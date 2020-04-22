@@ -13,5 +13,5 @@
 1. Make a file under {CSDK_ROOT}/libraries/standard/http/test named "test-\[function_name\].c"  
    For example {CSDK_ROOT}/libraries/standard/http/test/test-HTTPClient_AddHeader.c
 1. See https://gist.github.com/dan4thewin/6f708bf635f6cb647d9f7bc7f55e4706#the-complete-unit-test for an example unit tests and how to test assert.
-1. Any mocked external functions should go into "common.h".
+1. Any shared mocked external functions should go into "common.h".
 1. Build, run, and get coverage with: `make test`

@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "config.h"
 
 /**
  * @brief Maximum size, in bytes, of headers allowed from the server.
@@ -24,6 +25,32 @@
  */
 #ifndef HTTP_USER_AGENT_VALUE
     #define HTTP_USER_AGENT_VALUE    "my-platform-name"
+#endif
+
+/**
+ * AWS IoT Embedded C SDK optional specific logging setup.
+ */
+#ifdef USE_AWS_IOT_CSDK_LOGGING
+    #ifdef IOT_LOG_LEVEL_HTTP
+        #define LIBRARY_LOG_LEVEL        IOT_LOG_LEVEL_HTTP
+    #else
+        #ifdef IOT_LOG_LEVEL_GLOBAL
+            #define LIBRARY_LOG_LEVEL    IOT_LOG_LEVEL_GLOBAL
+        #else
+            #define LIBRARY_LOG_LEVEL    IOT_LOG_NONE
+        #endif
+    #endif
+    #define LIBRARY_LOG_NAME ( "HTTP" )
+    #include "iot_logging_setup.h"
+#else
+    #define IotLogError( message )
+    #define IotLogErrorWithArgs( format, ... )
+    #define IotLogWarn( message )
+    #define IotLogWarnWithArgs( format, ... )
+    #define IotLogInfo( message )
+    #define IotLogInfoWithArgs( format, ... )
+    #define IotLogDebug( message )
+    #define IotLogDebugWithArgs( format, ... )
 #endif
 
 /**
@@ -112,7 +139,7 @@ typedef int32_t (* HTTPTransportSend_t )( HTTPNetworkContext_t * pContext,
  * @return The number of bytes read or a negative error code.
  */
 typedef int32_t (* HTTPTransportRecv_t )( HTTPNetworkContext_t * pContext,
-                                          const void * pBuffer,
+                                          void * pBuffer,
                                           size_t bytesToRead );
 
 /**
@@ -130,9 +157,38 @@ typedef struct HTTPTransportInterface
  */
 typedef enum HTTPStatus
 {
+    /**
+     * @brief The HTTP Client library function completed successfully.
+     * 
+     * Functions that may return this value:
+     * - #HTTPClient_InitializeRequestHeaders
+     * - #HTTPClient_AddHeader
+     * - #HTTPClient_AddRangeHeader
+     * - #HTTPClient_Send
+     * - #HTTPClient_ReadHeader
+     */
     HTTP_SUCCESS = 0,
+    
+    /**
+     * @brief The HTTP Client library function input an invalid parameter.
+     * 
+     * Functions that may return this value:
+     * - #HTTPClient_InitializeRequestHeaders
+     * - #HTTPClient_AddHeader
+     * - #HTTPClient_AddRangeHeader
+     * - #HTTPClient_Send
+     * - #HTTPClient_ReadHeader
+     */
     HTTP_INVALID_PARAMETER,
+
+    /**
+     * @brief A network error was returned from the transport interface.
+     * 
+     * Functions that may return this value:
+     * - #HTTPClient_Send
+     */
     HTTP_NETWORK_ERROR,
+
     HTTP_NOT_SUPPORTED,
     HTTP_PARTIAL_RESPONSE,
     HTTP_INSUFFICIENT_MEMORY,

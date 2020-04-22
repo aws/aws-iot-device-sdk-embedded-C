@@ -1,12 +1,12 @@
 # the path to be indexed (default: ..)
 # Directory indexing includes subdirectories.
-SOURCE = ../src
+SOURCE = ../src ../../../../platform/posix
 
 # arguments given to the compiler (default: see the included file)
 #CFLAGS = std=c99 -Wall -fprofile-arcs -ftest-coverage -O0 -ggdb
 
 # include directories given to the compiler (default: none)
-INCLUDE = ../include
+INCLUDE = . ../include ../../../.. ../../utilities/include
 
 # the default goal (default: help)
 # Set to build or test as desired.
@@ -24,7 +24,10 @@ INCLUDE = ../include
 include Mock4thewin.mk
 
 # additional dependencies for all tests
-$(TESTS): common.h
+$(TESTS): ../../../../platform/posix/iot_clock_posix.o ../../../../platform/posix/iot_logging.o
 
 # additional dependency for a specific test
 #api_func.c: a_private_func.c
+
+# additional header dependencies for all tests
+COMMON = common.h

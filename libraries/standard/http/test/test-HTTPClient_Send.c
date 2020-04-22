@@ -1,0 +1,113 @@
+#include <string.h>
+#include <stdio.h>
+#include "common.h"
+
+/* Template HTTP successful response with no body. */
+#define HTTP_TEST_RESPONSE_HEADER_LINES_NO_BODY           \
+    "HTTP/1.1 200 OK\r\n"                                  \
+    "Content-Length: 43\r\n"                               \
+    "Date: Sun, 14 Jul 2019 06:07:52 GMT\r\n"              \
+    "ETag: \"3356-5233\"\r\n"                              \
+    "Vary: *\r\n"                                          \
+    "P3P: CP=\"This is not a P3P policy\"\r\n"             \
+    "xserver: www1021\r\n\r\n"
+#define HTTP_TEST_RESPONSE_HEADER_LINES_NO_BODY_LENGTH sizeof( HTTP_TEST_RESPONSE_HEADER_LINES_NO_BODY ) - 1
+
+/* Template HTTP request for a head request. */
+#define HTTP_TEST_REQUEST_HEAD                            \
+    "HEAD /somedir/somepage.html HTTP/1.1\r\n"            \
+    "test-header0: test-value0\r\n"                       \
+    "test-header1: test-value1\r\n"                       \
+    "test-header2: test-value2\r\n"                       \
+    "test-header3: test-value0\r\n"                       \
+    "test-header4: test-value1\r\n"                       \
+    "test-header5: test-value2\r\n"                       \
+    "\r\n"
+#define HTTP_TEST_REQUEST_HEAD_LENGTH sizeof( HTTP_TEST_REQUEST_HEAD ) - 1
+
+/* Test buffer to share among the test. */
+static uint8_t httpBuffer[ 1024 ] = { 0 };
+
+/* Test HEAD request. */
+static HTTPRequestHeaders_t requestHeadersHead = {
+    .pBuffer = ( uint8_t* )( HTTP_TEST_REQUEST_HEAD ),
+    .bufferLen = sizeof( HTTP_TEST_REQUEST_HEAD ) - 1,
+    .headersLen = sizeof( HTTP_TEST_REQUEST_HEAD ) - 1
+};
+
+/* Mocked successful transport send. */
+static int32_t transportSendSuccess( HTTPNetworkContext_t* pContext, 
+                                     const void * pBuffer, 
+                                     size_t bytesToWrite )
+{
+    ( void )pContext;
+    ( void )pBuffer;
+    return bytesToWrite;
+}
+
+/* Mocked successful transport read. */
+static int32_t transportRecvSuccess( HTTPNetworkContext_t *pContext,
+                                     void * pBuffer, 
+                                     size_t bytesToRead )
+{
+    ( void )pContext;
+    ( void )pBuffer;
+
+    memcpy( pBuffer, 
+            HTTP_TEST_RESPONSE_HEADER_LINES_NO_BODY, 
+            sizeof( HTTP_TEST_RESPONSE_HEADER_LINES_NO_BODY ) - 1 );
+
+    return sizeof( HTTP_TEST_RESPONSE_HEADER_LINES_NO_BODY ) - 1;
+}
+
+/* Mocked network error returning transport send. */
+static int32_t transportSendNetworkError( HTTPNetworkContext_t* pContext, 
+                                          const void * pBuffer, 
+                                          size_t bytesToWrite )
+{
+    ( void )pContext;
+    ( void )pBuffer;
+    ( void )bytesToWrite;
+
+    return -1;
+}
+
+/* Functions are pulled out into their own C files to be tested as a unit. */
+#include "HTTPClient_Send.c"
+
+int main()
+{
+    HTTPStatus_t returnStatus = HTTP_SUCCESS;
+    HTTPResponse_t response = { 0 };
+    response.pBuffer = httpBuffer;
+    response.bufferLen = sizeof( httpBuffer );
+
+    HTTPTransportInterface_t transportInterface = {
+        .recv = transportRecvSuccess,
+        .send = transportSendSuccess,
+        .pContext = NULL
+    };
+
+    /* Test sending a request and successfully receiving a response that is 
+     * within the bounds of the response buffer. */
+
+    returnStatus = HTTPClient_Send( &transportInterface,
+                                    &requestHeadersHead,
+                                    NULL,
+                                    0,
+                                    &response );
+
+    ok( returnStatus == HTTP_SUCCESS );
+
+    /* Test an error returned from a unsuccessful transport send. */
+    transportInterface.send = transportSendNetworkError;
+
+    returnStatus = HTTPClient_Send( &transportInterface,
+                                    &requestHeadersHead,
+                                    NULL,
+                                    0,
+                                    &response );
+
+    ok( returnStatus == HTTP_NETWORK_ERROR );
+    return 0;
+}
