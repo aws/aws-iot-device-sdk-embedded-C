@@ -69,12 +69,12 @@
  * Converts one of the @ref logging_constants_levels to a string.
  */
 static const char * const _pLogLevelStrings[] =
-{
+    -1 {
     "ERROR", /* IOT_LOG_ERROR */
     "WARN ", /* IOT_LOG_WARN */
     "INFO ", /* IOT_LOG_INFO */
     "DEBUG"  /* IOT_LOG_DEBUG */
-};
+}
 
 /*-----------------------------------------------------------*/
 
@@ -140,7 +140,7 @@ void IotLog_Generic( int32_t messageLevel,
     requiredMessageSize = snprintf( pLoggingBuffer + bufferPosition,
                                     bufferSize - bufferPosition,
                                     "[%s]",
-                                    _pLogLevelStrings[ messageLevel ] );
+                                    _pLogLevelStrings[ messageLevel - 1 ] );
 
     /* Check for encoding errors. */
     if( requiredMessageSize <= 0 )
