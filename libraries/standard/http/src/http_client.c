@@ -6,7 +6,8 @@
 #include "http_client.h"
 #include "private/http_client_internal.h"
 
-static uint8_t _isNullPtr( const void * ptr );
+static uint8_t _isNullParam( const void * ptr,
+                             const uint8_t * paramName );
 
 static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
                                 const char * pField,
@@ -14,7 +15,8 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
                                 const char * pValue,
                                 size_t valueLen );
 
-static uint8_t _isNullPtr( const void * ptr )
+static uint8_t _isNullParam( const void * ptr,
+                             const uint8_t * paramName )
 {
     /* TODO: Add log. */
     return ptr == NULL;
@@ -31,9 +33,9 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
     size_t toAddLen = 0;
 
     /* Check for NULL parameters. */
-    if( _isNullPtr( pRequestHeaders ) ||
-        _isNullPtr( pRequestHeaders->pBuffer ) ||
-        _isNullPtr( pField ) || _isNullPtr( pValue ) )
+    if( _isNullParam( pRequestHeaders, "Pointer to HTTPRequestHeaders_t" ) ||
+        _isNullParam( pRequestHeaders->pBuffer, "pBuffer member of type HTTPRequestHeaders_t" ) ||
+        _isNullParam( pField, "pField" ) || _isNullParam( pValue, "pValue" ) )
     {
         status = HTTP_INVALID_PARAMETER;
     }
@@ -98,11 +100,12 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
     memset( pRequestHeaders->pBuffer, 0, pRequestHeaders->bufferLen );
 
     /* Check for null parameters. */
-    if( _isNullPtr( pRequestHeaders ) || _isNullPtr( pRequestInfo ) ||
-        _isNullPtr( pRequestHeaders->pBuffer ) ||
-        _isNullPtr( pRequestInfo->method ) ||
-        _isNullPtr( pRequestInfo->pHost ) ||
-        _isNullPtr( pRequestInfo->pPath ) )
+    if( _isNullParam( pRequestHeaders, "Pointer to HTTPRequestHeaders_t" ) ||
+        _isNullParam( pRequestInfo, "Pointer to HTTPRequestInfo_t" ) ||
+        _isNullParam( pRequestHeaders->pBuffer, "pBuffer member of type HTTPRequestHeaders_t" ) ||
+        _isNullParam( pRequestInfo->method, "method member of type HTTPRequestInfo_t" ) ||
+        _isNullParam( pRequestInfo->pHost, "pHost member of type HTTPRequestInfo_t" ) ||
+        _isNullParam( pRequestInfo->pPath, "pPath member of type HTTPRequestInfo_t" ) )
     {
         status = HTTP_INVALID_PARAMETER;
     }
@@ -232,9 +235,10 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
     uint8_t * pBufferCur = NULL;
 
     /* Check for NULL parameters. */
-    if( _isNullPtr( pRequestHeaders ) ||
-        _isNullPtr( pRequestHeaders->pBuffer ) ||
-        _isNullPtr( pField ) || _isNullPtr( pValue ) )
+    if( _isNullParam( pRequestHeaders, "Pointer to HTTPRequestHeaders_t" ) ||
+        _isNullParam( pRequestHeaders->pBuffer, "pBuffer member of type HTTPRequestHeaders_t" ) ||
+        _isNullParam( pField, "Header field (pField)" ) ||
+        _isNullParam( pValue, "Header value (pValue)" ) )
     {
         status = HTTP_INVALID_PARAMETER;
     }
@@ -321,17 +325,14 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
     memcpy( rangeValueStr, EQUAL_CHARACTER, EQUAL_CHARACTER_LEN );
     pRangeValueCur += EQUAL_CHARACTER_LEN;
     rangeValueStrActualLength += EQUAL_CHARACTER_LEN;
-    memcpy( rangeValueStr, itoa( rangeStart ), itoaLength( rangeStart ) );
-    pRangeValueCur += itoaLength( rangeStart );
-    rangeValueStrActualLength += itoaLength( rangeStart );
-    memcpy( rangeValueStr, DASH_CHARACTER, DASH_CHARACTER_LEN );
-    pRangeValueCur += DASH_CHARACTER_LEN;
-    rangeValueStrActualLength += DASH_CHARACTER_LEN;
     bytesWritten = snprintf( rangeValueStr,
                              HTTP_RANGE_BYTES_VALUE_MAX_LEN - rangeValueStrActualLength,
                              "%d", rangeStart );
     pRangeValueCur += bytesWritten;
     rangeValueStrActualLength += bytesWritten;
+    memcpy( rangeValueStr, DASH_CHARACTER, DASH_CHARACTER_LEN );
+    pRangeValueCur += DASH_CHARACTER_LEN;
+    rangeValueStrActualLength += DASH_CHARACTER_LEN;
     bytesWritten = snprintf( rangeValueStr,
                              HTTP_RANGE_BYTES_VALUE_MAX_LEN - rangeValueStrActualLength,
                              "%d", rangeEnd );

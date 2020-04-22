@@ -28,15 +28,10 @@
 /**
  * @brief Supported HTTP request methods.
  */
-#define HTTP_METHOD_GET          "GET"             /**< HTTP Method GET. */
-#define HTTP_METHOD_PUT          "PUT"             /**< HTTP Method PUT. */
-#define HTTP_METHOD_POST         "POST"            /**< HTTP Method POST. */
-#define HTTP_METHOD_HEAD         "HEAD"            /**< HTTP Method HEAD. */
-
-/**
- * @brief The HTTP protocol version of this library is HTTP/1.1.
- */
-#define HTTP_PROTOCOL_VERSION    "HTTP/1.1"
+#define HTTP_METHOD_GET     "GET"                  /**< HTTP Method GET. */
+#define HTTP_METHOD_PUT     "PUT"                  /**< HTTP Method PUT. */
+#define HTTP_METHOD_POST    "POST"                 /**< HTTP Method POST. */
+#define HTTP_METHOD_HEAD    "HEAD"                 /**< HTTP Method HEAD. */
 
 /**
  * Flags for #HTTPRequestInfo_t.flags.
@@ -352,9 +347,10 @@
  *
  * @param[in] pRequestHeaders Request header buffer information.
  * @param[in] pRequestInfo Initial request header configurations.
- * @return #HTTP_SUCCESS if successful, an error code otherwise.
- * @return #HTTP_INVALID_PARAMETER if any provided parameters and their members are NULL.
- * @return #HTTP_INSUFFICIENT_MEMORY if provided buffer size is not large enough to hold headers.
+ * @return One of the following:
+ * - #HTTP_SUCCESS (If successful, an error code otherwise.)
+ * - #HTTP_INVALID_PARAMETER (If any provided parameters and their members are NULL.)
+ * - #HTTP_INSUFFICIENT_MEMORY (If provided buffer size is not large enough to hold headers.)
  */
     HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pRequestHeaders,
                                                       const HTTPRequestInfo_t * pRequestInfo );
