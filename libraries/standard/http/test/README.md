@@ -1,7 +1,7 @@
 # Instructions for running the tests:
 
 1. In your GNU compatible environment like WSL, mingw, Linux OS, MAC OS, etc., open a terminal.
-1. To get all the required installation scripts, clone this repo: https://github.com/dan4thewin/mock4thewin.
+1. To get all the required installation scripts, clone the LATEST from this repo: https://github.com/dan4thewin/mock4thewin.
 1. Go to the repo directory: `cd \{mock4thewin repo}`
 1. Run this command to install: `sudo ./install /usr/local`
 1. To get another required tool, clone this repo https://github.com/dan4thewin/ctags-xref and follow the instructions in the root README.md.

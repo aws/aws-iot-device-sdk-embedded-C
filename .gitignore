@@ -4,3 +4,10 @@ doc/tag/*
 
 # Ignore CMake build directory.
 build/
+
+#Ignore build artifacts
+*.o
+
+# Ignore code coverage artifacts
+*.gcda
+*.gcno
