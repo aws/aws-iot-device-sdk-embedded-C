@@ -1,5 +1,5 @@
 /*
- * IoT Common V1.1.0
+ * Common Logging Framework
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -22,7 +22,7 @@
 
 /**
  * @file iot_logging_setup.h
- * @brief Defines the logging macro #IotLog.
+ * @brief Defines the common logging framework that calls #IotLog interface.
  */
 
 #ifndef IOT_LOGGING_SETUP_H_
@@ -31,83 +31,9 @@
 /* The config header is always included first. */
 #include "config.h"
 
-/**
- * @constantspage{logging,logging library}
- *
- * @section logging_constants_levels Log levels
- * @brief Log levels for the libraries in this SDK.
- *
- * Each library should specify a log level by setting @ref LIBRARY_LOG_LEVEL.
- * All log messages with a level at or below the specified level will be printed
- * for that library.
- *
- * Currently, there are 4 log levels. In the order of lowest to highest, they are:
- * - #IOT_LOG_NONE <br>
- *   @copybrief IOT_LOG_NONE
- * - #IOT_LOG_ERROR <br>
- *   @copybrief IOT_LOG_ERROR
- * - #IOT_LOG_WARN <br>
- *   @copybrief IOT_LOG_WARN
- * - #IOT_LOG_INFO <br>
- *   @copybrief IOT_LOG_INFO
- * - #IOT_LOG_DEBUG <br>
- *   @copybrief IOT_LOG_DEBUG
- */
+/* Include header for logging level macros. */
+#include "iot_logging_levels.h"
 
-/**
- * @brief No log messages.
- *
- * When @ref LIBRARY_LOG_LEVEL is #IOT_LOG_NONE, logging is disabled and no
- * logging messages are printed.
- */
-#define IOT_LOG_NONE     0
-
-/**
- * @brief Represents erroneous application state or event.
- *
- * These messages describe the situations when a library encounters an error from
- * which it cannot recover.
- *
- * These messages are printed when @ref LIBRARY_LOG_LEVEL is defined as either
- * of #IOT_LOG_ERROR, #IOT_LOG_WARN, #IOT_LOG_INFO or #IOT_LOG_DEBUG.
- */
-#define IOT_LOG_ERROR    1
-
-/**
- * @brief Message about an abnormal event.
- *
- * These messages describe the situations when a library encounters
- * abnormal event that may be indicative of an error. Libraries continue
- * execution after logging a warning.
- *
- * These messages are printed when @ref LIBRARY_LOG_LEVEL is defined as either
- * of #IOT_LOG_WARN, #IOT_LOG_INFO or #IOT_LOG_DEBUG.
- */
-#define IOT_LOG_WARN     2
-
-/**
- * @brief A helpful, informational message.
- *
- * These messages describe normal execution of a library. They provide
- * the progress of the program at a coarse-grained level.
- *
- * These messages are printed when @ref LIBRARY_LOG_LEVEL is defined as either
- * of #IOT_LOG_INFO or #IOT_LOG_DEBUG.
- */
-#define IOT_LOG_INFO     3
-
-/**
- * @brief Detailed and excessive debug information.
- *
- * Debug log messages are used to provide the
- * progress of the program at a fine-grained level. These are mostly used
- * for debugging and may contain excessive information such as internal
- * variables, buffers, or other specific information.
- *
- * These messages are only printed when @ref LIBRARY_LOG_LEVEL is defined as
- * #IOT_LOG_DEBUG.
- */
-#define IOT_LOG_DEBUG    4
 
 /**
  * @functionpage{IotLog,logging,log}
@@ -270,10 +196,14 @@
         #define IotLogDebugWithArgs( pFormat, ... )
 
     #else /* if LIBRARY_LOG_LEVEL == IOT_LOG_ERROR */
-        #define IotLogError( ... )
-        #define IotLogWarn( ... )
-        #define IotLogInfo( ... )
-        #define IotLogDebug( ... )
+        #define IotLogError( message )
+        #define IotLogErrorWithArgs( pFormat, ... )
+        #define IotLogWarn( message )
+        #define IotLogWarnWithArgs( pFormat, ... )
+        #define IotLogInfo( message )
+        #define IotLogInfoWithArgs( pFormat, ... )
+        #define IotLogDebug( message )
+        #define IotLogDebugWithArgs( pFormat, ... )
     #endif /* if LIBRARY_LOG_LEVEL == IOT_LOG_ERROR */
 #endif /* if !defined( LIBRARY_LOG_LEVEL ) || ( ( LIBRARY_LOG_LEVEL != IOT_LOG_NONE ) && ( LIBRARY_LOG_LEVEL != IOT_LOG_ERROR ) && ( LIBRARY_LOG_LEVEL != IOT_LOG_WARN ) && ( LIBRARY_LOG_LEVEL != IOT_LOG_INFO ) && ( LIBRARY_LOG_LEVEL != IOT_LOG_DEBUG ) ) */
 
