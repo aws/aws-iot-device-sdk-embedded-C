@@ -64,17 +64,39 @@
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Lookup table for log levels.
+ * @brief Log level code to string conversion utility.
  *
- * Converts one of the @ref logging_constants_levels to a string.
+ * @param[in] messageLevel The log level to convert to string.
+ *
+ * @return The constant string representation of the log level.
  */
-static const char * const _pLogLevelStrings[] =
+static const char * _log_level_strerror( int32_t messageLevel )
 {
-    "ERROR", /* IOT_LOG_ERROR */
-    "WARN ", /* IOT_LOG_WARN */
-    "INFO ", /* IOT_LOG_INFO */
-    "DEBUG"  /* IOT_LOG_DEBUG */
-};
+    assert( ( messageLevel >= IOT_LOG_NONE ) && ( messageLevel <= IOT_LOG_DEBUG ) );
+
+    const char * retVal = NULL;
+
+    switch( messageLevel )
+    {
+        case IOT_LOG_ERROR:
+            retVal = "ERROR";
+            break;
+
+        case IOT_LOG_WARN:
+            retVal = "WARN";
+            break;
+
+        case IOT_LOG_INFO:
+            retVal = "INFO";
+            break;
+
+        case IOT_LOG_DEBUG:
+            retVal = "DEBUG";
+            break;
+    }
+
+    return retVal;
+}
 
 /*-----------------------------------------------------------*/
 
@@ -140,7 +162,7 @@ void IotLog_Generic( int32_t messageLevel,
     requiredMessageSize = snprintf( pLoggingBuffer + bufferPosition,
                                     bufferSize - bufferPosition,
                                     "[%s]",
-                                    _pLogLevelStrings[ messageLevel - 1 ] );
+                                    _log_level_strerror( messageLevel ) );
 
     /* Check for encoding errors. */
     if( requiredMessageSize <= 0 )
