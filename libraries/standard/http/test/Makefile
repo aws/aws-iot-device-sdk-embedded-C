@@ -30,6 +30,7 @@ $(TESTS): $(CSDK_ROOT)/platform/posix/iot_clock_posix.o $(CSDK_ROOT)/platform/po
 
 # additional dependency for a specific test
 HTTPClient_Send.c: _sendHttpHeaders.c _sendHttpBody.c _receiveHttpResponse.c
+HTTPClient_AddHeader.c: _addHeader.c _isNullParam.c
 
 # additional header dependencies for all tests
 COMMON = common.h
