@@ -72,7 +72,22 @@ static int32_t transportSendNetworkError( HTTPNetworkContext_t* pContext,
     return -1;
 }
 
+/* Mocked transport send that returns less bytes than expected. */
+static int32_t transportSendLessThanBytesToWrite( HTTPNetworkContext_t* pContext, 
+                                                  const void * pBuffer, 
+                                                  size_t bytesToWrite )
+{
+    ( void )pContext;
+    ( void )pBuffer;
+    ( void )bytesToWrite;
+
+    return bytesToWrite - 1;
+}
+
 /* Functions are pulled out into their own C files to be tested as a unit. */
+#include "_sendHttpHeaders.c"
+#include "_sendHttpBody.c"
+#include "_receiveHttpResponse.c"
 #include "HTTPClient_Send.c"
 
 int main()
@@ -90,7 +105,6 @@ int main()
 
     /* Test sending a request and successfully receiving a response that is 
      * within the bounds of the response buffer. */
-
     returnStatus = HTTPClient_Send( &transportInterface,
                                     &requestHeadersHead,
                                     NULL,
@@ -101,6 +115,17 @@ int main()
 
     /* Test an error returned from a unsuccessful transport send. */
     transportInterface.send = transportSendNetworkError;
+
+    returnStatus = HTTPClient_Send( &transportInterface,
+                                    &requestHeadersHead,
+                                    NULL,
+                                    0,
+                                    &response );
+
+    ok( returnStatus == HTTP_NETWORK_ERROR );
+
+    /* Test less bytes than expected returned from transport send. */
+    transportInterface.send = transportSendLessThanBytesToWrite;
 
     returnStatus = HTTPClient_Send( &transportInterface,
                                     &requestHeadersHead,

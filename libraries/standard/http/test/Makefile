@@ -1,6 +1,6 @@
 # the path to be indexed (default: ..)
 # Directory indexing includes subdirectories.
-SOURCE = ../src ../../../../platform/posix
+SOURCE = ../src
 
 # arguments given to the compiler (default: see the included file)
 #CFLAGS = std=c99 -Wall -fprofile-arcs -ftest-coverage -O0 -ggdb
@@ -18,7 +18,7 @@ INCLUDE = . ../include ../../../.. ../../utilities/include
 
 # functions to dump into separate source files
 # Values based on test source file names will be dynamically added.
-#FUNCTIONS = a_private_func
+FUNCTIONS = _sendHttpHeaders _sendHttpBody _receiveHttpResponse
 
 # Changes to the above variables should remain above this include.
 include Mock4thewin.mk
@@ -27,7 +27,7 @@ include Mock4thewin.mk
 $(TESTS): ../../../../platform/posix/iot_clock_posix.o ../../../../platform/posix/iot_logging.o
 
 # additional dependency for a specific test
-#api_func.c: a_private_func.c
+HTTPClient_Send.c: _sendHttpHeaders.c _sendHttpBody.c _receiveHttpResponse.c
 
 # additional header dependencies for all tests
 COMMON = common.h
