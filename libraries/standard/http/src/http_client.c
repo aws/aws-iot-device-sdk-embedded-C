@@ -1,11 +1,40 @@
 #include "http_client.h"
 
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Send the HTTP headers over the transport send interface.
+ *
+ * @param pTransport Transport interface.
+ * @param pRequestHeaders Request headers to send, it includes the buffer and length.
+ * @return #HTTP_SUCCESS if successful. If there was a network error or less
+ * bytes than was was specified were sent, then #HTTP_NETWORK_ERROR is returned.
+ */
+static HTTPStatus_t _sendHttpHeaders( const HTTPTransportInterface_t * pTransport,
+                                      const HTTPRequestHeaders_t * pRequestHeaders );
+
+/**
+ * @brief Send the HTTP body over the transport send interface.
+ *
+ * @param pTransport Transport interface.
+ * @param pRequestBodyBuf Request body buffer.
+ * @param reqBodyLen Length of the request body buffer.
+ * @return #HTTP_SUCCESS if successful. If there was a network error or less
+ * bytes than was was specified were sent, then #HTTP_NETWORK_ERROR is returned.
+ */
+static HTTPStatus_t _sendHttpBody( const HTTPTransportInterface_t * pTransport,
+                                   const uint8_t * pRequestBodyBuf,
+                                   size_t reqBodyBufLen );
+
+/*-----------------------------------------------------------*/
+
 HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pRequestHeaders,
                                                   const HTTPRequestInfo_t * pRequestInfo )
 {
     return HTTP_NOT_SUPPORTED;
 }
 
+/*-----------------------------------------------------------*/
 
 HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
                                    const char * pName,
@@ -16,6 +45,8 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
     return HTTP_NOT_SUPPORTED;
 }
 
+/*-----------------------------------------------------------*/
+
 HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
                                         int32_t rangeStart,
                                         int32_t rangeEnd )
@@ -23,9 +54,10 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
     return HTTP_NOT_SUPPORTED;
 }
 
+/*-----------------------------------------------------------*/
+
 static HTTPStatus_t _sendHttpHeaders( const HTTPTransportInterface_t * pTransport,
-                                      const HTTPRequestHeaders_t * pRequestHeaders,
-                                      const uint8_t * pRequestBodyBuf )
+                                      const HTTPRequestHeaders_t * pRequestHeaders )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
     int32_t transportStatus = 0;
@@ -44,7 +76,8 @@ static HTTPStatus_t _sendHttpHeaders( const HTTPTransportInterface_t * pTranspor
     }
     else if( transportStatus != pRequestHeaders->headersLen )
     {
-        IotLogErrorWithArgs( "Attempted to send %d, transport reported it sent %d.",
+        IotLogErrorWithArgs( "Attempted to send %d of HTTP headers, transport "
+                             " reported it sent %d.",
                              pRequestHeaders->headersLen,
                              transportStatus );
         returnStatus = HTTP_NETWORK_ERROR;
@@ -52,6 +85,8 @@ static HTTPStatus_t _sendHttpHeaders( const HTTPTransportInterface_t * pTranspor
 
     return returnStatus;
 }
+
+/*-----------------------------------------------------------*/
 
 static HTTPStatus_t _sendHttpBody( const HTTPTransportInterface_t * pTransport,
                                    const uint8_t * pRequestBodyBuf,
@@ -76,7 +111,8 @@ static HTTPStatus_t _sendHttpBody( const HTTPTransportInterface_t * pTransport,
         }
         else if( transportStatus != reqBodyBufLen )
         {
-            IotLogErrorWithArgs( "Attempted to send %d, transport reported it sent %d.",
+            IotLogErrorWithArgs( "Attempted to send %d of HTTP body, transport "
+                                 "reported it sent %d.",
                                  reqBodyBufLen,
                                  transportStatus );
             returnStatus = HTTP_NETWORK_ERROR;
@@ -86,12 +122,16 @@ static HTTPStatus_t _sendHttpBody( const HTTPTransportInterface_t * pTransport,
     return returnStatus;
 }
 
+/*-----------------------------------------------------------*/
+
 static HTTPStatus_t _receiveHttpResponse( const HTTPTransportInterface_t * pTransport,
                                           HTTPResponse_t * pResponse )
 {
     /* TODO: Receive the HTTP response with parsing. */
     return HTTP_SUCCESS;
 }
+
+/*-----------------------------------------------------------*/
 
 HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
                               const HTTPRequestHeaders_t * pRequestHeaders,
@@ -135,8 +175,7 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
     if( returnStatus == HTTP_SUCCESS )
     {
         returnStatus = _sendHttpHeaders( pTransport,
-                                         pRequestHeaders,
-                                         pRequestBodyBuf );
+                                         pRequestHeaders );
     }
 
     /* Send the body, which is at another location in memory. */
@@ -156,6 +195,8 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
     return returnStatus;
 }
 
+/*-----------------------------------------------------------*/
+
 HTTPStatus_t HTTPClient_ReadHeader( HTTPResponse_t * pResponse,
                                     const char * pName,
                                     size_t nameLen,
@@ -164,3 +205,5 @@ HTTPStatus_t HTTPClient_ReadHeader( HTTPResponse_t * pResponse,
 {
     return HTTP_NOT_SUPPORTED;
 }
+
+/*-----------------------------------------------------------*/
