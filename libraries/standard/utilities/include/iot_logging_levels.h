@@ -28,9 +28,6 @@
 #ifndef IOT_LOGGING_LEVELS_H_
 #define IOT_LOGGING_LEVELS_H_
 
-/* The config header is always included first. */
-#include "config.h"
-
 /**
  * @constantspage{logging,logging library}
  *

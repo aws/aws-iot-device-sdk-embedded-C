@@ -39,7 +39,7 @@
 #include "iot_logging_levels.h"
 
 /* Logging includes. */
-#include "iot_logging.h"
+#include "platform/include/iot_logging.h"
 
 /*-----------------------------------------------------------*/
 
