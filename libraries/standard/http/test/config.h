@@ -3,7 +3,7 @@
 
 #define USE_AWS_IOT_CSDK_LOGGING
 
-#define IOT_LOG_LEVEL_HTTP  IOT_LOG_DEBUG
+#define IOT_LOG_LEVEL_HTTP    IOT_LOG_DEBUG
 
 /* Include file for POSIX reference implementation. */
 #include "platform/include/iot_logging.h"
@@ -20,4 +20,4 @@
                     LIBRARY_LOG_NAME,        \
                     __VA_ARGS__ )
 
-#endif
+#endif /* ifndef CONFIG_H */

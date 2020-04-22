@@ -40,9 +40,9 @@
             #define LIBRARY_LOG_LEVEL    IOT_LOG_NONE
         #endif
     #endif
-    #define LIBRARY_LOG_NAME ( "HTTP" )
+    #define LIBRARY_LOG_NAME             ( "HTTP" )
     #include "iot_logging_setup.h"
-#else
+#else /* ifdef USE_AWS_IOT_CSDK_LOGGING */
     #define IotLogError( message )
     #define IotLogErrorWithArgs( format, ... )
     #define IotLogWarn( message )
@@ -51,7 +51,7 @@
     #define IotLogInfoWithArgs( format, ... )
     #define IotLogDebug( message )
     #define IotLogDebugWithArgs( format, ... )
-#endif
+#endif /* ifdef USE_AWS_IOT_CSDK_LOGGING */
 
 /**
  * Supported HTTP request methods.
@@ -159,7 +159,7 @@ typedef enum HTTPStatus
 {
     /**
      * @brief The HTTP Client library function completed successfully.
-     * 
+     *
      * Functions that may return this value:
      * - #HTTPClient_InitializeRequestHeaders
      * - #HTTPClient_AddHeader
@@ -168,10 +168,10 @@ typedef enum HTTPStatus
      * - #HTTPClient_ReadHeader
      */
     HTTP_SUCCESS = 0,
-    
+
     /**
      * @brief The HTTP Client library function input an invalid parameter.
-     * 
+     *
      * Functions that may return this value:
      * - #HTTPClient_InitializeRequestHeaders
      * - #HTTPClient_AddHeader
@@ -183,7 +183,7 @@ typedef enum HTTPStatus
 
     /**
      * @brief A network error was returned from the transport interface.
-     * 
+     *
      * Functions that may return this value:
      * - #HTTPClient_Send
      */

@@ -11,76 +11,76 @@
 
 
 /* Template HTTP successful response with no body. */
-#define HTTP_TEST_RESPONSE_HEADER_LINES_NO_BODY           \
-    "HTTP/1.1 200 OK\r\n"                                  \
-    "Content-Length: 43\r\n"                               \
-    "Date: Sun, 14 Jul 2019 06:07:52 GMT\r\n"              \
-    "ETag: \"3356-5233\"\r\n"                              \
-    "Vary: *\r\n"                                          \
-    "P3P: CP=\"This is not a P3P policy\"\r\n"             \
+#define HTTP_TEST_RESPONSE_HEADER_LINES_NO_BODY \
+    "HTTP/1.1 200 OK\r\n"                       \
+    "Content-Length: 43\r\n"                    \
+    "Date: Sun, 14 Jul 2019 06:07:52 GMT\r\n"   \
+    "ETag: \"3356-5233\"\r\n"                   \
+    "Vary: *\r\n"                               \
+    "P3P: CP=\"This is not a P3P policy\"\r\n"  \
     "xserver: www1021\r\n\r\n"
-#define HTTP_TEST_RESPONSE_HEADER_LINES_NO_BODY_LENGTH sizeof( HTTP_TEST_RESPONSE_HEADER_LINES_NO_BODY ) - 1
+#define HTTP_TEST_RESPONSE_HEADER_LINES_NO_BODY_LENGTH    sizeof( HTTP_TEST_RESPONSE_HEADER_LINES_NO_BODY ) - 1
 
 /* Template HTTP request for a head request. */
-#define HTTP_TEST_REQUEST_HEAD                            \
-    "HEAD /somedir/somepage.html HTTP/1.1\r\n"            \
-    "test-header0: test-value0\r\n"                       \
-    "test-header1: test-value1\r\n"                       \
-    "test-header2: test-value2\r\n"                       \
-    "test-header3: test-value0\r\n"                       \
-    "test-header4: test-value1\r\n"                       \
-    "test-header5: test-value2\r\n"                       \
+#define HTTP_TEST_REQUEST_HEAD                 \
+    "HEAD /somedir/somepage.html HTTP/1.1\r\n" \
+    "test-header0: test-value0\r\n"            \
+    "test-header1: test-value1\r\n"            \
+    "test-header2: test-value2\r\n"            \
+    "test-header3: test-value0\r\n"            \
+    "test-header4: test-value1\r\n"            \
+    "test-header5: test-value2\r\n"            \
     "\r\n"
-#define HTTP_TEST_REQUEST_HEAD_LENGTH sizeof( HTTP_TEST_REQUEST_HEAD ) - 1
+#define HTTP_TEST_REQUEST_HEAD_LENGTH    sizeof( HTTP_TEST_REQUEST_HEAD ) - 1
 
 /* Test buffer to share among the test. */
 static uint8_t httpBuffer[ 1024 ] = { 0 };
 
 /* Mocked successful transport send. */
-static int32_t transportSendSuccess( HTTPNetworkContext_t* pContext, 
-                                     const void * pBuffer, 
+static int32_t transportSendSuccess( HTTPNetworkContext_t * pContext,
+                                     const void * pBuffer,
                                      size_t bytesToWrite )
 {
-    ( void )pContext;
-    ( void )pBuffer;
+    ( void ) pContext;
+    ( void ) pBuffer;
     return bytesToWrite;
 }
 
 /* Mocked successful transport read. */
-static int32_t transportRecvSuccess( HTTPNetworkContext_t *pContext,
-                                     void * pBuffer, 
+static int32_t transportRecvSuccess( HTTPNetworkContext_t * pContext,
+                                     void * pBuffer,
                                      size_t bytesToRead )
 {
-    ( void )pContext;
-    ( void )pBuffer;
+    ( void ) pContext;
+    ( void ) pBuffer;
 
-    memcpy( pBuffer, 
-            HTTP_TEST_RESPONSE_HEADER_LINES_NO_BODY, 
+    memcpy( pBuffer,
+            HTTP_TEST_RESPONSE_HEADER_LINES_NO_BODY,
             sizeof( HTTP_TEST_RESPONSE_HEADER_LINES_NO_BODY ) - 1 );
 
     return sizeof( HTTP_TEST_RESPONSE_HEADER_LINES_NO_BODY ) - 1;
 }
 
 /* Mocked network error returning transport send. */
-static int32_t transportSendNetworkError( HTTPNetworkContext_t* pContext, 
-                                          const void * pBuffer, 
+static int32_t transportSendNetworkError( HTTPNetworkContext_t * pContext,
+                                          const void * pBuffer,
                                           size_t bytesToWrite )
 {
-    ( void )pContext;
-    ( void )pBuffer;
-    ( void )bytesToWrite;
+    ( void ) pContext;
+    ( void ) pBuffer;
+    ( void ) bytesToWrite;
 
     return -1;
 }
 
 /* Mocked transport send that returns less bytes than expected. */
-static int32_t transportSendLessThanBytesToWrite( HTTPNetworkContext_t* pContext, 
-                                                  const void * pBuffer, 
+static int32_t transportSendLessThanBytesToWrite( HTTPNetworkContext_t * pContext,
+                                                  const void * pBuffer,
                                                   size_t bytesToWrite )
 {
-    ( void )pContext;
-    ( void )pBuffer;
-    ( void )bytesToWrite;
+    ( void ) pContext;
+    ( void ) pBuffer;
+    ( void ) bytesToWrite;
 
     return bytesToWrite - 1;
 }
@@ -90,30 +90,32 @@ int main()
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
     HTTPResponse_t response = { 0 };
+
     response.pBuffer = httpBuffer;
     response.bufferLen = sizeof( httpBuffer );
 
-    HTTPTransportInterface_t transportInterface = 
+    HTTPTransportInterface_t transportInterface =
     {
-        .recv = transportRecvSuccess,
-        .send = transportSendSuccess,
+        .recv     = transportRecvSuccess,
+        .send     = transportSendSuccess,
         .pContext = NULL
     };
 
-    HTTPRequestHeaders_t requestHeadersHead = 
+    HTTPRequestHeaders_t requestHeadersHead =
     {
-        .pBuffer = ( uint8_t* )( HTTP_TEST_REQUEST_HEAD ),
-        .bufferLen = sizeof( HTTP_TEST_REQUEST_HEAD ) - 1,
+        .pBuffer    = ( uint8_t * ) ( HTTP_TEST_REQUEST_HEAD ),
+        .bufferLen  = sizeof( HTTP_TEST_REQUEST_HEAD ) - 1,
         .headersLen = sizeof( HTTP_TEST_REQUEST_HEAD ) - 1
     };
 
-    #define reset() do {                                \
-        transportInterface.recv = transportRecvSuccess; \
-        transportInterface.send = transportSendSuccess; \
-        transportInterface.pContext = NULL;             \
-        requestHeadersHead.pBuffer = ( uint8_t* )( HTTP_TEST_REQUEST_HEAD );  \
-        requestHeadersHead.bufferLen = sizeof( HTTP_TEST_REQUEST_HEAD ) - 1;  \
-        requestHeadersHead.headersLen = sizeof( HTTP_TEST_REQUEST_HEAD ) - 1; \
+#define reset()                                                                \
+    do {                                                                       \
+        transportInterface.recv = transportRecvSuccess;                        \
+        transportInterface.send = transportSendSuccess;                        \
+        transportInterface.pContext = NULL;                                    \
+        requestHeadersHead.pBuffer = ( uint8_t * ) ( HTTP_TEST_REQUEST_HEAD ); \
+        requestHeadersHead.bufferLen = sizeof( HTTP_TEST_REQUEST_HEAD ) - 1;   \
+        requestHeadersHead.headersLen = sizeof( HTTP_TEST_REQUEST_HEAD ) - 1;  \
     } while( 0 )
     reset();
 
