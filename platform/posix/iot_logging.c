@@ -28,13 +28,18 @@
 /* Standard includes. */
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 /* Platform clock include. */
-#include "platform/iot_clock.h"
+#include "platform/include/iot_clock.h"
+
+/* Include header for logging level macros. */
+#include "iot_logging_levels.h"
 
 /* Logging includes. */
-#include "iot_logging.h"
+#include "platform/include/iot_logging.h"
 
 /*-----------------------------------------------------------*/
 
@@ -50,20 +55,48 @@
  */
 #define MAX_TIMESTRING_LENGTH    ( 64 )
 
+/**
+ * @brief The longest string in #_pLogLevelStrings (below), plus 3 to accommodate
+ * `[]` and a null-terminator.
+ */
+#define MAX_LOG_LEVEL_LENGTH     ( 8 )
+
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Lookup table for log levels.
+ * @brief Log level code to string conversion utility.
  *
- * Converts one of the @ref logging_constants_levels to a string.
+ * @param[in] messageLevel The log level to convert to string.
+ *
+ * @return The constant string representation of the log level.
  */
-static const char * const _pLogLevelStrings[] =
+static const char * _log_level_strerror( int32_t messageLevel )
 {
-    "ERROR", /* IOT_LOG_ERROR */
-    "WARN ", /* IOT_LOG_WARN */
-    "INFO ", /* IOT_LOG_INFO */
-    "DEBUG"  /* IOT_LOG_DEBUG */
-};
+    assert( ( messageLevel >= IOT_LOG_NONE ) && ( messageLevel <= IOT_LOG_DEBUG ) );
+
+    const char * retVal = NULL;
+
+    switch( messageLevel )
+    {
+        case IOT_LOG_ERROR:
+            retVal = "ERROR";
+            break;
+
+        case IOT_LOG_WARN:
+            retVal = "WARN";
+            break;
+
+        case IOT_LOG_INFO:
+            retVal = "INFO";
+            break;
+
+        case IOT_LOG_DEBUG:
+            retVal = "DEBUG";
+            break;
+    }
+
+    return retVal;
+}
 
 /*-----------------------------------------------------------*/
 
@@ -83,7 +116,7 @@ static bool _reallocLoggingBuffer( void ** pOldBuffer,
         ( void ) memcpy( pNewBuffer, *pOldBuffer, oldSize );
 
         /* Free the old buffer and update the pointer. */
-        IotLogging_Free( *pOldBuffer );
+        free( *pOldBuffer );
         *pOldBuffer = pNewBuffer;
 
         status = true;
@@ -129,12 +162,12 @@ void IotLog_Generic( int32_t messageLevel,
     requiredMessageSize = snprintf( pLoggingBuffer + bufferPosition,
                                     bufferSize - bufferPosition,
                                     "[%s]",
-                                    _pLogLevelStrings[ messageLevel ] );
+                                    _log_level_strerror( messageLevel ) );
 
     /* Check for encoding errors. */
     if( requiredMessageSize <= 0 )
     {
-        IotLogging_Free( pLoggingBuffer );
+        free( pLoggingBuffer );
 
         return;
     }
@@ -193,7 +226,7 @@ void IotLog_Generic( int32_t messageLevel,
                                    bufferSize ) == false )
         {
             /* If buffer reallocation failed, return. */
-            IotLogging_Free( pLoggingBuffer );
+            free( pLoggingBuffer );
 
             return;
         }
@@ -214,16 +247,16 @@ void IotLog_Generic( int32_t messageLevel,
     /* Check for encoding errors. */
     if( requiredMessageSize <= 0 )
     {
-        IotLogging_Free( pLoggingBuffer );
+        free( pLoggingBuffer );
 
         return;
     }
 
     /* Print the logging buffer to stdout. */
-    IotLogging_Puts( pLoggingBuffer );
+    puts( pLoggingBuffer );
 
     /* Free the logging buffer. */
-    IotLogging_Free( pLoggingBuffer );
+    free( pLoggingBuffer );
 }
 
 /*-----------------------------------------------------------*/

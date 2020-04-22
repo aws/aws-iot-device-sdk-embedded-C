@@ -28,9 +28,6 @@
 #ifndef IOT_CLOCK_H_
 #define IOT_CLOCK_H_
 
-/* The config header is always included first. */
-#include "config.h"
-
 /* Standard includes. */
 #include <stdbool.h>
 #include <stddef.h>
