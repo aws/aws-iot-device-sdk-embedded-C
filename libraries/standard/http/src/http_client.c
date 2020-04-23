@@ -36,21 +36,11 @@ static HTTPStatus_t _sendHttpBody( const HTTPTransportInterface_t * pTransport,
 
 /*-----------------------------------------------------------*/
 
-static uint8_t _isNullParam( const void * ptr,
-                             const char * paramName );
-
 static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
                                 const char * pField,
                                 size_t fieldLen,
                                 const char * pValue,
                                 size_t valueLen );
-
-static uint8_t _isNullParam( const void * ptr,
-                             const char * paramName )
-{
-    IotLogErrorWithArgs( "%s is a NULL parameter.", paramName );
-    return( ptr == NULL );
-}
 
 static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
                                 const char * pField,
@@ -81,7 +71,8 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
 
     if( ( pRequestHeaders->headersLen + toAddLen ) > pRequestHeaders->bufferLen )
     {
-        IotLogError( "Buffer size too small to add new header." );
+        IotLogError( "Insufficient memory: Provided buffer size too small " \
+                     "to add new header." );
         returnStatus = HTTP_INSUFFICIENT_MEMORY;
     }
 
@@ -126,31 +117,47 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
     HTTPStatus_t returnStatus = HTTP_INTERNAL_ERROR;
 
     /* Check for NULL parameters. */
-    if( _isNullParam( pRequestHeaders, "Pointer to HTTPRequestHeaders_t" ) ||
-        _isNullParam( pRequestHeaders->pBuffer,
-                      "pBuffer member of type HTTPRequestHeaders_t" ) ||
-        _isNullParam( pField, "Header field (pField)" ) ||
-        _isNullParam( pValue, "Header value (pValue)" ) )
+    if( pRequestHeaders == NULL )
     {
+        IotLogError( "Parameter check failed: pRequestHeaders interface is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( pRequestHeaders->pBuffer == NULL )
+    {
+        IotLogError( "Parameter check failed: pRequestHeaders->pBuffer is NULL." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( pField == NULL )
+    {
+        IotLogError( "Parameter check failed: pField is NULL." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( pValue == NULL )
+    {
+        IotLogError( "Parameter check failed: pValue is NULL." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else
+    {
+        /* Empty else MISRA 15.7 */
     }
 
     if( fieldLen == 0 )
     {
-        IotLogError( "fieldLen must be greater than 0." );
+        IotLogError( "Parameter check failed: fieldLen must be greater than 0." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
 
     if( valueLen == 0 )
     {
-        IotLogError( "valueLen must be greater than 0." );
+        IotLogError( "Parameter check failed: valueLen must be greater than 0." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
 
     /* Check if header field is long enough for length to overflow. */
     if( fieldLen > ( UINT32_MAX >> 2 ) )
     {
-        IotLogErrorWithArgs( "fieldLen must be less than %d.",
+        IotLogErrorWithArgs( "Parameter check failed: fieldLen must be less than %d.",
                              ( UINT32_MAX >> 2 ) );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
@@ -158,7 +165,7 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
     /* Check if header value is long enough for length to overflow. */
     if( valueLen > ( UINT32_MAX >> 2 ) )
     {
-        IotLogErrorWithArgs( "valueLen must be less than %d.",
+        IotLogErrorWithArgs( "Parameter check failed: valueLen must be less than %d.",
                              ( UINT32_MAX >> 2 ) );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
@@ -171,7 +178,8 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
             ( strncmp( pField,
                        HTTP_CONTENT_LENGTH_FIELD, HTTP_CONTENT_LENGTH_FIELD_LEN ) == 0 ) )
         {
-            IotLogError( "Adding Content-Length header disallowed because " \
+            IotLogError( "Parameter check failed: "                         \
+                         "Adding Content-Length header disallowed because " \
                          "HTTP_REQUEST_DISABLE_CONTENT_LENGTH_FLAG is not set." );
             returnStatus = HTTP_INVALID_PARAMETER;
         }
@@ -180,7 +188,8 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
         if( strncmp( pField,
                      HTTP_CONNECTION_FIELD, HTTP_CONNECTION_FIELD_LEN ) == 0 )
         {
-            IotLogError( "Connection header can only be set during " \
+            IotLogError( "Parameter check failed: "                  \
+                         "Connection header can only be set during " \
                          "HTTPClient_InitializeRequestHeaders() "    \
                          "through HTTPRequestInfo_t.flags." );
             returnStatus = HTTP_INVALID_PARAMETER;
@@ -190,7 +199,8 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
         if( strncmp( pField,
                      HTTP_HOST_FIELD, HTTP_HOST_FIELD_LEN ) == 0 )
         {
-            IotLogError( "Host header can only be set during "    \
+            IotLogError( "Parameter check failed: "               \
+                         "Host header can only be set during "    \
                          "HTTPClient_InitializeRequestHeaders() " \
                          "through HTTPRequestInfo_t.pHost." );
             returnStatus = HTTP_INVALID_PARAMETER;
@@ -200,7 +210,8 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
         if( strncmp( pField,
                      HTTP_USER_AGENT_FIELD, HTTP_USER_AGENT_FIELD_LEN ) == 0 )
         {
-            IotLogError( "User-Agent header can only be set during " \
+            IotLogError( "Parameter check failed: "                  \
+                         "User-Agent header can only be set during " \
                          "HTTPClient_InitializeRequestHeaders() "    \
                          "by defining HTTP_USER_AGENT_VALUE." );
             returnStatus = HTTP_INVALID_PARAMETER;
