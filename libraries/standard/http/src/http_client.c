@@ -8,7 +8,7 @@
  * @param pTransport Transport interface.
  * @param pRequestHeaders Request headers to send, it includes the buffer and length.
  * @return #HTTP_SUCCESS if successful. If there was a network error or less
- * bytes than was was specified were sent, then #HTTP_NETWORK_ERROR is returned.
+ * bytes than what was specified were sent, then #HTTP_NETWORK_ERROR is returned.
  */
 static HTTPStatus_t _sendHttpHeaders( const HTTPTransportInterface_t * pTransport,
                                       const HTTPRequestHeaders_t * pRequestHeaders );
@@ -20,7 +20,7 @@ static HTTPStatus_t _sendHttpHeaders( const HTTPTransportInterface_t * pTranspor
  * @param pRequestBodyBuf Request body buffer.
  * @param reqBodyLen Length of the request body buffer.
  * @return #HTTP_SUCCESS if successful. If there was a network error or less
- * bytes than was was specified were sent, then #HTTP_NETWORK_ERROR is returned.
+ * bytes than what was specified were sent, then #HTTP_NETWORK_ERROR is returned.
  */
 static HTTPStatus_t _sendHttpBody( const HTTPTransportInterface_t * pTransport,
                                    const uint8_t * pRequestBodyBuf,
@@ -70,15 +70,15 @@ static HTTPStatus_t _sendHttpHeaders( const HTTPTransportInterface_t * pTranspor
     if( transportStatus < 0 )
     {
         IotLogErrorWithArgs( "Error in sending the HTTP headers over the transport "
-                             "interface. Transport status %d.",
+                             "interface: Transport status %d.",
                              transportStatus );
         returnStatus = HTTP_NETWORK_ERROR;
     }
     else if( transportStatus != pRequestHeaders->headersLen )
     {
-        IotLogErrorWithArgs( "Attempted to send %d of HTTP headers, transport "
-                             " reported it sent %d.",
-                             pRequestHeaders->headersLen,
+        IotLogErrorWithArgs( "Failure in sending HTTP headers: Transport layer "
+                             "sent lesser than required bytes: Required Bytes=%d"
+                             ", Sent Bytes=%d.",
                              transportStatus );
         returnStatus = HTTP_NETWORK_ERROR;
     }
@@ -111,9 +111,9 @@ static HTTPStatus_t _sendHttpBody( const HTTPTransportInterface_t * pTransport,
         }
         else if( transportStatus != reqBodyBufLen )
         {
-            IotLogErrorWithArgs( "Attempted to send %d of HTTP body, transport "
-                                 "reported it sent %d.",
-                                 reqBodyBufLen,
+            IotLogErrorWithArgs( "Failure in sending HTTP headers: Transport layer "
+                                 "sent lesser than required bytes: Required Bytes=%d"
+                                 ", Sent Bytes=%d.",
                                  transportStatus );
             returnStatus = HTTP_NETWORK_ERROR;
         }
@@ -165,10 +165,6 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
     {
         IotLogError( "The request header buffer cannot be NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
-    }
-    else
-    {
-        returnStatus = HTTP_SUCCESS;
     }
 
     /* Send the headers, which are at one location in memory. */
