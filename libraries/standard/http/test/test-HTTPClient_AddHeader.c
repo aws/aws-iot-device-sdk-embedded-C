@@ -120,6 +120,7 @@ int main()
                                      header.value, header.valueLen );
     ok( test_err == HTTP_INVALID_PARAMETER );
 
+    /* reqHeaders.pBuffer == NULL checked before NULL fields and values. */
     reqHeaders.pBuffer = buffer;
     test_err = HTTPClient_AddHeader( &reqHeaders,
                                      NULL, header.fieldLen,
