@@ -1,3 +1,5 @@
+CSDK_ROOT = ../../../..
+
 # the path to be indexed (default: ..)
 # Directory indexing includes subdirectories.
 SOURCE = ../src
@@ -6,7 +8,7 @@ SOURCE = ../src
 #CFLAGS = std=c99 -Wall -fprofile-arcs -ftest-coverage -O0 -ggdb
 
 # include directories given to the compiler (default: none)
-INCLUDE = . ../include ../../../.. ../../utilities/include
+INCLUDE = . ../include $(CSDK_ROOT) ../../utilities/include
 
 # the default goal (default: help)
 # Set to build or test as desired.
@@ -24,7 +26,7 @@ FUNCTIONS = _sendHttpHeaders _sendHttpBody _receiveHttpResponse
 include Mock4thewin.mk
 
 # additional dependencies for all tests
-$(TESTS): ../../../../platform/posix/iot_clock_posix.o ../../../../platform/posix/iot_logging.o
+$(TESTS): $(CSDK_ROOT)/platform/posix/iot_clock_posix.o $(CSDK_ROOT)/platform/posix/iot_logging.o
 
 # additional dependency for a specific test
 HTTPClient_Send.c: _sendHttpHeaders.c _sendHttpBody.c _receiveHttpResponse.c
