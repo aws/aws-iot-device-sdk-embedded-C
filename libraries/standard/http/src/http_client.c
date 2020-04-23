@@ -143,27 +143,27 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
 
     if( pTransport == NULL )
     {
-        IotLogError( "The transport interface cannot be NULL." );
+        IotLogError( "Parameter check failed: pTransport interface is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( pTransport->send == NULL )
     {
-        IotLogError( "The transport interface send cannot be NULL." );
+        IotLogError( "Parameter check failed: pTransport->send is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( pTransport->recv == NULL )
     {
-        IotLogError( "The transport interface recv cannot be NULL." );
+        IotLogError( "Parameter check failed: pTransport->recv is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( pRequestHeaders == NULL )
     {
-        IotLogError( "The request headers cannot be NULL." );
+        IotLogError( "Parameter check failed: pRequestHeaders is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( pRequestHeaders->pBuffer == NULL )
     {
-        IotLogError( "The request header buffer cannot be NULL." );
+        IotLogError( "Parameter check failed: pRequestHeaders->pBuffer is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
 
