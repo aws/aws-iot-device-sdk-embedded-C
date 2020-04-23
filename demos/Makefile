@@ -1,7 +1,8 @@
 CC = gcc
 
 INCLUDE_DIRS = -I include \
-               -I ../libraries/standard/mqtt/include
+               -I ../libraries/standard/mqtt/include \
+               -I ../platform/include
 
 SRC_FILES = $(shell find src -name '*.c') \
             $(shell find ../libraries/standard/mqtt/src -name '*.c')
