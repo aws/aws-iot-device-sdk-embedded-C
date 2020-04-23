@@ -48,7 +48,7 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
 static uint8_t _isNullParam( const void * ptr,
                              const char * paramName )
 {
-    /* TODO: Add log. "paramName is a NULL parameter." */
+    IotLogErrorWithArgs( "%s is a NULL parameter.", paramName );
     return( ptr == NULL );
 }
 
@@ -58,7 +58,7 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
                                 const char * pValue,
                                 size_t valueLen )
 {
-    HTTPStatus_t status = HTTP_INTERNAL_ERROR;
+    HTTPStatus_t returnStatus = HTTP_INTERNAL_ERROR;
     uint8_t * pBufferCur = pRequestHeaders->pBuffer + pRequestHeaders->headersLen;
     size_t toAddLen = 0;
     uint8_t hasTrailingLine = 0;
@@ -81,17 +81,17 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
 
     if( ( pRequestHeaders->headersLen + toAddLen ) > pRequestHeaders->bufferLen )
     {
-        /* TODO: Add log. */
-        status = HTTP_INSUFFICIENT_MEMORY;
+        IotLogError( "Buffer size too small to add new header." );
+        returnStatus = HTTP_INSUFFICIENT_MEMORY;
     }
 
     /* Set header length to original if previously backtracked. */
-    if( ( status == HTTP_INSUFFICIENT_MEMORY ) && hasTrailingLine )
+    if( ( returnStatus == HTTP_INSUFFICIENT_MEMORY ) && hasTrailingLine )
     {
         pRequestHeaders->headersLen += HTTP_HEADER_LINE_SEPARATOR_LEN;
     }
 
-    if( status != HTTP_INSUFFICIENT_MEMORY )
+    if( returnStatus != HTTP_INSUFFICIENT_MEMORY )
     {
         /* Write "Field: Value \r\n\r\n" to headers. */
         memcpy( pBufferCur, pField, fieldLen );
@@ -105,10 +105,10 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
         pBufferCur += HTTP_HEADER_LINE_SEPARATOR_LEN;
         memcpy( pBufferCur, HTTP_HEADER_LINE_SEPARATOR, HTTP_HEADER_LINE_SEPARATOR_LEN );
         pRequestHeaders->headersLen += toAddLen;
-        status = HTTP_SUCCESS;
+        returnStatus = HTTP_SUCCESS;
     }
 
-    return status;
+    return returnStatus;
 }
 
 HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pRequestHeaders,
@@ -123,44 +123,47 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
                                    const char * pValue,
                                    size_t valueLen )
 {
-    HTTPStatus_t status = HTTP_INTERNAL_ERROR;
+    HTTPStatus_t returnStatus = HTTP_INTERNAL_ERROR;
 
     /* Check for NULL parameters. */
     if( _isNullParam( pRequestHeaders, "Pointer to HTTPRequestHeaders_t" ) ||
-        _isNullParam( pRequestHeaders->pBuffer, "pBuffer member of type HTTPRequestHeaders_t" ) ||
+        _isNullParam( pRequestHeaders->pBuffer,
+                      "pBuffer member of type HTTPRequestHeaders_t" ) ||
         _isNullParam( pField, "Header field (pField)" ) ||
         _isNullParam( pValue, "Header value (pValue)" ) )
     {
-        status = HTTP_INVALID_PARAMETER;
+        returnStatus = HTTP_INVALID_PARAMETER;
     }
 
     if( fieldLen == 0 )
     {
-        /* TODO: Add log. */
-        status = HTTP_INVALID_PARAMETER;
+        IotLogError( "fieldLen must be greater than 0." );
+        returnStatus = HTTP_INVALID_PARAMETER;
     }
 
     if( valueLen == 0 )
     {
-        /* TODO: Add log. */
-        status = HTTP_INVALID_PARAMETER;
+        IotLogError( "valueLen must be greater than 0." );
+        returnStatus = HTTP_INVALID_PARAMETER;
     }
 
     /* Check if header field is long enough for length to overflow. */
     if( fieldLen > ( UINT32_MAX >> 2 ) )
     {
-        /* TODO: Add log. */
-        status = HTTP_INVALID_PARAMETER;
+        IotLogErrorWithArgs( "fieldLen must be less than %d.",
+                             ( UINT32_MAX >> 2 ) );
+        returnStatus = HTTP_INVALID_PARAMETER;
     }
 
     /* Check if header value is long enough for length to overflow. */
     if( valueLen > ( UINT32_MAX >> 2 ) )
     {
-        /* TODO: Add log. */
-        status = HTTP_INVALID_PARAMETER;
+        IotLogErrorWithArgs( "valueLen must be less than %d.",
+                             ( UINT32_MAX >> 2 ) );
+        returnStatus = HTTP_INVALID_PARAMETER;
     }
 
-    if( status != HTTP_INVALID_PARAMETER )
+    if( returnStatus != HTTP_INVALID_PARAMETER )
     {
         /* "Content-Length" header must not be set by user if
          * HTTP_REQUEST_DISABLE_CONTENT_LENGTH_FLAG is deactivated. */
@@ -168,42 +171,49 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
             ( strncmp( pField,
                        HTTP_CONTENT_LENGTH_FIELD, HTTP_CONTENT_LENGTH_FIELD_LEN ) == 0 ) )
         {
-            /* TODO: Add log. */
-            status = HTTP_INVALID_PARAMETER;
+            IotLogError( "Adding Content-Length header disallowed because " \
+                         "HTTP_REQUEST_DISABLE_CONTENT_LENGTH_FLAG is not set." );
+            returnStatus = HTTP_INVALID_PARAMETER;
         }
 
         /* User must not set "Connection" header through this method. */
         if( strncmp( pField,
                      HTTP_CONNECTION_FIELD, HTTP_CONNECTION_FIELD_LEN ) == 0 )
         {
-            /* TODO: Add log. */
-            status = HTTP_INVALID_PARAMETER;
+            IotLogError( "Connection header can only be set during " \
+                         "HTTPClient_InitializeRequestHeaders() "    \
+                         "through HTTPRequestInfo_t.flags." );
+            returnStatus = HTTP_INVALID_PARAMETER;
         }
 
         /* User must not set "Host" header through this method. */
         if( strncmp( pField,
                      HTTP_HOST_FIELD, HTTP_HOST_FIELD_LEN ) == 0 )
         {
-            /* TODO: Add log. */
-            status = HTTP_INVALID_PARAMETER;
+            IotLogError( "Host header can only be set during "    \
+                         "HTTPClient_InitializeRequestHeaders() " \
+                         "through HTTPRequestInfo_t.pHost." );
+            returnStatus = HTTP_INVALID_PARAMETER;
         }
 
         /* User must not set "User-Agent" header through this method. */
         if( strncmp( pField,
                      HTTP_USER_AGENT_FIELD, HTTP_USER_AGENT_FIELD_LEN ) == 0 )
         {
-            /* TODO: Add log. */
-            status = HTTP_INVALID_PARAMETER;
+            IotLogError( "User-Agent header can only be set during " \
+                         "HTTPClient_InitializeRequestHeaders() "    \
+                         "by defining HTTP_USER_AGENT_VALUE." );
+            returnStatus = HTTP_INVALID_PARAMETER;
         }
     }
 
-    if( status != HTTP_INVALID_PARAMETER )
+    if( returnStatus != HTTP_INVALID_PARAMETER )
     {
-        status = _addHeader( pRequestHeaders,
-                             pField, fieldLen, pValue, valueLen );
+        returnStatus = _addHeader( pRequestHeaders,
+                                   pField, fieldLen, pValue, valueLen );
     }
 
-    return status;
+    return returnStatus;
 }
 
 /*-----------------------------------------------------------*/
@@ -231,7 +241,7 @@ static HTTPStatus_t _sendHttpHeaders( const HTTPTransportInterface_t * pTranspor
     if( transportStatus < 0 )
     {
         IotLogErrorWithArgs( "Error in sending the HTTP headers over the transport "
-                             "interface: Transport status %d.",
+                             "interface: Transport returnStatus %d.",
                              transportStatus );
         returnStatus = HTTP_NETWORK_ERROR;
     }
@@ -270,7 +280,7 @@ static HTTPStatus_t _sendHttpBody( const HTTPTransportInterface_t * pTransport,
         if( transportStatus < 0 )
         {
             IotLogErrorWithArgs( "Error in sending the HTTP body over the "
-                                 "transport interface. Transport status %d.",
+                                 "transport interface. Transport returnStatus %d.",
                                  transportStatus );
             returnStatus = HTTP_NETWORK_ERROR;
         }
