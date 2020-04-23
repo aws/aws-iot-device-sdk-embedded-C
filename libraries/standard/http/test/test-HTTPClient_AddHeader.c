@@ -1,29 +1,36 @@
 #include <string.h>
 
 #include "common.h"
-#include "_isNullParam.c"
-#include "_addHeader.c"
-
-struct Header
-{
-    char field[ 100 ];
-    size_t fieldLen;
-    char value[ 100 ];
-    size_t valueLen;
-}
-header;
 
 /* Functions are pulled out into their own C files to be tested as a unit. */
+#include "_isNullParam.c"
+#include "_addHeader.c"
 #include "HTTPClient_AddHeader.c"
 
-#define xqcReset()                      \
-    do {                                \
-        memset( header.field, 0, 100 ); \
-        header.fieldLen = 0;            \
-        memset( header.value, 0, 100 ); \
-        header.valueLen = 0;            \
-    }                                   \
-    while( 0 )
+/* Template HTTP header fields and values. */
+#define HTTP_TEST_HEADER_FIELD               "Authorization"
+#define HTTP_TEST_HEADER_FIELD_LEN           ( uint8_t ) ( sizeof( HTTP_TEST_HEADER_FIELD ) - 1 )
+#define HTTP_TEST_HEADER_VALUE               "None"
+#define HTTP_TEST_HEADER_VALUE_LEN           ( uint8_t ) ( sizeof( HTTP_TEST_HEADER_VALUE ) - 1 )
+/* Template for first line of HTTP header. */
+#define HTTP_TEST_HEADER_REQUEST_LINE        "GET / HTTP/1.1 \r\n"
+#define HTTP_TEST_HEADER_REQUEST_LINE_LEN    ( uint8_t ) ( sizeof( HTTP_TEST_HEADER_REQUEST_LINE ) - 1 )
+#define HTTP_REQUEST_HEADERS_INITIALIZER     { 0 }
+/* Default size for request buffer. */
+#define HTTP_TEST_BUFFER_SIZE                ( 100 )
+
+/* Length of the following template HTTP header.
+ *   <HTTP_TEST_HEADER_REQUEST_LINE> \r\n
+ *   <HTTP_TEST_HEADER_FIELD>: <HTTP_TEST_HEADER_VALUE> \r\n
+ *   \r\n
+ * This is used to initialize the correctHeader string. */
+#define HTTP_CORRECT_HEADER_STRING_SIZE   \
+    ( HTTP_TEST_HEADER_REQUEST_LINE_LEN + \
+      HTTP_TEST_HEADER_FIELD_LEN +        \
+      HTTP_HEADER_FIELD_SEPARATOR_LEN +   \
+      HTTP_TEST_HEADER_VALUE_LEN +        \
+      HTTP_HEADER_LINE_SEPARATOR_LEN +    \
+      HTTP_HEADER_LINE_SEPARATOR_LEN )
 
 int main()
 {
@@ -34,14 +41,25 @@ int main()
     uint8_t smallBuffer[ HTTP_CORRECT_HEADER_STRING_SIZE - 1 ] = { 0 };
     char correctHeader[ HTTP_TEST_BUFFER_SIZE ] = { 0 };
     size_t correctHeaderLen = HTTP_CORRECT_HEADER_STRING_SIZE;
+    struct Header
+    {
+        char field[ 100 ];
+        size_t fieldLen;
+        char value[ 100 ];
+        size_t valueLen;
+    }
+    header;
 
 #define reset()                                                      \
     do {                                                             \
-        xqcReset();                                                  \
         test_err = HTTP_NOT_SUPPORTED;                               \
         reqHeaders = reqHeadersDflt;                                 \
         memset( buffer, 0, HTTP_TEST_BUFFER_SIZE );                  \
         memset( correctHeader, 0, HTTP_CORRECT_HEADER_STRING_SIZE ); \
+        memset( header.field, 0, 100 );                              \
+        header.fieldLen = 0;                                         \
+        memset( header.value, 0, 100 );                              \
+        header.valueLen = 0;                                         \
     }                                                                \
     while( 0 )
 
@@ -50,21 +68,21 @@ int main()
     /* Test the happy path. */
     reset();
     /* Write valid header field and value to pass as params later. */
-    memcpy( header.field, HTTP_HEADER_SAMPLE_FIELD, HTTP_HEADER_SAMPLE_FIELD_LEN );
-    header.fieldLen = HTTP_HEADER_SAMPLE_FIELD_LEN;
-    memcpy( header.value, HTTP_HEADER_SAMPLE_VALUE, HTTP_HEADER_SAMPLE_VALUE_LEN );
-    header.valueLen = HTTP_HEADER_SAMPLE_VALUE_LEN;
+    memcpy( header.field, HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_FIELD_LEN );
+    header.fieldLen = HTTP_TEST_HEADER_FIELD_LEN;
+    memcpy( header.value, HTTP_TEST_HEADER_VALUE, HTTP_TEST_HEADER_VALUE_LEN );
+    header.valueLen = HTTP_TEST_HEADER_VALUE_LEN;
     /* We add 1 because snprintf() writes a null byte at the end. */
     snprintf( correctHeader, HTTP_CORRECT_HEADER_STRING_SIZE + 1,
               "%s%s: %s\r\n\r\n",
-              HTTP_HEADER_SAMPLE_FIRST_LINE,
-              HTTP_HEADER_SAMPLE_FIELD, HTTP_HEADER_SAMPLE_VALUE );
+              HTTP_TEST_HEADER_REQUEST_LINE,
+              HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_VALUE );
     correctHeaderLen = HTTP_CORRECT_HEADER_STRING_SIZE;
     /* Set parameters for reqHeaders. */
-    memcpy( buffer, HTTP_HEADER_SAMPLE_FIRST_LINE, HTTP_HEADER_SAMPLE_FIRST_LINE_LEN );
+    memcpy( buffer, HTTP_TEST_HEADER_REQUEST_LINE, HTTP_TEST_HEADER_REQUEST_LINE_LEN );
     reqHeaders.pBuffer = buffer;
     reqHeaders.bufferLen = HTTP_TEST_BUFFER_SIZE;
-    reqHeaders.headersLen = HTTP_HEADER_SAMPLE_FIRST_LINE_LEN;
+    reqHeaders.headersLen = HTTP_TEST_HEADER_REQUEST_LINE_LEN;
     reqHeaders.flags = 0;
     test_err = HTTPClient_AddHeader( &reqHeaders,
                                      header.field, header.fieldLen,
@@ -84,15 +102,15 @@ int main()
     ok( test_err == HTTP_INSUFFICIENT_MEMORY );
     /* Add extra header with sufficient memory. */
     reqHeaders.bufferLen = HTTP_TEST_BUFFER_SIZE;
-    correctHeaderLen = HTTP_CORRECT_HEADER_STRING_SIZE +                             \
-                       HTTP_HEADER_SAMPLE_FIELD_LEN + HTTP_HEADER_SAMPLE_VALUE_LEN + \
+    correctHeaderLen = HTTP_CORRECT_HEADER_STRING_SIZE +                         \
+                       HTTP_TEST_HEADER_FIELD_LEN + HTTP_TEST_HEADER_VALUE_LEN + \
                        HTTP_HEADER_FIELD_SEPARATOR_LEN + HTTP_HEADER_LINE_SEPARATOR_LEN;
     /* We add 1 because snprintf() writes a null byte at the end. */
     snprintf( correctHeader, correctHeaderLen + 1,
               "%s%s: %s\r\n%s: %s\r\n\r\n",
-              HTTP_HEADER_SAMPLE_FIRST_LINE,
-              HTTP_HEADER_SAMPLE_FIELD, HTTP_HEADER_SAMPLE_VALUE,
-              HTTP_HEADER_SAMPLE_FIELD, HTTP_HEADER_SAMPLE_VALUE );
+              HTTP_TEST_HEADER_REQUEST_LINE,
+              HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_VALUE,
+              HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_VALUE );
     test_err = HTTPClient_AddHeader( &reqHeaders,
                                      header.field, header.fieldLen,
                                      header.value, header.valueLen );
@@ -104,10 +122,10 @@ int main()
     /* Test NULL parameters. */
     reset();
     /* Write valid header field and value to pass as params later. */
-    memcpy( header.field, HTTP_HEADER_SAMPLE_FIELD, HTTP_HEADER_SAMPLE_FIELD_LEN );
-    header.fieldLen = HTTP_HEADER_SAMPLE_FIELD_LEN;
-    memcpy( header.value, HTTP_HEADER_SAMPLE_VALUE, HTTP_HEADER_SAMPLE_VALUE_LEN );
-    header.valueLen = HTTP_HEADER_SAMPLE_VALUE_LEN;
+    memcpy( header.field, HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_FIELD_LEN );
+    header.fieldLen = HTTP_TEST_HEADER_FIELD_LEN;
+    memcpy( header.value, HTTP_TEST_HEADER_VALUE, HTTP_TEST_HEADER_VALUE_LEN );
+    header.valueLen = HTTP_TEST_HEADER_VALUE_LEN;
 
     test_err = HTTPClient_AddHeader( NULL,
                                      header.field, header.fieldLen,
@@ -159,8 +177,8 @@ int main()
     reset();
     memcpy( header.field, HTTP_CONTENT_LENGTH_FIELD, HTTP_CONTENT_LENGTH_FIELD_LEN );
     header.fieldLen = HTTP_CONTENT_LENGTH_FIELD_LEN;
-    memcpy( header.value, HTTP_HEADER_SAMPLE_VALUE, HTTP_HEADER_SAMPLE_VALUE_LEN );
-    header.valueLen = HTTP_HEADER_SAMPLE_VALUE_LEN;
+    memcpy( header.value, HTTP_TEST_HEADER_VALUE, HTTP_TEST_HEADER_VALUE_LEN );
+    header.valueLen = HTTP_TEST_HEADER_VALUE_LEN;
     reqHeaders.pBuffer = buffer;
     reqHeaders.flags = 0;
     test_err = HTTPClient_AddHeader( &reqHeaders,
@@ -172,8 +190,8 @@ int main()
     reset();
     memcpy( header.field, HTTP_CONNECTION_FIELD, HTTP_CONNECTION_FIELD_LEN );
     header.fieldLen = HTTP_CONNECTION_FIELD_LEN;
-    memcpy( header.value, HTTP_HEADER_SAMPLE_VALUE, HTTP_HEADER_SAMPLE_VALUE_LEN );
-    header.valueLen = HTTP_HEADER_SAMPLE_VALUE_LEN;
+    memcpy( header.value, HTTP_TEST_HEADER_VALUE, HTTP_TEST_HEADER_VALUE_LEN );
+    header.valueLen = HTTP_TEST_HEADER_VALUE_LEN;
     reqHeaders.flags = HTTP_REQUEST_DISABLE_CONTENT_LENGTH_FLAG;
     reqHeaders.pBuffer = buffer;
     test_err = HTTPClient_AddHeader( &reqHeaders,
@@ -185,8 +203,8 @@ int main()
     reset();
     memcpy( header.field, HTTP_HOST_FIELD, HTTP_HOST_FIELD_LEN );
     header.fieldLen = HTTP_HOST_FIELD_LEN;
-    memcpy( header.value, HTTP_HEADER_SAMPLE_VALUE, HTTP_HEADER_SAMPLE_VALUE_LEN );
-    header.valueLen = HTTP_HEADER_SAMPLE_VALUE_LEN;
+    memcpy( header.value, HTTP_TEST_HEADER_VALUE, HTTP_TEST_HEADER_VALUE_LEN );
+    header.valueLen = HTTP_TEST_HEADER_VALUE_LEN;
     reqHeaders.pBuffer = buffer;
     test_err = HTTPClient_AddHeader( &reqHeaders,
                                      header.field, header.fieldLen,
@@ -197,8 +215,8 @@ int main()
     reset();
     memcpy( header.field, HTTP_USER_AGENT_FIELD, HTTP_USER_AGENT_FIELD_LEN );
     header.fieldLen = HTTP_USER_AGENT_FIELD_LEN;
-    memcpy( header.value, HTTP_HEADER_SAMPLE_VALUE, HTTP_HEADER_SAMPLE_VALUE_LEN );
-    header.valueLen = HTTP_HEADER_SAMPLE_VALUE_LEN;
+    memcpy( header.value, HTTP_TEST_HEADER_VALUE, HTTP_TEST_HEADER_VALUE_LEN );
+    header.valueLen = HTTP_TEST_HEADER_VALUE_LEN;
     reqHeaders.pBuffer = buffer;
     test_err = HTTPClient_AddHeader( &reqHeaders,
                                      header.field, header.fieldLen,
@@ -208,12 +226,12 @@ int main()
     /* Test HTTP_INSUFFICIENT_MEMORY error from having buffer size less than
      * what is required to fit HTTP headers. */
     reset();
-    memcpy( header.field, HTTP_HEADER_SAMPLE_FIELD, HTTP_HEADER_SAMPLE_FIELD_LEN );
-    header.fieldLen = HTTP_HEADER_SAMPLE_FIELD_LEN;
-    memcpy( header.value, HTTP_HEADER_SAMPLE_VALUE, HTTP_HEADER_SAMPLE_VALUE_LEN );
-    header.valueLen = HTTP_HEADER_SAMPLE_VALUE_LEN;
-    memcpy( smallBuffer, HTTP_HEADER_SAMPLE_FIRST_LINE, HTTP_HEADER_SAMPLE_FIRST_LINE_LEN );
-    reqHeaders.headersLen = HTTP_HEADER_SAMPLE_FIRST_LINE_LEN;
+    memcpy( header.field, HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_FIELD_LEN );
+    header.fieldLen = HTTP_TEST_HEADER_FIELD_LEN;
+    memcpy( header.value, HTTP_TEST_HEADER_VALUE, HTTP_TEST_HEADER_VALUE_LEN );
+    header.valueLen = HTTP_TEST_HEADER_VALUE_LEN;
+    memcpy( smallBuffer, HTTP_TEST_HEADER_REQUEST_LINE, HTTP_TEST_HEADER_REQUEST_LINE_LEN );
+    reqHeaders.headersLen = HTTP_TEST_HEADER_REQUEST_LINE_LEN;
     reqHeaders.pBuffer = smallBuffer;
     reqHeaders.bufferLen = HTTP_CORRECT_HEADER_STRING_SIZE - 1;
     test_err = HTTPClient_AddHeader( &reqHeaders,

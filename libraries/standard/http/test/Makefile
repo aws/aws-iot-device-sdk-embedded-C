@@ -8,7 +8,7 @@ SOURCE = ../src
 #CFLAGS = std=c99 -Wall -fprofile-arcs -ftest-coverage -O0 -ggdb
 
 # include directories given to the compiler (default: none)
-INCLUDE = . ../include $(CSDK_ROOT) ../../utilities/include ../src
+INCLUDE = . ../include $(CSDK_ROOT)/platform/include ../../utilities/include ../src
 
 # the default goal (default: help)
 # Set to build or test as desired.
@@ -20,7 +20,7 @@ INCLUDE = . ../include $(CSDK_ROOT) ../../utilities/include ../src
 
 # functions to dump into separate source files
 # Values based on test source file names will be dynamically added.
-FUNCTIONS = _sendHttpHeaders _sendHttpBody _receiveHttpResponse
+FUNCTIONS = _sendHttpHeaders _sendHttpBody _receiveHttpResponse _addHeader _isNullParam
 
 # Changes to the above variables should remain above this include.
 include Mock4thewin.mk

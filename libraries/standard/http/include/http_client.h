@@ -4,8 +4,6 @@
 #include <stdint.h>
 #include "config.h"
 
-#include "const.h"
-
 /**
  * @brief Maximum size, in bytes, of headers allowed from the server.
  *
@@ -80,8 +78,8 @@
  * define HTTPNetworkContext to the type of their network context. This context
  * is passed into the network interface functions.
  */
-    struct HTTPNetworkContext;
-    typedef struct HTTPNetworkContext   HTTPNetworkContext_t;
+struct HTTPNetworkContext;
+typedef struct HTTPNetworkContext HTTPNetworkContext_t;
 
 /**
  * @brief Transport interface for sending data over the network.

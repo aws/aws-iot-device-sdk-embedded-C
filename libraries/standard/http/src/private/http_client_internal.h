@@ -107,3 +107,5 @@
 #define HTTP_RANGE_BYTES_VALUE_MAX_LEN          ( 27 )
 
 #define STRLEN_LITERAL( x )    ( ( sizeof( x ) / sizeof( char ) ) - 1 )
+
+#endif /* ifndef HTTP_CLIENT_INTERNAL_H_ */
