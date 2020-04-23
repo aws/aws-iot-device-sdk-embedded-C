@@ -68,7 +68,8 @@ int main()
     test_err = HTTPClient_AddHeader( &reqHeaders,
                                      header.field, header.fieldLen,
                                      header.value, header.valueLen );
-    ok( strncmp( ( char * ) reqHeaders.pBuffer, correctHeader, reqHeaders.headersLen ) == 0 );
+    ok( strncmp( ( char * ) reqHeaders.pBuffer,
+                 correctHeader, HTTP_HEADER_SAMPLE_FIRST_LINE_LEN ) == 0 );
     ok( test_err == HTTP_SUCCESS );
     /* Test trailing "\r\n". */
 
@@ -79,7 +80,8 @@ int main()
                                      header.field, header.fieldLen,
                                      header.value, header.valueLen );
     /* printf( "%.*s", reqHeaders.headersLen, reqHeaders.pBuffer ); */
-    ok( strncmp( ( char * ) reqHeaders.pBuffer, correctHeader, reqHeaders.headersLen ) == 0 );
+    ok( strncmp( ( char * ) reqHeaders.pBuffer,
+                 correctHeader, HTTP_HEADER_SAMPLE_FIRST_LINE_LEN ) == 0 );
     ok( test_err == HTTP_INSUFFICIENT_MEMORY );
     /* Add extra header with sufficient memory. */
     reqHeaders.bufferLen = HTTP_USER_BUFFER_SIZE;
@@ -96,7 +98,8 @@ int main()
                                      header.field, header.fieldLen,
                                      header.value, header.valueLen );
     /* printf( "%.*s", reqHeaders.headersLen, reqHeaders.pBuffer ); */
-    ok( strncmp( ( char * ) reqHeaders.pBuffer, correctHeader, reqHeaders.headersLen ) == 0 );
+    ok( strncmp( ( char * ) reqHeaders.pBuffer,
+                 correctHeader, correctHeaderLen ) == 0 );
     ok( test_err == HTTP_SUCCESS );
 
     /* Test NULL parameters. */
