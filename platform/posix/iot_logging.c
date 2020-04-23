@@ -33,13 +33,13 @@
 #include <assert.h>
 
 /* Platform clock include. */
-#include "platform/include/iot_clock.h"
+#include "iot_clock.h"
 
 /* Include header for logging level macros. */
 #include "iot_logging_levels.h"
 
 /* Logging includes. */
-#include "platform/include/iot_logging.h"
+#include "iot_logging.h"
 
 /*-----------------------------------------------------------*/
 
