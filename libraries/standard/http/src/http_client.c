@@ -53,27 +53,30 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
     size_t toAddLen = 0;
     uint8_t hasTrailingLine = 0;
 
-    /* Backtrack before trailing "\r\n" (HTTP header end) if it's already written.
-     * Note that this method also writes trailing "\r\n" before returning. */
-    if( strncmp( ( char * ) pBufferCur - 2 * HTTP_HEADER_LINE_SEPARATOR_LEN,
-                 "\r\n\r\n", 2 * HTTP_HEADER_LINE_SEPARATOR_LEN ) == 0 )
+    if( returnStatus != HTTP_INVALID_PARAMETER )
     {
-        /* Set this flag to backtrack in case of HTTP_INSUFFICIENT_MEMORY. */
-        hasTrailingLine = 1;
-        pBufferCur -= HTTP_HEADER_LINE_SEPARATOR_LEN;
-        pRequestHeaders->headersLen -= HTTP_HEADER_LINE_SEPARATOR_LEN;
-    }
+        /* Backtrack before trailing "\r\n" (HTTP header end) if it's already written.
+         * Note that this method also writes trailing "\r\n" before returning. */
+        if( strncmp( ( char * ) pBufferCur - 2 * HTTP_HEADER_LINE_SEPARATOR_LEN,
+                     "\r\n\r\n", 2 * HTTP_HEADER_LINE_SEPARATOR_LEN ) == 0 )
+        {
+            /* Set this flag to backtrack in case of HTTP_INSUFFICIENT_MEMORY. */
+            hasTrailingLine = 1;
+            pBufferCur -= HTTP_HEADER_LINE_SEPARATOR_LEN;
+            pRequestHeaders->headersLen -= HTTP_HEADER_LINE_SEPARATOR_LEN;
+        }
 
-    /* Check if there is enough space in buffer for additional header. */
-    toAddLen = fieldLen + HTTP_HEADER_FIELD_SEPARATOR_LEN + valueLen + \
-               HTTP_HEADER_LINE_SEPARATOR_LEN +                        \
-               HTTP_HEADER_LINE_SEPARATOR_LEN;
+        /* Check if there is enough space in buffer for additional header. */
+        toAddLen = fieldLen + HTTP_HEADER_FIELD_SEPARATOR_LEN + valueLen + \
+                   HTTP_HEADER_LINE_SEPARATOR_LEN +                        \
+                   HTTP_HEADER_LINE_SEPARATOR_LEN;
 
-    if( ( pRequestHeaders->headersLen + toAddLen ) > pRequestHeaders->bufferLen )
-    {
-        IotLogError( "Insufficient memory: Provided buffer size too small " \
-                     "to add new header." );
-        returnStatus = HTTP_INSUFFICIENT_MEMORY;
+        if( ( pRequestHeaders->headersLen + toAddLen ) > pRequestHeaders->bufferLen )
+        {
+            IotLogError( "Insufficient memory: Provided buffer size too small " \
+                         "to add new header." );
+            returnStatus = HTTP_INSUFFICIENT_MEMORY;
+        }
     }
 
     /* Set header length to original if previously backtracked. */
@@ -115,6 +118,7 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
                                    size_t valueLen )
 {
     HTTPStatus_t returnStatus = HTTP_INTERNAL_ERROR;
+    uint8_t disabledContentLength = false;
 
     /* Check for NULL parameters. */
     if( pRequestHeaders == NULL )
@@ -127,12 +131,12 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
         IotLogError( "Parameter check failed: pRequestHeaders->pBuffer is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
-    else if( pField == NULL )
+    else if( ( pField == NULL ) )
     {
         IotLogError( "Parameter check failed: pField is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
-    else if( pValue == NULL )
+    else if( ( pValue == NULL ) )
     {
         IotLogError( "Parameter check failed: pValue is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
@@ -142,24 +146,21 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
         /* Empty else MISRA 15.7 */
     }
 
-    if( fieldLen == 0 )
-    {
-        IotLogError( "Parameter check failed: fieldLen must be greater than 0." );
-        returnStatus = HTTP_INVALID_PARAMETER;
-    }
-
-    if( valueLen == 0 )
-    {
-        IotLogError( "Parameter check failed: valueLen must be greater than 0." );
-        returnStatus = HTTP_INVALID_PARAMETER;
-    }
-
     /* Check if header field is long enough for length to overflow. */
     if( fieldLen > ( UINT32_MAX >> 2 ) )
     {
         IotLogErrorWithArgs( "Parameter check failed: fieldLen must be less than %d.",
                              ( UINT32_MAX >> 2 ) );
         returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( fieldLen == 0 )
+    {
+        IotLogError( "Parameter check failed: fieldLen must be greater than 0." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else
+    {
+        /* Empty else MISRA 15.7 */
     }
 
     /* Check if header value is long enough for length to overflow. */
@@ -169,12 +170,24 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
                              ( UINT32_MAX >> 2 ) );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
+    else if( valueLen == 0 )
+    {
+        IotLogError( "Parameter check failed: valueLen must be greater than 0." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else
+    {
+        /* Empty else MISRA 15.7 */
+    }
 
     if( returnStatus != HTTP_INVALID_PARAMETER )
     {
+        disabledContentLength = HTTP_REQUEST_DISABLE_CONTENT_LENGTH_FLAG &
+                                pRequestHeaders->flags;
+
         /* "Content-Length" header must not be set by user if
          * HTTP_REQUEST_DISABLE_CONTENT_LENGTH_FLAG is deactivated. */
-        if( !( HTTP_REQUEST_DISABLE_CONTENT_LENGTH_FLAG & pRequestHeaders->flags ) &&
+        if( !disabledContentLength &&
             ( strncmp( pField,
                        HTTP_CONTENT_LENGTH_FIELD, HTTP_CONTENT_LENGTH_FIELD_LEN ) == 0 ) )
         {
@@ -186,7 +199,7 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
 
         /* User must not set "Connection" header through this method. */
         if( strncmp( pField,
-                     HTTP_CONNECTION_FIELD, HTTP_CONNECTION_FIELD_LEN ) == 0 )
+                     HTTP_CONNECTION_FIELD, fieldLen ) == 0 )
         {
             IotLogError( "Parameter check failed: "                  \
                          "Connection header can only be set during " \
@@ -197,7 +210,7 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
 
         /* User must not set "Host" header through this method. */
         if( strncmp( pField,
-                     HTTP_HOST_FIELD, HTTP_HOST_FIELD_LEN ) == 0 )
+                     HTTP_HOST_FIELD, fieldLen ) == 0 )
         {
             IotLogError( "Parameter check failed: "               \
                          "Host header can only be set during "    \
@@ -208,7 +221,7 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
 
         /* User must not set "User-Agent" header through this method. */
         if( strncmp( pField,
-                     HTTP_USER_AGENT_FIELD, HTTP_USER_AGENT_FIELD_LEN ) == 0 )
+                     HTTP_USER_AGENT_FIELD, fieldLen ) == 0 )
         {
             IotLogError( "Parameter check failed: "                  \
                          "User-Agent header can only be set during " \

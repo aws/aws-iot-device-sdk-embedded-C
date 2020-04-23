@@ -3,7 +3,6 @@
 #include "common.h"
 
 /* Functions are pulled out into their own C files to be tested as a unit. */
-#include "_isNullParam.c"
 #include "_addHeader.c"
 #include "HTTPClient_AddHeader.c"
 

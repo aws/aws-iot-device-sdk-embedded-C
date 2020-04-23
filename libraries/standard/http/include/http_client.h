@@ -166,6 +166,15 @@ typedef enum HTTPStatus
 
     HTTP_NOT_SUPPORTED,
     HTTP_PARTIAL_RESPONSE,
+
+    /**
+     * @brief The application buffer was not large enough for HTTP headers or body.
+     *
+     * Functions that may return this value:
+     * - #HTTPClient_InitializeRequestHeaders
+     * - #HTTPClient_AddHeader
+     * - #HTTPClient_AddRangeHeader
+     */
     HTTP_INSUFFICIENT_MEMORY,
     HTTP_INTERNAL_ERROR,
     HTTP_SECURITY_ALERT_RESPONSE_HEADERS_SIZE_LIMIT_EXCEEDED,
@@ -394,7 +403,16 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
  * Upon return, pRequestHeaders->headersLen will be updated with the number of
  * bytes written.
  *
- * TODO: Expand documentation.
+ * The maximum value for valueLen and nameLen is ( UINT32_MAX >> 2 ) and also
+ * cannot be set to 0. Otherwise, #HTTP_INVALID_PARAMETER is returned.
+ *
+ * If the following header fields are set by this method,
+ * #HTTP_INVALID_PARAMETER is also returned:
+ *  - Content-Length (Value can be set if HTTP_REQUEST_DISABLE_CONTENT_LENGTH_FLAG
+ *                    in #HTTPRequestHeaders_t.flags is activated.)
+ *  - Connection (Value can be set through #HTTPRequestInfo_t.flags.)
+ *  - Host (Value can be set through #HTTPRequestInfo_t.pHost.)
+ *  - User-Agent (Value can be set by defining HTTP_USER_AGENT_VALUE macro)
  *
  * @param[in] pRequestHeaders Request header buffer information.
  * @param[in] pName The header field name to write.
@@ -402,8 +420,10 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
  * @param[in] pValue The header value to write.
  * @param[in] valueLen The byte length of the header field value.
  *
- * @return #HTTP_SUCCESS if successful, an error code otherwise.
- * TODO: Update for exact error codes returned.
+ * @return One of the following:
+ * - #HTTP_SUCCESS (If successful, an error code otherwise.)
+ * - #HTTP_INVALID_PARAMETER (If any provided parameters or their members are NULL.)
+ * - #HTTP_INSUFFICIENT_MEMORY (If application buffer size is not large enough to hold headers.)
  */
 HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
                                    const char * pName,
