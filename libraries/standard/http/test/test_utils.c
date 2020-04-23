@@ -2,7 +2,7 @@
 #include "../src/private/http_client_internal.h"
 
 #define HTTP_REQUEST_HEADERS_INITIALIZER     { 0 }
-#define HTTP_USER_BUFFER_SIZE                ( 100 )
+#define HTTP_TEST_BUFFER_SIZE                ( 100 )
 #define HTTP_CORRECT_HEADER_STRING_SIZE   \
     ( HTTP_HEADER_SAMPLE_FIRST_LINE_LEN + \
       HTTP_HEADER_SAMPLE_FIELD_LEN +      \

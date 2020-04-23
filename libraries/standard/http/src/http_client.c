@@ -105,8 +105,6 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
         pBufferCur += HTTP_HEADER_LINE_SEPARATOR_LEN;
         memcpy( pBufferCur, HTTP_HEADER_LINE_SEPARATOR, HTTP_HEADER_LINE_SEPARATOR_LEN );
         pRequestHeaders->headersLen += toAddLen;
-        /* printf( "%.*s\n", pRequestHeaders->headersLen, pRequestHeaders->pBuffer ); */
-        /* printf( "%d\n", toAddLen ); */
         status = HTTP_SUCCESS;
     }
 

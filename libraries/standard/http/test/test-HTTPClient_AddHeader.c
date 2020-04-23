@@ -30,9 +30,9 @@ int main()
     HTTPRequestHeaders_t reqHeaders = HTTP_REQUEST_HEADERS_INITIALIZER;
     HTTPRequestHeaders_t reqHeadersDflt = HTTP_REQUEST_HEADERS_INITIALIZER;
     HTTPStatus_t test_err = HTTP_NOT_SUPPORTED;
-    uint8_t buffer[ HTTP_USER_BUFFER_SIZE ] = { 0 };
+    uint8_t buffer[ HTTP_TEST_BUFFER_SIZE ] = { 0 };
     uint8_t smallBuffer[ HTTP_CORRECT_HEADER_STRING_SIZE - 1 ] = { 0 };
-    char correctHeader[ HTTP_USER_BUFFER_SIZE ] = { 0 };
+    char correctHeader[ HTTP_TEST_BUFFER_SIZE ] = { 0 };
     size_t correctHeaderLen = HTTP_CORRECT_HEADER_STRING_SIZE;
 
 #define reset()                                                      \
@@ -40,12 +40,12 @@ int main()
         xqcReset();                                                  \
         test_err = HTTP_NOT_SUPPORTED;                               \
         reqHeaders = reqHeadersDflt;                                 \
-        memset( buffer, 0, HTTP_USER_BUFFER_SIZE );                  \
+        memset( buffer, 0, HTTP_TEST_BUFFER_SIZE );                  \
         memset( correctHeader, 0, HTTP_CORRECT_HEADER_STRING_SIZE ); \
     }                                                                \
     while( 0 )
 
-    plan( 19 );
+    plan( 22 );
 
     /* Test the happy path. */
     reset();
@@ -59,32 +59,31 @@ int main()
               "%s%s: %s\r\n\r\n",
               HTTP_HEADER_SAMPLE_FIRST_LINE,
               HTTP_HEADER_SAMPLE_FIELD, HTTP_HEADER_SAMPLE_VALUE );
+    correctHeaderLen = HTTP_CORRECT_HEADER_STRING_SIZE;
+    /* Set parameters for reqHeaders. */
     memcpy( buffer, HTTP_HEADER_SAMPLE_FIRST_LINE, HTTP_HEADER_SAMPLE_FIRST_LINE_LEN );
-
     reqHeaders.pBuffer = buffer;
-    reqHeaders.bufferLen = HTTP_USER_BUFFER_SIZE;
+    reqHeaders.bufferLen = HTTP_TEST_BUFFER_SIZE;
     reqHeaders.headersLen = HTTP_HEADER_SAMPLE_FIRST_LINE_LEN;
     reqHeaders.flags = 0;
     test_err = HTTPClient_AddHeader( &reqHeaders,
                                      header.field, header.fieldLen,
                                      header.value, header.valueLen );
     ok( strncmp( ( char * ) reqHeaders.pBuffer,
-                 correctHeader, HTTP_HEADER_SAMPLE_FIRST_LINE_LEN ) == 0 );
+                 correctHeader, correctHeaderLen ) == 0 );
+    ok( reqHeaders.headersLen == correctHeaderLen );
     ok( test_err == HTTP_SUCCESS );
-    /* Test trailing "\r\n". */
-
-    /* printf( "%.*s", reqHeaders.headersLen, reqHeaders.pBuffer ); */
     /* Add extra header with insufficient memory. */
     reqHeaders.bufferLen = reqHeaders.headersLen;
     test_err = HTTPClient_AddHeader( &reqHeaders,
                                      header.field, header.fieldLen,
                                      header.value, header.valueLen );
-    /* printf( "%.*s", reqHeaders.headersLen, reqHeaders.pBuffer ); */
     ok( strncmp( ( char * ) reqHeaders.pBuffer,
-                 correctHeader, HTTP_HEADER_SAMPLE_FIRST_LINE_LEN ) == 0 );
+                 correctHeader, correctHeaderLen ) == 0 );
+    ok( reqHeaders.headersLen == correctHeaderLen );
     ok( test_err == HTTP_INSUFFICIENT_MEMORY );
     /* Add extra header with sufficient memory. */
-    reqHeaders.bufferLen = HTTP_USER_BUFFER_SIZE;
+    reqHeaders.bufferLen = HTTP_TEST_BUFFER_SIZE;
     correctHeaderLen = HTTP_CORRECT_HEADER_STRING_SIZE +                             \
                        HTTP_HEADER_SAMPLE_FIELD_LEN + HTTP_HEADER_SAMPLE_VALUE_LEN + \
                        HTTP_HEADER_FIELD_SEPARATOR_LEN + HTTP_HEADER_LINE_SEPARATOR_LEN;
@@ -97,9 +96,9 @@ int main()
     test_err = HTTPClient_AddHeader( &reqHeaders,
                                      header.field, header.fieldLen,
                                      header.value, header.valueLen );
-    /* printf( "%.*s", reqHeaders.headersLen, reqHeaders.pBuffer ); */
     ok( strncmp( ( char * ) reqHeaders.pBuffer,
                  correctHeader, correctHeaderLen ) == 0 );
+    ok( reqHeaders.headersLen == correctHeaderLen );
     ok( test_err == HTTP_SUCCESS );
 
     /* Test NULL parameters. */
