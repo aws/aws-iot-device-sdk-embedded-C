@@ -28,4 +28,4 @@
     #define IotLogDebugWithArgs( format, ... )
 #endif /* ifdef USE_AWS_IOT_CSDK_LOGGING */
 
-#endif
+#endif /* ifndef HTTP_CLIENT_INTERNAL_H_ */

@@ -8,7 +8,7 @@ SOURCE = ../src
 #CFLAGS = std=c99 -Wall -fprofile-arcs -ftest-coverage -O0 -ggdb
 
 # include directories given to the compiler (default: none)
-INCLUDE = . ../include $(CSDK_ROOT) ../../utilities/include
+INCLUDE = . ../include $(CSDK_ROOT) ../../utilities/include ../src
 
 # the default goal (default: help)
 # Set to build or test as desired.
