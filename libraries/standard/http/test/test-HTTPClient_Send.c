@@ -173,31 +173,6 @@ int main()
     ok( returnStatus == HTTP_INVALID_PARAMETER );
     reset();
 
-
-    /* -----------------------------------------------------------------------*/
-
-    /* Test a NULL transport interface. */
-    returnStatus = HTTPClient_Send( NULL,
-                                    &requestHeadersHead,
-                                    NULL,
-                                    0,
-                                    &response );
-
-    ok( returnStatus == HTTP_INVALID_PARAMETER );
-    reset();
-
-    /* -----------------------------------------------------------------------*/
-
-    /* Test a NULL transport interface. */
-    returnStatus = HTTPClient_Send( NULL,
-                                    &requestHeadersHead,
-                                    NULL,
-                                    0,
-                                    &response );
-
-    ok( returnStatus == HTTP_INVALID_PARAMETER );
-    reset();
-
     /* -----------------------------------------------------------------------*/
 
     /* Test a NULL transport interface send. */

@@ -1,4 +1,5 @@
 #include "http_client.h"
+#include "http_client_internal.h"
 
 /*-----------------------------------------------------------*/
 
@@ -7,6 +8,7 @@
  *
  * @param pTransport Transport interface.
  * @param pRequestHeaders Request headers to send, it includes the buffer and length.
+ * 
  * @return #HTTP_SUCCESS if successful. If there was a network error or less
  * bytes than what was specified were sent, then #HTTP_NETWORK_ERROR is returned.
  */
@@ -19,6 +21,7 @@ static HTTPStatus_t _sendHttpHeaders( const HTTPTransportInterface_t * pTranspor
  * @param pTransport Transport interface.
  * @param pRequestBodyBuf Request body buffer.
  * @param reqBodyLen Length of the request body buffer.
+ * 
  * @return #HTTP_SUCCESS if successful. If there was a network error or less
  * bytes than what was specified were sent, then #HTTP_NETWORK_ERROR is returned.
  */
@@ -82,6 +85,11 @@ static HTTPStatus_t _sendHttpHeaders( const HTTPTransportInterface_t * pTranspor
                              transportStatus );
         returnStatus = HTTP_NETWORK_ERROR;
     }
+    else
+    {
+        /* Empty else MISRA 15.7 */
+    }
+    
 
     return returnStatus;
 }
@@ -165,6 +173,9 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
     {
         IotLogError( "Parameter check failed: pRequestHeaders->pBuffer is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    {
+        /* Empty else MISRA 15.7 */
     }
 
     /* Send the headers, which are at one location in memory. */

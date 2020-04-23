@@ -27,49 +27,6 @@
 #endif
 
 /**
- * AWS IoT Embedded C SDK optional specific logging setup.
- */
-#ifdef USE_AWS_IOT_CSDK_LOGGING
-    #ifdef IOT_LOG_LEVEL_HTTP
-        #define LIBRARY_LOG_LEVEL        IOT_LOG_LEVEL_HTTP
-    #else
-        #ifdef IOT_LOG_LEVEL_GLOBAL
-            #define LIBRARY_LOG_LEVEL    IOT_LOG_LEVEL_GLOBAL
-        #else
-            #define LIBRARY_LOG_LEVEL    IOT_LOG_NONE
-        #endif
-    #endif
-    #define LIBRARY_LOG_NAME             ( "HTTP" )
-    #include "iot_logging_setup.h"
-#else /* ifdef USE_AWS_IOT_CSDK_LOGGING */
-/* Otherwise please define logging macros in config.h. */
-    #ifndef IotLogError
-        #define IotLogError( message )
-    #endif
-    #ifndef IotLogErrorWithArgs
-        #define IotLogErrorWithArgs( format, ... )
-    #endif
-    #ifndef IotLogWarn
-        #define IotLogWarn( message )
-    #endif
-    #ifndef IotLogWarnWithArgs
-        #define IotLogWarnWithArgs( format, ... )
-    #endif
-    #ifndef IotLogInfo
-        #define IotLogInfo( message )
-    #endif
-    #ifndef IotLogInfoWithArgs
-        #define IotLogInfoWithArgs( format, ... )
-    #endif
-    #ifndef IotLogDebug
-        #define IotLogDebug( message )
-    #endif
-    #ifndef IotLogDebugWithArgs
-        #define IotLogDebugWithArgs( format, ... )
-    #endif
-#endif /* ifdef USE_AWS_IOT_CSDK_LOGGING */
-
-/**
  * Supported HTTP request methods.
  */
 #define HTTP_METHOD_GET     "GET"              /**< HTTP Method GET. */
@@ -134,6 +91,7 @@ typedef struct HTTPNetworkContext HTTPNetworkContext_t;
  * @param[in] context User defined context.
  * @param[in] pBuffer Buffer to write to the network stack.
  * @param[in] bytesToWrite Number of bytes to write to the network.
+ * 
  * @return The number of bytes written or a negative network error code.
  */
 typedef int32_t (* HTTPTransportSend_t )( HTTPNetworkContext_t * pContext,
@@ -152,6 +110,7 @@ typedef int32_t (* HTTPTransportSend_t )( HTTPNetworkContext_t * pContext,
  * @param[in] context User defined context.
  * @param[in] pBuffer Buffer to read network data into.
  * @param[in] bytesToRead Number of bytes requested from the network.
+ * 
  * @return The number of bytes read or a negative error code.
  */
 typedef int32_t (* HTTPTransportRecv_t )( HTTPNetworkContext_t * pContext,
@@ -408,6 +367,7 @@ typedef struct HTTPResponse
  *
  * @param[in] pRequestHeaders Request header buffer information.
  * @param[in] pRequestInfo Initial request header configurations.
+ * 
  * @return #HTTP_SUCCESS if successful, an error code otherwise.
  * TODO: Update for exact error codes returned.
  */
@@ -428,6 +388,7 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
  * @param[in] nameLen The byte length of the header field name.
  * @param[in] pValue The header value to write.
  * @param[in] valueLen The byte length of the header field value.
+ * 
  * @return #HTTP_SUCCESS if successful, an error code otherwise.
  * TODO: Update for exact error codes returned.
  */
@@ -449,6 +410,7 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
  * @param[in] pRequestHeaders Request header buffer information.
  * @param[in] rangeStart The starting range for the requested file.
  * @param[in] rangeEnd The ending range for the requested file.
+ * 
  * @return #HTTP_SUCCESS if successful, an error code otherwise.
  * TODO: Update for exact error codes returned.
  */
@@ -471,6 +433,7 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
  * @param[in] reqBodyBufLen The length of the request entity in bytes.
  * @param[in] pResponse The response message and some notable response
  * parameters will be returned here on success.
+ * 
  * @return #HTTP_SUCCESS if successful, an error code otherwise.
  * TODO: Update for exact error codes returned.
  */
@@ -495,6 +458,7 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
  * @param[out] pValue The location of the header value in
  * #HTTPResponse_t.pBuffer.
  * @param[out] valueLen The length of the header value in bytes.
+ * 
  * @return #HTTP_SUCCESS if successful, an error code otherwise.
  * TODO: Update for exact error codes returned.
  */
