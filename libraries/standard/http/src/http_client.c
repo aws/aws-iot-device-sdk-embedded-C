@@ -77,7 +77,7 @@ static HTTPStatus_t _sendHttpHeaders( const HTTPTransportInterface_t * pTranspor
     else if( transportStatus != pRequestHeaders->headersLen )
     {
         IotLogErrorWithArgs( "Failure in sending HTTP headers: Transport layer "
-                             "sent lesser than required bytes: Required Bytes=%d"
+                             "sent less than the required bytes: Required Bytes=%d"
                              ", Sent Bytes=%d.",
                              transportStatus );
         returnStatus = HTTP_NETWORK_ERROR;
@@ -112,7 +112,7 @@ static HTTPStatus_t _sendHttpBody( const HTTPTransportInterface_t * pTransport,
         else if( transportStatus != reqBodyBufLen )
         {
             IotLogErrorWithArgs( "Failure in sending HTTP headers: Transport layer "
-                                 "sent lesser than required bytes: Required Bytes=%d"
+                                 "sent less than the required bytes: Required Bytes=%d"
                                  ", Sent Bytes=%d.",
                                  transportStatus );
             returnStatus = HTTP_NETWORK_ERROR;
