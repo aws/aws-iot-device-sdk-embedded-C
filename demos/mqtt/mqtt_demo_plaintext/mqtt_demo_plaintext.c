@@ -168,19 +168,52 @@ static int establishMqttSession( MQTTContext_t * pContext, int tcpSocket )
     return status;
 }
 
+static int disconnectMqttSession( MQTTContext_t * pContext )
+{
+    int status = EXIT_SUCCESS;
+
+    MQTTStatus_t mqttStatus = MQTT_Disconnect( pContext );
+
+    if( mqttStatus != MQTTSuccess )
+    {
+        status = EXIT_FAILURE;
+    }
+
+    return status;
+}
+
 int main( int argc, char ** argv )
 {
+    bool mqttSessionEstablished = false;
     int status;
     MQTTContext_t context;
+
     int tcpSocket = connectToServer( SERVER, PORT );
 
-    if( tcpSocket != -1 )
+    if( tcpSocket == -1 )
     {
-        status = establishMqttSession( &context, tcpSocket );
+        status = EXIT_FAILURE;
     }
     else
     {
-        status = EXIT_FAILURE;
+        status = establishMqttSession( &context, tcpSocket );
+
+        if( status == EXIT_SUCCESS )
+        {
+            mqttSessionEstablished = true;
+        }
+    }
+
+    if( mqttSessionEstablished == true )
+    {
+        if( status == EXIT_FAILURE )
+        {
+            ( void ) disconnectMqttSession( &context );
+        }
+        else
+        {
+            status = disconnectMqttSession( &context );
+        }
     }
 
     if( tcpSocket != -1 )
