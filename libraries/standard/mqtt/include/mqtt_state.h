@@ -51,4 +51,7 @@ MQTTPublishState_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
                                         MQTTPubAckType_t packetType,
                                         MQTTStateOperation_t opType );
 
+uint16_t MQTT_StateSelect( MQTTContext_t * pMqttContext,
+                           MQTTPublishState_t searchState );
+
 #endif /* ifndef MQTT_STATE_H */

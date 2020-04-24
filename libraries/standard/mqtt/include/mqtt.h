@@ -94,9 +94,9 @@ struct MQTTPubAckInfo
 
 struct MQTTContext
 {
-    MQTTPubAckInfo_t outgoingPublishRecords[ MQTT_MAX_QUEUED_PUBLISH_MESSAGES ];
+    MQTTPubAckInfo_t outgoingPublishRecords[ MQTT_STATE_ARRAY_MAX_COUNT ];
     size_t outgoingPublishCount;
-    MQTTPubAckInfo_t incomingPublishRecords[ MQTT_MAX_QUEUED_PUBLISH_MESSAGES ];
+    MQTTPubAckInfo_t incomingPublishRecords[ MQTT_STATE_ARRAY_MAX_COUNT ];
     size_t incomingPublishCount;
 
     MQTTTransportInterface_t transportInterface;
