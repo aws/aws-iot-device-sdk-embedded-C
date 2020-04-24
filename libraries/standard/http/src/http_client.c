@@ -34,6 +34,20 @@ static HTTPStatus_t _sendHttpBody( const HTTPTransportInterface_t * pTransport,
                                    const uint8_t * pRequestBodyBuf,
                                    size_t reqBodyBufLen );
 
+/**
+ * @brief Write header based on parameters. This method also adds a trailing "\r\n".
+ * If a trailing "\r\n" already exists in the HTTP header, this method backtracks
+ * in order to write over it and updates the length accordingly.
+ *
+ * @param pRequestHeaders Request header buffer information.
+ * @param pField The header field name to write.
+ * @param fieldLen The byte length of the header field name.
+ * @param pValue The header value to write.
+ * @param valueLen The byte length of the header field value.
+ *
+ * @return #HTTP_SUCCESS if successful. If there was insufficient memory in the
+ * application buffer, then #HTTP_INSUFFICIENT_MEMORY is returned.
+ */
 static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
                                 const char * pField,
                                 size_t fieldLen,
@@ -53,30 +67,27 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
     size_t toAddLen = 0;
     uint8_t hasTrailingLine = 0;
 
-    if( returnStatus != HTTP_INVALID_PARAMETER )
+    /* Backtrack before trailing "\r\n" (HTTP header end) if it's already written.
+     * Note that this method also writes trailing "\r\n" before returning. */
+    if( strncmp( ( char * ) pBufferCur - 2 * HTTP_HEADER_LINE_SEPARATOR_LEN,
+                 "\r\n\r\n", 2 * HTTP_HEADER_LINE_SEPARATOR_LEN ) == 0 )
     {
-        /* Backtrack before trailing "\r\n" (HTTP header end) if it's already written.
-         * Note that this method also writes trailing "\r\n" before returning. */
-        if( strncmp( ( char * ) pBufferCur - 2 * HTTP_HEADER_LINE_SEPARATOR_LEN,
-                     "\r\n\r\n", 2 * HTTP_HEADER_LINE_SEPARATOR_LEN ) == 0 )
-        {
-            /* Set this flag to backtrack in case of HTTP_INSUFFICIENT_MEMORY. */
-            hasTrailingLine = 1;
-            pBufferCur -= HTTP_HEADER_LINE_SEPARATOR_LEN;
-            pRequestHeaders->headersLen -= HTTP_HEADER_LINE_SEPARATOR_LEN;
-        }
+        /* Set this flag to backtrack in case of HTTP_INSUFFICIENT_MEMORY. */
+        hasTrailingLine = 1;
+        pBufferCur -= HTTP_HEADER_LINE_SEPARATOR_LEN;
+        pRequestHeaders->headersLen -= HTTP_HEADER_LINE_SEPARATOR_LEN;
+    }
 
-        /* Check if there is enough space in buffer for additional header. */
-        toAddLen = fieldLen + HTTP_HEADER_FIELD_SEPARATOR_LEN + valueLen + \
-                   HTTP_HEADER_LINE_SEPARATOR_LEN +                        \
-                   HTTP_HEADER_LINE_SEPARATOR_LEN;
+    /* Check if there is enough space in buffer for additional header. */
+    toAddLen = fieldLen + HTTP_HEADER_FIELD_SEPARATOR_LEN + valueLen + \
+               HTTP_HEADER_LINE_SEPARATOR_LEN +                        \
+               HTTP_HEADER_LINE_SEPARATOR_LEN;
 
-        if( ( pRequestHeaders->headersLen + toAddLen ) > pRequestHeaders->bufferLen )
-        {
-            IotLogError( "Insufficient memory: Provided buffer size too small " \
-                         "to add new header." );
-            returnStatus = HTTP_INSUFFICIENT_MEMORY;
-        }
+    if( ( pRequestHeaders->headersLen + toAddLen ) > pRequestHeaders->bufferLen )
+    {
+        IotLogError( "Insufficient memory: Provided buffer size too small " \
+                     "to add new header." );
+        returnStatus = HTTP_INSUFFICIENT_MEMORY;
     }
 
     /* Set header length to original if previously backtracked. */
