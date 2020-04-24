@@ -51,7 +51,7 @@ typedef enum MQTTConnectionStatus
 
 typedef enum MQTTPublishState
 {
-    MQTTInvalidState = 0,
+    MQTTStateNull = 0,
     MQTTPublishSend,
     MQTTPubAckSend,
     MQTTPubRecSend,
