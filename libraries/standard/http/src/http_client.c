@@ -65,7 +65,7 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
     uint8_t * pBufferCur = pRequestHeaders->pBuffer + pRequestHeaders->headersLen;
     size_t toAddLen = 0;
-    uint8_t hasTrailingLine = 0;
+    uint8_t hasTrailingLine = 0u;
 
     /* Backtrack before trailing "\r\n" (HTTP header end) if it's already written.
      * Note that this method also writes trailing "\r\n" before returning. */
@@ -73,7 +73,7 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
                  "\r\n\r\n", 2 * HTTP_HEADER_LINE_SEPARATOR_LEN ) == 0 )
     {
         /* Set this flag to backtrack in case of HTTP_INSUFFICIENT_MEMORY. */
-        hasTrailingLine = 1;
+        hasTrailingLine = 1u;
         pBufferCur -= HTTP_HEADER_LINE_SEPARATOR_LEN;
         pRequestHeaders->headersLen -= HTTP_HEADER_LINE_SEPARATOR_LEN;
     }
@@ -83,20 +83,8 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
                HTTP_HEADER_LINE_SEPARATOR_LEN +                        \
                HTTP_HEADER_LINE_SEPARATOR_LEN;
 
-    if( ( pRequestHeaders->headersLen + toAddLen ) > pRequestHeaders->bufferLen )
-    {
-        IotLogError( "Insufficient memory: Provided buffer size too small " \
-                     "to add new header." );
-        returnStatus = HTTP_INSUFFICIENT_MEMORY;
-    }
-
-    /* Set header length to original if previously backtracked. */
-    if( ( returnStatus == HTTP_INSUFFICIENT_MEMORY ) && hasTrailingLine )
-    {
-        pRequestHeaders->headersLen += HTTP_HEADER_LINE_SEPARATOR_LEN;
-    }
-
-    if( returnStatus == HTTP_SUCCESS )
+    /* If we have enough room for the new header line, then write it to the header buffer. */
+    if( ( pRequestHeaders->headersLen + toAddLen ) <= pRequestHeaders->bufferLen )
     {
         /* Write "Field: Value \r\n\r\n" to headers. */
         memcpy( pBufferCur, pField, fieldLen );
@@ -111,6 +99,21 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
         memcpy( pBufferCur, HTTP_HEADER_LINE_SEPARATOR, HTTP_HEADER_LINE_SEPARATOR_LEN );
         pRequestHeaders->headersLen += toAddLen;
         returnStatus = HTTP_SUCCESS;
+    }
+    else
+    {
+        /* Restore the length of the trailing line separator. */
+        if( hasTrailingLine == 1u )
+        {
+            pRequestHeaders->headersLen += HTTP_HEADER_LINE_SEPARATOR_LEN;
+        }
+
+        IotLogErrorWithArgs( "Unable to add header in buffer: " \
+                             "Buffer has insufficient memory: " \
+                             "RequiredBytes=%d, RemainingBufferSize=%d",
+                             toAddLen,
+                             ( pRequestHeaders->bufferLen - pRequestHeaders->headersLen ) );
+        returnStatus = HTTP_INSUFFICIENT_MEMORY;
     }
 
     return returnStatus;
@@ -155,12 +158,12 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
         IotLogError( "Parameter check failed: pValue is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
-    else if( fieldLen == 0U )
+    else if( fieldLen == 0u )
     {
         IotLogError( "Parameter check failed: fieldLen must be greater than 0." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
-    else if( valueLen == 0U )
+    else if( valueLen == 0u )
     {
         IotLogError( "Parameter check failed: valueLen must be greater than 0." );
         returnStatus = HTTP_INVALID_PARAMETER;

@@ -385,8 +385,8 @@ typedef struct HTTPResponse
  * @param[in] pRequestHeaders Request header buffer information.
  * @param[in] pRequestInfo Initial request header configurations.
  * @return One of the following:
- * - #HTTP_SUCCESS (If successful, an error code otherwise.)
- * - #HTTP_INVALID_PARAMETER (If any provided parameters and their members are NULL.)
+ * - #HTTP_SUCCESS (If successful)
+ * - #HTTP_INVALID_PARAMETER (If any provided parameters or their members are invalid.)
  * - #HTTP_INSUFFICIENT_MEMORY (If provided buffer size is not large enough to hold headers.)
  */
 HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pRequestHeaders,
@@ -399,15 +399,20 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
  * Upon return, pRequestHeaders->headersLen will be updated with the number of
  * bytes written.
  *
+ * Headers are written in the following format:
+ *     <pName>: <pField>\r\n\r\n
+ * The trailing \r\n that denotes the end of the header lines is overwritten,
+ * if it already exists in the buffer.
+ *
  * @param[in] pRequestHeaders Request header buffer information.
- * @param[in] pName The header field name to write.
- * @param[in] nameLen The byte length of the header field name.
+ * @param[in] pField The header field name to write.
+ * @param[in] fieldLen The byte length of the header field name.
  * @param[in] pValue The header value to write.
  * @param[in] valueLen The byte length of the header field value.
  *
  * @return One of the following:
  * - #HTTP_SUCCESS (If successful, an error code otherwise.)
- * - #HTTP_INVALID_PARAMETER (If any provided parameters or their members are NULL.)
+ * - #HTTP_INVALID_PARAMETER (If any provided parameters or their members are invalid.)
  * - #HTTP_INSUFFICIENT_MEMORY (If application-provided buffer is not large enough to hold headers.)
  */
 HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,

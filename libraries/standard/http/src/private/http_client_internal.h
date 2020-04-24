@@ -89,9 +89,4 @@
 #define HTTP_CONNECTION_KEEP_ALIVE_VALUE_LEN    ( sizeof( HTTP_CONNECTION_KEEP_ALIVE_VALUE ) - 1 )
 #define HTTP_CONNECTION_CLOSE_VALUE_LEN         ( sizeof( HTTP_CONNECTION_CLOSE_VALUE ) - 1 )
 
-/**
- * @brief Returns the length of a macro string.
- */
-#define STRLEN_LITERAL( x )    ( ( sizeof( x ) / sizeof( char ) ) - 1 )
-
 #endif /* ifndef HTTP_CLIENT_INTERNAL_H_ */
