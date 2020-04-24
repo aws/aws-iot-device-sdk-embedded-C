@@ -255,7 +255,6 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
                                                   const HTTPRequestInfo_t * pRequestInfo )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
-    uint8_t * pBufferCur = NULL;
 
     /* Check for NULL parameters. */
     if( pRequestHeaders == NULL )
@@ -303,13 +302,13 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
         /* Empty else MISRA 15.7 */
     }
 
-    pBufferCur = pRequestHeaders->pBuffer;
-    pRequestHeaders->headersLen = 0;
-    /* Clear user-provided buffer. */
-    memset( pRequestHeaders->pBuffer, 0, pRequestHeaders->bufferLen );
-
     if( returnStatus == HTTP_SUCCESS )
     {
+        /* Reset application-provided parameters. */
+        pRequestHeaders->headersLen = 0;
+        /* Clear user-provided buffer. */
+        memset( pRequestHeaders->pBuffer, 0, pRequestHeaders->bufferLen );
+
         /* Write "<METHOD> <PATH> HTTP/1.1\r\n" to start the HTTP header. */
         returnStatus = _writeRequestLine( pRequestHeaders,
                                           pRequestInfo->method,

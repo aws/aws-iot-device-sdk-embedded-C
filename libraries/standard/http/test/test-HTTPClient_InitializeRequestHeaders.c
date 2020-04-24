@@ -56,6 +56,20 @@ int main()
     char correctHeader[ HTTP_TEST_BUFFER_SIZE ] = { 0 };
     size_t correctHeaderLen = HTTP_TEST_MAX_HEADER_LEN;
 
+/* Write template reqInfo to pass as parameter to
+ * HTTPClient_InitializeRequestHeaders() method. */
+#define fillReqInfoTemplate()                             \
+    do {                                                  \
+        reqInfo.method = HTTP_TEST_REQUEST_METHOD;        \
+        reqInfo.methodLen = HTTP_TEST_REQUEST_METHOD_LEN; \
+        reqInfo.pPath = HTTP_TEST_REQUEST_PATH;           \
+        reqInfo.pathLen = HTTP_TEST_REQUEST_PATH_LEN;     \
+        reqInfo.pHost = HTTP_TEST_HOST_VALUE;             \
+        reqInfo.hostLen = HTTP_TEST_HOST_VALUE_LEN;       \
+        reqInfo.flags = 0;                                \
+    }                                                     \
+    while( 0 )
+
 #define reset()                                                   \
     do {                                                          \
         test_err = HTTP_NOT_SUPPORTED;                            \
@@ -83,18 +97,66 @@ int main()
     /* Set parameters for reqHeaders. */
     reqHeaders.pBuffer = buffer;
     reqHeaders.bufferLen = HTTP_TEST_BUFFER_SIZE;
-    reqHeaders.headersLen = 0;
     /* Set parameters for reqInfo. */
-    reqInfo.method = HTTP_TEST_REQUEST_METHOD;
-    reqInfo.methodLen = HTTP_TEST_REQUEST_METHOD_LEN;
-    reqInfo.pPath = HTTP_TEST_REQUEST_PATH;
-    reqInfo.pathLen = HTTP_TEST_REQUEST_PATH_LEN;
-    reqInfo.pHost = HTTP_TEST_HOST_VALUE;
-    reqInfo.hostLen = HTTP_TEST_HOST_VALUE_LEN;
-    reqInfo.flags = 0;
+    fillReqInfoTemplate();
     test_err = HTTPClient_InitializeRequestHeaders( &reqHeaders, &reqInfo );
     ok( strncmp( ( char * ) reqHeaders.pBuffer,
                  correctHeader, correctHeaderLen ) == 0 );
     ok( reqHeaders.headersLen == correctHeaderLen );
     ok( test_err == HTTP_SUCCESS );
+
+    /* Test NULL parameters, following order of else-if blocks in implementation. */
+    reset();
+    test_err = HTTPClient_InitializeRequestHeaders( NULL, &reqInfo );
+    ok( test_err == HTTP_INVALID_PARAMETER );
+    /* reqInfo.pBuffer should be NULL after reset(). */
+    test_err = HTTPClient_InitializeRequestHeaders( &reqHeaders, &reqInfo );
+    ok( test_err == HTTP_INVALID_PARAMETER );
+    reqHeaders.pBuffer = buffer;
+    reqHeaders.bufferLen = HTTP_TEST_BUFFER_SIZE;
+    test_err = HTTPClient_InitializeRequestHeaders( &reqHeaders, NULL );
+    ok( test_err == HTTP_INVALID_PARAMETER );
+    /* reqInfo members should be NULL after reset(). */
+    test_err = HTTPClient_InitializeRequestHeaders( &reqHeaders, &reqInfo );
+    ok( test_err == HTTP_INVALID_PARAMETER );
+    reqInfo.method = HTTP_TEST_REQUEST_METHOD;
+    test_err = HTTPClient_InitializeRequestHeaders( &reqHeaders, &reqInfo );
+    ok( test_err == HTTP_INVALID_PARAMETER );
+    reqInfo.pHost = HTTP_TEST_HOST_VALUE;
+    test_err = HTTPClient_InitializeRequestHeaders( &reqHeaders, &reqInfo );
+    ok( test_err == HTTP_INVALID_PARAMETER );
+    reqInfo.pPath = HTTP_TEST_REQUEST_PATH;
+    reqInfo.pathLen = HTTP_TEST_REQUEST_PATH_LEN;
+    test_err = HTTPClient_InitializeRequestHeaders( &reqHeaders, &reqInfo );
+    ok( test_err == HTTP_INVALID_PARAMETER );
+    reqInfo.methodLen = HTTP_TEST_REQUEST_METHOD_LEN;
+    test_err = HTTPClient_InitializeRequestHeaders( &reqHeaders, &reqInfo );
+    ok( test_err == HTTP_INVALID_PARAMETER );
+    reqInfo.hostLen = HTTP_TEST_HOST_VALUE_LEN;
+
+    /* Test HTTP_REQUEST_KEEP_ALIVE_FLAG. */
+    reset();
+    reqHeaders.pBuffer = buffer;
+    reqHeaders.bufferLen = HTTP_TEST_BUFFER_SIZE;
+    fillReqInfoTemplate();
+    reqInfo.flags = HTTP_REQUEST_KEEP_ALIVE_FLAG;
+    correctHeaderLen = HTTP_TEST_PREFIX_HEADER_LEN + \
+                       HTTP_CONNECTION_KEEP_ALIVE_VALUE_LEN;
+    /* Add 1 because snprintf() writes a null byte at the end. */
+    snprintf( correctHeader, correctHeaderLen + 1,
+              "%s %s %s\r\n" \
+              "%s: %s\r\n"   \
+              "%s: %s\r\n"   \
+              "%s: %s\r\n\r\n",
+              HTTP_TEST_REQUEST_METHOD, HTTP_TEST_REQUEST_PATH, HTTP_PROTOCOL_VERSION,
+              HTTP_USER_AGENT_FIELD, HTTP_USER_AGENT_VALUE,
+              HTTP_HOST_FIELD, HTTP_TEST_HOST_VALUE,
+              HTTP_CONNECTION_FIELD, HTTP_CONNECTION_KEEP_ALIVE_VALUE );
+    test_err = HTTPClient_InitializeRequestHeaders( &reqHeaders, &reqInfo );
+    ok( strncmp( ( char * ) reqHeaders.pBuffer,
+                 correctHeader, correctHeaderLen ) == 0 );
+    ok( reqHeaders.headersLen == correctHeaderLen );
+    ok( test_err == HTTP_SUCCESS );
+
+    return 0;
 }
