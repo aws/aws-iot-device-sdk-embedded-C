@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "http_client.h"
 #include "private/http_client_internal.h"
 
@@ -86,7 +87,9 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
         /* Empty else MISRA 15.7 */
     }
 
-    requiredBytes = RANGE_REQUEST_HEADER_STRING_LEN;
+    requiredBytes = RANGE_REQUEST_HEADER_FIELD_LEN +
+                    HTTP_HEADER_LINE_SEPARATOR_LEN +
+                    RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN;
 
     /* Add byte count for ASCII representation of rangeStart value. */
     ( void ) itoa( rangeStart, rangeStartStrBuffer, 10 );
@@ -115,51 +118,51 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
           HTTP_HEADER_LINE_SEPARATOR_LEN )
         >= requiredBytes )
     {
-        /* Add the Range header name in the buffer. */
-        memcpy( pRequestHeaders->pBuffer + pRequestHeaders->headersLen
-                - HTTP_HEADER_LINE_SEPARATOR_LEN,
-                RANGE_REQUEST_HEADER_STRING,
-                RANGE_REQUEST_HEADER_STRING_LEN );
-        pRequestHeaders->headersLen += RANGE_REQUEST_HEADER_STRING_LEN - HTTP_HEADER_LINE_SEPARATOR_LEN;
+        /* Add the range request header field and rangeStart value of the form
+         * "Range: bytes=<rangeStart>" to the buffer. */
+        sprintf( pRequestHeaders->pBuffer + pRequestHeaders->headersLen
+                 - HTTP_HEADER_LINE_SEPARATOR_LEN,
+                 "%s%s%s%s",
+                 RANGE_REQUEST_HEADER_FIELD,
+                 HTTP_HEADER_FIELD_SEPARATOR
+                 RANGE_REQUEST_HEADER_VALUE_PREFIX,
+                 rangeStartStrBuffer );
 
-        /* Add the value for the header in the buffer. */
+        pRequestHeaders->headersLen += RANGE_REQUEST_HEADER_FIELD_LEN +
+                                       HTTP_HEADER_LINE_SEPARATOR_LEN +
+                                       RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN +
+                                       rangeStartStrLen;
 
-        /* Add the rangeStart value. */
-        memcpy( pRequestHeaders->pBuffer + pRequestHeaders->headersLen,
-                rangeStartStrBuffer,
-                rangeStartStrLen );
-        pRequestHeaders->headersLen += rangeStartStrLen;
+        /* Add remaining value data depending on the range specification type . */
 
         /* Add rangeEnd value if it is valid. */
         if( rangeEnd != 0 )
         {
-            /* Add the "-" character.*/
-            memcpy( pRequestHeaders->pBuffer + pRequestHeaders->headersLen,
-                    DASH_CHARACTER,
-                    DASH_CHARACTER_LEN );
-            pRequestHeaders->headersLen += DASH_CHARACTER_LEN;
-
-            /* Add the rangeEnd value. */
-            memcpy( pRequestHeaders->pBuffer + pRequestHeaders->headersLen,
-                    rangeEndStrBuffer,
-                    rangeEndStrLen );
-            pRequestHeaders->headersLen += rangeEndStrLen;
-            requiredBytes += rangeEndStrLen;
+            /* Add the rangeEnd value to the request range .*/
+            sprintf( pRequestHeaders->pBuffer + pRequestHeaders->headersLen,
+                     "%s%s"
+                     DASH_CHARACTER,
+                     rangeEndStrBuffer );
+            pRequestHeaders->headersLen += DASH_CHARACTER_LEN + rangeEndStrLen;
         }
         /* Case when request is for all bytes >= rangeStart. */
         else if( rangeStart > 0 )
         {
             /* Add the "-" character.*/
-            memcpy( pRequestHeaders->pBuffer + pRequestHeaders->headersLen,
-                    DASH_CHARACTER,
-                    DASH_CHARACTER_LEN );
+            sprintf( pRequestHeaders->pBuffer + pRequestHeaders->headersLen,
+                     "%s"
+                     DASH_CHARACTER );
             pRequestHeaders->headersLen += DASH_CHARACTER_LEN;
         }
 
-        /* Add the termination "\r\n" characters twice. */
+        /* Add the termination "\r\n\r\n" characters. */
+        /*Note: memcpy() is used here to avoid adding NULL character in the buffer. */
         memcpy( pRequestHeaders->pBuffer + pRequestHeaders->headersLen,
-                HTTP_HEADER_LINE_SEPARATOR ""HTTP_HEADER_LINE_SEPARATOR,
-                2 * HTTP_HEADER_LINE_SEPARATOR_LEN );
+                HTTP_HEADER_LINE_SEPARATOR,
+                HTTP_HEADER_LINE_SEPARATOR_LEN );
+        memcpy( pRequestHeaders->pBuffer + pRequestHeaders->headersLen,
+                HTTP_HEADER_LINE_SEPARATOR,
+                HTTP_HEADER_LINE_SEPARATOR_LEN );
         pRequestHeaders->headersLen += 2 * HTTP_HEADER_LINE_SEPARATOR_LEN;
     }
     else
