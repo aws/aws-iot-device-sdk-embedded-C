@@ -276,7 +276,7 @@ static HTTPStatus_t _sendHttpHeaders( const HTTPTransportInterface_t * pTranspor
     if( transportStatus < 0 )
     {
         IotLogErrorWithArgs( "Error in sending the HTTP headers over the transport "
-                             "interface: Transport returnStatus %d.",
+                             "interface: Transport status %d.",
                              transportStatus );
         returnStatus = HTTP_NETWORK_ERROR;
     }
@@ -315,7 +315,7 @@ static HTTPStatus_t _sendHttpBody( const HTTPTransportInterface_t * pTransport,
         if( transportStatus < 0 )
         {
             IotLogErrorWithArgs( "Error in sending the HTTP body over the "
-                                 "transport interface. Transport returnStatus %d.",
+                                 "transport interface. Transport status %d.",
                                  transportStatus );
             returnStatus = HTTP_NETWORK_ERROR;
         }
