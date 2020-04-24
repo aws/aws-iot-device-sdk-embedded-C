@@ -92,15 +92,16 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
         }
 
         /* Write "Field: Value \r\n\r\n" to headers. */
-        memcpy( pBufferCur, pField, fieldLen );
-        pBufferCur += fieldLen;
-        memcpy( pBufferCur, HTTP_HEADER_FIELD_SEPARATOR,
-                HTTP_HEADER_FIELD_SEPARATOR_LEN );
-        pBufferCur += HTTP_HEADER_FIELD_SEPARATOR_LEN;
-        memcpy( pBufferCur, pValue, valueLen );
-        pBufferCur += valueLen;
-        memcpy( pBufferCur, HTTP_HEADER_LINE_SEPARATOR, HTTP_HEADER_LINE_SEPARATOR_LEN );
-        pBufferCur += HTTP_HEADER_LINE_SEPARATOR_LEN;
+        pBufferCur += snprintf( ( char * ) pBufferCur,
+                                toAddLen,
+                                "%.*s%s%.*s%s",
+                                ( int ) fieldLen, pField,
+                                HTTP_HEADER_FIELD_SEPARATOR,
+                                ( int ) valueLen, pValue,
+                                HTTP_HEADER_LINE_SEPARATOR );
+
+        /* HTTP_HEADER_LINE_SEPARATOR cannot be written above because snprintf
+         * writes an extra null byte at the end. */
         memcpy( pBufferCur, HTTP_HEADER_LINE_SEPARATOR, HTTP_HEADER_LINE_SEPARATOR_LEN );
         pRequestHeaders->headersLen += toAddLen;
         returnStatus = HTTP_SUCCESS;
