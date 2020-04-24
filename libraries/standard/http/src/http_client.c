@@ -62,7 +62,7 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
                                 const char * pValue,
                                 size_t valueLen )
 {
-    HTTPStatus_t returnStatus = HTTP_INTERNAL_ERROR;
+    HTTPStatus_t returnStatus = HTTP_SUCCESS;
     uint8_t * pBufferCur = pRequestHeaders->pBuffer + pRequestHeaders->headersLen;
     size_t toAddLen = 0;
     uint8_t hasTrailingLine = 0;
@@ -96,7 +96,7 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
         pRequestHeaders->headersLen += HTTP_HEADER_LINE_SEPARATOR_LEN;
     }
 
-    if( returnStatus != HTTP_INSUFFICIENT_MEMORY )
+    if( returnStatus == HTTP_SUCCESS )
     {
         /* Write "Field: Value \r\n\r\n" to headers. */
         memcpy( pBufferCur, pField, fieldLen );
@@ -132,7 +132,7 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
                                    const char * pValue,
                                    size_t valueLen )
 {
-    HTTPStatus_t returnStatus = HTTP_INTERNAL_ERROR;
+    HTTPStatus_t returnStatus = HTTP_SUCCESS;
 
     /* Check for NULL parameters. */
     if( pRequestHeaders == NULL )
@@ -170,7 +170,7 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
         /* Empty else MISRA 15.7 */
     }
 
-    if( returnStatus != HTTP_INVALID_PARAMETER )
+    if( returnStatus == HTTP_SUCCESS )
     {
         returnStatus = _addHeader( pRequestHeaders,
                                    pField, fieldLen, pValue, valueLen );
