@@ -79,7 +79,7 @@ int main()
 
     /* Test the happy path. */
     reset();
-    fillTemplateHeaderStruct();
+    fillHeaderStructTemplate();
     /* We add 1 because snprintf() writes a null byte at the end. */
     snprintf( correctHeader, HTTP_TEST_SUFFICIENT_HEADER_LEN + 1,
               "%s%s: %s\r\n\r\n",
@@ -228,7 +228,7 @@ int main()
     /* Test HTTP_INSUFFICIENT_MEMORY error from having buffer size less than
      * what is required to fit HTTP headers. */
     reset();
-    fillTemplateHeaderStruct();
+    fillHeaderStructTemplate();
     memcpy( smallBuffer, HTTP_TEST_HEADER_REQUEST_LINE, HTTP_TEST_HEADER_REQUEST_LINE_LEN );
     reqHeaders.headersLen = HTTP_TEST_HEADER_REQUEST_LINE_LEN;
     reqHeaders.pBuffer = smallBuffer;

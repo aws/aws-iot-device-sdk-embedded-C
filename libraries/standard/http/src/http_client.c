@@ -118,7 +118,6 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
                                    size_t valueLen )
 {
     HTTPStatus_t returnStatus = HTTP_INTERNAL_ERROR;
-    uint8_t disabledContentLength = false;
 
     /* Check for NULL parameters. */
     if( pRequestHeaders == NULL )
@@ -182,12 +181,9 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
 
     if( returnStatus != HTTP_INVALID_PARAMETER )
     {
-        disabledContentLength = HTTP_REQUEST_DISABLE_CONTENT_LENGTH_FLAG &
-                                pRequestHeaders->flags;
-
         /* "Content-Length" header must not be set by user if
          * HTTP_REQUEST_DISABLE_CONTENT_LENGTH_FLAG is deactivated. */
-        if( !disabledContentLength &&
+        if( !( HTTP_REQUEST_DISABLE_CONTENT_LENGTH_FLAG & pRequestHeaders->flags ) &&
             ( strncmp( pField,
                        HTTP_CONTENT_LENGTH_FIELD, HTTP_CONTENT_LENGTH_FIELD_LEN ) == 0 ) )
         {
