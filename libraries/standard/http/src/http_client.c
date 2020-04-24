@@ -155,13 +155,7 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
         IotLogError( "Parameter check failed: pValue is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
-    else
-    {
-        /* Empty else MISRA 15.7 */
-    }
-
-    /* Check if header field is long enough for length to overflow. */
-    if( fieldLen > ( UINT32_MAX >> 2 ) )
+    else if( fieldLen > ( UINT32_MAX >> 2 ) )
     {
         IotLogErrorWithArgs( "Parameter check failed: fieldLen must be less than %d.",
                              ( UINT32_MAX >> 2 ) );
@@ -172,13 +166,7 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
         IotLogError( "Parameter check failed: fieldLen must be greater than 0." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
-    else
-    {
-        /* Empty else MISRA 15.7 */
-    }
-
-    /* Check if header value is long enough for length to overflow. */
-    if( valueLen > ( UINT32_MAX >> 2 ) )
+    else if( valueLen > ( UINT32_MAX >> 2 ) )
     {
         IotLogErrorWithArgs( "Parameter check failed: valueLen must be less than %d.",
                              ( UINT32_MAX >> 2 ) );

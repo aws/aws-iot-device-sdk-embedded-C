@@ -154,6 +154,7 @@ int main()
 
     /* Test length of fieldLen and valueLen. */
     reset();
+    fillHeaderStructTemplate();
     reqHeaders.pBuffer = buffer;
     /* Test if length > 0. */
     test_err = HTTPClient_AddHeader( &reqHeaders,
