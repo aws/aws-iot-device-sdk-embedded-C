@@ -108,6 +108,12 @@ static HTTPStatus_t _getFinalResponseStatus( HTTPParsingState_t parsingState,
 static HTTPStatus_t _receiveAndParseHttpResponse( const HTTPTransportInterface_t * pTransport,
                                                   HTTPResponse_t * pResponse );
 
+static HTTPStatus_t _writeRequestLine( HTTPRequestHeaders_t * pRequestHeaders,
+                                       const char * pMethod,
+                                       size_t methodLen,
+                                       const char * pPath,
+                                       size_t pathLen );
+
 /*-----------------------------------------------------------*/
 
 static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
@@ -186,10 +192,175 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
 
 /*-----------------------------------------------------------*/
 
+static HTTPStatus_t _writeRequestLine( HTTPRequestHeaders_t * pRequestHeaders,
+                                       const char * pMethod,
+                                       size_t methodLen,
+                                       const char * pPath,
+                                       size_t pathLen )
+{
+    HTTPStatus_t returnStatus = HTTP_SUCCESS;
+    uint8_t * pBufferCur = pRequestHeaders->pBuffer;
+    size_t toAddLen = methodLen +                 \
+                      SPACE_CHARACTER_LEN +       \
+                      pathLen +                   \
+                      SPACE_CHARACTER_LEN +       \
+                      HTTP_PROTOCOL_VERSION_LEN + \
+                      HTTP_HEADER_LINE_SEPARATOR_LEN;
+
+    if( ( toAddLen + pRequestHeaders->headersLen ) > pRequestHeaders->bufferLen )
+    {
+        returnStatus = HTTP_INSUFFICIENT_MEMORY;
+    }
+
+    if( returnStatus == HTTP_SUCCESS )
+    {
+        /* Write "<METHOD> <PATH> HTTP/1.1\r\n" to start the HTTP header. */
+        memcpy( pBufferCur, pMethod, methodLen );
+        pBufferCur += methodLen;
+        memcpy( pBufferCur, SPACE_CHARACTER, 1 );
+
+        pBufferCur += SPACE_CHARACTER_LEN;
+
+        /* Use "/" as default value if <PATH> is NULL. */
+        if( ( pPath == NULL ) || ( pathLen == 0 ) )
+        {
+            /* Revise toAddLen to contain <HTTP_EMPTY_PATH_LEN> instead. */
+            toAddLen = ( toAddLen - pathLen ) + HTTP_EMPTY_PATH_LEN;
+            memcpy( pBufferCur, HTTP_EMPTY_PATH, HTTP_EMPTY_PATH_LEN );
+            pBufferCur += HTTP_EMPTY_PATH_LEN;
+        }
+        else
+        {
+            memcpy( pBufferCur, pPath, pathLen );
+            pBufferCur += pathLen;
+        }
+
+        memcpy( pBufferCur, SPACE_CHARACTER, SPACE_CHARACTER_LEN );
+        pBufferCur += SPACE_CHARACTER_LEN;
+
+        memcpy( pBufferCur,
+                HTTP_PROTOCOL_VERSION, HTTP_PROTOCOL_VERSION_LEN );
+        pBufferCur += HTTP_PROTOCOL_VERSION_LEN;
+        memcpy( pBufferCur,
+                HTTP_HEADER_LINE_SEPARATOR, HTTP_HEADER_LINE_SEPARATOR_LEN );
+        pRequestHeaders->headersLen += toAddLen;
+    }
+
+    return returnStatus;
+}
+
+/*-----------------------------------------------------------*/
+
 HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pRequestHeaders,
                                                   const HTTPRequestInfo_t * pRequestInfo )
 {
-    return HTTP_NOT_SUPPORTED;
+    HTTPStatus_t returnStatus = HTTP_SUCCESS;
+    uint8_t * pBufferCur = NULL;
+
+    /* Check for NULL parameters. */
+    if( pRequestHeaders == NULL )
+    {
+        IotLogError( "Parameter check failed: pRequestHeaders interface is NULL." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( pRequestHeaders->pBuffer == NULL )
+    {
+        IotLogError( "Parameter check failed: pRequestHeaders->pBuffer is NULL." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( ( pRequestInfo == NULL ) )
+    {
+        IotLogError( "Parameter check failed: pRequestInfo interface is NULL." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( ( pRequestInfo->method == NULL ) )
+    {
+        IotLogError( "Parameter check failed: pRequestInfo->method is NULL." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( pRequestInfo->pHost == NULL )
+    {
+        IotLogError( "Parameter check failed: pRequestInfo->pHost is NULL." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( pRequestInfo->pPath == NULL )
+    {
+        IotLogError( "Parameter check failed: pRequestInfo->pPath is NULL." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( pRequestInfo->methodLen == 0 )
+    {
+        IotLogError( "Parameter check failed: pRequestInfo->methodLen must be greater than 0." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( pRequestInfo->hostLen == 0 )
+    {
+        IotLogError( "Parameter check failed: pRequestInfo->hostLen must be greater than 0." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else
+    {
+        /* Empty else MISRA 15.7 */
+    }
+
+    pBufferCur = pRequestHeaders->pBuffer;
+    pRequestHeaders->headersLen = 0;
+    /* Clear user-provided buffer. */
+    memset( pRequestHeaders->pBuffer, 0, pRequestHeaders->bufferLen );
+
+    if( returnStatus == HTTP_SUCCESS )
+    {
+        /* Write "<METHOD> <PATH> HTTP/1.1\r\n" to start the HTTP header. */
+        returnStatus = _writeRequestLine( pRequestHeaders,
+                                          pRequestInfo->method,
+                                          pRequestInfo->methodLen,
+                                          pRequestInfo->pPath,
+                                          pRequestInfo->pathLen );
+    }
+
+    if( returnStatus == HTTP_SUCCESS )
+    {
+        /* Write "User-Agent: <Value>". */
+        returnStatus = _addHeader( pRequestHeaders,
+                                   HTTP_USER_AGENT_FIELD,
+                                   HTTP_USER_AGENT_FIELD_LEN,
+                                   HTTP_USER_AGENT_VALUE,
+                                   HTTP_USER_AGENT_VALUE_LEN );
+    }
+
+    if( returnStatus == HTTP_SUCCESS )
+    {
+        /* Write "Host: <Value>". */
+        returnStatus = _addHeader( pRequestHeaders,
+                                   HTTP_HOST_FIELD,
+                                   HTTP_HOST_FIELD_LEN,
+                                   pRequestInfo->pHost,
+                                   pRequestInfo->hostLen );
+    }
+
+    if( returnStatus == HTTP_SUCCESS )
+    {
+        if( HTTP_REQUEST_KEEP_ALIVE_FLAG & pRequestInfo->flags )
+        {
+            /* Write "Connection: keep-alive". */
+            returnStatus = _addHeader( pRequestHeaders,
+                                       HTTP_CONNECTION_FIELD,
+                                       HTTP_CONNECTION_FIELD_LEN,
+                                       HTTP_CONNECTION_KEEP_ALIVE_VALUE,
+                                       HTTP_CONNECTION_KEEP_ALIVE_VALUE_LEN );
+        }
+        else
+        {
+            /* Write "Connection: close". */
+            returnStatus = _addHeader( pRequestHeaders,
+                                       HTTP_CONNECTION_FIELD,
+                                       HTTP_CONNECTION_FIELD_LEN,
+                                       HTTP_CONNECTION_CLOSE_VALUE,
+                                       HTTP_CONNECTION_CLOSE_VALUE_LEN );
+        }
+    }
+
+    return returnStatus;
 }
 
 /*-----------------------------------------------------------*/

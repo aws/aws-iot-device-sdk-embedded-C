@@ -28,6 +28,7 @@ INCLUDE = . \
 # functions to dump into separate source files
 # Values based on test source file names will be dynamically added.
 FUNCTIONS = _addHeader \
+			_writeRequestLine \
             _sendHttpHeaders \
 			_sendHttpBody \
 			_receiveHttpResponse \
@@ -52,6 +53,7 @@ HTTPClient_Send.c: _sendHttpHeaders.c \
 				   _HTTPClient_InitializeParsingContext.c \
 				   _HTTPClient_ParseResponse.c \
 				   _getFinalResponseStatus.c \
+HTTPClient_InitializeRequestHeaders.c: _writeRequestLine.c _addHeader.c
 
 # additional header dependencies for all tests
 COMMON = common.h
