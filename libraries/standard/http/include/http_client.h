@@ -187,7 +187,8 @@ typedef enum HTTPStatus
  * @brief Represents header data that will be sent in an HTTP request.
  *
  * The memory for the header data buffer is supplied by the user. Information in
- * the buffer will be filled by calling #HTTPClient_InitializeRequestHeaders.
+ * the buffer will be filled by calling #HTTPClient_InitializeRequestHeaders and
+ * #HTTPClient_AddHeader.
  */
 typedef struct HTTPRequestHeaders
 {
