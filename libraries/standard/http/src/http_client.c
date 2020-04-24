@@ -108,6 +108,19 @@ static HTTPStatus_t _getFinalResponseStatus( HTTPParsingState_t parsingState,
 static HTTPStatus_t _receiveAndParseHttpResponse( const HTTPTransportInterface_t * pTransport,
                                                   HTTPResponse_t * pResponse );
 
+/**
+ * @brief This method writes the request line (first line) of the HTTP Header
+ * into #HTTPRequestHeaders_t.pBuffer and updates length accordingly.
+ *
+ * @param pRequestHeaders Request header buffer information.
+ * @param pMethod The HTTP request method e.g. "GET", "POST", "PUT", or "HEAD".
+ * @param methodLen The byte length of the request method.
+ * @param pPath The Request-URI to the objects of interest, e.g. "/path/to/item.txt".
+ * @param pathLen The byte length of the request path.
+ *
+ * @return #HTTP_SUCCESS if successful. If there was insufficient memory in the
+ * application buffer, then #HTTP_INSUFFICIENT_MEMORY is returned.
+ */
 static HTTPStatus_t _writeRequestLine( HTTPRequestHeaders_t * pRequestHeaders,
                                        const char * pMethod,
                                        size_t methodLen,
