@@ -186,8 +186,6 @@ See @subpage provisioning_demo_config for configuration settings that change the
 @section AWS_IOT_DEMO_PROVISIONING_TEMPLATE_NAME
 @brief The provisioning demo uses this template to demonstrate the fleet provisioning feature.
 
-The provisioning demo uses this template to demonstrate the fleet provisioning feature.
-
 @configpossible Any string <br>
 @configdefault `""` (empty string)
 
