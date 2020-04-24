@@ -8,12 +8,12 @@
 
 /* Template HTTP header fields and values. */
 #define HTTP_TEST_HEADER_FIELD               "Authorization"
-#define HTTP_TEST_HEADER_FIELD_LEN           ( uint8_t ) ( sizeof( HTTP_TEST_HEADER_FIELD ) - 1 )
+#define HTTP_TEST_HEADER_FIELD_LEN           ( sizeof( HTTP_TEST_HEADER_FIELD ) - 1 )
 #define HTTP_TEST_HEADER_VALUE               "None"
-#define HTTP_TEST_HEADER_VALUE_LEN           ( uint8_t ) ( sizeof( HTTP_TEST_HEADER_VALUE ) - 1 )
+#define HTTP_TEST_HEADER_VALUE_LEN           ( sizeof( HTTP_TEST_HEADER_VALUE ) - 1 )
 /* Template for first line of HTTP header. */
 #define HTTP_TEST_HEADER_REQUEST_LINE        "GET / HTTP/1.1 \r\n"
-#define HTTP_TEST_HEADER_REQUEST_LINE_LEN    ( uint8_t ) ( sizeof( HTTP_TEST_HEADER_REQUEST_LINE ) - 1 )
+#define HTTP_TEST_HEADER_REQUEST_LINE_LEN    ( sizeof( HTTP_TEST_HEADER_REQUEST_LINE ) - 1 )
 #define HTTP_REQUEST_HEADERS_INITIALIZER     { 0 }
 /* Default size for request buffer. */
 #define HTTP_TEST_BUFFER_SIZE                ( 100 )
