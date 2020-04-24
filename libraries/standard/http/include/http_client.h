@@ -84,7 +84,7 @@ typedef struct HTTPNetworkContext HTTPNetworkContext_t;
 /**
  * @brief Transport interface for sending data over the network.
  *
- * If the number of bytes written returned is less than bytesToWrite, then
+ * If the number of bytes written returned is not equal to bytesToWrite, then
  * #HTTPClient_Send will return HTTP_NETWORK_ERROR. If a negative value is
  * returned then this #HTTPClient_Send will also return #HTTP_NETWORK_ERROR.
  *
@@ -102,10 +102,14 @@ typedef int32_t (* HTTPTransportSend_t )( HTTPNetworkContext_t * pContext,
  * @brief Transport interface for reading data on the network.
  *
  * This function will read up to bytesToRead amount of data from the network.
+ *
  * If this function returns a value less than zero, then #HTTPClient_Send will
- * return #HTTP_NETWORK_ERROR. If this function returns less than the
- * bytesToRead and greater than zero, then this function will be invoked again
- * if the data in pBuffer contains a partial HTTP response message.
+ * return #HTTP_NETWORK_ERROR.
+ *
+ * If this function returns less than the bytesToRead and greater than zero,
+ * then this function will be invoked again if the data in pBuffer contains a
+ * partial HTTP response message and there there is room left in the pBuffer.
+ * Repeated invocations will stop if this function returns zero.
  *
  * @param[in] context User defined context.
  * @param[in] pBuffer Buffer to read network data into.
@@ -122,9 +126,9 @@ typedef int32_t (* HTTPTransportRecv_t )( HTTPNetworkContext_t * pContext,
  */
 typedef struct HTTPTransportInterface
 {
-    HTTPTransportRecv_t recv;
-    HTTPTransportSend_t send;
-    HTTPNetworkContext_t * pContext;
+    HTTPTransportRecv_t recv;        /**< Transport receive interface */
+    HTTPTransportSend_t send;        /**< Transport interface send interface. */
+    HTTPNetworkContext_t * pContext; /**< User defined transport interface context. */
 } HTTPTransportInterface_t;
 
 /**
@@ -142,7 +146,7 @@ typedef enum HTTPStatus
      * - #HTTPClient_Send
      * - #HTTPClient_ReadHeader
      */
-    HTTP_SUCCESS = 0,
+    HTTP_SUCCESS,
 
     /**
      * @brief The HTTP Client library function input an invalid parameter.
@@ -164,23 +168,47 @@ typedef enum HTTPStatus
      */
     HTTP_NETWORK_ERROR,
 
-    HTTP_NOT_SUPPORTED,
+    /**
+     * @brief Part of the HTTP response was received from the network.
+     *
+     * This can occur only if #HTTPTransportRecv_t returns zero before the full
+     * response message was received.
+     *
+     * Functions that may return this value:
+     * - #HTTPClient_Send
+     */
     HTTP_PARTIAL_RESPONSE,
 
     /**
-     * @brief The application buffer was not large enough for HTTP headers or body.
+     * @brief No HTTP response was received from the network.
+     *
+     * This can occur only if #HTTPTransportRecv_t returns zero when first
+     * invoked.
+     *
+     * Functions that may return this value:
+     * - #HTTPClient_Send
+     */
+    HTTP_NO_RESPONSE,
+
+    /**
+     * @brief The application buffer was not large enough for HTTP request
+     * headers or the HTTP response message.
      *
      * Functions that may return this value:
      * - #HTTPClient_InitializeRequestHeaders
      * - #HTTPClient_AddHeader
      * - #HTTPClient_AddRangeHeader
+     * - #HTTPClient_Send
      */
     HTTP_INSUFFICIENT_MEMORY,
+
     HTTP_INTERNAL_ERROR,
     HTTP_SECURITY_ALERT_RESPONSE_HEADERS_SIZE_LIMIT_EXCEEDED,
     HTTP_SECURITY_ALERT_PARSER_INVALID_CHARACTER,
     HTTP_SECURITY_ALERT_INVALID_CONTENT_LENGTH,
     /* TODO: Add return codes as implementation continues. */
+    /* Temporary error code while implementation is in progress. */
+    HTTP_NOT_SUPPORTED,
 } HTTPStatus_t;
 
 /**
@@ -446,19 +474,29 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
  * parameter pRequestBodyBuf over the transport. The response is received in
  * #HTTPResponse_t.
  *
+ * The application should close the connection with the server if any
+ * HTTP_SECURITY_ALERT_X errors are returned. Any error found in parsing is
+ * considered a malformed response and therefore a security alert.
+ *
  * TODO: Expand documentation.
  *
  * @param[in] pTransport Transport interface, see #HTTPTransportInterface_t for
  * more information.
  * @param[in] pRequestHeaders Request configuration containing the buffer of
  * headers to send.
- * @param[in] pRequestBodyBuf Request entity body.
+ * @param[in] pRequestBodyBuf Request entity body. This can be NULL.
  * @param[in] reqBodyBufLen The length of the request entity in bytes.
  * @param[in] pResponse The response message and some notable response
  * parameters will be returned here on success.
  *
- * @return #HTTP_SUCCESS if successful, an error code otherwise.
- * TODO: Update for exact error codes returned.
+ * @return One of the following:
+ * - #HTTP_SUCCESS
+ * - #HTTP_INVALID_PARAMETER
+ * - #HTTP_NETWORK_ERROR
+ * - #HTTP_PARTIAL_RESPONSE
+ * - #HTTP_NO_RESPONSE
+ * - #HTTP_INSUFFICIENT_MEMORY
+ * TODO: Add more errors for parsing implementation.
  */
 HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
                               const HTTPRequestHeaders_t * pRequestHeaders,
