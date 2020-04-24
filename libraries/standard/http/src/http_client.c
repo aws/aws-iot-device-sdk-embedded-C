@@ -69,7 +69,7 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
 
     /* Backtrack before trailing "\r\n" (HTTP header end) if it's already written.
      * Note that this method also writes trailing "\r\n" before returning. */
-    if( strncmp( ( char * ) pBufferCur - 2 * HTTP_HEADER_LINE_SEPARATOR_LEN,
+    if( strncmp( ( char * ) pBufferCur - ( 2 * HTTP_HEADER_LINE_SEPARATOR_LEN ),
                  "\r\n\r\n", 2 * HTTP_HEADER_LINE_SEPARATOR_LEN ) == 0 )
     {
         /* Set this flag to backtrack in case of HTTP_INSUFFICIENT_MEMORY. */
@@ -155,21 +155,9 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
         IotLogError( "Parameter check failed: pValue is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
-    else if( fieldLen > ( UINT32_MAX >> 2 ) )
-    {
-        IotLogErrorWithArgs( "Parameter check failed: fieldLen must be less than %d.",
-                             ( UINT32_MAX >> 2 ) );
-        returnStatus = HTTP_INVALID_PARAMETER;
-    }
     else if( fieldLen == 0U )
     {
         IotLogError( "Parameter check failed: fieldLen must be greater than 0." );
-        returnStatus = HTTP_INVALID_PARAMETER;
-    }
-    else if( valueLen > ( UINT32_MAX >> 2 ) )
-    {
-        IotLogErrorWithArgs( "Parameter check failed: valueLen must be less than %d.",
-                             ( UINT32_MAX >> 2 ) );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( valueLen == 0U )

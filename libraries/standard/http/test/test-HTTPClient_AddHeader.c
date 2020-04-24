@@ -75,7 +75,7 @@ int main()
     }                                                                \
     while( 0 )
 
-    plan( 18 );
+    plan( 16 );
 
     /* Test the happy path. */
     reset();
@@ -163,15 +163,6 @@ int main()
     test_err = HTTPClient_AddHeader( &reqHeaders,
                                      header.field, header.fieldLen,
                                      header.value, 0 );
-    ok( test_err == HTTP_INVALID_PARAMETER );
-    /* Test if length < MAX. */
-    test_err = HTTPClient_AddHeader( &reqHeaders,
-                                     header.field, ( UINT32_MAX >> 2 ) + 1,
-                                     header.value, header.valueLen );
-    ok( test_err == HTTP_INVALID_PARAMETER );
-    test_err = HTTPClient_AddHeader( &reqHeaders,
-                                     header.field, header.fieldLen,
-                                     header.value, ( UINT32_MAX >> 2 ) + 1 );
     ok( test_err == HTTP_INVALID_PARAMETER );
 
     /* Test HTTP_INSUFFICIENT_MEMORY error from having buffer size less than

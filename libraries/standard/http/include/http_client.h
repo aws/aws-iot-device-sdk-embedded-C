@@ -399,17 +399,6 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
  * Upon return, pRequestHeaders->headersLen will be updated with the number of
  * bytes written.
  *
- * The maximum value for valueLen and nameLen is ( UINT32_MAX >> 2 ) and also
- * cannot be set to 0. Otherwise, #HTTP_INVALID_PARAMETER is returned.
- *
- * If the following header fields are set by this method,
- * #HTTP_INVALID_PARAMETER is also returned:
- *  - Content-Length (Value can be set if HTTP_REQUEST_DISABLE_CONTENT_LENGTH_FLAG
- *                    in #HTTPRequestHeaders_t.flags is activated.)
- *  - Connection (Value can be set through #HTTPRequestInfo_t.flags.)
- *  - Host (Value can be set through #HTTPRequestInfo_t.pHost.)
- *  - User-Agent (Value can be set by defining HTTP_USER_AGENT_VALUE macro)
- *
  * @param[in] pRequestHeaders Request header buffer information.
  * @param[in] pName The header field name to write.
  * @param[in] nameLen The byte length of the header field name.
@@ -419,7 +408,7 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
  * @return One of the following:
  * - #HTTP_SUCCESS (If successful, an error code otherwise.)
  * - #HTTP_INVALID_PARAMETER (If any provided parameters or their members are NULL.)
- * - #HTTP_INSUFFICIENT_MEMORY (If application buffer size is not large enough to hold headers.)
+ * - #HTTP_INSUFFICIENT_MEMORY (If application-provided buffer is not large enough to hold headers.)
  */
 HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
                                    const char * pField,
