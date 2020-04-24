@@ -1,3 +1,5 @@
+#include <string.h>
+#include <stdlib.h>
 #include "http_client.h"
 #include "private/http_client_internal.h"
 
@@ -54,7 +56,118 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
                                         int32_t rangeStart,
                                         int32_t rangeEnd )
 {
-    return HTTP_NOT_SUPPORTED;
+    HTTPStatus_t returnStatus = HTTP_SUCCESS;
+    size_t requiredBytes = 0;
+    char rangeStartStrBuffer[ MAX_INT32_NO_OF_DIGITS ] = { 0 };
+    size_t rangeStartStrLen = 0;
+    char rangeEndStrBuffer[ MAX_INT32_NO_OF_DIGITS ] = { 0 };
+    size_t rangeEndStrLen = 0;
+
+    if( pRequestHeaders == NULL )
+    {
+        IotLogError( "Parameter check failed: pRequestHeaders is NULL." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( rangeEnd < 0 )
+    {
+        IotLogErrorWithArgs( "Parameter check failed: rangeEnd is negative: "
+                             "rangeEnd should be >=0: RangeEnd=%d", rangeEnd );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( ( rangeEnd != 0 ) && ( rangeStart > rangeEnd ) )
+    {
+        IotLogErrorWithArgs( "Parameter check failed: Invalid range values: "
+                             "rangeStart should be > rangeEnd when both are > 0: "
+                             "RangeStart=%d, RangeEnd=%d", rangeStart, rangeEnd );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else
+    {
+        /* Empty else MISRA 15.7 */
+    }
+
+    requiredBytes = RANGE_REQUEST_HEADER_STRING_LEN;
+
+    /* Add byte count for ASCII representation of rangeStart value. */
+    ( void ) itoa( rangeStart, rangeStartStrBuffer, 10 );
+    requiredBytes += strlen( rangeStartStrBuffer );
+
+    /* Scenario when both range parameters are part of the request. */
+    if( rangeEnd != 0 )
+    {
+        /* Add byte count for ASCII representation of rangeEnd value. */
+        ( void ) itoa( rangeEnd, rangeEndStrBuffer, 10 );
+        requiredBytes += strlen( rangeEndStrBuffer );
+    }
+    /* Case when request is for all bytes >= rangeStart. */
+    else if( rangeStart > 0 )
+    {
+        /* Add byte count for "-" character. */
+        requiredBytes += 1;
+    }
+
+    /* Add byte counts for appending "\r\n" twice at the end. */
+    requiredBytes += 2 * HTTP_HEADER_LINE_SEPARATOR_LEN;
+
+    /* Check if the passed header buffer contains enough remaining memory for
+     * adding the Range Request header. */
+    if( ( pRequestHeaders->bufferLen - pRequestHeaders->headersLen -
+          HTTP_HEADER_LINE_SEPARATOR_LEN )
+        >= requiredBytes )
+    {
+        /* Add the Range header name in the buffer. */
+        memcpy( pRequestHeaders->pBuffer + pRequestHeaders->headersLen
+                - HTTP_HEADER_LINE_SEPARATOR_LEN,
+                RANGE_REQUEST_HEADER_STRING,
+                RANGE_REQUEST_HEADER_STRING_LEN );
+        pRequestHeaders->headersLen += RANGE_REQUEST_HEADER_STRING_LEN - HTTP_HEADER_LINE_SEPARATOR_LEN;
+
+        /* Add the value for the header in the buffer. */
+
+        /* Add the rangeStart value. */
+        memcpy( pRequestHeaders->pBuffer + pRequestHeaders->headersLen,
+                rangeStartStrBuffer,
+                rangeStartStrLen );
+        pRequestHeaders->headersLen += rangeStartStrLen;
+
+        /* Add rangeEnd value if it is valid. */
+        if( rangeEnd != 0 )
+        {
+            /* Add the "-" character.*/
+            memcpy( pRequestHeaders->pBuffer + pRequestHeaders->headersLen,
+                    DASH_CHARACTER,
+                    DASH_CHARACTER_LEN );
+            pRequestHeaders->headersLen += DASH_CHARACTER_LEN;
+
+            /* Add the rangeEnd value. */
+            memcpy( pRequestHeaders->pBuffer + pRequestHeaders->headersLen,
+                    rangeEndStrBuffer,
+                    rangeEndStrLen );
+            pRequestHeaders->headersLen += rangeEndStrLen;
+            requiredBytes += rangeEndStrLen;
+        }
+        /* Case when request is for all bytes >= rangeStart. */
+        else if( rangeStart > 0 )
+        {
+            /* Add the "-" character.*/
+            memcpy( pRequestHeaders->pBuffer + pRequestHeaders->headersLen,
+                    DASH_CHARACTER,
+                    DASH_CHARACTER_LEN );
+            pRequestHeaders->headersLen += DASH_CHARACTER_LEN;
+        }
+
+        /* Add the termination "\r\n" characters twice. */
+        memcpy( pRequestHeaders->pBuffer + pRequestHeaders->headersLen,
+                HTTP_HEADER_LINE_SEPARATOR ""HTTP_HEADER_LINE_SEPARATOR,
+                2 * HTTP_HEADER_LINE_SEPARATOR_LEN );
+        pRequestHeaders->headersLen += 2 * HTTP_HEADER_LINE_SEPARATOR_LEN;
+    }
+    else
+    {
+        returnStatus = HTTP_INSUFFICIENT_MEMORY;
+    }
+
+    return returnStatus;
 }
 
 /*-----------------------------------------------------------*/
@@ -73,15 +186,15 @@ static HTTPStatus_t _sendHttpHeaders( const HTTPTransportInterface_t * pTranspor
     if( transportStatus < 0 )
     {
         IotLogErrorWithArgs( "Error in sending the HTTP headers over the transport "
-                             "interface: Transport status %d.",
+                             "interface : TransportStatus = % d.",
                              transportStatus );
         returnStatus = HTTP_NETWORK_ERROR;
     }
     else if( transportStatus != pRequestHeaders->headersLen )
     {
-        IotLogErrorWithArgs( "Failure in sending HTTP headers: Transport layer "
-                             "did not send the required bytes: Required Bytes=%d"
-                             ", Sent Bytes=%d.",
+        IotLogErrorWithArgs( "Failure in sending HTTP headers:Transport layer "
+                             "did not send the required bytes:RequiredBytes = % d "
+                             ", SentBytes = % d.",
                              transportStatus );
         returnStatus = HTTP_NETWORK_ERROR;
     }
@@ -112,15 +225,15 @@ static HTTPStatus_t _sendHttpBody( const HTTPTransportInterface_t * pTransport,
         if( transportStatus < 0 )
         {
             IotLogErrorWithArgs( "Error in sending the HTTP body over the "
-                                 "transport interface. Transport status %d.",
+                                 "transport interface.TransportStatus = % d.",
                                  transportStatus );
             returnStatus = HTTP_NETWORK_ERROR;
         }
         else if( transportStatus != reqBodyBufLen )
         {
-            IotLogErrorWithArgs( "Failure in sending HTTP headers: Transport layer "
-                                 "did not send the required bytes: Required Bytes=%d"
-                                 ", Sent Bytes=%d.",
+            IotLogErrorWithArgs( "Failure in sending HTTP headers:      Transport layer "
+                                 "did not send the required bytes:      RequiredBytes = % d "
+                                 ", SentBytes = % d.",
                                  transportStatus );
             returnStatus = HTTP_NETWORK_ERROR;
         }
@@ -150,27 +263,27 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
 
     if( pTransport == NULL )
     {
-        IotLogError( "Parameter check failed: pTransport interface is NULL." );
+        IotLogError( "Parameter check failed:   pTransport interface is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( pTransport->send == NULL )
     {
-        IotLogError( "Parameter check failed: pTransport->send is NULL." );
+        IotLogError( "Parameter check failed:   pTransport->send is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( pTransport->recv == NULL )
     {
-        IotLogError( "Parameter check failed: pTransport->recv is NULL." );
+        IotLogError( "Parameter check failed:   pTransport->recv is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( pRequestHeaders == NULL )
     {
-        IotLogError( "Parameter check failed: pRequestHeaders is NULL." );
+        IotLogError( "Parameter check failed:   pRequestHeaders is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( pRequestHeaders->pBuffer == NULL )
     {
-        IotLogError( "Parameter check failed: pRequestHeaders->pBuffer is NULL." );
+        IotLogError( "Parameter check failed:   pRequestHeaders->pBuffer is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else

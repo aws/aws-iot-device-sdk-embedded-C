@@ -28,4 +28,17 @@
     #define IotLogDebugWithArgs( format, ... )
 #endif /* ifdef USE_AWS_IOT_CSDK_LOGGING */
 
+#define HTTP_HEADER_LINE_SEPARATOR         "\r\n"
+
+#define HTTP_HEADER_LINE_SEPARATOR_LEN     ( sizeof( HTTP_HEADER_LINE_SEPARATOR ) - 1 )
+
+#define DASH_CHARACTER                     '-'
+#define DASH_CHARACTER_LEN                 ( sizeof( DASH_CHARACTER ) - 1 )
+
+
+#define RANGE_REQUEST_HEADER_STRING        "Range: bytes="
+#define RANGE_REQUEST_HEADER_STRING_LEN    ( sizeof( RANGE_REQUEST_HEADER ) - 1 )
+#define MAX_INT32_NO_OF_DIGITS             10
+
+
 #endif /* ifndef HTTP_CLIENT_INTERNAL_H_ */
