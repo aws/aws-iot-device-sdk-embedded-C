@@ -403,16 +403,38 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
  * #HTTPRequestHeaders_t.pBuffer.
  *
  * For example, if requesting for the first 1kB of a file the following would be
- * written  "Range: bytes=0-1024\r\n".
+ * written  "Range: bytes=0-1024\r\n\r\n".
  *
- * TODO: Add documentation about rangeStart and rangeEnd configuration.
+ * The trailing "\r\n" that denotes the end of the header lines is overwritten, if it
+ * already exists in the buffer.
+ *
+ * @note There are 3 different forms of range specification, determined by the
+ * combination of @a rangeStart and @a rangeEnd parameter values:
+ * 1. Request containing both parameters for the byte range [rangeStart, rangeEnd]
+ * where @a rangeStart <= @a rangeEnd.
+ * Example request: "Range: bytes=0-1024\r\n" for requesting bytes in the range [0, 1024].
+ *
+ * 2. Request for the last N bytes, represented by @p rangeStart.
+ * @p rangeStart should be < 0 and @p rangeEnd should be zero.
+ * Example request: "Range: bytes=-512\r\n" for requesting the last 512 bytes
+ * (or bytes in the range [0, 512]).
+ *
+ * 3. Request for all bytes (till the end of byte sequence) from byte N,
+ * represented by @p rangeStart.
+ * @p rangeStart should be >= 0 and @p rangeEnd should be zero.
+ * Example request: "Range: bytes=256-\r\n" for requesting all bytes after and
+ * including byte 256 (or bytes in the range [256,)).
  *
  * @param[in] pRequestHeaders Request header buffer information.
  * @param[in] rangeStart The starting range for the requested file.
  * @param[in] rangeEnd The ending range for the requested file.
  *
- * @return #HTTP_SUCCESS if successful, an error code otherwise.
- * TODO: Update for exact error codes returned.
+ * @return Returns the following status codes:
+ * #HTTP_SUCCESS if successful.
+ * #HTTP_INVALID_PARAMETER, if input parameters are invalid, including when
+ * the @p rangeStart and @p rangeEnd parameter combination is invalid.
+ * #HTTP_INSUFFICIENT_MEMORY, if the passed #HTTPRequestHeaders_t.pBuffer
+ * contains insufficient remaining memory for storing the range request.
  */
 HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
                                         int32_t rangeStart,
