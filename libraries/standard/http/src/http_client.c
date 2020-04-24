@@ -184,54 +184,6 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
 
     if( returnStatus != HTTP_INVALID_PARAMETER )
     {
-        /* "Content-Length" header must not be set by user if
-         * HTTP_REQUEST_DISABLE_CONTENT_LENGTH_FLAG is deactivated. */
-        if( !( HTTP_REQUEST_DISABLE_CONTENT_LENGTH_FLAG & pRequestHeaders->flags ) &&
-            ( strncmp( pField,
-                       HTTP_CONTENT_LENGTH_FIELD, HTTP_CONTENT_LENGTH_FIELD_LEN ) == 0 ) )
-        {
-            IotLogError( "Parameter check failed: "                         \
-                         "Adding Content-Length header disallowed because " \
-                         "HTTP_REQUEST_DISABLE_CONTENT_LENGTH_FLAG is not set." );
-            returnStatus = HTTP_INVALID_PARAMETER;
-        }
-
-        /* User must not set "Connection" header through this method. */
-        if( strncmp( pField,
-                     HTTP_CONNECTION_FIELD, fieldLen ) == 0 )
-        {
-            IotLogError( "Parameter check failed: "                  \
-                         "Connection header can only be set during " \
-                         "HTTPClient_InitializeRequestHeaders() "    \
-                         "through HTTPRequestInfo_t.flags." );
-            returnStatus = HTTP_INVALID_PARAMETER;
-        }
-
-        /* User must not set "Host" header through this method. */
-        if( strncmp( pField,
-                     HTTP_HOST_FIELD, fieldLen ) == 0 )
-        {
-            IotLogError( "Parameter check failed: "               \
-                         "Host header can only be set during "    \
-                         "HTTPClient_InitializeRequestHeaders() " \
-                         "through HTTPRequestInfo_t.pHost." );
-            returnStatus = HTTP_INVALID_PARAMETER;
-        }
-
-        /* User must not set "User-Agent" header through this method. */
-        if( strncmp( pField,
-                     HTTP_USER_AGENT_FIELD, fieldLen ) == 0 )
-        {
-            IotLogError( "Parameter check failed: "                  \
-                         "User-Agent header can only be set during " \
-                         "HTTPClient_InitializeRequestHeaders() "    \
-                         "by defining HTTP_USER_AGENT_VALUE." );
-            returnStatus = HTTP_INVALID_PARAMETER;
-        }
-    }
-
-    if( returnStatus != HTTP_INVALID_PARAMETER )
-    {
         returnStatus = _addHeader( pRequestHeaders,
                                    pField, fieldLen, pValue, valueLen );
     }

@@ -214,11 +214,6 @@ typedef struct HTTPRequestHeaders
      * and #HTTPClient_InitializeRequestHeaders.
      */
     size_t headersLen;
-
-    /**
-     * @brief Flags to activate other request header configurations.
-     */
-    uint32_t flags;
 } HTTPRequestHeaders_t;
 
 /**

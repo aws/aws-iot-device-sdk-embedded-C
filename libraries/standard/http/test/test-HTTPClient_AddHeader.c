@@ -75,7 +75,7 @@ int main()
     }                                                                \
     while( 0 )
 
-    plan( 22 );
+    plan( 18 );
 
     /* Test the happy path. */
     reset();
@@ -91,7 +91,6 @@ int main()
     reqHeaders.pBuffer = buffer;
     reqHeaders.bufferLen = HTTP_TEST_BUFFER_SIZE;
     reqHeaders.headersLen = HTTP_TEST_HEADER_REQUEST_LINE_LEN;
-    reqHeaders.flags = 0;
     test_err = HTTPClient_AddHeader( &reqHeaders,
                                      header.field, header.fieldLen,
                                      header.value, header.valueLen );
@@ -173,57 +172,6 @@ int main()
     test_err = HTTPClient_AddHeader( &reqHeaders,
                                      header.field, header.fieldLen,
                                      header.value, ( UINT32_MAX >> 2 ) + 1 );
-    ok( test_err == HTTP_INVALID_PARAMETER );
-
-    /* Test "Content-Length" header if HTTP_REQUEST_DISABLE_CONTENT_LENGTH_FLAG
-     * is deactivated. */
-    reset();
-    memcpy( header.field, HTTP_CONTENT_LENGTH_FIELD, HTTP_CONTENT_LENGTH_FIELD_LEN );
-    header.fieldLen = HTTP_CONTENT_LENGTH_FIELD_LEN;
-    memcpy( header.value, HTTP_TEST_HEADER_VALUE, HTTP_TEST_HEADER_VALUE_LEN );
-    header.valueLen = HTTP_TEST_HEADER_VALUE_LEN;
-    reqHeaders.pBuffer = buffer;
-    reqHeaders.flags = 0;
-    test_err = HTTPClient_AddHeader( &reqHeaders,
-                                     header.field, header.fieldLen,
-                                     header.value, header.valueLen );
-    ok( test_err == HTTP_INVALID_PARAMETER );
-
-    /* Test "Connection" header field. */
-    reset();
-    memcpy( header.field, HTTP_CONNECTION_FIELD, HTTP_CONNECTION_FIELD_LEN );
-    header.fieldLen = HTTP_CONNECTION_FIELD_LEN;
-    memcpy( header.value, HTTP_TEST_HEADER_VALUE, HTTP_TEST_HEADER_VALUE_LEN );
-    header.valueLen = HTTP_TEST_HEADER_VALUE_LEN;
-    reqHeaders.flags = HTTP_REQUEST_DISABLE_CONTENT_LENGTH_FLAG;
-    reqHeaders.pBuffer = buffer;
-    test_err = HTTPClient_AddHeader( &reqHeaders,
-                                     header.field, header.fieldLen,
-                                     header.value, header.valueLen );
-    ok( test_err == HTTP_INVALID_PARAMETER );
-
-    /* Test "Host" header field. */
-    reset();
-    memcpy( header.field, HTTP_HOST_FIELD, HTTP_HOST_FIELD_LEN );
-    header.fieldLen = HTTP_HOST_FIELD_LEN;
-    memcpy( header.value, HTTP_TEST_HEADER_VALUE, HTTP_TEST_HEADER_VALUE_LEN );
-    header.valueLen = HTTP_TEST_HEADER_VALUE_LEN;
-    reqHeaders.pBuffer = buffer;
-    test_err = HTTPClient_AddHeader( &reqHeaders,
-                                     header.field, header.fieldLen,
-                                     header.value, header.valueLen );
-    ok( test_err == HTTP_INVALID_PARAMETER );
-
-    /* Test "User-Agent" header field. */
-    reset();
-    memcpy( header.field, HTTP_USER_AGENT_FIELD, HTTP_USER_AGENT_FIELD_LEN );
-    header.fieldLen = HTTP_USER_AGENT_FIELD_LEN;
-    memcpy( header.value, HTTP_TEST_HEADER_VALUE, HTTP_TEST_HEADER_VALUE_LEN );
-    header.valueLen = HTTP_TEST_HEADER_VALUE_LEN;
-    reqHeaders.pBuffer = buffer;
-    test_err = HTTPClient_AddHeader( &reqHeaders,
-                                     header.field, header.fieldLen,
-                                     header.value, header.valueLen );
     ok( test_err == HTTP_INVALID_PARAMETER );
 
     /* Test HTTP_INSUFFICIENT_MEMORY error from having buffer size less than
