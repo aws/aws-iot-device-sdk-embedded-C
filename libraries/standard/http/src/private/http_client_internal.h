@@ -62,7 +62,7 @@
  *
  * This is used to initialize a local array for the final headers to send.
  */
-#define INT32_STRING_MAX_LEN               ( uint8_t ) ( sizeof( INT32_STRING_MAX ) - 1 )
+#define INT32_STRING_MAX_LEN               ( 10 )
 
 
 /**
