@@ -163,7 +163,32 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * const pContext,
 
 MQTTStatus_t MQTT_Disconnect( MQTTContext_t * const pContext )
 {
-    return MQTTSuccess;
+    size_t packetSize;
+    int32_t bytesSent;
+
+    MQTTStatus_t status = MQTT_GetDisconnectPacketSize( &packetSize );
+
+    if( status == MQTTSuccess )
+    {
+        status = MQTT_SerializeDisconnect( &( pContext->networkBuffer ) );
+    }
+
+    if( status == MQTTSuccess )
+    {
+        bytesSent = sendPacket( pContext, packetSize );
+
+        if( bytesSent < 0 )
+        {
+            status = MQTTSendFailed;
+        }
+    }
+
+    if( status == MQTTSuccess )
+    {
+        pContext->connectStatus = MQTTNotConnected;
+    }
+
+    return status;
 }
 
 MQTTStatus_t MQTT_Process( MQTTContext_t * const pContext,

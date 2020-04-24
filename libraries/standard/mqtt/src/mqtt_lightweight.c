@@ -36,6 +36,9 @@
 #define MQTT_CONNECT_FLAG_PASSWORD       ( 6 )
 #define MQTT_CONNECT_FLAG_USERNAME       ( 7 )
 
+#define MQTT_DISCONNECT_PACKET_SIZE         ( 2UL )
+#define MQTT_DISCONNECT_REMAINING_LENGTH    ( ( uint8_t ) 0 )
+
 #define UINT8_SET_BIT( x, position )    ( ( x ) = ( uint8_t ) ( ( x ) | ( 0x01U << ( position ) ) ) )
 
 #define UINT16_HIGH_BYTE( x )    ( ( uint8_t ) ( ( x ) >> 8 ) )
@@ -370,9 +373,36 @@ MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * const pPubli
     return MQTTSuccess;
 }
 
+MQTTStatus_t MQTT_GetDisconnectPacketSize( size_t * pPacketSize )
+{
+    /* MQTT DISCONNECT packets always have the same size. */
+    *pPacketSize = MQTT_DISCONNECT_PACKET_SIZE;
+
+    return MQTTSuccess;
+}
+
 MQTTStatus_t MQTT_SerializeDisconnect( const MQTTFixedBuffer_t * const pBuffer )
 {
-    return MQTTSuccess;
+    MQTTStatus_t status = MQTTSuccess;
+    size_t disconnectPacketSize;
+
+    status = MQTT_GetDisconnectPacketSize( &disconnectPacketSize );
+
+    if( status == MQTTSuccess )
+    {
+        if( pBuffer->size < disconnectPacketSize )
+        {
+            status = MQTTNoMemory;
+        }
+    }
+
+    if( status == MQTTSuccess )
+    {
+        pBuffer->pBuffer[ 0 ] = MQTT_PACKET_TYPE_DISCONNECT;
+        pBuffer->pBuffer[ 1 ] = MQTT_DISCONNECT_REMAINING_LENGTH;
+    }
+
+    return status;
 }
 
 MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * const pBuffer )
