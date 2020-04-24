@@ -1,3 +1,5 @@
+# -*- mode: makefile -*-
+
 SHELL=/bin/bash
 
 default: report
@@ -13,7 +15,6 @@ GOTO_INSTRUMENT ?= goto-instrument
 GOTO_ANALYZER ?= goto-analyzer
 BATCH ?= cbmc-batch
 VIEWER ?= cbmc-viewer
-
 
 ################################################################
 # Build goto binary for cbmc
@@ -39,27 +40,58 @@ DEF += \
 
 CFLAGS += $(CFLAGS2) $(INC) $(DEF) -std=gnu99
 
-%.goto : %.c
+# The --nondet-static flag causes cbmc to ignore static initialization
+# and havoc static variables to give them unconstrained initial values.
+# Use --nondet-static-exclude to remove a variable from the list of
+# static variables to havoc.  Use goto-instrument --list-symbols to
+# get the fully-qualified name of the variable to remove.  Then add
+# --nondet-static-exclude to NONDET in the proof makefile.
+# For example:
+#   NONDET += --nondet-static-exclude _IotMqtt_SerializePingreq::1::pPingreq
+
+NONDET += --nondet-static
+
+# Out of source builds
+#
+# Proof makefiles were originally written using in-source builds, but
+# this inhibits building and running proofs concurrently when
+# different proofs build sources with different configurations.  These
+# definitions assume $(OBJS) is the original list of in-source goto
+# binaries and defines $(GOTOS) to be the list of out-of-source goto
+# binaries written into the local gotos subdirectory.
+
+SRCS=$(patsubst %.goto,%.c,$(patsubst $(MQTT)/%,%,$(OBJS)))
+GOTO_DIR=gotos
+GOTOS=$(patsubst %.c,$(GOTO_DIR)/%.goto,$(SRCS))
+
+# Build sources in the source tree with full paths
+$(GOTO_DIR)/%.goto: $(MQTT)/%.c
+	mkdir -p $(dir $@)
+	$(GOTO_CC) -o $@ $(CFLAGS) $<
+
+# build sources in the local directory with relative paths
+$(GOTO_DIR)/%.goto: ./%.c
+	mkdir -p $(dir $@)
 	$(GOTO_CC) -o $@ $(CFLAGS) $<
 
 $(MQTT)/build:
 	(mkdir -p $(MQTT)/build; cd $(MQTT)/build; cmake ..) \
 	       > $(ENTRY)0.txt 2>&1
 
-$(ENTRY)1.goto: $(MQTT)/build $(OBJS)
-	$(GOTO_CC) --function harness -o $@ $(OBJS)
+$(ENTRY)1.goto: $(MQTT)/build $(GOTOS)
+	$(GOTO_CC) --function harness -o $@ $(GOTOS) \
 		> $(ENTRY)1.txt 2>&1
 
 $(ENTRY)2.goto: $(ENTRY)1.goto
 	 $(GOTO_INSTRUMENT) \
 			$(ABSTRACTIONS) \
+			$(NONDET) \
 			--drop-unused-functions \
 			--slice-global-inits $< $@ \
 		> $(ENTRY)2.txt  2>&1
 
 $(ENTRY).goto: $(ENTRY)2.goto
 	cp $< $@
-
 
 ################################################################
 # Set C compiler defines
@@ -68,37 +100,49 @@ CBMC_OBJECT_BITS ?= 8
 CBMCFLAGS += --object-bits $(CBMC_OBJECT_BITS)
 CBMC_MAX_OBJECT_SIZE = "(SIZE_MAX>>(CBMC_OBJECT_BITS+1))"
 
-
 ################################################################
 # Run cbmc and build html report
 
 CBMCFLAGS += \
 	$(UNWINDING) \
+	--object-bits $(CBMC_OBJECT_BITS) \
 	--bounds-check \
-	--pointer-check \
-	--unwinding-assertions \
-	--nondet-static \
+	--conversion-check \
 	--div-by-zero-check \
 	--float-overflow-check \
-	--nan-check \
-	--pointer-overflow-check \
-	--undefined-shift-check \
-	--signed-overflow-check \
-	--unsigned-overflow-check \
 	--flush \
+	--nan-check \
+	--pointer-check \
+	--pointer-overflow-check \
+	--signed-overflow-check \
+	--undefined-shift-check \
+	--unsigned-overflow-check \
+	--unwinding-assertions \
 
 goto: $(ENTRY).goto
 
 cbmc.txt: $(ENTRY).goto
-	@echo cbmc $(CBMCFLAGS) --trace $< 2>&1 | tee $@
-	cbmc $(CBMCFLAGS) --trace $< 2>&1 | tee -a $@
+	- cbmc $(CBMCFLAGS) --trace $< >$@ 2>&1
+
+cbmc.xml: $(ENTRY).goto
+	- cbmc $(CBMCFLAGS) --trace --xml-ui $< >$@ 2>&1
+
+cbmc.json: $(ENTRY).goto
+	- cbmc $(CBMCFLAGS) --trace --json-ui $< >$@ 2>&1
 
 property.xml: $(ENTRY).goto
-	cbmc $(CBMCFLAGS) --show-properties --xml-ui $< 2>&1 > $@
+	cbmc $(CBMCFLAGS) --show-properties --xml-ui $< >$@ 2>&1
+
+property.json: $(ENTRY).goto
+	cbmc $(CBMCFLAGS) --show-properties --json-ui $< >$@ 2>&1
 
 coverage.xml: $(ENTRY).goto
 	cbmc $(filter-out --unwinding-assertions,$(CBMCFLAGS)) \
-		--cover location --xml-ui $< 2>&1 > $@
+		--cover location --xml-ui $< >$@ 2>&1
+
+coverage.json: $(ENTRY).goto
+	cbmc $(filter-out --unwinding-assertions,$(CBMCFLAGS)) \
+		--cover location --json-ui $< >$@ 2>&1
 
 cbmc: cbmc.txt
 
@@ -120,99 +164,68 @@ report: cbmc.txt property.xml coverage.xml
 clean:
 	$(RM) $(OBJS) $(ENTRY).goto
 	$(RM) $(ENTRY)[0-9].goto $(ENTRY)[0-9].txt
+	$(RM) -r $(GOTO_DIR)
 	$(RM) cbmc.txt property.xml coverage.xml TAGS TAGS-*
 	$(RM) *~ \#*
 
 veryclean: clean
 	$(RM) -r html
 
-.PHONY: cbmc property coverage report clean veryclean
+.PHONY: default goto cbmc property coverage report clean veryclean
 
 ################################################################
-# Run cbmc under cbmc-batch
+# Build configuration file to run cbmc under cbmc-batch in CI
 
-BATCH ?= cbmc-batch
-WS ?= ws
 JOBOS ?= ubuntu16
-
-define encode_options
-       '=$(shell echo $(1) | sed 's/ ,/ /g' | sed 's/ /;/g')='
-endef
-
-PROPMEM ?= 64000
-COVMEM ?= 64000
-CBMCPKG ?= cbmc
-BATCHPKG ?= cbmc-batch
-VIEWERPKG ?= cbmc-viewer
-
-SRC_ROOT ?= $(MQTT)
-SRC_TARFILE ?= s3://cbmc/mqtt.tar.gz
-
-BATCHFLAGS ?= \
-	--srcdir $(MQTT) \
-	--wsdir $(WS) \
-	--jobprefix $(ENTRY) \
-	--no-build \
-	--goto $(ENTRY).goto \
-	--cbmcflags $(call encode_options,$(CBMCFLAGS)) \
-	--property-memory $(PROPMEM) \
-	--coverage-memory $(COVMEM) \
-	--cbmcpkg $(CBMCPKG) \
-	--batchpkg $(BATCHPKG) \
-	--viewerpkg $(VIEWERPKG) \
-	--no-copysrc \
-	--srctarfile $(SRC_TARFILE) \
-	--blddir $(MQTT) \
-	--jobos $(JOBOS) \
+PROOFMEM ?= 32000
 
 define yaml_encode_options
        "$(shell echo $(1) | sed 's/ ,/ /g' | sed 's/ /;/g')"
 endef
 
-$(ENTRY).yaml: $(ENTRY).goto Makefile
-	echo 'jobos: $(JOBOS)' > $@
-	echo 'cbmcpkg: $(CBMCPKG)' >> $@
-	echo 'batchpkg: $(BATCHPKG)' >> $@
-	echo 'viewerpkg: $(VIEWERPKG)' >> $@
-	echo 'goto: $(ENTRY).goto' >> $@
-	echo 'build: false' >> $@
-	echo 'cbmcflags: $(call yaml_encode_options,$(CBMCFLAGS))' >> $@
-	echo 'property_memory: $(PROPMEM)' >> $@
-	echo 'coverage_memory: $(COVMEM)' >> $@
-	echo 'expected: "SUCCESSFUL"' >> $@
+define encode_options
+       '=$(shell echo $(1) | sed 's/ ,/ /g' | sed 's/ /;/g')='
+endef
 
-launch: $(ENTRY).goto Makefile
-	mkdir -p $(WS)
-	cp $(ENTRY).goto $(WS)
-	$(BATCH) $(BATCHFLAGS)
-
-launch-clean:
-	for d in $(ENTRY)*; do \
-	  if [ -d $$d ]; then \
-	    for f in $$d.json $$d.yaml Makefile-$$d; do \
-	      if [ -f $$f ]; then mv $$f $$d; fi \
-	    done\
-	  fi \
-	done
-	$(RM) Makefile-$(ENTRY)-[0-9]*-[0-9]*
-	$(RM) $(ENTRY)-[0-9]*-[0-9]*.json $(ENTRY)-[0-9]*-[0-9]*.yaml
-	$(RM) -r $(WS)
-
-launch-veryclean: launch-clean
-	$(RM) -r $(ENTRY)-[0-9]*-[0-9]*
-
-################################################################
-# Build configuration file to run cbmc under cbmc-batch in CI
-
-CBMC_FLAGS =  '$(call encode_options,$(CBMCFLAGS))'
-cbmc-batch.yaml: Makefile ../Makefile.common
+# Regenerate cbmc-batch.yaml every time (use PHONY, list no dependencies)
+cbmc-batch.yaml:
 	@echo "Building $@"
 	@$(RM) $@
-	@echo 'cbmcflags: $(strip $(call yaml_encode_options,$(CBMCFLAGS)))' > $@
+	@echo 'build_memory: $(PROOFMEM)' > $@
+	@echo 'cbmcflags: $(strip $(call yaml_encode_options,$(CBMCFLAGS)))' >> $@
+	@echo 'coverage_memory: $(PROOFMEM)' >> $@
 	@echo "expected: SUCCESSFUL" >> $@
 	@echo "goto: $(ENTRY).goto" >> $@
 	@echo "jobos: $(JOBOS)" >> $@
+	@echo 'property_memory: $(PROOFMEM)' >> $@
+	@echo 'report_memory: $(PROOFMEM)' >> $@
 
 .PHONY: cbmc-batch.yaml
 
 ################################################################
+# Use the latest version of cbmc viewer
+
+VIEWER2=viewer
+MAKE_SOURCES=make-sources
+
+sources.json:
+	- $(MAKE_SOURCES) --root $(MQTT) --build . > $@
+
+report2: sources.json cbmc.xml property.xml coverage.xml
+	- $(VIEWER2) \
+	--viewer-sources sources.json \
+	--goto $(ENTRY).goto \
+	--srcdir $(MQTT) \
+	--htmldir html \
+	--result cbmc.xml \
+	--property property.xml \
+	--coverage coverage.xml
+
+clean2: clean
+	$(RM) cbmc.xml sources.json
+
+veryclean2: veryclean
+	$(RM) cbmc.xml sources.json
+	$(RM) viewer-*.json
+
+.PHONY: report2 clean2 veryclean2

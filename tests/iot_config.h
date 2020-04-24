@@ -172,7 +172,7 @@
 
 /* Enable asserts in the libraries. */
 #define IOT_CONTAINERS_ENABLE_ASSERTS           ( 1 )
-#define IOT_MQTT_ENABLE_ASSERTS                 ( !IOT_TEST_COVERAGE )
+#define IOT_MQTT_ENABLE_ASSERTS                 ( ! IOT_TEST_COVERAGE )
 #define IOT_TASKPOOL_ENABLE_ASSERTS             ( 1 )
 #define IOT_SERIALIZER_ENABLE_ASSERTS           ( 1 )
 #define AWS_IOT_SHADOW_ENABLE_ASSERTS           ( 1 )
@@ -270,10 +270,10 @@
         #error "Unsupported compiler. Only gcc and clang are supported for coverage."
     #endif
 
-/* Define a custom logging puts function. This function allows coverage
- * testing of logging functions, but prevents excessive logs from being
- * printed. */
-    #define IotLogging_Puts    _coveragePuts
+    /* Define a custom logging puts function. This function allows coverage
+     * testing of logging functions, but prevents excessive logs from being
+     * printed. */
+    #define IotLogging_Puts       _coveragePuts
 
 /* Includes for coverage logging puts. */
     #include <stdbool.h>

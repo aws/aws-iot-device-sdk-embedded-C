@@ -1244,7 +1244,7 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
         status = IOT_MQTT_NOT_INITIALIZED;
     }
     /* Validate network interface and connect info. */
-    else if( _IotMqtt_ValidateConnect( pConnectInfo ) == false )
+    else if( _IotMqtt_ValidateConnect( pConnectInfo ) == false || pMqttConnection == NULL )
     {
         status = IOT_MQTT_BAD_PARAMETER;
     }
@@ -1773,29 +1773,35 @@ IotMqttError_t IotMqtt_PublishSync( IotMqttConnection_t mqttConnection,
     /* Flags are currently ignored. */
     ( void ) flags;
 
-    /* Set the waitable flag and reference for QoS 1 PUBLISH. */
-    if( pPublishInfo->qos == IOT_MQTT_QOS_1 )
+    if( pPublishInfo == NULL )
     {
-        syncFlags |= IOT_MQTT_FLAG_WAITABLE;
-        pPublishOperation = &publishOperation;
+        status = IOT_MQTT_BAD_PARAMETER;
     }
-
-    /* Call the asynchronous PUBLISH function. */
-    status = IotMqtt_PublishAsync( mqttConnection,
-                                   pPublishInfo,
-                                   syncFlags,
-                                   NULL,
-                                   pPublishOperation );
-
-    /* Wait for a queued QoS 1 PUBLISH to complete. */
-    if( pPublishInfo->qos == IOT_MQTT_QOS_1 )
+    else
     {
-        if( status == IOT_MQTT_STATUS_PENDING )
+        /* Set the waitable flag and reference for QoS 1 PUBLISH. */
+        if( pPublishInfo->qos == IOT_MQTT_QOS_1 )
         {
-            status = IotMqtt_Wait( publishOperation, timeoutMs );
+            syncFlags |= IOT_MQTT_FLAG_WAITABLE;
+            pPublishOperation = &publishOperation;
+        }
+
+        /* Call the asynchronous PUBLISH function. */
+        status = IotMqtt_PublishAsync( mqttConnection,
+                                       pPublishInfo,
+                                       syncFlags,
+                                       NULL,
+                                       pPublishOperation );
+
+        /* Wait for a queued QoS 1 PUBLISH to complete. */
+        if( pPublishInfo->qos == IOT_MQTT_QOS_1 )
+        {
+            if( status == IOT_MQTT_STATUS_PENDING )
+            {
+                status = IotMqtt_Wait( publishOperation, timeoutMs );
+            }
         }
     }
-
     return status;
 }
 

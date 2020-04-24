@@ -38,7 +38,3 @@ sizeof
 tinycbor
 todo
 www
-getsizeof
-https
-ietf
-iterable

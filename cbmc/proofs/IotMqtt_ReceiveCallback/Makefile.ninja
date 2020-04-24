@@ -1,0 +1,33 @@
+# -*- mode: makefile -*-
+
+# This Makefile runs the ReceiveCallback proofs with as much
+# concurrency as possible.  It runs each case in isolation, but runs
+# the two instances of cbmc in parallel.
+#
+# The ninja build file does not run the ReceiveCallback proofs
+# correctly.
+#
+# The problem is that each case of the proof requires a different
+# version of IotMqtt_ReceiveCallback.goto.  One could ask ninja to do
+# a "make clean" before doing a "make goto".  But the result would be
+# that case A would build goto, then case B would build goto, then
+# case A would run cbmc and see the IotMqtt_ReceiveCallback.goto has
+# changed and rebuild goto.  Now the concurrently running cases are
+# stompping on each other's goto binaries.
+
+DIRS = \
+	IotMqtt_ReceiveCallback_CONNACK \
+	IotMqtt_ReceiveCallback_OTHER \
+	IotMqtt_ReceiveCallback_PUBACK \
+	IotMqtt_ReceiveCallback_PUBLISH \
+	IotMqtt_ReceiveCallback_SUBACK \
+	IotMqtt_ReceiveCallback_UNSUBACK
+
+default:
+	ninja veryclean
+	for d in $(DIRS); do \
+		echo -n TIME: STARTING $$d ": "; date; \
+		make -C $$d veryclean2; \
+		ninja $$d; \
+		echo -n TIME: ENDING $$d ": "; date; \
+	done

@@ -569,7 +569,9 @@ bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo )
     bool status = true;
 
     /* Check for NULL. */
-    if( pConnectInfo == NULL )
+    if( pConnectInfo == NULL ||
+      ( pConnectInfo->pUserName == NULL && pConnectInfo->userNameLength != 0 ) ||
+      ( pConnectInfo->pPassword == NULL && pConnectInfo->passwordLength != 0 ) )
     {
         IotLogError( "MQTT connection information cannot be NULL." );
 
@@ -598,7 +600,8 @@ bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo )
         /* If will info is provided, check that it is valid. */
         if( pConnectInfo->pWillInfo != NULL )
         {
-            status = _IotMqtt_ValidateLwtPublish( pConnectInfo->awsIotMqttMode,
+            status = ( pConnectInfo->pWillInfo->pPayload != NULL ) &&
+                     _IotMqtt_ValidateLwtPublish( pConnectInfo->awsIotMqttMode,
                                                   pConnectInfo->pWillInfo );
         }
     }

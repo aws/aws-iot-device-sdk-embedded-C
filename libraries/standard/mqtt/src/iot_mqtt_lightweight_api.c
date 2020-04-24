@@ -1028,7 +1028,7 @@ IotMqttError_t IotMqtt_DeserializePublish( IotMqttPacketInfo_t * pMqttPacket )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
     /* Internal MQTT packet structure */
-    IotMqttPacketInfo_t mqttPacket;
+    IotMqttPacketInfo_t mqttPacket = { 0 };
 
     if( pMqttPacket == NULL )
     {
@@ -1043,7 +1043,6 @@ IotMqttError_t IotMqtt_DeserializePublish( IotMqttPacketInfo_t * pMqttPacket )
     else
     {
         /* Set internal mqtt packet parameters. */
-        ( void ) memset( ( void * ) &mqttPacket, 0x00, sizeof( IotMqttPacketInfo_t ) );
         mqttPacket.pRemainingData = pMqttPacket->pRemainingData;
         mqttPacket.remainingLength = pMqttPacket->remainingLength;
         mqttPacket.type = pMqttPacket->type;
@@ -1065,7 +1064,7 @@ IotMqttError_t IotMqtt_DeserializeResponse( IotMqttPacketInfo_t * pMqttPacket )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
     /* Internal MQTT packet structure */
-    IotMqttPacketInfo_t mqttPacket;
+    IotMqttPacketInfo_t mqttPacket = { 0 };
 
     if( pMqttPacket == NULL )
     {
@@ -1080,8 +1079,6 @@ IotMqttError_t IotMqtt_DeserializeResponse( IotMqttPacketInfo_t * pMqttPacket )
     else
     {
         /* Set internal mqtt packet parameters. */
-        ( void ) memset( ( void * ) &mqttPacket, 0x00, sizeof( IotMqttPacketInfo_t ) );
-
         mqttPacket.pRemainingData = pMqttPacket->pRemainingData;
         mqttPacket.remainingLength = pMqttPacket->remainingLength;
         mqttPacket.type = pMqttPacket->type;
