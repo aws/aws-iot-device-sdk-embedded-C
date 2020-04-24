@@ -295,11 +295,6 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
         IotLogError( "Parameter check failed: pRequestInfo->pHost is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
-    else if( pRequestInfo->pPath == NULL )
-    {
-        IotLogError( "Parameter check failed: pRequestInfo->pPath is NULL." );
-        returnStatus = HTTP_INVALID_PARAMETER;
-    }
     else if( pRequestInfo->methodLen == 0 )
     {
         IotLogError( "Parameter check failed: pRequestInfo->methodLen must be greater than 0." );

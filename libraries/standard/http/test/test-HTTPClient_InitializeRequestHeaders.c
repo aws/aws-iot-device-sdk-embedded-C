@@ -80,6 +80,8 @@ int main()
     }                                                             \
     while( 0 )
 
+    plan( 17 );
+
     /* Test the happy path. */
     reset();
     correctHeaderLen = HTTP_TEST_PREFIX_HEADER_LEN + \
@@ -158,5 +160,30 @@ int main()
     ok( reqHeaders.headersLen == correctHeaderLen );
     ok( test_err == HTTP_SUCCESS );
 
-    return 0;
+    /* Test default path "/" if path == NULL. */
+    reset();
+    reqHeaders.pBuffer = buffer;
+    reqHeaders.bufferLen = HTTP_TEST_BUFFER_SIZE;
+    fillReqInfoTemplate();
+    reqInfo.pPath = NULL;
+    correctHeaderLen = ( HTTP_TEST_PREFIX_HEADER_LEN - HTTP_TEST_REQUEST_PATH_LEN ) + \
+                       HTTP_EMPTY_PATH_LEN +                                          \
+                       HTTP_CONNECTION_CLOSE_VALUE_LEN;
+    /* Add 1 because snprintf() writes a null byte at the end. */
+    snprintf( correctHeader, correctHeaderLen + 1,
+              "%s %s %s\r\n" \
+              "%s: %s\r\n"   \
+              "%s: %s\r\n"   \
+              "%s: %s\r\n\r\n",
+              HTTP_TEST_REQUEST_METHOD, HTTP_EMPTY_PATH, HTTP_PROTOCOL_VERSION,
+              HTTP_USER_AGENT_FIELD, HTTP_USER_AGENT_VALUE,
+              HTTP_HOST_FIELD, HTTP_TEST_HOST_VALUE,
+              HTTP_CONNECTION_FIELD, HTTP_CONNECTION_CLOSE_VALUE );
+    test_err = HTTPClient_InitializeRequestHeaders( &reqHeaders, &reqInfo );
+    ok( strncmp( ( char * ) reqHeaders.pBuffer,
+                 correctHeader, correctHeaderLen ) == 0 );
+    ok( reqHeaders.headersLen == correctHeaderLen );
+    ok( test_err == HTTP_SUCCESS );
+
+    return grade();
 }
