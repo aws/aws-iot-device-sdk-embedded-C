@@ -375,7 +375,7 @@ typedef struct HTTPResponse
  * #HTTPRequestInfo_t.
  *
  * Upon return, #HTTPRequestHeaders_t.headersLen will be updated with the number
- * of bytes written if there is sufficient memory.
+ * of bytes written.
  *
  * Each line in the header is listed below and written in this order:
  *     <#HTTPRequestInfo_t.method> <#HTTPRequestInfo_t.pPath> <HTTP_PROTOCOL_VERSION>
