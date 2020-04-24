@@ -426,8 +426,8 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
  * - #HTTP_INSUFFICIENT_MEMORY (If application buffer size is not large enough to hold headers.)
  */
 HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
-                                   const char * pName,
-                                   size_t nameLen,
+                                   const char * pField,
+                                   size_t fieldLen,
                                    const char * pValue,
                                    size_t valueLen );
 
