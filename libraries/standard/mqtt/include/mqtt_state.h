@@ -40,7 +40,7 @@ MQTTPublishState_t MQTT_CalculateStatePublish( MQTTStateOperation_t opType,
 MQTTPublishState_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
                                             uint16_t packetId,
                                             MQTTStateOperation_t opType,
-                                            MQTTQoS_t receivedQos );
+                                            MQTTQoS_t receivedQoS );
 
 MQTTPublishState_t MQTT_CalculateStateAck( MQTTPubAckType_t packetType,
                                            MQTTStateOperation_t opType,

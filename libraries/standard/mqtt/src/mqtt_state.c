@@ -178,7 +178,6 @@ static bool _validateTransitionAck( MQTTPublishState_t currentState,
     {
         case MQTTPubAckSend:
             /* Incoming publish, QoS 1. */
-            isValid = ( newState == MQTTPublishDone );
         case MQTTPubAckPending:
             /* Outgoing publish, QoS 1. */
             isValid = ( newState == MQTTPublishDone );
@@ -301,18 +300,18 @@ static MQTTStatus_t _addRecord( MQTTPubAckInfo_t * records,
     MQTTStatus_t status = MQTTNoMemory;
     int32_t index = 0;
     size_t availableIndex = recordCount;
-    if( packetId == MQTT_PACKET_ID_INVALID || qos == MQTTQoS0 )
+    if( ( packetId == MQTT_PACKET_ID_INVALID ) || ( qos == MQTTQoS0 ) )
     {
         status = MQTTBadParameter;
     }
     else
     {
         /* Start from end so first available index will be populated. */
-        for( index = recordCount - 1; index >= 0; index-- )
+        for( index = ( (int32_t ) recordCount - 1 ); index >= 0; index-- )
         {
             if( records[ index ].packetId == MQTT_PACKET_ID_INVALID )
             {
-                availableIndex = index;
+                availableIndex = ( size_t ) index;
             }
             else if( records[ index ].packetId == packetId )
             {
@@ -469,7 +468,7 @@ MQTTPublishState_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
         isTransitionValid = _validateTransitionPublish( currentState, newState, opType, qos );
         if( opType == MQTT_SEND )
         {
-            if( isTransitionValid && recordIndex < MQTT_STATE_ARRAY_MAX_COUNT )
+            if( isTransitionValid && ( recordIndex < MQTT_STATE_ARRAY_MAX_COUNT ) )
             {
                 mqttStatus = _updateRecord( records,
                                             MQTT_STATE_ARRAY_MAX_COUNT,
@@ -480,7 +479,7 @@ MQTTPublishState_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
         }
         else
         {
-            if( isTransitionValid && recordIndex >= MQTT_STATE_ARRAY_MAX_COUNT )
+            if( isTransitionValid && ( recordIndex >= MQTT_STATE_ARRAY_MAX_COUNT ) )
             {
                 mqttStatus = _addRecord( records,
                                          MQTT_STATE_ARRAY_MAX_COUNT,
@@ -521,10 +520,12 @@ MQTTPublishState_t MQTT_CalculateStateAck( MQTTPubAckType_t packetType,
             /* Incoming publish: receive PUBREL, send PUBCOMP.
              * Outgoing publish: send PUBREL, PUBCOMP pending. */
             calculatedState = ( opType == MQTT_SEND )? MQTTPubCompPending : MQTTPubCompSend;
+            break;
         case MQTTPubcomp:
             calculatedState = MQTTPublishDone;
             break;
         default:
+            /* No other ack type. */
             break;
     }
     /* Sanity check, make sure ack and QoS agree. */

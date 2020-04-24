@@ -35,7 +35,7 @@ typedef int MQTTNetworkContext_t;
  * macro sets the limit on how many simultaneous PUBLISH states an MQTT
  * context maintains.
  */
-#define MQTT_STATE_ARRAY_MAX_COUNT    10
+#define MQTT_STATE_ARRAY_MAX_COUNT    10U
 
 /**
  * @brief MQTT client identifier.
