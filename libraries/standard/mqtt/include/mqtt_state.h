@@ -24,29 +24,31 @@
 
 #include "mqtt.h"
 
-typedef enum MQTTPacketIDState
-{
-    ID_INVALID = 0,
-    ID_UNKNOWN,
-    ID_KNOWN,
-} MQTTPacketIDState_t;
-
 typedef enum MQTTStateOperation
 {
-    MQTT_RESERVE,
     MQTT_SEND,
     MQTT_RECEIVE,
 } MQTTStateOperation_t;
 
-MQTTPublishState_t _MQTT_CalculateState( MQTTPublishType_t packetType,
-                                         MQTTStateOperation_t opType,
-                                         MQTTQoS_t qos,
-                                         MQTTPacketIDState_t idStatus );
+MQTTPublishState_t MQTT_ReserveState( MQTTContext_t * pMqttContext,
+                                      uint16_t packetId,
+                                      MQTTQoS_t qos );
 
-MQTTStatus_t _MQTT_UpdateState( MQTTContext_t * pMqttContext,
-                                uint16_t packetId,
-                                MQTTPublishType_t packetType,
-                                MQTTStateOperation_t opType,
-                                MQTTQoS_t qos );
+MQTTPublishState_t MQTT_CalculateStatePublish( MQTTStateOperation_t opType,
+                                               MQTTQoS_t qos );
+
+MQTTPublishState_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
+                                            uint16_t packetId,
+                                            MQTTStateOperation_t opType,
+                                            MQTTQoS_t receivedQos );
+
+MQTTPublishState_t MQTT_CalculateStateAck( MQTTPubAckType_t packetType,
+                                           MQTTStateOperation_t opType,
+                                           MQTTQoS_t qos );
+
+MQTTPublishState_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
+                                        uint16_t packetId,
+                                        MQTTPubAckType_t packetType,
+                                        MQTTStateOperation_t opType );
 
 #endif /* ifndef MQTT_STATE_H */

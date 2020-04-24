@@ -64,14 +64,13 @@ typedef enum MQTTPublishState
     MQTTPublishDone,
 } MQTTPublishState_t;
 
-typedef enum MQTTPublishType
+typedef enum MQTTPubAckType
 {
-    MQTT_PUBLISH,
-    MQTT_PUBACK,
-    MQTT_PUBREC,
-    MQTT_PUBREL,
-    MQTT_PUBCOMP,
-} MQTTPublishType_t;
+    MQTTPuback,
+    MQTTPubrec,
+    MQTTPubrel,
+    MQTTPubcomp
+} MQTTPubAckType_t;
 
 struct MQTTTransportInterface
 {
