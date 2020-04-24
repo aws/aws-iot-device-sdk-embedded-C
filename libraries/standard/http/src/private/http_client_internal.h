@@ -31,39 +31,31 @@
 /**
  * @brief The HTTP protocol version of this library is HTTP/1.1.
  */
-#define HTTP_PROTOCOL_VERSION              "HTTP/1.1"
+#define HTTP_PROTOCOL_VERSION                   "HTTP/1.1"
 
 /**
  * @brief Default value when pRequestInfo->pPath == NULL.
  */
-#define HTTP_EMPTY_PATH                    "/"
-#define HTTP_EMPTY_PATH_LEN                ( sizeof( HTTP_EMPTY_PATH ) - 1 )
+#define HTTP_EMPTY_PATH                         "/"
+#define HTTP_EMPTY_PATH_LEN                     ( sizeof( HTTP_EMPTY_PATH ) - 1 )
 
 /**
  * @brief Consants for HTTP header formatting
  */
-#define HTTP_HEADER_LINE_SEPARATOR         "\r\n"
-#define CARRIAGE_RETURN_CHARACTER          '\r'
-#define NEWLINE_CHARACTER                  '\n'
-#define HTTP_HEADER_FIELD_SEPARATOR        ": "
-#define COLON_CHARACTER                    ':'
-#define SPACE_CHARACTER                    ' '
-#define EQUAL_CHARACTER                    '='
-#define DASH_CHARACTER                     '-'
-#define HTTP_HEADER_LINE_SEPARATOR_LEN     ( sizeof( HTTP_HEADER_LINE_SEPARATOR ) - 1 )
-#define HTTP_HEADER_FIELD_SEPARATOR_LEN    ( sizeof( HTTP_HEADER_FIELD_SEPARATOR ) - 1 )
-#define COLON_CHARACTER_LEN                ( sizeof( COLON_CHARACTER ) - 1 )
-#define SPACE_CHARACTER_LEN                ( sizeof( SPACE_CHARACTER ) - 1 )
-#define EQUAL_CHARACTER_LEN                ( sizeof( EQUAL_CHARACTER ) - 1 )
-#define DASH_CHARACTER_LEN                 ( sizeof( DASH_CHARACTER ) - 1 )
-
-/**
- * @brief The maximum length for a 32-bit integer when converted to a string.
- *
- * This is used to initialize a local array for the final headers to send.
- */
-#define INT32_STRING_MAX_LEN               ( 10 )
-
+#define HTTP_HEADER_LINE_SEPARATOR              "\r\n"
+#define CARRIAGE_RETURN_CHARACTER               '\r'
+#define NEWLINE_CHARACTER                       '\n'
+#define HTTP_HEADER_FIELD_SEPARATOR             ": "
+#define COLON_CHARACTER                         ':'
+#define SPACE_CHARACTER                         ' '
+#define EQUAL_CHARACTER                         '='
+#define DASH_CHARACTER                          '-'
+#define HTTP_HEADER_LINE_SEPARATOR_LEN          ( sizeof( HTTP_HEADER_LINE_SEPARATOR ) - 1 )
+#define HTTP_HEADER_FIELD_SEPARATOR_LEN         ( sizeof( HTTP_HEADER_FIELD_SEPARATOR ) - 1 )
+#define COLON_CHARACTER_LEN                     ( sizeof( COLON_CHARACTER ) - 1 )
+#define SPACE_CHARACTER_LEN                     ( sizeof( SPACE_CHARACTER ) - 1 )
+#define EQUAL_CHARACTER_LEN                     ( sizeof( EQUAL_CHARACTER ) - 1 )
+#define DASH_CHARACTER_LEN                      ( sizeof( DASH_CHARACTER ) - 1 )
 
 /**
  * @brief Constants for header fields added automatically during the request initialization.

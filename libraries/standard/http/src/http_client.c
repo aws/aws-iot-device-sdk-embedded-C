@@ -65,6 +65,7 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
     uint8_t * pBufferCur = pRequestHeaders->pBuffer + pRequestHeaders->headersLen;
     size_t toAddLen = 0;
+    size_t initHeadersLen = pRequestHeaders->headersLen;
     uint8_t hasTrailingLine = 0u;
 
     /* Backtrack before trailing "\r\n" (HTTP header end) if it's already written.
@@ -75,17 +76,21 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
         /* Set this flag to backtrack in case of HTTP_INSUFFICIENT_MEMORY. */
         hasTrailingLine = 1u;
         pBufferCur -= HTTP_HEADER_LINE_SEPARATOR_LEN;
-        pRequestHeaders->headersLen -= HTTP_HEADER_LINE_SEPARATOR_LEN;
     }
 
     /* Check if there is enough space in buffer for additional header. */
-    toAddLen = fieldLen + HTTP_HEADER_FIELD_SEPARATOR_LEN + valueLen + \
-               HTTP_HEADER_LINE_SEPARATOR_LEN +                        \
+    toAddLen = fieldLen + HTTP_HEADER_FIELD_SEPARATOR_LEN + valueLen +
+               HTTP_HEADER_LINE_SEPARATOR_LEN +
                HTTP_HEADER_LINE_SEPARATOR_LEN;
 
     /* If we have enough room for the new header line, then write it to the header buffer. */
-    if( ( pRequestHeaders->headersLen + toAddLen ) <= pRequestHeaders->bufferLen )
+    if( ( initHeadersLen + toAddLen ) <= pRequestHeaders->bufferLen )
     {
+        if( hasTrailingLine == 1u )
+        {
+            pRequestHeaders->headersLen = initHeadersLen - HTTP_HEADER_LINE_SEPARATOR_LEN;
+        }
+
         /* Write "Field: Value \r\n\r\n" to headers. */
         memcpy( pBufferCur, pField, fieldLen );
         pBufferCur += fieldLen;
@@ -102,14 +107,8 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
     }
     else
     {
-        /* Restore the length of the trailing line separator. */
-        if( hasTrailingLine == 1u )
-        {
-            pRequestHeaders->headersLen += HTTP_HEADER_LINE_SEPARATOR_LEN;
-        }
-
-        IotLogErrorWithArgs( "Unable to add header in buffer: " \
-                             "Buffer has insufficient memory: " \
+        IotLogErrorWithArgs( "Unable to add header in buffer: ",
+                             "Buffer has insufficient memory: ",
                              "RequiredBytes=%d, RemainingBufferSize=%d",
                              toAddLen,
                              ( pRequestHeaders->bufferLen - pRequestHeaders->headersLen ) );

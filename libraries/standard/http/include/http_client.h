@@ -411,7 +411,7 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
  * @param[in] valueLen The byte length of the header field value.
  *
  * @return One of the following:
- * - #HTTP_SUCCESS (If successful, an error code otherwise.)
+ * - #HTTP_SUCCESS (If successful.)
  * - #HTTP_INVALID_PARAMETER (If any provided parameters or their members are invalid.)
  * - #HTTP_INSUFFICIENT_MEMORY (If application-provided buffer is not large enough to hold headers.)
  */
