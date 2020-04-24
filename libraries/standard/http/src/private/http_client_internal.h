@@ -90,22 +90,8 @@
 #define HTTP_CONNECTION_CLOSE_VALUE_LEN         ( sizeof( HTTP_CONNECTION_CLOSE_VALUE ) - 1 )
 
 /**
- * @brief Constants for header fields added for "Range" header.
+ * @brief Returns the length of a macro string.
  */
-#define HTTP_RANGE_FIELD                        "Range"
-#define HTTP_RANGE_FIELD_LEN                    ( sizeof( HTTP_RANGE_FIELD ) - 1 )
-
-/**
- * @brief Constants for header value prefix added for "Range" header.
- */
-#define HTTP_RANGE_BYTES_PREFIX_VALUE           "bytes"
-#define HTTP_RANGE_BYTES_PREFIX_VALUE_LEN       ( sizeof( HTTP_RANGE_BYTES_PREFIX_VALUE ) - 1 )
-
-/**
- * @brief Longest possible string for "Range" header value field.
- */
-#define HTTP_RANGE_BYTES_VALUE_MAX_LEN          ( 27 )
-
 #define STRLEN_LITERAL( x )    ( ( sizeof( x ) / sizeof( char ) ) - 1 )
 
 #endif /* ifndef HTTP_CLIENT_INTERNAL_H_ */
