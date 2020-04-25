@@ -66,8 +66,14 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
     uint8_t * pBufferCur = pRequestHeaders->pBuffer + pRequestHeaders->headersLen;
     size_t toAddLen = 0;
     size_t backtrackHeaderLen = pRequestHeaders->headersLen;
-    uint8_t hasTrailingLine = 0u;
     int32_t bytesWritten = 0;
+
+    assert( pRequestHeaders != NULL );
+    assert( pRequestHeaders->pBuffer != NULL );
+    assert( pField != NULL );
+    assert( pValue != NULL );
+    assert( fieldLen != 0u );
+    assert( valueLen != 0u );
 
     /* Backtrack before trailing "\r\n" (HTTP header end) if it's already written.
      * Note that this method also writes trailing "\r\n" before returning. */
@@ -90,12 +96,17 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
         bytesWritten = snprintf( ( char * ) pBufferCur,
                                  toAddLen,
                                  "%.*s%s%.*s%s",
-                                 ( int ) fieldLen, pField,
+                                 ( int32_t ) fieldLen, pField,
                                  HTTP_HEADER_FIELD_SEPARATOR,
-                                 ( int ) valueLen, pValue,
+                                 ( int32_t ) valueLen, pValue,
                                  HTTP_HEADER_LINE_SEPARATOR );
 
-        if( bytesWritten > 0 )
+        if( ( bytesWritten + HTTP_HEADER_LINE_SEPARATOR_LEN ) != toAddLen )
+        {
+            IotLogErrorWithArgs( "Internal error in snprintf() in _addHeader(). "
+                                 "Bytes written: %d.", bytesWritten );
+        }
+        else
         {
             pBufferCur += bytesWritten;
         }
