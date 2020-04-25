@@ -109,8 +109,8 @@ int main()
     ok( test_err == HTTP_INSUFFICIENT_MEMORY );
     /* Add extra header with sufficient memory. */
     reqHeaders.bufferLen = HTTP_TEST_BUFFER_SIZE;
-    correctHeaderLen = HTTP_TEST_SUFFICIENT_HEADER_LEN +                         \
-                       HTTP_TEST_HEADER_FIELD_LEN + HTTP_TEST_HEADER_VALUE_LEN + \
+    correctHeaderLen = HTTP_TEST_SUFFICIENT_HEADER_LEN +
+                       HTTP_TEST_HEADER_FIELD_LEN + HTTP_TEST_HEADER_VALUE_LEN +
                        HTTP_HEADER_FIELD_SEPARATOR_LEN + HTTP_HEADER_LINE_SEPARATOR_LEN;
     /* We add 1 because snprintf() writes a null byte at the end. */
     snprintf( correctHeader, correctHeaderLen + 1,

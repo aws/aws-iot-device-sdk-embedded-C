@@ -67,6 +67,7 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
     size_t toAddLen = 0;
     size_t backtrackHeaderLen = pRequestHeaders->headersLen;
     uint8_t hasTrailingLine = 0u;
+    int32_t bytesWritten = 0;
 
     /* Backtrack before trailing "\r\n" (HTTP header end) if it's already written.
      * Note that this method also writes trailing "\r\n" before returning. */
@@ -75,7 +76,6 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
     {
         /* Set this flag to backtrack in case of HTTP_INSUFFICIENT_MEMORY. */
         hasTrailingLine = 1u;
-        pBufferCur -= HTTP_HEADER_LINE_SEPARATOR_LEN;
         backtrackHeaderLen -= HTTP_HEADER_LINE_SEPARATOR_LEN;
     }
 
@@ -90,21 +90,31 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
         if( hasTrailingLine == 1u )
         {
             pRequestHeaders->headersLen = backtrackHeaderLen;
+            pBufferCur -= HTTP_HEADER_LINE_SEPARATOR_LEN;
+        }
+        else
+        {
+            /* empty else marker */
         }
 
         /* Write "Field: Value \r\n\r\n" to headers. */
-        pBufferCur += snprintf( ( char * ) pBufferCur,
-                                toAddLen,
-                                "%.*s%s%.*s%s",
-                                ( int ) fieldLen, pField,
-                                HTTP_HEADER_FIELD_SEPARATOR,
-                                ( int ) valueLen, pValue,
-                                HTTP_HEADER_LINE_SEPARATOR );
+        bytesWritten = snprintf( ( char * ) pBufferCur,
+                                 toAddLen,
+                                 "%.*s%s%.*s%s",
+                                 ( int ) fieldLen, pField,
+                                 HTTP_HEADER_FIELD_SEPARATOR,
+                                 ( int ) valueLen, pValue,
+                                 HTTP_HEADER_LINE_SEPARATOR );
+
+        if( bytesWritten > 0 )
+        {
+            pBufferCur += bytesWritten;
+        }
 
         /* HTTP_HEADER_LINE_SEPARATOR cannot be written above because snprintf
          * writes an extra null byte at the end. */
         memcpy( pBufferCur, HTTP_HEADER_LINE_SEPARATOR, HTTP_HEADER_LINE_SEPARATOR_LEN );
-        pRequestHeaders->headersLen += toAddLen;
+        pRequestHeaders->headersLen = backtrackHeaderLen + toAddLen;
         returnStatus = HTTP_SUCCESS;
     }
     else
