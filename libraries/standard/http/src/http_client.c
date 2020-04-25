@@ -74,9 +74,8 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
     if( strncmp( ( char * ) pBufferCur - ( 2 * HTTP_HEADER_LINE_SEPARATOR_LEN ),
                  "\r\n\r\n", 2 * HTTP_HEADER_LINE_SEPARATOR_LEN ) == 0 )
     {
-        /* Set this flag to backtrack in case of HTTP_INSUFFICIENT_MEMORY. */
-        hasTrailingLine = 1u;
         backtrackHeaderLen -= HTTP_HEADER_LINE_SEPARATOR_LEN;
+        pBufferCur -= HTTP_HEADER_LINE_SEPARATOR_LEN;
     }
 
     /* Check if there is enough space in buffer for additional header. */
@@ -87,16 +86,6 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
     /* If we have enough room for the new header line, then write it to the header buffer. */
     if( ( backtrackHeaderLen + toAddLen ) <= pRequestHeaders->bufferLen )
     {
-        if( hasTrailingLine == 1u )
-        {
-            pRequestHeaders->headersLen = backtrackHeaderLen;
-            pBufferCur -= HTTP_HEADER_LINE_SEPARATOR_LEN;
-        }
-        else
-        {
-            /* empty else marker */
-        }
-
         /* Write "Field: Value \r\n\r\n" to headers. */
         bytesWritten = snprintf( ( char * ) pBufferCur,
                                  toAddLen,
