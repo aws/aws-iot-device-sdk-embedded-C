@@ -63,6 +63,7 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
     size_t rangeStartStrLen = 0;
     char rangeEndStrBuffer[ MAX_INT32_NO_OF_DIGITS ] = { 0 };
     size_t rangeEndStrLen = 0;
+    uint8_t hasTrailingSeparator = 0u;
 
     if( pRequestHeaders == NULL )
     {
@@ -106,11 +107,19 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
     else if( rangeStart > 0 )
     {
         /* Add byte count for "-" character. */
-        requiredBytes += 1;
+        requiredBytes += DASH_CHARACTER_LEN;
     }
 
     /* Add byte counts for appending "\r\n" twice at the end. */
     requiredBytes += 2 * HTTP_HEADER_LINE_SEPARATOR_LEN;
+
+    /* Backtrack before trailing "\r\n" (HTTP header end) if it's already written.
+     * Note that this method also writes trailing "\r\n" before returning. */
+    if( memcmp( pRequestHeaders->pBuffer +  -( 2 * HTTP_HEADER_LINE_SEPARATOR_LEN ),
+                "\r\n\r\n", 2 * HTTP_HEADER_LINE_SEPARATOR_LEN ) == 0 )
+    {
+        hasTrailingSeparator = 1u;
+    }
 
     /* Check if the passed header buffer contains enough remaining memory for
      * adding the Range Request header. */
@@ -167,6 +176,11 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
     }
     else
     {
+        IotLogErrorWithArgs( "Unable to add Range Request in buffer: "
+                             "Buffer has insufficient space: "
+                             "RequiredBytes=%d, BufferSpace=%d",
+                             requiredBytes,
+                             ( pRequestHeaders->bufferLen - pRequestHeaders->headersLen ) );
         returnStatus = HTTP_INSUFFICIENT_MEMORY;
     }
 
