@@ -22,7 +22,15 @@
 #ifndef MQTT_LIGHTWEIGHT_H
 #define MQTT_LIGHTWEIGHT_H
 
-#include <stdbool.h>
+/* bools are only defined in C99+ */
+#if __STDC_VERSION__ >= 199901L
+    #include <stdbool.h>
+#else
+    #define bool signed char
+    #define false 0
+    #define true 1
+#endif
+
 #include <stddef.h>
 #include <stdint.h>
 
