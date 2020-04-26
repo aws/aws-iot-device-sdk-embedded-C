@@ -564,7 +564,6 @@ IoT_Error_t aws_iot_mqtt_disconnect(AWS_IoT_Client *pClient) {
 
 IoT_Error_t aws_iot_mqtt_attempt_reconnect(AWS_IoT_Client *pClient) {
 	IoT_Error_t rc;
-	ClientState currentState = aws_iot_mqtt_get_client_state(pClient);
 
 	FUNC_ENTRY;
 
