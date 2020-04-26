@@ -198,12 +198,9 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
                                         int32_t rangeEnd )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
-    size_t requiredBytes = 0;
-    char rangeStartStrBuffer[ MAX_INT32_NO_OF_DIGITS ] = { 0 };
-    size_t rangeStartStrLen = 0;
-    char rangeEndStrBuffer[ MAX_INT32_NO_OF_DIGITS ] = { 0 };
-    size_t rangeEndStrLen = 0;
-    uint8_t hasTrailingSeparator = 0u;
+    char rangeValueBuffer[ MAX_RANGE_REQUEST_VALUE_LEN ] = { 0 };
+    size_t rangeValueLength = 0;
+    int stdRetVal = 0;
 
     if( pRequestHeaders == NULL )
     {
@@ -225,103 +222,46 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
     }
     else
     {
-        /* Empty else MISRA 15.7 */
-    }
+        /* Populate the buffer with the value data for the Range Request.*/
+        stdRetVal = sprintf( rangeValueBuffer,
+                             "%s%d",
+                             RANGE_REQUEST_HEADER_VALUE_PREFIX,
+                             rangeStart );
+        assert( ( stdRetVal >= 0 ) &&
+                stdRetVal <= ( RANGE_REQUEST_HEADER_VALUE_PREFIX + MAX_INT32_NO_OF_DIGITS ) );
+        rangeValueLength += ( size_t ) stdRetVal;
 
-    requiredBytes = RANGE_REQUEST_HEADER_FIELD_LEN +
-                    HTTP_HEADER_LINE_SEPARATOR_LEN +
-                    RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN;
+        /* Add remaining value data depending on the range specification type. */
 
-    /* Add byte count for ASCII representation of rangeStart value. */
-    ( void ) itoa( rangeStart, rangeStartStrBuffer, 10 );
-    requiredBytes += strlen( rangeStartStrBuffer );
-
-    /* Scenario when both range parameters are part of the request. */
-    if( rangeEnd != 0 )
-    {
-        /* Add byte count for ASCII representation of rangeEnd value. */
-        ( void ) itoa( rangeEnd, rangeEndStrBuffer, 10 );
-        requiredBytes += strlen( rangeEndStrBuffer );
-    }
-    /* Case when request is for all bytes >= rangeStart. */
-    else if( rangeStart > 0 )
-    {
-        /* Add byte count for "-" character. */
-        requiredBytes += DASH_CHARACTER_LEN;
-    }
-
-    /* Add byte counts for appending "\r\n" twice at the end. */
-    requiredBytes += 2 * HTTP_HEADER_LINE_SEPARATOR_LEN;
-
-    /* Backtrack before trailing "\r\n" (HTTP header end) if it's already written.
-     * Note that this method also writes trailing "\r\n" before returning. */
-    if( memcmp( pRequestHeaders->pBuffer +  -( 2 * HTTP_HEADER_LINE_SEPARATOR_LEN ),
-                "\r\n\r\n", 2 * HTTP_HEADER_LINE_SEPARATOR_LEN ) == 0 )
-    {
-        hasTrailingSeparator = 1u;
-    }
-
-    /* Check if the passed header buffer contains enough remaining memory for
-     * adding the Range Request header. */
-    if( ( pRequestHeaders->bufferLen - pRequestHeaders->headersLen -
-          HTTP_HEADER_LINE_SEPARATOR_LEN )
-        >= requiredBytes )
-    {
-        /* Add the range request header field and rangeStart value of the form
-         * "Range: bytes=<rangeStart>" to the buffer. */
-        sprintf( pRequestHeaders->pBuffer + pRequestHeaders->headersLen
-                 - HTTP_HEADER_LINE_SEPARATOR_LEN,
-                 "%s%s%s%s",
-                 RANGE_REQUEST_HEADER_FIELD,
-                 HTTP_HEADER_FIELD_SEPARATOR
-                 RANGE_REQUEST_HEADER_VALUE_PREFIX,
-                 rangeStartStrBuffer );
-
-        pRequestHeaders->headersLen += RANGE_REQUEST_HEADER_FIELD_LEN +
-                                       HTTP_HEADER_LINE_SEPARATOR_LEN +
-                                       RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN +
-                                       rangeStartStrLen;
-
-        /* Add remaining value data depending on the range specification type . */
-
-        /* Add rangeEnd value if it is valid. */
+        /* Add rangeEnd value if request is for [rangeStart, rangeEnd] byte range */
         if( rangeEnd != 0 )
         {
             /* Add the rangeEnd value to the request range .*/
-            sprintf( pRequestHeaders->pBuffer + pRequestHeaders->headersLen,
-                     "%s%s"
-                     DASH_CHARACTER,
-                     rangeEndStrBuffer );
-            pRequestHeaders->headersLen += DASH_CHARACTER_LEN + rangeEndStrLen;
+            stdRetVal = sprintf( rangeValueBuffer + rangeValueLength,
+                                 "%s%d",
+                                 DASH_CHARACTER,
+                                 rangeEnd );
+            assert( ( stdRetVal >= 0 ) &&
+                    stdRetVal <= ( DASH_CHARACTER_LEN + MAX_INT32_NO_OF_DIGITS ) );
+            rangeValueLength += ( size_t ) stdRetVal;
         }
-        /* Case when request is for all bytes >= rangeStart. */
+        /* Case when request is for bytes in the range [rangeStart, ). */
         else if( rangeStart > 0 )
         {
             /* Add the "-" character.*/
-            sprintf( pRequestHeaders->pBuffer + pRequestHeaders->headersLen,
-                     "%s"
-                     DASH_CHARACTER );
-            pRequestHeaders->headersLen += DASH_CHARACTER_LEN;
+            stdRetVal = sprintf( rangeValueBuffer + rangeValueLength,
+                                 "%s",
+                                 DASH_CHARACTER );
+            assert( stdRetVal == DASH_CHARACTER_LEN );
+            rangeValueLength += ( size_t ) stdRetVal;
         }
 
-        /* Add the termination "\r\n\r\n" characters. */
-        /*Note: memcpy() is used here to avoid adding NULL character in the buffer. */
-        memcpy( pRequestHeaders->pBuffer + pRequestHeaders->headersLen,
-                HTTP_HEADER_LINE_SEPARATOR,
-                HTTP_HEADER_LINE_SEPARATOR_LEN );
-        memcpy( pRequestHeaders->pBuffer + pRequestHeaders->headersLen,
-                HTTP_HEADER_LINE_SEPARATOR,
-                HTTP_HEADER_LINE_SEPARATOR_LEN );
-        pRequestHeaders->headersLen += 2 * HTTP_HEADER_LINE_SEPARATOR_LEN;
-    }
-    else
-    {
-        IotLogErrorWithArgs( "Unable to add Range Request in buffer: "
-                             "Buffer has insufficient space: "
-                             "RequiredBytes=%d, BufferSpace=%d",
-                             requiredBytes,
-                             ( pRequestHeaders->bufferLen - pRequestHeaders->headersLen ) );
-        returnStatus = HTTP_INSUFFICIENT_MEMORY;
+        /* Add the Range Request header field and value to the buffer. */
+        returnStatus = _addHeader( pRequestHeaders,
+                                   RANGE_REQUEST_HEADER_FIELD,
+                                   RANGE_REQUEST_HEADER_FIELD_LEN,
+                                   rangeValueBuffer,
+                                   rangeValueLength );
     }
 
     return returnStatus;
