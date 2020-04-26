@@ -308,7 +308,7 @@ IoT_Error_t aws_iot_mqtt_internal_init_header(MQTTHeader *pHeader, MessageTypes 
 IoT_Error_t aws_iot_mqtt_internal_send_packet(AWS_IoT_Client *pClient, size_t length, Timer *pTimer) {
 
 	size_t sentLen, sent;
-	IoT_Error_t rc;
+	IoT_Error_t rc = FAILURE;
 
 	FUNC_ENTRY;
 
