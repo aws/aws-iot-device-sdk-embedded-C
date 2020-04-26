@@ -32,6 +32,102 @@ static HTTPStatus_t _sendHttpBody( const HTTPTransportInterface_t * pTransport,
                                    const uint8_t * pRequestBodyBuf,
                                    size_t reqBodyBufLen );
 
+/**
+ * @brief Write header based on parameters. This method also adds a trailing "\r\n".
+ * If a trailing "\r\n" already exists in the HTTP header, this method backtracks
+ * in order to write over it and updates the length accordingly.
+ *
+ * @param pRequestHeaders Request header buffer information.
+ * @param pField The header field name to write.
+ * @param fieldLen The byte length of the header field name.
+ * @param pValue The header value to write.
+ * @param valueLen The byte length of the header field value.
+ *
+ * @return #HTTP_SUCCESS if successful. If there was insufficient memory in the
+ * application buffer, then #HTTP_INSUFFICIENT_MEMORY is returned.
+ */
+static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
+                                const char * pField,
+                                size_t fieldLen,
+                                const char * pValue,
+                                size_t valueLen );
+
+/*-----------------------------------------------------------*/
+
+static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
+                                const char * pField,
+                                size_t fieldLen,
+                                const char * pValue,
+                                size_t valueLen )
+{
+    HTTPStatus_t returnStatus = HTTP_SUCCESS;
+    uint8_t * pBufferCur = pRequestHeaders->pBuffer + pRequestHeaders->headersLen;
+    size_t toAddLen = 0;
+    size_t backtrackHeaderLen = pRequestHeaders->headersLen;
+    int32_t bytesWritten = 0;
+
+    assert( pRequestHeaders != NULL );
+    assert( pRequestHeaders->pBuffer != NULL );
+    assert( pField != NULL );
+    assert( pValue != NULL );
+    assert( fieldLen != 0u );
+    assert( valueLen != 0u );
+
+    /* Backtrack before trailing "\r\n" (HTTP header end) if it's already written.
+     * Note that this method also writes trailing "\r\n" before returning. */
+    if( strncmp( ( char * ) pBufferCur - ( 2 * HTTP_HEADER_LINE_SEPARATOR_LEN ),
+                 "\r\n\r\n", 2 * HTTP_HEADER_LINE_SEPARATOR_LEN ) == 0 )
+    {
+        backtrackHeaderLen -= HTTP_HEADER_LINE_SEPARATOR_LEN;
+        pBufferCur -= HTTP_HEADER_LINE_SEPARATOR_LEN;
+    }
+
+    /* Check if there is enough space in buffer for additional header. */
+    toAddLen = fieldLen + HTTP_HEADER_FIELD_SEPARATOR_LEN + valueLen +
+               HTTP_HEADER_LINE_SEPARATOR_LEN +
+               HTTP_HEADER_LINE_SEPARATOR_LEN;
+
+    /* If we have enough room for the new header line, then write it to the header buffer. */
+    if( ( backtrackHeaderLen + toAddLen ) <= pRequestHeaders->bufferLen )
+    {
+        /* Write "Field: Value \r\n\r\n" to headers. */
+        bytesWritten = snprintf( ( char * ) pBufferCur,
+                                 toAddLen,
+                                 "%.*s%s%.*s%s",
+                                 ( int32_t ) fieldLen, pField,
+                                 HTTP_HEADER_FIELD_SEPARATOR,
+                                 ( int32_t ) valueLen, pValue,
+                                 HTTP_HEADER_LINE_SEPARATOR );
+
+        if( ( bytesWritten + HTTP_HEADER_LINE_SEPARATOR_LEN ) != toAddLen )
+        {
+            IotLogErrorWithArgs( "Internal error in snprintf() in _addHeader(). "
+                                 "Bytes written: %d.", bytesWritten );
+        }
+        else
+        {
+            pBufferCur += bytesWritten;
+        }
+
+        /* HTTP_HEADER_LINE_SEPARATOR cannot be written above because snprintf
+         * writes an extra null byte at the end. */
+        memcpy( pBufferCur, HTTP_HEADER_LINE_SEPARATOR, HTTP_HEADER_LINE_SEPARATOR_LEN );
+        pRequestHeaders->headersLen = backtrackHeaderLen + toAddLen;
+        returnStatus = HTTP_SUCCESS;
+    }
+    else
+    {
+        IotLogErrorWithArgs( "Unable to add header in buffer: ",
+                             "Buffer has insufficient memory: ",
+                             "RequiredBytes=%d, RemainingBufferSize=%d",
+                             toAddLen,
+                             ( pRequestHeaders->bufferLen - pRequestHeaders->headersLen ) );
+        returnStatus = HTTP_INSUFFICIENT_MEMORY;
+    }
+
+    return returnStatus;
+}
+
 /*-----------------------------------------------------------*/
 
 HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pRequestHeaders,
@@ -43,12 +139,56 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
 /*-----------------------------------------------------------*/
 
 HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
-                                   const char * pName,
-                                   size_t nameLen,
+                                   const char * pField,
+                                   size_t fieldLen,
                                    const char * pValue,
                                    size_t valueLen )
 {
-    return HTTP_NOT_SUPPORTED;
+    HTTPStatus_t returnStatus = HTTP_SUCCESS;
+
+    /* Check for NULL parameters. */
+    if( pRequestHeaders == NULL )
+    {
+        IotLogError( "Parameter check failed: pRequestHeaders interface is NULL." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( pRequestHeaders->pBuffer == NULL )
+    {
+        IotLogError( "Parameter check failed: pRequestHeaders->pBuffer is NULL." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( ( pField == NULL ) )
+    {
+        IotLogError( "Parameter check failed: pField is NULL." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( ( pValue == NULL ) )
+    {
+        IotLogError( "Parameter check failed: pValue is NULL." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( fieldLen == 0u )
+    {
+        IotLogError( "Parameter check failed: fieldLen must be greater than 0." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( valueLen == 0u )
+    {
+        IotLogError( "Parameter check failed: valueLen must be greater than 0." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else
+    {
+        /* Empty else MISRA 15.7 */
+    }
+
+    if( returnStatus == HTTP_SUCCESS )
+    {
+        returnStatus = _addHeader( pRequestHeaders,
+                                   pField, fieldLen, pValue, valueLen );
+    }
+
+    return returnStatus;
 }
 
 /*-----------------------------------------------------------*/

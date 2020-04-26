@@ -28,21 +28,70 @@
     #define IotLogDebugWithArgs( format, ... )
 #endif /* ifdef USE_AWS_IOT_CSDK_LOGGING */
 
-#define HTTP_HEADER_LINE_SEPARATOR               "\r\n"
+/**
+ * @brief The HTTP protocol version of this library is HTTP/1.1.
+ */
+#define HTTP_PROTOCOL_VERSION                   "HTTP/1.1"
 
-#define HTTP_HEADER_LINE_SEPARATOR_LEN           ( sizeof( HTTP_HEADER_LINE_SEPARATOR ) - 1 )
+/**
+ * @brief Default value when pRequestInfo->pPath == NULL.
+ */
+#define HTTP_EMPTY_PATH                         "/"
+#define HTTP_EMPTY_PATH_LEN                     ( sizeof( HTTP_EMPTY_PATH ) - 1 )
 
-#define DASH_CHARACTER                           "-"
-#define DASH_CHARACTER_LEN                       ( sizeof( DASH_CHARACTER ) - 1 )
+/**
+ * @brief Consants for HTTP header formatting.
+ */
+#define HTTP_HEADER_LINE_SEPARATOR              "\r\n"
+#define CARRIAGE_RETURN_CHARACTER               '\r'
+#define NEWLINE_CHARACTER                       '\n'
+#define HTTP_HEADER_FIELD_SEPARATOR             ": "
+#define COLON_CHARACTER                         ':'
+#define SPACE_CHARACTER                         ' '
+#define EQUAL_CHARACTER                         '='
+#define DASH_CHARACTER                          '-'
+#define HTTP_HEADER_LINE_SEPARATOR_LEN          ( sizeof( HTTP_HEADER_LINE_SEPARATOR ) - 1 )
+#define HTTP_HEADER_FIELD_SEPARATOR_LEN         ( sizeof( HTTP_HEADER_FIELD_SEPARATOR ) - 1 )
+#define COLON_CHARACTER_LEN                     ( sizeof( COLON_CHARACTER ) - 1 )
+#define SPACE_CHARACTER_LEN                     ( sizeof( SPACE_CHARACTER ) - 1 )
+#define EQUAL_CHARACTER_LEN                     ( sizeof( EQUAL_CHARACTER ) - 1 )
+#define DASH_CHARACTER_LEN                      ( sizeof( DASH_CHARACTER ) - 1 )
 
-#define HTTP_HEADER_FIELD_SEPARATOR              ": "
-#define HTTP_HEADER_LINE_SEPARATOR_LEN           ( sizeof( HTTP_HEADER_LINE_SEPARATOR ) - 1 )
+/**
+ * @brief Constants for header fields added automatically during the request initialization.
+ */
+#define HTTP_USER_AGENT_FIELD                   "User-Agent"
+#define HTTP_HOST_FIELD                         "Host"
+#define HTTP_USER_AGENT_FIELD_LEN               ( sizeof( HTTP_USER_AGENT_FIELD ) - 1 )
+#define HTTP_HOST_FIELD_LEN                     ( sizeof( HTTP_HOST_FIELD ) - 1 )
 
+/**
+ * @brief Constants for header fields added based on flags.
+ */
+#define HTTP_CONNECTION_FIELD                   "Connection"
+#define HTTP_CONTENT_LENGTH_FIELD               "Content-Length"
+#define HTTP_CONNECTION_FIELD_LEN               ( sizeof( HTTP_CONNECTION_FIELD ) - 1 )
+#define HTTP_CONTENT_LENGTH_FIELD_LEN           ( sizeof( HTTP_CONTENT_LENGTH_FIELD ) - 1 )
+
+/**
+ * @brief Constants for header values added based on flags.
+ */
+#define HTTP_CONNECTION_KEEP_ALIVE_VALUE        "keep-alive"
+#define HTTP_CONNECTION_CLOSE_VALUE             "close"
+#define HTTP_CONNECTION_KEEP_ALIVE_VALUE_LEN    ( sizeof( HTTP_CONNECTION_KEEP_ALIVE_VALUE ) - 1 )
+#define HTTP_CONNECTION_CLOSE_VALUE_LEN         ( sizeof( HTTP_CONNECTION_CLOSE_VALUE ) - 1 )
+
+
+/**
+ * @brief Constants relating to Range Requests.
+ */
 #define RANGE_REQUEST_HEADER_FIELD               "Range:"
 #define RANGE_REQUEST_HEADER_FIELD_LEN           ( sizeof( RANGE_REQUEST_HEADER_FIELD_LEN ) - 1 )
 #define RANGE_REQUEST_HEADER_VALUE_PREFIX        "bytes="
 #define RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN    ( sizeof( RANGE_REQUEST_HEADER_VALUE_PREFIX ) - 1 )
-#define MAX_INT32_NO_OF_DIGITS                   10
 
+/* Max 32 bit signed integer value is 2,147,483,647. Used for calculating buffer space for
+ * ASCII representation of range values. */
+#define MAX_INT32_NO_OF_DIGITS                   10
 
 #endif /* ifndef HTTP_CLIENT_INTERNAL_H_ */
