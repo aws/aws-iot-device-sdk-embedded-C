@@ -504,6 +504,11 @@ static void _metricsPublishRoutine( IotTaskPool_t pTaskPool,
         {
             /* Re-schedule metrics job with period as deferred interval. */
             taskPoolError = IotTaskPool_ScheduleDeferred( IOT_SYSTEM_TASKPOOL, _metricsPublishJob, _periodMilliSecond );
+
+            if( taskPoolError != IOT_TASKPOOL_SUCCESS )
+            {
+                IotLogError( "Failed to re-schedule the metrics job. Error: %s.", IotTaskPool_strerror( taskPoolError ) );
+            }
         }
 
         /* Give Done semaphore so AwsIotDefender_Stop() can proceed */
