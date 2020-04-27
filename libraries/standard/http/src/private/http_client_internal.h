@@ -52,10 +52,6 @@
 #define DASH_CHARACTER                          '-'
 #define HTTP_HEADER_LINE_SEPARATOR_LEN          ( sizeof( HTTP_HEADER_LINE_SEPARATOR ) - 1 )
 #define HTTP_HEADER_FIELD_SEPARATOR_LEN         ( sizeof( HTTP_HEADER_FIELD_SEPARATOR ) - 1 )
-#define COLON_CHARACTER_LEN                     ( sizeof( COLON_CHARACTER ) - 1 )
-#define SPACE_CHARACTER_LEN                     ( sizeof( SPACE_CHARACTER ) - 1 )
-#define EQUAL_CHARACTER_LEN                     ( sizeof( EQUAL_CHARACTER ) - 1 )
-#define DASH_CHARACTER_LEN                      ( sizeof( DASH_CHARACTER ) - 1 )
 
 /**
  * @brief Constants for header fields added automatically during the request initialization.
@@ -85,7 +81,7 @@
 /**
  * @brief Constants relating to Range Requests.
  */
-#define RANGE_REQUEST_HEADER_FIELD               "Range:"
+#define RANGE_REQUEST_HEADER_FIELD               "Range"
 #define RANGE_REQUEST_HEADER_FIELD_LEN           ( sizeof( RANGE_REQUEST_HEADER_FIELD ) - 1 )
 #define RANGE_REQUEST_HEADER_VALUE_PREFIX        "bytes="
 #define RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN    ( sizeof( RANGE_REQUEST_HEADER_VALUE_PREFIX ) - 1 )
@@ -98,7 +94,7 @@
  * Largest size is of the form "bytes=<Max-Integer-Value>-<<Max-Integer-Value>" */
 #define MAX_RANGE_REQUEST_VALUE_LEN                                    \
     ( RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN + MAX_INT32_NO_OF_DIGITS + \
-      MAX_INT32_NO_OF_DIGITS + DASH_CHARACTER_LEN )
+      1u /* Dash character '-' */ + MAX_INT32_NO_OF_DIGITS )
 
 
 #endif /* ifndef HTTP_CLIENT_INTERNAL_H_ */

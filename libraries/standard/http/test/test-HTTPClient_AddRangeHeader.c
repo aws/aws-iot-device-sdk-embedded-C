@@ -6,168 +6,199 @@
 #include "_addHeader.c"
 #include "HTTPClient_AddRangeHeader.c"
 
-/* Template HTTP header fields and values. */
-#define HTTP_TEST_HEADER_FIELD               "Authorization"
-#define HTTP_TEST_HEADER_FIELD_LEN           ( sizeof( HTTP_TEST_HEADER_FIELD ) - 1 )
-#define HTTP_TEST_HEADER_VALUE               "None"
-#define HTTP_TEST_HEADER_VALUE_LEN           ( sizeof( HTTP_TEST_HEADER_VALUE ) - 1 )
-/* Template for first line of HTTP header. */
-#define HTTP_TEST_HEADER_REQUEST_LINE        "POST / HTTP/1.1 \r\n"
-#define HTTP_TEST_HEADER_REQUEST_LINE_LEN    ( sizeof( HTTP_TEST_HEADER_REQUEST_LINE ) - 1 )
-#define HTTP_REQUEST_HEADERS_INITIALIZER     { 0 }
 /* Default size for request buffer. */
-#define HTTP_TEST_BUFFER_SIZE                ( 100 )
+#define HTTP_TEST_BUFFER_SIZE                   ( 100 )
 
-/* Length of the following template HTTP header.
- *   <HTTP_TEST_HEADER_REQUEST_LINE> \r\n
- *   <HTTP_TEST_HEADER_FIELD>: <HTTP_TEST_HEADER_VALUE> \r\n
- *   \r\n
- * This is used to initialize the correctHeader string. */
-#define HTTP_TEST_SUFFICIENT_HEADER_LEN   \
-    ( HTTP_TEST_HEADER_REQUEST_LINE_LEN + \
-      HTTP_TEST_HEADER_FIELD_LEN +        \
-      HTTP_HEADER_FIELD_SEPARATOR_LEN +   \
-      HTTP_TEST_HEADER_VALUE_LEN +        \
-      HTTP_HEADER_LINE_SEPARATOR_LEN +    \
-      HTTP_HEADER_LINE_SEPARATOR_LEN )
+/* Use the following data as pre-existing headers data in buffer used for test. */
+#define PREEXISTING_HEADER_DATA                 "POST / HTTP/1.1 \r\nAuthorization: None\r\n\r\n"
+#define PREEXISTING_HEADER_DATA_LEN             ( sizeof( PREEXISTING_HEADER_DATA ) - 1 )
 
+/* Range Request data that is common for all range specification types. */
+#define RANGE_REQUEST_HEADER_DATA_PREFIX        "Range: bytes="
+#define RANGE_REQUEST_HEADER_DATA_PREFIX_LEN    ( sizeof( RANGE_REQUEST_HEADER_DATA_PREFIX ) - 1 )
 
-static int32_t _rangeStartPositive = 10;
-static int32_t _rangeStartZero = 0;
-static int32_t _rangeStartNegative = -100;
-
-static int32_t _rangeEndPositive = 10;
-static int32_t _rangeEndZero = 0;
-static int32_t _rangeEndNegative = -100;
-
-#define RANGE_WITH_DIFF_START_AND_END_BYTES    "0-10"
-#define RANGE_WITH_SAME_START_AND_END_BYTES    "10-10"
-#define RANGE_WITH_NEGATIVE_START_BYTE         "-100"
-#define RANGE_WITH_ONLY_START_BYTE             "-100"
-
+struct _headers
+{
+    uint8_t buffer[ HTTP_TEST_BUFFER_SIZE ];
+    size_t dataLen;
+}
+expectedHeaders;
 
 int main()
 {
-    HTTPRequestHeaders_t reqHeaders = HTTP_REQUEST_HEADERS_INITIALIZER;
-    HTTPRequestHeaders_t reqHeadersDflt = HTTP_REQUEST_HEADERS_INITIALIZER;
+    HTTPRequestHeaders_t testHeaders = { 0 };
     HTTPStatus_t retCode = HTTP_NOT_SUPPORTED;
-    uint8_t buffer[ HTTP_TEST_BUFFER_SIZE ] = { 0 };
-    uint8_t smallBuffer[ HTTP_TEST_SUFFICIENT_HEADER_LEN - 1 ] = { 0 };
-    char correctHeader[ HTTP_TEST_BUFFER_SIZE ] = { 0 };
-    size_t correctHeaderLen = HTTP_TEST_SUFFICIENT_HEADER_LEN;
+    uint8_t testBuffer[ HTTP_TEST_BUFFER_SIZE ] = { 0 };
+    int testRangeStart = 0;
+    int testRangeEnd = 0;
 
-#define reset()                                                      \
-    do {                                                             \
-        retCode = HTTP_NOT_SUPPORTED;                                \
-        reqHeaders = reqHeadersDflt;                                 \
-        memset( buffer, 0, HTTP_TEST_BUFFER_SIZE );                  \
-        memset( correctHeader, 0, HTTP_TEST_SUFFICIENT_HEADER_LEN ); \
-    }                                                                \
-    while( 0 )
+#define setupBuffersWithPreexistingHeader( requestHeaders, expectedHeaders ) \
+    do {                                                                     \
+        requestHeaders.pBuffer = testBuffer;                                 \
+        requestHeaders.bufferLen = sizeof( testBuffer );                     \
+        /* We add 1 bytes as snprintf() writes a null byte at the end. */    \
+        int numBytes = snprintf( ( char * ) requestHeaders.pBuffer,          \
+                                 PREEXISTING_HEADER_DATA_LEN + 1,            \
+                                 "%s",                                       \
+                                 PREEXISTING_HEADER_DATA );                  \
+        ok( numBytes == PREEXISTING_HEADER_DATA_LEN );                       \
+        requestHeaders.headersLen = PREEXISTING_HEADER_DATA_LEN;             \
+        /* Fill the same data in the expected buffer as HTTPClient_AddRangeHeaders()
+         * is not expected to change it. */                         \
+        ok( memcpy( expectedHeaders.buffer, requestHeaders.pBuffer, \
+                    requestHeaders.headersLen )                     \
+            == expectedHeaders.buffer );                            \
+        expectedHeaders.dataLen = requestHeaders.headersLen;        \
+    } while( 0 )
 
-    plan( 16 );
 
-    /* / * Test the happy path. * / */
-    /* reset(); */
-    /* fillHeaderStructTemplate(); */
-    /* / * We add 1 because snprintf() writes a null byte at the end. * / */
-    /* snprintf( correctHeader, HTTP_TEST_SUFFICIENT_HEADER_LEN + 1, */
-    /*           "%s%s: %s\r\n\r\n", */
-    /*           HTTP_TEST_HEADER_REQUEST_LINE, */
-    /*           HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_VALUE ); */
-    /* correctHeaderLen = HTTP_TEST_SUFFICIENT_HEADER_LEN; */
-    /* / * Set parameters for reqHeaders. * / */
-    /* memcpy( buffer, HTTP_TEST_HEADER_REQUEST_LINE, HTTP_TEST_HEADER_REQUEST_LINE_LEN ); */
-    /* reqHeaders.pBuffer = buffer; */
-    /* reqHeaders.bufferLen = HTTP_TEST_BUFFER_SIZE; */
-    /* reqHeaders.headersLen = HTTP_TEST_HEADER_REQUEST_LINE_LEN; */
-    /* retCode = HTTPClient_AddRangeHeader( &reqHeaders, */
-    /*                                  header.field, header.fieldLen, */
-    /*                                  header.value, header.valueLen ); */
-    /* ok( strncmp( ( char * ) reqHeaders.pBuffer, */
-    /*              correctHeader, correctHeaderLen ) == 0 ); */
-    /* ok( reqHeaders.headersLen == correctHeaderLen ); */
-    /* ok( retCode == HTTP_SUCCESS ); */
-    /* / * Add extra header with insufficient memory. * / */
-    /* reqHeaders.bufferLen = reqHeaders.headersLen; */
-    /* retCode = HTTPClient_AddRangeHeader( &reqHeaders, */
-    /*                                  header.field, header.fieldLen, */
-    /*                                  header.value, header.valueLen ); */
-    /* ok( strncmp( ( char * ) reqHeaders.pBuffer, */
-    /*              correctHeader, correctHeaderLen ) == 0 ); */
-    /* ok( reqHeaders.headersLen == correctHeaderLen ); */
-    /* ok( retCode == HTTP_INSUFFICIENT_MEMORY ); */
-    /* / * Add extra header with sufficient memory. * / */
-    /* reqHeaders.bufferLen = HTTP_TEST_BUFFER_SIZE; */
-    /* correctHeaderLen = HTTP_TEST_SUFFICIENT_HEADER_LEN + */
-    /*                    HTTP_TEST_HEADER_FIELD_LEN + HTTP_TEST_HEADER_VALUE_LEN + */
-    /*                    HTTP_HEADER_FIELD_SEPARATOR_LEN + HTTP_HEADER_LINE_SEPARATOR_LEN; */
-    /* / * We add 1 because snprintf() writes a null byte at the end. * / */
-    /* snprintf( correctHeader, correctHeaderLen + 1, */
-    /*           "%s%s: %s\r\n%s: %s\r\n\r\n", */
-    /*           HTTP_TEST_HEADER_REQUEST_LINE, */
-    /*           HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_VALUE, */
-    /*           HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_VALUE ); */
-    /* retCode = HTTPClient_AddRangeHeader( &reqHeaders, */
-    /*                                  header.field, header.fieldLen, */
-    /*                                  header.value, header.valueLen ); */
-    /* ok( strncmp( ( char * ) reqHeaders.pBuffer, */
-    /*              correctHeader, correctHeaderLen ) == 0 ); */
-    /* ok( reqHeaders.headersLen == correctHeaderLen ); */
-    /* ok( retCode == HTTP_SUCCESS ); */
+#define addRangeToExpectedHeaders( expectedHeaders, expectedRange )                     \
+    do {                                                                                \
+        size_t rangeRequestLen = RANGE_REQUEST_HEADER_DATA_PREFIX_LEN +                 \
+                                 strlen( expectedRange ) +                              \
+                                 2 * HTTP_HEADER_LINE_SEPARATOR_LEN;                    \
+        int numBytes =                                                                  \
+            snprintf( ( char * ) expectedHeaders.buffer +                               \
+                      expectedHeaders.dataLen - HTTP_HEADER_LINE_SEPARATOR_LEN,         \
+                      /* We add 1 bytes as snprintf() writes a null byte at the end. */ \
+                      rangeRequestLen + 1,                                              \
+                      "%s%s\r\n\r\n",                                                   \
+                      RANGE_REQUEST_HEADER_DATA_PREFIX,                                 \
+                      expectedRange );                                                  \
+        ok( ( size_t ) numBytes == rangeRequestLen );                                   \
+        expectedHeaders.dataLen += rangeRequestLen - HTTP_HEADER_LINE_SEPARATOR_LEN;    \
+    } while( 0 )
+
+
+#define reset()                                                   \
+    do {                                                          \
+        retCode = HTTP_NOT_SUPPORTED;                             \
+        memset( &testHeaders, 0, sizeof( testHeaders ) );         \
+        memset( testBuffer, 0, sizeof( testBuffer ) );            \
+        memset( &expectedHeaders, 0, sizeof( expectedHeaders ) ); \
+    } while( 0 )
+
+    plan( 34 );
+
+    /*************************** Test happy path. *****************************/
+
+    /* Case 1: Headers buffer contains header data ending with "\r\n\r\n". */
+
+    /* Range specification of the form [rangeStart, rangeEnd]. */
+    /* Test with 0 as the range values */
+    reset();
+    setupBuffersWithPreexistingHeader( testHeaders, expectedHeaders );
+    testRangeStart = 0;
+    testRangeEnd = 0;
+    addRangeToExpectedHeaders( expectedHeaders, "0-0" /*expected range*/ );
+    retCode = HTTPClient_AddRangeHeader( &testHeaders,
+                                         testRangeStart,
+                                         testRangeEnd );
+    ok( retCode == HTTP_SUCCESS );
+    /* Verify the the Range Request header data. */
+    ok( testHeaders.headersLen == expectedHeaders.dataLen );
+    ok( memcmp( testHeaders.pBuffer, expectedHeaders.buffer, expectedHeaders.dataLen )
+        == 0 );
+    /* Verify that the bufferLen data was not tampered with. */
+    ok( testHeaders.bufferLen == sizeof( testBuffer ) );
+
+    reset();
+    setupBuffersWithPreexistingHeader( testHeaders, expectedHeaders );
+    testRangeStart = 10;
+    testRangeEnd = 100;
+    addRangeToExpectedHeaders( expectedHeaders, "10-100" /*expected range*/ );
+    retCode = HTTPClient_AddRangeHeader( &testHeaders,
+                                         testRangeStart,
+                                         testRangeEnd );
+    ok( retCode == HTTP_SUCCESS );
+    /* Verify the the Range Request header data. */
+    ok( testHeaders.headersLen == expectedHeaders.dataLen );
+    ok( memcmp( testHeaders.pBuffer, expectedHeaders.buffer, expectedHeaders.dataLen )
+        == 0 );
+    /* Verify that the bufferLen data was not tampered with. */
+    ok( testHeaders.bufferLen == sizeof( testBuffer ) );
+
+    /* Range specification of the form [rangeStart,)
+     * i.e. for all bytes >= rangeStart. */
+    reset();
+    setupBuffersWithPreexistingHeader( testHeaders, expectedHeaders );
+    testRangeStart = 100;
+    testRangeEnd = 0;
+    addRangeToExpectedHeaders( expectedHeaders, "100-" /*expected range*/ );
+    retCode = HTTPClient_AddRangeHeader( &testHeaders,
+                                         testRangeStart,
+                                         testRangeEnd );
+    ok( retCode == HTTP_SUCCESS );
+    /* Verify the the Range Request header data. */
+    ok( testHeaders.headersLen == expectedHeaders.dataLen );
+    ok( memcmp( testHeaders.pBuffer, expectedHeaders.buffer, expectedHeaders.dataLen )
+        == 0 );
+    /* Verify that the bufferLen data was not tampered with. */
+    ok( testHeaders.bufferLen == sizeof( testBuffer ) );
+
+    /* Range specification for the last N bytes. */
+    reset();
+    setupBuffersWithPreexistingHeader( testHeaders, expectedHeaders );
+    testRangeStart = -50;
+    testRangeEnd = 0;
+    addRangeToExpectedHeaders( expectedHeaders, "-50" /*expected range*/ );
+    retCode = HTTPClient_AddRangeHeader( &testHeaders,
+                                         testRangeStart,
+                                         testRangeEnd );
+    ok( retCode == HTTP_SUCCESS );
+    /* Verify the the Range Request header data. */
+    ok( testHeaders.headersLen == expectedHeaders.dataLen );
+    ok( memcmp( testHeaders.pBuffer, expectedHeaders.buffer, expectedHeaders.dataLen )
+        == 0 );
+    /* Verify that the bufferLen data was not tampered with. */
+    ok( testHeaders.bufferLen == sizeof( testBuffer ) );
+
+    /*************************** Test Failure Cases *****************************/
 
     /* Request header parameter is NULL. */
     reset();
     retCode = HTTPClient_AddRangeHeader( NULL,
-                                         _rangeStartZero,
-                                         _rangeEndZero );
+                                         0 /* rangeStart */,
+                                         0 /* rageEnd */ );
     ok( retCode == HTTP_INVALID_PARAMETER );
 
     /* Underlying buffer is NULL in request headers. */
     reset();
-    retCode = HTTPClient_AddRangeHeader( &reqHeaders,
-                                         _rangeStartZero,
-                                         _rangeEndZero );
+    retCode = HTTPClient_AddRangeHeader( &testHeaders,
+                                         0 /* rangeStart */,
+                                         0 /* rageEnd */ );
     ok( retCode == HTTP_INVALID_PARAMETER );
 
     /* Request Header Size is zero. */
     reset();
-    reqHeaders.pBuffer = &buffer[ 0 ];
-    retCode = HTTPClient_AddRangeHeader( &reqHeaders,
-                                         _rangeStartZero,
-                                         _rangeEndZero );
+    testHeaders.pBuffer = &testBuffer[ 0 ];
+    retCode = HTTPClient_AddRangeHeader( &testHeaders,
+                                         0 /* rangeStart */,
+                                         0 /* rageEnd */ );
     ok( retCode == HTTP_INSUFFICIENT_MEMORY );
 
     /* Test incorrect combinations of rangeStart and rangeEnd. */
 
     /* rangeStart > rangeEnd */
     reset();
-    reqHeaders.pBuffer = buffer;
-    retCode = HTTPClient_AddRangeHeader( &reqHeaders,
-                                         _rangeEndPositive + 1,
-                                         _rangeEndPositive );
+    testHeaders.pBuffer = &testBuffer[ 0 ];
+    retCode = HTTPClient_AddRangeHeader( &testHeaders,
+                                         10 /* rangeStart */,
+                                         5 /* rageEnd */ );
     ok( retCode == HTTP_INVALID_PARAMETER );
 
     /* rangeStart is negative but rangeStart is non-zero. */
     reset();
-    reqHeaders.pBuffer = buffer;
-    retCode = HTTPClient_AddRangeHeader( &reqHeaders,
-                                         _rangeStartNegative,
-                                         _rangeEndPositive );
+    testHeaders.pBuffer = &testBuffer[ 0 ];
+    retCode = HTTPClient_AddRangeHeader( &testHeaders,
+                                         -10 /* rangeStart */,
+                                         10 /* rageEnd */ );
     ok( retCode == HTTP_INVALID_PARAMETER );
     reset();
-    reqHeaders.pBuffer = buffer;
-    retCode = HTTPClient_AddRangeHeader( &reqHeaders,
-                                         _rangeStartNegative,
-                                         _rangeEndNegative );
-    ok( retCode == HTTP_INVALID_PARAMETER );
-
-    /* Both range values are negative. */
-    reset();
-    reqHeaders.pBuffer = buffer;
-    retCode = HTTPClient_AddRangeHeader( &reqHeaders,
-                                         _rangeStartNegative,
-                                         _rangeEndNegative );
+    testHeaders.pBuffer = &testBuffer[ 0 ];
+    retCode = HTTPClient_AddRangeHeader( &testHeaders,
+                                         -50 /* rangeStart */,
+                                         -10 /* rageEnd */ );
     ok( retCode == HTTP_INVALID_PARAMETER );
 
     /* / * Test HTTP_INSUFFICIENT_MEMORY error from having buffer size less than */

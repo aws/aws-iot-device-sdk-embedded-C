@@ -207,10 +207,22 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
         IotLogError( "Parameter check failed: pRequestHeaders is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
+    else if( pRequestHeaders->pBuffer == NULL )
+    {
+        IotLogError( "Parameter check failed: pRequestHeaders->pBuffer is NULL." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
     else if( rangeEnd < 0 )
     {
         IotLogErrorWithArgs( "Parameter check failed: rangeEnd is negative: "
                              "rangeEnd should be >=0: RangeEnd=%d", rangeEnd );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( ( rangeStart < 0 ) && ( rangeEnd != 0 ) )
+    {
+        IotLogErrorWithArgs( "Parameter check failed: Invalid range values: "
+                             "rangeEnd should be zero when rangeStart < 0: "
+                             "RangeStart=%d, RangeEnd=%d", rangeStart, rangeEnd );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( ( rangeEnd != 0 ) && ( rangeStart > rangeEnd ) )
@@ -228,21 +240,21 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
                              RANGE_REQUEST_HEADER_VALUE_PREFIX,
                              rangeStart );
         assert( ( stdRetVal >= 0 ) &&
-                stdRetVal <= ( RANGE_REQUEST_HEADER_VALUE_PREFIX + MAX_INT32_NO_OF_DIGITS ) );
+                stdRetVal <= ( RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN + MAX_INT32_NO_OF_DIGITS ) );
         rangeValueLength += ( size_t ) stdRetVal;
 
         /* Add remaining value data depending on the range specification type. */
 
         /* Add rangeEnd value if request is for [rangeStart, rangeEnd] byte range */
-        if( rangeEnd != 0 )
+        if( ( rangeStart >= 0 ) && ( rangeStart <= rangeEnd ) )
         {
             /* Add the rangeEnd value to the request range .*/
             stdRetVal = sprintf( rangeValueBuffer + rangeValueLength,
-                                 "%s%d",
+                                 "%c%d",
                                  DASH_CHARACTER,
                                  rangeEnd );
             assert( ( stdRetVal >= 0 ) &&
-                    stdRetVal <= ( DASH_CHARACTER_LEN + MAX_INT32_NO_OF_DIGITS ) );
+                    stdRetVal <= ( 1 /* Dash Character */ + MAX_INT32_NO_OF_DIGITS ) );
             rangeValueLength += ( size_t ) stdRetVal;
         }
         /* Case when request is for bytes in the range [rangeStart, ). */
@@ -250,9 +262,10 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
         {
             /* Add the "-" character.*/
             stdRetVal = sprintf( rangeValueBuffer + rangeValueLength,
-                                 "%s",
+                                 "%c",
                                  DASH_CHARACTER );
-            assert( stdRetVal == DASH_CHARACTER_LEN );
+            /* Check that only a single character was written. */
+            assert( stdRetVal == 1 );
             rangeValueLength += ( size_t ) stdRetVal;
         }
 
