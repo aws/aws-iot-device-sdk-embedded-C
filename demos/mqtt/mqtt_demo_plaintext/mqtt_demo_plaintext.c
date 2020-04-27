@@ -19,24 +19,61 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/* Standard includes. */
 #include <stdlib.h>
 
+/* POSIX socket includes. */
 #include <netdb.h>
 #include <unistd.h>
 
 #include <sys/socket.h>
 #include <sys/types.h>
 
+/* MQTT API header. */
 #include "mqtt.h"
 
+/**
+ * @brief MQTT server host name.
+ *
+ * This demo uses the Mosquitto test server. This is a public MQTT server; do not
+ * publish anything sensitive to this server.
+ */
 #define SERVER    "test.mosquitto.org"
+
+/**
+ * @brief MQTT server port number.
+ *
+ * In general, port 1883 is for unsecured MQTT connections.
+ */
 #define PORT      1883
 
+/**
+ * @brief Size of the network buffer for MQTT packets.
+ */
 #define NETWORK_BUFFER_SIZE    ( 1024U )
 
+/**
+ * @brief MQTT client identifier.
+ *
+ * No two clients may use the same client identifier simultaneously.
+ */
 #define CLIENT_IDENTIFIER           "testclient"
+
+/**
+ * @brief Length of client identifier.
+ */
 #define CLIENT_IDENTIFIER_LENGTH    ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) )
 
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Establish a TCP connection to the given server.
+ *
+ * @param[in] pServer Host name of server.
+ * @param[in] port Server port.
+ *
+ * @return A file descriptor representing the TCP socket; -1 on failure.
+ */
 static int connectToServer( const char * pServer, uint16_t port )
 {
     int status, tcpSocket = -1;
@@ -45,10 +82,12 @@ static int connectToServer( const char * pServer, uint16_t port )
     uint16_t netPort = htons( port );
     socklen_t serverInfoLength;
 
+    /* Perform a DNS lookup on the given host name. */
     status = getaddrinfo( pServer, NULL, NULL, &pListHead );
 
     if( status != -1 )
     {
+        /* Attempt to connect to one of the retrieved DNS records. */
         for( pIndex = pListHead; pIndex != NULL; pIndex = pIndex->ai_next )
         {
             tcpSocket = socket( pIndex->ai_family, pIndex->ai_socktype, pIndex->ai_protocol );
@@ -87,6 +126,7 @@ static int connectToServer( const char * pServer, uint16_t port )
 
         if( pIndex == NULL )
         {
+            /* Fail if no connection could be established. */
             status = -1;
         }
         else
@@ -103,26 +143,72 @@ static int connectToServer( const char * pServer, uint16_t port )
     return status;
 }
 
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief The transport send function provided to the MQTT context.
+ *
+ * @param[in] tcpSocket TCP socket.
+ * @param[in] pMessage Data to send.
+ * @param[in] bytesToSend Length of data to send.
+ *
+ * @return Number of bytes sent; negative value on error.
+ */
 static int32_t transportSend( int tcpSocket, const void * pMessage, size_t bytesToSend )
 {
     return ( int32_t ) send( tcpSocket, pMessage, bytesToSend, 0 );
 }
 
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief The transport receive function provided to the MQTT context.
+ *
+ * @param[in] tcpSocket TCP socket.
+ * @param[out] pBuffer Buffer for receiving data.
+ * @param[in] bytesToSend Size of pBuffer.
+ *
+ * @return Number of bytes received; negative value on error.
+ */
 static int32_t transportRecv( int tcpSocket, void * pBuffer, size_t bytesToRecv )
 {
     return ( int32_t ) recv( tcpSocket, pBuffer, bytesToRecv, 0 );
 }
 
-static void eventCallback( MQTTContext_t * pContext, MQTTPacketInfo_t * pPacketInfo )
-{
+/*-----------------------------------------------------------*/
 
-}
-
+/**
+ * @brief The timer query function provided to the MQTT context.
+ *
+ * Currently not implemented.
+ */
 static uint32_t getTime( void )
 {
     return 0;
 }
 
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief MQTT event callback.
+ *
+ * Currently not implemented.
+ */
+static void eventCallback( MQTTContext_t * pContext, MQTTPacketInfo_t * pPacketInfo )
+{
+
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Establish an MQTT session over a TCP connection by sending MQTT CONNECT.
+ *
+ * @param[in] pContext MQTT context.
+ * @param[in] tcpSocket TCP socket.
+ *
+ * @return EXIT_SUCCESS if an MQTT session is established; EXIT_FAILURE otherwise.
+ */
 static int establishMqttSession( MQTTContext_t * pContext, int tcpSocket )
 {
     int status = EXIT_SUCCESS;
@@ -168,6 +254,15 @@ static int establishMqttSession( MQTTContext_t * pContext, int tcpSocket )
     return status;
 }
 
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Close an MQTT session by sending MQTT DISCONNECT.
+ *
+ * @param[in] pContext MQTT context.
+ *
+ * @return EXIT_SUCCESS if DISCONNECT was successfully sent; EXIT_FAILURE otherwise.
+ */
 static int disconnectMqttSession( MQTTContext_t * pContext )
 {
     int status = EXIT_SUCCESS;
@@ -182,6 +277,11 @@ static int disconnectMqttSession( MQTTContext_t * pContext )
     return status;
 }
 
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Entry point of demo.
+ */
 int main( int argc, char ** argv )
 {
     bool mqttSessionEstablished = false;
@@ -224,3 +324,5 @@ int main( int argc, char ** argv )
 
     return status;
 }
+
+/*-----------------------------------------------------------*/
