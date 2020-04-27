@@ -19,6 +19,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <assert.h>
 #include "mqtt_state.h"
 
 #define MQTT_PACKET_ID_INVALID ( uint16_t ) 0U
@@ -83,19 +84,6 @@ static size_t _findInRecord( const MQTTPubAckInfo_t * records,
                              MQTTPublishState_t * pCurrentState );
 
 /**
- * @brief Delete an entry from the state record.
- *
- * @param[in] records State record array.
- * @param[in] recordCount Length of record array.
- * @param[in] index Index of record to delete.
- *
- * @return MQTTSuccess if successful, else MQTTBadParameter.
- */
-static MQTTStatus_t _deleteRecord( MQTTPubAckInfo_t * records,
-                                   size_t recordCount,
-                                   size_t index );
-
-/**
  * @brief Store a new entry in the state record.
  *
  * @param[in] records State record array.
@@ -104,7 +92,7 @@ static MQTTStatus_t _deleteRecord( MQTTPubAckInfo_t * records,
  * @param[in] qos QoS of new entry.
  * @param[in] publishState state of new entry.
  *
- * @return MQTTSuccess, MQTTNoMemory, MQTTStateCollision, or MQTTBadParameter.
+ * @return MQTTSuccess, MQTTNoMemory, MQTTStateCollision.
  */
 static MQTTStatus_t _addRecord( MQTTPubAckInfo_t * records,
                                 size_t recordCount,
@@ -120,14 +108,12 @@ static MQTTStatus_t _addRecord( MQTTPubAckInfo_t * records,
  * @param[in] recordIndex index of record to update.
  * @param[in] newState New state to update.
  * @param[in] shouldDelete Whether an existing entry should be deleted.
- *
- * @return MQTTSuccess or MQTTBadParameter.
  */
-static MQTTStatus_t _updateRecord( MQTTPubAckInfo_t * records,
-                                   size_t recordCount,
-                                   size_t recordIndex,
-                                   MQTTPublishState_t newState,
-                                   bool shouldDelete );
+static void _updateRecord( MQTTPubAckInfo_t * records,
+                           size_t recordCount,
+                           size_t recordIndex,
+                           MQTTPublishState_t newState,
+                           bool shouldDelete );
 
 
 static bool _validateTransitionPublish( MQTTPublishState_t currentState,
@@ -227,16 +213,12 @@ static bool _isPublishOutgoing( MQTTPubAckType_t packetType,
     switch( packetType )
     {
         case MQTTPuback:
-            isOutgoing = ( opType == MQTT_RECEIVE );
-            break;
         case MQTTPubrec:
+        case MQTTPubcomp:
             isOutgoing = ( opType == MQTT_RECEIVE );
             break;
         case MQTTPubrel:
             isOutgoing = ( opType == MQTT_SEND );
-            break;
-        case MQTTPubcomp:
-            isOutgoing = ( opType == MQTT_RECEIVE );
             break;
         default:
             /* No other ack type. */
@@ -272,25 +254,6 @@ static size_t _findInRecord( const MQTTPubAckInfo_t * records,
     return index;
 }
 
-static MQTTStatus_t _deleteRecord( MQTTPubAckInfo_t * records,
-                                   size_t recordCount,
-                                   size_t index )
-{
-    MQTTStatus_t status = MQTTSuccess;
-    if( index < recordCount )
-    {
-        records[ index ].packetId = MQTT_PACKET_ID_INVALID;
-        records[ index ].qos = MQTTQoS0;
-        records[ index ].publishState = MQTTStateNull;
-    }
-    else
-    {
-        /* Out of bounds error. */
-        status = MQTTBadParameter;
-    }
-    return status;
-}
-
 static MQTTStatus_t _addRecord( MQTTPubAckInfo_t * records,
                                 size_t recordCount,
                                 uint16_t packetId,
@@ -300,31 +263,28 @@ static MQTTStatus_t _addRecord( MQTTPubAckInfo_t * records,
     MQTTStatus_t status = MQTTNoMemory;
     int32_t index = 0;
     size_t availableIndex = recordCount;
-    if( ( packetId == MQTT_PACKET_ID_INVALID ) || ( qos == MQTTQoS0 ) )
+
+    assert( packetId != MQTT_PACKET_ID_INVALID );
+    assert( qos != MQTTQoS0 );
+
+    /* Start from end so first available index will be populated. */
+    for( index = ( (int32_t ) recordCount - 1 ); index >= 0; index-- )
     {
-        status = MQTTBadParameter;
-    }
-    else
-    {
-        /* Start from end so first available index will be populated. */
-        for( index = ( (int32_t ) recordCount - 1 ); index >= 0; index-- )
+        if( records[ index ].packetId == MQTT_PACKET_ID_INVALID )
         {
-            if( records[ index ].packetId == MQTT_PACKET_ID_INVALID )
-            {
-                availableIndex = ( size_t ) index;
-            }
-            else if( records[ index ].packetId == packetId )
-            {
-                /* Collision. */
-                status = MQTTStateCollision;
-                availableIndex = recordCount;
-                break;
-            }
-            else
-            {
-                /* Empty else clause. */
-            }   
+            availableIndex = ( size_t ) index;
         }
+        else if( records[ index ].packetId == packetId )
+        {
+            /* Collision. */
+            status = MQTTStateCollision;
+            availableIndex = recordCount;
+            break;
+        }
+        else
+        {
+            /* Empty else clause. */
+        }   
     }
 
     if( availableIndex < recordCount )
@@ -338,28 +298,25 @@ static MQTTStatus_t _addRecord( MQTTPubAckInfo_t * records,
     return status;
 }
 
-static MQTTStatus_t _updateRecord( MQTTPubAckInfo_t * records,
-                                   size_t recordCount,
-                                   size_t recordIndex,
-                                   MQTTPublishState_t newState,
-                                   bool shouldDelete )
+static void _updateRecord( MQTTPubAckInfo_t * records,
+                           size_t recordCount,
+                           size_t recordIndex,
+                           MQTTPublishState_t newState,
+                           bool shouldDelete )
 {
-    MQTTStatus_t status = MQTTBadParameter;
+    assert( recordIndex < recordCount );
 
-    if( recordIndex < recordCount )
+    if( shouldDelete )
     {
-        if( shouldDelete )
-        {
-            status = _deleteRecord( records, recordCount, recordIndex );
-        }
-        else
-        {
-            records[ recordIndex ].publishState = newState;
-            status = MQTTSuccess;
-        }
+        records[ recordIndex ].packetId = MQTT_PACKET_ID_INVALID;
+        records[ recordIndex ].qos = MQTTQoS0;
+        records[ recordIndex ].publishState = MQTTStateNull;
     }
-    
-    return status;
+    else
+    {
+        records[ recordIndex ].publishState = newState;
+    }
+
 }
 
 MQTTPublishState_t MQTT_ReserveState( MQTTContext_t * pMqttContext,
@@ -379,7 +336,7 @@ MQTTPublishState_t MQTT_ReserveState( MQTTContext_t * pMqttContext,
                                  &tempState );
 
     /* Make sure there's no collision. */
-    if( recordIndex >= MQTT_STATE_ARRAY_MAX_COUNT )
+    if( ( packetId != MQTT_PACKET_ID_INVALID ) && ( recordIndex >= MQTT_STATE_ARRAY_MAX_COUNT ) )
     {
         mqttStatus = _addRecord( pMqttContext->outgoingPublishRecords,
                                  MQTT_STATE_ARRAY_MAX_COUNT,
@@ -470,11 +427,12 @@ MQTTPublishState_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
         {
             if( isTransitionValid && ( recordIndex < MQTT_STATE_ARRAY_MAX_COUNT ) )
             {
-                mqttStatus = _updateRecord( records,
-                                            MQTT_STATE_ARRAY_MAX_COUNT,
-                                            recordIndex,
-                                            newState,
-                                            false );
+                _updateRecord( records,
+                               MQTT_STATE_ARRAY_MAX_COUNT,
+                               recordIndex,
+                               newState,
+                               false );
+                mqttStatus = MQTTSuccess;
             }
         }
         else
@@ -543,7 +501,6 @@ MQTTPublishState_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
 {
     MQTTPublishState_t newState = MQTTStateNull;
     MQTTPublishState_t currentState = MQTTStateNull;
-    MQTTStatus_t mqttStatus = MQTTIllegalState;
     bool isPublishOutgoing = _isPublishOutgoing( packetType, opType );
     bool shouldDeleteRecord = false;
     bool isTransitionValid = false;
@@ -572,16 +529,11 @@ MQTTPublishState_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
         isTransitionValid = _validateTransitionAck( currentState, newState );
         if( isTransitionValid )
         {
-            mqttStatus = _updateRecord( records,
-                                        MQTT_STATE_ARRAY_MAX_COUNT,
-                                        recordIndex,
-                                        newState,
-                                        shouldDeleteRecord );
-
-            if( mqttStatus != MQTTSuccess )
-            {
-                newState = MQTTStateNull;
-            }
+            _updateRecord( records,
+                           MQTT_STATE_ARRAY_MAX_COUNT,
+                           recordIndex,
+                           newState,
+                           shouldDeleteRecord );
         }
         else
         {
@@ -616,7 +568,7 @@ uint16_t MQTT_StateSelect( MQTTContext_t * pMqttContext,
             records = pMqttContext->outgoingPublishRecords;
             break;
         default:
-            /* NULL or done aren't valid entries. */
+            /* NULL or done aren't valid entries to search for. */
             break;
     }
 
