@@ -218,7 +218,8 @@ int main()
 
     /* Test HTTP_INSUFFICIENT_MEMORY error from having buffer size less than
      * what is required to fit HTTP headers. */
-    memcpy( smallBuffer, HTTP_TEST_HEADER_REQUEST_LINE, HTTP_TEST_HEADER_REQUEST_LINE_LEN );
+    snprintf( ( char * ) smallBuffer,
+              HTTP_TEST_HEADER_REQUEST_LINE_LEN + 1, HTTP_TEST_HEADER_REQUEST_LINE );
     reqHeaders.headersLen = HTTP_TEST_HEADER_REQUEST_LINE_LEN;
     reqHeaders.pBuffer = smallBuffer;
     reqHeaders.bufferLen = HTTP_TEST_SUFFICIENT_HEADER_LEN - 1;
