@@ -119,8 +119,8 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
     }
     else
     {
-        IotLogErrorWithArgs( "Unable to add header in buffer: ",
-                             "Buffer has insufficient memory: ",
+        IotLogErrorWithArgs( "Unable to add header in buffer: "
+                             "Buffer has insufficient memory: "
                              "RequiredBytes=%d, RemainingBufferSize=%d",
                              toAddLen,
                              ( pRequestHeaders->bufferLen - pRequestHeaders->headersLen ) );

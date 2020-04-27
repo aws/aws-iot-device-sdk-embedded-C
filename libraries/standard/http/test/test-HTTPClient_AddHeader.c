@@ -72,23 +72,25 @@ int main()
         header.fieldLen = 0;                                         \
         memset( header.value, 0, 100 );                              \
         header.valueLen = 0;                                         \
+        fillHeaderStructTemplate();                                  \
+        reqHeaders.pBuffer = buffer;                                 \
     }                                                                \
     while( 0 )
 
     plan( 16 );
 
-    /* Test the happy path. */
+    /* Happy Path testing. Prefill the user buffer with HTTP_TEST_HEADER_REQUEST_LINE
+     * and call HTTPClient_AddHeader using the field and value in the header struct. */
     reset();
-    fillHeaderStructTemplate();
-    /* We add 1 because snprintf() writes a null byte at the end. */
+    /* Add 1 because snprintf() writes a null byte at the end. */
     snprintf( correctHeader, HTTP_TEST_SUFFICIENT_HEADER_LEN + 1,
               "%s%s: %s\r\n\r\n",
               HTTP_TEST_HEADER_REQUEST_LINE,
               HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_VALUE );
     correctHeaderLen = HTTP_TEST_SUFFICIENT_HEADER_LEN;
     /* Set parameters for reqHeaders. */
-    memcpy( buffer, HTTP_TEST_HEADER_REQUEST_LINE, HTTP_TEST_HEADER_REQUEST_LINE_LEN );
-    reqHeaders.pBuffer = buffer;
+    snprintf( ( char * ) reqHeaders.pBuffer,
+              HTTP_TEST_HEADER_REQUEST_LINE_LEN + 1, HTTP_TEST_HEADER_REQUEST_LINE );
     reqHeaders.bufferLen = HTTP_TEST_BUFFER_SIZE;
     reqHeaders.headersLen = HTTP_TEST_HEADER_REQUEST_LINE_LEN;
     test_err = HTTPClient_AddHeader( &reqHeaders,
@@ -98,7 +100,22 @@ int main()
                  correctHeader, correctHeaderLen ) == 0 );
     ok( reqHeaders.headersLen == correctHeaderLen );
     ok( test_err == HTTP_SUCCESS );
-    /* Add extra header with insufficient memory. */
+    reset();
+
+    /* -----------------------------------------------------------------------*/
+
+    /* Test adding extra header with insufficient memory. */
+    snprintf( correctHeader, HTTP_TEST_SUFFICIENT_HEADER_LEN + 1,
+              "%s%s: %s\r\n\r\n",
+              HTTP_TEST_HEADER_REQUEST_LINE,
+              HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_VALUE );
+    correctHeaderLen = HTTP_TEST_SUFFICIENT_HEADER_LEN;
+    /* Prefill the buffer with a request line and header. */
+    snprintf( ( char * ) reqHeaders.pBuffer, HTTP_TEST_SUFFICIENT_HEADER_LEN + 1,
+              "%s%s: %s\r\n\r\n",
+              HTTP_TEST_HEADER_REQUEST_LINE,
+              HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_VALUE );
+    reqHeaders.headersLen = HTTP_TEST_SUFFICIENT_HEADER_LEN;
     reqHeaders.bufferLen = reqHeaders.headersLen;
     test_err = HTTPClient_AddHeader( &reqHeaders,
                                      header.field, header.fieldLen,
@@ -107,17 +124,27 @@ int main()
                  correctHeader, correctHeaderLen ) == 0 );
     ok( reqHeaders.headersLen == correctHeaderLen );
     ok( test_err == HTTP_INSUFFICIENT_MEMORY );
-    /* Add extra header with sufficient memory. */
-    reqHeaders.bufferLen = HTTP_TEST_BUFFER_SIZE;
+    reset();
+
+    /* -----------------------------------------------------------------------*/
+
+    /* Test adding extra header with sufficient memory. */
     correctHeaderLen = HTTP_TEST_SUFFICIENT_HEADER_LEN +
                        HTTP_TEST_HEADER_FIELD_LEN + HTTP_TEST_HEADER_VALUE_LEN +
                        HTTP_HEADER_FIELD_SEPARATOR_LEN + HTTP_HEADER_LINE_SEPARATOR_LEN;
-    /* We add 1 because snprintf() writes a null byte at the end. */
     snprintf( correctHeader, correctHeaderLen + 1,
               "%s%s: %s\r\n%s: %s\r\n\r\n",
               HTTP_TEST_HEADER_REQUEST_LINE,
               HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_VALUE,
               HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_VALUE );
+    /* Prefill the buffer with a request line and header. */
+    snprintf( ( char * ) reqHeaders.pBuffer, HTTP_TEST_SUFFICIENT_HEADER_LEN + 1,
+              "%s%s: %s\r\n\r\n",
+              HTTP_TEST_HEADER_REQUEST_LINE,
+              HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_VALUE );
+    reqHeaders.headersLen = HTTP_TEST_SUFFICIENT_HEADER_LEN;
+    reqHeaders.bufferLen = correctHeaderLen;
+
     test_err = HTTPClient_AddHeader( &reqHeaders,
                                      header.field, header.fieldLen,
                                      header.value, header.valueLen );
@@ -125,50 +152,72 @@ int main()
                  correctHeader, correctHeaderLen ) == 0 );
     ok( reqHeaders.headersLen == correctHeaderLen );
     ok( test_err == HTTP_SUCCESS );
-
-    /* Test NULL parameters. */
     reset();
+
+    /* -----------------------------------------------------------------------*/
+
+    /* Test a NULL request headers interface. */
     test_err = HTTPClient_AddHeader( NULL,
                                      header.field, header.fieldLen,
                                      header.value, header.valueLen );
     ok( test_err == HTTP_INVALID_PARAMETER );
+    reset();
 
-    /* reqHeaders should have NULL pBuffer upon reset(). */
+    /* -----------------------------------------------------------------------*/
+
+    /* Test a NULL pBuffer member of request headers. */
+    reqHeaders.pBuffer = NULL;
     test_err = HTTPClient_AddHeader( &reqHeaders,
                                      header.field, header.fieldLen,
                                      header.value, header.valueLen );
     ok( test_err == HTTP_INVALID_PARAMETER );
+    reset();
 
-    /* reqHeaders.pBuffer == NULL checked before NULL fields and values. */
-    reqHeaders.pBuffer = buffer;
+    /* -----------------------------------------------------------------------*/
+
+    /* Test NULL header field. */
+    reqHeaders.bufferLen = HTTP_TEST_BUFFER_SIZE;
     test_err = HTTPClient_AddHeader( &reqHeaders,
                                      NULL, header.fieldLen,
                                      header.value, header.valueLen );
     ok( test_err == HTTP_INVALID_PARAMETER );
+    reset();
 
+    /* -----------------------------------------------------------------------*/
+
+    /* Test NULL header value. */
+    reqHeaders.bufferLen = HTTP_TEST_BUFFER_SIZE;
     test_err = HTTPClient_AddHeader( &reqHeaders,
                                      header.field, header.fieldLen,
                                      NULL, header.valueLen );
     ok( test_err == HTTP_INVALID_PARAMETER );
-
-    /* Test length of fieldLen and valueLen. */
     reset();
-    fillHeaderStructTemplate();
-    reqHeaders.pBuffer = buffer;
-    /* Test if length > 0. */
+
+    /* -----------------------------------------------------------------------*/
+
+
+    /* Test that fieldLen > 0. */
+    reqHeaders.bufferLen = HTTP_TEST_BUFFER_SIZE;
     test_err = HTTPClient_AddHeader( &reqHeaders,
                                      header.field, 0,
                                      header.value, header.valueLen );
     ok( test_err == HTTP_INVALID_PARAMETER );
+    reset();
+
+    /* -----------------------------------------------------------------------*/
+
+    /* Test that valueLen > 0. */
+    reqHeaders.bufferLen = HTTP_TEST_BUFFER_SIZE;
     test_err = HTTPClient_AddHeader( &reqHeaders,
                                      header.field, header.fieldLen,
                                      header.value, 0 );
     ok( test_err == HTTP_INVALID_PARAMETER );
+    reset();
+
+    /* -----------------------------------------------------------------------*/
 
     /* Test HTTP_INSUFFICIENT_MEMORY error from having buffer size less than
      * what is required to fit HTTP headers. */
-    reset();
-    fillHeaderStructTemplate();
     memcpy( smallBuffer, HTTP_TEST_HEADER_REQUEST_LINE, HTTP_TEST_HEADER_REQUEST_LINE_LEN );
     reqHeaders.headersLen = HTTP_TEST_HEADER_REQUEST_LINE_LEN;
     reqHeaders.pBuffer = smallBuffer;
@@ -177,6 +226,9 @@ int main()
                                      header.field, header.fieldLen,
                                      header.value, header.valueLen );
     ok( test_err == HTTP_INSUFFICIENT_MEMORY );
+    reset();
+
+    /* -----------------------------------------------------------------------*/
 
     return grade();
 }
