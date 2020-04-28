@@ -439,7 +439,7 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
  * #HTTPRequestHeaders_t.pBuffer.
  *
  * For example, if requesting for the first 1kB of a file the following would be
- * written  "Range: bytes=0-1024\r\n\r\n".
+ * written  "Range: bytes=0-1023\r\n\r\n".
  *
  * The trailing "\r\n" that denotes the end of the header lines is overwritten, if it
  * already exists in the buffer.
@@ -448,21 +448,23 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
  * combination of @a rangeStartOrLastNBytes and @a rangeEnd parameter values:
  * 1. Request containing both parameters for the byte range [rangeStart, rangeEnd]
  * where @a rangeStartOrLastNBytes <= @a rangeEnd.
- * Example request: "Range: bytes=0-1024\r\n" for requesting bytes in the range [0, 1024].
+ * Example request: "Range: bytes=0-1023\r\n" for requesting bytes in the range [0, 1024].
  *
- * 2. Request for the last N bytes, represented by @p rangeStartOrLastNBytes.
- * @p rangeStartOrLastNBytes should be negative and @p rangeEnd should #FILE_END.
+ * 2. Request for the last N bytes, represented by @p rangeStartOrlastNbytes.
+ * @p rangeStartOrlastNbytes should be negative and @p rangeEnd should be
+ * #HTTP_RANGE_REQUEST_END_OF_FILE.
  * Example request: "Range: bytes=-512\r\n" for requesting the last 512 bytes
- * (or bytes in the range [0, 512]).
+ * (or bytes in the range [512, 1023] for a 1kB sized file).
  *
  * 3. Request for all bytes (till the end of byte sequence) from byte N,
- * represented by @p rangeStartOrLastNBytes.
- * @p rangeStartOrLastNBytes should be >= 0 and @p rangeEnd should be #FILE_END.
+ * represented by @p rangeStartOrlastNbytes.
+ * @p rangeStartOrlastNbytes should be >= 0 and @p rangeEnd should be
+ * #HTTP_RANGE_REQUEST_END_OF_FILE.
  * Example request: "Range: bytes=256-\r\n" for requesting all bytes after and
- * including byte 256 (or bytes in the range [256,)).
+ * including byte 256 (or bytes in the range [256,1023] for a 1kB sized file).
  *
  * @param[in] pRequestHeaders Request header buffer information.
- * @param[in] rangeStartOrLastNBytes Represents either the starting byte
+ * @param[in] rangeStartOrlastNbytes Represents either the starting byte
  * for a range OR the last N number of bytes in the requested file.
  * @param[in] rangeEnd The ending range for the requested file. For end of file
  * byte in Range Specifications 2. and 3., #HTTP_RANGE_REQUEST_END_OF_FILE
@@ -471,7 +473,7 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
  * @return Returns the following status codes:
  * #HTTP_SUCCESS if successful.
  * #HTTP_INVALID_PARAMETER, if input parameters are invalid, including when
- * the @p rangeStartOrLastNBytes and @p rangeEnd parameter combination is invalid.
+ * the @p rangeStartOrlastNbytes and @p rangeEnd parameter combination is invalid.
  * #HTTP_INSUFFICIENT_MEMORY, if the passed #HTTPRequestHeaders_t.pBuffer
  * contains insufficient remaining memory for storing the range request.
  */

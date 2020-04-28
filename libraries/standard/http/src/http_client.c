@@ -149,7 +149,7 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
     /* Check for NULL parameters. */
     if( pRequestHeaders == NULL )
     {
-        IotLogError( "Parameter check failed: pRequestHeaders interface is NULL." );
+        IotLogError( "Parameter check failed: pRequestHeaders is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( pRequestHeaders->pBuffer == NULL )
@@ -272,6 +272,10 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
             assert( stdRetVal == 1 );
             rangeValueLength += ( size_t ) stdRetVal;
         }
+        else
+        {
+            /* Empty else MISRA 15.7 */
+        }
 
         /* Add the Range Request header field and value to the buffer. */
         returnStatus = _addHeader( pRequestHeaders,
@@ -299,17 +303,16 @@ static HTTPStatus_t _sendHttpHeaders( const HTTPTransportInterface_t * pTranspor
 
     if( transportStatus < 0 )
     {
-        IotLogErrorWithArgs( "Error in sending the HTTP headers over the transport "
-                             "interface : TransportStatus = % d.",
-                             transportStatus );
+        IotLogErrorWithArgs( "Failed to send HTTP headers: Transport interface failed: "
+                             "TransportStatus=%d", transportStatus );
         returnStatus = HTTP_NETWORK_ERROR;
     }
     else if( transportStatus != pRequestHeaders->headersLen )
     {
-        IotLogErrorWithArgs( "Failure in sending HTTP headers:Transport layer "
-                             "did not send the required bytes:RequiredBytes = % d "
-                             ", SentBytes = % d.",
-                             transportStatus );
+        IotLogErrorWithArgs( "Failed to send HTTP headers: Transport layer "
+                             "did not send required num of bytes: "
+                             "RequiredBytes=%d, SentBytes=%d.",
+                             pRequestHeaders->headersLen, transportStatus );
         returnStatus = HTTP_NETWORK_ERROR;
     }
     else
@@ -338,17 +341,16 @@ static HTTPStatus_t _sendHttpBody( const HTTPTransportInterface_t * pTransport,
 
         if( transportStatus < 0 )
         {
-            IotLogErrorWithArgs( "Error in sending the HTTP body over the "
-                                 "transport interface.TransportStatus = % d.",
-                                 transportStatus );
+            IotLogErrorWithArgs( "Failed to send HTTP headers: Transport interface failed: "
+                                 "TransportStatus=%d", transportStatus );
             returnStatus = HTTP_NETWORK_ERROR;
         }
         else if( transportStatus != reqBodyBufLen )
         {
-            IotLogErrorWithArgs( "Failure in sending HTTP headers:      Transport layer "
-                                 "did not send the required bytes:      RequiredBytes = % d "
-                                 ", SentBytes = % d.",
-                                 transportStatus );
+            IotLogErrorWithArgs( "Failed to send HTTP headers: Transport layer "
+                                 "did not send required num of bytes: "
+                                 "RequiredBytes=%d, SentBytes=%d.",
+                                 pRequestHeaders->headersLen, transportStatus );
             returnStatus = HTTP_NETWORK_ERROR;
         }
     }
@@ -377,27 +379,27 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
 
     if( pTransport == NULL )
     {
-        IotLogError( "Parameter check failed:   pTransport interface is NULL." );
+        IotLogError( "Parameter check failed: pTransport interface is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( pTransport->send == NULL )
     {
-        IotLogError( "Parameter check failed:   pTransport->send is NULL." );
+        IotLogError( "Parameter check failed: pTransport->send is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( pTransport->recv == NULL )
     {
-        IotLogError( "Parameter check failed:   pTransport->recv is NULL." );
+        IotLogError( "Parameter check failed: pTransport->recv is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( pRequestHeaders == NULL )
     {
-        IotLogError( "Parameter check failed:   pRequestHeaders is NULL." );
+        IotLogError( "Parameter check failed: pRequestHeaders is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( pRequestHeaders->pBuffer == NULL )
     {
-        IotLogError( "Parameter check failed:   pRequestHeaders->pBuffer is NULL." );
+        IotLogError( "Parameter check failed: pRequestHeaders->pBuffer is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else
