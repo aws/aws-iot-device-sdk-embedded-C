@@ -80,11 +80,11 @@ HTTPStatus_t _receiveHttpResponse( const HTTPTransportInterface_t * pTransport,
  * buffer.
  * @param[in] responseBufferLen The length of the response buffer.
  *
- * @return Returns #HTTP_SUCCESS if parsing state denotes it is complete. If the
- * parsing state denotes it never started, then return #HTTP_NO_RESPONSE. If the
- * parsing state is incomplete, thenif the response buffer is not full return
- * #HTTP_PARTIAL_RESPONSE. If the parsing state is incomplete, then if the
- * response buffer is full return #HTTP_INSUFFICIENT_MEMORY.
+ * @return Returns #HTTP_SUCCESS if the parsing state is complete. If
+ * the parsing state denotes it never started, then return #HTTP_NO_RESPONSE. If
+ * the parsing state is incomplete, then if the response buffer is not full
+ * #HTTP_PARTIAL_RESPONSE is returned. If the parsing state is incomplete, then
+ * if the response buffer is full #HTTP_INSUFFICIENT_MEMORY is returned.
  */
 static HTTPStatus_t _getFinalResponseStatus( HTTPParsingState_t parsingState,
                                              size_t totalReceived,
@@ -317,14 +317,14 @@ static HTTPStatus_t _sendHttpBody( const HTTPTransportInterface_t * pTransport,
 
     if( transportStatus < 0 )
     {
-        IotLogErrorWithArgs( "Failed to send HTTP body: Transport send()"
+        IotLogErrorWithArgs( "Failed to send HTTP body: Transport send() "
                              " returned error: Transport Status = %d",
                              transportStatus );
         returnStatus = HTTP_NETWORK_ERROR;
     }
     else if( transportStatus != reqBodyBufLen )
     {
-        IotLogErrorWithArgs( "Failed to send HTTP body: Transport layer "
+        IotLogErrorWithArgs( "Failed to send HTTP body: Transport send() "
                              "did not send the required bytes: Required bytes = %d"
                              ", Sent bytes=%d.",
                              reqBodyBufLen,
@@ -387,7 +387,7 @@ HTTPStatus_t _receiveHttpResponse( const HTTPTransportInterface_t * pTransport,
     {
         /* When a zero is returned from the transport recv it will not be
          * invoked again. */
-        IotLogDebug( "Transport recv returned 0. Receiving transport data"
+        IotLogDebug( "Transport recv() returned 0. Receiving transport data"
                      "is complete." );
     }
 

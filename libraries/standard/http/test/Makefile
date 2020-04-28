@@ -29,7 +29,6 @@ FUNCTIONS = _addHeader \
 			_sendHttpBody \
 			_receiveHttpResponse \
 			_receiveAndParseHttpResponse \
-			_receiveHttpResponse \
 			_HTTPClient_InitializeParsingContext \
 			_HTTPClient_ParseResponse \
 			_getFinalResponseStatus
@@ -46,7 +45,6 @@ HTTPClient_Send.c: _sendHttpHeaders.c \
 				   _sendHttpBody.c \
 				   _receiveHttpResponse.c \
 				   _receiveAndParseHttpResponse.c \
-				   _receiveHttpResponse.c \
 				   _HTTPClient_InitializeParsingContext.c \
 				   _HTTPClient_ParseResponse.c \
 				   _getFinalResponseStatus.c \
