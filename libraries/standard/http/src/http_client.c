@@ -215,10 +215,18 @@ static HTTPStatus_t _writeRequestLine( HTTPRequestHeaders_t * pRequestHeaders,
     uint8_t * pBufferCur = pRequestHeaders->pBuffer;
     size_t toAddLen = methodLen +                 \
                       SPACE_CHARACTER_LEN +       \
-                      pathLen +                   \
                       SPACE_CHARACTER_LEN +       \
                       HTTP_PROTOCOL_VERSION_LEN + \
                       HTTP_HEADER_LINE_SEPARATOR_LEN;
+
+    if( ( pPath == NULL ) || ( pathLen == 0 ) )
+    {
+        toAddLen += HTTP_EMPTY_PATH_LEN;
+    }
+    else
+    {
+        toAddLen += pathLen;
+    }
 
     if( ( toAddLen + pRequestHeaders->headersLen ) > pRequestHeaders->bufferLen )
     {
@@ -230,15 +238,13 @@ static HTTPStatus_t _writeRequestLine( HTTPRequestHeaders_t * pRequestHeaders,
         /* Write "<METHOD> <PATH> HTTP/1.1\r\n" to start the HTTP header. */
         memcpy( pBufferCur, pMethod, methodLen );
         pBufferCur += methodLen;
-        memcpy( pBufferCur, SPACE_CHARACTER, 1 );
+        memcpy( pBufferCur, SPACE_CHARACTER, SPACE_CHARACTER_LEN );
 
         pBufferCur += SPACE_CHARACTER_LEN;
 
         /* Use "/" as default value if <PATH> is NULL. */
         if( ( pPath == NULL ) || ( pathLen == 0 ) )
         {
-            /* Revise toAddLen to contain <HTTP_EMPTY_PATH_LEN> instead. */
-            toAddLen = ( toAddLen - pathLen ) + HTTP_EMPTY_PATH_LEN;
             memcpy( pBufferCur, HTTP_EMPTY_PATH, HTTP_EMPTY_PATH_LEN );
             pBufferCur += HTTP_EMPTY_PATH_LEN;
         }
@@ -314,8 +320,6 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
     {
         /* Reset application-provided parameters. */
         pRequestHeaders->headersLen = 0;
-        /* Clear user-provided buffer. */
-        memset( pRequestHeaders->pBuffer, 0, pRequestHeaders->bufferLen );
 
         /* Write "<METHOD> <PATH> HTTP/1.1\r\n" to start the HTTP header. */
         returnStatus = _writeRequestLine( pRequestHeaders,
