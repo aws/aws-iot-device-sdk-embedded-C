@@ -70,6 +70,8 @@ static IotSerializerError_t _getBufferAddress( const IotSerializerDecoderObject_
 static IotSerializerError_t _getSizeOfEncodedData( const IotSerializerDecoderObject_t * pDecoderObject,
                                                    size_t * pEncodedDataLength );
 
+static IotSerializerError_t _getSizeOf( const IotSerializerDecoderObject_t * pDecoderObject,
+                                        size_t * pLength );
 
 /*-----------------------------------------------------------*/
 
@@ -658,7 +660,7 @@ static CborError _calculateSizeOfIndefiniteLengthContainer( CborValue * pCborVal
 
 /*-----------------------------------------------------------*/
 
-IotSerializerError_t _getSizeOf( IotSerializerDecoderObject_t * pDecoderObject,
+IotSerializerError_t _getSizeOf( const IotSerializerDecoderObject_t * pDecoderObject,
                                  size_t * pLength )
 {
     IotSerializer_Assert( pDecoderObject != NULL );
