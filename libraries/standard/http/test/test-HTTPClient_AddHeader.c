@@ -22,7 +22,7 @@
  *   <HTTP_TEST_HEADER_REQUEST_LINE> \r\n
  *   <HTTP_TEST_HEADER_FIELD>: <HTTP_TEST_HEADER_VALUE> \r\n
  *   \r\n
- * This is used to initialize the correctHeader string. */
+ * This is used to initialize the expectedHeader string. */
 #define HTTP_TEST_SUFFICIENT_HEADER_LEN   \
     ( HTTP_TEST_HEADER_REQUEST_LINE_LEN + \
       HTTP_TEST_HEADER_FIELD_LEN +        \
@@ -31,6 +31,7 @@
       HTTP_HEADER_LINE_SEPARATOR_LEN +    \
       HTTP_HEADER_LINE_SEPARATOR_LEN )
 
+
 int main()
 {
     HTTPRequestHeaders_t reqHeaders = HTTP_REQUEST_HEADERS_INITIALIZER;
@@ -38,35 +39,16 @@ int main()
     HTTPStatus_t test_err = HTTP_NOT_SUPPORTED;
     uint8_t buffer[ HTTP_TEST_BUFFER_SIZE ] = { 0 };
     uint8_t smallBuffer[ HTTP_TEST_SUFFICIENT_HEADER_LEN - 1 ] = { 0 };
-    char correctHeader[ HTTP_TEST_BUFFER_SIZE ] = { 0 };
-    size_t correctHeaderLen = HTTP_TEST_SUFFICIENT_HEADER_LEN;
+    char expectedHeader[ HTTP_TEST_BUFFER_SIZE ] = { 0 };
+    size_t expectedHeaderLen = HTTP_TEST_SUFFICIENT_HEADER_LEN;
     struct Header
     {
-        char field[ 100 ];
+        char field[ HTTP_TEST_BUFFER_SIZE ];
         size_t fieldLen;
-        char value[ 100 ];
+        char value[ HTTP_TEST_BUFFER_SIZE ];
         size_t valueLen;
     }
     header;
-
-#define setupBuffersWithPreexistingHeader( requestHeaders, expectedHeaders ) \
-    do {                                                                     \
-        requestHeaders.pBuffer = testBuffer;                                 \
-        requestHeaders.bufferLen = sizeof( testBuffer );                     \
-        /* We add 1 bytes as snprintf() writes a null byte at the end. */    \
-        int numBytes = snprintf( ( char * ) requestHeaders.pBuffer,          \
-                                 PREEXISTING_HEADER_DATA_LEN + 1,            \
-                                 "%s",                                       \
-                                 PREEXISTING_HEADER_DATA );                  \
-        ok( numBytes == PREEXISTING_HEADER_DATA_LEN );                       \
-        requestHeaders.headersLen = PREEXISTING_HEADER_DATA_LEN;             \
-        /* Fill the same data in the expected buffer as HTTPClient_AddRangeHeaders()
-         * is not expected to change it. */                         \
-        ok( memcpy( expectedHeaders.buffer, requestHeaders.pBuffer, \
-                    requestHeaders.headersLen )                     \
-            == expectedHeaders.buffer );                            \
-        expectedHeaders.dataLen = requestHeaders.headersLen;        \
-    } while( 0 )
 
 /* Write template header field and value to a struct to pass as
  * parameters to HTTPClient_AddHeader() method. */
@@ -81,95 +63,103 @@ int main()
     }                                                                 \
     while( 0 )
 
-#define reset()                                                      \
-    do {                                                             \
-        test_err = HTTP_NOT_SUPPORTED;                               \
-        reqHeaders = reqHeadersDflt;                                 \
-        memset( buffer, 0, HTTP_TEST_BUFFER_SIZE );                  \
-        memset( correctHeader, 0, HTTP_TEST_SUFFICIENT_HEADER_LEN ); \
-        memset( header.field, 0, 100 );                              \
-        header.fieldLen = 0;                                         \
-        memset( header.value, 0, 100 );                              \
-        header.valueLen = 0;                                         \
-        fillHeaderStructTemplate();                                  \
-        reqHeaders.pBuffer = buffer;                                 \
-    }                                                                \
+#define reset()                                                       \
+    do {                                                              \
+        test_err = HTTP_NOT_SUPPORTED;                                \
+        reqHeaders = reqHeadersDflt;                                  \
+        memset( buffer, 0, HTTP_TEST_BUFFER_SIZE );                   \
+        memset( expectedHeader, 0, HTTP_TEST_SUFFICIENT_HEADER_LEN ); \
+        memset( header.field, 0, HTTP_TEST_BUFFER_SIZE );             \
+        header.fieldLen = 0;                                          \
+        memset( header.value, 0, HTTP_TEST_BUFFER_SIZE );             \
+        header.valueLen = 0;                                          \
+        fillHeaderStructTemplate();                                   \
+        reqHeaders.pBuffer = buffer;                                  \
+    }                                                                 \
     while( 0 )
 
-    plan( 16 );
+    plan( 23 );
 
     /* Happy Path testing. Prefill the user buffer with HTTP_TEST_HEADER_REQUEST_LINE
      * and call HTTPClient_AddHeader using the field and value in the header struct. */
     reset();
     /* Add 1 because snprintf(...) writes a null byte at the end. */
-    snprintf( correctHeader, HTTP_TEST_SUFFICIENT_HEADER_LEN + 1,
-              "%s%s: %s\r\n\r\n",
-              HTTP_TEST_HEADER_REQUEST_LINE,
-              HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_VALUE );
-    correctHeaderLen = HTTP_TEST_SUFFICIENT_HEADER_LEN;
+    ok( snprintf( expectedHeader, HTTP_TEST_SUFFICIENT_HEADER_LEN + 1,
+                  "%s%s: %s\r\n\r\n",
+                  HTTP_TEST_HEADER_REQUEST_LINE,
+                  HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_VALUE )
+        == HTTP_TEST_SUFFICIENT_HEADER_LEN );
+    expectedHeaderLen = HTTP_TEST_SUFFICIENT_HEADER_LEN;
     /* Set parameters for reqHeaders. */
-    snprintf( ( char * ) reqHeaders.pBuffer,
-              HTTP_TEST_HEADER_REQUEST_LINE_LEN + 1, HTTP_TEST_HEADER_REQUEST_LINE );
+    ok( snprintf( ( char * ) reqHeaders.pBuffer,
+                  HTTP_TEST_HEADER_REQUEST_LINE_LEN + 1,
+                  HTTP_TEST_HEADER_REQUEST_LINE )
+        == HTTP_TEST_HEADER_REQUEST_LINE_LEN );
     reqHeaders.bufferLen = HTTP_TEST_BUFFER_SIZE;
     reqHeaders.headersLen = HTTP_TEST_HEADER_REQUEST_LINE_LEN;
     test_err = HTTPClient_AddHeader( &reqHeaders,
                                      header.field, header.fieldLen,
                                      header.value, header.valueLen );
     ok( strncmp( ( char * ) reqHeaders.pBuffer,
-                 correctHeader, correctHeaderLen ) == 0 );
-    ok( reqHeaders.headersLen == correctHeaderLen );
+                 expectedHeader, expectedHeaderLen ) == 0 );
+    ok( reqHeaders.headersLen == expectedHeaderLen );
     ok( test_err == HTTP_SUCCESS );
     reset();
 
     /* -----------------------------------------------------------------------*/
 
     /* Test adding extra header with insufficient memory. */
-    snprintf( correctHeader, HTTP_TEST_SUFFICIENT_HEADER_LEN + 1,
-              "%s%s: %s\r\n\r\n",
-              HTTP_TEST_HEADER_REQUEST_LINE,
-              HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_VALUE );
-    correctHeaderLen = HTTP_TEST_SUFFICIENT_HEADER_LEN;
+    ok( snprintf( expectedHeader, HTTP_TEST_SUFFICIENT_HEADER_LEN + 1,
+                  "%s%s: %s\r\n\r\n",
+                  HTTP_TEST_HEADER_REQUEST_LINE,
+                  HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_VALUE )
+        == HTTP_TEST_SUFFICIENT_HEADER_LEN );
+    expectedHeaderLen = HTTP_TEST_SUFFICIENT_HEADER_LEN;
     /* Prefill the buffer with a request line and header. */
-    snprintf( ( char * ) reqHeaders.pBuffer, HTTP_TEST_SUFFICIENT_HEADER_LEN + 1,
-              "%s%s: %s\r\n\r\n",
-              HTTP_TEST_HEADER_REQUEST_LINE,
-              HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_VALUE );
+    ok( snprintf( ( char * ) reqHeaders.pBuffer, HTTP_TEST_SUFFICIENT_HEADER_LEN + 1,
+                  "%s%s: %s\r\n\r\n",
+                  HTTP_TEST_HEADER_REQUEST_LINE,
+                  HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_VALUE )
+        == HTTP_TEST_SUFFICIENT_HEADER_LEN );
     reqHeaders.headersLen = HTTP_TEST_SUFFICIENT_HEADER_LEN;
     reqHeaders.bufferLen = reqHeaders.headersLen;
     test_err = HTTPClient_AddHeader( &reqHeaders,
                                      header.field, header.fieldLen,
                                      header.value, header.valueLen );
     ok( strncmp( ( char * ) reqHeaders.pBuffer,
-                 correctHeader, correctHeaderLen ) == 0 );
-    ok( reqHeaders.headersLen == correctHeaderLen );
+                 expectedHeader, expectedHeaderLen ) == 0 );
+    ok( reqHeaders.headersLen == expectedHeaderLen );
     ok( test_err == HTTP_INSUFFICIENT_MEMORY );
     reset();
 
     /* -----------------------------------------------------------------------*/
 
     /* Test adding extra header with sufficient memory. */
-    correctHeaderLen = HTTP_TEST_SUFFICIENT_HEADER_LEN +
-                       HTTP_TEST_HEADER_FIELD_LEN + HTTP_TEST_HEADER_VALUE_LEN +
-                       HTTP_HEADER_FIELD_SEPARATOR_LEN + HTTP_HEADER_LINE_SEPARATOR_LEN;
-    snprintf( correctHeader, correctHeaderLen + 1,
-              "%s%s: %s\r\n%s: %s\r\n\r\n",
-              HTTP_TEST_HEADER_REQUEST_LINE,
-              HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_VALUE,
-              HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_VALUE );
+    expectedHeaderLen = HTTP_TEST_SUFFICIENT_HEADER_LEN +
+                        HTTP_TEST_HEADER_FIELD_LEN + HTTP_TEST_HEADER_VALUE_LEN +
+                        HTTP_HEADER_FIELD_SEPARATOR_LEN + HTTP_HEADER_LINE_SEPARATOR_LEN;
+    ok( snprintf( expectedHeader, expectedHeaderLen + 1,
+                  "%s%s: %s\r\n%s: %s\r\n\r\n",
+                  HTTP_TEST_HEADER_REQUEST_LINE,
+                  HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_VALUE,
+                  HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_VALUE )
+        == expectedHeaderLen );
     /* Prefill the buffer with a request line and header. */
-    snprintf( ( char * ) reqHeaders.pBuffer, HTTP_TEST_SUFFICIENT_HEADER_LEN + 1,
-              "%s%s: %s\r\n\r\n",
-              HTTP_TEST_HEADER_REQUEST_LINE,
-              HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_VALUE );
+    ok( snprintf( ( char * ) reqHeaders.pBuffer,
+                  HTTP_TEST_SUFFICIENT_HEADER_LEN + 1,
+                  "%s%s: %s\r\n\r\n",
+                  HTTP_TEST_HEADER_REQUEST_LINE,
+                  HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_VALUE )
+        == HTTP_TEST_SUFFICIENT_HEADER_LEN );
     reqHeaders.headersLen = HTTP_TEST_SUFFICIENT_HEADER_LEN;
-    reqHeaders.bufferLen = correctHeaderLen;
+    reqHeaders.bufferLen = expectedHeaderLen;
 
     test_err = HTTPClient_AddHeader( &reqHeaders,
                                      header.field, header.fieldLen,
                                      header.value, header.valueLen );
     ok( strncmp( ( char * ) reqHeaders.pBuffer,
-                 correctHeader, correctHeaderLen ) == 0 );
-    ok( reqHeaders.headersLen == correctHeaderLen );
+                 expectedHeader, expectedHeaderLen ) == 0 );
+    ok( reqHeaders.headersLen == expectedHeaderLen );
     ok( test_err == HTTP_SUCCESS );
     reset();
 
@@ -237,8 +227,10 @@ int main()
 
     /* Test HTTP_INSUFFICIENT_MEMORY error from having buffer size less than
      * what is required to fit HTTP headers. */
-    snprintf( ( char * ) smallBuffer,
-              HTTP_TEST_HEADER_REQUEST_LINE_LEN + 1, HTTP_TEST_HEADER_REQUEST_LINE );
+    ok( snprintf( ( char * ) smallBuffer,
+                  HTTP_TEST_HEADER_REQUEST_LINE_LEN + 1,
+                  HTTP_TEST_HEADER_REQUEST_LINE )
+        == HTTP_TEST_HEADER_REQUEST_LINE_LEN );
     reqHeaders.headersLen = HTTP_TEST_HEADER_REQUEST_LINE_LEN;
     reqHeaders.pBuffer = smallBuffer;
     reqHeaders.bufferLen = HTTP_TEST_SUFFICIENT_HEADER_LEN - 1;
