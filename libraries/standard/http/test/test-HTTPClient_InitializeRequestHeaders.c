@@ -95,13 +95,13 @@ int main()
     reset();
     expectedHeaderLen = HTTP_TEST_PREFIX_HEADER_LEN + \
                         HTTP_CONNECTION_CLOSE_VALUE_LEN;
-    /* Add 1 because snprintf() writes a null byte at the end. */
-    snprintf( expectedHeader, expectedHeaderLen + 1,
-              HTTP_TEST_HEADER_FORMAT,
-              HTTP_TEST_REQUEST_METHOD, HTTP_TEST_REQUEST_PATH, HTTP_PROTOCOL_VERSION,
-              HTTP_USER_AGENT_FIELD, HTTP_USER_AGENT_VALUE,
-              HTTP_HOST_FIELD, HTTP_TEST_HOST_VALUE,
-              HTTP_CONNECTION_FIELD, HTTP_CONNECTION_CLOSE_VALUE );
+    ok( snprintf( expectedHeader, expectedHeaderLen + 1,
+                  HTTP_TEST_HEADER_FORMAT,
+                  HTTP_TEST_REQUEST_METHOD, HTTP_TEST_REQUEST_PATH, HTTP_PROTOCOL_VERSION,
+                  HTTP_USER_AGENT_FIELD, HTTP_USER_AGENT_VALUE,
+                  HTTP_HOST_FIELD, HTTP_TEST_HOST_VALUE,
+                  HTTP_CONNECTION_FIELD, HTTP_CONNECTION_CLOSE_VALUE )
+        == expectedHeaderLen );
     /* Set parameters for reqHeaders. */
     reqHeaders.pBuffer = buffer;
     reqHeaders.bufferLen = expectedHeaderLen;
@@ -152,13 +152,14 @@ int main()
     reqInfo.flags = HTTP_REQUEST_KEEP_ALIVE_FLAG;
     expectedHeaderLen = HTTP_TEST_PREFIX_HEADER_LEN + \
                         HTTP_CONNECTION_KEEP_ALIVE_VALUE_LEN;
-    /* Add 1 because snprintf() writes a null byte at the end. */
-    snprintf( expectedHeader, expectedHeaderLen + 1,
-              HTTP_TEST_HEADER_FORMAT,
-              HTTP_TEST_REQUEST_METHOD, HTTP_TEST_REQUEST_PATH, HTTP_PROTOCOL_VERSION,
-              HTTP_USER_AGENT_FIELD, HTTP_USER_AGENT_VALUE,
-              HTTP_HOST_FIELD, HTTP_TEST_HOST_VALUE,
-              HTTP_CONNECTION_FIELD, HTTP_CONNECTION_KEEP_ALIVE_VALUE );
+    ok( snprintf( expectedHeader, expectedHeaderLen + 1,
+                  HTTP_TEST_HEADER_FORMAT,
+                  HTTP_TEST_REQUEST_METHOD, HTTP_TEST_REQUEST_PATH,
+                  HTTP_PROTOCOL_VERSION,
+                  HTTP_USER_AGENT_FIELD, HTTP_USER_AGENT_VALUE,
+                  HTTP_HOST_FIELD, HTTP_TEST_HOST_VALUE,
+                  HTTP_CONNECTION_FIELD, HTTP_CONNECTION_KEEP_ALIVE_VALUE )
+        == expectedHeaderLen );
     reqHeaders.pBuffer = buffer;
     reqHeaders.bufferLen = expectedHeaderLen;
     test_err = HTTPClient_InitializeRequestHeaders( &reqHeaders, &reqInfo );
@@ -176,12 +177,13 @@ int main()
     expectedHeaderLen = ( HTTP_TEST_PREFIX_HEADER_LEN - HTTP_TEST_REQUEST_PATH_LEN ) + \
                         HTTP_EMPTY_PATH_LEN +                                          \
                         HTTP_CONNECTION_CLOSE_VALUE_LEN;
-    snprintf( expectedHeader, expectedHeaderLen + 1,
-              HTTP_TEST_HEADER_FORMAT,
-              HTTP_TEST_REQUEST_METHOD, HTTP_EMPTY_PATH, HTTP_PROTOCOL_VERSION,
-              HTTP_USER_AGENT_FIELD, HTTP_USER_AGENT_VALUE,
-              HTTP_HOST_FIELD, HTTP_TEST_HOST_VALUE,
-              HTTP_CONNECTION_FIELD, HTTP_CONNECTION_CLOSE_VALUE );
+    ok( snprintf( expectedHeader, expectedHeaderLen + 1,
+                  HTTP_TEST_HEADER_FORMAT,
+                  HTTP_TEST_REQUEST_METHOD, HTTP_EMPTY_PATH, HTTP_PROTOCOL_VERSION,
+                  HTTP_USER_AGENT_FIELD, HTTP_USER_AGENT_VALUE,
+                  HTTP_HOST_FIELD, HTTP_TEST_HOST_VALUE,
+                  HTTP_CONNECTION_FIELD, HTTP_CONNECTION_CLOSE_VALUE )
+        == expectedHeaderLen );
     reqHeaders.pBuffer = buffer;
     reqHeaders.bufferLen = expectedHeaderLen;
     test_err = HTTPClient_InitializeRequestHeaders( &reqHeaders, &reqInfo );

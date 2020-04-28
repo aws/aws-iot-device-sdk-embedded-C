@@ -276,7 +276,7 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
     /* Check for NULL parameters. */
     if( pRequestHeaders == NULL )
     {
-        IotLogError( "Parameter check failed: pRequestHeaders interface is NULL." );
+        IotLogError( "Parameter check failed: pRequestHeaders is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( pRequestHeaders->pBuffer == NULL )
@@ -286,7 +286,7 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
     }
     else if( ( pRequestInfo == NULL ) )
     {
-        IotLogError( "Parameter check failed: pRequestInfo interface is NULL." );
+        IotLogError( "Parameter check failed: pRequestInfo is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( ( pRequestInfo->method == NULL ) )
