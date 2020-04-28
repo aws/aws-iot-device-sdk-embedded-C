@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <assert.h>
 #include "http_client.h"
 #include "private/http_client_internal.h"
 
@@ -198,7 +199,8 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
                                         int32_t rangeEnd )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
-    char rangeValueBuffer[ MAX_RANGE_REQUEST_VALUE_LEN ] = { 0 };
+    /* Extra byte allocation ( + 1 ) for NULL character when using sprintf. */
+    char rangeValueBuffer[ MAX_RANGE_REQUEST_VALUE_LEN + 1 ] = { 0 };
     size_t rangeValueLength = 0;
     int stdRetVal = 0;
 
@@ -244,7 +246,7 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
                              RANGE_REQUEST_HEADER_VALUE_PREFIX,
                              rangeStartOrlastNbytes );
         assert( ( stdRetVal >= 0 ) &&
-                stdRetVal <= ( RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN + MAX_INT32_NO_OF_DIGITS ) );
+                stdRetVal <= ( int ) ( RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN + MAX_INT32_NO_OF_DIGITS ) );
         rangeValueLength += ( size_t ) stdRetVal;
 
         /* Add remaining value data depending on the range specification type. */
