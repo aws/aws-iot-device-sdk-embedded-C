@@ -1,6 +1,7 @@
 #include "private/http_client_parse.h"
 
-HTTPStatus_t _HTTPClient_InitializeParsingContext( HTTPParsingContext_t * pParsingContext )
+HTTPStatus_t _HTTPClient_InitializeParsingContext( HTTPParsingContext_t * pParsingContext,
+                                                   HTTPClient_HeaderParsingCallback_t * pHeaderParsingCallback )
 {
     /* This function is to be implenmented. */
     return HTTP_SUCCESS;

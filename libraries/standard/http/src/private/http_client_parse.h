@@ -26,19 +26,23 @@ typedef struct HTTPParsingContext
         http_parser httpParser; /**< Third-party http-parser context. */
     #endif
     HTTPParsingState_t state;   /**< The current state of the HTTP response parsed. */
+    HTTPClient_HeaderParsingCallback_t * pHeaderParsingCallback;
 } HTTPParsingContext_t;
 
 /**
  * Initialize the HTTP Client response parsing context.
  *
  * @param[in] pParsingContext The state of response parsing to initialize.
+ * @param[in] pHeaderParsingCallback Callback to invoked for each complete
+ * header and value found.
  *
  * @return One of the following:
  * - #HTTP_SUCCESS
  * - #HTTP_INVALID_PARAMETER
  * TODO: Other return values will be added during implementation of the parsing.
  */
-HTTPStatus_t _HTTPClient_InitializeParsingContext( HTTPParsingContext_t * pParsingContext );
+HTTPStatus_t _HTTPClient_InitializeParsingContext( HTTPParsingContext_t * pParsingContext,
+                                                   HTTPClient_HeaderParsingCallback_t * pHeaderParsingCallback );
 
 /**
  * Parse the input HTTP response buffer.

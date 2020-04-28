@@ -459,7 +459,8 @@ static HTTPStatus_t _receiveAndParseHttpResponse( const HTTPTransportInterface_t
     if( returnStatus == HTTP_SUCCESS )
     {
         /* Initialize the parsing context. */
-        returnStatus = _HTTPClient_InitializeParsingContext( &parsingContext );
+        returnStatus = _HTTPClient_InitializeParsingContext( &parsingContext,
+                                                             pResponse->pHeaderParsingCallback );
     }
 
     /* While there are no errors in the transport recv or parsing, the response
