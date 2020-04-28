@@ -32,23 +32,24 @@
       HTTP_HEADER_LINE_SEPARATOR_LEN +    \
       HTTP_HEADER_LINE_SEPARATOR_LEN )
 
-/* Accounts for longest possible header that buffer can hold for tests. */
-#define HTTP_TEST_BUFFER_SIZE           \
+/* The longest possible header used for these unit tests. */
+#define HTTP_TEST_MAX_HEADER_LEN        \
     ( HTTP_TEST_TEMPLATE_HEADER_LEN +   \
       HTTP_TEST_HEADER_FIELD_LEN +      \
       HTTP_HEADER_FIELD_SEPARATOR_LEN + \
       HTTP_TEST_HEADER_VALUE_LEN +      \
       HTTP_HEADER_LINE_SEPARATOR_LEN )
 
+/* Add 1 because snprintf(...) writes a null byte at the end. */
+#define HTTP_TEST_BUFFER_SIZE    ( HTTP_TEST_MAX_HEADER_LEN + 1 )
 
 int main()
 {
     HTTPRequestHeaders_t reqHeaders = HTTP_REQUEST_HEADERS_INITIALIZER;
     HTTPRequestHeaders_t reqHeadersDflt = HTTP_REQUEST_HEADERS_INITIALIZER;
     HTTPStatus_t test_err = HTTP_NOT_SUPPORTED;
-    /* Add 1 because snprintf(...) writes a null byte at the end. */
-    uint8_t buffer[ HTTP_TEST_BUFFER_SIZE + 1 ] = { 0 };
-    char expectedHeader[ HTTP_TEST_BUFFER_SIZE + 1 ] = { 0 };
+    uint8_t buffer[ HTTP_TEST_BUFFER_SIZE ] = { 0 };
+    char expectedHeader[ HTTP_TEST_BUFFER_SIZE ] = { 0 };
     size_t expectedHeaderLen = HTTP_TEST_TEMPLATE_HEADER_LEN;
     struct Header
     {
@@ -104,7 +105,7 @@ int main()
                   HTTP_TEST_HEADER_REQUEST_LINE_LEN + 1,
                   HTTP_TEST_HEADER_REQUEST_LINE )
         == HTTP_TEST_HEADER_REQUEST_LINE_LEN );
-    reqHeaders.bufferLen = HTTP_TEST_BUFFER_SIZE;
+    reqHeaders.bufferLen = HTTP_TEST_MAX_HEADER_LEN;
     reqHeaders.headersLen = HTTP_TEST_HEADER_REQUEST_LINE_LEN;
     test_err = HTTPClient_AddHeader( &reqHeaders,
                                      header.field, header.fieldLen,
@@ -144,7 +145,7 @@ int main()
     /* -----------------------------------------------------------------------*/
 
     /* Test adding extra header with sufficient memory. */
-    expectedHeaderLen = HTTP_TEST_BUFFER_SIZE;
+    expectedHeaderLen = HTTP_TEST_MAX_HEADER_LEN;
     ok( snprintf( expectedHeader, expectedHeaderLen + 1,
                   HTTP_TEST_DOUBLE_HEADER_FORMAT,
                   HTTP_TEST_HEADER_REQUEST_LINE,
@@ -192,7 +193,7 @@ int main()
     /* -----------------------------------------------------------------------*/
 
     /* Test NULL header field. */
-    reqHeaders.bufferLen = HTTP_TEST_BUFFER_SIZE;
+    reqHeaders.bufferLen = HTTP_TEST_MAX_HEADER_LEN;
     test_err = HTTPClient_AddHeader( &reqHeaders,
                                      NULL, header.fieldLen,
                                      header.value, header.valueLen );
@@ -202,7 +203,7 @@ int main()
     /* -----------------------------------------------------------------------*/
 
     /* Test NULL header value. */
-    reqHeaders.bufferLen = HTTP_TEST_BUFFER_SIZE;
+    reqHeaders.bufferLen = HTTP_TEST_MAX_HEADER_LEN;
     test_err = HTTPClient_AddHeader( &reqHeaders,
                                      header.field, header.fieldLen,
                                      NULL, header.valueLen );
@@ -212,7 +213,7 @@ int main()
     /* -----------------------------------------------------------------------*/
 
     /* Test that fieldLen > 0. */
-    reqHeaders.bufferLen = HTTP_TEST_BUFFER_SIZE;
+    reqHeaders.bufferLen = HTTP_TEST_MAX_HEADER_LEN;
     test_err = HTTPClient_AddHeader( &reqHeaders,
                                      header.field, 0,
                                      header.value, header.valueLen );
@@ -222,7 +223,7 @@ int main()
     /* -----------------------------------------------------------------------*/
 
     /* Test that valueLen > 0. */
-    reqHeaders.bufferLen = HTTP_TEST_BUFFER_SIZE;
+    reqHeaders.bufferLen = HTTP_TEST_MAX_HEADER_LEN;
     test_err = HTTPClient_AddHeader( &reqHeaders,
                                      header.field, header.fieldLen,
                                      header.value, 0 );
