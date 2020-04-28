@@ -49,6 +49,25 @@ int main()
     }
     header;
 
+#define setupBuffersWithPreexistingHeader( requestHeaders, expectedHeaders ) \
+    do {                                                                     \
+        requestHeaders.pBuffer = testBuffer;                                 \
+        requestHeaders.bufferLen = sizeof( testBuffer );                     \
+        /* We add 1 bytes as snprintf() writes a null byte at the end. */    \
+        int numBytes = snprintf( ( char * ) requestHeaders.pBuffer,          \
+                                 PREEXISTING_HEADER_DATA_LEN + 1,            \
+                                 "%s",                                       \
+                                 PREEXISTING_HEADER_DATA );                  \
+        ok( numBytes == PREEXISTING_HEADER_DATA_LEN );                       \
+        requestHeaders.headersLen = PREEXISTING_HEADER_DATA_LEN;             \
+        /* Fill the same data in the expected buffer as HTTPClient_AddRangeHeaders()
+         * is not expected to change it. */                         \
+        ok( memcpy( expectedHeaders.buffer, requestHeaders.pBuffer, \
+                    requestHeaders.headersLen )                     \
+            == expectedHeaders.buffer );                            \
+        expectedHeaders.dataLen = requestHeaders.headersLen;        \
+    } while( 0 )
+
 /* Write template header field and value to a struct to pass as
  * parameters to HTTPClient_AddHeader() method. */
 #define fillHeaderStructTemplate()                                    \
@@ -82,7 +101,7 @@ int main()
     /* Happy Path testing. Prefill the user buffer with HTTP_TEST_HEADER_REQUEST_LINE
      * and call HTTPClient_AddHeader using the field and value in the header struct. */
     reset();
-    /* Add 1 because snprintf() writes a null byte at the end. */
+    /* Add 1 because snprintf(...) writes a null byte at the end. */
     snprintf( correctHeader, HTTP_TEST_SUFFICIENT_HEADER_LEN + 1,
               "%s%s: %s\r\n\r\n",
               HTTP_TEST_HEADER_REQUEST_LINE,
