@@ -17,12 +17,15 @@
 #define RANGE_REQUEST_HEADER_DATA_PREFIX        "Range: bytes="
 #define RANGE_REQUEST_HEADER_DATA_PREFIX_LEN    ( sizeof( RANGE_REQUEST_HEADER_DATA_PREFIX ) - 1 )
 
-struct _headers
+/* The range end value for representing end of file byte. */
+#define RANGE_REQUEST_END_OF_FILE               -1
+
+/* Type to store expected headers data. */
+typedef struct _headers
 {
     uint8_t buffer[ HTTP_TEST_BUFFER_SIZE ];
     size_t dataLen;
-}
-expectedHeaders;
+} _headers_t;
 
 #define setupBuffersWithPreexistingHeader( requestHeaders, testBuffer, expectedHeaders ) \
     do {                                                                                 \
@@ -67,6 +70,7 @@ int main()
     HTTPRequestHeaders_t testHeaders = { 0 };
     HTTPStatus_t retCode = HTTP_NOT_SUPPORTED;
     uint8_t testBuffer[ HTTP_TEST_BUFFER_SIZE ] = { 0 };
+    _headers_t expectedHeaders = { 0 };
     int testRangeStart = 0;
     int testRangeEnd = 0;
 
@@ -78,7 +82,7 @@ int main()
         memset( &expectedHeaders, 0, sizeof( expectedHeaders ) ); \
     } while( 0 )
 
-    plan( 48 );
+    plan( 55 );
 
     /*************************** Test happy path. *****************************/
 
@@ -91,6 +95,23 @@ int main()
     testRangeStart = 0;
     testRangeEnd = 0;
     addRangeToExpectedHeaders( expectedHeaders, "0-0" /*expected range*/ );
+    retCode = HTTPClient_AddRangeHeader( &testHeaders,
+                                         testRangeStart,
+                                         testRangeEnd );
+    ok( retCode == HTTP_SUCCESS );
+    /* Verify the the Range Request header data. */
+    ok( testHeaders.headersLen == expectedHeaders.dataLen );
+    ok( memcmp( testHeaders.pBuffer, expectedHeaders.buffer, expectedHeaders.dataLen )
+        == 0 );
+    /* Verify that the bufferLen data was not tampered with. */
+    ok( testHeaders.bufferLen == sizeof( testBuffer ) );
+
+    /* Test for [0, eof) range */
+    reset();
+    setupBuffersWithPreexistingHeader( testHeaders, testBuffer, expectedHeaders );
+    testRangeStart = 0;
+    testRangeEnd = RANGE_REQUEST_END_OF_FILE;
+    addRangeToExpectedHeaders( expectedHeaders, "0-" /*expected range*/ );
     retCode = HTTPClient_AddRangeHeader( &testHeaders,
                                          testRangeStart,
                                          testRangeEnd );
@@ -123,7 +144,7 @@ int main()
     reset();
     setupBuffersWithPreexistingHeader( testHeaders, testBuffer, expectedHeaders );
     testRangeStart = 100;
-    testRangeEnd = 0;
+    testRangeEnd = RANGE_REQUEST_END_OF_FILE;
     addRangeToExpectedHeaders( expectedHeaders, "100-" /*expected range*/ );
     retCode = HTTPClient_AddRangeHeader( &testHeaders,
                                          testRangeStart,
@@ -140,7 +161,7 @@ int main()
     reset();
     setupBuffersWithPreexistingHeader( testHeaders, testBuffer, expectedHeaders );
     testRangeStart = -50;
-    testRangeEnd = 0;
+    testRangeEnd = RANGE_REQUEST_END_OF_FILE;
     addRangeToExpectedHeaders( expectedHeaders, "-50" /*expected range*/ );
     retCode = HTTPClient_AddRangeHeader( &testHeaders,
                                          testRangeStart,
@@ -205,12 +226,12 @@ int main()
                                          5 /* rageEnd */ );
     ok( retCode == HTTP_INVALID_PARAMETER );
 
-    /* rangeStart is negative but rangeStart is non-zero. */
+    /* rangeStart is negative but rangeStart is non-End of File. */
     reset();
     testHeaders.pBuffer = &testBuffer[ 0 ];
     retCode = HTTPClient_AddRangeHeader( &testHeaders,
                                          -10 /* rangeStart */,
-                                         10 /* rageEnd */ );
+                                         RANGE_REQUEST_END_OF_FILE + 1 /* rageEnd */ );
     ok( retCode == HTTP_INVALID_PARAMETER );
     reset();
     testHeaders.pBuffer = &testBuffer[ 0 ];
