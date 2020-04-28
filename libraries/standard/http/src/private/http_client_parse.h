@@ -10,13 +10,13 @@
  */
 typedef enum HTTPParsingState_t
 {
-    HTTP_PARSING_NONE = 0,   /**< The parser is initialized and has not started reading any message. */
+    HTTP_PARSING_NONE = 0,   /**< The parser has not started reading any response. */
     HTTP_PARSING_INCOMPLETE, /**< The parse found a partial reponse. */
     HTTP_PARSING_COMPLETE    /**< The parser found the entire response. */
 } HTTPParsingState_t;
 
 /**
- * The HTTP parsing context.
+ * The HTTP response parsing context.
  */
 typedef struct HTTPParsingContext
 {
@@ -26,7 +26,7 @@ typedef struct HTTPParsingContext
         http_parser httpParser; /**< Third-party http-parser context. */
     #endif
     HTTPParsingState_t state;   /**< The current state of the HTTP response parsed. */
-    HTTPClient_HeaderParsingCallback_t * pHeaderParsingCallback;
+    HTTPClient_HeaderParsingCallback_t * pHeaderParsingCallback; /**< Callback to invoke with each header found. */
 } HTTPParsingContext_t;
 
 /**

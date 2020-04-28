@@ -108,7 +108,7 @@ typedef int32_t (* HTTPTransportSend_t )( HTTPNetworkContext_t * pContext,
  *
  * If this function returns less than the bytesToRead and greater than zero,
  * then this function will be invoked again if the data in pBuffer contains a
- * partial HTTP response message and there there is room left in the pBuffer.
+ * partial HTTP response message and there is room left in the pBuffer.
  * Repeated invocations will stop if this function returns zero.
  *
  * @param[in] context User defined context.
@@ -191,7 +191,7 @@ typedef enum HTTPStatus
     HTTP_NO_RESPONSE,
 
     /**
-     * @brief The application buffer was not large enough for HTTP request
+     * @brief The application buffer was not large enough for the HTTP request
      * headers or the HTTP response message.
      *
      * Functions that may return this value:
