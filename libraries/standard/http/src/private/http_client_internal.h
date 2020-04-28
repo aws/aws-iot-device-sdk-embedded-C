@@ -47,6 +47,7 @@
 #define HTTP_HEADER_LINE_SEPARATOR_LEN          ( sizeof( HTTP_HEADER_LINE_SEPARATOR ) - 1 )
 #define HTTP_HEADER_END_INDICATOR               "\r\n\r\n"
 #define HTTP_HEADER_END_INDICATOR_LEN           ( sizeof( HTTP_HEADER_END_INDICATOR ) - 1 )
+#define HTTP_HEADER_ADD_TEMPLATE                "%.*s" HTTP_HEADER_FIELD_SEPARATOR "%.*s" HTTP_HEADER_LINE_SEPARATOR
 #define CARRIAGE_RETURN_CHARACTER               '\r'
 #define NEWLINE_CHARACTER                       '\n'
 #define HTTP_HEADER_FIELD_SEPARATOR             ": "

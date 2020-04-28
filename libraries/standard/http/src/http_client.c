@@ -94,14 +94,12 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
     /* If we have enough room for the new header line, then write it to the header buffer. */
     if( ( backtrackHeaderLen + toAddLen ) <= pRequestHeaders->bufferLen )
     {
-        /* Write "Field: Value \r\n\r\n" to headers. */
+        /* Write "Field: Value \r\n" to headers. */
         bytesWritten = snprintf( ( char * ) pBufferCur,
                                  toAddLen,
-                                 "%.*s%s%.*s%s",
+                                 HTTP_HEADER_ADD_TEMPLATE,
                                  ( int32_t ) fieldLen, pField,
-                                 HTTP_HEADER_FIELD_SEPARATOR,
-                                 ( int32_t ) valueLen, pValue,
-                                 HTTP_HEADER_LINE_SEPARATOR );
+                                 ( int32_t ) valueLen, pValue );
 
         if( ( bytesWritten + HTTP_HEADER_LINE_SEPARATOR_LEN ) != toAddLen )
         {
