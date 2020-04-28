@@ -50,8 +50,8 @@
 #define HTTP_TEST_MAX_HEADER_LEN \
     ( HTTP_TEST_PREFIX_HEADER_LEN + HTTP_CONNECTION_KEEP_ALIVE_VALUE_LEN )
 
-/* Default size for request buffer. */
-#define HTTP_TEST_BUFFER_SIZE    HTTP_TEST_MAX_HEADER_LEN + 1
+/* Add 1 because snprintf(...) writes a null byte at the end. */
+#define HTTP_TEST_BUFFER_SIZE    ( HTTP_TEST_MAX_HEADER_LEN + 1 )
 
 
 int main()
