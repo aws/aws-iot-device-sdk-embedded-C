@@ -74,6 +74,19 @@
 #define HTTP_RESPONSE_CONNECTION_KEEP_ALIVE_FLAG    0x2U
 
 /**
+ * @brief Flag that represents End of File byte in the range specification of
+ * a Range Request.
+ * This flag should be used ONLY for 2 kinds of range specifications when
+ * creating the Range Request header through the #HTTPClient_AddRangeHeader
+ * function:
+ *  - When the requested range is all bytes > starting range byte to end of file.
+ *  - When the requested range is for the last N bytes of the file.
+ * In both cases, this value should be used for the "rangeEnd" parameter.
+ */
+#define HTTP_RANGE_REQUEST_END_OF_FILE              -1
+
+
+/**
  * @brief The HTTPNetworkContext is an incomplete type. The application must
  * define HTTPNetworkContext to the type of their network context. This context
  * is passed into the network interface functions.
@@ -432,35 +445,38 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
  * already exists in the buffer.
  *
  * @note There are 3 different forms of range specification, determined by the
- * combination of @a rangeStart and @a rangeEnd parameter values:
+ * combination of @a rangeStartOrLastNBytes and @a rangeEnd parameter values:
  * 1. Request containing both parameters for the byte range [rangeStart, rangeEnd]
- * where @a rangeStart <= @a rangeEnd.
+ * where @a rangeStartOrLastNBytes <= @a rangeEnd.
  * Example request: "Range: bytes=0-1024\r\n" for requesting bytes in the range [0, 1024].
  *
- * 2. Request for the last N bytes, represented by @p rangeStart.
- * @p rangeStart should be < 0 and @p rangeEnd should be zero.
+ * 2. Request for the last N bytes, represented by @p rangeStartOrLastNBytes.
+ * @p rangeStartOrLastNBytes should be negative and @p rangeEnd should #FILE_END.
  * Example request: "Range: bytes=-512\r\n" for requesting the last 512 bytes
  * (or bytes in the range [0, 512]).
  *
  * 3. Request for all bytes (till the end of byte sequence) from byte N,
- * represented by @p rangeStart.
- * @p rangeStart should be >= 0 and @p rangeEnd should be zero.
+ * represented by @p rangeStartOrLastNBytes.
+ * @p rangeStartOrLastNBytes should be >= 0 and @p rangeEnd should be #FILE_END.
  * Example request: "Range: bytes=256-\r\n" for requesting all bytes after and
  * including byte 256 (or bytes in the range [256,)).
  *
  * @param[in] pRequestHeaders Request header buffer information.
- * @param[in] rangeStart The starting range for the requested file.
- * @param[in] rangeEnd The ending range for the requested file.
+ * @param[in] rangeStartOrLastNBytes Represents either the starting byte
+ * for a range OR the last N number of bytes in the requested file.
+ * @param[in] rangeEnd The ending range for the requested file. For end of file
+ * byte in Range Specifications 2. and 3., #HTTP_RANGE_REQUEST_END_OF_FILE
+ * should be passed.
  *
  * @return Returns the following status codes:
  * #HTTP_SUCCESS if successful.
  * #HTTP_INVALID_PARAMETER, if input parameters are invalid, including when
- * the @p rangeStart and @p rangeEnd parameter combination is invalid.
+ * the @p rangeStartOrLastNBytes and @p rangeEnd parameter combination is invalid.
  * #HTTP_INSUFFICIENT_MEMORY, if the passed #HTTPRequestHeaders_t.pBuffer
  * contains insufficient remaining memory for storing the range request.
  */
 HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
-                                        int32_t rangeStart,
+                                        int32_t rangeStartOrlastNbytes,
                                         int32_t rangeEnd );
 
 /**

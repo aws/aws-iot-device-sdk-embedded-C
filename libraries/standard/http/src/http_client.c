@@ -194,7 +194,7 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
 /*-----------------------------------------------------------*/
 
 HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
-                                        int32_t rangeStart,
+                                        int32_t rangeStartOrlastNbytes,
                                         int32_t rangeEnd )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
@@ -212,24 +212,28 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
         IotLogError( "Parameter check failed: pRequestHeaders->pBuffer is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
-    else if( rangeEnd < 0 )
+    else if( rangeEnd < HTTP_RANGE_REQUEST_END_OF_FILE )
     {
-        IotLogErrorWithArgs( "Parameter check failed: rangeEnd is negative: "
-                             "rangeEnd should be >=0: RangeEnd=%d", rangeEnd );
+        IotLogErrorWithArgs( "Parameter check failed: rangeEnd is invalid: "
+                             "rangeEnd should be >=-1: RangeEnd=%d", rangeEnd );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
-    else if( ( rangeStart < 0 ) && ( rangeEnd != 0 ) )
+    else if( ( rangeStartOrlastNbytes < 0 ) &&
+             ( rangeEnd != HTTP_RANGE_REQUEST_END_OF_FILE ) )
     {
         IotLogErrorWithArgs( "Parameter check failed: Invalid range values: "
-                             "rangeEnd should be zero when rangeStart < 0: "
-                             "RangeStart=%d, RangeEnd=%d", rangeStart, rangeEnd );
+                             "rangeEnd should be -1 when rangeStart < 0: "
+                             "RangeStart=%d, RangeEnd=%d",
+                             rangeStartOrlastNbytes, rangeEnd );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
-    else if( ( rangeEnd != 0 ) && ( rangeStart > rangeEnd ) )
+    else if( ( rangeEnd != HTTP_RANGE_REQUEST_END_OF_FILE ) &&
+             ( rangeStartOrlastNbytes > rangeEnd ) )
     {
         IotLogErrorWithArgs( "Parameter check failed: Invalid range values: "
-                             "rangeStart should be > rangeEnd when both are > 0: "
-                             "RangeStart=%d, RangeEnd=%d", rangeStart, rangeEnd );
+                             "rangeStart should be < rangeEnd when both are >= 0: "
+                             "RangeStart=%d, RangeEnd=%d",
+                             rangeStartOrlastNbytes, rangeEnd );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else
@@ -238,7 +242,7 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
         stdRetVal = sprintf( rangeValueBuffer,
                              "%s%d",
                              RANGE_REQUEST_HEADER_VALUE_PREFIX,
-                             rangeStart );
+                             rangeStartOrlastNbytes );
         assert( ( stdRetVal >= 0 ) &&
                 stdRetVal <= ( RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN + MAX_INT32_NO_OF_DIGITS ) );
         rangeValueLength += ( size_t ) stdRetVal;
@@ -246,7 +250,7 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
         /* Add remaining value data depending on the range specification type. */
 
         /* Add rangeEnd value if request is for [rangeStart, rangeEnd] byte range */
-        if( ( rangeStart >= 0 ) && ( rangeStart <= rangeEnd ) )
+        if( rangeEnd != HTTP_RANGE_REQUEST_END_OF_FILE )
         {
             /* Add the rangeEnd value to the request range .*/
             stdRetVal = sprintf( rangeValueBuffer + rangeValueLength,
@@ -258,7 +262,7 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
             rangeValueLength += ( size_t ) stdRetVal;
         }
         /* Case when request is for bytes in the range [rangeStart, ). */
-        else if( rangeStart > 0 )
+        else if( rangeStartOrlastNbytes >= 0 )
         {
             /* Add the "-" character.*/
             stdRetVal = sprintf( rangeValueBuffer + rangeValueLength,
