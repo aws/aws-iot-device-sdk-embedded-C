@@ -825,7 +825,6 @@ TEST( Serializer_Decoder_Unit_CBOR, TestDecoderObjectReuseAfterIteration )
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->next( iterator2 ) );
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->next( iterator2 ) );
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->next( iterator2 ) );
-    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->stepOut( iterator2, &mapDecoder ) );
 
     /* End the second round of iteration */
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->stepOut( iterator2, &mapDecoder ) );
