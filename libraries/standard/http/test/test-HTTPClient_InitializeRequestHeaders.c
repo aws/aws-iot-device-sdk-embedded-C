@@ -89,7 +89,7 @@ int main()
     }                                                              \
     while( 0 )
 
-    plan( 17 );
+    plan( 20 );
 
     /* Happy Path testing. */
     reset();
