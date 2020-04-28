@@ -97,7 +97,7 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
         /* Write "Field: Value \r\n" to headers. */
         bytesWritten = snprintf( ( char * ) pBufferCur,
                                  toAddLen,
-                                 HTTP_HEADER_ADD_TEMPLATE,
+                                 HTTP_HEADER_ADD_FORMAT,
                                  ( int32_t ) fieldLen, pField,
                                  ( int32_t ) valueLen, pValue );
 

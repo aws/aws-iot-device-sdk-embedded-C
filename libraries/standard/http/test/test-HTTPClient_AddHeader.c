@@ -15,6 +15,9 @@
 #define HTTP_TEST_HEADER_REQUEST_LINE        "GET / HTTP/1.1 \r\n"
 #define HTTP_TEST_HEADER_REQUEST_LINE_LEN    ( sizeof( HTTP_TEST_HEADER_REQUEST_LINE ) - 1 )
 #define HTTP_REQUEST_HEADERS_INITIALIZER     { 0 }
+/* Template for snprintf(...) strings. */
+#define HTTP_TEST_SINGLE_HEADER_FORMAT       "%s%s: %s\r\n\r\n"
+#define HTTP_TEST_DOUBLE_HEADER_FORMAT       "%s%s: %s\r\n%s: %s\r\n\r\n"
 
 /* Length of the following template HTTP header.
  *   <HTTP_TEST_HEADER_REQUEST_LINE> \r\n
@@ -36,6 +39,7 @@
       HTTP_HEADER_FIELD_SEPARATOR_LEN + \
       HTTP_TEST_HEADER_VALUE_LEN +      \
       HTTP_HEADER_LINE_SEPARATOR_LEN )
+
 
 int main()
 {
@@ -90,7 +94,7 @@ int main()
     reset();
     /* Add 1 because snprintf(...) writes a null byte at the end. */
     ok( snprintf( expectedHeader, HTTP_TEST_TEMPLATE_HEADER_LEN + 1,
-                  "%s%s: %s\r\n\r\n",
+                  HTTP_TEST_SINGLE_HEADER_FORMAT,
                   HTTP_TEST_HEADER_REQUEST_LINE,
                   HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_VALUE )
         == HTTP_TEST_TEMPLATE_HEADER_LEN );
@@ -115,14 +119,14 @@ int main()
 
     /* Test adding extra header with insufficient memory. */
     ok( snprintf( expectedHeader, HTTP_TEST_TEMPLATE_HEADER_LEN + 1,
-                  "%s%s: %s\r\n\r\n",
+                  HTTP_TEST_SINGLE_HEADER_FORMAT,
                   HTTP_TEST_HEADER_REQUEST_LINE,
                   HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_VALUE )
         == HTTP_TEST_TEMPLATE_HEADER_LEN );
     expectedHeaderLen = HTTP_TEST_TEMPLATE_HEADER_LEN;
     /* Prefill the buffer with a request line and header. */
     ok( snprintf( ( char * ) reqHeaders.pBuffer, HTTP_TEST_TEMPLATE_HEADER_LEN + 1,
-                  "%s%s: %s\r\n\r\n",
+                  HTTP_TEST_SINGLE_HEADER_FORMAT,
                   HTTP_TEST_HEADER_REQUEST_LINE,
                   HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_VALUE )
         == HTTP_TEST_TEMPLATE_HEADER_LEN );
@@ -142,7 +146,7 @@ int main()
     /* Test adding extra header with sufficient memory. */
     expectedHeaderLen = HTTP_TEST_BUFFER_SIZE;
     ok( snprintf( expectedHeader, expectedHeaderLen + 1,
-                  "%s%s: %s\r\n%s: %s\r\n\r\n",
+                  HTTP_TEST_DOUBLE_HEADER_FORMAT,
                   HTTP_TEST_HEADER_REQUEST_LINE,
                   HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_VALUE,
                   HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_VALUE )
@@ -150,7 +154,7 @@ int main()
     /* Prefill the buffer with a request line and header. */
     ok( snprintf( ( char * ) reqHeaders.pBuffer,
                   HTTP_TEST_TEMPLATE_HEADER_LEN + 1,
-                  "%s%s: %s\r\n\r\n",
+                  HTTP_TEST_SINGLE_HEADER_FORMAT,
                   HTTP_TEST_HEADER_REQUEST_LINE,
                   HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_VALUE )
         == HTTP_TEST_TEMPLATE_HEADER_LEN );
@@ -206,7 +210,6 @@ int main()
     reset();
 
     /* -----------------------------------------------------------------------*/
-
 
     /* Test that fieldLen > 0. */
     reqHeaders.bufferLen = HTTP_TEST_BUFFER_SIZE;
