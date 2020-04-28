@@ -77,7 +77,7 @@ static IotSerializerError_t _getSizeOfEncodedData( const IotSerializerDecoderObj
  * @brief Utility to calculates the length of the raw encoded data represented by the
  * passed `pValue` object.
  */
-static size_t calculateSizeOfCborObject( CborValue * pValue );
+static size_t _calculateSizeOfCborObject( CborValue * pValue );
 
 /**
  * @brief Calculates the number of elements in an indefinite-length container
@@ -108,6 +108,7 @@ static const IotSerializerDecodeInterface_t _cborDecoder =
     .isEndOfContainer     = _isEndOfContainer,
     .getBufferAddress     = _getBufferAddress,
     .getSizeOfEncodedData = _getSizeOfEncodedData,
+    .getSizeOf            = _getSizeOf,
     .destroy              = _destroy
 };
 
@@ -120,7 +121,7 @@ typedef struct _cborValueWrapper
 
 /*-----------------------------------------------------------*/
 
-static size_t calculateSizeOfCborObject( CborValue * pValue )
+static size_t _calculateSizeOfCborObject( CborValue * pValue )
 {
     IotSerializer_Assert( pValue != NULL );
     CborValue nextValue;
@@ -613,7 +614,7 @@ IotSerializerError_t _getSizeOfEncodedData( const IotSerializerDecoderObject_t *
 
     if( IotSerializer_IsContainer( pDecoderObject ) )
     {
-        *pEncodedDataLength = calculateSizeOfCborObject(
+        *pEncodedDataLength = _calculateSizeOfCborObject(
             &( ( ( _cborValueWrapper_t * ) pDecoderObject->u.pHandle )->cborValue ) );
     }
     else
