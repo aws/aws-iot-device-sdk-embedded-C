@@ -1,0 +1,28 @@
+From c785aa73d869777a8a0ee4f8ff488397a70e0e29 Mon Sep 17 00:00:00 2001
+From: "Felipe R. Monteiro" <felisous@amazon.com>
+Date: Mon, 20 Apr 2020 20:08:05 +0000
+Subject: [PATCH] Bound packet remaining length
+
+Signed-off-by: Felipe R. Monteiro <felisous@amazon.com>
+---
+ libraries/standard/mqtt/src/iot_mqtt_network.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/libraries/standard/mqtt/src/iot_mqtt_network.c b/libraries/standard/mqtt/src/iot_mqtt_network.c
+index f39eb98..31c083e 100644
+--- a/libraries/standard/mqtt/src/iot_mqtt_network.c
++++ b/libraries/standard/mqtt/src/iot_mqtt_network.c
+@@ -256,6 +256,10 @@ static IotMqttError_t _allocateAndReceivePacket( IotNetworkConnection_t pNetwork
+     IotMqtt_Assert( pMqttConnection != NULL );
+     IotMqtt_Assert( pIncomingPacket != NULL );
+ 
++#ifdef CBMC_REMAINING_LENGTH_BOUND
++    __CPROVER_assume( pIncomingPacket->remainingLength < CBMC_REMAINING_LENGTH_BOUND );
++#endif
++
+     /* Allocate a buffer for the remaining data and read the data. */
+     if( pIncomingPacket->remainingLength > 0U )
+     {
+-- 
+2.17.1
+
