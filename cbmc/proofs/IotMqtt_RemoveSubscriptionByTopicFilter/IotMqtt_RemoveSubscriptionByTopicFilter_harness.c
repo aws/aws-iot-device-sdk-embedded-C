@@ -36,6 +36,7 @@ void harness()
 {
     /* Assume a valid MQTT connection. */
     IotMqttConnection_t mqttConnection = allocate_IotMqttConnection( NULL );
+
     __CPROVER_assume( mqttConnection != NULL );
     ensure_IotMqttConnection_has_lists( mqttConnection );
     __CPROVER_assume( valid_IotMqttConnection( mqttConnection ) );

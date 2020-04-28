@@ -39,9 +39,9 @@
 * Type definitions used by the IoT List Double remove functions
 ****************************************************************/
 
-typedef bool ( *MatchFunction_t )( const IotLink_t * const pOperationLink,
-                                   void * pCompare );
-typedef void ( *FreeElementFunction_t )( void * pData );
+typedef bool ( * MatchFunction_t )( const IotLink_t * const pOperationLink,
+                                    void * pCompare );
+typedef void ( * FreeElementFunction_t )( void * pData );
 
 /****************************************************************
 * We assume the IoT List Double remove functions are memory safe.

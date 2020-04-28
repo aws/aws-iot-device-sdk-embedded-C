@@ -45,9 +45,9 @@
  * demonstrate that no subsequent code makes use of the values in the list.
  */
 
-typedef bool ( *MatchFunction_t )( const IotLink_t * const pOperationLink,
-                                   void * pCompare );
-typedef void ( *FreeElementFunction_t )( void * pData );
+typedef bool ( * MatchFunction_t )( const IotLink_t * const pOperationLink,
+                                    void * pCompare );
+typedef void ( * FreeElementFunction_t )( void * pData );
 
 void IotListDouble_RemoveAllMatches( const IotListDouble_t * const pList,
                                      MatchFunction_t isMatch,
