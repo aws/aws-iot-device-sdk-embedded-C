@@ -219,6 +219,11 @@ static HTTPStatus_t _writeRequestLine( HTTPRequestHeaders_t * pRequestHeaders,
                       HTTP_PROTOCOL_VERSION_LEN + \
                       HTTP_HEADER_LINE_SEPARATOR_LEN;
 
+    assert( pRequestHeaders != NULL );
+    assert( pRequestHeaders->pBuffer != NULL );
+    assert( pMethod != NULL );
+    assert( methodLen != 0u );
+
     if( ( pPath == NULL ) || ( pathLen == 0 ) )
     {
         toAddLen += HTTP_EMPTY_PATH_LEN;
