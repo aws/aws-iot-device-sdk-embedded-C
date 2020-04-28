@@ -224,14 +224,7 @@ static HTTPStatus_t _writeRequestLine( HTTPRequestHeaders_t * pRequestHeaders,
     assert( pMethod != NULL );
     assert( methodLen != 0u );
 
-    if( ( pPath == NULL ) || ( pathLen == 0 ) )
-    {
-        toAddLen += HTTP_EMPTY_PATH_LEN;
-    }
-    else
-    {
-        toAddLen += pathLen;
-    }
+    toAddLen += ( pPath == NULL || pathLen == 0 ) ? HTTP_EMPTY_PATH_LEN : pathLen;
 
     if( ( toAddLen + pRequestHeaders->headersLen ) > pRequestHeaders->bufferLen )
     {
