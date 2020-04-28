@@ -38,3 +38,4 @@ sizeof
 tinycbor
 todo
 www
+getsizeof
