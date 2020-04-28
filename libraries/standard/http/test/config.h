@@ -6,7 +6,7 @@
 #define IOT_LOG_LEVEL_HTTP    IOT_LOG_DEBUG
 
 /* Include file for POSIX reference implementation. */
-#include "platform/include/iot_logging.h"
+#include "iot_logging.h"
 
 /* Define the IotLog logging interface to enabling logging.
  * This demo maps the macro to the reference POSIX implementation for logging.

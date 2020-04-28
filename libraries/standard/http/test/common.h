@@ -5,3 +5,5 @@
 
 /* Private includes for internal macros. */
 #include "private/http_client_internal.h"
+
+#define assert( x )

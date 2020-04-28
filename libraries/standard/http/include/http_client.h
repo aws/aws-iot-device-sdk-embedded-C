@@ -27,12 +27,12 @@
 #endif
 
 /**
- * Supported HTTP request methods.
+ * @brief Supported HTTP request methods.
  */
-#define HTTP_METHOD_GET     "GET"              /**< HTTP Method GET. */
-#define HTTP_METHOD_PUT     "PUT"              /**< HTTP Method PUT. */
-#define HTTP_METHOD_POST    "POST"             /**< HTTP Method POST. */
-#define HTTP_METHOD_HEAD    "HEAD"             /**< HTTP Method HEAD. */
+#define HTTP_METHOD_GET     "GET"                  /**< HTTP Method GET. */
+#define HTTP_METHOD_PUT     "PUT"                  /**< HTTP Method PUT. */
+#define HTTP_METHOD_POST    "POST"                 /**< HTTP Method POST. */
+#define HTTP_METHOD_HEAD    "HEAD"                 /**< HTTP Method HEAD. */
 
 /**
  * Flags for #HTTPRequestInfo_t.flags.
@@ -166,6 +166,15 @@ typedef enum HTTPStatus
 
     HTTP_NOT_SUPPORTED,
     HTTP_PARTIAL_RESPONSE,
+
+    /**
+     * @brief The application buffer was not large enough for HTTP headers or body.
+     *
+     * Functions that may return this value:
+     * - #HTTPClient_InitializeRequestHeaders
+     * - #HTTPClient_AddHeader
+     * - #HTTPClient_AddRangeHeader
+     */
     HTTP_INSUFFICIENT_MEMORY,
     HTTP_INTERNAL_ERROR,
     HTTP_SECURITY_ALERT_RESPONSE_HEADERS_SIZE_LIMIT_EXCEEDED,
@@ -178,7 +187,8 @@ typedef enum HTTPStatus
  * @brief Represents header data that will be sent in an HTTP request.
  *
  * The memory for the header data buffer is supplied by the user. Information in
- * the buffer will be filled by calling #HTTPClient_InitializeHeaders.
+ * the buffer will be filled by calling #HTTPClient_InitializeRequestHeaders and
+ * #HTTPClient_AddHeader.
  */
 typedef struct HTTPRequestHeaders
 {
@@ -363,13 +373,21 @@ typedef struct HTTPResponse
  * Upon return, #HTTPRequestHeaders_t.headersLen will be updated with the number
  * of bytes written.
  *
- * TODO: Expand documentation.
+ * Each line in the header is listed below and written in this order:
+ *     <#HTTPRequestInfo_t.method> <#HTTPRequestInfo_t.pPath> <HTTP_PROTOCOL_VERSION>
+ *     User-Agent: <HTTP_USER_AGENT_VALUE>
+ *     Host: <#HTTPRequestInfo_t.pHost>
+ *     Connection: close
+ *
+ * Note that Connection header value can be changed to keep-alive by setting
+ * the HTTP_REQUEST_KEEP_ALIVE_FLAG in #HTTPRequestInfo_t.flags.
  *
  * @param[in] pRequestHeaders Request header buffer information.
  * @param[in] pRequestInfo Initial request header configurations.
- *
- * @return #HTTP_SUCCESS if successful, an error code otherwise.
- * TODO: Update for exact error codes returned.
+ * @return One of the following:
+ * - #HTTP_SUCCESS (If successful)
+ * - #HTTP_INVALID_PARAMETER (If any provided parameters or their members are invalid.)
+ * - #HTTP_INSUFFICIENT_MEMORY (If provided buffer size is not large enough to hold headers.)
  */
 HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pRequestHeaders,
                                                   const HTTPRequestInfo_t * pRequestInfo );
@@ -381,20 +399,25 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
  * Upon return, pRequestHeaders->headersLen will be updated with the number of
  * bytes written.
  *
- * TODO: Expand documentation.
+ * Headers are written in the following format:
+ *     <pName>: <pField>\r\n\r\n
+ * The trailing \r\n that denotes the end of the header lines is overwritten,
+ * if it already exists in the buffer.
  *
  * @param[in] pRequestHeaders Request header buffer information.
- * @param[in] pName The header field name to write.
- * @param[in] nameLen The byte length of the header field name.
+ * @param[in] pField The header field name to write.
+ * @param[in] fieldLen The byte length of the header field name.
  * @param[in] pValue The header value to write.
  * @param[in] valueLen The byte length of the header field value.
  *
- * @return #HTTP_SUCCESS if successful, an error code otherwise.
- * TODO: Update for exact error codes returned.
+ * @return One of the following:
+ * - #HTTP_SUCCESS (If successful.)
+ * - #HTTP_INVALID_PARAMETER (If any provided parameters or their members are invalid.)
+ * - #HTTP_INSUFFICIENT_MEMORY (If application-provided buffer is not large enough to hold headers.)
  */
 HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
-                                   const char * pName,
-                                   size_t nameLen,
+                                   const char * pField,
+                                   size_t fieldLen,
                                    const char * pValue,
                                    size_t valueLen );
 
