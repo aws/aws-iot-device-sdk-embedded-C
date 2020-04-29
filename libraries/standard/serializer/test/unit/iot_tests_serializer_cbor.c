@@ -683,7 +683,7 @@ TEST( Serializer_Decoder_Unit_CBOR, TestGetSizeOfForIndefiniteLengthMap )
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->getSizeOf( &mapDecoder, &mapSize ) );
     TEST_ASSERT_EQUAL( 2, mapSize );
 
-    /* Test iterating through the map and extracting the first and last iterable elements. */
+    /* Test iterating through the map and extracting the first and last elements. */
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->stepIn( &mapDecoder, &iter ) );
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->get( iter, &keyObject ) );
@@ -751,7 +751,7 @@ TEST( Serializer_Decoder_Unit_CBOR, TestGetSizeOfForIndefiniteLengthArray )
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->getSizeOf( &arrayDecoder, &arraySize ) );
     TEST_ASSERT_EQUAL( 4, arraySize );
 
-    /* Test iterating through the array and extracting the first and last iterable elements. */
+    /* Test iterating through the array and extracting the first and last elements. */
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->stepIn( &arrayDecoder, &iter ) );
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->get( iter, &elementObject ) );
@@ -825,10 +825,9 @@ TEST( Serializer_Decoder_Unit_CBOR, TestDecoderObjectReuseAfterIteration )
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->next( iterator2 ) );
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->next( iterator2 ) );
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->next( iterator2 ) );
-    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->stepOut( iterator2, &mapDecoder ) );
 
     /* End the second round of iteration */
-    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->stepOut( iterator1, &mapDecoder ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->stepOut( iterator2, &mapDecoder ) );
 
     _pCborDecoder->destroy( &valueDecoder );
     _pCborDecoder->destroy( &mapDecoder );

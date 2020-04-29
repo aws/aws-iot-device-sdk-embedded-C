@@ -41,4 +41,3 @@ www
 getsizeof
 https
 ietf
-iterable

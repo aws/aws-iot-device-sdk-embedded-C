@@ -59,7 +59,7 @@ In addition to the components above, the MQTT library also depends on C standard
 @subsection mqtt_memory_code Code size
 @brief Code size of the MQTT library.
 
-The following measurements were taken with arm-none-eabi-gcc v9.2.1 (November 2019) with the [MQTT library from January 2020](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/f1a8b698b1d2fd5b8475b11a16d399181c1d867f). These values are rough estimates not tuned for any specific ARM processor.
+The following measurements were taken with arm-none-eabi-gcc v9.2.1 (October 2019) with the [MQTT library from January 2020](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/f1a8b698b1d2fd5b8475b11a16d399181c1d867f). These values are rough estimates not tuned for any specific ARM processor.
 
 <b>Minimal Size Build</b> <br>
 No logging, asserts, or diagnostic information. Compiled using the ARM Thumb instruction set (`-mthumb`) and optimized for size (`-Os`). Values are in <i>bytes</i>.

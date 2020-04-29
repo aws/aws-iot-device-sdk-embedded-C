@@ -1,0 +1,48 @@
+diff --git a/libraries/standard/mqtt/src/iot_mqtt_network.c b/libraries/standard/mqtt/src/iot_mqtt_network.c
+index f39eb98..6b7d13d 100644
+--- a/libraries/standard/mqtt/src/iot_mqtt_network.c
++++ b/libraries/standard/mqtt/src/iot_mqtt_network.c
+@@ -281,6 +281,10 @@ static IotMqttError_t _allocateAndReceivePacket( IotNetworkConnection_t pNetwork
+ 
+         if( status == IOT_MQTT_SUCCESS )
+         {
++#ifdef CBMC
++	  assert( IS_STUBBED_NETWORKIF_RECEIVE( pMqttConnection->pNetworkInterface ) );
++	  __CPROVER_assume( IS_STUBBED_NETWORKIF_RECEIVE( pMqttConnection->pNetworkInterface ) );
++#endif
+             dataBytesRead = pMqttConnection->pNetworkInterface->receive( pNetworkConnection,
+                                                                          pIncomingPacket->pRemainingData,
+                                                                          pIncomingPacket->remainingLength );
+@@ -701,6 +705,10 @@ bool _IotMqtt_GetNextByte( IotNetworkConnection_t pNetworkConnection,
+     size_t bytesReceived = 0;
+ 
+     /* Attempt to read 1 byte. */
++#ifdef CBMC
++    assert( IS_STUBBED_NETWORKIF_RECEIVE( pNetworkInterface ) );
++    __CPROVER_assume( IS_STUBBED_NETWORKIF_RECEIVE( pNetworkInterface ) );
++#endif
+     bytesReceived = pNetworkInterface->receive( pNetworkConnection,
+                                                 &incomingByte,
+                                                 1 );
+@@ -792,6 +800,10 @@ void _IotMqtt_CloseNetworkConnection( IotMqttDisconnectReason_t disconnectReason
+     /* Close the network connection. */
+     if( closeConnection != NULL )
+     {
++#ifdef CBMC
++      assert( closeConnection == IotNetworkInterfaceClose );
++    __CPROVER_assume( closeConnection == IotNetworkInterfaceClose );
++#endif
+         closeStatus = closeConnection( pNetworkConnection );
+ 
+         if( closeStatus == IOT_NETWORK_SUCCESS )
+@@ -818,6 +830,10 @@ void _IotMqtt_CloseNetworkConnection( IotMqttDisconnectReason_t disconnectReason
+         callbackParam.mqttConnection = pMqttConnection;
+         callbackParam.u.disconnectReason = disconnectReason;
+ 
++#ifdef CBMC
++	assert( IS_STUBBED_USER_CALLBACK( disconnectCallback ) );
++	__CPROVER_assume( IS_STUBBED_USER_CALLBACK( disconnectCallback ) );
++#endif
+         disconnectCallback( pDisconnectCallbackContext,
+                             &callbackParam );
+     }

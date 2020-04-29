@@ -1,3 +1,6 @@
+#include "iot_config.h"
+#include "private/iot_mqtt_internal.h"
+
 #include <stdlib.h>
 
 /****************************************************************
@@ -151,6 +154,7 @@ IotListDouble_t *allocate_IotMqttSubscriptionList( IotListDouble_t *pSub,
 						   size_t length );
 bool valid_IotMqttSubscriptionList( const IotListDouble_t *pSub,
 				   const size_t length );
+void free_IotMqttSubscriptionList( IotListDouble_t *pSub );
 
 /****************************************************************
  * IotMqttPublishInfo
@@ -183,7 +187,11 @@ void *allocate_IotNetworkConnection();
  * Instead, when a proof requires a stub, we make an explicit
  * assumption that the needed struct member is pointing to the correct
  * stub.  The macro IS_STUBBED_NETWORKIF_XXX(IF) states that the
- * method XXX in the interface IF points to the correct stub.
+ * method XXX in the interface IF points to the correct stub.  A
+ * parallel set of macros MAYBE_STUBBED_NETWORKIF_XXX states the
+ * weaker claim that the method XXX may be NULL in the interface (and
+ * we expect the code to check for a NULL pointer before invoking the
+ * method).
  ****************************************************************/
 
 IotNetworkInterface_t *allocate_IotNetworkInterface();
@@ -204,6 +212,21 @@ bool stubbed_IotNetworkInterface( const IotNetworkInterface_t *netif );
   (netif->setCloseCallback == IotNetworkInterfaceCloseCallback)
 #define IS_STUBBED_NETWORKIF_DESTROY(netif) \
   (netif->destroy == IotNetworkInterfaceDestroy)
+
+#define MAYBE_STUBBED_NETWORKIF_CREATE(netif) \
+  (netif->create == NULL || netif->create == IotNetworkInterfaceCreate)
+#define MAYBE_STUBBED_NETWORKIF_CLOSE(netif) \
+  (netif->close == NULL || netif->close == IotNetworkInterfaceClose)
+#define MAYBE_STUBBED_NETWORKIF_SEND(netif) \
+  (netif->send == NULL || netif->send == IotNetworkInterfaceSend)
+#define MAYBE_STUBBED_NETWORKIF_RECEIVE(netif) \
+  (netif->receive == NULL || netif->receive == IotNetworkInterfaceReceive)
+#define MAYBE_STUBBED_NETWORKIF_SETRECEIVECALLBACK(netif) \
+  (netif->setReceiveCallback == NULL || netif->setReceiveCallback == IotNetworkInterfaceReceiveCallback)
+#define MAYBE_STUBBED_NETWORKIF_SETCLOSECALLBACK(netif) \
+  (netif->setCloseCallback == NULL || netif->setCloseCallback == IotNetworkInterfaceCloseCallback)
+#define MAYBE_STUBBED_NETWORKIF_DESTROY(netif) \
+  (netif->destroy == NULL || netif->destroy == IotNetworkInterfaceDestroy)
 
 IotNetworkError_t IotNetworkInterfaceCreate( void * pConnectionInfo,
 					     void * pCredentialInfo,
@@ -230,3 +253,8 @@ IotNetworkError_t IotNetworkInterfaceDestroy( void * pConnection );
 IotMqttCallbackInfo_t *allocate_IotMqttCallbackInfo(IotMqttCallbackInfo_t *pCb);
 void IotUserCallback( void * pCallbackContext,
 		      IotMqttCallbackParam_t * pCallbackParam );
+
+#define IS_STUBBED_USER_CALLBACK(cb) (cb == IotUserCallback)
+#define MAYBE_STUBBED_USER_CALLBACK(cb) (cb == NULL || cb == IotUserCallback)
+
+/****************************************************************/

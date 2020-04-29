@@ -1,0 +1,14 @@
+{ "expected-missing-functions":
+  [
+    "IotLog_Generic",
+    "IotMutex_Destroy",
+    "IotMutex_Lock",
+    "IotMutex_Unlock",
+    "IotSemaphore_Destroy",
+    "IotSemaphore_Post",
+    "IotTaskPool_GetSystemTaskPool",
+    "IotTaskPool_strerror"
+  ],
+  "proof-name": "_IotMqtt_Notify",
+  "proof-root": "cbmc/proofs"
+}

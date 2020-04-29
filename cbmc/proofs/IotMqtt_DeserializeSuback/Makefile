@@ -21,17 +21,18 @@ DEF += -DBUFFER_SIZE=$(BUFFER_SIZE)
 # proof and assume their implementation is correct
 ABSTRACTIONS += --remove-function-body IotLog_Generic
 
-# These defines have the effect of removing RemoveAllMatches from the
+# This define has the effect of removing RemoveAllMatches from the
 # linear containers header so that our stub will be used.
-DEF += -DCBMC=1 -DCBMC_PROOF_DESERIALIZE_SUBACK=1
+DEF += -DCBMC_STUB_REMOVEALLMATCHES=1
 
 ################################################################
 # Loop unwinding
 
+LOOP += _decodeSubackStatus.0:$(BUFFER_SIZE)
+LOOP += IotListDouble_FindFirstMatch.0:$(SUBSCRIPTION_COUNT_MAX)
+LOOP += IotListDouble_RemoveAllMatches\$$link1.0:$(SUBSCRIPTION_COUNT_MAX)
 LOOP += valid_IotMqttSubscriptionList.0:$(SUBSCRIPTION_COUNT_MAX)
 LOOP += valid_IotMqttOperationList.0:$(OPERATION_COUNT_MAX)
-
-LOOP += _decodeSubackStatus.0:$(BUFFER_SIZE)
 
 UNWINDING += --unwind 1
 UNWINDING += --unwindset '$(shell echo $(LOOP) | sed 's/ /,/g')'

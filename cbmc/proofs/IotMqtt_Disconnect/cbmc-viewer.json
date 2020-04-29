@@ -1,0 +1,28 @@
+{ "expected-missing-functions":
+  [
+    "IotClock_GetTimeMs",
+    "IotLog_Generic",
+    "IotMutex_Destroy",
+    "IotMutex_Lock",
+    "IotMutex_Unlock",
+    "IotSemaphore_Create",
+    "IotSemaphore_Destroy",
+    "IotSemaphore_Post",
+    "IotSemaphore_TimedWait",
+    "IotTaskPool_CreateJob",
+    "IotTaskPool_GetSystemTaskPool",
+    "IotTaskPool_ScheduleDeferred",
+    "IotTaskPool_TryCancel",
+    "IotTaskPool_strerror",
+
+    "_IotMqtt_PublishSetDup",
+    "_IotMqtt_RemoveSubscriptionByPacket",
+    "_IotMqtt_ScheduleOperation",
+    "_checkRetryLimit",
+    "_completePendingSend",
+    "_scheduleCallback",
+    "_scheduleNextRetry"
+  ],
+  "proof-name": "IotMqtt_Disconnect",
+  "proof-root": "cbmc/proofs"
+}

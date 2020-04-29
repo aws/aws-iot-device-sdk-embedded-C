@@ -1,21 +1,50 @@
-From a1455991c02aa6d7db1d4333e2cdc5add392c105 Mon Sep 17 00:00:00 2001
-From: Mark R Tuttle <mrtuttle@amazon.com>
-Date: Thu, 13 Feb 2020 17:39:51 +0000
-Subject: [PATCH] Modify MQTT to let CBMC proofs stub out RemoveAllMatches
-
----
- libraries/standard/common/include/iot_linear_containers.h | 8 ++++++++
- 1 file changed, 8 insertions(+)
-
 diff --git a/libraries/standard/common/include/iot_linear_containers.h b/libraries/standard/common/include/iot_linear_containers.h
-index 689ea5e..ffb3469 100644
+index 689ea5e..09061f2 100644
 --- a/libraries/standard/common/include/iot_linear_containers.h
 +++ b/libraries/standard/common/include/iot_linear_containers.h
-@@ -719,6 +719,13 @@ static inline IotLink_t * IotListDouble_RemoveFirstMatch( const IotListDouble_t
+@@ -489,6 +489,9 @@ static inline void IotListDouble_InsertSorted( IotListDouble_t * const pList,
+  * @param[in] pLink The element to remove.
+  */
+ /* @[declare_linear_containers_list_double_remove] */
++#ifdef CBMC_STUB_REMOVE
++void IotListDouble_Remove( IotLink_t * const pLink );
++#else
+ static inline void IotListDouble_Remove( IotLink_t * const pLink )
+ /* @[declare_linear_containers_list_double_remove] */
+ {
+@@ -503,6 +506,7 @@ static inline void IotListDouble_Remove( IotLink_t * const pLink )
+     pLink->pPrevious = NULL;
+     pLink->pNext = NULL;
+ }
++#endif
+
+ /**
+  * @brief Remove the element at the head of a doubly-linked list.
+@@ -564,6 +568,11 @@ static inline IotLink_t * IotListDouble_RemoveTail( const IotListDouble_t * cons
+  * or its value is `0`.
+  */
+ /* @[declare_linear_containers_list_double_removeall] */
++#ifdef CBMC_STUB_REMOVEALL
++void IotListDouble_RemoveAll( const IotListDouble_t * const pList,
++                                            void ( *freeElement )( void * pData ),
++                                            size_t linkOffset );
++#else
+ static inline void IotListDouble_RemoveAll( const IotListDouble_t * const pList,
+                                             void ( *freeElement )( void * pData ),
+                                             size_t linkOffset )
+@@ -593,6 +602,7 @@ static inline void IotListDouble_RemoveAll( const IotListDouble_t * const pList,
+         pCurrent = pNext;
+     }
+ }
++#endif
+
+ /**
+  * @brief Search a doubly-linked list for the first matching element.
+@@ -719,6 +734,13 @@ static inline IotLink_t * IotListDouble_RemoveFirstMatch( const IotListDouble_t
   * or its value is `0`.
   */
  /* @[declare_linear_containers_list_double_removeallmatches] */
-+#ifdef CBMC_PROOF_DESERIALIZE_SUBACK
++#ifdef CBMC_STUB_REMOVEALLMATCHES
 +void IotListDouble_RemoveAllMatches( const IotListDouble_t * const pList,
 +				     bool ( *isMatch )( const IotLink_t * const pOperationLink, void * pCompare ),
 +				     void * pMatch,
@@ -25,14 +54,11 @@ index 689ea5e..ffb3469 100644
  static inline void IotListDouble_RemoveAllMatches( const IotListDouble_t * const pList,
                                                     bool ( *isMatch )( const IotLink_t * const pOperationLink, void * pCompare ),
                                                     void * pMatch,
-@@ -754,6 +761,7 @@ static inline void IotListDouble_RemoveAllMatches( const IotListDouble_t * const
+@@ -754,6 +776,7 @@ static inline void IotListDouble_RemoveAllMatches( const IotListDouble_t * const
          }
      } while( pMatchedElement != NULL );
  }
 +#endif
- 
+
  /**
   * @brief Create a new queue.
--- 
-2.7.4
-
