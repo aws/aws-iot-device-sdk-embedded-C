@@ -23,9 +23,9 @@ typedef struct HTTPParsingContext
     /* http-parser dependencies will be added in the next incremental change. */
     /* Below will be un-commented when parsing is implemented. */
     #if 0
-        http_parser httpParser; /**< Third-party http-parser context. */
+        http_parser httpParser;                                  /**< Third-party http-parser context. */
     #endif
-    HTTPParsingState_t state;   /**< The current state of the HTTP response parsed. */
+    HTTPParsingState_t state;                                    /**< The current state of the HTTP response parsed. */
     HTTPClient_HeaderParsingCallback_t * pHeaderParsingCallback; /**< Callback to invoke with each header found. */
 } HTTPParsingContext_t;
 
@@ -51,8 +51,8 @@ HTTPStatus_t _HTTPClient_InitializeParsingContext( HTTPParsingContext_t * pParsi
  * HTTP response. The state of what was last parsed in the response is kept in
  * #HTTPParsingContext_t.
  *
- * The application should close the connection with the server if any 
- * HTTP_SECURITY_ALERT_X errors are returned. 
+ * The application should close the connection with the server if any
+ * HTTP_SECURITY_ALERT_X errors are returned.
  * TODO: List all the security alerts possible after parsing development.
  *
  * @param[in] pParsingState The state of the response parsing.

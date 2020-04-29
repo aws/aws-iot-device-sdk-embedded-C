@@ -471,7 +471,7 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
  * parameter pRequestBodyBuf over the transport. The response is received in
  * #HTTPResponse_t.
  *
- * The application should close the connection with the server if any 
+ * The application should close the connection with the server if any
  * HTTP_SECURITY_ALERT_X errors are returned.
  * TODO: List all the security alerts possible after parsing development.
  *
