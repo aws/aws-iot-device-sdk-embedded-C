@@ -157,7 +157,7 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
         if( ( bytesWritten + HTTP_HEADER_LINE_SEPARATOR_LEN ) != toAddLen )
         {
             IotLogErrorWithArgs( "Internal error in snprintf() in _addHeader(). "
-                                 "Bytes written: %d.", bytesWritten );
+                                 "BytesWritten: %d.", bytesWritten );
         }
         else
         {
@@ -275,22 +275,22 @@ static HTTPStatus_t _sendHttpHeaders( const HTTPTransportInterface_t * pTranspor
     if( transportStatus < 0 )
     {
         IotLogErrorWithArgs( "Failed to send HTTP headers: Transport send()"
-                             " returned error: Transport Status=%d",
+                             " returned error: TransportStatus=%d",
                              transportStatus );
         returnStatus = HTTP_NETWORK_ERROR;
     }
     else if( (size_t)transportStatus != pRequestHeaders->headersLen )
     {
         IotLogErrorWithArgs( "Failed to send HTTP headers: Transport layer "
-                             "did not send the required bytes: Required bytes=%d"
-                             ", Sent bytes=%d.",
+                             "did not send the required bytes: RequiredBytes=%d"
+                             ", SentBytes=%d.",
                              pRequestHeaders->headersLen,
                              transportStatus );
         returnStatus = HTTP_NETWORK_ERROR;
     }
     else
     {
-        IotLogDebugWithArgs( "Sent HTTP headers over the transport: Bytes sent "
+        IotLogDebugWithArgs( "Sent HTTP headers over the transport: BytesSent "
                              "= %d.",
                              transportStatus );
     }
@@ -318,14 +318,14 @@ static HTTPStatus_t _sendHttpBody( const HTTPTransportInterface_t * pTransport,
     if( transportStatus < 0 )
     {
         IotLogErrorWithArgs( "Failed to send HTTP body: Transport send() "
-                             " returned error: Transport Status=%d",
+                             " returned error: TransportStatus=%d",
                              transportStatus );
         returnStatus = HTTP_NETWORK_ERROR;
     }
     else if( ( size_t )transportStatus != reqBodyBufLen )
     {
         IotLogErrorWithArgs( "Failed to send HTTP body: Transport send() "
-                             "did not send the required bytes: Required bytes=%d"
+                             "did not send the required bytes: RequiredBytes=%d"
                              ", Sent bytes=%d.",
                              reqBodyBufLen,
                              transportStatus );
@@ -333,7 +333,7 @@ static HTTPStatus_t _sendHttpBody( const HTTPTransportInterface_t * pTransport,
     }
     else
     {
-        IotLogDebugWithArgs( "Sent HTTP body over the transport: Bytes sent=%d.",
+        IotLogDebugWithArgs( "Sent HTTP body over the transport: BytesSent=%d.",
                              transportStatus );
     }
 
@@ -362,7 +362,7 @@ HTTPStatus_t _receiveHttpResponse( const HTTPTransportInterface_t * pTransport,
     if( transportStatus < 0 )
     {
         IotLogErrorWithArgs( "Failed to receive HTTP response: Transport recv() "
-                             "returned error: Transport status=%d.",
+                             "returned error: TransportStatus=%d.",
                              transportStatus );
         returnStatus = HTTP_NETWORK_ERROR;
     }
@@ -371,7 +371,7 @@ HTTPStatus_t _receiveHttpResponse( const HTTPTransportInterface_t * pTransport,
         /* There is a bug in the transport recv if more bytes are reported
          * to have been read than the bytes asked for. */
         IotLogErrorWithArgs( "Failed to receive HTTP response: Transport recv() "
-                             " read more bytes than expected: Bytes read=%d",
+                             " read more bytes than expected: BytesRead=%d",
                              transportStatus );
         returnStatus = HTTP_NETWORK_ERROR;
     }
@@ -379,8 +379,7 @@ HTTPStatus_t _receiveHttpResponse( const HTTPTransportInterface_t * pTransport,
     {
         /* Some or all of the specified data was received. */
         *pBytesReceived = ( size_t ) ( transportStatus );
-        IotLogDebugWithArgs( "Received data from the transport: Bytes "
-                             "received=%d.",
+        IotLogDebugWithArgs( "Received data from the transport: BytesReceived=%d.",
                              transportStatus );
     }
     else
@@ -410,7 +409,7 @@ static HTTPStatus_t _getFinalResponseStatus( HTTPParsingState_t parsingState,
     if( parsingState == HTTP_PARSING_NONE )
     {
         IotLogErrorWithArgs( "Response not received: Zero returned from "
-                             "transport recv: Total received=%d",
+                             "transport recv: totalReceived=%d",
                              totalReceived );
         returnStatus = HTTP_NO_RESPONSE;
     }
@@ -419,7 +418,7 @@ static HTTPStatus_t _getFinalResponseStatus( HTTPParsingState_t parsingState,
         if( totalReceived == responseBufferLen )
         {
             IotLogErrorWithArgs( "Response is too large for the response buffer"
-                                 ": Response buffer size in bytes=%d",
+                                 ": responseBufferLen=%d",
                                  responseBufferLen );
             returnStatus = HTTP_INSUFFICIENT_MEMORY;
         }

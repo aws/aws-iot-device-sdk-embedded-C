@@ -51,9 +51,9 @@ HTTPStatus_t _HTTPClient_InitializeParsingContext( HTTPParsingContext_t * pParsi
  * HTTP response. The state of what was last parsed in the response is kept in
  * #HTTPParsingContext_t.
  *
- * Any error found in parsing is considered a malformed response and therefore
- * a security alert. The application should close the connection with the server
- * if any HTTP_SECURITY_ALERT_X errors are returned.
+ * The application should close the connection with the server if any 
+ * HTTP_SECURITY_ALERT_X errors are returned. 
+ * TODO: List all the security alerts possible after parsing development.
  *
  * @param[in] pParsingState The state of the response parsing.
  * @param[in] pBuffer The buffer containing response message to parse.
