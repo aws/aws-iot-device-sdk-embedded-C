@@ -1,4 +1,4 @@
-# AWS IoT Device SDK C with Fleet Provisioning<sup>BETA</sup> support
+# AWS IoT Device SDK C v4.0.0
 
 **[Link to API documentation](https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/main/index.html)**
 
@@ -19,7 +19,9 @@ This library is a new design that inherits from both the AWS IoT Device SDK Embe
 - Configurable memory allocation (static-only or dynamic). Memory allocation functions may also be set by the user.
 - Network stack based on OpenSSL when building for Linux.
 - MQTT persistent session support.
-- Device Defender library.
+- Device Defender client library for the [AWS IoT Device Defender](https://docs.aws.amazon.com/iot/latest/developerguide/device-defender.html) service.
+- Provisioning client library for the [Fleet Provisioning  feature
+of AWS IoT Core](https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html).
 
 ## Building and Running the Fleet Provisioning library Demo
 
@@ -33,19 +35,32 @@ This SDK builds with [CMake](https://cmake.org/), a cross-platform build tool. T
     - Linux system with POSIX thread and timer APIs. (CI tests on Ubuntu 16.04).<br>
     On Linux systems, the OpenSSL network implementation may be used instead of the default network implementation based on mbed TLS. This requires the installation of OpenSSL development libraries and header files, version 1.0.2g or later. The OpenSSL development libraries are usually called something like `libssl-dev` or `openssl-devel` when installed through a package manager.
 
+### AWS IoT Account Setup
+It is required to setup an AWS account and access the AWS IoT Console for running tests and demos. Follow the links to: 
+- [Setup an AWS account](https://docs.aws.amazon.com/iot/latest/developerguide/iot-console-signin.html). 
+- [Sign-in to the AWS IoT Console](https://docs.aws.amazon.com/iot/latest/developerguide/iot-console-signin.html) after setting up the AWS account.
+
+<b>If using the Provisioning library</b>, a fleet provisioning template, a provisioning claim, IoT policies and IAM policies need to be setup for the AWS account. Complete the steps to setup your device and AWS IoT account outlined [here](https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html#use-claim).
+
+<b>If using the Shadow, Jobs or Defender libraries</b>, a device needs to be registered on the AWS IoT account. Complete the following steps from the [Getting Started with AWS IoT](https://docs.aws.amazon.com/iot/latest/developerguide/iot-gs.html) guide. The guide mentions the AWS IoT Button, but you do not need one to use this SDK.
+    1. [Register a Device in the Registry](https://docs.aws.amazon.com/iot/latest/developerguide/register-device.html)
+    2. [Create and Activate a Device Certificate](https://docs.aws.amazon.com/iot/latest/developerguide/create-device-certificate.html)
+    3. [Create an AWS IoT Policy](https://docs.aws.amazon.com/iot/latest/developerguide/create-iot-policy.html)
+    4. [Attach an AWS IoT Policy to a Device Certificate](https://docs.aws.amazon.com/iot/latest/developerguide/attach-policy-to-certificate.html)
+
 ### Build Steps
 1. Clone the source code and submodules. This SDK uses third-party libraries as submodules in the `third_party` directory.
     - If the source code is downloaded via `git clone`, nothing further needs to be done. The CMake build system can automatically clone submodules in this case.
     - For any other download, the submodules must be downloaded and placed in their respective `third_party` directory.
         - [mbed TLS](https://github.com/ARMmbed/mbedtls/tree/mbedtls-2.17) → `third_party/mbedtls/mbedtls`
         - [tinyCBOR](https://github.com/intel/tinycbor) → `third_party/tinycbor/tinycbor`
-2. For running the demo with the fleet provisioning feature, a fleet provisioning template, a provisioning claim, IoT policies and IAM policies will need to be setup on an AWS IoT account. ([Instructions for setting up an AWS IoT account](https://docs.aws.amazon.com/iot/latest/developerguide/iot-console-signin.html)). Complete the steps to setup your device and AWS IoT account outlined [here](https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html#use-claim).
-3. *Required:* Set the following `#define` in [iot_config.h](demos/iot_config.h). The demo requires configuration of 2 parameter name-value pairs to send to the AWS IoT Core service. If the fleet provisioning template (created in step 2.) does not support an extra parameter besides Certificate ID and Serial Number (that are created by default from AWS IoT Console), then update the template definition with an extra parameter. Refer to the [Parameters section](https://docs.aws.amazon.com/iot/latest/developerguide/provision-template.html#parameters-section) of [Fleet Provisioning Template](https://docs.aws.amazon.com/iot/latest/developerguide/provision-template.html#fleet-provision-template) for more information.
+2. *Required ONLY for Provisioning library:* (Skip if not using Provisioning library) Set the following `#define`s in [iot_config.h](demos/iot_config.h). The demo requires configuration of 2 parameter name-value pairs to send to the AWS IoT Core service. Update the fleet provisioning template on the AWS IoT Console to support an extra parameter, besides the <b>Certificate ID</b> and <b>Serial Number</b> parameters (that are present in the default template created from AWS IoT Console). Refer to the [Parameters section](https://docs.aws.amazon.com/iot/latest/developerguide/provision-template.html#parameters-section) of [Fleet Provisioning Template](https://docs.aws.amazon.com/iot/latest/developerguide/provision-template.html#fleet-provision-template) for more information.
     - Set `AWS_IOT_DEMO_PROVISIONING_TEMPLATE_NAME` with the name of the fleet provisioning template created in step 1. of [Provisioning by claim](https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html#use-claim).
     - Set `AWS_IOT_DEMO_PROVISIONING_PARAMETER_NAME_SERIAL_NUMBER_VALUE` with the value of the device's serial number (or an equivalent unique device identifier) that will be used to create a Thing resource by the fleet provisioning template.
     - Set `AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_NAME` with the name of an additional parameter that the device needs to send to the fleet provisioning template. The demo requires exactly 2 different parameter name-value pairs (including serial number) to be configured. 
     - Set `AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_VALUE` with the value of the additional parameter.
-4. *Optional:* Set the following `#define` in [iot_config.h](demos/iot_config.h). You may skip this step and instead pass these configuration settings as command line options when running the demos.
+    - When testing the Certificate-Signing Request (CSR) based Provisioning demo, set the `AWS_IOT_DEMO_PROVISIONING_CSR_PEM` macro with the Certificate-Signing Request string.
+3. *Optional:* Set the following `#define` in [iot_config.h](demos/iot_config.h). You may skip this step and instead pass these configuration settings as command line options when running the demos.
     - Set `IOT_DEMO_IDENTIFIER` to a MQTT client identifier that you want to use for the MQTT connection to AWS IoT Core. The corresponding command line option for this constant is `-i`.
     - Set `IOT_DEMO_SERVER` to your custom endpoint. This is found on the *Settings* page of the AWS IoT Console and has a format of `ABCDEFG1234567.iot.us-east-2.amazonaws.com`. The corresponding command line option for this constant is `-h`.
     - Set `IOT_DEMO_ROOT_CA` to the path of the root CA certificate downloaded during the setup of provisioning claim in step 2 of [Build Steps](https://github.com/aws/aws-iot-device-sdk-embedded-C-staging/tree/fleetprovisioning_beta#build-steps). The corresponding command line option for this constant is `-r`.
