@@ -242,10 +242,11 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
     else
     {
         /* Populate the buffer with the value data for the Range Request.*/
-        stdRetVal = sprintf( rangeValueBuffer,
-                             "%s%d",
-                             RANGE_REQUEST_HEADER_VALUE_PREFIX,
-                             rangeStartOrlastNbytes );
+        stdRetVal = snprintf( rangeValueBuffer,
+                              sizeof( rangeValueBuffer ),
+                              "%s%d",
+                              RANGE_REQUEST_HEADER_VALUE_PREFIX,
+                              rangeStartOrlastNbytes );
         assert( ( stdRetVal >= 0 ) &&
                 stdRetVal <= ( int ) ( RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN + MAX_INT32_NO_OF_DIGITS ) );
         rangeValueLength += ( size_t ) stdRetVal;
@@ -256,10 +257,11 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
         if( rangeEnd != HTTP_RANGE_REQUEST_END_OF_FILE )
         {
             /* Add the rangeEnd value to the request range .*/
-            stdRetVal = sprintf( rangeValueBuffer + rangeValueLength,
-                                 "%s%d",
-                                 DASH_CHARACTER,
-                                 rangeEnd );
+            stdRetVal = snprintf( rangeValueBuffer + rangeValueLength,
+                                  sizeof( rangeValueBuffer ) - rangeValueLength,
+                                  "%s%d",
+                                  DASH_CHARACTER,
+                                  rangeEnd );
             assert( ( stdRetVal >= 0 ) &&
                     stdRetVal <= ( DASH_CHARACTER_LEN + MAX_INT32_NO_OF_DIGITS ) );
             rangeValueLength += ( size_t ) stdRetVal;
@@ -268,9 +270,10 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
         else if( rangeStartOrlastNbytes >= 0 )
         {
             /* Add the "-" character.*/
-            stdRetVal = sprintf( rangeValueBuffer + rangeValueLength,
-                                 "%s",
-                                 DASH_CHARACTER );
+            stdRetVal = snprintf( rangeValueBuffer + rangeValueLength,
+                                  sizeof( rangeValueBuffer ) - rangeValueLength,
+                                  "%s",
+                                  DASH_CHARACTER );
             /* Check that only a single character was written. */
             assert( stdRetVal == DASH_CHARACTER_LEN );
             rangeValueLength += ( size_t ) stdRetVal;

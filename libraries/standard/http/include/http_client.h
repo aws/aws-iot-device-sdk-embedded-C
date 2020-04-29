@@ -79,7 +79,8 @@
  * This flag should be used ONLY for 2 kinds of range specifications when
  * creating the Range Request header through the #HTTPClient_AddRangeHeader
  * function:
- *  - When the requested range is all bytes > starting range byte to end of file.
+ *  - When the requested range is all bytes from the starting range byte to
+ * the end of file.
  *  - When the requested range is for the last N bytes of the file.
  * In both cases, this value should be used for the "rangeEnd" parameter.
  */
@@ -448,7 +449,7 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
  * combination of @a rangeStartOrLastNBytes and @a rangeEnd parameter values:
  * 1. Request containing both parameters for the byte range [rangeStart, rangeEnd]
  * where @a rangeStartOrLastNBytes <= @a rangeEnd.
- * Example request: "Range: bytes=0-1023\r\n" for requesting bytes in the range [0, 1024].
+ * Example request: "Range: bytes=0-1023\r\n" for requesting bytes in the range [0, 1023].
  *
  * 2. Request for the last N bytes, represented by @p rangeStartOrlastNbytes.
  * @p rangeStartOrlastNbytes should be negative and @p rangeEnd should be
