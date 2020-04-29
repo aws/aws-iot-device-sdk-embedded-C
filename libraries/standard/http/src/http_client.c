@@ -292,7 +292,7 @@ static HTTPStatus_t _sendHttpHeaders( const HTTPTransportInterface_t * pTranspor
     else
     {
         IotLogDebugWithArgs( "Sent HTTP headers over the transport: BytesSent "
-                             "= %d.",
+                             "=%d.",
                              transportStatus );
     }
 
@@ -542,7 +542,7 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
         IotLogError( "Parameter check failed: pRequestHeaders->pBuffer is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
-    else if( pResponse && ( pResponse->pBuffer == NULL ) )
+    else if( ( pResponse != NULL ) && ( pResponse->pBuffer == NULL ) )
     {
         IotLogError( "Parameter check failed: pResponse->pBuffer is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
