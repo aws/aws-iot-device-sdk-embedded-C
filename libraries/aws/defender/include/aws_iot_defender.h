@@ -65,19 +65,13 @@
  * @brief Bit flags or metrics used by @ref defender_function_setmetrics function.
  *
  * These metrics are subset of metrics supported by AWS IoT Device Defender service. For details,
- * refer to developer document of [AWS IoT Device
- * Defender](https://docs.aws.amazon.com/iot/latest/developerguide/device-defender-detect.html#DetectMetricsMessages).
+ * refer to developer document of [AWS IoT Device Defender](https://docs.aws.amazon.com/iot/latest/developerguide/device-defender-detect.html#DetectMetricsMessages).
  */
 /**@{ */
-#define AWS_IOT_DEFENDER_METRICS_ALL                                        0xffffffff /**< Flag to indicate including
-                                                                                        * all metrics. */
+#define AWS_IOT_DEFENDER_METRICS_ALL                                        0xffffffff /**< Flag to indicate including all metrics. */
 
-#define AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS_ESTABLISHED_TOTAL          0x00000001 /**< Total count of established
-                                                                                        * TCP connections. */
-#define AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS_ESTABLISHED_REMOTE_ADDR    0x00000004 /**< Remote address (IP:port) of
-                                                                                        * established TCP connections.
-                                                                                        * For example, 192.168.0.1:8000.
-                                                                                        * */
+#define AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS_ESTABLISHED_TOTAL          0x00000001 /**< Total count of established TCP connections. */
+#define AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS_ESTABLISHED_REMOTE_ADDR    0x00000004 /**< Remote address (IP:port) of established TCP connections. For example, 192.168.0.1:8000. */
 
 /**
  * Connections metrics including only remote address. Local port number is not supported.
@@ -90,9 +84,8 @@
 /**
  * Established connections metrics including connections metrics and total count.
  */
-#define AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS_ESTABLISHED             \
-    ( AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS_ESTABLISHED_CONNECTIONS | \
-      AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS_ESTABLISHED_TOTAL )       \
+#define AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS_ESTABLISHED                                                                          \
+    ( AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS_ESTABLISHED_CONNECTIONS | AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS_ESTABLISHED_TOTAL ) \
 
 /**@} end of DefenderMetricsFlags */
 
@@ -124,8 +117,7 @@
  * @brief Structures passed as parameters to [Defender functions](@ref defender_functions)
  *
  * These structures are passed as parameters to library functions.
- * Documentation for these structures will state the functions associated with each parameter structure and the purpose
- * of each member.
+ * Documentation for these structures will state the functions associated with each parameter structure and the purpose of each member.
  */
 
 /**
@@ -171,8 +163,7 @@ typedef enum
  * @brief Structures passed as parameters to [Defender functions](@ref defender_functions)
  *
  * These structures are passed as parameters to library functions.
- * Documentation for these structures will state the functions associated with each parameter structure and the purpose
- * of each member.
+ * Documentation for these structures will state the functions associated with each parameter structure and the purpose of each member.
  */
 
 /**
@@ -194,8 +185,7 @@ typedef struct AwsIotDefenderCallbackInfo
  */
 typedef struct AwsIotDefenderCallback
 {
-    void * pCallbackContext;                                     /**< The callback context for caller's use (optional).
-                                                                  * */
+    void * pCallbackContext;                                     /**< The callback context for caller's use (optional). */
     void ( * function )( void *,
                          AwsIotDefenderCallbackInfo_t * const ); /**< Callback function signature(optional). */
 } AwsIotDefenderCallback_t;
@@ -237,8 +227,7 @@ typedef struct AwsIotDefenderStartInfo
  * @brief Set metrics that defender agent needs to collect for a metrics group.
  *
  * * If defender agent is not started, this function will provide the metrics to be collected.
- * * If defender agent is started, this function will update the metrics and take effect in defender agent's next
- * iteration.
+ * * If defender agent is started, this function will update the metrics and take effect in defender agent's next iteration.
  *
  * @param[in] metricsGroup Metrics group defined in #AwsIotDefenderMetricsGroup_t
  * @param[in] metrics Bit-flags to specify what metrics to collect.
@@ -272,8 +261,7 @@ AwsIotDefenderError_t AwsIotDefender_SetMetrics( AwsIotDefenderMetricsGroup_t me
  *
  * @warning This function is not thread safe.
  *
- * @note No need to manage the memory allocated for #AwsIotDefenderCallbackInfo_t. This function save the information
- * internally.
+ * @note No need to manage the memory allocated for #AwsIotDefenderCallbackInfo_t. This function save the information internally.
  *
  * Example:
  *
@@ -323,14 +311,8 @@ AwsIotDefenderError_t AwsIotDefender_SetMetrics( AwsIotDefenderMetricsGroup_t me
  *
  *     // specify two TCP connections metrics: total count and local port
  *     AwsIotDefenderError_t error = AwsIotDefender_SetMetrics(AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS,
- *
- *                                                           AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS_ESTABLISHED_TOTAL
- *|
- *
- *
- *
- *                                                     AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS_ESTABLISHED_REMOTE_ADDR
- *);
+ *                                                             AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS_ESTABLISHED_TOTAL |
+ *                                                             AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS_ESTABLISHED_REMOTE_ADDR );
  *
  *     if ( error == AWS_IOT_DEFENDER_SUCCESS )
  *     {
@@ -367,8 +349,7 @@ AwsIotDefenderError_t AwsIotDefender_Start( AwsIotDefenderStartInfo_t * pStartIn
  * @brief Stop the defender agent.
  *
  * It waits for the current metrics-publishing iteration to finish before freeing the resource allocated.
- * It also clears the metrics set previously so that user is expected to SetMetrics again before restarting defender
- * agent.
+ * It also clears the metrics set previously so that user is expected to SetMetrics again before restarting defender agent.
  *
  * @warning This function must be called after successfully calling @ref defender_function_start.
  * @warning This function is not thread safe.
@@ -389,8 +370,7 @@ void AwsIotDefender_Stop( void );
  *
  * @warning This function is not thread safe.
  *
- * @note If this function is called when defender agent is started, the period is re-calculated and updated in next
- * iteration.
+ * @note If this function is called when defender agent is started, the period is re-calculated and updated in next iteration.
  */
 /* @[declare_defender_setperiod] */
 AwsIotDefenderError_t AwsIotDefender_SetPeriod( uint32_t periodSeconds );
