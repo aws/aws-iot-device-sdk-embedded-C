@@ -54,7 +54,7 @@ typedef struct MQTTPacketInfo MQTTPacketInfo_t;
  * A function with this signature must be provided to the MQTT library to read
  * data off the network.
  *
- * @param[in] context The context provided with this function.
+ * @param[in] context The network context provided with this function.
  * @param[out] pBuffer Buffer to receive network data.
  * @param[in] bytesToRecv Bytes to receive from the network. pBuffer must be at
  * least this size.
@@ -158,7 +158,7 @@ struct MQTTSubscribeInfo
     MQTTQoS_t qos;
 
     /**
-     * @brief Topic filter for subscription.
+     * @brief Topic filter to subscribe to.
      */
     const char * pTopicFilter;
 
@@ -184,7 +184,7 @@ struct MqttPublishInfo
     bool retain;
 
     /**
-     * @brief Topic name for message.
+     * @brief Topic name on which the message is published.
      */
     const char * pTopicName;
 

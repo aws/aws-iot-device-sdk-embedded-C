@@ -63,12 +63,12 @@
 #define UINT8_SET_BIT( x, position )    ( ( x ) = ( uint8_t ) ( ( x ) | ( 0x01U << ( position ) ) ) )
 
 /**
- * @brief Get the high byte of a 16-bit integer.
+ * @brief Get the high byte of a 16-bit unsigned integer.
  */
 #define UINT16_HIGH_BYTE( x )    ( ( uint8_t ) ( ( x ) >> 8 ) )
 
 /**
- * @brief Get the low byte of a 16-bit signed integer.
+ * @brief Get the low byte of a 16-bit unsigned integer.
  */
 #define UINT16_LOW_BYTE( x )     ( ( uint8_t ) ( ( x ) & 0x00ffU ) )
 
