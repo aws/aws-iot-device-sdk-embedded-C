@@ -23,9 +23,9 @@ typedef struct HTTPParsingContext
     /* http-parser dependencies will be added in the next incremental change. */
     /* Below will be un-commented when parsing is implemented. */
     #if 0
-        http_parser httpParser;                                  /**< Third-party http-parser context. */
+        http_parser httpParser; /**< Third-party http-parser context. */
     #endif
-    HTTPParsingState_t state;                                    /**< The current state of the HTTP response parsed. */
+    HTTPParsingState_t state;   /**< The current state of the HTTP response parsed. */
     HTTPClient_HeaderParsingCallback_t * pHeaderParsingCallback; /**< Callback to invoke with each header found. */
 } HTTPParsingContext_t;
 

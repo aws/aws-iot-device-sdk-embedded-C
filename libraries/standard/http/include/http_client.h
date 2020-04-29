@@ -488,12 +488,12 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
  * parameters will be returned here on success.
  *
  * @return One of the following:
- * - #HTTP_SUCCESS
- * - #HTTP_INVALID_PARAMETER
- * - #HTTP_NETWORK_ERROR
- * - #HTTP_PARTIAL_RESPONSE
- * - #HTTP_NO_RESPONSE
- * - #HTTP_INSUFFICIENT_MEMORY
+ * - #HTTP_SUCCESS (If successful.)
+ * - #HTTP_INVALID_PARAMETER (If any provided parameters or their members are invalid.)
+ * - #HTTP_NETWORK_ERROR (Errors in sending or receiving over the transport interface.)
+ * - #HTTP_PARTIAL_RESPONSE (Part of an HTTP response was received in a partially filled response buffer.)
+ * - #HTTP_NO_RESPONSE (No data was received from the transport interface.)
+ * - #HTTP_INSUFFICIENT_MEMORY (The response received could not fit into the response buffer.)
  * TODO: Add more errors for parsing implementation.
  */
 HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
