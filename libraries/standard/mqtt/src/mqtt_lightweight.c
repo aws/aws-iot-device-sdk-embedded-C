@@ -261,24 +261,24 @@ static bool publishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
                                size_t * pPacketSize )
 {
     bool status = true;
-    size_t publishPacketSize = 0, payloadLimit = 0;
+    size_t packetSize = 0, payloadLimit = 0;
 
     /* The variable header of a PUBLISH packet always contains the topic name.
      * The first 2 bytes of UTF-8 string contains length of the string.
      */
-    publishPacketSize += pPublishInfo->topicNameLength + sizeof( uint16_t );
+    packetSize += pPublishInfo->topicNameLength + sizeof( uint16_t );
 
     /* The variable header of a QoS 1 or 2 PUBLISH packet contains a 2-byte
      * packet identifier. */
     if( pPublishInfo->qos > MQTTQoS0 )
     {
-        publishPacketSize += sizeof( uint16_t );
+        packetSize += sizeof( uint16_t );
     }
 
     /* Calculate the maximum allowed size of the payload for the given parameters.
      * This calculation excludes the "Remaining length" encoding, whose size is not
      * yet known. */
-    payloadLimit = MQTT_MAX_REMAINING_LENGTH - publishPacketSize - 1U;
+    payloadLimit = MQTT_MAX_REMAINING_LENGTH - packetSize - 1U;
 
     /* Ensure that the given payload fits within the calculated limit. */
     if( pPublishInfo->payloadLength > payloadLimit )
@@ -289,11 +289,11 @@ static bool publishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
     {
         /* Add the length of the PUBLISH payload. At this point, the "Remaining length"
          * has been calculated. */
-        publishPacketSize += pPublishInfo->payloadLength;
+        packetSize += pPublishInfo->payloadLength;
 
         /* Now that the "Remaining length" is known, recalculate the payload limit
          * based on the size of its encoding. */
-        payloadLimit -= remainingLengthEncodedSize( publishPacketSize );
+        payloadLimit -= remainingLengthEncodedSize( packetSize );
 
         /* Check that the given payload fits within the size allowed by MQTT spec. */
         if( pPublishInfo->payloadLength > payloadLimit )
@@ -304,10 +304,10 @@ static bool publishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
         {
             /* Set the "Remaining length" output parameter and calculate the full
              * size of the PUBLISH packet. */
-            *pRemainingLength = publishPacketSize;
+            *pRemainingLength = packetSize;
 
-            publishPacketSize += 1U + remainingLengthEncodedSize( publishPacketSize );
-            *pPacketSize = publishPacketSize;
+            packetSize += 1U + remainingLengthEncodedSize( packetSize );
+            *pPacketSize = packetSize;
         }
     }
 
@@ -326,13 +326,17 @@ static MQTTStatus_t serializePublishCommon( const MQTTPublishInfo_t * pPublishIn
     uint8_t * pIndex = NULL;
     size_t minBufferSize = 0;
 
-    if( ( pFixedBuffer == NULL ) || ( pPublishInfo == NULL ) || ( packetIdentifier == 0 ) )
+    if( ( pFixedBuffer == NULL ) || ( pPublishInfo == NULL ) || ( packetIdentifier == 0U ) )
     {
         status = MQTTBadParameter;
     }
     else if( ( pPublishInfo->pTopicName == NULL ) || ( pPublishInfo->topicNameLength == 0U ) )
     {
         status = MQTTBadParameter;
+    }
+    else
+    {
+        /* Empty else MISRA 15.7 */
     }
 
     /* Calculate the minimum buffer size needed and check if the buffer is big enough. */
@@ -1161,7 +1165,7 @@ MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * const pPublish
         }
     }
 
-    return MQTTSuccess;
+    return status;
 }
 
 /*-----------------------------------------------------------*/

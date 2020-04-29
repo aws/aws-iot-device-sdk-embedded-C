@@ -165,7 +165,7 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * const pContext,
 MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
                            const MQTTPublishInfo_t * const pPublishInfo )
 {
-    size_t remainingLength, packetSize, headerSize;
+    size_t remainingLength, packetSize, headerSize = 0U;
     int32_t bytesSent;
     uint16_t packetId;
 
