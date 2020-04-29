@@ -84,8 +84,8 @@ typedef struct HTTPNetworkContext HTTPNetworkContext_t;
 /**
  * @brief Transport interface for sending data over the network.
  *
- * If the number of bytes written returned is not equal to bytesToWrite, then
- * #HTTPClient_Send will return HTTP_NETWORK_ERROR. If a negative value is
+ * If the number of bytes written returned is not equal to @p bytesToWrite, then
+ * #HTTPClient_Send will return #HTTP_NETWORK_ERROR. If a negative value is
  * returned then this #HTTPClient_Send will also return #HTTP_NETWORK_ERROR.
  *
  * @param[in] context User defined context.
@@ -101,14 +101,14 @@ typedef int32_t (* HTTPTransportSend_t )( HTTPNetworkContext_t * pContext,
 /**
  * @brief Transport interface for reading data on the network.
  *
- * This function will read up to bytesToRead amount of data from the network.
+ * This function will read up to @p bytesToRead amount of data from the network.
  *
  * If this function returns a value less than zero, then #HTTPClient_Send will
  * return #HTTP_NETWORK_ERROR.
  *
  * If this function returns less than the bytesToRead and greater than zero,
- * then this function will be invoked again if the data in pBuffer contains a
- * partial HTTP response message and there is room left in the pBuffer.
+ * then this function will be invoked again if the data in @p pBuffer contains a
+ * partial HTTP response message and there is room left in the @p pBuffer.
  * Repeated invocations will stop if this function returns zero.
  *
  * @param[in] context User defined context.
@@ -171,9 +171,6 @@ typedef enum HTTPStatus
     /**
      * @brief Part of the HTTP response was received from the network.
      *
-     * This can occur only if #HTTPTransportRecv_t returns zero before the full
-     * response message was received.
-     *
      * Functions that may return this value:
      * - #HTTPClient_Send
      */
@@ -182,8 +179,8 @@ typedef enum HTTPStatus
     /**
      * @brief No HTTP response was received from the network.
      *
-     * This can occur only if #HTTPTransportRecv_t returns zero when first
-     * invoked.
+     * This can occur only if there was no data received from the transport
+     * interface.
      *
      * Functions that may return this value:
      * - #HTTPClient_Send
@@ -484,7 +481,8 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
  * more information.
  * @param[in] pRequestHeaders Request configuration containing the buffer of
  * headers to send.
- * @param[in] pRequestBodyBuf Request entity body. This can be NULL.
+ * @param[in] pRequestBodyBuf Optional Request entity body. Set to NULL if there
+ * is no request body.
  * @param[in] reqBodyBufLen The length of the request entity in bytes.
  * @param[in] pResponse The response message and some notable response
  * parameters will be returned here on success.

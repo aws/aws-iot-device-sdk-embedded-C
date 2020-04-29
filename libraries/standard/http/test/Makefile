@@ -4,6 +4,9 @@ CSDK_ROOT = ../../../..
 # Directory indexing includes subdirectories.
 SOURCE = ../src
 
+# Show extra warnings.
+CFLAGS += -Wextra
+
 # arguments given to the compiler (default: see the included file)
 #CFLAGS = std=c99 -Wall -fprofile-arcs -ftest-coverage -O0 -ggdb
 
