@@ -1,7 +1,8 @@
+#include <assert.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <assert.h>
+
 #include "http_client.h"
 #include "private/http_client_internal.h"
 
@@ -75,9 +76,11 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
     assert( valueLen != 0u );
 
     /* Backtrack before trailing "\r\n" (HTTP header end) if it's already written.
-     * Note that this method also writes trailing "\r\n" before returning. */
-    if( strncmp( ( char * ) pBufferCur - ( 2 * HTTP_HEADER_LINE_SEPARATOR_LEN ),
-                 "\r\n\r\n", 2 * HTTP_HEADER_LINE_SEPARATOR_LEN ) == 0 )
+     * Note that this method also writes trailing "\r\n" before returning.
+     * The first condition prevents reading before start of the header. */
+    if( ( HTTP_HEADER_END_INDICATOR_LEN <= pRequestHeaders->headersLen ) &&
+        ( strncmp( ( char * ) pBufferCur - HTTP_HEADER_END_INDICATOR_LEN,
+                   HTTP_HEADER_END_INDICATOR, HTTP_HEADER_END_INDICATOR_LEN ) == 0 ) )
     {
         backtrackHeaderLen -= HTTP_HEADER_LINE_SEPARATOR_LEN;
         pBufferCur -= HTTP_HEADER_LINE_SEPARATOR_LEN;
@@ -91,14 +94,12 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
     /* If we have enough room for the new header line, then write it to the header buffer. */
     if( ( backtrackHeaderLen + toAddLen ) <= pRequestHeaders->bufferLen )
     {
-        /* Write "Field: Value \r\n\r\n" to headers. */
+        /* Write "Field: Value \r\n" to headers. */
         bytesWritten = snprintf( ( char * ) pBufferCur,
                                  toAddLen,
-                                 "%.*s%s%.*s%s",
+                                 HTTP_HEADER_ADD_FORMAT,
                                  ( int32_t ) fieldLen, pField,
-                                 HTTP_HEADER_FIELD_SEPARATOR,
-                                 ( int32_t ) valueLen, pValue,
-                                 HTTP_HEADER_LINE_SEPARATOR );
+                                 ( int32_t ) valueLen, pValue );
 
         if( ( bytesWritten + HTTP_HEADER_LINE_SEPARATOR_LEN ) != toAddLen )
         {
@@ -108,18 +109,18 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
         else
         {
             pBufferCur += bytesWritten;
-        }
 
-        /* HTTP_HEADER_LINE_SEPARATOR cannot be written above because snprintf
-         * writes an extra null byte at the end. */
-        memcpy( pBufferCur, HTTP_HEADER_LINE_SEPARATOR, HTTP_HEADER_LINE_SEPARATOR_LEN );
-        pRequestHeaders->headersLen = backtrackHeaderLen + toAddLen;
-        returnStatus = HTTP_SUCCESS;
+            /* HTTP_HEADER_LINE_SEPARATOR cannot be written above because snprintf
+             * writes an extra null byte at the end. */
+            memcpy( pBufferCur, HTTP_HEADER_LINE_SEPARATOR, HTTP_HEADER_LINE_SEPARATOR_LEN );
+            pRequestHeaders->headersLen = backtrackHeaderLen + toAddLen;
+            returnStatus = HTTP_SUCCESS;
+        }
     }
     else
     {
-        IotLogErrorWithArgs( "Unable to add header in buffer: ",
-                             "Buffer has insufficient memory: ",
+        IotLogErrorWithArgs( "Unable to add header in buffer: "
+                             "Buffer has insufficient memory: "
                              "RequiredBytes=%d, RemainingBufferSize=%d",
                              toAddLen,
                              ( pRequestHeaders->bufferLen - pRequestHeaders->headersLen ) );

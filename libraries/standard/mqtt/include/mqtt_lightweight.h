@@ -30,6 +30,7 @@
 
 #define MQTT_PACKET_TYPE_CONNECT         ( ( uint8_t ) 0x10U )
 #define MQTT_PACKET_TYPE_CONNACK         ( ( uint8_t ) 0x20U )
+#define MQTT_PACKET_TYPE_DISCONNECT      ( ( uint8_t ) 0xE0U )
 
 struct MQTTFixedBuffer;
 typedef struct MQTTFixedBuffer MQTTFixedBuffer_t;
@@ -152,6 +153,8 @@ MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * const pPubli
                                           size_t remainingLength,
                                           const MQTTFixedBuffer_t * const pBuffer,
                                           size_t * const pHeaderSize );
+
+MQTTStatus_t MQTT_GetDisconnectPacketSize( size_t * pPacketSize );
 
 MQTTStatus_t MQTT_SerializeDisconnect( const MQTTFixedBuffer_t * const pBuffer );
 
