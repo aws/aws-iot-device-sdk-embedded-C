@@ -402,6 +402,10 @@ int main( int argc, char ** argv )
     {
         status = EXIT_FAILURE;
     }
+    else
+    {
+        status = EXIT_SUCCESS;
+    }
 
     if( status == EXIT_SUCCESS )
     {
