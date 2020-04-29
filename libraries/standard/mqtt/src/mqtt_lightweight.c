@@ -40,6 +40,12 @@
  */
 #define MQTT_PACKET_CONNECT_MAX_SIZE       ( 327700UL )
 
+/**
+ * @brief Per the MQTT 3.1.1 spec, the largest "Remaining Length" of an MQTT
+ * packet is this value.
+ */
+#define MQTT_MAX_REMAINING_LENGTH           ( 268435455UL )
+
 /* MQTT CONNECT flags. */
 #define MQTT_CONNECT_FLAG_CLEAN          ( 1 )    /**< @brief Clean session. */
 #define MQTT_CONNECT_FLAG_WILL           ( 2 )    /**< @brief Will present. */
@@ -250,7 +256,171 @@ static int32_t recvExact( MQTTTransportRecvFunc_t recvFunc,
     return totalBytesRecvd;
 }
 
-/*-----------------------------------------------------------*/
+static bool publishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
+                               size_t * pRemainingLength,
+                               size_t * pPacketSize )
+{
+    bool status = true;
+    size_t publishPacketSize = 0, payloadLimit = 0;
+
+    /* The variable header of a PUBLISH packet always contains the topic name.
+     * The first 2 bytes of UTF-8 string contains length of the string.
+     */
+    publishPacketSize += pPublishInfo->topicNameLength + sizeof( uint16_t );
+
+    /* The variable header of a QoS 1 or 2 PUBLISH packet contains a 2-byte
+     * packet identifier. */
+    if( pPublishInfo->qos > MQTTQoS0 )
+    {
+        publishPacketSize += sizeof( uint16_t );
+    }
+
+    /* Calculate the maximum allowed size of the payload for the given parameters.
+     * This calculation excludes the "Remaining length" encoding, whose size is not
+     * yet known. */
+    payloadLimit = MQTT_MAX_REMAINING_LENGTH - publishPacketSize - 1U;
+
+    /* Ensure that the given payload fits within the calculated limit. */
+    if( pPublishInfo->payloadLength > payloadLimit )
+    {
+        status = false;
+    }
+    else
+    {
+        /* Add the length of the PUBLISH payload. At this point, the "Remaining length"
+         * has been calculated. */
+        publishPacketSize += pPublishInfo->payloadLength;
+
+        /* Now that the "Remaining length" is known, recalculate the payload limit
+         * based on the size of its encoding. */
+        payloadLimit -= remainingLengthEncodedSize( publishPacketSize );
+
+        /* Check that the given payload fits within the size allowed by MQTT spec. */
+        if( pPublishInfo->payloadLength > payloadLimit )
+        {
+            status = false;
+        }
+        else
+        {
+            /* Set the "Remaining length" output parameter and calculate the full
+             * size of the PUBLISH packet. */
+            *pRemainingLength = publishPacketSize;
+
+            publishPacketSize += 1U + remainingLengthEncodedSize( publishPacketSize );
+            *pPacketSize = publishPacketSize;
+        }
+    }
+
+    return status;
+}
+
+static MQTTStatus_t serializePublishCommon( const MQTTPublishInfo_t * pPublishInfo,
+                                            size_t remainingLength,
+                                            uint16_t packetIdentifier,
+                                            const MQTTFixedBuffer_t * const pFixedBuffer,
+                                            bool serializePayload,
+                                            size_t * const pHeaderSize )
+{
+    MQTTStatus_t status = MQTTSuccess;
+    uint8_t publishFlags = 0;
+    uint8_t * pIndex = NULL;
+    size_t minBufferSize = 0;
+
+    if( ( pFixedBuffer == NULL ) || ( pPublishInfo == NULL ) || ( packetIdentifier == 0 ) )
+    {
+        status = MQTTBadParameter;
+    }
+    else if( ( pPublishInfo->pTopicName == NULL ) || ( pPublishInfo->topicNameLength == 0U ) )
+    {
+        status = MQTTBadParameter;
+    }
+
+    /* Calculate the minimum buffer size needed and check if the buffer is big enough. */
+    if( status == MQTTSuccess )
+    {
+        minBufferSize += remainingLength + 1U + remainingLengthEncodedSize( remainingLength );
+
+        /* Reduce the payload size if not needed to be serialized. */
+        if( serializePayload )
+        {
+            minBufferSize -= pPublishInfo->payloadLength;
+        }
+
+        /* Check if the buffer size is greater than the minimum buffer size. */
+        if( minBufferSize > pFixedBuffer->size )
+        {
+            status = MQTTNoMemory;
+        }
+    }
+
+    if( status == MQTTSuccess )
+    {
+        pIndex = pFixedBuffer->pBuffer;
+
+        /* The first byte of a PUBLISH packet contains the packet type and flags. */
+        publishFlags = MQTT_PACKET_TYPE_PUBLISH;
+
+        if( pPublishInfo->qos == MQTTQoS1 )
+        {
+            UINT8_SET_BIT( publishFlags, MQTT_PUBLISH_FLAG_QOS1 );
+        }
+        else if( pPublishInfo->qos == MQTTQoS2 )
+        {
+            UINT8_SET_BIT( publishFlags, MQTT_PUBLISH_FLAG_QOS2 );
+        }
+        else
+        {
+            /* Empty else MISRA 15.7 */
+        }
+
+        if( pPublishInfo->retain == true )
+        {
+            UINT8_SET_BIT( publishFlags, MQTT_PUBLISH_FLAG_RETAIN );
+        }
+
+        *pIndex = publishFlags;
+        pIndex++;
+
+        /* The "Remaining length" is encoded from the second byte. */
+        pIndex = encodeRemainingLength( pIndex, remainingLength );
+
+        /* The topic name is placed after the "Remaining length". */
+        pIndex = encodeString( pIndex,
+                               pPublishInfo->pTopicName,
+                               pPublishInfo->topicNameLength );
+
+        /* A packet identifier is required for QoS 1 and 2 messages. */
+        if( pPublishInfo->qos > MQTTQoS0 )
+        {
+            /* Place the packet identifier into the PUBLISH packet. */
+            *pIndex = UINT16_HIGH_BYTE( packetIdentifier );
+            *( pIndex + 1 ) = UINT16_LOW_BYTE( packetIdentifier );
+            pIndex += 2;
+        }
+
+        /* The payload is placed after the packet identifier.
+         * Payload is copied over only if required by the flag serializePayload.
+         * This will help reduce an unnecessary copy of the payload into the buffer.
+         */
+        if( ( pPublishInfo->payloadLength > 0U ) &&
+            ( serializePayload == true ) )
+        {
+            /* This memcpy intentionally copies bytes from a void * buffer into
+             * a uint8_t * buffer. */
+            /* coverity[misra_c_2012_rule_21_15_violation] */
+            ( void ) memcpy( pIndex, pPublishInfo->pPayload, pPublishInfo->payloadLength );
+            pIndex += pPublishInfo->payloadLength;
+        }
+
+        /* Assign the serialized size to the output parameter if only header is serialized. */
+        if( serializePayload == false )
+        {
+            *pHeaderSize = minBufferSize;
+        }
+    }
+
+    return status;
+}
 
 static size_t getRemainingLength( MQTTTransportRecvFunc_t recvFunc,
                                   MQTTNetworkContext_t networkContext )
@@ -843,8 +1013,8 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * const pConnectInfo
         pIndex++;
 
         /* The remaining length of the CONNECT packet is encoded starting from the
-        * second byte. The remaining length does not include the length of the fixed
-        * header or the encoding of the remaining length. */
+         * second byte. The remaining length does not include the length of the fixed
+         * header or the encoding of the remaining length. */
         pIndex = encodeRemainingLength( pIndex, remainingLength );
 
         /* The string "MQTT" is placed at the beginning of the CONNECT packet's variable
@@ -971,6 +1141,26 @@ MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * const pPublish
                                         size_t * const pRemainingLength,
                                         size_t * const pPacketSize )
 {
+    MQTTStatus_t status = MQTTSuccess;
+
+    if( ( pPublishInfo == NULL ) || ( pRemainingLength == NULL ) || ( pPacketSize == NULL ) )
+    {
+        status = MQTTBadParameter;
+    }
+    else if( ( pPublishInfo->pTopicName == NULL ) || ( pPublishInfo->topicNameLength == 0U ) )
+    {
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        /* Calculate the "Remaining length" field and total packet size. If it exceeds
+         * what is allowed in the MQTT standard, return an error. */
+        if( publishPacketSize( pPublishInfo, pRemainingLength, pPacketSize ) == false )
+        {
+            status = MQTTBadParameter;
+        }
+    }
+
     return MQTTSuccess;
 }
 
@@ -981,7 +1171,15 @@ MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * const pPublishInfo
                                     size_t remainingLength,
                                     const MQTTFixedBuffer_t * const pBuffer )
 {
-    return MQTTSuccess;
+    /* Serialize publish with header and payload. */
+    MQTTStatus_t status = serializePublishCommon( pPublishInfo,
+                                                  remainingLength,
+                                                  packetId,
+                                                  pBuffer,
+                                                  true,
+                                                  NULL );
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/
@@ -992,7 +1190,28 @@ MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * const pPubli
                                           const MQTTFixedBuffer_t * const pBuffer,
                                           size_t * const pHeaderSize )
 {
-    return MQTTSuccess;
+    MQTTStatus_t status = MQTTSuccess;
+
+    /* Verify only if the pointer to Header size is not NULL.
+     * Rest all parameters are verified in the serializePublishCommon
+     * function.
+     */
+    if( pHeaderSize == NULL )
+    {
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        /* Serialize publish without copying the payload. */
+        status = serializePublishCommon( pPublishInfo,
+                                         remainingLength,
+                                         packetId,
+                                         pBuffer,
+                                         false,
+                                         pHeaderSize );
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/

@@ -23,13 +23,22 @@
 
 #include "mqtt.h"
 
-/*-----------------------------------------------------------*/
-
-static int32_t sendPacket( MQTTContext_t * pContext, size_t bytesToSend )
+static int32_t sendPacket( MQTTContext_t * pContext,
+                           const uint8_t * pOptionalBufferToSend,
+                           size_t bytesToSend )
 {
     const uint8_t * pIndex = pContext->networkBuffer.pBuffer;
     size_t bytesRemaining = bytesToSend;
     int32_t totalBytesSent = 0, bytesSent;
+
+    /* If the optional buffer is not null send that instead of networkBuffer.
+     * This is to support an optimization in publish to send header and payload
+     * separately.
+     */
+    if( pOptionalBufferToSend != NULL )
+    {
+        pIndex = pOptionalBufferToSend;
+    }
 
     /* Record the time of transmission. */
     uint32_t sendTime = pContext->callbacks.getTime();
@@ -107,7 +116,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
 
     if( status == MQTTSuccess )
     {
-        bytesSent = sendPacket( pContext, packetSize );
+        bytesSent = sendPacket( pContext, NULL, packetSize );
 
         if( bytesSent < 0 )
         {
@@ -156,7 +165,53 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * const pContext,
 MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
                            const MQTTPublishInfo_t * const pPublishInfo )
 {
-    return MQTTSuccess;
+    size_t remainingLength, packetSize, headerSize;
+    int32_t bytesSent;
+    uint16_t packetId;
+
+    /* Get the remaining length and packet size.*/
+    MQTTStatus_t status = MQTT_GetPublishPacketSize( pPublishInfo,
+                                                     &remainingLength,
+                                                     &packetSize );
+
+    if( status == MQTTSuccess )
+    {
+        /* Generate a packet ID for the publish packet. */
+        packetId = MQTT_GetPacketId( pContext );
+
+        status = MQTT_SerializePublishHeader( pPublishInfo,
+                                              packetId,
+                                              remainingLength,
+                                              &( pContext->networkBuffer ),
+                                              &headerSize );
+    }
+
+    if( status == MQTTSuccess )
+    {
+        /* Send header first. */
+        bytesSent = sendPacket( pContext, NULL, headerSize );
+
+        if( bytesSent < 0 )
+        {
+            status = MQTTSendFailed;
+        }
+        /* Send Payload. */
+        else
+        {
+            bytesSent = sendPacket( pContext, pPublishInfo->pPayload,
+                                    pPublishInfo->payloadLength );
+
+            if( bytesSent < 0 )
+            {
+                status = MQTTSendFailed;
+            }
+        }
+    }
+
+    /* TODO - Update the state machine with the packet ID. This will have to
+     * be done once the state machine changes are available.*/
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/
@@ -191,7 +246,7 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * const pContext )
 
     if( status == MQTTSuccess )
     {
-        bytesSent = sendPacket( pContext, packetSize );
+        bytesSent = sendPacket( pContext, NULL, packetSize );
 
         if( bytesSent < 0 )
         {
