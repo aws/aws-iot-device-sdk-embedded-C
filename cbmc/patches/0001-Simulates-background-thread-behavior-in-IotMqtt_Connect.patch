@@ -16,7 +16,7 @@ index 1e55cb5..fa8f634 100644
      /* Wait for the CONNECT operation to complete, i.e. wait for CONNACK. */
      status = IotMqtt_Wait( pOperation, timeoutMs );
  
-+#ifdef BACKGROUND_THREAD_SIMULATION
++#ifdef CBMC_BACKGROUND_THREAD_SIMULATION
 +    /* There is a background thread that's part of the network and changes
 +     * the status from IOT_MQTT_STATUS_PENDING to IOT_MQTT_SUCCESS. This
 +     * code snippet simulates the thread behavior and improves coverage. */
