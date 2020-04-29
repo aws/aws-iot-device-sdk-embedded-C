@@ -199,7 +199,7 @@ static MQTTStatus_t _receivePacket( MQTTContext_t * const pContext,
     /* Partial receive. */
     if( bytesReceived < ( int32_t ) bytesToReceive )
     {
-        IotLogWarnWithArgs( "Packet partially received: Bytes received=%d," 
+        IotLogWarnWithArgs( "Packet partially received: Bytes received=%d,"
                             "Bytes expected=%u",
                             bytesReceived,
                             bytesToReceive );
@@ -232,7 +232,7 @@ static MQTTStatus_t _receivePacket( MQTTContext_t * const pContext,
         IotLogInfoWithArgs( "Packet received. Received bytes=%d",
                             bytesReceived );
     }
-    
+
     /* Check if packet exceeds buffer. */
     if( ( status == MQTTSuccess ) && ( ( int32_t ) incomingPacket.remainingLength > bytesToReceive ) )
     {
@@ -295,7 +295,7 @@ static MQTTStatus_t _sendPublishAcks( MQTTContext_t * const pContext,
     assert( pPublishState != NULL );
 
     /* pContext->controlPacketSent doesn't seem to be part of the context.
-     * Does it need to be added? 
+     * Does it need to be added?
      * Additionally, need to update message timestamp if keep alive info part of
      * timestamp. */
     switch( *pPublishState )
@@ -1099,40 +1099,13 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * const pContext,
     MQTTGetCurrentTimeFunc_t getCurrentTime = pContext->callbacks.getTime;
     uint32_t entryTime = getCurrentTime();
     MQTTPacketInfo_t incomingPacket;
-    MQTTPubAckInfo_t puback;
-    MQTTPublishState_t publishRecordState = MQTTPublishDone;
-    int32_t bytesReceived = 0;
-    size_t bytesToReceive = 0;
-    int32_t totalBytesReceived = 0;
-    MQTTPubAckType_t ackType = MQTTPuback;
 
     while( ( getCurrentTime() - entryTime ) < timeoutMs )
     {
         status = MQTT_GetIncomingPacketTypeAndLength( pContext->transportInterface.recv,
                                                       &incomingPacket );
-        if( status == MQTTSuccess )
-        {
-            /* Do nothing. */
-        }
-        else if( status == MQTTNoDataAvailable )
-        {
-            /* TODO possible ping? */
-            //     if( ( getCurrentTime() - pContext->lastMessageTimestamp ) > pContext->keepAliveInterval )
-            //     {
-            //         if( pContext->waitingForPingResp )
-            //         {
-            //             /* Should have received a pingresp by now. */
-            //             /* TODO: Set status to timeout. */
-            //         }
-            //         else
-            //         {
-            //             /* Send PINGREQ. */
-            //             MQTT_Ping( pContext );
-            //             pContext->waitingForPingResp = true;
-            //         }
-            //     }
-        }
-        else
+
+        if( ( status != MQTTSuccess ) && ( status != MQTTNoDataAvailable ) )
         {
             IotLogErrorWithArgs( "Receiving incoming packet length failed. Status=%d",
                                  status );
