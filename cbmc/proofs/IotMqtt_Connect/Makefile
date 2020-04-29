@@ -94,10 +94,10 @@ DEF += -DUSER_NAME_LENGTH_MAX=$(USER_NAME_LENGTH_MAX)
 DEF += -DCBMC_STUB_REMOVEALLMATCHES=1
 
 # Enables _IotMqtt_SerializePingreq to return a nondet status
-DEF += -DSERIALIZAPINGREQ_NONDET_RETURN=1
+DEF += -DCBMC_SERIALIZAPINGREQ_NONDET_RETURN=1
 
 # Simulates background thread behavior in _sendConnectRequest
-DEF += -DBACKGROUND_THREAD_SIMULATION=1
+DEF += -DCBMC_BACKGROUND_THREAD_SIMULATION=1
 
 # Allow MQTT allocations to fail for coverage
 DEF += -include mqtt_state.h
