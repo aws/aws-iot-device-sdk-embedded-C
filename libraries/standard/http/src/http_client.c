@@ -257,11 +257,11 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
         {
             /* Add the rangeEnd value to the request range .*/
             stdRetVal = sprintf( rangeValueBuffer + rangeValueLength,
-                                 "%c%d",
+                                 "%s%d",
                                  DASH_CHARACTER,
                                  rangeEnd );
             assert( ( stdRetVal >= 0 ) &&
-                    stdRetVal <= ( 1 /* Dash Character */ + MAX_INT32_NO_OF_DIGITS ) );
+                    stdRetVal <= ( DASH_CHARACTER_LEN + MAX_INT32_NO_OF_DIGITS ) );
             rangeValueLength += ( size_t ) stdRetVal;
         }
         /* Case when request is for bytes in the range [rangeStart, ). */
@@ -269,10 +269,10 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
         {
             /* Add the "-" character.*/
             stdRetVal = sprintf( rangeValueBuffer + rangeValueLength,
-                                 "%c",
+                                 "%s",
                                  DASH_CHARACTER );
             /* Check that only a single character was written. */
-            assert( stdRetVal == 1 );
+            assert( stdRetVal == DASH_CHARACTER_LEN );
             rangeValueLength += ( size_t ) stdRetVal;
         }
         else
