@@ -427,6 +427,8 @@ int main( int argc, char ** argv )
         }
     }
 
+    /* Insert demo code here. */
+
     /* Disconnect MQTT session if established. */
     if( mqttSessionEstablished == true )
     {
