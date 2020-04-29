@@ -730,10 +730,7 @@ size_t IotNetworkInterfaceReceive( void * pConnection,
   __CPROVER_assert( pBuffer,
 		    "IotNetworkInterfaceReceive pBuffer is not NULL" );
 
-  // Fill the memory object pointed to by pBuffer with unconstrained
-  // data.  What follows a CBMC idiom to do that.
-  uint8_t byte;
-  __CPROVER_array_copy( pBuffer, &byte );
+  __CPROVER_havoc_object( pBuffer );
 
   // Choose the number of bytes in pBuffer considered received.
   size_t size;
