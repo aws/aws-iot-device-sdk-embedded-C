@@ -233,8 +233,8 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * const pContext,
  */
 MQTTStatus_t MQTT_Disconnect( MQTTContext_t * const pContext );
 
-MQTTStatus_t MQTT_Process( MQTTContext_t * const pContext,
-                           uint32_t timeoutMs );
+MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * const pContext,
+                               uint32_t timeoutMs );
 
 uint16_t MQTT_GetPacketId( MQTTContext_t * const pContext );
 
