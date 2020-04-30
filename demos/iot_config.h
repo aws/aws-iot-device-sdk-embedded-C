@@ -55,32 +55,34 @@
 
 /* Shadow demo configuration. The demo publishes periodic Shadow updates and responds
  * to changing Shadows. */
-#define AWS_IOT_DEMO_SHADOW_UPDATE_COUNT           ( 20 )                   /* Number of updates to publish. */
-#define AWS_IOT_DEMO_SHADOW_UPDATE_PERIOD_MS       ( 3000 )                 /* Period of Shadow updates. */
+#define AWS_IOT_DEMO_SHADOW_UPDATE_COUNT                                  ( 20 )   /* Number of updates to publish. */
+#define AWS_IOT_DEMO_SHADOW_UPDATE_PERIOD_MS                              ( 3000 ) /* Period of Shadow updates. */
 
 /**
  * The Certificate-Signing Request string to use for CSR-based Provisioning demo app.
  */
-#define AWS_IOT_DEMO_PROVISIONING_CSR_PEM          ""
+#define AWS_IOT_DEMO_PROVISIONING_CSR_PEM                                 ""
 
 /**
  * The name for the fleet provisioning template that will be used for provisioning
  * for registering thing in the Provisioning demo applications.
  */
-#define AWS_IOT_DEMO_PROVISIONING_TEMPLATE_NAME    ""
+#define AWS_IOT_DEMO_PROVISIONING_TEMPLATE_NAME                           ""
 
 /**
  * List of parameters that will be used for provisioning in the demo application.
  * There are 2 requirements for passing parameters to the Provisioning demo:
  * 1. One parameter is a "SerialNumber". The AWS IoT console generates a provisioning template
  * that by default uses a "SerialNumber" device parameter for creating a Thing resource. Also, the
- * demo setup instructions (on <PLACEHOLDER FOR LINK>) provide an AWS CLI command example for creating
- * a provisioning template, in which the template JSON string contains the "SerialNumber" parameter.
+ * setup instructions in the API reference documentation of Fleet Provisioning
+ * (https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/provisioning/provisioning_tests.html
+ * #provisioning_system_tests_setup)
+ * provide an AWS CLI command example for creating a provisioning template, in which the template
+ * JSON string contains the "SerialNumber" parameter.
  * 2. A second parameter which is configurable for both the name and value. The example provisioning
  * JSON string in the demo setup instructions contains "DeviceLocation" as the default parameter name.
  * If a different parameter name is used, make SURE to update the provisioning template on the AWS IoT Console!
  */
-
 #define AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_NAME            "SerialNumber"
 #define AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_NAME_LENGTH     sizeof( AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_NAME ) - 1
 #define AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_VALUE           ""

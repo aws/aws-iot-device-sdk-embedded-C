@@ -179,7 +179,9 @@ static void _demoKeysAndCertificateCallback( void * contextParam,
     }
     else
     {
-        IotLogInfo( "Oops, server rejected request for creating new credentials. Consider re-running the demo!" );
+        IotLogInfo( "Oops, server rejected request for creating new credentials. "
+                    "Please verify that the IoT Policy attached to the demo credentials "
+                    "allows the \"iot:CreateKeysAndCertificate\" action." );
         _printRejectedResponse( &pResponseInfo->u.rejectedResponse );
     }
 }
@@ -228,7 +230,9 @@ static void _demoRegisterThingCallback( void * contextParam,
     }
     else
     {
-        IotLogInfo( "Oops, server rejected request for provisioning the demo app.Consider re - running the demo !" );
+        IotLogInfo( "Oops, server rejected request for provisioning the demo app. "
+                    "Please verify that the IoT Policy attached to the demo credentials "
+                    "allows the \"iot:RegisterThing\" action." );
         _printRejectedResponse( &pResponseInfo->u.rejectedResponse );
     }
 }

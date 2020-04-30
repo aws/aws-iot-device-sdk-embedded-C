@@ -129,7 +129,7 @@ static void _demoCertFromCsrCallback( void * contextParam,
     _demoCertFromCsrCallbackContext_t * certIdTokenContext =
         ( _demoCertFromCsrCallbackContext_t * ) contextParam;
 
-    IotLogInfo( "demo: Server response callback invoked: Received server response: "
+    IotLogInfo( "Server response callback invoked: Received server response: "
                 "StatusCode={%d}", pResponseInfo->statusCode );
 
     if( pResponseInfo->statusCode == AWS_IOT_PROVISIONING_SERVER_STATUS_ACCEPTED )
@@ -169,7 +169,7 @@ static void _demoCertFromCsrCallback( void * contextParam,
         }
 
         /* Print the received credentials information.*/
-        IotLogInfo( "demo: Server has accepted Certificate-Signing Request: "
+        IotLogInfo( "Server has accepted Certificate-Signing Request: "
                     "\nCertificate PEM={%.*s}\nCertificate ID={%.*s}\nOwnership Token={%.*s}\n",
                     pResponseInfo->u.acceptedResponse.deviceCertLength,
                     pResponseInfo->u.acceptedResponse.pDeviceCert,
@@ -180,8 +180,9 @@ static void _demoCertFromCsrCallback( void * contextParam,
     }
     else
     {
-        IotLogWarn( "demo: Oops, certificate creation from CSR has been rejected. "
-                    "Consider re-running the demo!" );
+        IotLogWarn( "Oops, certificate creation from CSR has been rejected. "
+                    "Please verify that the IoT Policy attached to the demo credentials "
+                    "allows the \"iot:CreateCertificateFromCsr\" action." );
         _printRejectedResponse( &pResponseInfo->u.rejectedResponse );
     }
 }
@@ -230,7 +231,9 @@ static void _demoRegisterThingCallback( void * contextParam,
     }
     else
     {
-        IotLogInfo( "Oops, server rejected request for provisioning the demo app.Consider re - running the demo !" );
+        IotLogInfo( "Oops, server rejected request for provisioning the demo app. "
+                    "Please verify that the IoT Policy attached to the demo credentials "
+                    "allows the \"iot:RegisterThing\" action." );
         _printRejectedResponse( &pResponseInfo->u.rejectedResponse );
     }
 }
