@@ -1,18 +1,19 @@
 #include <assert.h>
 #include <string.h>
-#include <stdlib.h>
 #include <stdio.h>
 
 #include "http_client.h"
 #include "private/http_client_internal.h"
+#include "private/http_client_parse.h"
 
 /*-----------------------------------------------------------*/
 
 /**
  * @brief Send the HTTP headers over the transport send interface.
  *
- * @param pTransport Transport interface.
- * @param pRequestHeaders Request headers to send, it includes the buffer and length.
+ * @param[in] pTransport Transport interface.
+ * @param[in] pRequestHeaders Request headers to send, it includes the buffer
+ * and length.
  *
  * @return #HTTP_SUCCESS if successful. If there was a network error or less
  * bytes than what was specified were sent, then #HTTP_NETWORK_ERROR is returned.
@@ -23,9 +24,9 @@ static HTTPStatus_t _sendHttpHeaders( const HTTPTransportInterface_t * pTranspor
 /**
  * @brief Send the HTTP body over the transport send interface.
  *
- * @param pTransport Transport interface.
- * @param pRequestBodyBuf Request body buffer.
- * @param reqBodyLen Length of the request body buffer.
+ * @param[in] pTransport Transport interface.
+ * @param[in] pRequestBodyBuf Request body buffer.
+ * @param[in] reqBodyLen Length of the request body buffer.
  *
  * @return #HTTP_SUCCESS if successful. If there was a network error or less
  * bytes than what was specified were sent, then #HTTP_NETWORK_ERROR is returned.
@@ -39,11 +40,11 @@ static HTTPStatus_t _sendHttpBody( const HTTPTransportInterface_t * pTransport,
  * If a trailing "\r\n" already exists in the HTTP header, this method backtracks
  * in order to write over it and updates the length accordingly.
  *
- * @param pRequestHeaders Request header buffer information.
- * @param pField The header field name to write.
- * @param fieldLen The byte length of the header field name.
- * @param pValue The header value to write.
- * @param valueLen The byte length of the header field value.
+ * @param[in] pRequestHeaders Request header buffer information.
+ * @param[in] pField The header field name to write.
+ * @param[in] fieldLen The byte length of the header field name.
+ * @param[in] pValue The header value to write.
+ * @param[in] valueLen The byte length of the header field value.
  *
  * @return #HTTP_SUCCESS if successful. If there was insufficient memory in the
  * application buffer, then #HTTP_INSUFFICIENT_MEMORY is returned.
@@ -53,6 +54,59 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
                                 size_t fieldLen,
                                 const char * pValue,
                                 size_t valueLen );
+
+/**
+ * @brief Receive HTTP response from the transport recv interface.
+ *
+ * @param[in] pTransport Transport interface.
+ * @param[in] pResponse Response buffer.
+ * @param[in] bufferLen Length of the response buffer.
+ * @param[out] Bytes received from the transport interface.
+ *
+ * @return Returns #HTTP_SUCCESS if successful. If there was a network error or
+ * more bytes than what was specified were read, then #HTTP_NETWORK_ERROR is
+ * returned.
+ */
+HTTPStatus_t _receiveHttpResponse( const HTTPTransportInterface_t * pTransport,
+                                   uint8_t * pBuffer,
+                                   size_t bufferLen,
+                                   size_t * pBytesReceived );
+
+/**
+ * @brief Get the status of the HTTP response given the parsing state and how
+ * much data is in the response buffer.
+ *
+ * @param[in] parsingState State of the parsing on the HTTP response.
+ * @param[in] totalReceived The amount of network data received in the response
+ * buffer.
+ * @param[in] responseBufferLen The length of the response buffer.
+ *
+ * @return Returns #HTTP_SUCCESS if the parsing state is complete. If
+ * the parsing state denotes it never started, then return #HTTP_NO_RESPONSE. If
+ * the parsing state is incomplete, then if the response buffer is not full
+ * #HTTP_PARTIAL_RESPONSE is returned. If the parsing state is incomplete, then
+ * if the response buffer is full #HTTP_INSUFFICIENT_MEMORY is returned.
+ */
+static HTTPStatus_t _getFinalResponseStatus( HTTPParsingState_t parsingState,
+                                             size_t totalReceived,
+                                             size_t responseBufferLen );
+
+/**
+ * @brief Receive the HTTP response from the network and parse it.
+ *
+ * @param[in] pTransport Transport interface.
+ * @param[in] pResponse Response message to receive data from the network.
+ *
+ * @return Returns #HTTP_SUCCESS if successful. If there was an issue with receiving
+ * the response over the network interface, then #HTTP_NETWORK_ERROR is returned,
+ * please see #_receiveHttpResponse. If there was an issue with parsing, then the
+ * parsing error that occurred will be returned, please see
+ * #_HTTPClient_InitializeParsingContext and #_HTTPClient_ParseResponse. Please
+ * see #_getFinalResponseStatus for the status returned when there were no
+ * network or parsing errors.
+ */
+static HTTPStatus_t _receiveAndParseHttpResponse( const HTTPTransportInterface_t * pTransport,
+                                                  HTTPResponse_t * pResponse );
 
 /*-----------------------------------------------------------*/
 
@@ -104,7 +158,7 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
         if( ( bytesWritten + HTTP_HEADER_LINE_SEPARATOR_LEN ) != toAddLen )
         {
             IotLogErrorWithArgs( "Internal error in snprintf() in _addHeader(). "
-                                 "Bytes written: %d.", bytesWritten );
+                                 "BytesWritten: %d.", bytesWritten );
         }
         else
         {
@@ -210,6 +264,10 @@ static HTTPStatus_t _sendHttpHeaders( const HTTPTransportInterface_t * pTranspor
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
     int32_t transportStatus = 0;
 
+    assert( pTransport != NULL );
+    assert( pTransport->send != NULL );
+    assert( pRequestHeaders != NULL );
+
     /* Send the HTTP headers over the network. */
     transportStatus = pTransport->send( pTransport->pContext,
                                         pRequestHeaders->pBuffer,
@@ -217,22 +275,25 @@ static HTTPStatus_t _sendHttpHeaders( const HTTPTransportInterface_t * pTranspor
 
     if( transportStatus < 0 )
     {
-        IotLogErrorWithArgs( "Error in sending the HTTP headers over the transport "
-                             "interface: Transport status %d.",
+        IotLogErrorWithArgs( "Failed to send HTTP headers: Transport send()"
+                             " returned error: TransportStatus=%d",
                              transportStatus );
         returnStatus = HTTP_NETWORK_ERROR;
     }
-    else if( transportStatus != pRequestHeaders->headersLen )
+    else if( ( size_t ) transportStatus != pRequestHeaders->headersLen )
     {
-        IotLogErrorWithArgs( "Failure in sending HTTP headers: Transport layer "
-                             "did not send the required bytes: Required Bytes=%d"
-                             ", Sent Bytes=%d.",
+        IotLogErrorWithArgs( "Failed to send HTTP headers: Transport layer "
+                             "did not send the required bytes: RequiredBytes=%d"
+                             ", SentBytes=%d.",
+                             pRequestHeaders->headersLen,
                              transportStatus );
         returnStatus = HTTP_NETWORK_ERROR;
     }
     else
     {
-        /* Empty else MISRA 15.7 */
+        IotLogDebugWithArgs( "Sent HTTP headers over the transport: BytesSent "
+                             "=%d.",
+                             transportStatus );
     }
 
     return returnStatus;
@@ -247,28 +308,34 @@ static HTTPStatus_t _sendHttpBody( const HTTPTransportInterface_t * pTransport,
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
     int32_t transportStatus = 0;
 
-    /* Send the HTTP body over the network. */
-    if( pRequestBodyBuf != NULL )
-    {
-        transportStatus = pTransport->send( pTransport->pContext,
-                                            pRequestBodyBuf,
-                                            reqBodyBufLen );
+    assert( pTransport != NULL );
+    assert( pTransport->send != NULL );
+    assert( pRequestBodyBuf != NULL );
 
-        if( transportStatus < 0 )
-        {
-            IotLogErrorWithArgs( "Error in sending the HTTP body over the "
-                                 "transport interface. Transport status %d.",
-                                 transportStatus );
-            returnStatus = HTTP_NETWORK_ERROR;
-        }
-        else if( transportStatus != reqBodyBufLen )
-        {
-            IotLogErrorWithArgs( "Failure in sending HTTP headers: Transport layer "
-                                 "did not send the required bytes: Required Bytes=%d"
-                                 ", Sent Bytes=%d.",
-                                 transportStatus );
-            returnStatus = HTTP_NETWORK_ERROR;
-        }
+    transportStatus = pTransport->send( pTransport->pContext,
+                                        pRequestBodyBuf,
+                                        reqBodyBufLen );
+
+    if( transportStatus < 0 )
+    {
+        IotLogErrorWithArgs( "Failed to send HTTP body: Transport send() "
+                             " returned error: TransportStatus=%d",
+                             transportStatus );
+        returnStatus = HTTP_NETWORK_ERROR;
+    }
+    else if( ( size_t ) transportStatus != reqBodyBufLen )
+    {
+        IotLogErrorWithArgs( "Failed to send HTTP body: Transport send() "
+                             "did not send the required bytes: RequiredBytes=%d"
+                             ", Sent bytes=%d.",
+                             reqBodyBufLen,
+                             transportStatus );
+        returnStatus = HTTP_NETWORK_ERROR;
+    }
+    else
+    {
+        IotLogDebugWithArgs( "Sent HTTP body over the transport: BytesSent=%d.",
+                             transportStatus );
     }
 
     return returnStatus;
@@ -276,11 +343,168 @@ static HTTPStatus_t _sendHttpBody( const HTTPTransportInterface_t * pTransport,
 
 /*-----------------------------------------------------------*/
 
-static HTTPStatus_t _receiveHttpResponse( const HTTPTransportInterface_t * pTransport,
-                                          HTTPResponse_t * pResponse )
+HTTPStatus_t _receiveHttpResponse( const HTTPTransportInterface_t * pTransport,
+                                   uint8_t * pBuffer,
+                                   size_t bufferLen,
+                                   size_t * pBytesReceived )
 {
-    /* TODO: Receive the HTTP response with parsing. */
-    return HTTP_SUCCESS;
+    HTTPStatus_t returnStatus = HTTP_SUCCESS;
+
+    assert( pTransport != NULL );
+    assert( pTransport->recv != NULL );
+    assert( pBuffer != NULL );
+    assert( pBytesReceived != NULL );
+
+    int32_t transportStatus = pTransport->recv( pTransport->pContext,
+                                                pBuffer,
+                                                bufferLen );
+
+    /* A transport status of less than zero is an error. */
+    if( transportStatus < 0 )
+    {
+        IotLogErrorWithArgs( "Failed to receive HTTP response: Transport recv() "
+                             "returned error: TransportStatus=%d.",
+                             transportStatus );
+        returnStatus = HTTP_NETWORK_ERROR;
+    }
+    else if( ( size_t ) transportStatus > bufferLen )
+    {
+        /* There is a bug in the transport recv if more bytes are reported
+         * to have been read than the bytes asked for. */
+        IotLogErrorWithArgs( "Failed to receive HTTP response: Transport recv() "
+                             " read more bytes than requested: BytesRead=%d, "
+                             "RequestedBytes=%d",
+                             transportStatus,
+                             bufferLen );
+        returnStatus = HTTP_NETWORK_ERROR;
+    }
+    else if( transportStatus > 0 )
+    {
+        /* Some or all of the specified data was received. */
+        *pBytesReceived = ( size_t ) ( transportStatus );
+        IotLogDebugWithArgs( "Received data from the transport: BytesReceived=%d.",
+                             transportStatus );
+    }
+    else
+    {
+        /* When a zero is returned from the transport recv it will not be
+         * invoked again. */
+        IotLogDebug( "Received zero bytes from trasnport recv(). Receiving "
+                     "transport data is complete." );
+    }
+
+    return returnStatus;
+}
+
+/*-----------------------------------------------------------*/
+
+static HTTPStatus_t _getFinalResponseStatus( HTTPParsingState_t parsingState,
+                                             size_t totalReceived,
+                                             size_t responseBufferLen )
+{
+    HTTPStatus_t returnStatus = HTTP_SUCCESS;
+
+    assert( parsingState >= HTTP_PARSING_NONE &&
+            parsingState <= HTTP_PARSING_COMPLETE );
+    assert( totalReceived <= responseBufferLen );
+
+    /* If no parsing occurred, that means network data was never received. */
+    if( parsingState == HTTP_PARSING_NONE )
+    {
+        IotLogErrorWithArgs( "Response not received: Zero returned from "
+                             "transport recv: totalReceived=%d",
+                             totalReceived );
+        returnStatus = HTTP_NO_RESPONSE;
+    }
+    else if( parsingState == HTTP_PARSING_INCOMPLETE )
+    {
+        if( totalReceived == responseBufferLen )
+        {
+            IotLogErrorWithArgs( "Cannot receive complete response from tansport"
+                                 " interface: Response buffer has insufficient "
+                                 "space: responseBufferLen=%d",
+                                 responseBufferLen );
+            returnStatus = HTTP_INSUFFICIENT_MEMORY;
+        }
+        else
+        {
+            IotLogErrorWithArgs( "Received partial response from transport ",
+                                 "recv(): ResponseSize=%d, TotalBufferSize=%d",
+                                 totalReceived,
+                                 responseBufferLen - totalReceived );
+            returnStatus = HTTP_PARTIAL_RESPONSE;
+        }
+    }
+    else
+    {
+        /* Empty else for MISRA 15.7 compliance. */
+    }
+
+    return returnStatus;
+}
+
+static HTTPStatus_t _receiveAndParseHttpResponse( const HTTPTransportInterface_t * pTransport,
+                                                  HTTPResponse_t * pResponse )
+{
+    HTTPStatus_t returnStatus = HTTP_SUCCESS;
+    size_t totalReceived = 0;
+    size_t currentReceived = 0;
+    HTTPParsingContext_t parsingContext = { 0 };
+    uint8_t shouldRecv = 0;
+
+    assert( pTransport != NULL );
+    assert( pTransport->recv != NULL );
+    assert( pResponse != NULL );
+
+    /* Initialize the parsing context. */
+    returnStatus = _HTTPClient_InitializeParsingContext( &parsingContext,
+                                                         pResponse->pHeaderParsingCallback );
+
+    if( returnStatus == HTTP_SUCCESS )
+    {
+        shouldRecv = 1;
+    }
+
+    while( shouldRecv == 1 )
+    {
+        /* Receive the HTTP response data into the pResponse->pBuffer. */
+        returnStatus = _receiveHttpResponse( pTransport,
+                                             pResponse->pBuffer + totalReceived,
+                                             pResponse->bufferLen - totalReceived,
+                                             &currentReceived );
+
+        if( returnStatus == HTTP_SUCCESS )
+        {
+            if( currentReceived > 0 )
+            {
+                totalReceived += currentReceived;
+                /* Data is received into the buffer and must be parsed. */
+                returnStatus = _HTTPClient_ParseResponse( &parsingContext,
+                                                          pResponse->pBuffer + totalReceived,
+                                                          currentReceived );
+            }
+        }
+
+        /* While there are no errors in the transport recv or parsing, we received
+         * data over the transport, the response message is not finished, and
+         * there is room in the response buffer. */
+        shouldRecv = ( uint8_t ) ( ( returnStatus == HTTP_SUCCESS ) &&
+                                   ( currentReceived > 0 ) &&
+                                   ( parsingContext.state != HTTP_PARSING_COMPLETE ) &&
+                                   ( totalReceived < pResponse->bufferLen ) );
+    }
+
+    if( returnStatus == HTTP_SUCCESS )
+    {
+        /* For no network or parsing errors, the final status of the response
+         * message is derived from the state of the parsing and how much data
+         * is in the buffer. */
+        returnStatus = _getFinalResponseStatus( parsingContext.state,
+                                                totalReceived,
+                                                pResponse->bufferLen );
+    }
+
+    return returnStatus;
 }
 
 /*-----------------------------------------------------------*/
@@ -318,9 +542,14 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
         IotLogError( "Parameter check failed: pRequestHeaders->pBuffer is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
+    else if( ( pResponse != NULL ) && ( pResponse->pBuffer == NULL ) )
+    {
+        IotLogError( "Parameter check failed: pResponse->pBuffer is NULL." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
     else
     {
-        /* Empty else MISRA 15.7 */
+        /* Empty else for MISRA 15.7 compliance. */
     }
 
     /* Send the headers, which are at one location in memory. */
@@ -333,15 +562,31 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
     /* Send the body, which is at another location in memory. */
     if( returnStatus == HTTP_SUCCESS )
     {
-        returnStatus = _sendHttpBody( pTransport,
-                                      pRequestBodyBuf,
-                                      reqBodyBufLen );
+        if( pRequestBodyBuf != NULL )
+        {
+            returnStatus = _sendHttpBody( pTransport,
+                                          pRequestBodyBuf,
+                                          reqBodyBufLen );
+        }
+        else
+        {
+            IotLogDebug( "A request body was not sent: pRequestBodyBuf is NULL." );
+        }
     }
 
     if( returnStatus == HTTP_SUCCESS )
     {
-        returnStatus = _receiveHttpResponse( pTransport,
-                                             pResponse );
+        /* If the application chooses to receive a response, then pResponse
+         * will not be NULL. */
+        if( pResponse != NULL )
+        {
+            returnStatus = _receiveAndParseHttpResponse( pTransport,
+                                                         pResponse );
+        }
+        else
+        {
+            IotLogDebug( "Response ignored: pResponse is NULL. " );
+        }
     }
 
     return returnStatus;
