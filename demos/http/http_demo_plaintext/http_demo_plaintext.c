@@ -96,7 +96,7 @@ static uint8_t userBuffer[ USER_BUFFER_LENGTH ] = { 0 };
 static uint8_t requestBodyBuffer[] = REQUEST_BODY_TEXT;
 
 /**
- * @brief Define the HTTP network context.
+ * @brief Definition the HTTP network context.
  */
 struct HTTPNetworkContext
 {
