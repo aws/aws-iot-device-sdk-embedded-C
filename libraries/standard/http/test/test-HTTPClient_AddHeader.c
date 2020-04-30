@@ -151,7 +151,7 @@ int main()
                   HTTP_TEST_HEADER_REQUEST_LINE,
                   HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_VALUE,
                   HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_VALUE )
-        == expectedHeaderLen );
+        == ( int )expectedHeaderLen );
     /* Prefill the buffer with a request line and header. */
     ok( snprintf( ( char * ) reqHeaders.pBuffer,
                   HTTP_TEST_TEMPLATE_HEADER_LEN + 1,
