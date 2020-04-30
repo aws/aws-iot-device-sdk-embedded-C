@@ -395,7 +395,7 @@ int main( int argc, char ** argv )
     MQTTContext_t context;
     SSL * pSslContext = NULL;
 
-    /* Establish TCP+TLS connection and MQTT session. */
+    /* Establish TCP connection and MQTT session. */
     int tcpSocket = connectToServer( SERVER, PORT );
 
     if( tcpSocket == -1 )
@@ -407,6 +407,7 @@ int main( int argc, char ** argv )
         status = EXIT_SUCCESS;
     }
 
+    /* Establish TLS connection on top of TCP connection. */
     if( status == EXIT_SUCCESS )
     {
         pSslContext = tlsSetup( tcpSocket );
@@ -417,6 +418,7 @@ int main( int argc, char ** argv )
         }
     }
 
+    /* Establish MQTT session on top of TCP+TLS connection. */
     if( status == EXIT_SUCCESS )
     {
         status = establishMqttSession( &context, pSslContext );
