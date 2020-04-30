@@ -8,7 +8,7 @@ HTTPStatus_t _HTTPClient_InitializeParsingContext( HTTPParsingContext_t * pParsi
 }
 
 HTTPStatus_t _HTTPClient_ParseResponse( HTTPParsingContext_t * pParsingContext,
-                                        uint8_t * pBuffer,
+                                        const uint8_t * pBuffer,
                                         size_t bufferLen )
 {
     /* This function is to be implemented. For now we return success. */
