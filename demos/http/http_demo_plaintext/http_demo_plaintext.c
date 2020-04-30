@@ -39,14 +39,14 @@
  *
  * This demo uses httpbin.org: A simple HTTP Request & Response Service.
  */
-#define SERVER                      "httpbin.org"
+#define SERVER    "httpbin.org"
 
 /**
  * @brief HTTP server port number.
  *
  * In general, port 80 is for plaintext HTTP connections.
  */
-#define PORT                        80
+#define PORT      80
 
 /**
  * @brief Paths for different HTTP methods for specified host.
@@ -54,10 +54,21 @@
  * For httpbin.org, see http://httpbin.org/#/HTTP_Methods for details on
  * supported REST API.
  */
-#define GET_PATH                    "/ip"
-#define HEAD_PATH                   "/ip"
-#define PUT_PATH                    "/put"
-#define POST_PATH                   "/post"
+#ifndef GET_PATH
+    #define GET_PATH    "/ip"
+#endif
+
+#ifndef HEAD_PATH
+    #define HEAD_PATH    "/ip"
+#endif
+
+#ifndef PUT_PATH
+    #define PUT_PATH    "/put"
+#endif
+
+#ifndef POST_PATH
+    #define POST_PATH    "/post"
+#endif
 
 /**
  * @brief The length in bytes of the user buffer.
@@ -83,6 +94,14 @@ static uint8_t userBuffer[ USER_BUFFER_LENGTH ] = { 0 };
  * @brief The request body.
  */
 static uint8_t requestBodyBuffer[] = REQUEST_BODY_TEXT;
+
+/**
+ * @brief Define the HTTP network context.
+ */
+struct HTTPNetworkContext
+{
+    int tcpSocket;
+};
 
 /*-----------------------------------------------------------*/
 
@@ -169,37 +188,37 @@ static int connectToServer( const char * pServer,
 /*-----------------------------------------------------------*/
 
 /**
- * @brief The transport send function provided to the MQTT context.
+ * @brief The transport send function provided to the HTTP network context.
  *
- * @param[in] tcpSocket TCP socket.
- * @param[in] pMessage Data to send.
- * @param[in] bytesToSend Length of data to send.
+ * @param[in] pContext User defined context (TCP socket for this demo).
+ * @param[in] pBuffer Buffer to write to the network stack.
+ * @param[in] bytesToWrite Number of bytes to write to the network.
  *
  * @return Number of bytes sent; negative value on error.
  */
-static int32_t transportSend( int tcpSocket,
-                              const void * pMessage,
+static int32_t transportSend( HTTPNetworkContext_t * pContext,
+                              const void * pBuffer,
                               size_t bytesToSend )
 {
-    return ( int32_t ) send( tcpSocket, pMessage, bytesToSend, 0 );
+    return ( int32_t ) send( pContext->tcpSocket, pBuffer, bytesToSend, 0 );
 }
 
 /*-----------------------------------------------------------*/
 
 /**
- * @brief The transport receive function provided to the MQTT context.
+ * @brief The transport receive function provided to the HTTP network context.
  *
- * @param[in] tcpSocket TCP socket.
- * @param[out] pBuffer Buffer for receiving data.
- * @param[in] bytesToSend Size of pBuffer.
+ * @param[in] tcpSocket User defined context (TCP socket for this demo).
+ * @param[out] pBuffer Buffer to read network data into.
+ * @param[in] bytesToRead Number of bytes requested from the network.
  *
  * @return Number of bytes received; negative value on error.
  */
-static int32_t transportRecv( int tcpSocket,
+static int32_t transportRecv( HTTPNetworkContext_t * pContext,
                               void * pBuffer,
-                              size_t bytesToRecv )
+                              size_t bytesToRead )
 {
-    return ( int32_t ) recv( tcpSocket, pBuffer, bytesToRecv, 0 );
+    return ( int32_t ) recv( pContext->tcpSocket, pBuffer, bytesToRead, 0 );
 }
 
 /*-----------------------------------------------------------*/
@@ -213,7 +232,7 @@ static int32_t transportRecv( int tcpSocket,
  *
  * @return #HTTP_SUCCESS if successful.
  */
-static HTTPStatus_t _sendHttpRequest( int tcpSocket,
+static HTTPStatus_t _sendHttpRequest( HTTPNetworkContext_t * pContext,
                                       const char * pMethod,
                                       const char * pPath )
 {
@@ -243,7 +262,7 @@ static HTTPStatus_t _sendHttpRequest( int tcpSocket,
         /* Define the transport interface. */
         transport.recv = transportRecv;
         transport.send = transportSend;
-        transport.pContext = tcpSocket;
+        transport.pContext = pContext;
 
         /* Initialize the response object. */
         response.pBuffer = userBuffer;
@@ -279,11 +298,12 @@ static HTTPStatus_t _sendHttpRequest( int tcpSocket,
 int main()
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
+    HTTPNetworkContext_t socketContext = { 0 };
 
     /* Establish TCP connection. */
-    int tcpSocket = connectToServer( SERVER, PORT );
+    socketContext.tcpSocket = connectToServer( SERVER, PORT );
 
-    if( tcpSocket == -1 )
+    if( socketContext.tcpSocket == -1 )
     {
         returnStatus = HTTP_NETWORK_ERROR;
     }
@@ -293,48 +313,40 @@ int main()
     /* The client is now connected to the server. This example will send a
      * GET, HEAD, PUT, and POST request. */
 
-    #ifdef GET_PATH
-        if( returnStatus == HTTP_SUCCESS )
-        {
-            returnStatus = _sendHttpRequest( tcpSocket,
-                                             HTTP_METHOD_GET,
-                                             GET_PATH );
-        }
-    #endif
+    if( returnStatus == HTTP_SUCCESS )
+    {
+        returnStatus = _sendHttpRequest( &socketContext,
+                                         HTTP_METHOD_GET,
+                                         GET_PATH );
+    }
 
-    #ifdef HEAD_PATH
-        if( returnStatus == HTTP_SUCCESS )
-        {
-            returnStatus = _sendHttpRequest( tcpSocket,
-                                             HTTP_METHOD_HEAD,
-                                             HEAD_PATH );
-        }
-    #endif
+    if( returnStatus == HTTP_SUCCESS )
+    {
+        returnStatus = _sendHttpRequest( &socketContext,
+                                         HTTP_METHOD_HEAD,
+                                         HEAD_PATH );
+    }
 
-    #ifdef PUT_PATH
-        if( returnStatus == HTTP_SUCCESS )
-        {
-            returnStatus = _sendHttpRequest( tcpSocket,
-                                             HTTP_METHOD_PUT,
-                                             PUT_PATH );
-        }
-    #endif
+    if( returnStatus == HTTP_SUCCESS )
+    {
+        returnStatus = _sendHttpRequest( &socketContext,
+                                         HTTP_METHOD_PUT,
+                                         PUT_PATH );
+    }
 
-    #ifdef POST_PATH
-        if( returnStatus == HTTP_SUCCESS )
-        {
-            returnStatus = _sendHttpRequest( tcpSocket,
-                                             HTTP_METHOD_POST,
-                                             POST_PATH );
-        }
-    #endif
+    if( returnStatus == HTTP_SUCCESS )
+    {
+        returnStatus = _sendHttpRequest( &socketContext,
+                                         HTTP_METHOD_POST,
+                                         POST_PATH );
+    }
 
     /**************************** Disconnect. *****************************/
 
-    if( tcpSocket != -1 )
+    if( socketContext.tcpSocket != -1 )
     {
-        shutdown( tcpSocket, SHUT_RDWR );
-        close( tcpSocket );
+        shutdown( socketContext.tcpSocket, SHUT_RDWR );
+        close( socketContext.tcpSocket );
     }
 
     return returnStatus;
