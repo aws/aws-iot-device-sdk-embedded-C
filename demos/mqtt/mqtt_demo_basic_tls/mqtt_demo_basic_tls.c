@@ -43,9 +43,16 @@
 /**
  * @brief MQTT server port number.
  *
- * In general, port 1883 is for unsecured MQTT connections.
+ * In general, port 8883 is for secured MQTT connections.
  */
-#define PORT      1883
+#define PORT      8883
+
+/**
+ * @brief Path of the file containing the server's root CA certificate.
+ *
+ * This certificate should be PEM-encoded.
+ */
+#define SERVER_CERT    "mosquitto.org.crt"
 
 /**
  * @brief Size of the network buffer for MQTT packets.
@@ -144,17 +151,116 @@ static int connectToServer( const char * pServer, uint16_t port )
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Set up a TLS connection over an existing TCP connection.
+ *
+ * @param[in] tcpSocket Existing TCP connection.
+ *
+ * @return An SSL connection context; NULL on failure.
+ */
+static SSL * tlsSetup( int tcpSocket )
+{
+    int sslStatus = 0;
+    FILE * pRootCaFile = NULL;
+    X509 * pRootCa = NULL;
+    SSL * pSslContext = NULL;
+
+    /* Setup for creating a TLS client. */
+    SSL_CTX * pSslSetup = SSL_CTX_new( TLS_client_method() );
+
+    if( pSslSetup != NULL )
+    {
+        /* Set auto retry mode for the blocking calls to SSL_read and SSL_write.
+         * The mask returned by SSL_CTX_set_mode does not need to be checked. */
+        ( void ) SSL_CTX_set_mode( pSslSetup, SSL_MODE_AUTO_RETRY );
+
+        /* OpenSSL does not provide a single function for reading and loading certificates
+         * from files into stores, so the file API must be called. */
+        pRootCaFile = fopen( SERVER_CERT, "r" );
+
+        if( pRootCaFile != NULL )
+        {
+            pRootCa = PEM_read_X509( pRootCaFile, NULL, NULL, NULL );
+        }
+
+        if( pRootCa != NULL )
+        {
+            sslStatus = X509_STORE_add_cert( SSL_CTX_get_cert_store( pSslSetup ),
+                                               pRootCa );
+        }
+    }
+
+    /* Set up the TLS connection. */
+    if( sslStatus == 1 )
+    {
+        /* Create a new SSL context. */
+        pSslContext = SSL_new( pSslSetup );
+
+        if( pSslContext != NULL )
+        {
+            /* Enable SSL peer verification. */
+            SSL_set_verify( pSslContext, SSL_VERIFY_PEER, NULL );
+
+            sslStatus = SSL_set_fd( pSslContext, tcpSocket );
+        }
+        else
+        {
+            sslStatus = 0;
+        }
+
+        /* Perform the TLS handshake. */
+        if( sslStatus == 1 )
+        {
+            sslStatus = SSL_connect( pSslContext );
+        }
+
+        if( sslStatus == 1 )
+        {
+            if( SSL_get_verify_result( pSslContext ) != X509_V_OK )
+            {
+                sslStatus = 0;
+            }
+        }
+
+        /* Clean up on error. */
+        if( sslStatus == 0 )
+        {
+            SSL_free( pSslContext );
+            pSslContext = NULL;
+        }
+    }
+
+    if( pRootCaFile != NULL )
+    {
+        ( void ) fclose( pRootCaFile );
+    }
+
+    if( pRootCa != NULL )
+    {
+        X509_free( pRootCa );
+    }
+
+    if( pSslSetup != NULL )
+    {
+        SSL_CTX_free( pSslSetup );
+    }
+
+    return pSslContext;
+}
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief The transport send function provided to the MQTT context.
  *
- * @param[in] tcpSocket TCP socket.
+ * @param[in] pSslContext SSL context.
  * @param[in] pMessage Data to send.
  * @param[in] bytesToSend Length of data to send.
  *
  * @return Number of bytes sent; negative value on error.
  */
-static int32_t transportSend( MQTTNetworkContext_t tcpSocket, const void * pMessage, size_t bytesToSend )
+static int32_t transportSend( MQTTNetworkContext_t pSslContext, const void * pMessage, size_t bytesToSend )
 {
-    return ( int32_t ) send( tcpSocket, pMessage, bytesToSend, 0 );
+    return ( int32_t ) SSL_write( pSslContext, pMessage, bytesToSend );
 }
 
 /*-----------------------------------------------------------*/
@@ -162,15 +268,15 @@ static int32_t transportSend( MQTTNetworkContext_t tcpSocket, const void * pMess
 /**
  * @brief The transport receive function provided to the MQTT context.
  *
- * @param[in] tcpSocket TCP socket.
+ * @param[in] pSslContext SSL context.
  * @param[out] pBuffer Buffer for receiving data.
  * @param[in] bytesToSend Size of pBuffer.
  *
  * @return Number of bytes received; negative value on error.
  */
-static int32_t transportRecv( MQTTNetworkContext_t tcpSocket, void * pBuffer, size_t bytesToRecv )
+static int32_t transportRecv( MQTTNetworkContext_t pSslContext, void * pBuffer, size_t bytesToRecv )
 {
-    return ( int32_t ) recv( tcpSocket, pBuffer, bytesToRecv, 0 );
+    return ( int32_t ) SSL_read( pSslContext, pBuffer, bytesToRecv );
 }
 
 /*-----------------------------------------------------------*/
@@ -200,14 +306,14 @@ static void eventCallback( MQTTContext_t * pContext, MQTTPacketInfo_t * pPacketI
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Establish an MQTT session over a TCP connection by sending MQTT CONNECT.
+ * @brief Establish an MQTT session over a TCP+TLS connection by sending MQTT CONNECT.
  *
  * @param[in] pContext MQTT context.
- * @param[in] tcpSocket TCP socket.
+ * @param[in] pSslContext SSL context.
  *
  * @return EXIT_SUCCESS if an MQTT session is established; EXIT_FAILURE otherwise.
  */
-static int establishMqttSession( MQTTContext_t * pContext, int tcpSocket )
+static int establishMqttSession( MQTTContext_t * pContext, SSL * pSslContext )
 {
     int status = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus;
@@ -220,7 +326,7 @@ static int establishMqttSession( MQTTContext_t * pContext, int tcpSocket )
     static uint8_t buffer[ NETWORK_BUFFER_SIZE ];
 
     /* Initialize MQTT context. */
-    transport.networkContext = tcpSocket;
+    transport.networkContext = pSslContext;
     transport.send = transportSend;
     transport.recv = transportRecv;
 
@@ -283,27 +389,45 @@ static int disconnectMqttSession( MQTTContext_t * pContext )
 int main( int argc, char ** argv )
 {
     bool mqttSessionEstablished = false;
-    int status = EXIT_SUCCESS;
+    int status;
     MQTTContext_t context;
+    SSL * pSslContext = NULL;
 
-    /* Establish TCP connection. */
+    /* Establish TCP connection and MQTT session. */
     int tcpSocket = connectToServer( SERVER, PORT );
 
     if( tcpSocket == -1 )
     {
         status = EXIT_FAILURE;
     }
-
-    /* Establish MQTT session on top of TCP connection. */
-    if( status = EXIT_SUCCESS )
+    else
     {
-        status = establishMqttSession( &context, tcpSocket );
+        status = EXIT_SUCCESS;
+    }
+
+    /* Establish TLS connection on top of TCP connection. */
+    if( status == EXIT_SUCCESS )
+    {
+        pSslContext = tlsSetup( tcpSocket );
+
+        if( pSslContext == NULL )
+        {
+            status = EXIT_FAILURE;
+        }
+    }
+
+    /* Establish MQTT session on top of TCP+TLS connection. */
+    if( status == EXIT_SUCCESS )
+    {
+        status = establishMqttSession( &context, pSslContext );
 
         if( status == EXIT_SUCCESS )
         {
             mqttSessionEstablished = true;
         }
     }
+
+    /* Insert demo code here. */
 
     /* Disconnect MQTT session if established. */
     if( mqttSessionEstablished == true )
@@ -316,6 +440,19 @@ int main( int argc, char ** argv )
         {
             status = disconnectMqttSession( &context );
         }
+    }
+
+    /* Close TLS session if established. */
+    if( pSslContext != NULL )
+    {
+        /* SSL shutdown should be called twice: once to send "close notify" and
+         * once more to receive the peer's "close notify". */
+        if( SSL_shutdown( pSslContext ) == 0 )
+        {
+            ( void ) SSL_shutdown( pSslContext );
+        }
+
+        SSL_free( pSslContext );
     }
 
     /* Close TCP connection if established. */
