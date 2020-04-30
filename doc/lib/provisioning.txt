@@ -48,7 +48,7 @@ In addition to the components above, the Provisioning library also depends on C 
 @subsection provisioning_memory_code Code size
 @brief Code size of the Provisioning library.
 
-The following measurements were taken with arm-none-eabi-gcc v9.2.1 (November 2019) with the [Provisioning library from April 2020](https://github.com/aws/aws-iot-device-sdk-embedded-C/commit/26acc9320e35d29086e2b519f46040daab776f70). These values are rough estimates not tuned for any specific ARM processor.
+The following measurements were taken with arm-none-eabi-gcc v9.2.1 (November 2019) with the [Provisioning library from April 2020](https://github.com/aws/aws-iot-device-sdk-embedded-C/commit/148d3fabcdc783885207b98da7a879aa7fedd30d). These values are rough estimates not tuned for any specific ARM processor.
 
 (Also, refer to the [MQTT memory requirements](@ref mqtt_memory), which is a dependency of the Provisioning library.)
 
@@ -89,7 +89,7 @@ No logging, asserts, or diagnostic information. Compiled using the ARM Thumb ins
 </table>
 
 <b>Debug Build</b> <br>
-All logging, asserts, and diagnostic information enabled. Debugging symbols available. Compiled using the ARM Thumb instruction set (`-mthumb`). Values are in <i>bytes</i>.
+All logging, asserts, and diagnostic information enabled. Debugging symbols available (Compiled with `-Og -g` flags). Compiled using the ARM Thumb instruction set (`-mthumb`). Values are in <i>bytes</i>.
 
 <table>
     <tr>
@@ -100,27 +100,27 @@ All logging, asserts, and diagnostic information enabled. Debugging symbols avai
     </tr>
     <tr>
         <td>aws_iot_provisioning_api</td>
-        <td>7644</td>
+        <td>5748</td>
         <td>4</td>
-        <td>69</td>
+        <td>72</td>
     </tr>
     <tr>
         <td>aws_iot_provisioning_parser</td>
-        <td>7899</td>
+        <td>5431</td>
         <td>0</td>
         <td>0</td>
     </tr>
     <tr>
         <td>aws_iot_provisioning_serializer</td>
-        <td>5701</td>
+        <td>2692</td>
         <td>0</td>
         <td>0</td>
     </tr>
     <tr>
         <td><b>total</b></td>
-        <td><b>21244</b></td>
+        <td><b>13871</b></td>
         <td><b>4</b></td>
-        <td><b>69</b></td>
+        <td><b>72</b></td>
     </tr>
 </table>
 

@@ -23,7 +23,7 @@ This library is a new design that inherits from both the AWS IoT Device SDK Embe
 - Provisioning client library for the [Fleet Provisioning  feature
 of AWS IoT Core](https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html).
 
-## Building and Running the Fleet Provisioning library Demo
+## Building and Running Demos
 
 **Main documentation page:** [Building the SDK](https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/main/building.html)
 
@@ -68,12 +68,12 @@ It is required to setup an AWS account and access the AWS IoT Console for runnin
     - Set `IOT_DEMO_PRIVATE_KEY` to the path of the private downloaded when setting up device certificate (or Provisioning Claim for Fleet Provisioning) in [AWS IoT Account Setup](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v4_beta#aws-iot-account-setup). The corresponding command line option for this constant is `-k`.
     - Set `IOT_DEMO_USER_NAME` to the username string, if any, required to authenticate to your MQTT broker. The corresponding command line option for this constant is `-m`.
     - Set `IOT_DEMO_PASSWORD` to the password string, if any, required to authenticate to your MQTT broker. The corresponding command line option for this constant is `-w`.
-5. Make a build directory in the SDK's root directory and `cd` into it.
+4. Make a build directory in the SDK's root directory and `cd` into it.
     ```sh
     mkdir build
     cd build
     ```
-6. Run CMake from the build directory.
+5. Run CMake from the build directory.
     ```sh
     cmake ..
     ```
