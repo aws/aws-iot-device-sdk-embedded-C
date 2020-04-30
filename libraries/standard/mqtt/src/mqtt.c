@@ -90,7 +90,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
 {
     size_t remainingLength, packetSize;
     int32_t bytesSent;
-    MQTTPacketInfo_t incomingPacket;
+    MQTTPacketInfo_t incomingPacket = { .type = ( ( uint8_t ) 0 ) };
 
     MQTTStatus_t status = MQTT_GetConnectPacketSize( pConnectInfo,
                                                      pWillInfo,
