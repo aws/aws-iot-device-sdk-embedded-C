@@ -52,7 +52,7 @@ HTTPClient_Send.c: _sendHttpHeaders.c \
 				   _receiveAndParseHttpResponse.c \
 				   _HTTPClient_InitializeParsingContext.c \
 				   _HTTPClient_ParseResponse.c \
-				   _getFinalResponseStatus.c \
+				   _getFinalResponseStatus.c
 HTTPClient_InitializeRequestHeaders.c: _writeRequestLine.c _addHeader.c
 
 # additional header dependencies for all tests
