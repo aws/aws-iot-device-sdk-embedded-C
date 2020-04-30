@@ -32,8 +32,8 @@ static int32_t sendPacket( MQTTContext_t * pContext,
     int32_t totalBytesSent = 0, bytesSent;
 
     /* If the optional buffer is not null send that instead of networkBuffer.
-     * This is to support an optimization in publish to send header and payload
-     * separately.
+     * This is to support an optimization in publish to avoid copy of the
+     * payload into networkBuffer.
      */
     if( pOptionalBufferToSend != NULL )
     {
@@ -165,9 +165,9 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * const pContext,
 MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
                            const MQTTPublishInfo_t * const pPublishInfo )
 {
-    size_t remainingLength, packetSize, headerSize = 0U;
-    int32_t bytesSent;
-    uint16_t packetId;
+    size_t remainingLength = 0, packetSize = 0, headerSize = 0;
+    int32_t bytesSent = 0;
+    uint16_t packetId = 0U;
 
     /* Get the remaining length and packet size.*/
     MQTTStatus_t status = MQTT_GetPublishPacketSize( pPublishInfo,
@@ -198,7 +198,8 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
         /* Send Payload. */
         else
         {
-            bytesSent = sendPacket( pContext, pPublishInfo->pPayload,
+            bytesSent = sendPacket( pContext,
+                                    pPublishInfo->pPayload,
                                     pPublishInfo->payloadLength );
 
             if( bytesSent < 0 )

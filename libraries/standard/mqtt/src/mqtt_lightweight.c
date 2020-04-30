@@ -140,6 +140,16 @@
 
 /*-----------------------------------------------------------*/
 
+static void _serializePublishCommon( const MQTTPublishInfo_t * pPublishInfo,
+                                     size_t remainingLength,
+                                     uint16_t packetIdentifier,
+                                     const MQTTFixedBuffer_t * const pFixedBuffer,
+                                     bool serializePayload );
+
+static bool _publishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
+                                size_t * pRemainingLength,
+                                size_t * pPacketSize );
+
 static size_t remainingLengthEncodedSize( size_t length )
 {
     size_t encodedSize;
@@ -256,9 +266,9 @@ static int32_t recvExact( MQTTTransportRecvFunc_t recvFunc,
     return totalBytesRecvd;
 }
 
-static bool publishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
-                               size_t * pRemainingLength,
-                               size_t * pPacketSize )
+static bool _publishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
+                                size_t * pRemainingLength,
+                                size_t * pPacketSize )
 {
     bool status = true;
     size_t packetSize = 0, payloadLimit = 0;
@@ -314,116 +324,70 @@ static bool publishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
     return status;
 }
 
-static MQTTStatus_t serializePublishCommon( const MQTTPublishInfo_t * pPublishInfo,
-                                            size_t remainingLength,
-                                            uint16_t packetIdentifier,
-                                            const MQTTFixedBuffer_t * const pFixedBuffer,
-                                            bool serializePayload,
-                                            size_t * const pHeaderSize )
+static void _serializePublishCommon( const MQTTPublishInfo_t * pPublishInfo,
+                                     size_t remainingLength,
+                                     uint16_t packetIdentifier,
+                                     const MQTTFixedBuffer_t * const pFixedBuffer,
+                                     bool serializePayload )
 {
-    MQTTStatus_t status = MQTTSuccess;
     uint8_t publishFlags = 0;
-    uint8_t * pIndex = NULL;
+    uint8_t * pIndex = pFixedBuffer->pBuffer;
     size_t minBufferSize = 0;
 
-    if( ( pFixedBuffer == NULL ) || ( pPublishInfo == NULL ) || ( packetIdentifier == 0U ) )
+    /* The first byte of a PUBLISH packet contains the packet type and flags. */
+    publishFlags = MQTT_PACKET_TYPE_PUBLISH;
+
+    if( pPublishInfo->qos == MQTTQoS1 )
     {
-        status = MQTTBadParameter;
+        UINT8_SET_BIT( publishFlags, MQTT_PUBLISH_FLAG_QOS1 );
     }
-    else if( ( pPublishInfo->pTopicName == NULL ) || ( pPublishInfo->topicNameLength == 0U ) )
+    else if( pPublishInfo->qos == MQTTQoS2 )
     {
-        status = MQTTBadParameter;
+        UINT8_SET_BIT( publishFlags, MQTT_PUBLISH_FLAG_QOS2 );
     }
     else
     {
         /* Empty else MISRA 15.7 */
     }
 
-    /* Calculate the minimum buffer size needed and check if the buffer is big enough. */
-    if( status == MQTTSuccess )
+    if( pPublishInfo->retain )
     {
-        minBufferSize += remainingLength + 1U + remainingLengthEncodedSize( remainingLength );
-
-        /* Reduce the payload size if not needed to be serialized. */
-        if( serializePayload )
-        {
-            minBufferSize -= pPublishInfo->payloadLength;
-        }
-
-        /* Check if the buffer size is greater than the minimum buffer size. */
-        if( minBufferSize > pFixedBuffer->size )
-        {
-            status = MQTTNoMemory;
-        }
+        UINT8_SET_BIT( publishFlags, MQTT_PUBLISH_FLAG_RETAIN );
     }
 
-    if( status == MQTTSuccess )
+    *pIndex = publishFlags;
+    pIndex++;
+
+    /* The "Remaining length" is encoded from the second byte. */
+    pIndex = encodeRemainingLength( pIndex, remainingLength );
+
+    /* The topic name is placed after the "Remaining length". */
+    pIndex = encodeString( pIndex,
+                           pPublishInfo->pTopicName,
+                           pPublishInfo->topicNameLength );
+
+    /* A packet identifier is required for QoS 1 and 2 messages. */
+    if( pPublishInfo->qos > MQTTQoS0 )
     {
-        pIndex = pFixedBuffer->pBuffer;
-
-        /* The first byte of a PUBLISH packet contains the packet type and flags. */
-        publishFlags = MQTT_PACKET_TYPE_PUBLISH;
-
-        if( pPublishInfo->qos == MQTTQoS1 )
-        {
-            UINT8_SET_BIT( publishFlags, MQTT_PUBLISH_FLAG_QOS1 );
-        }
-        else if( pPublishInfo->qos == MQTTQoS2 )
-        {
-            UINT8_SET_BIT( publishFlags, MQTT_PUBLISH_FLAG_QOS2 );
-        }
-        else
-        {
-            /* Empty else MISRA 15.7 */
-        }
-
-        if( pPublishInfo->retain == true )
-        {
-            UINT8_SET_BIT( publishFlags, MQTT_PUBLISH_FLAG_RETAIN );
-        }
-
-        *pIndex = publishFlags;
-        pIndex++;
-
-        /* The "Remaining length" is encoded from the second byte. */
-        pIndex = encodeRemainingLength( pIndex, remainingLength );
-
-        /* The topic name is placed after the "Remaining length". */
-        pIndex = encodeString( pIndex,
-                               pPublishInfo->pTopicName,
-                               pPublishInfo->topicNameLength );
-
-        /* A packet identifier is required for QoS 1 and 2 messages. */
-        if( pPublishInfo->qos > MQTTQoS0 )
-        {
-            /* Place the packet identifier into the PUBLISH packet. */
-            *pIndex = UINT16_HIGH_BYTE( packetIdentifier );
-            *( pIndex + 1 ) = UINT16_LOW_BYTE( packetIdentifier );
-            pIndex += 2;
-        }
-
-        /* The payload is placed after the packet identifier.
-         * Payload is copied over only if required by the flag serializePayload.
-         * This will help reduce an unnecessary copy of the payload into the buffer.
-         */
-        if( ( pPublishInfo->payloadLength > 0U ) &&
-            ( serializePayload == true ) )
-        {
-            /* This memcpy intentionally copies bytes from a void * buffer into
-             * a uint8_t * buffer. */
-            /* coverity[misra_c_2012_rule_21_15_violation] */
-            ( void ) memcpy( pIndex, pPublishInfo->pPayload, pPublishInfo->payloadLength );
-            pIndex += pPublishInfo->payloadLength;
-        }
-
-        /* Assign the serialized size to the output parameter if only header is serialized. */
-        if( serializePayload == false )
-        {
-            *pHeaderSize = minBufferSize;
-        }
+        /* Place the packet identifier into the PUBLISH packet. */
+        *pIndex = UINT16_HIGH_BYTE( packetIdentifier );
+        *( pIndex + 1 ) = UINT16_LOW_BYTE( packetIdentifier );
+        pIndex += 2;
     }
 
-    return status;
+    /* The payload is placed after the packet identifier.
+     * Payload is copied over only if required by the flag serializePayload.
+     * This will help reduce an unnecessary copy of the payload into the buffer.
+     */
+    if( ( pPublishInfo->payloadLength > 0U ) &&
+        ( serializePayload ) )
+    {
+        /* This memcpy intentionally copies bytes from a void * buffer into
+         * a uint8_t * buffer. */
+        /* coverity[misra_c_2012_rule_21_15_violation] */
+        ( void ) memcpy( pIndex, pPublishInfo->pPayload, pPublishInfo->payloadLength );
+        pIndex += pPublishInfo->payloadLength;
+    }
 }
 
 static size_t getRemainingLength( MQTTTransportRecvFunc_t recvFunc,
@@ -1159,7 +1123,7 @@ MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * const pPublish
     {
         /* Calculate the "Remaining length" field and total packet size. If it exceeds
          * what is allowed in the MQTT standard, return an error. */
-        if( publishPacketSize( pPublishInfo, pRemainingLength, pPacketSize ) == false )
+        if( _publishPacketSize( pPublishInfo, pRemainingLength, pPacketSize ) == false )
         {
             status = MQTTBadParameter;
         }
@@ -1175,13 +1139,35 @@ MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * const pPublishInfo
                                     size_t remainingLength,
                                     const MQTTFixedBuffer_t * const pBuffer )
 {
-    /* Serialize publish with header and payload. */
-    MQTTStatus_t status = serializePublishCommon( pPublishInfo,
-                                                  remainingLength,
-                                                  packetId,
-                                                  pBuffer,
-                                                  true,
-                                                  NULL );
+    MQTTStatus_t status = MQTTSuccess;
+
+    if( ( pBuffer == NULL ) || ( pPublishInfo == NULL ) || ( packetId == 0U ) )
+    {
+        status = MQTTBadParameter;
+    }
+    else if( ( pPublishInfo->pTopicName == NULL ) || ( pPublishInfo->topicNameLength == 0U ) )
+    {
+        status = MQTTBadParameter;
+    }
+
+    /* Check if the serialized packet can fit in the buffer.
+     * Length of serialized packet = First byte + Length of encoded remaining length
+     *                               + Remaining length.
+     */
+    else if( ( 1U + remainingLengthEncodedSize( remainingLength ) + remainingLength )
+             > pBuffer->size )
+    {
+        status = MQTTNoMemory;
+    }
+    else
+    {
+        /* Serialize publish with header and payload. */
+        _serializePublishCommon( pPublishInfo,
+                                 remainingLength,
+                                 packetId,
+                                 pBuffer,
+                                 true );
+    }
 
     return status;
 }
@@ -1196,23 +1182,37 @@ MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * const pPubli
 {
     MQTTStatus_t status = MQTTSuccess;
 
-    /* Verify only if the pointer to Header size is not NULL.
-     * Rest all parameters are verified in the serializePublishCommon
-     * function.
-     */
-    if( pHeaderSize == NULL )
+    if( ( pBuffer == NULL ) || ( pPublishInfo == NULL ) ||
+        ( pHeaderSize == NULL ) || ( packetId == 0U ) )
     {
         status = MQTTBadParameter;
+    }
+    else if( ( pPublishInfo->pTopicName == NULL ) || ( pPublishInfo->topicNameLength == 0U ) )
+    {
+        status = MQTTBadParameter;
+    }
+
+    /* Check if the serialized packet can fit in the buffer.
+     * Length of serialized packet = First byte + Length of encoded remaining length
+     *                               + Remaining length - Payload Length.
+     */
+    else if( ( 1U + remainingLengthEncodedSize( remainingLength )
+               + remainingLength - pPublishInfo->payloadLength ) > pBuffer->size )
+    {
+        status = MQTTNoMemory;
     }
     else
     {
         /* Serialize publish without copying the payload. */
-        status = serializePublishCommon( pPublishInfo,
-                                         remainingLength,
-                                         packetId,
-                                         pBuffer,
-                                         false,
-                                         pHeaderSize );
+        _serializePublishCommon( pPublishInfo,
+                                 remainingLength,
+                                 packetId,
+                                 pBuffer,
+                                 false );
+
+        /* Calculate the header size. */
+        *pHeaderSize = 1U + remainingLengthEncodedSize( remainingLength )
+                       + remainingLength - pPublishInfo->payloadLength;
     }
 
     return status;
