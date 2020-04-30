@@ -188,7 +188,7 @@ static int connectToServer( const char * pServer,
 /*-----------------------------------------------------------*/
 
 /**
- * @brief The transport send function provided to the HTTP network context.
+ * @brief The transport send function that defines the transport interface.
  *
  * @param[in] pContext User defined context (TCP socket for this demo).
  * @param[in] pBuffer Buffer to write to the network stack.
@@ -206,7 +206,7 @@ static int32_t transportSend( HTTPNetworkContext_t * pContext,
 /*-----------------------------------------------------------*/
 
 /**
- * @brief The transport receive function provided to the HTTP network context.
+ * @brief The transport receive function that defines the transport interface.
  *
  * @param[in] tcpSocket User defined context (TCP socket for this demo).
  * @param[out] pBuffer Buffer to read network data into.
