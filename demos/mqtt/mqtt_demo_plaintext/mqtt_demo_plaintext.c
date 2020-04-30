@@ -52,12 +52,10 @@
  */
 #define NETWORK_BUFFER_SIZE    ( 1024U )
 
-/**
- * @brief MQTT client identifier.
- *
- * No two clients may use the same client identifier simultaneously.
- */
-#define CLIENT_IDENTIFIER           "testclient"
+/* Check that client identifier is defined. */
+#ifndef CLIENT_IDENTIFIER
+    #error "Please define a unique CLIENT_IDENTIFIER."
+#endif
 
 /**
  * @brief Length of client identifier.
@@ -154,7 +152,7 @@ static int connectToServer( const char * pServer, uint16_t port )
  *
  * @return Number of bytes sent; negative value on error.
  */
-static int32_t transportSend( int tcpSocket, const void * pMessage, size_t bytesToSend )
+static int32_t transportSend( MQTTNetworkContext_t tcpSocket, const void * pMessage, size_t bytesToSend )
 {
     return ( int32_t ) send( tcpSocket, pMessage, bytesToSend, 0 );
 }
@@ -170,7 +168,7 @@ static int32_t transportSend( int tcpSocket, const void * pMessage, size_t bytes
  *
  * @return Number of bytes received; negative value on error.
  */
-static int32_t transportRecv( int tcpSocket, void * pBuffer, size_t bytesToRecv )
+static int32_t transportRecv( MQTTNetworkContext_t tcpSocket, void * pBuffer, size_t bytesToRecv )
 {
     return ( int32_t ) recv( tcpSocket, pBuffer, bytesToRecv, 0 );
 }
@@ -285,17 +283,19 @@ static int disconnectMqttSession( MQTTContext_t * pContext )
 int main( int argc, char ** argv )
 {
     bool mqttSessionEstablished = false;
-    int status;
+    int status = EXIT_SUCCESS;
     MQTTContext_t context;
 
-    /* Establish TCP connection and MQTT session. */
+    /* Establish TCP connection. */
     int tcpSocket = connectToServer( SERVER, PORT );
 
     if( tcpSocket == -1 )
     {
         status = EXIT_FAILURE;
     }
-    else
+
+    /* Establish MQTT session on top of TCP connection. */
+    if( status = EXIT_SUCCESS )
     {
         status = establishMqttSession( &context, tcpSocket );
 

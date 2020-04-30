@@ -59,12 +59,10 @@
  */
 #define NETWORK_BUFFER_SIZE    ( 1024U )
 
-/**
- * @brief MQTT client identifier.
- *
- * No two clients may use the same client identifier simultaneously.
- */
-#define CLIENT_IDENTIFIER           "testclient"
+/* Check that client identifier is defined. */
+#ifndef CLIENT_IDENTIFIER
+    #error "Please define a unique CLIENT_IDENTIFIER."
+#endif
 
 /**
  * @brief Length of client identifier.
@@ -166,7 +164,7 @@ static SSL * tlsSetup( int tcpSocket )
     X509 * pRootCa = NULL;
     SSL * pSslContext = NULL;
 
-    /* Read the server root CA certificate. */
+    /* Setup for creating a TLS client. */
     SSL_CTX * pSslSetup = SSL_CTX_new( TLS_client_method() );
 
     if( pSslSetup != NULL )
@@ -260,7 +258,7 @@ static SSL * tlsSetup( int tcpSocket )
  *
  * @return Number of bytes sent; negative value on error.
  */
-static int32_t transportSend( SSL * pSslContext, const void * pMessage, size_t bytesToSend )
+static int32_t transportSend( MQTTNetworkContext_t pSslContext, const void * pMessage, size_t bytesToSend )
 {
     return ( int32_t ) SSL_write( pSslContext, pMessage, bytesToSend );
 }
@@ -276,7 +274,7 @@ static int32_t transportSend( SSL * pSslContext, const void * pMessage, size_t b
  *
  * @return Number of bytes received; negative value on error.
  */
-static int32_t transportRecv( SSL * pSslContext, void * pBuffer, size_t bytesToRecv )
+static int32_t transportRecv( MQTTNetworkContext_t pSslContext, void * pBuffer, size_t bytesToRecv )
 {
     return ( int32_t ) SSL_read( pSslContext, pBuffer, bytesToRecv );
 }

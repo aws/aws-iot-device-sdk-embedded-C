@@ -37,4 +37,11 @@ typedef int MQTTNetworkContext_t;
  */
 #define MQTT_MAX_QUEUED_PUBLISH_MESSAGES    10
 
+/**
+ * @brief MQTT client identifier.
+ *
+ * No two clients may use the same client identifier simultaneously.
+ */
+#define CLIENT_IDENTIFIER           "testclient"
+
 #endif /* ifndef CONFIG_H */
