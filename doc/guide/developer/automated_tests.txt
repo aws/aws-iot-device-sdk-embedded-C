@@ -150,8 +150,8 @@ AWS recommends using the most restrictive policy possible. The following policy 
 
 This policy only allows the CI to interact with topics that contain a matching client identifier (which is prefixed with the Travis CI variable `IOT_IDENTIFIER_PREFIX`). A few special topics used by the MQTT tests are also present. The policy will need to be updated if any new topics are used by the tests in the future.
 
-@section guide_developer_automated_tests_jobs Additional Travis CI setup for Jobs system tests
-@brief Additional CI settings for running the [Jobs system tests](@ref jobs_tests).
+@section guide_developer_automated_tests_jobs_and_provisioning Additional Travis CI setup for Jobs and Provisioning system tests
+@brief Additional CI settings for running the [Jobs system tests](@ref jobs_tests) and [Provisioning system tests](@ref provisioning_tests).
 
 The Jobs system tests use AWS CLI to create and delete Jobs. Therefore, additional setup is needed in Travis CI.
 

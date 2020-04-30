@@ -37,16 +37,16 @@
     #define IOT_TEST_SECURED_CONNECTION    ( 0 )
 
     #ifndef IOT_TEST_SERVER
-        #define IOT_TEST_SERVER                "test.mosquitto.org"
+        #define IOT_TEST_SERVER            "test.mosquitto.org"
     #endif
     #ifndef IOT_TEST_PORT
-        #define IOT_TEST_PORT                  ( 1883 )
+        #define IOT_TEST_PORT              ( 1883 )
     #endif
 #else
     /* AWS IoT MQTT server. */
     #define IOT_TEST_SECURED_CONNECTION    ( 1 )
 
-    /* AWS IoT endpoint and credentials. */
+/* AWS IoT endpoint and credentials. */
     #ifndef IOT_TEST_SERVER
         #define IOT_TEST_SERVER         ""
     #endif
@@ -77,13 +77,32 @@
 
 /* Jobs tests configuration. */
 #ifndef AWS_IOT_TEST_JOBS_THING_NAME
-    #define AWS_IOT_TEST_JOBS_THING_NAME      ""
+    #define AWS_IOT_TEST_JOBS_THING_NAME    ""
 #endif
 
 /* Defender tests configuration. */
 #ifndef AWS_IOT_TEST_DEFENDER_THING_NAME
     #define AWS_IOT_TEST_DEFENDER_THING_NAME    ""
 #endif
+
+/* Provisioning tests configuration */
+#ifndef AWS_IOT_TEST_PROVISIONING_CSR_PEM
+    #define AWS_IOT_TEST_PROVISIONING_CSR_PEM          ""
+#endif /* ifndef AWS_IOT_TEST_PROVISIONING_CSR_PEM */
+#ifndef AWS_IOT_TEST_PROVISIONING_TEMPLATE_NAME
+    #define AWS_IOT_TEST_PROVISIONING_TEMPLATE_NAME    ""
+#endif /* ifndef AWS_IOT_TEST_PROVISIONING_TEMPLATE_NAME */
+#ifndef AWS_IOT_TEST_PROVISIONING_TEMPLATE_PARAMETERS
+    #define AWS_IOT_TEST_PROVISIONING_TEMPLATE_PARAMETERS       \
+    {                                                           \
+        {                                                       \
+            .pParameterKey = "SerialNumber",                    \
+            .parameterKeyLength = sizeof( "SerialNumber" ) - 1, \
+            .pParameterValue = "",                              \
+            .parameterValueLength = 0                           \
+        }                                                       \
+    }
+#endif /* ifndef AWS_IOT_TEST_PROVISIONING_TEMPLATE_PARAMETERS */
 
 /* Log level for testing the demos. */
 #define IOT_LOG_LEVEL_DEMO    IOT_LOG_INFO
@@ -93,30 +112,62 @@
     #define IOT_DEMO_SECURED_CONNECTION    IOT_TEST_SECURED_CONNECTION
 #endif
 #ifdef IOT_TEST_SERVER
-    #define IOT_DEMO_SERVER         IOT_TEST_SERVER
+    #define IOT_DEMO_SERVER                IOT_TEST_SERVER
 #endif
 #ifdef IOT_TEST_PORT
-    #define IOT_DEMO_PORT           IOT_TEST_PORT
+    #define IOT_DEMO_PORT                  IOT_TEST_PORT
 #endif
 #ifdef IOT_TEST_ROOT_CA
-    #define IOT_DEMO_ROOT_CA        IOT_TEST_ROOT_CA
+    #define IOT_DEMO_ROOT_CA               IOT_TEST_ROOT_CA
 #endif
 #ifdef IOT_TEST_CLIENT_CERT
-    #define IOT_DEMO_CLIENT_CERT    IOT_TEST_CLIENT_CERT
+    #define IOT_DEMO_CLIENT_CERT           IOT_TEST_CLIENT_CERT
 #endif
 #ifdef IOT_TEST_PRIVATE_KEY
-    #define IOT_DEMO_PRIVATE_KEY    IOT_TEST_PRIVATE_KEY
+    #define IOT_DEMO_PRIVATE_KEY           IOT_TEST_PRIVATE_KEY
 #endif
 #ifdef IOT_TEST_USER_NAME
-    #define IOT_DEMO_USER_NAME      IOT_TEST_USER_NAME
+    #define IOT_DEMO_USER_NAME             IOT_TEST_USER_NAME
 #endif
 #ifdef IOT_TEST_PASSWORD
-    #define IOT_DEMO_PASSWORD       IOT_TEST_PASSWORD
+    #define IOT_DEMO_PASSWORD              IOT_TEST_PASSWORD
 #endif
 #if defined( IOT_TEST_MQTT_CLIENT_IDENTIFIER )
-    #define IOT_DEMO_IDENTIFIER     IOT_TEST_MQTT_CLIENT_IDENTIFIER
+    #define IOT_DEMO_IDENTIFIER            IOT_TEST_MQTT_CLIENT_IDENTIFIER
 #elif defined( AWS_IOT_TEST_SHADOW_THING_NAME )
-    #define IOT_DEMO_IDENTIFIER     AWS_IOT_TEST_SHADOW_THING_NAME
+    #define IOT_DEMO_IDENTIFIER            AWS_IOT_TEST_SHADOW_THING_NAME
+#endif
+
+/* Set defines required for Provisioning demo when building demo target with IOT_BUILD_TESTS set to 1. */
+#ifdef AWS_IOT_TEST_PROVISIONING_CSR_PEM
+    #define AWS_IOT_DEMO_PROVISIONING_CSR_PEM                                 AWS_IOT_TEST_PROVISIONING_CSR_PEM
+#endif
+#ifdef AWS_IOT_TEST_PROVISIONING_TEMPLATE_NAME
+    #define AWS_IOT_DEMO_PROVISIONING_TEMPLATE_NAME                           AWS_IOT_TEST_PROVISIONING_TEMPLATE_NAME
+#endif
+#ifndef AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_NAME
+    #define AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_NAME            "SerialNumber"
+#endif
+#ifndef AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_NAME_LENGTH
+    #define AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_NAME_LENGTH     sizeof( AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_NAME ) - 1
+#endif
+#ifndef AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_VALUE
+    #define AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_VALUE           ""
+#endif
+#ifndef AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_VALUE_LENGTH
+    #define AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_VALUE_LENGTH    sizeof( AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_VALUE ) - 1
+#endif
+#ifndef AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_NAME
+    #define AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_NAME                        ""
+#endif
+#ifndef AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_NAME_LENGTH
+    #define AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_NAME_LENGTH                 sizeof( AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_NAME ) - 1
+#endif
+#ifndef AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_VALUE
+    #define AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_VALUE                       ""
+#endif
+#ifndef AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_VALUE_LENGTH
+    #define AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_VALUE_LENGTH                sizeof( AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_VALUE ) - 1
 #endif
 
 /* Enable asserts in the libraries. */
@@ -127,6 +178,7 @@
 #define AWS_IOT_SHADOW_ENABLE_ASSERTS           ( 1 )
 #define AWS_IOT_DEFENDER_ENABLE_ASSERTS         ( 1 )
 #define AWS_IOT_JOBS_ENABLE_ASSERTS             ( 1 )
+#define AWS_IOT_PROVISIONING_ENABLE_ASSERTS     ( 1 )
 
 /* MQTT library configuration. */
 #define IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES    ( 1 )
@@ -189,7 +241,7 @@
 
     #define IotTestNetwork_Init           IotNetworkMbedtls_Init
     #define IotTestNetwork_Cleanup        IotNetworkMbedtls_Cleanup
-#endif
+#endif /* if IOT_NETWORK_USE_OPENSSL == 1 */
 
 /* Initializers for the tests' network types. */
 #define IOT_TEST_NETWORK_SERVER_INFO_INITIALIZER \
@@ -210,7 +262,7 @@
     }
 #else
     #define IOT_TEST_NETWORK_CREDENTIALS_INITIALIZER    { 0 }
-#endif
+#endif /* if IOT_TEST_SECURED_CONNECTION == 1 */
 
 /* Configure code coverage testing if enabled. */
 #if IOT_TEST_COVERAGE == 1
@@ -223,13 +275,13 @@
      * printed. */
     #define IotLogging_Puts       _coveragePuts
 
-    /* Includes for coverage logging puts. */
+/* Includes for coverage logging puts. */
     #include <stdbool.h>
     #include <stdio.h>
     #include <string.h>
 
-    /* Logging output function that only prints messages from demo executables.
-     * May be unused, hence the gcc unused attribute (not portable!) */
+/* Logging output function that only prints messages from demo executables.
+ * May be unused, hence the gcc unused attribute (not portable!) */
     static int __attribute__( ( unused ) ) _coveragePuts( const char * pMessage )
     {
         bool printMessage = false;

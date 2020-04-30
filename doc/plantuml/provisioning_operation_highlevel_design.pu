@@ -1,0 +1,97 @@
+@startuml
+
+title High-Level Diagram of an Operation in Provisioning Library
+
+skinparam classFontSize 8
+skinparam classFontName Helvetica
+
+box "User Application" #Wheat
+actor "Application Task" as app
+participant "User Callback\n(for Provisioning operation)" as callback
+end box
+
+box "Provisioning Library" #LightBlue
+participant "Provisioning" as provisioning
+end box
+
+box "Serializer Library" #LightGoldenRodYellow
+participant "Serializer" as serializer
+end box
+
+box "MQTT Library" #LightGreen
+participant "MQTT" as mqtt
+end box
+
+box "AWS" #LightPink
+participant "AWS IoT Core" as aws
+end box
+
+activate app
+app -> mqtt: Create MQTT connection
+mqtt -> app: Return MQTT connection handle or error.
+note right of app: Recommended to <i>share</i> MQTT connection\nacross Provisioning API calls.
+
+app -> provisioning: Call Provisioning operation API.\n Provide user-callback for operation.
+
+provisioning -> provisioning: Validate input arguments
+provisioning --> app: Return BAD_PARAMETER for any invalid input argument
+
+provisioning -> mqtt: Subscribe to 'accepted' and 'rejected' response topics\nof operation
+
+mqtt -> aws: Transmit MQTT SUBSCRIBE packets to Server
+mqtt -> provisioning: Return SUCCESS or error
+alt MQTT Subscribing failed
+provisioning -> mqtt: Unsubscribe from response topics.
+provisioning --> app: Return MQTT_ERROR.
+end alt
+
+provisioning -> serializer: Serialize PUBLISH payload
+serializer -> provisioning: Return success or error.
+alt PUBLISH payload serialization failed
+provisioning -> mqtt: Unsubscribe from response topics.
+provisioning -> app: Return INTERNAL_FAILURE or NO_MEMORY that caused\nserialization failure.
+end alt
+
+provisioning -> mqtt: PUBLISH payload to operation's request topic
+mqtt -> aws: Transmit MQTT PUBLISH packets to server
+mqtt -> provisioning: Return SUCCESS or failure.
+alt Request topic PUBLISH failed
+provisioning -> mqtt: Unsubscribe from response topics. 
+provisioning -> app: Return MQTT_ERROR
+end alt
+
+provisioning -> provisioning: Start waiting on server response with timeout.
+deactivate app
+alt Receive Server Response within timeout period
+activate callback
+aws -> mqtt : Incoming PUBLISH response from server
+mqtt -> provisioning: Pass server response information.
+provisioning -> serializer: De-serialize server response
+serializer -> provisioning: Return success of error.
+alt Server response parsing failed
+provisioning -> mqtt: Unsubscribe from response topics. 
+provisioning -> app: Return BAD_RESPONSE or INTERNAL_FAILURE that\ncaused response parsing failure.
+end alt
+provisioning -> callback: Invoke user-callback.\n Pass parsed server response payload.
+note right of callback: User-defined logic is executed.\nFor <b>KeysAndCertificate</b> and\n<b>CertificateFromCsr</b> operations,\n credentials should be stored in this callback.
+callback -> provisioning
+note right of callback: User-callback execution has completed.
+deactivate callback
+activate app
+provisioning->provisioning: Stop waiting on server response.
+else Server Response Wait Timed Out 
+provisioning -> provisioning: Stop waiting as timeout occurred.
+provisioning -> mqtt: Unsubscribe from response topics
+provisioning -> app: Return timeout error
+end alt
+
+provisioning -> mqtt: Unsubscribe from "accepted" and "rejected" response topics
+mqtt -> aws: Transmit MQTT UNSUBSCRIBE packets to server.
+mqtt -> provisioning: Return SUCCESS or error if unsubscribe failed.
+alt Unsubscribe from response topics failed
+provisioning -> app: Return MQTT_ERROR if unsubscribe failed.
+else
+provisioning -> app: Return <b>SUCCESS!</b>
+end alt
+deactivate app
+@enduml

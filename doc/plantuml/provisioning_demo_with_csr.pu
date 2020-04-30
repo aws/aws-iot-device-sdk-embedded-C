@@ -1,0 +1,41 @@
+@startuml
+
+title Demo design for Certificate-Signing Request based Provisioning Workflow
+
+skinparam classFontSize 8
+skinparam classFontName Helvetica
+autonumber
+
+box "Demo Application" #LightBlue
+    participant "Demo Main Function" as main
+    participant "<b>CertificateFromCsr</b> Callback" as certfromcsr_callback
+    participant "<b>RegisterThing</b> Callback" as register_thing
+end box
+
+box "Provisioning Library" #LightGreen
+    participant "API" as library
+end box
+
+box "Fleet Provisioning feature of\nAWS Iot Core service" #LightPink
+    participant "<b>CreateCertificateFromCsr</b>\n MQTT API" as certfromcsrapi
+    participant "<b>RegisterThing</b>\n MQTT API" as registerthingapi
+end box
+
+main -> library: Request new credentials (provide callback)
+note over library: AwsIotProvisioning_CreateCertificateFromCsr
+library -> certfromcsrapi: Request new certificate from CSR 
+certfromcsrapi -> certfromcsrapi: Generate new keys and certificate
+certfromcsrapi -> library: Send new certificate response
+library -> certfromcsr_callback: Invoke callback with server response payload
+note left of certfromcsr_callback: Print server response data, and \nstore <b>certificate ID</b> and \n<b>certificate ownership token</b>\nin demo application buffers.
+
+main -> library: Request registration of device (provide callback)
+note over library: AwsIotProvisioning_RegisterThing
+note left of main: Provides\n1.Certificate ID and Token\n stored in demo application buffers\n2.Template Name (defined in demo config)\n3.Device Parameters (defined in demo app)
+library -> registerthingapi: Request registration of device
+registerthingapi -> registerthingapi: Register <b>certificate</b>,\nattach <b>policy</b>,\ncreate <b>Thing</b> resource,\nand attach <b>certificate to Thing</b>.
+registerthingapi -> library: Send Thing Name,\nand Device Configuration (specified in Fleet Provisioning Template)
+library -> register_thing: Invoke callback with server response
+note left of register_thing: Print the server response
+
+@enduml

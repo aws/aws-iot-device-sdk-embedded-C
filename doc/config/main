@@ -31,7 +31,8 @@ TAGFILES = doc/tag/logging.tag=../logging \
            doc/tag/platform.tag=../platform \
            doc/tag/mqtt.tag=../mqtt \
            doc/tag/shadow.tag=../shadow \
-           doc/tag/jobs.tag=../jobs
+           doc/tag/jobs.tag=../jobs \
+           doc/tag/provisioning.tag=../provisioning
 
 # Use the Main page layout file
 LAYOUT_FILE = doc/config/layout_main.xml

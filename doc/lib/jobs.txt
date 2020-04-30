@@ -49,7 +49,7 @@ In addition to the components above, the Jobs library also depends on C standard
 @page jobs_design Design
 @brief Architecture behind the Jobs library.
 
-The Jobs library uses MQTT subscriptions and publishes to communicate with the AWS IoT Jobs Service. Jobs operations such as Get Pending, Start Next, Describe, and Update use MQTT subscriptions to two MQTT topics in order to receive their accepted/rejected status, and publish to the appropriate topic for the operation. The Jobs Notify Next callback uses an MQTT subscription to receive data from the AWS IoT Jobs Service when the information for the next job in the queue changes. The Notify Pending callbacks does the same for the case when any job changes. These callbacks are run in MQTT's taskpool context.
+The Jobs library uses MQTT subscriptions and publishes to communicate with the AWS IoT Jobs Service. Jobs operations such as Get Pending, Start Next, Describe, and Update use MQTT subscriptions to two MQTT topics in order to receive their accepted/rejected status, and publish to the appropriate topic for the operation. The Jobs Notify Next callback uses an MQTT subscription to receive data from the AWS IoT Jobs Service when the information for the next job in the queue changes. The Notify Pending callbacks does the same for the case when any job changes. These callbacks are run in the system taskpool context.
 
 @section jobs_synchronous_design Synchronous Design
 @image html jobs_sync_detail.png width=100%
@@ -71,7 +71,7 @@ The Jobs demo establishes an MQTT connection and registers a [Jobs NotifyNext ca
 
 Because the Jobs MQTT API does not support creating Jobs, you must create Jobs for the demo separately. We recommend using AWS CLI to create Jobs.
 
-1. Create a user for AWS CLI. See steps 1 and 2 of @ref guide_developer_automated_tests_jobs for more information.
+1. Create a user for AWS CLI. See steps 1 and 2 of @ref guide_developer_automated_tests_jobs_and_provisioning for more information.
 2. Build and run the demo as described [here](@ref building).
 3. When the following message appears, you may begin creating Jobs for the demo.
 @code{sh}
@@ -143,7 +143,7 @@ The current Jobs tests use the [Unity test framework](http://www.throwtheswitch.
 
 The Jobs system tests require Jobs to be created with an AWS account. AWS does not provide the functionality to create Jobs using the Device API; therefore, Jobs will have to be created using another method.
 
-See @ref guide_developer_automated_tests_jobs for additional setup for running the Jobs tests on Travis CI.
+See @ref guide_developer_automated_tests_jobs_and_provisioning for additional setup for running the Jobs tests on Travis CI.
 
 1. Register a Thing for the tests. This needs to be done only once. <br>
 Follow [this guide](https://docs.aws.amazon.com/iot/latest/developerguide/register-device.html) to register a new Thing.
