@@ -163,22 +163,29 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * const pContext,
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
-                           const MQTTPublishInfo_t * const pPublishInfo )
+                           const MQTTPublishInfo_t * const pPublishInfo,
+                           uint16_t packetId )
 {
     size_t remainingLength = 0, packetSize = 0, headerSize = 0;
     int32_t bytesSent = 0;
-    uint16_t packetId = 0U;
+    MQTTStatus_t status = MQTTSuccess;
 
-    /* Get the remaining length and packet size.*/
-    MQTTStatus_t status = MQTT_GetPublishPacketSize( pPublishInfo,
-                                                     &remainingLength,
-                                                     &packetSize );
+    /* Validate arguments. */
+    if( ( pContext == NULL ) || ( pPublishInfo == NULL ) )
+    {
+        status = MQTTBadParameter;
+    }
 
     if( status == MQTTSuccess )
     {
-        /* Generate a packet ID for the publish packet. */
-        packetId = MQTT_GetPacketId( pContext );
+        /* Get the remaining length and packet size.*/
+        status = MQTT_GetPublishPacketSize( pPublishInfo,
+                                            &remainingLength,
+                                            &packetSize );
+    }
 
+    if( status == MQTTSuccess )
+    {
         status = MQTT_SerializePublishHeader( pPublishInfo,
                                               packetId,
                                               remainingLength,

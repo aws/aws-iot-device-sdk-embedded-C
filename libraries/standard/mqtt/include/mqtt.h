@@ -144,7 +144,8 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * const pContext,
                              size_t subscriptionCount );
 
 MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
-                           const MQTTPublishInfo_t * const pPublishInfo );
+                           const MQTTPublishInfo_t * const pPublishInfo,
+                           uint16_t packetId );
 
 MQTTStatus_t MQTT_Ping( MQTTContext_t * const pContext );
 

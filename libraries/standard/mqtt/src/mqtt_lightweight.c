@@ -28,17 +28,17 @@
 /**
  * @brief MQTT protocol version 3.1.1.
  */
-#define MQTT_VERSION_3_1_1    ( ( uint8_t ) 4U )
+#define MQTT_VERSION_3_1_1                  ( ( uint8_t ) 4U )
 
 /**
  * @brief Size of the fixed and variable header of a CONNECT packet.
  */
-#define MQTT_PACKET_CONNECT_HEADER_SIZE    ( 10UL )
+#define MQTT_PACKET_CONNECT_HEADER_SIZE     ( 10UL )
 
 /**
  * @brief Maximum size of an MQTT CONNECT packet, per MQTT spec.
  */
-#define MQTT_PACKET_CONNECT_MAX_SIZE       ( 327700UL )
+#define MQTT_PACKET_CONNECT_MAX_SIZE        ( 327700UL )
 
 /**
  * @brief Per the MQTT 3.1.1 spec, the largest "Remaining Length" of an MQTT
@@ -47,13 +47,13 @@
 #define MQTT_MAX_REMAINING_LENGTH           ( 268435455UL )
 
 /* MQTT CONNECT flags. */
-#define MQTT_CONNECT_FLAG_CLEAN          ( 1 )    /**< @brief Clean session. */
-#define MQTT_CONNECT_FLAG_WILL           ( 2 )    /**< @brief Will present. */
-#define MQTT_CONNECT_FLAG_WILL_QOS1      ( 3 )    /**< @brief Will QoS 1. */
-#define MQTT_CONNECT_FLAG_WILL_QOS2      ( 4 )    /**< @brief Will QoS 2. */
-#define MQTT_CONNECT_FLAG_WILL_RETAIN    ( 5 )    /**< @brief Will retain. */
-#define MQTT_CONNECT_FLAG_PASSWORD       ( 6 )    /**< @brief Password present. */
-#define MQTT_CONNECT_FLAG_USERNAME       ( 7 )    /**< @brief User name present. */
+#define MQTT_CONNECT_FLAG_CLEAN             ( 1 ) /**< @brief Clean session. */
+#define MQTT_CONNECT_FLAG_WILL              ( 2 ) /**< @brief Will present. */
+#define MQTT_CONNECT_FLAG_WILL_QOS1         ( 3 ) /**< @brief Will QoS 1. */
+#define MQTT_CONNECT_FLAG_WILL_QOS2         ( 4 ) /**< @brief Will QoS 2. */
+#define MQTT_CONNECT_FLAG_WILL_RETAIN       ( 5 ) /**< @brief Will retain. */
+#define MQTT_CONNECT_FLAG_PASSWORD          ( 6 ) /**< @brief Password present. */
+#define MQTT_CONNECT_FLAG_USERNAME          ( 7 ) /**< @brief User name present. */
 
 /*
  * Positions of each flag in the first byte of an MQTT PUBLISH packet's
@@ -108,12 +108,12 @@
 /**
  * @brief Get the high byte of a 16-bit unsigned integer.
  */
-#define UINT16_HIGH_BYTE( x )    ( ( uint8_t ) ( ( x ) >> 8 ) )
+#define UINT16_HIGH_BYTE( x )           ( ( uint8_t ) ( ( x ) >> 8 ) )
 
 /**
  * @brief Get the low byte of a 16-bit unsigned integer.
  */
-#define UINT16_LOW_BYTE( x )     ( ( uint8_t ) ( ( x ) & 0x00ffU ) )
+#define UINT16_LOW_BYTE( x )            ( ( uint8_t ) ( ( x ) & 0x00ffU ) )
 
 /**
  * @brief Macro for decoding a 2-byte unsigned int from a sequence of bytes.
@@ -1141,7 +1141,7 @@ MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * const pPublishInfo
 {
     MQTTStatus_t status = MQTTSuccess;
 
-    if( ( pBuffer == NULL ) || ( pPublishInfo == NULL ) || ( packetId == 0U ) )
+    if( ( pBuffer == NULL ) || ( pPublishInfo == NULL ) )
     {
         status = MQTTBadParameter;
     }
@@ -1183,7 +1183,7 @@ MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * const pPubli
     MQTTStatus_t status = MQTTSuccess;
 
     if( ( pBuffer == NULL ) || ( pPublishInfo == NULL ) ||
-        ( pHeaderSize == NULL ) || ( packetId == 0U ) )
+        ( pHeaderSize == NULL ) )
     {
         status = MQTTBadParameter;
     }
