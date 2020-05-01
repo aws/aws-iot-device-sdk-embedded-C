@@ -7,4 +7,5 @@
 #include "private/http_client_internal.h"
 #include "private/http_client_parse.h"
 
-#define assert( x )
+/*#define assert( x ) */
+#include <assert.h>

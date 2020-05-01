@@ -318,7 +318,8 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
                                   DASH_CHARACTER,
                                   rangeEnd );
             assert( ( stdRetVal >= 0 ) &&
-                    stdRetVal <= ( DASH_CHARACTER_LEN + MAX_INT32_NO_OF_DECIMAL_DIGITS ) );
+                    stdRetVal <= ( int ) ( DASH_CHARACTER_LEN +
+                                           MAX_INT32_NO_OF_DECIMAL_DIGITS ) );
             rangeValueLength += ( size_t ) stdRetVal;
         }
         /* Case when request is for bytes in the range [rangeStart, ). */
