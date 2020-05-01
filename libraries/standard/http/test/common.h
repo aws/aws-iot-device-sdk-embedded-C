@@ -7,8 +7,6 @@
 #include "private/http_client_internal.h"
 #include "private/http_client_parse.h"
 
-#if TESTS_DISABLE_ASSERT
-    #define assert( x )
-#else
-    #include <assert.h>
-#endif
+static int _assertCount;
+#define assertReset()    do { _assertCount = 0; } while( 0 )
+#define assert( x )      do { _assertCount++; } while( 0 )
