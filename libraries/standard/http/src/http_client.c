@@ -302,7 +302,8 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
                               RANGE_REQUEST_HEADER_VALUE_PREFIX,
                               rangeStartOrlastNbytes );
         assert( ( stdRetVal >= 0 ) &&
-                stdRetVal <= ( int ) ( RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN + MAX_INT32_NO_OF_DIGITS ) );
+                stdRetVal <= ( int ) ( RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN +
+                                       MAX_INT32_NO_OF_DECIMAL_DIGITS ) );
         rangeValueLength += ( size_t ) stdRetVal;
 
         /* Add remaining value data depending on the range specification type. */
@@ -317,7 +318,7 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
                                   DASH_CHARACTER,
                                   rangeEnd );
             assert( ( stdRetVal >= 0 ) &&
-                    stdRetVal <= ( DASH_CHARACTER_LEN + MAX_INT32_NO_OF_DIGITS ) );
+                    stdRetVal <= ( DASH_CHARACTER_LEN + MAX_INT32_NO_OF_DECIMAL_DIGITS ) );
             rangeValueLength += ( size_t ) stdRetVal;
         }
         /* Case when request is for bytes in the range [rangeStart, ). */
