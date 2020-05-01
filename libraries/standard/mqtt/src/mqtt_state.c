@@ -560,11 +560,11 @@ MQTTPublishState_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
 }
 
 uint16_t MQTT_StateSelect( MQTTContext_t * pMqttContext,
-                           MQTTPublishState_t searchState )
+                           MQTTPublishState_t searchState,
+                           MQTTStateCursor_t * pCursor )
 {
     uint16_t packetId = MQTT_PACKET_ID_INVALID;
     MQTTPubAckInfo_t * records = NULL;
-    size_t recordIndex = 0;
 
     /* Classify state into incoming or outgoing so we don't search both. */
     switch( searchState )
@@ -573,29 +573,37 @@ uint16_t MQTT_StateSelect( MQTTContext_t * pMqttContext,
         case MQTTPubRecSend:
         case MQTTPubRelPending:
         case MQTTPubCompSend:
-            records = pMqttContext->incomingPublishRecords;
+            if( pMqttContext != NULL )
+            {
+                records = pMqttContext->incomingPublishRecords;
+            }
             break;
         case MQTTPublishSend:
         case MQTTPubAckPending:
         case MQTTPubRecPending:
         case MQTTPubRelSend:
         case MQTTPubCompPending:
-            records = pMqttContext->outgoingPublishRecords;
+            if( pMqttContext != NULL )
+            {
+                records = pMqttContext->outgoingPublishRecords;
+            }
             break;
         default:
             /* NULL or done aren't valid entries to search for. */
             break;
     }
 
-    if( records != NULL )
+    if( ( records != NULL ) && ( pCursor != NULL ) )
     {
-        for( recordIndex = 0; recordIndex < MQTT_STATE_ARRAY_MAX_COUNT; recordIndex++ )
+        while( *pCursor < MQTT_STATE_ARRAY_MAX_COUNT )
         {
-            if( records[ recordIndex ].publishState == searchState )
+            if( records[ *pCursor ].publishState == searchState )
             {
-                packetId = records[ recordIndex ].packetId;
+                packetId = records[ *pCursor ].packetId;
+                (*pCursor)++;
                 break;
             }
+            (*pCursor)++;
         }
     }
 
