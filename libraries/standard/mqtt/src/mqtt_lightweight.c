@@ -23,26 +23,56 @@
 
 #include "mqtt_lightweight.h"
 
+/**
+ * @brief MQTT protocol version 3.1.1.
+ */
 #define MQTT_VERSION_3_1_1    ( ( uint8_t ) 4U )
 
+/**
+ * @brief Size of the fixed and variable header of a CONNECT packet.
+ */
 #define MQTT_PACKET_CONNECT_HEADER_SIZE    ( 10UL )
+
+/**
+ * @brief Maximum size of an MQTT CONNECT packet, per MQTT spec.
+ */
 #define MQTT_PACKET_CONNECT_MAX_SIZE       ( 327700UL )
 
-#define MQTT_CONNECT_FLAG_CLEAN          ( 1 )
-#define MQTT_CONNECT_FLAG_WILL           ( 2 )
-#define MQTT_CONNECT_FLAG_WILL_QOS1      ( 3 )
-#define MQTT_CONNECT_FLAG_WILL_QOS2      ( 4 )
-#define MQTT_CONNECT_FLAG_WILL_RETAIN    ( 5 )
-#define MQTT_CONNECT_FLAG_PASSWORD       ( 6 )
-#define MQTT_CONNECT_FLAG_USERNAME       ( 7 )
+/* MQTT CONNECT flags. */
+#define MQTT_CONNECT_FLAG_CLEAN          ( 1 )    /**< @brief Clean session. */
+#define MQTT_CONNECT_FLAG_WILL           ( 2 )    /**< @brief Will present. */
+#define MQTT_CONNECT_FLAG_WILL_QOS1      ( 3 )    /**< @brief Will QoS 1. */
+#define MQTT_CONNECT_FLAG_WILL_QOS2      ( 4 )    /**< @brief Will QoS 2. */
+#define MQTT_CONNECT_FLAG_WILL_RETAIN    ( 5 )    /**< @brief Will retain. */
+#define MQTT_CONNECT_FLAG_PASSWORD       ( 6 )    /**< @brief Password present. */
+#define MQTT_CONNECT_FLAG_USERNAME       ( 7 )    /**< @brief User name present. */
 
+/**
+ * @brief The size of MQTT DISCONNECT packets, per MQTT spec.
+ */
 #define MQTT_DISCONNECT_PACKET_SIZE         ( 2UL )
+
+/**
+ * @brief The Remaining Length field of MQTT disconnect packets, per MQTT spec.
+ */
 #define MQTT_DISCONNECT_REMAINING_LENGTH    ( ( uint8_t ) 0 )
 
+/**
+ * @brief Set a bit in an 8-bit unsigned integer.
+ */
 #define UINT8_SET_BIT( x, position )    ( ( x ) = ( uint8_t ) ( ( x ) | ( 0x01U << ( position ) ) ) )
 
+/**
+ * @brief Get the high byte of a 16-bit unsigned integer.
+ */
 #define UINT16_HIGH_BYTE( x )    ( ( uint8_t ) ( ( x ) >> 8 ) )
+
+/**
+ * @brief Get the low byte of a 16-bit unsigned integer.
+ */
 #define UINT16_LOW_BYTE( x )     ( ( uint8_t ) ( ( x ) & 0x00ffU ) )
+
+/*-----------------------------------------------------------*/
 
 static size_t remainingLengthEncodedSize( size_t length )
 {
@@ -75,6 +105,8 @@ static size_t remainingLengthEncodedSize( size_t length )
     return encodedSize;
 }
 
+/*-----------------------------------------------------------*/
+
 static uint8_t * encodeRemainingLength( uint8_t * pDestination,
                                         size_t length )
 {
@@ -102,6 +134,7 @@ static uint8_t * encodeRemainingLength( uint8_t * pDestination,
     return pLengthEnd;
 }
 
+/*-----------------------------------------------------------*/
 
 static uint8_t * encodeString( uint8_t * pDestination,
                                const char * source,
@@ -125,6 +158,8 @@ static uint8_t * encodeString( uint8_t * pDestination,
 
     return pBuffer;
 }
+
+/*-----------------------------------------------------------*/
 
 static int32_t recvExact( MQTTTransportRecvFunc_t recvFunc,
                           MQTTNetworkContext_t networkContext,
@@ -154,6 +189,8 @@ static int32_t recvExact( MQTTTransportRecvFunc_t recvFunc,
 
     return totalBytesRecvd;
 }
+
+/*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * const pConnectInfo,
                                         const MQTTPublishInfo_t * const pWillInfo,
@@ -208,6 +245,8 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * const pConnect
 
     return status;
 }
+
+/*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * const pConnectInfo,
                                     const MQTTPublishInfo_t * const pWillInfo,
@@ -323,6 +362,8 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * const pConnectInfo
     return status;
 }
 
+/*-----------------------------------------------------------*/
+
 MQTTStatus_t MQTT_SubscriptionPacketSize( const MQTTSubscribeInfo_t * const pSubscriptionList,
                                           size_t subscriptionCount,
                                           size_t * pRemainingLength,
@@ -330,6 +371,8 @@ MQTTStatus_t MQTT_SubscriptionPacketSize( const MQTTSubscribeInfo_t * const pSub
 {
     return MQTTSuccess;
 }
+
+/*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * const pSubscriptionList,
                                       size_t subscriptionCount,
@@ -340,6 +383,8 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * const pSubscri
     return MQTTSuccess;
 }
 
+/*-----------------------------------------------------------*/
+
 MQTTStatus_t MQTT_SerializeUnsubscribe( const MQTTSubscribeInfo_t * const pSubscriptionList,
                                         size_t subscriptionCount,
                                         uint16_t packetId,
@@ -349,12 +394,16 @@ MQTTStatus_t MQTT_SerializeUnsubscribe( const MQTTSubscribeInfo_t * const pSubsc
     return MQTTSuccess;
 }
 
+/*-----------------------------------------------------------*/
+
 MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * const pPublishInfo,
                                         size_t * const pRemainingLength,
                                         size_t * const pPacketSize )
 {
     return MQTTSuccess;
 }
+
+/*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * const pPublishInfo,
                                     uint16_t packetId,
@@ -363,6 +412,8 @@ MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * const pPublishInfo
 {
     return MQTTSuccess;
 }
+
+/*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * const pPublishInfo,
                                           uint16_t packetId,
@@ -373,6 +424,8 @@ MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * const pPubli
     return MQTTSuccess;
 }
 
+/*-----------------------------------------------------------*/
+
 MQTTStatus_t MQTT_GetDisconnectPacketSize( size_t * pPacketSize )
 {
     /* MQTT DISCONNECT packets always have the same size. */
@@ -380,6 +433,8 @@ MQTTStatus_t MQTT_GetDisconnectPacketSize( size_t * pPacketSize )
 
     return MQTTSuccess;
 }
+
+/*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTT_SerializeDisconnect( const MQTTFixedBuffer_t * const pBuffer )
 {
@@ -405,10 +460,14 @@ MQTTStatus_t MQTT_SerializeDisconnect( const MQTTFixedBuffer_t * const pBuffer )
     return status;
 }
 
+/*-----------------------------------------------------------*/
+
 MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * const pBuffer )
 {
     return MQTTSuccess;
 }
+
+/*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTT_GetIncomingPacket( MQTTTransportRecvFunc_t recvFunc,
                                      MQTTNetworkContext_t networkContext,
@@ -417,12 +476,16 @@ MQTTStatus_t MQTT_GetIncomingPacket( MQTTTransportRecvFunc_t recvFunc,
     return MQTTSuccess;
 }
 
+/*-----------------------------------------------------------*/
+
 MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * const pIncomingPacket,
                                       uint16_t * const pPacketId,
                                       MQTTPublishInfo_t * const pPublishInfo )
 {
     return MQTTSuccess;
 }
+
+/*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * const pIncomingPacket,
                                   uint16_t * const pPacketId,
@@ -431,3 +494,5 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * const pIncomingPacket
 
     return MQTTSuccess;
 }
+
+/*-----------------------------------------------------------*/

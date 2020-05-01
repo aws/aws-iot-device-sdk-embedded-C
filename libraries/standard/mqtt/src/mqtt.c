@@ -23,6 +23,8 @@
 
 #include "mqtt.h"
 
+/*-----------------------------------------------------------*/
+
 static int32_t sendPacket( MQTTContext_t * pContext, size_t bytesToSend )
 {
     const uint8_t * pIndex = pContext->networkBuffer.pBuffer;
@@ -61,6 +63,8 @@ static int32_t sendPacket( MQTTContext_t * pContext, size_t bytesToSend )
     return totalBytesSent;
 }
 
+/*-----------------------------------------------------------*/
+
 void MQTT_Init( MQTTContext_t * const pContext,
                 const MQTTTransportInterface_t * const pTransportInterface,
                 const MQTTApplicationCallbacks_t * const pCallbacks,
@@ -77,6 +81,8 @@ void MQTT_Init( MQTTContext_t * const pContext,
     pContext->nextPacketId = 1;
 }
 
+/*-----------------------------------------------------------*/
+
 MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
                            const MQTTConnectInfo_t * const pConnectInfo,
                            const MQTTPublishInfo_t * const pWillInfo,
@@ -84,7 +90,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
 {
     size_t remainingLength, packetSize;
     int32_t bytesSent;
-    MQTTPacketInfo_t incomingPacket;
+    MQTTPacketInfo_t incomingPacket = { .type = ( ( uint8_t ) 0 ) };
 
     MQTTStatus_t status = MQTT_GetConnectPacketSize( pConnectInfo,
                                                      pWillInfo,
@@ -136,6 +142,8 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
     return status;
 }
 
+/*-----------------------------------------------------------*/
+
 MQTTStatus_t MQTT_Subscribe( MQTTContext_t * const pContext,
                              const MQTTSubscribeInfo_t * const pSubscriptionList,
                              size_t subscriptionCount )
@@ -143,16 +151,22 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * const pContext,
     return MQTTSuccess;
 }
 
+/*-----------------------------------------------------------*/
+
 MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
                            const MQTTPublishInfo_t * const pPublishInfo )
 {
     return MQTTSuccess;
 }
 
+/*-----------------------------------------------------------*/
+
 MQTTStatus_t MQTT_Ping( MQTTContext_t * const pContext )
 {
     return MQTTSuccess;
 }
+
+/*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * const pContext,
                                const MQTTSubscribeInfo_t * const pSubscriptionList,
@@ -160,6 +174,8 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * const pContext,
 {
     return MQTTSuccess;
 }
+
+/*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTT_Disconnect( MQTTContext_t * const pContext )
 {
@@ -191,11 +207,15 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * const pContext )
     return status;
 }
 
+/*-----------------------------------------------------------*/
+
 MQTTStatus_t MQTT_Process( MQTTContext_t * const pContext,
                            uint32_t timeoutMs )
 {
     return MQTTSuccess;
 }
+
+/*-----------------------------------------------------------*/
 
 uint16_t MQTT_GetPacketId( MQTTContext_t * const pContext )
 {
@@ -210,3 +230,5 @@ uint16_t MQTT_GetPacketId( MQTTContext_t * const pContext )
 
     return packetId;
 }
+
+/*-----------------------------------------------------------*/

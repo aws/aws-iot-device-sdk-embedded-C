@@ -107,11 +107,32 @@ struct MQTTContext
     uint32_t lastPacketTime;
 };
 
+/**
+ * @brief Initialize an MQTT context.
+ *
+ * This function must be called on an MQTT context before any other function.
+ *
+ * @brief param[in] pContext The context to initialize.
+ * @brief param[in] pTransportInterface The transport interface to use with the context.
+ * @brief param[in] pCallbacks Callbacks to use with the context.
+ * @brief param[in] pNetworkBuffer Network buffer provided for the context.
+ */
 void MQTT_Init( MQTTContext_t * const pContext,
                 const MQTTTransportInterface_t * const pTransportInterface,
                 const MQTTApplicationCallbacks_t * const pCallbacks,
                 const MQTTFixedBuffer_t * const pNetworkBuffer );
 
+/**
+ * @brief Establish a MQTT session.
+ *
+ * @brief param[in] pContext Initialized MQTT context.
+ * @brief param[in] pConnectInfo MQTT CONNECT packet parameters.
+ * @brief param[in] pWillInfo Last Will and Testament. Pass NULL if not used.
+ * @brief param[out] pSessionPresent Whether a previous session was present.
+ * Only relevant if not establishing a clean session.
+ *
+ * @return See #MQTTStatus_t.
+ */
 MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
                            const MQTTConnectInfo_t * const pConnectInfo,
                            const MQTTPublishInfo_t * const pWillInfo,
@@ -130,6 +151,13 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * const pContext,
                                const MQTTSubscribeInfo_t * const pSubscriptionList,
                                size_t subscriptionCount );
 
+/**
+ * @brief Disconnect an MQTT session.
+ *
+ * @param[in] pContext Initialized and connected MQTT context.
+ *
+ * @return See #MQTTStatus_t.
+ */
 MQTTStatus_t MQTT_Disconnect( MQTTContext_t * const pContext );
 
 MQTTStatus_t MQTT_Process( MQTTContext_t * const pContext,

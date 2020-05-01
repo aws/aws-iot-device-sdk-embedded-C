@@ -22,8 +22,9 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-/* Set network context to socket (int). */
-typedef int MQTTNetworkContext_t;
+/* Set network context to OpenSSL SSL context. */
+#include <openssl/ssl.h>
+typedef SSL * MQTTNetworkContext_t;
 
 /**
  * @brief The maximum number of MQTT PUBLISH messages that may be pending
