@@ -218,6 +218,7 @@ static HTTPStatus_t _writeRequestLine( HTTPRequestHeaders_t * pRequestHeaders,
                       SPACE_CHARACTER_LEN +       \
                       HTTP_PROTOCOL_VERSION_LEN + \
                       HTTP_HEADER_LINE_SEPARATOR_LEN;
+    int32_t bytesWritten = 0;
 
     assert( pRequestHeaders != NULL );
     assert( pRequestHeaders->pBuffer != NULL );
@@ -234,33 +235,44 @@ static HTTPStatus_t _writeRequestLine( HTTPRequestHeaders_t * pRequestHeaders,
     if( returnStatus == HTTP_SUCCESS )
     {
         /* Write "<METHOD> <PATH> HTTP/1.1\r\n" to start the HTTP header. */
-        memcpy( pBufferCur, pMethod, methodLen );
-        pBufferCur += methodLen;
-        memcpy( pBufferCur, SPACE_CHARACTER, SPACE_CHARACTER_LEN );
-
-        pBufferCur += SPACE_CHARACTER_LEN;
-
-        /* Use "/" as default value if <PATH> is NULL. */
         if( ( pPath == NULL ) || ( pathLen == 0 ) )
         {
-            memcpy( pBufferCur, HTTP_EMPTY_PATH, HTTP_EMPTY_PATH_LEN );
-            pBufferCur += HTTP_EMPTY_PATH_LEN;
+            /* Use "/" as default value if <PATH> is NULL. */
+            bytesWritten = snprintf( ( char * ) pBufferCur,
+                                     toAddLen,
+                                     HTTP_REQUEST_LINE_FORMAT,
+                                     ( int32_t ) methodLen, pMethod,
+                                     ( int32_t ) HTTP_EMPTY_PATH_LEN,
+                                     HTTP_EMPTY_PATH,
+                                     ( int32_t ) HTTP_PROTOCOL_VERSION_LEN,
+                                     HTTP_PROTOCOL_VERSION );
         }
         else
         {
-            memcpy( pBufferCur, pPath, pathLen );
-            pBufferCur += pathLen;
+            bytesWritten = snprintf( ( char * ) pBufferCur,
+                                     toAddLen,
+                                     HTTP_REQUEST_LINE_FORMAT,
+                                     ( int32_t ) methodLen, pMethod,
+                                     ( int32_t ) pathLen, pPath,
+                                     ( int32_t ) HTTP_PROTOCOL_VERSION_LEN,
+                                     HTTP_PROTOCOL_VERSION );
         }
 
-        memcpy( pBufferCur, SPACE_CHARACTER, SPACE_CHARACTER_LEN );
-        pBufferCur += SPACE_CHARACTER_LEN;
+        if( ( bytesWritten + HTTP_HEADER_LINE_SEPARATOR_LEN ) != toAddLen )
+        {
+            IotLogErrorWithArgs( "Internal error in snprintf() in _addHeader(). "
+                                 "BytesWritten: %d.", bytesWritten );
+        }
+        else
+        {
+            pBufferCur += bytesWritten;
 
-        memcpy( pBufferCur,
-                HTTP_PROTOCOL_VERSION, HTTP_PROTOCOL_VERSION_LEN );
-        pBufferCur += HTTP_PROTOCOL_VERSION_LEN;
-        memcpy( pBufferCur,
-                HTTP_HEADER_LINE_SEPARATOR, HTTP_HEADER_LINE_SEPARATOR_LEN );
-        pRequestHeaders->headersLen = toAddLen;
+            /* HTTP_HEADER_LINE_SEPARATOR cannot be written during snprintf
+             * above because it writes an extra null byte at the end. */
+            memcpy( pBufferCur, HTTP_HEADER_LINE_SEPARATOR, HTTP_HEADER_LINE_SEPARATOR_LEN );
+            pRequestHeaders->headersLen = toAddLen;
+            returnStatus = HTTP_SUCCESS;
+        }
     }
 
     return returnStatus;

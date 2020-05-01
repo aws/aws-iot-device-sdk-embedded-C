@@ -89,7 +89,7 @@ int main()
     }                                                              \
     while( 0 )
 
-    plan( 20 );
+    plan( 22 );
 
     /* Happy Path testing. */
     reset();
@@ -101,7 +101,7 @@ int main()
                   HTTP_USER_AGENT_FIELD, HTTP_USER_AGENT_VALUE,
                   HTTP_HOST_FIELD, HTTP_TEST_HOST_VALUE,
                   HTTP_CONNECTION_FIELD, HTTP_CONNECTION_CLOSE_VALUE )
-        == expectedHeaderLen );
+        == ( int ) expectedHeaderLen );
     /* Set parameters for reqHeaders. */
     reqHeaders.pBuffer = buffer;
     reqHeaders.bufferLen = expectedHeaderLen;
@@ -159,7 +159,7 @@ int main()
                   HTTP_USER_AGENT_FIELD, HTTP_USER_AGENT_VALUE,
                   HTTP_HOST_FIELD, HTTP_TEST_HOST_VALUE,
                   HTTP_CONNECTION_FIELD, HTTP_CONNECTION_KEEP_ALIVE_VALUE )
-        == expectedHeaderLen );
+        == ( int ) expectedHeaderLen );
     reqHeaders.pBuffer = buffer;
     reqHeaders.bufferLen = expectedHeaderLen;
     test_err = HTTPClient_InitializeRequestHeaders( &reqHeaders, &reqInfo );
@@ -183,7 +183,7 @@ int main()
                   HTTP_USER_AGENT_FIELD, HTTP_USER_AGENT_VALUE,
                   HTTP_HOST_FIELD, HTTP_TEST_HOST_VALUE,
                   HTTP_CONNECTION_FIELD, HTTP_CONNECTION_CLOSE_VALUE )
-        == expectedHeaderLen );
+        == ( int ) expectedHeaderLen );
     reqHeaders.pBuffer = buffer;
     reqHeaders.bufferLen = expectedHeaderLen;
     test_err = HTTPClient_InitializeRequestHeaders( &reqHeaders, &reqInfo );
@@ -191,6 +191,27 @@ int main()
                  expectedHeader, expectedHeaderLen ) == 0 );
     ok( reqHeaders.headersLen == expectedHeaderLen );
     ok( test_err == HTTP_SUCCESS );
+    reset();
+
+    /* -----------------------------------------------------------------------*/
+
+    /* Test HTTP_INSUFFICIENT_MEMORY from user providing too small a buffer. */
+    expectedHeaderLen = HTTP_TEST_PREFIX_HEADER_LEN + \
+                        HTTP_CONNECTION_CLOSE_VALUE_LEN;
+    ok( snprintf( expectedHeader, expectedHeaderLen + 1,
+                  HTTP_TEST_HEADER_FORMAT,
+                  HTTP_TEST_REQUEST_METHOD, HTTP_TEST_REQUEST_PATH, HTTP_PROTOCOL_VERSION,
+                  HTTP_USER_AGENT_FIELD, HTTP_USER_AGENT_VALUE,
+                  HTTP_HOST_FIELD, HTTP_TEST_HOST_VALUE,
+                  HTTP_CONNECTION_FIELD, HTTP_CONNECTION_CLOSE_VALUE )
+        == ( int ) expectedHeaderLen );
+    /* Set parameters for reqHeaders. */
+    reqHeaders.pBuffer = buffer;
+    reqHeaders.bufferLen = expectedHeaderLen - 1;
+    /* Set parameters for reqInfo. */
+    fillReqInfoTemplate();
+    test_err = HTTPClient_InitializeRequestHeaders( &reqHeaders, &reqInfo );
+    ok( test_err == HTTP_INSUFFICIENT_MEMORY );
     reset();
 
     /* -----------------------------------------------------------------------*/
