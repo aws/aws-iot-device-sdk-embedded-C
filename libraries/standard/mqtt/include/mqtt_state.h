@@ -30,9 +30,9 @@ typedef enum MQTTStateOperation
     MQTT_RECEIVE,
 } MQTTStateOperation_t;
 
-MQTTPublishState_t MQTT_ReserveState( MQTTContext_t * pMqttContext,
-                                      uint16_t packetId,
-                                      MQTTQoS_t qos );
+MQTTStatus_t MQTT_ReserveState( MQTTContext_t * pMqttContext,
+                                uint16_t packetId,
+                                MQTTQoS_t qos );
 
 MQTTPublishState_t MQTT_CalculateStatePublish( MQTTStateOperation_t opType,
                                                MQTTQoS_t qos );
@@ -40,7 +40,7 @@ MQTTPublishState_t MQTT_CalculateStatePublish( MQTTStateOperation_t opType,
 MQTTPublishState_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
                                             uint16_t packetId,
                                             MQTTStateOperation_t opType,
-                                            MQTTQoS_t receivedQoS );
+                                            MQTTQoS_t qos );
 
 MQTTPublishState_t MQTT_CalculateStateAck( MQTTPubAckType_t packetType,
                                            MQTTStateOperation_t opType,

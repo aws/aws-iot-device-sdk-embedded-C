@@ -104,13 +104,11 @@ static MQTTStatus_t _addRecord( MQTTPubAckInfo_t * records,
  * @brief Update and possibly delete an entry in the state record.
  *
  * @param[in] records State record array.
- * @param[in] recordCount Length of record array.
  * @param[in] recordIndex index of record to update.
  * @param[in] newState New state to update.
  * @param[in] shouldDelete Whether an existing entry should be deleted.
  */
 static void _updateRecord( MQTTPubAckInfo_t * records,
-                           size_t recordCount,
                            size_t recordIndex,
                            MQTTPublishState_t newState,
                            bool shouldDelete );
@@ -125,14 +123,15 @@ static bool _validateTransitionPublish( MQTTPublishState_t currentState,
     switch( currentState )
     {
         case MQTTStateNull:
-            /* Transitions from invalid occur when storing a new entry into the record. */
+            /* Transitions from null occur when storing a new entry into the record. */
             if( opType == MQTT_RECEIVE )
             {
                 isValid = ( newState == MQTTPubAckSend ) || ( newState == MQTTPubRecSend );
             }
             break;
         case MQTTPublishSend:
-            /* Outgoing publish. */
+            /* Outgoing publish. All such publishes start in this state due to
+             * the reserve operation. */
             switch( qos )
             {
                 case MQTTQoS0:
@@ -299,13 +298,10 @@ static MQTTStatus_t _addRecord( MQTTPubAckInfo_t * records,
 }
 
 static void _updateRecord( MQTTPubAckInfo_t * records,
-                           size_t recordCount,
                            size_t recordIndex,
                            MQTTPublishState_t newState,
                            bool shouldDelete )
 {
-    assert( recordIndex < recordCount );
-
     if( shouldDelete )
     {
         records[ recordIndex ].packetId = MQTT_PACKET_ID_INVALID;
@@ -316,18 +312,16 @@ static void _updateRecord( MQTTPubAckInfo_t * records,
     {
         records[ recordIndex ].publishState = newState;
     }
-
 }
 
-MQTTPublishState_t MQTT_ReserveState( MQTTContext_t * pMqttContext,
-                                      uint16_t packetId,
-                                      MQTTQoS_t qos )
+MQTTStatus_t MQTT_ReserveState( MQTTContext_t * pMqttContext,
+                                uint16_t packetId,
+                                MQTTQoS_t qos )
 {
-    MQTTPublishState_t state = MQTTStateNull;
+    MQTTStatus_t status = MQTTSuccess;
+    size_t recordIndex = MQTT_STATE_ARRAY_MAX_COUNT;
     MQTTQoS_t tempQoS = MQTTQoS0;
     MQTTPublishState_t tempState = MQTTStateNull;
-    size_t recordIndex = MQTT_STATE_ARRAY_MAX_COUNT;
-    MQTTStatus_t mqttStatus = MQTTBadParameter;
 
     recordIndex = _findInRecord( pMqttContext->outgoingPublishRecords,
                                  MQTT_STATE_ARRAY_MAX_COUNT,
@@ -335,26 +329,30 @@ MQTTPublishState_t MQTT_ReserveState( MQTTContext_t * pMqttContext,
                                  &tempQoS,
                                  &tempState );
 
-    /* Make sure there's no collision. */
-    if( ( packetId != MQTT_PACKET_ID_INVALID ) && ( recordIndex >= MQTT_STATE_ARRAY_MAX_COUNT ) )
+    if( qos == MQTTQoS0 )
     {
-        mqttStatus = _addRecord( pMqttContext->outgoingPublishRecords,
-                                 MQTT_STATE_ARRAY_MAX_COUNT,
-                                 packetId,
-                                 qos,
-                                 MQTTPublishSend );
+        status = MQTTSuccess;
     }
-
-    if( mqttStatus != MQTTSuccess )
+    else if( packetId == MQTT_PACKET_ID_INVALID )
     {
-        state = MQTTStateNull;
+        status = MQTTBadParameter;
+    }
+    /* Make sure there's no collision. */
+    else if( recordIndex >= MQTT_STATE_ARRAY_MAX_COUNT )
+    {
+        status = _addRecord( pMqttContext->outgoingPublishRecords,
+                             MQTT_STATE_ARRAY_MAX_COUNT,
+                             packetId,
+                             qos,
+                             MQTTPublishSend );
     }
     else
     {
-        state = MQTTPublishSend;
+        /* If the ID was found there must be a collision. */
+        status = MQTTStateCollision;
     }
     
-    return state;
+    return status;
 }
 
 MQTTPublishState_t MQTT_CalculateStatePublish( MQTTStateOperation_t opType,
@@ -382,13 +380,13 @@ MQTTPublishState_t MQTT_CalculateStatePublish( MQTTStateOperation_t opType,
 MQTTPublishState_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
                                             uint16_t packetId,
                                             MQTTStateOperation_t opType,
-                                            MQTTQoS_t receivedQoS )
+                                            MQTTQoS_t qos )
 {
     MQTTPublishState_t newState = MQTTStateNull;
     MQTTPublishState_t currentState = MQTTStateNull;
-    MQTTStatus_t mqttStatus = MQTTBadParameter;
+    MQTTStatus_t mqttStatus = MQTTSuccess;
     size_t recordIndex = MQTT_STATE_ARRAY_MAX_COUNT;
-    MQTTQoS_t qos = MQTTQoS0;
+    MQTTQoS_t foundQoS = MQTTQoS0;
     MQTTPubAckInfo_t * records = NULL;
     bool isTransitionValid = false;
 
@@ -401,55 +399,73 @@ MQTTPublishState_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
     {
         records = pMqttContext->incomingPublishRecords;
     }
-    
 
-    if( packetId == MQTT_PACKET_ID_INVALID )
+    recordIndex = _findInRecord( records,
+                                 MQTT_STATE_ARRAY_MAX_COUNT,
+                                 packetId,
+                                 &foundQoS,
+                                 &currentState );
+    
+    if( qos == MQTTQoS0 )
     {
-        /* QoS 0 publish. Do nothing. */
+        /* QoS 0 publish. Do nothing */
         newState = MQTTPublishDone;
+    }
+    else if( packetId == MQTT_PACKET_ID_INVALID )
+    {
+        /* Publishes > QoS 0 need a valid packet ID. */
+        mqttStatus = MQTTBadParameter;
+    }
+    else if( foundQoS == MQTTQoS0 )
+    {
+        /* If entry not found, use supplied QoS. */
+        foundQoS = qos;
+    }
+    else if( foundQoS != qos )
+    {
+        /* If entry found, should match up with supplied QoS. */
+        mqttStatus = MQTTBadParameter;
     }
     else
     {
-        recordIndex = _findInRecord( records,
-                                     MQTT_STATE_ARRAY_MAX_COUNT,
-                                     packetId,
-                                     &qos,
-                                     &currentState );
-        /* When the record does not exist, a QoS must be supplied. Otherwise,
-         * we ignore it. */
-        if( opType == MQTT_RECEIVE )
+        /* Parameters valid. */
+    }
+
+    if( ( foundQoS != MQTTQoS0 ) && ( mqttStatus == MQTTSuccess ) )
+    {
+        newState = MQTT_CalculateStatePublish( opType, foundQoS );
+        isTransitionValid = _validateTransitionPublish( currentState, newState, opType, foundQoS );
+        if( isTransitionValid )
         {
-            qos = receivedQoS;
-        }
-        newState = MQTT_CalculateStatePublish( opType, qos );
-        isTransitionValid = _validateTransitionPublish( currentState, newState, opType, qos );
-        if( opType == MQTT_SEND )
-        {
-            if( isTransitionValid && ( recordIndex < MQTT_STATE_ARRAY_MAX_COUNT ) )
-            {
-                _updateRecord( records,
-                               MQTT_STATE_ARRAY_MAX_COUNT,
-                               recordIndex,
-                               newState,
-                               false );
-                mqttStatus = MQTTSuccess;
-            }
-        }
-        else
-        {
-            if( isTransitionValid && ( recordIndex >= MQTT_STATE_ARRAY_MAX_COUNT ) )
+            /* We don't need to check the record index since _addRecord will check for collisions. */
+            if( opType == MQTT_RECEIVE )
             {
                 mqttStatus = _addRecord( records,
                                          MQTT_STATE_ARRAY_MAX_COUNT,
                                          packetId,
-                                         qos,
+                                         foundQoS,
                                          newState );
             }
+            /* Send operation. */
+            else if( recordIndex < MQTT_STATE_ARRAY_MAX_COUNT )
+            {
+                _updateRecord( records, recordIndex, newState, false );
+            }
+            else
+            {
+                /* Send operation with no record found. */
+                mqttStatus = MQTTBadParameter;
+            }
         }
-        if( mqttStatus != MQTTSuccess )
+        else
         {
-            newState = MQTTStateNull;
+            mqttStatus = MQTTBadParameter;
         }
+    }
+
+    if( mqttStatus != MQTTSuccess )
+    {
+        newState = MQTTStateNull;
     }
     
     return newState;
@@ -530,7 +546,6 @@ MQTTPublishState_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
         if( isTransitionValid )
         {
             _updateRecord( records,
-                           MQTT_STATE_ARRAY_MAX_COUNT,
                            recordIndex,
                            newState,
                            shouldDeleteRecord );
