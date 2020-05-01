@@ -7,6 +7,6 @@
 #include "private/http_client_internal.h"
 #include "private/http_client_parse.h"
 
-static int _assertCount;
-#define assertReset()    do { _assertCount = 0; } while( 0 )
-#define assert( x )      do { _assertCount++; } while( 0 )
+static int _assertFailureCount;
+#define assertReset()    do { _assertFailureCount = 0; } while( 0 )
+#define assert( x )      do { if( x == false ) { _assertFailureCount++; } } while( 0 )
