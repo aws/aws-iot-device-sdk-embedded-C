@@ -250,10 +250,102 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
 /*-----------------------------------------------------------*/
 
 HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
-                                        int32_t rangeStart,
+                                        int32_t rangeStartOrlastNbytes,
                                         int32_t rangeEnd )
 {
-    return HTTP_NOT_SUPPORTED;
+    HTTPStatus_t returnStatus = HTTP_SUCCESS;
+    /* Extra byte allocation ( + 1 ) for NULL character when using sprintf. */
+    char rangeValueBuffer[ MAX_RANGE_REQUEST_VALUE_LEN + 1 ] = { 0 };
+    size_t rangeValueLength = 0;
+    int stdRetVal = 0;
+
+    if( pRequestHeaders == NULL )
+    {
+        IotLogError( "Parameter check failed: pRequestHeaders is NULL." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( pRequestHeaders->pBuffer == NULL )
+    {
+        IotLogError( "Parameter check failed: pRequestHeaders->pBuffer is NULL." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( rangeEnd < HTTP_RANGE_REQUEST_END_OF_FILE )
+    {
+        IotLogErrorWithArgs( "Parameter check failed: rangeEnd is invalid: "
+                             "rangeEnd should be >=-1: RangeEnd=%d", rangeEnd );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( ( rangeStartOrlastNbytes < 0 ) &&
+             ( rangeEnd != HTTP_RANGE_REQUEST_END_OF_FILE ) )
+    {
+        IotLogErrorWithArgs( "Parameter check failed: Invalid range values: "
+                             "rangeEnd should be -1 when rangeStart < 0: "
+                             "RangeStart=%d, RangeEnd=%d",
+                             rangeStartOrlastNbytes, rangeEnd );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( ( rangeEnd != HTTP_RANGE_REQUEST_END_OF_FILE ) &&
+             ( rangeStartOrlastNbytes > rangeEnd ) )
+    {
+        IotLogErrorWithArgs( "Parameter check failed: Invalid range values: "
+                             "rangeStart should be < rangeEnd when both are >= 0: "
+                             "RangeStart=%d, RangeEnd=%d",
+                             rangeStartOrlastNbytes, rangeEnd );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else
+    {
+        /* Populate the buffer with the value data for the Range Request.*/
+        stdRetVal = snprintf( rangeValueBuffer,
+                              sizeof( rangeValueBuffer ),
+                              "%s%d",
+                              RANGE_REQUEST_HEADER_VALUE_PREFIX,
+                              rangeStartOrlastNbytes );
+        assert( ( stdRetVal >= 0 ) &&
+                stdRetVal <= ( int ) ( RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN + MAX_INT32_NO_OF_DIGITS ) );
+        rangeValueLength += ( size_t ) stdRetVal;
+
+        /* Add remaining value data depending on the range specification type. */
+
+        /* Add rangeEnd value if request is for [rangeStart, rangeEnd] byte range */
+        if( rangeEnd != HTTP_RANGE_REQUEST_END_OF_FILE )
+        {
+            /* Add the rangeEnd value to the request range .*/
+            stdRetVal = snprintf( rangeValueBuffer + rangeValueLength,
+                                  sizeof( rangeValueBuffer ) - rangeValueLength,
+                                  "%s%d",
+                                  DASH_CHARACTER,
+                                  rangeEnd );
+            assert( ( stdRetVal >= 0 ) &&
+                    stdRetVal <= ( DASH_CHARACTER_LEN + MAX_INT32_NO_OF_DIGITS ) );
+            rangeValueLength += ( size_t ) stdRetVal;
+        }
+        /* Case when request is for bytes in the range [rangeStart, ). */
+        else if( rangeStartOrlastNbytes >= 0 )
+        {
+            /* Add the "-" character.*/
+            stdRetVal = snprintf( rangeValueBuffer + rangeValueLength,
+                                  sizeof( rangeValueBuffer ) - rangeValueLength,
+                                  "%s",
+                                  DASH_CHARACTER );
+            /* Check that only a single character was written. */
+            assert( stdRetVal == DASH_CHARACTER_LEN );
+            rangeValueLength += ( size_t ) stdRetVal;
+        }
+        else
+        {
+            /* Empty else MISRA 15.7 */
+        }
+
+        /* Add the Range Request header field and value to the buffer. */
+        returnStatus = _addHeader( pRequestHeaders,
+                                   RANGE_REQUEST_HEADER_FIELD,
+                                   RANGE_REQUEST_HEADER_FIELD_LEN,
+                                   rangeValueBuffer,
+                                   rangeValueLength );
+    }
+
+    return returnStatus;
 }
 
 /*-----------------------------------------------------------*/
