@@ -313,33 +313,41 @@ int main()
     /* The client is now connected to the server. This example will send a
      * GET, HEAD, PUT, and POST request. */
 
-    if( returnStatus == HTTP_SUCCESS )
-    {
-        returnStatus = _sendHttpRequest( &socketContext,
-                                         HTTP_METHOD_GET,
-                                         GET_PATH );
-    }
+    #ifdef GET_PATH
+        if( returnStatus == HTTP_SUCCESS )
+        {
+            returnStatus = _sendHttpRequest( &socketContext,
+                                             HTTP_METHOD_GET,
+                                             GET_PATH );
+        }
+    #endif
 
-    if( returnStatus == HTTP_SUCCESS )
-    {
-        returnStatus = _sendHttpRequest( &socketContext,
-                                         HTTP_METHOD_HEAD,
-                                         HEAD_PATH );
-    }
+    #ifdef HEAD_PATH
+        if( returnStatus == HTTP_SUCCESS )
+        {
+            returnStatus = _sendHttpRequest( &socketContext,
+                                             HTTP_METHOD_HEAD,
+                                             HEAD_PATH );
+        }
+    #endif
 
-    if( returnStatus == HTTP_SUCCESS )
-    {
-        returnStatus = _sendHttpRequest( &socketContext,
-                                         HTTP_METHOD_PUT,
-                                         PUT_PATH );
-    }
+    #ifdef PUT_PATH
+        if( returnStatus == HTTP_SUCCESS )
+        {
+            returnStatus = _sendHttpRequest( &socketContext,
+                                             HTTP_METHOD_PUT,
+                                             PUT_PATH );
+        }
+    #endif
 
-    if( returnStatus == HTTP_SUCCESS )
-    {
-        returnStatus = _sendHttpRequest( &socketContext,
-                                         HTTP_METHOD_POST,
-                                         POST_PATH );
-    }
+    #ifdef POST_PATH
+        if( returnStatus == HTTP_SUCCESS )
+        {
+            returnStatus = _sendHttpRequest( &socketContext,
+                                             HTTP_METHOD_POST,
+                                             POST_PATH );
+        }
+    #endif
 
     /**************************** Disconnect. *****************************/
 
