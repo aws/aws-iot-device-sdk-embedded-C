@@ -96,12 +96,12 @@
 
 /* Maximum value of a 32 bit signed integer is 2,147,483,647. Used for calculating buffer space for
  * ASCII representation of range values. */
-#define MAX_INT32_NO_OF_DIGITS                   10
+#define MAX_INT32_NO_OF_DECIMAL_DIGITS           10
 
 /* Maximum buffer space for storing a Range Request Value.
  * Largest size is of the form "bytes=<Max-Integer-Value>-<<Max-Integer-Value>" */
-#define MAX_RANGE_REQUEST_VALUE_LEN                                    \
-    ( RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN + MAX_INT32_NO_OF_DIGITS + \
+#define MAX_RANGE_REQUEST_VALUE_LEN                                            \
+    ( RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN + MAX_INT32_NO_OF_DECIMAL_DIGITS + \
       1u /* Dash character '-' */ + MAX_INT32_NO_OF_DIGITS )
 
 
