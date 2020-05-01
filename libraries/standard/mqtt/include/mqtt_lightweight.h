@@ -84,7 +84,7 @@ typedef enum MQTTStatus
     MQTTSendFailed,     /**< The transport send function failed. */
     MQTTRecvFailed,     /**< The transport receive function failed. */
     MQTTBadResponse,    /**< An invalid packet was received from the server. */
-    MQTTServerRefused,   /**< The server refused a CONNECT or SUBSCRIBE. */
+    MQTTServerRefused,  /**< The server refused a CONNECT or SUBSCRIBE. */
     MQTTNoDataAvailable
 } MQTTStatus_t;
 

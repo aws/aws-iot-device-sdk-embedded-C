@@ -1123,9 +1123,8 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * const pIncomingPacket
                 break;
         }
     }
-    
 
-    return MQTTSuccess;
+    return status;
 }
 
 /*-----------------------------------------------------------*/
