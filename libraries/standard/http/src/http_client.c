@@ -260,7 +260,7 @@ static HTTPStatus_t _writeRequestLine( HTTPRequestHeaders_t * pRequestHeaders,
         pBufferCur += HTTP_PROTOCOL_VERSION_LEN;
         memcpy( pBufferCur,
                 HTTP_HEADER_LINE_SEPARATOR, HTTP_HEADER_LINE_SEPARATOR_LEN );
-        pRequestHeaders->headersLen += toAddLen;
+        pRequestHeaders->headersLen = toAddLen;
     }
 
     return returnStatus;
