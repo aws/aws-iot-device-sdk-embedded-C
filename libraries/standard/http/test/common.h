@@ -7,8 +7,8 @@
 #include "private/http_client_internal.h"
 #include "private/http_client_parse.h"
 
-#if DISABLE_ASSERT
-    #include <assert.h>
-#else
+#if TESTS_DISABLE_ASSERT
     #define assert( x )
+#else
+    #include <assert.h>
 #endif

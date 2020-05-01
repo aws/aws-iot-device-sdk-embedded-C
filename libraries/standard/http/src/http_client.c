@@ -155,21 +155,14 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
                                  ( int32_t ) fieldLen, pField,
                                  ( int32_t ) valueLen, pValue );
 
-        if( ( bytesWritten + HTTP_HEADER_LINE_SEPARATOR_LEN ) != toAddLen )
-        {
-            IotLogErrorWithArgs( "Internal error in snprintf() in _addHeader(). "
-                                 "BytesWritten: %d.", bytesWritten );
-        }
-        else
-        {
-            pBufferCur += bytesWritten;
+        assert( bytesWritten == (int) ( toAddLen - HTTP_HEADER_LINE_SEPARATOR_LEN ) );
+        pBufferCur += bytesWritten;
 
-            /* HTTP_HEADER_LINE_SEPARATOR cannot be written above because snprintf
-             * writes an extra null byte at the end. */
-            memcpy( pBufferCur, HTTP_HEADER_LINE_SEPARATOR, HTTP_HEADER_LINE_SEPARATOR_LEN );
-            pRequestHeaders->headersLen = backtrackHeaderLen + toAddLen;
-            returnStatus = HTTP_SUCCESS;
-        }
+        /* HTTP_HEADER_LINE_SEPARATOR cannot be written above because snprintf
+         * writes an extra null byte at the end. */
+        memcpy( pBufferCur, HTTP_HEADER_LINE_SEPARATOR, HTTP_HEADER_LINE_SEPARATOR_LEN );
+        pRequestHeaders->headersLen = backtrackHeaderLen + toAddLen;
+        returnStatus = HTTP_SUCCESS;
     }
     else
     {
