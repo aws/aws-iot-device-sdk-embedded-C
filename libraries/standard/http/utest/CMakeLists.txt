@@ -80,3 +80,12 @@ create_test(${utest_name}
             "${utest_dep_list}"
             "${test_include_directories}"
         )
+
+set(send_utest_name "http_send_utest")
+set(send_utest_source "http_send_utest.c")
+create_test(${send_utest_name}
+            ${send_utest_source}
+            "${utest_link_list}"
+            "${utest_dep_list}"
+            "${test_include_directories}"
+        )

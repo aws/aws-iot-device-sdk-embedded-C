@@ -11,12 +11,13 @@ CFLAGS += -Wextra -O0 -ggdb
 #CFLAGS = std=c99 -Wall -fprofile-arcs -ftest-coverage -O0 -ggdb
 
 # include directories given to the compiler (default: none)
+# FIXME: Temporarily include the http_parser to verify functionality.
 INCLUDE = . \
 		  ../include \
 		  ../src \
 		  $(CSDK_ROOT)/platform/include \
 		  ../../utilities/include \
-		  ../third_party
+		  ../third_party/http_parser
 
 # the default goal (default: help)
 # Set to build or test as desired.
@@ -35,14 +36,24 @@ FUNCTIONS = addHeader \
 			sendHttpBody \
 			receiveHttpResponse \
 			receiveAndParseHttpResponse \
-			HTTPClient_InitializeParsingContext \
-			HTTPClient_ParseResponse \
+			initializeParsingContextForFirstResponse \
+			parseHttpResponse \
 			getFinalResponseStatus \
 			HTTPClient_strerror \
 			findHeaderFieldParserCallback \
 			findHeaderValueParserCallback \
 			findHeaderOnHeaderCompleteCallback \
-			findHeaderInResponse 
+			findHeaderInResponse \
+			readHeaderParsingCallback \
+			processCompleteHeader \
+			httpParserOnMessageBeginCallback \
+			httpParserOnStatusCallback \
+			httpParserOnHeaderFieldCallback \
+			httpParserOnHeaderValueCallback \
+			httpParserOnHeadersCompleteCallback \
+			httpParserOnMessageCompleteCallback \
+			httpParserOnBodyCallback \
+			processHttpParserError
 
 # Changes to the above variables should remain above this include.
 include Mock4thewin.mk
@@ -54,9 +65,18 @@ HTTPClient_Send.c: sendHttpHeaders.c \
 				   sendHttpBody.c \
 				   receiveHttpResponse.c \
 				   receiveAndParseHttpResponse.c \
-				   HTTPClient_InitializeParsingContext.c \
-				   HTTPClient_ParseResponse.c \
-				   getFinalResponseStatus.c
+				   initializeParsingContextForFirstResponse.c \
+				   parseHttpResponse.c \
+				   getFinalResponseStatus.c \
+				   processCompleteHeader.c \
+				   httpParserOnMessageBeginCallback.c \
+				   httpParserOnStatusCallback.c \
+				   httpParserOnHeaderFieldCallback.c \
+				   httpParserOnHeaderValueCallback.c \
+				   httpParserOnHeadersCompleteCallback.c \
+				   httpParserOnMessageCompleteCallback.c \
+				   httpParserOnBodyCallback.c \
+				   processHttpParserError.c
 HTTPClient_InitializeRequestHeaders.c: writeRequestLine.c addHeader.c
 HTTPClient_ReadHeader.c: HTTPClient_strerror.c \
 						 findHeaderFieldParserCallback.c \

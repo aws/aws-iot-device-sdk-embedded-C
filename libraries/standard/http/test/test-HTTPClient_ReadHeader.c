@@ -2,18 +2,6 @@
 #include <stdbool.h>
 
 #include "common.h"
-#include "http_parser/http_parser.h"
-
-/* Mirror of the context type used to pass to http_parser. */
-typedef struct findHeaderContext
-{
-    const uint8_t * pField;
-    size_t fieldLen;
-    const uint8_t ** pValueLoc;
-    size_t * pValueLen;
-    uint8_t fieldFound : 1;
-    uint8_t valueFound : 1;
-} findHeaderContext_t;
 
 /* Functions are pulled out into their own C files to be tested as a unit. */
 #include "HTTPClient_strerror.c"
@@ -39,17 +27,6 @@ static const size_t headerValInRespLen = sizeof( "test-value1" ) - 1u;
 
 /* -------------------- Mock'd implementations of http_parser function dependencies. ------------------ */
 
-void http_parser_init( http_parser * parser,
-                       enum http_parser_type type )
-{
-    ok( parser != NULL );
-    ok( type == HTTP_RESPONSE );
-}
-
-void http_parser_settings_init( http_parser_settings * settings )
-{
-    ok( settings != NULL );
-}
 /* Variables for controlling behavior of the http_parser_execute() mock. */
 static const char * pExpectedBuffer = NULL;
 static size_t expectedBufferSize = 0u;
@@ -104,12 +81,6 @@ size_t http_parser_execute( http_parser * parser,
     return len;
 }
 
-const char * http_errno_description( enum http_errno err )
-{
-    ( void ) err;
-    return "test-error";
-}
-
 /* -------------------- End of http_parser function mocks. ------------------ */
 
 int main()
@@ -136,8 +107,6 @@ int main()
         valueLenToReturn = 0u;                              \
         invokeHeaderCompleteCallback = false;               \
     } while( 0 )
-
-    plan( 69 );
 
     /*************************** Test Failure Cases *****************************/
 

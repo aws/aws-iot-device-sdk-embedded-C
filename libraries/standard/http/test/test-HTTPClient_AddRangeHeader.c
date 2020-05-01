@@ -57,7 +57,8 @@ typedef struct _headers
                     requestHeaders.headersLen )                     \
             == expectedHeaders.buffer );                            \
         expectedHeaders.dataLen = requestHeaders.headersLen;        \
-    } while( 0 )
+    }                                                               \
+    while( 0 )
 
 
 #define addRangeToExpectedHeaders( expectedHeaders, expectedRange, terminatorExists )         \
@@ -77,7 +78,8 @@ typedef struct _headers
         ok( ( size_t ) numBytes == rangeRequestLen );                                         \
         expectedHeaders.dataLen += rangeRequestLen -                                          \
                                    ( terminatorExists ? HTTP_HEADER_LINE_SEPARATOR_LEN : 0 ); \
-    } while( 0 )
+    }                                                                                         \
+    while( 0 )
 
 
 int main()
@@ -95,7 +97,8 @@ int main()
         memset( &testHeaders, 0, sizeof( testHeaders ) );         \
         memset( testBuffer, 0, sizeof( testBuffer ) );            \
         memset( &expectedHeaders, 0, sizeof( expectedHeaders ) ); \
-    } while( 0 )
+    }                                                             \
+    while( 0 )
 
     plan( 62 );
 
