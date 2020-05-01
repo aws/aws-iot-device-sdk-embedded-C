@@ -594,7 +594,7 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
 
 /*-----------------------------------------------------------*/
 
-HTTPStatus_t HTTPClient_ReadHeader( HTTPResponse_t * pResponse,
+HTTPStatus_t HTTPClient_ReadHeader( const HTTPResponse_t * pResponse,
                                     const char * pName,
                                     size_t nameLen,
                                     char ** pValue,
