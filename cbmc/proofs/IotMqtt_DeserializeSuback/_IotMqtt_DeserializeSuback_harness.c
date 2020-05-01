@@ -15,71 +15,74 @@
  * in the topic subscription filters.  By design, any actual use of
  * the list in subsequent code (there is none) will trigger pointer
  * errors.
-/****************************************************************/
+ *****************************************************************/
 
 void IotListDouble_RemoveAllMatches( const IotListDouble_t * const pList,
-				     bool ( *isMatch )( const IotLink_t * const pOperationLink,
-							void * pCompare ),
-				     void * pMatch,
-				     void ( *freeElement )( void * pData ),
-				     size_t linkOffset )
+                                     bool ( *isMatch )( const IotLink_t * const pOperationLink,
+                                                        void * pCompare ),
+                                     void * pMatch,
+                                     void ( *freeElement )( void * pData ),
+                                     size_t linkOffset )
 {
-  IotListDouble_t *sentinel = pList->pNext->pPrevious;
+    IotListDouble_t * sentinel = pList->pNext->pPrevious;
 
-  size_t num_elts;
-  __CPROVER_assume(num_elts < SUBSCRIPTION_COUNT_MAX);
+    size_t num_elts;
 
-  // Allocate lists of length at most 3
-  __CPROVER_assert(SUBSCRIPTION_COUNT_MAX <= 4,
-		   "Subscription lists limited to 3 elements");
+    __CPROVER_assume( num_elts < SUBSCRIPTION_COUNT_MAX );
 
-  if (1 <= num_elts)
+    /* Allocate lists of length at most 3 */
+    __CPROVER_assert( SUBSCRIPTION_COUNT_MAX <= 4,
+                      "Subscription lists limited to 3 elements" );
+
+    if( 1 <= num_elts )
     {
-      _mqttSubscription_t *pElt = malloc(sizeof(*pElt));
-      sentinel->pNext = &pElt->link;
-      pElt->link.pPrevious = sentinel;
-      pElt->link.pNext = sentinel;
-      sentinel->pPrevious = &pElt->link;
+        _mqttSubscription_t * pElt = malloc( sizeof( *pElt ) );
+        sentinel->pNext = &pElt->link;
+        pElt->link.pPrevious = sentinel;
+        pElt->link.pNext = sentinel;
+        sentinel->pPrevious = &pElt->link;
     }
-  if (2 <= num_elts)
+
+    if( 2 <= num_elts )
     {
-      _mqttSubscription_t *pElt = malloc(sizeof(*pElt));
-      sentinel->pNext = &pElt->link;
-      pElt->link.pPrevious = sentinel;
-      pElt->link.pNext = sentinel;
-      sentinel->pPrevious = &pElt->link;
+        _mqttSubscription_t * pElt = malloc( sizeof( *pElt ) );
+        sentinel->pNext = &pElt->link;
+        pElt->link.pPrevious = sentinel;
+        pElt->link.pNext = sentinel;
+        sentinel->pPrevious = &pElt->link;
     }
-  if (3 <= num_elts)
+
+    if( 3 <= num_elts )
     {
-      _mqttSubscription_t *pElt = malloc(sizeof(*pElt));
-      sentinel->pNext = &pElt->link;
-      pElt->link.pPrevious = sentinel;
-      pElt->link.pNext = sentinel;
-      sentinel->pPrevious = &pElt->link;
+        _mqttSubscription_t * pElt = malloc( sizeof( *pElt ) );
+        sentinel->pNext = &pElt->link;
+        pElt->link.pPrevious = sentinel;
+        pElt->link.pNext = sentinel;
+        sentinel->pPrevious = &pElt->link;
     }
 }
 
 /****************************************************************
- * Proof harness
- ****************************************************************/
+* Proof harness
+****************************************************************/
 
 void harness()
 {
     _mqttPacket_t suback;
 
-    // Create packet data
+    /* Create packet data */
     __CPROVER_assume( suback.remainingLength <= BUFFER_SIZE );
     suback.pRemainingData = malloc( sizeof( uint8_t )
-				    * suback.remainingLength );
+                                    * suback.remainingLength );
 
-    // Create packet connection
-    IotMqttConnection_t pConn = allocate_IotMqttConnection(NULL);
-    __CPROVER_assume(pConn != NULL);
-    ensure_IotMqttConnection_has_lists(pConn);
-    __CPROVER_assume(valid_IotMqttConnection(pConn));
+    /* Create packet connection */
+    IotMqttConnection_t pConn = allocate_IotMqttConnection( NULL );
+    __CPROVER_assume( pConn != NULL );
+    ensure_IotMqttConnection_has_lists( pConn );
+    __CPROVER_assume( valid_IotMqttConnection( pConn ) );
     suback.u.pMqttConnection = pConn;
 
-    // Argument must be a nonnull pointer
+    /* Argument must be a nonnull pointer */
     _IotMqtt_DeserializeSuback( &suback );
 }
 

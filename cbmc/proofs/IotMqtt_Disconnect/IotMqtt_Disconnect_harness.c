@@ -36,23 +36,23 @@
 #include "mqtt_state.h"
 
 /****************************************************************
- * Type definitions used by the IoT List Double remove functions
- ****************************************************************/
+* Type definitions used by the IoT List Double remove functions
+****************************************************************/
 
-typedef bool ( *MatchFunction_t )( const IotLink_t * const pOperationLink,
-                                   void * pCompare );
-typedef void ( *FreeElementFunction_t )( void * pData );
+typedef bool ( * MatchFunction_t )( const IotLink_t * const pOperationLink,
+                                    void * pCompare );
+typedef void ( * FreeElementFunction_t )( void * pData );
 
 /****************************************************************
- * We assume the IoT List Double remove functions are memory safe.
- *
- * We abstract the list remove functions for performance reasons.  Our
- * abstraction replaces the original list with an unconstrained list.
- * Our abstraction proves that none of the elements on the original
- * list are accessed after the remove: We free all elements on the
- * original list, so that any later access will be caught as a
- * use-after-free error.
- ****************************************************************/
+* We assume the IoT List Double remove functions are memory safe.
+*
+* We abstract the list remove functions for performance reasons.  Our
+* abstraction replaces the original list with an unconstrained list.
+* Our abstraction proves that none of the elements on the original
+* list are accessed after the remove: We free all elements on the
+* original list, so that any later access will be caught as a
+* use-after-free error.
+****************************************************************/
 
 void IotListDouble_RemoveAllMatches( const IotListDouble_t * const pList,
                                      MatchFunction_t isMatch,
@@ -115,8 +115,8 @@ bool IotSemaphore_TimedWait( IotSemaphore_t * pSemaphore,
 }
 
 /****************************************************************
- * The proof harness
- ****************************************************************/
+* The proof harness
+****************************************************************/
 
 void harness()
 {

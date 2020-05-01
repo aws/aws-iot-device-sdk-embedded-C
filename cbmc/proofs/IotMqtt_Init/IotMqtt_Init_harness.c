@@ -6,6 +6,7 @@
 
 void harness()
 {
-  IotMqttError_t status = IotMqtt_Init();
-  assert(status == IOT_MQTT_SUCCESS || status == IOT_MQTT_NOT_INITIALIZED);
+    IotMqttError_t status = IotMqtt_Init();
+
+    assert( status == IOT_MQTT_SUCCESS || status == IOT_MQTT_NOT_INITIALIZED );
 }

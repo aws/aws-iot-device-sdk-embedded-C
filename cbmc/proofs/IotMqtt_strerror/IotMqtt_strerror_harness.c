@@ -3,7 +3,8 @@
 
 void harness()
 {
-  IotMqttError_t status;
-  const char *pMessage = IotMqtt_strerror(status);
-  assert(pMessage != NULL);
+    IotMqttError_t status;
+    const char * pMessage = IotMqtt_strerror( status );
+
+    assert( pMessage != NULL );
 }
