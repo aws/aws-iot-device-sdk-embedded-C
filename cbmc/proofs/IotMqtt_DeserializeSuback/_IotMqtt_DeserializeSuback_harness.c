@@ -15,7 +15,7 @@
  * in the topic subscription filters.  By design, any actual use of
  * the list in subsequent code (there is none) will trigger pointer
  * errors.
- * /****************************************************************/
+ *****************************************************************/
 
 void IotListDouble_RemoveAllMatches( const IotListDouble_t * const pList,
                                      bool ( *isMatch )( const IotLink_t * const pOperationLink,

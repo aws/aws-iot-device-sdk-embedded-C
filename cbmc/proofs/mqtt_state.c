@@ -866,7 +866,7 @@ size_t IotNetworkInterfaceReceive( void * pConnection,
     __CPROVER_assert( pBuffer,
                       "IotNetworkInterfaceReceive pBuffer is not NULL" );
 
-  __CPROVER_havoc_object( pBuffer );
+    __CPROVER_havoc_object( pBuffer );
 
     /* Choose the number of bytes in pBuffer considered received. */
     size_t size;
