@@ -102,7 +102,7 @@
  * Largest size is of the form "bytes=<Max-Integer-Value>-<<Max-Integer-Value>" */
 #define MAX_RANGE_REQUEST_VALUE_LEN                                            \
     ( RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN + MAX_INT32_NO_OF_DECIMAL_DIGITS + \
-      1u /* Dash character '-' */ + MAX_INT32_NO_OF_DIGITS )
+      1u /* Dash character '-' */ + MAX_INT32_NO_OF_DECIMAL_DIGITS )
 
 
 #endif /* ifndef HTTP_CLIENT_INTERNAL_H_ */
