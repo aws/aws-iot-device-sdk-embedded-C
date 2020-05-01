@@ -5,8 +5,7 @@ CSDK_ROOT = ../../../..
 SOURCE = ../src
 
 # Show extra warnings.
-# To disable asserts, uncomment -DTESTS_DISABLE_ASSERT flag.
-CFLAGS += -Wextra #-DTESTS_DISABLE_ASSERT
+CFLAGS += -Wextra
 
 # arguments given to the compiler (default: see the included file)
 #CFLAGS = std=c99 -Wall -fprofile-arcs -ftest-coverage -O0 -ggdb

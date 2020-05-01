@@ -445,8 +445,12 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
  *
  * @param[in] pRequestHeaders Request header buffer information.
  * @param[in] pField The header field name to write.
+ * The data should be ISO 8859-1 (Latin-1) encoded per the HTTP standard,
+ * but the API does not perform the character set validation.
  * @param[in] fieldLen The byte length of the header field name.
  * @param[in] pValue The header value to write.
+ * The data should be ISO 8859-1 (Latin-1) encoded per the HTTP standard,
+ * but the API does not perform the character set validation.
  * @param[in] valueLen The byte length of the header field value.
  *
  * @return One of the following:
@@ -455,9 +459,9 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
  * - #HTTP_INSUFFICIENT_MEMORY (If application-provided buffer is not large enough to hold headers.)
  */
 HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
-                                   const char * pField,
+                                   const uint8_t * pField,
                                    size_t fieldLen,
-                                   const char * pValue,
+                                   const uint8_t * pValue,
                                    size_t valueLen );
 
 /**

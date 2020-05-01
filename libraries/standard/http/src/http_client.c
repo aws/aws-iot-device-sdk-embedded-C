@@ -41,9 +41,9 @@ static HTTPStatus_t _sendHttpBody( const HTTPTransportInterface_t * pTransport,
  * in order to write over it and updates the length accordingly.
  *
  * @param[in] pRequestHeaders Request header buffer information.
- * @param[in] pField The header field name to write.
+ * @param[in] pField The ISO 8859-1 encoded header field name to write.
  * @param[in] fieldLen The byte length of the header field name.
- * @param[in] pValue The header value to write.
+ * @param[in] pValue The ISO 8859-1 encoded header value to write.
  * @param[in] valueLen The byte length of the header field value.
  *
  * @return #HTTP_SUCCESS if successful. If there was insufficient memory in the
@@ -111,16 +111,16 @@ static HTTPStatus_t _receiveAndParseHttpResponse( const HTTPTransportInterface_t
 /*-----------------------------------------------------------*/
 
 static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
-                                const char * pField,
+                                const uint8_t * pField,
                                 size_t fieldLen,
-                                const char * pValue,
+                                const uint8_t * pValue,
                                 size_t valueLen )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
     uint8_t * pBufferCur = pRequestHeaders->pBuffer + pRequestHeaders->headersLen;
     size_t toAddLen = 0;
     size_t backtrackHeaderLen = pRequestHeaders->headersLen;
-    int32_t bytesWritten = 0;
+    void * memcpyRetVal = NULL;
 
     assert( pRequestHeaders != NULL );
     assert( pRequestHeaders->pBuffer != NULL );
@@ -148,21 +148,33 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
     /* If we have enough room for the new header line, then write it to the header buffer. */
     if( ( backtrackHeaderLen + toAddLen ) <= pRequestHeaders->bufferLen )
     {
-        /* Write "Field: Value \r\n" to headers. */
-        bytesWritten = snprintf( ( char * ) pBufferCur,
-                                 toAddLen,
-                                 HTTP_HEADER_ADD_FORMAT,
-                                 ( int32_t ) fieldLen, pField,
-                                 ( int32_t ) valueLen, pValue );
+        /* Write "<Field>: <Value> \r\n" to the headers buffer. */
 
-        assert( bytesWritten == (int) ( toAddLen - HTTP_HEADER_LINE_SEPARATOR_LEN ) );
-        pBufferCur += bytesWritten;
+        /* Copy the header name into the buffer. */
+        memcpyRetVal = memcpy( pBufferCur, pField, fieldLen );
+        assert( memcpyRetVal == pBufferCur );
+        pBufferCur += fieldLen;
 
-        /* HTTP_HEADER_LINE_SEPARATOR cannot be written above because snprintf
-         * writes an extra null byte at the end. */
-        memcpy( pBufferCur, HTTP_HEADER_LINE_SEPARATOR, HTTP_HEADER_LINE_SEPARATOR_LEN );
+        /* Copy the field separator, ": ", into the buffer. */
+        memcpyRetVal = memcpy( pBufferCur,
+                               HTTP_HEADER_FIELD_SEPARATOR,
+                               HTTP_HEADER_FIELD_SEPARATOR_LEN );
+        assert( memcpyRetVal == pBufferCur );
+        pBufferCur += HTTP_HEADER_FIELD_SEPARATOR_LEN;
+
+        /* Copy the header value into the buffer. */
+        memcpyRetVal = memcpy( pBufferCur, pValue, valueLen );
+        assert( memcpyRetVal == pBufferCur );
+        pBufferCur += valueLen;
+
+        /* Copy the header end indicator, "\r\n\r\n" into the buffer. */
+        memcpyRetVal = memcpy( pBufferCur,
+                               HTTP_HEADER_END_INDICATOR,
+                               HTTP_HEADER_END_INDICATOR_LEN );
+        assert( memcpyRetVal == pBufferCur );
+
+        /* Update the headers length value. */
         pRequestHeaders->headersLen = backtrackHeaderLen + toAddLen;
-        returnStatus = HTTP_SUCCESS;
     }
     else
     {
@@ -188,9 +200,9 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
 /*-----------------------------------------------------------*/
 
 HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
-                                   const char * pField,
+                                   const uint8_t * pField,
                                    size_t fieldLen,
-                                   const char * pValue,
+                                   const uint8_t * pValue,
                                    size_t valueLen )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
