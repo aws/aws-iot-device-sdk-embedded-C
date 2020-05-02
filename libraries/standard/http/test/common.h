@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include "tap.h"
 
 /* Include paths for public enums, structures, and macros. */

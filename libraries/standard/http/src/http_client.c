@@ -50,9 +50,9 @@ static HTTPStatus_t _sendHttpBody( const HTTPTransportInterface_t * pTransport,
  * application buffer, then #HTTP_INSUFFICIENT_MEMORY is returned.
  */
 static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
-                                const char * pField,
+                                const uint8_t * pField,
                                 size_t fieldLen,
-                                const char * pValue,
+                                const uint8_t * pValue,
                                 size_t valueLen );
 
 /**
@@ -346,9 +346,9 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
 
         /* Add the Range Request header field and value to the buffer. */
         returnStatus = _addHeader( pRequestHeaders,
-                                   RANGE_REQUEST_HEADER_FIELD,
+                                   ( uint8_t * ) RANGE_REQUEST_HEADER_FIELD,
                                    RANGE_REQUEST_HEADER_FIELD_LEN,
-                                   rangeValueBuffer,
+                                   ( uint8_t * ) rangeValueBuffer,
                                    rangeValueLength );
     }
 

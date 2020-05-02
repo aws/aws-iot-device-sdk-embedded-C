@@ -2,6 +2,7 @@
 #define HTTP_CLIENT_H_
 
 #include <stdint.h>
+#include <stddef.h>
 #include "config.h"
 
 /**
