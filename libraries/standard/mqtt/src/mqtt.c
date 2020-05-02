@@ -158,9 +158,51 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
 
 MQTTStatus_t MQTT_Subscribe( MQTTContext_t * const pContext,
                              const MQTTSubscribeInfo_t * const pSubscriptionList,
-                             size_t subscriptionCount )
+                             size_t subscriptionCount,
+                             uint16_t packetId )
 {
-    return MQTTSuccess;
+    size_t remainingLength = 0, packetSize = 0, headerSize = 0;
+    int32_t bytesSent = 0;
+    MQTTStatus_t status = MQTTSuccess;
+
+    /* Validate arguments. */
+    if( ( pContext == NULL ) || ( pSubscriptionList == NULL ) ||
+        ( subscriptionCount == 0 ) || ( packetId == 0 ) )
+    {
+        status = MQTTBadParameter;
+    }
+
+    if( status == MQTTSuccess )
+    {
+        /* Get the remaining length and packet size.*/
+        status = MQTT_GetSubscribePacketSize( pSubscriptionList,
+                                              subscriptionCount,
+                                              &remainingLength,
+                                              &packetSize );
+    }
+
+    if( status == MQTTSuccess )
+    {
+        /* Serialize MQTT SUBSCRIBE packet. */
+        status = MQTT_SerializeSubscribe( pSubscriptionList,
+                                          subscriptionCount,
+                                          packetId,
+                                          remainingLength,
+                                          &( pContext->networkBuffer ) );
+    }
+
+    if( status == MQTTSuccess )
+    {
+        /* Send serialized MQTT subscribe to transport layer. */
+        bytesSent = sendPacket( pContext, packetSize );
+
+        if( bytesSent < 0 )
+        {
+            status = MQTTSendFailed;
+        }
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/
@@ -267,9 +309,51 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * const pContext )
 
 MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * const pContext,
                                const MQTTSubscribeInfo_t * const pSubscriptionList,
-                               size_t subscriptionCount )
+                               size_t subscriptionCount,
+                               uint16_t packetId )
 {
-    return MQTTSuccess;
+    size_t remainingLength = 0, packetSize = 0, headerSize = 0;
+    int32_t bytesSent = 0;
+    MQTTStatus_t status = MQTTSuccess;
+
+    /* Validate arguments. */
+    if( ( pContext == NULL ) || ( pSubscriptionList == NULL ) ||
+        ( subscriptionCount == 0 ) || ( packetId == 0 ) )
+    {
+        status = MQTTBadParameter;
+    }
+
+    if( status == MQTTSuccess )
+    {
+        /* Get the remaining length and packet size.*/
+        status = MQTT_GetUnsubscribePacketSize( pSubscriptionList,
+                                                subscriptionCount,
+                                                &remainingLength,
+                                                &packetSize );
+    }
+
+    if( status == MQTTSuccess )
+    {
+        /* Serialize MQTT SUBSCRIBE packet. */
+        status = MQTT_SerializeUnsubscribe( pSubscriptionList,
+                                            subscriptionCount,
+                                            packetId,
+                                            remainingLength,
+                                            &( pContext->networkBuffer ) );
+    }
+
+    if( status == MQTTSuccess )
+    {
+        /* Send serialized MQTT subscribe to transport layer. */
+        bytesSent = sendPacket( pContext, packetSize );
+
+        if( bytesSent < 0 )
+        {
+            status = MQTTSendFailed;
+        }
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/

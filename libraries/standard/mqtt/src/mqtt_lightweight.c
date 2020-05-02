@@ -28,32 +28,26 @@
 /**
  * @brief MQTT protocol version 3.1.1.
  */
-#define MQTT_VERSION_3_1_1                          ( ( uint8_t ) 4U )
+#define MQTT_VERSION_3_1_1                  ( ( uint8_t ) 4U )
 
 /**
  * @brief Size of the fixed and variable header of a CONNECT packet.
  */
-#define MQTT_PACKET_CONNECT_HEADER_SIZE             ( 10UL )
+#define MQTT_PACKET_CONNECT_HEADER_SIZE     ( 10UL )
 
 /**
  * @brief Maximum size of an MQTT CONNECT packet, per MQTT spec.
  */
-#define MQTT_PACKET_CONNECT_MAX_SIZE                ( 327700UL )
-
-/**
- * @brief Per the MQTT 3.1.1 spec, the largest "Remaining Length" of an MQTT
- * packet is this value.
- */
-#define MQTT_MAX_REMAINING_LENGTH                   ( 268435455UL )
+#define MQTT_PACKET_CONNECT_MAX_SIZE        ( 327700UL )
 
 /* MQTT CONNECT flags. */
-#define MQTT_CONNECT_FLAG_CLEAN                     ( 1 ) /**< @brief Clean session. */
-#define MQTT_CONNECT_FLAG_WILL                      ( 2 ) /**< @brief Will present. */
-#define MQTT_CONNECT_FLAG_WILL_QOS1                 ( 3 ) /**< @brief Will QoS 1. */
-#define MQTT_CONNECT_FLAG_WILL_QOS2                 ( 4 ) /**< @brief Will QoS 2. */
-#define MQTT_CONNECT_FLAG_WILL_RETAIN               ( 5 ) /**< @brief Will retain. */
-#define MQTT_CONNECT_FLAG_PASSWORD                  ( 6 ) /**< @brief Password present. */
-#define MQTT_CONNECT_FLAG_USERNAME                  ( 7 ) /**< @brief User name present. */
+#define MQTT_CONNECT_FLAG_CLEAN             ( 1 ) /**< @brief Clean session. */
+#define MQTT_CONNECT_FLAG_WILL              ( 2 ) /**< @brief Will present. */
+#define MQTT_CONNECT_FLAG_WILL_QOS1         ( 3 ) /**< @brief Will QoS 1. */
+#define MQTT_CONNECT_FLAG_WILL_QOS2         ( 4 ) /**< @brief Will QoS 2. */
+#define MQTT_CONNECT_FLAG_WILL_RETAIN       ( 5 ) /**< @brief Will retain. */
+#define MQTT_CONNECT_FLAG_PASSWORD          ( 6 ) /**< @brief Password present. */
+#define MQTT_CONNECT_FLAG_USERNAME          ( 7 ) /**< @brief User name present. */
 
 /*
  * Positions of each flag in the first byte of an MQTT PUBLISH packet's
@@ -93,6 +87,12 @@
 #define MQTT_PACKET_PINGRESP_REMAINING_LENGTH       ( 0U )            /**< @brief A PINGRESP packet always has a "Remaining length" of 0. */
 
 /**
+ * @brief Per the MQTT 3.1.1 spec, the largest "Remaining Length" of an MQTT
+ * packet is this value.
+ */
+#define MQTT_MAX_REMAINING_LENGTH           ( 268435455UL )
+
+/**
  * @brief Set a bit in an 8-bit unsigned integer.
  */
 #define UINT8_SET_BIT( x, position )      ( ( x ) = ( uint8_t ) ( ( x ) | ( 0x01U << ( position ) ) ) )
@@ -108,12 +108,35 @@
 /**
  * @brief Get the high byte of a 16-bit unsigned integer.
  */
-#define UINT16_HIGH_BYTE( x )             ( ( uint8_t ) ( ( x ) >> 8 ) )
+#define UINT16_HIGH_BYTE( x )           ( ( uint8_t ) ( ( x ) >> 8 ) )
 
 /**
  * @brief Get the low byte of a 16-bit unsigned integer.
  */
-#define UINT16_LOW_BYTE( x )              ( ( uint8_t ) ( ( x ) & 0x00ffU ) )
+#define UINT16_LOW_BYTE( x )            ( ( uint8_t ) ( ( x ) & 0x00ffU ) )
+
+/*-----------------------------------------------------------*/
+
+/* MQTT Subscription packet types. */
+typedef enum _MQTTSubscriptionType
+{
+    MQTT_SUBSCRIBE,
+    MQTT_UNSUBSCRIBE
+} _MQTTSubscriptionType_t;
+
+/*-----------------------------------------------------------*/
+
+static bool _subscriptionPacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
+                                     size_t subscriptionCount,
+                                     size_t * pRemainingLength,
+                                     size_t * pPacketSize,
+                                     _MQTTSubscriptionType_t subscriptionType );
+
+static MQTTStatus_t _validateSubscribeUnsubscribeParams( const MQTTSubscribeInfo_t * const pSubscriptionList,
+                                                         size_t subscriptionCount,
+                                                         uint16_t packetId,
+                                                         size_t remainingLength,
+                                                         const MQTTFixedBuffer_t * const pBuffer );
 
 /**
  * @brief Macro for decoding a 2-byte unsigned int from a sequence of bytes.
@@ -757,6 +780,56 @@ static MQTTStatus_t deserializeConnack( const MQTTPacketInfo_t * const pConnack,
 
 /*-----------------------------------------------------------*/
 
+static bool _subscriptionPacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
+                                     size_t subscriptionCount,
+                                     size_t * pRemainingLength,
+                                     size_t * pPacketSize,
+                                     _MQTTSubscriptionType_t subscriptionType )
+{
+    bool status = true;
+    size_t i = 0, subscriptionPacketSize = 0;
+
+    /* The variable header of a subscription packet consists of a 2-byte packet
+     * identifier. */
+    subscriptionPacketSize += sizeof( uint16_t );
+
+    /* Sum the lengths of all subscription topic filters; add 1 byte for each
+     * subscription's QoS if type is IOT_MQTT_SUBSCRIBE. */
+    for( i = 0; i < subscriptionCount; i++ )
+    {
+        /* Add the length of the topic filter. */
+        subscriptionPacketSize += pSubscriptionList[ i ].topicFilterLength + sizeof( uint16_t );
+
+        /* Only SUBSCRIBE packets include the QoS. */
+        if( subscriptionType == MQTT_SUBSCRIBE )
+        {
+            subscriptionPacketSize += 1U;
+        }
+    }
+
+    /* At this point, the "Remaining length" has been calculated. Return error
+     * if the "Remaining length" exceeds what is allowed by MQTT 3.1.1. Otherwise,
+     * set the output parameter.*/
+    if( subscriptionPacketSize > MQTT_MAX_REMAINING_LENGTH )
+    {
+        status = false;
+    }
+    else
+    {
+        *pRemainingLength = subscriptionPacketSize;
+
+        /* Calculate the full size of the subscription packet by adding the size of the
+         * "Remaining length" field plus 1 byte for the "Packet type" field. Set the
+         * pPacketSize output parameter. */
+        subscriptionPacketSize += 1U + remainingLengthEncodedSize( subscriptionPacketSize );
+        *pPacketSize = subscriptionPacketSize;
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
 static MQTTStatus_t readSubackStatus( size_t statusCount,
                                       const uint8_t * pStatusStart )
 {
@@ -839,6 +912,37 @@ static MQTTStatus_t deserializeSuback( const MQTTPacketInfo_t * const pSuback,
 
         status = readSubackStatus( remainingLength - sizeof( uint16_t ),
                                    pVariableHeader + sizeof( uint16_t ) );
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+static MQTTStatus_t _validateSubscribeUnsubscribeParams( const MQTTSubscribeInfo_t * const pSubscriptionList,
+                                                         size_t subscriptionCount,
+                                                         uint16_t packetId,
+                                                         size_t remainingLength,
+                                                         const MQTTFixedBuffer_t * const pBuffer )
+{
+    MQTTStatus_t status = MQTTSuccess;
+
+    /* Validate all the parameters. */
+    if( ( pBuffer == NULL ) || ( pSubscriptionList == NULL ) ||
+        ( packetId == 0U ) || ( subscriptionCount == 0U ) )
+    {
+        status = MQTTBadParameter;
+    }
+
+    /* Validate if the passed buffer can hold the serialized packet.
+     * The serialized packet size = First byte
+     *  + length of encoded size of remaining length
+     *  + remaining length.
+     */
+    else if( ( 1U + remainingLengthEncodedSize( remainingLength ) + remainingLength )
+             > pBuffer->size )
+    {
+        status = MQTTNoMemory;
     }
 
     return status;
@@ -1161,12 +1265,33 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * const pConnectInfo
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_SubscriptionPacketSize( const MQTTSubscribeInfo_t * const pSubscriptionList,
+MQTTStatus_t MQTT_GetSubscribePacketSize( const MQTTSubscribeInfo_t * const pSubscriptionList,
                                           size_t subscriptionCount,
                                           size_t * pRemainingLength,
                                           size_t * pPacketSize )
 {
-    return MQTTSuccess;
+    MQTTStatus_t status = MQTTSuccess;
+
+    /* Validate parameters. */
+    if( ( pSubscriptionList == NULL ) || ( pRemainingLength == NULL ) ||
+        ( pPacketSize == NULL ) || ( subscriptionCount == 0U ) )
+    {
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        /* Calculate the MQTT SUBSCRIBE packet size. */
+        if( _subscriptionPacketSize( pSubscriptionList,
+                                     subscriptionCount,
+                                     pRemainingLength,
+                                     pPacketSize,
+                                     MQTT_SUBSCRIBE ) == false )
+        {
+            status = MQTTBadParameter;
+        }
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/
@@ -1177,7 +1302,78 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * const pSubscri
                                       size_t remainingLength,
                                       const MQTTFixedBuffer_t * const pBuffer )
 {
-    return MQTTSuccess;
+    MQTTStatus_t status = MQTTSuccess;
+    size_t i = 0;
+    uint8_t * pIndex = NULL;
+
+    /* Validate all the parameters. */
+    status = _validateSubscribeUnsubscribeParams( pSubscriptionList,
+                                                  subscriptionCount,
+                                                  packetId,
+                                                  remainingLength,
+                                                  pBuffer );
+
+    if( status == MQTTSuccess )
+    {
+        pIndex = pBuffer->pBuffer;
+
+        /* The first byte in SUBSCRIBE is the packet type. */
+        *pIndex = MQTT_PACKET_TYPE_SUBSCRIBE;
+        pIndex++;
+
+        /* Encode the "Remaining length" starting from the second byte. */
+        pIndex = encodeRemainingLength( pIndex, remainingLength );
+
+        /* Place the packet identifier into the SUBSCRIBE packet. */
+        *pIndex = UINT16_HIGH_BYTE( packetId );
+        *( pIndex + 1 ) = UINT16_LOW_BYTE( packetId );
+        pIndex += 2;
+
+        /* Serialize each subscription topic filter and QoS. */
+        for( i = 0; i < subscriptionCount; i++ )
+        {
+            pIndex = encodeString( pIndex,
+                                   pSubscriptionList[ i ].pTopicFilter,
+                                   pSubscriptionList[ i ].topicFilterLength );
+
+            /* Place the QoS in the SUBSCRIBE packet. */
+            *pIndex = ( uint8_t ) ( pSubscriptionList[ i ].qos );
+            pIndex++;
+        }
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * const pSubscriptionList,
+                                            size_t subscriptionCount,
+                                            size_t * pRemainingLength,
+                                            size_t * pPacketSize )
+{
+    MQTTStatus_t status = MQTTSuccess;
+
+    /* Validate parameters. */
+    if( ( pSubscriptionList == NULL ) || ( pRemainingLength == NULL ) ||
+        ( pPacketSize == NULL ) || ( subscriptionCount == 0U ) )
+    {
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        /* Calculate the MQTT SUBSCRIBE packet size. */
+        if( _subscriptionPacketSize( pSubscriptionList,
+                                     subscriptionCount,
+                                     pRemainingLength,
+                                     pPacketSize,
+                                     MQTT_UNSUBSCRIBE ) == false )
+        {
+            status = MQTTBadParameter;
+        }
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/
@@ -1188,7 +1384,44 @@ MQTTStatus_t MQTT_SerializeUnsubscribe( const MQTTSubscribeInfo_t * const pSubsc
                                         size_t remainingLength,
                                         const MQTTFixedBuffer_t * const pBuffer )
 {
-    return MQTTSuccess;
+    MQTTStatus_t status = MQTTSuccess;
+    size_t i = 0;
+    uint8_t * pIndex = NULL;
+
+    /* Validate all the parameters. */
+    status = _validateSubscribeUnsubscribeParams( pSubscriptionList,
+                                                  subscriptionCount,
+                                                  packetId,
+                                                  remainingLength,
+                                                  pBuffer );
+
+    if( status == MQTTSuccess )
+    {
+        /* Get the start of the buffer to the iterator variable. */
+        pIndex = pBuffer->pBuffer;
+
+        /* The first byte in UNSUBSCRIBE is the packet type. */
+        *pIndex = MQTT_PACKET_TYPE_UNSUBSCRIBE;
+        pIndex++;
+
+        /* Encode the "Remaining length" starting from the second byte. */
+        pIndex = encodeRemainingLength( pBuffer, remainingLength );
+
+        /* Place the packet identifier into the UNSUBSCRIBE packet. */
+        *pIndex = UINT16_HIGH_BYTE( packetId );
+        *( pIndex + 1 ) = UINT16_LOW_BYTE( packetId );
+        pIndex += 2;
+
+        /* Serialize each subscription topic filter. */
+        for( i = 0; i < subscriptionCount; i++ )
+        {
+            pIndex = encodeString( pIndex,
+                                   pSubscriptionList[ i ].pTopicFilter,
+                                   pSubscriptionList[ i ].topicFilterLength );
+        }
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/
