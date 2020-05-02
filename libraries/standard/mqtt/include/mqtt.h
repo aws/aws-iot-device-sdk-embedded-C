@@ -175,6 +175,15 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
                            const MQTTPublishInfo_t * const pPublishInfo,
                            uint16_t packetId );
 
+/**
+ * @brief Sends an MQTT ping request.
+ *
+ * @param[in] pContext Initialized and connected MQTT context.
+ *
+ * @return #MQTTNoMemory if pBuffer is too small to hold the MQTT packet;
+ * #MQTTBadParameter if invalid parameters are passed;
+ * #MQTTSuccess otherwise.
+ */
 MQTTStatus_t MQTT_Ping( MQTTContext_t * const pContext );
 
 /**

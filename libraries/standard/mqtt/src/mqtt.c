@@ -371,7 +371,28 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
 
 MQTTStatus_t MQTT_Ping( MQTTContext_t * const pContext )
 {
-    return MQTTSuccess;
+    int32_t bytesSent = 0;
+
+    /* Serialize MQTT ping request. */
+    MQTTStatus_t status = MQTT_SerializePingreq( pContext );
+
+    if( status == MQTTSuccess )
+    {
+        /* Send the serialized ping request packet to transport layer. */
+        bytesSent = sendPacket( pContext,
+                                pContext->networkBuffer.pBuffer,
+                                MQTT_PACKET_PINGREQ_SIZE );
+        IotLogDebugWithArgs( "Sent %d bytes of ping request packet. ",
+                             bytesSent );
+
+        if( bytesSent < 0 )
+        {
+            IotLogError( "Transport write failed for ping request packet." );
+            status = MQTTSendFailed;
+        }
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/
