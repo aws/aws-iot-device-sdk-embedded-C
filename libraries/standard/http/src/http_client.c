@@ -116,21 +116,23 @@ static HTTPStatus_t _receiveAndParseHttpResponse( const HTTPTransportInterface_t
  * @return Returns the number of bytes written to @p pBuffer.
  */
 static uint8_t _convertInt32ToAscii( int32_t value,
-                                     uint8_t * pBuffer,
+                                     char * pBuffer,
                                      size_t bufferlength );
 
 /*-----------------------------------------------------------*/
 
 static uint8_t _convertInt32ToAscii( int32_t value,
-                                     uint8_t * pBuffer,
-                                     size_t bufferlength )
+                                     char * pBuffer,
+                                     size_t bufferLength )
 {
     uint8_t numOfDigits = 0u;
     uint8_t index = 0u;
     uint8_t isNegative = 0u;
+    char tempDigit = '';
 
     assert( pBuffer != NULL );
-    assert( bufferlength >= MAX_INT32_NO_OF_DECIMAL_DIGITS );
+    assert( bufferLength >= MAX_INT32_NO_OF_DECIMAL_DIGITS );
+    ( void ) bufferLength;
 
     /* If the value is negative, write the '-' (minus) character to the buffer. */
     if( value < 0 )
@@ -147,17 +149,17 @@ static uint8_t _convertInt32ToAscii( int32_t value,
     /* Write the absolute integer value in reverse ASCII representation. */
     do
     {
-        pBuffer[ numOfDigits++ ] = value % 10 + '0';
-        value /= 10;
+        pBuffer[ numOfDigits++ ] = ( value % 10u ) + '0';
+        value /= 10u;
     } while( value != 0 );
 
     /* Reverse the digits in the buffer to store the correct ASCII representation
      * of the value. */
-    for( index = 0; index < numOfDigits / 2; index++ )
+    for( index = 0u; index < ( numOfDigits / 2u ); index++ )
     {
-        pBuffer[ index ] ^= pBuffer[ numOfDigits - index - 1 ];
-        pBuffer[ numOfDigits - index - 1 ] ^= pBuffer[ index ];
-        pBuffer[ index ] ^= pBuffer[ numOfDigits - index - 1 ];
+        tempDigit = pBuffer[ numOfDigits - index - 1u ];
+        pBuffer[ numOfDigits - index - 1u ] = pBuffer[ index ];
+        pBuffer[ index ] = tempDigit;
     }
 
     return( isNegative + numOfDigits );
@@ -173,7 +175,7 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
     uint8_t * pBufferCur = pRequestHeaders->pBuffer + pRequestHeaders->headersLen;
-    size_t toAddLen = 0;
+    size_t toAddLen = 0u;
     size_t backtrackHeaderLen = pRequestHeaders->headersLen;
     void * memcpyRetVal = NULL;
 
@@ -317,9 +319,9 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
                                         int32_t rangeEnd )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
-    uint8_t rangeValueBuffer[ MAX_RANGE_REQUEST_VALUE_LEN ] = { 0 };
-    size_t rangeValueLength = 0;
-    void * memcpyRetVal = NULL;
+    char rangeValueBuffer[ MAX_RANGE_REQUEST_VALUE_LEN ] = { 0 };
+    size_t rangeValueLength = 0u;
+    const void * memcpyRetVal = NULL;
 
     if( pRequestHeaders == NULL )
     {
@@ -405,9 +407,9 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
 
         /* Add the Range Request header field and value to the buffer. */
         returnStatus = _addHeader( pRequestHeaders,
-                                   ( uint8_t * ) RANGE_REQUEST_HEADER_FIELD,
+                                   ( const uint8_t * ) RANGE_REQUEST_HEADER_FIELD,
                                    RANGE_REQUEST_HEADER_FIELD_LEN,
-                                   rangeValueBuffer,
+                                   ( const uint8_t * ) rangeValueBuffer,
                                    rangeValueLength );
     }
 

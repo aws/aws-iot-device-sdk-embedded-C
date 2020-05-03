@@ -2,7 +2,6 @@
 #define HTTP_CLIENT_PARSE_H_
 
 #include "http_client.h"
-/* #include "http_parser.h" */
 
 /**
  * @brief The state of the response message parsed after
