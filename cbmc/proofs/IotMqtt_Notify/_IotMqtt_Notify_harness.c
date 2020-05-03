@@ -37,7 +37,7 @@
 typedef bool ( * MatchFunction_t )( const IotLink_t * const pOperationLink,
                                     void * pCompare );
 
-typedef void ( *FreeElementFunction_t )( void * pData );
+typedef void ( * FreeElementFunction_t )( void * pData );
 
 /**
  * We constrain the return values of these functions because
@@ -92,12 +92,14 @@ void harness()
 {
     /* Assume a valid MQTT connection. */
     IotMqttConnection_t pMqttConnection = allocate_IotMqttConnection( NULL );
+
     __CPROVER_assume( pMqttConnection != NULL );
     __CPROVER_assume( pMqttConnection->pNetworkInterface != NULL );
     __CPROVER_assume( IS_STUBBED_NETWORKIF_SEND( pMqttConnection->pNetworkInterface ) );
     __CPROVER_assume( IS_STUBBED_NETWORKIF_DESTROY( pMqttConnection->pNetworkInterface ) );
     ensure_IotMqttConnection_has_lists( pMqttConnection );
     __CPROVER_assume( valid_IotMqttConnection( pMqttConnection ) );
+
     /* If there are no operations waiting on this connection, then there is nothing
      * to notify, so assume references is positive. */
     __CPROVER_assume( pMqttConnection->references > 0 );
@@ -105,15 +107,17 @@ void harness()
     /* Assume unconstrained operation. */
     IotMqttOperation_t pOperation = allocate_IotMqttOperation( NULL, pMqttConnection );
     __CPROVER_assume( valid_IotMqttOperation( pOperation ) );
+
     /* Inbound packets are either an inbound publish or an inbound response
      * (a ping response or an acknowledgement). The purpose of _IotMqtt_Notify
      * is to alert any task waiting on an inbound response. _IotMqtt_Notify is
      * never invoked on an inbound publish, so assume incomingPublish is false. */
-    __CPROVER_assume( pOperation->incomingPublish == false ); 
-    IotListDouble_Create( &( pOperation->link ));
-    if ( nondet_bool() )
+    __CPROVER_assume( pOperation->incomingPublish == false );
+    IotListDouble_Create( &( pOperation->link ) );
+
+    if( nondet_bool() )
     {
-        IotListDouble_InsertHead( &( pMqttConnection->pendingProcessing ), &( pOperation->link ));
+        IotListDouble_InsertHead( &( pMqttConnection->pendingProcessing ), &( pOperation->link ) );
     }
 
     /* Function under verification. */

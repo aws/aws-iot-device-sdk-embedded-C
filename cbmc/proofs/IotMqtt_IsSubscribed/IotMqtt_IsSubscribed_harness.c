@@ -8,24 +8,25 @@
 
 void harness()
 {
-  IotMqttConnection_t mqttConnection = allocate_IotMqttConnection(NULL);
-  __CPROVER_assume(mqttConnection);
-  ensure_IotMqttConnection_has_lists(mqttConnection);
-  __CPROVER_assume(valid_IotMqttConnection(mqttConnection));
+    IotMqttConnection_t mqttConnection = allocate_IotMqttConnection( NULL );
 
-  allocate_IotMqttSubscriptionList(&(mqttConnection->subscriptionList), 1);
-  __CPROVER_assume(valid_IotMqttSubscriptionList(&(mqttConnection->subscriptionList), 1));
+    __CPROVER_assume( mqttConnection );
+    ensure_IotMqttConnection_has_lists( mqttConnection );
+    __CPROVER_assume( valid_IotMqttConnection( mqttConnection ) );
 
-  uint16_t topicFilterLength;
-  __CPROVER_assume(topicFilterLength < TOPIC_LENGTH_MAX);
+    allocate_IotMqttSubscriptionList( &( mqttConnection->subscriptionList ), 1 );
+    __CPROVER_assume( valid_IotMqttSubscriptionList( &( mqttConnection->subscriptionList ), 1 ) );
 
-  char* TopicFilter = malloc_can_fail(topicFilterLength);
-  __CPROVER_assume( VALID_STRING(TopicFilter, topicFilterLength) );
+    uint16_t topicFilterLength;
+    __CPROVER_assume( topicFilterLength < TOPIC_LENGTH_MAX );
 
-  IotMqttSubscription_t result;
+    char * TopicFilter = malloc_can_fail( topicFilterLength );
+    __CPROVER_assume( VALID_STRING( TopicFilter, topicFilterLength ) );
 
-  IotMqtt_IsSubscribed( mqttConnection,
-                        nondet_bool() ? NULL : TopicFilter,
-                        topicFilterLength,
-                        nondet_bool() ? NULL : &result );
+    IotMqttSubscription_t result;
+
+    IotMqtt_IsSubscribed( mqttConnection,
+                          nondet_bool() ? NULL : TopicFilter,
+                          topicFilterLength,
+                          nondet_bool() ? NULL : &result );
 }

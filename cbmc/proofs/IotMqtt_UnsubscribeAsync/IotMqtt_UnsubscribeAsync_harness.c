@@ -45,9 +45,9 @@
  * demonstrate that no subsequent code makes use of the values in the list.
  */
 
-typedef bool ( *MatchFunction_t )( const IotLink_t * const pOperationLink,
-                                   void * pCompare );
-typedef void ( *FreeElementFunction_t )( void * pData );
+typedef bool ( * MatchFunction_t )( const IotLink_t * const pOperationLink,
+                                    void * pCompare );
+typedef void ( * FreeElementFunction_t )( void * pData );
 
 void IotListDouble_RemoveAllMatches( const IotListDouble_t * const pList,
                                      MatchFunction_t isMatch,
@@ -123,28 +123,28 @@ void harness()
     __CPROVER_assume( subscriptionCount < SUBSCRIPTION_COUNT_MAX );
 
     IotMqttSubscription_t * subscriptionList =
-      allocate_IotMqttSubscriptionArray( NULL, subscriptionCount );
+        allocate_IotMqttSubscriptionArray( NULL, subscriptionCount );
     __CPROVER_assume( valid_IotMqttSubscriptionArray( subscriptionList,
-						      subscriptionCount ) );
+                                                      subscriptionCount ) );
 
     IotMqttConnection_t mqttConnection = allocate_IotMqttConnection( NULL );
     __CPROVER_assume( mqttConnection );
     ensure_IotMqttConnection_has_lists( mqttConnection );
     __CPROVER_assume( valid_IotMqttConnection( mqttConnection ) );
     __CPROVER_assume( IS_STUBBED_NETWORKIF_SEND( mqttConnection->
-						 pNetworkInterface ) );
+                                                    pNetworkInterface ) );
     __CPROVER_assume( IS_STUBBED_NETWORKIF_DESTROY( mqttConnection->
-						    pNetworkInterface ) );
+                                                       pNetworkInterface ) );
 
     uint32_t flags;
 
     IotMqttCallbackInfo_t * pCallbackInfo =
-      malloc_can_fail( sizeof( *pCallbackInfo ) );
-    __CPROVER_assume(pCallbackInfo != NULL);
+        malloc_can_fail( sizeof( *pCallbackInfo ) );
+    __CPROVER_assume( pCallbackInfo != NULL );
 
     /* output */
     IotMqttOperation_t pUnsubscribeOperation =
-      allocate_IotMqttOperation( NULL, mqttConnection );
+        allocate_IotMqttOperation( NULL, mqttConnection );
 
 
 
