@@ -1,6 +1,5 @@
 #include <assert.h>
 #include <string.h>
-#include <stdio.h>
 
 #include "http_client.h"
 #include "private/http_client_internal.h"
@@ -108,6 +107,62 @@ static HTTPStatus_t _getFinalResponseStatus( HTTPParsingState_t parsingState,
 static HTTPStatus_t _receiveAndParseHttpResponse( const HTTPTransportInterface_t * pTransport,
                                                   HTTPResponse_t * pResponse );
 
+/**
+ * @brief Converts an integer value to its ASCII representation in the passed buffer.
+ *
+ * @param[in] value The value to convert to ASCII.
+ * @param[out] pBuffer The buffer to store the ASCII representation of the integer.
+ *
+ * @return Returns the number of bytes written to @p pBuffer.
+ */
+static uint8_t _convertInt32ToAscii( int32_t value,
+                                     uint8_t * pBuffer,
+                                     size_t bufferlength );
+
+/*-----------------------------------------------------------*/
+
+static uint8_t _convertInt32ToAscii( int32_t value,
+                                     uint8_t * pBuffer,
+                                     size_t bufferlength )
+{
+    uint8_t numOfDigits = 0u;
+    uint8_t index = 0u;
+    uint8_t isNegative = 0u;
+
+    assert( pBuffer != NULL );
+    assert( bufferlength >= MAX_INT32_NO_OF_DECIMAL_DIGITS );
+
+    /* If the value is negative, write the '-' (minus) character to the buffer. */
+    if( value < 0 )
+    {
+        isNegative = 1u;
+
+        *pBuffer = '-';
+        pBuffer++;
+
+        /* Convert the value to its absolute representation. */
+        value *= -1;
+    }
+
+    /* Write the absolute integer value in reverse ASCII representation. */
+    do
+    {
+        pBuffer[ numOfDigits++ ] = value % 10 + '0';
+        value /= 10;
+    } while( value != 0 );
+
+    /* Reverse the digits in the buffer to store the correct ASCII representation
+     * of the value. */
+    for( index = 0; index < numOfDigits / 2; index++ )
+    {
+        pBuffer[ index ] ^= pBuffer[ numOfDigits - index - 1 ];
+        pBuffer[ numOfDigits - index - 1 ] ^= pBuffer[ index ];
+        pBuffer[ index ] ^= pBuffer[ numOfDigits - index - 1 ];
+    }
+
+    return( isNegative + numOfDigits );
+}
+
 /*-----------------------------------------------------------*/
 
 static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
@@ -194,6 +249,9 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
 HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pRequestHeaders,
                                                   const HTTPRequestInfo_t * pRequestInfo )
 {
+    ( void ) pRequestHeaders;
+    ( void ) pRequestInfo;
+
     return HTTP_NOT_SUPPORTED;
 }
 
@@ -259,10 +317,9 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
                                         int32_t rangeEnd )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
-    /* Extra byte allocation ( + 1 ) for NULL character when using sprintf. */
-    char rangeValueBuffer[ MAX_RANGE_REQUEST_VALUE_LEN + 1 ] = { 0 };
+    uint8_t rangeValueBuffer[ MAX_RANGE_REQUEST_VALUE_LEN ] = { 0 };
     size_t rangeValueLength = 0;
-    int stdRetVal = 0;
+    void * memcpyRetVal = NULL;
 
     if( pRequestHeaders == NULL )
     {
@@ -300,44 +357,46 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
     }
     else
     {
-        /* Populate the buffer with the value data for the Range Request.*/
-        stdRetVal = snprintf( rangeValueBuffer,
-                              sizeof( rangeValueBuffer ),
-                              "%s%d",
-                              RANGE_REQUEST_HEADER_VALUE_PREFIX,
-                              rangeStartOrlastNbytes );
-        assert( ( stdRetVal >= 0 ) &&
-                stdRetVal <= ( int ) ( RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN +
-                                       MAX_INT32_NO_OF_DECIMAL_DIGITS ) );
-        rangeValueLength += ( size_t ) stdRetVal;
+        /* Generate the value data for the Range Request header.*/
+
+        /* Write the range value prefix in the buffer. */
+        memcpyRetVal = memcpy( rangeValueBuffer,
+                               RANGE_REQUEST_HEADER_VALUE_PREFIX,
+                               RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN );
+        assert( memcpyRetVal == rangeValueBuffer );
+        rangeValueLength += RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN;
+
+        /* Write the range start value in the buffer. */
+        rangeValueLength += _convertInt32ToAscii( rangeStartOrlastNbytes,
+                                                  rangeValueBuffer + rangeValueLength,
+                                                  sizeof( rangeValueBuffer ) - rangeValueLength );
 
         /* Add remaining value data depending on the range specification type. */
 
         /* Add rangeEnd value if request is for [rangeStart, rangeEnd] byte range */
         if( rangeEnd != HTTP_RANGE_REQUEST_END_OF_FILE )
         {
-            /* Add the rangeEnd value to the request range .*/
-            stdRetVal = snprintf( rangeValueBuffer + rangeValueLength,
-                                  sizeof( rangeValueBuffer ) - rangeValueLength,
-                                  "%s%d",
-                                  DASH_CHARACTER,
-                                  rangeEnd );
-            assert( ( stdRetVal >= 0 ) &&
-                    stdRetVal <= ( int ) ( DASH_CHARACTER_LEN +
-                                           MAX_INT32_NO_OF_DECIMAL_DIGITS ) );
-            rangeValueLength += ( size_t ) stdRetVal;
+            /* Write the "-" character to the buffer.*/
+            memcpyRetVal = memcpy( rangeValueBuffer + rangeValueLength,
+                                   DASH_CHARACTER,
+                                   DASH_CHARACTER_LEN );
+            assert( memcpyRetVal == rangeValueBuffer );
+            rangeValueLength += DASH_CHARACTER_LEN;
+
+            /* Write the rangeEnd value of the request range to the buffer .*/
+            rangeValueLength += _convertInt32ToAscii( rangeEnd,
+                                                      rangeValueBuffer + rangeValueLength,
+                                                      sizeof( rangeValueBuffer ) - rangeValueLength );
         }
-        /* Case when request is for bytes in the range [rangeStart, ). */
+        /* Case when request is for bytes in the range [rangeStart, EoF). */
         else if( rangeStartOrlastNbytes >= 0 )
         {
-            /* Add the "-" character.*/
-            stdRetVal = snprintf( rangeValueBuffer + rangeValueLength,
-                                  sizeof( rangeValueBuffer ) - rangeValueLength,
-                                  "%s",
-                                  DASH_CHARACTER );
-            /* Check that only a single character was written. */
-            assert( stdRetVal == DASH_CHARACTER_LEN );
-            rangeValueLength += ( size_t ) stdRetVal;
+            /* Write the "-" character to the buffer.*/
+            memcpyRetVal = memcpy( rangeValueBuffer + rangeValueLength,
+                                   DASH_CHARACTER,
+                                   DASH_CHARACTER_LEN );
+            assert( memcpyRetVal == rangeValueBuffer );
+            rangeValueLength += DASH_CHARACTER_LEN;
         }
         else
         {
@@ -348,7 +407,7 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
         returnStatus = _addHeader( pRequestHeaders,
                                    ( uint8_t * ) RANGE_REQUEST_HEADER_FIELD,
                                    RANGE_REQUEST_HEADER_FIELD_LEN,
-                                   ( uint8_t * ) rangeValueBuffer,
+                                   rangeValueBuffer,
                                    rangeValueLength );
     }
 
@@ -699,6 +758,11 @@ HTTPStatus_t HTTPClient_ReadHeader( const HTTPResponse_t * pResponse,
                                     char ** pValue,
                                     size_t * valueLen )
 {
+    ( void ) pResponse;
+    ( void ) pName;
+    ( void ) nameLen;
+    ( void ) pValue;
+    ( void ) valueLen;
     return HTTP_NOT_SUPPORTED;
 }
 
