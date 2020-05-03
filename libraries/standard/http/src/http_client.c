@@ -128,7 +128,7 @@ static uint8_t _convertInt32ToAscii( int32_t value,
     uint8_t numOfDigits = 0u;
     uint8_t index = 0u;
     uint8_t isNegative = 0u;
-    char tempDigit = '';
+    char tempDigit = '\0';
 
     assert( pBuffer != NULL );
     assert( bufferLength >= MAX_INT32_NO_OF_DECIMAL_DIGITS );
@@ -149,8 +149,8 @@ static uint8_t _convertInt32ToAscii( int32_t value,
     /* Write the absolute integer value in reverse ASCII representation. */
     do
     {
-        pBuffer[ numOfDigits++ ] = ( value % 10u ) + '0';
-        value /= 10u;
+        pBuffer[ numOfDigits++ ] = ( value % 10 ) + '0';
+        value /= 10;
     } while( value != 0 );
 
     /* Reverse the digits in the buffer to store the correct ASCII representation
@@ -319,7 +319,7 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
                                         int32_t rangeEnd )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
-    char rangeValueBuffer[ MAX_RANGE_REQUEST_VALUE_LEN ] = { 0 };
+    char rangeValueBuffer[ MAX_RANGE_REQUEST_VALUE_LEN ] = { '\0' };
     size_t rangeValueLength = 0u;
     const void * memcpyRetVal = NULL;
 
@@ -607,10 +607,10 @@ static HTTPStatus_t _receiveAndParseHttpResponse( const HTTPTransportInterface_t
                                                   HTTPResponse_t * pResponse )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
-    size_t totalReceived = 0;
-    size_t currentReceived = 0;
+    size_t totalReceived = 0u;
+    size_t currentReceived = 0u;
     HTTPParsingContext_t parsingContext = { 0 };
-    uint8_t shouldRecv = 0;
+    uint8_t shouldRecv = 0u;
 
     assert( pTransport != NULL );
     assert( pTransport->recv != NULL );
@@ -622,10 +622,10 @@ static HTTPStatus_t _receiveAndParseHttpResponse( const HTTPTransportInterface_t
 
     if( returnStatus == HTTP_SUCCESS )
     {
-        shouldRecv = 1;
+        shouldRecv = 1u;
     }
 
-    while( shouldRecv == 1 )
+    while( shouldRecv == 1u )
     {
         /* Receive the HTTP response data into the pResponse->pBuffer. */
         returnStatus = _receiveHttpResponse( pTransport,
@@ -635,7 +635,7 @@ static HTTPStatus_t _receiveAndParseHttpResponse( const HTTPTransportInterface_t
 
         if( returnStatus == HTTP_SUCCESS )
         {
-            if( currentReceived > 0 )
+            if( currentReceived > 0u )
             {
                 totalReceived += currentReceived;
                 /* Data is received into the buffer and must be parsed. */
@@ -648,10 +648,10 @@ static HTTPStatus_t _receiveAndParseHttpResponse( const HTTPTransportInterface_t
         /* While there are no errors in the transport recv or parsing, we received
          * data over the transport, the response message is not finished, and
          * there is room in the response buffer. */
-        shouldRecv = ( uint8_t ) ( ( returnStatus == HTTP_SUCCESS ) &&
-                                   ( currentReceived > 0 ) &&
-                                   ( parsingContext.state != HTTP_PARSING_COMPLETE ) &&
-                                   ( totalReceived < pResponse->bufferLen ) );
+        shouldRecv = ( ( returnStatus == HTTP_SUCCESS ) &&
+                       ( currentReceived > 0u ) &&
+                       ( parsingContext.state != HTTP_PARSING_COMPLETE ) &&
+                       ( totalReceived < pResponse->bufferLen ) ) ? 1u : 0u;
     }
 
     if( returnStatus == HTTP_SUCCESS )
