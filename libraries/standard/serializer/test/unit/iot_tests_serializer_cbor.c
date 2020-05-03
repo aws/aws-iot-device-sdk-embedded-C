@@ -431,7 +431,7 @@ TEST( Serializer_Unit_CBOR, Encoder_map_nest_array )
     TEST_ASSERT_TRUE( cbor_value_at_end( &arrayElement ) );
 }
 
-/* JSON Representation:
+/* CBOR Diagnostic notation:
  * {
  *      "1": {
  *          "A": 10
@@ -453,7 +453,7 @@ static const uint8_t _testEncodedNestedMap[] =
     0xF4, /* # false */
 };
 
-/* JSON Representation:
+/* CBOR Diagnostic notation:
  * [
  *    "El1",
  *    1,
@@ -463,7 +463,7 @@ static const uint8_t _testEncodedNestedMap[] =
  *    ]
  * ]
  */
-static const uint8_t _testEncodedIndefiniteLengthArray[] =
+static const uint8_t _testEncodedIndefiniteLengthNestedArray[] =
 {
     0x9F,                           /*# array(*)        <---- Indefinite length array */
         0x63,                       /*# text(3) */
@@ -481,7 +481,7 @@ static const uint8_t _testEncodedIndefiniteLengthArray[] =
     0xFF,                           /*# primitive(*)    <---- "break" */
 };
 
-/* JSON Representation:
+/* CBOR Diagnostic notation:
  * {
  *   "statusCode": 400,
  *   "errorCode": "InvalidPayload",
@@ -511,7 +511,7 @@ static const uint8_t _testEncodedIndefiniteLengthMap[] =
     0xFF,                                                                       /* # primitive(*) */
 };
 
-/* JSON Representation:
+/* CBOR Diagnostic notation:
  * {
  *   "statusCode": 400,
  *   "errorCode": "InvalidPayload",
@@ -539,7 +539,7 @@ static const uint8_t _testEncodedDefiniteLengthMap[] =
         0x6F, 0x74, 0x20, 0x62, 0x65, 0x20, 0x70, 0x61, 0x72, 0x73, 0x65, 0x64,
 };
 
-/* JSON Representation:
+/* CBOR Diagnostic notation:
  * {
  *    "result": {
  *                 "statusCode": 400,
@@ -583,7 +583,7 @@ static const uint8_t _testEncodedIndefiniteLengthNestedMap[] =
     0xFF,                                                                       /* # primitive(*) */
 };
 
-/* JSON Representation:
+/* CBOR Diagnostic notation:
  * {
  *    "result": {
  *                 "statusCode": 400,
@@ -619,7 +619,7 @@ static const uint8_t _testEncodedIndefiniteLengthNestedMapWith2BreakChars[] =
     0xFF,                                                                       /* # primitive(*) */
 };
 
-/* JSON Representation:
+/* CBOR Diagnostic notation:
  * {
  *     "result": h'AABBCCFF'
  * }
@@ -629,12 +629,13 @@ static const uint8_t _testEncodedIndefiniteLengthMapWithFFatTheEnd[] =
     0xBF,                                       /* # map(*) */
         0x66,                                   /* # text(6) */
         0x72, 0x65, 0x73, 0x75, 0x6C, 0x74,     /* # "result" */
+
         0x44,                                   /* # bytes(4) */
         0xAA, 0xBB, 0xCC, 0xFF,                 /* # "\xAA\xBB\xCC\xFF" */
     0xFF,                                       /* # primitive(*) */
 };
 
-/* JSON Representation:
+/* CBOR Diagnostic notation:
  * {
  *     "result": h'AABBCCFF'
  * }
@@ -644,6 +645,40 @@ static const uint8_t _testEncodedDefiniteLengthMapWithFFatTheEnd[] =
     0xA1,                                       /* # map(1) */
         0x66,                                   /* # text(6) */
         0x72, 0x65, 0x73, 0x75, 0x6C, 0x74,     /* # "result" */
+
+        0x44,                                   /* # bytes(4) */
+        0xAA, 0xBB, 0xCC, 0xFF,                 /* # "\xAA\xBB\xCC\xFF" */
+};
+
+/* CBOR Diagnostic notation:
+ * [
+ *     "result",
+ *      h'AABBCCFF'
+ * ]
+ */
+static const uint8_t _testEncodedIndefiniteLengthArrayWithFFatTheEnd[] =
+{
+    0x9F,                                       /* # array(*) */
+        0x66,                                   /* # text(6) */
+        0x72, 0x65, 0x73, 0x75, 0x6C, 0x74,     /* # "result" */
+
+        0x44,                                   /* # bytes(4) */
+        0xAA, 0xBB, 0xCC, 0xFF,                 /* # "\xAA\xBB\xCC\xFF" */
+    0xFF,                                       /* # primitive(*) */
+};
+
+/* CBOR Diagnostic notation:
+ * [
+ *     "result",
+ *      h'AABBCCFF'
+ * ]
+ */
+static const uint8_t _testEncodedDefiniteLengthArrayWithFFatTheEnd[] =
+{
+    0x82,                                       /* # array(2) */
+        0x66,                                   /* # text(6) */
+        0x72, 0x65, 0x73, 0x75, 0x6C, 0x74,     /* # "result" */
+
         0x44,                                   /* # bytes(4) */
         0xAA, 0xBB, 0xCC, 0xFF,                 /* # "\xAA\xBB\xCC\xFF" */
 };
@@ -667,7 +702,7 @@ TEST_GROUP_RUNNER( Serializer_Decoder_Unit_CBOR )
     RUN_TEST_CASE( Serializer_Decoder_Unit_CBOR, TestDecoderObjectWithNestedMap );
     RUN_TEST_CASE( Serializer_Decoder_Unit_CBOR, TestDecoderIteratorWithNestedMap );
     RUN_TEST_CASE( Serializer_Decoder_Unit_CBOR, TestGetSizeOfForIndefiniteLengthMap );
-    RUN_TEST_CASE( Serializer_Decoder_Unit_CBOR, TestGetSizeOfForIndefiniteLengthArray );
+    RUN_TEST_CASE( Serializer_Decoder_Unit_CBOR, TestGetSizeOfForIndefiniteLengthNestedArray );
     RUN_TEST_CASE( Serializer_Decoder_Unit_CBOR, TestDecoderObjectReuseAfterIteration );
     RUN_TEST_CASE( Serializer_Decoder_Unit_CBOR, TestDecoderObjectWithIndefiniteLengthMap );
     RUN_TEST_CASE( Serializer_Decoder_Unit_CBOR, TestDecoderObjectWithDefiniteLengthMap );
@@ -675,6 +710,8 @@ TEST_GROUP_RUNNER( Serializer_Decoder_Unit_CBOR )
     RUN_TEST_CASE( Serializer_Decoder_Unit_CBOR, TestDecoderObjectWithIndefiniteLengthNestedMapWith2BreakChars );
     RUN_TEST_CASE( Serializer_Decoder_Unit_CBOR, TestDecoderObjectWithIndefiniteLengthMapWithFFatTheEnd );
     RUN_TEST_CASE( Serializer_Decoder_Unit_CBOR, TestDecoderObjectWithDefiniteLengthMapWithFFatTheEnd );
+    RUN_TEST_CASE( Serializer_Decoder_Unit_CBOR, TestDecoderObjectWithIndefiniteLengthArrayWithFFatTheEnd );
+    RUN_TEST_CASE( Serializer_Decoder_Unit_CBOR, TestDecoderObjectWithDefiniteLengthArrayWithFFatTheEnd );
 }
 
 TEST( Serializer_Decoder_Unit_CBOR, TestDecoderObjectWithNestedMap )
@@ -922,7 +959,7 @@ TEST( Serializer_Decoder_Unit_CBOR, TestGetSizeOfForIndefiniteLengthMap )
     _pCborDecoder->destroy( &mapDecoder );
 }
 
-TEST( Serializer_Decoder_Unit_CBOR, TestGetSizeOfForIndefiniteLengthArray )
+TEST( Serializer_Decoder_Unit_CBOR, TestGetSizeOfForIndefiniteLengthNestedArray )
 {
     IotSerializerDecoderObject_t arrayDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
     size_t arraySize = 0;
@@ -934,8 +971,8 @@ TEST( Serializer_Decoder_Unit_CBOR, TestGetSizeOfForIndefiniteLengthArray )
 
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->init( &arrayDecoder,
-                                                                    _testEncodedIndefiniteLengthArray,
-                                                                    sizeof( _testEncodedIndefiniteLengthArray ) ) );
+                                                                    _testEncodedIndefiniteLengthNestedArray,
+                                                                    sizeof( _testEncodedIndefiniteLengthNestedArray ) ) );
 
     /* Test that size of an indefinite length map can be calculated. */
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->getSizeOf( &arrayDecoder, &arraySize ) );
@@ -1299,4 +1336,92 @@ TEST( Serializer_Decoder_Unit_CBOR, TestDecoderObjectWithDefiniteLengthMapWithFF
 
     _pCborDecoder->destroy( &result );
     _pCborDecoder->destroy( &outermostMap );
+}
+
+TEST( Serializer_Decoder_Unit_CBOR, TestDecoderObjectWithIndefiniteLengthArrayWithFFatTheEnd )
+{
+    IotSerializerDecoderObject_t outermostArray = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    IotSerializerDecoderIterator_t iter = IOT_SERIALIZER_DECODER_ITERATOR_INITIALIZER;
+    IotSerializerDecoderObject_t result = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    IotSerializerDecoderObject_t byteString = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    uint8_t expectedByteString[] = { 0xAA, 0xBB, 0xCC, 0xFF };
+
+    /* Initialize the decoder. */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS,
+                       _pCborDecoder->init( &outermostArray,
+                                            _testEncodedIndefiniteLengthArrayWithFFatTheEnd,
+                                            sizeof( _testEncodedIndefiniteLengthArrayWithFFatTheEnd ) ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_CONTAINER_ARRAY, outermostArray.type );
+
+    /* Start iterating the array. */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->stepIn( &outermostArray, &iter ) );
+
+    /* Find the result. */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->get( iter, &result ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SCALAR_TEXT_STRING, result.type );
+    TEST_ASSERT_EQUAL( 6, result.u.value.u.string.length );
+    TEST_ASSERT_EQUAL_STRING_LEN( "result",
+                                  result.u.value.u.string.pString,
+                                  result.u.value.u.string.length );
+
+    /* Find the byte array last element of which is 0xFF. */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->next( iter ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->get( iter, &byteString ) );
+    TEST_ASSERT_EQUAL( sizeof( expectedByteString ), byteString.u.value.u.string.length );
+    TEST_ASSERT_EQUAL_UINT8_ARRAY( expectedByteString,
+                                   byteString.u.value.u.string.pString,
+                                   byteString.u.value.u.string.length );
+
+    /* Stop iterating the array and destroy the iterator. */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->next( iter ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->stepOut( iter,
+                                                                       &outermostArray ) );
+
+    _pCborDecoder->destroy( &byteString );
+    _pCborDecoder->destroy( &result );
+    _pCborDecoder->destroy( &outermostArray );
+}
+
+TEST( Serializer_Decoder_Unit_CBOR, TestDecoderObjectWithDefiniteLengthArrayWithFFatTheEnd )
+{
+    IotSerializerDecoderObject_t outermostArray = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    IotSerializerDecoderIterator_t iter = IOT_SERIALIZER_DECODER_ITERATOR_INITIALIZER;
+    IotSerializerDecoderObject_t result = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    IotSerializerDecoderObject_t byteString = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    uint8_t expectedByteString[] = { 0xAA, 0xBB, 0xCC, 0xFF };
+
+    /* Initialize the decoder. */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS,
+                       _pCborDecoder->init( &outermostArray,
+                                            _testEncodedDefiniteLengthArrayWithFFatTheEnd,
+                                            sizeof( _testEncodedDefiniteLengthArrayWithFFatTheEnd ) ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_CONTAINER_ARRAY, outermostArray.type );
+
+    /* Start iterating the array. */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->stepIn( &outermostArray, &iter ) );
+
+    /* Find the result. */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->get( iter, &result ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SCALAR_TEXT_STRING, result.type );
+    TEST_ASSERT_EQUAL( 6, result.u.value.u.string.length );
+    TEST_ASSERT_EQUAL_STRING_LEN( "result",
+                                  result.u.value.u.string.pString,
+                                  result.u.value.u.string.length );
+
+    /* Find the byte string last element of which is 0xFF. */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->next( iter ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->get( iter, &byteString ) );
+    TEST_ASSERT_EQUAL( sizeof( expectedByteString ), byteString.u.value.u.string.length );
+    TEST_ASSERT_EQUAL_UINT8_ARRAY( expectedByteString,
+                                   byteString.u.value.u.string.pString,
+                                   byteString.u.value.u.string.length );
+
+    /* Stop iterating the array and destroy the iterator. */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->next( iter ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->stepOut( iter,
+                                                                       &outermostArray ) );
+
+    _pCborDecoder->destroy( &byteString );
+    _pCborDecoder->destroy( &result );
+    _pCborDecoder->destroy( &outermostArray );
 }
