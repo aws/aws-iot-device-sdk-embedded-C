@@ -41,3 +41,12 @@ www
 getsizeof
 https
 ietf
+errorcode
+errormessage
+invalidpayload
+statuscode
+iter
+xaa
+xbb
+xcc
+xff
