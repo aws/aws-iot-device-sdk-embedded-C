@@ -3,7 +3,7 @@
 
 #include "config.h"
 
-#if defined( HTTP_ENABLE_ASSERT ) && HTTP_ENABLE_ASSERT == 1
+#if defined( HTTP_ENABLE_ASSERT ) && ( HTTP_ENABLE_ASSERT == 1 )
     #include <assert.h>
 #else
     #ifndef assert
