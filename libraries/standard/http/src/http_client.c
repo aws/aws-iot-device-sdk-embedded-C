@@ -126,7 +126,7 @@ static uint8_t _convertInt32ToAscii( int32_t value,
 {
     /* As input value may be altered and MISRA C 2012 rule 17.8 prevents modification
      * of parameter, a local copy of the parameter is stored. */
-    uint32_t absoluteValue = 0;
+    uint32_t absoluteValue = 0u;
     uint8_t numOfDigits = 0u;
     uint8_t index = 0u;
     uint8_t isNegative = 0u;
@@ -143,21 +143,21 @@ static uint8_t _convertInt32ToAscii( int32_t value,
         *pBuffer = ( uint8_t ) '-';
 
         /* Convert the value to its absolute representation. */
-        absoluteValue = value * -1;
+        absoluteValue = ( uint32_t ) ( value * -1 );
     }
     else
     {
         /* As the input integer value is positive, store is as it-is. */
-        absoluteValue = value;
+        absoluteValue = ( uint32_t ) value;
     }
 
     /* Write the absolute integer value in reverse ASCII representation. */
     do
     {
-        pBuffer[ isNegative + numOfDigits ] = ( absoluteValue % 10 ) + ( uint8_t ) '0';
+        pBuffer[ isNegative + numOfDigits ] = ( uint8_t ) ( absoluteValue % 10u ) + ( uint8_t ) '0';
         numOfDigits++;
-        absoluteValue /= 10;
-    } while( absoluteValue != 0 );
+        absoluteValue /= 10u;
+    } while( absoluteValue != 0u );
 
     /* Reverse the digits in the buffer to store the correct ASCII representation
      * of the value. */
@@ -375,7 +375,7 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
 
         /* Write the range value prefix in the buffer. */
         memcpyRetVal = memcpy( rangeValueBuffer,
-                               ( const void * ) RANGE_REQUEST_HEADER_VALUE_PREFIX,
+                               RANGE_REQUEST_HEADER_VALUE_PREFIX,
                                RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN );
         assert( memcpyRetVal == rangeValueBuffer );
         rangeValueLength += RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN;
@@ -392,7 +392,7 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
         {
             /* Write the "-" character to the buffer.*/
             memcpyRetVal = memcpy( rangeValueBuffer + rangeValueLength,
-                                   ( const void * ) DASH_CHARACTER,
+                                   DASH_CHARACTER,
                                    DASH_CHARACTER_LEN );
             assert( memcpyRetVal == rangeValueBuffer + rangeValueLength );
             rangeValueLength += DASH_CHARACTER_LEN;
@@ -407,7 +407,7 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
         {
             /* Write the "-" character to the buffer.*/
             memcpyRetVal = memcpy( rangeValueBuffer + rangeValueLength,
-                                   ( const void * ) DASH_CHARACTER,
+                                   DASH_CHARACTER,
                                    DASH_CHARACTER_LEN );
             assert( memcpyRetVal == rangeValueBuffer + rangeValueLength );
             rangeValueLength += DASH_CHARACTER_LEN;
