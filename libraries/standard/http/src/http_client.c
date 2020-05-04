@@ -117,7 +117,7 @@ static HTTPStatus_t _receiveAndParseHttpResponse( const HTTPTransportInterface_t
  */
 static uint8_t _convertInt32ToAscii( int32_t value,
                                      char * pBuffer,
-                                     size_t bufferlength );
+                                     size_t bufferLength );
 
 /*-----------------------------------------------------------*/
 
@@ -182,6 +182,9 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
     size_t backtrackHeaderLen = pRequestHeaders->headersLen;
     void * memcpyRetVal = NULL;
 
+    /* Disable unused variable warning. */
+    ( void ) memcpyRetVal;
+
     assert( pRequestHeaders != NULL );
     assert( pRequestHeaders->pBuffer != NULL );
     assert( pField != NULL );
@@ -217,7 +220,7 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
 
         /* Copy the field separator, ": ", into the buffer. */
         memcpyRetVal = memcpy( pBufferCur,
-                               HTTP_HEADER_FIELD_SEPARATOR,
+                               ( const uint8_t * ) HTTP_HEADER_FIELD_SEPARATOR,
                                HTTP_HEADER_FIELD_SEPARATOR_LEN );
         assert( memcpyRetVal == pBufferCur );
         pBufferCur += HTTP_HEADER_FIELD_SEPARATOR_LEN;
@@ -229,7 +232,7 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
 
         /* Copy the header end indicator, "\r\n\r\n" into the buffer. */
         memcpyRetVal = memcpy( pBufferCur,
-                               HTTP_HEADER_END_INDICATOR,
+                               ( const uint8_t * ) HTTP_HEADER_END_INDICATOR,
                                HTTP_HEADER_END_INDICATOR_LEN );
         assert( memcpyRetVal == pBufferCur );
 
@@ -410,7 +413,7 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
 
         /* Add the Range Request header field and value to the buffer. */
         returnStatus = _addHeader( pRequestHeaders,
-                                   ( const uint8_t * ) RANGE_REQUEST_HEADER_FIELD,
+                                   RANGE_REQUEST_HEADER_FIELD,
                                    RANGE_REQUEST_HEADER_FIELD_LEN,
                                    ( const uint8_t * ) rangeValueBuffer,
                                    rangeValueLength );
@@ -763,6 +766,7 @@ HTTPStatus_t HTTPClient_ReadHeader( const HTTPResponse_t * pResponse,
                                     char ** pValue,
                                     size_t * valueLen )
 {
+    /* Disable unused parameter warnings. */
     ( void ) pResponse;
     ( void ) pName;
     ( void ) nameLen;
