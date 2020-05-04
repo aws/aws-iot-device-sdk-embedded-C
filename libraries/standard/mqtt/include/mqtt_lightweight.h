@@ -304,6 +304,21 @@ MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * const pPubli
                                           size_t * const pHeaderSize );
 
 /**
+ * @brief Serialize an MQTT PUBACK, PUBREC, PUBREL, or PUBCOMP into the given
+ * buffer.
+ *
+ * @param[out] pBuffer Buffer for packet serialization.
+ * @param[in] packetType Byte of the corresponding packet fixed header per the
+ * MQTT spec.
+ * @param[in] packetId Packet ID of the publish.
+ *
+ * @return #MQTTBadParameter, #MQTTNoMemory, or #MQTTSuccess.
+ */
+MQTTStatus_t MQTT_SerializeAck( const MQTTFixedBuffer_t * const pBuffer,
+                                uint8_t packetType,
+                                uint16_t packetId );
+
+/**
  * @brief Get the size of an MQTT DISCONNECT packet.
  *
  * @param[out] pPacketSize The size of the MQTT DISCONNECT packet.
@@ -328,10 +343,30 @@ MQTTStatus_t MQTT_GetIncomingPacket( MQTTTransportRecvFunc_t recvFunc,
                                      MQTTNetworkContext_t networkContext,
                                      MQTTPacketInfo_t * const pIncomingPacket );
 
+/**
+ * @brief Deserialize an MQTT PUBLISH packet.
+ *
+ * @param[in] pIncomingPacket #MQTTPacketInfo_t containing the buffer.
+ * @param[out] pPacketId The packet ID obtained from the buffer.
+ * @param[out] pPublishInfo Struct containing information about the publish.
+ *
+ * @return #MQTTBadParameter, #MQTTBadResponse, or #MQTTSuccess.
+ */
 MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * const pIncomingPacket,
                                       uint16_t * const pPacketId,
                                       MQTTPublishInfo_t * const pPublishInfo );
 
+/**
+ * @brief Deserialize an MQTT CONNACK, SUBACK, UNSUBACK, PUBACK, PUBREC, PUBREL,
+ * PUBCOMP, or PINGRESP.
+ *
+ * @param[in] pIncomingPacket #MQTTPacketInfo_t containing the buffer.
+ * @param[out] pPacketId The packet ID of obtained from the buffer. Not used
+ * in CONNACK or PINGRESP.
+ * @param[out] pSessionPresent Boolean flag from a CONNACK indicating present session.
+ *
+ * @return #MQTTBadParameter, #MQTTBadResponse, or #MQTTSuccess.
+ */
 MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * const pIncomingPacket,
                                   uint16_t * const pPacketId,
                                   bool * const pSessionPresent );

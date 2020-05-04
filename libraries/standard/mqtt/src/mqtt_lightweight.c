@@ -74,6 +74,11 @@
 #define MQTT_PACKET_CONNACK_REMAINING_LENGTH        ( ( uint8_t ) 2U )    /**< @brief A CONNACK packet always has a "Remaining length" of 2. */
 #define MQTT_PACKET_CONNACK_SESSION_PRESENT_MASK    ( ( uint8_t ) 0x01U ) /**< @brief The "Session Present" bit is always the lowest bit. */
 
+/**
+ * @brief The size of MQTT PUBACK, PUBREC, PUBREL, and PUBCOMP packets, per MQTT spec.
+ */
+#define MQTT_PUBLISH_ACK_PACKET_SIZE        ( 4U )
+
 /*
  * UNSUBACK, PUBACK, PUBREC, PUBREL, and PUBCOMP always have a remaining length
  * of 2.
@@ -986,6 +991,49 @@ MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * const pPubli
                                           size_t * const pHeaderSize )
 {
     return MQTTSuccess;
+}
+
+/*-----------------------------------------------------------*/
+
+MQTTStatus_t MQTT_SerializeAck( const MQTTFixedBuffer_t * const pBuffer,
+                                uint8_t packetType,
+                                uint16_t packetId )
+{
+    MQTTStatus_t status = MQTTSuccess;
+
+    if( pBuffer == NULL )
+    {
+        IotLogError( "Provided buffer is NULL." );
+        status = MQTTBadParameter;
+    }
+    else if( pBuffer->size < MQTT_PUBLISH_ACK_PACKET_SIZE )
+    {
+        IotLogError( "Insufficient memory for packet." );
+        status = MQTTNoMemory;
+    }
+    else
+    {
+        switch( packetType )
+        {
+            /* Only publish acks are serialized by the client. */
+            case MQTT_PACKET_TYPE_PUBACK:
+            case MQTT_PACKET_TYPE_PUBREC:
+            case MQTT_PACKET_TYPE_PUBREL:
+            case MQTT_PACKET_TYPE_PUBCOMP:
+                pBuffer->pBuffer[0] = packetType;
+                pBuffer->pBuffer[1] = MQTT_PACKET_SIMPLE_ACK_REMAINING_LENGTH;
+                pBuffer->pBuffer[2] = UINT16_HIGH_BYTE( packetId );
+                pBuffer->pBuffer[3] = UINT16_LOW_BYTE( packetId );
+                break;
+            default:
+                IotLogErrorWithArgs( "Packet type is not a publish ACK: Packet type=%02x",
+                                     packetType );
+                status = MQTTBadParameter;
+                break;
+        }
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/
