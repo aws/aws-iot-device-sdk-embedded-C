@@ -1,5 +1,5 @@
 # Demo target.
-set( CURRENT_MODULE "mqtt_demo_plaintext" )
+set( CURRENT_MODULE "mqtt_demo_basic_tls" )
 add_executable(${CURRENT_MODULE})
 
 target_sources(

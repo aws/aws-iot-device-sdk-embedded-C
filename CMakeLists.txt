@@ -17,7 +17,7 @@ if( ${PROJECT_SOURCE_DIR} STREQUAL ${PROJECT_BINARY_DIR} )
 endif()
 
 # Import global configurations.
-include("tools/cmake/filepaths.cmake")
+include("tools/cmake/filePaths.cmake")
 
 # Configure options to always show in CMake GUI.
 option( IOT_ATOMIC_USE_PORT
@@ -71,11 +71,11 @@ endif()
 #    add_subdirectory( third_party/unity )
 #endif()
 
+# MQTT library.
+add_subdirectory( libraries/standard/mqtt )
+
 # Build the demos.
 add_subdirectory( demos )
 
 # Common utilities. This includes iot_logging.
 #add_subdirectory( libraries/standard/utilities )
-
-# MQTT library.
-add_subdirectory( libraries/standard/mqtt )
