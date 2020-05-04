@@ -1,4 +1,3 @@
-#include <assert.h>
 #include <string.h>
 
 #include "http_client.h"
@@ -116,53 +115,57 @@ static HTTPStatus_t _receiveAndParseHttpResponse( const HTTPTransportInterface_t
  * @return Returns the number of bytes written to @p pBuffer.
  */
 static uint8_t _convertInt32ToAscii( int32_t value,
-                                     char * pBuffer,
+                                     uint8_t * pBuffer,
                                      size_t bufferLength );
 
 /*-----------------------------------------------------------*/
 
 static uint8_t _convertInt32ToAscii( int32_t value,
-                                     char * pBuffer,
+                                     uint8_t * pBuffer,
                                      size_t bufferLength )
 {
     /* As input value may be altered and MISRA C 2012 rule 17.8 prevents modification
      * of parameter, a local copy of the parameter is stored. */
-    int32_t valueCopy = value;
+    uint32_t absoluteValue = 0;
     uint8_t numOfDigits = 0u;
     uint8_t index = 0u;
     uint8_t isNegative = 0u;
-    char tempDigit = '\0';
 
     assert( pBuffer != NULL );
     assert( bufferLength >= MAX_INT32_NO_OF_DECIMAL_DIGITS );
     ( void ) bufferLength;
 
     /* If the value is negative, write the '-' (minus) character to the buffer. */
-    if( valueCopy < 0 )
+    if( value < 0 )
     {
         isNegative = 1u;
 
-        *pBuffer = '-';
+        *pBuffer = ( uint8_t ) '-';
 
         /* Convert the value to its absolute representation. */
-        valueCopy *= -1;
+        absoluteValue = value * -1;
+    }
+    else
+    {
+        /* As the input integer value is positive, store is as it-is. */
+        absoluteValue = value;
     }
 
     /* Write the absolute integer value in reverse ASCII representation. */
     do
     {
-        pBuffer[ isNegative + numOfDigits ] = ( valueCopy % 10 ) + '0';
+        pBuffer[ isNegative + numOfDigits ] = ( absoluteValue % 10 ) + ( uint8_t ) '0';
         numOfDigits++;
-        valueCopy /= 10;
-    } while( valueCopy != 0 );
+        absoluteValue /= 10;
+    } while( absoluteValue != 0 );
 
     /* Reverse the digits in the buffer to store the correct ASCII representation
      * of the value. */
     for( index = 0u; index < ( numOfDigits / 2u ); index++ )
     {
-        tempDigit = pBuffer[ isNegative + numOfDigits - index - 1u ];
-        pBuffer[ isNegative + numOfDigits - index - 1u ] = pBuffer[ isNegative + index ];
-        pBuffer[ isNegative + index ] = tempDigit;
+        pBuffer[ isNegative + index ] ^= pBuffer[ isNegative + numOfDigits - index - 1u ];
+        pBuffer[ isNegative + numOfDigits - index - 1u ] ^= pBuffer[ isNegative + index ];
+        pBuffer[ isNegative + index ] ^= pBuffer[ isNegative + numOfDigits - index - 1u ];
     }
 
     return( isNegative + numOfDigits );
@@ -325,9 +328,12 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
                                         int32_t rangeEnd )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
-    char rangeValueBuffer[ MAX_RANGE_REQUEST_VALUE_LEN ] = { '\0' };
+    uint8_t rangeValueBuffer[ MAX_RANGE_REQUEST_VALUE_LEN ] = { 0 };
     size_t rangeValueLength = 0u;
     const void * memcpyRetVal = NULL;
+
+    /* Disale unused variable warning. */
+    ( void ) memcpyRetVal;
 
     if( pRequestHeaders == NULL )
     {
@@ -388,7 +394,7 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
             memcpyRetVal = memcpy( rangeValueBuffer + rangeValueLength,
                                    ( const void * ) DASH_CHARACTER,
                                    DASH_CHARACTER_LEN );
-            assert( memcpyRetVal == rangeValueBuffer );
+            assert( memcpyRetVal == rangeValueBuffer + rangeValueLength );
             rangeValueLength += DASH_CHARACTER_LEN;
 
             /* Write the rangeEnd value of the request range to the buffer .*/
@@ -403,7 +409,7 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
             memcpyRetVal = memcpy( rangeValueBuffer + rangeValueLength,
                                    ( const void * ) DASH_CHARACTER,
                                    DASH_CHARACTER_LEN );
-            assert( memcpyRetVal == rangeValueBuffer );
+            assert( memcpyRetVal == rangeValueBuffer + rangeValueLength );
             rangeValueLength += DASH_CHARACTER_LEN;
         }
         else
@@ -413,9 +419,9 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
 
         /* Add the Range Request header field and value to the buffer. */
         returnStatus = _addHeader( pRequestHeaders,
-                                   RANGE_REQUEST_HEADER_FIELD,
+                                   ( const uint8_t * ) RANGE_REQUEST_HEADER_FIELD,
                                    RANGE_REQUEST_HEADER_FIELD_LEN,
-                                   ( const uint8_t * ) rangeValueBuffer,
+                                   rangeValueBuffer,
                                    rangeValueLength );
     }
 
