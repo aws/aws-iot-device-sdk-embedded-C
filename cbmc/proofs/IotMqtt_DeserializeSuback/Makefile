@@ -14,6 +14,9 @@ DEF += -DOPERATION_COUNT_MAX=$(OPERATION_COUNT_MAX)
 BUFFER_SIZE = 15
 DEF += -DBUFFER_SIZE=$(BUFFER_SIZE)
 
+# Enables CBMC stub for RemoveAllMatches function
+DEF += -DCBMC_STUB_REMOVEALLMATCHES=1
+
 ################################################################
 # Function omitted from the proof
 
@@ -41,6 +44,7 @@ UNWINDING += --unwindset '$(shell echo $(LOOP) | sed 's/ /,/g')'
 
 OBJS += $(ENTRY)_harness.goto
 OBJS += $(MQTT)/cbmc/proofs/mqtt_state.goto
+OBJS += $(MQTT)/cbmc/stubs/IotListDouble_RemoveAllMatches.goto
 OBJS += $(MQTT)/libraries/standard/mqtt/src/iot_mqtt_serialize.goto
 OBJS += $(MQTT)/libraries/standard/mqtt/src/iot_mqtt_subscription.goto
 

@@ -35,94 +35,8 @@
 
 #include "mqtt_state.h"
 
-/****************************************************************
-* Type definitions used by the IoT List Double remove functions
-****************************************************************/
-
-typedef bool ( * MatchFunction_t )( const IotLink_t * const pOperationLink,
-                                    void * pCompare );
-typedef void ( * FreeElementFunction_t )( void * pData );
-
-/****************************************************************
-* We assume the IoT List Double remove functions are memory safe.
-*
-* We abstract the list remove functions for performance reasons.  Our
-* abstraction replaces the original list with an unconstrained list.
-* Our abstraction proves that none of the elements on the original
-* list are accessed after the remove: We free all elements on the
-* original list, so that any later access will be caught as a
-* use-after-free error.
-****************************************************************/
-
-void IotListDouble_RemoveAllMatches( const IotListDouble_t * const pList,
-                                     MatchFunction_t isMatch,
-                                     void * pMatch,
-                                     FreeElementFunction_t freeElement,
-                                     size_t linkOffset )
-{
-    free_IotMqttSubscriptionList( pList );
-    allocate_IotMqttSubscriptionList( pList, SUBSCRIPTION_COUNT_MAX - 1 );
-}
-
-/****************************************************************/
-
-void IotListDouble_RemoveAll( const IotListDouble_t * const pList,
-                              FreeElementFunction_t freeElement,
-                              size_t linkOffset )
-{
-    free_IotMqttSubscriptionList( pList );
-    allocate_IotMqttSubscriptionList( pList, SUBSCRIPTION_COUNT_MAX - 1 );
-}
-
-/****************************************************************
- * We assume the IoT Semaphore operations are memory safe.
- *
- * We abstract the semaphores because we are doing sequential proof.
- * But the semaphore API assures us that TimedWait called after Post will
- * never fail. Our abstraction of the semaphores models this behavior.
- *
- * Our abstraction is safe because the Disconnect method invokes the
- * semaphore methods on the semaphore associated with the Disconnect
- * packet.  The Disconnect method is the only code that accesses this
- * semaphore.  This justifies this simple semaphore model of checking
- * for Post before TimedWait.
- *****************************************************************/
-
-static unsigned int flagSemaphore;
-
-/****************************************************************/
-
-void IotSemaphore_Post( IotSemaphore_t * pSemaphore )
-{
-    assert( pSemaphore != NULL );
-    flagSemaphore++;
-}
-
-/****************************************************************/
-
-bool IotSemaphore_TimedWait( IotSemaphore_t * pSemaphore,
-                             uint32_t timeoutMs )
-{
-    assert( pSemaphore != NULL );
-
-    if( flagSemaphore > 0 )
-    {
-        flagSemaphore--;
-        return true;
-    }
-
-    return false;
-}
-
-/****************************************************************
-* The proof harness
-****************************************************************/
-
 void harness()
 {
-    /* initialize semaphore flag */
-    flagSemaphore = 0;
-
     IotMqttConnection_t mqttConnection = allocate_IotMqttConnection( NULL );
     uint32_t flags;
 
@@ -145,5 +59,3 @@ void harness()
 
     IotMqtt_Disconnect( mqttConnection, flags );
 }
-
-/****************************************************************/

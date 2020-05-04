@@ -34,60 +34,6 @@
 
 #include "mqtt_state.h"
 
-typedef bool ( * MatchFunction_t )( const IotLink_t * const pOperationLink,
-                                    void * pCompare );
-
-typedef void ( * FreeElementFunction_t )( void * pData );
-
-/**
- * We constrain the return values of these functions because
- * they are checked by assertions in the MQTT code.
- */
-IotTaskPoolError_t IotTaskPool_CreateJob( IotTaskPoolRoutine_t userCallback,
-                                          void * pUserContext,
-                                          IotTaskPoolJobStorage_t * const pJobStorage,
-                                          IotTaskPoolJob_t * const pJob )
-{
-    assert( userCallback != NULL );
-    assert( pJobStorage != NULL );
-    assert( pJob != NULL );
-
-    /* _IotMqtt_ScheduleOperation asserts this. */
-    return IOT_TASKPOOL_SUCCESS;
-}
-
-IotTaskPoolError_t IotTaskPool_ScheduleDeferred( IotTaskPool_t taskPool,
-                                                 IotTaskPoolJob_t job,
-                                                 uint32_t timeMs )
-{
-    IotTaskPoolError_t error;
-
-    /* _IotMqtt_ScheduleOperation asserts this. */
-    __CPROVER_assume( error != IOT_TASKPOOL_BAD_PARAMETER &&
-                      error != IOT_TASKPOOL_ILLEGAL_OPERATION );
-    return error;
-}
-
-/**
- * We assume the list remove functions are memory safe.
- *
- * We abstract the list remove functions for performance reasons.  Our
- * abstraction replaces the original list with an unconstrained list.
- * Our abstraction proves that none of the elements on the original
- * list are accessed after the remove: we free all elements on the
- * original list, so that any later access will be caught as a
- * use-after-free error.
- */
-void IotListDouble_RemoveAllMatches( const IotListDouble_t * const pList,
-                                     MatchFunction_t isMatch,
-                                     void * pMatch,
-                                     FreeElementFunction_t freeElement,
-                                     size_t linkOffset )
-{
-    free_IotMqttSubscriptionList( pList );
-    allocate_IotMqttSubscriptionList( pList, SUBSCRIPTION_COUNT_MAX - 1 );
-}
-
 void harness()
 {
     /* Assume a valid MQTT connection. */
