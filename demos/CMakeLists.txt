@@ -1,8 +1,3 @@
-# Common application source files.
-set( DEMO_APP_SOURCES
-     app/iot_demo.c
-     app/iot_demo_arguments.c )
-
 # Common demo header files.
 set( DEMO_COMMON_HEADERS
      include/iot_clock.h
@@ -19,7 +14,7 @@ set( DEMO_COMMON_HEADERS
 # DEMO_LIBRARY_DEPENDENCY. The semicolon itself must be escaped as \\\;
 
 # Create demo sources by listing directories in cwd
-set( DEMO_LIBARY_NAMES
+set( DEMO_LIBRARY_NAMES
      "mqtt" )
 
 set( DEMO_LIBRARY_DEPENDENCIES
@@ -30,16 +25,23 @@ set( DEMO_LIBRARY_DEPENDENCIES
 list( LENGTH DEMO_LIBRARY_DEPENDENCIES DEMO_LIBRARY_COUNT )
 math( EXPR DEMO_LIBRARY_COUNT "${DEMO_LIBRARY_COUNT}-1" )
 
+set( CONFIG_HEADER config.h )
+
 foreach( i RANGE ${DEMO_LIBRARY_COUNT} )
-    list( GET DEMO_LIBARY_NAMES ${i} CURRENT_NAME )
+    list( GET DEMO_LIBRARY_NAMES ${i} CURRENT_NAME )
     list( GET DEMO_LIBRARY_DEPENDENCIES ${i} CURRENT_DEPENDENCY )
+    message("${CURRENT_NAME}")
     # Include submodules
     file(GLOB demo_dirs "${DEMOS_DIR}/${CURRENT_NAME}/*")
     foreach(demo_dir IN LISTS demo_dirs)
         if(IS_DIRECTORY "${demo_dir}" AND EXISTS "${demo_dir}/CMakeLists.txt")
-            add_subdirectory( demo_dir )
-            message("${demo_dir}")
+        get_filename_component( DEMO_EXE_NAME ${demo_dir} NAME )
+            add_subdirectory(${demo_dir})
+            # Add the demo executable.
+            #add_executable( ${DEMO_EXE_NAME}
+            #                "${DEMO_EXE_NAME}.c"
+            #                ${CONFIG_HEADER} )
+            #target_link_libraries( ${DEMO_EXE_NAME} PRIVATE ${CURRENT_DEPENDENCY} )
         endif()
     endforeach()
-
 endforeach()

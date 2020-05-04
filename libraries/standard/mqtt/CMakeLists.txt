@@ -3,7 +3,6 @@ include(filePaths.cmake)
 
 # MQTT library target.
 add_library( iotmqtt
-             ${CONFIG_HEADER_PATH}/iot_config.h
              ${MQTT_SOURCES}
              include/mqtt.h
              include/mqtt_lightweight.h )
