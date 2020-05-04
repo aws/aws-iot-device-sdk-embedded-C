@@ -16,6 +16,9 @@ if( ${PROJECT_SOURCE_DIR} STREQUAL ${PROJECT_BINARY_DIR} )
     message( FATAL_ERROR "In-source build is not allowed. Please build in a separate directory, such as ${PROJECT_SOURCE_DIR}/build." )
 endif()
 
+# Import global configurations.
+include("tools/cmake/filepaths.cmake")
+
 # Configure options to always show in CMake GUI.
 option( IOT_ATOMIC_USE_PORT
         "Set this to ON to use a custom atomic port. When OFF, the build system will choose an atomic port."
@@ -29,7 +32,7 @@ option( IOT_BUILD_CLONE_SUBMODULES
 
 # Unity test framework does not export the correct symbols for DLLs.
 set( ALLOW_SHARED_LIBRARIES ON )
-
+    
 include( CMakeDependentOption )
 CMAKE_DEPENDENT_OPTION( BUILD_SHARED_LIBS
                         "Set this to ON to build all libraries as shared libraries. When OFF, libraries build as static libraries."
@@ -48,10 +51,6 @@ endif()
 # Validate the platform name.
 if( NOT DEFINED IOT_PLATFORM_NAME )
     message( FATAL_ERROR "IOT_PLATFORM_NAME was not set and could not be automatically determined." )
-endif()
-
-if( NOT EXISTS ${PROJECT_SOURCE_DIR}/ports/${IOT_PLATFORM_NAME} )
-    message( FATAL_ERROR "A port for ${IOT_PLATFORM_NAME} does not exist." )
 endif()
 
 # Set output directories.
@@ -75,11 +74,8 @@ endif()
 # Build the demos.
 add_subdirectory( demos )
 
-# Common utilities. This creates the iot_logging.
-add_subdirectory( libraries/standard/utilities )
+# Common utilities. This includes iot_logging.
+#add_subdirectory( libraries/standard/utilities )
 
 # MQTT library.
 add_subdirectory( libraries/standard/mqtt )
-
-# HTTP library.
-add_subdirectory( libraries/standard/http )

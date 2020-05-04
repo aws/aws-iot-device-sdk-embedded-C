@@ -12,7 +12,7 @@ add_library( iotmqtt
 target_include_directories( iotmqtt PUBLIC ${MQTT_INCLUDE_PUBLIC_DIRS} )
 
 # Link required libraries.
-target_link_libraries( iotmqtt PRIVATE iotbase )
+#target_link_libraries( iotmqtt PRIVATE iotbase )
 
 # Link Unity test framework when building tests.
 #if( ${IOT_BUILD_TESTS} )
