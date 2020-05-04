@@ -78,7 +78,7 @@
  * UNSUBACK, PUBACK, PUBREC, PUBREL, and PUBCOMP always have a remaining length
  * of 2.
  */
-#define MQTT_PACKET_SIMPLE_ACK_REMAINING_LENGTH     ( ( uint8_t ) 2 )   /**< @brief A PUBACK packet always has a "Remaining length" of 2. */
+#define MQTT_PACKET_SIMPLE_ACK_REMAINING_LENGTH     ( ( uint8_t ) 2 )   /**< @brief PUBACK, PUBREC, PUBREl, PUBCOMP, UNSUBACK Remaining length. */
 #define MQTT_PACKET_PINGRESP_REMAINING_LENGTH       ( 0U ) /**< @brief A PINGRESP packet always has a "Remaining length" of 0. */
 
 /**
@@ -129,7 +129,7 @@
 
 /*-----------------------------------------------------------*/
 
-static size_t remainingLengthEncodedSize( size_t length )
+static size_t _remainingLengthEncodedSize( size_t length )
 {
     size_t encodedSize;
 
@@ -162,8 +162,8 @@ static size_t remainingLengthEncodedSize( size_t length )
 
 /*-----------------------------------------------------------*/
 
-static uint8_t * encodeRemainingLength( uint8_t * pDestination,
-                                        size_t length )
+static uint8_t * _encodeRemainingLength( uint8_t * pDestination,
+                                         size_t length )
 {
     uint8_t lengthByte;
     uint8_t * pLengthEnd = pDestination;
@@ -191,9 +191,9 @@ static uint8_t * encodeRemainingLength( uint8_t * pDestination,
 
 /*-----------------------------------------------------------*/
 
-static uint8_t * encodeString( uint8_t * pDestination,
-                               const char * source,
-                               uint16_t sourceLength )
+static uint8_t * _encodeString( uint8_t * pDestination,
+                                const char * source,
+                                uint16_t sourceLength )
 {
     uint8_t * pBuffer = pDestination;
 
@@ -284,7 +284,7 @@ static size_t _getRemainingLength( MQTTTransportRecvFunc_t recvFunc,
     /* Check that the decoded remaining length conforms to the MQTT specification. */
     if( remainingLength != MQTT_REMAINING_LENGTH_INVALID )
     {
-        expectedSize = remainingLengthEncodedSize( remainingLength );
+        expectedSize = _remainingLengthEncodedSize( remainingLength );
         if( bytesDecoded != expectedSize )
         {
             remainingLength = MQTT_REMAINING_LENGTH_INVALID;
@@ -423,17 +423,11 @@ static MQTTStatus_t _processPublishFlags( uint8_t publishFlags, MQTTPublishInfo_
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t _deserializeConnack( const MQTTPacketInfo_t * const pConnack,
-                                         bool * const pSessionPresent )
+static void _logConnackResponse( uint8_t responseCode )
 {
-    MQTTStatus_t status = MQTTSuccess;
-
-    assert( pConnack != NULL );
-    assert( pSessionPresent != NULL );
-    const uint8_t * pRemainingData = pConnack->pRemainingData;
-
-    /* If logging is enabled, declare the CONNACK response code strings. The
-     * fourth byte of CONNACK indexes into this array for the corresponding response. */
+    assert( responseCode <= 5 );
+    /* Declare the CONNACK response code strings. The fourth byte of CONNACK
+     * indexes into this array for the corresponding response. */
     #if LIBRARY_LOG_LEVEL > IOT_LOG_NONE
         static const char * const pConnackResponses[ 6 ] =
         {
@@ -444,7 +438,20 @@ static MQTTStatus_t _deserializeConnack( const MQTTPacketInfo_t * const pConnack
             "Connection refused: bad user name or password.",     /* 4 */
             "Connection refused: not authorized."                 /* 5 */
         };
+        IotLogErrorWithArgs( "%s", pConnackResponses[ responseCode ] );
     #endif
+}
+
+/*-----------------------------------------------------------*/
+
+static MQTTStatus_t _deserializeConnack( const MQTTPacketInfo_t * const pConnack,
+                                         bool * const pSessionPresent )
+{
+    MQTTStatus_t status = MQTTSuccess;
+
+    assert( pConnack != NULL );
+    assert( pSessionPresent != NULL );
+    const uint8_t * pRemainingData = pConnack->pRemainingData;
 
     /* According to MQTT 3.1.1, the second byte of CONNACK must specify a
      * "Remaining length" of 2. */
@@ -502,7 +509,7 @@ static MQTTStatus_t _deserializeConnack( const MQTTPacketInfo_t * const pConnack
             /* Print the appropriate message for the CONNACK response code if logs are
              * enabled. */
             #if LIBRARY_LOG_LEVEL > IOT_LOG_NONE
-                IotLogErrorWithArgs( "%s", pConnackResponses[ pRemainingData[ 1 ] ] );
+                _logConnackResponse( pRemainingData[ 1 ] );
             #endif
 
             /* A nonzero CONNACK response code means the connection was refused. */
@@ -787,7 +794,7 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * const pConnect
 
     /* Calculate the full size of the MQTT CONNECT packet by adding the size of
      * the "Remaining Length" field plus 1 byte for the "Packet Type" field. */
-    connectPacketSize += 1U + remainingLengthEncodedSize( connectPacketSize );
+    connectPacketSize += 1U + _remainingLengthEncodedSize( connectPacketSize );
 
     /* Check that the CONNECT packet is within the bounds of the MQTT spec. */
     if( connectPacketSize > MQTT_PACKET_CONNECT_MAX_SIZE )
@@ -815,7 +822,7 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * const pConnectInfo
     uint8_t * pIndex = pBuffer->pBuffer;
 
     /* Check that the full packet size fits within the given buffer. */
-    size_t connectPacketSize = remainingLength + remainingLengthEncodedSize( remainingLength ) + 1U;
+    size_t connectPacketSize = remainingLength + _remainingLengthEncodedSize( remainingLength ) + 1U;
 
     if( connectPacketSize > pBuffer->size )
     {
@@ -831,11 +838,11 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * const pConnectInfo
         /* The remaining length of the CONNECT packet is encoded starting from the
         * second byte. The remaining length does not include the length of the fixed
         * header or the encoding of the remaining length. */
-        pIndex = encodeRemainingLength( pIndex, remainingLength );
+        pIndex = _encodeRemainingLength( pIndex, remainingLength );
 
         /* The string "MQTT" is placed at the beginning of the CONNECT packet's variable
          * header. This string is 4 bytes long. */
-        pIndex = encodeString( pIndex, "MQTT", 4 );
+        pIndex = _encodeString( pIndex, "MQTT", 4 );
 
         /* The MQTT protocol version is the second field of the variable header. */
         *pIndex = MQTT_VERSION_3_1_1;
@@ -888,31 +895,31 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * const pConnectInfo
         pIndex += 2;
 
         /* Write the client identifier into the CONNECT packet. */
-        pIndex = encodeString( pIndex,
-                               pConnectInfo->pClientIdentifier,
-                               pConnectInfo->clientIdentifierLength );
+        pIndex = _encodeString( pIndex,
+                                pConnectInfo->pClientIdentifier,
+                                pConnectInfo->clientIdentifierLength );
 
         /* Write the will topic name and message into the CONNECT packet if provided. */
         if( pWillInfo != NULL )
         {
-            pIndex = encodeString( pIndex,
-                                   pWillInfo->pTopicName,
-                                   pWillInfo->topicNameLength );
-            pIndex = encodeString( pIndex,
-                                   pWillInfo->pPayload,
-                                   ( uint16_t ) pWillInfo->payloadLength );
+            pIndex = _encodeString( pIndex,
+                                    pWillInfo->pTopicName,
+                                    pWillInfo->topicNameLength );
+            pIndex = _encodeString( pIndex,
+                                    pWillInfo->pPayload,
+                                    ( uint16_t ) pWillInfo->payloadLength );
         }
 
         /* Encode the user name if provided. */
         if( pConnectInfo->pUserName != NULL )
         {
-            pIndex = encodeString( pIndex, pConnectInfo->pUserName, pConnectInfo->userNameLength );
+            pIndex = _encodeString( pIndex, pConnectInfo->pUserName, pConnectInfo->userNameLength );
         }
 
         /* Encode the password if provided. */
         if( pConnectInfo->pPassword != NULL )
         {
-            pIndex = encodeString( pIndex, pConnectInfo->pPassword, pConnectInfo->passwordLength );
+            pIndex = _encodeString( pIndex, pConnectInfo->pPassword, pConnectInfo->passwordLength );
         }
     }
 
