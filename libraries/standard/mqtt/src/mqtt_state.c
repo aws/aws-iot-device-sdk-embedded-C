@@ -319,15 +319,6 @@ MQTTStatus_t MQTT_ReserveState( MQTTContext_t * pMqttContext,
                                 MQTTQoS_t qos )
 {
     MQTTStatus_t status = MQTTSuccess;
-    size_t recordIndex = MQTT_STATE_ARRAY_MAX_COUNT;
-    MQTTQoS_t tempQoS = MQTTQoS0;
-    MQTTPublishState_t tempState = MQTTStateNull;
-
-    recordIndex = _findInRecord( pMqttContext->outgoingPublishRecords,
-                                 MQTT_STATE_ARRAY_MAX_COUNT,
-                                 packetId,
-                                 &tempQoS,
-                                 &tempState );
 
     if( qos == MQTTQoS0 )
     {
@@ -337,19 +328,14 @@ MQTTStatus_t MQTT_ReserveState( MQTTContext_t * pMqttContext,
     {
         status = MQTTBadParameter;
     }
-    /* Make sure there's no collision. */
-    else if( recordIndex >= MQTT_STATE_ARRAY_MAX_COUNT )
+    else
     {
+        /* Collisions are detected when adding the record. */
         status = _addRecord( pMqttContext->outgoingPublishRecords,
                              MQTT_STATE_ARRAY_MAX_COUNT,
                              packetId,
                              qos,
                              MQTTPublishSend );
-    }
-    else
-    {
-        /* If the ID was found there must be a collision. */
-        status = MQTTStateCollision;
     }
     
     return status;
@@ -387,69 +373,56 @@ MQTTPublishState_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
     MQTTStatus_t mqttStatus = MQTTSuccess;
     size_t recordIndex = MQTT_STATE_ARRAY_MAX_COUNT;
     MQTTQoS_t foundQoS = MQTTQoS0;
-    MQTTPubAckInfo_t * records = NULL;
     bool isTransitionValid = false;
 
-    /* Set this pointer so some common code can be used later. */
-    if( opType == MQTT_SEND )
-    {
-        records = pMqttContext->outgoingPublishRecords;
-    }
-    else
-    {
-        records = pMqttContext->incomingPublishRecords;
-    }
-
-    recordIndex = _findInRecord( records,
-                                 MQTT_STATE_ARRAY_MAX_COUNT,
-                                 packetId,
-                                 &foundQoS,
-                                 &currentState );
-    
     if( qos == MQTTQoS0 )
     {
-        /* QoS 0 publish. Do nothing */
+        /* QoS 0 publish. Do nothing. */
         newState = MQTTPublishDone;
     }
-    else if( packetId == MQTT_PACKET_ID_INVALID )
+    else if( ( packetId == MQTT_PACKET_ID_INVALID ) || ( pMqttContext == NULL ) )
     {
         /* Publishes > QoS 0 need a valid packet ID. */
         mqttStatus = MQTTBadParameter;
     }
-    else if( foundQoS == MQTTQoS0 )
+    else if( opType == MQTT_SEND )
     {
-        /* If entry not found, use supplied QoS. */
-        foundQoS = qos;
-    }
-    else if( foundQoS != qos )
-    {
-        /* If entry found, should match up with supplied QoS. */
-        mqttStatus = MQTTBadParameter;
+        /* Search record for entry so we can check QoS. */
+        recordIndex = _findInRecord( pMqttContext->outgoingPublishRecords,
+                                     MQTT_STATE_ARRAY_MAX_COUNT,
+                                     packetId,
+                                     &foundQoS,
+                                     &currentState );
+        if( foundQoS != qos )
+        {
+            /* Entry should match with supplied QoS. */
+            mqttStatus = MQTTBadParameter;
+        }
     }
     else
     {
-        /* Parameters valid. */
+        /* QoS 1 or 2 receive. Nothing to be done. */
     }
 
-    if( ( foundQoS != MQTTQoS0 ) && ( mqttStatus == MQTTSuccess ) )
+    if( ( qos != MQTTQoS0 ) && ( mqttStatus == MQTTSuccess ) )
     {
-        newState = MQTT_CalculateStatePublish( opType, foundQoS );
-        isTransitionValid = _validateTransitionPublish( currentState, newState, opType, foundQoS );
+        newState = MQTT_CalculateStatePublish( opType, qos );
+        isTransitionValid = _validateTransitionPublish( currentState, newState, opType, qos );
         if( isTransitionValid )
         {
-            /* We don't need to check the record index since _addRecord will check for collisions. */
+            /* _addRecord will check for collisions. */
             if( opType == MQTT_RECEIVE )
             {
-                mqttStatus = _addRecord( records,
+                mqttStatus = _addRecord( pMqttContext->incomingPublishRecords,
                                          MQTT_STATE_ARRAY_MAX_COUNT,
                                          packetId,
-                                         foundQoS,
+                                         qos,
                                          newState );
             }
             /* Send operation. */
             else if( recordIndex < MQTT_STATE_ARRAY_MAX_COUNT )
             {
-                _updateRecord( records, recordIndex, newState, false );
+                _updateRecord( pMqttContext->outgoingPublishRecords, recordIndex, newState, false );
             }
             else
             {
@@ -600,10 +573,10 @@ uint16_t MQTT_StateSelect( MQTTContext_t * pMqttContext,
             if( records[ *pCursor ].publishState == searchState )
             {
                 packetId = records[ *pCursor ].packetId;
-                (*pCursor)++;
+                ( *pCursor )++;
                 break;
             }
-            (*pCursor)++;
+            ( *pCursor )++;
         }
     }
 
