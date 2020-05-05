@@ -3,14 +3,6 @@
 
 #include "config.h"
 
-#if defined( HTTP_ENABLE_ASSERT ) && ( HTTP_ENABLE_ASSERT == 1 )
-    #include <assert.h>
-#else
-    #ifndef assert
-        #define assert( x )
-    #endif
-#endif
-
 /**
  * AWS IoT Embedded C SDK optional specific logging setup.
  */

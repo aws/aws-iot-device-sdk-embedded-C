@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <string.h>
 
 #include "http_client.h"
