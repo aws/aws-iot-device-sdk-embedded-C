@@ -120,7 +120,6 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
     uint8_t * pBufferCur = pRequestHeaders->pBuffer + pRequestHeaders->headersLen;
     size_t toAddLen = 0;
     size_t backtrackHeaderLen = pRequestHeaders->headersLen;
-    void * memcpyRetVal = NULL;
 
     assert( pRequestHeaders != NULL );
     assert( pRequestHeaders->pBuffer != NULL );
@@ -151,27 +150,23 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
         /* Write "<Field>: <Value> \r\n" to the headers buffer. */
 
         /* Copy the header name into the buffer. */
-        memcpyRetVal = memcpy( pBufferCur, pField, fieldLen );
-        assert( memcpyRetVal == pBufferCur );
+        memcpy( pBufferCur, pField, fieldLen );
         pBufferCur += fieldLen;
 
         /* Copy the field separator, ": ", into the buffer. */
-        memcpyRetVal = memcpy( pBufferCur,
-                               HTTP_HEADER_FIELD_SEPARATOR,
-                               HTTP_HEADER_FIELD_SEPARATOR_LEN );
-        assert( memcpyRetVal == pBufferCur );
+        memcpy( pBufferCur,
+                HTTP_HEADER_FIELD_SEPARATOR,
+                HTTP_HEADER_FIELD_SEPARATOR_LEN );
         pBufferCur += HTTP_HEADER_FIELD_SEPARATOR_LEN;
 
         /* Copy the header value into the buffer. */
-        memcpyRetVal = memcpy( pBufferCur, pValue, valueLen );
-        assert( memcpyRetVal == pBufferCur );
+        memcpy( pBufferCur, pValue, valueLen );
         pBufferCur += valueLen;
 
         /* Copy the header end indicator, "\r\n\r\n" into the buffer. */
-        memcpyRetVal = memcpy( pBufferCur,
-                               HTTP_HEADER_END_INDICATOR,
-                               HTTP_HEADER_END_INDICATOR_LEN );
-        assert( memcpyRetVal == pBufferCur );
+        memcpy( pBufferCur,
+                HTTP_HEADER_END_INDICATOR,
+                HTTP_HEADER_END_INDICATOR_LEN );
 
         /* Update the headers length value. */
         pRequestHeaders->headersLen = backtrackHeaderLen + toAddLen;
