@@ -161,6 +161,93 @@ static int32_t sendPacket( MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 /**
+ * @brief Convert a byte indicating a publish ack type to an #MQTTPubAckType_t.
+ *
+ * @param[in] packetType First byte of fixed header.
+ *
+ * @return Type of ack.
+ */
+static MQTTPubAckType_t _getAckFromPacketType( uint8_t packetType )
+{
+    MQTTPubAckType_t ackType;
+    switch( packetType )
+    {
+        case MQTT_PACKET_TYPE_PUBACK:
+            ackType = MQTTPuback;
+            break;
+        case MQTT_PACKET_TYPE_PUBREC:
+            ackType = MQTTPubrec;
+            break;
+        case MQTT_PACKET_TYPE_PUBREL:
+            ackType = MQTTPubrel;
+            break;
+        case MQTT_PACKET_TYPE_PUBCOMP:
+            ackType = MQTTPubcomp;
+            break;
+        default:
+            /* Not an ack. */
+            assert( 0 );
+            break;
+    }
+    return ackType;
+}
+
+/**
+ * @brief Dump a packet from the transport interface.
+ *
+ * @param[in] PContext MQTT Connection context.
+ * @param[in] remainingLength Remaining length of the packet to dump.
+ * @param[in] bytesAlreadyReceived Bytes previously read from the transport.
+ *
+ * @return #MQTTRecvFailed or #MQTTNoDataAvailable.
+ */
+static MQTTStatus_t _dumpPacket( MQTTContext_t * const pContext,
+                                 size_t remainingLength,
+                                 int32_t bytesAlreadyReceived )
+{
+    MQTTStatus_t status = MQTTRecvFailed;
+    int32_t totalBytesReceived = bytesAlreadyReceived, bytesReceived = 0;
+    assert( pContext != NULL );
+    size_t bytesToReceive = pContext->networkBuffer.size;
+
+    while( totalBytesReceived < ( int32_t ) remainingLength )
+    {
+        /* Update number of bytes to receive. */
+        if( ( remainingLength - ( size_t ) totalBytesReceived ) < bytesToReceive )
+        {
+            bytesToReceive = remainingLength - ( size_t ) totalBytesReceived;
+        }
+
+        bytesReceived = pContext->transportInterface.recv( pContext->transportInterface.networkContext,
+                                                           pContext->networkBuffer.pBuffer,
+                                                           bytesToReceive );
+        if( bytesReceived != ( int32_t ) bytesToReceive )
+        {
+            /* Partial receive occurred while trying to dump packet. */
+            IotLogErrorWithArgs( "Partial receive while dumping packet."
+                                 "Received bytes=%d, Expected bytes=%u",
+                                 bytesReceived,
+                                 bytesToReceive );
+            status = MQTTRecvFailed;
+            break;
+        }
+
+        /* Update number of bytes to receive. */
+        totalBytesReceived += bytesReceived;
+    }
+
+    if( totalBytesReceived == ( int32_t ) remainingLength )
+    {
+        IotLogInfoWithArgs( "Dumped packet. Dumped bytes=%d",
+                            totalBytesReceived );
+        /* Packet dumped, so no data is available. */
+        status = MQTTNoDataAvailable;
+    }
+
+    return status;
+}
+
+/**
  * @brief Receive a packet from the transport interface.
  *
  * @param[in] pContext MQTT Connection context.
@@ -236,40 +323,8 @@ static MQTTStatus_t _receivePacket( MQTTContext_t * const pContext,
     /* Check if packet exceeds buffer. */
     if( ( status == MQTTSuccess ) && ( ( int32_t ) incomingPacket.remainingLength > bytesToReceive ) )
     {
-        /* Packet exceeds buffer, dump it. At this point, bytesToReceive is
-         * pContext->networkBuffer.size, so we don't need to update it until
-         * the end of the loop. */
-        while( totalBytesReceived < ( int32_t ) incomingPacket.remainingLength )
-        {
-            bytesReceived = pContext->transportInterface.recv( pContext->transportInterface.networkContext,
-                                                               pContext->networkBuffer.pBuffer,
-                                                               bytesToReceive );
-            if( bytesReceived != bytesToReceive )
-            {
-                /* Partial receive occurred while trying to dump packet. */
-                IotLogErrorWithArgs( "Partial receive while dumping packet."
-                                     "Received bytes=%d, Expected bytes=%u",
-                                     bytesReceived,
-                                     bytesToReceive );
-                status = MQTTRecvFailed;
-                break;
-            }
-
-            /* Update number of bytes to receive. */
-            totalBytesReceived += bytesReceived;
-            if( ( incomingPacket.remainingLength - ( size_t ) totalBytesReceived ) < bytesToReceive )
-            {
-                bytesToReceive = incomingPacket.remainingLength - ( size_t ) totalBytesReceived;
-            }
-        }
-
-        if( totalBytesReceived == ( int32_t ) incomingPacket.remainingLength )
-        {
-            IotLogInfoWithArgs( "Dumped packet. Dumped bytes=%d",
-                                totalBytesReceived );
-            /* Packet dumped, so no data is available. */
-            status = MQTTNoDataAvailable;
-        }
+        /* Packet exceeds buffer, dump it. */
+        status = _dumpPacket( pContext, incomingPacket.remainingLength, totalBytesReceived );
     }
 
     return status;
@@ -290,76 +345,70 @@ static MQTTStatus_t _sendPublishAcks( MQTTContext_t * const pContext,
 {
     MQTTStatus_t status = MQTTSuccess;
     MQTTPublishState_t newState = MQTTStateNull;
+    int32_t bytesSent = 0;
+    uint8_t packetTypeByte = 0U;
+    MQTTPubAckType_t packetType;
+    MQTTPublishState_t expectedNextState = MQTTStateNull;
 
     assert( pContext != NULL );
     assert( pPublishState != NULL );
 
     /* pContext->controlPacketSent doesn't seem to be part of the context.
      * Does it need to be added?
-     * Additionally, need to update message timestamp if keep alive info part of
-     * timestamp. */
+     */
     switch( *pPublishState )
     {
         case MQTTPubAckSend:
-            /* TODO: Send PubAck. Is there a function for this? */
-            //status = _sendPacket( pContext, packetId, MQTTPuback );
-            //if( status == MQTTSuccess )
-            newState = MQTT_UpdateStateAck( pContext,
-                                            packetId,
-                                            MQTTPuback,
-                                            MQTT_SEND );
-
-            if( newState != MQTTPublishDone )
-            {
-                status = MQTTIllegalState;
-            }
+            packetTypeByte = MQTT_PACKET_TYPE_PUBACK;
+            packetType = MQTTPuback;
+            expectedNextState = MQTTPublishDone;
             break;
         case MQTTPubRecSend:
-            /* TODO: Send PubRec. Is there a function for this? */
-            //status = _sendPacket( pContext, packetId, MQTTPubrec );
-            //if( status == MQTTSuccess )
-            newState = MQTT_UpdateStateAck( pContext,
-                                            packetId,
-                                            MQTTPubrec,
-                                            MQTT_SEND );
-
-            if( newState != MQTTPubRelPending )
-            {
-                status = MQTTIllegalState;
-            }
+            packetTypeByte = MQTT_PACKET_TYPE_PUBREC;
+            packetType = MQTTPubrec;
+            expectedNextState = MQTTPubRelPending;
             break;
         case MQTTPubRelSend:
-            /* TODO: Send PubRel. Is there a function for this? */
-            //status = _sendPacket( pContext, packetId, MQTTPubrel );
-            //if( status == MQTTSuccess )
-            newState = MQTT_UpdateStateAck( pContext,
-                                            packetId,
-                                            MQTTPubrel,
-                                            MQTT_SEND );
-
-            if( newState != MQTTPubCompPending )
-            {
-                status = MQTTIllegalState;
-            }
+            packetTypeByte = MQTT_PACKET_TYPE_PUBREL;
+            packetType = MQTTPubrel;
+            expectedNextState = MQTTPubCompPending;
             break;
         case MQTTPubCompSend:
-            /* TODO: Send PubComp. Is there a function for this? */
-            //status = _sendPacket( pContext, packetId, MQTTPubcomp );
-            //if( status == MQTTSuccess )
-            newState = MQTT_UpdateStateAck( pContext,
-                                            packetId,
-                                            MQTTPubcomp,
-                                            MQTT_SEND );
-
-            if( newState != MQTTPublishDone )
-            {
-                status = MQTTIllegalState;
-            }
+            packetTypeByte = MQTT_PACKET_TYPE_PUBCOMP;
+            packetType = MQTTPubcomp;
+            expectedNextState = MQTTPublishDone;
             break;
         default:
             /* Nothing to send. */
             break;
     }
+
+    if( packetTypeByte != 0U )
+    {
+        status = MQTT_SerializeAck( pContext->networkBuffer, packetTypeByte, packetId );
+        if( status == MQTTSuccess )
+        {
+            bytesSent = sendPacket( pContext, MQTT_PUBLISH_ACK_PACKET_SIZE );
+        }
+
+        if( bytesSent == MQTT_PUBLISH_ACK_PACKET_SIZE )
+        {
+            newState = MQTT_UpdateStateAck( pContext,
+                                            packetId,
+                                            packetType,
+                                            MQTT_SEND );
+
+            if( newState != expectedNextState )
+            {
+                status = MQTTIllegalState;
+            }
+        }
+        else
+        {
+            status = MQTTSendFailed;
+        }
+    }
+
     if( ( status == MQTTSuccess ) && ( newState != MQTTStateNull ) )
     {
         *pPublishState = newState;
@@ -368,83 +417,86 @@ static MQTTStatus_t _sendPublishAcks( MQTTContext_t * const pContext,
 }
 
 /**
- * @brief Handle received MQTT packet.
+ * @brief Handle received MQTT PUBLISH packet.
+ *
+ * @param[in] pContext MQTT Connection context.
+ * @param[in] pIncomingPacket Incoming packet.
+ *
+ * @return MQTTSuccess, MQTTIllegalState or deserialization error.
+ */
+static MQTTStatus_t _handleIncomingPublish( MQTTContext_t * const pContext,
+                                            MQTTPacketInfo_t * pIncomingPacket )
+{
+    MQTTStatus_t status = MQTTSuccess;
+    MQTTPublishState_t publishRecordState = MQTTStateNull;
+    uint16_t packetIdentifier;
+    MQTTPublishInfo_t publishInfo;
+
+    assert( pContext != NULL );
+    assert( pIncomingPacket != NULL );
+
+    status = MQTT_DeserializePublish( pIncomingPacket, &packetIdentifier, &publishInfo );
+    IotLogInfoWithArgs( "Publish packet deserialized with result %d.", status );
+
+    if( status == MQTTSuccess )
+    {
+        publishRecordState = MQTT_UpdateStatePublish( pContext,
+                                                      packetIdentifier,
+                                                      MQTT_RECEIVE,
+                                                      publishInfo.qos );
+        IotLogInfoWithArgs( "State record updated. New state=%d.",
+                            publishRecordState );
+
+        /* Send PUBACK or PUBREC if necessary. */
+        status = _sendPublishAcks( pContext,
+                                   packetIdentifier,
+                                   &publishRecordState );
+    }
+
+    if( status == MQTTSuccess )
+    {
+        /* TODO: Should the publish info be passed instead? */
+        pContext->callbacks.appCallback( pContext, pIncomingPacket );
+    }
+
+    return status;
+}
+
+/**
+ * @brief Handle received MQTT ack.
  *
  * @param[in] pContext MQTT Connection context.
  * @param[in] pIncomingPacket Incoming packet.
  *
  * @return MQTTSuccess, MQTTIllegalState, or deserialization error.
  */
-static MQTTStatus_t _handleMessage( MQTTContext_t * const pContext,
-                                    MQTTPacketInfo_t * pIncomingPacket )
+static MQTTStatus_t _handleIncomingAck( MQTTContext_t * const pContext,
+                                        MQTTPacketInfo_t * pIncomingPacket )
 {
     MQTTStatus_t status = MQTTSuccess;
     MQTTPublishState_t publishRecordState = MQTTStateNull;
+    uint16_t packetIdentifier;
+    /* Need a dummy variable for MQTT_DeserializeAck(). */
+    bool sessionPresent = false;
     MQTTPubAckType_t ackType;
-    MQTTPublishInfo_t publishInfo;
 
     assert( pContext != NULL );
     assert( pIncomingPacket != NULL );
 
-    /* Determine ack type here so next switch doesn't duplicate code. */
     switch( pIncomingPacket->type )
     {
-        case MQTT_PACKET_TYPE_PUBACK:
-            ackType = MQTTPuback;
-            break;
-        case MQTT_PACKET_TYPE_PUBREC:
-            ackType = MQTTPubrec;
-            break;
-        case MQTT_PACKET_TYPE_PUBREL:
-            ackType = MQTTPubrel;
-            break;
-        case MQTT_PACKET_TYPE_PUBCOMP:
-            ackType = MQTTPubcomp;
-            break;
-        default:
-            /* Not an ack. */
-            break;
-    }
-    switch( pIncomingPacket->type )
-    {
-        case MQTT_PACKET_TYPE_PUBLISH:
-            /* TODO: Not sure about pPacketId arg since that's already in incoming packet. */
-            status = MQTT_DeserializePublish( pIncomingPacket, NULL, &publishInfo );
-            IotLogInfoWithArgs( "Publish packet deserialized with result %d.",
-                                status );
-
-            if( status == MQTTSuccess )
-            {
-                publishRecordState = MQTT_UpdateStatePublish( pContext,
-                                                              pIncomingPacket->packetIdentifier,
-                                                              MQTT_RECEIVE,
-                                                              publishInfo.qos );
-                IotLogInfoWithArgs( "State record updated. New state=%d.",
-                                    publishRecordState );
-
-                /* Send PUBACK or PUBREC if necessary. */
-                status = _sendPublishAcks( pContext,
-                                           pIncomingPacket->packetIdentifier,
-                                           &publishRecordState );
-            }
-            if( status == MQTTSuccess )
-            {
-                /* TODO: Should the publish info be passed instead? */
-                pContext->callbacks.appCallback( pContext, pIncomingPacket );
-            }
-            break;
         case MQTT_PACKET_TYPE_PUBACK:
         case MQTT_PACKET_TYPE_PUBREC:
         case MQTT_PACKET_TYPE_PUBREL:
         case MQTT_PACKET_TYPE_PUBCOMP:
-            /* TODO: Not sure about pPacketId and pSessionPresent since they don't appear in API doc. */
-            status = MQTT_DeserializeAck( pIncomingPacket, NULL,  NULL );
+            ackType = _getAckFromPacketType( pIncomingPacket->type );
+            status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier,  &sessionPresent );
             IotLogInfoWithArgs( "Ack packet deserialized with result: %d.",
                                 status );
             if( status == MQTTSuccess )
             {
                 publishRecordState = MQTT_UpdateStateAck( pContext,
-                                                          pIncomingPacket->packetIdentifier,
+                                                          packetIdentifier,
                                                           ackType,
                                                           MQTT_RECEIVE );
                 IotLogInfoWithArgs( "State record updated. New state=%d.",
@@ -452,7 +504,7 @@ static MQTTStatus_t _handleMessage( MQTTContext_t * const pContext,
 
                 /* Send PUBREL or PUBCOMP if necessary. */
                 status = _sendPublishAcks( pContext,
-                                           pIncomingPacket->packetIdentifier,
+                                           packetIdentifier,
                                            &publishRecordState );
                 if( status == MQTTSuccess )
                 {
@@ -460,6 +512,7 @@ static MQTTStatus_t _handleMessage( MQTTContext_t * const pContext,
                     pContext->callbacks.appCallback( pContext, pIncomingPacket );
                 }
             }
+            break;
         case MQTT_PACKET_TYPE_PINGRESP:
             /* TODO: should this be handled here? pContext->waitingForPingResp = false; */
         case MQTT_PACKET_TYPE_SUBACK:
@@ -1121,7 +1174,16 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * const pContext,
         if( status == MQTTSuccess )
         {
             incomingPacket.pRemainingData = pContext->networkBuffer.pBuffer;
-            status = _handleMessage( pContext, &incomingPacket );
+            /* PUBLISH packets allow flags in the lower four bits. For other
+             * packet types, they are reserved. */
+            if( ( incomingPacket.type & 0xF0U ) == MQTT_PACKET_TYPE_PUBLISH )
+            {
+                status = _handleIncomingPublish( pContext, &incomingPacket );
+            }
+            else
+            {
+                status = _handleIncomingAck( pContext, &incomingPacket );
+            }
         }
 
         if( status != MQTTSuccess && status != MQTTNoDataAvailable )
@@ -1129,9 +1191,14 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * const pContext,
             /* Error, break. */
             IotLogErrorWithArgs( "Exiting receive loop. Error status=%d",
                                  status );
-            /* TODO signal connection to close? */
             break;
         }
+    }
+
+    /* No data available on last read is still success. */
+    if( status == MQTTNoDataAvailable )
+    {
+        status = MQTTSuccess;
     }
 
     return status;
