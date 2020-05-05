@@ -184,10 +184,6 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
     uint8_t * pBufferCur = pRequestHeaders->pBuffer + pRequestHeaders->headersLen;
     size_t toAddLen = 0u;
     size_t backtrackHeaderLen = pRequestHeaders->headersLen;
-    void * memcpyRetVal = NULL;
-
-    /* Disable unused variable warning. */
-    ( void ) memcpyRetVal;
 
     assert( pRequestHeaders != NULL );
     assert( pRequestHeaders->pBuffer != NULL );
@@ -218,27 +214,23 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
         /* Write "<Field>: <Value> \r\n" to the headers buffer. */
 
         /* Copy the header name into the buffer. */
-        memcpyRetVal = memcpy( pBufferCur, pField, fieldLen );
-        assert( memcpyRetVal == pBufferCur );
+        memcpy( pBufferCur, pField, fieldLen );
         pBufferCur += fieldLen;
 
         /* Copy the field separator, ": ", into the buffer. */
-        memcpyRetVal = memcpy( pBufferCur,
-                               ( const uint8_t * ) HTTP_HEADER_FIELD_SEPARATOR,
-                               HTTP_HEADER_FIELD_SEPARATOR_LEN );
-        assert( memcpyRetVal == pBufferCur );
+        memcpy( pBufferCur,
+                ( const uint8_t * ) HTTP_HEADER_FIELD_SEPARATOR,
+                HTTP_HEADER_FIELD_SEPARATOR_LEN );
         pBufferCur += HTTP_HEADER_FIELD_SEPARATOR_LEN;
 
         /* Copy the header value into the buffer. */
-        memcpyRetVal = memcpy( pBufferCur, pValue, valueLen );
-        assert( memcpyRetVal == pBufferCur );
+        memcpy( pBufferCur, pValue, valueLen );
         pBufferCur += valueLen;
 
         /* Copy the header end indicator, "\r\n\r\n" into the buffer. */
-        memcpyRetVal = memcpy( pBufferCur,
-                               ( const uint8_t * ) HTTP_HEADER_END_INDICATOR,
-                               HTTP_HEADER_END_INDICATOR_LEN );
-        assert( memcpyRetVal == pBufferCur );
+        memcpy( pBufferCur,
+                ( const uint8_t * ) HTTP_HEADER_END_INDICATOR,
+                HTTP_HEADER_END_INDICATOR_LEN );
 
         /* Update the headers length value. */
         pRequestHeaders->headersLen = backtrackHeaderLen + toAddLen;
@@ -331,10 +323,6 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
     uint8_t rangeValueBuffer[ MAX_RANGE_REQUEST_VALUE_LEN ] = { 0 };
     size_t rangeValueLength = 0u;
-    const void * memcpyRetVal = NULL;
-
-    /* Disale unused variable warning. */
-    ( void ) memcpyRetVal;
 
     if( pRequestHeaders == NULL )
     {
@@ -375,10 +363,9 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
         /* Generate the value data for the Range Request header.*/
 
         /* Write the range value prefix in the buffer. */
-        memcpyRetVal = memcpy( rangeValueBuffer,
-                               RANGE_REQUEST_HEADER_VALUE_PREFIX,
-                               RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN );
-        assert( memcpyRetVal == rangeValueBuffer );
+        memcpy( rangeValueBuffer,
+                RANGE_REQUEST_HEADER_VALUE_PREFIX,
+                RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN );
         rangeValueLength += RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN;
 
         /* Write the range start value in the buffer. */
@@ -392,10 +379,9 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
         if( rangeEnd != HTTP_RANGE_REQUEST_END_OF_FILE )
         {
             /* Write the "-" character to the buffer.*/
-            memcpyRetVal = memcpy( rangeValueBuffer + rangeValueLength,
-                                   DASH_CHARACTER,
-                                   DASH_CHARACTER_LEN );
-            assert( memcpyRetVal == rangeValueBuffer + rangeValueLength );
+            memcpy( rangeValueBuffer + rangeValueLength,
+                    DASH_CHARACTER,
+                    DASH_CHARACTER_LEN );
             rangeValueLength += DASH_CHARACTER_LEN;
 
             /* Write the rangeEnd value of the request range to the buffer .*/
@@ -407,10 +393,9 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
         else if( rangeStartOrlastNbytes >= 0 )
         {
             /* Write the "-" character to the buffer.*/
-            memcpyRetVal = memcpy( rangeValueBuffer + rangeValueLength,
-                                   DASH_CHARACTER,
-                                   DASH_CHARACTER_LEN );
-            assert( memcpyRetVal == rangeValueBuffer + rangeValueLength );
+            memcpy( rangeValueBuffer + rangeValueLength,
+                    DASH_CHARACTER,
+                    DASH_CHARACTER_LEN );
             rangeValueLength += DASH_CHARACTER_LEN;
         }
         else
