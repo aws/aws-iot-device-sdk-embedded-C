@@ -160,6 +160,7 @@ static int32_t sendPacket( MQTTContext_t * pContext,
 }
 
 /*-----------------------------------------------------------*/
+
 /**
  * @brief Convert a byte indicating a publish ack type to an #MQTTPubAckType_t.
  *
@@ -191,6 +192,8 @@ static MQTTPubAckType_t _getAckFromPacketType( uint8_t packetType )
     }
     return ackType;
 }
+
+/*-----------------------------------------------------------*/
 
 /**
  * @brief Dump a packet from the transport interface.
@@ -246,6 +249,8 @@ static MQTTStatus_t _dumpPacket( MQTTContext_t * const pContext,
 
     return status;
 }
+
+/*-----------------------------------------------------------*/
 
 /**
  * @brief Receive a packet from the transport interface.
@@ -329,6 +334,8 @@ static MQTTStatus_t _receivePacket( MQTTContext_t * const pContext,
 
     return status;
 }
+
+/*-----------------------------------------------------------*/
 
 /**
  * @brief Send acks for received QoS 1/2 publishes.
@@ -416,6 +423,8 @@ static MQTTStatus_t _sendPublishAcks( MQTTContext_t * const pContext,
     return status;
 }
 
+/*-----------------------------------------------------------*/
+
 /**
  * @brief Handle received MQTT PUBLISH packet.
  *
@@ -461,6 +470,8 @@ static MQTTStatus_t _handleIncomingPublish( MQTTContext_t * const pContext,
 
     return status;
 }
+
+/*-----------------------------------------------------------*/
 
 /**
  * @brief Handle received MQTT ack.
@@ -524,6 +535,8 @@ static MQTTStatus_t _handleIncomingAck( MQTTContext_t * const pContext,
     }
     return status;
 }
+
+/*-----------------------------------------------------------*/
 
 static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * const pContext,
                                                         const MQTTSubscribeInfo_t * const pSubscriptionList,
