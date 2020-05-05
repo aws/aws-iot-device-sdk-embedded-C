@@ -930,18 +930,155 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
 
 /*-----------------------------------------------------------*/
 
-HTTPStatus_t HTTPClient_ReadHeader( const HTTPResponse_t * pResponse,
-                                    const char * pName,
-                                    size_t nameLen,
-                                    char ** pValue,
-                                    size_t * valueLen )
+typedef struct readHeaderInfo
 {
-    /* Disable unused parameter warnings. */
-    ( void ) pResponse;
-    ( void ) pName;
-    ( void ) nameLen;
-    ( void ) pValue;
-    ( void ) valueLen;
+    const char * pHeaderName;
+    size_t headerNameLen;
+    const char ** pHeaderValueLoc;
+    size_t * pHeaderValueLen;
+} readHeaderInfo_t;
+
+
+void readHeaderCallback( void * pContext,
+                         const char * fieldLoc,
+                         size_t fieldLen,
+                         const char * valueLoc,
+                         size_t valueLen,
+                         uint16_t statusCode )
+{
+    readHeaderInfo_t * pInfo = ( readHeaderInfo_t * ) pContext;
+
+    /* Disable unused parameter warning. */
+    ( void ) statusCode;
+
+    assert( pContext != NULL );
+    assert( fieldLoc != NULL );
+    assert( valueLoc != NULL );
+
+    assert( pInfo->pHeaderName != NULL );
+    assert( pInfo->pHeaderValueLoc != NULL );
+    assert( pInfo->pHeaderValueLen != NULL );
+
+    /* Check whether the parsed header matches the header we are looking for. */
+    if( ( fieldLen == pInfo->headerNameLen ) && ( strncmp( pInfo->pHeaderName, fieldLoc, fieldLen ) == 0 ) )
+    {
+        IotLogDebugWithArgs( "Found header in response buffer: "
+                             "HeaderName=%.*s, HeaderLocation=0x%d, HeaderVal=%.*s",
+                             fieldLen, pInfo->pHeaderName,
+                             fieldLoc,
+                             valueLen, valueLoc );
+
+        /* Populate the output parameters with the location of the header value in the response buffer. */
+        *pInfo->pHeaderValueLoc = valueLoc;
+        *pInfo->pHeaderValueLen = valueLen;
+    }
+    else
+    {
+        /* Empty else for MISRA 15.7 compliance. */
+    }
+}
+
+
+/*-----------------------------------------------------------*/
+
+HTTPStatus_t HTTPClient_ReadHeader( const HTTPResponse_t * pResponse,
+                                    const char * pHeaderName,
+                                    size_t headerNameLen,
+                                    const char ** pHeaderValueLoc,
+                                    size_t * pHeaderValueLen )
+{
+    HTTPStatus_t returnStatus = HTTP_SUCCESS;
+    HTTPParsingContext_t parsingContext;
+    readHeaderInfo_t context =
+    {
+        .pHeaderName     = pHeaderName,
+        .headerNameLen   = headerNameLen,
+        .pHeaderValueLoc = pHeaderValueLoc,
+        .pHeaderValueLen = pHeaderValueLen
+    };
+
+    HTTPClient_HeaderParsingCallback_t parsingCallback =
+    {
+        .onHeaderCallback = readHeaderCallback,
+        .pContext         = &context
+    };
+
+    memset( &parsingContext, 0, sizeof( HTTPParsingContext_t ) );
+
+    if( pResponse == NULL )
+    {
+        IotLogError( "Parameter check failed: pResponse is NULL." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( pResponse->pBuffer == NULL )
+    {
+        IotLogError( "Parameter check failed: pRequestHeaders->pBuffer is NULL." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( pResponse->bufferLen == 0u )
+    {
+        IotLogError( "Parameter check failed: pRequestHeaders->bufferLen is 0: Buffer len should be > 0." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( pHeaderName == NULL )
+    {
+        IotLogError( "Parameter check failed: Input header name is NULL." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( headerNameLen == 0u )
+    {
+        IotLogError( "Parameter check failed: Input header name length is 0: pHeaderName should be > 0." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( pHeaderValueLoc == NULL )
+    {
+        IotLogError( "Parameter check failed: Output parameter for header value location is NULL." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( pHeaderValueLen == NULL )
+    {
+        IotLogError( "Parameter check failed: Output parameter for header value length is NULL." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else
+    {
+        /* Empty else for MISRA 15.7 compliance. */
+    }
+
+    /* Initialize Parsing context with our callback. */
+    returnStatus = _HTTPClient_InitializeParsingContext( &parsingContext,
+                                                         &parsingCallback );
+
+    if( returnStatus == HTTP_SUCCESS )
+    {
+        returnStatus = _HTTPClient_ParseResponse( &parsingContext,
+                                                  pResponse->pBuffer,
+                                                  pResponse->bufferLen );
+
+        if( returnStatus == HTTP_HEADER_NOT_FOUND )
+        {
+            IotLogWarnWithArgs( "Unable to read header from response: "
+                                "Header field not found in response buffer: "
+                                "HeaderName=%.*s", pHeaderName, headerNameLen );
+        }
+        else if( returnStatus != HTTP_SUCCESS )
+        {
+            IotLogErrorWithArgs( "Unable to read header from response: "
+                                 "Failure in parsing response for header field: "
+                                 "HeaderName=%.*s", pHeaderName, headerNameLen );
+        }
+        else
+        {
+            /* Empty else for MISRA 15.7 compliance. */
+        }
+    }
+    else
+    {
+        IotLogErrorWithArgs( "Failed to read header from response: "
+                             "Unable to initialize parsing context: "
+                             "HeaderName=%.*s", pHeaderName, headerNameLen );
+    }
+
     return HTTP_NOT_SUPPORTED;
 }
 

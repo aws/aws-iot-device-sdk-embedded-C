@@ -219,6 +219,14 @@ typedef enum HTTPStatus
     HTTP_SECURITY_ALERT_PARSER_INVALID_CHARACTER,
     HTTP_SECURITY_ALERT_INVALID_CONTENT_LENGTH,
     /* TODO: Add return codes as implementation continues. */
+
+    /**
+     * @brief The requested header field was not found in the response buffer.
+     *
+     * Functions that may return this value:
+     * - #HTTPClient_ReadHeader
+     */
+    HTTP_HEADER_NOT_FOUND,
     /* Temporary error code while implementation is in progress. */
     HTTP_NOT_SUPPORTED,
 } HTTPStatus_t;
@@ -550,28 +558,33 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
                               HTTPResponse_t * pResponse );
 
 /**
- * @brief Read a header from the completed response #HTTPResponse_t. This will
- * return the response header value location within #HTTPResponse_t.pBuffer.
+ * @brief Read a header from a buffer containing a complete HTTP response.
+ * This will return the location of the response header value in the
+ * #HTTPResponse_t.pBuffer buffer.
  *
- * This function should be used only a completed response. A #HTTPResponse_t is
- * not complete until #HTTPClient_Send returns.
+ * @note This function should only be called on a complete HTTP response. If the
+ * request is sent through the #HTTPClient_Send function, the #HTTPResponse_t is
+ * incomplete until #HTTPClient_Send returns.
  *
  * TODO: Expand documentation.
  *
- * @param[in] pResponse Completed response.
- * @param[in] pName The header field name to read.
- * @param[in] nameLen The length of the header field name in bytes.
- * @param[out] pValue The location of the header value in
- * #HTTPResponse_t.pBuffer.
- * @param[out] valueLen The length of the header value in bytes.
+ * @param[in] pResponse The buffer containing the completed HTTP response.
+ * @param[in] pHeaderName The header field name to read.
+ * @param[in] headerNameLen The length of the header field name in bytes.
+ * @param[out] pHeaderValueLoc This will be populated with the location of the
+ * header value in the response buffer, #HTTPResponse_t.pBuffer.
+ * @param[out] headerValueLen This will be populated with the length of the
+ * header value in bytes.
  *
- * @return #HTTP_SUCCESS if successful, an error code otherwise.
- * TODO: Update for exact error codes returned.
+ * @return One of the following:
+ * - #HTTP_SUCCESS (If successful.)
+ * - #HTTP_INVALID_PARAMETER (If any provided parameters or their members are invalid.)
+ * - #HTTP_PARTIAL_RESPONSE (Part of an HTTP response was received in a partially filled response buffer.)
  */
 HTTPStatus_t HTTPClient_ReadHeader( const HTTPResponse_t * pResponse,
-                                    const char * pName,
-                                    size_t nameLen,
-                                    char ** pValue,
-                                    size_t * valueLen );
+                                    const char * pHeaderName,
+                                    size_t headerNameLen,
+                                    const char ** pHeaderValueLoc,
+                                    size_t * headerValueLen );
 
 #endif /* ifndef HTTP_CLIENT_H_ */
