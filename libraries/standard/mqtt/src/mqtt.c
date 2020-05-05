@@ -23,9 +23,9 @@
 
 #include "mqtt.h"
 
-static int32_t sendPacket( MQTTContext_t * pContext,
-                           const uint8_t * pOptionalBufferToSend,
-                           size_t bytesToSend )
+static int32_t _sendPacket( MQTTContext_t * pContext,
+                            const uint8_t * pOptionalBufferToSend,
+                            size_t bytesToSend )
 {
     const uint8_t * pIndex = pContext->networkBuffer.pBuffer;
     size_t bytesRemaining = bytesToSend;
@@ -116,7 +116,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
 
     if( status == MQTTSuccess )
     {
-        bytesSent = sendPacket( pContext, NULL, packetSize );
+        bytesSent = _sendPacket( pContext, NULL, packetSize );
 
         if( bytesSent < 0 )
         {
@@ -196,7 +196,7 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
     if( status == MQTTSuccess )
     {
         /* Send header first. */
-        bytesSent = sendPacket( pContext, NULL, headerSize );
+        bytesSent = _sendPacket( pContext, NULL, headerSize );
 
         if( bytesSent < 0 )
         {
@@ -205,9 +205,9 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
         /* Send Payload. */
         else
         {
-            bytesSent = sendPacket( pContext,
-                                    pPublishInfo->pPayload,
-                                    pPublishInfo->payloadLength );
+            bytesSent = _sendPacket( pContext,
+                                     pPublishInfo->pPayload,
+                                     pPublishInfo->payloadLength );
 
             if( bytesSent < 0 )
             {
@@ -254,7 +254,7 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * const pContext )
 
     if( status == MQTTSuccess )
     {
-        bytesSent = sendPacket( pContext, NULL, packetSize );
+        bytesSent = _sendPacket( pContext, NULL, packetSize );
 
         if( bytesSent < 0 )
         {

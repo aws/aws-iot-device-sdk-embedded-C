@@ -50,19 +50,19 @@
 #define MQTT_PACKET_TYPE_DISCONNECT      ( ( uint8_t ) 0xE0U ) /**< @brief DISCONNECT (client-to-server). */
 
 struct MQTTFixedBuffer;
-typedef struct MQTTFixedBuffer MQTTFixedBuffer_t;
+typedef struct MQTTFixedBuffer     MQTTFixedBuffer_t;
 
 struct MQTTConnectInfo;
-typedef struct MQTTConnectInfo MQTTConnectInfo_t;
+typedef struct MQTTConnectInfo     MQTTConnectInfo_t;
 
 struct MQTTSubscribeInfo;
-typedef struct MQTTSubscribeInfo MQTTSubscribeInfo_t;
+typedef struct MQTTSubscribeInfo   MQTTSubscribeInfo_t;
 
 struct MqttPublishInfo;
-typedef struct MqttPublishInfo MQTTPublishInfo_t;
+typedef struct MqttPublishInfo     MQTTPublishInfo_t;
 
 struct MQTTPacketInfo;
-typedef struct MQTTPacketInfo MQTTPacketInfo_t;
+typedef struct MQTTPacketInfo      MQTTPacketInfo_t;
 
 /**
  * @brief Signature of the transport interface receive function.
@@ -103,9 +103,9 @@ typedef enum MQTTStatus
  */
 typedef enum MQTTQoS
 {
-    MQTTQoS0 = 0,    /**< Delivery at most once. */
-    MQTTQoS1 = 1,    /**< Delivery at least once. */
-    MQTTQoS2 = 2     /**< Delivery exactly once. */
+    MQTTQoS0 = 0, /**< Delivery at most once. */
+    MQTTQoS1 = 1, /**< Delivery at least once. */
+    MQTTQoS2 = 2  /**< Delivery exactly once. */
 } MQTTQoS_t;
 
 /**
@@ -116,8 +116,8 @@ typedef enum MQTTQoS
  */
 struct MQTTFixedBuffer
 {
-    uint8_t * pBuffer;    /**< @brief Pointer to buffer. */
-    size_t size;          /**< @brief Size of buffer. */
+    uint8_t * pBuffer; /**< @brief Pointer to buffer. */
+    size_t size;       /**< @brief Size of buffer. */
 };
 
 /**
