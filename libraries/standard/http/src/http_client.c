@@ -119,6 +119,25 @@ static uint8_t _convertInt32ToAscii( int32_t value,
                                      uint8_t * pBuffer,
                                      size_t bufferLength );
 
+/**
+ * @brief This method writes the request line (first line) of the HTTP Header
+ * into #HTTPRequestHeaders_t.pBuffer and updates length accordingly.
+ *
+ * @param pRequestHeaders Request header buffer information.
+ * @param pMethod The HTTP request method e.g. "GET", "POST", "PUT", or "HEAD".
+ * @param methodLen The byte length of the request method.
+ * @param pPath The Request-URI to the objects of interest, e.g. "/path/to/item.txt".
+ * @param pathLen The byte length of the request path.
+ *
+ * @return #HTTP_SUCCESS if successful. If there was insufficient memory in the
+ * application buffer, then #HTTP_INSUFFICIENT_MEMORY is returned.
+ */
+static HTTPStatus_t _writeRequestLine( HTTPRequestHeaders_t * pRequestHeaders,
+                                       const char * pMethod,
+                                       size_t methodLen,
+                                       const char * pPath,
+                                       size_t pathLen );
+
 /*-----------------------------------------------------------*/
 
 static uint8_t _convertInt32ToAscii( int32_t value,
@@ -250,13 +269,172 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
 
 /*-----------------------------------------------------------*/
 
+static HTTPStatus_t _writeRequestLine( HTTPRequestHeaders_t * pRequestHeaders,
+                                       const char * pMethod,
+                                       size_t methodLen,
+                                       const char * pPath,
+                                       size_t pathLen )
+{
+    HTTPStatus_t returnStatus = HTTP_SUCCESS;
+    uint8_t * pBufferCur = pRequestHeaders->pBuffer;
+    size_t toAddLen = methodLen +                 \
+                      SPACE_CHARACTER_LEN +       \
+                      SPACE_CHARACTER_LEN +       \
+                      HTTP_PROTOCOL_VERSION_LEN + \
+                      HTTP_HEADER_LINE_SEPARATOR_LEN;
+    int32_t bytesWritten = 0;
+
+    assert( pRequestHeaders != NULL );
+    assert( pRequestHeaders->pBuffer != NULL );
+    assert( pMethod != NULL );
+    assert( methodLen != 0u );
+
+    toAddLen += ( pPath == NULL || pathLen == 0 ) ? HTTP_EMPTY_PATH_LEN : pathLen;
+
+    if( ( toAddLen + pRequestHeaders->headersLen ) > pRequestHeaders->bufferLen )
+    {
+        returnStatus = HTTP_INSUFFICIENT_MEMORY;
+    }
+
+    if( returnStatus == HTTP_SUCCESS )
+    {
+        /* Write "<METHOD> <PATH> HTTP/1.1\r\n" to start the HTTP header. */
+        memcpy( pBufferCur, pMethod, methodLen );
+        pBufferCur += methodLen;
+        memcpy( pBufferCur, SPACE_CHARACTER, SPACE_CHARACTER_LEN );
+
+        pBufferCur += SPACE_CHARACTER_LEN;
+
+        /* Use "/" as default value if <PATH> is NULL. */
+        if( ( pPath == NULL ) || ( pathLen == 0 ) )
+        {
+            memcpy( pBufferCur, HTTP_EMPTY_PATH, HTTP_EMPTY_PATH_LEN );
+            pBufferCur += HTTP_EMPTY_PATH_LEN;
+        }
+        else
+        {
+            memcpy( pBufferCur, pPath, pathLen );
+            pBufferCur += pathLen;
+        }
+
+        memcpy( pBufferCur, SPACE_CHARACTER, SPACE_CHARACTER_LEN );
+        pBufferCur += SPACE_CHARACTER_LEN;
+
+        memcpy( pBufferCur,
+                HTTP_PROTOCOL_VERSION, HTTP_PROTOCOL_VERSION_LEN );
+        pBufferCur += HTTP_PROTOCOL_VERSION_LEN;
+        memcpy( pBufferCur,
+                HTTP_HEADER_LINE_SEPARATOR, HTTP_HEADER_LINE_SEPARATOR_LEN );
+        pRequestHeaders->headersLen = toAddLen;
+    }
+
+    return returnStatus;
+}
+
+/*-----------------------------------------------------------*/
+
 HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pRequestHeaders,
                                                   const HTTPRequestInfo_t * pRequestInfo )
 {
-    ( void ) pRequestHeaders;
-    ( void ) pRequestInfo;
+    HTTPStatus_t returnStatus = HTTP_SUCCESS;
 
-    return HTTP_NOT_SUPPORTED;
+    /* Check for NULL parameters. */
+    if( pRequestHeaders == NULL )
+    {
+        IotLogError( "Parameter check failed: pRequestHeaders is NULL." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( pRequestHeaders->pBuffer == NULL )
+    {
+        IotLogError( "Parameter check failed: pRequestHeaders->pBuffer is NULL." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( ( pRequestInfo == NULL ) )
+    {
+        IotLogError( "Parameter check failed: pRequestInfo is NULL." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( ( pRequestInfo->method == NULL ) )
+    {
+        IotLogError( "Parameter check failed: pRequestInfo->method is NULL." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( pRequestInfo->pHost == NULL )
+    {
+        IotLogError( "Parameter check failed: pRequestInfo->pHost is NULL." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( pRequestInfo->methodLen == 0 )
+    {
+        IotLogError( "Parameter check failed: pRequestInfo->methodLen must be greater than 0." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( pRequestInfo->hostLen == 0 )
+    {
+        IotLogError( "Parameter check failed: pRequestInfo->hostLen must be greater than 0." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else
+    {
+        /* Empty else MISRA 15.7 */
+    }
+
+    if( returnStatus == HTTP_SUCCESS )
+    {
+        /* Reset application-provided parameters. */
+        pRequestHeaders->headersLen = 0;
+
+        /* Write "<METHOD> <PATH> HTTP/1.1\r\n" to start the HTTP header. */
+        returnStatus = _writeRequestLine( pRequestHeaders,
+                                          pRequestInfo->method,
+                                          pRequestInfo->methodLen,
+                                          pRequestInfo->pPath,
+                                          pRequestInfo->pathLen );
+    }
+
+    if( returnStatus == HTTP_SUCCESS )
+    {
+        /* Write "User-Agent: <Value>". */
+        returnStatus = _addHeader( pRequestHeaders,
+                                   HTTP_USER_AGENT_FIELD,
+                                   HTTP_USER_AGENT_FIELD_LEN,
+                                   HTTP_USER_AGENT_VALUE,
+                                   HTTP_USER_AGENT_VALUE_LEN );
+    }
+
+    if( returnStatus == HTTP_SUCCESS )
+    {
+        /* Write "Host: <Value>". */
+        returnStatus = _addHeader( pRequestHeaders,
+                                   HTTP_HOST_FIELD,
+                                   HTTP_HOST_FIELD_LEN,
+                                   pRequestInfo->pHost,
+                                   pRequestInfo->hostLen );
+    }
+
+    if( returnStatus == HTTP_SUCCESS )
+    {
+        if( HTTP_REQUEST_KEEP_ALIVE_FLAG & pRequestInfo->flags )
+        {
+            /* Write "Connection: keep-alive". */
+            returnStatus = _addHeader( pRequestHeaders,
+                                       HTTP_CONNECTION_FIELD,
+                                       HTTP_CONNECTION_FIELD_LEN,
+                                       HTTP_CONNECTION_KEEP_ALIVE_VALUE,
+                                       HTTP_CONNECTION_KEEP_ALIVE_VALUE_LEN );
+        }
+        else
+        {
+            /* Write "Connection: close". */
+            returnStatus = _addHeader( pRequestHeaders,
+                                       HTTP_CONNECTION_FIELD,
+                                       HTTP_CONNECTION_FIELD_LEN,
+                                       HTTP_CONNECTION_CLOSE_VALUE,
+                                       HTTP_CONNECTION_CLOSE_VALUE_LEN );
+        }
+    }
+
+    return returnStatus;
 }
 
 /*-----------------------------------------------------------*/
