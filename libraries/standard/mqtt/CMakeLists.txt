@@ -20,6 +20,5 @@ target_include_directories( iotmqtt PUBLIC ${MQTT_INCLUDE_PUBLIC_DIRS} )
 
 # Organization of MQTT in folders.
 set_property( TARGET iotmqtt PROPERTY FOLDER libraries/standard )
-source_group( "" FILES ${CONFIG_HEADER_PATH}/iot_config.h )
 source_group( include FILES include/mqtt.h )
 source_group( src FILES ${MQTT_SOURCES} )
