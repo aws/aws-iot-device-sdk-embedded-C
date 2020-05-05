@@ -289,7 +289,7 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * const pConnectInfo
                                     const MQTTFixedBuffer_t * const pBuffer );
 
 /**
- * @brief Get the size and Remaining Length of an MQTT SUBSCRIBE packet.
+ * @brief Get packet size and remaining length of an MQTT SUBSCRIBE packet.
  *
  * @param[in] pSubscriptionList List of MQTT subscription info.
  * @param[in] subscriptionCount The number of elements in pSubscriptionList.
@@ -323,7 +323,7 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * const pSubscri
                                       const MQTTFixedBuffer_t * const pBuffer );
 
 /**
- * @brief Get the size and Remaining Length of an MQTT UNSUBSCRIBE packet.
+ * @brief Get packet size and remaining length of an MQTT UNSUBSCRIBE packet.
  *
  * @param[in] pSubscriptionList List of MQTT subscription info.
  * @param[in] subscriptionCount The number of elements in pSubscriptionList.

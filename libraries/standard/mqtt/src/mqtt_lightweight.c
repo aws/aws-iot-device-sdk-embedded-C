@@ -126,17 +126,17 @@ typedef enum _MQTTSubscriptionType
 
 /*-----------------------------------------------------------*/
 
-static bool _subscriptionPacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
-                                     size_t subscriptionCount,
-                                     size_t * pRemainingLength,
-                                     size_t * pPacketSize,
-                                     _MQTTSubscriptionType_t subscriptionType );
+static bool subscriptionPacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
+                                    size_t subscriptionCount,
+                                    size_t * pRemainingLength,
+                                    size_t * pPacketSize,
+                                    _MQTTSubscriptionType_t subscriptionType );
 
-static MQTTStatus_t _validateSubscribeUnsubscribeParams( const MQTTSubscribeInfo_t * const pSubscriptionList,
-                                                         size_t subscriptionCount,
-                                                         uint16_t packetId,
-                                                         size_t remainingLength,
-                                                         const MQTTFixedBuffer_t * const pBuffer );
+static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTSubscribeInfo_t * const pSubscriptionList,
+                                                        size_t subscriptionCount,
+                                                        uint16_t packetId,
+                                                        size_t remainingLength,
+                                                        const MQTTFixedBuffer_t * const pBuffer );
 
 /**
  * @brief Macro for decoding a 2-byte unsigned int from a sequence of bytes.
@@ -780,11 +780,11 @@ static MQTTStatus_t deserializeConnack( const MQTTPacketInfo_t * const pConnack,
 
 /*-----------------------------------------------------------*/
 
-static bool _subscriptionPacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
-                                     size_t subscriptionCount,
-                                     size_t * pRemainingLength,
-                                     size_t * pPacketSize,
-                                     _MQTTSubscriptionType_t subscriptionType )
+static bool subscriptionPacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
+                                    size_t subscriptionCount,
+                                    size_t * pRemainingLength,
+                                    size_t * pPacketSize,
+                                    _MQTTSubscriptionType_t subscriptionType )
 {
     bool status = true;
     size_t i = 0, subscriptionPacketSize = 0;
@@ -919,11 +919,11 @@ static MQTTStatus_t deserializeSuback( const MQTTPacketInfo_t * const pSuback,
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t _validateSubscribeUnsubscribeParams( const MQTTSubscribeInfo_t * const pSubscriptionList,
-                                                         size_t subscriptionCount,
-                                                         uint16_t packetId,
-                                                         size_t remainingLength,
-                                                         const MQTTFixedBuffer_t * const pBuffer )
+static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTSubscribeInfo_t * const pSubscriptionList,
+                                                        size_t subscriptionCount,
+                                                        uint16_t packetId,
+                                                        size_t remainingLength,
+                                                        const MQTTFixedBuffer_t * const pBuffer )
 {
     MQTTStatus_t status = MQTTSuccess;
 
@@ -943,6 +943,10 @@ static MQTTStatus_t _validateSubscribeUnsubscribeParams( const MQTTSubscribeInfo
              > pBuffer->size )
     {
         status = MQTTNoMemory;
+    }
+    else
+    {
+        /* Empty else MISRA 15.7 */
     }
 
     return status;
@@ -1281,11 +1285,11 @@ MQTTStatus_t MQTT_GetSubscribePacketSize( const MQTTSubscribeInfo_t * const pSub
     else
     {
         /* Calculate the MQTT SUBSCRIBE packet size. */
-        if( _subscriptionPacketSize( pSubscriptionList,
-                                     subscriptionCount,
-                                     pRemainingLength,
-                                     pPacketSize,
-                                     MQTT_SUBSCRIBE ) == false )
+        if( subscriptionPacketSize( pSubscriptionList,
+                                    subscriptionCount,
+                                    pRemainingLength,
+                                    pPacketSize,
+                                    MQTT_SUBSCRIBE ) == false )
         {
             status = MQTTBadParameter;
         }
@@ -1307,11 +1311,11 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * const pSubscri
     uint8_t * pIndex = NULL;
 
     /* Validate all the parameters. */
-    status = _validateSubscribeUnsubscribeParams( pSubscriptionList,
-                                                  subscriptionCount,
-                                                  packetId,
-                                                  remainingLength,
-                                                  pBuffer );
+    status = validateSubscribeUnsubscribeParams( pSubscriptionList,
+                                                 subscriptionCount,
+                                                 packetId,
+                                                 remainingLength,
+                                                 pBuffer );
 
     if( status == MQTTSuccess )
     {
@@ -1363,11 +1367,11 @@ MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * const pS
     else
     {
         /* Calculate the MQTT SUBSCRIBE packet size. */
-        if( _subscriptionPacketSize( pSubscriptionList,
-                                     subscriptionCount,
-                                     pRemainingLength,
-                                     pPacketSize,
-                                     MQTT_UNSUBSCRIBE ) == false )
+        if( subscriptionPacketSize( pSubscriptionList,
+                                    subscriptionCount,
+                                    pRemainingLength,
+                                    pPacketSize,
+                                    MQTT_UNSUBSCRIBE ) == false )
         {
             status = MQTTBadParameter;
         }
@@ -1389,11 +1393,11 @@ MQTTStatus_t MQTT_SerializeUnsubscribe( const MQTTSubscribeInfo_t * const pSubsc
     uint8_t * pIndex = NULL;
 
     /* Validate all the parameters. */
-    status = _validateSubscribeUnsubscribeParams( pSubscriptionList,
-                                                  subscriptionCount,
-                                                  packetId,
-                                                  remainingLength,
-                                                  pBuffer );
+    status = validateSubscribeUnsubscribeParams( pSubscriptionList,
+                                                 subscriptionCount,
+                                                 packetId,
+                                                 remainingLength,
+                                                 pBuffer );
 
     if( status == MQTTSuccess )
     {

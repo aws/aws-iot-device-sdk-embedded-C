@@ -167,7 +167,7 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * const pContext,
 
     /* Validate arguments. */
     if( ( pContext == NULL ) || ( pSubscriptionList == NULL ) ||
-        ( subscriptionCount == 0 ) || ( packetId == 0 ) )
+        ( subscriptionCount == 0UL ) || ( packetId == 0U ) )
     {
         status = MQTTBadParameter;
     }
@@ -318,7 +318,7 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * const pContext,
 
     /* Validate arguments. */
     if( ( pContext == NULL ) || ( pSubscriptionList == NULL ) ||
-        ( subscriptionCount == 0 ) || ( packetId == 0 ) )
+        ( subscriptionCount == 0UL ) || ( packetId == 0U ) )
     {
         status = MQTTBadParameter;
     }
