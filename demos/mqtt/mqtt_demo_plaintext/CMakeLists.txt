@@ -1,23 +1,23 @@
+# Include filepaths for source and include.
+include(filePaths.cmake)
+
 # Demo target.
-set( CURRENT_MODULE "mqtt_demo_plaintext" )
-add_executable(${CURRENT_MODULE})
+add_executable(${DEMO_NAME})
 
 target_sources(
-    ${CURRENT_MODULE}
-    PUBLIC
-        "${CMAKE_CURRENT_LIST_DIR}/${CURRENT_MODULE}.c"
+    ${DEMO_NAME}
+    PRIVATE
+        ${MQTT_DEMO_PLAINTEXT_SOURCES}
 )
 
 target_link_libraries(
-    ${CURRENT_MODULE}
+    ${DEMO_NAME}
     PRIVATE
-        iotmqtt   
+        ${MQTT_DEMO_PLAINTEXT_LIBRARIES}   
 )
-
-add_dependencies()
 
 target_include_directories(
     iotmqtt
     PUBLIC
-    ${CMAKE_CURRENT_LIST_DIR}
+        ${MQTT_DEMO_PLAINTEXT_INCLUDE_PUBLIC_DIRS}
 )

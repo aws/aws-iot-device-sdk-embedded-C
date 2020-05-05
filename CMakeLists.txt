@@ -72,6 +72,9 @@ endif()
 #endif()
 
 # MQTT library.
+#add_subdirectory( libraries/standard/mqtt )
+
+# MQTT library.
 add_subdirectory( libraries/standard/mqtt )
 
 # Build the demos.
