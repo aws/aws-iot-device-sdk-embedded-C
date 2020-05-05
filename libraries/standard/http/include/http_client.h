@@ -407,7 +407,8 @@ typedef struct HTTPResponse
 /**
  * @brief Initialize the request headers, stored in
  * #HTTPRequestHeaders_t.pBuffer, with initial configurations from
- * #HTTPRequestInfo_t.
+ * #HTTPRequestInfo_t. This method is expected to be called before sending a
+ * new request.
  *
  * Upon return, #HTTPRequestHeaders_t.headersLen will be updated with the number
  * of bytes written.
