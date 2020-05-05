@@ -513,9 +513,7 @@ static MQTTStatus_t _deserializeConnack( const MQTTPacketInfo_t * const pConnack
         {
             /* Print the appropriate message for the CONNACK response code if logs are
              * enabled. */
-            #if LIBRARY_LOG_LEVEL > IOT_LOG_NONE
-                _logConnackResponse( pRemainingData[ 1 ] );
-            #endif
+            _logConnackResponse( pRemainingData[ 1 ] );
 
             /* A nonzero CONNACK response code means the connection was refused. */
             if( pRemainingData[ 1 ] > 0U )
