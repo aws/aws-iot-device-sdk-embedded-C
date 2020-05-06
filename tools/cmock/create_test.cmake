@@ -16,7 +16,9 @@ function(create_test test_name
                     ${test_name}_runner.c
                   DEPENDS ${test_src}
         )
+    message("create exec")
     add_executable(${test_name} ${test_src} ${test_name}_runner.c)
+    target_link_libraries(${test_name} 3rdparty::unity)
     set_target_properties(${test_name} PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
             INSTALL_RPATH_USE_LINK_PATH TRUE
@@ -40,7 +42,6 @@ function(create_test test_name
         add_dependencies(${test_name} ${dependency})
     endforeach()
     target_link_libraries(${test_name} -lgcov)
-
     target_link_directories(${test_name}  PUBLIC
                             ${CMAKE_CURRENT_BINARY_DIR}/lib
             )
@@ -148,7 +149,7 @@ function(create_real_library target
     set_target_properties(${target} PROPERTIES
                 COMPILE_FLAGS "-Wextra -Wpedantic \
                     -fprofile-arcs -ftest-coverage -fprofile-generate \
-                    -include portableDefs.h -Wno-unused-but-set-variable"
+                    -Wno-unused-but-set-variable"
                 LINK_FLAGS "-fprofile-arcs -ftest-coverage \
                     -fprofile-generate "
                 ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib

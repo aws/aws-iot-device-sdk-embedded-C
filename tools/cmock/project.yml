@@ -33,11 +33,3 @@
     - portDONT_DISCARD
     - '(?:fcntl\s*\(+.*?\)+)' # this function is causing some trouble with code coverage as the annotations are calling the mocked one, so we won't mock it
   :treat_externs: :include
-  :includes_c_pre_header:
-    - "portableDefs.h"
-  :includes_h_pre_orig_header:
-    - "portableDefs.h"
-  :includes:
-    - "portableDefs.h"
-    - "projdefs.h"
-    - "task.h"

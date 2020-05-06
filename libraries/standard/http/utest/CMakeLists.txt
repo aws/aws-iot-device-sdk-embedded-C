@@ -29,17 +29,17 @@ list(APPEND real_source_files
 # list the directories the module under test includes
 list(APPEND real_include_directories
             .
-            ../include
-            ../src
+            "${MODULES_DIR}/standard/http/include"
+            "${MODULES_DIR}/standard/http/src"
         )
 
 # =====================  Create UnitTest Code here (edit)  =====================
 
 # list the directories your test needs to include
 list(APPEND test_include_directories
-            ../include
+            .
             "${MODULES_DIR}/standard/http/include"
-            "${MODULES_DIR}/standard/http/src/private"
+            "${MODULES_DIR}/standard/http/src"
         )
 
 # =============================  (end edit)  ===================================
@@ -54,9 +54,7 @@ create_real_library(${real_name}
         )
 
 list(APPEND utest_link_list
-            -l${mock_name}
             lib${real_name}.a
-            libutils.so
         )
 
 list(APPEND utest_dep_list

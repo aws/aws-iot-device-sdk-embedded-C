@@ -60,7 +60,7 @@ set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output/lib )
 
 # Set the path to the config header.
 if( ${IOT_BUILD_TESTS} )
-    add_subdirectory(tests)
+    add_subdirectory( tests )
 endif()
 
 # Add libraries.

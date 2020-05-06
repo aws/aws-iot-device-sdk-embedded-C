@@ -8,6 +8,7 @@ include_directories(
         "${ROOT_DIR}/libraries/3rdparty/tracealyzer_recorder/Include"
         "${ROOT_DIR}/libraries/3rdparty/CMock/vendor/unity/src/"
         "${ROOT_DIR}/libraries/3rdparty/CMock/src"
+        "${ROOT_DIR}/libraries/3rdparty/CMock/examples"
         )
 link_directories("${CMAKE_BINARY_DIR}/lib"
         )

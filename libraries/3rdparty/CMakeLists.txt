@@ -17,6 +17,7 @@ if(EXISTS "${3RDPARTY_DIR}/unity")
     target_include_directories(
         3rdparty::unity INTERFACE
         "${3RDPARTY_DIR}/unity/src"
+        "${3RDPARTY_DIR}/unity/examples"
         "${3RDPARTY_DIR}/unity/extras/fixture/src"
     )
     target_compile_definitions(3rdparty::unity INTERFACE UNITY_INCLUDE_CONFIG_H)
