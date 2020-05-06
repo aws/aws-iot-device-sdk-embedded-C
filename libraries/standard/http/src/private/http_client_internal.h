@@ -47,11 +47,6 @@
 #define HTTP_HEADER_LINE_SEPARATOR_LEN          ( sizeof( HTTP_HEADER_LINE_SEPARATOR ) - 1 )
 #define HTTP_HEADER_END_INDICATOR               "\r\n\r\n"
 #define HTTP_HEADER_END_INDICATOR_LEN           ( sizeof( HTTP_HEADER_END_INDICATOR ) - 1 )
-#define HTTP_HEADER_ADD_FORMAT                  "%.*s" HTTP_HEADER_FIELD_SEPARATOR "%.*s" HTTP_HEADER_LINE_SEPARATOR
-#define CARRIAGE_RETURN_CHARACTER               "\r"
-#define CARRIAGE_RETURN_CHARACTER_LEN           ( sizeof( CARRIAGE_RETURN_CHARACTER ) - 1 )
-#define NEWLINE_CHARACTER                       "\n"
-#define NEWLINE_CHARACTER_LEN                   ( sizeof( NEWLINE_CHARACTER ) - 1 )
 #define HTTP_HEADER_FIELD_SEPARATOR             ": "
 #define HTTP_HEADER_FIELD_SEPARATOR_LEN         ( sizeof( HTTP_HEADER_FIELD_SEPARATOR ) - 1 )
 #define COLON_CHARACTER                         ":"

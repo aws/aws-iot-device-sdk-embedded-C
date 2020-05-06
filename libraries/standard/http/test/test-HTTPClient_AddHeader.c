@@ -53,9 +53,9 @@ int main()
     size_t expectedHeaderLen = HTTP_TEST_TEMPLATE_HEADER_LEN;
     struct Header
     {
-        char field[ HTTP_TEST_HEADER_FIELD_LEN ];
+        uint8_t field[ HTTP_TEST_HEADER_FIELD_LEN ];
         size_t fieldLen;
-        char value[ HTTP_TEST_HEADER_VALUE_LEN ];
+        uint8_t value[ HTTP_TEST_HEADER_VALUE_LEN ];
         size_t valueLen;
     }
     header;
@@ -151,7 +151,7 @@ int main()
                   HTTP_TEST_HEADER_REQUEST_LINE,
                   HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_VALUE,
                   HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_VALUE )
-        == ( int )expectedHeaderLen );
+        == ( int ) expectedHeaderLen );
     /* Prefill the buffer with a request line and header. */
     ok( snprintf( ( char * ) reqHeaders.pBuffer,
                   HTTP_TEST_TEMPLATE_HEADER_LEN + 1,
