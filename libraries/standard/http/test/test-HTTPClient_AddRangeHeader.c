@@ -48,7 +48,7 @@ typedef struct _headers
                                  dataLen + 1,                             \
                                  "%s",                                    \
                                  preexistingData );                       \
-        ok( numBytes == dataLen );                                        \
+        ok( numBytes == ( int ) dataLen );                                \
         requestHeaders.headersLen = dataLen;                              \
         /* Fill the same data in the expected buffer as HTTPClient_AddRangeHeaders()
          * is not expected to change it. */                         \

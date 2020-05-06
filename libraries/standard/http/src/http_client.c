@@ -41,18 +41,18 @@ static HTTPStatus_t _sendHttpBody( const HTTPTransportInterface_t * pTransport,
  * in order to write over it and updates the length accordingly.
  *
  * @param[in] pRequestHeaders Request header buffer information.
- * @param[in] pField The header field name to write.
+ * @param[in] pField The ISO 8859-1 encoded header field name to write.
  * @param[in] fieldLen The byte length of the header field name.
- * @param[in] pValue The header value to write.
+ * @param[in] pValue The ISO 8859-1 encoded header value to write.
  * @param[in] valueLen The byte length of the header field value.
  *
  * @return #HTTP_SUCCESS if successful. If there was insufficient memory in the
  * application buffer, then #HTTP_INSUFFICIENT_MEMORY is returned.
  */
 static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
-                                const char * pField,
+                                const uint8_t * pField,
                                 size_t fieldLen,
-                                const char * pValue,
+                                const uint8_t * pValue,
                                 size_t valueLen );
 
 /**
@@ -130,16 +130,15 @@ static HTTPStatus_t _writeRequestLine( HTTPRequestHeaders_t * pRequestHeaders,
 /*-----------------------------------------------------------*/
 
 static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
-                                const char * pField,
+                                const uint8_t * pField,
                                 size_t fieldLen,
-                                const char * pValue,
+                                const uint8_t * pValue,
                                 size_t valueLen )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
     uint8_t * pBufferCur = pRequestHeaders->pBuffer + pRequestHeaders->headersLen;
     size_t toAddLen = 0;
     size_t backtrackHeaderLen = pRequestHeaders->headersLen;
-    int32_t bytesWritten = 0;
 
     assert( pRequestHeaders != NULL );
     assert( pRequestHeaders->pBuffer != NULL );
@@ -167,28 +166,29 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
     /* If we have enough room for the new header line, then write it to the header buffer. */
     if( ( backtrackHeaderLen + toAddLen ) <= pRequestHeaders->bufferLen )
     {
-        /* Write "Field: Value \r\n" to headers. */
-        bytesWritten = snprintf( ( char * ) pBufferCur,
-                                 toAddLen,
-                                 HTTP_HEADER_ADD_FORMAT,
-                                 ( int32_t ) fieldLen, pField,
-                                 ( int32_t ) valueLen, pValue );
+        /* Write "<Field>: <Value> \r\n" to the headers buffer. */
 
-        if( ( bytesWritten + HTTP_HEADER_LINE_SEPARATOR_LEN ) != toAddLen )
-        {
-            IotLogErrorWithArgs( "Internal error in snprintf() in _addHeader(). "
-                                 "BytesWritten: %d.", bytesWritten );
-        }
-        else
-        {
-            pBufferCur += bytesWritten;
+        /* Copy the header name into the buffer. */
+        memcpy( pBufferCur, pField, fieldLen );
+        pBufferCur += fieldLen;
 
-            /* HTTP_HEADER_LINE_SEPARATOR cannot be written above because snprintf
-             * writes an extra null byte at the end. */
-            memcpy( pBufferCur, HTTP_HEADER_LINE_SEPARATOR, HTTP_HEADER_LINE_SEPARATOR_LEN );
-            pRequestHeaders->headersLen = backtrackHeaderLen + toAddLen;
-            returnStatus = HTTP_SUCCESS;
-        }
+        /* Copy the field separator, ": ", into the buffer. */
+        memcpy( pBufferCur,
+                HTTP_HEADER_FIELD_SEPARATOR,
+                HTTP_HEADER_FIELD_SEPARATOR_LEN );
+        pBufferCur += HTTP_HEADER_FIELD_SEPARATOR_LEN;
+
+        /* Copy the header value into the buffer. */
+        memcpy( pBufferCur, pValue, valueLen );
+        pBufferCur += valueLen;
+
+        /* Copy the header end indicator, "\r\n\r\n" into the buffer. */
+        memcpy( pBufferCur,
+                HTTP_HEADER_END_INDICATOR,
+                HTTP_HEADER_END_INDICATOR_LEN );
+
+        /* Update the headers length value. */
+        pRequestHeaders->headersLen = backtrackHeaderLen + toAddLen;
     }
     else
     {
@@ -376,9 +376,9 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
 /*-----------------------------------------------------------*/
 
 HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
-                                   const char * pField,
+                                   const uint8_t * pField,
                                    size_t fieldLen,
-                                   const char * pValue,
+                                   const uint8_t * pValue,
                                    size_t valueLen )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
@@ -483,7 +483,8 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
                               RANGE_REQUEST_HEADER_VALUE_PREFIX,
                               rangeStartOrlastNbytes );
         assert( ( stdRetVal >= 0 ) &&
-                stdRetVal <= ( int ) ( RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN + MAX_INT32_NO_OF_DIGITS ) );
+                stdRetVal <= ( int ) ( RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN +
+                                       MAX_INT32_NO_OF_DECIMAL_DIGITS ) );
         rangeValueLength += ( size_t ) stdRetVal;
 
         /* Add remaining value data depending on the range specification type. */
@@ -498,7 +499,8 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
                                   DASH_CHARACTER,
                                   rangeEnd );
             assert( ( stdRetVal >= 0 ) &&
-                    stdRetVal <= ( DASH_CHARACTER_LEN + MAX_INT32_NO_OF_DIGITS ) );
+                    stdRetVal <= ( int ) ( DASH_CHARACTER_LEN +
+                                           MAX_INT32_NO_OF_DECIMAL_DIGITS ) );
             rangeValueLength += ( size_t ) stdRetVal;
         }
         /* Case when request is for bytes in the range [rangeStart, ). */
@@ -520,9 +522,9 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
 
         /* Add the Range Request header field and value to the buffer. */
         returnStatus = _addHeader( pRequestHeaders,
-                                   RANGE_REQUEST_HEADER_FIELD,
+                                   ( uint8_t * ) RANGE_REQUEST_HEADER_FIELD,
                                    RANGE_REQUEST_HEADER_FIELD_LEN,
-                                   rangeValueBuffer,
+                                   ( uint8_t * ) rangeValueBuffer,
                                    rangeValueLength );
     }
 

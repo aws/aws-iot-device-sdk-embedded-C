@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include "tap.h"
 
 /* Include paths for public enums, structures, and macros. */
@@ -7,4 +8,6 @@
 #include "private/http_client_internal.h"
 #include "private/http_client_parse.h"
 
-#define assert( x )
+static int _assertFailureCount;
+#define assertReset()    do { _assertFailureCount = 0; } while( 0 )
+#define assert( x )      do { if( !(x) ) { _assertFailureCount++; } } while( 0 )
