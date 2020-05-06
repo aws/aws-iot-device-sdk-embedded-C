@@ -1,7 +1,7 @@
 # Project information.
 cmake_minimum_required( VERSION 3.5.0 )
 project( AwsIotDeviceSdkEmbeddedC
-         VERSION 4.0.1
+         VERSION 4.0.2
          LANGUAGES C )
 
 # Allow the project to be organized into folders.
@@ -60,7 +60,40 @@ set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output/lib )
 
 # Set the path to the config header.
 if( ${IOT_BUILD_TESTS} )
-    add_subdirectory( tests )
+    include("${ROOT_DIR}/tools/cmock/create_test.cmake")
+    link_directories("${CMAKE_BINARY_DIR}/lib"
+            )
+
+    add_library(cmock STATIC
+            ${ROOT_DIR}/libraries/3rdparty/CMock/src/cmock.c
+            )
+
+    set_target_properties(cmock PROPERTIES
+            ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+            POSITION_INDEPENDENT_CODE ON
+            COMPILE_FLAGS "-Og"
+            )
+
+    add_library(unity STATIC
+            ${ROOT_DIR}/libraries/3rdparty/CMock/vendor/unity/src/unity.c
+            )
+    set_target_properties(unity PROPERTIES
+            ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+            POSITION_INDEPENDENT_CODE ON
+            )
+
+    target_include_directories(cmock PUBLIC
+            ${ROOT_DIR}/libraries/3rdparty/CMock/src
+            ${ROOT_DIR}/libraries/3rdparty/CMock/vendor/unity/src/
+            ${ROOT_DIR}/libraries/3rdparty/CMock/examples
+            )
+    target_link_libraries(cmock unity)
+
+    add_custom_target(coverage
+            COMMAND ${CMAKE_COMMAND} -P ${CMAKE_SOURCE_DIR}/tools/cmock/coverage.cmake
+            DEPENDS http_utest cmock unity
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+            )
 endif()
 
 # Add libraries.

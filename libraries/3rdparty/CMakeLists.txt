@@ -22,3 +22,5 @@ if(EXISTS "${3RDPARTY_DIR}/unity")
     )
     target_compile_definitions(3rdparty::unity INTERFACE UNITY_INCLUDE_CONFIG_H)
 endif()
+
+# CMock runs through ruby, so no need to add_library.

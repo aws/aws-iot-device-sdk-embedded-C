@@ -1,4 +1,4 @@
-# Include filepaths for source and include.
+# Include filePaths for variables below.
 include(filePaths.cmake)
 
 # Demo target.
