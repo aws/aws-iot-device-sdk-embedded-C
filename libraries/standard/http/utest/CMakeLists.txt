@@ -1,8 +1,8 @@
-project ("secure sockets unit test")
+project ("http unit test")
 cmake_minimum_required (VERSION 3.13)
 
 # ====================  Define your project name (edit) ========================
-set(project_name "secure_sockets")
+set(project_name "http")
 
 # =====================  Create your mock here  (edit)  ========================
 
@@ -23,7 +23,8 @@ list(APPEND mock_define_list
 
 # list the files you would like to test here
 list(APPEND real_source_files
-            "../lwip/iot_secure_sockets.c"
+            "../src/http_client.c"
+            "../src/http_client_parse.c"
         )
 # list the directories the module under test includes
 list(APPEND real_include_directories
@@ -44,13 +45,8 @@ list(APPEND real_include_directories
 # list the directories your test needs to include
 list(APPEND test_include_directories
             ../include
-            "${3rdparty_dir}/lwip/src/include/lwip"
-            "${3rdparty_dir}/lwip/src/include"
-            "${3rdparty_dir}/lwip/contrib/ports/unix/lib"
-            "${3rdparty_dir}/lwip/contrib/ports/unix/port/include"
-            "${AFR_ROOT_DIR}/libraries/freertos_plus/standard/tls/include"
-            "${AFR_ROOT_DIR}/libraries/c_sdk/standard/common/include"
-            "${abstraction_dir}/wifi/include"
+            "${AFR_MODULES_DIR}/standard/http/include"
+            "${AFR_MODULES_DIR}/standard/http/src/private"
         )
 
 # =============================  (end edit)  ===================================

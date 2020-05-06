@@ -25,7 +25,7 @@ option( IOT_ATOMIC_USE_PORT
         OFF )
 option( IOT_BUILD_TESTS
         "Set this to ON to build both demo and test executables. When OFF, only demo executables are built."
-        OFF )
+        ON )
 option( IOT_BUILD_CLONE_SUBMODULES
         "Set this to ON to automatically clone any required Git submodules. When OFF, submodules must be manually cloned."
         ON )
@@ -66,19 +66,8 @@ else()
     set( CONFIG_HEADER_PATH ${PROJECT_SOURCE_DIR}/demos )
 endif()
 
-# Build Unity test framework when building tests.
-#if( ${IOT_BUILD_TESTS} )
-#    add_subdirectory( third_party/unity )
-#endif()
-
-# MQTT library.
-#add_subdirectory( libraries/standard/mqtt )
-
-# MQTT library.
-add_subdirectory( libraries/standard/mqtt )
+# Add libraries.
+add_subdirectory( libraries )
 
 # Build the demos.
 add_subdirectory( demos )
-
-# Common utilities. This includes iot_logging.
-#add_subdirectory( libraries/standard/utilities )
