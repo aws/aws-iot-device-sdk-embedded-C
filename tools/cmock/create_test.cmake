@@ -31,12 +31,12 @@ function(create_test test_name
         )
     target_link_directories(${test_name} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
-# link all libraries sent through parameters
+    # link all libraries sent through parameters
     foreach(link IN LISTS link_list)
         target_link_libraries(${test_name} ${link})
     endforeach()
 
-# add dependency to all the dep_list parameter
+    # add dependency to all the dep_list parameter
     foreach(dependency IN LISTS dep_list)
         add_dependencies(${test_name} ${dependency})
     endforeach()
