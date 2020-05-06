@@ -372,9 +372,16 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
 MQTTStatus_t MQTT_Ping( MQTTContext_t * const pContext )
 {
     int32_t bytesSent = 0;
+    MQTTStatus_t status = MQTTSuccess;
+
+    if( pContext == NULL )
+    {
+        IotLogError( "pContext is NULL." );
+        status = MQTTBadParameter;
+    }
 
     /* Serialize MQTT ping request. */
-    MQTTStatus_t status = MQTT_SerializePingreq( pContext );
+    status = MQTT_SerializePingreq( &( pContext->networkBuffer ) );
 
     if( status == MQTTSuccess )
     {
