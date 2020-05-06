@@ -47,17 +47,10 @@ list(APPEND test_include_directories
 set(mock_name "${project_name}_mock")
 set(real_name "${project_name}_real")
 
-create_mock_list(${mock_name}
-            "${mock_list}"
-            "${CMAKE_SOURCE_DIR}/tools/cmock/project.yml"
-            "${mock_include_list}"
-            "${mock_define_list}"
-        )
-
 create_real_library(${real_name}
                     "${real_source_files}"
                     "${real_include_directories}"
-                    "${mock_name}"
+                    ""
         )
 
 list(APPEND utest_link_list

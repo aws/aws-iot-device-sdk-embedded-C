@@ -153,10 +153,11 @@ function(create_real_library target
                     -fprofile-generate "
                 ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib
             )
-    add_dependencies(${target} ${mock_name})
-    target_link_libraries(${target}
-                    -l${mock_name}
-                    -lgcov
-            )
-
+    if(NOT(mock_name STREQUAL ""))
+        add_dependencies(${target} ${mock_name})
+        target_link_libraries(${target}
+                        -l${mock_name}
+                        -lgcov
+                )
+    endif()
 endfunction()

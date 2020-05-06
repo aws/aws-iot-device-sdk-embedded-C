@@ -5,10 +5,6 @@ set (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/tools/cmock)
 
 include(create_test)
 include_directories(
-        "${CMAKE_CURRENT_LIST_DIR}/config_files"
-        "${CMAKE_CURRENT_LIST_DIR}/utils"
-        "${ROOT_DIR}/libraries/c_sdk/standard/common/include/private"
-        "${ROOT_DIR}/freertos_kernel/include"
         "${ROOT_DIR}/libraries/3rdparty/tracealyzer_recorder/Include"
         "${ROOT_DIR}/libraries/3rdparty/CMock/vendor/unity/src/"
         "${ROOT_DIR}/libraries/3rdparty/CMock/src"
@@ -16,7 +12,7 @@ include_directories(
 link_directories("${CMAKE_BINARY_DIR}/lib"
         )
 
-add_library(cmock  STATIC
+add_library(cmock STATIC
         ${ROOT_DIR}/libraries/3rdparty/CMock/src/cmock.c
         )
 
