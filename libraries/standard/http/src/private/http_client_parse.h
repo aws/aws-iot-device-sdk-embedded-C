@@ -40,8 +40,8 @@ typedef struct HTTPParsingContext
  * - #HTTP_INVALID_PARAMETER
  * TODO: Other return values will be added during implementation of the parsing.
  */
-HTTPStatus_t _HTTPClient_InitializeParsingContext( HTTPParsingContext_t * pParsingContext,
-                                                   HTTPClient_HeaderParsingCallback_t * pHeaderParsingCallback );
+HTTPStatus_t HTTPClient_InitializeParsingContext( HTTPParsingContext_t * pParsingContext,
+                                                  HTTPClient_HeaderParsingCallback_t * pHeaderParsingCallback );
 
 /**
  * Parse the input HTTP response buffer.
@@ -64,8 +64,8 @@ HTTPStatus_t _HTTPClient_InitializeParsingContext( HTTPParsingContext_t * pParsi
  * - #HTTP_SECURITY_ALERT_PARSER_INVALID_CHARACTER
  * TODO: Other return values are to be added during implementation of parsing.
  */
-HTTPStatus_t _HTTPClient_ParseResponse( HTTPParsingContext_t * pParsingContext,
-                                        const uint8_t * pBuffer,
-                                        size_t bufferLen );
+HTTPStatus_t HTTPClient_ParseResponse( HTTPParsingContext_t * pParsingContext,
+                                       const uint8_t * pBuffer,
+                                       size_t bufferLen );
 
 #endif /* ifndef HTTP_CLIENT_PARSE_H_ */

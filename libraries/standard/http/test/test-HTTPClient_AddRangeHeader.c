@@ -4,8 +4,8 @@
 #include "common.h"
 
 /* Functions are pulled out into their own C files to be tested as a unit. */
-#include "_addHeader.c"
-#include "_convertInt32ToAscii.c"
+#include "addHeader.c"
+#include "convertInt32ToAscii.c"
 #include "HTTPClient_AddRangeHeader.c"
 
 /* Default size for request buffer. */

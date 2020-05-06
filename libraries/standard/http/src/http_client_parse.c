@@ -1,7 +1,7 @@
 #include "private/http_client_parse.h"
 
-HTTPStatus_t _HTTPClient_InitializeParsingContext( HTTPParsingContext_t * pParsingContext,
-                                                   HTTPClient_HeaderParsingCallback_t * pHeaderParsingCallback )
+HTTPStatus_t HTTPClient_InitializeParsingContext( HTTPParsingContext_t * pParsingContext,
+                                                  HTTPClient_HeaderParsingCallback_t * pHeaderParsingCallback )
 {
     /* Disable unused parameter warnings. */
     ( void ) pParsingContext;
@@ -10,9 +10,9 @@ HTTPStatus_t _HTTPClient_InitializeParsingContext( HTTPParsingContext_t * pParsi
     return HTTP_SUCCESS;
 }
 
-HTTPStatus_t _HTTPClient_ParseResponse( HTTPParsingContext_t * pParsingContext,
-                                        const uint8_t * pBuffer,
-                                        size_t bufferLen )
+HTTPStatus_t HTTPClient_ParseResponse( HTTPParsingContext_t * pParsingContext,
+                                       const uint8_t * pBuffer,
+                                       size_t bufferLen )
 {
     /* Disable unused parameter warnings. */
     ( void ) pBuffer;

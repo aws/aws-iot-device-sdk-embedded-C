@@ -7,13 +7,13 @@
 
 
 /* Functions are pulled out into their own C files to be tested as a unit. */
-#include "_sendHttpHeaders.c"
-#include "_sendHttpBody.c"
-#include "_receiveHttpResponse.c"
-#include "_HTTPClient_InitializeParsingContext.c"
-#include "_HTTPClient_ParseResponse.c"
-#include "_getFinalResponseStatus.c"
-#include "_receiveAndParseHttpResponse.c"
+#include "sendHttpHeaders.c"
+#include "sendHttpBody.c"
+#include "receiveHttpResponse.c"
+#include "HTTPClient_InitializeParsingContext.c"
+#include "HTTPClient_ParseResponse.c"
+#include "getFinalResponseStatus.c"
+#include "receiveAndParseHttpResponse.c"
 #include "HTTPClient_Send.c"
 
 /* HTTP OK Status-Line. */
