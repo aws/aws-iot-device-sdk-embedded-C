@@ -182,6 +182,7 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
  *
  * @return #MQTTNoMemory if pBuffer is too small to hold the MQTT packet;
  * #MQTTBadParameter if invalid parameters are passed;
+ * #MQTTSendFailed if transport write failed;
  * #MQTTSuccess otherwise.
  */
 MQTTStatus_t MQTT_Ping( MQTTContext_t * const pContext );
