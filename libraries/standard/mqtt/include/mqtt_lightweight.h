@@ -31,6 +31,14 @@
 /* MQTT packet types. */
 #define MQTT_PACKET_TYPE_CONNECT         ( ( uint8_t ) 0x10U ) /**< @brief CONNECT (client-to-server). */
 #define MQTT_PACKET_TYPE_CONNACK         ( ( uint8_t ) 0x20U ) /**< @brief CONNACK (server-to-client). */
+#define MQTT_PACKET_TYPE_PUBLISH         ( ( uint8_t ) 0x30U ) /**< @brief PUBLISH (bidirectional). */
+#define MQTT_PACKET_TYPE_PUBACK          ( ( uint8_t ) 0x40U ) /**< @brief PUBACK (bidirectional). */
+#define MQTT_PACKET_TYPE_PUBREC          ( ( uint8_t ) 0x50U ) /**< @brief PUBREC (bidirectional). */
+#define MQTT_PACKET_TYPE_PUBREL          ( ( uint8_t ) 0x62U ) /**< @brief PUBREL (bidirectional). */
+#define MQTT_PACKET_TYPE_PUBCOMP         ( ( uint8_t ) 0x70U ) /**< @brief PUBCOMP (bidirectional). */
+#define MQTT_PACKET_TYPE_SUBACK          ( ( uint8_t ) 0x90U ) /**< @brief SUBACK (server-to-client). */
+#define MQTT_PACKET_TYPE_UNSUBACK        ( ( uint8_t ) 0xB0U ) /**< @brief UNSUBACK (server-to-client). */
+#define MQTT_PACKET_TYPE_PINGRESP        ( ( uint8_t ) 0xD0U ) /**< @brief PINGRESP (server-to-client). */
 #define MQTT_PACKET_TYPE_DISCONNECT      ( ( uint8_t ) 0xE0U ) /**< @brief DISCONNECT (client-to-server). */
 
 struct MQTTFixedBuffer;
@@ -76,7 +84,8 @@ typedef enum MQTTStatus
     MQTTSendFailed,     /**< The transport send function failed. */
     MQTTRecvFailed,     /**< The transport receive function failed. */
     MQTTBadResponse,    /**< An invalid packet was received from the server. */
-    MQTTServerRefused   /**< The server refused a CONNECT or SUBSCRIBE. */
+    MQTTServerRefused,  /**< The server refused a CONNECT or SUBSCRIBE. */
+    MQTTNoDataAvailable
 } MQTTStatus_t;
 
 /**
@@ -295,6 +304,21 @@ MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * const pPubli
                                           size_t * const pHeaderSize );
 
 /**
+ * @brief Serialize an MQTT PUBACK, PUBREC, PUBREL, or PUBCOMP into the given
+ * buffer.
+ *
+ * @param[out] pBuffer Buffer for packet serialization.
+ * @param[in] packetType Byte of the corresponding packet fixed header per the
+ * MQTT spec.
+ * @param[in] packetId Packet ID of the publish.
+ *
+ * @return #MQTTBadParameter, #MQTTNoMemory, or #MQTTSuccess.
+ */
+MQTTStatus_t MQTT_SerializeAck( const MQTTFixedBuffer_t * const pBuffer,
+                                uint8_t packetType,
+                                uint16_t packetId );
+
+/**
  * @brief Get the size of an MQTT DISCONNECT packet.
  *
  * @param[out] pPacketSize The size of the MQTT DISCONNECT packet.
@@ -319,12 +343,46 @@ MQTTStatus_t MQTT_GetIncomingPacket( MQTTTransportRecvFunc_t recvFunc,
                                      MQTTNetworkContext_t networkContext,
                                      MQTTPacketInfo_t * const pIncomingPacket );
 
+/**
+ * @brief Deserialize an MQTT PUBLISH packet.
+ *
+ * @param[in] pIncomingPacket #MQTTPacketInfo_t containing the buffer.
+ * @param[out] pPacketId The packet ID obtained from the buffer.
+ * @param[out] pPublishInfo Struct containing information about the publish.
+ *
+ * @return #MQTTBadParameter, #MQTTBadResponse, or #MQTTSuccess.
+ */
 MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * const pIncomingPacket,
                                       uint16_t * const pPacketId,
                                       MQTTPublishInfo_t * const pPublishInfo );
 
+/**
+ * @brief Deserialize an MQTT CONNACK, SUBACK, UNSUBACK, PUBACK, PUBREC, PUBREL,
+ * PUBCOMP, or PINGRESP.
+ *
+ * @param[in] pIncomingPacket #MQTTPacketInfo_t containing the buffer.
+ * @param[out] pPacketId The packet ID of obtained from the buffer. Not used
+ * in CONNACK or PINGRESP.
+ * @param[out] pSessionPresent Boolean flag from a CONNACK indicating present session.
+ *
+ * @return #MQTTBadParameter, #MQTTBadResponse, or #MQTTSuccess.
+ */
 MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * const pIncomingPacket,
                                   uint16_t * const pPacketId,
                                   bool * const pSessionPresent );
+
+/**
+ * @brief Extract MQTT packet type and length from incoming packet.
+ *
+ * @param[in] readFunc Transport layer read function pointer.
+ * @param[out] pIncomingPacket Pointer to MQTTPacketInfo_t structure.
+ * where type, remaining length and packet identifier are stored.
+ *
+ * @return #MQTTSuccess on successful extraction of type and length,
+ * #MQTTBadResponse on failure and #MQTTNoDataAvailable if there is nothing to read.
+ */
+MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( MQTTTransportRecvFunc_t readFunc,
+                                                  MQTTNetworkContext_t networkContext,
+                                                  MQTTPacketInfo_t * pIncomingPacket );
 
 #endif
