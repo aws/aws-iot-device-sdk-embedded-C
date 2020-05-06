@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdbool.h>
 
 #include "common.h"
 
@@ -9,6 +10,7 @@ typedef struct readHeaderContext
     size_t headerNameLen;
     const char ** pHeaderValueLoc;
     size_t * pHeaderValueLen;
+    uint8_t headerFound;
 } readHeaderContext_t;
 
 /* Functions are pulled out into their own C files to be tested as a unit. */
@@ -16,69 +18,69 @@ typedef struct readHeaderContext
 #include "HTTPClient_ReadHeader.c"
 
 /* Template HTTP request for a PUT request. */
-#define HTTP_TEST_RESPONSE          \
-    "HTTP/1.1 200 OK"               \
-    "test-header0: test-value0\r\n" \
-    "test-header1: test-value1\r\n" \
-    "test-header2: test-value2\r\n" \
-    "\r\n"
+static const char * pTestResponse = "HTTP/1.1 200 OK"
+                                    "test-header0: test-value0\r\n"
+                                    "test-header1: test-value1\r\n"
+                                    "test-header2: test-value2\r\n"
+                                    "\r\n";
+static const size_t headerFieldInRespLoc = 15;
+static const size_t headerFieldInRespLen = strlen( "test-header0" );
+static const size_t headerValInRespLoc = 29;
+static const size_t headerValInRespLen = strlen( "test-value0" );
 
-#define HEADER_NAME_0_IN_BUFFER      "test-header0"
-#define HEADER_NAME_1_IN_BUFFER      "test-header1"
-#define HEADER_NAME_NOT_IN_BUFFER    "header-not-in-buffer"
-#define TEST_BUFFER_SIZE             100
+#define HEADER_IN_BUFFER        "test-header0"
+#define HEADER_NOT_IN_BUFFER    "header-not-in-buffer"
+#define TEST_BUFFER_SIZE        100
 
 /* Mocked out implementations of parser function dependencies. */
 static HTTPStatus_t initializeParsingContextRetCode = HTTP_SUCCESS;
 HTTPStatus_t HTTPClient_InitializeParsingContext( HTTPParsingContext_t * pParsingContext,
                                                   HTTPClient_HeaderParsingCallback_t * pHeaderParsingCallback )
 {
-    ( void ) pParsingContext;
-    ( void ) pHeaderParsingCallback;
+    /* Verify the input arguments. */
+    ok( pParsingContext != NULL );
+    ok( pHeaderParsingCallback != NULL );
+
+    /* Side-effect of mock'd function. */
+    pParsingContext->pHeaderParsingCallback = pHeaderParsingCallback;
 
     return initializeParsingContextRetCode;
 }
 
 static HTTPStatus_t parseResponseRetCode = HTTP_SUCCESS;
+static bool invokeParsingCallback = false;
 HTTPStatus_t HTTPClient_ParseResponse( HTTPParsingContext_t * pParsingContext,
                                        const uint8_t * pBuffer,
                                        size_t bufferLen )
 {
-    ( void ) pParsingContext;
-
     ( void ) pBuffer;
     ( void ) bufferLen;
+
+    /* Verify the input arguments. */
+    ok( pParsingContext != NULL );
+    ok( pParsingContext->pHeaderParsingCallback->onHeaderCallback != NULL );
+    ok( pParsingContext->pHeaderParsingCallback->pContext != NULL );
+    ok( pParsingContext->pHeaderParsingCallback->onHeaderCallback == readHeaderParsingCallback );
+    /*ok( pBuffer == ( const Uint8_t * ) pTestResponse ); */
+    ok( bufferLen == strlen( pTestResponse ) );
+
+    if( invokeParsingCallback )
+    {
+        pParsingContext->pHeaderParsingCallback->onHeaderCallback(
+            pParsingContext->pHeaderParsingCallback->pContext,
+            &pTestResponse[ headerFieldInRespLoc ],
+            headerFieldInRespLen,
+            &pTestResponse[ headerValInRespLoc ],
+            headerValInRespLen,
+            200 /* status code */ );
+    }
 
     return parseResponseRetCode;
 }
 
-#define setupBuffersWithPreexistingHeader( requestHeaders,                \
-                                           testBuffer,                    \
-                                           expectedHeaders,               \
-                                           preexistingData )              \
-    do {                                                                  \
-        size_t dataLen = strlen( preexistingData );                       \
-        requestHeaders.pBuffer = testBuffer;                              \
-        requestHeaders.bufferLen = sizeof( testBuffer );                  \
-        /* We add 1 bytes as snprintf() writes a null byte at the end. */ \
-        int numBytes = snprintf( ( char * ) requestHeaders.pBuffer,       \
-                                 dataLen + 1,                             \
-                                 "%s",                                    \
-                                 preexistingData );                       \
-        ok( numBytes == ( int ) dataLen );                                \
-        requestHeaders.headersLen = dataLen;                              \
-        /* Fill the same data in the expected buffer as HTTPClient_AddRangeHeaders()
-         * is not expected to change it. */                         \
-        ok( memcpy( expectedHeaders.buffer, requestHeaders.pBuffer, \
-                    requestHeaders.headersLen )                     \
-            == expectedHeaders.buffer );                            \
-        expectedHeaders.dataLen = requestHeaders.headersLen;        \
-    } while( 0 )
-
 int main()
 {
     HTTPResponse_t testResponse = { 0 };
-    uint8_t testBuffer[ TEST_BUFFER_SIZE ] = { 0u };
     HTTPStatus_t retCode = HTTP_NOT_SUPPORTED;
     const char * pValueLoc = NULL;
     size_t valueLen = 0u;
@@ -87,14 +89,14 @@ int main()
     do {                                                    \
         retCode = HTTP_NOT_SUPPORTED;                       \
         memset( &testResponse, 0, sizeof( testResponse ) ); \
-        memset( &testBuffer, 0, sizeof( testBuffer ) );     \
         pValueLoc = NULL;                                   \
         valueLen = 0u;                                      \
         initializeParsingContextRetCode = HTTP_SUCCESS;     \
         parseResponseRetCode = HTTP_SUCCESS;                \
+        invokeParsingCallback = false;                      \
     } while( 0 )
 
-    plan( 62 );
+    plan( 58 );
 
     /*************************** Test Failure Cases *****************************/
 
@@ -118,7 +120,7 @@ int main()
 
     /* Response buffer size is zero. */
     reset();
-    testResponse.pBuffer = &testBuffer[ 0 ];
+    testResponse.pBuffer = ( uint8_t * ) &pTestResponse[ 0 ];
     retCode = HTTPClient_ReadHeader( &testResponse,
                                      "Header",
                                      strlen( "Header" ),
@@ -128,8 +130,8 @@ int main()
 
     /* Header field name is NULL. */
     reset();
-    testResponse.pBuffer = &testBuffer[ 0 ];
-    testResponse.bufferLen = sizeof( testBuffer );
+    testResponse.pBuffer = ( uint8_t * ) &pTestResponse[ 0 ];
+    testResponse.bufferLen = strlen( pTestResponse );
     retCode = HTTPClient_ReadHeader( &testResponse,
                                      NULL,
                                      strlen( "Header" ),
@@ -139,8 +141,8 @@ int main()
 
     /* Header field length is 0. */
     reset();
-    testResponse.pBuffer = &testBuffer[ 0 ];
-    testResponse.bufferLen = sizeof( testBuffer );
+    testResponse.pBuffer = ( uint8_t * ) &pTestResponse[ 0 ];
+    testResponse.bufferLen = strlen( pTestResponse );
     retCode = HTTPClient_ReadHeader( &testResponse,
                                      "Header",
                                      0u,
@@ -150,8 +152,8 @@ int main()
 
     /* Invalid output parameters. */
     reset();
-    testResponse.pBuffer = &testBuffer[ 0 ];
-    testResponse.bufferLen = sizeof( testBuffer );
+    testResponse.pBuffer = ( uint8_t * ) &pTestResponse[ 0 ];
+    testResponse.bufferLen = strlen( pTestResponse );
     retCode = HTTPClient_ReadHeader( &testResponse,
                                      "Header",
                                      strlen( "Header" ),
@@ -159,8 +161,8 @@ int main()
                                      &valueLen );
     ok( retCode == HTTP_INVALID_PARAMETER );
     reset();
-    testResponse.pBuffer = &testBuffer[ 0 ];
-    testResponse.bufferLen = sizeof( testBuffer );
+    testResponse.pBuffer = ( uint8_t * ) &pTestResponse[ 0 ];
+    testResponse.bufferLen = strlen( pTestResponse );
     retCode = HTTPClient_ReadHeader( &testResponse,
                                      "Header",
                                      strlen( "Header" ),
@@ -171,45 +173,57 @@ int main()
     /* Test when HTTPClient_InitializeParsingContext returns failure. */
     reset();
     initializeParsingContextRetCode = HTTP_INTERNAL_ERROR;
-    testResponse.pBuffer = &testBuffer[ 0 ];
-    testResponse.bufferLen = sizeof( testBuffer );
+    testResponse.pBuffer = ( uint8_t * ) &pTestResponse[ 0 ];
+    testResponse.bufferLen = strlen( pTestResponse );
     retCode = HTTPClient_ReadHeader( &testResponse,
                                      "Header",
                                      strlen( "Header" ),
                                      &pValueLoc,
-                                     NULL );
+                                     &valueLen );
     ok( retCode == HTTP_INTERNAL_ERROR );
 
     /* Test when HTTPClient_ParseResponse returns failure. */
     reset();
-    parseResponseRetCode = HTTP_HEADER_NOT_FOUND;
-    testResponse.pBuffer = &testBuffer[ 0 ];
-    testResponse.bufferLen = sizeof( testBuffer );
-    retCode = HTTPClient_ReadHeader( &testResponse,
-                                     "Header",
-                                     strlen( "Header" ),
-                                     &pValueLoc,
-                                     NULL );
-    ok( retCode == HTTP_HEADER_NOT_FOUND );
-    reset();
     parseResponseRetCode = HTTP_INTERNAL_ERROR;
-    testResponse.pBuffer = &testBuffer[ 0 ];
-    testResponse.bufferLen = sizeof( testBuffer );
+    testResponse.pBuffer = ( uint8_t * ) &pTestResponse[ 0 ];
+    testResponse.bufferLen = strlen( pTestResponse );
     retCode = HTTPClient_ReadHeader( &testResponse,
                                      "Header",
                                      strlen( "Header" ),
                                      &pValueLoc,
-                                     NULL );
+                                     &valueLen );
     ok( retCode == HTTP_INTERNAL_ERROR );
-
-
-    /* Test when requested header is not present in response. */
-
-
 
     /*************************** Test Happy-Path Cases *****************************/
 
+    /* Test when requested header in present response. */
+    reset();
+    invokeParsingCallback = true;
+    testResponse.pBuffer = ( uint8_t * ) &pTestResponse[ 0 ];
+    testResponse.bufferLen = strlen( pTestResponse );
+    retCode = HTTPClient_ReadHeader( &testResponse,
+                                     HEADER_IN_BUFFER,
+                                     strlen( HEADER_IN_BUFFER ),
+                                     &pValueLoc,
+                                     &valueLen );
+    ok( retCode == HTTP_SUCCESS );
+    ok( pValueLoc == &pTestResponse[ headerValInRespLoc ] );
+    ok( valueLen == headerValInRespLen );
 
+    /* Test when requested header is not present in response. */
+    reset();
+    invokeParsingCallback = true;
+    testResponse.pBuffer = ( uint8_t * ) &pTestResponse[ 0 ];
+    testResponse.bufferLen = strlen( pTestResponse );
+    retCode = HTTPClient_ReadHeader( &testResponse,
+                                     HEADER_NOT_IN_BUFFER,
+                                     strlen( HEADER_NOT_IN_BUFFER ),
+                                     &pValueLoc,
+                                     &valueLen );
+    ok( retCode == HTTP_HEADER_NOT_FOUND );
+    /* Make sure that the output parameters were not updated. */
+    ok( pValueLoc == NULL );
+    ok( valueLen == 0u );
 
     return grade();
 }

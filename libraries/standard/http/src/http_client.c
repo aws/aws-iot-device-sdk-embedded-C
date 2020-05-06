@@ -18,6 +18,7 @@ typedef struct readHeaderContext
     size_t headerNameLen;
     const char ** pHeaderValueLoc;
     size_t * pHeaderValueLen;
+    uint8_t headerFound;
 } readHeaderContext_t;
 
 /*-----------------------------------------------------------*/
@@ -1002,6 +1003,9 @@ static void readHeaderParsingCallback( void * pContext,
         /* Populate the output parameters with the location of the header value in the response buffer. */
         *pInfo->pHeaderValueLoc = valueLoc;
         *pInfo->pHeaderValueLen = valueLen;
+
+        /* Set the flag to indicate that header has been found in response. */
+        pInfo->headerFound = 1u;
     }
     else
     {
@@ -1024,7 +1028,8 @@ HTTPStatus_t HTTPClient_ReadHeader( const HTTPResponse_t * pResponse,
         .pHeaderName     = pHeaderName,
         .headerNameLen   = headerNameLen,
         .pHeaderValueLoc = pHeaderValueLoc,
-        .pHeaderValueLen = pHeaderValueLen
+        .pHeaderValueLen = pHeaderValueLen,
+        .headerFound     = 0u
     };
 
     HTTPClient_HeaderParsingCallback_t parsingCallback =
@@ -1088,21 +1093,27 @@ HTTPStatus_t HTTPClient_ReadHeader( const HTTPResponse_t * pResponse,
                                                  pResponse->pBuffer,
                                                  pResponse->bufferLen );
 
-        if( returnStatus == HTTP_HEADER_NOT_FOUND )
-        {
-            IotLogWarnWithArgs( "Unable to read header from response: "
-                                "Header field not found in response buffer: "
-                                "HeaderName=%.*s", pHeaderName, headerNameLen );
-        }
-        else if( returnStatus != HTTP_SUCCESS )
+        if( returnStatus != HTTP_SUCCESS )
         {
             IotLogErrorWithArgs( "Unable to read header from response: "
                                  "Failure in parsing response for header field: "
                                  "HeaderName=%.*s", pHeaderName, headerNameLen );
         }
+        else if( context.headerFound == 0u )
+        {
+            /* Header is not present in buffer. */
+            IotLogWarnWithArgs( "Unable to read header from response: "
+                                "Header field not found in response buffer: "
+                                "HeaderName=%.*s", pHeaderName, headerNameLen );
+            returnStatus = HTTP_HEADER_NOT_FOUND;
+        }
         else
         {
-            /* Empty else for MISRA 15.7 compliance. */
+            /* Header value found present in buffer. */
+            IotLogDebugWithArgs( "Found requested header in response: "
+                                 "HeaderName=%.*s, ValueLoc=%.*s",
+                                 headerNameLen, pHeaderName,
+                                 *pHeaderValueLen, *pHeaderValueLoc );
         }
     }
     else
