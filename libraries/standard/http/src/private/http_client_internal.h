@@ -65,6 +65,7 @@
 #define HTTP_USER_AGENT_FIELD_LEN               ( sizeof( HTTP_USER_AGENT_FIELD ) - 1 )
 #define HTTP_HOST_FIELD                         "Host"
 #define HTTP_HOST_FIELD_LEN                     ( sizeof( HTTP_HOST_FIELD ) - 1 )
+#define HTTP_USER_AGENT_VALUE_LEN               ( sizeof( HTTP_USER_AGENT_VALUE ) - 1 )
 
 /**
  * @brief Constants for header fields added based on flags.
