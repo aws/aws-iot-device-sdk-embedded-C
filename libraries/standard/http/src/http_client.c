@@ -176,7 +176,7 @@ static void readHeaderCallback( void * pContext,
                                 size_t fieldLen,
                                 const char * valueLoc,
                                 size_t valueLen,
-                                uint16_t statusCode )
+                                uint16_t statusCode );
 
 /*-----------------------------------------------------------*/
 
