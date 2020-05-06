@@ -566,8 +566,6 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
  * request is sent through the #HTTPClient_Send function, the #HTTPResponse_t is
  * incomplete until #HTTPClient_Send returns.
  *
- * TODO: Expand documentation.
- *
  * @param[in] pResponse The buffer containing the completed HTTP response.
  * @param[in] pHeaderName The header field name to read.
  * @param[in] headerNameLen The length of the header field name in bytes.
