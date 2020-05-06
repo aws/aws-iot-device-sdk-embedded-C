@@ -7,13 +7,17 @@
 
 # HTTP library source files.
 set( HTTP_SOURCES
-     src/http_client.c
-     src/http_client_parse.c )
+     "${MODULES_DIR}/standard/http/src/http_client.c"
+     "${MODULES_DIR}/standard/http/src/http_client_parse.c" )
 
 # HTTP library Include directories.
 set( HTTP_INCLUDE_PUBLIC_DIRS
-     include )
+     "${MODULES_DIR}/standard/http/include"
+     "${MODULES_DIR}/standard/utilities/include"
+     "${ROOT_DIR}/platform/include"
+      )
 
 # HTTP test include directories.
 set( HTTP_TEST_INCLUDE_PRIVATE_DIRS
-     src )
+     "${MODULES_DIR}/standard/http/src"
+      )

@@ -1,3 +1,4 @@
+include("../filePaths.cmake")
 project ("http unit test")
 cmake_minimum_required (VERSION 3.13)
 
@@ -23,15 +24,13 @@ list(APPEND mock_define_list
 
 # list the files you would like to test here
 list(APPEND real_source_files
-            "../src/http_client.c"
-            "../src/http_client_parse.c"
+            ${HTTP_SOURCES}
         )
 # list the directories the module under test includes
 list(APPEND real_include_directories
             .
-            "${MODULES_DIR}/standard/http/include"
-            "${MODULES_DIR}/standard/http/src"
-            "$(ROOT_DIR)/platform/include"
+            ${HTTP_INCLUDE_PUBLIC_DIRS}
+            ${HTTP_TEST_INCLUDE_PRIVATE_DIRS}
         )
 
 # =====================  Create UnitTest Code here (edit)  =====================
@@ -39,9 +38,8 @@ list(APPEND real_include_directories
 # list the directories your test needs to include
 list(APPEND test_include_directories
             .
-            "${MODULES_DIR}/standard/http/include"
-            "${MODULES_DIR}/standard/http/src"
-            "$(ROOT_DIR)/platform/include"
+            ${HTTP_INCLUDE_PUBLIC_DIRS}
+            ${HTTP_TEST_INCLUDE_PRIVATE_DIRS}
         )
 
 # =============================  (end edit)  ===================================
