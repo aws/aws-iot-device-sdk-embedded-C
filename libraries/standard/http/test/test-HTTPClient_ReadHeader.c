@@ -30,7 +30,6 @@ static const size_t headerValInRespLen = strlen( "test-value0" );
 
 #define HEADER_IN_BUFFER        "test-header0"
 #define HEADER_NOT_IN_BUFFER    "header-not-in-buffer"
-#define TEST_BUFFER_SIZE        100
 
 /* Mocked out implementations of parser function dependencies. */
 static HTTPStatus_t initializeParsingContextRetCode = HTTP_SUCCESS;
