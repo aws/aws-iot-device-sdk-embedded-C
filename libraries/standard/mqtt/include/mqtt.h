@@ -61,7 +61,7 @@ typedef enum MQTTPublishState
     MQTTPubRelPending,
     MQTTPubRecPending,
     MQTTPubCompPending,
-    MQTTPublishDone,
+    MQTTPublishDone
 } MQTTPublishState_t;
 
 typedef enum MQTTPubAckType

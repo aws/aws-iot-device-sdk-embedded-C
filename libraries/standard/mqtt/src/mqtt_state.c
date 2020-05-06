@@ -39,10 +39,10 @@
  *
  * @return `true` if transition is possible, else `false`
  */
-static bool _validateTransitionPublish( MQTTPublishState_t currentState,
-                                        MQTTPublishState_t newState,
-                                        MQTTStateOperation_t opType,
-                                        MQTTQoS_t qos );
+static bool validateTransitionPublish( MQTTPublishState_t currentState,
+                                       MQTTPublishState_t newState,
+                                       MQTTStateOperation_t opType,
+                                       MQTTQoS_t qos );
 
 /**
  * @brief Test if a transition to a new state is possible, when dealing with acks.
@@ -52,8 +52,8 @@ static bool _validateTransitionPublish( MQTTPublishState_t currentState,
  *
  * @return `true` if transition is possible, else `false`.
  */
-static bool _validateTransitionAck( MQTTPublishState_t currentState,
-                                    MQTTPublishState_t newState );
+static bool validateTransitionAck( MQTTPublishState_t currentState,
+                                   MQTTPublishState_t newState );
 
 /**
  * @brief Test if the publish corresponding to an ack is outgoing or incoming.
@@ -63,8 +63,8 @@ static bool _validateTransitionAck( MQTTPublishState_t currentState,
  *
  * @return `true` if corresponds to outgoing publish, else `false`.
  */
-static bool _isPublishOutgoing( MQTTPubAckType_t packetType,
-                                MQTTStateOperation_t opType );
+static bool isPublishOutgoing( MQTTPubAckType_t packetType,
+                               MQTTStateOperation_t opType );
 
 /**
  * @brief Find a packet ID in the state record.
@@ -77,11 +77,11 @@ static bool _isPublishOutgoing( MQTTPubAckType_t packetType,
  *
  * @return index of the packet id in the record if it exists, else the record length.
  */
-static size_t _findInRecord( const MQTTPubAckInfo_t * records,
-                             size_t recordCount,
-                             uint16_t packetId,
-                             MQTTQoS_t * pQos,
-                             MQTTPublishState_t * pCurrentState );
+static size_t findInRecord( const MQTTPubAckInfo_t * records,
+                            size_t recordCount,
+                            uint16_t packetId,
+                            MQTTQoS_t * pQos,
+                            MQTTPublishState_t * pCurrentState );
 
 /**
  * @brief Store a new entry in the state record.
@@ -94,11 +94,11 @@ static size_t _findInRecord( const MQTTPubAckInfo_t * records,
  *
  * @return MQTTSuccess, MQTTNoMemory, MQTTStateCollision.
  */
-static MQTTStatus_t _addRecord( MQTTPubAckInfo_t * records,
-                                size_t recordCount,
-                                uint16_t packetId,
-                                MQTTQoS_t qos,
-                                MQTTPublishState_t publishState );
+static MQTTStatus_t addRecord( MQTTPubAckInfo_t * records,
+                               size_t recordCount,
+                               uint16_t packetId,
+                               MQTTQoS_t qos,
+                               MQTTPublishState_t publishState );
 
 /**
  * @brief Update and possibly delete an entry in the state record.
@@ -108,16 +108,16 @@ static MQTTStatus_t _addRecord( MQTTPubAckInfo_t * records,
  * @param[in] newState New state to update.
  * @param[in] shouldDelete Whether an existing entry should be deleted.
  */
-static void _updateRecord( MQTTPubAckInfo_t * records,
-                           size_t recordIndex,
-                           MQTTPublishState_t newState,
-                           bool shouldDelete );
+static void updateRecord( MQTTPubAckInfo_t * records,
+                          size_t recordIndex,
+                          MQTTPublishState_t newState,
+                          bool shouldDelete );
 
 
-static bool _validateTransitionPublish( MQTTPublishState_t currentState,
-                                        MQTTPublishState_t newState,
-                                        MQTTStateOperation_t opType,
-                                        MQTTQoS_t qos )
+static bool validateTransitionPublish( MQTTPublishState_t currentState,
+                                       MQTTPublishState_t newState,
+                                       MQTTStateOperation_t opType,
+                                       MQTTQoS_t qos )
 {
     bool isValid = false;
     switch( currentState )
@@ -155,8 +155,8 @@ static bool _validateTransitionPublish( MQTTPublishState_t currentState,
     return isValid;
 }
 
-static bool _validateTransitionAck( MQTTPublishState_t currentState,
-                                    MQTTPublishState_t newState )
+static bool validateTransitionAck( MQTTPublishState_t currentState,
+                                   MQTTPublishState_t newState )
 {
     bool isValid = false;
     switch( currentState )
@@ -205,8 +205,8 @@ static bool _validateTransitionAck( MQTTPublishState_t currentState,
     return isValid;
 }
 
-static bool _isPublishOutgoing( MQTTPubAckType_t packetType,
-                                MQTTStateOperation_t opType )
+static bool isPublishOutgoing( MQTTPubAckType_t packetType,
+                               MQTTStateOperation_t opType )
 {
     bool isOutgoing = false;
     switch( packetType )
@@ -226,11 +226,11 @@ static bool _isPublishOutgoing( MQTTPubAckType_t packetType,
     return isOutgoing;
 }
 
-static size_t _findInRecord( const MQTTPubAckInfo_t * records,
-                             size_t recordCount,
-                             uint16_t packetId,
-                             MQTTQoS_t * pQos,
-                             MQTTPublishState_t * pCurrentState )
+static size_t findInRecord( const MQTTPubAckInfo_t * records,
+                            size_t recordCount,
+                            uint16_t packetId,
+                            MQTTQoS_t * pQos,
+                            MQTTPublishState_t * pCurrentState )
 {
     size_t index = 0;
     *pCurrentState = MQTTStateNull;
@@ -253,11 +253,11 @@ static size_t _findInRecord( const MQTTPubAckInfo_t * records,
     return index;
 }
 
-static MQTTStatus_t _addRecord( MQTTPubAckInfo_t * records,
-                                size_t recordCount,
-                                uint16_t packetId,
-                                MQTTQoS_t qos,
-                                MQTTPublishState_t publishState )
+static MQTTStatus_t addRecord( MQTTPubAckInfo_t * records,
+                               size_t recordCount,
+                               uint16_t packetId,
+                               MQTTQoS_t qos,
+                               MQTTPublishState_t publishState )
 {
     MQTTStatus_t status = MQTTNoMemory;
     int32_t index = 0;
@@ -297,10 +297,10 @@ static MQTTStatus_t _addRecord( MQTTPubAckInfo_t * records,
     return status;
 }
 
-static void _updateRecord( MQTTPubAckInfo_t * records,
-                           size_t recordIndex,
-                           MQTTPublishState_t newState,
-                           bool shouldDelete )
+static void updateRecord( MQTTPubAckInfo_t * records,
+                          size_t recordIndex,
+                          MQTTPublishState_t newState,
+                          bool shouldDelete )
 {
     if( shouldDelete )
     {
@@ -331,11 +331,11 @@ MQTTStatus_t MQTT_ReserveState( MQTTContext_t * pMqttContext,
     else
     {
         /* Collisions are detected when adding the record. */
-        status = _addRecord( pMqttContext->outgoingPublishRecords,
-                             MQTT_STATE_ARRAY_MAX_COUNT,
-                             packetId,
-                             qos,
-                             MQTTPublishSend );
+        status = addRecord( pMqttContext->outgoingPublishRecords,
+                            MQTT_STATE_ARRAY_MAX_COUNT,
+                            packetId,
+                            qos,
+                            MQTTPublishSend );
     }
     
     return status;
@@ -388,11 +388,11 @@ MQTTPublishState_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
     else if( opType == MQTT_SEND )
     {
         /* Search record for entry so we can check QoS. */
-        recordIndex = _findInRecord( pMqttContext->outgoingPublishRecords,
-                                     MQTT_STATE_ARRAY_MAX_COUNT,
-                                     packetId,
-                                     &foundQoS,
-                                     &currentState );
+        recordIndex = findInRecord( pMqttContext->outgoingPublishRecords,
+                                    MQTT_STATE_ARRAY_MAX_COUNT,
+                                    packetId,
+                                    &foundQoS,
+                                    &currentState );
         if( foundQoS != qos )
         {
             /* Entry should match with supplied QoS. */
@@ -407,22 +407,22 @@ MQTTPublishState_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
     if( ( qos != MQTTQoS0 ) && ( mqttStatus == MQTTSuccess ) )
     {
         newState = MQTT_CalculateStatePublish( opType, qos );
-        isTransitionValid = _validateTransitionPublish( currentState, newState, opType, qos );
+        isTransitionValid = validateTransitionPublish( currentState, newState, opType, qos );
         if( isTransitionValid )
         {
-            /* _addRecord will check for collisions. */
+            /* addRecord will check for collisions. */
             if( opType == MQTT_RECEIVE )
             {
-                mqttStatus = _addRecord( pMqttContext->incomingPublishRecords,
-                                         MQTT_STATE_ARRAY_MAX_COUNT,
-                                         packetId,
-                                         qos,
-                                         newState );
+                mqttStatus = addRecord( pMqttContext->incomingPublishRecords,
+                                        MQTT_STATE_ARRAY_MAX_COUNT,
+                                        packetId,
+                                        qos,
+                                        newState );
             }
             /* Send operation. */
             else if( recordIndex < MQTT_STATE_ARRAY_MAX_COUNT )
             {
-                _updateRecord( pMqttContext->outgoingPublishRecords, recordIndex, newState, false );
+                updateRecord( pMqttContext->outgoingPublishRecords, recordIndex, newState, false );
             }
             else
             {
@@ -490,14 +490,14 @@ MQTTPublishState_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
 {
     MQTTPublishState_t newState = MQTTStateNull;
     MQTTPublishState_t currentState = MQTTStateNull;
-    bool isPublishOutgoing = _isPublishOutgoing( packetType, opType );
+    bool isOutgoingPublish = isPublishOutgoing( packetType, opType );
     bool shouldDeleteRecord = false;
     bool isTransitionValid = false;
     MQTTQoS_t qos = MQTTQoS0;
     size_t recordIndex = MQTT_STATE_ARRAY_MAX_COUNT;
     MQTTPubAckInfo_t * records = NULL;
 
-    if( isPublishOutgoing )
+    if( isOutgoingPublish )
     {
         records = pMqttContext->outgoingPublishRecords;
     }
@@ -505,23 +505,23 @@ MQTTPublishState_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
     {
         records = pMqttContext->incomingPublishRecords;
     }
-    recordIndex = _findInRecord( records,
-                                 MQTT_STATE_ARRAY_MAX_COUNT,
-                                 packetId,
-                                 &qos,
-                                 &currentState );
+    recordIndex = findInRecord( records,
+                                MQTT_STATE_ARRAY_MAX_COUNT,
+                                packetId,
+                                &qos,
+                                &currentState );
 
     if( recordIndex < MQTT_STATE_ARRAY_MAX_COUNT )
     {
         newState = MQTT_CalculateStateAck( packetType, opType, qos );
         shouldDeleteRecord = ( newState == MQTTPublishDone );
-        isTransitionValid = _validateTransitionAck( currentState, newState );
+        isTransitionValid = validateTransitionAck( currentState, newState );
         if( isTransitionValid )
         {
-            _updateRecord( records,
-                           recordIndex,
-                           newState,
-                           shouldDeleteRecord );
+            updateRecord( records,
+                          recordIndex,
+                          newState,
+                          shouldDeleteRecord );
         }
         else
         {
