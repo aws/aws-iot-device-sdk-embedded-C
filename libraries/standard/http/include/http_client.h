@@ -314,9 +314,9 @@ typedef struct httpResponseParsingCallback
      * @param[in] statusCode The HTTP response status-code.
      */
     void ( * onHeaderCallback )( void * pContext,
-                                 const char * fieldLoc,
+                                 const uint8_t * fieldLoc,
                                  size_t fieldLen,
-                                 const char * valueLoc,
+                                 const uint8_t * valueLoc,
                                  size_t valueLen,
                                  uint16_t statusCode );
 
@@ -582,9 +582,9 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
  * - #HTTP_PARTIAL_RESPONSE (Part of an HTTP response was received in a partially filled response buffer.)
  */
 HTTPStatus_t HTTPClient_ReadHeader( const HTTPResponse_t * pResponse,
-                                    const char * pHeaderName,
+                                    const uint8_t * pHeaderName,
                                     size_t headerNameLen,
-                                    const char ** pHeaderValueLoc,
+                                    const uint8_t ** pHeaderValueLoc,
                                     size_t * headerValueLen );
 
 #endif /* ifndef HTTP_CLIENT_H_ */

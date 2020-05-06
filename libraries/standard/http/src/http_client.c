@@ -14,9 +14,9 @@
  */
 typedef struct readHeaderContext
 {
-    const char * pHeaderName;
+    const uint8_t * pHeaderName;
     size_t headerNameLen;
-    const char ** pHeaderValueLoc;
+    const uint8_t ** pHeaderValueLoc;
     size_t * pHeaderValueLen;
     uint8_t headerFound;
 } readHeaderContext_t;
@@ -148,11 +148,11 @@ static uint8_t convertInt32ToAscii( int32_t value,
  * @return #HTTP_SUCCESS if successful. If there was insufficient memory in the
  * application buffer, then #HTTP_INSUFFICIENT_MEMORY is returned.
  */
-static HTTPStatus_t_t writeRequestLine( HTTPRequestHeaders_t * pRequestHeaders,
-                                        const char * pMethod,
-                                        size_t methodLen,
-                                        const char * pPath,
-                                        size_t pathLen );
+static HTTPStatus_t writeRequestLine( HTTPRequestHeaders_t * pRequestHeaders,
+                                      const char * pMethod,
+                                      size_t methodLen,
+                                      const char * pPath,
+                                      size_t pathLen );
 
 /**
  * @brief Parsing callback for the HTTPClient_ReadHeader API function.
@@ -173,9 +173,9 @@ static HTTPStatus_t_t writeRequestLine( HTTPRequestHeaders_t * pRequestHeaders,
  * ignored by the callback.
  */
 static void readHeaderParsingCallback( void * pContext,
-                                       const char * fieldLoc,
+                                       const uint8_t * fieldLoc,
                                        size_t fieldLen,
-                                       const char * valueLoc,
+                                       const uint8_t * valueLoc,
                                        size_t valueLen,
                                        uint16_t statusCode );
 
@@ -972,9 +972,9 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
 /*-----------------------------------------------------------*/
 
 static void readHeaderParsingCallback( void * pContext,
-                                       const char * fieldLoc,
+                                       const uint8_t * fieldLoc,
                                        size_t fieldLen,
-                                       const char * valueLoc,
+                                       const uint8_t * valueLoc,
                                        size_t valueLen,
                                        uint16_t statusCode )
 {
@@ -992,7 +992,7 @@ static void readHeaderParsingCallback( void * pContext,
     assert( pInfo->pHeaderValueLen != NULL );
 
     /* Check whether the parsed header matches the header we are looking for. */
-    if( ( fieldLen == pInfo->headerNameLen ) && ( strncmp( pInfo->pHeaderName, fieldLoc, fieldLen ) == 0 ) )
+    if( ( fieldLen == pInfo->headerNameLen ) && ( memcmp( pInfo->pHeaderName, fieldLoc, fieldLen ) == 0 ) )
     {
         IotLogDebugWithArgs( "Found header in response buffer: "
                              "HeaderName=%.*s, HeaderLocation=0x%d, HeaderVal=%.*s",
@@ -1016,9 +1016,9 @@ static void readHeaderParsingCallback( void * pContext,
 /*-----------------------------------------------------------*/
 
 HTTPStatus_t HTTPClient_ReadHeader( const HTTPResponse_t * pResponse,
-                                    const char * pHeaderName,
+                                    const uint8_t * pHeaderName,
                                     size_t headerNameLen,
-                                    const char ** pHeaderValueLoc,
+                                    const uint8_t ** pHeaderValueLoc,
                                     size_t * pHeaderValueLen )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;

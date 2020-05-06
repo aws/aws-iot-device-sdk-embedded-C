@@ -6,9 +6,9 @@
 /* Mirror of internal type used by HTTPClient_ReadHeader function. */
 typedef struct readHeaderContext
 {
-    const char * pHeaderName;
+    const uint8_t * pHeaderName;
     size_t headerNameLen;
-    const char ** pHeaderValueLoc;
+    const uint8_t ** pHeaderValueLoc;
     size_t * pHeaderValueLen;
     uint8_t headerFound;
 } readHeaderContext_t;
@@ -82,7 +82,7 @@ int main()
 {
     HTTPResponse_t testResponse = { 0 };
     HTTPStatus_t retCode = HTTP_NOT_SUPPORTED;
-    const char * pValueLoc = NULL;
+    const uint8_t * pValueLoc = NULL;
     size_t valueLen = 0u;
 
 #define reset()                                             \
@@ -96,7 +96,7 @@ int main()
         invokeParsingCallback = false;                      \
     } while( 0 )
 
-    plan( 58 );
+    plan( 38 );
 
     /*************************** Test Failure Cases *****************************/
 
@@ -207,7 +207,7 @@ int main()
                                      &pValueLoc,
                                      &valueLen );
     ok( retCode == HTTP_SUCCESS );
-    ok( pValueLoc == &pTestResponse[ headerValInRespLoc ] );
+    ok( pValueLoc == ( const uint8_t * ) &pTestResponse[ headerValInRespLoc ] );
     ok( valueLen == headerValInRespLen );
 
     /* Test when requested header is not present in response. */
