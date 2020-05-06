@@ -29,7 +29,7 @@
 static int32_t sendPacket( MQTTContext_t * pContext,
                            size_t bytesToSend );
 
-static MQTTStatus_t validateSubscribeUnsubscribeParams( MQTTContext_t * const pContext,
+static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * const pContext,
                                                         const MQTTSubscribeInfo_t * const pSubscriptionList,
                                                         size_t subscriptionCount,
                                                         uint16_t packetId );
@@ -85,7 +85,7 @@ static int32_t sendPacket( MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t validateSubscribeUnsubscribeParams( MQTTContext_t * const pContext,
+static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * const pContext,
                                                         const MQTTSubscribeInfo_t * const pSubscriptionList,
                                                         size_t subscriptionCount,
                                                         uint16_t packetId )
@@ -208,7 +208,7 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * const pContext,
                              uint16_t packetId )
 {
     size_t remainingLength = 0UL, packetSize = 0UL, headerSize = 0UL;
-    int32_t bytesSent = 0U;
+    int32_t bytesSent = 0;
 
     /* Validate arguments. */
     MQTTStatus_t status = validateSubscribeUnsubscribeParams( pContext,
@@ -363,7 +363,7 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * const pContext,
                                uint16_t packetId )
 {
     size_t remainingLength = 0UL, packetSize = 0UL, headerSize = 0UL;
-    int32_t bytesSent = 0U;
+    int32_t bytesSent = 0;
 
     /* Validate arguments. */
     MQTTStatus_t status = validateSubscribeUnsubscribeParams( pContext,

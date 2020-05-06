@@ -787,7 +787,7 @@ static bool subscriptionPacketSize( const MQTTSubscribeInfo_t * pSubscriptionLis
                                     MQTTSubscriptionType_t subscriptionType )
 {
     bool status = true;
-    size_t i = 0, subscriptionPacketSize = 0;
+    size_t i = 0, packetSize = 0;
 
     assert( pSubscriptionList != NULL );
     assert( subscriptionCount != 0U );
@@ -796,39 +796,39 @@ static bool subscriptionPacketSize( const MQTTSubscribeInfo_t * pSubscriptionLis
 
     /* The variable header of a subscription packet consists of a 2-byte packet
      * identifier. */
-    subscriptionPacketSize += sizeof( uint16_t );
+    packetSize += sizeof( uint16_t );
 
     /* Sum the lengths of all subscription topic filters; add 1 byte for each
      * subscription's QoS if type is IOT_MQTT_SUBSCRIBE. */
     for( i = 0; i < subscriptionCount; i++ )
     {
         /* Add the length of the topic filter. */
-        subscriptionPacketSize += pSubscriptionList[ i ].topicFilterLength + sizeof( uint16_t );
+        packetSize += pSubscriptionList[ i ].topicFilterLength + sizeof( uint16_t );
 
         /* Only SUBSCRIBE packets include the QoS. */
         if( subscriptionType == MQTT_SUBSCRIBE )
         {
-            subscriptionPacketSize += 1U;
+            packetSize += 1U;
         }
     }
 
     /* At this point, the "Remaining length" has been calculated. Return error
      * if the "Remaining length" exceeds what is allowed by MQTT 3.1.1. Otherwise,
      * set the output parameter.*/
-    if( subscriptionPacketSize > MQTT_MAX_REMAINING_LENGTH )
+    if( packetSize > MQTT_MAX_REMAINING_LENGTH )
     {
         IotLogError( "Subscription packet length exceeds the MQTT maximum length." );
         status = false;
     }
     else
     {
-        *pRemainingLength = subscriptionPacketSize;
+        *pRemainingLength = packetSize;
 
         /* Calculate the full size of the subscription packet by adding the size of the
          * "Remaining length" field plus 1 byte for the "Packet type" field. Set the
          * pPacketSize output parameter. */
-        subscriptionPacketSize += 1U + remainingLengthEncodedSize( subscriptionPacketSize );
-        *pPacketSize = subscriptionPacketSize;
+        packetSize += 1U + remainingLengthEncodedSize( packetSize );
+        *pPacketSize = packetSize;
     }
 
     IotLogDebugWithArgs( " Publish packet remaining length=%lu and packet size=%lu",
