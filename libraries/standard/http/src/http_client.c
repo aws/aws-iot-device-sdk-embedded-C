@@ -8,6 +8,21 @@
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief An aggregator that represents the user-provided parameters to the
+ * #HTTPClient_ReadHeader API function, to be used as context parameter
+ * to the parsing callback used by the API function.
+ */
+typedef struct readHeaderContext
+{
+    const char * pHeaderName;
+    size_t headerNameLen;
+    const char ** pHeaderValueLoc;
+    size_t * pHeaderValueLen;
+} readHeaderContext_t;
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief Send the HTTP headers over the transport send interface.
  *
  * @param[in] pTransport Transport interface.
@@ -137,6 +152,31 @@ static HTTPStatus_t _writeRequestLine( HTTPRequestHeaders_t * pRequestHeaders,
                                        size_t methodLen,
                                        const char * pPath,
                                        size_t pathLen );
+
+/**
+ * @brief Parsing callback for the HTTPClient_ReadHeader API function.
+ *
+ * It checks whether the parsed header matches the user-requested header
+ * value to read from the buffer, and if there is a match, populates the
+ * user-provided output parameters with the location of the header value
+ * in the response buffer.
+ *
+ * @param[in, out] pContext The context containing the requested header field name,
+ * and user-provided output parameters for storing the header value information.
+ * @param[in] fieldLoc The location of the field name of the parsed header in the
+ * response buffer.
+ * @param[in] fieldLen The size of the header field.
+ * @param[in] valueLoc The location of the parsed header value in the response
+ * buffer.
+ * @param[in] statusCode The status code associated with the response. It is
+ * ignored by the callback.
+ */
+static void readHeaderCallback( void * pContext,
+                                const char * fieldLoc,
+                                size_t fieldLen,
+                                const char * valueLoc,
+                                size_t valueLen,
+                                uint16_t statusCode )
 
 /*-----------------------------------------------------------*/
 
@@ -930,23 +970,14 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
 
 /*-----------------------------------------------------------*/
 
-typedef struct readHeaderInfo
+static void readHeaderCallback( void * pContext,
+                                const char * fieldLoc,
+                                size_t fieldLen,
+                                const char * valueLoc,
+                                size_t valueLen,
+                                uint16_t statusCode )
 {
-    const char * pHeaderName;
-    size_t headerNameLen;
-    const char ** pHeaderValueLoc;
-    size_t * pHeaderValueLen;
-} readHeaderInfo_t;
-
-
-void readHeaderCallback( void * pContext,
-                         const char * fieldLoc,
-                         size_t fieldLen,
-                         const char * valueLoc,
-                         size_t valueLen,
-                         uint16_t statusCode )
-{
-    readHeaderInfo_t * pInfo = ( readHeaderInfo_t * ) pContext;
+    readHeaderContext_t * pInfo = ( readHeaderContext_t * ) pContext;
 
     /* Disable unused parameter warning. */
     ( void ) statusCode;
@@ -978,7 +1009,6 @@ void readHeaderCallback( void * pContext,
     }
 }
 
-
 /*-----------------------------------------------------------*/
 
 HTTPStatus_t HTTPClient_ReadHeader( const HTTPResponse_t * pResponse,
@@ -989,7 +1019,7 @@ HTTPStatus_t HTTPClient_ReadHeader( const HTTPResponse_t * pResponse,
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
     HTTPParsingContext_t parsingContext;
-    readHeaderInfo_t context =
+    readHeaderContext_t context =
     {
         .pHeaderName     = pHeaderName,
         .headerNameLen   = headerNameLen,
