@@ -132,11 +132,11 @@ static uint8_t convertInt32ToAscii( int32_t value,
  * @return #HTTP_SUCCESS if successful. If there was insufficient memory in the
  * application buffer, then #HTTP_INSUFFICIENT_MEMORY is returned.
  */
-static HTTPStatus_t_t writeRequestLine( HTTPRequestHeaders_t * pRequestHeaders,
-                                        const char * pMethod,
-                                        size_t methodLen,
-                                        const char * pPath,
-                                        size_t pathLen );
+static HTTPStatus_t writeRequestLine( HTTPRequestHeaders_t * pRequestHeaders,
+                                      const char * pMethod,
+                                      size_t methodLen,
+                                      const char * pPath,
+                                      size_t pathLen );
 
 /*-----------------------------------------------------------*/
 
@@ -282,7 +282,6 @@ static HTTPStatus_t writeRequestLine( HTTPRequestHeaders_t * pRequestHeaders,
                       SPACE_CHARACTER_LEN +       \
                       HTTP_PROTOCOL_VERSION_LEN + \
                       HTTP_HEADER_LINE_SEPARATOR_LEN;
-    int32_t bytesWritten = 0;
 
     assert( pRequestHeaders != NULL );
     assert( pRequestHeaders->pBuffer != NULL );
@@ -396,9 +395,9 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
     {
         /* Write "User-Agent: <Value>". */
         returnStatus = addHeader( pRequestHeaders,
-                                  HTTP_USER_AGENT_FIELD,
+                                  ( const uint8_t * ) HTTP_USER_AGENT_FIELD,
                                   HTTP_USER_AGENT_FIELD_LEN,
-                                  HTTP_USER_AGENT_VALUE,
+                                  ( const uint8_t * ) HTTP_USER_AGENT_VALUE,
                                   HTTP_USER_AGENT_VALUE_LEN );
     }
 
@@ -406,9 +405,9 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
     {
         /* Write "Host: <Value>". */
         returnStatus = addHeader( pRequestHeaders,
-                                  HTTP_HOST_FIELD,
+                                  ( const uint8_t * ) HTTP_HOST_FIELD,
                                   HTTP_HOST_FIELD_LEN,
-                                  pRequestInfo->pHost,
+                                  ( const uint8_t * ) pRequestInfo->pHost,
                                   pRequestInfo->hostLen );
     }
 
@@ -418,18 +417,18 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
         {
             /* Write "Connection: keep-alive". */
             returnStatus = addHeader( pRequestHeaders,
-                                      HTTP_CONNECTION_FIELD,
+                                      ( const uint8_t * ) HTTP_CONNECTION_FIELD,
                                       HTTP_CONNECTION_FIELD_LEN,
-                                      HTTP_CONNECTION_KEEP_ALIVE_VALUE,
+                                      ( const uint8_t * ) HTTP_CONNECTION_KEEP_ALIVE_VALUE,
                                       HTTP_CONNECTION_KEEP_ALIVE_VALUE_LEN );
         }
         else
         {
             /* Write "Connection: close". */
             returnStatus = addHeader( pRequestHeaders,
-                                      HTTP_CONNECTION_FIELD,
+                                      ( const uint8_t * ) HTTP_CONNECTION_FIELD,
                                       HTTP_CONNECTION_FIELD_LEN,
-                                      HTTP_CONNECTION_CLOSE_VALUE,
+                                      ( const uint8_t * ) HTTP_CONNECTION_CLOSE_VALUE,
                                       HTTP_CONNECTION_CLOSE_VALUE_LEN );
         }
     }
