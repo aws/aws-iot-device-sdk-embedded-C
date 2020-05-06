@@ -115,29 +115,6 @@
  */
 #define UINT16_LOW_BYTE( x )              ( ( uint8_t ) ( ( x ) & 0x00ffU ) )
 
-/*-----------------------------------------------------------*/
-
-/* MQTT Subscription packet types. */
-typedef enum MQTTSubscriptionType
-{
-    MQTT_SUBSCRIBE,
-    MQTT_UNSUBSCRIBE
-} MQTTSubscriptionType_t;
-
-/*-----------------------------------------------------------*/
-
-static bool subscriptionPacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
-                                    size_t subscriptionCount,
-                                    size_t * pRemainingLength,
-                                    size_t * pPacketSize,
-                                    MQTTSubscriptionType_t subscriptionType );
-
-static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTSubscribeInfo_t * const pSubscriptionList,
-                                                        size_t subscriptionCount,
-                                                        uint16_t packetId,
-                                                        size_t remainingLength,
-                                                        const MQTTFixedBuffer_t * const pBuffer );
-
 /**
  * @brief Macro for decoding a 2-byte unsigned int from a sequence of bytes.
  *
@@ -200,6 +177,29 @@ static void serializePublishCommon( const MQTTPublishInfo_t * pPublishInfo,
 static bool calculatePublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
                                         size_t * pRemainingLength,
                                         size_t * pPacketSize );
+
+/*-----------------------------------------------------------*/
+
+/* MQTT Subscription packet types. */
+typedef enum MQTTSubscriptionType
+{
+    MQTT_SUBSCRIBE,
+    MQTT_UNSUBSCRIBE
+} MQTTSubscriptionType_t;
+
+/*-----------------------------------------------------------*/
+
+static bool subscriptionPacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
+                                    size_t subscriptionCount,
+                                    size_t * pRemainingLength,
+                                    size_t * pPacketSize,
+                                    MQTTSubscriptionType_t subscriptionType );
+
+static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTSubscribeInfo_t * const pSubscriptionList,
+                                                        size_t subscriptionCount,
+                                                        uint16_t packetId,
+                                                        size_t remainingLength,
+                                                        const MQTTFixedBuffer_t * const pBuffer );
 
 /*-----------------------------------------------------------*/
 
