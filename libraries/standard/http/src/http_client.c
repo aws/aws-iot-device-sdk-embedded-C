@@ -282,7 +282,6 @@ static HTTPStatus_t _writeRequestLine( HTTPRequestHeaders_t * pRequestHeaders,
                       SPACE_CHARACTER_LEN +       \
                       HTTP_PROTOCOL_VERSION_LEN + \
                       HTTP_HEADER_LINE_SEPARATOR_LEN;
-    int32_t bytesWritten = 0;
 
     assert( pRequestHeaders != NULL );
     assert( pRequestHeaders->pBuffer != NULL );
@@ -396,9 +395,9 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
     {
         /* Write "User-Agent: <Value>". */
         returnStatus = _addHeader( pRequestHeaders,
-                                   HTTP_USER_AGENT_FIELD,
+                                   ( const uint8_t * ) HTTP_USER_AGENT_FIELD,
                                    HTTP_USER_AGENT_FIELD_LEN,
-                                   HTTP_USER_AGENT_VALUE,
+                                   ( const uint8_t * ) HTTP_USER_AGENT_VALUE,
                                    HTTP_USER_AGENT_VALUE_LEN );
     }
 
@@ -406,9 +405,9 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
     {
         /* Write "Host: <Value>". */
         returnStatus = _addHeader( pRequestHeaders,
-                                   HTTP_HOST_FIELD,
+                                   ( const uint8_t * ) HTTP_HOST_FIELD,
                                    HTTP_HOST_FIELD_LEN,
-                                   pRequestInfo->pHost,
+                                   ( const uint8_t * ) pRequestInfo->pHost,
                                    pRequestInfo->hostLen );
     }
 
@@ -418,18 +417,18 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
         {
             /* Write "Connection: keep-alive". */
             returnStatus = _addHeader( pRequestHeaders,
-                                       HTTP_CONNECTION_FIELD,
+                                       ( const uint8_t * ) HTTP_CONNECTION_FIELD,
                                        HTTP_CONNECTION_FIELD_LEN,
-                                       HTTP_CONNECTION_KEEP_ALIVE_VALUE,
+                                       ( const uint8_t * ) HTTP_CONNECTION_KEEP_ALIVE_VALUE,
                                        HTTP_CONNECTION_KEEP_ALIVE_VALUE_LEN );
         }
         else
         {
             /* Write "Connection: close". */
             returnStatus = _addHeader( pRequestHeaders,
-                                       HTTP_CONNECTION_FIELD,
+                                       ( const uint8_t * ) HTTP_CONNECTION_FIELD,
                                        HTTP_CONNECTION_FIELD_LEN,
-                                       HTTP_CONNECTION_CLOSE_VALUE,
+                                       ( const uint8_t * ) HTTP_CONNECTION_CLOSE_VALUE,
                                        HTTP_CONNECTION_CLOSE_VALUE_LEN );
         }
     }
