@@ -31,6 +31,7 @@ list(APPEND real_include_directories
             .
             "${MODULES_DIR}/standard/http/include"
             "${MODULES_DIR}/standard/http/src"
+            "$(ROOT_DIR)/platform/include"
         )
 
 # =====================  Create UnitTest Code here (edit)  =====================
@@ -40,6 +41,7 @@ list(APPEND test_include_directories
             .
             "${MODULES_DIR}/standard/http/include"
             "${MODULES_DIR}/standard/http/src"
+            "$(ROOT_DIR)/platform/include"
         )
 
 # =============================  (end edit)  ===================================

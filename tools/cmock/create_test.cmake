@@ -28,7 +28,13 @@ function(create_test test_name
     target_include_directories(${test_name} PUBLIC
                                ${mocks_dir}
                                ${include_list}
+                               "${ROOT_DIR}/platform/include"
+                               "${MODULES_DIR}/standard/utilities/include"
         )
+    target_link_libraries(${test_name} 
+        "${ROOT_DIR}/platform/posix/iot_clock_posix.o"
+        "${ROOT_DIR}/platform/posix/iot_logging.o"
+    )
     target_link_directories(${test_name} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
     # link all libraries sent through parameters
@@ -144,7 +150,13 @@ function(create_real_library target
         )
     target_include_directories(${target} PUBLIC
             ${real_include_list}
-            )
+            "${ROOT_DIR}/platform/include"
+            "${MODULES_DIR}/standard/utilities/include"
+        )
+    target_link_libraries(${target} 
+            "${ROOT_DIR}/platform/posix/iot_clock_posix.o"
+            "${ROOT_DIR}/platform/posix/iot_logging.o"
+        )
     set_target_properties(${target} PROPERTIES
                 COMPILE_FLAGS "-Wextra -Wpedantic \
                     -fprofile-arcs -ftest-coverage -fprofile-generate \

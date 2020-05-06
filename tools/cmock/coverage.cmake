@@ -30,7 +30,7 @@ foreach(testname ${files})
     execute_process(COMMAND ${testname} OUTPUT_FILE ${CMAKE_BINARY_DIR}/${test}_out.txt)
 
     file(READ ${CMAKE_BINARY_DIR}/${test}_out.txt CONTENTS)
-    file(APPEND ${REPORT_FILE} "${CONTENTS}")
+    file(WRITE ${REPORT_FILE} "${CONTENTS}")
 endforeach()
 
 # generage Junit style xml output
@@ -49,6 +49,7 @@ execute_process(
                          --directory ${CMAKE_BINARY_DIR}
                          --output-file ${CMAKE_BINARY_DIR}/second_coverage.info
         )
+
 # combile baseline results (zeros) with the one after running the tests
 execute_process(
             COMMAND lcov --base-directory ${CMAKE_BINARY_DIR}

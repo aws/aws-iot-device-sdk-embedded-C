@@ -30,7 +30,8 @@ int suiteTearDown( int numFailures )
 }
 
 /* ============================   Testing ============================ */
-void test_Foo_whatever( void )
+void test_Http_blahblahblah( void )
 {
-    TEST_ASSERT_TRUE( 1 == 1 );
+    TEST_ASSERT_TRUE( HTTPClient_AddHeader( NULL, NULL, 0, NULL, 0 ) ==
+                      HTTP_INVALID_PARAMETER );
 }
