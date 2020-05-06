@@ -29,6 +29,7 @@ INCLUDE = . \
 # Values based on test source file names will be dynamically added.
 FUNCTIONS = _addHeader \
 			_writeRequestLine \
+			_convertInt32ToAscii \
             _sendHttpHeaders \
 			_sendHttpBody \
 			_receiveHttpResponse \
@@ -45,7 +46,7 @@ $(TESTS): $(CSDK_ROOT)/platform/posix/iot_clock_posix.o $(CSDK_ROOT)/platform/po
 
 # additional dependency for a specific test
 HTTPClient_AddHeader.c: _addHeader.c
-HTTPClient_AddRangeHeader.c: _addHeader.c
+HTTPClient_AddRangeHeader.c: _addHeader.c _convertInt32ToAscii.c
 HTTPClient_Send.c: _sendHttpHeaders.c \
 				   _sendHttpBody.c \
 				   _receiveHttpResponse.c \
