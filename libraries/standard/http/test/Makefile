@@ -27,15 +27,16 @@ INCLUDE = . \
 
 # functions to dump into separate source files
 # Values based on test source file names will be dynamically added.
-FUNCTIONS = _addHeader \
-			_writeRequestLine \
-            _sendHttpHeaders \
-			_sendHttpBody \
-			_receiveHttpResponse \
-			_receiveAndParseHttpResponse \
-			_HTTPClient_InitializeParsingContext \
-			_HTTPClient_ParseResponse \
-			_getFinalResponseStatus
+FUNCTIONS = addHeader \
+			writeRequestLine \
+			convertInt32ToAscii \
+            sendHttpHeaders \
+			sendHttpBody \
+			receiveHttpResponse \
+			receiveAndParseHttpResponse \
+			HTTPClient_InitializeParsingContext \
+			HTTPClient_ParseResponse \
+			getFinalResponseStatus
 
 # Changes to the above variables should remain above this include.
 include Mock4thewin.mk
@@ -44,16 +45,16 @@ include Mock4thewin.mk
 $(TESTS): $(CSDK_ROOT)/platform/posix/iot_clock_posix.o $(CSDK_ROOT)/platform/posix/iot_logging.o
 
 # additional dependency for a specific test
-HTTPClient_AddHeader.c: _addHeader.c
-HTTPClient_AddRangeHeader.c: _addHeader.c _convertInt32ToAscii.c
-HTTPClient_Send.c: _sendHttpHeaders.c \
-				   _sendHttpBody.c \
-				   _receiveHttpResponse.c \
-				   _receiveAndParseHttpResponse.c \
-				   _HTTPClient_InitializeParsingContext.c \
-				   _HTTPClient_ParseResponse.c \
-				   _getFinalResponseStatus.c
-HTTPClient_InitializeRequestHeaders.c: _writeRequestLine.c _addHeader.c
+HTTPClient_AddHeader.c: addHeader.c
+HTTPClient_AddRangeHeader.c: addHeader.c convertInt32ToAscii.c
+HTTPClient_Send.c: sendHttpHeaders.c \
+				   sendHttpBody.c \
+				   receiveHttpResponse.c \
+				   receiveAndParseHttpResponse.c \
+				   HTTPClient_InitializeParsingContext.c \
+				   HTTPClient_ParseResponse.c \
+				   getFinalResponseStatus.c
+HTTPClient_InitializeRequestHeaders.c: writeRequestLine.c addHeader.c
 
 # additional header dependencies for all tests
 COMMON = common.h
