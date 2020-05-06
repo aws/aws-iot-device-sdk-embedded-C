@@ -16,11 +16,10 @@ function(create_test test_name
                     ${test_name}_runner.c
                   DEPENDS ${test_src}
         )
-    message("create exec")
     add_executable(${test_name} ${test_src} ${test_name}_runner.c)
     target_link_libraries(${test_name} 3rdparty::unity)
     set_target_properties(${test_name} PROPERTIES
-            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/tests"
             INSTALL_RPATH_USE_LINK_PATH TRUE
             LINK_FLAGS " \
                 -Wl,-rpath,${CMAKE_BINARY_DIR}/lib \
@@ -46,7 +45,7 @@ function(create_test test_name
                             ${CMAKE_CURRENT_BINARY_DIR}/lib
             )
     add_test(NAME ${test_name}
-             COMMAND ${CMAKE_BINARY_DIR}/bin/${test_name}
+             COMMAND ${CMAKE_BINARY_DIR}/bin/tests/${test_name}
              WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
             )
 endfunction()

@@ -17,7 +17,7 @@ execute_process( COMMAND lcov --directory ${CMAKE_BINARY_DIR}
                          --rc genhtml_branch_coverage=1
                          --output-file=${CMAKE_BINARY_DIR}/base_coverage.info
         )
-file(GLOB files "${CMAKE_BINARY_DIR}/bin/*")
+file(GLOB files "${CMAKE_BINARY_DIR}/bin/tests/*")
 
 set(REPORT_FILE ${CMAKE_BINARY_DIR}/utest_report.txt)
 # execute all files in bin directory, gathering the output to show it in CI

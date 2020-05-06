@@ -1,7 +1,7 @@
 # Project information.
 cmake_minimum_required( VERSION 3.5.0 )
 project( AwsIotDeviceSdkEmbeddedC
-         VERSION 4.0.2
+         VERSION 4.0.1
          LANGUAGES C )
 
 # Allow the project to be organized into folders.
@@ -54,13 +54,14 @@ if( NOT DEFINED IOT_PLATFORM_NAME )
 endif()
 
 # Set output directories.
-set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output/bin )
-set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output/lib )
-set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output/lib )
+set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin )
+set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
+set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
 
 # Set the path to the config header.
 if( ${IOT_BUILD_TESTS} )
     include("${ROOT_DIR}/tools/cmock/create_test.cmake")
+
     link_directories("${CMAKE_BINARY_DIR}/lib"
             )
 
