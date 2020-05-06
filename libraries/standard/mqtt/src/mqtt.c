@@ -22,10 +22,11 @@
 #include <string.h>
 
 #include "mqtt.h"
+#include "private/mqtt_internal.h"
 
-static int32_t _sendPacket( MQTTContext_t * pContext,
-                            const uint8_t * pOptionalBufferToSend,
-                            size_t bytesToSend )
+static int32_t sendPacket( MQTTContext_t * pContext,
+                           const uint8_t * pOptionalBufferToSend,
+                           size_t bytesToSend )
 {
     const uint8_t * pIndex = pContext->networkBuffer.pBuffer;
     size_t bytesRemaining = bytesToSend;
@@ -116,7 +117,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
 
     if( status == MQTTSuccess )
     {
-        bytesSent = _sendPacket( pContext, NULL, packetSize );
+        bytesSent = sendPacket( pContext, NULL, packetSize );
 
         if( bytesSent < 0 )
         {
@@ -173,7 +174,21 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
     /* Validate arguments. */
     if( ( pContext == NULL ) || ( pPublishInfo == NULL ) )
     {
+        IotLogErrorWithArgs( "Argument cannot be NULL: pContext=%p, "
+                             "pPublishInfo=%p",
+                             pContext,
+                             pPublishInfo );
         status = MQTTBadParameter;
+    }
+    else if( ( pPublishInfo->qos != MQTTQoS0 ) && ( packetId == 0 ) )
+    {
+        IotLogErrorWithArgs( "Packet Id is 0 for publish with QoS=%u",
+                             pPublishInfo->qos );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        /* Empty else MISRA 15.7 */
     }
 
     if( status == MQTTSuccess )
@@ -182,6 +197,9 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
         status = MQTT_GetPublishPacketSize( pPublishInfo,
                                             &remainingLength,
                                             &packetSize );
+        IotLogDebugWithArgs( "Publish packet size is %lu and remaining length is %lu",
+                             packetSize,
+                             remainingLength );
     }
 
     if( status == MQTTSuccess )
@@ -191,26 +209,34 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
                                               remainingLength,
                                               &( pContext->networkBuffer ),
                                               &headerSize );
+        IotLogDebugWithArgs( "Serialized publish header size is %lu",
+                             headerSize );
     }
 
     if( status == MQTTSuccess )
     {
         /* Send header first. */
-        bytesSent = _sendPacket( pContext, NULL, headerSize );
+        bytesSent = sendPacket( pContext, NULL, headerSize );
+        IotLogDebugWithArgs( "Sent %d bytes of publish header ",
+                             bytesSent );
 
         if( bytesSent < 0 )
         {
+            IotLogError( "Transport sent failed for publish header." );
             status = MQTTSendFailed;
         }
         /* Send Payload. */
         else
         {
-            bytesSent = _sendPacket( pContext,
-                                     pPublishInfo->pPayload,
-                                     pPublishInfo->payloadLength );
+            bytesSent = sendPacket( pContext,
+                                    pPublishInfo->pPayload,
+                                    pPublishInfo->payloadLength );
+            IotLogDebugWithArgs( "Sent %d bytes of publish payload ",
+                                 bytesSent );
 
             if( bytesSent < 0 )
             {
+                IotLogError( "Transport sent failed for publish payload." );
                 status = MQTTSendFailed;
             }
         }
@@ -254,7 +280,7 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * const pContext )
 
     if( status == MQTTSuccess )
     {
-        bytesSent = _sendPacket( pContext, NULL, packetSize );
+        bytesSent = sendPacket( pContext, NULL, packetSize );
 
         if( bytesSent < 0 )
         {

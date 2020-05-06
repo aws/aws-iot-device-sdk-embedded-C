@@ -37,17 +37,17 @@
 #include "config.h"
 
 /* MQTT packet types. */
-#define MQTT_PACKET_TYPE_CONNECT         ( ( uint8_t ) 0x10U ) /**< @brief CONNECT (client-to-server). */
-#define MQTT_PACKET_TYPE_CONNACK         ( ( uint8_t ) 0x20U ) /**< @brief CONNACK (server-to-client). */
-#define MQTT_PACKET_TYPE_PUBLISH         ( ( uint8_t ) 0x30U ) /**< @brief PUBLISH (bidirectional). */
-#define MQTT_PACKET_TYPE_PUBACK          ( ( uint8_t ) 0x40U ) /**< @brief PUBACK (bidirectional). */
-#define MQTT_PACKET_TYPE_PUBREC          ( ( uint8_t ) 0x50U ) /**< @brief PUBREC (bidirectional). */
-#define MQTT_PACKET_TYPE_PUBREL          ( ( uint8_t ) 0x62U ) /**< @brief PUBREL (bidirectional). */
-#define MQTT_PACKET_TYPE_PUBCOMP         ( ( uint8_t ) 0x70U ) /**< @brief PUBCOMP (bidirectional). */
-#define MQTT_PACKET_TYPE_SUBACK          ( ( uint8_t ) 0x90U ) /**< @brief SUBACK (server-to-client). */
-#define MQTT_PACKET_TYPE_UNSUBACK        ( ( uint8_t ) 0xB0U ) /**< @brief UNSUBACK (server-to-client). */
-#define MQTT_PACKET_TYPE_PINGRESP        ( ( uint8_t ) 0xD0U ) /**< @brief PINGRESP (server-to-client). */
-#define MQTT_PACKET_TYPE_DISCONNECT      ( ( uint8_t ) 0xE0U ) /**< @brief DISCONNECT (client-to-server). */
+#define MQTT_PACKET_TYPE_CONNECT       ( ( uint8_t ) 0x10U )   /**< @brief CONNECT (client-to-server). */
+#define MQTT_PACKET_TYPE_CONNACK       ( ( uint8_t ) 0x20U )   /**< @brief CONNACK (server-to-client). */
+#define MQTT_PACKET_TYPE_PUBLISH       ( ( uint8_t ) 0x30U )   /**< @brief PUBLISH (bidirectional). */
+#define MQTT_PACKET_TYPE_PUBACK        ( ( uint8_t ) 0x40U )   /**< @brief PUBACK (bidirectional). */
+#define MQTT_PACKET_TYPE_PUBREC        ( ( uint8_t ) 0x50U )   /**< @brief PUBREC (bidirectional). */
+#define MQTT_PACKET_TYPE_PUBREL        ( ( uint8_t ) 0x62U )   /**< @brief PUBREL (bidirectional). */
+#define MQTT_PACKET_TYPE_PUBCOMP       ( ( uint8_t ) 0x70U )   /**< @brief PUBCOMP (bidirectional). */
+#define MQTT_PACKET_TYPE_SUBACK        ( ( uint8_t ) 0x90U )   /**< @brief SUBACK (server-to-client). */
+#define MQTT_PACKET_TYPE_UNSUBACK      ( ( uint8_t ) 0xB0U )   /**< @brief UNSUBACK (server-to-client). */
+#define MQTT_PACKET_TYPE_PINGRESP      ( ( uint8_t ) 0xD0U )   /**< @brief PINGRESP (server-to-client). */
+#define MQTT_PACKET_TYPE_DISCONNECT    ( ( uint8_t ) 0xE0U )   /**< @brief DISCONNECT (client-to-server). */
 
 struct MQTTFixedBuffer;
 typedef struct MQTTFixedBuffer     MQTTFixedBuffer_t;
@@ -201,6 +201,11 @@ struct MqttPublishInfo
      * @brief Whether this is a retained message.
      */
     bool retain;
+
+    /**
+     * @brief Whether this is a duplicate publish message.
+     */
+    bool dup;
 
     /**
      * @brief Topic name on which the message is published.
@@ -430,4 +435,4 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( MQTTTransportRecvFunc_t readFu
                                                   MQTTNetworkContext_t networkContext,
                                                   MQTTPacketInfo_t * pIncomingPacket );
 
-#endif
+#endif /* ifndef MQTT_LIGHTWEIGHT_H */
