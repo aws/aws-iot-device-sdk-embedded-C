@@ -3,7 +3,7 @@
 # -------------------------------------------------------------------------------------------------
 # unity - test framework
 if(EXISTS "${3RDPARTY_DIR}/unity")
-    afr_3rdparty_module(unity)
+    add_library(3rdparty::unity INTERFACE IMPORTED GLOBAL)
     target_sources(
         3rdparty::unity INTERFACE
         "${3RDPARTY_DIR}/unity/src/unity.c"

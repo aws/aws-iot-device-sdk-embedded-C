@@ -1,5 +1,5 @@
 # Add standard modules
-file(GLOB standard_modules "${AFR_MODULES_DIR}/standard/*")
+file(GLOB standard_modules "${MODULES_DIR}/standard/*")
 foreach(module IN LISTS standard_modules)
     if(IS_DIRECTORY "${module}" AND EXISTS "${module}/CMakeLists.txt")
         add_subdirectory(${module})

@@ -30,14 +30,7 @@ list(APPEND real_source_files
 list(APPEND real_include_directories
             .
             ../include
-            "${3rdparty_dir}/lwip/src/include"
-            "${3rdparty_dir}/lwip/contrib/ports/unix/lib"
-            "${3rdparty_dir}/lwip/contrib/ports/unix/port/include"
-            "${abstraction_dir}/wifi/include"
-            "${AFR_ROOT_DIR}/libraries/c_sdk/standard/common/include"
-            "${AFR_ROOT_DIR}/libraries/freertos_plus/standard/tls/include"
-            "${AFR_ROOT_DIR}/freertos_kernel/include/"
-            "${CMAKE_CURRENT_BINARY_DIR}/mocks"
+            ../src
         )
 
 # =====================  Create UnitTest Code here (edit)  =====================
@@ -45,8 +38,8 @@ list(APPEND real_include_directories
 # list the directories your test needs to include
 list(APPEND test_include_directories
             ../include
-            "${AFR_MODULES_DIR}/standard/http/include"
-            "${AFR_MODULES_DIR}/standard/http/src/private"
+            "${MODULES_DIR}/standard/http/include"
+            "${MODULES_DIR}/standard/http/src/private"
         )
 
 # =============================  (end edit)  ===================================
