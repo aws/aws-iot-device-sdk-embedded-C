@@ -3,8 +3,8 @@
 #include "common.h"
 
 /* Functions are pulled out into their own C files to be tested as a unit. */
-#include "_writeRequestLine.c"
-#include "_addHeader.c"
+#include "writeRequestLine.c"
+#include "addHeader.c"
 #include "HTTPClient_InitializeRequestHeaders.c"
 
 #define HTTP_TEST_REQUEST_METHOD        "GET"
