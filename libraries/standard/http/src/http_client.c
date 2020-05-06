@@ -171,12 +171,12 @@ static HTTPStatus_t_t writeRequestLine( HTTPRequestHeaders_t * pRequestHeaders,
  * @param[in] statusCode The status code associated with the response. It is
  * ignored by the callback.
  */
-static void readHeaderCallback( void * pContext,
-                                const char * fieldLoc,
-                                size_t fieldLen,
-                                const char * valueLoc,
-                                size_t valueLen,
-                                uint16_t statusCode );
+static void readHeaderParsingCallback( void * pContext,
+                                       const char * fieldLoc,
+                                       size_t fieldLen,
+                                       const char * valueLoc,
+                                       size_t valueLen,
+                                       uint16_t statusCode );
 
 /*-----------------------------------------------------------*/
 
@@ -970,12 +970,12 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
 
 /*-----------------------------------------------------------*/
 
-static void readHeaderCallback( void * pContext,
-                                const char * fieldLoc,
-                                size_t fieldLen,
-                                const char * valueLoc,
-                                size_t valueLen,
-                                uint16_t statusCode )
+static void readHeaderParsingCallback( void * pContext,
+                                       const char * fieldLoc,
+                                       size_t fieldLen,
+                                       const char * valueLoc,
+                                       size_t valueLen,
+                                       uint16_t statusCode )
 {
     readHeaderContext_t * pInfo = ( readHeaderContext_t * ) pContext;
 
@@ -1029,7 +1029,7 @@ HTTPStatus_t HTTPClient_ReadHeader( const HTTPResponse_t * pResponse,
 
     HTTPClient_HeaderParsingCallback_t parsingCallback =
     {
-        .onHeaderCallback = readHeaderCallback,
+        .onHeaderCallback = readHeaderParsingCallback,
         .pContext         = &context
     };
 
@@ -1075,9 +1075,12 @@ HTTPStatus_t HTTPClient_ReadHeader( const HTTPResponse_t * pResponse,
         /* Empty else for MISRA 15.7 compliance. */
     }
 
-    /* Initialize Parsing context with our callback. */
-    returnStatus = HTTPClient_InitializeParsingContext( &parsingContext,
-                                                        &parsingCallback );
+    if( returnStatus == HTTP_SUCCESS )
+    {
+        /* Initialize Parsing context with our callback. */
+        returnStatus = HTTPClient_InitializeParsingContext( &parsingContext,
+                                                            &parsingCallback );
+    }
 
     if( returnStatus == HTTP_SUCCESS )
     {
@@ -1109,7 +1112,7 @@ HTTPStatus_t HTTPClient_ReadHeader( const HTTPResponse_t * pResponse,
                              "HeaderName=%.*s", pHeaderName, headerNameLen );
     }
 
-    return HTTP_NOT_SUPPORTED;
+    return returnStatus;
 }
 
 /*-----------------------------------------------------------*/

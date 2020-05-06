@@ -5,7 +5,7 @@ CSDK_ROOT = ../../../..
 SOURCE = ../src
 
 # Show extra warnings.
-CFLAGS += -Wextra
+CFLAGS += -Wextra -O0 -ggdb
 
 # arguments given to the compiler (default: see the included file)
 #CFLAGS = std=c99 -Wall -fprofile-arcs -ftest-coverage -O0 -ggdb
@@ -36,7 +36,8 @@ FUNCTIONS = addHeader \
 			receiveAndParseHttpResponse \
 			HTTPClient_InitializeParsingContext \
 			HTTPClient_ParseResponse \
-			getFinalResponseStatus
+			getFinalResponseStatus \
+			readHeaderParsingCallback
 
 # Changes to the above variables should remain above this include.
 include Mock4thewin.mk
@@ -55,6 +56,7 @@ HTTPClient_Send.c: sendHttpHeaders.c \
 				   HTTPClient_ParseResponse.c \
 				   getFinalResponseStatus.c
 HTTPClient_InitializeRequestHeaders.c: writeRequestLine.c addHeader.c
+HTTPClient_ReadHeader.c: readHeaderParsingCallback.c
 
 # additional header dependencies for all tests
 COMMON = common.h
