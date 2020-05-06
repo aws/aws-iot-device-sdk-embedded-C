@@ -380,8 +380,11 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * const pContext )
         status = MQTTBadParameter;
     }
 
-    /* Serialize MQTT ping request. */
-    status = MQTT_SerializePingreq( &( pContext->networkBuffer ) );
+    if( status == MQTTSuccess )
+    {
+        /* Serialize MQTT ping request. */
+        status = MQTT_SerializePingreq( &( pContext->networkBuffer ) );
+    }
 
     if( status == MQTTSuccess )
     {
