@@ -98,8 +98,8 @@ if( ${BUILD_TESTS} )
     target_link_libraries(cmock unity)
 
     add_custom_target(coverage
-            COMMAND make && ${CMAKE_COMMAND} -P ${CMAKE_SOURCE_DIR}/tools/cmock/coverage.cmake
-            DEPENDS http_utest cmock unity
+            COMMAND ${CMAKE_COMMAND} -P ${CMAKE_SOURCE_DIR}/tools/cmock/coverage.cmake
+            DEPENDS cmock unity http_utest mqtt_utest
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
             )
 endif()

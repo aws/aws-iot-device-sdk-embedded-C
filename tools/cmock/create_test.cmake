@@ -1,4 +1,3 @@
-
 #function to create the test executable
 function(create_test test_name
                      test_src
@@ -17,7 +16,7 @@ function(create_test test_name
                   DEPENDS ${test_src}
         )
     add_executable(${test_name} ${test_src} ${test_name}_runner.c)
-    target_link_libraries(${test_name} unity)
+    target_link_libraries(${test_name} cmock)
     set_target_properties(${test_name} PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/tests"
             INSTALL_RPATH_USE_LINK_PATH TRUE
@@ -135,7 +134,6 @@ function(create_mock_list mock_name
     target_compile_definitions(${mock_name} PUBLIC
             ${mock_define_list}
         )
-    target_link_libraries(${mock_name} libcmock.a libunity.a)
 endfunction()
 
 
