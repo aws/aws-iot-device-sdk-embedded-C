@@ -2,6 +2,8 @@
 
 #include "unity.h"
 
+#include "mock_mqtt_lightweight.h"
+
 /* Include paths for public enums, structures, and macros. */
 #include "mqtt.h"
 
@@ -25,8 +27,11 @@ int suiteTearDown( int numFailures )
 {
 }
 
-/* ============================   Testing ============================ */
-void test_Mqtt_blahblahblah( void )
+/* ============================   Testing MQTT_Connect ====================== */
+void test_Mqtt_connect_packet_size_gt_max( void )
 {
-    TEST_ASSERT_EQUAL( 1, 1 );
+    /* This mocked method will be called inside MQTT_Connect(...). */
+    MQTT_GetConnectPacketSize_ExpectAnyArgsAndReturn( MQTTBadParameter );
+
+    TEST_ASSERT_EQUAL( MQTT_Connect( NULL, NULL, NULL, NULL ), MQTTBadParameter );
 }

@@ -5,6 +5,3 @@ foreach(module IN LISTS standard_modules)
         add_subdirectory(${module})
     endif()
 endforeach()
-
-# Add 3rdparty modules
-add_subdirectory(${3RDPARTY_DIR})

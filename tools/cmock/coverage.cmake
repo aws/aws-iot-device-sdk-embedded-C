@@ -20,6 +20,7 @@ execute_process( COMMAND lcov --directory ${CMAKE_BINARY_DIR}
 file(GLOB files "${CMAKE_BINARY_DIR}/bin/tests/*")
 
 set(REPORT_FILE ${CMAKE_BINARY_DIR}/utest_report.txt)
+file(WRITE ${REPORT_FILE} "")
 # execute all files in bin directory, gathering the output to show it in CI
 foreach(testname ${files})
     get_filename_component(test
@@ -30,7 +31,7 @@ foreach(testname ${files})
     execute_process(COMMAND ${testname} OUTPUT_FILE ${CMAKE_BINARY_DIR}/${test}_out.txt)
 
     file(READ ${CMAKE_BINARY_DIR}/${test}_out.txt CONTENTS)
-    file(WRITE ${REPORT_FILE} "${CONTENTS}")
+    file(APPEND ${REPORT_FILE} "${CONTENTS}")
 endforeach()
 
 # generage Junit style xml output

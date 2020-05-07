@@ -9,7 +9,7 @@ set(project_name "mqtt")
 
 # list the files to mock here
 list(APPEND mock_list
-            "${MODULES_DIR}/standard/mqtt/include/mqtt.h"
+            "${MODULES_DIR}/standard/mqtt/include/mqtt_lightweight.h"
         )
 # list the directories your mocks need
 list(APPEND mock_include_list
@@ -50,7 +50,7 @@ set(real_name "${project_name}_real")
 
 create_mock_list(${mock_name}
                 "${mock_list}"
-                "${CMAKE_SOURCE_DIR}/tools/cmock/project.yml"
+                "${ROOT_DIR}/tools/cmock/project.yml"
                 "${mock_include_list}"
                 "${mock_define_list}"
         )
@@ -62,6 +62,7 @@ create_real_library(${real_name}
         )
 
 list(APPEND utest_link_list
+            -l${mock_name}
             lib${real_name}.a
         )
 
