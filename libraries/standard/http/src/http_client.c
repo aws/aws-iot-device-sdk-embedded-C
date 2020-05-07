@@ -920,7 +920,7 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
         }
         else
         {
-            IotLogDebug( "Response ignored: pResponse is NULL. " );
+            IotLogDebug( "Response ignored: pResponse is NULL." );
         }
     }
 
@@ -930,18 +930,171 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
 /*-----------------------------------------------------------*/
 
 HTTPStatus_t HTTPClient_ReadHeader( const HTTPResponse_t * pResponse,
-                                    const char * pName,
-                                    size_t nameLen,
-                                    char ** pValue,
-                                    size_t * valueLen )
+                                    const uint8_t * pHeaderName,
+                                    size_t headerNameLen,
+                                    const uint8_t ** pHeaderValueLoc,
+                                    size_t * pHeaderValueLen )
 {
-    /* Disable unused parameter warnings. */
-    ( void ) pResponse;
-    ( void ) pName;
-    ( void ) nameLen;
-    ( void ) pValue;
-    ( void ) valueLen;
-    return HTTP_NOT_SUPPORTED;
+    HTTPStatus_t returnStatus = HTTP_SUCCESS;
+    HTTPParsingContext_t parsingContext;
+
+    memset( &parsingContext, 0, sizeof( HTTPParsingContext_t ) );
+
+    if( pResponse == NULL )
+    {
+        IotLogError( "Parameter check failed: pResponse is NULL." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( pResponse->pBuffer == NULL )
+    {
+        IotLogError( "Parameter check failed: pResponse->pBuffer is NULL." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( pResponse->bufferLen == 0u )
+    {
+        IotLogError( "Parameter check failed: pResponse->bufferLen is 0: "
+                     "Buffer len should be > 0." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( pHeaderName == NULL )
+    {
+        IotLogError( "Parameter check failed: Input header name is NULL." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( headerNameLen == 0u )
+    {
+        IotLogError( "Parameter check failed: Input header name length is 0: "
+                     "headerNameLen should be > 0." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( pHeaderValueLoc == NULL )
+    {
+        IotLogError( "Parameter check failed: Output parameter for header value location is NULL." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( pHeaderValueLen == NULL )
+    {
+        IotLogError( "Parameter check failed: Output parameter for header value length is NULL." );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else
+    {
+        /* Empty else for MISRA 15.7 compliance. */
+    }
+
+    if( returnStatus == HTTP_SUCCESS )
+    {
+        /* Initialize Parsing context with our callback. */
+        returnStatus = HTTPClient_InitializeParsingContext( &parsingContext, NULL );
+    }
+
+    if( returnStatus == HTTP_SUCCESS )
+    {
+        returnStatus = HTTPClient_FindHeaderInResponse( &parsingContext,
+                                                        pResponse->pBuffer,
+                                                        pResponse->bufferLen,
+                                                        pHeaderName,
+                                                        headerNameLen,
+                                                        pHeaderValueLoc,
+                                                        pHeaderValueLen );
+
+        if( returnStatus == HTTP_SUCCESS )
+        {
+            /* Header value found present in buffer. */
+            IotLogDebugWithArgs( "Found requested header in response: "
+                                 "HeaderName=%.*s, ValueLoc=%.*s",
+                                 headerNameLen, pHeaderName,
+                                 *pHeaderValueLen, *pHeaderValueLoc );
+        }
+        else if( returnStatus == HTTP_HEADER_NOT_FOUND )
+        {
+            /* Header is not present in buffer. */
+            IotLogWarnWithArgs( "Header field not found in response buffer: "
+                                "HeaderName=%.*s", headerNameLen, pHeaderName );
+        }
+        else
+        {
+            IotLogErrorWithArgs( "Unable to read header from response: "
+                                 "Failure in parsing response for header field: "
+                                 "HeaderName=%.*s, ParserError=%s",
+                                 headerNameLen, pHeaderName,
+                                 HTTPClient_strerror( returnStatus ) );
+        }
+    }
+    else
+    {
+        IotLogErrorWithArgs( "Failed to read header from response: "
+                             "Unable to initialize parsing context: "
+                             "HeaderName=%.*s", headerNameLen, pHeaderName );
+    }
+
+    return returnStatus;
 }
+
+/*-----------------------------------------------------------*/
+
+const char * HTTPClient_strerror( HTTPStatus_t status )
+{
+    const char * str = NULL;
+
+    switch( status )
+    {
+        case HTTP_SUCCESS:
+            str = "HTTP_SUCCESS";
+            break;
+
+        case HTTP_INVALID_PARAMETER:
+            str = "HTTP_INVALID_PARAMETER";
+            break;
+
+        case HTTP_NETWORK_ERROR:
+            str = "HTTP_NETWORK_ERROR";
+            break;
+
+        case HTTP_PARTIAL_RESPONSE:
+            str = "HTTP_PARTIAL_RESPONSE";
+            break;
+
+        case HTTP_NO_RESPONSE:
+            str = "HTTP_NO_RESPONSE";
+            break;
+
+        case HTTP_INSUFFICIENT_MEMORY:
+            str = "HTTP_INSUFFICIENT_MEMORY";
+            break;
+
+        case HTTP_INTERNAL_ERROR:
+            str = "HTTP_INTERNAL_ERROR";
+            break;
+
+        case HTTP_SECURITY_ALERT_RESPONSE_HEADERS_SIZE_LIMIT_EXCEEDED:
+            str = "HTTP_SECURITY_ALERT_RESPONSE_HEADERS_SIZE_LIMIT_EXCEEDED";
+            break;
+
+        case HTTP_SECURITY_ALERT_PARSER_INVALID_CHARACTER:
+            str = "HTTP_SECURITY_ALERT_PARSER_INVALID_CHARACTER";
+            break;
+
+        case HTTP_SECURITY_ALERT_INVALID_CONTENT_LENGTH:
+            str = "HTTP_SECURITY_ALERT_INVALID_CONTENT_LENGTH";
+            break;
+
+        case HTTP_HEADER_NOT_FOUND:
+            str = "HTTP_HEADER_NOT_FOUND";
+            break;
+
+        case HTTP_NOT_SUPPORTED:
+            str = "HTTP_NOT_SUPPORTED";
+            break;
+
+        default:
+            IotLogWarnWithArgs( "Invalid status code received for string conversion: "
+                                "StatusCode=%d", status );
+    }
+
+    return str;
+}
+
+
 
 /*-----------------------------------------------------------*/
