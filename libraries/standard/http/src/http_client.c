@@ -154,31 +154,6 @@ static HTTPStatus_t writeRequestLine( HTTPRequestHeaders_t * pRequestHeaders,
                                       const char * pPath,
                                       size_t pathLen );
 
-/**
- * @brief Parsing callback for the HTTPClient_ReadHeader API function.
- *
- * It checks whether the parsed header matches the user-requested header
- * value to read from the buffer, and if there is a match, populates the
- * user-provided output parameters with the location of the header value
- * in the response buffer.
- *
- * @param[in, out] pContext The context containing the requested header field name,
- * and user-provided output parameters for storing the header value information.
- * @param[in] fieldLoc The location of the field name of the parsed header in the
- * response buffer.
- * @param[in] fieldLen The size of the header field.
- * @param[in] valueLoc The location of the parsed header value in the response
- * buffer.
- * @param[in] statusCode The status code associated with the response. It is
- * ignored by the callback.
- */
-static void readHeaderParsingCallback( void * pContext,
-                                       const uint8_t * fieldLoc,
-                                       size_t fieldLen,
-                                       const uint8_t * valueLoc,
-                                       size_t valueLen,
-                                       uint16_t statusCode );
-
 /*-----------------------------------------------------------*/
 
 static uint8_t convertInt32ToAscii( int32_t value,
@@ -970,50 +945,6 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
 
 /*-----------------------------------------------------------*/
 
-static void readHeaderParsingCallback( void * pContext,
-                                       const uint8_t * fieldLoc,
-                                       size_t fieldLen,
-                                       const uint8_t * valueLoc,
-                                       size_t valueLen,
-                                       uint16_t statusCode )
-{
-    readHeaderContext_t * pInfo = ( readHeaderContext_t * ) pContext;
-
-    /* Disable unused parameter warning. */
-    ( void ) statusCode;
-
-    assert( pContext != NULL );
-    assert( fieldLoc != NULL );
-    assert( valueLoc != NULL );
-
-    assert( pInfo->pHeaderName != NULL );
-    assert( pInfo->pHeaderValueLoc != NULL );
-    assert( pInfo->pHeaderValueLen != NULL );
-
-    /* Check whether the parsed header matches the header we are looking for. */
-    if( ( fieldLen == pInfo->headerNameLen ) && ( memcmp( pInfo->pHeaderName, fieldLoc, fieldLen ) == 0 ) )
-    {
-        IotLogDebugWithArgs( "Found header in response buffer: "
-                             "HeaderName=%.*s, HeaderLocation=0x%d, HeaderVal=%.*s",
-                             fieldLen, pInfo->pHeaderName,
-                             fieldLoc,
-                             valueLen, valueLoc );
-
-        /* Populate the output parameters with the location of the header value in the response buffer. */
-        *pInfo->pHeaderValueLoc = valueLoc;
-        *pInfo->pHeaderValueLen = valueLen;
-
-        /* Set the flag to indicate that header has been found in response. */
-        pInfo->headerFound = 1u;
-    }
-    else
-    {
-        /* Empty else for MISRA 15.7 compliance. */
-    }
-}
-
-/*-----------------------------------------------------------*/
-
 HTTPStatus_t HTTPClient_ReadHeader( const HTTPResponse_t * pResponse,
                                     const uint8_t * pHeaderName,
                                     size_t headerNameLen,
@@ -1022,20 +953,6 @@ HTTPStatus_t HTTPClient_ReadHeader( const HTTPResponse_t * pResponse,
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
     HTTPParsingContext_t parsingContext;
-    readHeaderContext_t context =
-    {
-        .pHeaderName     = pHeaderName,
-        .headerNameLen   = headerNameLen,
-        .pHeaderValueLoc = pHeaderValueLoc,
-        .pHeaderValueLen = pHeaderValueLen,
-        .headerFound     = 0u
-    };
-
-    HTTPClient_HeaderParsingCallback_t parsingCallback =
-    {
-        .onHeaderCallback = readHeaderParsingCallback,
-        .pContext         = &context
-    };
 
     memset( &parsingContext, 0, sizeof( HTTPParsingContext_t ) );
 
@@ -1082,37 +999,39 @@ HTTPStatus_t HTTPClient_ReadHeader( const HTTPResponse_t * pResponse,
     if( returnStatus == HTTP_SUCCESS )
     {
         /* Initialize Parsing context with our callback. */
-        returnStatus = HTTPClient_InitializeParsingContext( &parsingContext,
-                                                            &parsingCallback );
+        returnStatus = HTTPClient_InitializeParsingContext( &parsingContext, NULL );
     }
 
     if( returnStatus == HTTP_SUCCESS )
     {
-        returnStatus = HTTPClient_ParseResponse( &parsingContext,
-                                                 pResponse->pBuffer,
-                                                 pResponse->bufferLen );
+        returnStatus = HTTPClient_FindHeaderInResponse( &parsingContext,
+                                                        pResponse->pBuffer,
+                                                        pResponse->bufferLen,
+                                                        pHeaderName,
+                                                        headerNameLen,
+                                                        pHeaderValueLoc,
+                                                        pHeaderValueLen );
 
-        if( returnStatus != HTTP_SUCCESS )
-        {
-            IotLogErrorWithArgs( "Unable to read header from response: "
-                                 "Failure in parsing response for header field: "
-                                 "HeaderName=%.*s", pHeaderName, headerNameLen );
-        }
-        else if( context.headerFound == 0u )
-        {
-            /* Header is not present in buffer. */
-            IotLogWarnWithArgs( "Unable to read header from response: "
-                                "Header field not found in response buffer: "
-                                "HeaderName=%.*s", pHeaderName, headerNameLen );
-            returnStatus = HTTP_HEADER_NOT_FOUND;
-        }
-        else
+        if( returnStatus == HTTP_SUCCESS )
         {
             /* Header value found present in buffer. */
             IotLogDebugWithArgs( "Found requested header in response: "
                                  "HeaderName=%.*s, ValueLoc=%.*s",
                                  headerNameLen, pHeaderName,
                                  *pHeaderValueLen, *pHeaderValueLoc );
+        }
+        else if( returnStatus == HTTP_HEADER_NOT_FOUND )
+        {
+            /* Header is not present in buffer. */
+            IotLogWarnWithArgs( "Unable to read header from response: "
+                                "Header field not found in response buffer: "
+                                "HeaderName=%.*s", pHeaderName, headerNameLen );
+        }
+        else
+        {
+            IotLogErrorWithArgs( "Unable to read header from response: "
+                                 "Failure in parsing response for header field: "
+                                 "HeaderName=%.*s", pHeaderName, headerNameLen );
         }
     }
     else
