@@ -397,7 +397,9 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * const pContext,
                                     packetId );
         if( status == MQTTSuccess )
         {
-            bytesSent = sendPacket( pContext, MQTT_PUBLISH_ACK_PACKET_SIZE );
+            bytesSent = sendPacket( pContext,
+                                    pContext->networkBuffer.pBuffer,
+                                    MQTT_PUBLISH_ACK_PACKET_SIZE );
         }
 
         if( bytesSent == MQTT_PUBLISH_ACK_PACKET_SIZE )
