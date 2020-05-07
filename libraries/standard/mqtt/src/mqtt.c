@@ -89,14 +89,14 @@ static int32_t sendPacket( MQTTContext_t * pContext,
             totalBytesSent += bytesSent;
             pIndex += bytesSent;
             IotLogDebugWithArgs( "Bytes sent=%d, bytes remaining=%ul,"
-                                 "total bytes sent=%d ",
+                                 "total bytes sent=%d.",
                                  bytesSent,
                                  bytesRemaining,
                                  totalBytesSent );
         }
         else
         {
-            IotLogError( "Transport send failed. " );
+            IotLogError( "Transport send failed." );
             totalBytesSent = -1;
             break;
         }
@@ -106,7 +106,7 @@ static int32_t sendPacket( MQTTContext_t * pContext,
     if( totalBytesSent > -1 )
     {
         pContext->lastPacketTime = sendTime;
-        IotLogDebugWithArgs( "Successfully sent packet at time %u",
+        IotLogDebugWithArgs( "Successfully sent packet at time %u.",
                              sendTime );
     }
 
@@ -182,7 +182,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
     if( ( pContext == NULL ) || ( pConnectInfo == NULL ) )
     {
         IotLogErrorWithArgs( "Argument cannot be NULL: pContext=%p, "
-                             "pConnectInfo=%p",
+                             "pConnectInfo=%p.",
                              pContext,
                              pConnectInfo );
         status = MQTTBadParameter;
@@ -195,7 +195,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
                                             pWillInfo,
                                             &remainingLength,
                                             &packetSize );
-        IotLogDebugWithArgs( "CONNECT packet size is %lu and remaining length is %lu",
+        IotLogDebugWithArgs( "CONNECT packet size is %lu and remaining length is %lu.",
                              packetSize,
                              remainingLength );
     }
@@ -221,6 +221,11 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
             IotLogError( "Transport send failed for CONNECT packet." );
             status = MQTTSendFailed;
         }
+        else
+        {
+            IotLogDebugWithArgs( "Sent %d bytes of CONNECT packet.",
+                                 bytesSent );
+        }
     }
 
     if( status == MQTTSuccess )
@@ -233,9 +238,6 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
 
     if( status == MQTTSuccess )
     {
-        IotLogDebugWithArgs( "Received packet type %u from transport recv.",
-                             incomingPacket.type );
-
         /* Check if received packet type is CONNACK and deserialize it. */
         if( incomingPacket.type == MQTT_PACKET_TYPE_CONNACK )
         {
@@ -532,15 +534,15 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * const pContext )
 
     if( status == MQTTSuccess )
     {
-        /* Get MQTT disconnect packet size. */
+        /* Get MQTT DISCONNECT packet size. */
         status = MQTT_GetDisconnectPacketSize( &packetSize );
-        IotLogDebugWithArgs( "MQTT disconnect packet size is %lu",
+        IotLogDebugWithArgs( "MQTT DISCONNECT packet size is %lu.",
                              packetSize );
     }
 
     if( status == MQTTSuccess )
     {
-        /* Serialize MQTT disconnect packet. */
+        /* Serialize MQTT DISCONNECT packet. */
         status = MQTT_SerializeDisconnect( &( pContext->networkBuffer ) );
     }
 
@@ -554,8 +556,13 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * const pContext )
 
         if( bytesSent < 0 )
         {
-            IotLogError( "Transport send failed for disconnect packet." );
+            IotLogError( "Transport send failed for DISCONNECT packet." );
             status = MQTTSendFailed;
+        }
+        else
+        {
+            IotLogDebugWithArgs( "Sent %d bytes of DISCONNECT packet.",
+                                 bytesSent );
         }
     }
 

@@ -228,6 +228,20 @@ static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTSubscribeInfo_
                                                         size_t remainingLength,
                                                         const MQTTFixedBuffer_t * const pBuffer );
 
+/**
+ * @brief Serialize an MQTT CONNECT packet in the given buffer.
+ *
+ * @param[in] pConnectInfo MQTT CONNECT packet parameters.
+ * @param[in] pWillInfo Last Will and Testament. Pass NULL if not used.
+ * @param[in] remainingLength Remaining Length of MQTT CONNECT packet.
+ * @param[out] pBuffer Buffer for packet serialization.
+ *
+ */
+static void serializeConnectPacket( const MQTTConnectInfo_t * const pConnectInfo,
+                                    const MQTTPublishInfo_t * const pWillInfo,
+                                    size_t remainingLength,
+                                    const MQTTFixedBuffer_t * const pBuffer );
+
 /*-----------------------------------------------------------*/
 
 static size_t remainingLengthEncodedSize( size_t length )
@@ -258,7 +272,7 @@ static size_t remainingLengthEncodedSize( size_t length )
         encodedSize = 4U;
     }
 
-    IotLogDebugWithArgs( "Encoded size for length =%ul is %ul",
+    IotLogDebugWithArgs( "Encoded size for length =%ul is %ul.",
                          length,
                          encodedSize );
 
@@ -1170,6 +1184,119 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * const pPingres
 
 /*-----------------------------------------------------------*/
 
+static void serializeConnectPacket( const MQTTConnectInfo_t * const pConnectInfo,
+                                    const MQTTPublishInfo_t * const pWillInfo,
+                                    size_t remainingLength,
+                                    const MQTTFixedBuffer_t * const pBuffer )
+{
+    uint8_t connectFlags = 0;
+    uint8_t * pIndex = NULL;
+
+    assert( pConnectInfo != NULL );
+    assert( pBuffer != NULL );
+
+    pIndex = pBuffer->pBuffer;
+    /* The first byte in the CONNECT packet is the control packet type. */
+    *pIndex = MQTT_PACKET_TYPE_CONNECT;
+    pIndex++;
+
+    /* The remaining length of the CONNECT packet is encoded starting from the
+     * second byte. The remaining length does not include the length of the fixed
+     * header or the encoding of the remaining length. */
+    pIndex = encodeRemainingLength( pIndex, remainingLength );
+
+    /* The string "MQTT" is placed at the beginning of the CONNECT packet's variable
+     * header. This string is 4 bytes long. */
+    pIndex = encodeString( pIndex, "MQTT", 4 );
+
+    /* The MQTT protocol version is the second field of the variable header. */
+    *pIndex = MQTT_VERSION_3_1_1;
+    pIndex++;
+
+    /* Set the clean session flag if needed. */
+    if( pConnectInfo->cleanSession == true )
+    {
+        UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_CLEAN );
+    }
+
+    /* Set the flags for username and password if provided. */
+    if( pConnectInfo->pUserName != NULL )
+    {
+        UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_USERNAME );
+    }
+
+    if( pConnectInfo->pPassword != NULL )
+    {
+        UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_PASSWORD );
+    }
+
+    /* Set will flag if a Last Will and Testament is provided. */
+    if( pWillInfo != NULL )
+    {
+        UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_WILL );
+
+        /* Flags only need to be changed for Will QoS 1 or 2. */
+        if( pWillInfo->qos == MQTTQoS1 )
+        {
+            UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_WILL_QOS1 );
+        }
+        else if( pWillInfo->qos == MQTTQoS2 )
+        {
+            UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_WILL_QOS2 );
+        }
+
+        if( pWillInfo->retain == true )
+        {
+            UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_WILL_RETAIN );
+        }
+    }
+
+    *pIndex = connectFlags;
+    pIndex++;
+
+    /* Write the 2 bytes of the keep alive interval into the CONNECT packet. */
+    *pIndex = UINT16_HIGH_BYTE( pConnectInfo->keepAliveSeconds );
+    *( pIndex + 1 ) = UINT16_LOW_BYTE( pConnectInfo->keepAliveSeconds );
+    pIndex += 2;
+
+    /* Write the client identifier into the CONNECT packet. */
+    pIndex = encodeString( pIndex,
+                           pConnectInfo->pClientIdentifier,
+                           pConnectInfo->clientIdentifierLength );
+
+    /* Write the will topic name and message into the CONNECT packet if provided. */
+    if( pWillInfo != NULL )
+    {
+        pIndex = encodeString( pIndex,
+                               pWillInfo->pTopicName,
+                               pWillInfo->topicNameLength );
+        pIndex = encodeString( pIndex,
+                               pWillInfo->pPayload,
+                               ( uint16_t ) pWillInfo->payloadLength );
+    }
+
+    /* Encode the user name if provided. */
+    if( pConnectInfo->pUserName != NULL )
+    {
+        pIndex = encodeString( pIndex, pConnectInfo->pUserName, pConnectInfo->userNameLength );
+    }
+
+    /* Encode the password if provided. */
+    if( pConnectInfo->pPassword != NULL )
+    {
+        pIndex = encodeString( pIndex, pConnectInfo->pPassword, pConnectInfo->passwordLength );
+    }
+
+    IotLogDebugWithArgs( "Length of serialized CONNECT packet is %lu.",
+                         ( ( size_t ) ( pIndex - pBuffer->pBuffer ) ) );
+
+    /* Ensure that the difference between the end and beginning of the buffer
+     * is less than the buffer size. */
+    assert( ( ( size_t ) ( pIndex - pBuffer->pBuffer ) ) <= pBuffer->size );
+}
+
+/*-----------------------------------------------------------*/
+
 MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * const pConnectInfo,
                                         const MQTTPublishInfo_t * const pWillInfo,
                                         size_t * const pRemainingLength,
@@ -1186,7 +1313,7 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * const pConnect
         ( pPacketSize == NULL ) )
     {
         IotLogErrorWithArgs( "Argument cannot be NULL: pConnectInfo=%p, "
-                             "pRemainingLength=%p, pPacketSize=%p",
+                             "pRemainingLength=%p, pPacketSize=%p.",
                              pConnectInfo,
                              pRemainingLength,
                              pPacketSize );
@@ -1235,7 +1362,7 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * const pConnect
             *pPacketSize = connectPacketSize;
         }
 
-        IotLogDebugWithArgs( "CONNECT packet remaining length=%lu and packet size=%lu",
+        IotLogDebugWithArgs( "CONNECT packet remaining length=%lu and packet size=%lu.",
                              *pRemainingLength,
                              *pPacketSize );
     }
@@ -1251,8 +1378,6 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * const pConnectInfo
                                     const MQTTFixedBuffer_t * const pBuffer )
 {
     MQTTStatus_t status = MQTTSuccess;
-    uint8_t connectFlags = 0;
-    uint8_t * pIndex = NULL;
 
     /* Calculate CONNECT packet size. */
     size_t connectPacketSize = remainingLength + remainingLengthEncodedSize( remainingLength ) + 1U;
@@ -1261,7 +1386,7 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * const pConnectInfo
     if( ( pConnectInfo == NULL ) || ( pBuffer == NULL ) )
     {
         IotLogErrorWithArgs( "Argument cannot be NULL: pConnectInfo=%p, "
-                             "pBuffer=%p",
+                             "pBuffer=%p.",
                              pConnectInfo,
                              pBuffer );
         status = MQTTBadParameter;
@@ -1269,105 +1394,18 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * const pConnectInfo
     /* Check that the full packet size fits within the given buffer. */
     else if( connectPacketSize > pBuffer->size )
     {
-        IotLogError( "Insufficient memory for packet." );
+        IotLogErrorWithArgs( "Buffer size of %lu is not sufficient to hold "
+                             "serialized CONNECT packet of size of %lu.",
+                             pBuffer->size,
+                             connectPacketSize );
         status = MQTTNoMemory;
     }
     else
     {
-        pIndex = pBuffer->pBuffer;
-        /* The first byte in the CONNECT packet is the control packet type. */
-        *pIndex = MQTT_PACKET_TYPE_CONNECT;
-        pIndex++;
-
-        /* The remaining length of the CONNECT packet is encoded starting from the
-         * second byte. The remaining length does not include the length of the fixed
-         * header or the encoding of the remaining length. */
-        pIndex = encodeRemainingLength( pIndex, remainingLength );
-
-        /* The string "MQTT" is placed at the beginning of the CONNECT packet's variable
-         * header. This string is 4 bytes long. */
-        pIndex = encodeString( pIndex, "MQTT", 4 );
-
-        /* The MQTT protocol version is the second field of the variable header. */
-        *pIndex = MQTT_VERSION_3_1_1;
-        pIndex++;
-
-        /* Set the clean session flag if needed. */
-        if( pConnectInfo->cleanSession == true )
-        {
-            UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_CLEAN );
-        }
-
-        /* Set the flags for username and password if provided. */
-        if( pConnectInfo->pUserName != NULL )
-        {
-            UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_USERNAME );
-        }
-
-        if( pConnectInfo->pPassword != NULL )
-        {
-            UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_PASSWORD );
-        }
-
-        /* Set will flag if a Last Will and Testament is provided. */
-        if( pWillInfo != NULL )
-        {
-            UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_WILL );
-
-            /* Flags only need to be changed for Will QoS 1 or 2. */
-            if( pWillInfo->qos == MQTTQoS1 )
-            {
-                UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_WILL_QOS1 );
-            }
-            else if( pWillInfo->qos == MQTTQoS2 )
-            {
-                UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_WILL_QOS2 );
-            }
-
-            if( pWillInfo->retain == true )
-            {
-                UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_WILL_RETAIN );
-            }
-        }
-
-        *pIndex = connectFlags;
-        pIndex++;
-
-        /* Write the 2 bytes of the keep alive interval into the CONNECT packet. */
-        *pIndex = UINT16_HIGH_BYTE( pConnectInfo->keepAliveSeconds );
-        *( pIndex + 1 ) = UINT16_LOW_BYTE( pConnectInfo->keepAliveSeconds );
-        pIndex += 2;
-
-        /* Write the client identifier into the CONNECT packet. */
-        pIndex = encodeString( pIndex,
-                               pConnectInfo->pClientIdentifier,
-                               pConnectInfo->clientIdentifierLength );
-
-        /* Write the will topic name and message into the CONNECT packet if provided. */
-        if( pWillInfo != NULL )
-        {
-            pIndex = encodeString( pIndex,
-                                   pWillInfo->pTopicName,
-                                   pWillInfo->topicNameLength );
-            pIndex = encodeString( pIndex,
-                                   pWillInfo->pPayload,
-                                   ( uint16_t ) pWillInfo->payloadLength );
-        }
-
-        /* Encode the user name if provided. */
-        if( pConnectInfo->pUserName != NULL )
-        {
-            pIndex = encodeString( pIndex, pConnectInfo->pUserName, pConnectInfo->userNameLength );
-        }
-
-        /* Encode the password if provided. */
-        if( pConnectInfo->pPassword != NULL )
-        {
-            pIndex = encodeString( pIndex, pConnectInfo->pPassword, pConnectInfo->passwordLength );
-        }
-
-        IotLogDebugWithArgs( "Length of serialized CONNECT packet is %lu ",
-                             ( ( size_t ) ( pIndex - pBuffer->pBuffer ) ) );
+        serializeConnectPacket( pConnectInfo,
+                                pWillInfo,
+                                remainingLength,
+                                pBuffer );
     }
 
     return status;
@@ -1805,7 +1843,7 @@ MQTTStatus_t MQTT_SerializeDisconnect( const MQTTFixedBuffer_t * const pBuffer )
     if( status == MQTTSuccess )
     {
         status = MQTT_GetDisconnectPacketSize( &disconnectPacketSize );
-        IotLogDebugWithArgs( "MQTT disconnect packet size is %ul",
+        IotLogDebugWithArgs( "MQTT DISCONNECT packet size is %ul.",
                              disconnectPacketSize );
     }
 
@@ -1813,7 +1851,10 @@ MQTTStatus_t MQTT_SerializeDisconnect( const MQTTFixedBuffer_t * const pBuffer )
     {
         if( pBuffer->size < disconnectPacketSize )
         {
-            IotLogError( "Insufficient memory for packet." );
+            IotLogErrorWithArgs( "Buffer size of %lu is not sufficient to hold "
+                                 "serialized DISCONNECT packet of size of %lu.",
+                                 pBuffer->size,
+                                 disconnectPacketSize );
             status = MQTTNoMemory;
         }
     }
