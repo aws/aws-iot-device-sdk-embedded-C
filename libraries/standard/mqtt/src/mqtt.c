@@ -27,14 +27,8 @@
 /**
  * @brief Sends provided buffer to network using transport send.
  *
- * This function sends #MQTTContext_t.networkBuffer.pBuffer by default to
- * network. If a non NULL address is passed to pBufferToSend, then pBufferToSend
- * will be sent to network instead of #MQTTContext_t.networkBuffer.pBuffer.
- *
  * @brief param[in] pContext Initialized MQTT context.
- * @brief param[in] pBufferToSend Optional buffer to be sent to network
- * instead of #MQTTContext_t.networkBuffer.pBuffer. Pass NULL to send
- * #MQTTContext_t.networkBuffer.pBuffer instead.
+ * @brief param[in] pBufferToSend Buffer to be sent to network.
  * @brief param[in] bytesToSend Number of bytes to be sent.
  *
  * @return Total number of bytes sent; -1 if there is an error.
@@ -43,18 +37,9 @@ static int32_t sendPacket( MQTTContext_t * pContext,
                            const uint8_t * pBufferToSend,
                            size_t bytesToSend )
 {
-    const uint8_t * pIndex = pContext->networkBuffer.pBuffer;
+    const uint8_t * pIndex = pBufferToSend;
     size_t bytesRemaining = bytesToSend;
     int32_t totalBytesSent = 0, bytesSent;
-
-    /* If the optional buffer is not null send that instead of networkBuffer.
-     * This is to support an optimization in publish to avoid copy of the
-     * payload into networkBuffer.
-     */
-    if( pBufferToSend != NULL )
-    {
-        pIndex = pBufferToSend;
-    }
 
     /* Record the time of transmission. */
     uint32_t sendTime = pContext->callbacks.getTime();
@@ -132,7 +117,9 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
 
     if( status == MQTTSuccess )
     {
-        bytesSent = sendPacket( pContext, NULL, packetSize );
+        bytesSent = sendPacket( pContext,
+                                pContext->networkBuffer.pBuffer,
+                                packetSize );
 
         if( bytesSent < 0 )
         {
@@ -231,7 +218,9 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
     if( status == MQTTSuccess )
     {
         /* Send header first. */
-        bytesSent = sendPacket( pContext, NULL, headerSize );
+        bytesSent = sendPacket( pContext,
+                                pContext->networkBuffer.pBuffer,
+                                headerSize );
 
         if( bytesSent < 0 )
         {
@@ -299,7 +288,9 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * const pContext )
 
     if( status == MQTTSuccess )
     {
-        bytesSent = sendPacket( pContext, NULL, packetSize );
+        bytesSent = sendPacket( pContext,
+                                pContext->networkBuffer.pBuffer,
+                                packetSize );
 
         if( bytesSent < 0 )
         {
