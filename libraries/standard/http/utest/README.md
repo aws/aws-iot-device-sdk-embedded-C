@@ -1,4 +1,4 @@
-# Running Unit Tests:
+# Running Unit Tests
 
 1. In your GNU compatible environment like WSL, mingw, Linux OS, MAC OS, etc., open a terminal.
 1. Install ruby: `sudo apt install ruby-full`
