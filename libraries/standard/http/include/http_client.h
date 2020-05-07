@@ -227,6 +227,15 @@ typedef enum HTTPStatus
      * - #HTTPClient_ReadHeader
      */
     HTTP_HEADER_NOT_FOUND,
+
+    /**
+     * @brief The HTTP response, provided for parsing, is either corrupt or incomplete.
+     *
+     * Functions that may return this value:
+     * - #HTTPClient_ReadHeader
+     */
+    HTTP_INVALID_RESPONSE,
+
     /* Temporary error code while implementation is in progress. */
     HTTP_NOT_SUPPORTED,
 } HTTPStatus_t;
@@ -577,7 +586,7 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
  * @return One of the following:
  * - #HTTP_SUCCESS (If successful.)
  * - #HTTP_INVALID_PARAMETER (If any provided parameters or their members are invalid.)
- * - #HTTP_PARTIAL_RESPONSE (Part of an HTTP response was received in a partially filled response buffer.)
+ * - #HTTP_INVALID_RESPONSE (Provided response is not a valid HTTP response for parsing.)
  */
 HTTPStatus_t HTTPClient_ReadHeader( const HTTPResponse_t * pResponse,
                                     const uint8_t * pHeaderName,
