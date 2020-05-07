@@ -1,7 +1,5 @@
-# Include filePaths for variables below.
 include(filePaths.cmake)
 
-# Demo target.
 add_executable(${DEMO_NAME})
 
 target_sources(

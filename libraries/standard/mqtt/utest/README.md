@@ -8,7 +8,8 @@
 1. Create build directory: `mkdir build && cd build`
 1. Run cmake while inside build directory: `cmake ..`
 1. Run this command to build and run the tests: `make coverage`
-1. Go to *build/coverage* and open *index.html* to view test coverage results.
+1. Go to `build` and open `mqtt_utest_out.txt` to view logs
+1. Go to `build/coverage` and open `index.html` to view test coverage results.
 
 # Writing Unit Tests
 

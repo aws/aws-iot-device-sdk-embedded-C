@@ -9,7 +9,7 @@
 #include "private/http_client_internal.h"
 #include "private/http_client_parse.h"
 
-/* ============================   UNITY FIXTURES ============================ */
+/* ============================ UNITY FIXTURES ============================== */
 void setUp( void )
 {
 }
@@ -29,8 +29,8 @@ int suiteTearDown( int numFailures )
 {
 }
 
-/* ============================   Testing ============================ */
-void test_Http_blahBlahBlah( void )
+/* ====================== Testing HTTPClient_AddHeader ====================== */
+void test_Http_AddHeader_invalid_params( void )
 {
     TEST_ASSERT_EQUAL( HTTPClient_AddHeader( NULL, NULL, 0, NULL, 0 ),
                        HTTP_INVALID_PARAMETER );

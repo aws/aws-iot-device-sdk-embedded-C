@@ -1,7 +1,5 @@
-# Include filepaths for source and include.
 include(filePaths.cmake)
 
-# Demo target.
 add_executable(${DEMO_NAME})
 
 set(OPENSSL_USE_STATIC_LIBS TRUE)
