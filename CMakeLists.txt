@@ -7,8 +7,8 @@ project( AwsIotDeviceSdkEmbeddedC
 # Allow the project to be organized into folders.
 set_property( GLOBAL PROPERTY USE_FOLDERS ON )
 
-# Use C99.
-set( CMAKE_C_STANDARD 99 )
+# Use C90.
+set( CMAKE_C_STANDARD 90 )
 set( CMAKE_C_STANDARD_REQUIRED ON )
 
 # Do not allow in-source build.
