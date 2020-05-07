@@ -51,6 +51,7 @@ typedef enum MQTTConnectionStatus
 
 typedef enum MQTTPublishState
 {
+    MQTTStateNull = 0,
     MQTTPublishSend,
     MQTTPubAckSend,
     MQTTPubRecSend,
@@ -87,15 +88,15 @@ struct MQTTApplicationCallbacks
 struct MQTTPubAckInfo
 {
     uint16_t packetId;
-    MQTTPubAckType_t ackType;
+    MQTTQoS_t qos;
     MQTTPublishState_t publishState;
 };
 
 struct MQTTContext
 {
-    MQTTPubAckInfo_t outgoingPublishRecords[ MQTT_MAX_QUEUED_PUBLISH_MESSAGES ];
+    MQTTPubAckInfo_t outgoingPublishRecords[ MQTT_STATE_ARRAY_MAX_COUNT ];
     size_t outgoingPublishCount;
-    MQTTPubAckInfo_t incomingPublishRecords[ MQTT_MAX_QUEUED_PUBLISH_MESSAGES ];
+    MQTTPubAckInfo_t incomingPublishRecords[ MQTT_STATE_ARRAY_MAX_COUNT ];
     size_t incomingPublishCount;
 
     MQTTTransportInterface_t transportInterface;
