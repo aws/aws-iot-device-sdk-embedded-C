@@ -1,7 +1,6 @@
 #ifndef HTTP_CLIENT_H_
 #define HTTP_CLIENT_H_
 
-#include <stddef.h>
 #include <stdint.h>
 #include <stddef.h>
 #include "config.h"
