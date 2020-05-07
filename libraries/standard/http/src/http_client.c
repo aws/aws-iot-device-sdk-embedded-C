@@ -1010,13 +1010,13 @@ HTTPStatus_t HTTPClient_ReadHeader( const HTTPResponse_t * pResponse,
         {
             /* Header is not present in buffer. */
             IotLogWarnWithArgs( "Header field not found in response buffer: "
-                                "HeaderName=%.*s ", headerNameLen, pHeaderName );
+                                "HeaderName=%.*s", headerNameLen, pHeaderName );
         }
         else
         {
             IotLogErrorWithArgs( "Unable to read header from response: "
                                  "Failure in parsing response for header field: "
-                                 "HeaderName=%.*s, ParserError=% s ",
+                                 "HeaderName=%.*s, ParserError=%s",
                                  headerNameLen, pHeaderName,
                                  HTTPClient_strerror( returnStatus ) );
         }
@@ -1025,7 +1025,7 @@ HTTPStatus_t HTTPClient_ReadHeader( const HTTPResponse_t * pResponse,
     {
         IotLogErrorWithArgs( "Failed to read header from response: "
                              "Unable to initialize parsing context: "
-                             "HeaderName=%.*s ", headerNameLen, pHeaderName );
+                             "HeaderName=%.*s", headerNameLen, pHeaderName );
     }
 
     return returnStatus;
