@@ -37,32 +37,32 @@
 #include "config.h"
 
 /* MQTT packet types. */
-#define MQTT_PACKET_TYPE_CONNECT         ( ( uint8_t ) 0x10U ) /**< @brief CONNECT (client-to-server). */
-#define MQTT_PACKET_TYPE_CONNACK         ( ( uint8_t ) 0x20U ) /**< @brief CONNACK (server-to-client). */
-#define MQTT_PACKET_TYPE_PUBLISH         ( ( uint8_t ) 0x30U ) /**< @brief PUBLISH (bidirectional). */
-#define MQTT_PACKET_TYPE_PUBACK          ( ( uint8_t ) 0x40U ) /**< @brief PUBACK (bidirectional). */
-#define MQTT_PACKET_TYPE_PUBREC          ( ( uint8_t ) 0x50U ) /**< @brief PUBREC (bidirectional). */
-#define MQTT_PACKET_TYPE_PUBREL          ( ( uint8_t ) 0x62U ) /**< @brief PUBREL (bidirectional). */
-#define MQTT_PACKET_TYPE_PUBCOMP         ( ( uint8_t ) 0x70U ) /**< @brief PUBCOMP (bidirectional). */
-#define MQTT_PACKET_TYPE_SUBACK          ( ( uint8_t ) 0x90U ) /**< @brief SUBACK (server-to-client). */
-#define MQTT_PACKET_TYPE_UNSUBACK        ( ( uint8_t ) 0xB0U ) /**< @brief UNSUBACK (server-to-client). */
-#define MQTT_PACKET_TYPE_PINGRESP        ( ( uint8_t ) 0xD0U ) /**< @brief PINGRESP (server-to-client). */
-#define MQTT_PACKET_TYPE_DISCONNECT      ( ( uint8_t ) 0xE0U ) /**< @brief DISCONNECT (client-to-server). */
+#define MQTT_PACKET_TYPE_CONNECT       ( ( uint8_t ) 0x10U )   /**< @brief CONNECT (client-to-server). */
+#define MQTT_PACKET_TYPE_CONNACK       ( ( uint8_t ) 0x20U )   /**< @brief CONNACK (server-to-client). */
+#define MQTT_PACKET_TYPE_PUBLISH       ( ( uint8_t ) 0x30U )   /**< @brief PUBLISH (bidirectional). */
+#define MQTT_PACKET_TYPE_PUBACK        ( ( uint8_t ) 0x40U )   /**< @brief PUBACK (bidirectional). */
+#define MQTT_PACKET_TYPE_PUBREC        ( ( uint8_t ) 0x50U )   /**< @brief PUBREC (bidirectional). */
+#define MQTT_PACKET_TYPE_PUBREL        ( ( uint8_t ) 0x62U )   /**< @brief PUBREL (bidirectional). */
+#define MQTT_PACKET_TYPE_PUBCOMP       ( ( uint8_t ) 0x70U )   /**< @brief PUBCOMP (bidirectional). */
+#define MQTT_PACKET_TYPE_SUBACK        ( ( uint8_t ) 0x90U )   /**< @brief SUBACK (server-to-client). */
+#define MQTT_PACKET_TYPE_UNSUBACK      ( ( uint8_t ) 0xB0U )   /**< @brief UNSUBACK (server-to-client). */
+#define MQTT_PACKET_TYPE_PINGRESP      ( ( uint8_t ) 0xD0U )   /**< @brief PINGRESP (server-to-client). */
+#define MQTT_PACKET_TYPE_DISCONNECT    ( ( uint8_t ) 0xE0U )   /**< @brief DISCONNECT (client-to-server). */
 
 struct MQTTFixedBuffer;
-typedef struct MQTTFixedBuffer MQTTFixedBuffer_t;
+typedef struct MQTTFixedBuffer     MQTTFixedBuffer_t;
 
 struct MQTTConnectInfo;
-typedef struct MQTTConnectInfo MQTTConnectInfo_t;
+typedef struct MQTTConnectInfo     MQTTConnectInfo_t;
 
 struct MQTTSubscribeInfo;
-typedef struct MQTTSubscribeInfo MQTTSubscribeInfo_t;
+typedef struct MQTTSubscribeInfo   MQTTSubscribeInfo_t;
 
 struct MqttPublishInfo;
-typedef struct MqttPublishInfo MQTTPublishInfo_t;
+typedef struct MqttPublishInfo     MQTTPublishInfo_t;
 
 struct MQTTPacketInfo;
-typedef struct MQTTPacketInfo MQTTPacketInfo_t;
+typedef struct MQTTPacketInfo      MQTTPacketInfo_t;
 
 /**
  * @brief Signature of the transport interface receive function.
@@ -103,9 +103,9 @@ typedef enum MQTTStatus
  */
 typedef enum MQTTQoS
 {
-    MQTTQoS0 = 0,    /**< Delivery at most once. */
-    MQTTQoS1 = 1,    /**< Delivery at least once. */
-    MQTTQoS2 = 2     /**< Delivery exactly once. */
+    MQTTQoS0 = 0, /**< Delivery at most once. */
+    MQTTQoS1 = 1, /**< Delivery at least once. */
+    MQTTQoS2 = 2  /**< Delivery exactly once. */
 } MQTTQoS_t;
 
 /**
@@ -116,8 +116,8 @@ typedef enum MQTTQoS
  */
 struct MQTTFixedBuffer
 {
-    uint8_t * pBuffer;    /**< @brief Pointer to buffer. */
-    size_t size;          /**< @brief Size of buffer. */
+    uint8_t * pBuffer; /**< @brief Pointer to buffer. */
+    size_t size;       /**< @brief Size of buffer. */
 };
 
 /**
@@ -201,6 +201,11 @@ struct MqttPublishInfo
      * @brief Whether this is a retained message.
      */
     bool retain;
+
+    /**
+     * @brief Whether this is a duplicate publish message.
+     */
+    bool dup;
 
     /**
      * @brief Topic name on which the message is published.
@@ -298,15 +303,61 @@ MQTTStatus_t MQTT_SerializeUnsubscribe( const MQTTSubscribeInfo_t * const pSubsc
                                         size_t remainingLength,
                                         const MQTTFixedBuffer_t * const pBuffer );
 
+/**
+ * @brief Get the packet size and remaining length of an MQTT PUBLISH packet.
+ *
+ * @param[in] pPublishInfo MQTT PUBLISH packet parameters.
+ * @param[out] pRemainingLength The Remaining Length of the MQTT PUBLISH packet.
+ * @param[out] pPacketSize The total size of the MQTT PUBLISH packet.
+ *
+ * @return #MQTTBadParameter if the packet would exceed the size allowed by the
+ * MQTT spec or if invalid parameters are passed; #MQTTSuccess otherwise.
+ */
 MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * const pPublishInfo,
                                         size_t * const pRemainingLength,
                                         size_t * const pPacketSize );
 
+/**
+ * @brief Serialize an MQTT PUBLISH packet in the given buffer.
+ *
+ * This function will serialize complete MQTT PUBLISH packet into
+ * the given buffer. If the PUBLISH payload can be sent separately,
+ * consider using #MQTT_SerializePublishHeader, which will serialize
+ * only the PUBLISH header into the buffer.
+ *
+ * @param[in] pPublishInfo MQTT PUBLISH packet parameters.
+ * @param[in] packetId packet ID generated by #MQTT_GetPacketId.
+ * @param[in] remainingLength Remaining Length provided by #MQTT_GetConnectPacketSize.
+ * @param[out] pBuffer Buffer for packet serialization.
+ *
+ * @return #MQTTNoMemory if pBuffer is too small to hold the MQTT packet;
+ * #MQTTBadParameter if invalid parameters are passed;
+ * #MQTTSuccess otherwise.
+ */
 MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * const pPublishInfo,
                                     uint16_t packetId,
                                     size_t remainingLength,
                                     const MQTTFixedBuffer_t * const pBuffer );
 
+/**
+ * @brief Serialize an MQTT PUBLISH packet header in the given buffer.
+ *
+ * This function serializes PUBLISH header in to the given buffer. Payload
+ * for PUBLISH will not be copied over to the buffer. This will help reduce
+ * the memory needed for the buffer and avoid an unwanted copy operataion of
+ * PUBLISH payload into the buffer. If payload also would need to be part of
+ * the serialized buffer, consider using #MQTT_SerializePublish.
+ *
+ * @param[in] pPublishInfo MQTT PUBLISH packet parameters.
+ * @param[in] packetId packet ID generated by #MQTT_GetPacketId.
+ * @param[in] remainingLength Remaining Length provided by #MQTT_GetConnectPacketSize.
+ * @param[out] pBuffer Buffer for packet serialization.
+ * @param[out] pHeaderSize Size of the serialized MQTT PUBLISH header.
+ *
+ * @return #MQTTNoMemory if pBuffer is too small to hold the MQTT packet;
+ * #MQTTBadParameter if invalid parameters are passed;
+ * #MQTTSuccess otherwise.
+ */
 MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * const pPublishInfo,
                                           uint16_t packetId,
                                           size_t remainingLength,
@@ -395,4 +446,4 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( MQTTTransportRecvFunc_t readFu
                                                   MQTTNetworkContext_t networkContext,
                                                   MQTTPacketInfo_t * pIncomingPacket );
 
-#endif
+#endif /* ifndef MQTT_LIGHTWEIGHT_H */
