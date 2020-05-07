@@ -7,13 +7,15 @@
 
 # MQTT library source files.
 set( MQTT_SOURCES
-     src/mqtt.c
-     src/mqtt_lightweight.c )
+     "${MODULES_DIR}/standard/mqtt/src/mqtt.c"
+     "${MODULES_DIR}/standard/mqtt/src/mqtt_lightweight.c" )
 
 # MQTT library Include directories.
 set( MQTT_INCLUDE_PUBLIC_DIRS
-     include )
+     "${MODULES_DIR}/standard/mqtt/include"
+     "${MODULES_DIR}/standard/utilities/include"
+     "${ROOT_DIR}/platform/include" )
 
 # MQTT test include directories.
 set( MQTT_TEST_INCLUDE_PRIVATE_DIRS
-     src )
+     "${MODULES_DIR}/standard/mqtt/src" )

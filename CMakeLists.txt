@@ -20,13 +20,13 @@ endif()
 include("tools/cmake/filePaths.cmake")
 
 # Configure options to always show in CMake GUI.
-option( IOT_ATOMIC_USE_PORT
+option( ATOMIC_USE_PORT
         "Set this to ON to use a custom atomic port. When OFF, the build system will choose an atomic port."
         OFF )
-option( IOT_BUILD_TESTS
+option( BUILD_TESTS
         "Set this to ON to build both demo and test executables. When OFF, only demo executables are built."
         ON )
-option( IOT_BUILD_CLONE_SUBMODULES
+option( BUILD_CLONE_SUBMODULES
         "Set this to ON to automatically clone any required Git submodules. When OFF, submodules must be manually cloned."
         ON )
 
@@ -40,17 +40,17 @@ CMAKE_DEPENDENT_OPTION( BUILD_SHARED_LIBS
                         OFF )
 
 # Set the platform named based on the host OS if not defined.
-if( NOT DEFINED IOT_PLATFORM_NAME )
+if( NOT DEFINED _PLATFORM_NAME )
     if( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
-        set( IOT_PLATFORM_NAME "posix" CACHE STRING "Port to use for building the SDK." )
+        set( PLATFORM_NAME "posix" CACHE STRING "Port to use for building the SDK." )
     else()
         message( FATAL_ERROR "${CMAKE_SYSTEM_NAME} is not a supported platform." )
     endif()
 endif()
 
 # Validate the platform name.
-if( NOT DEFINED IOT_PLATFORM_NAME )
-    message( FATAL_ERROR "IOT_PLATFORM_NAME was not set and could not be automatically determined." )
+if( NOT DEFINED PLATFORM_NAME )
+    message( FATAL_ERROR "PLATFORM_NAME was not set and could not be automatically determined." )
 endif()
 
 # Set output directories.
@@ -59,14 +59,19 @@ set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
 set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
 
 # Set the path to the config header.
-if( ${IOT_BUILD_TESTS} )
+if( ${BUILD_TESTS} )
     include("${ROOT_DIR}/tools/cmock/create_test.cmake")
 
+    include_directories("${3RDPARTY_DIR}/CMock/vendor/unity/src/"
+                        "${3RDPARTY_DIR}/CMock/vendor/unity/extras/fixture/src"
+                        "${3RDPARTY_DIR}/CMock/vendor/unity/extras/memory/src"
+                        "${3RDPARTY_DIR}/CMock/src"
+            )
     link_directories("${CMAKE_BINARY_DIR}/lib"
             )
 
     add_library(cmock STATIC
-            ${ROOT_DIR}/libraries/3rdparty/CMock/src/cmock.c
+            "${ROOT_DIR}/libraries/3rdparty/CMock/src/cmock.c"
             )
 
     set_target_properties(cmock PROPERTIES
@@ -76,7 +81,9 @@ if( ${IOT_BUILD_TESTS} )
             )
 
     add_library(unity STATIC
-            ${ROOT_DIR}/libraries/3rdparty/CMock/vendor/unity/src/unity.c
+            "${3RDPARTY_DIR}/CMock/vendor/unity/src/unity.c"
+            "${3RDPARTY_DIR}/CMock/vendor/unity/extras/fixture/src/unity_fixture.c"
+            "${3RDPARTY_DIR}/CMock/vendor/unity/extras/memory/src/unity_memory.c"
             )
     set_target_properties(unity PROPERTIES
             ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib

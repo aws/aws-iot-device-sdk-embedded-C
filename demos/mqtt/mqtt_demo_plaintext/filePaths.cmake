@@ -17,4 +17,4 @@ set( MQTT_DEMO_PLAINTEXT_INCLUDE_PUBLIC_DIRS
 
 # Libraries.
 set( MQTT_DEMO_PLAINTEXT_LIBRARIES
-     iotmqtt )
+     mqtt )

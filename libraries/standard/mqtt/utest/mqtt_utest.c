@@ -3,11 +3,7 @@
 #include "unity.h"
 
 /* Include paths for public enums, structures, and macros. */
-#include "http_client.h"
-
-/* Private includes for internal macros. */
-#include "private/http_client_internal.h"
-#include "private/http_client_parse.h"
+#include "mqtt.h"
 
 /* ============================   UNITY FIXTURES ============================ */
 void setUp( void )
@@ -30,8 +26,7 @@ int suiteTearDown( int numFailures )
 }
 
 /* ============================   Testing ============================ */
-void test_Http_blahBlahBlah( void )
+void test_Mqtt_blahblahblah( void )
 {
-    TEST_ASSERT_EQUAL( HTTPClient_AddHeader( NULL, NULL, 0, NULL, 0 ),
-                       HTTP_INVALID_PARAMETER );
+    TEST_ASSERT_EQUAL( 1, 1 );
 }
