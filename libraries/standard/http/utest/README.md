@@ -34,8 +34,8 @@ func_ReturnMemThruPtr_[parameter name](size, ret_memory)
 func_IgnoreArg_[parameter name]()
 ```
 For a detailed explanation about these mocks check the official documentation:
-The **CMock** official website click [here] (http://www.throwtheswitch.org/cmock)
-The **CMock** git hub repository click [here] (https://github.com/ThrowTheSwitch/CMock)
+[The **CMock** official website](http://www.throwtheswitch.org/cmock)
+[The **CMock** github repository](https://github.com/ThrowTheSwitch/CMock)
 
 ### Setting up a new Unit Testing module in C SDK
 To setup a module for Unit Testing, as an example we will follow a walkthrough approach for **mqtt** which is located in *libraries/standard/mqtt*.
