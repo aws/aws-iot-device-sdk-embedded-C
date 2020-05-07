@@ -4,7 +4,7 @@
 #include "common.h"
 
 /* Functions are pulled out into their own C files to be tested as a unit. */
-#include "readHeaderParsingCallback.c"
+#include "HTTPClient_strerror.c"
 #include "HTTPClient_ReadHeader.c"
 
 /* Template HTTP request for a PUT request. */

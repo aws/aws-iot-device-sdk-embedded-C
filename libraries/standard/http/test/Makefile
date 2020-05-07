@@ -37,7 +37,8 @@ FUNCTIONS = addHeader \
 			HTTPClient_InitializeParsingContext \
 			HTTPClient_ParseResponse \
 			getFinalResponseStatus \
-			readHeaderParsingCallback
+			readHeaderParsingCallback \
+			HTTPClient_strerror
 
 # Changes to the above variables should remain above this include.
 include Mock4thewin.mk
@@ -56,7 +57,7 @@ HTTPClient_Send.c: sendHttpHeaders.c \
 				   HTTPClient_ParseResponse.c \
 				   getFinalResponseStatus.c
 HTTPClient_InitializeRequestHeaders.c: writeRequestLine.c addHeader.c
-HTTPClient_ReadHeader.c: readHeaderParsingCallback.c
+HTTPClient_ReadHeader.c: HTTPClient_strerror.c
 
 # additional header dependencies for all tests
 COMMON = common.h
