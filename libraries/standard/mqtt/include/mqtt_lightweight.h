@@ -22,7 +22,15 @@
 #ifndef MQTT_LIGHTWEIGHT_H
 #define MQTT_LIGHTWEIGHT_H
 
-#include <stdbool.h>
+/* bools are only defined in C99+ */
+#if __STDC_VERSION__ >= 199901L
+    #include <stdbool.h>
+#else
+    #define bool signed char
+    #define false 0
+    #define true 1
+#endif
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -85,7 +93,9 @@ typedef enum MQTTStatus
     MQTTRecvFailed,     /**< The transport receive function failed. */
     MQTTBadResponse,    /**< An invalid packet was received from the server. */
     MQTTServerRefused,  /**< The server refused a CONNECT or SUBSCRIBE. */
-    MQTTNoDataAvailable
+    MQTTNoDataAvailable,/**< No data available from the transport interface. */
+    MQTTIllegalState,   /**< An illegal state in the state record. */
+    MQTTStateCollision  /**< A collision with an existing state record entry. */
 } MQTTStatus_t;
 
 /**
