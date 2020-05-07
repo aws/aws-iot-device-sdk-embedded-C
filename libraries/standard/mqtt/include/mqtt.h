@@ -140,7 +140,8 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
                            bool * const pSessionPresent );
 
 /**
- * @brief Sends MQTT SUBSCRIBE for the given list of topics to the broker.
+ * @brief Sends MQTT SUBSCRIBE for the given list of topic filters to
+ * the broker.
  *
  * @param[in] pContext Initialized MQTT context.
  * @param[in] pSubscriptionList List of MQTT subscription info.
@@ -177,7 +178,8 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
 MQTTStatus_t MQTT_Ping( MQTTContext_t * const pContext );
 
 /**
- * @brief Sends MQTT UNSUBSCRIBE for the given list of topics to the broker.
+ * @brief Sends MQTT UNSUBSCRIBE for the given list of topic filters to
+ * the broker.
  *
  * @param[in] pContext Initialized MQTT context.
  * @param[in] pSubscriptionList List of MQTT subscription info.

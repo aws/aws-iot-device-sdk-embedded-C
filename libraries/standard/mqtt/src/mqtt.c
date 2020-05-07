@@ -96,19 +96,19 @@ static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * co
     if( ( pContext == NULL ) || ( pSubscriptionList == NULL ) )
     {
         IotLogErrorWithArgs( "Argument cannot be NULL: pContext=%p, "
-                             "pSubscriptionList=%p",
+                             "pSubscriptionList=%p.",
                              pContext,
                              pSubscriptionList );
         status = MQTTBadParameter;
     }
     else if( subscriptionCount == 0UL )
     {
-        IotLogError( "Subscription count is 0. " );
+        IotLogError( "Subscription count is 0." );
         status = MQTTBadParameter;
     }
     else if( packetId == 0U )
     {
-        IotLogError( "Packet Id for subscription packet is 0. " );
+        IotLogError( "Packet Id for subscription packet is 0." );
         status = MQTTBadParameter;
     }
     else
@@ -223,7 +223,7 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * const pContext,
                                               subscriptionCount,
                                               &remainingLength,
                                               &packetSize );
-        IotLogDebugWithArgs( "Subscribe packet size is %lu and remaining length is %lu",
+        IotLogDebugWithArgs( "SUBSCRIBE packet size is %lu and remaining length is %lu.",
                              packetSize,
                              remainingLength );
     }
@@ -242,13 +242,16 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * const pContext,
     {
         /* Send serialized MQTT subscribe to transport layer. */
         bytesSent = sendPacket( pContext, packetSize );
-        IotLogDebugWithArgs( "Sent %d bytes of subscribe packet. ",
-                             bytesSent );
 
         if( bytesSent < 0 )
         {
-            IotLogError( "Transport write failed for subscribe packet." );
+            IotLogError( "Transport send failed for SUBSCRIBE packet." );
             status = MQTTSendFailed;
+        }
+        else
+        {
+            IotLogDebugWithArgs( "Sent %d bytes of SUBSCRIBE packet.",
+                                 bytesSent );
         }
     }
 
@@ -378,7 +381,7 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * const pContext,
                                                 subscriptionCount,
                                                 &remainingLength,
                                                 &packetSize );
-        IotLogDebugWithArgs( "Unsubscribe packet size is %lu and remaining length is %lu",
+        IotLogDebugWithArgs( "UNSUBSCRIBE packet size is %lu and remaining length is %lu.",
                              packetSize,
                              remainingLength );
     }
@@ -397,13 +400,16 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * const pContext,
     {
         /* Send serialized MQTT subscribe to transport layer. */
         bytesSent = sendPacket( pContext, packetSize );
-        IotLogDebugWithArgs( "Sent %d bytes of unsubscribe packet. ",
-                             bytesSent );
 
         if( bytesSent < 0 )
         {
-            IotLogError( "Transport write failed for unsubscribe packet." );
+            IotLogError( "Transport send failed for UNSUBSCRIBE packet." );
             status = MQTTSendFailed;
+        }
+        else
+        {
+            IotLogDebugWithArgs( "Sent %d bytes of UNSUBSCRIBE packet.",
+                                 bytesSent );
         }
     }
 
