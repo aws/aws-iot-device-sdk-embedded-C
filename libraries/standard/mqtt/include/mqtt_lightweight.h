@@ -26,9 +26,9 @@
 #if __STDC_VERSION__ >= 199901L
     #include <stdbool.h>
 #else
-    #define bool signed char
-    #define false 0
-    #define true 1
+    #define bool     signed char
+    #define false    0
+    #define true     1
 #endif
 
 #include <stddef.h>
@@ -88,16 +88,16 @@ typedef int32_t (* MQTTTransportRecvFunc_t )( MQTTNetworkContext_t context,
  */
 typedef enum MQTTStatus
 {
-    MQTTSuccess = 0,    /**< Function completed successfully. */
-    MQTTBadParameter,   /**< At least one parameter was invalid. */
-    MQTTNoMemory,       /**< A provided buffer was too small. */
-    MQTTSendFailed,     /**< The transport send function failed. */
-    MQTTRecvFailed,     /**< The transport receive function failed. */
-    MQTTBadResponse,    /**< An invalid packet was received from the server. */
-    MQTTServerRefused,  /**< The server refused a CONNECT or SUBSCRIBE. */
-    MQTTNoDataAvailable,/**< No data available from the transport interface. */
-    MQTTIllegalState,   /**< An illegal state in the state record. */
-    MQTTStateCollision  /**< A collision with an existing state record entry. */
+    MQTTSuccess = 0,     /**< Function completed successfully. */
+    MQTTBadParameter,    /**< At least one parameter was invalid. */
+    MQTTNoMemory,        /**< A provided buffer was too small. */
+    MQTTSendFailed,      /**< The transport send function failed. */
+    MQTTRecvFailed,      /**< The transport receive function failed. */
+    MQTTBadResponse,     /**< An invalid packet was received from the server. */
+    MQTTServerRefused,   /**< The server refused a CONNECT or SUBSCRIBE. */
+    MQTTNoDataAvailable, /**< No data available from the transport interface. */
+    MQTTIllegalState,    /**< An illegal state in the state record. */
+    MQTTStateCollision   /**< A collision with an existing state record entry. */
 } MQTTStatus_t;
 
 /**

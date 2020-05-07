@@ -26,14 +26,6 @@
 
 /*-----------------------------------------------------------*/
 
-static int32_t sendPacket( MQTTContext_t * pContext,
-                           size_t bytesToSend );
-
-static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * const pContext,
-                                                        const MQTTSubscribeInfo_t * const pSubscriptionList,
-                                                        size_t subscriptionCount,
-                                                        uint16_t packetId );
-
 /**
  * @brief Sends provided buffer to network using transport send.
  *
@@ -43,6 +35,28 @@ static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * co
  *
  * @return Total number of bytes sent; -1 if there is an error.
  */
+static int32_t sendPacket( MQTTContext_t * pContext,
+                           const uint8_t * pBufferToSend,
+                           size_t bytesToSend );
+
+/**
+ * @brief Validates parameters of #MQTT_Subscribe or #MQTT_Unsubscribe.
+ *
+ * @param[in] pContext Initialized MQTT context.
+ * @param[in] pSubscriptionList List of MQTT subscription info.
+ * @param[in] subscriptionCount The number of elements in pSubscriptionList.
+ * @param[in] packetId Packet identifier.
+ *
+ * @return #MQTTBadParameter if invalid parameters are passed;
+ * #MQTTSuccess otherwise.
+ */
+static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * const pContext,
+                                                        const MQTTSubscribeInfo_t * const pSubscriptionList,
+                                                        size_t subscriptionCount,
+                                                        uint16_t packetId );
+
+/*-----------------------------------------------------------*/
+
 static int32_t sendPacket( MQTTContext_t * pContext,
                            const uint8_t * pBufferToSend,
                            size_t bytesToSend )
@@ -240,8 +254,10 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * const pContext,
 
     if( status == MQTTSuccess )
     {
-        /* Send serialized MQTT subscribe to transport layer. */
-        bytesSent = sendPacket( pContext, packetSize );
+        /* Send serialized MQTT SUBSCRIBE packet to transport layer. */
+        bytesSent = sendPacket( pContext,
+                                pContext->networkBuffer.pBuffer,
+                                packetSize );
 
         if( bytesSent < 0 )
         {
@@ -388,7 +404,7 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * const pContext,
 
     if( status == MQTTSuccess )
     {
-        /* Serialize MQTT SUBSCRIBE packet. */
+        /* Serialize MQTT UNSUBSCRIBE packet. */
         status = MQTT_SerializeUnsubscribe( pSubscriptionList,
                                             subscriptionCount,
                                             packetId,
@@ -398,8 +414,10 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * const pContext,
 
     if( status == MQTTSuccess )
     {
-        /* Send serialized MQTT subscribe to transport layer. */
-        bytesSent = sendPacket( pContext, packetSize );
+        /* Send serialized MQTT UNSUBSCRIBE packet to transport layer. */
+        bytesSent = sendPacket( pContext,
+                                pContext->networkBuffer.pBuffer,
+                                packetSize );
 
         if( bytesSent < 0 )
         {

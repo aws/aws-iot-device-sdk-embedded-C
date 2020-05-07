@@ -140,6 +140,15 @@
 
 /*-----------------------------------------------------------*/
 
+/* MQTT Subscription packet types. */
+typedef enum MQTTSubscriptionType
+{
+    MQTT_SUBSCRIBE,
+    MQTT_UNSUBSCRIBE
+} MQTTSubscriptionType_t;
+
+/*-----------------------------------------------------------*/
+
 /**
  * @brief Serializes MQTT PUBLISH packet into the buffer provided.
  *
@@ -178,17 +187,6 @@ static bool calculatePublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
                                         size_t * pRemainingLength,
                                         size_t * pPacketSize );
 
-/*-----------------------------------------------------------*/
-
-/* MQTT Subscription packet types. */
-typedef enum MQTTSubscriptionType
-{
-    MQTT_SUBSCRIBE,
-    MQTT_UNSUBSCRIBE
-} MQTTSubscriptionType_t;
-
-/*-----------------------------------------------------------*/
-
 /**
  * @brief Calculates the packet size and remaining length of an MQTT
  * SUBSCRIBE or UNSUBSCRIBE packet.
@@ -212,7 +210,7 @@ static MQTTStatus_t calculateSubscriptionPacketSize( const MQTTSubscribeInfo_t *
 
 /**
  * @brief Validates parameters of #MQTT_SerializeSubscribe or
- * MQTT_SerializeUnsubscribe.
+ * #MQTT_SerializeUnsubscribe.
  *
  * @param[in] pSubscriptionList List of MQTT subscription info.
  * @param[in] subscriptionCount The number of elements in pSubscriptionList.
