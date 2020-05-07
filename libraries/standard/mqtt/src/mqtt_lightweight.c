@@ -1254,6 +1254,9 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * const pConnectInfo
     uint8_t connectFlags = 0;
     uint8_t * pIndex = NULL;
 
+    /* Calculate CONNECT packet size. */
+    size_t connectPacketSize = remainingLength + remainingLengthEncodedSize( remainingLength ) + 1U;
+
     /* Validate arguments. */
     if( ( pConnectInfo == NULL ) || ( pBuffer == NULL ) )
     {
@@ -1263,116 +1266,108 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * const pConnectInfo
                              pBuffer );
         status = MQTTBadParameter;
     }
-
-    if( status == MQTTSuccess )
+    /* Check that the full packet size fits within the given buffer. */
+    else if( connectPacketSize > pBuffer->size )
+    {
+        IotLogError( "Insufficient memory for packet." );
+        status = MQTTNoMemory;
+    }
+    else
     {
         pIndex = pBuffer->pBuffer;
+        /* The first byte in the CONNECT packet is the control packet type. */
+        *pIndex = MQTT_PACKET_TYPE_CONNECT;
+        pIndex++;
 
-        /* Check that the full packet size fits within the given buffer. */
-        size_t connectPacketSize = remainingLength + remainingLengthEncodedSize( remainingLength ) + 1U;
+        /* The remaining length of the CONNECT packet is encoded starting from the
+         * second byte. The remaining length does not include the length of the fixed
+         * header or the encoding of the remaining length. */
+        pIndex = encodeRemainingLength( pIndex, remainingLength );
 
-        if( connectPacketSize > pBuffer->size )
+        /* The string "MQTT" is placed at the beginning of the CONNECT packet's variable
+         * header. This string is 4 bytes long. */
+        pIndex = encodeString( pIndex, "MQTT", 4 );
+
+        /* The MQTT protocol version is the second field of the variable header. */
+        *pIndex = MQTT_VERSION_3_1_1;
+        pIndex++;
+
+        /* Set the clean session flag if needed. */
+        if( pConnectInfo->cleanSession == true )
         {
-            IotLogError( "Insufficient memory for packet." );
-            status = MQTTNoMemory;
+            UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_CLEAN );
         }
 
-        if( status == MQTTSuccess )
+        /* Set the flags for username and password if provided. */
+        if( pConnectInfo->pUserName != NULL )
         {
-            /* The first byte in the CONNECT packet is the control packet type. */
-            *pIndex = MQTT_PACKET_TYPE_CONNECT;
-            pIndex++;
+            UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_USERNAME );
+        }
 
-            /* The remaining length of the CONNECT packet is encoded starting from the
-             * second byte. The remaining length does not include the length of the fixed
-             * header or the encoding of the remaining length. */
-            pIndex = encodeRemainingLength( pIndex, remainingLength );
+        if( pConnectInfo->pPassword != NULL )
+        {
+            UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_PASSWORD );
+        }
 
-            /* The string "MQTT" is placed at the beginning of the CONNECT packet's variable
-             * header. This string is 4 bytes long. */
-            pIndex = encodeString( pIndex, "MQTT", 4 );
+        /* Set will flag if a Last Will and Testament is provided. */
+        if( pWillInfo != NULL )
+        {
+            UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_WILL );
 
-            /* The MQTT protocol version is the second field of the variable header. */
-            *pIndex = MQTT_VERSION_3_1_1;
-            pIndex++;
-
-            /* Set the clean session flag if needed. */
-            if( pConnectInfo->cleanSession == true )
+            /* Flags only need to be changed for Will QoS 1 or 2. */
+            if( pWillInfo->qos == MQTTQoS1 )
             {
-                UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_CLEAN );
+                UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_WILL_QOS1 );
+            }
+            else if( pWillInfo->qos == MQTTQoS2 )
+            {
+                UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_WILL_QOS2 );
             }
 
-            /* Set the flags for username and password if provided. */
-            if( pConnectInfo->pUserName != NULL )
+            if( pWillInfo->retain == true )
             {
-                UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_USERNAME );
+                UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_WILL_RETAIN );
             }
+        }
 
-            if( pConnectInfo->pPassword != NULL )
-            {
-                UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_PASSWORD );
-            }
+        *pIndex = connectFlags;
+        pIndex++;
 
-            /* Set will flag if a Last Will and Testament is provided. */
-            if( pWillInfo != NULL )
-            {
-                UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_WILL );
+        /* Write the 2 bytes of the keep alive interval into the CONNECT packet. */
+        *pIndex = UINT16_HIGH_BYTE( pConnectInfo->keepAliveSeconds );
+        *( pIndex + 1 ) = UINT16_LOW_BYTE( pConnectInfo->keepAliveSeconds );
+        pIndex += 2;
 
-                /* Flags only need to be changed for Will QoS 1 or 2. */
-                if( pWillInfo->qos == MQTTQoS1 )
-                {
-                    UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_WILL_QOS1 );
-                }
-                else if( pWillInfo->qos == MQTTQoS2 )
-                {
-                    UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_WILL_QOS2 );
-                }
+        /* Write the client identifier into the CONNECT packet. */
+        pIndex = encodeString( pIndex,
+                               pConnectInfo->pClientIdentifier,
+                               pConnectInfo->clientIdentifierLength );
 
-                if( pWillInfo->retain == true )
-                {
-                    UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_WILL_RETAIN );
-                }
-            }
-
-            *pIndex = connectFlags;
-            pIndex++;
-
-            /* Write the 2 bytes of the keep alive interval into the CONNECT packet. */
-            *pIndex = UINT16_HIGH_BYTE( pConnectInfo->keepAliveSeconds );
-            *( pIndex + 1 ) = UINT16_LOW_BYTE( pConnectInfo->keepAliveSeconds );
-            pIndex += 2;
-
-            /* Write the client identifier into the CONNECT packet. */
+        /* Write the will topic name and message into the CONNECT packet if provided. */
+        if( pWillInfo != NULL )
+        {
             pIndex = encodeString( pIndex,
-                                   pConnectInfo->pClientIdentifier,
-                                   pConnectInfo->clientIdentifierLength );
-
-            /* Write the will topic name and message into the CONNECT packet if provided. */
-            if( pWillInfo != NULL )
-            {
-                pIndex = encodeString( pIndex,
-                                       pWillInfo->pTopicName,
-                                       pWillInfo->topicNameLength );
-                pIndex = encodeString( pIndex,
-                                       pWillInfo->pPayload,
-                                       ( uint16_t ) pWillInfo->payloadLength );
-            }
-
-            /* Encode the user name if provided. */
-            if( pConnectInfo->pUserName != NULL )
-            {
-                pIndex = encodeString( pIndex, pConnectInfo->pUserName, pConnectInfo->userNameLength );
-            }
-
-            /* Encode the password if provided. */
-            if( pConnectInfo->pPassword != NULL )
-            {
-                pIndex = encodeString( pIndex, pConnectInfo->pPassword, pConnectInfo->passwordLength );
-            }
-
-            IotLogDebugWithArgs( "Length of serialized CONNECT packet is %lu ",
-                                 ( ( size_t ) ( pIndex - pBuffer->pBuffer ) ) );
+                                   pWillInfo->pTopicName,
+                                   pWillInfo->topicNameLength );
+            pIndex = encodeString( pIndex,
+                                   pWillInfo->pPayload,
+                                   ( uint16_t ) pWillInfo->payloadLength );
         }
+
+        /* Encode the user name if provided. */
+        if( pConnectInfo->pUserName != NULL )
+        {
+            pIndex = encodeString( pIndex, pConnectInfo->pUserName, pConnectInfo->userNameLength );
+        }
+
+        /* Encode the password if provided. */
+        if( pConnectInfo->pPassword != NULL )
+        {
+            pIndex = encodeString( pIndex, pConnectInfo->pPassword, pConnectInfo->passwordLength );
+        }
+
+        IotLogDebugWithArgs( "Length of serialized CONNECT packet is %lu ",
+                             ( ( size_t ) ( pIndex - pBuffer->pBuffer ) ) );
     }
 
     return status;
