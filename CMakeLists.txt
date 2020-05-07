@@ -40,7 +40,7 @@ CMAKE_DEPENDENT_OPTION( BUILD_SHARED_LIBS
                         OFF )
 
 # Set the platform named based on the host OS if not defined.
-if( NOT DEFINED _PLATFORM_NAME )
+if( NOT DEFINED PLATFORM_NAME )
     if( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
         set( PLATFORM_NAME "posix" CACHE STRING "Port to use for building the SDK." )
     else()

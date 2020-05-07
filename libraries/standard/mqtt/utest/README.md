@@ -12,14 +12,14 @@
 
 # Writing Unit Tests
 
-### Introduction to CMOCK
-**CMOCK** is a mocking framework, that automatically generates mocks.
+### Introduction to CMock
+**CMock** is a mocking framework, that automatically generates mocks.
 It gives the ability to set expectations and implement stubs/callbacks.
-This will allow you to call the functions to be tested and the **CMOCK** generated code will do all the rest for you.
+This will allow you to call the functions to be tested and the **CMock** generated code will do all the rest for you.
 
 For example suppose your module accesses the internet using sockets, but you want to just test your module (unit) without testing/calling any socket API function as this could be unpredictable, slow, hard to simulate all possible
 error scenarios and return codes.
-In order to achieve that you tell **CMOCK** to mock the header file where the socket's APIs reside. For simplicity we will assume the only function used is *func*, **CMOCK** will generate the following mocks for you:
+In order to achieve that you tell **CMock** to mock the header file where the socket's APIs reside. For simplicity we will assume the only function used is *func*, **CMock** will generate the following mocks for you:
 
 ```
 func_Ignore[AndReturn]([return_val]);
@@ -33,8 +33,8 @@ func_ReturnMemThruPtr_[parameter name](size, ret_memory)
 func_IgnoreArg_[parameter name]()
 ```
 For a detailed explanation about these mocks check the official documentation:
-The **CMOCK** official website click [here] (http://www.throwtheswitch.org/cmock)
-The **CMOCK** git hub repository click [here] (https://github.com/ThrowTheSwitch/CMock)
+The **CMock** official website click [here] (http://www.throwtheswitch.org/cmock)
+The **CMock** git hub repository click [here] (https://github.com/ThrowTheSwitch/CMock)
 
 ### Setting up a new Unit Testing module in C SDK
 To setup a module for Unit Testing, as an example we will follow a walkthrough approach for **mqtt** which is located in *libraries/standard/mqtt*.
