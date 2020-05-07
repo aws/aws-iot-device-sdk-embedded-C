@@ -168,7 +168,7 @@ static int32_t sendPacket( MQTTContext_t * pContext,
  *
  * @return Type of ack.
  */
-static MQTTPubAckType_t _getAckFromPacketType( uint8_t packetType )
+static MQTTPubAckType_t getAckFromPacketType( uint8_t packetType )
 {
     MQTTPubAckType_t ackType;
     switch( packetType )
@@ -204,9 +204,9 @@ static MQTTPubAckType_t _getAckFromPacketType( uint8_t packetType )
  *
  * @return #MQTTRecvFailed or #MQTTNoDataAvailable.
  */
-static MQTTStatus_t _dumpPacket( MQTTContext_t * const pContext,
-                                 size_t remainingLength,
-                                 int32_t bytesAlreadyReceived )
+static MQTTStatus_t dumpPacket( MQTTContext_t * const pContext,
+                                size_t remainingLength,
+                                int32_t bytesAlreadyReceived )
 {
     MQTTStatus_t status = MQTTRecvFailed;
     int32_t totalBytesReceived = bytesAlreadyReceived, bytesReceived = 0;
@@ -260,8 +260,8 @@ static MQTTStatus_t _dumpPacket( MQTTContext_t * const pContext,
  *
  * @return MQTTSuccess or MQTTRecvFailed.
  */
-static MQTTStatus_t _receivePacket( MQTTContext_t * const pContext,
-                                    MQTTPacketInfo_t incomingPacket )
+static MQTTStatus_t receivePacket( MQTTContext_t * const pContext,
+                                   MQTTPacketInfo_t incomingPacket )
 {
     MQTTStatus_t status = MQTTSuccess;
     int32_t bytesReceived = 0;
@@ -326,10 +326,10 @@ static MQTTStatus_t _receivePacket( MQTTContext_t * const pContext,
     }
 
     /* Check if packet exceeds buffer. */
-    if( ( status == MQTTSuccess ) && ( ( int32_t ) incomingPacket.remainingLength > bytesToReceive ) )
+    if( ( status == MQTTSuccess ) && ( incomingPacket.remainingLength > bytesToReceive ) )
     {
         /* Packet exceeds buffer, dump it. */
-        status = _dumpPacket( pContext, incomingPacket.remainingLength, totalBytesReceived );
+        status = dumpPacket( pContext, incomingPacket.remainingLength, totalBytesReceived );
     }
 
     return status;
@@ -346,9 +346,9 @@ static MQTTStatus_t _receivePacket( MQTTContext_t * const pContext,
  *
  * @return MQTTSuccess or MQTTIllegalState.
  */
-static MQTTStatus_t _sendPublishAcks( MQTTContext_t * const pContext,
-                                      uint16_t packetId,
-                                      MQTTPublishState_t * pPublishState )
+static MQTTStatus_t sendPublishAcks( MQTTContext_t * const pContext,
+                                     uint16_t packetId,
+                                     MQTTPublishState_t * pPublishState )
 {
     MQTTStatus_t status = MQTTSuccess;
     MQTTPublishState_t newState = MQTTStateNull;
@@ -392,7 +392,9 @@ static MQTTStatus_t _sendPublishAcks( MQTTContext_t * const pContext,
 
     if( packetTypeByte != 0U )
     {
-        status = MQTT_SerializeAck( pContext->networkBuffer, packetTypeByte, packetId );
+        status = MQTT_SerializeAck( &( pContext->networkBuffer ),
+                                    packetTypeByte,
+                                    packetId );
         if( status == MQTTSuccess )
         {
             bytesSent = sendPacket( pContext, MQTT_PUBLISH_ACK_PACKET_SIZE );
@@ -433,8 +435,8 @@ static MQTTStatus_t _sendPublishAcks( MQTTContext_t * const pContext,
  *
  * @return MQTTSuccess, MQTTIllegalState or deserialization error.
  */
-static MQTTStatus_t _handleIncomingPublish( MQTTContext_t * const pContext,
-                                            MQTTPacketInfo_t * pIncomingPacket )
+static MQTTStatus_t handleIncomingPublish( MQTTContext_t * const pContext,
+                                           MQTTPacketInfo_t * pIncomingPacket )
 {
     MQTTStatus_t status = MQTTSuccess;
     MQTTPublishState_t publishRecordState = MQTTStateNull;
@@ -457,9 +459,9 @@ static MQTTStatus_t _handleIncomingPublish( MQTTContext_t * const pContext,
                             publishRecordState );
 
         /* Send PUBACK or PUBREC if necessary. */
-        status = _sendPublishAcks( pContext,
-                                   packetIdentifier,
-                                   &publishRecordState );
+        status = sendPublishAcks( pContext,
+                                  packetIdentifier,
+                                  &publishRecordState );
     }
 
     if( status == MQTTSuccess )
@@ -481,8 +483,8 @@ static MQTTStatus_t _handleIncomingPublish( MQTTContext_t * const pContext,
  *
  * @return MQTTSuccess, MQTTIllegalState, or deserialization error.
  */
-static MQTTStatus_t _handleIncomingAck( MQTTContext_t * const pContext,
-                                        MQTTPacketInfo_t * pIncomingPacket )
+static MQTTStatus_t handleIncomingAck( MQTTContext_t * const pContext,
+                                       MQTTPacketInfo_t * pIncomingPacket )
 {
     MQTTStatus_t status = MQTTSuccess;
     MQTTPublishState_t publishRecordState = MQTTStateNull;
@@ -500,7 +502,7 @@ static MQTTStatus_t _handleIncomingAck( MQTTContext_t * const pContext,
         case MQTT_PACKET_TYPE_PUBREC:
         case MQTT_PACKET_TYPE_PUBREL:
         case MQTT_PACKET_TYPE_PUBCOMP:
-            ackType = _getAckFromPacketType( pIncomingPacket->type );
+            ackType = getAckFromPacketType( pIncomingPacket->type );
             status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier,  &sessionPresent );
             IotLogInfoWithArgs( "Ack packet deserialized with result: %d.",
                                 status );
@@ -514,9 +516,9 @@ static MQTTStatus_t _handleIncomingAck( MQTTContext_t * const pContext,
                                     publishRecordState );
 
                 /* Send PUBREL or PUBCOMP if necessary. */
-                status = _sendPublishAcks( pContext,
-                                           packetIdentifier,
-                                           &publishRecordState );
+                status = sendPublishAcks( pContext,
+                                          packetIdentifier,
+                                          &publishRecordState );
                 if( status == MQTTSuccess )
                 {
                     /* TODO: There doesn't seem to be a separate callback for acks. */
@@ -1169,6 +1171,7 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * const pContext,
     while( ( getCurrentTime() - entryTime ) < timeoutMs )
     {
         status = MQTT_GetIncomingPacketTypeAndLength( pContext->transportInterface.recv,
+                                                      pContext->transportInterface.networkContext,
                                                       &incomingPacket );
 
         if( ( status != MQTTSuccess ) && ( status != MQTTNoDataAvailable ) )
@@ -1180,7 +1183,7 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * const pContext,
         /* Receive packet. */
         if( status == MQTTSuccess )
         {
-            status = _receivePacket( pContext, incomingPacket );
+            status = receivePacket( pContext, incomingPacket );
         }
 
         /* Handle received packet. */
@@ -1191,11 +1194,11 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * const pContext,
              * packet types, they are reserved. */
             if( ( incomingPacket.type & 0xF0U ) == MQTT_PACKET_TYPE_PUBLISH )
             {
-                status = _handleIncomingPublish( pContext, &incomingPacket );
+                status = handleIncomingPublish( pContext, &incomingPacket );
             }
             else
             {
-                status = _handleIncomingAck( pContext, &incomingPacket );
+                status = handleIncomingAck( pContext, &incomingPacket );
             }
         }
 

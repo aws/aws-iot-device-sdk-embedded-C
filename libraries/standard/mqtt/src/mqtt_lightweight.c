@@ -74,11 +74,6 @@
 #define MQTT_PACKET_CONNACK_REMAINING_LENGTH        ( ( uint8_t ) 2U )    /**< @brief A CONNACK packet always has a "Remaining length" of 2. */
 #define MQTT_PACKET_CONNACK_SESSION_PRESENT_MASK    ( ( uint8_t ) 0x01U ) /**< @brief The "Session Present" bit is always the lowest bit. */
 
-/**
- * @brief The size of MQTT PUBACK, PUBREC, PUBREL, and PUBCOMP packets, per MQTT spec.
- */
-#define MQTT_PUBLISH_ACK_PACKET_SIZE                ( 4U )
-
 /*
  * UNSUBACK, PUBACK, PUBREC, PUBREL, and PUBCOMP always have a remaining length
  * of 2.

@@ -57,6 +57,11 @@
  */
 #define MQTT_PACKET_PINGREQ_SIZE        ( 2U )  /**< @brief A PINGREQ packet is always 2 bytes in size. */
 
+/**
+ * @brief The size of MQTT PUBACK, PUBREC, PUBREL, and PUBCOMP packets, per MQTT spec.
+ */
+#define MQTT_PUBLISH_ACK_PACKET_SIZE        ( 4UL )
+
 struct MQTTFixedBuffer;
 typedef struct MQTTFixedBuffer     MQTTFixedBuffer_t;
 
