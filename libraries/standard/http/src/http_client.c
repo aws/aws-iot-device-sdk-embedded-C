@@ -920,7 +920,7 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
         }
         else
         {
-            IotLogDebug( "Response ignored: pResponse is NULL. " );
+            IotLogDebug( "Response ignored: pResponse is NULL." );
         }
     }
 
@@ -1017,7 +1017,7 @@ HTTPStatus_t HTTPClient_ReadHeader( const HTTPResponse_t * pResponse,
             IotLogErrorWithArgs( "Unable to read header from response:"
                                  "Failure in parsing response for header field:"
                                  "HeaderName=%.*s, ParserError=% s ",
-                                 pHeaderName, headerNameLen,
+                                 headerNameLen, pHeaderName,
                                  HTTPClient_strerror( returnStatus ) );
         }
     }
@@ -1025,7 +1025,7 @@ HTTPStatus_t HTTPClient_ReadHeader( const HTTPResponse_t * pResponse,
     {
         IotLogErrorWithArgs( "Failed to read header from response: "
                              "Unable to initialize parsing context:"
-                             "HeaderName=%.*s ", pHeaderName, headerNameLen );
+                             "HeaderName=%.*s ", headerNameLen, pHeaderName );
     }
 
     return returnStatus;
@@ -1040,55 +1040,55 @@ const char * HTTPClient_strerror( HTTPStatus_t status )
     switch( status )
     {
         case HTTP_SUCCESS:
-            str = "HTTP_SUCCESS ";
+            str = "HTTP_SUCCESS";
             break;
 
         case HTTP_INVALID_PARAMETER:
-            str = "HTTP_INVALID_PARAMETER ";
+            str = "HTTP_INVALID_PARAMETER";
             break;
 
         case HTTP_NETWORK_ERROR:
-            str = "HTTP_NETWORK_ERROR ";
+            str = "HTTP_NETWORK_ERROR";
             break;
 
         case HTTP_PARTIAL_RESPONSE:
-            str = "HTTP_PARTIAL_RESPONSE ";
+            str = "HTTP_PARTIAL_RESPONSE";
             break;
 
         case HTTP_NO_RESPONSE:
-            str = "HTTP_NO_RESPONSE ";
+            str = "HTTP_NO_RESPONSE";
             break;
 
         case HTTP_INSUFFICIENT_MEMORY:
-            str = "HTTP_INSUFFICIENT_MEMORY ";
+            str = "HTTP_INSUFFICIENT_MEMORY";
             break;
 
         case HTTP_INTERNAL_ERROR:
-            str = "HTTP_INTERNAL_ERROR ";
+            str = "HTTP_INTERNAL_ERROR";
             break;
 
         case HTTP_SECURITY_ALERT_RESPONSE_HEADERS_SIZE_LIMIT_EXCEEDED:
-            str = "HTTP_SECURITY_ALERT_RESPONSE_HEADERS_SIZE_LIMIT_EXCEEDED ";
+            str = "HTTP_SECURITY_ALERT_RESPONSE_HEADERS_SIZE_LIMIT_EXCEEDED";
             break;
 
         case HTTP_SECURITY_ALERT_PARSER_INVALID_CHARACTER:
-            str = "HTTP_SECURITY_ALERT_PARSER_INVALID_CHARACTER ";
+            str = "HTTP_SECURITY_ALERT_PARSER_INVALID_CHARACTER";
             break;
 
         case HTTP_SECURITY_ALERT_INVALID_CONTENT_LENGTH:
-            str = "HTTP_SECURITY_ALERT_INVALID_CONTENT_LENGTH ";
+            str = "HTTP_SECURITY_ALERT_INVALID_CONTENT_LENGTH";
             break;
 
         case HTTP_HEADER_NOT_FOUND:
-            str = "HTTP_HEADER_NOT_FOUND ";
+            str = "HTTP_HEADER_NOT_FOUND";
             break;
 
         case HTTP_NOT_SUPPORTED:
-            str = "HTTP_NOT_SUPPORTED ";
+            str = "HTTP_NOT_SUPPORTED";
             break;
 
         default:
-            IotLogWarnWithArgs( "Invalid status code received for string conversion:"
+            IotLogWarnWithArgs( "Invalid status code received for string conversion: "
                                 "StatusCode=%d", status );
     }
 
