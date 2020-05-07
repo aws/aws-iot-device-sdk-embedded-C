@@ -24,8 +24,23 @@
 #include "mqtt.h"
 #include "private/mqtt_internal.h"
 
+/**
+ * @brief Sends provided buffer to network using transport send.
+ *
+ * This function sends #MQTTContext_t.networkBuffer.pBuffer by default to
+ * network. If a non NULL address is passed to pBufferToSend, then pBufferToSend
+ * will be sent to network instead of #MQTTContext_t.networkBuffer.pBuffer.
+ *
+ * @brief param[in] pContext Initialized MQTT context.
+ * @brief param[in] pBufferToSend Optional buffer to be sent to network
+ * instead of #MQTTContext_t.networkBuffer.pBuffer. Pass NULL to send
+ * #MQTTContext_t.networkBuffer.pBuffer instead.
+ * @brief param[in] bytesToSend Number of bytes to be sent.
+ *
+ * @return Total number of bytes sent; -1 if there is an error.
+ */
 static int32_t sendPacket( MQTTContext_t * pContext,
-                           const uint8_t * pOptionalBufferToSend,
+                           const uint8_t * pBufferToSend,
                            size_t bytesToSend )
 {
     const uint8_t * pIndex = pContext->networkBuffer.pBuffer;
@@ -36,9 +51,9 @@ static int32_t sendPacket( MQTTContext_t * pContext,
      * This is to support an optimization in publish to avoid copy of the
      * payload into networkBuffer.
      */
-    if( pOptionalBufferToSend != NULL )
+    if( pBufferToSend != NULL )
     {
-        pIndex = pOptionalBufferToSend;
+        pIndex = pBufferToSend;
     }
 
     /* Record the time of transmission. */
@@ -175,14 +190,14 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
     if( ( pContext == NULL ) || ( pPublishInfo == NULL ) )
     {
         IotLogErrorWithArgs( "Argument cannot be NULL: pContext=%p, "
-                             "pPublishInfo=%p",
+                             "pPublishInfo=%p.",
                              pContext,
                              pPublishInfo );
         status = MQTTBadParameter;
     }
     else if( ( pPublishInfo->qos != MQTTQoS0 ) && ( packetId == 0 ) )
     {
-        IotLogErrorWithArgs( "Packet Id is 0 for publish with QoS=%u",
+        IotLogErrorWithArgs( "Packet Id is 0 for PUBLISH with QoS=%u.",
                              pPublishInfo->qos );
         status = MQTTBadParameter;
     }
@@ -197,7 +212,7 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
         status = MQTT_GetPublishPacketSize( pPublishInfo,
                                             &remainingLength,
                                             &packetSize );
-        IotLogDebugWithArgs( "Publish packet size is %lu and remaining length is %lu",
+        IotLogDebugWithArgs( "PUBLISH packet size is %lu and remaining length is %lu.",
                              packetSize,
                              remainingLength );
     }
@@ -209,7 +224,7 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
                                               remainingLength,
                                               &( pContext->networkBuffer ),
                                               &headerSize );
-        IotLogDebugWithArgs( "Serialized publish header size is %lu",
+        IotLogDebugWithArgs( "Serialized PUBLISH header size is %lu.",
                              headerSize );
     }
 
@@ -217,27 +232,31 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
     {
         /* Send header first. */
         bytesSent = sendPacket( pContext, NULL, headerSize );
-        IotLogDebugWithArgs( "Sent %d bytes of publish header ",
-                             bytesSent );
 
         if( bytesSent < 0 )
         {
-            IotLogError( "Transport sent failed for publish header." );
+            IotLogError( "Transport send failed for PUBLISH header." );
             status = MQTTSendFailed;
         }
-        /* Send Payload. */
         else
         {
+            IotLogDebugWithArgs( "Sent %d bytes of PUBLISH header.",
+                                 bytesSent );
+
+            /* Send Payload. */
             bytesSent = sendPacket( pContext,
                                     pPublishInfo->pPayload,
                                     pPublishInfo->payloadLength );
-            IotLogDebugWithArgs( "Sent %d bytes of publish payload ",
-                                 bytesSent );
 
             if( bytesSent < 0 )
             {
-                IotLogError( "Transport sent failed for publish payload." );
+                IotLogError( "Transport send failed for PUBLISH payload." );
                 status = MQTTSendFailed;
+            }
+            else
+            {
+                IotLogDebugWithArgs( "Sent %d bytes of PUBLISH payload.",
+                                     bytesSent );
             }
         }
     }
