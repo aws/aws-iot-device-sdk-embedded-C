@@ -585,4 +585,15 @@ HTTPStatus_t HTTPClient_ReadHeader( const HTTPResponse_t * pResponse,
                                     const uint8_t ** pHeaderValueLoc,
                                     size_t * headerValueLen );
 
+/**
+ * @brief Error code to string conversion utility for HTTP Client library.
+ *
+ * @note This returns constant strings, which should not be modified.
+ *
+ * @param[in] status The status code to convert to a string.
+ *
+ * @return The string representation of the status code.
+ */
+const char * HTTPClient_strerror( HTTPStatus_t status );
+
 #endif /* ifndef HTTP_CLIENT_H_ */

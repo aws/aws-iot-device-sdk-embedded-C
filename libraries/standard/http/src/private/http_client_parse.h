@@ -71,7 +71,7 @@ HTTPStatus_t HTTPClient_ParseResponse( HTTPParsingContext_t * pParsingContext,
 /**
  * @brief Find the specified header field in the response buffer.
  *
- * @param[in] pParsingState The state of the of the response parsing.
+ * @param[in] pParsingContext The state of the of the response parsing.
  * @param[in] pBuffer The response buffer to parse.
  * @param[in] bufferLen The length of the response buffer to parse.
  * @param[in] pField The header field to search for.
