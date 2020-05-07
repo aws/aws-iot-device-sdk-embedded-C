@@ -1,4 +1,4 @@
-
+# Taken from amazon-freertos repository
 :cmock:
   :mock_prefix: mock_
   :when_no_prototypes: :warn

@@ -1,3 +1,5 @@
+# Taken from amazon-freertos repository
+
 #function to create the test executable
 function(create_test test_name
                      test_src
