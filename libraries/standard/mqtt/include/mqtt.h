@@ -176,7 +176,7 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
                            uint16_t packetId );
 
 /**
- * @brief Sends an MQTT ping request.
+ * @brief Sends an MQTT PINGREQ to broker.
  *
  * @param[in] pContext Initialized and connected MQTT context.
  *

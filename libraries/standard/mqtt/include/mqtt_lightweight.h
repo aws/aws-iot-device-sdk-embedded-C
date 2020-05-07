@@ -460,7 +460,7 @@ MQTTStatus_t MQTT_GetDisconnectPacketSize( size_t * pPacketSize );
 MQTTStatus_t MQTT_SerializeDisconnect( const MQTTFixedBuffer_t * const pBuffer );
 
 /**
- * @brief Serialize an MQTT ping request packet into the given buffer.
+ * @brief Serialize an MQTT PINGREQ packet into the given buffer.
  *
  * @param[out] pBuffer Buffer for packet serialization.
  *

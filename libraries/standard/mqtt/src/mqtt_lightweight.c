@@ -1777,12 +1777,15 @@ MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * const pBuffer )
 
     if( pBuffer == NULL )
     {
-        IotLogError( "pBuffer is NULL. " );
+        IotLogError( "pBuffer is NULL." );
         status = MQTTBadParameter;
     }
     else if( pBuffer->size < MQTT_PACKET_PINGREQ_SIZE )
     {
-        IotLogError( "Insufficient memory for packet." );
+        IotLogErrorWithArgs( "Buffer size of %lu is not sufficient to hold "
+                             "serialized PINGREQ packet of size of %lu.",
+                             pBuffer->size,
+                             MQTT_PACKET_PINGREQ_SIZE );
         status = MQTTNoMemory;
     }
     else
