@@ -28,45 +28,51 @@
 /**
  * @brief MQTT protocol version 3.1.1.
  */
-#define MQTT_VERSION_3_1_1    ( ( uint8_t ) 4U )
+#define MQTT_VERSION_3_1_1                          ( ( uint8_t ) 4U )
 
 /**
  * @brief Size of the fixed and variable header of a CONNECT packet.
  */
-#define MQTT_PACKET_CONNECT_HEADER_SIZE    ( 10UL )
+#define MQTT_PACKET_CONNECT_HEADER_SIZE             ( 10UL )
 
 /**
  * @brief Maximum size of an MQTT CONNECT packet, per MQTT spec.
  */
-#define MQTT_PACKET_CONNECT_MAX_SIZE       ( 327700UL )
+#define MQTT_PACKET_CONNECT_MAX_SIZE                ( 327700UL )
+
+/**
+ * @brief Per the MQTT 3.1.1 spec, the largest "Remaining Length" of an MQTT
+ * packet is this value.
+ */
+#define MQTT_MAX_REMAINING_LENGTH                   ( 268435455UL )
 
 /* MQTT CONNECT flags. */
-#define MQTT_CONNECT_FLAG_CLEAN          ( 1 )    /**< @brief Clean session. */
-#define MQTT_CONNECT_FLAG_WILL           ( 2 )    /**< @brief Will present. */
-#define MQTT_CONNECT_FLAG_WILL_QOS1      ( 3 )    /**< @brief Will QoS 1. */
-#define MQTT_CONNECT_FLAG_WILL_QOS2      ( 4 )    /**< @brief Will QoS 2. */
-#define MQTT_CONNECT_FLAG_WILL_RETAIN    ( 5 )    /**< @brief Will retain. */
-#define MQTT_CONNECT_FLAG_PASSWORD       ( 6 )    /**< @brief Password present. */
-#define MQTT_CONNECT_FLAG_USERNAME       ( 7 )    /**< @brief User name present. */
+#define MQTT_CONNECT_FLAG_CLEAN                     ( 1 ) /**< @brief Clean session. */
+#define MQTT_CONNECT_FLAG_WILL                      ( 2 ) /**< @brief Will present. */
+#define MQTT_CONNECT_FLAG_WILL_QOS1                 ( 3 ) /**< @brief Will QoS 1. */
+#define MQTT_CONNECT_FLAG_WILL_QOS2                 ( 4 ) /**< @brief Will QoS 2. */
+#define MQTT_CONNECT_FLAG_WILL_RETAIN               ( 5 ) /**< @brief Will retain. */
+#define MQTT_CONNECT_FLAG_PASSWORD                  ( 6 ) /**< @brief Password present. */
+#define MQTT_CONNECT_FLAG_USERNAME                  ( 7 ) /**< @brief User name present. */
 
 /*
  * Positions of each flag in the first byte of an MQTT PUBLISH packet's
  * fixed header.
  */
-#define MQTT_PUBLISH_FLAG_RETAIN         ( 0 )             /**< @brief Message retain flag. */
-#define MQTT_PUBLISH_FLAG_QOS1           ( 1 )             /**< @brief Publish QoS 1. */
-#define MQTT_PUBLISH_FLAG_QOS2           ( 2 )             /**< @brief Publish QoS 2. */
-#define MQTT_PUBLISH_FLAG_DUP            ( 3 )             /**< @brief Duplicate message. */
+#define MQTT_PUBLISH_FLAG_RETAIN                    ( 0 ) /**< @brief MQTT PUBLISH retain flag. */
+#define MQTT_PUBLISH_FLAG_QOS1                      ( 1 ) /**< @brief MQTT PUBLISH QoS1 flag. */
+#define MQTT_PUBLISH_FLAG_QOS2                      ( 2 ) /**< @brief MQTT PUBLISH QoS1 flag. */
+#define MQTT_PUBLISH_FLAG_DUP                       ( 3 ) /**< @brief MQTT PUBLISH duplicate flag. */
 
 /**
  * @brief The size of MQTT DISCONNECT packets, per MQTT spec.
  */
-#define MQTT_DISCONNECT_PACKET_SIZE         ( 2UL )
+#define MQTT_DISCONNECT_PACKET_SIZE                 ( 2UL )
 
 /**
  * @brief The Remaining Length field of MQTT disconnect packets, per MQTT spec.
  */
-#define MQTT_DISCONNECT_REMAINING_LENGTH    ( ( uint8_t ) 0 )
+#define MQTT_DISCONNECT_REMAINING_LENGTH            ( ( uint8_t ) 0 )
 
 /*
  * Constants relating to CONNACK packets, defined by MQTT 3.1.1 spec.
@@ -77,19 +83,19 @@
 /**
  * @brief The size of MQTT PUBACK, PUBREC, PUBREL, and PUBCOMP packets, per MQTT spec.
  */
-#define MQTT_PUBLISH_ACK_PACKET_SIZE        ( 4U )
+#define MQTT_PUBLISH_ACK_PACKET_SIZE                ( 4U )
 
 /*
  * UNSUBACK, PUBACK, PUBREC, PUBREL, and PUBCOMP always have a remaining length
  * of 2.
  */
-#define MQTT_PACKET_SIMPLE_ACK_REMAINING_LENGTH     ( ( uint8_t ) 2 )   /**< @brief PUBACK, PUBREC, PUBREl, PUBCOMP, UNSUBACK Remaining length. */
-#define MQTT_PACKET_PINGRESP_REMAINING_LENGTH       ( 0U ) /**< @brief A PINGRESP packet always has a "Remaining length" of 0. */
+#define MQTT_PACKET_SIMPLE_ACK_REMAINING_LENGTH     ( ( uint8_t ) 2 ) /**< @brief PUBACK, PUBREC, PUBREl, PUBCOMP, UNSUBACK Remaining length. */
+#define MQTT_PACKET_PINGRESP_REMAINING_LENGTH       ( 0U )            /**< @brief A PINGRESP packet always has a "Remaining length" of 0. */
 
 /**
  * @brief Set a bit in an 8-bit unsigned integer.
  */
-#define UINT8_SET_BIT( x, position )    ( ( x ) = ( uint8_t ) ( ( x ) | ( 0x01U << ( position ) ) ) )
+#define UINT8_SET_BIT( x, position )      ( ( x ) = ( uint8_t ) ( ( x ) | ( 0x01U << ( position ) ) ) )
 
 /**
  * @brief Macro for checking if a bit is set in a 1-byte unsigned int.
@@ -102,12 +108,12 @@
 /**
  * @brief Get the high byte of a 16-bit unsigned integer.
  */
-#define UINT16_HIGH_BYTE( x )    ( ( uint8_t ) ( ( x ) >> 8 ) )
+#define UINT16_HIGH_BYTE( x )             ( ( uint8_t ) ( ( x ) >> 8 ) )
 
 /**
  * @brief Get the low byte of a 16-bit unsigned integer.
  */
-#define UINT16_LOW_BYTE( x )     ( ( uint8_t ) ( ( x ) & 0x00ffU ) )
+#define UINT16_LOW_BYTE( x )              ( ( uint8_t ) ( ( x ) & 0x00ffU ) )
 
 /**
  * @brief Macro for decoding a 2-byte unsigned int from a sequence of bytes.
@@ -123,14 +129,54 @@
  *
  * This value is greater than what is allowed by the MQTT specification.
  */
-#define MQTT_REMAINING_LENGTH_INVALID               ( ( size_t ) 268435456 )
+#define MQTT_REMAINING_LENGTH_INVALID             ( ( size_t ) 268435456 )
 
 /**
  * @brief The minimum remaining length for a QoS 0 PUBLISH.
  *
  * Includes two bytes for topic name length and one byte for topic name.
  */
-#define MQTT_MIN_PUBLISH_REMAINING_LENGTH_QOS0      ( 3U )
+#define MQTT_MIN_PUBLISH_REMAINING_LENGTH_QOS0    ( 3U )
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Serializes MQTT PUBLISH packet into the buffer provided.
+ *
+ * This function serializes MQTT PUBLISH packet into #pFixedBuffer.pBuffer.
+ * Copy of the payload into the buffer is done as part of the serialization
+ * only if #serializePayload is true.
+ *
+ * @brief param[in] pPublishInfo Publish information.
+ * @brief param[in] remainingLength Remaining length of the PUBLISH packet.
+ * @brief param[in] packetIdentifier Packet identifier of PUBLISH packet.
+ * @brief param[in, out] pFixedBuffer Buffer to which PUBLISH packet will be
+ * serialized.
+ * @brief param[in] serializePayload Copy payload to the serialized buffer
+ * only if true. Only PUBLISH header will be serialized if false.
+ *
+ * @return Total number of bytes sent; -1 if there is an error.
+ */
+static void serializePublishCommon( const MQTTPublishInfo_t * pPublishInfo,
+                                    size_t remainingLength,
+                                    uint16_t packetIdentifier,
+                                    const MQTTFixedBuffer_t * const pFixedBuffer,
+                                    bool serializePayload );
+
+/**
+ * @brief Calculates the packet size and remaining length of an MQTT
+ * PUBLISH packet.
+ *
+ * @param[in] pPublishInfo MQTT PUBLISH packet parameters.
+ * @param[out] pRemainingLength The Remaining Length of the MQTT PUBLISH packet.
+ * @param[out] pPacketSize The total size of the MQTT PUBLISH packet.
+ *
+ * @return false if the packet would exceed the size allowed by the
+ * MQTT spec; true otherwise.
+ */
+static bool calculatePublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
+                                        size_t * pRemainingLength,
+                                        size_t * pPacketSize );
 
 /*-----------------------------------------------------------*/
 
@@ -252,6 +298,177 @@ static int32_t recvExact( MQTTTransportRecvFunc_t recvFunc,
 
 /*-----------------------------------------------------------*/
 
+static bool calculatePublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
+                                        size_t * pRemainingLength,
+                                        size_t * pPacketSize )
+{
+    bool status = true;
+    size_t packetSize = 0, payloadLimit = 0;
+
+    assert( pPublishInfo != NULL );
+    assert( pRemainingLength != NULL );
+    assert( pPacketSize != NULL );
+
+    /* The variable header of a PUBLISH packet always contains the topic name.
+     * The first 2 bytes of UTF-8 string contains length of the string.
+     */
+    packetSize += pPublishInfo->topicNameLength + sizeof( uint16_t );
+
+    /* The variable header of a QoS 1 or 2 PUBLISH packet contains a 2-byte
+     * packet identifier. */
+    if( pPublishInfo->qos > MQTTQoS0 )
+    {
+        packetSize += sizeof( uint16_t );
+    }
+
+    /* Calculate the maximum allowed size of the payload for the given parameters.
+     * This calculation excludes the "Remaining length" encoding, whose size is not
+     * yet known. */
+    payloadLimit = MQTT_MAX_REMAINING_LENGTH - packetSize - 1U;
+
+    /* Ensure that the given payload fits within the calculated limit. */
+    if( pPublishInfo->payloadLength > payloadLimit )
+    {
+        IotLogErrorWithArgs( "PUBLISH payload length of %lu cannot exceed "
+                             "%lu so as not to exceed the maximum "
+                             "remaining length of MQTT 3.1.1 packet( %lu ).",
+                             pPublishInfo->payloadLength,
+                             payloadLimit,
+                             MQTT_MAX_REMAINING_LENGTH );
+        status = false;
+    }
+    else
+    {
+        /* Add the length of the PUBLISH payload. At this point, the "Remaining length"
+         * has been calculated. */
+        packetSize += pPublishInfo->payloadLength;
+
+        /* Now that the "Remaining length" is known, recalculate the payload limit
+         * based on the size of its encoding. */
+        payloadLimit -= remainingLengthEncodedSize( packetSize );
+
+        /* Check that the given payload fits within the size allowed by MQTT spec. */
+        if( pPublishInfo->payloadLength > payloadLimit )
+        {
+            IotLogErrorWithArgs( "PUBLISH payload length of %lu cannot exceed "
+                                 "%lu so as not to exceed the maximum "
+                                 "remaining length of MQTT 3.1.1 packet( %lu ).",
+                                 pPublishInfo->payloadLength,
+                                 payloadLimit,
+                                 MQTT_MAX_REMAINING_LENGTH );
+            status = false;
+        }
+        else
+        {
+            /* Set the "Remaining length" output parameter and calculate the full
+             * size of the PUBLISH packet. */
+            *pRemainingLength = packetSize;
+
+            packetSize += 1U + remainingLengthEncodedSize( packetSize );
+            *pPacketSize = packetSize;
+        }
+    }
+
+    IotLogDebugWithArgs( "PUBLISH packet remaining length=%lu and packet size=%lu.",
+                         *pRemainingLength,
+                         *pPacketSize );
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+static void serializePublishCommon( const MQTTPublishInfo_t * pPublishInfo,
+                                    size_t remainingLength,
+                                    uint16_t packetIdentifier,
+                                    const MQTTFixedBuffer_t * const pFixedBuffer,
+                                    bool serializePayload )
+{
+    uint8_t * pIndex = NULL;
+    size_t minBufferSize = 0;
+
+    /* The first byte of a PUBLISH packet contains the packet type and flags. */
+    uint8_t publishFlags = MQTT_PACKET_TYPE_PUBLISH;
+
+    assert( pPublishInfo != NULL );
+    assert( pFixedBuffer != NULL );
+    /* Packet Id should be non zero for QoS1 and QoS2. */
+    assert( pPublishInfo->qos == MQTTQoS0 || packetIdentifier != 0U );
+    /* Duplicate flag should be set only for Qos1 or Qos2. */
+    assert( ( !pPublishInfo->dup ) || ( pPublishInfo->qos > MQTTQoS0 ) );
+
+    /* Get the start address of the buffer. */
+    pIndex = pFixedBuffer->pBuffer;
+
+    if( pPublishInfo->qos == MQTTQoS1 )
+    {
+        IotLogDebug( "Adding QoS as QoS1 in PUBLISH flags." );
+        UINT8_SET_BIT( publishFlags, MQTT_PUBLISH_FLAG_QOS1 );
+    }
+    else if( pPublishInfo->qos == MQTTQoS2 )
+    {
+        IotLogDebug( "Adding QoS as QoS2 in PUBLISH flags." );
+        UINT8_SET_BIT( publishFlags, MQTT_PUBLISH_FLAG_QOS2 );
+    }
+    else
+    {
+        /* Empty else MISRA 15.7 */
+    }
+
+    if( pPublishInfo->retain )
+    {
+        IotLogDebug( "Adding retain bit in PUBLISH flags." );
+        UINT8_SET_BIT( publishFlags, MQTT_PUBLISH_FLAG_RETAIN );
+    }
+
+    if( pPublishInfo->dup )
+    {
+        IotLogDebug( "Adding dup bit in PUBLISH flags." );
+        UINT8_SET_BIT( publishFlags, MQTT_PUBLISH_FLAG_DUP );
+    }
+
+    *pIndex = publishFlags;
+    pIndex++;
+
+    /* The "Remaining length" is encoded from the second byte. */
+    pIndex = encodeRemainingLength( pIndex, remainingLength );
+
+    /* The topic name is placed after the "Remaining length". */
+    pIndex = encodeString( pIndex,
+                           pPublishInfo->pTopicName,
+                           pPublishInfo->topicNameLength );
+
+    /* A packet identifier is required for QoS 1 and 2 messages. */
+    if( pPublishInfo->qos > MQTTQoS0 )
+    {
+        IotLogDebug( "Adding packet Id in PUBLISH packet." );
+        /* Place the packet identifier into the PUBLISH packet. */
+        *pIndex = UINT16_HIGH_BYTE( packetIdentifier );
+        *( pIndex + 1 ) = UINT16_LOW_BYTE( packetIdentifier );
+        pIndex += 2;
+    }
+
+    /* The payload is placed after the packet identifier.
+     * Payload is copied over only if required by the flag serializePayload.
+     * This will help reduce an unnecessary copy of the payload into the buffer.
+     */
+    if( ( pPublishInfo->payloadLength > 0U ) &&
+        ( serializePayload ) )
+    {
+        IotLogDebugWithArgs( "Copying PUBLISH payload of length =%lu to buffer",
+                             pPublishInfo->payloadLength );
+
+        /* This memcpy intentionally copies bytes from a void * buffer into
+         * a uint8_t * buffer. */
+        /* coverity[misra_c_2012_rule_21_15_violation] */
+        ( void ) memcpy( pIndex, pPublishInfo->pPayload, pPublishInfo->payloadLength );
+        pIndex += pPublishInfo->payloadLength;
+    }
+
+    /* Ensure that the difference between the end and beginning of the buffer
+     * is less than the buffer size. */
+    assert( ( ( size_t ) ( pIndex - pFixedBuffer->pBuffer ) ) <= pFixedBuffer->size );
+}
+
 static size_t getRemainingLength( MQTTTransportRecvFunc_t recvFunc,
                                   MQTTNetworkContext_t networkContext )
 {
@@ -269,6 +486,7 @@ static size_t getRemainingLength( MQTTTransportRecvFunc_t recvFunc,
         else
         {
             bytesReceived = recvFunc( networkContext, &encodedByte, 1U );
+
             if( bytesReceived == 1 )
             {
                 remainingLength += ( ( size_t ) encodedByte & 0x7FU ) * multiplier;
@@ -280,16 +498,18 @@ static size_t getRemainingLength( MQTTTransportRecvFunc_t recvFunc,
                 remainingLength = MQTT_REMAINING_LENGTH_INVALID;
             }
         }
+
         if( remainingLength == MQTT_REMAINING_LENGTH_INVALID )
         {
             break;
         }
-    } while ( ( encodedByte & 0x80U ) != 0U );
+    } while( ( encodedByte & 0x80U ) != 0U );
 
     /* Check that the decoded remaining length conforms to the MQTT specification. */
     if( remainingLength != MQTT_REMAINING_LENGTH_INVALID )
     {
         expectedSize = remainingLengthEncodedSize( remainingLength );
+
         if( bytesDecoded != expectedSize )
         {
             remainingLength = MQTT_REMAINING_LENGTH_INVALID;
@@ -319,13 +539,15 @@ static bool incomingPacketValid( uint8_t packetType )
         case MQTT_PACKET_TYPE_PINGRESP:
             status = true;
             break;
-        
+
         case ( MQTT_PACKET_TYPE_PUBREL & 0xF0U ):
+
             /* The second bit of a PUBREL must be set. */
             if( packetType & 0x02U )
             {
                 status = true;
             }
+
             break;
 
         /* Any other packet type is invalid. */
@@ -369,6 +591,7 @@ static MQTTStatus_t checkPublishRemainingLength( size_t remainingLength,
             status = MQTTBadResponse;
         }
     }
+
     return status;
 }
 
@@ -426,6 +649,7 @@ static MQTTStatus_t processPublishFlags( uint8_t publishFlags,
             IotLogDebug( "DUP is 0." );
         }
     }
+
     return status;
 }
 
@@ -434,6 +658,7 @@ static MQTTStatus_t processPublishFlags( uint8_t publishFlags,
 static void logConnackResponse( uint8_t responseCode )
 {
     assert( responseCode <= 5 );
+
     /* Declare the CONNACK response code strings. The fourth byte of CONNACK
      * indexes into this array for the corresponding response. This array
      * does not need to be allocated if logs are not enabled. */
@@ -448,7 +673,7 @@ static void logConnackResponse( uint8_t responseCode )
             "Connection refused: not authorized."                 /* 5 */
         };
         IotLogErrorWithArgs( "%s", pConnackResponses[ responseCode ] );
-    #endif
+    #endif /* if LIBRARY_LOG_LEVEL > IOT_LOG_NONE */
 }
 
 /*-----------------------------------------------------------*/
@@ -703,6 +928,7 @@ static MQTTStatus_t deserializePublish( const MQTTPacketInfo_t * const pIncoming
 
         IotLogDebugWithArgs( "Payload length %hu.", pPublishInfo->payloadLength );
     }
+
     return status;
 }
 
@@ -843,8 +1069,8 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * const pConnectInfo
         pIndex++;
 
         /* The remaining length of the CONNECT packet is encoded starting from the
-        * second byte. The remaining length does not include the length of the fixed
-        * header or the encoding of the remaining length. */
+         * second byte. The remaining length does not include the length of the fixed
+         * header or the encoding of the remaining length. */
         pIndex = encodeRemainingLength( pIndex, remainingLength );
 
         /* The string "MQTT" is placed at the beginning of the CONNECT packet's variable
@@ -971,7 +1197,39 @@ MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * const pPublish
                                         size_t * const pRemainingLength,
                                         size_t * const pPacketSize )
 {
-    return MQTTSuccess;
+    MQTTStatus_t status = MQTTSuccess;
+
+    if( ( pPublishInfo == NULL ) || ( pRemainingLength == NULL ) || ( pPacketSize == NULL ) )
+    {
+        IotLogErrorWithArgs( "Argument cannot be NULL: pPublishInfo=%p, "
+                             "pRemainingLength=%p, pPacketSize=%p.",
+                             pPublishInfo,
+                             pRemainingLength,
+                             pPacketSize );
+        status = MQTTBadParameter;
+    }
+    else if( ( pPublishInfo->pTopicName == NULL ) || ( pPublishInfo->topicNameLength == 0U ) )
+    {
+        IotLogErrorWithArgs( "Invalid topic name for PUBLISH: pTopicName=%p, "
+                             "topicNameLength=%u.",
+                             pPublishInfo->pTopicName,
+                             pPublishInfo->topicNameLength );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        /* Calculate the "Remaining length" field and total packet size. If it exceeds
+         * what is allowed in the MQTT standard, return an error. */
+        if( calculatePublishPacketSize( pPublishInfo, pRemainingLength, pPacketSize ) == false )
+        {
+            IotLogErrorWithArgs( "PUBLISH packet remaining length exceeds %lu, which is the "
+                                 "maximum size allowed by MQTT 3.1.1.",
+                                 MQTT_MAX_REMAINING_LENGTH );
+            status = MQTTBadParameter;
+        }
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/
@@ -981,7 +1239,56 @@ MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * const pPublishInfo
                                     size_t remainingLength,
                                     const MQTTFixedBuffer_t * const pBuffer )
 {
-    return MQTTSuccess;
+    MQTTStatus_t status = MQTTSuccess;
+    size_t packetSize = 0UL;
+
+    if( ( pBuffer == NULL ) || ( pPublishInfo == NULL ) )
+    {
+        IotLogErrorWithArgs( "Argument cannot be NULL: pBuffer=%p, "
+                             "pPublishInfo=%p.",
+                             pBuffer,
+                             pPublishInfo );
+        status = MQTTBadParameter;
+    }
+    else if( ( pPublishInfo->pTopicName == NULL ) || ( pPublishInfo->topicNameLength == 0U ) )
+    {
+        IotLogErrorWithArgs( "Invalid topic name for PUBLISH: pTopicName=%p, "
+                             "topicNameLength=%u.",
+                             pPublishInfo->pTopicName,
+                             pPublishInfo->topicNameLength );
+        status = MQTTBadParameter;
+    }
+    else if( ( pPublishInfo->qos != MQTTQoS0 ) && ( packetId == 0 ) )
+    {
+        IotLogErrorWithArgs( "Packet Id is 0 for PUBLISH with QoS=%u.",
+                             pPublishInfo->qos );
+        status = MQTTBadParameter;
+    }
+
+    /* Check if the serialized packet can fit in the buffer.
+     * Length of serialized packet = First byte + Length of encoded remaining length
+     *                               + Remaining length.
+     */
+    else if( ( packetSize = 1U + remainingLengthEncodedSize( remainingLength ) + remainingLength )
+             > pBuffer->size )
+    {
+        IotLogErrorWithArgs( "Buffer size of %lu is not sufficient to hold "
+                             "serialized PUBLISH packet of size of %lu.",
+                             pBuffer->size,
+                             packetSize );
+        status = MQTTNoMemory;
+    }
+    else
+    {
+        /* Serialize publish with header and payload. */
+        serializePublishCommon( pPublishInfo,
+                                remainingLength,
+                                packetId,
+                                pBuffer,
+                                true );
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/
@@ -992,7 +1299,61 @@ MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * const pPubli
                                           const MQTTFixedBuffer_t * const pBuffer,
                                           size_t * const pHeaderSize )
 {
-    return MQTTSuccess;
+    MQTTStatus_t status = MQTTSuccess;
+    size_t packetSize = 0UL;
+
+    if( ( pBuffer == NULL ) || ( pPublishInfo == NULL ) ||
+        ( pHeaderSize == NULL ) )
+    {
+        IotLogErrorWithArgs( "Argument cannot be NULL: pBuffer=%p, "
+                             "pPublishInfo=%p, pHeaderSize=%p.",
+                             pBuffer,
+                             pPublishInfo,
+                             pHeaderSize );
+        status = MQTTBadParameter;
+    }
+    else if( ( pPublishInfo->pTopicName == NULL ) || ( pPublishInfo->topicNameLength == 0U ) )
+    {
+        IotLogErrorWithArgs( "Invalid topic name for publish: pTopicName=%p, "
+                             "topicNameLength=%u.",
+                             pPublishInfo->pTopicName,
+                             pPublishInfo->topicNameLength );
+        status = MQTTBadParameter;
+    }
+    else if( ( pPublishInfo->qos != MQTTQoS0 ) && ( packetId == 0 ) )
+    {
+        IotLogErrorWithArgs( "Packet Id is 0 for publish with QoS=%u.",
+                             pPublishInfo->qos );
+        status = MQTTBadParameter;
+    }
+
+    /* Check if the serialized packet can fit in the buffer.
+     * Length of serialized packet = First byte + Length of encoded remaining length
+     *                               + Remaining length - Payload Length.
+     */
+    else if( ( packetSize = 1U + remainingLengthEncodedSize( remainingLength )
+                            + remainingLength - pPublishInfo->payloadLength ) > pBuffer->size )
+    {
+        IotLogErrorWithArgs( "Buffer size of %lu is not sufficient to hold "
+                             "serialized PUBLISH header packet of size of %lu.",
+                             pBuffer->size,
+                             packetSize );
+        status = MQTTNoMemory;
+    }
+    else
+    {
+        /* Serialize publish without copying the payload. */
+        serializePublishCommon( pPublishInfo,
+                                remainingLength,
+                                packetId,
+                                pBuffer,
+                                false );
+
+        /* Header size is the same as calculated packet size. */
+        *pHeaderSize = packetSize;
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/
@@ -1023,11 +1384,12 @@ MQTTStatus_t MQTT_SerializeAck( const MQTTFixedBuffer_t * const pBuffer,
             case MQTT_PACKET_TYPE_PUBREC:
             case MQTT_PACKET_TYPE_PUBREL:
             case MQTT_PACKET_TYPE_PUBCOMP:
-                pBuffer->pBuffer[0] = packetType;
-                pBuffer->pBuffer[1] = MQTT_PACKET_SIMPLE_ACK_REMAINING_LENGTH;
-                pBuffer->pBuffer[2] = UINT16_HIGH_BYTE( packetId );
-                pBuffer->pBuffer[3] = UINT16_LOW_BYTE( packetId );
+                pBuffer->pBuffer[ 0 ] = packetType;
+                pBuffer->pBuffer[ 1 ] = MQTT_PACKET_SIMPLE_ACK_REMAINING_LENGTH;
+                pBuffer->pBuffer[ 2 ] = UINT16_HIGH_BYTE( packetId );
+                pBuffer->pBuffer[ 3 ] = UINT16_LOW_BYTE( packetId );
                 break;
+
             default:
                 IotLogErrorWithArgs( "Packet type is not a publish ACK: Packet type=%02x",
                                      packetType );
@@ -1118,7 +1480,7 @@ MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * const pIncomingPa
     {
         status = deserializePublish( pIncomingPacket, pPacketId, pPublishInfo );
     }
-    
+
     return status;
 }
 
@@ -1168,7 +1530,7 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * const pIncomingPacket
             case MQTT_PACKET_TYPE_PUBCOMP:
                 status = deserializeSimpleAck( pIncomingPacket, pPacketId );
                 break;
-            
+
             /* Any other packet type is invalid. */
             default:
                 IotLogErrorWithArgs( "IotMqtt_DeserializeResponse() called with unknown packet type:(%lu).", pIncomingPacket->type );
@@ -1189,6 +1551,7 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( MQTTTransportRecvFunc_t readFu
     MQTTStatus_t status = MQTTSuccess;
     /* Read a single byte. */
     int32_t bytesReceived = readFunc( networkContext, &( pIncomingPacket->type ), 1U );
+
     if( bytesReceived == 1 )
     {
         /* Check validity. */
@@ -1207,13 +1570,12 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( MQTTTransportRecvFunc_t readFu
                                  pIncomingPacket->type );
             status = MQTTBadResponse;
         }
-        
     }
     else
     {
         status = MQTTNoDataAvailable;
     }
-    
+
     return status;
 }
 
