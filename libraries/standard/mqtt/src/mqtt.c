@@ -371,7 +371,41 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
 
 MQTTStatus_t MQTT_Ping( MQTTContext_t * const pContext )
 {
-    return MQTTSuccess;
+    int32_t bytesSent = 0;
+    MQTTStatus_t status = MQTTSuccess;
+
+    if( pContext == NULL )
+    {
+        IotLogError( "pContext is NULL." );
+        status = MQTTBadParameter;
+    }
+
+    if( status == MQTTSuccess )
+    {
+        /* Serialize MQTT PINGREQ. */
+        status = MQTT_SerializePingreq( &( pContext->networkBuffer ) );
+    }
+
+    if( status == MQTTSuccess )
+    {
+        /* Send the serialized PINGREQ packet to transport layer. */
+        bytesSent = sendPacket( pContext,
+                                pContext->networkBuffer.pBuffer,
+                                MQTT_PACKET_PINGREQ_SIZE );
+
+        if( bytesSent < 0 )
+        {
+            IotLogError( "Transport send failed for PINGREQ packet." );
+            status = MQTTSendFailed;
+        }
+        else
+        {
+            IotLogDebugWithArgs( "Sent %d bytes of PINGREQ packet.",
+                                 bytesSent );
+        }
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/
