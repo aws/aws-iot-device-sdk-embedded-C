@@ -20,9 +20,6 @@ endif()
 include("tools/cmake/filePaths.cmake")
 
 # Configure options to always show in CMake GUI.
-option( ATOMIC_USE_PORT
-        "Set this to ON to use a custom atomic port. When OFF, the build system will choose an atomic port."
-        OFF )
 option( BUILD_TESTS
         "Set this to ON to build both demo and test executables. When OFF, only demo executables are built."
         ON )

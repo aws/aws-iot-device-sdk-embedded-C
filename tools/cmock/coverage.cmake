@@ -35,7 +35,7 @@ foreach(testname ${files})
     file(APPEND ${REPORT_FILE} "${CONTENTS}")
 endforeach()
 
-# generage Junit style xml output
+# generate Junit style xml output
 execute_process(COMMAND ruby
     ${CMAKE_SOURCE_DIR}/../libraries/3rdparty/CMock/vendor/unity/auto/parse_output.rb
                     -xml ${REPORT_FILE}
