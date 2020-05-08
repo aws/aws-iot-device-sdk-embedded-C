@@ -287,6 +287,7 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * const pConnect
  * @param[out] pBuffer Buffer for packet serialization.
  *
  * @return #MQTTNoMemory if pBuffer is too small to hold the MQTT packet;
+ * #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSuccess otherwise.
  */
 MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * const pConnectInfo,
@@ -455,6 +456,7 @@ MQTTStatus_t MQTT_GetDisconnectPacketSize( size_t * pPacketSize );
  * @param[out] pBuffer Buffer for packet serialization.
  *
  * @return #MQTTNoMemory if pBuffer is too small to hold the MQTT packet;
+ * #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSuccess otherwise.
  */
 MQTTStatus_t MQTT_SerializeDisconnect( const MQTTFixedBuffer_t * const pBuffer );

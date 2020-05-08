@@ -132,7 +132,11 @@ void MQTT_Init( MQTTContext_t * const pContext,
  * @brief param[out] pSessionPresent Whether a previous session was present.
  * Only relevant if not establishing a clean session.
  *
- * @return See #MQTTStatus_t.
+ * @return #MQTTNoMemory if the #MQTTContext_t.networkBuffer is too small to
+ * hold the MQTT packet;
+ * #MQTTBadParameter if invalid parameters are passed;
+ * #MQTTSendFailed if transport send failed;
+ * #MQTTSuccess otherwise.
  */
 MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
                            const MQTTConnectInfo_t * const pConnectInfo,
@@ -212,7 +216,11 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * const pContext,
  *
  * @param[in] pContext Initialized and connected MQTT context.
  *
- * @return See #MQTTStatus_t.
+ * @return #MQTTNoMemory if the #MQTTContext_t.networkBuffer is too small to
+ * hold the MQTT packet;
+ * #MQTTBadParameter if invalid parameters are passed;
+ * #MQTTSendFailed if transport send failed;
+ * #MQTTSuccess otherwise.
  */
 MQTTStatus_t MQTT_Disconnect( MQTTContext_t * const pContext );
 
