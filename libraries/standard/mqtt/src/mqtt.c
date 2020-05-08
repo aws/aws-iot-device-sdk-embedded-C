@@ -213,8 +213,6 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
         bytesSent = sendPacket( pContext,
                                 pContext->networkBuffer.pBuffer,
                                 packetSize );
-        IotLogDebugWithArgs( "Sent %d bytes of CONNECT packet. ",
-                             bytesSent );
 
         if( bytesSent < 0 )
         {
@@ -551,8 +549,6 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * const pContext )
         bytesSent = sendPacket( pContext,
                                 pContext->networkBuffer.pBuffer,
                                 packetSize );
-        IotLogDebugWithArgs( "Sent %d bytes of disconnect packet. ",
-                             bytesSent );
 
         if( bytesSent < 0 )
         {
