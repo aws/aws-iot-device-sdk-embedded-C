@@ -109,7 +109,6 @@ typedef enum MQTTStatus
     MQTTNoDataAvailable, /**< No data available from the transport interface. */
     MQTTIllegalState,    /**< An illegal state in the state record. */
     MQTTStateCollision,  /**< A collision with an existing state record entry. */
-    MQTTBufferExceeded,  /**< Received a packet exceeding the network buffer. */
     MQTTKeepAliveTimeout /**< Timeout while waiting for PINGRESP. */
 } MQTTStatus_t;
 

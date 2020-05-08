@@ -241,10 +241,10 @@ static MQTTStatus_t dumpPacket( MQTTContext_t * const pContext,
 
     if( totalBytesReceived == ( int32_t ) remainingLength )
     {
-        IotLogInfoWithArgs( "Dumped packet. Dumped bytes=%d",
-                            totalBytesReceived );
-        /* Packet dumped, return error to application. */
-        status = MQTTBufferExceeded;
+        IotLogErrorWithArgs( "Dumped packet. Dumped bytes=%d",
+                             totalBytesReceived );
+        /* Packet dumped, so no data is available. */
+        status = MQTTNoDataAvailable;
     }
 
     return status;
@@ -273,10 +273,10 @@ static MQTTStatus_t receivePacket( MQTTContext_t * const pContext,
     if( incomingPacket.remainingLength > pContext->networkBuffer.size )
     {
         bytesToReceive = pContext->networkBuffer.size;
-        IotLogWarnWithArgs( "Incoming packet length %u exceeds network buffer size %u."
-                            "Incoming packet will be dumped",
-                            incomingPacket.remainingLength
-                            pContext->networkBuffer );
+        IotLogErrorWithArgs( "Incoming packet length %u exceeds network buffer size %u."
+                             "Incoming packet will be dumped",
+                             incomingPacket.remainingLength
+                             pContext->networkBuffer );
     }
     else
     {
