@@ -1773,7 +1773,29 @@ MQTTStatus_t MQTT_SerializeDisconnect( const MQTTFixedBuffer_t * const pBuffer )
 
 MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * const pBuffer )
 {
-    return MQTTSuccess;
+    MQTTStatus_t status = MQTTSuccess;
+
+    if( pBuffer == NULL )
+    {
+        IotLogError( "pBuffer is NULL." );
+        status = MQTTBadParameter;
+    }
+    else if( pBuffer->size < MQTT_PACKET_PINGREQ_SIZE )
+    {
+        IotLogErrorWithArgs( "Buffer size of %lu is not sufficient to hold "
+                             "serialized PINGREQ packet of size of %lu.",
+                             pBuffer->size,
+                             MQTT_PACKET_PINGREQ_SIZE );
+        status = MQTTNoMemory;
+    }
+    else
+    {
+        /* Ping request packets are always the same. */
+        pBuffer->pBuffer[ 0 ] = MQTT_PACKET_TYPE_PINGREQ;
+        pBuffer->pBuffer[ 1 ] = 0x00;
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/
