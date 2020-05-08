@@ -227,7 +227,6 @@ typedef enum HTTPStatus
      * - #HTTPClient_ReadHeader
      */
     HTTP_HEADER_NOT_FOUND,
-    << << << < HEAD
 
     /**
      * @brief The HTTP response, provided for parsing, is either corrupt or incomplete.
@@ -237,10 +236,8 @@ typedef enum HTTPStatus
      */
     HTTP_INVALID_RESPONSE,
 
-    == == == =
-        >> >> >> > origin / development
-        /* Temporary error code while implementation is in progress. */
-        HTTP_NOT_SUPPORTED,
+    /* Temporary error code while implementation is in progress. */
+    HTTP_NOT_SUPPORTED,
 } HTTPStatus_t;
 
 /**

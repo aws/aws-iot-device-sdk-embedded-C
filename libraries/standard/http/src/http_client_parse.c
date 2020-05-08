@@ -1,4 +1,8 @@
+#include <assert.h>
+#include <string.h>
+
 #include "private/http_client_parse.h"
+#include "private/http_client_internal.h"
 #include "http_parser/http_parser.h"
 
 HTTPStatus_t HTTPClient_InitializeParsingContext( HTTPParsingContext_t * pParsingContext,
@@ -52,10 +56,10 @@ static int findHeaderHeaderParsedCallback( http_parser * pHttpParser,
 
     assert( pHttpParser != NULL );
     assert( pFieldLoc != NULL );
-    assert( fieldLen >= 0u );
+    assert( fieldLen > 0u );
 
     assert( pContext->pField != NULL );
-    assert( pContext->fieldLen >= 0u );
+    assert( pContext->fieldLen > 0u );
 
     /* The header found flags should not be set. */
     assert( pContext->fieldFound == 0u );
@@ -88,10 +92,10 @@ static int findHeaderValueParsedCallback( http_parser * pHttpParser,
 
     assert( pHttpParser != NULL );
     assert( pVaLueLoc != NULL );
-    assert( valueLen >= 0u );
+    assert( valueLen > 0u );
 
     assert( pContext->pField != NULL );
-    assert( pContext->fieldLen >= 0u );
+    assert( pContext->fieldLen > 0u );
     assert( pContext->pValueLoc != NULL );
     assert( pContext->pValueLen != NULL );
 
@@ -105,8 +109,8 @@ static int findHeaderValueParsedCallback( http_parser * pHttpParser,
                              pContext->fieldLen, pContext->pField, pVaLueLoc );
 
         /* Populate the output parameters with the location of the header value in the response buffer. */
-        *pContext->pValueLoc = pVaLueLoc;
-        *pContext->pValueLoc = valueLen;
+        *pContext->pValueLoc = ( const uint8_t * ) pVaLueLoc;
+        *pContext->pValueLen = valueLen;
 
         /* As we have found the value associated with the header, we don't need
          * to parse the response any further. */
@@ -139,8 +143,7 @@ static int findHeaderOnHeaderCompleteCallback( http_parser * pHttpParser )
     return HTTP_PARSER_STOP_PARSING;
 }
 
-HTTPStatus_t HTTPClient_FindHeaderInResponse( HTTPParsingContext_t * pParsingContext,
-                                              const uint8_t * pBuffer,
+HTTPStatus_t HTTPClient_FindHeaderInResponse( const uint8_t * pBuffer,
                                               size_t bufferLen,
                                               const uint8_t * pField,
                                               size_t fieldLen,
@@ -209,7 +212,12 @@ HTTPStatus_t HTTPClient_FindHeaderInResponse( HTTPParsingContext_t * pParsingCon
     else
     {
         /* Header is found. */
-        assert( ( context.headerFound == 1u ) && ( context.valueFound == 1u ) );
+        assert( ( context.fieldFound == 1u ) && ( context.valueFound == 1u ) );
+
+        IotLogDebugWithArgs( "Found requested header in response: "
+                             "HeaderName=%.*s, HeaderValue=%.*s",
+                             fieldLen, pField,
+                             *pValueLen, *pValueLoc );
     }
 
     return returnStatus;

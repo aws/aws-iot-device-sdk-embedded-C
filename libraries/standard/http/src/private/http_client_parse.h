@@ -71,7 +71,6 @@ HTTPStatus_t HTTPClient_ParseResponse( HTTPParsingContext_t * pParsingContext,
 /**
  * @brief Find the specified header field in the response buffer.
  *
- * @param[in] pParsingContext The state of the of the response parsing.
  * @param[in] pBuffer The response buffer to parse.
  * @param[in] bufferLen The length of the response buffer to parse.
  * @param[in] pField The header field to search for.
@@ -82,10 +81,10 @@ HTTPStatus_t HTTPClient_ParseResponse( HTTPParsingContext_t * pParsingContext,
  * @return One of the following:
  * - #HTTP_SUCCESS when header is found in the response.
  * - #HTTP_HEADER_NOT_FOUND if requested header is not found in response.
+ * - #HTTP_INVALID_RESPONSE if passed response is invalid for parsing.
  * - #HTTP_INTERNAL_ERROR for any parsing errors.
  */
-HTTPStatus_t HTTPClient_FindHeaderInResponse( HTTPParsingContext_t * pParsingContext,
-                                              const uint8_t * pBuffer,
+HTTPStatus_t HTTPClient_FindHeaderInResponse( const uint8_t * pBuffer,
                                               size_t bufferLen,
                                               const uint8_t * pField,
                                               size_t fieldLen,
