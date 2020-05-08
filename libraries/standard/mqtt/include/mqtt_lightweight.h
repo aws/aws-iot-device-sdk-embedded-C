@@ -108,7 +108,9 @@ typedef enum MQTTStatus
     MQTTServerRefused,   /**< The server refused a CONNECT or SUBSCRIBE. */
     MQTTNoDataAvailable, /**< No data available from the transport interface. */
     MQTTIllegalState,    /**< An illegal state in the state record. */
-    MQTTStateCollision   /**< A collision with an existing state record entry. */
+    MQTTStateCollision,  /**< A collision with an existing state record entry. */
+    MQTTBufferExceeded,  /**< Received a packet exceeding the network buffer. */
+    MQTTKeepAliveTimeout /**< Timeout while waiting for PINGRESP. */
 } MQTTStatus_t;
 
 /**
@@ -517,7 +519,9 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * const pIncomingPacket
  * where type, remaining length and packet identifier are stored.
  *
  * @return #MQTTSuccess on successful extraction of type and length,
- * #MQTTBadResponse on failure and #MQTTNoDataAvailable if there is nothing to read.
+ * #MQTTRecvFailed on transport receive failure,
+ * #MQTTBadResponse if an invalid packet is read, and 
+ * #MQTTNoDataAvailable if there is nothing to read.
  */
 MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( MQTTTransportRecvFunc_t readFunc,
                                                   MQTTNetworkContext_t networkContext,

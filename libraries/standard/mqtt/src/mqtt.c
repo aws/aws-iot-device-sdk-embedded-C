@@ -243,8 +243,8 @@ static MQTTStatus_t dumpPacket( MQTTContext_t * const pContext,
     {
         IotLogInfoWithArgs( "Dumped packet. Dumped bytes=%d",
                             totalBytesReceived );
-        /* Packet dumped, so no data is available. */
-        status = MQTTNoDataAvailable;
+        /* Packet dumped, return error to application. */
+        status = MQTTBufferExceeded;
     }
 
     return status;
@@ -360,9 +360,6 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * const pContext,
     assert( pContext != NULL );
     assert( pPublishState != NULL );
 
-    /* pContext->controlPacketSent doesn't seem to be part of the context.
-     * Does it need to be added?
-     */
     switch( *pPublishState )
     {
         case MQTTPubAckSend:
@@ -404,6 +401,7 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * const pContext,
 
         if( bytesSent == MQTT_PUBLISH_ACK_PACKET_SIZE )
         {
+            pContext->controlPacketSent = true;
             newState = MQTT_UpdateStateAck( pContext,
                                             packetId,
                                             packetType,
@@ -424,6 +422,47 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * const pContext,
     {
         *pPublishState = newState;
     }
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Send a keep alive PINGREQ if the keep alive interval has elapsed.
+ *
+ * @param[in] pContext Initialized MQTT Context.
+ *
+ * @return #MQTTKeepAliveTimeout if a PINGRESP is not received in time,
+ * #MQTTSendFailed if the PINGREQ cannot be sent, or #MQTTSuccess.
+ */
+static MQTTStatus_t handleKeepAlive( MQTTContext_t * const pContext )
+{
+    MQTTStatus_t status = MQTTSuccess;
+    assert( pContext != NULL );
+    MQTTGetCurrentTimeFunc_t getCurrentTime = pContext->callbacks.getTime;
+    uint32_t now = getCurrentTime();
+    uint32_t keepAliveMs = 1000U * ( uint32_t ) pContext->keepAliveIntervalSec;
+
+    /* If keep alive interval is 0, it is disabled. */
+    if( keepAliveMs && ( ( now - pContext->lastPacketTime ) > keepAliveMs ) )
+    {
+        if( pContext->waitingForPingResp )
+        {
+            /* Has time expired? */
+            if( ( now - pContext->pingReqSendTimeMs ) > pContext->pingRespTimeoutMs )
+            {
+                status = MQTTKeepAliveTimeout;
+            }
+        }
+        else
+        {
+            status = MQTT_Ping( pContext );
+            /* Sending the packet may have taken some time. Recalculate. */
+            pContext->pingReqSendTimeMs = getCurrentTime();
+            pContext->waitingForPingResp = true;
+        }
+    }
+
     return status;
 }
 
@@ -529,7 +568,8 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * const pContext,
             }
             break;
         case MQTT_PACKET_TYPE_PINGRESP:
-            /* TODO: should this be handled here? pContext->waitingForPingResp = false; */
+            pContext->waitingForPingResp = false;
+            pContext->callbacks.appCallback( pContext, pIncomingPacket );
         case MQTT_PACKET_TYPE_SUBACK:
             /* Give these to the app provided callback. */
             pContext->callbacks.appCallback( pContext, pIncomingPacket );
@@ -1165,26 +1205,48 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * const pContext )
 MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * const pContext,
                                uint32_t timeoutMs )
 {
-    MQTTStatus_t status = MQTTSuccess;
-    MQTTGetCurrentTimeFunc_t getCurrentTime = pContext->callbacks.getTime;
-    uint32_t entryTime = getCurrentTime();
+    MQTTStatus_t status = MQTTBadParameter;
+    MQTTGetCurrentTimeFunc_t getCurrentTime = NULL;
+    uint32_t entryTime = 0;
     MQTTPacketInfo_t incomingPacket;
 
-    while( ( getCurrentTime() - entryTime ) < timeoutMs )
+    if( pContext != NULL )
+    {
+        getCurrentTime = pContext->callbacks.getTime;
+        entryTime = getCurrentTime();
+        status = MQTTSuccess;
+    }
+    else
+    {
+        IotLogError( "MQTT Context cannot be NULL." );
+    }
+    
+    while( ( pContext != NULL ) && ( ( getCurrentTime() - entryTime ) < timeoutMs ) )
     {
         status = MQTT_GetIncomingPacketTypeAndLength( pContext->transportInterface.recv,
                                                       pContext->transportInterface.networkContext,
                                                       &incomingPacket );
 
-        if( ( status != MQTTSuccess ) && ( status != MQTTNoDataAvailable ) )
+        if( status == MQTTNoDataAvailable )
+        {
+            /* Assign status so an error can be bubbled up to application,
+             * but reset it on success. */
+            status = handleKeepAlive( pContext );
+            if( status == MQTTSuccess )
+            {
+                /* Reset the status to indicate that we should not try to read
+                 * a packet from the transport interface. */
+                status = MQTTNoDataAvailable;
+            }
+        }
+        else if( status != MQTTSuccess )
         {
             IotLogErrorWithArgs( "Receiving incoming packet length failed. Status=%d",
                                  status );
         }
-
-        /* Receive packet. */
-        if( status == MQTTSuccess )
+        else
         {
+            /* Receive packet. */
             status = receivePacket( pContext, incomingPacket );
         }
 
@@ -1204,19 +1266,19 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * const pContext,
             }
         }
 
-        if( status != MQTTSuccess && status != MQTTNoDataAvailable )
+        if( status == MQTTNoDataAvailable )
+        {
+            /* No data available is still a successful iteration. */
+            status = MQTTSuccess;
+        }
+
+        if( status != MQTTSuccess )
         {
             /* Error, break. */
             IotLogErrorWithArgs( "Exiting receive loop. Error status=%d",
                                  status );
             break;
         }
-    }
-
-    /* No data available on last read is still success. */
-    if( status == MQTTNoDataAvailable )
-    {
-        status = MQTTSuccess;
     }
 
     return status;

@@ -109,6 +109,13 @@ struct MQTTContext
     MQTTConnectionStatus_t connectStatus;
     MQTTApplicationCallbacks_t callbacks;
     uint32_t lastPacketTime;
+    bool controlPacketSent;
+
+    /* Keep alive members. */
+    uint16_t keepAliveIntervalSec;
+    uint32_t pingReqSendTimeMs;
+    uint32_t pingRespTimeoutMs;
+    bool waitingForPingResp;
 };
 
 /**

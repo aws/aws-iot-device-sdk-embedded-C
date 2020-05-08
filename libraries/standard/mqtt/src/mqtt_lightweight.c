@@ -2019,9 +2019,13 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( MQTTTransportRecvFunc_t readFu
             status = MQTTBadResponse;
         }
     }
-    else
+    else if( bytesReceived == 0 )
     {
         status = MQTTNoDataAvailable;
+    }
+    else
+    {
+        status = MQTTRecvFailed;
     }
 
     return status;
