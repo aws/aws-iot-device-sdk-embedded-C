@@ -77,7 +77,7 @@ static int32_t sendPacket( MQTTContext_t * pContext,
     bytesRemaining = bytesToSend;
 
     /* Loop until the entire packet is sent. */
-    while( bytesRemaining > 0 )
+    while( bytesRemaining > 0UL )
     {
         bytesSent = pContext->transportInterface.send( pContext->transportInterface.networkContext,
                                                        pIndex,
@@ -156,7 +156,7 @@ void MQTT_Init( MQTTContext_t * const pContext,
                 const MQTTApplicationCallbacks_t * const pCallbacks,
                 const MQTTFixedBuffer_t * const pNetworkBuffer )
 {
-    memset( pContext, 0x00, sizeof( MQTTContext_t ) );
+    ( void ) memset( pContext, 0x00, sizeof( MQTTContext_t ) );
 
     pContext->connectStatus = MQTTNotConnected;
     pContext->transportInterface = *pTransportInterface;
@@ -174,7 +174,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
                            const MQTTPublishInfo_t * const pWillInfo,
                            bool * const pSessionPresent )
 {
-    size_t remainingLength, packetSize;
+    size_t remainingLength = 0UL, packetSize = 0UL;
     int32_t bytesSent;
     MQTTStatus_t status = MQTTSuccess;
     MQTTPacketInfo_t incomingPacket = { .type = ( ( uint8_t ) 0 ) };
@@ -268,7 +268,7 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * const pContext,
                              size_t subscriptionCount,
                              uint16_t packetId )
 {
-    size_t remainingLength = 0UL, packetSize = 0UL, headerSize = 0UL;
+    size_t remainingLength = 0UL, packetSize = 0UL;
     int32_t bytesSent = 0;
 
     /* Validate arguments. */
@@ -327,7 +327,7 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
                            const MQTTPublishInfo_t * const pPublishInfo,
                            uint16_t packetId )
 {
-    size_t remainingLength = 0, packetSize = 0, headerSize = 0;
+    size_t remainingLength = 0UL, packetSize = 0UL, headerSize = 0UL;
     int32_t bytesSent = 0;
     MQTTStatus_t status = MQTTSuccess;
 
@@ -340,7 +340,7 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
                           pPublishInfo );
         status = MQTTBadParameter;
     }
-    else if( ( pPublishInfo->qos != MQTTQoS0 ) && ( packetId == 0 ) )
+    else if( ( pPublishInfo->qos != MQTTQoS0 ) && ( packetId == 0U ) )
     {
         LogErrorWithArgs( "Packet Id is 0 for PUBLISH with QoS=%u.",
                           pPublishInfo->qos );
@@ -462,7 +462,7 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * const pContext,
                                size_t subscriptionCount,
                                uint16_t packetId )
 {
-    size_t remainingLength = 0UL, packetSize = 0UL, headerSize = 0UL;
+    size_t remainingLength = 0UL, packetSize = 0UL;
     int32_t bytesSent = 0;
 
     /* Validate arguments. */
@@ -587,7 +587,7 @@ uint16_t MQTT_GetPacketId( MQTTContext_t * const pContext )
 
     pContext->nextPacketId++;
 
-    if( pContext->nextPacketId == 0 )
+    if( pContext->nextPacketId == 0U )
     {
         pContext->nextPacketId = 1;
     }
