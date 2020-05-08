@@ -26,9 +26,9 @@
 #if __STDC_VERSION__ >= 199901L
     #include <stdbool.h>
 #else
-    #define bool signed char
-    #define false 0
-    #define true 1
+    #define bool     signed char
+    #define false    0
+    #define true     1
 #endif
 
 #include <stddef.h>
@@ -37,17 +37,19 @@
 #include "config.h"
 
 /* MQTT packet types. */
-#define MQTT_PACKET_TYPE_CONNECT       ( ( uint8_t ) 0x10U )   /**< @brief CONNECT (client-to-server). */
-#define MQTT_PACKET_TYPE_CONNACK       ( ( uint8_t ) 0x20U )   /**< @brief CONNACK (server-to-client). */
-#define MQTT_PACKET_TYPE_PUBLISH       ( ( uint8_t ) 0x30U )   /**< @brief PUBLISH (bidirectional). */
-#define MQTT_PACKET_TYPE_PUBACK        ( ( uint8_t ) 0x40U )   /**< @brief PUBACK (bidirectional). */
-#define MQTT_PACKET_TYPE_PUBREC        ( ( uint8_t ) 0x50U )   /**< @brief PUBREC (bidirectional). */
-#define MQTT_PACKET_TYPE_PUBREL        ( ( uint8_t ) 0x62U )   /**< @brief PUBREL (bidirectional). */
-#define MQTT_PACKET_TYPE_PUBCOMP       ( ( uint8_t ) 0x70U )   /**< @brief PUBCOMP (bidirectional). */
-#define MQTT_PACKET_TYPE_SUBACK        ( ( uint8_t ) 0x90U )   /**< @brief SUBACK (server-to-client). */
-#define MQTT_PACKET_TYPE_UNSUBACK      ( ( uint8_t ) 0xB0U )   /**< @brief UNSUBACK (server-to-client). */
-#define MQTT_PACKET_TYPE_PINGRESP      ( ( uint8_t ) 0xD0U )   /**< @brief PINGRESP (server-to-client). */
-#define MQTT_PACKET_TYPE_DISCONNECT    ( ( uint8_t ) 0xE0U )   /**< @brief DISCONNECT (client-to-server). */
+#define MQTT_PACKET_TYPE_CONNECT        ( ( uint8_t ) 0x10U )  /**< @brief CONNECT (client-to-server). */
+#define MQTT_PACKET_TYPE_CONNACK        ( ( uint8_t ) 0x20U )  /**< @brief CONNACK (server-to-client). */
+#define MQTT_PACKET_TYPE_PUBLISH        ( ( uint8_t ) 0x30U )  /**< @brief PUBLISH (bidirectional). */
+#define MQTT_PACKET_TYPE_PUBACK         ( ( uint8_t ) 0x40U )  /**< @brief PUBACK (bidirectional). */
+#define MQTT_PACKET_TYPE_PUBREC         ( ( uint8_t ) 0x50U )  /**< @brief PUBREC (bidirectional). */
+#define MQTT_PACKET_TYPE_PUBREL         ( ( uint8_t ) 0x62U )  /**< @brief PUBREL (bidirectional). */
+#define MQTT_PACKET_TYPE_PUBCOMP        ( ( uint8_t ) 0x70U )  /**< @brief PUBCOMP (bidirectional). */
+#define MQTT_PACKET_TYPE_SUBSCRIBE      ( ( uint8_t ) 0x82U )  /**< @brief SUBSCRIBE (client-to-server). */
+#define MQTT_PACKET_TYPE_SUBACK         ( ( uint8_t ) 0x90U )  /**< @brief SUBACK (server-to-client). */
+#define MQTT_PACKET_TYPE_UNSUBSCRIBE    ( ( uint8_t ) 0xA2U )  /**< @brief UNSUBSCRIBE (client-to-server). */
+#define MQTT_PACKET_TYPE_UNSUBACK       ( ( uint8_t ) 0xB0U )  /**< @brief UNSUBACK (server-to-client). */
+#define MQTT_PACKET_TYPE_PINGRESP       ( ( uint8_t ) 0xD0U )  /**< @brief PINGRESP (server-to-client). */
+#define MQTT_PACKET_TYPE_DISCONNECT     ( ( uint8_t ) 0xE0U )  /**< @brief DISCONNECT (client-to-server). */
 
 struct MQTTFixedBuffer;
 typedef struct MQTTFixedBuffer     MQTTFixedBuffer_t;
@@ -86,16 +88,16 @@ typedef int32_t (* MQTTTransportRecvFunc_t )( MQTTNetworkContext_t context,
  */
 typedef enum MQTTStatus
 {
-    MQTTSuccess = 0,    /**< Function completed successfully. */
-    MQTTBadParameter,   /**< At least one parameter was invalid. */
-    MQTTNoMemory,       /**< A provided buffer was too small. */
-    MQTTSendFailed,     /**< The transport send function failed. */
-    MQTTRecvFailed,     /**< The transport receive function failed. */
-    MQTTBadResponse,    /**< An invalid packet was received from the server. */
-    MQTTServerRefused,  /**< The server refused a CONNECT or SUBSCRIBE. */
-    MQTTNoDataAvailable,/**< No data available from the transport interface. */
-    MQTTIllegalState,   /**< An illegal state in the state record. */
-    MQTTStateCollision  /**< A collision with an existing state record entry. */
+    MQTTSuccess = 0,     /**< Function completed successfully. */
+    MQTTBadParameter,    /**< At least one parameter was invalid. */
+    MQTTNoMemory,        /**< A provided buffer was too small. */
+    MQTTSendFailed,      /**< The transport send function failed. */
+    MQTTRecvFailed,      /**< The transport receive function failed. */
+    MQTTBadResponse,     /**< An invalid packet was received from the server. */
+    MQTTServerRefused,   /**< The server refused a CONNECT or SUBSCRIBE. */
+    MQTTNoDataAvailable, /**< No data available from the transport interface. */
+    MQTTIllegalState,    /**< An illegal state in the state record. */
+    MQTTStateCollision   /**< A collision with an existing state record entry. */
 } MQTTStatus_t;
 
 /**
@@ -286,17 +288,70 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * const pConnectInfo
                                     size_t remainingLength,
                                     const MQTTFixedBuffer_t * const pBuffer );
 
-MQTTStatus_t MQTT_SubscriptionPacketSize( const MQTTSubscribeInfo_t * const pSubscriptionList,
+/**
+ * @brief Get packet size and Remaining Length of an MQTT SUBSCRIBE packet.
+ *
+ * @param[in] pSubscriptionList List of MQTT subscription info.
+ * @param[in] subscriptionCount The number of elements in pSubscriptionList.
+ * @param[out] pRemainingLength The Remaining Length of the MQTT SUBSCRIBE packet.
+ * @param[out] pPacketSize The total size of the MQTT SUBSCRIBE packet.
+ *
+ * @return #MQTTBadParameter if the packet would exceed the size allowed by the
+ * MQTT spec; #MQTTSuccess otherwise.
+ */
+MQTTStatus_t MQTT_GetSubscribePacketSize( const MQTTSubscribeInfo_t * const pSubscriptionList,
                                           size_t subscriptionCount,
                                           size_t * pRemainingLength,
                                           size_t * pPacketSize );
 
+/**
+ * @brief Serialize an MQTT SUBSCRIBE packet in the given buffer.
+ *
+ * @param[in] pSubscriptionList List of MQTT subscription info.
+ * @param[in] subscriptionCount The number of elements in pSubscriptionList.
+ * @param[in] packetId packet ID generated by #MQTT_GetPacketId.
+ * @param[in] remainingLength Remaining Length provided by #MQTT_GetSubscribePacketSize.
+ * @param[out] pBuffer Buffer for packet serialization.
+ *
+ * @return #MQTTNoMemory if pBuffer is too small to hold the MQTT packet;
+ * #MQTTBadParameter if invalid parameters are passed;
+ * #MQTTSuccess otherwise.
+ */
 MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * const pSubscriptionList,
                                       size_t subscriptionCount,
                                       uint16_t packetId,
                                       size_t remainingLength,
                                       const MQTTFixedBuffer_t * const pBuffer );
 
+/**
+ * @brief Get packet size and Remaining Length of an MQTT UNSUBSCRIBE packet.
+ *
+ * @param[in] pSubscriptionList List of MQTT subscription info.
+ * @param[in] subscriptionCount The number of elements in pSubscriptionList.
+ * @param[out] pRemainingLength The Remaining Length of the MQTT UNSUBSCRIBE packet.
+ * @param[out] pPacketSize The total size of the MQTT UNSUBSCRIBE packet.
+ *
+ * @return #MQTTBadParameter if the packet would exceed the size allowed by the
+ * MQTT spec; #MQTTSuccess otherwise.
+ */
+MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * const pSubscriptionList,
+                                            size_t subscriptionCount,
+                                            size_t * pRemainingLength,
+                                            size_t * pPacketSize );
+
+/**
+ * @brief Serialize an MQTT UNSUBSCRIBE packet in the given buffer.
+ *
+ * @param[in] pSubscriptionList List of MQTT subscription info.
+ * @param[in] subscriptionCount The number of elements in pSubscriptionList.
+ * @param[in] packetId packet ID generated by #MQTT_GetPacketId.
+ * @param[in] remainingLength Remaining Length provided by #MQTT_GetUnsubscribePacketSize.
+ * @param[out] pBuffer Buffer for packet serialization.
+ *
+ * @return #MQTTNoMemory if pBuffer is too small to hold the MQTT packet;
+ * #MQTTBadParameter if invalid parameters are passed;
+ * #MQTTSuccess otherwise.
+ */
 MQTTStatus_t MQTT_SerializeUnsubscribe( const MQTTSubscribeInfo_t * const pSubscriptionList,
                                         size_t subscriptionCount,
                                         uint16_t packetId,
