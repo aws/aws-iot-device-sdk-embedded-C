@@ -18,4 +18,5 @@ This SDK builds with [CMake](https://cmake.org/), a cross-platform build tool.
 1. Update submodules (if you haven't already): `git submodule update --init --recursive` 
 1. Create build directory: `mkdir build && cd build`
 1. Run cmake while inside build directory: `cmake ..`
-1. Run this command to build the demos: `make coverage`
+1. Run this command to build the demos: `make`
+1. Go to the `build/bin` directory to see executables
