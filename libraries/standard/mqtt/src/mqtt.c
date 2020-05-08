@@ -24,6 +24,8 @@
 #include "mqtt.h"
 #include "private/mqtt_internal.h"
 
+/*-----------------------------------------------------------*/
+
 /**
  * @brief Sends provided buffer to network using transport send.
  *
@@ -33,6 +35,28 @@
  *
  * @return Total number of bytes sent; -1 if there is an error.
  */
+static int32_t sendPacket( MQTTContext_t * pContext,
+                           const uint8_t * pBufferToSend,
+                           size_t bytesToSend );
+
+/**
+ * @brief Validates parameters of #MQTT_Subscribe or #MQTT_Unsubscribe.
+ *
+ * @param[in] pContext Initialized MQTT context.
+ * @param[in] pSubscriptionList List of MQTT subscription info.
+ * @param[in] subscriptionCount The number of elements in pSubscriptionList.
+ * @param[in] packetId Packet identifier.
+ *
+ * @return #MQTTBadParameter if invalid parameters are passed;
+ * #MQTTSuccess otherwise.
+ */
+static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * const pContext,
+                                                        const MQTTSubscribeInfo_t * const pSubscriptionList,
+                                                        size_t subscriptionCount,
+                                                        uint16_t packetId );
+
+/*-----------------------------------------------------------*/
+
 static int32_t sendPacket( MQTTContext_t * pContext,
                            const uint8_t * pBufferToSend,
                            size_t bytesToSend )
@@ -71,6 +95,42 @@ static int32_t sendPacket( MQTTContext_t * pContext,
     }
 
     return totalBytesSent;
+}
+
+/*-----------------------------------------------------------*/
+
+static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * const pContext,
+                                                        const MQTTSubscribeInfo_t * const pSubscriptionList,
+                                                        size_t subscriptionCount,
+                                                        uint16_t packetId )
+{
+    MQTTStatus_t status = MQTTSuccess;
+
+    /* Validate all the parameters. */
+    if( ( pContext == NULL ) || ( pSubscriptionList == NULL ) )
+    {
+        IotLogErrorWithArgs( "Argument cannot be NULL: pContext=%p, "
+                             "pSubscriptionList=%p.",
+                             pContext,
+                             pSubscriptionList );
+        status = MQTTBadParameter;
+    }
+    else if( subscriptionCount == 0UL )
+    {
+        IotLogError( "Subscription count is 0." );
+        status = MQTTBadParameter;
+    }
+    else if( packetId == 0U )
+    {
+        IotLogError( "Packet Id for subscription packet is 0." );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        /* Empty else MISRA 15.7 */
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/
@@ -158,9 +218,60 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
 
 MQTTStatus_t MQTT_Subscribe( MQTTContext_t * const pContext,
                              const MQTTSubscribeInfo_t * const pSubscriptionList,
-                             size_t subscriptionCount )
+                             size_t subscriptionCount,
+                             uint16_t packetId )
 {
-    return MQTTSuccess;
+    size_t remainingLength = 0UL, packetSize = 0UL, headerSize = 0UL;
+    int32_t bytesSent = 0;
+
+    /* Validate arguments. */
+    MQTTStatus_t status = validateSubscribeUnsubscribeParams( pContext,
+                                                              pSubscriptionList,
+                                                              subscriptionCount,
+                                                              packetId );
+
+    if( status == MQTTSuccess )
+    {
+        /* Get the remaining length and packet size.*/
+        status = MQTT_GetSubscribePacketSize( pSubscriptionList,
+                                              subscriptionCount,
+                                              &remainingLength,
+                                              &packetSize );
+        IotLogDebugWithArgs( "SUBSCRIBE packet size is %lu and remaining length is %lu.",
+                             packetSize,
+                             remainingLength );
+    }
+
+    if( status == MQTTSuccess )
+    {
+        /* Serialize MQTT SUBSCRIBE packet. */
+        status = MQTT_SerializeSubscribe( pSubscriptionList,
+                                          subscriptionCount,
+                                          packetId,
+                                          remainingLength,
+                                          &( pContext->networkBuffer ) );
+    }
+
+    if( status == MQTTSuccess )
+    {
+        /* Send serialized MQTT SUBSCRIBE packet to transport layer. */
+        bytesSent = sendPacket( pContext,
+                                pContext->networkBuffer.pBuffer,
+                                packetSize );
+
+        if( bytesSent < 0 )
+        {
+            IotLogError( "Transport send failed for SUBSCRIBE packet." );
+            status = MQTTSendFailed;
+        }
+        else
+        {
+            IotLogDebugWithArgs( "Sent %d bytes of SUBSCRIBE packet.",
+                                 bytesSent );
+        }
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/
@@ -267,9 +378,60 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * const pContext )
 
 MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * const pContext,
                                const MQTTSubscribeInfo_t * const pSubscriptionList,
-                               size_t subscriptionCount )
+                               size_t subscriptionCount,
+                               uint16_t packetId )
 {
-    return MQTTSuccess;
+    size_t remainingLength = 0UL, packetSize = 0UL, headerSize = 0UL;
+    int32_t bytesSent = 0;
+
+    /* Validate arguments. */
+    MQTTStatus_t status = validateSubscribeUnsubscribeParams( pContext,
+                                                              pSubscriptionList,
+                                                              subscriptionCount,
+                                                              packetId );
+
+    if( status == MQTTSuccess )
+    {
+        /* Get the remaining length and packet size.*/
+        status = MQTT_GetUnsubscribePacketSize( pSubscriptionList,
+                                                subscriptionCount,
+                                                &remainingLength,
+                                                &packetSize );
+        IotLogDebugWithArgs( "UNSUBSCRIBE packet size is %lu and remaining length is %lu.",
+                             packetSize,
+                             remainingLength );
+    }
+
+    if( status == MQTTSuccess )
+    {
+        /* Serialize MQTT UNSUBSCRIBE packet. */
+        status = MQTT_SerializeUnsubscribe( pSubscriptionList,
+                                            subscriptionCount,
+                                            packetId,
+                                            remainingLength,
+                                            &( pContext->networkBuffer ) );
+    }
+
+    if( status == MQTTSuccess )
+    {
+        /* Send serialized MQTT UNSUBSCRIBE packet to transport layer. */
+        bytesSent = sendPacket( pContext,
+                                pContext->networkBuffer.pBuffer,
+                                packetSize );
+
+        if( bytesSent < 0 )
+        {
+            IotLogError( "Transport send failed for UNSUBSCRIBE packet." );
+            status = MQTTSendFailed;
+        }
+        else
+        {
+            IotLogDebugWithArgs( "Sent %d bytes of UNSUBSCRIBE packet.",
+                                 bytesSent );
+        }
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/
