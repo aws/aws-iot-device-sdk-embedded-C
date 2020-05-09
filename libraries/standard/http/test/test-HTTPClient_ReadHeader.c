@@ -4,6 +4,7 @@
 #include "common.h"
 #include "http_parser/http_parser.h"
 
+/* Mirror of the context type used to pass to http_parser. */
 typedef struct findHeaderContext
 {
     const uint8_t * pField;

@@ -9,6 +9,36 @@
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Return value for http_parser registered callback to signal halting further execution.
+ */
+static const int HTTP_PARSER_STOP_PARSING = 1;
+
+/**
+ * @brief Return value for http_parser registered callback to signal further continuation of
+ * HTTP response parsing.
+ */
+static const int HTTP_PARSER_CONTINUE_PARSING = 0;
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief An aggregator that represents the user-provided parameters to the
+ * #HTTPClient_ReadHeader API function, to be used as context parameter
+ * to the parsing callback used by the API function.
+ */
+typedef struct findHeaderContext
+{
+    const uint8_t * pField;
+    size_t fieldLen;
+    const uint8_t ** pValueLoc;
+    size_t * pValueLen;
+    uint8_t fieldFound : 1;
+    uint8_t valueFound : 1;
+} findHeaderContext_t;
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief Send the HTTP headers over the transport send interface.
  *
  * @param[in] pTransport Transport interface.
@@ -161,6 +191,54 @@ static HTTPStatus_t findHeaderInResponse( const uint8_t * pBuffer,
                                           size_t fieldLen,
                                           const uint8_t ** pValue,
                                           size_t * valueLen );
+
+/**
+ * @brief The "on_header_field" callback for the HTTP parser used by the
+ * #findHeaderInResponse function. The callback checks whether the parser
+ * header field matched the header being searched for, and sets a flag to
+ * represent reception of the header accordingly.
+ *
+ * @param[in] pHttpParser The parser object to which this callback is registered.
+ * @param[in] pFieldLoc The location of the parsed header field in the response buffer.
+ * @param[in] fieldLen The length of the header field.
+ *
+ * @return Returns #HTTP_PARSER_CONTINUE_PARSING to indicate continuation with parsing.
+ */
+static int findHeaderHeaderParsedCallback( http_parser * pHttpParser,
+                                           const char * pFieldLoc,
+                                           size_t fieldLen );
+
+/**
+ * @brief The "on_header_value" callback for the HTTP parser used by the
+ * #findHeaderInResponse function. The callback sets the user-provided output parameters
+ * for header value if the requested header's field was found in the
+ * @ref findHeaderHeaderParsedCallback function.
+ *
+ * @param[in] pHttpParser The parser object to which this callback is registered.
+ * @param[in] pVaLueLoc The location of the parsed header value in the response buffer.
+ * @param[in] valueLen The length of the header value.
+ *
+ * @return Returns #HTTP_PARSER_STOP_PARSING if the header field/value pair are found; otherwise,
+ * #HTTP_PARSING_CONTINUE_PARSING.
+ */
+static int findHeaderValueParsedCallback( http_parser * pHttpParser,
+                                          const char * pVaLueLoc,
+                                          size_t valueLen );
+
+/**
+ * @brief The "on_header_complete" callback for the HTTP parser used by the
+ * #findHeaderInResponse function.
+ *
+ * This callback will only be invoked if the requested header is not found in
+ * the response. This callback is used to signal the parser to halt execution
+ * if the requested header is not found.
+ *
+ * @param[in] pHttpParser The parser object to which this callback is registered.
+ *
+ * @return Returns #HTTP_PARSER_STOP_PARSING for the parser to halt further execution,
+ * as all headers have been parsed in the response.
+ */
+static int findHeaderOnHeaderCompleteCallback( http_parser * pHttpParser );
 
 /*-----------------------------------------------------------*/
 
@@ -953,26 +1031,6 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
 
 /*-----------------------------------------------------------*/
 
-static const int HTTP_PARSER_STOP_PARSING = 1;
-static const int HTTP_PARSER_CONTINUE_PARSING = 0;
-
-/**
- * @brief An aggregator that represents the user-provided parameters to the
- * #HTTPClient_ReadHeader API function, to be used as context parameter
- * to the parsing callback used by the API function.
- */
-typedef struct findHeaderContext
-{
-    const uint8_t * pField;
-    size_t fieldLen;
-    const uint8_t ** pValueLoc;
-    size_t * pValueLen;
-    uint8_t fieldFound : 1;
-    uint8_t valueFound : 1;
-} findHeaderContext_t;
-
-/*-----------------------------------------------------------*/
-
 static int findHeaderHeaderParsedCallback( http_parser * pHttpParser,
                                            const char * pFieldLoc,
                                            size_t fieldLen )
@@ -1296,6 +1354,7 @@ const char * HTTPClient_strerror( HTTPStatus_t status )
         default:
             IotLogWarnWithArgs( "Invalid status code received for string conversion: "
                                 "StatusCode=%d", status );
+            break;
     }
 
     return str;
