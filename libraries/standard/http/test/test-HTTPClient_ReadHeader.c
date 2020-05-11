@@ -134,7 +134,7 @@ int main()
         invokeHeaderCompleteCallback = false;                      \
     } while( 0 )
 
-    plan( 56 );
+    plan( 69 );
 
     /*************************** Test Failure Cases *****************************/
 
@@ -208,7 +208,7 @@ int main()
                                      NULL );
     ok( retCode == HTTP_INVALID_PARAMETER );
 
-    /* Test when http_parser_execute does not call the value callback,
+    /* Test when http_parser_execute() does not call the value callback,
      * even though the response is valid and requested header is present,
      * due to an internal error. */
     reset();
@@ -226,6 +226,28 @@ int main()
                                      &valueLen );
     ok( retCode == HTTP_INTERNAL_ERROR );
 
+    /* Test when the header is present in response but http_parser_execute()
+     * does not set the expected errno value (of "CB_header_value")
+     * due to an internal error. */
+    reset();
+    /* Configure the http_parser_execute mock. */
+    invokeHeaderFieldCallback = true;
+    invokeHeaderValueCallback = true;
+    pFieldLocToReturn = &pTestResponse[ headerFieldInRespLoc ];
+    fieldLenToReturn = headerFieldInRespLen;
+    pValueLocToReturn = &pTestResponse[ headerValInRespLoc ];
+    valueLenToReturn = headerValInRespLen;
+    expectedValCbRetVal = HTTP_PARSER_STOP_PARSING;
+    parserErrNo = HPE_CB_chunk_complete;
+    /* Call the function under test. */
+    testResponse.pBuffer = ( uint8_t * ) &pTestResponse[ 0 ];
+    testResponse.bufferLen = strlen( pTestResponse );
+    retCode = HTTPClient_ReadHeader( &testResponse,
+                                     HEADER_IN_BUFFER,
+                                     strlen( HEADER_IN_BUFFER ),
+                                     &pValueLoc,
+                                     &valueLen );
+    ok( retCode == HTTP_INTERNAL_ERROR );
 
     /* Test when requested header is not present in response. */
 
