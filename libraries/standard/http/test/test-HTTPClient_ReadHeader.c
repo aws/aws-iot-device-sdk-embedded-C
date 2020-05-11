@@ -15,9 +15,6 @@ typedef struct findHeaderContext
     uint8_t valueFound : 1;
 } findHeaderContext_t;
 
-#define HTTP_PARSER_STOP_PARSING        1
-#define HTTP_PARSER_CONTINUE_PARSING    0
-
 /* Functions are pulled out into their own C files to be tested as a unit. */
 #include "HTTPClient_strerror.c"
 #include "findHeaderFieldParserCallback.c"

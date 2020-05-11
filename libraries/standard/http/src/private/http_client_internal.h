@@ -104,4 +104,16 @@
     ( RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN + MAX_INT32_NO_OF_DECIMAL_DIGITS + \
       1u /* Dash character '-' */ + MAX_INT32_NO_OF_DECIMAL_DIGITS )
 
+/**
+ * @brief Return value for http_parser registered callback to signal halting further execution.
+ */
+#define HTTP_PARSER_STOP_PARSING        1
+
+/**
+ * @brief Return value for http_parser registered callback to signal further continuation of
+ * HTTP response parsing.
+ */
+#define HTTP_PARSER_CONTINUE_PARSING    0
+
+
 #endif /* ifndef HTTP_CLIENT_INTERNAL_H_ */

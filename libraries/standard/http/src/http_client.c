@@ -9,19 +9,6 @@
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Return value for http_parser registered callback to signal halting further execution.
- */
-static const int HTTP_PARSER_STOP_PARSING = 1;
-
-/**
- * @brief Return value for http_parser registered callback to signal further continuation of
- * HTTP response parsing.
- */
-static const int HTTP_PARSER_CONTINUE_PARSING = 0;
-
-/*-----------------------------------------------------------*/
-
-/**
  * @brief An aggregator that represents the user-provided parameters to the
  * #HTTPClient_ReadHeader API function. This will be used as context parameter
  * for the parsing callbacks used by the API function.
