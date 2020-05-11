@@ -20,8 +20,8 @@ typedef struct findHeaderContext
 
 /* Functions are pulled out into their own C files to be tested as a unit. */
 #include "HTTPClient_strerror.c"
-#include "findHeaderHeaderParsedCallback.c"
-#include "findHeaderValueParsedCallback.c"
+#include "findHeaderFieldParserCallback.c"
+#include "findHeaderValueParserCallback.c"
 #include "findHeaderOnHeaderCompleteCallback.c"
 #include "findHeaderInResponse.c"
 #include "HTTPClient_ReadHeader.c"

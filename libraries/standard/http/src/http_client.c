@@ -23,8 +23,8 @@ static const int HTTP_PARSER_CONTINUE_PARSING = 0;
 
 /**
  * @brief An aggregator that represents the user-provided parameters to the
- * #HTTPClient_ReadHeader API function, to be used as context parameter
- * to the parsing callback used by the API function.
+ * #HTTPClient_ReadHeader API function. This will be used as context parameter
+ * for the parsing callbacks used by the API function.
  */
 typedef struct findHeaderContext
 {
@@ -204,15 +204,15 @@ static HTTPStatus_t findHeaderInResponse( const uint8_t * pBuffer,
  *
  * @return Returns #HTTP_PARSER_CONTINUE_PARSING to indicate continuation with parsing.
  */
-static int findHeaderHeaderParsedCallback( http_parser * pHttpParser,
-                                           const char * pFieldLoc,
-                                           size_t fieldLen );
+static int findHeaderFieldParserCallback( http_parser * pHttpParser,
+                                          const char * pFieldLoc,
+                                          size_t fieldLen );
 
 /**
  * @brief The "on_header_value" callback for the HTTP parser used by the
  * #findHeaderInResponse function. The callback sets the user-provided output parameters
  * for header value if the requested header's field was found in the
- * @ref findHeaderHeaderParsedCallback function.
+ * @ref findHeaderFieldParserCallback function.
  *
  * @param[in] pHttpParser The parser object to which this callback is registered.
  * @param[in] pVaLueLoc The location of the parsed header value in the response buffer.
@@ -221,7 +221,7 @@ static int findHeaderHeaderParsedCallback( http_parser * pHttpParser,
  * @return Returns #HTTP_PARSER_STOP_PARSING if the header field/value pair are found; otherwise,
  * #HTTP_PARSING_CONTINUE_PARSING.
  */
-static int findHeaderValueParsedCallback( http_parser * pHttpParser,
+static int findHeaderValueParserCallback( http_parser * pHttpParser,
                                           const char * pVaLueLoc,
                                           size_t valueLen );
 
@@ -1031,9 +1031,9 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
 
 /*-----------------------------------------------------------*/
 
-static int findHeaderHeaderParsedCallback( http_parser * pHttpParser,
-                                           const char * pFieldLoc,
-                                           size_t fieldLen )
+static int findHeaderFieldParserCallback( http_parser * pHttpParser,
+                                          const char * pFieldLoc,
+                                          size_t fieldLen )
 {
     findHeaderContext_t * pContext = ( findHeaderContext_t * ) pHttpParser->data;
 
@@ -1068,7 +1068,7 @@ static int findHeaderHeaderParsedCallback( http_parser * pHttpParser,
 
 /*-----------------------------------------------------------*/
 
-static int findHeaderValueParsedCallback( http_parser * pHttpParser,
+static int findHeaderValueParserCallback( http_parser * pHttpParser,
                                           const char * pVaLueLoc,
                                           size_t valueLen )
 {
@@ -1164,8 +1164,8 @@ static HTTPStatus_t findHeaderInResponse( const uint8_t * pBuffer,
      * need to create a private context in httpParser->data that has the field and
      * value to update and pass back. */
     http_parser_settings_init( &parserSettings );
-    parserSettings.on_header_field = findHeaderHeaderParsedCallback;
-    parserSettings.on_header_value = findHeaderValueParsedCallback;
+    parserSettings.on_header_field = findHeaderFieldParserCallback;
+    parserSettings.on_header_value = findHeaderValueParserCallback;
     parserSettings.on_headers_complete = findHeaderOnHeaderCompleteCallback;
 
     /* Start parsing for the header! */
@@ -1210,17 +1210,26 @@ static HTTPStatus_t findHeaderInResponse( const uint8_t * pBuffer,
                              *pValueLen, *pValueLoc );
     }
 
+    /* If the header field-value pair is found in response, then the return value of "on_header_value"
+     * callback (related to the header value) should cause the http_parser.http_errno to be "CB_header_value". */
     if( ( returnStatus == HTTP_SUCCESS ) && ( ( parser.http_errno != HPE_CB_header_value ) ) )
     {
         IotLogErrorWithArgs( "Header found in response but http-parser returned error: ParserError=%s",
                              http_errno_description( HTTP_PARSER_ERRNO( &( parser ) ) ) );
         returnStatus = HTTP_INTERNAL_ERROR;
     }
+
+    /* If header was not found, then the "on_header_complete" callback is expected to be called which should
+     * cause the http_parser.http_errno to be "OK" */
     else if( ( returnStatus == HTTP_HEADER_NOT_FOUND ) && ( ( parser.http_errno != HPE_OK ) ) )
     {
-        IotLogErrorWithArgs( "Header not found search in response: http-parser returned error: ParserError=%s",
+        IotLogErrorWithArgs( "Header not found in response: http-parser returned error: ParserError=%s",
                              http_errno_description( HTTP_PARSER_ERRNO( &( parser ) ) ) );
         returnStatus = HTTP_INVALID_RESPONSE;
+    }
+    else
+    {
+        /* Empty else for MISRA 15.7 compliance. */
     }
 
     return returnStatus;

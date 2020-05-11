@@ -214,6 +214,14 @@ typedef enum HTTPStatus
      */
     HTTP_INSUFFICIENT_MEMORY,
 
+    /**
+     * @brief Represents all errors not related to user-input or transport I/O, but
+     * errors internal to the implementation of the HTTP client library.
+     *
+     * Functions that may return this value:
+     * - #HTTPClient_Send
+     * - #HTTPClient_ReadHeader
+     */
     HTTP_INTERNAL_ERROR,
     HTTP_SECURITY_ALERT_RESPONSE_HEADERS_SIZE_LIMIT_EXCEEDED,
     HTTP_SECURITY_ALERT_PARSER_INVALID_CHARACTER,

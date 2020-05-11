@@ -39,8 +39,8 @@ FUNCTIONS = addHeader \
 			HTTPClient_ParseResponse \
 			getFinalResponseStatus \
 			HTTPClient_strerror \
-			findHeaderHeaderParsedCallback \
-			findHeaderValueParsedCallback \
+			findHeaderFieldParserCallback \
+			findHeaderValueParserCallback \
 			findHeaderOnHeaderCompleteCallback \
 			findHeaderInResponse 
 
@@ -48,7 +48,7 @@ FUNCTIONS = addHeader \
 include Mock4thewin.mk
 
 # additional dependencies for all tests
-$(TESTS): $(CSDK_ROOT)/platform/posix/iot_clock_posix.o $(CSDK_ROOT)/platform/posix/iot_logging.o #../third_party/http_parser/http_parser.o ../src/http_client_parse.o
+$(TESTS): $(CSDK_ROOT)/platform/posix/iot_clock_posix.o $(CSDK_ROOT)/platform/posix/iot_logging.o
 
 # additional dependency for a specific test
 HTTPClient_AddHeader.c: addHeader.c
@@ -62,8 +62,8 @@ HTTPClient_Send.c: sendHttpHeaders.c \
 				   getFinalResponseStatus.c
 HTTPClient_InitializeRequestHeaders.c: writeRequestLine.c addHeader.c
 HTTPClient_ReadHeader.c: HTTPClient_strerror.c \
-						 findHeaderHeaderParsedCallback.c \
-						 findHeaderValueParsedCallback.c \
+						 findHeaderFieldParserCallback.c \
+						 findHeaderValueParserCallback.c \
 						 findHeaderOnHeaderCompleteCallback.c \
 						 findHeaderInResponse.c 
 
