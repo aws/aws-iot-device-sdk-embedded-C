@@ -33,9 +33,9 @@ static const char * pTestResponse = "HTTP/1.1 200 OK"
                                     "test-header2: test-value2\r\n"
                                     "\r\n";
 static const size_t headerFieldInRespLoc = 42;
-static const size_t headerFieldInRespLen = strlen( "test-header1" );
+static const size_t headerFieldInRespLen = sizeof( "test-header1" ) - 1u;
 static const size_t headerValInRespLoc = 56;
-static const size_t headerValInRespLen = strlen( "test-value1" );
+static const size_t headerValInRespLen = sizeof( "test-value1" ) - 1u;
 
 #define HEADER_IN_BUFFER        "test-header1"
 #define HEADER_NOT_IN_BUFFER    "header-not-in-buffer"
@@ -57,10 +57,10 @@ void http_parser_settings_init( http_parser_settings * settings )
 static const char * pExpectedBuffer = NULL;
 static size_t expectedBufferSize = 0u;
 bool invokeHeaderFieldCallback = false;
-const uint8_t * pFieldLocToReturn = NULL;
+const char * pFieldLocToReturn = NULL;
 size_t fieldLenToReturn = 0u;
 bool invokeHeaderValueCallback = false;
-const uint8_t * pValueLocToReturn = NULL;
+const char * pValueLocToReturn = NULL;
 static int expectedValCbRetVal = 0;
 size_t valueLenToReturn = 0u;
 bool invokeHeaderCompleteCallback = false;
@@ -82,13 +82,17 @@ size_t http_parser_execute( http_parser * parser,
     if( invokeHeaderFieldCallback == true )
     {
         ok( HTTP_PARSER_CONTINUE_PARSING ==
-            settings->on_header_field( parser, pFieldLocToReturn, fieldLenToReturn ) );
+            settings->on_header_field( parser,
+                                       pFieldLocToReturn,
+                                       fieldLenToReturn ) );
     }
 
     if( invokeHeaderValueCallback == true )
     {
         ok( expectedValCbRetVal ==
-            settings->on_header_value( parser, pValueLocToReturn, valueLenToReturn ) );
+            settings->on_header_value( parser,
+                                       pValueLocToReturn,
+                                       valueLenToReturn ) );
     }
 
     if( invokeHeaderCompleteCallback == true )
@@ -99,6 +103,8 @@ size_t http_parser_execute( http_parser * parser,
 
     /* Set the error value in the parser. */
     parser->http_errno = parserErrNo;
+
+    return len;
 }
 
 const char * http_errno_description( enum http_errno err )
@@ -116,22 +122,22 @@ int main()
     const uint8_t * pValueLoc = NULL;
     size_t valueLen = 0u;
 
-#define reset()                                                    \
-    do {                                                           \
-        retCode = HTTP_NOT_SUPPORTED;                              \
-        memset( &testResponse, 0, sizeof( testResponse ) );        \
-        pValueLoc = NULL;                                          \
-        valueLen = 0u;                                             \
-        pExpectedBuffer = ( const uint8_t * ) &pTestResponse[ 0 ]; \
-        expectedBufferSize = strlen( pTestResponse );              \
-        invokeHeaderFieldCallback = false;                         \
-        pFieldLocToReturn = NULL;                                  \
-        fieldLenToReturn = 0u;                                     \
-        invokeHeaderValueCallback = false;                         \
-        pValueLocToReturn = NULL;                                  \
-        expectedValCbRetVal = 0;                                   \
-        valueLenToReturn = 0u;                                     \
-        invokeHeaderCompleteCallback = false;                      \
+#define reset()                                             \
+    do {                                                    \
+        retCode = HTTP_NOT_SUPPORTED;                       \
+        memset( &testResponse, 0, sizeof( testResponse ) ); \
+        pValueLoc = NULL;                                   \
+        valueLen = 0u;                                      \
+        pExpectedBuffer = &pTestResponse[ 0 ];              \
+        expectedBufferSize = strlen( pTestResponse );       \
+        invokeHeaderFieldCallback = false;                  \
+        pFieldLocToReturn = NULL;                           \
+        fieldLenToReturn = 0u;                              \
+        invokeHeaderValueCallback = false;                  \
+        pValueLocToReturn = NULL;                           \
+        expectedValCbRetVal = 0;                            \
+        valueLenToReturn = 0u;                              \
+        invokeHeaderCompleteCallback = false;               \
     } while( 0 )
 
     plan( 69 );
@@ -141,7 +147,7 @@ int main()
     /* Response parameter is NULL. */
     reset();
     retCode = HTTPClient_ReadHeader( NULL,
-                                     "Header",
+                                     ( const uint8_t * ) "Header",
                                      strlen( "Header" ),
                                      &pValueLoc,
                                      &valueLen );
@@ -150,7 +156,7 @@ int main()
     /* Underlying buffer is NULL in the response parameter. */
     reset();
     retCode = HTTPClient_ReadHeader( &testResponse,
-                                     "Header",
+                                     ( const uint8_t * ) "Header",
                                      strlen( "Header" ),
                                      &pValueLoc,
                                      &valueLen );
@@ -160,7 +166,7 @@ int main()
     reset();
     testResponse.pBuffer = ( uint8_t * ) &pTestResponse[ 0 ];
     retCode = HTTPClient_ReadHeader( &testResponse,
-                                     "Header",
+                                     ( const uint8_t * ) "Header",
                                      strlen( "Header" ),
                                      &pValueLoc,
                                      &valueLen );
@@ -182,7 +188,7 @@ int main()
     testResponse.pBuffer = ( uint8_t * ) &pTestResponse[ 0 ];
     testResponse.bufferLen = strlen( pTestResponse );
     retCode = HTTPClient_ReadHeader( &testResponse,
-                                     "Header",
+                                     ( const uint8_t * ) "Header",
                                      0u,
                                      &pValueLoc,
                                      &valueLen );
@@ -193,7 +199,7 @@ int main()
     testResponse.pBuffer = ( uint8_t * ) &pTestResponse[ 0 ];
     testResponse.bufferLen = strlen( pTestResponse );
     retCode = HTTPClient_ReadHeader( &testResponse,
-                                     "Header",
+                                     ( const uint8_t * ) "Header",
                                      strlen( "Header" ),
                                      NULL,
                                      &valueLen );
@@ -202,7 +208,7 @@ int main()
     testResponse.pBuffer = ( uint8_t * ) &pTestResponse[ 0 ];
     testResponse.bufferLen = strlen( pTestResponse );
     retCode = HTTPClient_ReadHeader( &testResponse,
-                                     "Header",
+                                     ( const uint8_t * ) "Header",
                                      strlen( "Header" ),
                                      &pValueLoc,
                                      NULL );
@@ -220,7 +226,7 @@ int main()
     testResponse.pBuffer = ( uint8_t * ) &pTestResponse[ 0 ];
     testResponse.bufferLen = strlen( pTestResponse );
     retCode = HTTPClient_ReadHeader( &testResponse,
-                                     HEADER_IN_BUFFER,
+                                     ( const uint8_t * ) HEADER_IN_BUFFER,
                                      strlen( HEADER_IN_BUFFER ),
                                      &pValueLoc,
                                      &valueLen );
@@ -243,7 +249,7 @@ int main()
     testResponse.pBuffer = ( uint8_t * ) &pTestResponse[ 0 ];
     testResponse.bufferLen = strlen( pTestResponse );
     retCode = HTTPClient_ReadHeader( &testResponse,
-                                     HEADER_IN_BUFFER,
+                                     ( const uint8_t * ) HEADER_IN_BUFFER,
                                      strlen( HEADER_IN_BUFFER ),
                                      &pValueLoc,
                                      &valueLen );
@@ -259,7 +265,7 @@ int main()
     testResponse.pBuffer = ( uint8_t * ) &pTestResponse[ 0 ];
     testResponse.bufferLen = strlen( pTestResponse );
     retCode = HTTPClient_ReadHeader( &testResponse,
-                                     HEADER_NOT_IN_BUFFER,
+                                     ( const uint8_t * ) HEADER_NOT_IN_BUFFER,
                                      strlen( HEADER_NOT_IN_BUFFER ),
                                      &pValueLoc,
                                      &valueLen );
@@ -281,7 +287,7 @@ int main()
     testResponse.pBuffer = ( uint8_t * ) &pInvalidResponse[ 0 ];
     testResponse.bufferLen = strlen( pInvalidResponse );
     retCode = HTTPClient_ReadHeader( &testResponse,
-                                     HEADER_IN_BUFFER,
+                                     ( const uint8_t * ) HEADER_IN_BUFFER,
                                      strlen( HEADER_IN_BUFFER ),
                                      &pValueLoc,
                                      &valueLen );
@@ -305,7 +311,7 @@ int main()
     testResponse.pBuffer = ( uint8_t * ) &pTestResponse[ 0 ];
     testResponse.bufferLen = strlen( pTestResponse );
     retCode = HTTPClient_ReadHeader( &testResponse,
-                                     HEADER_IN_BUFFER,
+                                     ( const uint8_t * ) HEADER_IN_BUFFER,
                                      strlen( HEADER_IN_BUFFER ),
                                      &pValueLoc,
                                      &valueLen );

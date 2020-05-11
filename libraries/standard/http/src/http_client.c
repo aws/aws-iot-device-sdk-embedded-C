@@ -1155,6 +1155,9 @@ static HTTPStatus_t findHeaderInResponse( const uint8_t * pBuffer,
     };
     size_t numOfBytesParsed = 0u;
 
+    /* Disable unused variable warning. */
+    ( void ) numOfBytesParsed;
+
     http_parser_init( &parser, HTTP_RESPONSE );
 
     /* Set the context for the parser. */
