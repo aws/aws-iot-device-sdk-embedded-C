@@ -1,5 +1,5 @@
-include(filePaths.cmake)
-
+set( DEMO_NAME "mqtt_demo_basic_tls" )
+# Demo target.
 add_executable(${DEMO_NAME})
 
 set(OPENSSL_USE_STATIC_LIBS TRUE)
@@ -8,17 +8,19 @@ find_package(OpenSSL REQUIRED)
 target_sources(
     ${DEMO_NAME}
     PRIVATE
-        ${MQTT_DEMO_BASIC_TLS_SOURCES}
+        "${DEMO_NAME}.c"
 )
 
 target_link_libraries(
     ${DEMO_NAME}
     PRIVATE
-        ${MQTT_DEMO_BASIC_TLS_LIBRARIES}   
+        mqtt
+        OpenSSL::Crypto
+        OpenSSL::SSL
 )
 
 target_include_directories(
     mqtt
     PUBLIC
-        ${MQTT_DEMO_BASIC_TLS_INCLUDE_PUBLIC_DIRS}
+        ${CMAKE_CURRENT_LIST_DIR}
 )
