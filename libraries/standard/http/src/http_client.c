@@ -1018,6 +1018,10 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
 
 /*-----------------------------------------------------------*/
 
+/* The coverity violation is for using "int" instead of a type that specifies size
+ * and signedness information. We suppress this violation as this function follows the
+ * callback function signature of "on_header_field" specified by the http-parser library. */
+/* coverity[misra_c_2012_directive_4_6_violation] */
 static int findHeaderFieldParserCallback( http_parser * pHttpParser,
                                           const char * pFieldLoc,
                                           size_t fieldLen )
@@ -1055,11 +1059,22 @@ static int findHeaderFieldParserCallback( http_parser * pHttpParser,
 
 /*-----------------------------------------------------------*/
 
+/* The coverity violation is for using "int" instead of a type that specifies size
+ * and signedness information. We suppress this violation as this function follows the
+ * function signature of the "on_header_value" callback specified by the http-parser
+ * library. */
+/* coverity[misra_c_2012_directive_4_6_violation] */
 static int findHeaderValueParserCallback( http_parser * pHttpParser,
                                           const char * pVaLueLoc,
                                           size_t valueLen )
 {
     findHeaderContext_t * pContext = ( findHeaderContext_t * ) pHttpParser->data;
+
+    /* The coverity violation is for using "int" instead of a type that specifies size
+     * and signedness information. We suppress this violation as this variable represents
+     * the return value type of this callback function, whose return type is defined by
+     * http-parser. */
+    /* coverity[misra_c_2012_directive_4_6_violation] */
     int retCode = HTTP_PARSER_CONTINUE_PARSING;
 
     assert( pHttpParser != NULL );
@@ -1101,6 +1116,11 @@ static int findHeaderValueParserCallback( http_parser * pHttpParser,
 
 /*-----------------------------------------------------------*/
 
+/* The coverity violation is for using "int" instead of a type that specifies size
+ * and signedness information. We suppress this violation as this function follows the
+ * function signature of the "on_header_complete" callback specified by the http-parser
+ * library. */
+/* coverity[misra_c_2012_directive_4_6_violation] */
 static int findHeaderOnHeaderCompleteCallback( http_parser * pHttpParser )
 {
     /* Disable unused parameter warning. */
@@ -1202,7 +1222,8 @@ static HTTPStatus_t findHeaderInResponse( const uint8_t * pBuffer,
 
     /* If the header field-value pair is found in response, then the return value of "on_header_value"
      * callback (related to the header value) should cause the http_parser.http_errno to be "CB_header_value". */
-    if( ( returnStatus == HTTP_SUCCESS ) && ( ( parser.http_errno != HPE_CB_header_value ) ) )
+    if( ( returnStatus == HTTP_SUCCESS ) &&
+        ( ( ( enum http_errno ) parser.http_errno != HPE_CB_header_value ) ) )
     {
         IotLogErrorWithArgs( "Header found in response but http-parser returned error: ParserError=%s",
                              http_errno_description( HTTP_PARSER_ERRNO( &( parser ) ) ) );
@@ -1211,7 +1232,8 @@ static HTTPStatus_t findHeaderInResponse( const uint8_t * pBuffer,
 
     /* If header was not found, then the "on_header_complete" callback is expected to be called which should
      * cause the http_parser.http_errno to be "OK" */
-    else if( ( returnStatus == HTTP_HEADER_NOT_FOUND ) && ( ( parser.http_errno != HPE_OK ) ) )
+    else if( ( returnStatus == HTTP_HEADER_NOT_FOUND ) &&
+             ( ( ( enum http_errno ) parser.http_errno != HPE_OK ) ) )
     {
         IotLogErrorWithArgs( "Header not found in response: http-parser returned error: ParserError=%s",
                              http_errno_description( HTTP_PARSER_ERRNO( &( parser ) ) ) );
