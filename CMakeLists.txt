@@ -23,9 +23,6 @@ include("tools/cmake/filePaths.cmake")
 option( BUILD_TESTS
         "Set this to ON to build both demo and test executables. When OFF, only demo executables are built."
         ON )
-option( BUILD_CLONE_SUBMODULES
-        "Set this to ON to automatically clone any required Git submodules. When OFF, submodules must be manually cloned."
-        ON )
 
 # Unity test framework does not export the correct symbols for DLLs.
 set( ALLOW_SHARED_LIBRARIES ON )
@@ -35,20 +32,6 @@ CMAKE_DEPENDENT_OPTION( BUILD_SHARED_LIBS
                         "Set this to ON to build all libraries as shared libraries. When OFF, libraries build as static libraries."
                         ON "${ALLOW_SHARED_LIBRARIES}"
                         OFF )
-
-# Set the platform named based on the host OS if not defined.
-if( NOT DEFINED PLATFORM_NAME )
-    if( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
-        set( PLATFORM_NAME "posix" CACHE STRING "Port to use for building the SDK." )
-    else()
-        message( FATAL_ERROR "${CMAKE_SYSTEM_NAME} is not a supported platform." )
-    endif()
-endif()
-
-# Validate the platform name.
-if( NOT DEFINED PLATFORM_NAME )
-    message( FATAL_ERROR "PLATFORM_NAME was not set and could not be automatically determined." )
-endif()
 
 # Set output directories.
 set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin )
