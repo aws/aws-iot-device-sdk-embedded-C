@@ -588,7 +588,7 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
  * @param[in] headerNameLen The length of the header field name in bytes.
  * @param[out] pHeaderValueLoc This will be populated with the location of the
  * header value in the response buffer, #HTTPResponse_t.pBuffer.
- * @param[out] headerValueLen This will be populated with the length of the
+ * @param[out] pHeaderValueLen This will be populated with the length of the
  * header value in bytes.
  *
  * @return One of the following:
@@ -601,7 +601,7 @@ HTTPStatus_t HTTPClient_ReadHeader( const HTTPResponse_t * pResponse,
                                     const uint8_t * pHeaderName,
                                     size_t headerNameLen,
                                     const uint8_t ** pHeaderValueLoc,
-                                    size_t * headerValueLen );
+                                    size_t * pHeaderValueLen );
 
 /**
  * @brief Error code to string conversion utility for HTTP Client library.

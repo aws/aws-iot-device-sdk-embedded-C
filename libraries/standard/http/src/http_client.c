@@ -164,7 +164,7 @@ static HTTPStatus_t writeRequestLine( HTTPRequestHeaders_t * pRequestHeaders,
  * @param[in] pField The header field to search for.
  * @param[in] fieldLen The length of pField.
  * @param[out] pValue The location of the the header value found in pBuffer.
- * @param[out] valueLen The length of pValue.
+ * @param[out] pValueLen The length of pValue.
  *
  * @return One of the following:
  * - #HTTP_SUCCESS when header is found in the response.
@@ -177,7 +177,7 @@ static HTTPStatus_t findHeaderInResponse( const uint8_t * pBuffer,
                                           const uint8_t * pField,
                                           size_t fieldLen,
                                           const uint8_t ** pValue,
-                                          size_t * valueLen );
+                                          size_t * pValueLen );
 
 /**
  * @brief The "on_header_field" callback for the HTTP parser used by the
@@ -1161,7 +1161,7 @@ static HTTPStatus_t findHeaderInResponse( const uint8_t * pBuffer,
     /* Start parsing for the header! */
     numOfBytesParsed = http_parser_execute( &parser,
                                             &parserSettings,
-                                            ( char * ) pBuffer,
+                                            ( const char * ) pBuffer,
                                             bufferLen );
 
     IotLogDebugWithArgs( "Parsed response for header search: NumBytesParsed=%d",
