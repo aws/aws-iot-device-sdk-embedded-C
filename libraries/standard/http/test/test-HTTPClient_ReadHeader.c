@@ -24,20 +24,21 @@ typedef struct findHeaderContext
 #include "HTTPClient_ReadHeader.c"
 
 /* Template HTTP request for a PUT request. */
-static const char * pTestResponse = "HTTP/1.1 200 OK"
+static const char * pTestResponse = "HTTP/1.1 200 OK\r\n"
                                     "test-header0: test-value0\r\n"
                                     "test-header1: test-value1\r\n"
                                     "test-header2: test-value2\r\n"
                                     "\r\n";
-static const size_t headerFieldInRespLoc = 42;
+static const size_t headerFieldInRespLoc = 44;
 static const size_t headerFieldInRespLen = sizeof( "test-header1" ) - 1u;
-static const size_t headerValInRespLoc = 56;
+static const size_t headerValInRespLoc = 58;
 static const size_t headerValInRespLen = sizeof( "test-value1" ) - 1u;
 
 #define HEADER_IN_BUFFER        "test-header1"
 #define HEADER_NOT_IN_BUFFER    "header-not-in-buffer"
 
 /* -------------------- Mock'd implementations of http_parser function dependencies. ------------------ */
+
 void http_parser_init( http_parser * parser,
                        enum http_parser_type type )
 {
@@ -49,7 +50,6 @@ void http_parser_settings_init( http_parser_settings * settings )
 {
     ok( settings != NULL );
 }
-
 /* Variables for controlling behavior of the http_parser_execute() mock. */
 static const char * pExpectedBuffer = NULL;
 static size_t expectedBufferSize = 0u;
@@ -211,24 +211,6 @@ int main()
                                      NULL );
     ok( retCode == HTTP_INVALID_PARAMETER );
 
-    /* Test when http_parser_execute() does not call the value callback,
-     * even though the response is valid and requested header is present,
-     * due to an internal error. */
-    reset();
-    /* Configure the http_parser_execute mock. */
-    invokeHeaderFieldCallback = true;
-    pFieldLocToReturn = &pTestResponse[ headerFieldInRespLoc ];
-    fieldLenToReturn = headerFieldInRespLen;
-    /* Call the function under test. */
-    testResponse.pBuffer = ( uint8_t * ) &pTestResponse[ 0 ];
-    testResponse.bufferLen = strlen( pTestResponse );
-    retCode = HTTPClient_ReadHeader( &testResponse,
-                                     ( const uint8_t * ) HEADER_IN_BUFFER,
-                                     strlen( HEADER_IN_BUFFER ),
-                                     &pValueLoc,
-                                     &valueLen );
-    ok( retCode == HTTP_INTERNAL_ERROR );
-
     /* Test when the header is present in response but http_parser_execute()
      * does not set the expected errno value (of "CB_header_value")
      * due to an internal error. */
@@ -268,24 +250,44 @@ int main()
                                      &valueLen );
     ok( retCode == HTTP_HEADER_NOT_FOUND );
 
-    /* Test with an invalid HTTP response. */
+    /* Test with invalid HTTP responses. */
 
+    /* Test when invalid response only contains the header field for the requested header. */
+    const char * pResponseWithoutValue = "HTTP/1.1 200 OK\r\n"
+                                         "test-header0: test-value0\r\n"
+                                         "test-header1:";
     reset();
-    const char * pInvalidResponse = "HTTP/1.1 200 OK"
-                                    "test-header1: test-value1\r\n"
-                                    "test-header0 "
-                                    "test-header2: test-value2\r\n"
-                                    "\r\n";
     /* Configure the http_parser_execute mock. */
-    pExpectedBuffer = &pInvalidResponse[ 0 ];
-    expectedBufferSize = strlen( pInvalidResponse );
-    parserErrNo = HPE_UNKNOWN;
+    pExpectedBuffer = pResponseWithoutValue;
+    expectedBufferSize = strlen( pResponseWithoutValue );
+    invokeHeaderFieldCallback = true;
+    pFieldLocToReturn = &pTestResponse[ headerFieldInRespLoc ];
+    fieldLenToReturn = headerFieldInRespLen;
     /* Call the function under test. */
-    testResponse.pBuffer = ( uint8_t * ) &pInvalidResponse[ 0 ];
-    testResponse.bufferLen = strlen( pInvalidResponse );
+    testResponse.pBuffer = ( uint8_t * ) &pResponseWithoutValue[ 0 ];
+    testResponse.bufferLen = strlen( pResponseWithoutValue );
     retCode = HTTPClient_ReadHeader( &testResponse,
                                      ( const uint8_t * ) HEADER_IN_BUFFER,
                                      strlen( HEADER_IN_BUFFER ),
+                                     &pValueLoc,
+                                     &valueLen );
+    ok( retCode == HTTP_INVALID_RESPONSE );
+
+    /* Test when the invalid response does not contain the requested header.
+     * (Response is invalid as it doesn't end with "\r\n\r\n".) */
+    reset();
+    const char * pResponseWithoutHeaders = "HTTP/1.1 200 OK\r\n"
+                                           "test-header0:test-value0";
+    /* Configure the http_parser_execute mock. */
+    pExpectedBuffer = &pResponseWithoutHeaders[ 0 ];
+    expectedBufferSize = strlen( pResponseWithoutHeaders );
+    parserErrNo = HPE_UNKNOWN;
+    /* Call the function under test. */
+    testResponse.pBuffer = ( uint8_t * ) &pResponseWithoutHeaders[ 0 ];
+    testResponse.bufferLen = strlen( pResponseWithoutHeaders );
+    retCode = HTTPClient_ReadHeader( &testResponse,
+                                     ( const uint8_t * ) HEADER_NOT_IN_BUFFER,
+                                     strlen( HEADER_NOT_IN_BUFFER ),
                                      &pValueLoc,
                                      &valueLen );
     ok( retCode == HTTP_INVALID_RESPONSE );
