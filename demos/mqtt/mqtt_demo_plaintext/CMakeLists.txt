@@ -17,7 +17,7 @@ target_link_libraries(
 )
 
 target_include_directories(
-    iotmqtt
+    mqtt
     PUBLIC
         ${MQTT_DEMO_PLAINTEXT_INCLUDE_PUBLIC_DIRS}
 )

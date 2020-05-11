@@ -20,7 +20,7 @@ target_link_libraries(
 )
 
 target_include_directories(
-    iotmqtt
+    mqtt
     PUBLIC
         ${MQTT_DEMO_BASIC_TLS_INCLUDE_PUBLIC_DIRS}
 )

@@ -17,6 +17,6 @@ set( MQTT_DEMO_BASIC_TLS_INCLUDE_PUBLIC_DIRS
 
 # Libraries.
 set( MQTT_DEMO_BASIC_TLS_LIBRARIES
-     iotmqtt
+     mqtt
      OpenSSL::Crypto
      OpenSSL::SSL )
