@@ -214,6 +214,14 @@ typedef enum HTTPStatus
      */
     HTTP_INSUFFICIENT_MEMORY,
 
+    /**
+     * @brief Represents all errors not related to user-input or transport I/O, but
+     * errors internal to the implementation of the HTTP client library.
+     *
+     * Functions that may return this value:
+     * - #HTTPClient_Send
+     * - #HTTPClient_ReadHeader
+     */
     HTTP_INTERNAL_ERROR,
     HTTP_SECURITY_ALERT_RESPONSE_HEADERS_SIZE_LIMIT_EXCEEDED,
     HTTP_SECURITY_ALERT_PARSER_INVALID_CHARACTER,
@@ -227,6 +235,15 @@ typedef enum HTTPStatus
      * - #HTTPClient_ReadHeader
      */
     HTTP_HEADER_NOT_FOUND,
+
+    /**
+     * @brief The HTTP response, provided for parsing, is either corrupt or incomplete.
+     *
+     * Functions that may return this value:
+     * - #HTTPClient_ReadHeader
+     */
+    HTTP_INVALID_RESPONSE,
+
     /* Temporary error code while implementation is in progress. */
     HTTP_NOT_SUPPORTED,
 } HTTPStatus_t;
@@ -571,20 +588,20 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
  * @param[in] headerNameLen The length of the header field name in bytes.
  * @param[out] pHeaderValueLoc This will be populated with the location of the
  * header value in the response buffer, #HTTPResponse_t.pBuffer.
- * @param[out] headerValueLen This will be populated with the length of the
+ * @param[out] pHeaderValueLen This will be populated with the length of the
  * header value in bytes.
  *
  * @return One of the following:
  * - #HTTP_SUCCESS (If successful.)
  * - #HTTP_INVALID_PARAMETER (If any provided parameters or their members are invalid.)
- * - #HTTP_PARTIAL_RESPONSE (Part of an HTTP response was received in a partially filled response buffer.)
  * - #HTTP_HEADER_NOT_FOUND (Header is not found in the passed response buffer.)
+ * - #HTTP_INVALID_RESPONSE (Provided response is not a valid HTTP response for parsing.)
  */
 HTTPStatus_t HTTPClient_ReadHeader( const HTTPResponse_t * pResponse,
                                     const uint8_t * pHeaderName,
                                     size_t headerNameLen,
                                     const uint8_t ** pHeaderValueLoc,
-                                    size_t * headerValueLen );
+                                    size_t * pHeaderValueLen );
 
 /**
  * @brief Error code to string conversion utility for HTTP Client library.

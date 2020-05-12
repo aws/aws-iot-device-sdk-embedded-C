@@ -1,7 +1,9 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#define IOT_LOG_LEVEL_HTTP    IOT_LOG_DEBUG
+#define IOT_LOG_LEVEL_HTTP          IOT_LOG_DEBUG
+
+#define USE_AWS_IOT_CSDK_LOGGING    1
 
 #ifdef USE_AWS_IOT_CSDK_LOGGING
 
