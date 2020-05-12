@@ -1044,9 +1044,9 @@ static int findHeaderFieldParserCallback( http_parser * pHttpParser,
     /* Check whether the parsed header matches the header we are looking for. */
     if( ( fieldLen == pContext->fieldLen ) && ( memcmp( pContext->pField, pFieldLoc, fieldLen ) == 0 ) )
     {
-        IotLogDebugWithArgs( "Found header field in response: "
-                             "HeaderName=%.*s, HeaderLocation=0x%d",
-                             fieldLen, pContext->pField );
+        LogDebugWithArgs( "Found header field in response: "
+                          "HeaderName=%.*s, HeaderLocation=0x%d",
+                          fieldLen, pContext->pField );
 
         /* Set the flag to indicate that header has been found in response. */
         pContext->fieldFound = 1u;
@@ -1094,9 +1094,9 @@ static int findHeaderValueParserCallback( http_parser * pHttpParser,
 
     if( pContext->fieldFound == 1u )
     {
-        IotLogDebugWithArgs( "Found header value in response: "
-                             "RequestedField=%.*s, ValueLocation=0x%d",
-                             pContext->fieldLen, pContext->pField, pVaLueLoc );
+        LogDebugWithArgs( "Found header value in response: "
+                          "RequestedField=%.*s, ValueLocation=0x%d",
+                          pContext->fieldLen, pContext->pField, pVaLueLoc );
 
         /* Populate the output parameters with the location of the header value in the response buffer. */
         *pContext->pValueLoc = ( const uint8_t * ) pVaLueLoc;
@@ -1134,10 +1134,10 @@ static int findHeaderOnHeaderCompleteCallback( http_parser * pHttpParser )
 
     /* If we have reached here, all headers in the response have been parsed but the requested
      * header has not been found in the response buffer. */
-    IotLogDebugWithArgs( "Reached end of header parsing: Header not found in response: "
-                         "RequestedHeader=%.*s",
-                         ( ( findHeaderContext_t * ) pHttpParser->data )->fieldLen,
-                         ( ( findHeaderContext_t * ) pHttpParser->data )->pField );
+    LogDebugWithArgs( "Reached end of header parsing: Header not found in response: "
+                      "RequestedHeader=%.*s",
+                      ( ( findHeaderContext_t * ) pHttpParser->data )->fieldLen,
+                      ( ( findHeaderContext_t * ) pHttpParser->data )->pField );
 
     /* No further parsing is required; thus, indicate the parser to stop parsing. */
     return HTTP_PARSER_STOP_PARSING;
@@ -1188,8 +1188,8 @@ static HTTPStatus_t findHeaderInResponse( const uint8_t * pBuffer,
                                             ( const char * ) pBuffer,
                                             bufferLen );
 
-    IotLogDebugWithArgs( "Parsed response for header search: NumBytesParsed=%d",
-                         numOfBytesParsed );
+    LogDebugWithArgs( "Parsed response for header search: NumBytesParsed=%d",
+                      numOfBytesParsed );
 
     if( context.fieldFound == 0u )
     {
@@ -1197,8 +1197,8 @@ static HTTPStatus_t findHeaderInResponse( const uint8_t * pBuffer,
         assert( context.valueFound == 0u );
 
         /* Header is not present in buffer. */
-        IotLogWarnWithArgs( "Header not found in response buffer: "
-                            "RequestedHeader=%.*s", fieldLen, pField );
+        LogWarnWithArgs( "Header not found in response buffer: "
+                         "RequestedHeader=%.*s", fieldLen, pField );
 
         returnStatus = HTTP_HEADER_NOT_FOUND;
     }
@@ -1206,11 +1206,11 @@ static HTTPStatus_t findHeaderInResponse( const uint8_t * pBuffer,
     {
         /* The response buffer is invalid as only the header field was found
          * in the "<field>: <value>\r\n" format of an HTTP header. */
-        IotLogErrorWithArgs( "Unable to find header value in response: "
-                             "Response data is invalid: "
-                             "RequestedHeader=%.*s, ParserError=%s",
-                             fieldLen, pField,
-                             http_errno_description( HTTP_PARSER_ERRNO( &( parser ) ) ) );
+        LogErrorWithArgs( "Unable to find header value in response: "
+                          "Response data is invalid: "
+                          "RequestedHeader=%.*s, ParserError=%s",
+                          fieldLen, pField,
+                          http_errno_description( HTTP_PARSER_ERRNO( &( parser ) ) ) );
         returnStatus = HTTP_INVALID_RESPONSE;
     }
     else
@@ -1220,10 +1220,10 @@ static HTTPStatus_t findHeaderInResponse( const uint8_t * pBuffer,
         /* Header is found. */
         assert( ( context.fieldFound == 1u ) && ( context.valueFound == 1u ) );
 
-        IotLogDebugWithArgs( "Found requested header in response: "
-                             "HeaderName=%.*s, HeaderValue=%.*s",
-                             fieldLen, pField,
-                             *pValueLen, *pValueLoc );
+        LogDebugWithArgs( "Found requested header in response: "
+                          "HeaderName=%.*s, HeaderValue=%.*s",
+                          fieldLen, pField,
+                          *pValueLen, *pValueLoc );
     }
 
     /* If the header field-value pair is found in response, then the return value of "on_header_value"
@@ -1231,8 +1231,8 @@ static HTTPStatus_t findHeaderInResponse( const uint8_t * pBuffer,
     if( ( returnStatus == HTTP_SUCCESS ) &&
         ( ( parser.http_errno != HPE_CB_header_value ) ) )
     {
-        IotLogErrorWithArgs( "Header found in response but http-parser returned error: ParserError=%s",
-                             http_errno_description( HTTP_PARSER_ERRNO( &( parser ) ) ) );
+        LogErrorWithArgs( "Header found in response but http-parser returned error: ParserError=%s",
+                          http_errno_description( HTTP_PARSER_ERRNO( &( parser ) ) ) );
         returnStatus = HTTP_INTERNAL_ERROR;
     }
 
@@ -1241,8 +1241,8 @@ static HTTPStatus_t findHeaderInResponse( const uint8_t * pBuffer,
     else if( ( returnStatus == HTTP_HEADER_NOT_FOUND ) &&
              ( ( parser.http_errno != HPE_OK ) ) )
     {
-        IotLogErrorWithArgs( "Header not found in response: http-parser returned error: ParserError=%s",
-                             http_errno_description( HTTP_PARSER_ERRNO( &( parser ) ) ) );
+        LogErrorWithArgs( "Header not found in response: http-parser returned error: ParserError=%s",
+                          http_errno_description( HTTP_PARSER_ERRNO( &( parser ) ) ) );
         returnStatus = HTTP_INVALID_RESPONSE;
     }
     else
