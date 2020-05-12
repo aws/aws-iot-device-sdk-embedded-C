@@ -31,8 +31,9 @@ list(APPEND real_source_files
 list(APPEND real_include_directories
             .
             ${HTTP_INCLUDE_PUBLIC_DIRS}
-            ${HTTP_INCLUDE_PRIVATE_DIRS}
-            ${LOGGING_INCLUDE_DIRS}
+            ${HTTP_TEST_INCLUDE_PRIVATE_DIRS}
+            "${ROOT_DIR}/platform/include"
+            "${MODULES_DIR}/standard/http/third_party"
         )
 
 # =====================  Create UnitTest Code here (edit)  =====================
