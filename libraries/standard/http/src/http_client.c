@@ -1018,10 +1018,12 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
 
 /*-----------------------------------------------------------*/
 
-/* The coverity violation is for using "int" instead of a type that specifies size
- * and signedness information. We suppress this violation as this function follows the
- * callback function signature of "on_header_field" specified by the http-parser library. */
-/* coverity[misra_c_2012_directive_4_6_violation] */
+/* The coverity violation is for using a non-const type for the "pHttpParser" parser
+ * instead of a const-type as the pointed to object is not modified by the function.
+ * We suppress this violations this violation as this function follows the function
+ * function signature of the "on_header_field" callback specified by the http-parser
+ * library. */
+/* coverity[misra_c_2012_rule_8_13_violation] */
 static int findHeaderFieldParserCallback( http_parser * pHttpParser,
                                           const char * pFieldLoc,
                                           size_t fieldLen )
@@ -1059,11 +1061,12 @@ static int findHeaderFieldParserCallback( http_parser * pHttpParser,
 
 /*-----------------------------------------------------------*/
 
-/* The coverity violation is for using "int" instead of a type that specifies size
- * and signedness information. We suppress this violation as this function follows the
+/* The coverity violation is for using a non-const type for the "pHttpParser" parser
+ * instead of a const-type as the pointed to object is not modified by the function.
+ * We suppress this violations this violation as this function follows the function
  * function signature of the "on_header_value" callback specified by the http-parser
  * library. */
-/* coverity[misra_c_2012_directive_4_6_violation] */
+/* coverity[misra_c_2012_rule_8_13_violation] */
 static int findHeaderValueParserCallback( http_parser * pHttpParser,
                                           const char * pVaLueLoc,
                                           size_t valueLen )
@@ -1116,11 +1119,12 @@ static int findHeaderValueParserCallback( http_parser * pHttpParser,
 
 /*-----------------------------------------------------------*/
 
-/* The coverity violation is for using "int" instead of a type that specifies size
- * and signedness information. We suppress this violation as this function follows the
- * function signature of the "on_header_complete" callback specified by the http-parser
+/* The coverity violation is for using a non-const type for the "pHttpParser" parser
+ * instead of a const-type as the pointed to object is not modified by the function.
+ * We suppress this violations this violation as this function follows the function
+ * function signature of the "on_headers_complete" callback specified by the http-parser
  * library. */
-/* coverity[misra_c_2012_directive_4_6_violation] */
+/* coverity[misra_c_2012_rule_8_13_violation] */
 static int findHeaderOnHeaderCompleteCallback( http_parser * pHttpParser )
 {
     /* Disable unused parameter warning. */
@@ -1211,6 +1215,8 @@ static HTTPStatus_t findHeaderInResponse( const uint8_t * pBuffer,
     }
     else
     {
+        /* Empty else (when assert and logging is disabled) for MISRA 15.7 compliance. */
+
         /* Header is found. */
         assert( ( context.fieldFound == 1u ) && ( context.valueFound == 1u ) );
 
