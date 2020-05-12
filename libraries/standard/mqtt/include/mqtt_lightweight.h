@@ -253,11 +253,6 @@ struct MQTTPacketInfo
     uint8_t type;
 
     /**
-     * @brief Packet identifier of incoming MQTT packet.
-     */
-    uint16_t packetIdentifier;
-
-    /**
      * @brief Remaining serialized data in the MQTT packet.
      */
     uint8_t * pRemainingData;

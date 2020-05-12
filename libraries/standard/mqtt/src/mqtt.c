@@ -580,7 +580,7 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * const pContext,
     if( status == MQTTSuccess )
     {
         /* TODO: Should the publish info be passed instead? */
-        pContext->callbacks.appCallback( pContext, pIncomingPacket );
+        pContext->callbacks.appCallback( pContext, pIncomingPacket, packetIdentifier );
     }
 
     return status;
@@ -634,21 +634,29 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * const pContext,
                                           &publishRecordState );
                 if( status == MQTTSuccess )
                 {
-                    /* TODO: There doesn't seem to be a separate callback for acks. */
-                    pContext->callbacks.appCallback( pContext, pIncomingPacket );
+                    pContext->callbacks.appCallback( pContext, pIncomingPacket, packetIdentifier );
                 }
             }
             break;
         case MQTT_PACKET_TYPE_PINGRESP:
             pContext->waitingForPingResp = false;
-            pContext->callbacks.appCallback( pContext, pIncomingPacket );
+            status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, &sessionPresent );
+            if( status == MQTTSuccess )
+            {
+                pContext->callbacks.appCallback( pContext, pIncomingPacket, packetIdentifier );
+            }
             break;
         case MQTT_PACKET_TYPE_SUBACK:
+        case MQTT_PACKET_TYPE_UNSUBACK:
             /* Give these to the app provided callback. */
-            pContext->callbacks.appCallback( pContext, pIncomingPacket );
+            status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, &sessionPresent );
+            if( status == MQTTSuccess )
+            {
+                pContext->callbacks.appCallback( pContext, pIncomingPacket, packetIdentifier );
+            }
             break;
         default:
-            /* Not a publish packet or ack. */
+            /* Not an ack. */
             break;
     }
     return status;

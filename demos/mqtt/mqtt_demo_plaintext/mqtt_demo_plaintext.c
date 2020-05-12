@@ -197,7 +197,9 @@ static uint32_t getTime( void )
  *
  * Currently not implemented.
  */
-static void eventCallback( MQTTContext_t * pContext, MQTTPacketInfo_t * pPacketInfo )
+static void eventCallback( MQTTContext_t * pContext,
+                           MQTTPacketInfo_t * pPacketInfo,
+                           uint16_t packetIdentifier )
 {
 
 }
