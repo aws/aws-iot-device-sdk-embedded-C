@@ -13,8 +13,7 @@ set( MQTT_SOURCES
 # MQTT library Include directories.
 set( MQTT_INCLUDE_PUBLIC_DIRS
      "${MODULES_DIR}/standard/mqtt/include"
-     "${MODULES_DIR}/standard/utilities/include"
-     "${ROOT_DIR}/platform/include" )
+     "${MODULES_DIR}/standard/utilities/include" )
 
 # MQTT test include directories.
 set( MQTT_TEST_INCLUDE_PRIVATE_DIRS

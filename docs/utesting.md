@@ -4,7 +4,6 @@
 1. Install ruby: `sudo apt install ruby-full`
 1. Install lcov: `sudo apt install lcov`
 1. Go to the root directory of this repository.
-1. Update submodules (if you haven't already): `git submodule update --init --recursive` 
 1. Create build directory: `mkdir build && cd build`
 1. Run cmake while inside build directory: `cmake ..`
 1. Run this command to build and run the tests: `make coverage`
