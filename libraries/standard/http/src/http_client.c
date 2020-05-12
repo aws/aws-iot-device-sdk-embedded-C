@@ -256,11 +256,11 @@ static HTTPStatus_t addHeader( HTTPRequestHeaders_t * pRequestHeaders,
     }
     else
     {
-        IotLogErrorWithArgs( "Unable to add header in buffer: "
-                             "Buffer has insufficient memory: "
-                             "RequiredBytes=%d, RemainingBufferSize=%d",
-                             toAddLen,
-                             ( pRequestHeaders->bufferLen - pRequestHeaders->headersLen ) );
+        LogErrorWithArgs( "Unable to add header in buffer: "
+                          "Buffer has insufficient memory: "
+                          "RequiredBytes=%d, RemainingBufferSize=%d",
+                          toAddLen,
+                          ( pRequestHeaders->bufferLen - pRequestHeaders->headersLen ) );
         returnStatus = HTTP_INSUFFICIENT_MEMORY;
     }
 
@@ -340,37 +340,37 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
     /* Check for NULL parameters. */
     if( pRequestHeaders == NULL )
     {
-        IotLogError( "Parameter check failed: pRequestHeaders is NULL." );
+        LogError( "Parameter check failed: pRequestHeaders is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( pRequestHeaders->pBuffer == NULL )
     {
-        IotLogError( "Parameter check failed: pRequestHeaders->pBuffer is NULL." );
+        LogError( "Parameter check failed: pRequestHeaders->pBuffer is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( ( pRequestInfo == NULL ) )
     {
-        IotLogError( "Parameter check failed: pRequestInfo is NULL." );
+        LogError( "Parameter check failed: pRequestInfo is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( ( pRequestInfo->method == NULL ) )
     {
-        IotLogError( "Parameter check failed: pRequestInfo->method is NULL." );
+        LogError( "Parameter check failed: pRequestInfo->method is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( pRequestInfo->pHost == NULL )
     {
-        IotLogError( "Parameter check failed: pRequestInfo->pHost is NULL." );
+        LogError( "Parameter check failed: pRequestInfo->pHost is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( pRequestInfo->methodLen == 0 )
     {
-        IotLogError( "Parameter check failed: pRequestInfo->methodLen must be greater than 0." );
+        LogError( "Parameter check failed: pRequestInfo->methodLen must be greater than 0." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( pRequestInfo->hostLen == 0 )
     {
-        IotLogError( "Parameter check failed: pRequestInfo->hostLen must be greater than 0." );
+        LogError( "Parameter check failed: pRequestInfo->hostLen must be greater than 0." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else
@@ -449,32 +449,32 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
     /* Check for NULL parameters. */
     if( pRequestHeaders == NULL )
     {
-        IotLogError( "Parameter check failed: pRequestHeaders is NULL." );
+        LogError( "Parameter check failed: pRequestHeaders is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( pRequestHeaders->pBuffer == NULL )
     {
-        IotLogError( "Parameter check failed: pRequestHeaders->pBuffer is NULL." );
+        LogError( "Parameter check failed: pRequestHeaders->pBuffer is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( ( pField == NULL ) )
     {
-        IotLogError( "Parameter check failed: pField is NULL." );
+        LogError( "Parameter check failed: pField is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( ( pValue == NULL ) )
     {
-        IotLogError( "Parameter check failed: pValue is NULL." );
+        LogError( "Parameter check failed: pValue is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( fieldLen == 0u )
     {
-        IotLogError( "Parameter check failed: fieldLen must be greater than 0." );
+        LogError( "Parameter check failed: fieldLen must be greater than 0." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( valueLen == 0u )
     {
-        IotLogError( "Parameter check failed: valueLen must be greater than 0." );
+        LogError( "Parameter check failed: valueLen must be greater than 0." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else
@@ -503,36 +503,36 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
 
     if( pRequestHeaders == NULL )
     {
-        IotLogError( "Parameter check failed: pRequestHeaders is NULL." );
+        LogError( "Parameter check failed: pRequestHeaders is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( pRequestHeaders->pBuffer == NULL )
     {
-        IotLogError( "Parameter check failed: pRequestHeaders->pBuffer is NULL." );
+        LogError( "Parameter check failed: pRequestHeaders->pBuffer is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( rangeEnd < HTTP_RANGE_REQUEST_END_OF_FILE )
     {
-        IotLogErrorWithArgs( "Parameter check failed: rangeEnd is invalid: "
-                             "rangeEnd should be >=-1: RangeEnd=%d", rangeEnd );
+        LogErrorWithArgs( "Parameter check failed: rangeEnd is invalid: "
+                          "rangeEnd should be >=-1: RangeEnd=%d", rangeEnd );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( ( rangeStartOrlastNbytes < 0 ) &&
              ( rangeEnd != HTTP_RANGE_REQUEST_END_OF_FILE ) )
     {
-        IotLogErrorWithArgs( "Parameter check failed: Invalid range values: "
-                             "rangeEnd should be -1 when rangeStart < 0: "
-                             "RangeStart=%d, RangeEnd=%d",
-                             rangeStartOrlastNbytes, rangeEnd );
+        LogErrorWithArgs( "Parameter check failed: Invalid range values: "
+                          "rangeEnd should be -1 when rangeStart < 0: "
+                          "RangeStart=%d, RangeEnd=%d",
+                          rangeStartOrlastNbytes, rangeEnd );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( ( rangeEnd != HTTP_RANGE_REQUEST_END_OF_FILE ) &&
              ( rangeStartOrlastNbytes > rangeEnd ) )
     {
-        IotLogErrorWithArgs( "Parameter check failed: Invalid range values: "
-                             "rangeStart should be < rangeEnd when both are >= 0: "
-                             "RangeStart=%d, RangeEnd=%d",
-                             rangeStartOrlastNbytes, rangeEnd );
+        LogErrorWithArgs( "Parameter check failed: Invalid range values: "
+                          "rangeStart should be < rangeEnd when both are >= 0: "
+                          "RangeStart=%d, RangeEnd=%d",
+                          rangeStartOrlastNbytes, rangeEnd );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else
@@ -610,25 +610,25 @@ static HTTPStatus_t sendHttpHeaders( const HTTPTransportInterface_t * pTransport
 
     if( transportStatus < 0 )
     {
-        IotLogErrorWithArgs( "Failed to send HTTP headers: Transport send()"
-                             " returned error: TransportStatus=%d",
-                             transportStatus );
+        LogErrorWithArgs( "Failed to send HTTP headers: Transport send()"
+                          " returned error: TransportStatus=%d",
+                          transportStatus );
         returnStatus = HTTP_NETWORK_ERROR;
     }
     else if( ( size_t ) transportStatus != pRequestHeaders->headersLen )
     {
-        IotLogErrorWithArgs( "Failed to send HTTP headers: Transport layer "
-                             "did not send the required bytes: RequiredBytes=%d"
-                             ", SentBytes=%d.",
-                             pRequestHeaders->headersLen,
-                             transportStatus );
+        LogErrorWithArgs( "Failed to send HTTP headers: Transport layer "
+                          "did not send the required bytes: RequiredBytes=%d"
+                          ", SentBytes=%d.",
+                          pRequestHeaders->headersLen,
+                          transportStatus );
         returnStatus = HTTP_NETWORK_ERROR;
     }
     else
     {
-        IotLogDebugWithArgs( "Sent HTTP headers over the transport: BytesSent "
-                             "=%d.",
-                             transportStatus );
+        LogDebugWithArgs( "Sent HTTP headers over the transport: BytesSent "
+                          "=%d.",
+                          transportStatus );
     }
 
     return returnStatus;
@@ -653,24 +653,24 @@ static HTTPStatus_t sendHttpBody( const HTTPTransportInterface_t * pTransport,
 
     if( transportStatus < 0 )
     {
-        IotLogErrorWithArgs( "Failed to send HTTP body: Transport send() "
-                             " returned error: TransportStatus=%d",
-                             transportStatus );
+        LogErrorWithArgs( "Failed to send HTTP body: Transport send() "
+                          " returned error: TransportStatus=%d",
+                          transportStatus );
         returnStatus = HTTP_NETWORK_ERROR;
     }
     else if( ( size_t ) transportStatus != reqBodyBufLen )
     {
-        IotLogErrorWithArgs( "Failed to send HTTP body: Transport send() "
-                             "did not send the required bytes: RequiredBytes=%d"
-                             ", Sent bytes=%d.",
-                             reqBodyBufLen,
-                             transportStatus );
+        LogErrorWithArgs( "Failed to send HTTP body: Transport send() "
+                          "did not send the required bytes: RequiredBytes=%d"
+                          ", Sent bytes=%d.",
+                          reqBodyBufLen,
+                          transportStatus );
         returnStatus = HTTP_NETWORK_ERROR;
     }
     else
     {
-        IotLogDebugWithArgs( "Sent HTTP body over the transport: BytesSent=%d.",
-                             transportStatus );
+        LogDebugWithArgs( "Sent HTTP body over the transport: BytesSent=%d.",
+                          transportStatus );
     }
 
     return returnStatus;
@@ -697,35 +697,35 @@ HTTPStatus_t receiveHttpResponse( const HTTPTransportInterface_t * pTransport,
     /* A transport status of less than zero is an error. */
     if( transportStatus < 0 )
     {
-        IotLogErrorWithArgs( "Failed to receive HTTP response: Transport recv() "
-                             "returned error: TransportStatus=%d.",
-                             transportStatus );
+        LogErrorWithArgs( "Failed to receive HTTP response: Transport recv() "
+                          "returned error: TransportStatus=%d.",
+                          transportStatus );
         returnStatus = HTTP_NETWORK_ERROR;
     }
     else if( ( size_t ) transportStatus > bufferLen )
     {
         /* There is a bug in the transport recv if more bytes are reported
          * to have been read than the bytes asked for. */
-        IotLogErrorWithArgs( "Failed to receive HTTP response: Transport recv() "
-                             " read more bytes than requested: BytesRead=%d, "
-                             "RequestedBytes=%d",
-                             transportStatus,
-                             bufferLen );
+        LogErrorWithArgs( "Failed to receive HTTP response: Transport recv() "
+                          " read more bytes than requested: BytesRead=%d, "
+                          "RequestedBytes=%d",
+                          transportStatus,
+                          bufferLen );
         returnStatus = HTTP_NETWORK_ERROR;
     }
     else if( transportStatus > 0 )
     {
         /* Some or all of the specified data was received. */
         *pBytesReceived = ( size_t ) ( transportStatus );
-        IotLogDebugWithArgs( "Received data from the transport: BytesReceived=%d.",
-                             transportStatus );
+        LogDebugWithArgs( "Received data from the transport: BytesReceived=%d.",
+                          transportStatus );
     }
     else
     {
         /* When a zero is returned from the transport recv it will not be
          * invoked again. */
-        IotLogDebug( "Received zero bytes from trasnport recv(). Receiving "
-                     "transport data is complete." );
+        LogDebug( "Received zero bytes from trasnport recv(). Receiving "
+                  "transport data is complete." );
     }
 
     return returnStatus;
@@ -746,27 +746,27 @@ static HTTPStatus_t getFinalResponseStatus( HTTPParsingState_t parsingState,
     /* If no parsing occurred, that means network data was never received. */
     if( parsingState == HTTP_PARSING_NONE )
     {
-        IotLogErrorWithArgs( "Response not received: Zero returned from "
-                             "transport recv: totalReceived=%d",
-                             totalReceived );
+        LogErrorWithArgs( "Response not received: Zero returned from "
+                          "transport recv: totalReceived=%d",
+                          totalReceived );
         returnStatus = HTTP_NO_RESPONSE;
     }
     else if( parsingState == HTTP_PARSING_INCOMPLETE )
     {
         if( totalReceived == responseBufferLen )
         {
-            IotLogErrorWithArgs( "Cannot receive complete response from tansport"
-                                 " interface: Response buffer has insufficient "
-                                 "space: responseBufferLen=%d",
-                                 responseBufferLen );
+            LogErrorWithArgs( "Cannot receive complete response from tansport"
+                              " interface: Response buffer has insufficient "
+                              "space: responseBufferLen=%d",
+                              responseBufferLen );
             returnStatus = HTTP_INSUFFICIENT_MEMORY;
         }
         else
         {
-            IotLogErrorWithArgs( "Received partial response from transport ",
-                                 "recv(): ResponseSize=%d, TotalBufferSize=%d",
-                                 totalReceived,
-                                 responseBufferLen - totalReceived );
+            LogErrorWithArgs( "Received partial response from transport ",
+                              "recv(): ResponseSize=%d, TotalBufferSize=%d",
+                              totalReceived,
+                              responseBufferLen - totalReceived );
             returnStatus = HTTP_PARTIAL_RESPONSE;
         }
     }
@@ -854,32 +854,32 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
 
     if( pTransport == NULL )
     {
-        IotLogError( "Parameter check failed: pTransport interface is NULL." );
+        LogError( "Parameter check failed: pTransport interface is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( pTransport->send == NULL )
     {
-        IotLogError( "Parameter check failed: pTransport->send is NULL." );
+        LogError( "Parameter check failed: pTransport->send is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( pTransport->recv == NULL )
     {
-        IotLogError( "Parameter check failed: pTransport->recv is NULL." );
+        LogError( "Parameter check failed: pTransport->recv is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( pRequestHeaders == NULL )
     {
-        IotLogError( "Parameter check failed: pRequestHeaders is NULL." );
+        LogError( "Parameter check failed: pRequestHeaders is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( pRequestHeaders->pBuffer == NULL )
     {
-        IotLogError( "Parameter check failed: pRequestHeaders->pBuffer is NULL." );
+        LogError( "Parameter check failed: pRequestHeaders->pBuffer is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( ( pResponse != NULL ) && ( pResponse->pBuffer == NULL ) )
     {
-        IotLogError( "Parameter check failed: pResponse->pBuffer is NULL." );
+        LogError( "Parameter check failed: pResponse->pBuffer is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else
@@ -905,7 +905,7 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
         }
         else
         {
-            IotLogDebug( "A request body was not sent: pRequestBodyBuf is NULL." );
+            LogDebug( "A request body was not sent: pRequestBodyBuf is NULL." );
         }
     }
 
@@ -920,7 +920,7 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
         }
         else
         {
-            IotLogDebug( "Response ignored: pResponse is NULL." );
+            LogDebug( "Response ignored: pResponse is NULL." );
         }
     }
 
@@ -942,39 +942,39 @@ HTTPStatus_t HTTPClient_ReadHeader( const HTTPResponse_t * pResponse,
 
     if( pResponse == NULL )
     {
-        IotLogError( "Parameter check failed: pResponse is NULL." );
+        LogError( "Parameter check failed: pResponse is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( pResponse->pBuffer == NULL )
     {
-        IotLogError( "Parameter check failed: pResponse->pBuffer is NULL." );
+        LogError( "Parameter check failed: pResponse->pBuffer is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( pResponse->bufferLen == 0u )
     {
-        IotLogError( "Parameter check failed: pResponse->bufferLen is 0: "
-                     "Buffer len should be > 0." );
+        LogError( "Parameter check failed: pResponse->bufferLen is 0: "
+                  "Buffer len should be > 0." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( pHeaderName == NULL )
     {
-        IotLogError( "Parameter check failed: Input header name is NULL." );
+        LogError( "Parameter check failed: Input header name is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( headerNameLen == 0u )
     {
-        IotLogError( "Parameter check failed: Input header name length is 0: "
-                     "headerNameLen should be > 0." );
+        LogError( "Parameter check failed: Input header name length is 0: "
+                  "headerNameLen should be > 0." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( pHeaderValueLoc == NULL )
     {
-        IotLogError( "Parameter check failed: Output parameter for header value location is NULL." );
+        LogError( "Parameter check failed: Output parameter for header value location is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( pHeaderValueLen == NULL )
     {
-        IotLogError( "Parameter check failed: Output parameter for header value length is NULL." );
+        LogError( "Parameter check failed: Output parameter for header value length is NULL." );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else
@@ -1001,31 +1001,31 @@ HTTPStatus_t HTTPClient_ReadHeader( const HTTPResponse_t * pResponse,
         if( returnStatus == HTTP_SUCCESS )
         {
             /* Header value found present in buffer. */
-            IotLogDebugWithArgs( "Found requested header in response: "
-                                 "HeaderName=%.*s, ValueLoc=%.*s",
-                                 headerNameLen, pHeaderName,
-                                 *pHeaderValueLen, *pHeaderValueLoc );
+            LogDebugWithArgs( "Found requested header in response: "
+                              "HeaderName=%.*s, ValueLoc=%.*s",
+                              headerNameLen, pHeaderName,
+                              *pHeaderValueLen, *pHeaderValueLoc );
         }
         else if( returnStatus == HTTP_HEADER_NOT_FOUND )
         {
             /* Header is not present in buffer. */
-            IotLogWarnWithArgs( "Header field not found in response buffer: "
-                                "HeaderName=%.*s", headerNameLen, pHeaderName );
+            LogWarnWithArgs( "Header field not found in response buffer: "
+                             "HeaderName=%.*s", headerNameLen, pHeaderName );
         }
         else
         {
-            IotLogErrorWithArgs( "Unable to read header from response: "
-                                 "Failure in parsing response for header field: "
-                                 "HeaderName=%.*s, ParserError=%s",
-                                 headerNameLen, pHeaderName,
-                                 HTTPClient_strerror( returnStatus ) );
+            LogErrorWithArgs( "Unable to read header from response: "
+                              "Failure in parsing response for header field: "
+                              "HeaderName=%.*s, ParserError=%s",
+                              headerNameLen, pHeaderName,
+                              HTTPClient_strerror( returnStatus ) );
         }
     }
     else
     {
-        IotLogErrorWithArgs( "Failed to read header from response: "
-                             "Unable to initialize parsing context: "
-                             "HeaderName=%.*s", headerNameLen, pHeaderName );
+        LogErrorWithArgs( "Failed to read header from response: "
+                          "Unable to initialize parsing context: "
+                          "HeaderName=%.*s", headerNameLen, pHeaderName );
     }
 
     return returnStatus;
@@ -1088,8 +1088,8 @@ const char * HTTPClient_strerror( HTTPStatus_t status )
             break;
 
         default:
-            IotLogWarnWithArgs( "Invalid status code received for string conversion: "
-                                "StatusCode=%d", status );
+            LogWarnWithArgs( "Invalid status code received for string conversion: "
+                             "StatusCode=%d", status );
     }
 
     return str;

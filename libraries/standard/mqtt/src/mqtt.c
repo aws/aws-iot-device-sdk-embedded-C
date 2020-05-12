@@ -88,15 +88,15 @@ static int32_t sendPacket( MQTTContext_t * pContext,
             bytesRemaining -= ( size_t ) bytesSent;
             totalBytesSent += bytesSent;
             pIndex += bytesSent;
-            IotLogDebugWithArgs( "Bytes sent=%d, bytes remaining=%ul,"
-                                 "total bytes sent=%d.",
-                                 bytesSent,
-                                 bytesRemaining,
-                                 totalBytesSent );
+            LogDebugWithArgs( "Bytes sent=%d, bytes remaining=%ul,"
+                              "total bytes sent=%d.",
+                              bytesSent,
+                              bytesRemaining,
+                              totalBytesSent );
         }
         else
         {
-            IotLogError( "Transport send failed." );
+            LogError( "Transport send failed." );
             totalBytesSent = -1;
             break;
         }
@@ -106,8 +106,8 @@ static int32_t sendPacket( MQTTContext_t * pContext,
     if( totalBytesSent > -1 )
     {
         pContext->lastPacketTime = sendTime;
-        IotLogDebugWithArgs( "Successfully sent packet at time %u.",
-                             sendTime );
+        LogDebugWithArgs( "Successfully sent packet at time %u.",
+                          sendTime );
     }
 
     return totalBytesSent;
@@ -125,20 +125,20 @@ static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * co
     /* Validate all the parameters. */
     if( ( pContext == NULL ) || ( pSubscriptionList == NULL ) )
     {
-        IotLogErrorWithArgs( "Argument cannot be NULL: pContext=%p, "
-                             "pSubscriptionList=%p.",
-                             pContext,
-                             pSubscriptionList );
+        LogErrorWithArgs( "Argument cannot be NULL: pContext=%p, "
+                          "pSubscriptionList=%p.",
+                          pContext,
+                          pSubscriptionList );
         status = MQTTBadParameter;
     }
     else if( subscriptionCount == 0UL )
     {
-        IotLogError( "Subscription count is 0." );
+        LogError( "Subscription count is 0." );
         status = MQTTBadParameter;
     }
     else if( packetId == 0U )
     {
-        IotLogError( "Packet Id for subscription packet is 0." );
+        LogError( "Packet Id for subscription packet is 0." );
         status = MQTTBadParameter;
     }
     else
@@ -181,10 +181,10 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
 
     if( ( pContext == NULL ) || ( pConnectInfo == NULL ) )
     {
-        IotLogErrorWithArgs( "Argument cannot be NULL: pContext=%p, "
-                             "pConnectInfo=%p.",
-                             pContext,
-                             pConnectInfo );
+        LogErrorWithArgs( "Argument cannot be NULL: pContext=%p, "
+                          "pConnectInfo=%p.",
+                          pContext,
+                          pConnectInfo );
         status = MQTTBadParameter;
     }
 
@@ -195,9 +195,9 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
                                             pWillInfo,
                                             &remainingLength,
                                             &packetSize );
-        IotLogDebugWithArgs( "CONNECT packet size is %lu and remaining length is %lu.",
-                             packetSize,
-                             remainingLength );
+        LogDebugWithArgs( "CONNECT packet size is %lu and remaining length is %lu.",
+                          packetSize,
+                          remainingLength );
     }
 
     if( status == MQTTSuccess )
@@ -216,13 +216,13 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
 
         if( bytesSent < 0 )
         {
-            IotLogError( "Transport send failed for CONNECT packet." );
+            LogError( "Transport send failed for CONNECT packet." );
             status = MQTTSendFailed;
         }
         else
         {
-            IotLogDebugWithArgs( "Sent %d bytes of CONNECT packet.",
-                                 bytesSent );
+            LogDebugWithArgs( "Sent %d bytes of CONNECT packet.",
+                              bytesSent );
         }
     }
 
@@ -239,22 +239,22 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
         /* Check if received packet type is CONNACK and deserialize it. */
         if( incomingPacket.type == MQTT_PACKET_TYPE_CONNACK )
         {
-            IotLogInfo( "Received MQTT CONNACK from broker." );
+            LogInfo( "Received MQTT CONNACK from broker." );
 
             /* Deserialize CONNACK. */
             status = MQTT_DeserializeAck( &incomingPacket, NULL, pSessionPresent );
         }
         else
         {
-            IotLogErrorWithArgs( "Unexpected packet type %u received from network.",
-                                 incomingPacket.type );
+            LogErrorWithArgs( "Unexpected packet type %u received from network.",
+                              incomingPacket.type );
             status = MQTTBadResponse;
         }
     }
 
     if( status == MQTTSuccess )
     {
-        IotLogInfo( "MQTT connection established with the broker." );
+        LogInfo( "MQTT connection established with the broker." );
         pContext->connectStatus = MQTTConnected;
     }
 
@@ -284,9 +284,9 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * const pContext,
                                               subscriptionCount,
                                               &remainingLength,
                                               &packetSize );
-        IotLogDebugWithArgs( "SUBSCRIBE packet size is %lu and remaining length is %lu.",
-                             packetSize,
-                             remainingLength );
+        LogDebugWithArgs( "SUBSCRIBE packet size is %lu and remaining length is %lu.",
+                          packetSize,
+                          remainingLength );
     }
 
     if( status == MQTTSuccess )
@@ -308,13 +308,13 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * const pContext,
 
         if( bytesSent < 0 )
         {
-            IotLogError( "Transport send failed for SUBSCRIBE packet." );
+            LogError( "Transport send failed for SUBSCRIBE packet." );
             status = MQTTSendFailed;
         }
         else
         {
-            IotLogDebugWithArgs( "Sent %d bytes of SUBSCRIBE packet.",
-                                 bytesSent );
+            LogDebugWithArgs( "Sent %d bytes of SUBSCRIBE packet.",
+                              bytesSent );
         }
     }
 
@@ -334,16 +334,16 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
     /* Validate arguments. */
     if( ( pContext == NULL ) || ( pPublishInfo == NULL ) )
     {
-        IotLogErrorWithArgs( "Argument cannot be NULL: pContext=%p, "
-                             "pPublishInfo=%p.",
-                             pContext,
-                             pPublishInfo );
+        LogErrorWithArgs( "Argument cannot be NULL: pContext=%p, "
+                          "pPublishInfo=%p.",
+                          pContext,
+                          pPublishInfo );
         status = MQTTBadParameter;
     }
     else if( ( pPublishInfo->qos != MQTTQoS0 ) && ( packetId == 0 ) )
     {
-        IotLogErrorWithArgs( "Packet Id is 0 for PUBLISH with QoS=%u.",
-                             pPublishInfo->qos );
+        LogErrorWithArgs( "Packet Id is 0 for PUBLISH with QoS=%u.",
+                          pPublishInfo->qos );
         status = MQTTBadParameter;
     }
     else
@@ -357,9 +357,9 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
         status = MQTT_GetPublishPacketSize( pPublishInfo,
                                             &remainingLength,
                                             &packetSize );
-        IotLogDebugWithArgs( "PUBLISH packet size is %lu and remaining length is %lu.",
-                             packetSize,
-                             remainingLength );
+        LogDebugWithArgs( "PUBLISH packet size is %lu and remaining length is %lu.",
+                          packetSize,
+                          remainingLength );
     }
 
     if( status == MQTTSuccess )
@@ -369,8 +369,8 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
                                               remainingLength,
                                               &( pContext->networkBuffer ),
                                               &headerSize );
-        IotLogDebugWithArgs( "Serialized PUBLISH header size is %lu.",
-                             headerSize );
+        LogDebugWithArgs( "Serialized PUBLISH header size is %lu.",
+                          headerSize );
     }
 
     if( status == MQTTSuccess )
@@ -382,13 +382,13 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
 
         if( bytesSent < 0 )
         {
-            IotLogError( "Transport send failed for PUBLISH header." );
+            LogError( "Transport send failed for PUBLISH header." );
             status = MQTTSendFailed;
         }
         else
         {
-            IotLogDebugWithArgs( "Sent %d bytes of PUBLISH header.",
-                                 bytesSent );
+            LogDebugWithArgs( "Sent %d bytes of PUBLISH header.",
+                              bytesSent );
 
             /* Send Payload. */
             bytesSent = sendPacket( pContext,
@@ -397,13 +397,13 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
 
             if( bytesSent < 0 )
             {
-                IotLogError( "Transport send failed for PUBLISH payload." );
+                LogError( "Transport send failed for PUBLISH payload." );
                 status = MQTTSendFailed;
             }
             else
             {
-                IotLogDebugWithArgs( "Sent %d bytes of PUBLISH payload.",
-                                     bytesSent );
+                LogDebugWithArgs( "Sent %d bytes of PUBLISH payload.",
+                                  bytesSent );
             }
         }
     }
@@ -423,7 +423,7 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * const pContext )
 
     if( pContext == NULL )
     {
-        IotLogError( "pContext is NULL." );
+        LogError( "pContext is NULL." );
         status = MQTTBadParameter;
     }
 
@@ -442,13 +442,13 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * const pContext )
 
         if( bytesSent < 0 )
         {
-            IotLogError( "Transport send failed for PINGREQ packet." );
+            LogError( "Transport send failed for PINGREQ packet." );
             status = MQTTSendFailed;
         }
         else
         {
-            IotLogDebugWithArgs( "Sent %d bytes of PINGREQ packet.",
-                                 bytesSent );
+            LogDebugWithArgs( "Sent %d bytes of PINGREQ packet.",
+                              bytesSent );
         }
     }
 
@@ -478,9 +478,9 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * const pContext,
                                                 subscriptionCount,
                                                 &remainingLength,
                                                 &packetSize );
-        IotLogDebugWithArgs( "UNSUBSCRIBE packet size is %lu and remaining length is %lu.",
-                             packetSize,
-                             remainingLength );
+        LogDebugWithArgs( "UNSUBSCRIBE packet size is %lu and remaining length is %lu.",
+                          packetSize,
+                          remainingLength );
     }
 
     if( status == MQTTSuccess )
@@ -502,13 +502,13 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * const pContext,
 
         if( bytesSent < 0 )
         {
-            IotLogError( "Transport send failed for UNSUBSCRIBE packet." );
+            LogError( "Transport send failed for UNSUBSCRIBE packet." );
             status = MQTTSendFailed;
         }
         else
         {
-            IotLogDebugWithArgs( "Sent %d bytes of UNSUBSCRIBE packet.",
-                                 bytesSent );
+            LogDebugWithArgs( "Sent %d bytes of UNSUBSCRIBE packet.",
+                              bytesSent );
         }
     }
 
@@ -526,7 +526,7 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * const pContext )
     /* Validate arguments. */
     if( pContext == NULL )
     {
-        IotLogError( "pContext cannot be NULL." );
+        LogError( "pContext cannot be NULL." );
         status = MQTTBadParameter;
     }
 
@@ -534,8 +534,8 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * const pContext )
     {
         /* Get MQTT DISCONNECT packet size. */
         status = MQTT_GetDisconnectPacketSize( &packetSize );
-        IotLogDebugWithArgs( "MQTT DISCONNECT packet size is %lu.",
-                             packetSize );
+        LogDebugWithArgs( "MQTT DISCONNECT packet size is %lu.",
+                          packetSize );
     }
 
     if( status == MQTTSuccess )
@@ -552,19 +552,19 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * const pContext )
 
         if( bytesSent < 0 )
         {
-            IotLogError( "Transport send failed for DISCONNECT packet." );
+            LogError( "Transport send failed for DISCONNECT packet." );
             status = MQTTSendFailed;
         }
         else
         {
-            IotLogDebugWithArgs( "Sent %d bytes of DISCONNECT packet.",
-                                 bytesSent );
+            LogDebugWithArgs( "Sent %d bytes of DISCONNECT packet.",
+                              bytesSent );
         }
     }
 
     if( status == MQTTSuccess )
     {
-        IotLogInfo( "Disconnected from the broker." );
+        LogInfo( "Disconnected from the broker." );
         pContext->connectStatus = MQTTNotConnected;
     }
 
