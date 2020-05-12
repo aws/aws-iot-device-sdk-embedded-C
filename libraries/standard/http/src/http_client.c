@@ -1229,7 +1229,7 @@ static HTTPStatus_t findHeaderInResponse( const uint8_t * pBuffer,
     /* If the header field-value pair is found in response, then the return value of "on_header_value"
      * callback (related to the header value) should cause the http_parser.http_errno to be "CB_header_value". */
     if( ( returnStatus == HTTP_SUCCESS ) &&
-        ( ( ( enum http_errno ) parser.http_errno != HPE_CB_header_value ) ) )
+        ( ( parser.http_errno != HPE_CB_header_value ) ) )
     {
         IotLogErrorWithArgs( "Header found in response but http-parser returned error: ParserError=%s",
                              http_errno_description( HTTP_PARSER_ERRNO( &( parser ) ) ) );
@@ -1239,7 +1239,7 @@ static HTTPStatus_t findHeaderInResponse( const uint8_t * pBuffer,
     /* If header was not found, then the "on_header_complete" callback is expected to be called which should
      * cause the http_parser.http_errno to be "OK" */
     else if( ( returnStatus == HTTP_HEADER_NOT_FOUND ) &&
-             ( ( ( enum http_errno ) parser.http_errno != HPE_OK ) ) )
+             ( ( parser.http_errno != HPE_OK ) ) )
     {
         IotLogErrorWithArgs( "Header not found in response: http-parser returned error: ParserError=%s",
                              http_errno_description( HTTP_PARSER_ERRNO( &( parser ) ) ) );
