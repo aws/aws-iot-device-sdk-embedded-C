@@ -290,7 +290,7 @@ static MQTTStatus_t discardPacket( MQTTContext_t * const pContext,
     MQTTStatus_t status = MQTTRecvFailed;
     int32_t bytesReceived = 0;
     size_t bytesToReceive = 0U;
-    uint32_t totalBytesReceived, entryTime, elapsedTime;
+    uint32_t totalBytesReceived = 0U, entryTime, elapsedTime;
     uint32_t remainingTimeMs = timeoutMs;
     MQTTGetCurrentTimeFunc_t getTimeStamp = NULL;
     bool shouldBreak = false;
@@ -309,7 +309,7 @@ static MQTTStatus_t discardPacket( MQTTContext_t * const pContext,
 
         bytesReceived = recvExact( pContext, bytesToReceive, remainingTimeMs );
 
-        if( bytesReceived != bytesToReceive )
+        if( bytesReceived != ( int32_t ) bytesToReceive )
         {
             IotLogErrorWithArgs( "Receive error while discarding packet."
                                  "ReceivedBytes=%d, ExpectedBytes=%u.",
@@ -367,8 +367,7 @@ static MQTTStatus_t receivePacket( MQTTContext_t * const pContext,
 {
     MQTTStatus_t status = MQTTSuccess;
     int32_t bytesReceived = 0;
-    int32_t totalBytesReceived = 0;
-    size_t bytesToReceive = 0;
+    size_t bytesToReceive = 0U;
 
     assert( pContext != NULL );
 
@@ -387,7 +386,7 @@ static MQTTStatus_t receivePacket( MQTTContext_t * const pContext,
     {
         bytesToReceive = incomingPacket.remainingLength;
         bytesReceived = recvExact( pContext, bytesToReceive, remainingTimeMs );
-        if( bytesReceived == (int32_t ) bytesToReceive )
+        if( bytesReceived == ( int32_t ) bytesToReceive )
         {
             /* Receive successful, bytesReceived == bytesToReceive. */
             IotLogInfoWithArgs( "Packet received. ReceivedBytes=%d.",
@@ -427,7 +426,6 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * const pContext,
     int32_t bytesSent = 0;
     uint8_t packetTypeByte = 0U;
     MQTTPubAckType_t packetType;
-    MQTTPublishState_t expectedNextState = MQTTStateNull;
 
     assert( pContext != NULL );
     assert( pPublishState != NULL );
@@ -437,22 +435,18 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * const pContext,
         case MQTTPubAckSend:
             packetTypeByte = MQTT_PACKET_TYPE_PUBACK;
             packetType = MQTTPuback;
-            expectedNextState = MQTTPublishDone;
             break;
         case MQTTPubRecSend:
             packetTypeByte = MQTT_PACKET_TYPE_PUBREC;
             packetType = MQTTPubrec;
-            expectedNextState = MQTTPubRelPending;
             break;
         case MQTTPubRelSend:
             packetTypeByte = MQTT_PACKET_TYPE_PUBREL;
             packetType = MQTTPubrel;
-            expectedNextState = MQTTPubCompPending;
             break;
         case MQTTPubCompSend:
             packetTypeByte = MQTT_PACKET_TYPE_PUBCOMP;
             packetType = MQTTPubcomp;
-            expectedNextState = MQTTPublishDone;
             break;
         default:
             /* Nothing to send. */
@@ -479,13 +473,17 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * const pContext,
                                             packetType,
                                             MQTT_SEND );
 
-            if( newState != expectedNextState )
+            if( newState == MQTTStateNull )
             {
                 status = MQTTIllegalState;
             }
         }
         else
         {
+            IotLogErrorWithArgs( "Failed to send ACK packet: SentBytes=%d, "
+                                 "PacketSize=%u",
+                                 bytesSent,
+                                 MQTT_PUBLISH_ACK_PACKET_SIZE );
             status = MQTTSendFailed;
         }
     }
@@ -563,7 +561,7 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * const pContext,
     assert( pIncomingPacket != NULL );
 
     status = MQTT_DeserializePublish( pIncomingPacket, &packetIdentifier, &publishInfo );
-    IotLogInfoWithArgs( "Publish packet deserialized with result %d.", status );
+    IotLogInfoWithArgs( "De-serialized incoming PUBLISH packet: DeserializerResult=%d", status );
 
     if( status == MQTTSuccess )
     {
