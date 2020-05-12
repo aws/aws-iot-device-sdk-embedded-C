@@ -103,7 +103,7 @@ void setupRequestInfo( HTTPRequestInfo_t * pRequestInfo )
  * @param[in] bufferLen Size of the buffer.
  */
 void setupBuffer( HTTPRequestHeaders_t * pRequestHeaders,
-                  const uint8_t * buffer,
+                  uint8_t * buffer,
                   size_t bufferLen )
 {
     pRequestHeaders->pBuffer = buffer;
@@ -121,6 +121,7 @@ void test_Http_InitializeRequestHeaders_happy_path()
     size_t expectedHeaderLen = HTTP_TEST_MAX_INITIALIZED_HEADER_LEN;
     uint8_t buffer[ HTTP_TEST_INITIALIZED_HEADER_BUFFER_LEN ] = { 0 };
     char expectedHeader[ HTTP_TEST_INITIALIZED_HEADER_BUFFER_LEN ] = { 0 };
+    int numBytes = 0;
 
     setupRequestInfo( &requestInfo );
     setupBuffer( &requestHeaders, buffer, expectedHeaderLen );
@@ -128,13 +129,13 @@ void test_Http_InitializeRequestHeaders_happy_path()
     /* Happy Path testing. */
     expectedHeaderLen = HTTP_TEST_PREFIX_HEADER_LEN +
                         HTTP_CONNECTION_CLOSE_VALUE_LEN;
-    int numBytes = snprintf( expectedHeader, expectedHeaderLen + 1,
-                             HTTP_TEST_HEADER_FORMAT,
-                             HTTP_TEST_REQUEST_METHOD, HTTP_TEST_REQUEST_PATH,
-                             HTTP_PROTOCOL_VERSION,
-                             HTTP_USER_AGENT_FIELD, HTTP_USER_AGENT_VALUE,
-                             HTTP_HOST_FIELD, HTTP_TEST_HOST_VALUE,
-                             HTTP_CONNECTION_FIELD, HTTP_CONNECTION_CLOSE_VALUE );
+    numBytes = snprintf( expectedHeader, expectedHeaderLen + 1,
+                         HTTP_TEST_HEADER_FORMAT,
+                         HTTP_TEST_REQUEST_METHOD, HTTP_TEST_REQUEST_PATH,
+                         HTTP_PROTOCOL_VERSION,
+                         HTTP_USER_AGENT_FIELD, HTTP_USER_AGENT_VALUE,
+                         HTTP_HOST_FIELD, HTTP_TEST_HOST_VALUE,
+                         HTTP_CONNECTION_FIELD, HTTP_CONNECTION_CLOSE_VALUE );
     TEST_ASSERT_EQUAL( numBytes, expectedHeaderLen );
     test_err = HTTPClient_InitializeRequestHeaders( &requestHeaders, &requestInfo );
     TEST_ASSERT_EQUAL_MEMORY( requestHeaders.pBuffer, expectedHeader, expectedHeaderLen );
@@ -196,6 +197,7 @@ void test_Http_InitializeRequestHeaders_req_info()
     size_t expectedHeaderLen = HTTP_TEST_MAX_INITIALIZED_HEADER_LEN;
     uint8_t buffer[ HTTP_TEST_INITIALIZED_HEADER_BUFFER_LEN ] = { 0 };
     char expectedHeader[ HTTP_TEST_INITIALIZED_HEADER_BUFFER_LEN ] = { 0 };
+    int numBytes = 0;
 
     setupRequestInfo( &requestInfo );
     setupBuffer( &requestHeaders, buffer, expectedHeaderLen );
@@ -206,13 +208,13 @@ void test_Http_InitializeRequestHeaders_req_info()
                         HTTP_TEST_REQUEST_PATH_LEN +
                         HTTP_EMPTY_PATH_LEN +
                         HTTP_CONNECTION_KEEP_ALIVE_VALUE_LEN;
-    int numBytes = snprintf( expectedHeader, expectedHeaderLen + 1,
-                             HTTP_TEST_HEADER_FORMAT,
-                             HTTP_TEST_REQUEST_METHOD, HTTP_EMPTY_PATH,
-                             HTTP_PROTOCOL_VERSION,
-                             HTTP_USER_AGENT_FIELD, HTTP_USER_AGENT_VALUE,
-                             HTTP_HOST_FIELD, HTTP_TEST_HOST_VALUE,
-                             HTTP_CONNECTION_FIELD, HTTP_CONNECTION_KEEP_ALIVE_VALUE );
+    numBytes = snprintf( expectedHeader, expectedHeaderLen + 1,
+                         HTTP_TEST_HEADER_FORMAT,
+                         HTTP_TEST_REQUEST_METHOD, HTTP_EMPTY_PATH,
+                         HTTP_PROTOCOL_VERSION,
+                         HTTP_USER_AGENT_FIELD, HTTP_USER_AGENT_VALUE,
+                         HTTP_HOST_FIELD, HTTP_TEST_HOST_VALUE,
+                         HTTP_CONNECTION_FIELD, HTTP_CONNECTION_KEEP_ALIVE_VALUE );
     TEST_ASSERT_EQUAL( numBytes, expectedHeaderLen );
 
     requestHeaders.pBuffer = buffer;
