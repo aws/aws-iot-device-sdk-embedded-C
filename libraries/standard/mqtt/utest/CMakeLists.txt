@@ -15,6 +15,7 @@ list(APPEND mock_list
 list(APPEND mock_include_list
             .
             ${MQTT_INCLUDE_PUBLIC_DIRS}
+            "${ROOT_DIR}/platform/include"
         )
 #list the definitions of your mocks to control what to be included
 list(APPEND mock_define_list
@@ -32,6 +33,7 @@ list(APPEND real_include_directories
             .
             ${MQTT_INCLUDE_PUBLIC_DIRS}
             ${MQTT_TEST_INCLUDE_PRIVATE_DIRS}
+            "${ROOT_DIR}/platform/include"
         )
 
 # =====================  Create UnitTest Code here (edit)  =====================
@@ -41,6 +43,7 @@ list(APPEND test_include_directories
             .
             ${MQTT_INCLUDE_PUBLIC_DIRS}
             ${MQTT_TEST_INCLUDE_PRIVATE_DIRS}
+            "${ROOT_DIR}/platform/include"
         )
 
 # =============================  (end edit)  ===================================

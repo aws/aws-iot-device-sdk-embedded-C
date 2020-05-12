@@ -31,10 +31,13 @@ function(create_test test_name
                                ${include_list}
         )
     target_link_libraries(${test_name} 
-        "${ROOT_DIR}/platform/posix/iot_clock_posix.o"
-        "${ROOT_DIR}/platform/posix/iot_logging.o"
-    )
-    target_link_directories(${test_name} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+                          "${ROOT_DIR}/platform/posix/iot_clock_posix.o"
+                          "${ROOT_DIR}/platform/posix/iot_logging.o"
+        )
+
+    target_link_directories(${test_name} PUBLIC
+                            ${CMAKE_CURRENT_BINARY_DIR}
+        )
 
     # link all libraries sent through parameters
     foreach(link IN LISTS link_list)

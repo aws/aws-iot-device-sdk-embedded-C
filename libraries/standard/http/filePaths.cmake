@@ -14,7 +14,6 @@ set( HTTP_SOURCES
 set( HTTP_INCLUDE_PUBLIC_DIRS
      "${MODULES_DIR}/standard/http/include"
      "${MODULES_DIR}/standard/utilities/include"
-     "${ROOT_DIR}/platform/include"
       )
 
 # HTTP test include directories.
