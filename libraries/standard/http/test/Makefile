@@ -15,7 +15,8 @@ INCLUDE = . \
 		  ../include \
 		  ../src \
 		  $(CSDK_ROOT)/platform/include \
-		  ../../utilities/include
+		  ../../utilities/include \
+		  ../third_party
 
 # the default goal (default: help)
 # Set to build or test as desired.
@@ -37,8 +38,11 @@ FUNCTIONS = addHeader \
 			HTTPClient_InitializeParsingContext \
 			HTTPClient_ParseResponse \
 			getFinalResponseStatus \
-			readHeaderParsingCallback \
-			HTTPClient_strerror
+			HTTPClient_strerror \
+			findHeaderFieldParserCallback \
+			findHeaderValueParserCallback \
+			findHeaderOnHeaderCompleteCallback \
+			findHeaderInResponse 
 
 # Changes to the above variables should remain above this include.
 include Mock4thewin.mk
@@ -57,7 +61,11 @@ HTTPClient_Send.c: sendHttpHeaders.c \
 				   HTTPClient_ParseResponse.c \
 				   getFinalResponseStatus.c
 HTTPClient_InitializeRequestHeaders.c: writeRequestLine.c addHeader.c
-HTTPClient_ReadHeader.c: HTTPClient_strerror.c
+HTTPClient_ReadHeader.c: HTTPClient_strerror.c \
+						 findHeaderFieldParserCallback.c \
+						 findHeaderValueParserCallback.c \
+						 findHeaderOnHeaderCompleteCallback.c \
+						 findHeaderInResponse.c 
 
 # additional header dependencies for all tests
 COMMON = common.h

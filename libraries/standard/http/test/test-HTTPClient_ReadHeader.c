@@ -2,68 +2,115 @@
 #include <stdbool.h>
 
 #include "common.h"
+#include "http_parser/http_parser.h"
+
+/* Mirror of the context type used to pass to http_parser. */
+typedef struct findHeaderContext
+{
+    const uint8_t * pField;
+    size_t fieldLen;
+    const uint8_t ** pValueLoc;
+    size_t * pValueLen;
+    uint8_t fieldFound : 1;
+    uint8_t valueFound : 1;
+} findHeaderContext_t;
 
 /* Functions are pulled out into their own C files to be tested as a unit. */
 #include "HTTPClient_strerror.c"
+#include "findHeaderFieldParserCallback.c"
+#include "findHeaderValueParserCallback.c"
+#include "findHeaderOnHeaderCompleteCallback.c"
+#include "findHeaderInResponse.c"
 #include "HTTPClient_ReadHeader.c"
 
 /* Template HTTP request for a PUT request. */
-static const char * pTestResponse = "HTTP/1.1 200 OK"
+static const char * pTestResponse = "HTTP/1.1 200 OK\r\n"
                                     "test-header0: test-value0\r\n"
                                     "test-header1: test-value1\r\n"
                                     "test-header2: test-value2\r\n"
                                     "\r\n";
-static const size_t headerFieldInRespLoc = 15;
-static const size_t headerFieldInRespLen = strlen( "test-header0" );
-static const size_t headerValInRespLoc = 29;
-static const size_t headerValInRespLen = strlen( "test-value0" );
+static const size_t headerFieldInRespLoc = 44;
+static const size_t headerFieldInRespLen = sizeof( "test-header1" ) - 1u;
+static const size_t headerValInRespLoc = 58;
+static const size_t headerValInRespLen = sizeof( "test-value1" ) - 1u;
 
-#define HEADER_IN_BUFFER        "test-header0"
+#define HEADER_IN_BUFFER        "test-header1"
 #define HEADER_NOT_IN_BUFFER    "header-not-in-buffer"
 
-/* Mocked out implementations of parser function dependencies. */
-static HTTPStatus_t initializeParsingContextRetCode = HTTP_SUCCESS;
-HTTPStatus_t HTTPClient_InitializeParsingContext( HTTPParsingContext_t * pParsingContext,
-                                                  HTTPClient_HeaderParsingCallback_t * pHeaderParsingCallback )
+/* -------------------- Mock'd implementations of http_parser function dependencies. ------------------ */
+
+void http_parser_init( http_parser * parser,
+                       enum http_parser_type type )
 {
-    ( void ) pHeaderParsingCallback;
-
-    /* Verify the input arguments. */
-    ok( pParsingContext != NULL );
-
-    return initializeParsingContextRetCode;
+    ok( parser != NULL );
+    ok( type == HTTP_RESPONSE );
 }
 
-static HTTPStatus_t findHeaderInRespRetCode = HTTP_SUCCESS;
-static const uint8_t * pExpectedField = NULL;
-static size_t expectedFieldSize = 0u;
-static const uint8_t * pValLocToReturn = NULL;
-static size_t valLenToReturn = 0u;
-HTTPStatus_t HTTPClient_FindHeaderInResponse( HTTPParsingContext_t * pParsingContext,
-                                              const uint8_t * pBuffer,
-                                              size_t bufferLen,
-                                              const uint8_t * pField,
-                                              size_t fieldLen,
-                                              const uint8_t ** pValue,
-                                              size_t * pValueLen )
+void http_parser_settings_init( http_parser_settings * settings )
 {
-    /* Verify the input arguments. */
-    ok( pParsingContext != NULL );
-    ok( pBuffer == ( const uint8_t * ) pTestResponse );
-    ok( bufferLen == strlen( pTestResponse ) );
-    ok( bufferLen != 0u );
-    ok( pField != NULL );
-    ok( fieldLen == expectedFieldSize );
-    ok( 0u == memcmp( pField, pExpectedField, fieldLen ) );
-    ok( pValue != NULL );
-    ok( pValueLen != NULL );
-
-    /* Side-effects of mock'd implementation. */
-    *pValue = pValLocToReturn;
-    *pValueLen = valLenToReturn;
-
-    return findHeaderInRespRetCode;
+    ok( settings != NULL );
 }
+/* Variables for controlling behavior of the http_parser_execute() mock. */
+static const char * pExpectedBuffer = NULL;
+static size_t expectedBufferSize = 0u;
+bool invokeHeaderFieldCallback = false;
+const char * pFieldLocToReturn = NULL;
+size_t fieldLenToReturn = 0u;
+bool invokeHeaderValueCallback = false;
+const char * pValueLocToReturn = NULL;
+static int expectedValCbRetVal = 0;
+size_t valueLenToReturn = 0u;
+bool invokeHeaderCompleteCallback = false;
+unsigned int parserErrNo = 0;
+size_t http_parser_execute( http_parser * parser,
+                            const http_parser_settings * settings,
+                            const char * data,
+                            size_t len )
+{
+    ok( parser != NULL );
+    ok( settings != NULL );
+    ok( len == expectedBufferSize );
+    ok( data == pExpectedBuffer );
+
+    ok( settings->on_header_field != NULL );
+    ok( settings->on_header_value != NULL );
+    ok( settings->on_headers_complete != NULL );
+
+    if( invokeHeaderFieldCallback == true )
+    {
+        ok( HTTP_PARSER_CONTINUE_PARSING ==
+            settings->on_header_field( parser,
+                                       pFieldLocToReturn,
+                                       fieldLenToReturn ) );
+    }
+
+    if( invokeHeaderValueCallback == true )
+    {
+        ok( expectedValCbRetVal ==
+            settings->on_header_value( parser,
+                                       pValueLocToReturn,
+                                       valueLenToReturn ) );
+    }
+
+    if( invokeHeaderCompleteCallback == true )
+    {
+        ok( HTTP_PARSER_STOP_PARSING ==
+            settings->on_headers_complete( parser ) );
+    }
+
+    /* Set the error value in the parser. */
+    parser->http_errno = parserErrNo;
+
+    return len;
+}
+
+const char * http_errno_description( enum http_errno err )
+{
+    ( void ) err;
+    return "test-error";
+}
+
+/* -------------------- End of http_parser function mocks. ------------------ */
 
 int main()
 {
@@ -78,22 +125,26 @@ int main()
         memset( &testResponse, 0, sizeof( testResponse ) ); \
         pValueLoc = NULL;                                   \
         valueLen = 0u;                                      \
-        initializeParsingContextRetCode = HTTP_SUCCESS;     \
-        findHeaderInRespRetCode = HTTP_SUCCESS;             \
-        pExpectedField = NULL;                              \
-        expectedFieldSize = 0u;                             \
-        pValLocToReturn = NULL;                             \
-        valLenToReturn = 0u;                                \
+        pExpectedBuffer = &pTestResponse[ 0 ];              \
+        expectedBufferSize = strlen( pTestResponse );       \
+        invokeHeaderFieldCallback = false;                  \
+        pFieldLocToReturn = NULL;                           \
+        fieldLenToReturn = 0u;                              \
+        invokeHeaderValueCallback = false;                  \
+        pValueLocToReturn = NULL;                           \
+        expectedValCbRetVal = 0;                            \
+        valueLenToReturn = 0u;                              \
+        invokeHeaderCompleteCallback = false;               \
     } while( 0 )
 
-    plan( 44 );
+    plan( 69 );
 
     /*************************** Test Failure Cases *****************************/
 
     /* Response parameter is NULL. */
     reset();
     retCode = HTTPClient_ReadHeader( NULL,
-                                     "Header",
+                                     ( const uint8_t * ) "Header",
                                      strlen( "Header" ),
                                      &pValueLoc,
                                      &valueLen );
@@ -102,7 +153,7 @@ int main()
     /* Underlying buffer is NULL in the response parameter. */
     reset();
     retCode = HTTPClient_ReadHeader( &testResponse,
-                                     "Header",
+                                     ( const uint8_t * ) "Header",
                                      strlen( "Header" ),
                                      &pValueLoc,
                                      &valueLen );
@@ -112,7 +163,7 @@ int main()
     reset();
     testResponse.pBuffer = ( uint8_t * ) &pTestResponse[ 0 ];
     retCode = HTTPClient_ReadHeader( &testResponse,
-                                     "Header",
+                                     ( const uint8_t * ) "Header",
                                      strlen( "Header" ),
                                      &pValueLoc,
                                      &valueLen );
@@ -134,7 +185,7 @@ int main()
     testResponse.pBuffer = ( uint8_t * ) &pTestResponse[ 0 ];
     testResponse.bufferLen = strlen( pTestResponse );
     retCode = HTTPClient_ReadHeader( &testResponse,
-                                     "Header",
+                                     ( const uint8_t * ) "Header",
                                      0u,
                                      &pValueLoc,
                                      &valueLen );
@@ -145,7 +196,7 @@ int main()
     testResponse.pBuffer = ( uint8_t * ) &pTestResponse[ 0 ];
     testResponse.bufferLen = strlen( pTestResponse );
     retCode = HTTPClient_ReadHeader( &testResponse,
-                                     "Header",
+                                     ( const uint8_t * ) "Header",
                                      strlen( "Header" ),
                                      NULL,
                                      &valueLen );
@@ -154,35 +205,30 @@ int main()
     testResponse.pBuffer = ( uint8_t * ) &pTestResponse[ 0 ];
     testResponse.bufferLen = strlen( pTestResponse );
     retCode = HTTPClient_ReadHeader( &testResponse,
-                                     "Header",
+                                     ( const uint8_t * ) "Header",
                                      strlen( "Header" ),
                                      &pValueLoc,
                                      NULL );
     ok( retCode == HTTP_INVALID_PARAMETER );
 
-    /* Test when HTTPClient_InitializeParsingContext returns failure. */
+    /* Test when the header is present in response but http_parser_execute()
+     * does not set the expected errno value (of "CB_header_value")
+     * due to an internal error. */
     reset();
-    initializeParsingContextRetCode = HTTP_INTERNAL_ERROR;
-    testResponse.pBuffer = ( uint8_t * ) &pTestResponse[ 0 ];
-    testResponse.bufferLen = strlen( pTestResponse );
-    retCode = HTTPClient_ReadHeader( &testResponse,
-                                     "Header",
-                                     strlen( "Header" ),
-                                     &pValueLoc,
-                                     &valueLen );
-    ok( retCode == HTTP_INTERNAL_ERROR );
-
-    /* Test when HTTPClient_ParseResponse returns failure. */
-    reset();
-    /* Configure the HTTPClient_FindResponseInHeader mock. */
-    findHeaderInRespRetCode = HTTP_INTERNAL_ERROR;
-    pExpectedField = HEADER_IN_BUFFER;
-    expectedFieldSize = strlen( HEADER_IN_BUFFER );
+    /* Configure the http_parser_execute mock. */
+    invokeHeaderFieldCallback = true;
+    invokeHeaderValueCallback = true;
+    pFieldLocToReturn = &pTestResponse[ headerFieldInRespLoc ];
+    fieldLenToReturn = headerFieldInRespLen;
+    pValueLocToReturn = &pTestResponse[ headerValInRespLoc ];
+    valueLenToReturn = headerValInRespLen;
+    expectedValCbRetVal = HTTP_PARSER_STOP_PARSING;
+    parserErrNo = HPE_CB_chunk_complete;
     /* Call the function under test. */
     testResponse.pBuffer = ( uint8_t * ) &pTestResponse[ 0 ];
     testResponse.bufferLen = strlen( pTestResponse );
     retCode = HTTPClient_ReadHeader( &testResponse,
-                                     HEADER_IN_BUFFER,
+                                     ( const uint8_t * ) HEADER_IN_BUFFER,
                                      strlen( HEADER_IN_BUFFER ),
                                      &pValueLoc,
                                      &valueLen );
@@ -191,35 +237,80 @@ int main()
     /* Test when requested header is not present in response. */
 
     reset();
-    /* Configure the HTTPClient_FindResponseInHeader mock. */
-    findHeaderInRespRetCode = HTTP_HEADER_NOT_FOUND;
-    pExpectedField = HEADER_NOT_IN_BUFFER;
-    expectedFieldSize = strlen( HEADER_NOT_IN_BUFFER );
+    /* Configure the http_parser_execute mock. */
+    invokeHeaderCompleteCallback = false;
+    parserErrNo = HPE_OK;
     /* Call the function under test. */
     testResponse.pBuffer = ( uint8_t * ) &pTestResponse[ 0 ];
     testResponse.bufferLen = strlen( pTestResponse );
     retCode = HTTPClient_ReadHeader( &testResponse,
-                                     HEADER_NOT_IN_BUFFER,
+                                     ( const uint8_t * ) HEADER_NOT_IN_BUFFER,
                                      strlen( HEADER_NOT_IN_BUFFER ),
                                      &pValueLoc,
                                      &valueLen );
     ok( retCode == HTTP_HEADER_NOT_FOUND );
+
+    /* Test with invalid HTTP responses. */
+
+    /* Test when invalid response only contains the header field for the requested header. */
+    const char * pResponseWithoutValue = "HTTP/1.1 200 OK\r\n"
+                                         "test-header0: test-value0\r\n"
+                                         "test-header1:";
+    reset();
+    /* Configure the http_parser_execute mock. */
+    pExpectedBuffer = pResponseWithoutValue;
+    expectedBufferSize = strlen( pResponseWithoutValue );
+    invokeHeaderFieldCallback = true;
+    pFieldLocToReturn = &pTestResponse[ headerFieldInRespLoc ];
+    fieldLenToReturn = headerFieldInRespLen;
+    /* Call the function under test. */
+    testResponse.pBuffer = ( uint8_t * ) &pResponseWithoutValue[ 0 ];
+    testResponse.bufferLen = strlen( pResponseWithoutValue );
+    retCode = HTTPClient_ReadHeader( &testResponse,
+                                     ( const uint8_t * ) HEADER_IN_BUFFER,
+                                     strlen( HEADER_IN_BUFFER ),
+                                     &pValueLoc,
+                                     &valueLen );
+    ok( retCode == HTTP_INVALID_RESPONSE );
+
+    /* Test when the invalid response does not contain the requested header.
+     * (Response is invalid as it doesn't end with "\r\n\r\n".) */
+    reset();
+    const char * pResponseWithoutHeaders = "HTTP/1.1 200 OK\r\n"
+                                           "test-header0:test-value0";
+    /* Configure the http_parser_execute mock. */
+    pExpectedBuffer = &pResponseWithoutHeaders[ 0 ];
+    expectedBufferSize = strlen( pResponseWithoutHeaders );
+    parserErrNo = HPE_UNKNOWN;
+    /* Call the function under test. */
+    testResponse.pBuffer = ( uint8_t * ) &pResponseWithoutHeaders[ 0 ];
+    testResponse.bufferLen = strlen( pResponseWithoutHeaders );
+    retCode = HTTPClient_ReadHeader( &testResponse,
+                                     ( const uint8_t * ) HEADER_NOT_IN_BUFFER,
+                                     strlen( HEADER_NOT_IN_BUFFER ),
+                                     &pValueLoc,
+                                     &valueLen );
+    ok( retCode == HTTP_INVALID_RESPONSE );
 
     /*************************** Test Happy-Path Cases *****************************/
 
     /* Test when requested header in present response. */
 
     reset();
-    /* Configure the HTTPClient_FindResponseInHeader mock. */
-    pExpectedField = HEADER_IN_BUFFER;
-    expectedFieldSize = strlen( HEADER_IN_BUFFER );
-    pValLocToReturn = &pTestResponse[ headerValInRespLoc ];
-    valLenToReturn = headerValInRespLen;
+    /* Configure the http_parser_execute mock. */
+    expectedValCbRetVal = HTTP_PARSER_STOP_PARSING;
+    pFieldLocToReturn = &pTestResponse[ headerFieldInRespLoc ];
+    fieldLenToReturn = headerFieldInRespLen;
+    pValueLocToReturn = &pTestResponse[ headerValInRespLoc ];
+    valueLenToReturn = headerValInRespLen;
+    invokeHeaderFieldCallback = true;
+    invokeHeaderValueCallback = true;
+    parserErrNo = HPE_CB_header_value;
     /* Call the function under test. */
     testResponse.pBuffer = ( uint8_t * ) &pTestResponse[ 0 ];
     testResponse.bufferLen = strlen( pTestResponse );
     retCode = HTTPClient_ReadHeader( &testResponse,
-                                     HEADER_IN_BUFFER,
+                                     ( const uint8_t * ) HEADER_IN_BUFFER,
                                      strlen( HEADER_IN_BUFFER ),
                                      &pValueLoc,
                                      &valueLen );
