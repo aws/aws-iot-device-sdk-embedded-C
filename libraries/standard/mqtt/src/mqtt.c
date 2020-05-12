@@ -162,6 +162,22 @@ static int32_t sendPacket( MQTTContext_t * pContext,
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Calculate the interval between two timestamps, including when the
+ * later value has overflowed.
+ *
+ * @param[in] later The later time stamp.
+ * @param[in] start The earlier time stamp.
+ *
+ * @return later - start.
+ */
+static uint32_t calculateElapsedTime( uint32_t later, uint32_t start )
+{
+    return later - start;
+}
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief Convert a byte indicating a publish ack type to an #MQTTPubAckType_t.
  *
  * @param[in] packetType First byte of fixed header.
@@ -196,52 +212,136 @@ static MQTTPubAckType_t getAckFromPacketType( uint8_t packetType )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Dump a packet from the transport interface.
+ * @brief Receive a packet from the network, with a timeout.
+ *
+ * @param[in] pContext Initialized MQTT Context.
+ * @param[in] bytesToRecv Number of bytes to receive.
+ * @param[in] timeoutMs Time remaining to receive the packet.
+ *
+ * @return Number of bytes received, or -1 on network error.
+ */
+static int32_t recvExact( MQTTContext_t * const pContext,
+                          size_t bytesToRecv,
+                          uint32_t timeoutMs )
+{
+    uint8_t * pIndex = NULL;
+    size_t bytesRemaining = bytesToRecv;
+    int32_t totalBytesRecvd = 0, bytesRecvd;
+    uint32_t entryTime = 0U;
+    MQTTTransportRecvFunc_t recvFunc = NULL;
+    MQTTGetCurrentTimeFunc_t getTimeStamp = NULL;
+    bool shouldBreak = false;
+
+    assert( pContext != NULL );
+    pIndex = pContext->networkBuffer.pBuffer;
+    recvFunc = pContext->transportInterface.recv;
+    getTimeStamp = pContext->callbacks.getTime;
+    entryTime = getTimeStamp();
+
+    while( bytesRemaining > 0 )
+    {
+        bytesRecvd = recvFunc( pContext->transportInterface.networkContext,
+                               pIndex,
+                               bytesRemaining );
+
+        if( bytesRecvd > 0 )
+        {
+            bytesRemaining -= ( size_t ) bytesRecvd;
+            totalBytesRecvd += ( int32_t ) bytesRecvd;
+            pIndex += bytesRecvd;
+        }
+        else
+        {
+            IotLogError( "Network error while receiving packet." );
+            totalBytesRecvd = -1;
+            shouldBreak = true;
+        }
+
+        if( calculateElapsedTime( getTimeStamp(), entryTime ) > timeoutMs )
+        {
+            IotLogError( "Time expired while receiving packet." );
+            shouldBreak = true;
+        }
+
+        if( shouldBreak )
+        {
+            break;
+        }
+    }
+
+    return totalBytesRecvd;
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Discard a packet from the transport interface.
  *
  * @param[in] PContext MQTT Connection context.
  * @param[in] remainingLength Remaining length of the packet to dump.
- * @param[in] bytesAlreadyReceived Bytes previously read from the transport.
+ * @param[in] timeoutMs Time remaining to discard the packet.
  *
  * @return #MQTTRecvFailed or #MQTTNoDataAvailable.
  */
-static MQTTStatus_t dumpPacket( MQTTContext_t * const pContext,
-                                size_t remainingLength,
-                                int32_t bytesAlreadyReceived )
+static MQTTStatus_t discardPacket( MQTTContext_t * const pContext,
+                                   size_t remainingLength,
+                                   uint32_t timeoutMs )
 {
     MQTTStatus_t status = MQTTRecvFailed;
-    int32_t totalBytesReceived = bytesAlreadyReceived, bytesReceived = 0;
-    assert( pContext != NULL );
-    size_t bytesToReceive = pContext->networkBuffer.size;
+    int32_t bytesReceived = 0;
+    size_t bytesToReceive = 0U;
+    uint32_t totalBytesReceived, entryTime, elapsedTime;
+    uint32_t remainingTimeMs = timeoutMs;
+    MQTTGetCurrentTimeFunc_t getTimeStamp = NULL;
+    bool shouldBreak = false;
 
-    while( totalBytesReceived < ( int32_t ) remainingLength )
+    assert( pContext != NULL );
+    bytesToReceive = pContext->networkBuffer.size;
+    getTimeStamp = pContext->callbacks.getTime;
+    entryTime = getTimeStamp();
+
+    while( totalBytesReceived < remainingLength )
     {
-        /* Update number of bytes to receive. */
-        if( ( remainingLength - ( size_t ) totalBytesReceived ) < bytesToReceive )
+        if( ( remainingLength - totalBytesReceived ) < bytesToReceive )
         {
-            bytesToReceive = remainingLength - ( size_t ) totalBytesReceived;
+            bytesToReceive = remainingLength - totalBytesReceived;
         }
 
-        bytesReceived = pContext->transportInterface.recv( pContext->transportInterface.networkContext,
-                                                           pContext->networkBuffer.pBuffer,
-                                                           bytesToReceive );
-        if( bytesReceived != ( int32_t ) bytesToReceive )
+        bytesReceived = recvExact( pContext, bytesToReceive, remainingTimeMs );
+
+        if( bytesReceived != bytesToReceive )
         {
-            /* Partial receive occurred while trying to dump packet. */
-            IotLogErrorWithArgs( "Partial receive while dumping packet."
-                                 "Received bytes=%d, Expected bytes=%u",
+            IotLogErrorWithArgs( "Receive error while discarding packet."
+                                 "ReceivedBytes=%d, ExpectedBytes=%u.",
                                  bytesReceived,
                                  bytesToReceive );
-            status = MQTTRecvFailed;
-            break;
+            shouldBreak = true;
+        }
+        else
+        {
+            totalBytesReceived += ( uint32_t ) bytesReceived;
+            /* Update remaining time and check for timeout. */
+            elapsedTime = calculateElapsedTime( getTimeStamp(), entryTime );
+            if( elapsedTime < timeoutMs )
+            {
+                remainingTimeMs = timeoutMs - elapsedTime;
+            }
+            else
+            {
+                IotLogError( "Time expired while discarding packet." );
+                shouldBreak = true;
+            }
         }
 
-        /* Update number of bytes to receive. */
-        totalBytesReceived += bytesReceived;
+        if( shouldBreak )
+        {
+            break;
+        }
     }
 
-    if( totalBytesReceived == ( int32_t ) remainingLength )
+    if( totalBytesReceived == remainingLength )
     {
-        IotLogErrorWithArgs( "Dumped packet. Dumped bytes=%d",
+        IotLogErrorWithArgs( "Dumped packet. DumpedBytes=%d.",
                              totalBytesReceived );
         /* Packet dumped, so no data is available. */
         status = MQTTNoDataAvailable;
@@ -257,11 +357,13 @@ static MQTTStatus_t dumpPacket( MQTTContext_t * const pContext,
  *
  * @param[in] pContext MQTT Connection context.
  * @param[in] incomingPacket packet struct with remaining length.
+ * @param[in] remainingTimeMs Time remaining to receive the packet.
  *
- * @return MQTTSuccess or MQTTRecvFailed.
+ * @return #MQTTSuccess or #MQTTRecvFailed.
  */
 static MQTTStatus_t receivePacket( MQTTContext_t * const pContext,
-                                   MQTTPacketInfo_t incomingPacket )
+                                   MQTTPacketInfo_t incomingPacket,
+                                   uint32_t remainingTimeMs )
 {
     MQTTStatus_t status = MQTTSuccess;
     int32_t bytesReceived = 0;
@@ -274,62 +376,32 @@ static MQTTStatus_t receivePacket( MQTTContext_t * const pContext,
     {
         bytesToReceive = pContext->networkBuffer.size;
         IotLogErrorWithArgs( "Incoming packet length %u exceeds network buffer size %u."
-                             "Incoming packet will be dumped",
+                             "Incoming packet will be dumped.",
                              incomingPacket.remainingLength
                              pContext->networkBuffer );
+        status = discardPacket( pContext,
+                                incomingPacket.remainingLength,
+                                remainingTimeMs );
     }
     else
     {
         bytesToReceive = incomingPacket.remainingLength;
-    }
-
-    bytesReceived = pContext->transportInterface.recv( pContext->transportInterface.networkContext,
-                                                       pContext->networkBuffer.pBuffer,
-                                                       bytesToReceive );
-    totalBytesReceived = bytesReceived;
-
-    /* Partial receive. */
-    if( bytesReceived < ( int32_t ) bytesToReceive )
-    {
-        IotLogWarnWithArgs( "Packet partially received: Bytes received=%d,"
-                            "Bytes expected=%u",
-                            bytesReceived,
-                            bytesToReceive );
-        /* Handle partial receive. */
-        bytesReceived = pContext->transportInterface.recv( pContext->transportInterface.networkContext,
-                                                           ( pContext->networkBuffer.pBuffer + totalBytesReceived ),
-                                                           ( bytesToReceive - totalBytesReceived ) );
-        totalBytesReceived += bytesReceived;
-        if( totalBytesReceived != ( int32_t ) bytesToReceive )
+        bytesReceived = recvExact( pContext, bytesToReceive, remainingTimeMs );
+        if( bytesReceived == (int32_t ) bytesToReceive )
         {
-            IotLogErrorWithArgs( "Handling partial receive failed. Bytes "
-                                 "received=%d, Bytes expected=%u",
-                                 totalBytesReceived,
+            /* Receive successful, bytesReceived == bytesToReceive. */
+            IotLogInfoWithArgs( "Packet received. ReceivedBytes=%d.",
+                                bytesReceived );
+        }
+        else
+        {
+            IotLogErrorWithArgs( "Packet reception failed. ReceivedBytes=%d, "
+                                 "ExpectedBytes=%u.",
+                                 bytesReceived,
                                  bytesToReceive );
             status = MQTTRecvFailed;
         }
-    }
-    /* Too many bytes received. */
-    else if( bytesReceived > ( int32_t ) bytesToReceive )
-    {
-        IotLogErrorWithArgs( "Too many bytes received. Bytes received=%d, ",
-                             "Bytes expected=%u",
-                             bytesReceived,
-                             bytesToReceive );
-        status = MQTTRecvFailed;
-    }
-    else
-    {
-        /* Receive successful, bytesReceived == bytesToReceive. */
-        IotLogInfoWithArgs( "Packet received. Received bytes=%d",
-                            bytesReceived );
-    }
-
-    /* Check if packet exceeds buffer. */
-    if( ( status == MQTTSuccess ) && ( incomingPacket.remainingLength > bytesToReceive ) )
-    {
-        /* Packet exceeds buffer, dump it. */
-        status = dumpPacket( pContext, incomingPacket.remainingLength, totalBytesReceived );
+        
     }
 
     return status;
@@ -341,7 +413,7 @@ static MQTTStatus_t receivePacket( MQTTContext_t * const pContext,
  * @brief Send acks for received QoS 1/2 publishes.
  *
  * @param[in] pContext MQTT Connection context.
- * @param[in] packetId, packet ID of original PUBLISH.
+ * @param[in] packetId packet ID of original PUBLISH.
  * @param[in,out] pPublishState Current/updated publish state in record.
  *
  * @return MQTTSuccess or MQTTIllegalState.
@@ -438,18 +510,21 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * const pContext,
 static MQTTStatus_t handleKeepAlive( MQTTContext_t * const pContext )
 {
     MQTTStatus_t status = MQTTSuccess;
+    uint32_t now = 0U, keepAliveMs = 0U;
+
     assert( pContext != NULL );
-    MQTTGetCurrentTimeFunc_t getCurrentTime = pContext->callbacks.getTime;
-    uint32_t now = getCurrentTime();
-    uint32_t keepAliveMs = 1000U * ( uint32_t ) pContext->keepAliveIntervalSec;
+    now = pContext->callbacks.getTime();
+    keepAliveMs = 1000U * ( uint32_t ) pContext->keepAliveIntervalSec;
 
     /* If keep alive interval is 0, it is disabled. */
-    if( keepAliveMs && ( ( now - pContext->lastPacketTime ) > keepAliveMs ) )
+    if( keepAliveMs && 
+        ( calculateElapsedTime( now, pContext->lastPacketTime ) > keepAliveMs ) )
     {
         if( pContext->waitingForPingResp )
         {
             /* Has time expired? */
-            if( ( now - pContext->pingReqSendTimeMs ) > pContext->pingRespTimeoutMs )
+            if( calculateElapsedTime( now, pContext->pingReqSendTimeMs ) > 
+                pContext->pingRespTimeoutMs )
             {
                 status = MQTTKeepAliveTimeout;
             }
@@ -458,7 +533,7 @@ static MQTTStatus_t handleKeepAlive( MQTTContext_t * const pContext )
         {
             status = MQTT_Ping( pContext );
             /* Sending the packet may have taken some time. Recalculate. */
-            pContext->pingReqSendTimeMs = getCurrentTime();
+            pContext->pingReqSendTimeMs = pContext->callbacks.getTime();
             pContext->waitingForPingResp = true;
         }
     }
@@ -1206,14 +1281,14 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * const pContext,
                                uint32_t timeoutMs )
 {
     MQTTStatus_t status = MQTTBadParameter;
-    MQTTGetCurrentTimeFunc_t getCurrentTime = NULL;
-    uint32_t entryTime = 0;
+    MQTTGetCurrentTimeFunc_t getTimeStamp = NULL;
+    uint32_t entryTime = 0, remainingTimeMs = timeoutMs;
     MQTTPacketInfo_t incomingPacket;
 
     if( pContext != NULL )
     {
-        getCurrentTime = pContext->callbacks.getTime;
-        entryTime = getCurrentTime();
+        getTimeStamp = pContext->callbacks.getTime;
+        entryTime = getTimeStamp();
         status = MQTTSuccess;
     }
     else
@@ -1221,7 +1296,8 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * const pContext,
         IotLogError( "MQTT Context cannot be NULL." );
     }
     
-    while( ( pContext != NULL ) && ( ( getCurrentTime() - entryTime ) < timeoutMs ) )
+    while( ( pContext != NULL ) && 
+           ( calculateElapsedTime( getTimeStamp(), entryTime ) < timeoutMs ) )
     {
         status = MQTT_GetIncomingPacketTypeAndLength( pContext->transportInterface.recv,
                                                       pContext->transportInterface.networkContext,
@@ -1246,8 +1322,8 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * const pContext,
         }
         else
         {
-            /* Receive packet. */
-            status = receivePacket( pContext, incomingPacket );
+            /* Receive packet. Remaining time is recalculated at the end of the loop. */
+            status = receivePacket( pContext, incomingPacket, remainingTimeMs );
         }
 
         /* Handle received packet. */
@@ -1279,6 +1355,9 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * const pContext,
                                  status );
             break;
         }
+
+        /* timeoutMs > elapsedTime is checked in the loop condition. */
+        remainingTimeMs = timeoutMs - calculateElapsedTime( getTimeStamp(), entryTime );
     }
 
     return status;
