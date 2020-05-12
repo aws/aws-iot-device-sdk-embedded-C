@@ -186,7 +186,7 @@ static uint32_t calculateElapsedTime( uint32_t later, uint32_t start )
  */
 static MQTTPubAckType_t getAckFromPacketType( uint8_t packetType )
 {
-    MQTTPubAckType_t ackType;
+    MQTTPubAckType_t ackType = MQTTPuback;
     switch( packetType )
     {
         case MQTT_PACKET_TYPE_PUBACK:
@@ -220,7 +220,7 @@ static MQTTPubAckType_t getAckFromPacketType( uint8_t packetType )
  *
  * @return Number of bytes received, or -1 on network error.
  */
-static int32_t recvExact( MQTTContext_t * const pContext,
+static int32_t recvExact( const MQTTContext_t * const pContext,
                           size_t bytesToRecv,
                           uint32_t timeoutMs )
 {
@@ -238,7 +238,7 @@ static int32_t recvExact( MQTTContext_t * const pContext,
     getTimeStamp = pContext->callbacks.getTime;
     entryTime = getTimeStamp();
 
-    while( bytesRemaining > 0 )
+    while( bytesRemaining > 0U )
     {
         bytesRecvd = recvFunc( pContext->transportInterface.networkContext,
                                pIndex,
@@ -373,7 +373,6 @@ static MQTTStatus_t receivePacket( MQTTContext_t * const pContext,
 
     if( incomingPacket.remainingLength > pContext->networkBuffer.size )
     {
-        bytesToReceive = pContext->networkBuffer.size;
         IotLogErrorWithArgs( "Incoming packet length %u exceeds network buffer size %u."
                              "Incoming packet will be dumped.",
                              incomingPacket.remainingLength
@@ -465,7 +464,7 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * const pContext,
                                     MQTT_PUBLISH_ACK_PACKET_SIZE );
         }
 
-        if( bytesSent == MQTT_PUBLISH_ACK_PACKET_SIZE )
+        if( bytesSent == ( int32_t ) MQTT_PUBLISH_ACK_PACKET_SIZE )
         {
             pContext->controlPacketSent = true;
             newState = MQTT_UpdateStateAck( pContext,
@@ -515,7 +514,7 @@ static MQTTStatus_t handleKeepAlive( MQTTContext_t * const pContext )
     keepAliveMs = 1000U * ( uint32_t ) pContext->keepAliveIntervalSec;
 
     /* If keep alive interval is 0, it is disabled. */
-    if( keepAliveMs && 
+    if( ( keepAliveMs != 0U ) && 
         ( calculateElapsedTime( now, pContext->lastPacketTime ) > keepAliveMs ) )
     {
         if( pContext->waitingForPingResp )
@@ -643,9 +642,11 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * const pContext,
         case MQTT_PACKET_TYPE_PINGRESP:
             pContext->waitingForPingResp = false;
             pContext->callbacks.appCallback( pContext, pIncomingPacket );
+            break;
         case MQTT_PACKET_TYPE_SUBACK:
             /* Give these to the app provided callback. */
             pContext->callbacks.appCallback( pContext, pIncomingPacket );
+            break;
         default:
             /* Not a publish packet or ack. */
             break;
