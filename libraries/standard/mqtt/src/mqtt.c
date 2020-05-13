@@ -26,10 +26,6 @@
 #include "mqtt_state.h"
 #include "private/mqtt_internal.h"
 
-
-/* Transport recv retry limit for CONNACK packet. */
-#define CONNACK_RECV_RETRY_LIMIT    3U
-
 /*-----------------------------------------------------------*/
 
 /**
@@ -79,7 +75,10 @@ static MQTTStatus_t sendPublish( const MQTTContext_t * const pContext,
  * @brief Receives a CONNACK MQTT packet.
  *
  * @param[in] pContext Initialized MQTT context.
+ * @param[in] timeoutMs Timeout for waiting for CONNACK packet.
  * @param[out] pIncomingPacket List of MQTT subscription info.
+ * @param[out] pSessionPresent Whether a previous session was present.
+ * Only relevant if not establishing a clean session.
  *
  * @return #MQTTBadResponse if a bad response is received;
  * #MQTTNoDataAvailable if no data available for transport recv;
@@ -87,7 +86,9 @@ static MQTTStatus_t sendPublish( const MQTTContext_t * const pContext,
  * #MQTTSuccess otherwise.
  */
 static MQTTStatus_t receiveConnack( MQTTContext_t * const pContext,
-                                    MQTTPacketInfo_t * const pIncomingPacket );
+                                    uint32_t timeoutMs,
+                                    MQTTPacketInfo_t * const pIncomingPacket,
+                                    bool * const pSessionPresent );
 
 /*-----------------------------------------------------------*/
 
@@ -232,6 +233,23 @@ static MQTTStatus_t sendPublish( const MQTTContext_t * const pContext,
 
 /*-----------------------------------------------------------*/
 
+/**
+ * @brief Calculate the interval between two timestamps, including when the
+ * later value has overflowed.
+ *
+ * @param[in] later The later time stamp.
+ * @param[in] start The earlier time stamp.
+ *
+ * @return later - start.
+ */
+static uint32_t calculateElapsedTime( uint32_t later,
+                                      uint32_t start )
+{
+    return later - start;
+}
+
+/*-----------------------------------------------------------*/
+
 static MQTTStatus_t receivePacket( MQTTContext_t * const pContext,
                                    MQTTPacketInfo_t incomingPacket,
                                    uint32_t remainingTimeMs )
@@ -242,13 +260,20 @@ static MQTTStatus_t receivePacket( MQTTContext_t * const pContext,
 /*-----------------------------------------------------------*/
 
 static MQTTStatus_t receiveConnack( MQTTContext_t * const pContext,
-                                    MQTTPacketInfo_t * const incomingPacket )
+                                    uint32_t timeoutMs,
+                                    MQTTPacketInfo_t * const incomingPacket,
+                                    bool * const pSessionPresent )
 {
     MQTTStatus_t status = MQTTSuccess;
-    uint8_t retryCount = 0U;
+    MQTTGetCurrentTimeFunc_t getTimeStamp = NULL;
+    uint32_t entryTime = 0U, remainingTimeMs = timeoutMs;
 
     assert( pContext != NULL );
     assert( incomingPacket != NULL );
+
+    getTimeStamp = pContext->callbacks.getTime;
+    /* Get the entry time for the function. */
+    entryTime = getTimeStamp();
 
     do
     {
@@ -257,34 +282,71 @@ static MQTTStatus_t receiveConnack( MQTTContext_t * const pContext,
                                                       pContext->transportInterface.networkContext,
                                                       incomingPacket );
 
-        if( status == MQTTSuccess )
+        /* Loop until there is data to read or if the timeout has not expired. */
+    } while( ( status == MQTTNoDataAvailable ) &&
+             ( calculateElapsedTime( getTimeStamp(), entryTime ) < timeoutMs ) );
+
+    if( status == MQTTSuccess )
+    {
+        /* Check if the timeout has expired. */
+        if( calculateElapsedTime( getTimeStamp(), entryTime ) < timeoutMs )
         {
-            /* Reading the remainder of the packet by transport recv.
-             * The timeout is passed as 0 as it is only 2 more bytes to
-             * read for CONNACK. */
+            /* Calculate remaining time for receiving the remainder of
+             * the packet. */
+            remainingTimeMs = timeoutMs - calculateElapsedTime( getTimeStamp(), entryTime );
+        }
+        else
+        {
+            LogErrorWithArgs( "Timeout has expired before reading the complete"
+                              " CONNACK packet. Time taken to read so far is"
+                              " %u ms whereas the timeout is %u ms.",
+                              ( calculateElapsedTime( getTimeStamp(), entryTime ) ),
+                              timeoutMs );
+            status = MQTTRecvFailed;
+        }
+    }
+
+    if( status == MQTTSuccess )
+    {
+        /* Reading the remainder of the packet by transport recv. */
+        if( incomingPacket->type == MQTT_PACKET_TYPE_CONNACK )
+        {
             status = receivePacket( pContext,
                                     *incomingPacket,
-                                    0U );
+                                    remainingTimeMs );
         }
-
-        /* Loop until there is data to read or the retry count has not
-         * exceeded the limit. */
-    } while( ( status == MQTTNoDataAvailable ) &&
-             ( ++retryCount < CONNACK_RECV_RETRY_LIMIT ) );
+        else
+        {
+            LogErrorWithArgs( "Incorrect packet type %X received while expecting"
+                              " CONNACK(%X).",
+                              incomingPacket->type,
+                              MQTT_PACKET_TYPE_CONNACK );
+            status = MQTTBadResponse;
+        }
+    }
 
     if( status == MQTTSuccess )
     {
         /* Update the packet info pointer to the buffer read. */
         incomingPacket->pRemainingData = pContext->networkBuffer.pBuffer;
+
+        /* Deserialize CONNACK. */
+        status = MQTT_DeserializeAck( &incomingPacket, NULL, pSessionPresent );
     }
-    else
+
+    if( status != MQTTSuccess )
     {
         LogErrorWithArgs( "CONNACK recv failed with status = %u.",
                           status );
     }
+    else
+    {
+        LogInfo( "Received MQTT CONNACK successfully from broker." );
+    }
 
     return status;
 }
+
 /*-----------------------------------------------------------*/
 
 void MQTT_Init( MQTTContext_t * const pContext,
@@ -308,6 +370,7 @@ void MQTT_Init( MQTTContext_t * const pContext,
 MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
                            const MQTTConnectInfo_t * const pConnectInfo,
                            const MQTTPublishInfo_t * const pWillInfo,
+                           uint32_t timeoutMs,
                            bool * const pSessionPresent )
 {
     size_t remainingLength = 0UL, packetSize = 0UL;
@@ -322,6 +385,15 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
                           pContext,
                           pConnectInfo );
         status = MQTTBadParameter;
+    }
+    else if( timeoutMs == 0U )
+    {
+        LogError( "Timeout for CONNACK cannot be 0." );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        /* Empty else MISRA 15.7 */
     }
 
     if( status == MQTTSuccess )
@@ -366,25 +438,9 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
     if( status == MQTTSuccess )
     {
         status = receiveConnack( pContext,
-                                 &incomingPacket );
-    }
-
-    if( status == MQTTSuccess )
-    {
-        /* Check if received packet type is CONNACK and deserialize it. */
-        if( incomingPacket.type == MQTT_PACKET_TYPE_CONNACK )
-        {
-            LogInfo( "Received MQTT CONNACK from broker." );
-
-            /* Deserialize CONNACK. */
-            status = MQTT_DeserializeAck( &incomingPacket, NULL, pSessionPresent );
-        }
-        else
-        {
-            LogErrorWithArgs( "Unexpected packet type %u received from network.",
-                              incomingPacket.type );
-            status = MQTTBadResponse;
-        }
+                                 timeoutMs,
+                                 &incomingPacket,
+                                 pSessionPresent );
     }
 
     if( status == MQTTSuccess )

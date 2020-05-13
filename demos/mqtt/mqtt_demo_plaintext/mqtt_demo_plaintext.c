@@ -62,6 +62,11 @@
  */
 #define CLIENT_IDENTIFIER_LENGTH    ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) )
 
+/**
+ * @brief Timeout for receiving CONNACK packet in milli seconds.
+ */
+#define CONNACK_RECV_TIMEOUT    (1000)
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -242,7 +247,7 @@ static int establishMqttSession( MQTTContext_t * pContext, int tcpSocket )
     connectInfo.pPassword = NULL;
     connectInfo.passwordLength = 0;
 
-    mqttStatus = MQTT_Connect( pContext, &connectInfo, NULL, NULL );
+    mqttStatus = MQTT_Connect( pContext, &connectInfo, NULL, CONNACK_RECV_TIMEOUT, NULL );
 
     if( mqttStatus != MQTTSuccess )
     {
