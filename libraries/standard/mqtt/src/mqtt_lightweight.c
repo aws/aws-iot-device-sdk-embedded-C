@@ -718,30 +718,31 @@ static void logConnackResponse( uint8_t responseCode )
     switch( responseCode )
     {
         case 0u:
-            LogError( "Connection accepted." );
+            LogInfo( "Connection accepted." );
             break;
 
         case 1u:
-            LogError( "Connection refused: unacceptable protocol version." );
+            LogInfo( "Connection refused: unacceptable protocol version." );
             break;
 
         case 2u:
-            LogError( "Connection refused: identifier rejected." );
+            LogInfo( "Connection refused: identifier rejected." );
             break;
 
         case 3u:
-            LogError( "Connection refused: server unavailable" );
+            LogInfo( "Connection refused: server unavailable" );
             break;
 
         case 4u:
-            LogError( "Connection refused: bad user name or password." );
+            LogInfo( "Connection refused: bad user name or password." );
             break;
 
         case 5u:
-            LogError( "Connection refused: not authorized." );
+            LogInfo( "Connection refused: not authorized." );
             break;
 
         default:
+            /* Empty default MISRA 16.4. */
             break;
     }
 }
