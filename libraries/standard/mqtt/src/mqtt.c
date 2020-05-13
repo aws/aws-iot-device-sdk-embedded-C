@@ -261,7 +261,6 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
         LogDebugWithArgs( "CONNECT packet size is %lu and remaining length is %lu.",
                           packetSize,
                           remainingLength );
-        printf( "%d\n", status );
     }
 
     if( status == MQTTSuccess )
