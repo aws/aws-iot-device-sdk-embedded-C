@@ -38,7 +38,7 @@
 #endif
 
 /* Platform clock include. */
-#include "iot_clock.h"
+#include "clock.h"
 
 /* Configure logs for the functions in this file. */
 #ifdef IOT_LOG_LEVEL_PLATFORM
@@ -52,7 +52,7 @@
 #endif
 
 #define LIBRARY_LOG_NAME    ( "CLOCK" )
-#include "iot_logging_setup.h"
+#include "logging_setup.h"
 
 /*-----------------------------------------------------------*/
 

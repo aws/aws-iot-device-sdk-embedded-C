@@ -15,17 +15,17 @@
         #endif
     #endif
     #define LIBRARY_LOG_NAME             ( "MQTT" )
-    #include "iot_logging_setup.h"
+    #include "logging_setup.h"
 #else /* ifdef USE_AWS_IOT_CSDK_LOGGING */
 /* Otherwise please define logging macros in config.h. */
-    #define IotLogError( message )
-    #define IotLogErrorWithArgs( format, ... )
-    #define IotLogWarn( message )
-    #define IotLogWarnWithArgs( format, ... )
-    #define IotLogInfo( message )
-    #define IotLogInfoWithArgs( format, ... )
-    #define IotLogDebug( message )
-    #define IotLogDebugWithArgs( format, ... )
+    #define LogError( message )
+    #define LogErrorWithArgs( format, ... )
+    #define LogWarn( message )
+    #define LogWarnWithArgs( format, ... )
+    #define LogInfo( message )
+    #define LogInfoWithArgs( format, ... )
+    #define LogDebug( message )
+    #define LogDebugWithArgs( format, ... )
 #endif /* ifdef USE_AWS_IOT_CSDK_LOGGING */
 
 #endif /* ifndef MQTT_INTERNAL_H_ */

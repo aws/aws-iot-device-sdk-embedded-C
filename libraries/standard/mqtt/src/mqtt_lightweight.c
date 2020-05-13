@@ -272,9 +272,9 @@ static size_t remainingLengthEncodedSize( size_t length )
         encodedSize = 4U;
     }
 
-    IotLogDebugWithArgs( "Encoded size for length =%ul is %ul.",
-                         length,
-                         encodedSize );
+    LogDebugWithArgs( "Encoded size for length =%ul is %ul.",
+                      length,
+                      encodedSize );
 
     return encodedSize;
 }
@@ -405,12 +405,12 @@ static bool calculatePublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
     /* Ensure that the given payload fits within the calculated limit. */
     if( pPublishInfo->payloadLength > payloadLimit )
     {
-        IotLogErrorWithArgs( "PUBLISH payload length of %lu cannot exceed "
-                             "%lu so as not to exceed the maximum "
-                             "remaining length of MQTT 3.1.1 packet( %lu ).",
-                             pPublishInfo->payloadLength,
-                             payloadLimit,
-                             MQTT_MAX_REMAINING_LENGTH );
+        LogErrorWithArgs( "PUBLISH payload length of %lu cannot exceed "
+                          "%lu so as not to exceed the maximum "
+                          "remaining length of MQTT 3.1.1 packet( %lu ).",
+                          pPublishInfo->payloadLength,
+                          payloadLimit,
+                          MQTT_MAX_REMAINING_LENGTH );
         status = false;
     }
     else
@@ -426,12 +426,12 @@ static bool calculatePublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
         /* Check that the given payload fits within the size allowed by MQTT spec. */
         if( pPublishInfo->payloadLength > payloadLimit )
         {
-            IotLogErrorWithArgs( "PUBLISH payload length of %lu cannot exceed "
-                                 "%lu so as not to exceed the maximum "
-                                 "remaining length of MQTT 3.1.1 packet( %lu ).",
-                                 pPublishInfo->payloadLength,
-                                 payloadLimit,
-                                 MQTT_MAX_REMAINING_LENGTH );
+            LogErrorWithArgs( "PUBLISH payload length of %lu cannot exceed "
+                              "%lu so as not to exceed the maximum "
+                              "remaining length of MQTT 3.1.1 packet( %lu ).",
+                              pPublishInfo->payloadLength,
+                              payloadLimit,
+                              MQTT_MAX_REMAINING_LENGTH );
             status = false;
         }
         else
@@ -445,9 +445,9 @@ static bool calculatePublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
         }
     }
 
-    IotLogDebugWithArgs( "PUBLISH packet remaining length=%lu and packet size=%lu.",
-                         *pRemainingLength,
-                         *pPacketSize );
+    LogDebugWithArgs( "PUBLISH packet remaining length=%lu and packet size=%lu.",
+                      *pRemainingLength,
+                      *pPacketSize );
     return status;
 }
 
@@ -477,12 +477,12 @@ static void serializePublishCommon( const MQTTPublishInfo_t * pPublishInfo,
 
     if( pPublishInfo->qos == MQTTQoS1 )
     {
-        IotLogDebug( "Adding QoS as QoS1 in PUBLISH flags." );
+        LogDebug( "Adding QoS as QoS1 in PUBLISH flags." );
         UINT8_SET_BIT( publishFlags, MQTT_PUBLISH_FLAG_QOS1 );
     }
     else if( pPublishInfo->qos == MQTTQoS2 )
     {
-        IotLogDebug( "Adding QoS as QoS2 in PUBLISH flags." );
+        LogDebug( "Adding QoS as QoS2 in PUBLISH flags." );
         UINT8_SET_BIT( publishFlags, MQTT_PUBLISH_FLAG_QOS2 );
     }
     else
@@ -492,13 +492,13 @@ static void serializePublishCommon( const MQTTPublishInfo_t * pPublishInfo,
 
     if( pPublishInfo->retain )
     {
-        IotLogDebug( "Adding retain bit in PUBLISH flags." );
+        LogDebug( "Adding retain bit in PUBLISH flags." );
         UINT8_SET_BIT( publishFlags, MQTT_PUBLISH_FLAG_RETAIN );
     }
 
     if( pPublishInfo->dup )
     {
-        IotLogDebug( "Adding dup bit in PUBLISH flags." );
+        LogDebug( "Adding dup bit in PUBLISH flags." );
         UINT8_SET_BIT( publishFlags, MQTT_PUBLISH_FLAG_DUP );
     }
 
@@ -516,7 +516,7 @@ static void serializePublishCommon( const MQTTPublishInfo_t * pPublishInfo,
     /* A packet identifier is required for QoS 1 and 2 messages. */
     if( pPublishInfo->qos > MQTTQoS0 )
     {
-        IotLogDebug( "Adding packet Id in PUBLISH packet." );
+        LogDebug( "Adding packet Id in PUBLISH packet." );
         /* Place the packet identifier into the PUBLISH packet. */
         *pIndex = UINT16_HIGH_BYTE( packetIdentifier );
         *( pIndex + 1 ) = UINT16_LOW_BYTE( packetIdentifier );
@@ -530,8 +530,8 @@ static void serializePublishCommon( const MQTTPublishInfo_t * pPublishInfo,
     if( ( pPublishInfo->payloadLength > 0U ) &&
         ( serializePayload ) )
     {
-        IotLogDebugWithArgs( "Copying PUBLISH payload of length =%lu to buffer",
-                             pPublishInfo->payloadLength );
+        LogDebugWithArgs( "Copying PUBLISH payload of length =%lu to buffer",
+                          pPublishInfo->payloadLength );
 
         /* This memcpy intentionally copies bytes from a void * buffer into
          * a uint8_t * buffer. */
@@ -648,8 +648,8 @@ static MQTTStatus_t checkPublishRemainingLength( size_t remainingLength,
         /* Check that the "Remaining length" is greater than the minimum. */
         if( remainingLength < qos0Minimum )
         {
-            IotLogDebugWithArgs( "QoS 0 PUBLISH cannot have a remaining length less than %lu.",
-                                 qos0Minimum );
+            LogDebugWithArgs( "QoS 0 PUBLISH cannot have a remaining length less than %lu.",
+                              qos0Minimum );
 
             status = MQTTBadResponse;
         }
@@ -661,8 +661,8 @@ static MQTTStatus_t checkPublishRemainingLength( size_t remainingLength,
          * packet identifier. */
         if( remainingLength < ( qos0Minimum + 2U ) )
         {
-            IotLogDebugWithArgs( "QoS 1 or 2 PUBLISH cannot have a remaining length less than %lu.",
-                                 qos0Minimum + 2U );
+            LogDebugWithArgs( "QoS 1 or 2 PUBLISH cannot have a remaining length less than %lu.",
+                              qos0Minimum + 2U );
 
             status = MQTTBadResponse;
         }
@@ -686,7 +686,7 @@ static MQTTStatus_t processPublishFlags( uint8_t publishFlags,
         /* PUBLISH packet is invalid if both QoS 1 and QoS 2 bits are set. */
         if( UINT8_CHECK_BIT( publishFlags, MQTT_PUBLISH_FLAG_QOS1 ) )
         {
-            IotLogDebug( "Bad QoS: 3." );
+            LogDebug( "Bad QoS: 3." );
 
             status = MQTTBadResponse;
         }
@@ -708,21 +708,21 @@ static MQTTStatus_t processPublishFlags( uint8_t publishFlags,
 
     if( status == MQTTSuccess )
     {
-        IotLogDebugWithArgs( "QoS is %d.", pPublishInfo->qos );
+        LogDebugWithArgs( "QoS is %d.", pPublishInfo->qos );
 
         /* Parse the Retain bit. */
         pPublishInfo->retain = UINT8_CHECK_BIT( publishFlags, MQTT_PUBLISH_FLAG_RETAIN );
 
-        IotLogDebugWithArgs( "Retain bit is %d.", pPublishInfo->retain );
+        LogDebugWithArgs( "Retain bit is %d.", pPublishInfo->retain );
 
         /* Parse the DUP bit. */
         if( UINT8_CHECK_BIT( publishFlags, MQTT_PUBLISH_FLAG_DUP ) )
         {
-            IotLogDebug( "DUP is 1." );
+            LogDebug( "DUP is 1." );
         }
         else
         {
-            IotLogDebug( "DUP is 0." );
+            LogDebug( "DUP is 0." );
         }
     }
 
@@ -748,7 +748,7 @@ static void logConnackResponse( uint8_t responseCode )
             "Connection refused: bad user name or password.",     /* 4 */
             "Connection refused: not authorized."                 /* 5 */
         };
-        IotLogErrorWithArgs( "%s", pConnackResponses[ responseCode ] );
+        LogErrorWithArgs( "%s", pConnackResponses[ responseCode ] );
     #endif /* if LIBRARY_LOG_LEVEL > IOT_LOG_NONE */
 }
 
@@ -767,8 +767,8 @@ static MQTTStatus_t deserializeConnack( const MQTTPacketInfo_t * const pConnack,
      * "Remaining length" of 2. */
     if( pConnack->remainingLength != MQTT_PACKET_CONNACK_REMAINING_LENGTH )
     {
-        IotLogErrorWithArgs( "CONNACK does not have remaining length of %d.",
-                             MQTT_PACKET_CONNACK_REMAINING_LENGTH );
+        LogErrorWithArgs( "CONNACK does not have remaining length of %d.",
+                          MQTT_PACKET_CONNACK_REMAINING_LENGTH );
 
         status = MQTTBadResponse;
     }
@@ -777,7 +777,7 @@ static MQTTStatus_t deserializeConnack( const MQTTPacketInfo_t * const pConnack,
      * in CONNACK must be 0. */
     else if( ( pRemainingData[ 0 ] | 0x01U ) != 0x01U )
     {
-        IotLogError( "Reserved bits in CONNACK incorrect." );
+        LogError( "Reserved bits in CONNACK incorrect." );
 
         status = MQTTBadResponse;
     }
@@ -788,7 +788,7 @@ static MQTTStatus_t deserializeConnack( const MQTTPacketInfo_t * const pConnack,
         if( ( pRemainingData[ 0 ] & MQTT_PACKET_CONNACK_SESSION_PRESENT_MASK )
             == MQTT_PACKET_CONNACK_SESSION_PRESENT_MASK )
         {
-            IotLogWarn( "CONNACK session present bit set." );
+            LogWarn( "CONNACK session present bit set." );
             *pSessionPresent = true;
 
             /* MQTT 3.1.1 specifies that the fourth byte in CONNACK must be 0 if the
@@ -800,7 +800,7 @@ static MQTTStatus_t deserializeConnack( const MQTTPacketInfo_t * const pConnack,
         }
         else
         {
-            IotLogInfo( "CONNACK session present bit not set." );
+            LogInfo( "CONNACK session present bit not set." );
         }
     }
 
@@ -809,8 +809,8 @@ static MQTTStatus_t deserializeConnack( const MQTTPacketInfo_t * const pConnack,
         /* In MQTT 3.1.1, only values 0 through 5 are valid CONNACK response codes. */
         if( pRemainingData[ 1 ] > 5U )
         {
-            IotLogErrorWithArgs( "CONNACK response %hhu is not valid.",
-                                 pRemainingData[ 1 ] );
+            LogErrorWithArgs( "CONNACK response %hhu is not valid.",
+                              pRemainingData[ 1 ] );
 
             status = MQTTBadResponse;
         }
@@ -871,10 +871,10 @@ static MQTTStatus_t calculateSubscriptionPacketSize( const MQTTSubscribeInfo_t *
      * set the output parameter.*/
     if( packetSize > MQTT_MAX_REMAINING_LENGTH )
     {
-        IotLogErrorWithArgs( "Subscription packet length of %lu exceeds"
-                             "the MQTT 3.1.1 maximum packet length of %lu.",
-                             packetSize,
-                             MQTT_MAX_REMAINING_LENGTH );
+        LogErrorWithArgs( "Subscription packet length of %lu exceeds"
+                          "the MQTT 3.1.1 maximum packet length of %lu.",
+                          packetSize,
+                          MQTT_MAX_REMAINING_LENGTH );
         status = MQTTBadParameter;
     }
     else
@@ -890,9 +890,9 @@ static MQTTStatus_t calculateSubscriptionPacketSize( const MQTTSubscribeInfo_t *
         *pPacketSize = packetSize;
     }
 
-    IotLogDebugWithArgs( "Subscription packet remaining length=%lu and packet size=%lu.",
-                         *pRemainingLength,
-                         *pPacketSize );
+    LogDebugWithArgs( "Subscription packet remaining length=%lu and packet size=%lu.",
+                      *pRemainingLength,
+                      *pPacketSize );
 
     return status;
 }
@@ -921,13 +921,13 @@ static MQTTStatus_t readSubackStatus( size_t statusCount,
             case 0x01:
             case 0x02:
 
-                IotLogDebugWithArgs( "Topic filter %lu accepted, max QoS %hhu.",
-                                     ( unsigned long ) i, subscriptionStatus );
+                LogDebugWithArgs( "Topic filter %lu accepted, max QoS %hhu.",
+                                  ( unsigned long ) i, subscriptionStatus );
                 break;
 
             case 0x80:
 
-                IotLogDebugWithArgs( "Topic filter %lu refused.", ( unsigned long ) i );
+                LogDebugWithArgs( "Topic filter %lu refused.", ( unsigned long ) i );
 
                 /* Application should remove subscription from the list */
                 status = MQTTServerRefused;
@@ -935,7 +935,7 @@ static MQTTStatus_t readSubackStatus( size_t statusCount,
                 break;
 
             default:
-                IotLogDebugWithArgs( "Bad SUBSCRIBE status %hhu.", subscriptionStatus );
+                LogDebugWithArgs( "Bad SUBSCRIBE status %hhu.", subscriptionStatus );
 
                 status = MQTTBadResponse;
 
@@ -969,7 +969,7 @@ static MQTTStatus_t deserializeSuback( const MQTTPacketInfo_t * const pSuback,
      * packet identifier and at least 1 return code. */
     if( remainingLength < 3U )
     {
-        IotLogDebug( "SUBACK cannot have a remaining length less than 3." );
+        LogDebug( "SUBACK cannot have a remaining length less than 3." );
         status = MQTTBadResponse;
     }
     else
@@ -977,7 +977,7 @@ static MQTTStatus_t deserializeSuback( const MQTTPacketInfo_t * const pSuback,
         /* Extract the packet identifier (first 2 bytes of variable header) from SUBACK. */
         *pPacketIdentifier = UINT16_DECODE( pVariableHeader );
 
-        IotLogDebugWithArgs( "Packet identifier %hu.", *pPacketIdentifier );
+        LogDebugWithArgs( "Packet identifier %hu.", *pPacketIdentifier );
 
         status = readSubackStatus( remainingLength - sizeof( uint16_t ),
                                    pVariableHeader + sizeof( uint16_t ) );
@@ -1000,20 +1000,20 @@ static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTSubscribeInfo_
     /* Validate all the parameters. */
     if( ( pBuffer == NULL ) || ( pSubscriptionList == NULL ) )
     {
-        IotLogErrorWithArgs( "Argument cannot be NULL: pBuffer=%p, "
-                             "pSubscriptionList=%p.",
-                             pBuffer,
-                             pSubscriptionList );
+        LogErrorWithArgs( "Argument cannot be NULL: pBuffer=%p, "
+                          "pSubscriptionList=%p.",
+                          pBuffer,
+                          pSubscriptionList );
         status = MQTTBadParameter;
     }
     else if( subscriptionCount == 0U )
     {
-        IotLogError( "Subscription count is 0." );
+        LogError( "Subscription count is 0." );
         status = MQTTBadParameter;
     }
     else if( packetId == 0U )
     {
-        IotLogError( "Packet Id for subscription packet is 0." );
+        LogError( "Packet Id for subscription packet is 0." );
         status = MQTTBadParameter;
     }
 
@@ -1025,10 +1025,10 @@ static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTSubscribeInfo_
     else if( ( packetSize = 1U + remainingLengthEncodedSize( remainingLength )
                             + remainingLength ) > pBuffer->size )
     {
-        IotLogErrorWithArgs( "Buffer size of %lu is not sufficient to hold "
-                             "serialized packet of size of %lu.",
-                             pBuffer->size,
-                             packetSize );
+        LogErrorWithArgs( "Buffer size of %lu is not sufficient to hold "
+                          "serialized packet of size of %lu.",
+                          pBuffer->size,
+                          packetSize );
         status = MQTTNoMemory;
     }
     else
@@ -1083,10 +1083,10 @@ static MQTTStatus_t deserializePublish( const MQTTPacketInfo_t * const pIncoming
     {
         /* Parse the topic. */
         pPublishInfo->pTopicName = ( const char * ) ( pVariableHeader + sizeof( uint16_t ) );
-        IotLogDebugWithArgs( "Topic name length %hu: %.*s",
-                             pPublishInfo->topicNameLength,
-                             pPublishInfo->topicNameLength,
-                             pPublishInfo->pTopicName );
+        LogDebugWithArgs( "Topic name length %hu: %.*s",
+                          pPublishInfo->topicNameLength,
+                          pPublishInfo->topicNameLength,
+                          pPublishInfo->pTopicName );
 
         /* Extract the packet identifier for QoS 1 or 2 PUBLISH packets. Packet
          * identifier starts immediately after the topic name. */
@@ -1096,7 +1096,7 @@ static MQTTStatus_t deserializePublish( const MQTTPacketInfo_t * const pIncoming
         {
             *pPacketId = UINT16_DECODE( pPacketIdentifierHigh );
 
-            IotLogDebugWithArgs( "Packet identifier %hu.", *pPacketId );
+            LogDebugWithArgs( "Packet identifier %hu.", *pPacketId );
 
             /* Packet identifier cannot be 0. */
             if( *pPacketId == 0U )
@@ -1121,7 +1121,7 @@ static MQTTStatus_t deserializePublish( const MQTTPacketInfo_t * const pIncoming
             pPublishInfo->pPayload = pPacketIdentifierHigh + sizeof( uint16_t );
         }
 
-        IotLogDebugWithArgs( "Payload length %hu.", pPublishInfo->payloadLength );
+        LogDebugWithArgs( "Payload length %hu.", pPublishInfo->payloadLength );
     }
 
     return status;
@@ -1140,8 +1140,8 @@ static MQTTStatus_t deserializeSimpleAck( const MQTTPacketInfo_t * const pAck,
     /* Check that the "Remaining length" of the received ACK is 2. */
     if( pAck->remainingLength != MQTT_PACKET_SIMPLE_ACK_REMAINING_LENGTH )
     {
-        IotLogErrorWithArgs( "ACK does not have remaining length of %d.",
-                             MQTT_PACKET_SIMPLE_ACK_REMAINING_LENGTH );
+        LogErrorWithArgs( "ACK does not have remaining length of %d.",
+                          MQTT_PACKET_SIMPLE_ACK_REMAINING_LENGTH );
 
         status = MQTTBadResponse;
     }
@@ -1150,7 +1150,7 @@ static MQTTStatus_t deserializeSimpleAck( const MQTTPacketInfo_t * const pAck,
         /* Extract the packet identifier (third and fourth bytes) from ACK. */
         *pPacketIdentifier = UINT16_DECODE( pAck->pRemainingData );
 
-        IotLogDebugWithArgs( "Packet identifier %hu.", *pPacketIdentifier );
+        LogDebugWithArgs( "Packet identifier %hu.", *pPacketIdentifier );
 
         /* Packet identifier cannot be 0. */
         if( *pPacketIdentifier == 0U )
@@ -1173,8 +1173,8 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * const pPingres
     /* Check the "Remaining length" (second byte) of the received PINGRESP is 0. */
     if( pPingresp->remainingLength != MQTT_PACKET_PINGRESP_REMAINING_LENGTH )
     {
-        IotLogErrorWithArgs( "PINGRESP does not have remaining length of %d.",
-                             MQTT_PACKET_PINGRESP_REMAINING_LENGTH );
+        LogErrorWithArgs( "PINGRESP does not have remaining length of %d.",
+                          MQTT_PACKET_PINGRESP_REMAINING_LENGTH );
 
         status = MQTTBadResponse;
     }
@@ -1287,8 +1287,8 @@ static void serializeConnectPacket( const MQTTConnectInfo_t * const pConnectInfo
         pIndex = encodeString( pIndex, pConnectInfo->pPassword, pConnectInfo->passwordLength );
     }
 
-    IotLogDebugWithArgs( "Length of serialized CONNECT packet is %lu.",
-                         ( ( size_t ) ( pIndex - pBuffer->pBuffer ) ) );
+    LogDebugWithArgs( "Length of serialized CONNECT packet is %lu.",
+                      ( ( size_t ) ( pIndex - pBuffer->pBuffer ) ) );
 
     /* Ensure that the difference between the end and beginning of the buffer
      * is less than the buffer size. */
@@ -1312,11 +1312,11 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * const pConnect
     if( ( pConnectInfo == NULL ) || ( pRemainingLength == NULL ) ||
         ( pPacketSize == NULL ) )
     {
-        IotLogErrorWithArgs( "Argument cannot be NULL: pConnectInfo=%p, "
-                             "pRemainingLength=%p, pPacketSize=%p.",
-                             pConnectInfo,
-                             pRemainingLength,
-                             pPacketSize );
+        LogErrorWithArgs( "Argument cannot be NULL: pConnectInfo=%p, "
+                          "pRemainingLength=%p, pPacketSize=%p.",
+                          pConnectInfo,
+                          pRemainingLength,
+                          pPacketSize );
         status = MQTTBadParameter;
     }
 
@@ -1362,9 +1362,9 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * const pConnect
             *pPacketSize = connectPacketSize;
         }
 
-        IotLogDebugWithArgs( "CONNECT packet remaining length=%lu and packet size=%lu.",
-                             *pRemainingLength,
-                             *pPacketSize );
+        LogDebugWithArgs( "CONNECT packet remaining length=%lu and packet size=%lu.",
+                          *pRemainingLength,
+                          *pPacketSize );
     }
 
     return status;
@@ -1385,19 +1385,19 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * const pConnectInfo
     /* Validate arguments. */
     if( ( pConnectInfo == NULL ) || ( pBuffer == NULL ) )
     {
-        IotLogErrorWithArgs( "Argument cannot be NULL: pConnectInfo=%p, "
-                             "pBuffer=%p.",
-                             pConnectInfo,
-                             pBuffer );
+        LogErrorWithArgs( "Argument cannot be NULL: pConnectInfo=%p, "
+                          "pBuffer=%p.",
+                          pConnectInfo,
+                          pBuffer );
         status = MQTTBadParameter;
     }
     /* Check that the full packet size fits within the given buffer. */
     else if( connectPacketSize > pBuffer->size )
     {
-        IotLogErrorWithArgs( "Buffer size of %lu is not sufficient to hold "
-                             "serialized CONNECT packet of size of %lu.",
-                             pBuffer->size,
-                             connectPacketSize );
+        LogErrorWithArgs( "Buffer size of %lu is not sufficient to hold "
+                          "serialized CONNECT packet of size of %lu.",
+                          pBuffer->size,
+                          connectPacketSize );
         status = MQTTNoMemory;
     }
     else
@@ -1424,16 +1424,16 @@ MQTTStatus_t MQTT_GetSubscribePacketSize( const MQTTSubscribeInfo_t * const pSub
     if( ( pSubscriptionList == NULL ) || ( pRemainingLength == NULL ) ||
         ( pPacketSize == NULL ) )
     {
-        IotLogErrorWithArgs( "Argument cannot be NULL: pSubscriptionList=%p, "
-                             "pRemainingLength=%p, pPacketSize=%p.",
-                             pSubscriptionList,
-                             pRemainingLength,
-                             pPacketSize );
+        LogErrorWithArgs( "Argument cannot be NULL: pSubscriptionList=%p, "
+                          "pRemainingLength=%p, pPacketSize=%p.",
+                          pSubscriptionList,
+                          pRemainingLength,
+                          pPacketSize );
         status = MQTTBadParameter;
     }
     else if( subscriptionCount == 0U )
     {
-        IotLogError( " subscriptionCount is 0." );
+        LogError( " subscriptionCount is 0." );
         status = MQTTBadParameter;
     }
     else
@@ -1447,9 +1447,9 @@ MQTTStatus_t MQTT_GetSubscribePacketSize( const MQTTSubscribeInfo_t * const pSub
 
         if( status == MQTTBadParameter )
         {
-            IotLogErrorWithArgs( "SUBSCRIBE packet remaining length exceeds %lu, which is the "
-                                 "maximum size allowed by MQTT 3.1.1.",
-                                 MQTT_MAX_REMAINING_LENGTH );
+            LogErrorWithArgs( "SUBSCRIBE packet remaining length exceeds %lu, which is the "
+                              "maximum size allowed by MQTT 3.1.1.",
+                              MQTT_MAX_REMAINING_LENGTH );
         }
     }
 
@@ -1503,8 +1503,8 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * const pSubscri
             pIndex++;
         }
 
-        IotLogDebugWithArgs( "Length of serialized SUBSCRIBE packet is %lu.",
-                             ( ( size_t ) ( pIndex - pBuffer->pBuffer ) ) );
+        LogDebugWithArgs( "Length of serialized SUBSCRIBE packet is %lu.",
+                          ( ( size_t ) ( pIndex - pBuffer->pBuffer ) ) );
     }
 
     return status;
@@ -1523,16 +1523,16 @@ MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * const pS
     if( ( pSubscriptionList == NULL ) || ( pRemainingLength == NULL ) ||
         ( pPacketSize == NULL ) )
     {
-        IotLogErrorWithArgs( "Argument cannot be NULL: pSubscriptionList=%p, "
-                             "pRemainingLength=%p, pPacketSize=%p.",
-                             pSubscriptionList,
-                             pRemainingLength,
-                             pPacketSize );
+        LogErrorWithArgs( "Argument cannot be NULL: pSubscriptionList=%p, "
+                          "pRemainingLength=%p, pPacketSize=%p.",
+                          pSubscriptionList,
+                          pRemainingLength,
+                          pPacketSize );
         status = MQTTBadParameter;
     }
     else if( subscriptionCount == 0U )
     {
-        IotLogError( "Subscription count is 0." );
+        LogError( "Subscription count is 0." );
         status = MQTTBadParameter;
     }
     else
@@ -1546,9 +1546,9 @@ MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * const pS
 
         if( status == MQTTBadParameter )
         {
-            IotLogErrorWithArgs( "UNSUBSCRIBE packet remaining length exceeds %lu, which is the "
-                                 "maximum size allowed by MQTT 3.1.1.",
-                                 MQTT_MAX_REMAINING_LENGTH );
+            LogErrorWithArgs( "UNSUBSCRIBE packet remaining length exceeds %lu, which is the "
+                              "maximum size allowed by MQTT 3.1.1.",
+                              MQTT_MAX_REMAINING_LENGTH );
         }
     }
 
@@ -1599,8 +1599,8 @@ MQTTStatus_t MQTT_SerializeUnsubscribe( const MQTTSubscribeInfo_t * const pSubsc
                                    pSubscriptionList[ i ].topicFilterLength );
         }
 
-        IotLogDebugWithArgs( "Length of serialized UNSUBSCRIBE packet is %lu.",
-                             ( ( size_t ) ( pIndex - pBuffer->pBuffer ) ) );
+        LogDebugWithArgs( "Length of serialized UNSUBSCRIBE packet is %lu.",
+                          ( ( size_t ) ( pIndex - pBuffer->pBuffer ) ) );
     }
 
     return status;
@@ -1616,19 +1616,19 @@ MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * const pPublish
 
     if( ( pPublishInfo == NULL ) || ( pRemainingLength == NULL ) || ( pPacketSize == NULL ) )
     {
-        IotLogErrorWithArgs( "Argument cannot be NULL: pPublishInfo=%p, "
-                             "pRemainingLength=%p, pPacketSize=%p.",
-                             pPublishInfo,
-                             pRemainingLength,
-                             pPacketSize );
+        LogErrorWithArgs( "Argument cannot be NULL: pPublishInfo=%p, "
+                          "pRemainingLength=%p, pPacketSize=%p.",
+                          pPublishInfo,
+                          pRemainingLength,
+                          pPacketSize );
         status = MQTTBadParameter;
     }
     else if( ( pPublishInfo->pTopicName == NULL ) || ( pPublishInfo->topicNameLength == 0U ) )
     {
-        IotLogErrorWithArgs( "Invalid topic name for PUBLISH: pTopicName=%p, "
-                             "topicNameLength=%u.",
-                             pPublishInfo->pTopicName,
-                             pPublishInfo->topicNameLength );
+        LogErrorWithArgs( "Invalid topic name for PUBLISH: pTopicName=%p, "
+                          "topicNameLength=%u.",
+                          pPublishInfo->pTopicName,
+                          pPublishInfo->topicNameLength );
         status = MQTTBadParameter;
     }
     else
@@ -1637,9 +1637,9 @@ MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * const pPublish
          * what is allowed in the MQTT standard, return an error. */
         if( calculatePublishPacketSize( pPublishInfo, pRemainingLength, pPacketSize ) == false )
         {
-            IotLogErrorWithArgs( "PUBLISH packet remaining length exceeds %lu, which is the "
-                                 "maximum size allowed by MQTT 3.1.1.",
-                                 MQTT_MAX_REMAINING_LENGTH );
+            LogErrorWithArgs( "PUBLISH packet remaining length exceeds %lu, which is the "
+                              "maximum size allowed by MQTT 3.1.1.",
+                              MQTT_MAX_REMAINING_LENGTH );
             status = MQTTBadParameter;
         }
     }
@@ -1659,24 +1659,24 @@ MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * const pPublishInfo
 
     if( ( pBuffer == NULL ) || ( pPublishInfo == NULL ) )
     {
-        IotLogErrorWithArgs( "Argument cannot be NULL: pBuffer=%p, "
-                             "pPublishInfo=%p.",
-                             pBuffer,
-                             pPublishInfo );
+        LogErrorWithArgs( "Argument cannot be NULL: pBuffer=%p, "
+                          "pPublishInfo=%p.",
+                          pBuffer,
+                          pPublishInfo );
         status = MQTTBadParameter;
     }
     else if( ( pPublishInfo->pTopicName == NULL ) || ( pPublishInfo->topicNameLength == 0U ) )
     {
-        IotLogErrorWithArgs( "Invalid topic name for PUBLISH: pTopicName=%p, "
-                             "topicNameLength=%u.",
-                             pPublishInfo->pTopicName,
-                             pPublishInfo->topicNameLength );
+        LogErrorWithArgs( "Invalid topic name for PUBLISH: pTopicName=%p, "
+                          "topicNameLength=%u.",
+                          pPublishInfo->pTopicName,
+                          pPublishInfo->topicNameLength );
         status = MQTTBadParameter;
     }
     else if( ( pPublishInfo->qos != MQTTQoS0 ) && ( packetId == 0 ) )
     {
-        IotLogErrorWithArgs( "Packet Id is 0 for PUBLISH with QoS=%u.",
-                             pPublishInfo->qos );
+        LogErrorWithArgs( "Packet Id is 0 for PUBLISH with QoS=%u.",
+                          pPublishInfo->qos );
         status = MQTTBadParameter;
     }
 
@@ -1687,10 +1687,10 @@ MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * const pPublishInfo
     else if( ( packetSize = 1U + remainingLengthEncodedSize( remainingLength ) + remainingLength )
              > pBuffer->size )
     {
-        IotLogErrorWithArgs( "Buffer size of %lu is not sufficient to hold "
-                             "serialized PUBLISH packet of size of %lu.",
-                             pBuffer->size,
-                             packetSize );
+        LogErrorWithArgs( "Buffer size of %lu is not sufficient to hold "
+                          "serialized PUBLISH packet of size of %lu.",
+                          pBuffer->size,
+                          packetSize );
         status = MQTTNoMemory;
     }
     else
@@ -1720,25 +1720,25 @@ MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * const pPubli
     if( ( pBuffer == NULL ) || ( pPublishInfo == NULL ) ||
         ( pHeaderSize == NULL ) )
     {
-        IotLogErrorWithArgs( "Argument cannot be NULL: pBuffer=%p, "
-                             "pPublishInfo=%p, pHeaderSize=%p.",
-                             pBuffer,
-                             pPublishInfo,
-                             pHeaderSize );
+        LogErrorWithArgs( "Argument cannot be NULL: pBuffer=%p, "
+                          "pPublishInfo=%p, pHeaderSize=%p.",
+                          pBuffer,
+                          pPublishInfo,
+                          pHeaderSize );
         status = MQTTBadParameter;
     }
     else if( ( pPublishInfo->pTopicName == NULL ) || ( pPublishInfo->topicNameLength == 0U ) )
     {
-        IotLogErrorWithArgs( "Invalid topic name for publish: pTopicName=%p, "
-                             "topicNameLength=%u.",
-                             pPublishInfo->pTopicName,
-                             pPublishInfo->topicNameLength );
+        LogErrorWithArgs( "Invalid topic name for publish: pTopicName=%p, "
+                          "topicNameLength=%u.",
+                          pPublishInfo->pTopicName,
+                          pPublishInfo->topicNameLength );
         status = MQTTBadParameter;
     }
     else if( ( pPublishInfo->qos != MQTTQoS0 ) && ( packetId == 0 ) )
     {
-        IotLogErrorWithArgs( "Packet Id is 0 for publish with QoS=%u.",
-                             pPublishInfo->qos );
+        LogErrorWithArgs( "Packet Id is 0 for publish with QoS=%u.",
+                          pPublishInfo->qos );
         status = MQTTBadParameter;
     }
 
@@ -1749,10 +1749,10 @@ MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * const pPubli
     else if( ( packetSize = 1U + remainingLengthEncodedSize( remainingLength )
                             + remainingLength - pPublishInfo->payloadLength ) > pBuffer->size )
     {
-        IotLogErrorWithArgs( "Buffer size of %lu is not sufficient to hold "
-                             "serialized PUBLISH header packet of size of %lu.",
-                             pBuffer->size,
-                             packetSize );
+        LogErrorWithArgs( "Buffer size of %lu is not sufficient to hold "
+                          "serialized PUBLISH header packet of size of %lu.",
+                          pBuffer->size,
+                          packetSize );
         status = MQTTNoMemory;
     }
     else
@@ -1781,13 +1781,13 @@ MQTTStatus_t MQTT_SerializeAck( const MQTTFixedBuffer_t * const pBuffer,
 
     if( pBuffer == NULL )
     {
-        IotLogError( "Provided buffer is NULL." );
+        LogError( "Provided buffer is NULL." );
         status = MQTTBadParameter;
     }
     /* The buffer must be able to fit 4 bytes for the packet. */
     else if( pBuffer->size < MQTT_PUBLISH_ACK_PACKET_SIZE )
     {
-        IotLogError( "Insufficient memory for packet." );
+        LogError( "Insufficient memory for packet." );
         status = MQTTNoMemory;
     }
     else
@@ -1806,8 +1806,8 @@ MQTTStatus_t MQTT_SerializeAck( const MQTTFixedBuffer_t * const pBuffer,
                 break;
 
             default:
-                IotLogErrorWithArgs( "Packet type is not a publish ACK: Packet type=%02x",
-                                     packetType );
+                LogErrorWithArgs( "Packet type is not a publish ACK: Packet type=%02x",
+                                  packetType );
                 status = MQTTBadParameter;
                 break;
         }
@@ -1836,25 +1836,25 @@ MQTTStatus_t MQTT_SerializeDisconnect( const MQTTFixedBuffer_t * const pBuffer )
     /* Validate arguments. */
     if( pBuffer == NULL )
     {
-        IotLogError( "pBuffer cannot be NULL." );
+        LogError( "pBuffer cannot be NULL." );
         status = MQTTBadParameter;
     }
 
     if( status == MQTTSuccess )
     {
         status = MQTT_GetDisconnectPacketSize( &disconnectPacketSize );
-        IotLogDebugWithArgs( "MQTT DISCONNECT packet size is %ul.",
-                             disconnectPacketSize );
+        LogDebugWithArgs( "MQTT DISCONNECT packet size is %ul.",
+                          disconnectPacketSize );
     }
 
     if( status == MQTTSuccess )
     {
         if( pBuffer->size < disconnectPacketSize )
         {
-            IotLogErrorWithArgs( "Buffer size of %lu is not sufficient to hold "
-                                 "serialized DISCONNECT packet of size of %lu.",
-                                 pBuffer->size,
-                                 disconnectPacketSize );
+            LogErrorWithArgs( "Buffer size of %lu is not sufficient to hold "
+                              "serialized DISCONNECT packet of size of %lu.",
+                              pBuffer->size,
+                              disconnectPacketSize );
             status = MQTTNoMemory;
         }
     }
@@ -1876,15 +1876,15 @@ MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * const pBuffer )
 
     if( pBuffer == NULL )
     {
-        IotLogError( "pBuffer is NULL." );
+        LogError( "pBuffer is NULL." );
         status = MQTTBadParameter;
     }
     else if( pBuffer->size < MQTT_PACKET_PINGREQ_SIZE )
     {
-        IotLogErrorWithArgs( "Buffer size of %lu is not sufficient to hold "
-                             "serialized PINGREQ packet of size of %lu.",
-                             pBuffer->size,
-                             MQTT_PACKET_PINGREQ_SIZE );
+        LogErrorWithArgs( "Buffer size of %lu is not sufficient to hold "
+                          "serialized PINGREQ packet of size of %lu.",
+                          pBuffer->size,
+                          MQTT_PACKET_PINGREQ_SIZE );
         status = MQTTNoMemory;
     }
     else
@@ -1916,17 +1916,17 @@ MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * const pIncomingPa
 
     if( ( pIncomingPacket == NULL ) || ( pPacketId == NULL ) || ( pPublishInfo == NULL ) )
     {
-        IotLogErrorWithArgs( "Argument cannot be NULL: pIncomingPacket=%p, "
-                             "pPacketId=%p, pPublishInfo=%p",
-                             pIncomingPacket,
-                             pPacketId,
-                             pPublishInfo );
+        LogErrorWithArgs( "Argument cannot be NULL: pIncomingPacket=%p, "
+                          "pPacketId=%p, pPublishInfo=%p",
+                          pIncomingPacket,
+                          pPacketId,
+                          pPublishInfo );
         status = MQTTBadParameter;
     }
     else if( ( pIncomingPacket->type & 0xF0U ) != MQTT_PACKET_TYPE_PUBLISH )
     {
-        IotLogErrorWithArgs( "Packet is not publish. Packet type: %hu.",
-                             pIncomingPacket->type );
+        LogErrorWithArgs( "Packet is not publish. Packet type: %hu.",
+                          pIncomingPacket->type );
         status = MQTTBadParameter;
     }
     else
@@ -1947,16 +1947,16 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * const pIncomingPacket
 
     if( ( pIncomingPacket == NULL ) || ( pPacketId == NULL ) || ( pSessionPresent == NULL ) )
     {
-        IotLogErrorWithArgs( "Argument cannot be NULL: pIncomingPacket=%p, "
-                             "pPacketId=%p, pSessionPresent=%p",
-                             pIncomingPacket,
-                             pPacketId,
-                             pSessionPresent );
+        LogErrorWithArgs( "Argument cannot be NULL: pIncomingPacket=%p, "
+                          "pPacketId=%p, pSessionPresent=%p",
+                          pIncomingPacket,
+                          pPacketId,
+                          pSessionPresent );
         status = MQTTBadParameter;
     }
     else if( pIncomingPacket->pRemainingData == NULL )
     {
-        IotLogError( "Remaining data of incoming packet is NULL." );
+        LogError( "Remaining data of incoming packet is NULL." );
         status = MQTTBadParameter;
     }
     else
@@ -1986,7 +1986,7 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * const pIncomingPacket
 
             /* Any other packet type is invalid. */
             default:
-                IotLogErrorWithArgs( "IotMqtt_DeserializeResponse() called with unknown packet type:(%lu).", pIncomingPacket->type );
+                LogErrorWithArgs( "IotMqtt_DeserializeResponse() called with unknown packet type:(%lu).", pIncomingPacket->type );
                 status = MQTTBadResponse;
                 break;
         }
@@ -2019,8 +2019,8 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( MQTTTransportRecvFunc_t readFu
         }
         else
         {
-            IotLogErrorWithArgs( "Incoming packet invalid: Packet type=%u",
-                                 pIncomingPacket->type );
+            LogErrorWithArgs( "Incoming packet invalid: Packet type=%u",
+                              pIncomingPacket->type );
             status = MQTTBadResponse;
         }
     }

@@ -44,7 +44,7 @@
  */
 
 /**
- * @functionpage{IotLog_Generic,logging,generic}
+ * @functionpage{Log_Generic,logging,generic}
  */
 
 /**
@@ -60,9 +60,9 @@
  * @return No return value. On errors, it prints nothing.
  */
 /* @[declare_logging_generic] */
-void IotLog_Generic( int32_t messageLevel,
-                     const char * const pFormat,
-                     ... );
+void Log_Generic( int32_t messageLevel,
+                  const char * const pFormat,
+                  ... );
 /* @[declare_logging_generic] */
 
 
