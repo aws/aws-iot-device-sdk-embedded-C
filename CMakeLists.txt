@@ -22,7 +22,7 @@ include("tools/cmake/filePaths.cmake")
 # Configure options to always show in CMake GUI.
 option( BUILD_TESTS
         "Set this to ON to build both demo and test executables. When OFF, only demo executables are built."
-        ON )
+        OFF )
 option( BUILD_CLONE_SUBMODULES
         "Set this to ON to automatically clone any required Git submodules. When OFF, submodules must be manually cloned."
         ON )
