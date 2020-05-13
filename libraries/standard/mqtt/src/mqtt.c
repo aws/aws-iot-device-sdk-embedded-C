@@ -393,6 +393,7 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
     size_t remainingLength = 0UL, packetSize = 0UL, headerSize = 0UL;
     int32_t bytesSent = 0;
     MQTTStatus_t status = MQTTSuccess;
+    MQTTPublishState_t publishStatus = MQTTStateNull;
 
     /* Validate arguments. */
     if( ( pContext == NULL ) || ( pPublishInfo == NULL ) )
@@ -453,6 +454,10 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
         status = sendPublish( pContext,
                               pPublishInfo,
                               headerSize );
+
+        /* TODO. When a publish fails, the reserved state has to be cleaned
+         * up. This will have to be done once an API in state machine is
+         * available. */
     }
 
     if( status == MQTTSuccess )
@@ -461,10 +466,26 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
          * Only to be done for QoS1 or QoS2. */
         if( pPublishInfo->qos > MQTTQoS0 )
         {
-            status = MQTT_UpdateStatePublish( pContext,
-                                              packetId,
-                                              MQTT_SEND,
-                                              pPublishInfo->qos );
+            /* TODO MQTT_UpdateStatePublish will be updated to return
+             * MQTTStatus_t instead of MQTTPublishState_t. Update the
+             * code when that change is made. */
+            publishStatus = MQTT_UpdateStatePublish( pContext,
+                                                     packetId,
+                                                     MQTT_SEND,
+                                                     pPublishInfo->qos );
+
+            if( publishStatus == MQTTStateNull )
+            {
+                LogErrorWithArgs( "Update state for publish failed with status =%u."
+                                  " However PUBLISH packet is sent to the broker."
+                                  " Any further handling of ACKs for the packet Id"
+                                  " will fail.",
+                                  publishStatus );
+
+                /* TODO. Need to remove this update once MQTT_UpdateStatePublish is
+                 * refactored with return type of MQTTStatus_t. */
+                status = MQTTBadParameter;
+            }
         }
     }
 
