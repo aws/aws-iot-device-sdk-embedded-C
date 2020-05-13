@@ -34,9 +34,9 @@ if( ${BUILD_TESTS} )
 
 endif()
             
-# Add all CMakeLists.txt in 3rdparty and standard folders.
+# Add all CMakeLists.txts in the standard folder.
 file(GLOB standard_modules "${MODULES_DIR}/standard/*")
-foreach(module IN LISTS 3rdparty_modules standard_modules )
+foreach(module IN LISTS standard_modules )
     if(IS_DIRECTORY "${module}" AND EXISTS "${module}/CMakeLists.txt")
         add_subdirectory(${module})
     endif()
