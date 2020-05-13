@@ -714,21 +714,37 @@ static void logConnackResponse( uint8_t responseCode )
 
     assert( responseCode <= 5 );
 
-    /* Declare the CONNACK response code strings. The fourth byte of CONNACK
-     * indexes into this array for the corresponding response. This array
-     * does not need to be allocated if logs are not enabled. */
-    #if LIBRARY_LOG_LEVEL > LOG_NONE
-        static const char * const pConnackResponses[ 6 ] =
-        {
-            "Connection accepted.",                               /* 0 */
-            "Connection refused: unacceptable protocol version.", /* 1 */
-            "Connection refused: identifier rejected.",           /* 2 */
-            "Connection refused: server unavailable",             /* 3 */
-            "Connection refused: bad user name or password.",     /* 4 */
-            "Connection refused: not authorized."                 /* 5 */
-        };
-        LogErrorWithArgs( "%s", pConnackResponses[ responseCode ] );
-    #endif /* if LIBRARY_LOG_LEVEL > LOG_NONE */
+    /* Log an error based on the CONNACK response code. */
+    switch( responseCode )
+    {
+        case 0u:
+            LogInfo( "Connection accepted." );
+            break;
+
+        case 1u:
+            LogInfo( "Connection refused: unacceptable protocol version." );
+            break;
+
+        case 2u:
+            LogInfo( "Connection refused: identifier rejected." );
+            break;
+
+        case 3u:
+            LogInfo( "Connection refused: server unavailable" );
+            break;
+
+        case 4u:
+            LogInfo( "Connection refused: bad user name or password." );
+            break;
+
+        case 5u:
+            LogInfo( "Connection refused: not authorized." );
+            break;
+
+        default:
+            /* Empty default MISRA 16.4. */
+            break;
+    }
 }
 
 /*-----------------------------------------------------------*/
