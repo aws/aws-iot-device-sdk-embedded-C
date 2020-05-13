@@ -43,7 +43,6 @@ list(APPEND test_include_directories
             ${HTTP_INCLUDE_PRIVATE_DIRS}
             ${HTTP_TEST_INCLUDE_PRIVATE_DIRS}
             "${ROOT_DIR}/platform/include"
-            "${3RDPARTY_DIR}/CMock/vendor/unity/src"
         )
 
 # =============================  (end edit)  ===================================
@@ -67,6 +66,7 @@ list(APPEND utest_dep_list
 
 set(utest_name "${project_name}_utest")
 set(utest_source "${project_name}_utest.c")
+set (logging_source ${MODULES_DIR})
 create_test(${utest_name}
             ${utest_source}
             "${utest_link_list}"
