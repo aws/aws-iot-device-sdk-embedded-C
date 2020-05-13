@@ -717,7 +717,7 @@ static void logConnackResponse( uint8_t responseCode )
     /* Declare the CONNACK response code strings. The fourth byte of CONNACK
      * indexes into this array for the corresponding response. This array
      * does not need to be allocated if logs are not enabled. */
-    #if LIBRARY_LOG_LEVEL > IOT_LOG_NONE
+    #if LIBRARY_LOG_LEVEL > LOG_NONE
         static const char * const pConnackResponses[ 6 ] =
         {
             "Connection accepted.",                               /* 0 */
@@ -728,7 +728,7 @@ static void logConnackResponse( uint8_t responseCode )
             "Connection refused: not authorized."                 /* 5 */
         };
         LogErrorWithArgs( "%s", pConnackResponses[ responseCode ] );
-    #endif /* if LIBRARY_LOG_LEVEL > IOT_LOG_NONE */
+    #endif /* if LIBRARY_LOG_LEVEL > LOG_NONE */
 }
 
 /*-----------------------------------------------------------*/
