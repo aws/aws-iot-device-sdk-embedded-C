@@ -22,7 +22,7 @@
 #include <assert.h>
 #include "mqtt_state.h"
 
-#define MQTT_PACKET_ID_INVALID ( uint16_t ) 0U
+#define MQTT_PACKET_ID_INVALID    ( uint16_t ) 0U
 
 /**
  * @brief Test if a transition to new state is possible, when dealing with PUBLISHes.
@@ -120,16 +120,21 @@ static bool validateTransitionPublish( MQTTPublishState_t currentState,
                                        MQTTQoS_t qos )
 {
     bool isValid = false;
+
     switch( currentState )
     {
         case MQTTStateNull:
+
             /* Transitions from null occur when storing a new entry into the record. */
             if( opType == MQTT_RECEIVE )
             {
                 isValid = ( newState == MQTTPubAckSend ) || ( newState == MQTTPubRecSend );
             }
+
             break;
+
         case MQTTPublishSend:
+
             /* Outgoing publish. All such publishes start in this state due to
              * the reserve operation. */
             switch( qos )
@@ -137,21 +142,27 @@ static bool validateTransitionPublish( MQTTPublishState_t currentState,
                 case MQTTQoS0:
                     isValid = ( newState == MQTTPublishDone );
                     break;
+
                 case MQTTQoS1:
                     isValid = ( newState == MQTTPubAckPending );
                     break;
+
                 case MQTTQoS2:
                     isValid = ( newState == MQTTPubRecPending );
                     break;
+
                 default:
                     /* No other QoS value. */
                     break;
             }
+
             break;
+
         default:
             /* For a PUBLISH, we should not start from any other state. */
             break;
     }
+
     return isValid;
 }
 
@@ -159,44 +170,52 @@ static bool validateTransitionAck( MQTTPublishState_t currentState,
                                    MQTTPublishState_t newState )
 {
     bool isValid = false;
+
     switch( currentState )
     {
         case MQTTPubAckSend:
-            /* Incoming publish, QoS 1. */
+        /* Incoming publish, QoS 1. */
         case MQTTPubAckPending:
             /* Outgoing publish, QoS 1. */
             isValid = ( newState == MQTTPublishDone );
             break;
+
         case MQTTPubRecSend:
             /* Incoming publish, QoS 2. */
             isValid = ( newState == MQTTPubRelPending );
             break;
+
         case MQTTPubRelPending:
             /* Incoming publish, QoS 2. */
             isValid = ( newState == MQTTPubCompSend );
             break;
+
         case MQTTPubCompSend:
             /* Incoming publish, QoS 2. */
             isValid = ( newState == MQTTPublishDone );
             break;
+
         case MQTTPubRecPending:
             /* Outgoing publish, Qos 2. */
             isValid = ( newState == MQTTPubRelSend );
             break;
+
         case MQTTPubRelSend:
             /* Outgoing publish, Qos 2. */
             isValid = ( newState == MQTTPubCompPending );
             break;
+
         case MQTTPubCompPending:
             /* Outgoing publish, Qos 2. */
             isValid = ( newState == MQTTPublishDone );
             break;
+
         case MQTTPublishDone:
-            /* Done state should transition to invalid since it will be removed from the record. */
+        /* Done state should transition to invalid since it will be removed from the record. */
         case MQTTPublishSend:
-            /* If an ack was sent/received we shouldn't have been in this state. */
+        /* If an ack was sent/received we shouldn't have been in this state. */
         case MQTTStateNull:
-            /* If an ack was sent/received the record should exist. */
+        /* If an ack was sent/received the record should exist. */
         default:
             /* Invalid. */
             break;
@@ -209,6 +228,7 @@ static bool isPublishOutgoing( MQTTPubAckType_t packetType,
                                MQTTStateOperation_t opType )
 {
     bool isOutgoing = false;
+
     switch( packetType )
     {
         case MQTTPuback:
@@ -216,13 +236,16 @@ static bool isPublishOutgoing( MQTTPubAckType_t packetType,
         case MQTTPubcomp:
             isOutgoing = ( opType == MQTT_RECEIVE );
             break;
+
         case MQTTPubrel:
             isOutgoing = ( opType == MQTT_SEND );
             break;
+
         default:
             /* No other ack type. */
             break;
     }
+
     return isOutgoing;
 }
 
@@ -233,7 +256,9 @@ static size_t findInRecord( const MQTTPubAckInfo_t * records,
                             MQTTPublishState_t * pCurrentState )
 {
     size_t index = 0;
+
     *pCurrentState = MQTTStateNull;
+
     if( packetId == MQTT_PACKET_ID_INVALID )
     {
         index = recordCount;
@@ -250,6 +275,7 @@ static size_t findInRecord( const MQTTPubAckInfo_t * records,
             }
         }
     }
+
     return index;
 }
 
@@ -267,7 +293,7 @@ static MQTTStatus_t addRecord( MQTTPubAckInfo_t * records,
     assert( qos != MQTTQoS0 );
 
     /* Start from end so first available index will be populated. */
-    for( index = ( (int32_t ) recordCount - 1 ); index >= 0; index-- )
+    for( index = ( ( int32_t ) recordCount - 1 ); index >= 0; index-- )
     {
         if( records[ index ].packetId == MQTT_PACKET_ID_INVALID )
         {
@@ -283,7 +309,7 @@ static MQTTStatus_t addRecord( MQTTPubAckInfo_t * records,
         else
         {
             /* Empty else clause. */
-        }   
+        }
     }
 
     if( availableIndex < recordCount )
@@ -337,7 +363,7 @@ MQTTStatus_t MQTT_ReserveState( MQTTContext_t * pMqttContext,
                             qos,
                             MQTTPublishSend );
     }
-    
+
     return status;
 }
 
@@ -345,21 +371,26 @@ MQTTPublishState_t MQTT_CalculateStatePublish( MQTTStateOperation_t opType,
                                                MQTTQoS_t qos )
 {
     MQTTPublishState_t calculatedState = MQTTStateNull;
+
     switch( qos )
     {
         case MQTTQoS0:
             calculatedState = MQTTPublishDone;
             break;
+
         case MQTTQoS1:
-            calculatedState = ( opType == MQTT_SEND )? MQTTPubAckPending : MQTTPubAckSend;
+            calculatedState = ( opType == MQTT_SEND ) ? MQTTPubAckPending : MQTTPubAckSend;
             break;
+
         case MQTTQoS2:
-            calculatedState = ( opType == MQTT_SEND )? MQTTPubRecPending : MQTTPubRecSend;
+            calculatedState = ( opType == MQTT_SEND ) ? MQTTPubRecPending : MQTTPubRecSend;
             break;
+
         default:
             /* No other QoS values. */
             break;
     }
+
     return calculatedState;
 }
 
@@ -393,6 +424,7 @@ MQTTPublishState_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
                                     packetId,
                                     &foundQoS,
                                     &currentState );
+
         if( foundQoS != qos )
         {
             /* Entry should match with supplied QoS. */
@@ -408,6 +440,7 @@ MQTTPublishState_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
     {
         newState = MQTT_CalculateStatePublish( opType, qos );
         isTransitionValid = validateTransitionPublish( currentState, newState, opType, qos );
+
         if( isTransitionValid )
         {
             /* addRecord will check for collisions. */
@@ -440,7 +473,7 @@ MQTTPublishState_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
     {
         newState = MQTTStateNull;
     }
-    
+
     return newState;
 }
 
@@ -458,28 +491,36 @@ MQTTPublishState_t MQTT_CalculateStateAck( MQTTPubAckType_t packetType,
             qosValid = ( qos == MQTTQoS1 );
             calculatedState = MQTTPublishDone;
             break;
+
         case MQTTPubrec:
+
             /* Incoming publish: send PUBREC, PUBREL pending.
              * Outgoing publish: receive PUBREC, send PUBREL. */
-            calculatedState = ( opType == MQTT_SEND )? MQTTPubRelPending : MQTTPubRelSend;
+            calculatedState = ( opType == MQTT_SEND ) ? MQTTPubRelPending : MQTTPubRelSend;
             break;
+
         case MQTTPubrel:
+
             /* Incoming publish: receive PUBREL, send PUBCOMP.
              * Outgoing publish: send PUBREL, PUBCOMP pending. */
-            calculatedState = ( opType == MQTT_SEND )? MQTTPubCompPending : MQTTPubCompSend;
+            calculatedState = ( opType == MQTT_SEND ) ? MQTTPubCompPending : MQTTPubCompSend;
             break;
+
         case MQTTPubcomp:
             calculatedState = MQTTPublishDone;
             break;
+
         default:
             /* No other ack type. */
             break;
     }
+
     /* Sanity check, make sure ack and QoS agree. */
     if( !qosValid )
     {
         calculatedState = MQTTStateNull;
     }
+
     return calculatedState;
 }
 
@@ -505,6 +546,7 @@ MQTTPublishState_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
     {
         records = pMqttContext->incomingPublishRecords;
     }
+
     recordIndex = findInRecord( records,
                                 MQTT_STATE_ARRAY_MAX_COUNT,
                                 packetId,
@@ -516,6 +558,7 @@ MQTTPublishState_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
         newState = MQTT_CalculateStateAck( packetType, opType, qos );
         shouldDeleteRecord = ( newState == MQTTPublishDone );
         isTransitionValid = validateTransitionAck( currentState, newState );
+
         if( isTransitionValid )
         {
             updateRecord( records,
@@ -527,17 +570,17 @@ MQTTPublishState_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
         {
             newState = MQTTStateNull;
         }
-        
     }
+
     return newState;
 }
 
-uint16_t MQTT_StateSelect( MQTTContext_t * pMqttContext,
+uint16_t MQTT_StateSelect( const MQTTContext_t * pMqttContext,
                            MQTTPublishState_t searchState,
                            MQTTStateCursor_t * pCursor )
 {
     uint16_t packetId = MQTT_PACKET_ID_INVALID;
-    MQTTPubAckInfo_t * records = NULL;
+    const MQTTPubAckInfo_t * records = NULL;
 
     /* Classify state into incoming or outgoing so we don't search both. */
     switch( searchState )
@@ -546,21 +589,27 @@ uint16_t MQTT_StateSelect( MQTTContext_t * pMqttContext,
         case MQTTPubRecSend:
         case MQTTPubRelPending:
         case MQTTPubCompSend:
+
             if( pMqttContext != NULL )
             {
                 records = pMqttContext->incomingPublishRecords;
             }
+
             break;
+
         case MQTTPublishSend:
         case MQTTPubAckPending:
         case MQTTPubRecPending:
         case MQTTPubRelSend:
         case MQTTPubCompPending:
+
             if( pMqttContext != NULL )
             {
                 records = pMqttContext->outgoingPublishRecords;
             }
+
             break;
+
         default:
             /* NULL or done aren't valid entries to search for. */
             break;
@@ -576,6 +625,7 @@ uint16_t MQTT_StateSelect( MQTTContext_t * pMqttContext,
                 ( *pCursor )++;
                 break;
             }
+
             ( *pCursor )++;
         }
     }
