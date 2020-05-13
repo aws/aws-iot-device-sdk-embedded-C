@@ -33,13 +33,13 @@
 #include <assert.h>
 
 /* Platform clock include. */
-#include "iot_clock.h"
+#include "clock.h"
 
 /* Include header for logging level macros. */
-#include "iot_logging_levels.h"
+#include "logging_levels.h"
 
 /* Logging includes. */
-#include "iot_logging.h"
+#include "logging.h"
 
 /*-----------------------------------------------------------*/
 
@@ -127,9 +127,9 @@ static bool _reallocLoggingBuffer( void ** pOldBuffer,
 
 /*-----------------------------------------------------------*/
 
-void IotLog_Generic( int32_t messageLevel,
-                     const char * const pFormat,
-                     ... )
+void Log_Generic( int32_t messageLevel,
+                  const char * const pFormat,
+                  ... )
 {
     assert( ( messageLevel >= IOT_LOG_NONE ) && ( messageLevel <= IOT_LOG_DEBUG ) );
 

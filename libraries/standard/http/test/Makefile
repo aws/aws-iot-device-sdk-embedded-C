@@ -48,7 +48,7 @@ FUNCTIONS = addHeader \
 include Mock4thewin.mk
 
 # additional dependencies for all tests
-$(TESTS): $(CSDK_ROOT)/platform/posix/iot_clock_posix.o $(CSDK_ROOT)/platform/posix/iot_logging.o
+$(TESTS): $(CSDK_ROOT)/platform/posix/clock_posix.o $(CSDK_ROOT)/platform/posix/logging.o
 
 # additional dependency for a specific test
 HTTPClient_AddHeader.c: addHeader.c
