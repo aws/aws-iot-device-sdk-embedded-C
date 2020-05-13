@@ -23,6 +23,7 @@
 #include <assert.h>
 
 #include "mqtt.h"
+#include "mqtt_state.h"
 #include "private/mqtt_internal.h"
 
 /*-----------------------------------------------------------*/
@@ -55,6 +56,20 @@ static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * co
                                                         const MQTTSubscribeInfo_t * const pSubscriptionList,
                                                         size_t subscriptionCount,
                                                         uint16_t packetId );
+
+/**
+ * @brief Send serialized publish packet using transport send.
+ *
+ * @brief param[in] pContext Initialized MQTT context.
+ * @brief param[in] pPublishInfo MQTT PUBLISH packet parameters.
+ * @brief param[in] headerSize Header size of the PUBLISH packet.
+ *
+ * @return #MQTTSendFailed if transport write failed;
+ * #MQTTSuccess otherwise.
+ */
+static MQTTStatus_t sendPublish( const MQTTContext_t * const pContext,
+                                 const MQTTPublishInfo_t * const pPublishInfo,
+                                 size_t headerSize );
 
 /*-----------------------------------------------------------*/
 
@@ -144,6 +159,54 @@ static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * co
     else
     {
         /* Empty else MISRA 15.7 */
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+static MQTTStatus_t sendPublish( const MQTTContext_t * const pContext,
+                                 const MQTTPublishInfo_t * const pPublishInfo,
+                                 size_t headerSize )
+{
+    MQTTStatus_t status = MQTTSuccess;
+    int32_t bytesSent = 0;
+
+    assert( pContext != NULL );
+    assert( pPublishInfo != NULL );
+    assert( headerSize > 0 );
+
+    /* Send header first. */
+    bytesSent = sendPacket( pContext,
+                            pContext->networkBuffer.pBuffer,
+                            headerSize );
+
+    if( bytesSent < 0 )
+    {
+        LogError( "Transport send failed for PUBLISH header." );
+        status = MQTTSendFailed;
+    }
+    else
+    {
+        LogDebugWithArgs( "Sent %d bytes of PUBLISH header.",
+                          bytesSent );
+
+        /* Send Payload. */
+        bytesSent = sendPacket( pContext,
+                                pPublishInfo->pPayload,
+                                pPublishInfo->payloadLength );
+
+        if( bytesSent < 0 )
+        {
+            LogError( "Transport send failed for PUBLISH payload." );
+            status = MQTTSendFailed;
+        }
+        else
+        {
+            LogDebugWithArgs( "Sent %d bytes of PUBLISH payload.",
+                              bytesSent );
+        }
     }
 
     return status;
@@ -375,41 +438,40 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
 
     if( status == MQTTSuccess )
     {
-        /* Send header first. */
-        bytesSent = sendPacket( pContext,
-                                pContext->networkBuffer.pBuffer,
-                                headerSize );
-
-        if( bytesSent < 0 )
+        /* Reserve state for publish message. Only to be done for QoS1 or QoS2. */
+        if( pPublishInfo->qos > MQTTQoS0 )
         {
-            LogError( "Transport send failed for PUBLISH header." );
-            status = MQTTSendFailed;
-        }
-        else
-        {
-            LogDebugWithArgs( "Sent %d bytes of PUBLISH header.",
-                              bytesSent );
-
-            /* Send Payload. */
-            bytesSent = sendPacket( pContext,
-                                    pPublishInfo->pPayload,
-                                    pPublishInfo->payloadLength );
-
-            if( bytesSent < 0 )
-            {
-                LogError( "Transport send failed for PUBLISH payload." );
-                status = MQTTSendFailed;
-            }
-            else
-            {
-                LogDebugWithArgs( "Sent %d bytes of PUBLISH payload.",
-                                  bytesSent );
-            }
+            status = MQTT_ReserveState( pContext,
+                                        packetId,
+                                        pPublishInfo->qos );
         }
     }
 
-    /* TODO - Update the state machine with the packet ID. This will have to
-     * be done once the state machine changes are available.*/
+    if( status == MQTTSuccess )
+    {
+        /* Sends the serialized publish packet over network. */
+        status = sendPublish( pContext,
+                              pPublishInfo,
+                              headerSize );
+    }
+
+    if( status == MQTTSuccess )
+    {
+        /* Reserve state for publish message. Only to be done for QoS1 or QoS2. */
+        if( pPublishInfo->qos > MQTTQoS0 )
+        {
+            status = MQTT_UpdateStatePublish( pContext,
+                                              packetId,
+                                              MQTT_SEND,
+                                              pPublishInfo->qos );
+        }
+    }
+
+    if( status != MQTTSuccess )
+    {
+        LogErrorWithArgs( "MQTT PUBLISH failed with status=%u.",
+                          status );
+    }
 
     return status;
 }
