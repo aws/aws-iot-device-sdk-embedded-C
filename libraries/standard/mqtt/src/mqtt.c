@@ -457,7 +457,8 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
 
     if( status == MQTTSuccess )
     {
-        /* Reserve state for publish message. Only to be done for QoS1 or QoS2. */
+        /* Update state machine after PUBLISH is sent.
+         * Only to be done for QoS1 or QoS2. */
         if( pPublishInfo->qos > MQTTQoS0 )
         {
             status = MQTT_UpdateStatePublish( pContext,
