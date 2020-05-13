@@ -72,25 +72,25 @@
  */
 static const char * _log_level_strerror( int32_t messageLevel )
 {
-    assert( ( messageLevel >= IOT_LOG_NONE ) && ( messageLevel <= IOT_LOG_DEBUG ) );
+    assert( ( messageLevel >= LOG_NONE ) && ( messageLevel <= LOG_DEBUG ) );
 
     const char * retVal = NULL;
 
     switch( messageLevel )
     {
-        case IOT_LOG_ERROR:
+        case LOG_ERROR:
             retVal = "ERROR";
             break;
 
-        case IOT_LOG_WARN:
+        case LOG_WARN:
             retVal = "WARN";
             break;
 
-        case IOT_LOG_INFO:
+        case LOG_INFO:
             retVal = "INFO";
             break;
 
-        case IOT_LOG_DEBUG:
+        case LOG_DEBUG:
             retVal = "DEBUG";
             break;
     }
@@ -131,7 +131,7 @@ void Log_Generic( int32_t messageLevel,
                   const char * const pFormat,
                   ... )
 {
-    assert( ( messageLevel >= IOT_LOG_NONE ) && ( messageLevel <= IOT_LOG_DEBUG ) );
+    assert( ( messageLevel >= LOG_NONE ) && ( messageLevel <= LOG_DEBUG ) );
 
     int requiredMessageSize = 0;
     size_t bufferSize = 0,

@@ -7,13 +7,13 @@
  * AWS IoT Embedded C SDK optional specific logging setup.
  */
 #ifdef USE_AWS_IOT_CSDK_LOGGING
-    #ifdef IOT_LOG_LEVEL_HTTP
-        #define LIBRARY_LOG_LEVEL        IOT_LOG_LEVEL_HTTP
+    #ifdef LOG_LEVEL_HTTP
+        #define LIBRARY_LOG_LEVEL        LOG_LEVEL_HTTP
     #else
-        #ifdef IOT_LOG_LEVEL_GLOBAL
-            #define LIBRARY_LOG_LEVEL    IOT_LOG_LEVEL_GLOBAL
+        #ifdef LOG_LEVEL_GLOBAL
+            #define LIBRARY_LOG_LEVEL    LOG_LEVEL_GLOBAL
         #else
-            #define LIBRARY_LOG_LEVEL    IOT_LOG_NONE
+            #define LIBRARY_LOG_LEVEL    LOG_NONE
         #endif
     #endif
     #define LIBRARY_LOG_NAME             ( "HTTP" )
