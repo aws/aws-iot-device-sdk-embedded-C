@@ -75,6 +75,20 @@ static MQTTStatus_t sendPublish( const MQTTContext_t * const pContext,
                                  const MQTTPublishInfo_t * const pPublishInfo,
                                  size_t headerSize );
 
+/**
+ * @brief Receives a CONNACK MQTT packet.
+ *
+ * @param[in] pContext Initialized MQTT context.
+ * @param[out] pIncomingPacket List of MQTT subscription info.
+ *
+ * @return #MQTTBadResponse if a bad response is received;
+ * #MQTTNoDataAvailable if no data available for transport recv;
+ * ##MQTTRecvFailed if transport recv failed;
+ * #MQTTSuccess otherwise.
+ */
+static MQTTStatus_t receiveConnack( MQTTContext_t * const pContext,
+                                    MQTTPacketInfo_t * const pIncomingPacket );
+
 /*-----------------------------------------------------------*/
 
 static int32_t sendPacket( MQTTContext_t * pContext,
@@ -227,6 +241,52 @@ static MQTTStatus_t receivePacket( MQTTContext_t * const pContext,
 
 /*-----------------------------------------------------------*/
 
+static MQTTStatus_t receiveConnack( MQTTContext_t * const pContext,
+                                    MQTTPacketInfo_t * const incomingPacket )
+{
+    MQTTStatus_t status = MQTTSuccess;
+    uint8_t retryCount = 0U;
+
+    assert( pContext != NULL );
+    assert( incomingPacket != NULL );
+
+    do
+    {
+        /* Transport read for incoming CONNACK packet type and length. */
+        status = MQTT_GetIncomingPacketTypeAndLength( pContext->transportInterface.recv,
+                                                      pContext->transportInterface.networkContext,
+                                                      incomingPacket );
+
+        if( status == MQTTSuccess )
+        {
+            /* Reading the remainder of the packet by transport recv.
+             * The timeout is passed as 0 as it is only 2 more bytes to
+             * read for CONNACK. */
+            status = receivePacket( pContext,
+                                    *incomingPacket,
+                                    0U );
+        }
+
+        /* Loop until there is data to read or the retry count has not
+         * exceeded the limit. */
+    } while( ( status == MQTTNoDataAvailable ) &&
+             ( ++retryCount < CONNACK_RECV_RETRY_LIMIT ) );
+
+    if( status == MQTTSuccess )
+    {
+        /* Update the packet info pointer to the buffer read. */
+        incomingPacket->pRemainingData = pContext->networkBuffer.pBuffer;
+    }
+    else
+    {
+        LogErrorWithArgs( "CONNACK recv failed with status = %u.",
+                          status );
+    }
+
+    return status;
+}
+/*-----------------------------------------------------------*/
+
 void MQTT_Init( MQTTContext_t * const pContext,
                 const MQTTTransportInterface_t * const pTransportInterface,
                 const MQTTApplicationCallbacks_t * const pCallbacks,
@@ -254,7 +314,6 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
     int32_t bytesSent;
     MQTTStatus_t status = MQTTSuccess;
     MQTTPacketInfo_t incomingPacket = { .type = ( ( uint8_t ) 0 ) };
-    uint8_t retryCount = 0U;
 
     if( ( pContext == NULL ) || ( pConnectInfo == NULL ) )
     {
@@ -306,32 +365,8 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
     /* Read CONNACK from transport layer. */
     if( status == MQTTSuccess )
     {
-        do
-        {
-            /* Transport read for incoming CONNACK packet type and length. */
-            status = MQTT_GetIncomingPacketTypeAndLength( pContext->transportInterface.recv,
-                                                          pContext->transportInterface.networkContext,
-                                                          &incomingPacket );
-
-            /* Loop until there is data to read or the retry count has not
-             * exceeded the limit. */
-        } while( ( status == MQTTNoDataAvailable ) &&
-                 ( ++retryCount < CONNACK_RECV_RETRY_LIMIT ) );
-
-        if( status == MQTTSuccess )
-        {
-            /* Reading the remainder of the packet by transport recv.
-             * The timeout is passed as 0 as it is only 2 more bytes to
-             * read for CONNACK. */
-            status = receivePacket( pContext,
-                                    incomingPacket,
-                                    0U );
-        }
-        else
-        {
-            LogErrorWithArgs( "CONNACK recv failed with status = %u.",
-                                 status );
-        }
+        status = receiveConnack( pContext,
+                                 &incomingPacket );
     }
 
     if( status == MQTTSuccess )
@@ -360,7 +395,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
     else
     {
         LogErrorWithArgs( "MQTT connection failed with status = %u.",
-                             status );
+                          status );
     }
 
     return status;
