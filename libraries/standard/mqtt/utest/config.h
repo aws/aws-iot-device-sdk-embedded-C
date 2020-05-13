@@ -1,11 +1,11 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#define LOG_LEVEL_HTTP              LOG_DEBUG
+#define LOG_LEVEL_HTTP      LOG_DEBUG
 
-#define USE_AWS_IOT_CSDK_LOGGING    1
+#define USE_CSDK_LOGGING    1
 
-#ifdef USE_AWS_IOT_CSDK_LOGGING
+#ifdef USE_CSDK_LOGGING
 
 /* Include file for POSIX reference implementation. */
     #include "logging.h"
@@ -22,7 +22,7 @@
                  LIBRARY_LOG_NAME,               \
                  __VA_ARGS__ )
 
-#endif /* ifdef USE_AWS_IOT_CSDK_LOGGING */
+#endif /* ifdef USE_CSDK_LOGGING */
 
 
 /* Set network context to socket (int). */

@@ -3,7 +3,7 @@
 
 #define LOG_LEVEL_HTTP    LOG_DEBUG
 
-#ifdef USE_AWS_IOT_CSDK_LOGGING
+#ifdef USE_CSDK_LOGGING
 
 /* Include file for POSIX reference implementation. */
     #include "logging.h"
@@ -20,6 +20,6 @@
                  LIBRARY_LOG_NAME,               \
                  __VA_ARGS__ )
 
-#endif /* ifdef USE_AWS_IOT_CSDK_LOGGING */
+#endif /* ifdef USE_CSDK_LOGGING */
 
 #endif /* ifndef CONFIG_H */

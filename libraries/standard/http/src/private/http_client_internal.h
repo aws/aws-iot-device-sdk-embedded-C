@@ -6,7 +6,7 @@
 /**
  * AWS IoT Embedded C SDK optional specific logging setup.
  */
-#ifdef USE_AWS_IOT_CSDK_LOGGING
+#ifdef USE_CSDK_LOGGING
     #ifdef LOG_LEVEL_HTTP
         #define LIBRARY_LOG_LEVEL        LOG_LEVEL_HTTP
     #else
@@ -18,7 +18,7 @@
     #endif
     #define LIBRARY_LOG_NAME             ( "HTTP" )
     #include "logging_setup.h"
-#else /* ifdef USE_AWS_IOT_CSDK_LOGGING */
+#else /* ifdef USE_CSDK_LOGGING */
 /* Otherwise please define logging macros in config.h. */
     #define LogError( message )
     #define LogErrorWithArgs( format, ... )
@@ -28,7 +28,7 @@
     #define LogInfoWithArgs( format, ... )
     #define LogDebug( message )
     #define LogDebugWithArgs( format, ... )
-#endif /* ifdef USE_AWS_IOT_CSDK_LOGGING */
+#endif /* ifdef USE_CSDK_LOGGING */
 
 /**
  * @brief The HTTP protocol version of this library is HTTP/1.1.
