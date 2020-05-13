@@ -42,6 +42,110 @@ static int32_t sendPacket( MQTTContext_t * pContext,
                            size_t bytesToSend );
 
 /**
+ * @brief Calculate the interval between two timestamps, including when the
+ * later value has overflowed.
+ *
+ * @param[in] later The later time stamp.
+ * @param[in] start The earlier time stamp.
+ *
+ * @return later - start.
+ */
+static uint32_t calculateElapsedTime( uint32_t later, uint32_t start );
+
+/**
+ * @brief Convert a byte indicating a publish ack type to an #MQTTPubAckType_t.
+ *
+ * @param[in] packetType First byte of fixed header.
+ *
+ * @return Type of ack.
+ */
+static MQTTPubAckType_t getAckFromPacketType( uint8_t packetType );
+
+/**
+ * @brief Receive bytes into the network buffer, with a timeout.
+ *
+ * @param[in] pContext Initialized MQTT Context.
+ * @param[in] bytesToRecv Number of bytes to receive.
+ * @param[in] timeoutMs Time remaining to receive the packet.
+ *
+ * @return Number of bytes received, or -1 on network error.
+ */
+static int32_t recvExact( const MQTTContext_t * const pContext,
+                          size_t bytesToRecv,
+                          uint32_t timeoutMs );
+
+/**
+ * @brief Discard a packet from the transport interface.
+ *
+ * @param[in] PContext MQTT Connection context.
+ * @param[in] remainingLength Remaining length of the packet to dump.
+ * @param[in] timeoutMs Time remaining to discard the packet.
+ *
+ * @return #MQTTRecvFailed or #MQTTNoDataAvailable.
+ */
+static MQTTStatus_t discardPacket( MQTTContext_t * const pContext,
+                                   size_t remainingLength,
+                                   uint32_t timeoutMs );
+
+/**
+ * @brief Receive a packet from the transport interface.
+ *
+ * @param[in] pContext MQTT Connection context.
+ * @param[in] incomingPacket packet struct with remaining length.
+ * @param[in] remainingTimeMs Time remaining to receive the packet.
+ *
+ * @return #MQTTSuccess or #MQTTRecvFailed.
+ */
+static MQTTStatus_t receivePacket( MQTTContext_t * const pContext,
+                                   MQTTPacketInfo_t incomingPacket,
+                                   uint32_t remainingTimeMs );
+
+/**
+ * @brief Send acks for received QoS 1/2 publishes.
+ *
+ * @param[in] pContext MQTT Connection context.
+ * @param[in] packetId packet ID of original PUBLISH.
+ * @param[in,out] pPublishState Current/updated publish state in record.
+ *
+ * @return #MQTTSuccess or #MQTTIllegalState.
+ */
+static MQTTStatus_t sendPublishAcks( MQTTContext_t * const pContext,
+                                     uint16_t packetId,
+                                     MQTTPublishState_t * pPublishState );
+
+/**
+ * @brief Send a keep alive PINGREQ if the keep alive interval has elapsed.
+ *
+ * @param[in] pContext Initialized MQTT Context.
+ *
+ * @return #MQTTKeepAliveTimeout if a PINGRESP is not received in time,
+ * #MQTTSendFailed if the PINGREQ cannot be sent, or #MQTTSuccess.
+ */
+static MQTTStatus_t handleKeepAlive( MQTTContext_t * const pContext );
+
+/**
+ * @brief Handle received MQTT PUBLISH packet.
+ *
+ * @param[in] pContext MQTT Connection context.
+ * @param[in] pIncomingPacket Incoming packet.
+ *
+ * @return MQTTSuccess, MQTTIllegalState or deserialization error.
+ */
+static MQTTStatus_t handleIncomingPublish( MQTTContext_t * const pContext,
+                                           MQTTPacketInfo_t * pIncomingPacket );
+
+/**
+ * @brief Handle received MQTT ack.
+ *
+ * @param[in] pContext MQTT Connection context.
+ * @param[in] pIncomingPacket Incoming packet.
+ *
+ * @return MQTTSuccess, MQTTIllegalState, or deserialization error.
+ */
+static MQTTStatus_t handleIncomingAck( MQTTContext_t * const pContext,
+                                       MQTTPacketInfo_t * pIncomingPacket );
+
+/**
  * @brief Validates parameters of #MQTT_Subscribe or #MQTT_Unsubscribe.
  *
  * @param[in] pContext Initialized MQTT context.
@@ -161,15 +265,6 @@ static int32_t sendPacket( MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
-/**
- * @brief Calculate the interval between two timestamps, including when the
- * later value has overflowed.
- *
- * @param[in] later The later time stamp.
- * @param[in] start The earlier time stamp.
- *
- * @return later - start.
- */
 static uint32_t calculateElapsedTime( uint32_t later, uint32_t start )
 {
     return later - start;
@@ -177,13 +272,6 @@ static uint32_t calculateElapsedTime( uint32_t later, uint32_t start )
 
 /*-----------------------------------------------------------*/
 
-/**
- * @brief Convert a byte indicating a publish ack type to an #MQTTPubAckType_t.
- *
- * @param[in] packetType First byte of fixed header.
- *
- * @return Type of ack.
- */
 static MQTTPubAckType_t getAckFromPacketType( uint8_t packetType )
 {
     MQTTPubAckType_t ackType = MQTTPuback;
@@ -211,15 +299,6 @@ static MQTTPubAckType_t getAckFromPacketType( uint8_t packetType )
 
 /*-----------------------------------------------------------*/
 
-/**
- * @brief Receive a packet from the network, with a timeout.
- *
- * @param[in] pContext Initialized MQTT Context.
- * @param[in] bytesToRecv Number of bytes to receive.
- * @param[in] timeoutMs Time remaining to receive the packet.
- *
- * @return Number of bytes received, or -1 on network error.
- */
 static int32_t recvExact( const MQTTContext_t * const pContext,
                           size_t bytesToRecv,
                           uint32_t timeoutMs )
@@ -276,15 +355,6 @@ static int32_t recvExact( const MQTTContext_t * const pContext,
 
 /*-----------------------------------------------------------*/
 
-/**
- * @brief Discard a packet from the transport interface.
- *
- * @param[in] PContext MQTT Connection context.
- * @param[in] remainingLength Remaining length of the packet to dump.
- * @param[in] timeoutMs Time remaining to discard the packet.
- *
- * @return #MQTTRecvFailed or #MQTTNoDataAvailable.
- */
 static MQTTStatus_t discardPacket( MQTTContext_t * const pContext,
                                    size_t remainingLength,
                                    uint32_t timeoutMs )
@@ -354,15 +424,6 @@ static MQTTStatus_t discardPacket( MQTTContext_t * const pContext,
 
 /*-----------------------------------------------------------*/
 
-/**
- * @brief Receive a packet from the transport interface.
- *
- * @param[in] pContext MQTT Connection context.
- * @param[in] incomingPacket packet struct with remaining length.
- * @param[in] remainingTimeMs Time remaining to receive the packet.
- *
- * @return #MQTTSuccess or #MQTTRecvFailed.
- */
 static MQTTStatus_t receivePacket( MQTTContext_t * const pContext,
                                    MQTTPacketInfo_t incomingPacket,
                                    uint32_t remainingTimeMs )
@@ -409,15 +470,6 @@ static MQTTStatus_t receivePacket( MQTTContext_t * const pContext,
 
 /*-----------------------------------------------------------*/
 
-/**
- * @brief Send acks for received QoS 1/2 publishes.
- *
- * @param[in] pContext MQTT Connection context.
- * @param[in] packetId packet ID of original PUBLISH.
- * @param[in,out] pPublishState Current/updated publish state in record.
- *
- * @return MQTTSuccess or MQTTIllegalState.
- */
 static MQTTStatus_t sendPublishAcks( MQTTContext_t * const pContext,
                                      uint16_t packetId,
                                      MQTTPublishState_t * pPublishState )
@@ -502,14 +554,6 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * const pContext,
 
 /*-----------------------------------------------------------*/
 
-/**
- * @brief Send a keep alive PINGREQ if the keep alive interval has elapsed.
- *
- * @param[in] pContext Initialized MQTT Context.
- *
- * @return #MQTTKeepAliveTimeout if a PINGRESP is not received in time,
- * #MQTTSendFailed if the PINGREQ cannot be sent, or #MQTTSuccess.
- */
 static MQTTStatus_t handleKeepAlive( MQTTContext_t * const pContext )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -543,14 +587,6 @@ static MQTTStatus_t handleKeepAlive( MQTTContext_t * const pContext )
 
 /*-----------------------------------------------------------*/
 
-/**
- * @brief Handle received MQTT PUBLISH packet.
- *
- * @param[in] pContext MQTT Connection context.
- * @param[in] pIncomingPacket Incoming packet.
- *
- * @return MQTTSuccess, MQTTIllegalState or deserialization error.
- */
 static MQTTStatus_t handleIncomingPublish( MQTTContext_t * const pContext,
                                            MQTTPacketInfo_t * pIncomingPacket )
 {
@@ -591,14 +627,6 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * const pContext,
 
 /*-----------------------------------------------------------*/
 
-/**
- * @brief Handle received MQTT ack.
- *
- * @param[in] pContext MQTT Connection context.
- * @param[in] pIncomingPacket Incoming packet.
- *
- * @return MQTTSuccess, MQTTIllegalState, or deserialization error.
- */
 static MQTTStatus_t handleIncomingAck( MQTTContext_t * const pContext,
                                        MQTTPacketInfo_t * pIncomingPacket )
 {
