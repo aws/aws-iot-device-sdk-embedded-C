@@ -27,11 +27,18 @@ int suiteTearDown( int numFailures )
 {
 }
 
-/* ============================   Testing MQTT_Connect ====================== */
-void test_Mqtt_connect_packet_size_gt_max( void )
+/* ============================   Testing MQTT_Init ========================= */
+void test_Mqtt_init_complete( void )
 {
-    /* This mocked method will be called inside MQTT_Connect(...). */
-    MQTT_GetConnectPacketSize_ExpectAnyArgsAndReturn( MQTTBadParameter );
+    MQTTContext_t context;
+    MQTTTransportInterface_t transport;
+    MQTTFixedBuffer_t networkBuffer;
+    MQTTApplicationCallbacks_t callbacks;
 
-    TEST_ASSERT_EQUAL( MQTT_Connect( NULL, NULL, NULL, 0U, NULL ), MQTTBadParameter );
+    MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    TEST_ASSERT_EQUAL( context.connectStatus, MQTTNotConnected );
+    /* These Unity assertions take pointers and compare their contents. */
+    TEST_ASSERT_EQUAL_MEMORY( &context.transportInterface, &transport, sizeof( transport ) );
+    TEST_ASSERT_EQUAL_MEMORY( &context.callbacks, &callbacks, sizeof( callbacks ) );
+    TEST_ASSERT_EQUAL_MEMORY( &context.networkBuffer, &networkBuffer, sizeof( networkBuffer ) );
 }
