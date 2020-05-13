@@ -6,19 +6,19 @@
 #ifdef USE_AWS_IOT_CSDK_LOGGING
 
 /* Include file for POSIX reference implementation. */
-    #include "iot_logging.h"
+    #include "logging.h"
 
 /* Define the IotLog logging interface to enable logging.
  * This demo maps the macro to the reference POSIX implementation for logging.
  * Note: @ref LIBRARY_LOG_NAME adds the name of the library, that produces the
  * log, as metadata in each log message. */
-    #define IotLog( messageLevel, pFormat, ... ) \
-    IotLog_Generic( messageLevel,                \
-                    "[%s:%d] [%s] "pFormat,      \
-                    __FILE__,                    \
-                    __LINE__,                    \
-                    LIBRARY_LOG_NAME,            \
-                    __VA_ARGS__ )
+    #define SdkLog( messageLevel, pFormat, ... ) \
+    Log_Generic( messageLevel,                   \
+                 "[%s:%d] [%s] "pFormat,         \
+                 __FILE__,                       \
+                 __LINE__,                       \
+                 LIBRARY_LOG_NAME,               \
+                 __VA_ARGS__ )
 
 #endif /* ifdef USE_AWS_IOT_CSDK_LOGGING */
 
