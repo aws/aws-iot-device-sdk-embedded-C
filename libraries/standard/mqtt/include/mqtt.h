@@ -241,6 +241,23 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * const pContext,
  */
 MQTTStatus_t MQTT_Disconnect( MQTTContext_t * const pContext );
 
+/**
+ * @brief Loop to receive packets from the transport interface.
+ *
+ * @param[in] pContext Initialized and connected MQTT context.
+ * @param[in] timeoutMs Minimum time in milliseconds that the receive loop will
+ * run, unless an error occurs.
+ *
+ * @return #MQTTBadParameter if context is NULL;
+ * #MQTTRecvFailed if a network error occurs during reception;
+ * #MQTTSendFailed if a network error occurs while sending an ACK;
+ * #MQTTBadResponse if an invalid packet is received;
+ * #MQTTKeepAliveTimeout if the server has not sent a PINGRESP before
+ * pContext->pingRespTimeoutMs milliseconds;
+ * #MQTTIllegalState if an incoming QoS 1/2 publish or ack causes an
+ * invalid transition for the internal state machine;
+ * #MQTTSuccess on success.
+ */
 MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * const pContext,
                                uint32_t timeoutMs );
 
