@@ -6,7 +6,8 @@ add_library( http
              ${HTTP_SOURCES} )
 
 # HTTP public include path.
-target_include_directories( http PUBLIC ${HTTP_INCLUDE_PUBLIC_DIRS} )
+target_include_directories( http PUBLIC ${HTTP_INCLUDE_PUBLIC_DIRS} 
+                                        ${CMAKE_CURRENT_LIST_DIR}/utest )
 
 # HTTP private include path.
 target_include_directories( http PRIVATE ${HTTP_INCLUDE_PRIVATE_DIRS} )

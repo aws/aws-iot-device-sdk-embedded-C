@@ -10,10 +10,15 @@ set( HTTP_SOURCES
      ${MODULES_DIR}/standard/http/src/http_client.c
      ${MODULES_DIR}/standard/http/src/http_client_parse.c )
 
-# HTTP library Include directories.
+# HTTP library Public Include directories.
 set( HTTP_INCLUDE_PUBLIC_DIRS
      ${MODULES_DIR}/standard/http/include
      ${MODULES_DIR}/standard/utilities/include
+      )
+
+# HTTP library Private Include directories.
+set( HTTP_INCLUDE_PRIVATE_DIRS
+     ${MODULES_DIR}/standard/http/src
       )
 
 # HTTP test include directories.
