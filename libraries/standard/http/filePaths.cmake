@@ -13,16 +13,10 @@ set( HTTP_SOURCES
 # HTTP library Public Include directories.
 set( HTTP_INCLUDE_PUBLIC_DIRS
      ${MODULES_DIR}/standard/http/include
-     ${MODULES_DIR}/standard/utilities/include
-      )
+     ${MODULES_DIR}/standard/utilities/include )
 
 # HTTP library Private Include directories.
 set( HTTP_INCLUDE_PRIVATE_DIRS
      ${MODULES_DIR}/standard/http/src
-      )
+     ${MODULES_DIR}/standard/http/third_party )
 
-# HTTP test include directories.
-set( HTTP_TEST_INCLUDE_PRIVATE_DIRS
-     ${MODULES_DIR}/standard/http/src/private
-     ${MODULES_DIR}/standard/http/third_party
-      )

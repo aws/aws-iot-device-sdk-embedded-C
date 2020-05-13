@@ -44,6 +44,7 @@ list(APPEND test_include_directories
             ${MQTT_INCLUDE_PUBLIC_DIRS}
             ${MQTT_TEST_INCLUDE_PRIVATE_DIRS}
             "${ROOT_DIR}/platform/include"
+            "${3RDPARTY_DIR}/CMock/vendor/unity/src"
         )
 
 # =============================  (end edit)  ===================================
