@@ -19,6 +19,9 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#ifndef MQTT_H
+#define MQTT_H
+
 #include "config.h"
 #include "mqtt_lightweight.h"
 
@@ -228,3 +231,5 @@ MQTTStatus_t MQTT_Process( MQTTContext_t * const pContext,
                            uint32_t timeoutMs );
 
 uint16_t MQTT_GetPacketId( MQTTContext_t * const pContext );
+
+#endif /* ifndef MQTT_H */

@@ -114,7 +114,7 @@ MQTTPublishState_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
  * @param[in] searchState The state to search for.
  * @param[in,out] pCursor Index at which to start searching.
  */
-uint16_t MQTT_StateSelect( MQTTContext_t * pMqttContext,
+uint16_t MQTT_StateSelect( const MQTTContext_t * pMqttContext,
                            MQTTPublishState_t searchState,
                            MQTTStateCursor_t * pCursor );
 
