@@ -90,6 +90,18 @@ static MQTTStatus_t receiveConnack( MQTTContext_t * const pContext,
                                     MQTTPacketInfo_t * const pIncomingPacket,
                                     bool * const pSessionPresent );
 
+/**
+ * @brief Calculate the interval between two timestamps, including when the
+ * later value has overflowed.
+ *
+ * @param[in] later The later time stamp.
+ * @param[in] start The earlier time stamp.
+ *
+ * @return later - start.
+ */
+static uint32_t calculateElapsedTime( uint32_t later,
+                                      uint32_t start );
+
 /*-----------------------------------------------------------*/
 
 static int32_t sendPacket( MQTTContext_t * pContext,
@@ -233,15 +245,6 @@ static MQTTStatus_t sendPublish( const MQTTContext_t * const pContext,
 
 /*-----------------------------------------------------------*/
 
-/**
- * @brief Calculate the interval between two timestamps, including when the
- * later value has overflowed.
- *
- * @param[in] later The later time stamp.
- * @param[in] start The earlier time stamp.
- *
- * @return later - start.
- */
 static uint32_t calculateElapsedTime( uint32_t later,
                                       uint32_t start )
 {
@@ -266,10 +269,11 @@ static MQTTStatus_t receiveConnack( MQTTContext_t * const pContext,
 {
     MQTTStatus_t status = MQTTSuccess;
     MQTTGetCurrentTimeFunc_t getTimeStamp = NULL;
-    uint32_t entryTime = 0U, remainingTimeMs = timeoutMs;
+    uint32_t entryTime = 0U, remainingTimeMs = 0U;
 
     assert( pContext != NULL );
     assert( incomingPacket != NULL );
+    assert( pContext->callbacks.getTime != NULL );
 
     getTimeStamp = pContext->callbacks.getTime;
     /* Get the entry time for the function. */
@@ -288,27 +292,17 @@ static MQTTStatus_t receiveConnack( MQTTContext_t * const pContext,
 
     if( status == MQTTSuccess )
     {
-        /* Check if the timeout has expired. */
         if( calculateElapsedTime( getTimeStamp(), entryTime ) < timeoutMs )
         {
             /* Calculate remaining time for receiving the remainder of
              * the packet. */
             remainingTimeMs = timeoutMs - calculateElapsedTime( getTimeStamp(), entryTime );
         }
-        else
-        {
-            LogErrorWithArgs( "Timeout has expired before reading the complete"
-                              " CONNACK packet. Time taken to read so far is"
-                              " %u ms whereas the timeout is %u ms.",
-                              ( calculateElapsedTime( getTimeStamp(), entryTime ) ),
-                              timeoutMs );
-            status = MQTTRecvFailed;
-        }
-    }
 
-    if( status == MQTTSuccess )
-    {
-        /* Reading the remainder of the packet by transport recv. */
+        /* Reading the remainder of the packet by transport recv.
+         * Attempt to read once even if the timeout has expired at this point.
+         * Invoking receivePacket with remainingTime as 0 would attempt to
+         * recv from network once.*/
         if( incomingPacket->type == MQTT_PACKET_TYPE_CONNACK )
         {
             status = receivePacket( pContext,
@@ -385,15 +379,6 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
                           pContext,
                           pConnectInfo );
         status = MQTTBadParameter;
-    }
-    else if( timeoutMs == 0U )
-    {
-        LogError( "Timeout for CONNACK cannot be 0." );
-        status = MQTTBadParameter;
-    }
-    else
-    {
-        /* Empty else MISRA 15.7 */
     }
 
     if( status == MQTTSuccess )
