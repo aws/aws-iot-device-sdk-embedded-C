@@ -24,7 +24,7 @@
 
 #include "mqtt.h"
 
-#define MQTT_STATE_CURSOR_INITIALIZER ( size_t ) 0
+#define MQTT_STATE_CURSOR_INITIALIZER    ( size_t ) 0
 
 /**
  * @brief Value indicating either send or receive.

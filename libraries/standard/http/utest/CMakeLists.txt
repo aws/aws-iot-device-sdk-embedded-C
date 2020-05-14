@@ -1,4 +1,4 @@
-include("../filePaths.cmake")
+include("../httpFilePaths.cmake")
 project ("http unit test")
 cmake_minimum_required (VERSION 3.13)
 
@@ -9,11 +9,11 @@ set(project_name "http")
 
 # list the files to mock here
 list(APPEND mock_list
-            ""
+            ${MODULES_DIR}/standard/http/third_party/http_parser/http_parser.h
         )
 # list the directories your mocks need
 list(APPEND mock_include_list
-            ""
+             ${MODULES_DIR}/standard/http/third_party/http_parser
         )
 #list the definitions of your mocks to control what to be included
 list(APPEND mock_define_list
@@ -25,13 +25,14 @@ list(APPEND mock_define_list
 # list the files you would like to test here
 list(APPEND real_source_files
             ${HTTP_SOURCES}
+            ${LOGGING_SOURCES}
         )
 # list the directories the module under test includes
 list(APPEND real_include_directories
             .
             ${HTTP_INCLUDE_PUBLIC_DIRS}
-            ${HTTP_TEST_INCLUDE_PRIVATE_DIRS}
-            "${ROOT_DIR}/platform/include"
+            ${HTTP_INCLUDE_PRIVATE_DIRS}
+            ${LOGGING_INCLUDE_DIRS}
         )
 
 # =====================  Create UnitTest Code here (edit)  =====================
@@ -40,23 +41,32 @@ list(APPEND real_include_directories
 list(APPEND test_include_directories
             .
             ${HTTP_INCLUDE_PUBLIC_DIRS}
+            ${HTTP_INCLUDE_PRIVATE_DIRS}
             ${HTTP_TEST_INCLUDE_PRIVATE_DIRS}
             "${ROOT_DIR}/platform/include"
         )
 
 # =============================  (end edit)  ===================================
 
-set(mock_name "${project_name}_mock")
+set(mock_name "http_parser_mock")
 set(real_name "${project_name}_real")
+
+create_mock_list(${mock_name}
+                "${mock_list}"
+                "${ROOT_DIR}/tools/cmock/project.yml"
+                "${mock_include_list}"
+                "${mock_define_list}"
+        )
 
 create_real_library(${real_name}
                     "${real_source_files}"
                     "${real_include_directories}"
-                    ""
+                    "${mock_name}"
         )
 
 list(APPEND utest_link_list
             lib${real_name}.a
+            -l${mock_name}
         )
 
 list(APPEND utest_dep_list
