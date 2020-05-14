@@ -5,7 +5,7 @@
 1. Install lcov: `sudo apt install lcov`
 1. Go to the root directory of this repository.
 1. Create build directory: `mkdir build && cd build`
-1. Run cmake while inside build directory: `cmake ..`
+1. Run cmake while inside build directory: `cmake .. -DBUILD_TESTS=ON`
 1. Run this command to build and run the tests: `make coverage`
 1. Go to `build` and open `*_utest_out.txt` to view logs
 1. Go to `build/coverage` and open `index.html` to view test coverage results.
