@@ -132,6 +132,8 @@ void MQTT_Init( MQTTContext_t * const pContext,
  * @brief param[in] pContext Initialized MQTT context.
  * @brief param[in] pConnectInfo MQTT CONNECT packet parameters.
  * @brief param[in] pWillInfo Last Will and Testament. Pass NULL if not used.
+ * @brief param[in] timeoutMs Timeout in milliseconds for receiving
+ * CONNACK packet.
  * @brief param[out] pSessionPresent Whether a previous session was present.
  * Only relevant if not establishing a clean session.
  *
@@ -139,11 +141,15 @@ void MQTT_Init( MQTTContext_t * const pContext,
  * hold the MQTT packet;
  * #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSendFailed if transport send failed;
+ * #MQTTRecvFailed if transport receive failed for CONNACK;
+ * #MQTTNoDataAvailable if no data available to receive in transport until
+ * the #timeoutMs for CONNACK;
  * #MQTTSuccess otherwise.
  */
 MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
                            const MQTTConnectInfo_t * const pConnectInfo,
                            const MQTTPublishInfo_t * const pWillInfo,
+                           uint32_t timeoutMs,
                            bool * const pSessionPresent );
 
 /**
