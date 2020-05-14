@@ -15,7 +15,7 @@
 #define HTTP_TEST_HOST_VALUE          "amazon.com"
 #define HTTP_TEST_HOST_VALUE_LEN      ( sizeof( HTTP_TEST_HOST_VALUE ) - 1 )
 #define HTTP_TEST_REQUEST_LINE   \
-    ( HTTP_METHOD_GET_LEN " "    \
+    ( HTTP_METHOD_GET " "        \
       HTTP_TEST_REQUEST_PATH " " \
       HTTP_PROTOCOL_VERSION "\r\n" )
 #define HTTP_TEST_REQUEST_LINE_LEN    ( sizeof( HTTP_TEST_REQUEST_LINE ) - 1 )
