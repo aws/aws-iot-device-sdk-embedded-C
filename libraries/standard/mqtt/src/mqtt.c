@@ -618,8 +618,11 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * const pContext,
 
     if( status == MQTTSuccess )
     {
-        /* TODO: Should the publish info be passed instead? */
-        pContext->callbacks.appCallback( pContext, pIncomingPacket, packetIdentifier );
+        /* Provide publish info to application. */
+        pContext->callbacks.appCallback( pContext,
+                                         pIncomingPacket,
+                                         packetIdentifier,
+                                         &publishInfo );
     }
 
     return status;
@@ -664,7 +667,10 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * const pContext,
                                           &publishRecordState );
                 if( status == MQTTSuccess )
                 {
-                    pContext->callbacks.appCallback( pContext, pIncomingPacket, packetIdentifier );
+                    pContext->callbacks.appCallback( pContext,
+                                                     pIncomingPacket,
+                                                     packetIdentifier,
+                                                     NULL );
                 }
             }
             break;
@@ -673,16 +679,22 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * const pContext,
             status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, &sessionPresent );
             if( status == MQTTSuccess )
             {
-                pContext->callbacks.appCallback( pContext, pIncomingPacket, packetIdentifier );
+                pContext->callbacks.appCallback( pContext,
+                                                 pIncomingPacket,
+                                                 packetIdentifier,
+                                                 NULL );
             }
             break;
         case MQTT_PACKET_TYPE_SUBACK:
         case MQTT_PACKET_TYPE_UNSUBACK:
-            /* Give these to the app provided callback. */
+            /* Deserialize and give these to the app provided callback. */
             status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, &sessionPresent );
             if( status == MQTTSuccess )
             {
-                pContext->callbacks.appCallback( pContext, pIncomingPacket, packetIdentifier );
+                pContext->callbacks.appCallback( pContext,
+                                                 pIncomingPacket,
+                                                 packetIdentifier,
+                                                 NULL );
             }
             break;
         default:

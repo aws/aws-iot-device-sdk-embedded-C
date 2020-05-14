@@ -199,7 +199,8 @@ static uint32_t getTime( void )
  */
 static void eventCallback( MQTTContext_t * pContext,
                            MQTTPacketInfo_t * pPacketInfo,
-                           uint16_t packetIdentifier )
+                           uint16_t packetIdentifier,
+                           MQTTPublishInfo_t * pPublishInfo )
 {
 
 }

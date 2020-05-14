@@ -45,7 +45,8 @@ typedef uint32_t (* MQTTGetCurrentTimeFunc_t )( void );
 
 typedef void (* MQTTEventCallback_t )( MQTTContext_t * pContext,
                                        MQTTPacketInfo_t * pPacketInfo,
-                                       uint16_t packetIdentifier );
+                                       uint16_t packetIdentifier,
+                                       MQTTPublishInfo_t * pPublishInfo );
 
 typedef enum MQTTConnectionStatus
 {
