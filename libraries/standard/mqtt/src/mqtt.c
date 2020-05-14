@@ -73,7 +73,7 @@ static MQTTPubAckType_t getAckFromPacketType( uint8_t packetType );
  * @param[in] bytesToRecv Number of bytes to receive.
  * @param[in] timeoutMs Time remaining to receive the packet.
  *
- * @return Number of bytes received, or -1 on network error.
+ * @return Number of bytes received, or negative number on network error.
  */
 static int32_t recvExact( const MQTTContext_t * const pContext,
                           size_t bytesToRecv,
@@ -198,18 +198,6 @@ static MQTTStatus_t receiveConnack( MQTTContext_t * const pContext,
                                     uint32_t timeoutMs,
                                     MQTTPacketInfo_t * const pIncomingPacket,
                                     bool * const pSessionPresent );
-
-/**
- * @brief Calculate the interval between two timestamps, including when the
- * later value has overflowed.
- *
- * @param[in] later The later time stamp.
- * @param[in] start The earlier time stamp.
- *
- * @return later - start.
- */
-static uint32_t calculateElapsedTime( uint32_t later,
-                                      uint32_t start );
 
 /*-----------------------------------------------------------*/
 
@@ -347,7 +335,7 @@ static int32_t recvExact( const MQTTContext_t * const pContext,
         {
             LogErrorWithArgs( "Network error while receiving packet: ReturnCode=%d",
                               bytesRecvd );
-            totalBytesRecvd = -1;
+            totalBytesRecvd = bytesRecvd;
             receiveError = true;
         }
 
@@ -811,23 +799,6 @@ static MQTTStatus_t sendPublish( MQTTContext_t * const pContext,
     }
 
     return status;
-}
-
-/*-----------------------------------------------------------*/
-
-static uint32_t calculateElapsedTime( uint32_t later,
-                                      uint32_t start )
-{
-    return later - start;
-}
-
-/*-----------------------------------------------------------*/
-
-static MQTTStatus_t receivePacket( MQTTContext_t * const pContext,
-                                   MQTTPacketInfo_t incomingPacket,
-                                   uint32_t remainingTimeMs )
-{
-    return MQTTSuccess;
 }
 
 /*-----------------------------------------------------------*/
