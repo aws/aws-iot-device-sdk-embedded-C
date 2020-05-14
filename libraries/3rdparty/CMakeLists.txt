@@ -25,9 +25,3 @@ target_include_directories(cmock PUBLIC
         ${ROOT_DIR}/libraries/3rdparty/CMock/examples
         )
 target_link_libraries(cmock unity)
-
-add_custom_target(coverage
-        COMMAND ${CMAKE_COMMAND} -P ${CMAKE_SOURCE_DIR}/tools/cmock/coverage.cmake
-        DEPENDS cmock unity http_utest mqtt_utest
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-        )

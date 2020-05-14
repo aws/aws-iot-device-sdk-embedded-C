@@ -29,6 +29,13 @@ if( ${BUILD_TESTS} )
     link_directories("${CMAKE_BINARY_DIR}/lib"
             )
 
+    # Add a target for running coverage on tests.
+    add_custom_target(coverage
+        COMMAND ${CMAKE_COMMAND} -P ${CMAKE_SOURCE_DIR}/tools/cmock/coverage.cmake
+        DEPENDS cmock unity http_utest mqtt_utest
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        )
+
     # Include the 3rd party CMakeLists.txt for CMock build configuration.
     add_subdirectory(${3RDPARTY_DIR})
 
