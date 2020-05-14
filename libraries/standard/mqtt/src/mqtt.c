@@ -269,7 +269,7 @@ static MQTTStatus_t receiveConnack( MQTTContext_t * const pContext,
 {
     MQTTStatus_t status = MQTTSuccess;
     MQTTGetCurrentTimeFunc_t getTimeStamp = NULL;
-    uint32_t entryTime = 0U, remainingTimeMs = 0U;
+    uint32_t entryTime = 0U, remainingTimeMs = 0U, timeTaken = 0U;
 
     assert( pContext != NULL );
     assert( incomingPacket != NULL );
@@ -292,11 +292,14 @@ static MQTTStatus_t receiveConnack( MQTTContext_t * const pContext,
 
     if( status == MQTTSuccess )
     {
-        if( calculateElapsedTime( getTimeStamp(), entryTime ) < timeoutMs )
+        /* Time taken in this function so far. */
+        timeTaken = calculateElapsedTime( getTimeStamp(), entryTime );
+
+        if( timeTaken < timeoutMs )
         {
             /* Calculate remaining time for receiving the remainder of
              * the packet. */
-            remainingTimeMs = timeoutMs - calculateElapsedTime( getTimeStamp(), entryTime );
+            remainingTimeMs = timeoutMs - timeTaken;
         }
 
         /* Reading the remainder of the packet by transport recv.

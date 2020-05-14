@@ -141,6 +141,9 @@ void MQTT_Init( MQTTContext_t * const pContext,
  * hold the MQTT packet;
  * #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSendFailed if transport send failed;
+ * #MQTTRecvFailed if transport receive failed for CONNACK;
+ * #MQTTNoDataAvailable if no data available to receive in transport until
+ * the #timeoutMs for CONNACK;
  * #MQTTSuccess otherwise.
  */
 MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
