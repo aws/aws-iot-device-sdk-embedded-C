@@ -33,5 +33,5 @@ void test_Mqtt_connect_packet_size_gt_max( void )
     /* This mocked method will be called inside MQTT_Connect(...). */
     MQTT_GetConnectPacketSize_ExpectAnyArgsAndReturn( MQTTBadParameter );
 
-    TEST_ASSERT_EQUAL( MQTT_Connect( NULL, NULL, NULL, NULL ), MQTTBadParameter );
+    TEST_ASSERT_EQUAL( MQTT_Connect( NULL, NULL, NULL, 0U, NULL ), MQTTBadParameter );
 }
