@@ -34,13 +34,14 @@ typedef struct _headers
 
 static void setupBuffersWithPreexistingHeader( HTTPRequestHeaders_t * testRequestHeaders,
                                                uint8_t * testBuffer,
+                                               size_t bufferSize,
                                                _headers_t * expectedHeaders,
                                                const char * preexistingData )
 {
     size_t dataLen = strlen( preexistingData );
 
     testRequestHeaders->pBuffer = testBuffer;
-    testRequestHeaders->bufferLen = sizeof( testBuffer );
+    testRequestHeaders->bufferLen = bufferSize;
     /* We add 1 bytes as snprintf() writes a null byte at the end. */
     int numBytes = snprintf( ( char * ) testRequestHeaders->pBuffer,
                              dataLen + 1,
@@ -62,6 +63,7 @@ static void addRangeToExpectedHeaders( _headers_t * expectedHeaders,
                                        bool terminatorExists )
 {
     size_t rangeRequestLen = RANGE_REQUEST_HEADER_FIELD_LEN +
+                             HTTP_HEADER_FIELD_SEPARATOR_LEN +
                              RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN +
                              strlen( expectedRange ) +
                              2 * HTTP_HEADER_LINE_SEPARATOR_LEN;
@@ -71,8 +73,9 @@ static void addRangeToExpectedHeaders( _headers_t * expectedHeaders,
                   ( terminatorExists ? HTTP_HEADER_LINE_SEPARATOR_LEN : 0 ),
                   /* We add 1 bytes as snprintf() writes a null byte at the end. */
                   rangeRequestLen + 1,
-                  "%s%s%s\r\n\r\n",
+                  "%s%s%s%s\r\n\r\n",
                   RANGE_REQUEST_HEADER_FIELD,
+                  HTTP_HEADER_FIELD_SEPARATOR,
                   RANGE_REQUEST_HEADER_VALUE_PREFIX,
                   expectedRange );
 
@@ -91,15 +94,15 @@ static int testRangeEnd = 0;
 /* ============================ UNITY FIXTURES ============================== */
 void setUp( void )
 {
-    memset( &testHeaders, 0, sizeof( testHeaders ) );
-    memset( testBuffer, 0, sizeof( testBuffer ) );
-    memset( &expectedHeaders, 0, sizeof( expectedHeaders ) );
 }
 
 /* called before each testcase */
 void tearDown( void )
 {
     retCode = HTTP_NOT_SUPPORTED;
+    memset( &testHeaders, 0, sizeof( testHeaders ) );
+    memset( testBuffer, 0, sizeof( testBuffer ) );
+    memset( &expectedHeaders, 0, sizeof( expectedHeaders ) );
 }
 
 /* called at the beginning of the whole suite */
@@ -175,6 +178,7 @@ void test_Http_AddRangeHeader_Insufficient_Memory( void )
 {
     setupBuffersWithPreexistingHeader( &testHeaders,
                                        testBuffer,
+                                       sizeof( testBuffer ),
                                        &expectedHeaders,
                                        PREEXISTING_HEADER_DATA );
     size_t preHeadersLen = testHeaders.headersLen;
@@ -211,8 +215,8 @@ void test_Http_AddRangeHeader_Happy_Path( void )
 
     /* Range specification of the form [rangeStart, rangeEnd]. */
     /* Test with 0 as the range values */
-    tearDown();
     setupBuffersWithPreexistingHeader( &testHeaders, testBuffer,
+                                       sizeof( testBuffer ),
                                        &expectedHeaders,
                                        PREEXISTING_HEADER_DATA );
     testRangeStart = 0;
@@ -234,6 +238,7 @@ void test_Http_AddRangeHeader_Happy_Path( void )
     /* Test for [0, eof) range */
     tearDown();
     setupBuffersWithPreexistingHeader( &testHeaders, testBuffer,
+                                       sizeof( testBuffer ),
                                        &expectedHeaders,
                                        PREEXISTING_HEADER_DATA );
     testRangeStart = 0;
@@ -254,6 +259,7 @@ void test_Http_AddRangeHeader_Happy_Path( void )
 
     tearDown();
     setupBuffersWithPreexistingHeader( &testHeaders, testBuffer,
+                                       sizeof( testBuffer ),
                                        &expectedHeaders,
                                        PREEXISTING_HEADER_DATA );
     testRangeStart = 10;
@@ -276,6 +282,7 @@ void test_Http_AddRangeHeader_Happy_Path( void )
      * i.e. for all bytes >= rangeStart. */
     tearDown();
     setupBuffersWithPreexistingHeader( &testHeaders, testBuffer,
+                                       sizeof( testBuffer ),
                                        &expectedHeaders,
                                        PREEXISTING_HEADER_DATA );
     testRangeStart = 100;
@@ -297,6 +304,7 @@ void test_Http_AddRangeHeader_Happy_Path( void )
     /* Range specification for the last N bytes. */
     tearDown();
     setupBuffersWithPreexistingHeader( &testHeaders, testBuffer,
+                                       sizeof( testBuffer ),
                                        &expectedHeaders,
                                        PREEXISTING_HEADER_DATA );
     testRangeStart = -50;
@@ -318,6 +326,7 @@ void test_Http_AddRangeHeader_Happy_Path( void )
     /* Test with LARGE range values. */
     tearDown();
     setupBuffersWithPreexistingHeader( &testHeaders, testBuffer,
+                                       sizeof( testBuffer ),
                                        &expectedHeaders,
                                        PREEXISTING_HEADER_DATA );
     testRangeStart = INT32_MAX;
@@ -342,6 +351,7 @@ void test_Http_AddRangeHeader_Happy_Path( void )
     /* Test with 0 as the range values */
     tearDown();
     setupBuffersWithPreexistingHeader( &testHeaders, testBuffer,
+                                       sizeof( testBuffer ),
                                        &expectedHeaders,
                                        PREEXISTING_REQUEST_LINE );
     testRangeStart = 0;
