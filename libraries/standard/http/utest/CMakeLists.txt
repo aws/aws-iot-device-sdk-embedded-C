@@ -25,13 +25,14 @@ list(APPEND mock_define_list
 # list the files you would like to test here
 list(APPEND real_source_files
             ${HTTP_SOURCES}
+            ${LOGGING_SOURCES}
         )
 # list the directories the module under test includes
 list(APPEND real_include_directories
             .
             ${HTTP_INCLUDE_PUBLIC_DIRS}
-            ${HTTP_TEST_INCLUDE_PRIVATE_DIRS}
-            "${ROOT_DIR}/platform/include"
+            ${HTTP_INCLUDE_PRIVATE_DIRS}
+            ${LOGGING_INCLUDE_DIRS}
         )
 
 # =====================  Create UnitTest Code here (edit)  =====================
