@@ -29,10 +29,6 @@ function(create_test test_name
                                ${mocks_dir}
                                ${include_list}
         )
-    target_link_libraries(${test_name} 
-                          "${ROOT_DIR}/platform/posix/iot_clock_posix.o"
-                          "${ROOT_DIR}/platform/posix/iot_logging.o"
-        )
 
     target_link_directories(${test_name} PUBLIC
                             ${CMAKE_CURRENT_BINARY_DIR}
