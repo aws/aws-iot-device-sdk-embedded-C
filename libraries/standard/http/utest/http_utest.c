@@ -9,17 +9,16 @@
 #include "private/http_client_internal.h"
 #include "private/http_client_parse.h"
 
-#define HTTP_TEST_REQUEST_METHOD        "GET"
-#define HTTP_TEST_REQUEST_METHOD_LEN    ( sizeof( HTTP_TEST_REQUEST_METHOD ) - 1 )
-#define HTTP_TEST_REQUEST_PATH          "/robots.txt"
-#define HTTP_TEST_REQUEST_PATH_LEN      ( sizeof( HTTP_TEST_REQUEST_PATH ) - 1 )
-#define HTTP_TEST_HOST_VALUE            "amazon.com"
-#define HTTP_TEST_HOST_VALUE_LEN        ( sizeof( HTTP_TEST_HOST_VALUE ) - 1 )
-#define HTTP_TEST_REQUEST_LINE     \
-    ( HTTP_TEST_REQUEST_METHOD " " \
-      HTTP_TEST_REQUEST_PATH " "   \
+#define HTTP_METHOD_GET_LEN           ( sizeof( HTTP_METHOD_GET ) - 1 )
+#define HTTP_TEST_REQUEST_PATH        "/robots.txt"
+#define HTTP_TEST_REQUEST_PATH_LEN    ( sizeof( HTTP_TEST_REQUEST_PATH ) - 1 )
+#define HTTP_TEST_HOST_VALUE          "amazon.com"
+#define HTTP_TEST_HOST_VALUE_LEN      ( sizeof( HTTP_TEST_HOST_VALUE ) - 1 )
+#define HTTP_TEST_REQUEST_LINE   \
+    ( HTTP_METHOD_GET_LEN " "    \
+      HTTP_TEST_REQUEST_PATH " " \
       HTTP_PROTOCOL_VERSION "\r\n" )
-#define HTTP_TEST_REQUEST_LINE_LEN      ( sizeof( HTTP_TEST_REQUEST_LINE ) - 1 )
+#define HTTP_TEST_REQUEST_LINE_LEN    ( sizeof( HTTP_TEST_REQUEST_LINE ) - 1 )
 
 /* Used for format parameter in snprintf(...). */
 #define HTTP_TEST_HEADER_FORMAT \
@@ -29,7 +28,7 @@
     "%s: %s\r\n\r\n"
 
 /* Length of the following template HTTP header.
- *   <HTTP_TEST_REQUEST_METHOD> <HTTP_TEST_REQUEST_PATH> <HTTP_PROTOCOL_VERSION> \r\n
+ *   <HTTP_METHOD_GET> <HTTP_TEST_REQUEST_PATH> <HTTP_PROTOCOL_VERSION> \r\n
  *   <HTTP_USER_AGENT_FIELD>: <HTTP_USER_AGENT_FIELD_LEN> \r\n
  *   <HTTP_HOST_FIELD>: <HTTP_TEST_HOST_VALUE> \r\n
  *   <HTTP_CONNECTION_FIELD>: \r\n
@@ -38,7 +37,7 @@
  * <HTTP_TEST_CONNECTION_VALUE>. This is added later on depending on the
  * value of HTTP_REQUEST_KEEP_ALIVE_FLAG in pRequestInfo->flags. */
 #define HTTP_TEST_PREFIX_HEADER_LEN                                 \
-    ( HTTP_TEST_REQUEST_METHOD_LEN + SPACE_CHARACTER_LEN +          \
+    ( HTTP_METHOD_GET_LEN + SPACE_CHARACTER_LEN +                   \
       HTTP_TEST_REQUEST_PATH_LEN + SPACE_CHARACTER_LEN +            \
       HTTP_PROTOCOL_VERSION_LEN + HTTP_HEADER_LINE_SEPARATOR_LEN +  \
       HTTP_USER_AGENT_FIELD_LEN + HTTP_HEADER_FIELD_SEPARATOR_LEN + \
@@ -91,8 +90,8 @@ int suiteTearDown( int numFailures )
  */
 static void setupRequestInfo( HTTPRequestInfo_t * pRequestInfo )
 {
-    pRequestInfo->method = HTTP_TEST_REQUEST_METHOD;
-    pRequestInfo->methodLen = HTTP_TEST_REQUEST_METHOD_LEN;
+    pRequestInfo->method = HTTP_METHOD_GET;
+    pRequestInfo->methodLen = HTTP_METHOD_GET_LEN;
     pRequestInfo->pPath = HTTP_TEST_REQUEST_PATH;
     pRequestInfo->pathLen = HTTP_TEST_REQUEST_PATH_LEN;
     pRequestInfo->pHost = HTTP_TEST_HOST_VALUE;
@@ -133,7 +132,7 @@ void test_Http_InitializeRequestHeaders_happy_path()
                         HTTP_CONNECTION_CLOSE_VALUE_LEN;
     numBytes = snprintf( expectedHeader, expectedHeaderLen + 1,
                          HTTP_TEST_HEADER_FORMAT,
-                         HTTP_TEST_REQUEST_METHOD, HTTP_TEST_REQUEST_PATH,
+                         HTTP_METHOD_GET, HTTP_TEST_REQUEST_PATH,
                          HTTP_PROTOCOL_VERSION,
                          HTTP_USER_AGENT_FIELD, HTTP_USER_AGENT_VALUE,
                          HTTP_HOST_FIELD, HTTP_TEST_HOST_VALUE,
@@ -169,7 +168,7 @@ void test_Http_InitializeRequestHeaders_invalid_params()
     /* Test requestInfo members are NULL */
     test_err = HTTPClient_InitializeRequestHeaders( &requestHeaders, &requestInfo );
     TEST_ASSERT_EQUAL( test_err, HTTP_INVALID_PARAMETER );
-    requestInfo.method = HTTP_TEST_REQUEST_METHOD;
+    requestInfo.method = HTTP_METHOD_GET;
     test_err = HTTPClient_InitializeRequestHeaders( &requestHeaders, &requestInfo );
     TEST_ASSERT_EQUAL( test_err, HTTP_INVALID_PARAMETER );
     requestInfo.pHost = HTTP_TEST_HOST_VALUE;
@@ -179,7 +178,7 @@ void test_Http_InitializeRequestHeaders_invalid_params()
     requestInfo.pathLen = HTTP_TEST_REQUEST_PATH_LEN;
     test_err = HTTPClient_InitializeRequestHeaders( &requestHeaders, &requestInfo );
     TEST_ASSERT_EQUAL( test_err, HTTP_INVALID_PARAMETER );
-    requestInfo.methodLen = HTTP_TEST_REQUEST_METHOD_LEN;
+    requestInfo.methodLen = HTTP_METHOD_GET_LEN;
     test_err = HTTPClient_InitializeRequestHeaders( &requestHeaders, &requestInfo );
     TEST_ASSERT_EQUAL( test_err, HTTP_INVALID_PARAMETER );
     requestInfo.hostLen = HTTP_TEST_HOST_VALUE_LEN;
@@ -210,7 +209,7 @@ void test_Http_InitializeRequestHeaders_req_info()
                         HTTP_CONNECTION_KEEP_ALIVE_VALUE_LEN;
     numBytes = snprintf( expectedHeader, expectedHeaderLen + 1,
                          HTTP_TEST_HEADER_FORMAT,
-                         HTTP_TEST_REQUEST_METHOD, HTTP_EMPTY_PATH,
+                         HTTP_METHOD_GET, HTTP_EMPTY_PATH,
                          HTTP_PROTOCOL_VERSION,
                          HTTP_USER_AGENT_FIELD, HTTP_USER_AGENT_VALUE,
                          HTTP_HOST_FIELD, HTTP_TEST_HOST_VALUE,
