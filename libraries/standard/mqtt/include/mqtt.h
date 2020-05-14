@@ -44,7 +44,9 @@ typedef int32_t (* MQTTTransportSendFunc_t )( MQTTNetworkContext_t context,
 typedef uint32_t (* MQTTGetCurrentTimeFunc_t )( void );
 
 typedef void (* MQTTEventCallback_t )( MQTTContext_t * pContext,
-                                       MQTTPacketInfo_t * pPacketInfo );
+                                       MQTTPacketInfo_t * pPacketInfo,
+                                       uint16_t packetIdentifier,
+                                       MQTTPublishInfo_t * pPublishInfo );
 
 typedef enum MQTTConnectionStatus
 {
@@ -109,6 +111,13 @@ struct MQTTContext
     MQTTConnectionStatus_t connectStatus;
     MQTTApplicationCallbacks_t callbacks;
     uint32_t lastPacketTime;
+    bool controlPacketSent;
+
+    /* Keep alive members. */
+    uint16_t keepAliveIntervalSec;
+    uint32_t pingReqSendTimeMs;
+    uint32_t pingRespTimeoutMs;
+    bool waitingForPingResp;
 };
 
 /**
@@ -233,8 +242,25 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * const pContext,
  */
 MQTTStatus_t MQTT_Disconnect( MQTTContext_t * const pContext );
 
-MQTTStatus_t MQTT_Process( MQTTContext_t * const pContext,
-                           uint32_t timeoutMs );
+/**
+ * @brief Loop to receive packets from the transport interface.
+ *
+ * @param[in] pContext Initialized and connected MQTT context.
+ * @param[in] timeoutMs Minimum time in milliseconds that the receive loop will
+ * run, unless an error occurs.
+ *
+ * @return #MQTTBadParameter if context is NULL;
+ * #MQTTRecvFailed if a network error occurs during reception;
+ * #MQTTSendFailed if a network error occurs while sending an ACK or PINGREQ;
+ * #MQTTBadResponse if an invalid packet is received;
+ * #MQTTKeepAliveTimeout if the server has not sent a PINGRESP before
+ * pContext->pingRespTimeoutMs milliseconds;
+ * #MQTTIllegalState if an incoming QoS 1/2 publish or ack causes an
+ * invalid transition for the internal state machine;
+ * #MQTTSuccess on success.
+ */
+MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * const pContext,
+                               uint32_t timeoutMs );
 
 uint16_t MQTT_GetPacketId( MQTTContext_t * const pContext );
 
