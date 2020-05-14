@@ -45,6 +45,10 @@ static int32_t sendPacket( MQTTContext_t * pContext,
  * @brief Calculate the interval between two millisecond timestamps, including
  * when the later value has overflowed.
  *
+ * @note In C, the operands are promoted to signed integers in subtraction.
+ * Using this function avoids the need to cast the result of subtractions back
+ * to uint32_t.
+ *
  * @param[in] later The later time stamp, in milliseconds.
  * @param[in] start The earlier time stamp, in milliseconds.
  *
@@ -315,7 +319,7 @@ static int32_t recvExact( const MQTTContext_t * const pContext,
     uint8_t * pIndex = NULL;
     size_t bytesRemaining = bytesToRecv;
     int32_t totalBytesRecvd = 0, bytesRecvd;
-    uint32_t entryTime = 0U;
+    uint32_t entryTimeMs = 0U;
     MQTTTransportRecvFunc_t recvFunc = NULL;
     MQTTGetCurrentTimeFunc_t getTimeStampMs = NULL;
     bool receiveError = false;
@@ -325,7 +329,7 @@ static int32_t recvExact( const MQTTContext_t * const pContext,
     pIndex = pContext->networkBuffer.pBuffer;
     recvFunc = pContext->transportInterface.recv;
     getTimeStampMs = pContext->callbacks.getTime;
-    entryTime = getTimeStampMs();
+    entryTimeMs = getTimeStampMs();
 
     while( ( bytesRemaining > 0U ) && ( receiveError == false ) )
     {
@@ -348,7 +352,7 @@ static int32_t recvExact( const MQTTContext_t * const pContext,
         }
 
         if( ( bytesRemaining > 0U ) &&
-            ( calculateElapsedTime( getTimeStampMs(), entryTime ) > timeoutMs ) )
+            ( calculateElapsedTime( getTimeStampMs(), entryTimeMs ) > timeoutMs ) )
         {
             LogError( "Time expired while receiving packet." );
             receiveError = true;
@@ -367,7 +371,7 @@ static MQTTStatus_t discardPacket( MQTTContext_t * const pContext,
     MQTTStatus_t status = MQTTRecvFailed;
     int32_t bytesReceived = 0;
     size_t bytesToReceive = 0U;
-    uint32_t totalBytesReceived = 0U, entryTime, elapsedTime;
+    uint32_t totalBytesReceived = 0U, entryTimeMs, elapsedTimeMs;
     uint32_t remainingTimeMs = timeoutMs;
     MQTTGetCurrentTimeFunc_t getTimeStampMs = NULL;
     bool receiveError = false;
@@ -375,7 +379,7 @@ static MQTTStatus_t discardPacket( MQTTContext_t * const pContext,
     assert( pContext != NULL );
     bytesToReceive = pContext->networkBuffer.size;
     getTimeStampMs = pContext->callbacks.getTime;
-    entryTime = getTimeStampMs();
+    entryTimeMs = getTimeStampMs();
 
     while( ( totalBytesReceived < remainingLength ) && ( receiveError == false ) )
     {
@@ -398,11 +402,11 @@ static MQTTStatus_t discardPacket( MQTTContext_t * const pContext,
         {
             totalBytesReceived += ( uint32_t ) bytesReceived;
             /* Update remaining time and check for timeout. */
-            elapsedTime = calculateElapsedTime( getTimeStampMs(), entryTime );
+            elapsedTimeMs = calculateElapsedTime( getTimeStampMs(), entryTimeMs );
 
-            if( elapsedTime < timeoutMs )
+            if( elapsedTimeMs < timeoutMs )
             {
-                remainingTimeMs = timeoutMs - elapsedTime;
+                remainingTimeMs = timeoutMs - elapsedTimeMs;
             }
             else
             {
@@ -1354,13 +1358,13 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * const pContext,
 {
     MQTTStatus_t status = MQTTBadParameter;
     MQTTGetCurrentTimeFunc_t getTimeStampMs = NULL;
-    uint32_t entryTime = 0U, remainingTimeMs = timeoutMs, elapsedTime = 0U;
+    uint32_t entryTimeMs = 0U, remainingTimeMs = timeoutMs, elapsedTimeMs = 0U;
     MQTTPacketInfo_t incomingPacket;
 
     if( pContext != NULL )
     {
         getTimeStampMs = pContext->callbacks.getTime;
-        entryTime = getTimeStampMs();
+        entryTimeMs = getTimeStampMs();
         status = MQTTSuccess;
     }
     else
@@ -1428,13 +1432,14 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * const pContext,
         }
 
         /* Recalculate remaining time and check if loop should exit. */
-        elapsedTime = calculateElapsedTime( getTimeStampMs(), entryTime );
-        remainingTimeMs = timeoutMs - elapsedTime;
+        elapsedTimeMs = calculateElapsedTime( getTimeStampMs(), entryTimeMs );
 
-        if( elapsedTime > timeoutMs )
+        if( elapsedTimeMs > timeoutMs )
         {
             break;
         }
+
+        remainingTimeMs = timeoutMs - elapsedTimeMs;
     }
 
     return status;
