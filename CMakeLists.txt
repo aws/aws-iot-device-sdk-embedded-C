@@ -18,6 +18,7 @@ endif()
 
 # Import global configurations.
 include("tools/cmake/filePaths.cmake")
+include("tools/cmake/logging.cmake")
 
 # Configure options to always show in CMake GUI.
 option( BUILD_TESTS
