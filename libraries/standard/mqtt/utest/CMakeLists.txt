@@ -1,4 +1,4 @@
-include("../filePaths.cmake")
+include("../mqttFilePaths.cmake")
 project ("mqtt unit test")
 cmake_minimum_required (VERSION 3.13)
 

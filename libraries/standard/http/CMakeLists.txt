@@ -1,5 +1,5 @@
 # Include filepaths for source and include.
-include(filePaths.cmake)
+include(httpFilePaths.cmake)
 
 # HTTP library target.
 add_library( http

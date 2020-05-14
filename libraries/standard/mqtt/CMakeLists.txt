@@ -1,5 +1,5 @@
 # Include filepaths for source and include.
-include(filePaths.cmake)
+include(mqttFilePaths.cmake)
 
 # MQTT library target.
 add_library( mqtt
