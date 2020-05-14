@@ -251,7 +251,7 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * const pContext );
  *
  * @return #MQTTBadParameter if context is NULL;
  * #MQTTRecvFailed if a network error occurs during reception;
- * #MQTTSendFailed if a network error occurs while sending an ACK;
+ * #MQTTSendFailed if a network error occurs while sending an ACK or PINGREQ;
  * #MQTTBadResponse if an invalid packet is received;
  * #MQTTKeepAliveTimeout if the server has not sent a PINGRESP before
  * pContext->pingRespTimeoutMs milliseconds;

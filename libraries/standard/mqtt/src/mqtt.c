@@ -42,15 +42,16 @@ static int32_t sendPacket( MQTTContext_t * pContext,
                            size_t bytesToSend );
 
 /**
- * @brief Calculate the interval between two timestamps, including when the
- * later value has overflowed.
+ * @brief Calculate the interval between two millisecond timestamps, including
+ * when the later value has overflowed.
  *
- * @param[in] later The later time stamp.
- * @param[in] start The earlier time stamp.
+ * @param[in] later The later time stamp, in milliseconds.
+ * @param[in] start The earlier time stamp, in milliseconds.
  *
  * @return later - start.
  */
-static uint32_t calculateElapsedTime( uint32_t later, uint32_t start );
+static uint32_t calculateElapsedTime( uint32_t later,
+                                      uint32_t start );
 
 /**
  * @brief Convert a byte indicating a publish ack type to an #MQTTPubAckType_t.
@@ -265,7 +266,8 @@ static int32_t sendPacket( MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
-static uint32_t calculateElapsedTime( uint32_t later, uint32_t start )
+static uint32_t calculateElapsedTime( uint32_t later,
+                                      uint32_t start )
 {
     return later - start;
 }
@@ -275,25 +277,32 @@ static uint32_t calculateElapsedTime( uint32_t later, uint32_t start )
 static MQTTPubAckType_t getAckFromPacketType( uint8_t packetType )
 {
     MQTTPubAckType_t ackType = MQTTPuback;
+
     switch( packetType )
     {
         case MQTT_PACKET_TYPE_PUBACK:
             ackType = MQTTPuback;
             break;
+
         case MQTT_PACKET_TYPE_PUBREC:
             ackType = MQTTPubrec;
             break;
+
         case MQTT_PACKET_TYPE_PUBREL:
             ackType = MQTTPubrel;
             break;
+
         case MQTT_PACKET_TYPE_PUBCOMP:
             ackType = MQTTPubcomp;
             break;
+
         default:
-            /* Not an ack. */
+            /* This function is only called after checking the type is one of
+             * the above four values. */
             assert( 0 );
             break;
     }
+
     return ackType;
 }
 
@@ -308,17 +317,17 @@ static int32_t recvExact( const MQTTContext_t * const pContext,
     int32_t totalBytesRecvd = 0, bytesRecvd;
     uint32_t entryTime = 0U;
     MQTTTransportRecvFunc_t recvFunc = NULL;
-    MQTTGetCurrentTimeFunc_t getTimeStamp = NULL;
-    bool shouldBreak = false;
+    MQTTGetCurrentTimeFunc_t getTimeStampMs = NULL;
+    bool receiveError = false;
 
     assert( pContext != NULL );
     assert( bytesToRecv <= pContext->networkBuffer.size );
     pIndex = pContext->networkBuffer.pBuffer;
     recvFunc = pContext->transportInterface.recv;
-    getTimeStamp = pContext->callbacks.getTime;
-    entryTime = getTimeStamp();
+    getTimeStampMs = pContext->callbacks.getTime;
+    entryTime = getTimeStampMs();
 
-    while( bytesRemaining > 0U )
+    while( ( bytesRemaining > 0U ) && ( receiveError == false ) )
     {
         bytesRecvd = recvFunc( pContext->transportInterface.networkContext,
                                pIndex,
@@ -332,21 +341,17 @@ static int32_t recvExact( const MQTTContext_t * const pContext,
         }
         else
         {
-            LogError( "Network error while receiving packet." );
+            LogErrorWithArgs( "Network error while receiving packet: ReturnCode=%d",
+                              bytesRecvd );
             totalBytesRecvd = -1;
-            shouldBreak = true;
+            receiveError = true;
         }
 
-        if( ( bytesRemaining > 0U) && 
-            ( calculateElapsedTime( getTimeStamp(), entryTime ) > timeoutMs ) )
+        if( ( bytesRemaining > 0U ) &&
+            ( calculateElapsedTime( getTimeStampMs(), entryTime ) > timeoutMs ) )
         {
             LogError( "Time expired while receiving packet." );
-            shouldBreak = true;
-        }
-
-        if( shouldBreak )
-        {
-            break;
+            receiveError = true;
         }
     }
 
@@ -364,15 +369,15 @@ static MQTTStatus_t discardPacket( MQTTContext_t * const pContext,
     size_t bytesToReceive = 0U;
     uint32_t totalBytesReceived = 0U, entryTime, elapsedTime;
     uint32_t remainingTimeMs = timeoutMs;
-    MQTTGetCurrentTimeFunc_t getTimeStamp = NULL;
-    bool shouldBreak = false;
+    MQTTGetCurrentTimeFunc_t getTimeStampMs = NULL;
+    bool receiveError = false;
 
     assert( pContext != NULL );
     bytesToReceive = pContext->networkBuffer.size;
-    getTimeStamp = pContext->callbacks.getTime;
-    entryTime = getTimeStamp();
+    getTimeStampMs = pContext->callbacks.getTime;
+    entryTime = getTimeStampMs();
 
-    while( totalBytesReceived < remainingLength )
+    while( ( totalBytesReceived < remainingLength ) && ( receiveError == false ) )
     {
         if( ( remainingLength - totalBytesReceived ) < bytesToReceive )
         {
@@ -387,13 +392,14 @@ static MQTTStatus_t discardPacket( MQTTContext_t * const pContext,
                               "ReceivedBytes=%d, ExpectedBytes=%u.",
                               bytesReceived,
                               bytesToReceive );
-            shouldBreak = true;
+            receiveError = true;
         }
         else
         {
             totalBytesReceived += ( uint32_t ) bytesReceived;
             /* Update remaining time and check for timeout. */
-            elapsedTime = calculateElapsedTime( getTimeStamp(), entryTime );
+            elapsedTime = calculateElapsedTime( getTimeStampMs(), entryTime );
+
             if( elapsedTime < timeoutMs )
             {
                 remainingTimeMs = timeoutMs - elapsedTime;
@@ -401,13 +407,8 @@ static MQTTStatus_t discardPacket( MQTTContext_t * const pContext,
             else
             {
                 LogError( "Time expired while discarding packet." );
-                shouldBreak = true;
+                receiveError = true;
             }
-        }
-
-        if( shouldBreak )
-        {
-            break;
         }
     }
 
@@ -448,6 +449,7 @@ static MQTTStatus_t receivePacket( MQTTContext_t * const pContext,
     {
         bytesToReceive = incomingPacket.remainingLength;
         bytesReceived = recvExact( pContext, bytesToReceive, remainingTimeMs );
+
         if( bytesReceived == ( int32_t ) bytesToReceive )
         {
             /* Receive successful, bytesReceived == bytesToReceive. */
@@ -462,7 +464,6 @@ static MQTTStatus_t receivePacket( MQTTContext_t * const pContext,
                               bytesToReceive );
             status = MQTTRecvFailed;
         }
-        
     }
 
     return status;
@@ -489,20 +490,24 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * const pContext,
             packetTypeByte = MQTT_PACKET_TYPE_PUBACK;
             packetType = MQTTPuback;
             break;
+
         case MQTTPubRecSend:
             packetTypeByte = MQTT_PACKET_TYPE_PUBREC;
             packetType = MQTTPubrec;
             break;
+
         case MQTTPubRelSend:
             packetTypeByte = MQTT_PACKET_TYPE_PUBREL;
             packetType = MQTTPubrel;
             break;
+
         case MQTTPubCompSend:
             packetTypeByte = MQTT_PACKET_TYPE_PUBCOMP;
             packetType = MQTTPubcomp;
             break;
+
         default:
-            /* Nothing to send. */
+            /* Take no action for states that do not require sending an ack. */
             break;
     }
 
@@ -511,6 +516,7 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * const pContext,
         status = MQTT_SerializeAck( &( pContext->networkBuffer ),
                                     packetTypeByte,
                                     packetId );
+
         if( status == MQTTSuccess )
         {
             bytesSent = sendPacket( pContext,
@@ -549,6 +555,7 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * const pContext,
     {
         *pPublishState = newState;
     }
+
     return status;
 }
 
@@ -564,13 +571,13 @@ static MQTTStatus_t handleKeepAlive( MQTTContext_t * const pContext )
     keepAliveMs = 1000U * ( uint32_t ) pContext->keepAliveIntervalSec;
 
     /* If keep alive interval is 0, it is disabled. */
-    if( ( keepAliveMs != 0U ) && 
+    if( ( keepAliveMs != 0U ) &&
         ( calculateElapsedTime( now, pContext->lastPacketTime ) > keepAliveMs ) )
     {
         if( pContext->waitingForPingResp )
         {
             /* Has time expired? */
-            if( calculateElapsedTime( now, pContext->pingReqSendTimeMs ) > 
+            if( calculateElapsedTime( now, pContext->pingReqSendTimeMs ) >
                 pContext->pingRespTimeoutMs )
             {
                 status = MQTTKeepAliveTimeout;
@@ -590,7 +597,7 @@ static MQTTStatus_t handleKeepAlive( MQTTContext_t * const pContext )
 static MQTTStatus_t handleIncomingPublish( MQTTContext_t * const pContext,
                                            MQTTPacketInfo_t * pIncomingPacket )
 {
-    MQTTStatus_t status = MQTTSuccess;
+    MQTTStatus_t status = MQTTBadParameter;
     MQTTPublishState_t publishRecordState = MQTTStateNull;
     uint16_t packetIdentifier;
     MQTTPublishInfo_t publishInfo;
@@ -633,7 +640,7 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * const pContext,
 static MQTTStatus_t handleIncomingAck( MQTTContext_t * const pContext,
                                        MQTTPacketInfo_t * pIncomingPacket )
 {
-    MQTTStatus_t status = MQTTSuccess;
+    MQTTStatus_t status = MQTTBadResponse;
     MQTTPublishState_t publishRecordState = MQTTStateNull;
     uint16_t packetIdentifier;
     /* Need a dummy variable for MQTT_DeserializeAck(). */
@@ -650,8 +657,9 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * const pContext,
         case MQTT_PACKET_TYPE_PUBREL:
         case MQTT_PACKET_TYPE_PUBCOMP:
             ackType = getAckFromPacketType( pIncomingPacket->type );
-            status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier,  &sessionPresent );
+            status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, &sessionPresent );
             LogInfoWithArgs( "Ack packet deserialized with result: %d.", status );
+
             if( status == MQTTSuccess )
             {
                 publishRecordState = MQTT_UpdateStateAck( pContext,
@@ -665,6 +673,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * const pContext,
                 status = sendPublishAcks( pContext,
                                           packetIdentifier,
                                           &publishRecordState );
+
                 if( status == MQTTSuccess )
                 {
                     pContext->callbacks.appCallback( pContext,
@@ -673,10 +682,13 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * const pContext,
                                                      NULL );
                 }
             }
+
             break;
+
         case MQTT_PACKET_TYPE_PINGRESP:
             pContext->waitingForPingResp = false;
             status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, &sessionPresent );
+
             if( status == MQTTSuccess )
             {
                 pContext->callbacks.appCallback( pContext,
@@ -684,11 +696,14 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * const pContext,
                                                  packetIdentifier,
                                                  NULL );
             }
+
             break;
+
         case MQTT_PACKET_TYPE_SUBACK:
         case MQTT_PACKET_TYPE_UNSUBACK:
             /* Deserialize and give these to the app provided callback. */
             status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, &sessionPresent );
+
             if( status == MQTTSuccess )
             {
                 pContext->callbacks.appCallback( pContext,
@@ -696,11 +711,17 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * const pContext,
                                                  packetIdentifier,
                                                  NULL );
             }
+
             break;
+
         default:
-            /* Not an ack. */
+            /* Bad response from the server. */
+            LogErrorWithArgs( "Unexpected packet type from server: PacketType=%02x.",
+                              pIncomingPacket->type );
+            status = MQTTBadResponse;
             break;
     }
+
     return status;
 }
 
@@ -1332,21 +1353,21 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * const pContext,
                                uint32_t timeoutMs )
 {
     MQTTStatus_t status = MQTTBadParameter;
-    MQTTGetCurrentTimeFunc_t getTimeStamp = NULL;
+    MQTTGetCurrentTimeFunc_t getTimeStampMs = NULL;
     uint32_t entryTime = 0U, remainingTimeMs = timeoutMs, elapsedTime = 0U;
     MQTTPacketInfo_t incomingPacket;
 
     if( pContext != NULL )
     {
-        getTimeStamp = pContext->callbacks.getTime;
-        entryTime = getTimeStamp();
+        getTimeStampMs = pContext->callbacks.getTime;
+        entryTime = getTimeStampMs();
         status = MQTTSuccess;
     }
     else
     {
         LogError( "MQTT Context cannot be NULL." );
     }
-    
+
     while( status == MQTTSuccess )
     {
         status = MQTT_GetIncomingPacketTypeAndLength( pContext->transportInterface.recv,
@@ -1358,6 +1379,7 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * const pContext,
             /* Assign status so an error can be bubbled up to application,
              * but reset it on success. */
             status = handleKeepAlive( pContext );
+
             if( status == MQTTSuccess )
             {
                 /* Reset the status to indicate that we should not try to read
@@ -1380,6 +1402,7 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * const pContext,
         if( status == MQTTSuccess )
         {
             incomingPacket.pRemainingData = pContext->networkBuffer.pBuffer;
+
             /* PUBLISH packets allow flags in the lower four bits. For other
              * packet types, they are reserved. */
             if( ( incomingPacket.type & 0xF0U ) == MQTT_PACKET_TYPE_PUBLISH )
@@ -1405,8 +1428,9 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * const pContext,
         }
 
         /* Recalculate remaining time and check if loop should exit. */
-        elapsedTime = calculateElapsedTime( getTimeStamp(), entryTime );
+        elapsedTime = calculateElapsedTime( getTimeStampMs(), entryTime );
         remainingTimeMs = timeoutMs - elapsedTime;
+
         if( elapsedTime > timeoutMs )
         {
             break;
