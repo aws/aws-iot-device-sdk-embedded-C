@@ -242,7 +242,7 @@ static HTTPStatus_t _sendHttpRequest( HTTPNetworkContext_t * pContext,
     HTTPTransportInterface_t transport = { 0 };
     HTTPResponse_t response = { 0 };
 
-    IotLog( "Sending HTTP %s request to %s%s\r\n",
+    SdkLog( "Sending HTTP %s request to %s%s\r\n",
             pMethod, SERVER, pPath );
 
     /* Initialize the request object. */
@@ -279,10 +279,10 @@ static HTTPStatus_t _sendHttpRequest( HTTPNetworkContext_t * pContext,
     if( returnStatus == HTTP_SUCCESS )
     {
         /* Print the response. */
-        IotLog( "Response Headers\n%.*s\n",
+        SdkLog( "Response Headers\n%.*s\n",
                 response.headersLen,
                 response.pHeaders );
-        IotLog( "Response Body\n%.*s",
+        SdkLog( "Response Body\n%.*s",
                 response.bodyLen,
                 response.pBody );
     }

@@ -23,21 +23,21 @@
 #define CONFIG_H
 
 /* Include file for POSIX reference implementation. */
-#include "iot_logging_levels.h"
-#include "iot_logging.h"
+#include "logging_levels.h"
+#include "logging.h"
 
-#define LOG_NAME         ( "HTTP_DEMO" )
-#define IOT_LOG_LEVEL    ( IOT_LOG_DEBUG )
+#define LOG_NAME          ( "HTTP_DEMO" )
+#define LOG_LEVEL_HTTP    ( LOG_DEBUG )
 
 /* Define the IotLog logging interface to enabling logging.
  * This demo maps the macro to the reference POSIX implementation for logging.
  * Note: @ref LOG_NAME produces metadata for each log message. */
-#define IotLog( pFormat, ... )              \
-    IotLog_Generic( IOT_LOG_INFO,           \
-                    "[%s:%d] [%s] "pFormat, \
-                    __FILE__,               \
-                    __LINE__,               \
-                    LOG_NAME,               \
-                    __VA_ARGS__ )
+#define SdkLog( pFormat, ... )           \
+    Log_Generic( LOG_INFO,               \
+                 "[%s:%d] [%s] "pFormat, \
+                 __FILE__,               \
+                 __LINE__,               \
+                 LOG_NAME,               \
+                 __VA_ARGS__ )
 
 #endif /* ifndef CONFIG_H */
