@@ -24,4 +24,5 @@ target_include_directories(cmock PUBLIC
         ${ROOT_DIR}/libraries/3rdparty/CMock/vendor/unity/src/
         ${ROOT_DIR}/libraries/3rdparty/CMock/examples
         )
+
 target_link_libraries(cmock unity)

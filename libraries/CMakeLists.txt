@@ -39,6 +39,11 @@ if( ${BUILD_TESTS} )
     # Include the 3rd party CMakeLists.txt for CMock build configuration.
     add_subdirectory(${3RDPARTY_DIR})
 
+    add_custom_target(coverage
+        COMMAND ${CMAKE_COMMAND} -P ${CMAKE_SOURCE_DIR}/tools/cmock/coverage.cmake
+        DEPENDS cmock unity mqtt_utest http_utest
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    )
 endif()
             
 # Add all CMakeLists.txts in the standard folder.
