@@ -32,7 +32,7 @@ list(APPEND real_include_directories
             .
             ${HTTP_INCLUDE_PUBLIC_DIRS}
             ${HTTP_INCLUDE_PRIVATE_DIRS}
-            "${ROOT_DIR}/platform/include"
+            ${LOGGING_INCLUDE_DIRS}
         )
 
 # =====================  Create UnitTest Code here (edit)  =====================
