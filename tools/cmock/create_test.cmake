@@ -138,7 +138,7 @@ function(create_mock_list mock_name
     target_compile_definitions(${mock_name} PUBLIC
             ${mock_define_list}
         )
-    target_link_libraries(${mock_name} libcmock.a libunity.a)
+    target_link_libraries(${mock_name} cmock unity)
 endfunction()
 
 

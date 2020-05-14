@@ -70,7 +70,7 @@ create_real_library(${real_name}
 
 list(APPEND utest_link_list
             lib${real_name}.a
-            lib${mock_name}.so
+            -l${mock_name}
         )
 
 list(APPEND utest_dep_list
