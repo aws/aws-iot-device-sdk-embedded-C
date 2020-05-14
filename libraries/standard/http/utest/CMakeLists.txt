@@ -22,14 +22,10 @@ list(APPEND mock_define_list
 
 # ================= Create the library under test here (edit) ==================
 
-set(logging_sources 
-    ${ROOT_DIR}/platform/posix/logging.c
-    ${ROOT_DIR}/platform/posix/clock_posix.c )
-
 # list the files you would like to test here
 list(APPEND real_source_files
             ${HTTP_SOURCES}
-            ${logging_sources}
+            ${LOGGING_SOURCES}
         )
 # list the directories the module under test includes
 list(APPEND real_include_directories
