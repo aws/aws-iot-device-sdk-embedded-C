@@ -208,10 +208,9 @@ void test_Http_AddRangeHeader_Insufficient_Memory( void )
                                   testHeaders.bufferLen ) );
 }
 
-
-void test_Http_AddRangeHeader_Happy_Path( void )
+void test_Http_AddRangeHeader_RangeType_File_SubRange( void )
 {
-    /* Case 1: Headers buffer contains header data ending with "\r\n\r\n". */
+    /* Headers buffer contains header data ending with "\r\n\r\n". */
 
     /* Range specification of the form [rangeStart, rangeEnd]. */
     /* Test with 0 as the range values */
@@ -223,28 +222,6 @@ void test_Http_AddRangeHeader_Happy_Path( void )
     testRangeEnd = 0;
     addRangeToExpectedHeaders( &expectedHeaders,
                                "0-0" /*expected range*/,
-                               true );
-    retCode = HTTPClient_AddRangeHeader( &testHeaders,
-                                         testRangeStart,
-                                         testRangeEnd );
-    TEST_ASSERT_EQUAL( HTTP_SUCCESS, retCode );
-    /* Verify the the Range Request header data. */
-    TEST_ASSERT_EQUAL( testHeaders.headersLen, expectedHeaders.dataLen );
-    TEST_ASSERT( memcmp( testHeaders.pBuffer, expectedHeaders.buffer, expectedHeaders.dataLen )
-                 == 0 );
-    /* Verify that the bufferLen data was not tampered with. */
-    TEST_ASSERT_EQUAL( testHeaders.bufferLen, sizeof( testBuffer ) );
-
-    /* Test for [0, eof) range */
-    tearDown();
-    setupBuffersWithPreexistingHeader( &testHeaders, testBuffer,
-                                       sizeof( testBuffer ),
-                                       &expectedHeaders,
-                                       PREEXISTING_HEADER_DATA );
-    testRangeStart = 0;
-    testRangeEnd = HTTP_RANGE_REQUEST_END_OF_FILE;
-    addRangeToExpectedHeaders( &expectedHeaders,
-                               "0-" /*expected range*/,
                                true );
     retCode = HTTPClient_AddRangeHeader( &testHeaders,
                                          testRangeStart,
@@ -277,7 +254,34 @@ void test_Http_AddRangeHeader_Happy_Path( void )
                  == 0 );
     /* Verify that the bufferLen data was not tampered with. */
     TEST_ASSERT_EQUAL( testHeaders.bufferLen, sizeof( testBuffer ) );
+}
 
+void test_Http_AddRangeHeader_RangeType_Entire_File( void )
+{
+    /* Test for [0, eof) range */
+    setupBuffersWithPreexistingHeader( &testHeaders, testBuffer,
+                                       sizeof( testBuffer ),
+                                       &expectedHeaders,
+                                       PREEXISTING_HEADER_DATA );
+    testRangeStart = 0;
+    testRangeEnd = HTTP_RANGE_REQUEST_END_OF_FILE;
+    addRangeToExpectedHeaders( &expectedHeaders,
+                               "0-" /*expected range*/,
+                               true );
+    retCode = HTTPClient_AddRangeHeader( &testHeaders,
+                                         testRangeStart,
+                                         testRangeEnd );
+    TEST_ASSERT_EQUAL( HTTP_SUCCESS, retCode );
+    /* Verify the the Range Request header data. */
+    TEST_ASSERT_EQUAL( testHeaders.headersLen, expectedHeaders.dataLen );
+    TEST_ASSERT( memcmp( testHeaders.pBuffer, expectedHeaders.buffer, expectedHeaders.dataLen )
+                 == 0 );
+    /* Verify that the bufferLen data was not tampered with. */
+    TEST_ASSERT_EQUAL( testHeaders.bufferLen, sizeof( testBuffer ) );
+}
+
+void test_Http_AddRangeHeader_RangeType_All_Bytes_From_RangeStart( void )
+{
     /* Range specification of the form [rangeStart,)
      * i.e. for all bytes >= rangeStart. */
     tearDown();
@@ -300,9 +304,11 @@ void test_Http_AddRangeHeader_Happy_Path( void )
                  == 0 );
     /* Verify that the bufferLen data was not tampered with. */
     TEST_ASSERT_EQUAL( testHeaders.bufferLen, sizeof( testBuffer ) );
+}
 
+void test_Http_AddRangeHeader_RangeType_LastNBytes( void )
+{
     /* Range specification for the last N bytes. */
-    tearDown();
     setupBuffersWithPreexistingHeader( &testHeaders, testBuffer,
                                        sizeof( testBuffer ),
                                        &expectedHeaders,
@@ -322,9 +328,11 @@ void test_Http_AddRangeHeader_Happy_Path( void )
                  == 0 );
     /* Verify that the bufferLen data was not tampered with. */
     TEST_ASSERT_EQUAL( testHeaders.bufferLen, sizeof( testBuffer ) );
+}
 
+void test_Http_AddRangeHeader_With_Max_INT32_Range_Values( void )
+{
     /* Test with LARGE range values. */
-    tearDown();
     setupBuffersWithPreexistingHeader( &testHeaders, testBuffer,
                                        sizeof( testBuffer ),
                                        &expectedHeaders,
@@ -344,12 +352,14 @@ void test_Http_AddRangeHeader_Happy_Path( void )
                  == 0 );
     /* Verify that the bufferLen data was not tampered with. */
     TEST_ASSERT_EQUAL( testHeaders.bufferLen, sizeof( testBuffer ) );
+}
 
-    /* Case 2: Headers buffer does not contain data with trailing "\r\n\r\n". */
+void test_Http_AddRangeHeader_Without_Trailing_Terminator( void )
+{
+    /* Headers buffer does not contain data with trailing "\r\n\r\n". */
 
     /* Range specification of the form [rangeStart, rangeEnd]. */
     /* Test with 0 as the range values */
-    tearDown();
     setupBuffersWithPreexistingHeader( &testHeaders, testBuffer,
                                        sizeof( testBuffer ),
                                        &expectedHeaders,
