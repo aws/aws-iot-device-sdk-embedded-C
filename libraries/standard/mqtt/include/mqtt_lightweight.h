@@ -57,6 +57,11 @@
  */
 #define MQTT_PACKET_PINGREQ_SIZE        ( 2U )  /**< @brief A PINGREQ packet is always 2 bytes in size. */
 
+/**
+ * @brief The size of MQTT PUBACK, PUBREC, PUBREL, and PUBCOMP packets, per MQTT spec.
+ */
+#define MQTT_PUBLISH_ACK_PACKET_SIZE        ( 4UL )
+
 struct MQTTFixedBuffer;
 typedef struct MQTTFixedBuffer     MQTTFixedBuffer_t;
 
@@ -103,7 +108,8 @@ typedef enum MQTTStatus
     MQTTServerRefused,   /**< The server refused a CONNECT or SUBSCRIBE. */
     MQTTNoDataAvailable, /**< No data available from the transport interface. */
     MQTTIllegalState,    /**< An illegal state in the state record. */
-    MQTTStateCollision   /**< A collision with an existing state record entry. */
+    MQTTStateCollision,  /**< A collision with an existing state record entry. */
+    MQTTKeepAliveTimeout /**< Timeout while waiting for PINGRESP. */
 } MQTTStatus_t;
 
 /**
@@ -245,11 +251,6 @@ struct MQTTPacketInfo
      * @brief Type of incoming MQTT packet.
      */
     uint8_t type;
-
-    /**
-     * @brief Packet identifier of incoming MQTT packet.
-     */
-    uint16_t packetIdentifier;
 
     /**
      * @brief Remaining serialized data in the MQTT packet.
@@ -512,7 +513,9 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * const pIncomingPacket
  * where type, remaining length and packet identifier are stored.
  *
  * @return #MQTTSuccess on successful extraction of type and length,
- * #MQTTBadResponse on failure and #MQTTNoDataAvailable if there is nothing to read.
+ * #MQTTRecvFailed on transport receive failure,
+ * #MQTTBadResponse if an invalid packet is read, and 
+ * #MQTTNoDataAvailable if there is nothing to read.
  */
 MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( MQTTTransportRecvFunc_t readFunc,
                                                   MQTTNetworkContext_t networkContext,
