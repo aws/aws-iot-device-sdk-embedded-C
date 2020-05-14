@@ -65,7 +65,7 @@
 /**
  * @brief Timeout for receiving CONNACK packet in milli seconds.
  */
-#define CONNACK_RECV_TIMEOUT    (1000)
+#define CONNACK_RECV_TIMEOUT_MS    (1000)
 
 /*-----------------------------------------------------------*/
 
@@ -247,7 +247,7 @@ static int establishMqttSession( MQTTContext_t * pContext, int tcpSocket )
     connectInfo.pPassword = NULL;
     connectInfo.passwordLength = 0;
 
-    mqttStatus = MQTT_Connect( pContext, &connectInfo, NULL, CONNACK_RECV_TIMEOUT, NULL );
+    mqttStatus = MQTT_Connect( pContext, &connectInfo, NULL, CONNACK_RECV_TIMEOUT_MS, NULL );
 
     if( mqttStatus != MQTTSuccess )
     {

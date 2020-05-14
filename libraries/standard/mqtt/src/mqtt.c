@@ -269,7 +269,7 @@ static MQTTStatus_t receiveConnack( MQTTContext_t * const pContext,
 {
     MQTTStatus_t status = MQTTSuccess;
     MQTTGetCurrentTimeFunc_t getTimeStamp = NULL;
-    uint32_t entryTime = 0U, remainingTimeMs = 0U, timeTaken = 0U;
+    uint32_t entryTimeMs = 0U, remainingTimeMs = 0U, timeTakenMs = 0U;
 
     assert( pContext != NULL );
     assert( incomingPacket != NULL );
@@ -277,29 +277,32 @@ static MQTTStatus_t receiveConnack( MQTTContext_t * const pContext,
 
     getTimeStamp = pContext->callbacks.getTime;
     /* Get the entry time for the function. */
-    entryTime = getTimeStamp();
+    entryTimeMs = getTimeStamp();
 
     do
     {
-        /* Transport read for incoming CONNACK packet type and length. */
+        /* Transport read for incoming CONNACK packet type and length.
+         * MQTT_GetIncomingPacketTypeAndLength is a blocking call and it is
+         * returned after a transport receive timeout, an error, or a successful
+         * receive of packet type and length. */
         status = MQTT_GetIncomingPacketTypeAndLength( pContext->transportInterface.recv,
                                                       pContext->transportInterface.networkContext,
                                                       incomingPacket );
 
         /* Loop until there is data to read or if the timeout has not expired. */
     } while( ( status == MQTTNoDataAvailable ) &&
-             ( calculateElapsedTime( getTimeStamp(), entryTime ) < timeoutMs ) );
+             ( calculateElapsedTime( getTimeStamp(), entryTimeMs ) < timeoutMs ) );
 
     if( status == MQTTSuccess )
     {
         /* Time taken in this function so far. */
-        timeTaken = calculateElapsedTime( getTimeStamp(), entryTime );
+        timeTakenMs = calculateElapsedTime( getTimeStamp(), entryTimeMs );
 
-        if( timeTaken < timeoutMs )
+        if( timeTakenMs < timeoutMs )
         {
             /* Calculate remaining time for receiving the remainder of
              * the packet. */
-            remainingTimeMs = timeoutMs - timeTaken;
+            remainingTimeMs = timeoutMs - timeTakenMs;
         }
 
         /* Reading the remainder of the packet by transport recv.
