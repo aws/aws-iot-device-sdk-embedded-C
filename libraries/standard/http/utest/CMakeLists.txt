@@ -25,7 +25,6 @@ list(APPEND mock_define_list
 # list the files you would like to test here
 list(APPEND real_source_files
             ${HTTP_SOURCES}
-            "${MODULES_DIR}/standard/http/third_party/http_parser/http_parser.c"
         )
 # list the directories the module under test includes
 list(APPEND real_include_directories
@@ -33,7 +32,6 @@ list(APPEND real_include_directories
             ${HTTP_INCLUDE_PUBLIC_DIRS}
             ${HTTP_TEST_INCLUDE_PRIVATE_DIRS}
             "${ROOT_DIR}/platform/include"
-            "${MODULES_DIR}/standard/http/third_party"
         )
 
 # =====================  Create UnitTest Code here (edit)  =====================
