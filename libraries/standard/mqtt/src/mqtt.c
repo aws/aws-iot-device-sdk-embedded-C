@@ -289,6 +289,7 @@ static MQTTPubAckType_t getAckFromPacketType( uint8_t packetType )
             break;
 
         default:
+
             /* This function is only called after checking the type is one of
              * the above four values. */
             assert( 0 );
@@ -805,7 +806,7 @@ static MQTTStatus_t sendPublish( MQTTContext_t * const pContext,
 
 static MQTTStatus_t receiveConnack( MQTTContext_t * const pContext,
                                     uint32_t timeoutMs,
-                                    MQTTPacketInfo_t * const incomingPacket,
+                                    MQTTPacketInfo_t * const pIncomingPacket,
                                     bool * const pSessionPresent )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -813,7 +814,7 @@ static MQTTStatus_t receiveConnack( MQTTContext_t * const pContext,
     uint32_t entryTimeMs = 0U, remainingTimeMs = 0U, timeTakenMs = 0U;
 
     assert( pContext != NULL );
-    assert( incomingPacket != NULL );
+    assert( pIncomingPacket != NULL );
     assert( pContext->callbacks.getTime != NULL );
 
     getTimeStamp = pContext->callbacks.getTime;
@@ -828,7 +829,7 @@ static MQTTStatus_t receiveConnack( MQTTContext_t * const pContext,
          * receive of packet type and length. */
         status = MQTT_GetIncomingPacketTypeAndLength( pContext->transportInterface.recv,
                                                       pContext->transportInterface.networkContext,
-                                                      incomingPacket );
+                                                      pIncomingPacket );
 
         /* Loop until there is data to read or if the timeout has not expired. */
     } while( ( status == MQTTNoDataAvailable ) &&
@@ -850,17 +851,17 @@ static MQTTStatus_t receiveConnack( MQTTContext_t * const pContext,
          * Attempt to read once even if the timeout has expired at this point.
          * Invoking receivePacket with remainingTime as 0 would attempt to
          * recv from network once.*/
-        if( incomingPacket->type == MQTT_PACKET_TYPE_CONNACK )
+        if( pIncomingPacket->type == MQTT_PACKET_TYPE_CONNACK )
         {
             status = receivePacket( pContext,
-                                    *incomingPacket,
+                                    *pIncomingPacket,
                                     remainingTimeMs );
         }
         else
         {
             LogErrorWithArgs( "Incorrect packet type %X received while expecting"
                               " CONNACK(%X).",
-                              incomingPacket->type,
+                              pIncomingPacket->type,
                               MQTT_PACKET_TYPE_CONNACK );
             status = MQTTBadResponse;
         }
@@ -869,10 +870,10 @@ static MQTTStatus_t receiveConnack( MQTTContext_t * const pContext,
     if( status == MQTTSuccess )
     {
         /* Update the packet info pointer to the buffer read. */
-        incomingPacket->pRemainingData = pContext->networkBuffer.pBuffer;
+        pIncomingPacket->pRemainingData = pContext->networkBuffer.pBuffer;
 
         /* Deserialize CONNACK. */
-        status = MQTT_DeserializeAck( &incomingPacket, NULL, pSessionPresent );
+        status = MQTT_DeserializeAck( pIncomingPacket, NULL, pSessionPresent );
     }
 
     if( status != MQTTSuccess )
