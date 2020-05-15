@@ -6,21 +6,23 @@
 #include "mqtt.h"
 
 /* ============================   UNITY FIXTURES ============================ */
+
+/* Called before each test method. */
 void setUp( void )
 {
 }
 
-/* called before each testcase */
+/* Called after each test method. */
 void tearDown( void )
 {
 }
 
-/* called at the beginning of the whole suite */
+/* Called at the beginning of the whole suite. */
 void suiteSetUp()
 {
 }
 
-/* called at the end of the whole suite */
+/* Called at the end of the whole suite. */
 int suiteTearDown( int numFailures )
 {
 }
