@@ -114,12 +114,12 @@ void test_Mqtt_SerializeConnect_invalid_params()
     /* Test NULL pConnectInfo. */
     mqttStatus = MQTT_SerializeConnect( NULL, NULL,
                                         remainingLength, &networkBuffer );
-    TEST_ASSERT_EQUAL( mqttStatus, MQTTBadParameter );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
     /* Test NULL pBuffer. */
     mqttStatus = MQTT_SerializeConnect( &connectInfo, NULL,
                                         remainingLength, NULL );
-    TEST_ASSERT_EQUAL( mqttStatus, MQTTBadParameter );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
     /* Test connectPacketSize > pBuffer->size. */
     /* Get MQTT connect packet size and remaining length. */
@@ -127,12 +127,12 @@ void test_Mqtt_SerializeConnect_invalid_params()
                                             NULL,
                                             &remainingLength,
                                             &packetSize );
-    TEST_ASSERT_EQUAL( mqttStatus, MQTTSuccess );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     networkBuffer.pBuffer = mqttBuffer;
     networkBuffer.size = remainingLength - 1;
     mqttStatus = MQTT_SerializeConnect( &connectInfo, NULL,
                                         remainingLength, &networkBuffer );
-    TEST_ASSERT_EQUAL( mqttStatus, MQTTNoMemory );
+    TEST_ASSERT_EQUAL( MQTTNoMemory, mqttStatus );
 }
 
 /**
@@ -157,10 +157,10 @@ void test_Mqtt_SerializeConnect_happy_path()
                                             &willInfo,
                                             &remainingLength,
                                             &packetSize );
-    TEST_ASSERT_EQUAL( mqttStatus, MQTTSuccess );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     mqttStatus = MQTT_SerializeConnect( &connectInfo, &willInfo,
                                         remainingLength, &networkBuffer );
-    TEST_ASSERT_EQUAL( mqttStatus, MQTTSuccess );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
     /* Repeat with QoS2. */
     willInfo.qos = MQTTQoS2;
@@ -168,10 +168,10 @@ void test_Mqtt_SerializeConnect_happy_path()
                                             &willInfo,
                                             &remainingLength,
                                             &packetSize );
-    TEST_ASSERT_EQUAL( mqttStatus, MQTTSuccess );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     mqttStatus = MQTT_SerializeConnect( &connectInfo, &willInfo,
                                         remainingLength, &networkBuffer );
-    TEST_ASSERT_EQUAL( mqttStatus, MQTTSuccess );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 }
 
 /* ========================================================================== */
