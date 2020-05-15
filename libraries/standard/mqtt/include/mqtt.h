@@ -129,8 +129,11 @@ struct MQTTContext
  * @brief param[in] pTransportInterface The transport interface to use with the context.
  * @brief param[in] pCallbacks Callbacks to use with the context.
  * @brief param[in] pNetworkBuffer Network buffer provided for the context.
+ *
+ * @return #MQTTBadParameter if invalid parameters are passed;
+ * #MQTTSuccess otherwise.
  */
-void MQTT_Init( MQTTContext_t * const pContext,
+MQTTStatus_t MQTT_Init( MQTTContext_t * const pContext,
                 const MQTTTransportInterface_t * const pTransportInterface,
                 const MQTTApplicationCallbacks_t * const pCallbacks,
                 const MQTTFixedBuffer_t * const pNetworkBuffer );
