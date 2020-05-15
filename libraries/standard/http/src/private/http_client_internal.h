@@ -1,34 +1,40 @@
 #ifndef HTTP_CLIENT_INTERNAL_H_
 #define HTTP_CLIENT_INTERNAL_H_
 
-#include "config.h"
+#include "http_config.h"
 
-/**
- * AWS IoT Embedded C SDK optional specific logging setup.
- */
-#ifdef USE_CSDK_LOGGING
-    #ifdef LOG_LEVEL_HTTP
-        #define LIBRARY_LOG_LEVEL        LOG_LEVEL_HTTP
-    #else
-        #ifdef LOG_LEVEL_GLOBAL
-            #define LIBRARY_LOG_LEVEL    LOG_LEVEL_GLOBAL
-        #else
-            #define LIBRARY_LOG_LEVEL    LOG_NONE
-        #endif
-    #endif
-    #define LIBRARY_LOG_NAME             ( "HTTP" )
-    #include "logging_setup.h"
-#else /* ifdef USE_CSDK_LOGGING */
-/* Otherwise please define logging macros in config.h. */
+#ifndef LogError
     #define LogError( message )
-    #define LogError( format, ... )
+#endif
+
+#ifndef LogErrorWithArgs
+    #define LogErrorWithArgs( formatAndStrings )
+#endif
+
+#ifndef LogWarn
     #define LogWarn( message )
-    #define LogWarn( format, ... )
+#endif
+
+#ifndef LogWarnWithArgs
+    #define LogWarnWithArgs( formatAndStrings )
+#endif
+
+#ifndef LogInfo
     #define LogInfo( message )
-    #define LogInfo( format, ... )
+#endif
+
+#ifndef LogInfoWithArgs
+    #define LogInfoWithArgs( formatAndStrings )
+#endif
+
+#ifndef LogDebug
     #define LogDebug( message )
-    #define LogDebug( format, ... )
-#endif /* ifdef USE_CSDK_LOGGING */
+#endif
+
+#ifndef LogDebugWithArgs
+    #define LogDebugWithArgs( formatAndStrings )
+#endif
+
 
 /**
  * @brief The HTTP protocol version of this library is HTTP/1.1.
