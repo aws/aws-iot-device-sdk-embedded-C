@@ -5,6 +5,11 @@
 /* Include paths for public enums, structures, and macros. */
 #include "mqtt.h"
 
+/**
+ * @brief A valid starting packet ID per MQTT spec. Start from 1.
+ */
+#define MQTT_NEXT_PACKET_ID_START    ( 1 )
+
 /* ============================   UNITY FIXTURES ============================ */
 
 /* Called before each test method. */
@@ -28,7 +33,7 @@ int suiteTearDown( int numFailures )
 }
 
 /* ============================   Testing MQTT_Init ========================= */
-void test_Mqtt_init_complete( void )
+void test_MQTT_Init_complete( void )
 {
     MQTTContext_t context;
     MQTTTransportInterface_t transport;
@@ -41,4 +46,5 @@ void test_Mqtt_init_complete( void )
     TEST_ASSERT_EQUAL_MEMORY( &transport, &context.transportInterface, sizeof( transport ) );
     TEST_ASSERT_EQUAL_MEMORY( &callbacks, &context.callbacks, sizeof( callbacks ) );
     TEST_ASSERT_EQUAL_MEMORY( &networkBuffer, &context.networkBuffer, sizeof( networkBuffer ) );
+    TEST_ASSERT_EQUAL( MQTT_NEXT_PACKET_ID_START, context.nextPacketId );
 }
