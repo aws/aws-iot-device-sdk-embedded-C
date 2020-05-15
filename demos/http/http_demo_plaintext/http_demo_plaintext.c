@@ -73,7 +73,7 @@
 /**
  * @brief The length in bytes of the user buffer.
  */
-#define USER_BUFFER_LENGTH          ( 512 )
+#define USER_BUFFER_LENGTH          ( 1024 )
 
 /**
  * @brief Some text to send as the request body for a PUT and POST request in
@@ -233,6 +233,7 @@ static int32_t transportRecv( HTTPNetworkContext_t * pContext,
  * @return #HTTP_SUCCESS if successful.
  */
 static HTTPStatus_t _sendHttpRequest( HTTPNetworkContext_t * pContext,
+                                      const char * pHost,
                                       const char * pMethod,
                                       const char * pPath )
 {
@@ -246,6 +247,8 @@ static HTTPStatus_t _sendHttpRequest( HTTPNetworkContext_t * pContext,
             pMethod, SERVER, pPath );
 
     /* Initialize the request object. */
+    requestInfo.pHost = pHost;
+    requestInfo.hostLen = sizeof( pHost ) - 1;
     requestInfo.method = pMethod;
     requestInfo.methodLen = sizeof( pMethod ) - 1;
     requestInfo.pPath = pPath;
@@ -317,6 +320,7 @@ int main()
         if( returnStatus == HTTP_SUCCESS )
         {
             returnStatus = _sendHttpRequest( &socketContext,
+                                             SERVER,
                                              HTTP_METHOD_GET,
                                              GET_PATH );
         }
@@ -326,6 +330,7 @@ int main()
         if( returnStatus == HTTP_SUCCESS )
         {
             returnStatus = _sendHttpRequest( &socketContext,
+                                             SERVER,
                                              HTTP_METHOD_HEAD,
                                              HEAD_PATH );
         }
@@ -335,6 +340,7 @@ int main()
         if( returnStatus == HTTP_SUCCESS )
         {
             returnStatus = _sendHttpRequest( &socketContext,
+                                             SERVER,
                                              HTTP_METHOD_PUT,
                                              PUT_PATH );
         }
@@ -344,6 +350,7 @@ int main()
         if( returnStatus == HTTP_SUCCESS )
         {
             returnStatus = _sendHttpRequest( &socketContext,
+                                             SERVER,
                                              HTTP_METHOD_POST,
                                              POST_PATH );
         }
