@@ -34,9 +34,9 @@ void test_Mqtt_init_complete( void )
     MQTTApplicationCallbacks_t callbacks;
 
     MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
-    TEST_ASSERT_EQUAL( context.connectStatus, MQTTNotConnected );
+    TEST_ASSERT_EQUAL( MQTTNotConnected, context.connectStatus );
     /* These Unity assertions take pointers and compare their contents. */
-    TEST_ASSERT_EQUAL_MEMORY( &context.transportInterface, &transport, sizeof( transport ) );
-    TEST_ASSERT_EQUAL_MEMORY( &context.callbacks, &callbacks, sizeof( callbacks ) );
-    TEST_ASSERT_EQUAL_MEMORY( &context.networkBuffer, &networkBuffer, sizeof( networkBuffer ) );
+    TEST_ASSERT_EQUAL_MEMORY( &transport, &context.transportInterface, sizeof( transport ) );
+    TEST_ASSERT_EQUAL_MEMORY( &callbacks, &context.callbacks, sizeof( callbacks ) );
+    TEST_ASSERT_EQUAL_MEMORY( &networkBuffer, &context.networkBuffer, sizeof( networkBuffer ) );
 }
