@@ -35,7 +35,6 @@
     #define LogDebugWithArgs( formatAndStrings )
 #endif
 
-
 /**
  * @brief The HTTP protocol version of this library is HTTP/1.1.
  */
