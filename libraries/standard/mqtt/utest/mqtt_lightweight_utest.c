@@ -7,50 +7,104 @@
 #include "mqtt_lightweight.h"
 
 /**
- * @brief Size of the fixed and variable header of a CONNECT packet.
+ * @brief Test-defined macro for MQTT username.
  */
-#define MQTT_PACKET_CONNECT_HEADER_SIZE    ( 10UL )
+#define MQTT_TEST_USERNAME         "username"
+#define MQTT_TEST_USERNAME_LEN     sizeof( MQTT_TEST_USERNAME ) - 1
 
 /**
- * @brief Test-defined macros for MQTT.
+ * @brief Test-defined macro for MQTT password.
  */
-#define MQTT_TEST_USERNAME                 "username"
-#define MQTT_TEST_USERNAME_LEN             sizeof( MQTT_TEST_USERNAME ) - 1
+#define MQTT_TEST_PASSWORD         "password"
+#define MQTT_TEST_PASSWORD_LEN     sizeof( MQTT_TEST_PASSWORD ) - 1
 
-#define MQTT_TEST_PASSWORD                 "password"
-#define MQTT_TEST_PASSWORD_LEN             sizeof( MQTT_TEST_PASSWORD ) - 1
+/**
+ * @brief Test-defined macro for MQTT topic.
+ */
+#define MQTT_TEST_TOPIC            "topic"
+#define MQTT_TEST_TOPIC_LEN        sizeof( MQTT_TEST_TOPIC ) - 1
 
-#define MQTT_TEST_TOPIC                    "topic"
-#define MQTT_TEST_TOPIC_LEN                sizeof( MQTT_TEST_TOPIC ) - 1
+/**
+ * @brief Length of the client identifier.
+ */
+#define CLIENT_IDENTIFIER_LEN      sizeof( CLIENT_IDENTIFIER ) - 1
 
-#define CLIENT_IDENTIFIER_LEN              sizeof( CLIENT_IDENTIFIER ) - 1
-
-#define MQTT_TEST_BUFFER_LENGTH            ( 1024 )
+#define MQTT_TEST_BUFFER_LENGTH    ( 1024 )
 
 static uint8_t mqttBuffer[ MQTT_TEST_BUFFER_LENGTH ] = { 0 };
 
 /* ============================   UNITY FIXTURES ============================ */
+
+/* Called before each test method. */
 void setUp( void )
 {
 }
 
-/* called before each testcase */
+/* Called after each test method. */
 void tearDown( void )
 {
 }
 
-/* called at the beginning of the whole suite */
+/* Called at the beginning of the whole suite. */
 void suiteSetUp()
 {
 }
 
-/* called at the end of the whole suite */
+/* Called at the end of the whole suite. */
 int suiteTearDown( int numFailures )
 {
 }
 
 /* =====================  Testing MQTT_SerializeConnect ===================== */
 
+/**
+ * @brief Initialize pNetworkBuffer using static buffer.
+ *
+ * @param[in] pNetworkBuffer Network buffer provided for the context.
+ */
+static void setupNetworkBuffer( MQTTFixedBuffer_t * const pNetworkBuffer )
+{
+    pNetworkBuffer->pBuffer = mqttBuffer;
+    pNetworkBuffer->size = MQTT_TEST_BUFFER_LENGTH;
+}
+
+/**
+ * @brief Initialize pConnectInfo using test-defined macros.
+ *
+ * @param[in] pConnectInfo MQTT CONNECT packet parameters.
+ */
+static void setupConnectInfo( MQTTConnectInfo_t * const pConnectInfo )
+{
+    pConnectInfo->cleanSession = true;
+    pConnectInfo->pClientIdentifier = CLIENT_IDENTIFIER;
+    pConnectInfo->clientIdentifierLength = CLIENT_IDENTIFIER_LEN;
+    pConnectInfo->keepAliveSeconds = 0;
+    pConnectInfo->pUserName = MQTT_TEST_USERNAME;
+    pConnectInfo->userNameLength = MQTT_TEST_USERNAME_LEN;
+    pConnectInfo->pPassword = MQTT_TEST_PASSWORD;
+    pConnectInfo->passwordLength = MQTT_TEST_PASSWORD_LEN;
+}
+
+/**
+ * @brief Initialize pWillInfo using test-defined macros.
+ *
+ * @param[in] pWillInfo Last Will and Testament.
+ */
+static void setupWillInfo( MQTTPublishInfo_t * const pWillInfo )
+{
+    pWillInfo->pPayload = NULL;
+    pWillInfo->payloadLength = 0;
+    pWillInfo->pTopicName = CLIENT_IDENTIFIER;
+    pWillInfo->topicNameLength = CLIENT_IDENTIFIER_LEN;
+    pWillInfo->dup = true;
+    pWillInfo->qos = MQTTQoS1;
+    pWillInfo->retain = true;
+}
+
+/**
+ * @brief Successfully call Mqtt_SerializeConnect using different parameters
+ * until we have full coverage on the private method, serializeConnectPacket(...).
+ */
 void test_Mqtt_SerializeConnect_invalid_params()
 {
     MQTTStatus_t mqttStatus = MQTTSuccess;
@@ -59,21 +113,33 @@ void test_Mqtt_SerializeConnect_invalid_params()
     MQTTConnectInfo_t connectInfo;
 
     /* Test NULL pConnectInfo. */
-    mqttStatus = MQTT_SerializeConnect( NULL, NULL, remainingLength, &networkBuffer );
+    mqttStatus = MQTT_SerializeConnect( NULL, NULL,
+                                        remainingLength, &networkBuffer );
     TEST_ASSERT_EQUAL( mqttStatus, MQTTBadParameter );
 
     /* Test NULL pBuffer. */
-    mqttStatus = MQTT_SerializeConnect( &connectInfo, NULL, remainingLength, NULL );
+    mqttStatus = MQTT_SerializeConnect( &connectInfo, NULL,
+                                        remainingLength, NULL );
     TEST_ASSERT_EQUAL( mqttStatus, MQTTBadParameter );
 
     /* Test connectPacketSize > pBuffer->size. */
+    /* Get MQTT connect packet size and remaining length. */
+    mqttStatus = MQTT_GetConnectPacketSize( &connectInfo,
+                                            NULL,
+                                            &remainingLength,
+                                            &packetSize );
+    TEST_ASSERT_EQUAL( mqttStatus, MQTTSuccess );
     networkBuffer.pBuffer = mqttBuffer;
-    networkBuffer.size = MQTT_PACKET_CONNECT_HEADER_SIZE - 1;
+    networkBuffer.size = remainingLength - 1;
     mqttStatus = MQTT_SerializeConnect( &connectInfo, NULL,
                                         remainingLength, &networkBuffer );
     TEST_ASSERT_EQUAL( mqttStatus, MQTTNoMemory );
 }
 
+/**
+ * @brief This method calls Mqtt_SerializeConnect successfully using different parameters
+ * until we have full coverage on the private method, serializeConnectPacket(...).
+ */
 void test_Mqtt_SerializeConnect_happy_path()
 {
     MQTTStatus_t mqttStatus = MQTTSuccess;
@@ -82,28 +148,10 @@ void test_Mqtt_SerializeConnect_happy_path()
     MQTTConnectInfo_t connectInfo;
     MQTTPublishInfo_t willInfo;
 
-    networkBuffer.pBuffer = mqttBuffer;
-    networkBuffer.size = MQTT_TEST_BUFFER_LENGTH;
-
-    connectInfo.cleanSession = true;
-    connectInfo.pClientIdentifier = CLIENT_IDENTIFIER;
-    connectInfo.clientIdentifierLength = CLIENT_IDENTIFIER_LEN;
-    connectInfo.keepAliveSeconds = 0;
-    connectInfo.pUserName = MQTT_TEST_USERNAME;
-    connectInfo.userNameLength = MQTT_TEST_USERNAME_LEN;
-    connectInfo.pPassword = MQTT_TEST_PASSWORD;
-    connectInfo.passwordLength = MQTT_TEST_PASSWORD_LEN;
-
-    willInfo.pPayload = NULL;
-    willInfo.payloadLength = 0;
-    willInfo.pTopicName = CLIENT_IDENTIFIER;
-    willInfo.topicNameLength = CLIENT_IDENTIFIER_LEN;
-    willInfo.dup = true;
-    willInfo.qos = MQTTQoS1;
-    willInfo.retain = true;
-
-    /* We successfully call Mqtt_SerializeConnect until we have full coverage
-     * on the private method, serializeConnectPacket(...). */
+    /* Fill structs to pass into methods to be tested. */
+    setupNetworkBuffer( &networkBuffer );
+    setupConnectInfo( &connectInfo );
+    setupWillInfo( &willInfo );
 
     /* Get MQTT connect packet size and remaining length. */
     mqttStatus = MQTT_GetConnectPacketSize( &connectInfo,
@@ -111,7 +159,8 @@ void test_Mqtt_SerializeConnect_happy_path()
                                             &remainingLength,
                                             &packetSize );
     TEST_ASSERT_EQUAL( mqttStatus, MQTTSuccess );
-    mqttStatus = MQTT_SerializeConnect( &connectInfo, &willInfo, remainingLength, &networkBuffer );
+    mqttStatus = MQTT_SerializeConnect( &connectInfo, &willInfo,
+                                        remainingLength, &networkBuffer );
     TEST_ASSERT_EQUAL( mqttStatus, MQTTSuccess );
 
     /* Repeat with QoS2. */
@@ -121,7 +170,8 @@ void test_Mqtt_SerializeConnect_happy_path()
                                             &remainingLength,
                                             &packetSize );
     TEST_ASSERT_EQUAL( mqttStatus, MQTTSuccess );
-    mqttStatus = MQTT_SerializeConnect( &connectInfo, &willInfo, remainingLength, &networkBuffer );
+    mqttStatus = MQTT_SerializeConnect( &connectInfo, &willInfo,
+                                        remainingLength, &networkBuffer );
     TEST_ASSERT_EQUAL( mqttStatus, MQTTSuccess );
 }
 

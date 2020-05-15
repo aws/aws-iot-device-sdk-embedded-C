@@ -48,6 +48,7 @@ list(APPEND test_include_directories
 
 # =============================  (end edit)  ===================================
 
+# define targets for testing mqtt.c
 set(mock_name "${project_name}_mock")
 set(real_name "${project_name}_real")
 
@@ -88,7 +89,22 @@ set(utest_source "${project_name}_state_utest.c")
 
 set(utest_link_list "")
 list(APPEND utest_link_list
-            -lunity
+            lib${real_name}.a
+        )
+
+create_test(${utest_name}
+            ${utest_source}
+            "${utest_link_list}"
+            "${utest_dep_list}"
+            "${test_include_directories}"
+        )
+
+# define targets for testing mqtt_lightweight.c
+set(utest_name "${project_name}_lightweight_utest")
+set(utest_source "${project_name}_lightweight_utest.c")
+
+set(utest_link_list "")
+list(APPEND utest_link_list
             lib${real_name}.a
         )
 
