@@ -106,6 +106,7 @@ static void setupBuffersWithPreexistingHeader( HTTPRequestHeaders_t * testReques
     testRequestHeaders->pBuffer = testBuffer;
     testRequestHeaders->bufferLen = bufferSize;
     /* We add 1 bytes as snprintf() writes a null byte at the end. */
+    TEST_ASSERT_GREATER_OR_EQUAL( dataLen + 1, bufferSize );
     int numBytes = snprintf( ( char * ) testRequestHeaders->pBuffer,
                              dataLen + 1,
                              "%s",
@@ -134,6 +135,8 @@ static void addRangeToExpectedHeaders( _headers_t * expectedHeaders,
                              RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN +
                              strlen( expectedRange ) +
                              2 * HTTP_HEADER_LINE_SEPARATOR_LEN;
+
+    TEST_ASSERT_GREATER_OR_EQUAL( rangeRequestLen + 1, sizeof( expectedHeaders->buffer ) );
     int numBytes =
         snprintf( ( char * ) expectedHeaders->buffer +
                   expectedHeaders->dataLen -
@@ -365,9 +368,11 @@ void test_Http_AddRangeHeader_Invalid_Params( void )
     /* Request Header Size is zero. */
     tearDown();
     testHeaders.pBuffer = &testBuffer[ 0 ];
+    /* The input buffer size is zero!. */
+    testHeaders.bufferLen = 0u;
     retCode = HTTPClient_AddRangeHeader( &testHeaders,
                                          0 /* rangeStart */,
-                                         0 /* rageEnd */ );
+                                         10 /* rageEnd */ );
     TEST_ASSERT_EQUAL( retCode, HTTP_INSUFFICIENT_MEMORY );
 
     /* Test incorrect combinations of rangeStart and rangeEnd. */
