@@ -19,13 +19,13 @@
 #else /* ifdef USE_AWS_IOT_CSDK_LOGGING */
 /* Otherwise please define logging macros in config.h. */
     #define LogError( message )
-    #define LogErrorWithArgs( format, ... )
+    #define LogError( format, ... )
     #define LogWarn( message )
-    #define LogWarnWithArgs( format, ... )
+    #define LogWarn( format, ... )
     #define LogInfo( message )
-    #define LogInfoWithArgs( format, ... )
+    #define LogInfo( format, ... )
     #define LogDebug( message )
-    #define LogDebugWithArgs( format, ... )
+    #define LogDebug( format, ... )
 #endif /* ifdef USE_AWS_IOT_CSDK_LOGGING */
 
 #endif /* ifndef MQTT_INTERNAL_H_ */
