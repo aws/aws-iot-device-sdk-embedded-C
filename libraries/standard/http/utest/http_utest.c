@@ -413,16 +413,22 @@ void test_Http_AddRangeHeader_Insufficient_Memory( void )
     size_t preHeadersLen = testHeaders.headersLen;
     testRangeStart = 5;
     testRangeEnd = 10;
+
+    /* Update the expected header with the complete the range request header
+     * to determine the total required size of the buffer. */
     addRangeToExpectedHeaders( &expectedHeaders,
                                "5-10" /*expected range*/,
                                true );
 
-    /* Update headers buffer size to be one byte short of required size to add
-     * Range Request header. */
+    /* Change the input headers buffer size to be one byte short of the required
+     * size to add Range Request header. */
     testHeaders.bufferLen = expectedHeaders.dataLen - 1;
 
-    /* Re-write the expected headers buffer to store a copy of the test headers
-     * to use for verification later. */
+    /* As the call to the API function is expected to fail, we need to store a
+     * local copy of the input headers buffer to verify that the data has not changed
+     * after the API call returns. Thus, overwrite the expected headers buffer with the
+     * copy of the complete input headers buffer to use for verification later. */
+    TEST_ASSERT_GREATER_OR_EQUAL( testHeaders.bufferLen, sizeof( expectedHeaders.buffer ) );
     memcpy( expectedHeaders.buffer, testHeaders.pBuffer, testHeaders.bufferLen );
 
     retCode = HTTPClient_AddRangeHeader( &testHeaders,
