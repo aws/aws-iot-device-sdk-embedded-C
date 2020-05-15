@@ -449,8 +449,8 @@ void test_Http_AddRangeHeader_Insufficient_Memory( void )
                                          testRangeEnd );
     TEST_ASSERT_EQUAL( HTTP_INSUFFICIENT_MEMORY, retCode );
     /* Verify the headers input parameter is unaltered. */
-    TEST_ASSERT_EQUAL( testHeaders.headersLen, preHeadersLen );
-    TEST_ASSERT_EQUAL( testHeaders.bufferLen, expectedHeaders.dataLen - 1 );
+    TEST_ASSERT_EQUAL( preHeadersLen, testHeaders.headersLen );
+    TEST_ASSERT_EQUAL( expectedHeaders.dataLen - 1, testHeaders.bufferLen );
     TEST_ASSERT_EQUAL_MEMORY( expectedHeaders.buffer,
                               testHeaders.pBuffer,
                               testHeaders.bufferLen );
@@ -479,12 +479,12 @@ void test_Http_AddRangeHeader_Without_Trailing_Terminator( void )
                                          testRangeEnd );
     TEST_ASSERT_EQUAL( HTTP_SUCCESS, retCode );
     /* Verify the the Range Request header data. */
-    TEST_ASSERT_EQUAL( testHeaders.headersLen, expectedHeaders.dataLen );
+    TEST_ASSERT_EQUAL( expectedHeaders.dataLen, testHeaders.headersLen );
     TEST_ASSERT_EQUAL_MEMORY( expectedHeaders.buffer,
                               testHeaders.pBuffer,
                               testHeaders.bufferLen );
     /* Verify that the bufferLen data was not tampered with. */
-    TEST_ASSERT_EQUAL( testHeaders.bufferLen, sizeof( testBuffer ) );
+    TEST_ASSERT_EQUAL( sizeof( testBuffer ), testHeaders.bufferLen );
 }
 
 /**
@@ -509,11 +509,12 @@ void test_Http_AddRangeHeader_RangeType_File_SubRange( void )
                                          testRangeEnd );
     TEST_ASSERT_EQUAL( HTTP_SUCCESS, retCode );
     /* Verify the the Range Request header data. */
-    TEST_ASSERT_EQUAL( testHeaders.headersLen, expectedHeaders.dataLen );
-    TEST_ASSERT( memcmp( testHeaders.pBuffer, expectedHeaders.buffer, expectedHeaders.dataLen )
-                 == 0 );
+    TEST_ASSERT_EQUAL( expectedHeaders.dataLen, testHeaders.headersLen );
+    TEST_ASSERT_EQUAL_MEMORY( expectedHeaders.buffer,
+                              testHeaders.pBuffer,
+                              testHeaders.bufferLen );
     /* Verify that the bufferLen data was not tampered with. */
-    TEST_ASSERT_EQUAL( testHeaders.bufferLen, sizeof( testBuffer ) );
+    TEST_ASSERT_EQUAL( sizeof( testBuffer ), testHeaders.bufferLen );
 
     tearDown();
     setupBuffersWithPreexistingHeader( &testHeaders, testBuffer,
@@ -530,12 +531,12 @@ void test_Http_AddRangeHeader_RangeType_File_SubRange( void )
                                          testRangeEnd );
     TEST_ASSERT_EQUAL( HTTP_SUCCESS, retCode );
     /* Verify the the Range Request header data. */
-    TEST_ASSERT_EQUAL( testHeaders.headersLen, expectedHeaders.dataLen );
+    TEST_ASSERT_EQUAL( expectedHeaders.dataLen, testHeaders.headersLen );
     TEST_ASSERT_EQUAL_MEMORY( expectedHeaders.buffer,
                               testHeaders.pBuffer,
                               testHeaders.bufferLen );
     /* Verify that the bufferLen data was not tampered with. */
-    TEST_ASSERT_EQUAL( testHeaders.bufferLen, sizeof( testBuffer ) );
+    TEST_ASSERT_EQUAL( sizeof( testBuffer ), testHeaders.bufferLen );
 }
 
 /**
@@ -557,12 +558,12 @@ void test_Http_AddRangeHeader_RangeType_Entire_File( void )
                                          testRangeEnd );
     TEST_ASSERT_EQUAL( HTTP_SUCCESS, retCode );
     /* Verify the the Range Request header data. */
-    TEST_ASSERT_EQUAL( testHeaders.headersLen, expectedHeaders.dataLen );
+    TEST_ASSERT_EQUAL( expectedHeaders.dataLen, testHeaders.headersLen );
     TEST_ASSERT_EQUAL_MEMORY( expectedHeaders.buffer,
                               testHeaders.pBuffer,
                               testHeaders.bufferLen );
     /* Verify that the bufferLen data was not tampered with. */
-    TEST_ASSERT_EQUAL( testHeaders.bufferLen, sizeof( testBuffer ) );
+    TEST_ASSERT_EQUAL( sizeof( testBuffer ), testHeaders.bufferLen );
 }
 
 /**
@@ -587,12 +588,12 @@ void test_Http_AddRangeHeader_RangeType_All_Bytes_From_RangeStart( void )
                                          testRangeEnd );
     TEST_ASSERT_EQUAL( HTTP_SUCCESS, retCode );
     /* Verify the the Range Request header data. */
-    TEST_ASSERT_EQUAL( testHeaders.headersLen, expectedHeaders.dataLen );
+    TEST_ASSERT_EQUAL( expectedHeaders.dataLen, testHeaders.headersLen );
     TEST_ASSERT_EQUAL_MEMORY( expectedHeaders.buffer,
                               testHeaders.pBuffer,
                               testHeaders.bufferLen );
     /* Verify that the bufferLen data was not tampered with. */
-    TEST_ASSERT_EQUAL( testHeaders.bufferLen, sizeof( testBuffer ) );
+    TEST_ASSERT_EQUAL( sizeof( testBuffer ), testHeaders.bufferLen );
 }
 
 /**
@@ -615,12 +616,12 @@ void test_Http_AddRangeHeader_RangeType_LastNBytes( void )
                                          testRangeEnd );
     TEST_ASSERT_EQUAL( HTTP_SUCCESS, retCode );
     /* Verify the the Range Request header data. */
-    TEST_ASSERT_EQUAL( testHeaders.headersLen, expectedHeaders.dataLen );
+    TEST_ASSERT_EQUAL( expectedHeaders.dataLen, testHeaders.headersLen );
     TEST_ASSERT_EQUAL_MEMORY( expectedHeaders.buffer,
                               testHeaders.pBuffer,
                               testHeaders.bufferLen );
     /* Verify that the bufferLen data was not tampered with. */
-    TEST_ASSERT_EQUAL( testHeaders.bufferLen, sizeof( testBuffer ) );
+    TEST_ASSERT_EQUAL( sizeof( testBuffer ), testHeaders.bufferLen );
 }
 
 /**
@@ -643,12 +644,12 @@ void test_Http_AddRangeHeader_With_Max_INT32_Range_Values( void )
                                          testRangeEnd );
     TEST_ASSERT_EQUAL( HTTP_SUCCESS, retCode );
     /* Verify the the Range Request header data. */
-    TEST_ASSERT_EQUAL( testHeaders.headersLen, expectedHeaders.dataLen );
+    TEST_ASSERT_EQUAL( expectedHeaders.dataLen, testHeaders.headersLen );
     TEST_ASSERT_EQUAL_MEMORY( expectedHeaders.buffer,
                               testHeaders.pBuffer,
                               testHeaders.bufferLen );
     /* Verify that the bufferLen data was not tampered with. */
-    TEST_ASSERT_EQUAL( testHeaders.bufferLen, sizeof( testBuffer ) );
+    TEST_ASSERT_EQUAL( sizeof( testBuffer ), testHeaders.bufferLen );
 }
 
 /* ============== Testing HTTPClient_ReadHeader ================== */
