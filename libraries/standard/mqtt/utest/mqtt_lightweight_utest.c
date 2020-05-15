@@ -3,7 +3,6 @@
 #include "unity.h"
 
 /* Include paths for public enums, structures, and macros. */
-#include "mqtt.h"
 #include "mqtt_lightweight.h"
 
 /**
