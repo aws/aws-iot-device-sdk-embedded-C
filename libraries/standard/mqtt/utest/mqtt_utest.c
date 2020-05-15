@@ -2,8 +2,6 @@
 
 #include "unity.h"
 
-#include "mock_mqtt_lightweight.h"
-
 /* Include paths for public enums, structures, and macros. */
 #include "mqtt.h"
 
