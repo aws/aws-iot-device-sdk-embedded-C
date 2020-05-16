@@ -33,18 +33,42 @@ int suiteTearDown( int numFailures )
 }
 
 /* ============================   Testing MQTT_Init ========================= */
-void test_MQTT_Init_complete( void )
+void test_MQTT_Init_happy_path( void )
 {
+    MQTTStatus_t mqttStatus;
     MQTTContext_t context;
     MQTTTransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks;
 
-    MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus )
     TEST_ASSERT_EQUAL( MQTTNotConnected, context.connectStatus );
+    TEST_ASSERT_EQUAL( MQTT_NEXT_PACKET_ID_START, context.nextPacketId );
     /* These Unity assertions take pointers and compare their contents. */
     TEST_ASSERT_EQUAL_MEMORY( &transport, &context.transportInterface, sizeof( transport ) );
     TEST_ASSERT_EQUAL_MEMORY( &callbacks, &context.callbacks, sizeof( callbacks ) );
     TEST_ASSERT_EQUAL_MEMORY( &networkBuffer, &context.networkBuffer, sizeof( networkBuffer ) );
-    TEST_ASSERT_EQUAL( MQTT_NEXT_PACKET_ID_START, context.nextPacketId );
+}
+
+void test_MQTT_Init_invalid_params( void )
+{
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context;
+    MQTTTransportInterface_t transport;
+    MQTTFixedBuffer_t networkBuffer;
+    MQTTApplicationCallbacks_t callbacks;
+
+    /* Check that MQTTBadParameter is returned if any NULL parameters are passed. */
+    mqttStatus = MQTT_Init( NULL, &transport, &callbacks, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
+
+    mqttStatus = MQTT_Init( &context, NULL, &callbacks, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
+
+    mqttStatus = MQTT_Init( &context, &transport, NULL, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
+
+    mqttStatus = MQTT_Init( &context, &transport, &callbacks, NULL );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 }
