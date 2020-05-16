@@ -19,8 +19,18 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef CONFIG_H
-#define CONFIG_H
+#ifndef MQTT_CONFIG_H
+#define MQTT_CONFIG_H
+
+/* Log Level Configuration Include. */
+#include "logging_levels.h"
+
+/* Configure name and logging level for MQTT. */
+#define LIBRARY_LOG_NAME     "MQTT"
+#define LIBRARY_LOG_LEVEL    LOG_NONE
+
+/**** NOTE: Include logging stack ONLY after the library name and log level configuration. ******/
+#include "logging_stack.h"
 
 /* Set network context to socket (int). */
 typedef int MQTTNetworkContext_t;
@@ -37,11 +47,4 @@ typedef int MQTTNetworkContext_t;
  */
 #define MQTT_STATE_ARRAY_MAX_COUNT    10U
 
-/**
- * @brief MQTT client identifier.
- *
- * No two clients may use the same client identifier simultaneously.
- */
-#define CLIENT_IDENTIFIER           "testclient"
-
-#endif /* ifndef CONFIG_H */
+#endif /* ifndef MQTT_CONFIG_H */
