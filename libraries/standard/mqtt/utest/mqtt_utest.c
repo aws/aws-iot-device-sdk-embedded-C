@@ -42,7 +42,7 @@ void test_MQTT_Init_happy_path( void )
     MQTTApplicationCallbacks_t callbacks;
 
     mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
-    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus )
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     TEST_ASSERT_EQUAL( MQTTNotConnected, context.connectStatus );
     TEST_ASSERT_EQUAL( MQTT_NEXT_PACKET_ID_START, context.nextPacketId );
     /* These Unity assertions take pointers and compare their contents. */
