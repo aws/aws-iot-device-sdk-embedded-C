@@ -9,7 +9,8 @@ add_library( mqtt
 target_include_directories( mqtt PUBLIC ${MQTT_INCLUDE_PUBLIC_DIRS} )
 
 # MQTT private include path.
-target_include_directories( mqtt PRIVATE ${MQTT_INCLUDE_PRIVATE_DIRS} )
+target_include_directories( mqtt PRIVATE ${MQTT_INCLUDE_PRIVATE_DIRS} 
+                                         ${ROOT_DIR}/platform/include )
 
 # Organization of MQTT in IDE projects.
 set_target_properties( mqtt PROPERTIES FOLDER libraries/standard )

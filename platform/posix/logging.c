@@ -181,9 +181,9 @@ void Log_Generic( int32_t messageLevel,
     bufferPosition++;
 
     /* Generate the timestring and add it to the buffer. */
-    if( IotClock_GetTimestring( pLoggingBuffer + bufferPosition,
-                                bufferSize - bufferPosition,
-                                &timestringLength ) == true )
+    if( Clock_GetTimestring( pLoggingBuffer + bufferPosition,
+                             bufferSize - bufferPosition,
+                             &timestringLength ) == true )
     {
         /* If the timestring was successfully generated, add the closing "]". */
         bufferPosition += timestringLength;

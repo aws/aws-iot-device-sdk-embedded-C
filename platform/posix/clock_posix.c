@@ -66,9 +66,9 @@
 
 /*-----------------------------------------------------------*/
 
-bool IotClock_GetTimestring( char * pBuffer,
-                             size_t bufferSize,
-                             size_t * pTimestringLength )
+bool Clock_GetTimestring( char * pBuffer,
+                          size_t bufferSize,
+                          size_t * pTimestringLength )
 {
     bool status = true;
     const time_t unixTime = time( NULL );
