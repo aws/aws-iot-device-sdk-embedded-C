@@ -34,7 +34,11 @@ int suiteTearDown( int numFailures )
 }
 
 /* ============================   Testing MQTT_Init ========================= */
-void test_MQTT_Init_happy_path( void )
+
+/**
+ * @brief Test that MQTT_Init is able to update the context object correctly.
+ */
+void test_MQTT_Init_Happy_path( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
@@ -52,7 +56,10 @@ void test_MQTT_Init_happy_path( void )
     TEST_ASSERT_EQUAL_MEMORY( &networkBuffer, &context.networkBuffer, sizeof( networkBuffer ) );
 }
 
-void test_MQTT_Init_invalid_params( void )
+/**
+ * @brief Test that any NULL parameter causes MQTT_Init to return MQTTBadParameter.
+ */
+void test_MQTT_Init_Invalid_params( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
