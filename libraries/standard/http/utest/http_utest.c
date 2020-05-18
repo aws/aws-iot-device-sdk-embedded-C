@@ -349,11 +349,10 @@ static void setupRequestInfo( HTTPRequestInfo_t * pRequestInfo )
  * @param[in] pRequestHeaders Request header buffer information.
  * @param[in] bufferLen Size of the buffer.
  */
-static void setupBuffer( HTTPRequestHeaders_t * pRequestHeaders,
-                         size_t bufferLen )
+static void setupBuffer( HTTPRequestHeaders_t * pRequestHeaders )
 {
     pRequestHeaders->pBuffer = testBuffer;
-    pRequestHeaders->bufferLen = bufferLen;
+    pRequestHeaders->bufferLen = sizeof( testBuffer );
 }
 
 /**
@@ -369,7 +368,7 @@ void test_Http_InitializeRequestHeaders_Happy_path()
     setupRequestInfo( &requestInfo );
     expectedHeaders.dataLen = HTTP_TEST_PREFIX_HEADER_LEN +
                               HTTP_CONNECTION_CLOSE_VALUE_LEN;
-    setupBuffer( &requestHeaders, expectedHeaders.dataLen );
+    setupBuffer( &requestHeaders );
 
     /* Happy Path testing. */
     numBytes = snprintf( ( char * ) expectedHeaders.buffer, sizeof( expectedHeaders.buffer ),
@@ -379,7 +378,11 @@ void test_Http_InitializeRequestHeaders_Happy_path()
                          HTTP_USER_AGENT_FIELD, HTTP_USER_AGENT_VALUE,
                          HTTP_HOST_FIELD, HTTP_TEST_HOST_VALUE,
                          HTTP_CONNECTION_FIELD, HTTP_CONNECTION_CLOSE_VALUE );
+    /* Make sure that the entire pre-existing data was printed to the buffer. */
     TEST_ASSERT_EQUAL( expectedHeaders.dataLen, numBytes );
+    TEST_ASSERT_GREATER_THAN( 0, numBytes );
+    TEST_ASSERT_LESS_THAN( sizeof( expectedHeaders.buffer ), ( size_t ) numBytes );
+
     httpStatus = HTTPClient_InitializeRequestHeaders( &requestHeaders, &requestInfo );
     TEST_ASSERT_EQUAL( HTTP_SUCCESS, httpStatus );
     TEST_ASSERT_EQUAL( expectedHeaders.dataLen, requestHeaders.headersLen );
@@ -404,6 +407,7 @@ void test_Http_InitializeRequestHeaders_Invalid_params()
     TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, httpStatus );
     requestHeaders.pBuffer = testBuffer;
     requestHeaders.bufferLen = HTTP_TEST_INITIALIZED_HEADER_BUFFER_LEN;
+    /* Test requestInfo == NULL. */
     httpStatus = HTTPClient_InitializeRequestHeaders( &requestHeaders, NULL );
     TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, httpStatus );
     /* Test requestInfo members are NULL */
@@ -422,7 +426,6 @@ void test_Http_InitializeRequestHeaders_Invalid_params()
     requestInfo.methodLen = HTTP_METHOD_GET_LEN;
     httpStatus = HTTPClient_InitializeRequestHeaders( &requestHeaders, &requestInfo );
     TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, httpStatus );
-    requestInfo.hostLen = HTTP_TEST_HOST_VALUE_LEN;
 }
 
 /**
@@ -442,7 +445,7 @@ void test_Http_InitializeRequestHeaders_Req_info()
                               HTTP_TEST_REQUEST_PATH_LEN +
                               HTTP_EMPTY_PATH_LEN +
                               HTTP_CONNECTION_KEEP_ALIVE_VALUE_LEN;
-    setupBuffer( &requestHeaders, expectedHeaders.dataLen );
+    setupBuffer( &requestHeaders );
 
     requestInfo.pPath = 0;
     requestInfo.flags = HTTP_REQUEST_KEEP_ALIVE_FLAG;
@@ -454,6 +457,9 @@ void test_Http_InitializeRequestHeaders_Req_info()
                          HTTP_HOST_FIELD, HTTP_TEST_HOST_VALUE,
                          HTTP_CONNECTION_FIELD, HTTP_CONNECTION_KEEP_ALIVE_VALUE );
     TEST_ASSERT_EQUAL( expectedHeaders.dataLen, numBytes );
+    /* Make sure that the entire pre-existing data was printed to the buffer. */
+    TEST_ASSERT_GREATER_THAN( 0, numBytes );
+    TEST_ASSERT_LESS_THAN( sizeof( expectedHeaders.buffer ), ( size_t ) numBytes );
 
     requestHeaders.pBuffer = testBuffer;
     requestHeaders.bufferLen = expectedHeaders.dataLen;
@@ -477,7 +483,7 @@ void test_Http_InitializeRequestHeaders_insufficient_memory()
     expectedHeaders.dataLen = HTTP_TEST_MAX_INITIALIZED_HEADER_LEN;
 
     setupRequestInfo( &requestInfo );
-    setupBuffer( &requestHeaders, expectedHeaders.dataLen );
+    setupBuffer( &requestHeaders );
 
     requestHeaders.bufferLen = HTTP_TEST_REQUEST_LINE_LEN - 1;
 
