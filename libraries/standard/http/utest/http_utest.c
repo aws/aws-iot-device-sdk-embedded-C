@@ -381,10 +381,10 @@ void test_Http_InitializeRequestHeaders_Happy_path()
                          HTTP_CONNECTION_FIELD, HTTP_CONNECTION_CLOSE_VALUE );
     TEST_ASSERT_EQUAL( expectedHeaders.dataLen, numBytes );
     httpStatus = HTTPClient_InitializeRequestHeaders( &requestHeaders, &requestInfo );
-    TEST_ASSERT_EQUAL_MEMORY( requestHeaders.pBuffer, expectedHeaders.buffer,
-                              expectedHeaders.dataLen );
-    TEST_ASSERT_EQUAL( expectedHeaders.dataLen, requestHeaders.headersLen );
     TEST_ASSERT_EQUAL( HTTP_SUCCESS, httpStatus );
+    TEST_ASSERT_EQUAL( expectedHeaders.dataLen, requestHeaders.headersLen );
+    TEST_ASSERT_EQUAL_MEMORY( expectedHeaders.buffer, requestHeaders.pBuffer,
+                              expectedHeaders.dataLen );
 }
 
 /**
@@ -458,10 +458,10 @@ void test_Http_InitializeRequestHeaders_Req_info()
     requestHeaders.pBuffer = testBuffer;
     requestHeaders.bufferLen = expectedHeaders.dataLen;
     httpStatus = HTTPClient_InitializeRequestHeaders( &requestHeaders, &requestInfo );
-    TEST_ASSERT_EQUAL_MEMORY( requestHeaders.pBuffer, expectedHeaders.buffer,
-                              expectedHeaders.dataLen );
-    TEST_ASSERT_EQUAL( expectedHeaders.dataLen, requestHeaders.headersLen );
     TEST_ASSERT_EQUAL( HTTP_SUCCESS, httpStatus );
+    TEST_ASSERT_EQUAL( expectedHeaders.dataLen, requestHeaders.headersLen );
+    TEST_ASSERT_EQUAL_MEMORY( expectedHeaders.buffer, requestHeaders.pBuffer,
+                              expectedHeaders.dataLen );
 }
 
 /**
