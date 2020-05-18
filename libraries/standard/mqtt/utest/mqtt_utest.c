@@ -30,6 +30,8 @@ void suiteSetUp()
 /* Called at the end of the whole suite. */
 int suiteTearDown( int numFailures )
 {
+    /* Disable unused variable warning. */
+    return numFailures;
 }
 
 /* ============================   Testing MQTT_Init ========================= */
