@@ -10,8 +10,11 @@
 #include "private/http_client_internal.h"
 #include "private/http_client_parse.h"
 
+    << << << < HEAD
 #include "mock_http_parser.h"
 
+== == == =
+    >> >> >> > origin / development
 /* Default size for request buffer. */
 #define HTTP_TEST_BUFFER_SIZE           ( 100 )
 
@@ -26,7 +29,7 @@
 #define PREEXISTING_REQUEST_LINE_LEN    ( sizeof( PREEXISTING_REQUEST_LINE ) - 1 )
 
 /* Type to store expected headers data. */
-typedef struct _headers
+    typedef struct _headers
 {
     uint8_t buffer[ HTTP_TEST_BUFFER_SIZE ];
     size_t dataLen;
@@ -251,6 +254,71 @@ static void addRangeToExpectedHeaders( _headers_t * expectedHeaders,
                                 ( terminatorExists ? HTTP_HEADER_LINE_SEPARATOR_LEN : 0 );
 }
 
+/* ============================ Helper Functions ============================== */
+
+/**
+ * @brief Fills the test input buffer and expectation buffers with pre-existing data
+ * before calling the API function under test.
+ */
+static void setupBuffersWithPreexistingHeader( HTTPRequestHeaders_t * testRequestHeaders,
+                                               uint8_t * testBuffer,
+                                               size_t bufferSize,
+                                               _headers_t * expectedHeaders,
+                                               const char * preexistingData )
+{
+    size_t dataLen = strlen( preexistingData );
+
+    testRequestHeaders->pBuffer = testBuffer;
+    testRequestHeaders->bufferLen = bufferSize;
+    int numBytes = snprintf( ( char * ) testRequestHeaders->pBuffer,
+                             bufferSize,
+                             "%s",
+                             preexistingData );
+    /* Make sure that the entire pre-existing data was printed to the buffer. */
+    TEST_ASSERT_GREATER_THAN( 0, numBytes );
+    TEST_ASSERT_LESS_THAN( bufferSize, ( size_t ) numBytes );
+    testRequestHeaders->headersLen = dataLen;
+
+    /* Fill the same data in the expected buffer as HTTPClient_AddRangeHeaders()
+     * is not expected to change it. */
+    memcpy( expectedHeaders->buffer, testRequestHeaders->pBuffer,
+            testRequestHeaders->headersLen );
+    expectedHeaders->dataLen = testRequestHeaders->headersLen;
+}
+
+/**
+ * @brief Common utility for adding the expected range string for a AddRangeRequest test case
+ * in the expectation buffer.
+ */
+static void addRangeToExpectedHeaders( _headers_t * expectedHeaders,
+                                       const char * expectedRange,
+                                       bool terminatorExists )
+{
+    size_t expectedRangeLen = RANGE_REQUEST_HEADER_FIELD_LEN +
+                              HTTP_HEADER_FIELD_SEPARATOR_LEN +
+                              RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN +
+                              strlen( expectedRange ) +
+                              2 * HTTP_HEADER_LINE_SEPARATOR_LEN;
+
+    int numBytes =
+        snprintf( ( char * ) expectedHeaders->buffer +
+                  expectedHeaders->dataLen -
+                  ( terminatorExists ? HTTP_HEADER_LINE_SEPARATOR_LEN : 0 ),
+                  sizeof( expectedHeaders->buffer ),
+                  "%s%s%s%s\r\n\r\n",
+                  RANGE_REQUEST_HEADER_FIELD,
+                  HTTP_HEADER_FIELD_SEPARATOR,
+                  RANGE_REQUEST_HEADER_VALUE_PREFIX,
+                  expectedRange );
+
+    /* Make sure that the Range request was printed to the buffer. */
+    TEST_ASSERT_GREATER_THAN( 0, numBytes );
+    TEST_ASSERT_LESS_THAN( sizeof( expectedHeaders->buffer ), ( size_t ) numBytes );
+
+    expectedHeaders->dataLen += expectedRangeLen -
+                                ( terminatorExists ? HTTP_HEADER_LINE_SEPARATOR_LEN : 0 );
+}
+
 /* ============================ UNITY FIXTURES ============================== */
 void setUp( void )
 {
@@ -273,7 +341,9 @@ void tearDown( void )
     memset( &testHeaders, 0, sizeof( testHeaders ) );
     memset( testBuffer, 0, sizeof( testBuffer ) );
     memset( &expectedHeaders, 0, sizeof( expectedHeaders ) );
-    memset( &testResponse, 0, sizeof( testResponse ) );
+        << << << < HEAD memset( &testResponse,
+                                0,
+                                sizeof( testResponse ) );
     pValueLoc = NULL;
     valueLen = 0u;
     pValueLoc = NULL;
@@ -288,6 +358,8 @@ void tearDown( void )
     expectedValCbRetVal = 0;
     valueLenToReturn = 0u;
     invokeHeaderCompleteCallback = false;
+    == == == =
+        >> >> >> > origin / development
 }
 
 /* called at the beginning of the whole suite */
@@ -492,9 +564,11 @@ void test_Http_AddRangeHeader_Invalid_Params( void )
     /* Request Header Size is zero. */
     tearDown();
     testHeaders.pBuffer = &testBuffer[ 0 ];
+    /* The input buffer size is zero! */
+    testHeaders.bufferLen = 0u;
     retCode = HTTPClient_AddRangeHeader( &testHeaders,
                                          0 /* rangeStart */,
-                                         0 /* rageEnd */ );
+                                         10 /* rageEnd */ );
     TEST_ASSERT_EQUAL( retCode, HTTP_INSUFFICIENT_MEMORY );
 
     /* Test incorrect combinations of rangeStart and rangeEnd. */
@@ -535,16 +609,22 @@ void test_Http_AddRangeHeader_Insufficient_Memory( void )
     size_t preHeadersLen = testHeaders.headersLen;
     testRangeStart = 5;
     testRangeEnd = 10;
+
+    /* Update the expected header with the complete the range request header
+     * to determine the total required size of the buffer. */
     addRangeToExpectedHeaders( &expectedHeaders,
                                "5-10" /*expected range*/,
                                true );
 
-    /* Update headers buffer size to be one byte short of required size to add
-     * Range Request header. */
+    /* Change the input headers buffer size to be one byte short of the required
+     * size to add Range Request header. */
     testHeaders.bufferLen = expectedHeaders.dataLen - 1;
 
-    /* Re-write the expected headers buffer to store a copy of the test headers
-     * to use for verification later. */
+    /* As the call to the API function is expected to fail, we need to store a
+     * local copy of the input headers buffer to verify that the data has not changed
+     * after the API call returns. Thus, overwrite the expected headers buffer with the
+     * copy of the complete input headers buffer to use for verification later. */
+    TEST_ASSERT_GREATER_OR_EQUAL( testHeaders.bufferLen, sizeof( expectedHeaders.buffer ) );
     memcpy( expectedHeaders.buffer, testHeaders.pBuffer, testHeaders.bufferLen );
 
     retCode = HTTPClient_AddRangeHeader( &testHeaders,
