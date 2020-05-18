@@ -28,7 +28,6 @@ void suiteSetUp()
 /* Called at the end of the whole suite. */
 int suiteTearDown( int numFailures )
 {
-    return numFailures;
 }
 
 /* ============================   Testing MQTT_Init ========================= */
