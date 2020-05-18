@@ -360,7 +360,7 @@ static void setupBuffer( HTTPRequestHeaders_t * pRequestHeaders )
 /**
  * @brief Test happy path with zero-initialized requestHeaders and requestInfo.
  */
-void test_Http_InitializeRequestHeaders_Happy_path()
+void test_Http_InitializeRequestHeaders_Happy_Path()
 {
     HTTPStatus_t httpStatus = HTTP_INTERNAL_ERROR;
     HTTPRequestHeaders_t requestHeaders = { 0 };
@@ -394,7 +394,7 @@ void test_Http_InitializeRequestHeaders_Happy_path()
 /**
  * @brief Test NULL parameters, following order of else-if blocks in the HTTP library.
  */
-void test_Http_InitializeRequestHeaders_Invalid_params()
+void test_Http_InitializeRequestHeaders_Invalid_Params()
 {
     HTTPStatus_t httpStatus = HTTP_INTERNAL_ERROR;
     HTTPRequestHeaders_t requestHeaders = { 0 };
