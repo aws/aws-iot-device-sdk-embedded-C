@@ -105,12 +105,11 @@ static void setupBuffersWithPreexistingHeader( HTTPRequestHeaders_t * testReques
 
     testRequestHeaders->pBuffer = testBuffer;
     testRequestHeaders->bufferLen = bufferSize;
-    /* We add 1 bytes as snprintf() writes a null byte at the end. */
-    TEST_ASSERT_GREATER_OR_EQUAL( dataLen + 1, bufferSize );
     int numBytes = snprintf( ( char * ) testRequestHeaders->pBuffer,
-                             dataLen + 1,
+                             bufferSize,
                              "%s",
                              preexistingData );
+    /* Make sure that the entire pre-existing data was printed to the buffer. */
     TEST_ASSERT( numBytes == ( int ) dataLen );
     testRequestHeaders->headersLen = dataLen;
 
@@ -130,26 +129,26 @@ static void addRangeToExpectedHeaders( _headers_t * expectedHeaders,
                                        const char * expectedRange,
                                        bool terminatorExists )
 {
-    size_t rangeRequestLen = RANGE_REQUEST_HEADER_FIELD_LEN +
-                             HTTP_HEADER_FIELD_SEPARATOR_LEN +
-                             RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN +
-                             strlen( expectedRange ) +
-                             2 * HTTP_HEADER_LINE_SEPARATOR_LEN;
+    size_t expectedRangeLen = RANGE_REQUEST_HEADER_FIELD_LEN +
+                              HTTP_HEADER_FIELD_SEPARATOR_LEN +
+                              RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN +
+                              strlen( expectedRange ) +
+                              2 * HTTP_HEADER_LINE_SEPARATOR_LEN;
 
-    TEST_ASSERT_GREATER_OR_EQUAL( rangeRequestLen + 1, sizeof( expectedHeaders->buffer ) );
     int numBytes =
         snprintf( ( char * ) expectedHeaders->buffer +
                   expectedHeaders->dataLen -
                   ( terminatorExists ? HTTP_HEADER_LINE_SEPARATOR_LEN : 0 ),
-                  /* We add 1 bytes as snprintf() writes a null byte at the end. */
-                  rangeRequestLen + 1,
+                  sizeof( expectedHeaders->buffer ),
                   "%s%s%s%s\r\n\r\n",
                   RANGE_REQUEST_HEADER_FIELD,
                   HTTP_HEADER_FIELD_SEPARATOR,
                   RANGE_REQUEST_HEADER_VALUE_PREFIX,
                   expectedRange );
 
-    TEST_ASSERT_EQUAL( ( size_t ) numBytes, rangeRequestLen );
+    /* Make sure that the Range request was printed to the buffer. */
+    TEST_ASSERT_EQUAL( ( size_t ) numBytes, expectedRangeLen );
+
     expectedHeaders->dataLen += rangeRequestLen -
                                 ( terminatorExists ? HTTP_HEADER_LINE_SEPARATOR_LEN : 0 );
 }
