@@ -149,7 +149,7 @@ static void addRangeToExpectedHeaders( _headers_t * expectedHeaders,
     /* Make sure that the Range request was printed to the buffer. */
     TEST_ASSERT_EQUAL( ( size_t ) numBytes, expectedRangeLen );
 
-    expectedHeaders->dataLen += rangeRequestLen -
+    expectedHeaders->dataLen += expectedRangeLen -
                                 ( terminatorExists ? HTTP_HEADER_LINE_SEPARATOR_LEN : 0 );
 }
 
