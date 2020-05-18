@@ -365,15 +365,14 @@ void test_Http_InitializeRequestHeaders_happy_path()
     HTTPRequestHeaders_t requestHeaders = { 0 };
     HTTPRequestInfo_t requestInfo = { 0 };
 
-    expectedHeaders.dataLen = HTTP_TEST_MAX_INITIALIZED_HEADER_LEN;
+    expectedHeaders.dataLen = HTTP_TEST_PREFIX_HEADER_LEN +
+                              HTTP_CONNECTION_CLOSE_VALUE_LEN;
     int numBytes = 0;
 
     setupRequestInfo( &requestInfo );
     setupBuffer( &requestHeaders, expectedHeaders.dataLen );
 
     /* Happy Path testing. */
-    expectedHeaders.dataLen = HTTP_TEST_PREFIX_HEADER_LEN +
-                              HTTP_CONNECTION_CLOSE_VALUE_LEN;
     numBytes = snprintf( ( char * ) expectedHeaders.buffer, expectedHeaders.dataLen + 1,
                          HTTP_TEST_HEADER_FORMAT,
                          HTTP_METHOD_GET, HTTP_TEST_REQUEST_PATH,
@@ -438,7 +437,10 @@ void test_Http_InitializeRequestHeaders_req_info()
     HTTPRequestHeaders_t requestHeaders = { 0 };
     HTTPRequestInfo_t requestInfo = { 0 };
 
-    expectedHeaders.dataLen = HTTP_TEST_MAX_INITIALIZED_HEADER_LEN;
+    expectedHeaders.dataLen = HTTP_TEST_PREFIX_HEADER_LEN -
+                              HTTP_TEST_REQUEST_PATH_LEN +
+                              HTTP_EMPTY_PATH_LEN +
+                              HTTP_CONNECTION_KEEP_ALIVE_VALUE_LEN;
     int numBytes = 0;
 
     setupRequestInfo( &requestInfo );
@@ -446,10 +448,6 @@ void test_Http_InitializeRequestHeaders_req_info()
 
     requestInfo.pPath = 0;
     requestInfo.flags = HTTP_REQUEST_KEEP_ALIVE_FLAG;
-    expectedHeaders.dataLen = HTTP_TEST_PREFIX_HEADER_LEN -
-                              HTTP_TEST_REQUEST_PATH_LEN +
-                              HTTP_EMPTY_PATH_LEN +
-                              HTTP_CONNECTION_KEEP_ALIVE_VALUE_LEN;
     numBytes = snprintf( ( char * ) expectedHeaders.buffer, expectedHeaders.dataLen + 1,
                          HTTP_TEST_HEADER_FORMAT,
                          HTTP_METHOD_GET, HTTP_EMPTY_PATH,
