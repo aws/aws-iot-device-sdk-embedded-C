@@ -291,9 +291,9 @@ void tearDown( void )
     memset( &testHeaders, 0, sizeof( testHeaders ) );
     memset( testBuffer, 0, sizeof( testBuffer ) );
     memset( &expectedHeaders, 0, sizeof( expectedHeaders ) );
-    memset( &testResponse,
-            0,
-            sizeof( testResponse ) );
+        << << << < HEAD memset( &testResponse,
+                                0,
+                                sizeof( testResponse ) );
     pValueLoc = NULL;
     valueLen = 0u;
     pValueLoc = NULL;
@@ -308,6 +308,22 @@ void tearDown( void )
     expectedValCbRetVal = 0;
     valueLenToReturn = 0u;
     invokeHeaderCompleteCallback = 0u;
+    == == == =
+}
+
+/* called at the beginning of the whole suite */
+void suiteSetUp()
+{
+}
+
+/* called at the end of the whole suite */
+int suiteTearDown( int numFailures )
+{
+    return numFailures;
+
+    >> >> >> > 413847c ... Use expectedHeaders struct
+
+    for expected headers data
 }
 
 /* ============== Testing HTTPClient_InitializeRequestHeaders =============== */
@@ -336,7 +352,7 @@ static void setupRequestInfo( HTTPRequestInfo_t * pRequestInfo )
 static void setupBuffer( HTTPRequestHeaders_t * pRequestHeaders,
                          size_t bufferLen )
 {
-    pRequestHeaders->pBuffer = httpBuffer;
+    pRequestHeaders->pBuffer = testBuffer;
     pRequestHeaders->bufferLen = bufferLen;
 }
 
@@ -345,31 +361,32 @@ static void setupBuffer( HTTPRequestHeaders_t * pRequestHeaders,
  */
 void test_Http_InitializeRequestHeaders_happy_path()
 {
-    HTTPStatus_t test_err = HTTP_INTERNAL_ERROR;
+    HTTPStatus_t test_error = HTTP_INTERNAL_ERROR;
     HTTPRequestHeaders_t requestHeaders = { 0 };
     HTTPRequestInfo_t requestInfo = { 0 };
-    size_t expectedHeaderLen = HTTP_TEST_MAX_INITIALIZED_HEADER_LEN;
-    char expectedHeader[ HTTP_TEST_INITIALIZED_HEADER_BUFFER_LEN ] = { 0 };
+
+    expectedHeaders.dataLen = HTTP_TEST_MAX_INITIALIZED_HEADER_LEN;
     int numBytes = 0;
 
     setupRequestInfo( &requestInfo );
-    setupBuffer( &requestHeaders, expectedHeaderLen );
+    setupBuffer( &requestHeaders, expectedHeaders.dataLen );
 
     /* Happy Path testing. */
-    expectedHeaderLen = HTTP_TEST_PREFIX_HEADER_LEN +
-                        HTTP_CONNECTION_CLOSE_VALUE_LEN;
-    numBytes = snprintf( expectedHeader, expectedHeaderLen + 1,
+    expectedHeaders.dataLen = HTTP_TEST_PREFIX_HEADER_LEN +
+                              HTTP_CONNECTION_CLOSE_VALUE_LEN;
+    numBytes = snprintf( ( char * ) expectedHeaders.buffer, expectedHeaders.dataLen + 1,
                          HTTP_TEST_HEADER_FORMAT,
                          HTTP_METHOD_GET, HTTP_TEST_REQUEST_PATH,
                          HTTP_PROTOCOL_VERSION,
                          HTTP_USER_AGENT_FIELD, HTTP_USER_AGENT_VALUE,
                          HTTP_HOST_FIELD, HTTP_TEST_HOST_VALUE,
                          HTTP_CONNECTION_FIELD, HTTP_CONNECTION_CLOSE_VALUE );
-    TEST_ASSERT_EQUAL( numBytes, expectedHeaderLen );
-    test_err = HTTPClient_InitializeRequestHeaders( &requestHeaders, &requestInfo );
-    TEST_ASSERT_EQUAL_MEMORY( requestHeaders.pBuffer, expectedHeader, expectedHeaderLen );
-    TEST_ASSERT_EQUAL( requestHeaders.headersLen, expectedHeaderLen );
-    TEST_ASSERT_EQUAL( test_err, HTTP_SUCCESS );
+    TEST_ASSERT_EQUAL( expectedHeaders.dataLen, numBytes );
+    test_error = HTTPClient_InitializeRequestHeaders( &requestHeaders, &requestInfo );
+    TEST_ASSERT_EQUAL_MEMORY( requestHeaders.pBuffer, expectedHeaders.buffer,
+                              expectedHeaders.dataLen );
+    TEST_ASSERT_EQUAL( expectedHeaders.dataLen, requestHeaders.headersLen );
+    TEST_ASSERT_EQUAL( HTTP_SUCCESS, test_error );
 }
 
 /**
@@ -377,38 +394,36 @@ void test_Http_InitializeRequestHeaders_happy_path()
  */
 void test_Http_InitializeRequestHeaders_invalid_params()
 {
-    HTTPStatus_t test_err = HTTP_INTERNAL_ERROR;
+    HTTPStatus_t test_error = HTTP_INTERNAL_ERROR;
     HTTPRequestHeaders_t requestHeaders = { 0 };
     HTTPRequestInfo_t requestInfo = { 0 };
-    size_t expectedHeaderLen = HTTP_TEST_MAX_INITIALIZED_HEADER_LEN;
-    char expectedHeader[ HTTP_TEST_INITIALIZED_HEADER_BUFFER_LEN ] = { 0 };
 
     /* Test NULL parameters, following order of else-if blocks. */
-    test_err = HTTPClient_InitializeRequestHeaders( NULL, &requestInfo );
-    TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, test_err );
+    test_error = HTTPClient_InitializeRequestHeaders( NULL, &requestInfo );
+    TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, test_error );
     /* TEST requestInfo.pBuffer == NULL */
-    test_err = HTTPClient_InitializeRequestHeaders( &requestHeaders, &requestInfo );
-    TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, test_err );
-    requestHeaders.pBuffer = httpBuffer;
+    test_error = HTTPClient_InitializeRequestHeaders( &requestHeaders, &requestInfo );
+    TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, test_error );
+    requestHeaders.pBuffer = testBuffer;
     requestHeaders.bufferLen = HTTP_TEST_INITIALIZED_HEADER_BUFFER_LEN;
-    test_err = HTTPClient_InitializeRequestHeaders( &requestHeaders, NULL );
-    TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, test_err );
+    test_error = HTTPClient_InitializeRequestHeaders( &requestHeaders, NULL );
+    TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, test_error );
     /* Test requestInfo members are NULL */
-    test_err = HTTPClient_InitializeRequestHeaders( &requestHeaders, &requestInfo );
-    TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, test_err );
+    test_error = HTTPClient_InitializeRequestHeaders( &requestHeaders, &requestInfo );
+    TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, test_error );
     requestInfo.method = HTTP_METHOD_GET;
-    test_err = HTTPClient_InitializeRequestHeaders( &requestHeaders, &requestInfo );
-    TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, test_err );
+    test_error = HTTPClient_InitializeRequestHeaders( &requestHeaders, &requestInfo );
+    TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, test_error );
     requestInfo.pHost = HTTP_TEST_HOST_VALUE;
-    test_err = HTTPClient_InitializeRequestHeaders( &requestHeaders, &requestInfo );
-    TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, test_err );
+    test_error = HTTPClient_InitializeRequestHeaders( &requestHeaders, &requestInfo );
+    TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, test_error );
     requestInfo.pPath = HTTP_TEST_REQUEST_PATH;
     requestInfo.pathLen = HTTP_TEST_REQUEST_PATH_LEN;
-    test_err = HTTPClient_InitializeRequestHeaders( &requestHeaders, &requestInfo );
-    TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, test_err );
+    test_error = HTTPClient_InitializeRequestHeaders( &requestHeaders, &requestInfo );
+    TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, test_error );
     requestInfo.methodLen = HTTP_METHOD_GET_LEN;
-    test_err = HTTPClient_InitializeRequestHeaders( &requestHeaders, &requestInfo );
-    TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, test_err );
+    test_error = HTTPClient_InitializeRequestHeaders( &requestHeaders, &requestInfo );
+    TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, test_error );
     requestInfo.hostLen = HTTP_TEST_HOST_VALUE_LEN;
 }
 
@@ -419,37 +434,38 @@ void test_Http_InitializeRequestHeaders_invalid_params()
  */
 void test_Http_InitializeRequestHeaders_req_info()
 {
-    HTTPStatus_t test_err = HTTP_INTERNAL_ERROR;
+    HTTPStatus_t test_error = HTTP_INTERNAL_ERROR;
     HTTPRequestHeaders_t requestHeaders = { 0 };
     HTTPRequestInfo_t requestInfo = { 0 };
-    size_t expectedHeaderLen = HTTP_TEST_MAX_INITIALIZED_HEADER_LEN;
-    char expectedHeader[ HTTP_TEST_INITIALIZED_HEADER_BUFFER_LEN ] = { 0 };
+
+    expectedHeaders.dataLen = HTTP_TEST_MAX_INITIALIZED_HEADER_LEN;
     int numBytes = 0;
 
     setupRequestInfo( &requestInfo );
-    setupBuffer( &requestHeaders, expectedHeaderLen );
+    setupBuffer( &requestHeaders, expectedHeaders.dataLen );
 
     requestInfo.pPath = 0;
     requestInfo.flags = HTTP_REQUEST_KEEP_ALIVE_FLAG;
-    expectedHeaderLen = HTTP_TEST_PREFIX_HEADER_LEN -
-                        HTTP_TEST_REQUEST_PATH_LEN +
-                        HTTP_EMPTY_PATH_LEN +
-                        HTTP_CONNECTION_KEEP_ALIVE_VALUE_LEN;
-    numBytes = snprintf( expectedHeader, expectedHeaderLen + 1,
+    expectedHeaders.dataLen = HTTP_TEST_PREFIX_HEADER_LEN -
+                              HTTP_TEST_REQUEST_PATH_LEN +
+                              HTTP_EMPTY_PATH_LEN +
+                              HTTP_CONNECTION_KEEP_ALIVE_VALUE_LEN;
+    numBytes = snprintf( ( char * ) expectedHeaders.buffer, expectedHeaders.dataLen + 1,
                          HTTP_TEST_HEADER_FORMAT,
                          HTTP_METHOD_GET, HTTP_EMPTY_PATH,
                          HTTP_PROTOCOL_VERSION,
                          HTTP_USER_AGENT_FIELD, HTTP_USER_AGENT_VALUE,
                          HTTP_HOST_FIELD, HTTP_TEST_HOST_VALUE,
                          HTTP_CONNECTION_FIELD, HTTP_CONNECTION_KEEP_ALIVE_VALUE );
-    TEST_ASSERT_EQUAL( expectedHeaderLen, numBytes );
+    TEST_ASSERT_EQUAL( expectedHeaders.dataLen, numBytes );
 
-    requestHeaders.pBuffer = httpBuffer;
-    requestHeaders.bufferLen = expectedHeaderLen;
-    test_err = HTTPClient_InitializeRequestHeaders( &requestHeaders, &requestInfo );
-    TEST_ASSERT_EQUAL_MEMORY( requestHeaders.pBuffer, expectedHeader, expectedHeaderLen );
-    TEST_ASSERT_EQUAL( expectedHeaderLen, requestHeaders.headersLen );
-    TEST_ASSERT_EQUAL( HTTP_SUCCESS, test_err );
+    requestHeaders.pBuffer = testBuffer;
+    requestHeaders.bufferLen = expectedHeaders.dataLen;
+    test_error = HTTPClient_InitializeRequestHeaders( &requestHeaders, &requestInfo );
+    TEST_ASSERT_EQUAL_MEMORY( requestHeaders.pBuffer, expectedHeaders.buffer,
+                              expectedHeaders.dataLen );
+    TEST_ASSERT_EQUAL( expectedHeaders.dataLen, requestHeaders.headersLen );
+    TEST_ASSERT_EQUAL( HTTP_SUCCESS, test_error );
 }
 
 /**
@@ -458,19 +474,19 @@ void test_Http_InitializeRequestHeaders_req_info()
  */
 void test_Http_InitializeRequestHeaders_insufficient_memory()
 {
-    HTTPStatus_t test_err = HTTP_INTERNAL_ERROR;
+    HTTPStatus_t test_error = HTTP_INTERNAL_ERROR;
     HTTPRequestHeaders_t requestHeaders = { 0 };
     HTTPRequestInfo_t requestInfo = { 0 };
-    size_t expectedHeaderLen = HTTP_TEST_MAX_INITIALIZED_HEADER_LEN;
-    char expectedHeader[ HTTP_TEST_INITIALIZED_HEADER_BUFFER_LEN ] = { 0 };
+
+    expectedHeaders.dataLen = HTTP_TEST_MAX_INITIALIZED_HEADER_LEN;
 
     setupRequestInfo( &requestInfo );
-    setupBuffer( &requestHeaders, expectedHeaderLen );
+    setupBuffer( &requestHeaders, expectedHeaders.dataLen );
 
     requestHeaders.bufferLen = HTTP_TEST_REQUEST_LINE_LEN - 1;
 
-    test_err = HTTPClient_InitializeRequestHeaders( &requestHeaders, &requestInfo );
-    TEST_ASSERT_EQUAL( HTTP_INSUFFICIENT_MEMORY, test_err );
+    test_error = HTTPClient_InitializeRequestHeaders( &requestHeaders, &requestInfo );
+    TEST_ASSERT_EQUAL( HTTP_INSUFFICIENT_MEMORY, test_error );
     TEST_ASSERT_TRUE( strncmp( ( char * ) requestHeaders.pBuffer,
                                HTTP_TEST_REQUEST_LINE,
                                HTTP_TEST_REQUEST_LINE_LEN ) != 0 );
