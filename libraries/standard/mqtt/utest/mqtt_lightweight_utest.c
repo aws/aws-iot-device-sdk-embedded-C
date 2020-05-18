@@ -504,8 +504,8 @@ void test_MQTT_SerializeConnect_happy_paths()
 /* ==================  Testing MQTT_SerializeDisconnect ===================== */
 
 /**
- * @brief Call Mqtt_SerializeDisconnect using NULL parameters and insufficient buffer
- * size until we receive all possible MQTTBadParameter and MQTTNoMemory errors.
+ * @brief Call Mqtt_SerializeDisconnect using NULL pBuffer and insufficient buffer
+ * size in order to receive MQTTBadParameter and MQTTNoMemory errors.
  */
 void test_MQTT_SerializeDisconnect_invalid_params()
 {
