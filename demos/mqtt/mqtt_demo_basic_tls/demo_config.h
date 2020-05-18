@@ -22,6 +22,16 @@
 #ifndef DEMO_CONFIG_H
 #define DEMO_CONFIG_H
 
+/* Log Level Configuration Include. */
+#include "logging_levels.h"
+
+/* Logging configuration for the Demo. */
+#define LIBRARY_LOG_NAME     "DEMO"
+#define LIBRARY_LOG_LEVEL    LOG_NONE
+
+/**** NOTE: Include logging stack ONLY after the name and log level configuration. ******/
+#include "logging_stack.h"
+
 /**
  * @brief MQTT client identifier.
  *
@@ -29,4 +39,4 @@
  */
 #define CLIENT_IDENTIFIER    "testclient"
 
-#endif
+#endif /* ifndef DEMO_CONFIG_H */
