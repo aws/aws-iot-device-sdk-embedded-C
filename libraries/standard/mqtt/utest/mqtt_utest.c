@@ -3,6 +3,8 @@
 
 #include "unity.h"
 
+#include "mock_mqtt_lightweight.h"
+
 /* Include paths for public enums, structures, and macros. */
 #include "mqtt.h"
 
@@ -20,6 +22,11 @@
 #define MQTT_TEST_BUFFER_LENGTH      ( 1024 )
 
 /**
+ * @brief Timeout for receiving a packet.
+ */
+#define MQTT_TIMEOUT_MS              ( 3000 )
+
+/**
  * @brief Time at the beginning of each test. Note that this is not updated with
  * a real clock. Instead, we simply increment this variable.
  */
@@ -29,6 +36,7 @@ static uint32_t globalEntryTime = 0;
  * @brief A static buffer used by the MQTT library for storing packet data.
  */
 static uint8_t mqttBuffer[ MQTT_TEST_BUFFER_LENGTH ] = { 0 };
+
 
 /* ============================   UNITY FIXTURES ============================ */
 
@@ -74,6 +82,7 @@ static int32_t mockSend( MQTTNetworkContext_t context,
         /* Write single byte and advance buffer. */
         *mockNetwork++ = *buffer++;
     }
+
     /* Move stream by bytes sent. */
     ( *( uint8_t ** ) context ) = mockNetwork;
 
@@ -198,7 +207,7 @@ static void setupCallbacks( MQTTApplicationCallbacks_t * pCallbacks )
     pCallbacks->getTime = getTime;
 }
 
-/* ============================   Testing MQTT_Init ========================= */
+/* ========================================================================== */
 
 /**
  * @brief Test that MQTT_Init is able to update the context object correctly.
@@ -297,6 +306,7 @@ void test_MQTT_Connect_sendConnect( void )
     MQTT_SerializeConnect_IgnoreAndReturn( MQTTSuccess );
 
     /* Transport send failed when sending CONNECT. */
+
     /* Choose 10 bytes variable header + 1 byte payload for the remaining
      * length of the CONNECT. The packet size needs to be nonzero for this test
      * as that is the amount of bytes used in the call to send the packet. */
@@ -543,6 +553,7 @@ void test_MQTT_Publish( void )
 
     /* The transport interface will fail. */
     MQTT_SerializePublishHeader_ExpectAnyArgsAndReturn( MQTTSuccess );
+
     /* We need sendPacket to be called with at least 1 byte to send, so that
      * it can return failure. This argument is the output of serializing the
      * publish header. */
@@ -660,4 +671,48 @@ void test_MQTT_GetPacketId( void )
     packetId = MQTT_GetPacketId( &mqttContext );
     TEST_ASSERT_EQUAL_INT( UINT16_MAX, packetId );
     TEST_ASSERT_EQUAL_INT( 1, mqttContext.nextPacketId );
+}
+
+/**
+ * @brief Test that NULL pContext causes MQTT_ProcessLoop to return MQTTBadParameter.
+ */
+void test_MQTT_ProcessLoop_invalid_params( void )
+{
+    MQTT_ProcessLoop( NULL, MQTT_TIMEOUT_MS );
+}
+
+/* Mocked MQTT_GetIncomingPacketTypeAndLength callback that modifies pIncomingPacket
+ * to get full coverage on handleIncomingPublish. */
+static MQTTStatus_t modifyIncomingPacketPublish( MQTTTransportRecvFunc_t readFunc,
+                                                 MQTTNetworkContext_t networkContext,
+                                                 MQTTPacketInfo_t * pIncomingPacket,
+                                                 int cmock_num_calls )
+{
+    pIncomingPacket->type = MQTT_PACKET_TYPE_PUBLISH;
+}
+
+/**
+ * @brief Test coverage for handleIncomingPublish by using a CMock callback to
+ * modify incomingPacket.
+ */
+void test_MQTT_ProcessLoop_handleIncomingPublish( void )
+{
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context;
+    MQTTTransportInterface_t transport;
+    MQTTFixedBuffer_t networkBuffer;
+    MQTTApplicationCallbacks_t callbacks;
+    MQTTPacketInfo_t incomingPacket;
+
+    setupTransportInterface( &transport );
+    setupCallbacks( &callbacks );
+
+    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    MQTT_GetIncomingPacketTypeAndLength_AddCallback( modifyIncomingPacketPublish );
+
+    mqttStatus = MQTT_ProcessLoop( &context, MQTT_TIMEOUT_MS );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 }
