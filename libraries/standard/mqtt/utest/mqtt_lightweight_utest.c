@@ -504,6 +504,17 @@ void test_MQTT_SerializeConnect_happy_paths()
 /* ==================  Testing MQTT_SerializeDisconnect ===================== */
 
 /**
+ * @brief Initialize pNetworkBuffer using static buffer.
+ *
+ * @param[in] pNetworkBuffer Network buffer provided for the context.
+ */
+static void setupNetworkBuffer( MQTTFixedBuffer_t * const pNetworkBuffer )
+{
+    pNetworkBuffer->pBuffer = mqttBuffer;
+    pNetworkBuffer->size = MQTT_TEST_BUFFER_LENGTH;
+}
+
+/**
  * @brief Call Mqtt_SerializeDisconnect using NULL pBuffer and insufficient buffer
  * size in order to receive MQTTBadParameter and MQTTNoMemory errors.
  */
