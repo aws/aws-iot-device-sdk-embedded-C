@@ -1,4 +1,3 @@
-#include <stdbool.h>
 #include <string.h>
 
 #include "unity.h"
@@ -83,7 +82,7 @@ typedef struct _headers
 
 #define HTTP_TEST_BUFFER_LEN    1024
 
-/* Template HTTP request for a PUT request. */
+/* Template HTTP response for testing HTTPClient_ReadHeader API. */
 static const char * pTestResponse = "HTTP/1.1 200 OK\r\n"
                                     "test-header0: test-value0\r\n"
                                     "test-header1: test-value1\r\n"
@@ -112,18 +111,23 @@ static http_parser * pCapturedParser = NULL;
 static http_parser_settings * pCapturedSettings = NULL;
 static const char * pExpectedBuffer = NULL;
 static size_t expectedBufferSize = 0u;
-static bool invokeHeaderFieldCallback = false;
+static uint8_t invokeHeaderFieldCallback = 0u;
 static const char * pFieldLocToReturn = NULL;
 static size_t fieldLenToReturn = 0u;
-static bool invokeHeaderValueCallback = false;
+static uint8_t invokeHeaderValueCallback = 0u;
 static const char * pValueLocToReturn = NULL;
 static size_t valueLenToReturn = 0u;
 static int expectedValCbRetVal = 0;
-static bool invokeHeaderCompleteCallback = false;
+static uint8_t invokeHeaderCompleteCallback = 0u;
 static unsigned int parserErrNo = 0;
 
 /* ============================ Helper Functions ============================== */
 
+/**
+ * @brief Callback that is passed to the mock of http_parse_init function
+ * to set test expectations on input arguments sent by the HTTP API function under
+ * test.
+ */
 void parserInitExpectationCb( http_parser * parser,
                               enum http_parser_type type,
                               int cmock_num_calls )
@@ -137,6 +141,11 @@ void parserInitExpectationCb( http_parser * parser,
     TEST_ASSERT_EQUAL( HTTP_RESPONSE, type );
 }
 
+/**
+ * @brief Callback that is passed to the mock of http_parse_settings_init function
+ * to set test expectations on input arguments sent by the HTTP API function under
+ * test.
+ */
 void parserSettingsInitExpectationCb( http_parser_settings * settings,
                                       int cmock_num_calls )
 {
@@ -147,6 +156,12 @@ void parserSettingsInitExpectationCb( http_parser_settings * settings,
     pCapturedSettings = settings;
 }
 
+/**
+ * @brief Callback that is passed to the mock of http_parse_execute() function
+ * to set test expectations on input arguments, and inject behavior of invoking
+ * http-parser callbacks depending on test-case specific configuration of the
+ * function.
+ */
 size_t parserExecuteExpectationsCb( http_parser * parser,
                                     const http_parser_settings * settings,
                                     const char * data,
@@ -164,7 +179,7 @@ size_t parserExecuteExpectationsCb( http_parser * parser,
     TEST_ASSERT_EQUAL( expectedBufferSize, len );
     TEST_ASSERT_EQUAL( pExpectedBuffer, data );
 
-    if( invokeHeaderFieldCallback == true )
+    if( invokeHeaderFieldCallback == 1u )
     {
         TEST_ASSERT_EQUAL( HTTP_PARSER_CONTINUE_PARSING,
                            settings->on_header_field( parser,
@@ -172,7 +187,7 @@ size_t parserExecuteExpectationsCb( http_parser * parser,
                                                       fieldLenToReturn ) );
     }
 
-    if( invokeHeaderValueCallback == true )
+    if( invokeHeaderValueCallback == 1u )
     {
         TEST_ASSERT_EQUAL( expectedValCbRetVal,
                            settings->on_header_value( parser,
@@ -180,7 +195,7 @@ size_t parserExecuteExpectationsCb( http_parser * parser,
                                                       valueLenToReturn ) );
     }
 
-    if( invokeHeaderCompleteCallback == true )
+    if( invokeHeaderCompleteCallback == 1u )
     {
         TEST_ASSERT_EQUAL( HTTP_PARSER_STOP_PARSING,
                            settings->on_headers_complete( parser ) );
@@ -285,26 +300,14 @@ void tearDown( void )
     valueLen = 0u;
     pExpectedBuffer = &pTestResponse[ 0 ];
     expectedBufferSize = strlen( pTestResponse );
-    invokeHeaderFieldCallback = false;
+    invokeHeaderFieldCallback = 0u;
     pFieldLocToReturn = NULL;
     fieldLenToReturn = 0u;
-    invokeHeaderValueCallback = false;
+    invokeHeaderValueCallback = 0u;
     pValueLocToReturn = NULL;
     expectedValCbRetVal = 0;
     valueLenToReturn = 0u;
-    invokeHeaderCompleteCallback = false;
-}
-
-/* called at the beginning of the whole suite */
-void suiteSetUp()
-{
-}
-
-/* called at the end of the whole suite */
-int suiteTearDown( int numFailures )
-{
-    /* Disable unused variable warning. */
-    ( void ) numFailures;
+    invokeHeaderCompleteCallback = 0u;
 }
 
 /* ============== Testing HTTPClient_InitializeRequestHeaders =============== */
@@ -547,7 +550,7 @@ void test_Http_AddRangeHeader_Insufficient_Memory( void )
      * to determine the total required size of the buffer. */
     addRangeToExpectedHeaders( &expectedHeaders,
                                "5-10" /*expected range*/,
-                               true );
+                               1u );
 
     /* Change the input headers buffer size to be one byte short of the required
      * size to add Range Request header. */
@@ -589,7 +592,7 @@ void test_Http_AddRangeHeader_Without_Trailing_Terminator( void )
     testRangeEnd = 0;
     addRangeToExpectedHeaders( &expectedHeaders,
                                "0-0" /*expected range*/,
-                               false );
+                               0u );
     retCode = HTTPClient_AddRangeHeader( &testHeaders,
                                          testRangeStart,
                                          testRangeEnd );
@@ -619,7 +622,7 @@ void test_Http_AddRangeHeader_RangeType_File_SubRange( void )
     testRangeEnd = 0;
     addRangeToExpectedHeaders( &expectedHeaders,
                                "0-0" /*expected range*/,
-                               true );
+                               1u );
     retCode = HTTPClient_AddRangeHeader( &testHeaders,
                                          testRangeStart,
                                          testRangeEnd );
@@ -641,7 +644,7 @@ void test_Http_AddRangeHeader_RangeType_File_SubRange( void )
     testRangeEnd = 100;
     addRangeToExpectedHeaders( &expectedHeaders,
                                "10-100" /*expected range*/,
-                               true );
+                               1u );
     retCode = HTTPClient_AddRangeHeader( &testHeaders,
                                          testRangeStart,
                                          testRangeEnd );
@@ -668,7 +671,7 @@ void test_Http_AddRangeHeader_RangeType_Entire_File( void )
     testRangeEnd = HTTP_RANGE_REQUEST_END_OF_FILE;
     addRangeToExpectedHeaders( &expectedHeaders,
                                "0-" /*expected range*/,
-                               true );
+                               1u );
     retCode = HTTPClient_AddRangeHeader( &testHeaders,
                                          testRangeStart,
                                          testRangeEnd );
@@ -698,7 +701,7 @@ void test_Http_AddRangeHeader_RangeType_All_Bytes_From_RangeStart( void )
     testRangeEnd = HTTP_RANGE_REQUEST_END_OF_FILE;
     addRangeToExpectedHeaders( &expectedHeaders,
                                "100-" /*expected range*/,
-                               true );
+                               1u );
     retCode = HTTPClient_AddRangeHeader( &testHeaders,
                                          testRangeStart,
                                          testRangeEnd );
@@ -726,7 +729,7 @@ void test_Http_AddRangeHeader_RangeType_LastNBytes( void )
     testRangeEnd = HTTP_RANGE_REQUEST_END_OF_FILE;
     addRangeToExpectedHeaders( &expectedHeaders,
                                "-50" /*expected range*/,
-                               true );
+                               1u );
     retCode = HTTPClient_AddRangeHeader( &testHeaders,
                                          testRangeStart,
                                          testRangeEnd );
@@ -754,7 +757,7 @@ void test_Http_AddRangeHeader_With_Max_INT32_Range_Values( void )
     testRangeEnd = INT32_MAX;
     addRangeToExpectedHeaders( &expectedHeaders,
                                "2147483647-2147483647" /*expected range*/,
-                               true );
+                               1u );
     retCode = HTTPClient_AddRangeHeader( &testHeaders,
                                          testRangeStart,
                                          testRangeEnd );
@@ -850,7 +853,7 @@ void test_Http_ReadHeader_Header_Not_In_Response( void )
     http_parser_settings_init_ExpectAnyArgs();
 
     /* Configure the http_parser_execute mock. */
-    invokeHeaderCompleteCallback = false;
+    invokeHeaderCompleteCallback = 0u;
     parserErrNo = HPE_OK;
     http_parser_execute_ExpectAnyArgsAndReturn( strlen( pTestResponse ) );
 
@@ -865,11 +868,12 @@ void test_Http_ReadHeader_Header_Not_In_Response( void )
 }
 
 /**
- * @brief Test with invalid HTTP responses.
+ * @brief Test with an invalid HTTP response containing only the field name the
+ * requested header.
  */
-void test_Http_ReadHeader_With_Invalid_Responses()
+void test_Http_ReadHeader_Invalid_Response_Only_Header_Field_Found()
 {
-    /* Case 1: Test when invalid response only contains the header field for the requested header. */
+    /* Test when invalid response only contains the header field for the requested header. */
     const char * pResponseWithoutValue = "HTTP/1.1 200 OK\r\n"
                                          "test-header0: test-value0\r\n"
                                          "test-header1:";
@@ -881,7 +885,7 @@ void test_Http_ReadHeader_With_Invalid_Responses()
     /* Configure the http_parser_execute mock. */
     pExpectedBuffer = pResponseWithoutValue;
     expectedBufferSize = strlen( pResponseWithoutValue );
-    invokeHeaderFieldCallback = true;
+    invokeHeaderFieldCallback = 1u;
     pFieldLocToReturn = &pTestResponse[ headerFieldInRespLoc ];
     fieldLenToReturn = headerFieldInRespLen;
     http_parser_execute_ExpectAnyArgsAndReturn( strlen( pResponseWithoutValue ) );
@@ -895,9 +899,16 @@ void test_Http_ReadHeader_With_Invalid_Responses()
                                      &pValueLoc,
                                      &valueLen );
     TEST_ASSERT_EQUAL( HTTP_INVALID_RESPONSE, retCode );
+}
 
-    /* Test when the invalid response does not contain the requested header.
-     * (Response is invalid as it doesn't end with "\r\n\r\n".) */
+/**
+ * @brief Test with an invalid HTTP response that does not contain terminating
+ * characters ("\r\n\r\b") that represent the end of headers in the response.
+ */
+void test_Http_ReadHeader_Invalid_Response_No_Headers_Complete_Ending()
+{
+    /* Test response that does not contain requested header,
+     * is invalid as it doesn't end with "\r\n\r\n". */
     const char * pResponseWithoutHeaders = "HTTP/1.1 200 OK\r\n"
                                            "test-header0:test-value0";
 
@@ -935,8 +946,8 @@ void test_Http_ReadHeader_With_HttpParser_Internal_Error()
     http_parser_settings_init_ExpectAnyArgs();
 
     /* Configure the http_parser_execute mock. */
-    invokeHeaderFieldCallback = true;
-    invokeHeaderValueCallback = true;
+    invokeHeaderFieldCallback = 1u;
+    invokeHeaderValueCallback = 1u;
     pFieldLocToReturn = &pTestResponse[ headerFieldInRespLoc ];
     fieldLenToReturn = headerFieldInRespLen;
     pValueLocToReturn = &pTestResponse[ headerValInRespLoc ];
@@ -969,8 +980,8 @@ void test_Http_ReadHeader_Happy_Path()
     fieldLenToReturn = headerFieldInRespLen;
     pValueLocToReturn = &pTestResponse[ headerValInRespLoc ];
     valueLenToReturn = headerValInRespLen;
-    invokeHeaderFieldCallback = true;
-    invokeHeaderValueCallback = true;
+    invokeHeaderFieldCallback = 1u;
+    invokeHeaderValueCallback = 1u;
     parserErrNo = HPE_CB_header_value;
     http_parser_execute_ExpectAnyArgsAndReturn( strlen( pTestResponse ) );
 
