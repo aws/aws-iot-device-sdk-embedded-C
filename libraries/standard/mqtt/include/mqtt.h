@@ -134,9 +134,9 @@ struct MQTTContext
  * #MQTTSuccess otherwise.
  */
 MQTTStatus_t MQTT_Init( MQTTContext_t * const pContext,
-                const MQTTTransportInterface_t * const pTransportInterface,
-                const MQTTApplicationCallbacks_t * const pCallbacks,
-                const MQTTFixedBuffer_t * const pNetworkBuffer );
+                        const MQTTTransportInterface_t * const pTransportInterface,
+                        const MQTTApplicationCallbacks_t * const pCallbacks,
+                        const MQTTFixedBuffer_t * const pNetworkBuffer );
 
 /**
  * @brief Establish a MQTT session.
