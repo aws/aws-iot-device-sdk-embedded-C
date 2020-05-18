@@ -10,11 +10,9 @@
 #include "private/http_client_internal.h"
 #include "private/http_client_parse.h"
 
-    << << << < HEAD
+/* Include mock implementation of http-parser dependency. */
 #include "mock_http_parser.h"
 
-== == == =
-    >> >> >> > origin / development
 /* Default size for request buffer. */
 #define HTTP_TEST_BUFFER_SIZE           ( 100 )
 
@@ -29,7 +27,7 @@
 #define PREEXISTING_REQUEST_LINE_LEN    ( sizeof( PREEXISTING_REQUEST_LINE ) - 1 )
 
 /* Type to store expected headers data. */
-    typedef struct _headers
+typedef struct _headers
 {
     uint8_t buffer[ HTTP_TEST_BUFFER_SIZE ];
     size_t dataLen;
@@ -193,69 +191,6 @@ size_t parserExecuteExpectationsCb( http_parser * parser,
     return len;
 }
 
-
-/**
- * @brief Fills the test input buffer and expectation buffers with pre-existing data
- * before calling the API function under test.
- */
-static void setupBuffersWithPreexistingHeader( HTTPRequestHeaders_t * testRequestHeaders,
-                                               uint8_t * testBuffer,
-                                               size_t bufferSize,
-                                               _headers_t * expectedHeaders,
-                                               const char * preexistingData )
-{
-    size_t dataLen = strlen( preexistingData );
-
-    testRequestHeaders->pBuffer = testBuffer;
-    testRequestHeaders->bufferLen = bufferSize;
-    /* We add 1 bytes as snprintf() writes a null byte at the end. */
-    int numBytes = snprintf( ( char * ) testRequestHeaders->pBuffer,
-                             dataLen + 1,
-                             "%s",
-                             preexistingData );
-    TEST_ASSERT( numBytes == ( int ) dataLen );
-    testRequestHeaders->headersLen = dataLen;
-
-    /* Fill the same data in the expected buffer as HTTPClient_AddRangeHeaders()
-     * is not expected to change it. */
-    TEST_ASSERT( memcpy( expectedHeaders->buffer, testRequestHeaders->pBuffer,
-                         testRequestHeaders->headersLen )
-                 == expectedHeaders->buffer );
-    expectedHeaders->dataLen = testRequestHeaders->headersLen;
-}
-
-/**
- * @brief Common utility for adding the expected range string for a AddRangeRequest test case
- * in the expectation buffer.
- */
-static void addRangeToExpectedHeaders( _headers_t * expectedHeaders,
-                                       const char * expectedRange,
-                                       bool terminatorExists )
-{
-    size_t rangeRequestLen = RANGE_REQUEST_HEADER_FIELD_LEN +
-                             HTTP_HEADER_FIELD_SEPARATOR_LEN +
-                             RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN +
-                             strlen( expectedRange ) +
-                             2 * HTTP_HEADER_LINE_SEPARATOR_LEN;
-    int numBytes =
-        snprintf( ( char * ) expectedHeaders->buffer +
-                  expectedHeaders->dataLen -
-                  ( terminatorExists ? HTTP_HEADER_LINE_SEPARATOR_LEN : 0 ),
-                  /* We add 1 bytes as snprintf() writes a null byte at the end. */
-                  rangeRequestLen + 1,
-                  "%s%s%s%s\r\n\r\n",
-                  RANGE_REQUEST_HEADER_FIELD,
-                  HTTP_HEADER_FIELD_SEPARATOR,
-                  RANGE_REQUEST_HEADER_VALUE_PREFIX,
-                  expectedRange );
-
-    TEST_ASSERT_EQUAL( ( size_t ) numBytes, rangeRequestLen );
-    expectedHeaders->dataLen += rangeRequestLen -
-                                ( terminatorExists ? HTTP_HEADER_LINE_SEPARATOR_LEN : 0 );
-}
-
-/* ============================ Helper Functions ============================== */
-
 /**
  * @brief Fills the test input buffer and expectation buffers with pre-existing data
  * before calling the API function under test.
@@ -341,9 +276,9 @@ void tearDown( void )
     memset( &testHeaders, 0, sizeof( testHeaders ) );
     memset( testBuffer, 0, sizeof( testBuffer ) );
     memset( &expectedHeaders, 0, sizeof( expectedHeaders ) );
-        << << << < HEAD memset( &testResponse,
-                                0,
-                                sizeof( testResponse ) );
+    memset( &testResponse,
+            0,
+            sizeof( testResponse ) );
     pValueLoc = NULL;
     valueLen = 0u;
     pValueLoc = NULL;
@@ -358,8 +293,6 @@ void tearDown( void )
     expectedValCbRetVal = 0;
     valueLenToReturn = 0u;
     invokeHeaderCompleteCallback = false;
-    == == == =
-        >> >> >> > origin / development
 }
 
 /* called at the beginning of the whole suite */
