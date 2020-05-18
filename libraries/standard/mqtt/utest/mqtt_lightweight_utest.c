@@ -102,6 +102,7 @@ void suiteSetUp()
 /* Called at the end of the whole suite. */
 int suiteTearDown( int numFailures )
 {
+    ( void ) numFailures;
 }
 
 /* =====================  Testing MQTT_SerializeConnect ===================== */
