@@ -1885,7 +1885,7 @@ MQTTStatus_t MQTT_GetPingreqPacketSize( size_t * pPacketSize )
         *pPacketSize = MQTT_PACKET_PINGREQ_SIZE;
     }
 
-    return MQTTSuccess;
+    return status;
 }
 
 /*-----------------------------------------------------------*/

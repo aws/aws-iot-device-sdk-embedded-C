@@ -1203,7 +1203,7 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * const pContext )
     {
         /* Get MQTT PINGREQ packet size. */
         status = MQTT_GetPingReqPacketSize( &packetSize );
-        LogDebugWithArgs( "MQTT DISCONNECT packet size is %lu.",
+        LogDebugWithArgs( "MQTT PINGREQ packet size is %lu.",
                           packetSize );
     }
 
