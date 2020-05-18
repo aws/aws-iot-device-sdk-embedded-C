@@ -110,6 +110,7 @@ static void setupBuffersWithPreexistingHeader( HTTPRequestHeaders_t * testReques
                              "%s",
                              preexistingData );
     /* Make sure that the entire pre-existing data was printed to the buffer. */
+    TEST_ASSERT_GREATER_THAN( 0, numBytes );
     TEST_ASSERT_LESS_THAN( bufferSize, ( size_t ) numBytes );
     testRequestHeaders->headersLen = dataLen;
 
@@ -147,6 +148,7 @@ static void addRangeToExpectedHeaders( _headers_t * expectedHeaders,
                   expectedRange );
 
     /* Make sure that the Range request was printed to the buffer. */
+    TEST_ASSERT_GREATER_THAN( 0, numBytes );
     TEST_ASSERT_LESS_THAN( sizeof( expectedHeaders->buffer ), ( size_t ) numBytes );
 
     expectedHeaders->dataLen += expectedRangeLen -
