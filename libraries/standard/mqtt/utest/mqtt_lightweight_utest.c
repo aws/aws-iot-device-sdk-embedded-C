@@ -340,8 +340,8 @@ static void verifySerializedConnectPacket( const MQTTConnectInfo_t * const pConn
 }
 
 /**
- * @brief Successfully call Mqtt_SerializeConnect using different parameters
- * until we have full coverage on the private method, serializeConnectPacket(...).
+ * @brief Call Mqtt_SerializeConnect using NULL parameters and insufficient buffer
+ * size until we receive all possible MQTTBadParameter and MQTTNoMemory errors.
  */
 void test_MQTT_SerializeConnect_invalid_params()
 {
