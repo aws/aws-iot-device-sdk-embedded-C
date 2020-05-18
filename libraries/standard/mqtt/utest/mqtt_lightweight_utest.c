@@ -501,4 +501,48 @@ void test_MQTT_SerializeConnect_happy_paths()
                                    remainingLength, &networkBuffer );
 }
 
+/* ==================  Testing MQTT_SerializeDisconnect ===================== */
+
+/**
+ * @brief Call Mqtt_SerializeDisconnect using NULL parameters and insufficient buffer
+ * size until we receive all possible MQTTBadParameter and MQTTNoMemory errors.
+ */
+void test_MQTT_SerializeDisconnect_invalid_params()
+{
+    MQTTStatus_t mqttStatus = MQTTSuccess;
+    size_t packetSize = 0;
+    MQTTFixedBuffer_t networkBuffer;
+
+    /* Test NULL pBuffer. */
+    mqttStatus = MQTT_SerializeDisconnect( NULL );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
+
+    /* Test disconnectPacketSize > pBuffer->size. */
+    /* Get MQTT disconnect packet size and remaining length. */
+    mqttStatus = MQTT_GetDisconnectPacketSize( &packetSize );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    networkBuffer.pBuffer = mqttBuffer;
+    networkBuffer.size = packetSize - 1;
+    mqttStatus = MQTT_SerializeDisconnect( &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTNoMemory, mqttStatus );
+}
+
+/**
+ * @brief This method calls MQTT_SerializeDisconnect successfully in order to
+ * get full coverage on the method.
+ */
+void test_MQTT_SerializeDisconnect_happy_path()
+{
+    MQTTStatus_t mqttStatus = MQTTSuccess;
+    size_t packetSize = 0;
+    MQTTFixedBuffer_t networkBuffer;
+
+    /* Fill structs to pass into methods to be tested. */
+    setupNetworkBuffer( &networkBuffer );
+
+    /* Make sure buffer has enough space. */
+    mqttStatus = MQTT_SerializeDisconnect( &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+}
+
 /* ========================================================================== */
