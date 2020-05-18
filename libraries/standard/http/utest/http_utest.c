@@ -116,9 +116,8 @@ static void setupBuffersWithPreexistingHeader( HTTPRequestHeaders_t * testReques
 
     /* Fill the same data in the expected buffer as HTTPClient_AddRangeHeaders()
      * is not expected to change it. */
-    TEST_ASSERT( memcpy( expectedHeaders->buffer, testRequestHeaders->pBuffer,
-                         testRequestHeaders->headersLen )
-                 == expectedHeaders->buffer );
+    memcpy( expectedHeaders->buffer, testRequestHeaders->pBuffer,
+            testRequestHeaders->headersLen );
     expectedHeaders->dataLen = testRequestHeaders->headersLen;
 }
 
