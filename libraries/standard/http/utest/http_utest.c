@@ -270,6 +270,8 @@ static void addRangeToExpectedHeaders( _headers_t * expectedHeaders,
 }
 
 /* ============================ UNITY FIXTURES ============================== */
+
+/* Called before each test method. */
 void setUp( void )
 {
     testResponse.pBuffer = ( uint8_t * ) &pTestResponse[ 0 ];
@@ -284,7 +286,7 @@ void setUp( void )
     http_errno_description_IgnoreAndReturn( "Mocked HTTP Parser Status" );
 }
 
-/* called before each testcase */
+/* Called after each test method. */
 void tearDown( void )
 {
     retCode = HTTP_NOT_SUPPORTED;
@@ -311,12 +313,12 @@ void tearDown( void )
     == == == =
 }
 
-/* called at the beginning of the whole suite */
+/* Called at the beginning of the whole suite. */
 void suiteSetUp()
 {
 }
 
-/* called at the end of the whole suite */
+/* Called at the end of the whole suite. */
 int suiteTearDown( int numFailures )
 {
     return numFailures;
@@ -401,27 +403,32 @@ void test_Http_InitializeRequestHeaders_Invalid_params()
     /* Test NULL parameters, following order of else-if blocks. */
     httpStatus = HTTPClient_InitializeRequestHeaders( NULL, &requestInfo );
     TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, httpStatus );
+
     /* TEST requestInfo.pBuffer == NULL */
     httpStatus = HTTPClient_InitializeRequestHeaders( &requestHeaders, &requestInfo );
     TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, httpStatus );
     requestHeaders.pBuffer = testBuffer;
     requestHeaders.bufferLen = HTTP_TEST_INITIALIZED_HEADER_BUFFER_LEN;
+
     /* Test requestInfo == NULL. */
     httpStatus = HTTPClient_InitializeRequestHeaders( &requestHeaders, NULL );
     TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, httpStatus );
-    /* Test requestInfo members are NULL */
+
+    /* Test requestInfo.method == NULL. */
     httpStatus = HTTPClient_InitializeRequestHeaders( &requestHeaders, &requestInfo );
     TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, httpStatus );
     requestInfo.method = HTTP_METHOD_GET;
+
+    /* Test requestInfo.pHost == NULL. */
     httpStatus = HTTPClient_InitializeRequestHeaders( &requestHeaders, &requestInfo );
     TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, httpStatus );
+
+    /* Test requestInfo.methodLen == 0. */
     requestInfo.pHost = HTTP_TEST_HOST_VALUE;
     httpStatus = HTTPClient_InitializeRequestHeaders( &requestHeaders, &requestInfo );
     TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, httpStatus );
-    requestInfo.pPath = HTTP_TEST_REQUEST_PATH;
-    requestInfo.pathLen = HTTP_TEST_REQUEST_PATH_LEN;
-    httpStatus = HTTPClient_InitializeRequestHeaders( &requestHeaders, &requestInfo );
-    TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, httpStatus );
+
+    /* Test requestInfo.hostLen == 0. */
     requestInfo.methodLen = HTTP_METHOD_GET_LEN;
     httpStatus = HTTPClient_InitializeRequestHeaders( &requestHeaders, &requestInfo );
     TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, httpStatus );
