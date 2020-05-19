@@ -3,6 +3,7 @@
 
 #include "unity.h"
 
+#include "mock_mqtt_state.h"
 #include "mock_mqtt_lightweight.h"
 
 /* Include paths for public enums, structures, and macros. */
@@ -26,6 +27,8 @@
  */
 #define MQTT_TIMEOUT_MS              ( 3000 )
 
+#define MQTT_NO_TIMEOUT_MS           ( 0U )
+
 /**
  * @brief Time at the beginning of each test. Note that this is not updated with
  * a real clock. Instead, we simply increment this variable.
@@ -36,7 +39,6 @@ static uint32_t globalEntryTime = 0;
  * @brief A static buffer used by the MQTT library for storing packet data.
  */
 static uint8_t mqttBuffer[ MQTT_TEST_BUFFER_LENGTH ] = { 0 };
-
 
 /* ============================   UNITY FIXTURES ============================ */
 
@@ -678,7 +680,7 @@ void test_MQTT_GetPacketId( void )
  */
 void test_MQTT_ProcessLoop_invalid_params( void )
 {
-    MQTT_ProcessLoop( NULL, MQTT_TIMEOUT_MS );
+    MQTT_ProcessLoop( NULL, MQTT_NO_TIMEOUT_MS );
 }
 
 /* Mocked MQTT_GetIncomingPacketTypeAndLength callback that modifies pIncomingPacket
@@ -688,7 +690,13 @@ static MQTTStatus_t modifyIncomingPacketPublish( MQTTTransportRecvFunc_t readFun
                                                  MQTTPacketInfo_t * pIncomingPacket,
                                                  int cmock_num_calls )
 {
+    /* Remove unsued parameter warnings. */
+    ( void ) readFunc;
+    ( void ) networkContext;
+    ( void ) cmock_num_calls;
+
     pIncomingPacket->type = MQTT_PACKET_TYPE_PUBLISH;
+    return MQTTSuccess;
 }
 
 /**
@@ -702,7 +710,6 @@ void test_MQTT_ProcessLoop_handleIncomingPublish( void )
     MQTTTransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks;
-    MQTTPacketInfo_t incomingPacket;
 
     setupTransportInterface( &transport );
     setupCallbacks( &callbacks );
@@ -710,9 +717,11 @@ void test_MQTT_ProcessLoop_handleIncomingPublish( void )
     mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
-    MQTT_GetIncomingPacketTypeAndLength_AddCallback( modifyIncomingPacketPublish );
+    MQTT_GetIncomingPacketTypeAndLength_Stub( modifyIncomingPacketPublish );
+    MQTT_DeserializePublish_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_UpdateStatePublish_ExpectAnyArgsAndReturn( MQTTSuccess );
 
-    mqttStatus = MQTT_ProcessLoop( &context, MQTT_TIMEOUT_MS );
+    mqttStatus = MQTT_ProcessLoop( &context, MQTT_NO_TIMEOUT_MS );
 
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 }
