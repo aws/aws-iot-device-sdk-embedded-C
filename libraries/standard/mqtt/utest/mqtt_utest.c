@@ -890,4 +890,35 @@ void test_MQTT_ProcessLoop_handleIncomingAck( void )
 
     mqttStatus = MQTT_ProcessLoop( &context, MQTT_NO_TIMEOUT_MS );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+
+    /* Mock the receiving of a PINGRESP packet type through a callback. */
+    MQTT_GetIncomingPacketTypeAndLength_Stub( modifyIncomingPacketPingResp );
+    MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    /* Run the method to test. */
+    mqttStatus = MQTT_ProcessLoop( &context, MQTT_NO_TIMEOUT_MS );
+    TEST_ASSERT_FALSE( context.waitingForPingResp );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    /* Verify that error is propagated when deserialization fails. */
+    MQTT_GetIncomingPacketTypeAndLength_Stub( modifyIncomingPacketPingResp );
+    MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTBadResponse );
+    /* Run the method to test. */
+    mqttStatus = MQTT_ProcessLoop( &context, MQTT_NO_TIMEOUT_MS );
+    TEST_ASSERT_FALSE( context.waitingForPingResp );
+    TEST_ASSERT_EQUAL( MQTTBadResponse, mqttStatus );
+
+
+    /* Mock the receiving of a SUBACK packet type through a callback. */
+    MQTT_GetIncomingPacketTypeAndLength_Stub( modifyIncomingPacketSubAck );
+    MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    /* Run the method to test. */
+    mqttStatus = MQTT_ProcessLoop( &context, MQTT_NO_TIMEOUT_MS );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    /* Verify that error is propagated when deserialization fails. */
+    MQTT_GetIncomingPacketTypeAndLength_Stub( modifyIncomingPacketSubAck );
+    MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTBadResponse );
+    /* Run the method to test. */
+    mqttStatus = MQTT_ProcessLoop( &context, MQTT_NO_TIMEOUT_MS );
+    TEST_ASSERT_FALSE( context.waitingForPingResp );
+    TEST_ASSERT_EQUAL( MQTTBadResponse, mqttStatus );
 }
