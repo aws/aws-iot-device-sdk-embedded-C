@@ -903,7 +903,7 @@ void test_Http_ReadHeader_Invalid_Response_Only_Header_Field_Found()
 
 /**
  * @brief Test with an invalid HTTP response that does not contain terminating
- * characters ("\r\n\r\b") that represent the end of headers in the response.
+ * characters ("\r\n\r\n") that represent the end of headers in the response.
  */
 void test_Http_ReadHeader_Invalid_Response_No_Headers_Complete_Ending()
 {
@@ -966,7 +966,7 @@ void test_Http_ReadHeader_With_HttpParser_Internal_Error()
 }
 
 /**
- * @brief Test when requested header in present response.
+ * @brief Test when requested header is present in the HTTP response.
  */
 void test_Http_ReadHeader_Happy_Path()
 {
