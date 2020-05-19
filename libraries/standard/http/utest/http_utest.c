@@ -439,7 +439,7 @@ void test_Http_InitializeRequestHeaders_Invalid_Params()
  * header is set to "keep-alive" when HTTP_REQUEST_KEEP_ALIVE_FLAG in requestHeaders
  * is activated.
  */
-void test_Http_InitializeRequestHeaders_Req_info()
+void test_Http_InitializeRequestHeaders_ReqInfo()
 {
     HTTPStatus_t httpStatus = HTTP_INTERNAL_ERROR;
     HTTPRequestHeaders_t requestHeaders = { 0 };
@@ -479,7 +479,7 @@ void test_Http_InitializeRequestHeaders_Req_info()
  * @brief Test HTTP_INSUFFICIENT_MEMORY from having requestHeaders.bufferLen less than
  * what is required to fit HTTP_TEST_REQUEST_LINE.
  */
-void test_Http_InitializeRequestHeaders_insufficient_memory()
+void test_Http_InitializeRequestHeaders_InsufficientMemory()
 {
     HTTPStatus_t httpStatus = HTTP_INTERNAL_ERROR;
     HTTPRequestHeaders_t requestHeaders = { 0 };
