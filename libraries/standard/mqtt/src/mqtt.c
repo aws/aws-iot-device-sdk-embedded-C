@@ -903,14 +903,14 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * const pContext,
     if( ( pContext == NULL ) || ( pTransportInterface == NULL ) ||
         ( pCallbacks == NULL ) || ( pNetworkBuffer == NULL ) )
     {
-        LogErrorWithArgs( "Argument cannot be NULL: pContext=%p, "
-                          "pTransportInterface=%p "
-                          "pCallbacks=%p "
-                          "pNetworkBuffer=%p.",
-                          pContext,
-                          pTransportInterface,
-                          pCallbacks,
-                          pNetworkBuffer );
+        LogError( ( "Argument cannot be NULL: pContext=%p, "
+                    "pTransportInterface=%p "
+                    "pCallbacks=%p "
+                    "pNetworkBuffer=%p.",
+                    pContext,
+                    pTransportInterface,
+                    pCallbacks,
+                    pNetworkBuffer ) );
         status = MQTTBadParameter;
     }
     else
