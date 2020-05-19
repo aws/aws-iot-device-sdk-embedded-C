@@ -102,7 +102,7 @@ void suiteSetUp()
 /* Called at the end of the whole suite. */
 int suiteTearDown( int numFailures )
 {
-    ( void ) numFailures;
+    return numFailures;
 }
 
 /* =====================  Testing MQTT_SerializeConnect ===================== */
@@ -151,6 +151,13 @@ static void setupWillInfo( MQTTPublishInfo_t * const pWillInfo )
     pWillInfo->retain = true;
 }
 
+/**
+ * @brief Encode remaining length into pDestination for packet serialization
+ * using MQTT v3.1.1 spec.
+ *
+ * @param[in] pDestination Buffer to write encoded remaining length.
+ * @param[in] length Actual Remaining length.
+ */
 static size_t encodeRemainingLength( uint8_t * pDestination,
                                      size_t length )
 {
@@ -182,6 +189,13 @@ static size_t encodeRemainingLength( uint8_t * pDestination,
     return ( size_t ) ( pLengthEnd - pDestination );
 }
 
+/**
+ * @brief Encode UTF-8 string and its length into pDestination for
+ * packet serialization.
+ *
+ * @param[in] pDestination Buffer to write encoded remaining length.
+ * @param[in] length Actual Remaining length.
+ */
 static size_t encodeString( uint8_t * pDestination,
                             const char * source,
                             uint16_t sourceLength )
@@ -213,6 +227,16 @@ static size_t encodeString( uint8_t * pDestination,
     return ( size_t ) ( pBuffer - pDestination );
 }
 
+/**
+ * @brief Check the serialization of an MQTT CONNECT packet in the given buffer,
+ * following the same order in serializeConnectPacket.
+ *
+ * @param[in] pConnectInfo MQTT CONNECT packet parameters.
+ * @param[in] pWillInfo Last Will and Testament. Pass NULL if not used.
+ * @param[in] remainingLength Remaining Length of MQTT CONNECT packet.
+ * @param[in] pBuffer Buffer to check packet serialization.
+ *
+ */
 static void verifySerializedConnectPacket( const MQTTConnectInfo_t * const pConnectInfo,
                                            const MQTTPublishInfo_t * const pWillInfo,
                                            size_t remainingLength,
