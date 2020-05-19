@@ -1831,7 +1831,6 @@ MQTTStatus_t MQTT_GetDisconnectPacketSize( size_t * pPacketSize )
 MQTTStatus_t MQTT_SerializeDisconnect( const MQTTFixedBuffer_t * const pBuffer )
 {
     MQTTStatus_t status = MQTTSuccess;
-    size_t disconnectPacketSize;
 
     /* Validate arguments. */
     if( pBuffer == NULL )
@@ -1842,19 +1841,12 @@ MQTTStatus_t MQTT_SerializeDisconnect( const MQTTFixedBuffer_t * const pBuffer )
 
     if( status == MQTTSuccess )
     {
-        status = MQTT_GetDisconnectPacketSize( &disconnectPacketSize );
-        LogDebugWithArgs( "MQTT DISCONNECT packet size is %ul.",
-                          disconnectPacketSize );
-    }
-
-    if( status == MQTTSuccess )
-    {
-        if( pBuffer->size < disconnectPacketSize )
+        if( pBuffer->size < MQTT_DISCONNECT_PACKET_SIZE )
         {
             LogErrorWithArgs( "Buffer size of %lu is not sufficient to hold "
                               "serialized DISCONNECT packet of size of %lu.",
                               pBuffer->size,
-                              disconnectPacketSize );
+                              MQTT_DISCONNECT_PACKET_SIZE );
             status = MQTTNoMemory;
         }
     }
@@ -1893,7 +1885,6 @@ MQTTStatus_t MQTT_GetPingreqPacketSize( size_t * pPacketSize )
 MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * const pBuffer )
 {
     MQTTStatus_t status = MQTTSuccess;
-    size_t pingreqPacketSize;
 
     if( pBuffer == NULL )
     {
@@ -1903,19 +1894,12 @@ MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * const pBuffer )
 
     if( status == MQTTSuccess )
     {
-        status = MQTT_GetPingreqPacketSize( &pingreqPacketSize );
-        LogDebugWithArgs( "MQTT PINGREQ packet size is %ul.",
-                          pingreqPacketSize );
-    }
-
-    if( status == MQTTSuccess )
-    {
-        if( pBuffer->size < pingreqPacketSize )
+        if( pBuffer->size < MQTT_PACKET_PINGREQ_SIZE )
         {
             LogErrorWithArgs( "Buffer size of %lu is not sufficient to hold "
                               "serialized PINGREQ packet of size of %lu.",
                               pBuffer->size,
-                              pingreqPacketSize );
+                              MQTT_PACKET_PINGREQ_SIZE );
             status = MQTTNoMemory;
         }
     }
