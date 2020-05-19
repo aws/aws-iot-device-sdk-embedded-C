@@ -47,9 +47,6 @@ FUNCTIONS = addHeader \
 # Changes to the above variables should remain above this include.
 include Mock4thewin.mk
 
-# additional dependencies for all tests
-#$(TESTS): $(CSDK_ROOT)/platform/posix/clock_posix.o $(CSDK_ROOT)/platform/posix/logging.o
-
 # additional dependency for a specific test
 HTTPClient_AddHeader.c: addHeader.c
 HTTPClient_AddRangeHeader.c: addHeader.c convertInt32ToAscii.c
