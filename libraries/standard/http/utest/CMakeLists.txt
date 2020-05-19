@@ -41,7 +41,7 @@ list(APPEND test_include_directories
             .
             ${HTTP_INCLUDE_PUBLIC_DIRS}
             ${HTTP_INCLUDE_PRIVATE_DIRS}
-            ${HTTP_TEST_INCLUDE_PRIVATE_DIRS}
+            ${HTTP_TEST_INCLUDE_DIRS}
             ${LOGGING_INCLUDE_DIRS}
         )
 
