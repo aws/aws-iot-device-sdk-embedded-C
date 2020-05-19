@@ -449,12 +449,21 @@ void test_MQTT_SerializeConnect_happy_paths()
 
 
     /* Re-initialize objects for branch coverage. */
+    willInfo.pPayload = NULL;
+    willInfo.payloadLength = 0;
+    willInfo.pTopicName = CLIENT_IDENTIFIER;
+    willInfo.topicNameLength = CLIENT_IDENTIFIER_LEN;
+    willInfo.dup = true;
     willInfo.qos = MQTTQoS2;
+    willInfo.retain = false;
     connectInfo.cleanSession = false;
+    connectInfo.pClientIdentifier = CLIENT_IDENTIFIER;
+    connectInfo.clientIdentifierLength = CLIENT_IDENTIFIER_LEN;
     connectInfo.pUserName = NULL;
     connectInfo.userNameLength = 0;
     connectInfo.pPassword = NULL;
-    willInfo.retain = false;
+    connectInfo.passwordLength = 0;
+
     mqttStatus = MQTT_GetConnectPacketSize( &connectInfo,
                                             NULL,
                                             &remainingLength,
