@@ -1943,9 +1943,8 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * const pIncomingPacket
     if( ( pIncomingPacket == NULL ) || ( pSessionPresent == NULL ) )
     {
         LogErrorWithArgs( "Argument cannot be NULL: pIncomingPacket=%p, "
-                          "pPacketId=%p, pSessionPresent=%p",
+                          "pSessionPresent=%p",
                           pIncomingPacket,
-                          pPacketId,
                           pSessionPresent );
         status = MQTTBadParameter;
     }
