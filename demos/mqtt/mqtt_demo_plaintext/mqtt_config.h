@@ -22,15 +22,26 @@
 #ifndef MQTT_CONFIG_H
 #define MQTT_CONFIG_H
 
-/* Log Level Configuration Include. */
+/**************************************************/
+/******* DO NOT CHANGE the following order ********/
+/**************************************************/
+
+/* Logging related header files are required to be included in the following order:
+ * 1. Include the header file "logging_levels.h".
+ * 2. Define LIBRARY_LOG_NAME and  LIBRARY_LOG_LEVEL.
+ * 3. Include the header file "logging_stack.h".
+ */
+
+/* Include header that defines log levels. */
 #include "logging_levels.h"
 
-/* Configure name and logging level for MQTT. */
+/* Configure name and log level for the MQTT library. */
 #define LIBRARY_LOG_NAME     "MQTT"
-#define LIBRARY_LOG_LEVEL    LOG_NONE
+#define LIBRARY_LOG_LEVEL    LOG_INFO
 
-/**** NOTE: Include logging stack ONLY after the library name and log level configuration. ******/
 #include "logging_stack.h"
+
+/************ End of logging configuration ****************/
 
 /* Set network context to socket (int). */
 typedef int MQTTNetworkContext_t;

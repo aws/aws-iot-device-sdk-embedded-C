@@ -1,29 +1,26 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#define LOG_LEVEL_HTTP      LOG_DEBUG
+/**************************************************/
+/******* DO NOT CHANGE the following order ********/
+/**************************************************/
 
-#define USE_CSDK_LOGGING    1
+/* Logging related header files are required to be included in the following order:
+ * 1. Include the header file "logging_levels.h".
+ * 2. Define LIBRARY_LOG_NAME and  LIBRARY_LOG_LEVEL.
+ * 3. Include the header file "logging_stack.h".
+ */
 
-#ifdef USE_CSDK_LOGGING
+/* Include header that defines log levels. */
+#include "logging_levels.h"
 
-/* Include file for POSIX reference implementation. */
-    #include "logging.h"
+/* Configure name and log level for the MQTT library. */
+#define LIBRARY_LOG_NAME     "MQTT"
+#define LIBRARY_LOG_LEVEL    LOG_INFO
 
-/* Define the IotLog logging interface to enable logging.
- * This demo maps the macro to the reference POSIX implementation for logging.
- * Note: @ref LIBRARY_LOG_NAME adds the name of the library, that produces the
- * log, as metadata in each log message. */
-    #define SdkLog( messageLevel, pFormat, ... ) \
-    Log_Generic( messageLevel,                   \
-                 "[%s:%d] [%s] "pFormat,         \
-                 __FILE__,                       \
-                 __LINE__,                       \
-                 LIBRARY_LOG_NAME,               \
-                 __VA_ARGS__ )
+#include "logging_stack.h"
 
-#endif /* ifdef USE_CSDK_LOGGING */
-
+/************ End of logging configuration ****************/
 
 /* Set network context to socket (int). */
 typedef int MQTTNetworkContext_t;
