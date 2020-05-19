@@ -6,6 +6,7 @@ target_sources(
     ${DEMO_NAME}
     PRIVATE
         "${DEMO_NAME}.c"
+        ${LOGGING_SOURCES}
 )
 
 target_link_libraries(
@@ -24,4 +25,5 @@ target_include_directories(
     mqtt
     PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}
+        ${LOGGING_INCLUDE_DIRS}
 )
