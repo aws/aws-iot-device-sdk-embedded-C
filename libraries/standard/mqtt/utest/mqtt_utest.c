@@ -3,9 +3,6 @@
 
 #include "unity.h"
 
-#include "mock_mqtt_state.h"
-#include "mock_mqtt_lightweight.h"
-
 /* Include paths for public enums, structures, and macros. */
 #include "mqtt.h"
 
@@ -699,6 +696,103 @@ static MQTTStatus_t modifyIncomingPacketPublish( MQTTTransportRecvFunc_t readFun
     return MQTTSuccess;
 }
 
+/* Mocked MQTT_GetIncomingPacketTypeAndLength callback that modifies pIncomingPacket
+ * to get full coverage on handleIncomingAck by setting the type to PUBACK. */
+static MQTTStatus_t modifyIncomingPacketPubAck( MQTTTransportRecvFunc_t readFunc,
+                                                MQTTNetworkContext_t networkContext,
+                                                MQTTPacketInfo_t * pIncomingPacket,
+                                                int cmock_num_calls )
+{
+    /* Remove unsued parameter warnings. */
+    ( void ) readFunc;
+    ( void ) networkContext;
+    ( void ) cmock_num_calls;
+
+    pIncomingPacket->type = MQTT_PACKET_TYPE_PUBACK;
+    return MQTTSuccess;
+}
+
+/* Mocked MQTT_GetIncomingPacketTypeAndLength callback that modifies pIncomingPacket
+ * to get full coverage on handleIncomingAck by setting the type to PUBREC. */
+static MQTTStatus_t modifyIncomingPacketPubRec( MQTTTransportRecvFunc_t readFunc,
+                                                MQTTNetworkContext_t networkContext,
+                                                MQTTPacketInfo_t * pIncomingPacket,
+                                                int cmock_num_calls )
+{
+    /* Remove unsued parameter warnings. */
+    ( void ) readFunc;
+    ( void ) networkContext;
+    ( void ) cmock_num_calls;
+
+    pIncomingPacket->type = MQTT_PACKET_TYPE_PUBREC;
+    return MQTTSuccess;
+}
+
+/* Mocked MQTT_GetIncomingPacketTypeAndLength callback that modifies pIncomingPacket
+ * to get full coverage on handleIncomingAck by setting the type to PUBREL. */
+static MQTTStatus_t modifyIncomingPacketPubRel( MQTTTransportRecvFunc_t readFunc,
+                                                MQTTNetworkContext_t networkContext,
+                                                MQTTPacketInfo_t * pIncomingPacket,
+                                                int cmock_num_calls )
+{
+    /* Remove unsued parameter warnings. */
+    ( void ) readFunc;
+    ( void ) networkContext;
+    ( void ) cmock_num_calls;
+
+    pIncomingPacket->type = MQTT_PACKET_TYPE_PUBREL;
+    return MQTTSuccess;
+}
+
+/* Mocked MQTT_GetIncomingPacketTypeAndLength callback that modifies pIncomingPacket
+ * to get full coverage on handleIncomingAck by setting the type to PUBCOMP. */
+static MQTTStatus_t modifyIncomingPacketPubComp( MQTTTransportRecvFunc_t readFunc,
+                                                 MQTTNetworkContext_t networkContext,
+                                                 MQTTPacketInfo_t * pIncomingPacket,
+                                                 int cmock_num_calls )
+{
+    /* Remove unsued parameter warnings. */
+    ( void ) readFunc;
+    ( void ) networkContext;
+    ( void ) cmock_num_calls;
+
+    pIncomingPacket->type = MQTT_PACKET_TYPE_PUBCOMP;
+    return MQTTSuccess;
+}
+
+/* Mocked MQTT_GetIncomingPacketTypeAndLength callback that modifies pIncomingPacket
+ * to get full coverage on handleIncomingAck by setting the type to PINGRESP. */
+static MQTTStatus_t modifyIncomingPacketPingResp( MQTTTransportRecvFunc_t readFunc,
+                                                  MQTTNetworkContext_t networkContext,
+                                                  MQTTPacketInfo_t * pIncomingPacket,
+                                                  int cmock_num_calls )
+{
+    /* Remove unsued parameter warnings. */
+    ( void ) readFunc;
+    ( void ) networkContext;
+    ( void ) cmock_num_calls;
+
+    pIncomingPacket->type = MQTT_PACKET_TYPE_PINGRESP;
+    return MQTTSuccess;
+}
+
+
+/* Mocked MQTT_GetIncomingPacketTypeAndLength callback that modifies pIncomingPacket
+ * to get full coverage on handleIncomingAck by setting the type to SUBACK. */
+static MQTTStatus_t modifyIncomingPacketSubAck( MQTTTransportRecvFunc_t readFunc,
+                                                MQTTNetworkContext_t networkContext,
+                                                MQTTPacketInfo_t * pIncomingPacket,
+                                                int cmock_num_calls )
+{
+    /* Remove unsued parameter warnings. */
+    ( void ) readFunc;
+    ( void ) networkContext;
+    ( void ) cmock_num_calls;
+
+    pIncomingPacket->type = MQTT_PACKET_TYPE_SUBACK;
+    return MQTTSuccess;
+}
+
 /**
  * @brief Test coverage for handleIncomingPublish by using a CMock callback to
  * modify incomingPacket.
@@ -713,15 +807,77 @@ void test_MQTT_ProcessLoop_handleIncomingPublish( void )
 
     setupTransportInterface( &transport );
     setupCallbacks( &callbacks );
+    setupNetworkBuffer( &networkBuffer );
 
     mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
     MQTT_GetIncomingPacketTypeAndLength_Stub( modifyIncomingPacketPublish );
-    MQTT_DeserializePublish_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_UpdateStatePublish_ExpectAnyArgsAndReturn( MQTTSuccess );
+    /*MQTT_DeserializePublish_ExpectAnyArgsAndReturn( MQTTSuccess ); */
+    MQTT_DeserializePublish_Expect();
+    MQTT_UpdateStatePublish_ExpectAnyArgsAndReturn( MQTTPubAckSend );
+    MQTT_SerializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTPublishDone );
 
     mqttStatus = MQTT_ProcessLoop( &context, MQTT_NO_TIMEOUT_MS );
+    TEST_ASSERT_TRUE( context.controlPacketSent );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+}
 
+/**
+ * @brief Test coverage for handleIncomingAck by using a CMock callback to
+ * modify incomingPacket.
+ */
+void test_MQTT_ProcessLoop_handleIncomingAck( void )
+{
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context;
+    MQTTTransportInterface_t transport;
+    MQTTFixedBuffer_t networkBuffer;
+    MQTTApplicationCallbacks_t callbacks;
+
+    setupTransportInterface( &transport );
+    setupCallbacks( &callbacks );
+    setupNetworkBuffer( &networkBuffer );
+
+    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    /* Mock the receiving of a PUBACK packet type through a callback. */
+    MQTT_GetIncomingPacketTypeAndLength_Stub( modifyIncomingPacketPubAck );
+    MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTPublishDone );
+
+    mqttStatus = MQTT_ProcessLoop( &context, MQTT_NO_TIMEOUT_MS );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    /* Mock the receiving of a PUBREC packet type through a callback. */
+    MQTT_GetIncomingPacketTypeAndLength_Stub( modifyIncomingPacketPubRec );
+    MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTPubRelSend );
+    MQTT_SerializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTPubCompPending );
+
+    mqttStatus = MQTT_ProcessLoop( &context, MQTT_NO_TIMEOUT_MS );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    /* Mock the receiving of a PUBREL packet type through a callback. */
+    MQTT_GetIncomingPacketTypeAndLength_Stub( modifyIncomingPacketPubRel );
+    MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTPubCompSend );
+    MQTT_SerializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTPublishDone );
+
+    mqttStatus = MQTT_ProcessLoop( &context, MQTT_NO_TIMEOUT_MS );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    /* Mock the receiving of a PUBCOMP packet type through a callback. */
+    MQTT_GetIncomingPacketTypeAndLength_Stub( modifyIncomingPacketPubComp );
+    MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTPublishDone );
+    MQTT_SerializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTStateNull );
+
+    mqttStatus = MQTT_ProcessLoop( &context, MQTT_NO_TIMEOUT_MS );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 }
