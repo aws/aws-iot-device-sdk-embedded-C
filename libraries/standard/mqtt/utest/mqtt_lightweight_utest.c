@@ -147,7 +147,7 @@ static void setupWillInfo( MQTTPublishInfo_t * const pWillInfo )
     pWillInfo->pTopicName = CLIENT_IDENTIFIER;
     pWillInfo->topicNameLength = CLIENT_IDENTIFIER_LEN;
     pWillInfo->dup = true;
-    pWillInfo->qos = MQTTQoS1;
+    pWillInfo->qos = MQTTQoS0;
     pWillInfo->retain = true;
 }
 
@@ -315,11 +315,12 @@ static void verifySerializedConnectPacket( const MQTTConnectInfo_t * const pConn
     pIndex++;
 
     /* Verify the 2 bytes of the keep alive interval into the CONNECT packet. */
-    TEST_ASSERT_EQUAL( pConnectInfo->keepAliveSeconds,
-                       UINT16_HIGH_BYTE( pConnectInfo->keepAliveSeconds ) );
-    TEST_ASSERT_EQUAL( pConnectInfo->keepAliveSeconds,
-                       UINT16_LOW_BYTE( pConnectInfo->keepAliveSeconds ) );
-    pIndex += 2;
+    TEST_ASSERT_EQUAL( UINT16_HIGH_BYTE( pConnectInfo->keepAliveSeconds ),
+                       *pIndex );
+    pIndex++;
+    TEST_ASSERT_EQUAL( UINT16_LOW_BYTE( pConnectInfo->keepAliveSeconds ),
+                       *pIndex );
+    pIndex++;
 
     /* Verify the client identifier into the CONNECT packet. */
     encodedStringLength = encodeString( encodedStringBuffer,
@@ -430,8 +431,9 @@ void test_MQTT_SerializeConnect_happy_paths()
     verifySerializedConnectPacket( &connectInfo, &willInfo,
                                    remainingLength, &networkBuffer );
 
-    /* Repeat with QoS2. */
-    willInfo.qos = MQTTQoS2;
+
+    /* Repeat with MQTTQoS1. */
+    willInfo.qos = MQTTQoS1;
     mqttStatus = MQTT_GetConnectPacketSize( &connectInfo,
                                             &willInfo,
                                             &remainingLength,
@@ -443,6 +445,42 @@ void test_MQTT_SerializeConnect_happy_paths()
                                         remainingLength, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     verifySerializedConnectPacket( &connectInfo, &willInfo,
+                                   remainingLength, &networkBuffer );
+
+
+    /* Re-initialize objects for branch coverage. */
+    willInfo.qos = MQTTQoS2;
+    connectInfo.cleanSession = false;
+    connectInfo.pUserName = NULL;
+    connectInfo.userNameLength = 0;
+    connectInfo.pPassword = NULL;
+    willInfo.retain = false;
+    mqttStatus = MQTT_GetConnectPacketSize( &connectInfo,
+                                            NULL,
+                                            &remainingLength,
+                                            &packetSize );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    /* Make sure buffer has enough space. */
+    TEST_ASSERT_GREATER_OR_EQUAL( packetSize, networkBuffer.size );
+    mqttStatus = MQTT_SerializeConnect( &connectInfo, &willInfo,
+                                        remainingLength, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    verifySerializedConnectPacket( &connectInfo, &willInfo,
+                                   remainingLength, &networkBuffer );
+
+
+    /* Repeat with NULL pWillInfo. */
+    mqttStatus = MQTT_GetConnectPacketSize( &connectInfo,
+                                            NULL,
+                                            &remainingLength,
+                                            &packetSize );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    /* Make sure buffer has enough space. */
+    TEST_ASSERT_GREATER_OR_EQUAL( packetSize, networkBuffer.size );
+    mqttStatus = MQTT_SerializeConnect( &connectInfo, NULL,
+                                        remainingLength, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    verifySerializedConnectPacket( &connectInfo, NULL,
                                    remainingLength, &networkBuffer );
 }
 
