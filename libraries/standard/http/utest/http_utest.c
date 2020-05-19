@@ -479,7 +479,7 @@ void test_Http_InitializeRequestHeaders_ReqInfo()
  * @brief Test HTTP_INSUFFICIENT_MEMORY from having requestHeaders.bufferLen less than
  * what is required to fit HTTP_TEST_REQUEST_LINE.
  */
-void test_Http_InitializeRequestHeaders_InsufficientMemory()
+void test_Http_InitializeRequestHeaders_Insufficient_Memory()
 {
     HTTPStatus_t httpStatus = HTTP_INTERNAL_ERROR;
     HTTPRequestHeaders_t requestHeaders = { 0 };
