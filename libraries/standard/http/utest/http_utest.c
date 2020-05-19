@@ -347,9 +347,9 @@ static void setupRequestInfo( HTTPRequestInfo_t * pRequestInfo )
 }
 
 /**
+ * @brief Initialize pRequestHeaders with static buffer.
  *
  * @param[in] pRequestHeaders Request header buffer information.
- * @param[in] bufferLen Size of the buffer.
  */
 static void setupBuffer( HTTPRequestHeaders_t * pRequestHeaders )
 {
