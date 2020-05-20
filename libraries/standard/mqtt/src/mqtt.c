@@ -213,8 +213,6 @@ static int32_t sendPacket( MQTTContext_t * pContext,
     assert( pContext != NULL );
     assert( bytesToSend != 0 );
 
-    /* Point to the start of the network buffer from the context. */
-    pIndex = pContext->networkBuffer.pBuffer;
     /* Record the time of transmission. */
     sendTime = pContext->callbacks.getTime();
     bytesRemaining = bytesToSend;
