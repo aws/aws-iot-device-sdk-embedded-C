@@ -35,7 +35,7 @@ if( ${BUILD_TESTS} )
     # Add a target for running coverage on tests.
     add_custom_target(coverage
         COMMAND ${CMAKE_COMMAND} -P ${CMAKE_SOURCE_DIR}/tools/cmock/coverage.cmake
-        DEPENDS cmock unity http_utest mqtt_utest mqtt_state_utest mqtt_lightweight_utest
+        DEPENDS cmock unity http_utest mqtt_utest mqtt_lightweight_utest mqtt_state_utest
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     )
 endif()

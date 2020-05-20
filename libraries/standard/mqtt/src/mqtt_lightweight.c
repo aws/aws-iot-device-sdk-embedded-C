@@ -847,7 +847,7 @@ static MQTTStatus_t calculateSubscriptionPacketSize( const MQTTSubscribeInfo_t *
     packetSize += sizeof( uint16_t );
 
     /* Sum the lengths of all subscription topic filters; add 1 byte for each
-     * subscription's QoS if type is IOT_MQTT_SUBSCRIBE. */
+     * subscription's QoS if type is MQTT_SUBSCRIBE. */
     for( i = 0; i < subscriptionCount; i++ )
     {
         /* Add the length of the topic filter. MQTT strings are prepended
@@ -1316,8 +1316,12 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * const pConnect
                     pPacketSize ) );
         status = MQTTBadParameter;
     }
-
-    if( status == MQTTSuccess )
+    else if( ( pConnectInfo->clientIdentifierLength == 0U ) || ( pConnectInfo->pClientIdentifier == NULL ) )
+    {
+        LogError( ( "Mqtt_GetConnectPacketSize() client identifier must be set." ) );
+        status = MQTTBadParameter;
+    }
+    else
     {
         /* Add the length of the client identifier. */
         connectPacketSize += pConnectInfo->clientIdentifierLength + sizeof( uint16_t );
@@ -1396,6 +1400,15 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * const pConnectInfo
                     pBuffer->size,
                     connectPacketSize ) );
         status = MQTTNoMemory;
+    }
+    else if ( ( pWillInfo != NULL ) && 
+              ( ( pWillInfo->pPayload == NULL ) || ( pWillInfo->pTopicName == NULL ) ) )
+    {
+        LogError( ( "Argument cannot be NULL: pWillInfo->pPayload=%p, "
+                    "pWillInfo->pTopicName=%p",
+                    pWillInfo->pPayload,
+                    pWillInfo->pTopicName ) );
+        status = MQTTBadParameter;
     }
     else
     {
