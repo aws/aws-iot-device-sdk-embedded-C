@@ -1843,10 +1843,10 @@ MQTTStatus_t MQTT_SerializeDisconnect( const MQTTFixedBuffer_t * const pBuffer )
     {
         if( pBuffer->size < MQTT_DISCONNECT_PACKET_SIZE )
         {
-            LogErrorWithArgs( ( "Buffer size of %lu is not sufficient to hold "
-                                "serialized DISCONNECT packet of size of %lu.",
-                                pBuffer->size,
-                                MQTT_DISCONNECT_PACKET_SIZE ) );
+            LogError( ( "Buffer size of %lu is not sufficient to hold "
+                        "serialized DISCONNECT packet of size of %lu.",
+                        pBuffer->size,
+                        MQTT_DISCONNECT_PACKET_SIZE ) );
             status = MQTTNoMemory;
         }
     }
@@ -1868,7 +1868,7 @@ MQTTStatus_t MQTT_GetPingreqPacketSize( size_t * pPacketSize )
 
     if( pPacketSize == NULL )
     {
-        LogError( "pPacketSize is NULL." );
+        LogError( ( "pPacketSize is NULL." ) );
         status = MQTTBadParameter;
     }
     else
@@ -1896,10 +1896,10 @@ MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * const pBuffer )
     {
         if( pBuffer->size < MQTT_PACKET_PINGREQ_SIZE )
         {
-            LogErrorWithArgs( ( "Buffer size of %lu is not sufficient to hold "
-                                "serialized PINGREQ packet of size of %lu.",
-                                pBuffer->size,
-                                MQTT_PACKET_PINGREQ_SIZE ) );
+            LogError( ( "Buffer size of %lu is not sufficient to hold "
+                        "serialized PINGREQ packet of size of %lu.",
+                        pBuffer->size,
+                        MQTT_PACKET_PINGREQ_SIZE ) );
             status = MQTTNoMemory;
         }
     }
@@ -1974,8 +1974,8 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * const pIncomingPacket
              ( ( pIncomingPacket->type != MQTT_PACKET_TYPE_CONNACK ) &&
                ( pIncomingPacket->type != MQTT_PACKET_TYPE_PINGRESP ) ) )
     {
-        LogErrorWithArgs( ( "pPacketId cannot be NULL for packet type %02x.",
-                            pIncomingPacket->type ) );
+        LogError( ( "pPacketId cannot be NULL for packet type %02x.",
+                    pIncomingPacket->type ) );
         status = MQTTBadParameter;
     }
     /* Pointer for session present cannot be NULL for CONNACK. */
