@@ -21,12 +21,12 @@
  */
 
 /**
- * @file iot_logging_levels.h
+ * @file logging_levels.h
  * @brief Defines the logging level macros.
  */
 
-#ifndef IOT_LOGGING_LEVELS_H_
-#define IOT_LOGGING_LEVELS_H_
+#ifndef LOGGING_LEVELS_H_
+#define LOGGING_LEVELS_H_
 
 /**
  * @constantspage{logging,logging library}
@@ -106,4 +106,4 @@
  */
 #define LOG_DEBUG    4
 
-#endif /* ifndef IOT_LOGGING_LEVELS_H_ */
+#endif /* ifndef LOGGING_LEVELS_H_ */
