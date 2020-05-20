@@ -1962,13 +1962,26 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * const pIncomingPacket
 {
     MQTTStatus_t status = MQTTSuccess;
 
-    if( ( pIncomingPacket == NULL ) || ( pPacketId == NULL ) || ( pSessionPresent == NULL ) )
+    if( ( pIncomingPacket == NULL ) )
     {
-        LogErrorWithArgs( "Argument cannot be NULL: pIncomingPacket=%p, "
-                          "pPacketId=%p, pSessionPresent=%p",
-                          pIncomingPacket,
-                          pPacketId,
-                          pSessionPresent );
+        LogError( "pIncomingPacket cannot be NULL." );
+        status = MQTTBadParameter;
+    }
+    /* Pointer for packet identifier cannot be NULL for packets other than
+     * CONNACK and PINGRESP. */
+    else if( ( pPacketId == NULL ) &&
+             ( ( pIncomingPacket->type != MQTT_PACKET_TYPE_CONNACK ) &&
+               ( pIncomingPacket->type != MQTT_PACKET_TYPE_PINGRESP ) ) )
+    {
+        LogErrorWithArgs( "pPacketId cannot be NULL for packet type %02x.",
+                          pIncomingPacket->type );
+        status = MQTTBadParameter;
+    }
+    /* Pointer for session present cannot be NULL for CONNACK. */
+    else if( ( pSessionPresent == NULL ) &&
+             ( pIncomingPacket->type == MQTT_PACKET_TYPE_CONNACK ) )
+    {
+        LogError( "pSessionPresent cannot be NULL for CONNACK packet." );
         status = MQTTBadParameter;
     }
     else if( pIncomingPacket->pRemainingData == NULL )
