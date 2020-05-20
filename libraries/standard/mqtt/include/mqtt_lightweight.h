@@ -25,7 +25,7 @@
 /* bools are only defined in C99+ */
 #if __STDC_VERSION__ >= 199901L
     #include <stdbool.h>
-#else
+#elif !defined( __cplusplus ) && !defined( bool )
     #define bool     signed char
     #define false    0
     #define true     1
