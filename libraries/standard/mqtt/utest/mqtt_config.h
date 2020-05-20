@@ -1,5 +1,5 @@
-#ifndef CONFIG_H
-#define CONFIG_H
+#ifndef MQTT_CONFIG_H_
+#define MQTT_CONFIG_H_
 
 /**************************************************/
 /******* DO NOT CHANGE the following order ********/
@@ -57,4 +57,4 @@ typedef int MQTTNetworkContext_t;
 #define CLIENT_IDENTIFIER                   "testclient"
 
 
-#endif /* ifndef CONFIG_H */
+#endif /* ifndef MQTT_CONFIG_H_ */
