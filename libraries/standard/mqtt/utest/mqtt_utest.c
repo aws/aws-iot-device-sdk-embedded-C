@@ -777,7 +777,6 @@ static MQTTStatus_t modifyIncomingPacketPingResp( MQTTTransportRecvFunc_t readFu
     return MQTTSuccess;
 }
 
-
 /* Mocked MQTT_GetIncomingPacketTypeAndLength callback that modifies pIncomingPacket
  * to get full coverage on handleIncomingAck by setting the type to SUBACK. */
 static MQTTStatus_t modifyIncomingPacketSubAck( MQTTTransportRecvFunc_t readFunc,
@@ -794,11 +793,43 @@ static MQTTStatus_t modifyIncomingPacketSubAck( MQTTTransportRecvFunc_t readFunc
     return MQTTSuccess;
 }
 
+/* Mocked MQTT_GetIncomingPacketTypeAndLength callback that modifies pIncomingPacket
+ * to get full coverage on handleIncomingAck by setting the type to UNSUBACK. */
+static MQTTStatus_t modifyIncomingPacketUnsubAck( MQTTTransportRecvFunc_t readFunc,
+                                                  MQTTNetworkContext_t networkContext,
+                                                  MQTTPacketInfo_t * pIncomingPacket,
+                                                  int cmock_num_calls )
+{
+    /* Remove unused parameter warnings. */
+    ( void ) readFunc;
+    ( void ) networkContext;
+    ( void ) cmock_num_calls;
+
+    pIncomingPacket->type = MQTT_PACKET_TYPE_UNSUBACK;
+    return MQTTSuccess;
+}
+
+/* Mocked MQTT_GetIncomingPacketTypeAndLength callback that modifies pIncomingPacket
+ * to get full coverage on handleIncomingAck by setting the type to CONNECT. */
+static MQTTStatus_t modifyIncomingPacketConnect( MQTTTransportRecvFunc_t readFunc,
+                                                 MQTTNetworkContext_t networkContext,
+                                                 MQTTPacketInfo_t * pIncomingPacket,
+                                                 int cmock_num_calls )
+{
+    /* Remove unused parameter warnings. */
+    ( void ) readFunc;
+    ( void ) networkContext;
+    ( void ) cmock_num_calls;
+
+    pIncomingPacket->type = MQTT_PACKET_TYPE_CONNECT;
+    return MQTTSuccess;
+}
+
 /**
  * @brief Test coverage for handleIncomingPublish by using a CMock callback to
  * modify incomingPacket.
  */
-void test_MQTT_ProcessLoop_handleIncomingPublish( void )
+void test_MQTT_ProcessLoop_handleIncomingPublish_happy_paths( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
@@ -837,10 +868,38 @@ void test_MQTT_ProcessLoop_handleIncomingPublish( void )
 }
 
 /**
+ * @brief Test coverage for handleIncomingPublish by using a CMock callback to
+ * modify incomingPacket.
+ */
+void test_MQTT_ProcessLoop_handleIncomingPublish_sad_paths( void )
+{
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context;
+    MQTTTransportInterface_t transport;
+    MQTTFixedBuffer_t networkBuffer;
+    MQTTApplicationCallbacks_t callbacks;
+
+    setupTransportInterface( &transport );
+    setupCallbacks( &callbacks );
+    setupNetworkBuffer( &networkBuffer );
+
+    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    /* Verify that error is propagated when deserialization fails. */
+    MQTT_GetIncomingPacketTypeAndLength_Stub( modifyIncomingPacketPublish );
+    MQTT_DeserializePublish_ExpectAnyArgsAndReturn( MQTTBadResponse );
+
+    /* Run the method to test. */
+    mqttStatus = MQTT_ProcessLoop( &context, MQTT_NO_TIMEOUT_MS );
+    TEST_ASSERT_EQUAL( MQTTBadResponse, mqttStatus );
+}
+
+/**
  * @brief Test coverage for handleIncomingAck by using a CMock callback to
  * modify incomingPacket.
  */
-void test_MQTT_ProcessLoop_handleIncomingAck( void )
+void test_MQTT_ProcessLoop_handleIncomingAck_happy_paths( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
@@ -891,7 +950,6 @@ void test_MQTT_ProcessLoop_handleIncomingAck( void )
     mqttStatus = MQTT_ProcessLoop( &context, MQTT_NO_TIMEOUT_MS );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
-
     /* Mock the receiving of a PINGRESP packet type through a callback. */
     MQTT_GetIncomingPacketTypeAndLength_Stub( modifyIncomingPacketPingResp );
     MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -899,14 +957,6 @@ void test_MQTT_ProcessLoop_handleIncomingAck( void )
     mqttStatus = MQTT_ProcessLoop( &context, MQTT_NO_TIMEOUT_MS );
     TEST_ASSERT_FALSE( context.waitingForPingResp );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
-    /* Verify that error is propagated when deserialization fails. */
-    MQTT_GetIncomingPacketTypeAndLength_Stub( modifyIncomingPacketPingResp );
-    MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTBadResponse );
-    /* Run the method to test. */
-    mqttStatus = MQTT_ProcessLoop( &context, MQTT_NO_TIMEOUT_MS );
-    TEST_ASSERT_FALSE( context.waitingForPingResp );
-    TEST_ASSERT_EQUAL( MQTTBadResponse, mqttStatus );
-
 
     /* Mock the receiving of a SUBACK packet type through a callback. */
     MQTT_GetIncomingPacketTypeAndLength_Stub( modifyIncomingPacketSubAck );
@@ -914,11 +964,80 @@ void test_MQTT_ProcessLoop_handleIncomingAck( void )
     /* Run the method to test. */
     mqttStatus = MQTT_ProcessLoop( &context, MQTT_NO_TIMEOUT_MS );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
-    /* Verify that error is propagated when deserialization fails. */
-    MQTT_GetIncomingPacketTypeAndLength_Stub( modifyIncomingPacketSubAck );
+
+    /* Mock the receiving of an UNSUBACK packet type through a callback. */
+    MQTT_GetIncomingPacketTypeAndLength_Stub( modifyIncomingPacketUnsubAck );
+    MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    /* Run the method to test. */
+    mqttStatus = MQTT_ProcessLoop( &context, MQTT_NO_TIMEOUT_MS );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+}
+
+void test_MQTT_ProcessLoop_handleIncomingAck_sad_paths( void )
+{
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context;
+    MQTTTransportInterface_t transport;
+    MQTTFixedBuffer_t networkBuffer;
+    MQTTApplicationCallbacks_t callbacks;
+
+    setupTransportInterface( &transport );
+    setupCallbacks( &callbacks );
+    setupNetworkBuffer( &networkBuffer );
+
+    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    /* Verify that error is propagated when deserialization fails upon
+     * receiving a CONNECT or some other unknown packet type. */
+    MQTT_GetIncomingPacketTypeAndLength_Stub( modifyIncomingPacketConnect );
+    /* Run the method to test. */
+    mqttStatus = MQTT_ProcessLoop( &context, MQTT_NO_TIMEOUT_MS );
+    TEST_ASSERT_EQUAL( MQTTBadResponse, mqttStatus );
+
+    /* Verify that error is propagated when deserialization fails upon
+     * receiving a PUBACK. */
+    MQTT_GetIncomingPacketTypeAndLength_Stub( modifyIncomingPacketPubAck );
+    MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTBadResponse );
+    /* Run the method to test. */
+    mqttStatus = MQTT_ProcessLoop( &context, MQTT_NO_TIMEOUT_MS );
+    TEST_ASSERT_EQUAL( MQTTBadResponse, mqttStatus );
+
+    /* Verify that error is propagated when serialization fails upon
+     * receiving a PUBREC then sending a PUBREL. */
+    MQTT_GetIncomingPacketTypeAndLength_Stub( modifyIncomingPacketPubRec );
+    MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTPubRelSend );
+    MQTT_SerializeAck_ExpectAnyArgsAndReturn( MQTTNoMemory );
+    /* Run the method to test. */
+    mqttStatus = MQTT_ProcessLoop( &context, MQTT_NO_TIMEOUT_MS );
+    TEST_ASSERT_EQUAL( MQTTSendFailed, mqttStatus );
+
+    /* Verify that error is propagated when deserialization fails upon
+     * receiving a PINGRESP. */
+    MQTT_GetIncomingPacketTypeAndLength_Stub( modifyIncomingPacketPingResp );
     MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTBadResponse );
     /* Run the method to test. */
     mqttStatus = MQTT_ProcessLoop( &context, MQTT_NO_TIMEOUT_MS );
     TEST_ASSERT_FALSE( context.waitingForPingResp );
     TEST_ASSERT_EQUAL( MQTTBadResponse, mqttStatus );
+
+    /* Verify that error is propagated when deserialization fails upon
+     * receiving a SUBACK. */
+    MQTT_GetIncomingPacketTypeAndLength_Stub( modifyIncomingPacketSubAck );
+    MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTBadResponse );
+    /* Run the method to test. */
+    mqttStatus = MQTT_ProcessLoop( &context, MQTT_NO_TIMEOUT_MS );
+    TEST_ASSERT_EQUAL( MQTTBadResponse, mqttStatus );
+
+    /* Verify that MQTTIllegalState is returned if MQTT_UpdateStateAck(...)
+     * provides an unknown state such as MQTTStateNull to sendPublishAcks(...). */
+    MQTT_GetIncomingPacketTypeAndLength_Stub( modifyIncomingPacketPubRec );
+    MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTPubRelSend );
+    MQTT_SerializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTStateNull );
+    /* Run the method to test. */
+    mqttStatus = MQTT_ProcessLoop( &context, MQTT_NO_TIMEOUT_MS );
+    TEST_ASSERT_EQUAL( MQTTIllegalState, mqttStatus );
 }
