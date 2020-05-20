@@ -463,7 +463,7 @@ MQTTStatus_t MQTT_SerializeDisconnect( const MQTTFixedBuffer_t * const pBuffer )
  *
  * @param[out] pPacketSize The size of the MQTT PINGREQ packet.
  *
- * @return  #MQTTSuccess or #MQTTBadParameter id pPacketSize is NULL.
+ * @return  #MQTTSuccess or #MQTTBadParameter if pPacketSize is NULL.
  */
 MQTTStatus_t MQTT_GetPingreqPacketSize( size_t * pPacketSize );
 
