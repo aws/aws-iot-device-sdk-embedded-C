@@ -957,7 +957,8 @@ static MQTTStatus_t deserializeSuback( const MQTTPacketInfo_t * const pSuback,
     assert( pSuback != NULL );
     assert( pPacketIdentifier != NULL );
 
-    size_t remainingLength = pSuback->remainingLength;
+    size_t remainingLength;
+    remainingLength = pSuback->remainingLength;
     const uint8_t * pVariableHeader = pSuback->pRemainingData;
 
     /* A SUBACK must have a remaining length of at least 3 to accommodate the
@@ -1862,7 +1863,7 @@ MQTTStatus_t MQTT_SerializeDisconnect( const MQTTFixedBuffer_t * const pBuffer )
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_GetPingreqPacketSize( size_t * pPacketSize )
+MQTTStatus_t MQTT_GetPingReqPacketSize( size_t * pPacketSize )
 {
     MQTTStatus_t status = MQTTSuccess;
 
