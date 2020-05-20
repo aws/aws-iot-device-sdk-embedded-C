@@ -1200,7 +1200,7 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * const pContext )
     if( status == MQTTSuccess )
     {
         /* Get MQTT PINGREQ packet size. */
-        status = MQTT_GetPingReqPacketSize( &packetSize );
+        status = MQTT_GetPingreqPacketSize( &packetSize );
 
         if( status == MQTTSuccess )
         {
