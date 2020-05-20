@@ -63,6 +63,11 @@
  */
 #define MQTT_DISCONNECT_PACKET_SIZE                 ( 2UL )
 
+/*
+ * @brief A PINGREQ packet is always 2 bytes in size, defined by MQTT 3.1.1 spec.
+ */
+#define MQTT_PACKET_PINGREQ_SIZE                    ( 2U )
+
 /**
  * @brief The Remaining Length field of MQTT disconnect packets, per MQTT spec.
  */
@@ -1534,7 +1539,7 @@ MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * const pS
                                                   subscriptionCount,
                                                   pRemainingLength,
                                                   pPacketSize,
-                                                  MQTT_SUBSCRIBE );
+                                                  MQTT_UNSUBSCRIBE );
 
         if( status == MQTTBadParameter )
         {
@@ -1826,7 +1831,6 @@ MQTTStatus_t MQTT_GetDisconnectPacketSize( size_t * pPacketSize )
 MQTTStatus_t MQTT_SerializeDisconnect( const MQTTFixedBuffer_t * const pBuffer )
 {
     MQTTStatus_t status = MQTTSuccess;
-    size_t disconnectPacketSize;
 
     /* Validate arguments. */
     if( pBuffer == NULL )
@@ -1837,19 +1841,12 @@ MQTTStatus_t MQTT_SerializeDisconnect( const MQTTFixedBuffer_t * const pBuffer )
 
     if( status == MQTTSuccess )
     {
-        status = MQTT_GetDisconnectPacketSize( &disconnectPacketSize );
-        LogDebug( ( "MQTT DISCONNECT packet size is %ul.",
-                    disconnectPacketSize ) );
-    }
-
-    if( status == MQTTSuccess )
-    {
-        if( pBuffer->size < disconnectPacketSize )
+        if( pBuffer->size < MQTT_DISCONNECT_PACKET_SIZE )
         {
-            LogError( ( "Buffer size of %lu is not sufficient to hold "
-                        "serialized DISCONNECT packet of size of %lu.",
-                        pBuffer->size,
-                        disconnectPacketSize ) );
+            LogErrorWithArgs( ( "Buffer size of %lu is not sufficient to hold "
+                                "serialized DISCONNECT packet of size of %lu.",
+                                pBuffer->size,
+                                MQTT_DISCONNECT_PACKET_SIZE ) );
             status = MQTTNoMemory;
         }
     }
@@ -1858,6 +1855,26 @@ MQTTStatus_t MQTT_SerializeDisconnect( const MQTTFixedBuffer_t * const pBuffer )
     {
         pBuffer->pBuffer[ 0 ] = MQTT_PACKET_TYPE_DISCONNECT;
         pBuffer->pBuffer[ 1 ] = MQTT_DISCONNECT_REMAINING_LENGTH;
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+MQTTStatus_t MQTT_GetPingreqPacketSize( size_t * pPacketSize )
+{
+    MQTTStatus_t status = MQTTSuccess;
+
+    if( pPacketSize == NULL )
+    {
+        LogError( "pPacketSize is NULL." );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        /* MQTT PINGREQ packets always have the same size. */
+        *pPacketSize = MQTT_PACKET_PINGREQ_SIZE;
     }
 
     return status;
@@ -1874,15 +1891,20 @@ MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * const pBuffer )
         LogError( ( "pBuffer is NULL." ) );
         status = MQTTBadParameter;
     }
-    else if( pBuffer->size < MQTT_PACKET_PINGREQ_SIZE )
+
+    if( status == MQTTSuccess )
     {
-        LogError( ( "Buffer size of %lu is not sufficient to hold "
-                    "serialized PINGREQ packet of size of %lu.",
-                    pBuffer->size,
-                    MQTT_PACKET_PINGREQ_SIZE ) );
-        status = MQTTNoMemory;
+        if( pBuffer->size < MQTT_PACKET_PINGREQ_SIZE )
+        {
+            LogErrorWithArgs( ( "Buffer size of %lu is not sufficient to hold "
+                                "serialized PINGREQ packet of size of %lu.",
+                                pBuffer->size,
+                                MQTT_PACKET_PINGREQ_SIZE ) );
+            status = MQTTNoMemory;
+        }
     }
-    else
+
+    if( status == MQTTSuccess )
     {
         /* Ping request packets are always the same. */
         pBuffer->pBuffer[ 0 ] = MQTT_PACKET_TYPE_PINGREQ;
