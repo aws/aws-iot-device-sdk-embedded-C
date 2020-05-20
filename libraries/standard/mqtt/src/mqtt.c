@@ -1189,11 +1189,28 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * const pContext )
 {
     int32_t bytesSent = 0;
     MQTTStatus_t status = MQTTSuccess;
+    size_t packetSize;
 
     if( pContext == NULL )
     {
         LogError( "pContext is NULL." );
         status = MQTTBadParameter;
+    }
+
+    if( status == MQTTSuccess )
+    {
+        /* Get MQTT PINGREQ packet size. */
+        status = MQTT_GetPingReqPacketSize( &packetSize );
+
+        if( status == MQTTSuccess )
+        {
+            LogDebugWithArgs( "MQTT PINGREQ packet size is %lu.",
+                              packetSize );
+        }
+        else
+        {
+            LogError( "Failed to get the PINGREQ packet size." )
+        }
     }
 
     if( status == MQTTSuccess )
@@ -1207,7 +1224,7 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * const pContext )
         /* Send the serialized PINGREQ packet to transport layer. */
         bytesSent = sendPacket( pContext,
                                 pContext->networkBuffer.pBuffer,
-                                MQTT_PACKET_PINGREQ_SIZE );
+                                packetSize );
 
         if( bytesSent < 0 )
         {

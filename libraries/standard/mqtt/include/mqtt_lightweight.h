@@ -52,10 +52,6 @@
 #define MQTT_PACKET_TYPE_PINGRESP       ( ( uint8_t ) 0xD0U )  /**< @brief PINGRESP (server-to-client). */
 #define MQTT_PACKET_TYPE_DISCONNECT     ( ( uint8_t ) 0xE0U )  /**< @brief DISCONNECT (client-to-server). */
 
-/*
- * Constant relating to PINGREQ and PINGRESP packets, defined by MQTT 3.1.1 spec.
- */
-#define MQTT_PACKET_PINGREQ_SIZE        ( 2U )  /**< @brief A PINGREQ packet is always 2 bytes in size. */
 
 /**
  * @brief The size of MQTT PUBACK, PUBREC, PUBREL, and PUBCOMP packets, per MQTT spec.
@@ -461,6 +457,15 @@ MQTTStatus_t MQTT_GetDisconnectPacketSize( size_t * pPacketSize );
  * #MQTTSuccess otherwise.
  */
 MQTTStatus_t MQTT_SerializeDisconnect( const MQTTFixedBuffer_t * const pBuffer );
+
+/**
+ * @brief Get the size of an MQTT PINGREQ packet.
+ *
+ * @param[out] pPacketSize The size of the MQTT PINGREQ packet.
+ *
+ * @return  #MQTTSuccess or #MQTTBadParameter if pPacketSize is NULL.
+ */
+MQTTStatus_t MQTT_GetPingreqPacketSize( size_t * pPacketSize );
 
 /**
  * @brief Serialize an MQTT PINGREQ packet into the given buffer.
