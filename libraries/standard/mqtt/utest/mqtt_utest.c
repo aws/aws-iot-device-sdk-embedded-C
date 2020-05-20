@@ -895,6 +895,37 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_sad_paths( void )
     TEST_ASSERT_EQUAL( MQTTBadResponse, mqttStatus );
 }
 
+void expectPacketPath()
+{
+    /* Mock the receiving of a PUBREC packet type through a callback. */
+    MQTT_GetIncomingPacketTypeAndLength_Stub( modifyIncomingPacketPubRec );
+    MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTPubRelSend );
+    MQTT_SerializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTPubCompPending );
+}
+
+void test_MQTT_ProcessLoop_example( void )
+{
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context;
+    MQTTTransportInterface_t transport;
+    MQTTFixedBuffer_t networkBuffer;
+    MQTTApplicationCallbacks_t callbacks;
+
+    setupTransportInterface( &transport );
+    setupCallbacks( &callbacks );
+    setupNetworkBuffer( &networkBuffer );
+
+    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    expectPacketPath();
+
+    mqttStatus = MQTT_ProcessLoop( &context, MQTT_NO_TIMEOUT_MS );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+}
+
 /**
  * @brief Test coverage for handleIncomingAck by using a CMock callback to
  * modify incomingPacket.
@@ -995,14 +1026,6 @@ void test_MQTT_ProcessLoop_handleIncomingAck_sad_paths( void )
     mqttStatus = MQTT_ProcessLoop( &context, MQTT_NO_TIMEOUT_MS );
     TEST_ASSERT_EQUAL( MQTTBadResponse, mqttStatus );
 
-    /* Verify that error is propagated when deserialization fails upon
-     * receiving a PUBACK. */
-    MQTT_GetIncomingPacketTypeAndLength_Stub( modifyIncomingPacketPubAck );
-    MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTBadResponse );
-    /* Run the method to test. */
-    mqttStatus = MQTT_ProcessLoop( &context, MQTT_NO_TIMEOUT_MS );
-    TEST_ASSERT_EQUAL( MQTTBadResponse, mqttStatus );
-
     /* Verify that error is propagated when serialization fails upon
      * receiving a PUBREC then sending a PUBREL. */
     MQTT_GetIncomingPacketTypeAndLength_Stub( modifyIncomingPacketPubRec );
@@ -1012,6 +1035,14 @@ void test_MQTT_ProcessLoop_handleIncomingAck_sad_paths( void )
     /* Run the method to test. */
     mqttStatus = MQTT_ProcessLoop( &context, MQTT_NO_TIMEOUT_MS );
     TEST_ASSERT_EQUAL( MQTTSendFailed, mqttStatus );
+
+    /* Verify that error is propagated when deserialization fails upon
+     * receiving a PUBACK. */
+    MQTT_GetIncomingPacketTypeAndLength_Stub( modifyIncomingPacketPubAck );
+    MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTBadResponse );
+    /* Run the method to test. */
+    mqttStatus = MQTT_ProcessLoop( &context, MQTT_NO_TIMEOUT_MS );
+    TEST_ASSERT_EQUAL( MQTTBadResponse, mqttStatus );
 
     /* Verify that error is propagated when deserialization fails upon
      * receiving a PINGRESP. */
