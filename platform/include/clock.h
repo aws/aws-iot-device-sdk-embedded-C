@@ -70,8 +70,8 @@
  * @endcode
  */
 /* @[declare_platform_clock_gettimestring] */
-bool IotClock_GetTimestring( char * pBuffer,
-                             size_t bufferSize,
-                             size_t * pTimestringLength );
+bool Clock_GetTimestring( char * pBuffer,
+                          size_t bufferSize,
+                          size_t * pTimestringLength );
 
 #endif /* ifndef IOT_CLOCK_H_ */

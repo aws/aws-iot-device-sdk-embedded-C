@@ -34,7 +34,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "config.h"
+#include "mqtt_config.h"
 
 /* MQTT packet types. */
 #define MQTT_PACKET_TYPE_CONNECT        ( ( uint8_t ) 0x10U )  /**< @brief CONNECT (client-to-server). */
@@ -56,7 +56,7 @@
 /**
  * @brief The size of MQTT PUBACK, PUBREC, PUBREL, and PUBCOMP packets, per MQTT spec.
  */
-#define MQTT_PUBLISH_ACK_PACKET_SIZE        ( 4UL )
+#define MQTT_PUBLISH_ACK_PACKET_SIZE    ( 4UL )
 
 struct MQTTFixedBuffer;
 typedef struct MQTTFixedBuffer     MQTTFixedBuffer_t;
@@ -519,7 +519,7 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * const pIncomingPacket
  *
  * @return #MQTTSuccess on successful extraction of type and length,
  * #MQTTRecvFailed on transport receive failure,
- * #MQTTBadResponse if an invalid packet is read, and 
+ * #MQTTBadResponse if an invalid packet is read, and
  * #MQTTNoDataAvailable if there is nothing to read.
  */
 MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( MQTTTransportRecvFunc_t readFunc,

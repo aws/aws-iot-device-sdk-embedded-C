@@ -17,8 +17,8 @@ if( ${PROJECT_SOURCE_DIR} STREQUAL ${PROJECT_BINARY_DIR} )
 endif()
 
 # Import global configurations.
-include("tools/cmake/filePaths.cmake")
-include("tools/cmake/logging.cmake")
+include( "tools/cmake/filePaths.cmake" )
+include( "demos/logging-stack/logging.cmake" )
 
 # Configure options to always show in CMake GUI.
 option( BUILD_TESTS

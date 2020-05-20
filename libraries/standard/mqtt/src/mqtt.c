@@ -229,15 +229,15 @@ static int32_t sendPacket( MQTTContext_t * pContext,
             bytesRemaining -= ( size_t ) bytesSent;
             totalBytesSent += bytesSent;
             pIndex += bytesSent;
-            LogDebugWithArgs( "Bytes sent=%d, bytes remaining=%ul,"
-                              "total bytes sent=%d.",
-                              bytesSent,
-                              bytesRemaining,
-                              totalBytesSent );
+            LogDebug( ( "Bytes sent=%d, bytes remaining=%ul,"
+                        "total bytes sent=%d.",
+                        bytesSent,
+                        bytesRemaining,
+                        totalBytesSent ) );
         }
         else
         {
-            LogError( "Transport send failed." );
+            LogError( ( "Transport send failed." ) );
             totalBytesSent = -1;
             break;
         }
@@ -247,8 +247,8 @@ static int32_t sendPacket( MQTTContext_t * pContext,
     if( totalBytesSent > -1 )
     {
         pContext->lastPacketTime = sendTime;
-        LogDebugWithArgs( "Successfully sent packet at time %u.",
-                          sendTime );
+        LogDebug( ( "Successfully sent packet at time %u.",
+                    sendTime ) );
     }
 
     return totalBytesSent;
@@ -332,8 +332,8 @@ static int32_t recvExact( const MQTTContext_t * const pContext,
         }
         else
         {
-            LogErrorWithArgs( "Network error while receiving packet: ReturnCode=%d",
-                              bytesRecvd );
+            LogError( ( "Network error while receiving packet: ReturnCode=%d",
+                        bytesRecvd ) );
             totalBytesRecvd = bytesRecvd;
             receiveError = true;
         }
@@ -341,7 +341,7 @@ static int32_t recvExact( const MQTTContext_t * const pContext,
         if( ( bytesRemaining > 0U ) &&
             ( calculateElapsedTime( getTimeStampMs(), entryTimeMs ) > timeoutMs ) )
         {
-            LogError( "Time expired while receiving packet." );
+            LogError( ( "Time expired while receiving packet." ) );
             receiveError = true;
         }
     }
@@ -379,10 +379,10 @@ static MQTTStatus_t discardPacket( MQTTContext_t * const pContext,
 
         if( bytesReceived != ( int32_t ) bytesToReceive )
         {
-            LogErrorWithArgs( "Receive error while discarding packet."
-                              "ReceivedBytes=%d, ExpectedBytes=%u.",
-                              bytesReceived,
-                              bytesToReceive );
+            LogError( ( "Receive error while discarding packet."
+                        "ReceivedBytes=%d, ExpectedBytes=%u.",
+                        bytesReceived,
+                        bytesToReceive ) );
             receiveError = true;
         }
         else
@@ -397,7 +397,7 @@ static MQTTStatus_t discardPacket( MQTTContext_t * const pContext,
             }
             else
             {
-                LogError( "Time expired while discarding packet." );
+                LogError( ( "Time expired while discarding packet." ) );
                 receiveError = true;
             }
         }
@@ -405,8 +405,8 @@ static MQTTStatus_t discardPacket( MQTTContext_t * const pContext,
 
     if( totalBytesReceived == remainingLength )
     {
-        LogErrorWithArgs( "Dumped packet. DumpedBytes=%d.",
-                          totalBytesReceived );
+        LogError( ( "Dumped packet. DumpedBytes=%d.",
+                    totalBytesReceived ) );
         /* Packet dumped, so no data is available. */
         status = MQTTNoDataAvailable;
     }
@@ -428,10 +428,11 @@ static MQTTStatus_t receivePacket( MQTTContext_t * const pContext,
 
     if( incomingPacket.remainingLength > pContext->networkBuffer.size )
     {
-        LogErrorWithArgs( "Incoming packet length %u exceeds network buffer size %u."
-                          "Incoming packet will be dumped.",
-                          incomingPacket.remainingLength,
-                          pContext->networkBuffer );
+        LogError( ( "Incoming packet will be dumped: "
+                    "Packet length exceeds network buffer size."
+                    "PacketSize=%u, NetworkBufferSize=%u",
+                    incomingPacket.remainingLength,
+                    pContext->networkBuffer.size ) );
         status = discardPacket( pContext,
                                 incomingPacket.remainingLength,
                                 remainingTimeMs );
@@ -444,15 +445,15 @@ static MQTTStatus_t receivePacket( MQTTContext_t * const pContext,
         if( bytesReceived == ( int32_t ) bytesToReceive )
         {
             /* Receive successful, bytesReceived == bytesToReceive. */
-            LogInfoWithArgs( "Packet received. ReceivedBytes=%d.",
-                             bytesReceived );
+            LogInfo( ( "Packet received. ReceivedBytes=%d.",
+                       bytesReceived ) );
         }
         else
         {
-            LogErrorWithArgs( "Packet reception failed. ReceivedBytes=%d, "
-                              "ExpectedBytes=%u.",
-                              bytesReceived,
-                              bytesToReceive );
+            LogError( ( "Packet reception failed. ReceivedBytes=%d, "
+                        "ExpectedBytes=%u.",
+                        bytesReceived,
+                        bytesToReceive ) );
             status = MQTTRecvFailed;
         }
     }
@@ -525,19 +526,19 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * const pContext,
 
             if( newState == MQTTStateNull )
             {
-                LogErrorWithArgs( "Failed to update state of publish %u.",
-                                  packetId );
+                LogError( ( "Failed to update state of publish %u.",
+                            packetId ) );
                 status = MQTTIllegalState;
             }
         }
         else
         {
-            LogErrorWithArgs( "Failed to send ACK packet: PacketType=%02x, "
-                              "SentBytes=%d, "
-                              "PacketSize=%u",
-                              packetTypeByte,
-                              bytesSent,
-                              MQTT_PUBLISH_ACK_PACKET_SIZE );
+            LogError( ( "Failed to send ACK packet: PacketType=%02x, "
+                        "SentBytes=%d, "
+                        "PacketSize=%u",
+                        packetTypeByte,
+                        bytesSent,
+                        MQTT_PUBLISH_ACK_PACKET_SIZE ) );
             status = MQTTSendFailed;
         }
     }
@@ -597,7 +598,7 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * const pContext,
     assert( pIncomingPacket != NULL );
 
     status = MQTT_DeserializePublish( pIncomingPacket, &packetIdentifier, &publishInfo );
-    LogInfoWithArgs( "De-serialized incoming PUBLISH packet: DeserializerResult=%d", status );
+    LogInfo( ( "De-serialized incoming PUBLISH packet: DeserializerResult=%d", status ) );
 
     if( status == MQTTSuccess )
     {
@@ -605,8 +606,8 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * const pContext,
                                                       packetIdentifier,
                                                       MQTT_RECEIVE,
                                                       publishInfo.qos );
-        LogInfoWithArgs( "State record updated. New state=%d.",
-                         publishRecordState );
+        LogInfo( ( "State record updated. New state=%d.",
+                   publishRecordState ) );
 
         /* Send PUBACK or PUBREC if necessary. */
         status = sendPublishAcks( pContext,
@@ -649,7 +650,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * const pContext,
         case MQTT_PACKET_TYPE_PUBCOMP:
             ackType = getAckFromPacketType( pIncomingPacket->type );
             status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, &sessionPresent );
-            LogInfoWithArgs( "Ack packet deserialized with result: %d.", status );
+            LogInfo( ( "Ack packet deserialized with result: %d.", status ) );
 
             if( status == MQTTSuccess )
             {
@@ -657,8 +658,8 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * const pContext,
                                                           packetIdentifier,
                                                           ackType,
                                                           MQTT_RECEIVE );
-                LogInfoWithArgs( "State record updated. New state=%d.",
-                                 publishRecordState );
+                LogInfo( ( "State record updated. New state=%d.",
+                           publishRecordState ) );
 
                 /* Send PUBREL or PUBCOMP if necessary. */
                 status = sendPublishAcks( pContext,
@@ -707,8 +708,8 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * const pContext,
 
         default:
             /* Bad response from the server. */
-            LogErrorWithArgs( "Unexpected packet type from server: PacketType=%02x.",
-                              pIncomingPacket->type );
+            LogError( ( "Unexpected packet type from server: PacketType=%02x.",
+                        pIncomingPacket->type ) );
             status = MQTTBadResponse;
             break;
     }
@@ -728,20 +729,20 @@ static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * co
     /* Validate all the parameters. */
     if( ( pContext == NULL ) || ( pSubscriptionList == NULL ) )
     {
-        LogErrorWithArgs( "Argument cannot be NULL: pContext=%p, "
-                          "pSubscriptionList=%p.",
-                          pContext,
-                          pSubscriptionList );
+        LogError( ( "Argument cannot be NULL: pContext=%p, "
+                    "pSubscriptionList=%p.",
+                    pContext,
+                    pSubscriptionList ) );
         status = MQTTBadParameter;
     }
     else if( subscriptionCount == 0UL )
     {
-        LogError( "Subscription count is 0." );
+        LogError( ( "Subscription count is 0." ) );
         status = MQTTBadParameter;
     }
     else if( packetId == 0U )
     {
-        LogError( "Packet Id for subscription packet is 0." );
+        LogError( ( "Packet Id for subscription packet is 0." ) );
         status = MQTTBadParameter;
     }
     else
@@ -772,13 +773,13 @@ static MQTTStatus_t sendPublish( MQTTContext_t * const pContext,
 
     if( bytesSent < 0 )
     {
-        LogError( "Transport send failed for PUBLISH header." );
+        LogError( ( "Transport send failed for PUBLISH header." ) );
         status = MQTTSendFailed;
     }
     else
     {
-        LogDebugWithArgs( "Sent %d bytes of PUBLISH header.",
-                          bytesSent );
+        LogDebug( ( "Sent %d bytes of PUBLISH header.",
+                    bytesSent ) );
 
         /* Send Payload. */
         bytesSent = sendPacket( pContext,
@@ -787,13 +788,13 @@ static MQTTStatus_t sendPublish( MQTTContext_t * const pContext,
 
         if( bytesSent < 0 )
         {
-            LogError( "Transport send failed for PUBLISH payload." );
+            LogError( ( "Transport send failed for PUBLISH payload." ) );
             status = MQTTSendFailed;
         }
         else
         {
-            LogDebugWithArgs( "Sent %d bytes of PUBLISH payload.",
-                              bytesSent );
+            LogDebug( ( "Sent %d bytes of PUBLISH payload.",
+                        bytesSent ) );
         }
     }
 
@@ -857,10 +858,10 @@ static MQTTStatus_t receiveConnack( MQTTContext_t * const pContext,
         }
         else
         {
-            LogErrorWithArgs( "Incorrect packet type %X received while expecting"
-                              " CONNACK(%X).",
-                              pIncomingPacket->type,
-                              MQTT_PACKET_TYPE_CONNACK );
+            LogError( ( "Incorrect packet type %X received while expecting"
+                        " CONNACK(%X).",
+                        pIncomingPacket->type,
+                        MQTT_PACKET_TYPE_CONNACK ) );
             status = MQTTBadResponse;
         }
     }
@@ -876,12 +877,12 @@ static MQTTStatus_t receiveConnack( MQTTContext_t * const pContext,
 
     if( status != MQTTSuccess )
     {
-        LogErrorWithArgs( "CONNACK recv failed with status = %u.",
-                          status );
+        LogError( ( "CONNACK recv failed with status = %u.",
+                    status ) );
     }
     else
     {
-        LogInfo( "Received MQTT CONNACK successfully from broker." );
+        LogInfo( ( "Received MQTT CONNACK successfully from broker." ) );
     }
 
     return status;
@@ -900,14 +901,14 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * const pContext,
     if( ( pContext == NULL ) || ( pTransportInterface == NULL ) ||
         ( pCallbacks == NULL ) || ( pNetworkBuffer == NULL ) )
     {
-        LogErrorWithArgs( "Argument cannot be NULL: pContext=%p, "
-                          "pTransportInterface=%p "
-                          "pCallbacks=%p "
-                          "pNetworkBuffer=%p.",
-                          pContext,
-                          pTransportInterface,
-                          pCallbacks,
-                          pNetworkBuffer );
+        LogError( ( "Argument cannot be NULL: pContext=%p, "
+                    "pTransportInterface=%p "
+                    "pCallbacks=%p "
+                    "pNetworkBuffer=%p.",
+                    pContext,
+                    pTransportInterface,
+                    pCallbacks,
+                    pNetworkBuffer ) );
         status = MQTTBadParameter;
     }
     else
@@ -941,10 +942,10 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
 
     if( ( pContext == NULL ) || ( pConnectInfo == NULL ) )
     {
-        LogErrorWithArgs( "Argument cannot be NULL: pContext=%p, "
-                          "pConnectInfo=%p.",
-                          pContext,
-                          pConnectInfo );
+        LogError( ( "Argument cannot be NULL: pContext=%p, "
+                    "pConnectInfo=%p.",
+                    pContext,
+                    pConnectInfo ) );
         status = MQTTBadParameter;
     }
 
@@ -955,9 +956,9 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
                                             pWillInfo,
                                             &remainingLength,
                                             &packetSize );
-        LogDebugWithArgs( "CONNECT packet size is %lu and remaining length is %lu.",
-                          packetSize,
-                          remainingLength );
+        LogDebug( ( "CONNECT packet size is %lu and remaining length is %lu.",
+                    packetSize,
+                    remainingLength ) );
     }
 
     if( status == MQTTSuccess )
@@ -976,13 +977,13 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
 
         if( bytesSent < 0 )
         {
-            LogError( "Transport send failed for CONNECT packet." );
+            LogError( ( "Transport send failed for CONNECT packet." ) );
             status = MQTTSendFailed;
         }
         else
         {
-            LogDebugWithArgs( "Sent %d bytes of CONNECT packet.",
-                              bytesSent );
+            LogDebug( ( "Sent %d bytes of CONNECT packet.",
+                        bytesSent ) );
         }
     }
 
@@ -997,13 +998,13 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
 
     if( status == MQTTSuccess )
     {
-        LogInfo( "MQTT connection established with the broker." );
+        LogInfo( ( "MQTT connection established with the broker." ) );
         pContext->connectStatus = MQTTConnected;
     }
     else
     {
-        LogErrorWithArgs( "MQTT connection failed with status = %u.",
-                          status );
+        LogError( ( "MQTT connection failed with status = %u.",
+                    status ) );
     }
 
     return status;
@@ -1032,9 +1033,9 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * const pContext,
                                               subscriptionCount,
                                               &remainingLength,
                                               &packetSize );
-        LogDebugWithArgs( "SUBSCRIBE packet size is %lu and remaining length is %lu.",
-                          packetSize,
-                          remainingLength );
+        LogDebug( ( "SUBSCRIBE packet size is %lu and remaining length is %lu.",
+                    packetSize,
+                    remainingLength ) );
     }
 
     if( status == MQTTSuccess )
@@ -1056,13 +1057,13 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * const pContext,
 
         if( bytesSent < 0 )
         {
-            LogError( "Transport send failed for SUBSCRIBE packet." );
+            LogError( ( "Transport send failed for SUBSCRIBE packet." ) );
             status = MQTTSendFailed;
         }
         else
         {
-            LogDebugWithArgs( "Sent %d bytes of SUBSCRIBE packet.",
-                              bytesSent );
+            LogDebug( ( "Sent %d bytes of SUBSCRIBE packet.",
+                        bytesSent ) );
         }
     }
 
@@ -1083,16 +1084,16 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
     /* Validate arguments. */
     if( ( pContext == NULL ) || ( pPublishInfo == NULL ) )
     {
-        LogErrorWithArgs( "Argument cannot be NULL: pContext=%p, "
-                          "pPublishInfo=%p.",
-                          pContext,
-                          pPublishInfo );
+        LogError( ( "Argument cannot be NULL: pContext=%p, "
+                    "pPublishInfo=%p.",
+                    pContext,
+                    pPublishInfo ) );
         status = MQTTBadParameter;
     }
     else if( ( pPublishInfo->qos != MQTTQoS0 ) && ( packetId == 0U ) )
     {
-        LogErrorWithArgs( "Packet Id is 0 for PUBLISH with QoS=%u.",
-                          pPublishInfo->qos );
+        LogError( ( "Packet Id is 0 for PUBLISH with QoS=%u.",
+                    pPublishInfo->qos ) );
         status = MQTTBadParameter;
     }
     else
@@ -1106,9 +1107,9 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
         status = MQTT_GetPublishPacketSize( pPublishInfo,
                                             &remainingLength,
                                             &packetSize );
-        LogDebugWithArgs( "PUBLISH packet size is %lu and remaining length is %lu.",
-                          packetSize,
-                          remainingLength );
+        LogDebug( ( "PUBLISH packet size is %lu and remaining length is %lu.",
+                    packetSize,
+                    remainingLength ) );
     }
 
     if( status == MQTTSuccess )
@@ -1118,8 +1119,8 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
                                               remainingLength,
                                               &( pContext->networkBuffer ),
                                               &headerSize );
-        LogDebugWithArgs( "Serialized PUBLISH header size is %lu.",
-                          headerSize );
+        LogDebug( ( "Serialized PUBLISH header size is %lu.",
+                    headerSize ) );
     }
 
     if( status == MQTTSuccess )
@@ -1161,11 +1162,11 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
 
             if( publishStatus == MQTTStateNull )
             {
-                LogErrorWithArgs( "Update state for publish failed with status =%u."
-                                  " However PUBLISH packet is sent to the broker."
-                                  " Any further handling of ACKs for the packet Id"
-                                  " will fail.",
-                                  publishStatus );
+                LogError( ( "Update state for publish failed with status =%u."
+                            " However PUBLISH packet is sent to the broker."
+                            " Any further handling of ACKs for the packet Id"
+                            " will fail.",
+                            publishStatus ) );
 
                 /* TODO. Need to remove this update once MQTT_UpdateStatePublish is
                  * refactored with return type of MQTTStatus_t. */
@@ -1176,8 +1177,8 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
 
     if( status != MQTTSuccess )
     {
-        LogErrorWithArgs( "MQTT PUBLISH failed with status=%u.",
-                          status );
+        LogError( ( "MQTT PUBLISH failed with status=%u.",
+                    status ) );
     }
 
     return status;
@@ -1193,7 +1194,7 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * const pContext )
 
     if( pContext == NULL )
     {
-        LogError( "pContext is NULL." );
+        LogError( ( "pContext is NULL." ) );
         status = MQTTBadParameter;
     }
 
@@ -1204,12 +1205,12 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * const pContext )
 
         if( status == MQTTSuccess )
         {
-            LogDebugWithArgs( "MQTT PINGREQ packet size is %lu.",
-                              packetSize );
+            LogDebug( ( "MQTT PINGREQ packet size is %lu.",
+                        packetSize ) );
         }
         else
         {
-            LogError( "Failed to get the PINGREQ packet size." )
+            LogError( ( "Failed to get the PINGREQ packet size." ) );
         }
     }
 
@@ -1228,15 +1229,15 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * const pContext )
 
         if( bytesSent < 0 )
         {
-            LogError( "Transport send failed for PINGREQ packet." );
+            LogError( ( "Transport send failed for PINGREQ packet." ) );
             status = MQTTSendFailed;
         }
         else
         {
             pContext->pingReqSendTimeMs = pContext->lastPacketTime;
             pContext->waitingForPingResp = true;
-            LogDebugWithArgs( "Sent %d bytes of PINGREQ packet.",
-                              bytesSent );
+            LogDebug( ( "Sent %d bytes of PINGREQ packet.",
+                        bytesSent ) );
         }
     }
 
@@ -1266,9 +1267,9 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * const pContext,
                                                 subscriptionCount,
                                                 &remainingLength,
                                                 &packetSize );
-        LogDebugWithArgs( "UNSUBSCRIBE packet size is %lu and remaining length is %lu.",
-                          packetSize,
-                          remainingLength );
+        LogDebug( ( "UNSUBSCRIBE packet size is %lu and remaining length is %lu.",
+                    packetSize,
+                    remainingLength ) );
     }
 
     if( status == MQTTSuccess )
@@ -1290,13 +1291,13 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * const pContext,
 
         if( bytesSent < 0 )
         {
-            LogError( "Transport send failed for UNSUBSCRIBE packet." );
+            LogError( ( "Transport send failed for UNSUBSCRIBE packet." ) );
             status = MQTTSendFailed;
         }
         else
         {
-            LogDebugWithArgs( "Sent %d bytes of UNSUBSCRIBE packet.",
-                              bytesSent );
+            LogDebug( ( "Sent %d bytes of UNSUBSCRIBE packet.",
+                        bytesSent ) );
         }
     }
 
@@ -1314,7 +1315,7 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * const pContext )
     /* Validate arguments. */
     if( pContext == NULL )
     {
-        LogError( "pContext cannot be NULL." );
+        LogError( ( "pContext cannot be NULL." ) );
         status = MQTTBadParameter;
     }
 
@@ -1322,8 +1323,8 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * const pContext )
     {
         /* Get MQTT DISCONNECT packet size. */
         status = MQTT_GetDisconnectPacketSize( &packetSize );
-        LogDebugWithArgs( "MQTT DISCONNECT packet size is %lu.",
-                          packetSize );
+        LogDebug( ( "MQTT DISCONNECT packet size is %lu.",
+                    packetSize ) );
     }
 
     if( status == MQTTSuccess )
@@ -1340,19 +1341,19 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * const pContext )
 
         if( bytesSent < 0 )
         {
-            LogError( "Transport send failed for DISCONNECT packet." );
+            LogError( ( "Transport send failed for DISCONNECT packet." ) );
             status = MQTTSendFailed;
         }
         else
         {
-            LogDebugWithArgs( "Sent %d bytes of DISCONNECT packet.",
-                              bytesSent );
+            LogDebug( ( "Sent %d bytes of DISCONNECT packet.",
+                        bytesSent ) );
         }
     }
 
     if( status == MQTTSuccess )
     {
-        LogInfo( "Disconnected from the broker." );
+        LogInfo( ( "Disconnected from the broker." ) );
         pContext->connectStatus = MQTTNotConnected;
     }
 
@@ -1377,7 +1378,7 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * const pContext,
     }
     else
     {
-        LogError( "MQTT Context cannot be NULL." );
+        LogError( ( "MQTT Context cannot be NULL." ) );
     }
 
     while( status == MQTTSuccess )
@@ -1401,8 +1402,8 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * const pContext,
         }
         else if( status != MQTTSuccess )
         {
-            LogErrorWithArgs( "Receiving incoming packet length failed. Status=%d",
-                              status );
+            LogError( ( "Receiving incoming packet length failed. Status=%d",
+                        status ) );
         }
         else
         {
@@ -1436,7 +1437,7 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * const pContext,
 
         if( status != MQTTSuccess )
         {
-            LogErrorWithArgs( "Exiting receive loop. Error status=%d", status );
+            LogError( ( "Exiting receive loop. Error status=%d", status ) );
         }
 
         /* Recalculate remaining time and check if loop should exit. */
