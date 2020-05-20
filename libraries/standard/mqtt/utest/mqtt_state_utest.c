@@ -2,9 +2,9 @@
 
 #include "mqtt_state.h"
 
-#define MQTT_PACKET_ID_INVALID    ( uint16_t ) 0U
+#define MQTT_PACKET_ID_INVALID    ( ( uint16_t ) 0U )
 
-#define MQTT_STATE_ARRAY_MAX_COUNT 10U
+#define MQTT_STATE_ARRAY_MAX_COUNT ( 10U )
 
 /* ============================   UNITY FIXTURES ============================ */
 void setUp( void )
@@ -54,13 +54,26 @@ static void addToRecord( MQTTPubAckInfo_t * records,
     records[ index ].publishState = state;
 }
 
+static void fillRecord( MQTTPubAckInfo_t * records,
+                        uint16_t startingId,
+                        MQTTQoS_t qos,
+                        MQTTPublishState_t state )
+{
+    int i;
+    for( i = 0; i < MQTT_STATE_ARRAY_MAX_COUNT; i++ )
+    {
+        records[ i ].packetId = startingId + i;
+        records[ i ].qos = qos;
+        records[ i ].publishState = state;
+    }
+}
+
 /* ========================================================================== */
 
 void test_MQTT_ReserveState( void )
 {
     MQTTContext_t mqttContext = { 0 };
     MQTTStatus_t status;
-    int i;
 
     /* QoS 0 returns success. */
     TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_ReserveState( NULL, MQTT_PACKET_ID_INVALID, MQTTQoS0 ) );
@@ -80,12 +93,7 @@ void test_MQTT_ReserveState( void )
     TEST_ASSERT_EQUAL( MQTTStateCollision, status );
 
     /* Test for no memory. */
-    for( i = 0; i < MQTT_STATE_ARRAY_MAX_COUNT; i++ )
-    {
-        mqttContext.outgoingPublishRecords[ i ].packetId = 2;
-        mqttContext.outgoingPublishRecords[ i ].qos = MQTTQoS1;
-        mqttContext.outgoingPublishRecords[ i ].publishState = MQTTPublishSend;
-    }
+    fillRecord( mqttContext.outgoingPublishRecords, 2, MQTTQoS1, MQTTPublishSend );
     status = MQTT_ReserveState( &mqttContext, 1, MQTTQoS1 );
     TEST_ASSERT_EQUAL( MQTTNoMemory, status );
 
@@ -128,7 +136,6 @@ void test_MQTT_UpdateStatePublish( void )
     MQTTStateOperation_t operation = MQTT_SEND;
     MQTTQoS_t qos = MQTTQoS0;
     MQTTPublishState_t state;
-    int i = 0;
 
     /* QoS 0. */
     state = MQTT_UpdateStatePublish( &mqttContext, 0, operation, qos );
@@ -178,12 +185,7 @@ void test_MQTT_UpdateStatePublish( void )
 
     /* No memory. */
     operation = MQTT_RECEIVE;
-    for( i = 0; i < MQTT_STATE_ARRAY_MAX_COUNT; i++ )
-    {
-        mqttContext.incomingPublishRecords[ i ].packetId = 2;
-        mqttContext.incomingPublishRecords[ i ].qos = MQTTQoS1;
-        mqttContext.incomingPublishRecords[ i ].publishState = MQTTPublishSend;
-    }
+    fillRecord( mqttContext.incomingPublishRecords, 2, MQTTQoS1, MQTTPublishSend );
     state = MQTT_UpdateStatePublish( &mqttContext, PACKET_ID, operation, qos );
     TEST_ASSERT_EQUAL( MQTTStateNull, state );
 
