@@ -23,9 +23,9 @@
 #define MQTT_LIGHTWEIGHT_H
 
 /* bools are only defined in C99+ */
-#if __STDC_VERSION__ >= 199901L
+#if defined( __cplusplus ) || __STDC_VERSION__ >= 199901L
     #include <stdbool.h>
-#elif !defined( __cplusplus ) && !defined( bool )
+#elif !defined( bool )
     #define bool     signed char
     #define false    0
     #define true     1
