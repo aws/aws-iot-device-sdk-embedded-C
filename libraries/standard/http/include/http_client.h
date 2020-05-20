@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include "config.h"
+#include "http_config.h"
 
 /**
  * @brief Maximum size, in bytes, of headers allowed from the server.

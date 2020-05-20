@@ -32,20 +32,23 @@
 /* MQTT API header. */
 #include "mqtt.h"
 
+/* Demo Config header. */
+#include "demo_config.h"
+
 /**
  * @brief MQTT server host name.
  *
  * This demo uses the Mosquitto test server. This is a public MQTT server; do not
  * publish anything sensitive to this server.
  */
-#define SERVER    "test.mosquitto.org"
+#define SERVER                 "test.mosquitto.org"
 
 /**
  * @brief MQTT server port number.
  *
  * In general, port 1883 is for unsecured MQTT connections.
  */
-#define PORT      1883
+#define PORT                   1883
 
 /**
  * @brief Size of the network buffer for MQTT packets.
@@ -65,7 +68,7 @@
 /**
  * @brief Timeout for receiving CONNACK packet in milli seconds.
  */
-#define CONNACK_RECV_TIMEOUT_MS    (1000)
+#define CONNACK_RECV_TIMEOUT_MS     ( 1000 )
 
 /*-----------------------------------------------------------*/
 
@@ -77,7 +80,8 @@
  *
  * @return A file descriptor representing the TCP socket; -1 on failure.
  */
-static int connectToServer( const char * pServer, uint16_t port )
+static int connectToServer( const char * pServer,
+                            uint16_t port )
 {
     int status, tcpSocket = -1;
     struct addrinfo * pListHead = NULL, * pIndex;
@@ -157,7 +161,9 @@ static int connectToServer( const char * pServer, uint16_t port )
  *
  * @return Number of bytes sent; negative value on error.
  */
-static int32_t transportSend( MQTTNetworkContext_t tcpSocket, const void * pMessage, size_t bytesToSend )
+static int32_t transportSend( MQTTNetworkContext_t tcpSocket,
+                              const void * pMessage,
+                              size_t bytesToSend )
 {
     return ( int32_t ) send( tcpSocket, pMessage, bytesToSend, 0 );
 }
@@ -173,7 +179,9 @@ static int32_t transportSend( MQTTNetworkContext_t tcpSocket, const void * pMess
  *
  * @return Number of bytes received; negative value on error.
  */
-static int32_t transportRecv( MQTTNetworkContext_t tcpSocket, void * pBuffer, size_t bytesToRecv )
+static int32_t transportRecv( MQTTNetworkContext_t tcpSocket,
+                              void * pBuffer,
+                              size_t bytesToRecv )
 {
     return ( int32_t ) recv( tcpSocket, pBuffer, bytesToRecv, 0 );
 }
@@ -202,7 +210,6 @@ static void eventCallback( MQTTContext_t * pContext,
                            uint16_t packetIdentifier,
                            MQTTPublishInfo_t * pPublishInfo )
 {
-
 }
 
 /*-----------------------------------------------------------*/
@@ -215,7 +222,8 @@ static void eventCallback( MQTTContext_t * pContext,
  *
  * @return EXIT_SUCCESS if an MQTT session is established; EXIT_FAILURE otherwise.
  */
-static int establishMqttSession( MQTTContext_t * pContext, int tcpSocket )
+static int establishMqttSession( MQTTContext_t * pContext,
+                                 int tcpSocket )
 {
     int status = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus;
@@ -288,7 +296,8 @@ static int disconnectMqttSession( MQTTContext_t * pContext )
 /**
  * @brief Entry point of demo.
  */
-int main( int argc, char ** argv )
+int main( int argc,
+          char ** argv )
 {
     bool mqttSessionEstablished = false;
     int status = EXIT_SUCCESS;

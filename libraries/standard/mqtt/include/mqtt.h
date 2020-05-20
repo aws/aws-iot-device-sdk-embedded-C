@@ -22,7 +22,7 @@
 #ifndef MQTT_H
 #define MQTT_H
 
-#include "config.h"
+#include "mqtt_config.h"
 #include "mqtt_lightweight.h"
 
 struct MQTTApplicationCallbacks;

@@ -25,7 +25,6 @@ list(APPEND mock_define_list
 # list the files you would like to test here
 list(APPEND real_source_files
             ${HTTP_SOURCES}
-            ${LOGGING_SOURCES}
         )
 # list the directories the module under test includes
 list(APPEND real_include_directories
@@ -43,7 +42,7 @@ list(APPEND test_include_directories
             ${HTTP_INCLUDE_PUBLIC_DIRS}
             ${HTTP_INCLUDE_PRIVATE_DIRS}
             ${HTTP_TEST_INCLUDE_DIRS}
-            "${ROOT_DIR}/platform/include"
+            ${LOGGING_INCLUDE_DIRS}
         )
 
 # =============================  (end edit)  ===================================

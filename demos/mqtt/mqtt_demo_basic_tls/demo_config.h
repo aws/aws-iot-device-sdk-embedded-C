@@ -19,42 +19,35 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef CONFIG_H
-#define CONFIG_H
+#ifndef DEMO_CONFIG_H
+#define DEMO_CONFIG_H
 
-/* Set network context to OpenSSL SSL context. */
-#include <openssl/ssl.h>
-typedef SSL * MQTTNetworkContext_t;
+/**************************************************/
+/******* DO NOT CHANGE the following order ********/
+/**************************************************/
 
-/**
- * @brief The maximum number of MQTT PUBLISH messages that may be pending
- * acknowledgement at any time.
- *
- * QoS 1 and 2 MQTT PUBLISHes require acknowledgement from the server before
- * they can be completed. While they are awaiting the acknowledgement, the
- * client must maintain information about their state. The value of this
- * macro sets the limit on how many simultaneous PUBLISH states an MQTT
- * context maintains.
+/* Logging related header files are required to be included in the following order:
+ * 1. Include the header file "logging_levels.h".
+ * 2. Define LIBRARY_LOG_NAME and  LIBRARY_LOG_LEVEL.
+ * 3. Include the header file "logging_stack.h".
  */
-#define MQTT_STATE_ARRAY_MAX_COUNT          10U
 
-/**
- * @brief The maximum number of MQTT PUBLISH messages that may be pending
- * acknowledgement at any time.
- *
- * QoS 1 and 2 MQTT PUBLISHes require acknowlegement from the server before
- * they can be completed. While they are awaiting the acknowledgement, the
- * client must maintain information about their state. The value of this
- * macro sets the limit on how many simultaneous PUBLISH states an MQTT
- * context maintains.
- */
-#define MQTT_MAX_QUEUED_PUBLISH_MESSAGES    10
+/* Include header that defines log levels. */
+#include "logging_levels.h"
+
+/* Logging configuration for the Demo. */
+#define LIBRARY_LOG_NAME     "DEMO"
+#define LIBRARY_LOG_LEVEL    LOG_INFO
+
+#include "logging_stack.h"
+
+/************ End of logging configuration ****************/
 
 /**
  * @brief MQTT client identifier.
  *
  * No two clients may use the same client identifier simultaneously.
  */
-#define CLIENT_IDENTIFIER                   "testclient"
+#define CLIENT_IDENTIFIER    "testclient"
 
-#endif /* ifndef CONFIG_H */
+#endif /* ifndef DEMO_CONFIG_H */
