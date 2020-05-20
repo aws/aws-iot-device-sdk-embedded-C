@@ -1,7 +1,8 @@
 CC = gcc
 
 INCLUDE_DIRS = -I . \
-               -I ../../../libraries/standard/mqtt/include
+               -I ../../../libraries/standard/mqtt/include \
+               -I ../../logging-stack/
 
 SRC_FILES = mqtt_demo_basic_tls.c \
             $(shell find ../../../libraries/standard/mqtt/src -name '*.c')

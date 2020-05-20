@@ -1,5 +1,3 @@
-#include <stdbool.h>
-
 #include "unity.h"
 
 /* Include paths for public enums, structures, and macros. */
