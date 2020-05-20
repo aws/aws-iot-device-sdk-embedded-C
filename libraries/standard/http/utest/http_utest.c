@@ -93,7 +93,7 @@ static const char * pTestResponse = "HTTP/1.1 200 OK\r\n"
 #define HEADER_NOT_IN_BUFFER    "header-not-in-buffer"
 
 /* File-scoped Global variables */
-static HTTPStatus_t retCode = HTTP_NOT_SUPPORTED;
+static HTTPStatus_t retCode = HTTP_INTERNAL_ERROR;
 static uint8_t testBuffer[ HTTP_TEST_BUFFER_SIZE ] = { 0 };
 static HTTPRequestHeaders_t testHeaders = { 0 };
 static _headers_t expectedHeaders = { 0 };
