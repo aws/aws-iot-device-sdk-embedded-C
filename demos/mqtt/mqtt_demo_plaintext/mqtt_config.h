@@ -19,8 +19,8 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef MQTT_CONFIG_H
-#define MQTT_CONFIG_H
+#ifndef MQTT_CONFIG_H_
+#define MQTT_CONFIG_H_
 
 /**************************************************/
 /******* DO NOT CHANGE the following order ********/
@@ -58,4 +58,4 @@ typedef int MQTTNetworkContext_t;
  */
 #define MQTT_STATE_ARRAY_MAX_COUNT    10U
 
-#endif /* ifndef MQTT_CONFIG_H */
+#endif /* ifndef MQTT_CONFIG_H_ */
