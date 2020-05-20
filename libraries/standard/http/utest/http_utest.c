@@ -99,7 +99,6 @@ static HTTPRequestHeaders_t testHeaders = { 0 };
 static _headers_t expectedHeaders = { 0 };
 static int testRangeStart = 0;
 static int testRangeEnd = 0;
-static uint8_t httpBuffer[ HTTP_TEST_BUFFER_LEN ] = { 0 };
 static const uint8_t * pValueLoc = NULL;
 static size_t valueLen = 0u;
 static HTTPResponse_t testResponse = { 0 };
@@ -293,9 +292,9 @@ void tearDown( void )
     memset( &testHeaders, 0, sizeof( testHeaders ) );
     memset( testBuffer, 0, sizeof( testBuffer ) );
     memset( &expectedHeaders, 0, sizeof( expectedHeaders ) );
-        << << << < HEAD memset( &testResponse,
-                                0,
-                                sizeof( testResponse ) );
+    memset( &testResponse,
+            0,
+            sizeof( testResponse ) );
     pValueLoc = NULL;
     valueLen = 0u;
     pValueLoc = NULL;
@@ -310,7 +309,6 @@ void tearDown( void )
     expectedValCbRetVal = 0;
     valueLenToReturn = 0u;
     invokeHeaderCompleteCallback = 0u;
-    == == == =
 }
 
 /* Called at the beginning of the whole suite. */
@@ -322,10 +320,6 @@ void suiteSetUp()
 int suiteTearDown( int numFailures )
 {
     return numFailures;
-
-    >> >> >> > 413847c ... Use expectedHeaders struct
-
-    for expected headers data
 }
 
 /* ============== Testing HTTPClient_InitializeRequestHeaders =============== */
