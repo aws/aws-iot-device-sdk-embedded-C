@@ -15,7 +15,11 @@
 #define MQTT_NEXT_PACKET_ID_START    ( 1 )
 
 /**
- * @brief Length of the MQTT network buffer.
+ * @brief A PINGREQ packet is always 2 bytes in size, defined by MQTT 3.1.1 spec.
+ */
+#define MQTT_PACKET_PINGREQ_SIZE     ( 2U )
+
+/**
  * @brief A packet type not handled by MQTT_ProcessLoop.
  */
 #define MQTT_PACKET_TYPE_INVALID     ( 0U )
@@ -380,6 +384,20 @@ static MQTTStatus_t modifyIncomingPacket( MQTTTransportRecvFunc_t readFunc,
 }
 
 /**
+ * @brief MQTT_GetPingreqPacketSize callback used by CMock for setting the size
+ * of a PINGREQ packet and returns successfully.
+ */
+static MQTTStatus_t modifyPacketSize( size_t * pPacketSize,
+                                      int cmock_num_calls )
+{
+    /* Remove unused parameter warnings. */
+    ( void ) cmock_num_calls;
+
+    *pPacketSize = MQTT_PACKET_PINGREQ_SIZE;
+    return MQTTSuccess;
+}
+
+/**
  * @brief This helper function is used to expect any calls from the process loop
  * to mocked functions belonging to an external header file. Its parameters
  * are used to provide return values for these mocked functions.
@@ -416,6 +434,7 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext,
         if( ( pContext->waitingForPingResp == false ) &&
             ( pContext->keepAliveIntervalSec != 0U ) )
         {
+            MQTT_GetPingreqPacketSize_Stub( modifyPacketSize );
             MQTT_SerializePingreq_ExpectAnyArgsAndReturn( serializeStatus );
         }
 
@@ -1200,6 +1219,7 @@ void test_MQTT_ProcessLoop_handleKeepAlive_happy_paths( void )
     /* Coverage for the branch path where keep alive interval is greater than 0. */
     mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    context.waitingForPingResp = false;
     context.keepAliveIntervalSec = 0;
     expectProcessLoopCalls( &context, MQTTStateNull, MQTTStateNull,
                             MQTTSuccess, MQTTStateNull,
@@ -1275,7 +1295,7 @@ void test_MQTT_ProcessLoop_handleKeepAlive_error_paths( void )
  * iterations of the process loop, resulting in returning MQTTRecvFailed.
  * This allows us to have full branch and line coverage.
  */
-void test_MQTT_ProcessLoop_multiple_iterations()
+void test_MQTT_ProcessLoop_multiple_iterations( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
