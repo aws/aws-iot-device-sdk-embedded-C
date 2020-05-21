@@ -404,9 +404,9 @@ static MQTTStatus_t modifyPacketSize( size_t * pPacketSize,
  */
 static void expectProcessLoopCalls( MQTTContext_t * const pContext,
                                     MQTTStatus_t deserializeStatus,
-                                    MQTTPublishState_t updatedStateAfterDeserialize,
+                                    MQTTPublishState_t stateAfterDeserialize,
                                     MQTTStatus_t serializeStatus,
-                                    MQTTPublishState_t updatedStateAfterSerialize,
+                                    MQTTPublishState_t stateAfterSerialize,
                                     MQTTStatus_t processLoopStatus,
                                     bool incomingPublish )
 {
@@ -467,14 +467,14 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext,
     {
         if( incomingPublish )
         {
-            MQTT_UpdateStatePublish_ExpectAnyArgsAndReturn( updatedStateAfterDeserialize );
+            MQTT_UpdateStatePublish_ExpectAnyArgsAndReturn( stateAfterDeserialize );
         }
         else
         {
-            MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( updatedStateAfterDeserialize );
+            MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( stateAfterDeserialize );
         }
 
-        if( updatedStateAfterDeserialize == MQTTPublishDone )
+        if( stateAfterDeserialize == MQTTPublishDone )
         {
             expectMoreCalls = false;
         }
@@ -496,7 +496,7 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext,
     /* Update the state based on the sent packet. */
     if( expectMoreCalls )
     {
-        MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( updatedStateAfterSerialize );
+        MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( stateAfterSerialize );
     }
 
     /* Expect the above calls when running MQTT_ProcessLoop. */
