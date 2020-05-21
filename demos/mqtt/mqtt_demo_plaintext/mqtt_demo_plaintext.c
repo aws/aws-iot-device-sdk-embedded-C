@@ -149,19 +149,12 @@ extern int errno;
 
 /**
  * @brief globalEntryTime entry time into the application to use as a reference
- * timestamp in #getTime function. #getTime will always return the difference
+ * timestamp in #getTimeMs function. #getTimeMs will always return the difference
  * of current time with the globalEntryTime. This will reduce the chances of
  * overflow for 32 bit unsigned integer used for holding the timestamp.
  *
  */
 static uint32_t globalEntryTimeMs = 0U;
-
-/**
- * @brief Packet Identifier generated when Publish message was sent to the broker;
- * it is use to match incoming Publish acknowledgment message to the transmitted
- * publish.
- */
-static uint16_t globalPublishPacketIdentifier = 0U;
 
 /**
  * @brief Packet Identifier generated when Subscribe request was sent to the broker;
@@ -199,7 +192,8 @@ static int connectToServer( const char * pServer,
  * @param[in] pMessage Data to send.
  * @param[in] bytesToSend Length of data to send.
  *
- * @return Number of bytes sent; negative value on error.
+ * @return Number of bytes sent; negative value on error;
+ * 0 for timeout or 0 bytes sent.
  */
 static int32_t transportSend( MQTTNetworkContext_t tcpSocket,
                               const void * pMessage,
@@ -225,7 +219,7 @@ static int32_t transportRecv( MQTTNetworkContext_t tcpSocket,
  *
  * @return Time in milliseconds.
  */
-static uint32_t getTime( void );
+static uint32_t getTimeMs( void );
 
 /**
  * @brief The function to handle the incoming publishes.
@@ -313,14 +307,22 @@ static int connectToServer( const char * pServer,
                             int * pTcpSocket )
 {
     int status = EXIT_SUCCESS;
-    struct addrinfo * pListHead = NULL, * pIndex;
+    struct addrinfo hints, * pIndex, * pListHead = NULL;
     struct sockaddr * pServerInfo;
     uint16_t netPort = htons( port );
     socklen_t serverInfoLength;
     struct timeval transportTimeout;
 
+    /* Add hints to retrieve only TCP sockets in getaddrinfo. */
+    ( void ) memset( &hints, 0, sizeof( hints ) );
+    /* Address family of either IPv4 or IPv6. */
+    hints.ai_family = AF_UNSPEC;
+    /* TCP Socket. */
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
+
     /* Perform a DNS lookup on the given host name. */
-    status = getaddrinfo( pServer, NULL, NULL, &pListHead );
+    status = getaddrinfo( pServer, NULL, &hints, &pListHead );
 
     if( status != -1 )
     {
@@ -428,7 +430,21 @@ static int32_t transportSend( MQTTNetworkContext_t tcpSocket,
                               const void * pMessage,
                               size_t bytesToSend )
 {
-    return ( int32_t ) send( ( int ) tcpSocket, pMessage, bytesToSend, 0 );
+    int32_t bytesSend = 0;
+
+    bytesSend = send( ( int ) tcpSocket, pMessage, bytesToSend, 0 );
+
+    if( bytesSend < 0 )
+    {
+        /* Check if it was time out */
+        if( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) )
+        {
+            /* Set return value to 0 to indicate that send was timed out. */
+            bytesSend = 0;
+        }
+    }
+
+    return bytesSend;
 }
 
 /*-----------------------------------------------------------*/
@@ -465,7 +481,7 @@ static int32_t transportRecv( MQTTNetworkContext_t tcpSocket,
 
 /*-----------------------------------------------------------*/
 
-static uint32_t getTime( void )
+static uint32_t getTimeMs( void )
 {
     uint32_t timeMs;
     struct timespec timeSpec;
@@ -477,7 +493,7 @@ static uint32_t getTime( void )
     timeMs = ( uint32_t ) ( timeSpec.tv_sec * 1000 )
              + ( uint32_t ) ( timeSpec.tv_nsec / ( 1000 * 1000 ) );
 
-    /* Reduce it from globalEntryTime so as to always return the
+    /* Reduce globalEntryTime from obtained time so as to always return the
      * elapsed time in the application. */
     timeMs = ( uint32_t ) ( timeMs - globalEntryTimeMs );
 
@@ -506,17 +522,6 @@ static void handleIncomingPublish( MQTTPublishInfo_t * pPublishInfo,
         LogInfoWithArgs( "Incoming Publish Message : %.*s.",
                          pPublishInfo->payloadLength,
                          pPublishInfo->pPayload );
-
-        /* Check if the incoming Publish message is echo of the last Publish message
-         * we sent out. */
-        if( packetIdentifier != globalPublishPacketIdentifier )
-        {
-            LogInfo( "Incoming Publish has different packet identifier than outgoing Publish." );
-        }
-        else
-        {
-            LogInfo( "Incoming Publish packet identifier matches with outgoing Publish." );
-        }
     }
     else
     {
@@ -536,38 +541,45 @@ static void eventCallback( MQTTContext_t * pContext,
     assert( pContext != NULL );
     assert( pPacketInfo != NULL );
 
-    switch( pPacketInfo->type )
+    /* Handle incoming publish. The lower 4 bits of the publish packet
+     * type is used for the dup, QoS, and retain flags. Hence masking
+     * out the lower bits to check if the packet is publish. */
+    if( ( pPacketInfo->type & 0xF0U ) == MQTT_PACKET_TYPE_PUBLISH )
     {
-        case MQTT_PACKET_TYPE_PUBLISH:
-            assert( pPublishInfo != NULL );
-            /* This function would dispatch Publish message to various applications */
-            handleIncomingPublish( pPublishInfo, packetIdentifier );
-            break;
+        assert( pPublishInfo != NULL );
+        /* Handle incoming publish. */
+        handleIncomingPublish( pPublishInfo, packetIdentifier );
+    }
+    else
+    {
+        /* Handle other packets. */
+        switch( pPacketInfo->type )
+        {
+            case MQTT_PACKET_TYPE_SUBACK:
+                LogInfoWithArgs( "Subscribed to the topic %.*s.",
+                                 MQTT_EXAMPLE_TOPIC_LENGTH,
+                                 MQTT_EXAMPLE_TOPIC );
+                /* Make sure ACK packet identifier matches with Request packet identifier. */
+                assert( globalSubscribePacketIdentifier == packetIdentifier );
+                break;
 
-        case MQTT_PACKET_TYPE_SUBACK:
-            LogInfoWithArgs( "Subscribed to the topic %.*s.",
-                             MQTT_EXAMPLE_TOPIC_LENGTH,
-                             MQTT_EXAMPLE_TOPIC );
-            /* Make sure ACK packet identifier matches with Request packet identifier. */
-            assert( globalSubscribePacketIdentifier == packetIdentifier );
-            break;
+            case MQTT_PACKET_TYPE_UNSUBACK:
+                LogInfoWithArgs( "Unsubscribed from the topic %.*s.",
+                                 MQTT_EXAMPLE_TOPIC_LENGTH,
+                                 MQTT_EXAMPLE_TOPIC );
+                /* Make sure ACK packet identifier matches with Request packet identifier. */
+                assert( globalUnsubscribePacketIdentifier == packetIdentifier );
+                break;
 
-        case MQTT_PACKET_TYPE_UNSUBACK:
-            LogInfoWithArgs( "Unsubscribed from the topic %.*s.",
-                             MQTT_EXAMPLE_TOPIC_LENGTH,
-                             MQTT_EXAMPLE_TOPIC );
-            /* Make sure ACK packet identifier matches with Request packet identifier. */
-            assert( globalUnsubscribePacketIdentifier == packetIdentifier );
-            break;
+            case MQTT_PACKET_TYPE_PINGRESP:
+                LogInfo( "PIGRESP received." );
+                break;
 
-        case MQTT_PACKET_TYPE_PINGRESP:
-            LogInfo( "PIGRESP received." );
-            break;
-
-        /* Any other packet type is invalid. */
-        default:
-            LogInfoWithArgs( "Unknown packet type received:(%lu).",
-                             pPacketInfo->type );
+            /* Any other packet type is invalid. */
+            default:
+                LogErrorWithArgs( "Unknown packet type received:(%02x).",
+                                  pPacketInfo->type );
+        }
     }
 }
 
@@ -607,7 +619,7 @@ static int establishMqttSession( MQTTContext_t * pContext,
 
     /* Application callback for getting the time for MQTT library. This time
      * function will be used to calculate intervals in MQTT library.*/
-    callbacks.getTime = getTime;
+    callbacks.getTime = getTimeMs;
 
     /* Initialize MQTT library. */
     MQTT_Init( pContext, &transport, &callbacks, &networkBuffer );
@@ -779,13 +791,11 @@ static int publishToTopic( MQTTContext_t * pContext )
     publishInfo.pPayload = MQTT_EXAMPLE_MESSAGE;
     publishInfo.payloadLength = MQTT_EXAMPLE_MESSAGE_LENGTH;
 
-    /* Generate packet identifier for the PUBLISH packet. */
-    globalPublishPacketIdentifier = MQTT_GetPacketId( pContext );
-
-    /* Send PUBLISH packet. */
+    /* Send PUBLISH packet. Packet Id is not used for a QoS0 publish.
+     * Hence 0 is passed as packet id. */
     mqttSuccess = MQTT_Publish( pContext,
                                 &publishInfo,
-                                globalPublishPacketIdentifier );
+                                0U );
 
     if( status != MQTTSuccess )
     {
@@ -829,12 +839,12 @@ int main( int argc,
     ( void ) argv;
 
     /* Get the entry time to application. */
-    globalEntryTimeMs = getTime();
+    globalEntryTimeMs = getTimeMs();
 
     /* Establish a TCP connection with the MQTT broker. This example connects
      * to the MQTT broker as specified in BROKER_ENDPOINT and BROKER_PORT at
      * the top of this file. */
-    LogInfoWithArgs( "Create a TCP connection to %.*s:%d.",
+    LogInfoWithArgs( "Creating a TCP connection to %.*s:%d.",
                      BROKER_ENDPOINT_LENGTH,
                      BROKER_ENDPOINT,
                      BROKER_PORT );
