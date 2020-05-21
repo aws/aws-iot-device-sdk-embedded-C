@@ -80,7 +80,42 @@ typedef struct _headers
 #define HTTP_TEST_INITIALIZED_HEADER_BUFFER_LEN \
     ( HTTP_TEST_MAX_INITIALIZED_HEADER_LEN + 1 )
 
-#define HTTP_TEST_BUFFER_LEN    1024
+/* Template HTTP header fields and values. */
+#define HTTP_TEST_HEADER_FIELD               "Authorization"
+#define HTTP_TEST_HEADER_FIELD_LEN           ( sizeof( HTTP_TEST_HEADER_FIELD ) - 1 )
+#define HTTP_TEST_HEADER_VALUE               "None"
+#define HTTP_TEST_HEADER_VALUE_LEN           ( sizeof( HTTP_TEST_HEADER_VALUE ) - 1 )
+/* Template for first line of HTTP header. */
+#define HTTP_TEST_HEADER_REQUEST_LINE        "GET / HTTP/1.1 \r\n"
+#define HTTP_TEST_HEADER_REQUEST_LINE_LEN    ( sizeof( HTTP_TEST_HEADER_REQUEST_LINE ) - 1 )
+#define HTTP_REQUEST_HEADERS_INITIALIZER     { 0 }
+/* Template for snprintf(...) strings. */
+#define HTTP_TEST_SINGLE_HEADER_FORMAT       "%s%s: %s\r\n\r\n"
+#define HTTP_TEST_DOUBLE_HEADER_FORMAT       "%s%s: %s\r\n%s: %s\r\n\r\n"
+
+/* Length of the following template HTTP header.
+ *   <HTTP_TEST_HEADER_REQUEST_LINE> \r\n
+ *   <HTTP_TEST_HEADER_FIELD>: <HTTP_TEST_HEADER_VALUE> \r\n
+ *   \r\n
+ * This is used to initialize the expectedHeader string. */
+#define HTTP_TEST_SINGLE_HEADER_LEN       \
+    ( HTTP_TEST_HEADER_REQUEST_LINE_LEN + \
+      HTTP_TEST_HEADER_FIELD_LEN +        \
+      HTTP_HEADER_FIELD_SEPARATOR_LEN +   \
+      HTTP_TEST_HEADER_VALUE_LEN +        \
+      HTTP_HEADER_LINE_SEPARATOR_LEN +    \
+      HTTP_HEADER_LINE_SEPARATOR_LEN )
+
+/* The longest possible header used for these unit tests. */
+#define HTTP_TEST_DOUBLE_HEADER_LEN     \
+    ( HTTP_TEST_SINGLE_HEADER_LEN +     \
+      HTTP_TEST_HEADER_FIELD_LEN +      \
+      HTTP_HEADER_FIELD_SEPARATOR_LEN + \
+      HTTP_TEST_HEADER_VALUE_LEN +      \
+      HTTP_HEADER_LINE_SEPARATOR_LEN )
+
+#define HTTP_TEST_DOUBLE_HEADER_BUFFER_LEN \
+    ( HTTP_TEST_DOUBLE_HEADER_LEN + 1 )
 
 /* Template HTTP response for testing HTTPClient_ReadHeader API. */
 static const char * pTestResponse = "HTTP/1.1 200 OK\r\n"
@@ -271,7 +306,7 @@ static void addRangeToExpectedHeaders( _headers_t * expectedHeaders,
 /* ============================ UNITY FIXTURES ============================== */
 
 /* Called before each test method. */
-void setUp( void )
+void setUp()
 {
     testResponse.pBuffer = ( uint8_t * ) &pTestResponse[ 0 ];
     testResponse.bufferLen = strlen( pTestResponse );
@@ -286,9 +321,9 @@ void setUp( void )
 }
 
 /* Called after each test method. */
-void tearDown( void )
+void tearDown()
 {
-    retCode = HTTP_NOT_SUPPORTED;
+    retCode = HTTP_INTERNAL_ERROR;
     memset( &testHeaders, 0, sizeof( testHeaders ) );
     memset( testBuffer, 0, sizeof( testBuffer ) );
     memset( &expectedHeaders, 0, sizeof( expectedHeaders ) );
@@ -491,6 +526,213 @@ void test_Http_InitializeRequestHeaders_Insufficient_Memory()
     TEST_ASSERT_TRUE( strncmp( ( char * ) requestHeaders.pBuffer,
                                HTTP_TEST_REQUEST_LINE,
                                HTTP_TEST_REQUEST_LINE_LEN ) != 0 );
+}
+
+/* ===================== Testing HTTPClient_AddHeader ======================= */
+
+/**
+ * @brief Prefill the user buffer with HTTP_TEST_HEADER_REQUEST_LINE and call
+ * HTTPClient_AddHeader using HTTP_TEST_HEADER_FIELD and HTTP_TEST_HEADER_VALUE.
+ */
+void test_Http_AddHeader_Happy_Path()
+{
+    HTTPStatus_t httpStatus = HTTP_INTERNAL_ERROR;
+    HTTPRequestHeaders_t requestHeaders = { 0 };
+    int numBytes = 0;
+
+    setupBuffer( &requestHeaders );
+
+    /* Add 1 because snprintf(...) writes a null byte at the end. */
+    numBytes = snprintf( expectedHeaders.buffer, sizeof( expectedHeaders.buffer ),
+                         HTTP_TEST_SINGLE_HEADER_FORMAT,
+                         HTTP_TEST_HEADER_REQUEST_LINE,
+                         HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_VALUE );
+    /* Make sure that the entire pre-existing data was printed to the buffer. */
+    TEST_ASSERT_GREATER_THAN( 0, numBytes );
+    TEST_ASSERT_LESS_THAN( sizeof( expectedHeaders.buffer ), ( size_t ) numBytes );
+    expectedHeaders.dataLen = HTTP_TEST_SINGLE_HEADER_LEN;
+
+    /* Set parameters for requestHeaders. */
+    numBytes = snprintf( ( char * ) requestHeaders.pBuffer,
+                         HTTP_TEST_HEADER_REQUEST_LINE_LEN + 1,
+                         HTTP_TEST_HEADER_REQUEST_LINE );
+    /* Make sure that the entire pre-existing data was printed to the buffer. */
+    TEST_ASSERT_GREATER_THAN( 0, numBytes );
+    TEST_ASSERT_LESS_THAN( requestHeaders.bufferLen, ( size_t ) numBytes );
+    /* We correctly set headersLen after writing request line to requestHeaders.pBuffer. */
+    requestHeaders.headersLen = HTTP_TEST_HEADER_REQUEST_LINE_LEN;
+
+    /* Run the method to test. */
+    httpStatus = HTTPClient_AddHeader( &requestHeaders,
+                                       HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_FIELD_LEN,
+                                       HTTP_TEST_HEADER_VALUE, HTTP_TEST_HEADER_VALUE_LEN );
+    TEST_ASSERT_EQUAL( expectedHeaders.dataLen, requestHeaders.headersLen );
+    TEST_ASSERT_EQUAL_MEMORY( expectedHeaders.buffer,
+                              requestHeaders.pBuffer, expectedHeaders.dataLen );
+    TEST_ASSERT_EQUAL( HTTP_SUCCESS, httpStatus );
+}
+
+/**
+ * @brief Test invalid parameters, following order of else-if blocks in the HTTP library.
+ */
+void test_Http_AddHeader_Invalid_Parameters()
+{
+    HTTPStatus_t httpStatus = HTTP_INTERNAL_ERROR;
+    HTTPRequestHeaders_t requestHeaders = { 0 };
+
+    /* Test a NULL request headers interface. */
+    httpStatus = HTTPClient_AddHeader( NULL,
+                                       HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_FIELD_LEN,
+                                       HTTP_TEST_HEADER_VALUE, HTTP_TEST_HEADER_VALUE_LEN );
+    TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, httpStatus );
+
+    /* Test a NULL pBuffer member of request headers. */
+    requestHeaders.pBuffer = NULL;
+    httpStatus = HTTPClient_AddHeader( &requestHeaders,
+                                       HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_FIELD_LEN,
+                                       HTTP_TEST_HEADER_VALUE, HTTP_TEST_HEADER_VALUE_LEN );
+    TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, httpStatus );
+
+    /* Test NULL header field. */
+    requestHeaders.pBuffer = testBuffer;
+    requestHeaders.bufferLen = HTTP_TEST_DOUBLE_HEADER_LEN;
+    httpStatus = HTTPClient_AddHeader( &requestHeaders,
+                                       NULL, HTTP_TEST_HEADER_FIELD_LEN,
+                                       HTTP_TEST_HEADER_VALUE, HTTP_TEST_HEADER_VALUE_LEN );
+    TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, httpStatus );
+
+    /* Test NULL header value. */
+    httpStatus = HTTPClient_AddHeader( &requestHeaders,
+                                       HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_FIELD_LEN,
+                                       NULL, HTTP_TEST_HEADER_VALUE_LEN );
+    TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, httpStatus );
+
+    /* Test that fieldLen > 0. */
+    httpStatus = HTTPClient_AddHeader( &requestHeaders,
+                                       HTTP_TEST_HEADER_FIELD, 0,
+                                       HTTP_TEST_HEADER_VALUE, HTTP_TEST_HEADER_VALUE_LEN );
+    TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, httpStatus );
+
+    /* Test that valueLen > 0. */
+    httpStatus = HTTPClient_AddHeader( &requestHeaders,
+                                       HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_FIELD_LEN,
+                                       HTTP_TEST_HEADER_VALUE, 0 );
+    TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, httpStatus );
+}
+
+/**
+ * @brief Test adding extra header with sufficient memory.
+ */
+void test_Http_AddHeader_Extra_Header_Sufficient_Memory()
+{
+    HTTPStatus_t httpStatus = HTTP_INTERNAL_ERROR;
+    HTTPRequestHeaders_t requestHeaders = { 0 };
+    int numBytes = 0;
+
+    setupBuffer( &requestHeaders );
+
+    /* Add 1 because snprintf(...) writes a null byte at the end. */
+    numBytes = snprintf( expectedHeaders.buffer, sizeof( expectedHeaders.buffer ),
+                         HTTP_TEST_DOUBLE_HEADER_FORMAT,
+                         HTTP_TEST_HEADER_REQUEST_LINE,
+                         HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_VALUE,
+                         HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_VALUE );
+    /* Make sure that the entire pre-existing data was printed to the buffer. */
+    TEST_ASSERT_GREATER_THAN( 0, numBytes );
+    TEST_ASSERT_LESS_THAN( sizeof( expectedHeaders.buffer ), ( size_t ) numBytes );
+    expectedHeaders.dataLen = HTTP_TEST_DOUBLE_HEADER_LEN;
+
+    /* Prefill the buffer with a request line and header. */
+    numBytes = snprintf( ( char * ) requestHeaders.pBuffer,
+                         HTTP_TEST_SINGLE_HEADER_LEN + 1,
+                         HTTP_TEST_SINGLE_HEADER_FORMAT,
+                         HTTP_TEST_HEADER_REQUEST_LINE,
+                         HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_VALUE );
+    TEST_ASSERT_EQUAL( HTTP_TEST_SINGLE_HEADER_LEN, numBytes );
+    requestHeaders.headersLen = HTTP_TEST_SINGLE_HEADER_LEN;
+    requestHeaders.bufferLen = expectedHeaders.dataLen;
+
+    /* Run the method to test. */
+    httpStatus = HTTPClient_AddHeader( &requestHeaders,
+                                       HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_FIELD_LEN,
+                                       HTTP_TEST_HEADER_VALUE, HTTP_TEST_HEADER_VALUE_LEN );
+    TEST_ASSERT_EQUAL( expectedHeaders.dataLen, requestHeaders.headersLen );
+    TEST_ASSERT_EQUAL_MEMORY( expectedHeaders.buffer,
+                              requestHeaders.pBuffer, expectedHeaders.dataLen );
+    TEST_ASSERT_EQUAL( HTTP_SUCCESS, httpStatus );
+}
+
+/**
+ * @brief Test adding extra header with insufficient memory.
+ */
+void test_Http_AddHeader_Extra_Header_Insufficient_Memory()
+{
+    HTTPStatus_t httpStatus = HTTP_INTERNAL_ERROR;
+    HTTPRequestHeaders_t requestHeaders = { 0 };
+    int numBytes = 0;
+
+    setupBuffer( &requestHeaders );
+
+    /* Add 1 because snprintf(...) writes a null byte at the end. */
+    numBytes = snprintf( expectedHeaders.buffer, sizeof( expectedHeaders.buffer ),
+                         HTTP_TEST_SINGLE_HEADER_FORMAT,
+                         HTTP_TEST_HEADER_REQUEST_LINE,
+                         HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_VALUE );
+    /* Make sure that the entire pre-existing data was printed to the buffer. */
+    TEST_ASSERT_GREATER_THAN( 0, numBytes );
+    TEST_ASSERT_LESS_THAN( sizeof( expectedHeaders.buffer ), ( size_t ) numBytes );
+    expectedHeaders.dataLen = HTTP_TEST_SINGLE_HEADER_LEN;
+
+    /* Prefill the buffer with a request line and header. */
+    numBytes = snprintf( ( char * ) requestHeaders.pBuffer,
+                         HTTP_TEST_SINGLE_HEADER_LEN + 1,
+                         HTTP_TEST_SINGLE_HEADER_FORMAT,
+                         HTTP_TEST_HEADER_REQUEST_LINE,
+                         HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_VALUE );
+    /* Make sure that the entire pre-existing data was printed to the buffer. */
+    TEST_ASSERT_GREATER_THAN( 0, numBytes );
+    TEST_ASSERT_LESS_THAN( requestHeaders.bufferLen, ( size_t ) numBytes );
+    requestHeaders.headersLen = HTTP_TEST_SINGLE_HEADER_LEN;
+    requestHeaders.bufferLen = requestHeaders.headersLen;
+
+    /* Run the method to test. */
+    httpStatus = HTTPClient_AddHeader( &requestHeaders,
+                                       HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_FIELD_LEN,
+                                       HTTP_TEST_HEADER_VALUE, HTTP_TEST_HEADER_VALUE_LEN );
+    TEST_ASSERT_EQUAL( expectedHeaders.dataLen, requestHeaders.headersLen );
+    TEST_ASSERT_EQUAL_MEMORY( expectedHeaders.buffer,
+                              requestHeaders.pBuffer, expectedHeaders.dataLen );
+    TEST_ASSERT_EQUAL( HTTP_INSUFFICIENT_MEMORY, httpStatus );
+}
+
+/**
+ * @brief Test HTTP_INSUFFICIENT_MEMORY error from having buffer size less than
+ * what is required to fit a single HTTP header.
+ */
+void test_Http_AddHeader_Single_Header_Insufficient_Memory()
+{
+    HTTPStatus_t httpStatus = HTTP_INTERNAL_ERROR;
+    HTTPRequestHeaders_t requestHeaders = { 0 };
+    int numBytes = 0;
+
+    setupBuffer( &requestHeaders );
+
+    /* Add 1 because snprintf(...) writes a null byte at the end. */
+    numBytes = snprintf( ( char * ) testBuffer,
+                         HTTP_TEST_HEADER_REQUEST_LINE_LEN + 1,
+                         HTTP_TEST_HEADER_REQUEST_LINE );
+    /* Make sure that the entire pre-existing data was printed to the buffer. */
+    TEST_ASSERT_GREATER_THAN( 0, numBytes );
+    TEST_ASSERT_LESS_THAN( sizeof( testBuffer ), ( size_t ) numBytes );
+    requestHeaders.headersLen = HTTP_TEST_HEADER_REQUEST_LINE_LEN;
+    requestHeaders.pBuffer = testBuffer;
+    requestHeaders.bufferLen = HTTP_TEST_SINGLE_HEADER_LEN - 1;
+
+    /* Run the method to test. */
+    httpStatus = HTTPClient_AddHeader( &requestHeaders,
+                                       HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_FIELD_LEN,
+                                       HTTP_TEST_HEADER_VALUE, HTTP_TEST_HEADER_VALUE_LEN );
+    TEST_ASSERT_EQUAL( HTTP_INSUFFICIENT_MEMORY, httpStatus );
 }
 
 /* ============== Testing HTTPClient_AddRangeHeader ================== */
@@ -1012,3 +1254,5 @@ void test_Http_ReadHeader_Happy_Path()
     TEST_ASSERT_EQUAL( ( const uint8_t * ) &pTestResponse[ headerValInRespLoc ], pValueLoc );
     TEST_ASSERT_EQUAL( headerValInRespLen, valueLen );
 }
+
+/* ========================================================================== */
