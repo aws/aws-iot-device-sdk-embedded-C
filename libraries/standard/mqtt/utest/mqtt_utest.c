@@ -1161,8 +1161,8 @@ void test_MQTT_ProcessLoop_handleIncomingAck_error_paths( void )
                             MQTTBadResponse, MQTTStateNull,
                             MQTTBadResponse, false );
 
-    /* Verify that MQTTSendFailed is propagated when serialization fails upon
-     * receiving a PUBREC then responding with a PUBREL. */
+    /* Verify that MQTTSendFailed is propagated when receiving a PUBREC
+     * then failing when serializing a PUBREL to send in response. */
     currentPacketType = MQTT_PACKET_TYPE_PUBREC;
     expectProcessLoopCalls( &context, MQTTSuccess, MQTTPubRelSend,
                             MQTTNoMemory, MQTTStateNull,
