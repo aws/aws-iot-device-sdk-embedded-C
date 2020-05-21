@@ -428,7 +428,7 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext,
         expectMoreCalls = false;
     }
 
-    /* When no data is available, the process loop tries to send a keep alive. */
+    /* When no data is available, the process loop tries to send a PINGREQ. */
     if( modifyIncomingPacketStatus == MQTTNoDataAvailable )
     {
         if( ( pContext->waitingForPingResp == false ) &&
@@ -1052,7 +1052,8 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_error_paths( void )
     modifyIncomingPacketStatus = MQTTSuccess;
 
     /* Verify that error is propagated when deserialization fails by returning
-     * MQTTBadResponse. Any parameters beyond that are actually irrelevant. */
+     * MQTTBadResponse. Any parameters beyond that are actually irrelevant
+     * because they are only used as return values for non-expected calls. */
     currentPacketType = MQTT_PACKET_TYPE_PUBLISH;
     expectProcessLoopCalls( &context, MQTTBadResponse, MQTTStateNull,
                             MQTTBadResponse, MQTTStateNull,
