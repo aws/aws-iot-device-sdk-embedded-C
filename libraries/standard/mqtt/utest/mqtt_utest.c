@@ -27,6 +27,7 @@
 #define MQTT_NO_TIMEOUT_MS           ( 0U )
 
 static uint8_t currentPacketType = 0;
+static MQTTStatus_t modifyIncomingPacketStatus = MQTTSuccess;
 
 /**
  * @brief Time at the beginning of each test. Note that this is not updated with
@@ -351,35 +352,30 @@ static MQTTStatus_t modifyIncomingPacket( MQTTTransportRecvFunc_t readFunc,
     ( void ) cmock_num_calls;
 
     pIncomingPacket->type = currentPacketType;
-    return MQTTSuccess;
+    return modifyIncomingPacketStatus;
 }
 
-static void expectProcessLoopCalls( MQTTStatus_t deserializeStatus,
+static void expectProcessLoopCalls( MQTTContext_t * const pContext,
+                                    MQTTStatus_t deserializeStatus,
                                     MQTTPublishState_t deserializeUpdatedState,
                                     MQTTStatus_t serializeStatus,
                                     MQTTPublishState_t serializeUpdatedState,
                                     MQTTStatus_t processLoopStatus,
                                     bool incomingPublish )
 {
-    MQTTStatus_t mqttStatus;
-    MQTTContext_t context;
-    MQTTTransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
-    MQTTApplicationCallbacks_t callbacks;
+    MQTTStatus_t mqttStatus = MQTTSuccess;
     bool expectMoreCalls = true;
-
-    setupTransportInterface( &transport );
-    setupCallbacks( &callbacks );
-    setupNetworkBuffer( &networkBuffer );
-
-    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
-    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
     MQTT_GetIncomingPacketTypeAndLength_Stub( modifyIncomingPacket );
 
-    /* Note that this could be any packet type that isn't handled by MQTT_ProcessLoop
-     * such as MQTT_PACKET_TYPE_SUBSCRIBE. */
-    if( currentPacketType == MQTT_PACKET_TYPE_CONNECT )
+    if( ( currentPacketType != MQTT_PACKET_TYPE_PUBLISH ) &&
+        ( currentPacketType != MQTT_PACKET_TYPE_PUBACK ) &&
+        ( currentPacketType != MQTT_PACKET_TYPE_PUBREC ) &&
+        ( currentPacketType != MQTT_PACKET_TYPE_PUBREL ) &&
+        ( currentPacketType != MQTT_PACKET_TYPE_PUBCOMP ) &&
+        ( currentPacketType != MQTT_PACKET_TYPE_PINGRESP ) &&
+        ( currentPacketType != MQTT_PACKET_TYPE_SUBACK ) &&
+        ( currentPacketType != MQTT_PACKET_TYPE_UNSUBACK ) )
     {
         expectMoreCalls = false;
     }
@@ -437,19 +433,19 @@ static void expectProcessLoopCalls( MQTTStatus_t deserializeStatus,
     }
 
     /* Expect the above calls when running MQTT_ProcessLoop. */
-    mqttStatus = MQTT_ProcessLoop( &context, MQTT_NO_TIMEOUT_MS );
+    mqttStatus = MQTT_ProcessLoop( pContext, MQTT_NO_TIMEOUT_MS );
     TEST_ASSERT_EQUAL( processLoopStatus, mqttStatus );
 
     if( mqttStatus = MQTTSuccess )
     {
         if( currentPacketType == MQTT_PACKET_TYPE_PUBLISH )
         {
-            TEST_ASSERT_TRUE( context.controlPacketSent );
+            TEST_ASSERT_TRUE( pContext->controlPacketSent );
         }
 
         if( currentPacketType == MQTT_PACKET_TYPE_PINGRESP )
         {
-            TEST_ASSERT_FALSE( context.waitingForPingResp );
+            TEST_ASSERT_FALSE( pContext->waitingForPingResp );
         }
     }
 }
@@ -934,15 +930,30 @@ void test_MQTT_ProcessLoop_invalid_params( void )
  */
 void test_MQTT_ProcessLoop_handleIncomingPublish_happy_paths( void )
 {
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context;
+    MQTTTransportInterface_t transport;
+    MQTTFixedBuffer_t networkBuffer;
+    MQTTApplicationCallbacks_t callbacks;
+
+    setupTransportInterface( &transport );
+    setupCallbacks( &callbacks );
+    setupNetworkBuffer( &networkBuffer );
+
+    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    modifyIncomingPacketStatus = MQTTSuccess;
+
     /* Assume QoS = 1 so that a PUBACK will be sent after receiving PUBLISH. */
     currentPacketType = MQTT_PACKET_TYPE_PUBLISH;
-    expectProcessLoopCalls( MQTTSuccess, MQTTPubAckSend,
+    expectProcessLoopCalls( &context, MQTTSuccess, MQTTPubAckSend,
                             MQTTSuccess, MQTTPublishDone,
                             MQTTSuccess, true );
 
     /* Assume QoS = 2 so that a PUBREC will be sent after receiving PUBLISH. */
     currentPacketType = MQTT_PACKET_TYPE_PUBLISH;
-    expectProcessLoopCalls( MQTTSuccess, MQTTPubRecSend,
+    expectProcessLoopCalls( &context, MQTTSuccess, MQTTPubRecSend,
                             MQTTSuccess, MQTTPubRelPending,
                             MQTTSuccess, true );
 }
@@ -953,9 +964,24 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_happy_paths( void )
  */
 void test_MQTT_ProcessLoop_handleIncomingPublish_sad_paths( void )
 {
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context;
+    MQTTTransportInterface_t transport;
+    MQTTFixedBuffer_t networkBuffer;
+    MQTTApplicationCallbacks_t callbacks;
+
+    setupTransportInterface( &transport );
+    setupCallbacks( &callbacks );
+    setupNetworkBuffer( &networkBuffer );
+
+    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    modifyIncomingPacketStatus = MQTTSuccess;
+
     /* Verify that error is propagated when deserialization fails. */
     currentPacketType = MQTT_PACKET_TYPE_PUBLISH;
-    expectProcessLoopCalls( MQTTBadResponse, MQTTStateNull,
+    expectProcessLoopCalls( &context, MQTTBadResponse, MQTTStateNull,
                             MQTTBadResponse, MQTTStateNull,
                             MQTTBadResponse, true );
 }
@@ -966,90 +992,149 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_sad_paths( void )
  */
 void test_MQTT_ProcessLoop_handleIncomingAck_happy_paths( void )
 {
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context;
+    MQTTTransportInterface_t transport;
+    MQTTFixedBuffer_t networkBuffer;
+    MQTTApplicationCallbacks_t callbacks;
+
+    setupTransportInterface( &transport );
+    setupCallbacks( &callbacks );
+    setupNetworkBuffer( &networkBuffer );
+
+    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    modifyIncomingPacketStatus = MQTTSuccess;
+
     /* Mock the receiving of a PUBACK packet type through a callback. */
     currentPacketType = MQTT_PACKET_TYPE_PUBACK;
-    expectProcessLoopCalls( MQTTSuccess, MQTTPublishDone,
+    expectProcessLoopCalls( &context, MQTTSuccess, MQTTPublishDone,
                             MQTTSuccess, MQTTPublishDone,
                             MQTTSuccess, false );
 
     /* Mock the receiving of a PUBREC packet type through a callback. */
     currentPacketType = MQTT_PACKET_TYPE_PUBREC;
-    expectProcessLoopCalls( MQTTSuccess, MQTTPubRelSend,
+    expectProcessLoopCalls( &context, MQTTSuccess, MQTTPubRelSend,
                             MQTTSuccess, MQTTPubCompPending,
                             MQTTSuccess, false );
 
     /* Mock the receiving of a PUBREL packet type through a callback. */
     currentPacketType = MQTT_PACKET_TYPE_PUBREL;
-    expectProcessLoopCalls( MQTTSuccess, MQTTPubCompSend,
+    expectProcessLoopCalls( &context, MQTTSuccess, MQTTPubCompSend,
                             MQTTSuccess, MQTTPublishDone,
                             MQTTSuccess, false );
 
     /* Mock the receiving of a PUBCOMP packet type through a callback. */
     currentPacketType = MQTT_PACKET_TYPE_PUBCOMP;
-    expectProcessLoopCalls( MQTTSuccess, MQTTPublishDone,
+    expectProcessLoopCalls( &context, MQTTSuccess, MQTTPublishDone,
                             MQTTSuccess, MQTTPublishDone,
                             MQTTSuccess, false );
 
     /* Mock the receiving of a PINGRESP packet type through a callback. */
     currentPacketType = MQTT_PACKET_TYPE_PINGRESP;
-    expectProcessLoopCalls( MQTTSuccess, MQTTStateNull,
+    expectProcessLoopCalls( &context, MQTTSuccess, MQTTStateNull,
                             MQTTSuccess, MQTTStateNull,
                             MQTTSuccess, false );
 
     /* Mock the receiving of a SUBACK packet type through a callback. */
     currentPacketType = MQTT_PACKET_TYPE_SUBACK;
-    expectProcessLoopCalls( MQTTSuccess, MQTTStateNull,
+    expectProcessLoopCalls( &context, MQTTSuccess, MQTTStateNull,
                             MQTTSuccess, MQTTStateNull,
                             MQTTSuccess, false );
 
     /* Mock the receiving of an UNSUBACK packet type through a callback. */
     currentPacketType = MQTT_PACKET_TYPE_UNSUBACK;
-    expectProcessLoopCalls( MQTTSuccess, MQTTStateNull,
+    expectProcessLoopCalls( &context, MQTTSuccess, MQTTStateNull,
                             MQTTSuccess, MQTTStateNull,
                             MQTTSuccess, false );
 }
 
 void test_MQTT_ProcessLoop_handleIncomingAck_sad_paths( void )
 {
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context;
+    MQTTTransportInterface_t transport;
+    MQTTFixedBuffer_t networkBuffer;
+    MQTTApplicationCallbacks_t callbacks;
+
+    setupTransportInterface( &transport );
+    setupCallbacks( &callbacks );
+    setupNetworkBuffer( &networkBuffer );
+
+    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    modifyIncomingPacketStatus = MQTTSuccess;
+
     /* Verify that error is propagated when deserialization fails upon
      * receiving a CONNECT or some other unknown packet type. */
-    currentPacketType = MQTT_PACKET_TYPE_CONNECT;
-    expectProcessLoopCalls( MQTTBadResponse, MQTTStateNull,
+    currentPacketType = 0u;
+    expectProcessLoopCalls( &context, MQTTBadResponse, MQTTStateNull,
                             MQTTBadResponse, MQTTStateNull,
                             MQTTBadResponse, false );
 
     /* Verify that error is propagated when serialization fails upon
      * receiving a PUBREC then sending a PUBREL. */
     currentPacketType = MQTT_PACKET_TYPE_PUBREC;
-    expectProcessLoopCalls( MQTTSuccess, MQTTPubRelSend,
+    expectProcessLoopCalls( &context, MQTTSuccess, MQTTPubRelSend,
                             MQTTNoMemory, MQTTStateNull,
                             MQTTSendFailed, false );
 
     /* Verify that error is propagated when deserialization fails upon
      * receiving a PUBACK. */
     currentPacketType = MQTT_PACKET_TYPE_PUBACK;
-    expectProcessLoopCalls( MQTTBadResponse, MQTTStateNull,
+    expectProcessLoopCalls( &context, MQTTBadResponse, MQTTStateNull,
                             MQTTBadResponse, MQTTStateNull,
                             MQTTBadResponse, false );
 
     /* Verify that error is propagated when deserialization fails upon
      * receiving a PINGRESP. */
     currentPacketType = MQTT_PACKET_TYPE_PINGRESP;
-    expectProcessLoopCalls( MQTTBadResponse, MQTTStateNull,
+    expectProcessLoopCalls( &context, MQTTBadResponse, MQTTStateNull,
                             MQTTBadResponse, MQTTStateNull,
                             MQTTBadResponse, false );
 
     /* Verify that error is propagated when deserialization fails upon
      * receiving a SUBACK. */
     currentPacketType = MQTT_PACKET_TYPE_SUBACK;
-    expectProcessLoopCalls( MQTTBadResponse, MQTTStateNull,
+    expectProcessLoopCalls( &context, MQTTBadResponse, MQTTStateNull,
                             MQTTBadResponse, MQTTStateNull,
                             MQTTBadResponse, false );
 
     /* Verify that MQTTIllegalState is returned if MQTT_UpdateStateAck(...)
      * provides an unknown state such as MQTTStateNull to sendPublishAcks(...). */
     currentPacketType = MQTT_PACKET_TYPE_PUBREC;
-    expectProcessLoopCalls( MQTTSuccess, MQTTPubRelSend,
+    expectProcessLoopCalls( &context, MQTTSuccess, MQTTPubRelSend,
+                            MQTTSuccess, MQTTStateNull,
+                            MQTTIllegalState, false );
+}
+
+/**
+ * @brief Test coverage for handleKeepAlive by using a CMock callback to
+ * modify incomingPacket.
+ */
+void test_MQTT_ProcessLoop_handleKeepAlive_happy_paths( void )
+{
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context;
+    MQTTTransportInterface_t transport;
+    MQTTFixedBuffer_t networkBuffer;
+    MQTTApplicationCallbacks_t callbacks;
+
+    setupTransportInterface( &transport );
+    setupCallbacks( &callbacks );
+    setupNetworkBuffer( &networkBuffer );
+
+    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    modifyIncomingPacketStatus = MQTTNoDataAvailable;
+    globalEntryTime = 2000;
+    context.lastPacketTime = 0;
+    context.keepAliveIntervalSec = 1;
+
+    expectProcessLoopCalls( &context, MQTTNoDataAvailable, MQTTPubRelSend,
                             MQTTSuccess, MQTTStateNull,
                             MQTTIllegalState, false );
 }
