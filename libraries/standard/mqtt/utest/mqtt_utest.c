@@ -16,17 +16,42 @@
 
 /**
  * @brief Length of the MQTT network buffer.
+ * @brief A packet type not handled by MQTT_ProcessLoop.
+ */
+#define MQTT_PACKET_TYPE_INVALID     ( 0U )
+
+/**
+ * @brief Number of seconds in a millisecond.
+ */
+#define MQTT_ONE_SECOND_TO_MS        ( 1000U )
+
+/**
+ * @brief Length of the MQTT network buffer.
  */
 #define MQTT_TEST_BUFFER_LENGTH      ( 1024 )
 
 /**
- * @brief Timeout for receiving a packet.
+ * @brief Length of time spent for single test case with
+ * multiple iterations spent in the process loop for coverage.
  */
-#define MQTT_TIMEOUT_MS              ( 3000 )
+#define MQTT_SAMPLE_TIMEOUT_MS       ( 2U )
 
+/**
+ * @brief Zero timeout in the process loop implies one iteration.
+ */
 #define MQTT_NO_TIMEOUT_MS           ( 0U )
 
-static uint8_t currentPacketType = 0;
+/**
+ * @brief The packet type to be received by the process loop.
+ * IMPORTANT: Make sure this is set before calling expectProcessLoopCalls(...).
+ */
+static uint8_t currentPacketType = MQTT_PACKET_TYPE_INVALID;
+
+/**
+ * @brief The return value of modifyIncomingPacket(...) CMock callback that
+ * replaces a call to MQTT_GetIncomingPacketTypeAndLength.
+ * IMPORTANT: Make sure this is set before calling expectProcessLoopCalls(...).
+ */
 static MQTTStatus_t modifyIncomingPacketStatus = MQTTSuccess;
 
 /**
@@ -357,9 +382,9 @@ static MQTTStatus_t modifyIncomingPacket( MQTTTransportRecvFunc_t readFunc,
 
 static void expectProcessLoopCalls( MQTTContext_t * const pContext,
                                     MQTTStatus_t deserializeStatus,
-                                    MQTTPublishState_t deserializeUpdatedState,
+                                    MQTTPublishState_t updatedStateAfterDeserialize,
                                     MQTTStatus_t serializeStatus,
-                                    MQTTPublishState_t serializeUpdatedState,
+                                    MQTTPublishState_t updatedStateAfterSerialize,
                                     MQTTStatus_t processLoopStatus,
                                     bool incomingPublish )
 {
@@ -368,6 +393,7 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext,
 
     MQTT_GetIncomingPacketTypeAndLength_Stub( modifyIncomingPacket );
 
+    /* More calls are expected only with the following packet types. */
     if( ( currentPacketType != MQTT_PACKET_TYPE_PUBLISH ) &&
         ( currentPacketType != MQTT_PACKET_TYPE_PUBACK ) &&
         ( currentPacketType != MQTT_PACKET_TYPE_PUBREC ) &&
@@ -380,6 +406,19 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext,
         expectMoreCalls = false;
     }
 
+    /* When no data is available, the process loop tries to send a keep alive. */
+    if( modifyIncomingPacketStatus == MQTTNoDataAvailable )
+    {
+        if( ( pContext->waitingForPingResp == false ) &&
+            ( pContext->keepAliveIntervalSec != 0U ) )
+        {
+            MQTT_SerializePingreq_ExpectAnyArgsAndReturn( serializeStatus );
+        }
+
+        expectMoreCalls = false;
+    }
+
+    /* Deserialize based on the packet type (PUB or ACK) being received. */
     if( expectMoreCalls )
     {
         if( incomingPublish )
@@ -400,23 +439,26 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext,
         }
     }
 
+    /* Update state based on the packet type (PUB or ACK) being received. */
     if( expectMoreCalls )
     {
         if( incomingPublish )
         {
-            MQTT_UpdateStatePublish_ExpectAnyArgsAndReturn( deserializeUpdatedState );
+            MQTT_UpdateStatePublish_ExpectAnyArgsAndReturn( updatedStateAfterDeserialize );
         }
         else
         {
-            MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( deserializeUpdatedState );
+            MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( updatedStateAfterDeserialize );
         }
 
-        if( deserializeUpdatedState == MQTTPublishDone )
+        if( updatedStateAfterDeserialize == MQTTPublishDone )
         {
             expectMoreCalls = false;
         }
     }
 
+    /* Serialize the packet to be sent in response to the received packet.
+     * Observe that there is no reason to serialize a PUB after receiving a packet. */
     if( expectMoreCalls )
     {
         MQTT_SerializeAck_ExpectAnyArgsAndReturn( serializeStatus );
@@ -427,15 +469,17 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext,
         }
     }
 
+    /* Update the state based on the sent packet. */
     if( expectMoreCalls )
     {
-        MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( serializeUpdatedState );
+        MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( updatedStateAfterSerialize );
     }
 
     /* Expect the above calls when running MQTT_ProcessLoop. */
     mqttStatus = MQTT_ProcessLoop( pContext, MQTT_NO_TIMEOUT_MS );
     TEST_ASSERT_EQUAL( processLoopStatus, mqttStatus );
 
+    /* Any final assertions to end the test. */
     if( mqttStatus = MQTTSuccess )
     {
         if( currentPacketType == MQTT_PACKET_TYPE_PUBLISH )
@@ -962,7 +1006,7 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_happy_paths( void )
  * @brief Test coverage for handleIncomingPublish by using a CMock callback to
  * modify incomingPacket.
  */
-void test_MQTT_ProcessLoop_handleIncomingPublish_sad_paths( void )
+void test_MQTT_ProcessLoop_handleIncomingPublish_error_paths( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
@@ -1050,7 +1094,7 @@ void test_MQTT_ProcessLoop_handleIncomingAck_happy_paths( void )
                             MQTTSuccess, false );
 }
 
-void test_MQTT_ProcessLoop_handleIncomingAck_sad_paths( void )
+void test_MQTT_ProcessLoop_handleIncomingAck_error_paths( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
@@ -1069,7 +1113,7 @@ void test_MQTT_ProcessLoop_handleIncomingAck_sad_paths( void )
 
     /* Verify that error is propagated when deserialization fails upon
      * receiving a CONNECT or some other unknown packet type. */
-    currentPacketType = 0u;
+    currentPacketType = MQTT_PACKET_TYPE_INVALID;
     expectProcessLoopCalls( &context, MQTTBadResponse, MQTTStateNull,
                             MQTTBadResponse, MQTTStateNull,
                             MQTTBadResponse, false );
@@ -1126,15 +1170,102 @@ void test_MQTT_ProcessLoop_handleKeepAlive_happy_paths( void )
     setupCallbacks( &callbacks );
     setupNetworkBuffer( &networkBuffer );
 
+    modifyIncomingPacketStatus = MQTTNoDataAvailable;
+    globalEntryTime = MQTT_ONE_SECOND_TO_MS;
+
+    /* Coverage for the branch path where keep alive interval is greater than 0. */
+    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    context.keepAliveIntervalSec = 0;
+    expectProcessLoopCalls( &context, MQTTStateNull, MQTTStateNull,
+                            MQTTSuccess, MQTTStateNull,
+                            MQTTSuccess, false );
+
+    /* Coverage for the branch path where keep alive interval is greater than 0,
+     * but the interval has expired yet. */
+    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    context.waitingForPingResp = true;
+    context.keepAliveIntervalSec = 1;
+    context.lastPacketTime = getTime();
+    expectProcessLoopCalls( &context, MQTTStateNull, MQTTStateNull,
+                            MQTTSuccess, MQTTStateNull,
+                            MQTTSuccess, false );
+
+    /* Coverage for the branch path where PING timeout interval hasn't expired. */
+    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    context.waitingForPingResp = true;
+    context.keepAliveIntervalSec = 1;
+    context.lastPacketTime = 0;
+    context.pingReqSendTimeMs = getTime();
+    context.pingRespTimeoutMs = getTime();
+    expectProcessLoopCalls( &context, MQTTStateNull, MQTTStateNull,
+                            MQTTSuccess, MQTTStateNull,
+                            MQTTSuccess, false );
+
+    /* Coverage for the branch path where a PING hasn't been sent out yet. */
+    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    context.waitingForPingResp = false;
+    context.lastPacketTime = 0;
+    context.keepAliveIntervalSec = 1;
+    expectProcessLoopCalls( &context, MQTTStateNull, MQTTStateNull,
+                            MQTTSuccess, MQTTStateNull,
+                            MQTTSuccess, false );
+}
+
+/**
+ * @brief Test coverage for handleKeepAlive by using a CMock callback to
+ * modify incomingPacket.
+ */
+void test_MQTT_ProcessLoop_handleKeepAlive_error_paths( void )
+{
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context;
+    MQTTTransportInterface_t transport;
+    MQTTFixedBuffer_t networkBuffer;
+    MQTTApplicationCallbacks_t callbacks;
+
+    setupTransportInterface( &transport );
+    setupCallbacks( &callbacks );
+    setupNetworkBuffer( &networkBuffer );
+
+    modifyIncomingPacketStatus = MQTTNoDataAvailable;
+    globalEntryTime = MQTT_ONE_SECOND_TO_MS;
+
+    /* Coverage for the branch path where PING timeout interval hasn't expired. */
+    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    context.lastPacketTime = 0;
+    context.keepAliveIntervalSec = 1;
+    context.waitingForPingResp = true;
+    expectProcessLoopCalls( &context, MQTTStateNull, MQTTStateNull,
+                            MQTTSuccess, MQTTStateNull,
+                            MQTTKeepAliveTimeout, false );
+}
+
+/**
+ * @brief Test coverage for handleKeepAlive by using a CMock callback to
+ * modify incomingPacket.
+ */
+void test_MQTT_ProcessLoop_multiple_iterations()
+{
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context;
+    MQTTTransportInterface_t transport;
+    MQTTFixedBuffer_t networkBuffer;
+    MQTTApplicationCallbacks_t callbacks;
+
+    setupTransportInterface( &transport );
+    setupCallbacks( &callbacks );
+    setupNetworkBuffer( &networkBuffer );
+
     mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
-    modifyIncomingPacketStatus = MQTTNoDataAvailable;
-    globalEntryTime = 2000;
-    context.lastPacketTime = 0;
-    context.keepAliveIntervalSec = 1;
-
-    expectProcessLoopCalls( &context, MQTTNoDataAvailable, MQTTPubRelSend,
-                            MQTTSuccess, MQTTStateNull,
-                            MQTTIllegalState, false );
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTRecvFailed );
+    /* Expect the above call when running MQTT_ProcessLoop. */
+    mqttStatus = MQTT_ProcessLoop( &context, MQTT_SAMPLE_TIMEOUT_MS );
+    TEST_ASSERT_EQUAL( mqttStatus, mqttStatus );
 }
