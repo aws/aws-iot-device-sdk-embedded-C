@@ -31,8 +31,8 @@
  * mechanism for Publish messages.
  */
 
-/* Config header is included first. */
-#include "config.h"
+/* Demo Config header. */
+#include "demo_config.h"
 
 /* Standard includes. */
 #include <assert.h>
@@ -50,9 +50,6 @@
 
 /* MQTT API header. */
 #include "mqtt.h"
-
-/* Demo Config header. */
-#include "demo_config.h"
 
 /**
  * @brief MQTT server host name.
@@ -367,23 +364,23 @@ static int connectToServer( const char * pServer,
         {
             /* Fail if no connection could be established. */
             status = EXIT_FAILURE;
-            LogErrorWithArgs( "Located but could not connect to MQTT broker %.*s.",
-                              strlen( pServer ),
-                              pServer );
+            LogError( ( "Located but could not connect to MQTT broker %.*s.",
+                        ( int ) strlen( pServer ),
+                        pServer ) );
         }
         else
         {
             status = EXIT_SUCCESS;
-            LogInfoWithArgs( "TCP connection established with %.*s.",
-                             strlen( pServer ),
-                             pServer );
+            LogInfo( ( "TCP connection established with %.*s.",
+                       ( int ) strlen( pServer ),
+                       pServer ) );
         }
     }
     else
     {
-        LogErrorWithArgs( "Could not locate MQTT broker %.*s.",
-                          strlen( pServer ),
-                          pServer );
+        LogError( ( "Could not locate MQTT broker %.*s.",
+                    ( int ) strlen( pServer ),
+                    pServer ) );
         status = EXIT_FAILURE;
     }
 
@@ -400,7 +397,7 @@ static int connectToServer( const char * pServer,
                         ( char * ) &transportTimeout,
                         sizeof( transportTimeout ) ) < 0 )
         {
-            LogError( "Setting socket receive timeout failed." );
+            LogError( ( "Setting socket receive timeout failed." ) );
             status = EXIT_FAILURE;
         }
 
@@ -411,7 +408,7 @@ static int connectToServer( const char * pServer,
                         ( char * ) &transportTimeout,
                         sizeof( transportTimeout ) ) < 0 )
         {
-            LogError( "Setting socket send timeout failed." );
+            LogError( ( "Setting socket send timeout failed." ) );
             status = EXIT_FAILURE;
         }
     }
@@ -455,7 +452,7 @@ static int32_t transportRecv( MQTTNetworkContext_t tcpSocket,
 {
     int32_t bytesReceived = 0;
 
-    bytesReceived = ( int32_t ) recv( tcpSocket, pBuffer, bytesToRecv, 0 );
+    bytesReceived = ( int32_t ) recv( ( int ) tcpSocket, pBuffer, bytesToRecv, 0 );
 
     if( bytesReceived == 0 )
     {
@@ -508,7 +505,7 @@ static void handleIncomingPublish( MQTTPublishInfo_t * pPublishInfo,
     assert( pPublishInfo != NULL );
 
     /* Process incoming Publish. */
-    LogInfoWithArgs( "Incoming QOS : %d.", pPublishInfo->qos );
+    LogInfo( ( "Incoming QOS : %d.", pPublishInfo->qos ) );
 
     /* Verify the received publish is for the we have subscribed to. */
     if( ( pPublishInfo->topicNameLength == MQTT_EXAMPLE_TOPIC_LENGTH ) &&
@@ -516,18 +513,18 @@ static void handleIncomingPublish( MQTTPublishInfo_t * pPublishInfo,
                         pPublishInfo->pTopicName,
                         pPublishInfo->topicNameLength ) ) )
     {
-        LogInfoWithArgs( "Incoming Publish Topic Name: %.*s matches subscribed topic.",
-                         pPublishInfo->topicNameLength,
-                         pPublishInfo->pTopicName );
-        LogInfoWithArgs( "Incoming Publish Message : %.*s.",
-                         pPublishInfo->payloadLength,
-                         pPublishInfo->pPayload );
+        LogInfo( ( "Incoming Publish Topic Name: %.*s matches subscribed topic.",
+                   pPublishInfo->topicNameLength,
+                   pPublishInfo->pTopicName ) );
+        LogInfo( ( "Incoming Publish Message : %.*s.",
+                   ( int ) pPublishInfo->payloadLength,
+                   ( const char * ) pPublishInfo->pPayload ) );
     }
     else
     {
-        LogInfoWithArgs( "Incoming Publish Topic Name: %.*s does not match subscribed topic.",
-                         pPublishInfo->topicNameLength,
-                         pPublishInfo->pTopicName );
+        LogInfo( ( "Incoming Publish Topic Name: %.*s does not match subscribed topic.",
+                   pPublishInfo->topicNameLength,
+                   pPublishInfo->pTopicName ) );
     }
 }
 
@@ -556,29 +553,29 @@ static void eventCallback( MQTTContext_t * pContext,
         switch( pPacketInfo->type )
         {
             case MQTT_PACKET_TYPE_SUBACK:
-                LogInfoWithArgs( "Subscribed to the topic %.*s.",
-                                 MQTT_EXAMPLE_TOPIC_LENGTH,
-                                 MQTT_EXAMPLE_TOPIC );
+                LogInfo( ( "Subscribed to the topic %.*s.",
+                           MQTT_EXAMPLE_TOPIC_LENGTH,
+                           MQTT_EXAMPLE_TOPIC ) );
                 /* Make sure ACK packet identifier matches with Request packet identifier. */
                 assert( globalSubscribePacketIdentifier == packetIdentifier );
                 break;
 
             case MQTT_PACKET_TYPE_UNSUBACK:
-                LogInfoWithArgs( "Unsubscribed from the topic %.*s.",
-                                 MQTT_EXAMPLE_TOPIC_LENGTH,
-                                 MQTT_EXAMPLE_TOPIC );
+                LogInfo( ( "Unsubscribed from the topic %.*s.",
+                           MQTT_EXAMPLE_TOPIC_LENGTH,
+                           MQTT_EXAMPLE_TOPIC ) );
                 /* Make sure ACK packet identifier matches with Request packet identifier. */
                 assert( globalUnsubscribePacketIdentifier == packetIdentifier );
                 break;
 
             case MQTT_PACKET_TYPE_PINGRESP:
-                LogInfo( "PIGRESP received." );
+                LogInfo( ( "PIGRESP received." ) );
                 break;
 
             /* Any other packet type is invalid. */
             default:
-                LogErrorWithArgs( "Unknown packet type received:(%02x).",
-                                  pPacketInfo->type );
+                LogError( ( "Unknown packet type received:(%02x).",
+                            pPacketInfo->type ) );
         }
     }
 }
@@ -653,11 +650,11 @@ static int establishMqttSession( MQTTContext_t * pContext,
     if( mqttStatus != MQTTSuccess )
     {
         status = EXIT_FAILURE;
-        LogErrorWithArgs( "Connection with MQTT broker failed with status %u.", mqttStatus );
+        LogError( ( "Connection with MQTT broker failed with status %u.", mqttStatus ) );
     }
     else
     {
-        LogInfo( "MQTT connection successfully established with broker." );
+        LogInfo( ( "MQTT connection successfully established with broker." ) );
     }
 
     return status;
@@ -676,8 +673,8 @@ static int disconnectMqttSession( MQTTContext_t * pContext )
 
     if( mqttStatus != MQTTSuccess )
     {
-        LogErrorWithArgs( "Sending MQTT DISCONNECT failed with status=%u.",
-                          mqttStatus );
+        LogError( ( "Sending MQTT DISCONNECT failed with status=%u.",
+                    mqttStatus ) );
         status = EXIT_FAILURE;
     }
 
@@ -713,15 +710,15 @@ static int subscribeToTopic( MQTTContext_t * pContext )
 
     if( mqttStatus != MQTTSuccess )
     {
-        LogErrorWithArgs( "Failed to send SUBSCRIBE packet to broker with error = %u.",
-                          mqttStatus );
+        LogError( ( "Failed to send SUBSCRIBE packet to broker with error = %u.",
+                    mqttStatus ) );
         status = EXIT_FAILURE;
     }
     else
     {
-        LogInfoWithArgs( "SUBSCRIBE sent for topic %.*s to broker.",
-                         MQTT_EXAMPLE_TOPIC_LENGTH,
-                         MQTT_EXAMPLE_TOPIC );
+        LogInfo( ( "SUBSCRIBE sent for topic %.*s to broker.",
+                   MQTT_EXAMPLE_TOPIC_LENGTH,
+                   MQTT_EXAMPLE_TOPIC ) );
     }
 
     return status;
@@ -757,15 +754,15 @@ static MQTTStatus_t unsubscribeFromTopic( MQTTContext_t * pContext )
 
     if( mqttStatus != MQTTSuccess )
     {
-        LogErrorWithArgs( "Failed to send UNSUBSCRIBE packet to broker with error = %u.",
-                          mqttStatus );
+        LogError( ( "Failed to send UNSUBSCRIBE packet to broker with error = %u.",
+                    mqttStatus ) );
         status = EXIT_FAILURE;
     }
     else
     {
-        LogInfoWithArgs( "UNSUBSCRIBE sent for topic %.*s to broker.",
-                         MQTT_EXAMPLE_TOPIC_LENGTH,
-                         MQTT_EXAMPLE_TOPIC );
+        LogInfo( ( "UNSUBSCRIBE sent for topic %.*s to broker.",
+                   MQTT_EXAMPLE_TOPIC_LENGTH,
+                   MQTT_EXAMPLE_TOPIC ) );
     }
 
     return status;
@@ -799,15 +796,15 @@ static int publishToTopic( MQTTContext_t * pContext )
 
     if( status != MQTTSuccess )
     {
-        LogErrorWithArgs( "Failed to send PUBLISH packet to broker with error = %u.",
-                          mqttSuccess );
+        LogError( ( "Failed to send PUBLISH packet to broker with error = %u.",
+                    mqttSuccess ) );
         status = EXIT_FAILURE;
     }
     else
     {
-        LogInfoWithArgs( "PUBLISH send for topic %.*s to broker.",
-                         MQTT_EXAMPLE_TOPIC_LENGTH,
-                         MQTT_EXAMPLE_TOPIC );
+        LogInfo( ( "PUBLISH send for topic %.*s to broker.",
+                   MQTT_EXAMPLE_TOPIC_LENGTH,
+                   MQTT_EXAMPLE_TOPIC ) );
     }
 
     return status;
@@ -844,10 +841,10 @@ int main( int argc,
     /* Establish a TCP connection with the MQTT broker. This example connects
      * to the MQTT broker as specified in BROKER_ENDPOINT and BROKER_PORT at
      * the top of this file. */
-    LogInfoWithArgs( "Creating a TCP connection to %.*s:%d.",
-                     BROKER_ENDPOINT_LENGTH,
-                     BROKER_ENDPOINT,
-                     BROKER_PORT );
+    LogInfo( ( "Creating a TCP connection to %.*s:%d.",
+               BROKER_ENDPOINT_LENGTH,
+               BROKER_ENDPOINT,
+               BROKER_PORT ) );
     status = connectToServer( BROKER_ENDPOINT, BROKER_PORT, &tcpSocket );
 
     /* Establish MQTT session on top of TCP connection. */
@@ -855,9 +852,9 @@ int main( int argc,
     {
         /* Sends an MQTT Connect packet over the already connected TCP socket
          * tcpSocket, and waits for connection acknowledgment (CONNACK) packet. */
-        LogInfoWithArgs( "Creating an MQTT connection to %.*s.",
-                         BROKER_ENDPOINT_LENGTH,
-                         BROKER_ENDPOINT );
+        LogInfo( ( "Creating an MQTT connection to %.*s.",
+                   BROKER_ENDPOINT_LENGTH,
+                   BROKER_ENDPOINT ) );
         status = establishMqttSession( &context, tcpSocket );
 
         if( status == EXIT_SUCCESS )
@@ -894,8 +891,8 @@ int main( int argc,
         if( mqttStatus != MQTTSuccess )
         {
             status = EXIT_FAILURE;
-            LogErrorWithArgs( "MQTT_ProcessLoop returned with status = %u.",
-                              mqttStatus );
+            LogError( ( "MQTT_ProcessLoop returned with status = %u.",
+                        mqttStatus ) );
         }
     }
 
@@ -905,9 +902,9 @@ int main( int argc,
          * send keep alive messages. */
         for( publishCount = 0; publishCount < maxPublishCount; publishCount++ )
         {
-            LogInfoWithArgs( "Publish to the MQTT topic %.*s.",
-                             MQTT_EXAMPLE_TOPIC_LENGTH,
-                             MQTT_EXAMPLE_TOPIC );
+            LogInfo( ( "Publish to the MQTT topic %.*s.",
+                       MQTT_EXAMPLE_TOPIC_LENGTH,
+                       MQTT_EXAMPLE_TOPIC ) );
             status = publishToTopic( &context );
 
             /* Calling MQTT_ProcessLoop to process incoming publish echo, since
@@ -917,8 +914,8 @@ int main( int argc,
              * has expired since the last MQTT packet sent and receive
              * ping responses. */
             mqttStatus = MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS );
-            LogInfoWithArgs( "MQTT_ProcessLoop returned with status = %u.",
-                             mqttStatus );
+            LogInfo( ( "MQTT_ProcessLoop returned with status = %u.",
+                       mqttStatus ) );
 
             /* Leave connection idle for some time. */
             sleep( DELAY_BETWEEN_PUBLISHES_SECONDS );
@@ -928,9 +925,9 @@ int main( int argc,
     if( status == EXIT_SUCCESS )
     {
         /* Unsubscribe from the topic. */
-        LogInfoWithArgs( "Unsubscribe from the MQTT topic %.*s.",
-                         MQTT_EXAMPLE_TOPIC_LENGTH,
-                         MQTT_EXAMPLE_TOPIC );
+        LogInfo( ( "Unsubscribe from the MQTT topic %.*s.",
+                   MQTT_EXAMPLE_TOPIC_LENGTH,
+                   MQTT_EXAMPLE_TOPIC ) );
         status = unsubscribeFromTopic( &context );
     }
 
@@ -942,8 +939,8 @@ int main( int argc,
         if( mqttStatus != MQTTSuccess )
         {
             status = EXIT_FAILURE;
-            LogErrorWithArgs( "MQTT_ProcessLoop returned with status = %u.",
-                              mqttStatus );
+            LogError( ( "MQTT_ProcessLoop returned with status = %u.",
+                        mqttStatus ) );
         }
     }
 
@@ -952,9 +949,9 @@ int main( int argc,
      * disconnect, client must close the network connection. */
     if( mqttSessionEstablished == true )
     {
-        LogInfoWithArgs( "Disconnecting the MQTT connection with %.*s.",
-                         BROKER_ENDPOINT_LENGTH,
-                         BROKER_ENDPOINT );
+        LogInfo( ( "Disconnecting the MQTT connection with %.*s.",
+                   BROKER_ENDPOINT_LENGTH,
+                   BROKER_ENDPOINT ) );
 
         if( status == EXIT_FAILURE )
         {
@@ -978,7 +975,7 @@ int main( int argc,
     /* Log the success message. */
     if( status == EXIT_SUCCESS )
     {
-        LogInfo( "Demo completed successfully." );
+        LogInfo( ( "Demo completed successfully." ) );
     }
 
     return status;
