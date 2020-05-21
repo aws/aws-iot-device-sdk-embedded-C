@@ -139,10 +139,6 @@ static bool validateTransitionPublish( MQTTPublishState_t currentState,
              * the reserve operation. */
             switch( qos )
             {
-                case MQTTQoS0:
-                    isValid = ( newState == MQTTPublishDone );
-                    break;
-
                 case MQTTQoS1:
                     isValid = ( newState == MQTTPubAckPending );
                     break;
@@ -152,7 +148,7 @@ static bool validateTransitionPublish( MQTTPublishState_t currentState,
                     break;
 
                 default:
-                    /* No other QoS value. */
+                    /* QoS 0 is checked before calling this function. */
                     break;
             }
 
@@ -350,7 +346,7 @@ MQTTStatus_t MQTT_ReserveState( MQTTContext_t * pMqttContext,
     {
         status = MQTTSuccess;
     }
-    else if( packetId == MQTT_PACKET_ID_INVALID )
+    else if( ( packetId == MQTT_PACKET_ID_INVALID ) || ( pMqttContext == NULL ) )
     {
         status = MQTTBadParameter;
     }
@@ -425,7 +421,7 @@ MQTTPublishState_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
                                     &foundQoS,
                                     &currentState );
 
-        if( foundQoS != qos )
+        if( ( recordIndex == MQTT_STATE_ARRAY_MAX_COUNT ) || ( foundQoS != qos ) )
         {
             /* Entry should match with supplied QoS. */
             mqttStatus = MQTTBadParameter;
@@ -453,14 +449,9 @@ MQTTPublishState_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
                                         newState );
             }
             /* Send operation. */
-            else if( recordIndex < MQTT_STATE_ARRAY_MAX_COUNT )
-            {
-                updateRecord( pMqttContext->outgoingPublishRecords, recordIndex, newState, false );
-            }
             else
             {
-                /* Send operation with no record found. */
-                mqttStatus = MQTTBadParameter;
+                updateRecord( pMqttContext->outgoingPublishRecords, recordIndex, newState, false );
             }
         }
         else
