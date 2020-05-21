@@ -1205,7 +1205,7 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * const pContext )
 
         if( status == MQTTSuccess )
         {
-            LogDebugWithArgs( ( "MQTT PINGREQ packet size is %lu.",
+            LogDebug( ( "MQTT PINGREQ packet size is %lu.",
                                 packetSize ) );
         }
         else
