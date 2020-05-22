@@ -8,6 +8,12 @@ target_sources(
         "${DEMO_NAME}.c"
 )
 
+target_include_directories(
+    mqtt
+    PUBLIC
+        ${CMAKE_CURRENT_LIST_DIR}
+)
+
 target_link_libraries(
     ${DEMO_NAME}
     PRIVATE
@@ -20,8 +26,3 @@ target_include_directories(
         ${LOGGING_INCLUDE_DIRS}
 )
 
-target_include_directories(
-    mqtt
-    PUBLIC
-        ${CMAKE_CURRENT_LIST_DIR}
-)
