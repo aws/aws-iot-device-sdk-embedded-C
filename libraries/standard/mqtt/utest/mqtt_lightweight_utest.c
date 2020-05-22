@@ -14,24 +14,30 @@
  * @brief Test-defined macro for MQTT username.
  */
 #define MQTT_TEST_USERNAME               "username"
-#define MQTT_TEST_USERNAME_LEN           sizeof( MQTT_TEST_USERNAME ) - 1
+#define MQTT_TEST_USERNAME_LEN           ( sizeof( MQTT_TEST_USERNAME ) - 1 )
 
 /**
  * @brief Test-defined macro for MQTT password.
  */
 #define MQTT_TEST_PASSWORD               "password"
-#define MQTT_TEST_PASSWORD_LEN           sizeof( MQTT_TEST_PASSWORD ) - 1
+#define MQTT_TEST_PASSWORD_LEN           ( sizeof( MQTT_TEST_PASSWORD ) - 1 )
 
 /**
  * @brief Test-defined macro for MQTT topic.
  */
 #define MQTT_TEST_TOPIC                  "topic"
-#define MQTT_TEST_TOPIC_LEN              sizeof( MQTT_TEST_TOPIC ) - 1
+#define MQTT_TEST_TOPIC_LEN              ( sizeof( MQTT_TEST_TOPIC ) - 1 )
 
 /**
  * @brief Length of the client identifier.
  */
-#define CLIENT_IDENTIFIER_LEN            sizeof( CLIENT_IDENTIFIER ) - 1
+#define MQTT_CLIENT_IDENTIFIER_LEN       ( sizeof( MQTT_CLIENT_IDENTIFIER ) - 1 )
+
+/**
+ * @brief Payload for will info.
+ */
+#define MQTT_SAMPLE_PAYLOAD              "payload"
+#define MQTT_SAMPLE_PAYLOAD_LEN          ( sizeof( MQTT_SAMPLE_PAYLOAD ) - 1 )
 
 /* MQTT CONNECT flags. */
 #define MQTT_CONNECT_FLAG_CLEAN          ( 1 )            /**< @brief Clean session. */
@@ -126,8 +132,8 @@ static void setupNetworkBuffer( MQTTFixedBuffer_t * const pNetworkBuffer )
 static void setupConnectInfo( MQTTConnectInfo_t * const pConnectInfo )
 {
     pConnectInfo->cleanSession = true;
-    pConnectInfo->pClientIdentifier = CLIENT_IDENTIFIER;
-    pConnectInfo->clientIdentifierLength = CLIENT_IDENTIFIER_LEN;
+    pConnectInfo->pClientIdentifier = MQTT_CLIENT_IDENTIFIER;
+    pConnectInfo->clientIdentifierLength = MQTT_CLIENT_IDENTIFIER_LEN;
     pConnectInfo->keepAliveSeconds = 0;
     pConnectInfo->pUserName = MQTT_TEST_USERNAME;
     pConnectInfo->userNameLength = MQTT_TEST_USERNAME_LEN;
@@ -142,32 +148,32 @@ static void setupConnectInfo( MQTTConnectInfo_t * const pConnectInfo )
  */
 static void setupWillInfo( MQTTPublishInfo_t * const pWillInfo )
 {
-    pWillInfo->pPayload = NULL;
-    pWillInfo->payloadLength = 0;
-    pWillInfo->pTopicName = CLIENT_IDENTIFIER;
-    pWillInfo->topicNameLength = CLIENT_IDENTIFIER_LEN;
+    pWillInfo->pPayload = MQTT_SAMPLE_PAYLOAD;
+    pWillInfo->payloadLength = MQTT_SAMPLE_PAYLOAD_LEN;
+    pWillInfo->pTopicName = MQTT_CLIENT_IDENTIFIER;
+    pWillInfo->topicNameLength = MQTT_CLIENT_IDENTIFIER_LEN;
     pWillInfo->dup = true;
     pWillInfo->qos = MQTTQoS0;
     pWillInfo->retain = true;
 }
 
 /**
- * @brief Encode remaining length into pBuffer for packet serialization
+ * @brief Encode remaining length into pDestination for packet serialization
  * using MQTT v3.1.1 spec.
  *
- * @param[in] pBuffer Buffer to write encoded remaining length.
- * @param[in] length Actual Remaining length.
+ * @param[in] pDestination Buffer to write encoded remaining length.
+ * @param[in] length Actual remaining length.
  */
-static size_t encodeRemainingLength( uint8_t * pBuffer,
+static size_t encodeRemainingLength( uint8_t * pDestination,
                                      size_t length )
 {
     uint8_t lengthByte;
     uint8_t * pLengthEnd = NULL;
     size_t remainingLength = length;
 
-    TEST_ASSERT_NOT_NULL( pBuffer );
+    TEST_ASSERT_NOT_NULL( pDestination );
 
-    pLengthEnd = pBuffer;
+    pLengthEnd = pDestination;
 
     /* This algorithm is copied from the MQTT v3.1.1 spec. */
     do
@@ -186,15 +192,16 @@ static size_t encodeRemainingLength( uint8_t * pBuffer,
         pLengthEnd++;
     } while( remainingLength > 0U );
 
-    return ( size_t ) ( pLengthEnd - pBuffer );
+    return ( size_t ) ( pLengthEnd - pDestination );
 }
 
 /**
  * @brief Encode UTF-8 string and its length into pDestination for
  * packet serialization.
  *
- * @param[in] pDestination Buffer to write encoded remaining length.
- * @param[in] length Actual Remaining length.
+ * @param[in] pDestination Buffer to write encoded string.
+ * @param[in] source String to encode.
+ * @param[in] sourceLength Length of the string to encode.
  */
 static size_t encodeString( uint8_t * pDestination,
                             const char * source,
@@ -206,6 +213,7 @@ static size_t encodeString( uint8_t * pDestination,
      * This is to use same type buffers in memcpy. */
     const uint8_t * pSourceBuffer = ( const uint8_t * ) source;
 
+    TEST_ASSERT_NOT_NULL( pSourceBuffer );
     TEST_ASSERT_NOT_NULL( pDestination );
 
     pBuffer = pDestination;
@@ -449,16 +457,16 @@ void test_MQTT_SerializeConnect_happy_paths()
 
 
     /* Re-initialize objects for branch coverage. */
-    willInfo.pPayload = NULL;
-    willInfo.payloadLength = 0;
-    willInfo.pTopicName = CLIENT_IDENTIFIER;
-    willInfo.topicNameLength = CLIENT_IDENTIFIER_LEN;
+    willInfo.pPayload = MQTT_SAMPLE_PAYLOAD;
+    willInfo.payloadLength = MQTT_SAMPLE_PAYLOAD_LEN;
+    willInfo.pTopicName = MQTT_CLIENT_IDENTIFIER;
+    willInfo.topicNameLength = MQTT_CLIENT_IDENTIFIER_LEN;
     willInfo.dup = true;
     willInfo.qos = MQTTQoS2;
     willInfo.retain = false;
     connectInfo.cleanSession = false;
-    connectInfo.pClientIdentifier = CLIENT_IDENTIFIER;
-    connectInfo.clientIdentifierLength = CLIENT_IDENTIFIER_LEN;
+    connectInfo.pClientIdentifier = MQTT_CLIENT_IDENTIFIER;
+    connectInfo.clientIdentifierLength = MQTT_CLIENT_IDENTIFIER_LEN;
     connectInfo.pUserName = NULL;
     connectInfo.userNameLength = 0;
     connectInfo.pPassword = NULL;
