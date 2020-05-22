@@ -8,11 +8,11 @@ target_sources(
         "${DEMO_NAME}.c"
 )
 
-#target_include_directories(
-#    mqtt
-#    PUBLIC
-#        ${CMAKE_CURRENT_LIST_DIR}
-#)
+target_include_directories(
+    mqtt
+    PUBLIC
+        ${CMAKE_CURRENT_LIST_DIR}
+)
 
 target_link_libraries(
     ${DEMO_NAME}
