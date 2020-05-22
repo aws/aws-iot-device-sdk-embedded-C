@@ -940,7 +940,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
     MQTTStatus_t status = MQTTSuccess;
     MQTTPacketInfo_t incomingPacket = { .type = ( ( uint8_t ) 0 ) };
 
-    if( ( pContext == NULL ) || ( pConnectInfo == NULL ) )
+    if( ( pContext == NULL ) || ( pConnectInfo == NULL ) || ( pSessionPresent == NULL ) )
     {
         LogError( ( "Argument cannot be NULL: pContext=%p, "
                     "pConnectInfo=%p.",
@@ -1458,13 +1458,16 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * const pContext,
 
 uint16_t MQTT_GetPacketId( MQTTContext_t * const pContext )
 {
-    uint16_t packetId = pContext->nextPacketId;
+    uint16_t packetId = 0U;
 
-    pContext->nextPacketId++;
-
-    if( pContext->nextPacketId == 0U )
+    if( pContext != NULL )
     {
-        pContext->nextPacketId = 1;
+        packetId = pContext->nextPacketId++;
+
+        if( pContext->nextPacketId == 0U )
+        {
+            pContext->nextPacketId++;
+        }
     }
 
     return packetId;
