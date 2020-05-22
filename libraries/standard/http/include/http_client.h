@@ -182,9 +182,9 @@ typedef int32_t ( * HTTPTransportRecv_t )( HTTPNetworkContext_t * pContext,
  */
 typedef struct HTTPTransportInterface
 {
-    HTTPTransportRecv_t recv;        /**< Transport receive interface */
-    HTTPTransportSend_t send;        /**< Transport interface send interface. */
-    HTTPNetworkContext_t * pContext; /**< User defined transport interface context. */
+    HTTPTransportRecv_t recv;      /**< Transport receive interface */
+    HTTPTransportSend_t send;      /**< Transport interface send interface. */
+    HTTPNetworkContext_t pContext; /**< User defined transport interface context. */
 } HTTPTransportInterface_t;
 
 /**
@@ -349,8 +349,8 @@ typedef enum HTTPStatus
  *
  * The memory for the header data buffer is supplied by the user. Information in
  * the buffer will be filled by calling #HTTPClient_InitializeRequestHeaders and
- * #HTTPClient_AddHeader. This buffer may be automatically filled with the 
- * Content-Length header in #HTTPClient_Send, please see 
+ * #HTTPClient_AddHeader. This buffer may be automatically filled with the
+ * Content-Length header in #HTTPClient_Send, please see
  * HTTP_MAX_CONTENT_LENGTH_HEADER_LENGTH for the maximum amount of space needed
  * to accommodate the Content-Length header.
  */
@@ -643,7 +643,7 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
  *
  * If #HTTP_SEND_DISABLE_CONTENT_LENGTH_FLAG is not set in parameter @p flags,
  * then the Content-Length to be sent to the server is automatically written to
- * @p pRequestHeaders. The Content-Length will not be written when there is 
+ * @p pRequestHeaders. The Content-Length will not be written when there is
  * no request body. If there is not enough room in the buffer to write the
  * Content-Length then #HTTP_INSUFFICIENT_MEMORY is returned. Please see
  * #HTTP_MAX_CONTENT_LENGTH_HEADER_LENGTH for the maximum Content-Length header

@@ -22,6 +22,7 @@
 /* Standard includes. */
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
 
 /* POSIX socket includes. */
 #include <netdb.h>
