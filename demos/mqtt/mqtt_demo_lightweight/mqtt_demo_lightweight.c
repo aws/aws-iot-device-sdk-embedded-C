@@ -84,39 +84,39 @@
  * The topic name starts with the client identifier to ensure that each demo
  * interacts with a unique topic name.
  */
-#define MQTT_EXAMPLE_TOPIC                CLIENT_IDENTIFIER "/example/topic"
+#define MQTT_EXAMPLE_TOPIC                   CLIENT_IDENTIFIER "/example/topic"
 
 /**
  * @brief Dimensions a file scope buffer currently used to send and receive MQTT data
  * from a socket.
  */
-#define SHARED_BUFFER_SIZE                500U
+#define SHARED_BUFFER_SIZE                   500U
 
 /**
  * @brief The MQTT message published in this example.
  */
-#define MQTT_EXAMPLE_MESSAGE              "Hello Light Weight MQTT World!"
+#define MQTT_EXAMPLE_MESSAGE                 "Hello Light Weight MQTT World!"
 
 /**
  * @brief Keep alive period in seconds for MQTT connection.
  */
-#define MQTT_KEEP_ALIVE_PERIOD_SECONDS    5U
+#define MQTT_KEEP_ALIVE_PERIOD_SECONDS       5U
 
 /**
  * @brief Socket layer transportTimeout in millisecond.
  */
-#define TRANSPORT_SEND_RECV_TIMEOUT_MS    200U
+#define TRANSPORT_SEND_RECV_TIMEOUT_MS       200U
 
 /**
  * @brief Number of time network receive will be attempted
  * if it fails due to transportTimeout.
  */
-#define MQTT_MAX_RECV_ATTEMPTS            10U
+#define MQTT_MAX_RECV_ATTEMPTS               10U
 
 /**
  * @brief Delay between two demo iterations.
  */
-#define MQTT_DEMO_ITERATION_DELAY         5U
+#define MQTT_DEMO_ITERATION_DELAY_SECONDS    5U
 
 /*-----------------------------------------------------------*/
 
@@ -279,12 +279,13 @@ static uint16_t getNextPacketIdentifier()
 
     packetId++;
 
-    /* Since 0 is invalid packet identifier  value, 
+    /* Since 0 is invalid packet identifier  value,
      * take care of it when it rolls over */
     if( packetId == 0 )
     {
         packetId = 1;
     }
+
     return packetId;
 }
 
@@ -767,7 +768,7 @@ static void mqttProcessResponse( MQTTPacketInfo_t * pIncomingPacket,
  * Publish message.
  *
  * @param[in] packetId is packet identifier from the incoming publish if it was received.
- * @note PacketId is only valid for only for QOS1 and QOS2 messages.
+ * @note PacketId is only valid for QOS1 and QOS2 messages.
  */
 static void mqttProcessIncomingPublish( MQTTPublishInfo_t * pPubInfo,
                                         uint16_t packetId )
@@ -1034,7 +1035,7 @@ int main( int argc,
             /* Wait for some time between two iterations to ensure that we do not
              * bombard the public test mosquitto broker. */
             LogInfo( ( "Short delay before starting the next iteration.... \r\n\r\n" ) );
-            ( void ) sleep( MQTT_DEMO_ITERATION_DELAY );
+            ( void ) sleep( MQTT_DEMO_ITERATION_DELAY_SECONDS );
         }
     }
 
