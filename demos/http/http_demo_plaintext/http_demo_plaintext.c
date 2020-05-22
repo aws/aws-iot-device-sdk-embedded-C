@@ -39,7 +39,7 @@
  *
  * This demo uses httpbin.org: A simple HTTP Request & Response Service.
  */
-#define SERVER    "httpbin.org"
+#define SERVER    "postman-echo.com"
 
 /**
  * @brief HTTP server port number.
@@ -55,11 +55,11 @@
  * supported REST API.
  */
 #ifndef GET_PATH
-    #define GET_PATH    "/ip"
+    #define GET_PATH    "/get"
 #endif
 
 #ifndef HEAD_PATH
-    #define HEAD_PATH    "/ip"
+    #define HEAD_PATH    "/head"
 #endif
 
 #ifndef PUT_PATH
@@ -248,11 +248,11 @@ static HTTPStatus_t _sendHttpRequest( HTTPNetworkContext_t pContext,
 
     /* Initialize the request object. */
     requestInfo.pHost = pHost;
-    requestInfo.hostLen = sizeof( pHost ) - 1;
+    requestInfo.hostLen = strlen( pHost );
     requestInfo.method = pMethod;
-    requestInfo.methodLen = sizeof( pMethod ) - 1;
+    requestInfo.methodLen = strlen( pMethod );
     requestInfo.pPath = pPath;
-    requestInfo.pathLen = sizeof( pPath ) - 1;
+    requestInfo.pathLen = strlen( pPath );
 
     requestHeaders.pBuffer = userBuffer;
     requestHeaders.bufferLen = USER_BUFFER_LENGTH;
