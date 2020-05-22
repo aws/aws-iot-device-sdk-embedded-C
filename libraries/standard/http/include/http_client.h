@@ -9,8 +9,9 @@
  * @brief Maximum size, in bytes, of headers allowed from the server.
  *
  * If the total size in bytes of the headers sent from this server exceeds this
- * configuration, then the status code #HTTP_SECURITY_ALERT_HEADERS is
- * returned from #HTTPClient_Send.
+ * configuration, then the status code
+ * #HTTP_SECURITY_ALERT_RESPONSE_HEADERS_SIZE_LIMIT_EXCEEDED is returned from
+ * #HTTPClient_Send.
  */
 #ifndef HTTP_MAX_RESPONSE_HEADERS_SIZE_BYTES
     #define HTTP_MAX_RESPONSE_HEADERS_SIZE_BYTES    2048U
@@ -36,29 +37,61 @@
 #define HTTP_METHOD_HEAD    "HEAD"                 /**< HTTP Method HEAD. */
 
 /**
- * Flags for #HTTPRequestInfo_t.flags.
+ * @section http_send_flags
+ * @brief Flags for #HTTPClient_Send parameter flags.
+ * These flags control some behavior of sending the request or receiving the
+ * response.
+ *
+ * - #HTTP_SEND_DISABLE_CONTENT_LENGTH_FLAG <br>
+ *   @copybrief HTTP_SEND_DISABLE_CONTENT_LENGTH_FLAG
+ *
+ * Flags should be bitwise-ORed with each other to change the behavior of
+ * #HTTPClient_Send.
+ */
+
+/**
+ * @brief Set this flag to disable automatically sending the Content-Length
+ * header to the server.
+ *
+ * This flag is valid only for #HTTPClient_Send.
+ */
+#define HTTP_SEND_DISABLE_CONTENT_LENGTH_FLAG    0x1U
+
+/**
+ * @section http_request_flags
+ * @brief Flags for #HTTPRequestInfo_t.flags.
  * These flags control what headers are written or not to the
- * #HttpRequestHeaders_t.pBuffer.
+ * #HttpRequestHeaders_t.pBuffer by #HTTPClient_InitializeRequestHeaders.
+ *
+ * - #HTTP_REQUEST_KEEP_ALIVE_FLAG <br>
+ *   @copybrief HTTP_REQUEST_KEEP_ALIVE_FLAG
+ *
+ * Flags should be bitwise-ORed with each other to change the behavior of
+ * #HTTPClient_InitializeRequestHeaders.
  */
 
 /**
  * @brief Set this flag to indicate the request is for a persistent connection.
  *
  * Setting this will cause a "Connection: Keep-Alive" to be written to the
- * request.
+ * request headers.
+ * If this flag is not set, then "Connection: Close" will be written to the
+ * request headers.
+ *
+ * This flag is valid only for #HTTPRequestInfo.flags.
  */
-#define HTTP_REQUEST_KEEP_ALIVE_FLAG                0x1U
+#define HTTP_REQUEST_KEEP_ALIVE_FLAG    0x1U
 
 /**
- * @brief Set this flag to disable automatically writing the Content-Length
- * header.
- */
-#define HTTP_REQUEST_DISABLE_CONTENT_LENGTH_FLAG    0x2U
-
-/**
- * Flags for #HTTPResponse_t.flags.
- * These flags are populated in #HTTPResponse_t.flags by the #HTTPClient_Send()
+ * @section http_response_flags
+ * @brief Flags for #HTTPResponse_t.flags.
+ * These flags are populated in #HTTPResponse_t.flags by the #HTTPClient_Send
  * function.
+ *
+ * - #HTTP_RESPONSE_CONNECTION_CLOSE_FLAG <br>
+ *   @copybrief HTTP_RESPONSE_CONNECTION_CLOSE_FLAG
+ * - #HTTP_RESPONSE_CONNECTION_KEEP_ALIVE_FLAG
+ *   @copybrief HTTP_RESPONSE_CONNECTION_KEEP_ALIVE_FLAG
  */
 
 /**
@@ -66,11 +99,15 @@
  *
  * If a "Connection: close" header is present the application should always
  * close the connection.
+ *
+ * This flag is valid only for #HTTPResponse_t.flags.
  */
 #define HTTP_RESPONSE_CONNECTION_CLOSE_FLAG         0x1U
 
 /**
  * @brief This will be set to true if header "Connection: Keep-Alive" is found.
+ *
+ * This flag is valid only for #HTTPResponse_t.flags.
  */
 #define HTTP_RESPONSE_CONNECTION_KEEP_ALIVE_FLAG    0x2U
 
@@ -86,7 +123,6 @@
  * In both cases, this value should be used for the "rangeEnd" parameter.
  */
 #define HTTP_RANGE_REQUEST_END_OF_FILE              -1
-
 
 /**
  * @brief The HTTPNetworkContext is an incomplete type. The application must
@@ -109,9 +145,9 @@ typedef struct HTTPNetworkContext HTTPNetworkContext_t;
  *
  * @return The number of bytes written or a negative network error code.
  */
-typedef int32_t (* HTTPTransportSend_t )( HTTPNetworkContext_t * pContext,
-                                          const void * pBuffer,
-                                          size_t bytesToWrite );
+typedef int32_t ( * HTTPTransportSend_t )( HTTPNetworkContext_t * pContext,
+                                           const void * pBuffer,
+                                           size_t bytesToWrite );
 
 /**
  * @brief Transport interface for reading data on the network.
@@ -132,9 +168,9 @@ typedef int32_t (* HTTPTransportSend_t )( HTTPNetworkContext_t * pContext,
  *
  * @return The number of bytes read or a negative error code.
  */
-typedef int32_t (* HTTPTransportRecv_t )( HTTPNetworkContext_t * pContext,
-                                          void * pBuffer,
-                                          size_t bytesToRead );
+typedef int32_t ( * HTTPTransportRecv_t )( HTTPNetworkContext_t * pContext,
+                                           void * pBuffer,
+                                           size_t bytesToRead );
 
 /**
  * @brief The HTTP Client library transport layer interface.
@@ -215,18 +251,75 @@ typedef enum HTTPStatus
     HTTP_INSUFFICIENT_MEMORY,
 
     /**
-     * @brief Represents all errors not related to user-input or transport I/O, but
-     * errors internal to the implementation of the HTTP client library.
+     * @brief The server sent more headers than the configured
+     * #HTTP_MAX_RESPONSE_HEADERS_SIZE_BYTES.
+     *
+     * Functions that may return this value:
+     * - #HTTPClient_Send
+     */
+    HTTP_SECURITY_ALERT_RESPONSE_HEADERS_SIZE_LIMIT_EXCEEDED,
+
+    /**
+     * @brief A response contained the "Connection: close" header, but there
+     * was more data at the end of the complete message.
+     *
+     * Functions that may return this value:
+     * - #HTTPClient_Send
+     */
+    HTTP_SECURITY_ALERT_EXTRANEOUS_RESPONSE_DATA,
+
+    /**
+     * @brief The server sent a chunk header containing an invalid character.
+     *
+     * Functions that may return this value:
+     * - #HTTPClient_Send
+     */
+    HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CHUNK_HEADER,
+
+    /**
+     * @brief The server sent a response with an invalid character in the
+     * HTTP protocol version.
+     *
+     * Functions that may return this value:
+     * - #HTTPClient_Send
+     */
+    HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_PROTOCOL_VERSION,
+
+    /**
+     * @brief The server sent a response with an invalid character in the
+     * HTTP status-code or the HTTP status code is out of range.
+     *
+     * Functions that may return this value:
+     * - #HTTPClient_Send
+     */
+    HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_STATUS_CODE,
+
+    /**
+     * @brief An invalid character was found in the HTTP response message.
+     *
+     * Functions that may return this value:
+     * - #HTTPClient_Send
+     */
+    HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CHARACTER,
+
+    /**
+     * @brief The response contains either an invalid character in the
+     * Content-Length header or a Content-Length header when it was not expected
+     * to be present.
+     *
+     * Functions that may return this value:
+     * - #HTTPClient_Send
+     */
+    HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CONTENT_LENGTH,
+
+    /**
+     * @brief An error occurred in the third-party parsing library.
      *
      * Functions that may return this value:
      * - #HTTPClient_Send
      * - #HTTPClient_ReadHeader
      */
-    HTTP_INTERNAL_ERROR,
-    HTTP_SECURITY_ALERT_RESPONSE_HEADERS_SIZE_LIMIT_EXCEEDED,
-    HTTP_SECURITY_ALERT_PARSER_INVALID_CHARACTER,
-    HTTP_SECURITY_ALERT_INVALID_CONTENT_LENGTH,
-    /* TODO: Add return codes as implementation continues. */
+    HTTP_PARSER_INTERNAL_ERROR,
 
     /**
      * @brief The requested header field was not found in the response buffer.
@@ -237,15 +330,13 @@ typedef enum HTTPStatus
     HTTP_HEADER_NOT_FOUND,
 
     /**
-     * @brief The HTTP response, provided for parsing, is either corrupt or incomplete.
+     * @brief The HTTP response, provided for parsing, is either corrupt or
+     * incomplete.
      *
      * Functions that may return this value:
      * - #HTTPClient_ReadHeader
      */
-    HTTP_INVALID_RESPONSE,
-
-    /* Temporary error code while implementation is in progress. */
-    HTTP_NOT_SUPPORTED,
+    HTTP_INVALID_RESPONSE
 } HTTPStatus_t;
 
 /**
@@ -319,7 +410,7 @@ typedef struct HTTPRequestInfo
  * @brief Callback to intercept headers during the first parse through of the
  * response as it is received from the network.
  */
-typedef struct httpResponseParsingCallback
+typedef struct HTTPClient_ResponseHeaderParsingCallback
 {
     /**
      * @brief Invoked when both a header field and its associated header value are found.
@@ -339,7 +430,7 @@ typedef struct httpResponseParsingCallback
 
     /* Private context for the application. */
     void * pContext;
-} HTTPClient_HeaderParsingCallback_t;
+} HTTPClient_ResponseHeaderParsingCallback_t;
 
 /**
  * @brief Represents an HTTP response.
@@ -351,7 +442,7 @@ typedef struct HTTPResponse
      *
      * This buffer is supplied by the application.
      *
-     * This buffer is owned by the library during  #HTTPClient_Send and
+     * This buffer is owned by the library during #HTTPClient_Send and
      * #HTTPClient_ReadHeader. This buffer should not be modifed until after
      * these functions return.
      *
@@ -369,14 +460,14 @@ typedef struct HTTPResponse
      * parse through of the response as is it receive from the network.
      * Set to NULL to disable.
      */
-    HTTPClient_HeaderParsingCallback_t * pHeaderParsingCallback;
+    HTTPClient_ResponseHeaderParsingCallback_t * pHeaderParsingCallback;
 
     /**
      * @brief The starting location of the response headers in pBuffer.
      *
      * This is updated by #HTTPClient_Send.
      */
-    uint8_t * pHeaders;
+    const uint8_t * pHeaders;
 
     /**
      * @brief Byte length of the response headers in pBuffer.
@@ -390,7 +481,7 @@ typedef struct HTTPResponse
      *
      * This is updated by #HTTPClient_Send.
      */
-    uint8_t * pBody;
+    const uint8_t * pBody;
 
     /**
      * @brief Byte length of the body in pBuffer.
@@ -538,15 +629,21 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
                                         int32_t rangeEnd );
 
 /**
- * @brief Send the request headers in #HTTPRequestHeaders_t and request body in
- * parameter pRequestBodyBuf over the transport. The response is received in
- * #HTTPResponse_t.
+ * @brief Send the request headers in #HTTPRequestHeaders_t.pBuffer and request
+ * body in @p pRequestBodyBuf over the transport. The response is received in
+ * #HTTPResponse_t.pBuffer.
  *
- * The application should close the connection with the server if any
- * HTTP_SECURITY_ALERT_X errors are returned.
- * TODO: List all the security alerts possible after parsing development.
+ * The application should close the connection with the server if any of the
+ * following errors are returned:
+ * - HTTP_SECURITY_ALERT_RESPONSE_HEADERS_SIZE_LIMIT_EXCEEDED
+ * - HTTP_SECURITY_ALERT_EXTRANEOUS_RESPONSE_DATA
+ * - HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CHUNK_HEADER
+ * - HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_PROTOCOL_VERSION
+ * - HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_STATUS_CODE
+ * - HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CHARACTER
+ * - HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CONTENT_LENGTH
  *
- * TODO: Expand documentation.
+ * The @p pResponse returned is valid only if this function returns HTTP_SUCCESS.
  *
  * @param[in] pTransport Transport interface, see #HTTPTransportInterface_t for
  * more information.
@@ -557,6 +654,8 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
  * @param[in] reqBodyBufLen The length of the request entity in bytes.
  * @param[in] pResponse The response message and some notable response
  * parameters will be returned here on success.
+ * @param[in] pFlags Flags which modify the behavior of this function. Please
+ * see @ref http_send_flags.
  *
  * @return One of the following:
  * - #HTTP_SUCCESS (If successful.)
@@ -565,13 +664,22 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
  * - #HTTP_PARTIAL_RESPONSE (Part of an HTTP response was received in a partially filled response buffer.)
  * - #HTTP_NO_RESPONSE (No data was received from the transport interface.)
  * - #HTTP_INSUFFICIENT_MEMORY (The response received could not fit into the response buffer.)
- * TODO: Add more errors for parsing implementation.
+ * - #HTTP_PARSER_INTERNAL_ERROR (Internal parsing error.)
+ * Security alerts are listed below, please see #HTTPStatus_t for more information:
+ * - #HTTP_SECURITY_ALERT_RESPONSE_HEADERS_SIZE_LIMIT_EXCEEDED
+ * - #HTTP_SECURITY_ALERT_EXTRANEOUS_RESPONSE_DATA
+ * - #HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CHUNK_HEADER
+ * - #HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_PROTOCOL_VERSION
+ * - #HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_STATUS_CODE
+ * - #HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CHARACTER
+ * - #HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CONTENT_LENGTH
  */
 HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
                               const HTTPRequestHeaders_t * pRequestHeaders,
                               const uint8_t * pRequestBodyBuf,
                               size_t reqBodyBufLen,
-                              HTTPResponse_t * pResponse );
+                              HTTPResponse_t * pResponse,
+                              uint32_t flags );
 
 /**
  * @brief Read a header from a buffer containing a complete HTTP response.
@@ -595,6 +703,7 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
  * - #HTTP_INVALID_PARAMETER (If any provided parameters or their members are invalid.)
  * - #HTTP_HEADER_NOT_FOUND (Header is not found in the passed response buffer.)
  * - #HTTP_INVALID_RESPONSE (Provided response is not a valid HTTP response for parsing.)
+ * - #HTTP_PARSER_INTERNAL_ERROR(If an error in the response parser.)
  */
 HTTPStatus_t HTTPClient_ReadHeader( const HTTPResponse_t * pResponse,
                                     const uint8_t * pHeaderName,
