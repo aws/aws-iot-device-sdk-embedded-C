@@ -22,7 +22,7 @@
 
 /************ End of logging configuration ****************/
 
-/* Set network context to socket (int). */
+/* Set network context to double pointer to buffer (uint8_t**). */
 typedef uint8_t ** MQTTNetworkContext_t;
 
 /**
