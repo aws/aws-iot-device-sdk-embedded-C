@@ -80,17 +80,17 @@
 /**
  * @brief Constants relating to Range Requests.
  */
-#define RANGE_REQUEST_HEADER_FIELD               "Range"
-#define RANGE_REQUEST_HEADER_FIELD_LEN           ( sizeof( RANGE_REQUEST_HEADER_FIELD ) - 1u )
-#define RANGE_REQUEST_HEADER_VALUE_PREFIX        "bytes="
-#define RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN    ( sizeof( RANGE_REQUEST_HEADER_VALUE_PREFIX ) - 1u )
+#define HTTP_RANGE_REQUEST_HEADER_FIELD               "Range"
+#define HTTP_RANGE_REQUEST_HEADER_FIELD_LEN           ( sizeof( HTTP_RANGE_REQUEST_HEADER_FIELD ) - 1u )
+#define HTTP_RANGE_REQUEST_HEADER_VALUE_PREFIX        "bytes="
+#define HTTP_RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN    ( sizeof( HTTP_RANGE_REQUEST_HEADER_VALUE_PREFIX ) - 1u )
 
 /**
  * @brief Maximum value of a 32 bit signed integer is 2,147,483,647.
  *
  * Used for calculating buffer space for ASCII representation of range values.
  */
-#define MAX_INT32_NO_OF_DECIMAL_DIGITS           10u
+#define MAX_INT32_NO_OF_DECIMAL_DIGITS                10u
 
 /**
  * @brief Maximum buffer space for storing a Range Request Value.
@@ -98,21 +98,21 @@
  * Largest size is of the form:
  * "bytes=<Max-Integer-Value>-<<Max-Integer-Value>"
  */
-#define MAX_RANGE_REQUEST_VALUE_LEN                                            \
-    ( RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN + MAX_INT32_NO_OF_DECIMAL_DIGITS + \
+#define HTTP_MAX_RANGE_REQUEST_VALUE_LEN                                            \
+    ( HTTP_RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN + MAX_INT32_NO_OF_DECIMAL_DIGITS + \
       1u /* Dash character '-' */ + MAX_INT32_NO_OF_DECIMAL_DIGITS )
 
 /**
  * @brief Return value for the http-parser registered callback to signal halting
  * further execution.
  */
-#define HTTP_PARSER_STOP_PARSING        1
+#define HTTP_PARSER_STOP_PARSING            1
 
 /**
  * @brief Return value for http_parser registered callback to signal
  * continuation of HTTP response parsing.
  */
-#define HTTP_PARSER_CONTINUE_PARSING    0
+#define HTTP_PARSER_CONTINUE_PARSING        0
 
 /**
  * @brief The minimum request-line in the headers has a possible one character
@@ -126,7 +126,7 @@
  * Note that custom methods are allowed per:
  * https://tools.ietf.org/html/rfc2616#section-5.1.1.
  */
-#define MINIMUM_REQUEST_LINE_LENGTH     16u
+#define HTTP_MINIMUM_REQUEST_LINE_LENGTH    16u
 
 
 /**

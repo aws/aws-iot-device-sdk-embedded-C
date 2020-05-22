@@ -272,9 +272,9 @@ static void addRangeToExpectedHeaders( _headers_t * expectedHeaders,
                                        const char * expectedRange,
                                        bool terminatorExists )
 {
-    size_t expectedRangeLen = RANGE_REQUEST_HEADER_FIELD_LEN +
+    size_t expectedRangeLen = HTTP_RANGE_REQUEST_HEADER_FIELD_LEN +
                               HTTP_HEADER_FIELD_SEPARATOR_LEN +
-                              RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN +
+                              HTTP_RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN +
                               strlen( expectedRange ) +
                               2 * HTTP_HEADER_LINE_SEPARATOR_LEN;
 
@@ -284,9 +284,9 @@ static void addRangeToExpectedHeaders( _headers_t * expectedHeaders,
                   ( terminatorExists ? HTTP_HEADER_LINE_SEPARATOR_LEN : 0 ),
                   sizeof( expectedHeaders->buffer ) - expectedHeaders->dataLen,
                   "%s%s%s%s\r\n\r\n",
-                  RANGE_REQUEST_HEADER_FIELD,
+                  HTTP_RANGE_REQUEST_HEADER_FIELD,
                   HTTP_HEADER_FIELD_SEPARATOR,
-                  RANGE_REQUEST_HEADER_VALUE_PREFIX,
+                  HTTP_RANGE_REQUEST_HEADER_VALUE_PREFIX,
                   expectedRange );
 
     /* Make sure that the Range request was printed to the buffer. */

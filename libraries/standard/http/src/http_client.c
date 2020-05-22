@@ -255,9 +255,9 @@ static uint8_t convertInt32ToAscii( int32_t value,
 {
     /* As input value may be altered and MISRA C 2012 rule 17.8 prevents
      * modification of parameter, a local copy of the parameter is stored.
-     * absoluteValue stores the positive version of the input value. It's type
+     * absoluteValue stores the positive version of the input value. Its type
      * remains the same type as the input value to avoid unnecessary casting on
-     * a privately used variable. This variables size will always be less
+     * a privately used variable. This variable's size will always be less
      * than INT32_MAX. */
     int32_t absoluteValue = value;
     uint8_t numOfDigits = 0u;
@@ -557,7 +557,7 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
     {
         /* Write "User-Agent: <Value>". */
         returnStatus = addHeader( pRequestHeaders,
-                                  ( const uint8_t * ) ( HTTP_USER_AGENT_FIELD ),
+                                  ( const uint8_t * ) HTTP_USER_AGENT_FIELD,
                                   HTTP_USER_AGENT_FIELD_LEN,
                                   ( const uint8_t * ) HTTP_USER_AGENT_VALUE,
                                   HTTP_USER_AGENT_VALUE_LEN );
@@ -654,7 +654,7 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
 
     /* This buffer uses a char type instead of the general purpose uint8_t because
     * the range value expected to be written is within the ASCII character set. */
-    char rangeValueBuffer[ MAX_RANGE_REQUEST_VALUE_LEN ] = { '\0' };
+    char rangeValueBuffer[ HTTP_MAX_RANGE_REQUEST_VALUE_LEN ] = { '\0' };
     size_t rangeValueLength = 0u;
 
     if( pRequestHeaders == NULL )
@@ -697,9 +697,9 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
 
         /* Write the range value prefix in the buffer. */
         ( void ) memcpy( rangeValueBuffer,
-                         RANGE_REQUEST_HEADER_VALUE_PREFIX,
-                         RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN );
-        rangeValueLength += RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN;
+                         HTTP_RANGE_REQUEST_HEADER_VALUE_PREFIX,
+                         HTTP_RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN );
+        rangeValueLength += HTTP_RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN;
 
         /* Write the range start value in the buffer. */
         rangeValueLength += convertInt32ToAscii( rangeStartOrlastNbytes,
@@ -738,8 +738,8 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
 
         /* Add the Range Request header field and value to the buffer. */
         returnStatus = addHeader( pRequestHeaders,
-                                  ( const uint8_t * ) RANGE_REQUEST_HEADER_FIELD,
-                                  RANGE_REQUEST_HEADER_FIELD_LEN,
+                                  ( const uint8_t * ) HTTP_RANGE_REQUEST_HEADER_FIELD,
+                                  HTTP_RANGE_REQUEST_HEADER_FIELD_LEN,
                                   ( const uint8_t * ) rangeValueBuffer,
                                   rangeValueLength );
     }
@@ -1022,7 +1022,7 @@ static HTTPStatus_t receiveAndParseHttpResponse( const HTTPTransportInterface_t 
     assert( pTransport->recv != NULL );
     assert( pResponse != NULL );
     assert( pRequestHeaders != NULL );
-    assert( pRequestHeaders->headersLen >= MINIMUM_REQUEST_LINE_LENGTH );
+    assert( pRequestHeaders->headersLen >= HTTP_MINIMUM_REQUEST_LINE_LENGTH );
 
     /* The parsing context needs to know if the response is for a HEAD request.
      * The third-party parser requires parsing is manually indicated to stop
@@ -1118,12 +1118,12 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
         LogError( ( "Parameter check failed: pRequestHeaders->pBuffer is NULL." ) );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
-    else if( pRequestHeaders->headersLen < MINIMUM_REQUEST_LINE_LENGTH )
+    else if( pRequestHeaders->headersLen < HTTP_MINIMUM_REQUEST_LINE_LENGTH )
     {
         LogError( ( "Parameter check failed: pRequestHeaders->headersLen "
                     "does not meet minimum the required length. "
                     "MinimumRequiredLength=%u, LastHeadersLength =%lu",
-                    MINIMUM_REQUEST_LINE_LENGTH,
+                    HTTP_MINIMUM_REQUEST_LINE_LENGTH,
                     ( unsigned long ) ( pRequestHeaders->headersLen ) ) );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
