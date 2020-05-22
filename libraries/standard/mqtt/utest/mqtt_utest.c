@@ -78,6 +78,16 @@
 #define MQTT_SAMPLE_NETWORK_CONTEXT         ( 0 )
 
 /**
+ * @brief Sample topic filter to subscribe to.
+ */
+#define MQTT_SAMPLE_TOPIC_FILTER            "iot"
+
+/**
+ * @brief Length of sample topic filter.
+ */
+#define MQTT_SAMPLE_TOPIC_FILTER_LENGTH     ( sizeof( MQTT_SAMPLE_TOPIC_FILTER ) - 1 )
+
+/**
  * @brief The packet type to be received by the process loop.
  * IMPORTANT: Make sure this is set before calling expectProcessLoopCalls(...).
  */
@@ -1260,6 +1270,8 @@ void test_MQTT_ProcessLoop_Timer_Overflow( void )
 static void setupSubscriptionInfo( MQTTSubscribeInfo_t * subscribeInfo )
 {
     subscribeInfo->qos = MQTTQoS1;
+    subscribeInfo->pTopicFilter = MQTT_SAMPLE_TOPIC_FILTER;
+    subscribeInfo->topicFilterLength = MQTT_SAMPLE_TOPIC_FILTER_LENGTH;
 }
 
 void test_MQTT_Subscribe_happy_paths( void )
@@ -1276,4 +1288,16 @@ void test_MQTT_Subscribe_happy_paths( void )
     setupCallbacks( &callbacks );
     setupNetworkBuffer( &networkBuffer );
     setupSubscriptionInfo( &subscribeInfo );
+
+    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_SerializeSubscribe_ExpectAnyArgsAndReturn( MQTTSuccess );
+
+    mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1,
+                                 MQTT_NEXT_PACKET_ID_START );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 }
+
+/* ========================================================================== */
