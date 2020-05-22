@@ -36,7 +36,7 @@ int suiteTearDown( int numFailures )
 /**
  * @brief Test that MQTT_Init is able to update the context object correctly.
  */
-void test_MQTT_Init_Happy_path( void )
+void test_MQTT_Init_Happy_Path( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
@@ -57,7 +57,7 @@ void test_MQTT_Init_Happy_path( void )
 /**
  * @brief Test that any NULL parameter causes MQTT_Init to return MQTTBadParameter.
  */
-void test_MQTT_Init_Invalid_params( void )
+void test_MQTT_Init_Invalid_Params( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;

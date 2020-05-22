@@ -382,7 +382,7 @@ static void verifySerializedConnectPacket( const MQTTConnectInfo_t * const pConn
  * @brief Call Mqtt_SerializeConnect using NULL parameters and insufficient buffer
  * size until we receive all possible MQTTBadParameter and MQTTNoMemory errors.
  */
-void test_MQTT_SerializeConnect_invalid_params()
+void test_MQTT_SerializeConnect_Invalid_Params()
 {
     MQTTStatus_t mqttStatus = MQTTSuccess;
     size_t remainingLength = 0, packetSize = 0;
@@ -417,7 +417,7 @@ void test_MQTT_SerializeConnect_invalid_params()
  * @brief This method calls MQTT_SerializeConnect successfully using different parameters
  * until we have full coverage on the private method, serializeConnectPacket(...).
  */
-void test_MQTT_SerializeConnect_happy_paths()
+void test_MQTT_SerializeConnect_Happy_Paths()
 {
     MQTTStatus_t mqttStatus = MQTTSuccess;
     size_t remainingLength = 0, packetSize = 0;
@@ -512,7 +512,7 @@ void test_MQTT_SerializeConnect_happy_paths()
  * @brief Call Mqtt_SerializeDisconnect using NULL pBuffer and insufficient buffer
  * size in order to receive MQTTBadParameter and MQTTNoMemory errors.
  */
-void test_MQTT_SerializeDisconnect_invalid_params()
+void test_MQTT_SerializeDisconnect_Invalid_Params()
 {
     MQTTStatus_t mqttStatus = MQTTSuccess;
     size_t packetSize = 0;
@@ -536,7 +536,7 @@ void test_MQTT_SerializeDisconnect_invalid_params()
  * @brief This method calls MQTT_SerializeDisconnect successfully in order to
  * get full coverage on the method.
  */
-void test_MQTT_SerializeDisconnect_happy_path()
+void test_MQTT_SerializeDisconnect_Happy_Path()
 {
     MQTTStatus_t mqttStatus = MQTTSuccess;
     size_t packetSize = 0;
