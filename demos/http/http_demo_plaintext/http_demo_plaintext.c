@@ -302,12 +302,12 @@ static HTTPStatus_t _sendHttpRequest( HTTPNetworkContext_t pContext,
 int main()
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
-    HTTPNetworkContext_t socketContext = { 0 };
+    struct networkContext_t socketContext = { 0 };
 
     /* Establish TCP connection. */
-    socketContext->tcpSocket = connectToServer( SERVER, PORT );
+    socketContext.tcpSocket = connectToServer( SERVER, PORT );
 
-    if( socketContext->tcpSocket == -1 )
+    if( socketContext.tcpSocket == -1 )
     {
         returnStatus = HTTP_NETWORK_ERROR;
     }
@@ -320,7 +320,7 @@ int main()
     #ifdef GET_PATH
         if( returnStatus == HTTP_SUCCESS )
         {
-            returnStatus = _sendHttpRequest( socketContext,
+            returnStatus = _sendHttpRequest( &socketContext,
                                              SERVER,
                                              HTTP_METHOD_GET,
                                              GET_PATH );
@@ -330,7 +330,7 @@ int main()
     #ifdef HEAD_PATH
         if( returnStatus == HTTP_SUCCESS )
         {
-            returnStatus = _sendHttpRequest( socketContext,
+            returnStatus = _sendHttpRequest( &socketContext,
                                              SERVER,
                                              HTTP_METHOD_HEAD,
                                              HEAD_PATH );
@@ -340,7 +340,7 @@ int main()
     #ifdef PUT_PATH
         if( returnStatus == HTTP_SUCCESS )
         {
-            returnStatus = _sendHttpRequest( socketContext,
+            returnStatus = _sendHttpRequest( &socketContext,
                                              SERVER,
                                              HTTP_METHOD_PUT,
                                              PUT_PATH );
@@ -350,7 +350,7 @@ int main()
     #ifdef POST_PATH
         if( returnStatus == HTTP_SUCCESS )
         {
-            returnStatus = _sendHttpRequest( socketContext,
+            returnStatus = _sendHttpRequest( &socketContext,
                                              SERVER,
                                              HTTP_METHOD_POST,
                                              POST_PATH );
@@ -359,10 +359,10 @@ int main()
 
     /**************************** Disconnect. *****************************/
 
-    if( socketContext->tcpSocket != -1 )
+    if( socketContext.tcpSocket != -1 )
     {
-        shutdown( socketContext->tcpSocket, SHUT_RDWR );
-        close( socketContext->tcpSocket );
+        shutdown( socketContext.tcpSocket, SHUT_RDWR );
+        close( socketContext.tcpSocket );
     }
 
     return returnStatus;
