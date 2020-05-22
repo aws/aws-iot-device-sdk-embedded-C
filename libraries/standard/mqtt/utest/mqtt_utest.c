@@ -1224,12 +1224,6 @@ void test_MQTT_ProcessLoop_Receive_Failed( void )
  */
 void test_MQTT_ProcessLoop_Timer_Overflow( void )
 {
-    MQTTStatus_t mqttStatus;
-    MQTTContext_t context;
-    MQTTTransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
-    MQTTApplicationCallbacks_t callbacks;
-    MQTTPacketInfo_t incomingPacket = { 0 };
     uint8_t i = 0;
     uint8_t numIterations = ( MQTT_TIMER_OVERFLOW_TIMEOUT_MS / MQTT_TIMER_CALLS_PER_ITERATION ) + 1;
 
@@ -1259,4 +1253,27 @@ void test_MQTT_ProcessLoop_Timer_Overflow( void )
 
     mqttStatus = MQTT_ProcessLoop( &context, MQTT_TIMER_OVERFLOW_TIMEOUT_MS );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+}
+
+/* ========================================================================== */
+
+static void setupSubscriptionInfo( MQTTSubscribeInfo_t * subscribeInfo )
+{
+    subscribeInfo->qos = MQTTQoS1;
+}
+
+void test_MQTT_Subscribe_happy_paths( void )
+{
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context;
+    MQTTTransportInterface_t transport;
+    MQTTFixedBuffer_t networkBuffer;
+    MQTTApplicationCallbacks_t callbacks;
+    MQTTPacketInfo_t incomingPacket = { 0 };
+    MQTTSubscribeInfo_t subscribeInfo;
+
+    setupTransportInterface( &transport );
+    setupCallbacks( &callbacks );
+    setupNetworkBuffer( &networkBuffer );
+    setupSubscriptionInfo( &subscribeInfo );
 }
