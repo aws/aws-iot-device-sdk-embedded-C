@@ -295,6 +295,8 @@ static HTTPStatus_t _sendHttpRequest( const char * pHost,
         LogInfo( ( "Response Headers\n%.*s\n",
                    response.headersLen,
                    response.pHeaders ) );
+        LogInfo( ( "Response Status\n%u\n",
+                   response.statusCode ) );
         LogInfo( ( "Response Body\n%.*s",
                    response.bodyLen,
                    response.pBody ) );
