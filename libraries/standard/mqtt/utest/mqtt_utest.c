@@ -11,12 +11,12 @@
 /* ============================   UNITY FIXTURES ============================ */
 
 /* Called before each test method. */
-void setUp( void )
+void setUp()
 {
 }
 
 /* Called after each test method. */
-void tearDown( void )
+void tearDown()
 {
 }
 
@@ -28,6 +28,7 @@ void suiteSetUp()
 /* Called at the end of the whole suite. */
 int suiteTearDown( int numFailures )
 {
+    return numFailures;
 }
 
 /* ============================   Testing MQTT_Init ========================= */
