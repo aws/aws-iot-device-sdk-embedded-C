@@ -82,13 +82,29 @@ create_test(${utest_name}
             "${test_include_directories}"
         )
 
-# create targets for testing mqtt_lightweight.c
+# need to redefine because the tests below don't use any mocks
+set(utest_link_list "")
+list(APPEND utest_link_list
+                lib${real_name}.a
+        )
+
+# mqtt_state_utest
 set(utest_name "${project_name}_state_utest")
 set(utest_source "${project_name}_state_utest.c")
 
+create_test(${utest_name}
+            ${utest_source}
+            "${utest_link_list}"
+            "${utest_dep_list}"
+            "${test_include_directories}"
+        )
+
+# mqtt_lightweight_utest
+set(utest_name "${project_name}_lightweight_utest")
+set(utest_source "${project_name}_lightweight_utest.c")
+
 set(utest_link_list "")
 list(APPEND utest_link_list
-            -lunity
             lib${real_name}.a
         )
 

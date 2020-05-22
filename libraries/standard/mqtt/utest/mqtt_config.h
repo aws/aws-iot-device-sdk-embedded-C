@@ -54,7 +54,7 @@ typedef int MQTTNetworkContext_t;
  *
  * No two clients may use the same client identifier simultaneously.
  */
-#define CLIENT_IDENTIFIER                   "testclient"
+#define MQTT_CLIENT_IDENTIFIER              "testclient"
 
 
 #endif /* ifndef MQTT_CONFIG_H_ */
