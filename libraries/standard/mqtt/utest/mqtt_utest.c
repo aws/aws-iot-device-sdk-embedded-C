@@ -1385,12 +1385,12 @@ void test_MQTT_Subscribe_happy_path( void )
     setupNetworkBuffer( &networkBuffer );
     setupSubscriptionInfo( &subscribeInfo );
 
+    /* Initialize context. */
     mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
-
+    /* Verify MQTTSuccess is returned with the following mocks. */
     MQTT_GetSubscribePacketSize_Stub( modifySubscribeUnsubscribePacketSize );
     MQTT_SerializeSubscribe_ExpectAnyArgsAndReturn( MQTTSuccess );
-
     /* Expect the above calls when running MQTT_Subscribe. */
     mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1,
                                  MQTT_NEXT_PACKET_ID_START );
@@ -1417,12 +1417,12 @@ void test_MQTT_Subscribe_error_paths( void )
     setupNetworkBuffer( &networkBuffer );
     setupSubscriptionInfo( &subscribeInfo );
 
+    /* Initialize context. */
     mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
-
+    /* Verify MQTTSendFailed is propagated when transport interface returns an error. */
     MQTT_GetSubscribePacketSize_Stub( modifySubscribeUnsubscribePacketSize );
     MQTT_SerializeSubscribe_ExpectAnyArgsAndReturn( MQTTSuccess );
-
     /* Expect the above calls when running MQTT_Subscribe. */
     mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1,
                                  MQTT_NEXT_PACKET_ID_START );
@@ -1482,12 +1482,12 @@ void test_MQTT_Unsubscribe_happy_path( void )
     setupNetworkBuffer( &networkBuffer );
     setupSubscriptionInfo( &subscribeInfo );
 
+    /* Initialize context. */
     mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
-
+    /* Verify MQTTSuccess is returned with the following mocks. */
     MQTT_GetUnsubscribePacketSize_Stub( modifySubscribeUnsubscribePacketSize );
     MQTT_SerializeUnsubscribe_ExpectAnyArgsAndReturn( MQTTSuccess );
-
     /* Expect the above calls when running MQTT_Unsubscribe. */
     mqttStatus = MQTT_Unsubscribe( &context, &subscribeInfo, 1,
                                    MQTT_NEXT_PACKET_ID_START );
@@ -1514,12 +1514,12 @@ void test_MQTT_Unsubscribe_error_path( void )
     setupNetworkBuffer( &networkBuffer );
     setupSubscriptionInfo( &subscribeInfo );
 
+    /* Initialize context. */
     mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
-
+    /* Verify MQTTSendFailed is propagated when transport interface returns an error. */
     MQTT_GetUnsubscribePacketSize_Stub( modifySubscribeUnsubscribePacketSize );
     MQTT_SerializeUnsubscribe_ExpectAnyArgsAndReturn( MQTTSuccess );
-
     /* Expect the above calls when running MQTT_Unsubscribe. */
     mqttStatus = MQTT_Unsubscribe( &context, &subscribeInfo, 1,
                                    MQTT_NEXT_PACKET_ID_START );
