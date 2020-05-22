@@ -31,9 +31,6 @@
  * mechanism for Publish messages.
  */
 
-/* Demo Config header. */
-#include "demo_config.h"
-
 /* Standard includes. */
 #include <assert.h>
 #include <stdlib.h>
@@ -50,6 +47,9 @@
 
 /* MQTT API header. */
 #include "mqtt.h"
+
+/* Demo Config header. */
+#include "demo_config.h"
 
 /**
  * @brief MQTT server host name.
