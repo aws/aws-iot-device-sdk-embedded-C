@@ -73,7 +73,6 @@ list(APPEND utest_dep_list
             ${real_name}
         )
 
-# create targets for testing mqtt.c
 set(utest_name "${project_name}_utest")
 set(utest_source "${project_name}_utest.c")
 create_test(${utest_name}
@@ -83,14 +82,15 @@ create_test(${utest_name}
             "${test_include_directories}"
         )
 
-# create targets for testing mqtt_lightweight.c
-set(utest_name "${project_name}_state_utest")
-set(utest_source "${project_name}_state_utest.c")
-
+# need to redefine because the tests below don't use any mocks
 set(utest_link_list "")
 list(APPEND utest_link_list
-            lib${real_name}.a
+                lib${real_name}.a
         )
+
+# mqtt_state_utest
+set(utest_name "${project_name}_state_utest")
+set(utest_source "${project_name}_state_utest.c")
 
 create_test(${utest_name}
             ${utest_source}
@@ -99,7 +99,7 @@ create_test(${utest_name}
             "${test_include_directories}"
         )
 
-# create targets for testing mqtt_lightweight.c
+# mqtt_lightweight_utest
 set(utest_name "${project_name}_lightweight_utest")
 set(utest_source "${project_name}_lightweight_utest.c")
 
