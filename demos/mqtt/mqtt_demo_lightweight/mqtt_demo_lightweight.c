@@ -914,7 +914,7 @@ int main( int argc,
         /* Establish a TCP connection with the MQTT broker. This example connects to
          * the MQTT broker as specified in MQTT_BROKER_ENDPOINT and
          * MQTT_BROKER_PORT at the top of this file. */
-        LogInfo( ( "Estabishing TCP connection to the broker  %s.\r\n", MQTT_BROKER_ENDPOINT ) );
+        LogInfo( ( "Establishing TCP connection to the broker  %s.\r\n", MQTT_BROKER_ENDPOINT ) );
         status = connectToServer( MQTT_BROKER_ENDPOINT, MQTT_BROKER_PORT, &tcpSocket );
 
         if( status == EXIT_SUCCESS )
