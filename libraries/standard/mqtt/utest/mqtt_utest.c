@@ -1274,7 +1274,24 @@ static void setupSubscriptionInfo( MQTTSubscribeInfo_t * subscribeInfo )
     subscribeInfo->topicFilterLength = MQTT_SAMPLE_TOPIC_FILTER_LENGTH;
 }
 
-void test_MQTT_Subscribe_happy_paths( void )
+static MQTTStatus_t modifySubscribePacketSize( const MQTTSubscribeInfo_t * const pSubscriptionList,
+                                               size_t subscriptionCount,
+                                               size_t * pRemainingLength,
+                                               size_t * pPacketSize,
+                                               int cmock_num_calls )
+{
+    /* Remove unused parameter warnings. */
+    ( void ) pSubscriptionList;
+    ( void ) subscriptionCount;
+    ( void ) cmock_num_calls;
+
+    *pRemainingLength = SAMPLE_REMAINING_LENGTH;
+    *pPacketSize = SAMPLE_REMAINING_LENGTH;
+
+    return MQTTSuccess;
+}
+
+void test_MQTT_Subscribe_happy_path( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
@@ -1292,7 +1309,7 @@ void test_MQTT_Subscribe_happy_paths( void )
     mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
-    MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetSubscribePacketSize_Stub( modifySubscribePacketSize );
     MQTT_SerializeSubscribe_ExpectAnyArgsAndReturn( MQTTSuccess );
 
     mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1,
