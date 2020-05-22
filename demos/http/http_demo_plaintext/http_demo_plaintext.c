@@ -30,7 +30,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
-#include "config.h"
+#include "demo_config.h"
 
 #include "http_client.h"
 
@@ -98,7 +98,7 @@ static uint8_t requestBodyBuffer[] = REQUEST_BODY_TEXT;
 /**
  * @brief Definition of the HTTP network context.
  */
-struct HTTPNetworkContext
+struct networkContext_t
 {
     int tcpSocket;
 };
@@ -196,7 +196,7 @@ static int connectToServer( const char * pServer,
  *
  * @return Number of bytes sent; negative value on error.
  */
-static int32_t transportSend( HTTPNetworkContext_t * pContext,
+static int32_t transportSend( HTTPNetworkContext_t pContext,
                               const void * pBuffer,
                               size_t bytesToSend )
 {
@@ -214,7 +214,7 @@ static int32_t transportSend( HTTPNetworkContext_t * pContext,
  *
  * @return Number of bytes received; negative value on error.
  */
-static int32_t transportRecv( HTTPNetworkContext_t * pContext,
+static int32_t transportRecv( HTTPNetworkContext_t pContext,
                               void * pBuffer,
                               size_t bytesToRead )
 {
@@ -232,7 +232,7 @@ static int32_t transportRecv( HTTPNetworkContext_t * pContext,
  *
  * @return #HTTP_SUCCESS if successful.
  */
-static HTTPStatus_t _sendHttpRequest( HTTPNetworkContext_t * pContext,
+static HTTPStatus_t _sendHttpRequest( HTTPNetworkContext_t pContext,
                                       const char * pHost,
                                       const char * pMethod,
                                       const char * pPath )
@@ -243,8 +243,8 @@ static HTTPStatus_t _sendHttpRequest( HTTPNetworkContext_t * pContext,
     HTTPTransportInterface_t transport = { 0 };
     HTTPResponse_t response = { 0 };
 
-    SdkLog( "Sending HTTP %s request to %s%s\r\n",
-            pMethod, SERVER, pPath );
+    LogInfo( ( "Sending HTTP %s request to %s%s\r\n",
+               pMethod, SERVER, pPath ) );
 
     /* Initialize the request object. */
     requestInfo.pHost = pHost;
@@ -276,18 +276,19 @@ static HTTPStatus_t _sendHttpRequest( HTTPNetworkContext_t * pContext,
                                         &requestHeaders,
                                         requestBodyBuffer,
                                         REQUEST_BODY_TEXT_LENGTH,
-                                        &response );
+                                        &response,
+                                        0 );
     }
 
     if( returnStatus == HTTP_SUCCESS )
     {
         /* Print the response. */
-        SdkLog( "Response Headers\n%.*s\n",
-                response.headersLen,
-                response.pHeaders );
-        SdkLog( "Response Body\n%.*s",
-                response.bodyLen,
-                response.pBody );
+        LogInfo( ( "Response Headers\n%.*s\n",
+                   response.headersLen,
+                   response.pHeaders ) );
+        LogInfo( ( "Response Body\n%.*s",
+                   response.bodyLen,
+                   response.pBody ) );
     }
 
     return returnStatus;
@@ -304,9 +305,9 @@ int main()
     HTTPNetworkContext_t socketContext = { 0 };
 
     /* Establish TCP connection. */
-    socketContext.tcpSocket = connectToServer( SERVER, PORT );
+    socketContext->tcpSocket = connectToServer( SERVER, PORT );
 
-    if( socketContext.tcpSocket == -1 )
+    if( socketContext->tcpSocket == -1 )
     {
         returnStatus = HTTP_NETWORK_ERROR;
     }
@@ -319,7 +320,7 @@ int main()
     #ifdef GET_PATH
         if( returnStatus == HTTP_SUCCESS )
         {
-            returnStatus = _sendHttpRequest( &socketContext,
+            returnStatus = _sendHttpRequest( socketContext,
                                              SERVER,
                                              HTTP_METHOD_GET,
                                              GET_PATH );
@@ -329,7 +330,7 @@ int main()
     #ifdef HEAD_PATH
         if( returnStatus == HTTP_SUCCESS )
         {
-            returnStatus = _sendHttpRequest( &socketContext,
+            returnStatus = _sendHttpRequest( socketContext,
                                              SERVER,
                                              HTTP_METHOD_HEAD,
                                              HEAD_PATH );
@@ -339,7 +340,7 @@ int main()
     #ifdef PUT_PATH
         if( returnStatus == HTTP_SUCCESS )
         {
-            returnStatus = _sendHttpRequest( &socketContext,
+            returnStatus = _sendHttpRequest( socketContext,
                                              SERVER,
                                              HTTP_METHOD_PUT,
                                              PUT_PATH );
@@ -349,7 +350,7 @@ int main()
     #ifdef POST_PATH
         if( returnStatus == HTTP_SUCCESS )
         {
-            returnStatus = _sendHttpRequest( &socketContext,
+            returnStatus = _sendHttpRequest( socketContext,
                                              SERVER,
                                              HTTP_METHOD_POST,
                                              POST_PATH );
@@ -358,10 +359,10 @@ int main()
 
     /**************************** Disconnect. *****************************/
 
-    if( socketContext.tcpSocket != -1 )
+    if( socketContext->tcpSocket != -1 )
     {
-        shutdown( socketContext.tcpSocket, SHUT_RDWR );
-        close( socketContext.tcpSocket );
+        shutdown( socketContext->tcpSocket, SHUT_RDWR );
+        close( socketContext->tcpSocket );
     }
 
     return returnStatus;

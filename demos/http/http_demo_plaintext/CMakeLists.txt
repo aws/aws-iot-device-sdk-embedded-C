@@ -15,7 +15,7 @@ target_link_libraries(
 )
 
 target_include_directories(
-    http
+    ${DEMO_NAME}
     PUBLIC
-        ${CMAKE_CURRENT_LIST_DIR}
+        ${LOGGING_INCLUDE_DIRS}
 )
