@@ -32,7 +32,7 @@
 /**
  * @brief Length of the MQTT network buffer.
  */
-#define MQTT_TEST_BUFFER_LENGTH      ( 1024 )
+#define MQTT_TEST_BUFFER_LENGTH      ( 128 )
 
 /**
  * @brief Length of time spent for single test case with
@@ -44,6 +44,11 @@
  * @brief Zero timeout in the process loop implies one iteration.
  */
 #define MQTT_NO_TIMEOUT_MS           ( 0U )
+
+/**
+ * @brief Sample length of remaining serialized data.
+ */
+#define SAMPLE_REMAINING_LENGTH      ( 64 )
 
 /**
  * @brief The packet type to be received by the process loop.
@@ -380,6 +385,7 @@ static MQTTStatus_t modifyIncomingPacket( MQTTTransportRecvFunc_t readFunc,
     ( void ) cmock_num_calls;
 
     pIncomingPacket->type = currentPacketType;
+    pIncomingPacket->remainingLength = SAMPLE_REMAINING_LENGTH;
     return modifyIncomingPacketStatus;
 }
 
