@@ -4,8 +4,6 @@
 
 #define MQTT_PACKET_ID_INVALID    ( ( uint16_t ) 0U )
 
-#define MQTT_STATE_ARRAY_MAX_COUNT ( 10U )
-
 /* ============================   UNITY FIXTURES ============================ */
 void setUp( void )
 {
@@ -32,6 +30,7 @@ int suiteTearDown( int numFailures )
 static void resetPublishRecords( MQTTContext_t * pMqttContext )
 {
     int i = 0;
+
     for( ; i < MQTT_STATE_ARRAY_MAX_COUNT; i++ )
     {
         pMqttContext->outgoingPublishRecords[ i ].packetId = MQTT_PACKET_ID_INVALID;
@@ -60,6 +59,7 @@ static void fillRecord( MQTTPubAckInfo_t * records,
                         MQTTPublishState_t state )
 {
     int i;
+
     for( i = 0; i < MQTT_STATE_ARRAY_MAX_COUNT; i++ )
     {
         records[ i ].packetId = startingId + i;
@@ -220,7 +220,6 @@ void test_MQTT_UpdateStatePublish( void )
     state = MQTT_UpdateStatePublish( &mqttContext, PACKET_ID, operation, qos );
     TEST_ASSERT_EQUAL( MQTTPubRecSend, state );
     TEST_ASSERT_EQUAL( MQTTPubRecSend, mqttContext.incomingPublishRecords[ 0 ].publishState );
-
 }
 
 /* ========================================================================== */

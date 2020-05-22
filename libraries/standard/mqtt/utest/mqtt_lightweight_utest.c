@@ -8,45 +8,50 @@
 /**
  * @brief MQTT protocol version 3.1.1.
  */
-#define MQTT_VERSION_3_1_1               ( ( uint8_t ) 4U )
+#define MQTT_VERSION_3_1_1                  ( ( uint8_t ) 4U )
 
 /**
  * @brief Test-defined macro for MQTT username.
  */
-#define MQTT_TEST_USERNAME               "username"
-#define MQTT_TEST_USERNAME_LEN           ( sizeof( MQTT_TEST_USERNAME ) - 1 )
+#define MQTT_TEST_USERNAME                  "username"
+#define MQTT_TEST_USERNAME_LEN              ( sizeof( MQTT_TEST_USERNAME ) - 1 )
 
 /**
  * @brief Test-defined macro for MQTT password.
  */
-#define MQTT_TEST_PASSWORD               "password"
-#define MQTT_TEST_PASSWORD_LEN           ( sizeof( MQTT_TEST_PASSWORD ) - 1 )
+#define MQTT_TEST_PASSWORD                  "password"
+#define MQTT_TEST_PASSWORD_LEN              ( sizeof( MQTT_TEST_PASSWORD ) - 1 )
 
 /**
  * @brief Test-defined macro for MQTT topic.
  */
-#define MQTT_TEST_TOPIC                  "topic"
-#define MQTT_TEST_TOPIC_LEN              ( sizeof( MQTT_TEST_TOPIC ) - 1 )
+#define MQTT_TEST_TOPIC                     "topic"
+#define MQTT_TEST_TOPIC_LEN                 ( sizeof( MQTT_TEST_TOPIC ) - 1 )
 
 /**
  * @brief Length of the client identifier.
  */
-#define MQTT_CLIENT_IDENTIFIER_LEN       ( sizeof( MQTT_CLIENT_IDENTIFIER ) - 1 )
+#define MQTT_CLIENT_IDENTIFIER_LEN          ( sizeof( MQTT_CLIENT_IDENTIFIER ) - 1 )
 
 /**
  * @brief Payload for will info.
  */
-#define MQTT_SAMPLE_PAYLOAD              "payload"
-#define MQTT_SAMPLE_PAYLOAD_LEN          ( sizeof( MQTT_SAMPLE_PAYLOAD ) - 1 )
+#define MQTT_SAMPLE_PAYLOAD                 "payload"
+#define MQTT_SAMPLE_PAYLOAD_LEN             ( sizeof( MQTT_SAMPLE_PAYLOAD ) - 1 )
 
 /* MQTT CONNECT flags. */
-#define MQTT_CONNECT_FLAG_CLEAN          ( 1 )            /**< @brief Clean session. */
-#define MQTT_CONNECT_FLAG_WILL           ( 2 )            /**< @brief Will present. */
-#define MQTT_CONNECT_FLAG_WILL_QOS1      ( 3 )            /**< @brief Will QoS 1. */
-#define MQTT_CONNECT_FLAG_WILL_QOS2      ( 4 )            /**< @brief Will QoS 2. */
-#define MQTT_CONNECT_FLAG_WILL_RETAIN    ( 5 )            /**< @brief Will retain. */
-#define MQTT_CONNECT_FLAG_PASSWORD       ( 6 )            /**< @brief Password present. */
-#define MQTT_CONNECT_FLAG_USERNAME       ( 7 )            /**< @brief User name present. */
+#define MQTT_CONNECT_FLAG_CLEAN             ( 1 )         /**< @brief Clean session. */
+#define MQTT_CONNECT_FLAG_WILL              ( 2 )         /**< @brief Will present. */
+#define MQTT_CONNECT_FLAG_WILL_QOS1         ( 3 )         /**< @brief Will QoS 1. */
+#define MQTT_CONNECT_FLAG_WILL_QOS2         ( 4 )         /**< @brief Will QoS 2. */
+#define MQTT_CONNECT_FLAG_WILL_RETAIN       ( 5 )         /**< @brief Will retain. */
+#define MQTT_CONNECT_FLAG_PASSWORD          ( 6 )         /**< @brief Password present. */
+#define MQTT_CONNECT_FLAG_USERNAME          ( 7 )         /**< @brief User name present. */
+
+/**
+ * @brief The Remaining Length field of MQTT disconnect packets, per MQTT spec.
+ */
+#define MQTT_DISCONNECT_REMAINING_LENGTH    ( ( uint8_t ) 0 )
 
 /**
  * @brief Set a bit in an 8-bit unsigned integer.
@@ -377,7 +382,7 @@ static void verifySerializedConnectPacket( const MQTTConnectInfo_t * const pConn
  * @brief Call Mqtt_SerializeConnect using NULL parameters and insufficient buffer
  * size until we receive all possible MQTTBadParameter and MQTTNoMemory errors.
  */
-void test_MQTT_SerializeConnect_invalid_params()
+void test_MQTT_SerializeConnect_Invalid_Params()
 {
     MQTTStatus_t mqttStatus = MQTTSuccess;
     size_t remainingLength = 0, packetSize = 0;
@@ -412,7 +417,7 @@ void test_MQTT_SerializeConnect_invalid_params()
  * @brief This method calls MQTT_SerializeConnect successfully using different parameters
  * until we have full coverage on the private method, serializeConnectPacket(...).
  */
-void test_MQTT_SerializeConnect_happy_paths()
+void test_MQTT_SerializeConnect_Happy_Paths()
 {
     MQTTStatus_t mqttStatus = MQTTSuccess;
     size_t remainingLength = 0, packetSize = 0;
@@ -499,6 +504,52 @@ void test_MQTT_SerializeConnect_happy_paths()
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     verifySerializedConnectPacket( &connectInfo, NULL,
                                    remainingLength, &networkBuffer );
+}
+
+/* ==================  Testing MQTT_SerializeDisconnect ===================== */
+
+/**
+ * @brief Call Mqtt_SerializeDisconnect using NULL pBuffer and insufficient buffer
+ * size in order to receive MQTTBadParameter and MQTTNoMemory errors.
+ */
+void test_MQTT_SerializeDisconnect_Invalid_Params()
+{
+    MQTTStatus_t mqttStatus = MQTTSuccess;
+    size_t packetSize = 0;
+    MQTTFixedBuffer_t networkBuffer;
+
+    /* Test NULL pBuffer. */
+    mqttStatus = MQTT_SerializeDisconnect( NULL );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
+
+    /* Test disconnectPacketSize > pBuffer->size. */
+    /* Get MQTT disconnect packet size and remaining length. */
+    mqttStatus = MQTT_GetDisconnectPacketSize( &packetSize );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    networkBuffer.pBuffer = mqttBuffer;
+    networkBuffer.size = packetSize - 1;
+    mqttStatus = MQTT_SerializeDisconnect( &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTNoMemory, mqttStatus );
+}
+
+/**
+ * @brief This method calls MQTT_SerializeDisconnect successfully in order to
+ * get full coverage on the method.
+ */
+void test_MQTT_SerializeDisconnect_Happy_Path()
+{
+    MQTTStatus_t mqttStatus = MQTTSuccess;
+    size_t packetSize = 0;
+    MQTTFixedBuffer_t networkBuffer;
+
+    /* Fill structs to pass into methods to be tested. */
+    setupNetworkBuffer( &networkBuffer );
+
+    /* Make sure buffer has enough space. */
+    mqttStatus = MQTT_SerializeDisconnect( &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTT_PACKET_TYPE_DISCONNECT, networkBuffer.pBuffer[ 0 ] );
+    TEST_ASSERT_EQUAL( MQTT_DISCONNECT_REMAINING_LENGTH, networkBuffer.pBuffer[ 1 ] );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 }
 
 /* ========================================================================== */
