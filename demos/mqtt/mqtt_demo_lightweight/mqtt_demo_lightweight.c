@@ -113,6 +113,11 @@
  */
 #define MQTT_MAX_RECV_ATTEMPTS            10U
 
+/**
+ * @brief Delay between two demo iterations.
+ */
+#define MQTT_DEMO_ITERATION_DELAY         5U
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -272,7 +277,15 @@ static uint16_t getNextPacketIdentifier()
 {
     static uint16_t packetId = 0;
 
-    return ++packetId;
+    packetId++;
+
+    /* Since 0 is invalid packet identifier  value, 
+     * take care of it when it rolls over */
+    if( packetId == 0 )
+    {
+        packetId = 1;
+    }
+    return packetId;
 }
 
 /*-----------------------------------------------------------*/
@@ -345,7 +358,8 @@ static int connectToServer( const char * pServer,
             transportTimeout.tv_usec = ( TRANSPORT_SEND_RECV_TIMEOUT_MS * 1000 );
 
             if( setsockopt( *pTcpSocket,
-                            SOL_SOCKET, SO_RCVTIMEO,
+                            SOL_SOCKET,
+                            SO_RCVTIMEO,
                             ( char * ) &transportTimeout,
                             sizeof( transportTimeout ) ) < 0 )
             {
@@ -485,15 +499,8 @@ static int createMQTTConnectionWithBroker( int tcpSocket,
     {
         /* Since tcpSocket has timeout, retry until the data is available */
         result = MQTT_GetIncomingPacketTypeAndLength( transportRecv, tcpSocket, &incomingPacket );
-
-        /* If it is not timeout, exit immediately */
-        if( result != MQTTNoDataAvailable )
-        {
-            break;
-        }
-
         receiveAttempts++;
-    } while ( ( result != MQTTSuccess ) && ( receiveAttempts < MQTT_MAX_RECV_ATTEMPTS ) );
+    } while ( ( result == MQTTNoDataAvailable ) && ( receiveAttempts < MQTT_MAX_RECV_ATTEMPTS ) );
 
     assert( result == MQTTSuccess );
     assert( incomingPacket.type == MQTT_PACKET_TYPE_CONNACK );
@@ -557,7 +564,7 @@ static void mqttSubscribeToTopic( int tcpSocket,
     assert( packetSize < pFixedBuffer->size );
     subscribePacketIdentifier = getNextPacketIdentifier();
 
-    /* Serialize subscribe into statically allocated ucSharedBuffer. */
+    /* Serialize subscribe into statically allocated buffer. */
     result = MQTT_SerializeSubscribe( mqttSubscription,
                                       sizeof( mqttSubscription ) / sizeof( MQTTSubscribeInfo_t ),
                                       subscribePacketIdentifier,
@@ -746,7 +753,8 @@ static void mqttProcessResponse( MQTTPacketInfo_t * pIncomingPacket,
 
         /* Any other packet type is invalid. */
         default:
-            LogInfo( ( "mqttProcessResponse() called with unknown packet type:(%lu).", pIncomingPacket->type ) );
+            LogInfo( ( "mqttProcessResponse() called with unknown packet type:(%u).",
+                       ( unsigned ) pIncomingPacket->type ) );
     }
 }
 
@@ -759,14 +767,17 @@ static void mqttProcessResponse( MQTTPacketInfo_t * pIncomingPacket,
  * Publish message.
  *
  * @param[in] packetId is packet identifier from the incoming publish if it was received.
- * valid for only for QOS1 and QOS2.
+ * @note PacketId is only valid for only for QOS1 and QOS2 messages.
  */
 static void mqttProcessIncomingPublish( MQTTPublishInfo_t * pPubInfo,
                                         uint16_t packetId )
 {
     assert( pPubInfo != NULL );
 
-    /* Process incoming Publish. */
+    /* Since this example does not make use of QOS1 or QOS2,
+     * packet identifier is not required. */
+    ( void ) packetId;
+
     LogInfo( ( "Incoming QOS : %d\n", pPubInfo->qos ) );
 
     /* Verify the received publish is for the we have subscribed to. */
@@ -806,7 +817,7 @@ static void mqttProcessIncomingPacket( int tcpSocket,
     MQTTStatus_t result;
     MQTTPacketInfo_t incomingPacket;
     MQTTPublishInfo_t publishInfo;
-    uint16_t packetId;
+    uint16_t packetId = 0;
     int status;
     bool sessionPresent = false;
     uint16_t receiveAttempts = 0;
@@ -823,15 +834,8 @@ static void mqttProcessIncomingPacket( int tcpSocket,
     {
         /* Retry till data is available */
         result = MQTT_GetIncomingPacketTypeAndLength( transportRecv, tcpSocket, &incomingPacket );
-
-        /* If it is success of any other failure than transportTimeout, exit immediately */
-        if( result != MQTTNoDataAvailable )
-        {
-            break;
-        }
-
         receiveAttempts++;
-    } while ( ( result != MQTTSuccess ) && ( receiveAttempts < MQTT_MAX_RECV_ATTEMPTS ) );
+    } while ( ( result == MQTTNoDataAvailable ) && ( receiveAttempts < MQTT_MAX_RECV_ATTEMPTS ) );
 
     assert( result == MQTTSuccess );
     assert( incomingPacket.remainingLength <= pFixedBuffer->size );
@@ -916,7 +920,7 @@ int main( int argc,
         {
             /* Sends an MQTT Connect packet over the already connected TCP socket
              * tcpSocket, and waits for connection acknowledgment (CONNACK) packet. */
-            LogInfo( ( "Estabishing MQTT connection to the broker  %s.\r\n", MQTT_BROKER_ENDPOINT ) );
+            LogInfo( ( "Establishing MQTT connection to the broker  %s.\r\n", MQTT_BROKER_ENDPOINT ) );
             status = createMQTTConnectionWithBroker( tcpSocket, &fixedBuffer );
             assert( status == EXIT_SUCCESS );
 
@@ -927,7 +931,7 @@ int main( int argc,
              * subscribe packet then waiting for a subscribe acknowledgment (SUBACK).
              * This client will then publish to the same topic it subscribed to, so it
              * will expect all the messages it sends to the broker to be sent back to it
-             * from the broker. This demo uses QOS0 in Subscribe, therefore, the Publish
+             * from the broker. This demo uses QOS0 in subscribe, therefore, the Publish
              * messages received from the broker will have QOS0. */
             /* Subscribe and SUBACK */
             LogInfo( ( "Attempt to subscribed to the MQTT topic %s\r\n", MQTT_EXAMPLE_TOPIC ) );
@@ -969,10 +973,6 @@ int main( int argc,
                 }
                 else
                 {
-                    /* Since PUBLISH packet is not sent for this iteration, set publishPacketSent to false
-                     * so the next iteration will send PUBLISH .*/
-                    publishPacketSent = false;
-
                     /* Check if the keep-alive period has elapsed, since the last control packet was sent.
                      * If the period has elapsed, send out MQTT PINGREQ to the broker.  */
                     timeDiff = calculateElapsedTime( currentTimeStamp.tv_sec, lastControlPacketSentTimeStamp );
@@ -1006,10 +1006,10 @@ int main( int argc,
                 }
 
                 /* Sleep until keep alive time period, so that for the next iteration this
-                 * loop will send out a PINGREQ if PUBLISH was noy sent for this iteration.
+                 * loop will send out a PINGREQ if PUBLISH was not sent for this iteration.
                  * The broker will wait till 1.5 times keep-alive period before it disconnects
                  * the client. */
-                sleep( MQTT_KEEP_ALIVE_PERIOD_SECONDS );
+                ( void ) sleep( MQTT_KEEP_ALIVE_PERIOD_SECONDS );
             }
 
             /* Unsubscribe from the previously subscribed topic */
@@ -1025,8 +1025,8 @@ int main( int argc,
             mqttDisconnect( tcpSocket, &fixedBuffer );
 
             /* Close the TCP connection. */
-            shutdown( tcpSocket, SHUT_RDWR );
-            close( tcpSocket );
+            ( void ) shutdown( tcpSocket, SHUT_RDWR );
+            ( void ) close( tcpSocket );
         }
 
         if( demoIterations < ( maxDemoIterations - 1U ) )
@@ -1034,7 +1034,7 @@ int main( int argc,
             /* Wait for some time between two iterations to ensure that we do not
              * bombard the public test mosquitto broker. */
             LogInfo( ( "Short delay before starting the next iteration.... \r\n\r\n" ) );
-            sleep( 5U );
+            ( void ) sleep( MQTT_DEMO_ITERATION_DELAY );
         }
     }
 
