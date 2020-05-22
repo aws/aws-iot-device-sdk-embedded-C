@@ -152,22 +152,22 @@ static void setupWillInfo( MQTTPublishInfo_t * const pWillInfo )
 }
 
 /**
- * @brief Encode remaining length into pDestination for packet serialization
+ * @brief Encode remaining length into pBuffer for packet serialization
  * using MQTT v3.1.1 spec.
  *
- * @param[in] pDestination Buffer to write encoded remaining length.
+ * @param[in] pBuffer Buffer to write encoded remaining length.
  * @param[in] length Actual Remaining length.
  */
-static size_t encodeRemainingLength( uint8_t * pDestination,
+static size_t encodeRemainingLength( uint8_t * pBuffer,
                                      size_t length )
 {
     uint8_t lengthByte;
     uint8_t * pLengthEnd = NULL;
     size_t remainingLength = length;
 
-    TEST_ASSERT_NOT_NULL( pDestination );
+    TEST_ASSERT_NOT_NULL( pBuffer );
 
-    pLengthEnd = pDestination;
+    pLengthEnd = pBuffer;
 
     /* This algorithm is copied from the MQTT v3.1.1 spec. */
     do
@@ -186,7 +186,7 @@ static size_t encodeRemainingLength( uint8_t * pDestination,
         pLengthEnd++;
     } while( remainingLength > 0U );
 
-    return ( size_t ) ( pLengthEnd - pDestination );
+    return ( size_t ) ( pLengthEnd - pBuffer );
 }
 
 /**
