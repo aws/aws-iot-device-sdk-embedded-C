@@ -53,7 +53,25 @@
 /**
  * @brief Sample length of remaining serialized data.
  */
-#define SAMPLE_REMAINING_LENGTH             ( 64 )
+#define MQTT_SAMPLE_REMAINING_LENGTH        ( 64 )
+
+/**
+ * @brief Subtract this value from max value of global entry time
+ * for the timer overflow test.
+ */
+#define MQTT_OVERFLOW_OFFSET                ( 3 )
+
+/**
+ * @brief Subtract this value from max value of global entry time
+ * for the timer overflow test.
+ */
+#define MQTT_TIMER_CALLS_PER_ITERATION      ( 3 )
+
+/**
+ * @brief Timeout for the timer overflow test.
+ */
+#define MQTT_TIMER_OVERFLOW_TIMEOUT_MS      ( 10 )
+
 
 /**
  * @brief The packet type to be received by the process loop.
@@ -107,6 +125,31 @@ int suiteTearDown( int numFailures )
 /* ========================================================================== */
 
 /**
+ * @brief Mock successful transport send, and write data into buffer for
+ * verification.
+ */
+static int32_t mockSend( MQTTNetworkContext_t context,
+                         const void * pMessage,
+                         size_t bytesToSend )
+{
+    const uint8_t * buffer = ( const uint8_t * ) pMessage;
+    /* Treat network context as pointer to buffer for mocking. */
+    uint8_t * mockNetwork = ( *( uint8_t ** ) context );
+    size_t bytesSent = 0;
+
+    while( bytesSent++ < bytesToSend )
+    {
+        /* Write single byte and advance buffer. */
+        *mockNetwork++ = *buffer++;
+    }
+
+    /* Move stream by bytes sent. */
+    ( *( uint8_t ** ) context ) = mockNetwork;
+
+    return bytesToSend;
+}
+
+/**
  * @brief Initialize pNetworkBuffer using static buffer.
  *
  * @param[in] pNetworkBuffer Network buffer provided for the context.
@@ -139,31 +182,6 @@ static void eventCallback( MQTTContext_t * pContext,
 static uint32_t getTime( void )
 {
     return globalEntryTime++;
-}
-
-/**
- * @brief Mock successful transport send, and write data into buffer for
- * verification.
- */
-static int32_t mockSend( MQTTNetworkContext_t context,
-                         const void * pMessage,
-                         size_t bytesToSend )
-{
-    const uint8_t * buffer = ( const uint8_t * ) pMessage;
-    /* Treat network context as pointer to buffer for mocking. */
-    uint8_t * mockNetwork = ( *( uint8_t ** ) context );
-    size_t bytesSent = 0;
-
-    while( bytesSent++ < bytesToSend )
-    {
-        /* Write single byte and advance buffer. */
-        *mockNetwork++ = *buffer++;
-    }
-
-    /* Move stream by bytes sent. */
-    ( *( uint8_t ** ) context ) = mockNetwork;
-
-    return bytesToSend;
 }
 
 /**
@@ -262,7 +280,7 @@ static MQTTStatus_t modifyIncomingPacket( MQTTTransportRecvFunc_t readFunc,
     ( void ) cmock_num_calls;
 
     pIncomingPacket->type = currentPacketType;
-    pIncomingPacket->remainingLength = SAMPLE_REMAINING_LENGTH;
+    pIncomingPacket->remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
     return modifyIncomingPacketStatus;
 }
 
@@ -880,7 +898,6 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Paths( void )
 
     setupTransportInterface( &transport );
     setupCallbacks( &callbacks );
-    setupNetworkBuffer( &networkBuffer );
 
     mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
@@ -915,7 +932,6 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Error_Paths( void )
 
     setupTransportInterface( &transport );
     setupCallbacks( &callbacks );
-    setupNetworkBuffer( &networkBuffer );
 
     mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
@@ -946,7 +962,6 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths( void )
 
     setupTransportInterface( &transport );
     setupCallbacks( &callbacks );
-    setupNetworkBuffer( &networkBuffer );
 
     mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
@@ -1018,7 +1033,6 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths( void )
 
     setupTransportInterface( &transport );
     setupCallbacks( &callbacks );
-    setupNetworkBuffer( &networkBuffer );
 
     mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
@@ -1083,7 +1097,6 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths( void )
 
     setupTransportInterface( &transport );
     setupCallbacks( &callbacks );
-    setupNetworkBuffer( &networkBuffer );
 
     modifyIncomingPacketStatus = MQTTNoDataAvailable;
     globalEntryTime = MQTT_ONE_SECOND_TO_MS;
@@ -1146,7 +1159,6 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths( void )
 
     setupTransportInterface( &transport );
     setupCallbacks( &callbacks );
-    setupNetworkBuffer( &networkBuffer );
 
     modifyIncomingPacketStatus = MQTTNoDataAvailable;
     globalEntryTime = MQTT_ONE_SECOND_TO_MS;
@@ -1165,9 +1177,8 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths( void )
 /**
  * @brief This test mocks a failing transport receive and runs multiple
  * iterations of the process loop, resulting in returning MQTTRecvFailed.
- * This allows us to have full branch and line coverage.
  */
-void test_MQTT_ProcessLoop_Multiple_Iterations( void )
+void test_MQTT_ProcessLoop_Receive_Failed( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
@@ -1177,7 +1188,6 @@ void test_MQTT_ProcessLoop_Multiple_Iterations( void )
 
     setupTransportInterface( &transport );
     setupCallbacks( &callbacks );
-    setupNetworkBuffer( &networkBuffer );
 
     mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
@@ -1185,4 +1195,48 @@ void test_MQTT_ProcessLoop_Multiple_Iterations( void )
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTRecvFailed );
     mqttStatus = MQTT_ProcessLoop( &context, MQTT_SAMPLE_TIMEOUT_MS );
     TEST_ASSERT_EQUAL( MQTTRecvFailed, mqttStatus );
+}
+
+/**
+ * @brief This test mocks a failing transport receive and runs multiple
+ * iterations of the process loop, resulting in returning MQTTRecvFailed.
+ * This allows us to have full branch and line coverage.
+ */
+void test_MQTT_ProcessLoop_Timer_Overflow( void )
+{
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context;
+    MQTTTransportInterface_t transport;
+    MQTTFixedBuffer_t networkBuffer;
+    MQTTApplicationCallbacks_t callbacks;
+    MQTTPacketInfo_t incomingPacket = { 0 };
+    uint8_t i = 0;
+    uint8_t numIterations = ( MQTT_TIMER_OVERFLOW_TIMEOUT_MS / MQTT_TIMER_CALLS_PER_ITERATION ) + 1;
+
+    setupTransportInterface( &transport );
+    setupCallbacks( &callbacks );
+
+    networkBuffer.size = 1000;
+    incomingPacket.type = MQTT_PACKET_TYPE_PUBLISH;
+    incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+
+    globalEntryTime = UINT32_MAX - MQTT_OVERFLOW_OFFSET;
+
+    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    /* Verify that we run the expected number of iterations despite overflowing. */
+    for( ; i < numIterations; i++ )
+    {
+        MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+        MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+        /* Assume QoS = 1 so that a PUBACK will be sent after receiving PUBLISH. */
+        MQTT_DeserializePublish_ExpectAnyArgsAndReturn( MQTTSuccess );
+        MQTT_UpdateStatePublish_ExpectAnyArgsAndReturn( MQTTPubAckSend );
+        MQTT_SerializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+        MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTPublishDone );
+    }
+
+    mqttStatus = MQTT_ProcessLoop( &context, MQTT_TIMER_OVERFLOW_TIMEOUT_MS );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 }
