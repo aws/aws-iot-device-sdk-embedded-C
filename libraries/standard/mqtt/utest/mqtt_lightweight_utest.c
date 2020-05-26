@@ -364,6 +364,20 @@ void test_MQTT_GetConnectPacketSize( void )
     status = MQTT_GetConnectPacketSize( &connectInfo, NULL, &remainingLength, &packetSize );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
+    /* Connect packet too large. */
+    memset( ( void * ) &connectInfo, 0x0, sizeof( connectInfo ) );
+    connectInfo.pClientIdentifier = CLIENT_IDENTIFIER;
+    connectInfo.clientIdentifierLength = UINT16_MAX;
+    connectInfo.pPassword = "";
+    connectInfo.passwordLength = UINT16_MAX;
+    connectInfo.pUserName = "";
+    connectInfo.userNameLength = UINT16_MAX;
+    willInfo.pTopicName = TEST_TOPIC_NAME;
+    willInfo.topicNameLength = UINT16_MAX;
+    willInfo.payloadLength = UINT16_MAX + 2;
+    status = MQTT_GetConnectPacketSize( &connectInfo, &willInfo, &remainingLength, &packetSize );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+
     /* Verify good case */
     memset( ( void * ) &connectInfo, 0x0, sizeof( connectInfo ) );
     connectInfo.cleanSession = true;
@@ -378,6 +392,7 @@ void test_MQTT_GetConnectPacketSize( void )
 
     /* With will. These parameters will cause the packet to be
      * 4 + 2 + 8 + 2 = 16 bytes larger. */
+    memset( ( void * ) &willInfo, 0x0, sizeof( willInfo ) );
     willInfo.pTopicName = "test";
     willInfo.topicNameLength = 4;
     willInfo.pPayload = "testload";
@@ -388,6 +403,19 @@ void test_MQTT_GetConnectPacketSize( void )
     TEST_ASSERT_EQUAL_INT( 32, remainingLength );
     /* Make sure packet size is 34 = 18 + 16. */
     TEST_ASSERT_EQUAL_INT( 34, packetSize );
+
+    /* With username and password. This will add 4 + 2 + 4 + 2 = 12 bytes. */
+    connectInfo.cleanSession = true;
+    connectInfo.pUserName = "USER";
+    connectInfo.userNameLength = 4;
+    connectInfo.pPassword = "PASS";
+    connectInfo.passwordLength = 4;
+    status = MQTT_GetConnectPacketSize( &connectInfo, NULL, &remainingLength, &packetSize );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    /* Make sure remaining size returned is 28 = 16 + 12. */
+    TEST_ASSERT_EQUAL_INT( 28, remainingLength );
+    /* Make sure packet size is 30 = 18 + 12. */
+    TEST_ASSERT_EQUAL_INT( 30, packetSize );
 }
 
 /**
@@ -413,20 +441,6 @@ void test_MQTT_SerializeConnect( void )
     memset( ( void * ) &connectInfo, 0x0, sizeof( connectInfo ) );
     status = MQTT_SerializeConnect( &connectInfo, NULL, 120, &fixedBuffer );
     TEST_ASSERT_EQUAL_INT( MQTTNoMemory, status );
-
-    /* Connect packet too large. */
-    memset( ( void * ) &connectInfo, 0x0, sizeof( connectInfo ) );
-    connectInfo.pClientIdentifier = CLIENT_IDENTIFIER;
-    connectInfo.clientIdentifierLength = UINT16_MAX;
-    connectInfo.pPassword = "";
-    connectInfo.passwordLength = UINT16_MAX;
-    connectInfo.pUserName = "";
-    connectInfo.userNameLength = UINT16_MAX;
-    willInfo.pTopicName = TEST_TOPIC_NAME;
-    willInfo.topicNameLength = UINT16_MAX;
-    willInfo.payloadLength = UINT16_MAX + 2;
-    status = MQTT_GetConnectPacketSize( &connectInfo, &willInfo, &remainingLength, &packetSize );
-    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
     /* Good case succeeds */
     /* Calculate packet size. */
@@ -454,17 +468,7 @@ void test_MQTT_SerializeConnect( void )
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 
     /* Serialize connect with LWT. */
-    ( void ) memset( &willInfo, 0x00, sizeof( MQTTPublishInfo_t ) );
-    willInfo.retain = true;
-    willInfo.qos = MQTTQoS1;
-    willInfo.pTopicName = "test";
-    willInfo.topicNameLength = ( uint16_t ) 4;
-    status = MQTT_GetConnectPacketSize( &connectInfo, &willInfo, &remainingLength, &packetSize );
-    TEST_ASSERT_EQUAL( MQTTSuccess, status );
-    TEST_ASSERT_GREATER_OR_EQUAL( packetSize, bufferSize );
-    status = MQTT_SerializeConnect( &connectInfo, &willInfo, remainingLength, &fixedBuffer );
-    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
-
+    /* Test for NULL topic name. */
     ( void ) memset( &willInfo, 0x00, sizeof( MQTTPublishInfo_t ) );
     willInfo.retain = true;
     willInfo.qos = MQTTQoS1;
@@ -476,6 +480,7 @@ void test_MQTT_SerializeConnect( void )
     status = MQTT_SerializeConnect( &connectInfo, &willInfo, remainingLength, &fixedBuffer );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
+    /* Success. */
     ( void ) memset( &willInfo, 0x00, sizeof( MQTTPublishInfo_t ) );
     willInfo.retain = true;
     willInfo.qos = MQTTQoS1;
@@ -500,6 +505,9 @@ void test_MQTT_SerializeConnect( void )
 
     willInfo.qos = MQTTQoS0;
     willInfo.retain = false;
+    /* NULL payload is acceptable. */
+    willInfo.pPayload = NULL;
+    willInfo.payloadLength = 0;
     status = MQTT_GetConnectPacketSize( &connectInfo, &willInfo, &remainingLength, &packetSize );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
     TEST_ASSERT_GREATER_OR_EQUAL( packetSize, bufferSize );
@@ -708,6 +716,16 @@ void test_MQTT_SerializeSubscribe( void )
                                       &fixedBuffer );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
+    /* Test if buffer is too small. */
+    fixedBuffer.size = 1;
+    status = MQTT_SerializeSubscribe( &subscriptionList,
+                                      subscriptionCount,
+                                      PACKET_ID,
+                                      remainingLength,
+                                      &fixedBuffer );
+    TEST_ASSERT_EQUAL_INT( MQTTNoMemory, status );
+    fixedBuffer.size = bufferSize;
+
     /* Make sure success is returned for good case. */
     status = MQTT_SerializeSubscribe( &subscriptionList,
                                       subscriptionCount,
@@ -791,6 +809,16 @@ void test_MQTT_SerializeUnsubscribe( void )
                                         &fixedBuffer );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
+    /* Test if buffer is too small. */
+    fixedBuffer.size = 1;
+    status = MQTT_SerializeUnsubscribe( &subscriptionList,
+                                        subscriptionCount,
+                                        PACKET_ID,
+                                        remainingLength,
+                                        &fixedBuffer );
+    TEST_ASSERT_EQUAL_INT( MQTTNoMemory, status );
+    fixedBuffer.size = bufferSize;
+
     /* Make sure success it returned for good case. */
     status = MQTT_SerializeUnsubscribe( &subscriptionList,
                                         subscriptionCount,
@@ -864,6 +892,11 @@ void test_MQTT_GetPublishPacketSize( void )
     publishInfo.topicNameLength = sizeof( "/test/topic" );
     publishInfo.pPayload = "";
     publishInfo.payloadLength = 0;
+    status = MQTT_GetPublishPacketSize( &publishInfo, &remainingLength, &packetSize );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+
+    /* Again with QoS 2. */
+    publishInfo.qos = MQTTQoS2;
     status = MQTT_GetPublishPacketSize( &publishInfo, &remainingLength, &packetSize );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 }
@@ -940,7 +973,7 @@ void test_MQTT_SerializePublish( void )
     TEST_ASSERT_EQUAL_INT( MQTTNoMemory, status );
 
     /* Good case succeeds */
-    publishInfo.qos = MQTTQoS2;
+    publishInfo.qos = MQTTQoS0;
     publishInfo.pTopicName = "/test/topic";
     publishInfo.topicNameLength = sizeof( "/test/topic" );
     fixedBuffer.size = bufferSize;
@@ -956,7 +989,8 @@ void test_MQTT_SerializePublish( void )
                                     &fixedBuffer );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
-    /* Again with dup and retain, and remaining length > 2 bytes. */
+    /* Again with QoS2, dup, and retain. Also encode remaining length > 2 bytes. */
+    publishInfo.qos = MQTTQoS2;
     publishInfo.retain = true;
     publishInfo.dup = true;
     publishInfo.pTopicName = longTopic;

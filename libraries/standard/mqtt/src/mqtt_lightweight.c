@@ -337,7 +337,10 @@ static uint8_t * encodeString( uint8_t * pDestination,
     pBuffer++;
 
     /* Copy the string into pBuffer. */
-    ( void ) memcpy( pBuffer, pSourceBuffer, sourceLength );
+    if( pSourceBuffer != NULL )
+    {
+        ( void ) memcpy( pBuffer, pSourceBuffer, sourceLength );
+    }
 
     /* Return the pointer to the end of the encoded string. */
     pBuffer += sourceLength;
@@ -1267,6 +1270,7 @@ static void serializeConnectPacket( const MQTTConnectInfo_t * const pConnectInfo
         pIndex = encodeString( pIndex,
                                pWillInfo->pTopicName,
                                pWillInfo->topicNameLength );
+
         pIndex = encodeString( pIndex,
                                pWillInfo->pPayload,
                                ( uint16_t ) pWillInfo->payloadLength );
@@ -1401,13 +1405,9 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * const pConnectInfo
                     connectPacketSize ) );
         status = MQTTNoMemory;
     }
-    else if ( ( pWillInfo != NULL ) && 
-              ( ( pWillInfo->pPayload == NULL ) || ( pWillInfo->pTopicName == NULL ) ) )
+    else if ( ( pWillInfo != NULL ) && ( pWillInfo->pTopicName == NULL ) )
     {
-        LogError( ( "Argument cannot be NULL: pWillInfo->pPayload=%p, "
-                    "pWillInfo->pTopicName=%p",
-                    pWillInfo->pPayload,
-                    pWillInfo->pTopicName ) );
+        LogError( ( "pWillInfo->pTopicName cannot be NULL if Will is present." ) );
         status = MQTTBadParameter;
     }
     else
