@@ -12,43 +12,48 @@
 /**
  * @brief A valid starting packet ID per MQTT spec. Start from 1.
  */
-#define MQTT_FIRST_VALID_PACKET_ID    ( 1 )
+#define MQTT_FIRST_VALID_PACKET_ID          ( 1 )
 
 /**
  * @brief A PINGREQ packet is always 2 bytes in size, defined by MQTT 3.1.1 spec.
  */
-#define MQTT_PACKET_PINGREQ_SIZE      ( 2U )
+#define MQTT_PACKET_PINGREQ_SIZE            ( 2U )
 
 /**
  * @brief A packet type not handled by MQTT_ProcessLoop.
  */
-#define MQTT_PACKET_TYPE_INVALID      ( 0U )
+#define MQTT_PACKET_TYPE_INVALID            ( 0U )
 
 /**
  * @brief Number of milliseconds in a second.
  */
-#define MQTT_ONE_SECOND_TO_MS         ( 1000U )
+#define MQTT_ONE_SECOND_TO_MS               ( 1000U )
 
 /**
  * @brief Length of the MQTT network buffer.
  */
-#define MQTT_TEST_BUFFER_LENGTH       ( 128 )
+#define MQTT_TEST_BUFFER_LENGTH             ( 128 )
+
+/**
+ * @brief Sample keep-alive interval that should be greater than 0.
+ */
+#define MQTT_SAMPLE_KEEPALIVE_INTERVAL_S    ( 1U )
 
 /**
  * @brief Length of time spent for single test case with
  * multiple iterations spent in the process loop for coverage.
  */
-#define MQTT_SAMPLE_TIMEOUT_MS        ( 1U )
+#define MQTT_SAMPLE_TIMEOUT_MS              ( 1U )
 
 /**
  * @brief Zero timeout in the process loop implies one iteration.
  */
-#define MQTT_NO_TIMEOUT_MS            ( 0U )
+#define MQTT_NO_TIMEOUT_MS                  ( 0U )
 
 /**
  * @brief Sample length of remaining serialized data.
  */
-#define SAMPLE_REMAINING_LENGTH       ( 64 )
+#define SAMPLE_REMAINING_LENGTH             ( 64 )
 
 /**
  * @brief The packet type to be received by the process loop.
@@ -348,9 +353,7 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext,
         }
     }
 
-    /* Serialize the packet to be sent in response to the received packet.
-     * Observe that there is no reason to serialize a PUBLISH after receiving
-     * a packet. */
+    /* Serialize the packet to be sent in response to the received packet. */
     if( expectMoreCalls )
     {
         MQTT_SerializeAck_ExpectAnyArgsAndReturn( serializeStatus );
@@ -865,7 +868,7 @@ void test_MQTT_ProcessLoop_Invalid_Params( void )
 /**
  * @brief This test case covers all calls to the private method,
  * handleIncomingPublish(...),
- * that results in the process loop returning successfully.
+ * that result in the process loop returning successfully.
  */
 void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Paths( void )
 {
@@ -900,7 +903,7 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Paths( void )
 /**
  * @brief This test case covers all calls to the private method,
  * handleIncomingPublish(...),
- * that results in the process loop returning an error.
+ * that result in the process loop returning an error.
  */
 void test_MQTT_ProcessLoop_handleIncomingPublish_Error_Paths( void )
 {
@@ -919,7 +922,7 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Error_Paths( void )
 
     modifyIncomingPacketStatus = MQTTSuccess;
 
-    /* Verify that error is propagated when deserialization fails by returning
+    /* Verify that an error is propagated when deserialization fails by returning
      * MQTTBadResponse. Any parameters beyond that are actually irrelevant
      * because they are only used as return values for non-expected calls. */
     currentPacketType = MQTT_PACKET_TYPE_PUBLISH;
@@ -931,7 +934,7 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Error_Paths( void )
 /**
  * @brief This test case covers all calls to the private method,
  * handleIncomingAck(...),
- * that results in the process loop returning successfully.
+ * that result in the process loop returning successfully.
  */
 void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths( void )
 {
@@ -1003,7 +1006,7 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths( void )
 /**
  * @brief This test case covers all calls to the private method,
  * handleIncomingAck(...),
- * that results in the process loop returning an error.
+ * that result in the process loop returning an error.
  */
 void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths( void )
 {
@@ -1068,7 +1071,7 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths( void )
 /**
  * @brief This test case covers all calls to the private method,
  * handleKeepAlive(...),
- * that results in the process loop returning successfully.
+ * that result in the process loop returning successfully.
  */
 void test_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths( void )
 {
@@ -1085,7 +1088,7 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths( void )
     modifyIncomingPacketStatus = MQTTNoDataAvailable;
     globalEntryTime = MQTT_ONE_SECOND_TO_MS;
 
-    /* Coverage for the branch path where keep alive interval is greater than 0. */
+    /* Coverage for the branch path where keep alive interval is 0. */
     mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     context.waitingForPingResp = false;
@@ -1095,21 +1098,21 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths( void )
                             MQTTSuccess, false );
 
     /* Coverage for the branch path where keep alive interval is greater than 0,
-     * but the interval has expired yet. */
+     * and the interval has expired. */
     mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     context.waitingForPingResp = true;
-    context.keepAliveIntervalSec = 1;
+    context.keepAliveIntervalSec = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
     context.lastPacketTime = getTime();
     expectProcessLoopCalls( &context, MQTTStateNull, MQTTStateNull,
                             MQTTSuccess, MQTTStateNull,
                             MQTTSuccess, false );
 
-    /* Coverage for the branch path where PING timeout interval hasn't expired. */
+    /* Coverage for the branch path where PINGRESP timeout interval hasn't expired. */
     mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     context.waitingForPingResp = true;
-    context.keepAliveIntervalSec = 1;
+    context.keepAliveIntervalSec = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
     context.lastPacketTime = 0;
     context.pingReqSendTimeMs = MQTT_ONE_SECOND_TO_MS;
     context.pingRespTimeoutMs = MQTT_ONE_SECOND_TO_MS;
@@ -1117,11 +1120,11 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths( void )
                             MQTTSuccess, MQTTStateNull,
                             MQTTSuccess, false );
 
-    /* Coverage for the branch path where a PING hasn't been sent out yet. */
+    /* Coverage for the branch path where a PINGRESP hasn't been sent out yet. */
     mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     context.waitingForPingResp = false;
-    context.keepAliveIntervalSec = 1;
+    context.keepAliveIntervalSec = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
     context.lastPacketTime = 0;
     expectProcessLoopCalls( &context, MQTTStateNull, MQTTStateNull,
                             MQTTSuccess, MQTTStateNull,
@@ -1131,7 +1134,7 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths( void )
 /**
  * @brief This test case covers all calls to the private method,
  * handleKeepAlive(...),
- * that results in the process loop returning an error.
+ * that result in the process loop returning an error.
  */
 void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths( void )
 {
@@ -1152,7 +1155,7 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths( void )
     mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     context.lastPacketTime = 0;
-    context.keepAliveIntervalSec = 1;
+    context.keepAliveIntervalSec = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
     context.waitingForPingResp = true;
     expectProcessLoopCalls( &context, MQTTStateNull, MQTTStateNull,
                             MQTTSuccess, MQTTStateNull,
