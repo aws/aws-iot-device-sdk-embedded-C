@@ -993,7 +993,7 @@ void test_MQTT_GetPacketId( void )
 /**
  * @brief Test that NULL pContext causes MQTT_ProcessLoop to return MQTTBadParameter.
  */
-void test_MQTT_ProcessLoop_invalid_params( void )
+void test_MQTT_ProcessLoop_Invalid_Params( void )
 {
     MQTTStatus_t mqttStatus = MQTT_ProcessLoop( NULL, MQTT_NO_TIMEOUT_MS );
 
@@ -1005,7 +1005,7 @@ void test_MQTT_ProcessLoop_invalid_params( void )
  * handleIncomingPublish(...),
  * that results in the process loop returning successfully.
  */
-void test_MQTT_ProcessLoop_handleIncomingPublish_happy_paths( void )
+void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Paths( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
@@ -1040,7 +1040,7 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_happy_paths( void )
  * handleIncomingPublish(...),
  * that results in the process loop returning an error.
  */
-void test_MQTT_ProcessLoop_handleIncomingPublish_error_paths( void )
+void test_MQTT_ProcessLoop_handleIncomingPublish_Error_Paths( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
@@ -1071,7 +1071,7 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_error_paths( void )
  * handleIncomingAck(...),
  * that results in the process loop returning successfully.
  */
-void test_MQTT_ProcessLoop_handleIncomingAck_happy_paths( void )
+void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
@@ -1143,7 +1143,7 @@ void test_MQTT_ProcessLoop_handleIncomingAck_happy_paths( void )
  * handleIncomingAck(...),
  * that results in the process loop returning an error.
  */
-void test_MQTT_ProcessLoop_handleIncomingAck_error_paths( void )
+void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
@@ -1208,7 +1208,7 @@ void test_MQTT_ProcessLoop_handleIncomingAck_error_paths( void )
  * handleKeepAlive(...),
  * that results in the process loop returning successfully.
  */
-void test_MQTT_ProcessLoop_handleKeepAlive_happy_paths( void )
+void test_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
@@ -1271,7 +1271,7 @@ void test_MQTT_ProcessLoop_handleKeepAlive_happy_paths( void )
  * handleKeepAlive(...),
  * that results in the process loop returning an error.
  */
-void test_MQTT_ProcessLoop_handleKeepAlive_error_paths( void )
+void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
@@ -1302,7 +1302,7 @@ void test_MQTT_ProcessLoop_handleKeepAlive_error_paths( void )
  * iterations of the process loop, resulting in returning MQTTRecvFailed.
  * This allows us to have full branch and line coverage.
  */
-void test_MQTT_ProcessLoop_multiple_iterations( void )
+void test_MQTT_ProcessLoop_Multiple_Iterations( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
