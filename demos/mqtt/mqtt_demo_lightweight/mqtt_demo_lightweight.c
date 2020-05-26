@@ -370,6 +370,7 @@ static int connectToServer( const char * pServer,
         if( pIndex == NULL )
         {
             /* Fail if no connection could be established. */
+            LogError( ( "Failed to establish TCP connection to the broker %s.\n", pServer ) );
             status = EXIT_FAILURE;
         }
         else
@@ -406,7 +407,6 @@ static int connectToServer( const char * pServer,
 
     if( pListHead != NULL )
     {
-        LogError( ( "Failed to establish TCP connection to the broker %s.\n", pServer ) );
         freeaddrinfo( pListHead );
     }
 
