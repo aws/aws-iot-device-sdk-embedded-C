@@ -943,9 +943,10 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
     if( ( pContext == NULL ) || ( pConnectInfo == NULL ) || ( pSessionPresent == NULL ) )
     {
         LogError( ( "Argument cannot be NULL: pContext=%p, "
-                    "pConnectInfo=%p.",
+                    "pConnectInfo=%p, pSessionPresent=%p.",
                     pContext,
-                    pConnectInfo ) );
+                    pConnectInfo,
+                    pSessionPresent ) );
         status = MQTTBadParameter;
     }
 

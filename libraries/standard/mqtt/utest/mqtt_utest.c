@@ -268,7 +268,6 @@ void test_MQTT_Connect_sendConnect( void )
     setupTransportInterface( &transport );
     setupCallbacks( &callbacks );
     setupNetworkBuffer( &networkBuffer );
-    transport.send = transportSendFailure;
 
     memset( ( void * ) &mqttContext, 0x0, sizeof( mqttContext ) );
     MQTT_Init( &mqttContext, &transport, &callbacks, &networkBuffer );
@@ -303,6 +302,7 @@ void test_MQTT_Connect_sendConnect( void )
      * as that is the amount of bytes used in the call to send the packet. */
     packetSize = 13;
     remainingLength = 11;
+    mqttContext.transportInterface.send = transportSendFailure;
     MQTT_GetConnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetConnectPacketSize_IgnoreArg_pPacketSize();
     MQTT_GetConnectPacketSize_IgnoreArg_pRemainingLength();
@@ -321,7 +321,6 @@ void test_MQTT_Connect_sendConnect( void )
     TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
 
     /* Success. */
-    mqttContext.transportInterface.send = transportSendSuccess;
     incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
     incomingPacket.remainingLength = 2;
     MQTT_GetConnectPacketSize_IgnoreAndReturn( MQTTSuccess );
