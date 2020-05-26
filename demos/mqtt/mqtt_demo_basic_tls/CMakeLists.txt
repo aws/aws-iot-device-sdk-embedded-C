@@ -17,6 +17,8 @@ target_link_libraries(
         mqtt
         OpenSSL::Crypto
         OpenSSL::SSL
+        Threads::Threads
+        ${CMAKE_DL_LIBS}
 )
 
 target_include_directories(

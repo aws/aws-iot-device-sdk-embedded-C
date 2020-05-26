@@ -10,6 +10,9 @@ set_property( GLOBAL PROPERTY USE_FOLDERS ON )
 # Use C90.
 set( CMAKE_C_STANDARD 90 )
 set( CMAKE_C_STANDARD_REQUIRED ON )
+set( CMAKE_THREAD_PREFER_PTHREAD ON )
+
+find_package(Threads REQUIRED)
 
 # Do not allow in-source build.
 if( ${PROJECT_SOURCE_DIR} STREQUAL ${PROJECT_BINARY_DIR} )
