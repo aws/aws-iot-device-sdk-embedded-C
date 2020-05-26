@@ -19,8 +19,8 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef DEMO_CONFIG_H
-#define DEMO_CONFIG_H
+#ifndef DEMO_CONFIG_H_
+#define DEMO_CONFIG_H_
 
 /**************************************************/
 /******* DO NOT CHANGE the following order ********/

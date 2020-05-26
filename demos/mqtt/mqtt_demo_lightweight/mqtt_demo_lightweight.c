@@ -103,7 +103,7 @@
 #define MQTT_KEEP_ALIVE_PERIOD_SECONDS       5U
 
 /**
- * @brief Socket layer transportTimeout in millisecond.
+ * @brief Socket layer transportTimeout in milliseconds.
  */
 #define TRANSPORT_SEND_RECV_TIMEOUT_MS       200U
 
@@ -125,8 +125,8 @@
  *
  * @param[in] pServer Host name of server.
  * @param[in] port Server port.
- * @param[out] pSocket pointer to socket descriptor if
- * connect was successful.
+ * @param[out] pSocket pointer to the socket descriptor if connect
+ * is successful, this call will return the socket descriptor.
  *
  * @return EXIT_SUCCESS or EXIT_FAILURE.
  */
@@ -138,7 +138,8 @@ static int connectToServer( const char * pServer,
  * @brief Establish an MQTT session over a TCP connection by sending MQTT CONNECT.
  *
  * @param[in] tcpSocket TCP socket.
- * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and length.
+ * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and its length.
+ * The buffer is used for serialzing CONNECT packet and deserializing CONN-ACK.
  *
  * @return EXIT_SUCCESS if an MQTT session is established; EXIT_FAILURE otherwise.
  */
@@ -151,7 +152,8 @@ static int createMQTTConnectionWithBroker( int tcpSocket,
  *
  * @param[in] tcpSocket is a TCP socket that is connected to an MQTT broker to which
  * an MQTT connection has been established.
- * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and length.
+ * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and its length.
+ * The buffer is used for serialzing SUBSCRIBE packet.
  *
  */
 static void mqttSubscribeToTopic( int tcpSocket,
@@ -162,7 +164,8 @@ static void mqttSubscribeToTopic( int tcpSocket,
  *
  * @param[in] tcpSocket is a TCP socket that is connected to an MQTT broker to which
  * an MQTT connection has been established.
- * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and length.
+ * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and its length.
+ * The buffer is used for serialzing PUBLISH packet.
  *
  */
 static void mqttPublishToTopic( int tcpSocket,
@@ -174,7 +177,8 @@ static void mqttPublishToTopic( int tcpSocket,
  *
  * @param[in] tcpSocket is a TCP socket that is connected to an MQTT broker to which
  * an MQTT connection has been established.
- * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and length.
+ * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and its length.
+ * The buffer is used for serialzing UNSUBSCRIBE packet.
  *
  */
 static void mqttUnsubscribeFromTopic( int tcpSocket,
@@ -185,19 +189,31 @@ static void mqttUnsubscribeFromTopic( int tcpSocket,
  *
  * @param[in] tcpSocket is a TCP socket that is connected to an MQTT broker to which
  * an MQTT connection has been established.
- * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and length.
+ * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and its length.
+ * The buffer is used for serialzing DISCONNECT packet.
  */
 static void mqttDisconnect( int tcpSocket,
                             MQTTFixedBuffer_t * pFixedBuffer );
 
-
 /**
- * @brief Receive and validate MQTT packet from the broker, determine the type
- * of the packet and processes the packet based on the type.
+ * @brief Send Ping Request to the MQTT broker.
  *
  * @param[in] tcpSocket is a TCP socket that is connected to an MQTT broker to which
  * an MQTT connection has been established.
- * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and length.
+ * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and its length.
+ * The buffer is used for serialzing PING request packet.
+ */
+static void mqttKeepAlive( int tcpSocket,
+                           MQTTFixedBuffer_t * pFixedBuffer );
+
+/**
+ * @brief Receive and validate MQTT packet from the broker, determine the type
+ * of the packet and process the packet based on the type.
+ *
+ * @param[in] tcpSocket is a TCP socket that is connected to an MQTT broker to which
+ * an MQTT connection has been established.
+ * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and its length.
+ * The buffer is used to deserialize incoming MQTT packet.
  *
  */
 static void mqttProcessIncomingPacket( int tcpSocket,
@@ -205,11 +221,12 @@ static void mqttProcessIncomingPacket( int tcpSocket,
 
 /**
  * @brief Process a response or ack to an MQTT request (PING, SUBSCRIBE
- * or UNSUBSCRIBE). This function processes PING_RESP, SUB_ACK, UNSUB_ACK
+ * or UNSUBSCRIBE). This function processes PING_RESP, SUB_ACK and UNSUB_ACK.
  *
- * @param[in] pxIncomingPacket is a pointer to structure containing deserialized
+ * @param[in] pIncomingPacket is a pointer to structure containing deserialized
  * MQTT response.
- * @param[in] packetId is packet identifier from the incoming if it was received.
+ * @param[in] packetId is packet identifier from the incoming MQTT packet,
+ * if it was received.
  *
  * @note Not all responses contain packet identifier.
  */
@@ -229,7 +246,10 @@ static void mqttProcessIncomingPublish( MQTTPublishInfo_t * pPubInfo,
                                         uint16_t packetId );
 
 /**
- * @brief Monotonically increasing packet identifier.
+ * @brief Generate and return monotonically increasing packet identifier.
+ *
+ * @return The next PacketId.
+ *
  * @note This function is not thread safe.
  */
 static uint16_t getNextPacketIdentifier();
@@ -260,7 +280,7 @@ static uint8_t mqttSharedBuffer[ SHARED_BUFFER_SIZE ];
 
 /**
  * @brief Packet Identifier generated when Subscribe request was sent to the broker;
- * it is used to match received Subscribe ACK to the transmitted ACK.
+ * it is used to match received Subscribe ACK to the transmitted SUBSCRIBE request.
  */
 static uint16_t subscribePacketIdentifier;
 
@@ -377,13 +397,16 @@ static int connectToServer( const char * pServer,
                 LogError( ( "Setting socket send transportTimeout failed.\n" ) );
                 status = EXIT_FAILURE;
             }
-
-            status = EXIT_SUCCESS;
         }
+    }
+    else
+    {
+        LogError( ( "DNS lookup failed for broker %s.\n", pServer ) );
     }
 
     if( pListHead != NULL )
     {
+        LogError( ( "Failed to establish TCP connection to the broker %s.\n", pServer ) );
         freeaddrinfo( pListHead );
     }
 
@@ -393,11 +416,12 @@ static int connectToServer( const char * pServer,
 /*-----------------------------------------------------------*/
 
 /**
- * @brief The transport receive wrapper function for receiving type and length.
+ * @brief The transport receive wrapper function supplied to the MQTT library for
+ * receiving type and length of an incoming MQTT packet.
  *
  * @param[in] tcpSocket TCP socket.
  * @param[out] pBuffer Buffer for receiving data.
- * @param[in] bytesToSend Size of pBuffer.
+ * @param[in] bytesToRecv Size of pBuffer.
  *
  * @return Number of bytes received or zero to indicate transportTimeout; negative value on error.
  */
@@ -524,6 +548,7 @@ static int createMQTTConnectionWithBroker( int tcpSocket,
     }
     else
     {
+        LogInfo( ( "Successfully connected with the MQTT broker\r\n" ) );
         status = EXIT_SUCCESS;
     }
 
@@ -547,7 +572,7 @@ static void mqttSubscribeToTopic( int tcpSocket,
      * asserts().
      ***/
 
-    /* Some fields not used by this demo so start with everything at 0. */
+    /* Some fields not used by this demo so start with everything as 0. */
     memset( ( void * ) &mqttSubscription, 0x00, sizeof( mqttSubscription ) );
 
     /* Subscribe to the MQTT_EXAMPLE_TOPIC topic filter. This example subscribes to
@@ -596,7 +621,7 @@ static void mqttPublishToTopic( int tcpSocket,
      * asserts().
      ***/
 
-    /* Some fields not used by this demo so start with everything at 0. */
+    /* Some fields not used by this demo so start with everything as 0. */
     memset( ( void * ) &mqttPublishInfo, 0x00, sizeof( mqttPublishInfo ) );
 
     /* This demo uses QOS0 */
@@ -646,9 +671,7 @@ static void mqttUnsubscribeFromTopic( int tcpSocket,
     /* Some fields not used by this demo so start with everything at 0. */
     memset( ( void * ) &mqttSubscription, 0x00, sizeof( mqttSubscription ) );
 
-    /* Unsubscribe to the MQTT_EXAMPLE_TOPIC topic filter. The task handle is passed
-     * as the callback context which is used by the callback to send a task
-     * notification to this task.*/
+    /* Unsubscribe to the MQTT_EXAMPLE_TOPIC topic filter. */
     mqttSubscription[ 0 ].qos = MQTTQoS0;
     mqttSubscription[ 0 ].pTopicFilter = MQTT_EXAMPLE_TOPIC;
     mqttSubscription[ 0 ].topicFilterLength = ( uint16_t ) strlen( MQTT_EXAMPLE_TOPIC );
@@ -684,11 +707,11 @@ static void mqttKeepAlive( int tcpSocket,
     int status;
     size_t packetSize = 0;
 
+    /* Calculate PING request size. */
     status = MQTT_GetPingreqPacketSize( &packetSize );
 
-    /* PingReq is fixed length packet, therefore there is no need to calculate the size,
-     * just makes sure static buffer can accommodate ping request. */
-    assert( packetSize <= SHARED_BUFFER_SIZE );
+    /*  Make sure the buffer can accommodate ping request. */
+    assert( packetSize <= pFixedBuffer->size );
 
     result = MQTT_SerializePingreq( pFixedBuffer );
     assert( result == MQTTSuccess );
@@ -721,16 +744,6 @@ static void mqttDisconnect( int tcpSocket,
 
 /*-----------------------------------------------------------*/
 
-/**
- * @brief Process a response or ack to an MQTT request (PING, SUBSCRIBE
- * or UNSUBSCRIBE). This function processes PING_RESP, SUB_ACK, UNSUB_ACK
- *
- * @param[in] pxIncomingPacket is a pointer to structure containing deserialized
- * MQTT response.
- *
- * @param[in] packetId is packet identifier from the incoming if it was received.
- * @note Not all responses contain packet identifier.
- */
 static void mqttProcessResponse( MQTTPacketInfo_t * pIncomingPacket,
                                  uint16_t packetId )
 {
@@ -754,22 +767,13 @@ static void mqttProcessResponse( MQTTPacketInfo_t * pIncomingPacket,
 
         /* Any other packet type is invalid. */
         default:
-            LogInfo( ( "mqttProcessResponse() called with unknown packet type:(%u).",
+            LogWarn( ( "mqttProcessResponse() called with unknown packet type:(%u).",
                        ( unsigned ) pIncomingPacket->type ) );
     }
 }
 
 /*-----------------------------------------------------------*/
 
-/**
- * @brief Process incoming Publish message.
- *
- * @param[in] pPubInfo is a pointer to structure containing deserialized
- * Publish message.
- *
- * @param[in] packetId is packet identifier from the incoming publish if it was received.
- * @note PacketId is only valid for QOS1 and QOS2 messages.
- */
 static void mqttProcessIncomingPublish( MQTTPublishInfo_t * pPubInfo,
                                         uint16_t packetId )
 {
@@ -781,7 +785,7 @@ static void mqttProcessIncomingPublish( MQTTPublishInfo_t * pPubInfo,
 
     LogInfo( ( "Incoming QOS : %d\n", pPubInfo->qos ) );
 
-    /* Verify the received publish is for the we have subscribed to. */
+    /* Verify the received publish is for the topic we have subscribed to. */
     if( ( pPubInfo->topicNameLength == strlen( MQTT_EXAMPLE_TOPIC ) ) &&
         ( 0 == strncmp( MQTT_EXAMPLE_TOPIC, pPubInfo->pTopicName, pPubInfo->topicNameLength ) ) )
     {
@@ -802,16 +806,6 @@ static void mqttProcessIncomingPublish( MQTTPublishInfo_t * pPubInfo,
 
 /*-----------------------------------------------------------*/
 
-/**
- * @brief Receive and validate MQTT packet from the broker, determine the type
- * of the packet and processes the packet based on the type.
- *
- * @param[in] tcpSocket is a TCP socket that is connected to an MQTT broker to which
- * an MQTT connection has been established.
- *
- * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and length.
- *
- */
 static void mqttProcessIncomingPacket( int tcpSocket,
                                        MQTTFixedBuffer_t * pFixedBuffer )
 {
@@ -935,7 +929,7 @@ int main( int argc,
              * from the broker. This demo uses QOS0 in subscribe, therefore, the Publish
              * messages received from the broker will have QOS0. */
             /* Subscribe and SUBACK */
-            LogInfo( ( "Attempt to subscribed to the MQTT topic %s\r\n", MQTT_EXAMPLE_TOPIC ) );
+            LogInfo( ( "Attempt to subscribe to the MQTT topic %s\r\n", MQTT_EXAMPLE_TOPIC ) );
             mqttSubscribeToTopic( tcpSocket, &fixedBuffer );
 
             /* Since subscribe is a control packet, record the last control packet sent
@@ -1016,7 +1010,7 @@ int main( int argc,
             /* Unsubscribe from the previously subscribed topic */
             LogInfo( ( "Unsubscribe from the MQTT topic %s.\r\n", MQTT_EXAMPLE_TOPIC ) );
             mqttUnsubscribeFromTopic( tcpSocket, &fixedBuffer );
-            /* Process Incoming packet from the broker. */
+            /* Process Incoming unsubscribe ack from the broker. */
             mqttProcessIncomingPacket( tcpSocket, &fixedBuffer );
 
             /* Send an MQTT Disconnect packet over the already connected TCP socket.
