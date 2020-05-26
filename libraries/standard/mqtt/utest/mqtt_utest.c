@@ -12,43 +12,43 @@
 /**
  * @brief A valid starting packet ID per MQTT spec. Start from 1.
  */
-#define MQTT_NEXT_PACKET_ID_START    ( 1 )
+#define MQTT_FIRST_VALID_PACKET_ID    ( 1 )
 
 /**
  * @brief A PINGREQ packet is always 2 bytes in size, defined by MQTT 3.1.1 spec.
  */
-#define MQTT_PACKET_PINGREQ_SIZE     ( 2U )
+#define MQTT_PACKET_PINGREQ_SIZE      ( 2U )
 
 /**
  * @brief A packet type not handled by MQTT_ProcessLoop.
  */
-#define MQTT_PACKET_TYPE_INVALID     ( 0U )
+#define MQTT_PACKET_TYPE_INVALID      ( 0U )
 
 /**
  * @brief Number of milliseconds in a second.
  */
-#define MQTT_ONE_SECOND_TO_MS        ( 1000U )
+#define MQTT_ONE_SECOND_TO_MS         ( 1000U )
 
 /**
  * @brief Length of the MQTT network buffer.
  */
-#define MQTT_TEST_BUFFER_LENGTH      ( 128 )
+#define MQTT_TEST_BUFFER_LENGTH       ( 128 )
 
 /**
  * @brief Length of time spent for single test case with
  * multiple iterations spent in the process loop for coverage.
  */
-#define MQTT_SAMPLE_TIMEOUT_MS       ( 1U )
+#define MQTT_SAMPLE_TIMEOUT_MS        ( 1U )
 
 /**
  * @brief Zero timeout in the process loop implies one iteration.
  */
-#define MQTT_NO_TIMEOUT_MS           ( 0U )
+#define MQTT_NO_TIMEOUT_MS            ( 0U )
 
 /**
  * @brief Sample length of remaining serialized data.
  */
-#define SAMPLE_REMAINING_LENGTH      ( 64 )
+#define SAMPLE_REMAINING_LENGTH       ( 64 )
 
 /**
  * @brief The packet type to be received by the process loop.
@@ -102,31 +102,6 @@ int suiteTearDown( int numFailures )
 /* ========================================================================== */
 
 /**
- * @brief Mock successful transport send, and write data into buffer for
- * verification.
- */
-static int32_t mockSend( MQTTNetworkContext_t context,
-                         const void * pMessage,
-                         size_t bytesToSend )
-{
-    const uint8_t * buffer = ( const uint8_t * ) pMessage;
-    /* Treat network context as pointer to buffer for mocking. */
-    uint8_t * mockNetwork = ( *( uint8_t ** ) context );
-    size_t bytesSent = 0;
-
-    while( bytesSent++ < bytesToSend )
-    {
-        /* Write single byte and advance buffer. */
-        *mockNetwork++ = *buffer++;
-    }
-
-    /* Move stream by bytes sent. */
-    ( *( uint8_t ** ) context ) = mockNetwork;
-
-    return bytesToSend;
-}
-
-/**
  * @brief Initialize pNetworkBuffer using static buffer.
  *
  * @param[in] pNetworkBuffer Network buffer provided for the context.
@@ -159,6 +134,31 @@ static void eventCallback( MQTTContext_t * pContext,
 static uint32_t getTime( void )
 {
     return globalEntryTime++;
+}
+
+/**
+ * @brief Mock successful transport send, and write data into buffer for
+ * verification.
+ */
+static int32_t mockSend( MQTTNetworkContext_t context,
+                         const void * pMessage,
+                         size_t bytesToSend )
+{
+    const uint8_t * buffer = ( const uint8_t * ) pMessage;
+    /* Treat network context as pointer to buffer for mocking. */
+    uint8_t * mockNetwork = ( *( uint8_t ** ) context );
+    size_t bytesSent = 0;
+
+    while( bytesSent++ < bytesToSend )
+    {
+        /* Write single byte and advance buffer. */
+        *mockNetwork++ = *buffer++;
+    }
+
+    /* Move stream by bytes sent. */
+    ( *( uint8_t ** ) context ) = mockNetwork;
+
+    return bytesToSend;
 }
 
 /**
@@ -245,134 +245,6 @@ static void setupCallbacks( MQTTApplicationCallbacks_t * pCallbacks )
 }
 
 /* Mocked MQTT_GetIncomingPacketTypeAndLength callback that modifies pIncomingPacket
- * to get full coverage on handleIncomingPublish. */
-static MQTTStatus_t modifyIncomingPacketPublish( MQTTTransportRecvFunc_t readFunc,
-                                                 MQTTNetworkContext_t networkContext,
-                                                 MQTTPacketInfo_t * pIncomingPacket,
-                                                 int cmock_num_calls )
-{
-    /* Remove unsued parameter warnings. */
-    ( void ) readFunc;
-    ( void ) networkContext;
-    ( void ) cmock_num_calls;
-
-    pIncomingPacket->type = MQTT_PACKET_TYPE_PUBLISH;
-    return MQTTSuccess;
-}
-
-/* Mocked MQTT_GetIncomingPacketTypeAndLength callback that modifies pIncomingPacket
- * to get full coverage on handleIncomingAck by setting the type to PUBACK. */
-static MQTTStatus_t modifyIncomingPacketPubAck( MQTTTransportRecvFunc_t readFunc,
-                                                MQTTNetworkContext_t networkContext,
-                                                MQTTPacketInfo_t * pIncomingPacket,
-                                                int cmock_num_calls )
-{
-    /* Remove unused parameter warnings. */
-    ( void ) readFunc;
-    ( void ) networkContext;
-    ( void ) cmock_num_calls;
-
-    pIncomingPacket->type = MQTT_PACKET_TYPE_PUBACK;
-    return MQTTSuccess;
-}
-
-/* Mocked MQTT_GetIncomingPacketTypeAndLength callback that modifies pIncomingPacket
- * to get full coverage on handleIncomingAck by setting the type to PUBREC. */
-static MQTTStatus_t modifyIncomingPacketPubRec( MQTTTransportRecvFunc_t readFunc,
-                                                MQTTNetworkContext_t networkContext,
-                                                MQTTPacketInfo_t * pIncomingPacket,
-                                                int cmock_num_calls )
-{
-    /* Remove unsued parameter warnings. */
-    ( void ) readFunc;
-    ( void ) networkContext;
-    ( void ) cmock_num_calls;
-
-    pIncomingPacket->type = MQTT_PACKET_TYPE_PUBREC;
-    return MQTTSuccess;
-}
-
-/* Mocked MQTT_GetIncomingPacketTypeAndLength callback that modifies pIncomingPacket
- * to get full coverage on handleIncomingAck by setting the type to PUBREL. */
-static MQTTStatus_t modifyIncomingPacketPubRel( MQTTTransportRecvFunc_t readFunc,
-                                                MQTTNetworkContext_t networkContext,
-                                                MQTTPacketInfo_t * pIncomingPacket,
-                                                int cmock_num_calls )
-{
-    /* Remove unused parameter warnings. */
-    ( void ) readFunc;
-    ( void ) networkContext;
-    ( void ) cmock_num_calls;
-
-    pIncomingPacket->type = MQTT_PACKET_TYPE_PUBREL;
-    return MQTTSuccess;
-}
-
-/* Mocked MQTT_GetIncomingPacketTypeAndLength callback that modifies pIncomingPacket
- * to get full coverage on handleIncomingAck by setting the type to PUBCOMP. */
-static MQTTStatus_t modifyIncomingPacketPubComp( MQTTTransportRecvFunc_t readFunc,
-                                                 MQTTNetworkContext_t networkContext,
-                                                 MQTTPacketInfo_t * pIncomingPacket,
-                                                 int cmock_num_calls )
-{
-    /* Remove unused parameter warnings. */
-    ( void ) readFunc;
-    ( void ) networkContext;
-    ( void ) cmock_num_calls;
-
-    pIncomingPacket->type = MQTT_PACKET_TYPE_PUBCOMP;
-    return MQTTSuccess;
-}
-
-/* Mocked MQTT_GetIncomingPacketTypeAndLength callback that modifies pIncomingPacket
- * to get full coverage on handleIncomingAck by setting the type to PINGRESP. */
-static MQTTStatus_t modifyIncomingPacketPingResp( MQTTTransportRecvFunc_t readFunc,
-                                                  MQTTNetworkContext_t networkContext,
-                                                  MQTTPacketInfo_t * pIncomingPacket,
-                                                  int cmock_num_calls )
-{
-    /* Remove unused parameter warnings. */
-    ( void ) readFunc;
-    ( void ) networkContext;
-    ( void ) cmock_num_calls;
-
-    pIncomingPacket->type = MQTT_PACKET_TYPE_PINGRESP;
-    return MQTTSuccess;
-}
-
-/* Mocked MQTT_GetIncomingPacketTypeAndLength callback that modifies pIncomingPacket
- * to get full coverage on handleIncomingAck by setting the type to SUBACK. */
-static MQTTStatus_t modifyIncomingPacketSubAck( MQTTTransportRecvFunc_t readFunc,
-                                                MQTTNetworkContext_t networkContext,
-                                                MQTTPacketInfo_t * pIncomingPacket,
-                                                int cmock_num_calls )
-{
-    /* Remove unused parameter warnings. */
-    ( void ) readFunc;
-    ( void ) networkContext;
-    ( void ) cmock_num_calls;
-
-    pIncomingPacket->type = MQTT_PACKET_TYPE_SUBACK;
-    return MQTTSuccess;
-}
-
-/* Mocked MQTT_GetIncomingPacketTypeAndLength callback that modifies pIncomingPacket
- * to get full coverage on handleIncomingAck by setting the type to UNSUBACK. */
-static MQTTStatus_t modifyIncomingPacketUnsubAck( MQTTTransportRecvFunc_t readFunc,
-                                                  MQTTNetworkContext_t networkContext,
-                                                  MQTTPacketInfo_t * pIncomingPacket,
-                                                  int cmock_num_calls )
-{
-    /* Remove unused parameter warnings. */
-    ( void ) readFunc;
-    ( void ) networkContext;
-    ( void ) cmock_num_calls;
-
-    pIncomingPacket->type = MQTT_PACKET_TYPE_UNSUBACK;
-    return MQTTSuccess;
-}
-
-/* Mocked MQTT_GetIncomingPacketTypeAndLength callback that modifies pIncomingPacket
  * to get full coverage on handleIncomingAck by setting the type to CONNECT. */
 static MQTTStatus_t modifyIncomingPacket( MQTTTransportRecvFunc_t readFunc,
                                           MQTTNetworkContext_t networkContext,
@@ -390,20 +262,6 @@ static MQTTStatus_t modifyIncomingPacket( MQTTTransportRecvFunc_t readFunc,
 }
 
 /**
- * @brief MQTT_GetPingreqPacketSize callback used by CMock for setting the size
- * of a PINGREQ packet and returns successfully.
- */
-static MQTTStatus_t modifyPacketSize( size_t * pPacketSize,
-                                      int cmock_num_calls )
-{
-    /* Remove unused parameter warnings. */
-    ( void ) cmock_num_calls;
-
-    *pPacketSize = MQTT_PACKET_PINGREQ_SIZE;
-    return MQTTSuccess;
-}
-
-/**
  * @brief This helper function is used to expect any calls from the process loop
  * to mocked functions belonging to an external header file. Its parameters
  * are used to provide return values for these mocked functions.
@@ -417,6 +275,8 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext,
                                     bool incomingPublish )
 {
     MQTTStatus_t mqttStatus = MQTTSuccess;
+    MQTTPacketInfo_t incomingPacket = { 0 };
+    size_t pingreqSize = MQTT_PACKET_PINGREQ_SIZE;
     bool expectMoreCalls = true;
 
     MQTT_GetIncomingPacketTypeAndLength_Stub( modifyIncomingPacket );
@@ -440,7 +300,9 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext,
         if( ( pContext->waitingForPingResp == false ) &&
             ( pContext->keepAliveIntervalSec != 0U ) )
         {
-            MQTT_GetPingreqPacketSize_Stub( modifyPacketSize );
+            MQTT_GetPingreqPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+            /* Replace pointer parameter being passed to the method. */
+            MQTT_GetPingreqPacketSize_ReturnThruPtr_pPacketSize( &pingreqSize );
             MQTT_SerializePingreq_ExpectAnyArgsAndReturn( serializeStatus );
         }
 
@@ -540,7 +402,7 @@ void test_MQTT_Init_Happy_Path( void )
     mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     TEST_ASSERT_EQUAL( MQTTNotConnected, context.connectStatus );
-    TEST_ASSERT_EQUAL( MQTT_NEXT_PACKET_ID_START, context.nextPacketId );
+    TEST_ASSERT_EQUAL( MQTT_FIRST_VALID_PACKET_ID, context.nextPacketId );
     /* These Unity assertions take pointers and compare their contents. */
     TEST_ASSERT_EQUAL_MEMORY( &transport, &context.transportInterface, sizeof( transport ) );
     TEST_ASSERT_EQUAL_MEMORY( &callbacks, &context.callbacks, sizeof( callbacks ) );
