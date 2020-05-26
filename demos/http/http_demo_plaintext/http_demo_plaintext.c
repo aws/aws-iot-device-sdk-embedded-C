@@ -233,7 +233,8 @@ static int32_t transportRecv( HTTPNetworkContext_t pContext,
  *
  * @return #HTTP_SUCCESS if successful.
  */
-static HTTPStatus_t _sendHttpRequest( const char * pHost,
+static HTTPStatus_t _sendHttpRequest( HTTPTransportInterface_t * pTransport,
+                                      const char * pHost,
                                       const char * pMethod,
                                       const char * pPath )
 {
@@ -242,15 +243,6 @@ static HTTPStatus_t _sendHttpRequest( const char * pHost,
     HTTPRequestInfo_t requestInfo = { 0 };
     HTTPTransportInterface_t transport = { 0 };
     HTTPResponse_t response = { 0 };
-    struct networkContext_t socketContext = { 0 };
-
-    /* Establish TCP connection. */
-    socketContext.tcpSocket = connectToServer( SERVER, PORT );
-
-    if( socketContext.tcpSocket == -1 )
-    {
-        returnStatus = HTTP_NETWORK_ERROR;
-    }
 
     LogInfo( ( "Sending HTTP %s request to %s%s\r\n",
                pMethod, SERVER, pPath ) );
@@ -262,7 +254,9 @@ static HTTPStatus_t _sendHttpRequest( const char * pHost,
     requestInfo.methodLen = strlen( pMethod );
     requestInfo.pPath = pPath;
     requestInfo.pathLen = strlen( pPath );
+    requestInfo.flags = HTTP_REQUEST_KEEP_ALIVE_FLAG;
 
+    /* Set the buffer used for request headers. */
     requestHeaders.pBuffer = userBuffer;
     requestHeaders.bufferLen = USER_BUFFER_LENGTH;
 
@@ -271,17 +265,12 @@ static HTTPStatus_t _sendHttpRequest( const char * pHost,
 
     if( returnStatus == HTTP_SUCCESS )
     {
-        /* Define the transport interface. */
-        transport.recv = transportRecv;
-        transport.send = transportSend;
-        transport.pContext = &socketContext;
-
         /* Initialize the response object. */
         response.pBuffer = userBuffer;
         response.bufferLen = USER_BUFFER_LENGTH;
 
         /* Send the request and receive the response. */
-        returnStatus = HTTPClient_Send( &transport,
+        returnStatus = HTTPClient_Send( pTransport,
                                         &requestHeaders,
                                         requestBodyBuffer,
                                         REQUEST_BODY_TEXT_LENGTH,
@@ -302,12 +291,6 @@ static HTTPStatus_t _sendHttpRequest( const char * pHost,
                    response.pBody ) );
     }
 
-    if( socketContext.tcpSocket != -1 )
-    {
-        shutdown( socketContext.tcpSocket, SHUT_RDWR );
-        close( socketContext.tcpSocket );
-    }
-
     return returnStatus;
 }
 
@@ -319,6 +302,23 @@ static HTTPStatus_t _sendHttpRequest( const char * pHost,
 int main()
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
+    struct networkContext_t socketContext = { 0 };
+    HTTPTransportInterface_t transport = { 0 };
+
+    /**************************** Connect. ******************************/
+
+    /* Establish TCP connection. */
+    socketContext.tcpSocket = connectToServer( SERVER, PORT );
+
+    if( socketContext.tcpSocket == -1 )
+    {
+        returnStatus = HTTP_NETWORK_ERROR;
+    }
+
+    /* Define the transport interface. */
+    transport.recv = transportRecv;
+    transport.send = transportSend;
+    transport.pContext = &socketContext;
 
     /*********************** Send HTTPS request. ************************/
 
@@ -327,33 +327,43 @@ int main()
 
     if( returnStatus == HTTP_SUCCESS )
     {
-        returnStatus = _sendHttpRequest( SERVER,
+        returnStatus = _sendHttpRequest( &transport,
+                                         SERVER,
                                          HTTP_METHOD_GET,
                                          GET_PATH );
     }
 
     if( returnStatus == HTTP_SUCCESS )
     {
-        returnStatus = _sendHttpRequest( SERVER,
+        returnStatus = _sendHttpRequest( &transport,
+                                         SERVER,
                                          HTTP_METHOD_HEAD,
                                          HEAD_PATH );
     }
 
     if( returnStatus == HTTP_SUCCESS )
     {
-        returnStatus = _sendHttpRequest( SERVER,
+        returnStatus = _sendHttpRequest( &transport,
+                                         SERVER,
                                          HTTP_METHOD_PUT,
                                          PUT_PATH );
     }
 
     if( returnStatus == HTTP_SUCCESS )
     {
-        returnStatus = _sendHttpRequest( SERVER,
+        returnStatus = _sendHttpRequest( &transport,
+                                         SERVER,
                                          HTTP_METHOD_POST,
                                          POST_PATH );
     }
 
-    /**************************** Disconnect. *****************************/
+    /************************** Disconnect. *****************************/
+
+    if( socketContext.tcpSocket != -1 )
+    {
+        shutdown( socketContext.tcpSocket, SHUT_RDWR );
+        close( socketContext.tcpSocket );
+    }
 
     return returnStatus;
 }
