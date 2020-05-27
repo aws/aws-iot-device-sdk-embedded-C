@@ -173,7 +173,7 @@ static int connectToServer( const char * pServer,
                             uint16_t port,
                             int * pTcpSocket )
 {
-    int status = EXIT_SUCCESS;
+    int returnStatus = EXIT_SUCCESS;
     struct addrinfo hints, * pIndex, * pListHead = NULL;
     struct sockaddr * pServerInfo;
     uint16_t netPort = htons( port );
@@ -189,9 +189,9 @@ static int connectToServer( const char * pServer,
     hints.ai_protocol = IPPROTO_TCP;
 
     /* Perform a DNS lookup on the given host name. */
-    status = getaddrinfo( pServer, NULL, &hints, &pListHead );
+    returnStatus = getaddrinfo( pServer, NULL, &hints, &pListHead );
 
-    if( status != -1 )
+    if( returnStatus != -1 )
     {
         LogInfo( ( "Performing DNS lookup on %s.",
                    SERVER_HOST ) );
@@ -232,9 +232,9 @@ static int connectToServer( const char * pServer,
             LogInfo( ( "Attempting to connect to resolved IP Address: %s.",
                        resolvedIpAddr ) );
 
-            status = connect( *pTcpSocket, pServerInfo, serverInfoLength );
+            returnStatus = connect( *pTcpSocket, pServerInfo, serverInfoLength );
 
-            if( status == -1 )
+            if( returnStatus == -1 )
             {
                 close( *pTcpSocket );
             }
@@ -249,14 +249,14 @@ static int connectToServer( const char * pServer,
         if( pIndex == NULL )
         {
             /* Fail if no connection could be established. */
-            status = EXIT_FAILURE;
+            returnStatus = EXIT_FAILURE;
             LogError( ( "Resolved but could not connect to any resolved IP from %.*s.\n",
                         ( int ) strlen( pServer ),
                         pServer ) );
         }
         else
         {
-            status = EXIT_SUCCESS;
+            returnStatus = EXIT_SUCCESS;
             LogInfo( ( "TCP connection established with %.*s.\n",
                        ( int ) strlen( pServer ),
                        pServer ) );
@@ -267,11 +267,11 @@ static int connectToServer( const char * pServer,
         LogError( ( "Could not resolve host %.*s.\n",
                     ( int ) strlen( pServer ),
                     pServer ) );
-        status = EXIT_FAILURE;
+        returnStatus = EXIT_FAILURE;
     }
 
     /* Set the socket option for send and receive timeouts. */
-    if( status == EXIT_SUCCESS )
+    if( returnStatus == EXIT_SUCCESS )
     {
         transportTimeout.tv_sec = 0;
         transportTimeout.tv_usec = ( TRANSSERVER_PORT_SEND_RECV_TIMEOUT_MS * 1000 );
@@ -284,7 +284,7 @@ static int connectToServer( const char * pServer,
                         sizeof( transportTimeout ) ) < 0 )
         {
             LogError( ( "Setting socket receive timeout failed." ) );
-            status = EXIT_FAILURE;
+            returnStatus = EXIT_FAILURE;
         }
 
         /* Set the send timeout. */
@@ -295,7 +295,7 @@ static int connectToServer( const char * pServer,
                         sizeof( transportTimeout ) ) < 0 )
         {
             LogError( ( "Setting socket send timeout failed." ) );
-            status = EXIT_FAILURE;
+            returnStatus = EXIT_FAILURE;
         }
     }
 
@@ -304,7 +304,7 @@ static int connectToServer( const char * pServer,
         freeaddrinfo( pListHead );
     }
 
-    return status;
+    return returnStatus;
 }
 
 /*-----------------------------------------------------------*/
@@ -375,10 +375,10 @@ static int32_t transportRecv( HTTPNetworkContext_t * pContext,
  * @return #HTTP_SUCCESS if successful;
  * otherwise, the error status returned by the HTTP library
  */
-static HTTPStatus_t _sendHttpRequest( HTTPTransportInterface_t * pTransport,
-                                      const char * pHost,
-                                      const char * pMethod,
-                                      const char * pPath )
+static int sendHttpRequest( HTTPTransportInterface_t * pTransport,
+                            const char * pHost,
+                            const char * pMethod,
+                            const char * pPath )
 {
     HTTPStatus_t httpStatus = HTTP_SUCCESS;
     HTTPRequestHeaders_t requestHeaders = { 0 };
@@ -397,7 +397,7 @@ static HTTPStatus_t _sendHttpRequest( HTTPTransportInterface_t * pTransport,
     requestInfo.pathLen = strlen( pPath );
 
     /* Set "Connection" HTTP header to "keep-alive" so that multiple requests
-     * can be sent once the connection has been established. */
+     * can be sent over the same established TCP connection. */
     requestInfo.flags = HTTP_REQUEST_KEEP_ALIVE_FLAG;
 
     /* Set the buffer used for storing request headers. */
@@ -450,7 +450,14 @@ static HTTPStatus_t _sendHttpRequest( HTTPTransportInterface_t * pTransport,
                     pMethod, SERVER_HOST, pPath, httpStatus ) );
     }
 
-    return httpStatus;
+    if( httpStatus == HTTP_SUCCESS )
+    {
+        return EXIT_SUCCESS;
+    }
+    else
+    {
+        return EXIT_FAILURE;
+    }
 }
 
 /*-----------------------------------------------------------*/
@@ -488,57 +495,37 @@ int main()
     /* Send GET Request. */
     if( returnStatus == EXIT_SUCCESS )
     {
-        httpStatus = _sendHttpRequest( &transport,
-                                       SERVER_HOST,
-                                       HTTP_METHOD_GET,
-                                       GET_PATH );
-
-        if( httpStatus != HTTP_SUCCESS )
-        {
-            returnStatus = EXIT_FAILURE;
-        }
+        returnStatus = sendHttpRequest( &transport,
+                                        SERVER_HOST,
+                                        HTTP_METHOD_GET,
+                                        GET_PATH );
     }
 
     /* Send HEAD Request. */
     if( returnStatus == EXIT_SUCCESS )
     {
-        httpStatus = _sendHttpRequest( &transport,
-                                       SERVER_HOST,
-                                       HTTP_METHOD_HEAD,
-                                       HEAD_PATH );
-
-        if( httpStatus != HTTP_SUCCESS )
-        {
-            returnStatus = EXIT_FAILURE;
-        }
+        returnStatus = sendHttpRequest( &transport,
+                                        SERVER_HOST,
+                                        HTTP_METHOD_HEAD,
+                                        HEAD_PATH );
     }
 
     /* Send PUT Request. */
     if( returnStatus == EXIT_SUCCESS )
     {
-        httpStatus = _sendHttpRequest( &transport,
-                                       SERVER_HOST,
-                                       HTTP_METHOD_PUT,
-                                       PUT_PATH );
-
-        if( httpStatus != HTTP_SUCCESS )
-        {
-            returnStatus = EXIT_FAILURE;
-        }
+        returnStatus = sendHttpRequest( &transport,
+                                        SERVER_HOST,
+                                        HTTP_METHOD_PUT,
+                                        PUT_PATH );
     }
 
     /* Send POST Request. */
     if( returnStatus != EXIT_SUCCESS )
     {
-        httpStatus = _sendHttpRequest( &transport,
-                                       SERVER_HOST,
-                                       HTTP_METHOD_POST,
-                                       POST_PATH );
-
-        if( httpStatus != HTTP_SUCCESS )
-        {
-            returnStatus = EXIT_FAILURE;
-        }
+        returnStatus = sendHttpRequest( &transport,
+                                        SERVER_HOST,
+                                        HTTP_METHOD_POST,
+                                        POST_PATH );
     }
 
     /************************** Disconnect. *****************************/
