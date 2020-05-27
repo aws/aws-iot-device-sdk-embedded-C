@@ -86,11 +86,20 @@
 #define HTTP_RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN    ( sizeof( HTTP_RANGE_REQUEST_HEADER_VALUE_PREFIX ) - 1u )
 
 /**
+ * @brief The maximum buffer space for storing the Content-Length header field
+ * line.
+ */
+#define HTTP_MAX_CONTENT_LENGTH_HEADER_LINE_LEN                          \
+    ( HTTP_CONTENT_LENGTH_FIELD_LEN + HTTP_HEADER_FIELD_SEPARATOR_LEN +  \
+      HTTP_HEADER_FIELD_SEPARATOR_LEN + MAX_INT32_NO_OF_DECIMAL_DIGITS + \
+      HTTP_HEADER_END_INDICATOR_LEN )
+
+/**
  * @brief Maximum value of a 32 bit signed integer is 2,147,483,647.
  *
  * Used for calculating buffer space for ASCII representation of range values.
  */
-#define MAX_INT32_NO_OF_DECIMAL_DIGITS                10u
+#define MAX_INT32_NO_OF_DECIMAL_DIGITS    10u
 
 /**
  * @brief Maximum buffer space for storing a Range Request Value.

@@ -50,8 +50,8 @@ static HTTPStatus_t sendHttpHeaders( const HTTPTransportInterface_t * pTransport
  * bytes than what were specified were sent, then #HTTP_NETWORK_ERROR is
  * returned.
  */
-static HTTPStatus_t sendContentLength( const HTTPTransportInterface_t * pTransport,
-                                       size_t contentLength );
+static HTTPStatus_t sendHttpContentLength( const HTTPTransportInterface_t * pTransport,
+                                           size_t contentLength );
 
 /**
  * @brief Send the HTTP body over the transport send interface.
@@ -200,7 +200,7 @@ static HTTPStatus_t findHeaderInResponse( const uint8_t * pBuffer,
  * header field matched the header being searched for, and sets a flag to
  * represent reception of the header accordingly.
  *
- * @param[in] pHttpParser The parsing context.
+ * @param[in] pHttpParser Parsing object containing state and callback context.
  * @param[in] pFieldLoc The location of the parsed header field in the response
  * buffer.
  * @param[in] fieldLen The length of the header field.
@@ -218,7 +218,7 @@ static int findHeaderFieldParserCallback( http_parser * pHttpParser,
  * parameters for header value if the requested header's field was found in the
  * @ref findHeaderFieldParserCallback function.
  *
- * @param[in] pHttpParser The parsing context.
+ * @param[in] pHttpParser Parsing object containing state and callback context.
  * @param[in] pVaLueLoc The location of the parsed header value in the response
  * buffer.
  * @param[in] valueLen The length of the header value.
@@ -238,7 +238,7 @@ static int findHeaderValueParserCallback( http_parser * pHttpParser,
  * the response. This callback is used to signal the parser to halt execution
  * if the requested header is not found.
  *
- * @param[in] pHttpParser The parsing context.
+ * @param[in] pHttpParser Parsing object containing state and callback context.
  *
  * @return Returns #HTTP_PARSER_STOP_PARSING for the parser to halt further
  * execution, as all headers have been parsed in the response.
@@ -792,18 +792,15 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
 
 /*-----------------------------------------------------------*/
 
-static HTTPStatus_t sendContentLength( const HTTPTransportInterface_t * pTransport,
-                                       size_t contentLength )
+static HTTPStatus_t sendHttpContentLength( const HTTPTransportInterface_t * pTransport,
+                                           size_t contentLength )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
 
     /* The content-length is the final header line sent. It is sent in this
      * function before the body to utilize the reqBodyBufLen. */
-    char pContentLengthBuffer[ HTTP_CONTENT_LENGTH_FIELD_LEN +
-                               HTTP_HEADER_FIELD_SEPARATOR_LEN +
-                               MAX_INT32_NO_OF_DECIMAL_DIGITS +
-                               HTTP_HEADER_END_INDICATOR_LEN ] = { '\0' };
-    size_t sendLength = 0;
+    char pContentLengthBuffer[ HTTP_MAX_CONTENT_LENGTH_HEADER_LINE_LEN ] = { '\0' };
+    size_t headerLength = 0;
 
     assert( pTransport != NULL );
 
@@ -811,24 +808,24 @@ static HTTPStatus_t sendContentLength( const HTTPTransportInterface_t * pTranspo
     ( void ) memcpy( pContentLengthBuffer,
                      HTTP_CONTENT_LENGTH_FIELD,
                      HTTP_CONTENT_LENGTH_FIELD_LEN );
-    sendLength += HTTP_CONTENT_LENGTH_FIELD_LEN;
-    ( void ) memcpy( pContentLengthBuffer + sendLength,
+    headerLength += HTTP_CONTENT_LENGTH_FIELD_LEN;
+    ( void ) memcpy( pContentLengthBuffer + headerLength,
                      HTTP_HEADER_FIELD_SEPARATOR,
                      HTTP_HEADER_FIELD_SEPARATOR_LEN );
-    sendLength += HTTP_HEADER_FIELD_SEPARATOR_LEN;
-    sendLength += convertInt32ToAscii( ( int32_t ) contentLength,
-                                       pContentLengthBuffer + sendLength,
-                                       sizeof( pContentLengthBuffer ) - sendLength );
-    ( void ) memcpy( pContentLengthBuffer + sendLength,
+    headerLength += HTTP_HEADER_FIELD_SEPARATOR_LEN;
+    headerLength += convertInt32ToAscii( ( int32_t ) contentLength,
+                                         pContentLengthBuffer + headerLength,
+                                         sizeof( pContentLengthBuffer ) - headerLength );
+    ( void ) memcpy( pContentLengthBuffer + headerLength,
                      HTTP_HEADER_END_INDICATOR,
                      HTTP_HEADER_END_INDICATOR_LEN );
-    sendLength += HTTP_HEADER_END_INDICATOR_LEN;
+    headerLength += HTTP_HEADER_END_INDICATOR_LEN;
 
     LogDebug( ( "Sending the HTTP request Content-Length header: "
                 "HeaderBytes=%d",
-                sendLength ) );
+                headerLength ) );
 
-    returnStatus = sendHttpData( pTransport, ( const uint8_t * ) pContentLengthBuffer, sendLength );
+    returnStatus = sendHttpData( pTransport, ( const uint8_t * ) pContentLengthBuffer, headerLength );
 
     return returnStatus;
 }
@@ -841,14 +838,14 @@ static HTTPStatus_t sendHttpHeaders( const HTTPTransportInterface_t * pTransport
                                      uint32_t flags )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
-    size_t sendLength = 0u;
+    size_t numBytesToSend = 0u;
     uint8_t shouldSendContentLength = 0u;
 
     assert( pTransport != NULL );
     assert( pTransport->send != NULL );
     assert( pRequestHeaders != NULL );
 
-    sendLength = pRequestHeaders->headersLen;
+    numBytesToSend = pRequestHeaders->headersLen;
 
     /* Send the content length header if the flag to disable is not set and the
      * body length is greater than zero. */
@@ -860,21 +857,21 @@ static HTTPStatus_t sendHttpHeaders( const HTTPTransportInterface_t * pTransport
      * "\r\n" that denotes the end of the header. */
     if( shouldSendContentLength == 1u )
     {
-        sendLength -= HTTP_HEADER_LINE_SEPARATOR_LEN;
+        numBytesToSend -= HTTP_HEADER_LINE_SEPARATOR_LEN;
     }
 
     LogDebug( ( "Sending HTTP request headers: HeaderBytes=%d",
-                sendLength ) );
+                numBytesToSend ) );
 
     /* Send the HTTP headers over the network. */
-    returnStatus = sendHttpData( pTransport, pRequestHeaders->pBuffer, sendLength );
+    returnStatus = sendHttpData( pTransport, pRequestHeaders->pBuffer, numBytesToSend );
 
     if( returnStatus == HTTP_SUCCESS )
     {
         if( shouldSendContentLength == 1u )
         {
             /* Send the Content-Length header over the network. */
-            returnStatus = sendContentLength( pTransport, reqBodyBufLen );
+            returnStatus = sendHttpContentLength( pTransport, reqBodyBufLen );
         }
     }
 
@@ -1027,7 +1024,7 @@ static HTTPStatus_t receiveAndParseHttpResponse( const HTTPTransportInterface_t 
     /* The parsing context needs to know if the response is for a HEAD request.
      * The third-party parser requires parsing is manually indicated to stop
      * in the httpParserOnHeadersCompleteCallback() for a HEAD response,
-     * otherwise the parser will not indicate the mfessage was complete. */
+     * otherwise the parser will not indicate the message was complete. */
     if( strncmp( ( const char * ) ( pRequestHeaders->pBuffer ),
                  HTTP_METHOD_HEAD,
                  sizeof( HTTP_METHOD_HEAD ) - 1u ) == 0 )
@@ -1122,7 +1119,7 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
     {
         LogError( ( "Parameter check failed: pRequestHeaders->headersLen "
                     "does not meet minimum the required length. "
-                    "MinimumRequiredLength=%u, LastHeadersLength =%lu",
+                    "MinimumRequiredLength=%u, HeadersLength =%lu",
                     HTTP_MINIMUM_REQUEST_LINE_LENGTH,
                     ( unsigned long ) ( pRequestHeaders->headersLen ) ) );
         returnStatus = HTTP_INVALID_PARAMETER;
@@ -1469,7 +1466,7 @@ static HTTPStatus_t findHeaderInResponse( const uint8_t * pBuffer,
      * and maps http_parser.http_errno to the enum http_errno. */
     /* coverity[misra_c_2012_rule_10_5_violation] */
     if( ( returnStatus == HTTP_SUCCESS ) &&
-        ( ( ( ( enum http_errno ) ( parser.http_errno ) ) != HPE_CB_header_value ) ) )
+        ( parser.http_errno != HPE_CB_header_value ) )
     {
         /* MISRA rule 10.5 notes casting an unsigned integer to an enum type. This
          * violation is suppressed because the http-parser library directly sets
@@ -1490,7 +1487,7 @@ static HTTPStatus_t findHeaderInResponse( const uint8_t * pBuffer,
      * and maps http_parser.http_errno to the enum http_errno. */
     /* coverity[misra_c_2012_rule_10_5_violation] */
     else if( ( returnStatus == HTTP_HEADER_NOT_FOUND ) &&
-             ( ( ( ( enum http_errno ) ( parser.http_errno ) ) != HPE_OK ) ) )
+             ( parser.http_errno != HPE_OK ) )
     {
         /* MISRA rule 10.5 notes casting an unsigned integer to an enum type. This
          * violation is suppressed because the http-parser library directly sets
