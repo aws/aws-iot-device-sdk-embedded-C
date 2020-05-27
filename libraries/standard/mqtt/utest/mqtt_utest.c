@@ -163,6 +163,12 @@ static void setupNetworkBuffer( MQTTFixedBuffer_t * const pNetworkBuffer )
 
 /**
  * @brief Mocked MQTT event callback.
+ *
+ * @param[in] pContext MQTT context pointer.
+ * @param[in] pPacketInfo Packet Info pointer for the incoming packet.
+ * @param[in] packetIdentifier Packet identifier of the incoming packet.
+ * @param[in] pPublishInfo Deserialized publish info pointer for the incoming
+ * packet.
  */
 static void eventCallback( MQTTContext_t * pContext,
                            MQTTPacketInfo_t * pPacketInfo,
@@ -186,6 +192,13 @@ static uint32_t getTime( void )
 
 /**
  * @brief Mocked successful transport send.
+ *
+ * @param[in] tcpSocket TCP socket.
+ * @param[in] pMessage Data to send.
+ * @param[in] bytesToWrite Length of data to send.
+ *
+ * @return Number of bytes sent; negative value on error;
+ * 0 for timeout or 0 bytes sent.
  */
 static int32_t transportSendSuccess( MQTTNetworkContext_t pContext,
                                      const void * pBuffer,
@@ -211,6 +224,12 @@ static int32_t transportSendFailure( MQTTNetworkContext_t pContext,
 
 /**
  * @brief Mocked successful transport read.
+ *
+ * @param[in] tcpSocket TCP socket.
+ * @param[out] pBuffer Buffer for receiving data.
+ * @param[in] bytesToRead Size of pBuffer.
+ *
+ * @return Number of bytes received; negative value on error.
  */
 static int32_t transportRecvSuccess( MQTTNetworkContext_t pContext,
                                      void * pBuffer,
@@ -249,6 +268,8 @@ static int32_t transportRecvOneByte( MQTTNetworkContext_t pContext,
 /**
  * @brief Initialize the transport interface with the mocked functions for
  * send and receive.
+ *
+ * @brief param[in] pTransport The transport interface to use with the context.
  */
 static void setupTransportInterface( MQTTTransportInterface_t * pTransport )
 {
@@ -260,6 +281,8 @@ static void setupTransportInterface( MQTTTransportInterface_t * pTransport )
 /**
  * @brief Initialize our event and time callback with the mocked functions
  * defined for the purposes this test.
+ *
+ * @brief param[in] pCallbacks Callbacks to use with the context.
  */
 static void setupCallbacks( MQTTApplicationCallbacks_t * pCallbacks )
 {
@@ -1202,9 +1225,9 @@ void test_MQTT_ProcessLoop_Receive_Failed( void )
 }
 
 /**
- * @brief This test mocks a failing transport receive and runs multiple
- * iterations of the process loop, resulting in returning MQTTRecvFailed.
- * This allows us to have full branch and line coverage.
+ * @brief Set the initial entry time close to the maximum value, causing
+ * an overflow. This test then checks that the process loop still runs for the
+ * expected number of iterations in spite of this.
  */
 void test_MQTT_ProcessLoop_Timer_Overflow( void )
 {
