@@ -72,6 +72,7 @@
  */
 #define MQTT_TIMER_OVERFLOW_TIMEOUT_MS      ( 10 )
 
+#define MQTT_SAMPLE_TRANSPORT_INTERFACE     ( 0 )
 
 /**
  * @brief The packet type to be received by the process loop.
@@ -168,7 +169,6 @@ static void eventCallback( MQTTContext_t * pContext,
                            uint16_t packetIdentifier,
                            MQTTPublishInfo_t * pPublishInfo )
 {
-    ( void ) pContext;
     ( void ) pPacketInfo;
     ( void ) packetIdentifier;
     ( void ) pPublishInfo;
@@ -191,7 +191,7 @@ static int32_t transportSendSuccess( MQTTNetworkContext_t pContext,
                                      const void * pBuffer,
                                      size_t bytesToWrite )
 {
-    ( void ) pContext;
+    TEST_ASSERT_EQUAL( MQTT_SAMPLE_TRANSPORT_INTERFACE, pContext );
     ( void ) pBuffer;
     return bytesToWrite;
 }
@@ -216,7 +216,7 @@ static int32_t transportRecvSuccess( MQTTNetworkContext_t pContext,
                                      void * pBuffer,
                                      size_t bytesToRead )
 {
-    ( void ) pContext;
+    TEST_ASSERT_EQUAL( MQTT_SAMPLE_TRANSPORT_INTERFACE, pContext );
     ( void ) pBuffer;
     return bytesToRead;
 }
@@ -252,7 +252,7 @@ static int32_t transportRecvOneByte( MQTTNetworkContext_t pContext,
  */
 static void setupTransportInterface( MQTTTransportInterface_t * pTransport )
 {
-    pTransport->networkContext = 0;
+    pTransport->networkContext = MQTT_SAMPLE_TRANSPORT_INTERFACE;
     pTransport->send = transportSendSuccess;
     pTransport->recv = transportRecvSuccess;
 }
@@ -904,13 +904,17 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Paths( void )
 
     modifyIncomingPacketStatus = MQTTSuccess;
 
-    /* Assume QoS = 1 so that a PUBACK will be sent after receiving PUBLISH. */
+    /* Assume QoS = 1 so that a PUBACK will be sent after receiving PUBLISH.
+     * That is, expectProcessLoopCalls will take on the following parameters:
+     * incomingPublish=true and stateAfterDeserialize=MQTTPubAckSend. */
     currentPacketType = MQTT_PACKET_TYPE_PUBLISH;
     expectProcessLoopCalls( &context, MQTTSuccess, MQTTPubAckSend,
                             MQTTSuccess, MQTTPublishDone,
                             MQTTSuccess, true );
 
-    /* Assume QoS = 2 so that a PUBREC will be sent after receiving PUBLISH. */
+    /* Assume QoS = 2 so that a PUBREC will be sent after receiving PUBLISH.
+     * That is, expectProcessLoopCalls will take on the following parameters:
+     * incomingPublish=true and stateAfterDeserialize=MQTTPubRecSend. */
     currentPacketType = MQTT_PACKET_TYPE_PUBLISH;
     expectProcessLoopCalls( &context, MQTTSuccess, MQTTPubRecSend,
                             MQTTSuccess, MQTTPubRelPending,
