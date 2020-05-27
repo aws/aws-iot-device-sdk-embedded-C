@@ -5,6 +5,9 @@ add_executable(${DEMO_NAME})
 set(OPENSSL_USE_STATIC_LIBS TRUE)
 find_package(OpenSSL REQUIRED)
 
+set( CMAKE_THREAD_PREFER_PTHREAD ON )
+find_package(Threads REQUIRED)
+
 target_sources(
     ${DEMO_NAME}
     PRIVATE
