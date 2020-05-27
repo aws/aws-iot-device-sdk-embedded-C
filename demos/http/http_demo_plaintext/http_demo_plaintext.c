@@ -45,14 +45,14 @@
  *
  * This demo uses httpbin.org: A simple HTTP Request & Response Service.
  */
-#define SERVER    "httpbin.org"
+#define SERVER_HOST    "httpbin.org"
 
 /**
  * @brief HTTP server port number.
  *
  * In general, port 80 is for plaintext HTTP connections.
  */
-#define PORT      80
+#define SERVER_PORT    80
 
 /**
  * @brief Paths for different HTTP methods for specified host.
@@ -79,17 +79,17 @@
 /**
  * @brief Transport timeout in milliseconds for transport send and receive.
  */
-#define TRANSPORT_SEND_RECV_TIMEOUT_MS    ( 1000 )
+#define TRANSSERVER_PORT_SEND_RECV_TIMEOUT_MS    ( 1000 )
 
 /**
  * @brief The length in bytes of the user buffer.
  */
-#define USER_BUFFER_LENGTH                ( 1024 )
+#define USER_BUFFER_LENGTH                       ( 1024 )
 
 /**
  * @brief Length of an IPv6 address when converted to hex digits.
  */
-#define IPV6_LENGTH                       ( 40 )
+#define IPV6_LENGTH                              ( 40 )
 
 
 /**
@@ -194,7 +194,7 @@ static int connectToServer( const char * pServer,
     if( status != -1 )
     {
         LogInfo( ( "Performing DNS lookup on %s.",
-                   SERVER ) );
+                   SERVER_HOST ) );
 
         /* Attempt to connect to one of the retrieved DNS records. */
         for( pIndex = pListHead; pIndex != NULL; pIndex = pIndex->ai_next )
@@ -274,7 +274,7 @@ static int connectToServer( const char * pServer,
     if( status == EXIT_SUCCESS )
     {
         transportTimeout.tv_sec = 0;
-        transportTimeout.tv_usec = ( TRANSPORT_SEND_RECV_TIMEOUT_MS * 1000 );
+        transportTimeout.tv_usec = ( TRANSSERVER_PORT_SEND_RECV_TIMEOUT_MS * 1000 );
 
         /* Set the receive timeout. */
         if( setsockopt( *pTcpSocket,
@@ -367,7 +367,8 @@ static int32_t transportRecv( HTTPNetworkContext_t pContext,
 /**
  * @brief Send an HTTP request based on a specified method and path.
  *
- * @param[in] tcpSocket TCP socket.
+ * @param[in] pTransport The transport interface for network send and receive.
+ * @param[in] pHost The host name of the server.
  * @param[in] pMethod The HTTP request method.
  * @param[in] pPath The Request-URI to the objects of interest.
  *
@@ -414,7 +415,7 @@ static HTTPStatus_t _sendHttpRequest( HTTPTransportInterface_t * pTransport,
         response.bufferLen = USER_BUFFER_LENGTH;
 
         LogInfo( ( "Sending HTTP %s request to %s%s...",
-                   pMethod, SERVER, pPath ) );
+                   pMethod, SERVER_HOST, pPath ) );
         LogInfo( ( "Request Headers:\n%.*s",
                    ( int32_t ) requestHeaders.headersLen,
                    ( char * ) requestHeaders.pBuffer ) );
@@ -433,7 +434,7 @@ static HTTPStatus_t _sendHttpRequest( HTTPTransportInterface_t * pTransport,
     if( httpStatus == HTTP_SUCCESS )
     {
         LogInfo( ( "Received HTTP response from %s%s...",
-                   SERVER, pPath ) );
+                   SERVER_HOST, pPath ) );
         LogInfo( ( "Response Headers:\n%.*s",
                    ( int32_t ) response.headersLen,
                    response.pHeaders ) );
@@ -446,7 +447,7 @@ static HTTPStatus_t _sendHttpRequest( HTTPTransportInterface_t * pTransport,
     else
     {
         LogError( ( "Sending HTTP %s request to %s%s failed with status = %u.",
-                    pMethod, SERVER, pPath, httpStatus ) );
+                    pMethod, SERVER_HOST, pPath, httpStatus ) );
     }
 
     return httpStatus;
@@ -467,7 +468,7 @@ int main()
     /**************************** Connect. ******************************/
 
     /* Establish TCP connection. */
-    returnStatus = connectToServer( SERVER, PORT, &socketContext.tcpSocket );
+    returnStatus = connectToServer( SERVER_HOST, SERVER_PORT, &socketContext.tcpSocket );
 
     /* Define the transport interface. */
     transport.recv = transportRecv;
@@ -484,7 +485,7 @@ int main()
     if( returnStatus == EXIT_SUCCESS )
     {
         httpStatus = _sendHttpRequest( &transport,
-                                       SERVER,
+                                       SERVER_HOST,
                                        HTTP_METHOD_GET,
                                        GET_PATH );
 
@@ -498,7 +499,7 @@ int main()
     if( returnStatus == EXIT_SUCCESS )
     {
         httpStatus = _sendHttpRequest( &transport,
-                                       SERVER,
+                                       SERVER_HOST,
                                        HTTP_METHOD_HEAD,
                                        HEAD_PATH );
 
@@ -512,7 +513,7 @@ int main()
     if( returnStatus == EXIT_SUCCESS )
     {
         httpStatus = _sendHttpRequest( &transport,
-                                       SERVER,
+                                       SERVER_HOST,
                                        HTTP_METHOD_PUT,
                                        PUT_PATH );
 
@@ -526,7 +527,7 @@ int main()
     if( returnStatus != EXIT_SUCCESS )
     {
         httpStatus = _sendHttpRequest( &transport,
-                                       SERVER,
+                                       SERVER_HOST,
                                        HTTP_METHOD_POST,
                                        POST_PATH );
 
