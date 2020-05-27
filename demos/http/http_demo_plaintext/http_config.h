@@ -19,8 +19,8 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef DEMO_CONFIG_H
-#define DEMO_CONFIG_H
+#ifndef HTTP_CONFIG_H
+#define HTTP_CONFIG_H
 
 /**************************************************/
 /******* DO NOT CHANGE the following order ********/
@@ -35,12 +35,12 @@
 /* Include header that defines log levels. */
 #include "logging_levels.h"
 
-/* Logging configuration for the Demo. */
-#define LIBRARY_LOG_NAME     "DEMO"
+/* Logging configuration for the HTTP library. */
+#define LIBRARY_LOG_NAME     "HTTP"
 #define LIBRARY_LOG_LEVEL    LOG_INFO
 
 #include "logging_stack.h"
 
 /************ End of logging configuration ****************/
 
-#endif /* ifndef DEMO_CONFIG_H */
+#endif /* ifndef HTTP_CONFIG_H */
