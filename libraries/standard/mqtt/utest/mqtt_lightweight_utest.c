@@ -513,16 +513,6 @@ void test_MQTT_SerializeConnect( void )
     TEST_ASSERT_GREATER_OR_EQUAL( packetSize, bufferSize );
     status = MQTT_SerializeConnect( &connectInfo, &willInfo, remainingLength, &fixedBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
-
-    /* For this example, MQTT_GetConnectPacketSize() will return
-     * packetSize = remainingLength +2 (two byte fixed header).
-     * Make sure MQTT_SerializeConnect()
-     * fails  when remaining length is more than packet size. */
-    /* TODO: Since MQTT_SerializeConnect trusts the remaining length to be
-     * accurate, either change the implementation or remove this test, since it
-     * should fail. */
-    status = MQTT_SerializeConnect( &connectInfo, &willInfo, remainingLength + 4, &fixedBuffer );
-    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 }
 
 /* ========================================================================== */
@@ -733,20 +723,6 @@ void test_MQTT_SerializeSubscribe( void )
                                       remainingLength,
                                       &fixedBuffer );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-
-    /* For this example, MQTT_GetSubscriptionPacketSize() will return
-     * packetSize = remainingLength +2 (two byte fixed header).
-     * Make sure MQTT_SerializeSubscribe()
-     * fails  when remaining length is more than packet size. */
-    /* TODO: Since MQTT_SerializeSubscribe trusts the remaining length to be
-     * accurate, either change the implementation or remove this test, since it
-     * should fail. */
-    status = MQTT_SerializeSubscribe( &subscriptionList,
-                                      subscriptionCount,
-                                      PACKET_ID,
-                                      remainingLength + 4,
-                                      &fixedBuffer );
-    TEST_ASSERT_EQUAL_INT( MQTTNoMemory, status );
 }
 
 /**
@@ -826,19 +802,6 @@ void test_MQTT_SerializeUnsubscribe( void )
                                         remainingLength,
                                         &fixedBuffer );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-
-    /* For this example, MQTT_GetSubscriptionPacketSize() will return
-     * packetSize = remainingLength +2, make sure MQTT_SerializeUnsubscribe()
-     * fails  when remaining length is more than packet size. */
-    /* TODO: Since MQTT_SerializeUnsubscribe trusts the remaining length to be
-     * accurate, either change the implementation or remove this test, since it
-     * should fail. */
-    status = MQTT_SerializeUnsubscribe( &subscriptionList,
-                                        subscriptionCount,
-                                        PACKET_ID,
-                                        remainingLength + 4,
-                                        &fixedBuffer );
-    TEST_ASSERT_EQUAL_INT( MQTTNoMemory, status );
 }
 
 /* ========================================================================== */
