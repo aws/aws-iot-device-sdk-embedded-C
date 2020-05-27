@@ -120,7 +120,7 @@ static uint8_t requestBodyBuffer[ REQUEST_BODY_TEXT_LENGTH ] = { 0 };
 /**
  * @brief Definition of the HTTP network context.
  */
-struct networkContext_t
+struct HTTPNetworkContext
 {
     int tcpSocket;
 };
@@ -150,7 +150,7 @@ static int connectToServer( const char * pServer,
  *
  * @return Number of bytes sent; negative value on error.
  */
-static int32_t transportSend( HTTPNetworkContext_t pContext,
+static int32_t transportSend( HTTPNetworkContext_t * pContext,
                               const void * pBuffer,
                               size_t bytesToSend );
 
@@ -163,7 +163,7 @@ static int32_t transportSend( HTTPNetworkContext_t pContext,
  *
  * @return Number of bytes received; negative value on error.
  */
-static int32_t transportRecv( HTTPNetworkContext_t pContext,
+static int32_t transportRecv( HTTPNetworkContext_t * pContext,
                               void * pBuffer,
                               size_t bytesToRecv );
 
@@ -309,7 +309,7 @@ static int connectToServer( const char * pServer,
 
 /*-----------------------------------------------------------*/
 
-static int32_t transportSend( HTTPNetworkContext_t pContext,
+static int32_t transportSend( HTTPNetworkContext_t * pContext,
                               const void * pBuffer,
                               size_t bytesToSend )
 {
@@ -332,7 +332,7 @@ static int32_t transportSend( HTTPNetworkContext_t pContext,
 
 /*-----------------------------------------------------------*/
 
-static int32_t transportRecv( HTTPNetworkContext_t pContext,
+static int32_t transportRecv( HTTPNetworkContext_t * pContext,
                               void * pBuffer,
                               size_t bytesToRecv )
 {
@@ -397,7 +397,7 @@ static HTTPStatus_t _sendHttpRequest( HTTPTransportInterface_t * pTransport,
     requestInfo.pathLen = strlen( pPath );
 
     /* Set "Connection" HTTP header to "keep-alive" so that multiple requests
-     * can be sent once the connection has been established. */
+     * can be sent over the same established TCP connection. */
     requestInfo.flags = HTTP_REQUEST_KEEP_ALIVE_FLAG;
 
     /* Set the buffer used for storing request headers. */
@@ -462,7 +462,7 @@ int main()
 {
     int returnStatus = EXIT_SUCCESS;
     HTTPStatus_t httpStatus = HTTP_SUCCESS;
-    struct networkContext_t socketContext = { 0 };
+    HTTPNetworkContext_t socketContext = { 0 };
     HTTPTransportInterface_t transport = { 0 };
 
     /* Set the request body. */
