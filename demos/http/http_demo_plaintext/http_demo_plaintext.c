@@ -115,7 +115,7 @@ static uint8_t userBuffer[ USER_BUFFER_LENGTH ] = { 0 };
 /**
  * @brief The request body.
  */
-static uint8_t requestBodyBuffer[] = REQUEST_BODY_TEXT;
+static uint8_t requestBodyBuffer[ REQUEST_BODY_TEXT_LENGTH ] = { 0 };
 
 /**
  * @brief Definition of the HTTP network context.
@@ -464,6 +464,10 @@ int main()
     HTTPStatus_t httpStatus = HTTP_SUCCESS;
     struct networkContext_t socketContext = { 0 };
     HTTPTransportInterface_t transport = { 0 };
+
+    /* Set the request body. */
+    strncpy( ( char * ) requestBodyBuffer,
+             REQUEST_BODY_TEXT, REQUEST_BODY_TEXT_LENGTH );
 
     /**************************** Connect. ******************************/
 
