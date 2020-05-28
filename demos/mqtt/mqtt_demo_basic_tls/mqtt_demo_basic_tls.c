@@ -76,7 +76,7 @@
  *
  * This certificate should be PEM-encoded.
  */
-#define SERVER_CERT_PATH          "mosquitto.org.crt"
+#define SERVER_CERT_PATH          "certificates/mosquitto.org.crt"
 
 /**
  * @brief Length of path to server certificate.
