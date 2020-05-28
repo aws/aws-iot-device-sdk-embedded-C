@@ -10,16 +10,16 @@
  * @brief Send HTTP bytes over the transport send interface.
  *
  * @param[in] pTransport Transport interface.
- * @param[in] pBuffer HTTP request data to send.
- * @param[in] bufferLen HTTP request data length.
+ * @param[in] pDataHTTP request data to send.
+ * @param[in] dataLen HTTP request data length.
  *
  * @return #HTTP_SUCCESS if successful. If there was a network error or less
  * bytes than what were specified were sent, then #HTTP_NETWORK_ERROR is
  * returned.
  */
 static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
-                                  const uint8_t * pBuffer,
-                                  size_t bufferLen );
+                                  const uint8_t * pData,
+                                  size_t dataLen );
 
 /**
  * @brief Send the HTTP headers over the transport send interface.
@@ -27,7 +27,7 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
  * @param[in] pTransport Transport interface.
  * @param[in] pRequestHeaders Request headers to send, it includes the buffer
  * and length.
- * @param[in] reqBodyBufLen The length of the request body to be sent. This is
+ * @param[in] reqBodyLen The length of the request body to be sent. This is
  * used to generated a Content-Length header.
  * @param[in] flags Application provided flags to #HTTPClient_Send.
  *
@@ -37,7 +37,7 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
  */
 static HTTPStatus_t sendHttpHeaders( const HTTPTransportInterface_t * pTransport,
                                      const HTTPRequestHeaders_t * pRequestHeaders,
-                                     size_t reqBodyBufLen,
+                                     size_t reqBodyLen,
                                      uint32_t flags );
 
 /**
@@ -94,7 +94,7 @@ static HTTPStatus_t addHeader( HTTPRequestHeaders_t * pRequestHeaders,
  * @param[in] pTransport Transport interface.
  * @param[in] pBuffer Response buffer.
  * @param[in] bufferLen Length of the response buffer.
- * @param[out] Bytes received from the transport interface.
+ * @param[out] pBytesReceived Bytes received from the transport interface.
  *
  * @return Returns #HTTP_SUCCESS if successful. If there was a network error or
  * more bytes than what was specified were read, then #HTTP_NETWORK_ERROR is
@@ -129,7 +129,7 @@ static HTTPStatus_t getFinalResponseStatus( HTTPParsingState_t parsingState,
  *
  * @param[in] pTransport Transport interface.
  * @param[in] pResponse Response message to receive data from the network.
- * @param[in] pRequestHeaders Request headers to extract the request method from.
+ * @param[in] pRequestHeaders Request headers for the corresponding HTTP request.
  *
  * @return Returns #HTTP_SUCCESS if successful. Please see #receiveHttpData,
  * #parseHttpResponse, and #getFinalResponseStatus for other statuses returned.
@@ -343,11 +343,6 @@ static HTTPStatus_t addHeader( HTTPRequestHeaders_t * pRequestHeaders,
         /* Write "<Field>: <Value> \r\n" to the headers buffer. */
 
         /* Copy the header name into the buffer. */
-
-        /* MISRA rule 21.15 flags the memcpy of two different types, const uint8_t*
-         * and const char*. These types are the same size, so this comparision is
-         * acceptable. */
-        /* coverity[misra_c_2012_rule_21_15_violation] */
         ( void ) memcpy( pBufferCur, pField, fieldLen );
         pBufferCur += fieldLen;
 
@@ -750,19 +745,19 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
 /*-----------------------------------------------------------*/
 
 static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
-                                  const uint8_t * pBuffer,
-                                  size_t bufferLen )
+                                  const uint8_t * pData,
+                                  size_t dataLen )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
     int32_t transportStatus = 0;
 
     assert( pTransport != NULL );
     assert( pTransport->send != NULL );
-    assert( pBuffer != NULL );
+    assert( pData != NULL );
 
     transportStatus = pTransport->send( pTransport->pContext,
-                                        pBuffer,
-                                        bufferLen );
+                                        pData,
+                                        dataLen );
 
     if( transportStatus < 0 )
     {
@@ -771,12 +766,12 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
                     transportStatus ) );
         returnStatus = HTTP_NETWORK_ERROR;
     }
-    else if( ( size_t ) transportStatus != bufferLen )
+    else if( ( size_t ) transportStatus != dataLen )
     {
         LogError( ( "Failed to send HTTP data: Transport layer "
                     "did not send the required bytes: RequiredBytes=%lu"
                     ", SentBytes=%d.",
-                    ( unsigned long ) bufferLen,
+                    ( unsigned long ) dataLen,
                     transportStatus ) );
         returnStatus = HTTP_NETWORK_ERROR;
     }
@@ -834,7 +829,7 @@ static HTTPStatus_t sendHttpContentLength( const HTTPTransportInterface_t * pTra
 
 static HTTPStatus_t sendHttpHeaders( const HTTPTransportInterface_t * pTransport,
                                      const HTTPRequestHeaders_t * pRequestHeaders,
-                                     size_t reqBodyBufLen,
+                                     size_t reqBodyLen,
                                      uint32_t flags )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
@@ -850,7 +845,7 @@ static HTTPStatus_t sendHttpHeaders( const HTTPTransportInterface_t * pTransport
     /* Send the content length header if the flag to disable is not set and the
      * body length is greater than zero. */
     shouldSendContentLength = ( ( ( flags & HTTP_SEND_DISABLE_CONTENT_LENGTH_FLAG ) == 0u ) &&
-                                ( reqBodyBufLen > 0u ) ) ? 1u : 0u;
+                                ( reqBodyLen > 0u ) ) ? 1u : 0u;
 
     /* If the application does want the Content-Length header automatically
      * written. Then send the headers in pRequestHeaders without the final
@@ -871,7 +866,7 @@ static HTTPStatus_t sendHttpHeaders( const HTTPTransportInterface_t * pTransport
         if( shouldSendContentLength == 1u )
         {
             /* Send the Content-Length header over the network. */
-            returnStatus = sendHttpContentLength( pTransport, reqBodyBufLen );
+            returnStatus = sendHttpContentLength( pTransport, reqBodyLen );
         }
     }
 

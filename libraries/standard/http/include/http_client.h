@@ -8,8 +8,8 @@
 /**
  * @brief Maximum size, in bytes, of headers allowed from the server.
  *
- * If the total size in bytes of the headers sent from this server exceeds this
- * configuration, then the status code
+ * If the total size in bytes of the headers received from the server exceeds
+ * this configuration, then the status code
  * #HTTP_SECURITY_ALERT_RESPONSE_HEADERS_SIZE_LIMIT_EXCEEDED is returned from
  * #HTTPClient_Send.
  */
@@ -38,7 +38,7 @@
 
 /**
  * @section http_send_flags
- * @brief Flags for #HTTPClient_Send parameter flags.
+ * @brief Values for #HTTPClient_Send flags parameter.
  * These flags control some behavior of sending the request or receiving the
  * response.
  *
@@ -53,7 +53,7 @@
  * @brief Set this flag to disable automatically sending the Content-Length
  * header to the server.
  *
- * This flag is valid only for #HTTPClient_Send.
+ * This flag is valid only for #HTTPClient_Send.flags.
  */
 #define HTTP_SEND_DISABLE_CONTENT_LENGTH_FLAG    0x1U
 
@@ -71,7 +71,8 @@
  */
 
 /**
- * @brief Set this flag to indicate the request is for a persistent connection.
+ * @brief Set this flag to indicate that the request is for a persistent
+ * connection.
  *
  * Setting this will cause a "Connection: Keep-Alive" to be written to the
  * request headers.

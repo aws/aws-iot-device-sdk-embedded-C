@@ -104,8 +104,8 @@
 /**
  * @brief Maximum buffer space for storing a Range Request Value.
  *
- * Largest size is of the form:
- * "bytes=<Max-Integer-Value>-<<Max-Integer-Value>"
+ * The largest Range Request value is of the form:
+ * "bytes=<Max-Integer-Value>-<Max-Integer-Value>"
  */
 #define HTTP_MAX_RANGE_REQUEST_VALUE_LEN                                            \
     ( HTTP_RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN + MAX_INT32_NO_OF_DECIMAL_DIGITS + \
