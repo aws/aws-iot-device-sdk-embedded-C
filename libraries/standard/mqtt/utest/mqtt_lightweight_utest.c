@@ -1634,6 +1634,9 @@ void test_MQTT_GetIncomingPacketTypeAndLength( void )
 
 /* ========================================================================== */
 
+/**
+ * @brief Tests that MQTT_SerializePublishHeader works as intended.
+ */
 void test_MQTT_SerializePublishHeader( void )
 {
     MQTTPublishInfo_t publishInfo;
@@ -1738,6 +1741,9 @@ void test_MQTT_SerializePublishHeader( void )
 
 /* ========================================================================== */
 
+/**
+ * @brief Tests that MQTT_SerializeAck works as intended.
+ */
 void test_MQTT_SerializeAck( void )
 {
     uint8_t buffer[ 200 ];
@@ -1758,6 +1764,7 @@ void test_MQTT_SerializeAck( void )
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
     status = MQTT_SerializeAck( &fixedBuffer, packetType, 0 );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
     /* Not a PUBACK, PUBREC, PUBREL, or PUBCOMP. */
     status = MQTT_SerializeAck( &fixedBuffer, MQTT_PACKET_TYPE_CONNACK, PACKET_ID );

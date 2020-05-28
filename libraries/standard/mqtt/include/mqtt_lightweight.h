@@ -478,6 +478,10 @@ MQTTStatus_t MQTT_GetPingreqPacketSize( size_t * pPacketSize );
  */
 MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * const pBuffer );
 
+MQTTStatus_t MQTT_GetIncomingPacket( MQTTTransportRecvFunc_t recvFunc,
+                                     MQTTNetworkContext_t networkContext,
+                                     MQTTPacketInfo_t * const pIncomingPacket );
+
 /**
  * @brief Deserialize an MQTT PUBLISH packet.
  *
