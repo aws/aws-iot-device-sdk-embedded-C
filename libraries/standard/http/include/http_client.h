@@ -444,7 +444,7 @@ typedef struct HTTPResponse
  *     User-Agent: <HTTP_USER_AGENT_VALUE>
  *     Host: <#HTTPRequestInfo_t.pHost>
  *
- * Note that "Connection" header value can be added and set to "keep-alive" by
+ * Note that "Connection" header can be added and set to "keep-alive" by
  * activating the HTTP_REQUEST_KEEP_ALIVE_FLAG in #HTTPRequestInfo_t.flags.
  *
  * @param[in] pRequestHeaders Request header buffer information.
