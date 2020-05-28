@@ -1297,23 +1297,19 @@ void test_MQTT_Subscribe_invalid_params( void )
     MQTTSubscribeInfo_t subscribeInfo;
 
     /* Call subscribe with a NULL context. */
-    mqttStatus = MQTT_Subscribe( NULL, &subscribeInfo, 1,
-                                 MQTT_FIRST_VALID_PACKET_ID );
+    mqttStatus = MQTT_Subscribe( NULL, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
     /* Call subscribe with a NULL subscription list. */
-    mqttStatus = MQTT_Subscribe( &context, NULL, 1,
-                                 MQTT_FIRST_VALID_PACKET_ID );
+    mqttStatus = MQTT_Subscribe( &context, NULL, 1, MQTT_FIRST_VALID_PACKET_ID );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
     /* Call subscribe with 0 subscriptions. */
-    mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 0,
-                                 MQTT_FIRST_VALID_PACKET_ID );
+    mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 0, MQTT_FIRST_VALID_PACKET_ID );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
     /* Packet ID cannot be 0 per MQTT 3.1.1 spec. */
-    mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1,
-                                 0 );
+    mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1, 0 );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 }
 
@@ -1347,8 +1343,7 @@ void test_MQTT_Subscribe_happy_path( void )
     MQTT_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
     MQTT_SerializeSubscribe_ExpectAnyArgsAndReturn( MQTTSuccess );
     /* Expect the above calls when running MQTT_Subscribe. */
-    mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1,
-                                 MQTT_FIRST_VALID_PACKET_ID );
+    mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 }
 
@@ -1385,8 +1380,7 @@ void test_MQTT_Subscribe_error_paths( void )
     MQTT_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
     MQTT_SerializeSubscribe_ExpectAnyArgsAndReturn( MQTTSuccess );
     /* Expect the above calls when running MQTT_Subscribe. */
-    mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1,
-                                 MQTT_FIRST_VALID_PACKET_ID );
+    mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID );
     TEST_ASSERT_EQUAL( MQTTSendFailed, mqttStatus );
 }
 
@@ -1404,23 +1398,19 @@ void test_MQTT_Unsubscribe_invalid_params( void )
     MQTTSubscribeInfo_t subscribeInfo;
 
     /* Call subscribe with a NULL context. */
-    mqttStatus = MQTT_Unsubscribe( NULL, &subscribeInfo, 1,
-                                   MQTT_FIRST_VALID_PACKET_ID );
+    mqttStatus = MQTT_Unsubscribe( NULL, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
     /* Call subscribe with a NULL subscription list. */
-    mqttStatus = MQTT_Unsubscribe( &context, NULL, 1,
-                                   MQTT_FIRST_VALID_PACKET_ID );
+    mqttStatus = MQTT_Unsubscribe( &context, NULL, 1, MQTT_FIRST_VALID_PACKET_ID );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
     /* Call subscribe with 0 subscriptions. */
-    mqttStatus = MQTT_Unsubscribe( &context, &subscribeInfo, 0,
-                                   MQTT_FIRST_VALID_PACKET_ID );
+    mqttStatus = MQTT_Unsubscribe( &context, &subscribeInfo, 0, MQTT_FIRST_VALID_PACKET_ID );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
     /* Packet ID cannot be 0 per MQTT 3.1.1 spec. */
-    mqttStatus = MQTT_Unsubscribe( &context, &subscribeInfo, 1,
-                                   0 );
+    mqttStatus = MQTT_Unsubscribe( &context, &subscribeInfo, 1, 0 );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 }
 
@@ -1453,8 +1443,7 @@ void test_MQTT_Unsubscribe_happy_path( void )
     MQTT_GetUnsubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
     MQTT_SerializeUnsubscribe_ExpectAnyArgsAndReturn( MQTTSuccess );
     /* Expect the above calls when running MQTT_Unsubscribe. */
-    mqttStatus = MQTT_Unsubscribe( &context, &subscribeInfo, 1,
-                                   MQTT_FIRST_VALID_PACKET_ID );
+    mqttStatus = MQTT_Unsubscribe( &context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 }
 
@@ -1491,8 +1480,7 @@ void test_MQTT_Unsubscribe_error_path( void )
     MQTT_GetUnsubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
     MQTT_SerializeUnsubscribe_ExpectAnyArgsAndReturn( MQTTSuccess );
     /* Expect the above calls when running MQTT_Unsubscribe. */
-    mqttStatus = MQTT_Unsubscribe( &context, &subscribeInfo, 1,
-                                   MQTT_FIRST_VALID_PACKET_ID );
+    mqttStatus = MQTT_Unsubscribe( &context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID );
     TEST_ASSERT_EQUAL( MQTTSendFailed, mqttStatus );
 }
 
