@@ -1448,9 +1448,9 @@ void test_MQTT_Unsubscribe_happy_path( void )
     mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     /* Verify MQTTSuccess is returned with the following mocks. */
-    MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
-    MQTT_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
+    MQTT_GetUnsubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetUnsubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
+    MQTT_GetUnsubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
     MQTT_SerializeUnsubscribe_ExpectAnyArgsAndReturn( MQTTSuccess );
     /* Expect the above calls when running MQTT_Unsubscribe. */
     mqttStatus = MQTT_Unsubscribe( &context, &subscribeInfo, 1,
@@ -1486,9 +1486,9 @@ void test_MQTT_Unsubscribe_error_path( void )
     mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     /* Verify MQTTSendFailed is propagated when transport interface returns an error. */
-    MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
-    MQTT_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
+    MQTT_GetUnsubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetUnsubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
+    MQTT_GetUnsubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
     MQTT_SerializeUnsubscribe_ExpectAnyArgsAndReturn( MQTTSuccess );
     /* Expect the above calls when running MQTT_Unsubscribe. */
     mqttStatus = MQTT_Unsubscribe( &context, &subscribeInfo, 1,
