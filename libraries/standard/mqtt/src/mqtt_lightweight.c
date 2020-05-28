@@ -712,42 +712,24 @@ static MQTTStatus_t processPublishFlags( uint8_t publishFlags,
 
 static void logConnackResponse( uint8_t responseCode )
 {
+    const char * const pConnackResponses[ 6 ] =
+    {
+        "Connection accepted.",                               /* 0 */
+        "Connection refused: unacceptable protocol version.", /* 1 */
+        "Connection refused: identifier rejected.",           /* 2 */
+        "Connection refused: server unavailable",             /* 3 */
+        "Connection refused: bad user name or password.",     /* 4 */
+        "Connection refused: not authorized."                 /* 5 */
+    };
+
     /* Avoid unused parameter warning when assert and logs are disabled. */
     ( void ) responseCode;
+    ( void ) pConnackResponses;
 
     assert( responseCode <= 5 );
 
     /* Log an error based on the CONNACK response code. */
-    switch( responseCode )
-    {
-        case 0u:
-            LogInfo( ( "Connection accepted." ) );
-            break;
-
-        case 1u:
-            LogInfo( ( "Connection refused: unacceptable protocol version." ) );
-            break;
-
-        case 2u:
-            LogInfo( ( "Connection refused: identifier rejected." ) );
-            break;
-
-        case 3u:
-            LogInfo( ( "Connection refused: server unavailable" ) );
-            break;
-
-        case 4u:
-            LogInfo( ( "Connection refused: bad user name or password." ) );
-            break;
-
-        case 5u:
-            LogInfo( ( "Connection refused: not authorized." ) );
-            break;
-
-        default:
-            /* Empty default MISRA 16.4. */
-            break;
-    }
+    LogError( ( "%s", pConnackResponses[ responseCode ] ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -1803,6 +1785,11 @@ MQTTStatus_t MQTT_SerializeAck( const MQTTFixedBuffer_t * const pBuffer,
         LogError( ( "Insufficient memory for packet." ) );
         status = MQTTNoMemory;
     }
+    else if( packetId == 0U )
+    {
+        LogError( ( "Packet ID cannot be 0." ) );
+        status = MQTTBadParameter;
+    }
     else
     {
         switch( packetType )
@@ -1833,10 +1820,20 @@ MQTTStatus_t MQTT_SerializeAck( const MQTTFixedBuffer_t * const pBuffer,
 
 MQTTStatus_t MQTT_GetDisconnectPacketSize( size_t * pPacketSize )
 {
-    /* MQTT DISCONNECT packets always have the same size. */
-    *pPacketSize = MQTT_DISCONNECT_PACKET_SIZE;
+    MQTTStatus_t status = MQTTSuccess;
 
-    return MQTTSuccess;
+    if( pPacketSize == NULL )
+    {
+        LogError( ( "pPacketSize is NULL." ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        /* MQTT DISCONNECT packets always have the same size. */
+        *pPacketSize = MQTT_DISCONNECT_PACKET_SIZE;
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/
@@ -1925,15 +1922,6 @@ MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * const pBuffer )
     }
 
     return status;
-}
-
-/*-----------------------------------------------------------*/
-
-MQTTStatus_t MQTT_GetIncomingPacket( MQTTTransportRecvFunc_t recvFunc,
-                                     MQTTNetworkContext_t networkContext,
-                                     MQTTPacketInfo_t * const pIncomingPacket )
-{
-    return MQTTSuccess;
 }
 
 /*-----------------------------------------------------------*/

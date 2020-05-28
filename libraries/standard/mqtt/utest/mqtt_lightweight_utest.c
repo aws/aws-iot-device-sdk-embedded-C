@@ -1045,6 +1045,24 @@ void test_MQTT_SerializePublish( void )
 /* ========================================================================== */
 
 /**
+ * @brief Tests that MQTT_GetDisconnectPacketSize works as intended.
+ */
+void test_MQTT_GetDisconnectPacketSize( void )
+{
+    MQTTStatus_t status;
+    size_t packetSize;
+
+    /* Verify parameters. */
+    status = MQTT_GetDisconnectPacketSize( NULL );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Good case succeeds. A DISCONNECT is 2 bytes. */
+    status = MQTT_GetDisconnectPacketSize( &packetSize );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL_INT( 2, packetSize );
+}
+
+/**
  * @brief Tests that MQTT_SerializeDisconnect works as intended.
  */
 void test_MQTT_SerializeDisconnect( void )
@@ -1068,6 +1086,24 @@ void test_MQTT_SerializeDisconnect( void )
     status = MQTT_SerializeDisconnect( &fixedBuffer );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     checkBufferOverflow( buffer, sizeof( buffer ) );
+}
+
+/**
+ * @brief Tests that MQTT_GetPingreqPacketSize works as intended.
+ */
+void test_MQTT_GetPingreqPacketSize( void )
+{
+    MQTTStatus_t status;
+    size_t packetSize;
+
+    /* Verify parameters. */
+    status = MQTT_GetPingreqPacketSize( NULL );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Good case succeeds. A PINGREQ is 2 bytes. */
+    status = MQTT_GetPingreqPacketSize( &packetSize );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL_INT( 2, packetSize );
 }
 
 /**
@@ -1644,6 +1680,67 @@ void test_MQTT_SerializePublishHeader( void )
                                           &fixedBuffer,
                                           &headerSize );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+}
+
+/* ========================================================================== */
+
+void test_MQTT_SerializeAck( void )
+{
+    uint8_t buffer[ 200 ];
+    uint8_t expectedPacket[ MQTT_PUBLISH_ACK_PACKET_SIZE ];
+    size_t bufferSize = sizeof( buffer );
+    MQTTStatus_t status = MQTTSuccess;
+    MQTTFixedBuffer_t fixedBuffer = { .pBuffer = buffer, .size = bufferSize };
+    uint8_t packetType = MQTT_PACKET_TYPE_PUBACK;
+
+    const uint16_t PACKET_ID = 1;
+    expectedPacket[ 0 ] = packetType;
+    expectedPacket[ 1 ] = 2U;
+    expectedPacket[ 2 ] = PACKET_ID >> 8;
+    expectedPacket[ 3 ] = PACKET_ID & UINT8_MAX;
+
+    /* Verify parameters. */
+    status = MQTT_SerializeAck( NULL, packetType, PACKET_ID );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    status = MQTT_SerializeAck( &fixedBuffer, packetType, 0 );
+
+    /* Not a PUBACK, PUBREC, PUBREL, or PUBCOMP. */
+    status = MQTT_SerializeAck( &fixedBuffer, MQTT_PACKET_TYPE_CONNACK, PACKET_ID );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* An ack is 4 bytes. */
+    fixedBuffer.size = 3;
+    status = MQTT_SerializeAck( &fixedBuffer, packetType, PACKET_ID );
+    TEST_ASSERT_EQUAL_INT( MQTTNoMemory, status );
+    fixedBuffer.size = bufferSize;
+
+    /* Good case succeeds. */
+    status = MQTT_SerializeAck( &fixedBuffer, packetType, PACKET_ID );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL_MEMORY( expectedPacket, buffer, MQTT_PUBLISH_ACK_PACKET_SIZE );
+
+    /* QoS 2 acks. */
+    packetType = MQTT_PACKET_TYPE_PUBREC;
+    expectedPacket[ 0 ] = packetType;
+    memset( ( void * ) buffer, 0x00, bufferSize );
+    status = MQTT_SerializeAck( &fixedBuffer, packetType, PACKET_ID );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL_MEMORY( expectedPacket, buffer, MQTT_PUBLISH_ACK_PACKET_SIZE );
+
+    packetType = MQTT_PACKET_TYPE_PUBREL;
+    expectedPacket[ 0 ] = packetType;
+    memset( ( void * ) buffer, 0x00, bufferSize );
+    status = MQTT_SerializeAck( &fixedBuffer, packetType, PACKET_ID );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL_MEMORY( expectedPacket, buffer, MQTT_PUBLISH_ACK_PACKET_SIZE );
+
+    packetType = MQTT_PACKET_TYPE_PUBCOMP;
+    expectedPacket[ 0 ] = packetType;
+    memset( ( void * ) buffer, 0x00, bufferSize );
+    status = MQTT_SerializeAck( &fixedBuffer, packetType, PACKET_ID );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL_MEMORY( expectedPacket, buffer, MQTT_PUBLISH_ACK_PACKET_SIZE );
 }
 
 /* =====================  Testing MQTT_SerializeConnect ===================== */
