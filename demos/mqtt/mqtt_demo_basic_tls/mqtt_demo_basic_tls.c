@@ -444,10 +444,6 @@ static int tlsSetup( int tcpSocket,
                         " provided by SERVER_CERT_PATH(%.*s).",
                         SERVER_CERT_PATH_LEN,
                         SERVER_CERT_PATH ) );
-
-            /* Assert here in the step so as to help configure the path
-             * to certificate file. */
-            assert( false );
         }
 
         if( pRootCa != NULL )
@@ -461,10 +457,6 @@ static int tlsSetup( int tcpSocket,
                         " file %.*s. Please validate the certificate.",
                         SERVER_CERT_PATH_LEN,
                         SERVER_CERT_PATH ) );
-
-            /* Assert here in the step so as to help configure the path
-             * to certificate file. */
-            assert( false );
         }
     }
 
