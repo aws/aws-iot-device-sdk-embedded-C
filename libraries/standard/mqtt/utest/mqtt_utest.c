@@ -293,23 +293,6 @@ static void setupCallbacks( MQTTApplicationCallbacks_t * pCallbacks )
     pCallbacks->getTime = getTime;
 }
 
-/* Mocked MQTT_GetIncomingPacketTypeAndLength callback that modifies pIncomingPacket
- * to get full coverage on handleIncomingAck by setting the type to CONNECT. */
-static MQTTStatus_t modifyIncomingPacket( MQTTTransportRecvFunc_t readFunc,
-                                          MQTTNetworkContext_t networkContext,
-                                          MQTTPacketInfo_t * pIncomingPacket,
-                                          int cmock_num_calls )
-{
-    /* Remove unused parameter warnings. */
-    ( void ) readFunc;
-    ( void ) networkContext;
-    ( void ) cmock_num_calls;
-
-    pIncomingPacket->type = currentPacketType;
-    pIncomingPacket->remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
-    return modifyIncomingPacketStatus;
-}
-
 /**
  * @brief This helper function is used to expect any calls from the process loop
  * to mocked functions belonging to an external header file. Its parameters
@@ -328,7 +311,12 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext,
     size_t pingreqSize = MQTT_PACKET_PINGREQ_SIZE;
     bool expectMoreCalls = true;
 
-    MQTT_GetIncomingPacketTypeAndLength_Stub( modifyIncomingPacket );
+    /* Modify incoming packet depending on type to be tested. */
+    incomingPacket.type = currentPacketType;
+    incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( modifyIncomingPacketStatus );
+    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
 
     /* More calls are expected only with the following packet types. */
     if( ( currentPacketType != MQTT_PACKET_TYPE_PUBLISH ) &&
