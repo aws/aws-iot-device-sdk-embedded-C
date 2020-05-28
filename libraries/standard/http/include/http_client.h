@@ -443,10 +443,9 @@ typedef struct HTTPResponse
  *     <#HTTPRequestInfo_t.method> <#HTTPRequestInfo_t.pPath> <HTTP_PROTOCOL_VERSION>
  *     User-Agent: <HTTP_USER_AGENT_VALUE>
  *     Host: <#HTTPRequestInfo_t.pHost>
- *     Connection: close
  *
- * Note that Connection header value can be changed to keep-alive by setting
- * the HTTP_REQUEST_KEEP_ALIVE_FLAG in #HTTPRequestInfo_t.flags.
+ * Note that "Connection" header can be added and set to "keep-alive" by
+ * activating the HTTP_REQUEST_KEEP_ALIVE_FLAG in #HTTPRequestInfo_t.flags.
  *
  * @param[in] pRequestHeaders Request header buffer information.
  * @param[in] pRequestInfo Initial request header configurations.

@@ -47,18 +47,20 @@ typedef struct _headers
 #define HTTP_TEST_HEADER_FORMAT \
     "%s %s %s\r\n"              \
     "%s: %s\r\n"                \
-    "%s: %s\r\n"                \
+    "%s: %s\r\n\r\n"
+
+#define HTTP_TEST_EXTRA_HEADER_FORMAT \
+    "%s %s %s\r\n"                    \
+    "%s: %s\r\n"                      \
+    "%s: %s\r\n"                      \
     "%s: %s\r\n\r\n"
 
 /* Length of the following template HTTP header.
  *   <HTTP_METHOD_GET> <HTTP_TEST_REQUEST_PATH> <HTTP_PROTOCOL_VERSION> \r\n
  *   <HTTP_USER_AGENT_FIELD>: <HTTP_USER_AGENT_FIELD_LEN> \r\n
  *   <HTTP_HOST_FIELD>: <HTTP_TEST_HOST_VALUE> \r\n
- *   <HTTP_CONNECTION_FIELD>: \r\n
  *   \r\n
- * This is used to initialize the expectedHeader string. Note the missing
- * <HTTP_TEST_CONNECTION_VALUE>. This is added later on depending on the
- * value of HTTP_REQUEST_KEEP_ALIVE_FLAG in pRequestInfo->flags. */
+ * This is used to initialize the expectedHeader string. */
 #define HTTP_TEST_PREFIX_HEADER_LEN                                 \
     ( HTTP_METHOD_GET_LEN + SPACE_CHARACTER_LEN +                   \
       HTTP_TEST_REQUEST_PATH_LEN + SPACE_CHARACTER_LEN +            \
@@ -67,18 +69,11 @@ typedef struct _headers
       HTTP_USER_AGENT_VALUE_LEN + HTTP_HEADER_LINE_SEPARATOR_LEN +  \
       HTTP_HOST_FIELD_LEN + HTTP_HEADER_FIELD_SEPARATOR_LEN +       \
       HTTP_TEST_HOST_VALUE_LEN + HTTP_HEADER_LINE_SEPARATOR_LEN +   \
-      HTTP_CONNECTION_FIELD_LEN + HTTP_HEADER_FIELD_SEPARATOR_LEN + \
-      HTTP_HEADER_LINE_SEPARATOR_LEN +                              \
       HTTP_HEADER_LINE_SEPARATOR_LEN )
-
-/* Add HTTP_CONNECTION_KEEP_ALIVE_VALUE_LEN to account for longest possible
- * length of template header. */
-#define HTTP_TEST_MAX_INITIALIZED_HEADER_LEN \
-    ( HTTP_TEST_PREFIX_HEADER_LEN + HTTP_CONNECTION_KEEP_ALIVE_VALUE_LEN )
 
 /* Add 1 because snprintf(...) writes a null byte at the end. */
 #define HTTP_TEST_INITIALIZED_HEADER_BUFFER_LEN \
-    ( HTTP_TEST_MAX_INITIALIZED_HEADER_LEN + 1 )
+    ( HTTP_TEST_PREFIX_HEADER_LEN + 1 )
 
 /* Template HTTP header fields and values. */
 #define HTTP_TEST_HEADER_FIELD               "Authorization"
@@ -397,8 +392,7 @@ void test_Http_InitializeRequestHeaders_Happy_Path()
     int numBytes = 0;
 
     setupRequestInfo( &requestInfo );
-    expectedHeaders.dataLen = HTTP_TEST_PREFIX_HEADER_LEN +
-                              HTTP_CONNECTION_CLOSE_VALUE_LEN;
+    expectedHeaders.dataLen = HTTP_TEST_PREFIX_HEADER_LEN;
     setupBuffer( &requestHeaders );
 
     /* Happy Path testing. */
@@ -407,8 +401,7 @@ void test_Http_InitializeRequestHeaders_Happy_Path()
                          HTTP_METHOD_GET, HTTP_TEST_REQUEST_PATH,
                          HTTP_PROTOCOL_VERSION,
                          HTTP_USER_AGENT_FIELD, HTTP_USER_AGENT_VALUE,
-                         HTTP_HOST_FIELD, HTTP_TEST_HOST_VALUE,
-                         HTTP_CONNECTION_FIELD, HTTP_CONNECTION_CLOSE_VALUE );
+                         HTTP_HOST_FIELD, HTTP_TEST_HOST_VALUE );
     /* Make sure that the entire pre-existing data was printed to the buffer. */
     TEST_ASSERT_GREATER_THAN( 0, numBytes );
     TEST_ASSERT_LESS_THAN( sizeof( expectedHeaders.buffer ), ( size_t ) numBytes );
@@ -474,18 +467,23 @@ void test_Http_InitializeRequestHeaders_ReqInfo()
     HTTPRequestHeaders_t requestHeaders = { 0 };
     HTTPRequestInfo_t requestInfo = { 0 };
     int numBytes = 0;
+    size_t connectionKeepAliveHeaderLen = HTTP_CONNECTION_FIELD_LEN +
+                                          HTTP_HEADER_FIELD_SEPARATOR_LEN +
+                                          HTTP_CONNECTION_KEEP_ALIVE_VALUE_LEN +
+                                          HTTP_HEADER_LINE_SEPARATOR_LEN;
 
-    setupRequestInfo( &requestInfo );
     expectedHeaders.dataLen = HTTP_TEST_PREFIX_HEADER_LEN -
                               HTTP_TEST_REQUEST_PATH_LEN +
                               HTTP_EMPTY_PATH_LEN +
-                              HTTP_CONNECTION_KEEP_ALIVE_VALUE_LEN;
+                              connectionKeepAliveHeaderLen;
+
+    setupRequestInfo( &requestInfo );
     setupBuffer( &requestHeaders );
 
     requestInfo.pPath = 0;
     requestInfo.flags = HTTP_REQUEST_KEEP_ALIVE_FLAG;
     numBytes = snprintf( ( char * ) expectedHeaders.buffer, sizeof( expectedHeaders.buffer ),
-                         HTTP_TEST_HEADER_FORMAT,
+                         HTTP_TEST_EXTRA_HEADER_FORMAT,
                          HTTP_METHOD_GET, HTTP_EMPTY_PATH,
                          HTTP_PROTOCOL_VERSION,
                          HTTP_USER_AGENT_FIELD, HTTP_USER_AGENT_VALUE,
@@ -514,7 +512,7 @@ void test_Http_InitializeRequestHeaders_Insufficient_Memory()
     HTTPRequestHeaders_t requestHeaders = { 0 };
     HTTPRequestInfo_t requestInfo = { 0 };
 
-    expectedHeaders.dataLen = HTTP_TEST_MAX_INITIALIZED_HEADER_LEN;
+    expectedHeaders.dataLen = HTTP_TEST_PREFIX_HEADER_LEN;
 
     setupRequestInfo( &requestInfo );
     setupBuffer( &requestHeaders );
