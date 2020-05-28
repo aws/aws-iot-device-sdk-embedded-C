@@ -1068,6 +1068,8 @@ void test_MQTT_SerializePublish( void )
     publishInfo.dup = true;
     publishInfo.pTopicName = longTopic;
     publishInfo.topicNameLength = strlen( longTopic );
+    publishInfo.pPayload = MQTT_SAMPLE_PAYLOAD;
+    publishInfo.payloadLength = MQTT_SAMPLE_PAYLOAD_LEN;
     memset( ( void * ) buffer, 0x00, bufferSize );
     /* Calculate exact packet size and remaining length. */
     status = MQTT_GetPublishPacketSize( &publishInfo, &remainingLength, &packetSize );
@@ -1089,6 +1091,7 @@ void test_MQTT_SerializePublish( void )
     pIterator += encodeString( pIterator, publishInfo.pTopicName, publishInfo.topicNameLength );
     *pIterator++ = UINT16_HIGH_BYTE( PACKET_ID );
     *pIterator++ = UINT16_LOW_BYTE( PACKET_ID );
+    ( void ) memcpy( pIterator, publishInfo.pPayload, publishInfo.payloadLength );
     TEST_ASSERT_EQUAL_MEMORY( expectedPacket, &buffer[ BUFFER_PADDING_LENGTH ], packetSize );
 }
 
@@ -1643,11 +1646,13 @@ void test_MQTT_SerializePublishHeader( void )
     size_t remainingLength = 0;
     uint16_t packetIdentifier;
     uint8_t * pPacketIdentifierHigh;
-    uint8_t buffer[ 200 ];
-    size_t bufferSize = sizeof( buffer );
+    uint8_t buffer[ 200 + 2 * BUFFER_PADDING_LENGTH ];
+    uint8_t expectedPacket[ 200 ];
+    uint8_t * pIterator;
+    size_t bufferSize = sizeof( buffer ) - 2 * BUFFER_PADDING_LENGTH;
     size_t packetSize = bufferSize;
     MQTTStatus_t status = MQTTSuccess;
-    MQTTFixedBuffer_t fixedBuffer = { .pBuffer = buffer, .size = bufferSize };
+    MQTTFixedBuffer_t fixedBuffer = { .pBuffer = &buffer[ BUFFER_PADDING_LENGTH ], .size = bufferSize };
     size_t headerSize = 0;
 
     const uint16_t PACKET_ID = 1;
@@ -1719,24 +1724,50 @@ void test_MQTT_SerializePublishHeader( void )
     /* Success case. */
     status = MQTT_GetPublishPacketSize( &publishInfo, &remainingLength, &packetSize );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    padAndResetBuffer( buffer, sizeof( buffer ) );
     status = MQTT_SerializePublishHeader( &publishInfo,
                                           PACKET_ID,
                                           remainingLength,
                                           &fixedBuffer,
                                           &headerSize );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    /* MQTT PUBLISH packet format:
+     * 0x30 | publish flags (dup, qos, retain) (1 byte)
+     * Remaining length (1-4 bytes)
+     * Topic name length (2 bytes)
+     * Topic name (variable)
+     * Packet ID (if QoS > 0) (1 byte)
+     * Payload (>= 0 bytes) */
+    memset( ( void * ) expectedPacket, 0x00, sizeof( expectedPacket ) );
+    pIterator = expectedPacket;
+    *pIterator++ = MQTT_PACKET_TYPE_PUBLISH | ( publishInfo.qos << 1 );
+    pIterator += encodeRemainingLength( pIterator, remainingLength );
+    pIterator += encodeString( pIterator, publishInfo.pTopicName, publishInfo.topicNameLength );
+    *pIterator++ = UINT16_HIGH_BYTE( PACKET_ID );
+    *pIterator++ = UINT16_LOW_BYTE( PACKET_ID );
+    TEST_ASSERT_EQUAL_MEMORY( expectedPacket, &buffer[ BUFFER_PADDING_LENGTH ], packetSize );
+    checkBufferOverflow( buffer, sizeof( buffer ) );
 
     publishInfo.qos = MQTTQoS0;
     publishInfo.pPayload = "test";
     publishInfo.payloadLength = 4;
     status = MQTT_GetPublishPacketSize( &publishInfo, &remainingLength, &packetSize );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    padAndResetBuffer( buffer, sizeof( buffer ) );
     status = MQTT_SerializePublishHeader( &publishInfo,
                                           0,
                                           remainingLength,
                                           &fixedBuffer,
                                           &headerSize );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    memset( ( void * ) expectedPacket, 0x00, sizeof( expectedPacket ) );
+    pIterator = expectedPacket;
+    *pIterator++ = MQTT_PACKET_TYPE_PUBLISH;
+    pIterator += encodeRemainingLength( pIterator, remainingLength );
+    pIterator += encodeString( pIterator, publishInfo.pTopicName, publishInfo.topicNameLength );
+    /* Payload should not be serialized. */
+    TEST_ASSERT_EQUAL_MEMORY( expectedPacket, &buffer[ BUFFER_PADDING_LENGTH ], packetSize );
+    checkBufferOverflow( buffer, sizeof( buffer ) );
 }
 
 /* ========================================================================== */
@@ -1746,18 +1777,18 @@ void test_MQTT_SerializePublishHeader( void )
  */
 void test_MQTT_SerializeAck( void )
 {
-    uint8_t buffer[ 200 ];
+    uint8_t buffer[ 10 + 2 * BUFFER_PADDING_LENGTH ];
     uint8_t expectedPacket[ MQTT_PUBLISH_ACK_PACKET_SIZE ];
-    size_t bufferSize = sizeof( buffer );
+    size_t bufferSize = sizeof( buffer ) - 2 * BUFFER_PADDING_LENGTH;
     MQTTStatus_t status = MQTTSuccess;
-    MQTTFixedBuffer_t fixedBuffer = { .pBuffer = buffer, .size = bufferSize };
+    MQTTFixedBuffer_t fixedBuffer = { .pBuffer = &buffer[ BUFFER_PADDING_LENGTH ], .size = bufferSize };
     uint8_t packetType = MQTT_PACKET_TYPE_PUBACK;
 
     const uint16_t PACKET_ID = 1;
     expectedPacket[ 0 ] = packetType;
     expectedPacket[ 1 ] = 2U;
-    expectedPacket[ 2 ] = PACKET_ID >> 8;
-    expectedPacket[ 3 ] = PACKET_ID & UINT8_MAX;
+    expectedPacket[ 2 ] = UINT16_HIGH_BYTE( PACKET_ID );
+    expectedPacket[ 3 ] = UINT16_LOW_BYTE( PACKET_ID );
 
     /* Verify parameters. */
     status = MQTT_SerializeAck( NULL, packetType, PACKET_ID );
@@ -1777,31 +1808,36 @@ void test_MQTT_SerializeAck( void )
     fixedBuffer.size = bufferSize;
 
     /* Good case succeeds. */
+    padAndResetBuffer( buffer, sizeof( buffer ) );
     status = MQTT_SerializeAck( &fixedBuffer, packetType, PACKET_ID );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-    TEST_ASSERT_EQUAL_MEMORY( expectedPacket, buffer, MQTT_PUBLISH_ACK_PACKET_SIZE );
+    TEST_ASSERT_EQUAL_MEMORY( expectedPacket, &buffer[ BUFFER_PADDING_LENGTH ], MQTT_PUBLISH_ACK_PACKET_SIZE );
+    checkBufferOverflow( buffer, sizeof( buffer ) );
 
     /* QoS 2 acks. */
     packetType = MQTT_PACKET_TYPE_PUBREC;
     expectedPacket[ 0 ] = packetType;
-    memset( ( void * ) buffer, 0x00, bufferSize );
+    padAndResetBuffer( buffer, sizeof( buffer ) );
     status = MQTT_SerializeAck( &fixedBuffer, packetType, PACKET_ID );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-    TEST_ASSERT_EQUAL_MEMORY( expectedPacket, buffer, MQTT_PUBLISH_ACK_PACKET_SIZE );
+    TEST_ASSERT_EQUAL_MEMORY( expectedPacket, &buffer[ BUFFER_PADDING_LENGTH ], MQTT_PUBLISH_ACK_PACKET_SIZE );
+    checkBufferOverflow( buffer, sizeof( buffer ) );
 
     packetType = MQTT_PACKET_TYPE_PUBREL;
     expectedPacket[ 0 ] = packetType;
-    memset( ( void * ) buffer, 0x00, bufferSize );
+    padAndResetBuffer( buffer, sizeof( buffer ) );
     status = MQTT_SerializeAck( &fixedBuffer, packetType, PACKET_ID );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-    TEST_ASSERT_EQUAL_MEMORY( expectedPacket, buffer, MQTT_PUBLISH_ACK_PACKET_SIZE );
+    TEST_ASSERT_EQUAL_MEMORY( expectedPacket, &buffer[ BUFFER_PADDING_LENGTH ], MQTT_PUBLISH_ACK_PACKET_SIZE );
+    checkBufferOverflow( buffer, sizeof( buffer ) );
 
     packetType = MQTT_PACKET_TYPE_PUBCOMP;
     expectedPacket[ 0 ] = packetType;
-    memset( ( void * ) buffer, 0x00, bufferSize );
+    padAndResetBuffer( buffer, sizeof( buffer ) );
     status = MQTT_SerializeAck( &fixedBuffer, packetType, PACKET_ID );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-    TEST_ASSERT_EQUAL_MEMORY( expectedPacket, buffer, MQTT_PUBLISH_ACK_PACKET_SIZE );
+    TEST_ASSERT_EQUAL_MEMORY( expectedPacket, &buffer[ BUFFER_PADDING_LENGTH ], MQTT_PUBLISH_ACK_PACKET_SIZE );
+    checkBufferOverflow( buffer, sizeof( buffer ) );
 }
 
 /* =====================  Testing MQTT_SerializeConnect ===================== */
