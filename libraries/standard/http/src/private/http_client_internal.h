@@ -128,6 +128,16 @@
  */
 #define HTTP_MINIMUM_REQUEST_LINE_LENGTH    16u
 
+/**
+ * @brief The state of the response message parsed after function
+ * #parseHttpResponse returns.
+ */
+typedef enum HTTPParsingState_t
+{
+    HTTP_PARSING_NONE = 0,   /**< The parser has not started reading any response. */
+    HTTP_PARSING_INCOMPLETE, /**< The parser found a partial reponse. */
+    HTTP_PARSING_COMPLETE    /**< The parser found the entire response. */
+} HTTPParsingState_t;
 
 /**
  * @brief An aggregator that represents the user-provided parameters to the
@@ -143,5 +153,75 @@ typedef struct findHeaderContext
     uint8_t fieldFound;         /**< Indicates that the header field was found during parsing. */
     uint8_t valueFound;         /**< Indicates that the header value was found during parsing. */
 } findHeaderContext_t;
+
+/**
+ * @brief The HTTP response parsing context for a response fresh from the
+ * server. This context is passed into the http-parser registered callbacks.
+ * The registered callbacks are private functions of the form
+ * httpParserXXXXCallbacks().
+ *
+ * The transitions of the httpParserXXXXCallback() functions are shown belown.
+ * The  XXXX is replaced by the strings in the state boxes:
+ *
+ * +---------------------+
+ * |onMessageBegin       |
+ * +--------+------------+
+ *          |
+ *          |
+ *          |
+ *          v
+ * +--------+------------+
+ * |onStatus             |
+ * +--------+------------+
+ *          |
+ *          |
+ *          |
+ *          v
+ * +--------+------------+
+ * |onHeaderField        +<---+
+ * +--------+------------+    |
+ *          |                 |
+ *          |                 |(More headers)
+ *          |                 |
+ *          v                 |
+ * +--------+------------+    |
+ * |onHeaderValue        +----^
+ * +--------+------------+
+ *          |
+ *          |
+ *          |
+ *          v
+ * +--------+------------+
+ * |onHeadersComplete    |
+ * +---------------------+
+ *          |
+ *          |
+ *          |
+ *          v
+ * +--------+------------+
+ * |onBody               +<---+
+ * +--------+--------+---+    |
+ *          |        |        |(Transfer-endoding chunked body)
+ *          |        |        |
+ *          |        +--------+
+ *          |
+ *          v
+ * +--------+------------+
+ * |onMessageComplete    |
+ * +---------------------+
+ */
+typedef struct HTTPParsingContext
+{
+    http_parser httpParser;        /**< Third-party http-parser context. */
+    HTTPParsingState_t state;      /**< The current state of the HTTP response parsed. */
+    HTTPResponse_t * pResponse;    /**< HTTP response associated with this parsing context. */
+    uint8_t isHeadResponse;        /**< HTTP response is for a HEAD request. */
+
+    const char * pBufferCur;       /**< The current location of the parser in the response buffer. */
+    const char * pLastHeaderField; /**< Holds the last part of the header field parsed. */
+    size_t lastHeaderFieldLen;     /**< The length of the last header field parsed. */
+    const char * pLastHeaderValue; /**< Holds the last part of the header value parsed. */
+    size_t lastHeaderValueLen;     /**< The length of the last value field parsed. */
+} HTTPParsingContext_t;
 
 #endif /* ifndef HTTP_CLIENT_INTERNAL_H_ */

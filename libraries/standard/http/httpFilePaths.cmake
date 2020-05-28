@@ -7,8 +7,7 @@
 
 # HTTP library source files.
 set( HTTP_SOURCES
-     ${MODULES_DIR}/standard/http/src/http_client.c
-     ${MODULES_DIR}/standard/http/src/http_client_parse.c )
+     ${MODULES_DIR}/standard/http/src/http_client.c )
 
 # HTTP library Public Include directories.
 set( HTTP_INCLUDE_PUBLIC_DIRS
@@ -18,7 +17,7 @@ set( HTTP_INCLUDE_PUBLIC_DIRS
 # HTTP library Private Include directories.
 set( HTTP_INCLUDE_PRIVATE_DIRS
      ${MODULES_DIR}/standard/http/src
-     ${MODULES_DIR}/standard/http/third_party )
+     ${MODULES_DIR}/standard/http/third_party/http_parser )
 
 # HTTP library Include directories for Tests.
 set( HTTP_TEST_INCLUDE_DIRS
