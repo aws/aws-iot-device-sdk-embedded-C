@@ -34,6 +34,8 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
+#include <openssl/ssl.h>
+
 /* HTTP API header. */
 #include "http_client.h"
 
@@ -50,9 +52,16 @@
 /**
  * @brief HTTP server port number.
  *
- * In general, port 80 is for plaintext HTTP connections.
+ * In general, port 443 is for TLS HTTP connections.
  */
-#define SERVER_PORT    80
+#define SERVER_PORT    443
+
+/**
+ * @brief Path of the file containing the server's root CA certificate.
+ *
+ * This certificate should be PEM-encoded.
+ */
+#define SERVER_CERT    "httpbin.org.crt"
 
 /**
  * @brief Paths for different HTTP methods for specified host.
@@ -123,6 +132,7 @@ static uint8_t requestBodyBuffer[ REQUEST_BODY_TEXT_LENGTH ] = { 0 };
 struct HTTPNetworkContext
 {
     int tcpSocket;
+    SSL * sslContext;
 };
 
 /*-----------------------------------------------------------*/
@@ -140,6 +150,15 @@ struct HTTPNetworkContext
 static int connectToServer( const char * pServer,
                             uint16_t port,
                             int * pTcpSocket );
+
+/**
+ * @brief Set up a TLS connection over an existing TCP connection.
+ *
+ * @param[in] tcpSocket Existing TCP connection.
+ *
+ * @return An SSL connection context; NULL on failure.
+ */
+static SSL * tlsSetup( int tcpSocket );
 
 /**
  * @brief The transport send function that defines the transport interface.
@@ -309,6 +328,109 @@ static int connectToServer( const char * pServer,
 
 /*-----------------------------------------------------------*/
 
+static SSL * tlsSetup( int tcpSocket )
+{
+    int sslStatus = 0;
+    X509 * pCert = NULL;
+    X509_NAME * pCertName = NULL;
+    SSL * pSslContext = NULL;
+    BIO * pCertBio = NULL;
+    /* Only allow TLS. */
+    const long flags = SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_COMPRESSION;
+
+    init_openssl_library();
+
+    /* Setup for creating a TLS client. */
+    SSL_CTX * pSslSetup = SSL_CTX_new( TLS_client_method() );
+
+    /* Set up the TLS connection. */
+    if( pSslSetup != NULL )
+    {
+        SSL_CTX_set_verify( ctx, SSL_VERIFY_PEER, verify_callback );
+
+        SSL_CTX_set_verify_depth( ctx, 4 );
+
+        SSL_CTX_set_options( ctx, flags );
+
+        /* Set auto retry mode for the blocking calls to SSL_read and SSL_write.
+         * The mask returned by SSL_CTX_set_mode does not need to be checked. */
+        ( void ) SSL_CTX_set_mode( pSslSetup, SSL_MODE_AUTO_RETRY );
+
+        /* Create a new SSL context. */
+        pSslContext = SSL_new( pSslSetup );
+
+        if( pSslContext != NULL )
+        {
+            /* Enable SSL peer verification. */
+            SSL_set_verify( pSslContext, SSL_VERIFY_PEER, NULL );
+
+            sslStatus = SSL_set_fd( pSslContext, tcpSocket );
+        }
+        else
+        {
+            sslStatus = 0;
+        }
+    }
+
+    /* Perform the TLS handshake. */
+    if( sslStatus == 1 )
+    {
+        sslStatus = SSL_connect( pSslContext );
+    }
+
+    if( sslStatus == 1 )
+    {
+        pCert = SSL_get_peer_certificate( pSslContext );
+
+        if( pCert == NULL )
+        {
+            LogError( ( "Error: Could not get a certificate from: %s.", SERVER_HOST ) );
+        }
+        else
+        {
+            LogInfo( ( "Retrieved the server's certificate from: %s.", SERVER_HOST ) );
+        }
+
+        /* Extract information from certificate. */
+        pCertName = X509_get_subject_name( pCert );
+
+        /* Possibly print certificate. */
+    }
+    else
+    {
+        LogError( ( "Error: Could not establish TLS session with %s.", SERVER_HOST ) );
+    }
+
+    if( sslStatus == 1 )
+    {
+        if( SSL_get_verify_result( pSslContext ) != X509_V_OK )
+        {
+            sslStatus = 0;
+        }
+    }
+
+    /* Clean up on error. */
+    if( sslStatus == 0 )
+    {
+        SSL_free( pSslContext );
+        pSslContext = NULL;
+    }
+
+    if( pCert != NULL )
+    {
+        X509_free( pCert );
+    }
+
+    if( pSslSetup != NULL )
+    {
+        SSL_CTX_free( pSslSetup );
+    }
+
+    return pSslContext;
+}
+
+/*-----------------------------------------------------------*/
+
 static int32_t transportSend( HTTPNetworkContext_t * pContext,
                               const void * pBuffer,
                               size_t bytesToSend )
@@ -469,7 +591,7 @@ int main()
 {
     int returnStatus = EXIT_SUCCESS;
     HTTPStatus_t httpStatus = HTTP_SUCCESS;
-    HTTPNetworkContext_t socketContext = { 0 };
+    HTTPNetworkContext_t networkContext = { 0 };
     HTTPTransportInterface_t transport = { 0 };
 
     /* Set the request body. */
@@ -479,12 +601,25 @@ int main()
     /**************************** Connect. ******************************/
 
     /* Establish TCP connection. */
-    returnStatus = connectToServer( SERVER_HOST, SERVER_PORT, &socketContext.tcpSocket );
+    returnStatus = connectToServer( SERVER_HOST, SERVER_PORT, &networkContext.tcpSocket );
+
+    /* Establish TLS connection on top of TCP connection. */
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        LogInfo( ( "Establishing a TLS connection on top of the TCP connection." ) );
+        networkContext.sslContext = tlsSetup( networkContext.tcpSocket );
+
+        if( networkContext.sslContext == NULL )
+        {
+            returnStatus = EXIT_FAILURE;
+            LogError( ( "Establishing a TLS connection failed." ) );
+        }
+    }
 
     /* Define the transport interface. */
     transport.recv = transportRecv;
     transport.send = transportSend;
-    transport.pContext = &socketContext;
+    transport.pContext = &networkContext;
 
     /*********************** Send HTTPS request. ************************/
 
@@ -530,10 +665,10 @@ int main()
 
     /************************** Disconnect. *****************************/
 
-    if( socketContext.tcpSocket != -1 )
+    if( networkContext.tcpSocket != -1 )
     {
-        shutdown( socketContext.tcpSocket, SHUT_RDWR );
-        close( socketContext.tcpSocket );
+        shutdown( networkContext.tcpSocket, SHUT_RDWR );
+        close( networkContext.tcpSocket );
     }
 
     return returnStatus;
