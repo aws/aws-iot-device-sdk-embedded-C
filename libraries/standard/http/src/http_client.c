@@ -36,22 +36,22 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
  * returned.
  */
 static HTTPStatus_t sendHttpHeaders( const HTTPTransportInterface_t * pTransport,
-                                     const HTTPRequestHeaders_t * pRequestHeaders,
+                                     HTTPRequestHeaders_t * pRequestHeaders,
                                      size_t reqBodyLen,
                                      uint32_t flags );
 
 /**
- * @brief Send the HTTP Content-Length header line over the transport interface.
+ * @brief Adds the Content-Length header field and value to the
+ * @p pRequestHeaders.
  *
- * @param[in] pTransport Transport interface.
- * @param[in] contentLength The Content-Length header value to send.
+ * @param[in] pRequestHeaders Request header buffer information.
+ * @param[in] contentLength The Content-Length header value to write.
  *
- * @return #HTTP_SUCCESS if successful. If there was a network error or less
- * bytes than what were specified were sent, then #HTTP_NETWORK_ERROR is
- * returned.
+ * @return #HTTP_SUCCESS if successful. If there was insufficient memory in the
+ * application buffer, then #HTTP_INSUFFICIENT_MEMORY is returned.
  */
-static HTTPStatus_t sendHttpContentLength( const HTTPTransportInterface_t * pTransport,
-                                           size_t contentLength );
+static HTTPStatus_t addContentLengthHeader( HTTPRequestHeaders_t * pRequestHeaders,
+                                            size_t contentLength );
 
 /**
  * @brief Send the HTTP body over the transport send interface.
@@ -244,8 +244,6 @@ static int findHeaderValueParserCallback( http_parser * pHttpParser,
  * execution, as all headers have been parsed in the response.
  */
 static int findHeaderOnHeaderCompleteCallback( http_parser * pHttpParser );
-
-/*-----------------------------------------------------------*/
 
 /*-----------------------------------------------------------*/
 
@@ -787,40 +785,33 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
 
 /*-----------------------------------------------------------*/
 
-static HTTPStatus_t sendHttpContentLength( const HTTPTransportInterface_t * pTransport,
-                                           size_t contentLength )
+static HTTPStatus_t addContentLengthHeader( HTTPRequestHeaders_t * pRequestHeaders,
+                                            size_t contentLength )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
-
-    /* The content-length is the final header line sent. It is sent in this
-     * function before the body to utilize the reqBodyBufLen. */
-    char pContentLengthBuffer[ HTTP_MAX_CONTENT_LENGTH_HEADER_LINE_LEN ] = { '\0' };
+    char pContentLengthValue[ MAX_INT32_NO_OF_DECIMAL_DIGITS ] = { '\0' };
+    uint8_t contentLengthValueNumBytes = 0;
     size_t headerLength = 0;
 
-    assert( pTransport != NULL );
+    assert( pRequestHeaders != NULL );
+    assert( contentLength > 0 );
 
-    /* Generate the Content-Length header and send first. */
-    ( void ) memcpy( pContentLengthBuffer,
-                     HTTP_CONTENT_LENGTH_FIELD,
-                     HTTP_CONTENT_LENGTH_FIELD_LEN );
-    headerLength += HTTP_CONTENT_LENGTH_FIELD_LEN;
-    ( void ) memcpy( pContentLengthBuffer + headerLength,
-                     HTTP_HEADER_FIELD_SEPARATOR,
-                     HTTP_HEADER_FIELD_SEPARATOR_LEN );
-    headerLength += HTTP_HEADER_FIELD_SEPARATOR_LEN;
-    headerLength += convertInt32ToAscii( ( int32_t ) contentLength,
-                                         pContentLengthBuffer + headerLength,
-                                         sizeof( pContentLengthBuffer ) - headerLength );
-    ( void ) memcpy( pContentLengthBuffer + headerLength,
-                     HTTP_HEADER_END_INDICATOR,
-                     HTTP_HEADER_END_INDICATOR_LEN );
-    headerLength += HTTP_HEADER_END_INDICATOR_LEN;
+    contentLengthValueNumBytes = convertInt32ToAscii( ( int32_t ) contentLength,
+                                                      pContentLengthValue,
+                                                      sizeof( pContentLengthValue ) );
 
-    LogDebug( ( "Sending the HTTP request Content-Length header: "
-                "HeaderBytes=%d",
-                headerLength ) );
+    returnStatus = addHeader( pRequestHeaders,
+                              ( const uint8_t * ) HTTP_CONTENT_LENGTH_FIELD,
+                              HTTP_CONTENT_LENGTH_FIELD_LEN,
+                              ( const uint8_t * ) pContentLengthValue,
+                              contentLengthValueNumBytes );
 
-    returnStatus = sendHttpData( pTransport, ( const uint8_t * ) pContentLengthBuffer, headerLength );
+    if( returnStatus != HTTP_SUCCESS )
+    {
+        LogError( ( "Failed to write Content-Length header to the request "
+                    "header buffer: ContentLengthValue: %lu",
+                    ( unsigned long ) contentLength ) );
+    }
 
     return returnStatus;
 }
@@ -828,7 +819,7 @@ static HTTPStatus_t sendHttpContentLength( const HTTPTransportInterface_t * pTra
 /*-----------------------------------------------------------*/
 
 static HTTPStatus_t sendHttpHeaders( const HTTPTransportInterface_t * pTransport,
-                                     const HTTPRequestHeaders_t * pRequestHeaders,
+                                     HTTPRequestHeaders_t * pRequestHeaders,
                                      size_t reqBodyLen,
                                      uint32_t flags )
 {
@@ -847,27 +838,18 @@ static HTTPStatus_t sendHttpHeaders( const HTTPTransportInterface_t * pTransport
     shouldSendContentLength = ( ( ( flags & HTTP_SEND_DISABLE_CONTENT_LENGTH_FLAG ) == 0u ) &&
                                 ( reqBodyLen > 0u ) ) ? 1u : 0u;
 
-    /* If the application does want the Content-Length header automatically
-     * written. Then send the headers in pRequestHeaders without the final
-     * "\r\n" that denotes the end of the header. */
     if( shouldSendContentLength == 1u )
     {
-        numBytesToSend -= HTTP_HEADER_LINE_SEPARATOR_LEN;
+        returnStatus = addContentLengthHeader( pRequestHeaders, reqBodyLen );
     }
-
-    LogDebug( ( "Sending HTTP request headers: HeaderBytes=%d",
-                numBytesToSend ) );
-
-    /* Send the HTTP headers over the network. */
-    returnStatus = sendHttpData( pTransport, pRequestHeaders->pBuffer, numBytesToSend );
 
     if( returnStatus == HTTP_SUCCESS )
     {
-        if( shouldSendContentLength == 1u )
-        {
-            /* Send the Content-Length header over the network. */
-            returnStatus = sendHttpContentLength( pTransport, reqBodyLen );
-        }
+        LogDebug( ( "Sending HTTP request headers: HeaderBytes=%d",
+                    numBytesToSend ) );
+
+        /* Send the HTTP headers over the network. */
+        returnStatus = sendHttpData( pTransport, pRequestHeaders->pBuffer, numBytesToSend );
     }
 
     return returnStatus;

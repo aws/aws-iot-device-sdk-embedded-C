@@ -31,10 +31,16 @@
 /**
  * @brief Supported HTTP request methods.
  */
-#define HTTP_METHOD_GET     "GET"                  /**< HTTP Method GET. */
-#define HTTP_METHOD_PUT     "PUT"                  /**< HTTP Method PUT. */
-#define HTTP_METHOD_POST    "POST"                 /**< HTTP Method POST. */
-#define HTTP_METHOD_HEAD    "HEAD"                 /**< HTTP Method HEAD. */
+#define HTTP_METHOD_GET                          "GET"  /**< HTTP Method GET. */
+#define HTTP_METHOD_PUT                          "PUT"  /**< HTTP Method PUT. */
+#define HTTP_METHOD_POST                         "POST" /**< HTTP Method POST. */
+#define HTTP_METHOD_HEAD                         "HEAD" /**< HTTP Method HEAD. */
+
+/**
+ * @brief The maximum Content-Length header field and value that could be
+ * written to the request header buffer.
+ */
+#define HTTP_MAX_CONTENT_LENGTH_HEADER_LENGTH    sizeof( "Content-Length: 4294967295" ) - 1u
 
 /**
  * @section http_send_flags
@@ -50,8 +56,8 @@
  */
 
 /**
- * @brief Set this flag to disable automatically sending the Content-Length
- * header to the server.
+ * @brief Set this flag to disable automatically writing the Content-Length
+ * header to send to the server.
  *
  * This flag is valid only for #HTTPClient_Send.flags.
  */
@@ -634,6 +640,13 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
  * body in @p pRequestBodyBuf over the transport. The response is received in
  * #HTTPResponse_t.pBuffer.
  *
+ * If HTTP_SEND_DISABLE_CONTENT_LENGTH_FLAG is not set, then the Content-Length
+ * to be sent to the server is automatically written to @p pRequestHeaders. If
+ * there was not enough room in the buffer to write the Content-Length then
+ * HTTP_INSUFFICIENT_MEMORY is returned. Please see
+ * HTTP_MAX_CONTENT_LENGTH_HEADER_LENGTH for the maximum Content-Length header
+ * field and value that could be written to the buffer.
+ *
  * The application should close the connection with the server if any of the
  * following errors are returned:
  * - HTTP_SECURITY_ALERT_RESPONSE_HEADERS_SIZE_LIMIT_EXCEEDED
@@ -664,7 +677,8 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
  * - #HTTP_NETWORK_ERROR (Errors in sending or receiving over the transport interface.)
  * - #HTTP_PARTIAL_RESPONSE (Part of an HTTP response was received in a partially filled response buffer.)
  * - #HTTP_NO_RESPONSE (No data was received from the transport interface.)
- * - #HTTP_INSUFFICIENT_MEMORY (The response received could not fit into the response buffer.)
+ * - #HTTP_INSUFFICIENT_MEMORY (The response received could not fit into the response buffer
+ * or extra headers could not be sent in the request.)
  * - #HTTP_PARSER_INTERNAL_ERROR (Internal parsing error.)
  * Security alerts are listed below, please see #HTTPStatus_t for more information:
  * - #HTTP_SECURITY_ALERT_RESPONSE_HEADERS_SIZE_LIMIT_EXCEEDED
