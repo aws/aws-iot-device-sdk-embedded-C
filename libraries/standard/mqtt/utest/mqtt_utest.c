@@ -72,7 +72,10 @@
  */
 #define MQTT_TIMER_OVERFLOW_TIMEOUT_MS      ( 10 )
 
-#define MQTT_SAMPLE_TRANSPORT_INTERFACE     ( 0 )
+/**
+ * @brief A sample network context that we set to NULL.
+ */
+#define MQTT_SAMPLE_NETWORK_CONTEXT         ( 0 )
 
 /**
  * @brief The packet type to be received by the process loop.
@@ -204,7 +207,7 @@ static int32_t transportSendSuccess( MQTTNetworkContext_t pContext,
                                      const void * pBuffer,
                                      size_t bytesToWrite )
 {
-    TEST_ASSERT_EQUAL( MQTT_SAMPLE_TRANSPORT_INTERFACE, pContext );
+    TEST_ASSERT_EQUAL( MQTT_SAMPLE_NETWORK_CONTEXT, pContext );
     ( void ) pBuffer;
     return bytesToWrite;
 }
@@ -235,7 +238,7 @@ static int32_t transportRecvSuccess( MQTTNetworkContext_t pContext,
                                      void * pBuffer,
                                      size_t bytesToRead )
 {
-    TEST_ASSERT_EQUAL( MQTT_SAMPLE_TRANSPORT_INTERFACE, pContext );
+    TEST_ASSERT_EQUAL( MQTT_SAMPLE_NETWORK_CONTEXT, pContext );
     ( void ) pBuffer;
     return bytesToRead;
 }
@@ -273,7 +276,7 @@ static int32_t transportRecvOneByte( MQTTNetworkContext_t pContext,
  */
 static void setupTransportInterface( MQTTTransportInterface_t * pTransport )
 {
-    pTransport->networkContext = MQTT_SAMPLE_TRANSPORT_INTERFACE;
+    pTransport->networkContext = MQTT_SAMPLE_NETWORK_CONTEXT;
     pTransport->send = transportSendSuccess;
     pTransport->recv = transportRecvSuccess;
 }
