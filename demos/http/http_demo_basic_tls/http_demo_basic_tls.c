@@ -738,6 +738,19 @@ int main()
 
     /************************** Disconnect. *****************************/
 
+    /* Close TLS session if established. */
+    if( networkContext.sslContext != NULL )
+    {
+        /* SSL shutdown should be called twice: once to send "close notify" and
+         * once more to receive the peer's "close notify". */
+        if( SSL_shutdown( networkContext.sslContext ) == 0 )
+        {
+            ( void ) SSL_shutdown( networkContext.sslContext );
+        }
+
+        SSL_free( networkContext.sslContext );
+    }
+
     if( networkContext.tcpSocket != -1 )
     {
         shutdown( networkContext.tcpSocket, SHUT_RDWR );
