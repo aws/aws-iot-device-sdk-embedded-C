@@ -502,7 +502,7 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
 
     if( returnStatus == HTTP_SUCCESS )
     {
-        if( HTTP_REQUEST_KEEP_ALIVE_FLAG & pRequestInfo->flags )
+        if( ( HTTP_REQUEST_KEEP_ALIVE_FLAG & pRequestInfo->flags ) != 0u )
         {
             /* Write "Connection: keep-alive". */
             returnStatus = addHeader( pRequestHeaders,
@@ -510,15 +510,6 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
                                       HTTP_CONNECTION_FIELD_LEN,
                                       ( const uint8_t * ) HTTP_CONNECTION_KEEP_ALIVE_VALUE,
                                       HTTP_CONNECTION_KEEP_ALIVE_VALUE_LEN );
-        }
-        else
-        {
-            /* Write "Connection: close". */
-            returnStatus = addHeader( pRequestHeaders,
-                                      ( const uint8_t * ) HTTP_CONNECTION_FIELD,
-                                      HTTP_CONNECTION_FIELD_LEN,
-                                      ( const uint8_t * ) HTTP_CONNECTION_CLOSE_VALUE,
-                                      HTTP_CONNECTION_CLOSE_VALUE_LEN );
         }
     }
 
