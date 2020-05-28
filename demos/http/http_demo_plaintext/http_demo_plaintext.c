@@ -79,17 +79,17 @@
 /**
  * @brief Transport timeout in milliseconds for transport send and receive.
  */
-#define TRANSSERVER_PORT_SEND_RECV_TIMEOUT_MS    ( 1000 )
+#define TRANSPORT_SEND_RECV_TIMEOUT_MS    ( 1000 )
 
 /**
  * @brief The length in bytes of the user buffer.
  */
-#define USER_BUFFER_LENGTH                       ( 1024 )
+#define USER_BUFFER_LENGTH                ( 1024 )
 
 /**
  * @brief Length of an IPv6 address when converted to hex digits.
  */
-#define IPV6_LENGTH                              ( 40 )
+#define IPV6_LENGTH                       ( 40 )
 
 
 /**
@@ -146,7 +146,7 @@ static int connectToServer( const char * pServer,
  *
  * @param[in] pContext User defined context (TCP socket for this demo).
  * @param[in] pBuffer Buffer containing the bytes to send over the network stack.
- * @param[in] bytesToWrite Number of bytes to write to the network.
+ * @param[in] bytesToSend Number of bytes to write to the network.
  *
  * @return Number of bytes sent; negative value on error.
  */
@@ -274,7 +274,7 @@ static int connectToServer( const char * pServer,
     if( returnStatus == EXIT_SUCCESS )
     {
         transportTimeout.tv_sec = 0;
-        transportTimeout.tv_usec = ( TRANSSERVER_PORT_SEND_RECV_TIMEOUT_MS * 1000 );
+        transportTimeout.tv_usec = ( TRANSPORT_SEND_RECV_TIMEOUT_MS * 1000 );
 
         /* Set the receive timeout. */
         if( setsockopt( *pTcpSocket,
@@ -468,7 +468,6 @@ static int sendHttpRequest( HTTPTransportInterface_t * pTransport,
 int main()
 {
     int returnStatus = EXIT_SUCCESS;
-    HTTPStatus_t httpStatus = HTTP_SUCCESS;
     HTTPNetworkContext_t socketContext = { 0 };
     HTTPTransportInterface_t transport = { 0 };
 
