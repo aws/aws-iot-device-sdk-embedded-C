@@ -380,7 +380,7 @@ static MQTTStatus_t discardPacket( MQTTContext_t * const pContext,
         if( bytesReceived != ( int32_t ) bytesToReceive )
         {
             LogError( ( "Receive error while discarding packet."
-                        "ReceivedBytes=%d, ExpectedBytes=%u.",
+                        "ReceivedBytes=%d, ExpectedBytes=%lu.",
                         bytesReceived,
                         bytesToReceive ) );
             receiveError = true;
@@ -430,7 +430,7 @@ static MQTTStatus_t receivePacket( MQTTContext_t * const pContext,
     {
         LogError( ( "Incoming packet will be dumped: "
                     "Packet length exceeds network buffer size."
-                    "PacketSize=%u, NetworkBufferSize=%u",
+                    "PacketSize=%lu, NetworkBufferSize=%lu",
                     incomingPacket.remainingLength,
                     pContext->networkBuffer.size ) );
         status = discardPacket( pContext,
@@ -451,7 +451,7 @@ static MQTTStatus_t receivePacket( MQTTContext_t * const pContext,
         else
         {
             LogError( ( "Packet reception failed. ReceivedBytes=%d, "
-                        "ExpectedBytes=%u.",
+                        "ExpectedBytes=%lu.",
                         bytesReceived,
                         bytesToReceive ) );
             status = MQTTRecvFailed;
@@ -535,7 +535,7 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * const pContext,
         {
             LogError( ( "Failed to send ACK packet: PacketType=%02x, "
                         "SentBytes=%d, "
-                        "PacketSize=%u",
+                        "PacketSize=%lu",
                         packetTypeByte,
                         bytesSent,
                         MQTT_PUBLISH_ACK_PACKET_SIZE ) );
