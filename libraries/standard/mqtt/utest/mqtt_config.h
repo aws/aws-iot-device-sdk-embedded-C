@@ -16,14 +16,14 @@
 
 /* Configure name and log level for the MQTT library. */
 #define LIBRARY_LOG_NAME     "MQTT"
-#define LIBRARY_LOG_LEVEL    LOG_INFO
+#define LIBRARY_LOG_LEVEL    LOG_NONE
 
 #include "logging_stack.h"
 
 /************ End of logging configuration ****************/
 
-/* Set network context to socket (int). */
-typedef int MQTTNetworkContext_t;
+/* Set network context to double pointer to buffer (uint8_t**). */
+typedef uint8_t ** MQTTNetworkContext_t;
 
 /**
  * @brief The maximum number of MQTT PUBLISH messages that may be pending
