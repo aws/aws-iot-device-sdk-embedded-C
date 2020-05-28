@@ -304,6 +304,18 @@ static void setupCallbacks( MQTTApplicationCallbacks_t * pCallbacks )
 }
 
 /**
+ * @brief Initialize pSubscribeInfo using test-defined macros.
+ *
+ * @param[in] pSubscribeInfo Pointer to MQTT subscription info.
+ */
+static void setupSubscriptionInfo( MQTTSubscribeInfo_t * pSubscribeInfo )
+{
+    pSubscribeInfo->qos = MQTTQoS1;
+    pSubscribeInfo->pTopicFilter = MQTT_SAMPLE_TOPIC_FILTER;
+    pSubscribeInfo->topicFilterLength = MQTT_SAMPLE_TOPIC_FILTER_LENGTH;
+}
+
+/**
  * @brief This helper function is used to expect any calls from the process loop
  * to mocked functions belonging to an external header file. Its parameters
  * are used to provide return values for these mocked functions.
@@ -1272,18 +1284,6 @@ void test_MQTT_ProcessLoop_Timer_Overflow( void )
 }
 
 /* ========================================================================== */
-
-/**
- * @brief Initialize pSubscribeInfo using test-defined macros.
- *
- * @param[in] pSubscribeInfo Pointer to MQTT subscription info.
- */
-static void setupSubscriptionInfo( MQTTSubscribeInfo_t * pSubscribeInfo )
-{
-    pSubscribeInfo->qos = MQTTQoS1;
-    pSubscribeInfo->pTopicFilter = MQTT_SAMPLE_TOPIC_FILTER;
-    pSubscribeInfo->topicFilterLength = MQTT_SAMPLE_TOPIC_FILTER_LENGTH;
-}
 
 /**
  * @brief This test case verifies that MQTT_Subscribe returns MQTTBadParameter
