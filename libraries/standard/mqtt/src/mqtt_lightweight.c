@@ -1387,7 +1387,7 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * const pConnectInfo
                     connectPacketSize ) );
         status = MQTTNoMemory;
     }
-    else if ( ( pWillInfo != NULL ) && ( pWillInfo->pTopicName == NULL ) )
+    else if( ( pWillInfo != NULL ) && ( pWillInfo->pTopicName == NULL ) )
     {
         LogError( ( "pWillInfo->pTopicName cannot be NULL if Will is present." ) );
         status = MQTTBadParameter;
@@ -1907,7 +1907,7 @@ MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * const pBuffer )
         if( pBuffer->size < MQTT_PACKET_PINGREQ_SIZE )
         {
             LogError( ( "Buffer size of %lu is not sufficient to hold "
-                        "serialized PINGREQ packet of size of %lu.",
+                        "serialized PINGREQ packet of size of %u.",
                         pBuffer->size,
                         MQTT_PACKET_PINGREQ_SIZE ) );
             status = MQTTNoMemory;
@@ -2027,7 +2027,7 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * const pIncomingPacket
 
             /* Any other packet type is invalid. */
             default:
-                LogError( ( "IotMqtt_DeserializeResponse() called with unknown packet type:(%lu).", pIncomingPacket->type ) );
+                LogError( ( "IotMqtt_DeserializeResponse() called with unknown packet type:(%u).", pIncomingPacket->type ) );
                 status = MQTTBadResponse;
                 break;
         }
