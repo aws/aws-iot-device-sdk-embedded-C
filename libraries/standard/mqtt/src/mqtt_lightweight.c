@@ -2027,7 +2027,7 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * const pIncomingPacket
 
             /* Any other packet type is invalid. */
             default:
-                LogError( ( "IotMqtt_DeserializeResponse() called with unknown packet type:(%u).", pIncomingPacket->type ) );
+                LogError( ( "IotMqtt_DeserializeResponse() called with unknown packet type:(%02x).", pIncomingPacket->type ) );
                 status = MQTTBadResponse;
                 break;
         }
