@@ -37,3 +37,9 @@ target_include_directories(
     PUBLIC
         ${LOGGING_INCLUDE_DIRS}
 )
+
+add_custom_command(
+        TARGET ${DEMO_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+                ${CMAKE_CURRENT_SOURCE_DIR}/certificates/amazon.crt
+                ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/certificates/amazon.crt)

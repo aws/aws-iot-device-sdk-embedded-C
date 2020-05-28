@@ -28,6 +28,7 @@
 #include <errno.h>
 #include <netdb.h>
 #include <time.h>
+#include <poll.h>
 #include <unistd.h>
 #include <arpa/inet.h>
 
@@ -47,21 +48,21 @@
  *
  * This demo uses httpbin.org: A simple HTTP Request & Response Service.
  */
-#define SERVER_HOST    "httpbin.org"
+#define SERVER_HOST         "httpbin.org"
 
 /**
  * @brief HTTP server port number.
  *
  * In general, port 443 is for TLS HTTP connections.
  */
-#define SERVER_PORT    443
+#define SERVER_PORT         443
 
 /**
  * @brief Path of the file containing the server's root CA certificate.
  *
  * This certificate should be PEM-encoded.
  */
-#define SERVER_CERT    "httpbin.org.crt"
+#define SERVER_CERT_PATH    "certificates/amazon.crt"
 
 /**
  * @brief Paths for different HTTP methods for specified host.
@@ -88,25 +89,24 @@
 /**
  * @brief Transport timeout in milliseconds for transport send and receive.
  */
-#define TRANSSERVER_PORT_SEND_RECV_TIMEOUT_MS    ( 1000 )
+#define TRANSPORT_SEND_RECV_TIMEOUT_MS    ( 5000 )
 
 /**
  * @brief The length in bytes of the user buffer.
  */
-#define USER_BUFFER_LENGTH                       ( 1024 )
+#define USER_BUFFER_LENGTH                ( 1024 )
 
 /**
  * @brief Length of an IPv6 address when converted to hex digits.
  */
-#define IPV6_LENGTH                              ( 40 )
-
+#define IPV6_LENGTH                       ( 40 )
 
 /**
  * @brief Some text to send as the request body for PUT and POST requests in
  * this demo.
  */
-#define REQUEST_BODY_TEXT           "Hello, world!"
-#define REQUEST_BODY_TEXT_LENGTH    ( sizeof( REQUEST_BODY_TEXT ) - 1 )
+#define REQUEST_BODY_TEXT                 "Hello, world!"
+#define REQUEST_BODY_TEXT_LENGTH          ( sizeof( REQUEST_BODY_TEXT ) - 1 )
 
 /**
  * @brief A string to store the resolved IP address from the host name.
@@ -163,9 +163,9 @@ static SSL * tlsSetup( int tcpSocket );
 /**
  * @brief The transport send function that defines the transport interface.
  *
- * @param[in] pContext User defined context (TCP socket for this demo).
+ * @param[in] pContext User defined context (TCP socket with SSL context for demo).
  * @param[in] pBuffer Buffer containing the bytes to send over the network stack.
- * @param[in] bytesToWrite Number of bytes to write to the network.
+ * @param[in] bytesToSend Number of bytes to send to the network.
  *
  * @return Number of bytes sent; negative value on error.
  */
@@ -176,7 +176,7 @@ static int32_t transportSend( HTTPNetworkContext_t * pContext,
 /**
  * @brief The transport receive function that defines the transport interface.
  *
- * @param[in] pContext User defined context (TCP socket for this demo).
+ * @param[in] pContext User defined context (TCP socket with SSL context for demo).
  * @param[out] pBuffer Buffer to read network data into.
  * @param[in] bytesToRead Number of bytes requested from the network.
  *
@@ -185,6 +185,22 @@ static int32_t transportSend( HTTPNetworkContext_t * pContext,
 static int32_t transportRecv( HTTPNetworkContext_t * pContext,
                               void * pBuffer,
                               size_t bytesToRecv );
+
+/**
+ * @brief Send an HTTP request based on a specified method and path.
+ *
+ * @param[in] pTransport The transport interface for network send and receive.
+ * @param[in] pHost The host name of the server.
+ * @param[in] pMethod The HTTP request method.
+ * @param[in] pPath The Request-URI to the objects of interest.
+ *
+ * @return #HTTP_SUCCESS if successful;
+ * otherwise, the error status returned by the HTTP library
+ */
+static int sendHttpRequest( HTTPTransportInterface_t * pTransport,
+                            const char * pHost,
+                            const char * pMethod,
+                            const char * pPath );
 
 /*-----------------------------------------------------------*/
 
@@ -293,7 +309,7 @@ static int connectToServer( const char * pServer,
     if( returnStatus == EXIT_SUCCESS )
     {
         transportTimeout.tv_sec = 0;
-        transportTimeout.tv_usec = ( TRANSSERVER_PORT_SEND_RECV_TIMEOUT_MS * 1000 );
+        transportTimeout.tv_usec = ( TRANSPORT_SEND_RECV_TIMEOUT_MS * 1000 );
 
         /* Set the receive timeout. */
         if( setsockopt( *pTcpSocket,
@@ -328,34 +344,68 @@ static int connectToServer( const char * pServer,
 
 /*-----------------------------------------------------------*/
 
+/**
+ * @brief Set up a TLS connection over an existing TCP connection.
+ *
+ * @param[in] tcpSocket Existing TCP connection.
+ *
+ * @return An SSL connection context; NULL on failure.
+ */
 static SSL * tlsSetup( int tcpSocket )
 {
     int sslStatus = 0;
-    X509 * pCert = NULL;
-    X509_NAME * pCertName = NULL;
+    FILE * pRootCaFile = NULL;
+    X509 * pRootCa = NULL;
     SSL * pSslContext = NULL;
-    BIO * pCertBio = NULL;
-    /* Only allow TLS. */
-    const long flags = SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_COMPRESSION;
-
-    init_openssl_library();
 
     /* Setup for creating a TLS client. */
     SSL_CTX * pSslSetup = SSL_CTX_new( TLS_client_method() );
 
-    /* Set up the TLS connection. */
     if( pSslSetup != NULL )
     {
-        SSL_CTX_set_verify( ctx, SSL_VERIFY_PEER, verify_callback );
-
-        SSL_CTX_set_verify_depth( ctx, 4 );
-
-        SSL_CTX_set_options( ctx, flags );
-
         /* Set auto retry mode for the blocking calls to SSL_read and SSL_write.
          * The mask returned by SSL_CTX_set_mode does not need to be checked. */
         ( void ) SSL_CTX_set_mode( pSslSetup, SSL_MODE_AUTO_RETRY );
 
+        /* OpenSSL does not provide a single function for reading and loading certificates
+         * from files into stores, so the file API must be called. */
+        pRootCaFile = fopen( SERVER_CERT_PATH, "r" );
+
+        if( pRootCaFile != NULL )
+        {
+            pRootCa = PEM_read_X509( pRootCaFile, NULL, NULL, NULL );
+        }
+        else
+        {
+            LogError( ( "Unable to find the certificate file in the path"
+                        " provided by SERVER_CERT_PATH: %s.",
+                        SERVER_CERT_PATH ) );
+
+            /* Assert here in the step so as to help configure the path
+             * to certificate file. */
+            assert( 0 );
+        }
+
+        if( pRootCa != NULL )
+        {
+            sslStatus = X509_STORE_add_cert( SSL_CTX_get_cert_store( pSslSetup ),
+                                             pRootCa );
+        }
+        else
+        {
+            LogError( ( "Failed to parse the server certificate from"
+                        " file %s. Please validate the certificate.",
+                        SERVER_CERT_PATH ) );
+
+            /* Assert here in the step so as to help configure the path
+             * to certificate file. */
+            assert( 0 );
+        }
+    }
+
+    /* Set up the TLS connection. */
+    if( sslStatus == 1 )
+    {
         /* Create a new SSL context. */
         pSslContext = SSL_new( pSslSetup );
 
@@ -368,57 +418,58 @@ static SSL * tlsSetup( int tcpSocket )
         }
         else
         {
+            LogError( ( "Failed to create a new SSL context." ) );
             sslStatus = 0;
         }
-    }
 
-    /* Perform the TLS handshake. */
-    if( sslStatus == 1 )
-    {
-        sslStatus = SSL_connect( pSslContext );
-    }
-
-    if( sslStatus == 1 )
-    {
-        pCert = SSL_get_peer_certificate( pSslContext );
-
-        if( pCert == NULL )
+        /* Perform the TLS handshake. */
+        if( sslStatus == 1 )
         {
-            LogError( ( "Error: Could not get a certificate from: %s.", SERVER_HOST ) );
+            sslStatus = SSL_connect( pSslContext );
         }
         else
         {
-            LogInfo( ( "Retrieved the server's certificate from: %s.", SERVER_HOST ) );
+            LogError( ( "Failed to set the socket fd to SSL context." ) );
         }
 
-        /* Extract information from certificate. */
-        pCertName = X509_get_subject_name( pCert );
+        if( sslStatus == 1 )
+        {
+            if( SSL_get_verify_result( pSslContext ) != X509_V_OK )
+            {
+                sslStatus = 0;
+            }
+        }
+        else
+        {
+            LogError( ( "Failed to perform TLS handshake." ) );
+        }
 
-        /* Possibly print certificate. */
+        /* Clean up on error. */
+        if( sslStatus == 0 )
+        {
+            SSL_free( pSslContext );
+            pSslContext = NULL;
+        }
     }
     else
     {
-        LogError( ( "Error: Could not establish TLS session with %s.", SERVER_HOST ) );
+        LogError( ( "Failed to add certificate to store." ) );
     }
 
-    if( sslStatus == 1 )
-    {
-        if( SSL_get_verify_result( pSslContext ) != X509_V_OK )
-        {
-            sslStatus = 0;
-        }
-    }
-
-    /* Clean up on error. */
     if( sslStatus == 0 )
     {
-        SSL_free( pSslContext );
-        pSslContext = NULL;
+        LogError( ( "Failed to establish a SSL connection to %s.",
+                    SERVER_HOST ) );
     }
 
-    if( pCert != NULL )
+    if( pRootCaFile != NULL )
     {
-        X509_free( pCert );
+        ( void ) fclose( pRootCaFile );
+    }
+
+    if( pRootCa != NULL )
+    {
+        X509_free( pRootCa );
     }
 
     if( pSslSetup != NULL )
@@ -431,54 +482,83 @@ static SSL * tlsSetup( int tcpSocket )
 
 /*-----------------------------------------------------------*/
 
-static int32_t transportSend( HTTPNetworkContext_t * pContext,
-                              const void * pBuffer,
+static int32_t transportSend( HTTPNetworkContext_t * pNetworkContext,
+                              const void * pMessage,
                               size_t bytesToSend )
 {
-    int32_t bytesSend = 0;
-
-    bytesSend = send( ( int ) pContext->tcpSocket, pBuffer, bytesToSend, 0 );
-
-    if( bytesSend < 0 )
+    int32_t bytesSent = 0;
+    int pollStatus = 0;
+    struct pollfd fileDescriptor =
     {
-        /* Check if it was time out */
-        if( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) )
-        {
-            /* Set return value to 0 to indicate that send was timed out. */
-            bytesSend = 0;
-        }
+        .events  = POLLOUT,
+        .revents = 0
+    };
+
+    /* Set the file descriptor for poll. */
+    fileDescriptor.fd = SSL_get_fd( pNetworkContext->sslContext );
+
+    /* Poll the file descriptor to check if SSL_Write can be done now. */
+    pollStatus = poll( &fileDescriptor, 1, TRANSPORT_SEND_RECV_TIMEOUT_MS );
+
+    if( pollStatus > 0 )
+    {
+        bytesSent = ( int32_t ) SSL_write( pNetworkContext->sslContext, pMessage, bytesToSend );
+    }
+    else if( pollStatus == 0 )
+    {
+        LogInfo( ( "Timed out while polling SSL socket for write buffer availability." ) );
+    }
+    else
+    {
+        LogError( ( "Polling of the SSL socket for write buffer availability failed"
+                    " with status %d.",
+                    pollStatus ) );
+        bytesSent = -1;
     }
 
-    return bytesSend;
+    return bytesSent;
 }
 
 /*-----------------------------------------------------------*/
 
-static int32_t transportRecv( HTTPNetworkContext_t * pContext,
+static int32_t transportRecv( HTTPNetworkContext_t * pNetworkContext,
                               void * pBuffer,
                               size_t bytesToRecv )
 {
     int32_t bytesReceived = 0;
-
-    bytesReceived = ( int32_t ) recv( ( int ) pContext->tcpSocket, pBuffer, bytesToRecv, 0 );
-
-    if( bytesReceived == 0 )
+    int pollStatus = -1, bytesAvailableToRead = 0;
+    struct pollfd fileDescriptor =
     {
-        /* Server closed the connection, treat it as an error. */
-        bytesReceived = -1;
+        .events  = POLLIN | POLLPRI,
+        .revents = 0
+    };
+
+    /* Set the file descriptor for poll. */
+    fileDescriptor.fd = SSL_get_fd( pNetworkContext->sslContext );
+
+    /* Check if there are any pending data available for read. */
+    bytesAvailableToRead = SSL_pending( pNetworkContext->sslContext );
+
+    /* Poll only if there is no data available yet to read. */
+    if( bytesAvailableToRead <= 0 )
+    {
+        pollStatus = poll( &fileDescriptor, 1, TRANSPORT_SEND_RECV_TIMEOUT_MS );
     }
-    else if( bytesReceived < 0 )
+
+    /* SSL read of data. */
+    if( ( pollStatus > 0 ) || ( bytesAvailableToRead > 0 ) )
     {
-        /* Check if it was time out */
-        if( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) )
-        {
-            /* Set return value to 0 to indicate nothing to receive */
-            bytesReceived = 0;
-        }
+        bytesReceived = ( int32_t ) SSL_read( pNetworkContext->sslContext, pBuffer, bytesToRecv );
+    }
+    /* Poll timed out. */
+    else if( pollStatus == 0 )
+    {
+        LogInfo( ( "Poll timed out and there is no data to read from the buffer." ) );
     }
     else
     {
-        /* EMPTY else */
+        LogError( ( "Poll returned with status = %d.", pollStatus ) );
+        bytesReceived = -1;
     }
 
     return bytesReceived;
@@ -486,17 +566,6 @@ static int32_t transportRecv( HTTPNetworkContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
-/**
- * @brief Send an HTTP request based on a specified method and path.
- *
- * @param[in] pTransport The transport interface for network send and receive.
- * @param[in] pHost The host name of the server.
- * @param[in] pMethod The HTTP request method.
- * @param[in] pPath The Request-URI to the objects of interest.
- *
- * @return #HTTP_SUCCESS if successful;
- * otherwise, the error status returned by the HTTP library
- */
 static int sendHttpRequest( HTTPTransportInterface_t * pTransport,
                             const char * pHost,
                             const char * pMethod,
@@ -606,13 +675,17 @@ int main()
     /* Establish TLS connection on top of TCP connection. */
     if( returnStatus == EXIT_SUCCESS )
     {
-        LogInfo( ( "Establishing a TLS connection on top of the TCP connection." ) );
+        LogInfo( ( "Performing TLS handshake on top of the TCP connection." ) );
         networkContext.sslContext = tlsSetup( networkContext.tcpSocket );
 
         if( networkContext.sslContext == NULL )
         {
             returnStatus = EXIT_FAILURE;
-            LogError( ( "Establishing a TLS connection failed." ) );
+            LogError( ( "TLS handshake failed.\n" ) );
+        }
+        else
+        {
+            LogInfo( ( "TLS handshake complete.\n" ) );
         }
     }
 
