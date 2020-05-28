@@ -887,6 +887,8 @@ void test_MQTT_GetPacketId( void )
     TEST_ASSERT_EQUAL_INT( 1, mqttContext.nextPacketId );
 }
 
+/* ========================================================================== */
+
 /**
  * @brief Test that NULL pContext causes MQTT_ProcessLoop to return MQTTBadParameter.
  */
