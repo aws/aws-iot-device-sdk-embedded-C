@@ -27,12 +27,13 @@
 #      your project, your proofs, and your source tree.
 #   2. For each function for which you are writing a proof,
 #      a. Create a subdirectory <DIR>.
-#      b. Write a proof harness (a function) with the name <ENTRY>
-#         in a file with the name <DIR>/harness.c
+#      b. Write a proof harness (a function) with the name <HARNESS_ENTRY>
+#         in a file with the name <DIR>/<HARNESS_FILE>.c
 #      c. Write a makefile with the name <DIR>/Makefile that looks
 #         something like
 #
-#         ENTRY=<ENTRY>
+#         HARNESS_FILE=<HARNESS_FILE>
+#         HARNESS_ENTRY=<HARNESS_ENTRY>
 #
 #         PROJECT_SOURCES += $(SRCDIR)/libraries/api_1.c
 #         PROJECT_SOURCES += $(SRCDIR)/libraries/api_2.c
@@ -76,11 +77,29 @@ default: report
 ## be relative to your proof directory.
 ##
 
+# Absolute path to the directory containing this Makefile.common
+# See https://ftp.gnu.org/old-gnu/Manuals/make-3.80/html_node/make_17.html
+PROOF_ROOT = $(dir $(abspath $(filter %/Makefile.common,$(MAKEFILE_LIST))))
+
+# Project-specific definitions to override defaults below
+sinclude $(PROOF_ROOT)/Makefile.local
+
 # Path to the directory containing the proof harness
 PROOFDIR ?= $(abspath .)
 
 # Path to the root of the source tree
-SRCDIR ?= $(abspath $(PROOFDIR)/../../../..)
+SRCDIR ?= $(abspath $(PROOFDIR)/../../../../../..)
+
+config:
+	ls $(SRCDIR)
+
+# Path to the root of the cbmc work.
+#
+# Projects generally have a directory $(CBMCDIR) with subdirectories
+# $(CBMCDIR)/proofs containing the proofs and maybe $(CBMCDIR)/stubs
+# containing the stubs used in the proof.  This Makefile is generally
+# at $(CBMCDIR)/proofs/Makefile.common.
+CBMCDIR ?= $(SRCDIR)/cbmc
 
 # Default CBMC flags used for property checking and coverage checking
 CBMCFLAGS += --unwind 1 $(CBMC_LOOP_UNWINDINGS)
@@ -201,7 +220,7 @@ LOGDIR ?= $(PROOFDIR)/logs
 PROJECT ?= project
 PROOF ?= proof
 
-ENTRY_GOTO ?= $(GOTODIR)/$(ENTRY)
+HARNESS_GOTO ?= $(GOTODIR)/$(HARNESS_FILE)
 PROJECT_GOTO ?= $(GOTODIR)/$(PROJECT)
 PROOF_GOTO ?= $(GOTODIR)/$(PROOF)
 
@@ -242,8 +261,8 @@ DO_NOOP_COPY = cp $(2) $(3); echo $(1) | tee $(call LOG_FROM_ENTRY,$(3))
 
 C_FROM_GOTO = $(patsubst $(GOTODIR)%,$(SRCDIR)%,$(1:.goto=.c))
 GOTO_FROM_C = $(patsubst $(SRCDIR)%,$(GOTODIR)%,$(1:.c=.goto))
-LOG_FROM_ENTRY = $(LOGDIR)/$(notdir $(1:.goto=.log))
-LOG_FROM_GOTO = $(patsubst $(GOTODIR)%,$(LOGDIR)%,$(1:.goto=.log))
+LOG_FROM_ENTRY = $(LOGDIR)/$(notdir $(1:.goto=.txt))
+LOG_FROM_GOTO = $(patsubst $(GOTODIR)%,$(LOGDIR)%,$(1:.goto=.txt))
 
 ################################################################
 # Set C compiler defines
@@ -261,19 +280,19 @@ CBMC_REMOVE_FUNCTION_BODY := $(patsubst %,--remove-function-body %, $(REMOVE_FUN
 # Build targets that make the relevant .goto files
 
 # Compile project sources
-$(PROJECT_GOTO)0.goto: $(PROJECT_SOURCES)
+$(PROJECT_GOTO)1.goto: $(PROJECT_SOURCES)
 	mkdir -p $(dir $@)
 	mkdir -p $(dir $(call LOG_FROM_ENTRY,$@))
-	$(call DO_GOTO_CC,$(COMPILE_FLAGS) $(INC) $(DEFINES),$^,$@)
+	$(call DO_GOTO_CC,--export-file-local-symbols $(COMPILE_FLAGS) $(INC) $(DEFINES),$^,$@)
 
 # Compile proof sources
-$(PROOF_GOTO)0.goto: $(PROOF_SOURCES)
+$(PROOF_GOTO)1.goto: $(PROOF_SOURCES)
 	mkdir -p $(dir $@)
 	mkdir -p $(dir $(call LOG_FROM_ENTRY,$@))
-	$(call DO_GOTO_CC,$(COMPILE_FLAGS) $(INC) $(DEFINES),$^,$@)
+	$(call DO_GOTO_CC,--export-file-local-symbols $(COMPILE_FLAGS) $(INC) $(DEFINES),$^,$@)
 
 # Optionally remove function bodies from project sources
-$(PROJECT_GOTO)1.goto: $(PROJECT_GOTO)0.goto
+$(PROJECT_GOTO)2.goto: $(PROJECT_GOTO)1.goto
 ifeq ($(REMOVE_FUNCTION_BODY),"")
 	$(call DO_NOOP_COPY,"Not removing function bodies",$<,$@)
 else
@@ -281,15 +300,15 @@ else
 endif
 
 # Don't remove function bodies from proof sources
-$(PROOF_GOTO)1.goto: $(PROOF_GOTO)0.goto
+$(PROOF_GOTO)2.goto: $(PROOF_GOTO)1.goto
 	$(call DO_NOOP_COPY,"Not removing function bodies",$<,$@)
 
 # Link project and proof sources into the proof harness
-$(ENTRY_GOTO)0.goto: $(PROOF_GOTO)1.goto $(PROJECT_GOTO)1.goto
-	$(call DO_GOTO_CC,--function $(ENTRY),$^,$@)
+$(HARNESS_GOTO)1.goto: $(PROOF_GOTO)2.goto $(PROJECT_GOTO)2.goto
+	$(call DO_GOTO_CC,--function $(HARNESS_ENTRY),$^,$@)
 
 # Optionally fill static variable with unconstrained values
-$(ENTRY_GOTO)1.goto: $(ENTRY_GOTO)0.goto
+$(HARNESS_GOTO)2.goto: $(HARNESS_GOTO)1.goto
 ifeq ($(NONDET_STATIC),"")
 	$(call DO_NOOP_COPY,"Not applying --nondet-static",$<,$@)
 else
@@ -297,33 +316,33 @@ else
 endif
 
 # Omit unused functions (sharpens coverage calculations)
-$(ENTRY_GOTO)2.goto: $(ENTRY_GOTO)1.goto
+$(HARNESS_GOTO)3.goto: $(HARNESS_GOTO)2.goto
 	$(call DO_GOTO_INSTRUMENT,--drop-unused-functions,$<,$@)
 
 # Omit initialization of unused global variables (reduces problem size)
-$(ENTRY_GOTO)3.goto: $(ENTRY_GOTO)2.goto
+$(HARNESS_GOTO)4.goto: $(HARNESS_GOTO)3.goto
 	$(call DO_GOTO_INSTRUMENT,--slice-global-inits,$<,$@)
 
 # Final name for proof harness
-$(ENTRY_GOTO).goto: $(ENTRY_GOTO)3.goto
+$(HARNESS_GOTO).goto: $(HARNESS_GOTO)4.goto
 	cp $< $@
 
-goto: $(ENTRY_GOTO).goto
+goto: $(HARNESS_GOTO).goto
 	echo $(DEPENDENT_GOTOS)
 
 ################################################################
 # Targets to run the analysis commands
 
-logs/property.txt: $(ENTRY_GOTO).goto
+logs/property.txt: $(HARNESS_GOTO).goto
 	$(call DO_CBMC,$(CBMCFLAGS) $(CHECKFLAGS) --trace,$<,$@)
 
-logs/property.xml: $(ENTRY_GOTO).goto
+logs/property.xml: $(HARNESS_GOTO).goto
 	$(call DO_CBMC,$(CBMCFLAGS) $(CHECKFLAGS) --unwinding-assertions --trace --xml-ui,$<,$@)
 
-logs/property-list.xml: $(ENTRY_GOTO).goto
+logs/property-list.xml: $(HARNESS_GOTO).goto
 	$(call DO_CBMC,$(CBMCFLAGS) $(CHECKFLAGS) --unwinding-assertions --show-properties --xml-ui,$<,$@)
 
-logs/coverage.xml: $(ENTRY_GOTO).goto
+logs/coverage.xml: $(HARNESS_GOTO).goto
 	$(call DO_CBMC,$(CBMCFLAGS) $(COVERFLAGS) --cover location --xml-ui,$<,$@)
 
 property: logs/property.txt
@@ -335,7 +354,7 @@ coverage: logs/coverage.xml
 report: logs/property.txt logs/property-list.xml logs/coverage.xml
 	$(VIEWER) \
 	--block logs/coverage.xml \
-	--goto $(ENTRY_GOTO).goto \
+	--goto $(HARNESS_GOTO).goto \
 	--htmldir html \
 	--property logs/property-list.xml \
 	--result logs/property.txt \
@@ -353,15 +372,13 @@ report2: logs/sources.json logs/property.xml logs/property-list.xml logs/coverag
 	--coverage logs/coverage.xml \
 	--property logs/property-list.xml \
 	--srcdir $(SRCDIR) \
-	--goto $(ENTRY_GOTO).goto \
+	--goto $(HARNESS_GOTO).goto \
 	--htmldir html \
 
 ################################################################
 # Targets to clean up after ourselves
 clean:
-	$(RM) *.goto
 	$(RM) $(DEPENDENT_GOTOS)
-	$(RM) *.log
 	$(RM) TAGS*
 	$(RM) *~ \#*
 
@@ -372,4 +389,12 @@ veryclean: clean
 
 .PHONY: setup_dependencies property property-list coverage report clean veryclean testdeps
 
-sinclude $(HELPERDIR)/proofs/Makefile.cbmc_batch
+################################################################
+
+# Project-specific targets requiring values defined above
+sinclude $(PROOF_ROOT)/Makefile.targets
+
+# CI-specific targets to drive cbmc in CI
+sinclude $(PROOF_ROOT)/Makefile.batch
+
+################################################################

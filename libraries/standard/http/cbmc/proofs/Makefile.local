@@ -1,0 +1,22 @@
+# -*- mode: makefile -*-
+# The first line sets the emacs major mode to Makefile
+
+INC += \
+	-I$(SRCDIR)/cbmc/proofs \
+	-I$(SRCDIR)/demos \
+	-I$(SRCDIR)/libraries/ \
+	-I$(SRCDIR)/libraries/platform \
+	-I$(SRCDIR)/libraries/standard/common/include \
+	-I$(SRCDIR)/libraries/standard/mqtt/include \
+	-I$(SRCDIR)/libraries/standard/mqtt/src \
+	-I$(SRCDIR)/libraries/standard/mqtt/src/private \
+	-I$(SRCDIR)/ports/common/include \
+
+DEF += \
+	 -DIOT_SYSTEM_TYPES_FILE=\"$(SRCDIR)/ports/posix/include/iot_platform_types_posix.h\" \
+	 -Diotmqtt_EXPORTS \
+
+COMPILE_FLAGS += -std=gnu99
+LINK_FLAGS += -std=gnu99
+
+NONDET_STATIC += --nondet-static

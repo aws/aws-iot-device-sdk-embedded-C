@@ -1,0 +1,8 @@
+$(SRCDIR)/build:
+	mkdir -p $@
+	mkdir -p $(LOGDIR)
+	(cd $(SRCDIR)/build; cmake ..) > $(LOGDIR)/cmake.txt 2>&1
+
+$(PROJECT_GOTO)1.goto: $(SRCDIR)/build
+
+$(PROOF_GOTO)1.goto: $(SRCDIR)/build

@@ -1,0 +1,23 @@
+################################################################
+# Regenerate the control file cbmc-batch.yaml driving cbmc in CI
+
+JOBOS ?= ubuntu16
+PROOFMEM ?= 32000
+
+define yaml_encode_options
+       "$(shell echo $(1) | sed 's/ ,/ /g' | sed 's/ /;/g')"
+endef
+
+cbmc-batch.yaml:
+	@echo "Building $@"
+	@$(RM) $@
+	@echo 'build_memory: $(PROOFMEM)' > $@
+	@echo 'cbmcflags: $(strip $(call yaml_encode_options,$(CBMCFLAGS) $(CHECKFLAGS) $(COVERFLAGS)))' >> $@
+	@echo 'coverage_memory: $(PROOFMEM)' >> $@
+	@echo "expected: SUCCESSFUL" >> $@
+	@echo "goto: $(HARNESS_FILE).goto" >> $@
+	@echo "jobos: $(JOBOS)" >> $@
+	@echo 'property_memory: $(PROOFMEM)' >> $@
+	@echo 'report_memory: $(PROOFMEM)' >> $@
+
+.PHONY: cbmc-batch.yaml
