@@ -640,10 +640,10 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
  * body in @p pRequestBodyBuf over the transport. The response is received in
  * #HTTPResponse_t.pBuffer.
  *
- * If HTTP_SEND_DISABLE_CONTENT_LENGTH_FLAG is not set, then the Content-Length
- * to be sent to the server is automatically written to @p pRequestHeaders. If
- * there was not enough room in the buffer to write the Content-Length then
- * HTTP_INSUFFICIENT_MEMORY is returned. Please see
+ * If HTTP_SEND_DISABLE_CONTENT_LENGTH_FLAG is not set in parameter @p flags,
+ * then the Content-Length to be sent to the server is automatically written to
+ * @p pRequestHeaders. If there was not enough room in the buffer to write the
+ * Content-Length then HTTP_INSUFFICIENT_MEMORY is returned. Please see
  * HTTP_MAX_CONTENT_LENGTH_HEADER_LENGTH for the maximum Content-Length header
  * field and value that could be written to the buffer.
  *
