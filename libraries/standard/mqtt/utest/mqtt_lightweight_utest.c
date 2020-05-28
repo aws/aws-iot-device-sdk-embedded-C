@@ -97,6 +97,16 @@
 #define MQTT_REMAINING_BUFFER_MAX_LENGTH    ( 4 )
 
 /**
+ * @brief Length of buffer padding to use in under/overflow checks.
+ */
+#define BUFFER_PADDING_LENGTH               ( 4 )
+
+/**
+ * @brief Byte to use for buffer padding in under/overflow checks.
+ */
+#define BUFFER_PADDING_BYTE                 ( 0xA5 )
+
+/**
  * @brief Length of the MQTT network buffer.
  */
 #define MQTT_TEST_BUFFER_LENGTH             ( 1024 )
@@ -323,6 +333,45 @@ static size_t encodeString( uint8_t * pDestination,
     return ( size_t ) ( pBuffer - pDestination );
 }
 
+/**
+ * @brief Pad beginning and end of buffer with non-zero bytes to be used in
+ * checking for under/overflow after serialization.
+ *
+ * @param[in] pBuffer Buffer to pad.
+ * @param[in] bufferLength Total length of buffer.
+ */
+static void padAndResetBuffer( uint8_t * pBuffer, size_t bufferLength )
+{
+    int i = 0;
+
+    for( i = 0; i < BUFFER_PADDING_LENGTH; i++ )
+    {
+        pBuffer[ i ] = BUFFER_PADDING_BYTE;
+        pBuffer[ bufferLength - 1 - i ] = BUFFER_PADDING_BYTE;
+    }
+
+    /* Zero out rest of buffer. */
+    memset( ( void * ) &pBuffer[ BUFFER_PADDING_LENGTH ], 0x0, bufferLength - 2 * BUFFER_PADDING_LENGTH );
+}
+
+/**
+ * @brief Test buffer for under/overflow.
+ *
+ * @param[in] pBuffer Buffer to check.
+ * @param[in] bufferLength Total length of buffer.
+ */
+static void checkBufferOverflow( uint8_t * pBuffer, size_t bufferLength )
+{
+    /* Check beginning of buffer. */
+    TEST_ASSERT_EACH_EQUAL_UINT8( BUFFER_PADDING_BYTE,
+                                  pBuffer,
+                                  BUFFER_PADDING_LENGTH );
+    /* Check end. */
+    TEST_ASSERT_EACH_EQUAL_UINT8( BUFFER_PADDING_BYTE,
+                                  pBuffer + bufferLength - BUFFER_PADDING_LENGTH,
+                                  BUFFER_PADDING_LENGTH );
+}
+
 /* ========================================================================== */
 
 /**
@@ -426,11 +475,11 @@ void test_MQTT_SerializeConnect( void )
     MQTTConnectInfo_t connectInfo;
     MQTTPublishInfo_t willInfo;
     size_t remainingLength = 0;
-    uint8_t buffer[ 70 ];
-    size_t bufferSize = sizeof( buffer );
+    uint8_t buffer[ 70 + 2 * BUFFER_PADDING_LENGTH ];
+    size_t bufferSize = sizeof( buffer ) - 2 * BUFFER_PADDING_LENGTH;
     size_t packetSize = bufferSize;
     MQTTStatus_t status = MQTTSuccess;
-    MQTTFixedBuffer_t fixedBuffer = { .pBuffer = buffer, .size = bufferSize };
+    MQTTFixedBuffer_t fixedBuffer = { .pBuffer = &buffer[ BUFFER_PADDING_LENGTH ], .size = bufferSize };
 
     /* Verify bad parameter errors. */
     status = MQTT_SerializeConnect( NULL, &willInfo, remainingLength, &fixedBuffer );
@@ -452,8 +501,10 @@ void test_MQTT_SerializeConnect( void )
     /* Make sure buffer has enough space */
     TEST_ASSERT_GREATER_OR_EQUAL( packetSize, bufferSize );
     /* Make sure test succeeds. */
+    padAndResetBuffer( buffer, sizeof( buffer ) );
     status = MQTT_SerializeConnect( &connectInfo, NULL, remainingLength, &fixedBuffer );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    checkBufferOverflow( buffer, sizeof( buffer ) );
 
     /* Encode user name. Also try clean session. */
     connectInfo.cleanSession = true;
@@ -464,8 +515,10 @@ void test_MQTT_SerializeConnect( void )
     status = MQTT_GetConnectPacketSize( &connectInfo, NULL, &remainingLength, &packetSize );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
     TEST_ASSERT_GREATER_OR_EQUAL( packetSize, bufferSize );
+    padAndResetBuffer( buffer, sizeof( buffer ) );
     status = MQTT_SerializeConnect( &connectInfo, NULL, remainingLength, &fixedBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    checkBufferOverflow( buffer, sizeof( buffer ) );
 
     /* Serialize connect with LWT. */
     /* Test for NULL topic name. */
@@ -491,8 +544,10 @@ void test_MQTT_SerializeConnect( void )
     status = MQTT_GetConnectPacketSize( &connectInfo, &willInfo, &remainingLength, &packetSize );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
     TEST_ASSERT_GREATER_OR_EQUAL( packetSize, bufferSize );
+    padAndResetBuffer( buffer, sizeof( buffer ) );
     status = MQTT_SerializeConnect( &connectInfo, &willInfo, remainingLength, &fixedBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    checkBufferOverflow( buffer, sizeof( buffer ) );
 
     /* Again with QoS 2 and 0. */
 
@@ -500,8 +555,10 @@ void test_MQTT_SerializeConnect( void )
     status = MQTT_GetConnectPacketSize( &connectInfo, &willInfo, &remainingLength, &packetSize );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
     TEST_ASSERT_GREATER_OR_EQUAL( packetSize, bufferSize );
+    padAndResetBuffer( buffer, sizeof( buffer ) );
     status = MQTT_SerializeConnect( &connectInfo, &willInfo, remainingLength, &fixedBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    checkBufferOverflow( buffer, sizeof( buffer ) );
 
     willInfo.qos = MQTTQoS0;
     willInfo.retain = false;
@@ -511,8 +568,10 @@ void test_MQTT_SerializeConnect( void )
     status = MQTT_GetConnectPacketSize( &connectInfo, &willInfo, &remainingLength, &packetSize );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
     TEST_ASSERT_GREATER_OR_EQUAL( packetSize, bufferSize );
+    padAndResetBuffer( buffer, sizeof( buffer ) );
     status = MQTT_SerializeConnect( &connectInfo, &willInfo, remainingLength, &fixedBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    checkBufferOverflow( buffer, sizeof( buffer ) );
 }
 
 /* ========================================================================== */
@@ -654,11 +713,11 @@ void test_MQTT_SerializeSubscribe( void )
     size_t subscriptionCount = 1;
     size_t remainingLength = 0;
     uint16_t packetIdentifier;
-    uint8_t buffer[ 25 ];
-    size_t bufferSize = sizeof( buffer );
+    uint8_t buffer[ 25 + 2 * BUFFER_PADDING_LENGTH ];
+    size_t bufferSize = sizeof( buffer ) - 2 * BUFFER_PADDING_LENGTH;
     size_t packetSize = bufferSize;
     MQTTStatus_t status = MQTTSuccess;
-    MQTTFixedBuffer_t fixedBuffer = { .pBuffer = buffer, .size = bufferSize };
+    MQTTFixedBuffer_t fixedBuffer = { .pBuffer = &buffer[ BUFFER_PADDING_LENGTH ], .size = bufferSize };
 
     const uint16_t PACKET_ID = 1;
 
@@ -717,12 +776,14 @@ void test_MQTT_SerializeSubscribe( void )
     fixedBuffer.size = bufferSize;
 
     /* Make sure success is returned for good case. */
+    padAndResetBuffer( buffer, sizeof( buffer ) );
     status = MQTT_SerializeSubscribe( &subscriptionList,
                                       subscriptionCount,
                                       PACKET_ID,
                                       remainingLength,
                                       &fixedBuffer );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    checkBufferOverflow( buffer, sizeof( buffer ) );
 }
 
 /**
@@ -734,11 +795,11 @@ void test_MQTT_SerializeUnsubscribe( void )
     size_t subscriptionCount = 1;
     size_t remainingLength = 0;
     uint16_t packetIdentifier;
-    uint8_t buffer[ 25 ];
-    size_t bufferSize = sizeof( buffer );
+    uint8_t buffer[ 25 + 2 * BUFFER_PADDING_LENGTH ];
+    size_t bufferSize = sizeof( buffer ) - 2 * BUFFER_PADDING_LENGTH;
     size_t packetSize = bufferSize;
     MQTTStatus_t status = MQTTSuccess;
-    MQTTFixedBuffer_t fixedBuffer = { .pBuffer = buffer, .size = bufferSize };
+    MQTTFixedBuffer_t fixedBuffer = { .pBuffer = &buffer[ BUFFER_PADDING_LENGTH ], .size = bufferSize };
 
     const uint16_t PACKET_ID = 1;
 
@@ -796,12 +857,14 @@ void test_MQTT_SerializeUnsubscribe( void )
     fixedBuffer.size = bufferSize;
 
     /* Make sure success it returned for good case. */
+    padAndResetBuffer( buffer, sizeof( buffer ) );
     status = MQTT_SerializeUnsubscribe( &subscriptionList,
                                         subscriptionCount,
                                         PACKET_ID,
                                         remainingLength,
                                         &fixedBuffer );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    checkBufferOverflow( buffer, sizeof( buffer ) );
 }
 
 /* ========================================================================== */
@@ -873,11 +936,11 @@ void test_MQTT_SerializePublish( void )
     size_t remainingLength = 98;
     uint16_t packetIdentifier;
     uint8_t * pPacketIdentifierHigh;
-    uint8_t buffer[ 200 ];
-    size_t bufferSize = sizeof( buffer );
+    uint8_t buffer[ 200 + 2 * BUFFER_PADDING_LENGTH ];
+    size_t bufferSize = sizeof( buffer ) - 2 * BUFFER_PADDING_LENGTH;
     size_t packetSize = bufferSize;
     MQTTStatus_t status = MQTTSuccess;
-    MQTTFixedBuffer_t fixedBuffer = { .pBuffer = buffer, .size = bufferSize };
+    MQTTFixedBuffer_t fixedBuffer = { .pBuffer = &buffer[ BUFFER_PADDING_LENGTH ], .size = bufferSize };
 
     const uint16_t PACKET_ID = 1;
     const char * longTopic = "/test/topic/name/longer/than/one/hundred/twenty/eight/characters" \
@@ -946,11 +1009,13 @@ void test_MQTT_SerializePublish( void )
     /* Make sure buffer has enough space */
     TEST_ASSERT_GREATER_OR_EQUAL( packetSize, bufferSize );
 
+    padAndResetBuffer( buffer, sizeof( buffer ) );
     status = MQTT_SerializePublish( &publishInfo,
                                     PACKET_ID,
                                     remainingLength,
                                     &fixedBuffer );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    checkBufferOverflow( buffer, sizeof( buffer ) );
 
     /* Again with QoS2, dup, and retain. Also encode remaining length > 2 bytes. */
     publishInfo.qos = MQTTQoS2;
@@ -963,11 +1028,13 @@ void test_MQTT_SerializePublish( void )
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     /* Make sure buffer has enough space */
     TEST_ASSERT_GREATER_OR_EQUAL( packetSize, bufferSize );
+    padAndResetBuffer( buffer, sizeof( buffer ) );
     status = MQTT_SerializePublish( &publishInfo,
                                     PACKET_ID,
                                     remainingLength,
                                     &fixedBuffer );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    checkBufferOverflow( buffer, sizeof( buffer ) );
 }
 
 /* ========================================================================== */
@@ -977,8 +1044,8 @@ void test_MQTT_SerializePublish( void )
  */
 void test_MQTT_SerializeDisconnect( void )
 {
-    uint8_t buffer[ 10 ];
-    MQTTFixedBuffer_t fixedBuffer = { .pBuffer = buffer };
+    uint8_t buffer[ 10 + 2 * BUFFER_PADDING_LENGTH ];
+    MQTTFixedBuffer_t fixedBuffer = { .pBuffer = &buffer[ BUFFER_PADDING_LENGTH ] };
     MQTTStatus_t status = MQTTSuccess;
 
     /* Buffer size less than disconnect request fails. */
@@ -992,8 +1059,10 @@ void test_MQTT_SerializeDisconnect( void )
 
     /* Good case succeeds. */
     fixedBuffer.size = 2;
+    padAndResetBuffer( buffer, sizeof( buffer ) );
     status = MQTT_SerializeDisconnect( &fixedBuffer );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    checkBufferOverflow( buffer, sizeof( buffer ) );
 }
 
 /**
@@ -1001,8 +1070,8 @@ void test_MQTT_SerializeDisconnect( void )
  */
 void test_MQTT_SerializePingreq( void )
 {
-    uint8_t buffer[ 10 ];
-    MQTTFixedBuffer_t fixedBuffer = { .pBuffer = buffer };
+    uint8_t buffer[ 10 + 2 * BUFFER_PADDING_LENGTH ];
+    MQTTFixedBuffer_t fixedBuffer = { .pBuffer = &buffer[ BUFFER_PADDING_LENGTH ] };
     MQTTStatus_t status = MQTTSuccess;
 
     /* Buffer size less than ping request fails. */
@@ -1016,8 +1085,10 @@ void test_MQTT_SerializePingreq( void )
 
     /* Good case succeeds. */
     fixedBuffer.size = 2;
+    padAndResetBuffer( buffer, sizeof( buffer ) );
     status = MQTT_SerializePingreq( &fixedBuffer );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    checkBufferOverflow( buffer, sizeof( buffer ) );
 }
 
 /* ========================================================================== */
