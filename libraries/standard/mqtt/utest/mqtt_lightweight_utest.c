@@ -1542,6 +1542,110 @@ void test_MQTT_GetIncomingPacketTypeAndLength( void )
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 }
 
+/* ========================================================================== */
+
+void test_MQTT_SerializePublishHeader( void )
+{
+    MQTTPublishInfo_t publishInfo;
+    size_t remainingLength = 0;
+    uint16_t packetIdentifier;
+    uint8_t * pPacketIdentifierHigh;
+    uint8_t buffer[ 200 ];
+    size_t bufferSize = sizeof( buffer );
+    size_t packetSize = bufferSize;
+    MQTTStatus_t status = MQTTSuccess;
+    MQTTFixedBuffer_t fixedBuffer = { .pBuffer = buffer, .size = bufferSize };
+    size_t headerSize = 0;
+
+    const uint16_t PACKET_ID = 1;
+
+    /* Verify bad parameters fail. */
+    memset( ( void * ) &publishInfo, 0x00, sizeof( publishInfo ) );
+    publishInfo.pTopicName = TEST_TOPIC_NAME;
+    publishInfo.topicNameLength = TEST_TOPIC_NAME_LENGTH;
+    status = MQTT_SerializePublishHeader( NULL,
+                                          PACKET_ID,
+                                          remainingLength,
+                                          &fixedBuffer,
+                                          &headerSize );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    status = MQTT_SerializePublishHeader( &publishInfo,
+                                          PACKET_ID,
+                                          remainingLength,
+                                          NULL,
+                                          &headerSize );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    status = MQTT_SerializePublishHeader( &publishInfo,
+                                          PACKET_ID,
+                                          remainingLength,
+                                          &fixedBuffer,
+                                          NULL );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Empty topic fails. */
+    publishInfo.pTopicName = NULL;
+    publishInfo.topicNameLength = TEST_TOPIC_NAME_LENGTH;
+    status = MQTT_SerializePublishHeader( &publishInfo,
+                                          PACKET_ID,
+                                          remainingLength,
+                                          &fixedBuffer,
+                                          &headerSize );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    publishInfo.pTopicName = TEST_TOPIC_NAME;
+    publishInfo.topicNameLength = 0;
+    status = MQTT_SerializePublishHeader( &publishInfo,
+                                          PACKET_ID,
+                                          remainingLength,
+                                          &fixedBuffer,
+                                          &headerSize );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+    publishInfo.topicNameLength = TEST_TOPIC_NAME_LENGTH;
+
+    /* 0 packet ID for QoS > 0. */
+    publishInfo.qos = MQTTQoS1;
+    status = MQTT_SerializePublishHeader( &publishInfo,
+                                          0,
+                                          remainingLength,
+                                          &fixedBuffer,
+                                          &headerSize );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Buffer too small. */
+    fixedBuffer.size = 1;
+    status = MQTT_SerializePublishHeader( &publishInfo,
+                                          PACKET_ID,
+                                          remainingLength,
+                                          &fixedBuffer,
+                                          &headerSize );
+    TEST_ASSERT_EQUAL_INT( MQTTNoMemory, status );
+    fixedBuffer.size = bufferSize;
+
+    /* Success case. */
+    status = MQTT_GetPublishPacketSize( &publishInfo, &remainingLength, &packetSize );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    status = MQTT_SerializePublishHeader( &publishInfo,
+                                          PACKET_ID,
+                                          remainingLength,
+                                          &fixedBuffer,
+                                          &headerSize );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+
+    publishInfo.qos = MQTTQoS0;
+    publishInfo.pPayload = "test";
+    publishInfo.payloadLength = 4;
+    status = MQTT_GetPublishPacketSize( &publishInfo, &remainingLength, &packetSize );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    status = MQTT_SerializePublishHeader( &publishInfo,
+                                          0,
+                                          remainingLength,
+                                          &fixedBuffer,
+                                          &headerSize );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+}
+
 /* =====================  Testing MQTT_SerializeConnect ===================== */
 
 /**
