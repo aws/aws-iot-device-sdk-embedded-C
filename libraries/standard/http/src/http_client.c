@@ -831,8 +831,6 @@ static HTTPStatus_t sendHttpHeaders( const HTTPTransportInterface_t * pTransport
     assert( pTransport->send != NULL );
     assert( pRequestHeaders != NULL );
 
-    numBytesToSend = pRequestHeaders->headersLen;
-
     /* Send the content length header if the flag to disable is not set and the
      * body length is greater than zero. */
     shouldSendContentLength = ( ( ( flags & HTTP_SEND_DISABLE_CONTENT_LENGTH_FLAG ) == 0u ) &&
@@ -849,7 +847,7 @@ static HTTPStatus_t sendHttpHeaders( const HTTPTransportInterface_t * pTransport
                     numBytesToSend ) );
 
         /* Send the HTTP headers over the network. */
-        returnStatus = sendHttpData( pTransport, pRequestHeaders->pBuffer, numBytesToSend );
+        returnStatus = sendHttpData( pTransport, pRequestHeaders->pBuffer, pRequestHeaders->headersLen );
     }
 
     return returnStatus;
@@ -1059,7 +1057,7 @@ static HTTPStatus_t receiveAndParseHttpResponse( const HTTPTransportInterface_t 
 /*-----------------------------------------------------------*/
 
 HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
-                              const HTTPRequestHeaders_t * pRequestHeaders,
+                              HTTPRequestHeaders_t * pRequestHeaders,
                               const uint8_t * pRequestBodyBuf,
                               size_t reqBodyBufLen,
                               HTTPResponse_t * pResponse,

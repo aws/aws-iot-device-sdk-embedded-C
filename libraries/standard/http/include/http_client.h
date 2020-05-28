@@ -690,7 +690,7 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
  * - #HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CONTENT_LENGTH
  */
 HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
-                              const HTTPRequestHeaders_t * pRequestHeaders,
+                              HTTPRequestHeaders_t * pRequestHeaders,
                               const uint8_t * pRequestBodyBuf,
                               size_t reqBodyBufLen,
                               HTTPResponse_t * pResponse,
