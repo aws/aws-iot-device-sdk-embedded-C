@@ -81,10 +81,10 @@ create_test(${utest_name}
             "${test_include_directories}"
         )
 
-set(send_utest_name "http_send_utest")
-set(send_utest_source "http_send_utest.c")
-create_test(${send_utest_name}
-            ${send_utest_source}
+set(utest_name "${project_name}_send_utest")
+set(utest_source "${project_name}_send_utest.c")
+create_test(${utest_name}
+            ${utest_source}
             "${utest_link_list}"
             "${utest_dep_list}"
             "${test_include_directories}"
