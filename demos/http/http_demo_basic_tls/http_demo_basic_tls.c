@@ -48,21 +48,31 @@
  *
  * This demo uses httpbin.org: A simple HTTP Request & Response Service.
  */
-#define SERVER_HOST         "httpbin.org"
+#define SERVER_HOST                "httpbin.org"
+
+/**
+ * @brief The length of the HTTP server host name.
+ */
+#define SERVER_HOST_LENGTH         ( sizeof( SERVER_HOST ) - 1 )
 
 /**
  * @brief HTTP server port number.
  *
  * In general, port 443 is for TLS HTTP connections.
  */
-#define SERVER_PORT         443
+#define SERVER_PORT                443
 
 /**
  * @brief Path of the file containing the server's root CA certificate.
  *
  * This certificate should be PEM-encoded.
  */
-#define SERVER_CERT_PATH    "certificates/amazon.crt"
+#define SERVER_CERT_PATH           "certificates/amazon.crt"
+
+/**
+ * @brief Length of path to server certificate.
+ */
+#define SERVER_CERT_PATH_LENGTH    ( ( uint16_t ) ( sizeof( SERVER_CERT_PATH ) - 1 ) )
 
 /**
  * @brief Paths for different HTTP methods for specified host.
@@ -102,11 +112,14 @@
 #define IPV6_LENGTH                       ( 40 )
 
 /**
- * @brief Some text to send as the request body for PUT and POST requests in
- * this demo.
+ * @brief Request body to send for PUT and POST requests in this demo.
  */
-#define REQUEST_BODY_TEXT                 "Hello, world!"
-#define REQUEST_BODY_TEXT_LENGTH          ( sizeof( REQUEST_BODY_TEXT ) - 1 )
+#define REQUEST_BODY                      "Hello, world!"
+
+/**
+ * @brief Length of the request body.
+ */
+#define REQUEST_BODY_LENGTH               ( sizeof( REQUEST_BODY ) - 1 )
 
 /**
  * @brief A string to store the resolved IP address from the host name.
@@ -124,7 +137,7 @@ static uint8_t userBuffer[ USER_BUFFER_LENGTH ] = { 0 };
 /**
  * @brief The request body.
  */
-static uint8_t requestBodyBuffer[ REQUEST_BODY_TEXT_LENGTH ] = { 0 };
+static uint8_t requestBodyBuffer[ REQUEST_BODY_LENGTH ] = { 0 };
 
 /**
  * @brief Definition of the HTTP network context.
@@ -228,8 +241,8 @@ static int connectToServer( const char * pServer,
 
     if( returnStatus != -1 )
     {
-        LogInfo( ( "Performing DNS lookup on %s.",
-                   SERVER_HOST ) );
+        LogInfo( ( "Performing DNS lookup on %.*s.",
+                   SERVER_HOST_LEN, SERVER_HOST ) );
 
         /* Attempt to connect to one of the retrieved DNS records. */
         for( pIndex = pListHead; pIndex != NULL; pIndex = pIndex->ai_next )
@@ -353,10 +366,11 @@ static int connectToServer( const char * pServer,
  */
 static SSL * tlsSetup( int tcpSocket )
 {
-    int sslStatus = 0;
+    int status = 0;
     FILE * pRootCaFile = NULL;
     X509 * pRootCa = NULL;
-    SSL * pSslContext = NULL;
+
+    assert( tcpSocket >= 0 );
 
     /* Setup for creating a TLS client. */
     SSL_CTX * pSslSetup = SSL_CTX_new( TLS_client_method() );
@@ -378,65 +392,59 @@ static SSL * tlsSetup( int tcpSocket )
         else
         {
             LogError( ( "Unable to find the certificate file in the path"
-                        " provided by SERVER_CERT_PATH: %s.",
+                        " provided by SERVER_CERT_PATH(%.*s).",
+                        SERVER_CERT_PATH_LENGTH,
                         SERVER_CERT_PATH ) );
-
-            /* Assert here in the step so as to help configure the path
-             * to certificate file. */
-            assert( 0 );
         }
 
         if( pRootCa != NULL )
         {
-            sslStatus = X509_STORE_add_cert( SSL_CTX_get_cert_store( pSslSetup ),
-                                             pRootCa );
+            status = X509_STORE_add_cert( SSL_CTX_get_cert_store( pSslSetup ),
+                                          pRootCa );
         }
         else
         {
             LogError( ( "Failed to parse the server certificate from"
-                        " file %s. Please validate the certificate.",
+                        " file %.*s. Please validate the certificate.",
+                        SERVER_CERT_PATH_LENGTH,
                         SERVER_CERT_PATH ) );
-
-            /* Assert here in the step so as to help configure the path
-             * to certificate file. */
-            assert( 0 );
         }
     }
 
     /* Set up the TLS connection. */
-    if( sslStatus == 1 )
+    if( status == 1 )
     {
         /* Create a new SSL context. */
-        pSslContext = SSL_new( pSslSetup );
+        *pSslContext = SSL_new( pSslSetup );
 
-        if( pSslContext != NULL )
+        if( *pSslContext != NULL )
         {
             /* Enable SSL peer verification. */
-            SSL_set_verify( pSslContext, SSL_VERIFY_PEER, NULL );
+            SSL_set_verify( *pSslContext, SSL_VERIFY_PEER, NULL );
 
-            sslStatus = SSL_set_fd( pSslContext, tcpSocket );
+            status = SSL_set_fd( *pSslContext, tcpSocket );
         }
         else
         {
             LogError( ( "Failed to create a new SSL context." ) );
-            sslStatus = 0;
+            status = 0;
         }
 
         /* Perform the TLS handshake. */
-        if( sslStatus == 1 )
+        if( status == 1 )
         {
-            sslStatus = SSL_connect( pSslContext );
+            status = SSL_connect( *pSslContext );
         }
         else
         {
             LogError( ( "Failed to set the socket fd to SSL context." ) );
         }
 
-        if( sslStatus == 1 )
+        if( status == 1 )
         {
-            if( SSL_get_verify_result( pSslContext ) != X509_V_OK )
+            if( SSL_get_verify_result( *pSslContext ) != X509_V_OK )
             {
-                sslStatus = 0;
+                status = 0;
             }
         }
         else
@@ -445,21 +453,15 @@ static SSL * tlsSetup( int tcpSocket )
         }
 
         /* Clean up on error. */
-        if( sslStatus == 0 )
+        if( status == 0 )
         {
-            SSL_free( pSslContext );
-            pSslContext = NULL;
+            SSL_free( *pSslContext );
+            *pSslContext = NULL;
         }
     }
     else
     {
         LogError( ( "Failed to add certificate to store." ) );
-    }
-
-    if( sslStatus == 0 )
-    {
-        LogError( ( "Failed to establish a SSL connection to %s.",
-                    SERVER_HOST ) );
     }
 
     if( pRootCaFile != NULL )
@@ -477,7 +479,23 @@ static SSL * tlsSetup( int tcpSocket )
         SSL_CTX_free( pSslSetup );
     }
 
-    return pSslContext;
+    /* Log failure or success and update the correct exit status to return. */
+    if( status == 0 )
+    {
+        LogError( ( "Failed to establish a TLS connection to %.*s.",
+                    SERVER_HOST_LENGTH,
+                    SERVER_HOST ) );
+        status = EXIT_FAILURE;
+    }
+    else
+    {
+        LogInfo( ( "Established a TLS connection to %.*s.\n\n",
+                   SERVER_HOST_LENGTH,
+                   SERVER_HOST ) );
+        status = EXIT_SUCCESS;
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/
@@ -611,13 +629,13 @@ static int sendHttpRequest( HTTPTransportInterface_t * pTransport,
                    ( int32_t ) requestHeaders.headersLen,
                    ( char * ) requestHeaders.pBuffer ) );
         LogInfo( ( "Request Body:\n%.*s\n",
-                   ( int32_t ) REQUEST_BODY_TEXT_LENGTH,
+                   ( int32_t ) REQUEST_BODY_LENGTH,
                    ( char * ) requestBodyBuffer ) );
         /* Send the request and receive the response. */
         httpStatus = HTTPClient_Send( pTransport,
                                       &requestHeaders,
                                       requestBodyBuffer,
-                                      REQUEST_BODY_TEXT_LENGTH,
+                                      REQUEST_BODY_LENGTH,
                                       &response,
                                       0 );
     }
@@ -665,7 +683,7 @@ int main()
 
     /* Set the request body. */
     strncpy( ( char * ) requestBodyBuffer,
-             REQUEST_BODY_TEXT, REQUEST_BODY_TEXT_LENGTH );
+             REQUEST_BODY, REQUEST_BODY_LENGTH );
 
     /**************************** Connect. ******************************/
 
@@ -681,11 +699,6 @@ int main()
         if( networkContext.sslContext == NULL )
         {
             returnStatus = EXIT_FAILURE;
-            LogError( ( "TLS handshake failed.\n" ) );
-        }
-        else
-        {
-            LogInfo( ( "TLS handshake complete.\n" ) );
         }
     }
 
