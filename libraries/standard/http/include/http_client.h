@@ -349,7 +349,10 @@ typedef enum HTTPStatus
  *
  * The memory for the header data buffer is supplied by the user. Information in
  * the buffer will be filled by calling #HTTPClient_InitializeRequestHeaders and
- * #HTTPClient_AddHeader.
+ * #HTTPClient_AddHeader. This buffer may be automatically filled with the 
+ * Content-Length header in #HTTPClient_Send, please see 
+ * HTTP_MAX_CONTENT_LENGTH_HEADER_LENGTH for the maximum amount of space needed
+ * to accommodate the Content-Length header.
  */
 typedef struct HTTPRequestHeaders
 {
@@ -638,22 +641,23 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
  * body in @p pRequestBodyBuf over the transport. The response is received in
  * #HTTPResponse_t.pBuffer.
  *
- * If HTTP_SEND_DISABLE_CONTENT_LENGTH_FLAG is not set in parameter @p flags,
+ * If #HTTP_SEND_DISABLE_CONTENT_LENGTH_FLAG is not set in parameter @p flags,
  * then the Content-Length to be sent to the server is automatically written to
- * @p pRequestHeaders. If there was not enough room in the buffer to write the
- * Content-Length then HTTP_INSUFFICIENT_MEMORY is returned. Please see
- * HTTP_MAX_CONTENT_LENGTH_HEADER_LENGTH for the maximum Content-Length header
+ * @p pRequestHeaders. The Content-Length will not be written when there is 
+ * no request body. If there is not enough room in the buffer to write the
+ * Content-Length then #HTTP_INSUFFICIENT_MEMORY is returned. Please see
+ * #HTTP_MAX_CONTENT_LENGTH_HEADER_LENGTH for the maximum Content-Length header
  * field and value that could be written to the buffer.
  *
  * The application should close the connection with the server if any of the
  * following errors are returned:
- * - HTTP_SECURITY_ALERT_RESPONSE_HEADERS_SIZE_LIMIT_EXCEEDED
- * - HTTP_SECURITY_ALERT_EXTRANEOUS_RESPONSE_DATA
- * - HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CHUNK_HEADER
- * - HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_PROTOCOL_VERSION
- * - HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_STATUS_CODE
- * - HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CHARACTER
- * - HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CONTENT_LENGTH
+ * - #HTTP_SECURITY_ALERT_RESPONSE_HEADERS_SIZE_LIMIT_EXCEEDED
+ * - #HTTP_SECURITY_ALERT_EXTRANEOUS_RESPONSE_DATA
+ * - #HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CHUNK_HEADER
+ * - #HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_PROTOCOL_VERSION
+ * - #HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_STATUS_CODE
+ * - #HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CHARACTER
+ * - #HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CONTENT_LENGTH
  *
  * The @p pResponse returned is valid only if this function returns HTTP_SUCCESS.
  *
