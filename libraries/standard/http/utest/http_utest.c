@@ -7,7 +7,6 @@
 
 /* Private includes for internal macros. */
 #include "private/http_client_internal.h"
-#include "private/http_client_parse.h"
 
 /* Include mock implementation of http-parser dependency. */
 #include "mock_http_parser.h"
@@ -123,7 +122,7 @@ static const char * pTestResponse = "HTTP/1.1 200 OK\r\n"
 #define HEADER_NOT_IN_BUFFER    "header-not-in-buffer"
 
 /* File-scoped Global variables */
-static HTTPStatus_t retCode = HTTP_INTERNAL_ERROR;
+static HTTPStatus_t retCode = HTTP_SUCCESS;
 static uint8_t testBuffer[ HTTP_TEST_BUFFER_SIZE ] = { 0 };
 static HTTPRequestHeaders_t testHeaders = { 0 };
 static _headers_t expectedHeaders = { 0 };
@@ -273,9 +272,9 @@ static void addRangeToExpectedHeaders( _headers_t * expectedHeaders,
                                        const char * expectedRange,
                                        bool terminatorExists )
 {
-    size_t expectedRangeLen = RANGE_REQUEST_HEADER_FIELD_LEN +
+    size_t expectedRangeLen = HTTP_RANGE_REQUEST_HEADER_FIELD_LEN +
                               HTTP_HEADER_FIELD_SEPARATOR_LEN +
-                              RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN +
+                              HTTP_RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN +
                               strlen( expectedRange ) +
                               2 * HTTP_HEADER_LINE_SEPARATOR_LEN;
 
@@ -285,9 +284,9 @@ static void addRangeToExpectedHeaders( _headers_t * expectedHeaders,
                   ( terminatorExists ? HTTP_HEADER_LINE_SEPARATOR_LEN : 0 ),
                   sizeof( expectedHeaders->buffer ) - expectedHeaders->dataLen,
                   "%s%s%s%s\r\n\r\n",
-                  RANGE_REQUEST_HEADER_FIELD,
+                  HTTP_RANGE_REQUEST_HEADER_FIELD,
                   HTTP_HEADER_FIELD_SEPARATOR,
-                  RANGE_REQUEST_HEADER_VALUE_PREFIX,
+                  HTTP_RANGE_REQUEST_HEADER_VALUE_PREFIX,
                   expectedRange );
 
     /* Make sure that the Range request was printed to the buffer. */
@@ -318,7 +317,7 @@ void setUp()
 /* Called after each test method. */
 void tearDown()
 {
-    retCode = HTTP_INTERNAL_ERROR;
+    retCode = HTTP_SUCCESS;
     memset( &testHeaders, 0, sizeof( testHeaders ) );
     memset( testBuffer, 0, sizeof( testBuffer ) );
     memset( &expectedHeaders, 0, sizeof( expectedHeaders ) );
@@ -386,7 +385,7 @@ static void setupBuffer( HTTPRequestHeaders_t * pRequestHeaders )
  */
 void test_Http_InitializeRequestHeaders_Happy_Path()
 {
-    HTTPStatus_t httpStatus = HTTP_INTERNAL_ERROR;
+    HTTPStatus_t httpStatus = HTTP_SUCCESS;
     HTTPRequestHeaders_t requestHeaders = { 0 };
     HTTPRequestInfo_t requestInfo = { 0 };
     int numBytes = 0;
@@ -418,7 +417,7 @@ void test_Http_InitializeRequestHeaders_Happy_Path()
  */
 void test_Http_InitializeRequestHeaders_Invalid_Params()
 {
-    HTTPStatus_t httpStatus = HTTP_INTERNAL_ERROR;
+    HTTPStatus_t httpStatus = HTTP_SUCCESS;
     HTTPRequestHeaders_t requestHeaders = { 0 };
     HTTPRequestInfo_t requestInfo = { 0 };
 
@@ -463,7 +462,7 @@ void test_Http_InitializeRequestHeaders_Invalid_Params()
  */
 void test_Http_InitializeRequestHeaders_ReqInfo()
 {
-    HTTPStatus_t httpStatus = HTTP_INTERNAL_ERROR;
+    HTTPStatus_t httpStatus = HTTP_SUCCESS;
     HTTPRequestHeaders_t requestHeaders = { 0 };
     HTTPRequestInfo_t requestInfo = { 0 };
     int numBytes = 0;
@@ -508,7 +507,7 @@ void test_Http_InitializeRequestHeaders_ReqInfo()
  */
 void test_Http_InitializeRequestHeaders_Insufficient_Memory()
 {
-    HTTPStatus_t httpStatus = HTTP_INTERNAL_ERROR;
+    HTTPStatus_t httpStatus = HTTP_SUCCESS;
     HTTPRequestHeaders_t requestHeaders = { 0 };
     HTTPRequestInfo_t requestInfo = { 0 };
 
@@ -534,7 +533,7 @@ void test_Http_InitializeRequestHeaders_Insufficient_Memory()
  */
 void test_Http_AddHeader_Happy_Path()
 {
-    HTTPStatus_t httpStatus = HTTP_INTERNAL_ERROR;
+    HTTPStatus_t httpStatus = HTTP_SUCCESS;
     HTTPRequestHeaders_t requestHeaders = { 0 };
     int numBytes = 0;
 
@@ -575,7 +574,7 @@ void test_Http_AddHeader_Happy_Path()
  */
 void test_Http_AddHeader_Invalid_Parameters()
 {
-    HTTPStatus_t httpStatus = HTTP_INTERNAL_ERROR;
+    HTTPStatus_t httpStatus = HTTP_SUCCESS;
     HTTPRequestHeaders_t requestHeaders = { 0 };
 
     /* Test a NULL request headers interface. */
@@ -623,7 +622,7 @@ void test_Http_AddHeader_Invalid_Parameters()
  */
 void test_Http_AddHeader_Extra_Header_Sufficient_Memory()
 {
-    HTTPStatus_t httpStatus = HTTP_INTERNAL_ERROR;
+    HTTPStatus_t httpStatus = HTTP_SUCCESS;
     HTTPRequestHeaders_t requestHeaders = { 0 };
     int numBytes = 0;
 
@@ -665,7 +664,7 @@ void test_Http_AddHeader_Extra_Header_Sufficient_Memory()
  */
 void test_Http_AddHeader_Extra_Header_Insufficient_Memory()
 {
-    HTTPStatus_t httpStatus = HTTP_INTERNAL_ERROR;
+    HTTPStatus_t httpStatus = HTTP_SUCCESS;
     HTTPRequestHeaders_t requestHeaders = { 0 };
     int numBytes = 0;
 
@@ -709,7 +708,7 @@ void test_Http_AddHeader_Extra_Header_Insufficient_Memory()
  */
 void test_Http_AddHeader_Single_Header_Insufficient_Memory()
 {
-    HTTPStatus_t httpStatus = HTTP_INTERNAL_ERROR;
+    HTTPStatus_t httpStatus = HTTP_SUCCESS;
     HTTPRequestHeaders_t requestHeaders = { 0 };
     int numBytes = 0;
 
@@ -1219,7 +1218,7 @@ void test_Http_ReadHeader_With_HttpParser_Internal_Error()
                                      strlen( HEADER_IN_BUFFER ),
                                      &pValueLoc,
                                      &valueLen );
-    TEST_ASSERT_EQUAL( HTTP_INTERNAL_ERROR, retCode );
+    TEST_ASSERT_EQUAL( HTTP_SUCCESS, retCode );
 }
 
 /**
