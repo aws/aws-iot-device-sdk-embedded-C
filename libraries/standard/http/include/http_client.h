@@ -82,8 +82,6 @@
  *
  * Setting this will cause a "Connection: Keep-Alive" to be written to the
  * request headers.
- * If this flag is not set, then "Connection: Close" will be written to the
- * request headers.
  *
  * This flag is valid only for #HTTPRequestInfo.flags.
  */
