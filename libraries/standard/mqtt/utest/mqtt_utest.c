@@ -78,6 +78,16 @@
 #define MQTT_SAMPLE_NETWORK_CONTEXT         ( 0 )
 
 /**
+ * @brief Sample topic filter to subscribe to.
+ */
+#define MQTT_SAMPLE_TOPIC_FILTER            "iot"
+
+/**
+ * @brief Length of sample topic filter.
+ */
+#define MQTT_SAMPLE_TOPIC_FILTER_LENGTH     ( sizeof( MQTT_SAMPLE_TOPIC_FILTER ) - 1 )
+
+/**
  * @brief The packet type to be received by the process loop.
  * IMPORTANT: Make sure this is set before calling expectProcessLoopCalls(...).
  */
@@ -291,6 +301,18 @@ static void setupCallbacks( MQTTApplicationCallbacks_t * pCallbacks )
 {
     pCallbacks->appCallback = eventCallback;
     pCallbacks->getTime = getTime;
+}
+
+/**
+ * @brief Initialize pSubscribeInfo using test-defined macros.
+ *
+ * @param[in] pSubscribeInfo Pointer to MQTT subscription info.
+ */
+static void setupSubscriptionInfo( MQTTSubscribeInfo_t * pSubscribeInfo )
+{
+    pSubscribeInfo->qos = MQTTQoS1;
+    pSubscribeInfo->pTopicFilter = MQTT_SAMPLE_TOPIC_FILTER;
+    pSubscribeInfo->topicFilterLength = MQTT_SAMPLE_TOPIC_FILTER_LENGTH;
 }
 
 /**
@@ -1260,3 +1282,296 @@ void test_MQTT_ProcessLoop_Timer_Overflow( void )
     mqttStatus = MQTT_ProcessLoop( &context, MQTT_TIMER_OVERFLOW_TIMEOUT_MS );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 }
+
+/* ========================================================================== */
+
+/**
+ * @brief This test case verifies that MQTT_Subscribe returns MQTTBadParameter
+ * with an invalid parameter. This test case also gives us coverage over
+ * the private method, validateSubscribeUnsubscribeParams(...).
+ */
+void test_MQTT_Subscribe_invalid_params( void )
+{
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context;
+    MQTTSubscribeInfo_t subscribeInfo;
+
+    /* Call subscribe with a NULL context. */
+    mqttStatus = MQTT_Subscribe( NULL, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
+
+    /* Call subscribe with a NULL subscription list. */
+    mqttStatus = MQTT_Subscribe( &context, NULL, 1, MQTT_FIRST_VALID_PACKET_ID );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
+
+    /* Call subscribe with 0 subscriptions. */
+    mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 0, MQTT_FIRST_VALID_PACKET_ID );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
+
+    /* Packet ID cannot be 0 per MQTT 3.1.1 spec. */
+    mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1, 0 );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
+}
+
+/**
+ * @brief This test case verifies that MQTT_Subscribe returns successfully
+ * when valid parameters are passed and all bytes are sent.
+ */
+void test_MQTT_Subscribe_happy_path( void )
+{
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context;
+    MQTTTransportInterface_t transport;
+    MQTTFixedBuffer_t networkBuffer;
+    MQTTApplicationCallbacks_t callbacks;
+    MQTTPacketInfo_t incomingPacket = { 0 };
+    MQTTSubscribeInfo_t subscribeInfo;
+    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+
+    setupTransportInterface( &transport );
+    setupCallbacks( &callbacks );
+    setupNetworkBuffer( &networkBuffer );
+    setupSubscriptionInfo( &subscribeInfo );
+
+    /* Initialize context. */
+    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    /* Verify MQTTSuccess is returned with the following mocks. */
+    MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
+    MQTT_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
+    MQTT_SerializeSubscribe_ExpectAnyArgsAndReturn( MQTTSuccess );
+    /* Expect the above calls when running MQTT_Subscribe. */
+    mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+}
+
+/**
+ * @brief This test case verifies that MQTT_Subscribe returns MQTTSendFailed
+ * if transport interface send returns an error.
+ */
+void test_MQTT_Subscribe_error_paths( void )
+{
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context;
+    MQTTTransportInterface_t transport;
+    MQTTFixedBuffer_t networkBuffer;
+    MQTTApplicationCallbacks_t callbacks;
+    MQTTSubscribeInfo_t subscribeInfo;
+    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+
+    /* Verify that an error is propagated when transport interface returns an error. */
+    setupTransportInterface( &transport );
+    setupCallbacks( &callbacks );
+    setupNetworkBuffer( &networkBuffer );
+    setupSubscriptionInfo( &subscribeInfo );
+
+    transport.send = transportSendFailure;
+    transport.recv = transportRecvFailure;
+
+    /* Initialize context. */
+    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    /* Verify MQTTSendFailed is propagated when transport interface returns an error. */
+    MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
+    MQTT_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
+    MQTT_SerializeSubscribe_ExpectAnyArgsAndReturn( MQTTSuccess );
+    /* Expect the above calls when running MQTT_Subscribe. */
+    mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID );
+    TEST_ASSERT_EQUAL( MQTTSendFailed, mqttStatus );
+}
+
+/* ========================================================================== */
+
+/**
+ * @brief This test case verifies that MQTT_Unsubscribe returns MQTTBadParameter
+ * with an invalid parameter. This test case also gives us coverage over
+ * the private method, validateSubscribeUnsubscribeParams(...).
+ */
+void test_MQTT_Unsubscribe_invalid_params( void )
+{
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context;
+    MQTTSubscribeInfo_t subscribeInfo;
+
+    /* Call subscribe with a NULL context. */
+    mqttStatus = MQTT_Unsubscribe( NULL, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
+
+    /* Call subscribe with a NULL subscription list. */
+    mqttStatus = MQTT_Unsubscribe( &context, NULL, 1, MQTT_FIRST_VALID_PACKET_ID );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
+
+    /* Call subscribe with 0 subscriptions. */
+    mqttStatus = MQTT_Unsubscribe( &context, &subscribeInfo, 0, MQTT_FIRST_VALID_PACKET_ID );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
+
+    /* Packet ID cannot be 0 per MQTT 3.1.1 spec. */
+    mqttStatus = MQTT_Unsubscribe( &context, &subscribeInfo, 1, 0 );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
+}
+
+/**
+ * @brief This test case verifies that MQTT_Unsubscribe returns successfully
+ * when valid parameters are passed and all bytes are sent.
+ */
+void test_MQTT_Unsubscribe_happy_path( void )
+{
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context;
+    MQTTTransportInterface_t transport;
+    MQTTFixedBuffer_t networkBuffer;
+    MQTTApplicationCallbacks_t callbacks;
+    MQTTSubscribeInfo_t subscribeInfo;
+    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+
+    setupTransportInterface( &transport );
+    setupCallbacks( &callbacks );
+    setupNetworkBuffer( &networkBuffer );
+    setupSubscriptionInfo( &subscribeInfo );
+
+    /* Initialize context. */
+    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    /* Verify MQTTSuccess is returned with the following mocks. */
+    MQTT_GetUnsubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetUnsubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
+    MQTT_GetUnsubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
+    MQTT_SerializeUnsubscribe_ExpectAnyArgsAndReturn( MQTTSuccess );
+    /* Expect the above calls when running MQTT_Unsubscribe. */
+    mqttStatus = MQTT_Unsubscribe( &context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+}
+
+/**
+ * @brief This test case verifies that MQTT_Unsubscribe returns MQTTSendFailed
+ * if transport interface send returns an error.
+ */
+void test_MQTT_Unsubscribe_error_path( void )
+{
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context;
+    MQTTTransportInterface_t transport;
+    MQTTFixedBuffer_t networkBuffer;
+    MQTTApplicationCallbacks_t callbacks;
+    MQTTSubscribeInfo_t subscribeInfo;
+    size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
+    size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
+
+    /* Verify that an error is propagated when transport interface returns an error. */
+    setupTransportInterface( &transport );
+    setupCallbacks( &callbacks );
+    setupNetworkBuffer( &networkBuffer );
+    setupSubscriptionInfo( &subscribeInfo );
+
+    transport.send = transportSendFailure;
+    transport.recv = transportRecvFailure;
+
+    /* Initialize context. */
+    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    /* Verify MQTTSendFailed is propagated when transport interface returns an error. */
+    MQTT_GetUnsubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetUnsubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
+    MQTT_GetUnsubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
+    MQTT_SerializeUnsubscribe_ExpectAnyArgsAndReturn( MQTTSuccess );
+    /* Expect the above calls when running MQTT_Unsubscribe. */
+    mqttStatus = MQTT_Unsubscribe( &context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID );
+    TEST_ASSERT_EQUAL( MQTTSendFailed, mqttStatus );
+}
+
+/* ========================================================================== */
+
+/**
+ * @brief This test case verifies that MQTT_Ping returns MQTTBadParameter
+ * with context parameter is NULL.
+ */
+void test_MQTT_Ping_invalid_params( void )
+{
+    MQTTStatus_t mqttStatus;
+
+    /* Call ping with a NULL context. */
+    mqttStatus = MQTT_Ping( NULL );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
+}
+
+/**
+ * @brief This test case verifies that MQTT_Ping returns successfully
+ * when valid parameters are passed and all bytes are sent.
+ */
+void test_MQTT_Ping_happy_path( void )
+{
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context;
+    MQTTTransportInterface_t transport;
+    MQTTFixedBuffer_t networkBuffer;
+    MQTTApplicationCallbacks_t callbacks;
+    size_t pingreqSize = MQTT_PACKET_PINGREQ_SIZE;
+
+    setupTransportInterface( &transport );
+    setupCallbacks( &callbacks );
+    setupNetworkBuffer( &networkBuffer );
+
+    /* Initialize context. */
+    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    /* Verify MQTTSuccess is returned. */
+    MQTT_GetPingreqPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetPingreqPacketSize_ReturnThruPtr_pPacketSize( &pingreqSize );
+    MQTT_SerializePingreq_ExpectAnyArgsAndReturn( MQTTSuccess );
+    /* Expect the above calls when running MQTT_Ping. */
+    mqttStatus = MQTT_Ping( &context );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    TEST_ASSERT_EQUAL( context.lastPacketTime, context.pingReqSendTimeMs );
+    TEST_ASSERT_TRUE( context.waitingForPingResp );
+}
+
+/**
+ * @brief This test case verifies that MQTT_Ping returns MQTTSendFailed
+ * if transport interface send returns an error.
+ */
+void test_MQTT_Ping_error_path( void )
+{
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context;
+    MQTTTransportInterface_t transport;
+    MQTTFixedBuffer_t networkBuffer;
+    MQTTApplicationCallbacks_t callbacks;
+    size_t pingreqSize = MQTT_PACKET_PINGREQ_SIZE;
+
+    setupTransportInterface( &transport );
+    setupCallbacks( &callbacks );
+    setupNetworkBuffer( &networkBuffer );
+
+    transport.send = transportSendFailure;
+    transport.recv = transportRecvFailure;
+
+    /* Initialize context. */
+    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    /* Verify MQTTSendFailed is propagated when transport interface returns an error. */
+    MQTT_GetPingreqPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetPingreqPacketSize_ReturnThruPtr_pPacketSize( &pingreqSize );
+    MQTT_SerializePingreq_ExpectAnyArgsAndReturn( MQTTSuccess );
+    /* Expect the above calls when running MQTT_Ping. */
+    mqttStatus = MQTT_Ping( &context );
+    TEST_ASSERT_EQUAL( MQTTSendFailed, mqttStatus );
+
+
+    /* Initialize context. */
+    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    /* Verify MQTTBadParameter is propagated when getting PINGREQ packet size fails. */
+    MQTT_GetPingreqPacketSize_ExpectAnyArgsAndReturn( MQTTBadParameter );
+    MQTT_GetPingreqPacketSize_ReturnThruPtr_pPacketSize( &pingreqSize );
+    /* Expect the above calls when running MQTT_Ping. */
+    mqttStatus = MQTT_Ping( &context );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
+}
+
+/* ========================================================================== */
