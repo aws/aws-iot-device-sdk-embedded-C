@@ -262,7 +262,7 @@ static void initializeParsingContextForFirstResponse( HTTPParsingContext_t * pPa
  * @p pParsingContext.
  *
  * @param[in,out] pParsingState The response parsing state.
- * @param[in] pResponse The response information to be updated.
+ * @param[in,out] pResponse The response information to be updated.
  * @param[in] parseLen The next length to parse in pResponse->pBuffer.
  * @param[in] isHeaderResponse If the response is to a HEAD request this is set
  * to 1, otherwise this is set to 0.
@@ -432,12 +432,8 @@ static int httpParserOnMessageCompleteCallback( http_parser * pHttpParser );
  * This function is invoked only in callbacks that could follow
  * #httpParserOnHeaderValueCallback. These callbacks are
  * #httpParserOnHeaderFieldCallback and #httpParserOnHeadersCompleteCallback.
- *
- * Because of #httpParserOnHeadersCompleteCallback and
- * #httpParserOnHeaderValueCallback having the possibility of being invoked
- * multiple times for partial header fields and values, it is not known if a
- * header field and value pair is complete until
- * httpParserOnHeaderValueCallback() does not get called in succession.
+ * A header field and value is not is not known to be complete until 
+ * #httpParserOnHeaderValueCallback is not called in succession.
  *
  * @param[in] pParsingContext Parsing state containing information to notify
  * the application of a complete header.
@@ -506,9 +502,9 @@ static void processCompleteHeader( HTTPParsingContext_t * pParsingContext )
          * httpParserOnHeaderFieldCallback() and
          * httpParserOnHeaderValueCallback(). */
         pParsingContext->pLastHeaderField = NULL;
-        pParsingContext->lastHeaderFieldLen = 0;
+        pParsingContext->lastHeaderFieldLen = 0u;
         pParsingContext->pLastHeaderValue = NULL;
-        pParsingContext->lastHeaderValueLen = 0;
+        pParsingContext->lastHeaderValueLen = 0u;
     }
 }
 
@@ -530,6 +526,7 @@ static int httpParserOnMessageBeginCallback( http_parser * pHttpParser )
     HTTPResponse_t * pResponse = NULL;
 
     assert( pHttpParser != NULL );
+    assert( pHttpParser->data != NULL );
 
     /* The MISRA rule 11.5 violation flags casting a void pointer to another
      * type. This rule is suppressed here because the http-parser library
@@ -602,7 +599,7 @@ static int httpParserOnStatusCallback( http_parser * pHttpParser,
 
     LogDebug( ( "Response parsing: Found the Reason-Phrase: "
                 "StatusCode=%d, ReasonPhrase=%.*s",
-                pParsingContext->pResponse->statusCode,
+                pResponse->statusCode,
                 length,
                 pLoc ) );
 
@@ -825,11 +822,11 @@ static int httpParserOnHeadersCompleteCallback( http_parser * pHttpParser )
     /* coverity[misra_c_2012_rule_14_3_violation] */
     if( pHttpParser->content_length != ( ( uint64_t ) -1 ) )
     {
-        pParsingContext->pResponse->contentLength = ( size_t ) ( pHttpParser->content_length );
+        pResponse->contentLength = ( size_t ) ( pHttpParser->content_length );
     }
     else
     {
-        pParsingContext->pResponse->contentLength = 0u;
+        pResponse->contentLength = 0u;
     }
 
     /* If the Connection: close header was found this flag will be set. */
@@ -857,7 +854,7 @@ static int httpParserOnHeadersCompleteCallback( http_parser * pHttpParser )
     }
 
     /* http_parser_execute() requires that callback implementations must
-     * manually stop the parsing on headers complete, if response is to a HEAD
+     * indicate that parsing stops on headers complete, if response is to a HEAD
      * request. A HEAD response will contain Content-Length, but no body. If
      * the parser is not stopped here, then it will try to keep parsing past the
      * end of the headers up to the Content-Length found. */
@@ -931,7 +928,7 @@ static int httpParserOnBodyCallback( http_parser * pHttpParser,
     if( pResponse->pBody == NULL )
     {
         pResponse->pBody = ( const uint8_t * ) ( pParsingContext->pBufferCur );
-        pResponse->bodyLen = 0;
+        pResponse->bodyLen = 0u;
     }
 
     /* The next location to write. */
@@ -990,6 +987,7 @@ static int httpParserOnMessageCompleteCallback( http_parser * pHttpParser )
     HTTPParsingContext_t * pParsingContext = NULL;
 
     assert( pHttpParser != NULL );
+    assert( pHttpParser->data != NULL );
 
     /* The MISRA rule 11.5 violation flags casting a void pointer to another
      * type. This rule is suppressed here because the http-parser library
@@ -1003,7 +1001,7 @@ static int httpParserOnMessageCompleteCallback( http_parser * pHttpParser )
 
     LogDebug( ( "Response parsing: Response message complete." ) );
 
-    return 0;
+    return HTTP_PARSER_CONTINUE_PARSING;
 }
 
 /*-----------------------------------------------------------*/
@@ -1175,7 +1173,7 @@ HTTPStatus_t parseHttpResponse( HTTPParsingContext_t * pParsingContext,
         pResponse->statusCode = 0u;
         /* Initialize the start of the response body and length. */
         pResponse->pBody = NULL;
-        pResponse->bodyLen = 0;
+        pResponse->bodyLen = 0u;
 
         /* Initialize the start of the headers, its length, and the count for
          * the parsing that follows the status. */
@@ -1183,7 +1181,7 @@ HTTPStatus_t parseHttpResponse( HTTPParsingContext_t * pParsingContext,
         pResponse->headersLen = 0u;
         pResponse->headerCount = 0u;
         /* Initialize the response flags. */
-        pResponse->flags = 0;
+        pResponse->flags = 0u;
     }
     else
     {
@@ -1770,11 +1768,11 @@ static HTTPStatus_t addContentLengthHeader( HTTPRequestHeaders_t * pRequestHeade
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
     char pContentLengthValue[ MAX_INT32_NO_OF_DECIMAL_DIGITS ] = { '\0' };
-    uint8_t contentLengthValueNumBytes = 0;
-    size_t headerLength = 0;
+    uint8_t contentLengthValueNumBytes = 0u;
+    size_t headerLength = 0u;
 
     assert( pRequestHeaders != NULL );
-    assert( contentLength > 0 );
+    assert( contentLength > 0u );
 
     contentLengthValueNumBytes = convertInt32ToAscii( ( int32_t ) contentLength,
                                                       pContentLengthValue,

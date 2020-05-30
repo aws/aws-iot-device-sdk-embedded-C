@@ -21,7 +21,7 @@
     "test-header4: test-value1\r\n"            \
     "test-header5: test-value2\r\n"            \
     "\r\n"
-#define HTTP_TEST_REQUEST_HEAD_HEADERS_LENGTH    sizeof( HTTP_TEST_REQUEST_HEAD_HEADERS ) - 1U
+#define HTTP_TEST_REQUEST_HEAD_HEADERS_LENGTH    ( sizeof( HTTP_TEST_REQUEST_HEAD_HEADERS ) - 1U )
 
 /* Template HTTP request for a PUT request. */
 #define HTTP_TEST_REQUEST_PUT_HEADERS         \
@@ -32,11 +32,11 @@
     "test-header4: test-value1\r\n"           \
     "test-header5: test-value2\r\n"           \
     "\r\n"
-#define HTTP_TEST_REQUEST_PUT_HEADERS_LENGTH                    sizeof( HTTP_TEST_REQUEST_PUT_HEADERS ) - 1U
+#define HTTP_TEST_REQUEST_PUT_HEADERS_LENGTH                    ( sizeof( HTTP_TEST_REQUEST_PUT_HEADERS ) - 1U )
 #define HTTP_TEST_REQUEST_PUT_BODY                              "abcdefghijklmnopqrstuvwxyz"
-#define HTTP_TEST_REQUEST_PUT_BODY_LENGTH                       sizeof( HTTP_TEST_REQUEST_PUT_BODY ) - 1U
+#define HTTP_TEST_REQUEST_PUT_BODY_LENGTH                       ( sizeof( HTTP_TEST_REQUEST_PUT_BODY ) - 1U )
 #define HTTP_TEST_REQUEST_PUT_CONTENT_LENGTH_EXPECTED           "Content-Length: 26\r\n" HTTP_HEADER_LINE_SEPARATOR
-#define HTTP_TEST_REQUEST_PUT_CONTENT_LENGTH_EXPECTED_LENGTH    sizeof( HTTP_TEST_REQUEST_PUT_CONTENT_LENGTH_EXPECTED ) - 1U
+#define HTTP_TEST_REQUEST_PUT_CONTENT_LENGTH_EXPECTED_LENGTH    ( sizeof( HTTP_TEST_REQUEST_PUT_CONTENT_LENGTH_EXPECTED ) - 1U )
 
 /* Template HTTP request for a GET request. */
 #define HTTP_TEST_REQUEST_GET_HEADERS         \
@@ -47,7 +47,7 @@
     "test-header4: test-value1\r\n"           \
     "test-header5: test-value2\r\n"           \
     "\r\n"
-#define HTTP_TEST_REQUEST_GET_HEADERS_LENGTH               sizeof( HTTP_TEST_REQUEST_GET_HEADERS ) - 1U
+#define HTTP_TEST_REQUEST_GET_HEADERS_LENGTH               ( sizeof( HTTP_TEST_REQUEST_GET_HEADERS ) - 1U )
 
 /* HTTP OK Status-Line. */
 #define HTTP_STATUS_LINE_OK                                "HTTP/1.1 200 OK\r\n"
@@ -79,11 +79,11 @@
     HTTP_TEST_VARY_HEADER_LINE             \
     HTTP_TEST_P3P_HEADER_LINE              \
     HTTP_TEST_XSERVER_HEADER_LINE HTTP_HEADER_LINE_SEPARATOR
-#define HTTP_TEST_RESPONSE_HEAD_LENGTH                         sizeof( HTTP_TEST_RESPONSE_HEAD ) - 1U
+#define HTTP_TEST_RESPONSE_HEAD_LENGTH                         ( sizeof( HTTP_TEST_RESPONSE_HEAD ) - 1U )
 #define HTTP_TEST_RESPONSE_HEAD_HEADER_COUNT                   7
 #define HTTP_TEST_RESPONSE_HEAD_CONTENT_LENGTH                 43
-#define HTTP_TEST_RESPONSE_HEAD_PARTIAL_HEADER_FIELD_LENGTH    sizeof( HTTP_STATUS_LINE_OK ) + sizeof( HTTP_TEST_CONTENT_LENGTH_PARTIAL_HEADER_FIELD ) - 2U
-#define HTTP_TEST_RESPONSE_HEAD_PARTIAL_HEADER_VALUE_LENGTH    sizeof( HTTP_STATUS_LINE_OK ) + sizeof( HTTP_TEST_CONTENT_LENGTH_PARTIAL_HEADER_VALUE ) - 2U
+#define HTTP_TEST_RESPONSE_HEAD_PARTIAL_HEADER_FIELD_LENGTH    ( sizeof( HTTP_STATUS_LINE_OK ) + sizeof( HTTP_TEST_CONTENT_LENGTH_PARTIAL_HEADER_FIELD ) - 2U )
+#define HTTP_TEST_RESPONSE_HEAD_PARTIAL_HEADER_VALUE_LENGTH    ( sizeof( HTTP_STATUS_LINE_OK ) + sizeof( HTTP_TEST_CONTENT_LENGTH_PARTIAL_HEADER_VALUE ) - 2U )
 
 /* Template HTTP PUT response. This has no body. */
 #define HTTP_TEST_RESPONSE_PUT                  \
@@ -94,19 +94,19 @@
     HTTP_TEST_VARY_HEADER_LINE                  \
     HTTP_TEST_P3P_HEADER_LINE                   \
     HTTP_TEST_XSERVER_HEADER_LINE HTTP_HEADER_LINE_SEPARATOR
-#define HTTP_TEST_RESPONSE_PUT_LENGTH          sizeof( HTTP_TEST_RESPONSE_PUT ) - 1U
+#define HTTP_TEST_RESPONSE_PUT_LENGTH          ( sizeof( HTTP_TEST_RESPONSE_PUT ) - 1U )
 #define HTTP_TEST_RESPONSE_PUT_HEADER_COUNT    6
 
 /* Template HTTP GET response. */
 #define HTTP_TEST_RESPONSE_GET \
     HTTP_TEST_RESPONSE_HEAD    \
     "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopq"
-#define HTTP_TEST_RESPONSE_GET_LENGTH                 sizeof( HTTP_TEST_RESPONSE_GET ) - 1U
+#define HTTP_TEST_RESPONSE_GET_LENGTH                 ( sizeof( HTTP_TEST_RESPONSE_GET ) - 1U)
 #define HTTP_TEST_RESPONSE_GET_HEADER_COUNT           HTTP_TEST_RESPONSE_HEAD_HEADER_COUNT
-#define HTTP_TEST_RESPONSE_GET_HEADERS_LENGTH         HTTP_TEST_RESPONSE_HEAD_LENGTH - ( sizeof( HTTP_STATUS_LINE_OK ) - 1U )
+#define HTTP_TEST_RESPONSE_GET_HEADERS_LENGTH         ( HTTP_TEST_RESPONSE_HEAD_LENGTH - ( sizeof( HTTP_STATUS_LINE_OK ) - 1U ) )
 #define HTTP_TEST_RESPONSE_GET_BODY_LENGTH            HTTP_TEST_RESPONSE_HEAD_CONTENT_LENGTH
 #define HTTP_TEST_RESPONSE_GET_CONTENT_LENGTH         HTTP_TEST_RESPONSE_HEAD_CONTENT_LENGTH
-#define HTTP_TEST_RESPONSE_GET_PARTIAL_BODY_LENGTH    HTTP_TEST_RESPONSE_GET_LENGTH - 13U
+#define HTTP_TEST_RESPONSE_GET_PARTIAL_BODY_LENGTH    ( HTTP_TEST_RESPONSE_GET_LENGTH - 13U )
 
 /* Template HTTP transfer-encoding chunked response. */
 #define HTTP_TEST_RESPONSE_CHUNKED                           \
@@ -126,7 +126,7 @@
     "xyz\r\n"                                                \
     "0\r\n"                                                  \
     "\r\n"
-#define HTTP_TEST_RESPONSE_CHUNKED_LENGTH          sizeof( HTTP_TEST_RESPONSE_CHUNKED ) - 1U
+#define HTTP_TEST_RESPONSE_CHUNKED_LENGTH          ( sizeof( HTTP_TEST_RESPONSE_CHUNKED ) - 1U )
 #define HTTP_TEST_RESPONSE_CHUNKED_HEADER_COUNT    7
 #define HTTP_TEST_RESPONSE_CHUNKED_BODY_LENGTH     26
 #define HTTP_TEST_RESPONSE_CHUNKED_HEADERS_LENGTH               \
@@ -142,7 +142,7 @@
 /* Template HTTP response with no headers. */
 #define HTTP_TEST_RESPONSE_NO_HEADERS \
     HTTP_STATUS_LINE_OK HTTP_HEADER_LINE_SEPARATOR
-#define HTTP_TEST_RESPONSE_NO_HEADERS_LENGTH    sizeof( HTTP_TEST_RESPONSE_NO_HEADERS ) - 1U
+#define HTTP_TEST_RESPONSE_NO_HEADERS_LENGTH    ( sizeof( HTTP_TEST_RESPONSE_NO_HEADERS ) - 1U )
 
 /* Test buffer to share among the test. */
 #define HTTP_TEST_BUFFER_LENGTH                 1024
@@ -842,7 +842,7 @@ void test_HTTPClient_Send_GET_request_parse_whole_response( void )
 
 /*-----------------------------------------------------------*/
 
-/* Test successfully parsing a response where there is are no headers. The full
+/* Test successfully parsing a response where there are no headers. The full
  * response message is present in the response buffer on the first network read. */
 void test_HTTPClient_Send_no_response_headers( void )
 {
@@ -1371,6 +1371,8 @@ void test_HTTPClient_Send_Content_Length_Header_Doesnt_Fit( void )
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
 
     requestHeaders.pBuffer = (uint8_t*)HTTP_TEST_REQUEST_PUT_HEADERS;
+    /* Set the length of the buffer to be the same length as the current
+     * amount of headers without the Content-Length. */
     requestHeaders.bufferLen = HTTP_TEST_REQUEST_PUT_HEADERS_LENGTH;
     requestHeaders.headersLen = HTTP_TEST_REQUEST_PUT_HEADERS_LENGTH;
 
