@@ -167,9 +167,12 @@ static int tlsSetup( int tcpSocket,
 /**
  * @brief The transport send function that defines the transport interface.
  *
- * @param[in] pContext User defined context (TCP socket with SSL context for demo).
+ * This is passed to the #HTTPTransportInterface.send function and used to
+ * make calls to the network.
+ *
+ * @param[in] pContext User defined context (TCP socket for this demo).
  * @param[in] pBuffer Buffer containing the bytes to send over the network stack.
- * @param[in] bytesToSend Number of bytes to send to the network.
+ * @param[in] bytesToSend Number of bytes to write to the network.
  *
  * @return Number of bytes sent; negative value on error.
  */
@@ -180,9 +183,12 @@ static int32_t transportSend( HTTPNetworkContext_t * pContext,
 /**
  * @brief The transport receive function that defines the transport interface.
  *
- * @param[in] pContext User defined context (TCP socket with SSL context for demo).
+ * @param[in] pContext User defined context (TCP socket for this demo).
  * @param[out] pBuffer Buffer to read network data into.
  * @param[in] bytesToRead Number of bytes requested from the network.
+ *
+ * This is passed to the #HTTPTransportInterface.recv function and used to
+ * make calls to the network.
  *
  * @return Number of bytes received; negative value on error.
  */
@@ -481,7 +487,7 @@ static int tlsSetup( int tcpSocket,
 /*-----------------------------------------------------------*/
 
 static int32_t transportSend( HTTPNetworkContext_t * pNetworkContext,
-                              const void * pMessage,
+                              const void * pBuffer,
                               size_t bytesToSend )
 {
     int32_t bytesSent = 0;
@@ -500,7 +506,7 @@ static int32_t transportSend( HTTPNetworkContext_t * pNetworkContext,
 
     if( pollStatus > 0 )
     {
-        bytesSent = ( int32_t ) SSL_write( pNetworkContext->pSslContext, pMessage, bytesToSend );
+        bytesSent = ( int32_t ) SSL_write( pNetworkContext->pSslContext, pBuffer, bytesToSend );
     }
     else if( pollStatus == 0 )
     {
