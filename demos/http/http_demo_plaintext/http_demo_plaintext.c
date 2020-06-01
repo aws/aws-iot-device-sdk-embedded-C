@@ -173,6 +173,21 @@ static int32_t transportRecv( HTTPNetworkContext_t * pContext,
                               void * pBuffer,
                               size_t bytesToRecv );
 
+/**
+ * @brief Send an HTTP request based on a specified method and path.
+ *
+ * @param[in] pTransportInterface The transport interface for making network calls.
+ * @param[in] pHost The host name of the server.
+ * @param[in] pMethod The HTTP request method.
+ * @param[in] pPath The Request-URI to the objects of interest.
+ *
+ * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
+ */
+static int sendHttpRequest( HTTPTransportInterface_t * pTransportInterface,
+                            const char * pHost,
+                            const char * pMethod,
+                            const char * pPath );
+
 /*-----------------------------------------------------------*/
 
 static int connectToServer( const char * pServer,
@@ -370,16 +385,6 @@ static int32_t transportRecv( HTTPNetworkContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
-/**
- * @brief Send an HTTP request based on a specified method and path.
- *
- * @param[in] pTransportInterface The transport interface for making network calls.
- * @param[in] pHost The host name of the server.
- * @param[in] pMethod The HTTP request method.
- * @param[in] pPath The Request-URI to the objects of interest.
- *
- * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
- */
 static int sendHttpRequest( HTTPTransportInterface_t * pTransportInterface,
                             const char * pHost,
                             const char * pMethod,
