@@ -102,7 +102,7 @@
 /**
  * @brief A string to store the resolved IP address from the host name.
  */
-static uint8_t resolvedIpAddr[ IPV6_LENGTH ] = { 0 };
+static char resolvedIpAddr[ IPV6_LENGTH ] = { 0 };
 
 /**
  * @brief A buffer used to store request headers and reused after sending
@@ -229,7 +229,7 @@ static int connectToServer( const char * pServer,
                            sizeof( resolvedIpAddr ) );
             }
 
-            LogInfo( ( "Attempting to connect to resolved IP Address: %s.",
+            LogInfo( ( "Attempting to connect to resolved IP address: %s.",
                        resolvedIpAddr ) );
 
             returnStatus = connect( *pTcpSocket, pServerInfo, serverInfoLength );
@@ -240,7 +240,7 @@ static int connectToServer( const char * pServer,
             }
             else
             {
-                LogInfo( ( "Connected to IP Address: %s.",
+                LogInfo( ( "Connected to IP address: %s.",
                            resolvedIpAddr ) );
                 break;
             }
