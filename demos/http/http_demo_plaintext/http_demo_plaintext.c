@@ -497,7 +497,7 @@ int main()
     /* Send GET Request. */
     if( returnStatus == EXIT_SUCCESS )
     {
-        returnStatus = sendHttpRequest( &transport,
+        returnStatus = sendHttpRequest( &transportInterface,
                                         SERVER_HOST,
                                         HTTP_METHOD_GET,
                                         GET_PATH );
@@ -506,7 +506,7 @@ int main()
     /* Send HEAD Request. */
     if( returnStatus == EXIT_SUCCESS )
     {
-        returnStatus = sendHttpRequest( &transport,
+        returnStatus = sendHttpRequest( &transportInterface,
                                         SERVER_HOST,
                                         HTTP_METHOD_HEAD,
                                         HEAD_PATH );
@@ -515,7 +515,7 @@ int main()
     /* Send PUT Request. */
     if( returnStatus == EXIT_SUCCESS )
     {
-        returnStatus = sendHttpRequest( &transport,
+        returnStatus = sendHttpRequest( &transportInterface,
                                         SERVER_HOST,
                                         HTTP_METHOD_PUT,
                                         PUT_PATH );
@@ -524,7 +524,7 @@ int main()
     /* Send POST Request. */
     if( returnStatus != EXIT_SUCCESS )
     {
-        returnStatus = sendHttpRequest( &transport,
+        returnStatus = sendHttpRequest( &transportInterface,
                                         SERVER_HOST,
                                         HTTP_METHOD_POST,
                                         POST_PATH );
