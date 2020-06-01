@@ -70,4 +70,9 @@
     "rqXRfboQnoZsG4q5WTP468SQvvG5\n"                                   \
     "-----END CERTIFICATE-----"
 
+/**
+ * @brief Length of the server's root CA certificate.
+ */
+#define SERVER_CERTIFICATE_LENGTH    ( sizeof( SERVER_CERTIFICATE ) - 1 )
+
 #endif /* ifndef HTTP_CONFIG_H */

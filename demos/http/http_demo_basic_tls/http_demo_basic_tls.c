@@ -367,10 +367,11 @@ static int tlsSetup( int tcpSocket,
         ( void ) SSL_CTX_set_mode( pSslSetup, SSL_MODE_AUTO_RETRY );
 
         pRootCaBio = BIO_new( BIO_s_mem() );
+        /* Add the root server CA, which is defined in the config header file. */
+        sslStatus = BIO_write( pRootCaBio, SERVER_CERTIFICATE, SERVER_CERTIFICATE_LENGTH );
     }
 
-    /* Add the root server CA, which is defined in the config header file. */
-    if( BIO_puts( pRootCaBio, SERVER_CERTIFICATE ) )
+    if( sslStatus == 1 )
     {
         pRootCa = PEM_read_bio_X509( pRootCaBio, NULL, NULL, NULL );
 
@@ -385,6 +386,10 @@ static int tlsSetup( int tcpSocket,
                         "Please validate the certificate.",
                         SERVER_CERTIFICATE ) );
         }
+    }
+    else
+    {
+        LogError( ( "Failed to write server certificate to BIO." ) );
     }
 
     /* Set up the TLS connection. */
