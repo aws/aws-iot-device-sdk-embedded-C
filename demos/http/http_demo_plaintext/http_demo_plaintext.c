@@ -378,8 +378,7 @@ static int32_t transportRecv( HTTPNetworkContext_t * pContext,
  * @param[in] pMethod The HTTP request method.
  * @param[in] pPath The Request-URI to the objects of interest.
  *
- * @return #HTTP_SUCCESS if successful;
- * otherwise, the error status returned by the HTTP library
+ * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
 static int sendHttpRequest( HTTPTransportInterface_t * pTransport,
                             const char * pHost,
