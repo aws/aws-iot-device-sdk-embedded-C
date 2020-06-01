@@ -36,6 +36,7 @@
 #include <sys/types.h>
 
 #include <openssl/ssl.h>
+#include <openssl/bio.h>
 
 /* HTTP API header. */
 #include "http_client.h"
@@ -48,31 +49,19 @@
  *
  * This demo uses httpbin.org: A simple HTTP Request & Response Service.
  */
-#define SERVER_HOST                "httpbin.org"
+#define SERVER_HOST           "httpbin.org"
 
 /**
  * @brief The length of the HTTP server host name.
  */
-#define SERVER_HOST_LENGTH         ( sizeof( SERVER_HOST ) - 1 )
+#define SERVER_HOST_LENGTH    ( sizeof( SERVER_HOST ) - 1 )
 
 /**
  * @brief HTTP server port number.
  *
  * In general, port 443 is for TLS HTTP connections.
  */
-#define SERVER_PORT                443
-
-/**
- * @brief Path of the file containing the server's root CA certificate.
- *
- * This certificate should be PEM-encoded.
- */
-#define SERVER_CERT_PATH           "/home/jutsniduts/dev/c-sdk-dev/aws-iot-device-sdk-embedded-C/build/bin/certificates/amazon.crt"
-
-/**
- * @brief Length of path to server certificate.
- */
-#define SERVER_CERT_PATH_LENGTH    ( ( uint16_t ) ( sizeof( SERVER_CERT_PATH ) - 1 ) )
+#define SERVER_PORT           443
 
 /**
  * @brief Paths for different HTTP methods for specified host.
@@ -124,7 +113,7 @@
 /**
  * @brief A string to store the resolved IP address from the host name.
  */
-static uint8_t resolvedIpAddr[ IPV6_LENGTH ] = { 0 };
+static char resolvedIpAddr[ IPV6_LENGTH ] = { 0 };
 
 /**
  * @brief A buffer used to store request headers and reused after sending
@@ -362,8 +351,8 @@ static int connectToServer( const char * pServer,
 static int tlsSetup( int tcpSocket,
                      SSL ** pSslContext )
 {
-    int status = 0;
-    FILE * pRootCaFile = NULL;
+    int sslStatus = 0;
+    BIO * pRootCaBio = NULL;
     X509 * pRootCa = NULL;
 
     assert( tcpSocket >= 0 );
@@ -377,38 +366,29 @@ static int tlsSetup( int tcpSocket,
          * The mask returned by SSL_CTX_set_mode does not need to be checked. */
         ( void ) SSL_CTX_set_mode( pSslSetup, SSL_MODE_AUTO_RETRY );
 
-        /* OpenSSL does not provide a single function for reading and loading certificates
-         * from files into stores, so the file API must be called. */
-        pRootCaFile = fopen( SERVER_CERT_PATH, "r" );
+        pRootCaBio = BIO_new( BIO_s_mem() );
+    }
 
-        if( pRootCaFile != NULL )
-        {
-            pRootCa = PEM_read_X509( pRootCaFile, NULL, NULL, NULL );
-        }
-        else
-        {
-            LogError( ( "Unable to find the certificate file in the path"
-                        " provided by SERVER_CERT_PATH(%.*s).",
-                        ( int32_t ) SERVER_CERT_PATH_LENGTH,
-                        SERVER_CERT_PATH ) );
-        }
+    /* Add the root server CA, which is defined in the config header file. */
+    if( BIO_puts( pRootCaBio, SERVER_CERTIFICATE ) )
+    {
+        pRootCa = PEM_read_bio_X509( pRootCaBio, NULL, NULL, NULL );
 
         if( pRootCa != NULL )
         {
-            status = X509_STORE_add_cert( SSL_CTX_get_cert_store( pSslSetup ),
-                                          pRootCa );
+            sslStatus = X509_STORE_add_cert( SSL_CTX_get_cert_store( pSslSetup ),
+                                             pRootCa );
         }
         else
         {
-            LogError( ( "Failed to parse the server certificate from"
-                        " file %.*s. Please validate the certificate.",
-                        ( int32_t ) SERVER_CERT_PATH_LENGTH,
-                        SERVER_CERT_PATH ) );
+            LogError( ( "Failed to parse the provided server certificate:\n%s\n"
+                        "Please validate the certificate.",
+                        SERVER_CERTIFICATE ) );
         }
     }
 
     /* Set up the TLS connection. */
-    if( status == 1 )
+    if( sslStatus == 1 )
     {
         /* Create a new SSL context. */
         *pSslContext = SSL_new( pSslSetup );
@@ -418,29 +398,29 @@ static int tlsSetup( int tcpSocket,
             /* Enable SSL peer verification. */
             SSL_set_verify( *pSslContext, SSL_VERIFY_PEER, NULL );
 
-            status = SSL_set_fd( *pSslContext, tcpSocket );
+            sslStatus = SSL_set_fd( *pSslContext, tcpSocket );
         }
         else
         {
             LogError( ( "Failed to create a new SSL context." ) );
-            status = 0;
+            sslStatus = 0;
         }
 
         /* Perform the TLS handshake. */
-        if( status == 1 )
+        if( sslStatus == 1 )
         {
-            status = SSL_connect( *pSslContext );
+            sslStatus = SSL_connect( *pSslContext );
         }
         else
         {
             LogError( ( "Failed to set the socket fd to SSL context." ) );
         }
 
-        if( status == 1 )
+        if( sslStatus == 1 )
         {
             if( SSL_get_verify_result( *pSslContext ) != X509_V_OK )
             {
-                status = 0;
+                sslStatus = 0;
             }
         }
         else
@@ -449,7 +429,7 @@ static int tlsSetup( int tcpSocket,
         }
 
         /* Clean up on error. */
-        if( status == 0 )
+        if( sslStatus == 0 )
         {
             SSL_free( *pSslContext );
             *pSslContext = NULL;
@@ -460,9 +440,9 @@ static int tlsSetup( int tcpSocket,
         LogError( ( "Failed to add certificate to store." ) );
     }
 
-    if( pRootCaFile != NULL )
+    if( pRootCaBio != NULL )
     {
-        ( void ) fclose( pRootCaFile );
+        BIO_free( pRootCaBio );
     }
 
     if( pRootCa != NULL )
@@ -475,23 +455,21 @@ static int tlsSetup( int tcpSocket,
         SSL_CTX_free( pSslSetup );
     }
 
-    /* Log failure or success and update the correct exit status to return. */
-    if( status == 0 )
+    /* Log failure or success and return the correct exit status. */
+    if( sslStatus == 0 )
     {
         LogError( ( "Failed to establish a TLS connection to %.*s.",
                     ( int32_t ) SERVER_HOST_LENGTH,
                     SERVER_HOST ) );
-        status = EXIT_FAILURE;
+        return EXIT_FAILURE;
     }
     else
     {
         LogInfo( ( "Established a TLS connection to %.*s.\n\n",
                    ( int32_t ) SERVER_HOST_LENGTH,
                    SERVER_HOST ) );
-        status = EXIT_SUCCESS;
+        return EXIT_SUCCESS;
     }
-
-    return status;
 }
 
 /*-----------------------------------------------------------*/
@@ -673,7 +651,6 @@ static int sendHttpRequest( HTTPTransportInterface_t * pTransport,
 int main()
 {
     int returnStatus = EXIT_SUCCESS;
-    HTTPStatus_t httpStatus = HTTP_SUCCESS;
     HTTPNetworkContext_t networkContext = { 0 };
     HTTPTransportInterface_t transportInterface = { 0 };
 
