@@ -250,7 +250,7 @@ static int connectToServer( const char * pServer,
         {
             /* Fail if no connection could be established. */
             returnStatus = EXIT_FAILURE;
-            LogError( ( "Resolved but could not connect to any resolved IP from %.*s.\n",
+            LogError( ( "Could not connect to any resolved IP address from %.*s.\n",
                         ( int ) strlen( pServer ),
                         pServer ) );
         }
@@ -469,7 +469,7 @@ int main()
 {
     int returnStatus = EXIT_SUCCESS;
     HTTPNetworkContext_t socketContext = { 0 };
-    HTTPTransportInterface_t transport = { 0 };
+    HTTPTransportInterface_t transportInterface = { 0 };
 
     /* Set the request body. */
     strncpy( ( char * ) requestBodyBuffer,
@@ -481,9 +481,12 @@ int main()
     returnStatus = connectToServer( SERVER_HOST, SERVER_PORT, &socketContext.tcpSocket );
 
     /* Define the transport interface. */
-    transport.recv = transportRecv;
-    transport.send = transportSend;
-    transport.pContext = &socketContext;
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        transportInterface.recv = transportRecv;
+        transportInterface.send = transportSend;
+        transportInterface.pContext = &socketContext;
+    }
 
     /*********************** Send HTTPS request. ************************/
 
