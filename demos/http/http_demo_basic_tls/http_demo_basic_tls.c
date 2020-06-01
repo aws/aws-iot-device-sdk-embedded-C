@@ -199,14 +199,14 @@ static int32_t transportRecv( HTTPNetworkContext_t * pContext,
 /**
  * @brief Send an HTTP request based on a specified method and path.
  *
- * @param[in] pTransport The transport interface for network send and receive.
+ * @param[in] pTransportInterface The transport interface for making network calls.
  * @param[in] pHost The host name of the server.
  * @param[in] pMethod The HTTP request method.
  * @param[in] pPath The Request-URI to the objects of interest.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
-static int sendHttpRequest( HTTPTransportInterface_t * pTransport,
+static int sendHttpRequest( HTTPTransportInterface_t * pTransportInterface,
                             const char * pHost,
                             const char * pMethod,
                             const char * pPath );
@@ -569,7 +569,7 @@ static int32_t transportRecv( HTTPNetworkContext_t * pNetworkContext,
 
 /*-----------------------------------------------------------*/
 
-static int sendHttpRequest( HTTPTransportInterface_t * pTransport,
+static int sendHttpRequest( HTTPTransportInterface_t * pTransportInterface,
                             const char * pHost,
                             const char * pMethod,
                             const char * pPath )
@@ -579,7 +579,7 @@ static int sendHttpRequest( HTTPTransportInterface_t * pTransport,
     HTTPRequestInfo_t requestInfo = { 0 };
     HTTPResponse_t response = { 0 };
 
-    assert( pTransport != NULL );
+    assert( pTransportInterface != NULL );
     assert( pMethod != NULL );
 
     /* Initialize the request object. */
@@ -617,7 +617,7 @@ static int sendHttpRequest( HTTPTransportInterface_t * pTransport,
                    ( int32_t ) REQUEST_BODY_LENGTH,
                    ( char * ) requestBodyBuffer ) );
         /* Send the request and receive the response. */
-        httpStatus = HTTPClient_Send( pTransport,
+        httpStatus = HTTPClient_Send( pTransportInterface,
                                       &requestHeaders,
                                       requestBodyBuffer,
                                       REQUEST_BODY_LENGTH,
