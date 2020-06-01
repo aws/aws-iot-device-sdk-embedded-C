@@ -351,7 +351,7 @@ static int connectToServer( const char * pServer,
 static int tlsSetup( int tcpSocket,
                      SSL ** pSslContext )
 {
-    int sslStatus = 0;
+    int sslStatus = 0, bytesWritten = 0;
     BIO * pRootCaBio = NULL;
     X509 * pRootCa = NULL;
 
@@ -368,10 +368,10 @@ static int tlsSetup( int tcpSocket,
 
         pRootCaBio = BIO_new( BIO_s_mem() );
         /* Add the root server CA, which is defined in the config header file. */
-        sslStatus = BIO_write( pRootCaBio, SERVER_CERTIFICATE, SERVER_CERTIFICATE_LENGTH );
+        bytesWritten = BIO_write( pRootCaBio, SERVER_CERTIFICATE, SERVER_CERTIFICATE_LENGTH );
     }
 
-    if( sslStatus == 1 )
+    if( bytesWritten == SERVER_CERTIFICATE_LENGTH )
     {
         pRootCa = PEM_read_bio_X509( pRootCaBio, NULL, NULL, NULL );
 
@@ -389,7 +389,8 @@ static int tlsSetup( int tcpSocket,
     }
     else
     {
-        LogError( ( "Failed to write server certificate to BIO." ) );
+        LogError( ( "Failed to write server certificate to BIO: "
+                    "bytesWritten=%d", bytesWritten ) );
     }
 
     /* Set up the TLS connection. */
