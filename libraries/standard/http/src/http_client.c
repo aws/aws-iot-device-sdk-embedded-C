@@ -10,7 +10,7 @@
  * @brief Send HTTP bytes over the transport send interface.
  *
  * @param[in] pTransport Transport interface.
- * @param[in] pDataHTTP request data to send.
+ * @param[in] pData HTTP request data to send.
  * @param[in] dataLen HTTP request data length.
  *
  * @return #HTTP_SUCCESS if successful. If there was a network error or less
@@ -432,7 +432,7 @@ static int httpParserOnMessageCompleteCallback( http_parser * pHttpParser );
  * This function is invoked only in callbacks that could follow
  * #httpParserOnHeaderValueCallback. These callbacks are
  * #httpParserOnHeaderFieldCallback and #httpParserOnHeadersCompleteCallback.
- * A header field and value is not is not known to be complete until 
+ * A header field and value is not is not known to be complete until
  * #httpParserOnHeaderValueCallback is not called in succession.
  *
  * @param[in] pParsingContext Parsing state containing information to notify
