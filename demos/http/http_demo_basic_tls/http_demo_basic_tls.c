@@ -67,7 +67,7 @@
  *
  * This certificate should be PEM-encoded.
  */
-#define SERVER_CERT_PATH           "certificates/amazon.crt"
+#define SERVER_CERT_PATH           "/home/jutsniduts/dev/c-sdk-dev/aws-iot-device-sdk-embedded-C/build/bin/certificates/amazon.crt"
 
 /**
  * @brief Length of path to server certificate.
@@ -145,7 +145,7 @@ static uint8_t requestBodyBuffer[ REQUEST_BODY_LENGTH ] = { 0 };
 struct HTTPNetworkContext
 {
     int tcpSocket;
-    SSL * sslContext;
+    SSL * pSslContext;
 };
 
 /*-----------------------------------------------------------*/
@@ -168,10 +168,12 @@ static int connectToServer( const char * pServer,
  * @brief Set up a TLS connection over an existing TCP connection.
  *
  * @param[in] tcpSocket Existing TCP connection.
+ * @param[out] pSslContext Pointer to SSL connection context.
  *
- * @return An SSL connection context; NULL on failure.
+ * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
-static SSL * tlsSetup( int tcpSocket );
+static int tlsSetup( int tcpSocket,
+                     SSL ** pSslContext );
 
 /**
  * @brief The transport send function that defines the transport interface.
@@ -242,7 +244,7 @@ static int connectToServer( const char * pServer,
     if( returnStatus != -1 )
     {
         LogInfo( ( "Performing DNS lookup on %.*s.",
-                   SERVER_HOST_LEN, SERVER_HOST ) );
+                   ( int32_t ) SERVER_HOST_LENGTH, SERVER_HOST ) );
 
         /* Attempt to connect to one of the retrieved DNS records. */
         for( pIndex = pListHead; pIndex != NULL; pIndex = pIndex->ai_next )
@@ -277,7 +279,7 @@ static int connectToServer( const char * pServer,
                            sizeof( resolvedIpAddr ) );
             }
 
-            LogInfo( ( "Attempting to connect to resolved IP Address: %s.",
+            LogInfo( ( "Attempting to connect to resolved IP address: %s.",
                        resolvedIpAddr ) );
 
             returnStatus = connect( *pTcpSocket, pServerInfo, serverInfoLength );
@@ -288,7 +290,7 @@ static int connectToServer( const char * pServer,
             }
             else
             {
-                LogInfo( ( "Connected to IP Address: %s.",
+                LogInfo( ( "Connected to IP address: %s.",
                            resolvedIpAddr ) );
                 break;
             }
@@ -298,7 +300,7 @@ static int connectToServer( const char * pServer,
         {
             /* Fail if no connection could be established. */
             returnStatus = EXIT_FAILURE;
-            LogError( ( "Resolved but could not connect to any resolved IP from %.*s.\n",
+            LogError( ( "Could not connect to any resolved IP address from %.*s.\n",
                         ( int ) strlen( pServer ),
                         pServer ) );
         }
@@ -357,14 +359,8 @@ static int connectToServer( const char * pServer,
 
 /*-----------------------------------------------------------*/
 
-/**
- * @brief Set up a TLS connection over an existing TCP connection.
- *
- * @param[in] tcpSocket Existing TCP connection.
- *
- * @return An SSL connection context; NULL on failure.
- */
-static SSL * tlsSetup( int tcpSocket )
+static int tlsSetup( int tcpSocket,
+                     SSL ** pSslContext )
 {
     int status = 0;
     FILE * pRootCaFile = NULL;
@@ -393,7 +389,7 @@ static SSL * tlsSetup( int tcpSocket )
         {
             LogError( ( "Unable to find the certificate file in the path"
                         " provided by SERVER_CERT_PATH(%.*s).",
-                        SERVER_CERT_PATH_LENGTH,
+                        ( int32_t ) SERVER_CERT_PATH_LENGTH,
                         SERVER_CERT_PATH ) );
         }
 
@@ -406,7 +402,7 @@ static SSL * tlsSetup( int tcpSocket )
         {
             LogError( ( "Failed to parse the server certificate from"
                         " file %.*s. Please validate the certificate.",
-                        SERVER_CERT_PATH_LENGTH,
+                        ( int32_t ) SERVER_CERT_PATH_LENGTH,
                         SERVER_CERT_PATH ) );
         }
     }
@@ -483,14 +479,14 @@ static SSL * tlsSetup( int tcpSocket )
     if( status == 0 )
     {
         LogError( ( "Failed to establish a TLS connection to %.*s.",
-                    SERVER_HOST_LENGTH,
+                    ( int32_t ) SERVER_HOST_LENGTH,
                     SERVER_HOST ) );
         status = EXIT_FAILURE;
     }
     else
     {
         LogInfo( ( "Established a TLS connection to %.*s.\n\n",
-                   SERVER_HOST_LENGTH,
+                   ( int32_t ) SERVER_HOST_LENGTH,
                    SERVER_HOST ) );
         status = EXIT_SUCCESS;
     }
@@ -513,18 +509,18 @@ static int32_t transportSend( HTTPNetworkContext_t * pNetworkContext,
     };
 
     /* Set the file descriptor for poll. */
-    fileDescriptor.fd = SSL_get_fd( pNetworkContext->sslContext );
+    fileDescriptor.fd = SSL_get_fd( pNetworkContext->pSslContext );
 
     /* Poll the file descriptor to check if SSL_Write can be done now. */
     pollStatus = poll( &fileDescriptor, 1, TRANSPORT_SEND_RECV_TIMEOUT_MS );
 
     if( pollStatus > 0 )
     {
-        bytesSent = ( int32_t ) SSL_write( pNetworkContext->sslContext, pMessage, bytesToSend );
+        bytesSent = ( int32_t ) SSL_write( pNetworkContext->pSslContext, pMessage, bytesToSend );
     }
     else if( pollStatus == 0 )
     {
-        LogInfo( ( "Timed out while polling SSL socket for write buffer availability." ) );
+        LogDebug( ( "Timed out while polling SSL socket for write buffer availability." ) );
     }
     else
     {
@@ -552,10 +548,10 @@ static int32_t transportRecv( HTTPNetworkContext_t * pNetworkContext,
     };
 
     /* Set the file descriptor for poll. */
-    fileDescriptor.fd = SSL_get_fd( pNetworkContext->sslContext );
+    fileDescriptor.fd = SSL_get_fd( pNetworkContext->pSslContext );
 
     /* Check if there are any pending data available for read. */
-    bytesAvailableToRead = SSL_pending( pNetworkContext->sslContext );
+    bytesAvailableToRead = SSL_pending( pNetworkContext->pSslContext );
 
     /* Poll only if there is no data available yet to read. */
     if( bytesAvailableToRead <= 0 )
@@ -566,7 +562,7 @@ static int32_t transportRecv( HTTPNetworkContext_t * pNetworkContext,
     /* SSL read of data. */
     if( ( pollStatus > 0 ) || ( bytesAvailableToRead > 0 ) )
     {
-        bytesReceived = ( int32_t ) SSL_read( pNetworkContext->sslContext, pBuffer, bytesToRecv );
+        bytesReceived = ( int32_t ) SSL_read( pNetworkContext->pSslContext, pBuffer, bytesToRecv );
     }
     /* Poll timed out. */
     else if( pollStatus == 0 )
@@ -679,7 +675,7 @@ int main()
     int returnStatus = EXIT_SUCCESS;
     HTTPStatus_t httpStatus = HTTP_SUCCESS;
     HTTPNetworkContext_t networkContext = { 0 };
-    HTTPTransportInterface_t transport = { 0 };
+    HTTPTransportInterface_t transportInterface = { 0 };
 
     /* Set the request body. */
     strncpy( ( char * ) requestBodyBuffer,
@@ -694,18 +690,17 @@ int main()
     if( returnStatus == EXIT_SUCCESS )
     {
         LogInfo( ( "Performing TLS handshake on top of the TCP connection." ) );
-        networkContext.sslContext = tlsSetup( networkContext.tcpSocket );
-
-        if( networkContext.sslContext == NULL )
-        {
-            returnStatus = EXIT_FAILURE;
-        }
+        returnStatus = tlsSetup( networkContext.tcpSocket,
+                                 &networkContext.pSslContext );
     }
 
     /* Define the transport interface. */
-    transport.recv = transportRecv;
-    transport.send = transportSend;
-    transport.pContext = &networkContext;
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        transportInterface.recv = transportRecv;
+        transportInterface.send = transportSend;
+        transportInterface.pContext = &networkContext;
+    }
 
     /*********************** Send HTTPS request. ************************/
 
@@ -716,7 +711,7 @@ int main()
     /* Send GET Request. */
     if( returnStatus == EXIT_SUCCESS )
     {
-        returnStatus = sendHttpRequest( &transport,
+        returnStatus = sendHttpRequest( &transportInterface,
                                         SERVER_HOST,
                                         HTTP_METHOD_GET,
                                         GET_PATH );
@@ -725,7 +720,7 @@ int main()
     /* Send HEAD Request. */
     if( returnStatus == EXIT_SUCCESS )
     {
-        returnStatus = sendHttpRequest( &transport,
+        returnStatus = sendHttpRequest( &transportInterface,
                                         SERVER_HOST,
                                         HTTP_METHOD_HEAD,
                                         HEAD_PATH );
@@ -734,7 +729,7 @@ int main()
     /* Send PUT Request. */
     if( returnStatus == EXIT_SUCCESS )
     {
-        returnStatus = sendHttpRequest( &transport,
+        returnStatus = sendHttpRequest( &transportInterface,
                                         SERVER_HOST,
                                         HTTP_METHOD_PUT,
                                         PUT_PATH );
@@ -743,7 +738,7 @@ int main()
     /* Send POST Request. */
     if( returnStatus != EXIT_SUCCESS )
     {
-        returnStatus = sendHttpRequest( &transport,
+        returnStatus = sendHttpRequest( &transportInterface,
                                         SERVER_HOST,
                                         HTTP_METHOD_POST,
                                         POST_PATH );
@@ -752,16 +747,16 @@ int main()
     /************************** Disconnect. *****************************/
 
     /* Close TLS session if established. */
-    if( networkContext.sslContext != NULL )
+    if( networkContext.pSslContext != NULL )
     {
         /* SSL shutdown should be called twice: once to send "close notify" and
          * once more to receive the peer's "close notify". */
-        if( SSL_shutdown( networkContext.sslContext ) == 0 )
+        if( SSL_shutdown( networkContext.pSslContext ) == 0 )
         {
-            ( void ) SSL_shutdown( networkContext.sslContext );
+            ( void ) SSL_shutdown( networkContext.pSslContext );
         }
 
-        SSL_free( networkContext.sslContext );
+        SSL_free( networkContext.pSslContext );
     }
 
     if( networkContext.tcpSocket != -1 )
