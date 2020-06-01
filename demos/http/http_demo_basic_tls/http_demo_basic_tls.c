@@ -168,7 +168,7 @@ static int tlsSetup( int tcpSocket,
  * @brief The transport send function that defines the transport interface.
  *
  * This is passed to the #HTTPTransportInterface.send function and used to
- * make calls to the network.
+ * send data over the network.
  *
  * @param[in] pContext User defined context (TCP socket for this demo).
  * @param[in] pBuffer Buffer containing the bytes to send over the network stack.
@@ -188,7 +188,7 @@ static int32_t transportSend( HTTPNetworkContext_t * pContext,
  * @param[in] bytesToRead Number of bytes requested from the network.
  *
  * This is passed to the #HTTPTransportInterface.recv function and used to
- * make calls to the network.
+ * receive data over the network.
  *
  * @return Number of bytes received; negative value on error.
  */
