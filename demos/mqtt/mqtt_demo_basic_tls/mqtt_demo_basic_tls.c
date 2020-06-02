@@ -47,6 +47,7 @@
 
 /* MQTT API header. */
 #include "mqtt.h"
+#include "mqtt_state.h"
 
 /* Demo Config header. */
 #include "demo_config.h"
@@ -57,36 +58,36 @@
  * This demo uses the Mosquitto test server. This is a public MQTT server; do not
  * publish anything sensitive to this server.
  */
-#define BROKER_ENDPOINT           "test.mosquitto.org"
+#define BROKER_ENDPOINT            "test.mosquitto.org"
 
 /**
  * @brief Length of MQTT server host name.
  */
-#define BROKER_ENDPOINT_LENGTH    ( ( uint16_t ) ( sizeof( BROKER_ENDPOINT ) - 1 ) )
+#define BROKER_ENDPOINT_LENGTH     ( ( uint16_t ) ( sizeof( BROKER_ENDPOINT ) - 1 ) )
 
 /**
  * @brief MQTT server port number.
  *
  * In general, port 8883 is for secured MQTT connections.
  */
-#define BROKER_PORT               ( 8883 )
+#define BROKER_PORT                ( 8883 )
 
 /**
  * @brief Path of the file containing the server's root CA certificate.
  *
  * This certificate should be PEM-encoded.
  */
-#define SERVER_CERT_PATH          "certificates/mosquitto.org.crt"
+#define SERVER_CERT_PATH           "certificates/mosquitto.org.crt"
 
 /**
  * @brief Length of path to server certificate.
  */
-#define SERVER_CERT_PATH_LEN      ( ( uint16_t ) ( sizeof( SERVER_CERT_PATH ) - 1 ) )
+#define SERVER_CERT_PATH_LENGTH    ( ( uint16_t ) ( sizeof( SERVER_CERT_PATH ) - 1 ) )
 
 /**
  * @brief Size of the network buffer for MQTT packets.
  */
-#define NETWORK_BUFFER_SIZE       ( 1024U )
+#define NETWORK_BUFFER_SIZE        ( 1024U )
 
 /* Check that client identifier is defined. */
 #ifndef CLIENT_IDENTIFIER
@@ -127,6 +128,18 @@
 #define MQTT_EXAMPLE_MESSAGE_LENGTH         ( ( uint16_t ) ( sizeof( MQTT_EXAMPLE_MESSAGE ) - 1 ) )
 
 /**
+ * @brief Maximum number of outgoing publishes maintained in the application
+ * until an ack is received from the broker.
+ */
+#define MAX_OUTGOING_PUBLISHES              ( 5U )
+
+/**
+ * @brief Invalid packet identifier for the MQTT packets. Zero is always an
+ * invalid packet identifier as per MQTT 3.1.1 spec.
+ */
+#define MQTT_PACKET_ID_INVALID              ( ( uint16_t ) 0U )
+
+/**
  * @brief Timeout for MQTT_ProcessLoop function in milliseconds.
  *
  */
@@ -151,6 +164,25 @@
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Structure to keep the MQTT publish packets until an ack is received
+ * for QoS2 publishes.
+ */
+typedef struct PublishPackets
+{
+    /**
+     * @brief MQTT client identifier. Must be unique per client.
+     */
+    uint16_t packetId;
+
+    /**
+     * @brief MQTT client identifier. Must be unique per client.
+     */
+    MQTTPublishInfo_t pubInfo;
+} PublishPackets_t;
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief globalEntryTime entry time into the application to use as a reference
  * timestamp in #getTimeMs function. #getTimeMs will always return the difference
  * of current time with the globalEntryTime. This will reduce the chances of
@@ -171,6 +203,13 @@ static uint16_t globalSubscribePacketIdentifier = 0U;
  * request.
  */
 static uint16_t globalUnsubscribePacketIdentifier = 0U;
+
+/**
+ * @brief Array to keep the outgoing publish messages.
+ * These stored outgoing publish messages are used to keep the messages until
+ * a successful ack is received.
+ */
+static PublishPackets_t outgoingPublishPackets[ MAX_OUTGOING_PUBLISHES ] = { 0 };
 
 /*-----------------------------------------------------------*/
 
@@ -265,12 +304,19 @@ static void eventCallback( MQTTContext_t * pContext,
  *
  * @param[in] pContext MQTT context pointer.
  * @param[in] pSslContext SSL context.
+ * @param[in] createCleanSession Creates a new MQTT session if true.
+ * If false, tries to establish the existing session if there was session
+ * already present in broker.
+ * @param[out] pSessionPresent Session was already present in the broker or not.
+ * Session present response is obtained from the CONNACK from broker.
  *
  * @return EXIT_SUCCESS if an MQTT session is established;
  * EXIT_FAILURE otherwise.
  */
 static int establishMqttSession( MQTTContext_t * pContext,
-                                 SSL * pSslContext );
+                                 SSL * pSslContext,
+                                 bool createCleanSession,
+                                 bool * pSessionPresent );
 
 /**
  * @brief Close an MQTT session by sending MQTT DISCONNECT.
@@ -315,6 +361,60 @@ static MQTTStatus_t unsubscribeFromTopic( MQTTContext_t * pContext );
  */
 static int publishToTopic( MQTTContext_t * pContext );
 
+/**
+ * @brief Function to get the free index at which an outgoing publish
+ * can be stored.
+ *
+ * @param[out] pIndex The pointer to index at which an outgoing publish message
+ * can be stored.
+ *
+ * @return EXIT_FAILURE if no more publishes can be stored;
+ * EXIT_SUCCESS if an index to store the next outgoing publish is obtained.
+ */
+static int getNextFreeIndexForOutgoingPublishes( uint8_t * pIndex );
+
+/**
+ * @brief Function to clean up an outgoing publish at given index from the
+ * #outgoingPublishPackets array.
+ *
+ * @param[in] index The index at which a publish message has to be cleaned up.
+ */
+static void cleanupOutgoingPublishAt( uint8_t index );
+
+/**
+ * @brief Function to clean up all the outgoing publishes maintained in the
+ * array.
+ */
+static void cleanUpOutgoingPublishes();
+
+/**
+ * @brief Function to clean up the publish packet with the given packet id.
+ *
+ * @param[in] packetId Packet identifier of the packet to be cleaned up from
+ * the array.
+ */
+static void cleanupOutgoingPublishesWithPacketID( uint16_t packetId );
+
+/**
+ * @brief Function to get the index of packet in the array with
+ * the given packet id.
+ *
+ * @param[in] packetId Packet identifier of the packet get the index for.
+ *
+ * @return #MAX_OUTGOING_PUBLISHES if no index found; index of the publish
+ * packet if a packet is found.
+ */
+static uint8_t getIndexOfOutgoingPublishWithPacketId( uint16_t packetId );
+
+/**
+ * @brief Function to resend the publishes if a session is re-established with
+ * the broker. This function handles the resending of the QoS2 publish packets,
+ * which are in state #MQTTPubrecPending.
+ *
+ * @param[in] pContext MQTT context pointer.
+ */
+static int handlePublishResend( MQTTContext_t * pContext );
+
 /*-----------------------------------------------------------*/
 
 static int connectToServer( const char * pServer,
@@ -329,7 +429,7 @@ static int connectToServer( const char * pServer,
     struct timeval transportTimeout;
 
     /* Add hints to retrieve only TCP sockets in getaddrinfo. */
-    ( void ) memset( &hints, 0, sizeof( hints ) );
+    ( void ) memset( &hints, 0x00, sizeof( hints ) );
     /* Address family of either IPv4 or IPv6. */
     hints.ai_family = AF_UNSPEC;
     /* TCP Socket. */
@@ -415,7 +515,7 @@ static int connectToServer( const char * pServer,
 static int tlsSetup( int tcpSocket,
                      SSL ** pSslContext )
 {
-    int status = 0;
+    int status = EXIT_FAILURE, sslStatus = 0;
     FILE * pRootCaFile = NULL;
     X509 * pRootCa = NULL;
 
@@ -442,26 +542,26 @@ static int tlsSetup( int tcpSocket,
         {
             LogError( ( "Unable to find the certificate file in the path"
                         " provided by SERVER_CERT_PATH(%.*s).",
-                        SERVER_CERT_PATH_LEN,
+                        SERVER_CERT_PATH_LENGTH,
                         SERVER_CERT_PATH ) );
         }
 
         if( pRootCa != NULL )
         {
-            status = X509_STORE_add_cert( SSL_CTX_get_cert_store( pSslSetup ),
-                                          pRootCa );
+            sslStatus = X509_STORE_add_cert( SSL_CTX_get_cert_store( pSslSetup ),
+                                             pRootCa );
         }
         else
         {
             LogError( ( "Failed to parse the server certificate from"
                         " file %.*s. Please validate the certificate.",
-                        SERVER_CERT_PATH_LEN,
+                        SERVER_CERT_PATH_LENGTH,
                         SERVER_CERT_PATH ) );
         }
     }
 
     /* Set up the TLS connection. */
-    if( status == 1 )
+    if( sslStatus == 1 )
     {
         /* Create a new SSL context. */
         *pSslContext = SSL_new( pSslSetup );
@@ -471,29 +571,29 @@ static int tlsSetup( int tcpSocket,
             /* Enable SSL peer verification. */
             SSL_set_verify( *pSslContext, SSL_VERIFY_PEER, NULL );
 
-            status = SSL_set_fd( *pSslContext, tcpSocket );
+            sslStatus = SSL_set_fd( *pSslContext, tcpSocket );
         }
         else
         {
             LogError( ( "Failed to create a new SSL context." ) );
-            status = 0;
+            sslStatus = 0;
         }
 
         /* Perform the TLS handshake. */
-        if( status == 1 )
+        if( sslStatus == 1 )
         {
-            status = SSL_connect( *pSslContext );
+            sslStatus = SSL_connect( *pSslContext );
         }
         else
         {
             LogError( ( "Failed to set the socket fd to SSL context." ) );
         }
 
-        if( status == 1 )
+        if( sslStatus == 1 )
         {
             if( SSL_get_verify_result( *pSslContext ) != X509_V_OK )
             {
-                status = 0;
+                sslStatus = 0;
             }
         }
         else
@@ -502,7 +602,7 @@ static int tlsSetup( int tcpSocket,
         }
 
         /* Clean up on error. */
-        if( status == 0 )
+        if( sslStatus == 0 )
         {
             SSL_free( *pSslContext );
             *pSslContext = NULL;
@@ -529,7 +629,7 @@ static int tlsSetup( int tcpSocket,
     }
 
     /* Log failure or success and update the correct exit status to return. */
-    if( status == 0 )
+    if( sslStatus == 0 )
     {
         LogError( ( "Failed to establish a TLS connection to %.*s.",
                     BROKER_ENDPOINT_LENGTH,
@@ -549,15 +649,6 @@ static int tlsSetup( int tcpSocket,
 
 /*-----------------------------------------------------------*/
 
-/**
- * @brief The transport send function provided to the MQTT context.
- *
- * @param[in] pSslContext SSL context.
- * @param[in] pMessage Data to send.
- * @param[in] bytesToSend Length of data to send.
- *
- * @return Number of bytes sent; negative value on error.
- */
 static int32_t transportSend( MQTTNetworkContext_t pSslContext,
                               const void * pMessage,
                               size_t bytesToSend )
@@ -597,15 +688,6 @@ static int32_t transportSend( MQTTNetworkContext_t pSslContext,
 
 /*-----------------------------------------------------------*/
 
-/**
- * @brief The transport receive function provided to the MQTT context.
- *
- * @param[in] pSslContext SSL context.
- * @param[out] pBuffer Buffer for receiving data.
- * @param[in] bytesToSend Size of pBuffer.
- *
- * @return Number of bytes received; negative value on error.
- */
 static int32_t transportRecv( MQTTNetworkContext_t pSslContext,
                               void * pBuffer,
                               size_t bytesToRecv )
@@ -672,6 +754,180 @@ static uint32_t getTimeMs( void )
 
 /*-----------------------------------------------------------*/
 
+static int getNextFreeIndexForOutgoingPublishes( uint8_t * pIndex )
+{
+    int status = EXIT_FAILURE;
+
+    assert( outgoingPublishPackets != NULL );
+
+    for( *pIndex = 0; *pIndex < MAX_OUTGOING_PUBLISHES; ( *pIndex )++ )
+    {
+        /* A free index is marked byy invalid packet id.
+         * Check if the the index has a free slot. */
+        if( outgoingPublishPackets[ *pIndex ].packetId == MQTT_PACKET_ID_INVALID )
+        {
+            status = EXIT_SUCCESS;
+            break;
+        }
+    }
+
+    return status;
+}
+/*-----------------------------------------------------------*/
+
+static void cleanupOutgoingPublishAt( uint8_t index )
+{
+    assert( outgoingPublishPackets != NULL );
+    assert( index < MAX_OUTGOING_PUBLISHES );
+
+    /* Clean up all the entries. */
+    if( index < MAX_OUTGOING_PUBLISHES )
+    {
+        /* Assign the packet ID to zero. */
+        outgoingPublishPackets[ index ].packetId = MQTT_PACKET_ID_INVALID;
+
+        /* Clear the publish info. */
+        ( void ) memset( &( outgoingPublishPackets[ index ].pubInfo ),
+                         0x00,
+                         sizeof( outgoingPublishPackets[ index ].pubInfo ) );
+    }
+}
+
+/*-----------------------------------------------------------*/
+
+static void cleanUpOutgoingPublishes()
+{
+    uint8_t index = 0;
+
+    assert( outgoingPublishPackets != NULL );
+
+    /* Clean up all the saved outgoing publishes. */
+    for( ; index < MAX_OUTGOING_PUBLISHES; index++ )
+    {
+        cleanupOutgoingPublishAt( index );
+    }
+}
+
+/*-----------------------------------------------------------*/
+
+static void cleanupOutgoingPublishesWithPacketID( uint16_t packetId )
+{
+    uint8_t index = 0;
+
+    assert( outgoingPublishPackets != NULL );
+    assert( packetId != MQTT_PACKET_ID_INVALID );
+
+    /* Clean up all the saved outgoing publishes. */
+    for( ; index < MAX_OUTGOING_PUBLISHES; index++ )
+    {
+        if( outgoingPublishPackets[ index ].packetId == packetId )
+        {
+            cleanupOutgoingPublishAt( index );
+            LogInfo( ( "Cleaned up outgoing publish packet with packet id %u.\n\n",
+                       packetId ) );
+            break;
+        }
+    }
+}
+
+/*-----------------------------------------------------------*/
+
+static uint8_t getIndexOfOutgoingPublishWithPacketId( uint16_t packetId )
+{
+    uint8_t index = 0U;
+
+    assert( outgoingPublishPackets != NULL );
+    assert( packetId != MQTT_PACKET_ID_INVALID );
+
+    /* Find the index for the given packet id. */
+    for( ; index < MAX_OUTGOING_PUBLISHES; index++ )
+    {
+        if( outgoingPublishPackets[ index ].packetId == packetId )
+        {
+            break;
+        }
+    }
+
+    return index;
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Function to clean up the publish packet with the given packet id.
+ *
+ * @param[in] packetId Packet identifier of the packet to be cleaned up from
+ * the array.
+ */
+static int handlePublishResend( MQTTContext_t * pContext )
+{
+    int status = EXIT_SUCCESS;
+    MQTTStateCursor_t cursor = 0U;
+    MQTTStatus_t mqttStatus = MQTTSuccess;
+    uint16_t packetId = MQTT_PACKET_ID_INVALID;
+    uint8_t index = MAX_OUTGOING_PUBLISHES;
+
+    assert( outgoingPublishPackets != NULL );
+
+    /* Check all the QoS2 publish packets that are still waiting for
+     * a PUBREC. This can be identified by querying the state machine
+     * for all the outgoing publish packets which are in state
+     * #MQTTPubRecPending. */
+    do
+    {
+        /* Find the packet ids which are in #MQTTPubRecPending state.
+         * Using the same cursor will help restart the search from the
+         * last searched position. */
+        packetId = MQTT_StateSelect( pContext, MQTTPubRecPending, &cursor );
+
+        /* Check if a valid packet id is obtained. */
+        if( packetId != MQTT_PACKET_ID_INVALID )
+        {
+            /* Resending the publish after marking publish as duplicate. */
+            index = getIndexOfOutgoingPublishWithPacketId( packetId );
+
+            /* Check if a valid index is obtained. */
+            if( index < MAX_OUTGOING_PUBLISHES )
+            {
+                /*Resend the publish after marking it as duplicate. */
+                outgoingPublishPackets[ index ].pubInfo.dup = true;
+
+                LogInfo( ( "Sending duplicate PUBLISH with packet id %u.",
+                           packetId ) );
+                mqttStatus = MQTT_Publish( pContext,
+                                           &outgoingPublishPackets[ index ].pubInfo,
+                                           packetId );
+
+                if( mqttStatus != MQTTSuccess )
+                {
+                    LogError( ( "Sending duplicate PUBLISH for packet id %u "
+                                " failed with status %u.",
+                                packetId,
+                                mqttStatus ) );
+                    status = EXIT_FAILURE;
+                    break;
+                }
+                else
+                {
+                    LogInfo( ( "Sent duplicate PUBLISH successfully for packet id %u.\n\n",
+                               packetId ) );
+                }
+            }
+            else
+            {
+                LogError( ( "Failed to obtain a stored outgoing publish packet for"
+                            " packet id %u.",
+                            packetId ) );
+                status = EXIT_FAILURE;
+            }
+        }
+    } while( packetId != MQTT_PACKET_ID_INVALID );
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
 static void handleIncomingPublish( MQTTPublishInfo_t * pPublishInfo,
                                    uint16_t packetIdentifier )
 {
@@ -689,6 +945,8 @@ static void handleIncomingPublish( MQTTPublishInfo_t * pPublishInfo,
         LogInfo( ( "Incoming Publish Topic Name: %.*s matches subscribed topic.",
                    pPublishInfo->topicNameLength,
                    pPublishInfo->pTopicName ) );
+        LogInfo( ( "Incoming Publish message Packet Id is %u.",
+                   packetIdentifier ) );
         LogInfo( ( "Incoming Publish Message : %.*s.\n\n",
                    ( int ) pPublishInfo->payloadLength,
                    ( const char * ) pPublishInfo->pPayload ) );
@@ -742,7 +1000,33 @@ static void eventCallback( MQTTContext_t * pContext,
                 break;
 
             case MQTT_PACKET_TYPE_PINGRESP:
-                LogInfo( ( "PIGRESP received." ) );
+
+                /* Nothing to be done from application as library handles
+                 * PINGRESP. */
+                LogInfo( ( "PIGRESP received.\n\n" ) );
+                break;
+
+            case MQTT_PACKET_TYPE_PUBREC:
+                LogInfo( ( "PUBREC received for packet id %u.",
+                           packetIdentifier ) );
+                /* Cleanup publish packet when a PUBREC is received. */
+                cleanupOutgoingPublishesWithPacketID( packetIdentifier );
+                break;
+
+            case MQTT_PACKET_TYPE_PUBREL:
+
+                /* Nothing to be done from application as library handles
+                 * PUBREL. */
+                LogInfo( ( "PUBREL received for packet id %u.\n\n",
+                           packetIdentifier ) );
+                break;
+
+            case MQTT_PACKET_TYPE_PUBCOMP:
+
+                /* Nothing to be done from application as library handles
+                 * PUBCOMP. */
+                LogInfo( ( "PUBCOMP received for packet id %u.\n\n",
+                           packetIdentifier ) );
                 break;
 
             /* Any other packet type is invalid. */
@@ -756,12 +1040,13 @@ static void eventCallback( MQTTContext_t * pContext,
 /*-----------------------------------------------------------*/
 
 static int establishMqttSession( MQTTContext_t * pContext,
-                                 SSL * pSslContext )
+                                 SSL * pSslContext,
+                                 bool createCleanSession,
+                                 bool * pSessionPresent )
 {
     int status = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus;
     MQTTConnectInfo_t connectInfo;
-    char sessionPresent;
     MQTTTransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks;
@@ -803,11 +1088,11 @@ static int establishMqttSession( MQTTContext_t * pContext,
     {
         /* Establish MQTT session with a CONNECT packet. */
 
-        /* Start with a clean session i.e. direct the MQTT broker to discard any
-         * previous session data. Also, establishing a connection with clean session
-         * will ensure that the broker does not store any data when this client
-         * gets disconnected. */
-        connectInfo.cleanSession = true;
+        /* If #createCleanSession is true, start with a clean session
+         * i.e. direct the MQTT broker to discard any previous session data.
+         * If #createCleanSession is false, directs the broker to attempt to
+         * reestablish a session which was already present. */
+        connectInfo.cleanSession = createCleanSession;
 
         /* The client identifier is used to uniquely identify this MQTT client to
          * the MQTT broker. In a production device the identifier can be something
@@ -820,12 +1105,12 @@ static int establishMqttSession( MQTTContext_t * pContext,
 
         /* Username and password for authentication. Not used in this demo. */
         connectInfo.pUserName = NULL;
-        connectInfo.userNameLength = 0;
+        connectInfo.userNameLength = 0U;
         connectInfo.pPassword = NULL;
-        connectInfo.passwordLength = 0;
+        connectInfo.passwordLength = 0U;
 
         /* Send MQTT CONNECT packet to broker. */
-        mqttStatus = MQTT_Connect( pContext, &connectInfo, NULL, CONNACK_RECV_TIMEOUT_MS, &sessionPresent );
+        mqttStatus = MQTT_Connect( pContext, &connectInfo, NULL, CONNACK_RECV_TIMEOUT_MS, pSessionPresent );
 
         if( mqttStatus != MQTTSuccess )
         {
@@ -875,8 +1160,8 @@ static int subscribeToTopic( MQTTContext_t * pContext )
     /* Start with everything at 0. */
     ( void ) memset( ( void * ) pSubscriptionList, 0x00, sizeof( pSubscriptionList ) );
 
-    /* This example subscribes to only one topic and uses QOS0. */
-    pSubscriptionList[ 0 ].qos = MQTTQoS0;
+    /* This example subscribes to only one topic and uses QOS2. */
+    pSubscriptionList[ 0 ].qos = MQTTQoS2;
     pSubscriptionList[ 0 ].pTopicFilter = MQTT_EXAMPLE_TOPIC;
     pSubscriptionList[ 0 ].topicFilterLength = MQTT_EXAMPLE_TOPIC_LENGTH;
 
@@ -920,7 +1205,7 @@ static MQTTStatus_t unsubscribeFromTopic( MQTTContext_t * pContext )
 
     /* This example subscribes to and unsubscribes from only one topic
      * and uses QOS0. */
-    pSubscriptionList[ 0 ].qos = MQTTQoS0;
+    pSubscriptionList[ 0 ].qos = MQTTQoS2;
     pSubscriptionList[ 0 ].pTopicFilter = MQTT_EXAMPLE_TOPIC;
     pSubscriptionList[ 0 ].topicFilterLength = MQTT_EXAMPLE_TOPIC_LENGTH;
 
@@ -955,37 +1240,51 @@ static int publishToTopic( MQTTContext_t * pContext )
 {
     int status = EXIT_SUCCESS;
     MQTTStatus_t mqttSuccess;
-    MQTTPublishInfo_t publishInfo;
+    uint8_t publishIndex = MAX_OUTGOING_PUBLISHES;
 
     assert( pContext != NULL );
 
-    /* Some fields not used by this demo so start with everything at 0. */
-    ( void ) memset( ( void * ) &publishInfo, 0x00, sizeof( publishInfo ) );
+    /* Get the next free index for the outgoing publish. All QoS2 outgoing
+     * publishes are stored until a PUBREC is received. These messages are
+     * stored for supporting a resend if a network connection is broken before
+     * receiving a PUBREC. */
+    status = getNextFreeIndexForOutgoingPublishes( &publishIndex );
 
-    /* This example publishes to only one topic and uses QOS0. */
-    publishInfo.qos = MQTTQoS0;
-    publishInfo.pTopicName = MQTT_EXAMPLE_TOPIC;
-    publishInfo.topicNameLength = MQTT_EXAMPLE_TOPIC_LENGTH;
-    publishInfo.pPayload = MQTT_EXAMPLE_MESSAGE;
-    publishInfo.payloadLength = MQTT_EXAMPLE_MESSAGE_LENGTH;
-
-    /* Send PUBLISH packet. Packet Id is not used for a QoS0 publish.
-     * Hence 0 is passed as packet id. */
-    mqttSuccess = MQTT_Publish( pContext,
-                                &publishInfo,
-                                0U );
-
-    if( status != MQTTSuccess )
+    if( status == EXIT_FAILURE )
     {
-        LogError( ( "Failed to send PUBLISH packet to broker with error = %u.",
-                    mqttSuccess ) );
-        status = EXIT_FAILURE;
+        LogError( ( "Unable to find a free spot for outgoing PUBLISH message.\n\n" ) );
     }
     else
     {
-        LogInfo( ( "PUBLISH send for topic %.*s to broker.\n\n",
-                   MQTT_EXAMPLE_TOPIC_LENGTH,
-                   MQTT_EXAMPLE_TOPIC ) );
+        /* This example publishes to only one topic and uses QOS2. */
+        outgoingPublishPackets[ publishIndex ].pubInfo.qos = MQTTQoS2;
+        outgoingPublishPackets[ publishIndex ].pubInfo.pTopicName = MQTT_EXAMPLE_TOPIC;
+        outgoingPublishPackets[ publishIndex ].pubInfo.topicNameLength = MQTT_EXAMPLE_TOPIC_LENGTH;
+        outgoingPublishPackets[ publishIndex ].pubInfo.pPayload = MQTT_EXAMPLE_MESSAGE;
+        outgoingPublishPackets[ publishIndex ].pubInfo.payloadLength = MQTT_EXAMPLE_MESSAGE_LENGTH;
+
+        /* Get a new packet id. */
+        outgoingPublishPackets[ publishIndex ].packetId = MQTT_GetPacketId( pContext );
+
+        /* Send PUBLISH packet. */
+        mqttSuccess = MQTT_Publish( pContext,
+                                    &outgoingPublishPackets[ publishIndex ].pubInfo,
+                                    outgoingPublishPackets[ publishIndex ].packetId );
+
+        if( status != MQTTSuccess )
+        {
+            LogError( ( "Failed to send PUBLISH packet to broker with error = %u.",
+                        mqttSuccess ) );
+            cleanupOutgoingPublishAt( publishIndex );
+            status = EXIT_FAILURE;
+        }
+        else
+        {
+            LogInfo( ( "PUBLISH send for topic %.*s to broker with packet id %u.\n\n",
+                       MQTT_EXAMPLE_TOPIC_LENGTH,
+                       MQTT_EXAMPLE_TOPIC,
+                       outgoingPublishPackets[ publishIndex ].packetId ) );
+        }
     }
 
     return status;
@@ -1006,7 +1305,7 @@ int main( int argc,
           char ** argv )
 {
     int status = EXIT_SUCCESS, tcpSocket;
-    bool mqttSessionEstablished = false;
+    bool sessionPresent, mqttSessionEstablished = false;
     MQTTContext_t context;
     MQTTStatus_t mqttStatus = MQTTSuccess;
     SSL * pSslContext = NULL;
@@ -1043,7 +1342,7 @@ int main( int argc,
         LogInfo( ( "Creating an MQTT connection to %.*s.",
                    BROKER_ENDPOINT_LENGTH,
                    BROKER_ENDPOINT ) );
-        status = establishMqttSession( &context, pSslContext );
+        status = establishMqttSession( &context, pSslContext, false, &sessionPresent );
 
         if( status == EXIT_SUCCESS )
         {
@@ -1051,6 +1350,30 @@ int main( int argc,
              * flag will mark that an MQTT DISCONNECT has to be send at the end
              * of the demo even if there are intermediate failures. */
             mqttSessionEstablished = true;
+        }
+    }
+
+    if( status == EXIT_SUCCESS )
+    {
+        /* Check if session is present and if there are any outgoing publishes
+         * that need to resend. This is only valid if the broker is
+         * re-establishing a session which was already present. */
+        if( sessionPresent == true )
+        {
+            LogInfo( ( "An MQTT session with broker is re-established. "
+                       "Resending unacked publishes." ) );
+
+            /* Handle all the resend of publish messages. */
+            status = handlePublishResend( &context );
+        }
+        else
+        {
+            LogInfo( ( "A clean MQTT connection is established."
+                       " Cleaning up all the stored outgoing publishes.\n\n" ) );
+
+            /* Clean up the outgoing publishes waiting for ack as this new
+             * connection doesn't re-establish an existing session. */
+            cleanUpOutgoingPublishes();
         }
     }
 
@@ -1093,7 +1416,7 @@ int main( int argc,
          * send keep alive messages. */
         for( publishCount = 0; publishCount < maxPublishCount; publishCount++ )
         {
-            LogInfo( ( "Publish to the MQTT topic %.*s.",
+            LogInfo( ( "Sending Publish to the MQTT topic %.*s.",
                        MQTT_EXAMPLE_TOPIC_LENGTH,
                        MQTT_EXAMPLE_TOPIC ) );
             status = publishToTopic( &context );
