@@ -71,13 +71,15 @@ MQTTPublishState_t MQTT_CalculateStatePublish( MQTTStateOperation_t opType,
  * @param[in] packetId ID of the PUBLISH packet.
  * @param[in] opType Send or Receive.
  * @param[in] qos 0, 1, or 2.
+ * @param[out] pNewState Updated state.
  *
  * @return The new state of the publish.
  */
-MQTTPublishState_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
-                                            uint16_t packetId,
-                                            MQTTStateOperation_t opType,
-                                            MQTTQoS_t qos );
+MQTTStatus_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
+                                      uint16_t packetId,
+                                      MQTTStateOperation_t opType,
+                                      MQTTQoS_t qos,
+                                      MQTTPublishState_t * pNewState );
 
 /**
  * @brief Calculate the state from a PUBACK, PUBREC, PUBREL, or PUBCOMP.
@@ -99,13 +101,15 @@ MQTTPublishState_t MQTT_CalculateStateAck( MQTTPubAckType_t packetType,
  * @param[in] packetId ID of the ack packet.
  * @param[in] packetType PUBACK, PUBREC, PUBREL, or PUBCOMP.
  * @param[in] opType Send or Receive.
+ * @param[out] pNewState Updated state.
  *
  * @return The new state of the publish.
  */
-MQTTPublishState_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
-                                        uint16_t packetId,
-                                        MQTTPubAckType_t packetType,
-                                        MQTTStateOperation_t opType );
+MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
+                                  uint16_t packetId,
+                                  MQTTPubAckType_t packetType,
+                                  MQTTStateOperation_t opType,
+                                  MQTTPublishState_t * pNewState );
 
 /**
  * @brief Get the packet ID and index of a publish in a specified state.

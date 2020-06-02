@@ -394,11 +394,15 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext,
     {
         if( incomingPublish )
         {
-            MQTT_UpdateStatePublish_ExpectAnyArgsAndReturn( stateAfterDeserialize );
+            MQTT_UpdateStatePublish_ExpectAnyArgsAndReturn( ( stateAfterDeserialize == MQTTStateNull )?
+                                                            MQTTIllegalState : MQTTSuccess );
+            MQTT_UpdateStatePublish_ReturnThruPtr_pNewState( &stateAfterDeserialize );
         }
         else
         {
-            MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( stateAfterDeserialize );
+            MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( ( stateAfterDeserialize == MQTTStateNull )?
+                                                        MQTTIllegalState : MQTTSuccess );
+            MQTT_UpdateStateAck_ReturnThruPtr_pNewState( &stateAfterDeserialize );
         }
 
         if( stateAfterDeserialize == MQTTPublishDone )
@@ -421,7 +425,9 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext,
     /* Update the state based on the sent packet. */
     if( expectMoreCalls )
     {
-        MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( stateAfterSerialize );
+        MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( ( stateAfterSerialize == MQTTStateNull )?
+                                                    MQTTIllegalState : MQTTSuccess );
+        MQTT_UpdateStateAck_ReturnThruPtr_pNewState( &stateAfterSerialize );
     }
 
     /* Expect the above calls when running MQTT_ProcessLoop. */
@@ -753,6 +759,7 @@ void test_MQTT_Publish( void )
     MQTTApplicationCallbacks_t callbacks;
     MQTTStatus_t status;
     size_t headerSize;
+    MQTTPublishState_t expectedState;
 
     const uint16_t PACKET_ID = 1;
 
@@ -813,13 +820,15 @@ void test_MQTT_Publish( void )
     /* Now for non zero QoS, which uses state engine. */
     publishInfo.qos = MQTTQoS2;
     MQTT_ReserveState_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_UpdateStatePublish_ExpectAnyArgsAndReturn( MQTTStateNull );
+    MQTT_UpdateStatePublish_ExpectAnyArgsAndReturn( MQTTBadParameter );
     status = MQTT_Publish( &mqttContext, &publishInfo, PACKET_ID );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
     publishInfo.qos = MQTTQoS1;
+    expectedState = MQTTPublishSend;
     MQTT_ReserveState_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_UpdateStatePublish_ExpectAnyArgsAndReturn( MQTTPublishSend );
+    MQTT_UpdateStatePublish_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_UpdateStatePublish_ReturnThruPtr_pNewState( &expectedState );
     status = MQTT_Publish( &mqttContext, &publishInfo, PACKET_ID );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 }
@@ -1252,6 +1261,8 @@ void test_MQTT_ProcessLoop_Timer_Overflow( void )
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks;
     MQTTPacketInfo_t incomingPacket = { 0 };
+    MQTTPublishState_t publishState = MQTTPubAckSend;
+    MQTTPublishState_t ackState = MQTTPublishDone;
     uint8_t i = 0;
     uint8_t numIterations = ( MQTT_TIMER_OVERFLOW_TIMEOUT_MS / MQTT_TIMER_CALLS_PER_ITERATION ) + 1;
 
@@ -1274,9 +1285,11 @@ void test_MQTT_ProcessLoop_Timer_Overflow( void )
         MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
         /* Assume QoS = 1 so that a PUBACK will be sent after receiving PUBLISH. */
         MQTT_DeserializePublish_ExpectAnyArgsAndReturn( MQTTSuccess );
-        MQTT_UpdateStatePublish_ExpectAnyArgsAndReturn( MQTTPubAckSend );
+        MQTT_UpdateStatePublish_ExpectAnyArgsAndReturn( MQTTSuccess );
+        MQTT_UpdateStatePublish_ReturnThruPtr_pNewState( &publishState );
         MQTT_SerializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
-        MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTPublishDone );
+        MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+        MQTT_UpdateStateAck_ReturnThruPtr_pNewState( &ackState );
     }
 
     mqttStatus = MQTT_ProcessLoop( &context, MQTT_TIMER_OVERFLOW_TIMEOUT_MS );
