@@ -510,16 +510,6 @@ static void processCompleteHeader( HTTPParsingContext_t * pParsingContext )
 
 /*-----------------------------------------------------------*/
 
-/* MISRA directive 4.6 violation is for using primitive type int, instead of
- * a typedef which denotes the signedness and size of the type. This violation
- * is suppressed because this callback follows the function signature for the
- * http_cb type in http-parser. */
-
-/* MISRA directive 8.13 flags that pHttpParser should be a const parameter since
- * it does not change. This rule is suppressed because http-parser defines
- * their callback function signatures without the const. */
-/* coverity[misra_c_2012_directive_4_6_violation] */
-/* coverity[misra_c_2012_rule_8_13_violation] */
 static int httpParserOnMessageBeginCallback( http_parser * pHttpParser )
 {
     HTTPParsingContext_t * pParsingContext = NULL;
@@ -528,11 +518,6 @@ static int httpParserOnMessageBeginCallback( http_parser * pHttpParser )
     assert( pHttpParser != NULL );
     assert( pHttpParser->data != NULL );
 
-    /* The MISRA rule 11.5 violation flags casting a void pointer to another
-     * type. This rule is suppressed here because the http-parser library
-     * requires that private context into callbacks must be set to a void
-     * pointer variable. */
-    /* coverity[misra_c_2012_rule_11_5_violation] */
     pParsingContext = ( HTTPParsingContext_t * ) ( pHttpParser->data );
     pResponse = pParsingContext->pResponse;
 
@@ -543,25 +528,11 @@ static int httpParserOnMessageBeginCallback( http_parser * pHttpParser )
 
     LogDebug( ( "Response parsing: Found the start of the response message." ) );
 
-    /* The MISRA directive 4.6 violation is for using primitive type int, instead of
-     * a typedef which denotes the signedness and size of the type. This violation
-     * is suppressed because http-parser requires this callback to return an integer. */
-    /* coverity[misra_c_2012_directive_4_6_violation] */
     return HTTP_PARSER_CONTINUE_PARSING;
 }
 
 /*-----------------------------------------------------------*/
 
-/* The MISRA directive 4.6 violation is for using primitive type int, instead of
- * a typedef which denotes the signedness and size of the type. This violation
- * is suppressed because this callback follows the function signature for the
- * http_data_cb type in http-parser. */
-
-/* MISRA directive 8.13 flags that pHttpParser should be a const parameter since
- * it does not change. This rule is suppressed because http-parser defines
- * their callback function signatures without the const. */
-/* coverity[misra_c_2012_directive_4_6_violation] */
-/* coverity[misra_c_2012_rule_8_13_violation] */
 static int httpParserOnStatusCallback( http_parser * pHttpParser,
                                        const char * pLoc,
                                        size_t length )
@@ -573,11 +544,6 @@ static int httpParserOnStatusCallback( http_parser * pHttpParser,
     assert( pHttpParser->data != NULL );
     assert( pLoc != NULL );
 
-    /* The MISRA rule 11.5 violation flags casting a void pointer to another
-     * type. This rule is suppressed here because the http-parser library
-     * requires that private context into callbacks must be set to a void
-     * pointer variable. */
-    /* coverity[misra_c_2012_rule_11_5_violation] */
     pParsingContext = ( HTTPParsingContext_t * ) ( pHttpParser->data );
     pResponse = pParsingContext->pResponse;
 
@@ -603,25 +569,11 @@ static int httpParserOnStatusCallback( http_parser * pHttpParser,
                 length,
                 pLoc ) );
 
-    /* The MISRA directive 4.6 violation is for using primitive type int, instead of
-     * a typedef which denotes the signedness and size of the type. This violation
-     * is suppressed because http-parser requires this callback to return an integer. */
-    /* coverity[misra_c_2012_directive_4_6_violation] */
     return HTTP_PARSER_CONTINUE_PARSING;
 }
 
 /*-----------------------------------------------------------*/
 
-/* The MISRA directive 4.6 violation is for using primitive type int, instead of
- * a typedef which denotes the signedness and size of the type. This violation
- * is suppressed because this callback follows the function signature for the
- * http_data_cb type in http-parser. */
-
-/* MISRA directive 8.13 flags that pHttpParser should be a const parameter since
- * it does not change. This rule is suppressed because http-parser defines
- * their callback function signatures without the const. */
-/* coverity[misra_c_2012_directive_4_6_violation] */
-/* coverity[misra_c_2012_rule_8_13_violation] */
 static int httpParserOnHeaderFieldCallback( http_parser * pHttpParser,
                                             const char * pLoc,
                                             size_t length )
@@ -633,11 +585,6 @@ static int httpParserOnHeaderFieldCallback( http_parser * pHttpParser,
     assert( pHttpParser->data != NULL );
     assert( pLoc != NULL );
 
-    /* The MISRA rule 11.5 violation flags casting a void pointer to another
-     * type. This rule is suppressed here because the http-parser library
-     * requires that private context into callbacks must be set to a void
-     * pointer variable. */
-    /* coverity[misra_c_2012_rule_11_5_violation] */
     pParsingContext = ( HTTPParsingContext_t * ) ( pHttpParser->data );
     pResponse = pParsingContext->pResponse;
 
@@ -679,25 +626,11 @@ static int httpParserOnHeaderFieldCallback( http_parser * pHttpParser,
                 length,
                 pLoc ) );
 
-    /* The MISRA directive 4.6 violation is for using primitive type int, instead of
-     * a typedef which denotes the signedness and size of the type. This violation
-     * is suppressed because http-parser requires this callback to return an integer. */
-    /* coverity[misra_c_2012_directive_4_6_violation] */
     return HTTP_PARSER_CONTINUE_PARSING;
 }
 
 /*-----------------------------------------------------------*/
 
-/* The MISRA directive 4.6 violation is for using primitive type int, instead of
- * a typedef which denotes the signedness and size of the type. This violation
- * is suppressed because this callback follows the function signature for the
- * http_data_cb type in http-parser. */
-
-/* MISRA directive 8.13 flags that pHttpParser should be a const parameter since
- * it does not change. This rule is suppressed because http-parser defines
- * their callback function signatures without the const. */
-/* coverity[misra_c_2012_directive_4_6_violation] */
-/* coverity[misra_c_2012_rule_8_13_violation] */
 static int httpParserOnHeaderValueCallback( http_parser * pHttpParser,
                                             const char * pLoc,
                                             size_t length )
@@ -709,11 +642,6 @@ static int httpParserOnHeaderValueCallback( http_parser * pHttpParser,
     assert( pHttpParser->data != NULL );
     assert( pLoc != NULL );
 
-    /* The MISRA rule 11.5 violation flags casting a void pointer to another
-     * type. This rule is suppressed here because the http-parser library
-     * requires that private context into callbacks must be set to a void
-     * pointer variable. */
-    /* coverity[misra_c_2012_rule_11_5_violation] */
     pParsingContext = ( HTTPParsingContext_t * ) ( pHttpParser->data );
     pResponse = pParsingContext->pResponse;
 
@@ -747,33 +675,13 @@ static int httpParserOnHeaderValueCallback( http_parser * pHttpParser,
                 length,
                 pLoc ) );
 
-    /* The MISRA directive 4.6 violation is for using primitive type int, instead of
-     * a typedef which denotes the signedness and size of the type. This violation
-     * is suppressed because http-parser requires this callback to return an integer. */
-    /* coverity[misra_c_2012_directive_4_6_violation] */
     return HTTP_PARSER_CONTINUE_PARSING;
 }
 
 /*-----------------------------------------------------------*/
 
-/* The MISRA directive 4.6 violation is for using primitive type int, instead of
- * a typedef which denotes the signedness and size of the type. This violation
- * is suppressed because this callback follows the function signature for the
- * http_data_cb type in http-parser. */
-
-/* MISRA directive 8.13 flags that pHttpParser should be a const parameter since
- * it does not change. This rule is suppressed because http-parser defines
- * their callback function signatures without the const. */
-/* coverity[misra_c_2012_directive_4_6_violation] */
-/* coverity[misra_c_2012_rule_8_13_violation] */
 static int httpParserOnHeadersCompleteCallback( http_parser * pHttpParser )
 {
-    /* The MISRA directive 4.6 violation is for using primitive type int,
-     * instead of a typedef which denotes the signedness and size of the type.
-     * This violation is suppressed because this variable stores the return
-     * value of this callback, which follows the function signature for the
-     * http_data_cb type in http-parser. */
-    /* coverity[misra_c_2012_directive_4_6_violation] */
     int shouldContinueParse = HTTP_PARSER_CONTINUE_PARSING;
     HTTPParsingContext_t * pParsingContext = NULL;
     HTTPResponse_t * pResponse = NULL;
@@ -781,11 +689,6 @@ static int httpParserOnHeadersCompleteCallback( http_parser * pHttpParser )
     assert( pHttpParser != NULL );
     assert( pHttpParser->data != NULL );
 
-    /* The MISRA rule 11.5 violation flags casting a void pointer to another
-     * type. This rule is suppressed here because the http-parser library
-     * requires that private context into callbacks must be set to a void
-     * pointer variable. */
-    /* coverity[misra_c_2012_rule_11_5_violation] */
     pParsingContext = ( HTTPParsingContext_t * ) ( pHttpParser->data );
     pResponse = pParsingContext->pResponse;
 
@@ -802,7 +705,7 @@ static int httpParserOnHeadersCompleteCallback( http_parser * pHttpParser )
         assert( ( const char * ) ( pResponse->pHeaders ) < pParsingContext->pBufferCur );
 
         /* MISRA Rule 10.8 flags the following line for casting from a signed
-         * pointer difference to a size_t. This rule us suppressed because in
+         * pointer difference to a size_t. This rule is suppressed because in
          * in the previous statement it is asserted that the pointer difference
          * will never be negative. */
         /* coverity[misra_c_2012_rule_10_8_violation] */
@@ -815,11 +718,6 @@ static int httpParserOnHeadersCompleteCallback( http_parser * pHttpParser )
 
     /* If the Content-Length header was found, then pHttpParser->content_length
      * will not be equal to the maximum 64 bit integer. */
-
-    /* MISRA rule 14.3 flags the following line as invaraint. http-parser library
-     * sets pHttpParser->content_length intentionally to the maximum 64 bit
-     * integer to note a non-existent Content-Length header. */
-    /* coverity[misra_c_2012_rule_14_3_violation] */
     if( pHttpParser->content_length != ( ( uint64_t ) -1 ) )
     {
         pResponse->contentLength = ( size_t ) ( pHttpParser->content_length );
@@ -830,24 +728,12 @@ static int httpParserOnHeadersCompleteCallback( http_parser * pHttpParser )
     }
 
     /* If the Connection: close header was found this flag will be set. */
-
-    /* The MISRA directive 4.6 violation is for using primitive type unsigned
-     * int, instead of a typedef which denotes the signedness and size of the
-     * type. This violation is suppressed because http-parser defines these
-     * variables as an unsigned int. */
-    /* coverity[misra_c_2012_directive_4_6_violation] */
     if( ( pHttpParser->flags & ( unsigned int ) ( F_CONNECTION_CLOSE ) ) != 0u )
     {
         pResponse->flags |= HTTP_RESPONSE_CONNECTION_CLOSE_FLAG;
     }
 
     /* If the Connection: keep-alive header was found this flag will be set. */
-
-    /* The MISRA directive 4.6 violation is for using primitive type unsigned
-     * int, instead of a typedef which denotes the signedness and size of the
-     * type. This violation is suppressed because http-parser defines these
-     * variables as an unsigned int. */
-    /* coverity[misra_c_2012_directive_4_6_violation] */
     if( ( pHttpParser->flags & ( unsigned int ) ( F_CONNECTION_KEEP_ALIVE ) ) != 0u )
     {
         pResponse->flags |= HTTP_RESPONSE_CONNECTION_KEEP_ALIVE_FLAG;
@@ -860,10 +746,6 @@ static int httpParserOnHeadersCompleteCallback( http_parser * pHttpParser )
      * end of the headers up to the Content-Length found. */
     if( pParsingContext->isHeadResponse == 1u )
     {
-        /* The MISRA directive 4.6 violation is for using primitive type int, instead of
-         * a typedef which denotes the signedness and size of the type. This violation
-         * is suppressed because http-parser requires this callback to return an integer. */
-        /* coverity[misra_c_2012_directive_4_6_violation] */
         shouldContinueParse = HTTP_PARSER_STOP_PARSING;
     }
 
@@ -881,26 +763,10 @@ static int httpParserOnHeadersCompleteCallback( http_parser * pHttpParser )
 
 /*-----------------------------------------------------------*/
 
-/* The MISRA directive 4.6 violation is for using primitive type int, instead of
- * a typedef which denotes the signedness and size of the type. This violation
- * is suppressed because this callback follows the function signature for the
- * http_data_cb type in http-parser. */
-
-/* MISRA directive 8.13 flags that pHttpParser should be a const parameter since
- * it does not change. This rule is suppressed because http-parser defines
- * their callback function signatures without the const. */
-/* coverity[misra_c_2012_directive_4_6_violation] */
-/* coverity[misra_c_2012_rule_8_13_violation] */
 static int httpParserOnBodyCallback( http_parser * pHttpParser,
                                      const char * pLoc,
                                      size_t length )
 {
-    /* The MISRA directive 4.6 violation is for using primitive type int,
-     * instead of a typedef which denotes the signedness and size of the type.
-     * This violation is suppressed because this variable stores the return
-     * value of this callback, which follows the function signature for the
-     * http_data_cb type in http-parser. */
-    /* coverity[misra_c_2012_directive_4_6_violation] */
     int shouldContinueParse = HTTP_PARSER_CONTINUE_PARSING;
     HTTPParsingContext_t * pParsingContext = NULL;
     HTTPResponse_t * pResponse = NULL;
@@ -910,11 +776,6 @@ static int httpParserOnBodyCallback( http_parser * pHttpParser,
     assert( pHttpParser->data != NULL );
     assert( pLoc != NULL );
 
-    /* The MISRA rule 11.5 violation flags casting a void pointer to another
-     * type. This rule is suppressed here because the http-parser library
-     * requires that private context into callbacks must be set to a void
-     * pointer variable. */
-    /* coverity[misra_c_2012_rule_11_5_violation] */
     pParsingContext = ( HTTPParsingContext_t * ) ( pHttpParser->data );
     pResponse = pParsingContext->pResponse;
 
@@ -946,11 +807,6 @@ static int httpParserOnBodyCallback( http_parser * pHttpParser,
      * will follow the the chunked header. This body data is in a later location
      * and must be moved up in the buffer. When pLoc is greater than the current
      * end of the body, that signals the parser found a chunk header. */
-
-    /* MISRA rule 18.3 glags the following as pLoc not pointing to the same
-     * object as pNextWriteLoc. This rule is suppressed because http-parser will
-     * always return a pLoc within the response buffer limit. */
-    /* coverity[misra_c_2012_rule_18_3_violation] */
     if( pLoc > ( const char * ) pNextWriteLoc )
     {
         ( void ) memcpy( pNextWriteLoc, ( const uint8_t * ) pLoc, length );
@@ -972,16 +828,6 @@ static int httpParserOnBodyCallback( http_parser * pHttpParser,
 
 /*-----------------------------------------------------------*/
 
-/* The MISRA directive 4.6 violation is for using primitive type int, instead of
- * a typedef which denotes the signedness and size of the type. This violation
- * is suppressed because this callback follows the function signature for the
- * http_cb type in http-parser. */
-
-/* MISRA directive 8.13 flags that pHttpParser should be a const parameter since
- * it does not change. This rule is suppressed because http-parser defines
- * their callback function signatures without the const. */
-/* coverity[misra_c_2012_directive_4_6_violation] */
-/* coverity[misra_c_2012_rule_8_13_violation] */
 static int httpParserOnMessageCompleteCallback( http_parser * pHttpParser )
 {
     HTTPParsingContext_t * pParsingContext = NULL;
@@ -989,11 +835,6 @@ static int httpParserOnMessageCompleteCallback( http_parser * pHttpParser )
     assert( pHttpParser != NULL );
     assert( pHttpParser->data != NULL );
 
-    /* The MISRA rule 11.5 violation flags casting a void pointer to another
-     * type. This rule is suppressed here because the http-parser library
-     * requires that private context into callbacks must be set to a void
-     * pointer variable. */
-    /* coverity[misra_c_2012_rule_11_5_violation] */
     pParsingContext = ( HTTPParsingContext_t * ) ( pHttpParser->data );
 
     /* The response message is complete. */
@@ -1030,10 +871,6 @@ static HTTPStatus_t processHttpParserError( http_parser * pHttpParser )
 
     assert( pHttpParser != NULL );
 
-    /* MISRA rule 10.5 notes casting an unsigned integer to an enum type. This
-     * violation is suppressed because the http-parser library directly sets
-     * and maps http_parser.http_errno to the enum http_errno. */
-    /* coverity[misra_c_2012_rule_10_5_violation] */
     switch( ( enum http_errno ) ( pHttpParser->http_errno ) )
     {
         case HPE_OK:
@@ -1134,11 +971,6 @@ static HTTPStatus_t processHttpParserError( http_parser * pHttpParser )
 
     /* Errors with CB_ prepending are manual returns of non-zero in the
      * response parsing callbacked. */
-
-    /* MISRA rule 10.5 notes casting an unsigned integer to an enum type. This
-     * violation is suppressed because the http-parser library directly sets
-     * and maps http_parser.http_errno to the enum http_errno. */
-    /* coverity[misra_c_2012_rule_10_5_violation] */
     LogDebug( ( "http-parser errno description: %s",
                 http_errno_description( HTTP_PARSER_ERRNO( pHttpParser ) ) ) );
 
@@ -1323,12 +1155,7 @@ static HTTPStatus_t addHeader( HTTPRequestHeaders_t * pRequestHeaders,
         pBufferCur += fieldLen;
 
         /* Copy the field separator, ": ", into the buffer. */
-
-        /* MISRA rule 21.15 flags the memcpy of two different types, const uint8_t*
-         * and const char*. These types are the same size, so this comparision is
-         * acceptable. */
-        /* coverity[misra_c_2012_rule_21_15_violation] */
-        ( void ) memcpy( pBufferCur,
+        ( void ) memcpy( ( char * ) pBufferCur,
                          HTTP_HEADER_FIELD_SEPARATOR,
                          HTTP_HEADER_FIELD_SEPARATOR_LEN );
         pBufferCur += HTTP_HEADER_FIELD_SEPARATOR_LEN;
@@ -1338,12 +1165,7 @@ static HTTPStatus_t addHeader( HTTPRequestHeaders_t * pRequestHeaders,
         pBufferCur += valueLen;
 
         /* Copy the header end indicator, "\r\n\r\n" into the buffer. */
-
-        /* MISRA rule 21.15 flags the memcpy of two different types, const uint8_t*
-         * and const char*. These types are the same size, so this comparision is
-         * acceptable. */
-        /* coverity[misra_c_2012_rule_21_15_violation] */
-        ( void ) memcpy( pBufferCur,
+        ( void ) memcpy( ( char * ) pBufferCur,
                          HTTP_HEADER_END_INDICATOR,
                          HTTP_HEADER_END_INDICATOR_LEN );
 
@@ -1394,67 +1216,38 @@ static HTTPStatus_t writeRequestLine( HTTPRequestHeaders_t * pRequestHeaders,
     if( returnStatus == HTTP_SUCCESS )
     {
         /* Write "<METHOD> <PATH> HTTP/1.1\r\n" to start the HTTP header. */
-
-        /* MISRA rule 21.15 flags the memcpy of two different types, const uint8_t*
-         * and const char*. These types are the same size, so this comparision is
-         * acceptable. */
-        /* coverity[misra_c_2012_rule_21_15_violation] */
-        ( void ) memcpy( pBufferCur, pMethod, methodLen );
+        ( void ) memcpy( ( char * ) pBufferCur, pMethod, methodLen );
         pBufferCur += methodLen;
 
-        /* MISRA rule 21.15 flags the memcpy of two different types, const uint8_t*
-         * and const char*. These types are the same size, so this comparision is
-         * acceptable. */
-        /* coverity[misra_c_2012_rule_21_15_violation] */
-        ( void ) memcpy( pBufferCur, SPACE_CHARACTER, SPACE_CHARACTER_LEN );
+        ( void ) memcpy( ( char * ) pBufferCur, SPACE_CHARACTER, SPACE_CHARACTER_LEN );
 
         pBufferCur += SPACE_CHARACTER_LEN;
 
         /* Use "/" as default value if <PATH> is NULL. */
         if( ( pPath == NULL ) || ( pathLen == 0u ) )
         {
-            /* MISRA rule 21.15 flags the memcpy of two different types, const uint8_t*
-             * and const char*. These types are the same size, so this comparision is
-             * acceptable. */
-            /* coverity[misra_c_2012_rule_21_15_violation] */
-            ( void ) memcpy( pBufferCur,
+            ( void ) memcpy( ( char * ) pBufferCur,
                              HTTP_EMPTY_PATH,
                              HTTP_EMPTY_PATH_LEN );
             pBufferCur += HTTP_EMPTY_PATH_LEN;
         }
         else
         {
-            /* MISRA rule 21.15 flags the memcpy of two different types, const uint8_t*
-             * and const char*. These types are the same size, so this comparision is
-             * acceptable. */
-            /* coverity[misra_c_2012_rule_21_15_violation] */
-            ( void ) memcpy( pBufferCur, pPath, pathLen );
+            ( void ) memcpy( ( char * ) pBufferCur, pPath, pathLen );
             pBufferCur += pathLen;
         }
 
-        /* MISRA rule 21.15 flags the memcpy of two different types, const uint8_t*
-         * and const char*. These types are the same size, so this comparision is
-         * acceptable. */
-        /* coverity[misra_c_2012_rule_21_15_violation] */
-        ( void ) memcpy( pBufferCur,
+        ( void ) memcpy( ( char * ) pBufferCur,
                          SPACE_CHARACTER,
                          SPACE_CHARACTER_LEN );
         pBufferCur += SPACE_CHARACTER_LEN;
 
-        /* MISRA rule 21.15 flags the memcpy of two different types, const uint8_t*
-         * and const char*. These types are the same size, so this comparision is
-         * acceptable. */
-        /* coverity[misra_c_2012_rule_21_15_violation] */
-        ( void ) memcpy( pBufferCur,
+        ( void ) memcpy( ( char * ) pBufferCur,
                          HTTP_PROTOCOL_VERSION,
                          HTTP_PROTOCOL_VERSION_LEN );
         pBufferCur += HTTP_PROTOCOL_VERSION_LEN;
 
-        /* MISRA rule 21.15 flags the memcpy of two different types, const uint8_t*
-         * and const char*. These types are the same size, so this comparision is
-         * acceptable. */
-        /* coverity[misra_c_2012_rule_21_15_violation] */
-        ( void ) memcpy( pBufferCur,
+        ( void ) memcpy( ( char * ) pBufferCur,
                          HTTP_HEADER_LINE_SEPARATOR,
                          HTTP_HEADER_LINE_SEPARATOR_LEN );
         pRequestHeaders->headersLen = toAddLen;
@@ -1769,7 +1562,6 @@ static HTTPStatus_t addContentLengthHeader( HTTPRequestHeaders_t * pRequestHeade
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
     char pContentLengthValue[ MAX_INT32_NO_OF_DECIMAL_DIGITS ] = { '\0' };
     uint8_t contentLengthValueNumBytes = 0u;
-    size_t headerLength = 0u;
 
     assert( pRequestHeaders != NULL );
     assert( contentLength > 0u );
@@ -1802,7 +1594,6 @@ static HTTPStatus_t sendHttpHeaders( const HTTPTransportInterface_t * pTransport
                                      uint32_t flags )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
-    size_t numBytesToSend = 0u;
     uint8_t shouldSendContentLength = 0u;
 
     assert( pTransport != NULL );
@@ -1822,7 +1613,7 @@ static HTTPStatus_t sendHttpHeaders( const HTTPTransportInterface_t * pTransport
     if( returnStatus == HTTP_SUCCESS )
     {
         LogDebug( ( "Sending HTTP request headers: HeaderBytes=%d",
-                    numBytesToSend ) );
+                    pRequestHeaders->headersLen ) );
 
         /* Send the HTTP headers over the network. */
         returnStatus = sendHttpData( pTransport, pRequestHeaders->pBuffer, pRequestHeaders->headersLen );
@@ -2138,17 +1929,6 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
 
 /*-----------------------------------------------------------*/
 
-/* The MISRA rule 8.13 violation is for using a non-const type for the
- * "pHttpParser" parser instead of a const-type, because the pointed to object
- * is not modified by the function. This violations is suppressed because this
- * function follows the function signature of the "on_header_field" callback
- * specified by the http-parser library.
- * /* The MISRA directive 4.6 violation is for using primitive type int, instead of
- * a typedef which denotes the signedness and size of the type. This violation
- * is suppressed because this callback follows the function signature for the
- * http_data_cb type in http-parser. */
-/* coverity[misra_c_2012_rule_8_13_violation] */
-/* coverity[misra_c_2012_directive_4_6_violation] */
 static int findHeaderFieldParserCallback( http_parser * pHttpParser,
                                           const char * pFieldLoc,
                                           size_t fieldLen )
@@ -2166,21 +1946,11 @@ static int findHeaderFieldParserCallback( http_parser * pHttpParser,
     assert( pContext->fieldFound == 0u );
     assert( pContext->valueFound == 0u );
 
-    /* The MISRA rule 11.5 violation flags casting a void pointer to another
-     * type. This rule is suppressed here because the http-parser library
-     * requires that private context into callbacks must be set to a void
-     * pointer variable. */
-    /* coverity[misra_c_2012_rule_11_5_violation] */
     pContext = ( findHeaderContext_t * ) pHttpParser->data;
 
     /* Check whether the parsed header matches the header we are looking for. */
-
-    /* MISRA rule 21.15 flags the memcmp of two different types, const uint8_t*
-     * and const char*. These types are the same size, so this comparision is
-     * acceptable. */
-    /* coverity[misra_c_2012_rule_21_15_violation] */
     if( ( fieldLen == pContext->fieldLen ) &&
-        ( memcmp( pContext->pField, pFieldLoc, fieldLen ) == 0 ) )
+        ( memcmp( pContext->pField, ( const uint8_t * ) pFieldLoc, fieldLen ) == 0 ) )
     {
         LogDebug( ( "Found header field in response: "
                     "HeaderName=%.*s, HeaderLocation=0x%x",
@@ -2194,36 +1964,15 @@ static int findHeaderFieldParserCallback( http_parser * pHttpParser,
         /* Empty else for MISRA 15.7 compliance. */
     }
 
-    /* The MISRA directive 4.6 violation is for using primitive type int, instead of
-     * a typedef which denotes the signedness and size of the type. This violation
-     * is suppressed because http-parser requires this callback to return an integer. */
-    /* coverity[misra_c_2012_directive_4_6_violation] */
     return HTTP_PARSER_CONTINUE_PARSING;
 }
 
 /*-----------------------------------------------------------*/
 
-/* The coverity violation is for using a non-const type for the "pHttpParser" parser
- * instead of a const-type as the pointed to object is not modified by the function.
- * We suppress this violations this violation as this function follows the function
- * function signature of the "on_header_value" callback specified by the http-parser
- * library. */
-
-/* The MISRA directive 4.6 violation is for using primitive type int, instead of
- * a typedef which denotes the signedness and size of the type. This violation
- * is suppressed because this callback follows the function signature for the
- * http_data_cb type in http-parser. */
-/* coverity[misra_c_2012_rule_8_13_violation] */
-/* coverity[misra_c_2012_directive_4_6_violation] */
 static int findHeaderValueParserCallback( http_parser * pHttpParser,
                                           const char * pVaLueLoc,
                                           size_t valueLen )
 {
-    /* The coverity violation is for using "int" instead of a type that specifies size
-     * and signedness information. We suppress this violation as this variable represents
-     * the return value type of this callback function, whose return type is defined by
-     * http-parser. */
-    /* coverity[misra_c_2012_directive_4_6_violation] */
     int retCode = HTTP_PARSER_CONTINUE_PARSING;
     findHeaderContext_t * pContext = NULL;
 
@@ -2236,11 +1985,6 @@ static int findHeaderValueParserCallback( http_parser * pHttpParser,
     assert( pContext->pValueLoc != NULL );
     assert( pContext->pValueLen != NULL );
 
-    /* The MISRA rule 11.5 violation flags casting a void pointer to another
-     * type. This rule is suppressed here because the http-parser library
-     * requires that private context into callbacks must be set to a void
-     * pointer variable. */
-    /* coverity[misra_c_2012_rule_11_5_violation] */
     pContext = ( findHeaderContext_t * ) pHttpParser->data;
 
     /* The header value found flag should not be set. */
@@ -2261,11 +2005,6 @@ static int findHeaderValueParserCallback( http_parser * pHttpParser,
 
         /* As we have found the value associated with the header, we don't need
          * to parse the response any further. */
-
-        /* The MISRA directive 4.6 violation is for using primitive type int, instead of
-         * a typedef which denotes the signedness and size of the type. This violation
-         * is suppressed because http-parser requires this callback to return an integer. */
-        /* coverity[misra_c_2012_directive_4_6_violation] */
         retCode = HTTP_PARSER_STOP_PARSING;
     }
     else
@@ -2278,18 +2017,6 @@ static int findHeaderValueParserCallback( http_parser * pHttpParser,
 
 /*-----------------------------------------------------------*/
 
-/* The coverity violation is for using a non-const type for the "pHttpParser" parser
- * instead of a const-type as the pointed to object is not modified by the function.
- * We suppress this violations this violation as this function follows the function
- * function signature of the "on_headers_complete" callback specified by the http-parser
- * library. */
-
-/* The MISRA directive 4.6 violation is for using primitive type int, instead of
- * a typedef which denotes the signedness and size of the type. This violation
- * is suppressed because this callback follows the function signature for the
- * http_cb type in http-parser. */
-/* coverity[misra_c_2012_rule_8_13_violation] */
-/* coverity[misra_c_2012_directive_4_6_violation] */
 static int findHeaderOnHeaderCompleteCallback( http_parser * pHttpParser )
 {
     findHeaderContext_t * pContext = NULL;
@@ -2299,11 +2026,6 @@ static int findHeaderOnHeaderCompleteCallback( http_parser * pHttpParser )
 
     assert( pHttpParser != NULL );
 
-    /* The MISRA rule 11.5 violation flags casting a void pointer to another
-     * type. This rule is suppressed here because the http-parser library
-     * requires that private context into callbacks must be set to a void
-     * pointer variable. */
-    /* coverity[misra_c_2012_rule_11_5_violation] */
     pContext = ( findHeaderContext_t * ) pHttpParser->data;
 
     /* If we have reached here, all headers in the response have been parsed but the requested
@@ -2381,11 +2103,6 @@ static HTTPStatus_t findHeaderInResponse( const uint8_t * pBuffer,
     {
         /* The response buffer is invalid as only the header field was found
          * in the "<field>: <value>\r\n" format of an HTTP header. */
-
-        /* MISRA rule 10.5 notes casting an unsigned integer to an enum type. This
-         * violation is suppressed because the http-parser library directly sets
-         * and maps http_parser.http_errno to the enum http_errno. */
-        /* coverity[misra_c_2012_rule_10_5_violation] */
         LogError( ( "Unable to find header value in response: "
                     "Response data is invalid: "
                     "RequestedHeader=%.*s, ParserError=%s",
@@ -2413,18 +2130,9 @@ static HTTPStatus_t findHeaderInResponse( const uint8_t * pBuffer,
     /* If the header field-value pair is found in response, then the return
      * value of "on_header_value" callback (related to the header value) should
      * cause the http_parser.http_errno to be "CB_header_value". */
-
-    /* MISRA rule 10.5 notes casting an unsigned integer to an enum type. This
-     * violation is suppressed because the http-parser library directly sets
-     * and maps http_parser.http_errno to the enum http_errno. */
-    /* coverity[misra_c_2012_rule_10_5_violation] */
     if( ( returnStatus == HTTP_SUCCESS ) &&
         ( parser.http_errno != HPE_CB_header_value ) )
     {
-        /* MISRA rule 10.5 notes casting an unsigned integer to an enum type. This
-         * violation is suppressed because the http-parser library directly sets
-         * and maps http_parser.http_errno to the enum http_errno. */
-        /* coverity[misra_c_2012_rule_10_5_violation] */
         LogError( ( "Header found in response but http-parser returned error: "
                     "ParserError=%s",
                     http_errno_description( HTTP_PARSER_ERRNO( &( parser ) ) ) ) );
@@ -2434,18 +2142,9 @@ static HTTPStatus_t findHeaderInResponse( const uint8_t * pBuffer,
     /* If header was not found, then the "on_header_complete" callback is
      * expected to be called which should cause the http_parser.http_errno to be
      * "OK" */
-
-    /* MISRA rule 10.5 notes casting an unsigned integer to an enum type. This
-     * violation is suppressed because the http-parser library directly sets
-     * and maps http_parser.http_errno to the enum http_errno. */
-    /* coverity[misra_c_2012_rule_10_5_violation] */
     else if( ( returnStatus == HTTP_HEADER_NOT_FOUND ) &&
              ( parser.http_errno != HPE_OK ) )
     {
-        /* MISRA rule 10.5 notes casting an unsigned integer to an enum type. This
-         * violation is suppressed because the http-parser library directly sets
-         * and maps http_parser.http_errno to the enum http_errno. */
-        /* coverity[misra_c_2012_rule_10_5_violation] */
         LogError( ( "Header not found in response: http-parser returned error: "
                     "ParserError=%s",
                     http_errno_description( HTTP_PARSER_ERRNO( &( parser ) ) ) ) );
