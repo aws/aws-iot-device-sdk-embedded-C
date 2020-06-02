@@ -24,11 +24,13 @@
  * subscribe to a topic, publish to a topic, receive incoming publishes,
  * unsubscribe from a topic and disconnect the MQTT session.
  *
- * The example shown below uses MQTT APIs to send and receive MQTT packets
- * over the TLS connection established using openSSL.
  * The example is single threaded and uses statically allocated memory;
- * it uses QOS0 and therefore does not implement any retransmission
- * mechanism for Publish messages.
+ * it uses QOS2 and therefore implements a retransmission mechanism
+ * for Publish messages. Retransmission of publish messages are attempted
+ * when a MQTT connection is established with a session that was already
+ * present. All the outgoing publish messages waiting to receive PUBREC
+ * are resend in this demo. In order to support retransmission all the outgoing
+ * publishes are stored until a PUBREC is received.
  */
 
 /* Standard includes. */
@@ -1297,9 +1299,14 @@ static int publishToTopic( MQTTContext_t * pContext )
  *
  * The example shown below uses MQTT APIs to send and receive MQTT packets
  * over the TLS connection established using openSSL.
+ *
  * The example is single threaded and uses statically allocated memory;
- * it uses QOS0 and therefore does not implement any retransmission
- * mechanism for Publish messages.
+ * it uses QOS2 and therefore implements a retransmission mechanism
+ * for Publish messages. Retransmission of publish messages are attempted
+ * when a MQTT connection is established with a session that was already
+ * present. All the outgoing publish messages waiting to receive PUBREC
+ * are resend in this demo. In order to support retransmission all the outgoing
+ * publishes are stored until a PUBREC is received.
  */
 int main( int argc,
           char ** argv )
