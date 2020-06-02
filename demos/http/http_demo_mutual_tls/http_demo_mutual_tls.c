@@ -66,7 +66,7 @@
  * information about the TLS connection.
  */
 #ifndef GET_PATH
-    #define GET_PATH    "/secure"
+    #define GET_PATH    "/secure/"
 #endif
 
 /**
@@ -77,7 +77,7 @@
 /**
  * @brief The length in bytes of the user buffer.
  */
-#define USER_BUFFER_LENGTH                ( 1024 )
+#define USER_BUFFER_LENGTH                ( 4096 )
 
 /**
  * @brief Length of an IPv6 address when converted to hex digits.
@@ -346,7 +346,7 @@ static int tlsSetup( int tcpSocket,
     BIO * pClientCertBio = NULL;
     X509 * pClientCert = NULL;
     BIO * pClientKeyBio = NULL;
-    X509 * pClientKey = NULL;
+    EVP_PKEY * pClientKey = NULL;
 
     assert( tcpSocket >= 0 );
 
@@ -394,16 +394,9 @@ static int tlsSetup( int tcpSocket,
         bytesWritten = BIO_write( pClientCertBio,
                                   CLIENT_CERTIFICATE, CLIENT_CERTIFICATE_LENGTH );
 
-        /* Create X509 data type from BIO. */
         if( bytesWritten == CLIENT_CERTIFICATE_LENGTH )
         {
             pClientCert = PEM_read_bio_X509( pClientCertBio, NULL, NULL, NULL );
-            sslStatus = X509_STORE_add_cert( SSL_CTX_get_cert_store( pSslSetup ),
-                                             pClientCert );
-        }
-
-        if( sslStatus == 1 )
-        {
             sslStatus = SSL_CTX_use_certificate( pSslSetup, pClientCert );
         }
     }
@@ -413,18 +406,11 @@ static int tlsSetup( int tcpSocket,
     {
         pClientKeyBio = BIO_new( BIO_s_mem() );
         bytesWritten = BIO_write( pClientKeyBio,
-                                  CLIENT_CERTIFICATE, CLIENT_CERTIFICATE_LENGTH );
+                                  CLIENT_KEY, CLIENT_KEY_LENGTH );
 
-        /* Create X509 data type from BIO. */
-        if( bytesWritten == CLIENT_CERTIFICATE_LENGTH )
+        if( bytesWritten == CLIENT_KEY_LENGTH )
         {
-            pClientKey = PEM_read_bio_X509( pClientKeyBio, NULL, NULL, NULL );
-            sslStatus = X509_STORE_add_cert( SSL_CTX_get_cert_store( pSslSetup ),
-                                             pClientKey );
-        }
-
-        if( sslStatus == 1 )
-        {
+            pClientKey = PEM_read_bio_PrivateKey( pClientKeyBio, NULL, NULL, NULL );
             sslStatus = SSL_CTX_use_PrivateKey( pSslSetup, pClientKey );
         }
     }
@@ -487,12 +473,12 @@ static int tlsSetup( int tcpSocket,
         BIO_free( pRootCaBio );
     }
 
-    if( pClientCert != NULL )
+    if( pClientCertBio != NULL )
     {
         BIO_free( pClientCertBio );
     }
 
-    if( pClientKey != NULL )
+    if( pClientKeyBio != NULL )
     {
         BIO_free( pClientKeyBio );
     }
@@ -500,6 +486,16 @@ static int tlsSetup( int tcpSocket,
     if( pRootCa != NULL )
     {
         X509_free( pRootCa );
+    }
+
+    if( pClientCert != NULL )
+    {
+        X509_free( pClientCert );
+    }
+
+    if( pClientKey != NULL )
+    {
+        EVP_PKEY_free( pClientKey );
     }
 
     if( pSslSetup != NULL )
