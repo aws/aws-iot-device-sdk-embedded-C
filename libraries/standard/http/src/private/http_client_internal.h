@@ -201,7 +201,7 @@ typedef struct findHeaderContext
  * +--------+------------+
  * |onBody               +<---+
  * +--------+--------+---+    |
- *          |        |        |(Transfer-endoding chunked body)
+ *          |        |        |(Transfer-encoding chunked body)
  *          |        |        |
  *          |        +--------+
  *          |
