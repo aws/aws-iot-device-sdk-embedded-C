@@ -1218,7 +1218,7 @@ void test_Http_ReadHeader_With_HttpParser_Internal_Error()
                                      strlen( HEADER_IN_BUFFER ),
                                      &pValueLoc,
                                      &valueLen );
-    TEST_ASSERT_EQUAL( HTTP_SUCCESS, retCode );
+    TEST_ASSERT_EQUAL( HTTP_PARSER_INTERNAL_ERROR, retCode );
 }
 
 /**
