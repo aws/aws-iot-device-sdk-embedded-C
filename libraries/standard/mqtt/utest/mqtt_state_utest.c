@@ -456,3 +456,57 @@ void test_MQTT_StateSelect( void )
     TEST_ASSERT_EQUAL( MQTT_PACKET_ID_INVALID, packetId );
     TEST_ASSERT_EQUAL( MQTT_STATE_ARRAY_MAX_COUNT, outgoingCursor );
 }
+
+void test_MQTT_State_strerror( void )
+{
+    MQTTPublishState_t state;
+    const char * str = NULL;
+
+    state = MQTTStateNull;
+    str = MQTT_State_strerror( state );
+    TEST_ASSERT_EQUAL_STRING( "MQTTStateNull", str );
+
+    state = MQTTPublishSend;
+    str = MQTT_State_strerror( state );
+    TEST_ASSERT_EQUAL_STRING( "MQTTPublishSend", str );
+
+    state = MQTTPubAckSend;
+    str = MQTT_State_strerror( state );
+    TEST_ASSERT_EQUAL_STRING( "MQTTPubAckSend", str );
+
+    state = MQTTPubRecSend;
+    str = MQTT_State_strerror( state );
+    TEST_ASSERT_EQUAL_STRING( "MQTTPubRecSend", str );
+
+    state = MQTTPubRelSend;
+    str = MQTT_State_strerror( state );
+    TEST_ASSERT_EQUAL_STRING( "MQTTPubRelSend", str );
+
+    state = MQTTPubCompSend;
+    str = MQTT_State_strerror( state );
+    TEST_ASSERT_EQUAL_STRING( "MQTTPubCompSend", str );
+
+    state = MQTTPubAckPending;
+    str = MQTT_State_strerror( state );
+    TEST_ASSERT_EQUAL_STRING( "MQTTPubAckPending", str );
+
+    state = MQTTPubRecPending;
+    str = MQTT_State_strerror( state );
+    TEST_ASSERT_EQUAL_STRING( "MQTTPubRecPending", str );
+
+    state = MQTTPubRelPending;
+    str = MQTT_State_strerror( state );
+    TEST_ASSERT_EQUAL_STRING( "MQTTPubRelPending", str );
+
+    state = MQTTPubCompPending;
+    str = MQTT_State_strerror( state );
+    TEST_ASSERT_EQUAL_STRING( "MQTTPubCompPending", str );
+
+    state = MQTTPublishDone;
+    str = MQTT_State_strerror( state );
+    TEST_ASSERT_EQUAL_STRING( "MQTTPublishDone", str );
+
+    state = MQTTPublishDone + 1;
+    str = MQTT_State_strerror( state );
+    TEST_ASSERT_EQUAL_STRING( "Invalid MQTT State", str );
+}

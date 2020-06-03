@@ -470,9 +470,9 @@ MQTTStatus_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
         else
         {
             mqttStatus = MQTTIllegalState;
-            LogError( ( "Invalid transition from state %d to state %d.",
-                        currentState,
-                        newState ) );
+            LogError( ( "Invalid transition from state %s to state %s.",
+                        MQTT_State_strerror( currentState ),
+                        MQTT_State_strerror( newState ) ) );
         }
 
         *pNewState = newState;
@@ -587,16 +587,15 @@ MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
         else
         {
             status = MQTTIllegalState;
-            LogError( ( "Invalid transition from state %d to state %d.",
-                        currentState,
-                        newState ) );
+            LogError( ( "Invalid transition from state %s to state %s.",
+                        MQTT_State_strerror( currentState ),
+                        MQTT_State_strerror( newState ) ) );
         }
     }
     else
     {
         LogError( ( "No matching record found for publish %u.", packetId ) );
     }
-    
 
     return status;
 }
@@ -657,4 +656,63 @@ uint16_t MQTT_StateSelect( const MQTTContext_t * pMqttContext,
     }
 
     return packetId;
+}
+
+const char * MQTT_State_strerror( MQTTPublishState_t state )
+{
+    const char * str = NULL;
+
+    switch( state )
+    {
+        case MQTTStateNull:
+            str = "MQTTStateNull";
+            break;
+
+        case MQTTPublishSend:
+            str = "MQTTPublishSend";
+            break;
+
+        case MQTTPubAckSend:
+            str = "MQTTPubAckSend";
+            break;
+
+        case MQTTPubRecSend:
+            str = "MQTTPubRecSend";
+            break;
+
+        case MQTTPubRelSend:
+            str = "MQTTPubRelSend";
+            break;
+
+        case MQTTPubCompSend:
+            str = "MQTTPubCompSend";
+            break;
+
+        case MQTTPubAckPending:
+            str = "MQTTPubAckPending";
+            break;
+
+        case MQTTPubRecPending:
+            str = "MQTTPubRecPending";
+            break;
+
+        case MQTTPubRelPending:
+            str = "MQTTPubRelPending";
+            break;
+
+        case MQTTPubCompPending:
+            str = "MQTTPubCompPending";
+            break;
+
+        case MQTTPublishDone:
+            str = "MQTTPublishDone";
+            break;
+
+        default:
+            /* Invalid state received. */
+            str = "Invalid MQTT State";
+            break;
+    }
+
+    return str;
 }
