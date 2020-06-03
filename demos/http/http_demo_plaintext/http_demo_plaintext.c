@@ -37,8 +37,8 @@
 /* HTTP API header. */
 #include "http_client.h"
 
-/* Demo Config header. */
-#include "http_config.h"
+/* Demo config header. */
+#include "demo_config.h"
 
 /**
  * @brief HTTP server host name.
