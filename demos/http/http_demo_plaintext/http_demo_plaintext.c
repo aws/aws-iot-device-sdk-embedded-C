@@ -150,7 +150,7 @@ static HTTPRequestHeaders_t requestHeaders;
 static HTTPRequestInfo_t requestInfo;
 
 /**
- * @brief Represents data returned from the server in the form of an HTTP response.
+ * @brief Represents a response returned from an HTTP server.
  */
 static HTTPResponse_t response;
 
