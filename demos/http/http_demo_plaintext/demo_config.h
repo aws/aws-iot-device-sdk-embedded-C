@@ -43,4 +43,62 @@
 
 /************ End of logging configuration ****************/
 
+/**
+ * @brief HTTP server host name.
+ *
+ * This demo uses httpbin.org: A simple HTTP Request & Response Service.
+ */
+#define SERVER_HOST    "httpbin.org"
+
+/**
+ * @brief HTTP server port number.
+ *
+ * In general, port 80 is for plaintext HTTP connections.
+ */
+#define SERVER_PORT    80
+
+/**
+ * @brief Paths for different HTTP methods for specified host.
+ *
+ * For httpbin.org, see http://httpbin.org/#/HTTP_Methods for details on
+ * supported REST API.
+ */
+#ifndef GET_PATH
+    #define GET_PATH    "/get"
+#endif
+
+#ifndef HEAD_PATH
+    #define HEAD_PATH    "/get"
+#endif
+
+#ifndef PUT_PATH
+    #define PUT_PATH    "/put"
+#endif
+
+#ifndef POST_PATH
+    #define POST_PATH    "/post"
+#endif
+
+/**
+ * @brief Transport timeout in milliseconds for transport send and receive.
+ */
+#define TRANSPORT_SEND_RECV_TIMEOUT_MS    ( 1000 )
+
+/**
+ * @brief The length in bytes of the user buffer.
+ */
+#define USER_BUFFER_LENGTH                ( 1024 )
+
+/**
+ * @brief Length of an IPv6 address when converted to hex digits.
+ */
+#define IPV6_ADDRESS_STRING_LEN           ( 40 )
+
+/**
+ * @brief Some text to send as the request body for PUT and POST requests in
+ * this demo.
+ */
+#define REQUEST_BODY_TEXT                 "Hello, world!"
+#define REQUEST_BODY_TEXT_LENGTH          ( sizeof( REQUEST_BODY_TEXT ) - 1 )
+
 #endif /* ifndef DEMO_CONFIG_H */

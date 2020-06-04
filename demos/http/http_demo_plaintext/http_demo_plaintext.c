@@ -41,64 +41,6 @@
 #include "demo_config.h"
 
 /**
- * @brief HTTP server host name.
- *
- * This demo uses httpbin.org: A simple HTTP Request & Response Service.
- */
-#define SERVER_HOST    "httpbin.org"
-
-/**
- * @brief HTTP server port number.
- *
- * In general, port 80 is for plaintext HTTP connections.
- */
-#define SERVER_PORT    80
-
-/**
- * @brief Paths for different HTTP methods for specified host.
- *
- * For httpbin.org, see http://httpbin.org/#/HTTP_Methods for details on
- * supported REST API.
- */
-#ifndef GET_PATH
-    #define GET_PATH    "/get"
-#endif
-
-#ifndef HEAD_PATH
-    #define HEAD_PATH    "/get"
-#endif
-
-#ifndef PUT_PATH
-    #define PUT_PATH    "/put"
-#endif
-
-#ifndef POST_PATH
-    #define POST_PATH    "/post"
-#endif
-
-/**
- * @brief Transport timeout in milliseconds for transport send and receive.
- */
-#define TRANSPORT_SEND_RECV_TIMEOUT_MS    ( 1000 )
-
-/**
- * @brief The length in bytes of the user buffer.
- */
-#define USER_BUFFER_LENGTH                ( 1024 )
-
-/**
- * @brief Length of an IPv6 address when converted to hex digits.
- */
-#define IPV6_ADDRESS_STRING_LEN           ( 40 )
-
-/**
- * @brief Some text to send as the request body for PUT and POST requests in
- * this demo.
- */
-#define REQUEST_BODY_TEXT                 "Hello, world!"
-#define REQUEST_BODY_TEXT_LENGTH          ( sizeof( REQUEST_BODY_TEXT ) - 1 )
-
-/**
  * @brief A string to store the resolved IP address from the host name.
  */
 static char resolvedIpAddr[ IPV6_ADDRESS_STRING_LEN ];
@@ -112,11 +54,6 @@ static char resolvedIpAddr[ IPV6_ADDRESS_STRING_LEN ];
  * decide to use separate buffers for storing the HTTP request and response.
  */
 static uint8_t userBuffer[ USER_BUFFER_LENGTH ];
-
-/**
- * @brief The request body.
- */
-static uint8_t requestBodyBuffer[ REQUEST_BODY_TEXT_LENGTH ];
 
 /**
  * @brief Definition of the HTTP network context.
@@ -460,7 +397,7 @@ static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface
                    ( char * ) requestHeaders.pBuffer ) );
         LogInfo( ( "Request Body:\n%.*s\n",
                    ( int32_t ) REQUEST_BODY_TEXT_LENGTH,
-                   ( char * ) requestBodyBuffer ) );
+                   REQUEST_BODY_TEXT ) );
         /* Send the request and receive the response. */
         httpStatus = HTTPClient_Send( pTransportInterface,
                                       &requestHeaders,
@@ -521,9 +458,8 @@ int main( int argc,
 {
     int returnStatus = EXIT_SUCCESS;
 
-    /* Set the request body. */
-    strncpy( ( char * ) requestBodyBuffer,
-             REQUEST_BODY_TEXT, REQUEST_BODY_TEXT_LENGTH );
+    ( void ) argc;
+    ( void ) argv;
 
     /**************************** Connect. ******************************/
 
