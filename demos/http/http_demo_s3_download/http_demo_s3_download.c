@@ -737,8 +737,9 @@ static int downloadS3ObjectFile( HTTPTransportInterface_t * pTransportInterface,
 
         if( httpStatus == HTTP_SUCCESS )
         {
-            LogInfo( ( "Sending HTTP %s request to %s%s...",
-                       pMethod, S3_PRESIGNED_HOST, pPath ) );
+            LogInfo( ( "Downloading S3 Object from %s%s...: %d out of %d bytes",
+                       pMethod, S3_PRESIGNED_HOST,
+                       curByte, fileSize ) );
             LogInfo( ( "Request Headers:\n%.*s",
                        ( int32_t ) requestHeaders.headersLen,
                        ( char * ) requestHeaders.pBuffer ) );
