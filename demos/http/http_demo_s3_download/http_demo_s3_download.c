@@ -575,6 +575,7 @@ static HTTPStatus_t getS3ObjectFileSize( size_t * pFileSize,
      * of the maximum 32 bit integer which is 10. Since the header field value
      * "bytes 0-0/FILESIZE" is less than the maximum possible Range header
      * field value, we size this string to the Range header field value. */
+    uint8_t * contentRangeValBuffer = NULL;
     char contentRangeValStr[ HTTP_RANGE_VALUE_MAX_LENGTH ] = { 0 };
     size_t contentRangeValStrLength = 0;
 
@@ -641,12 +642,15 @@ static HTTPStatus_t getS3ObjectFileSize( size_t * pFileSize,
         httpStatus = HTTPClient_ReadHeader( &response,
                                             ( const uint8_t * ) HTTP_CONTENT_RANGE_HEADER_FIELD,
                                             ( size_t ) HTTP_CONTENT_RANGE_HEADER_FIELD_LENGTH,
-                                            &contentRangeValStr,
+                                            &contentRangeValBuffer,
                                             &contentRangeValStrLength );
     }
 
     if( httpStatus == HTTP_SUCCESS )
     {
+        strncpy( contentRangeValStr,
+                 ( char * ) contentRangeValBuffer, contentRangeValStrLength );
+
         /* Parse the Content-Range header value to get the file size. */
         pFileSizeStr = strstr( contentRangeValStr, "/" );
 
