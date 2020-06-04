@@ -47,7 +47,7 @@
 /**
  * @brief Host for S3 GET Object access.
  */
-#define S3_PRESIGNED_HOST                 "csdk-demos.s3.amazonaws.com"
+#define S3_PRESIGNED_HOST                 "Please update the host for the demo"
 
 /**
  * @brief The length of the host for S3 GET Object access.
@@ -57,7 +57,7 @@
 /**
  * @brief Presigned URL path for S3 GET Object access.
  */
-#define S3_PRESIGNED_GET_PATH             "/test.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAWKZHVZ2CZE4KMSHY%2F20200604%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20200604T014120Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=2184131000a9fe2865cfd22194122733616051fc9ec2f93e3a8bf09fa8835e98"
+#define S3_PRESIGNED_GET_PATH             "Please update the path for the demo"
 
 /**
  * @brief The length of the presigned URL path for S3 GET Object access.
