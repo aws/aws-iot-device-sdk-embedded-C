@@ -516,7 +516,8 @@ static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface
  * single-threaded and uses statically allocated memory.
  *
  */
-int main()
+int main( int argc,
+          char ** argv )
 {
     int returnStatus = EXIT_SUCCESS;
 
