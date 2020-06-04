@@ -22,7 +22,6 @@
 #include <assert.h>
 #include "mqtt_state.h"
 
-#define MQTT_PACKET_ID_INVALID    ( uint16_t ) 0U
 
 /**
  * @brief Test if a transition to new state is possible, when dealing with PUBLISHes.

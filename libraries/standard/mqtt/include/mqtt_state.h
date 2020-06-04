@@ -27,6 +27,13 @@
 #define MQTT_STATE_CURSOR_INITIALIZER    ( size_t ) 0
 
 /**
+ * @brief Invalid packet identifier.
+ *
+ * Zero is an invalid packet identifier as per MQTT v3.1.1 spec.
+ */
+#define MQTT_PACKET_ID_INVALID           ( ( uint16_t ) 0U )
+
+/**
  * @brief Value indicating either send or receive.
  */
 typedef enum MQTTStateOperation
