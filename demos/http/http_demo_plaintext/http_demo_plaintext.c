@@ -101,7 +101,7 @@
 /**
  * @brief A string to store the resolved IP address from the host name.
  */
-static char resolvedIpAddr[ IPV6_ADDRESS_STRING_LEN ] = { 0 };
+static char resolvedIpAddr[ IPV6_ADDRESS_STRING_LEN ];
 
 /**
  * @brief A buffer used in the demo for storing HTTP request headers and
@@ -111,12 +111,12 @@ static char resolvedIpAddr[ IPV6_ADDRESS_STRING_LEN ] = { 0 };
  * response after the HTTP request is sent out. However, the user can also
  * decide to use separate buffers for storing the HTTP request and response.
  */
-static uint8_t userBuffer[ USER_BUFFER_LENGTH ] = { 0 };
+static uint8_t userBuffer[ USER_BUFFER_LENGTH ];
 
 /**
  * @brief The request body.
  */
-static uint8_t requestBodyBuffer[ REQUEST_BODY_TEXT_LENGTH ] = { 0 };
+static uint8_t requestBodyBuffer[ REQUEST_BODY_TEXT_LENGTH ];
 
 /**
  * @brief Definition of the HTTP network context.
