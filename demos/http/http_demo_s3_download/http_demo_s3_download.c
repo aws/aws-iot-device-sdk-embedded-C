@@ -569,14 +569,8 @@ static HTTPStatus_t getS3ObjectFileSize( size_t * pFileSize,
     /* The location of the file size in the contentRangeValStr. */
     char * pFileSizeStr = NULL;
 
-    /* String to store the Content-Range header field value. This header field
-     * as we are requesting in this demo is of the form:
-     * "Content-Range: bytes 0-0/FILESIZE", where file size would be the length
-     * of the maximum 32 bit integer which is 10. Since the header field value
-     * "bytes 0-0/FILESIZE" is less than the maximum possible Range header
-     * field value, we size this string to the Range header field value. */
-    uint8_t * contentRangeValBuffer = NULL;
-    char contentRangeValStr[ HTTP_RANGE_VALUE_MAX_LENGTH ] = { 0 };
+    /* String to store the Content-Range header value. */
+    char * contentRangeValStr = NULL;
     size_t contentRangeValStrLength = 0;
 
     assert( pTransportInterface != NULL );
@@ -642,15 +636,12 @@ static HTTPStatus_t getS3ObjectFileSize( size_t * pFileSize,
         httpStatus = HTTPClient_ReadHeader( &response,
                                             ( const uint8_t * ) HTTP_CONTENT_RANGE_HEADER_FIELD,
                                             ( size_t ) HTTP_CONTENT_RANGE_HEADER_FIELD_LENGTH,
-                                            &contentRangeValBuffer,
+                                            ( const uint8_t ** ) &contentRangeValStr,
                                             &contentRangeValStrLength );
     }
 
     if( httpStatus == HTTP_SUCCESS )
     {
-        strncpy( contentRangeValStr,
-                 ( char * ) contentRangeValBuffer, contentRangeValStrLength );
-
         /* Parse the Content-Range header value to get the file size. */
         pFileSizeStr = strstr( contentRangeValStr, "/" );
 
@@ -662,6 +653,13 @@ static HTTPStatus_t getS3ObjectFileSize( size_t * pFileSize,
 
         pFileSizeStr += sizeof( char );
         *pFileSize = ( size_t ) strtoul( pFileSizeStr, NULL, 10 );
+
+        if( ( *pFileSize == 0 ) || ( *pFileSize == UINT32_MAX ) )
+        {
+            LogError( ( "Error using strtoul to get the file size from %s. Error returned: %d",
+                        pFileSizeStr, *pFileSize ) );
+            httpStatus = HTTP_INVALID_PARAMETER;
+        }
     }
 
     return httpStatus;

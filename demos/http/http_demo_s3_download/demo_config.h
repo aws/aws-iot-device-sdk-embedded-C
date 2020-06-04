@@ -83,17 +83,4 @@
 #define HTTP_CONTENT_RANGE_HEADER_FIELD           "Content-Range"
 #define HTTP_CONTENT_RANGE_HEADER_FIELD_LENGTH    ( sizeof( HTTP_CONTENT_RANGE_HEADER_FIELD ) - 1 )
 
-/**
- * @brief The maximum size of the header value string for the "Range" field.
- *
- * This is used to specify which parts of the file
- * we want to download. Let's say the maximum file size is what can fit in a 32
- * bit unsigned integer. 2^32 = 4294967296 which is 10 digits. The header value
- * string is of the form: "bytes=N-M" where N and M are integers. So the length
- * of this string is strlen(N) + strlen(M) + strlen("bytes=-") + NULL terminator.
- * Given the maximum number of digits is 10 we get the maximum length of this
- * header value as: 10 * 2 + 7 + 1.
- */
-#define HTTP_RANGE_VALUE_MAX_LENGTH               ( 28 )
-
 #endif /* ifndef DEMO_CONFIG_H */
