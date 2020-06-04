@@ -362,6 +362,7 @@ static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface
                             const char * pMethod,
                             const char * pPath )
 {
+    int returnStatus = EXIT_SUCCESS;
     HTTPStatus_t httpStatus = HTTP_SUCCESS;
 
     /* Initialize the request object. */
@@ -431,14 +432,12 @@ static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface
                     pMethod, SERVER_HOST, pPath, HTTPClient_strerror( httpStatus ) ) );
     }
 
-    if( httpStatus == HTTP_SUCCESS )
+    if( httpStatus != HTTP_SUCCESS )
     {
-        return EXIT_SUCCESS;
+        returnStatus = EXIT_FAILURE;
     }
-    else
-    {
-        return EXIT_FAILURE;
-    }
+
+    return returnStatus;
 }
 
 /*-----------------------------------------------------------*/
@@ -516,8 +515,8 @@ int main( int argc,
 
     if( socketContext.tcpSocket != -1 )
     {
-        shutdown( socketContext.tcpSocket, SHUT_RDWR );
-        close( socketContext.tcpSocket );
+        ( void ) shutdown( socketContext.tcpSocket, SHUT_RDWR );
+        ( void ) close( socketContext.tcpSocket );
     }
 
     return returnStatus;
