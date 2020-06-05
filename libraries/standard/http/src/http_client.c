@@ -1997,8 +1997,6 @@ static int findHeaderValueParserCallback( http_parser * pHttpParser,
     assert( pContext->pValueLoc != NULL );
     assert( pContext->pValueLen != NULL );
 
-    pContext = ( findHeaderContext_t * ) pHttpParser->data;
-
     /* The header value found flag should not be set. */
     assert( pContext->valueFound == 0u );
 
