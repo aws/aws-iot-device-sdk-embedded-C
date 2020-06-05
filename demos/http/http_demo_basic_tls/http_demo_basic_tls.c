@@ -621,10 +621,11 @@ static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface
  * This example resolves a domain, establishes a TCP connection, validates the
  * server's certificate using the root CA certificate defined in the config header,
  * then finally performs a TLS handshake with the HTTP server so that all communication
- * is encrypted. After which, HTTP_Client APIs are used to send a GET, HEAD, PUT,
- * and POST request in that order. For each request, an HTTP response from the
- * server (or an error code) is logged. Note that this example is single-threaded
- * and uses statically allocated memory.
+ * is encrypted. After which, HTTP Client library API is used to send a GET, HEAD,
+ * PUT, and POST request in that order. For each request, the HTTP response from the
+ * server (or an error code) is logged.
+ *
+ * @note This example is single-threaded and uses statically allocated memory.
  *
  */
 int main( int argc,
