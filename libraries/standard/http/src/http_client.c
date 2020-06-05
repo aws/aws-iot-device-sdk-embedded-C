@@ -1519,7 +1519,7 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
     const uint8_t * pIndex = pData;
-    int32_t totalBytesSent = 0, bytesSent = 0;
+    int32_t bytesSent = 0;
     size_t bytesRemaining = dataLen;
 
     assert( pTransport != NULL );
@@ -1536,21 +1536,19 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
         if( bytesSent > 0 )
         {
             bytesRemaining -= ( size_t ) bytesSent;
-            totalBytesSent += bytesSent;
             pIndex += bytesSent;
             LogDebug( ( "Sent HTTP data over the transport: "
                         "BytesSent=%d, BytesRemaining=%ul, "
                         "TotalBytesSent=%d.",
                         bytesSent,
                         bytesRemaining,
-                        totalBytesSent ) );
+                        dataLen - bytesRemaining ) );
         }
         else
         {
             LogError( ( "Failed to send HTTP data: Transport send()"
                         " returned error: TransportStatus=%d",
                         bytesSent ) );
-            totalBytesSent = -1;
             returnStatus = HTTP_NETWORK_ERROR;
             break;
         }
@@ -1945,11 +1943,13 @@ static int findHeaderFieldParserCallback( http_parser * pHttpParser,
                                           const char * pFieldLoc,
                                           size_t fieldLen )
 {
-    findHeaderContext_t * pContext = pHttpParser->data;
+    findHeaderContext_t * pContext = NULL;
 
     assert( pHttpParser != NULL );
     assert( pFieldLoc != NULL );
     assert( fieldLen > 0u );
+
+    pContext = ( findHeaderContext_t * ) pHttpParser->data;
 
     assert( pContext->pField != NULL );
     assert( pContext->fieldLen > 0u );
@@ -1957,8 +1957,6 @@ static int findHeaderFieldParserCallback( http_parser * pHttpParser,
     /* The header found flags should not be set. */
     assert( pContext->fieldFound == 0u );
     assert( pContext->valueFound == 0u );
-
-    pContext = ( findHeaderContext_t * ) pHttpParser->data;
 
     /* Check whether the parsed header matches the header we are looking for. */
     if( ( fieldLen == pContext->fieldLen ) &&
@@ -1986,11 +1984,13 @@ static int findHeaderValueParserCallback( http_parser * pHttpParser,
                                           size_t valueLen )
 {
     int retCode = HTTP_PARSER_CONTINUE_PARSING;
-    findHeaderContext_t * pContext = pHttpParser->data;
+    findHeaderContext_t * pContext = NULL;
 
     assert( pHttpParser != NULL );
     assert( pVaLueLoc != NULL );
     assert( valueLen > 0u );
+
+    pContext = ( findHeaderContext_t * ) pHttpParser->data;
 
     assert( pContext->pField != NULL );
     assert( pContext->fieldLen > 0u );
