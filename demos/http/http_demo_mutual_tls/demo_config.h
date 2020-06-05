@@ -45,10 +45,8 @@
 
 /**
  * @brief HTTP server host name.
- *
- * This demo uses httpbin.org: A simple HTTP Request & Response Service.
  */
-#define SERVER_HOST           "httpbin.org"
+#define SERVER_HOST           "server.cryptomix.com"
 
 /**
  * @brief The length of the HTTP server host name.
@@ -175,25 +173,11 @@
 #define CLIENT_KEY_LENGTH    ( sizeof( CLIENT_KEY ) - 1 )
 
 /**
- * @brief Paths for different HTTP methods for specified host.
- *
- * For httpbin.org, see http://httpbin.org/#/HTTP_Methods for details on
- * supported REST API.
+ * @brief Path that accepts any client certificate then responds with
+ * information about the TLS connection.
  */
 #ifndef GET_PATH
-    #define GET_PATH    "/get"
-#endif
-
-#ifndef HEAD_PATH
-    #define HEAD_PATH    "/get"
-#endif
-
-#ifndef PUT_PATH
-    #define PUT_PATH    "/put"
-#endif
-
-#ifndef POST_PATH
-    #define POST_PATH    "/post"
+    #define GET_PATH    "/secure/"
 #endif
 
 /**
@@ -204,7 +188,7 @@
 /**
  * @brief The length in bytes of the user buffer.
  */
-#define USER_BUFFER_LENGTH                ( 1024 )
+#define USER_BUFFER_LENGTH                ( 4096 )
 
 /**
  * @brief Length of an IPv6 address when converted to hex digits.

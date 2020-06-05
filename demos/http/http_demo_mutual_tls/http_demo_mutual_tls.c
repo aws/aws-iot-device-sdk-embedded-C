@@ -327,8 +327,6 @@ static int tlsSetup( int tcpSocket,
     BIO * pClientKeyBio = NULL;
     EVP_PKEY * pClientKey = NULL;
 
-    assert( tcpSocket >= 0 );
-
     /* Setup for creating a TLS client. */
     SSL_CTX * pSslSetup = SSL_CTX_new( TLS_client_method() );
 
@@ -713,40 +711,12 @@ int main( int argc,
 
     /*********************** Send HTTPS request. ************************/
 
-    /* Send GET Request. */
     if( returnStatus == EXIT_SUCCESS )
     {
         returnStatus = sendHttpRequest( &transportInterface,
                                         SERVER_HOST,
                                         HTTP_METHOD_GET,
                                         GET_PATH );
-    }
-
-    /* Send HEAD Request. */
-    if( returnStatus == EXIT_SUCCESS )
-    {
-        returnStatus = sendHttpRequest( &transportInterface,
-                                        SERVER_HOST,
-                                        HTTP_METHOD_HEAD,
-                                        HEAD_PATH );
-    }
-
-    /* Send PUT Request. */
-    if( returnStatus == EXIT_SUCCESS )
-    {
-        returnStatus = sendHttpRequest( &transportInterface,
-                                        SERVER_HOST,
-                                        HTTP_METHOD_PUT,
-                                        PUT_PATH );
-    }
-
-    /* Send POST Request. */
-    if( returnStatus != EXIT_SUCCESS )
-    {
-        returnStatus = sendHttpRequest( &transportInterface,
-                                        SERVER_HOST,
-                                        HTTP_METHOD_POST,
-                                        POST_PATH );
     }
 
     /************************** Disconnect. *****************************/
