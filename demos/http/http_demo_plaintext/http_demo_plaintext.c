@@ -327,7 +327,7 @@ static int32_t transportRecv( HTTPNetworkContext_t * pContext,
 {
     int32_t bytesReceived = 0;
 
-    bytesReceived = ( int32_t ) recv( pContext->tcpSocket, pBuffer, bytesToRecv, 0 );
+    bytesReceived = recv( pContext->tcpSocket, pBuffer, bytesToRecv, 0 );
 
     if( bytesReceived == 0 )
     {
