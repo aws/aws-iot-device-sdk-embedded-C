@@ -323,8 +323,6 @@ static int tlsSetup( int tcpSocket,
     BIO * pRootCaBio = NULL;
     X509 * pRootCa = NULL;
 
-    assert( tcpSocket >= 0 );
-
     /* Setup for creating a TLS client. */
     SSL_CTX * pSslSetup = SSL_CTX_new( TLS_client_method() );
 
@@ -573,7 +571,7 @@ static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface
                    ( char * ) requestHeaders.pBuffer ) );
         LogInfo( ( "Request Body:\n%.*s\n",
                    ( int32_t ) REQUEST_BODY_LENGTH,
-                   REQUEST_BODYT ) );
+                   REQUEST_BODY ) );
         /* Send the request and receive the response. */
         httpStatus = HTTPClient_Send( pTransportInterface,
                                       &requestHeaders,

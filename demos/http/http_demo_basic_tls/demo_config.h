@@ -129,7 +129,7 @@
 /**
  * @brief Length of an IPv6 address when converted to hex digits.
  */
-#define IPV6_LENGTH                       ( 40 )
+#define IPV6_ADDRESS_STRING_LEN           ( 40 )
 
 /**
  * @brief Request body to send for PUT and POST requests in this demo.
