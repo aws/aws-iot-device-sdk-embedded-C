@@ -44,6 +44,33 @@
 /************ End of logging configuration ****************/
 
 /**
+ * @brief Host for S3 GET Object access.
+ */
+#define S3_PRESIGNED_HOST               "Please update the host for the demo"
+
+/**
+ * @brief The length of the host for S3 GET Object access.
+ */
+#define S3_PRESIGNED_HOST_LENGTH        ( sizeof( S3_PRESIGNED_HOST ) - 1 )
+
+/**
+ * @brief Presigned URL path for S3 GET Object access.
+ */
+#define S3_PRESIGNED_GET_PATH           "Please update the path for the demo"
+
+/**
+ * @brief The length of the presigned URL path for S3 GET Object access.
+ */
+#define S3_PRESIGNED_GET_PATH_LENGTH    ( sizeof( S3_PRESIGNED_GET_PATH ) - 1 )
+
+/**
+ * @brief Port of [resigned URL for S3 GET Object access.
+ *
+ * In general, port 443 is for HTTPS connections.
+ */
+#define S3_PRESIGNED_PORT               443
+
+/**
  * @brief Root CA certificate associated with the S3 server certificate for
  * TLS server authentication.
  *
@@ -78,9 +105,28 @@
 #define SERVER_CERTIFICATE_LENGTH                 ( sizeof( SERVER_CERTIFICATE ) - 1 )
 
 /**
+ * @brief Transport timeout in milliseconds for transport send and receive.
+ */
+#define TRANSPORT_SEND_RECV_TIMEOUT_MS            ( 5000 )
+
+/**
+ * @brief The length in bytes of the user buffer.
+ */
+#define USER_BUFFER_LENGTH                        ( 1024 )
+
+/**
+ * @brief Length of an IPv6 address when converted to hex digits.
+ */
+#define IPV6_ADDRESS_STRING_LEN                   ( 40 )
+
+/**
  * @brief Field name of the HTTP Range header.
  */
 #define HTTP_CONTENT_RANGE_HEADER_FIELD           "Content-Range"
+
+/**
+ * @brief Length of the HTTP Range header field.
+ */
 #define HTTP_CONTENT_RANGE_HEADER_FIELD_LENGTH    ( sizeof( HTTP_CONTENT_RANGE_HEADER_FIELD ) - 1 )
 
 #endif /* ifndef DEMO_CONFIG_H */

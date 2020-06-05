@@ -20,7 +20,6 @@
  */
 
 /* Standard includes. */
-#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -45,62 +44,24 @@
 #include "demo_config.h"
 
 /**
- * @brief Host for S3 GET Object access.
- */
-#define S3_PRESIGNED_HOST                 "Please update the host for the demo"
-
-/**
- * @brief The length of the host for S3 GET Object access.
- */
-#define S3_PRESIGNED_HOST_LENGTH          ( sizeof( S3_PRESIGNED_HOST ) - 1 )
-
-/**
- * @brief Presigned URL path for S3 GET Object access.
- */
-#define S3_PRESIGNED_GET_PATH             "Please update the path for the demo"
-
-/**
- * @brief The length of the presigned URL path for S3 GET Object access.
- */
-#define S3_PRESIGNED_GET_PATH_LENGTH      ( sizeof( S3_PRESIGNED_GET_PATH ) - 1 )
-
-/**
- * @brief Port of [resigned URL for S3 GET Object access.
- *
- * In general, port 443 is for HTTPS connections.
- */
-#define S3_PRESIGNED_PORT                 443
-
-/**
- * @brief Transport timeout in milliseconds for transport send and receive.
- */
-#define TRANSPORT_SEND_RECV_TIMEOUT_MS    ( 5000 )
-
-/**
- * @brief The length in bytes of the user buffer.
- */
-#define USER_BUFFER_LENGTH                ( 1024 )
-
-/**
- * @brief Length of an IPv6 address when converted to hex digits.
- */
-#define IPV6_LENGTH                       ( 40 )
-
-/**
  * @brief A string to store the resolved IP address from the host name.
  */
-static char resolvedIpAddr[ IPV6_LENGTH ] = { 0 };
+static char resolvedIpAddr[ IPV6_ADDRESS_STRING_LEN ];
 
 /**
- * @brief A buffer used to store request headers and reused after sending
- * the request to store the response headers and body.
+ * @brief A buffer used in the demo for storing HTTP request headers and
+ * HTTP response headers and body.
  *
- * User can also decide to have two separate buffers for request and response.
+ * @note This demo shows how the same buffer can be re-used for storing the HTTP
+ * response after the HTTP request is sent out. However, the user can also
+ * decide to use separate buffers for storing the HTTP request and response.
  */
-static uint8_t userBuffer[ USER_BUFFER_LENGTH ] = { 0 };
+static uint8_t userBuffer[ USER_BUFFER_LENGTH ];
 
 /**
  * @brief Definition of the HTTP network context.
+ *
+ * @note For this TLS demo, the socket descriptor and SSL context is used.
  */
 struct HTTPNetworkContext
 {
@@ -108,10 +69,36 @@ struct HTTPNetworkContext
     SSL * pSslContext;
 };
 
+/**
+ * @brief Structure based on the definition of the HTTP network context.
+ */
+static HTTPNetworkContext_t networkContext;
+
+/**
+ * @brief The HTTP Client library transport layer interface.
+ */
+static HTTPTransportInterface_t transportInterface;
+
+/**
+ * @brief Represents header data that will be sent in an HTTP request.
+ */
+static HTTPRequestHeaders_t requestHeaders;
+
+/**
+ * @brief Configurations of the initial request headers that are passed to
+ * #HTTPClient_InitializeRequestHeaders.
+ */
+static HTTPRequestInfo_t requestInfo;
+
+/**
+ * @brief Represents a response returned from an HTTP server.
+ */
+static HTTPResponse_t response;
+
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Performs a DNS lookup on the given host name then establishes a TCP
+ * @brief Performs a DNS lookup on the given host name, then establishes a TCP
  * connection to the server.
  *
  * @param[in] pServer Host name of server.
@@ -138,14 +125,14 @@ static int tlsSetup( int tcpSocket,
 /**
  * @brief The transport send function that defines the transport interface.
  *
- * This is passed to the #HTTPTransportInterface.send function and used to
+ * This is passed as the #HTTPTransportInterface.send function and used to
  * send data over the network.
  *
  * @param[in] pContext User defined context (TCP socket for this demo).
  * @param[in] pBuffer Buffer containing the bytes to send over the network stack.
  * @param[in] bytesToSend Number of bytes to write to the network.
  *
- * @return Number of bytes sent; negative value on error.
+ * @return Number of bytes sent if successful; otherwise negative value on error.
  */
 static int32_t transportSend( HTTPNetworkContext_t * pContext,
                               const void * pBuffer,
@@ -154,6 +141,9 @@ static int32_t transportSend( HTTPNetworkContext_t * pContext,
 /**
  * @brief The transport receive function that defines the transport interface.
  *
+ * This is passed as the #HTTPTransportInterface.recv function used for reading
+ * data received from the network.
+ *
  * @param[in] pContext User defined context (TCP socket for this demo).
  * @param[out] pBuffer Buffer to read network data into.
  * @param[in] bytesToRead Number of bytes requested from the network.
@@ -161,14 +151,15 @@ static int32_t transportSend( HTTPNetworkContext_t * pContext,
  * This is passed to the #HTTPTransportInterface.recv function and used to
  * receive data over the network.
  *
- * @return Number of bytes received; negative value on error.
+ * @return Number of bytes received if successful; otherwise negative value on error.
  */
 static int32_t transportRecv( HTTPNetworkContext_t * pContext,
                               void * pBuffer,
                               size_t bytesToRecv );
 
 /**
- * @brief Send an HTTP request based on a specified method and path.
+ * @brief Send an HTTP request based on a specified method and path, then
+ * print the response received from the server.
  *
  * @param[in] pTransportInterface The transport interface for making network calls.
  * @param[in] pHost The host name of the server.
@@ -177,7 +168,7 @@ static int32_t transportRecv( HTTPNetworkContext_t * pContext,
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
-static int downloadS3ObjectFile( HTTPTransportInterface_t * pTransportInterface,
+static int downloadS3ObjectFile( const HTTPTransportInterface_t * pTransportInterface,
                                  const char * pHost,
                                  const char * pMethod,
                                  const char * pPath );
@@ -192,7 +183,7 @@ static int downloadS3ObjectFile( HTTPTransportInterface_t * pTransportInterface,
  * @param[in] pPath The Request-URI to the objects of interest.
  */
 static HTTPStatus_t getS3ObjectFileSize( size_t * pFileSize,
-                                         HTTPTransportInterface_t * pTransportInterface,
+                                         const HTTPTransportInterface_t * pTransportInterface,
                                          const char * pHost,
                                          const char * pMethod,
                                          const char * pPath );
@@ -223,7 +214,7 @@ static int connectToServer( const char * pServer,
 
     if( returnStatus != -1 )
     {
-        LogInfo( ( "Performing DNS lookup on %.*s.",
+        LogInfo( ( "Performing DNS lookup: Host=%.*s.",
                    ( int32_t ) S3_PRESIGNED_HOST_LENGTH,
                    S3_PRESIGNED_HOST ) );
 
@@ -255,18 +246,20 @@ static int connectToServer( const char * pServer,
                 ( ( struct sockaddr_in6 * ) pServerInfo )->sin6_port = netPort;
                 serverInfoLength = sizeof( struct sockaddr_in6 );
                 inet_ntop( pServerInfo->sa_family,
-                           &( ( struct sockaddr_in * ) pServerInfo )->sin_addr,
+                           &( ( struct sockaddr_in6 * ) pServerInfo )->sin6_addr,
                            resolvedIpAddr,
                            sizeof( resolvedIpAddr ) );
             }
 
-            LogInfo( ( "Attempting to connect to resolved IP address: %s.",
-                       resolvedIpAddr ) );
+            LogInfo( ( "Attempting to connect to server: Host=%s, IP address=%s.",
+                       S3_PRESIGNED_HOST, resolvedIpAddr ) );
 
             returnStatus = connect( *pTcpSocket, pServerInfo, serverInfoLength );
 
             if( returnStatus == -1 )
             {
+                LogError( ( "Failed to connect to server: Host=%s, IP address=%s.",
+                            S3_PRESIGNED_HOST, resolvedIpAddr ) );
                 close( *pTcpSocket );
             }
             else
@@ -288,7 +281,7 @@ static int connectToServer( const char * pServer,
         else
         {
             returnStatus = EXIT_SUCCESS;
-            LogInfo( ( "TCP connection established with %.*s.\n",
+            LogInfo( ( "Established TCP connection: Server=%.*s.\n",
                        ( int ) strlen( pServer ),
                        pServer ) );
         }
@@ -346,8 +339,6 @@ static int tlsSetup( int tcpSocket,
     int sslStatus = 0, bytesWritten = 0;
     BIO * pRootCaBio = NULL;
     X509 * pRootCa = NULL;
-
-    assert( tcpSocket >= 0 );
 
     /* Setup for creating a TLS client. */
     SSL_CTX * pSslSetup = SSL_CTX_new( TLS_client_method() );
@@ -456,14 +447,14 @@ static int tlsSetup( int tcpSocket,
     /* Log failure or success and return the correct exit status. */
     if( sslStatus == 0 )
     {
-        LogError( ( "Failed to establish a TLS connection to %.*s.",
+        LogError( ( "Failed to establish a TLS connection: Host=%.*s.",
                     ( int32_t ) S3_PRESIGNED_HOST_LENGTH,
                     S3_PRESIGNED_HOST ) );
         return EXIT_FAILURE;
     }
     else
     {
-        LogInfo( ( "Established a TLS connection to %.*s.\n\n",
+        LogInfo( ( "Established a TLS connection: Host=%.*s.\n\n",
                    ( int32_t ) S3_PRESIGNED_HOST_LENGTH,
                    S3_PRESIGNED_HOST ) );
         return EXIT_SUCCESS;
@@ -500,8 +491,8 @@ static int32_t transportSend( HTTPNetworkContext_t * pNetworkContext,
     }
     else
     {
-        LogError( ( "Polling of the SSL socket for write buffer availability failed"
-                    " with status %d.",
+        LogError( ( "Polling of the SSL socket for write buffer availability failed:"
+                    " status=%d",
                     pollStatus ) );
         bytesSent = -1;
     }
@@ -557,24 +548,19 @@ static int32_t transportRecv( HTTPNetworkContext_t * pNetworkContext,
 /*-----------------------------------------------------------*/
 
 static HTTPStatus_t getS3ObjectFileSize( size_t * pFileSize,
-                                         HTTPTransportInterface_t * pTransportInterface,
+                                         const HTTPTransportInterface_t * pTransportInterface,
                                          const char * pHost,
                                          const char * pMethod,
                                          const char * pPath )
 {
     HTTPStatus_t httpStatus = HTTP_SUCCESS;
-    HTTPRequestHeaders_t requestHeaders = { 0 };
-    HTTPRequestInfo_t requestInfo = { 0 };
-    HTTPResponse_t response = { 0 };
+
     /* The location of the file size in the contentRangeValStr. */
     char * pFileSizeStr = NULL;
 
     /* String to store the Content-Range header value. */
     char * contentRangeValStr = NULL;
     size_t contentRangeValStrLength = 0;
-
-    assert( pTransportInterface != NULL );
-    assert( pMethod != NULL );
 
     /* Initialize the request object. */
     requestInfo.pHost = pHost;
@@ -585,8 +571,8 @@ static HTTPStatus_t getS3ObjectFileSize( size_t * pFileSize,
     requestInfo.pathLen = strlen( pPath );
 
     /* Set "Connection" HTTP header to "keep-alive" so that multiple requests
-     * can be sent over the same established TCP connection. We are doing this
-     * because we are downloading the file in parts. */
+     * can be sent over the same established TCP connection. This is done in
+     * order to download the file in parts. */
     requestInfo.flags = HTTP_REQUEST_KEEP_ALIVE_FLAG;
 
     /* Set the buffer used for storing request headers. */
@@ -619,6 +605,10 @@ static HTTPStatus_t getS3ObjectFileSize( size_t * pFileSize,
                                       0,
                                       &response,
                                       0 );
+    }
+
+    if( httpStatus == HTTP_SUCCESS )
+    {
         LogInfo( ( "Received HTTP response from %s%s...",
                    S3_PRESIGNED_HOST, pPath ) );
         LogInfo( ( "Response Headers:\n%.*s",
@@ -629,15 +619,17 @@ static HTTPStatus_t getS3ObjectFileSize( size_t * pFileSize,
         LogInfo( ( "Response Body:\n%.*s\n",
                    ( int32_t ) response.bodyLen,
                    response.pBody ) );
-    }
 
-    if( httpStatus == HTTP_SUCCESS )
-    {
         httpStatus = HTTPClient_ReadHeader( &response,
                                             ( const uint8_t * ) HTTP_CONTENT_RANGE_HEADER_FIELD,
                                             ( size_t ) HTTP_CONTENT_RANGE_HEADER_FIELD_LENGTH,
                                             ( const uint8_t ** ) &contentRangeValStr,
                                             &contentRangeValStrLength );
+    }
+    else
+    {
+        LogError( ( "Failed to send HTTP %s request to %s%s: Error=%s.",
+                    pMethod, S3_PRESIGNED_HOST, pPath, HTTPClient_strerror( httpStatus ) ) );
     }
 
     if( httpStatus == HTTP_SUCCESS )
@@ -656,33 +648,34 @@ static HTTPStatus_t getS3ObjectFileSize( size_t * pFileSize,
 
         if( ( *pFileSize == 0 ) || ( *pFileSize == UINT32_MAX ) )
         {
-            LogError( ( "Error using strtoul to get the file size from %s. Error returned: %d",
-                        pFileSizeStr, *pFileSize ) );
+            LogError( ( "Error using strtoul to get the file size from %s: fileSize=%d",
+                        pFileSizeStr, ( int32_t ) *pFileSize ) );
             httpStatus = HTTP_INVALID_PARAMETER;
         }
+    }
+    else
+    {
+        LogError( ( "Failed to read Content-Range header from HTTP response: Error=%s.",
+                    HTTPClient_strerror( httpStatus ) ) );
     }
 
     return httpStatus;
 }
 
-static int downloadS3ObjectFile( HTTPTransportInterface_t * pTransportInterface,
+static int downloadS3ObjectFile( const HTTPTransportInterface_t * pTransportInterface,
                                  const char * pHost,
                                  const char * pMethod,
                                  const char * pPath )
 {
+    int returnStatus = EXIT_SUCCESS;
     HTTPStatus_t httpStatus = HTTP_SUCCESS;
-    HTTPRequestHeaders_t requestHeaders = { 0 };
-    HTTPRequestInfo_t requestInfo = { 0 };
-    HTTPResponse_t response = { 0 };
+
     /* The size of the file we are trying to download in S3. */
     size_t fileSize = 0;
     /* The number of bytes we want to request with in each range of the file bytes. */
     size_t numReqBytes = 0;
     /* curByte indicates which starting byte we want to download next. */
     size_t curByte = 0;
-
-    assert( pTransportInterface != NULL );
-    assert( pMethod != NULL );
 
     /* Initialize the request object. */
     requestInfo.pHost = pHost;
@@ -693,7 +686,8 @@ static int downloadS3ObjectFile( HTTPTransportInterface_t * pTransportInterface,
     requestInfo.pathLen = strlen( pPath );
 
     /* Set "Connection" HTTP header to "keep-alive" so that multiple requests
-     * can be sent over the same established TCP connection. */
+     * can be sent over the same established TCP connection. This is done in
+     * order to download the file in parts. */
     requestInfo.flags = HTTP_REQUEST_KEEP_ALIVE_FLAG;
 
     /* Set the buffer used for storing request headers. */
@@ -734,12 +728,17 @@ static int downloadS3ObjectFile( HTTPTransportInterface_t * pTransportInterface,
                                                     curByte,
                                                     curByte + numReqBytes - 1 );
         }
+        else
+        {
+            LogError( ( "Failed to initialize HTTP request headers: Error=%s.",
+                        HTTPClient_strerror( httpStatus ) ) );
+        }
 
         if( httpStatus == HTTP_SUCCESS )
         {
             LogInfo( ( "Downloading S3 Object from %s%s...: %d out of %d bytes",
                        pMethod, S3_PRESIGNED_HOST,
-                       curByte, fileSize ) );
+                       ( int32_t ) curByte, ( int32_t ) fileSize ) );
             LogInfo( ( "Request Headers:\n%.*s",
                        ( int32_t ) requestHeaders.headersLen,
                        ( char * ) requestHeaders.pBuffer ) );
@@ -749,6 +748,11 @@ static int downloadS3ObjectFile( HTTPTransportInterface_t * pTransportInterface,
                                           0,
                                           &response,
                                           0 );
+        }
+        else
+        {
+            LogError( ( "Failed to add Range header to request headers: Error=%s.",
+                        HTTPClient_strerror( httpStatus ) ) );
         }
 
         if( httpStatus == HTTP_SUCCESS )
@@ -775,31 +779,42 @@ static int downloadS3ObjectFile( HTTPTransportInterface_t * pTransportInterface,
         }
         else
         {
-            LogError( ( "Sending HTTP %s request to %s%s failed with status = %u.",
-                        pMethod, S3_PRESIGNED_HOST, pPath, httpStatus ) );
+            LogError( ( "Failed to send HTTP %s request to %s%s: Error=%s.",
+                        pMethod, S3_PRESIGNED_HOST, pPath, HTTPClient_strerror( httpStatus ) ) );
         }
     }
 
-    if( httpStatus == HTTP_SUCCESS )
+    if( httpStatus != HTTP_SUCCESS )
     {
-        return EXIT_SUCCESS;
+        returnStatus = EXIT_FAILURE;
     }
-    else
-    {
-        return EXIT_FAILURE;
-    }
+
+    return returnStatus;
 }
 
 /*-----------------------------------------------------------*/
 
 /**
  * @brief Entry point of demo.
+ *
+ * This example resolves a domain, establishes a TCP connection, validates the
+ * server's certificate using the root CA certificate defined in the config header,
+ * then finally performs a TLS handshake with the HTTP server so that all communication
+ * is encrypted. After which, HTTP Client library API is used to download the
+ * S3 file by sending multiple GET requests, filling up the response buffer
+ * each time until all parts are downloaded. If any request fails, an error
+ * code is returned.
+ *
+ * @note This example is single-threaded and uses statically allocated memory.
+ *
  */
-int main()
+int main( int argc,
+          char ** argv )
 {
     int returnStatus = EXIT_SUCCESS;
-    HTTPNetworkContext_t networkContext = { 0 };
-    HTTPTransportInterface_t transportInterface = { 0 };
+
+    ( void ) argc;
+    ( void ) argv;
 
     /**************************** Connect. ******************************/
 
@@ -823,11 +838,6 @@ int main()
     }
 
     /******************** Download S3 Object File. **********************/
-
-    /* The client is now connected to the server. This example will download the
-     * S3 file by sending multiple GET requests, filling up the response buffer
-     * each time until all parts are downloaded. If any request fails, an error
-     * code is returned. */
 
     if( returnStatus == EXIT_SUCCESS )
     {
@@ -854,8 +864,8 @@ int main()
 
     if( networkContext.tcpSocket != -1 )
     {
-        shutdown( networkContext.tcpSocket, SHUT_RDWR );
-        close( networkContext.tcpSocket );
+        ( void ) shutdown( networkContext.tcpSocket, SHUT_RDWR );
+        ( void ) close( networkContext.tcpSocket );
     }
 
     return returnStatus;
