@@ -20,7 +20,6 @@
  */
 
 /* Standard includes. */
-#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -397,13 +396,13 @@ static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface
                    ( int32_t ) requestHeaders.headersLen,
                    ( char * ) requestHeaders.pBuffer ) );
         LogInfo( ( "Request Body:\n%.*s\n",
-                   ( int32_t ) REQUEST_BODY_TEXT_LENGTH,
-                   REQUEST_BODY_TEXT ) );
+                   ( int32_t ) REQUEST_BODY_LENGTH,
+                   REQUEST_BODY ) );
         /* Send the request and receive the response. */
         httpStatus = HTTPClient_Send( pTransportInterface,
                                       &requestHeaders,
-                                      ( uint8_t * ) REQUEST_BODY_TEXT,
-                                      REQUEST_BODY_TEXT_LENGTH,
+                                      ( uint8_t * ) REQUEST_BODY,
+                                      REQUEST_BODY_LENGTH,
                                       &response,
                                       0 );
     }

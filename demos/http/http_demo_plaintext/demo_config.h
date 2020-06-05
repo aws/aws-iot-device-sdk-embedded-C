@@ -95,10 +95,13 @@
 #define IPV6_ADDRESS_STRING_LEN           ( 40 )
 
 /**
- * @brief Some text to send as the request body for PUT and POST requests in
- * this demo.
+ * @brief Request body to send for PUT and POST requests in this demo.
  */
-#define REQUEST_BODY_TEXT                 "Hello, world!"
-#define REQUEST_BODY_TEXT_LENGTH          ( sizeof( REQUEST_BODY_TEXT ) - 1 )
+#define REQUEST_BODY                      "Hello, world!"
+
+/**
+ * @brief Length of the request body.
+ */
+#define REQUEST_BODY_LENGTH               ( sizeof( REQUEST_BODY ) - 1 )
 
 #endif /* ifndef DEMO_CONFIG_H */
