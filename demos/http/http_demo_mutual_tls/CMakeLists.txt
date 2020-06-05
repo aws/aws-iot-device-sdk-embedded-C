@@ -37,3 +37,13 @@ target_include_directories(
     PUBLIC
         ${LOGGING_INCLUDE_DIRS}
 )
+
+#Copy the certificates and client key to the binary directory.
+add_custom_command(
+    TARGET
+        ${DEMO_NAME}
+    POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_CURRENT_LIST_DIR}/certificates"
+        "$<TARGET_FILE_DIR:${DEMO_NAME}>/certificates"
+)

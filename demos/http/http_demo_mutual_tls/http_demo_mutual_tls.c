@@ -320,12 +320,13 @@ static int connectToServer( const char * pServer,
 static int tlsSetup( int tcpSocket,
                      SSL ** pSslContext )
 {
-    int sslStatus = 0, bytesWritten = 0;
-    BIO * pRootCaBio = NULL;
+    int sslStatus = 0;
+    char * cwd = getcwd( NULL, 0 );
+    FILE * pRootCaFile = NULL;
     X509 * pRootCa = NULL;
-    BIO * pClientCertBio = NULL;
+    FILE * pClientCertFile = NULL;
     X509 * pClientCert = NULL;
-    BIO * pClientKeyBio = NULL;
+    FILE * pClientKeyFile = NULL;
     EVP_PKEY * pClientKey = NULL;
 
     /* Setup for creating a TLS client. */
@@ -337,59 +338,143 @@ static int tlsSetup( int tcpSocket,
          * The mask returned by SSL_CTX_set_mode does not need to be checked. */
         ( void ) SSL_CTX_set_mode( pSslSetup, SSL_MODE_AUTO_RETRY );
 
-        pRootCaBio = BIO_new( BIO_s_mem() );
-        /* Write the root server CA, which is defined in the config header file. */
-        bytesWritten = BIO_write( pRootCaBio, SERVER_CERTIFICATE, SERVER_CERTIFICATE_LENGTH );
-    }
+        /* OpenSSL does not provide a single function for reading and loading certificates
+         * from files into stores, so the file API must be called. */
+        pRootCaFile = fopen( SERVER_CERT_PATH, "r" );
 
-    /* Add the server's root CA to the set of trusted certificates. */
-    if( bytesWritten == SERVER_CERTIFICATE_LENGTH )
-    {
-        pRootCa = PEM_read_bio_X509( pRootCaBio, NULL, NULL, NULL );
+        /* Check if an absolute directory is being used. */
+        if( ( SERVER_CERT_PATH[ 0 ] == '/' ) || ( SERVER_CERT_PATH[ 0 ] == '\\' ) )
+        {
+            LogInfo( ( "Attempting to open root CA certificate: Path=%.*s.",
+                       ( int32_t ) SERVER_CERT_PATH_LENGTH,
+                       SERVER_CERT_PATH ) );
+        }
+        else
+        {
+            LogInfo( ( "Attempting to open root CA certificate: Path=%s/%.*s.",
+                       cwd,
+                       ( int32_t ) SERVER_CERT_PATH_LENGTH,
+                       SERVER_CERT_PATH ) );
+        }
+
+        if( pRootCaFile != NULL )
+        {
+            pRootCa = PEM_read_X509( pRootCaFile, NULL, NULL, NULL );
+        }
+        else
+        {
+            LogError( ( "Unable to find the root CA certificate file: "
+                        "SERVER_CERT_PATH=%.*s.",
+                        ( int32_t ) SERVER_CERT_PATH_LENGTH,
+                        SERVER_CERT_PATH ) );
+        }
 
         if( pRootCa != NULL )
         {
+            /* Add the server's root CA to the set of trusted certificates. */
             sslStatus = X509_STORE_add_cert( SSL_CTX_get_cert_store( pSslSetup ),
                                              pRootCa );
         }
         else
         {
-            LogError( ( "Failed to parse the provided server certificate:\n%s\n"
-                        "Please validate the certificate.",
-                        SERVER_CERTIFICATE ) );
+            LogError( ( "Failed to parse the root CA certificate from"
+                        " file %.*s. Please validate the certificate.",
+                        ( int32_t ) SERVER_CERT_PATH_LENGTH,
+                        SERVER_CERT_PATH ) );
         }
-    }
-    else
-    {
-        LogError( ( "Failed to write server certificate to BIO: "
-                    "bytesWritten=%d", bytesWritten ) );
     }
 
     /* Provide the client's certificate to the SSL setup. */
     if( sslStatus == 1 )
     {
-        pClientCertBio = BIO_new( BIO_s_mem() );
-        bytesWritten = BIO_write( pClientCertBio,
-                                  CLIENT_CERTIFICATE, CLIENT_CERTIFICATE_LENGTH );
-
-        if( bytesWritten == CLIENT_CERTIFICATE_LENGTH )
+        /* Check if an absolute directory is being used. */
+        if( ( CLIENT_CERT_PATH[ 0 ] == '/' ) || ( CLIENT_CERT_PATH[ 0 ] == '\\' ) )
         {
-            pClientCert = PEM_read_bio_X509( pClientCertBio, NULL, NULL, NULL );
+            LogInfo( ( "Attempting to open client certificate: Path=%.*s.",
+                       ( int32_t ) CLIENT_CERT_PATH_LENGTH,
+                       CLIENT_CERT_PATH ) );
+        }
+        else
+        {
+            LogInfo( ( "Attempting to open client certificate: Path=%s/%.*s.",
+                       cwd,
+                       ( int32_t ) CLIENT_CERT_PATH_LENGTH,
+                       CLIENT_CERT_PATH ) );
+        }
+
+        /* OpenSSL does not provide a single function for reading and loading certificates
+         * from files into stores, so the file API must be called. */
+        pClientCertFile = fopen( CLIENT_CERT_PATH, "r" );
+
+        if( pClientCertFile != NULL )
+        {
+            pClientCert = PEM_read_X509( pClientCertFile, NULL, NULL, NULL );
+        }
+        else
+        {
+            LogError( ( "Unable to find the client certificate file: "
+                        "CLIENT_CERT_PATH=%.*s.",
+                        ( int32_t ) CLIENT_CERT_PATH_LENGTH,
+                        CLIENT_CERT_PATH ) );
+        }
+
+        if( pClientCert != NULL )
+        {
             sslStatus = SSL_CTX_use_certificate( pSslSetup, pClientCert );
+        }
+        else
+        {
+            LogError( ( "Failed to parse the client certificate from"
+                        " file %.*s. Please validate the certificate.",
+                        ( int32_t ) CLIENT_CERT_PATH_LENGTH,
+                        CLIENT_CERT_PATH ) );
         }
     }
 
     /* Provide the client's key to the SSL setup. */
     if( sslStatus == 1 )
     {
-        pClientKeyBio = BIO_new( BIO_s_mem() );
-        bytesWritten = BIO_write( pClientKeyBio,
-                                  CLIENT_KEY, CLIENT_KEY_LENGTH );
-
-        if( bytesWritten == CLIENT_KEY_LENGTH )
+        /* Check if an absolute directory is being used. */
+        if( ( CLIENT_KEY_PATH[ 0 ] == '/' ) || ( CLIENT_KEY_PATH[ 0 ] == '\\' ) )
         {
-            pClientKey = PEM_read_bio_PrivateKey( pClientKeyBio, NULL, NULL, NULL );
+            LogInfo( ( "Attempting to open client key: Path=%.*s.",
+                       ( int32_t ) CLIENT_KEY_PATH_LENGTH,
+                       CLIENT_KEY_PATH ) );
+        }
+        else
+        {
+            LogInfo( ( "Attempting to open client key: Path=%s/%.*s.",
+                       cwd,
+                       ( int32_t ) CLIENT_KEY_PATH_LENGTH,
+                       CLIENT_KEY_PATH ) );
+        }
+
+        /* OpenSSL does not provide a single function for reading and loading certificates
+         * from files into stores, so the file API must be called. */
+        pClientKeyFile = fopen( CLIENT_KEY_PATH, "r" );
+
+        if( pClientKeyFile != NULL )
+        {
+            pClientKey = PEM_read_PrivateKey( pClientKeyFile, NULL, NULL, NULL );
+        }
+        else
+        {
+            LogError( ( "Unable to find the client key file: "
+                        "CLIENT_KEY_PATH=%.*s.",
+                        ( int32_t ) CLIENT_KEY_PATH_LENGTH,
+                        CLIENT_KEY_PATH ) );
+        }
+
+        if( pClientKey != NULL )
+        {
             sslStatus = SSL_CTX_use_PrivateKey( pSslSetup, pClientKey );
+        }
+        else
+        {
+            LogError( ( "Failed to parse the client key from"
+                        " file %.*s. Please validate the key.",
+                        ( int32_t ) CLIENT_KEY_PATH_LENGTH,
+                        CLIENT_KEY_PATH ) );
         }
     }
 
@@ -446,19 +531,24 @@ static int tlsSetup( int tcpSocket,
         LogError( ( "Failed to add certificate to store." ) );
     }
 
-    if( pRootCaBio != NULL )
+    if( cwd != NULL )
     {
-        BIO_free( pRootCaBio );
+        free( cwd );
     }
 
-    if( pClientCertBio != NULL )
+    if( pRootCaFile != NULL )
     {
-        BIO_free( pClientCertBio );
+        ( void ) fclose( pRootCaFile );
     }
 
-    if( pClientKeyBio != NULL )
+    if( pClientCertFile != NULL )
     {
-        BIO_free( pClientKeyBio );
+        ( void ) fclose( pClientCertFile );
+    }
+
+    if( pClientKeyFile != NULL )
+    {
+        ( void ) fclose( pClientKeyFile );
     }
 
     if( pRootCa != NULL )
