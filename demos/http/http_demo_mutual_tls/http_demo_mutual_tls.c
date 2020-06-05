@@ -94,6 +94,7 @@ static HTTPRequestInfo_t requestInfo;
  * @brief Represents a response returned from an HTTP server.
  */
 static HTTPResponse_t response;
+
 /*-----------------------------------------------------------*/
 
 /**
