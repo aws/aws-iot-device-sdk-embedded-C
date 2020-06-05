@@ -288,7 +288,6 @@ static int32_t sendPacket( MQTTContext_t * pContext,
     uint32_t sendTime = 0U;
 
     assert( pContext != NULL );
-    assert( bytesToSend != 0 );
 
     /* Record the time of transmission. */
     sendTime = pContext->callbacks.getTime();
@@ -719,6 +718,7 @@ static bool checkIfPublishWasReceivedBefore( MQTTContext_t * const pContext,
     assert( packetId != MQTT_PACKET_ID_INVALID );
     assert( pIsStateUpdateNeededAfterAck != NULL );
     assert( pPublishRecordState != NULL );
+    assert( qos == MQTTQoS1 || qos == MQTTQoS2 );
 
     if( qos == MQTTQoS1 )
     {
@@ -746,7 +746,7 @@ static bool checkIfPublishWasReceivedBefore( MQTTContext_t * const pContext,
             *pPublishRecordState = MQTTPubAckSend;
         }
     }
-    else if( qos == MQTTQoS2 )
+    else
     {
         /* A QoS2 incoming publish can be received with a dup flag.
          * The state record of the publish can be in 3 states.
@@ -796,10 +796,6 @@ static bool checkIfPublishWasReceivedBefore( MQTTContext_t * const pContext,
             *pPublishRecordState = MQTTPubRecSend;
         }
     }
-    else
-    {
-        LogWarn( ( "Incoming publish received with dup flag set for QoS0." ) );
-    }
 
     return hasPublishReceivedBefore;
 }
@@ -823,8 +819,10 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * const pContext,
 
     if( status == MQTTSuccess )
     {
-        /* Check if dup bit is set by the broker. */
-        if( ( publishInfo.dup ) )
+        /* Check if dup bit is set by the broker. Duplicates are not possible
+         * for QoS0 publishes. */
+        if( ( publishInfo.dup ) && ( ( publishInfo.qos == MQTTQoS1 ) ||
+                                     ( publishInfo.qos == MQTTQoS2 ) ) )
         {
             /* Check if the publish packet was already received. */
             hasPublishReceivedBefore = checkIfPublishWasReceivedBefore( pContext,
@@ -913,11 +911,20 @@ static bool checkIfPubrelWasReceivedBefore( MQTTContext_t * const pContext,
     }
 
     /* If PUBREL is not duplicate, it will be received when the state is
-     * #MQTTPubRelPending. If it is not present in that state, no state
-     * record is present for the packet. */
-    else if( !isPacketStatePresentInStateRecords( pContext,
-                                                  packetId,
-                                                  MQTTPubRelPending ) )
+     * #MQTTPubRelPending. This is the correct state and is not PUBREL is
+     * not duplicate. No action to be taken here. */
+    else if( isPacketStatePresentInStateRecords( pContext,
+                                                 packetId,
+                                                 MQTTPubRelPending ) )
+    {
+        /* This is the first time PUBREL is received for this packet. */
+    }
+
+    /* No valid state exists for PUBREL. Just respond with a PUBCOMP
+     * without updating state. Marking this as duplicate as this would
+     * indicate a state in which application would have lost the states of
+     * messages received before reestablishing a session. */
+    else
     {
         hasPubrelReceivedBefore = true;
 
@@ -926,10 +933,6 @@ static bool checkIfPubrelWasReceivedBefore( MQTTContext_t * const pContext,
 
         /* Set the ack packet type. */
         *pPublishRecordState = MQTTPubCompSend;
-    }
-    else
-    {
-        /* Non duplicate PUBREL received. */
     }
 
     return hasPubrelReceivedBefore;
@@ -1090,7 +1093,6 @@ static MQTTStatus_t sendPublish( MQTTContext_t * const pContext,
 
     assert( pContext != NULL );
     assert( pPublishInfo != NULL );
-    assert( headerSize > 0 );
 
     /* Send header first. */
     bytesSent = sendPacket( pContext,
@@ -1290,7 +1292,8 @@ static MQTTStatus_t resendPubrelForPacketInState( MQTTContext_t * const pContext
                             packetId ) );
             }
         }
-    } while( packetId != MQTT_PACKET_ID_INVALID );
+    } while( packetId != MQTT_PACKET_ID_INVALID &&
+             status == MQTTSuccess );
 
     return status;
 }
@@ -1826,6 +1829,7 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * const pContext,
         {
             /* Receive packet. Remaining time is recalculated at the end of the loop. */
             status = receivePacket( pContext, incomingPacket, remainingTimeMs );
+            LogDebug( ( "After receiving packet with status %u.", status ) );
         }
 
         /* Handle received packet. If no data was read then this will not execute. */

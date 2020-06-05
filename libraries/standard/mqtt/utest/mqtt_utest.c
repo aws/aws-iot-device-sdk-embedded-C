@@ -111,6 +111,25 @@ static uint32_t globalEntryTime = 0;
  */
 static uint8_t mqttBuffer[ MQTT_TEST_BUFFER_LENGTH ] = { 0 };
 
+/**
+ * @brief A flag to indicate whether event callback is called from
+ * MQTT_ProcessLoop.
+ */
+static bool isEventCallbackInvoked = false;
+
+/**
+ * @brief Structure for holding the duplicate incoming PUBLISH or
+ * PUBREL parameters.
+ */
+typedef struct DuplicateIncomingPacketInfo
+{
+    /* Publish Info is valid on duplicate incoming publishes. */
+    MQTTPublishInfo_t publishInfo;
+    uint16_t incomingPacketId;
+    uint16_t packetIdFromStateSelect1;
+    uint16_t packetIdFromStateSelect2;
+} DuplicateIncomingPacketInfo_t;
+
 /* ============================   UNITY FIXTURES ============================ */
 
 /* Called before each test method. */
@@ -191,6 +210,8 @@ static void eventCallback( MQTTContext_t * pContext,
     ( void ) pPacketInfo;
     ( void ) packetIdentifier;
     ( void ) pPublishInfo;
+
+    isEventCallbackInvoked = true;
 }
 
 /**
@@ -326,12 +347,15 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext,
                                     MQTTStatus_t serializeStatus,
                                     MQTTPublishState_t stateAfterSerialize,
                                     MQTTStatus_t processLoopStatus,
-                                    bool incomingPublish )
+                                    bool incomingPublish,
+                                    DuplicateIncomingPacketInfo_t * pDuplicateIncomingPacket )
 {
     MQTTStatus_t mqttStatus = MQTTSuccess;
     MQTTPacketInfo_t incomingPacket = { 0 };
     size_t pingreqSize = MQTT_PACKET_PINGREQ_SIZE;
     bool expectMoreCalls = true;
+    bool hasIncomingPacketAlreadyReceived = false, isStateUpdateNeededAfterSendingAck = true;
+    uint16_t storedPacketId = MQTT_PACKET_TYPE_INVALID;
 
     /* Modify incoming packet depending on type to be tested. */
     incomingPacket.type = currentPacketType;
@@ -389,16 +413,105 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext,
         }
     }
 
+    /* Handle duplicate incoming publish. */
+    if( expectMoreCalls )
+    {
+        if( ( pDuplicateIncomingPacket != NULL ) && ( pDuplicateIncomingPacket->publishInfo.dup ) )
+        {
+            MQTT_DeserializePublish_ReturnThruPtr_pPublishInfo( &( pDuplicateIncomingPacket->publishInfo ) );
+            MQTT_DeserializePublish_ReturnThruPtr_pPacketId( &( pDuplicateIncomingPacket->incomingPacketId ) );
+
+            /* Handle QoS1. */
+            if( pDuplicateIncomingPacket->publishInfo.qos == MQTTQoS1 )
+            {
+                MQTT_StateSelect_ExpectAnyArgsAndReturn( pDuplicateIncomingPacket->packetIdFromStateSelect1 );
+                storedPacketId = pDuplicateIncomingPacket->packetIdFromStateSelect1;
+            }
+            else if( pDuplicateIncomingPacket->publishInfo.qos == MQTTQoS2 )
+            {
+                MQTT_StateSelect_ExpectAnyArgsAndReturn( pDuplicateIncomingPacket->packetIdFromStateSelect1 );
+                storedPacketId = pDuplicateIncomingPacket->packetIdFromStateSelect1;
+
+                /* No state update required for #MQTTPubRelPending. */
+                if( storedPacketId == pDuplicateIncomingPacket->incomingPacketId )
+                {
+                    isStateUpdateNeededAfterSendingAck = false;
+                }
+
+                /* Second state select will be called only if first one is invalid*/
+                if( pDuplicateIncomingPacket->packetIdFromStateSelect1 == MQTT_PACKET_TYPE_INVALID )
+                {
+                    MQTT_StateSelect_ExpectAnyArgsAndReturn( pDuplicateIncomingPacket->packetIdFromStateSelect2 );
+                    storedPacketId = pDuplicateIncomingPacket->packetIdFromStateSelect2;
+                }
+            }
+            else
+            {
+                /*This is considered as a new incoming publish. */
+            }
+
+            /* This publish was already received and state is maintained in the state machine. */
+            if( storedPacketId == pDuplicateIncomingPacket->incomingPacketId )
+            {
+                hasIncomingPacketAlreadyReceived = true;
+            }
+        }
+    }
+
+    /* Handle duplicate PUBREL. */
+    if( expectMoreCalls )
+    {
+        if( ( currentPacketType == MQTT_PACKET_TYPE_PUBREL ) &&
+            ( pDuplicateIncomingPacket != NULL ) )
+        {
+            /* Deserialize PUBREL with the packetId. */
+            MQTT_DeserializeAck_ReturnThruPtr_pPacketId( &( pDuplicateIncomingPacket->incomingPacketId ) );
+            MQTT_StateSelect_ExpectAnyArgsAndReturn( pDuplicateIncomingPacket->packetIdFromStateSelect1 );
+
+            /* PUBREL was already received and state is #MQTTPubCompSend. */
+            if( pDuplicateIncomingPacket->packetIdFromStateSelect1 == pDuplicateIncomingPacket->incomingPacketId )
+            {
+                hasIncomingPacketAlreadyReceived = true;
+            }
+
+            /* Second state select will be called only if first one is invalid*/
+            if( pDuplicateIncomingPacket->packetIdFromStateSelect1 == MQTT_PACKET_TYPE_INVALID )
+            {
+                MQTT_StateSelect_ExpectAnyArgsAndReturn( pDuplicateIncomingPacket->packetIdFromStateSelect2 );
+
+                /* No state record exists for PUBREL. A PUBCOMP needs to be
+                 * sent without advancing the state. */
+                if( pDuplicateIncomingPacket->packetIdFromStateSelect2 != pDuplicateIncomingPacket->incomingPacketId )
+                {
+                    hasIncomingPacketAlreadyReceived = true;
+                    isStateUpdateNeededAfterSendingAck = false;
+                }
+                else
+                {
+                    /* PUBREL is received for the first time for this packetId. */
+                }
+            }
+        }
+    }
+
     /* Update state based on the packet type (PUB or ACK) being received. */
     if( expectMoreCalls )
     {
         if( incomingPublish )
         {
-            MQTT_UpdateStatePublish_ExpectAnyArgsAndReturn( stateAfterDeserialize );
+            /* Update state for receive only if incoming publish is not duplicate. */
+            if( !hasIncomingPacketAlreadyReceived )
+            {
+                MQTT_UpdateStatePublish_ExpectAnyArgsAndReturn( stateAfterDeserialize );
+            }
         }
         else
         {
-            MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( stateAfterDeserialize );
+            /* Update state for receive only if incoming PUBREL is not duplicate. */
+            if( !hasIncomingPacketAlreadyReceived )
+            {
+                MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( stateAfterDeserialize );
+            }
         }
 
         if( stateAfterDeserialize == MQTTPublishDone )
@@ -419,7 +532,7 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext,
     }
 
     /* Update the state based on the sent packet. */
-    if( expectMoreCalls )
+    if( expectMoreCalls && isStateUpdateNeededAfterSendingAck )
     {
         MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( stateAfterSerialize );
     }
@@ -629,6 +742,177 @@ void test_MQTT_Connect_receiveConnack( void )
 }
 
 /**
+ * @brief Test resend of pending acks in MQTT_Connect.
+ */
+void test_MQTT_Connect_resendPendingAcks( void )
+{
+    MQTTContext_t mqttContext;
+    MQTTConnectInfo_t connectInfo;
+    MQTTPublishInfo_t willInfo;
+    uint32_t timeout = 2;
+    bool sessionPresent;
+    MQTTStatus_t status;
+    MQTTTransportInterface_t transport;
+    MQTTFixedBuffer_t networkBuffer;
+    MQTTApplicationCallbacks_t callbacks;
+    MQTTPacketInfo_t incomingPacket;
+    size_t remainingLength, packetSize;
+    uint16_t packetIdentifier = 1;
+
+    setupTransportInterface( &transport );
+    setupCallbacks( &callbacks );
+    setupNetworkBuffer( &networkBuffer );
+
+    memset( ( void * ) &mqttContext, 0x0, sizeof( mqttContext ) );
+    MQTT_Init( &mqttContext, &transport, &callbacks, &networkBuffer );
+
+    MQTT_SerializeConnect_IgnoreAndReturn( MQTTSuccess );
+    MQTT_GetConnectPacketSize_IgnoreAndReturn( MQTTSuccess );
+
+    /* Test 1. No packets to resend reestablishing a session. */
+    /* Successfull receive CONNACK packet. */
+    incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
+    incomingPacket.remainingLength = 2;
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    /* Return with a session present flag. */
+    sessionPresent = true;
+    MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_DeserializeAck_ReturnThruPtr_pSessionPresent( &sessionPresent );
+    /* No packets to resend. */
+    MQTT_StateSelect_ExpectAnyArgsAndReturn( MQTT_PACKET_TYPE_INVALID );
+    MQTT_StateSelect_ExpectAnyArgsAndReturn( MQTT_PACKET_TYPE_INVALID );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
+
+    /* Test 2. One packet found in #MQTTPubCompPending state, but Sending ack failed. */
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_DeserializeAck_ReturnThruPtr_pSessionPresent( &sessionPresent );
+    MQTT_StateSelect_ExpectAnyArgsAndReturn( packetIdentifier );
+    /* Serialize Ack failure. */
+    MQTT_SerializeAck_ExpectAnyArgsAndReturn( MQTTBadParameter );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
+    TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
+    TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
+
+    /* Test 3. One packet found in #MQTTPubCompPending state, Sent
+     * PUBREL successfully. A state update is not required. */
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_DeserializeAck_ReturnThruPtr_pSessionPresent( &sessionPresent );
+    MQTT_StateSelect_ExpectAnyArgsAndReturn( packetIdentifier );
+    /* Serialize Ack Successfull. */
+    MQTT_SerializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    /* Query for any remaining packets in state #MQTTPubCompPending. */
+    MQTT_StateSelect_ExpectAnyArgsAndReturn( MQTT_PACKET_TYPE_INVALID );
+    /* Query for any packets in state #MQTTPubRelSend. */
+    MQTT_StateSelect_ExpectAnyArgsAndReturn( MQTT_PACKET_TYPE_INVALID );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
+
+    /* Test 4. One packet found in #MQTTPubRelSend state, but Sending ack failed. */
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_DeserializeAck_ReturnThruPtr_pSessionPresent( &sessionPresent );
+    /* Query for any packets in state #MQTTPubCompPending. */
+    MQTT_StateSelect_ExpectAnyArgsAndReturn( MQTT_PACKET_TYPE_INVALID );
+    /* Query for any packets in state #MQTTPubRelSend. */
+    MQTT_StateSelect_ExpectAnyArgsAndReturn( packetIdentifier );
+    /* Serialize Ack failure. */
+    MQTT_SerializeAck_ExpectAnyArgsAndReturn( MQTTBadParameter );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
+    TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
+    TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
+
+    /* Test 5. One packet found in #MQTTPubRelSend state, Sent
+     * PUBREL successfully. A state update is required, but failed. */
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_DeserializeAck_ReturnThruPtr_pSessionPresent( &sessionPresent );
+    /* Query for any packets in state #MQTTPubCompPending. */
+    MQTT_StateSelect_ExpectAnyArgsAndReturn( MQTT_PACKET_TYPE_INVALID );
+    /* Query for any packets in state #MQTTPubRelSend. */
+    MQTT_StateSelect_ExpectAnyArgsAndReturn( packetIdentifier );
+    /* Serialize Ack Successfull. */
+    MQTT_SerializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    /* State update from #MQTTPubRelSend to #MQTTPubCompPending failed. */
+    MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTStateNull );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
+    TEST_ASSERT_EQUAL_INT( MQTTIllegalState, status );
+    TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
+
+    /* Test 6. One packet found in #MQTTPubRelSend state, Sent
+     * PUBREL successfully. A state update is successfully done. */
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_DeserializeAck_ReturnThruPtr_pSessionPresent( &sessionPresent );
+    /* Query for any packets in state #MQTTPubCompPending. */
+    MQTT_StateSelect_ExpectAnyArgsAndReturn( MQTT_PACKET_TYPE_INVALID );
+    /* Query for any packets in state #MQTTPubRelSend. */
+    MQTT_StateSelect_ExpectAnyArgsAndReturn( packetIdentifier );
+    /* Serialize Ack Successfull. */
+    MQTT_SerializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    /* State update from #MQTTPubRelSend to #MQTTPubCompPending. */
+    MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTPubCompPending );
+    /* Query for remaining packets in state #MQTTPubRelSend. */
+    MQTT_StateSelect_ExpectAnyArgsAndReturn( MQTT_PACKET_TYPE_INVALID );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
+
+    /* Test 7. One packet found in #MQTTPubCompPending state and one packet
+     * found in #MQTTPubRelSend state. Sent PUBREL successfully for first
+     * and failed for second. */
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_DeserializeAck_ReturnThruPtr_pSessionPresent( &sessionPresent );
+    MQTT_StateSelect_ExpectAnyArgsAndReturn( packetIdentifier );
+    /* Serialize Ack Successfull. */
+    MQTT_SerializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    /* Query for any remaining packets in state #MQTTPubCompPending. */
+    MQTT_StateSelect_ExpectAnyArgsAndReturn( MQTT_PACKET_TYPE_INVALID );
+    /* Query for any packets in state #MQTTPubRelSend. */
+    MQTT_StateSelect_ExpectAnyArgsAndReturn( packetIdentifier + 1 );
+    /* Serialize Ack Successfull. */
+    MQTT_SerializeAck_ExpectAnyArgsAndReturn( MQTTBadParameter );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
+    TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
+    TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
+
+    /* Test 8. One packet found in #MQTTPubCompPending state and one packet
+    * found in #MQTTPubRelSend state. Sent PUBREL successfully for both. */
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_DeserializeAck_ReturnThruPtr_pSessionPresent( &sessionPresent );
+    MQTT_StateSelect_ExpectAnyArgsAndReturn( packetIdentifier );
+    /* Serialize Ack Successfull. */
+    MQTT_SerializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    /* Query for any remaining packets in state #MQTTPubCompPending. */
+    MQTT_StateSelect_ExpectAnyArgsAndReturn( MQTT_PACKET_TYPE_INVALID );
+    /* Query for any packets in state #MQTTPubRelSend. */
+    MQTT_StateSelect_ExpectAnyArgsAndReturn( packetIdentifier + 1 );
+    /* Serialize Ack Successfull. */
+    MQTT_SerializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    /* State update from #MQTTPubRelSend to #MQTTPubCompPending. */
+    MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTPubCompPending );
+    /* Query for remaining packets in state #MQTTPubRelSend. */
+    MQTT_StateSelect_ExpectAnyArgsAndReturn( MQTT_PACKET_TYPE_INVALID );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
+}
+
+/**
  * @brief Test error cases for MQTT_Connect when a timeout occurs or the packet
  * needs to be discarded in MQTT_Connect.
  */
@@ -822,6 +1106,12 @@ void test_MQTT_Publish( void )
     MQTT_UpdateStatePublish_ExpectAnyArgsAndReturn( MQTTPublishSend );
     status = MQTT_Publish( &mqttContext, &publishInfo, PACKET_ID );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+
+    /* Now for QoS2 and a duplicate publish, state updates should not be called. */
+    publishInfo.qos = MQTTQoS2;
+    publishInfo.dup = true;
+    status = MQTT_Publish( &mqttContext, &publishInfo, PACKET_ID );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 }
 
 /* ========================================================================== */
@@ -933,14 +1223,20 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Paths( void )
     MQTTTransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks;
+    DuplicateIncomingPacketInfo_t duplicateIncomingPublishInfo;
 
     setupTransportInterface( &transport );
     setupCallbacks( &callbacks );
+    setupNetworkBuffer( &networkBuffer );
 
     mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
     modifyIncomingPacketStatus = MQTTSuccess;
+
+    ( void ) memset( ( void * ) &duplicateIncomingPublishInfo,
+                     0x00,
+                     sizeof( DuplicateIncomingPacketInfo_t ) );
 
     /* Assume QoS = 1 so that a PUBACK will be sent after receiving PUBLISH.
      * That is, expectProcessLoopCalls will take on the following parameters:
@@ -948,7 +1244,7 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Paths( void )
     currentPacketType = MQTT_PACKET_TYPE_PUBLISH;
     expectProcessLoopCalls( &context, MQTTSuccess, MQTTPubAckSend,
                             MQTTSuccess, MQTTPublishDone,
-                            MQTTSuccess, true );
+                            MQTTSuccess, true, NULL );
 
     /* Assume QoS = 2 so that a PUBREC will be sent after receiving PUBLISH.
      * That is, expectProcessLoopCalls will take on the following parameters:
@@ -956,7 +1252,106 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Paths( void )
     currentPacketType = MQTT_PACKET_TYPE_PUBLISH;
     expectProcessLoopCalls( &context, MQTTSuccess, MQTTPubRecSend,
                             MQTTSuccess, MQTTPubRelPending,
-                            MQTTSuccess, true );
+                            MQTTSuccess, true, NULL );
+
+    /* Handle duplicate publishes. */
+
+    /* A QoS1 incoming publish packet is received with dup flag set.
+     * No entry in the state machine. Consider it as a new incoming publish.
+     * A PUBACK will be sent after receiving PUBLISH.
+     * That is, expectProcessLoopCalls will take on the following parameters:
+     * incomingPublish=true and stateAfterDeserialize=MQTTPubAckSend. */
+    currentPacketType = MQTT_PACKET_TYPE_PUBLISH;
+    ( void ) memset( ( void * ) &duplicateIncomingPublishInfo,
+                     0x00,
+                     sizeof( DuplicateIncomingPacketInfo_t ) );
+    duplicateIncomingPublishInfo.publishInfo.dup = true;
+    duplicateIncomingPublishInfo.publishInfo.qos = MQTTQoS1;
+    duplicateIncomingPublishInfo.incomingPacketId = 1;
+    duplicateIncomingPublishInfo.packetIdFromStateSelect1 = MQTT_PACKET_TYPE_INVALID;
+    /* Resetting the eventcallback flag. */
+    isEventCallbackInvoked = false;
+    expectProcessLoopCalls( &context, MQTTSuccess, MQTTPubAckSend,
+                            MQTTSuccess, MQTTPublishDone,
+                            MQTTSuccess, true,
+                            &duplicateIncomingPublishInfo );
+    TEST_ASSERT_TRUE( isEventCallbackInvoked );
+
+    /* A QoS1 incoming publish packet is received with dup flag set.
+     * A valid entry in the state machine is present. */
+    currentPacketType = MQTT_PACKET_TYPE_PUBLISH;
+    ( void ) memset( ( void * ) &duplicateIncomingPublishInfo,
+                     0x00,
+                     sizeof( DuplicateIncomingPacketInfo_t ) );
+    duplicateIncomingPublishInfo.publishInfo.dup = true;
+    duplicateIncomingPublishInfo.publishInfo.qos = MQTTQoS1;
+    duplicateIncomingPublishInfo.incomingPacketId = 1;
+    duplicateIncomingPublishInfo.packetIdFromStateSelect1 = 1;
+    /* Resetting the eventcallback flag. */
+    isEventCallbackInvoked = false;
+    expectProcessLoopCalls( &context, MQTTSuccess, MQTTPubAckSend,
+                            MQTTSuccess, MQTTPublishDone,
+                            MQTTSuccess, true,
+                            &duplicateIncomingPublishInfo );
+    TEST_ASSERT_TRUE( isEventCallbackInvoked );
+
+    /* A QoS2 incoming publish packet is received with dup flag set.
+     * A valid entry in the state machine is present. The state of
+     * the incoming publish is in #MQTTPubRelPending. */
+    currentPacketType = MQTT_PACKET_TYPE_PUBLISH;
+    ( void ) memset( ( void * ) &duplicateIncomingPublishInfo,
+                     0x00,
+                     sizeof( DuplicateIncomingPacketInfo_t ) );
+    duplicateIncomingPublishInfo.publishInfo.dup = true;
+    duplicateIncomingPublishInfo.publishInfo.qos = MQTTQoS2;
+    duplicateIncomingPublishInfo.incomingPacketId = 1;
+    duplicateIncomingPublishInfo.packetIdFromStateSelect1 = 1;
+    /* Resetting the eventcallback flag. */
+    isEventCallbackInvoked = false;
+    expectProcessLoopCalls( &context, MQTTSuccess, MQTTPubRecSend,
+                            MQTTSuccess, MQTTPubRelPending,
+                            MQTTSuccess, true,
+                            &duplicateIncomingPublishInfo );
+    TEST_ASSERT_FALSE( isEventCallbackInvoked );
+
+    /* A QoS2 incoming publish packet is received with dup flag set.
+     * A valid entry in the state machine is present. The state of
+     * the incoming publish is in #MQTTPubRecSend. */
+    currentPacketType = MQTT_PACKET_TYPE_PUBLISH;
+    ( void ) memset( ( void * ) &duplicateIncomingPublishInfo,
+                     0x00,
+                     sizeof( DuplicateIncomingPacketInfo_t ) );
+    duplicateIncomingPublishInfo.publishInfo.dup = true;
+    duplicateIncomingPublishInfo.publishInfo.qos = MQTTQoS2;
+    duplicateIncomingPublishInfo.incomingPacketId = 1;
+    duplicateIncomingPublishInfo.packetIdFromStateSelect1 = MQTT_PACKET_TYPE_INVALID;
+    duplicateIncomingPublishInfo.packetIdFromStateSelect2 = 1;
+    /* Resetting the eventcallback flag. */
+    isEventCallbackInvoked = false;
+    expectProcessLoopCalls( &context, MQTTSuccess, MQTTPubRecSend,
+                            MQTTSuccess, MQTTPubRelPending,
+                            MQTTSuccess, true,
+                            &duplicateIncomingPublishInfo );
+    TEST_ASSERT_FALSE( isEventCallbackInvoked );
+
+    /* A QoS2 incoming publish packet is received with dup flag set.
+     * A valid entry in the state machine is not present. */
+    currentPacketType = MQTT_PACKET_TYPE_PUBLISH;
+    ( void ) memset( ( void * ) &duplicateIncomingPublishInfo,
+                     0x00,
+                     sizeof( DuplicateIncomingPacketInfo_t ) );
+    duplicateIncomingPublishInfo.publishInfo.dup = true;
+    duplicateIncomingPublishInfo.publishInfo.qos = MQTTQoS2;
+    duplicateIncomingPublishInfo.incomingPacketId = 1;
+    duplicateIncomingPublishInfo.packetIdFromStateSelect1 = MQTT_PACKET_TYPE_INVALID;
+    duplicateIncomingPublishInfo.packetIdFromStateSelect2 = MQTT_PACKET_TYPE_INVALID;
+    /* Resetting the eventcallback flag. */
+    isEventCallbackInvoked = false;
+    expectProcessLoopCalls( &context, MQTTSuccess, MQTTPubRecSend,
+                            MQTTSuccess, MQTTPubRelPending,
+                            MQTTSuccess, true,
+                            &duplicateIncomingPublishInfo );
+    TEST_ASSERT_TRUE( isEventCallbackInvoked );
 }
 
 /**
@@ -974,6 +1369,7 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Error_Paths( void )
 
     setupTransportInterface( &transport );
     setupCallbacks( &callbacks );
+    setupNetworkBuffer( &networkBuffer );
 
     mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
@@ -986,7 +1382,7 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Error_Paths( void )
     currentPacketType = MQTT_PACKET_TYPE_PUBLISH;
     expectProcessLoopCalls( &context, MQTTBadResponse, MQTTStateNull,
                             MQTTBadResponse, MQTTStateNull,
-                            MQTTBadResponse, true );
+                            MQTTBadResponse, true, NULL );
 }
 
 /**
@@ -1001,9 +1397,11 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths( void )
     MQTTTransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks;
+    DuplicateIncomingPacketInfo_t duplicateIncomingPubrelInfo;
 
     setupTransportInterface( &transport );
     setupCallbacks( &callbacks );
+    setupNetworkBuffer( &networkBuffer );
 
     mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
@@ -1015,49 +1413,93 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths( void )
     currentPacketType = MQTT_PACKET_TYPE_PUBACK;
     expectProcessLoopCalls( &context, MQTTSuccess, MQTTPublishDone,
                             MQTTSuccess, MQTTPublishDone,
-                            MQTTSuccess, false );
+                            MQTTSuccess, false, NULL );
 
     /* Mock the receiving of a PUBREC packet type and expect the appropriate
      * calls made from the process loop. */
     currentPacketType = MQTT_PACKET_TYPE_PUBREC;
     expectProcessLoopCalls( &context, MQTTSuccess, MQTTPubRelSend,
                             MQTTSuccess, MQTTPubCompPending,
-                            MQTTSuccess, false );
+                            MQTTSuccess, false, NULL );
 
     /* Mock the receiving of a PUBREL packet type and expect the appropriate
-     * calls made from the process loop. */
+     * calls made from the process loop.
+     * State will be in #MQTTPubrelPending for the packet Id.
+     * Second #MQTT_StateSelect() with the incoming packet id indicates that
+     * state is in #MQTTPubrelPending. */
     currentPacketType = MQTT_PACKET_TYPE_PUBREL;
+    ( void ) memset( ( void * ) &duplicateIncomingPubrelInfo,
+                     0x00,
+                     sizeof( DuplicateIncomingPacketInfo_t ) );
+    duplicateIncomingPubrelInfo.incomingPacketId = 1;
+    duplicateIncomingPubrelInfo.packetIdFromStateSelect1 = MQTT_PACKET_TYPE_INVALID;
+    duplicateIncomingPubrelInfo.packetIdFromStateSelect2 = 1;
     expectProcessLoopCalls( &context, MQTTSuccess, MQTTPubCompSend,
                             MQTTSuccess, MQTTPublishDone,
-                            MQTTSuccess, false );
+                            MQTTSuccess, false,
+                            &duplicateIncomingPubrelInfo );
+
+    /* Mock the receiving of a duplicate PUBREL packet type and expect
+     * the appropriate calls made from the process loop.
+     * State will be in #MQTTPubCompSend for the packet Id.
+     * First #MQTT_StateSelect() with the incoming packet id indicates that
+     * state is in #MQTTPubCompSend. */
+    currentPacketType = MQTT_PACKET_TYPE_PUBREL;
+    ( void ) memset( ( void * ) &duplicateIncomingPubrelInfo,
+                     0x00,
+                     sizeof( DuplicateIncomingPacketInfo_t ) );
+    duplicateIncomingPubrelInfo.incomingPacketId = 1;
+    duplicateIncomingPubrelInfo.packetIdFromStateSelect1 = 1;
+    duplicateIncomingPubrelInfo.packetIdFromStateSelect2 = MQTT_PACKET_TYPE_INVALID;
+    expectProcessLoopCalls( &context, MQTTSuccess, MQTTPubCompSend,
+                            MQTTSuccess, MQTTPublishDone,
+                            MQTTSuccess, false,
+                            &duplicateIncomingPubrelInfo );
+
+    /* Mock the receiving of a duplicate PUBREL packet type and expect
+     * the appropriate calls made from the process loop.
+     * State will not be present in state records for the packet Id.
+     * Both #MQTT_StateSelect() with the invalid id indicates that
+     * state is in missing. */
+    currentPacketType = MQTT_PACKET_TYPE_PUBREL;
+    ( void ) memset( ( void * ) &duplicateIncomingPubrelInfo,
+                     0x00,
+                     sizeof( DuplicateIncomingPacketInfo_t ) );
+    duplicateIncomingPubrelInfo.incomingPacketId = 1;
+    duplicateIncomingPubrelInfo.packetIdFromStateSelect1 = MQTT_PACKET_TYPE_INVALID;
+    duplicateIncomingPubrelInfo.packetIdFromStateSelect2 = MQTT_PACKET_TYPE_INVALID;
+    expectProcessLoopCalls( &context, MQTTSuccess, MQTTPubCompSend,
+                            MQTTSuccess, MQTTPublishDone,
+                            MQTTSuccess, false,
+                            &duplicateIncomingPubrelInfo );
 
     /* Mock the receiving of a PUBCOMP packet type and expect the appropriate
      * calls made from the process loop. */
     currentPacketType = MQTT_PACKET_TYPE_PUBCOMP;
     expectProcessLoopCalls( &context, MQTTSuccess, MQTTPublishDone,
                             MQTTSuccess, MQTTPublishDone,
-                            MQTTSuccess, false );
+                            MQTTSuccess, false, NULL );
 
     /* Mock the receiving of a PINGRESP packet type and expect the appropriate
      * calls made from the process loop. */
     currentPacketType = MQTT_PACKET_TYPE_PINGRESP;
     expectProcessLoopCalls( &context, MQTTSuccess, MQTTStateNull,
                             MQTTSuccess, MQTTStateNull,
-                            MQTTSuccess, false );
+                            MQTTSuccess, false, NULL );
 
     /* Mock the receiving of a SUBACK packet type and expect the appropriate
      * calls made from the process loop. */
     currentPacketType = MQTT_PACKET_TYPE_SUBACK;
     expectProcessLoopCalls( &context, MQTTSuccess, MQTTStateNull,
                             MQTTSuccess, MQTTStateNull,
-                            MQTTSuccess, false );
+                            MQTTSuccess, false, NULL );
 
     /* Mock the receiving of an UNSUBACK packet type and expect the appropriate
      * calls made from the process loop. */
     currentPacketType = MQTT_PACKET_TYPE_UNSUBACK;
     expectProcessLoopCalls( &context, MQTTSuccess, MQTTStateNull,
                             MQTTSuccess, MQTTStateNull,
-                            MQTTSuccess, false );
+                            MQTTSuccess, false, NULL );
 }
 
 /**
@@ -1086,42 +1528,42 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths( void )
     currentPacketType = MQTT_PACKET_TYPE_INVALID;
     expectProcessLoopCalls( &context, MQTTBadResponse, MQTTStateNull,
                             MQTTBadResponse, MQTTStateNull,
-                            MQTTBadResponse, false );
+                            MQTTBadResponse, false, NULL );
 
     /* Verify that MQTTSendFailed is propagated when receiving a PUBREC
      * then failing when serializing a PUBREL to send in response. */
     currentPacketType = MQTT_PACKET_TYPE_PUBREC;
     expectProcessLoopCalls( &context, MQTTSuccess, MQTTPubRelSend,
                             MQTTNoMemory, MQTTStateNull,
-                            MQTTSendFailed, false );
+                            MQTTSendFailed, false, NULL );
 
     /* Verify that MQTTBadResponse is propagated when deserialization fails upon
      * receiving a PUBACK. */
     currentPacketType = MQTT_PACKET_TYPE_PUBACK;
     expectProcessLoopCalls( &context, MQTTBadResponse, MQTTStateNull,
                             MQTTBadResponse, MQTTStateNull,
-                            MQTTBadResponse, false );
+                            MQTTBadResponse, false, NULL );
 
     /* Verify that MQTTBadResponse is propagated when deserialization fails upon
      * receiving a PINGRESP. */
     currentPacketType = MQTT_PACKET_TYPE_PINGRESP;
     expectProcessLoopCalls( &context, MQTTBadResponse, MQTTStateNull,
                             MQTTBadResponse, MQTTStateNull,
-                            MQTTBadResponse, false );
+                            MQTTBadResponse, false, NULL );
 
     /* Verify that MQTTBadResponse is propagated when deserialization fails upon
      * receiving a SUBACK. */
     currentPacketType = MQTT_PACKET_TYPE_SUBACK;
     expectProcessLoopCalls( &context, MQTTBadResponse, MQTTStateNull,
                             MQTTBadResponse, MQTTStateNull,
-                            MQTTBadResponse, false );
+                            MQTTBadResponse, false, NULL );
 
     /* Verify that MQTTIllegalState is returned if MQTT_UpdateStateAck(...)
      * provides an unknown state such as MQTTStateNull to sendPublishAcks(...). */
     currentPacketType = MQTT_PACKET_TYPE_PUBREC;
     expectProcessLoopCalls( &context, MQTTSuccess, MQTTPubRelSend,
                             MQTTSuccess, MQTTStateNull,
-                            MQTTIllegalState, false );
+                            MQTTIllegalState, false, NULL );
 }
 
 /**
@@ -1150,7 +1592,7 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths( void )
     context.keepAliveIntervalSec = 0;
     expectProcessLoopCalls( &context, MQTTStateNull, MQTTStateNull,
                             MQTTSuccess, MQTTStateNull,
-                            MQTTSuccess, false );
+                            MQTTSuccess, false, NULL );
 
     /* Coverage for the branch path where keep alive interval is greater than 0,
      * and the interval has expired. */
@@ -1161,7 +1603,7 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths( void )
     context.lastPacketTime = getTime();
     expectProcessLoopCalls( &context, MQTTStateNull, MQTTStateNull,
                             MQTTSuccess, MQTTStateNull,
-                            MQTTSuccess, false );
+                            MQTTSuccess, false, NULL );
 
     /* Coverage for the branch path where PINGRESP timeout interval hasn't expired. */
     mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
@@ -1173,7 +1615,7 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths( void )
     context.pingRespTimeoutMs = MQTT_ONE_SECOND_TO_MS;
     expectProcessLoopCalls( &context, MQTTStateNull, MQTTStateNull,
                             MQTTSuccess, MQTTStateNull,
-                            MQTTSuccess, false );
+                            MQTTSuccess, false, NULL );
 
     /* Coverage for the branch path where a PINGRESP hasn't been sent out yet. */
     mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
@@ -1183,7 +1625,7 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths( void )
     context.lastPacketTime = 0;
     expectProcessLoopCalls( &context, MQTTStateNull, MQTTStateNull,
                             MQTTSuccess, MQTTStateNull,
-                            MQTTSuccess, false );
+                            MQTTSuccess, false, NULL );
 }
 
 /**
@@ -1213,7 +1655,7 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths( void )
     context.waitingForPingResp = true;
     expectProcessLoopCalls( &context, MQTTStateNull, MQTTStateNull,
                             MQTTSuccess, MQTTStateNull,
-                            MQTTKeepAliveTimeout, false );
+                            MQTTKeepAliveTimeout, false, NULL );
 }
 
 /**
