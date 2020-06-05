@@ -1518,33 +1518,45 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
                                   size_t dataLen )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
-    int32_t transportStatus = 0;
+    const uint8_t * pIndex = pData;
+    int32_t totalBytesSent = 0, bytesSent = 0;
+    size_t bytesRemaining = dataLen;
 
     assert( pTransport != NULL );
     assert( pTransport->send != NULL );
     assert( pData != NULL );
 
-    transportStatus = pTransport->send( pTransport->pContext,
-                                        pData,
-                                        dataLen );
+    /* Loop until all data is sent. */
+    while( bytesRemaining > 0UL )
+    {
+        bytesSent = pTransport->send( pTransport->pContext,
+                                      pData,
+                                      dataLen );
 
-    if( transportStatus < 0 )
-    {
-        LogError( ( "Failed to send HTTP data: Transport send()"
-                    " returned error: TransportStatus=%d",
-                    transportStatus ) );
-        returnStatus = HTTP_NETWORK_ERROR;
+        if( bytesSent > 0 )
+        {
+            bytesRemaining -= ( size_t ) bytesSent;
+            totalBytesSent += bytesSent;
+            pIndex += bytesSent;
+            LogDebug( ( "Sent HTTP data over the transport: "
+                        "BytesSent=%d, BytesRemaining=%ul, "
+                        "TotalBytesSent=%d.",
+                        bytesSent,
+                        bytesRemaining,
+                        totalBytesSent ) );
+        }
+        else
+        {
+            LogError( ( "Failed to send HTTP data: Transport send()"
+                        " returned error: TransportStatus=%d",
+                        bytesSent ) );
+            totalBytesSent = -1;
+            returnStatus = HTTP_NETWORK_ERROR;
+            break;
+        }
     }
-    else if( ( size_t ) transportStatus != dataLen )
-    {
-        LogError( ( "Failed to send HTTP data: Transport layer "
-                    "did not send the required bytes: RequiredBytes=%lu"
-                    ", SentBytes=%d.",
-                    ( unsigned long ) dataLen,
-                    transportStatus ) );
-        returnStatus = HTTP_NETWORK_ERROR;
-    }
-    else
+
+    if( returnStatus == HTTP_SUCCESS )
     {
         LogDebug( ( "Sent HTTP data over the transport: BytesSent "
                     "=%d.",
