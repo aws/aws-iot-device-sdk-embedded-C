@@ -236,6 +236,28 @@ static int32_t transportSendFailure( MQTTNetworkContext_t pContext,
 }
 
 /**
+ * @brief Mocked transport send that succeeds then fails.
+ */
+static int32_t transportSendSucceedThenFail( MQTTNetworkContext_t context,
+                                             const void * pMessage,
+                                             size_t bytesToSend )
+{
+    int32_t retVal = bytesToSend;
+    static int counter = 0;
+
+    ( void ) context;
+    ( void ) pMessage;
+
+    if( counter++ )
+    {
+        retVal = -1;
+        counter = 0;
+    }
+
+    return retVal;
+}
+
+/**
  * @brief Mocked successful transport read.
  *
  * @param[in] tcpSocket TCP socket.
@@ -267,7 +289,7 @@ static int32_t transportRecvFailure( MQTTNetworkContext_t pContext,
 }
 
 /**
- * @brief Mocked failed transport read.
+ * @brief Mocked transport reading one byte at a time.
  */
 static int32_t transportRecvOneByte( MQTTNetworkContext_t pContext,
                                      void * pBuffer,
@@ -805,20 +827,26 @@ void test_MQTT_Publish( void )
     status = MQTT_Publish( &mqttContext, &publishInfo, 0 );
     TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
 
-    /* We can ignore this now since MQTT_Publish initializes the header size to
-     * 0, so its initial send returns success (since 0 bytes are sent). */
-    MQTT_SerializePublishHeader_IgnoreAndReturn( MQTTSuccess );
+    /* We want to test the first call to sendPacket within sendPublish succeeding,
+     * and the second one failing. */
+    mqttContext.transportInterface.send = transportSendSucceedThenFail;
+    MQTT_SerializePublishHeader_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_SerializePublishHeader_ReturnThruPtr_pHeaderSize( &headerSize );
     publishInfo.pPayload = "Test";
     publishInfo.payloadLength = 4;
     status = MQTT_Publish( &mqttContext, &publishInfo, 0 );
     TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
 
     mqttContext.transportInterface.send = transportSendSuccess;
+    MQTT_SerializePublishHeader_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_SerializePublishHeader_ReturnThruPtr_pHeaderSize( &headerSize );
     status = MQTT_Publish( &mqttContext, &publishInfo, 0 );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
     /* Now for non zero QoS, which uses state engine. */
     publishInfo.qos = MQTTQoS2;
+    MQTT_SerializePublishHeader_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_SerializePublishHeader_ReturnThruPtr_pHeaderSize( &headerSize );
     MQTT_ReserveState_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_UpdateStatePublish_ExpectAnyArgsAndReturn( MQTTBadParameter );
     status = MQTT_Publish( &mqttContext, &publishInfo, PACKET_ID );
@@ -826,6 +854,8 @@ void test_MQTT_Publish( void )
 
     publishInfo.qos = MQTTQoS1;
     expectedState = MQTTPublishSend;
+    MQTT_SerializePublishHeader_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_SerializePublishHeader_ReturnThruPtr_pHeaderSize( &headerSize );
     MQTT_ReserveState_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_UpdateStatePublish_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_UpdateStatePublish_ReturnThruPtr_pNewState( &expectedState );

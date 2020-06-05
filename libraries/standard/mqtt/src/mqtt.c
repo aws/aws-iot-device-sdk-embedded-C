@@ -294,7 +294,7 @@ static MQTTPubAckType_t getAckFromPacketType( uint8_t packetType )
         case MQTT_PACKET_TYPE_PUBCOMP:
         default:
             /* This function is only called after checking the type is one of
-             * the above four values. */
+             * the above four values, so packet type must be PUBCOMP here. */
             assert( packetType == MQTT_PACKET_TYPE_PUBCOMP );
             ackType = MQTTPubcomp;
             break;
