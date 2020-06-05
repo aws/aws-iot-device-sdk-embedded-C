@@ -104,7 +104,7 @@
 /**
  * @brief Timeout for receiving CONNACK packet in milli seconds.
  */
-#define CONNACK_RECV_TIMEOUT_MS             ( 1000 )
+#define CONNACK_RECV_TIMEOUT_MS             ( 1000U )
 
 /**
  * @brief The topic to subscribe and publish to in the example.
@@ -387,7 +387,7 @@ static void cleanupOutgoingPublishAt( uint8_t index );
  * @brief Function to clean up all the outgoing publishes maintained in the
  * array.
  */
-static void cleanUpOutgoingPublishes();
+static void cleanupOutgoingPublishes();
 
 /**
  * @brief Function to clean up the publish packet with the given packet id.
@@ -395,23 +395,12 @@ static void cleanUpOutgoingPublishes();
  * @param[in] packetId Packet identifier of the packet to be cleaned up from
  * the array.
  */
-static void cleanupOutgoingPublishesWithPacketID( uint16_t packetId );
-
-/**
- * @brief Function to get the index of packet in the array with
- * the given packet id.
- *
- * @param[in] packetId Packet identifier of the packet get the index for.
- *
- * @return #MAX_OUTGOING_PUBLISHES if no index found; index of the publish
- * packet if a packet is found.
- */
-static uint8_t getIndexOfOutgoingPublishWithPacketId( uint16_t packetId );
+static void cleanupOutgoingPublishWithPacketID( uint16_t packetId );
 
 /**
  * @brief Function to resend the publishes if a session is re-established with
  * the broker. This function handles the resending of the QoS2 publish packets,
- * which are in state #MQTTPubrecPending.
+ * which are maintained locally.
  *
  * @param[in] pContext MQTT context pointer.
  */
@@ -797,7 +786,7 @@ static void cleanupOutgoingPublishAt( uint8_t index )
 
 /*-----------------------------------------------------------*/
 
-static void cleanUpOutgoingPublishes()
+static void cleanupOutgoingPublishes()
 {
     uint8_t index = 0;
 
@@ -812,7 +801,7 @@ static void cleanUpOutgoingPublishes()
 
 /*-----------------------------------------------------------*/
 
-static void cleanupOutgoingPublishesWithPacketID( uint16_t packetId )
+static void cleanupOutgoingPublishWithPacketID( uint16_t packetId )
 {
     uint8_t index = 0;
 
@@ -834,96 +823,47 @@ static void cleanupOutgoingPublishesWithPacketID( uint16_t packetId )
 
 /*-----------------------------------------------------------*/
 
-static uint8_t getIndexOfOutgoingPublishWithPacketId( uint16_t packetId )
-{
-    uint8_t index = 0U;
-
-    assert( outgoingPublishPackets != NULL );
-    assert( packetId != MQTT_PACKET_ID_INVALID );
-
-    /* Find the index for the given packet id. */
-    for( ; index < MAX_OUTGOING_PUBLISHES; index++ )
-    {
-        if( outgoingPublishPackets[ index ].packetId == packetId )
-        {
-            break;
-        }
-    }
-
-    return index;
-}
-
-/*-----------------------------------------------------------*/
-
-/**
- * @brief Function to clean up the publish packet with the given packet id.
- *
- * @param[in] packetId Packet identifier of the packet to be cleaned up from
- * the array.
- */
 static int handlePublishResend( MQTTContext_t * pContext )
 {
     int status = EXIT_SUCCESS;
     MQTTStateCursor_t cursor = 0U;
     MQTTStatus_t mqttStatus = MQTTSuccess;
     uint16_t packetId = MQTT_PACKET_ID_INVALID;
-    uint8_t index = MAX_OUTGOING_PUBLISHES;
+    uint8_t index = 0U;
 
     assert( outgoingPublishPackets != NULL );
 
-    /* Check all the QoS2 publish packets that are still waiting for
-     * a PUBREC. This can be identified by querying the state machine
-     * for all the outgoing publish packets which are in state
-     * #MQTTPubRecPending. */
-    do
+    /* Resend all the QoS2 publishes still in the array. These are the
+     * publishes that hasn't received a PUBREC. When a PUBREC is
+     * received, the publish is removed from the array. */
+    for( index = 0U; index < MAX_OUTGOING_PUBLISHES; index++ )
     {
-        /* Find the packet ids which are in #MQTTPubRecPending state.
-         * Using the same cursor will help restart the search from the
-         * last searched position. */
-        packetId = MQTT_StateSelect( pContext, MQTTPubRecPending, &cursor );
-
-        /* Check if a valid packet id is obtained. */
-        if( packetId != MQTT_PACKET_ID_INVALID )
+        if( outgoingPublishPackets[ index ].packetId != MQTT_PACKET_ID_INVALID )
         {
-            /* Resending the publish after marking publish as duplicate. */
-            index = getIndexOfOutgoingPublishWithPacketId( packetId );
+            outgoingPublishPackets[ index ].pubInfo.dup = true;
 
-            /* Check if a valid index is obtained. */
-            if( index < MAX_OUTGOING_PUBLISHES )
+            LogInfo( ( "Sending duplicate PUBLISH with packet id %u.",
+                       packetId ) );
+            mqttStatus = MQTT_Publish( pContext,
+                                       &outgoingPublishPackets[ index ].pubInfo,
+                                       packetId );
+
+            if( mqttStatus != MQTTSuccess )
             {
-                /*Resend the publish after marking it as duplicate. */
-                outgoingPublishPackets[ index ].pubInfo.dup = true;
-
-                LogInfo( ( "Sending duplicate PUBLISH with packet id %u.",
-                           packetId ) );
-                mqttStatus = MQTT_Publish( pContext,
-                                           &outgoingPublishPackets[ index ].pubInfo,
-                                           packetId );
-
-                if( mqttStatus != MQTTSuccess )
-                {
-                    LogError( ( "Sending duplicate PUBLISH for packet id %u "
-                                " failed with status %u.",
-                                packetId,
-                                mqttStatus ) );
-                    status = EXIT_FAILURE;
-                    break;
-                }
-                else
-                {
-                    LogInfo( ( "Sent duplicate PUBLISH successfully for packet id %u.\n\n",
-                               packetId ) );
-                }
+                LogError( ( "Sending duplicate PUBLISH for packet id %u "
+                            " failed with status %u.",
+                            packetId,
+                            mqttStatus ) );
+                status = EXIT_FAILURE;
+                break;
             }
             else
             {
-                LogError( ( "Failed to obtain a stored outgoing publish packet for"
-                            " packet id %u.",
-                            packetId ) );
-                status = EXIT_FAILURE;
+                LogInfo( ( "Sent duplicate PUBLISH successfully for packet id %u.\n\n",
+                           packetId ) );
             }
         }
-    } while( packetId != MQTT_PACKET_ID_INVALID );
+    }
 
     return status;
 }
@@ -1012,7 +952,7 @@ static void eventCallback( MQTTContext_t * pContext,
                 LogInfo( ( "PUBREC received for packet id %u.",
                            packetIdentifier ) );
                 /* Cleanup publish packet when a PUBREC is received. */
-                cleanupOutgoingPublishesWithPacketID( packetIdentifier );
+                cleanupOutgoingPublishWithPacketID( packetIdentifier );
                 break;
 
             case MQTT_PACKET_TYPE_PUBREL:
@@ -1380,7 +1320,7 @@ int main( int argc,
 
             /* Clean up the outgoing publishes waiting for ack as this new
              * connection doesn't re-establish an existing session. */
-            cleanUpOutgoingPublishes();
+            cleanupOutgoingPublishes();
         }
     }
 
