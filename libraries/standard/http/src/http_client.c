@@ -1933,7 +1933,7 @@ static int findHeaderFieldParserCallback( http_parser * pHttpParser,
                                           const char * pFieldLoc,
                                           size_t fieldLen )
 {
-    findHeaderContext_t * pContext = NULL;
+    findHeaderContext_t * pContext = pHttpParser->data;
 
     assert( pHttpParser != NULL );
     assert( pFieldLoc != NULL );
@@ -1974,7 +1974,7 @@ static int findHeaderValueParserCallback( http_parser * pHttpParser,
                                           size_t valueLen )
 {
     int retCode = HTTP_PARSER_CONTINUE_PARSING;
-    findHeaderContext_t * pContext = NULL;
+    findHeaderContext_t * pContext = pHttpParser->data;
 
     assert( pHttpParser != NULL );
     assert( pVaLueLoc != NULL );
