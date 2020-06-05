@@ -336,10 +336,10 @@ static int32_t transportRecv( HTTPNetworkContext_t * pContext,
     }
     else if( bytesReceived < 0 )
     {
-        /* Check if it was time out */
+        /* Check if it was time out. */
         if( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) )
         {
-            /* Set return value to 0 to indicate nothing to receive */
+            /* Set return value to 0 to indicate nothing to receive. */
             bytesReceived = 0;
         }
     }
