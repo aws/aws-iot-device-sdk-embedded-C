@@ -20,7 +20,6 @@
  */
 
 /* Standard includes. */
-#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -42,78 +41,27 @@
 #include "http_client.h"
 
 /* Demo Config header. */
-#include "http_config.h"
-
-/**
- * @brief HTTP server host name.
- */
-#define SERVER_HOST           "server.cryptomix.com"
-
-/**
- * @brief The length of the HTTP server host name.
- */
-#define SERVER_HOST_LENGTH    ( sizeof( SERVER_HOST ) - 1 )
-
-/**
- * @brief HTTP server port number.
- *
- * In general, port 443 is for TLS HTTP connections.
- */
-#define SERVER_PORT           443
-
-/**
- * @brief Endpoint that accepts any client certificate then response with
- * information about the TLS connection.
- */
-#ifndef GET_PATH
-    #define GET_PATH    "/secure/"
-#endif
-
-/**
- * @brief Transport timeout in milliseconds for transport send and receive.
- */
-#define TRANSPORT_SEND_RECV_TIMEOUT_MS    ( 5000 )
-
-/**
- * @brief The length in bytes of the user buffer.
- */
-#define USER_BUFFER_LENGTH                ( 4096 )
-
-/**
- * @brief Length of an IPv6 address when converted to hex digits.
- */
-#define IPV6_LENGTH                       ( 40 )
-
-/**
- * @brief Request body to send for PUT and POST requests in this demo.
- */
-#define REQUEST_BODY                      "Hello, world!"
-
-/**
- * @brief Length of the request body.
- */
-#define REQUEST_BODY_LENGTH               ( sizeof( REQUEST_BODY ) - 1 )
+#include "demo_config.h"
 
 /**
  * @brief A string to store the resolved IP address from the host name.
  */
-static char resolvedIpAddr[ IPV6_LENGTH ] = { 0 };
+static char resolvedIpAddr[ IPV6_ADDRESS_STRING_LEN ];
 
 /**
- * @brief A buffer used to store request headers and reused after sending
- * the request to store the response headers and body.
+ * @brief A buffer used in the demo for storing HTTP request headers and
+ * HTTP response headers and body.
  *
- * User can also decide to have two separate buffers for request and response.
+ * @note This demo shows how the same buffer can be re-used for storing the HTTP
+ * response after the HTTP request is sent out. However, the user can also
+ * decide to use separate buffers for storing the HTTP request and response.
  */
-static uint8_t userBuffer[ USER_BUFFER_LENGTH ] = { 0 };
-
-/**
- * @brief The request body.
- */
-static uint8_t requestBodyBuffer[ REQUEST_BODY_LENGTH ] = { 0 };
+static uint8_t userBuffer[ USER_BUFFER_LENGTH ];
 
 /**
  * @brief Definition of the HTTP network context.
+ *
+ * @note For this TLS demo, the socket descriptor and SSL context is used.
  */
 struct HTTPNetworkContext
 {
@@ -121,10 +69,35 @@ struct HTTPNetworkContext
     SSL * pSslContext;
 };
 
+/**
+ * @brief Structure based on the definition of the HTTP network context.
+ */
+static HTTPNetworkContext_t networkContext;
+
+/**
+ * @brief The HTTP Client library transport layer interface.
+ */
+static HTTPTransportInterface_t transportInterface;
+
+/**
+ * @brief Represents header data that will be sent in an HTTP request.
+ */
+static HTTPRequestHeaders_t requestHeaders;
+
+/**
+ * @brief Configurations of the initial request headers that are passed to
+ * #HTTPClient_InitializeRequestHeaders.
+ */
+static HTTPRequestInfo_t requestInfo;
+
+/**
+ * @brief Represents a response returned from an HTTP server.
+ */
+static HTTPResponse_t response;
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Performs a DNS lookup on the given host name then establishes a TCP
+ * @brief Performs a DNS lookup on the given host name, then establishes a TCP
  * connection to the server.
  *
  * @param[in] pServer Host name of server.
@@ -151,14 +124,14 @@ static int tlsSetup( int tcpSocket,
 /**
  * @brief The transport send function that defines the transport interface.
  *
- * This is passed to the #HTTPTransportInterface.send function and used to
+ * This is passed as the #HTTPTransportInterface.send function and used to
  * send data over the network.
  *
  * @param[in] pContext User defined context (TCP socket for this demo).
  * @param[in] pBuffer Buffer containing the bytes to send over the network stack.
  * @param[in] bytesToSend Number of bytes to write to the network.
  *
- * @return Number of bytes sent; negative value on error.
+ * @return Number of bytes sent if successful; otherwise negative value on error.
  */
 static int32_t transportSend( HTTPNetworkContext_t * pContext,
                               const void * pBuffer,
@@ -167,6 +140,9 @@ static int32_t transportSend( HTTPNetworkContext_t * pContext,
 /**
  * @brief The transport receive function that defines the transport interface.
  *
+ * This is passed as the #HTTPTransportInterface.recv function used for reading
+ * data received from the network.
+ *
  * @param[in] pContext User defined context (TCP socket for this demo).
  * @param[out] pBuffer Buffer to read network data into.
  * @param[in] bytesToRead Number of bytes requested from the network.
@@ -174,14 +150,15 @@ static int32_t transportSend( HTTPNetworkContext_t * pContext,
  * This is passed to the #HTTPTransportInterface.recv function and used to
  * receive data over the network.
  *
- * @return Number of bytes received; negative value on error.
+ * @return Number of bytes received if successful; otherwise negative value on error.
  */
 static int32_t transportRecv( HTTPNetworkContext_t * pContext,
                               void * pBuffer,
                               size_t bytesToRecv );
 
 /**
- * @brief Send an HTTP request based on a specified method and path.
+ * @brief Send an HTTP request based on a specified method and path, then
+ * print the response received from the server.
  *
  * @param[in] pTransportInterface The transport interface for making network calls.
  * @param[in] pHost The host name of the server.
@@ -190,7 +167,7 @@ static int32_t transportRecv( HTTPNetworkContext_t * pContext,
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
-static int sendHttpRequest( HTTPTransportInterface_t * pTransportInterface,
+static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface,
                             const char * pHost,
                             const char * pMethod,
                             const char * pPath );
@@ -221,8 +198,8 @@ static int connectToServer( const char * pServer,
 
     if( returnStatus != -1 )
     {
-        LogInfo( ( "Performing DNS lookup on %.*s.",
-                   ( int32_t ) SERVER_HOST_LENGTH, SERVER_HOST ) );
+        LogInfo( ( "Performing DNS lookup: Host=%s.",
+                   SERVER_HOST ) );
 
         /* Attempt to connect to one of the retrieved DNS records. */
         for( pIndex = pListHead; pIndex != NULL; pIndex = pIndex->ai_next )
@@ -252,18 +229,20 @@ static int connectToServer( const char * pServer,
                 ( ( struct sockaddr_in6 * ) pServerInfo )->sin6_port = netPort;
                 serverInfoLength = sizeof( struct sockaddr_in6 );
                 inet_ntop( pServerInfo->sa_family,
-                           &( ( struct sockaddr_in * ) pServerInfo )->sin_addr,
+                           &( ( struct sockaddr_in6 * ) pServerInfo )->sin6_addr,
                            resolvedIpAddr,
                            sizeof( resolvedIpAddr ) );
             }
 
-            LogInfo( ( "Attempting to connect to resolved IP address: %s.",
-                       resolvedIpAddr ) );
+            LogInfo( ( "Attempting to connect to server: Host=%s, IP address=%s.",
+                       SERVER_HOST, resolvedIpAddr ) );
 
             returnStatus = connect( *pTcpSocket, pServerInfo, serverInfoLength );
 
             if( returnStatus == -1 )
             {
+                LogError( ( "Failed to connect to server: Host=%s, IP address=%s.",
+                            SERVER_HOST, resolvedIpAddr ) );
                 close( *pTcpSocket );
             }
             else
@@ -285,7 +264,7 @@ static int connectToServer( const char * pServer,
         else
         {
             returnStatus = EXIT_SUCCESS;
-            LogInfo( ( "TCP connection established with %.*s.\n",
+            LogInfo( ( "Established TCP connection: Server=%.*s.\n",
                        ( int ) strlen( pServer ),
                        pServer ) );
         }
@@ -506,14 +485,14 @@ static int tlsSetup( int tcpSocket,
     /* Log failure or success and return the correct exit status. */
     if( sslStatus == 0 )
     {
-        LogError( ( "Failed to establish a TLS connection to %.*s.",
+        LogError( ( "Failed to establish a TLS connection: Host=%.*s.",
                     ( int32_t ) SERVER_HOST_LENGTH,
                     SERVER_HOST ) );
         return EXIT_FAILURE;
     }
     else
     {
-        LogInfo( ( "Established a TLS connection to %.*s.\n\n",
+        LogInfo( ( "Established a TLS connection: Host=%.*s.\n\n",
                    ( int32_t ) SERVER_HOST_LENGTH,
                    SERVER_HOST ) );
         return EXIT_SUCCESS;
@@ -521,7 +500,6 @@ static int tlsSetup( int tcpSocket,
 }
 
 /*-----------------------------------------------------------*/
-
 static int32_t transportSend( HTTPNetworkContext_t * pNetworkContext,
                               const void * pBuffer,
                               size_t bytesToSend )
@@ -550,8 +528,8 @@ static int32_t transportSend( HTTPNetworkContext_t * pNetworkContext,
     }
     else
     {
-        LogError( ( "Polling of the SSL socket for write buffer availability failed"
-                    " with status %d.",
+        LogError( ( "Polling of the SSL socket for write buffer availability failed:"
+                    " status=%d",
                     pollStatus ) );
         bytesSent = -1;
     }
@@ -606,18 +584,13 @@ static int32_t transportRecv( HTTPNetworkContext_t * pNetworkContext,
 
 /*-----------------------------------------------------------*/
 
-static int sendHttpRequest( HTTPTransportInterface_t * pTransportInterface,
+static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface,
                             const char * pHost,
                             const char * pMethod,
                             const char * pPath )
 {
+    int returnStatus = EXIT_SUCCESS;
     HTTPStatus_t httpStatus = HTTP_SUCCESS;
-    HTTPRequestHeaders_t requestHeaders = { 0 };
-    HTTPRequestInfo_t requestInfo = { 0 };
-    HTTPResponse_t response = { 0 };
-
-    assert( pTransportInterface != NULL );
-    assert( pMethod != NULL );
 
     /* Initialize the request object. */
     requestInfo.pHost = pHost;
@@ -652,14 +625,19 @@ static int sendHttpRequest( HTTPTransportInterface_t * pTransportInterface,
                    ( char * ) requestHeaders.pBuffer ) );
         LogInfo( ( "Request Body:\n%.*s\n",
                    ( int32_t ) REQUEST_BODY_LENGTH,
-                   ( char * ) requestBodyBuffer ) );
+                   REQUEST_BODY ) );
         /* Send the request and receive the response. */
         httpStatus = HTTPClient_Send( pTransportInterface,
                                       &requestHeaders,
-                                      requestBodyBuffer,
+                                      ( uint8_t * ) REQUEST_BODY,
                                       REQUEST_BODY_LENGTH,
                                       &response,
                                       0 );
+    }
+    else
+    {
+        LogError( ( "Failed to initialize HTTP request headers: Error=%s.",
+                    HTTPClient_strerror( httpStatus ) ) );
     }
 
     if( httpStatus == HTTP_SUCCESS )
@@ -677,34 +655,40 @@ static int sendHttpRequest( HTTPTransportInterface_t * pTransportInterface,
     }
     else
     {
-        LogError( ( "Sending HTTP %s request to %s%s failed with status = %u.",
-                    pMethod, SERVER_HOST, pPath, httpStatus ) );
+        LogError( ( "Failed to send HTTP %s request to %s%s: Error=%s.",
+                    pMethod, SERVER_HOST, pPath, HTTPClient_strerror( httpStatus ) ) );
     }
 
-    if( httpStatus == HTTP_SUCCESS )
+    if( httpStatus != HTTP_SUCCESS )
     {
-        return EXIT_SUCCESS;
+        returnStatus = EXIT_FAILURE;
     }
-    else
-    {
-        return EXIT_FAILURE;
-    }
+
+    return returnStatus;
 }
 
 /*-----------------------------------------------------------*/
 
 /**
  * @brief Entry point of demo.
+ *
+ * This example resolves a domain, establishes a TCP connection, validates the
+ * server's certificate using the root CA certificate defined in the config header,
+ * then finally performs a TLS handshake with the HTTP server so that all communication
+ * is encrypted. After which, HTTP Client library API is used to send a GET, HEAD,
+ * PUT, and POST request in that order. For each request, the HTTP response from the
+ * server (or an error code) is logged.
+ *
+ * @note This example is single-threaded and uses statically allocated memory.
+ *
  */
-int main()
+int main( int argc,
+          char ** argv )
 {
     int returnStatus = EXIT_SUCCESS;
-    HTTPNetworkContext_t networkContext = { 0 };
-    HTTPTransportInterface_t transportInterface = { 0 };
 
-    /* Set the request body. */
-    strncpy( ( char * ) requestBodyBuffer,
-             REQUEST_BODY, REQUEST_BODY_LENGTH );
+    ( void ) argc;
+    ( void ) argv;
 
     /**************************** Connect. ******************************/
 
@@ -729,9 +713,6 @@ int main()
 
     /*********************** Send HTTPS request. ************************/
 
-    /* The client is now connected to the server. This example will send a
-     * GET request to https://server.cryptomix.com/secure. */
-
     /* Send GET Request. */
     if( returnStatus == EXIT_SUCCESS )
     {
@@ -739,6 +720,33 @@ int main()
                                         SERVER_HOST,
                                         HTTP_METHOD_GET,
                                         GET_PATH );
+    }
+
+    /* Send HEAD Request. */
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        returnStatus = sendHttpRequest( &transportInterface,
+                                        SERVER_HOST,
+                                        HTTP_METHOD_HEAD,
+                                        HEAD_PATH );
+    }
+
+    /* Send PUT Request. */
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        returnStatus = sendHttpRequest( &transportInterface,
+                                        SERVER_HOST,
+                                        HTTP_METHOD_PUT,
+                                        PUT_PATH );
+    }
+
+    /* Send POST Request. */
+    if( returnStatus != EXIT_SUCCESS )
+    {
+        returnStatus = sendHttpRequest( &transportInterface,
+                                        SERVER_HOST,
+                                        HTTP_METHOD_POST,
+                                        POST_PATH );
     }
 
     /************************** Disconnect. *****************************/
@@ -758,8 +766,8 @@ int main()
 
     if( networkContext.tcpSocket != -1 )
     {
-        shutdown( networkContext.tcpSocket, SHUT_RDWR );
-        close( networkContext.tcpSocket );
+        ( void ) shutdown( networkContext.tcpSocket, SHUT_RDWR );
+        ( void ) close( networkContext.tcpSocket );
     }
 
     return returnStatus;
