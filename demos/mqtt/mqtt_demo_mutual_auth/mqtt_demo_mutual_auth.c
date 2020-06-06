@@ -24,13 +24,18 @@
  * subscribe to a topic, publish to a topic, receive incoming publishes,
  * unsubscribe from a topic and disconnect the MQTT session.
  *
+ * A mutually authenticated TLS connection is used to connect to the broker
+ * in this example. Define SERVER_CERT_PATH, CLIENT_CERT_PATH,
+ * and CLIENT_PRIVATE_KEY_PATH in demo_config.h to achieve mutual
+ * authentication.
+ *
  * The example is single threaded and uses statically allocated memory;
- * it uses QOS2 and therefore implements a retransmission mechanism
+ * it uses QOS1 and therefore implements a retransmission mechanism
  * for Publish messages. Retransmission of publish messages are attempted
  * when a MQTT connection is established with a session that was already
- * present. All the outgoing publish messages waiting to receive PUBREC
+ * present. All the outgoing publish messages waiting to receive PUBACK
  * are resend in this demo. In order to support retransmission all the outgoing
- * publishes are stored until a PUBREC is received.
+ * publishes are stored until a PUBACK is received.
  */
 
 /* Standard includes. */
@@ -49,32 +54,40 @@
 
 /* MQTT API header. */
 #include "mqtt.h"
-#include "mqtt_state.h"
 
 /* Demo Config header. */
 #include "demo_config.h"
 
-/**
- * @brief MQTT server port number.
- *
- * In general, port 8883 is for secured MQTT connections.
- */
-#define BROKER_PORT                ( 8883 )
+
+/* Check that client identifier is defined. */
+#ifndef CLIENT_IDENTIFIER
+    #error "Please define a unique CLIENT_IDENTIFIER in demo_config.h."
+#endif
+
+/* Check that an MQTT broker is defined. */
+#ifndef BROKER_ENDPOINT
+    #error "Please define an MQTT broker endpoint in demo_config.h."
+#endif
+
+/* Check that file path to server certificate is defined. */
+#ifndef SERVER_CERT_PATH
+    #error "Please define path to the server certificate file in demo_config.h."
+#endif
+
+/* Check that file path to client certificate is defined. */
+#ifndef CLIENT_CERT_PATH
+    #error "Please define path to the client certificate file in demo_config.h."
+#endif
+
+/* Check that file path to client private key is defined. */
+#ifndef CLIENT_PRIVATE_KEY_PATH
+    #error "Please define path to the client private key file in demo_config.h."
+#endif
 
 /**
  * @brief Size of the network buffer for MQTT packets.
  */
-#define NETWORK_BUFFER_SIZE        ( 1024U )
-
-/* Check that client identifier is defined. */
-#ifndef CLIENT_IDENTIFIER
-    #error "Please define a unique CLIENT_IDENTIFIER."
-#endif
-
-/**
- * @brief Length of client identifier.
- */
-#define CLIENT_IDENTIFIER_LENGTH            ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) )
+#define NETWORK_BUFFER_SIZE                 ( 1024U )
 
 /**
  * @brief Timeout for receiving CONNACK packet in milli seconds.
@@ -142,7 +155,7 @@
 
 /**
  * @brief Structure to keep the MQTT publish packets until an ack is received
- * for QoS2 publishes.
+ * for QoS1 publishes.
  */
 typedef struct PublishPackets
 {
@@ -391,7 +404,7 @@ static void cleanupOutgoingPublishWithPacketID( uint16_t packetId );
 
 /**
  * @brief Function to resend the publishes if a session is re-established with
- * the broker. This function handles the resending of the QoS2 publish packets,
+ * the broker. This function handles the resending of the QoS1 publish packets,
  * which are maintained locally.
  *
  * @param[in] pContext MQTT context pointer.
@@ -622,11 +635,16 @@ static int tlsSetup( int tcpSocket,
         /* Setup authentication. */
         if( !readCredentials( pSslSetup,
                               SERVER_CERT_PATH,
-                              CLIENT_CERT_PATH ,
+                              CLIENT_CERT_PATH,
                               CLIENT_PRIVATE_KEY_PATH ) )
         {
             LogError( ( "Setting up credentials failed." ) );
             sslStatus = 0;
+        }
+        else
+        {
+            LogInfo( ( "Set credentials completed." ) );
+            sslStatus = 1;
         }
     }
 
@@ -648,39 +666,40 @@ static int tlsSetup( int tcpSocket,
             LogError( ( "Failed to create a new SSL context." ) );
             sslStatus = 0;
         }
-
-        /* Perform the TLS handshake. */
-        if( sslStatus == 1 )
-        {
-            sslStatus = SSL_connect( *pSslContext );
-        }
-        else
-        {
-            LogError( ( "Failed to set the socket fd to SSL context." ) );
-        }
-
-        if( sslStatus == 1 )
-        {
-            if( SSL_get_verify_result( *pSslContext ) != X509_V_OK )
-            {
-                sslStatus = 0;
-            }
-        }
-        else
-        {
-            LogError( ( "Failed to perform TLS handshake." ) );
-        }
-
-        /* Clean up on error. */
-        if( sslStatus == 0 )
-        {
-            SSL_free( *pSslContext );
-            *pSslContext = NULL;
-        }
     }
     else
     {
         LogError( ( "Failed to add certificate to store." ) );
+    }
+
+    /* Perform the TLS handshake. */
+    if( sslStatus == 1 )
+    {
+        sslStatus = SSL_connect( *pSslContext );
+    }
+    else
+    {
+        LogError( ( "Failed to set the socket fd to SSL context." ) );
+    }
+
+    /* Verify the peer certificate. */
+    if( sslStatus == 1 )
+    {
+        if( SSL_get_verify_result( *pSslContext ) != X509_V_OK )
+        {
+            sslStatus = 0;
+        }
+    }
+    else
+    {
+        LogError( ( "Failed to perform TLS handshake." ) );
+    }
+
+    /* Clean up on error. */
+    if( ( sslStatus == 0 ) && ( pSslSetup != NULL ) )
+    {
+        SSL_free( *pSslContext );
+        *pSslContext = NULL;
     }
 
     if( pRootCaFile != NULL )
@@ -905,15 +924,13 @@ static void cleanupOutgoingPublishWithPacketID( uint16_t packetId )
 static int handlePublishResend( MQTTContext_t * pContext )
 {
     int status = EXIT_SUCCESS;
-    MQTTStateCursor_t cursor = 0U;
     MQTTStatus_t mqttStatus = MQTTSuccess;
-    uint16_t packetId = MQTT_PACKET_ID_INVALID;
     uint8_t index = 0U;
 
     assert( outgoingPublishPackets != NULL );
 
-    /* Resend all the QoS2 publishes still in the array. These are the
-     * publishes that hasn't received a PUBREC. When a PUBREC is
+    /* Resend all the QoS1 publishes still in the array. These are the
+     * publishes that hasn't received a PUBACK. When a PUBACK is
      * received, the publish is removed from the array. */
     for( index = 0U; index < MAX_OUTGOING_PUBLISHES; index++ )
     {
@@ -922,16 +939,16 @@ static int handlePublishResend( MQTTContext_t * pContext )
             outgoingPublishPackets[ index ].pubInfo.dup = true;
 
             LogInfo( ( "Sending duplicate PUBLISH with packet id %u.",
-                       packetId ) );
+                       outgoingPublishPackets[ index ].packetId ) );
             mqttStatus = MQTT_Publish( pContext,
                                        &outgoingPublishPackets[ index ].pubInfo,
-                                       packetId );
+                                       outgoingPublishPackets[ index ].packetId );
 
             if( mqttStatus != MQTTSuccess )
             {
                 LogError( ( "Sending duplicate PUBLISH for packet id %u "
                             " failed with status %u.",
-                            packetId,
+                            outgoingPublishPackets[ index ].packetId,
                             mqttStatus ) );
                 status = EXIT_FAILURE;
                 break;
@@ -939,7 +956,7 @@ static int handlePublishResend( MQTTContext_t * pContext )
             else
             {
                 LogInfo( ( "Sent duplicate PUBLISH successfully for packet id %u.\n\n",
-                           packetId ) );
+                           outgoingPublishPackets[ index ].packetId ) );
             }
         }
     }
@@ -1027,27 +1044,11 @@ static void eventCallback( MQTTContext_t * pContext,
                 LogInfo( ( "PIGRESP received.\n\n" ) );
                 break;
 
-            case MQTT_PACKET_TYPE_PUBREC:
-                LogInfo( ( "PUBREC received for packet id %u.",
+            case MQTT_PACKET_TYPE_PUBACK:
+                LogInfo( ( "PUBACK received for packet id %u.",
                            packetIdentifier ) );
-                /* Cleanup publish packet when a PUBREC is received. */
+                /* Cleanup publish packet when a PUBACK is received. */
                 cleanupOutgoingPublishWithPacketID( packetIdentifier );
-                break;
-
-            case MQTT_PACKET_TYPE_PUBREL:
-
-                /* Nothing to be done from application as library handles
-                 * PUBREL. */
-                LogInfo( ( "PUBREL received for packet id %u.\n\n",
-                           packetIdentifier ) );
-                break;
-
-            case MQTT_PACKET_TYPE_PUBCOMP:
-
-                /* Nothing to be done from application as library handles
-                 * PUBCOMP. */
-                LogInfo( ( "PUBCOMP received for packet id %u.\n\n",
-                           packetIdentifier ) );
                 break;
 
             /* Any other packet type is invalid. */
@@ -1181,8 +1182,8 @@ static int subscribeToTopic( MQTTContext_t * pContext )
     /* Start with everything at 0. */
     ( void ) memset( ( void * ) pSubscriptionList, 0x00, sizeof( pSubscriptionList ) );
 
-    /* This example subscribes to only one topic and uses QOS2. */
-    pSubscriptionList[ 0 ].qos = MQTTQoS2;
+    /* This example subscribes to only one topic and uses QOS1. */
+    pSubscriptionList[ 0 ].qos = MQTTQoS1;
     pSubscriptionList[ 0 ].pTopicFilter = MQTT_EXAMPLE_TOPIC;
     pSubscriptionList[ 0 ].topicFilterLength = MQTT_EXAMPLE_TOPIC_LENGTH;
 
@@ -1225,8 +1226,8 @@ static MQTTStatus_t unsubscribeFromTopic( MQTTContext_t * pContext )
     ( void ) memset( ( void * ) pSubscriptionList, 0x00, sizeof( pSubscriptionList ) );
 
     /* This example subscribes to and unsubscribes from only one topic
-     * and uses QOS0. */
-    pSubscriptionList[ 0 ].qos = MQTTQoS2;
+     * and uses QOS1. */
+    pSubscriptionList[ 0 ].qos = MQTTQoS1;
     pSubscriptionList[ 0 ].pTopicFilter = MQTT_EXAMPLE_TOPIC;
     pSubscriptionList[ 0 ].topicFilterLength = MQTT_EXAMPLE_TOPIC_LENGTH;
 
@@ -1265,10 +1266,10 @@ static int publishToTopic( MQTTContext_t * pContext )
 
     assert( pContext != NULL );
 
-    /* Get the next free index for the outgoing publish. All QoS2 outgoing
-     * publishes are stored until a PUBREC is received. These messages are
+    /* Get the next free index for the outgoing publish. All QoS1 outgoing
+     * publishes are stored until a PUBACK is received. These messages are
      * stored for supporting a resend if a network connection is broken before
-     * receiving a PUBREC. */
+     * receiving a PUBACK. */
     status = getNextFreeIndexForOutgoingPublishes( &publishIndex );
 
     if( status == EXIT_FAILURE )
@@ -1277,8 +1278,8 @@ static int publishToTopic( MQTTContext_t * pContext )
     }
     else
     {
-        /* This example publishes to only one topic and uses QOS2. */
-        outgoingPublishPackets[ publishIndex ].pubInfo.qos = MQTTQoS2;
+        /* This example publishes to only one topic and uses QOS1. */
+        outgoingPublishPackets[ publishIndex ].pubInfo.qos = MQTTQoS1;
         outgoingPublishPackets[ publishIndex ].pubInfo.pTopicName = MQTT_EXAMPLE_TOPIC;
         outgoingPublishPackets[ publishIndex ].pubInfo.topicNameLength = MQTT_EXAMPLE_TOPIC_LENGTH;
         outgoingPublishPackets[ publishIndex ].pubInfo.pPayload = MQTT_EXAMPLE_MESSAGE;
@@ -1320,12 +1321,12 @@ static int publishToTopic( MQTTContext_t * pContext )
  * over the TLS connection established using openSSL.
  *
  * The example is single threaded and uses statically allocated memory;
- * it uses QOS2 and therefore implements a retransmission mechanism
+ * it uses QOS1 and therefore implements a retransmission mechanism
  * for Publish messages. Retransmission of publish messages are attempted
  * when a MQTT connection is established with a session that was already
- * present. All the outgoing publish messages waiting to receive PUBREC
+ * present. All the outgoing publish messages waiting to receive PUBACK
  * are resend in this demo. In order to support retransmission all the outgoing
- * publishes are stored until a PUBREC is received.
+ * publishes are stored until a PUBACK is received.
  */
 int main( int argc,
           char ** argv )
@@ -1409,8 +1410,8 @@ int main( int argc,
          * as specified in MQTT_EXAMPLE_TOPIC at the top of this file by sending a
          * subscribe packet. This client will then publish to the same topic it
          * subscribed to, so it will expect all the messages it sends to the broker
-         * to be sent back to it from the broker. This demo uses QOS0 in Subscribe,
-         * therefore, the Publish messages received from the broker will have QOS0. */
+         * to be sent back to it from the broker. This demo uses QOS1 in Subscribe,
+         * therefore, the Publish messages received from the broker will have QOS1. */
         LogInfo( ( "Subscribing to the MQTT topic %.*s.",
                    MQTT_EXAMPLE_TOPIC_LENGTH,
                    MQTT_EXAMPLE_TOPIC ) );
@@ -1438,7 +1439,7 @@ int main( int argc,
 
     if( status == EXIT_SUCCESS )
     {
-        /* Publish messages with QOS0, receive incoming messages and
+        /* Publish messages with QOS1, receive incoming messages and
          * send keep alive messages. */
         for( publishCount = 0; publishCount < maxPublishCount; publishCount++ )
         {

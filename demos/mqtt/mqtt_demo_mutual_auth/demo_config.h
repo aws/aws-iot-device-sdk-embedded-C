@@ -49,19 +49,27 @@
  *
  * This demo uses the AWS IoT broker end point test server.
  */
-#define BROKER_ENDPOINT            "a3c4bx1snc0lp8-ats.iot.us-west-2.amazonaws.com"
+#define BROKER_ENDPOINT           ""
+
+/**
+ * @brief MQTT server port number.
+ *
+ * In general, port 8883 is for secured MQTT connections.
+ */
+#define BROKER_PORT               ( 8883 )
 
 /**
  * @brief Length of MQTT server host name.
  */
-#define BROKER_ENDPOINT_LENGTH     ( ( uint16_t ) ( sizeof( BROKER_ENDPOINT ) - 1 ) )
+#define BROKER_ENDPOINT_LENGTH    ( ( uint16_t ) ( sizeof( BROKER_ENDPOINT ) - 1 ) )
 
 /**
  * @brief Path of the file containing the server's root CA certificate.
  *
  * This certificate should be PEM-encoded.
  */
-#define SERVER_CERT_PATH           "certificates/root_ca_cert"
+#define SERVER_CERT_PATH          ""
+
 
 /**
  * @brief Length of path to server certificate.
@@ -73,7 +81,8 @@
  *
  * This certificate should be PEM-encoded.
  */
-#define CLIENT_CERT_PATH           "certificates/MyIOTThingTest5_cert_pem_file"
+#define CLIENT_CERT_PATH           ""
+
 
 /**
  * @brief Length of path to client certificate.
@@ -85,7 +94,8 @@
  *
  * This private should be PEM-encoded.
  */
-#define CLIENT_PRIVATE_KEY_PATH           "certificates/MyIOTThingTest5_private_key_pem_file"
+#define CLIENT_PRIVATE_KEY_PATH    ""
+
 
 /**
  * @brief Length of path to client's private key.
@@ -97,6 +107,12 @@
  *
  * No two clients may use the same client identifier simultaneously.
  */
-#define CLIENT_IDENTIFIER    "MyIOTThingTest5"
+#define CLIENT_IDENTIFIER                 ""
+
+
+/**
+ * @brief Length of client identifier.
+ */
+#define CLIENT_IDENTIFIER_LENGTH    ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) )
 
 #endif /* ifndef DEMO_CONFIG_H */
