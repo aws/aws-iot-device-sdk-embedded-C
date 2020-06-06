@@ -49,42 +49,9 @@
 
 /* MQTT API header. */
 #include "mqtt.h"
-#include "mqtt_state.h"
 
 /* Demo Config header. */
 #include "demo_config.h"
-
-/**
- * @brief MQTT server host name.
- *
- * This demo uses the Mosquitto test server. This is a public MQTT server; do not
- * publish anything sensitive to this server.
- */
-#define BROKER_ENDPOINT            "test.mosquitto.org"
-
-/**
- * @brief Length of MQTT server host name.
- */
-#define BROKER_ENDPOINT_LENGTH     ( ( uint16_t ) ( sizeof( BROKER_ENDPOINT ) - 1 ) )
-
-/**
- * @brief MQTT server port number.
- *
- * In general, port 8883 is for secured MQTT connections.
- */
-#define BROKER_PORT                ( 8883 )
-
-/**
- * @brief Path of the file containing the server's root CA certificate.
- *
- * This certificate should be PEM-encoded.
- */
-#define SERVER_CERT_PATH           "certificates/mosquitto.org.crt"
-
-/**
- * @brief Length of path to server certificate.
- */
-#define SERVER_CERT_PATH_LENGTH    ( ( uint16_t ) ( sizeof( SERVER_CERT_PATH ) - 1 ) )
 
 /**
  * @brief Size of the network buffer for MQTT packets.
@@ -826,9 +793,7 @@ static void cleanupOutgoingPublishWithPacketID( uint16_t packetId )
 static int handlePublishResend( MQTTContext_t * pContext )
 {
     int status = EXIT_SUCCESS;
-    MQTTStateCursor_t cursor = 0U;
     MQTTStatus_t mqttStatus = MQTTSuccess;
-    uint16_t packetId = MQTT_PACKET_ID_INVALID;
     uint8_t index = 0U;
 
     assert( outgoingPublishPackets != NULL );
@@ -843,16 +808,16 @@ static int handlePublishResend( MQTTContext_t * pContext )
             outgoingPublishPackets[ index ].pubInfo.dup = true;
 
             LogInfo( ( "Sending duplicate PUBLISH with packet id %u.",
-                       packetId ) );
+                       outgoingPublishPackets[ index ].packetId ) );
             mqttStatus = MQTT_Publish( pContext,
                                        &outgoingPublishPackets[ index ].pubInfo,
-                                       packetId );
+                                       outgoingPublishPackets[ index ].packetId );
 
             if( mqttStatus != MQTTSuccess )
             {
                 LogError( ( "Sending duplicate PUBLISH for packet id %u "
                             " failed with status %u.",
-                            packetId,
+                            outgoingPublishPackets[ index ].packetId,
                             mqttStatus ) );
                 status = EXIT_FAILURE;
                 break;
@@ -860,7 +825,7 @@ static int handlePublishResend( MQTTContext_t * pContext )
             else
             {
                 LogInfo( ( "Sent duplicate PUBLISH successfully for packet id %u.\n\n",
-                           packetId ) );
+                           outgoingPublishPackets[ index ].packetId ) );
             }
         }
     }
@@ -1146,7 +1111,7 @@ static MQTTStatus_t unsubscribeFromTopic( MQTTContext_t * pContext )
     ( void ) memset( ( void * ) pSubscriptionList, 0x00, sizeof( pSubscriptionList ) );
 
     /* This example subscribes to and unsubscribes from only one topic
-     * and uses QOS0. */
+     * and uses QOS2. */
     pSubscriptionList[ 0 ].qos = MQTTQoS2;
     pSubscriptionList[ 0 ].pTopicFilter = MQTT_EXAMPLE_TOPIC;
     pSubscriptionList[ 0 ].topicFilterLength = MQTT_EXAMPLE_TOPIC_LENGTH;
@@ -1330,8 +1295,8 @@ int main( int argc,
          * as specified in MQTT_EXAMPLE_TOPIC at the top of this file by sending a
          * subscribe packet. This client will then publish to the same topic it
          * subscribed to, so it will expect all the messages it sends to the broker
-         * to be sent back to it from the broker. This demo uses QOS0 in Subscribe,
-         * therefore, the Publish messages received from the broker will have QOS0. */
+         * to be sent back to it from the broker. This demo uses QOS2 in Subscribe,
+         * therefore, the Publish messages received from the broker will have QOS2. */
         LogInfo( ( "Subscribing to the MQTT topic %.*s.",
                    MQTT_EXAMPLE_TOPIC_LENGTH,
                    MQTT_EXAMPLE_TOPIC ) );
@@ -1359,7 +1324,7 @@ int main( int argc,
 
     if( status == EXIT_SUCCESS )
     {
-        /* Publish messages with QOS0, receive incoming messages and
+        /* Publish messages with QOS2, receive incoming messages and
          * send keep alive messages. */
         for( publishCount = 0; publishCount < maxPublishCount; publishCount++ )
         {
