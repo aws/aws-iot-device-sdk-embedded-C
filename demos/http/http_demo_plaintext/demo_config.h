@@ -46,22 +46,21 @@
 /**
  * @brief HTTP server host name.
  *
- * This demo uses httpbin.org: A simple HTTP Request & Response Service.
+ * @note A local HTTP server is used for this demo. Instructions for setting
+ * this up can be found in the top-level README.md file.
  */
-#define SERVER_HOST    "httpbin.org"
+#define SERVER_HOST    "localhost"
 
 /**
  * @brief HTTP server port number.
  *
- * In general, port 80 is for plaintext HTTP connections.
+ * @note In general, port 80 is for plaintext HTTP connections. However,
+ * the default plaintext port from the local http server is used below.
  */
-#define SERVER_PORT    80
+#define SERVER_PORT    8080
 
 /**
  * @brief Paths for different HTTP methods for specified host.
- *
- * For httpbin.org, see http://httpbin.org/#/HTTP_Methods for details on
- * supported REST API.
  */
 #ifndef GET_PATH
     #define GET_PATH    "/get"
