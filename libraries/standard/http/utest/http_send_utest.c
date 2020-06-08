@@ -101,7 +101,7 @@
 #define HTTP_TEST_RESPONSE_GET \
     HTTP_TEST_RESPONSE_HEAD    \
     "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopq"
-#define HTTP_TEST_RESPONSE_GET_LENGTH                 ( sizeof( HTTP_TEST_RESPONSE_GET ) - 1U)
+#define HTTP_TEST_RESPONSE_GET_LENGTH                 ( sizeof( HTTP_TEST_RESPONSE_GET ) - 1U )
 #define HTTP_TEST_RESPONSE_GET_HEADER_COUNT           HTTP_TEST_RESPONSE_HEAD_HEADER_COUNT
 #define HTTP_TEST_RESPONSE_GET_HEADERS_LENGTH         ( HTTP_TEST_RESPONSE_HEAD_LENGTH - ( sizeof( HTTP_STATUS_LINE_OK ) - 1U ) )
 #define HTTP_TEST_RESPONSE_GET_BODY_LENGTH            HTTP_TEST_RESPONSE_HEAD_CONTENT_LENGTH
@@ -239,7 +239,7 @@ static int32_t transportSendSuccess( HTTPNetworkContext_t * pContext,
         if( sendCurrentCall == 0U )
         {
             size_t contentLengthAndHeaderEndLen = HTTP_TEST_REQUEST_PUT_CONTENT_LENGTH_EXPECTED_LENGTH;
-            char* pContentLengthStart = ( ( (char *)pBuffer ) + bytesToWrite ) - contentLengthAndHeaderEndLen;
+            char * pContentLengthStart = ( ( ( char * ) pBuffer ) + bytesToWrite ) - contentLengthAndHeaderEndLen;
             TEST_ASSERT_GREATER_OR_EQUAL( contentLengthAndHeaderEndLen, bytesToWrite );
             TEST_ASSERT_EQUAL_MEMORY( HTTP_TEST_REQUEST_PUT_CONTENT_LENGTH_EXPECTED,
                                       pContentLengthStart,
@@ -777,9 +777,9 @@ void test_HTTPClient_Send_PUT_request_parse_whole_response( void )
     http_parser_execute_Stub( http_parser_execute_whole_response );
 
     checkContentLength = 1;
-    memcpy( requestHeaders.pBuffer, 
-           HTTP_TEST_REQUEST_PUT_HEADERS, 
-           HTTP_TEST_REQUEST_PUT_HEADERS_LENGTH );
+    memcpy( requestHeaders.pBuffer,
+            HTTP_TEST_REQUEST_PUT_HEADERS,
+            HTTP_TEST_REQUEST_PUT_HEADERS_LENGTH );
     requestHeaders.headersLen = HTTP_TEST_REQUEST_PUT_HEADERS_LENGTH;
     pNetworkData = ( uint8_t * ) HTTP_TEST_RESPONSE_PUT;
     networkDataLen = HTTP_TEST_RESPONSE_PUT_LENGTH;
@@ -814,8 +814,8 @@ void test_HTTPClient_Send_GET_request_parse_whole_response( void )
 
     http_parser_execute_Stub( http_parser_execute_whole_response );
 
-    memcpy( requestHeaders.pBuffer, 
-            HTTP_TEST_REQUEST_GET_HEADERS, 
+    memcpy( requestHeaders.pBuffer,
+            HTTP_TEST_REQUEST_GET_HEADERS,
             HTTP_TEST_REQUEST_GET_HEADERS_LENGTH );
     requestHeaders.headersLen = HTTP_TEST_REQUEST_GET_HEADERS_LENGTH;
     pNetworkData = ( uint8_t * ) HTTP_TEST_RESPONSE_GET;
@@ -943,8 +943,8 @@ void test_HTTPClient_Send_parse_partial_body( void )
 
     http_parser_execute_Stub( http_parser_execute_partial_body );
 
-    memcpy( requestHeaders.pBuffer, 
-            HTTP_TEST_REQUEST_GET_HEADERS, 
+    memcpy( requestHeaders.pBuffer,
+            HTTP_TEST_REQUEST_GET_HEADERS,
             HTTP_TEST_REQUEST_GET_HEADERS_LENGTH );
     requestHeaders.headersLen = HTTP_TEST_REQUEST_GET_HEADERS_LENGTH;
     pNetworkData = ( uint8_t * ) HTTP_TEST_RESPONSE_GET;
@@ -977,8 +977,8 @@ void test_HTTPClient_Send_parse_chunked_body( void )
 
     http_parser_execute_Stub( http_parser_execute_chunked_body );
 
-    memcpy( requestHeaders.pBuffer, 
-            HTTP_TEST_REQUEST_PUT_HEADERS, 
+    memcpy( requestHeaders.pBuffer,
+            HTTP_TEST_REQUEST_PUT_HEADERS,
             HTTP_TEST_REQUEST_PUT_HEADERS_LENGTH );
     requestHeaders.headersLen = HTTP_TEST_REQUEST_PUT_HEADERS_LENGTH;
     pNetworkData = ( uint8_t * ) HTTP_TEST_RESPONSE_CHUNKED;
@@ -1083,8 +1083,8 @@ void test_HTTPClient_Send_null_response( void )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
 
-    memcpy( requestHeaders.pBuffer, 
-            HTTP_TEST_REQUEST_PUT_HEADERS, 
+    memcpy( requestHeaders.pBuffer,
+            HTTP_TEST_REQUEST_PUT_HEADERS,
             HTTP_TEST_REQUEST_PUT_HEADERS_LENGTH );
     requestHeaders.headersLen = HTTP_TEST_REQUEST_PUT_HEADERS_LENGTH;
     returnStatus = HTTPClient_Send( &transportInterface,
@@ -1146,8 +1146,18 @@ void test_HTTPClient_Send_less_bytes_request_headers( void )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
 
+    http_parser_execute_Stub( http_parser_execute_whole_response );
+
     transportInterface.send = transportSendLessThanBytesToWrite;
     sendErrorCall = 0U;
+    memcpy( requestHeaders.pBuffer,
+            HTTP_TEST_REQUEST_PUT_HEADERS,
+            HTTP_TEST_REQUEST_PUT_HEADERS_LENGTH );
+    requestHeaders.headersLen = HTTP_TEST_REQUEST_PUT_HEADERS_LENGTH;
+    pNetworkData = ( uint8_t * ) HTTP_TEST_RESPONSE_PUT;
+    networkDataLen = HTTP_TEST_RESPONSE_PUT_LENGTH;
+    firstPartBytes = HTTP_TEST_RESPONSE_PUT_LENGTH;
+
     returnStatus = HTTPClient_Send( &transportInterface,
                                     &requestHeaders,
                                     NULL,
@@ -1155,7 +1165,16 @@ void test_HTTPClient_Send_less_bytes_request_headers( void )
                                     &response,
                                     0 );
 
-    TEST_ASSERT_EQUAL( HTTP_NETWORK_ERROR, returnStatus );
+    TEST_ASSERT_EQUAL( HTTP_SUCCESS, returnStatus );
+    TEST_ASSERT_EQUAL( response.pBuffer + ( sizeof( HTTP_STATUS_LINE_OK ) - 1 ), response.pHeaders );
+    TEST_ASSERT_EQUAL( HTTP_TEST_RESPONSE_PUT_LENGTH - ( sizeof( HTTP_STATUS_LINE_OK ) - 1 ), response.headersLen );
+    TEST_ASSERT_EQUAL( NULL, response.pBody );
+    TEST_ASSERT_EQUAL( 0, response.bodyLen );
+    TEST_ASSERT_EQUAL( HTTP_STATUS_CODE_OK, response.statusCode );
+    TEST_ASSERT_EQUAL( 0, response.contentLength );
+    TEST_ASSERT_EQUAL( HTTP_TEST_RESPONSE_PUT_HEADER_COUNT, response.headerCount );
+    TEST_ASSERT_BITS_LOW( HTTP_RESPONSE_CONNECTION_CLOSE_FLAG, response.flags );
+    TEST_ASSERT_BITS_HIGH( HTTP_RESPONSE_CONNECTION_KEEP_ALIVE_FLAG, response.flags );
 }
 
 /*-----------------------------------------------------------*/
@@ -1165,22 +1184,38 @@ void test_HTTPClient_Send_less_bytes_request_body( void )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
 
+    http_parser_execute_Stub( http_parser_execute_whole_response );
+
     transportInterface.send = transportSendLessThanBytesToWrite;
 
     /* There is no Content-Length header written so the call to send an error on
      * is call 1. */
     sendErrorCall = 1U;
-    requestHeaders.pBuffer = ( uint8_t * ) ( HTTP_TEST_REQUEST_PUT_HEADERS );
-    requestHeaders.bufferLen = HTTP_TEST_REQUEST_PUT_HEADERS_LENGTH;
+    memcpy( requestHeaders.pBuffer,
+            HTTP_TEST_REQUEST_PUT_HEADERS,
+            HTTP_TEST_REQUEST_PUT_HEADERS_LENGTH );
     requestHeaders.headersLen = HTTP_TEST_REQUEST_PUT_HEADERS_LENGTH;
+    pNetworkData = ( uint8_t * ) HTTP_TEST_RESPONSE_PUT;
+    networkDataLen = HTTP_TEST_RESPONSE_PUT_LENGTH;
+    firstPartBytes = HTTP_TEST_RESPONSE_PUT_LENGTH;
+
     returnStatus = HTTPClient_Send( &transportInterface,
                                     &requestHeaders,
-                                    ( uint8_t * ) HTTP_TEST_REQUEST_PUT_BODY,
-                                    HTTP_TEST_REQUEST_PUT_BODY_LENGTH,
+                                    NULL,
+                                    0,
                                     &response,
-                                    HTTP_SEND_DISABLE_CONTENT_LENGTH_FLAG );
+                                    0 );
 
-    TEST_ASSERT_EQUAL( HTTP_NETWORK_ERROR, returnStatus );
+    TEST_ASSERT_EQUAL( HTTP_SUCCESS, returnStatus );
+    TEST_ASSERT_EQUAL( response.pBuffer + ( sizeof( HTTP_STATUS_LINE_OK ) - 1 ), response.pHeaders );
+    TEST_ASSERT_EQUAL( HTTP_TEST_RESPONSE_PUT_LENGTH - ( sizeof( HTTP_STATUS_LINE_OK ) - 1 ), response.headersLen );
+    TEST_ASSERT_EQUAL( NULL, response.pBody );
+    TEST_ASSERT_EQUAL( 0, response.bodyLen );
+    TEST_ASSERT_EQUAL( HTTP_STATUS_CODE_OK, response.statusCode );
+    TEST_ASSERT_EQUAL( 0, response.contentLength );
+    TEST_ASSERT_EQUAL( HTTP_TEST_RESPONSE_PUT_HEADER_COUNT, response.headerCount );
+    TEST_ASSERT_BITS_LOW( HTTP_RESPONSE_CONNECTION_CLOSE_FLAG, response.flags );
+    TEST_ASSERT_BITS_HIGH( HTTP_RESPONSE_CONNECTION_KEEP_ALIVE_FLAG, response.flags );
 }
 
 /*-----------------------------------------------------------*/
@@ -1370,7 +1405,8 @@ void test_HTTPClient_Send_Content_Length_Header_Doesnt_Fit( void )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
 
-    requestHeaders.pBuffer = (uint8_t*)HTTP_TEST_REQUEST_PUT_HEADERS;
+    requestHeaders.pBuffer = ( uint8_t * ) HTTP_TEST_REQUEST_PUT_HEADERS;
+
     /* Set the length of the buffer to be the same length as the current
      * amount of headers without the Content-Length. */
     requestHeaders.bufferLen = HTTP_TEST_REQUEST_PUT_HEADERS_LENGTH;
