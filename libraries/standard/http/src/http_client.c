@@ -1547,7 +1547,7 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
         else
         {
             LogError( ( "Failed to send HTTP data: Transport send()"
-                        " returned error: TransportStatus=%d",
+                        " returned error: TransportStatus=%d.",
                         bytesSent ) );
             returnStatus = HTTP_NETWORK_ERROR;
             break;
@@ -1556,9 +1556,9 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
 
     if( returnStatus == HTTP_SUCCESS )
     {
-        LogDebug( ( "Sent HTTP data over the transport: BytesSent "
-                    "=%d.",
-                    transportStatus ) );
+        LogDebug( ( "Sent HTTP data over the transport: "
+                    "BytesSent=%d.",
+                    bytesSent ) );
     }
 
     return returnStatus;
