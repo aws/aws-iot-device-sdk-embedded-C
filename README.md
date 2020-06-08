@@ -17,7 +17,7 @@ This SDK builds with [CMake](https://cmake.org/), a cross-platform build tool.
 1. Create build directory: `mkdir build && cd build`
 1. Run *cmake* while inside build directory: `cmake ..`
 1. Run this command to build the demos: `make`
-1. Go to the `build/bin` directory and run demos from there.
+1. Go to the `build/bin` directory and run any demo executables from there.
 1. To run demos prefixed with `http_`:
     1. Install `Python 3` if it is not yet installed in your system: `sudo apt-get install python3`
     1. Run the following from the root directory of this repository: `python3 tools/http-echo-server/http_server.py &`
