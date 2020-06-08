@@ -26,7 +26,8 @@ class ServerRequestHandler(BaseHTTPRequestHandler):
             'Request Headers': str(self.headers),
         }
 
-        # Read the value from the Content-Length header
+        # Get the Content-Length header value from the request and use that
+        # to read the request body from the stream
         content_len = int(self.headers.get('Content-Length')
                           ) if self.headers.get('Content-Length') else 0
         if content_len:
