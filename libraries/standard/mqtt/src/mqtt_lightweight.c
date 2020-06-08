@@ -337,7 +337,10 @@ static uint8_t * encodeString( uint8_t * pDestination,
     pBuffer++;
 
     /* Copy the string into pBuffer. */
-    ( void ) memcpy( pBuffer, pSourceBuffer, sourceLength );
+    if( pSourceBuffer != NULL )
+    {
+        ( void ) memcpy( pBuffer, pSourceBuffer, sourceLength );
+    }
 
     /* Return the pointer to the end of the encoded string. */
     pBuffer += sourceLength;
@@ -709,42 +712,24 @@ static MQTTStatus_t processPublishFlags( uint8_t publishFlags,
 
 static void logConnackResponse( uint8_t responseCode )
 {
+    const char * const pConnackResponses[ 6 ] =
+    {
+        "Connection accepted.",                               /* 0 */
+        "Connection refused: unacceptable protocol version.", /* 1 */
+        "Connection refused: identifier rejected.",           /* 2 */
+        "Connection refused: server unavailable",             /* 3 */
+        "Connection refused: bad user name or password.",     /* 4 */
+        "Connection refused: not authorized."                 /* 5 */
+    };
+
     /* Avoid unused parameter warning when assert and logs are disabled. */
     ( void ) responseCode;
+    ( void ) pConnackResponses;
 
     assert( responseCode <= 5 );
 
     /* Log an error based on the CONNACK response code. */
-    switch( responseCode )
-    {
-        case 0u:
-            LogInfo( ( "Connection accepted." ) );
-            break;
-
-        case 1u:
-            LogInfo( ( "Connection refused: unacceptable protocol version." ) );
-            break;
-
-        case 2u:
-            LogInfo( ( "Connection refused: identifier rejected." ) );
-            break;
-
-        case 3u:
-            LogInfo( ( "Connection refused: server unavailable" ) );
-            break;
-
-        case 4u:
-            LogInfo( ( "Connection refused: bad user name or password." ) );
-            break;
-
-        case 5u:
-            LogInfo( ( "Connection refused: not authorized." ) );
-            break;
-
-        default:
-            /* Empty default MISRA 16.4. */
-            break;
-    }
+    LogError( ( "%s", pConnackResponses[ responseCode ] ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -847,7 +832,7 @@ static MQTTStatus_t calculateSubscriptionPacketSize( const MQTTSubscribeInfo_t *
     packetSize += sizeof( uint16_t );
 
     /* Sum the lengths of all subscription topic filters; add 1 byte for each
-     * subscription's QoS if type is IOT_MQTT_SUBSCRIBE. */
+     * subscription's QoS if type is MQTT_SUBSCRIBE. */
     for( i = 0; i < subscriptionCount; i++ )
     {
         /* Add the length of the topic filter. MQTT strings are prepended
@@ -1267,6 +1252,7 @@ static void serializeConnectPacket( const MQTTConnectInfo_t * const pConnectInfo
         pIndex = encodeString( pIndex,
                                pWillInfo->pTopicName,
                                pWillInfo->topicNameLength );
+
         pIndex = encodeString( pIndex,
                                pWillInfo->pPayload,
                                ( uint16_t ) pWillInfo->payloadLength );
@@ -1316,8 +1302,12 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * const pConnect
                     pPacketSize ) );
         status = MQTTBadParameter;
     }
-
-    if( status == MQTTSuccess )
+    else if( ( pConnectInfo->clientIdentifierLength == 0U ) || ( pConnectInfo->pClientIdentifier == NULL ) )
+    {
+        LogError( ( "Mqtt_GetConnectPacketSize() client identifier must be set." ) );
+        status = MQTTBadParameter;
+    }
+    else
     {
         /* Add the length of the client identifier. */
         connectPacketSize += pConnectInfo->clientIdentifierLength + sizeof( uint16_t );
@@ -1396,6 +1386,11 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * const pConnectInfo
                     pBuffer->size,
                     connectPacketSize ) );
         status = MQTTNoMemory;
+    }
+    else if( ( pWillInfo != NULL ) && ( pWillInfo->pTopicName == NULL ) )
+    {
+        LogError( ( "pWillInfo->pTopicName cannot be NULL if Will is present." ) );
+        status = MQTTBadParameter;
     }
     else
     {
@@ -1790,6 +1785,11 @@ MQTTStatus_t MQTT_SerializeAck( const MQTTFixedBuffer_t * const pBuffer,
         LogError( ( "Insufficient memory for packet." ) );
         status = MQTTNoMemory;
     }
+    else if( packetId == 0U )
+    {
+        LogError( ( "Packet ID cannot be 0." ) );
+        status = MQTTBadParameter;
+    }
     else
     {
         switch( packetType )
@@ -1820,10 +1820,20 @@ MQTTStatus_t MQTT_SerializeAck( const MQTTFixedBuffer_t * const pBuffer,
 
 MQTTStatus_t MQTT_GetDisconnectPacketSize( size_t * pPacketSize )
 {
-    /* MQTT DISCONNECT packets always have the same size. */
-    *pPacketSize = MQTT_DISCONNECT_PACKET_SIZE;
+    MQTTStatus_t status = MQTTSuccess;
 
-    return MQTTSuccess;
+    if( pPacketSize == NULL )
+    {
+        LogError( ( "pPacketSize is NULL." ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        /* MQTT DISCONNECT packets always have the same size. */
+        *pPacketSize = MQTT_DISCONNECT_PACKET_SIZE;
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/
@@ -1897,7 +1907,7 @@ MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * const pBuffer )
         if( pBuffer->size < MQTT_PACKET_PINGREQ_SIZE )
         {
             LogError( ( "Buffer size of %lu is not sufficient to hold "
-                        "serialized PINGREQ packet of size of %lu.",
+                        "serialized PINGREQ packet of size of %u.",
                         pBuffer->size,
                         MQTT_PACKET_PINGREQ_SIZE ) );
             status = MQTTNoMemory;
@@ -2017,7 +2027,7 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * const pIncomingPacket
 
             /* Any other packet type is invalid. */
             default:
-                LogError( ( "IotMqtt_DeserializeResponse() called with unknown packet type:(%lu).", pIncomingPacket->type ) );
+                LogError( ( "IotMqtt_DeserializeResponse() called with unknown packet type:(%02x).", pIncomingPacket->type ) );
                 status = MQTTBadResponse;
                 break;
         }
