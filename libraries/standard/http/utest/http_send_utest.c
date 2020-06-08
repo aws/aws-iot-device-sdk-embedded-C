@@ -1201,10 +1201,10 @@ void test_HTTPClient_Send_less_bytes_request_body( void )
 
     returnStatus = HTTPClient_Send( &transportInterface,
                                     &requestHeaders,
-                                    NULL,
-                                    0,
+                                    ( uint8_t * ) HTTP_TEST_REQUEST_PUT_BODY,
+                                    HTTP_TEST_REQUEST_PUT_BODY_LENGTH,
                                     &response,
-                                    0 );
+                                    HTTP_SEND_DISABLE_CONTENT_LENGTH_FLAG );
 
     TEST_ASSERT_EQUAL( HTTP_SUCCESS, returnStatus );
     TEST_ASSERT_EQUAL( response.pBuffer + ( sizeof( HTTP_STATUS_LINE_OK ) - 1 ), response.pHeaders );
