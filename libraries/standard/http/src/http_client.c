@@ -1519,7 +1519,7 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
     const uint8_t * pIndex = pData;
-    int32_t bytesSent = 0;
+    int32_t transportStatus = 0;
     size_t bytesRemaining = dataLen;
 
     assert( pTransport != NULL );
@@ -1529,18 +1529,18 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
     /* Loop until all data is sent. */
     while( bytesRemaining > 0UL )
     {
-        bytesSent = pTransport->send( pTransport->pContext,
-                                      pData,
-                                      dataLen );
+        transportStatus = pTransport->send( pTransport->pContext,
+                                            pIndex,
+                                            bytesRemaining );
 
-        if( bytesSent > 0 )
+        if( transportStatus > 0 )
         {
-            bytesRemaining -= ( size_t ) bytesSent;
-            pIndex += bytesSent;
+            bytesRemaining -= ( size_t ) transportStatus;
+            pIndex += transportStatus;
             LogDebug( ( "Sent HTTP data over the transport: "
                         "BytesSent=%d, BytesRemaining=%ul, "
                         "TotalBytesSent=%d.",
-                        bytesSent,
+                        transportStatus,
                         bytesRemaining,
                         dataLen - bytesRemaining ) );
         }
@@ -1548,7 +1548,7 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
         {
             LogError( ( "Failed to send HTTP data: Transport send()"
                         " returned error: TransportStatus=%d.",
-                        bytesSent ) );
+                        transportStatus ) );
             returnStatus = HTTP_NETWORK_ERROR;
             break;
         }
@@ -1558,7 +1558,7 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
     {
         LogDebug( ( "Sent HTTP data over the transport: "
                     "BytesSent=%d.",
-                    bytesSent ) );
+                    transportStatus ) );
     }
 
     return returnStatus;
