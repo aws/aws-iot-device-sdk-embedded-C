@@ -40,6 +40,11 @@
 #include "demo_config.h"
 
 /**
+ * @brief Defined by transport layer to check send or receive error.
+ */
+extern int errno;
+
+/**
  * @brief A string to store the resolved IP address from the host name.
  */
 static char resolvedIpAddr[ IPV6_ADDRESS_STRING_LEN ];
