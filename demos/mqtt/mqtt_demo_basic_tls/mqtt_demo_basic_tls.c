@@ -56,7 +56,7 @@
 /**
  * @brief Size of the network buffer for MQTT packets.
  */
-#define NETWORK_BUFFER_SIZE        ( 1024U )
+#define NETWORK_BUFFER_SIZE    ( 1024U )
 
 /* Check that client identifier is defined. */
 #ifndef CLIENT_IDENTIFIER
@@ -720,7 +720,7 @@ static int getNextFreeIndexForOutgoingPublishes( uint8_t * pIndex )
 
     for( *pIndex = 0; *pIndex < MAX_OUTGOING_PUBLISHES; ( *pIndex )++ )
     {
-        /* A free index is marked byy invalid packet id.
+        /* A free index is marked by invalid packet id.
          * Check if the the index has a free slot. */
         if( outgoingPublishPackets[ *pIndex ].packetId == MQTT_PACKET_ID_INVALID )
         {
@@ -738,17 +738,10 @@ static void cleanupOutgoingPublishAt( uint8_t index )
     assert( outgoingPublishPackets != NULL );
     assert( index < MAX_OUTGOING_PUBLISHES );
 
-    /* Clean up all the entries. */
-    if( index < MAX_OUTGOING_PUBLISHES )
-    {
-        /* Assign the packet ID to zero. */
-        outgoingPublishPackets[ index ].packetId = MQTT_PACKET_ID_INVALID;
-
-        /* Clear the publish info. */
-        ( void ) memset( &( outgoingPublishPackets[ index ].pubInfo ),
-                         0x00,
-                         sizeof( outgoingPublishPackets[ index ].pubInfo ) );
-    }
+    /* Clear the outgoing publish packet. */
+    ( void ) memset( &( outgoingPublishPackets[ index ] ),
+                     0x00,
+                     sizeof( outgoingPublishPackets[ index ] ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -910,7 +903,7 @@ static void eventCallback( MQTTContext_t * pContext,
 
                 /* Nothing to be done from application as library handles
                  * PINGRESP. */
-                LogInfo( ( "PIGRESP received.\n\n" ) );
+                LogInfo( ( "PINGRESP received.\n\n" ) );
                 break;
 
             case MQTT_PACKET_TYPE_PUBREC:
