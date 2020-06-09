@@ -886,7 +886,7 @@ static HTTPStatus_t processHttpParserError( http_parser * pHttpParser )
 
         case HPE_HEADER_OVERFLOW:
             LogError( ( "Response parsing error: Header byte limit "
-                        "exceeded: HeaderByteLimit=%d.",
+                        "exceeded: HeaderByteLimit=%d",
                         HTTP_MAX_RESPONSE_HEADERS_SIZE_BYTES ) );
             returnStatus = HTTP_SECURITY_ALERT_RESPONSE_HEADERS_SIZE_LIMIT_EXCEEDED;
             break;
@@ -1518,36 +1518,57 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
                                   size_t dataLen )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
+    const uint8_t * pIndex = pData;
     int32_t transportStatus = 0;
+    size_t bytesRemaining = dataLen;
 
     assert( pTransport != NULL );
     assert( pTransport->send != NULL );
     assert( pData != NULL );
 
-    transportStatus = pTransport->send( pTransport->pContext,
-                                        pData,
-                                        dataLen );
+    /* Loop until all data is sent. */
+    while( bytesRemaining > 0UL )
+    {
+        transportStatus = pTransport->send( pTransport->pContext,
+                                            pIndex,
+                                            bytesRemaining );
 
-    if( transportStatus < 0 )
-    {
-        LogError( ( "Failed to send HTTP data: Transport send()"
-                    " returned error: TransportStatus=%d",
-                    transportStatus ) );
-        returnStatus = HTTP_NETWORK_ERROR;
+        /* A transport status of less than zero is an error. */
+        if( transportStatus < 0 )
+        {
+            LogError( ( "Failed to send HTTP data: Transport send()"
+                        " returned error: TransportStatus=%d",
+                        transportStatus ) );
+            returnStatus = HTTP_NETWORK_ERROR;
+            break;
+        }
+        else if( ( size_t ) transportStatus > bytesRemaining )
+        {
+            LogError( ( "Failed to send HTTP data: Transport send()"
+                        " wrote more data than what was expected: "
+                        "BytesSent=%d, BytesRemaining=%lu",
+                        transportStatus,
+                        bytesRemaining ) );
+            returnStatus = HTTP_NETWORK_ERROR;
+            break;
+        }
+        else
+        {
+            bytesRemaining -= ( size_t ) transportStatus;
+            pIndex += transportStatus;
+            LogDebug( ( "Sent HTTP data over the transport: "
+                        "BytesSent=%d, BytesRemaining=%lu, "
+                        "TotalBytesSent=%d",
+                        transportStatus,
+                        bytesRemaining,
+                        dataLen - bytesRemaining ) );
+        }
     }
-    else if( ( size_t ) transportStatus != dataLen )
+
+    if( returnStatus == HTTP_SUCCESS )
     {
-        LogError( ( "Failed to send HTTP data: Transport layer "
-                    "did not send the required bytes: RequiredBytes=%lu"
-                    ", SentBytes=%d.",
-                    ( unsigned long ) dataLen,
-                    transportStatus ) );
-        returnStatus = HTTP_NETWORK_ERROR;
-    }
-    else
-    {
-        LogDebug( ( "Sent HTTP data over the transport: BytesSent "
-                    "=%d.",
+        LogDebug( ( "Sent HTTP data over the transport: "
+                    "BytesSent=%d",
                     transportStatus ) );
     }
 
@@ -1665,7 +1686,7 @@ HTTPStatus_t receiveHttpData( const HTTPTransportInterface_t * pTransport,
     if( transportStatus < 0 )
     {
         LogError( ( "Failed to receive HTTP data: Transport recv() "
-                    "returned error: TransportStatus=%d.",
+                    "returned error: TransportStatus=%d",
                     transportStatus ) );
         returnStatus = HTTP_NETWORK_ERROR;
     }
@@ -1674,8 +1695,8 @@ HTTPStatus_t receiveHttpData( const HTTPTransportInterface_t * pTransport,
         /* There is a bug in the transport recv if more bytes are reported
          * to have been read than the bytes asked for. */
         LogError( ( "Failed to receive HTTP data: Transport recv() "
-                    " read more bytes than requested: BytesRead=%d, "
-                    "RequestedBytes=%lu",
+                    " read more bytes than requested: BytesReceived=%d, "
+                    "BytesRequested=%lu",
                     transportStatus,
                     ( unsigned long ) bufferLen ) );
         returnStatus = HTTP_NETWORK_ERROR;
@@ -1684,7 +1705,7 @@ HTTPStatus_t receiveHttpData( const HTTPTransportInterface_t * pTransport,
     {
         /* Some or all of the specified data was received. */
         *pBytesReceived = ( size_t ) ( transportStatus );
-        LogDebug( ( "Received data from the transport: BytesReceived=%d.",
+        LogDebug( ( "Received data from the transport: BytesReceived=%d",
                     transportStatus ) );
     }
     else
@@ -1939,14 +1960,14 @@ static int findHeaderFieldParserCallback( http_parser * pHttpParser,
     assert( pFieldLoc != NULL );
     assert( fieldLen > 0u );
 
+    pContext = ( findHeaderContext_t * ) pHttpParser->data;
+
     assert( pContext->pField != NULL );
     assert( pContext->fieldLen > 0u );
 
     /* The header found flags should not be set. */
     assert( pContext->fieldFound == 0u );
     assert( pContext->valueFound == 0u );
-
-    pContext = ( findHeaderContext_t * ) pHttpParser->data;
 
     /* Check whether the parsed header matches the header we are looking for. */
     if( ( fieldLen == pContext->fieldLen ) &&
@@ -1980,12 +2001,12 @@ static int findHeaderValueParserCallback( http_parser * pHttpParser,
     assert( pVaLueLoc != NULL );
     assert( valueLen > 0u );
 
+    pContext = ( findHeaderContext_t * ) pHttpParser->data;
+
     assert( pContext->pField != NULL );
     assert( pContext->fieldLen > 0u );
     assert( pContext->pValueLoc != NULL );
     assert( pContext->pValueLen != NULL );
-
-    pContext = ( findHeaderContext_t * ) pHttpParser->data;
 
     /* The header value found flag should not be set. */
     assert( pContext->valueFound == 0u );
