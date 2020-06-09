@@ -324,6 +324,8 @@ void tearDown()
     memset( &testResponse,
             0,
             sizeof( testResponse ) );
+    testResponse.pBuffer = testBuffer;
+    testResponse.bufferLen = strlen( pTestResponse );
     pValueLoc = NULL;
     valueLen = 0u;
     pValueLoc = NULL;
@@ -1044,6 +1046,7 @@ void test_Http_ReadHeader_Invalid_Params( void )
 
     /* Underlying buffer is NULL in the response parameter. */
     tearDown();
+    testResponse.pBuffer = NULL;
     retCode = HTTPClient_ReadHeader( &testResponse,
                                      ( const uint8_t * ) "Header",
                                      strlen( "Header" ),
@@ -1053,6 +1056,7 @@ void test_Http_ReadHeader_Invalid_Params( void )
 
     /* Response buffer size is zero. */
     tearDown();
+    testResponse.bufferLen = 0;
     retCode = HTTPClient_ReadHeader( &testResponse,
                                      ( const uint8_t * ) "Header",
                                      strlen( "Header" ),
@@ -1062,7 +1066,6 @@ void test_Http_ReadHeader_Invalid_Params( void )
 
     /* Header field name is NULL. */
     tearDown();
-    testResponse.bufferLen = strlen( pTestResponse );
     retCode = HTTPClient_ReadHeader( &testResponse,
                                      NULL,
                                      strlen( "Header" ),
@@ -1072,7 +1075,6 @@ void test_Http_ReadHeader_Invalid_Params( void )
 
     /* Header field length is 0. */
     tearDown();
-    testResponse.bufferLen = strlen( pTestResponse );
     retCode = HTTPClient_ReadHeader( &testResponse,
                                      ( const uint8_t * ) "Header",
                                      0u,
@@ -1082,7 +1084,6 @@ void test_Http_ReadHeader_Invalid_Params( void )
 
     /* Invalid output parameters. */
     tearDown();
-    testResponse.bufferLen = strlen( pTestResponse );
     retCode = HTTPClient_ReadHeader( &testResponse,
                                      ( const uint8_t * ) "Header",
                                      strlen( "Header" ),
@@ -1090,7 +1091,6 @@ void test_Http_ReadHeader_Invalid_Params( void )
                                      &valueLen );
     TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, retCode );
     tearDown();
-    testResponse.bufferLen = strlen( pTestResponse );
     retCode = HTTPClient_ReadHeader( &testResponse,
                                      ( const uint8_t * ) "Header",
                                      strlen( "Header" ),
