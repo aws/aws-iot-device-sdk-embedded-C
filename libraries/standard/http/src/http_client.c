@@ -1545,8 +1545,8 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
         else if( ( size_t ) transportStatus > bytesRemaining )
         {
             LogError( ( "Failed to send HTTP data: Transport send()"
-                        " attempted to write more data than what was expected: "
-                        "RequestedBytes=%d, BytesRemaining=%ul.",
+                        " wrote more data than what was expected: "
+                        "BytesSent=%d, BytesRemaining=%ul.",
                         transportStatus,
                         bytesRemaining ) );
             returnStatus = HTTP_NETWORK_ERROR;
