@@ -481,7 +481,30 @@ void test_Http_InitializeRequestHeaders_ReqInfo()
     setupRequestInfo( &requestInfo );
     setupBuffer( &requestHeaders );
 
-    requestInfo.pPath = 0;
+    requestInfo.pPath = NULL;
+    requestInfo.flags = HTTP_REQUEST_KEEP_ALIVE_FLAG;
+    numBytes = snprintf( ( char * ) expectedHeaders.buffer, sizeof( expectedHeaders.buffer ),
+                         HTTP_TEST_EXTRA_HEADER_FORMAT,
+                         HTTP_METHOD_GET, HTTP_EMPTY_PATH,
+                         HTTP_PROTOCOL_VERSION,
+                         HTTP_USER_AGENT_FIELD, HTTP_USER_AGENT_VALUE,
+                         HTTP_HOST_FIELD, HTTP_TEST_HOST_VALUE,
+                         HTTP_CONNECTION_FIELD, HTTP_CONNECTION_KEEP_ALIVE_VALUE );
+    /* Make sure that the entire pre-existing data was printed to the buffer. */
+    TEST_ASSERT_GREATER_THAN( 0, numBytes );
+    TEST_ASSERT_LESS_THAN( sizeof( expectedHeaders.buffer ), ( size_t ) numBytes );
+
+    requestHeaders.pBuffer = testBuffer;
+    requestHeaders.bufferLen = expectedHeaders.dataLen;
+    httpStatus = HTTPClient_InitializeRequestHeaders( &requestHeaders, &requestInfo );
+    TEST_ASSERT_EQUAL( HTTP_SUCCESS, httpStatus );
+    TEST_ASSERT_EQUAL( expectedHeaders.dataLen, requestHeaders.headersLen );
+    TEST_ASSERT_EQUAL_MEMORY( expectedHeaders.buffer, requestHeaders.pBuffer,
+                              expectedHeaders.dataLen );
+
+    /* Repeat the test above but with length of path == 0 for coverage. */
+    requestInfo.pPath = HTTP_EMPTY_PATH;
+    requestInfo.pathLen = 0;
     requestInfo.flags = HTTP_REQUEST_KEEP_ALIVE_FLAG;
     numBytes = snprintf( ( char * ) expectedHeaders.buffer, sizeof( expectedHeaders.buffer ),
                          HTTP_TEST_EXTRA_HEADER_FORMAT,
@@ -574,7 +597,7 @@ void test_Http_AddHeader_Happy_Path()
 /**
  * @brief Test invalid parameters, following order of else-if blocks in the HTTP library.
  */
-void test_Http_AddHeader_Invalid_Parameters()
+void test_Http_AddHeader_Invalid_Params()
 {
     HTTPStatus_t httpStatus = HTTP_SUCCESS;
     HTTPRequestHeaders_t requestHeaders = { 0 };
