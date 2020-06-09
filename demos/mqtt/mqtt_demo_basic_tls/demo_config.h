@@ -48,6 +48,9 @@
  *
  * This demo uses the Mosquitto test server. This is a public MQTT server; do not
  * publish anything sensitive to this server.
+ * Mosquitto MQTT broker can run locally as an alternate option. Please refer to
+ * the instructions in https://mosquitto.org/ for running a Mosquitto broker
+ * locally.
  */
 #define BROKER_ENDPOINT            "test.mosquitto.org"
 
