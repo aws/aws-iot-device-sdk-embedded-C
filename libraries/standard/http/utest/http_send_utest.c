@@ -296,6 +296,18 @@ static int32_t transportSendLessThanBytesToWrite( HTTPNetworkContext_t * pContex
     return retVal;
 }
 
+/* Application transport send that writes more bytes than expected. */
+static int32_t transportSendMoreThanBytesToRead( HTTPNetworkContext_t * pContext,
+                                                 const void * pBuffer,
+                                                 size_t bytesToWrite )
+{
+    ( void ) pContext;
+    ( void ) pBuffer;
+
+    return( bytesToWrite + 1 );
+}
+
+
 /* Application transport receive interface that sends the bytes specified in
  * firstPartBytes on the first call, then sends the rest of the response in the
  * second call. The response to send is set in pNetworkData and the current
@@ -1245,13 +1257,33 @@ void test_HTTPClient_Send_network_error_response( void )
 
 /* Test when more bytes are received than expected, when receiving a response
  * from the network. */
-void test_HTTPClient_Send_too_many_bytes_response( void )
+void test_HTTPClient_Send_recv_too_many_bytes( void )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
 
     http_parser_init_Ignore();
 
     transportInterface.recv = transportRecvMoreThanBytesToRead;
+    returnStatus = HTTPClient_Send( &transportInterface,
+                                    &requestHeaders,
+                                    NULL,
+                                    0,
+                                    &response,
+                                    0 );
+    TEST_ASSERT_EQUAL( HTTP_NETWORK_ERROR, returnStatus );
+}
+
+/*-----------------------------------------------------------*/
+
+/* Test when more bytes are sent than expected, when sending data
+ * over the socket. */
+void test_HTTPClient_Send_send_too_many_bytes( void )
+{
+    HTTPStatus_t returnStatus = HTTP_SUCCESS;
+
+    http_parser_init_Ignore();
+
+    transportInterface.send = transportSendMoreThanBytesToRead;
     returnStatus = HTTPClient_Send( &transportInterface,
                                     &requestHeaders,
                                     NULL,
