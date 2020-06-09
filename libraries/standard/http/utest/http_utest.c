@@ -1109,7 +1109,14 @@ void test_Http_ReadHeader_Header_Not_In_Response( void )
     http_parser_settings_init_ExpectAnyArgs();
 
     /* Configure the http_parser_execute mock. */
-    invokeHeaderCompleteCallback = 0u;
+    invokeHeaderFieldCallback = 1u;
+    invokeHeaderValueCallback = 1u;
+    pFieldLocToReturn = &pTestResponse[ headerFieldInRespLoc ];
+    fieldLenToReturn = headerFieldInRespLen;
+    pValueLocToReturn = &pTestResponse[ headerValInRespLoc ];
+    valueLenToReturn = headerValInRespLen;
+    expectedValCbRetVal = HTTP_PARSER_CONTINUE_PARSING;
+    invokeHeaderCompleteCallback = 1u;
     parserErrNo = HPE_OK;
     http_parser_execute_ExpectAnyArgsAndReturn( strlen( pTestResponse ) );
 
