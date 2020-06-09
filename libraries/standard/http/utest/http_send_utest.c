@@ -166,6 +166,10 @@ static uint8_t checkContentLength = 0;
  * to return an error from. */
 static uint8_t sendErrorCall = 0;
 
+/* The test sets this variable to indicate at which call count of transport send
+ * to send less bytes than indicated. */
+static uint8_t sendPartialCall = 0;
+
 /* The network data to receive. */
 static uint8_t * pNetworkData = NULL;
 /* The length of the network data to receive. */
@@ -272,8 +276,9 @@ static int32_t transportSendNetworkError( HTTPNetworkContext_t * pContext,
 }
 
 /* Application transport send interface that returns less bytes than expected
- * depending on the call count. Set sendErrorCall to 0 to return an error on the
- * first call. Set sendErrorCall to 1 to return an error on the second call. */
+ * depending on the call count. Set sendPartialCall to 0 to return less bytes on
+ * the first call. Set sendPartialCall to 1 to return less bytes on the second
+ * call. */
 static int32_t transportSendLessThanBytesToWrite( HTTPNetworkContext_t * pContext,
                                                   const void * pBuffer,
                                                   size_t bytesToWrite )
@@ -282,7 +287,7 @@ static int32_t transportSendLessThanBytesToWrite( HTTPNetworkContext_t * pContex
     ( void ) pBuffer;
     int32_t retVal = bytesToWrite;
 
-    if( sendErrorCall == sendCurrentCall )
+    if( sendPartialCall == sendCurrentCall )
     {
         retVal -= 1;
     }
@@ -709,6 +714,7 @@ void setUp( void )
     headerCallbackCount = 0;
     sendCurrentCall = 0;
     sendErrorCall = 0;
+    sendPartialCall = 0;
     checkContentLength = 0;
     pNetworkData = ( uint8_t * ) HTTP_TEST_RESPONSE_HEAD;
     networkDataLen = HTTP_TEST_RESPONSE_HEAD_LENGTH;
@@ -1149,7 +1155,7 @@ void test_HTTPClient_Send_less_bytes_request_headers( void )
     http_parser_execute_Stub( http_parser_execute_whole_response );
 
     transportInterface.send = transportSendLessThanBytesToWrite;
-    sendErrorCall = 0U;
+    sendPartialCall = 0U;
     memcpy( requestHeaders.pBuffer,
             HTTP_TEST_REQUEST_PUT_HEADERS,
             HTTP_TEST_REQUEST_PUT_HEADERS_LENGTH );
@@ -1188,9 +1194,7 @@ void test_HTTPClient_Send_less_bytes_request_body( void )
 
     transportInterface.send = transportSendLessThanBytesToWrite;
 
-    /* There is no Content-Length header written so the call to send an error on
-     * is call 1. */
-    sendErrorCall = 1U;
+    sendPartialCall = 1U;
     memcpy( requestHeaders.pBuffer,
             HTTP_TEST_REQUEST_PUT_HEADERS,
             HTTP_TEST_REQUEST_PUT_HEADERS_LENGTH );
