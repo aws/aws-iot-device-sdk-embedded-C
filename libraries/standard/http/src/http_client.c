@@ -1546,7 +1546,7 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
         {
             LogError( ( "Failed to send HTTP data: Transport send()"
                         " wrote more data than what was expected: "
-                        "BytesSent=%d, BytesRemaining=%ul.",
+                        "BytesSent=%d, BytesRemaining=%lu.",
                         transportStatus,
                         bytesRemaining ) );
             returnStatus = HTTP_NETWORK_ERROR;
@@ -1557,7 +1557,7 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
             bytesRemaining -= ( size_t ) transportStatus;
             pIndex += transportStatus;
             LogDebug( ( "Sent HTTP data over the transport: "
-                        "BytesSent=%d, BytesRemaining=%ul, "
+                        "BytesSent=%d, BytesRemaining=%lu, "
                         "TotalBytesSent=%d.",
                         transportStatus,
                         bytesRemaining,
