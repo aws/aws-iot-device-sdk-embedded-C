@@ -119,8 +119,14 @@ static const char * pTestResponse = "HTTP/1.1 200 OK\r\n"
                                     "header_not_in_buffer: test-value3\r\n"
                                     "\r\n";
 
-#define HEADER_IN_BUFFER        "test-header1"
-#define HEADER_NOT_IN_BUFFER    "header-not-in-buffer"
+#define HEADER_INVALID_PARAMS        "Header"
+#define HEADER_INVALID_PARAMS_LEN    ( sizeof( HEADER_INVALID_PARAMS ) - 1 )
+
+#define HEADER_IN_BUFFER             "test-header1"
+#define HEADER_IN_BUFFER_LEN         ( sizeof( HEADER_IN_BUFFER ) - 1 )
+
+#define HEADER_NOT_IN_BUFFER         "header-not-in-buffer"
+#define HEADER_NOT_IN_BUFFER_LEN     ( sizeof( HEADER_NOT_IN_BUFFER ) - 1 )
 
 /* File-scoped Global variables */
 static HTTPStatus_t retCode = HTTP_SUCCESS;
@@ -1070,8 +1076,8 @@ void test_Http_ReadHeader_Invalid_Params( void )
 {
     /* Response parameter is NULL. */
     retCode = HTTPClient_ReadHeader( NULL,
-                                     ( const uint8_t * ) "Header",
-                                     strlen( "Header" ),
+                                     ( const uint8_t * ) HEADER_INVALID_PARAMS,
+                                     HEADER_INVALID_PARAMS_LEN,
                                      &pValueLoc,
                                      &valueLen );
     TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, retCode );
@@ -1080,8 +1086,8 @@ void test_Http_ReadHeader_Invalid_Params( void )
     tearDown();
     testResponse.pBuffer = NULL;
     retCode = HTTPClient_ReadHeader( &testResponse,
-                                     ( const uint8_t * ) "Header",
-                                     strlen( "Header" ),
+                                     ( const uint8_t * ) HEADER_INVALID_PARAMS,
+                                     HEADER_INVALID_PARAMS_LEN,
                                      &pValueLoc,
                                      &valueLen );
     TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, retCode );
@@ -1090,8 +1096,8 @@ void test_Http_ReadHeader_Invalid_Params( void )
     tearDown();
     testResponse.bufferLen = 0;
     retCode = HTTPClient_ReadHeader( &testResponse,
-                                     ( const uint8_t * ) "Header",
-                                     strlen( "Header" ),
+                                     ( const uint8_t * ) HEADER_INVALID_PARAMS,
+                                     HEADER_INVALID_PARAMS_LEN,
                                      &pValueLoc,
                                      &valueLen );
     TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, retCode );
@@ -1100,7 +1106,7 @@ void test_Http_ReadHeader_Invalid_Params( void )
     tearDown();
     retCode = HTTPClient_ReadHeader( &testResponse,
                                      NULL,
-                                     strlen( "Header" ),
+                                     HEADER_INVALID_PARAMS_LEN,
                                      &pValueLoc,
                                      &valueLen );
     TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, retCode );
@@ -1108,7 +1114,7 @@ void test_Http_ReadHeader_Invalid_Params( void )
     /* Header field length is 0. */
     tearDown();
     retCode = HTTPClient_ReadHeader( &testResponse,
-                                     ( const uint8_t * ) "Header",
+                                     ( const uint8_t * ) HEADER_INVALID_PARAMS,
                                      0u,
                                      &pValueLoc,
                                      &valueLen );
@@ -1117,15 +1123,15 @@ void test_Http_ReadHeader_Invalid_Params( void )
     /* Invalid output parameters. */
     tearDown();
     retCode = HTTPClient_ReadHeader( &testResponse,
-                                     ( const uint8_t * ) "Header",
-                                     strlen( "Header" ),
+                                     ( const uint8_t * ) HEADER_INVALID_PARAMS,
+                                     HEADER_INVALID_PARAMS_LEN,
                                      NULL,
                                      &valueLen );
     TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, retCode );
     tearDown();
     retCode = HTTPClient_ReadHeader( &testResponse,
-                                     ( const uint8_t * ) "Header",
-                                     strlen( "Header" ),
+                                     ( const uint8_t * ) HEADER_INVALID_PARAMS,
+                                     HEADER_INVALID_PARAMS_LEN,
                                      &pValueLoc,
                                      NULL );
     TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, retCode );
@@ -1156,12 +1162,12 @@ void test_Http_ReadHeader_Header_Not_In_Response( void )
     testResponse.bufferLen = strlen( pTestResponse );
     retCode = HTTPClient_ReadHeader( &testResponse,
                                      ( const uint8_t * ) HEADER_NOT_IN_BUFFER,
-                                     strlen( HEADER_NOT_IN_BUFFER ),
+                                     HEADER_NOT_IN_BUFFER_LEN,
                                      &pValueLoc,
                                      &valueLen );
     TEST_ASSERT_EQUAL( HTTP_HEADER_NOT_FOUND, retCode );
 
-    /* Repeat the test above but with fieldLenToReturn == strlen( HEADER_NOT_IN_BUFFER ).
+    /* Repeat the test above but with fieldLenToReturn == HEADER_NOT_IN_BUFFER_LEN.
      * Doing this allows us to take the branch where the actual contents
      * of the fields are compared rather than just the length. */
     setUp();
@@ -1169,10 +1175,10 @@ void test_Http_ReadHeader_Header_Not_In_Response( void )
     http_parser_init_ExpectAnyArgs();
     http_parser_settings_init_ExpectAnyArgs();
     /* Ensure that the header field does NOT match what we're searching. */
+    TEST_ASSERT_EQUAL( otherHeaderFieldInRespLen, HEADER_NOT_IN_BUFFER_LEN );
     TEST_ASSERT_TRUE( memcmp( &pTestResponse[ otherHeaderFieldInRespLoc ],
                               HEADER_NOT_IN_BUFFER,
-                              strlen( HEADER_NOT_IN_BUFFER ) ) != 0 );
-
+                              HEADER_NOT_IN_BUFFER_LEN ) != 0 );
     /* Configure the http_parser_execute mock. */
     invokeHeaderFieldCallback = 1u;
     invokeHeaderValueCallback = 1u;
@@ -1189,7 +1195,7 @@ void test_Http_ReadHeader_Header_Not_In_Response( void )
     testResponse.bufferLen = strlen( pTestResponse );
     retCode = HTTPClient_ReadHeader( &testResponse,
                                      ( const uint8_t * ) HEADER_NOT_IN_BUFFER,
-                                     strlen( HEADER_NOT_IN_BUFFER ),
+                                     HEADER_NOT_IN_BUFFER_LEN,
                                      &pValueLoc,
                                      &valueLen );
     TEST_ASSERT_EQUAL( HTTP_HEADER_NOT_FOUND, retCode );
@@ -1223,7 +1229,7 @@ void test_Http_ReadHeader_Invalid_Response_Only_Header_Field_Found()
     testResponse.bufferLen = strlen( pResponseWithoutValue );
     retCode = HTTPClient_ReadHeader( &testResponse,
                                      ( const uint8_t * ) HEADER_IN_BUFFER,
-                                     strlen( HEADER_IN_BUFFER ),
+                                     HEADER_IN_BUFFER_LEN,
                                      &pValueLoc,
                                      &valueLen );
     TEST_ASSERT_EQUAL( HTTP_INVALID_RESPONSE, retCode );
@@ -1256,7 +1262,7 @@ void test_Http_ReadHeader_Invalid_Response_No_Headers_Complete_Ending()
     testResponse.bufferLen = strlen( pResponseWithoutHeaders );
     retCode = HTTPClient_ReadHeader( &testResponse,
                                      ( const uint8_t * ) HEADER_NOT_IN_BUFFER,
-                                     strlen( HEADER_NOT_IN_BUFFER ),
+                                     HEADER_NOT_IN_BUFFER_LEN,
                                      &pValueLoc,
                                      &valueLen );
     TEST_ASSERT_EQUAL( HTTP_INVALID_RESPONSE, retCode );
@@ -1287,7 +1293,7 @@ void test_Http_ReadHeader_With_HttpParser_Internal_Error()
     /* Call the function under test. */
     retCode = HTTPClient_ReadHeader( &testResponse,
                                      ( const uint8_t * ) HEADER_IN_BUFFER,
-                                     strlen( HEADER_IN_BUFFER ),
+                                     HEADER_IN_BUFFER_LEN,
                                      &pValueLoc,
                                      &valueLen );
     TEST_ASSERT_EQUAL( HTTP_PARSER_INTERNAL_ERROR, retCode );
@@ -1316,7 +1322,7 @@ void test_Http_ReadHeader_Happy_Path()
     /* Call the function under test. */
     retCode = HTTPClient_ReadHeader( &testResponse,
                                      ( const uint8_t * ) HEADER_IN_BUFFER,
-                                     strlen( HEADER_IN_BUFFER ),
+                                     HEADER_IN_BUFFER_LEN,
                                      &pValueLoc,
                                      &valueLen );
     TEST_ASSERT_EQUAL( HTTP_SUCCESS, retCode );
