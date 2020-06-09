@@ -48,31 +48,31 @@
  *
  * This demo uses httpbin.org: A simple HTTP Request & Response Service.
  */
-#define SERVER_HOST                "httpbin.org"
+#define SERVER_HOST                       "httpbin.org"
 
 /**
  * @brief The length of the HTTP server host name.
  */
-#define SERVER_HOST_LENGTH         ( sizeof( SERVER_HOST ) - 1 )
+#define SERVER_HOST_LENGTH                ( sizeof( SERVER_HOST ) - 1 )
 
 /**
  * @brief HTTP server port number.
  *
  * In general, port 443 is for TLS HTTP connections.
  */
-#define SERVER_PORT                443
+#define SERVER_PORT                       443
 
 /**
  * @brief Path of the file containing the server's root CA certificate for TLS authentication.
  *
  * @note This certificate should be PEM-encoded.
  */
-#define SERVER_CERT_PATH           "certificates/amazon.crt"
+#define SERVER_CERT_PATH                  "certificates/amazon.crt"
 
 /**
  * @brief Length of path to server certificate.
  */
-#define SERVER_CERT_PATH_LENGTH    ( ( uint16_t ) ( sizeof( SERVER_CERT_PATH ) - 1 ) )
+#define SERVER_CERT_PATH_LENGTH           ( ( uint16_t ) ( sizeof( SERVER_CERT_PATH ) - 1 ) )
 
 /**
  * @brief Paths for different HTTP methods for specified host.
@@ -80,21 +80,10 @@
  * For httpbin.org, see http://httpbin.org/#/HTTP_Methods for details on
  * supported REST API.
  */
-#ifndef GET_PATH
-    #define GET_PATH    "/get"
-#endif
-
-#ifndef HEAD_PATH
-    #define HEAD_PATH    "/get"
-#endif
-
-#ifndef PUT_PATH
-    #define PUT_PATH    "/put"
-#endif
-
-#ifndef POST_PATH
-    #define POST_PATH    "/post"
-#endif
+#define GET_PATH                          "/get"
+#define HEAD_PATH                         "/get"
+#define PUT_PATH                          "/put"
+#define POST_PATH                         "/post"
 
 /**
  * @brief Transport timeout in milliseconds for transport send and receive.
@@ -105,11 +94,6 @@
  * @brief The length in bytes of the user buffer.
  */
 #define USER_BUFFER_LENGTH                ( 1024 )
-
-/**
- * @brief Length of an IPv6 address when converted to hex digits.
- */
-#define IPV6_ADDRESS_STRING_LEN           ( 40 )
 
 /**
  * @brief Request body to send for PUT and POST requests in this demo.

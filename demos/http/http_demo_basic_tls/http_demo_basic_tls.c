@@ -43,6 +43,56 @@
 /* Demo Config header. */
 #include "demo_config.h"
 
+/* Check that hostname of the server is defined. */
+#ifndef SERVER_HOST
+    #error "Please define a SERVER_HOST."
+#endif
+
+/* Check that TLS port of the server is defined. */
+#ifndef SERVER_PORT
+    #error "Please define a SERVER_PORT."
+#endif
+
+/* Check that a path for HTTP Method GET is defined. */
+#ifndef GET_PATH
+    #error "Please define a GET_PATH."
+#endif
+
+/* Check that a path for HTTP Method HEAD is defined. */
+#ifndef HEAD_PATH
+    #error "Please define a HEAD_PATH."
+#endif
+
+/* Check that a path for HTTP Method PUT is defined. */
+#ifndef PUT_PATH
+    #error "Please define a PUT_PATH."
+#endif
+
+/* Check that a path for HTTP Method POST is defined. */
+#ifndef POST_PATH
+    #error "Please define a POST_PATH."
+#endif
+
+/* Check that transport timeout for transport send and receive is defined. */
+#ifndef TRANSPORT_SEND_RECV_TIMEOUT_MS
+    #define TRANSPORT_SEND_RECV_TIMEOUT_MS    ( 1000 )
+#endif
+
+/* Check that size of the user buffer is defined. */
+#ifndef USER_BUFFER_LENGTH
+    #define USER_BUFFER_LENGTH    ( 1024 )
+#endif
+
+/* Check that a request body to send for PUT and POST requests is defined. */
+#ifndef REQUEST_BODY
+    #error "Please define a REQUEST_BODY."
+#endif
+
+/**
+ * @brief Length of an IPv6 address when converted to hex digits.
+ */
+#define IPV6_ADDRESS_STRING_LEN    ( 40 )
+
 /**
  * @brief A string to store the resolved IP address from the host name.
  */
@@ -73,27 +123,6 @@ struct HTTPNetworkContext
  * @brief Structure based on the definition of the HTTP network context.
  */
 static HTTPNetworkContext_t networkContext;
-
-/**
- * @brief The HTTP Client library transport layer interface.
- */
-static HTTPTransportInterface_t transportInterface;
-
-/**
- * @brief Represents header data that will be sent in an HTTP request.
- */
-static HTTPRequestHeaders_t requestHeaders;
-
-/**
- * @brief Configurations of the initial request headers that are passed to
- * #HTTPClient_InitializeRequestHeaders.
- */
-static HTTPRequestInfo_t requestInfo;
-
-/**
- * @brief Represents a response returned from an HTTP server.
- */
-static HTTPResponse_t response;
 
 /*-----------------------------------------------------------*/
 
@@ -561,8 +590,24 @@ static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface
                             const char * pMethod,
                             const char * pPath )
 {
+    /* Return value of this method. */
     int returnStatus = EXIT_SUCCESS;
+
+    /* Configurations of the initial request headers that are passed to
+     * #HTTPClient_InitializeRequestHeaders. */
+    HTTPRequestInfo_t requestInfo;
+    /* Represents a response returned from an HTTP server. */
+    HTTPResponse_t response;
+    /* Represents header data that will be sent in an HTTP request. */
+    HTTPRequestHeaders_t requestHeaders;
+
+    /* Return value of all methods from the HTTP Client library API. */
     HTTPStatus_t httpStatus = HTTP_SUCCESS;
+
+    /* Initialize all HTTP Client library API structs to 0. */
+    memset( &requestInfo, 0, sizeof( requestInfo ) );
+    memset( &response, 0, sizeof( response ) );
+    memset( &requestHeaders, 0, sizeof( requestHeaders ) );
 
     /* Initialize the request object. */
     requestInfo.pHost = pHost;
@@ -657,7 +702,10 @@ static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface
 int main( int argc,
           char ** argv )
 {
+    /* Return value of main. */
     int returnStatus = EXIT_SUCCESS;
+    /* The HTTP Client library transport layer interface. */
+    HTTPTransportInterface_t transportInterface;
 
     ( void ) argc;
     ( void ) argv;
@@ -678,6 +726,7 @@ int main( int argc,
     /* Define the transport interface. */
     if( returnStatus == EXIT_SUCCESS )
     {
+        memset( &transportInterface, 0, sizeof( transportInterface ) );
         transportInterface.recv = transportRecv;
         transportInterface.send = transportSend;
         transportInterface.pContext = &networkContext;
