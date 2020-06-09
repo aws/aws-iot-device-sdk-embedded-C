@@ -1168,6 +1168,10 @@ void test_Http_ReadHeader_Header_Not_In_Response( void )
     /* Add expectations for http_parser dependencies. */
     http_parser_init_ExpectAnyArgs();
     http_parser_settings_init_ExpectAnyArgs();
+    /* Ensure that the header field does NOT match what we're searching. */
+    TEST_ASSERT_TRUE( memcmp( &pTestResponse[ otherHeaderFieldInRespLoc ],
+                              HEADER_NOT_IN_BUFFER,
+                              strlen( HEADER_NOT_IN_BUFFER ) ) != 0 );
 
     /* Configure the http_parser_execute mock. */
     invokeHeaderFieldCallback = 1u;
