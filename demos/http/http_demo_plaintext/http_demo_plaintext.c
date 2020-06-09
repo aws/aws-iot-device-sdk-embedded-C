@@ -40,6 +40,11 @@
 #include "demo_config.h"
 
 /**
+ * @brief Length of an IPv6 address when converted to hex digits.
+ */
+#define IPV6_ADDRESS_STRING_LEN    ( 40 )
+
+/**
  * @brief Defined by transport layer to check send or receive error.
  */
 extern int errno;

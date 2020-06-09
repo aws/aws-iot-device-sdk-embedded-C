@@ -49,7 +49,7 @@
  * @note A local HTTP server is used for this demo. Instructions for setting
  * this up can be found in the top-level README.md file.
  */
-#define SERVER_HOST    "localhost"
+#define SERVER_HOST                       "localhost"
 
 /**
  * @brief HTTP server port number.
@@ -57,26 +57,15 @@
  * @note In general, port 80 is for plaintext HTTP connections. However,
  * the default plaintext port from the local http server is used below.
  */
-#define SERVER_PORT    8080
+#define SERVER_PORT                       8080
 
 /**
  * @brief Paths for different HTTP methods for specified host.
  */
-#ifndef GET_PATH
-    #define GET_PATH    "/get"
-#endif
-
-#ifndef HEAD_PATH
-    #define HEAD_PATH    "/get"
-#endif
-
-#ifndef PUT_PATH
-    #define PUT_PATH    "/put"
-#endif
-
-#ifndef POST_PATH
-    #define POST_PATH    "/post"
-#endif
+#define GET_PATH                          "/get"
+#define HEAD_PATH                         "/get"
+#define PUT_PATH                          "/put"
+#define POST_PATH                         "/post"
 
 /**
  * @brief Transport timeout in milliseconds for transport send and receive.
@@ -87,11 +76,6 @@
  * @brief The length in bytes of the user buffer.
  */
 #define USER_BUFFER_LENGTH                ( 1024 )
-
-/**
- * @brief Length of an IPv6 address when converted to hex digits.
- */
-#define IPV6_ADDRESS_STRING_LEN           ( 40 )
 
 /**
  * @brief Request body to send for PUT and POST requests in this demo.
