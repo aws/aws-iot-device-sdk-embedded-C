@@ -297,9 +297,9 @@ static int32_t transportSendLessThanBytesToWrite( HTTPNetworkContext_t * pContex
 }
 
 /* Application transport send that writes more bytes than expected. */
-static int32_t transportSendMoreThanBytesToRead( HTTPNetworkContext_t * pContext,
-                                                 const void * pBuffer,
-                                                 size_t bytesToWrite )
+static int32_t transportSendMoreThanBytesToWrite( HTTPNetworkContext_t * pContext,
+                                                  const void * pBuffer,
+                                                  size_t bytesToWrite )
 {
     ( void ) pContext;
     ( void ) pBuffer;
@@ -1283,7 +1283,7 @@ void test_HTTPClient_Send_send_too_many_bytes( void )
 
     http_parser_init_Ignore();
 
-    transportInterface.send = transportSendMoreThanBytesToRead;
+    transportInterface.send = transportSendMoreThanBytesToWrite;
     returnStatus = HTTPClient_Send( &transportInterface,
                                     &requestHeaders,
                                     NULL,
