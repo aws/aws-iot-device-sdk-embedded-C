@@ -1151,6 +1151,34 @@ void test_Http_ReadHeader_Header_Not_In_Response( void )
                                      &pValueLoc,
                                      &valueLen );
     TEST_ASSERT_EQUAL( HTTP_HEADER_NOT_FOUND, retCode );
+
+    /* Repeat the test above but with length of value in callback equal to
+     * header that is not in the response headers. */
+    setUp();
+    /* Add expectations for http_parser dependencies. */
+    http_parser_init_ExpectAnyArgs();
+    http_parser_settings_init_ExpectAnyArgs();
+
+    /* Configure the http_parser_execute mock. */
+    invokeHeaderFieldCallback = 1u;
+    invokeHeaderValueCallback = 1u;
+    pFieldLocToReturn = &pTestResponse[ headerFieldInRespLoc ];
+    fieldLenToReturn = strlen( HEADER_NOT_IN_BUFFER );
+    pValueLocToReturn = &pTestResponse[ headerValInRespLoc ];
+    valueLenToReturn = headerValInRespLen;
+    expectedValCbRetVal = HTTP_PARSER_CONTINUE_PARSING;
+    invokeHeaderCompleteCallback = 1u;
+    parserErrNo = HPE_OK;
+    http_parser_execute_ExpectAnyArgsAndReturn( strlen( pTestResponse ) );
+
+    /* Call the function under test. */
+    testResponse.bufferLen = strlen( pTestResponse );
+    retCode = HTTPClient_ReadHeader( &testResponse,
+                                     ( const uint8_t * ) HEADER_NOT_IN_BUFFER,
+                                     strlen( HEADER_NOT_IN_BUFFER ),
+                                     &pValueLoc,
+                                     &valueLen );
+    TEST_ASSERT_EQUAL( HTTP_HEADER_NOT_FOUND, retCode );
 }
 
 /**
