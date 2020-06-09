@@ -1533,7 +1533,26 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
                                             pIndex,
                                             bytesRemaining );
 
-        if( transportStatus > 0 )
+        /* A transport status of less than zero is an error. */
+        if( transportStatus < 0 )
+        {
+            LogError( ( "Failed to send HTTP data: Transport send()"
+                        " returned error: TransportStatus=%d.",
+                        transportStatus ) );
+            returnStatus = HTTP_NETWORK_ERROR;
+            break;
+        }
+        else if( ( size_t ) transportStatus > bytesRemaining )
+        {
+            LogError( ( "Failed to send HTTP data: Transport send()"
+                        " attempted to write more data than what was expected: "
+                        "RequestedBytes=%d, BytesRemaining=%ul.",
+                        transportStatus,
+                        bytesRemaining ) );
+            returnStatus = HTTP_NETWORK_ERROR;
+            break;
+        }
+        else
         {
             bytesRemaining -= ( size_t ) transportStatus;
             pIndex += transportStatus;
@@ -1543,14 +1562,6 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
                         transportStatus,
                         bytesRemaining,
                         dataLen - bytesRemaining ) );
-        }
-        else
-        {
-            LogError( ( "Failed to send HTTP data: Transport send()"
-                        " returned error: TransportStatus=%d.",
-                        transportStatus ) );
-            returnStatus = HTTP_NETWORK_ERROR;
-            break;
         }
     }
 
