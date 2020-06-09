@@ -1153,7 +1153,7 @@ void test_Http_ReadHeader_Header_Not_In_Response( void )
     TEST_ASSERT_EQUAL( HTTP_HEADER_NOT_FOUND, retCode );
 
     /* Repeat the test above but with length of value in callback equal to
-     * header that is not in the response headers. */
+     * length of header that is not in the response headers. */
     setUp();
     /* Add expectations for http_parser dependencies. */
     http_parser_init_ExpectAnyArgs();
