@@ -886,7 +886,7 @@ static HTTPStatus_t processHttpParserError( http_parser * pHttpParser )
 
         case HPE_HEADER_OVERFLOW:
             LogError( ( "Response parsing error: Header byte limit "
-                        "exceeded: HeaderByteLimit=%d.",
+                        "exceeded: HeaderByteLimit=%d",
                         HTTP_MAX_RESPONSE_HEADERS_SIZE_BYTES ) );
             returnStatus = HTTP_SECURITY_ALERT_RESPONSE_HEADERS_SIZE_LIMIT_EXCEEDED;
             break;
@@ -1537,7 +1537,7 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
         if( transportStatus < 0 )
         {
             LogError( ( "Failed to send HTTP data: Transport send()"
-                        " returned error: TransportStatus=%d.",
+                        " returned error: TransportStatus=%d",
                         transportStatus ) );
             returnStatus = HTTP_NETWORK_ERROR;
             break;
@@ -1545,8 +1545,8 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
         else if( ( size_t ) transportStatus > bytesRemaining )
         {
             LogError( ( "Failed to send HTTP data: Transport send()"
-                        " wrote more bytes than what was expected: "
-                        "BytesSent=%d, BytesRemaining=%lu.",
+                        " wrote more data than what was expected: "
+                        "BytesSent=%d, BytesRemaining=%lu",
                         transportStatus,
                         bytesRemaining ) );
             returnStatus = HTTP_NETWORK_ERROR;
@@ -1558,7 +1558,7 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
             pIndex += transportStatus;
             LogDebug( ( "Sent HTTP data over the transport: "
                         "BytesSent=%d, BytesRemaining=%lu, "
-                        "TotalBytesSent=%d.",
+                        "TotalBytesSent=%d",
                         transportStatus,
                         bytesRemaining,
                         dataLen - bytesRemaining ) );
@@ -1568,7 +1568,7 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
     if( returnStatus == HTTP_SUCCESS )
     {
         LogDebug( ( "Sent HTTP data over the transport: "
-                    "BytesSent=%d.",
+                    "BytesSent=%d",
                     transportStatus ) );
     }
 
@@ -1686,7 +1686,7 @@ HTTPStatus_t receiveHttpData( const HTTPTransportInterface_t * pTransport,
     if( transportStatus < 0 )
     {
         LogError( ( "Failed to receive HTTP data: Transport recv() "
-                    "returned error: TransportStatus=%d.",
+                    "returned error: TransportStatus=%d",
                     transportStatus ) );
         returnStatus = HTTP_NETWORK_ERROR;
     }
@@ -1695,8 +1695,8 @@ HTTPStatus_t receiveHttpData( const HTTPTransportInterface_t * pTransport,
         /* There is a bug in the transport recv if more bytes are reported
          * to have been read than the bytes asked for. */
         LogError( ( "Failed to receive HTTP data: Transport recv() "
-                    " read more bytes than requested: BytesRead=%d, "
-                    "RequestedBytes=%lu",
+                    " read more bytes than requested: BytesReceived=%d, "
+                    "BytesRequested=%lu",
                     transportStatus,
                     ( unsigned long ) bufferLen ) );
         returnStatus = HTTP_NETWORK_ERROR;
@@ -1705,7 +1705,7 @@ HTTPStatus_t receiveHttpData( const HTTPTransportInterface_t * pTransport,
     {
         /* Some or all of the specified data was received. */
         *pBytesReceived = ( size_t ) ( transportStatus );
-        LogDebug( ( "Received data from the transport: BytesReceived=%d.",
+        LogDebug( ( "Received data from the transport: BytesReceived=%d",
                     transportStatus ) );
     }
     else
