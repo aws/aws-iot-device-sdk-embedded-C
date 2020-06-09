@@ -116,6 +116,7 @@ static const char * pTestResponse = "HTTP/1.1 200 OK\r\n"
                                     "test-header0: test-value0\r\n"
                                     "test-header1: test-value1\r\n"
                                     "test-header2: test-value2\r\n"
+                                    "header_not_in_buffer: test-value3\r\n"
                                     "\r\n";
 
 #define HEADER_IN_BUFFER        "test-header1"
@@ -133,6 +134,8 @@ static size_t valueLen = 0u;
 static HTTPResponse_t testResponse = { 0 };
 static const size_t headerFieldInRespLoc = 44;
 static const size_t headerFieldInRespLen = sizeof( "test-header1" ) - 1u;
+static const size_t otherHeaderFieldInRespLoc = 98;
+static const size_t otherHeaderFieldInRespLen = sizeof( "header_not_in_buffer" ) - 1u;
 static const size_t headerValInRespLoc = 58;
 static const size_t headerValInRespLen = sizeof( "test-value1" ) - 1u;
 static http_parser * pCapturedParser = NULL;
@@ -676,8 +679,10 @@ void test_Http_AddHeader_Extra_Header_Sufficient_Memory()
 
     /* Run the method to test. */
     httpStatus = HTTPClient_AddHeader( &requestHeaders,
-                                       HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_FIELD_LEN,
-                                       HTTP_TEST_HEADER_VALUE, HTTP_TEST_HEADER_VALUE_LEN );
+                                       ( uint8_t * ) HTTP_TEST_HEADER_FIELD,
+                                       HTTP_TEST_HEADER_FIELD_LEN,
+                                       ( uint8_t * ) HTTP_TEST_HEADER_VALUE,
+                                       HTTP_TEST_HEADER_VALUE_LEN );
     TEST_ASSERT_EQUAL( expectedHeaders.dataLen, requestHeaders.headersLen );
     TEST_ASSERT_EQUAL_MEMORY( expectedHeaders.buffer,
                               requestHeaders.pBuffer, expectedHeaders.dataLen );
@@ -719,8 +724,10 @@ void test_Http_AddHeader_Extra_Header_Insufficient_Memory()
 
     /* Run the method to test. */
     httpStatus = HTTPClient_AddHeader( &requestHeaders,
-                                       HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_FIELD_LEN,
-                                       HTTP_TEST_HEADER_VALUE, HTTP_TEST_HEADER_VALUE_LEN );
+                                       ( uint8_t * ) HTTP_TEST_HEADER_FIELD,
+                                       HTTP_TEST_HEADER_FIELD_LEN,
+                                       ( uint8_t * ) HTTP_TEST_HEADER_VALUE,
+                                       HTTP_TEST_HEADER_VALUE_LEN );
     TEST_ASSERT_EQUAL( expectedHeaders.dataLen, requestHeaders.headersLen );
     TEST_ASSERT_EQUAL_MEMORY( expectedHeaders.buffer,
                               requestHeaders.pBuffer, expectedHeaders.dataLen );
@@ -752,8 +759,10 @@ void test_Http_AddHeader_Single_Header_Insufficient_Memory()
 
     /* Run the method to test. */
     httpStatus = HTTPClient_AddHeader( &requestHeaders,
-                                       HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_FIELD_LEN,
-                                       HTTP_TEST_HEADER_VALUE, HTTP_TEST_HEADER_VALUE_LEN );
+                                       ( uint8_t * ) HTTP_TEST_HEADER_FIELD,
+                                       HTTP_TEST_HEADER_FIELD_LEN,
+                                       ( uint8_t * ) HTTP_TEST_HEADER_VALUE,
+                                       HTTP_TEST_HEADER_VALUE_LEN );
     TEST_ASSERT_EQUAL( HTTP_INSUFFICIENT_MEMORY, httpStatus );
 }
 
@@ -1152,8 +1161,9 @@ void test_Http_ReadHeader_Header_Not_In_Response( void )
                                      &valueLen );
     TEST_ASSERT_EQUAL( HTTP_HEADER_NOT_FOUND, retCode );
 
-    /* Repeat the test above but with length of value in callback equal to
-     * length of header that is not in the response headers. */
+    /* Repeat the test above but with fieldLenToReturn == strlen( HEADER_NOT_IN_BUFFER ).
+     * Doing this allows us to take the branch where the actual contents
+     * of the fields are compared rather than just the length. */
     setUp();
     /* Add expectations for http_parser dependencies. */
     http_parser_init_ExpectAnyArgs();
@@ -1162,8 +1172,8 @@ void test_Http_ReadHeader_Header_Not_In_Response( void )
     /* Configure the http_parser_execute mock. */
     invokeHeaderFieldCallback = 1u;
     invokeHeaderValueCallback = 1u;
-    pFieldLocToReturn = &pTestResponse[ headerFieldInRespLoc ];
-    fieldLenToReturn = strlen( HEADER_NOT_IN_BUFFER );
+    pFieldLocToReturn = &pTestResponse[ otherHeaderFieldInRespLoc ];
+    fieldLenToReturn = otherHeaderFieldInRespLen;
     pValueLocToReturn = &pTestResponse[ headerValInRespLoc ];
     valueLenToReturn = headerValInRespLen;
     expectedValCbRetVal = HTTP_PARSER_CONTINUE_PARSING;
