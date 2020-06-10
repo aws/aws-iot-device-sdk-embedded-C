@@ -763,7 +763,7 @@ TEST( Provisioning_Unit_API, Init )
     AwsIotProvisioning_Cleanup();
     TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_DEFAULT_MQTT_TIMEOUT_MS, _AwsIotProvisioningMqttTimeoutMs );
 
-    /* Test provisioning initialization with sempahore creation failures. */
+    /* Test provisioning initialization with semaphore creation failures. */
     for( i = 0; ; i++ )
     {
         UnityMalloc_MakeMallocFailAfterCount( i );

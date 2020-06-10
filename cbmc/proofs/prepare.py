@@ -138,7 +138,7 @@ def build():
         create_cbmc_yaml_files()
     except subprocess.CalledProcessError as error:
         logging.error(textwrap.dedent("""\
-            An error occured during cbmc-batch generation.
+            An error occurred during cbmc-batch generation.
             The error message is: {}
             """.format(str(error))))
         exit(1)

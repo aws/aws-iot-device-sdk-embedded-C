@@ -116,7 +116,7 @@ uint8_t * AwsIotDefenderInternal_GetReportBuffer( void )
 
 size_t AwsIotDefenderInternal_GetReportBufferSize( void )
 {
-    /* Encoder might over-calculate the needed size. Therefor encoded size might be smaller than buffer size: _report.size. */
+    /* Encoder might over-calculate the needed size. Therefore encoded size might be smaller than buffer size: _report.size. */
     return _report.pDataBuffer == NULL ? 0
            : _pAwsIotDefenderEncoder->getEncodedSize( &_report.object, _report.pDataBuffer );
 }

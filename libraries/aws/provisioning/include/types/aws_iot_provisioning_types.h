@@ -290,7 +290,7 @@ typedef struct AwsIotProvisioningRejectedResponse
     size_t errorCodeLength;     /**< The length of the error code string.*/
     const char * pErrorMessage; /**< The most granular level error information is provided in the
                                  * message by the server. */
-    size_t errorMessageLength;  /**< The length of the error messsage sent by the server. */
+    size_t errorMessageLength;  /**< The length of the error message sent by the server. */
 } AwsIotProvisioningRejectedResponse_t;
 
 /**
