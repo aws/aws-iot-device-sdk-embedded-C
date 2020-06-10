@@ -349,8 +349,8 @@ typedef enum HTTPStatus
  *
  * The memory for the header data buffer is supplied by the user. Information in
  * the buffer will be filled by calling #HTTPClient_InitializeRequestHeaders and
- * #HTTPClient_AddHeader. This buffer may be automatically filled with the 
- * Content-Length header in #HTTPClient_Send, please see 
+ * #HTTPClient_AddHeader. This buffer may be automatically filled with the
+ * Content-Length header in #HTTPClient_Send, please see
  * HTTP_MAX_CONTENT_LENGTH_HEADER_LENGTH for the maximum amount of space needed
  * to accommodate the Content-Length header.
  */
@@ -430,9 +430,9 @@ typedef struct HTTPClient_ResponseHeaderParsingCallback
      * @param[in] statusCode The HTTP response status-code.
      */
     void ( * onHeaderCallback )( void * pContext,
-                                 const uint8_t * fieldLoc,
+                                 const char * fieldLoc,
                                  size_t fieldLen,
-                                 const uint8_t * valueLoc,
+                                 const char * valueLoc,
                                  size_t valueLen,
                                  uint16_t statusCode );
 
@@ -584,9 +584,9 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
  * - #HTTP_INSUFFICIENT_MEMORY (If application-provided buffer is not large enough to hold headers.)
  */
 HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
-                                   const uint8_t * pField,
+                                   const char * pField,
                                    size_t fieldLen,
-                                   const uint8_t * pValue,
+                                   const char * pValue,
                                    size_t valueLen );
 
 /**
@@ -643,7 +643,7 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
  *
  * If #HTTP_SEND_DISABLE_CONTENT_LENGTH_FLAG is not set in parameter @p flags,
  * then the Content-Length to be sent to the server is automatically written to
- * @p pRequestHeaders. The Content-Length will not be written when there is 
+ * @p pRequestHeaders. The Content-Length will not be written when there is
  * no request body. If there is not enough room in the buffer to write the
  * Content-Length then #HTTP_INSUFFICIENT_MEMORY is returned. Please see
  * #HTTP_MAX_CONTENT_LENGTH_HEADER_LENGTH for the maximum Content-Length header
@@ -708,11 +708,11 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
  * incomplete until #HTTPClient_Send returns.
  *
  * @param[in] pResponse The buffer containing the completed HTTP response.
- * @param[in] pHeaderName The header field name to read.
- * @param[in] headerNameLen The length of the header field name in bytes.
- * @param[out] pHeaderValueLoc This will be populated with the location of the
+ * @param[in] pField The header field name to read.
+ * @param[in] fieldLen The length of the header field name in bytes.
+ * @param[out] pValueLoc This will be populated with the location of the
  * header value in the response buffer, #HTTPResponse_t.pBuffer.
- * @param[out] pHeaderValueLen This will be populated with the length of the
+ * @param[out] pValueLen This will be populated with the length of the
  * header value in bytes.
  *
  * @return One of the following:
@@ -723,10 +723,10 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
  * - #HTTP_PARSER_INTERNAL_ERROR(If an error in the response parser.)
  */
 HTTPStatus_t HTTPClient_ReadHeader( const HTTPResponse_t * pResponse,
-                                    const uint8_t * pHeaderName,
-                                    size_t headerNameLen,
-                                    const uint8_t ** pHeaderValueLoc,
-                                    size_t * pHeaderValueLen );
+                                    const char * pField,
+                                    size_t fieldLen,
+                                    const char ** pValueLoc,
+                                    size_t * pValueLen );
 
 /**
  * @brief Error code to string conversion utility for HTTP Client library.

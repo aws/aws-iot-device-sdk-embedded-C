@@ -83,9 +83,9 @@ static HTTPStatus_t sendHttpBody( const HTTPTransportInterface_t * pTransport,
  * application buffer, then #HTTP_INSUFFICIENT_MEMORY is returned.
  */
 static HTTPStatus_t addHeader( HTTPRequestHeaders_t * pRequestHeaders,
-                               const uint8_t * pField,
+                               const char * pField,
                                size_t fieldLen,
-                               const uint8_t * pValue,
+                               const char * pValue,
                                size_t valueLen );
 
 /**
@@ -189,9 +189,9 @@ static HTTPStatus_t writeRequestLine( HTTPRequestHeaders_t * pRequestHeaders,
  */
 static HTTPStatus_t findHeaderInResponse( const uint8_t * pBuffer,
                                           size_t bufferLen,
-                                          const uint8_t * pField,
+                                          const char * pField,
                                           size_t fieldLen,
-                                          const uint8_t ** pValueLoc,
+                                          const char ** pValueLoc,
                                           size_t * pValueLen );
 
 /**
@@ -595,7 +595,7 @@ static int httpParserOnHeaderFieldCallback( http_parser * pHttpParser,
      * to NULL in the preceding httpParseOnStatusFieldCallback(). */
     if( pResponse->pHeaders == NULL )
     {
-        pResponse->pHeaders = ( const uint8_t * ) pLoc;
+        pResponse->pHeaders = pLoc;
     }
 
     /* Set the location of what to parse next. */
@@ -1111,9 +1111,9 @@ static uint8_t convertInt32ToAscii( int32_t value,
 /*-----------------------------------------------------------*/
 
 static HTTPStatus_t addHeader( HTTPRequestHeaders_t * pRequestHeaders,
-                               const uint8_t * pField,
+                               const char * pField,
                                size_t fieldLen,
-                               const uint8_t * pValue,
+                               const char * pValue,
                                size_t valueLen )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
@@ -1321,9 +1321,9 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
     {
         /* Write "User-Agent: <Value>". */
         returnStatus = addHeader( pRequestHeaders,
-                                  ( const uint8_t * ) HTTP_USER_AGENT_FIELD,
+                                  HTTP_USER_AGENT_FIELD,
                                   HTTP_USER_AGENT_FIELD_LEN,
-                                  ( const uint8_t * ) HTTP_USER_AGENT_VALUE,
+                                  HTTP_USER_AGENT_VALUE,
                                   HTTP_USER_AGENT_VALUE_LEN );
     }
 
@@ -1331,9 +1331,9 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
     {
         /* Write "Host: <Value>". */
         returnStatus = addHeader( pRequestHeaders,
-                                  ( const uint8_t * ) HTTP_HOST_FIELD,
+                                  HTTP_HOST_FIELD,
                                   HTTP_HOST_FIELD_LEN,
-                                  ( const uint8_t * ) pRequestInfo->pHost,
+                                  pRequestInfo->pHost,
                                   pRequestInfo->hostLen );
     }
 
@@ -1343,9 +1343,9 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
         {
             /* Write "Connection: keep-alive". */
             returnStatus = addHeader( pRequestHeaders,
-                                      ( const uint8_t * ) HTTP_CONNECTION_FIELD,
+                                      HTTP_CONNECTION_FIELD,
                                       HTTP_CONNECTION_FIELD_LEN,
-                                      ( const uint8_t * ) HTTP_CONNECTION_KEEP_ALIVE_VALUE,
+                                      HTTP_CONNECTION_KEEP_ALIVE_VALUE,
                                       HTTP_CONNECTION_KEEP_ALIVE_VALUE_LEN );
         }
     }
@@ -1356,9 +1356,9 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
 /*-----------------------------------------------------------*/
 
 HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
-                                   const uint8_t * pField,
+                                   const char * pField,
                                    size_t fieldLen,
-                                   const uint8_t * pValue,
+                                   const char * pValue,
                                    size_t valueLen )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
@@ -1502,9 +1502,9 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
 
         /* Add the Range Request header field and value to the buffer. */
         returnStatus = addHeader( pRequestHeaders,
-                                  ( const uint8_t * ) HTTP_RANGE_REQUEST_HEADER_FIELD,
+                                  HTTP_RANGE_REQUEST_HEADER_FIELD,
                                   HTTP_RANGE_REQUEST_HEADER_FIELD_LEN,
-                                  ( const uint8_t * ) rangeValueBuffer,
+                                  rangeValueBuffer,
                                   rangeValueLength );
     }
 
@@ -1592,9 +1592,9 @@ static HTTPStatus_t addContentLengthHeader( HTTPRequestHeaders_t * pRequestHeade
                                                       sizeof( pContentLengthValue ) );
 
     returnStatus = addHeader( pRequestHeaders,
-                              ( const uint8_t * ) HTTP_CONTENT_LENGTH_FIELD,
+                              HTTP_CONTENT_LENGTH_FIELD,
                               HTTP_CONTENT_LENGTH_FIELD_LEN,
-                              ( const uint8_t * ) pContentLengthValue,
+                              pContentLengthValue,
                               contentLengthValueNumBytes );
 
     if( returnStatus != HTTP_SUCCESS )
@@ -1657,7 +1657,7 @@ static HTTPStatus_t sendHttpBody( const HTTPTransportInterface_t * pTransport,
 
     /* Send the request body. */
     LogDebug( ( "Sending the HTTP request body: BodyBytes=%d",
-                reqBodyBufLen ) );
+                ( int32_t ) reqBodyBufLen ) );
     returnStatus = sendHttpData( pTransport, pRequestBodyBuf, reqBodyBufLen );
 
     return returnStatus;
@@ -1971,7 +1971,7 @@ static int findHeaderFieldParserCallback( http_parser * pHttpParser,
 
     /* Check whether the parsed header matches the header we are looking for. */
     if( ( fieldLen == pContext->fieldLen ) &&
-        ( memcmp( pContext->pField, ( const uint8_t * ) pFieldLoc, fieldLen ) == 0 ) )
+        ( memcmp( pContext->pField, pFieldLoc, fieldLen ) == 0 ) )
     {
         LogDebug( ( "Found header field in response: "
                     "HeaderName=%.*s, HeaderLocation=0x%x",
@@ -2018,7 +2018,7 @@ static int findHeaderValueParserCallback( http_parser * pHttpParser,
                     pContext->fieldLen, pContext->pField, pVaLueLoc ) );
 
         /* Populate the output parameters with the location of the header value in the response buffer. */
-        *pContext->pValueLoc = ( const uint8_t * ) pVaLueLoc;
+        *pContext->pValueLoc = pVaLueLoc;
         *pContext->pValueLen = valueLen;
 
         /* Set the header value found flag. */
@@ -2064,9 +2064,9 @@ static int findHeaderOnHeaderCompleteCallback( http_parser * pHttpParser )
 
 static HTTPStatus_t findHeaderInResponse( const uint8_t * pBuffer,
                                           size_t bufferLen,
-                                          const uint8_t * pField,
+                                          const char * pField,
                                           size_t fieldLen,
-                                          const uint8_t ** pValueLoc,
+                                          const char ** pValueLoc,
                                           size_t * pValueLen )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
@@ -2182,10 +2182,10 @@ static HTTPStatus_t findHeaderInResponse( const uint8_t * pBuffer,
 /*-----------------------------------------------------------*/
 
 HTTPStatus_t HTTPClient_ReadHeader( const HTTPResponse_t * pResponse,
-                                    const uint8_t * pHeaderName,
-                                    size_t headerNameLen,
-                                    const uint8_t ** pHeaderValueLoc,
-                                    size_t * pHeaderValueLen )
+                                    const char * pField,
+                                    size_t fieldLen,
+                                    const char ** pValueLoc,
+                                    size_t * pValueLen )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
 
@@ -2205,23 +2205,23 @@ HTTPStatus_t HTTPClient_ReadHeader( const HTTPResponse_t * pResponse,
                     "Buffer len should be > 0." ) );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
-    else if( pHeaderName == NULL )
+    else if( pField == NULL )
     {
         LogError( ( "Parameter check failed: Input header name is NULL." ) );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
-    else if( headerNameLen == 0u )
+    else if( fieldLen == 0u )
     {
         LogError( ( "Parameter check failed: Input header name length is 0: "
-                    "headerNameLen should be > 0." ) );
+                    "fieldLen should be > 0." ) );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
-    else if( pHeaderValueLoc == NULL )
+    else if( pValueLoc == NULL )
     {
         LogError( ( "Parameter check failed: Output parameter for header value location is NULL." ) );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
-    else if( pHeaderValueLen == NULL )
+    else if( pValueLen == NULL )
     {
         LogError( ( "Parameter check failed: Output parameter for header value length is NULL." ) );
         returnStatus = HTTP_INVALID_PARAMETER;
@@ -2235,10 +2235,10 @@ HTTPStatus_t HTTPClient_ReadHeader( const HTTPResponse_t * pResponse,
     {
         returnStatus = findHeaderInResponse( pResponse->pBuffer,
                                              pResponse->bufferLen,
-                                             pHeaderName,
-                                             headerNameLen,
-                                             pHeaderValueLoc,
-                                             pHeaderValueLen );
+                                             pField,
+                                             fieldLen,
+                                             pValueLoc,
+                                             pValueLen );
     }
 
     return returnStatus;
