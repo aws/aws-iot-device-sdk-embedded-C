@@ -109,7 +109,6 @@ ownnetworkconnection
 packetidentifier
 packetinfo
 packetsize
-paramameters
 passwordlength
 payloadlength
 pbuffer

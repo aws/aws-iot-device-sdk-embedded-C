@@ -102,7 +102,7 @@ int RunProvisioningWithKeysAndCertDemo( bool awsIotMqttMode,
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Prints the rejected reponse information received from the server.
+ * @brief Prints the rejected response information received from the server.
  */
 static void _printRejectedResponse( const AwsIotProvisioningRejectedResponse_t * pResponseInfo )
 {

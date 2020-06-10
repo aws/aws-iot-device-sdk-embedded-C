@@ -290,7 +290,7 @@ static void _commonServerResponseHandler( const uint8_t operationIndex,
                                           _provisioningServerResponseParser responseParser )
 {
     /*
-     * Check whether the operation's sempahore is valid. There is tackles the
+     * Check whether the operation's semaphore is valid. There is tackles the
      * possible RACE CONDITION between #AwsIotProvisioning_CleanUp destroying the
      * semaphore resource, and an incoming server response being processed by the
      * callback.
@@ -1041,7 +1041,7 @@ void AwsIotProvisioning_Cleanup( void )
 
         _AwsIotProvisioningMqttTimeoutMs = AWS_IOT_PROVISIONING_DEFAULT_MQTT_TIMEOUT_MS;
 
-        /* Clean-up all objeration objects. */
+        /* Clean-up all operation objects. */
         _cleanUpOperationObject( _createKeysAndCertOperationIndex );
         _cleanUpOperationObject( _createCertFromCsrOperationIndex );
         _cleanUpOperationObject( _registerThingOperationIndex );

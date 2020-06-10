@@ -51,7 +51,7 @@ In addition to the components above, the Shadow library also depends on C standa
 @page shadow_design Design
 @brief Architecture behind the Shadow library.
 
-Shadow library uses MQTT subscriptions and MQTT publishes for communicating with the AWS IoT Shadow Service. Shadow operations such as Shadow Delete, Shadow Get, and Shadow Update uses MQTT subscriptions to two MQTT topics to know the accepted or rejected status of the follwing MQTT publish and then publishes to the topic for the Shadow operation. Shadow Updated Callback and Shadow Delta Callback uses MQTT subscriptions to receive data from the AWS IoT Shadow Service. The callbacks will be run in MQTT's taskpool context.
+Shadow library uses MQTT subscriptions and MQTT publishes for communicating with the AWS IoT Shadow Service. Shadow operations such as Shadow Delete, Shadow Get, and Shadow Update uses MQTT subscriptions to two MQTT topics to know the accepted or rejected status of the following MQTT publish and then publishes to the topic for the Shadow operation. Shadow Updated Callback and Shadow Delta Callback uses MQTT subscriptions to receive data from the AWS IoT Shadow Service. The callbacks will be run in MQTT's taskpool context.
 
 @section Synchronous_Design Synchronous Design
 @image html shadow_sync_opertation_detail.png width=100%

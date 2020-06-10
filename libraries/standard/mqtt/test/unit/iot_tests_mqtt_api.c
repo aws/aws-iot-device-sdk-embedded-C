@@ -2013,7 +2013,7 @@ TEST( MQTT_Unit_API, GetConnectPacketSizeChecks )
     IotMqttError_t status = IOT_MQTT_SUCCESS;
 
     /* Call IotMqtt_GetConnectPacketSize() with various combinations of
-     * incorrect paramters */
+     * incorrect parameters */
 
     status = IotMqtt_GetConnectPacketSize( NULL, &remainingLength, &packetSize );
     TEST_ASSERT_EQUAL_INT( IOT_MQTT_BAD_PARAMETER, status );
@@ -2411,7 +2411,7 @@ TEST( MQTT_Unit_API, GetPublishPacketSizeChecks )
     size_t packetSize;
     IotMqttError_t status = IOT_MQTT_SUCCESS;
 
-    /* Verify bad paramameters fail. */
+    /* Verify bad parameters fail. */
     status = IotMqtt_GetPublishPacketSize( NULL, &remainingLength, &packetSize );
     TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
 

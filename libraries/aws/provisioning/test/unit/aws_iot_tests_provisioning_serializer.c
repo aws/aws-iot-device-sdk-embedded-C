@@ -49,7 +49,7 @@ static const char * _testCsrString = "TestCSR";
 
 /**
  * @brief The sanity value to use for checking against buffer overrun
- * behavior in buffers that will be modified by serializer funtions in tests.
+ * behavior in buffers that will be modified by serializer functions in tests.
  */
 static const uint8_t _bufferOverrunCheckValue = 0xA5;
 

@@ -34,7 +34,7 @@ CSR_FILE=./system_test_csr.csr
 # Sets up all resources (Provisioning role, Fleet Provisioning template) on the AWS IoT account for running integration tests.
 setup() {
     # Generate a private key and associated Certificate-Signing Request for
-    # CSR-based provisiong tests. 
+    # CSR-based provisioning tests.
     CSR_PRIVATE_KEY_FILE=./csr_private_key.pem
     openssl genrsa -passout pass:test -des3 -out $CSR_PRIVATE_KEY_FILE 2048
     openssl req -new -key $CSR_PRIVATE_KEY_FILE -passin pass:test -out $CSR_FILE -subj "/C=US/ST=WA/L=Seattle/O=AWS/CN=Test_FleetProvisioning"
@@ -68,7 +68,7 @@ setup() {
 # Cleanup the created resources created by the integration tests on the AWS IoT account.
 # (Resources include Thing, its attached certificates and their policies, Fleet Provisioning Template)
 # Note - We do not delete the Provisioning Role as the immediate availability of an IAM role that is created on every CI script run is not guaranteed
-# (due to the eventually consistent characterstic of the IAM role creation).
+# (due to the eventually consistent characteristic of the IAM role creation).
 teardown() {
     # Make best effort to delete any inactive certificate that may have been created by the integration tests.
     aws iot list-certificates \

@@ -8,7 +8,7 @@
 /****************************************************************
 * Bound the lengths of subscription and operation lists.
 *
-* Lists are empty by defaut.
+* Lists are empty by default.
 * Set this variable to L+1 for lists of length <= L.
 ****************************************************************/
 
