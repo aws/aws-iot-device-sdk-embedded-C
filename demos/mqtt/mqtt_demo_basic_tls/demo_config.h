@@ -26,21 +26,24 @@
 /******* DO NOT CHANGE the following order ********/
 /**************************************************/
 
-/* Logging related header files are required to be included in the following order:
- * 1. Include the logging config file "logging_config.h".
+/* Logging config definition and header files inclusion are required in the following order:
+ * 1. Include the header file "logging_levels.h".
  * 2. Define the LIBRARY_LOG_NAME and LIBRARY_LOG_LEVEL macros depending on
- * the logging configuration for the DEMO.
+ * the logging configuration for DEMO.
  * 3. Include the header file "logging_stack.h", if logging is enabled for DEMO.
  */
-#include "logging_config.h"
 
-#ifdef DEMO_LOG_LEVEL
+#include "logging_levels.h"
+
 /* Logging configuration for the Demo. */
-    #define LIBRARY_LOG_NAME     "DEMO"
-    #define LIBRARY_LOG_LEVEL    DEMO_LOG_LEVEL
-
-    #include "logging_stack.h"
+#ifndef LIBRARY_LOG_NAME
+    #define LIBRARY_LOG_NAME    "DEMO"
 #endif
+
+#ifndef LIBRARY_LOG_LEVEL
+    #define LIBRARY_LOG_LEVEL    DEMO_LOG_LEVEL
+#endif
+#include "logging_stack.h"
 
 /************ End of logging configuration ****************/
 
