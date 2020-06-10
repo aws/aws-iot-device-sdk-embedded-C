@@ -247,7 +247,12 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
 MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext );
 
 /**
- * @brief Loop to receive packets from the transport interface.
+ * @brief Loop to receive packets from the transport interface. Handles keep
+ * alive.
+ *
+ * @note This function assumes that pContext->callbacks.getTime is defined.
+ * This is due to keep alive requiring a reliable method of calculating elapsed
+ * time to determine if the keep alive interval has expired.
  *
  * @param[in] pContext Initialized and connected MQTT context.
  * @param[in] timeoutMs Minimum time in milliseconds that the receive loop will
@@ -264,6 +269,27 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext );
  * #MQTTSuccess on success.
  */
 MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
+                               uint32_t timeoutMs );
+
+/**
+ * @brief Loop to receive packets from the transport interface. Does not handle
+ * keep alive.
+ *
+ * @note Passing a timeout value of 0 will run the loop for a single iteration.
+ *
+ * @param[in] pContext Initialized and connected MQTT context.
+ * @param[in] timeoutMs Minimum time in milliseconds that the receive loop will
+ * run, unless an error occurs.
+ *
+ * @return #MQTTBadParameter if context is NULL;
+ * #MQTTRecvFailed if a network error occurs during reception;
+ * #MQTTSendFailed if a network error occurs while sending an ACK or PINGREQ;
+ * #MQTTBadResponse if an invalid packet is received;
+ * #MQTTIllegalState if an incoming QoS 1/2 publish or ack causes an
+ * invalid transition for the internal state machine;
+ * #MQTTSuccess on success.
+ */
+MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext,
                                uint32_t timeoutMs );
 
 /**
