@@ -89,14 +89,29 @@
 #endif
 
 /**
+ * @brief The length of the HTTP server host name.
+ */
+#define SERVER_HOST_LENGTH            ( sizeof( SERVER_HOST ) - 1 )
+
+/**
+ * @brief Length of path to server certificate.
+ */
+#define SERVER_CERT_PATH_LENGTH       ( ( uint16_t ) ( sizeof( SERVER_CERT_PATH ) - 1 ) )
+
+/**
+ * @brief Length of the request body.
+ */
+#define REQUEST_BODY_LENGTH           ( sizeof( REQUEST_BODY ) - 1 )
+
+/**
  * @brief Length of an IPv6 address when converted to hex digits.
  */
-#define IPV6_ADDRESS_STRING_LEN    ( 40 )
+#define IPV6_ADDRESS_STRING_LENGTH    ( 40 )
 
 /**
  * @brief A string to store the resolved IP address from the host name.
  */
-static char resolvedIpAddr[ IPV6_ADDRESS_STRING_LEN ];
+static char resolvedIpAddr[ IPV6_ADDRESS_STRING_LENGTH ];
 
 /**
  * @brief A buffer used in the demo for storing HTTP request headers and

@@ -51,11 +51,6 @@
 #define SERVER_HOST                       "httpbin.org"
 
 /**
- * @brief The length of the HTTP server host name.
- */
-#define SERVER_HOST_LENGTH                ( sizeof( SERVER_HOST ) - 1 )
-
-/**
  * @brief HTTP server port number.
  *
  * In general, port 443 is for TLS HTTP connections.
@@ -68,11 +63,6 @@
  * @note This certificate should be PEM-encoded.
  */
 #define SERVER_CERT_PATH                  "certificates/amazon.crt"
-
-/**
- * @brief Length of path to server certificate.
- */
-#define SERVER_CERT_PATH_LENGTH           ( ( uint16_t ) ( sizeof( SERVER_CERT_PATH ) - 1 ) )
 
 /**
  * @brief Paths for different HTTP methods for specified host.
@@ -99,10 +89,5 @@
  * @brief Request body to send for PUT and POST requests in this demo.
  */
 #define REQUEST_BODY                      "Hello, world!"
-
-/**
- * @brief Length of the request body.
- */
-#define REQUEST_BODY_LENGTH               ( sizeof( REQUEST_BODY ) - 1 )
 
 #endif /* ifndef DEMO_CONFIG_H */
