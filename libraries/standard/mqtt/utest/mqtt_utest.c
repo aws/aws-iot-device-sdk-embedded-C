@@ -126,8 +126,7 @@ typedef struct DuplicateIncomingPacketInfo
     /* Publish Info is valid on duplicate incoming publishes. */
     MQTTPublishInfo_t publishInfo;
     uint16_t incomingPacketId;
-    uint16_t packetIdFromStateSelect1;
-    uint16_t packetIdFromStateSelect2;
+    MQTTPublishState_t stateRecordState;
 } DuplicateIncomingPacketInfo_t;
 
 /* ============================   UNITY FIXTURES ============================ */
@@ -420,40 +419,35 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext,
         {
             MQTT_DeserializePublish_ReturnThruPtr_pPublishInfo( &( pDuplicateIncomingPacket->publishInfo ) );
             MQTT_DeserializePublish_ReturnThruPtr_pPacketId( &( pDuplicateIncomingPacket->incomingPacketId ) );
+            MQTT_GetPacketState_ExpectAnyArgsAndReturn( pDuplicateIncomingPacket->stateRecordState );
 
             /* Handle QoS1. */
             if( pDuplicateIncomingPacket->publishInfo.qos == MQTTQoS1 )
             {
-                MQTT_StateSelect_ExpectAnyArgsAndReturn( pDuplicateIncomingPacket->packetIdFromStateSelect1 );
-                storedPacketId = pDuplicateIncomingPacket->packetIdFromStateSelect1;
+                /* Check if state record already exists. */
+                if( pDuplicateIncomingPacket->stateRecordState == MQTTPubAckSend )
+                {
+                    hasIncomingPacketAlreadyReceived = true;
+                }
             }
             else if( pDuplicateIncomingPacket->publishInfo.qos == MQTTQoS2 )
             {
-                MQTT_StateSelect_ExpectAnyArgsAndReturn( pDuplicateIncomingPacket->packetIdFromStateSelect1 );
-                storedPacketId = pDuplicateIncomingPacket->packetIdFromStateSelect1;
-
-                /* No state update required for #MQTTPubRelPending. */
-                if( storedPacketId == pDuplicateIncomingPacket->incomingPacketId )
+                /* Check if state record already exists. */
+                if( ( pDuplicateIncomingPacket->stateRecordState == MQTTPubRelPending ) ||
+                    ( pDuplicateIncomingPacket->stateRecordState == MQTTPubRecSend ) )
                 {
-                    isStateUpdateNeededAfterSendingAck = false;
-                }
+                    hasIncomingPacketAlreadyReceived = true;
 
-                /* Second state select will be called only if first one is invalid*/
-                if( pDuplicateIncomingPacket->packetIdFromStateSelect1 == MQTT_PACKET_TYPE_INVALID )
-                {
-                    MQTT_StateSelect_ExpectAnyArgsAndReturn( pDuplicateIncomingPacket->packetIdFromStateSelect2 );
-                    storedPacketId = pDuplicateIncomingPacket->packetIdFromStateSelect2;
+                    /* No state update required for #MQTTPubRelPending. */
+                    if( pDuplicateIncomingPacket->stateRecordState == MQTTPubRelPending )
+                    {
+                        isStateUpdateNeededAfterSendingAck = false;
+                    }
                 }
             }
             else
             {
                 /*This is considered as a new incoming publish. */
-            }
-
-            /* This publish was already received and state is maintained in the state machine. */
-            if( storedPacketId == pDuplicateIncomingPacket->incomingPacketId )
-            {
-                hasIncomingPacketAlreadyReceived = true;
             }
         }
     }
@@ -466,30 +460,26 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext,
         {
             /* Deserialize PUBREL with the packetId. */
             MQTT_DeserializeAck_ReturnThruPtr_pPacketId( &( pDuplicateIncomingPacket->incomingPacketId ) );
-            MQTT_StateSelect_ExpectAnyArgsAndReturn( pDuplicateIncomingPacket->packetIdFromStateSelect1 );
+            MQTT_GetPacketState_ExpectAnyArgsAndReturn( pDuplicateIncomingPacket->stateRecordState );
 
             /* PUBREL was already received and state is #MQTTPubCompSend. */
-            if( pDuplicateIncomingPacket->packetIdFromStateSelect1 == pDuplicateIncomingPacket->incomingPacketId )
+            if( pDuplicateIncomingPacket->stateRecordState == MQTTPubCompSend )
             {
                 hasIncomingPacketAlreadyReceived = true;
             }
 
-            /* Second state select will be called only if first one is invalid*/
-            if( pDuplicateIncomingPacket->packetIdFromStateSelect1 == MQTT_PACKET_TYPE_INVALID )
+            /* If PUBREL is not duplicate, it will be received when the state is
+             * #MQTTPubRelPending. This is the correct state and new PUBREL is
+             * not duplicate. No action to be taken here. */
+            else if( pDuplicateIncomingPacket->stateRecordState == MQTTPubRelPending )
             {
-                MQTT_StateSelect_ExpectAnyArgsAndReturn( pDuplicateIncomingPacket->packetIdFromStateSelect2 );
-
-                /* No state record exists for PUBREL. A PUBCOMP needs to be
-                 * sent without advancing the state. */
-                if( pDuplicateIncomingPacket->packetIdFromStateSelect2 != pDuplicateIncomingPacket->incomingPacketId )
-                {
-                    hasIncomingPacketAlreadyReceived = true;
-                    isStateUpdateNeededAfterSendingAck = false;
-                }
-                else
-                {
-                    /* PUBREL is received for the first time for this packetId. */
-                }
+                /* PUBREL is received for the first time for this packetId. */
+            }
+            /* Handle this case by just sending a PUBCOMP. */
+            else
+            {
+                hasIncomingPacketAlreadyReceived = true;
+                isStateUpdateNeededAfterSendingAck = false;
             }
         }
     }
@@ -1268,7 +1258,7 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Paths( void )
     duplicateIncomingPublishInfo.publishInfo.dup = true;
     duplicateIncomingPublishInfo.publishInfo.qos = MQTTQoS1;
     duplicateIncomingPublishInfo.incomingPacketId = 1;
-    duplicateIncomingPublishInfo.packetIdFromStateSelect1 = MQTT_PACKET_TYPE_INVALID;
+    duplicateIncomingPublishInfo.stateRecordState = MQTTStateNull;
     /* Resetting the eventcallback flag. */
     isEventCallbackInvoked = false;
     expectProcessLoopCalls( &context, MQTTSuccess, MQTTPubAckSend,
@@ -1286,7 +1276,7 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Paths( void )
     duplicateIncomingPublishInfo.publishInfo.dup = true;
     duplicateIncomingPublishInfo.publishInfo.qos = MQTTQoS1;
     duplicateIncomingPublishInfo.incomingPacketId = 1;
-    duplicateIncomingPublishInfo.packetIdFromStateSelect1 = 1;
+    duplicateIncomingPublishInfo.stateRecordState = MQTTPubAckSend;
     /* Resetting the eventcallback flag. */
     isEventCallbackInvoked = false;
     expectProcessLoopCalls( &context, MQTTSuccess, MQTTPubAckSend,
@@ -1305,7 +1295,7 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Paths( void )
     duplicateIncomingPublishInfo.publishInfo.dup = true;
     duplicateIncomingPublishInfo.publishInfo.qos = MQTTQoS2;
     duplicateIncomingPublishInfo.incomingPacketId = 1;
-    duplicateIncomingPublishInfo.packetIdFromStateSelect1 = 1;
+    duplicateIncomingPublishInfo.stateRecordState = MQTTPubRelPending;
     /* Resetting the eventcallback flag. */
     isEventCallbackInvoked = false;
     expectProcessLoopCalls( &context, MQTTSuccess, MQTTPubRecSend,
@@ -1324,8 +1314,7 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Paths( void )
     duplicateIncomingPublishInfo.publishInfo.dup = true;
     duplicateIncomingPublishInfo.publishInfo.qos = MQTTQoS2;
     duplicateIncomingPublishInfo.incomingPacketId = 1;
-    duplicateIncomingPublishInfo.packetIdFromStateSelect1 = MQTT_PACKET_TYPE_INVALID;
-    duplicateIncomingPublishInfo.packetIdFromStateSelect2 = 1;
+    duplicateIncomingPublishInfo.stateRecordState = MQTTPubRecSend;
     /* Resetting the eventcallback flag. */
     isEventCallbackInvoked = false;
     expectProcessLoopCalls( &context, MQTTSuccess, MQTTPubRecSend,
@@ -1343,8 +1332,7 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Paths( void )
     duplicateIncomingPublishInfo.publishInfo.dup = true;
     duplicateIncomingPublishInfo.publishInfo.qos = MQTTQoS2;
     duplicateIncomingPublishInfo.incomingPacketId = 1;
-    duplicateIncomingPublishInfo.packetIdFromStateSelect1 = MQTT_PACKET_TYPE_INVALID;
-    duplicateIncomingPublishInfo.packetIdFromStateSelect2 = MQTT_PACKET_TYPE_INVALID;
+    duplicateIncomingPublishInfo.stateRecordState = MQTTStateNull;
     /* Resetting the eventcallback flag. */
     isEventCallbackInvoked = false;
     expectProcessLoopCalls( &context, MQTTSuccess, MQTTPubRecSend,
@@ -1424,16 +1412,13 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths( void )
 
     /* Mock the receiving of a PUBREL packet type and expect the appropriate
      * calls made from the process loop.
-     * State will be in #MQTTPubrelPending for the packet Id.
-     * Second #MQTT_StateSelect() with the incoming packet id indicates that
-     * state is in #MQTTPubrelPending. */
+     * State will be in #MQTTPubRelPending for the packet Id. */
     currentPacketType = MQTT_PACKET_TYPE_PUBREL;
     ( void ) memset( ( void * ) &duplicateIncomingPubrelInfo,
                      0x00,
                      sizeof( DuplicateIncomingPacketInfo_t ) );
     duplicateIncomingPubrelInfo.incomingPacketId = 1;
-    duplicateIncomingPubrelInfo.packetIdFromStateSelect1 = MQTT_PACKET_TYPE_INVALID;
-    duplicateIncomingPubrelInfo.packetIdFromStateSelect2 = 1;
+    duplicateIncomingPubrelInfo.stateRecordState = MQTTPubRelPending;
     expectProcessLoopCalls( &context, MQTTSuccess, MQTTPubCompSend,
                             MQTTSuccess, MQTTPublishDone,
                             MQTTSuccess, false,
@@ -1441,33 +1426,26 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths( void )
 
     /* Mock the receiving of a duplicate PUBREL packet type and expect
      * the appropriate calls made from the process loop.
-     * State will be in #MQTTPubCompSend for the packet Id.
-     * First #MQTT_StateSelect() with the incoming packet id indicates that
-     * state is in #MQTTPubCompSend. */
+     * State will be in #MQTTPubCompSend for the packet Id. */
     currentPacketType = MQTT_PACKET_TYPE_PUBREL;
     ( void ) memset( ( void * ) &duplicateIncomingPubrelInfo,
                      0x00,
                      sizeof( DuplicateIncomingPacketInfo_t ) );
     duplicateIncomingPubrelInfo.incomingPacketId = 1;
-    duplicateIncomingPubrelInfo.packetIdFromStateSelect1 = 1;
-    duplicateIncomingPubrelInfo.packetIdFromStateSelect2 = MQTT_PACKET_TYPE_INVALID;
+    duplicateIncomingPubrelInfo.stateRecordState = MQTTPubCompSend;
     expectProcessLoopCalls( &context, MQTTSuccess, MQTTPubCompSend,
                             MQTTSuccess, MQTTPublishDone,
                             MQTTSuccess, false,
                             &duplicateIncomingPubrelInfo );
 
     /* Mock the receiving of a duplicate PUBREL packet type and expect
-     * the appropriate calls made from the process loop.
-     * State will not be present in state records for the packet Id.
-     * Both #MQTT_StateSelect() with the invalid id indicates that
-     * state is in missing. */
+     * the appropriate calls made from the process loop. */
     currentPacketType = MQTT_PACKET_TYPE_PUBREL;
     ( void ) memset( ( void * ) &duplicateIncomingPubrelInfo,
                      0x00,
                      sizeof( DuplicateIncomingPacketInfo_t ) );
     duplicateIncomingPubrelInfo.incomingPacketId = 1;
-    duplicateIncomingPubrelInfo.packetIdFromStateSelect1 = MQTT_PACKET_TYPE_INVALID;
-    duplicateIncomingPubrelInfo.packetIdFromStateSelect2 = MQTT_PACKET_TYPE_INVALID;
+    duplicateIncomingPubrelInfo.stateRecordState = MQTTStateNull;
     expectProcessLoopCalls( &context, MQTTSuccess, MQTTPubCompSend,
                             MQTTSuccess, MQTTPublishDone,
                             MQTTSuccess, false,
