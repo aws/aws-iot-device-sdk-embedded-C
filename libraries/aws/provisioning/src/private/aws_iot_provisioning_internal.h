@@ -503,7 +503,7 @@ typedef struct _provisioningOperation
     uint32_t semReferenceCount;         /**< @brief An atomic reference counter for
                                          *  safeguarding semaphore access across thread
                                          *  contexts. */
-    IotSemaphore_t responseReceivedSem; /**< @brief Binary sempahore used for notifying
+    IotSemaphore_t responseReceivedSem; /**< @brief Binary semaphore used for notifying
                                          * arrival of server response in the synchronous
                                          * API functions
                                          * @ref provisioning_function_createkeysandcertificate,

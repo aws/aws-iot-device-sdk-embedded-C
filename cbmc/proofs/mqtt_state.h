@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 /****************************************************************
-* Logical connectives useful in assuptions
+* Logical connectives useful in assumptions
 ****************************************************************/
 
 #define IMPLIES( a, b )    ( !( a ) || ( b ) )
@@ -73,7 +73,7 @@ void * malloc_can_fail( size_t size );
 * tree.  If that pointer is NULL, the allocator allocates the root
 * struct and the result of the tree.  If it points to an existing
 * root struct, the allocators uses that root and fills in the rest of
-* the tree.  The pointer is usually NULL.  In constrast, because a
+* the tree.  The pointer is usually NULL.  In contrast, because a
 * connection struct includes an ping request operation struct as a
 * substruct, we allocate that ping request operation by passing a
 * pointer to the connection's operation substruct.
@@ -172,14 +172,14 @@ void * allocate_IotNetworkConnection();
 /****************************************************************
 * IotNetworkInterface
 *
-* The network interface is a struct of fuction pointers that point to
+* The network interface is a struct of function pointers that point to
 * implementions of the network API.  We define a collection of stubs
 * for these implementations that do little more that check the
 * validity of arguments and generate some minor side effects.
 *
 * The presence of these stubs can play havoc on CBMC function pointer
 * elimination.  CBMC considers all functions whose address has been
-* taken to be a candiate for the value of a function pointer.  So we
+* taken to be a candidate for the value of a function pointer.  So we
 * have to be careful not to take the address of these stubs unless we
 * have to.  In particular, we don't assign them in the allocator or
 * validator.

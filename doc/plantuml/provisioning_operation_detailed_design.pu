@@ -1,6 +1,6 @@
 @startuml
 
-title Detailed Worflow Diagram of an Operation in Provisioning Library
+title Detailed Workflow Diagram of an Operation in Provisioning Library
 
 skinparam classFontSize 8
 skinparam classFontName Helvetica
@@ -52,7 +52,7 @@ provisioning -> app: Return NO_MEMORY if allocation fails.
 provisioning -> serializer: Request serialization of PUBLISH payload. \nProvide allocated buffer.  
 serializer -> serializer: Perform <i>actual serialization</i> in buffer.
 serializer -> provisioning: Return SUCCESS or INTERNAL_FAILURE/NO_MEMORY\nfor serializer failure.
-provisioning -> app: Return same error code if serializalion failed.
+provisioning -> app: Return same error code if serialization failed.
 
 provisioning -> mqtt: PUBLISH payload to operation's request topic
 mqtt -> aws: Transmit MQTT PUBLISH packets to server
@@ -60,7 +60,7 @@ mqtt -> provisioning: Return SUCCESS or failure.
 provisioning --> app: Return MQTT_ERROR if PUBLISH failed.
 
 provisioning -> provisioning: Wait on server response with timeout.
-note right of provisioning: <b>Sempahore</b> resource used for pending on\n notification from MQTT subscription callback.
+note right of provisioning: <b>Semaphore</b> resource used for pending on\n notification from MQTT subscription callback.
 deactivate app
 alt Receive Server Response within timeout period
 aws -> mqtt : Incoming PUBLISH response from server

@@ -337,7 +337,7 @@ IotTaskPoolError_t IotTaskPool_RecycleJob( IotTaskPool_t taskPool,
  * - #IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS
  *
  *
- * @note This function will not allocate memory, so it is guaranteed to succeed if the paramters are correct and the task pool
+ * @note This function will not allocate memory, so it is guaranteed to succeed if the parameters are correct and the task pool
  * was correctly initialized, and not yet destroyed.
  *
  * @warning The `taskPool` used in this function should be the same used to create the job pointed to by `job`, or the
