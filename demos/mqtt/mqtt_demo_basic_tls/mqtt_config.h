@@ -27,19 +27,20 @@
 /**************************************************/
 
 /* Logging related header files are required to be included in the following order:
- * 1. Include the header file "logging_levels.h".
- * 2. Define LIBRARY_LOG_NAME and  LIBRARY_LOG_LEVEL.
- * 3. Include the header file "logging_stack.h".
+ * 1. Include the logging config file "logging_config.h".
+ * 2. Define the LIBRARY_LOG_NAME and LIBRARY_LOG_LEVEL macros depending on
+ * the logging configuration for MQTT.
+ * 3. Include the header file "logging_stack.h", if logging is enabled for MQTT.
  */
+#include "logging_config.h"
 
-/* Include header that defines log levels. */
-#include "logging_levels.h"
+#ifdef MQTT_LOG_LEVEL
+/* Logging configuration for the MQTT library. */
+    #define LIBRARY_LOG_NAME     "MQTT"
+    #define LIBRARY_LOG_LEVEL    MQTT_LOG_LEVEL
 
-/* Configure name and log level for the MQTT library. */
-#define LIBRARY_LOG_NAME     "MQTT"
-#define LIBRARY_LOG_LEVEL    LOG_INFO
-
-#include "logging_stack.h"
+    #include "logging_stack.h"
+#endif
 
 /************ End of logging configuration ****************/
 

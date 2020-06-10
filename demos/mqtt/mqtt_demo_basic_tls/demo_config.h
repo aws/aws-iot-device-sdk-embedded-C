@@ -27,19 +27,20 @@
 /**************************************************/
 
 /* Logging related header files are required to be included in the following order:
- * 1. Include the header file "logging_levels.h".
- * 2. Define LIBRARY_LOG_NAME and  LIBRARY_LOG_LEVEL.
- * 3. Include the header file "logging_stack.h".
+ * 1. Include the logging config file "logging_config.h".
+ * 2. Define the LIBRARY_LOG_NAME and LIBRARY_LOG_LEVEL macros depending on
+ * the logging configuration for the DEMO.
+ * 3. Include the header file "logging_stack.h", if logging is enabled for DEMO.
  */
+#include "logging_config.h"
 
-/* Include header that defines log levels. */
-#include "logging_levels.h"
-
+#ifdef DEMO_LOG_LEVEL
 /* Logging configuration for the Demo. */
-#define LIBRARY_LOG_NAME     "DEMO"
-#define LIBRARY_LOG_LEVEL    LOG_INFO
+    #define LIBRARY_LOG_NAME     "DEMO"
+    #define LIBRARY_LOG_LEVEL    DEMO_LOG_LEVEL
 
-#include "logging_stack.h"
+    #include "logging_stack.h"
+#endif
 
 /************ End of logging configuration ****************/
 
@@ -83,6 +84,6 @@
  *
  * No two clients may use the same client identifier simultaneously.
  */
-#define CLIENT_IDENTIFIER    "testclient"
+#define CLIENT_IDENTIFIER          "testclient"
 
 #endif /* ifndef DEMO_CONFIG_H */
