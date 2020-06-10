@@ -1,6 +1,7 @@
 #ifndef MQTT_INTERNAL_H_
 #define MQTT_INTERNAL_H_
 
+/* Include config file before other headers. */
 #include "mqtt_config.h"
 
 #ifndef LogError

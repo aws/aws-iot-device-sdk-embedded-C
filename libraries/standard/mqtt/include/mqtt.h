@@ -22,6 +22,7 @@
 #ifndef MQTT_H
 #define MQTT_H
 
+/* Include config file before other headers. */
 #include "mqtt_config.h"
 #include "mqtt_lightweight.h"
 
