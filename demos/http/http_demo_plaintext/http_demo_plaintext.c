@@ -33,11 +33,11 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
+/* Include Demo Config as the first non-system header. */
+#include "demo_config.h"
+
 /* HTTP API header. */
 #include "http_client.h"
-
-/* Demo config header. */
-#include "demo_config.h"
 
 /**
  * @brief Length of an IPv6 address when converted to hex digits.
