@@ -637,12 +637,12 @@ static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface
 
         LogInfo( ( "Sending HTTP %s request to %s%s...",
                    pMethod, SERVER_HOST, pPath ) );
-        LogInfo( ( "Request Headers:\n%.*s",
-                   ( int32_t ) requestHeaders.headersLen,
-                   ( char * ) requestHeaders.pBuffer ) );
-        LogInfo( ( "Request Body:\n%.*s\n",
-                   ( int32_t ) REQUEST_BODY_LENGTH,
-                   REQUEST_BODY ) );
+        LogDebug( ( "Request Headers:\n%.*s",
+                    ( int32_t ) requestHeaders.headersLen,
+                    ( char * ) requestHeaders.pBuffer ) );
+        LogDebug( ( "Request Body:\n%.*s\n",
+                    ( int32_t ) REQUEST_BODY_LENGTH,
+                    REQUEST_BODY ) );
         /* Send the request and receive the response. */
         httpStatus = HTTPClient_Send( pTransportInterface,
                                       &requestHeaders,
