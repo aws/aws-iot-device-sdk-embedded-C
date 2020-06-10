@@ -144,17 +144,6 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * const pContext,
                                            MQTTPacketInfo_t * pIncomingPacket );
 
 /**
- * @brief Handle received MQTT ack for publish messages.
- *
- * @param[in] pContext MQTT Connection context.
- * @param[in] pIncomingPacket Incoming packet.
- *
- * @return MQTTSuccess, MQTTIllegalState, or deserialization error.
- */
-static MQTTStatus_t handleIncomingPubAck( MQTTContext_t * const pContext,
-                                          MQTTPacketInfo_t * pIncomingPacket );
-
-/**
  * @brief Handle received MQTT ack.
  *
  * @param[in] pContext MQTT Connection context.
@@ -257,20 +246,6 @@ static bool publishRecordExists( MQTTContext_t * const pContext,
                                  MQTTPublishState_t * pPublishRecordState );
 
 /**
- * @brief Checks if packet with a given state is present in state records.
- *
- * @param[in] pContext Initialized MQTT context.
- * @param[in] packetId Packet identifier to query in the state records.
- * @param[in] state Packet state to query for in the state records.
- *
- * @return true if packet id with a given state is present in the state records;
- * false otherwise.
- */
-static bool packetStatePresent( MQTTContext_t * const pContext,
-                                uint16_t packetId,
-                                MQTTPublishState_t state );
-
-/**
  * @brief Checks if a PUBREL packet was received before.
  *
  * @param[in] pContext Initialized MQTT context.
@@ -331,39 +306,6 @@ static MQTTStatus_t validatePublishParams( MQTTContext_t * const pContext,
 static MQTTStatus_t updatePublishState( MQTTContext_t * const pContext,
                                         const MQTTPublishInfo_t * const pPublishInfo,
                                         uint16_t packetId );
-
-/**
- * @brief Function to get the packet type and packet type byte for the given
- * publish ack state.
- *
- * @brief param[in] publishState Publish ack state for which packet type and
- * packet type byte needs to be filled.
- * @brief param[out] pPacketType Packet type of the ack to be send.
- * @brief param[out] pPacketTypeByte Packet type byte of the ack to be send.
- *
- */
-static void getPacketTypeAndByte( MQTTPublishState_t publishState,
-                                  MQTTPubAckType_t * const pPacketType,
-                                  uint8_t * const pPacketTypeByte );
-
-/**
- * @brief Function to update state after sending a publish ack.
- *
- * @brief param[in] pContext Initialized MQTT context.
- * @brief param[in] packetId Packet Id for the MQTT PUBLISH packet.
- * @brief param[in] stateNeedUpdate Whether the state need to be updated after
- * sending an ack or not.
- * @brief param[in] packetType Packet type of the ack to be send.
- * @brief param[out] pNewState New state after state machine update.
- *
- * @return #MQTTIllegalState if state machine update failed;
- * #MQTTSuccess otherwise.
- */
-static MQTTStatus_t updateAckState( MQTTContext_t * const pContext,
-                                    uint16_t packetId,
-                                    bool stateNeedUpdate,
-                                    MQTTPubAckType_t packetType,
-                                    MQTTPublishState_t * const pNewState );
 
 /*-----------------------------------------------------------*/
 
@@ -628,72 +570,6 @@ static MQTTStatus_t receivePacket( MQTTContext_t * const pContext,
 
 /*-----------------------------------------------------------*/
 
-static void getPacketTypeAndByte( MQTTPublishState_t publishState,
-                                  MQTTPubAckType_t * const pPacketType,
-                                  uint8_t * const pPacketTypeByte )
-{
-    switch( publishState )
-    {
-        case MQTTPubAckSend:
-            *pPacketTypeByte = MQTT_PACKET_TYPE_PUBACK;
-            *pPacketType = MQTTPuback;
-            break;
-
-        case MQTTPubRecSend:
-            *pPacketTypeByte = MQTT_PACKET_TYPE_PUBREC;
-            *pPacketType = MQTTPubrec;
-            break;
-
-        case MQTTPubRelSend:
-            *pPacketTypeByte = MQTT_PACKET_TYPE_PUBREL;
-            *pPacketType = MQTTPubrel;
-            break;
-
-        case MQTTPubCompSend:
-            *pPacketTypeByte = MQTT_PACKET_TYPE_PUBCOMP;
-            *pPacketType = MQTTPubcomp;
-            break;
-
-        default:
-            /* Take no action for states that do not require sending an ack. */
-            break;
-    }
-}
-
-/*-----------------------------------------------------------*/
-
-static MQTTStatus_t updateAckState( MQTTContext_t * const pContext,
-                                    uint16_t packetId,
-                                    bool stateNeedUpdate,
-                                    MQTTPubAckType_t packetType,
-                                    MQTTPublishState_t * const pNewState )
-{
-    MQTTStatus_t status = MQTTSuccess;
-
-    assert( pContext != NULL );
-    assert( pNewState != NULL );
-
-    /* Only update the state machine if the state update is required. */
-    if( stateNeedUpdate )
-    {
-        *pNewState = MQTT_UpdateStateAck( pContext,
-                                          packetId,
-                                          packetType,
-                                          MQTT_SEND );
-
-        if( *pNewState == MQTTStateNull )
-        {
-            LogError( ( "Failed to update state of publish %u.",
-                        packetId ) );
-            status = MQTTIllegalState;
-        }
-    }
-
-    return status;
-}
-
-/*-----------------------------------------------------------*/
-
 static MQTTStatus_t sendPublishAcks( MQTTContext_t * const pContext,
                                      uint16_t packetId,
                                      MQTTPublishState_t * pPublishState,
@@ -708,8 +584,32 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * const pContext,
     assert( pContext != NULL );
     assert( pPublishState != NULL );
 
-    /* Get the packet type and packet type byte for the publish ack packet. */
-    getPacketTypeAndByte( *pPublishState, &packetType, &packetTypeByte );
+    switch( *pPublishState )
+    {
+        case MQTTPubAckSend:
+            packetTypeByte = MQTT_PACKET_TYPE_PUBACK;
+            packetType = MQTTPuback;
+            break;
+
+        case MQTTPubRecSend:
+            packetTypeByte = MQTT_PACKET_TYPE_PUBREC;
+            packetType = MQTTPubrec;
+            break;
+
+        case MQTTPubRelSend:
+            packetTypeByte = MQTT_PACKET_TYPE_PUBREL;
+            packetType = MQTTPubrel;
+            break;
+
+        case MQTTPubCompSend:
+            packetTypeByte = MQTT_PACKET_TYPE_PUBCOMP;
+            packetType = MQTTPubcomp;
+            break;
+
+        default:
+            /* Take no action for states that do not require sending an ack. */
+            break;
+    }
 
     if( packetTypeByte != 0U )
     {
@@ -728,11 +628,21 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * const pContext,
         {
             pContext->controlPacketSent = true;
 
-            status = updateAckState( pContext,
-                                     packetId,
-                                     stateNeedUpdate,
-                                     packetType,
-                                     &newState );
+            /* Only update the state machine if the state update is required. */
+            if( stateNeedUpdate )
+            {
+                newState = MQTT_UpdateStateAck( pContext,
+                                                packetId,
+                                                packetType,
+                                                MQTT_SEND );
+
+                if( newState == MQTTStateNull )
+                {
+                    LogError( ( "Failed to update state of publish %u.",
+                                packetId ) );
+                    status = MQTTIllegalState;
+                }
+            }
         }
         else
         {
@@ -753,6 +663,7 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * const pContext,
 
     return status;
 }
+
 
 /*-----------------------------------------------------------*/
 
@@ -789,44 +700,6 @@ static MQTTStatus_t handleKeepAlive( MQTTContext_t * const pContext )
 
 /*-----------------------------------------------------------*/
 
-static bool packetStatePresent( MQTTContext_t * const pContext,
-                                uint16_t packetId,
-                                MQTTPublishState_t state )
-{
-    bool hasPublishReceived = false;
-    uint16_t packetIdFromStoredPublish = MQTT_PACKET_ID_INVALID;
-    MQTTStateCursor_t cursor = 0U;
-
-    assert( pContext != NULL );
-    assert( packetId != MQTT_PACKET_ID_INVALID );
-
-    /* Find out if the publish packet has already received and state
-     * is maintained in the state machine. */
-    do
-    {
-        /* Query state machine for packet ids in given state. */
-        packetIdFromStoredPublish = MQTT_StateSelect( pContext,
-                                                      state,
-                                                      &cursor );
-
-        /* If there was a publish received already with the same
-         * packet id.*/
-        if( packetIdFromStoredPublish == packetId )
-        {
-            /* The incoming packet was received earlier and in state
-             * MQTTPubRelPending. */
-            hasPublishReceived = true;
-            LogDebug( ( "Incoming publish with packet id %u was already stored in records.",
-                        packetId ) );
-            break;
-        }
-    } while( packetIdFromStoredPublish != MQTT_PACKET_ID_INVALID );
-
-    return hasPublishReceived;
-}
-
-/*-----------------------------------------------------------*/
-
 static bool publishRecordExists( MQTTContext_t * const pContext,
                                  uint16_t packetId,
                                  MQTTQoS_t qos,
@@ -834,12 +707,16 @@ static bool publishRecordExists( MQTTContext_t * const pContext,
                                  MQTTPublishState_t * pPublishRecordState )
 {
     bool hasPublishReceivedBefore = false;
+    MQTTPublishState_t publishState = MQTTStateNull;
 
     assert( pContext != NULL );
     assert( packetId != MQTT_PACKET_ID_INVALID );
     assert( pIsStateUpdateNeededAfterAck != NULL );
     assert( pPublishRecordState != NULL );
     assert( qos == MQTTQoS1 || qos == MQTTQoS2 );
+
+    /* Get the packet state from the state engine. */
+    publishState = MQTT_GetPacketState( pContext, packetId, true );
 
     if( qos == MQTTQoS1 )
     {
@@ -854,9 +731,7 @@ static bool publishRecordExists( MQTTContext_t * const pContext,
          * 2. No state record present - This will indicate that a publish was
          *    never received or a PUBACK was sent but not successfully received
          *    by broker. This has to be handled as a new incoming publish.*/
-        if( packetStatePresent( pContext,
-                                packetId,
-                                MQTTPubAckSend ) )
+        if( publishState == MQTTPubAckSend )
         {
             hasPublishReceivedBefore = true;
 
@@ -885,18 +760,14 @@ static bool publishRecordExists( MQTTContext_t * const pContext,
          *    sending a PUBREC.
          * 2. No state record present - This will indicate that a publish was
          *    never received. This has to be handled as a new incoming publish. */
-        if( packetStatePresent( pContext,
-                                packetId,
-                                MQTTPubRelPending ) )
+        if( publishState == MQTTPubRelPending )
         {
             hasPublishReceivedBefore = true;
 
             /* A state update is not required after sending PUBREL. */
             *pIsStateUpdateNeededAfterAck = false;
         }
-        else if( packetStatePresent( pContext,
-                                     packetId,
-                                     MQTTPubRecSend ) )
+        else if( publishState == MQTTPubRecSend )
         {
             hasPublishReceivedBefore = true;
 
@@ -968,7 +839,9 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * const pContext,
     if( status == MQTTSuccess )
     {
         /* Pass the incoming publish to application, except the QoS2 duplicate
-         * incoming publishes. */
+         * incoming publishes. QoS2 doesn't allow duplicate incoming publishes
+         * (at most once delivery), whereas QoS1 allows duplicates to be passed
+         * (at least once delivery). */
         if( ( !hasPublishReceivedBefore ) || ( publishInfo.qos != MQTTQoS2 ) )
         {
             /* Provide publish info to application. This has to be done
@@ -1001,11 +874,15 @@ static bool pubrelRecordExists( MQTTContext_t * const pContext,
                                 MQTTPublishState_t * pPublishRecordState )
 {
     bool hasPubrelReceivedBefore = false;
+    MQTTPublishState_t publishState = MQTTStateNull;
 
     assert( pContext != NULL );
     assert( packetId != MQTT_PACKET_ID_INVALID );
     assert( pIsStateUpdateNeededAfterAck != NULL );
     assert( pPublishRecordState != NULL );
+
+    /* Get the state for the packet from state engine. */
+    publishState = MQTT_GetPacketState( pContext, packetId, true );
 
     /* A duplicate PUBREL for an incoming publish can be received when the
      * packet is in 2 states.
@@ -1017,9 +894,7 @@ static bool pubrelRecordExists( MQTTContext_t * const pContext,
      *    lost from the application or a PUBCOMP was sent earlier but not
      *    successfully received by the broker. This has to be handled by just
      *    sending a PUBREL back to broker without updating the state. */
-    if( packetStatePresent( pContext,
-                            packetId,
-                            MQTTPubCompSend ) )
+    if( publishState == MQTTPubCompSend )
     {
         hasPubrelReceivedBefore = true;
 
@@ -1031,11 +906,9 @@ static bool pubrelRecordExists( MQTTContext_t * const pContext,
     }
 
     /* If PUBREL is not duplicate, it will be received when the state is
-     * #MQTTPubRelPending. This is the correct state and is not PUBREL is
+     * #MQTTPubRelPending. This is the correct state and new PUBREL is
      * not duplicate. No action to be taken here. */
-    else if( packetStatePresent( pContext,
-                                 packetId,
-                                 MQTTPubRelPending ) )
+    else if( publishState == MQTTPubRelPending )
     {
         /* This is the first time PUBREL is received for this packet. */
     }
@@ -1060,72 +933,15 @@ static bool pubrelRecordExists( MQTTContext_t * const pContext,
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t handleIncomingPubAck( MQTTContext_t * const pContext,
-                                          MQTTPacketInfo_t * pIncomingPacket )
-{
-    MQTTStatus_t status = MQTTBadResponse;
-    MQTTPublishState_t publishRecordState = MQTTStateNull;
-    uint16_t packetIdentifier;
-    MQTTPubAckType_t ackType;
-    /* Variables to handle duplicate PUBREL ack from broker. */
-    bool hasPubrelReceivedBefore = false, stateUpdateNeededAfterPubcompSend = true;
-
-    assert( pContext != NULL );
-    assert( pIncomingPacket != NULL );
-
-    ackType = getAckFromPacketType( pIncomingPacket->type );
-    status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, NULL );
-    LogInfo( ( "Ack packet deserialized with result: %d.", status ) );
-
-    /* Handle PUBREL duplicates received from broker after an MQTT
-     * session is reestablished. */
-    if( pIncomingPacket->type == MQTT_PACKET_TYPE_PUBREL )
-    {
-        hasPubrelReceivedBefore = pubrelRecordExists( pContext,
-                                                      packetIdentifier,
-                                                      &stateUpdateNeededAfterPubcompSend,
-                                                      &publishRecordState );
-    }
-
-    /* Update the state record. Do not update the state record for a
-     * duplicate PUBREL. */
-    if( ( status == MQTTSuccess ) && ( !hasPubrelReceivedBefore ) )
-    {
-        publishRecordState = MQTT_UpdateStateAck( pContext,
-                                                  packetIdentifier,
-                                                  ackType,
-                                                  MQTT_RECEIVE );
-        LogInfo( ( "State record updated. New state=%d.",
-                   publishRecordState ) );
-    }
-
-    if( status == MQTTSuccess )
-    {
-        pContext->callbacks.appCallback( pContext,
-                                         pIncomingPacket,
-                                         packetIdentifier,
-                                         NULL );
-    }
-
-    if( status == MQTTSuccess )
-    {
-        /* Send PUBREL or PUBCOMP if necessary. */
-        status = sendPublishAcks( pContext,
-                                  packetIdentifier,
-                                  &publishRecordState,
-                                  stateUpdateNeededAfterPubcompSend );
-    }
-
-    return status;
-}
-
-/*-----------------------------------------------------------*/
-
 static MQTTStatus_t handleIncomingAck( MQTTContext_t * const pContext,
                                        MQTTPacketInfo_t * pIncomingPacket )
 {
     MQTTStatus_t status = MQTTBadResponse;
     uint16_t packetIdentifier;
+    MQTTPublishState_t publishRecordState = MQTTStateNull;
+    MQTTPubAckType_t ackType;
+    /* Variables to handle duplicate PUBREL ack from broker. */
+    bool hasPubrelReceivedBefore = false, stateUpdateNeededAfterPubcompSend = true;
 
     assert( pContext != NULL );
     assert( pIncomingPacket != NULL );
@@ -1137,7 +953,49 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * const pContext,
         case MQTT_PACKET_TYPE_PUBREL:
         case MQTT_PACKET_TYPE_PUBCOMP:
 
-            status = handleIncomingPubAck( pContext, pIncomingPacket );
+            ackType = getAckFromPacketType( pIncomingPacket->type );
+            status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, NULL );
+            LogInfo( ( "Ack packet deserialized with result: %d.", status ) );
+
+            /* Handle PUBREL duplicates received from broker after an MQTT
+             * session is reestablished. */
+            if( pIncomingPacket->type == MQTT_PACKET_TYPE_PUBREL )
+            {
+                hasPubrelReceivedBefore = pubrelRecordExists( pContext,
+                                                              packetIdentifier,
+                                                              &stateUpdateNeededAfterPubcompSend,
+                                                              &publishRecordState );
+            }
+
+            /* Update the state record. Do not update the state record for a
+             * duplicate PUBREL. */
+            if( ( status == MQTTSuccess ) && ( !hasPubrelReceivedBefore ) )
+            {
+                publishRecordState = MQTT_UpdateStateAck( pContext,
+                                                          packetIdentifier,
+                                                          ackType,
+                                                          MQTT_RECEIVE );
+                LogInfo( ( "State record updated. New state=%d.",
+                           publishRecordState ) );
+            }
+
+            if( status == MQTTSuccess )
+            {
+                pContext->callbacks.appCallback( pContext,
+                                                 pIncomingPacket,
+                                                 packetIdentifier,
+                                                 NULL );
+            }
+
+            if( status == MQTTSuccess )
+            {
+                /* Send PUBREL or PUBCOMP if necessary. */
+                status = sendPublishAcks( pContext,
+                                          packetIdentifier,
+                                          &publishRecordState,
+                                          stateUpdateNeededAfterPubcompSend );
+            }
+
             break;
 
         case MQTT_PACKET_TYPE_PINGRESP:
@@ -1227,6 +1085,7 @@ static MQTTStatus_t sendPublish( MQTTContext_t * const pContext,
 
     assert( pContext != NULL );
     assert( pPublishInfo != NULL );
+    assert( headerSize > 0 );
 
     /* Send header first. */
     bytesSent = sendPacket( pContext,
@@ -1382,8 +1241,8 @@ static MQTTStatus_t resendPubrelForPacketInState( MQTTContext_t * const pContext
                                                   MQTTPublishState_t state )
 {
     MQTTStatus_t status = MQTTSuccess;
-    MQTTStateCursor_t cursor = 0U;
-    uint16_t packetId = 0U;
+    MQTTStateCursor_t cursor = MQTT_STATE_CURSOR_INITIALIZER;
+    uint16_t packetId = MQTT_PACKET_ID_INVALID;
     bool stateNeedUpdate = false;
 
     assert( pContext != NULL );

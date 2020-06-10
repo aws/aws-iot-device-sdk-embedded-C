@@ -622,3 +622,37 @@ uint16_t MQTT_StateSelect( const MQTTContext_t * pMqttContext,
 
     return packetId;
 }
+
+MQTTPublishState_t MQTT_GetPacketState( const MQTTContext_t * pMqttContext,
+                                        uint16_t packetId,
+                                        bool incomingPublish )
+{
+    MQTTPublishState_t publishState = MQTTStateNull;
+    const MQTTPubAckInfo_t * records = NULL;
+    int index = 0;
+
+    if( pMqttContext == NULL )
+    {
+        LogError( ( "pMqttContext cannot be NULL." ) );
+    }
+    else if( packetId == MQTT_PACKET_ID_INVALID )
+    {
+        LogError( ( "packet ID cannot be 0." ) );
+    }
+    else
+    {
+        records = ( incomingPublish ) ? pMqttContext->incomingPublishRecords
+                  : pMqttContext->outgoingPublishRecords;
+
+        for( ; index < MQTT_STATE_ARRAY_MAX_COUNT; index++ )
+        {
+            if( records[ index ].packetId == packetId )
+            {
+                publishState = records[ index ].publishState;
+                break;
+            }
+        }
+    }
+
+    return publishState;
+}

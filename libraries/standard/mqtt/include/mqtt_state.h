@@ -27,13 +27,6 @@
 #define MQTT_STATE_CURSOR_INITIALIZER    ( size_t ) 0
 
 /**
- * @brief Invalid packet identifier.
- *
- * Zero is an invalid packet identifier as per MQTT v3.1.1 spec.
- */
-#define MQTT_PACKET_ID_INVALID           ( ( uint16_t ) 0U )
-
-/**
  * @brief Value indicating either send or receive.
  */
 typedef enum MQTTStateOperation
@@ -124,5 +117,21 @@ MQTTPublishState_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
 uint16_t MQTT_StateSelect( const MQTTContext_t * pMqttContext,
                            MQTTPublishState_t searchState,
                            MQTTStateCursor_t * pCursor );
+
+/**
+ * @brief Get the publish state for the publish packet with the given packet id.
+ *
+ * @param[in] pMqttContext Initialized MQTT context.
+ * @param[in] packetId The packet id of the packet to search for.
+ * @param[in] incomingPublish Whether to search for the publish packet in
+ * incoming publish records or the outgoing publish records. True for searching
+ * in incoming publish record; false for searching outgoing publish record.
+ *
+ * @return #MQTTStateNull if no publish packet found or if invalid parameters
+ * are passed; state of the publish packet with given packet id otherwise.
+ */
+MQTTPublishState_t MQTT_GetPacketState( const MQTTContext_t * pMqttContext,
+                                        uint16_t packetId,
+                                        bool incomingPublish );
 
 #endif /* ifndef MQTT_STATE_H */

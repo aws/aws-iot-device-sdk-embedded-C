@@ -433,3 +433,39 @@ void test_MQTT_StateSelect( void )
     TEST_ASSERT_EQUAL( MQTT_PACKET_ID_INVALID, packetId );
     TEST_ASSERT_EQUAL( MQTT_STATE_ARRAY_MAX_COUNT, outgoingCursor );
 }
+
+/* ========================================================================== */
+
+void test_MQTT_GetPacketState( void )
+{
+    MQTTContext_t mqttContext = { 0 };
+    MQTTPublishState_t publishState = MQTTStateNull;
+    const uint16_t PACKET_ID = 1;
+    const size_t index = MQTT_STATE_ARRAY_MAX_COUNT / 2;
+
+    /* Invalid parameters. */
+    publishState = MQTT_GetPacketState( NULL, PACKET_ID, true );
+    TEST_ASSERT_EQUAL( MQTTStateNull, publishState );
+    publishState = MQTT_GetPacketState( &mqttContext, MQTT_PACKET_ID_INVALID, true );
+    TEST_ASSERT_EQUAL( MQTTStateNull, publishState );
+
+    /* Packet not present in records. */
+    /* Incoming. */
+    publishState = MQTT_GetPacketState( &mqttContext, PACKET_ID, true );
+    TEST_ASSERT_EQUAL( MQTTStateNull, publishState );
+
+    /* Outgoing. */
+    publishState = MQTT_GetPacketState( &mqttContext, PACKET_ID, false );
+    TEST_ASSERT_EQUAL( MQTTStateNull, publishState );
+
+    /* Packet present in records. */
+    /* Incoming. */
+    addToRecord( mqttContext.incomingPublishRecords, index, PACKET_ID, MQTTQoS1, MQTTPubAckSend );
+    publishState = MQTT_GetPacketState( &mqttContext, PACKET_ID, true );
+    TEST_ASSERT_EQUAL( MQTTPubAckSend, publishState );
+
+    /* Outgoing. */
+    addToRecord( mqttContext.outgoingPublishRecords, index, PACKET_ID, MQTTQoS1, MQTTPublishSend );
+    publishState = MQTT_GetPacketState( &mqttContext, PACKET_ID, false );
+    TEST_ASSERT_EQUAL( MQTTPublishSend, publishState );
+}

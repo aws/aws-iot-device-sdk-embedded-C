@@ -25,6 +25,13 @@
 #include "mqtt_config.h"
 #include "mqtt_lightweight.h"
 
+/**
+ * @brief Invalid packet identifier.
+ *
+ * Zero is an invalid packet identifier as per MQTT v3.1.1 spec.
+ */
+#define MQTT_PACKET_ID_INVALID    ( ( uint16_t ) 0U )
+
 struct MQTTApplicationCallbacks;
 typedef struct MQTTApplicationCallbacks   MQTTApplicationCallbacks_t;
 
