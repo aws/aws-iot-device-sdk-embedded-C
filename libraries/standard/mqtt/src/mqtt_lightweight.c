@@ -466,13 +466,13 @@ static void serializePublishCommon( const MQTTPublishInfo_t * pPublishInfo,
         /* Empty else MISRA 15.7 */
     }
 
-    if( pPublishInfo->retain )
+    if( pPublishInfo->retain == true )
     {
         LogDebug( ( "Adding retain bit in PUBLISH flags." ) );
         UINT8_SET_BIT( publishFlags, MQTT_PUBLISH_FLAG_RETAIN );
     }
 
-    if( pPublishInfo->dup )
+    if( pPublishInfo->dup == true )
     {
         LogDebug( ( "Adding dup bit in PUBLISH flags." ) );
         UINT8_SET_BIT( publishFlags, MQTT_PUBLISH_FLAG_DUP );
@@ -504,7 +504,7 @@ static void serializePublishCommon( const MQTTPublishInfo_t * pPublishInfo,
      * This will help reduce an unnecessary copy of the payload into the buffer.
      */
     if( ( pPublishInfo->payloadLength > 0U ) &&
-        ( serializePayload ) )
+        ( serializePayload == true ) )
     {
         LogDebug( ( "Copying PUBLISH payload of length =%lu to buffer",
                     pPublishInfo->payloadLength ) );
@@ -690,7 +690,7 @@ static MQTTStatus_t processPublishFlags( uint8_t publishFlags,
         LogDebug( ( "QoS is %d.", pPublishInfo->qos ) );
 
         /* Parse the Retain bit. */
-        pPublishInfo->retain = UINT8_CHECK_BIT( publishFlags, MQTT_PUBLISH_FLAG_RETAIN );
+        pPublishInfo->retain = ( bool ) UINT8_CHECK_BIT( publishFlags, MQTT_PUBLISH_FLAG_RETAIN );
 
         LogDebug( ( "Retain bit is %d.", pPublishInfo->retain ) );
 
@@ -2053,7 +2053,7 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( MQTTTransportRecvFunc_t readFu
     if( bytesReceived == 1 )
     {
         /* Check validity. */
-        if( incomingPacketValid( pIncomingPacket->type ) )
+        if( incomingPacketValid( pIncomingPacket->type ) == true )
         {
             pIncomingPacket->remainingLength = getRemainingLength( readFunc, networkContext );
 

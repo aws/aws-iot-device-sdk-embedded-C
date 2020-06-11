@@ -41,7 +41,9 @@
 
 /* Common macro for all logging interface macros. */
 /* TODO - Replace printf with an implementation function. */
-#define SdkLog( string )    printf string
+#ifndef SdkLog
+    #define SdkLog( string )    printf string
+#endif
 
 /* Check that LIBRARY_LOG_LEVEL is defined and has a valid value. */
 #if !defined( LIBRARY_LOG_LEVEL ) ||       \

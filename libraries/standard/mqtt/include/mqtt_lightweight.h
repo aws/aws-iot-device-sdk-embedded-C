@@ -22,17 +22,17 @@
 #ifndef MQTT_LIGHTWEIGHT_H
 #define MQTT_LIGHTWEIGHT_H
 
-/* bools are only defined in C99+ */
-#if defined( __cplusplus ) || __STDC_VERSION__ >= 199901L
-    #include <stdbool.h>
-#elif !defined( bool )
-    #define bool     signed char
-    #define false    0
-    #define true     1
-#endif
-
 #include <stddef.h>
 #include <stdint.h>
+
+/* bools are only defined in C99+ */
+#if defined( __cplusplus ) || ( defined( __STDC_VERSION__ ) && ( __STDC_VERSION__ >= 199901L ) )
+    #include <stdbool.h>
+#elif !defined( bool )
+    #define bool     int8_t
+    #define false    ( int8_t ) 0
+    #define true     ( int8_t ) 1
+#endif
 
 /* Include config file before other headers. */
 #include "mqtt_config.h"

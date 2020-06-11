@@ -88,7 +88,7 @@ static int32_t recvExact( const MQTTContext_t * const pContext,
  *
  * @return #MQTTRecvFailed or #MQTTNoDataAvailable.
  */
-static MQTTStatus_t discardPacket( MQTTContext_t * const pContext,
+static MQTTStatus_t discardPacket( const MQTTContext_t * pContext,
                                    size_t remainingLength,
                                    uint32_t timeoutMs );
 
@@ -101,7 +101,7 @@ static MQTTStatus_t discardPacket( MQTTContext_t * const pContext,
  *
  * @return #MQTTSuccess or #MQTTRecvFailed.
  */
-static MQTTStatus_t receivePacket( MQTTContext_t * const pContext,
+static MQTTStatus_t receivePacket( const MQTTContext_t * pContext,
                                    MQTTPacketInfo_t incomingPacket,
                                    uint32_t remainingTimeMs );
 
@@ -204,10 +204,10 @@ static MQTTStatus_t sendPublish( MQTTContext_t * const pContext,
  * ##MQTTRecvFailed if transport recv failed;
  * #MQTTSuccess otherwise.
  */
-static MQTTStatus_t receiveConnack( MQTTContext_t * const pContext,
+static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
                                     uint32_t timeoutMs,
-                                    MQTTPacketInfo_t * const pIncomingPacket,
-                                    bool * const pSessionPresent );
+                                    MQTTPacketInfo_t * pIncomingPacket,
+                                    bool * pSessionPresent );
 
 /*-----------------------------------------------------------*/
 
@@ -358,7 +358,7 @@ static int32_t recvExact( const MQTTContext_t * const pContext,
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t discardPacket( MQTTContext_t * const pContext,
+static MQTTStatus_t discardPacket( const MQTTContext_t * pContext,
                                    size_t remainingLength,
                                    uint32_t timeoutMs )
 {
@@ -423,7 +423,7 @@ static MQTTStatus_t discardPacket( MQTTContext_t * const pContext,
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t receivePacket( MQTTContext_t * const pContext,
+static MQTTStatus_t receivePacket( const MQTTContext_t * pContext,
                                    MQTTPacketInfo_t incomingPacket,
                                    uint32_t remainingTimeMs )
 {
@@ -575,7 +575,7 @@ static MQTTStatus_t handleKeepAlive( MQTTContext_t * const pContext )
     if( ( keepAliveMs != 0U ) &&
         ( calculateElapsedTime( now, pContext->lastPacketTime ) > keepAliveMs ) )
     {
-        if( pContext->waitingForPingResp )
+        if( pContext->waitingForPingResp == true )
         {
             /* Has time expired? */
             if( calculateElapsedTime( now, pContext->pingReqSendTimeMs ) >
@@ -600,7 +600,7 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * const pContext,
 {
     MQTTStatus_t status = MQTTBadParameter;
     MQTTPublishState_t publishRecordState = MQTTStateNull;
-    uint16_t packetIdentifier;
+    uint16_t packetIdentifier = 0U;
     MQTTPublishInfo_t publishInfo;
 
     assert( pContext != NULL );
@@ -811,10 +811,10 @@ static MQTTStatus_t sendPublish( MQTTContext_t * const pContext,
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t receiveConnack( MQTTContext_t * const pContext,
+static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
                                     uint32_t timeoutMs,
-                                    MQTTPacketInfo_t * const pIncomingPacket,
-                                    bool * const pSessionPresent )
+                                    MQTTPacketInfo_t * pIncomingPacket,
+                                    bool * pSessionPresent )
 {
     MQTTStatus_t status = MQTTSuccess;
     MQTTGetCurrentTimeFunc_t getTimeStamp = NULL;
@@ -1088,7 +1088,6 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
                            uint16_t packetId )
 {
     size_t remainingLength = 0UL, packetSize = 0UL, headerSize = 0UL;
-    int32_t bytesSent = 0;
     MQTTStatus_t status = MQTTSuccess;
     MQTTPublishState_t publishStatus = MQTTStateNull;
 
@@ -1468,7 +1467,8 @@ uint16_t MQTT_GetPacketId( MQTTContext_t * const pContext )
 
     if( pContext != NULL )
     {
-        packetId = pContext->nextPacketId++;
+        packetId = pContext->nextPacketId;
+        pContext->nextPacketId++;
 
         if( pContext->nextPacketId == 0U )
         {
