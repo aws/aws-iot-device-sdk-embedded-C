@@ -51,13 +51,16 @@
 /* Demo Config header. */
 #include "demo_config.h"
 
+/* Reconnect parameters. */
+#include "reconnect.h"
+
 /**
  * @brief MQTT server host name.
  *
  * This demo uses the Mosquitto test server. This is a public MQTT server; do not
  * publish anything sensitive to this server.
  */
-#define BROKER_ENDPOINT           "test.mosquitto.org"
+#define BROKER_ENDPOINT           "foo.mosquitto.org"
 
 /**
  * @brief Length of MQTT server host name.
@@ -181,6 +184,18 @@ static uint16_t globalUnsubscribePacketIdentifier = 0U;
 static int connectToServer( const char * pServer,
                             uint16_t port,
                             int * pTcpSocket );
+
+/**
+ * @brief connect to MQTT broker with reconnection retries.
+ * If connection fails, retry is attempted after a timeout.
+ * Timeout value will exponentially increased till the maximum
+ * attemps are reached.
+ *
+ * @param[out] pTcpSocket Pointer to TCP socket file descriptor.
+ *
+ * @return EXIT_FAILURE on failure; EXIT_SUCCESS on successful connection.
+ */
+static int connectToServerWithBackoffRetries( int * pTcpSocket );
 
 /**
  * @brief The transport send function provided to the MQTT context.
@@ -417,6 +432,43 @@ static int connectToServer( const char * pServer,
     {
         freeaddrinfo( pListHead );
     }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+static int connectToServerWithBackoffRetries( int * pTcpSocket )
+{
+    int status = EXIT_SUCCESS;
+    bool backoffSuccess = true;
+
+    /* Initialize reconnect attempts and interval */
+    reconnectBackoffReset();
+
+    /* Attempt to connect to MQTT broker. If connection fails, retry after
+     * a timeout. Timeout value will exponentially increase till maximum
+     * attemps are reached.
+     *
+     *  while( ( EXIT_FAILURE == connectToServer( BROKER_ENDPOINT, BROKER_PORT, pTcpSocket ) ) &&
+     *  ( true == reconnectBackoffAndSleep() ) ) {}
+     */
+
+    do
+    {
+        status = connectToServer( BROKER_ENDPOINT, BROKER_PORT, pTcpSocket );
+
+        if( status == EXIT_FAILURE )
+        {
+            LogWarn( ( "Connection to the broker failed, sleeping before the next attempt." ) );
+            backoffSuccess = reconnectBackoffAndSleep();
+        }
+
+        if( backoffSuccess == false )
+        {
+            LogError( ( "Connection to the broker failed, all attempts exhausted." ) );
+        }
+    } while ( ( status == EXIT_FAILURE ) && ( backoffSuccess == true ) );
 
     return status;
 }
@@ -845,7 +897,8 @@ int main( int argc,
                BROKER_ENDPOINT_LENGTH,
                BROKER_ENDPOINT,
                BROKER_PORT ) );
-    status = connectToServer( BROKER_ENDPOINT, BROKER_PORT, &tcpSocket );
+
+    status = connectToServerWithBackoffRetries( &tcpSocket );
 
     /* Establish MQTT session on top of TCP connection. */
     if( status == EXIT_SUCCESS )

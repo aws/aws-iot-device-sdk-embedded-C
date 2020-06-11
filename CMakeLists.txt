@@ -20,6 +20,7 @@ endif()
 get_filename_component(__root_dir "${CMAKE_CURRENT_LIST_DIR}" ABSOLUTE)
 set(ROOT_DIR ${__root_dir} CACHE INTERNAL "C SDK source root.")
 set(DEMOS_DIR "${ROOT_DIR}/demos" CACHE INTERNAL "C SDK demos root.")
+set(PLATFORM_DIR "${ROOT_DIR}/platform" CACHE INTERNAL "C SDK platform root.")
 set(MODULES_DIR "${ROOT_DIR}/libraries" CACHE INTERNAL "C SDK modules root.")
 set(3RDPARTY_DIR "${MODULES_DIR}/3rdparty" CACHE INTERNAL "3rdparty libraries root.")
 
@@ -52,3 +53,6 @@ add_subdirectory( libraries )
 
 # Build the demos.
 add_subdirectory( demos )
+
+# Build platform
+add_subdirectory( platform )

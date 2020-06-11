@@ -17,7 +17,8 @@ target_include_directories(
 target_link_libraries(
     ${DEMO_NAME}
     PRIVATE
-        mqtt   
+        mqtt
+        platform   
 )
 
 target_include_directories(
