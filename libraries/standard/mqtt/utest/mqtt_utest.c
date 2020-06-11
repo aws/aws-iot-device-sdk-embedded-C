@@ -710,8 +710,10 @@ void test_MQTT_Connect_partial_receive()
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
 
-    /* Receive failure while discarding packet. */
+    /* Receive failure while discarding packet. Time is not necessary for this so
+     * set time function to NULL for branch coverage. */
     mqttContext.transportInterface.recv = transportRecvFailure;
+    mqttContext.callbacks.getTime = NULL;
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
@@ -955,8 +957,21 @@ void test_MQTT_GetPacketId( void )
  */
 void test_MQTT_ProcessLoop_Invalid_Params( void )
 {
+    MQTTContext_t context;
+    MQTTTransportInterface_t transport;
+    MQTTFixedBuffer_t networkBuffer;
+    MQTTApplicationCallbacks_t callbacks = { 0 };
     MQTTStatus_t mqttStatus = MQTT_ProcessLoop( NULL, MQTT_NO_TIMEOUT_MS );
 
+    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
+
+    setupTransportInterface( &transport );
+    callbacks.appCallback = eventCallback;
+    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    /* Get time function cannot be NULL. */
+    mqttStatus = MQTT_ProcessLoop( &context, MQTT_NO_TIMEOUT_MS );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 }
 
@@ -1323,6 +1338,53 @@ void test_MQTT_ProcessLoop_Timer_Overflow( void )
     }
 
     mqttStatus = MQTT_ProcessLoop( &context, MQTT_TIMER_OVERFLOW_TIMEOUT_MS );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+}
+
+/* ========================================================================== */
+
+/**
+ * @brief Test that MQTT_ReceiveLoop() works as intended. Since the only difference
+ * between this and the process loop is keep alive, we only need to test the
+ * differences for coverage.
+ */
+void test_MQTT_ReceiveLoop( void )
+{
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t context;
+    MQTTTransportInterface_t transport;
+    MQTTFixedBuffer_t networkBuffer;
+    MQTTApplicationCallbacks_t callbacks = { 0 };
+    MQTTPacketInfo_t incomingPacket = { 0 };
+
+    setupTransportInterface( &transport );
+    setupCallbacks( &callbacks );
+
+    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+
+    /* NULL Context. */
+    mqttStatus = MQTT_ReceiveLoop( NULL, MQTT_NO_TIMEOUT_MS );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
+
+    /* With time function. Keep Alive should not trigger.*/
+    context.keepAliveIntervalSec = 1;
+    MQTT_GetIncomingPacketTypeAndLength_IgnoreAndReturn( MQTTNoDataAvailable );
+    mqttStatus = MQTT_ReceiveLoop( &context, 2000 );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    TEST_ASSERT_FALSE( context.controlPacketSent );
+
+    MQTT_GetIncomingPacketTypeAndLength_StopIgnore();
+
+    /* Set getTime to NULL for single iteration. */
+    incomingPacket.type = MQTT_PACKET_TYPE_PINGRESP;
+    incomingPacket.remainingLength = 0U;
+    context.callbacks.getTime = NULL;
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    /* Set large timeout so if more than one iteration runs, test will fail. */
+    mqttStatus = MQTT_ReceiveLoop( &context, 2000 );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 }
 
