@@ -128,6 +128,11 @@ static bool validateTransitionPublish( MQTTPublishState_t currentState,
             /* Transitions from null occur when storing a new entry into the record. */
             if( opType == MQTT_RECEIVE )
             {
+                /* Removing the below cast results in a MISRA 10.3 violation (required, implicit cast
+                 * from a boolean), and keeping it results in a 10.5 violation (advisory, explicit cast).
+                 * The violation can only be resolved if the variable is of a boolean type, which is
+                 * not present in C89. */
+                /* coverity[misra_c_2012_rule_10_5_violation] */
                 isValid = ( bool ) ( ( newState == MQTTPubAckSend ) || ( newState == MQTTPubRecSend ) );
             }
 
@@ -140,10 +145,20 @@ static bool validateTransitionPublish( MQTTPublishState_t currentState,
             switch( qos )
             {
                 case MQTTQoS1:
+                    /* Removing the below cast results in a MISRA 10.3 violation (required, implicit cast
+                     * from a boolean), and keeping it results in a 10.5 violation (advisory, explicit cast).
+                     * The violation can only be resolved if the variable is of a boolean type, which is
+                     * not present in C89. */
+                    /* coverity[misra_c_2012_rule_10_5_violation] */
                     isValid = ( bool ) ( newState == MQTTPubAckPending );
                     break;
 
                 case MQTTQoS2:
+                    /* Removing the below cast results in a MISRA 10.3 violation (required, implicit cast
+                     * from a boolean), and keeping it results in a 10.5 violation (advisory, explicit cast).
+                     * The violation can only be resolved if the variable is of a boolean type, which is
+                     * not present in C89. */
+                    /* coverity[misra_c_2012_rule_10_5_violation] */
                     isValid = ( bool ) ( newState == MQTTPubRecPending );
                     break;
 
@@ -173,36 +188,78 @@ static bool validateTransitionAck( MQTTPublishState_t currentState,
         /* Incoming publish, QoS 1. */
         case MQTTPubAckPending:
             /* Outgoing publish, QoS 1. */
+
+            /* Removing the below cast results in a MISRA 10.3 violation (required, implicit cast
+             * from a boolean), and keeping it results in a 10.5 violation (advisory, explicit cast).
+             * The violation can only be resolved if the variable is of a boolean type, which is
+             * not present in C89. */
+            /* coverity[misra_c_2012_rule_10_5_violation] */
             isValid = ( bool ) ( newState == MQTTPublishDone );
             break;
 
         case MQTTPubRecSend:
             /* Incoming publish, QoS 2. */
+
+            /* Removing the below cast results in a MISRA 10.3 violation (required, implicit cast
+             * from a boolean), and keeping it results in a 10.5 violation (advisory, explicit cast).
+             * The violation can only be resolved if the variable is of a boolean type, which is
+             * not present in C89. */
+            /* coverity[misra_c_2012_rule_10_5_violation] */
             isValid = ( bool ) ( newState == MQTTPubRelPending );
             break;
 
         case MQTTPubRelPending:
             /* Incoming publish, QoS 2. */
+
+            /* Removing the below cast results in a MISRA 10.3 violation (required, implicit cast
+             * from a boolean), and keeping it results in a 10.5 violation (advisory, explicit cast).
+             * The violation can only be resolved if the variable is of a boolean type, which is
+             * not present in C89. */
+            /* coverity[misra_c_2012_rule_10_5_violation] */
             isValid = ( bool ) ( newState == MQTTPubCompSend );
             break;
 
         case MQTTPubCompSend:
             /* Incoming publish, QoS 2. */
+
+            /* Removing the below cast results in a MISRA 10.3 violation (required, implicit cast
+             * from a boolean), and keeping it results in a 10.5 violation (advisory, explicit cast).
+             * The violation can only be resolved if the variable is of a boolean type, which is
+             * not present in C89. */
+            /* coverity[misra_c_2012_rule_10_5_violation] */
             isValid = ( bool ) ( newState == MQTTPublishDone );
             break;
 
         case MQTTPubRecPending:
             /* Outgoing publish, Qos 2. */
+
+            /* Removing the below cast results in a MISRA 10.3 violation (required, implicit cast
+             * from a boolean), and keeping it results in a 10.5 violation (advisory, explicit cast).
+             * The violation can only be resolved if the variable is of a boolean type, which is
+             * not present in C89. */
+            /* coverity[misra_c_2012_rule_10_5_violation] */
             isValid = ( bool ) ( newState == MQTTPubRelSend );
             break;
 
         case MQTTPubRelSend:
             /* Outgoing publish, Qos 2. */
+
+            /* Removing the below cast results in a MISRA 10.3 violation (required, implicit cast
+             * from a boolean), and keeping it results in a 10.5 violation (advisory, explicit cast).
+             * The violation can only be resolved if the variable is of a boolean type, which is
+             * not present in C89. */
+            /* coverity[misra_c_2012_rule_10_5_violation] */
             isValid = ( bool ) ( newState == MQTTPubCompPending );
             break;
 
         case MQTTPubCompPending:
             /* Outgoing publish, Qos 2. */
+
+            /* Removing the below cast results in a MISRA 10.3 violation (required, implicit cast
+             * from a boolean), and keeping it results in a 10.5 violation (advisory, explicit cast).
+             * The violation can only be resolved if the variable is of a boolean type, which is
+             * not present in C89. */
+            /* coverity[misra_c_2012_rule_10_5_violation] */
             isValid = ( bool ) ( newState == MQTTPublishDone );
             break;
 
@@ -230,10 +287,20 @@ static bool isPublishOutgoing( MQTTPubAckType_t packetType,
         case MQTTPuback:
         case MQTTPubrec:
         case MQTTPubcomp:
+            /* Removing the below cast results in a MISRA 10.3 violation (required, implicit cast
+             * from a boolean), and keeping it results in a 10.5 violation (advisory, explicit cast).
+             * The violation can only be resolved if the variable is of a boolean type, which is
+             * not present in C89. */
+            /* coverity[misra_c_2012_rule_10_5_violation] */
             isOutgoing = ( bool ) ( opType == MQTT_RECEIVE );
             break;
 
         case MQTTPubrel:
+            /* Removing the below cast results in a MISRA 10.3 violation (required, implicit cast
+             * from a boolean), and keeping it results in a 10.5 violation (advisory, explicit cast).
+             * The violation can only be resolved if the variable is of a boolean type, which is
+             * not present in C89. */
+            /* coverity[misra_c_2012_rule_10_5_violation] */
             isOutgoing = ( bool ) ( opType == MQTT_SEND );
             break;
 
@@ -487,11 +554,22 @@ MQTTPublishState_t MQTT_CalculateStateAck( MQTTPubAckType_t packetType,
 {
     MQTTPublishState_t calculatedState = MQTTStateNull;
     /* There are more QoS2 cases than QoS1, so initialize to that. */
+
+    /* Removing the below cast results in a MISRA 10.3 violation (required, implicit cast
+     * from a boolean), and keeping it results in a 10.5 violation (advisory, explicit cast).
+     * The violation can only be resolved if the variable is of a boolean type, which is
+     * not present in C89. */
+    /* coverity[misra_c_2012_rule_10_5_violation] */
     bool qosValid = ( bool ) ( qos == MQTTQoS2 );
 
     switch( packetType )
     {
         case MQTTPuback:
+            /* Removing the below cast results in a MISRA 10.3 violation (required, implicit cast
+             * from a boolean), and keeping it results in a 10.5 violation (advisory, explicit cast).
+             * The violation can only be resolved if the variable is of a boolean type, which is
+             * not present in C89. */
+            /* coverity[misra_c_2012_rule_10_5_violation] */
             qosValid = ( bool ) ( qos == MQTTQoS1 );
             calculatedState = MQTTPublishDone;
             break;
@@ -571,6 +649,12 @@ MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
     if( recordIndex < MQTT_STATE_ARRAY_MAX_COUNT )
     {
         newState = MQTT_CalculateStateAck( packetType, opType, qos );
+
+        /* Removing the below cast results in a MISRA 10.3 violation (required, implicit cast
+         * from a boolean), and keeping it results in a 10.5 violation (advisory, explicit cast).
+         * The violation can only be resolved if the variable is of a boolean type, which is
+         * not present in C89. */
+        /* coverity[misra_c_2012_rule_10_5_violation] */
         shouldDeleteRecord = ( bool ) ( newState == MQTTPublishDone );
         isTransitionValid = validateTransitionAck( currentState, newState );
 
