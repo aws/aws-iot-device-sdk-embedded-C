@@ -90,4 +90,4 @@
  */
 #define REQUEST_BODY                      "Hello, world!"
 
-#endif /* ifndef DEMO_CONFIG_H */
+#endif /* ifndef DEMO_CONFIG_H_ */

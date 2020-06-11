@@ -20,6 +20,7 @@
  */
 
 /* Standard includes. */
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -31,9 +32,11 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
+/* Socket includes. */
 #include <sys/socket.h>
 #include <sys/types.h>
 
+/* OpenSSL includes. */
 #include <openssl/ssl.h>
 #include <openssl/bio.h>
 
@@ -147,7 +150,7 @@ static HTTPNetworkContext_t networkContext;
  *
  * @param[in] pServer Host name of server.
  * @param[in] port Server port.
- * @param[out] pTcpSocket Pointer to TCP socket file descriptor.
+ * @param[out] pTcpSocket The output parameter to return the created socket descriptor.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
@@ -158,8 +161,8 @@ static int connectToServer( const char * pServer,
 /**
  * @brief Set up a TLS connection over an existing TCP connection.
  *
- * @param[in] tcpSocket Existing TCP connection.
- * @param[out] pSslContext Pointer to SSL connection context.
+ * @param[in] tcpSocket Socket descriptor corresponding to the existing TCP connection.
+ * @param[out] pSslContext The output parameter to return the created SSL context.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
@@ -172,9 +175,9 @@ static int tlsSetup( int tcpSocket,
  * This is passed as the #HTTPTransportInterface.send function and used to
  * send data over the network.
  *
- * @param[in] pContext User defined context (TCP socket for this demo).
+ * @param[in] pContext User defined context (TCP socket and SSL context for this demo).
  * @param[in] pBuffer Buffer containing the bytes to send over the network stack.
- * @param[in] bytesToSend Number of bytes to write to the network.
+ * @param[in] bytesToSend Number of bytes to send over the network.
  *
  * @return Number of bytes sent if successful; otherwise negative value on error.
  */
@@ -188,7 +191,7 @@ static int32_t transportSend( HTTPNetworkContext_t * pContext,
  * This is passed as the #HTTPTransportInterface.recv function used for reading
  * data received from the network.
  *
- * @param[in] pContext User defined context (TCP socket for this demo).
+ * @param[in] pContext User defined context (TCP socket and SSL context for this demo).
  * @param[out] pBuffer Buffer to read network data into.
  * @param[in] bytesToRead Number of bytes requested from the network.
  *
@@ -364,6 +367,7 @@ static int connectToServer( const char * pServer,
 static int tlsSetup( int tcpSocket,
                      SSL ** pSslContext )
 {
+    int returnStatus = EXIT_SUCCESS;
     int sslStatus = 0;
     char * cwd = getcwd( NULL, 0 );
     FILE * pRootCaFile = NULL;
@@ -377,10 +381,6 @@ static int tlsSetup( int tcpSocket,
         /* Set auto retry mode for the blocking calls to SSL_read and SSL_write.
          * The mask returned by SSL_CTX_set_mode does not need to be checked. */
         ( void ) SSL_CTX_set_mode( pSslSetup, SSL_MODE_AUTO_RETRY );
-
-        /* OpenSSL does not provide a single function for reading and loading certificates
-         * from files into stores, so the file API must be called. */
-        pRootCaFile = fopen( SERVER_CERT_PATH, "r" );
 
         /* Check if an absolute directory is being used. */
         if( ( SERVER_CERT_PATH[ 0 ] == '/' ) || ( SERVER_CERT_PATH[ 0 ] == '\\' ) )
@@ -397,13 +397,17 @@ static int tlsSetup( int tcpSocket,
                        SERVER_CERT_PATH ) );
         }
 
+        /* OpenSSL does not provide a single function for reading and loading certificates
+         * from files into stores, so the file API must be called. */
+        pRootCaFile = fopen( SERVER_CERT_PATH, "r" );
+
         if( pRootCaFile != NULL )
         {
             pRootCa = PEM_read_X509( pRootCaFile, NULL, NULL, NULL );
         }
         else
         {
-            LogError( ( "Unable to find the root CA certificate file: "
+            LogError( ( "fopen failed to find the root CA certificate file: "
                         "SERVER_CERT_PATH=%.*s.",
                         ( int32_t ) SERVER_CERT_PATH_LENGTH,
                         SERVER_CERT_PATH ) );
@@ -417,8 +421,8 @@ static int tlsSetup( int tcpSocket,
         }
         else
         {
-            LogError( ( "Failed to parse the root CA certificate from"
-                        " file %.*s. Please validate the certificate.",
+            LogError( ( "PEM_read_X509 failed to parse the root CA certificate "
+                        "from file %.*s. Please validate the certificate.",
                         ( int32_t ) SERVER_CERT_PATH_LENGTH,
                         SERVER_CERT_PATH ) );
         }
@@ -474,7 +478,7 @@ static int tlsSetup( int tcpSocket,
     }
     else
     {
-        LogError( ( "Failed to add certificate to store." ) );
+        LogError( ( "X509_STORE_add_cert failed to add certificate to store." ) );
     }
 
     if( cwd != NULL )
@@ -503,15 +507,17 @@ static int tlsSetup( int tcpSocket,
         LogError( ( "Failed to establish a TLS connection: Host=%.*s.",
                     ( int32_t ) SERVER_HOST_LENGTH,
                     SERVER_HOST ) );
-        return EXIT_FAILURE;
+        returnStatus = EXIT_FAILURE;
     }
     else
     {
         LogInfo( ( "Established a TLS connection: Host=%.*s.\n\n",
                    ( int32_t ) SERVER_HOST_LENGTH,
                    SERVER_HOST ) );
-        return EXIT_SUCCESS;
+        returnStatus = EXIT_SUCCESS;
     }
+
+    return returnStatus;
 }
 
 /*-----------------------------------------------------------*/
@@ -522,14 +528,13 @@ static int32_t transportSend( HTTPNetworkContext_t * pNetworkContext,
 {
     int32_t bytesSent = 0;
     int pollStatus = 0;
-    struct pollfd fileDescriptor =
-    {
-        .events  = POLLOUT,
-        .revents = 0
-    };
+    struct pollfd fileDescriptor;
 
+    /* Initialize the file descriptor. */
+    fileDescriptor.events = POLLOUT;
+    fileDescriptor.revents = 0;
     /* Set the file descriptor for poll. */
-    fileDescriptor.fd = SSL_get_fd( pNetworkContext->pSslContext );
+    fileDescriptor.fd = pNetworkContext->tcpSocket;
 
     /* Poll the file descriptor to check if SSL_Write can be done now. */
     pollStatus = poll( &fileDescriptor, 1, TRANSPORT_SEND_RECV_TIMEOUT_MS );
@@ -561,12 +566,11 @@ static int32_t transportRecv( HTTPNetworkContext_t * pNetworkContext,
 {
     int32_t bytesReceived = 0;
     int pollStatus = -1, bytesAvailableToRead = 0;
-    struct pollfd fileDescriptor =
-    {
-        .events  = POLLIN | POLLPRI,
-        .revents = 0
-    };
+    struct pollfd fileDescriptor;
 
+    /* Initialize the file descriptor. */
+    fileDescriptor.events = POLLIN | POLLPRI;
+    fileDescriptor.revents = 0;
     /* Set the file descriptor for poll. */
     fileDescriptor.fd = SSL_get_fd( pNetworkContext->pSslContext );
 
@@ -579,8 +583,10 @@ static int32_t transportRecv( HTTPNetworkContext_t * pNetworkContext,
         pollStatus = poll( &fileDescriptor, 1, TRANSPORT_SEND_RECV_TIMEOUT_MS );
     }
 
-    /* SSL read of data. */
-    if( ( pollStatus > 0 ) || ( bytesAvailableToRead > 0 ) )
+    /* bytesAvailableToRead > 0 means that there was pending data to be read.
+     * pollStatus > 0 means that there was no pending data, but it became available
+     * during polling. If either holds true, read the available data. */
+    if( ( bytesAvailableToRead > 0 ) || ( pollStatus > 0 ) )
     {
         bytesReceived = ( int32_t ) SSL_read( pNetworkContext->pSslContext, pBuffer, bytesToRecv );
     }
@@ -619,6 +625,9 @@ static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface
     /* Return value of all methods from the HTTP Client library API. */
     HTTPStatus_t httpStatus = HTTP_SUCCESS;
 
+    assert( pHost != NULL );
+    assert( pMethod != NULL );
+
     /* Initialize all HTTP Client library API structs to 0. */
     memset( &requestInfo, 0, sizeof( requestInfo ) );
     memset( &response, 0, sizeof( response ) );
@@ -652,12 +661,11 @@ static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface
 
         LogInfo( ( "Sending HTTP %s request to %s%s...",
                    pMethod, SERVER_HOST, pPath ) );
-        LogDebug( ( "Request Headers:\n%.*s",
-                    ( int32_t ) requestHeaders.headersLen,
-                    ( char * ) requestHeaders.pBuffer ) );
-        LogDebug( ( "Request Body:\n%.*s\n",
-                    ( int32_t ) REQUEST_BODY_LENGTH,
-                    REQUEST_BODY ) );
+        LogDebug( "Request Headers:\n%.*s\n",
+                  "Request Body:\n%.*s\n",
+                  ( int32_t ) requestHeaders.headersLen,
+                  ( char * ) requestHeaders.pBuffer,
+                  ( int32_t ) REQUEST_BODY_LENGTH, REQUEST_BODY );
         /* Send the request and receive the response. */
         httpStatus = HTTPClient_Send( pTransportInterface,
                                       &requestHeaders,
@@ -674,16 +682,14 @@ static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface
 
     if( httpStatus == HTTP_SUCCESS )
     {
-        LogInfo( ( "Received HTTP response from %s%s...",
-                   SERVER_HOST, pPath ) );
-        LogInfo( ( "Response Headers:\n%.*s",
-                   ( int32_t ) response.headersLen,
-                   response.pHeaders ) );
-        LogInfo( ( "Response Status:\n%u",
-                   response.statusCode ) );
-        LogInfo( ( "Response Body:\n%.*s\n",
-                   ( int32_t ) response.bodyLen,
-                   response.pBody ) );
+        LogInfo( ( "Received HTTP response from %s%s...\n",
+                   "Response Headers:\n%.*s\n",
+                   "Response Status:\n%u\n",
+                   "Response Body:\n%.*s\n",
+                   SERVER_HOST, pPath,
+                   ( int32_t ) response.headersLen, response.pHeaders,
+                   response.statusCode,
+                   ( int32_t ) response.bodyLen, response.pBody ) );
     }
     else
     {
