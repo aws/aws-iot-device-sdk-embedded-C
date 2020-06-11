@@ -44,6 +44,41 @@
 /************ End of logging configuration ****************/
 
 /**
+ * @brief MQTT server host name.
+ *
+ * This demo uses the Mosquitto test server. This is a public MQTT server; do not
+ * publish anything sensitive to this server.
+ * Mosquitto MQTT broker can run locally as an alternate option. Please refer to
+ * the instructions in https://mosquitto.org/ for running a Mosquitto broker
+ * locally.
+ */
+#define BROKER_ENDPOINT            "test.mosquitto.org"
+
+/**
+ * @brief Length of MQTT server host name.
+ */
+#define BROKER_ENDPOINT_LENGTH     ( ( uint16_t ) ( sizeof( BROKER_ENDPOINT ) - 1 ) )
+
+/**
+ * @brief MQTT server port number.
+ *
+ * In general, port 8883 is for secured MQTT connections.
+ */
+#define BROKER_PORT                ( 8883 )
+
+/**
+ * @brief Path of the file containing the server's root CA certificate.
+ *
+ * This certificate should be PEM-encoded.
+ */
+#define SERVER_CERT_PATH           "certificates/mosquitto.org.crt"
+
+/**
+ * @brief Length of path to server certificate.
+ */
+#define SERVER_CERT_PATH_LENGTH    ( ( uint16_t ) ( sizeof( SERVER_CERT_PATH ) - 1 ) )
+
+/**
  * @brief MQTT client identifier.
  *
  * No two clients may use the same client identifier simultaneously.
