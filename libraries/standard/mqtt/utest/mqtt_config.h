@@ -56,5 +56,15 @@ typedef uint8_t ** NetworkContext_t;
  */
 #define MQTT_CLIENT_IDENTIFIER              "testclient"
 
+/**
+ * @brief Retry count for reading CONNACK from network.
+ *
+ * #MQTT_Connect() can be independent of #getTime. If a #getTime is NULL,
+ * retries are used to attempt to read from network. The retry count is
+ * specified by this config.
+ */
+#define MQTT_CONNACK_RECEIVE_RETRY_COUNT    ( 2U )
+
+
 
 #endif /* ifndef MQTT_CONFIG_H_ */
