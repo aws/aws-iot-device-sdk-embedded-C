@@ -1936,15 +1936,6 @@ MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * pBuffer )
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_GetIncomingPacket( MQTTTransportRecvFunc_t recvFunc,
-                                     MQTTNetworkContext_t networkContext,
-                                     MQTTPacketInfo_t * pIncomingPacket )
-{
-    return MQTTSuccess;
-}
-
-/*-----------------------------------------------------------*/
-
 MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * pIncomingPacket,
                                       uint16_t * pPacketId,
                                       MQTTPublishInfo_t * pPublishInfo )
