@@ -75,7 +75,7 @@ static MQTTPubAckType_t getAckFromPacketType( uint8_t packetType );
  *
  * @return Number of bytes received, or negative number on network error.
  */
-static int32_t recvExact( const MQTTContext_t * const pContext,
+static int32_t recvExact( const MQTTContext_t * pContext,
                           size_t bytesToRecv,
                           uint32_t timeoutMs );
 
@@ -124,7 +124,7 @@ static uint8_t getAckTypeToSend( MQTTPublishState_t state );
  *
  * @return #MQTTSuccess, #MQTTIllegalState or #MQTTSendFailed.
  */
-static MQTTStatus_t sendPublishAcks( MQTTContext_t * const pContext,
+static MQTTStatus_t sendPublishAcks( MQTTContext_t * pContext,
                                      uint16_t packetId,
                                      MQTTPublishState_t publishState );
 
@@ -136,7 +136,7 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * const pContext,
  * @return #MQTTKeepAliveTimeout if a PINGRESP is not received in time,
  * #MQTTSendFailed if the PINGREQ cannot be sent, or #MQTTSuccess.
  */
-static MQTTStatus_t handleKeepAlive( MQTTContext_t * const pContext );
+static MQTTStatus_t handleKeepAlive( MQTTContext_t * pContext );
 
 /**
  * @brief Handle received MQTT PUBLISH packet.
@@ -146,7 +146,7 @@ static MQTTStatus_t handleKeepAlive( MQTTContext_t * const pContext );
  *
  * @return MQTTSuccess, MQTTIllegalState or deserialization error.
  */
-static MQTTStatus_t handleIncomingPublish( MQTTContext_t * const pContext,
+static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
                                            MQTTPacketInfo_t * pIncomingPacket );
 
 /**
@@ -157,7 +157,7 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * const pContext,
  *
  * @return MQTTSuccess, MQTTIllegalState, or deserialization error.
  */
-static MQTTStatus_t handleIncomingAck( MQTTContext_t * const pContext,
+static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
                                        MQTTPacketInfo_t * pIncomingPacket );
 
 /**
@@ -171,8 +171,8 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * const pContext,
  * @return #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSuccess otherwise.
  */
-static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * const pContext,
-                                                        const MQTTSubscribeInfo_t * const pSubscriptionList,
+static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * pContext,
+                                                        const MQTTSubscribeInfo_t * pSubscriptionList,
                                                         size_t subscriptionCount,
                                                         uint16_t packetId );
 
@@ -186,8 +186,8 @@ static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * co
  * @return #MQTTSendFailed if transport write failed;
  * #MQTTSuccess otherwise.
  */
-static MQTTStatus_t sendPublish( MQTTContext_t * const pContext,
-                                 const MQTTPublishInfo_t * const pPublishInfo,
+static MQTTStatus_t sendPublish( MQTTContext_t * pContext,
+                                 const MQTTPublishInfo_t * pPublishInfo,
                                  size_t headerSize );
 
 /**
@@ -306,7 +306,7 @@ static MQTTPubAckType_t getAckFromPacketType( uint8_t packetType )
 
 /*-----------------------------------------------------------*/
 
-static int32_t recvExact( const MQTTContext_t * const pContext,
+static int32_t recvExact( const MQTTContext_t * pContext,
                           size_t bytesToRecv,
                           uint32_t timeoutMs )
 {
@@ -502,7 +502,7 @@ static uint8_t getAckTypeToSend( MQTTPublishState_t state )
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t sendPublishAcks( MQTTContext_t * const pContext,
+static MQTTStatus_t sendPublishAcks( MQTTContext_t * pContext,
                                      uint16_t packetId,
                                      MQTTPublishState_t publishState )
 {
@@ -562,7 +562,7 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * const pContext,
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t handleKeepAlive( MQTTContext_t * const pContext )
+static MQTTStatus_t handleKeepAlive( MQTTContext_t * pContext )
 {
     MQTTStatus_t status = MQTTSuccess;
     uint32_t now = 0U, keepAliveMs = 0U;
@@ -595,7 +595,7 @@ static MQTTStatus_t handleKeepAlive( MQTTContext_t * const pContext )
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t handleIncomingPublish( MQTTContext_t * const pContext,
+static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
                                            MQTTPacketInfo_t * pIncomingPacket )
 {
     MQTTStatus_t status = MQTTBadParameter;
@@ -640,7 +640,7 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * const pContext,
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t handleIncomingAck( MQTTContext_t * const pContext,
+static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
                                        MQTTPacketInfo_t * pIncomingPacket )
 {
     MQTTStatus_t status = MQTTBadResponse;
@@ -727,8 +727,8 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * const pContext,
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * const pContext,
-                                                        const MQTTSubscribeInfo_t * const pSubscriptionList,
+static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * pContext,
+                                                        const MQTTSubscribeInfo_t * pSubscriptionList,
                                                         size_t subscriptionCount,
                                                         uint16_t packetId )
 {
@@ -763,8 +763,8 @@ static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * co
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t sendPublish( MQTTContext_t * const pContext,
-                                 const MQTTPublishInfo_t * const pPublishInfo,
+static MQTTStatus_t sendPublish( MQTTContext_t * pContext,
+                                 const MQTTPublishInfo_t * pPublishInfo,
                                  size_t headerSize )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -898,10 +898,10 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_Init( MQTTContext_t * const pContext,
-                        const MQTTTransportInterface_t * const pTransportInterface,
-                        const MQTTApplicationCallbacks_t * const pCallbacks,
-                        const MQTTFixedBuffer_t * const pNetworkBuffer )
+MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
+                        const MQTTTransportInterface_t * pTransportInterface,
+                        const MQTTApplicationCallbacks_t * pCallbacks,
+                        const MQTTFixedBuffer_t * pNetworkBuffer )
 {
     MQTTStatus_t status = MQTTSuccess;
 
@@ -937,11 +937,11 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * const pContext,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
-                           const MQTTConnectInfo_t * const pConnectInfo,
-                           const MQTTPublishInfo_t * const pWillInfo,
+MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
+                           const MQTTConnectInfo_t * pConnectInfo,
+                           const MQTTPublishInfo_t * pWillInfo,
                            uint32_t timeoutMs,
-                           bool * const pSessionPresent )
+                           bool * pSessionPresent )
 {
     size_t remainingLength = 0UL, packetSize = 0UL;
     int32_t bytesSent;
@@ -1023,8 +1023,8 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_Subscribe( MQTTContext_t * const pContext,
-                             const MQTTSubscribeInfo_t * const pSubscriptionList,
+MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
+                             const MQTTSubscribeInfo_t * pSubscriptionList,
                              size_t subscriptionCount,
                              uint16_t packetId )
 {
@@ -1083,8 +1083,8 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * const pContext,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
-                           const MQTTPublishInfo_t * const pPublishInfo,
+MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
+                           const MQTTPublishInfo_t * pPublishInfo,
                            uint16_t packetId )
 {
     size_t remainingLength = 0UL, packetSize = 0UL, headerSize = 0UL;
@@ -1190,7 +1190,7 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_Ping( MQTTContext_t * const pContext )
+MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext )
 {
     int32_t bytesSent = 0;
     MQTTStatus_t status = MQTTSuccess;
@@ -1250,8 +1250,8 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * const pContext )
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * const pContext,
-                               const MQTTSubscribeInfo_t * const pSubscriptionList,
+MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
+                               const MQTTSubscribeInfo_t * pSubscriptionList,
                                size_t subscriptionCount,
                                uint16_t packetId )
 {
@@ -1310,7 +1310,7 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * const pContext,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_Disconnect( MQTTContext_t * const pContext )
+MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext )
 {
     size_t packetSize;
     int32_t bytesSent;
@@ -1366,7 +1366,7 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * const pContext )
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * const pContext,
+MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
                                uint32_t timeoutMs )
 {
     MQTTStatus_t status = MQTTBadParameter;
@@ -1461,7 +1461,7 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * const pContext,
 
 /*-----------------------------------------------------------*/
 
-uint16_t MQTT_GetPacketId( MQTTContext_t * const pContext )
+uint16_t MQTT_GetPacketId( MQTTContext_t * pContext )
 {
     uint16_t packetId = 0U;
 
