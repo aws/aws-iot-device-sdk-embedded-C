@@ -49,70 +49,59 @@
  *
  * This demo uses the AWS IoT broker end point test server.
  */
-#define BROKER_ENDPOINT           ""
+#define BROKER_ENDPOINT            ""
 
 /**
  * @brief MQTT server port number.
  *
  * In general, port 8883 is for secured MQTT connections.
  */
-#define BROKER_PORT               ( 8883 )
-
-/**
- * @brief Length of MQTT server host name.
- */
-#define BROKER_ENDPOINT_LENGTH    ( ( uint16_t ) ( sizeof( BROKER_ENDPOINT ) - 1 ) )
+#define BROKER_PORT                ( 8883 )
 
 /**
  * @brief Path of the file containing the server's root CA certificate.
  *
+ * This certificate is used to identify the AWS IoT server and is publicly
+ * available. Refer to the AWS documentation available in the link below
+ * https://docs.aws.amazon.com/iot/latest/developerguide/server-authentication.html#server-authentication-certs
+ *
  * This certificate should be PEM-encoded.
  */
-#define SERVER_CERT_PATH          ""
-
-
-/**
- * @brief Length of path to server certificate.
- */
-#define SERVER_CERT_PATH_LENGTH    ( ( uint16_t ) ( sizeof( SERVER_CERT_PATH ) - 1 ) )
+#define SERVER_CERT_PATH           ""
 
 /**
  * @brief Path of the file containing the client certificate.
+ *
+ * Refer to the AWS documentation below for details regarding client
+ * authentication.
+ * https://docs.aws.amazon.com/iot/latest/developerguide/client-authentication.html
  *
  * This certificate should be PEM-encoded.
  */
 #define CLIENT_CERT_PATH           ""
 
-
-/**
- * @brief Length of path to client certificate.
- */
-#define CLIENT_CERT_PATH_LENGTH    ( ( uint16_t ) ( sizeof( CLIENT_CERT_PATH ) - 1 ) )
-
 /**
  * @brief Path of the file containing the client's private key.
  *
- * This private should be PEM-encoded.
+ * Refer to the AWS documentation below for details regarding client
+ * authentication.
+ * https://docs.aws.amazon.com/iot/latest/developerguide/client-authentication.html
+ *
+ * This private key should be PEM-encoded.
  */
 #define CLIENT_PRIVATE_KEY_PATH    ""
-
-
-/**
- * @brief Length of path to client's private key.
- */
-#define CLIENT_PRIVATE_KEY_PATH_LENGTH    ( ( uint16_t ) ( sizeof( CLIENT_PRIVATE_KEY_PATH ) - 1 ) )
 
 /**
  * @brief MQTT client identifier.
  *
  * No two clients may use the same client identifier simultaneously.
  */
-#define CLIENT_IDENTIFIER                 ""
-
+#define CLIENT_IDENTIFIER          ""
 
 /**
- * @brief Length of client identifier.
+ * @brief Size of the network buffer for MQTT packets.
  */
-#define CLIENT_IDENTIFIER_LENGTH    ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) )
+#define NETWORK_BUFFER_SIZE        ( 1024U )
+
 
 #endif /* ifndef DEMO_CONFIG_H */

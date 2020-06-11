@@ -58,36 +58,28 @@
 /* Demo Config header. */
 #include "demo_config.h"
 
-
-/* Check that client identifier is defined. */
+/**
+ * Provide default values for undefined configuration settings.
+ */
+#ifndef BROKER_PORT
+    #define BROKER_PORT            ( 8883 )
+#endif
+#ifndef NETWORK_BUFFER_SIZE
+    #define NETWORK_BUFFER_SIZE    ( 1024U )
+#endif
 #ifndef CLIENT_IDENTIFIER
-    #error "Please define a unique CLIENT_IDENTIFIER in demo_config.h."
-#endif
-
-/* Check that an MQTT broker is defined. */
-#ifndef BROKER_ENDPOINT
-    #error "Please define an MQTT broker endpoint in demo_config.h."
-#endif
-
-/* Check that file path to server certificate is defined. */
-#ifndef SERVER_CERT_PATH
-    #error "Please define path to the server certificate file in demo_config.h."
-#endif
-
-/* Check that file path to client certificate is defined. */
-#ifndef CLIENT_CERT_PATH
-    #error "Please define path to the client certificate file in demo_config.h."
-#endif
-
-/* Check that file path to client private key is defined. */
-#ifndef CLIENT_PRIVATE_KEY_PATH
-    #error "Please define path to the client private key file in demo_config.h."
+    #define CLIENT_IDENTIFIER      "testclient"
 #endif
 
 /**
- * @brief Size of the network buffer for MQTT packets.
+ * @brief Length of MQTT server host name.
  */
-#define NETWORK_BUFFER_SIZE                 ( 1024U )
+#define BROKER_ENDPOINT_LENGTH              ( ( uint16_t ) ( sizeof( BROKER_ENDPOINT ) - 1 ) )
+
+/**
+ * @brief Length of client identifier.
+ */
+#define CLIENT_IDENTIFIER_LENGTH            ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) )
 
 /**
  * @brief Timeout for receiving CONNACK packet in milli seconds.
@@ -851,7 +843,7 @@ static int getNextFreeIndexForOutgoingPublishes( uint8_t * pIndex )
 
     for( *pIndex = 0; *pIndex < MAX_OUTGOING_PUBLISHES; ( *pIndex )++ )
     {
-        /* A free index is marked byy invalid packet id.
+        /* A free index is marked by invalid packet id.
          * Check if the the index has a free slot. */
         if( outgoingPublishPackets[ *pIndex ].packetId == MQTT_PACKET_ID_INVALID )
         {
@@ -869,32 +861,20 @@ static void cleanupOutgoingPublishAt( uint8_t index )
     assert( outgoingPublishPackets != NULL );
     assert( index < MAX_OUTGOING_PUBLISHES );
 
-    /* Clean up all the entries. */
-    if( index < MAX_OUTGOING_PUBLISHES )
-    {
-        /* Assign the packet ID to zero. */
-        outgoingPublishPackets[ index ].packetId = MQTT_PACKET_ID_INVALID;
-
-        /* Clear the publish info. */
-        ( void ) memset( &( outgoingPublishPackets[ index ].pubInfo ),
-                         0x00,
-                         sizeof( outgoingPublishPackets[ index ].pubInfo ) );
-    }
+    /* Clear the outgoing publish packet. */
+    ( void ) memset( &( outgoingPublishPackets[ index ] ),
+                     0x00,
+                     sizeof( outgoingPublishPackets[ index ] ) );
 }
 
 /*-----------------------------------------------------------*/
 
 static void cleanupOutgoingPublishes()
 {
-    uint8_t index = 0;
-
     assert( outgoingPublishPackets != NULL );
 
-    /* Clean up all the saved outgoing publishes. */
-    for( ; index < MAX_OUTGOING_PUBLISHES; index++ )
-    {
-        cleanupOutgoingPublishAt( index );
-    }
+    /* Clean up all the outgoing publish packets. */
+    ( void ) memset( outgoingPublishPackets, 0x00, sizeof( outgoingPublishPackets ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -1041,7 +1021,7 @@ static void eventCallback( MQTTContext_t * pContext,
 
                 /* Nothing to be done from application as library handles
                  * PINGRESP. */
-                LogInfo( ( "PIGRESP received.\n\n" ) );
+                LogInfo( ( "PINGRESP received.\n\n" ) );
                 break;
 
             case MQTT_PACKET_TYPE_PUBACK:
