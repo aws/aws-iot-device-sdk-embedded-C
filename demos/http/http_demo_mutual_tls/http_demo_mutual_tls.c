@@ -702,6 +702,9 @@ static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface
     /* Return value of all methods from the HTTP Client library API. */
     HTTPStatus_t httpStatus = HTTP_SUCCESS;
 
+    assert( pHost != NULL );
+    assert( pMethod != NULL );
+
     /* Initialize all HTTP Client library API structs to 0. */
     memset( &requestInfo, 0, sizeof( requestInfo ) );
     memset( &response, 0, sizeof( response ) );
