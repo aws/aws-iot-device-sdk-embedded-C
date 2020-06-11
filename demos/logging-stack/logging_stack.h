@@ -41,8 +41,10 @@
 
 /* Common macro for all logging interface macros. */
 /* TODO - Replace printf with an implementation function. */
-#ifndef SdkLog
+#if !defined( DISABLE_LOGGING )
     #define SdkLog( string )    printf string
+#else
+    #define SdkLog( string )
 #endif
 
 /* Check that LIBRARY_LOG_LEVEL is defined and has a valid value. */
