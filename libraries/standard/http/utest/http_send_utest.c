@@ -203,29 +203,29 @@ static HTTPClient_ResponseHeaderParsingCallback_t headerParsingCallback = { 0 };
 /* Application callback for intercepting the headers during the parse of a new
  * response from the mocked network interface. */
 static void onHeaderCallback( void * pContext,
-                              const uint8_t * fieldLoc,
+                              const char * fieldLoc,
                               size_t fieldLen,
-                              const uint8_t * valueLoc,
+                              const char * valueLoc,
                               size_t valueLen,
                               uint16_t statusCode )
 {
     ( void ) pContext;
     ( void ) statusCode;
 
-    if( strncmp( ( const char * ) fieldLoc, "Connection", fieldLen ) == 0 )
+    if( strncmp( fieldLoc, "Connection", fieldLen ) == 0 )
     {
-        if( strncmp( ( const char * ) valueLoc, "keep-alive", valueLen ) == 0 )
+        if( strncmp( valueLoc, "keep-alive", valueLen ) == 0 )
         {
             hasConnectionKeepAlive = 1;
         }
-        else if( strncmp( ( const char * ) valueLoc, "close", valueLen ) == 0 )
+        else if( strncmp( valueLoc, "close", valueLen ) == 0 )
         {
             hasConnectionClose = 1;
         }
     }
-    else if( strncmp( ( const char * ) fieldLoc, "Content-Length", fieldLen ) == 0 )
+    else if( strncmp( fieldLoc, "Content-Length", fieldLen ) == 0 )
     {
-        contentLength = strtoul( ( const char * ) valueLoc, NULL, 10 );
+        contentLength = strtoul( valueLoc, NULL, 10 );
     }
 
     headerCallbackCount++;
