@@ -481,9 +481,9 @@ static void processCompleteHeader( HTTPParsingContext_t * pParsingContext )
 
         LogDebug( ( "Response parsing: Found complete header: "
                     "HeaderField=%.*s, HeaderValue=%.*s",
-                    pParsingContext->lastHeaderFieldLen,
+                    ( int ) ( pParsingContext->lastHeaderFieldLen ),
                     pParsingContext->pLastHeaderField,
-                    pParsingContext->lastHeaderValueLen,
+                    ( int ) ( pParsingContext->lastHeaderValueLen ),
                     pParsingContext->pLastHeaderValue ) );
 
         /* If the application registered a callback, then it must be notified. */
@@ -491,9 +491,9 @@ static void processCompleteHeader( HTTPParsingContext_t * pParsingContext )
         {
             pResponse->pHeaderParsingCallback->onHeaderCallback(
                 pResponse->pHeaderParsingCallback->pContext,
-                ( const uint8_t * ) pParsingContext->pLastHeaderField,
+                pParsingContext->pLastHeaderField,
                 pParsingContext->lastHeaderFieldLen,
-                ( const uint8_t * ) pParsingContext->pLastHeaderValue,
+                pParsingContext->pLastHeaderValue,
                 pParsingContext->lastHeaderValueLen,
                 pResponse->statusCode );
         }
@@ -566,7 +566,7 @@ static int httpParserOnStatusCallback( http_parser * pHttpParser,
     LogDebug( ( "Response parsing: Found the Reason-Phrase: "
                 "StatusCode=%d, ReasonPhrase=%.*s",
                 pResponse->statusCode,
-                length,
+                ( int ) length,
                 pLoc ) );
 
     return HTTP_PARSER_CONTINUE_PARSING;
@@ -595,7 +595,7 @@ static int httpParserOnHeaderFieldCallback( http_parser * pHttpParser,
      * to NULL in the preceding httpParseOnStatusFieldCallback(). */
     if( pResponse->pHeaders == NULL )
     {
-        pResponse->pHeaders = pLoc;
+        pResponse->pHeaders = ( const uint8_t * ) pLoc;
     }
 
     /* Set the location of what to parse next. */
@@ -623,7 +623,7 @@ static int httpParserOnHeaderFieldCallback( http_parser * pHttpParser,
 
     LogDebug( ( "Response parsing: Found a header field: "
                 "HeaderField=%.*s",
-                length,
+                ( int ) length,
                 pLoc ) );
 
     return HTTP_PARSER_CONTINUE_PARSING;
@@ -672,7 +672,7 @@ static int httpParserOnHeaderValueCallback( http_parser * pHttpParser,
 
     LogDebug( ( "Response parsing: Found a header value: "
                 "HeaderValue=%.*s",
-                length,
+                ( int ) length,
                 pLoc ) );
 
     return HTTP_PARSER_CONTINUE_PARSING;
@@ -818,10 +818,9 @@ static int httpParserOnBodyCallback( http_parser * pHttpParser,
     /* Set the next location of parsing. */
     pParsingContext->pBufferCur = pLoc + length;
 
-    LogDebug( ( "Response parsing: Found the response body. "
+    LogDebug( ( "Response parsing: Found the response body: "
                 "BodyLength=%d",
-                length,
-                pLoc ) );
+                ( int ) length ) );
 
     return shouldContinueParse;
 }
@@ -1045,10 +1044,10 @@ HTTPStatus_t parseHttpResponse( HTTPParsingContext_t * pParsingContext,
                                        pParsingContext->pBufferCur,
                                        parseLen );
 
-    LogDebug( ( "Parsed HTTP Response buffer: BytesParsed=%d, ",
-                "ExpectedBytesParsed=%d",
-                bytesParsed,
-                parseLen ) );
+    LogDebug( ( "Parsed HTTP Response buffer: BytesParsed=%lu, "
+                "ExpectedBytesParsed=%lu",
+                ( unsigned long ) bytesParsed,
+                ( unsigned long ) parseLen ) );
 
     returnStatus = processHttpParserError( &( pParsingContext->httpParser ) );
 
@@ -1558,10 +1557,10 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
             pIndex += transportStatus;
             LogDebug( ( "Sent HTTP data over the transport: "
                         "BytesSent=%d, BytesRemaining=%lu, "
-                        "TotalBytesSent=%d",
+                        "TotalBytesSent=%lu",
                         transportStatus,
                         bytesRemaining,
-                        dataLen - bytesRemaining ) );
+                        ( unsigned long ) ( dataLen - bytesRemaining ) ) );
         }
     }
 
@@ -1633,8 +1632,8 @@ static HTTPStatus_t sendHttpHeaders( const HTTPTransportInterface_t * pTransport
 
     if( returnStatus == HTTP_SUCCESS )
     {
-        LogDebug( ( "Sending HTTP request headers: HeaderBytes=%d",
-                    pRequestHeaders->headersLen ) );
+        LogDebug( ( "Sending HTTP request headers: HeaderBytes=%lu",
+                    ( unsigned long ) ( pRequestHeaders->headersLen ) ) );
 
         /* Send the HTTP headers over the network. */
         returnStatus = sendHttpData( pTransport, pRequestHeaders->pBuffer, pRequestHeaders->headersLen );
@@ -1974,8 +1973,8 @@ static int findHeaderFieldParserCallback( http_parser * pHttpParser,
         ( memcmp( pContext->pField, pFieldLoc, fieldLen ) == 0 ) )
     {
         LogDebug( ( "Found header field in response: "
-                    "HeaderName=%.*s, HeaderLocation=0x%x",
-                    fieldLen, pContext->pField, pFieldLoc ) );
+                    "HeaderName=%.*s, HeaderLocation=0x%p",
+                    ( int ) fieldLen, pContext->pField, pFieldLoc ) );
 
         /* Set the flag to indicate that header has been found in response. */
         pContext->fieldFound = 1u;
@@ -2014,8 +2013,8 @@ static int findHeaderValueParserCallback( http_parser * pHttpParser,
     if( pContext->fieldFound == 1u )
     {
         LogDebug( ( "Found header value in response: "
-                    "RequestedField=%.*s, ValueLocation=0x%x",
-                    pContext->fieldLen, pContext->pField, pVaLueLoc ) );
+                    "RequestedField=%.*s, ValueLocation=0x%p",
+                    ( int ) ( pContext->fieldLen ), pContext->pField, pVaLueLoc ) );
 
         /* Populate the output parameters with the location of the header value in the response buffer. */
         *pContext->pValueLoc = pVaLueLoc;
@@ -2053,7 +2052,7 @@ static int findHeaderOnHeaderCompleteCallback( http_parser * pHttpParser )
      * header has not been found in the response buffer. */
     LogDebug( ( "Reached end of header parsing: Header not found in response: "
                 "RequestedHeader=%.*s",
-                pContext->fieldLen,
+                ( int ) ( pContext->fieldLen ),
                 pContext->pField ) );
 
     /* No further parsing is required; thus, indicate the parser to stop parsing. */
@@ -2104,8 +2103,8 @@ static HTTPStatus_t findHeaderInResponse( const uint8_t * pBuffer,
                                             ( const char * ) pBuffer,
                                             bufferLen );
 
-    LogDebug( ( "Parsed response for header search: NumBytesParsed=%u",
-                numOfBytesParsed ) );
+    LogDebug( ( "Parsed response for header search: NumBytesParsed=%lu",
+                ( unsigned long ) numOfBytesParsed ) );
 
     if( context.fieldFound == 0u )
     {
