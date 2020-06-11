@@ -53,9 +53,9 @@
     #error "Please define a SERVER_PORT."
 #endif
 
-/* Check that a path for HTTP Method GET is defined. */
-#ifndef GET_PATH
-    #error "Please define a GET_PATH."
+/* Check that a path for HTTP Method POST is defined. */
+#ifndef POST_PATH
+    #error "Please define a POST_PATH."
 #endif
 
 /* Check that transport timeout for transport send and receive is defined. */
@@ -223,7 +223,6 @@ static int connectToServer( const char * pServer,
     struct sockaddr * pServerInfo;
     uint16_t netPort = htons( port );
     socklen_t serverInfoLength;
-    struct timeval transportTimeout;
 
     /* Add hints to retrieve only TCP sockets in getaddrinfo. */
     ( void ) memset( &hints, 0, sizeof( hints ) );
@@ -315,35 +314,6 @@ static int connectToServer( const char * pServer,
                     ( int ) strlen( pServer ),
                     pServer ) );
         returnStatus = EXIT_FAILURE;
-    }
-
-    /* Set the socket option for send and receive timeouts. */
-    if( returnStatus == EXIT_SUCCESS )
-    {
-        transportTimeout.tv_sec = 0;
-        transportTimeout.tv_usec = ( TRANSPORT_SEND_RECV_TIMEOUT_MS * 1000 );
-
-        /* Set the receive timeout. */
-        if( setsockopt( *pTcpSocket,
-                        SOL_SOCKET,
-                        SO_RCVTIMEO,
-                        ( char * ) &transportTimeout,
-                        sizeof( transportTimeout ) ) < 0 )
-        {
-            LogError( ( "Setting socket receive timeout failed." ) );
-            returnStatus = EXIT_FAILURE;
-        }
-
-        /* Set the send timeout. */
-        if( setsockopt( *pTcpSocket,
-                        SOL_SOCKET,
-                        SO_SNDTIMEO,
-                        ( char * ) &transportTimeout,
-                        sizeof( transportTimeout ) ) < 0 )
-        {
-            LogError( ( "Setting socket send timeout failed." ) );
-            returnStatus = EXIT_FAILURE;
-        }
     }
 
     if( pListHead != NULL )
@@ -865,8 +835,8 @@ int main( int argc,
     {
         returnStatus = sendHttpRequest( &transportInterface,
                                         SERVER_HOST,
-                                        HTTP_METHOD_GET,
-                                        GET_PATH );
+                                        HTTP_METHOD_POST,
+                                        POST_PATH );
     }
 
     /************************** Disconnect. *****************************/
