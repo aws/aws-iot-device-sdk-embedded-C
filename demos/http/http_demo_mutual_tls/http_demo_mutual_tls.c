@@ -43,10 +43,70 @@
 /* Demo Config header. */
 #include "demo_config.h"
 
+/* Check that hostname of the server is defined. */
+#ifndef SERVER_HOST
+    #error "Please define a SERVER_HOST."
+#endif
+
+/* Check that TLS port of the server is defined. */
+#ifndef SERVER_PORT
+    #error "Please define a SERVER_PORT."
+#endif
+
+/* Check that a path for HTTP Method GET is defined. */
+#ifndef GET_PATH
+    #error "Please define a GET_PATH."
+#endif
+
+/* Check that transport timeout for transport send and receive is defined. */
+#ifndef TRANSPORT_SEND_RECV_TIMEOUT_MS
+    #define TRANSPORT_SEND_RECV_TIMEOUT_MS    ( 1000 )
+#endif
+
+/* Check that size of the user buffer is defined. */
+#ifndef USER_BUFFER_LENGTH
+    #define USER_BUFFER_LENGTH    ( 1024 )
+#endif
+
+/* Check that a request body to send for PUT and POST requests is defined. */
+#ifndef REQUEST_BODY
+    #error "Please define a REQUEST_BODY."
+#endif
+
+/**
+ * @brief The length of the HTTP server host name.
+ */
+#define SERVER_HOST_LENGTH            ( sizeof( SERVER_HOST ) - 1 )
+
+/**
+ * @brief Length of path to server certificate.
+ */
+#define SERVER_CERT_PATH_LENGTH       ( ( uint16_t ) ( sizeof( SERVER_CERT_PATH ) - 1 ) )
+
+/**
+ * @brief Length of path to client's certificate.
+ */
+#define CLIENT_CERT_PATH_LENGTH       ( ( uint16_t ) sizeof( CLIENT_CERT_PATH ) - 1 )
+
+/**
+ * @brief Length of path to client's key.
+ */
+#define CLIENT_KEY_PATH_LENGTH        ( sizeof( CLIENT_KEY_PATH ) - 1 )
+
+/**
+ * @brief Length of the request body.
+ */
+#define REQUEST_BODY_LENGTH           ( sizeof( REQUEST_BODY ) - 1 )
+
+/**
+ * @brief Length of an IPv6 address when converted to hex digits.
+ */
+#define IPV6_ADDRESS_STRING_LENGTH    ( 40 )
+
 /**
  * @brief A string to store the resolved IP address from the host name.
  */
-static char resolvedIpAddr[ IPV6_ADDRESS_STRING_LEN ];
+static char resolvedIpAddr[ IPV6_ADDRESS_STRING_LENGTH ];
 
 /**
  * @brief A buffer used in the demo for storing HTTP request headers and
@@ -73,27 +133,6 @@ struct HTTPNetworkContext
  * @brief Structure based on the definition of the HTTP network context.
  */
 static HTTPNetworkContext_t networkContext;
-
-/**
- * @brief The HTTP Client library transport layer interface.
- */
-static HTTPTransportInterface_t transportInterface;
-
-/**
- * @brief Represents header data that will be sent in an HTTP request.
- */
-static HTTPRequestHeaders_t requestHeaders;
-
-/**
- * @brief Configurations of the initial request headers that are passed to
- * #HTTPClient_InitializeRequestHeaders.
- */
-static HTTPRequestInfo_t requestInfo;
-
-/**
- * @brief Represents a response returned from an HTTP server.
- */
-static HTTPResponse_t response;
 
 /*-----------------------------------------------------------*/
 
@@ -589,6 +628,7 @@ static int tlsSetup( int tcpSocket,
 }
 
 /*-----------------------------------------------------------*/
+
 static int32_t transportSend( HTTPNetworkContext_t * pNetworkContext,
                               const void * pBuffer,
                               size_t bytesToSend )
@@ -678,8 +718,24 @@ static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface
                             const char * pMethod,
                             const char * pPath )
 {
+    /* Return value of this method. */
     int returnStatus = EXIT_SUCCESS;
+
+    /* Configurations of the initial request headers that are passed to
+     * #HTTPClient_InitializeRequestHeaders. */
+    HTTPRequestInfo_t requestInfo;
+    /* Represents a response returned from an HTTP server. */
+    HTTPResponse_t response;
+    /* Represents header data that will be sent in an HTTP request. */
+    HTTPRequestHeaders_t requestHeaders;
+
+    /* Return value of all methods from the HTTP Client library API. */
     HTTPStatus_t httpStatus = HTTP_SUCCESS;
+
+    /* Initialize all HTTP Client library API structs to 0. */
+    memset( &requestInfo, 0, sizeof( requestInfo ) );
+    memset( &response, 0, sizeof( response ) );
+    memset( &requestHeaders, 0, sizeof( requestHeaders ) );
 
     /* Initialize the request object. */
     requestInfo.pHost = pHost;
@@ -709,12 +765,12 @@ static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface
 
         LogInfo( ( "Sending HTTP %s request to %s%s...",
                    pMethod, SERVER_HOST, pPath ) );
-        LogInfo( ( "Request Headers:\n%.*s",
-                   ( int32_t ) requestHeaders.headersLen,
-                   ( char * ) requestHeaders.pBuffer ) );
-        LogInfo( ( "Request Body:\n%.*s\n",
-                   ( int32_t ) REQUEST_BODY_LENGTH,
-                   REQUEST_BODY ) );
+        LogDebug( ( "Request Headers:\n%.*s",
+                    ( int32_t ) requestHeaders.headersLen,
+                    ( char * ) requestHeaders.pBuffer ) );
+        LogDebug( ( "Request Body:\n%.*s\n",
+                    ( int32_t ) REQUEST_BODY_LENGTH,
+                    REQUEST_BODY ) );
         /* Send the request and receive the response. */
         httpStatus = HTTPClient_Send( pTransportInterface,
                                       &requestHeaders,
@@ -764,8 +820,8 @@ static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface
  * This example resolves a domain, establishes a TCP connection, both server and
  * client validate each other's certificates, then a TLS handshake occurs so that
  * all communication is encrypted. After which, HTTP Client library API is used to
- * send a GET request and receives a response from the server (or an error code)
- * containing information about the TLS connection such as the cipher suite.
+ * send a request and receives a response from the server (or an error code)
+ * that is logged.
  *
  * @note This example is single-threaded and uses statically allocated memory.
  *
@@ -773,7 +829,10 @@ static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface
 int main( int argc,
           char ** argv )
 {
+    /* Return value of main. */
     int returnStatus = EXIT_SUCCESS;
+    /* The HTTP Client library transport layer interface. */
+    HTTPTransportInterface_t transportInterface;
 
     ( void ) argc;
     ( void ) argv;
@@ -794,6 +853,7 @@ int main( int argc,
     /* Define the transport interface. */
     if( returnStatus == EXIT_SUCCESS )
     {
+        memset( &transportInterface, 0, sizeof( transportInterface ) );
         transportInterface.recv = transportRecv;
         transportInterface.send = transportSend;
         transportInterface.pContext = &networkContext;

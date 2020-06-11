@@ -46,31 +46,21 @@
 /**
  * @brief HTTP server host name.
  */
-#define SERVER_HOST                "server.cryptomix.com"
-
-/**
- * @brief The length of the HTTP server host name.
- */
-#define SERVER_HOST_LENGTH         ( sizeof( SERVER_HOST ) - 1 )
+#define SERVER_HOST                       "server.cryptomix.com"
 
 /**
  * @brief HTTP server port number.
  *
  * In general, port 443 is for TLS HTTP connections.
  */
-#define SERVER_PORT                443
+#define SERVER_PORT                       443
 
 /**
  * @brief Path of the file containing the server's root CA certificate for TLS authentication.
  *
  * @note This certificate should be PEM-encoded.
  */
-#define SERVER_CERT_PATH           "certificates/dst.crt"
-
-/**
- * @brief Length of path to server certificate.
- */
-#define SERVER_CERT_PATH_LENGTH    ( ( uint16_t ) ( sizeof( SERVER_CERT_PATH ) - 1 ) )
+#define SERVER_CERT_PATH                  "certificates/dst.crt"
 
 /**
  * @brief Path of the file containing the client's certificate for TLS authentication.
@@ -81,12 +71,7 @@
  *
  * @note This certificate should be PEM-encoded.
  */
-#define CLIENT_CERT_PATH           "certificates/client.crt"
-
-/**
- * @brief Length of path to client's certificate.
- */
-#define CLIENT_CERT_PATH_LENGTH    ( ( uint16_t ) sizeof( CLIENT_CERT_PATH ) - 1 )
+#define CLIENT_CERT_PATH                  "certificates/client.crt"
 
 /**
  * @brief Path of the file containing the client's key for TLS client authentication.
@@ -94,20 +79,12 @@
  *
  * @note This key should be PEM-encoded.
  */
-#define CLIENT_KEY_PATH            "certificates/client.key"
+#define CLIENT_KEY_PATH                   "certificates/client.key"
 
 /**
- * @brief Length of path to client's key.
+ * @brief HTTP server path to perform the mutually authenticated request.
  */
-#define CLIENT_KEY_PATH_LENGTH     ( sizeof( CLIENT_KEY_PATH ) - 1 )
-
-/**
- * @brief Path that accepts any client certificate then responds with
- * information about the TLS connection.
- */
-#ifndef GET_PATH
-    #define GET_PATH    "/secure/"
-#endif
+#define GET_PATH                          "/secure/"
 
 /**
  * @brief Transport timeout in milliseconds for transport send and receive.
@@ -120,18 +97,8 @@
 #define USER_BUFFER_LENGTH                ( 4096 )
 
 /**
- * @brief Length of an IPv6 address when converted to hex digits.
- */
-#define IPV6_ADDRESS_STRING_LEN           ( 40 )
-
-/**
  * @brief Request body to send for PUT and POST requests in this demo.
  */
 #define REQUEST_BODY                      "Hello, world!"
-
-/**
- * @brief Length of the request body.
- */
-#define REQUEST_BODY_LENGTH               ( sizeof( REQUEST_BODY ) - 1 )
 
 #endif /* ifndef DEMO_CONFIG_H */
