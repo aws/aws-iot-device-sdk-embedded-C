@@ -154,11 +154,22 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
 /**
  * @brief Establish a MQTT session.
  *
+ * This function will send MQTT CONNECT packet and receive a CONNACK packet.
+ * The send and receive from the network is through the transport interface.
+ * The maximum wait for receiving a CONNACK is managed in 2 ways.
+ * 1. If a #getTime interface function is passed to the MQTT library:
+ *    Parameter #timeoutMs will be used for a #getTime based maximum timeout
+ *    for the network read.
+ * 2. If a #getTime interface function is not passed to the MQTT library:
+ *    A network read would be retried upto the number of times configured by
+ *    #MQTT_CONNACK_RECEIVE_RETRY_COUNT.
+ *
  * @brief param[in] pContext Initialized MQTT context.
  * @brief param[in] pConnectInfo MQTT CONNECT packet parameters.
  * @brief param[in] pWillInfo Last Will and Testament. Pass NULL if not used.
  * @brief param[in] timeoutMs Timeout in milliseconds for receiving
- * CONNACK packet.
+ * CONNACK packet. A zero timeout value will attempt to receive through
+ * transport receive once.
  * @brief param[out] pSessionPresent Whether a previous session was present.
  * Only relevant if not establishing a clean session.
  *
