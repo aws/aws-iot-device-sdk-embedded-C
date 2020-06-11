@@ -46,21 +46,22 @@
 /**
  * @brief HTTP server host name.
  */
-#define SERVER_HOST                       "server.cryptomix.com"
+#define SERVER_HOST                       "placeholder.iot.us-west-2.amazonaws.com"
 
 /**
  * @brief HTTP server port number.
  *
- * In general, port 443 is for TLS HTTP connections.
+ * @note Port 443 is normally used for HTTPS connections. However, because 443
+ * is reserved for MQTT in AWS IoT Core, port 8443 is used instead.
  */
-#define SERVER_PORT                       443
+#define SERVER_PORT                       8443
 
 /**
  * @brief Path of the file containing the server's root CA certificate for TLS authentication.
  *
  * @note This certificate should be PEM-encoded.
  */
-#define SERVER_CERT_PATH                  "certificates/dst.crt"
+#define SERVER_CERT_PATH                  "certificates/AmazonRootCA1.crt"
 
 /**
  * @brief Path of the file containing the client's certificate for TLS authentication.
@@ -83,8 +84,11 @@
 
 /**
  * @brief HTTP server path to perform the mutually authenticated request.
+ * This will publish a "Hello World" message to a topic named topic.
+ *
+ * @note QoS=1 implies the message is delivered at least once.
  */
-#define GET_PATH                          "/secure/"
+#define POST_PATH                         "/topics/topic?qos=1"
 
 /**
  * @brief Transport timeout in milliseconds for transport send and receive.
@@ -99,6 +103,6 @@
 /**
  * @brief Request body to send for PUT and POST requests in this demo.
  */
-#define REQUEST_BODY                      "Hello, world!"
+#define REQUEST_BODY                      "{ \"message\": \"Hello, world\" }"
 
 #endif /* ifndef DEMO_CONFIG_H */
