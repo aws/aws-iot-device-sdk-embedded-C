@@ -19,8 +19,8 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef HTTP_CONFIG_H
-#define HTTP_CONFIG_H
+#ifndef HTTP_CONFIG_H_
+#define HTTP_CONFIG_H_
 
 /**************************************************/
 /******* DO NOT CHANGE the following order ********/
@@ -43,4 +43,4 @@
 
 /************ End of logging configuration ****************/
 
-#endif /* ifndef HTTP_CONFIG_H */
+#endif /* ifndef HTTP_CONFIG_H_ */

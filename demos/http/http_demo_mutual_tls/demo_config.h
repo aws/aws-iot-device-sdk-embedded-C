@@ -105,4 +105,4 @@
  */
 #define REQUEST_BODY                      "{ \"message\": \"Hello, world\" }"
 
-#endif /* ifndef DEMO_CONFIG_H */
+#endif /* ifndef DEMO_CONFIG_H_ */
