@@ -27,7 +27,6 @@
 /* POSIX socket includes. */
 #include <errno.h>
 #include <netdb.h>
-#include <time.h>
 #include <poll.h>
 #include <unistd.h>
 #include <arpa/inet.h>
@@ -95,6 +94,46 @@
  * @brief The length of the HTTP server host name.
  */
 #define SERVER_HOST_LENGTH            ( sizeof( SERVER_HOST ) - 1 )
+
+/**
+ * @brief The length of the HTTP GET method.
+ */
+#define HTTP_METHOD_GET_LENGTH        ( sizeof( HTTP_METHOD_GET ) - 1 )
+
+/**
+ * @brief The length of the HTTP HEAD method.
+ */
+#define HTTP_METHOD_HEAD_LENGTH       ( sizeof( HTTP_METHOD_HEAD ) - 1 )
+
+/**
+ * @brief The length of the HTTP PUT method.
+ */
+#define HTTP_METHOD_PUT_LENGTH        ( sizeof( HTTP_METHOD_PUT ) - 1 )
+
+/**
+ * @brief The length of the HTTP POST method.
+ */
+#define HTTP_METHOD_POST_LENGTH       ( sizeof( HTTP_METHOD_POST ) - 1 )
+
+/**
+ * @brief The length of the HTTP GET path.
+ */
+#define GET_PATH_LENGTH               ( sizeof( GET_PATH ) - 1 )
+
+/**
+ * @brief The length of the HTTP HEAD path.
+ */
+#define HEAD_PATH_LENGTH              ( sizeof( HEAD_PATH ) - 1 )
+
+/**
+ * @brief The length of the HTTP PUT path.
+ */
+#define PUT_PATH_LENGTH               ( sizeof( PUT_PATH ) - 1 )
+
+/**
+ * @brief The length of the HTTP POST path.
+ */
+#define POST_PATH_LENGTH              ( sizeof( POST_PATH ) - 1 )
 
 /**
  * @brief Length of path to server certificate.
@@ -209,16 +248,18 @@ static int32_t transportRecv( HTTPNetworkContext_t * pContext,
  * print the response received from the server.
  *
  * @param[in] pTransportInterface The transport interface for making network calls.
- * @param[in] pHost The host name of the server.
  * @param[in] pMethod The HTTP request method.
+ * @param[in] methodLen The length of the HTTP request method.
  * @param[in] pPath The Request-URI to the objects of interest.
+ * @param[in] pathLen The length of the Request-URI.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
 static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface,
-                            const char * pHost,
                             const char * pMethod,
-                            const char * pPath );
+                            size_t methodLen,
+                            const char * pPath,
+                            size_t pathLen );
 
 /*-----------------------------------------------------------*/
 
@@ -231,7 +272,6 @@ static int connectToServer( const char * pServer,
     struct sockaddr * pServerInfo;
     uint16_t netPort = htons( port );
     socklen_t serverInfoLength;
-    struct timeval transportTimeout;
 
     /* Add hints to retrieve only TCP sockets in getaddrinfo. */
     ( void ) memset( &hints, 0, sizeof( hints ) );
@@ -246,8 +286,8 @@ static int connectToServer( const char * pServer,
 
     if( returnStatus != -1 )
     {
-        LogInfo( ( "Performing DNS lookup: Host=%s.",
-                   SERVER_HOST ) );
+        LogInfo( ( "Performing DNS lookup: Host=%.*s.",
+                   ( int32_t ) SERVER_HOST_LENGTH, SERVER_HOST ) );
 
         /* Attempt to connect to one of the retrieved DNS records. */
         for( pIndex = pListHead; pIndex != NULL; pIndex = pIndex->ai_next )
@@ -282,15 +322,15 @@ static int connectToServer( const char * pServer,
                            sizeof( resolvedIpAddr ) );
             }
 
-            LogInfo( ( "Attempting to connect to server: Host=%s, IP address=%s.",
-                       SERVER_HOST, resolvedIpAddr ) );
+            LogInfo( ( "Attempting to connect to server: Host=%.*s, IP address=%s.",
+                       ( int32_t ) SERVER_HOST_LENGTH, SERVER_HOST, resolvedIpAddr ) );
 
             returnStatus = connect( *pTcpSocket, pServerInfo, serverInfoLength );
 
             if( returnStatus == -1 )
             {
-                LogError( ( "Failed to connect to server: Host=%s, IP address=%s.",
-                            SERVER_HOST, resolvedIpAddr ) );
+                LogError( ( "Failed to connect to server: Host=%.*s, IP address=%s.",
+                            ( int32_t ) SERVER_HOST_LENGTH, SERVER_HOST, resolvedIpAddr ) );
                 close( *pTcpSocket );
             }
             else
@@ -304,17 +344,17 @@ static int connectToServer( const char * pServer,
         if( pIndex == NULL )
         {
             /* Fail if no connection could be established. */
-            returnStatus = EXIT_FAILURE;
             LogError( ( "Could not connect to any resolved IP address from %.*s.\n",
                         ( int ) strlen( pServer ),
                         pServer ) );
+            returnStatus = EXIT_FAILURE;
         }
         else
         {
-            returnStatus = EXIT_SUCCESS;
             LogInfo( ( "Established TCP connection: Server=%.*s.\n",
                        ( int ) strlen( pServer ),
                        pServer ) );
+            returnStatus = EXIT_SUCCESS;
         }
     }
     else
@@ -323,35 +363,6 @@ static int connectToServer( const char * pServer,
                     ( int ) strlen( pServer ),
                     pServer ) );
         returnStatus = EXIT_FAILURE;
-    }
-
-    /* Set the socket option for send and receive timeouts. */
-    if( returnStatus == EXIT_SUCCESS )
-    {
-        transportTimeout.tv_sec = 0;
-        transportTimeout.tv_usec = ( TRANSPORT_SEND_RECV_TIMEOUT_MS * 1000 );
-
-        /* Set the receive timeout. */
-        if( setsockopt( *pTcpSocket,
-                        SOL_SOCKET,
-                        SO_RCVTIMEO,
-                        ( char * ) &transportTimeout,
-                        sizeof( transportTimeout ) ) < 0 )
-        {
-            LogError( ( "Setting socket receive timeout failed." ) );
-            returnStatus = EXIT_FAILURE;
-        }
-
-        /* Set the send timeout. */
-        if( setsockopt( *pTcpSocket,
-                        SOL_SOCKET,
-                        SO_SNDTIMEO,
-                        ( char * ) &transportTimeout,
-                        sizeof( transportTimeout ) ) < 0 )
-        {
-            LogError( ( "Setting socket send timeout failed." ) );
-            returnStatus = EXIT_FAILURE;
-        }
     }
 
     if( pListHead != NULL )
@@ -368,6 +379,7 @@ static int tlsSetup( int tcpSocket,
                      SSL ** pSslContext )
 {
     int returnStatus = EXIT_SUCCESS;
+    long verifyPeerCertStatus = X509_V_OK;
     int sslStatus = 0;
     char * cwd = getcwd( NULL, 0 );
     FILE * pRootCaFile = NULL;
@@ -382,7 +394,7 @@ static int tlsSetup( int tcpSocket,
          * The mask returned by SSL_CTX_set_mode does not need to be checked. */
         ( void ) SSL_CTX_set_mode( pSslSetup, SSL_MODE_AUTO_RETRY );
 
-        /* Check if an absolute directory is being used. */
+        /* Log the absolute directory based on first character of certificate path. */
         if( ( SERVER_CERT_PATH[ 0 ] == '/' ) || ( SERVER_CERT_PATH[ 0 ] == '\\' ) )
         {
             LogInfo( ( "Attempting to open root CA certificate: Path=%.*s.",
@@ -397,20 +409,20 @@ static int tlsSetup( int tcpSocket,
                        SERVER_CERT_PATH ) );
         }
 
-        /* OpenSSL does not provide a single function for reading and loading certificates
-         * from files into stores, so the file API must be called. */
+        /* OpenSSL does not provide a single function for reading and loading
+         * certificates from files into stores, so the file API must be called. */
         pRootCaFile = fopen( SERVER_CERT_PATH, "r" );
 
-        if( pRootCaFile != NULL )
-        {
-            pRootCa = PEM_read_X509( pRootCaFile, NULL, NULL, NULL );
-        }
-        else
+        if( pRootCaFile == NULL )
         {
             LogError( ( "fopen failed to find the root CA certificate file: "
                         "SERVER_CERT_PATH=%.*s.",
                         ( int32_t ) SERVER_CERT_PATH_LENGTH,
                         SERVER_CERT_PATH ) );
+        }
+        else
+        {
+            pRootCa = PEM_read_X509( pRootCaFile, NULL, NULL, NULL );
         }
 
         if( pRootCa != NULL )
@@ -418,13 +430,6 @@ static int tlsSetup( int tcpSocket,
             /* Add the server's root CA to the set of trusted certificates. */
             sslStatus = X509_STORE_add_cert( SSL_CTX_get_cert_store( pSslSetup ),
                                              pRootCa );
-        }
-        else
-        {
-            LogError( ( "PEM_read_X509 failed to parse the root CA certificate "
-                        "from file %.*s. Please validate the certificate.",
-                        ( int32_t ) SERVER_CERT_PATH_LENGTH,
-                        SERVER_CERT_PATH ) );
         }
     }
 
@@ -434,39 +439,46 @@ static int tlsSetup( int tcpSocket,
         /* Create a new SSL context. */
         *pSslContext = SSL_new( pSslSetup );
 
-        if( *pSslContext != NULL )
+        if( *pSslContext == NULL )
+        {
+            LogError( ( "SSL_new failed to create a new SSL context." ) );
+            sslStatus = 0;
+        }
+        else
         {
             /* Enable SSL peer verification. */
             SSL_set_verify( *pSslContext, SSL_VERIFY_PEER, NULL );
 
             sslStatus = SSL_set_fd( *pSslContext, tcpSocket );
-        }
-        else
-        {
-            LogError( ( "Failed to create a new SSL context." ) );
-            sslStatus = 0;
+
+            if( sslStatus != 1 )
+            {
+                LogError( ( "SSL_set_fd failed to set the socket fd to SSL context." ) );
+            }
         }
 
         /* Perform the TLS handshake. */
         if( sslStatus == 1 )
         {
             sslStatus = SSL_connect( *pSslContext );
-        }
-        else
-        {
-            LogError( ( "Failed to set the socket fd to SSL context." ) );
-        }
 
-        if( sslStatus == 1 )
-        {
-            if( SSL_get_verify_result( *pSslContext ) != X509_V_OK )
+            if( sslStatus != 1 )
             {
-                sslStatus = 0;
+                LogError( ( "SSL_connect failed to perform TLS handshake." ) );
             }
         }
-        else
+
+        /* Verify X509 certificate from peer. */
+        if( sslStatus == 1 )
         {
-            LogError( ( "Failed to perform TLS handshake." ) );
+            verifyPeerCertStatus = SSL_get_verify_result( *pSslContext );
+
+            if( verifyPeerCertStatus != X509_V_OK )
+            {
+                LogError( ( "SSL_get_verify_result failed to verify X509 "
+                            "certificate from peer." ) );
+                sslStatus = 0;
+            }
         }
 
         /* Clean up on error. */
@@ -607,9 +619,10 @@ static int32_t transportRecv( HTTPNetworkContext_t * pNetworkContext,
 /*-----------------------------------------------------------*/
 
 static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface,
-                            const char * pHost,
                             const char * pMethod,
-                            const char * pPath )
+                            size_t methodLen,
+                            const char * pPath,
+                            size_t pathLen )
 {
     /* Return value of this method. */
     int returnStatus = EXIT_SUCCESS;
@@ -625,7 +638,6 @@ static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface
     /* Return value of all methods from the HTTP Client library API. */
     HTTPStatus_t httpStatus = HTTP_SUCCESS;
 
-    assert( pHost != NULL );
     assert( pMethod != NULL );
 
     /* Initialize all HTTP Client library API structs to 0. */
@@ -634,12 +646,12 @@ static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface
     memset( &requestHeaders, 0, sizeof( requestHeaders ) );
 
     /* Initialize the request object. */
-    requestInfo.pHost = pHost;
-    requestInfo.hostLen = strlen( pHost );
+    requestInfo.pHost = SERVER_HOST;
+    requestInfo.hostLen = SERVER_HOST_LENGTH;
     requestInfo.method = pMethod;
-    requestInfo.methodLen = strlen( pMethod );
+    requestInfo.methodLen = methodLen;
     requestInfo.pPath = pPath;
-    requestInfo.pathLen = strlen( pPath );
+    requestInfo.pathLen = pathLen;
 
     /* Set "Connection" HTTP header to "keep-alive" so that multiple requests
      * can be sent over the same established TCP connection. */
@@ -659,13 +671,15 @@ static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface
         response.pBuffer = userBuffer;
         response.bufferLen = USER_BUFFER_LENGTH;
 
-        LogInfo( ( "Sending HTTP %s request to %s%s...",
-                   pMethod, SERVER_HOST, pPath ) );
-        LogDebug( "Request Headers:\n%.*s\n",
-                  "Request Body:\n%.*s\n",
-                  ( int32_t ) requestHeaders.headersLen,
-                  ( char * ) requestHeaders.pBuffer,
-                  ( int32_t ) REQUEST_BODY_LENGTH, REQUEST_BODY );
+        LogInfo( ( "Sending HTTP %.*s request to %.*s%.*s...",
+                   ( int32_t ) methodLen, pMethod,
+                   ( int32_t ) SERVER_HOST_LENGTH, SERVER_HOST,
+                   ( int32_t ) pathLen, pPath ) );
+        LogDebug( ( "Request Headers:\n%.*s\n"
+                    "Request Body:\n%.*s\n",
+                    ( int32_t ) requestHeaders.headersLen,
+                    ( char * ) requestHeaders.pBuffer,
+                    ( int32_t ) REQUEST_BODY_LENGTH, REQUEST_BODY ) );
         /* Send the request and receive the response. */
         httpStatus = HTTPClient_Send( pTransportInterface,
                                       &requestHeaders,
@@ -682,19 +696,23 @@ static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface
 
     if( httpStatus == HTTP_SUCCESS )
     {
-        LogInfo( ( "Received HTTP response from %s%s...\n",
-                   "Response Headers:\n%.*s\n",
-                   "Response Status:\n%u\n",
+        LogInfo( ( "Received HTTP response from %.*s%.*s...\n"
+                   "Response Headers:\n%.*s\n"
+                   "Response Status:\n%u\n"
                    "Response Body:\n%.*s\n",
-                   SERVER_HOST, pPath,
+                   ( int32_t ) SERVER_HOST_LENGTH, SERVER_HOST,
+                   ( int32_t ) pathLen, pPath,
                    ( int32_t ) response.headersLen, response.pHeaders,
                    response.statusCode,
                    ( int32_t ) response.bodyLen, response.pBody ) );
     }
     else
     {
-        LogError( ( "Failed to send HTTP %s request to %s%s: Error=%s.",
-                    pMethod, SERVER_HOST, pPath, HTTPClient_strerror( httpStatus ) ) );
+        LogError( ( "Failed to send HTTP %.*s request to %.*s%.*s: Error=%s.",
+                    ( int32_t ) methodLen, pMethod,
+                    ( int32_t ) SERVER_HOST_LENGTH, SERVER_HOST,
+                    ( int32_t ) pathLen, pPath,
+                    HTTPClient_strerror( httpStatus ) ) );
     }
 
     if( httpStatus != HTTP_SUCCESS )
@@ -759,36 +777,40 @@ int main( int argc,
     if( returnStatus == EXIT_SUCCESS )
     {
         returnStatus = sendHttpRequest( &transportInterface,
-                                        SERVER_HOST,
                                         HTTP_METHOD_GET,
-                                        GET_PATH );
+                                        HTTP_METHOD_GET_LENGTH,
+                                        GET_PATH,
+                                        GET_PATH_LENGTH );
     }
 
     /* Send HEAD Request. */
     if( returnStatus == EXIT_SUCCESS )
     {
         returnStatus = sendHttpRequest( &transportInterface,
-                                        SERVER_HOST,
                                         HTTP_METHOD_HEAD,
-                                        HEAD_PATH );
+                                        HTTP_METHOD_HEAD_LENGTH,
+                                        HEAD_PATH,
+                                        HEAD_PATH_LENGTH );
     }
 
     /* Send PUT Request. */
     if( returnStatus == EXIT_SUCCESS )
     {
         returnStatus = sendHttpRequest( &transportInterface,
-                                        SERVER_HOST,
                                         HTTP_METHOD_PUT,
-                                        PUT_PATH );
+                                        HTTP_METHOD_PUT_LENGTH,
+                                        PUT_PATH,
+                                        PUT_PATH_LENGTH );
     }
 
     /* Send POST Request. */
     if( returnStatus != EXIT_SUCCESS )
     {
         returnStatus = sendHttpRequest( &transportInterface,
-                                        SERVER_HOST,
                                         HTTP_METHOD_POST,
-                                        POST_PATH );
+                                        HTTP_METHOD_POST_LENGTH,
+                                        POST_PATH,
+                                        POST_PATH_LENGTH );
     }
 
     /************************** Disconnect. *****************************/
