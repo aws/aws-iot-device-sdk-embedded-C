@@ -738,10 +738,11 @@ static MQTTStatus_t deserializeConnack( const MQTTPacketInfo_t * const pConnack,
                                         bool * const pSessionPresent )
 {
     MQTTStatus_t status = MQTTSuccess;
+    const uint8_t * pRemainingData = NULL;
 
     assert( pConnack != NULL );
     assert( pSessionPresent != NULL );
-    const uint8_t * pRemainingData = pConnack->pRemainingData;
+    pRemainingData = pConnack->pRemainingData;
 
     /* According to MQTT 3.1.1, the second byte of CONNACK must specify a
      * "Remaining length" of 2. */
@@ -938,12 +939,14 @@ static MQTTStatus_t deserializeSuback( const MQTTPacketInfo_t * const pSuback,
                                        uint16_t * pPacketIdentifier )
 {
     MQTTStatus_t status = MQTTSuccess;
+    size_t remainingLength;
+    const uint8_t * pVariableHeader = NULL;
 
     assert( pSuback != NULL );
     assert( pPacketIdentifier != NULL );
 
-    size_t remainingLength = pSuback->remainingLength;
-    const uint8_t * pVariableHeader = pSuback->pRemainingData;
+    remainingLength = pSuback->remainingLength;
+    pVariableHeader = pSuback->pRemainingData;
 
     /* A SUBACK must have a remaining length of at least 3 to accommodate the
      * packet identifier and at least 1 return code. */
@@ -1024,11 +1027,12 @@ static MQTTStatus_t deserializePublish( const MQTTPacketInfo_t * const pIncoming
                                         MQTTPublishInfo_t * const pPublishInfo )
 {
     MQTTStatus_t status = MQTTSuccess;
+    const uint8_t * pVariableHeader, * pPacketIdentifierHigh;
 
     assert( pIncomingPacket != NULL );
     assert( pPacketId != NULL );
     assert( pPublishInfo != NULL );
-    const uint8_t * pVariableHeader = pIncomingPacket->pRemainingData, * pPacketIdentifierHigh;
+    pVariableHeader = pIncomingPacket->pRemainingData;
     /* The flags are the lower 4 bits of the first byte in PUBLISH. */
     status = processPublishFlags( ( pIncomingPacket->type & 0x0FU ), pPublishInfo );
 

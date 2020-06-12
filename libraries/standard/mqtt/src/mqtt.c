@@ -106,17 +106,27 @@ static MQTTStatus_t receivePacket( MQTTContext_t * const pContext,
                                    uint32_t remainingTimeMs );
 
 /**
+ * @brief Get the correct ack type to send.
+ *
+ * @param[in] state Current state of publish.
+ *
+ * @return Packet Type byte of PUBACK, PUBREC, PUBREL, or PUBCOMP if one of
+ * those should be sent, else 0.
+ */
+static uint8_t getAckTypeToSend( MQTTPublishState_t state );
+
+/**
  * @brief Send acks for received QoS 1/2 publishes.
  *
  * @param[in] pContext MQTT Connection context.
  * @param[in] packetId packet ID of original PUBLISH.
- * @param[in,out] pPublishState Current/updated publish state in record.
+ * @param[in] publishState Current publish state in record.
  *
- * @return #MQTTSuccess or #MQTTIllegalState.
+ * @return #MQTTSuccess, #MQTTIllegalState or #MQTTSendFailed.
  */
 static MQTTStatus_t sendPublishAcks( MQTTContext_t * const pContext,
                                      uint16_t packetId,
-                                     MQTTPublishState_t * pPublishState );
+                                     MQTTPublishState_t publishState );
 
 /**
  * @brief Send a keep alive PINGREQ if the keep alive interval has elapsed.
@@ -211,7 +221,6 @@ static int32_t sendPacket( MQTTContext_t * pContext,
     uint32_t sendTime = 0U;
 
     assert( pContext != NULL );
-    assert( bytesToSend != 0 );
 
     /* Record the time of transmission. */
     sendTime = pContext->callbacks.getTime();
@@ -244,7 +253,7 @@ static int32_t sendPacket( MQTTContext_t * pContext,
     }
 
     /* Update time of last transmission if the entire packet was successfully sent. */
-    if( totalBytesSent > -1 )
+    if( totalBytesSent > 0 )
     {
         pContext->lastPacketTime = sendTime;
         LogDebug( ( "Successfully sent packet at time %u.",
@@ -283,14 +292,11 @@ static MQTTPubAckType_t getAckFromPacketType( uint8_t packetType )
             break;
 
         case MQTT_PACKET_TYPE_PUBCOMP:
-            ackType = MQTTPubcomp;
-            break;
-
         default:
-
             /* This function is only called after checking the type is one of
-             * the above four values. */
-            assert( 0 );
+             * the above four values, so packet type must be PUBCOMP here. */
+            assert( packetType == MQTT_PACKET_TYPE_PUBCOMP );
+            ackType = MQTTPubcomp;
             break;
     }
 
@@ -463,9 +469,41 @@ static MQTTStatus_t receivePacket( MQTTContext_t * const pContext,
 
 /*-----------------------------------------------------------*/
 
+static uint8_t getAckTypeToSend( MQTTPublishState_t state )
+{
+    uint8_t packetTypeByte = 0U;
+
+    switch( state )
+    {
+        case MQTTPubAckSend:
+            packetTypeByte = MQTT_PACKET_TYPE_PUBACK;
+            break;
+
+        case MQTTPubRecSend:
+            packetTypeByte = MQTT_PACKET_TYPE_PUBREC;
+            break;
+
+        case MQTTPubRelSend:
+            packetTypeByte = MQTT_PACKET_TYPE_PUBREL;
+            break;
+
+        case MQTTPubCompSend:
+            packetTypeByte = MQTT_PACKET_TYPE_PUBCOMP;
+            break;
+
+        default:
+            /* Take no action for states that do not require sending an ack. */
+            break;
+    }
+
+    return packetTypeByte;
+}
+
+/*-----------------------------------------------------------*/
+
 static MQTTStatus_t sendPublishAcks( MQTTContext_t * const pContext,
                                      uint16_t packetId,
-                                     MQTTPublishState_t * pPublishState )
+                                     MQTTPublishState_t publishState )
 {
     MQTTStatus_t status = MQTTSuccess;
     MQTTPublishState_t newState = MQTTStateNull;
@@ -474,37 +512,13 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * const pContext,
     MQTTPubAckType_t packetType;
 
     assert( pContext != NULL );
-    assert( pPublishState != NULL );
 
-    switch( *pPublishState )
-    {
-        case MQTTPubAckSend:
-            packetTypeByte = MQTT_PACKET_TYPE_PUBACK;
-            packetType = MQTTPuback;
-            break;
-
-        case MQTTPubRecSend:
-            packetTypeByte = MQTT_PACKET_TYPE_PUBREC;
-            packetType = MQTTPubrec;
-            break;
-
-        case MQTTPubRelSend:
-            packetTypeByte = MQTT_PACKET_TYPE_PUBREL;
-            packetType = MQTTPubrel;
-            break;
-
-        case MQTTPubCompSend:
-            packetTypeByte = MQTT_PACKET_TYPE_PUBCOMP;
-            packetType = MQTTPubcomp;
-            break;
-
-        default:
-            /* Take no action for states that do not require sending an ack. */
-            break;
-    }
+    packetTypeByte = getAckTypeToSend( publishState );
 
     if( packetTypeByte != 0U )
     {
+        packetType = getAckFromPacketType( packetTypeByte );
+
         status = MQTT_SerializeAck( &( pContext->networkBuffer ),
                                     packetTypeByte,
                                     packetId );
@@ -519,16 +533,15 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * const pContext,
         if( bytesSent == ( int32_t ) MQTT_PUBLISH_ACK_PACKET_SIZE )
         {
             pContext->controlPacketSent = true;
-            newState = MQTT_UpdateStateAck( pContext,
-                                            packetId,
-                                            packetType,
-                                            MQTT_SEND );
+            status = MQTT_UpdateStateAck( pContext,
+                                          packetId,
+                                          packetType,
+                                          MQTT_SEND,
+                                          &newState );
 
-            if( newState == MQTTStateNull )
+            if( status != MQTTSuccess )
             {
-                LogError( ( "Failed to update state of publish %u.",
-                            packetId ) );
-                status = MQTTIllegalState;
+                LogError( ( "Failed to update state of publish %u.", packetId ) );
             }
         }
         else
@@ -541,11 +554,6 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * const pContext,
                         MQTT_PUBLISH_ACK_PACKET_SIZE ) );
             status = MQTTSendFailed;
         }
-    }
-
-    if( ( status == MQTTSuccess ) && ( newState != MQTTStateNull ) )
-    {
-        *pPublishState = newState;
     }
 
     return status;
@@ -602,17 +610,21 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * const pContext,
 
     if( status == MQTTSuccess )
     {
-        publishRecordState = MQTT_UpdateStatePublish( pContext,
-                                                      packetIdentifier,
-                                                      MQTT_RECEIVE,
-                                                      publishInfo.qos );
+        status = MQTT_UpdateStatePublish( pContext,
+                                          packetIdentifier,
+                                          MQTT_RECEIVE,
+                                          publishInfo.qos,
+                                          &publishRecordState );
         LogInfo( ( "State record updated. New state=%d.",
                    publishRecordState ) );
+    }
 
+    if( status == MQTTSuccess )
+    {
         /* Send PUBACK or PUBREC if necessary. */
         status = sendPublishAcks( pContext,
                                   packetIdentifier,
-                                  &publishRecordState );
+                                  publishRecordState );
     }
 
     if( status == MQTTSuccess )
@@ -638,9 +650,12 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * const pContext,
     /* Need a dummy variable for MQTT_DeserializeAck(). */
     bool sessionPresent = false;
     MQTTPubAckType_t ackType;
+    MQTTEventCallback_t appCallback;
 
     assert( pContext != NULL );
     assert( pIncomingPacket != NULL );
+
+    appCallback = pContext->callbacks.appCallback;
 
     switch( pIncomingPacket->type )
     {
@@ -654,24 +669,25 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * const pContext,
 
             if( status == MQTTSuccess )
             {
-                publishRecordState = MQTT_UpdateStateAck( pContext,
-                                                          packetIdentifier,
-                                                          ackType,
-                                                          MQTT_RECEIVE );
+                status = MQTT_UpdateStateAck( pContext,
+                                              packetIdentifier,
+                                              ackType,
+                                              MQTT_RECEIVE,
+                                              &publishRecordState );
                 LogInfo( ( "State record updated. New state=%d.",
                            publishRecordState ) );
+            }
 
+            if( status == MQTTSuccess )
+            {
                 /* Send PUBREL or PUBCOMP if necessary. */
                 status = sendPublishAcks( pContext,
                                           packetIdentifier,
-                                          &publishRecordState );
+                                          publishRecordState );
 
                 if( status == MQTTSuccess )
                 {
-                    pContext->callbacks.appCallback( pContext,
-                                                     pIncomingPacket,
-                                                     packetIdentifier,
-                                                     NULL );
+                    appCallback( pContext, pIncomingPacket, packetIdentifier, NULL );
                 }
             }
 
@@ -683,10 +699,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * const pContext,
 
             if( status == MQTTSuccess )
             {
-                pContext->callbacks.appCallback( pContext,
-                                                 pIncomingPacket,
-                                                 packetIdentifier,
-                                                 NULL );
+                appCallback( pContext, pIncomingPacket, packetIdentifier, NULL );
             }
 
             break;
@@ -698,10 +711,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * const pContext,
 
             if( status == MQTTSuccess )
             {
-                pContext->callbacks.appCallback( pContext,
-                                                 pIncomingPacket,
-                                                 packetIdentifier,
-                                                 NULL );
+                appCallback( pContext, pIncomingPacket, packetIdentifier, NULL );
             }
 
             break;
@@ -938,7 +948,9 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
     size_t remainingLength = 0UL, packetSize = 0UL;
     int32_t bytesSent;
     MQTTStatus_t status = MQTTSuccess;
-    MQTTPacketInfo_t incomingPacket = { .type = ( ( uint8_t ) 0 ) };
+    MQTTPacketInfo_t incomingPacket = { 0 };
+
+    incomingPacket.type = ( uint8_t ) 0;
 
     if( ( pContext == NULL ) || ( pConnectInfo == NULL ) || ( pSessionPresent == NULL ) )
     {
@@ -1153,25 +1165,19 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * const pContext,
          * Only to be done for QoS1 or QoS2. */
         if( pPublishInfo->qos > MQTTQoS0 )
         {
-            /* TODO MQTT_UpdateStatePublish will be updated to return
-             * MQTTStatus_t instead of MQTTPublishState_t. Update the
-             * code when that change is made. */
-            publishStatus = MQTT_UpdateStatePublish( pContext,
-                                                     packetId,
-                                                     MQTT_SEND,
-                                                     pPublishInfo->qos );
+            status = MQTT_UpdateStatePublish( pContext,
+                                              packetId,
+                                              MQTT_SEND,
+                                              pPublishInfo->qos,
+                                              &publishStatus );
 
-            if( publishStatus == MQTTStateNull )
+            if( status != MQTTSuccess )
             {
                 LogError( ( "Update state for publish failed with status =%u."
                             " However PUBLISH packet is sent to the broker."
                             " Any further handling of ACKs for the packet Id"
                             " will fail.",
-                            publishStatus ) );
-
-                /* TODO. Need to remove this update once MQTT_UpdateStatePublish is
-                 * refactored with return type of MQTTStatus_t. */
-                status = MQTTBadParameter;
+                            status ) );
             }
         }
     }
@@ -1376,6 +1382,7 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * const pContext,
         getTimeStampMs = pContext->callbacks.getTime;
         entryTimeMs = getTimeStampMs();
         status = MQTTSuccess;
+        pContext->controlPacketSent = false;
     }
     else
     {
@@ -1472,6 +1479,66 @@ uint16_t MQTT_GetPacketId( MQTTContext_t * const pContext )
     }
 
     return packetId;
+}
+
+/*-----------------------------------------------------------*/
+
+const char * MQTT_Status_strerror( MQTTStatus_t status )
+{
+    const char * str = NULL;
+
+    switch( status )
+    {
+        case MQTTSuccess:
+            str = "MQTTSuccess";
+            break;
+
+        case MQTTBadParameter:
+            str = "MQTTBadParameter";
+            break;
+
+        case MQTTNoMemory:
+            str = "MQTTNoMemory";
+            break;
+
+        case MQTTSendFailed:
+            str = "MQTTSendFailed";
+            break;
+
+        case MQTTRecvFailed:
+            str = "MQTTRecvFailed";
+            break;
+
+        case MQTTBadResponse:
+            str = "MQTTBadResponse";
+            break;
+
+        case MQTTServerRefused:
+            str = "MQTTServerRefused";
+            break;
+
+        case MQTTNoDataAvailable:
+            str = "MQTTNoDataAvailable";
+            break;
+
+        case MQTTIllegalState:
+            str = "MQTTIllegalState";
+            break;
+
+        case MQTTStateCollision:
+            str = "MQTTStateCollision";
+            break;
+
+        case MQTTKeepAliveTimeout:
+            str = "MQTTKeepAliveTimeout";
+            break;
+
+        default:
+            str = "Invalid MQTT Status code";
+            break;
+    }
+
+    return str;
 }
 
 /*-----------------------------------------------------------*/
