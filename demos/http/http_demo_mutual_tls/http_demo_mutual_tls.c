@@ -78,42 +78,47 @@
 /**
  * @brief The length of the HTTP server host name.
  */
-#define IOT_CORE_ENDPOINT_LENGTH          ( sizeof( IOT_CORE_ENDPOINT ) - 1 )
+#define IOT_CORE_ENDPOINT_LENGTH              ( sizeof( IOT_CORE_ENDPOINT ) - 1 )
+
+/**
+ * @brief The length of the ALPN protocol name.
+ */
+#define IOT_CORE_ALPN_PROTOCOL_NAME_LENGTH    ( sizeof( IOT_CORE_ALPN_PROTOCOL_NAME ) - 1 )
 
 /**
  * @brief The length of the HTTP POST method.
  */
-#define HTTP_METHOD_POST_LENGTH           ( sizeof( HTTP_METHOD_POST ) - 1 )
+#define HTTP_METHOD_POST_LENGTH               ( sizeof( HTTP_METHOD_POST ) - 1 )
 
 /**
  * @brief The length of the HTTP POST path.
  */
-#define POST_PATH_LENGTH                  ( sizeof( POST_PATH ) - 1 )
+#define POST_PATH_LENGTH                      ( sizeof( POST_PATH ) - 1 )
 
 /**
  * @brief Length of path to root CA certificate of AWS IoT Core.
  */
-#define ROOT_CA_CERT_PATH_LENGTH          ( sizeof( ROOT_CA_CERT_PATH ) - 1 )
+#define ROOT_CA_CERT_PATH_LENGTH              ( sizeof( ROOT_CA_CERT_PATH ) - 1 )
 
 /**
  * @brief Length of path to client's certificate.
  */
-#define CLIENT_CERT_PATH_LENGTH           ( sizeof( CLIENT_CERT_PATH ) - 1 )
+#define CLIENT_CERT_PATH_LENGTH               ( sizeof( CLIENT_CERT_PATH ) - 1 )
 
 /**
  * @brief Length of path to client's key.
  */
-#define CLIENT_PRIVATE_KEY_PATH_LENGTH    ( sizeof( CLIENT_PRIVATE_KEY_PATH ) - 1 )
+#define CLIENT_PRIVATE_KEY_PATH_LENGTH        ( sizeof( CLIENT_PRIVATE_KEY_PATH ) - 1 )
 
 /**
  * @brief Length of the request body.
  */
-#define REQUEST_BODY_LENGTH               ( sizeof( REQUEST_BODY ) - 1 )
+#define REQUEST_BODY_LENGTH                   ( sizeof( REQUEST_BODY ) - 1 )
 
 /**
  * @brief Length of an IPv6 address when converted to hex digits.
  */
-#define IPV6_ADDRESS_STRING_LENGTH        ( 40 )
+#define IPV6_ADDRESS_STRING_LENGTH            ( 40 )
 
 /**
  * @brief A buffer used in the demo for storing HTTP request headers and
@@ -191,7 +196,9 @@ static int readCredentials( SSL_CTX * pSslContext,
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
 static int tlsSetup( int tcpSocket,
-                     SSL ** pSslContext );
+                     SSL ** pSslContext,
+                     const char * pAlpnProtos,
+                     size_t alpnProtosLen );
 
 /**
  * @brief The transport send function that defines the transport interface.
@@ -534,7 +541,9 @@ static int readCredentials( SSL_CTX * pSslContext,
 /*-----------------------------------------------------------*/
 
 static int tlsSetup( int tcpSocket,
-                     SSL ** pSslContext )
+                     SSL ** pSslContext,
+                     const char * pAlpnProtos,
+                     size_t alpnProtosLen )
 {
     int returnStatus = EXIT_SUCCESS;
     long verifyPeerCertStatus = X509_V_OK;
@@ -589,6 +598,27 @@ static int tlsSetup( int tcpSocket,
             if( sslStatus != 1 )
             {
                 LogError( ( "SSL_set_fd failed to set the socket fd to SSL context." ) );
+            }
+        }
+
+        if( ( sslStatus == 1 ) &&
+            ( pAlpnProtos != NULL ) && ( alpnProtosLen > 0 ) )
+        {
+            if( IOT_CORE_PORT != 443 )
+            {
+                LogError( ( "IOT_CORE_PORT must be set to 443 to use ALPN in AWS IoT Core." ) );
+                sslStatus = -1;
+            }
+            else
+            {
+                sslStatus = SSL_set_alpn_protos( *pSslContext,
+                                                 ( unsigned char * ) pAlpnProtos,
+                                                 ( unsigned int ) alpnProtosLen );
+            }
+
+            if( sslStatus != 1 )
+            {
+                LogError( ( "SSL_set_alpn_protos failed to set ALPN protos." ) );
             }
         }
 
@@ -877,7 +907,9 @@ int main( int argc,
     {
         LogInfo( ( "Performing TLS handshake on top of the TCP connection." ) );
         returnStatus = tlsSetup( networkContext.tcpSocket,
-                                 &networkContext.pSslContext );
+                                 &networkContext.pSslContext,
+                                 IOT_CORE_ALPN_PROTOCOL_NAME,
+                                 IOT_CORE_ALPN_PROTOCOL_NAME_LENGTH );
     }
 
     /* Define the transport interface. */
