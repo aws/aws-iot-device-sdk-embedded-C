@@ -54,6 +54,7 @@
  *
  * @note Your AWS IoT Core endpoint can be found in the AWS IoT console under
  * Settings/Custom Endpoint, or using the describe-endpoint API.
+ * @ref https://docs.aws.amazon.com/iot/latest/apireference/API_DescribeEndpoint.html
  */
 #define IOT_CORE_ENDPOINT                 "your-aws-iot-core-endpoint"
 
