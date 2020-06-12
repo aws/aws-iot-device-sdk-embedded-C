@@ -124,11 +124,11 @@ uint16_t MQTT_StateSelect( const MQTTContext_t * pMqttContext,
                            MQTTStateCursor_t * pCursor );
 
 /**
- * @brief Error code to string conversion for state engine.
+ * @brief State to string conversion for state engine.
  *
  * @param[in] state The state to convert to a string.
  *
- * @return The string representation of the state
+ * @return The string representation of the state.
  */
 const char * MQTT_State_strerror( MQTTPublishState_t state );
 
