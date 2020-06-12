@@ -26,65 +26,75 @@
 /******* DO NOT CHANGE the following order ********/
 /**************************************************/
 
-/* Logging related header files are required to be included in the following order:
+/* Logging config definition and header files inclusion are required in the following order:
  * 1. Include the header file "logging_levels.h".
- * 2. Define LIBRARY_LOG_NAME and  LIBRARY_LOG_LEVEL.
- * 3. Include the header file "logging_stack.h".
+ * 2. Define the LIBRARY_LOG_NAME and LIBRARY_LOG_LEVEL macros depending on
+ * the logging configuration for DEMO.
+ * 3. Include the header file "logging_stack.h", if logging is enabled for DEMO.
  */
 
 /* Include header that defines log levels. */
 #include "logging_levels.h"
 
 /* Logging configuration for the Demo. */
-#define LIBRARY_LOG_NAME     "DEMO"
-#define LIBRARY_LOG_LEVEL    LOG_INFO
+#ifndef LIBRARY_LOG_NAME
+    #define LIBRARY_LOG_NAME    "DEMO"
+#endif
+
+#ifndef LIBRARY_LOG_LEVEL
+    #define LIBRARY_LOG_LEVEL    LOG_INFO
+#endif
 
 #include "logging_stack.h"
 
 /************ End of logging configuration ****************/
 
 /**
- * @brief HTTP server host name.
+ * @brief HTTP server endpoint for your AWS IoT Core.
+ *
+ * @note This can be find in the "Settings" section of AWS IoT Core
  */
-#define SERVER_HOST                       "placeholder.iot.us-west-2.amazonaws.com"
+#define IOT_CORE_ENDPOINT                 "placeholder.iot.us-west-2.amazonaws.com"
 
 /**
- * @brief HTTP server port number.
+ * @brief AWS IoT Core server port number for HTTPS connections.
  *
  * @note Port 443 is normally used for HTTPS connections. However, because 443
  * is reserved for MQTT in AWS IoT Core, port 8443 is used instead.
  */
-#define SERVER_PORT                       8443
+#define IOT_CORE_PORT                     8443
 
 /**
- * @brief Path of the file containing the server's root CA certificate for TLS authentication.
+ * @brief Path of the file containing Amazon's root CA certificate for TLS
+ * authentication to AWS IoT Core.
  *
  * @note This certificate should be PEM-encoded.
  */
-#define SERVER_CERT_PATH                  "certificates/AmazonRootCA1.crt"
+#define ROOT_CA_CERT_PATH                 "certificates/AmazonRootCA1.crt"
 
 /**
- * @brief Path of the file containing the client's certificate for TLS authentication.
+ * @brief Path of the file containing the client's certificate for TLS
+ * authentication to AWS IoT Core.
  *
- * For the purposes of this demo, a self-signed certificate is used. However,
- * in production, this certificate should be signed by a certifying authority
- * that is trusted by the server.
- *
- * @note This certificate should be PEM-encoded.
+ * @note This certificate should be PEM-encoded and generated from AWS IoT core
+ * for the demo to function correctly. Each certificate has an associated policy
+ * that must be configured to support the POST_PATH configured below.
  */
 #define CLIENT_CERT_PATH                  "certificates/client.crt"
 
 /**
- * @brief Path of the file containing the client's key for TLS client authentication.
+ * @brief Path of the file containing the client's private key for
+ * TLS client authentication.
  *
- *
- * @note This key should be PEM-encoded.
+ * @note This key should be PEM-encoded and generated from AWS IoT core
+ * for the demo to function correctly.
  */
-#define CLIENT_KEY_PATH                   "certificates/client.key"
+#define CLIENT_PRIVATE_KEY_PATH           "certificates/client.key"
 
 /**
- * @brief HTTP server path to perform the mutually authenticated request.
- * This will publish a "Hello World" message to a topic named topic.
+ * @brief This will publish a "Hello World" message to a topic named topic on
+ * AWS IoT Core. Each client certificate has an associated policy document that
+ * must be configured to support the path below for this demo to work correctly.
  *
  * @note QoS=1 implies the message is delivered at least once.
  */

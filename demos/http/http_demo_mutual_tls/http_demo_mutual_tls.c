@@ -20,6 +20,7 @@
  */
 
 /* Standard includes. */
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -34,6 +35,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
+/* OpenSSL includes. */
 #include <openssl/ssl.h>
 #include <openssl/bio.h>
 
@@ -44,13 +46,13 @@
 #include "demo_config.h"
 
 /* Check that hostname of the server is defined. */
-#ifndef SERVER_HOST
-    #error "Please define a SERVER_HOST."
+#ifndef IOT_CORE_ENDPOINT
+    #error "Please define a IOT_CORE_ENDPOINT."
 #endif
 
 /* Check that TLS port of the server is defined. */
-#ifndef SERVER_PORT
-    #error "Please define a SERVER_PORT."
+#ifndef IOT_CORE_PORT
+    #error "Please define a IOT_CORE_PORT."
 #endif
 
 /* Check that a path for HTTP Method POST is defined. */
@@ -76,37 +78,42 @@
 /**
  * @brief The length of the HTTP server host name.
  */
-#define SERVER_HOST_LENGTH            ( sizeof( SERVER_HOST ) - 1 )
+#define IOT_CORE_ENDPOINT_LENGTH          ( sizeof( IOT_CORE_ENDPOINT ) - 1 )
 
 /**
- * @brief Length of path to server certificate.
+ * @brief The length of the HTTP POST method.
  */
-#define SERVER_CERT_PATH_LENGTH       ( ( uint16_t ) ( sizeof( SERVER_CERT_PATH ) - 1 ) )
+#define HTTP_METHOD_POST_LENGTH           ( sizeof( HTTP_METHOD_POST ) - 1 )
+
+/**
+ * @brief The length of the HTTP POST path.
+ */
+#define POST_PATH_LENGTH                  ( sizeof( POST_PATH ) - 1 )
+
+/**
+ * @brief Length of path to root CA certificate of AWS IoT Core.
+ */
+#define ROOT_CA_CERT_PATH_LENGTH          ( sizeof( ROOT_CA_CERT_PATH ) - 1 )
 
 /**
  * @brief Length of path to client's certificate.
  */
-#define CLIENT_CERT_PATH_LENGTH       ( ( uint16_t ) sizeof( CLIENT_CERT_PATH ) - 1 )
+#define CLIENT_CERT_PATH_LENGTH           ( sizeof( CLIENT_CERT_PATH ) - 1 )
 
 /**
  * @brief Length of path to client's key.
  */
-#define CLIENT_KEY_PATH_LENGTH        ( sizeof( CLIENT_KEY_PATH ) - 1 )
+#define CLIENT_PRIVATE_KEY_PATH_LENGTH    ( sizeof( CLIENT_PRIVATE_KEY_PATH ) - 1 )
 
 /**
  * @brief Length of the request body.
  */
-#define REQUEST_BODY_LENGTH           ( sizeof( REQUEST_BODY ) - 1 )
+#define REQUEST_BODY_LENGTH               ( sizeof( REQUEST_BODY ) - 1 )
 
 /**
  * @brief Length of an IPv6 address when converted to hex digits.
  */
-#define IPV6_ADDRESS_STRING_LENGTH    ( 40 )
-
-/**
- * @brief A string to store the resolved IP address from the host name.
- */
-static char resolvedIpAddr[ IPV6_ADDRESS_STRING_LENGTH ];
+#define IPV6_ADDRESS_STRING_LENGTH        ( 40 )
 
 /**
  * @brief A buffer used in the demo for storing HTTP request headers and
@@ -142,19 +149,44 @@ static HTTPNetworkContext_t networkContext;
  *
  * @param[in] pServer Host name of server.
  * @param[in] port Server port.
- * @param[out] pTcpSocket Pointer to TCP socket file descriptor.
+ * @param[out] pTcpSocket The output parameter to return the created socket descriptor.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
 static int connectToServer( const char * pServer,
+                            size_t serverLen,
                             uint16_t port,
                             int * pTcpSocket );
 
 /**
+ * @brief Reads TLS credentials from the filesystem for mutual authentication.
+ *
+ * Uses OpenSSL to import the root CA certificate, client certificate, and
+ * client certificate private key.
+ *
+ * @param[in] pSslContext Destination for the imported credentials.
+ * @param[in] pRootCaPath Path to the root CA certificate.
+ * @param[in] rootCaPathLen Length of path to the root CA certificate.
+ * @param[in] pClientCertPath Path to the client certificate.
+ * @param[in] clientCertPathLen Length of path to the client certificate.
+ * @param[in] pClientPrivateKeyPath Path to the client certificate private key.
+ * @param[in] clientPrivateKeyPathLen Length of path to the client certificate private key.
+ *
+ * @return 1 on success; otherwise, failure;
+ */
+static int readCredentials( SSL_CTX * pSslContext,
+                            const char * pRootCaPath,
+                            size_t rootCaPathLen,
+                            const char * pClientCertPath,
+                            size_t clientCertPathLen,
+                            const char * pClientPrivateKeyPath,
+                            size_t clientPrivateKeyPathLen );
+
+/**
  * @brief Set up a TLS connection over an existing TCP connection.
  *
- * @param[in] tcpSocket Existing TCP connection.
- * @param[out] pSslContext Pointer to SSL connection context.
+ * @param[in] tcpSocket Socket descriptor corresponding to the existing TCP connection.
+ * @param[out] pSslContext The output parameter to return the created SSL context.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
@@ -167,9 +199,9 @@ static int tlsSetup( int tcpSocket,
  * This is passed as the #HTTPTransportInterface.send function and used to
  * send data over the network.
  *
- * @param[in] pContext User defined context (TCP socket for this demo).
+ * @param[in] pContext User defined context (TCP socket and SSL context for this demo).
  * @param[in] pBuffer Buffer containing the bytes to send over the network stack.
- * @param[in] bytesToSend Number of bytes to write to the network.
+ * @param[in] bytesToSend Number of bytes to send over the network.
  *
  * @return Number of bytes sent if successful; otherwise negative value on error.
  */
@@ -183,12 +215,9 @@ static int32_t transportSend( HTTPNetworkContext_t * pContext,
  * This is passed as the #HTTPTransportInterface.recv function used for reading
  * data received from the network.
  *
- * @param[in] pContext User defined context (TCP socket for this demo).
+ * @param[in] pContext User defined context (TCP socket and SSL context for this demo).
  * @param[out] pBuffer Buffer to read network data into.
  * @param[in] bytesToRead Number of bytes requested from the network.
- *
- * This is passed to the #HTTPTransportInterface.recv function and used to
- * receive data over the network.
  *
  * @return Number of bytes received if successful; otherwise negative value on error.
  */
@@ -201,20 +230,23 @@ static int32_t transportRecv( HTTPNetworkContext_t * pContext,
  * print the response received from the server.
  *
  * @param[in] pTransportInterface The transport interface for making network calls.
- * @param[in] pHost The host name of the server.
  * @param[in] pMethod The HTTP request method.
+ * @param[in] methodLen The length of the HTTP request method.
  * @param[in] pPath The Request-URI to the objects of interest.
+ * @param[in] pathLen The length of the Request-URI.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
 static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface,
-                            const char * pHost,
                             const char * pMethod,
-                            const char * pPath );
+                            size_t methodLen,
+                            const char * pPath,
+                            size_t pathLen );
 
 /*-----------------------------------------------------------*/
 
 static int connectToServer( const char * pServer,
+                            size_t serverLen,
                             uint16_t port,
                             int * pTcpSocket )
 {
@@ -223,7 +255,10 @@ static int connectToServer( const char * pServer,
     struct sockaddr * pServerInfo;
     uint16_t netPort = htons( port );
     socklen_t serverInfoLength;
+    char resolvedIpAddr[ IPV6_ADDRESS_STRING_LENGTH ];
 
+    /* Initialize string to store the resolved IP address from the host name. */
+    ( void ) memset( resolvedIpAddr, 0, IPV6_ADDRESS_STRING_LENGTH );
     /* Add hints to retrieve only TCP sockets in getaddrinfo. */
     ( void ) memset( &hints, 0, sizeof( hints ) );
     /* Address family of either IPv4 or IPv6. */
@@ -237,8 +272,8 @@ static int connectToServer( const char * pServer,
 
     if( returnStatus != -1 )
     {
-        LogInfo( ( "Performing DNS lookup: Host=%s.",
-                   SERVER_HOST ) );
+        LogInfo( ( "Performing DNS lookup: Host=%.*s.",
+                   ( int32_t ) IOT_CORE_ENDPOINT_LENGTH, IOT_CORE_ENDPOINT ) );
 
         /* Attempt to connect to one of the retrieved DNS records. */
         for( pIndex = pListHead; pIndex != NULL; pIndex = pIndex->ai_next )
@@ -273,15 +308,15 @@ static int connectToServer( const char * pServer,
                            sizeof( resolvedIpAddr ) );
             }
 
-            LogInfo( ( "Attempting to connect to server: Host=%s, IP address=%s.",
-                       SERVER_HOST, resolvedIpAddr ) );
+            LogInfo( ( "Attempting to connect to server: Host=%.*s, IP address=%s.",
+                       ( int32_t ) IOT_CORE_ENDPOINT_LENGTH, IOT_CORE_ENDPOINT, resolvedIpAddr ) );
 
             returnStatus = connect( *pTcpSocket, pServerInfo, serverInfoLength );
 
             if( returnStatus == -1 )
             {
-                LogError( ( "Failed to connect to server: Host=%s, IP address=%s.",
-                            SERVER_HOST, resolvedIpAddr ) );
+                LogError( ( "Failed to connect to server: Host=%.*s, IP address=%s.",
+                            ( int32_t ) IOT_CORE_ENDPOINT_LENGTH, IOT_CORE_ENDPOINT, resolvedIpAddr ) );
                 close( *pTcpSocket );
             }
             else
@@ -295,23 +330,23 @@ static int connectToServer( const char * pServer,
         if( pIndex == NULL )
         {
             /* Fail if no connection could be established. */
-            returnStatus = EXIT_FAILURE;
-            LogError( ( "Could not connect to any resolved IP address from %.*s.\n",
-                        ( int ) strlen( pServer ),
+            LogError( ( "Could not connect to any resolved IP address from %.*s.",
+                        ( int32_t ) serverLen,
                         pServer ) );
+            returnStatus = EXIT_FAILURE;
         }
         else
         {
-            returnStatus = EXIT_SUCCESS;
             LogInfo( ( "Established TCP connection: Server=%.*s.\n",
-                       ( int ) strlen( pServer ),
+                       ( int32_t ) serverLen,
                        pServer ) );
+            returnStatus = EXIT_SUCCESS;
         }
     }
     else
     {
         LogError( ( "Could not resolve host %.*s.\n",
-                    ( int ) strlen( pServer ),
+                    ( int32_t ) serverLen,
                     pServer ) );
         returnStatus = EXIT_FAILURE;
     }
@@ -326,17 +361,182 @@ static int connectToServer( const char * pServer,
 
 /*-----------------------------------------------------------*/
 
-static int tlsSetup( int tcpSocket,
-                     SSL ** pSslContext )
+static int readCredentials( SSL_CTX * pSslContext,
+                            const char * pRootCaPath,
+                            size_t rootCaPathLen,
+                            const char * pClientCertPath,
+                            size_t clientCertPathLen,
+                            const char * pClientPrivateKeyPath,
+                            size_t clientPrivateKeyPathLen )
 {
     int sslStatus = 0;
     char * cwd = getcwd( NULL, 0 );
     FILE * pRootCaFile = NULL;
     X509 * pRootCa = NULL;
-    FILE * pClientCertFile = NULL;
-    X509 * pClientCert = NULL;
-    FILE * pClientKeyFile = NULL;
-    EVP_PKEY * pClientKey = NULL;
+
+    assert( pRootCaPath != NULL );
+    assert( rootCaPathLen > 0 );
+    assert( pClientCertPath != NULL );
+    assert( clientCertPathLen > 0 );
+    assert( pClientPrivateKeyPath != NULL );
+    assert( clientPrivateKeyPathLen > 0 );
+
+    /* OpenSSL does not provide a single function for reading and loading certificates
+     * from files into stores, so the file API must be called. Start with the
+     * root certificate. */
+    if( ( pRootCaPath != NULL ) && ( rootCaPathLen > 0 ) )
+    {
+        /* Log the absolute directory based on first character of root CA path. */
+        if( ( pRootCaPath[ 0 ] == '/' ) || ( pRootCaPath[ 0 ] == '\\' ) )
+        {
+            LogInfo( ( "Attempting to open root CA certificate: Path=%.*s.",
+                       ( int32_t ) rootCaPathLen,
+                       pRootCaPath ) );
+        }
+        else
+        {
+            LogInfo( ( "Attempting to open root CA certificate: Path=%s/%.*s.",
+                       cwd,
+                       ( int32_t ) rootCaPathLen,
+                       pRootCaPath ) );
+        }
+
+        pRootCaFile = fopen( pRootCaPath, "r" );
+
+        if( pRootCaFile == NULL )
+        {
+            LogError( ( "fopen failed to find the root CA certificate file: "
+                        "ROOT_CA_PATH=%.*s.",
+                        ( int32_t ) rootCaPathLen,
+                        pRootCaPath ) );
+            sslStatus = -1;
+        }
+        else
+        {
+            /* Read the root CA into an X509 object, then close its file handle. */
+            pRootCa = PEM_read_X509( pRootCaFile, NULL, NULL, NULL );
+
+            if( pRootCa == NULL )
+            {
+                LogError( ( "PEM_read_X509 failed to parse root CA." ) );
+                sslStatus = -1;
+            }
+
+            if( fclose( pRootCaFile ) != 0 )
+            {
+                LogWarn( ( "fclose failed to close file %.*s",
+                           ( int32_t ) rootCaPathLen,
+                           pRootCaPath ) );
+            }
+        }
+
+        sslStatus = X509_STORE_add_cert( SSL_CTX_get_cert_store( pSslContext ),
+                                         pRootCa );
+
+        if( sslStatus != 1 )
+        {
+            LogError( ( "X509_STORE_add_cert failed to add root CA to certificate store." ) );
+        }
+        else
+        {
+            LogInfo( ( "Successfully imported root CA." ) );
+        }
+    }
+
+    if( ( sslStatus == 1 ) &&
+        ( pClientCertPath != NULL ) && ( clientCertPathLen > 0 ) )
+    {
+        /* Log the absolute directory based on first character of client certificate path. */
+        if( ( pClientCertPath[ 0 ] == '/' ) || ( pClientCertPath[ 0 ] == '\\' ) )
+        {
+            LogInfo( ( "Attempting to open client's certificate: Path=%.*s.",
+                       ( int32_t ) rootCaPathLen,
+                       pRootCaPath ) );
+        }
+        else
+        {
+            LogInfo( ( "Attempting to open client's certificate: Path=%s/%.*s.",
+                       cwd,
+                       ( int32_t ) rootCaPathLen,
+                       pRootCaPath ) );
+        }
+
+        sslStatus = SSL_CTX_use_certificate_chain_file( pSslContext,
+                                                        pClientCertPath );
+
+        /* Import the client certificate. */
+        if( sslStatus != 1 )
+        {
+            LogError( ( "SSL_CTX_use_certificate_chain_file failed to import "
+                        "client certificate at %.*s.",
+                        ( int32_t ) clientCertPathLen,
+                        pClientCertPath ) );
+        }
+        else
+        {
+            LogInfo( ( "Successfully imported client certificate." ) );
+        }
+    }
+
+    if( ( sslStatus == 1 ) &&
+        ( pClientPrivateKeyPath != NULL ) && ( clientPrivateKeyPathLen > 0 ) )
+    {
+        /* Log the absolute directory based on first character of client certificate path. */
+        if( ( pClientPrivateKeyPath[ 0 ] == '/' ) || ( pClientPrivateKeyPath[ 0 ] == '\\' ) )
+        {
+            LogInfo( ( "Attempting to open client's private key: Path=%.*s.",
+                       ( int32_t ) clientPrivateKeyPathLen,
+                       pClientPrivateKeyPath ) );
+        }
+        else
+        {
+            LogInfo( ( "Attempting to open client's private key: Path=%s/%.*s.",
+                       cwd,
+                       ( int32_t ) clientPrivateKeyPathLen,
+                       pClientPrivateKeyPath ) );
+        }
+
+        sslStatus = SSL_CTX_use_PrivateKey_file( pSslContext,
+                                                 pClientPrivateKeyPath,
+                                                 SSL_FILETYPE_PEM );
+
+        /* Import the client certificate private key. */
+        if( sslStatus != 1 )
+        {
+            LogError( ( "SSL_CTX_use_PrivateKey_file failed to import client "
+                        "certificate private key at %.*s.",
+                        ( int32_t ) clientPrivateKeyPathLen,
+                        pClientPrivateKeyPath ) );
+        }
+        else
+        {
+            LogInfo( ( "Successfully imported client certificate private key." ) );
+        }
+    }
+
+    /* Free the root CA object. */
+    if( pRootCa != NULL )
+    {
+        X509_free( pRootCa );
+    }
+
+    /* Free cwd because getcwd calls malloc. */
+    if( cwd != NULL )
+    {
+        free( cwd );
+    }
+
+    return sslStatus;
+}
+
+/*-----------------------------------------------------------*/
+
+static int tlsSetup( int tcpSocket,
+                     SSL ** pSslContext )
+{
+    int returnStatus = EXIT_SUCCESS;
+    long verifyPeerCertStatus = X509_V_OK;
+    int sslStatus = 0;
 
     /* Setup for creating a TLS client. */
     SSL_CTX * pSslSetup = SSL_CTX_new( TLS_client_method() );
@@ -347,143 +547,22 @@ static int tlsSetup( int tcpSocket,
          * The mask returned by SSL_CTX_set_mode does not need to be checked. */
         ( void ) SSL_CTX_set_mode( pSslSetup, SSL_MODE_AUTO_RETRY );
 
-        /* OpenSSL does not provide a single function for reading and loading certificates
-         * from files into stores, so the file API must be called. */
-        pRootCaFile = fopen( SERVER_CERT_PATH, "r" );
+        sslStatus = readCredentials( pSslSetup,
+                                     ROOT_CA_CERT_PATH,
+                                     ROOT_CA_CERT_PATH_LENGTH,
+                                     CLIENT_CERT_PATH,
+                                     CLIENT_CERT_PATH_LENGTH,
+                                     CLIENT_PRIVATE_KEY_PATH,
+                                     CLIENT_PRIVATE_KEY_PATH_LENGTH );
 
-        /* Check if an absolute directory is being used. */
-        if( ( SERVER_CERT_PATH[ 0 ] == '/' ) || ( SERVER_CERT_PATH[ 0 ] == '\\' ) )
+        /* Setup authentication. */
+        if( sslStatus != 1 )
         {
-            LogInfo( ( "Attempting to open root CA certificate: Path=%.*s.",
-                       ( int32_t ) SERVER_CERT_PATH_LENGTH,
-                       SERVER_CERT_PATH ) );
+            LogError( ( "Setting up credentials failed." ) );
         }
         else
         {
-            LogInfo( ( "Attempting to open root CA certificate: Path=%s/%.*s.",
-                       cwd,
-                       ( int32_t ) SERVER_CERT_PATH_LENGTH,
-                       SERVER_CERT_PATH ) );
-        }
-
-        if( pRootCaFile != NULL )
-        {
-            pRootCa = PEM_read_X509( pRootCaFile, NULL, NULL, NULL );
-        }
-        else
-        {
-            LogError( ( "Unable to find the root CA certificate file: "
-                        "SERVER_CERT_PATH=%.*s.",
-                        ( int32_t ) SERVER_CERT_PATH_LENGTH,
-                        SERVER_CERT_PATH ) );
-        }
-
-        if( pRootCa != NULL )
-        {
-            /* Add the server's root CA to the set of trusted certificates. */
-            sslStatus = X509_STORE_add_cert( SSL_CTX_get_cert_store( pSslSetup ),
-                                             pRootCa );
-        }
-        else
-        {
-            LogError( ( "Failed to parse the root CA certificate from"
-                        " file %.*s. Please validate the certificate.",
-                        ( int32_t ) SERVER_CERT_PATH_LENGTH,
-                        SERVER_CERT_PATH ) );
-        }
-    }
-
-    /* Provide the client's certificate to the SSL setup. */
-    if( sslStatus == 1 )
-    {
-        /* Check if an absolute directory is being used. */
-        if( ( CLIENT_CERT_PATH[ 0 ] == '/' ) || ( CLIENT_CERT_PATH[ 0 ] == '\\' ) )
-        {
-            LogInfo( ( "Attempting to open client certificate: Path=%.*s.",
-                       ( int32_t ) CLIENT_CERT_PATH_LENGTH,
-                       CLIENT_CERT_PATH ) );
-        }
-        else
-        {
-            LogInfo( ( "Attempting to open client certificate: Path=%s/%.*s.",
-                       cwd,
-                       ( int32_t ) CLIENT_CERT_PATH_LENGTH,
-                       CLIENT_CERT_PATH ) );
-        }
-
-        /* OpenSSL does not provide a single function for reading and loading certificates
-         * from files into stores, so the file API must be called. */
-        pClientCertFile = fopen( CLIENT_CERT_PATH, "r" );
-
-        if( pClientCertFile != NULL )
-        {
-            pClientCert = PEM_read_X509( pClientCertFile, NULL, NULL, NULL );
-        }
-        else
-        {
-            LogError( ( "Unable to find the client certificate file: "
-                        "CLIENT_CERT_PATH=%.*s.",
-                        ( int32_t ) CLIENT_CERT_PATH_LENGTH,
-                        CLIENT_CERT_PATH ) );
-        }
-
-        if( pClientCert != NULL )
-        {
-            sslStatus = SSL_CTX_use_certificate( pSslSetup, pClientCert );
-        }
-        else
-        {
-            LogError( ( "Failed to parse the client certificate from"
-                        " file %.*s. Please validate the certificate.",
-                        ( int32_t ) CLIENT_CERT_PATH_LENGTH,
-                        CLIENT_CERT_PATH ) );
-        }
-    }
-
-    /* Provide the client's key to the SSL setup. */
-    if( sslStatus == 1 )
-    {
-        /* Check if an absolute directory is being used. */
-        if( ( CLIENT_KEY_PATH[ 0 ] == '/' ) || ( CLIENT_KEY_PATH[ 0 ] == '\\' ) )
-        {
-            LogInfo( ( "Attempting to open client key: Path=%.*s.",
-                       ( int32_t ) CLIENT_KEY_PATH_LENGTH,
-                       CLIENT_KEY_PATH ) );
-        }
-        else
-        {
-            LogInfo( ( "Attempting to open client key: Path=%s/%.*s.",
-                       cwd,
-                       ( int32_t ) CLIENT_KEY_PATH_LENGTH,
-                       CLIENT_KEY_PATH ) );
-        }
-
-        /* OpenSSL does not provide a single function for reading and loading certificates
-         * from files into stores, so the file API must be called. */
-        pClientKeyFile = fopen( CLIENT_KEY_PATH, "r" );
-
-        if( pClientKeyFile != NULL )
-        {
-            pClientKey = PEM_read_PrivateKey( pClientKeyFile, NULL, NULL, NULL );
-        }
-        else
-        {
-            LogError( ( "Unable to find the client key file: "
-                        "CLIENT_KEY_PATH=%.*s.",
-                        ( int32_t ) CLIENT_KEY_PATH_LENGTH,
-                        CLIENT_KEY_PATH ) );
-        }
-
-        if( pClientKey != NULL )
-        {
-            sslStatus = SSL_CTX_use_PrivateKey( pSslSetup, pClientKey );
-        }
-        else
-        {
-            LogError( ( "Failed to parse the client key from"
-                        " file %.*s. Please validate the key.",
-                        ( int32_t ) CLIENT_KEY_PATH_LENGTH,
-                        CLIENT_KEY_PATH ) );
+            LogInfo( ( "Setting up credentials succeeded." ) );
         }
     }
 
@@ -493,39 +572,46 @@ static int tlsSetup( int tcpSocket,
         /* Create a new SSL context. */
         *pSslContext = SSL_new( pSslSetup );
 
-        if( *pSslContext != NULL )
+        if( *pSslContext == NULL )
+        {
+            LogError( ( "SSL_new failed to create a new SSL context." ) );
+            sslStatus = 0;
+        }
+        else
         {
             /* Enable SSL peer verification. */
             SSL_set_verify( *pSslContext, SSL_VERIFY_PEER, NULL );
 
             sslStatus = SSL_set_fd( *pSslContext, tcpSocket );
-        }
-        else
-        {
-            LogError( ( "Failed to create a new SSL context." ) );
-            sslStatus = 0;
+
+            if( sslStatus != 1 )
+            {
+                LogError( ( "SSL_set_fd failed to set the socket fd to SSL context." ) );
+            }
         }
 
         /* Perform the TLS handshake. */
         if( sslStatus == 1 )
         {
             sslStatus = SSL_connect( *pSslContext );
-        }
-        else
-        {
-            LogError( ( "Failed to set the socket fd to SSL context." ) );
-        }
 
-        if( sslStatus == 1 )
-        {
-            if( SSL_get_verify_result( *pSslContext ) != X509_V_OK )
+            if( sslStatus != 1 )
             {
-                sslStatus = 0;
+                LogError( ( "SSL_connect failed to perform TLS handshake." ) );
             }
         }
-        else
+
+        /* Verify X509 certificate from peer. */
+        if( sslStatus == 1 )
         {
-            LogError( ( "Failed to perform TLS handshake." ) );
+            verifyPeerCertStatus = SSL_get_verify_result( *pSslContext );
+
+            if( verifyPeerCertStatus != X509_V_OK )
+            {
+                LogError( ( "SSL_get_verify_result failed to verify X509 "
+                            "certificate from peer." ) );
+                sslStatus = 0;
+            }
         }
 
         /* Clean up on error. */
@@ -537,64 +623,26 @@ static int tlsSetup( int tcpSocket,
     }
     else
     {
-        LogError( ( "Failed to add certificate to store." ) );
-    }
-
-    if( cwd != NULL )
-    {
-        free( cwd );
-    }
-
-    if( pRootCaFile != NULL )
-    {
-        ( void ) fclose( pRootCaFile );
-    }
-
-    if( pClientCertFile != NULL )
-    {
-        ( void ) fclose( pClientCertFile );
-    }
-
-    if( pClientKeyFile != NULL )
-    {
-        ( void ) fclose( pClientKeyFile );
-    }
-
-    if( pRootCa != NULL )
-    {
-        X509_free( pRootCa );
-    }
-
-    if( pClientCert != NULL )
-    {
-        X509_free( pClientCert );
-    }
-
-    if( pClientKey != NULL )
-    {
-        EVP_PKEY_free( pClientKey );
-    }
-
-    if( pSslSetup != NULL )
-    {
-        SSL_CTX_free( pSslSetup );
+        LogError( ( "X509_STORE_add_cert failed to add certificate to store." ) );
     }
 
     /* Log failure or success and return the correct exit status. */
     if( sslStatus == 0 )
     {
         LogError( ( "Failed to establish a TLS connection: Host=%.*s.",
-                    ( int32_t ) SERVER_HOST_LENGTH,
-                    SERVER_HOST ) );
-        return EXIT_FAILURE;
+                    ( int32_t ) IOT_CORE_ENDPOINT_LENGTH,
+                    IOT_CORE_ENDPOINT ) );
+        returnStatus = EXIT_FAILURE;
     }
     else
     {
         LogInfo( ( "Established a TLS connection: Host=%.*s.\n\n",
-                   ( int32_t ) SERVER_HOST_LENGTH,
-                   SERVER_HOST ) );
-        return EXIT_SUCCESS;
+                   ( int32_t ) IOT_CORE_ENDPOINT_LENGTH,
+                   IOT_CORE_ENDPOINT ) );
+        returnStatus = EXIT_SUCCESS;
     }
+
+    return returnStatus;
 }
 
 /*-----------------------------------------------------------*/
@@ -605,14 +653,13 @@ static int32_t transportSend( HTTPNetworkContext_t * pNetworkContext,
 {
     int32_t bytesSent = 0;
     int pollStatus = 0;
-    struct pollfd fileDescriptor =
-    {
-        .events  = POLLOUT,
-        .revents = 0
-    };
+    struct pollfd fileDescriptor;
 
+    /* Initialize the file descriptor. */
+    fileDescriptor.events = POLLOUT;
+    fileDescriptor.revents = 0;
     /* Set the file descriptor for poll. */
-    fileDescriptor.fd = SSL_get_fd( pNetworkContext->pSslContext );
+    fileDescriptor.fd = pNetworkContext->tcpSocket;
 
     /* Poll the file descriptor to check if SSL_Write can be done now. */
     pollStatus = poll( &fileDescriptor, 1, TRANSPORT_SEND_RECV_TIMEOUT_MS );
@@ -644,12 +691,11 @@ static int32_t transportRecv( HTTPNetworkContext_t * pNetworkContext,
 {
     int32_t bytesReceived = 0;
     int pollStatus = -1, bytesAvailableToRead = 0;
-    struct pollfd fileDescriptor =
-    {
-        .events  = POLLIN | POLLPRI,
-        .revents = 0
-    };
+    struct pollfd fileDescriptor;
 
+    /* Initialize the file descriptor. */
+    fileDescriptor.events = POLLIN | POLLPRI;
+    fileDescriptor.revents = 0;
     /* Set the file descriptor for poll. */
     fileDescriptor.fd = SSL_get_fd( pNetworkContext->pSslContext );
 
@@ -662,8 +708,10 @@ static int32_t transportRecv( HTTPNetworkContext_t * pNetworkContext,
         pollStatus = poll( &fileDescriptor, 1, TRANSPORT_SEND_RECV_TIMEOUT_MS );
     }
 
-    /* SSL read of data. */
-    if( ( pollStatus > 0 ) || ( bytesAvailableToRead > 0 ) )
+    /* bytesAvailableToRead > 0 means that there was pending data to be read.
+     * pollStatus > 0 means that there was no pending data, but it became available
+     * during polling. If either holds true, read the available data. */
+    if( ( bytesAvailableToRead > 0 ) || ( pollStatus > 0 ) )
     {
         bytesReceived = ( int32_t ) SSL_read( pNetworkContext->pSslContext, pBuffer, bytesToRecv );
     }
@@ -684,9 +732,10 @@ static int32_t transportRecv( HTTPNetworkContext_t * pNetworkContext,
 /*-----------------------------------------------------------*/
 
 static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface,
-                            const char * pHost,
                             const char * pMethod,
-                            const char * pPath )
+                            size_t methodLen,
+                            const char * pPath,
+                            size_t pathLen )
 {
     /* Return value of this method. */
     int returnStatus = EXIT_SUCCESS;
@@ -702,21 +751,21 @@ static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface
     /* Return value of all methods from the HTTP Client library API. */
     HTTPStatus_t httpStatus = HTTP_SUCCESS;
 
-    assert( pHost != NULL );
     assert( pMethod != NULL );
+    assert( methodLen > 0 );
 
     /* Initialize all HTTP Client library API structs to 0. */
-    memset( &requestInfo, 0, sizeof( requestInfo ) );
-    memset( &response, 0, sizeof( response ) );
-    memset( &requestHeaders, 0, sizeof( requestHeaders ) );
+    ( void ) memset( &requestInfo, 0, sizeof( requestInfo ) );
+    ( void ) memset( &response, 0, sizeof( response ) );
+    ( void ) memset( &requestHeaders, 0, sizeof( requestHeaders ) );
 
     /* Initialize the request object. */
-    requestInfo.pHost = pHost;
-    requestInfo.hostLen = strlen( pHost );
+    requestInfo.pHost = IOT_CORE_ENDPOINT;
+    requestInfo.hostLen = IOT_CORE_ENDPOINT_LENGTH;
     requestInfo.method = pMethod;
-    requestInfo.methodLen = strlen( pMethod );
+    requestInfo.methodLen = methodLen;
     requestInfo.pPath = pPath;
-    requestInfo.pathLen = strlen( pPath );
+    requestInfo.pathLen = pathLen;
 
     /* Set "Connection" HTTP header to "keep-alive" so that multiple requests
      * can be sent over the same established TCP connection. */
@@ -736,14 +785,16 @@ static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface
         response.pBuffer = userBuffer;
         response.bufferLen = USER_BUFFER_LENGTH;
 
-        LogInfo( ( "Sending HTTP %s request to %s%s...",
-                   pMethod, SERVER_HOST, pPath ) );
-        LogDebug( ( "Request Headers:\n%.*s",
+        LogInfo( ( "Sending HTTP %.*s request to %.*s%.*s...",
+                   ( int32_t ) methodLen, pMethod,
+                   ( int32_t ) IOT_CORE_ENDPOINT_LENGTH, IOT_CORE_ENDPOINT,
+                   ( int32_t ) pathLen, pPath ) );
+        LogDebug( ( "Request Headers:\n%.*s\n"
+                    "Request Body:\n%.*s\n",
                     ( int32_t ) requestHeaders.headersLen,
-                    ( char * ) requestHeaders.pBuffer ) );
-        LogDebug( ( "Request Body:\n%.*s\n",
-                    ( int32_t ) REQUEST_BODY_LENGTH,
-                    REQUEST_BODY ) );
+                    ( char * ) requestHeaders.pBuffer,
+                    ( int32_t ) REQUEST_BODY_LENGTH, REQUEST_BODY ) );
+
         /* Send the request and receive the response. */
         httpStatus = HTTPClient_Send( pTransportInterface,
                                       &requestHeaders,
@@ -760,21 +811,23 @@ static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface
 
     if( httpStatus == HTTP_SUCCESS )
     {
-        LogInfo( ( "Received HTTP response from %s%s...",
-                   SERVER_HOST, pPath ) );
-        LogInfo( ( "Response Headers:\n%.*s",
-                   ( int32_t ) response.headersLen,
-                   response.pHeaders ) );
-        LogInfo( ( "Response Status:\n%u",
-                   response.statusCode ) );
-        LogInfo( ( "Response Body:\n%.*s\n",
-                   ( int32_t ) response.bodyLen,
-                   response.pBody ) );
+        LogInfo( ( "Received HTTP response from %.*s%.*s...\n"
+                   "Response Headers:\n%.*s\n"
+                   "Response Status:\n%u\n"
+                   "Response Body:\n%.*s\n",
+                   ( int32_t ) IOT_CORE_ENDPOINT_LENGTH, IOT_CORE_ENDPOINT,
+                   ( int32_t ) pathLen, pPath,
+                   ( int32_t ) response.headersLen, response.pHeaders,
+                   response.statusCode,
+                   ( int32_t ) response.bodyLen, response.pBody ) );
     }
     else
     {
-        LogError( ( "Failed to send HTTP %s request to %s%s: Error=%s.",
-                    pMethod, SERVER_HOST, pPath, HTTPClient_strerror( httpStatus ) ) );
+        LogError( ( "Failed to send HTTP %.*s request to %.*s%.*s: Error=%s.",
+                    ( int32_t ) methodLen, pMethod,
+                    ( int32_t ) IOT_CORE_ENDPOINT_LENGTH, IOT_CORE_ENDPOINT,
+                    ( int32_t ) pathLen, pPath,
+                    HTTPClient_strerror( httpStatus ) ) );
     }
 
     if( httpStatus != HTTP_SUCCESS )
@@ -790,11 +843,12 @@ static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface
 /**
  * @brief Entry point of demo.
  *
- * This example resolves a domain, establishes a TCP connection, both server and
- * client validate each other's certificates, then a TLS handshake occurs so that
- * all communication is encrypted. After which, HTTP Client library API is used to
- * send a request and receives a response from the server (or an error code)
- * that is logged.
+ * This example resolves the AWS IoT Core endpoint, establishes a TCP connection,
+ * performs a mutually authenticated TLS handshake occurs such that all further
+ * communication is encrypted. After which, HTTP Client Library API is used to
+ * make a POST request to AWS IoT Core in order to publish a message to a topic
+ * named topic with QoS=1 so that all clients subscribed to the topic receive
+ * the message at least once. Any possible errors are also logged.
  *
  * @note This example is single-threaded and uses statically allocated memory.
  *
@@ -813,7 +867,8 @@ int main( int argc,
     /**************************** Connect. ******************************/
 
     /* Establish TCP connection. */
-    returnStatus = connectToServer( SERVER_HOST, SERVER_PORT, &networkContext.tcpSocket );
+    returnStatus = connectToServer( IOT_CORE_ENDPOINT, IOT_CORE_ENDPOINT_LENGTH,
+                                    IOT_CORE_PORT, &networkContext.tcpSocket );
 
     /* Establish TLS connection on top of TCP connection. */
     if( returnStatus == EXIT_SUCCESS )
@@ -826,7 +881,7 @@ int main( int argc,
     /* Define the transport interface. */
     if( returnStatus == EXIT_SUCCESS )
     {
-        memset( &transportInterface, 0, sizeof( transportInterface ) );
+        ( void ) memset( &transportInterface, 0, sizeof( transportInterface ) );
         transportInterface.recv = transportRecv;
         transportInterface.send = transportSend;
         transportInterface.pContext = &networkContext;
@@ -837,9 +892,10 @@ int main( int argc,
     if( returnStatus == EXIT_SUCCESS )
     {
         returnStatus = sendHttpRequest( &transportInterface,
-                                        SERVER_HOST,
                                         HTTP_METHOD_POST,
-                                        POST_PATH );
+                                        HTTP_METHOD_POST_LENGTH,
+                                        POST_PATH,
+                                        POST_PATH_LENGTH );
     }
 
     /************************** Disconnect. *****************************/
