@@ -53,9 +53,16 @@
  * @brief Your AWS IoT Core endpoint.
  *
  * @note Your AWS IoT Core endpoint can be found in the AWS IoT console under
- * Settings/Custom Endpoint, or using the describe-endpoint API
+ * Settings/Custom Endpoint, or using the describe-endpoint API.
  */
 #define IOT_CORE_ENDPOINT                 "your-aws-iot-core-endpoint"
+
+/**
+ * @brief ALPN protocol name to be sent as part of the ClientHello message.
+ *
+ * @note When using ALPN, port 443 must be used to connect to AWS IoT Core.
+ */
+#define IOT_CORE_ALPN_PROTOCOL_NAME       "x-amzn-mqtt-ca"
 
 /**
  * @brief AWS IoT Core server port number for HTTPS connections.
@@ -67,7 +74,7 @@
  * @note Port 443 requires use of the ALPN TLS extension with the ALPN protocol
  * name being x-amzn-http-ca. When using port 8443, ALPN is not required.
  */
-#define IOT_CORE_PORT                     8443
+#define IOT_CORE_PORT                     443
 
 /**
  * @brief Path of the file containing Amazon's root CA certificate for TLS
@@ -97,8 +104,10 @@
 
 /**
  * @brief This endpoint can be used to publish a message to a topic named topic
- * on AWS IoT Core. Each client certificate has an associated policy document that
- * must be configured to support the path below for this demo to work correctly.
+ * on AWS IoT Core.
+ *
+ * Each client certificate has an associated policy document that must be
+ * configured to support the path below for this demo to work correctly.
  *
  * @note QoS=1 implies the message is delivered to all subscribers of the topic
  * at least once.
