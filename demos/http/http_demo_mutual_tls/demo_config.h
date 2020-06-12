@@ -50,17 +50,22 @@
 /************ End of logging configuration ****************/
 
 /**
- * @brief HTTP server endpoint for your AWS IoT Core.
+ * @brief Your AWS IoT Core endpoint.
  *
- * @note This can be found in the "Settings" section of AWS IoT Core
+ * @note Your AWS IoT Core endpoint can be found in the AWS IoT console under
+ * Settings/Custom Endpoint, or using the describe-endpoint API
  */
-#define IOT_CORE_ENDPOINT                 "placeholder.iot.us-west-2.amazonaws.com"
+#define IOT_CORE_ENDPOINT                 "your-aws-iot-core-endpoint"
 
 /**
  * @brief AWS IoT Core server port number for HTTPS connections.
  *
- * @note Port 443 is normally used for HTTPS connections. However, because 443
- * is reserved for MQTT in AWS IoT Core, port 8443 is used instead.
+ * For this demo, an X.509 certificate is used to verify the client.
+ * However, it is also possible to use Signature Version 4 as detailed here:
+ * @ref https://docs.aws.amazon.com/iot/latest/developerguide/protocols.html
+ *
+ * @note Port 443 requires use of the ALPN TLS extension with the ALPN protocol
+ * name being x-amzn-http-ca. When using port 8443, ALPN is not required.
  */
 #define IOT_CORE_PORT                     8443
 
