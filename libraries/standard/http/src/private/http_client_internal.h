@@ -41,12 +41,8 @@
 #define HTTP_HEADER_END_INDICATOR_LEN           ( sizeof( HTTP_HEADER_END_INDICATOR ) - 1u )
 #define HTTP_HEADER_FIELD_SEPARATOR             ": "
 #define HTTP_HEADER_FIELD_SEPARATOR_LEN         ( sizeof( HTTP_HEADER_FIELD_SEPARATOR ) - 1u )
-#define COLON_CHARACTER                         ":"
-#define COLON_CHARACTER_LEN                     ( sizeof( COLON_CHARACTER ) - 1u )
 #define SPACE_CHARACTER                         " "
 #define SPACE_CHARACTER_LEN                     ( sizeof( SPACE_CHARACTER ) - 1u )
-#define EQUAL_CHARACTER                         "="
-#define EQUAL_CHARACTER_LEN                     ( sizeof( EQUAL_CHARACTER ) - 1u )
 #define DASH_CHARACTER                          "-"
 #define DASH_CHARACTER_LEN                      ( sizeof( DASH_CHARACTER ) - 1u )
 
@@ -72,17 +68,26 @@
  * @brief Constants for header values added based on flags.
  */
 #define HTTP_CONNECTION_KEEP_ALIVE_VALUE        "keep-alive"
+/* MISRA Rule 5.4 flags the following macro's name as ambiguous from the one
+ * above it. This rule is suppressed for consistency with other HTTP header
+ * string and length macros in this file. */
+/* coverity[misra_c_2012_rule_5_4_violation] */
 #define HTTP_CONNECTION_KEEP_ALIVE_VALUE_LEN    ( sizeof( HTTP_CONNECTION_KEEP_ALIVE_VALUE ) - 1u )
-#define HTTP_CONNECTION_CLOSE_VALUE             "close"
-#define HTTP_CONNECTION_CLOSE_VALUE_LEN         ( sizeof( HTTP_CONNECTION_CLOSE_VALUE ) - 1u )
-
 
 /**
  * @brief Constants relating to Range Requests.
  */
 #define HTTP_RANGE_REQUEST_HEADER_FIELD               "Range"
+/* MISRA Rule 5.4 flags the following macro's name as ambiguous from the one
+ * above it. This rule is suppressed for consistency with other HTTP header
+ * string and length macros in this file. */
+/* coverity[misra_c_2012_rule_5_4_violation] */
 #define HTTP_RANGE_REQUEST_HEADER_FIELD_LEN           ( sizeof( HTTP_RANGE_REQUEST_HEADER_FIELD ) - 1u )
 #define HTTP_RANGE_REQUEST_HEADER_VALUE_PREFIX        "bytes="
+/* MISRA Rule 5.4 flags the following macro's name as ambiguous from the one
+ * above it. This rule is suppressed for consistency with other HTTP header
+ * string and length macros in this file. */
+/* coverity[misra_c_2012_rule_5_4_violation] */
 #define HTTP_RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN    ( sizeof( HTTP_RANGE_REQUEST_HEADER_VALUE_PREFIX ) - 1u )
 
 /**

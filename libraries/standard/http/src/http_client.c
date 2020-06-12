@@ -29,7 +29,7 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
  * and length.
  * @param[in] reqBodyLen The length of the request body to be sent. This is
  * used to generated a Content-Length header.
- * @param[in] flags Application provided flags to #HTTPClient_Send.
+ * @param[in] sendFlags Application provided flags to #HTTPClient_Send.
  *
  * @return #HTTP_SUCCESS if successful. If there was a network error or less
  * bytes than what were specified were sent, then #HTTP_NETWORK_ERROR is
@@ -38,7 +38,7 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
 static HTTPStatus_t sendHttpHeaders( const HTTPTransportInterface_t * pTransport,
                                      HTTPRequestHeaders_t * pRequestHeaders,
                                      size_t reqBodyLen,
-                                     uint32_t flags );
+                                     uint32_t sendFlags );
 
 /**
  * @brief Adds the Content-Length header field and value to the
@@ -100,7 +100,7 @@ static HTTPStatus_t addHeader( HTTPRequestHeaders_t * pRequestHeaders,
  * more bytes than what was specified were read, then #HTTP_NETWORK_ERROR is
  * returned.
  */
-HTTPStatus_t receiveHttpData( const HTTPTransportInterface_t * pTransport,
+static HTTPStatus_t receiveHttpData( const HTTPTransportInterface_t * pTransport,
                               uint8_t * pBuffer,
                               size_t bufferLen,
                               size_t * pBytesReceived );
@@ -451,14 +451,14 @@ static void processCompleteHeader( HTTPParsingContext_t * pParsingContext );
  * - #HTTP_SUCCESS
  * - #HTTP_SECURITY_ALERT_RESPONSE_HEADERS_SIZE_LIMIT_EXCEEDED
  * - #HTTP_SECURITY_ALERT_EXTRANEOUS_RESPONSE_DATA
- * - #HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CHUNK_HEADER
- * - #HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_PROTOCOL_VERSION
- * - #HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_STATUS_CODE
- * - #HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CHARACTER
- * - #HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CONTENT_LENGTH
+ * - #HTTP_SECURITY_ALERT_INVALID_CHUNK_HEADER
+ * - #HTTP_SECURITY_ALERT_INVALID_PROTOCOL_VERSION
+ * - #HTTP_SECURITY_ALERT_INVALID_STATUS_CODE
+ * - #HTTP_SECURITY_ALERT_INVALID_CHARACTER
+ * - #HTTP_SECURITY_ALERT_INVALID_CONTENT_LENGTH
  * - #HTTP_PARSER_INTERNAL_ERROR
  */
-static HTTPStatus_t processHttpParserError( http_parser * pHttpParser );
+static HTTPStatus_t processHttpParserError( const http_parser * pHttpParser );
 
 /*-----------------------------------------------------------*/
 
@@ -730,13 +730,13 @@ static int httpParserOnHeadersCompleteCallback( http_parser * pHttpParser )
     /* If the Connection: close header was found this flag will be set. */
     if( ( pHttpParser->flags & ( unsigned int ) ( F_CONNECTION_CLOSE ) ) != 0u )
     {
-        pResponse->flags |= HTTP_RESPONSE_CONNECTION_CLOSE_FLAG;
+        pResponse->respFlags |= HTTP_RESPONSE_CONNECTION_CLOSE_FLAG;
     }
 
     /* If the Connection: keep-alive header was found this flag will be set. */
     if( ( pHttpParser->flags & ( unsigned int ) ( F_CONNECTION_KEEP_ALIVE ) ) != 0u )
     {
-        pResponse->flags |= HTTP_RESPONSE_CONNECTION_KEEP_ALIVE_FLAG;
+        pResponse->respFlags |= HTTP_RESPONSE_CONNECTION_KEEP_ALIVE_FLAG;
     }
 
     /* http_parser_execute() requires that callback implementations must
@@ -770,7 +770,7 @@ static int httpParserOnBodyCallback( http_parser * pHttpParser,
     int shouldContinueParse = HTTP_PARSER_CONTINUE_PARSING;
     HTTPParsingContext_t * pParsingContext = NULL;
     HTTPResponse_t * pResponse = NULL;
-    uint8_t * pNextWriteLoc = NULL;
+    char * pNextWriteLoc = NULL;
 
     assert( pHttpParser != NULL );
     assert( pHttpParser->data != NULL );
@@ -801,15 +801,19 @@ static int httpParserOnBodyCallback( http_parser * pHttpParser,
      * affect future parsing as the changed segment will always be before the
      * next place to parse. */
     /* coverity[misra_c_2012_rule_11_8_violation] */
-    pNextWriteLoc = ( uint8_t * ) ( pResponse->pBody + pResponse->bodyLen );
+    pNextWriteLoc = ( char * ) ( pResponse->pBody + pResponse->bodyLen );
 
     /* If the response is of type Transfer-Encoding: chunked, then actual body
      * will follow the the chunked header. This body data is in a later location
      * and must be moved up in the buffer. When pLoc is greater than the current
      * end of the body, that signals the parser found a chunk header. */
-    if( pLoc > ( const char * ) pNextWriteLoc )
+    /* MISRA Rule 18.3 flags pLoc and pNextWriteLoc as pointing to two different
+     * objects. This rule is suppressed because both pNextWriteLoc and pLoc 
+     * point to a location in the response buffer. */
+    /* coverity[misra_c_2012_rule_18_3_violation] */
+    if( pLoc > pNextWriteLoc )
     {
-        ( void ) memcpy( pNextWriteLoc, ( const uint8_t * ) pLoc, length );
+        ( void ) memcpy( pNextWriteLoc, pLoc, length );
     }
 
     /* Increase the length of the body found. */
@@ -864,7 +868,7 @@ static void initializeParsingContextForFirstResponse( HTTPParsingContext_t * pPa
 
 /*-----------------------------------------------------------*/
 
-static HTTPStatus_t processHttpParserError( http_parser * pHttpParser )
+static HTTPStatus_t processHttpParserError( const http_parser * pHttpParser )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
 
@@ -902,7 +906,7 @@ static HTTPStatus_t processHttpParserError( http_parser * pHttpParser )
              * character and location. */
             LogError( ( "Response parsing error: Invalid character found in "
                         "chunk header." ) );
-            returnStatus = HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CHUNK_HEADER;
+            returnStatus = HTTP_SECURITY_ALERT_INVALID_CHUNK_HEADER;
             break;
 
         case HPE_INVALID_VERSION:
@@ -911,7 +915,7 @@ static HTTPStatus_t processHttpParserError( http_parser * pHttpParser )
              * character and location. */
             LogError( ( "Response parsing error: Invalid character found in "
                         "HTTP protocol version." ) );
-            returnStatus = HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_PROTOCOL_VERSION;
+            returnStatus = HTTP_SECURITY_ALERT_INVALID_PROTOCOL_VERSION;
             break;
 
         case HPE_INVALID_STATUS:
@@ -920,20 +924,20 @@ static HTTPStatus_t processHttpParserError( http_parser * pHttpParser )
              * could be out of range. This feedback is not given back by the
              * http-parser library. */
             LogError( ( "Response parsing error: Invalid Status code." ) );
-            returnStatus = HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_STATUS_CODE;
+            returnStatus = HTTP_SECURITY_ALERT_INVALID_STATUS_CODE;
             break;
 
         case HPE_STRICT:
         case HPE_INVALID_CONSTANT:
             LogError( ( "Response parsing error: Invalid character found in "
                         "Status-Line or header delimitters." ) );
-            returnStatus = HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CHARACTER;
+            returnStatus = HTTP_SECURITY_ALERT_INVALID_CHARACTER;
             break;
 
         case HPE_LF_EXPECTED:
             LogError( ( "Response parsing error: Expected line-feed in header "
                         "not found." ) );
-            returnStatus = HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CHARACTER;
+            returnStatus = HTTP_SECURITY_ALERT_INVALID_CHARACTER;
             break;
 
         case HPE_INVALID_HEADER_TOKEN:
@@ -942,7 +946,7 @@ static HTTPStatus_t processHttpParserError( http_parser * pHttpParser )
              * character and location. */
             LogError( ( "Response parsing error: Invalid character found in "
                         "headers." ) );
-            returnStatus = HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CHARACTER;
+            returnStatus = HTTP_SECURITY_ALERT_INVALID_CHARACTER;
             break;
 
         case HPE_INVALID_CONTENT_LENGTH:
@@ -951,13 +955,13 @@ static HTTPStatus_t processHttpParserError( http_parser * pHttpParser )
              * character and location. */
             LogError( ( "Response parsing error: Invalid character found in "
                         "content-length headers." ) );
-            returnStatus = HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CONTENT_LENGTH;
+            returnStatus = HTTP_SECURITY_ALERT_INVALID_CONTENT_LENGTH;
             break;
 
         case HPE_UNEXPECTED_CONTENT_LENGTH:
             LogError( ( "Response parsing error: A Content-Length header was "
                         "found when it shouldn't have been." ) );
-            returnStatus = HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CONTENT_LENGTH;
+            returnStatus = HTTP_SECURITY_ALERT_INVALID_CONTENT_LENGTH;
             break;
 
         /* All other error cases cannot be triggered and indicate an error in the
@@ -978,7 +982,7 @@ static HTTPStatus_t processHttpParserError( http_parser * pHttpParser )
 
 /*-----------------------------------------------------------*/
 
-HTTPStatus_t parseHttpResponse( HTTPParsingContext_t * pParsingContext,
+static HTTPStatus_t parseHttpResponse( HTTPParsingContext_t * pParsingContext,
                                 HTTPResponse_t * pResponse,
                                 size_t parseLen,
                                 uint8_t isHeadResponse )
@@ -1012,7 +1016,7 @@ HTTPStatus_t parseHttpResponse( HTTPParsingContext_t * pParsingContext,
         pResponse->headersLen = 0u;
         pResponse->headerCount = 0u;
         /* Initialize the response flags. */
-        pResponse->flags = 0u;
+        pResponse->respFlags = 0u;
     }
     else
     {
@@ -1116,7 +1120,7 @@ static HTTPStatus_t addHeader( HTTPRequestHeaders_t * pRequestHeaders,
                                size_t valueLen )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
-    uint8_t * pBufferCur = pRequestHeaders->pBuffer + pRequestHeaders->headersLen;
+    char * pBufferCur = (char*)( pRequestHeaders->pBuffer + pRequestHeaders->headersLen );
     size_t toAddLen = 0u;
     size_t backtrackHeaderLen = pRequestHeaders->headersLen;
 
@@ -1154,7 +1158,7 @@ static HTTPStatus_t addHeader( HTTPRequestHeaders_t * pRequestHeaders,
         pBufferCur += fieldLen;
 
         /* Copy the field separator, ": ", into the buffer. */
-        ( void ) memcpy( ( char * ) pBufferCur,
+        ( void ) memcpy( pBufferCur,
                          HTTP_HEADER_FIELD_SEPARATOR,
                          HTTP_HEADER_FIELD_SEPARATOR_LEN );
         pBufferCur += HTTP_HEADER_FIELD_SEPARATOR_LEN;
@@ -1164,7 +1168,7 @@ static HTTPStatus_t addHeader( HTTPRequestHeaders_t * pRequestHeaders,
         pBufferCur += valueLen;
 
         /* Copy the header end indicator, "\r\n\r\n" into the buffer. */
-        ( void ) memcpy( ( char * ) pBufferCur,
+        ( void ) memcpy( pBufferCur,
                          HTTP_HEADER_END_INDICATOR,
                          HTTP_HEADER_END_INDICATOR_LEN );
 
@@ -1193,7 +1197,7 @@ static HTTPStatus_t writeRequestLine( HTTPRequestHeaders_t * pRequestHeaders,
                                       size_t pathLen )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
-    uint8_t * pBufferCur = pRequestHeaders->pBuffer;
+    char * pBufferCur = (char*)( pRequestHeaders->pBuffer );
     size_t toAddLen = methodLen +                 \
                       SPACE_CHARACTER_LEN +       \
                       SPACE_CHARACTER_LEN +       \
@@ -1215,38 +1219,38 @@ static HTTPStatus_t writeRequestLine( HTTPRequestHeaders_t * pRequestHeaders,
     if( returnStatus == HTTP_SUCCESS )
     {
         /* Write "<METHOD> <PATH> HTTP/1.1\r\n" to start the HTTP header. */
-        ( void ) memcpy( ( char * ) pBufferCur, pMethod, methodLen );
+        ( void ) memcpy( pBufferCur, pMethod, methodLen );
         pBufferCur += methodLen;
 
-        ( void ) memcpy( ( char * ) pBufferCur, SPACE_CHARACTER, SPACE_CHARACTER_LEN );
+        ( void ) memcpy( pBufferCur, SPACE_CHARACTER, SPACE_CHARACTER_LEN );
 
         pBufferCur += SPACE_CHARACTER_LEN;
 
         /* Use "/" as default value if <PATH> is NULL. */
         if( ( pPath == NULL ) || ( pathLen == 0u ) )
         {
-            ( void ) memcpy( ( char * ) pBufferCur,
+            ( void ) memcpy( pBufferCur,
                              HTTP_EMPTY_PATH,
                              HTTP_EMPTY_PATH_LEN );
             pBufferCur += HTTP_EMPTY_PATH_LEN;
         }
         else
         {
-            ( void ) memcpy( ( char * ) pBufferCur, pPath, pathLen );
+            ( void ) memcpy( pBufferCur, pPath, pathLen );
             pBufferCur += pathLen;
         }
 
-        ( void ) memcpy( ( char * ) pBufferCur,
+        ( void ) memcpy( pBufferCur,
                          SPACE_CHARACTER,
                          SPACE_CHARACTER_LEN );
         pBufferCur += SPACE_CHARACTER_LEN;
 
-        ( void ) memcpy( ( char * ) pBufferCur,
+        ( void ) memcpy( pBufferCur,
                          HTTP_PROTOCOL_VERSION,
                          HTTP_PROTOCOL_VERSION_LEN );
         pBufferCur += HTTP_PROTOCOL_VERSION_LEN;
 
-        ( void ) memcpy( ( char * ) pBufferCur,
+        ( void ) memcpy( pBufferCur,
                          HTTP_HEADER_LINE_SEPARATOR,
                          HTTP_HEADER_LINE_SEPARATOR_LEN );
         pRequestHeaders->headersLen = toAddLen;
@@ -1338,7 +1342,7 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
 
     if( returnStatus == HTTP_SUCCESS )
     {
-        if( ( HTTP_REQUEST_KEEP_ALIVE_FLAG & pRequestInfo->flags ) != 0u )
+        if( ( HTTP_REQUEST_KEEP_ALIVE_FLAG & pRequestInfo->reqFlags ) != 0u )
         {
             /* Write "Connection: keep-alive". */
             returnStatus = addHeader( pRequestHeaders,
@@ -1526,6 +1530,12 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
     assert( pData != NULL );
 
     /* Loop until all data is sent. */
+    /* MISCRA C-2012 Rule 15.4 flags multiple break statements in the while loop
+     * below. There are two only error conditions when reading data from the 
+     * network which both need the loop to terminate. Both of these conditions
+     * necessitate different error logs, so two different break statements are
+     * required. */
+    /* coverity[misra_c_2012_rule_15_4_violation] */
     while( bytesRemaining > 0UL )
     {
         transportStatus = pTransport->send( pTransport->pContext,
@@ -1611,7 +1621,7 @@ static HTTPStatus_t addContentLengthHeader( HTTPRequestHeaders_t * pRequestHeade
 static HTTPStatus_t sendHttpHeaders( const HTTPTransportInterface_t * pTransport,
                                      HTTPRequestHeaders_t * pRequestHeaders,
                                      size_t reqBodyLen,
-                                     uint32_t flags )
+                                     uint32_t sendFlags )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
     uint8_t shouldSendContentLength = 0u;
@@ -1622,7 +1632,7 @@ static HTTPStatus_t sendHttpHeaders( const HTTPTransportInterface_t * pTransport
 
     /* Send the content length header if the flag to disable is not set and the
      * body length is greater than zero. */
-    shouldSendContentLength = ( ( ( flags & HTTP_SEND_DISABLE_CONTENT_LENGTH_FLAG ) == 0u ) &&
+    shouldSendContentLength = ( ( ( sendFlags & HTTP_SEND_DISABLE_CONTENT_LENGTH_FLAG ) == 0u ) &&
                                 ( reqBodyLen > 0u ) ) ? 1u : 0u;
 
     if( shouldSendContentLength == 1u )
@@ -1664,7 +1674,7 @@ static HTTPStatus_t sendHttpBody( const HTTPTransportInterface_t * pTransport,
 
 /*-----------------------------------------------------------*/
 
-HTTPStatus_t receiveHttpData( const HTTPTransportInterface_t * pTransport,
+static HTTPStatus_t receiveHttpData( const HTTPTransportInterface_t * pTransport,
                               uint8_t * pBuffer,
                               size_t bufferLen,
                               size_t * pBytesReceived )
@@ -1850,7 +1860,7 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
                               const uint8_t * pRequestBodyBuf,
                               size_t reqBodyBufLen,
                               HTTPResponse_t * pResponse,
-                              uint32_t flags )
+                              uint32_t sendFlags )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
 
@@ -1910,7 +1920,7 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
         returnStatus = sendHttpHeaders( pTransport,
                                         pRequestHeaders,
                                         reqBodyBufLen,
-                                        flags );
+                                        sendFlags );
     }
 
     /* Send the body, which is at another location in memory. */
@@ -1970,7 +1980,7 @@ static int findHeaderFieldParserCallback( http_parser * pHttpParser,
 
     /* Check whether the parsed header matches the header we are looking for. */
     if( ( fieldLen == pContext->fieldLen ) &&
-        ( memcmp( pContext->pField, pFieldLoc, fieldLen ) == 0 ) )
+        ( strncmp( pContext->pField, pFieldLoc, fieldLen ) == 0 ) )
     {
         LogDebug( ( "Found header field in response: "
                     "HeaderName=%.*s, HeaderLocation=0x%p",
@@ -2151,7 +2161,7 @@ static HTTPStatus_t findHeaderInResponse( const uint8_t * pBuffer,
      * value of "on_header_value" callback (related to the header value) should
      * cause the http_parser.http_errno to be "CB_header_value". */
     if( ( returnStatus == HTTP_SUCCESS ) &&
-        ( parser.http_errno != HPE_CB_header_value ) )
+        ( parser.http_errno != ( unsigned int )HPE_CB_header_value ) )
     {
         LogError( ( "Header found in response but http-parser returned error: "
                     "ParserError=%s",
@@ -2163,7 +2173,7 @@ static HTTPStatus_t findHeaderInResponse( const uint8_t * pBuffer,
      * expected to be called which should cause the http_parser.http_errno to be
      * "OK" */
     else if( ( returnStatus == HTTP_HEADER_NOT_FOUND ) &&
-             ( parser.http_errno != HPE_OK ) )
+             ( parser.http_errno != ( unsigned int )( HPE_OK ) ) )
     {
         LogError( ( "Header not found in response: http-parser returned error: "
                     "ParserError=%s",
@@ -2283,24 +2293,24 @@ const char * HTTPClient_strerror( HTTPStatus_t status )
             str = "HTTP_SECURITY_ALERT_EXTRANEOUS_RESPONSE_DATA";
             break;
 
-        case HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CHUNK_HEADER:
-            str = "HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CHUNK_HEADER";
+        case HTTP_SECURITY_ALERT_INVALID_CHUNK_HEADER:
+            str = "HTTP_SECURITY_ALERT_INVALID_CHUNK_HEADER";
             break;
 
-        case HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_PROTOCOL_VERSION:
-            str = "HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_PROTOCOL_VERSION";
+        case HTTP_SECURITY_ALERT_INVALID_PROTOCOL_VERSION:
+            str = "HTTP_SECURITY_ALERT_INVALID_PROTOCOL_VERSION";
             break;
 
-        case HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_STATUS_CODE:
-            str = "HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_STATUS_CODE";
+        case HTTP_SECURITY_ALERT_INVALID_STATUS_CODE:
+            str = "HTTP_SECURITY_ALERT_INVALID_STATUS_CODE";
             break;
 
-        case HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CHARACTER:
-            str = "HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CHARACTER";
+        case HTTP_SECURITY_ALERT_INVALID_CHARACTER:
+            str = "HTTP_SECURITY_ALERT_INVALID_CHARACTER";
             break;
 
-        case HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CONTENT_LENGTH:
-            str = "HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CONTENT_LENGTH";
+        case HTTP_SECURITY_ALERT_INVALID_CONTENT_LENGTH:
+            str = "HTTP_SECURITY_ALERT_INVALID_CONTENT_LENGTH";
             break;
 
         case HTTP_PARSER_INTERNAL_ERROR:
