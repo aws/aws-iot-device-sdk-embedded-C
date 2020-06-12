@@ -298,6 +298,10 @@ static MQTTStatus_t addRecord( MQTTPubAckInfo_t * records,
         else if( records[ index ].packetId == packetId )
         {
             /* Collision. */
+            LogError( ( "Collision when adding PacketID=%u at index=%u",
+                        packetId,
+                        index ) );
+
             status = MQTTStateCollision;
             availableIndex = recordCount;
             break;
@@ -390,10 +394,11 @@ MQTTPublishState_t MQTT_CalculateStatePublish( MQTTStateOperation_t opType,
     return calculatedState;
 }
 
-MQTTPublishState_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
-                                            uint16_t packetId,
-                                            MQTTStateOperation_t opType,
-                                            MQTTQoS_t qos )
+MQTTStatus_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
+                                      uint16_t packetId,
+                                      MQTTStateOperation_t opType,
+                                      MQTTQoS_t qos,
+                                      MQTTPublishState_t * pNewState )
 {
     MQTTPublishState_t newState = MQTTStateNull;
     MQTTPublishState_t currentState = MQTTStateNull;
@@ -402,12 +407,20 @@ MQTTPublishState_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
     MQTTQoS_t foundQoS = MQTTQoS0;
     bool isTransitionValid = false;
 
-    if( qos == MQTTQoS0 )
+    if( ( pMqttContext == NULL ) || ( pNewState == NULL ) )
+    {
+        LogError( ( "Argument cannot be NULL: pMqttContext=%p, pNewState=%p",
+                    pMqttContext,
+                    pNewState ) );
+
+        mqttStatus = MQTTBadParameter;
+    }
+    else if( qos == MQTTQoS0 )
     {
         /* QoS 0 publish. Do nothing. */
-        newState = MQTTPublishDone;
+        *pNewState = MQTTPublishDone;
     }
-    else if( ( packetId == MQTT_PACKET_ID_INVALID ) || ( pMqttContext == NULL ) )
+    else if( packetId == MQTT_PACKET_ID_INVALID )
     {
         /* Publishes > QoS 0 need a valid packet ID. */
         mqttStatus = MQTTBadParameter;
@@ -456,16 +469,16 @@ MQTTPublishState_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
         }
         else
         {
-            mqttStatus = MQTTBadParameter;
+            mqttStatus = MQTTIllegalState;
+            LogError( ( "Invalid transition from state %s to state %s.",
+                        MQTT_State_strerror( currentState ),
+                        MQTT_State_strerror( newState ) ) );
         }
+
+        *pNewState = newState;
     }
 
-    if( mqttStatus != MQTTSuccess )
-    {
-        newState = MQTTStateNull;
-    }
-
-    return newState;
+    return mqttStatus;
 }
 
 MQTTPublishState_t MQTT_CalculateStateAck( MQTTPubAckType_t packetType,
@@ -515,10 +528,11 @@ MQTTPublishState_t MQTT_CalculateStateAck( MQTTPubAckType_t packetType,
     return calculatedState;
 }
 
-MQTTPublishState_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
-                                        uint16_t packetId,
-                                        MQTTPubAckType_t packetType,
-                                        MQTTStateOperation_t opType )
+MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
+                                  uint16_t packetId,
+                                  MQTTPubAckType_t packetType,
+                                  MQTTStateOperation_t opType,
+                                  MQTTPublishState_t * pNewState )
 {
     MQTTPublishState_t newState = MQTTStateNull;
     MQTTPublishState_t currentState = MQTTStateNull;
@@ -528,21 +542,31 @@ MQTTPublishState_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
     MQTTQoS_t qos = MQTTQoS0;
     size_t recordIndex = MQTT_STATE_ARRAY_MAX_COUNT;
     MQTTPubAckInfo_t * records = NULL;
+    MQTTStatus_t status = MQTTBadParameter;
 
-    if( isOutgoingPublish )
+    if( ( pMqttContext == NULL ) || ( pNewState == NULL ) )
     {
-        records = pMqttContext->outgoingPublishRecords;
+        LogError( ( "Argument cannot be NULL: pMqttContext=%p, pNewState=%p.",
+                    pMqttContext,
+                    pNewState ) );
     }
     else
     {
-        records = pMqttContext->incomingPublishRecords;
-    }
+        if( isOutgoingPublish )
+        {
+            records = pMqttContext->outgoingPublishRecords;
+        }
+        else
+        {
+            records = pMqttContext->incomingPublishRecords;
+        }
 
-    recordIndex = findInRecord( records,
-                                MQTT_STATE_ARRAY_MAX_COUNT,
-                                packetId,
-                                &qos,
-                                &currentState );
+        recordIndex = findInRecord( records,
+                                    MQTT_STATE_ARRAY_MAX_COUNT,
+                                    packetId,
+                                    &qos,
+                                    &currentState );
+    }
 
     if( recordIndex < MQTT_STATE_ARRAY_MAX_COUNT )
     {
@@ -556,14 +580,24 @@ MQTTPublishState_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
                           recordIndex,
                           newState,
                           shouldDeleteRecord );
+
+            status = MQTTSuccess;
+            *pNewState = newState;
         }
         else
         {
-            newState = MQTTStateNull;
+            status = MQTTIllegalState;
+            LogError( ( "Invalid transition from state %s to state %s.",
+                        MQTT_State_strerror( currentState ),
+                        MQTT_State_strerror( newState ) ) );
         }
     }
+    else
+    {
+        LogError( ( "No matching record found for publish %u.", packetId ) );
+    }
 
-    return newState;
+    return status;
 }
 
 uint16_t MQTT_StateSelect( const MQTTContext_t * pMqttContext,
@@ -622,4 +656,63 @@ uint16_t MQTT_StateSelect( const MQTTContext_t * pMqttContext,
     }
 
     return packetId;
+}
+
+const char * MQTT_State_strerror( MQTTPublishState_t state )
+{
+    const char * str = NULL;
+
+    switch( state )
+    {
+        case MQTTStateNull:
+            str = "MQTTStateNull";
+            break;
+
+        case MQTTPublishSend:
+            str = "MQTTPublishSend";
+            break;
+
+        case MQTTPubAckSend:
+            str = "MQTTPubAckSend";
+            break;
+
+        case MQTTPubRecSend:
+            str = "MQTTPubRecSend";
+            break;
+
+        case MQTTPubRelSend:
+            str = "MQTTPubRelSend";
+            break;
+
+        case MQTTPubCompSend:
+            str = "MQTTPubCompSend";
+            break;
+
+        case MQTTPubAckPending:
+            str = "MQTTPubAckPending";
+            break;
+
+        case MQTTPubRecPending:
+            str = "MQTTPubRecPending";
+            break;
+
+        case MQTTPubRelPending:
+            str = "MQTTPubRelPending";
+            break;
+
+        case MQTTPubCompPending:
+            str = "MQTTPubCompPending";
+            break;
+
+        case MQTTPublishDone:
+            str = "MQTTPublishDone";
+            break;
+
+        default:
+            /* Invalid state received. */
+            str = "Invalid MQTT State";
+            break;
+    }
+
+    return str;
 }

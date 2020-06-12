@@ -265,6 +265,22 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * const pContext );
 MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * const pContext,
                                uint32_t timeoutMs );
 
+/**
+ * @brief Get a packet ID that is valid according to the MQTT 3.1.1 spec.
+ *
+ * @param[in] pContext Initialized MQTT context.
+ *
+ * @return A non-zero number.
+ */
 uint16_t MQTT_GetPacketId( MQTTContext_t * const pContext );
+
+/**
+ * @brief Error code to string conversion for MQTT statuses.
+ *
+ * @param[in] status The status to convert to a string.
+ *
+ * @return The string representation of the status.
+ */
+const char * MQTT_Status_strerror( MQTTStatus_t status );
 
 #endif /* ifndef MQTT_H */
