@@ -54,7 +54,6 @@
  *
  * @note Your AWS IoT Core endpoint can be found in the AWS IoT console under
  * Settings/Custom Endpoint, or using the describe-endpoint API.
- * @ref https://docs.aws.amazon.com/iot/latest/apireference/API_DescribeEndpoint.html
  */
 #define IOT_CORE_ENDPOINT                 "your-aws-iot-core-endpoint"
 
@@ -69,8 +68,6 @@
  * @brief AWS IoT Core server port number for HTTPS connections.
  *
  * For this demo, an X.509 certificate is used to verify the client.
- * However, it is also possible to use Signature Version 4 as detailed here:
- * @ref https://docs.aws.amazon.com/iot/latest/developerguide/protocols.html
  *
  * @note Port 443 requires use of the ALPN TLS extension with the ALPN protocol
  * name being x-amzn-http-ca. When using port 8443, ALPN is not required.
