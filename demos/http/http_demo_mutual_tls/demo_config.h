@@ -52,7 +52,7 @@
 /**
  * @brief HTTP server endpoint for your AWS IoT Core.
  *
- * @note This can be find in the "Settings" section of AWS IoT Core
+ * @note This can be found in the "Settings" section of AWS IoT Core
  */
 #define IOT_CORE_ENDPOINT                 "placeholder.iot.us-west-2.amazonaws.com"
 
@@ -76,9 +76,8 @@
  * @brief Path of the file containing the client's certificate for TLS
  * authentication to AWS IoT Core.
  *
- * @note This certificate should be PEM-encoded and generated from AWS IoT core
- * for the demo to function correctly. Each certificate has an associated policy
- * that must be configured to support the POST_PATH configured below.
+ * @note This certificate should be PEM-encoded and must have an associated
+ * policy from AWS IoT core for the demo to function correctly.
  */
 #define CLIENT_CERT_PATH                  "certificates/client.crt"
 
@@ -86,17 +85,18 @@
  * @brief Path of the file containing the client's private key for
  * TLS client authentication.
  *
- * @note This key should be PEM-encoded and generated from AWS IoT core
- * for the demo to function correctly.
+ * @note This key should be PEM-encoded and must have an associated
+ * policy from AWS IoT core for the demo to function correctly.
  */
 #define CLIENT_PRIVATE_KEY_PATH           "certificates/client.key"
 
 /**
- * @brief This will publish a "Hello World" message to a topic named topic on
- * AWS IoT Core. Each client certificate has an associated policy document that
+ * @brief This endpoint can be used to publish a message to a topic named topic
+ * on AWS IoT Core. Each client certificate has an associated policy document that
  * must be configured to support the path below for this demo to work correctly.
  *
- * @note QoS=1 implies the message is delivered at least once.
+ * @note QoS=1 implies the message is delivered to all subscribers of the topic
+ * at least once.
  */
 #define POST_PATH                         "/topics/topic?qos=1"
 
