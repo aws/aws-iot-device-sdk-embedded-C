@@ -47,11 +47,12 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
+/* Include Demo Config as the first non-system header. */
+#include "demo_config.h"
+
 /* MQTT API header. */
 #include "mqtt.h"
 
-/* Demo Config header. */
-#include "demo_config.h"
 
 /**
  * @brief Size of the network buffer for MQTT packets.

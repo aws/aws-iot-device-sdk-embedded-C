@@ -1,6 +1,7 @@
 #ifndef HTTP_CLIENT_INTERNAL_H_
 #define HTTP_CLIENT_INTERNAL_H_
 
+/* Include config file before other headers. */
 #include "http_config.h"
 #include "http_parser.h"
 
