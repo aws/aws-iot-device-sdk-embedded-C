@@ -25,9 +25,6 @@
  * on POSIX platform.
  */
 
-/* Config file. */
-#include "tls_config.h"
-
 #include "tls_utils.h"
 /* POSIX socket includes. */
 #include <netdb.h>
@@ -42,6 +39,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
+
+/* Config file. */
+#include "tls_config.h"
 
 /*-----------------------------------------------------------*/
 
@@ -147,6 +147,7 @@ int tcpConnectToServer( const char * pServer,
 /*-----------------------------------------------------------*/
 
 int tlsSetup( int tcpSocket,
+              const char * pServerCertPath,
               SSL ** pSslContext )
 {
     int status = EXIT_FAILURE, sslStatus = 0;
@@ -166,7 +167,7 @@ int tlsSetup( int tcpSocket,
 
         /* OpenSSL does not provide a single function for reading and loading certificates
          * from files into stores, so the file API must be called. */
-        pRootCaFile = fopen( SERVER_CERT_PATH, "r" );
+        pRootCaFile = fopen( pServerCertPath, "r" );
 
         if( pRootCaFile != NULL )
         {
@@ -175,9 +176,8 @@ int tlsSetup( int tcpSocket,
         else
         {
             LogError( ( "Unable to find the certificate file in the path"
-                        " provided by SERVER_CERT_PATH(%.*s).",
-                        SERVER_CERT_PATH_LENGTH,
-                        SERVER_CERT_PATH ) );
+                        " provided by SERVER_CERT_PATH(%s).",
+                        pServerCertPath ) );
         }
 
         if( pRootCa != NULL )
@@ -188,9 +188,8 @@ int tlsSetup( int tcpSocket,
         else
         {
             LogError( ( "Failed to parse the server certificate from"
-                        " file %.*s. Please validate the certificate.",
-                        SERVER_CERT_PATH_LENGTH,
-                        SERVER_CERT_PATH ) );
+                        " file %s. Please validate the certificate.",
+                        pServerCertPath ) );
         }
     }
 
@@ -265,16 +264,12 @@ int tlsSetup( int tcpSocket,
     /* Log failure or success and update the correct exit status to return. */
     if( sslStatus == 0 )
     {
-        LogError( ( "Failed to establish a TLS connection to %.*s.",
-                    BROKER_ENDPOINT_LENGTH,
-                    BROKER_ENDPOINT ) );
+        LogError( ( "Failed to establish a TLS connection." ) );
         status = EXIT_FAILURE;
     }
     else
     {
-        LogInfo( ( "Established a TLS connection to %.*s.\n\n",
-                   BROKER_ENDPOINT_LENGTH,
-                   BROKER_ENDPOINT ) );
+        LogInfo( ( "Established a TLS connection." ) );
         status = EXIT_SUCCESS;
     }
 

@@ -19,8 +19,8 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef TLS_CONFIG_H
-#define TLS_CONFIG_H
+#ifndef MQTT_CONFIG_H_
+#define MQTT_CONFIG_H_
 
 /**************************************************/
 /******* DO NOT CHANGE the following order ********/
@@ -36,9 +36,39 @@
 #include "logging_levels.h"
 
 /* Configure name and log level for the MQTT library. */
-#define LIBRARY_LOG_NAME     "NETWORK"
+#define LIBRARY_LOG_NAME     "MQTT"
 #define LIBRARY_LOG_LEVEL    LOG_INFO
 
 #include "logging_stack.h"
 
-#endif /* ifndef TLS_CONFIG_H */
+/************ End of logging configuration ****************/
+
+/* Set network context to OpenSSL SSL context. */
+#include <openssl/ssl.h>
+typedef SSL * MQTTNetworkContext_t;
+
+/**
+ * @brief The maximum number of MQTT PUBLISH messages that may be pending
+ * acknowledgement at any time.
+ *
+ * QoS 1 and 2 MQTT PUBLISHes require acknowledgement from the server before
+ * they can be completed. While they are awaiting the acknowledgement, the
+ * client must maintain information about their state. The value of this
+ * macro sets the limit on how many simultaneous PUBLISH states an MQTT
+ * context maintains.
+ */
+#define MQTT_STATE_ARRAY_MAX_COUNT          10U
+
+/**
+ * @brief The maximum number of MQTT PUBLISH messages that may be pending
+ * acknowledgement at any time.
+ *
+ * QoS 1 and 2 MQTT PUBLISHes require acknowlegement from the server before
+ * they can be completed. While they are awaiting the acknowledgement, the
+ * client must maintain information about their state. The value of this
+ * macro sets the limit on how many simultaneous PUBLISH states an MQTT
+ * context maintains.
+ */
+#define MQTT_MAX_QUEUED_PUBLISH_MESSAGES    10
+
+#endif /* ifndef MQTT_CONFIG_H_ */

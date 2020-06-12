@@ -58,11 +58,13 @@ void closeTcpConnection( int tcpSocket );
  * @brief Set up a TLS connection over an existing TCP connection.
  *
  * @param[in] tcpSocket Existing TCP connection.
+ * @param[in] pServerCertPath The absolute file path to the server certificate.
  * @param[out] pSslContext Pointer to SSL connection context pointer.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
 int tlsSetup( int tcpSocket,
+              const char * pServerCertPath,
               SSL ** pSslContext );
 
 /**
