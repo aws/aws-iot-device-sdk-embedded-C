@@ -810,6 +810,7 @@ static int httpParserOnBodyCallback( http_parser * pHttpParser,
     /* MISRA Rule 18.3 flags pLoc and pNextWriteLoc as pointing to two different
      * objects. This rule is suppressed because both pNextWriteLoc and pLoc 
      * point to a location in the response buffer. */
+    /* coverity[pointer_parameter] */
     /* coverity[misra_c_2012_rule_18_3_violation] */
     if( pLoc > pNextWriteLoc )
     {
