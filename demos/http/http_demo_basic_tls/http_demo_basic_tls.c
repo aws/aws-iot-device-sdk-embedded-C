@@ -230,9 +230,6 @@ static int32_t transportSend( HTTPNetworkContext_t * pContext,
  * @param[out] pBuffer Buffer to read network data into.
  * @param[in] bytesToRead Number of bytes requested from the network.
  *
- * This is passed to the #HTTPTransportInterface.recv function and used to
- * receive data over the network.
- *
  * @return Number of bytes received if successful; otherwise negative value on error.
  */
 static int32_t transportRecv( HTTPNetworkContext_t * pContext,
