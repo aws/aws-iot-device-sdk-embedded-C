@@ -464,24 +464,24 @@ void tearDown()
 /* ========================== Test Cases ============================ */
 
 /**
- * @brief Tests Subscribe and Publish operations MQTT broken with QoS 0.
+ * @brief Tests Subscribe and Publish operations MQTT broken with QoS 1.
  * The test subscribes to a topic, and then publishes to the same topic. The
  * broker is expected to route the publish message back to the test.
  */
-void test_MQTT_Subscribe_Publish_With_Qos_0( void )
+void test_MQTT_Subscribe_Publish_With_Qos_1( void )
 {
     /* Subscribe to a topic with Qos 0. */
     TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic(
-                           &context, TEST_MQTT_TOPIC, MQTTQoS0 ) );
+                           &context, TEST_MQTT_TOPIC, MQTTQoS1 ) );
 
     /* Expect a SUBACK from the broker for the subscribe operation. */
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_TRUE( receivedSubAck );
 
-    /* Publish to the same topic, that we subscribed to, with Qos 0. */
+    /* Publish to the same topic, that we subscribed to, with Qos 1. */
     TEST_ASSERT_EQUAL( MQTTSuccess, publishToTopic(
-                           &context, TEST_MQTT_TOPIC, MQTTQoS0 ) );
+                           &context, TEST_MQTT_TOPIC, MQTTQoS1 ) );
 
     /* Expect a PUBACK from the broker for the PUBLISH. */
     TEST_ASSERT_EQUAL( MQTTSuccess,
@@ -503,7 +503,7 @@ void test_MQTT_Subscribe_Publish_With_Qos_0( void )
 
     /* Un-subscribe from a topic with Qos 0. */
     TEST_ASSERT_EQUAL( MQTTSuccess, unsubscribeFromTopic(
-                           &context, TEST_MQTT_TOPIC, MQTTQoS0 ) );
+                           &context, TEST_MQTT_TOPIC, MQTTQoS1 ) );
 
     /* Expect a SUBACK from the broker for the subscribe operation. */
     TEST_ASSERT_EQUAL( MQTTSuccess,
