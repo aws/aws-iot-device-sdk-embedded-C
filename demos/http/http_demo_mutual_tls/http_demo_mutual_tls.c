@@ -47,7 +47,7 @@
 
 /* Check that hostname of the server is defined. */
 #ifndef IOT_CORE_ENDPOINT
-    #error "Please define a IOT_CORE_ENDPOINT."
+    #error "IOT_CORE_ENDPOINT must be defined to your AWS IoT Core endpoint."
 #endif
 
 /* Check that TLS port of the server is defined. */
@@ -416,12 +416,6 @@ static int readCredentials( SSL_CTX * pSslContext,
             /* Read the root CA into an X509 object, then close its file handle. */
             pRootCa = PEM_read_X509( pRootCaFile, NULL, NULL, NULL );
 
-            if( pRootCa == NULL )
-            {
-                LogError( ( "PEM_read_X509 failed to parse root CA." ) );
-                sslStatus = -1;
-            }
-
             if( fclose( pRootCaFile ) != 0 )
             {
                 LogWarn( ( "fclose failed to close file %.*s",
@@ -430,8 +424,16 @@ static int readCredentials( SSL_CTX * pSslContext,
             }
         }
 
-        sslStatus = X509_STORE_add_cert( SSL_CTX_get_cert_store( pSslContext ),
-                                         pRootCa );
+        if( pRootCa == NULL )
+        {
+            LogError( ( "PEM_read_X509 failed to parse root CA." ) );
+            sslStatus = -1;
+        }
+        else
+        {
+            sslStatus = X509_STORE_add_cert( SSL_CTX_get_cert_store( pSslContext ),
+                                             pRootCa );
+        }
 
         if( sslStatus != 1 )
         {
