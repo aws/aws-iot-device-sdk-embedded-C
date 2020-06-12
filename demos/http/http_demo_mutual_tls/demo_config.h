@@ -62,7 +62,7 @@
  *
  * @note When using ALPN, port 443 must be used to connect to AWS IoT Core.
  */
-#define IOT_CORE_ALPN_PROTOCOL_NAME       "x-amzn-mqtt-ca"
+#define IOT_CORE_ALPN_PROTOCOL_NAME       "\x0ex-amzn-http-ca"
 
 /**
  * @brief AWS IoT Core server port number for HTTPS connections.
@@ -79,6 +79,10 @@
 /**
  * @brief Path of the file containing Amazon's root CA certificate for TLS
  * authentication to AWS IoT Core.
+ *
+ * Amazon's root CA certificate is automatically downloaded to the certificates
+ * directory from @ref https://www.amazontrust.com/repository/AmazonRootCA1.pem
+ * using the CMake build system.
  *
  * @note This certificate should be PEM-encoded.
  */

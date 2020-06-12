@@ -38,7 +38,14 @@ target_include_directories(
         ${LOGGING_INCLUDE_DIRS}
 )
 
-#Copy the certificates and client key to the binary directory.
+# Download the Amazon Root CA certificate
+message( "Downloading the Amazon Root CA certificate..." )
+execute_process(
+    COMMAND curl --url https://www.amazontrust.com/repository/AmazonRootCA1.pem 
+    -o ${CMAKE_CURRENT_LIST_DIR}/certificates/AmazonRootCA1.crt
+)
+
+# Copy the certificates and client key to the binary directory.
 add_custom_command(
     TARGET
         ${DEMO_NAME}
