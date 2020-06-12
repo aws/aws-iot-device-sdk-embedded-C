@@ -422,7 +422,12 @@ static int tlsSetup( int tcpSocket,
             pRootCa = PEM_read_X509( pRootCaFile, NULL, NULL, NULL );
         }
 
-        if( pRootCa != NULL )
+        if( pRootCa == NULL )
+        {
+            LogError( ( "PEM_read_X509 failed to read the "
+                        "root CA certificate filestream." ) );
+        }
+        else
         {
             /* Add the server's root CA to the set of trusted certificates. */
             sslStatus = X509_STORE_add_cert( SSL_CTX_get_cert_store( pSslSetup ),
