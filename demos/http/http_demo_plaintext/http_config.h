@@ -26,7 +26,7 @@
 /******* DO NOT CHANGE the following order ********/
 /**************************************************/
 
-/* Logging config definition and header files inclusion are required in the following order:
+/* Include logging header files and define logging macros in the following order:
  * 1. Include the header file "logging_levels.h".
  * 2. Define the LIBRARY_LOG_NAME and LIBRARY_LOG_LEVEL macros depending on
  * the logging configuration for HTTP.
