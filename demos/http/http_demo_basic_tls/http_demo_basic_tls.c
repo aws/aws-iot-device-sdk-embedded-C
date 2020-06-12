@@ -151,11 +151,6 @@
 #define IPV6_ADDRESS_STRING_LENGTH    ( 40 )
 
 /**
- * @brief A string to store the resolved IP address from the host name.
- */
-static char resolvedIpAddr[ IPV6_ADDRESS_STRING_LENGTH ];
-
-/**
  * @brief A buffer used in the demo for storing HTTP request headers and
  * HTTP response headers and body.
  *
@@ -194,6 +189,7 @@ static HTTPNetworkContext_t networkContext;
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
 static int connectToServer( const char * pServer,
+                            size_t serverLen,
                             uint16_t port,
                             int * pTcpSocket );
 
@@ -264,6 +260,7 @@ static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface
 /*-----------------------------------------------------------*/
 
 static int connectToServer( const char * pServer,
+                            size_t serverLen,
                             uint16_t port,
                             int * pTcpSocket )
 {
@@ -272,7 +269,10 @@ static int connectToServer( const char * pServer,
     struct sockaddr * pServerInfo;
     uint16_t netPort = htons( port );
     socklen_t serverInfoLength;
+    char resolvedIpAddr[ IPV6_ADDRESS_STRING_LENGTH ];
 
+    /* Initialize string to store the resolved IP address from the host name. */
+    ( void ) memset( resolvedIpAddr, 0, IPV6_ADDRESS_STRING_LENGTH );
     /* Add hints to retrieve only TCP sockets in getaddrinfo. */
     ( void ) memset( &hints, 0, sizeof( hints ) );
     /* Address family of either IPv4 or IPv6. */
@@ -344,15 +344,15 @@ static int connectToServer( const char * pServer,
         if( pIndex == NULL )
         {
             /* Fail if no connection could be established. */
-            LogError( ( "Could not connect to any resolved IP address from %.*s.\n",
-                        ( int ) strlen( pServer ),
+            LogError( ( "Could not connect to any resolved IP address from %.*s.",
+                        ( int32_t ) serverLen,
                         pServer ) );
             returnStatus = EXIT_FAILURE;
         }
         else
         {
             LogInfo( ( "Established TCP connection: Server=%.*s.\n",
-                       ( int ) strlen( pServer ),
+                       ( int32_t ) serverLen,
                        pServer ) );
             returnStatus = EXIT_SUCCESS;
         }
@@ -360,7 +360,7 @@ static int connectToServer( const char * pServer,
     else
     {
         LogError( ( "Could not resolve host %.*s.\n",
-                    ( int ) strlen( pServer ),
+                    ( int32_t ) serverLen,
                     pServer ) );
         returnStatus = EXIT_FAILURE;
     }
@@ -639,11 +639,12 @@ static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface
     HTTPStatus_t httpStatus = HTTP_SUCCESS;
 
     assert( pMethod != NULL );
+    assert( methodLen > 0 );
 
     /* Initialize all HTTP Client library API structs to 0. */
-    memset( &requestInfo, 0, sizeof( requestInfo ) );
-    memset( &response, 0, sizeof( response ) );
-    memset( &requestHeaders, 0, sizeof( requestHeaders ) );
+    ( void ) memset( &requestInfo, 0, sizeof( requestInfo ) );
+    ( void ) memset( &response, 0, sizeof( response ) );
+    ( void ) memset( &requestHeaders, 0, sizeof( requestHeaders ) );
 
     /* Initialize the request object. */
     requestInfo.pHost = SERVER_HOST;
@@ -752,7 +753,8 @@ int main( int argc,
     /**************************** Connect. ******************************/
 
     /* Establish TCP connection. */
-    returnStatus = connectToServer( SERVER_HOST, SERVER_PORT, &networkContext.tcpSocket );
+    returnStatus = connectToServer( SERVER_HOST, SERVER_HOST_LENGTH,
+                                    SERVER_PORT, &networkContext.tcpSocket );
 
     /* Establish TLS connection on top of TCP connection. */
     if( returnStatus == EXIT_SUCCESS )
@@ -765,7 +767,7 @@ int main( int argc,
     /* Define the transport interface. */
     if( returnStatus == EXIT_SUCCESS )
     {
-        memset( &transportInterface, 0, sizeof( transportInterface ) );
+        ( void ) memset( &transportInterface, 0, sizeof( transportInterface ) );
         transportInterface.recv = transportRecv;
         transportInterface.send = transportSend;
         transportInterface.pContext = &networkContext;
@@ -804,7 +806,7 @@ int main( int argc,
     }
 
     /* Send POST Request. */
-    if( returnStatus != EXIT_SUCCESS )
+    if( returnStatus == EXIT_SUCCESS )
     {
         returnStatus = sendHttpRequest( &transportInterface,
                                         HTTP_METHOD_POST,
