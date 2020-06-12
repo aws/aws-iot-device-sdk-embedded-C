@@ -689,13 +689,8 @@ static MQTTStatus_t processPublishFlags( uint8_t publishFlags,
     {
         LogDebug( ( "QoS is %d.", pPublishInfo->qos ) );
 
-        /* Parse the Retain bit.
-         * Removing the below cast results in a MISRA 10.3 violation (required, implicit cast
-         * from a boolean), and keeping it results in a 10.5 violation (advisory, explicit cast).
-         * The violation can only be resolved if the variable is of a boolean type, which is
-         * not present in C89. */
-        /* coverity[misra_c_2012_rule_10_5_violation] */
-        pPublishInfo->retain = ( bool ) UINT8_CHECK_BIT( publishFlags, MQTT_PUBLISH_FLAG_RETAIN );
+        /* Parse the Retain bit. */
+        pPublishInfo->retain = ( UINT8_CHECK_BIT( publishFlags, MQTT_PUBLISH_FLAG_RETAIN ) ) ? true : false;
 
         LogDebug( ( "Retain bit is %d.", pPublishInfo->retain ) );
 
@@ -1038,7 +1033,6 @@ static MQTTStatus_t deserializePublish( const MQTTPacketInfo_t * pIncomingPacket
     assert( pPacketId != NULL );
     assert( pPublishInfo != NULL );
     pVariableHeader = pIncomingPacket->pRemainingData;
-
     /* The flags are the lower 4 bits of the first byte in PUBLISH. */
     status = processPublishFlags( ( pIncomingPacket->type & 0x0FU ), pPublishInfo );
 
