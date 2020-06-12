@@ -45,12 +45,12 @@
 /* Demo Config header. */
 #include "demo_config.h"
 
-/* Check that hostname of the server is defined. */
+/* Check that AWS IoT Core endpoint is defined. */
 #ifndef IOT_CORE_ENDPOINT
     #error "IOT_CORE_ENDPOINT must be defined to your AWS IoT Core endpoint."
 #endif
 
-/* Check that TLS port of the server is defined. */
+/* Check that TLS port used for AWS IoT Core is defined. */
 #ifndef IOT_CORE_PORT
     #error "Please define a IOT_CORE_PORT."
 #endif
@@ -191,14 +191,16 @@ static int readCredentials( SSL_CTX * pSslContext,
  * @brief Set up a TLS connection over an existing TCP connection.
  *
  * @param[in] tcpSocket Socket descriptor corresponding to the existing TCP connection.
+ * @param[in] pAlpnProtos List of ALPN protocols available to be negotiated.
+ * @param[in] alpnProtosLen Length of the ALPN protocols list.
  * @param[out] pSslContext The output parameter to return the created SSL context.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
 static int tlsSetup( int tcpSocket,
-                     SSL ** pSslContext,
                      const char * pAlpnProtos,
-                     size_t alpnProtosLen );
+                     size_t alpnProtosLen,
+                     SSL ** pSslContext );
 
 /**
  * @brief The transport send function that defines the transport interface.
@@ -541,9 +543,9 @@ static int readCredentials( SSL_CTX * pSslContext,
 /*-----------------------------------------------------------*/
 
 static int tlsSetup( int tcpSocket,
-                     SSL ** pSslContext,
                      const char * pAlpnProtos,
-                     size_t alpnProtosLen )
+                     size_t alpnProtosLen,
+                     SSL ** pSslContext )
 {
     int returnStatus = EXIT_SUCCESS;
     long verifyPeerCertStatus = X509_V_OK;
@@ -916,16 +918,16 @@ int main( int argc,
         if( IOT_CORE_PORT == 443 )
         {
             returnStatus = tlsSetup( networkContext.tcpSocket,
-                                     &networkContext.pSslContext,
                                      IOT_CORE_ALPN_PROTOCOL_NAME,
-                                     IOT_CORE_ALPN_PROTOCOL_NAME_LENGTH );
+                                     IOT_CORE_ALPN_PROTOCOL_NAME_LENGTH,
+                                     &networkContext.pSslContext );
         }
         else if( IOT_CORE_PORT == 8443 )
         {
             returnStatus = tlsSetup( networkContext.tcpSocket,
-                                     &networkContext.pSslContext,
                                      NULL,
-                                     0 );
+                                     0,
+                                     &networkContext.pSslContext );
         }
         else
         {
