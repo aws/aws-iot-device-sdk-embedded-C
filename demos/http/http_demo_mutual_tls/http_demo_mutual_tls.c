@@ -616,9 +616,14 @@ static int tlsSetup( int tcpSocket,
                                                  ( unsigned int ) alpnProtosLen );
             }
 
-            if( sslStatus != 1 )
+            if( sslStatus != 0 )
             {
-                LogError( ( "SSL_set_alpn_protos failed to set ALPN protos." ) );
+                LogError( ( "SSL_set_alpn_protos failed to set ALPN protos. %s",
+                            pAlpnProtos ) );
+            }
+            else
+            {
+                sslStatus = 1;
             }
         }
 
@@ -906,10 +911,28 @@ int main( int argc,
     if( returnStatus == EXIT_SUCCESS )
     {
         LogInfo( ( "Performing TLS handshake on top of the TCP connection." ) );
-        returnStatus = tlsSetup( networkContext.tcpSocket,
-                                 &networkContext.pSslContext,
-                                 IOT_CORE_ALPN_PROTOCOL_NAME,
-                                 IOT_CORE_ALPN_PROTOCOL_NAME_LENGTH );
+
+        /* Pass the ALPN protocol name depending on the port being used. */
+        if( IOT_CORE_PORT == 443 )
+        {
+            returnStatus = tlsSetup( networkContext.tcpSocket,
+                                     &networkContext.pSslContext,
+                                     IOT_CORE_ALPN_PROTOCOL_NAME,
+                                     IOT_CORE_ALPN_PROTOCOL_NAME_LENGTH );
+        }
+        else if( IOT_CORE_PORT == 8443 )
+        {
+            returnStatus = tlsSetup( networkContext.tcpSocket,
+                                     &networkContext.pSslContext,
+                                     NULL,
+                                     0 );
+        }
+        else
+        {
+            LogError( ( "AWS IoT Core does not support HTTPS through port %d",
+                        IOT_CORE_PORT ) );
+            returnStatus = EXIT_FAILURE;
+        }
     }
 
     /* Define the transport interface. */
