@@ -101,9 +101,9 @@ static HTTPStatus_t addHeader( HTTPRequestHeaders_t * pRequestHeaders,
  * returned.
  */
 static HTTPStatus_t receiveHttpData( const HTTPTransportInterface_t * pTransport,
-                              uint8_t * pBuffer,
-                              size_t bufferLen,
-                              size_t * pBytesReceived );
+                                     uint8_t * pBuffer,
+                                     size_t bufferLen,
+                                     size_t * pBytesReceived );
 
 /**
  * @brief Get the status of the HTTP response given the parsing state and how
@@ -807,8 +807,9 @@ static int httpParserOnBodyCallback( http_parser * pHttpParser,
      * will follow the the chunked header. This body data is in a later location
      * and must be moved up in the buffer. When pLoc is greater than the current
      * end of the body, that signals the parser found a chunk header. */
+
     /* MISRA Rule 18.3 flags pLoc and pNextWriteLoc as pointing to two different
-     * objects. This rule is suppressed because both pNextWriteLoc and pLoc 
+     * objects. This rule is suppressed because both pNextWriteLoc and pLoc
      * point to a location in the response buffer. */
     /* coverity[pointer_parameter] */
     /* coverity[misra_c_2012_rule_18_3_violation] */
@@ -984,9 +985,9 @@ static HTTPStatus_t processHttpParserError( const http_parser * pHttpParser )
 /*-----------------------------------------------------------*/
 
 static HTTPStatus_t parseHttpResponse( HTTPParsingContext_t * pParsingContext,
-                                HTTPResponse_t * pResponse,
-                                size_t parseLen,
-                                uint8_t isHeadResponse )
+                                       HTTPResponse_t * pResponse,
+                                       size_t parseLen,
+                                       uint8_t isHeadResponse )
 {
     HTTPStatus_t returnStatus;
     http_parser_settings parserSettings = { 0 };
@@ -1121,7 +1122,7 @@ static HTTPStatus_t addHeader( HTTPRequestHeaders_t * pRequestHeaders,
                                size_t valueLen )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
-    char * pBufferCur = (char*)( pRequestHeaders->pBuffer + pRequestHeaders->headersLen );
+    char * pBufferCur = ( char * ) ( pRequestHeaders->pBuffer + pRequestHeaders->headersLen );
     size_t toAddLen = 0u;
     size_t backtrackHeaderLen = pRequestHeaders->headersLen;
 
@@ -1198,7 +1199,7 @@ static HTTPStatus_t writeRequestLine( HTTPRequestHeaders_t * pRequestHeaders,
                                       size_t pathLen )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
-    char * pBufferCur = (char*)( pRequestHeaders->pBuffer );
+    char * pBufferCur = ( char * ) ( pRequestHeaders->pBuffer );
     size_t toAddLen = methodLen +                 \
                       SPACE_CHARACTER_LEN +       \
                       SPACE_CHARACTER_LEN +       \
@@ -1531,8 +1532,9 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
     assert( pData != NULL );
 
     /* Loop until all data is sent. */
+
     /* MISCRA C-2012 Rule 15.4 flags multiple break statements in the while loop
-     * below. There are two only error conditions when reading data from the 
+     * below. There are two only error conditions when reading data from the
      * network which both need the loop to terminate. Both of these conditions
      * necessitate different error logs, so two different break statements are
      * required. */
@@ -1676,9 +1678,9 @@ static HTTPStatus_t sendHttpBody( const HTTPTransportInterface_t * pTransport,
 /*-----------------------------------------------------------*/
 
 static HTTPStatus_t receiveHttpData( const HTTPTransportInterface_t * pTransport,
-                              uint8_t * pBuffer,
-                              size_t bufferLen,
-                              size_t * pBytesReceived )
+                                     uint8_t * pBuffer,
+                                     size_t bufferLen,
+                                     size_t * pBytesReceived )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
     int32_t transportStatus = 0;
@@ -2162,7 +2164,7 @@ static HTTPStatus_t findHeaderInResponse( const uint8_t * pBuffer,
      * value of "on_header_value" callback (related to the header value) should
      * cause the http_parser.http_errno to be "CB_header_value". */
     if( ( returnStatus == HTTP_SUCCESS ) &&
-        ( parser.http_errno != ( unsigned int )HPE_CB_header_value ) )
+        ( parser.http_errno != ( unsigned int ) HPE_CB_header_value ) )
     {
         LogError( ( "Header found in response but http-parser returned error: "
                     "ParserError=%s",
@@ -2174,7 +2176,7 @@ static HTTPStatus_t findHeaderInResponse( const uint8_t * pBuffer,
      * expected to be called which should cause the http_parser.http_errno to be
      * "OK" */
     else if( ( returnStatus == HTTP_HEADER_NOT_FOUND ) &&
-             ( parser.http_errno != ( unsigned int )( HPE_OK ) ) )
+             ( parser.http_errno != ( unsigned int ) ( HPE_OK ) ) )
     {
         LogError( ( "Header not found in response: http-parser returned error: "
                     "ParserError=%s",
