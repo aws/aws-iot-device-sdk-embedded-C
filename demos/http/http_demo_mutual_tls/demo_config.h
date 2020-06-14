@@ -54,8 +54,9 @@
  *
  * @note Your AWS IoT Core endpoint can be found in the AWS IoT console under
  * Settings/Custom Endpoint, or using the describe-endpoint API.
+ *
+ * #define IOT_CORE_ENDPOINT                 "your-aws-iot-core-endpoint"
  */
-#define IOT_CORE_ENDPOINT                 "your-aws-iot-core-endpoint"
 
 /**
  * @brief ALPN protocol name to be sent as part of the ClientHello message.
