@@ -128,7 +128,7 @@ static bool validateTransitionPublish( MQTTPublishState_t currentState,
             /* Transitions from null occur when storing a new entry into the record. */
             if( opType == MQTT_RECEIVE )
             {
-                isValid = ( newState == MQTTPubAckSend ) || ( newState == MQTTPubRecSend );
+                isValid = ( ( newState == MQTTPubAckSend ) || ( newState == MQTTPubRecSend ) ) ? true : false;
             }
 
             break;
@@ -140,11 +140,11 @@ static bool validateTransitionPublish( MQTTPublishState_t currentState,
             switch( qos )
             {
                 case MQTTQoS1:
-                    isValid = ( newState == MQTTPubAckPending );
+                    isValid = ( newState == MQTTPubAckPending ) ? true : false;
                     break;
 
                 case MQTTQoS2:
-                    isValid = ( newState == MQTTPubRecPending );
+                    isValid = ( newState == MQTTPubRecPending ) ? true : false;
                     break;
 
                 default:
@@ -173,37 +173,37 @@ static bool validateTransitionAck( MQTTPublishState_t currentState,
         /* Incoming publish, QoS 1. */
         case MQTTPubAckPending:
             /* Outgoing publish, QoS 1. */
-            isValid = ( newState == MQTTPublishDone );
+            isValid = ( newState == MQTTPublishDone ) ? true : false;
             break;
 
         case MQTTPubRecSend:
             /* Incoming publish, QoS 2. */
-            isValid = ( newState == MQTTPubRelPending );
+            isValid = ( newState == MQTTPubRelPending ) ? true : false;
             break;
 
         case MQTTPubRelPending:
             /* Incoming publish, QoS 2. */
-            isValid = ( newState == MQTTPubCompSend );
+            isValid = ( newState == MQTTPubCompSend ) ? true : false;
             break;
 
         case MQTTPubCompSend:
             /* Incoming publish, QoS 2. */
-            isValid = ( newState == MQTTPublishDone );
+            isValid = ( newState == MQTTPublishDone ) ? true : false;
             break;
 
         case MQTTPubRecPending:
             /* Outgoing publish, Qos 2. */
-            isValid = ( newState == MQTTPubRelSend );
+            isValid = ( newState == MQTTPubRelSend ) ? true : false;
             break;
 
         case MQTTPubRelSend:
             /* Outgoing publish, Qos 2. */
-            isValid = ( newState == MQTTPubCompPending );
+            isValid = ( newState == MQTTPubCompPending ) ? true : false;
             break;
 
         case MQTTPubCompPending:
             /* Outgoing publish, Qos 2. */
-            isValid = ( newState == MQTTPublishDone );
+            isValid = ( newState == MQTTPublishDone ) ? true : false;
             break;
 
         case MQTTPublishDone:
@@ -230,11 +230,11 @@ static bool isPublishOutgoing( MQTTPubAckType_t packetType,
         case MQTTPuback:
         case MQTTPubrec:
         case MQTTPubcomp:
-            isOutgoing = ( opType == MQTT_RECEIVE );
+            isOutgoing = ( opType == MQTT_RECEIVE ) ? true : false;
             break;
 
         case MQTTPubrel:
-            isOutgoing = ( opType == MQTT_SEND );
+            isOutgoing = ( opType == MQTT_SEND ) ? true : false;
             break;
 
         default:
@@ -328,7 +328,7 @@ static void updateRecord( MQTTPubAckInfo_t * records,
                           MQTTPublishState_t newState,
                           bool shouldDelete )
 {
-    if( shouldDelete )
+    if( shouldDelete == true )
     {
         records[ recordIndex ].packetId = MQTT_PACKET_ID_INVALID;
         records[ recordIndex ].qos = MQTTQoS0;
@@ -450,7 +450,7 @@ MQTTStatus_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
         newState = MQTT_CalculateStatePublish( opType, qos );
         isTransitionValid = validateTransitionPublish( currentState, newState, opType, qos );
 
-        if( isTransitionValid )
+        if( isTransitionValid == true )
         {
             /* addRecord will check for collisions. */
             if( opType == MQTT_RECEIVE )
@@ -487,12 +487,12 @@ MQTTPublishState_t MQTT_CalculateStateAck( MQTTPubAckType_t packetType,
 {
     MQTTPublishState_t calculatedState = MQTTStateNull;
     /* There are more QoS2 cases than QoS1, so initialize to that. */
-    bool qosValid = ( qos == MQTTQoS2 );
+    bool qosValid = ( qos == MQTTQoS2 ) ? true : false;
 
     switch( packetType )
     {
         case MQTTPuback:
-            qosValid = ( qos == MQTTQoS1 );
+            qosValid = ( qos == MQTTQoS1 ) ? true : false;
             calculatedState = MQTTPublishDone;
             break;
 
@@ -520,7 +520,7 @@ MQTTPublishState_t MQTT_CalculateStateAck( MQTTPubAckType_t packetType,
     }
 
     /* Sanity check, make sure ack and QoS agree. */
-    if( !qosValid )
+    if( qosValid == false )
     {
         calculatedState = MQTTStateNull;
     }
@@ -552,7 +552,7 @@ MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
     }
     else
     {
-        if( isOutgoingPublish )
+        if( isOutgoingPublish == true )
         {
             records = pMqttContext->outgoingPublishRecords;
         }
@@ -571,10 +571,10 @@ MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
     if( recordIndex < MQTT_STATE_ARRAY_MAX_COUNT )
     {
         newState = MQTT_CalculateStateAck( packetType, opType, qos );
-        shouldDeleteRecord = ( newState == MQTTPublishDone );
+        shouldDeleteRecord = ( newState == MQTTPublishDone ) ? true : false;
         isTransitionValid = validateTransitionAck( currentState, newState );
 
-        if( isTransitionValid )
+        if( isTransitionValid == true )
         {
             updateRecord( records,
                           recordIndex,

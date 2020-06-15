@@ -39,6 +39,7 @@
 
 /* Standard includes. */
 #include <stdlib.h>
+#include <string.h>
 
 /* POSIX socket includes. */
 #include <netdb.h>
