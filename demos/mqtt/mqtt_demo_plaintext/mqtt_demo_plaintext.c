@@ -588,7 +588,7 @@ static int establishMqttSession( MQTTContext_t * pContext,
     int status = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus;
     MQTTConnectInfo_t connectInfo;
-    char sessionPresent;
+    bool sessionPresent;
     MQTTTransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks;

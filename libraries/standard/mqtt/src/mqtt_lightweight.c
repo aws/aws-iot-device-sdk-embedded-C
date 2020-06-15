@@ -169,7 +169,7 @@ typedef enum MQTTSubscriptionType
 static void serializePublishCommon( const MQTTPublishInfo_t * pPublishInfo,
                                     size_t remainingLength,
                                     uint16_t packetIdentifier,
-                                    const MQTTFixedBuffer_t * const pFixedBuffer,
+                                    const MQTTFixedBuffer_t * pFixedBuffer,
                                     bool serializePayload );
 
 /**
@@ -222,11 +222,11 @@ static MQTTStatus_t calculateSubscriptionPacketSize( const MQTTSubscribeInfo_t *
  * #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSuccess otherwise.
  */
-static MQTTStatus_t validateSubscriptionSerializeParams( const MQTTSubscribeInfo_t * const pSubscriptionList,
+static MQTTStatus_t validateSubscriptionSerializeParams( const MQTTSubscribeInfo_t * pSubscriptionList,
                                                          size_t subscriptionCount,
                                                          uint16_t packetId,
                                                          size_t remainingLength,
-                                                         const MQTTFixedBuffer_t * const pBuffer );
+                                                         const MQTTFixedBuffer_t * pBuffer );
 
 /**
  * @brief Serialize an MQTT CONNECT packet in the given buffer.
@@ -237,10 +237,10 @@ static MQTTStatus_t validateSubscriptionSerializeParams( const MQTTSubscribeInfo
  * @param[out] pBuffer Buffer for packet serialization.
  *
  */
-static void serializeConnectPacket( const MQTTConnectInfo_t * const pConnectInfo,
-                                    const MQTTPublishInfo_t * const pWillInfo,
+static void serializeConnectPacket( const MQTTConnectInfo_t * pConnectInfo,
+                                    const MQTTPublishInfo_t * pWillInfo,
                                     size_t remainingLength,
-                                    const MQTTFixedBuffer_t * const pBuffer );
+                                    const MQTTFixedBuffer_t * pBuffer );
 
 /*-----------------------------------------------------------*/
 
@@ -432,7 +432,7 @@ static bool calculatePublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
 static void serializePublishCommon( const MQTTPublishInfo_t * pPublishInfo,
                                     size_t remainingLength,
                                     uint16_t packetIdentifier,
-                                    const MQTTFixedBuffer_t * const pFixedBuffer,
+                                    const MQTTFixedBuffer_t * pFixedBuffer,
                                     bool serializePayload )
 {
     uint8_t * pIndex = NULL;
@@ -466,13 +466,13 @@ static void serializePublishCommon( const MQTTPublishInfo_t * pPublishInfo,
         /* Empty else MISRA 15.7 */
     }
 
-    if( pPublishInfo->retain )
+    if( pPublishInfo->retain == true )
     {
         LogDebug( ( "Adding retain bit in PUBLISH flags." ) );
         UINT8_SET_BIT( publishFlags, MQTT_PUBLISH_FLAG_RETAIN );
     }
 
-    if( pPublishInfo->dup )
+    if( pPublishInfo->dup == true )
     {
         LogDebug( ( "Adding dup bit in PUBLISH flags." ) );
         UINT8_SET_BIT( publishFlags, MQTT_PUBLISH_FLAG_DUP );
@@ -504,7 +504,7 @@ static void serializePublishCommon( const MQTTPublishInfo_t * pPublishInfo,
      * This will help reduce an unnecessary copy of the payload into the buffer.
      */
     if( ( pPublishInfo->payloadLength > 0U ) &&
-        ( serializePayload ) )
+        ( serializePayload == true ) )
     {
         LogDebug( ( "Copying PUBLISH payload of length =%lu to buffer",
                     pPublishInfo->payloadLength ) );
@@ -653,7 +653,7 @@ static MQTTStatus_t checkPublishRemainingLength( size_t remainingLength,
 /*-----------------------------------------------------------*/
 
 static MQTTStatus_t processPublishFlags( uint8_t publishFlags,
-                                         MQTTPublishInfo_t * const pPublishInfo )
+                                         MQTTPublishInfo_t * pPublishInfo )
 {
     MQTTStatus_t status = MQTTSuccess;
 
@@ -690,7 +690,7 @@ static MQTTStatus_t processPublishFlags( uint8_t publishFlags,
         LogDebug( ( "QoS is %d.", pPublishInfo->qos ) );
 
         /* Parse the Retain bit. */
-        pPublishInfo->retain = UINT8_CHECK_BIT( publishFlags, MQTT_PUBLISH_FLAG_RETAIN );
+        pPublishInfo->retain = ( UINT8_CHECK_BIT( publishFlags, MQTT_PUBLISH_FLAG_RETAIN ) ) ? true : false;
 
         LogDebug( ( "Retain bit is %d.", pPublishInfo->retain ) );
 
@@ -734,8 +734,8 @@ static void logConnackResponse( uint8_t responseCode )
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t deserializeConnack( const MQTTPacketInfo_t * const pConnack,
-                                        bool * const pSessionPresent )
+static MQTTStatus_t deserializeConnack( const MQTTPacketInfo_t * pConnack,
+                                        bool * pSessionPresent )
 {
     MQTTStatus_t status = MQTTSuccess;
     const uint8_t * pRemainingData = NULL;
@@ -935,7 +935,7 @@ static MQTTStatus_t readSubackStatus( size_t statusCount,
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t deserializeSuback( const MQTTPacketInfo_t * const pSuback,
+static MQTTStatus_t deserializeSuback( const MQTTPacketInfo_t * pSuback,
                                        uint16_t * pPacketIdentifier )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -971,11 +971,11 @@ static MQTTStatus_t deserializeSuback( const MQTTPacketInfo_t * const pSuback,
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t validateSubscriptionSerializeParams( const MQTTSubscribeInfo_t * const pSubscriptionList,
+static MQTTStatus_t validateSubscriptionSerializeParams( const MQTTSubscribeInfo_t * pSubscriptionList,
                                                          size_t subscriptionCount,
                                                          uint16_t packetId,
                                                          size_t remainingLength,
-                                                         const MQTTFixedBuffer_t * const pBuffer )
+                                                         const MQTTFixedBuffer_t * pBuffer )
 {
     MQTTStatus_t status = MQTTSuccess;
 
@@ -1022,9 +1022,9 @@ static MQTTStatus_t validateSubscriptionSerializeParams( const MQTTSubscribeInfo
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t deserializePublish( const MQTTPacketInfo_t * const pIncomingPacket,
-                                        uint16_t * const pPacketId,
-                                        MQTTPublishInfo_t * const pPublishInfo )
+static MQTTStatus_t deserializePublish( const MQTTPacketInfo_t * pIncomingPacket,
+                                        uint16_t * pPacketId,
+                                        MQTTPublishInfo_t * pPublishInfo )
 {
     MQTTStatus_t status = MQTTSuccess;
     const uint8_t * pVariableHeader, * pPacketIdentifierHigh;
@@ -1111,7 +1111,7 @@ static MQTTStatus_t deserializePublish( const MQTTPacketInfo_t * const pIncoming
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t deserializeSimpleAck( const MQTTPacketInfo_t * const pAck,
+static MQTTStatus_t deserializeSimpleAck( const MQTTPacketInfo_t * pAck,
                                           uint16_t * pPacketIdentifier )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -1146,7 +1146,7 @@ static MQTTStatus_t deserializeSimpleAck( const MQTTPacketInfo_t * const pAck,
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * const pPingresp )
+static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp )
 {
     MQTTStatus_t status = MQTTSuccess;
 
@@ -1166,10 +1166,10 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * const pPingres
 
 /*-----------------------------------------------------------*/
 
-static void serializeConnectPacket( const MQTTConnectInfo_t * const pConnectInfo,
-                                    const MQTTPublishInfo_t * const pWillInfo,
+static void serializeConnectPacket( const MQTTConnectInfo_t * pConnectInfo,
+                                    const MQTTPublishInfo_t * pWillInfo,
                                     size_t remainingLength,
-                                    const MQTTFixedBuffer_t * const pBuffer )
+                                    const MQTTFixedBuffer_t * pBuffer )
 {
     uint8_t connectFlags = 0U;
     uint8_t * pIndex = NULL;
@@ -1284,10 +1284,10 @@ static void serializeConnectPacket( const MQTTConnectInfo_t * const pConnectInfo
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * const pConnectInfo,
-                                        const MQTTPublishInfo_t * const pWillInfo,
-                                        size_t * const pRemainingLength,
-                                        size_t * const pPacketSize )
+MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
+                                        const MQTTPublishInfo_t * pWillInfo,
+                                        size_t * pRemainingLength,
+                                        size_t * pPacketSize )
 {
     MQTTStatus_t status = MQTTSuccess;
     size_t remainingLength;
@@ -1363,10 +1363,10 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * const pConnect
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * const pConnectInfo,
-                                    const MQTTPublishInfo_t * const pWillInfo,
+MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * pConnectInfo,
+                                    const MQTTPublishInfo_t * pWillInfo,
                                     size_t remainingLength,
-                                    const MQTTFixedBuffer_t * const pBuffer )
+                                    const MQTTFixedBuffer_t * pBuffer )
 {
     MQTTStatus_t status = MQTTSuccess;
 
@@ -1409,7 +1409,7 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * const pConnectInfo
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_GetSubscribePacketSize( const MQTTSubscribeInfo_t * const pSubscriptionList,
+MQTTStatus_t MQTT_GetSubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
                                           size_t subscriptionCount,
                                           size_t * pRemainingLength,
                                           size_t * pPacketSize )
@@ -1454,11 +1454,11 @@ MQTTStatus_t MQTT_GetSubscribePacketSize( const MQTTSubscribeInfo_t * const pSub
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * const pSubscriptionList,
+MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionList,
                                       size_t subscriptionCount,
                                       uint16_t packetId,
                                       size_t remainingLength,
-                                      const MQTTFixedBuffer_t * const pBuffer )
+                                      const MQTTFixedBuffer_t * pBuffer )
 {
     size_t i = 0;
     uint8_t * pIndex = NULL;
@@ -1508,7 +1508,7 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * const pSubscri
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * const pSubscriptionList,
+MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
                                             size_t subscriptionCount,
                                             size_t * pRemainingLength,
                                             size_t * pPacketSize )
@@ -1553,11 +1553,11 @@ MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * const pS
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_SerializeUnsubscribe( const MQTTSubscribeInfo_t * const pSubscriptionList,
+MQTTStatus_t MQTT_SerializeUnsubscribe( const MQTTSubscribeInfo_t * pSubscriptionList,
                                         size_t subscriptionCount,
                                         uint16_t packetId,
                                         size_t remainingLength,
-                                        const MQTTFixedBuffer_t * const pBuffer )
+                                        const MQTTFixedBuffer_t * pBuffer )
 {
     MQTTStatus_t status = MQTTSuccess;
     size_t i = 0;
@@ -1604,9 +1604,9 @@ MQTTStatus_t MQTT_SerializeUnsubscribe( const MQTTSubscribeInfo_t * const pSubsc
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * const pPublishInfo,
-                                        size_t * const pRemainingLength,
-                                        size_t * const pPacketSize )
+MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
+                                        size_t * pRemainingLength,
+                                        size_t * pPacketSize )
 {
     MQTTStatus_t status = MQTTSuccess;
 
@@ -1645,10 +1645,10 @@ MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * const pPublish
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * const pPublishInfo,
+MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * pPublishInfo,
                                     uint16_t packetId,
                                     size_t remainingLength,
-                                    const MQTTFixedBuffer_t * const pBuffer )
+                                    const MQTTFixedBuffer_t * pBuffer )
 {
     MQTTStatus_t status = MQTTSuccess;
 
@@ -1703,11 +1703,11 @@ MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * const pPublishInfo
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * const pPublishInfo,
+MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * pPublishInfo,
                                           uint16_t packetId,
                                           size_t remainingLength,
-                                          const MQTTFixedBuffer_t * const pBuffer,
-                                          size_t * const pHeaderSize )
+                                          const MQTTFixedBuffer_t * pBuffer,
+                                          size_t * pHeaderSize )
 {
     MQTTStatus_t status = MQTTSuccess;
 
@@ -1772,7 +1772,7 @@ MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * const pPubli
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_SerializeAck( const MQTTFixedBuffer_t * const pBuffer,
+MQTTStatus_t MQTT_SerializeAck( const MQTTFixedBuffer_t * pBuffer,
                                 uint8_t packetType,
                                 uint16_t packetId )
 {
@@ -1842,7 +1842,7 @@ MQTTStatus_t MQTT_GetDisconnectPacketSize( size_t * pPacketSize )
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_SerializeDisconnect( const MQTTFixedBuffer_t * const pBuffer )
+MQTTStatus_t MQTT_SerializeDisconnect( const MQTTFixedBuffer_t * pBuffer )
 {
     MQTTStatus_t status = MQTTSuccess;
 
@@ -1896,7 +1896,7 @@ MQTTStatus_t MQTT_GetPingreqPacketSize( size_t * pPacketSize )
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * const pBuffer )
+MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * pBuffer )
 {
     MQTTStatus_t status = MQTTSuccess;
 
@@ -1930,18 +1930,9 @@ MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * const pBuffer )
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_GetIncomingPacket( MQTTTransportRecvFunc_t recvFunc,
-                                     MQTTNetworkContext_t networkContext,
-                                     MQTTPacketInfo_t * const pIncomingPacket )
-{
-    return MQTTSuccess;
-}
-
-/*-----------------------------------------------------------*/
-
-MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * const pIncomingPacket,
-                                      uint16_t * const pPacketId,
-                                      MQTTPublishInfo_t * const pPublishInfo )
+MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * pIncomingPacket,
+                                      uint16_t * pPacketId,
+                                      MQTTPublishInfo_t * pPublishInfo )
 {
     MQTTStatus_t status = MQTTSuccess;
 
@@ -1970,9 +1961,9 @@ MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * const pIncomingPa
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * const pIncomingPacket,
-                                  uint16_t * const pPacketId,
-                                  bool * const pSessionPresent )
+MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
+                                  uint16_t * pPacketId,
+                                  bool * pSessionPresent )
 {
     MQTTStatus_t status = MQTTSuccess;
 
@@ -2053,7 +2044,7 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( MQTTTransportRecvFunc_t readFu
     if( bytesReceived == 1 )
     {
         /* Check validity. */
-        if( incomingPacketValid( pIncomingPacket->type ) )
+        if( incomingPacketValid( pIncomingPacket->type ) == true )
         {
             pIncomingPacket->remainingLength = getRemainingLength( readFunc, networkContext );
 
