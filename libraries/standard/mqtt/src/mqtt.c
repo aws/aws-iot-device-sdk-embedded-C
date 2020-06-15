@@ -293,6 +293,7 @@ static MQTTPubAckType_t getAckFromPacketType( uint8_t packetType )
 
         case MQTT_PACKET_TYPE_PUBCOMP:
         default:
+
             /* This function is only called after checking the type is one of
              * the above four values, so packet type must be PUBCOMP here. */
             assert( packetType == MQTT_PACKET_TYPE_PUBCOMP );
@@ -621,19 +622,17 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * const pContext,
 
     if( status == MQTTSuccess )
     {
-        /* Send PUBACK or PUBREC if necessary. */
-        status = sendPublishAcks( pContext,
-                                  packetIdentifier,
-                                  publishRecordState );
-    }
-
-    if( status == MQTTSuccess )
-    {
-        /* Provide publish info to application. */
+        /* Invoke application callback to hand the buffer over to application
+         * before sending acks. */
         pContext->callbacks.appCallback( pContext,
                                          pIncomingPacket,
                                          packetIdentifier,
                                          &publishInfo );
+
+        /* Send PUBACK or PUBREC if necessary. */
+        status = sendPublishAcks( pContext,
+                                  packetIdentifier,
+                                  publishRecordState );
     }
 
     return status;
@@ -680,15 +679,14 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * const pContext,
 
             if( status == MQTTSuccess )
             {
+                /* Invoke application callback to hand the buffer over to application
+                 * before sending acks. */
+                appCallback( pContext, pIncomingPacket, packetIdentifier, NULL );
+
                 /* Send PUBREL or PUBCOMP if necessary. */
                 status = sendPublishAcks( pContext,
                                           packetIdentifier,
                                           publishRecordState );
-
-                if( status == MQTTSuccess )
-                {
-                    appCallback( pContext, pIncomingPacket, packetIdentifier, NULL );
-                }
             }
 
             break;
