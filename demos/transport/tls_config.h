@@ -35,9 +35,9 @@
 /* Include header that defines log levels. */
 #include "logging_levels.h"
 
-/* Configure name and log level for the MQTT library. */
+/* Configure name and log level for the TLS utils library. */
 #define LIBRARY_LOG_NAME     "NETWORK"
-#define LIBRARY_LOG_LEVEL    LOG_INFO
+#define LIBRARY_LOG_LEVEL    LOG_NONE
 
 #include "logging_stack.h"
 

@@ -205,8 +205,6 @@ static void establishMqttSession( MQTTContext_t * pContext,
                                   bool createCleanSession,
                                   bool * pSessionPresent )
 {
-    int status = EXIT_SUCCESS;
-    MQTTStatus_t mqttStatus;
     MQTTConnectInfo_t connectInfo;
     MQTTTransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
@@ -284,6 +282,15 @@ static void eventCallback( MQTTContext_t * pContext,
         /* Cache information about the incoming PUBLISH message to process
          * in test case. */
         memcpy( &incomingInfo, pPublishInfo, sizeof( MQTTPublishInfo_t ) );
+        incomingInfo.pTopicName = NULL;
+        incomingInfo.pPayload = NULL;
+        /* Allocate buffers and copy information of topic name and payload. */
+        incomingInfo.pTopicName = malloc( pPublishInfo->topicNameLength );
+        TEST_ASSERT_NOT_NULL( incomingInfo.pTopicName );
+        memcpy( ( void * ) incomingInfo.pTopicName, pPublishInfo->pTopicName, pPublishInfo->topicNameLength );
+        incomingInfo.pPayload = malloc( pPublishInfo->payloadLength );
+        TEST_ASSERT_NOT_NULL( incomingInfo.pPayload );
+        memcpy( ( void * ) incomingInfo.pPayload, pPublishInfo->pPayload, pPublishInfo->payloadLength );
     }
     else
     {
@@ -451,6 +458,17 @@ void setUp()
 /* Called after each test method. */
 void tearDown()
 {
+    /* Free memory, if allocated during test case execution. */
+    if( incomingInfo.pTopicName != NULL )
+    {
+        free( ( void * ) incomingInfo.pTopicName );
+    }
+
+    if( incomingInfo.pPayload != NULL )
+    {
+        free( ( void * ) incomingInfo.pPayload );
+    }
+
     /* Terminate MQTT connection. */
     TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_Disconnect( &context ) );
 
@@ -462,6 +480,53 @@ void tearDown()
 }
 
 /* ========================== Test Cases ============================ */
+
+/**
+ * @brief Tests Subscribe and Publish operations MQTT broken with QoS 0.
+ * The test subscribes to a topic, and then publishes to the same topic. The
+ * broker is expected to route the publish message back to the test.
+ */
+void test_MQTT_Subscribe_Publish_With_Qos_0( void )
+{
+    /* Subscribe to a topic with Qos 0. */
+    TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic(
+                           &context, TEST_MQTT_TOPIC, MQTTQoS0 ) );
+
+    /* We do not expect a SUBACK from the broker for the subscribe operation. */
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+/*    TEST_ASSERT_FALSE( receivedSubAck ); */
+
+    /* Publish to the same topic, that we subscribed to, with Qos 1. */
+    TEST_ASSERT_EQUAL( MQTTSuccess, publishToTopic(
+                           &context, TEST_MQTT_TOPIC, MQTTQoS0 ) );
+
+    /* We do not expect a PUBACK from the broker for the PUBLISH. */
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    TEST_ASSERT_FALSE( receivedPubAck );
+
+    /* Make sure that we have received the same message from the server,
+     * that was published (as we have subscribed to the same topic). */
+    TEST_ASSERT_EQUAL( MQTTQoS0, incomingInfo.qos );
+    TEST_ASSERT_EQUAL( TEST_MQTT_TOPIC_LENGTH, incomingInfo.topicNameLength );
+    TEST_ASSERT_EQUAL_MEMORY( TEST_MQTT_TOPIC,
+                              incomingInfo.pTopicName,
+                              TEST_MQTT_TOPIC_LENGTH );
+    TEST_ASSERT_EQUAL( strlen( MQTT_EXAMPLE_MESSAGE ), incomingInfo.payloadLength );
+    TEST_ASSERT_EQUAL_MEMORY( MQTT_EXAMPLE_MESSAGE,
+                              incomingInfo.pPayload,
+                              incomingInfo.payloadLength );
+
+    /* Un-subscribe from a topic with Qos 0. */
+    TEST_ASSERT_EQUAL( MQTTSuccess, unsubscribeFromTopic(
+                           &context, TEST_MQTT_TOPIC, MQTTQoS0 ) );
+
+    /* We do not expect a SUBACK from the broker for the subscribe operation. */
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    TEST_ASSERT_TRUE( receivedUnsubAck );
+}
 
 /**
  * @brief Tests Subscribe and Publish operations MQTT broken with QoS 1.

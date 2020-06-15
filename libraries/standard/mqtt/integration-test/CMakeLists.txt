@@ -43,6 +43,7 @@ create_real_library(${real_name}
 list(APPEND utest_link_list
             lib${real_name}.a
             -ltls_utils
+            #libtls_utils.a
         )
 
 list(APPEND utest_dep_list
