@@ -50,7 +50,7 @@
 
 /* Set network context to OpenSSL SSL context. */
 #include <openssl/ssl.h>
-typedef SSL * MQTTNetworkContext_t;
+typedef SSL * NetworkContext_t;
 
 /**
  * @brief The maximum number of MQTT PUBLISH messages that may be pending
