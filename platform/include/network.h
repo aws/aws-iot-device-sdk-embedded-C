@@ -1,6 +1,17 @@
 #ifndef NETWORK_H_
 #define NETWORK_H_
 
+#include <stdint.h>
+#include <stddef.h>
+
+/**
+ * @brief The NetworkContext is an incomplete type. The application must
+ * define NetworkContext to the type of their network context. This context
+ * is passed into the network interface functions.
+ */
+struct NetworkContext;
+typedef struct NetworkContext * NetworkContext_t;
+
 /**
  * @ingroup platform_datatypes_enums
  * @brief Return codes for [network functions](@ref platform_network_functions).
@@ -38,12 +49,12 @@ typedef enum NetworkCloseReason
  * structure contains commonly-used parameters, but may be replaced with an
  * alternative.
  */
-struct NetworkServerInfo
+typedef struct NetworkServerInfo
 {
     const char * pHostName; /**< @brief Server host name. Must be NULL-terminated. */
     size_t hostNameLength;  /**< @brief Length associated with #NetworkServerInfo.pHostName. */
     uint16_t port;          /**< @brief Server port in host-order. */
-};
+} NetworkServerInfo_t;
 
 /**
  * @ingroup platform_datatypes_paramstructs

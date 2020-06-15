@@ -1,4 +1,17 @@
-#include "plaintext.h"
+#include "plaintext_transport.h"
+
+/* POSIX socket includes. */
+#include <errno.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+
+#include <sys/socket.h>
+#include <sys/types.h>
+
+/**
+ * @brief Defined by transport layer to check send or receive error.
+ */
+extern int errno;
 
 int32_t plaintextSend( NetworkContext_t pContext,
                        const void * pBuffer,

@@ -2,22 +2,32 @@
 #include <assert.h>
 #include <stdlib.h>
 
+/* POSIX socket includes. */
+#include <errno.h>
+#include <netdb.h>
+#include <time.h>
+#include <poll.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+
 #include <sys/socket.h>
 #include <sys/types.h>
+
+#include "connect.h"
 
 /**
  * @brief Length of an IPv6 address when converted to hex digits.
  */
 #define IPV6_ADDRESS_STRING_LENGTH    ( 40 )
 
-NetworkStatus_t TCP_Connect( const NetworkServerInfo_t * pServerInfo
+NetworkStatus_t TCP_Connect( const NetworkServerInfo_t * pServerInfo,
                              int * pTcpSocket )
 {
     int networkStatus = NETWORK_INTERNAL_ERROR;
     struct addrinfo hints, * pIndex, * pListHead = NULL;
-    struct sockaddr * pServerInfo;
+    struct sockaddr * pAddrInfo;
     uint16_t netPort = -1;
-    socklen_t serverInfoLength;
+    socklen_t addrInfoLength;
     char resolvedIpAddr[ IPV6_ADDRESS_STRING_LENGTH ];
 
     /* Initialize string to store the resolved IP address from the host name. */
@@ -32,13 +42,13 @@ NetworkStatus_t TCP_Connect( const NetworkServerInfo_t * pServerInfo
     netPort = htons( pServerInfo->port );
 
     /* Perform a DNS lookup on the given host name. */
-    networkStatus = getaddrinfo( pServer, NULL, &hints, &pListHead );
+    networkStatus = getaddrinfo( pServerInfo->pHostName, NULL, &hints, &pListHead );
 
     if( networkStatus == -1 )
     {
         LogError( ( "Could not resolve host %.*s.\n",
-                    ( int32_t ) serverLen,
-                    pServer ) );
+                    ( int32_t ) pServerInfo->hostNameLength,
+                    pServerInfo->pHostName ) );
         networkStatus = NETWORK_DNS_FAILURE;
     }
     else
@@ -59,38 +69,38 @@ NetworkStatus_t TCP_Connect( const NetworkServerInfo_t * pServerInfo
                 continue;
             }
 
-            pServerInfo = pIndex->ai_addr;
+            pAddrInfo = pIndex->ai_addr;
 
-            if( pServerInfo->sa_family == AF_INET )
+            if( pAddrInfo->sa_family == AF_INET )
             {
                 /* IPv4 */
-                ( ( struct sockaddr_in * ) pServerInfo )->sin_port = netPort;
-                serverInfoLength = sizeof( struct sockaddr_in );
-                inet_ntop( pServerInfo->sa_family,
-                           &( ( struct sockaddr_in * ) pServerInfo )->sin_addr,
+                ( ( struct sockaddr_in * ) pAddrInfo )->sin_port = netPort;
+                addrInfoLength = sizeof( struct sockaddr_in );
+                inet_ntop( pAddrInfo->sa_family,
+                           &( ( struct sockaddr_in * ) pAddrInfo )->sin_addr,
                            resolvedIpAddr,
                            sizeof( resolvedIpAddr ) );
             }
             else
             {
                 /* IPv6 */
-                ( ( struct sockaddr_in6 * ) pServerInfo )->sin6_port = netPort;
-                serverInfoLength = sizeof( struct sockaddr_in6 );
-                inet_ntop( pServerInfo->sa_family,
-                           &( ( struct sockaddr_in6 * ) pServerInfo )->sin6_addr,
+                ( ( struct sockaddr_in6 * ) pAddrInfo )->sin6_port = netPort;
+                addrInfoLength = sizeof( struct sockaddr_in6 );
+                inet_ntop( pAddrInfo->sa_family,
+                           &( ( struct sockaddr_in6 * ) pAddrInfo )->sin6_addr,
                            resolvedIpAddr,
                            sizeof( resolvedIpAddr ) );
             }
 
             LogInfo( ( "Attempting to connect to server: Host=%.*s, IP address=%s.",
-                       ( int32_t ) pServerInfo->hostNameLength, SERVER_HOST, resolvedIpAddr ) );
+                       ( int32_t ) pServerInfo->hostNameLength, pServerInfo->pHostName, resolvedIpAddr ) );
 
-            networkStatus = connect( *pTcpSocket, pServerInfo, serverInfoLength );
+            networkStatus = connect( *pTcpSocket, pAddrInfo, addrInfoLength );
 
             if( networkStatus == -1 )
             {
                 LogError( ( "Failed to connect to server: Host=%.*s, IP address=%s.",
-                            ( int32_t ) pServerInfo->hostNameLength, SERVER_HOST, resolvedIpAddr ) );
+                            ( int32_t ) pServerInfo->hostNameLength, pServerInfo->pHostName, resolvedIpAddr ) );
                 close( *pTcpSocket );
             }
             else
@@ -105,15 +115,15 @@ NetworkStatus_t TCP_Connect( const NetworkServerInfo_t * pServerInfo
         {
             /* Fail if no connection could be established. */
             LogError( ( "Could not connect to any resolved IP address from %.*s.",
-                        ( int32_t ) serverLen,
-                        pServer ) );
+                        ( int32_t ) pServerInfo->hostNameLength,
+                        pServerInfo->pHostName ) );
             networkStatus = NETWORK_CONNECT_FAILURE;
         }
         else
         {
             LogInfo( ( "Established TCP connection: Server=%.*s.\n",
-                       ( int32_t ) serverLen,
-                       pServer ) );
+                       ( int32_t ) pServerInfo->hostNameLength,
+                       pServerInfo->pHostName ) );
             networkStatus = NETWORK_SUCCESS;
         }
     }

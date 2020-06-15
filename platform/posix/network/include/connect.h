@@ -22,8 +22,6 @@
 #ifndef CONNECT_H_
 #define CONNECT_H_
 
-#include "network.h"
-
 /**************************************************/
 /******* DO NOT CHANGE the following order ********/
 /**************************************************/
@@ -33,8 +31,6 @@
  * 2. Define LIBRARY_LOG_NAME and  LIBRARY_LOG_LEVEL.
  * 3. Include the header file "logging_stack.h".
  */
-
-/************ End of logging configuration ****************/
 
 /* Include header that defines log levels. */
 #include "logging_levels.h"
@@ -49,7 +45,11 @@
 
 #include "logging_stack.h"
 
-NetworkStatus_t TCP_Connect( const NetworkServerInfo_t * pServerInfo
+/************ End of logging configuration ****************/
+
+#include "network.h"
+
+NetworkStatus_t TCP_Connect( const NetworkServerInfo_t * pServerInfo,
                              int * pTcpSocket );
 
 NetworkStatus_t TCP_Disconnect( int tcpSocket );
