@@ -708,7 +708,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
     MQTTPublishState_t publishRecordState = MQTTStateNull;
     uint16_t packetIdentifier;
     /* Need a dummy variable for MQTT_DeserializeAck(). */
-    bool sessionPresent = false, callAppCallback = true;
+    bool sessionPresent = false, callAppCallback = false;
     MQTTPubAckType_t ackType;
     MQTTEventCallback_t appCallback = NULL;
 
@@ -767,6 +767,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
         case MQTT_PACKET_TYPE_UNSUBACK:
             /* Deserialize and give these to the app provided callback. */
             status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, &sessionPresent );
+            callAppCallback = true;
             break;
 
         default:
@@ -1533,6 +1534,10 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
     {
         status = receiveSingleIteration( pContext, remainingTimeMs, true );
 
+        /* We don't need to break here since the status is already checked in
+         * the loop condition, and we do not want multiple breaks in a loop.
+         * Calculating remaining time before exiting is fine since it does not
+         * affect the status. */
         if( status != MQTTSuccess )
         {
             LogError( ( "Exiting process loop. Error status=%s",
@@ -1589,6 +1594,10 @@ MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext,
     {
         status = receiveSingleIteration( pContext, remainingTimeMs, false );
 
+        /* We don't need to break here since the status is already checked in
+         * the loop condition, and we do not want multiple breaks in a loop.
+         * Calculating remaining time before exiting is fine since it does not
+         * affect the status. */
         if( status != MQTTSuccess )
         {
             LogError( ( "Exiting receive loop. Error status=%s",
