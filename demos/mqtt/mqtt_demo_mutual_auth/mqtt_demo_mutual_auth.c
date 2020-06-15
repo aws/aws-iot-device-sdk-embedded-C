@@ -24,10 +24,10 @@
  * subscribe to a topic, publish to a topic, receive incoming publishes,
  * unsubscribe from a topic and disconnect the MQTT session.
  *
- * A mutually authenticated TLS connection is used to connect to the broker
- * in this example. Define SERVER_CERT_PATH, CLIENT_CERT_PATH,
- * and CLIENT_PRIVATE_KEY_PATH in demo_config.h to achieve mutual
- * authentication.
+ * A mutually authenticated TLS connection is used to connect to the AWS IoT
+ * MQTT message broker in this example. Define ROOT_CA_CERT_PATH,
+ * CLIENT_CERT_PATH, and CLIENT_PRIVATE_KEY_PATH in demo_config.h to achieve
+ * mutual authentication.
  *
  * The example is single threaded and uses statically allocated memory;
  * it uses QOS1 and therefore implements a retransmission mechanism
@@ -59,27 +59,62 @@
 #include "demo_config.h"
 
 /**
+ * These configuration settings are required to run the mutual auth demo.
+ * Throw compilation error if the below configs are not defined.
+ */
+#ifndef AWS_ENDPOINT
+    #error "Please define AWS IoT MQTT broker endpoint(AWS_ENDPOINT) in demo_config.h."
+#endif
+#ifndef ROOT_CA_CERT_PATH
+    #error "Please define path to root ca certificate of the AWS IoT MQTT broker(ROOT_CA_CERT_PATH) in demo_config.h."
+#endif
+#ifndef CLIENT_CERT_PATH
+    #error "Please define path to client certificate(CLIENT_CERT_PATH) in demo_config.h."
+#endif
+#ifndef CLIENT_PRIVATE_KEY_PATH
+    #error "Please define path to client private key(CLIENT_PRIVATE_KEY_PATH) in demo_config.h."
+#endif
+
+
+/**
  * Provide default values for undefined configuration settings.
  */
-#ifndef BROKER_PORT
-    #define BROKER_PORT            ( 8883 )
+#ifndef AWS_MQTT_PORT
+    #define AWS_MQTT_PORT    ( 8883 )
 #endif
+
 #ifndef NETWORK_BUFFER_SIZE
     #define NETWORK_BUFFER_SIZE    ( 1024U )
 #endif
+
 #ifndef CLIENT_IDENTIFIER
-    #define CLIENT_IDENTIFIER      "testclient"
+    #define CLIENT_IDENTIFIER    "testclient"
 #endif
 
 /**
  * @brief Length of MQTT server host name.
  */
-#define BROKER_ENDPOINT_LENGTH              ( ( uint16_t ) ( sizeof( BROKER_ENDPOINT ) - 1 ) )
+#define AWS_ENDPOINT_LENGTH                 ( ( uint16_t ) ( sizeof( AWS_ENDPOINT ) - 1 ) )
 
 /**
  * @brief Length of client identifier.
  */
 #define CLIENT_IDENTIFIER_LENGTH            ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) )
+
+/**
+ * @brief ALPN protocol name for AWS IoT MQTT.
+ *
+ * This will be used if the AWS_MQTT_PORT is configured as 443 for AWS IoT MQTT broker.
+ * Please see more details about the ALPN protocol for AWS IoT MQTT endpoint
+ * in the link below.
+ * https://aws.amazon.com/blogs/iot/mqtt-with-tls-client-authentication-on-port-443-why-it-is-useful-and-how-it-works/
+ */
+#define ALPN_PROTOCOL_NAME                  "\x0ex-amzn-mqtt-ca"
+
+/**
+ * @brief Length of ALPN protocol name.
+ */
+#define ALPN_PROTOCOL_NAME_LENGTH           ( ( uint16_t ) ( sizeof( ALPN_PROTOCOL_NAME ) - 1 ) )
 
 /**
  * @brief Timeout for receiving CONNACK packet in milli seconds.
@@ -152,12 +187,12 @@
 typedef struct PublishPackets
 {
     /**
-     * @brief MQTT client identifier. Must be unique per client.
+     * @brief Packet identifier of the publish packet.
      */
     uint16_t packetId;
 
     /**
-     * @brief MQTT client identifier. Must be unique per client.
+     * @brief Publish info of the publish packet.
      */
     MQTTPublishInfo_t pubInfo;
 } PublishPackets_t;
@@ -197,7 +232,7 @@ static PublishPackets_t outgoingPublishPackets[ MAX_OUTGOING_PUBLISHES ] = { 0 }
 
 /**
  * @brief Creates a TCP connection to the MQTT broker as specified by
- * BROKER_ENDPOINT and BROKER_PORT defined at the top of this file.
+ * AWS_ENDPOINT and AWS_MQTT_PORT defined at the top of this file.
  *
  * @param[in] pServer Host name of server.
  * @param[in] port Server port.
@@ -214,28 +249,34 @@ static int connectToServer( const char * pServer,
  *
  * Uses OpenSSL to import the root CA certificate, client certificate, and
  * client certificate private key.
+ *
  * @param[in] pSslContext Destination for the imported credentials.
  * @param[in] pRootCaPath Path to the root CA certificate.
  * @param[in] pClientCertPath Path to the client certificate.
  * @param[in] pCertPrivateKeyPath Path to the client certificate private key.
  *
- * @return `true` if all credentials were successfully read; `false` otherwise.
+ * @return 1 if all credentials were successfully read; 0 otherwise.
  */
-static bool readCredentials( SSL_CTX * pSslContext,
-                             const char * pRootCaPath,
-                             const char * pClientCertPath,
-                             const char * pCertPrivateKeyPath );
+static int readCredentials( SSL_CTX * pSslContext,
+                            const char * pRootCaPath,
+                            const char * pClientCertPath,
+                            const char * pCertPrivateKeyPath );
 
 /**
  * @brief Set up a TLS connection over an existing TCP connection.
  *
- * @param[in] tcpSocket Existing TCP connection.
- * @param[out] pSslContext Pointer to SSL connection context pointer.
+ * @param[in] tcpSocket Socket descriptor corresponding to the existing TCP connection.
+ * @param[in] pAlpnProtos List of ALPN protocols available to be negotiated.
+ * @param[in] alpnProtosLen Length of the ALPN protocols list.
+ * @param[out] pSslContext The output parameter to return the created SSL context.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
 static int tlsSetup( int tcpSocket,
+                     const char * pAlpnProtos,
+                     size_t alpnProtosLen,
                      SSL ** pSslContext );
+
 
 /**
  * @brief The transport send function provided to the MQTT context.
@@ -500,13 +541,14 @@ static int connectToServer( const char * pServer,
 
 /*-----------------------------------------------------------*/
 
-static bool readCredentials( SSL_CTX * pSslContext,
-                             const char * pRootCaPath,
-                             const char * pClientCertPath,
-                             const char * pCertPrivateKeyPath )
+static int readCredentials( SSL_CTX * pSslContext,
+                            const char * pRootCaPath,
+                            const char * pClientCertPath,
+                            const char * pCertPrivateKeyPath )
 {
-    bool status = true;
+    int sslStatus = 0;
     X509 * pRootCa = NULL;
+    FILE * pRootCaFile = NULL;
 
     /* OpenSSL does not provide a single function for reading and loading certificates
      * from files into stores, so the file API must be called. Start with the
@@ -515,12 +557,11 @@ static bool readCredentials( SSL_CTX * pSslContext,
         ( strlen( pRootCaPath ) != 0 ) )
     {
         LogDebug( ( "Opening root certificate %s.", pRootCaPath ) );
-        FILE * pRootCaFile = fopen( pRootCaPath, "r" );
+        pRootCaFile = fopen( pRootCaPath, "r" );
 
         if( pRootCaFile == NULL )
         {
             LogError( ( "Failed to open %s.", pRootCaPath ) );
-            status = false;
         }
         else
         {
@@ -535,62 +576,55 @@ static bool readCredentials( SSL_CTX * pSslContext,
             if( pRootCa == NULL )
             {
                 LogError( ( "Failed to parse root CA." ) );
-                status = false;
-            }
-        }
-
-        if( status )
-        {
-            /* Add the root CA to certificate store. */
-            if( X509_STORE_add_cert( SSL_CTX_get_cert_store( pSslContext ),
-                                     pRootCa ) != 1 )
-            {
-                LogError( ( "Failed to add root CA to certificate store." ) );
-                status = false;
             }
             else
             {
-                LogInfo( ( "Successfully imported root CA." ) );
+                sslStatus = 1;
+                LogDebug( ( "Successfully parsed root CA." ) );
+            }
+        }
+
+        if( sslStatus == 1 )
+        {
+            /* Add the root CA to certificate store. */
+            sslStatus = X509_STORE_add_cert( SSL_CTX_get_cert_store( pSslContext ),
+                                             pRootCa );
+
+            if( sslStatus != 1 )
+            {
+                LogError( ( "Failed to add root CA to certificate store." ) );
             }
         }
     }
 
-    if( ( status ) &&
+    if( ( sslStatus ) &&
         ( pClientCertPath != NULL ) &&
         ( strlen( pClientCertPath ) != 0 ) )
     {
         /* Import the client certificate. */
-        if( SSL_CTX_use_certificate_chain_file( pSslContext,
-                                                pClientCertPath ) != 1 )
+        sslStatus = SSL_CTX_use_certificate_chain_file( pSslContext,
+                                                        pClientCertPath );
+
+        if( sslStatus != 1 )
         {
             LogError( ( "Failed to import client certificate at %s.",
                         pClientCertPath ) );
-
-            status = false;
-        }
-        else
-        {
-            LogInfo( ( "Successfully imported client certificate." ) );
         }
     }
 
-    if( ( status ) &&
+    if( ( sslStatus ) &&
         ( pCertPrivateKeyPath != NULL ) &&
         ( strlen( pCertPrivateKeyPath ) != 0 ) )
     {
         /* Import the client certificate private key. */
-        if( SSL_CTX_use_PrivateKey_file( pSslContext,
-                                         pCertPrivateKeyPath,
-                                         SSL_FILETYPE_PEM ) != 1 )
+        sslStatus = SSL_CTX_use_PrivateKey_file( pSslContext,
+                                                 pCertPrivateKeyPath,
+                                                 SSL_FILETYPE_PEM );
+
+        if( sslStatus != 1 )
         {
             LogError( ( "Failed to import client certificate private key at %s.",
                         pCertPrivateKeyPath ) );
-
-            status = false;
-        }
-        else
-        {
-            LogInfo( ( "Successfully imported client certificate private key." ) );
         }
     }
 
@@ -600,15 +634,23 @@ static bool readCredentials( SSL_CTX * pSslContext,
         X509_free( pRootCa );
     }
 
-    return status;
+    if( sslStatus == 1 )
+    {
+        LogInfo( ( "Successfully imported server root CA, client certificate and "
+                   "client private key." ) );
+    }
+
+    return sslStatus;
 }
 
 /*-----------------------------------------------------------*/
 
 static int tlsSetup( int tcpSocket,
+                     const char * pAlpnProtos,
+                     size_t alpnProtosLen,
                      SSL ** pSslContext )
 {
-    int status = EXIT_FAILURE, sslStatus = 0;
+    int status = EXIT_FAILURE, sslStatus = 0, alpnStatus = -1;
     FILE * pRootCaFile = NULL;
     X509 * pRootCa = NULL;
     SSL_CTX * pSslSetup = NULL;
@@ -625,18 +667,14 @@ static int tlsSetup( int tcpSocket,
         ( void ) SSL_CTX_set_mode( pSslSetup, SSL_MODE_AUTO_RETRY );
 
         /* Setup authentication. */
-        if( !readCredentials( pSslSetup,
-                              SERVER_CERT_PATH,
-                              CLIENT_CERT_PATH,
-                              CLIENT_PRIVATE_KEY_PATH ) )
+        sslStatus = readCredentials( pSslSetup,
+                                     ROOT_CA_CERT_PATH,
+                                     CLIENT_CERT_PATH,
+                                     CLIENT_PRIVATE_KEY_PATH );
+
+        if( sslStatus != 1 )
         {
             LogError( ( "Setting up credentials failed." ) );
-            sslStatus = 0;
-        }
-        else
-        {
-            LogInfo( ( "Set credentials completed." ) );
-            sslStatus = 1;
         }
     }
 
@@ -650,8 +688,12 @@ static int tlsSetup( int tcpSocket,
         {
             /* Enable SSL peer verification. */
             SSL_set_verify( *pSslContext, SSL_VERIFY_PEER, NULL );
-
             sslStatus = SSL_set_fd( *pSslContext, tcpSocket );
+
+            if( sslStatus != 1 )
+            {
+                LogError( ( "Failed to set the socket fd to SSL context." ) );
+            }
         }
         else
         {
@@ -659,19 +701,43 @@ static int tlsSetup( int tcpSocket,
             sslStatus = 0;
         }
     }
-    else
+
+    if( ( sslStatus == 1 ) &&
+        ( pAlpnProtos != NULL ) && ( alpnProtosLen > 0 ) )
     {
-        LogError( ( "Failed to add certificate to store." ) );
+        sslStatus = -1;
+
+        if( AWS_MQTT_PORT != 443 )
+        {
+            LogError( ( "AWS_MQTT_PORT must be set to 443 to use ALPN." ) );
+        }
+        else
+        {
+            alpnStatus = SSL_set_alpn_protos( *pSslContext,
+                                              ( unsigned char * ) pAlpnProtos,
+                                              ( unsigned int ) alpnProtosLen );
+        }
+
+        if( alpnStatus != 0 )
+        {
+            LogError( ( "SSL_set_alpn_protos failed to set ALPN protos. %s",
+                        pAlpnProtos ) );
+        }
+        else
+        {
+            sslStatus = 1;
+        }
     }
 
     /* Perform the TLS handshake. */
     if( sslStatus == 1 )
     {
         sslStatus = SSL_connect( *pSslContext );
-    }
-    else
-    {
-        LogError( ( "Failed to set the socket fd to SSL context." ) );
+
+        if( sslStatus != 1 )
+        {
+            LogError( ( "Failed to perform TLS handshake." ) );
+        }
     }
 
     /* Verify the peer certificate. */
@@ -680,11 +746,8 @@ static int tlsSetup( int tcpSocket,
         if( SSL_get_verify_result( *pSslContext ) != X509_V_OK )
         {
             sslStatus = 0;
+            LogError( ( "Verifying the peer certificate failed. " ) );
         }
-    }
-    else
-    {
-        LogError( ( "Failed to perform TLS handshake." ) );
     }
 
     /* Clean up on error. */
@@ -710,18 +773,18 @@ static int tlsSetup( int tcpSocket,
     }
 
     /* Log failure or success and update the correct exit status to return. */
-    if( sslStatus == 0 )
+    if( sslStatus != 1 )
     {
         LogError( ( "Failed to establish a TLS connection to %.*s.",
-                    BROKER_ENDPOINT_LENGTH,
-                    BROKER_ENDPOINT ) );
+                    AWS_ENDPOINT_LENGTH,
+                    AWS_ENDPOINT ) );
         status = EXIT_FAILURE;
     }
     else
     {
         LogInfo( ( "Established a TLS connection to %.*s.\n\n",
-                   BROKER_ENDPOINT_LENGTH,
-                   BROKER_ENDPOINT ) );
+                   AWS_ENDPOINT_LENGTH,
+                   AWS_ENDPOINT ) );
         status = EXIT_SUCCESS;
     }
 
@@ -1326,19 +1389,44 @@ int main( int argc,
     globalEntryTimeMs = getTimeMs();
 
     /* Establish a TCP connection with the MQTT broker. This example connects
-     * to the MQTT broker as specified in BROKER_ENDPOINT and BROKER_PORT at
+     * to the MQTT broker as specified in AWS_ENDPOINT and AWS_MQTT_PORT at
      * the top of this file. */
     LogInfo( ( "Creating a TCP connection to %.*s:%d.",
-               BROKER_ENDPOINT_LENGTH,
-               BROKER_ENDPOINT,
-               BROKER_PORT ) );
-    status = connectToServer( BROKER_ENDPOINT, BROKER_PORT, &tcpSocket );
+               AWS_ENDPOINT_LENGTH,
+               AWS_ENDPOINT,
+               AWS_MQTT_PORT ) );
+    status = connectToServer( AWS_ENDPOINT, AWS_MQTT_PORT, &tcpSocket );
 
     /* Establish TLS connection on top of TCP connection. */
     if( status == EXIT_SUCCESS )
     {
-        LogInfo( ( "Creating a TLS connection on top of the TCP connection." ) );
-        status = tlsSetup( tcpSocket, &pSslContext );
+        LogInfo( ( "Performing TLS handshake on top of the TCP connection." ) );
+
+        if( AWS_MQTT_PORT == 443 )
+        {
+            /* Pass the ALPN protocol name depending on the port being used.
+             * Please see more details about the ALPN protocol for AWS IoT MQTT endpoint
+             * in the link below.
+             * https://aws.amazon.com/blogs/iot/mqtt-with-tls-client-authentication-on-port-443-why-it-is-useful-and-how-it-works/
+             */
+            status = tlsSetup( tcpSocket,
+                               ALPN_PROTOCOL_NAME,
+                               ALPN_PROTOCOL_NAME_LENGTH,
+                               &pSslContext );
+        }
+        else if( AWS_MQTT_PORT == 8883 )
+        {
+            status = tlsSetup( tcpSocket,
+                               NULL,
+                               0,
+                               &pSslContext );
+        }
+        else
+        {
+            LogError( ( "AWS IoT Core does not support MQTT through port %d",
+                        AWS_MQTT_PORT ) );
+            status = EXIT_FAILURE;
+        }
     }
 
     /* Establish MQTT session on top of TCP+TLS connection. */
@@ -1347,8 +1435,8 @@ int main( int argc,
         /* Sends an MQTT Connect packet over the already connected TCP socket
          * tcpSocket, and waits for connection acknowledgment (CONNACK) packet. */
         LogInfo( ( "Creating an MQTT connection to %.*s.",
-                   BROKER_ENDPOINT_LENGTH,
-                   BROKER_ENDPOINT ) );
+                   AWS_ENDPOINT_LENGTH,
+                   AWS_ENDPOINT ) );
         status = establishMqttSession( &context, pSslContext, false, &sessionPresent );
 
         if( status == EXIT_SUCCESS )
