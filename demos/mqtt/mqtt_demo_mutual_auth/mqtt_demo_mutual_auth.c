@@ -597,7 +597,7 @@ static int readCredentials( SSL_CTX * pSslContext,
         }
     }
 
-    if( ( sslStatus ) &&
+    if( ( sslStatus == 1 ) &&
         ( pClientCertPath != NULL ) &&
         ( strlen( pClientCertPath ) != 0 ) )
     {
@@ -612,7 +612,7 @@ static int readCredentials( SSL_CTX * pSslContext,
         }
     }
 
-    if( ( sslStatus ) &&
+    if( ( sslStatus == 1 ) &&
         ( pCertPrivateKeyPath != NULL ) &&
         ( strlen( pCertPrivateKeyPath ) != 0 ) )
     {

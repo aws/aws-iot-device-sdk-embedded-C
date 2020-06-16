@@ -72,10 +72,15 @@
  * available. Refer to the AWS documentation available in the link below
  * https://docs.aws.amazon.com/iot/latest/developerguide/server-authentication.html#server-authentication-certs
  *
- * @note This certificate should be PEM-encoded.
+ * Amazon's root CA certificate is automatically downloaded to the certificates
+ * directory from @ref https://www.amazontrust.com/repository/AmazonRootCA1.pem
+ * using the CMake build system.
  *
- * #define ROOT_CA_CERT_PATH          "...insert here..."
+ * @note This certificate should be PEM-encoded.
+ * @note This path is relative to from the demo binary created. Update config
+ * to the absolute path if this demo is executed from elsewhere.
  */
+#define ROOT_CA_CERT_PATH          "certificates/AmazonRootCA1.crt"
 
 /**
  * @brief Path of the file containing the client certificate.
