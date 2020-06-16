@@ -56,39 +56,45 @@
  * the instructions in https://mosquitto.org/ for running a Mosquitto broker
  * locally.
  */
-/*#define BROKER_ENDPOINT    "architag-ec2-mqtt.freeddns.org" */
-#define BROKER_ENDPOINT           "test.mosquitto.org"
+#ifndef BROKER_ENDPOINT
+    #define BROKER_ENDPOINT    "test.mosquitto.org"
+#endif
 
 /**
  * @brief Length of MQTT server host name.
  */
-#define BROKER_ENDPOINT_LENGTH    ( ( uint16_t ) ( sizeof( BROKER_ENDPOINT ) - 1 ) )
+#ifndef BROKER_ENDPOINT_LENGTH
+    #define BROKER_ENDPOINT_LENGTH    ( ( uint16_t ) ( sizeof( BROKER_ENDPOINT ) - 1 ) )
+#endif
 
 /**
  * @brief MQTT server port number.
  *
  * In general, port 8883 is for secured MQTT connections.
  */
-#define BROKER_PORT               ( 8883 )
+#define BROKER_PORT    ( 8883 )
 
 /**
  * @brief Path of the file containing the server's root CA certificate.
  *
  * This certificate should be PEM-encoded.
  */
-/*#define SERVER_CERT_PATH          "/home/ubuntu/AWS_Certificates/Amazon_Root_CA_1.txt" */
-#define SERVER_ROOT_CA_CERT_PATH    "/home/ubuntu/Repos/aws-iot-device-sdk-embedded-C/libraries/standard/mqtt/integration-test/mosquitto.org.crt"
+#ifndef SERVER_ROOT_CA_CERT_PATH
+    #define SERVER_ROOT_CA_CERT_PATH    "/home/ubuntu/Repos/aws-iot-device-sdk-embedded-C/libraries/standard/mqtt/integration-test/mosquitto.org.crt"
+#endif
 
 /**
  * @brief Length of path to server certificate.
  */
-#define SERVER_CERT_PATH_LENGTH     ( ( uint16_t ) ( sizeof( SERVER_CERT_PATH ) - 1 ) )
+#define SERVER_CERT_PATH_LENGTH    ( ( uint16_t ) ( sizeof( SERVER_CERT_PATH ) - 1 ) )
 
 /**
  * @brief MQTT client identifier.
  *
  * No two clients may use the same client identifier simultaneously.
  */
-#define CLIENT_IDENTIFIER           "testclient"
+#ifndef CLIENT_IDENTIFIER
+    #define CLIENT_IDENTIFIER    "testclient"
+#endif
 
 #endif /* ifndef TEST_CONFIG_H */

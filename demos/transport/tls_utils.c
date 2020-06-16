@@ -42,11 +42,8 @@
 /* Include config file before non-system headers. */
 #include "tls_config.h"
 
+/* Header file for the library. */
 #include "tls_utils.h"
-/* #define LogError( message ) */
-/* #define LogWarn( message ) */
-/* #define LogInfo( message ) */
-/* #define LogDebug( message ) */
 
 /*-----------------------------------------------------------*/
 

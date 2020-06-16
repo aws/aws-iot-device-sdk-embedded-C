@@ -149,6 +149,13 @@ static uint16_t globalSubscribePacketIdentifier = 0U;
  */
 static uint16_t globalUnsubscribePacketIdentifier = 0U;
 
+/**
+ * @brief Packet Identifier generated when Publish request was sent to the broker;
+ * it is used to match acknowledgement responses to the transmitted publish
+ * request.
+ */
+static uint16_t globalPublishPacketIdentifier = 0U;
+
 static int tcpSocket;
 static SSL * pSslContext;
 static MQTTContext_t context;
@@ -206,8 +213,8 @@ static void establishMqttSession( MQTTContext_t * pContext,
                                   bool * pSessionPresent );
 
 /**
- * @brief The application callback function for getting the incoming publish
- * and incoming acks reported from MQTT library.
+ * @brief The application callback function that is expected to be invoked by the
+ * MQTT library for incoming publish and incoming acks received over the network.
  *
  * @param[in] pContext MQTT context pointer.
  * @param[in] pPacketInfo Packet Info pointer for the incoming packet.
@@ -343,6 +350,9 @@ static void eventCallback( MQTTContext_t * pContext,
                 /* Set the flag to represent reception of PUBACK. */
                 receivedPubAck = true;
 
+                /* Make sure ACK packet identifier matches with Request packet identifier. */
+                TEST_ASSERT_EQUAL( globalPublishPacketIdentifier, packetIdentifier );
+
                 LogDebug( ( "Received PUBACK: PacketID=%u",
                             packetIdentifier ) );
                 break;
@@ -357,6 +367,9 @@ static void eventCallback( MQTTContext_t * pContext,
             case MQTT_PACKET_TYPE_PUBREC:
                 /* Set the flag to represent reception of PUBREC. */
                 receivedPubRec = true;
+
+                /* Make sure ACK packet identifier matches with Request packet identifier. */
+                TEST_ASSERT_EQUAL( globalPublishPacketIdentifier, packetIdentifier );
 
                 LogDebug( ( "Received PUBREC: PacketID=%u",
                             packetIdentifier ) );
@@ -375,6 +388,9 @@ static void eventCallback( MQTTContext_t * pContext,
             case MQTT_PACKET_TYPE_PUBCOMP:
                 /* Set the flag to represent reception of PUBACK. */
                 receivedPubComp = true;
+
+                /* Make sure ACK packet identifier matches with Request packet identifier. */
+                TEST_ASSERT_EQUAL( globalPublishPacketIdentifier, packetIdentifier );
 
                 /* Nothing to be done from application as library handles
                  * PUBCOMP. */
@@ -458,12 +474,12 @@ static MQTTStatus_t publishToTopic( MQTTContext_t * pContext,
     publishInfo.payloadLength = strlen( MQTT_EXAMPLE_MESSAGE );
 
     /* Get a new packet id. */
-    /* MQTT_GetPacketId( pContext ); */
+    globalPublishPacketIdentifier = MQTT_GetPacketId( pContext );
 
     /* Send PUBLISH packet. */
     return MQTT_Publish( pContext,
                          &publishInfo,
-                         MQTT_GetPacketId( pContext ) );
+                         globalPublishPacketIdentifier );
 }
 
 /* ============================   UNITY FIXTURES ============================ */
@@ -539,9 +555,11 @@ void test_MQTT_Subscribe_Publish_With_Qos_0( void )
     TEST_ASSERT_EQUAL( MQTTSuccess, publishToTopic(
                            &context, TEST_MQTT_TOPIC, MQTTQoS0 ) );
 
-    /* We do not expect a PUBACK from the broker for the PUBLISH. */
+    /* Call the MQTT library for the expectation to read an incoming PUBLISH for
+     * the same message that we published (as we have subscribed to the same topic). */
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    /* We do not expect a PUBACK from the broker for the PUBLISH. */
     TEST_ASSERT_FALSE( receivedPubAck );
 
     /* Make sure that we have received the same message from the server,
@@ -560,7 +578,7 @@ void test_MQTT_Subscribe_Publish_With_Qos_0( void )
     TEST_ASSERT_EQUAL( MQTTSuccess, unsubscribeFromTopic(
                            &context, TEST_MQTT_TOPIC, MQTTQoS0 ) );
 
-    /* We do not expect a SUBACK from the broker for the subscribe operation. */
+    /* We expect an UNSUBACK from the broker for the subscribe operation. */
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_TRUE( receivedUnsubAck );
@@ -586,7 +604,13 @@ void test_MQTT_Subscribe_Publish_With_Qos_1( void )
     TEST_ASSERT_EQUAL( MQTTSuccess, publishToTopic(
                            &context, TEST_MQTT_TOPIC, MQTTQoS1 ) );
 
-    /* Expect a PUBACK from the broker for the PUBLISH. */
+    /* Make sure that the MQTT context state was updated after the PUBLISH request. */
+    TEST_ASSERT_EQUAL( MQTTQoS1, context.outgoingPublishRecords[ 0 ].qos );
+    TEST_ASSERT_EQUAL( globalPublishPacketIdentifier, context.outgoingPublishRecords[ 0 ].packetId );
+    TEST_ASSERT_EQUAL( MQTTPubAckPending, context.outgoingPublishRecords[ 0 ].publishState );
+
+    /* Expect a PUBACK response for the PUBLISH and an incoming PUBLISH for the
+     * same message that we published (as we have subscribed to the same topic). */
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     /* Make sure we have received PUBACK response. */
@@ -608,7 +632,7 @@ void test_MQTT_Subscribe_Publish_With_Qos_1( void )
     TEST_ASSERT_EQUAL( MQTTSuccess, unsubscribeFromTopic(
                            &context, TEST_MQTT_TOPIC, MQTTQoS1 ) );
 
-    /* Expect a SUBACK from the broker for the subscribe operation. */
+    /* Expect an UNSUBACK from the broker for the subscribe operation. */
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_TRUE( receivedUnsubAck );
@@ -634,6 +658,11 @@ void test_MQTT_Subscribe_Publish_With_Qos_2( void )
     TEST_ASSERT_EQUAL( MQTTSuccess, publishToTopic(
                            &context, TEST_MQTT_TOPIC, MQTTQoS2 ) );
 
+    /* Make sure that the MQTT context state was updated after the PUBLISH request. */
+    TEST_ASSERT_EQUAL( MQTTQoS2, context.outgoingPublishRecords[ 0 ].qos );
+    TEST_ASSERT_EQUAL( globalPublishPacketIdentifier, context.outgoingPublishRecords[ 0 ].packetId );
+    TEST_ASSERT_EQUAL( MQTTPubRecPending, context.outgoingPublishRecords[ 0 ].publishState );
+
     /* Expect PUBREC and PUBCOMP responses from the broker for the PUBLISH. */
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
@@ -657,7 +686,7 @@ void test_MQTT_Subscribe_Publish_With_Qos_2( void )
     TEST_ASSERT_EQUAL( MQTTSuccess, unsubscribeFromTopic(
                            &context, TEST_MQTT_TOPIC, MQTTQoS2 ) );
 
-    /* Expect a SUBACK from the broker for the subscribe operation. */
+    /* Expect an UNSUBACK from the broker for the subscribe operation. */
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_TRUE( receivedUnsubAck );
