@@ -26,19 +26,23 @@
 /******* DO NOT CHANGE the following order ********/
 /**************************************************/
 
-/* Logging related header files are required to be included in the following order:
+/* Include logging header files and define logging macros in the following order:
  * 1. Include the header file "logging_levels.h".
- * 2. Define LIBRARY_LOG_NAME and  LIBRARY_LOG_LEVEL.
- * 3. Include the header file "logging_stack.h".
+ * 2. Define the LIBRARY_LOG_NAME and LIBRARY_LOG_LEVEL macros depending on
+ * the logging configuration for DEMO.
+ * 3. Include the header file "logging_stack.h", if logging is enabled for DEMO.
  */
 
-/* Include header that defines log levels. */
 #include "logging_levels.h"
 
-/* Logging configuration for the Test. */
-#define LIBRARY_LOG_NAME     "TEST"
-#define LIBRARY_LOG_LEVEL    LOG_DEBUG
+/* Logging configuration for the Demo. */
+#ifndef LIBRARY_LOG_NAME
+    #define LIBRARY_LOG_NAME    "TEST"
+#endif
 
+#ifndef LIBRARY_LOG_LEVEL
+    #define LIBRARY_LOG_LEVEL    LOG_INFO
+#endif
 #include "logging_stack.h"
 
 /************ End of logging configuration ****************/
@@ -52,8 +56,8 @@
  * the instructions in https://mosquitto.org/ for running a Mosquitto broker
  * locally.
  */
-#define BROKER_ENDPOINT    "architag-ec2-mqtt.freeddns.org"
-/*#define BROKER_ENDPOINT           "test.mosquitto.org" */
+/*#define BROKER_ENDPOINT    "architag-ec2-mqtt.freeddns.org" */
+#define BROKER_ENDPOINT           "test.mosquitto.org"
 
 /**
  * @brief Length of MQTT server host name.
@@ -72,19 +76,19 @@
  *
  * This certificate should be PEM-encoded.
  */
-#define SERVER_CERT_PATH          "/home/ubuntu/AWS_Certificates/Amazon_Root_CA_1.txt"
-/* #define SERVER_CERT_PATH           "/home/ubuntu/Repos/aws-iot-device-sdk-embedded-C/libraries/standard/mqtt/integration-test/mosquitto.org.crt" */
+/*#define SERVER_CERT_PATH          "/home/ubuntu/AWS_Certificates/Amazon_Root_CA_1.txt" */
+#define SERVER_ROOT_CA_CERT_PATH    "/home/ubuntu/Repos/aws-iot-device-sdk-embedded-C/libraries/standard/mqtt/integration-test/mosquitto.org.crt"
 
 /**
  * @brief Length of path to server certificate.
  */
-#define SERVER_CERT_PATH_LENGTH    ( ( uint16_t ) ( sizeof( SERVER_CERT_PATH ) - 1 ) )
+#define SERVER_CERT_PATH_LENGTH     ( ( uint16_t ) ( sizeof( SERVER_CERT_PATH ) - 1 ) )
 
 /**
  * @brief MQTT client identifier.
  *
  * No two clients may use the same client identifier simultaneously.
  */
-#define CLIENT_IDENTIFIER          "testclient"
+#define CLIENT_IDENTIFIER           "testclient"
 
 #endif /* ifndef TEST_CONFIG_H */

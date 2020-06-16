@@ -59,13 +59,3 @@ create_test(${utest_name}
             "${utest_dep_list}"
             "${test_include_directories}"
         )
-
-#Copy the server certificate file to the binary directory.
-add_custom_command(
-    TARGET
-        ${utest_name}
-    POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${CMAKE_CURRENT_LIST_DIR}/mosquitto.org.crt"
-        "$<TARGET_FILE_DIR:${utest_name}>/certificates/mosquitto.org.crt"
-)

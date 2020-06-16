@@ -25,7 +25,6 @@
  * on POSIX platform.
  */
 
-#include "tls_utils.h"
 /* POSIX socket includes. */
 #include <netdb.h>
 #include <poll.h>
@@ -40,8 +39,14 @@
 #include <stdlib.h>
 #include <assert.h>
 
-/* Config file. */
+/* Include config file before non-system headers. */
 #include "tls_config.h"
+
+#include "tls_utils.h"
+/* #define LogError( message ) */
+/* #define LogWarn( message ) */
+/* #define LogInfo( message ) */
+/* #define LogDebug( message ) */
 
 /*-----------------------------------------------------------*/
 
@@ -70,14 +75,20 @@ int tcpConnectToServer( const char * pServer,
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
 
+    LogInfo( ( "Looking up DNS for endpoint: %s", pServer ) );
+
     /* Perform a DNS lookup on the given host name. */
     status = getaddrinfo( pServer, NULL, &hints, &pListHead );
+
+    LogInfo( ( "Resolved DNS for endpoint: %s", pServer ) );
 
     if( status != -1 )
     {
         /* Attempt to connect to one of the retrieved DNS records. */
         for( pIndex = pListHead; pIndex != NULL; pIndex = pIndex->ai_next )
         {
+            LogInfo( ( "Attempting to create TCP client socket" ) );
+
             *pTcpSocket = socket( pIndex->ai_family, pIndex->ai_socktype, pIndex->ai_protocol );
 
             if( *pTcpSocket == -1 )
@@ -100,10 +111,13 @@ int tcpConnectToServer( const char * pServer,
                 serverInfoLength = sizeof( struct sockaddr_in6 );
             }
 
+            LogInfo( ( "Attempting to connect with socket: Fd=%d", *pTcpSocket ) );
+
             status = connect( *pTcpSocket, pServerInfo, serverInfoLength );
 
             if( status == -1 )
             {
+                LogError( ( "Connection with socket failed: Fd=%d", *pTcpSocket ) );
                 close( *pTcpSocket );
             }
             else
@@ -325,6 +339,7 @@ int32_t transportSend( MQTTNetworkContext_t pSslContext,
     if( pollStatus > 0 )
     {
         bytesSent = ( int32_t ) SSL_write( pSslContext, pMessage, bytesToSend );
+        LogInfo( ( "Bytes sent over SSL: %d", bytesSent ) );
     }
     else if( pollStatus == 0 )
     {
