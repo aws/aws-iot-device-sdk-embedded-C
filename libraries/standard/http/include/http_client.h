@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+/* Include config file before other headers. */
 #include "http_config.h"
 
 /**
@@ -44,7 +45,7 @@
 
 /**
  * @section http_send_flags
- * @brief Values for #HTTPClient_Send flags parameter.
+ * @brief Values for #HTTPClient_Send sendFlags parameter.
  * These flags control some behavior of sending the request or receiving the
  * response.
  *
@@ -59,13 +60,13 @@
  * @brief Set this flag to disable automatically writing the Content-Length
  * header to send to the server.
  *
- * This flag is valid only for #HTTPClient_Send.flags.
+ * This flag is valid only for #HTTPClient_Send.sendFlags.
  */
 #define HTTP_SEND_DISABLE_CONTENT_LENGTH_FLAG    0x1U
 
 /**
  * @section http_request_flags
- * @brief Flags for #HTTPRequestInfo_t.flags.
+ * @brief Flags for #HTTPRequestInfo_t.reqFlags.
  * These flags control what headers are written or not to the
  * #HttpRequestHeaders_t.pBuffer by #HTTPClient_InitializeRequestHeaders.
  *
@@ -83,14 +84,14 @@
  * Setting this will cause a "Connection: Keep-Alive" to be written to the
  * request headers.
  *
- * This flag is valid only for #HTTPRequestInfo.flags.
+ * This flag is valid only for #HTTPRequestInfo.reqFlags.
  */
 #define HTTP_REQUEST_KEEP_ALIVE_FLAG    0x1U
 
 /**
  * @section http_response_flags
- * @brief Flags for #HTTPResponse_t.flags.
- * These flags are populated in #HTTPResponse_t.flags by the #HTTPClient_Send
+ * @brief Flags for #HTTPResponse_t.respFlags.
+ * These flags are populated in #HTTPResponse_t.respFlags by the #HTTPClient_Send
  * function.
  *
  * - #HTTP_RESPONSE_CONNECTION_CLOSE_FLAG <br>
@@ -105,14 +106,14 @@
  * If a "Connection: close" header is present the application should always
  * close the connection.
  *
- * This flag is valid only for #HTTPResponse_t.flags.
+ * This flag is valid only for #HTTPResponse_t.respFlags.
  */
 #define HTTP_RESPONSE_CONNECTION_CLOSE_FLAG         0x1U
 
 /**
  * @brief This will be set to true if header "Connection: Keep-Alive" is found.
  *
- * This flag is valid only for #HTTPResponse_t.flags.
+ * This flag is valid only for #HTTPResponse_t.respFlags.
  */
 #define HTTP_RESPONSE_CONNECTION_KEEP_ALIVE_FLAG    0x2U
 
@@ -279,7 +280,7 @@ typedef enum HTTPStatus
      * Functions that may return this value:
      * - #HTTPClient_Send
      */
-    HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CHUNK_HEADER,
+    HTTP_SECURITY_ALERT_INVALID_CHUNK_HEADER,
 
     /**
      * @brief The server sent a response with an invalid character in the
@@ -288,7 +289,7 @@ typedef enum HTTPStatus
      * Functions that may return this value:
      * - #HTTPClient_Send
      */
-    HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_PROTOCOL_VERSION,
+    HTTP_SECURITY_ALERT_INVALID_PROTOCOL_VERSION,
 
     /**
      * @brief The server sent a response with an invalid character in the
@@ -297,7 +298,7 @@ typedef enum HTTPStatus
      * Functions that may return this value:
      * - #HTTPClient_Send
      */
-    HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_STATUS_CODE,
+    HTTP_SECURITY_ALERT_INVALID_STATUS_CODE,
 
     /**
      * @brief An invalid character was found in the HTTP response message.
@@ -305,7 +306,7 @@ typedef enum HTTPStatus
      * Functions that may return this value:
      * - #HTTPClient_Send
      */
-    HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CHARACTER,
+    HTTP_SECURITY_ALERT_INVALID_CHARACTER,
 
     /**
      * @brief The response contains either an invalid character in the
@@ -315,7 +316,7 @@ typedef enum HTTPStatus
      * Functions that may return this value:
      * - #HTTPClient_Send
      */
-    HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CONTENT_LENGTH,
+    HTTP_SECURITY_ALERT_INVALID_CONTENT_LENGTH,
 
     /**
      * @brief An error occurred in the third-party parsing library.
@@ -409,7 +410,7 @@ typedef struct HTTPRequestInfo
     /**
      * @brief Flags to activate other request header configurations.
      */
-    uint32_t flags;
+    uint32_t reqFlags;
 } HTTPRequestInfo_t;
 
 
@@ -526,7 +527,7 @@ typedef struct HTTPResponse
      *
      * This is updated by #HTTPClient_Send.
      */
-    uint32_t flags;
+    uint32_t respFlags;
 } HTTPResponse_t;
 
 /**
@@ -544,7 +545,7 @@ typedef struct HTTPResponse
  *     Host: <#HTTPRequestInfo_t.pHost>
  *
  * Note that "Connection" header can be added and set to "keep-alive" by
- * activating the HTTP_REQUEST_KEEP_ALIVE_FLAG in #HTTPRequestInfo_t.flags.
+ * activating the HTTP_REQUEST_KEEP_ALIVE_FLAG in #HTTPRequestInfo_t.reqFlags.
  *
  * @param[in] pRequestHeaders Request header buffer information.
  * @param[in] pRequestInfo Initial request header configurations.
@@ -641,7 +642,7 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
  * body in @p pRequestBodyBuf over the transport. The response is received in
  * #HTTPResponse_t.pBuffer.
  *
- * If #HTTP_SEND_DISABLE_CONTENT_LENGTH_FLAG is not set in parameter @p flags,
+ * If #HTTP_SEND_DISABLE_CONTENT_LENGTH_FLAG is not set in parameter @p sendFlags,
  * then the Content-Length to be sent to the server is automatically written to
  * @p pRequestHeaders. The Content-Length will not be written when there is
  * no request body. If there is not enough room in the buffer to write the
@@ -653,11 +654,11 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
  * following errors are returned:
  * - #HTTP_SECURITY_ALERT_RESPONSE_HEADERS_SIZE_LIMIT_EXCEEDED
  * - #HTTP_SECURITY_ALERT_EXTRANEOUS_RESPONSE_DATA
- * - #HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CHUNK_HEADER
- * - #HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_PROTOCOL_VERSION
- * - #HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_STATUS_CODE
- * - #HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CHARACTER
- * - #HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CONTENT_LENGTH
+ * - #HTTP_SECURITY_ALERT_INVALID_CHUNK_HEADER
+ * - #HTTP_SECURITY_ALERT_INVALID_PROTOCOL_VERSION
+ * - #HTTP_SECURITY_ALERT_INVALID_STATUS_CODE
+ * - #HTTP_SECURITY_ALERT_INVALID_CHARACTER
+ * - #HTTP_SECURITY_ALERT_INVALID_CONTENT_LENGTH
  *
  * The @p pResponse returned is valid only if this function returns HTTP_SUCCESS.
  *
@@ -670,7 +671,7 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
  * @param[in] reqBodyBufLen The length of the request entity in bytes.
  * @param[in] pResponse The response message and some notable response
  * parameters will be returned here on success.
- * @param[in] pFlags Flags which modify the behavior of this function. Please
+ * @param[in] sendFlags Flags which modify the behavior of this function. Please
  * see @ref http_send_flags.
  *
  * @return One of the following:
@@ -685,18 +686,18 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
  * Security alerts are listed below, please see #HTTPStatus_t for more information:
  * - #HTTP_SECURITY_ALERT_RESPONSE_HEADERS_SIZE_LIMIT_EXCEEDED
  * - #HTTP_SECURITY_ALERT_EXTRANEOUS_RESPONSE_DATA
- * - #HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CHUNK_HEADER
- * - #HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_PROTOCOL_VERSION
- * - #HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_STATUS_CODE
- * - #HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CHARACTER
- * - #HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CONTENT_LENGTH
+ * - #HTTP_SECURITY_ALERT_INVALID_CHUNK_HEADER
+ * - #HTTP_SECURITY_ALERT_INVALID_PROTOCOL_VERSION
+ * - #HTTP_SECURITY_ALERT_INVALID_STATUS_CODE
+ * - #HTTP_SECURITY_ALERT_INVALID_CHARACTER
+ * - #HTTP_SECURITY_ALERT_INVALID_CONTENT_LENGTH
  */
 HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
                               HTTPRequestHeaders_t * pRequestHeaders,
                               const uint8_t * pRequestBodyBuf,
                               size_t reqBodyBufLen,
                               HTTPResponse_t * pResponse,
-                              uint32_t flags );
+                              uint32_t sendFlags );
 
 /**
  * @brief Read a header from a buffer containing a complete HTTP response.

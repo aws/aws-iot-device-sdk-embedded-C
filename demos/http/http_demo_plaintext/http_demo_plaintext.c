@@ -33,11 +33,11 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
+/* Include Demo Config as the first non-system header. */
+#include "demo_config.h"
+
 /* HTTP API header. */
 #include "http_client.h"
-
-/* Demo config header. */
-#include "demo_config.h"
 
 /**
  * @brief Length of an IPv6 address when converted to hex digits.
@@ -381,7 +381,7 @@ static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface
 
     /* Set "Connection" HTTP header to "keep-alive" so that multiple requests
      * can be sent over the same established TCP connection. */
-    requestInfo.flags = HTTP_REQUEST_KEEP_ALIVE_FLAG;
+    requestInfo.reqFlags = HTTP_REQUEST_KEEP_ALIVE_FLAG;
 
     /* Set the buffer used for storing request headers. */
     requestHeaders.pBuffer = userBuffer;

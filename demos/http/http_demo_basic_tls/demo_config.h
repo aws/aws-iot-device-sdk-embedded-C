@@ -26,23 +26,19 @@
 /******* DO NOT CHANGE the following order ********/
 /**************************************************/
 
-/* Include logging header files and define logging macros in the following order:
+/* Logging related header files are required to be included in the following order:
  * 1. Include the header file "logging_levels.h".
- * 2. Define the LIBRARY_LOG_NAME and LIBRARY_LOG_LEVEL macros depending on
- * the logging configuration for DEMO.
- * 3. Include the header file "logging_stack.h", if logging is enabled for DEMO.
+ * 2. Define LIBRARY_LOG_NAME and  LIBRARY_LOG_LEVEL.
+ * 3. Include the header file "logging_stack.h".
  */
 
+/* Include header that defines log levels. */
 #include "logging_levels.h"
 
 /* Logging configuration for the Demo. */
-#ifndef LIBRARY_LOG_NAME
-    #define LIBRARY_LOG_NAME    "DEMO"
-#endif
+#define LIBRARY_LOG_NAME     "DEMO"
+#define LIBRARY_LOG_LEVEL    LOG_INFO
 
-#ifndef LIBRARY_LOG_LEVEL
-    #define LIBRARY_LOG_LEVEL    LOG_INFO
-#endif
 #include "logging_stack.h"
 
 /************ End of logging configuration ****************/
@@ -50,21 +46,29 @@
 /**
  * @brief HTTP server host name.
  *
- * @note A local HTTP server is used for this demo. Instructions for setting
- * this up can be found in the top-level README.md file.
+ * This demo uses httpbin.org: A simple HTTP Request & Response Service.
  */
-#define SERVER_HOST                       "localhost"
+#define SERVER_HOST                       "httpbin.org"
 
 /**
  * @brief HTTP server port number.
  *
- * @note In general, port 80 is for plaintext HTTP connections. However,
- * the default plaintext port from the local http server is used below.
+ * In general, port 443 is for TLS HTTP connections.
  */
-#define SERVER_PORT                       8080
+#define SERVER_PORT                       443
+
+/**
+ * @brief Path of the file containing the server's root CA certificate for TLS authentication.
+ *
+ * @note This certificate should be PEM-encoded.
+ */
+#define SERVER_CERT_PATH                  "certificates/amazon.crt"
 
 /**
  * @brief Paths for different HTTP methods for specified host.
+ *
+ * For httpbin.org, see http://httpbin.org/#/HTTP_Methods for details on
+ * supported REST API.
  */
 #define GET_PATH                          "/get"
 #define HEAD_PATH                         "/get"
@@ -74,7 +78,7 @@
 /**
  * @brief Transport timeout in milliseconds for transport send and receive.
  */
-#define TRANSPORT_SEND_RECV_TIMEOUT_MS    ( 1000 )
+#define TRANSPORT_SEND_RECV_TIMEOUT_MS    ( 5000 )
 
 /**
  * @brief The length in bytes of the user buffer.
@@ -86,9 +90,4 @@
  */
 #define REQUEST_BODY                      "Hello, world!"
 
-/**
- * @brief Length of the request body.
- */
-#define REQUEST_BODY_LENGTH               ( sizeof( REQUEST_BODY ) - 1 )
-
-#endif /* ifndef DEMO_CONFIG_H */
+#endif /* ifndef DEMO_CONFIG_H_ */

@@ -45,15 +45,21 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
+/* Include Demo Config as the first non-system header. */
+#include "demo_config.h"
+
 /* MQTT API header. */
 #include "mqtt.h"
 
+<<<<<<< HEAD
 /* Demo Config header. */
 #include "demo_config.h"
 
 /* Reconnect parameters. */
 #include "reconnect.h"
 
+=======
+>>>>>>> 4c102796231abb98a5aded1b4e583de602f41cc8
 /**
  * @brief MQTT server host name.
  *
@@ -640,7 +646,7 @@ static int establishMqttSession( MQTTContext_t * pContext,
     int status = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus;
     MQTTConnectInfo_t connectInfo;
-    char sessionPresent;
+    bool sessionPresent;
     MQTTTransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks;

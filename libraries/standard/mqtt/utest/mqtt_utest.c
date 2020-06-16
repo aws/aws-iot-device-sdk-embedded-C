@@ -236,6 +236,28 @@ static int32_t transportSendFailure( MQTTNetworkContext_t pContext,
 }
 
 /**
+ * @brief Mocked transport send that succeeds then fails.
+ */
+static int32_t transportSendSucceedThenFail( MQTTNetworkContext_t context,
+                                             const void * pMessage,
+                                             size_t bytesToSend )
+{
+    int32_t retVal = bytesToSend;
+    static int counter = 0;
+
+    ( void ) context;
+    ( void ) pMessage;
+
+    if( counter++ )
+    {
+        retVal = -1;
+        counter = 0;
+    }
+
+    return retVal;
+}
+
+/**
  * @brief Mocked successful transport read.
  *
  * @param[in] tcpSocket TCP socket.
@@ -267,7 +289,7 @@ static int32_t transportRecvFailure( MQTTNetworkContext_t pContext,
 }
 
 /**
- * @brief Mocked failed transport read.
+ * @brief Mocked transport reading one byte at a time.
  */
 static int32_t transportRecvOneByte( MQTTNetworkContext_t pContext,
                                      void * pBuffer,
@@ -394,11 +416,15 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext,
     {
         if( incomingPublish )
         {
-            MQTT_UpdateStatePublish_ExpectAnyArgsAndReturn( stateAfterDeserialize );
+            MQTT_UpdateStatePublish_ExpectAnyArgsAndReturn( ( stateAfterDeserialize == MQTTStateNull )?
+                                                            MQTTIllegalState : MQTTSuccess );
+            MQTT_UpdateStatePublish_ReturnThruPtr_pNewState( &stateAfterDeserialize );
         }
         else
         {
-            MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( stateAfterDeserialize );
+            MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( ( stateAfterDeserialize == MQTTStateNull )?
+                                                        MQTTIllegalState : MQTTSuccess );
+            MQTT_UpdateStateAck_ReturnThruPtr_pNewState( &stateAfterDeserialize );
         }
 
         if( stateAfterDeserialize == MQTTPublishDone )
@@ -421,7 +447,9 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext,
     /* Update the state based on the sent packet. */
     if( expectMoreCalls )
     {
-        MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( stateAfterSerialize );
+        MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( ( stateAfterSerialize == MQTTStateNull )?
+                                                    MQTTIllegalState : MQTTSuccess );
+        MQTT_UpdateStateAck_ReturnThruPtr_pNewState( &stateAfterSerialize );
     }
 
     /* Expect the above calls when running MQTT_ProcessLoop. */
@@ -753,6 +781,7 @@ void test_MQTT_Publish( void )
     MQTTApplicationCallbacks_t callbacks;
     MQTTStatus_t status;
     size_t headerSize;
+    MQTTPublishState_t expectedState;
 
     const uint16_t PACKET_ID = 1;
 
@@ -798,28 +827,38 @@ void test_MQTT_Publish( void )
     status = MQTT_Publish( &mqttContext, &publishInfo, 0 );
     TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
 
-    /* We can ignore this now since MQTT_Publish initializes the header size to
-     * 0, so its initial send returns success (since 0 bytes are sent). */
-    MQTT_SerializePublishHeader_IgnoreAndReturn( MQTTSuccess );
+    /* We want to test the first call to sendPacket within sendPublish succeeding,
+     * and the second one failing. */
+    mqttContext.transportInterface.send = transportSendSucceedThenFail;
+    MQTT_SerializePublishHeader_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_SerializePublishHeader_ReturnThruPtr_pHeaderSize( &headerSize );
     publishInfo.pPayload = "Test";
     publishInfo.payloadLength = 4;
     status = MQTT_Publish( &mqttContext, &publishInfo, 0 );
     TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
 
     mqttContext.transportInterface.send = transportSendSuccess;
+    MQTT_SerializePublishHeader_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_SerializePublishHeader_ReturnThruPtr_pHeaderSize( &headerSize );
     status = MQTT_Publish( &mqttContext, &publishInfo, 0 );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 
     /* Now for non zero QoS, which uses state engine. */
     publishInfo.qos = MQTTQoS2;
+    MQTT_SerializePublishHeader_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_SerializePublishHeader_ReturnThruPtr_pHeaderSize( &headerSize );
     MQTT_ReserveState_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_UpdateStatePublish_ExpectAnyArgsAndReturn( MQTTStateNull );
+    MQTT_UpdateStatePublish_ExpectAnyArgsAndReturn( MQTTBadParameter );
     status = MQTT_Publish( &mqttContext, &publishInfo, PACKET_ID );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
     publishInfo.qos = MQTTQoS1;
+    expectedState = MQTTPublishSend;
+    MQTT_SerializePublishHeader_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_SerializePublishHeader_ReturnThruPtr_pHeaderSize( &headerSize );
     MQTT_ReserveState_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_UpdateStatePublish_ExpectAnyArgsAndReturn( MQTTPublishSend );
+    MQTT_UpdateStatePublish_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_UpdateStatePublish_ReturnThruPtr_pNewState( &expectedState );
     status = MQTT_Publish( &mqttContext, &publishInfo, PACKET_ID );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 }
@@ -1252,6 +1291,8 @@ void test_MQTT_ProcessLoop_Timer_Overflow( void )
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks;
     MQTTPacketInfo_t incomingPacket = { 0 };
+    MQTTPublishState_t publishState = MQTTPubAckSend;
+    MQTTPublishState_t ackState = MQTTPublishDone;
     uint8_t i = 0;
     uint8_t numIterations = ( MQTT_TIMER_OVERFLOW_TIMEOUT_MS / MQTT_TIMER_CALLS_PER_ITERATION ) + 1;
 
@@ -1274,9 +1315,11 @@ void test_MQTT_ProcessLoop_Timer_Overflow( void )
         MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
         /* Assume QoS = 1 so that a PUBACK will be sent after receiving PUBLISH. */
         MQTT_DeserializePublish_ExpectAnyArgsAndReturn( MQTTSuccess );
-        MQTT_UpdateStatePublish_ExpectAnyArgsAndReturn( MQTTPubAckSend );
+        MQTT_UpdateStatePublish_ExpectAnyArgsAndReturn( MQTTSuccess );
+        MQTT_UpdateStatePublish_ReturnThruPtr_pNewState( &publishState );
         MQTT_SerializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
-        MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTPublishDone );
+        MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+        MQTT_UpdateStateAck_ReturnThruPtr_pNewState( &ackState );
     }
 
     mqttStatus = MQTT_ProcessLoop( &context, MQTT_TIMER_OVERFLOW_TIMEOUT_MS );
@@ -1572,6 +1615,65 @@ void test_MQTT_Ping_error_path( void )
     /* Expect the above calls when running MQTT_Ping. */
     mqttStatus = MQTT_Ping( &context );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
+}
+
+/* ========================================================================== */
+
+/**
+ * @brief Test MQTT_Status_strerror returns correct strings.
+ */
+void test_MQTT_Status_strerror( void )
+{
+    MQTTStatus_t status;
+    const char * str = NULL;
+
+    status = MQTTSuccess;
+    str = MQTT_Status_strerror( status );
+    TEST_ASSERT_EQUAL_STRING( "MQTTSuccess", str );
+
+    status = MQTTBadParameter;
+    str = MQTT_Status_strerror( status );
+    TEST_ASSERT_EQUAL_STRING( "MQTTBadParameter", str );
+
+    status = MQTTNoMemory;
+    str = MQTT_Status_strerror( status );
+    TEST_ASSERT_EQUAL_STRING( "MQTTNoMemory", str );
+
+    status = MQTTSendFailed;
+    str = MQTT_Status_strerror( status );
+    TEST_ASSERT_EQUAL_STRING( "MQTTSendFailed", str );
+
+    status = MQTTRecvFailed;
+    str = MQTT_Status_strerror( status );
+    TEST_ASSERT_EQUAL_STRING( "MQTTRecvFailed", str );
+
+    status = MQTTBadResponse;
+    str = MQTT_Status_strerror( status );
+    TEST_ASSERT_EQUAL_STRING( "MQTTBadResponse", str );
+
+    status = MQTTServerRefused;
+    str = MQTT_Status_strerror( status );
+    TEST_ASSERT_EQUAL_STRING( "MQTTServerRefused", str );
+
+    status = MQTTNoDataAvailable;
+    str = MQTT_Status_strerror( status );
+    TEST_ASSERT_EQUAL_STRING( "MQTTNoDataAvailable", str );
+
+    status = MQTTIllegalState;
+    str = MQTT_Status_strerror( status );
+    TEST_ASSERT_EQUAL_STRING( "MQTTIllegalState", str );
+
+    status = MQTTStateCollision;
+    str = MQTT_Status_strerror( status );
+    TEST_ASSERT_EQUAL_STRING( "MQTTStateCollision", str );
+
+    status = MQTTKeepAliveTimeout;
+    str = MQTT_Status_strerror( status );
+    TEST_ASSERT_EQUAL_STRING( "MQTTKeepAliveTimeout", str );
+
+    status = MQTTKeepAliveTimeout + 1;
+    str = MQTT_Status_strerror( status );
+    TEST_ASSERT_EQUAL_STRING( "Invalid MQTT Status code", str );
 }
 
 /* ========================================================================== */
