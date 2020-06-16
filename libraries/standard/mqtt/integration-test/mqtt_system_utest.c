@@ -112,22 +112,17 @@
 #define MQTT_KEEP_ALIVE_INTERVAL_SECONDS    ( 30U )
 
 /**
- * @brief Timeout for MQTT_ProcessLoop function in milliseconds.
- *
+ * @brief Timeout for MQTT_ProcessLoop() function in milliseconds.
+ * The timeout value is appropriately chosen for receiving an incoming
+ * PUBLISH message and ack responses for QoS 1 and QoS 2 communications
+ * with the broker.
  */
-#define MQTT_PROCESS_LOOP_TIMEOUT_MS        ( 300U )
+#define MQTT_PROCESS_LOOP_TIMEOUT_MS        ( 500U )
 
 /**
  * @brief The MQTT message published in this example.
  */
 #define MQTT_EXAMPLE_MESSAGE                "Hello World!"
-
-/**
- * @brief The return value of modifyIncomingPacket(...) CMock callback that
- * replaces a call to MQTT_GetIncomingPacketTypeAndLength.
- * IMPORTANT: Make sure this is set before calling expectProcessLoopCalls(...).
- */
-static MQTTStatus_t modifyIncomingPacketStatus = MQTTSuccess;
 
 /**
  * @brief Packet Identifier generated when Subscribe request was sent to the broker;
@@ -417,6 +412,7 @@ static MQTTStatus_t publishToTopic( MQTTContext_t * pContext,
     MQTTPublishInfo_t publishInfo;
 
     publishInfo.qos = qos;
+    publishInfo.dup = false;
     publishInfo.pTopicName = pTopic;
     publishInfo.topicNameLength = strlen( pTopic );
     publishInfo.pPayload = MQTT_EXAMPLE_MESSAGE;
@@ -440,6 +436,7 @@ void setUp()
     receivedSubAck = false;
     receivedUnsubAck = false;
     receivedPubAck = false;
+    persistentSession = false;
     memset( &incomingInfo, 0u, sizeof( MQTTPublishInfo_t ) );
 
     /* Establish a TCP connection with the server endpoint. */
