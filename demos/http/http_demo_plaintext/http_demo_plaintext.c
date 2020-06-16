@@ -381,7 +381,7 @@ static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface
 
     /* Set "Connection" HTTP header to "keep-alive" so that multiple requests
      * can be sent over the same established TCP connection. */
-    requestInfo.flags = HTTP_REQUEST_KEEP_ALIVE_FLAG;
+    requestInfo.reqFlags = HTTP_REQUEST_KEEP_ALIVE_FLAG;
 
     /* Set the buffer used for storing request headers. */
     requestHeaders.pBuffer = userBuffer;
