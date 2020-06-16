@@ -170,6 +170,21 @@ static bool receivedUnsubAck = false;
 static bool receivedPubAck = false;
 
 /**
+ * @brief Flag to represent whether a PUBREC is received from the broker.
+ */
+static bool receivedPubRec = false;
+
+/**
+ * @brief Flag to represent whether a PUBREL is received from the broker.
+ */
+static bool receivedPubRel = false;
+
+/**
+ * @brief Flag to represent whether a PUBCOMP is received from the broker.
+ */
+static bool receivedPubComp = false;
+
+/**
  * @brief Represents incoming PUBLISH information.
  */
 static MQTTPublishInfo_t incomingInfo;
@@ -308,7 +323,8 @@ static void eventCallback( MQTTContext_t * pContext,
                 /* Set the flag to represent reception of SUBACK. */
                 receivedSubAck = true;
 
-                LogDebug( ( "Received SUBACK" ) );
+                LogDebug( ( "Received SUBACK: PacketID=%u",
+                            packetIdentifier ) );
                 /* Make sure ACK packet identifier matches with Request packet identifier. */
                 TEST_ASSERT_EQUAL( globalSubscribePacketIdentifier, packetIdentifier );
                 break;
@@ -317,7 +333,8 @@ static void eventCallback( MQTTContext_t * pContext,
                 /* Set the flag to represent reception of UNSUBACK. */
                 receivedUnsubAck = true;
 
-                LogDebug( ( "Received UNSUBACK" ) );
+                LogDebug( ( "Received UNSUBACK: PacketID=%u",
+                            packetIdentifier ) );
                 /* Make sure ACK packet identifier matches with Request packet identifier. */
                 TEST_ASSERT_EQUAL( globalUnsubscribePacketIdentifier, packetIdentifier );
                 break;
@@ -325,34 +342,44 @@ static void eventCallback( MQTTContext_t * pContext,
             case MQTT_PACKET_TYPE_PUBACK:
                 /* Set the flag to represent reception of PUBACK. */
                 receivedPubAck = true;
+
+                LogDebug( ( "Received PUBACK: PacketID=%u",
+                            packetIdentifier ) );
                 break;
 
             case MQTT_PACKET_TYPE_PINGRESP:
 
                 /* Nothing to be done from application as library handles
                  * PINGRESP. */
-                LogInfo( ( "PINGRESP received.\n\n" ) );
+                LogDebug( ( "Received PINGRESP" ) );
                 break;
 
             case MQTT_PACKET_TYPE_PUBREC:
-                LogWarn( ( "Unexpected PUBREC received: PacketID=%u",
-                           packetIdentifier ) );
+                /* Set the flag to represent reception of PUBREC. */
+                receivedPubRec = true;
+
+                LogDebug( ( "Received PUBREC: PacketID=%u",
+                            packetIdentifier ) );
                 break;
 
             case MQTT_PACKET_TYPE_PUBREL:
+                /* Set the flag to represent reception of PUBREL. */
+                receivedPubRel = true;
 
                 /* Nothing to be done from application as library handles
                  * PUBREL. */
-                LogWarn( ( "Unexpected PUBREL received: PacketID=%u",
-                           packetIdentifier ) );
+                LogDebug( ( "Unexpected PUBREL received: PacketID=%u",
+                            packetIdentifier ) );
                 break;
 
             case MQTT_PACKET_TYPE_PUBCOMP:
+                /* Set the flag to represent reception of PUBACK. */
+                receivedPubComp = true;
 
                 /* Nothing to be done from application as library handles
                  * PUBCOMP. */
-                LogWarn( ( "Unexpected PUBCOMP received: PacketID=%u",
-                           packetIdentifier ) );
+                LogDebug( ( "Unexpected PUBCOMP received: PacketID=%u",
+                            packetIdentifier ) );
                 break;
 
             /* Any other packet type is invalid. */
@@ -448,6 +475,9 @@ void setUp()
     receivedSubAck = false;
     receivedUnsubAck = false;
     receivedPubAck = false;
+    receivedPubRec = false;
+    receivedPubRel = false;
+    receivedPubComp = false;
     persistentSession = false;
     memset( &incomingInfo, 0u, sizeof( MQTTPublishInfo_t ) );
 
@@ -461,7 +491,7 @@ void setUp()
     TEST_ASSERT_NOT_NULL( pSslContext );
 
     /* Establish MQTT session on top of the TCP+TLS connection. */
-    establishMqttSession( &context, pSslContext, false, &persistentSession );
+    establishMqttSession( &context, pSslContext, true, &persistentSession );
 }
 
 /* Called after each test method. */
@@ -491,7 +521,7 @@ void tearDown()
 /* ========================== Test Cases ============================ */
 
 /**
- * @brief Tests Subscribe and Publish operations MQTT broken with QoS 0.
+ * @brief Tests Subscribe and Publish operations with the MQTT broken using QoS 0.
  * The test subscribes to a topic, and then publishes to the same topic. The
  * broker is expected to route the publish message back to the test.
  */
@@ -504,7 +534,6 @@ void test_MQTT_Subscribe_Publish_With_Qos_0( void )
     /* We do not expect a SUBACK from the broker for the subscribe operation. */
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
-/*    TEST_ASSERT_FALSE( receivedSubAck ); */
 
     /* Publish to the same topic, that we subscribed to, with Qos 1. */
     TEST_ASSERT_EQUAL( MQTTSuccess, publishToTopic(
@@ -538,7 +567,7 @@ void test_MQTT_Subscribe_Publish_With_Qos_0( void )
 }
 
 /**
- * @brief Tests Subscribe and Publish operations MQTT broken with QoS 1.
+ * @brief Tests Subscribe and Publish operations with the MQTT broken using QoS 1.
  * The test subscribes to a topic, and then publishes to the same topic. The
  * broker is expected to route the publish message back to the test.
  */
@@ -575,9 +604,58 @@ void test_MQTT_Subscribe_Publish_With_Qos_1( void )
                               incomingInfo.pPayload,
                               incomingInfo.payloadLength );
 
-    /* Un-subscribe from a topic with Qos 0. */
+    /* Un-subscribe from a topic with Qos 1. */
     TEST_ASSERT_EQUAL( MQTTSuccess, unsubscribeFromTopic(
                            &context, TEST_MQTT_TOPIC, MQTTQoS1 ) );
+
+    /* Expect a SUBACK from the broker for the subscribe operation. */
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    TEST_ASSERT_TRUE( receivedUnsubAck );
+}
+
+/**
+ * @brief Tests Subscribe and Publish operations with the MQTT broken using QoS 2.
+ * The test subscribes to a topic, and then publishes to the same topic. The
+ * broker is expected to route the publish message back to the test.
+ */
+void test_MQTT_Subscribe_Publish_With_Qos_2( void )
+{
+    /* Subscribe to a topic with Qos 0. */
+    TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic(
+                           &context, TEST_MQTT_TOPIC, MQTTQoS2 ) );
+
+    /* Expect a SUBACK from the broker for the subscribe operation. */
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    TEST_ASSERT_TRUE( receivedSubAck );
+
+    /* Publish to the same topic, that we subscribed to, with Qos 2. */
+    TEST_ASSERT_EQUAL( MQTTSuccess, publishToTopic(
+                           &context, TEST_MQTT_TOPIC, MQTTQoS2 ) );
+
+    /* Expect PUBREC and PUBCOMP responses from the broker for the PUBLISH. */
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    TEST_ASSERT_FALSE( receivedPubAck );
+    TEST_ASSERT_TRUE( receivedPubRec );
+    TEST_ASSERT_TRUE( receivedPubComp );
+
+    /* Make sure that we have received the same message from the server,
+     * that was published (as we have subscribed to the same topic). */
+    TEST_ASSERT_EQUAL( MQTTQoS2, incomingInfo.qos );
+    TEST_ASSERT_EQUAL( TEST_MQTT_TOPIC_LENGTH, incomingInfo.topicNameLength );
+    TEST_ASSERT_EQUAL_MEMORY( TEST_MQTT_TOPIC,
+                              incomingInfo.pTopicName,
+                              TEST_MQTT_TOPIC_LENGTH );
+    TEST_ASSERT_EQUAL( strlen( MQTT_EXAMPLE_MESSAGE ), incomingInfo.payloadLength );
+    TEST_ASSERT_EQUAL_MEMORY( MQTT_EXAMPLE_MESSAGE,
+                              incomingInfo.pPayload,
+                              incomingInfo.payloadLength );
+
+    /* Un-subscribe from a topic with Qos 2. */
+    TEST_ASSERT_EQUAL( MQTTSuccess, unsubscribeFromTopic(
+                           &context, TEST_MQTT_TOPIC, MQTTQoS2 ) );
 
     /* Expect a SUBACK from the broker for the subscribe operation. */
     TEST_ASSERT_EQUAL( MQTTSuccess,
