@@ -47,11 +47,29 @@
 
 /************ End of logging configuration ****************/
 
-#include "network.h"
+#include "network_common.h"
 
-NetworkStatus_t TCP_Connect( const NetworkServerInfo_t * pServerInfo,
-                             int * pTcpSocket );
+/**
+ * @brief Information on the remote server for connection setup.
+ *
+ * May be passed to #IotNetworkInterface_t.create as `pConnectionInfo`. This
+ * structure contains commonly-used parameters, but may be replaced with an
+ * alternative.
+ */
+typedef struct NetworkServerInfo
+{
+    const char * pHostName; /**< @brief Server host name. Must be NULL-terminated. */
+    size_t hostNameLength;  /**< @brief Length associated with #NetworkServerInfo.pHostName. */
+    uint16_t port;          /**< @brief Server port in host-order. */
+} NetworkServerInfo_t;
 
+NetworkStatus_t TCP_Connect( int * pTcpSocket,
+                             const NetworkServerInfo_t * pServerInfo );
 NetworkStatus_t TCP_Disconnect( int tcpSocket );
+
+NetworkStatus_t TCP_SetSendTimeout( int tcpSocket,
+                                    uint32_t timeout );
+NetworkStatus_t TCP_SetRecvTimeout( int tcpSocket,
+                                    uint32_t timeout );
 
 #endif /* ifndef CONNECT_H_ */

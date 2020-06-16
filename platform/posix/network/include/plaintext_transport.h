@@ -22,7 +22,8 @@
 #ifndef PLAINTEXT_CONFIG_H_
 #define PLAINTEXT_CONFIG_H_
 
-#include "network.h"
+#include "network_interface.h"
+#include "network_common.h"
 
 /**
  * @brief Definition of the network context.
@@ -46,9 +47,9 @@ struct NetworkContext
  *
  * @return Number of bytes sent if successful; otherwise negative value on error.
  */
-int32_t plaintextSend( NetworkContext_t pContext,
-                       const void * pBuffer,
-                       size_t bytesToSend );
+int32_t Plaintext_Send( NetworkContext_t pContext,
+                        const void * pBuffer,
+                        size_t bytesToSend );
 
 /**
  * @brief The transport receive function that defines the transport interface.
@@ -62,8 +63,8 @@ int32_t plaintextSend( NetworkContext_t pContext,
  *
  * @return Number of bytes received if successful; otherwise negative value on error.
  */
-int32_t plaintextRecv( NetworkContext_t pContext,
-                       void * pBuffer,
-                       size_t bytesToRecv );
+int32_t Plaintext_Recv( NetworkContext_t pContext,
+                        void * pBuffer,
+                        size_t bytesToRecv );
 
 #endif /* ifndef PLAINTEXT_CONFIG_H_ */

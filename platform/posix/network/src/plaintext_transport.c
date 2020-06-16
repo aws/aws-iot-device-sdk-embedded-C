@@ -13,9 +13,9 @@
  */
 extern int errno;
 
-int32_t plaintextSend( NetworkContext_t pContext,
-                       const void * pBuffer,
-                       size_t bytesToSend )
+int32_t Plaintext_Send( NetworkContext_t pContext,
+                        const void * pBuffer,
+                        size_t bytesToSend )
 {
     int32_t bytesSent = 0;
 
@@ -34,9 +34,9 @@ int32_t plaintextSend( NetworkContext_t pContext,
     return bytesSent;
 }
 
-int32_t plaintextRecv( NetworkContext_t pContext,
-                       void * pBuffer,
-                       size_t bytesToRecv )
+int32_t Plaintext_Recv( NetworkContext_t pContext,
+                        void * pBuffer,
+                        size_t bytesToRecv )
 {
     int32_t bytesReceived = 0;
 
