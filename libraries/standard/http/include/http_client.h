@@ -131,12 +131,12 @@
 #define HTTP_RANGE_REQUEST_END_OF_FILE              -1
 
 /**
- * @brief The HTTPNetworkContext is an incomplete type. The application must
- * define HTTPNetworkContext to the type of their network context. This context
+ * @brief The NetworkContext is an incomplete type. The application must
+ * define NetworkContext to the type of their network context. This context
  * is passed into the network interface functions.
  */
-struct HTTPNetworkContext;
-typedef struct HTTPNetworkContext HTTPNetworkContext_t;
+struct NetworkContext;
+typedef struct NetworkContext * NetworkContext_t;
 
 /**
  * @brief Transport interface for sending data over the network.
@@ -151,7 +151,7 @@ typedef struct HTTPNetworkContext HTTPNetworkContext_t;
  *
  * @return The number of bytes written or a negative network error code.
  */
-typedef int32_t ( * HTTPTransportSend_t )( HTTPNetworkContext_t * pContext,
+typedef int32_t ( * HTTPTransportSend_t )( NetworkContext_t pContext,
                                            const void * pBuffer,
                                            size_t bytesToWrite );
 
@@ -174,7 +174,7 @@ typedef int32_t ( * HTTPTransportSend_t )( HTTPNetworkContext_t * pContext,
  *
  * @return The number of bytes read or a negative error code.
  */
-typedef int32_t ( * HTTPTransportRecv_t )( HTTPNetworkContext_t * pContext,
+typedef int32_t ( * HTTPTransportRecv_t )( NetworkContext_t pContext,
                                            void * pBuffer,
                                            size_t bytesToRead );
 
@@ -183,9 +183,9 @@ typedef int32_t ( * HTTPTransportRecv_t )( HTTPNetworkContext_t * pContext,
  */
 typedef struct HTTPTransportInterface
 {
-    HTTPTransportRecv_t recv;        /**< Transport receive interface */
-    HTTPTransportSend_t send;        /**< Transport interface send interface. */
-    HTTPNetworkContext_t * pContext; /**< User defined transport interface context. */
+    HTTPTransportRecv_t recv;  /**< Transport receive interface */
+    HTTPTransportSend_t send;  /**< Transport interface send interface. */
+    NetworkContext_t pContext; /**< User defined transport interface context. */
 } HTTPTransportInterface_t;
 
 /**

@@ -232,7 +232,7 @@ static void onHeaderCallback( void * pContext,
 }
 
 /* Successful application transport send interface. */
-static int32_t transportSendSuccess( HTTPNetworkContext_t * pContext,
+static int32_t transportSendSuccess( NetworkContext_t pContext,
                                      const void * pBuffer,
                                      size_t bytesToWrite )
 {
@@ -258,7 +258,7 @@ static int32_t transportSendSuccess( HTTPNetworkContext_t * pContext,
 /* Application transport send interface that returns a network error depending
 * on the call count. Set sendErrorCall to 0 to return an error on the
 * first call. Set sendErrorCall to 1 to return an error on the second call. */
-static int32_t transportSendNetworkError( HTTPNetworkContext_t * pContext,
+static int32_t transportSendNetworkError( NetworkContext_t pContext,
                                           const void * pBuffer,
                                           size_t bytesToWrite )
 {
@@ -279,7 +279,7 @@ static int32_t transportSendNetworkError( HTTPNetworkContext_t * pContext,
  * depending on the call count. Set sendPartialCall to 0 to return less bytes on
  * the first call. Set sendPartialCall to 1 to return less bytes on the second
  * call. */
-static int32_t transportSendLessThanBytesToWrite( HTTPNetworkContext_t * pContext,
+static int32_t transportSendLessThanBytesToWrite( NetworkContext_t pContext,
                                                   const void * pBuffer,
                                                   size_t bytesToWrite )
 {
@@ -297,7 +297,7 @@ static int32_t transportSendLessThanBytesToWrite( HTTPNetworkContext_t * pContex
 }
 
 /* Application transport send that writes more bytes than expected. */
-static int32_t transportSendMoreThanBytesToWrite( HTTPNetworkContext_t * pContext,
+static int32_t transportSendMoreThanBytesToWrite( NetworkContext_t pContext,
                                                   const void * pBuffer,
                                                   size_t bytesToWrite )
 {
@@ -313,7 +313,7 @@ static int32_t transportSendMoreThanBytesToWrite( HTTPNetworkContext_t * pContex
  * second call. The response to send is set in pNetworkData and the current
  * call count is kept track of in recvCurrentCall. This function will return
  * zero (timeout condition) when recvStopCall matches recvCurrentCall. */
-static int32_t transportRecvSuccess( HTTPNetworkContext_t * pContext,
+static int32_t transportRecvSuccess( NetworkContext_t pContext,
                                      void * pBuffer,
                                      size_t bytesToRead )
 {
@@ -351,7 +351,7 @@ static int32_t transportRecvSuccess( HTTPNetworkContext_t * pContext,
 }
 
 /* Application transport receive that return a network error. */
-static int32_t transportRecvNetworkError( HTTPNetworkContext_t * pContext,
+static int32_t transportRecvNetworkError( NetworkContext_t pContext,
                                           void * pBuffer,
                                           size_t bytesToRead )
 {
@@ -363,7 +363,7 @@ static int32_t transportRecvNetworkError( HTTPNetworkContext_t * pContext,
 }
 
 /* Application transport receive that returns more bytes read than expected. */
-static int32_t transportRecvMoreThanBytesToRead( HTTPNetworkContext_t * pContext,
+static int32_t transportRecvMoreThanBytesToRead( NetworkContext_t pContext,
                                                  void * pBuffer,
                                                  size_t bytesToRead )
 {

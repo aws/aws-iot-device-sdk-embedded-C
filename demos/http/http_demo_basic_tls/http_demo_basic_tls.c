@@ -165,16 +165,11 @@ static uint8_t userBuffer[ USER_BUFFER_LENGTH ];
  *
  * @note For this TLS demo, the socket descriptor and SSL context is used.
  */
-struct HTTPNetworkContext
+struct NetworkContext
 {
     int tcpSocket;
     SSL * pSslContext;
 };
-
-/**
- * @brief Structure based on the definition of the HTTP network context.
- */
-static HTTPNetworkContext_t networkContext;
 
 /*-----------------------------------------------------------*/
 
@@ -216,7 +211,7 @@ static int tlsSetup( int tcpSocket,
  *
  * @return Number of bytes sent if successful; otherwise negative value on error.
  */
-static int32_t transportSend( HTTPNetworkContext_t * pContext,
+static int32_t transportSend( NetworkContext_t pNetworkContext,
                               const void * pBuffer,
                               size_t bytesToSend );
 
@@ -232,7 +227,7 @@ static int32_t transportSend( HTTPNetworkContext_t * pContext,
  *
  * @return Number of bytes received if successful; otherwise negative value on error.
  */
-static int32_t transportRecv( HTTPNetworkContext_t * pContext,
+static int32_t transportRecv( NetworkContext_t pNetworkContext,
                               void * pBuffer,
                               size_t bytesToRecv );
 
@@ -536,7 +531,7 @@ static int tlsSetup( int tcpSocket,
 
 /*-----------------------------------------------------------*/
 
-static int32_t transportSend( HTTPNetworkContext_t * pNetworkContext,
+static int32_t transportSend( NetworkContext_t pNetworkContext,
                               const void * pBuffer,
                               size_t bytesToSend )
 {
@@ -574,7 +569,7 @@ static int32_t transportSend( HTTPNetworkContext_t * pNetworkContext,
 
 /*-----------------------------------------------------------*/
 
-static int32_t transportRecv( HTTPNetworkContext_t * pNetworkContext,
+static int32_t transportRecv( NetworkContext_t pNetworkContext,
                               void * pBuffer,
                               size_t bytesToRecv )
 {
@@ -658,7 +653,7 @@ static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface
 
     /* Set "Connection" HTTP header to "keep-alive" so that multiple requests
      * can be sent over the same established TCP connection. */
-    requestInfo.flags = HTTP_REQUEST_KEEP_ALIVE_FLAG;
+    requestInfo.reqFlags = HTTP_REQUEST_KEEP_ALIVE_FLAG;
 
     /* Set the buffer used for storing request headers. */
     requestHeaders.pBuffer = userBuffer;
@@ -748,6 +743,8 @@ int main( int argc,
     int returnStatus = EXIT_SUCCESS;
     /* The HTTP Client library transport layer interface. */
     HTTPTransportInterface_t transportInterface;
+    /* Structure based on the definition of the HTTP network context. */
+    struct NetworkContext networkContext;
 
     ( void ) argc;
     ( void ) argv;
