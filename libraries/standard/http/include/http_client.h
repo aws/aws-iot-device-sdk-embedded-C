@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+/* Include config file before other headers. */
 #include "http_config.h"
 
 /**

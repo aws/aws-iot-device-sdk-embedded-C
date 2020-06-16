@@ -40,8 +40,11 @@
 #define LOG_METADATA_ARGS      __FILE__, __LINE__
 
 /* Common macro for all logging interface macros. */
-/* TODO - Replace printf with an implementation function. */
-#define SdkLog( string )    printf string
+#if !defined( DISABLE_LOGGING )
+    #define SdkLog( string )    printf string
+#else
+    #define SdkLog( string )
+#endif
 
 /* Check that LIBRARY_LOG_LEVEL is defined and has a valid value. */
 #if !defined( LIBRARY_LOG_LEVEL ) ||       \
