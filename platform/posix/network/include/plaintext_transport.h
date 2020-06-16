@@ -64,14 +64,14 @@ struct NetworkContext
  *
  * @brief param[in] timeout The timeout to set for transport send.
  */
-void setSendTimeout( int timeout );
+void Plaintext_SetSendTimeout( int timeout );
 
 /**
  * @brief Set timeout for transport recv.
  *
  * @brief param[in] timeout The timeout to set for transport recv.
  */
-void setRecvTimeout( int timeout );
+void Plaintext_SetRecvTimeout( int timeout );
 
 /**
  * @brief The transport send function that defines the transport interface.
