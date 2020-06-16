@@ -26,40 +26,62 @@
 
 /* Standard includes. */
 #include <unistd.h>
+#include <stdlib.h>
+#include <time.h>
 #include "reconnect.h"
-
-static uint32_t reconnectTimeoutSec = RECONNECT_INITIAL_TIMEOUT_SECONDS;
-static uint32_t attemptsDone = 0;
 
 /*-----------------------------------------------------------*/
 
-bool reconnectBackoffAndSleep()
+bool reconnectBackoffAndSleep( TransportReconnectParams_t * pReconnectParams )
 {
     bool status = false;
-
-    if( attemptsDone < MAX_RECONNECT_ATTEMPS )
+   
+    /* MAX_RECONNECT_ATTEMPTS is set to 0, try for ever */
+    if( ( pReconnectParams->attemptsDone < MAX_RECONNECT_ATTEMPS ) ||
+        ( 0 == MAX_RECONNECT_ATTEMPS ) )
     {
-        /* continue to wait for timer to expire for the next reconnect */
-        ( void ) sleep( reconnectTimeoutSec );
-        reconnectTimeoutSec += reconnectTimeoutSec;
-        attemptsDone++;
+        /* Check if we have reached the max time out value */
+        if( pReconnectParams->reconnectTimeoutSec > MAX_RECONNECT_TIMEOUT )
+        {
+            pReconnectParams->reconnectTimeoutSec = MAX_RECONNECT_TIMEOUT;
+        }
+        
+        /* Continue to wait for timer to expire for the next reconnect */
+        ( void ) sleep( pReconnectParams->reconnectTimeoutSec );
+        pReconnectParams->reconnectTimeoutSec += pReconnectParams->reconnectTimeoutSec;
+        pReconnectParams->attemptsDone++;
         status = true;
     }
     else
     {
         status = false;
-        reconnectBackoffReset();
+        reconnectBackoffReset( pReconnectParams );
     }
-    
+
     return status;
 }
 
 /*-----------------------------------------------------------*/
 
-void reconnectBackoffReset()
+void reconnectBackoffReset( TransportReconnectParams_t * pReconnectParams )
 {
-    attemptsDone = 0;
-    reconnectTimeoutSec = RECONNECT_INITIAL_TIMEOUT_SECONDS;
+    uint32_t jitter = 0;
+    struct timespec tp;
+
+    /* Reset attempts done to zero so that the next connect cycle can start */
+    pReconnectParams->attemptsDone = 0;
+
+    /* Get current time to seed pseudo random number generator */
+    ( void ) clock_gettime( CLOCK_REALTIME, &tp );
+
+    /* Seed pseudo ramdom number generator with nano seconds */
+    srand( tp.tv_nsec );
+
+    /* Calculate jitter value using picking a random number. */
+    jitter = ( rand() % 5 );
+
+    /* Reset the timout value to the initial time out value plus jitter */
+    pReconnectParams->reconnectTimeoutSec = RECONNECT_INITIAL_TIMEOUT_SECONDS + jitter;
 }
 
 /*-----------------------------------------------------------*/

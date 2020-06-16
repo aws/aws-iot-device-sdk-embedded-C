@@ -29,24 +29,42 @@
 #if defined( __cplusplus ) || __STDC_VERSION__ >= 199901L
     #include <stdbool.h>
 #elif !defined( bool )
-    #define bool     signed char
-    #define false    0
-    #define true     1
+    #define bool                             signed char
+    #define false                            0
+    #define true                             1
 #endif
 
-#define MAX_RECONNECT_ATTEMPS                5
-#define RECONNECT_INITIAL_TIMEOUT_SECONDS    2
+/* @brief Max number of connect attempts, set this value to 0 if the device
+ * must try connecting forever */
+#define MAX_RECONNECT_ATTEMPS                4U
+#define RECONNECT_INITIAL_TIMEOUT_SECONDS    1U
+#define MAX_RECONNECT_TIMEOUT                32U
+
+
+typedef struct TransportReconnectParams
+{
+    uint32_t reconnectTimeoutSec;
+    uint32_t attemptsDone;
+} TransportReconnectParams_t;
+
 
 /**
- * @brief Reset reconnection timer. This must be called by the application 
- * everytime when application wants to start new connection with the server. 
+ * @brief Reset reconnection timeout value and number of attempts.
+ * This must be called by the application before the application wants
+ * to start a new connection with the server.
+ *
+ * @param[in, out] reconnectParam structure containing attempts done and timeout
+ * value.
  */
-void reconnectBackoffReset();
+void reconnectBackoffReset( TransportReconnectParams_t * reconnectParams );
 
 /**
- * @brief Very simple platfrom specific exponential backoff function. The application
- * must use this function while connecting to a server to handle connection failures.
+ * @brief Simple platfrom specific exponential backoff function. The application
+ * must use this function between connection failures to add exponential delay.
+ * This function will block the calling task for the current timeout value.
+ *
+ * @param[in, out] reconnectParam structure containing reconnection parameters.
  *
  * @return true after successful sleep, false when all attempts are exhausted.
  */
-bool reconnectBackoffAndSleep();
+bool reconnectBackoffAndSleep( TransportReconnectParams_t * reconnectParams );

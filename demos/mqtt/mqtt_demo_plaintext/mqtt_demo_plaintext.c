@@ -51,15 +51,12 @@
 /* MQTT API header. */
 #include "mqtt.h"
 
-<<<<<<< HEAD
 /* Demo Config header. */
 #include "demo_config.h"
 
 /* Reconnect parameters. */
 #include "reconnect.h"
 
-=======
->>>>>>> 4c102796231abb98a5aded1b4e583de602f41cc8
 /**
  * @brief MQTT server host name.
  *
@@ -448,9 +445,10 @@ static int connectToServerWithBackoffRetries( int * pTcpSocket )
 {
     int status = EXIT_SUCCESS;
     bool backoffSuccess = true;
+    TransportReconnectParams_t reconnectParams;
 
     /* Initialize reconnect attempts and interval */
-    reconnectBackoffReset();
+    reconnectBackoffReset( &reconnectParams );
 
     /* Attempt to connect to MQTT broker. If connection fails, retry after
      * a timeout. Timeout value will exponentially increase till maximum
@@ -466,8 +464,9 @@ static int connectToServerWithBackoffRetries( int * pTcpSocket )
 
         if( status == EXIT_FAILURE )
         {
-            LogWarn( ( "Connection to the broker failed, sleeping before the next attempt." ) );
-            backoffSuccess = reconnectBackoffAndSleep();
+            LogWarn( ( "Connection to the broker failed, sleeping %d seconds before the next attempt.",
+                       ( reconnectParams.reconnectTimeoutSec > MAX_RECONNECT_TIMEOUT ) ? MAX_RECONNECT_TIMEOUT : reconnectParams.reconnectTimeoutSec ) );
+            backoffSuccess = reconnectBackoffAndSleep( &reconnectParams );
         }
 
         if( backoffSuccess == false )
