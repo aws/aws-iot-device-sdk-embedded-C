@@ -728,8 +728,16 @@ static void logConnackResponse( uint8_t responseCode )
 
     assert( responseCode <= 5 );
 
-    /* Log an error based on the CONNACK response code. */
-    LogError( ( "%s", pConnackResponses[ responseCode ] ) );
+    if( responseCode == 0u )
+    {
+        /* Log at Info level for a success CONNACK response. */
+        LogInfo( ( "%s", pConnecAckResponses[ 0 ] ) );
+    }
+    else
+    {
+        /* Log an error based on the CONNACK response code. */
+        LogError( ( "%s", pConnackResponses[ responseCode ] ) );
+    }
 }
 
 /*-----------------------------------------------------------*/
