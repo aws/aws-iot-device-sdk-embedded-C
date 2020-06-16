@@ -512,7 +512,7 @@ int main( int argc,
     }
 
     /* Send POST Request. */
-    if( returnStatus != EXIT_SUCCESS )
+    if( returnStatus == EXIT_SUCCESS )
     {
         returnStatus = sendHttpRequest( &transportInterface,
                                         SERVER_HOST,
