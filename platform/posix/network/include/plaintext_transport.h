@@ -22,8 +22,32 @@
 #ifndef PLAINTEXT_CONFIG_H_
 #define PLAINTEXT_CONFIG_H_
 
+/**************************************************/
+/******* DO NOT CHANGE the following order ********/
+/**************************************************/
+
+/* Logging related header files are required to be included in the following order:
+ * 1. Include the header file "logging_levels.h".
+ * 2. Define LIBRARY_LOG_NAME and  LIBRARY_LOG_LEVEL.
+ * 3. Include the header file "logging_stack.h".
+ */
+
+/* Include header that defines log levels. */
+#include "logging_levels.h"
+
+/* Logging configuration for the Demo. */
+#ifndef LIBRARY_LOG_NAME
+    #define LIBRARY_LOG_NAME     "Plaintext Transport"
+#endif
+#ifndef LIBRARY_LOG_LEVEL
+    #define LIBRARY_LOG_LEVEL    LOG_INFO
+#endif
+
+#include "logging_stack.h"
+
+/************ End of logging configuration ****************/
+
 #include "network_interface.h"
-#include "network_common.h"
 
 /**
  * @brief Definition of the network context.
@@ -34,6 +58,20 @@ struct NetworkContext
 {
     int tcpSocket;
 };
+
+/**
+ * @brief Set timeout for transport send.
+ *
+ * @brief param[in] timeout The timeout to set for transport send.
+ */
+void setSendTimeout( int timeout );
+
+/**
+ * @brief Set timeout for transport recv.
+ *
+ * @brief param[in] timeout The timeout to set for transport recv.
+ */
+void setRecvTimeout( int timeout );
 
 /**
  * @brief The transport send function that defines the transport interface.

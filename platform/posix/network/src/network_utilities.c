@@ -21,73 +21,7 @@
  */
 #define IPV6_ADDRESS_STRING_LENGTH    ( 40 )
 
-/**
- * @brief Defined by transport layer to check error from setsockopt.
- */
-extern int errno;
-
-/**
- * @brief Log the error based on errno and return the respective network status.
- */
-NetworkStatus_t retreiveError();
-
 /*----------------------------------------------------------------------------*/
-
-NetworkStatus_t retreiveError()
-{
-    NetworkStatus_t networkStatus = NETWORK_SYSTEM_ERROR;
-
-    switch( errno )
-    {
-        case EBADF:
-            LogError( ( "The socket argument is not a valid file descriptor." ) );
-            break;
-
-        case EDOM:
-            LogError( ( "The send and receive timeout values are too big to fit "
-                        "into the timeout fields in the socket structure." ) );
-            break;
-
-        case EINVAL:
-            LogError( ( "The specified option is invalid at the specified "
-                        "socket level or the socket has been shut down." ) );
-            break;
-
-        case EISCONN:
-            LogError( ( "The socket is already connected, and a specified option "
-                        "cannot be set while the socket is connected." ) );
-            break;
-
-        case ENOPROTOOPT:
-            LogError( ( "The option is not supported by the protocol." ) );
-            break;
-
-        case ENOTSOCK:
-            LogError( ( "The socket argument does not refer to a socket." ) );
-            break;
-
-        case ENOMEM:
-            LogError( ( "There was insufficient memory available for the "
-                        "operation to complete." ) );
-            break;
-
-        case ENOBUFS:
-            LogError( ( "Insufficient resources are available in the system to "
-                        "complete the call." ) );
-            break;
-    }
-
-    if( ( errno == ENOMEM ) || ( errno == ENOBUFS ) )
-    {
-        networkStatus = NETWORK_NO_MEMORY;
-    }
-    else if( ( errno == ENOTSOCK ) || ( errno == EDOM ) || ( errno == EBADF ) )
-    {
-        networkStatus = NETWORK_INVALID_PARAMETER;
-    }
-
-    return networkStatus;
-}
 
 NetworkStatus_t TCP_Connect( int * pTcpSocket,
                              const NetworkServerInfo_t * pServerInfo )
@@ -211,71 +145,11 @@ NetworkStatus_t TCP_Connect( int * pTcpSocket,
     return networkStatus;
 }
 
-NetworkStatus_t TCP_Disconnect( int tcpSocket )
+void TCP_Disconnect( int tcpSocket )
 {
     if( tcpSocket != -1 )
     {
         ( void ) shutdown( tcpSocket, SHUT_RDWR );
         ( void ) close( tcpSocket );
     }
-}
-
-NetworkStatus_t TCP_SetSendTimeout( int tcpSocket,
-                                    uint32_t timeout )
-{
-    NetworkStatus_t networkStatus = NETWORK_SUCCESS;
-    int setTimeoutStatus = -1;
-    struct timeval transportTimeout;
-
-    transportTimeout.tv_sec = 0;
-    transportTimeout.tv_usec = ( timeout * 1000 );
-
-    /* Set the send timeout. */
-    setTimeoutStatus = setsockopt( tcpSocket,
-                                   SOL_SOCKET,
-                                   SO_SNDTIMEO,
-                                   ( char * ) &transportTimeout,
-                                   sizeof( transportTimeout ) );
-
-    if( setTimeoutStatus < 0 )
-    {
-        LogError( ( "Setting socket send timeout failed." ) );
-        networkStatus = retreiveError();
-    }
-    else
-    {
-        networkStatus = NETWORK_SUCCESS;
-    }
-
-    return networkStatus;
-}
-
-NetworkStatus_t TCP_SetRecvTimeout( int tcpSocket,
-                                    uint32_t timeout )
-{
-    NetworkStatus_t networkStatus = NETWORK_SUCCESS;
-    int setTimeoutStatus = -1;
-    struct timeval transportTimeout;
-
-    transportTimeout.tv_sec = 0;
-    transportTimeout.tv_usec = ( timeout * 1000 );
-
-    /* Set the receive timeout. */
-    setTimeoutStatus = setsockopt( tcpSocket,
-                                   SOL_SOCKET,
-                                   SO_RCVTIMEO,
-                                   ( char * ) &transportTimeout,
-                                   sizeof( transportTimeout ) );
-
-    if( setTimeoutStatus < 0 )
-    {
-        LogError( ( "Setting socket receive timeout failed." ) );
-        networkStatus = retreiveError();
-    }
-    else
-    {
-        networkStatus = NETWORK_SUCCESS;
-    }
-
-    return networkStatus;
 }

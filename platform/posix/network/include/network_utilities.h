@@ -47,7 +47,34 @@
 
 /************ End of logging configuration ****************/
 
-#include "network_common.h"
+/**
+ * @ingroup platform_datatypes_enums
+ * @brief Return codes for [network functions](@ref platform_network_functions).
+ */
+typedef enum NetworkStatus
+{
+    NETWORK_SUCCESS = 0,         /**< Function successfully completed. */
+    NETWORK_INVALID_PARAMETER,   /**< At least one parameter was invalid. */
+    NETWORK_INVALID_CREDENTIALS, /**< Provided certificates or key were invalid. */
+    NETWORK_CONNECT_FAILURE,     /**< Initial connection to the server failed. */
+    NETWORK_DNS_FAILURE,         /**< Resolving hostname of server failed. */
+    NETWORK_INTERNAL_ERROR,      /**< Generic failure not covered by other values. */
+    NETWORK_NO_MEMORY,           /**< Memory allocation failed. */
+    NETWORK_SYSTEM_ERROR         /**< An error occurred when calling a system API. */
+} NetworkStatus_t;
+
+/**
+ * @ingroup platform_datatypes_enums
+ * @brief Disconnect reasons for [the network close callback](@ref platform_network_function_closecallback).
+ */
+typedef enum NetworkCloseReason
+{
+    NETWORK_NOT_CLOSED = 0,    /**< Not closed, still open */
+    NETWORK_SERVER_CLOSED,     /**< Server closed connection. */
+    NETWORK_TRANSPORT_FAILURE, /**< Transport failed. */
+    NETWORK_CLIENT_CLOSED,     /**< Client closed connection. */
+    NETWORK_UNKNOWN_CLOSED     /**< Unknown close reason. */
+} NetworkCloseReason_t;
 
 /**
  * @brief Information on the remote server for connection setup.
@@ -65,11 +92,6 @@ typedef struct NetworkServerInfo
 
 NetworkStatus_t TCP_Connect( int * pTcpSocket,
                              const NetworkServerInfo_t * pServerInfo );
-NetworkStatus_t TCP_Disconnect( int tcpSocket );
-
-NetworkStatus_t TCP_SetSendTimeout( int tcpSocket,
-                                    uint32_t timeout );
-NetworkStatus_t TCP_SetRecvTimeout( int tcpSocket,
-                                    uint32_t timeout );
+void TCP_Disconnect( int tcpSocket );
 
 #endif /* ifndef CONNECT_H_ */

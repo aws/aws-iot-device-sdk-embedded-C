@@ -220,11 +220,12 @@ int main( int argc,
     serverInfo.hostNameLength = strlen( SERVER_HOST );
     serverInfo.port = SERVER_PORT;
 
+    /* Set timeouts. */
+    Plaintext_SetSendTimeout( TRANSPORT_SEND_RECV_TIMEOUT_MS );
+    Plaintext_SetRecvTimeout( TRANSPORT_SEND_RECV_TIMEOUT_MS );
+
     /* Establish TCP connection. */
     returnStatus = TCP_Connect( &socketContext.tcpSocket, &serverInfo );
-
-    TCP_SetSendTimeout( socketContext.tcpSocket, TRANSPORT_SEND_RECV_TIMEOUT_MS );
-    TCP_SetRecvTimeout( socketContext.tcpSocket, TRANSPORT_SEND_RECV_TIMEOUT_MS );
 
     /* Define the transport interface. */
     if( returnStatus == EXIT_SUCCESS )
