@@ -457,9 +457,7 @@ void setUp()
     TEST_ASSERT_NOT_EQUAL( -1, tcpSocket );
 
     /* Establish TLS connection on top of TCP connection. */
-    TEST_ASSERT_EQUAL( EXIT_SUCCESS, tlsSetup( tcpSocket, SERVER_ROOT_CA_CERT_PATH, &pSslContext ) ) defined
-
-    for the MQTT integration tests.;
+    TEST_ASSERT_EQUAL( EXIT_SUCCESS, tlsSetup( tcpSocket, SERVER_ROOT_CA_CERT_PATH, &pSslContext ) );
     TEST_ASSERT_NOT_NULL( pSslContext );
 
     /* Establish MQTT session on top of the TCP+TLS connection. */

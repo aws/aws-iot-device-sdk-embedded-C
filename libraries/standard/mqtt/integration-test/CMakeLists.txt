@@ -27,6 +27,7 @@ list(APPEND test_include_directories
             ${MQTT_INCLUDE_PUBLIC_DIRS}
             ${MQTT_INCLUDE_PRIVATE_DIRS}
             ${LOGGING_INCLUDE_DIRS}
+            # Header path for the TLS server auth utility.
             ${ROOT_DIR}/demos/transport
         )
 
@@ -42,8 +43,6 @@ create_real_library(${real_name}
 
 list(APPEND utest_link_list
             lib${real_name}.a
-            -ltls_utils
-            #libtls_utils.a
         )
 
 list(APPEND utest_dep_list
