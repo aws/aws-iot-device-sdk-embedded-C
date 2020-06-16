@@ -1,3 +1,5 @@
+include(demo_filepaths.cmake)
+
 set( DEMO_NAME "http_demo_plaintext" )
 # Demo target.
 add_executable(${DEMO_NAME})
@@ -6,12 +8,13 @@ target_sources(
     ${DEMO_NAME}
     PRIVATE
         "${DEMO_NAME}.c"
+        ${DEMO_SOURCES}
 )
 
 target_link_libraries(
     ${DEMO_NAME}
     PRIVATE
-        http   
+        http
 )
 
 target_include_directories(
@@ -24,4 +27,6 @@ target_include_directories(
     ${DEMO_NAME}
     PUBLIC
         ${LOGGING_INCLUDE_DIRS}
+    PRIVATE
+        ${DEMO_INCLUDE_PRIVATE_DIRS}
 )
