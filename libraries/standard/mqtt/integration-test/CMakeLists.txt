@@ -50,8 +50,8 @@ list(APPEND utest_dep_list
             transport_utils
         )
 
-set(utest_name "${project_name}_utest")
-set(utest_source "${project_name}_utest.c")
+set(utest_name "${project_name}_stest")
+set(utest_source "${project_name}_stest.c")
 create_test(${utest_name}
             ${utest_source}
             "${utest_link_list}"

@@ -315,7 +315,7 @@ void closeTcpConnection( int tcpSocket )
 
 /*-----------------------------------------------------------*/
 
-int32_t transportSend( MQTTNetworkContext_t pSslContext,
+int32_t transportSend( SSL * pSslContext,
                        const void * pMessage,
                        size_t bytesToSend )
 {
@@ -355,7 +355,7 @@ int32_t transportSend( MQTTNetworkContext_t pSslContext,
 
 /*-----------------------------------------------------------*/
 
-int32_t transportRecv( MQTTNetworkContext_t pSslContext,
+int32_t transportRecv( SSL * pSslContext,
                        void * pBuffer,
                        size_t bytesToRecv )
 {

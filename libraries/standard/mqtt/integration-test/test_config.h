@@ -80,7 +80,7 @@
  * This certificate should be PEM-encoded.
  */
 #ifndef SERVER_ROOT_CA_CERT_PATH
-    #define SERVER_ROOT_CA_CERT_PATH    "/home/ubuntu/Repos/aws-iot-device-sdk-embedded-C/libraries/standard/mqtt/integration-test/mosquitto.org.crt"
+    #define SERVER_ROOT_CA_CERT_PATH    ""
 #endif
 
 /**

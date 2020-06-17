@@ -31,9 +31,6 @@
 /* OpenSSL include. */
 #include <openssl/ssl.h>
 
-/* MQTT include. */
-#include "mqtt.h"
-
 /**
  * @brief Creates a TCP connection to the MQTT broker as specified by
  * the @p pServer and @p port parameters, and populate the tcp socket
@@ -87,7 +84,7 @@ void closeTlsSession( SSL * pSslContext );
  * @return Number of bytes sent; negative value on error;
  * 0 for timeout or 0 bytes sent.
  */
-int32_t transportSend( MQTTNetworkContext_t pSslContext,
+int32_t transportSend( SSL * pSslContext,
                        const void * pMessage,
                        size_t bytesToSend );
 
@@ -101,7 +98,7 @@ int32_t transportSend( MQTTNetworkContext_t pSslContext,
  * @return Number of bytes received; negative value on error;
  * 0 for timeout.
  */
-int32_t transportRecv( MQTTNetworkContext_t pSslContext,
+int32_t transportRecv( SSL * pSslContext,
                        void * pBuffer,
                        size_t bytesToRecv );
 
