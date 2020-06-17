@@ -129,7 +129,7 @@
  * PUBLISH message and ack responses for QoS 1 and QoS 2 communications
  * with the broker.
  */
-#define MQTT_PROCESS_LOOP_TIMEOUT_MS        ( 500U )
+#define MQTT_PROCESS_LOOP_TIMEOUT_MS        ( 700U )
 
 /**
  * @brief The MQTT message published in this example.
@@ -381,7 +381,7 @@ static void eventCallback( MQTTContext_t * pContext,
 
                 /* Nothing to be done from application as library handles
                  * PUBREL. */
-                LogDebug( ( "Unexpected PUBREL received: PacketID=%u",
+                LogDebug( ( "Received PUBREL: PacketID=%u",
                             packetIdentifier ) );
                 break;
 
@@ -465,6 +465,9 @@ static MQTTStatus_t publishToTopic( MQTTContext_t * pContext,
 {
     assert( pContext != NULL );
     MQTTPublishInfo_t publishInfo;
+
+    /* Set the retain flag to false to avoid side-effects across test runs. */
+    publishInfo.retain = false;
 
     publishInfo.qos = qos;
     publishInfo.dup = false;
@@ -663,12 +666,16 @@ void test_MQTT_Subscribe_Publish_With_Qos_2( void )
     TEST_ASSERT_EQUAL( globalPublishPacketIdentifier, context.outgoingPublishRecords[ 0 ].packetId );
     TEST_ASSERT_EQUAL( MQTTPubRecPending, context.outgoingPublishRecords[ 0 ].publishState );
 
-    /* Expect PUBREC and PUBCOMP responses from the broker for the PUBLISH. */
+    /* We expect PUBREC and PUBCOMP responses for the PUBLISH request, and
+     * incoming PUBLISH with the same message that we published (as we are subscribed
+     * to the same topic). Also, we expect a PUBREL ack response from the server for
+     * the incoming PUBLISH (as we subscribed and publish with QoS 2). */
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_FALSE( receivedPubAck );
     TEST_ASSERT_TRUE( receivedPubRec );
     TEST_ASSERT_TRUE( receivedPubComp );
+    TEST_ASSERT_TRUE( receivedPubRel );
 
     /* Make sure that we have received the same message from the server,
      * that was published (as we have subscribed to the same topic). */
