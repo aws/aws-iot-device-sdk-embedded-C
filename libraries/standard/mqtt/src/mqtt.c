@@ -58,14 +58,6 @@ static uint32_t calculateElapsedTime( uint32_t later,
                                       uint32_t start );
 
 /**
- * @brief A function that is used as a placeholder when a time function is not
- * defined as part of an MQTT context's callbacks.
- *
- * @return 0
- */
-static uint32_t getTimeStampNoSystemTime();
-
-/**
  * @brief Convert a byte indicating a publish ack type to an #MQTTPubAckType_t.
  *
  * @param[in] packetType First byte of fixed header.
@@ -308,13 +300,6 @@ static uint32_t calculateElapsedTime( uint32_t later,
 
 /*-----------------------------------------------------------*/
 
-static uint32_t getTimeStampNoSystemTime()
-{
-    return 0U;
-}
-
-/*-----------------------------------------------------------*/
-
 static MQTTPubAckType_t getAckFromPacketType( uint8_t packetType )
 {
     MQTTPubAckType_t ackType = MQTTPuback;
@@ -355,7 +340,7 @@ static int32_t recvExact( const MQTTContext_t * pContext,
     uint8_t * pIndex = NULL;
     size_t bytesRemaining = bytesToRecv;
     int32_t totalBytesRecvd = 0, bytesRecvd;
-    uint32_t entryTimeMs = 0U;
+    uint32_t entryTimeMs = 0U, elapsedTime = 0U;
     MQTTTransportRecvFunc_t recvFunc = NULL;
     MQTTGetCurrentTimeFunc_t getTimeStampMs = NULL;
     bool receiveError = false;
@@ -366,15 +351,12 @@ static int32_t recvExact( const MQTTContext_t * pContext,
     recvFunc = pContext->transportInterface.recv;
     getTimeStampMs = pContext->callbacks.getTime;
 
-    /* If no time function is provided, use a function that always returns 0 so
-     * as to run the loop for a single iteration. */
-    if( getTimeStampMs == NULL )
-    {
-        getTimeStampMs = getTimeStampNoSystemTime;
-        assert( timeoutMs == 0U );
-    }
+    assert( ( getTimeStampMs != NULL ) || ( timeoutMs == 0U ) );
 
-    entryTimeMs = getTimeStampMs();
+    if( getTimeStampMs != NULL )
+    {
+        entryTimeMs = getTimeStampMs();
+    }
 
     while( ( bytesRemaining > 0U ) && ( receiveError == false ) )
     {
@@ -396,8 +378,12 @@ static int32_t recvExact( const MQTTContext_t * pContext,
             receiveError = true;
         }
 
-        if( ( bytesRemaining > 0U ) &&
-            ( calculateElapsedTime( getTimeStampMs(), entryTimeMs ) >= timeoutMs ) )
+        if( getTimeStampMs != NULL )
+        {
+            elapsedTime = calculateElapsedTime( getTimeStampMs(), entryTimeMs );
+        }
+
+        if( ( bytesRemaining > 0U ) && ( elapsedTime >= timeoutMs ) )
         {
             LogError( ( "Time expired while receiving packet." ) );
             receiveError = true;
@@ -416,7 +402,7 @@ static MQTTStatus_t discardPacket( const MQTTContext_t * pContext,
     MQTTStatus_t status = MQTTRecvFailed;
     int32_t bytesReceived = 0;
     size_t bytesToReceive = 0U;
-    uint32_t totalBytesReceived = 0U, entryTimeMs, elapsedTimeMs;
+    uint32_t totalBytesReceived = 0U, entryTimeMs = 0U, elapsedTimeMs = 0U;
     uint32_t remainingTimeMs = timeoutMs;
     MQTTGetCurrentTimeFunc_t getTimeStampMs = NULL;
     bool receiveError = false;
@@ -425,15 +411,12 @@ static MQTTStatus_t discardPacket( const MQTTContext_t * pContext,
     bytesToReceive = pContext->networkBuffer.size;
     getTimeStampMs = pContext->callbacks.getTime;
 
-    /* If no time function is provided, use a function that always returns 0 so
-     * as to run the loop for a single iteration. */
-    if( getTimeStampMs == NULL )
-    {
-        getTimeStampMs = getTimeStampNoSystemTime;
-        assert( timeoutMs == 0U );
-    }
+    assert( ( getTimeStampMs != NULL ) || ( timeoutMs == 0U ) );
 
-    entryTimeMs = getTimeStampMs();
+    if( getTimeStampMs != NULL )
+    {
+        entryTimeMs = getTimeStampMs();
+    }
 
     while( ( totalBytesReceived < remainingLength ) && ( receiveError == false ) )
     {
@@ -455,9 +438,13 @@ static MQTTStatus_t discardPacket( const MQTTContext_t * pContext,
         else
         {
             totalBytesReceived += ( uint32_t ) bytesReceived;
-            /* Update remaining time and check for timeout. */
-            elapsedTimeMs = calculateElapsedTime( getTimeStampMs(), entryTimeMs );
 
+            if( getTimeStampMs != NULL )
+            {
+                elapsedTimeMs = calculateElapsedTime( getTimeStampMs(), entryTimeMs );
+            }
+
+            /* Update remaining time and check for timeout. */
             if( elapsedTimeMs < timeoutMs )
             {
                 remainingTimeMs = timeoutMs - elapsedTimeMs;
@@ -949,24 +936,22 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
 {
     MQTTStatus_t status = MQTTSuccess;
     MQTTGetCurrentTimeFunc_t getTimeStamp = NULL;
-    uint32_t entryTimeMs = 0U, remainingTimeMs = 0U, timeTakenMs = 0U;
-    uint32_t adjustedTimeoutMs = timeoutMs;
+    uint32_t entryTimeMs = 0U, remainingTimeMs = 0U;
+    /* Initialize time taken to the timeout in case a time function is not provided. */
+    uint32_t timeTakenMs = timeoutMs;
+    /* Initialize loop exit condition to true in case a time function is not provided. */
+    bool timeExpired = true;
 
     assert( pContext != NULL );
     assert( pIncomingPacket != NULL );
 
     getTimeStamp = pContext->callbacks.getTime;
 
-    /* If no time function is provided, use a function that always returns 0 so
-     * as to run the loop for a single iteration. */
-    if( getTimeStamp == NULL )
+    if( getTimeStamp != NULL )
     {
-        getTimeStamp = getTimeStampNoSystemTime;
-        adjustedTimeoutMs = 0U;
+        /* Get the entry time for the function. */
+        entryTimeMs = getTimeStamp();
     }
-
-    /* Get the entry time for the function. */
-    entryTimeMs = getTimeStamp();
 
     do
     {
@@ -978,20 +963,29 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
                                                       pContext->transportInterface.networkContext,
                                                       pIncomingPacket );
 
+        if( getTimeStamp != NULL )
+        {
+            timeExpired = ( calculateElapsedTime( getTimeStamp(), entryTimeMs ) >= timeoutMs ) ? true : false;
+        }
+
         /* Loop until there is data to read or if the timeout has not expired. */
-    } while( ( status == MQTTNoDataAvailable ) &&
-             ( calculateElapsedTime( getTimeStamp(), entryTimeMs ) < adjustedTimeoutMs ) );
+    } while( ( status == MQTTNoDataAvailable ) && ( timeExpired != true ) );
 
     if( status == MQTTSuccess )
     {
-        /* Time taken in this function so far. */
-        timeTakenMs = calculateElapsedTime( getTimeStamp(), entryTimeMs );
+        /* Calculate elapsed time. If no time function is provided, then the value of the
+         * time taken should be the timeout, and remaining time will not be updated. */
+        if( getTimeStamp != NULL )
+        {
+            /* Time taken in this function so far. */
+            timeTakenMs = calculateElapsedTime( getTimeStamp(), entryTimeMs );
+        }
 
-        if( timeTakenMs < adjustedTimeoutMs )
+        if( timeTakenMs < timeoutMs )
         {
             /* Calculate remaining time for receiving the remainder of
              * the packet. */
-            remainingTimeMs = adjustedTimeoutMs - timeTakenMs;
+            remainingTimeMs = timeoutMs - timeTakenMs;
         }
 
         /* Reading the remainder of the packet by transport recv.
@@ -1567,22 +1561,21 @@ MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext,
     MQTTStatus_t status = MQTTBadParameter;
     MQTTGetCurrentTimeFunc_t getTimeStampMs = NULL;
     uint32_t entryTimeMs = 0U, remainingTimeMs = timeoutMs, elapsedTimeMs = 0U;
-    uint32_t adjustedTimeoutMs = timeoutMs;
 
     if( pContext != NULL )
     {
         getTimeStampMs = pContext->callbacks.getTime;
 
-        /* If no time function is provided, use a function that always returns
-         * 0 so as to run the loop for a single iteration. */
+        /* If no time function is provided, set remaining time to 0. */
         if( getTimeStampMs == NULL )
         {
-            getTimeStampMs = getTimeStampNoSystemTime;
-            adjustedTimeoutMs = 0U;
             remainingTimeMs = 0U;
         }
+        else
+        {
+            entryTimeMs = getTimeStampMs();
+        }
 
-        entryTimeMs = getTimeStampMs();
         status = MQTTSuccess;
     }
     else
@@ -1606,14 +1599,23 @@ MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext,
 
         /* Recalculate remaining time and check if loop should exit. This is
          * done at the end so the loop will run at least a single iteration. */
-        elapsedTimeMs = calculateElapsedTime( getTimeStampMs(), entryTimeMs );
+        if( getTimeStampMs != NULL )
+        {
+            elapsedTimeMs = calculateElapsedTime( getTimeStampMs(), entryTimeMs );
+        }
+        else
+        {
+            /* If no time function is provided, set elapsed time to timeout so
+             * loop will exit after a single iteration. */
+            elapsedTimeMs = timeoutMs;
+        }
 
-        if( elapsedTimeMs >= adjustedTimeoutMs )
+        if( elapsedTimeMs >= timeoutMs )
         {
             break;
         }
 
-        remainingTimeMs = adjustedTimeoutMs - elapsedTimeMs;
+        remainingTimeMs = timeoutMs - elapsedTimeMs;
     }
 
     return status;

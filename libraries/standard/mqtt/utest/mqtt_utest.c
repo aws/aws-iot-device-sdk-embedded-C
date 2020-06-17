@@ -65,7 +65,7 @@
  * @brief Subtract this value from max value of global entry time
  * for the timer overflow test.
  */
-#define MQTT_TIMER_CALLS_PER_ITERATION      ( 3 )
+#define MQTT_TIMER_CALLS_PER_ITERATION      ( 4 )
 
 /**
  * @brief Timeout for the timer overflow test.
@@ -590,6 +590,17 @@ void test_MQTT_Connect_sendConnect( void )
     MQTT_GetConnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetConnectPacketSize_ReturnThruPtr_pPacketSize( &packetSize );
     MQTT_GetConnectPacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
+    /* We know the send was successful if MQTT_GetIncomingPacketTypeAndLength()
+     * is called. */
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTRecvFailed );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
+    TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
+
+    /* Again, but this time with a NULL time function. */
+    mqttContext.callbacks.getTime = NULL;
+    MQTT_GetConnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetConnectPacketSize_ReturnThruPtr_pPacketSize( &packetSize );
+    MQTT_GetConnectPacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTRecvFailed );
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
@@ -686,7 +697,8 @@ void test_MQTT_Connect_partial_receive()
     incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
     incomingPacket.remainingLength = 2;
 
-    /* Not enough time to receive entire packet, for branch coverage. */
+    /* Not enough time to receive entire packet, for branch coverage. This is due
+     * to the fact the mocked receive function reads only one byte at a time. */
     timeout = 1;
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
@@ -703,7 +715,20 @@ void test_MQTT_Connect_partial_receive()
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTNoDataAvailable, status );
 
+    /* Discard packet, no time function provided. This should fail since multiple
+     * iterations of the discard loop are required to discard the packet, but only
+     * one will run due to lack of a time function. */
+    mqttContext.callbacks.getTime = NULL;
+    mqttContext.transportInterface.recv = transportRecvSuccess;
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, 0, &sessionPresent );
+    TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
+
     /* Timeout while discarding packet. */
+    mqttContext.callbacks.getTime = getTime;
+    /* (Mocked) read only one byte at a time to ensure timeout will occur. */
+    mqttContext.transportInterface.recv = transportRecvOneByte;
     incomingPacket.remainingLength = 20;
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
@@ -1310,6 +1335,7 @@ void test_MQTT_ProcessLoop_Timer_Overflow( void )
     MQTTPublishState_t ackState = MQTTPublishDone;
     uint8_t i = 0;
     uint8_t numIterations = ( MQTT_TIMER_OVERFLOW_TIMEOUT_MS / MQTT_TIMER_CALLS_PER_ITERATION ) + 1;
+    uint32_t expectedFinalTime;
 
     setupTransportInterface( &transport );
     setupCallbacks( &callbacks );
@@ -1319,6 +1345,7 @@ void test_MQTT_ProcessLoop_Timer_Overflow( void )
     incomingPacket.remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
 
     globalEntryTime = UINT32_MAX - MQTT_OVERFLOW_OFFSET;
+    expectedFinalTime = MQTT_TIMER_CALLS_PER_ITERATION * numIterations - MQTT_OVERFLOW_OFFSET;
 
     mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
@@ -1339,6 +1366,7 @@ void test_MQTT_ProcessLoop_Timer_Overflow( void )
 
     mqttStatus = MQTT_ProcessLoop( &context, MQTT_TIMER_OVERFLOW_TIMEOUT_MS );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    TEST_ASSERT_EQUAL( expectedFinalTime, globalEntryTime );
 }
 
 /* ========================================================================== */
