@@ -964,7 +964,7 @@ static IotTaskPoolError_t _initTaskPoolControlStructures( const IotTaskPoolInfo_
     bool timerInit = false;
 
     /* Zero out all data structures. */
-    memset( ( void * ) pTaskPool, 0x00, sizeof( IotTaskPool_t ) );
+    memset( ( void * ) pTaskPool, 0x00, sizeof( *pTaskPool ) );
 
     /* Initialize a job data structures that require no de-initialization.
      * All other data structures carry a value of 'NULL' before initialization.
