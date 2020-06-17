@@ -87,7 +87,7 @@ typedef struct MQTTPacketInfo      MQTTPacketInfo_t;
  *
  * @return The number of bytes received; negative value on failure.
  */
-typedef int32_t (* MQTTTransportRecvFunc_t )( MQTTNetworkContext_t context,
+typedef int32_t (* MQTTTransportRecvFunc_t )( NetworkContext_t context,
                                               void * pBuffer,
                                               size_t bytesToRecv );
 
@@ -520,7 +520,7 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
  * #MQTTNoDataAvailable if there is nothing to read.
  */
 MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( MQTTTransportRecvFunc_t readFunc,
-                                                  MQTTNetworkContext_t networkContext,
+                                                  NetworkContext_t networkContext,
                                                   MQTTPacketInfo_t * pIncomingPacket );
 
 #endif /* ifndef MQTT_LIGHTWEIGHT_H */

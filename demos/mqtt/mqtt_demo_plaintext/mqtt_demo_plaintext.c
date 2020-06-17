@@ -192,7 +192,7 @@ static int connectToServer( const char * pServer,
  * @return Number of bytes sent; negative value on error;
  * 0 for timeout or 0 bytes sent.
  */
-static int32_t transportSend( MQTTNetworkContext_t tcpSocket,
+static int32_t transportSend( NetworkContext_t tcpSocket,
                               const void * pMessage,
                               size_t bytesToSend );
 
@@ -205,7 +205,7 @@ static int32_t transportSend( MQTTNetworkContext_t tcpSocket,
  *
  * @return Number of bytes received; negative value on error.
  */
-static int32_t transportRecv( MQTTNetworkContext_t tcpSocket,
+static int32_t transportRecv( NetworkContext_t tcpSocket,
                               void * pBuffer,
                               size_t bytesToRecv );
 
@@ -423,7 +423,7 @@ static int connectToServer( const char * pServer,
 
 /*-----------------------------------------------------------*/
 
-static int32_t transportSend( MQTTNetworkContext_t tcpSocket,
+static int32_t transportSend( NetworkContext_t tcpSocket,
                               const void * pMessage,
                               size_t bytesToSend )
 {
@@ -446,7 +446,7 @@ static int32_t transportSend( MQTTNetworkContext_t tcpSocket,
 
 /*-----------------------------------------------------------*/
 
-static int32_t transportRecv( MQTTNetworkContext_t tcpSocket,
+static int32_t transportRecv( NetworkContext_t tcpSocket,
                               void * pBuffer,
                               size_t bytesToRecv )
 {
@@ -602,7 +602,7 @@ static int establishMqttSession( MQTTContext_t * pContext,
     /* Fill in TransportInterface send and receive function pointers.
      * For this demo, TCP sockets are used to send and receive data
      * from network. Network context is socket file descriptor.*/
-    transport.networkContext = ( MQTTNetworkContext_t ) tcpSocket;
+    transport.networkContext = ( NetworkContext_t ) tcpSocket;
     transport.send = transportSend;
     transport.recv = transportRecv;
 
