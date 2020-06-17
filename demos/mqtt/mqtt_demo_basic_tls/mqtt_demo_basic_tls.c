@@ -218,7 +218,7 @@ static int tlsSetup( int tcpSocket,
  * @return Number of bytes sent; negative value on error;
  * 0 for timeout or 0 bytes sent.
  */
-static int32_t transportSend( MQTTNetworkContext_t pSslContext,
+static int32_t transportSend( NetworkContext_t pSslContext,
                               const void * pMessage,
                               size_t bytesToSend );
 
@@ -232,7 +232,7 @@ static int32_t transportSend( MQTTNetworkContext_t pSslContext,
  * @return Number of bytes received; negative value on error;
  * 0 for timeout.
  */
-static int32_t transportRecv( MQTTNetworkContext_t pSslContext,
+static int32_t transportRecv( NetworkContext_t pSslContext,
                               void * pBuffer,
                               size_t bytesToRecv );
 
@@ -608,7 +608,7 @@ static int tlsSetup( int tcpSocket,
 
 /*-----------------------------------------------------------*/
 
-static int32_t transportSend( MQTTNetworkContext_t pSslContext,
+static int32_t transportSend( NetworkContext_t pSslContext,
                               const void * pMessage,
                               size_t bytesToSend )
 {
@@ -647,7 +647,7 @@ static int32_t transportSend( MQTTNetworkContext_t pSslContext,
 
 /*-----------------------------------------------------------*/
 
-static int32_t transportRecv( MQTTNetworkContext_t pSslContext,
+static int32_t transportRecv( NetworkContext_t pSslContext,
                               void * pBuffer,
                               size_t bytesToRecv )
 {

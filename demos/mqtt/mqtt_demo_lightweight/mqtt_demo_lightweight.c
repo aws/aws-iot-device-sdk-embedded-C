@@ -426,7 +426,7 @@ static int connectToServer( const char * pServer,
  *
  * @return Number of bytes received or zero to indicate transportTimeout; negative value on error.
  */
-static int32_t transportRecv( MQTTNetworkContext_t tcpSocket,
+static int32_t transportRecv( NetworkContext_t tcpSocket,
                               void * pBuffer,
                               size_t bytesToRecv )
 {

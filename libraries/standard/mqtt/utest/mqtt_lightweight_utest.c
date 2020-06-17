@@ -152,7 +152,7 @@ int suiteTearDown( int numFailures )
 /**
  * @brief Mock successful transport receive by reading data from a buffer.
  */
-static int32_t mockReceive( MQTTNetworkContext_t context,
+static int32_t mockReceive( NetworkContext_t context,
                             void * pBuffer,
                             size_t bytesToRecv )
 {
@@ -178,7 +178,7 @@ static int32_t mockReceive( MQTTNetworkContext_t context,
 /**
  * @brief Mock transport receive with no data available.
  */
-static int32_t mockReceiveNoData( MQTTNetworkContext_t context,
+static int32_t mockReceiveNoData( NetworkContext_t context,
                                   void * pBuffer,
                                   size_t bytesToRecv )
 {
@@ -188,7 +188,7 @@ static int32_t mockReceiveNoData( MQTTNetworkContext_t context,
 /**
  * @brief Mock transport receive failure.
  */
-static int32_t mockReceiveFailure( MQTTNetworkContext_t context,
+static int32_t mockReceiveFailure( NetworkContext_t context,
                                    void * pBuffer,
                                    size_t bytesToRecv )
 {
@@ -198,7 +198,7 @@ static int32_t mockReceiveFailure( MQTTNetworkContext_t context,
 /**
  * @brief Mock transport receive that succeeds once, then fails.
  */
-static int32_t mockReceiveSucceedThenFail( MQTTNetworkContext_t context,
+static int32_t mockReceiveSucceedThenFail( NetworkContext_t context,
                                            void * pBuffer,
                                            size_t bytesToRecv )
 {
@@ -1575,7 +1575,7 @@ void test_MQTT_GetIncomingPacketTypeAndLength( void )
     uint8_t * bufPtr = buffer;
 
     /* Dummy network context - pointer to pointer to a buffer. */
-    MQTTNetworkContext_t networkContext = ( MQTTNetworkContext_t ) &bufPtr;
+    NetworkContext_t networkContext = ( NetworkContext_t ) &bufPtr;
 
     buffer[ 0 ] = 0x20; /* CONN ACK */
     buffer[ 1 ] = 0x02; /* Remaining length. */

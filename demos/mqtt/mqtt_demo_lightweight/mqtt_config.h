@@ -48,6 +48,6 @@
 /************ End of logging configuration ****************/
 
 /* Set network context to socket (int). */
-typedef int MQTTNetworkContext_t;
+typedef int NetworkContext_t;
 
 #endif /* ifndef MQTT_CONFIG_H_ */
