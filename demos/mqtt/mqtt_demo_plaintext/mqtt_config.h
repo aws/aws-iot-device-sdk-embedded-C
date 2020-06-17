@@ -49,7 +49,7 @@
 /************ End of logging configuration ****************/
 
 /* Set network context to socket (int). */
-typedef int MQTTNetworkContext_t;
+typedef int NetworkContext_t;
 
 /**
  * @brief The maximum number of MQTT PUBLISH messages that may be pending

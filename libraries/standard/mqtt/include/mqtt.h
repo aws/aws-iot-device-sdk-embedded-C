@@ -38,7 +38,7 @@ typedef struct MQTTContext                MQTTContext_t;
 struct MQTTTransportInterface;
 typedef struct MQTTTransportInterface     MQTTTransportInterface_t;
 
-typedef int32_t (* MQTTTransportSendFunc_t )( MQTTNetworkContext_t context,
+typedef int32_t (* MQTTTransportSendFunc_t )( NetworkContext_t context,
                                               const void * pMessage,
                                               size_t bytesToSend );
 
@@ -82,7 +82,7 @@ struct MQTTTransportInterface
 {
     MQTTTransportSendFunc_t send;
     MQTTTransportRecvFunc_t recv;
-    MQTTNetworkContext_t networkContext;
+    NetworkContext_t networkContext;
 };
 
 struct MQTTApplicationCallbacks

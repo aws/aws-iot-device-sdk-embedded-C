@@ -379,7 +379,7 @@ static void setupRequestInfo( HTTPRequestInfo_t * pRequestInfo )
     pRequestInfo->pathLen = HTTP_TEST_REQUEST_PATH_LEN;
     pRequestInfo->pHost = HTTP_TEST_HOST_VALUE;
     pRequestInfo->hostLen = HTTP_TEST_HOST_VALUE_LEN;
-    pRequestInfo->flags = 0;
+    pRequestInfo->reqFlags = 0;
 }
 
 /**
@@ -493,7 +493,7 @@ void test_Http_InitializeRequestHeaders_ReqInfo()
     setupBuffer( &requestHeaders );
 
     requestInfo.pPath = NULL;
-    requestInfo.flags = HTTP_REQUEST_KEEP_ALIVE_FLAG;
+    requestInfo.reqFlags = HTTP_REQUEST_KEEP_ALIVE_FLAG;
     numBytes = snprintf( ( char * ) expectedHeaders.buffer, sizeof( expectedHeaders.buffer ),
                          HTTP_TEST_EXTRA_HEADER_FORMAT,
                          HTTP_METHOD_GET, HTTP_EMPTY_PATH,
@@ -516,7 +516,7 @@ void test_Http_InitializeRequestHeaders_ReqInfo()
     /* Repeat the test above but with length of path == 0 for coverage. */
     requestInfo.pPath = HTTP_EMPTY_PATH;
     requestInfo.pathLen = 0;
-    requestInfo.flags = HTTP_REQUEST_KEEP_ALIVE_FLAG;
+    requestInfo.reqFlags = HTTP_REQUEST_KEEP_ALIVE_FLAG;
     numBytes = snprintf( ( char * ) expectedHeaders.buffer, sizeof( expectedHeaders.buffer ),
                          HTTP_TEST_EXTRA_HEADER_FORMAT,
                          HTTP_METHOD_GET, HTTP_EMPTY_PATH,

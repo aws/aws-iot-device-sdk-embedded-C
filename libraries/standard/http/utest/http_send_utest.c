@@ -232,7 +232,7 @@ static void onHeaderCallback( void * pContext,
 }
 
 /* Successful application transport send interface. */
-static int32_t transportSendSuccess( HTTPNetworkContext_t * pContext,
+static int32_t transportSendSuccess( NetworkContext_t pContext,
                                      const void * pBuffer,
                                      size_t bytesToWrite )
 {
@@ -258,7 +258,7 @@ static int32_t transportSendSuccess( HTTPNetworkContext_t * pContext,
 /* Application transport send interface that returns a network error depending
 * on the call count. Set sendErrorCall to 0 to return an error on the
 * first call. Set sendErrorCall to 1 to return an error on the second call. */
-static int32_t transportSendNetworkError( HTTPNetworkContext_t * pContext,
+static int32_t transportSendNetworkError( NetworkContext_t pContext,
                                           const void * pBuffer,
                                           size_t bytesToWrite )
 {
@@ -279,7 +279,7 @@ static int32_t transportSendNetworkError( HTTPNetworkContext_t * pContext,
  * depending on the call count. Set sendPartialCall to 0 to return less bytes on
  * the first call. Set sendPartialCall to 1 to return less bytes on the second
  * call. */
-static int32_t transportSendLessThanBytesToWrite( HTTPNetworkContext_t * pContext,
+static int32_t transportSendLessThanBytesToWrite( NetworkContext_t pContext,
                                                   const void * pBuffer,
                                                   size_t bytesToWrite )
 {
@@ -297,7 +297,7 @@ static int32_t transportSendLessThanBytesToWrite( HTTPNetworkContext_t * pContex
 }
 
 /* Application transport send that writes more bytes than expected. */
-static int32_t transportSendMoreThanBytesToWrite( HTTPNetworkContext_t * pContext,
+static int32_t transportSendMoreThanBytesToWrite( NetworkContext_t pContext,
                                                   const void * pBuffer,
                                                   size_t bytesToWrite )
 {
@@ -313,7 +313,7 @@ static int32_t transportSendMoreThanBytesToWrite( HTTPNetworkContext_t * pContex
  * second call. The response to send is set in pNetworkData and the current
  * call count is kept track of in recvCurrentCall. This function will return
  * zero (timeout condition) when recvStopCall matches recvCurrentCall. */
-static int32_t transportRecvSuccess( HTTPNetworkContext_t * pContext,
+static int32_t transportRecvSuccess( NetworkContext_t pContext,
                                      void * pBuffer,
                                      size_t bytesToRead )
 {
@@ -351,7 +351,7 @@ static int32_t transportRecvSuccess( HTTPNetworkContext_t * pContext,
 }
 
 /* Application transport receive that return a network error. */
-static int32_t transportRecvNetworkError( HTTPNetworkContext_t * pContext,
+static int32_t transportRecvNetworkError( NetworkContext_t pContext,
                                           void * pBuffer,
                                           size_t bytesToRead )
 {
@@ -363,7 +363,7 @@ static int32_t transportRecvNetworkError( HTTPNetworkContext_t * pContext,
 }
 
 /* Application transport receive that returns more bytes read than expected. */
-static int32_t transportRecvMoreThanBytesToRead( HTTPNetworkContext_t * pContext,
+static int32_t transportRecvMoreThanBytesToRead( NetworkContext_t pContext,
                                                  void * pBuffer,
                                                  size_t bytesToRead )
 {
@@ -780,8 +780,8 @@ void test_HTTPClient_Send_HEAD_request_parse_whole_response( void )
     TEST_ASSERT_EQUAL( HTTP_STATUS_CODE_OK, response.statusCode );
     TEST_ASSERT_EQUAL( HTTP_TEST_RESPONSE_HEAD_CONTENT_LENGTH, response.contentLength );
     TEST_ASSERT_EQUAL( HTTP_TEST_RESPONSE_HEAD_HEADER_COUNT, response.headerCount );
-    TEST_ASSERT_BITS_HIGH( HTTP_RESPONSE_CONNECTION_CLOSE_FLAG, response.flags );
-    TEST_ASSERT_BITS_LOW( HTTP_RESPONSE_CONNECTION_KEEP_ALIVE_FLAG, response.flags );
+    TEST_ASSERT_BITS_HIGH( HTTP_RESPONSE_CONNECTION_CLOSE_FLAG, response.respFlags );
+    TEST_ASSERT_BITS_LOW( HTTP_RESPONSE_CONNECTION_KEEP_ALIVE_FLAG, response.respFlags );
 }
 
 /*-----------------------------------------------------------*/
@@ -818,8 +818,8 @@ void test_HTTPClient_Send_PUT_request_parse_whole_response( void )
     TEST_ASSERT_EQUAL( HTTP_STATUS_CODE_OK, response.statusCode );
     TEST_ASSERT_EQUAL( 0, response.contentLength );
     TEST_ASSERT_EQUAL( HTTP_TEST_RESPONSE_PUT_HEADER_COUNT, response.headerCount );
-    TEST_ASSERT_BITS_LOW( HTTP_RESPONSE_CONNECTION_CLOSE_FLAG, response.flags );
-    TEST_ASSERT_BITS_HIGH( HTTP_RESPONSE_CONNECTION_KEEP_ALIVE_FLAG, response.flags );
+    TEST_ASSERT_BITS_LOW( HTTP_RESPONSE_CONNECTION_CLOSE_FLAG, response.respFlags );
+    TEST_ASSERT_BITS_HIGH( HTTP_RESPONSE_CONNECTION_KEEP_ALIVE_FLAG, response.respFlags );
 }
 
 /*-----------------------------------------------------------*/
@@ -854,8 +854,8 @@ void test_HTTPClient_Send_GET_request_parse_whole_response( void )
     TEST_ASSERT_EQUAL( HTTP_STATUS_CODE_OK, response.statusCode );
     TEST_ASSERT_EQUAL( HTTP_TEST_RESPONSE_GET_CONTENT_LENGTH, response.contentLength );
     TEST_ASSERT_EQUAL( HTTP_TEST_RESPONSE_GET_HEADER_COUNT, response.headerCount );
-    TEST_ASSERT_BITS_HIGH( HTTP_RESPONSE_CONNECTION_CLOSE_FLAG, response.flags );
-    TEST_ASSERT_BITS_LOW( HTTP_RESPONSE_CONNECTION_KEEP_ALIVE_FLAG, response.flags );
+    TEST_ASSERT_BITS_HIGH( HTTP_RESPONSE_CONNECTION_CLOSE_FLAG, response.respFlags );
+    TEST_ASSERT_BITS_LOW( HTTP_RESPONSE_CONNECTION_KEEP_ALIVE_FLAG, response.respFlags );
 }
 
 /*-----------------------------------------------------------*/
@@ -886,8 +886,8 @@ void test_HTTPClient_Send_no_response_headers( void )
     TEST_ASSERT_EQUAL( HTTP_STATUS_CODE_OK, response.statusCode );
     TEST_ASSERT_EQUAL( 0, response.contentLength );
     TEST_ASSERT_EQUAL( 0, response.headerCount );
-    TEST_ASSERT_BITS_LOW( HTTP_RESPONSE_CONNECTION_CLOSE_FLAG, response.flags );
-    TEST_ASSERT_BITS_LOW( HTTP_RESPONSE_CONNECTION_KEEP_ALIVE_FLAG, response.flags );
+    TEST_ASSERT_BITS_LOW( HTTP_RESPONSE_CONNECTION_CLOSE_FLAG, response.respFlags );
+    TEST_ASSERT_BITS_LOW( HTTP_RESPONSE_CONNECTION_KEEP_ALIVE_FLAG, response.respFlags );
 }
 
 /*-----------------------------------------------------------*/
@@ -916,8 +916,8 @@ void test_HTTPClient_Send_parse_partial_header_field( void )
     TEST_ASSERT_EQUAL( HTTP_STATUS_CODE_OK, response.statusCode );
     TEST_ASSERT_EQUAL( HTTP_TEST_RESPONSE_HEAD_CONTENT_LENGTH, response.contentLength );
     TEST_ASSERT_EQUAL( HTTP_TEST_RESPONSE_HEAD_HEADER_COUNT, response.headerCount );
-    TEST_ASSERT_BITS_HIGH( HTTP_RESPONSE_CONNECTION_CLOSE_FLAG, response.flags );
-    TEST_ASSERT_BITS_LOW( HTTP_RESPONSE_CONNECTION_KEEP_ALIVE_FLAG, response.flags );
+    TEST_ASSERT_BITS_HIGH( HTTP_RESPONSE_CONNECTION_CLOSE_FLAG, response.respFlags );
+    TEST_ASSERT_BITS_LOW( HTTP_RESPONSE_CONNECTION_KEEP_ALIVE_FLAG, response.respFlags );
 }
 
 /*-----------------------------------------------------------*/
@@ -946,8 +946,8 @@ void test_HTTPClient_Send_parse_partial_header_value( void )
     TEST_ASSERT_EQUAL( HTTP_STATUS_CODE_OK, response.statusCode );
     TEST_ASSERT_EQUAL( HTTP_TEST_RESPONSE_HEAD_CONTENT_LENGTH, response.contentLength );
     TEST_ASSERT_EQUAL( HTTP_TEST_RESPONSE_HEAD_HEADER_COUNT, response.headerCount );
-    TEST_ASSERT_BITS_HIGH( HTTP_RESPONSE_CONNECTION_CLOSE_FLAG, response.flags );
-    TEST_ASSERT_BITS_LOW( HTTP_RESPONSE_CONNECTION_KEEP_ALIVE_FLAG, response.flags );
+    TEST_ASSERT_BITS_HIGH( HTTP_RESPONSE_CONNECTION_CLOSE_FLAG, response.respFlags );
+    TEST_ASSERT_BITS_LOW( HTTP_RESPONSE_CONNECTION_KEEP_ALIVE_FLAG, response.respFlags );
 }
 
 /*-----------------------------------------------------------*/
@@ -982,8 +982,8 @@ void test_HTTPClient_Send_parse_partial_body( void )
     TEST_ASSERT_EQUAL( HTTP_STATUS_CODE_OK, response.statusCode );
     TEST_ASSERT_EQUAL( HTTP_TEST_RESPONSE_GET_CONTENT_LENGTH, response.contentLength );
     TEST_ASSERT_EQUAL( HTTP_TEST_RESPONSE_GET_HEADER_COUNT, response.headerCount );
-    TEST_ASSERT_BITS_HIGH( HTTP_RESPONSE_CONNECTION_CLOSE_FLAG, response.flags );
-    TEST_ASSERT_BITS_LOW( HTTP_RESPONSE_CONNECTION_KEEP_ALIVE_FLAG, response.flags );
+    TEST_ASSERT_BITS_HIGH( HTTP_RESPONSE_CONNECTION_CLOSE_FLAG, response.respFlags );
+    TEST_ASSERT_BITS_LOW( HTTP_RESPONSE_CONNECTION_KEEP_ALIVE_FLAG, response.respFlags );
 }
 
 /*-----------------------------------------------------------*/
@@ -1017,8 +1017,8 @@ void test_HTTPClient_Send_parse_chunked_body( void )
     TEST_ASSERT_EQUAL( HTTP_STATUS_CODE_OK, response.statusCode );
     TEST_ASSERT_EQUAL( 0, response.contentLength );
     TEST_ASSERT_EQUAL( HTTP_TEST_RESPONSE_CHUNKED_HEADER_COUNT, response.headerCount );
-    TEST_ASSERT_BITS_LOW( HTTP_RESPONSE_CONNECTION_CLOSE_FLAG, response.flags );
-    TEST_ASSERT_BITS_HIGH( HTTP_RESPONSE_CONNECTION_KEEP_ALIVE_FLAG, response.flags );
+    TEST_ASSERT_BITS_LOW( HTTP_RESPONSE_CONNECTION_CLOSE_FLAG, response.respFlags );
+    TEST_ASSERT_BITS_HIGH( HTTP_RESPONSE_CONNECTION_KEEP_ALIVE_FLAG, response.respFlags );
 }
 
 /*-----------------------------------------------------------*/
@@ -1191,8 +1191,8 @@ void test_HTTPClient_Send_less_bytes_request_headers( void )
     TEST_ASSERT_EQUAL( HTTP_STATUS_CODE_OK, response.statusCode );
     TEST_ASSERT_EQUAL( 0, response.contentLength );
     TEST_ASSERT_EQUAL( HTTP_TEST_RESPONSE_PUT_HEADER_COUNT, response.headerCount );
-    TEST_ASSERT_BITS_LOW( HTTP_RESPONSE_CONNECTION_CLOSE_FLAG, response.flags );
-    TEST_ASSERT_BITS_HIGH( HTTP_RESPONSE_CONNECTION_KEEP_ALIVE_FLAG, response.flags );
+    TEST_ASSERT_BITS_LOW( HTTP_RESPONSE_CONNECTION_CLOSE_FLAG, response.respFlags );
+    TEST_ASSERT_BITS_HIGH( HTTP_RESPONSE_CONNECTION_KEEP_ALIVE_FLAG, response.respFlags );
 }
 
 /*-----------------------------------------------------------*/
@@ -1230,8 +1230,8 @@ void test_HTTPClient_Send_less_bytes_request_body( void )
     TEST_ASSERT_EQUAL( HTTP_STATUS_CODE_OK, response.statusCode );
     TEST_ASSERT_EQUAL( 0, response.contentLength );
     TEST_ASSERT_EQUAL( HTTP_TEST_RESPONSE_PUT_HEADER_COUNT, response.headerCount );
-    TEST_ASSERT_BITS_LOW( HTTP_RESPONSE_CONNECTION_CLOSE_FLAG, response.flags );
-    TEST_ASSERT_BITS_HIGH( HTTP_RESPONSE_CONNECTION_KEEP_ALIVE_FLAG, response.flags );
+    TEST_ASSERT_BITS_LOW( HTTP_RESPONSE_CONNECTION_CLOSE_FLAG, response.respFlags );
+    TEST_ASSERT_BITS_HIGH( HTTP_RESPONSE_CONNECTION_KEEP_ALIVE_FLAG, response.respFlags );
 }
 
 /*-----------------------------------------------------------*/
@@ -1487,7 +1487,7 @@ void test_HTTPClient_Send_parsing_errors( void )
                                     0,
                                     &response,
                                     0 );
-    TEST_ASSERT_EQUAL( HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CHUNK_HEADER, returnStatus );
+    TEST_ASSERT_EQUAL( HTTP_SECURITY_ALERT_INVALID_CHUNK_HEADER, returnStatus );
 
     httpParsingErrno = HPE_CLOSED_CONNECTION;
     returnStatus = HTTPClient_Send( &transportInterface,
@@ -1505,7 +1505,7 @@ void test_HTTPClient_Send_parsing_errors( void )
                                     0,
                                     &response,
                                     0 );
-    TEST_ASSERT_EQUAL( HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_PROTOCOL_VERSION, returnStatus );
+    TEST_ASSERT_EQUAL( HTTP_SECURITY_ALERT_INVALID_PROTOCOL_VERSION, returnStatus );
 
     httpParsingErrno = HPE_INVALID_STATUS;
     returnStatus = HTTPClient_Send( &transportInterface,
@@ -1514,7 +1514,7 @@ void test_HTTPClient_Send_parsing_errors( void )
                                     0,
                                     &response,
                                     0 );
-    TEST_ASSERT_EQUAL( HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_STATUS_CODE, returnStatus );
+    TEST_ASSERT_EQUAL( HTTP_SECURITY_ALERT_INVALID_STATUS_CODE, returnStatus );
 
     httpParsingErrno = HPE_STRICT;
     returnStatus = HTTPClient_Send( &transportInterface,
@@ -1523,7 +1523,7 @@ void test_HTTPClient_Send_parsing_errors( void )
                                     0,
                                     &response,
                                     0 );
-    TEST_ASSERT_EQUAL( HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CHARACTER, returnStatus );
+    TEST_ASSERT_EQUAL( HTTP_SECURITY_ALERT_INVALID_CHARACTER, returnStatus );
 
     httpParsingErrno = HPE_INVALID_CONSTANT;
     returnStatus = HTTPClient_Send( &transportInterface,
@@ -1532,7 +1532,7 @@ void test_HTTPClient_Send_parsing_errors( void )
                                     0,
                                     &response,
                                     0 );
-    TEST_ASSERT_EQUAL( HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CHARACTER, returnStatus );
+    TEST_ASSERT_EQUAL( HTTP_SECURITY_ALERT_INVALID_CHARACTER, returnStatus );
 
     httpParsingErrno = HPE_LF_EXPECTED;
     returnStatus = HTTPClient_Send( &transportInterface,
@@ -1541,7 +1541,7 @@ void test_HTTPClient_Send_parsing_errors( void )
                                     0,
                                     &response,
                                     0 );
-    TEST_ASSERT_EQUAL( HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CHARACTER, returnStatus );
+    TEST_ASSERT_EQUAL( HTTP_SECURITY_ALERT_INVALID_CHARACTER, returnStatus );
 
     httpParsingErrno = HPE_INVALID_HEADER_TOKEN;
     returnStatus = HTTPClient_Send( &transportInterface,
@@ -1550,7 +1550,7 @@ void test_HTTPClient_Send_parsing_errors( void )
                                     0,
                                     &response,
                                     0 );
-    TEST_ASSERT_EQUAL( HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CHARACTER, returnStatus );
+    TEST_ASSERT_EQUAL( HTTP_SECURITY_ALERT_INVALID_CHARACTER, returnStatus );
 
     httpParsingErrno = HPE_INVALID_CONTENT_LENGTH;
     returnStatus = HTTPClient_Send( &transportInterface,
@@ -1559,7 +1559,7 @@ void test_HTTPClient_Send_parsing_errors( void )
                                     0,
                                     &response,
                                     0 );
-    TEST_ASSERT_EQUAL( HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CONTENT_LENGTH, returnStatus );
+    TEST_ASSERT_EQUAL( HTTP_SECURITY_ALERT_INVALID_CONTENT_LENGTH, returnStatus );
 
     httpParsingErrno = HPE_UNEXPECTED_CONTENT_LENGTH;
     returnStatus = HTTPClient_Send( &transportInterface,
@@ -1568,7 +1568,7 @@ void test_HTTPClient_Send_parsing_errors( void )
                                     0,
                                     &response,
                                     0 );
-    TEST_ASSERT_EQUAL( HTTP_SECURITY_ALERT_MALFORMED_RESPONSE_INVALID_CONTENT_LENGTH, returnStatus );
+    TEST_ASSERT_EQUAL( HTTP_SECURITY_ALERT_INVALID_CONTENT_LENGTH, returnStatus );
 
     httpParsingErrno = HPE_UNKNOWN;
     returnStatus = HTTPClient_Send( &transportInterface,
