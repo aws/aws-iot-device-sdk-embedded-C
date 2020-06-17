@@ -19,8 +19,8 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef TEST_CONFIG_H
-#define TEST_CONFIG_H
+#ifndef TEST_CONFIG_H_
+#define TEST_CONFIG_H_
 
 /**************************************************/
 /******* DO NOT CHANGE the following order ********/
@@ -84,11 +84,6 @@
 #endif
 
 /**
- * @brief Length of path to server certificate.
- */
-#define SERVER_CERT_PATH_LENGTH    ( ( uint16_t ) ( sizeof( SERVER_CERT_PATH ) - 1 ) )
-
-/**
  * @brief MQTT client identifier.
  *
  * No two clients may use the same client identifier simultaneously.
@@ -97,4 +92,4 @@
     #define CLIENT_IDENTIFIER    "testclient"
 #endif
 
-#endif /* ifndef TEST_CONFIG_H */
+#endif /* ifndef TEST_CONFIG_H_ */

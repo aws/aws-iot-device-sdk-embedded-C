@@ -47,7 +47,7 @@ list(APPEND utest_link_list
 
 list(APPEND utest_dep_list
             ${real_name}
-            tls_utils
+            transport_utils
         )
 
 set(utest_name "${project_name}_utest")

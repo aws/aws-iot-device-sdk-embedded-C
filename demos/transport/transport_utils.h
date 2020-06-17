@@ -31,15 +31,18 @@
 /* OpenSSL include. */
 #include <openssl/ssl.h>
 
+/* MQTT include. */
 #include "mqtt.h"
 
 /**
  * @brief Creates a TCP connection to the MQTT broker as specified by
- * BROKER_ENDPOINT and BROKER_PORT defined at the top of this file.
+ * the @p pServer and @p port parameters, and populate the tcp socket
+ * descriptor output parameter, if connection is successful.
  *
  * @param[in] pServer Host name of server.
  * @param[in] port Server port.
- * @param[out] pTcpSocket Pointer to TCP socket file descriptor.
+ * @param[out] pTcpSocket The output parameter to return the created socket
+ * descriptor.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
@@ -59,7 +62,7 @@ void closeTcpConnection( int tcpSocket );
  *
  * @param[in] tcpSocket Existing TCP connection.
  * @param[in] pServerCertPath The absolute file path to the server certificate.
- * @param[out] pSslContext Pointer to SSL connection context pointer.
+ * @param[out] pSslContext The output parameter to return the created SSL context.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */

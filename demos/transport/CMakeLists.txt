@@ -1,14 +1,14 @@
-# CMake library target for tls_utils.
+# CMake library target for transport_utils.
 set(OPENSSL_USE_STATIC_LIBS TRUE)
 find_package(OpenSSL REQUIRED)
 
 set( CMAKE_THREAD_PREFER_PTHREAD ON )
 find_package(Threads REQUIRED)
 
-add_library( tls_utils tls_utils.c )
+add_library( transport_utils transport_utils.c )
 
 target_link_libraries(
-    tls_utils
+    transport_utils
     PRIVATE
         OpenSSL::Crypto
         OpenSSL::SSL
@@ -21,7 +21,7 @@ target_link_libraries(
 )
 
 target_include_directories(
-    tls_utils
+    transport_utils
     PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}
 )

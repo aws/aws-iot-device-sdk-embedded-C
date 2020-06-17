@@ -40,10 +40,10 @@
 #include <assert.h>
 
 /* Include config file before non-system headers. */
-#include "tls_config.h"
+#include "transport_config.h"
 
 /* Header file for the library. */
-#include "tls_utils.h"
+#include "transport_utils.h"
 
 /*-----------------------------------------------------------*/
 
