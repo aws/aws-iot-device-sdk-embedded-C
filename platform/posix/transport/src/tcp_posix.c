@@ -281,7 +281,10 @@ TCPStatus_t TCP_Connect( const char * pHostName,
         /* Empty else for MISRA 15.7 compliance. */
     }
 
-    returnStatus = resolveHostName( pHostName, hostNameLength, &pListHead );
+    if( returnStatus == TCP_SUCCESS )
+    {
+        returnStatus = resolveHostName( pHostName, hostNameLength, &pListHead );
+    }
 
     if( returnStatus == TCP_SUCCESS )
     {
