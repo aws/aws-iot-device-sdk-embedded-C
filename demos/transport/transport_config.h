@@ -19,8 +19,8 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef TLS_CONFIG_H_
-#define TLS_CONFIG_H_
+#ifndef TRANSPORT_CONFIG_H_
+#define TRANSPORT_CONFIG_H_
 
 /**************************************************/
 /******* DO NOT CHANGE the following order ********/
@@ -47,4 +47,4 @@
 
 /************ End of logging configuration ****************/
 
-#endif /* ifndef TLS_CONFIG_H_ */
+#endif /* ifndef TRANSPORT_CONFIG_H_ */

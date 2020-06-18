@@ -25,8 +25,8 @@
  * integration tests.
  */
 
-#ifndef TLS_UTILS_H_
-#define TLS_UTILS_H_
+#ifndef TRANSPORT_UTILS_H_
+#define TRANSPORT_UTILS_H_
 
 /* OpenSSL include. */
 #include <openssl/ssl.h>
@@ -111,4 +111,4 @@ int32_t transportRecv( SSL * pSslContext,
  */
 uint32_t getTimeMs( void );
 
-#endif /* ifndef TLS_UTILS_H_ */
+#endif /* ifndef TRANSPORT_UTILS_H_ */
