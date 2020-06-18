@@ -16,8 +16,6 @@ target_link_libraries(
         Threads::Threads
 	    # SSL uses Dynamic Loading and on some platforms requires explicit linking.
         ${CMAKE_DL_LIBS}
-        # Dependency on mqtt for MQTTNetworkContext_t type.
-        mqtt
 )
 
 target_include_directories(

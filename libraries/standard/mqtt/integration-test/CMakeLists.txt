@@ -41,20 +41,20 @@ create_real_library(${real_name}
                     ""
         )
 
-list(APPEND utest_link_list
+list(APPEND stest_link_list
             lib${real_name}.a
         )
 
-list(APPEND utest_dep_list
+list(APPEND stest_dep_list
             ${real_name}
             transport_utils
         )
 
-set(utest_name "${project_name}_test")
-set(utest_source "${project_name}_test.c")
-create_test(${utest_name}
-            ${utest_source}
-            "${utest_link_list}"
-            "${utest_dep_list}"
+set(stest_name "${project_name}_test")
+set(stest_source "${project_name}_test.c")
+create_test(${stest_name}
+            ${stest_source}
+            "${stest_link_list}"
+            "${stest_dep_list}"
             "${test_include_directories}"
         )
