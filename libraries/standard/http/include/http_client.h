@@ -6,7 +6,7 @@
 /* Include config file before other headers. */
 #include "http_config.h"
 
-#include "network_interface.h"
+#include "transport_interface.h"
 
 /**
  * @brief Maximum size, in bytes, of headers allowed from the server.

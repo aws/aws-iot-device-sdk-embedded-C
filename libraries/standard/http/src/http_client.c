@@ -100,10 +100,10 @@ static HTTPStatus_t addHeader( HTTPRequestHeaders_t * pRequestHeaders,
  * more bytes than what was specified were read, then #HTTP_NETWORK_ERROR is
  * returned.
  */
-HTTPStatus_t receiveHttpData( const TransportInterface_t * pTransport,
-                              uint8_t * pBuffer,
-                              size_t bufferLen,
-                              size_t * pBytesReceived );
+static HTTPStatus_t receiveHttpData( const TransportInterface_t * pTransport,
+                                     uint8_t * pBuffer,
+                                     size_t bufferLen,
+                                     size_t * pBytesReceived );
 
 /**
  * @brief Get the status of the HTTP response given the parsing state and how
@@ -1677,10 +1677,10 @@ static HTTPStatus_t sendHttpBody( const TransportInterface_t * pTransport,
 
 /*-----------------------------------------------------------*/
 
-HTTPStatus_t receiveHttpData( const TransportInterface_t * pTransport,
-                              uint8_t * pBuffer,
-                              size_t bufferLen,
-                              size_t * pBytesReceived )
+static HTTPStatus_t receiveHttpData( const TransportInterface_t * pTransport,
+                                     uint8_t * pBuffer,
+                                     size_t bufferLen,
+                                     size_t * pBytesReceived )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
     int32_t transportStatus = 0;

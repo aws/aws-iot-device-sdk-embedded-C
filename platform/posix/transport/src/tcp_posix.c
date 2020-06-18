@@ -1,30 +1,71 @@
-/* Standard includes. */
-#include <assert.h>
-#include <stdlib.h>
-#include <string.h>
+#include "TCP_transport.h"
 
 /* POSIX socket includes. */
 #include <errno.h>
 #include <netdb.h>
-#include <time.h>
 #include <poll.h>
-#include <unistd.h>
 #include <arpa/inet.h>
 
 #include <sys/socket.h>
 #include <sys/types.h>
 
-#include "network_utilities.h"
+/* Transport interface include. */
+#include "transport_interface.h"
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Defined by transport layer to check send or receive error.
+ */
+extern int errno;
+
+/**
+ * @brief Timeout for transport send.
+ *
+ * @note Setting to a negative value implies an infinite timeout.
+ */
+static int sendTimeout = -1;
+
+/**
+ * @brief Timeout for transport recv.
+ *
+ * @note Setting to a negative value implies an infinite timeout.
+ */
+static int recvTimeout = -1;
+
+/**
+ * @brief Definition of the network context.
+ *
+ * @note An integer is used to store the descriptor of the socket.
+ */
+struct NetworkContext
+{
+    int tcpSocket;
+};
+
+/*-----------------------------------------------------------*/
 
 /**
  * @brief Length of an IPv6 address when converted to hex digits.
  */
 #define IPV6_ADDRESS_STRING_LENGTH    ( 40 )
 
-/*----------------------------------------------------------------------------*/
+/*-----------------------------------------------------------*/
 
-NetworkStatus_t TCP_Connect( int * pTcpSocket,
-                             const NetworkServerInfo_t * pServerInfo )
+int resolveHost( const char * pHostName,
+                 size_t hostNameLength );
+
+/*-----------------------------------------------------------*/
+
+int resolveHost( const char * pHostName,
+                 size_t hostNameLength )
+{
+}
+
+NetworkStatus_t TCP_Connect( const char * pHostName,
+                             size_t hostNameLength,
+                             uint16_t port,
+                             int * pTcpSocket )
 {
     int networkStatus = NETWORK_INTERNAL_ERROR;
     struct addrinfo hints, * pIndex, * pListHead = NULL;
@@ -152,4 +193,104 @@ void TCP_Disconnect( int tcpSocket )
         ( void ) shutdown( tcpSocket, SHUT_RDWR );
         ( void ) close( tcpSocket );
     }
+}
+
+void TCP_SetSendTimeout( int timeout )
+{
+    sendTimeout = timeout;
+}
+
+void TCP_SetRecvTimeout( int timeout )
+{
+    recvTimeout = timeout;
+}
+
+int32_t TCP_Send( NetworkContext_t pContext,
+                  const void * pBuffer,
+                  size_t bytesToSend )
+{
+    int32_t bytesSent = 0;
+    int pollStatus = 0;
+    struct pollfd fileDescriptor;
+
+    fileDescriptor.events = POLLOUT;
+    fileDescriptor.revents = 0;
+
+    /* Set the file descriptor for poll. */
+    fileDescriptor.fd = pContext->tcpSocket;
+
+    /* Poll the file descriptor to check if send is ready. */
+    pollStatus = poll( &fileDescriptor, 1, sendTimeout );
+
+    /* TCP read of data. */
+    if( pollStatus > 0 )
+    {
+        bytesSent = ( int32_t ) send( pContext->tcpSocket, pBuffer, bytesToSend, 0 );
+    }
+    /* Poll timed out. */
+    else if( pollStatus == 0 )
+    {
+        LogDebug( ( "Poll timed out while polling the socket for write buffer availability." ) );
+    }
+    else
+    {
+        if( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) )
+        {
+            LogError( ( "Server closed the connection." ) );
+            /* Set return value to 0 to indicate connection was dropped by server. */
+            bytesSent = 0;
+        }
+        else
+        {
+            LogError( ( "Poll returned with status = %d.", pollStatus ) );
+            bytesSent = -1;
+        }
+    }
+
+    return bytesSent;
+}
+
+int32_t TCP_Recv( NetworkContext_t pContext,
+                  void * pBuffer,
+                  size_t bytesToRecv )
+{
+    int32_t bytesReceived = 0;
+    int pollStatus = -1, bytesAvailableToRead = 0;
+    struct pollfd fileDescriptor;
+
+    fileDescriptor.events = POLLIN | POLLPRI;
+    fileDescriptor.revents = 0;
+
+    /* Set the file descriptor for poll. */
+    fileDescriptor.fd = pContext->tcpSocket;
+
+    /* Check if there are any pending data available for read. */
+    pollStatus = poll( &fileDescriptor, 1, recvTimeout );
+
+    /* SSL read of data. */
+    if( pollStatus > 0 )
+    {
+        bytesReceived = ( int32_t ) recv( pContext->tcpSocket, pBuffer, bytesToRecv, 0 );
+    }
+    /* Poll timed out. */
+    else if( pollStatus == 0 )
+    {
+        LogDebug( ( "Poll timed out while waiting for data to read from the buffer." ) );
+    }
+    else
+    {
+        if( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) )
+        {
+            LogError( ( "Server closed the connection." ) );
+            /* Set return value to 0 to indicate connection was dropped by server. */
+            bytesReceived = 0;
+        }
+        else
+        {
+            LogError( ( "Poll returned with status = %d.", pollStatus ) );
+            bytesReceived = -1;
+        }
+    }
+
+    return bytesReceived;
 }

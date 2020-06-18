@@ -1,5 +1,5 @@
-#ifndef NETWORK_INTERFACE_H_
-#define NETWORK_INTERFACE_H_
+#ifndef TRANSPORT_INTERFACE_H_
+#define TRANSPORT_INTERFACE_H_
 
 #include <stdint.h>
 #include <stddef.h>
@@ -32,7 +32,7 @@ typedef int32_t ( * TransportRecv_t )( NetworkContext_t pContext,
  * @param[in] pBuffer Buffer containing the bytes to send over the network stack.
  * @param[in] bytesToWrite Number of bytes to write to the network.
  *
- * @return The number of bytes written or a negative network error code.
+ * @return The number of bytes written or a negative error code.
  */
 typedef int32_t ( * TransportSend_t )( NetworkContext_t pContext,
                                        const void * pBuffer,
@@ -43,9 +43,9 @@ typedef int32_t ( * TransportSend_t )( NetworkContext_t pContext,
  */
 typedef struct TransportInterface
 {
-    TransportRecv_t recv;      /**< Transport receive interface */
-    TransportSend_t send;      /**< Transport interface send interface. */
+    TransportRecv_t recv;      /**< Transport receive interface. */
+    TransportSend_t send;      /**< Transport send interface. */
     NetworkContext_t pContext; /**< Application-defined transport interface context. */
 } TransportInterface_t;
 
-#endif /* ifndef NETWORK_INTERFACE_H_ */
+#endif /* ifndef TRANSPORT_INTERFACE_H_ */

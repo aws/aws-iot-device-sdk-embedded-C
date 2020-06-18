@@ -19,8 +19,8 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PLAINTEXT_CONFIG_H_
-#define PLAINTEXT_CONFIG_H_
+#ifndef TCP_CONFIG_H_
+#define TCP_CONFIG_H_
 
 /**************************************************/
 /******* DO NOT CHANGE the following order ********/
@@ -47,31 +47,68 @@
 
 /************ End of logging configuration ****************/
 
-#include "network_interface.h"
+/**
+ * @ingroup platform_datatypes_enums
+ * @brief Return codes for [network functions](@ref platform_network_functions).
+ */
+typedef enum NetworkStatus
+{
+    NETWORK_SUCCESS = 0,         /**< Function successfully completed. */
+    NETWORK_INVALID_PARAMETER,   /**< At least one parameter was invalid. */
+    NETWORK_INVALID_CREDENTIALS, /**< Provided certificates or key were invalid. */
+    NETWORK_CONNECT_FAILURE,     /**< Initial connection to the server failed. */
+    NETWORK_DNS_FAILURE,         /**< Resolving hostname of server failed. */
+    NETWORK_INTERNAL_ERROR,      /**< Generic failure not covered by other values. */
+    NETWORK_NO_MEMORY,           /**< Memory allocation failed. */
+    NETWORK_SYSTEM_ERROR         /**< An error occurred when calling a system API. */
+} NetworkStatus_t;
 
 /**
- * @brief Definition of the network context.
- *
- * @note An integer is used to store the descriptor of the socket.
+ * @ingroup platform_datatypes_enums
+ * @brief Disconnect reasons for [the network close callback](@ref platform_network_function_closecallback).
  */
-struct NetworkContext
+typedef enum NetworkCloseReason
 {
-    int tcpSocket;
-};
+    NETWORK_NOT_CLOSED = 0,    /**< Not closed, still open */
+    NETWORK_SERVER_CLOSED,     /**< Server closed connection. */
+    NETWORK_TRANSPORT_FAILURE, /**< Transport failed. */
+    NETWORK_CLIENT_CLOSED,     /**< Client closed connection. */
+    NETWORK_UNKNOWN_CLOSED     /**< Unknown close reason. */
+} NetworkCloseReason_t;
+
+/**
+ * @brief End connection to server.
+ *
+ * @brief param[in] pServerInfo Server host name.
+ * @brief param[in] hostNameLength Length associated with host name.
+ * @brief param[in] port Server port in host-order.
+ * @brief param[out] pTcpSocket Pointer to the socket descriptor.
+ */
+NetworkStatus_t TCP_Connect( const char * pHostName,
+                             size_t hostNameLength,
+                             uint16_t port,
+                             int * pTcpSocket );
+
+/**
+ * @brief End connection to server.
+ *
+ * @brief param[in] tcpSocket The socket descriptor.
+ */
+void TCP_Disconnect( int tcpSocket );
 
 /**
  * @brief Set timeout for transport send.
  *
  * @brief param[in] timeout The timeout to set for transport send.
  */
-void Plaintext_SetSendTimeout( int timeout );
+void TCP_SetSendTimeout( int timeout );
 
 /**
  * @brief Set timeout for transport recv.
  *
  * @brief param[in] timeout The timeout to set for transport recv.
  */
-void Plaintext_SetRecvTimeout( int timeout );
+void TCP_SetRecvTimeout( int timeout );
 
 /**
  * @brief The transport send function that defines the transport interface.
@@ -85,9 +122,9 @@ void Plaintext_SetRecvTimeout( int timeout );
  *
  * @return Number of bytes sent if successful; otherwise negative value on error.
  */
-int32_t Plaintext_Send( NetworkContext_t pContext,
-                        const void * pBuffer,
-                        size_t bytesToSend );
+int32_t TCP_Send( NetworkContext_t pContext,
+                  const void * pBuffer,
+                  size_t bytesToSend );
 
 /**
  * @brief The transport receive function that defines the transport interface.
@@ -101,8 +138,8 @@ int32_t Plaintext_Send( NetworkContext_t pContext,
  *
  * @return Number of bytes received if successful; otherwise negative value on error.
  */
-int32_t Plaintext_Recv( NetworkContext_t pContext,
-                        void * pBuffer,
-                        size_t bytesToRecv );
+int32_t TCP_Recv( NetworkContext_t pContext,
+                  void * pBuffer,
+                  size_t bytesToRecv );
 
-#endif /* ifndef PLAINTEXT_CONFIG_H_ */
+#endif /* ifndef TCP_CONFIG_H_ */
