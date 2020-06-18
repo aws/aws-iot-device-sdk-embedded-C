@@ -19,12 +19,12 @@
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Number of DNS records to attempt connection.
+ * @brief Number of DNS records to attempt a connection.
  *
  * @note Negative value implies attempting to connect to all DNS records
  * until successful.
  */
-#define DNS_RECORD_ATTEMPTS    ( -1 )
+#define NUM_DNS_RECORDS_TO_TRY    ( -1 )
 
 /*-----------------------------------------------------------*/
 
@@ -69,19 +69,16 @@ struct NetworkContext
  *
  * @brief param[in] pHostName Server host name.
  * @brief param[in] hostNameLength Length associated with host name.
- * @brief param[in] port Server port in host-order.
- * @brief param[out] pTcpSocket Pointer to the socket descriptor.
+ * @brief param[out] pListHead List containing resolved DNS records.
  *
  * @return #TCP_SUCCESS if successful; #TCP_DNS_FAILURE, #TCP_CONNECT_FAILURE on error.
  */
-TCPStatus_t resolveHost( const char * pHostName,
-                         size_t hostNameLength,
-                         uint16_t port,
-                         int * pTcpSocket );
+TCPStatus_t resolveHostName( const char * pHostName,
+                             size_t hostNameLength,
+                             struct addrinfo * pListHead );
 
 /**
- * @brief Traverse list of resolved DNS records and return successfully if one
- * connection is successful.
+ * @brief Traverse list of DNS records and return successfully if able to connect to one.
  *
  * @brief param[in] pListHead List containing resolved DNS records.
  * @brief param[in] pHostName Server host name.
@@ -104,18 +101,16 @@ TCPStatus_t attemptConnection( struct addrinfo * pListHead,
 
 /*-----------------------------------------------------------*/
 
-TCPStatus_t resolveHost( const char * pHostName,
-                         size_t hostNameLength,
-                         uint16_t port,
-                         int * pTcpSocket )
+TCPStatus_t resolveHostName( const char * pHostName,
+                             size_t hostNameLength,
+                             struct addrinfo * pListHead )
 {
     TCPStatus_t returnStatus = TCP_SUCCESS;
     int dnsStatus = -1;
-    struct addrinfo hints, * pListHead = NULL;
+    struct addrinfo hints;
 
     assert( pHostName != NULL );
     assert( hostNameLength > 0 );
-    assert( pTcpSocket != NULL );
 
     /* Add hints to retrieve only TCP sockets in getaddrinfo. */
     ( void ) memset( &hints, 0, sizeof( hints ) );
@@ -135,15 +130,6 @@ TCPStatus_t resolveHost( const char * pHostName,
                     ( int32_t ) hostNameLength,
                     pHostName ) );
         returnStatus = TCP_DNS_FAILURE;
-    }
-    else
-    {
-        returnStatus = attemptConnection( pListHead,
-                                          pHostName,
-                                          hostNameLength,
-                                          port,
-                                          pTcpSocket,
-                                          DNS_RECORD_ATTEMPTS );
     }
 
     return returnStatus;
@@ -170,9 +156,6 @@ TCPStatus_t attemptConnection( struct addrinfo * pListHead,
 
     if( pListHead != NULL )
     {
-        /* Initialize string to store the resolved IP address from the host name. */
-        ( void ) memset( resolvedIpAddr, 0, INET6_ADDRSTRLEN );
-
         netPort = htons( port );
 
         LogDebug( ( "Performing DNS lookup: Host=%.*s.",
@@ -279,6 +262,7 @@ TCPStatus_t TCP_Connect( const char * pHostName,
                          int * pTcpSocket )
 {
     TCPStatus_t returnStatus = TCP_SUCCESS;
+    struct addrinfo * pListHead = NULL;
 
     if( pHostName == NULL )
     {
@@ -300,7 +284,16 @@ TCPStatus_t TCP_Connect( const char * pHostName,
         /* Empty else for MISRA 15.7 compliance. */
     }
 
-    returnStatus = resolveHost( pHostName, hostNameLength, port, pTcpSocket );
+    returnStatus = resolveHost( pHostName, hostNameLength, pListHead );
+
+    if( returnStatus == TCP_SUCCESS )
+    {
+        returnStatus = attemptConnection( pListHead,
+                                          pHostName, hostNameLength,
+                                          port,
+                                          pTcpSocket,
+                                          NUM_DNS_RECORDS_TO_TRY );
+    }
 
     return returnStatus;
 }
