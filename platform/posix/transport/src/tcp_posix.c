@@ -316,59 +316,14 @@ TCPStatus_t TCP_Disconnect( int tcpSocket )
     return returnStatus;
 }
 
-void TCP_SetSendTimeout( int timeout )
-{
-    tcpSendTimeout = timeout;
-}
-
 void TCP_SetRecvTimeout( int timeout )
 {
     tcpRecvTimeout = timeout;
 }
 
-int32_t TCP_Send( NetworkContext_t pContext,
-                  const void * pBuffer,
-                  size_t bytesToSend )
+void TCP_SetSendTimeout( int timeout )
 {
-    int32_t bytesSent = 0;
-    int pollStatus = 0;
-    struct pollfd fileDescriptor;
-
-    fileDescriptor.events = POLLOUT;
-    fileDescriptor.revents = 0;
-
-    /* Set the file descriptor for poll. */
-    fileDescriptor.fd = pContext->tcpSocket;
-
-    /* Poll the file descriptor to check if send is ready. */
-    pollStatus = poll( &fileDescriptor, 1, tcpSendTimeout );
-
-    /* TCP read of data. */
-    if( pollStatus > 0 )
-    {
-        bytesSent = ( int32_t ) send( pContext->tcpSocket, pBuffer, bytesToSend, 0 );
-    }
-    /* Poll timed out. */
-    else if( pollStatus == 0 )
-    {
-        LogDebug( ( "Poll timed out while polling the socket for write buffer availability." ) );
-    }
-    else
-    {
-        if( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) )
-        {
-            LogError( ( "Server closed the connection." ) );
-            /* Set return value to 0 to indicate connection was dropped by server. */
-            bytesSent = 0;
-        }
-        else
-        {
-            LogError( ( "Poll returned with status = %d.", pollStatus ) );
-            bytesSent = -1;
-        }
-    }
-
-    return bytesSent;
+    tcpSendTimeout = timeout;
 }
 
 int32_t TCP_Recv( NetworkContext_t pContext,
@@ -379,10 +334,9 @@ int32_t TCP_Recv( NetworkContext_t pContext,
     int pollStatus = -1;
     struct pollfd fileDescriptor;
 
+    /* Initialize the file descriptor for polling. */
     fileDescriptor.events = POLLIN | POLLPRI;
     fileDescriptor.revents = 0;
-
-    /* Set the file descriptor for poll. */
     fileDescriptor.fd = pContext->tcpSocket;
 
     /* Check if there are any pending data available for read. */
@@ -414,4 +368,48 @@ int32_t TCP_Recv( NetworkContext_t pContext,
     }
 
     return bytesReceived;
+}
+
+int32_t TCP_Send( NetworkContext_t pContext,
+                  const void * pBuffer,
+                  size_t bytesToSend )
+{
+    int32_t bytesSent = 0;
+    int pollStatus = 0;
+    struct pollfd fileDescriptor;
+
+    /* Initialize the file descriptor for polling. */
+    fileDescriptor.events = POLLOUT;
+    fileDescriptor.revents = 0;
+    fileDescriptor.fd = pContext->tcpSocket;
+
+    /* Poll the file descriptor to check if send is ready. */
+    pollStatus = poll( &fileDescriptor, 1, tcpSendTimeout );
+
+    /* TCP read of data. */
+    if( pollStatus > 0 )
+    {
+        bytesSent = ( int32_t ) send( pContext->tcpSocket, pBuffer, bytesToSend, 0 );
+    }
+    /* Poll timed out. */
+    else if( pollStatus == 0 )
+    {
+        LogDebug( ( "Poll timed out while polling the socket for write buffer availability." ) );
+    }
+    else
+    {
+        if( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) )
+        {
+            LogError( ( "Server closed the connection." ) );
+            /* Set return value to 0 to indicate connection was dropped by server. */
+            bytesSent = 0;
+        }
+        else
+        {
+            LogError( ( "Poll returned with status = %d.", pollStatus ) );
+            bytesSent = -1;
+        }
+    }
+
+    return bytesSent;
 }

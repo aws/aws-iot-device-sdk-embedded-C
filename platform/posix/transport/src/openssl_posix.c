@@ -242,16 +242,6 @@ static int readCredentials( SSL_CTX * pSslContext,
     return sslStatus;
 }
 
-void Openssl_SetSendTimeout( int timeout )
-{
-    tlsSendTimeout = timeout;
-}
-
-void Openssl_SetRecvTimeout( int timeout )
-{
-    tlsRecvTimeout = timeout;
-}
-
 OpensslStatus_t Openssl_Connect( NetworkContext_t pNetworkContext,
                                  OpensslCredentials_t * pOpensslCredentials )
 {
@@ -482,6 +472,16 @@ OpensslStatus_t Openssl_Disconnect( NetworkContext_t pNetworkContext )
     return returnStatus;
 }
 
+void Openssl_SetRecvTimeout( int timeout )
+{
+    tlsRecvTimeout = timeout;
+}
+
+void Openssl_SetSendTimeout( int timeout )
+{
+    tlsSendTimeout = timeout;
+}
+
 int32_t Openssl_Recv( NetworkContext_t pNetworkContext,
                       void * pBuffer,
                       size_t bytesToRecv )
@@ -490,7 +490,7 @@ int32_t Openssl_Recv( NetworkContext_t pNetworkContext,
     int pollStatus = -1, bytesAvailableToRead = 0;
     struct pollfd fileDescriptor;
 
-    /* Initialize the file descriptor for poll. */
+    /* Initialize the file descriptor for polling. */
     fileDescriptor.events = POLLIN | POLLPRI;
     fileDescriptor.revents = 0;
     fileDescriptor.fd = SSL_get_fd( pNetworkContext->pSslContext );
@@ -533,7 +533,7 @@ int32_t Openssl_Send( NetworkContext_t pNetworkContext,
     int pollStatus = 0;
     struct pollfd fileDescriptor;
 
-    /* Initialize the file descriptor for poll. */
+    /* Initialize the file descriptor for polling. */
     fileDescriptor.events = POLLOUT;
     fileDescriptor.revents = 0;
     fileDescriptor.fd = SSL_get_fd( pNetworkContext->pSslContext );

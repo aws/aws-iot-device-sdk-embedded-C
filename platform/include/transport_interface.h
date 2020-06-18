@@ -30,13 +30,13 @@ typedef int32_t ( * TransportRecv_t )( NetworkContext_t pNetworkContext,
  *
  * @param[in] pNetworkContext Application-defined context.
  * @param[in] pBuffer Buffer containing the bytes to send over the network stack.
- * @param[in] bytesToWrite Number of bytes to write to the network.
+ * @param[in] bytesToSend Number of bytes to write to the network.
  *
  * @return The number of bytes written or a negative error code.
  */
 typedef int32_t ( * TransportSend_t )( NetworkContext_t pNetworkContext,
                                        const void * pBuffer,
-                                       size_t bytesToWrite );
+                                       size_t bytesToSend );
 
 /**
  * @brief The transport layer interface.
