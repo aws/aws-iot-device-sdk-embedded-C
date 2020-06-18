@@ -19,17 +19,12 @@
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Length of an IPv6 address when converted to hex digits.
- */
-#define IPV6_ADDRESS_STRING_LENGTH    ( 40 )
-
-/**
  * @brief Number of DNS records to attempt connection.
  *
  * @note Negative value implies attempting to connect to all DNS records
  * until successful.
  */
-#define DNS_RECORD_ATTEMPTS           ( -1 )
+#define DNS_RECORD_ATTEMPTS    ( -1 )
 
 /*-----------------------------------------------------------*/
 
@@ -55,7 +50,7 @@ static int tcpRecvTimeout = -1;
 /**
  * @brief String for storing the resolved IP address to log.
  */
-static char resolvedIpAddr[ IPV6_ADDRESS_STRING_LENGTH ];
+static char resolvedIpAddr[ INET6_ADDRSTRLEN ];
 
 /**
  * @brief Definition of the network context.
@@ -72,7 +67,7 @@ struct NetworkContext
 /**
  * @brief Resolve a host name.
  *
- * @brief param[in] pServerInfo Server host name.
+ * @brief param[in] pHostName Server host name.
  * @brief param[in] hostNameLength Length associated with host name.
  * @brief param[in] port Server port in host-order.
  * @brief param[out] pTcpSocket Pointer to the socket descriptor.
@@ -89,6 +84,10 @@ TCPStatus_t resolveHost( const char * pHostName,
  * connection is successful.
  *
  * @brief param[in] pListHead List containing resolved DNS records.
+ * @brief param[in] pHostName Server host name.
+ * @brief param[in] hostNameLength Length associated with host name.
+ * @brief param[in] port Server port in host-order.
+ * @brief param[in] pTcpSocket Pointer to the socket descriptor.
  * @brief param[in] maxAttempts Number of DNS records to attempt connection.
  *
  * @note If maxAttempts is negative, attempt to connect to all DNS records
@@ -172,7 +171,7 @@ TCPStatus_t attemptConnection( struct addrinfo * pListHead,
     if( pListHead != NULL )
     {
         /* Initialize string to store the resolved IP address from the host name. */
-        ( void ) memset( resolvedIpAddr, 0, IPV6_ADDRESS_STRING_LENGTH );
+        ( void ) memset( resolvedIpAddr, 0, INET6_ADDRSTRLEN );
 
         netPort = htons( port );
 
@@ -199,20 +198,20 @@ TCPStatus_t attemptConnection( struct addrinfo * pListHead,
                 /* Store IPv4 in string to log. */
                 ( ( struct sockaddr_in * ) pAddrInfo )->sin_port = netPort;
                 addrInfoLength = sizeof( struct sockaddr_in );
-                inet_ntop( pAddrInfo->sa_family,
-                           &( ( struct sockaddr_in * ) pAddrInfo )->sin_addr,
-                           resolvedIpAddr,
-                           sizeof( resolvedIpAddr ) );
+                ( void ) inet_ntop( pAddrInfo->sa_family,
+                                    &( ( struct sockaddr_in * ) pAddrInfo )->sin_addr,
+                                    resolvedIpAddr,
+                                    sizeof( resolvedIpAddr ) );
             }
             else
             {
                 /* Store IPv6 in string to log. */
                 ( ( struct sockaddr_in6 * ) pAddrInfo )->sin6_port = netPort;
                 addrInfoLength = sizeof( struct sockaddr_in6 );
-                inet_ntop( pAddrInfo->sa_family,
-                           &( ( struct sockaddr_in6 * ) pAddrInfo )->sin6_addr,
-                           resolvedIpAddr,
-                           sizeof( resolvedIpAddr ) );
+                ( void ) inet_ntop( pAddrInfo->sa_family,
+                                    &( ( struct sockaddr_in6 * ) pAddrInfo )->sin6_addr,
+                                    resolvedIpAddr,
+                                    sizeof( resolvedIpAddr ) );
             }
 
             LogDebug( ( "Attempting to connect to server: Host=%.*s, IP address=%s.",
