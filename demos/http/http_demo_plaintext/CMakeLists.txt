@@ -11,8 +11,7 @@ target_sources(
 target_link_libraries(
     ${DEMO_NAME}
     PRIVATE
-        http
-        tcp_posix
+        http   
 )
 
 target_include_directories(
@@ -25,6 +24,4 @@ target_include_directories(
     ${DEMO_NAME}
     PUBLIC
         ${LOGGING_INCLUDE_DIRS}
-    PRIVATE
-        ${DEMO_INCLUDE_PRIVATE_DIRS}
 )

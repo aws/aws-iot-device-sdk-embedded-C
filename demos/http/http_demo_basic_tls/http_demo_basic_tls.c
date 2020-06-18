@@ -39,15 +39,11 @@
 #include <openssl/ssl.h>
 #include <openssl/bio.h>
 
-/* Transport includes. */
-#include "tcp_posix.h"
-#include "openssl_posix.h"
+/* HTTP API header. */
+#include "http_client.h"
 
 /* Demo Config header. */
 #include "demo_config.h"
-
-/* HTTP API header. */
-#include "http_client.h"
 
 /* Check that hostname of the server is defined. */
 #ifndef SERVER_HOST
@@ -178,6 +174,64 @@ struct NetworkContext
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Performs a DNS lookup on the given host name, then establishes a TCP
+ * connection to the server.
+ *
+ * @param[in] pServer Host name of server.
+ * @param[in] port Server port.
+ * @param[out] pTcpSocket The output parameter to return the created socket descriptor.
+ *
+ * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
+ */
+static int connectToServer( const char * pServer,
+                            size_t serverLen,
+                            uint16_t port,
+                            int * pTcpSocket );
+
+/**
+ * @brief Set up a TLS connection over an existing TCP connection.
+ *
+ * @param[in] tcpSocket Socket descriptor corresponding to the existing TCP connection.
+ * @param[out] pSslContext The output parameter to return the created SSL context.
+ *
+ * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
+ */
+static int tlsSetup( int tcpSocket,
+                     SSL ** pSslContext );
+
+/**
+ * @brief The transport send function that defines the transport interface.
+ *
+ * This is passed as the #HTTPTransportInterface.send function and used to
+ * send data over the network.
+ *
+ * @param[in] pContext User defined context (TCP socket and SSL context for this demo).
+ * @param[in] pBuffer Buffer containing the bytes to send over the network stack.
+ * @param[in] bytesToSend Number of bytes to send over the network.
+ *
+ * @return Number of bytes sent if successful; otherwise negative value on error.
+ */
+static int32_t transportSend( NetworkContext_t pNetworkContext,
+                              const void * pBuffer,
+                              size_t bytesToSend );
+
+/**
+ * @brief The transport receive function that defines the transport interface.
+ *
+ * This is passed as the #HTTPTransportInterface.recv function used for reading
+ * data received from the network.
+ *
+ * @param[in] pContext User defined context (TCP socket and SSL context for this demo).
+ * @param[out] pBuffer Buffer to read network data into.
+ * @param[in] bytesToRead Number of bytes requested from the network.
+ *
+ * @return Number of bytes received if successful; otherwise negative value on error.
+ */
+static int32_t transportRecv( NetworkContext_t pNetworkContext,
+                              void * pBuffer,
+                              size_t bytesToRecv );
+
+/**
  * @brief Send an HTTP request based on a specified method and path, then
  * print the response received from the server.
  *
@@ -189,7 +243,7 @@ struct NetworkContext
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
-static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
+static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface,
                             const char * pMethod,
                             size_t methodLen,
                             const char * pPath,
@@ -197,7 +251,371 @@ static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
 
 /*-----------------------------------------------------------*/
 
-static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
+static int connectToServer( const char * pServer,
+                            size_t serverLen,
+                            uint16_t port,
+                            int * pTcpSocket )
+{
+    int returnStatus = EXIT_SUCCESS;
+    struct addrinfo hints, * pIndex, * pListHead = NULL;
+    struct sockaddr * pServerInfo;
+    uint16_t netPort = htons( port );
+    socklen_t serverInfoLength;
+    char resolvedIpAddr[ IPV6_ADDRESS_STRING_LENGTH ];
+
+    /* Initialize string to store the resolved IP address from the host name. */
+    ( void ) memset( resolvedIpAddr, 0, IPV6_ADDRESS_STRING_LENGTH );
+    /* Add hints to retrieve only TCP sockets in getaddrinfo. */
+    ( void ) memset( &hints, 0, sizeof( hints ) );
+    /* Address family of either IPv4 or IPv6. */
+    hints.ai_family = AF_UNSPEC;
+    /* TCP Socket. */
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
+
+    /* Perform a DNS lookup on the given host name. */
+    returnStatus = getaddrinfo( pServer, NULL, &hints, &pListHead );
+
+    if( returnStatus != -1 )
+    {
+        LogInfo( ( "Performing DNS lookup: Host=%.*s.",
+                   ( int32_t ) SERVER_HOST_LENGTH, SERVER_HOST ) );
+
+        /* Attempt to connect to one of the retrieved DNS records. */
+        for( pIndex = pListHead; pIndex != NULL; pIndex = pIndex->ai_next )
+        {
+            *pTcpSocket = socket( pIndex->ai_family, pIndex->ai_socktype, pIndex->ai_protocol );
+
+            if( *pTcpSocket == -1 )
+            {
+                continue;
+            }
+
+            pServerInfo = pIndex->ai_addr;
+
+            if( pServerInfo->sa_family == AF_INET )
+            {
+                /* IPv4 */
+                ( ( struct sockaddr_in * ) pServerInfo )->sin_port = netPort;
+                serverInfoLength = sizeof( struct sockaddr_in );
+                inet_ntop( pServerInfo->sa_family,
+                           &( ( struct sockaddr_in * ) pServerInfo )->sin_addr,
+                           resolvedIpAddr,
+                           sizeof( resolvedIpAddr ) );
+            }
+            else
+            {
+                /* IPv6 */
+                ( ( struct sockaddr_in6 * ) pServerInfo )->sin6_port = netPort;
+                serverInfoLength = sizeof( struct sockaddr_in6 );
+                inet_ntop( pServerInfo->sa_family,
+                           &( ( struct sockaddr_in6 * ) pServerInfo )->sin6_addr,
+                           resolvedIpAddr,
+                           sizeof( resolvedIpAddr ) );
+            }
+
+            LogInfo( ( "Attempting to connect to server: Host=%.*s, IP address=%s.",
+                       ( int32_t ) SERVER_HOST_LENGTH, SERVER_HOST, resolvedIpAddr ) );
+
+            returnStatus = connect( *pTcpSocket, pServerInfo, serverInfoLength );
+
+            if( returnStatus == -1 )
+            {
+                LogError( ( "Failed to connect to server: Host=%.*s, IP address=%s.",
+                            ( int32_t ) SERVER_HOST_LENGTH, SERVER_HOST, resolvedIpAddr ) );
+                close( *pTcpSocket );
+            }
+            else
+            {
+                LogInfo( ( "Connected to IP address: %s.",
+                           resolvedIpAddr ) );
+                break;
+            }
+        }
+
+        if( pIndex == NULL )
+        {
+            /* Fail if no connection could be established. */
+            LogError( ( "Could not connect to any resolved IP address from %.*s.",
+                        ( int32_t ) serverLen,
+                        pServer ) );
+            returnStatus = EXIT_FAILURE;
+        }
+        else
+        {
+            LogInfo( ( "Established TCP connection: Server=%.*s.\n",
+                       ( int32_t ) serverLen,
+                       pServer ) );
+            returnStatus = EXIT_SUCCESS;
+        }
+    }
+    else
+    {
+        LogError( ( "Could not resolve host %.*s.\n",
+                    ( int32_t ) serverLen,
+                    pServer ) );
+        returnStatus = EXIT_FAILURE;
+    }
+
+    if( pListHead != NULL )
+    {
+        freeaddrinfo( pListHead );
+    }
+
+    return returnStatus;
+}
+
+/*-----------------------------------------------------------*/
+
+static int tlsSetup( int tcpSocket,
+                     SSL ** pSslContext )
+{
+    int returnStatus = EXIT_SUCCESS;
+    long verifyPeerCertStatus = X509_V_OK;
+    int sslStatus = 0;
+    char * cwd = getcwd( NULL, 0 );
+    FILE * pRootCaFile = NULL;
+    X509 * pRootCa = NULL;
+
+    /* Setup for creating a TLS client. */
+    SSL_CTX * pSslSetup = SSL_CTX_new( TLS_client_method() );
+
+    if( pSslSetup != NULL )
+    {
+        /* Set auto retry mode for the blocking calls to SSL_read and SSL_write.
+         * The mask returned by SSL_CTX_set_mode does not need to be checked. */
+        ( void ) SSL_CTX_set_mode( pSslSetup, SSL_MODE_AUTO_RETRY );
+
+        /* Log the absolute directory based on first character of certificate path. */
+        if( ( SERVER_CERT_PATH[ 0 ] == '/' ) || ( SERVER_CERT_PATH[ 0 ] == '\\' ) )
+        {
+            LogInfo( ( "Attempting to open root CA certificate: Path=%.*s.",
+                       ( int32_t ) SERVER_CERT_PATH_LENGTH,
+                       SERVER_CERT_PATH ) );
+        }
+        else
+        {
+            LogInfo( ( "Attempting to open root CA certificate: Path=%s/%.*s.",
+                       cwd,
+                       ( int32_t ) SERVER_CERT_PATH_LENGTH,
+                       SERVER_CERT_PATH ) );
+        }
+
+        /* OpenSSL does not provide a single function for reading and loading
+         * certificates from files into stores, so the file API must be called. */
+        pRootCaFile = fopen( SERVER_CERT_PATH, "r" );
+
+        if( pRootCaFile == NULL )
+        {
+            LogError( ( "fopen failed to find the root CA certificate file: "
+                        "SERVER_CERT_PATH=%.*s.",
+                        ( int32_t ) SERVER_CERT_PATH_LENGTH,
+                        SERVER_CERT_PATH ) );
+        }
+        else
+        {
+            pRootCa = PEM_read_X509( pRootCaFile, NULL, NULL, NULL );
+        }
+
+        if( pRootCa == NULL )
+        {
+            LogError( ( "PEM_read_X509 failed to read the "
+                        "root CA certificate filestream." ) );
+        }
+        else
+        {
+            /* Add the server's root CA to the set of trusted certificates. */
+            sslStatus = X509_STORE_add_cert( SSL_CTX_get_cert_store( pSslSetup ),
+                                             pRootCa );
+        }
+    }
+
+    /* Set up the TLS connection. */
+    if( sslStatus == 1 )
+    {
+        /* Create a new SSL context. */
+        *pSslContext = SSL_new( pSslSetup );
+
+        if( *pSslContext == NULL )
+        {
+            LogError( ( "SSL_new failed to create a new SSL context." ) );
+            sslStatus = 0;
+        }
+        else
+        {
+            /* Enable SSL peer verification. */
+            SSL_set_verify( *pSslContext, SSL_VERIFY_PEER, NULL );
+
+            sslStatus = SSL_set_fd( *pSslContext, tcpSocket );
+
+            if( sslStatus != 1 )
+            {
+                LogError( ( "SSL_set_fd failed to set the socket fd to SSL context." ) );
+            }
+        }
+
+        /* Perform the TLS handshake. */
+        if( sslStatus == 1 )
+        {
+            sslStatus = SSL_connect( *pSslContext );
+
+            if( sslStatus != 1 )
+            {
+                LogError( ( "SSL_connect failed to perform TLS handshake." ) );
+            }
+        }
+
+        /* Verify X509 certificate from peer. */
+        if( sslStatus == 1 )
+        {
+            verifyPeerCertStatus = SSL_get_verify_result( *pSslContext );
+
+            if( verifyPeerCertStatus != X509_V_OK )
+            {
+                LogError( ( "SSL_get_verify_result failed to verify X509 "
+                            "certificate from peer." ) );
+                sslStatus = 0;
+            }
+        }
+
+        /* Clean up on error. */
+        if( sslStatus == 0 )
+        {
+            SSL_free( *pSslContext );
+            *pSslContext = NULL;
+        }
+    }
+    else
+    {
+        LogError( ( "X509_STORE_add_cert failed to add certificate to store." ) );
+    }
+
+    if( cwd != NULL )
+    {
+        free( cwd );
+    }
+
+    if( pRootCaFile != NULL )
+    {
+        ( void ) fclose( pRootCaFile );
+    }
+
+    if( pRootCa != NULL )
+    {
+        X509_free( pRootCa );
+    }
+
+    if( pSslSetup != NULL )
+    {
+        SSL_CTX_free( pSslSetup );
+    }
+
+    /* Log failure or success and return the correct exit status. */
+    if( sslStatus == 0 )
+    {
+        LogError( ( "Failed to establish a TLS connection: Host=%.*s.",
+                    ( int32_t ) SERVER_HOST_LENGTH,
+                    SERVER_HOST ) );
+        returnStatus = EXIT_FAILURE;
+    }
+    else
+    {
+        LogInfo( ( "Established a TLS connection: Host=%.*s.\n\n",
+                   ( int32_t ) SERVER_HOST_LENGTH,
+                   SERVER_HOST ) );
+        returnStatus = EXIT_SUCCESS;
+    }
+
+    return returnStatus;
+}
+
+/*-----------------------------------------------------------*/
+
+static int32_t transportSend( NetworkContext_t pNetworkContext,
+                              const void * pBuffer,
+                              size_t bytesToSend )
+{
+    int32_t bytesSent = 0;
+    int pollStatus = 0;
+    struct pollfd fileDescriptor;
+
+    /* Initialize the file descriptor. */
+    fileDescriptor.events = POLLOUT;
+    fileDescriptor.revents = 0;
+    /* Set the file descriptor for poll. */
+    fileDescriptor.fd = pNetworkContext->tcpSocket;
+
+    /* Poll the file descriptor to check if SSL_Write can be done now. */
+    pollStatus = poll( &fileDescriptor, 1, TRANSPORT_SEND_RECV_TIMEOUT_MS );
+
+    if( pollStatus > 0 )
+    {
+        bytesSent = ( int32_t ) SSL_write( pNetworkContext->pSslContext, pBuffer, bytesToSend );
+    }
+    else if( pollStatus == 0 )
+    {
+        LogDebug( ( "Timed out while polling SSL socket for write buffer availability." ) );
+    }
+    else
+    {
+        LogError( ( "Polling of the SSL socket for write buffer availability failed:"
+                    " status=%d",
+                    pollStatus ) );
+        bytesSent = -1;
+    }
+
+    return bytesSent;
+}
+
+/*-----------------------------------------------------------*/
+
+static int32_t transportRecv( NetworkContext_t pNetworkContext,
+                              void * pBuffer,
+                              size_t bytesToRecv )
+{
+    int32_t bytesReceived = 0;
+    int pollStatus = -1, bytesAvailableToRead = 0;
+    struct pollfd fileDescriptor;
+
+    /* Initialize the file descriptor. */
+    fileDescriptor.events = POLLIN | POLLPRI;
+    fileDescriptor.revents = 0;
+    /* Set the file descriptor for poll. */
+    fileDescriptor.fd = SSL_get_fd( pNetworkContext->pSslContext );
+
+    /* Check if there are any pending data available for read. */
+    bytesAvailableToRead = SSL_pending( pNetworkContext->pSslContext );
+
+    /* Poll only if there is no data available yet to read. */
+    if( bytesAvailableToRead <= 0 )
+    {
+        pollStatus = poll( &fileDescriptor, 1, TRANSPORT_SEND_RECV_TIMEOUT_MS );
+    }
+
+    /* bytesAvailableToRead > 0 means that there was pending data to be read.
+     * pollStatus > 0 means that there was no pending data, but it became available
+     * during polling. If either holds true, read the available data. */
+    if( ( bytesAvailableToRead > 0 ) || ( pollStatus > 0 ) )
+    {
+        bytesReceived = ( int32_t ) SSL_read( pNetworkContext->pSslContext, pBuffer, bytesToRecv );
+    }
+    /* Poll timed out. */
+    else if( pollStatus == 0 )
+    {
+        LogInfo( ( "Poll timed out and there is no data to read from the buffer." ) );
+    }
+    else
+    {
+        LogError( ( "Poll returned with status = %d.", pollStatus ) );
+        bytesReceived = -1;
+    }
+
+    return bytesReceived;
+}
+
+/*-----------------------------------------------------------*/
+
+static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface,
                             const char * pMethod,
                             size_t methodLen,
                             const char * pPath,
@@ -324,39 +742,33 @@ int main( int argc,
     /* Return value of main. */
     int returnStatus = EXIT_SUCCESS;
     /* The HTTP Client library transport layer interface. */
-    TransportInterface_t transportInterface;
+    HTTPTransportInterface_t transportInterface;
     /* Structure based on the definition of the HTTP network context. */
     struct NetworkContext networkContext;
-    /* Credentials necessary to establish the TLS connection. */
-    OpensslCredentials_t opensslCredentials;
 
     ( void ) argc;
     ( void ) argv;
 
-    ( void ) memset( &opensslCredentials, 0, sizeof( opensslCredentials ) );
-    opensslCredentials.pRootCaPath = SERVER_CERT_PATH;
-    opensslCredentials.rootCaPathLen = SERVER_CERT_PATH_LENGTH;
-
     /**************************** Connect. ******************************/
 
     /* Establish TCP connection. */
-    returnStatus = TCP_Connect( SERVER_HOST, SERVER_HOST_LENGTH,
-                                SERVER_PORT, &networkContext.tcpSocket );
+    returnStatus = connectToServer( SERVER_HOST, SERVER_HOST_LENGTH,
+                                    SERVER_PORT, &networkContext.tcpSocket );
 
     /* Establish TLS connection on top of TCP connection. */
-    if( returnStatus == TCP_SUCCESS )
+    if( returnStatus == EXIT_SUCCESS )
     {
         LogInfo( ( "Performing TLS handshake on top of the TCP connection." ) );
-        returnStatus = Openssl_Connect( &networkContext,
-                                        &opensslCredentials );
+        returnStatus = tlsSetup( networkContext.tcpSocket,
+                                 &networkContext.pSslContext );
     }
 
     /* Define the transport interface. */
     if( returnStatus == EXIT_SUCCESS )
     {
         ( void ) memset( &transportInterface, 0, sizeof( transportInterface ) );
-        transportInterface.recv = Openssl_Recv;
-        transportInterface.send = Openssl_Send;
+        transportInterface.recv = transportRecv;
+        transportInterface.send = transportSend;
         transportInterface.pContext = &networkContext;
     }
 
@@ -405,9 +817,23 @@ int main( int argc,
     /************************** Disconnect. *****************************/
 
     /* Close TLS session if established. */
-    Openssl_Disconnect( &networkContext );
+    if( networkContext.pSslContext != NULL )
+    {
+        /* SSL shutdown should be called twice: once to send "close notify" and
+         * once more to receive the peer's "close notify". */
+        if( SSL_shutdown( networkContext.pSslContext ) == 0 )
+        {
+            ( void ) SSL_shutdown( networkContext.pSslContext );
+        }
 
-    TCP_Disconnect( networkContext.tcpSocket );
+        SSL_free( networkContext.pSslContext );
+    }
+
+    if( networkContext.tcpSocket != -1 )
+    {
+        ( void ) shutdown( networkContext.tcpSocket, SHUT_RDWR );
+        ( void ) close( networkContext.tcpSocket );
+    }
 
     return returnStatus;
 }

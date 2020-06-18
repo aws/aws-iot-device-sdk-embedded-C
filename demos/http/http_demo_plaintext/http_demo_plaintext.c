@@ -36,21 +36,18 @@
 /* Include Demo Config as the first non-system header. */
 #include "demo_config.h"
 
-/* TCP transport header. */
-#include "tcp_posix.h"
-
 /* HTTP API header. */
 #include "http_client.h"
-
-/**
- * @brief The length of the HTTP server host name.
- */
-#define SERVER_HOST_LENGTH         ( sizeof( SERVER_HOST ) - 1 )
 
 /**
  * @brief Length of an IPv6 address when converted to hex digits.
  */
 #define IPV6_ADDRESS_STRING_LEN    ( 40 )
+
+/**
+ * @brief Defined by transport layer to check send or receive error.
+ */
+extern int errno;
 
 /**
  * @brief A string to store the resolved IP address from the host name.
@@ -68,16 +65,88 @@ static char resolvedIpAddr[ IPV6_ADDRESS_STRING_LEN ];
 static uint8_t userBuffer[ USER_BUFFER_LENGTH ];
 
 /**
- * @brief Definition of the network context.
+ * @brief Definition of the HTTP network context.
  *
  * @note An integer is used to store the descriptor of the socket.
  */
 struct NetworkContext
 {
-    int asdf;
+    int tcpSocket;
 };
 
+/**
+ * @brief Structure based on the definition of the HTTP network context.
+ */
+static struct NetworkContext socketContext;
+
+/**
+ * @brief The HTTP Client library transport layer interface.
+ */
+static HTTPTransportInterface_t transportInterface;
+
+/**
+ * @brief Represents header data that will be sent in an HTTP request.
+ */
+static HTTPRequestHeaders_t requestHeaders;
+
+/**
+ * @brief Configurations of the initial request headers that are passed to
+ * #HTTPClient_InitializeRequestHeaders.
+ */
+static HTTPRequestInfo_t requestInfo;
+
+/**
+ * @brief Represents a response returned from an HTTP server.
+ */
+static HTTPResponse_t response;
+
 /*-----------------------------------------------------------*/
+
+/**
+ * @brief Performs a DNS lookup on the given host name, then establishes a TCP
+ * connection to the server.
+ *
+ * @param[in] pServer Host name of server.
+ * @param[in] port Server port.
+ * @param[out] pTcpSocket Pointer to TCP socket file descriptor.
+ *
+ * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
+ */
+static int connectToServer( const char * pServer,
+                            uint16_t port,
+                            int * pTcpSocket );
+
+/**
+ * @brief The transport send function that defines the transport interface.
+ *
+ * This is passed as the #HTTPTransportInterface.send function and used to
+ * send data over the network.
+ *
+ * @param[in] pContext User defined context (TCP socket for this demo).
+ * @param[in] pBuffer Buffer containing the bytes to send over the network stack.
+ * @param[in] bytesToSend Number of bytes to write to the network.
+ *
+ * @return Number of bytes sent if successful; otherwise negative value on error.
+ */
+static int32_t transportSend( NetworkContext_t pContext,
+                              const void * pBuffer,
+                              size_t bytesToSend );
+
+/**
+ * @brief The transport receive function that defines the transport interface.
+ *
+ * This is passed as the #HTTPTransportInterface.recv function used for reading
+ * data received from the network.
+ *
+ * @param[in] pContext User defined context (TCP socket for this demo).
+ * @param[out] pBuffer Buffer to read network data into.
+ * @param[in] bytesToRead Number of bytes requested from the network.
+ *
+ * @return Number of bytes received if successful; otherwise negative value on error.
+ */
+static int32_t transportRecv( NetworkContext_t pContext,
+                              void * pBuffer,
+                              size_t bytesToRecv );
 
 /**
  * @brief Send an HTTP request based on a specified method and path, then
@@ -90,26 +159,217 @@ struct NetworkContext
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
-static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
+static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface,
                             const char * pHost,
                             const char * pMethod,
                             const char * pPath );
 
 /*-----------------------------------------------------------*/
 
-static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
+static int connectToServer( const char * pServer,
+                            uint16_t port,
+                            int * pTcpSocket )
+{
+    int returnStatus = EXIT_SUCCESS;
+    struct addrinfo hints, * pIndex, * pListHead = NULL;
+    struct sockaddr * pServerInfo;
+    uint16_t netPort = htons( port );
+    socklen_t serverInfoLength;
+    struct timeval transportTimeout;
+
+    /* Add hints to retrieve only TCP sockets in getaddrinfo. */
+    ( void ) memset( &hints, 0, sizeof( hints ) );
+    /* Address family of either IPv4 or IPv6. */
+    hints.ai_family = AF_UNSPEC;
+    /* TCP Socket. */
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
+
+    /* Perform a DNS lookup on the given host name. */
+    returnStatus = getaddrinfo( pServer, NULL, &hints, &pListHead );
+
+    if( returnStatus != -1 )
+    {
+        LogInfo( ( "Performing DNS lookup: Host=%s.",
+                   SERVER_HOST ) );
+
+        /* Attempt to connect to one of the retrieved DNS records. */
+        for( pIndex = pListHead; pIndex != NULL; pIndex = pIndex->ai_next )
+        {
+            *pTcpSocket = socket( pIndex->ai_family, pIndex->ai_socktype, pIndex->ai_protocol );
+
+            if( *pTcpSocket == -1 )
+            {
+                continue;
+            }
+
+            pServerInfo = pIndex->ai_addr;
+
+            if( pServerInfo->sa_family == AF_INET )
+            {
+                /* IPv4 */
+                ( ( struct sockaddr_in * ) pServerInfo )->sin_port = netPort;
+                serverInfoLength = sizeof( struct sockaddr_in );
+                inet_ntop( pServerInfo->sa_family,
+                           &( ( struct sockaddr_in * ) pServerInfo )->sin_addr,
+                           resolvedIpAddr,
+                           sizeof( resolvedIpAddr ) );
+            }
+            else
+            {
+                /* IPv6 */
+                ( ( struct sockaddr_in6 * ) pServerInfo )->sin6_port = netPort;
+                serverInfoLength = sizeof( struct sockaddr_in6 );
+                inet_ntop( pServerInfo->sa_family,
+                           &( ( struct sockaddr_in6 * ) pServerInfo )->sin6_addr,
+                           resolvedIpAddr,
+                           sizeof( resolvedIpAddr ) );
+            }
+
+            LogInfo( ( "Attempting to connect to server: Host=%s, IP address=%s.",
+                       SERVER_HOST, resolvedIpAddr ) );
+
+            returnStatus = connect( *pTcpSocket, pServerInfo, serverInfoLength );
+
+            if( returnStatus == -1 )
+            {
+                LogError( ( "Failed to connect to server: Host=%s, IP address=%s.",
+                            SERVER_HOST, resolvedIpAddr ) );
+                close( *pTcpSocket );
+            }
+            else
+            {
+                LogInfo( ( "Connected to IP address: %s.",
+                           resolvedIpAddr ) );
+                break;
+            }
+        }
+
+        if( pIndex == NULL )
+        {
+            /* Fail if no connection could be established. */
+            returnStatus = EXIT_FAILURE;
+            LogError( ( "Could not connect to any resolved IP address from %.*s.\n",
+                        ( int ) strlen( pServer ),
+                        pServer ) );
+        }
+        else
+        {
+            returnStatus = EXIT_SUCCESS;
+            LogInfo( ( "Established TCP connection: Server=%.*s.\n",
+                       ( int ) strlen( pServer ),
+                       pServer ) );
+        }
+    }
+    else
+    {
+        LogError( ( "Could not resolve host %.*s.\n",
+                    ( int ) strlen( pServer ),
+                    pServer ) );
+        returnStatus = EXIT_FAILURE;
+    }
+
+    /* Set the socket option for send and receive timeouts. */
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        transportTimeout.tv_sec = 0;
+        transportTimeout.tv_usec = ( TRANSPORT_SEND_RECV_TIMEOUT_MS * 1000 );
+
+        /* Set the receive timeout. */
+        if( setsockopt( *pTcpSocket,
+                        SOL_SOCKET,
+                        SO_RCVTIMEO,
+                        ( char * ) &transportTimeout,
+                        sizeof( transportTimeout ) ) < 0 )
+        {
+            LogError( ( "Setting socket receive timeout failed." ) );
+            returnStatus = EXIT_FAILURE;
+        }
+
+        /* Set the send timeout. */
+        if( setsockopt( *pTcpSocket,
+                        SOL_SOCKET,
+                        SO_SNDTIMEO,
+                        ( char * ) &transportTimeout,
+                        sizeof( transportTimeout ) ) < 0 )
+        {
+            LogError( ( "Setting socket send timeout failed." ) );
+            returnStatus = EXIT_FAILURE;
+        }
+    }
+
+    if( pListHead != NULL )
+    {
+        freeaddrinfo( pListHead );
+    }
+
+    return returnStatus;
+}
+
+/*-----------------------------------------------------------*/
+
+static int32_t transportSend( NetworkContext_t pContext,
+                              const void * pBuffer,
+                              size_t bytesToSend )
+{
+    int32_t bytesSent = 0;
+
+    bytesSent = send( pContext->tcpSocket, pBuffer, bytesToSend, 0 );
+
+    if( bytesSent < 0 )
+    {
+        /* Check if it was time out */
+        if( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) )
+        {
+            /* Set return value to 0 to indicate that send had timed out. */
+            bytesSent = 0;
+        }
+    }
+
+    return bytesSent;
+}
+
+/*-----------------------------------------------------------*/
+
+static int32_t transportRecv( NetworkContext_t pContext,
+                              void * pBuffer,
+                              size_t bytesToRecv )
+{
+    int32_t bytesReceived = 0;
+
+    bytesReceived = recv( pContext->tcpSocket, pBuffer, bytesToRecv, 0 );
+
+    if( bytesReceived == 0 )
+    {
+        /* Server closed the connection, treat it as an error. */
+        bytesReceived = -1;
+    }
+    else if( bytesReceived < 0 )
+    {
+        /* Check if it was time out. */
+        if( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) )
+        {
+            /* Set return value to 0 to indicate nothing to receive. */
+            bytesReceived = 0;
+        }
+    }
+    else
+    {
+        /* EMPTY else */
+    }
+
+    return bytesReceived;
+}
+
+/*-----------------------------------------------------------*/
+
+static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface,
                             const char * pHost,
                             const char * pMethod,
                             const char * pPath )
 {
     int returnStatus = EXIT_SUCCESS;
     HTTPStatus_t httpStatus = HTTP_SUCCESS;
-    /* Represents header data that will be sent in an HTTP request. */
-    HTTPRequestHeaders_t requestHeaders;
-    /* Configurations of the initial request headers that are passed to #HTTPClient_InitializeRequestHeaders. */
-    HTTPRequestInfo_t requestInfo;
-    /* Represents a response returned from an HTTP server. */
-    static HTTPResponse_t response;
 
     /* Initialize the request object. */
     requestInfo.pHost = pHost;
@@ -204,28 +464,22 @@ int main( int argc,
           char ** argv )
 {
     int returnStatus = EXIT_SUCCESS;
-    struct NetworkContext socketContext;
-    TransportInterface_t transportInterface;
+    NetworkContext_t pSocketContext = &socketContext;
 
     ( void ) argc;
     ( void ) argv;
 
     /**************************** Connect. ******************************/
 
-    /* Set timeouts. */
-    TCP_SetSendTimeout( TRANSPORT_SEND_RECV_TIMEOUT_MS );
-    TCP_SetRecvTimeout( TRANSPORT_SEND_RECV_TIMEOUT_MS );
-
     /* Establish TCP connection. */
-    returnStatus = TCP_Connect( SERVER_HOST, SERVER_HOST_LENGTH,
-                                SERVER_PORT, &socketContext.asdf );
+    returnStatus = connectToServer( SERVER_HOST, SERVER_PORT, &pSocketContext->tcpSocket );
 
     /* Define the transport interface. */
     if( returnStatus == EXIT_SUCCESS )
     {
-        transportInterface.recv = TCP_Recv;
-        transportInterface.send = TCP_Send;
-        transportInterface.pContext = &socketContext;
+        transportInterface.recv = transportRecv;
+        transportInterface.send = transportSend;
+        transportInterface.pContext = pSocketContext;
     }
 
     /*********************** Send HTTPS request. ************************/
@@ -266,7 +520,13 @@ int main( int argc,
                                         POST_PATH );
     }
 
-    TCP_Disconnect( socketContext.asdf );
+    /************************** Disconnect. *****************************/
+
+    if( pSocketContext->tcpSocket != -1 )
+    {
+        ( void ) shutdown( pSocketContext->tcpSocket, SHUT_RDWR );
+        ( void ) close( pSocketContext->tcpSocket );
+    }
 
     return returnStatus;
 }

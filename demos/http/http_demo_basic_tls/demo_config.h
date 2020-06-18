@@ -89,7 +89,7 @@
 /**
  * @brief The length in bytes of the user buffer.
  */
-#define USER_BUFFER_LENGTH                ( 2048 )
+#define USER_BUFFER_LENGTH                ( 1024 )
 
 /**
  * @brief Request body to send for PUT and POST requests in this demo.
