@@ -1,16 +1,35 @@
-#include "TCP_transport.h"
+/* Standard includes. */
+#include <assert.h>
+#include <stdlib.h>
+#include <string.h>
 
 /* POSIX socket includes. */
 #include <errno.h>
 #include <netdb.h>
+#include <time.h>
 #include <poll.h>
+#include <unistd.h>
 #include <arpa/inet.h>
 
 #include <sys/socket.h>
 #include <sys/types.h>
 
-/* Transport interface include. */
-#include "transport_interface.h"
+#include "tcp_posix.h"
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Length of an IPv6 address when converted to hex digits.
+ */
+#define IPV6_ADDRESS_STRING_LENGTH    ( 40 )
+
+/**
+ * @brief Number of DNS records to attempt connection.
+ *
+ * @note Negative value implies attempting to connect to all DNS records
+ * until successful.
+ */
+#define DNS_RECORD_ATTEMPTS           ( -1 )
 
 /*-----------------------------------------------------------*/
 
@@ -34,6 +53,11 @@ static int sendTimeout = -1;
 static int recvTimeout = -1;
 
 /**
+ * @brief String for storing the resolved IP address to log.
+ */
+static char resolvedIpAddr[ IPV6_ADDRESS_STRING_LENGTH ];
+
+/**
  * @brief Definition of the network context.
  *
  * @note An integer is used to store the descriptor of the socket.
@@ -46,62 +70,114 @@ struct NetworkContext
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Length of an IPv6 address when converted to hex digits.
+ * @brief Resolve a host name.
+ *
+ * @brief param[in] pServerInfo Server host name.
+ * @brief param[in] hostNameLength Length associated with host name.
+ * @brief param[in] port Server port in host-order.
+ * @brief param[out] pTcpSocket Pointer to the socket descriptor.
+ *
+ * @return #TCP_SUCCESS if successful; #TCP_DNS_FAILURE, #TCP_CONNECT_FAILURE on error.
  */
-#define IPV6_ADDRESS_STRING_LENGTH    ( 40 )
+TCPStatus_t resolveHost( const char * pHostName,
+                         size_t hostNameLength,
+                         uint16_t port,
+                         int * pTcpSocket );
+
+/**
+ * @brief Traverse list of resolved DNS records and return successfully if one
+ * connection is successful.
+ *
+ * @brief param[in] pListHead List containing resolved DNS records.
+ * @brief param[in] maxAttempts Number of DNS records to attempt connection.
+ *
+ * @note If maxAttempts is negative, attempt to connect to all DNS records
+ * until successful.
+ *
+ * @return #TCP_SUCCESS if successful; #TCP_CONNECT_FAILURE on error.
+ */
+TCPStatus_t attemptConnection( struct addrinfo * pListHead,
+                               const char * pHostName,
+                               size_t hostNameLength,
+                               uint16_t port,
+                               int * pTcpSocket,
+                               int32_t maxAttempts );
 
 /*-----------------------------------------------------------*/
 
-int resolveHost( const char * pHostName,
-                 size_t hostNameLength );
-
-/*-----------------------------------------------------------*/
-
-int resolveHost( const char * pHostName,
-                 size_t hostNameLength )
+TCPStatus_t resolveHost( const char * pHostName,
+                         size_t hostNameLength,
+                         uint16_t port,
+                         int * pTcpSocket )
 {
-}
+    TCPStatus_t returnStatus = TCP_SUCCESS;
+    struct addrinfo hints, * pListHead = NULL;
 
-NetworkStatus_t TCP_Connect( const char * pHostName,
-                             size_t hostNameLength,
-                             uint16_t port,
-                             int * pTcpSocket )
-{
-    int networkStatus = NETWORK_INTERNAL_ERROR;
-    struct addrinfo hints, * pIndex, * pListHead = NULL;
-    struct sockaddr * pAddrInfo;
-    uint16_t netPort = -1;
-    socklen_t addrInfoLength;
-    char resolvedIpAddr[ IPV6_ADDRESS_STRING_LENGTH ];
+    assert( pHostName != NULL );
+    assert( hostNameLength > 0 );
+    assert( pTcpSocket != NULL );
 
-    assert( pServerInfo != NULL );
-
-    /* Initialize string to store the resolved IP address from the host name. */
-    ( void ) memset( resolvedIpAddr, 0, IPV6_ADDRESS_STRING_LENGTH );
     /* Add hints to retrieve only TCP sockets in getaddrinfo. */
     ( void ) memset( &hints, 0, sizeof( hints ) );
+
     /* Address family of either IPv4 or IPv6. */
     hints.ai_family = AF_UNSPEC;
     /* TCP Socket. */
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
-    netPort = htons( pServerInfo->port );
 
     /* Perform a DNS lookup on the given host name. */
-    networkStatus = getaddrinfo( pServerInfo->pHostName, NULL, &hints, &pListHead );
+    returnStatus = getaddrinfo( pHostName, NULL, &hints, &pListHead );
 
-    if( networkStatus == -1 )
+    if( returnStatus == -1 )
     {
         LogError( ( "Could not resolve host %.*s.\n",
-                    ( int32_t ) pServerInfo->hostNameLength,
-                    pServerInfo->pHostName ) );
-        networkStatus = NETWORK_DNS_FAILURE;
+                    ( int32_t ) hostNameLength,
+                    pHostName ) );
+        returnStatus = TCP_DNS_FAILURE;
     }
     else
     {
-        LogInfo( ( "Performing DNS lookup: Host=%.*s.",
-                   ( int32_t ) pServerInfo->hostNameLength,
-                   pServerInfo->pHostName ) );
+        returnStatus = attemptConnection( pListHead,
+                                          pHostName,
+                                          hostNameLength,
+                                          port,
+                                          pTcpSocket,
+                                          DNS_RECORD_ATTEMPTS );
+    }
+
+    return returnStatus;
+}
+
+TCPStatus_t attemptConnection( struct addrinfo * pListHead,
+                               const char * pHostName,
+                               size_t hostNameLength,
+                               uint16_t port,
+                               int * pTcpSocket,
+                               int32_t maxAttempts )
+{
+    TCPStatus_t returnStatus = TCP_SUCCESS;
+    struct addrinfo * pIndex = NULL;
+    struct sockaddr * pAddrInfo;
+    socklen_t addrInfoLength;
+    uint16_t netPort = -1;
+    int curAttempts = 0, connectStatus = 0;
+
+    assert( pListHead != NULL );
+    assert( pHostName != NULL );
+    assert( hostNameLength > 0 );
+    assert( pTcpSocket != NULL );
+
+    if( pListHead != NULL )
+    {
+        /* Initialize string to store the resolved IP address from the host name. */
+        ( void ) memset( resolvedIpAddr, 0, IPV6_ADDRESS_STRING_LENGTH );
+
+        netPort = htons( port );
+
+        LogDebug( ( "Performing DNS lookup: Host=%.*s.",
+                    ( int32_t ) hostNameLength,
+                    pHostName ) );
 
         /* Attempt to connect to one of the retrieved DNS records. */
         for( pIndex = pListHead; pIndex != NULL; pIndex = pIndex->ai_next )
@@ -119,7 +195,7 @@ NetworkStatus_t TCP_Connect( const char * pHostName,
 
             if( pAddrInfo->sa_family == AF_INET )
             {
-                /* IPv4 */
+                /* Store IPv4 in string to log. */
                 ( ( struct sockaddr_in * ) pAddrInfo )->sin_port = netPort;
                 addrInfoLength = sizeof( struct sockaddr_in );
                 inet_ntop( pAddrInfo->sa_family,
@@ -129,7 +205,7 @@ NetworkStatus_t TCP_Connect( const char * pHostName,
             }
             else
             {
-                /* IPv6 */
+                /* Store IPv6 in string to log. */
                 ( ( struct sockaddr_in6 * ) pAddrInfo )->sin6_port = netPort;
                 addrInfoLength = sizeof( struct sockaddr_in6 );
                 inet_ntop( pAddrInfo->sa_family,
@@ -138,25 +214,33 @@ NetworkStatus_t TCP_Connect( const char * pHostName,
                            sizeof( resolvedIpAddr ) );
             }
 
-            LogInfo( ( "Attempting to connect to server: Host=%.*s, IP address=%s.",
-                       ( int32_t ) pServerInfo->hostNameLength,
-                       pServerInfo->pHostName,
-                       resolvedIpAddr ) );
+            LogDebug( ( "Attempting to connect to server: Host=%.*s, IP address=%s.",
+                        ( int32_t ) hostNameLength,
+                        pHostName,
+                        resolvedIpAddr ) );
 
-            networkStatus = connect( *pTcpSocket, pAddrInfo, addrInfoLength );
+            connectStatus = connect( *pTcpSocket, pAddrInfo, addrInfoLength );
 
-            if( networkStatus == -1 )
+            if( connectStatus == -1 )
             {
                 LogError( ( "Failed to connect to server: Host=%.*s, IP address=%s.",
-                            ( int32_t ) pServerInfo->hostNameLength,
-                            pServerInfo->pHostName,
+                            ( int32_t ) hostNameLength,
+                            pHostName,
                             resolvedIpAddr ) );
                 close( *pTcpSocket );
             }
             else
             {
-                LogInfo( ( "Connected to IP address: %s.",
-                           resolvedIpAddr ) );
+                LogDebug( ( "Connected to IP address: %s.",
+                            resolvedIpAddr ) );
+                break;
+            }
+
+            curAttempts += 1;
+
+            if( ( maxAttempts >= 0 ) && ( curAttempts >= maxAttempts ) )
+            {
+                returnStatus = TCP_CONNECT_FAILURE;
                 break;
             }
         }
@@ -165,25 +249,52 @@ NetworkStatus_t TCP_Connect( const char * pHostName,
         {
             /* Fail if no connection could be established. */
             LogError( ( "Could not connect to any resolved IP address from %.*s.",
-                        ( int32_t ) pServerInfo->hostNameLength,
-                        pServerInfo->pHostName ) );
-            networkStatus = NETWORK_CONNECT_FAILURE;
+                        ( int32_t ) hostNameLength,
+                        pHostName ) );
+            returnStatus = TCP_CONNECT_FAILURE;
         }
         else
         {
-            LogInfo( ( "Established TCP connection: Server=%.*s.\n",
-                       ( int32_t ) pServerInfo->hostNameLength,
-                       pServerInfo->pHostName ) );
-            networkStatus = NETWORK_SUCCESS;
+            LogDebug( ( "Established TCP connection: Server=%.*s.\n",
+                        ( int32_t ) hostNameLength,
+                        pHostName ) );
+            returnStatus = TCP_SUCCESS;
         }
-    }
 
-    if( pListHead != NULL )
-    {
         freeaddrinfo( pListHead );
     }
+}
 
-    return networkStatus;
+TCPStatus_t TCP_Connect( const char * pHostName,
+                         size_t hostNameLength,
+                         uint16_t port,
+                         int * pTcpSocket )
+{
+    TCPStatus_t returnStatus = TCP_SUCCESS;
+
+    if( pHostName == NULL )
+    {
+        LogError( ( "Parameter check failed: pHostName is NULL." ) );
+        returnStatus = TCP_INVALID_PARAMETER;
+    }
+    else if( pTcpSocket == NULL )
+    {
+        LogError( ( "Parameter check failed: pOpensslCredentials is NULL." ) );
+        returnStatus = TCP_INVALID_PARAMETER;
+    }
+    else if( hostNameLength == 0 )
+    {
+        LogError( ( "Parameter check failed: hostNameLength must be greater than 0." ) );
+        returnStatus = TCP_INVALID_PARAMETER;
+    }
+    else
+    {
+        /* Empty else for MISRA 15.7 compliance. */
+    }
+
+    returnStatus = resolveHost( pHostName, hostNameLength, port, pTcpSocket );
+
+    return returnStatus;
 }
 
 void TCP_Disconnect( int tcpSocket )

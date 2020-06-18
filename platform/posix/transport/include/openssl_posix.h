@@ -19,8 +19,8 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef OPENSSL_CONFIG_H_
-#define OPENSSL_CONFIG_H_
+#ifndef OPENSSL_POSIX_H_
+#define OPENSSL_POSIX_H_
 
 /**************************************************/
 /******* DO NOT CHANGE the following order ********/
@@ -47,22 +47,47 @@
 
 /************ End of logging configuration ****************/
 
+
 /**
- * @brief Contains the credentials necessary for TLS connection establishment.
+ * @brief OpenSSL Connect / Disconnect return status.
  */
-typedef struct NetworkCredentials
+typedef enum OpensslStatus
+{
+    OPENSSL_SUCCESS = 0,         /**< Function successfully completed. */
+    OPENSSL_INVALID_PARAMETER,   /**< At least one parameter was invalid. */
+    OPENSSL_INVALID_CREDENTIALS, /**< Provided credentials were invalid. */
+    OPENSSL_HANDSHAKE_FAILED,    /**< Performing TLS handshake with server failed. */
+    OPENSSL_API_ERROR            /**< An error occurred when calling the OpenSSL API. */
+} OpensslStatus_t;
+
+/**
+ * @brief Contains the credentials necessary to establish a TLS connection.
+ */
+typedef struct OpensslCredentials
 {
     /**
-     * @brief Set this to a non-NULL value to use ALPN.
-     *
-     * This string must be NULL-terminated.
+     * @brief An array of ALPN protocols. Set to NULL to disable ALPN.
      *
      * See [this link]
      * (https://aws.amazon.com/blogs/iot/mqtt-with-tls-client-authentication-on-port-443-why-it-is-useful-and-how-it-works/)
      * for more information.
      */
     const char * pAlpnProtos;
+
+    /**
+     * @brief Length of the ALPN protocols array.
+     */
     size_t alpnProtosLen;
+
+    /**
+     * @brief Set a host name to enable SNI. Set to NULL to disable SNI.
+     */
+    const char * sniHostName;
+
+    /**
+     * @brief Length of the SNI host name.
+     */
+    size_t sniHostNameLen;
 
     /**
      * @brief Set this to a non-zero value to use TLS max fragment length
@@ -73,30 +98,80 @@ typedef struct NetworkCredentials
      */
     size_t maxFragmentLength;
 
-    /**
-     * @brief Flags to configure the TLS connection.
-     */
-    uint16_t flags;
-
-    const char * pRootCaPath;     /**< @brief Filepath string to the trusted server root certificate. */
+    const char * pRootCaPath;     /**< @brief Filepath string to the trusted server root CA. */
     size_t rootCaPathLen;         /**< @brief Length associated with #NetworkCredentials.pRootCa. */
     const char * pClientCertPath; /**< @brief Filepath string to the client certificate. */
     size_t clientCertPathLen;     /**< @brief Length associated with #NetworkCredentials.pClientCert. */
     const char * pPrivateKeyPath; /**< @brief Filepath string to the client certificate's private key. */
     size_t privateKeyPathLen;     /**< @brief Length associated with #NetworkCredentials.pPrivateKey. */
-} NetworkCredentials_t;
+} OpensslCredentials_t;
 
-NetworkStatus_t Openssl_Establish( NetworkContext_t pNetworkContext,
-                                   NetworkCredentials_t * pNetworkCredentials );
+/**
+ * @brief Set timeout for transport recv.
+ *
+ * @brief param[in] timeout The timeout to set for transport recv.
+ */
+void Openssl_SetRecvTimeout( int timeout );
 
-NetworkStatus_t OpenSSL_Terminate( NetworkContext_t pNetworkContext );
+/**
+ * @brief Set timeout for transport send.
+ *
+ * @brief param[in] timeout The timeout to set for transport send.
+ */
+void Openssl_SetSendTimeout( int timeout );
 
+/**
+ * @brief Sets up a TLS session on top of a TCP connection using the OpenSSL API.
+ *
+ * @param[in] pNetworkContext Application-defined context (TCP socket and SSL context).
+ * @param[in] pOpensslCredentials Credentials for the TLS connection.
+ *
+ * @return #OPENSSL_SUCCESS on success,
+ * #OPENSSL_INVALID_PARAMETER, #OPENSSL_INVALID_CREDENTIALS,
+ * #OPENSSL_INVALID_CREDENTIALS, #OPENSSL_SYSTEM_ERROR on failure.
+ */
+OpensslStatus_t Openssl_Connect( NetworkContext_t pNetworkContext,
+                                 OpensslCredentials_t * pOpensslCredentials );
+
+/**
+ * @brief Closes a TLS session on top of a TCP connection using the OpenSSL API.
+ *
+ * @param[in] pNetworkContext Application-defined context (TCP socket and SSL context).
+ *
+ * @return #OPENSSL_SUCCESS on success, #OPENSSL_INVALID_PARAMETER on failure.
+ */
+OpensslStatus_t Openssl_Disconnect( NetworkContext_t pNetworkContext );
+
+/**
+ * @brief The transport receive function that defines the transport interface.
+ *
+ * This is passed as the #TransportInterface.recv function used for reading
+ * data received from the network.
+ *
+ * @param[in] pNetworkContext Application-defined context (TCP socket and SSL context).
+ * @param[out] pBuffer Buffer to read network data into.
+ * @param[in] bytesToRead Number of bytes requested from the network.
+ *
+ * @return Number of bytes received if successful; otherwise negative value on error.
+ */
 int32_t OpenSSL_Recv( NetworkContext_t pNetworkContext,
                       void * pBuffer,
                       size_t bytesToRecv );
 
+/**
+ * @brief The transport send function that defines the transport interface.
+ *
+ * This is passed as the #TransportInterface.send function and used to
+ * send data over the network.
+ *
+ * @param[in] pNetworkContext Application-defined context (TCP socket and SSL context).
+ * @param[in] pBuffer Buffer containing the bytes to send over the network stack.
+ * @param[in] bytesToSend Number of bytes to send over the network.
+ *
+ * @return Number of bytes sent if successful; otherwise negative value on error.
+ */
 int32_t OpenSSL_Send( NetworkContext_t pNetworkContext,
                       const void * pBuffer,
                       size_t bytesToSend );
 
-#endif /* ifndef OPENSSL_CONFIG_H_ */
+#endif /* ifndef OPENSSL_POSIX_H_ */

@@ -36,14 +36,16 @@
 /* Include Demo Config as the first non-system header. */
 #include "demo_config.h"
 
-/* TCP connect header. */
-#include "network_utilities.h"
-
-/* Plaintext transport header. */
-#include "plaintext_transport.h"
+/* TCP transport header. */
+#include "tcp_posix.h"
 
 /* HTTP API header. */
 #include "http_client.h"
+
+/**
+ * @brief The length of the HTTP server host name.
+ */
+#define SERVER_HOST_LENGTH         ( sizeof( SERVER_HOST ) - 1 )
 
 /**
  * @brief Length of an IPv6 address when converted to hex digits.
@@ -66,25 +68,14 @@ static char resolvedIpAddr[ IPV6_ADDRESS_STRING_LEN ];
 static uint8_t userBuffer[ USER_BUFFER_LENGTH ];
 
 /**
- * @brief The HTTP Client library transport layer interface.
+ * @brief Definition of the network context.
+ *
+ * @note An integer is used to store the descriptor of the socket.
  */
-static TransportInterface_t transportInterface;
-
-/**
- * @brief Represents header data that will be sent in an HTTP request.
- */
-static HTTPRequestHeaders_t requestHeaders;
-
-/**
- * @brief Configurations of the initial request headers that are passed to
- * #HTTPClient_InitializeRequestHeaders.
- */
-static HTTPRequestInfo_t requestInfo;
-
-/**
- * @brief Represents a response returned from an HTTP server.
- */
-static HTTPResponse_t response;
+struct NetworkContext
+{
+    int asdf;
+};
 
 /*-----------------------------------------------------------*/
 
@@ -113,6 +104,12 @@ static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
 {
     int returnStatus = EXIT_SUCCESS;
     HTTPStatus_t httpStatus = HTTP_SUCCESS;
+    /* Represents header data that will be sent in an HTTP request. */
+    HTTPRequestHeaders_t requestHeaders;
+    /* Configurations of the initial request headers that are passed to #HTTPClient_InitializeRequestHeaders. */
+    HTTPRequestInfo_t requestInfo;
+    /* Represents a response returned from an HTTP server. */
+    static HTTPResponse_t response;
 
     /* Initialize the request object. */
     requestInfo.pHost = pHost;
@@ -208,36 +205,28 @@ int main( int argc,
 {
     int returnStatus = EXIT_SUCCESS;
     struct NetworkContext socketContext;
-    NetworkServerInfo_t serverInfo;
+    TransportInterface_t transportInterface;
 
     ( void ) argc;
     ( void ) argv;
 
     /**************************** Connect. ******************************/
 
-    /* Initialize information needed to connect to server. */
-    serverInfo.pHostName = SERVER_HOST;
-    serverInfo.hostNameLength = strlen( SERVER_HOST );
-    serverInfo.port = SERVER_PORT;
-
     /* Set timeouts. */
-    Plaintext_SetSendTimeout( TRANSPORT_SEND_RECV_TIMEOUT_MS );
-    Plaintext_SetRecvTimeout( TRANSPORT_SEND_RECV_TIMEOUT_MS );
+    TCP_SetSendTimeout( TRANSPORT_SEND_RECV_TIMEOUT_MS );
+    TCP_SetRecvTimeout( TRANSPORT_SEND_RECV_TIMEOUT_MS );
 
     /* Establish TCP connection. */
-    returnStatus = TCP_Connect( &socketContext.tcpSocket, &serverInfo );
+    returnStatus = TCP_Connect( SERVER_HOST, SERVER_HOST_LENGTH,
+                                SERVER_PORT, &socketContext.asdf );
 
     /* Define the transport interface. */
     if( returnStatus == EXIT_SUCCESS )
     {
-        transportInterface.recv = Plaintext_Recv;
-        transportInterface.send = Plaintext_Send;
+        transportInterface.recv = TCP_Recv;
+        transportInterface.send = TCP_Send;
         transportInterface.pContext = &socketContext;
     }
-
-    /* Set an optional timeout for transport send and receive. */
-
-
 
     /*********************** Send HTTPS request. ************************/
 
@@ -277,9 +266,7 @@ int main( int argc,
                                         POST_PATH );
     }
 
-    /************************** Disconnect. *****************************/
-
-    TCP_Disconnect( socketContext.tcpSocket );
+    TCP_Disconnect( socketContext.asdf );
 
     return returnStatus;
 }

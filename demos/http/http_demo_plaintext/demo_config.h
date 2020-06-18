@@ -53,7 +53,7 @@
  * @note A local HTTP server is used for this demo. Instructions for setting
  * this up can be found in the top-level README.md file.
  */
-#define SERVER_HOST                       "localhost"
+#define SERVER_HOST                       "httpbin.org"
 
 /**
  * @brief HTTP server port number.
@@ -61,7 +61,7 @@
  * @note In general, port 80 is for plaintext HTTP connections. However,
  * the default plaintext port from the local http server is used below.
  */
-#define SERVER_PORT                       8080
+#define SERVER_PORT                       80
 
 /**
  * @brief Paths for different HTTP methods for specified host.
@@ -79,7 +79,7 @@
 /**
  * @brief The length in bytes of the user buffer.
  */
-#define USER_BUFFER_LENGTH                ( 1024 )
+#define USER_BUFFER_LENGTH                ( 2048 )
 
 /**
  * @brief Request body to send for PUT and POST requests in this demo.

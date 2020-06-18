@@ -7,16 +7,13 @@
 
 # Network library source files.
 set( TCP_TRANSPORT_SOURCES
-     ${CMAKE_CURRENT_LIST_DIR}/src/tcp_transport.c )
+     ${CMAKE_CURRENT_LIST_DIR}/src/tcp_posix.c )
 
 # Network library source files.
 set( OPENSSL_TRANSPORT_SOURCES
-     ${CMAKE_CURRENT_LIST_DIR}/src/openssl_transport.c )
-
-# Transport Private Include directories.
-set( COMMON_TRANSPORT_INCLUDE_PRIVATE_DIRS
-     ${PLATFORM_DIR}/include )
+     ${CMAKE_CURRENT_LIST_DIR}/src/openssl_posix.c )
 
 # Transport Public Include directories.
 set( COMMON_TRANSPORT_INCLUDE_PUBLIC_DIRS
-     ${CMAKE_CURRENT_LIST_DIR}/include )
+     ${CMAKE_CURRENT_LIST_DIR}/include
+     ${PLATFORM_DIR}/include )
