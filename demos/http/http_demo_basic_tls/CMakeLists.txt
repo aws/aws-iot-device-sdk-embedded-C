@@ -6,8 +6,8 @@ set(OPENSSL_USE_STATIC_LIBS TRUE)
 find_package(OpenSSL REQUIRED)
 
 # Verify the minimum OpenSSL version required
-if(NOT OPENSSL_VERSION MATCHES "1.1$")
-    message( FATAL_ERROR "OpenSSL 1.1.0 required: OpenSSL ${OPENSSL_VERSION} found." )
+if( NOT OPENSSL_VERSION MATCHES "1.1$" )
+    message( FATAL_ERROR "OpenSSL 1.1.0 or later required: OpenSSL ${OPENSSL_VERSION} found." )
 endif()
 
 set( CMAKE_THREAD_PREFER_PTHREAD ON )
