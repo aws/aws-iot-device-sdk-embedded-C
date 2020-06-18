@@ -154,7 +154,7 @@ OpensslStatus_t Openssl_Disconnect( NetworkContext_t pNetworkContext );
  *
  * @return Number of bytes received if successful; otherwise negative value on error.
  */
-int32_t OpenSSL_Recv( NetworkContext_t pNetworkContext,
+int32_t Openssl_Recv( NetworkContext_t pNetworkContext,
                       void * pBuffer,
                       size_t bytesToRecv );
 
@@ -170,7 +170,7 @@ int32_t OpenSSL_Recv( NetworkContext_t pNetworkContext,
  *
  * @return Number of bytes sent if successful; otherwise negative value on error.
  */
-int32_t OpenSSL_Send( NetworkContext_t pNetworkContext,
+int32_t Openssl_Send( NetworkContext_t pNetworkContext,
                       const void * pBuffer,
                       size_t bytesToSend );
 

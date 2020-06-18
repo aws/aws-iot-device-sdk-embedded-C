@@ -52,10 +52,10 @@ struct NetworkContext
 };
 
 /**
- * @brief A null-terminated string for the SNI host name.
+ * @brief A NULL-terminated string for the SNI host name.
  *
  * @note If SNI is enabled, this NULL-terminated string is set to
- * #OpensslCredentials.sniHostName, then passed to SSL_set_tlsext_host_name(...).
+ * #OpensslCredentials.sniHostName, then passed to #SSL_set_tlsext_host_name.
  */
 static char sniHostName[ HOST_NAME_MAX + 1 ];
 

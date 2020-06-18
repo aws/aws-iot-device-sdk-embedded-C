@@ -37,7 +37,7 @@
 
 /* Logging configuration for the Demo. */
 #ifndef LIBRARY_LOG_NAME
-    #define LIBRARY_LOG_NAME     "Plaintext Transport"
+    #define LIBRARY_LOG_NAME     "TCP Posix"
 #endif
 #ifndef LIBRARY_LOG_LEVEL
     #define LIBRARY_LOG_LEVEL    LOG_INFO

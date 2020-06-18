@@ -111,6 +111,7 @@ TCPStatus_t resolveHost( const char * pHostName,
                          int * pTcpSocket )
 {
     TCPStatus_t returnStatus = TCP_SUCCESS;
+    int dnsStatus = -1;
     struct addrinfo hints, * pListHead = NULL;
 
     assert( pHostName != NULL );
@@ -127,9 +128,9 @@ TCPStatus_t resolveHost( const char * pHostName,
     hints.ai_protocol = IPPROTO_TCP;
 
     /* Perform a DNS lookup on the given host name. */
-    returnStatus = getaddrinfo( pHostName, NULL, &hints, &pListHead );
+    dnsStatus = getaddrinfo( pHostName, NULL, &hints, &pListHead );
 
-    if( returnStatus == -1 )
+    if( dnsStatus == -1 )
     {
         LogError( ( "Could not resolve host %.*s.\n",
                     ( int32_t ) hostNameLength,
@@ -240,6 +241,12 @@ TCPStatus_t attemptConnection( struct addrinfo * pListHead,
 
             if( ( maxAttempts >= 0 ) && ( curAttempts >= maxAttempts ) )
             {
+                /* Fail if no connection could be established. */
+                LogError( ( "Could not connect to any resolved IP address from %.*s "
+                            "after %d attempts.",
+                            ( int32_t ) hostNameLength,
+                            pHostName,
+                            curAttempts ) );
                 returnStatus = TCP_CONNECT_FAILURE;
                 break;
             }
@@ -263,6 +270,8 @@ TCPStatus_t attemptConnection( struct addrinfo * pListHead,
 
         freeaddrinfo( pListHead );
     }
+
+    return returnStatus;
 }
 
 TCPStatus_t TCP_Connect( const char * pHostName,
@@ -366,7 +375,7 @@ int32_t TCP_Recv( NetworkContext_t pContext,
                   size_t bytesToRecv )
 {
     int32_t bytesReceived = 0;
-    int pollStatus = -1, bytesAvailableToRead = 0;
+    int pollStatus = -1;
     struct pollfd fileDescriptor;
 
     fileDescriptor.events = POLLIN | POLLPRI;
