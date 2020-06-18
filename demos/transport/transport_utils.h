@@ -20,7 +20,7 @@
  */
 
 /**
- * @file tls_utils.h
+ * @file transport_utils.h
  * @brief Wrapper utilities for using OpenSSL based TLS stack for demos and
  * integration tests.
  */

@@ -20,7 +20,7 @@
  */
 
 /**
- * @file tls_utils.c
+ * @file transport_utils.c
  * @brief Implementation of wrapper utilities for using OpenSSL as the TLS stack
  * on POSIX platform.
  */
