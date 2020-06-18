@@ -43,8 +43,9 @@ function(create_test test_name
     # add dependency to all the dep_list parameter
     foreach(dependency IN LISTS dep_list)
         add_dependencies(${test_name} ${dependency})
+        target_link_libraries(${test_name} ${dependency})
     endforeach()
-    target_link_libraries(${test_name} -lgcov -lunity)
+    target_link_libraries(${test_name} -lgcov unity)
     target_link_directories(${test_name}  PUBLIC
                             ${CMAKE_CURRENT_BINARY_DIR}/lib
             )
