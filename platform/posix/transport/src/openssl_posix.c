@@ -388,8 +388,8 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t pNetworkContext,
             ( pOpensslCredentials->sniHostNameLen > 0 ) )
         {
             LogDebug( ( "Setting server name %.*s for SNI.",
-                        pOpensslCredentials->sniHostName,
-                        pOpensslCredentials->sniHostNameLen ) );
+                        ( int32_t ) pOpensslCredentials->sniHostNameLen,
+                        pOpensslCredentials->sniHostName ) );
 
             /* NULL-terminated string is required for SSL_set_tlsext_host_name. */
             sniHostName[ pOpensslCredentials->sniHostNameLen ] = '\0';
