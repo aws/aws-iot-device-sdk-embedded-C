@@ -306,13 +306,22 @@ TCPStatus_t TCP_Connect( const char * pHostName,
     return returnStatus;
 }
 
-void TCP_Disconnect( int tcpSocket )
+TCPStatus_t TCP_Disconnect( int tcpSocket )
 {
-    if( tcpSocket != -1 )
+    TCPStatus_t returnStatus = TCP_SUCCESS;
+
+    if( tcpSocket > 0 )
     {
         ( void ) shutdown( tcpSocket, SHUT_RDWR );
         ( void ) close( tcpSocket );
     }
+    else
+    {
+        LogError( ( "Parameter check failed: tcpSocket was negative." ) );
+        returnStatus = TCP_INVALID_PARAMETER;
+    }
+
+    return returnStatus;
 }
 
 void TCP_SetSendTimeout( int timeout )

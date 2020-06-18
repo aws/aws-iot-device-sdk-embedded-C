@@ -13,5 +13,6 @@ target_include_directories( tcp_posix PUBLIC
 add_library( openssl_posix
              ${OPENSSL_TRANSPORT_SOURCES} )
 
-target_include_directories( openssl_posix PUBLIC ${COMMON_TRANSPORT_INCLUDE_PUBLIC_DIRS}
-                                                 ${LOGGING_INCLUDE_DIRS} )
+target_include_directories( openssl_posix PUBLIC 
+                                            ${COMMON_TRANSPORT_INCLUDE_PUBLIC_DIRS}
+                                            ${LOGGING_INCLUDE_DIRS} )

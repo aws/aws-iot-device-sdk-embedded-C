@@ -81,8 +81,10 @@ TCPStatus_t TCP_Connect( const char * pHostName,
  * @brief End connection to server.
  *
  * @brief param[in] tcpSocket The socket descriptor.
+ *
+ * @return #TCP_SUCCESS if successful; #TCP_INVALID_PARAMETER on error.
  */
-void TCP_Disconnect( int tcpSocket );
+TCPStatus_t TCP_Disconnect( int tcpSocket );
 
 /**
  * @brief Set timeout for transport recv.
@@ -108,7 +110,7 @@ void TCP_SetSendTimeout( int timeout );
  * @param[out] pBuffer Buffer to read network data into.
  * @param[in] bytesToRead Number of bytes requested from the network.
  *
- * @return Number of bytes received if successful; otherwise negative value on error.
+ * @return Number of bytes received if successful; negative value on error.
  */
 int32_t TCP_Recv( NetworkContext_t pContext,
                   void * pBuffer,
@@ -124,7 +126,7 @@ int32_t TCP_Recv( NetworkContext_t pContext,
  * @param[in] pBuffer Buffer containing the bytes to send over the network stack.
  * @param[in] bytesToSend Number of bytes to send over the network.
  *
- * @return Number of bytes sent if successful; otherwise negative value on error.
+ * @return Number of bytes sent if successful; negative value on error.
  */
 int32_t TCP_Send( NetworkContext_t pContext,
                   const void * pBuffer,

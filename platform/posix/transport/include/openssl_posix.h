@@ -138,7 +138,7 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t pNetworkContext,
  *
  * @param[in] pNetworkContext Application-defined context (TCP socket and SSL context).
  *
- * @return #OPENSSL_SUCCESS on success, #OPENSSL_INVALID_PARAMETER on failure.
+ * @return #OPENSSL_SUCCESS on success; #OPENSSL_INVALID_PARAMETER on failure.
  */
 OpensslStatus_t Openssl_Disconnect( NetworkContext_t pNetworkContext );
 
@@ -152,7 +152,7 @@ OpensslStatus_t Openssl_Disconnect( NetworkContext_t pNetworkContext );
  * @param[out] pBuffer Buffer to read network data into.
  * @param[in] bytesToRead Number of bytes requested from the network.
  *
- * @return Number of bytes received if successful; otherwise negative value on error.
+ * @return Number of bytes received if successful; negative value on error.
  */
 int32_t Openssl_Recv( NetworkContext_t pNetworkContext,
                       void * pBuffer,
@@ -168,7 +168,7 @@ int32_t Openssl_Recv( NetworkContext_t pNetworkContext,
  * @param[in] pBuffer Buffer containing the bytes to send over the network stack.
  * @param[in] bytesToSend Number of bytes to send over the network.
  *
- * @return Number of bytes sent if successful; otherwise negative value on error.
+ * @return Number of bytes sent if successful; negative value on error.
  */
 int32_t Openssl_Send( NetworkContext_t pNetworkContext,
                       const void * pBuffer,
