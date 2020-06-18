@@ -80,7 +80,7 @@
  * This certificate should be PEM-encoded.
  */
 #ifndef SERVER_ROOT_CA_CERT_PATH
-    #define SERVER_ROOT_CA_CERT_PATH    ""
+    #error "SERVER_ROOT_CA_CERT_PATH should be defined for MQTT system tests."
 #endif
 
 /**

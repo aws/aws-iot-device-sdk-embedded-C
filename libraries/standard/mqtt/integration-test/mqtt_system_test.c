@@ -20,7 +20,7 @@
  */
 
 /**
- * @file mqtt_system.c
+ * @file mqtt_system_test.c
  * @brief Integration tests for the MQTT library when communication with AWS IoT
  * from a POSIX platform.
  */

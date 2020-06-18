@@ -1,5 +1,5 @@
 include("../mqttFilePaths.cmake")
-project ("mqtt unit test")
+project ("mqtt system test")
 cmake_minimum_required (VERSION 3.13)
 
 # ====================  Define your project name (edit) ========================
@@ -50,8 +50,8 @@ list(APPEND utest_dep_list
             transport_utils
         )
 
-set(utest_name "${project_name}_stest")
-set(utest_source "${project_name}_stest.c")
+set(utest_name "${project_name}_test")
+set(utest_source "${project_name}_test.c")
 create_test(${utest_name}
             ${utest_source}
             "${utest_link_list}"
