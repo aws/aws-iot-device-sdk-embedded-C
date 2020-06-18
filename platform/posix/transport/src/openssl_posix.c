@@ -21,7 +21,7 @@
 /* Transport interface include. */
 #include "transport_interface.h"
 
-#include "Openssl_posix.h"
+#include "openssl_posix.h"
 
 /*-----------------------------------------------------------*/
 
