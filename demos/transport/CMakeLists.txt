@@ -22,4 +22,5 @@ target_include_directories(
     transport_utils
     PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}
+        ${LOGGING_INCLUDE_DIRS}
 )
