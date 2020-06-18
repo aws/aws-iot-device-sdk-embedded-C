@@ -43,14 +43,14 @@ extern int errno;
  *
  * @note Setting to a negative value implies an infinite timeout.
  */
-static int sendTimeout = -1;
+static int tcpSendTimeout = -1;
 
 /**
  * @brief Timeout for transport recv.
  *
  * @note Setting to a negative value implies an infinite timeout.
  */
-static int recvTimeout = -1;
+static int tcpRecvTimeout = -1;
 
 /**
  * @brief String for storing the resolved IP address to log.
@@ -317,12 +317,12 @@ void TCP_Disconnect( int tcpSocket )
 
 void TCP_SetSendTimeout( int timeout )
 {
-    sendTimeout = timeout;
+    tcpSendTimeout = timeout;
 }
 
 void TCP_SetRecvTimeout( int timeout )
 {
-    recvTimeout = timeout;
+    tcpRecvTimeout = timeout;
 }
 
 int32_t TCP_Send( NetworkContext_t pContext,
@@ -340,7 +340,7 @@ int32_t TCP_Send( NetworkContext_t pContext,
     fileDescriptor.fd = pContext->tcpSocket;
 
     /* Poll the file descriptor to check if send is ready. */
-    pollStatus = poll( &fileDescriptor, 1, sendTimeout );
+    pollStatus = poll( &fileDescriptor, 1, tcpSendTimeout );
 
     /* TCP read of data. */
     if( pollStatus > 0 )
@@ -385,7 +385,7 @@ int32_t TCP_Recv( NetworkContext_t pContext,
     fileDescriptor.fd = pContext->tcpSocket;
 
     /* Check if there are any pending data available for read. */
-    pollStatus = poll( &fileDescriptor, 1, recvTimeout );
+    pollStatus = poll( &fileDescriptor, 1, tcpRecvTimeout );
 
     /* SSL read of data. */
     if( pollStatus > 0 )
