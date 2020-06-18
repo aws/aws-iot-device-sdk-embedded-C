@@ -232,6 +232,16 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
                                     MQTTPacketInfo_t * pIncomingPacket,
                                     bool * pSessionPresent );
 
+/**
+ * @brief Resends pending acks for a re-established MQTT session.
+ *
+ * @param[in] pContext Initialized MQTT context.
+ *
+ * @return #MQTTSendFailed if transport send failed;
+ * #MQTTSuccess otherwise.
+ */
+static MQTTStatus_t resendPendingAcks( MQTTContext_t * const pContext );
+
 /*-----------------------------------------------------------*/
 
 static int32_t sendPacket( MQTTContext_t * pContext,
@@ -571,6 +581,18 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * pContext,
                                           MQTT_SEND,
                                           &newState );
 
+            /* A PUBCOMP packet can be sent without having a state present
+             * in state engine. This happens when an ack is sent for an
+             * incoming PUBREL for a packet without a stored record. */
+            if( ( status == MQTTStateNotPresent ) &&
+                ( packetType == MQTTPubcomp ) )
+            {
+                status = MQTTSuccess;
+                LogDebug( ( "Sent PUBCOMP for packet id %u which did not have"
+                            " a stored record.",
+                            packetId ) );
+            }
+
             if( status != MQTTSuccess )
             {
                 LogError( ( "Failed to update state of publish %u.", packetId ) );
@@ -633,6 +655,7 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
     MQTTPublishState_t publishRecordState = MQTTStateNull;
     uint16_t packetIdentifier = 0U;
     MQTTPublishInfo_t publishInfo;
+    bool duplicatePublish = false;
 
     assert( pContext != NULL );
     assert( pIncomingPacket != NULL );
@@ -647,18 +670,44 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
                                           MQTT_RECEIVE,
                                           publishInfo.qos,
                                           &publishRecordState );
-        LogInfo( ( "State record updated. New state=%d.",
-                   publishRecordState ) );
+
+        if( status == MQTTSuccess )
+        {
+            LogInfo( ( "State record updated. New state=%d.",
+                       publishRecordState ) );
+        }
+
+        /* A collision in the state engine and a duplicate flag set in the
+         * incoming packet would be indicating a duplicate incoming publish. */
+        else if( ( status == MQTTStateCollision ) && ( publishInfo.dup == true ) )
+        {
+            status = MQTTSuccess;
+            duplicatePublish = true;
+            LogDebug( ( "Incoming publish packet with packet id %u already exists.",
+                        packetIdentifier ) );
+        }
+        else
+        {
+            LogError( ( "Error in updating publish state for incoming publish with packet id %u."
+                        " Error is %s",
+                        packetIdentifier,
+                        MQTT_Status_strerror( status ) ) );
+        }
     }
 
     if( status == MQTTSuccess )
     {
         /* Invoke application callback to hand the buffer over to application
-         * before sending acks. */
-        pContext->callbacks.appCallback( pContext,
-                                         pIncomingPacket,
-                                         packetIdentifier,
-                                         &publishInfo );
+         * before sending acks.
+         * Application callback will be invoked for all publishes, except for
+         * duplicate QoS2 incoming publish. QoS2 ensures at most once delivery. */
+        if( ( duplicatePublish == false ) || ( publishInfo.qos != MQTTQoS2 ) )
+        {
+            pContext->callbacks.appCallback( pContext,
+                                             pIncomingPacket,
+                                             packetIdentifier,
+                                             &publishInfo );
+        }
 
         /* Send PUBACK or PUBREC if necessary. */
         status = sendPublishAcks( pContext,
@@ -689,6 +738,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
     bool invokeAppCallback = false;
     MQTTPubAckType_t ackType;
     MQTTEventCallback_t appCallback = NULL;
+    bool pubrelRecordMissing = false;
 
     assert( pContext != NULL );
     assert( pIncomingPacket != NULL );
@@ -712,8 +762,34 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
                                               ackType,
                                               MQTT_RECEIVE,
                                               &publishRecordState );
-                LogInfo( ( "State record updated. New state=%d.",
-                           publishRecordState ) );
+
+                if( status == MQTTSuccess )
+                {
+                    LogInfo( ( "State record updated. New state=%d.",
+                               publishRecordState ) );
+                }
+
+                /* PUBREL is received and there is no state record exists.
+                 * This happens when PUBCOMP was successfully sent from client
+                 * and broker failed to receive it due to a connection failure. */
+                else if( ( status == MQTTStateNotPresent ) &&
+                         ( pIncomingPacket->type == MQTT_PACKET_TYPE_PUBREL ) )
+                {
+                    pubrelRecordMissing = true;
+                    status = MQTTSuccess;
+
+                    /* Calculate the state ack for PUBCOMP to be sent. */
+                    publishRecordState = MQTT_CalculateStateAck( ackType,
+                                                                 MQTT_RECEIVE,
+                                                                 MQTTQoS2 );
+                }
+                else
+                {
+                    LogError( ( "Updating the state engine for packet id %u"
+                                "failed with error %s.",
+                                packetIdentifier,
+                                MQTT_Status_strerror( status ) ) );
+                }
             }
 
             if( status == MQTTSuccess )
@@ -1012,6 +1088,32 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
+static MQTTStatus_t resendPendingAcks( MQTTContext_t * pContext )
+{
+    MQTTStatus_t status = MQTTSuccess;
+    MQTTStateCursor_t cursor = MQTT_STATE_CURSOR_INITIALIZER;
+    uint16_t packetId = MQTT_PACKET_ID_INVALID;
+    MQTTPublishState_t state = MQTTStateNull;
+
+    assert( pContext != NULL );
+
+    /* Get the next packet Id for which a PUBREL need to be resent. */
+    packetId = MQTT_AckToResend( pContext, &cursor, &state );
+
+    /* Resend all the PUBREL acks after session is reestablished. */
+    while( ( packetId != MQTT_PACKET_ID_INVALID ) &&
+           ( status == MQTTSuccess ) )
+    {
+        status = sendPublishAcks( pContext, packetId, state );
+
+        packetId = MQTT_AckToResend( pContext, &cursor, &state );
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
 MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
                         const MQTTTransportInterface_t * pTransportInterface,
                         const MQTTApplicationCallbacks_t * pCallbacks,
@@ -1129,6 +1231,12 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
                                  timeoutMs,
                                  &incomingPacket,
                                  pSessionPresent );
+    }
+
+    /* Resend all the PUBREL when reestablishing a session. */
+    if( ( status == MQTTSuccess ) && ( *pSessionPresent == true ) )
+    {
+        status = resendPendingAcks( pContext );
     }
 
     if( status == MQTTSuccess )
@@ -1265,6 +1373,14 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
             status = MQTT_ReserveState( pContext,
                                         packetId,
                                         pPublishInfo->qos );
+
+            /* State already exists for a duplicate packet.
+             * If a state doesn't exist, it will be handled as a new publish in
+             * state engine. */
+            if( ( status == MQTTStateCollision ) && ( pPublishInfo->dup == true ) )
+            {
+                status = MQTTSuccess;
+            }
         }
     }
 
@@ -1274,10 +1390,6 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
         status = sendPublish( pContext,
                               pPublishInfo,
                               headerSize );
-
-        /* TODO. When a publish fails, the reserved state has to be cleaned
-         * up. This will have to be done once an API in state machine is
-         * available. */
     }
 
     if( status == MQTTSuccess )

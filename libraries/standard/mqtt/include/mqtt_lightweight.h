@@ -106,6 +106,7 @@ typedef enum MQTTStatus
     MQTTNoDataAvailable, /**< No data available from the transport interface. */
     MQTTIllegalState,    /**< An illegal state in the state record. */
     MQTTStateCollision,  /**< A collision with an existing state record entry. */
+    MQTTStateNotPresent, /**< A state is not present in the state record. */
     MQTTKeepAliveTimeout /**< Timeout while waiting for PINGRESP. */
 } MQTTStatus_t;
 

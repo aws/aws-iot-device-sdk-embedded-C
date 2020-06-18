@@ -124,6 +124,22 @@ uint16_t MQTT_StateSelect( const MQTTContext_t * pMqttContext,
                            MQTTStateCursor_t * pCursor );
 
 /**
+ * @brief Get the packet ID of next pending PUBREL ack to be resend.
+ *
+ * This function will be called to get the packet for which a PUBREL
+ * need to send when a session is reestablished. Calling this function
+ * repeatedly until packet id is 0 will give all the packets for which
+ * a PUBREL need to be resent.
+ *
+ * @param[in] pMqttContext Initialized MQTT context.
+ * @param[in,out] pCursor Index at which to start searching.
+ * @param[out] pState State indicating that PUBREL packet need to be sent.
+ */
+uint16_t MQTT_AckToResend( const MQTTContext_t * pMqttContext,
+                           MQTTStateCursor_t * pCursor,
+                           MQTTPublishState_t * pState );
+
+/**
  * @brief State to string conversion for state engine.
  *
  * @param[in] state The state to convert to a string.
