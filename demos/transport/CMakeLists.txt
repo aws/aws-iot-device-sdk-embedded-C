@@ -12,9 +12,9 @@ target_link_libraries(
     PRIVATE
         OpenSSL::Crypto
         OpenSSL::SSL
-	    # SSL uses Threads and on some platforms require explicit linking.
+        # SSL uses Threads and on some platforms require explicit linking.
         Threads::Threads
-	    # SSL uses Dynamic Loading and on some platforms requires explicit linking.
+        # SSL uses Dynamic Loading and on some platforms requires explicit linking.
         ${CMAKE_DL_LIBS}
 )
 
