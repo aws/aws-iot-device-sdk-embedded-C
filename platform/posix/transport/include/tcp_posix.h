@@ -106,13 +106,13 @@ void TCP_SetSendTimeout( int timeout );
  * This is passed as the #TransportInterface.recv function used for reading
  * data received from the network.
  *
- * @param[in] pContext User defined context (TCP socket for this demo).
+ * @param[in] pNetworkContext User defined context (TCP socket for this demo).
  * @param[out] pBuffer Buffer to read network data into.
  * @param[in] bytesToRead Number of bytes requested from the network.
  *
  * @return Number of bytes received if successful; negative value on error.
  */
-int32_t TCP_Recv( NetworkContext_t pContext,
+int32_t TCP_Recv( NetworkContext_t pNetworkContext,
                   void * pBuffer,
                   size_t bytesToRecv );
 
@@ -122,13 +122,13 @@ int32_t TCP_Recv( NetworkContext_t pContext,
  * This is passed as the #TransportInterface.send function and used to
  * send data over the network.
  *
- * @param[in] pContext User defined context (TCP socket for this demo).
+ * @param[in] pNetworkContext User defined context (TCP socket for this demo).
  * @param[in] pBuffer Buffer containing the bytes to send over the network stack.
  * @param[in] bytesToSend Number of bytes to send over the network.
  *
  * @return Number of bytes sent if successful; negative value on error.
  */
-int32_t TCP_Send( NetworkContext_t pContext,
+int32_t TCP_Send( NetworkContext_t pNetworkContext,
                   const void * pBuffer,
                   size_t bytesToSend );
 
