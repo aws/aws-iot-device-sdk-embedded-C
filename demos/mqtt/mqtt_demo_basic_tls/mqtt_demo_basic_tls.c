@@ -169,7 +169,7 @@ static uint16_t globalSubscribePacketIdentifier = 0U;
 
 /**
  * @brief Packet Identifier generated when Unsubscribe request was sent to the broker;
- * it is used to match received Unsubscribe response to the transmitted unsubscribe
+ * it is used to match received Unsubscribe ACK to the transmitted unsubscribe
  * request.
  */
 static uint16_t globalUnsubscribePacketIdentifier = 0U;
