@@ -607,13 +607,14 @@ MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
     MQTTQoS_t qos = MQTTQoS0;
     size_t recordIndex = MQTT_STATE_ARRAY_MAX_COUNT;
     MQTTPubAckInfo_t * records = NULL;
-    MQTTStatus_t status = MQTTBadParameter;
+    MQTTStatus_t status = MQTTSuccess;
 
     if( ( pMqttContext == NULL ) || ( pNewState == NULL ) )
     {
         LogError( ( "Argument cannot be NULL: pMqttContext=%p, pNewState=%p.",
                     pMqttContext,
                     pNewState ) );
+        status = MQTTBadParameter;
     }
     else
     {
@@ -652,7 +653,6 @@ MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
                               shouldDeleteRecord );
             }
 
-            status = MQTTSuccess;
             *pNewState = newState;
         }
         else
@@ -663,10 +663,15 @@ MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
                         MQTT_State_strerror( newState ) ) );
         }
     }
-    else
+    else if( status == MQTTSuccess )
     {
         status = MQTTStateNotPresent;
-        LogWarn( ( "No matching record found for publish %u.", packetId ) );
+        LogWarn( ( "No matching record found for publish with packet id %u.",
+                   packetId ) );
+    }
+    else
+    {
+        status = MQTTBadParameter;
     }
 
     return status;
@@ -735,7 +740,7 @@ uint16_t MQTT_AckToResend( const MQTTContext_t * pMqttContext,
                            MQTTPublishState_t * pState )
 {
     uint16_t packetId = MQTT_PACKET_ID_INVALID;
-    MQTTStateCursor_t * pCursorBegin;
+    MQTTStateCursor_t cursorBegin;
 
     /* Validate arguments. */
     if( ( pMqttContext == NULL ) || ( pCursor == NULL ) || ( pState == NULL ) )
@@ -749,7 +754,7 @@ uint16_t MQTT_AckToResend( const MQTTContext_t * pMqttContext,
     else
     {
         /* Save the original cursor position. */
-        pCursorBegin = pCursor;
+        cursorBegin = *pCursor;
 
         /* PUBREL for packets in state #MQTTPubCompPending and #MQTTPubRelSend
          * would need to be resend when a session is reestablished.
@@ -764,8 +769,8 @@ uint16_t MQTT_AckToResend( const MQTTContext_t * pMqttContext,
          * #MQTTPubRelSend. */
         if( packetId == MQTT_PACKET_ID_INVALID )
         {
-            pCursor = pCursorBegin;
-            packetId = MQTT_StateSelect( pMqttContext, MQTTPubRelSend, pCursorBegin );
+            *pCursor = cursorBegin;
+            packetId = MQTT_StateSelect( pMqttContext, MQTTPubRelSend, pCursor );
         }
 
         /* The state needs to be in #MQTTPubRelSend for sending PUBREL. */
