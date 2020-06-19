@@ -14,11 +14,11 @@
 void harness()
 {
     /* Insert argument declarations */
-    HTTPRequestHeaders_t * pRequestHeaders = allocate_HTTPRequestHeaders();
+    HTTPRequestHeaders_t * pRequestHeaders = allocateHTTPRequestHeaders();
 
     if( pRequestHeaders )
     {
-        __CPROVER_assume( is_valid_HTTPRequestHeaders( pRequestHeaders ) );
+        __CPROVER_assume( isValidHTTPRequestHeaders( pRequestHeaders ) );
     }
 
     size_t fieldLen;

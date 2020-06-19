@@ -1,6 +1,13 @@
+#include <stdlib.h>
+
 #include "http_cbmc_state.h"
 
-HTTPRequestHeaders_t allocate_HTTPRequestHeaders()
+void * safeMalloc( size_t xWantedSize )
+{
+    return nondet_bool() ? malloc( xWantedSize ) : NULL;
+}
+
+HTTPRequestHeaders_t * allocateHTTPRequestHeaders()
 {
     HTTPRequestHeaders_t * pRequestHeaders = NULL;
 
@@ -14,7 +21,7 @@ HTTPRequestHeaders_t allocate_HTTPRequestHeaders()
     return pRequestHeaders;
 }
 
-bool is_valid_HTTPRequestHeaders( const HTTPRequestHeaders_t * pRequestHeaders )
+int isValidHTTPRequestHeaders( const HTTPRequestHeaders_t * pRequestHeaders )
 {
     return pRequestHeaders->bufferLen < CBMC_MAX_OBJECT_SIZE &&
            pRequestHeaders->headersLen < CBMC_MAX_OBJECT_SIZE &&

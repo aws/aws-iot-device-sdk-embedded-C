@@ -3,7 +3,13 @@
 
 #include "http_client.h"
 
-HTTPRequestHeaders_t * allocate_HTTPRequestHeaders();
-int is_valid_HTTPRequestHeaders( const HTTPRequestHeaders_t * pRequestHeaders );
+/* Implementation of safe malloc which returns NULL if the requested
+ * size is 0.  Warning: The behavior of malloc(0) is platform
+ * dependent.  It is possible for malloc(0) to return an address
+ * without allocating memory.
+ */
+void * safeMalloc( size_t xWantedSize );
+HTTPRequestHeaders_t * allocateHTTPRequestHeaders();
+int isValidHTTPRequestHeaders( const HTTPRequestHeaders_t * pRequestHeaders );
 
 #endif /* ifndef HTTP_CBMC_STATE_H_ */
