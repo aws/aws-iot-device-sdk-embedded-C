@@ -19,81 +19,77 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef DEMO_CONFIG_H_
-#define DEMO_CONFIG_H_
+#ifndef TEST_CONFIG_H_
+#define TEST_CONFIG_H_
 
 /**************************************************/
 /******* DO NOT CHANGE the following order ********/
 /**************************************************/
 
-/* Logging config definition and header files inclusion are required in the following order:
+/* Include logging header files and define logging macros in the following order:
  * 1. Include the header file "logging_levels.h".
  * 2. Define the LIBRARY_LOG_NAME and LIBRARY_LOG_LEVEL macros depending on
  * the logging configuration for DEMO.
  * 3. Include the header file "logging_stack.h", if logging is enabled for DEMO.
  */
 
-/* Include header that defines log levels. */
 #include "logging_levels.h"
 
 /* Logging configuration for the Demo. */
 #ifndef LIBRARY_LOG_NAME
-    #define LIBRARY_LOG_NAME    "DEMO"
+    #define LIBRARY_LOG_NAME    "TEST"
 #endif
 
 #ifndef LIBRARY_LOG_LEVEL
     #define LIBRARY_LOG_LEVEL    LOG_INFO
 #endif
-
 #include "logging_stack.h"
 
 /************ End of logging configuration ****************/
 
 /**
- * @brief HTTP server host name.
+ * @brief MQTT server host name.
  *
- * This demo uses httpbin.org: A simple HTTP Request & Response Service.
+ * This test uses the Mosquitto test server. This is a public MQTT server; do not
+ * publish anything sensitive to this server.
+ * Mosquitto MQTT broker can run locally as an alternate option. Please refer to
+ * the instructions in https://mosquitto.org/ for running a Mosquitto broker
+ * locally.
  */
-#define SERVER_HOST                       "httpbin.org"
+#ifndef BROKER_ENDPOINT
+    #define BROKER_ENDPOINT    "test.mosquitto.org"
+#endif
 
 /**
- * @brief HTTP server port number.
+ * @brief Length of MQTT server host name.
+ */
+#ifndef BROKER_ENDPOINT_LENGTH
+    #define BROKER_ENDPOINT_LENGTH    ( ( uint16_t ) ( sizeof( BROKER_ENDPOINT ) - 1 ) )
+#endif
+
+/**
+ * @brief MQTT server port number.
  *
- * In general, port 443 is for TLS HTTP connections.
+ * In general, port 8883 is for secured MQTT connections.
  */
-#define SERVER_PORT                       443
+#define BROKER_PORT    ( 8883 )
 
 /**
- * @brief Path of the file containing the server's root CA certificate for TLS authentication.
+ * @brief Path of the file containing the server's root CA certificate.
  *
- * @note This certificate should be PEM-encoded.
+ * This certificate should be PEM-encoded.
  */
-#define SERVER_CERT_PATH                  "certificates/amazon.crt"
+#ifndef SERVER_ROOT_CA_CERT_PATH
+    #error "SERVER_ROOT_CA_CERT_PATH should be defined for MQTT system tests."
+#endif
 
 /**
- * @brief Paths for different HTTP methods for specified host.
+ * @brief MQTT client identifier.
  *
- * For httpbin.org, see http://httpbin.org/#/HTTP_Methods for details on
- * supported REST API.
+ * No two clients may use the same client identifier simultaneously.
  */
-#define GET_PATH                          "/get"
-#define HEAD_PATH                         "/get"
-#define PUT_PATH                          "/put"
-#define POST_PATH                         "/post"
+#ifndef CLIENT_IDENTIFIER
+    #define CLIENT_IDENTIFIER    "testclient"
+#endif
 
-/**
- * @brief Transport timeout in milliseconds for transport send and receive.
- */
-#define TRANSPORT_SEND_RECV_TIMEOUT_MS    ( 5000 )
-
-/**
- * @brief The length in bytes of the user buffer.
- */
-#define USER_BUFFER_LENGTH                ( 1024 )
-
-/**
- * @brief Request body to send for PUT and POST requests in this demo.
- */
-#define REQUEST_BODY                      "Hello, world!"
-
-#endif /* ifndef DEMO_CONFIG_H_ */
+#endif /* ifndef TEST_CONFIG_H_ */

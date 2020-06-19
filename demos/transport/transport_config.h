@@ -19,81 +19,32 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef DEMO_CONFIG_H_
-#define DEMO_CONFIG_H_
+#ifndef TRANSPORT_CONFIG_H_
+#define TRANSPORT_CONFIG_H_
 
 /**************************************************/
 /******* DO NOT CHANGE the following order ********/
 /**************************************************/
 
-/* Logging config definition and header files inclusion are required in the following order:
+/* Include logging header files and define logging macros in the following order:
  * 1. Include the header file "logging_levels.h".
  * 2. Define the LIBRARY_LOG_NAME and LIBRARY_LOG_LEVEL macros depending on
- * the logging configuration for DEMO.
+ * the logging configuration for TLS Utils library.
  * 3. Include the header file "logging_stack.h", if logging is enabled for DEMO.
  */
 
-/* Include header that defines log levels. */
 #include "logging_levels.h"
 
-/* Logging configuration for the Demo. */
+/* Logging configuration for the Transport. */
 #ifndef LIBRARY_LOG_NAME
-    #define LIBRARY_LOG_NAME    "DEMO"
+    #define LIBRARY_LOG_NAME    "TRANSPORT"
 #endif
 
 #ifndef LIBRARY_LOG_LEVEL
-    #define LIBRARY_LOG_LEVEL    LOG_INFO
+    #define LIBRARY_LOG_LEVEL    LOG_NONE
 #endif
-
 #include "logging_stack.h"
 
 /************ End of logging configuration ****************/
 
-/**
- * @brief HTTP server host name.
- *
- * This demo uses httpbin.org: A simple HTTP Request & Response Service.
- */
-#define SERVER_HOST                       "httpbin.org"
-
-/**
- * @brief HTTP server port number.
- *
- * In general, port 443 is for TLS HTTP connections.
- */
-#define SERVER_PORT                       443
-
-/**
- * @brief Path of the file containing the server's root CA certificate for TLS authentication.
- *
- * @note This certificate should be PEM-encoded.
- */
-#define SERVER_CERT_PATH                  "certificates/amazon.crt"
-
-/**
- * @brief Paths for different HTTP methods for specified host.
- *
- * For httpbin.org, see http://httpbin.org/#/HTTP_Methods for details on
- * supported REST API.
- */
-#define GET_PATH                          "/get"
-#define HEAD_PATH                         "/get"
-#define PUT_PATH                          "/put"
-#define POST_PATH                         "/post"
-
-/**
- * @brief Transport timeout in milliseconds for transport send and receive.
- */
-#define TRANSPORT_SEND_RECV_TIMEOUT_MS    ( 5000 )
-
-/**
- * @brief The length in bytes of the user buffer.
- */
-#define USER_BUFFER_LENGTH                ( 1024 )
-
-/**
- * @brief Request body to send for PUT and POST requests in this demo.
- */
-#define REQUEST_BODY                      "Hello, world!"
-
-#endif /* ifndef DEMO_CONFIG_H_ */
+#endif /* ifndef TRANSPORT_CONFIG_H_ */

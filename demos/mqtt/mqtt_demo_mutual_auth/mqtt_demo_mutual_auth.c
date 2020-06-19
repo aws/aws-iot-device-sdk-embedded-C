@@ -24,13 +24,18 @@
  * subscribe to a topic, publish to a topic, receive incoming publishes,
  * unsubscribe from a topic and disconnect the MQTT session.
  *
+ * A mutually authenticated TLS connection is used to connect to the AWS IoT
+ * MQTT message broker in this example. Define ROOT_CA_CERT_PATH,
+ * CLIENT_CERT_PATH, and CLIENT_PRIVATE_KEY_PATH in demo_config.h to achieve
+ * mutual authentication.
+ *
  * The example is single threaded and uses statically allocated memory;
- * it uses QOS2 and therefore implements a retransmission mechanism
+ * it uses QOS1 and therefore implements a retransmission mechanism
  * for Publish messages. Retransmission of publish messages are attempted
  * when a MQTT connection is established with a session that was already
- * present. All the outgoing publish messages waiting to receive PUBREC
- * are resend in this demo. In order to support retransmission all the outgoing
- * publishes are stored until a PUBREC is received.
+ * present. All the outgoing publish messages waiting to receive PUBACK
+ * are resent in this demo. In order to support retransmission all the outgoing
+ * publishes are stored until a PUBACK is received.
  */
 
 /* Standard includes. */
@@ -38,7 +43,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* POSIX socket includes. */
+/* POSIX includes. */
 #include <netdb.h>
 #include <poll.h>
 #include <time.h>
@@ -47,27 +52,69 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
-/* Include Demo Config as the first non-system header. */
+/* Demo Config header. */
 #include "demo_config.h"
 
 /* MQTT API header. */
 #include "mqtt.h"
 
+/**
+ * These configuration settings are required to run the mutual auth demo.
+ * Throw compilation error if the below configs are not defined.
+ */
+#ifndef AWS_IOT_ENDPOINT
+    #error "Please define AWS IoT MQTT broker endpoint(AWS_IOT_ENDPOINT) in demo_config.h."
+#endif
+#ifndef ROOT_CA_CERT_PATH
+    #error "Please define path to root ca certificate of the AWS IoT MQTT broker(ROOT_CA_CERT_PATH) in demo_config.h."
+#endif
+#ifndef CLIENT_CERT_PATH
+    #error "Please define path to client certificate(CLIENT_CERT_PATH) in demo_config.h."
+#endif
+#ifndef CLIENT_PRIVATE_KEY_PATH
+    #error "Please define path to client private key(CLIENT_PRIVATE_KEY_PATH) in demo_config.h."
+#endif
+
 
 /**
- * @brief Size of the network buffer for MQTT packets.
+ * Provide default values for undefined configuration settings.
  */
-#define NETWORK_BUFFER_SIZE    ( 1024U )
-
-/* Check that client identifier is defined. */
-#ifndef CLIENT_IDENTIFIER
-    #error "Please define a unique CLIENT_IDENTIFIER."
+#ifndef AWS_MQTT_PORT
+    #define AWS_MQTT_PORT    ( 8883 )
 #endif
+
+#ifndef NETWORK_BUFFER_SIZE
+    #define NETWORK_BUFFER_SIZE    ( 1024U )
+#endif
+
+#ifndef CLIENT_IDENTIFIER
+    #define CLIENT_IDENTIFIER    "testclient"
+#endif
+
+/**
+ * @brief Length of MQTT server host name.
+ */
+#define AWS_IOT_ENDPOINT_LENGTH             ( ( uint16_t ) ( sizeof( AWS_IOT_ENDPOINT ) - 1 ) )
 
 /**
  * @brief Length of client identifier.
  */
 #define CLIENT_IDENTIFIER_LENGTH            ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) )
+
+/**
+ * @brief ALPN protocol name for AWS IoT MQTT.
+ *
+ * This will be used if the AWS_MQTT_PORT is configured as 443 for AWS IoT MQTT broker.
+ * Please see more details about the ALPN protocol for AWS IoT MQTT endpoint
+ * in the link below.
+ * https://aws.amazon.com/blogs/iot/mqtt-with-tls-client-authentication-on-port-443-why-it-is-useful-and-how-it-works/
+ */
+#define ALPN_PROTOCOL_NAME                  "\x0ex-amzn-mqtt-ca"
+
+/**
+ * @brief Length of ALPN protocol name.
+ */
+#define ALPN_PROTOCOL_NAME_LENGTH           ( ( uint16_t ) ( sizeof( ALPN_PROTOCOL_NAME ) - 1 ) )
 
 /**
  * @brief Timeout for receiving CONNACK packet in milli seconds.
@@ -93,7 +140,7 @@
 #define MQTT_EXAMPLE_MESSAGE                "Hello World!"
 
 /**
- * @brief The MQTT message published in this example.
+ * @brief The length of the MQTT message published in this example.
  */
 #define MQTT_EXAMPLE_MESSAGE_LENGTH         ( ( uint16_t ) ( sizeof( MQTT_EXAMPLE_MESSAGE ) - 1 ) )
 
@@ -111,13 +158,17 @@
 
 /**
  * @brief Timeout for MQTT_ProcessLoop function in milliseconds.
- *
  */
 #define MQTT_PROCESS_LOOP_TIMEOUT_MS        ( 500U )
 
 /**
- * @brief Time interval in seconds at which an MQTT PINGREQ need to be sent to
- * broker.
+ * @brief The maximum time interval in seconds which is allowed to elapse
+ *  between two Control Packets.
+ *
+ *  It is the responsibility of the Client to ensure that the interval between
+ *  Control Packets being sent does not exceed the this Keep Alive value. In the
+ *  absence of sending any other Control Packets, the Client MUST send a
+ *  PINGREQ Packet.
  */
 #define MQTT_KEEP_ALIVE_INTERVAL_SECONDS    ( 60U )
 
@@ -127,7 +178,7 @@
 #define DELAY_BETWEEN_PUBLISHES_SECONDS     ( 1U )
 
 /**
- * @brief Transport timeout in milliseconds for transport send and receive.
+ * @brief Timeout in milliseconds for transport send and receive.
  */
 #define TRANSPORT_SEND_RECV_TIMEOUT_MS      ( 20 )
 
@@ -135,17 +186,17 @@
 
 /**
  * @brief Structure to keep the MQTT publish packets until an ack is received
- * for QoS2 publishes.
+ * for QoS1 publishes.
  */
 typedef struct PublishPackets
 {
     /**
-     * @brief MQTT client identifier. Must be unique per client.
+     * @brief Packet identifier of the publish packet.
      */
     uint16_t packetId;
 
     /**
-     * @brief MQTT client identifier. Must be unique per client.
+     * @brief Publish info of the publish packet.
      */
     MQTTPublishInfo_t pubInfo;
 } PublishPackets_t;
@@ -153,11 +204,10 @@ typedef struct PublishPackets
 /*-----------------------------------------------------------*/
 
 /**
- * @brief globalEntryTime entry time into the application to use as a reference
+ * @brief globalEntryTime Entry time into the application to use as a reference
  * timestamp in #getTimeMs function. #getTimeMs will always return the difference
  * of current time with the globalEntryTime. This will reduce the chances of
  * overflow for 32 bit unsigned integer used for holding the timestamp.
- *
  */
 static uint32_t globalEntryTimeMs = 0U;
 
@@ -176,8 +226,8 @@ static uint16_t globalUnsubscribePacketIdentifier = 0U;
 
 /**
  * @brief Array to keep the outgoing publish messages.
- * These stored outgoing publish messages are used to keep the messages until
- * a successful ack is received.
+ * These stored outgoing publish messages are kept until a successful ack
+ * is received.
  */
 static PublishPackets_t outgoingPublishPackets[ MAX_OUTGOING_PUBLISHES ] = { 0 };
 
@@ -185,11 +235,12 @@ static PublishPackets_t outgoingPublishPackets[ MAX_OUTGOING_PUBLISHES ] = { 0 }
 
 /**
  * @brief Creates a TCP connection to the MQTT broker as specified by
- * BROKER_ENDPOINT and BROKER_PORT defined at the top of this file.
+ * AWS_IOT_ENDPOINT and AWS_MQTT_PORT defined in the demo_config.h file.
  *
  * @param[in] pServer Host name of server.
  * @param[in] port Server port.
- * @param[out] pTcpSocket Pointer to TCP socket file descriptor.
+ * @param[out] pTcpSocket The output parameter to return the created socket
+ * descriptor.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
@@ -198,41 +249,64 @@ static int connectToServer( const char * pServer,
                             int * pTcpSocket );
 
 /**
+ * @brief Reads credentials from the filesystem.
+ *
+ * Uses OpenSSL to import the root CA certificate, client certificate, and
+ * client certificate private key.
+ *
+ * @param[in] pSslContext Destination for the imported credentials.
+ * @param[in] pRootCaPath Path to the root CA certificate.
+ * @param[in] pClientCertPath Path to the client certificate.
+ * @param[in] pCertPrivateKeyPath Path to the client private key.
+ *
+ * @return 1 if all credentials were successfully read; 0 otherwise.
+ */
+static int readCredentials( SSL_CTX * pSslContext,
+                            const char * pRootCaPath,
+                            const char * pClientCertPath,
+                            const char * pCertPrivateKeyPath );
+
+/**
  * @brief Set up a TLS connection over an existing TCP connection.
  *
- * @param[in] tcpSocket Existing TCP connection.
- * @param[out] pSslContext Pointer to SSL connection context pointer.
+ * @param[in] tcpSocket Socket descriptor corresponding to the existing TCP connection.
+ * @param[in] pAlpnProtos List of ALPN protocols available to be negotiated.
+ * @param[in] alpnProtosLen Length of the ALPN protocols list.
+ * @param[out] pSslContext The output parameter to return the created SSL context.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
 static int tlsSetup( int tcpSocket,
+                     const char * pAlpnProtos,
+                     size_t alpnProtosLen,
                      SSL ** pSslContext );
+
 
 /**
  * @brief The transport send function provided to the MQTT context.
  *
- * @param[in] pSslContext Pointer to SSL context.
+ * @param[in] pMQTTNetworkContext Pointer to SSL context.
  * @param[in] pMessage Data to send.
  * @param[in] bytesToSend Length of data to send.
  *
  * @return Number of bytes sent; negative value on error;
  * 0 for timeout or 0 bytes sent.
  */
-static int32_t transportSend( NetworkContext_t pSslContext,
+static int32_t transportSend( MQTTNetworkContext_t pMQTTNetworkContext,
                               const void * pMessage,
                               size_t bytesToSend );
 
 /**
  * @brief The transport receive function provided to the MQTT context.
  *
- * @param[in] pSslContext Pointer to SSL context.
+ * @param[in] pMQTTNetworkContext Pointer to SSL context.
  * @param[out] pBuffer Buffer for receiving data.
  * @param[in] bytesToRecv Length of data to be received.
  *
  * @return Number of bytes received; negative value on error;
  * 0 for timeout.
  */
-static int32_t transportRecv( NetworkContext_t pSslContext,
+static int32_t transportRecv( MQTTNetworkContext_t pMQTTNetworkContext,
                               void * pBuffer,
                               size_t bytesToRecv );
 
@@ -270,7 +344,7 @@ static void eventCallback( MQTTContext_t * pContext,
                            MQTTPublishInfo_t * pPublishInfo );
 
 /**
- * @brief Sends an MQTT CONNECT packet over the already connected TCP socket..
+ * @brief Sends an MQTT CONNECT packet over the already connected TCP socket.
  *
  * @param[in] pContext MQTT context pointer.
  * @param[in] pSslContext SSL context.
@@ -335,8 +409,8 @@ static int publishToTopic( MQTTContext_t * pContext );
  * @brief Function to get the free index at which an outgoing publish
  * can be stored.
  *
- * @param[out] pIndex The pointer to index at which an outgoing publish message
- * can be stored.
+ * @param[out] pIndex The output parameter to return the index at which an
+ * outgoing publish message can be stored.
  *
  * @return EXIT_FAILURE if no more publishes can be stored;
  * EXIT_SUCCESS if an index to store the next outgoing publish is obtained.
@@ -367,7 +441,7 @@ static void cleanupOutgoingPublishWithPacketID( uint16_t packetId );
 
 /**
  * @brief Function to resend the publishes if a session is re-established with
- * the broker. This function handles the resending of the QoS2 publish packets,
+ * the broker. This function handles the resending of the QoS1 publish packets,
  * which are maintained locally.
  *
  * @param[in] pContext MQTT context pointer.
@@ -471,17 +545,128 @@ static int connectToServer( const char * pServer,
 
 /*-----------------------------------------------------------*/
 
+static int readCredentials( SSL_CTX * pSslContext,
+                            const char * pRootCaPath,
+                            const char * pClientCertPath,
+                            const char * pCertPrivateKeyPath )
+{
+    int sslStatus = 0, fcloseStatus = 0;
+    X509 * pRootCa = NULL;
+    FILE * pRootCaFile = NULL;
+
+    /* OpenSSL does not provide a single function for reading and loading certificates
+     * from files into stores, so the file API must be called. Start with the
+     * root certificate. */
+    if( ( pRootCaPath != NULL ) &&
+        ( strlen( pRootCaPath ) != 0 ) )
+    {
+        LogDebug( ( "Opening root certificate %s.", pRootCaPath ) );
+        pRootCaFile = fopen( pRootCaPath, "r" );
+
+        if( pRootCaFile == NULL )
+        {
+            LogError( ( "Failed to open %s.", pRootCaPath ) );
+        }
+        else
+        {
+            /* Read the root CA into an X509 object, then close its file handle. */
+            pRootCa = PEM_read_X509( pRootCaFile, NULL, NULL, NULL );
+
+            if( pRootCa == NULL )
+            {
+                LogError( ( "Failed to parse root CA." ) );
+            }
+            else
+            {
+                sslStatus = 1;
+                LogDebug( ( "Successfully parsed root CA." ) );
+            }
+
+            /* Close the pRootCaFile regardless of whether we succeeded to
+             * parse the certificate or not. */
+            fcloseStatus = fclose( pRootCaFile );
+
+            if( fcloseStatus != 0 )
+            {
+                LogWarn( ( "Failed to close file %s", pRootCaPath ) );
+            }
+        }
+
+        if( sslStatus == 1 )
+        {
+            /* Add the root CA to certificate store. */
+            sslStatus = X509_STORE_add_cert( SSL_CTX_get_cert_store( pSslContext ),
+                                             pRootCa );
+
+            if( sslStatus != 1 )
+            {
+                LogError( ( "Failed to add root CA to certificate store." ) );
+            }
+        }
+    }
+
+    if( ( sslStatus == 1 ) &&
+        ( pClientCertPath != NULL ) &&
+        ( strlen( pClientCertPath ) != 0 ) )
+    {
+        /* Import the client certificate. */
+        sslStatus = SSL_CTX_use_certificate_chain_file( pSslContext,
+                                                        pClientCertPath );
+
+        if( sslStatus != 1 )
+        {
+            LogError( ( "Failed to import client certificate at %s.",
+                        pClientCertPath ) );
+        }
+    }
+
+    if( ( sslStatus == 1 ) &&
+        ( pCertPrivateKeyPath != NULL ) &&
+        ( strlen( pCertPrivateKeyPath ) != 0 ) )
+    {
+        /* Import the client certificate private key. */
+        sslStatus = SSL_CTX_use_PrivateKey_file( pSslContext,
+                                                 pCertPrivateKeyPath,
+                                                 SSL_FILETYPE_PEM );
+
+        if( sslStatus != 1 )
+        {
+            LogError( ( "Failed to import client certificate private key at %s.",
+                        pCertPrivateKeyPath ) );
+        }
+    }
+
+    /* Free the root CA object. */
+    if( pRootCa != NULL )
+    {
+        X509_free( pRootCa );
+    }
+
+    if( sslStatus == 1 )
+    {
+        LogInfo( ( "Successfully imported server root CA, client certificate and "
+                   "client private key." ) );
+    }
+
+    return sslStatus;
+}
+
+/*-----------------------------------------------------------*/
+
 static int tlsSetup( int tcpSocket,
+                     const char * pAlpnProtos,
+                     size_t alpnProtosLen,
                      SSL ** pSslContext )
 {
-    int status = EXIT_FAILURE, sslStatus = 0;
+    int status = EXIT_FAILURE, sslStatus = 0, alpnStatus = -1, sslVerifyStatus = 0;
     FILE * pRootCaFile = NULL;
     X509 * pRootCa = NULL;
+    SSL_CTX * pSslSetup = NULL;
 
     assert( tcpSocket >= 0 );
 
     /* Setup for creating a TLS client. */
-    SSL_CTX * pSslSetup = SSL_CTX_new( TLS_client_method() );
+    pSslSetup = SSL_CTX_new( TLS_client_method() );
 
     if( pSslSetup != NULL )
     {
@@ -489,34 +674,20 @@ static int tlsSetup( int tcpSocket,
          * The mask returned by SSL_CTX_set_mode does not need to be checked. */
         ( void ) SSL_CTX_set_mode( pSslSetup, SSL_MODE_AUTO_RETRY );
 
-        /* OpenSSL does not provide a single function for reading and loading certificates
-         * from files into stores, so the file API must be called. */
-        pRootCaFile = fopen( SERVER_CERT_PATH, "r" );
+        /* Setup authentication. */
+        sslStatus = readCredentials( pSslSetup,
+                                     ROOT_CA_CERT_PATH,
+                                     CLIENT_CERT_PATH,
+                                     CLIENT_PRIVATE_KEY_PATH );
 
-        if( pRootCaFile != NULL )
+        if( sslStatus != 1 )
         {
-            pRootCa = PEM_read_X509( pRootCaFile, NULL, NULL, NULL );
+            LogError( ( "Setting up credentials failed." ) );
         }
-        else
-        {
-            LogError( ( "Unable to find the certificate file in the path"
-                        " provided by SERVER_CERT_PATH(%.*s).",
-                        SERVER_CERT_PATH_LENGTH,
-                        SERVER_CERT_PATH ) );
-        }
-
-        if( pRootCa != NULL )
-        {
-            sslStatus = X509_STORE_add_cert( SSL_CTX_get_cert_store( pSslSetup ),
-                                             pRootCa );
-        }
-        else
-        {
-            LogError( ( "Failed to parse the server certificate from"
-                        " file %.*s. Please validate the certificate.",
-                        SERVER_CERT_PATH_LENGTH,
-                        SERVER_CERT_PATH ) );
-        }
+    }
+    else
+    {
+        LogError( ( "Failed setting up a TLS client." ) );
     }
 
     /* Set up the TLS connection. */
@@ -529,47 +700,75 @@ static int tlsSetup( int tcpSocket,
         {
             /* Enable SSL peer verification. */
             SSL_set_verify( *pSslContext, SSL_VERIFY_PEER, NULL );
-
             sslStatus = SSL_set_fd( *pSslContext, tcpSocket );
+
+            if( sslStatus != 1 )
+            {
+                LogError( ( "Failed to set the socket fd to SSL context." ) );
+            }
         }
         else
         {
             LogError( ( "Failed to create a new SSL context." ) );
             sslStatus = 0;
         }
+    }
 
-        /* Perform the TLS handshake. */
-        if( sslStatus == 1 )
+    if( ( sslStatus == 1 ) &&
+        ( pAlpnProtos != NULL ) && ( alpnProtosLen > 0 ) )
+    {
+        sslStatus = -1;
+
+        if( AWS_MQTT_PORT != 443 )
         {
-            sslStatus = SSL_connect( *pSslContext );
+            LogError( ( "AWS_MQTT_PORT must be set to 443 to use ALPN." ) );
         }
         else
         {
-            LogError( ( "Failed to set the socket fd to SSL context." ) );
+            alpnStatus = SSL_set_alpn_protos( *pSslContext,
+                                              ( unsigned char * ) pAlpnProtos,
+                                              ( unsigned int ) alpnProtosLen );
         }
 
-        if( sslStatus == 1 )
+        if( alpnStatus != 0 )
         {
-            if( SSL_get_verify_result( *pSslContext ) != X509_V_OK )
-            {
-                sslStatus = 0;
-            }
+            LogError( ( "SSL_set_alpn_protos failed to set ALPN protos. %s",
+                        pAlpnProtos ) );
         }
         else
+        {
+            sslStatus = 1;
+        }
+    }
+
+    /* Perform the TLS handshake. */
+    if( sslStatus == 1 )
+    {
+        sslStatus = SSL_connect( *pSslContext );
+
+        if( sslStatus != 1 )
         {
             LogError( ( "Failed to perform TLS handshake." ) );
         }
+    }
 
-        /* Clean up on error. */
-        if( sslStatus == 0 )
+    /* Verify the peer certificate. */
+    if( sslStatus == 1 )
+    {
+        sslVerifyStatus = SSL_get_verify_result( *pSslContext );
+
+        if( sslVerifyStatus != X509_V_OK )
         {
-            SSL_free( *pSslContext );
-            *pSslContext = NULL;
+            sslStatus = 0;
+            LogError( ( "Verifying the peer certificate failed. " ) );
         }
     }
-    else
+
+    /* Clean up on error. */
+    if( ( sslStatus == 0 ) && ( pSslSetup != NULL ) )
     {
-        LogError( ( "Failed to add certificate to store." ) );
+        SSL_free( *pSslContext );
+        *pSslContext = NULL;
     }
 
     if( pRootCaFile != NULL )
@@ -588,18 +787,18 @@ static int tlsSetup( int tcpSocket,
     }
 
     /* Log failure or success and update the correct exit status to return. */
-    if( sslStatus == 0 )
+    if( sslStatus != 1 )
     {
         LogError( ( "Failed to establish a TLS connection to %.*s.",
-                    BROKER_ENDPOINT_LENGTH,
-                    BROKER_ENDPOINT ) );
+                    AWS_IOT_ENDPOINT_LENGTH,
+                    AWS_IOT_ENDPOINT ) );
         status = EXIT_FAILURE;
     }
     else
     {
         LogInfo( ( "Established a TLS connection to %.*s.\n\n",
-                   BROKER_ENDPOINT_LENGTH,
-                   BROKER_ENDPOINT ) );
+                   AWS_IOT_ENDPOINT_LENGTH,
+                   AWS_IOT_ENDPOINT ) );
         status = EXIT_SUCCESS;
     }
 
@@ -608,27 +807,25 @@ static int tlsSetup( int tcpSocket,
 
 /*-----------------------------------------------------------*/
 
-static int32_t transportSend( NetworkContext_t pSslContext,
+static int32_t transportSend( MQTTNetworkContext_t pMQTTNetworkContext,
                               const void * pMessage,
                               size_t bytesToSend )
 {
     int32_t bytesSent = 0;
     int pollStatus = 0;
-    struct pollfd fileDescriptor =
-    {
-        .events  = POLLOUT,
-        .revents = 0
-    };
+    struct pollfd fileDescriptor;
 
+    fileDescriptor.events = POLLOUT;
+    fileDescriptor.revents = 0;
     /* Set the file descriptor for poll. */
-    fileDescriptor.fd = SSL_get_fd( pSslContext );
+    fileDescriptor.fd = SSL_get_fd( pMQTTNetworkContext );
 
     /* Poll the file descriptor to check if SSL_Write can be done now. */
     pollStatus = poll( &fileDescriptor, 1, TRANSPORT_SEND_RECV_TIMEOUT_MS );
 
     if( pollStatus > 0 )
     {
-        bytesSent = ( int32_t ) SSL_write( pSslContext, pMessage, bytesToSend );
+        bytesSent = ( int32_t ) SSL_write( pMQTTNetworkContext, pMessage, bytesToSend );
     }
     else if( pollStatus == 0 )
     {
@@ -647,23 +844,21 @@ static int32_t transportSend( NetworkContext_t pSslContext,
 
 /*-----------------------------------------------------------*/
 
-static int32_t transportRecv( NetworkContext_t pSslContext,
+static int32_t transportRecv( MQTTNetworkContext_t pMQTTNetworkContext,
                               void * pBuffer,
                               size_t bytesToRecv )
 {
     int32_t bytesReceived = 0;
     int pollStatus = -1, bytesAvailableToRead = 0;
-    struct pollfd fileDescriptor =
-    {
-        .events  = POLLIN | POLLPRI,
-        .revents = 0
-    };
+    struct pollfd fileDescriptor;
 
+    fileDescriptor.events = POLLIN | POLLPRI;
+    fileDescriptor.revents = 0;
     /* Set the file descriptor for poll. */
-    fileDescriptor.fd = SSL_get_fd( pSslContext );
+    fileDescriptor.fd = SSL_get_fd( pMQTTNetworkContext );
 
     /* Check if there are any pending data available for read. */
-    bytesAvailableToRead = SSL_pending( pSslContext );
+    bytesAvailableToRead = SSL_pending( pMQTTNetworkContext );
 
     /* Poll only if there is no data available yet to read. */
     if( bytesAvailableToRead <= 0 )
@@ -671,10 +866,11 @@ static int32_t transportRecv( NetworkContext_t pSslContext,
         pollStatus = poll( &fileDescriptor, 1, TRANSPORT_SEND_RECV_TIMEOUT_MS );
     }
 
-    /* SSL read of data. */
-    if( ( pollStatus > 0 ) || ( bytesAvailableToRead > 0 ) )
+    /* Read data if it was already pending or if it became available during
+     * polling. */
+    if( ( bytesAvailableToRead > 0 ) || ( pollStatus > 0 ) )
     {
-        bytesReceived = ( int32_t ) SSL_read( pSslContext, pBuffer, bytesToRecv );
+        bytesReceived = ( int32_t ) SSL_read( pMQTTNetworkContext, pBuffer, bytesToRecv );
     }
     /* Poll timed out. */
     else if( pollStatus == 0 )
@@ -716,19 +912,24 @@ static uint32_t getTimeMs( void )
 static int getNextFreeIndexForOutgoingPublishes( uint8_t * pIndex )
 {
     int status = EXIT_FAILURE;
+    int index = 0;
 
     assert( outgoingPublishPackets != NULL );
+    assert( pIndex != NULL );
 
-    for( *pIndex = 0; *pIndex < MAX_OUTGOING_PUBLISHES; ( *pIndex )++ )
+    for( index = 0; index < MAX_OUTGOING_PUBLISHES; index++ )
     {
         /* A free index is marked by invalid packet id.
          * Check if the the index has a free slot. */
-        if( outgoingPublishPackets[ *pIndex ].packetId == MQTT_PACKET_ID_INVALID )
+        if( outgoingPublishPackets[ index ].packetId == MQTT_PACKET_ID_INVALID )
         {
             status = EXIT_SUCCESS;
             break;
         }
     }
+
+    /* Copy the available index into the output param. */
+    *pIndex = index;
 
     return status;
 }
@@ -749,15 +950,10 @@ static void cleanupOutgoingPublishAt( uint8_t index )
 
 static void cleanupOutgoingPublishes()
 {
-    uint8_t index = 0;
-
     assert( outgoingPublishPackets != NULL );
 
-    /* Clean up all the saved outgoing publishes. */
-    for( ; index < MAX_OUTGOING_PUBLISHES; index++ )
-    {
-        cleanupOutgoingPublishAt( index );
-    }
+    /* Clean up all the outgoing publish packets. */
+    ( void ) memset( outgoingPublishPackets, 0x00, sizeof( outgoingPublishPackets ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -792,8 +988,8 @@ static int handlePublishResend( MQTTContext_t * pContext )
 
     assert( outgoingPublishPackets != NULL );
 
-    /* Resend all the QoS2 publishes still in the array. These are the
-     * publishes that hasn't received a PUBREC. When a PUBREC is
+    /* Resend all the QoS1 publishes still in the array. These are the
+     * publishes that hasn't received a PUBACK. When a PUBACK is
      * received, the publish is removed from the array. */
     for( index = 0U; index < MAX_OUTGOING_PUBLISHES; index++ )
     {
@@ -837,18 +1033,18 @@ static void handleIncomingPublish( MQTTPublishInfo_t * pPublishInfo,
     /* Process incoming Publish. */
     LogInfo( ( "Incoming QOS : %d.", pPublishInfo->qos ) );
 
-    /* Verify the received publish is for the we have subscribed to. */
+    /* Verify the received publish is for the topic we have subscribed to. */
     if( ( pPublishInfo->topicNameLength == MQTT_EXAMPLE_TOPIC_LENGTH ) &&
         ( 0 == strncmp( MQTT_EXAMPLE_TOPIC,
                         pPublishInfo->pTopicName,
                         pPublishInfo->topicNameLength ) ) )
     {
-        LogInfo( ( "Incoming Publish Topic Name: %.*s matches subscribed topic.",
+        LogInfo( ( "Incoming Publish Topic Name: %.*s matches subscribed topic.\n"
+                   "Incoming Publish message Packet Id is %u.\n"
+                   "Incoming Publish Message : %.*s.\n\n",
                    pPublishInfo->topicNameLength,
-                   pPublishInfo->pTopicName ) );
-        LogInfo( ( "Incoming Publish message Packet Id is %u.",
-                   packetIdentifier ) );
-        LogInfo( ( "Incoming Publish Message : %.*s.\n\n",
+                   pPublishInfo->pTopicName,
+                   packetIdentifier,
                    ( int ) pPublishInfo->payloadLength,
                    ( const char * ) pPublishInfo->pPayload ) );
     }
@@ -907,27 +1103,11 @@ static void eventCallback( MQTTContext_t * pContext,
                 LogInfo( ( "PINGRESP received.\n\n" ) );
                 break;
 
-            case MQTT_PACKET_TYPE_PUBREC:
-                LogInfo( ( "PUBREC received for packet id %u.",
+            case MQTT_PACKET_TYPE_PUBACK:
+                LogInfo( ( "PUBACK received for packet id %u.",
                            packetIdentifier ) );
-                /* Cleanup publish packet when a PUBREC is received. */
+                /* Cleanup publish packet when a PUBACK is received. */
                 cleanupOutgoingPublishWithPacketID( packetIdentifier );
-                break;
-
-            case MQTT_PACKET_TYPE_PUBREL:
-
-                /* Nothing to be done from application as library handles
-                 * PUBREL. */
-                LogInfo( ( "PUBREL received for packet id %u.\n\n",
-                           packetIdentifier ) );
-                break;
-
-            case MQTT_PACKET_TYPE_PUBCOMP:
-
-                /* Nothing to be done from application as library handles
-                 * PUBCOMP. */
-                LogInfo( ( "PUBCOMP received for packet id %u.\n\n",
-                           packetIdentifier ) );
                 break;
 
             /* Any other packet type is invalid. */
@@ -960,7 +1140,7 @@ static int establishMqttSession( MQTTContext_t * pContext,
 
     /* Fill in TransportInterface send and receive function pointers.
      * For this demo, TCP sockets are used to send and receive data
-     * from network. Network context is socket file descriptor.*/
+     * from network. Network context is SSL context.*/
     transport.networkContext = pSslContext;
     transport.send = transportSend;
     transport.recv = transportRecv;
@@ -987,7 +1167,7 @@ static int establishMqttSession( MQTTContext_t * pContext,
     }
     else
     {
-        /* Establish MQTT session with a CONNECT packet. */
+        /* Establish MQTT session by sending a CONNECT packet. */
 
         /* If #createCleanSession is true, start with a clean session
          * i.e. direct the MQTT broker to discard any previous session data.
@@ -1001,7 +1181,12 @@ static int establishMqttSession( MQTTContext_t * pContext,
         connectInfo.pClientIdentifier = CLIENT_IDENTIFIER;
         connectInfo.clientIdentifierLength = CLIENT_IDENTIFIER_LENGTH;
 
-        /* The interval at which an MQTT PINGREQ needs to be sent out to broker. */
+        /* The maximum time interval in seconds which is allowed to elapse
+         * between two Control Packets.
+         * It is the responsibility of the Client to ensure that the interval between
+         * Control Packets being sent does not exceed the this Keep Alive value. In the
+         * absence of sending any other Control Packets, the Client MUST send a
+         * PINGREQ Packet. */
         connectInfo.keepAliveSeconds = MQTT_KEEP_ALIVE_INTERVAL_SECONDS;
 
         /* Username and password for authentication. Not used in this demo. */
@@ -1061,8 +1246,8 @@ static int subscribeToTopic( MQTTContext_t * pContext )
     /* Start with everything at 0. */
     ( void ) memset( ( void * ) pSubscriptionList, 0x00, sizeof( pSubscriptionList ) );
 
-    /* This example subscribes to only one topic and uses QOS2. */
-    pSubscriptionList[ 0 ].qos = MQTTQoS2;
+    /* This example subscribes to only one topic and uses QOS1. */
+    pSubscriptionList[ 0 ].qos = MQTTQoS1;
     pSubscriptionList[ 0 ].pTopicFilter = MQTT_EXAMPLE_TOPIC;
     pSubscriptionList[ 0 ].topicFilterLength = MQTT_EXAMPLE_TOPIC_LENGTH;
 
@@ -1105,8 +1290,8 @@ static MQTTStatus_t unsubscribeFromTopic( MQTTContext_t * pContext )
     ( void ) memset( ( void * ) pSubscriptionList, 0x00, sizeof( pSubscriptionList ) );
 
     /* This example subscribes to and unsubscribes from only one topic
-     * and uses QOS2. */
-    pSubscriptionList[ 0 ].qos = MQTTQoS2;
+     * and uses QOS1. */
+    pSubscriptionList[ 0 ].qos = MQTTQoS1;
     pSubscriptionList[ 0 ].pTopicFilter = MQTT_EXAMPLE_TOPIC;
     pSubscriptionList[ 0 ].topicFilterLength = MQTT_EXAMPLE_TOPIC_LENGTH;
 
@@ -1140,15 +1325,15 @@ static MQTTStatus_t unsubscribeFromTopic( MQTTContext_t * pContext )
 static int publishToTopic( MQTTContext_t * pContext )
 {
     int status = EXIT_SUCCESS;
-    MQTTStatus_t mqttSuccess;
+    MQTTStatus_t mqttStatus;
     uint8_t publishIndex = MAX_OUTGOING_PUBLISHES;
 
     assert( pContext != NULL );
 
-    /* Get the next free index for the outgoing publish. All QoS2 outgoing
-     * publishes are stored until a PUBREC is received. These messages are
+    /* Get the next free index for the outgoing publish. All QoS1 outgoing
+     * publishes are stored until a PUBACK is received. These messages are
      * stored for supporting a resend if a network connection is broken before
-     * receiving a PUBREC. */
+     * receiving a PUBACK. */
     status = getNextFreeIndexForOutgoingPublishes( &publishIndex );
 
     if( status == EXIT_FAILURE )
@@ -1157,8 +1342,8 @@ static int publishToTopic( MQTTContext_t * pContext )
     }
     else
     {
-        /* This example publishes to only one topic and uses QOS2. */
-        outgoingPublishPackets[ publishIndex ].pubInfo.qos = MQTTQoS2;
+        /* This example publishes to only one topic and uses QOS1. */
+        outgoingPublishPackets[ publishIndex ].pubInfo.qos = MQTTQoS1;
         outgoingPublishPackets[ publishIndex ].pubInfo.pTopicName = MQTT_EXAMPLE_TOPIC;
         outgoingPublishPackets[ publishIndex ].pubInfo.topicNameLength = MQTT_EXAMPLE_TOPIC_LENGTH;
         outgoingPublishPackets[ publishIndex ].pubInfo.pPayload = MQTT_EXAMPLE_MESSAGE;
@@ -1168,14 +1353,14 @@ static int publishToTopic( MQTTContext_t * pContext )
         outgoingPublishPackets[ publishIndex ].packetId = MQTT_GetPacketId( pContext );
 
         /* Send PUBLISH packet. */
-        mqttSuccess = MQTT_Publish( pContext,
-                                    &outgoingPublishPackets[ publishIndex ].pubInfo,
-                                    outgoingPublishPackets[ publishIndex ].packetId );
+        mqttStatus = MQTT_Publish( pContext,
+                                   &outgoingPublishPackets[ publishIndex ].pubInfo,
+                                   outgoingPublishPackets[ publishIndex ].packetId );
 
-        if( status != MQTTSuccess )
+        if( mqttStatus != MQTTSuccess )
         {
             LogError( ( "Failed to send PUBLISH packet to broker with error = %u.",
-                        mqttSuccess ) );
+                        mqttStatus ) );
             cleanupOutgoingPublishAt( publishIndex );
             status = EXIT_FAILURE;
         }
@@ -1200,12 +1385,12 @@ static int publishToTopic( MQTTContext_t * pContext )
  * over the TLS connection established using openSSL.
  *
  * The example is single threaded and uses statically allocated memory;
- * it uses QOS2 and therefore implements a retransmission mechanism
+ * it uses QOS1 and therefore implements a retransmission mechanism
  * for Publish messages. Retransmission of publish messages are attempted
  * when a MQTT connection is established with a session that was already
- * present. All the outgoing publish messages waiting to receive PUBREC
- * are resend in this demo. In order to support retransmission all the outgoing
- * publishes are stored until a PUBREC is received.
+ * present. All the outgoing publish messages waiting to receive PUBACK
+ * are resent in this demo. In order to support retransmission all the outgoing
+ * publishes are stored until a PUBACK is received.
  */
 int main( int argc,
           char ** argv )
@@ -1225,19 +1410,44 @@ int main( int argc,
     globalEntryTimeMs = getTimeMs();
 
     /* Establish a TCP connection with the MQTT broker. This example connects
-     * to the MQTT broker as specified in BROKER_ENDPOINT and BROKER_PORT at
-     * the top of this file. */
+     * to the MQTT broker as specified in AWS_IOT_ENDPOINT and AWS_MQTT_PORT in
+     * the demo_config.h file. */
     LogInfo( ( "Creating a TCP connection to %.*s:%d.",
-               BROKER_ENDPOINT_LENGTH,
-               BROKER_ENDPOINT,
-               BROKER_PORT ) );
-    status = connectToServer( BROKER_ENDPOINT, BROKER_PORT, &tcpSocket );
+               AWS_IOT_ENDPOINT_LENGTH,
+               AWS_IOT_ENDPOINT,
+               AWS_MQTT_PORT ) );
+    status = connectToServer( AWS_IOT_ENDPOINT, AWS_MQTT_PORT, &tcpSocket );
 
     /* Establish TLS connection on top of TCP connection. */
     if( status == EXIT_SUCCESS )
     {
-        LogInfo( ( "Creating a TLS connection on top of the TCP connection." ) );
-        status = tlsSetup( tcpSocket, &pSslContext );
+        LogInfo( ( "Performing TLS handshake on top of the TCP connection." ) );
+
+        if( AWS_MQTT_PORT == 443 )
+        {
+            /* Pass the ALPN protocol name depending on the port being used.
+             * Please see more details about the ALPN protocol for AWS IoT MQTT endpoint
+             * in the link below.
+             * https://aws.amazon.com/blogs/iot/mqtt-with-tls-client-authentication-on-port-443-why-it-is-useful-and-how-it-works/
+             */
+            status = tlsSetup( tcpSocket,
+                               ALPN_PROTOCOL_NAME,
+                               ALPN_PROTOCOL_NAME_LENGTH,
+                               &pSslContext );
+        }
+        else if( AWS_MQTT_PORT == 8883 )
+        {
+            status = tlsSetup( tcpSocket,
+                               NULL,
+                               0,
+                               &pSslContext );
+        }
+        else
+        {
+            LogError( ( "AWS IoT Core does not support MQTT through port %d",
+                        AWS_MQTT_PORT ) );
+            status = EXIT_FAILURE;
+        }
     }
 
     /* Establish MQTT session on top of TCP+TLS connection. */
@@ -1246,14 +1456,14 @@ int main( int argc,
         /* Sends an MQTT Connect packet over the already connected TCP socket
          * tcpSocket, and waits for connection acknowledgment (CONNACK) packet. */
         LogInfo( ( "Creating an MQTT connection to %.*s.",
-                   BROKER_ENDPOINT_LENGTH,
-                   BROKER_ENDPOINT ) );
+                   AWS_IOT_ENDPOINT_LENGTH,
+                   AWS_IOT_ENDPOINT ) );
         status = establishMqttSession( &context, pSslContext, false, &sessionPresent );
 
         if( status == EXIT_SUCCESS )
         {
             /* Keep a flag for indicating if MQTT session is established. This
-             * flag will mark that an MQTT DISCONNECT has to be send at the end
+             * flag will mark that an MQTT DISCONNECT has to be sent at the end
              * of the demo even if there are intermediate failures. */
             mqttSessionEstablished = true;
         }
@@ -1289,8 +1499,8 @@ int main( int argc,
          * as specified in MQTT_EXAMPLE_TOPIC at the top of this file by sending a
          * subscribe packet. This client will then publish to the same topic it
          * subscribed to, so it will expect all the messages it sends to the broker
-         * to be sent back to it from the broker. This demo uses QOS2 in Subscribe,
-         * therefore, the Publish messages received from the broker will have QOS2. */
+         * to be sent back to it from the broker. This demo uses QOS1 in Subscribe,
+         * therefore, the Publish messages received from the broker will have QOS1. */
         LogInfo( ( "Subscribing to the MQTT topic %.*s.",
                    MQTT_EXAMPLE_TOPIC_LENGTH,
                    MQTT_EXAMPLE_TOPIC ) );
@@ -1318,7 +1528,7 @@ int main( int argc,
 
     if( status == EXIT_SUCCESS )
     {
-        /* Publish messages with QOS2, receive incoming messages and
+        /* Publish messages with QOS1, receive incoming messages and
          * send keep alive messages. */
         for( publishCount = 0; publishCount < maxPublishCount; publishCount++ )
         {

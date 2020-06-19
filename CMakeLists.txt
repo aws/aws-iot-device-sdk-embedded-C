@@ -52,6 +52,7 @@ set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
 add_subdirectory( libraries )
 
 # Build the demos.
+add_subdirectory( demos/transport )
 add_subdirectory( demos )
 
 # Build platform
