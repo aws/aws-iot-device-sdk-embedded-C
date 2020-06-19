@@ -19,8 +19,8 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef DEMO_CONFIG_H
-#define DEMO_CONFIG_H
+#ifndef DEMO_CONFIG_H_
+#define DEMO_CONFIG_H_
 
 /**************************************************/
 /******* DO NOT CHANGE the following order ********/
@@ -36,8 +36,12 @@
 #include "logging_levels.h"
 
 /* Logging configuration for the Demo. */
-#define LIBRARY_LOG_NAME     "DEMO"
-#define LIBRARY_LOG_LEVEL    LOG_INFO
+#ifndef LIBRARY_LOG_NAME
+    #define LIBRARY_LOG_NAME     "DEMO"
+#endif
+#ifndef LIBRARY_LOG_LEVEL
+    #define LIBRARY_LOG_LEVEL    LOG_INFO
+#endif
 
 #include "logging_stack.h"
 
@@ -52,7 +56,7 @@
  * @note Your AWS IoT Core endpoint can be found in the AWS IoT console under
  * Settings/Custom Endpoint, or using the describe-endpoint API.
  *
- * #define AWS_ENDPOINT               "...insert here..."
+ * #define AWS_IOT_ENDPOINT               "...insert here..."
  */
 
 /**
@@ -61,9 +65,9 @@
  * In general, port 8883 is for secured MQTT connections.
  *
  * @note Port 443 requires use of the ALPN TLS extension with the ALPN protocol
- * name. When using port 8443, ALPN is not required.
+ * name. When using port 8883, ALPN is not required.
  */
-#define AWS_MQTT_PORT    ( 8883 )
+#define AWS_MQTT_PORT        ( 8883 )
 
 /**
  * @brief Path of the file containing the server's root CA certificate.
@@ -77,10 +81,10 @@
  * using the CMake build system.
  *
  * @note This certificate should be PEM-encoded.
- * @note This path is relative to from the demo binary created. Update config
- * to the absolute path if this demo is executed from elsewhere.
+ * @note This path is relative from the demo binary created. Update
+ * ROOT_CA_CERT_PATH to the absolute path if this demo is executed from elsewhere.
  */
-#define ROOT_CA_CERT_PATH          "certificates/AmazonRootCA1.crt"
+#define ROOT_CA_CERT_PATH    "certificates/AmazonRootCA1.crt"
 
 /**
  * @brief Path of the file containing the client certificate.
@@ -91,7 +95,7 @@
  *
  * @note This certificate should be PEM-encoded.
  *
- * #define CLIENT_CERT_PATH           "...insert here..."
+ * #define CLIENT_CERT_PATH    "...insert here..."
  */
 
 /**
@@ -105,7 +109,6 @@
  *
  * #define CLIENT_PRIVATE_KEY_PATH    "...insert here..."
  */
-
 
 /**
  * @brief MQTT client identifier.
@@ -121,4 +124,4 @@
 #define NETWORK_BUFFER_SIZE    ( 1024U )
 
 
-#endif /* ifndef DEMO_CONFIG_H */
+#endif /* ifndef DEMO_CONFIG_H_ */

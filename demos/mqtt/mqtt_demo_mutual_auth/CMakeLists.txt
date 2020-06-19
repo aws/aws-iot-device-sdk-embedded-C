@@ -38,7 +38,7 @@ target_include_directories(
         ${LOGGING_INCLUDE_DIRS}
 )
 
-# Download the Amazon Root CA certificate
+# Download the Amazon Root CA certificate.
 message( "Downloading the Amazon Root CA certificate..." )
 execute_process(
     COMMAND curl --url https://www.amazontrust.com/repository/AmazonRootCA1.pem
