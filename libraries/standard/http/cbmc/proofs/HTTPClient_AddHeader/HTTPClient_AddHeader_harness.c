@@ -14,29 +14,33 @@
 void harness()
 {
     /* Insert argument declarations */
-    HTTPRequestHeaders_t * pRequestHeaders = allocateHTTPRequestHeaders();
+    HTTPRequestHeaders_t * pRequestHeaders = NULL;
+    char * pField = NULL;
+    char * pValue = NULL;
+    size_t fieldLen;
+    size_t valueLen;
+
+    pRequestHeaders = allocateHTTPRequestHeaders();
 
     if( pRequestHeaders )
     {
         __CPROVER_assume( isValidHTTPRequestHeaders( pRequestHeaders ) );
     }
 
-    size_t fieldLen;
-    size_t valueLen;
     __CPROVER_assume( fieldLen < CBMC_MAX_OBJECT_SIZE );
     __CPROVER_assume( valueLen < CBMC_MAX_OBJECT_SIZE );
 
-    char * pField = safeMalloc( fieldLen + 1 );
-    char * pValue = safeMalloc( valueLen + 1 );
+    pField = safeMalloc( fieldLen );
+    pValue = safeMalloc( valueLen );
 
     if( pField )
     {
-        pField[ fieldLen ] = 0;
+        __CPROVER_assume( __CPROVER_r_ok( pField, fieldLen ) );
     }
 
     if( pValue )
     {
-        pValue[ valueLen ] = 0;
+        __CPROVER_assume( __CPROVER_r_ok( pValue, valueLen ) );
     }
 
     HTTPClient_AddHeader( pRequestHeaders, pField, fieldLen, pValue, valueLen );

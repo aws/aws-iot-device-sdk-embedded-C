@@ -99,7 +99,7 @@ SRCDIR ?= $(abspath $(PROOF_ROOT)/../../../../..)
 CBMCDIR ?= $(SRCDIR)/cbmc
 
 # Default CBMC flags used for property checking and coverage checking
-CBMCFLAGS += --unwind 1 $(CBMC_LOOP_UNWINDINGS)
+CBMCFLAGS += --unwind 1 $(CBMC_UNWINDSET)
 
 # Additional CBMC flags used for property checking
 CHECKFLAGS += --bounds-check
@@ -192,9 +192,6 @@ PROOF_SOURCES ?=
 ################################################################
 ################################################################
 ## Section II: This section is for project-specific definitions
-
-PROOF_SOURCES += \
-				 $(SRCDIR)/libraries/standard/http/cbmc/sources/http_cbmc_state.c
 
 ################################################################
 ################################################################
