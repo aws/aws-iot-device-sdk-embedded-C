@@ -53,6 +53,11 @@ static int tcpRecvTimeout = -1;
 static char resolvedIpAddr[ INET6_ADDRSTRLEN ];
 
 /**
+ * @brief Defined by transport layer to check error from setsockopt.
+ */
+extern int errno;
+
+/**
  * @brief Definition of the network context.
  *
  * @note An integer is used to store the descriptor of the socket.
@@ -98,6 +103,17 @@ TCPStatus_t attemptConnection( struct addrinfo * pListHead,
                                uint16_t port,
                                int * pTcpSocket,
                                int32_t maxAttempts );
+
+/**
+ * @brief Log possible error from setsockopt and return appropriate status.
+ *
+ * @brief param[in] pHostName Server host name.
+ * @brief param[in] hostNameLength Length associated with host name.
+ * @brief param[out] pListHead List containing resolved DNS records.
+ *
+ * @return #TCP_SUCCESS if successful; #TCP_DNS_FAILURE, #TCP_CONNECT_FAILURE on error.
+ */
+TCPStatus_t retreiveError();
 
 /*-----------------------------------------------------------*/
 
@@ -253,13 +269,78 @@ TCPStatus_t attemptConnection( struct addrinfo * pListHead,
     return returnStatus;
 }
 
+TCPStatus_t retreiveError()
+{
+    TCPStatus_t returnStatus = TCP_API_ERROR;
+
+    switch( errno )
+    {
+        case EBADF:
+            LogError( ( "The socket argument is not a valid file descriptor." ) );
+            break;
+
+        case EDOM:
+            LogError( ( "The send and receive timeout values are too big to fit "
+                        "into the timeout fields in the socket structure." ) );
+            break;
+
+        case EINVAL:
+            LogError( ( "The specified option is invalid at the specified "
+                        "socket level or the socket has been shut down." ) );
+            break;
+
+        case EISCONN:
+            LogError( ( "The socket is already connected, and a specified option "
+                        "cannot be set while the socket is connected." ) );
+            break;
+
+        case ENOPROTOOPT:
+            LogError( ( "The option is not supported by the protocol." ) );
+            break;
+
+        case ENOTSOCK:
+            LogError( ( "The socket argument does not refer to a socket." ) );
+            break;
+
+        case ENOMEM:
+            LogError( ( "There was insufficient memory available for the "
+                        "operation to complete." ) );
+            break;
+
+        case ENOBUFS:
+            LogError( ( "Insufficient resources are available in the system to "
+                        "complete the call." ) );
+            break;
+    }
+
+    if( ( errno == ENOMEM ) || ( errno == ENOBUFS ) )
+    {
+        returnStatus = TCP_INSUFFICIENT_MEMORY;
+    }
+    else if( ( errno == ENOTSOCK ) || ( errno == EDOM ) || ( errno == EBADF ) )
+    {
+        returnStatus = TCP_INVALID_PARAMETER;
+    }
+    else
+    {
+        /* Empty else. */
+    }
+
+    return returnStatus;
+}
+
 TCPStatus_t TCP_Connect( const char * pHostName,
                          size_t hostNameLength,
                          uint16_t port,
-                         int * pTcpSocket )
+                         int * pTcpSocket,
+                         int sendTimeout,
+                         int recvTimeout )
 {
     TCPStatus_t returnStatus = TCP_SUCCESS;
     struct addrinfo * pListHead = NULL;
+    struct timeval transportTimeout;
+
+    transportTimeout.tv_sec = 0;
 
     if( pHostName == NULL )
     {
@@ -278,7 +359,7 @@ TCPStatus_t TCP_Connect( const char * pHostName,
     }
     else
     {
-        /* Empty else for MISRA 15.7 compliance. */
+        /* Empty else. */
     }
 
     if( returnStatus == TCP_SUCCESS )
@@ -293,6 +374,50 @@ TCPStatus_t TCP_Connect( const char * pHostName,
                                           port,
                                           pTcpSocket,
                                           NUM_DNS_RECORDS_TO_TRY );
+    }
+
+    /* Set the send timeout. */
+    if( returnStatus == TCP_SUCCESS )
+    {
+        transportTimeout.tv_usec = ( sendTimeout * 1000 );
+
+        setTimeoutStatus = setsockopt( *pTcpSocket,
+                                       SOL_SOCKET,
+                                       SO_SENDTIMEO,
+                                       ( char * ) &transportTimeout,
+                                       sizeof( transportTimeout ) );
+
+        if( setTimeoutStatus < 0 )
+        {
+            LogError( ( "Setting socket send timeout failed." ) );
+            returnStatus = retreiveError();
+        }
+        else
+        {
+            returnStatus = TCP_SUCCESS;
+        }
+    }
+
+    /* Set the receive timeout. */
+    if( returnStatus == TCP_SUCCESS )
+    {
+        transportTimeout.tv_usec = ( recvTimeout * 1000 );
+
+        setTimeoutStatus = setsockopt( *pTcpSocket,
+                                       SOL_SOCKET,
+                                       SO_RCVTIMEO,
+                                       ( char * ) &transportTimeout,
+                                       sizeof( transportTimeout ) );
+
+        if( setTimeoutStatus < 0 )
+        {
+            LogError( ( "Setting socket receive timeout failed." ) );
+            returnStatus = retreiveError();
+        }
+        else
+        {
+            returnStatus = TCP_SUCCESS;
+        }
     }
 
     return returnStatus;
@@ -314,16 +439,6 @@ TCPStatus_t TCP_Disconnect( int tcpSocket )
     }
 
     return returnStatus;
-}
-
-void TCP_SetRecvTimeout( int timeout )
-{
-    tcpRecvTimeout = timeout;
-}
-
-void TCP_SetSendTimeout( int timeout )
-{
-    tcpSendTimeout = timeout;
 }
 
 int32_t TCP_Recv( NetworkContext_t pContext,

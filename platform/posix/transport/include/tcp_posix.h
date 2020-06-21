@@ -55,10 +55,12 @@
  */
 typedef enum TCPStatus
 {
-    TCP_SUCCESS = 0,       /**< Function successfully completed. */
-    TCP_INVALID_PARAMETER, /**< At least one parameter was invalid. */
-    TCP_DNS_FAILURE,       /**< Resolving hostname of server failed. */
-    TCP_CONNECT_FAILURE    /**< Initial connection to the server failed. */
+    TCP_SUCCESS = 0,         /**< Function successfully completed. */
+    TCP_INVALID_PARAMETER,   /**< At least one parameter was invalid. */
+    TCP_INSUFFICIENT_MEMORY, /**< Insufficient memory required to establish connection. */
+    TCP_API_ERROR,           /**< A call to the TCP Posix API resulted in an internal error. */
+    TCP_DNS_FAILURE,         /**< Resolving hostname of server failed. */
+    TCP_CONNECT_FAILURE,     /**< Initial connection to the server failed. */
 } TCPStatus_t;
 
 /**
@@ -68,6 +70,8 @@ typedef enum TCPStatus
  * @brief param[in] hostNameLength Length associated with host name.
  * @brief param[in] port Server port in host-order.
  * @brief param[out] pTcpSocket Pointer to the socket descriptor.
+ * @brief param[in] sendTimeout Timeout for transport send.
+ * @brief param[in] recvTimeout Timeout for transport recv.
  *
  * @return #TCP_SUCCESS if successful;
  * #TCP_INVALID_PARAMETER, #TCP_DNS_FAILURE, #TCP_CONNECT_FAILURE on error.
@@ -75,7 +79,9 @@ typedef enum TCPStatus
 TCPStatus_t TCP_Connect( const char * pHostName,
                          size_t hostNameLength,
                          uint16_t port,
-                         int * pTcpSocket );
+                         int * pTcpSocket,
+                         int sendTimeout,
+                         int recvTimeout );
 
 /**
  * @brief End connection to server.
@@ -85,20 +91,6 @@ TCPStatus_t TCP_Connect( const char * pHostName,
  * @return #TCP_SUCCESS if successful; #TCP_INVALID_PARAMETER on error.
  */
 TCPStatus_t TCP_Disconnect( int tcpSocket );
-
-/**
- * @brief Set timeout for transport recv.
- *
- * @brief param[in] timeout The timeout to set for transport recv.
- */
-void TCP_SetRecvTimeout( int timeout );
-
-/**
- * @brief Set timeout for transport send.
- *
- * @brief param[in] timeout The timeout to set for transport send.
- */
-void TCP_SetSendTimeout( int timeout );
 
 /**
  * @brief The transport receive function that defines the transport interface.
