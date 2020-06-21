@@ -33,6 +33,5 @@ int isValidHTTPRequestHeaders( const HTTPRequestHeaders_t * pRequestHeaders )
     }
 
     return pRequestHeaders->bufferLen < CBMC_MAX_OBJECT_SIZE &&
-           pRequestHeaders->headersLen <= pRequestHeaders->bufferLen &&
            validBuffer;
 }
