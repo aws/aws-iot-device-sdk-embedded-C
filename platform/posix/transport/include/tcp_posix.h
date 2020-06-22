@@ -73,6 +73,8 @@ typedef enum TCPStatus
  * @brief param[in] sendTimeout Timeout for transport send.
  * @brief param[in] recvTimeout Timeout for transport recv.
  *
+ * @note A timeout of 0 means infinite timeout.
+ *
  * @return #TCP_SUCCESS if successful;
  * #TCP_INVALID_PARAMETER, #TCP_DNS_FAILURE, #TCP_CONNECT_FAILURE on error.
  */

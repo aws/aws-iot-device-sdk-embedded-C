@@ -1,3 +1,24 @@
+/*
+ * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 /* Standard includes. */
 #include <assert.h>
 #include <stdlib.h>
@@ -457,40 +478,26 @@ int32_t TCP_Recv( NetworkContext_t pContext,
                   size_t bytesToRecv )
 {
     int32_t bytesReceived = 0;
-    int pollStatus = -1;
-    struct pollfd fileDescriptor;
 
-    /* Initialize the file descriptor for polling. */
-    fileDescriptor.events = POLLIN | POLLPRI;
-    fileDescriptor.revents = 0;
-    fileDescriptor.fd = pContext->tcpSocket;
+    bytesReceived = recv( pContext->tcpSocket, pBuffer, bytesToRecv, 0 );
 
-    /* Check if there are any pending data available for read. */
-    pollStatus = poll( &fileDescriptor, 1, tcpRecvTimeout );
-
-    /* SSL read of data. */
-    if( pollStatus > 0 )
+    if( bytesReceived == 0 )
     {
-        bytesReceived = ( int32_t ) recv( pContext->tcpSocket, pBuffer, bytesToRecv, 0 );
+        /* Server closed the connection, treat it as an error. */
+        bytesReceived = -1;
     }
-    /* Poll timed out. */
-    else if( pollStatus == 0 )
+    else if( bytesReceived < 0 )
     {
-        LogDebug( ( "Poll timed out while waiting for data to read from the buffer." ) );
+        /* Check if it was time out. */
+        if( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) )
+        {
+            /* Set return value to 0 to indicate nothing to receive. */
+            bytesReceived = 0;
+        }
     }
     else
     {
-        if( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) )
-        {
-            LogError( ( "Server closed the connection." ) );
-            /* Set return value to 0 to indicate connection was dropped by server. */
-            bytesReceived = 0;
-        }
-        else
-        {
-            LogError( ( "Poll returned with status = %d.", pollStatus ) );
-            bytesReceived = -1;
-        }
+        /* Empty else. */
     }
 
     return bytesReceived;
@@ -501,39 +508,16 @@ int32_t TCP_Send( NetworkContext_t pContext,
                   size_t bytesToSend )
 {
     int32_t bytesSent = 0;
-    int pollStatus = 0;
-    struct pollfd fileDescriptor;
 
-    /* Initialize the file descriptor for polling. */
-    fileDescriptor.events = POLLOUT;
-    fileDescriptor.revents = 0;
-    fileDescriptor.fd = pContext->tcpSocket;
+    bytesSent = send( pContext->tcpSocket, pBuffer, bytesToSend, 0 );
 
-    /* Poll the file descriptor to check if send is ready. */
-    pollStatus = poll( &fileDescriptor, 1, tcpSendTimeout );
-
-    /* TCP read of data. */
-    if( pollStatus > 0 )
+    if( bytesSent < 0 )
     {
-        bytesSent = ( int32_t ) send( pContext->tcpSocket, pBuffer, bytesToSend, 0 );
-    }
-    /* Poll timed out. */
-    else if( pollStatus == 0 )
-    {
-        LogDebug( ( "Poll timed out while polling the socket for write buffer availability." ) );
-    }
-    else
-    {
+        /* Check if it was time out */
         if( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) )
         {
-            LogError( ( "Server closed the connection." ) );
-            /* Set return value to 0 to indicate connection was dropped by server. */
+            /* Set return value to 0 to indicate that send had timed out. */
             bytesSent = 0;
-        }
-        else
-        {
-            LogError( ( "Poll returned with status = %d.", pollStatus ) );
-            bytesSent = -1;
         }
     }
 

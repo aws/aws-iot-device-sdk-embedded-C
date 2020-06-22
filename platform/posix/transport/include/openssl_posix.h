@@ -61,7 +61,7 @@ typedef enum OpensslStatus
 } OpensslStatus_t;
 
 /**
- * @brief Contains the credentials necessary to establish a TLS connection.
+ * @brief Contains the credentials to establish a TLS connection.
  */
 typedef struct OpensslCredentials
 {
@@ -105,20 +105,6 @@ typedef struct OpensslCredentials
     const char * pPrivateKeyPath; /**< @brief Filepath string to the client certificate's private key. */
     size_t privateKeyPathLen;     /**< @brief Length associated with #NetworkCredentials.pPrivateKey. */
 } OpensslCredentials_t;
-
-/**
- * @brief Set timeout for transport recv.
- *
- * @brief param[in] timeout The timeout to set for transport recv.
- */
-void Openssl_SetRecvTimeout( int timeout );
-
-/**
- * @brief Set timeout for transport send.
- *
- * @brief param[in] timeout The timeout to set for transport send.
- */
-void Openssl_SetSendTimeout( int timeout );
 
 /**
  * @brief Sets up a TLS session on top of a TCP connection using the OpenSSL API.
