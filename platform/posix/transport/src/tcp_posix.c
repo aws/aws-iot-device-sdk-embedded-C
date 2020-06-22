@@ -26,6 +26,16 @@
  */
 #define NUM_DNS_RECORDS_TO_TRY    ( -1 )
 
+/**
+ * @brief Number of milliseconds in one second.
+ */
+#define ONE_SEC_TO_MS             ( 1000 )
+
+/**
+ * @brief Number of microseconds in one millisecond.
+ */
+#define ONE_MS_TO_US              ( 1000 )
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -333,14 +343,13 @@ TCPStatus_t TCP_Connect( const char * pHostName,
                          size_t hostNameLength,
                          uint16_t port,
                          int * pTcpSocket,
-                         int sendTimeout,
-                         int recvTimeout )
+                         uint32_t sendTimeoutMs,
+                         uint32_t recvTimeoutMs )
 {
     TCPStatus_t returnStatus = TCP_SUCCESS;
     struct addrinfo * pListHead = NULL;
     struct timeval transportTimeout;
-
-    transportTimeout.tv_sec = 0;
+    int setTimeoutStatus = -1;
 
     if( pHostName == NULL )
     {
@@ -379,12 +388,13 @@ TCPStatus_t TCP_Connect( const char * pHostName,
     /* Set the send timeout. */
     if( returnStatus == TCP_SUCCESS )
     {
-        transportTimeout.tv_usec = ( sendTimeout * 1000 );
+        transportTimeout.tv_sec = ( sendTimeoutMs / ONE_SEC_TO_MS );
+        transportTimeout.tv_usec = ( ONE_MS_TO_US * ( sendTimeoutMs % ONE_SEC_TO_MS ) );
 
         setTimeoutStatus = setsockopt( *pTcpSocket,
                                        SOL_SOCKET,
-                                       SO_SENDTIMEO,
-                                       ( char * ) &transportTimeout,
+                                       SO_SNDTIMEO,
+                                       &transportTimeout,
                                        sizeof( transportTimeout ) );
 
         if( setTimeoutStatus < 0 )
@@ -401,12 +411,13 @@ TCPStatus_t TCP_Connect( const char * pHostName,
     /* Set the receive timeout. */
     if( returnStatus == TCP_SUCCESS )
     {
-        transportTimeout.tv_usec = ( recvTimeout * 1000 );
+        transportTimeout.tv_sec = ( recvTimeoutMs / ONE_SEC_TO_MS );
+        transportTimeout.tv_usec = ( ONE_MS_TO_US * ( recvTimeoutMs % ONE_SEC_TO_MS ) );
 
         setTimeoutStatus = setsockopt( *pTcpSocket,
                                        SOL_SOCKET,
                                        SO_RCVTIMEO,
-                                       ( char * ) &transportTimeout,
+                                       &transportTimeout,
                                        sizeof( transportTimeout ) );
 
         if( setTimeoutStatus < 0 )
