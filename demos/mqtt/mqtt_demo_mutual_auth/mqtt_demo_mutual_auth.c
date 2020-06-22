@@ -285,28 +285,28 @@ static int tlsSetup( int tcpSocket,
 /**
  * @brief The transport send function provided to the MQTT context.
  *
- * @param[in] pMQTTNetworkContext Pointer to SSL context.
+ * @param[in] pNetworkContext Pointer to SSL context.
  * @param[in] pMessage Data to send.
  * @param[in] bytesToSend Length of data to send.
  *
  * @return Number of bytes sent; negative value on error;
  * 0 for timeout or 0 bytes sent.
  */
-static int32_t transportSend( MQTTNetworkContext_t pMQTTNetworkContext,
+static int32_t transportSend( NetworkContext_t pNetworkContext,
                               const void * pMessage,
                               size_t bytesToSend );
 
 /**
  * @brief The transport receive function provided to the MQTT context.
  *
- * @param[in] pMQTTNetworkContext Pointer to SSL context.
+ * @param[in] pNetworkContext Pointer to SSL context.
  * @param[out] pBuffer Buffer for receiving data.
  * @param[in] bytesToRecv Length of data to be received.
  *
  * @return Number of bytes received; negative value on error;
  * 0 for timeout.
  */
-static int32_t transportRecv( MQTTNetworkContext_t pMQTTNetworkContext,
+static int32_t transportRecv( NetworkContext_t pNetworkContext,
                               void * pBuffer,
                               size_t bytesToRecv );
 
@@ -807,7 +807,7 @@ static int tlsSetup( int tcpSocket,
 
 /*-----------------------------------------------------------*/
 
-static int32_t transportSend( MQTTNetworkContext_t pMQTTNetworkContext,
+static int32_t transportSend( NetworkContext_t pNetworkContext,
                               const void * pMessage,
                               size_t bytesToSend )
 {
@@ -818,14 +818,14 @@ static int32_t transportSend( MQTTNetworkContext_t pMQTTNetworkContext,
     fileDescriptor.events = POLLOUT;
     fileDescriptor.revents = 0;
     /* Set the file descriptor for poll. */
-    fileDescriptor.fd = SSL_get_fd( pMQTTNetworkContext );
+    fileDescriptor.fd = SSL_get_fd( pNetworkContext );
 
     /* Poll the file descriptor to check if SSL_Write can be done now. */
     pollStatus = poll( &fileDescriptor, 1, TRANSPORT_SEND_RECV_TIMEOUT_MS );
 
     if( pollStatus > 0 )
     {
-        bytesSent = ( int32_t ) SSL_write( pMQTTNetworkContext, pMessage, bytesToSend );
+        bytesSent = ( int32_t ) SSL_write( pNetworkContext, pMessage, bytesToSend );
     }
     else if( pollStatus == 0 )
     {
@@ -844,7 +844,7 @@ static int32_t transportSend( MQTTNetworkContext_t pMQTTNetworkContext,
 
 /*-----------------------------------------------------------*/
 
-static int32_t transportRecv( MQTTNetworkContext_t pMQTTNetworkContext,
+static int32_t transportRecv( NetworkContext_t pNetworkContext,
                               void * pBuffer,
                               size_t bytesToRecv )
 {
@@ -855,10 +855,10 @@ static int32_t transportRecv( MQTTNetworkContext_t pMQTTNetworkContext,
     fileDescriptor.events = POLLIN | POLLPRI;
     fileDescriptor.revents = 0;
     /* Set the file descriptor for poll. */
-    fileDescriptor.fd = SSL_get_fd( pMQTTNetworkContext );
+    fileDescriptor.fd = SSL_get_fd( pNetworkContext );
 
     /* Check if there are any pending data available for read. */
-    bytesAvailableToRead = SSL_pending( pMQTTNetworkContext );
+    bytesAvailableToRead = SSL_pending( pNetworkContext );
 
     /* Poll only if there is no data available yet to read. */
     if( bytesAvailableToRead <= 0 )
@@ -870,7 +870,7 @@ static int32_t transportRecv( MQTTNetworkContext_t pMQTTNetworkContext,
      * polling. */
     if( ( bytesAvailableToRead > 0 ) || ( pollStatus > 0 ) )
     {
-        bytesReceived = ( int32_t ) SSL_read( pMQTTNetworkContext, pBuffer, bytesToRecv );
+        bytesReceived = ( int32_t ) SSL_read( pNetworkContext, pBuffer, bytesToRecv );
     }
     /* Poll timed out. */
     else if( pollStatus == 0 )
