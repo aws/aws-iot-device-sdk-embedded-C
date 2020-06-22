@@ -20,6 +20,7 @@ void harness()
     size_t fieldLen;
     size_t valueLen;
 
+    /* Initialize and make assumptions for request headers. */
     pRequestHeaders = allocateHTTPRequestHeaders();
 
     if( pRequestHeaders )
@@ -28,15 +29,19 @@ void harness()
     }
 
     __CPROVER_assume( fieldLen < CBMC_MAX_OBJECT_SIZE );
-    __CPROVER_assume( valueLen < CBMC_MAX_OBJECT_SIZE );
 
+    /* Initialize and make assumptions for header field. */
     pField = safeMalloc( fieldLen );
-    pValue = safeMalloc( valueLen );
 
     if( pField )
     {
         __CPROVER_assume( __CPROVER_r_ok( pField, fieldLen ) );
     }
+
+    /* Initialize and make assumptions for header value. */
+    __CPROVER_assume( valueLen < CBMC_MAX_OBJECT_SIZE );
+
+    pValue = safeMalloc( valueLen );
 
     if( pValue )
     {
