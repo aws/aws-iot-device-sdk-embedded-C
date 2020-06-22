@@ -803,12 +803,22 @@ static IotMqttError_t _sendMqttMessage( _mqttOperation_t * pMqttOperation,
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
 
+    /* Cached value of initialized operation status to check it after
+     * the operation has executed for the MQTT_INTERNAL_FLAG_BLOCK_ON_SEND case. */
+    IotMqttError_t cachedStatus = pMqttOperation->u.operation.status;
+
     IotMqtt_Assert( pMqttOperation != NULL );
 
     /* Send the SUBSCRIBE packet. */
     if( ( flags & MQTT_INTERNAL_FLAG_BLOCK_ON_SEND ) == MQTT_INTERNAL_FLAG_BLOCK_ON_SEND )
     {
         _IotMqtt_ProcessSend( IOT_SYSTEM_TASKPOOL, pMqttOperation->job, pMqttOperation );
+
+        /* Update return status value if operation object status changed after job execution. */
+        if( pMqttOperation->u.operation.status != cachedStatus )
+        {
+            status = pMqttOperation->u.operation.status;
+        }
     }
     else
     {
@@ -1244,7 +1254,7 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
         status = IOT_MQTT_NOT_INITIALIZED;
     }
     /* Validate network interface and connect info. */
-    else if( _IotMqtt_ValidateConnect( pConnectInfo ) == false || pMqttConnection == NULL )
+    else if( ( _IotMqtt_ValidateConnect( pConnectInfo ) == false ) || ( pMqttConnection == NULL ) )
     {
         status = IOT_MQTT_BAD_PARAMETER;
     }
@@ -1802,6 +1812,7 @@ IotMqttError_t IotMqtt_PublishSync( IotMqttConnection_t mqttConnection,
             }
         }
     }
+
     return status;
 }
 
