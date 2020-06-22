@@ -65,30 +65,6 @@
 extern int errno;
 
 /**
- * @brief Timeout for transport send.
- *
- * @note Setting to a negative value implies an infinite timeout.
- */
-static int tcpSendTimeout = -1;
-
-/**
- * @brief Timeout for transport recv.
- *
- * @note Setting to a negative value implies an infinite timeout.
- */
-static int tcpRecvTimeout = -1;
-
-/**
- * @brief String for storing the resolved IP address to log.
- */
-static char resolvedIpAddr[ INET6_ADDRSTRLEN ];
-
-/**
- * @brief Defined by transport layer to check error from setsockopt.
- */
-extern int errno;
-
-/**
  * @brief Definition of the network context.
  *
  * @note An integer is used to store the descriptor of the socket.
@@ -109,9 +85,9 @@ struct NetworkContext
  *
  * @return #TCP_SUCCESS if successful; #TCP_DNS_FAILURE, #TCP_CONNECT_FAILURE on error.
  */
-TCPStatus_t resolveHostName( const char * pHostName,
-                             size_t hostNameLength,
-                             struct addrinfo ** pListHead );
+static TCPStatus_t resolveHostName( const char * pHostName,
+                                    size_t hostNameLength,
+                                    struct addrinfo ** pListHead );
 
 /**
  * @brief Traverse list of DNS records and return successfully if able to connect to one.
@@ -128,29 +104,25 @@ TCPStatus_t resolveHostName( const char * pHostName,
  *
  * @return #TCP_SUCCESS if successful; #TCP_CONNECT_FAILURE on error.
  */
-TCPStatus_t attemptConnection( struct addrinfo * pListHead,
-                               const char * pHostName,
-                               size_t hostNameLength,
-                               uint16_t port,
-                               int * pTcpSocket,
-                               int32_t maxAttempts );
+static TCPStatus_t attemptConnection( struct addrinfo * pListHead,
+                                      const char * pHostName,
+                                      size_t hostNameLength,
+                                      uint16_t port,
+                                      int * pTcpSocket,
+                                      int32_t maxAttempts );
 
 /**
  * @brief Log possible error from setsockopt and return appropriate status.
  *
- * @brief param[in] pHostName Server host name.
- * @brief param[in] hostNameLength Length associated with host name.
- * @brief param[out] pListHead List containing resolved DNS records.
- *
- * @return #TCP_SUCCESS if successful; #TCP_DNS_FAILURE, #TCP_CONNECT_FAILURE on error.
+ * @return #TCP_API_ERROR, #TCP_INSUFFICIENT_MEMORY, #TCP_INVALID_PARAMETER on error.
  */
-TCPStatus_t retreiveError();
+static TCPStatus_t retreiveError( void );
 
 /*-----------------------------------------------------------*/
 
-TCPStatus_t resolveHostName( const char * pHostName,
-                             size_t hostNameLength,
-                             struct addrinfo ** pListHead )
+static TCPStatus_t resolveHostName( const char * pHostName,
+                                    size_t hostNameLength,
+                                    struct addrinfo ** pListHead )
 {
     TCPStatus_t returnStatus = TCP_SUCCESS;
     int dnsStatus = -1;
@@ -182,12 +154,12 @@ TCPStatus_t resolveHostName( const char * pHostName,
     return returnStatus;
 }
 
-TCPStatus_t attemptConnection( struct addrinfo * pListHead,
-                               const char * pHostName,
-                               size_t hostNameLength,
-                               uint16_t port,
-                               int * pTcpSocket,
-                               int32_t maxAttempts )
+static TCPStatus_t attemptConnection( struct addrinfo * pListHead,
+                                      const char * pHostName,
+                                      size_t hostNameLength,
+                                      uint16_t port,
+                                      int * pTcpSocket,
+                                      int32_t maxAttempts )
 {
     TCPStatus_t returnStatus = TCP_SUCCESS;
     struct addrinfo * pIndex = NULL;
@@ -195,6 +167,7 @@ TCPStatus_t attemptConnection( struct addrinfo * pListHead,
     socklen_t addrInfoLength;
     uint16_t netPort = -1;
     int curAttempts = 0, connectStatus = 0;
+    char resolvedIpAddr[ INET6_ADDRSTRLEN ];
 
     assert( pListHead != NULL );
     assert( pHostName != NULL );
@@ -300,7 +273,7 @@ TCPStatus_t attemptConnection( struct addrinfo * pListHead,
     return returnStatus;
 }
 
-TCPStatus_t retreiveError()
+static TCPStatus_t retreiveError( void )
 {
     TCPStatus_t returnStatus = TCP_API_ERROR;
 
@@ -308,6 +281,34 @@ TCPStatus_t retreiveError()
     {
         case EBADF:
             LogError( ( "The socket argument is not a valid file descriptor." ) );
+            break;
+
+        case ECONNRESET:
+            LogError( ( "A connection was forcibly closed by a peer." ) );
+            break;
+
+        case EDESTADDRREQ:
+            LogError( ( "The socket is not connection-mode and no peer address is set." ) );
+            break;
+
+        case EINTR:
+            LogError( ( "A signal interrupted send/recv." ) );
+            break;
+
+        case EMSGSIZE:
+            LogError( ( "The message is too large to be sent all at once, as the socket requires." ) );
+            break;
+
+        case ENOTCONN:
+            LogError( ( "The socket is not connected." ) );
+            break;
+
+        case EOPNOTSUPP:
+            LogError( ( "The socket argument is associated with a socket that does not support one or more of the values set in flags." ) );
+            break;
+
+        case EPIPE:
+            LogError( ( "The socket is shut down for writing, or the socket is connection-mode and is no longer connected. In the latter case, and if the socket is of type SOCK_STREAM or SOCK_SEQPACKET and the MSG_NOSIGNAL flag is not set, the SIGPIPE signal is generated to the calling thread." ) );
             break;
 
         case EDOM:
@@ -488,6 +489,8 @@ int32_t TCP_Recv( NetworkContext_t pContext,
     }
     else if( bytesReceived < 0 )
     {
+        ( void ) retreiveError();
+
         /* Check if it was time out. */
         if( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) )
         {
@@ -513,6 +516,8 @@ int32_t TCP_Send( NetworkContext_t pContext,
 
     if( bytesSent < 0 )
     {
+        ( void ) retreiveError();
+
         /* Check if it was time out */
         if( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) )
         {

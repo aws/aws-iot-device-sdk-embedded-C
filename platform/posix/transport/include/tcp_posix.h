@@ -60,7 +60,7 @@ typedef enum TCPStatus
     TCP_INSUFFICIENT_MEMORY, /**< Insufficient memory required to establish connection. */
     TCP_API_ERROR,           /**< A call to the POSIX API resulted in an internal error. */
     TCP_DNS_FAILURE,         /**< Resolving hostname of server failed. */
-    TCP_CONNECT_FAILURE,     /**< Initial connection to the server failed. */
+    TCP_CONNECT_FAILURE      /**< Initial connection to the server failed. */
 } TCPStatus_t;
 
 /**
