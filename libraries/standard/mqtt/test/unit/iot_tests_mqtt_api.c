@@ -1530,10 +1530,6 @@ TEST( MQTT_Unit_API, PublishQoS0SendFails )
     TEST_ASSERT_EQUAL( IOT_MQTT_NETWORK_ERROR,
                        IotMqtt_PublishSync( _pMqttConnection, &publishInfo, 0, 0 ) );
 
-    /* Test that the async Publish API fails on network failure. */
-    TEST_ASSERT_EQUAL( IOT_MQTT_NETWORK_ERROR,
-                       IotMqtt_PublishAsync( _pMqttConnection, &publishInfo, 0, NULL, NULL ) );
-
     IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
 }
 
