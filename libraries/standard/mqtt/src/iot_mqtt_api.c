@@ -803,12 +803,22 @@ static IotMqttError_t _sendMqttMessage( _mqttOperation_t * pMqttOperation,
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
 
+    /* Cached value of initialized operation status to check it after
+     * the operation has executed for the MQTT_INTERNAL_FLAG_BLOCK_ON_SEND case. */
+    IotMqttError_t cachedStatus = pMqttOperation->u.operation.status;
+
     IotMqtt_Assert( pMqttOperation != NULL );
 
     /* Send the SUBSCRIBE packet. */
     if( ( flags & MQTT_INTERNAL_FLAG_BLOCK_ON_SEND ) == MQTT_INTERNAL_FLAG_BLOCK_ON_SEND )
     {
         _IotMqtt_ProcessSend( IOT_SYSTEM_TASKPOOL, pMqttOperation->job, pMqttOperation );
+
+        /* Update return status value if operation object status changed after job execution. */
+        if( pMqttOperation->u.operation.status != cachedStatus )
+        {
+            status = pMqttOperation->u.operation.status;
+        }
     }
     else
     {
@@ -1748,17 +1758,6 @@ IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
         if( pPublishInfo->qos > IOT_MQTT_QOS_0 )
         {
             status = IOT_MQTT_STATUS_PENDING;
-        }
-
-        if( pPublishInfo->qos == IOT_MQTT_QOS_0 )
-        {
-            if( ( ( flags & MQTT_INTERNAL_FLAG_BLOCK_ON_SEND )
-                  == MQTT_INTERNAL_FLAG_BLOCK_ON_SEND ) &&
-                ( pOperation != NULL ) &&
-                ( pOperation->u.operation.status == IOT_MQTT_NETWORK_ERROR ) )
-            {
-                status = IOT_MQTT_NETWORK_ERROR;
-            }
         }
 
         IotLogInfo( "(MQTT connection %p) MQTT PUBLISH operation queued.",
