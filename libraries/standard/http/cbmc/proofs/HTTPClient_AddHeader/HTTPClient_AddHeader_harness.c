@@ -44,9 +44,9 @@ void harness()
         __CPROVER_assume( isValidHttpRequestHeaders( pRequestHeaders ) );
     }
 
+    /* Initialize and make assumptions for header field. */
     __CPROVER_assume( fieldLen < CBMC_MAX_OBJECT_SIZE );
 
-    /* Initialize and make assumptions for header field. */
     pField = safeMalloc( fieldLen );
 
     if( pField )
