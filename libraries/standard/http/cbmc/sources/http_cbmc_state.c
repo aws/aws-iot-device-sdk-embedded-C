@@ -9,7 +9,7 @@ void * safeMalloc( size_t xWantedSize )
     return nondet_bool() ? malloc( xWantedSize ) : NULL;
 }
 
-HTTPRequestHeaders_t * allocateHTTPRequestHeaders()
+HTTPRequestHeaders_t * allocateHttpRequestHeaders()
 {
     HTTPRequestHeaders_t * pRequestHeaders = NULL;
 
@@ -23,7 +23,7 @@ HTTPRequestHeaders_t * allocateHTTPRequestHeaders()
     return pRequestHeaders;
 }
 
-int isValidHTTPRequestHeaders( const HTTPRequestHeaders_t * pRequestHeaders )
+int isValidHttpRequestHeaders( const HTTPRequestHeaders_t * pRequestHeaders )
 {
     int validBuffer = 1;
 

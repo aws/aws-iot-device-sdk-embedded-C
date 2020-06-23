@@ -37,11 +37,11 @@ void harness()
     size_t valueLen;
 
     /* Initialize and make assumptions for request headers. */
-    pRequestHeaders = allocateHTTPRequestHeaders();
+    pRequestHeaders = allocateHttpRequestHeaders();
 
     if( pRequestHeaders )
     {
-        __CPROVER_assume( isValidHTTPRequestHeaders( pRequestHeaders ) );
+        __CPROVER_assume( isValidHttpRequestHeaders( pRequestHeaders ) );
     }
 
     __CPROVER_assume( fieldLen < CBMC_MAX_OBJECT_SIZE );
