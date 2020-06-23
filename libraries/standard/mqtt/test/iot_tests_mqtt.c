@@ -39,22 +39,21 @@
  * @param[in] disableNetworkTests Whether tests that require the network should run.
  * @param[in] disableLongTests Whether tests that take a long time should run.
  */
-void RunMqttTests( bool disableNetworkTests,
-                   bool disableLongTests )
+void RunMqttTests( bool disableNetworkTests, bool disableLongTests )
 {
     /* Silence warnings about unused parameters. */
     ( void ) disableLongTests;
 
-    /* RUN_TEST_GROUP( MQTT_Unit_Subscription ); */
-    /* RUN_TEST_GROUP( MQTT_Unit_Validate ); */
-    /* RUN_TEST_GROUP( MQTT_Unit_Receive ); */
-    /* RUN_TEST_GROUP( MQTT_Unit_Platform ); */
+    RUN_TEST_GROUP( MQTT_Unit_Subscription );
+    RUN_TEST_GROUP( MQTT_Unit_Validate );
+    RUN_TEST_GROUP( MQTT_Unit_Receive );
+    RUN_TEST_GROUP( MQTT_Unit_Platform );
     RUN_TEST_GROUP( MQTT_Unit_API );
 
     if( disableNetworkTests == false )
     {
-        /* RUN_TEST_GROUP( MQTT_System_Platform ); */
-        /* RUN_TEST_GROUP( MQTT_System ); */
+        RUN_TEST_GROUP( MQTT_System_Platform );
+        RUN_TEST_GROUP( MQTT_System );
     }
 }
 
