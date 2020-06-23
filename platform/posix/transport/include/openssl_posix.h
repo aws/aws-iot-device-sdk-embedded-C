@@ -128,6 +128,7 @@ typedef struct OpensslCredentials
  * @brief Sets up a TLS session on top of a TCP connection using the OpenSSL API.
  *
  * @param[in] pNetworkContext Application-defined context (TCP socket and SSL context).
+ * @param[in] pServerInfo Server connection info.
  * @param[in] pOpensslCredentials Credentials for the TLS connection.
  * @param[in] sendTimeoutMs Timeout for transport send.
  * @param[in] recvTimeoutMs Timeout for transport recv.
