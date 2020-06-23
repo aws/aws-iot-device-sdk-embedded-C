@@ -805,22 +805,10 @@ static IotMqttError_t _sendMqttMessage( _mqttOperation_t * pMqttOperation,
 
     IotMqtt_Assert( pMqttOperation != NULL );
 
-    /* Cached value of initialized operation status to check it after
-     * the operation has executed for the MQTT_INTERNAL_FLAG_BLOCK_ON_SEND case. */
-    IotMqttError_t cachedStatus = pMqttOperation->u.operation.status;
-
-    IotMqtt_Assert( pMqttOperation != NULL );
-
     /* Send the SUBSCRIBE packet. */
     if( ( flags & MQTT_INTERNAL_FLAG_BLOCK_ON_SEND ) == MQTT_INTERNAL_FLAG_BLOCK_ON_SEND )
     {
         _IotMqtt_ProcessSend( IOT_SYSTEM_TASKPOOL, pMqttOperation->job, pMqttOperation );
-
-        /* Update return status value if operation object status changed after job execution. */
-        if( pMqttOperation->u.operation.status != cachedStatus )
-        {
-            status = pMqttOperation->u.operation.status;
-        }
     }
     else
     {
@@ -1745,24 +1733,36 @@ IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
         }
     }
 
-    if( ( flags & MQTT_INTERNAL_FLAG_BLOCK_ON_SEND ) != MQTT_INTERNAL_FLAG_BLOCK_ON_SEND )
+    /* Clean up the PUBLISH operation if this function fails. Otherwise, set the
+     * appropriate return code based on QoS. */
+
+    if( status != IOT_MQTT_SUCCESS )
     {
-        /* Clean up the PUBLISH operation if this function fails.
-         * Otherwise, set the appropriate return code based on QoS. */
-        if( ( status != IOT_MQTT_SUCCESS ) && ( pOperation != NULL ) )
+        if( pOperation != NULL )
         {
             _IotMqtt_DestroyOperation( pOperation );
         }
-        else if( status == IOT_MQTT_SUCCESS )
+    }
+    else
+    {
+        if( pPublishInfo->qos > IOT_MQTT_QOS_0 )
         {
-            if( pPublishInfo->qos > IOT_MQTT_QOS_0 )
-            {
-                status = IOT_MQTT_STATUS_PENDING;
-            }
-
-            IotLogInfo( "(MQTT connection %p) MQTT PUBLISH operation queued.",
-                        mqttConnection );
+            status = IOT_MQTT_STATUS_PENDING;
         }
+
+        if( pPublishInfo->qos == IOT_MQTT_QOS_0 )
+        {
+            if( ( ( flags & MQTT_INTERNAL_FLAG_BLOCK_ON_SEND )
+                  == MQTT_INTERNAL_FLAG_BLOCK_ON_SEND ) &&
+                ( pOperation != NULL ) &&
+                ( pOperation->u.operation.status == IOT_MQTT_NETWORK_ERROR ) )
+            {
+                status = IOT_MQTT_NETWORK_ERROR;
+            }
+        }
+
+        IotLogInfo( "(MQTT connection %p) MQTT PUBLISH operation queued.",
+                    mqttConnection );
     }
 
     return status;
