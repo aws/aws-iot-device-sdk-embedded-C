@@ -324,7 +324,7 @@ static SocketStatus_t retreiveError( void )
 }
 
 SocketStatus_t Sockets_Connect( int * pTcpSocket,
-                                ServerInfo_t * pServerInfo,
+                                const ServerInfo_t * pServerInfo,
                                 uint32_t sendTimeoutMs,
                                 uint32_t recvTimeoutMs )
 {

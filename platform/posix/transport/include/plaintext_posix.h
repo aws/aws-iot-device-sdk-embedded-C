@@ -19,8 +19,8 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef TCP_POSIX_H_
-#define TCP_POSIX_H_
+#ifndef PLAINTEXT_POSIX_H_
+#define PLAINTEXT_POSIX_H_
 
 /**************************************************/
 /******* DO NOT CHANGE the following order ********/
@@ -62,33 +62,31 @@ struct NetworkContext
 };
 
 /**
- * @brief End connection to server.
+ * @brief Establish TCP connection to server.
  *
  * @brief param[in] pServerInfo Server host name.
- * @brief param[in] hostNameLength Length associated with host name.
- * @brief param[in] port Server port in host-order.
- * @brief param[out] pTcpSocket Pointer to the socket descriptor.
+ * @brief param[in] pServerInfo .
  * @brief param[in] sendTimeout Timeout for transport send.
  * @brief param[in] recvTimeout Timeout for transport recv.
  *
  * @note A timeout of 0 means infinite timeout.
  *
- * @return #TCP_SUCCESS if successful;
- * #TCP_INVALID_PARAMETER, #TCP_DNS_FAILURE, #TCP_CONNECT_FAILURE on error.
+ * @return #SOCKETS_SUCCESS if successful;
+ * #SOCKETS_INVALID_PARAMETER, #SOCKETS_DNS_FAILURE, #SOCKETS_CONNECT_FAILURE on error.
  */
-SocketStatus_t TCP_Connect( NetworkContext_t pNetworkContext,
-                            ServerInfo_t * pServerInfo,
-                            uint32_t sendTimeoutMs,
-                            uint32_t recvTimeoutMs );
+SocketStatus_t Plaintext_Connect( NetworkContext_t pNetworkContext,
+                                  const ServerInfo_t * pServerInfo,
+                                  uint32_t sendTimeoutMs,
+                                  uint32_t recvTimeoutMs );
 
 /**
- * @brief End connection to server.
+ * @brief Close TCP connection to server.
  *
- * @brief param[in] tcpSocket The socket descriptor.
+ * @brief param[in] pNetworkContext The network context.
  *
- * @return #TCP_SUCCESS if successful; #TCP_INVALID_PARAMETER on error.
+ * @return #SOCKETS_SUCCESS if successful; #SOCKETS_INVALID_PARAMETER on error.
  */
-SocketStatus_t TCP_Disconnect( NetworkContext_t pNetworkContext );
+SocketStatus_t Plaintext_Disconnect( const NetworkContext_t pNetworkContext );
 
 /**
  * @brief The transport receive function that defines the transport interface.
@@ -96,15 +94,15 @@ SocketStatus_t TCP_Disconnect( NetworkContext_t pNetworkContext );
  * This is passed as the #TransportInterface.recv function used for reading
  * data received from the network.
  *
- * @param[in] pNetworkContext User defined context (TCP socket for this demo).
+ * @param[in] pNetworkContext User defined context (TCP socket descriptor).
  * @param[out] pBuffer Buffer to read network data into.
  * @param[in] bytesToRead Number of bytes requested from the network.
  *
  * @return Number of bytes received if successful; negative value on error.
  */
-int32_t TCP_Recv( NetworkContext_t pNetworkContext,
-                  void * pBuffer,
-                  size_t bytesToRecv );
+int32_t Plaintext_Recv( NetworkContext_t pNetworkContext,
+                        void * pBuffer,
+                        size_t bytesToRecv );
 
 /**
  * @brief The transport send function that defines the transport interface.
@@ -112,14 +110,14 @@ int32_t TCP_Recv( NetworkContext_t pNetworkContext,
  * This is passed as the #TransportInterface.send function and used to
  * send data over the network.
  *
- * @param[in] pNetworkContext User defined context (TCP socket for this demo).
+ * @param[in] pNetworkContext User defined context (TCP socket descriptor).
  * @param[in] pBuffer Buffer containing the bytes to send over the network stack.
  * @param[in] bytesToSend Number of bytes to send over the network.
  *
  * @return Number of bytes sent if successful; negative value on error.
  */
-int32_t TCP_Send( NetworkContext_t pNetworkContext,
-                  const void * pBuffer,
-                  size_t bytesToSend );
+int32_t Plaintext_Send( NetworkContext_t pNetworkContext,
+                        const void * pBuffer,
+                        size_t bytesToSend );
 
-#endif /* ifndef TCP_POSIX_H_ */
+#endif /* ifndef PLAINTEXT_POSIX_H_ */

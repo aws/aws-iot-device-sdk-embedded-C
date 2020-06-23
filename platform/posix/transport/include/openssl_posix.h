@@ -73,7 +73,7 @@ typedef enum OpensslStatus
     OPENSSL_INSUFFICIENT_MEMORY, /**< Insufficient memory required to establish connection. */
     OPENSSL_INVALID_CREDENTIALS, /**< Provided credentials were invalid. */
     OPENSSL_HANDSHAKE_FAILED,    /**< Performing TLS handshake with server failed. */
-    OPENSSL_API_ERROR            /**< A call to a system API resulted in an internal error. */
+    OPENSSL_API_ERROR,           /**< A call to a system API resulted in an internal error. */
     OPENSSL_DNS_FAILURE,         /**< Resolving hostname of server failed. */
     OPENSSL_CONNECT_FAILURE      /**< Initial connection to the server failed. */
 } OpensslStatus_t;
@@ -135,8 +135,10 @@ typedef struct OpensslCredentials
  * #OPENSSL_INVALID_CREDENTIALS, #OPENSSL_SYSTEM_ERROR on failure.
  */
 OpensslStatus_t Openssl_Connect( NetworkContext_t pNetworkContext,
-                                 ServerInfo_t * pServerInfo,
-                                 OpensslCredentials_t * pOpensslCredentials );
+                                 const ServerInfo_t * pServerInfo,
+                                 const OpensslCredentials_t * pOpensslCredentials,
+                                 uint32_t sendTimeoutMs,
+                                 uint32_t recvTimeoutMs );
 
 /**
  * @brief Closes a TLS session on top of a TCP connection using the OpenSSL API.

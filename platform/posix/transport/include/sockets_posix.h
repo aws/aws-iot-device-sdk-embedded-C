@@ -93,9 +93,7 @@ typedef struct ServerInfo
  * #SOCKETS_INVALID_PARAMETER, #SOCKETS_DNS_FAILURE, #SOCKETS_CONNECT_FAILURE on error.
  */
 SocketStatus_t Sockets_Connect( int * pTcpSocket,
-                                const char * pHostName,
-                                size_t hostNameLength,
-                                uint16_t port,
+                                const ServerInfo_t * pServerInfo,
                                 uint32_t sendTimeoutMs,
                                 uint32_t recvTimeoutMs );
 

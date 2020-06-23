@@ -78,7 +78,7 @@ static void logTransportError( void )
             break;
 
         case ENOTCONN:
-            LogError( ( "A receive is attempted on a connection-mode socket that is not connected." ) );
+            LogError( ( "A send/receive is attempted on a connection-mode socket that is not connected." ) );
             break;
 
         case ENOTSOCK:
@@ -97,10 +97,6 @@ static void logTransportError( void )
             LogError( ( "The message is too large to be sent all at once, as the socket requires." ) );
             break;
 
-        case ENOTCONN:
-            LogError( ( "The socket is not connected." ) );
-            break;
-
         case EPIPE:
             LogError( ( "The socket is shut down for writing, or the socket is connection-mode and is no longer connected. In the latter case, and if the socket is of type SOCK_STREAM or SOCK_SEQPACKET and the MSG_NOSIGNAL flag is not set, the SIGPIPE signal is generated to the calling thread." ) );
             break;
@@ -108,28 +104,28 @@ static void logTransportError( void )
 }
 
 SocketStatus_t Plaintext_Connect( NetworkContext_t pNetworkContext,
-                                  ServerInfo_t * pServerInfo,
+                                  const ServerInfo_t * pServerInfo,
                                   uint32_t sendTimeoutMs,
                                   uint32_t recvTimeoutMs )
 {
-    return Sockets_Connect( pServerInfo,
-                            pNetworkContext->socketDescriptor,
+    return Sockets_Connect( &pNetworkContext->socketDescriptor,
+                            pServerInfo,
                             sendTimeoutMs,
                             recvTimeoutMs );
 }
 
-SocketStatus_t Plaintext_Disconnect( NetworkContext_t pNetworkContext )
+SocketStatus_t Plaintext_Disconnect( const NetworkContext_t pNetworkContext )
 {
     return Sockets_Disconnect( pNetworkContext->socketDescriptor );
 }
 
-int32_t Plaintext_Recv( NetworkContext_t pContext,
+int32_t Plaintext_Recv( NetworkContext_t pNetworkContext,
                         void * pBuffer,
                         size_t bytesToRecv )
 {
     int32_t bytesReceived = 0;
 
-    bytesReceived = recv( pContext->tcpSocket, pBuffer, bytesToRecv, 0 );
+    bytesReceived = recv( pNetworkContext->socketDescriptor, pBuffer, bytesToRecv, 0 );
 
     if( bytesReceived == 0 )
     {
@@ -155,13 +151,13 @@ int32_t Plaintext_Recv( NetworkContext_t pContext,
     return bytesReceived;
 }
 
-int32_t Plaintext_Send( NetworkContext_t pContext,
+int32_t Plaintext_Send( NetworkContext_t pNetworkContext,
                         const void * pBuffer,
                         size_t bytesToSend )
 {
     int32_t bytesSent = 0;
 
-    bytesSent = send( pContext->tcpSocket, pBuffer, bytesToSend, 0 );
+    bytesSent = send( pNetworkContext->socketDescriptor, pBuffer, bytesToSend, 0 );
 
     if( bytesSent < 0 )
     {

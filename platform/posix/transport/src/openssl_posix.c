@@ -130,7 +130,7 @@ static int setPrivateKey( SSL_CTX * pSslSetup,
  * @return 1 on success; otherwise, failure;
  */
 static int setCredentials( SSL_CTX * pSslSetup,
-                           OpensslCredentials_t * pOpensslCredentials );
+                           const OpensslCredentials_t * pOpensslCredentials );
 
 /**
  * @brief Set optional configurations for the TLS connection.
@@ -141,7 +141,7 @@ static int setCredentials( SSL_CTX * pSslSetup,
  * @param[in] pOpensslCredentials TLS credentials containing configurations.
  */
 static void setOptionalConfigurations( SSL * pSslContext,
-                                       OpensslCredentials_t * pOpensslCredentials );
+                                       const OpensslCredentials_t * pOpensslCredentials );
 
 /*-----------------------------------------------------------*/
 
@@ -315,7 +315,7 @@ static int setPrivateKey( SSL_CTX * pSslSetup,
 }
 
 static int setCredentials( SSL_CTX * pSslSetup,
-                           OpensslCredentials_t * pOpensslCredentials )
+                           const OpensslCredentials_t * pOpensslCredentials )
 {
     int sslStatus = 0;
 
@@ -349,7 +349,7 @@ static int setCredentials( SSL_CTX * pSslSetup,
 }
 
 static void setOptionalConfigurations( SSL * pSslContext,
-                                       OpensslCredentials_t * pOpensslCredentials )
+                                       const OpensslCredentials_t * pOpensslCredentials )
 {
     int sslStatus = -1;
     char * sniHostName = NULL;
@@ -430,8 +430,8 @@ static void setOptionalConfigurations( SSL * pSslContext,
 }
 
 OpensslStatus_t Openssl_Connect( NetworkContext_t pNetworkContext,
-                                 SocketsServerInfo_t * pServerInfo,
-                                 OpensslCredentials_t * pOpensslCredentials,
+                                 const ServerInfo_t * pServerInfo,
+                                 const OpensslCredentials_t * pOpensslCredentials,
                                  uint32_t sendTimeoutMs,
                                  uint32_t recvTimeoutMs )
 {
@@ -460,7 +460,7 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t pNetworkContext,
     /* Establish the TCP connection. */
     if( returnStatus == OPENSSL_SUCCESS )
     {
-        socketStatus = Sockets_Connect( pNetworkContext->socketDescriptor,
+        socketStatus = Sockets_Connect( &pNetworkContext->socketDescriptor,
                                         pServerInfo,
                                         sendTimeoutMs,
                                         recvTimeoutMs );
