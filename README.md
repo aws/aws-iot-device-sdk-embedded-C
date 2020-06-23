@@ -8,9 +8,9 @@ This branch currently hosts development of the next iteration of the AWS IoT Emb
 This SDK builds with [CMake](https://cmake.org/), a cross-platform build tool.
 
 ### Prerequisites
-- CMake 3.5.0 or later and a C90 compiler.
+- CMake 3.13.0 or later and a C90 compiler.
 - A supported operating system. The ports provided with this repo are expected to work with all recent versions of the following operating systems, although we cannot guarantee the behavior on all systems.
-    - On Linux systems, installation of OpenSSL development libraries and header files, *version 1.0.2g or later*, are required. The OpenSSL development libraries are usually called something like `libssl-dev` or `openssl-devel` when installed through a package manager.
+    - On Linux systems, installation of OpenSSL development libraries and header files, *version 1.1.0 or later*, are required. The OpenSSL development libraries are usually called something like `libssl-dev` or `openssl-devel` when installed through a package manager.
 
 ### Build Steps
 1. Go to the root directory of this repository.
