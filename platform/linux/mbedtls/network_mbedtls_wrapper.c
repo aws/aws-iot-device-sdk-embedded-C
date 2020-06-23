@@ -279,7 +279,7 @@ IoT_Error_t iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
 
 	mbedtls_ssl_conf_read_timeout(&(tlsDataParams->conf), IOT_SSL_READ_TIMEOUT);
 
-#ifdef AWS_IOT_MQTT_SOCKET_NON_BLOCKING
+#ifdef IOT_SSL_SOCKET_NON_BLOCKING
 	mbedtls_net_set_nonblock(&(tlsDataParams->server_fd));
 #endif
 
