@@ -1873,7 +1873,6 @@ TEST( MQTT_Unit_API, SubscribeMallocFail )
 TEST( MQTT_Unit_API, SubscribeSyncWhenNetworkSendFails )
 {
     IotMqttSubscription_t subscription = IOT_MQTT_SUBSCRIPTION_INITIALIZER;
-    IotMqttOperation_t subscribeOperation = IOT_MQTT_OPERATION_INITIALIZER;
 
     /* Initializer parameters. */
     _networkInterface.send = _sendFailure;
@@ -1973,7 +1972,6 @@ TEST( MQTT_Unit_API, UnsubscribeMallocFail )
 TEST( MQTT_Unit_API, UnsubscribeSyncWhenNetworkSendFails )
 {
     IotMqttSubscription_t subscription = IOT_MQTT_SUBSCRIPTION_INITIALIZER;
-    IotMqttOperation_t subscribeOperation = IOT_MQTT_OPERATION_INITIALIZER;
 
     /* Initializer parameters. */
     _networkInterface.send = _sendFailure;
