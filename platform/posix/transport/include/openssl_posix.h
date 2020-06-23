@@ -47,6 +47,21 @@
 
 /************ End of logging configuration ****************/
 
+/* Transport includes. */
+#include "transport_interface.h"
+#include "sockets_posix.h"
+
+/**
+ * @brief Definition of the network context for OpenSSL.
+ *
+ * @note For this transport implementation, the socket descriptor and
+ * SSL context is used.
+ */
+struct NetworkContext
+{
+    int socketDescriptor;
+    SSL * pSslContext;
+};
 
 /**
  * @brief OpenSSL Connect / Disconnect return status.
@@ -55,9 +70,12 @@ typedef enum OpensslStatus
 {
     OPENSSL_SUCCESS = 0,         /**< Function successfully completed. */
     OPENSSL_INVALID_PARAMETER,   /**< At least one parameter was invalid. */
+    OPENSSL_INSUFFICIENT_MEMORY, /**< Insufficient memory required to establish connection. */
     OPENSSL_INVALID_CREDENTIALS, /**< Provided credentials were invalid. */
     OPENSSL_HANDSHAKE_FAILED,    /**< Performing TLS handshake with server failed. */
-    OPENSSL_API_ERROR            /**< An error occurred when calling the OpenSSL API. */
+    OPENSSL_API_ERROR            /**< A call to a system API resulted in an internal error. */
+    OPENSSL_DNS_FAILURE,         /**< Resolving hostname of server failed. */
+    OPENSSL_CONNECT_FAILURE      /**< Initial connection to the server failed. */
 } OpensslStatus_t;
 
 /**
@@ -117,6 +135,7 @@ typedef struct OpensslCredentials
  * #OPENSSL_INVALID_CREDENTIALS, #OPENSSL_SYSTEM_ERROR on failure.
  */
 OpensslStatus_t Openssl_Connect( NetworkContext_t pNetworkContext,
+                                 ServerInfo_t * pServerInfo,
                                  OpensslCredentials_t * pOpensslCredentials );
 
 /**

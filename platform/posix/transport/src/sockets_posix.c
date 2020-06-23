@@ -35,7 +35,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
-#include "tcp_posix.h"
+#include "sockets_posix.h"
 
 /*-----------------------------------------------------------*/
 
@@ -64,16 +64,6 @@
  */
 extern int errno;
 
-/**
- * @brief Definition of the network context.
- *
- * @note An integer is used to store the descriptor of the socket.
- */
-struct NetworkContext
-{
-    int tcpSocket;
-};
-
 /*-----------------------------------------------------------*/
 
 /**
@@ -83,11 +73,11 @@ struct NetworkContext
  * @brief param[in] hostNameLength Length associated with host name.
  * @brief param[out] pListHead List containing resolved DNS records.
  *
- * @return #TCP_SUCCESS if successful; #TCP_DNS_FAILURE, #TCP_CONNECT_FAILURE on error.
+ * @return #SOCKETS_SUCCESS if successful; #SOCKETS_DNS_FAILURE, #SOCKETS_CONNECT_FAILURE on error.
  */
-static TCPStatus_t resolveHostName( const char * pHostName,
-                                    size_t hostNameLength,
-                                    struct addrinfo ** pListHead );
+static SocketStatus_t resolveHostName( const char * pHostName,
+                                       size_t hostNameLength,
+                                       struct addrinfo ** pListHead );
 
 /**
  * @brief Traverse list of DNS records and return successfully if able to connect to one.
@@ -102,29 +92,29 @@ static TCPStatus_t resolveHostName( const char * pHostName,
  * @note If maxAttempts is negative, attempt to connect to all DNS records
  * until successful.
  *
- * @return #TCP_SUCCESS if successful; #TCP_CONNECT_FAILURE on error.
+ * @return #SOCKETS_SUCCESS if successful; #SOCKETS_CONNECT_FAILURE on error.
  */
-static TCPStatus_t attemptConnection( struct addrinfo * pListHead,
-                                      const char * pHostName,
-                                      size_t hostNameLength,
-                                      uint16_t port,
-                                      int * pTcpSocket,
-                                      int32_t maxAttempts );
+static SocketStatus_t attemptConnection( struct addrinfo * pListHead,
+                                         const char * pHostName,
+                                         size_t hostNameLength,
+                                         uint16_t port,
+                                         int * pTcpSocket,
+                                         int32_t maxAttempts );
 
 /**
  * @brief Log possible error from setsockopt and return appropriate status.
  *
- * @return #TCP_API_ERROR, #TCP_INSUFFICIENT_MEMORY, #TCP_INVALID_PARAMETER on error.
+ * @return #SOCKETS_API_ERROR, #SOCKETS_INSUFFICIENT_MEMORY, #SOCKETS_INVALID_PARAMETER on error.
  */
-static TCPStatus_t retreiveError( void );
+static SocketStatus_t retreiveError( void );
 
 /*-----------------------------------------------------------*/
 
-static TCPStatus_t resolveHostName( const char * pHostName,
-                                    size_t hostNameLength,
-                                    struct addrinfo ** pListHead )
+static SocketStatus_t resolveHostName( const char * pHostName,
+                                       size_t hostNameLength,
+                                       struct addrinfo ** pListHead )
 {
-    TCPStatus_t returnStatus = TCP_SUCCESS;
+    SocketStatus_t returnStatus = SOCKETS_SUCCESS;
     int dnsStatus = -1;
     struct addrinfo hints;
 
@@ -148,20 +138,20 @@ static TCPStatus_t resolveHostName( const char * pHostName,
         LogError( ( "Could not resolve host %.*s.\n",
                     ( int32_t ) hostNameLength,
                     pHostName ) );
-        returnStatus = TCP_DNS_FAILURE;
+        returnStatus = SOCKETS_DNS_FAILURE;
     }
 
     return returnStatus;
 }
 
-static TCPStatus_t attemptConnection( struct addrinfo * pListHead,
-                                      const char * pHostName,
-                                      size_t hostNameLength,
-                                      uint16_t port,
-                                      int * pTcpSocket,
-                                      int32_t maxAttempts )
+static SocketStatus_t attemptConnection( struct addrinfo * pListHead,
+                                         const char * pHostName,
+                                         size_t hostNameLength,
+                                         uint16_t port,
+                                         int * pTcpSocket,
+                                         int32_t maxAttempts )
 {
-    TCPStatus_t returnStatus = TCP_SUCCESS;
+    SocketStatus_t returnStatus = SOCKETS_SUCCESS;
     struct addrinfo * pIndex = NULL;
     struct sockaddr * pAddrInfo;
     socklen_t addrInfoLength;
@@ -247,7 +237,7 @@ static TCPStatus_t attemptConnection( struct addrinfo * pListHead,
                         ( int32_t ) hostNameLength,
                         pHostName,
                         curAttempts ) );
-            returnStatus = TCP_CONNECT_FAILURE;
+            returnStatus = SOCKETS_CONNECT_FAILURE;
             break;
         }
     }
@@ -258,14 +248,14 @@ static TCPStatus_t attemptConnection( struct addrinfo * pListHead,
         LogError( ( "Could not connect to any resolved IP address from %.*s.",
                     ( int32_t ) hostNameLength,
                     pHostName ) );
-        returnStatus = TCP_CONNECT_FAILURE;
+        returnStatus = SOCKETS_CONNECT_FAILURE;
     }
     else
     {
         LogDebug( ( "Established TCP connection: Server=%.*s.\n",
                     ( int32_t ) hostNameLength,
                     pHostName ) );
-        returnStatus = TCP_SUCCESS;
+        returnStatus = SOCKETS_SUCCESS;
     }
 
     freeaddrinfo( pListHead );
@@ -273,42 +263,14 @@ static TCPStatus_t attemptConnection( struct addrinfo * pListHead,
     return returnStatus;
 }
 
-static TCPStatus_t retreiveError( void )
+static SocketStatus_t retreiveError( void )
 {
-    TCPStatus_t returnStatus = TCP_API_ERROR;
+    SocketStatus_t returnStatus = SOCKETS_API_ERROR;
 
     switch( errno )
     {
         case EBADF:
             LogError( ( "The socket argument is not a valid file descriptor." ) );
-            break;
-
-        case ECONNRESET:
-            LogError( ( "A connection was forcibly closed by a peer." ) );
-            break;
-
-        case EDESTADDRREQ:
-            LogError( ( "The socket is not connection-mode and no peer address is set." ) );
-            break;
-
-        case EINTR:
-            LogError( ( "A signal interrupted send/recv." ) );
-            break;
-
-        case EMSGSIZE:
-            LogError( ( "The message is too large to be sent all at once, as the socket requires." ) );
-            break;
-
-        case ENOTCONN:
-            LogError( ( "The socket is not connected." ) );
-            break;
-
-        case EOPNOTSUPP:
-            LogError( ( "The socket argument is associated with a socket that does not support one or more of the values set in flags." ) );
-            break;
-
-        case EPIPE:
-            LogError( ( "The socket is shut down for writing, or the socket is connection-mode and is no longer connected. In the latter case, and if the socket is of type SOCK_STREAM or SOCK_SEQPACKET and the MSG_NOSIGNAL flag is not set, the SIGPIPE signal is generated to the calling thread." ) );
             break;
 
         case EDOM:
@@ -347,11 +309,11 @@ static TCPStatus_t retreiveError( void )
 
     if( ( errno == ENOMEM ) || ( errno == ENOBUFS ) )
     {
-        returnStatus = TCP_INSUFFICIENT_MEMORY;
+        returnStatus = SOCKETS_INSUFFICIENT_MEMORY;
     }
     else if( ( errno == ENOTSOCK ) || ( errno == EDOM ) || ( errno == EBADF ) )
     {
-        returnStatus = TCP_INVALID_PARAMETER;
+        returnStatus = SOCKETS_INVALID_PARAMETER;
     }
     else
     {
@@ -361,54 +323,55 @@ static TCPStatus_t retreiveError( void )
     return returnStatus;
 }
 
-TCPStatus_t TCP_Connect( const char * pHostName,
-                         size_t hostNameLength,
-                         uint16_t port,
-                         int * pTcpSocket,
-                         uint32_t sendTimeoutMs,
-                         uint32_t recvTimeoutMs )
+SocketStatus_t Sockets_Connect( int * pTcpSocket,
+                                ServerInfo_t * pServerInfo,
+                                uint32_t sendTimeoutMs,
+                                uint32_t recvTimeoutMs )
 {
-    TCPStatus_t returnStatus = TCP_SUCCESS;
+    SocketStatus_t returnStatus = SOCKETS_SUCCESS;
     struct addrinfo * pListHead = NULL;
     struct timeval transportTimeout;
     int setTimeoutStatus = -1;
 
-    if( pHostName == NULL )
+    if( pServerInfo->pHostName == NULL )
     {
         LogError( ( "Parameter check failed: pHostName is NULL." ) );
-        returnStatus = TCP_INVALID_PARAMETER;
+        returnStatus = SOCKETS_INVALID_PARAMETER;
     }
     else if( pTcpSocket == NULL )
     {
         LogError( ( "Parameter check failed: pOpensslCredentials is NULL." ) );
-        returnStatus = TCP_INVALID_PARAMETER;
+        returnStatus = SOCKETS_INVALID_PARAMETER;
     }
-    else if( hostNameLength == 0 )
+    else if( pServerInfo->hostNameLength == 0 )
     {
         LogError( ( "Parameter check failed: hostNameLength must be greater than 0." ) );
-        returnStatus = TCP_INVALID_PARAMETER;
+        returnStatus = SOCKETS_INVALID_PARAMETER;
     }
     else
     {
         /* Empty else. */
     }
 
-    if( returnStatus == TCP_SUCCESS )
+    if( returnStatus == SOCKETS_SUCCESS )
     {
-        returnStatus = resolveHostName( pHostName, hostNameLength, &pListHead );
+        returnStatus = resolveHostName( pServerInfo->pHostName,
+                                        pServerInfo->hostNameLength,
+                                        &pListHead );
     }
 
-    if( returnStatus == TCP_SUCCESS )
+    if( returnStatus == SOCKETS_SUCCESS )
     {
         returnStatus = attemptConnection( pListHead,
-                                          pHostName, hostNameLength,
-                                          port,
+                                          pServerInfo->pHostName,
+                                          pServerInfo->hostNameLength,
+                                          pServerInfo->port,
                                           pTcpSocket,
                                           NUM_DNS_RECORDS_TO_TRY );
     }
 
     /* Set the send timeout. */
-    if( returnStatus == TCP_SUCCESS )
+    if( returnStatus == SOCKETS_SUCCESS )
     {
         transportTimeout.tv_sec = ( sendTimeoutMs / ONE_SEC_TO_MS );
         transportTimeout.tv_usec = ( ONE_MS_TO_US * ( sendTimeoutMs % ONE_SEC_TO_MS ) );
@@ -426,12 +389,12 @@ TCPStatus_t TCP_Connect( const char * pHostName,
         }
         else
         {
-            returnStatus = TCP_SUCCESS;
+            returnStatus = SOCKETS_SUCCESS;
         }
     }
 
     /* Set the receive timeout. */
-    if( returnStatus == TCP_SUCCESS )
+    if( returnStatus == SOCKETS_SUCCESS )
     {
         transportTimeout.tv_sec = ( recvTimeoutMs / ONE_SEC_TO_MS );
         transportTimeout.tv_usec = ( ONE_MS_TO_US * ( recvTimeoutMs % ONE_SEC_TO_MS ) );
@@ -449,16 +412,16 @@ TCPStatus_t TCP_Connect( const char * pHostName,
         }
         else
         {
-            returnStatus = TCP_SUCCESS;
+            returnStatus = SOCKETS_SUCCESS;
         }
     }
 
     return returnStatus;
 }
 
-TCPStatus_t TCP_Disconnect( int tcpSocket )
+SocketStatus_t Sockets_Disconnect( int tcpSocket )
 {
-    TCPStatus_t returnStatus = TCP_SUCCESS;
+    SocketStatus_t returnStatus = SOCKETS_SUCCESS;
 
     if( tcpSocket > 0 )
     {
@@ -468,63 +431,8 @@ TCPStatus_t TCP_Disconnect( int tcpSocket )
     else
     {
         LogError( ( "Parameter check failed: tcpSocket was negative." ) );
-        returnStatus = TCP_INVALID_PARAMETER;
+        returnStatus = SOCKETS_INVALID_PARAMETER;
     }
 
     return returnStatus;
-}
-
-int32_t TCP_Recv( NetworkContext_t pContext,
-                  void * pBuffer,
-                  size_t bytesToRecv )
-{
-    int32_t bytesReceived = 0;
-
-    bytesReceived = recv( pContext->tcpSocket, pBuffer, bytesToRecv, 0 );
-
-    if( bytesReceived == 0 )
-    {
-        /* Server closed the connection, treat it as an error. */
-        bytesReceived = -1;
-    }
-    else if( bytesReceived < 0 )
-    {
-        ( void ) retreiveError();
-
-        /* Check if it was time out. */
-        if( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) )
-        {
-            /* Set return value to 0 to indicate nothing to receive. */
-            bytesReceived = 0;
-        }
-    }
-    else
-    {
-        /* Empty else. */
-    }
-
-    return bytesReceived;
-}
-
-int32_t TCP_Send( NetworkContext_t pContext,
-                  const void * pBuffer,
-                  size_t bytesToSend )
-{
-    int32_t bytesSent = 0;
-
-    bytesSent = send( pContext->tcpSocket, pBuffer, bytesToSend, 0 );
-
-    if( bytesSent < 0 )
-    {
-        ( void ) retreiveError();
-
-        /* Check if it was time out */
-        if( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) )
-        {
-            /* Set return value to 0 to indicate that send had timed out. */
-            bytesSent = 0;
-        }
-    }
-
-    return bytesSent;
 }

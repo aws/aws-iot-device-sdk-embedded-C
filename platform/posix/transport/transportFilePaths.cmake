@@ -5,11 +5,15 @@
 # Files specific to the repository such as test runner, platform tests
 # are not added to the variables.
 
-# Network library source files.
-set( TCP_TRANSPORT_SOURCES
-     ${CMAKE_CURRENT_LIST_DIR}/src/tcp_posix.c )
+# Sockets utility source files.
+set( SOCKETS_SOURCES
+     ${CMAKE_CURRENT_LIST_DIR}/src/sockets_posix.c )
 
-# Network library source files.
+# Plaintext transport source files.
+set( PLAINTEXT_TRANSPORT_SOURCES
+     ${CMAKE_CURRENT_LIST_DIR}/src/plaintext_posix.c )
+
+# OpenSSL transport source files.
 set( OPENSSL_TRANSPORT_SOURCES
      ${CMAKE_CURRENT_LIST_DIR}/src/openssl_posix.c )
 

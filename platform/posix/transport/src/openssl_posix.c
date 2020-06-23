@@ -64,20 +64,6 @@
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Definition of the HTTP network context.
- *
- * @note For this transport implementation, the socket descriptor and
- * SSL context is used.
- */
-struct NetworkContext
-{
-    int tcpSocket;
-    SSL * pSslContext;
-};
-
-/*-----------------------------------------------------------*/
-
-/**
  * @brief Log the absolute path given a relative or absolute path.
  *
  * @param[in] path Relative or absolute path.
@@ -444,13 +430,18 @@ static void setOptionalConfigurations( SSL * pSslContext,
 }
 
 OpensslStatus_t Openssl_Connect( NetworkContext_t pNetworkContext,
-                                 OpensslCredentials_t * pOpensslCredentials )
+                                 SocketsServerInfo_t * pServerInfo,
+                                 OpensslCredentials_t * pOpensslCredentials,
+                                 uint32_t sendTimeoutMs,
+                                 uint32_t recvTimeoutMs )
 {
+    SocketStatus_t socketStatus = SOCKETS_SUCCESS;
     OpensslStatus_t returnStatus = OPENSSL_SUCCESS;
     long verifyPeerCertStatus = X509_V_OK;
     int sslStatus = 0;
     SSL_CTX * pSslSetup = NULL;
 
+    /* Validate parameters. */
     if( pNetworkContext == NULL )
     {
         LogError( ( "Parameter check failed: pNetworkContext is NULL." ) );
@@ -463,7 +454,33 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t pNetworkContext,
     }
     else
     {
-        /* Empty else for MISRA 15.7 compliance. */
+        /* Empty else. */
+    }
+
+    /* Establish the TCP connection. */
+    if( returnStatus == OPENSSL_SUCCESS )
+    {
+        socketStatus = Sockets_Connect( pNetworkContext->socketDescriptor,
+                                        pServerInfo,
+                                        sendTimeoutMs,
+                                        recvTimeoutMs );
+
+        if( socketStatus == SOCKETS_INVALID_PARAMETER )
+        {
+            returnStatus = OPENSSL_INVALID_PARAMETER;
+        }
+        else if( socketStatus == SOCKETS_DNS_FAILURE )
+        {
+            returnStatus = OPENSSL_DNS_FAILURE;
+        }
+        else if( socketStatus == SOCKETS_CONNECT_FAILURE )
+        {
+            returnStatus = OPENSSL_CONNECT_FAILURE;
+        }
+        else
+        {
+            /* Empty else. */
+        }
     }
 
     /* Setup for creating a TLS client. */
@@ -518,7 +535,7 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t pNetworkContext,
             /* Enable SSL peer verification. */
             SSL_set_verify( pNetworkContext->pSslContext, SSL_VERIFY_PEER, NULL );
 
-            sslStatus = SSL_set_fd( pNetworkContext->pSslContext, pNetworkContext->tcpSocket );
+            sslStatus = SSL_set_fd( pNetworkContext->pSslContext, pNetworkContext->socketDescriptor );
 
             if( sslStatus != 1 )
             {
@@ -584,6 +601,7 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t pNetworkContext,
 OpensslStatus_t Openssl_Disconnect( NetworkContext_t pNetworkContext )
 {
     OpensslStatus_t returnStatus = OPENSSL_SUCCESS;
+    SocketStatus_t socketStatus = SOCKETS_SUCCESS;
 
     if( pNetworkContext == NULL )
     {
@@ -604,6 +622,13 @@ OpensslStatus_t Openssl_Disconnect( NetworkContext_t pNetworkContext )
     else
     {
         /* Empty else for MISRA 15.7 compliance. */
+    }
+
+    socketStatus = Sockets_Disconnect( pNetworkContext->socketDescriptor );
+
+    if( socketStatus == SOCKETS_INVALID_PARAMETER )
+    {
+        returnStatus = OPENSSL_INVALID_PARAMETER;
     }
 
     return returnStatus;

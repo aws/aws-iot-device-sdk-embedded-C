@@ -47,21 +47,19 @@
 
 /************ End of logging configuration ****************/
 
-/* Transport interface include. */
+/* Transport includes. */
 #include "transport_interface.h"
+#include "sockets_posix.h"
 
 /**
- * @brief TCP Connect / Disconnect return status.
+ * @brief Definition of the network context.
+ *
+ * @note An integer is used to store the descriptor of the socket.
  */
-typedef enum TCPStatus
+struct NetworkContext
 {
-    TCP_SUCCESS = 0,         /**< Function successfully completed. */
-    TCP_INVALID_PARAMETER,   /**< At least one parameter was invalid. */
-    TCP_INSUFFICIENT_MEMORY, /**< Insufficient memory required to establish connection. */
-    TCP_API_ERROR,           /**< A call to the POSIX API resulted in an internal error. */
-    TCP_DNS_FAILURE,         /**< Resolving hostname of server failed. */
-    TCP_CONNECT_FAILURE      /**< Initial connection to the server failed. */
-} TCPStatus_t;
+    int socketDescriptor;
+};
 
 /**
  * @brief End connection to server.
@@ -78,12 +76,10 @@ typedef enum TCPStatus
  * @return #TCP_SUCCESS if successful;
  * #TCP_INVALID_PARAMETER, #TCP_DNS_FAILURE, #TCP_CONNECT_FAILURE on error.
  */
-TCPStatus_t TCP_Connect( const char * pHostName,
-                         size_t hostNameLength,
-                         uint16_t port,
-                         int * pTcpSocket,
-                         uint32_t sendTimeoutMs,
-                         uint32_t recvTimeoutMs );
+SocketStatus_t TCP_Connect( NetworkContext_t pNetworkContext,
+                            ServerInfo_t * pServerInfo,
+                            uint32_t sendTimeoutMs,
+                            uint32_t recvTimeoutMs );
 
 /**
  * @brief End connection to server.
@@ -92,7 +88,7 @@ TCPStatus_t TCP_Connect( const char * pHostName,
  *
  * @return #TCP_SUCCESS if successful; #TCP_INVALID_PARAMETER on error.
  */
-TCPStatus_t TCP_Disconnect( int tcpSocket );
+SocketStatus_t TCP_Disconnect( NetworkContext_t pNetworkContext );
 
 /**
  * @brief The transport receive function that defines the transport interface.
