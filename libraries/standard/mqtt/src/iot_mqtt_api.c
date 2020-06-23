@@ -803,6 +803,8 @@ static IotMqttError_t _sendMqttMessage( _mqttOperation_t * pMqttOperation,
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
 
+    IotMqtt_Assert( pMqttOperation != NULL );
+
     /* Cached value of initialized operation status to check it after
      * the operation has executed for the MQTT_INTERNAL_FLAG_BLOCK_ON_SEND case. */
     IotMqttError_t cachedStatus = pMqttOperation->u.operation.status;
