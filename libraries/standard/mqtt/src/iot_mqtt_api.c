@@ -1750,11 +1750,10 @@ IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
             status = IOT_MQTT_STATUS_PENDING;
         }
 
-        if( pPublishInfo->qos == IOT_MQTT_QOS_0 )
+        if( ( pPublishInfo->qos == IOT_MQTT_QOS_0 ) && ( pOperation != NULL ) )
         {
             if( ( ( flags & MQTT_INTERNAL_FLAG_BLOCK_ON_SEND )
                   == MQTT_INTERNAL_FLAG_BLOCK_ON_SEND ) &&
-                ( pOperation != NULL ) &&
                 ( pOperation->u.operation.status == IOT_MQTT_NETWORK_ERROR ) )
             {
                 status = IOT_MQTT_NETWORK_ERROR;
