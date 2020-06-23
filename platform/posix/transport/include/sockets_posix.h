@@ -65,10 +65,6 @@ typedef enum SocketStatus
 
 /**
  * @brief Information on the remote server for connection setup.
- *
- * May be passed to #IotNetworkInterface_t.create as `pConnectionInfo`. This
- * structure contains commonly-used parameters, but may be replaced with an
- * alternative.
  */
 typedef struct ServerInfo
 {
@@ -80,12 +76,10 @@ typedef struct ServerInfo
 /**
  * @brief End connection to server.
  *
- * @brief param[in] pServerInfo Server host name.
- * @brief param[in] hostNameLength Length associated with host name.
- * @brief param[in] port Server port in host-order.
- * @brief param[out] pTcpSocket Pointer to the socket descriptor.
- * @brief param[in] sendTimeout Timeout for transport send.
- * @brief param[in] recvTimeout Timeout for transport recv.
+ * @param[out] pTcpSocket Pointer to the socket descriptor.
+ * @param[in] pServerInfo Server connection info.
+ * @param[in] sendTimeoutMs Timeout for transport send.
+ * @param[in] recvTimeoutMs Timeout for transport recv.
  *
  * @note A timeout of 0 means infinite timeout.
  *
@@ -100,7 +94,7 @@ SocketStatus_t Sockets_Connect( int * pTcpSocket,
 /**
  * @brief End connection to server.
  *
- * @brief param[in] tcpSocket The socket descriptor.
+ * @param[in] tcpSocket The socket descriptor.
  *
  * @return #SOCKETS_SUCCESS if successful; #SOCKETS_INVALID_PARAMETER on error.
  */

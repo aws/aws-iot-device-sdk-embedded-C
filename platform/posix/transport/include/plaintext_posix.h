@@ -64,10 +64,10 @@ struct NetworkContext
 /**
  * @brief Establish TCP connection to server.
  *
- * @brief param[in] pServerInfo Server host name.
- * @brief param[in] pServerInfo .
- * @brief param[in] sendTimeout Timeout for transport send.
- * @brief param[in] recvTimeout Timeout for transport recv.
+ * @param[in] pNetworkContext The network context.
+ * @param[in] pServerInfo Server connection info.
+ * @param[in] sendTimeout Timeout for transport send.
+ * @param[in] recvTimeout Timeout for transport recv.
  *
  * @note A timeout of 0 means infinite timeout.
  *
@@ -82,7 +82,7 @@ SocketStatus_t Plaintext_Connect( NetworkContext_t pNetworkContext,
 /**
  * @brief Close TCP connection to server.
  *
- * @brief param[in] pNetworkContext The network context.
+ * @param[in] pNetworkContext The network context.
  *
  * @return #SOCKETS_SUCCESS if successful; #SOCKETS_INVALID_PARAMETER on error.
  */

@@ -621,7 +621,7 @@ OpensslStatus_t Openssl_Disconnect( NetworkContext_t pNetworkContext )
     }
     else
     {
-        /* Empty else for MISRA 15.7 compliance. */
+        /* Empty else. */
     }
 
     socketStatus = Sockets_Disconnect( pNetworkContext->socketDescriptor );

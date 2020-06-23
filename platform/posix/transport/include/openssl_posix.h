@@ -129,6 +129,10 @@ typedef struct OpensslCredentials
  *
  * @param[in] pNetworkContext Application-defined context (TCP socket and SSL context).
  * @param[in] pOpensslCredentials Credentials for the TLS connection.
+ * @param[in] sendTimeoutMs Timeout for transport send.
+ * @param[in] recvTimeoutMs Timeout for transport recv.
+ *
+ * @note A timeout of 0 means infinite timeout.
  *
  * @return #OPENSSL_SUCCESS on success,
  * #OPENSSL_INVALID_PARAMETER, #OPENSSL_INVALID_CREDENTIALS,
