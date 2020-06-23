@@ -1743,25 +1743,24 @@ IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
         }
     }
 
-    /* Clean up the PUBLISH operation if this function fails. Otherwise, set the
-     * appropriate return code based on QoS. */
-
-    if( status != IOT_MQTT_SUCCESS )
+    if( ( flags & MQTT_INTERNAL_FLAG_BLOCK_ON_SEND ) != MQTT_INTERNAL_FLAG_BLOCK_ON_SEND )
     {
-        if( pOperation != NULL )
+        /* Clean up the PUBLISH operation if this function fails.
+         * Otherwise, set the appropriate return code based on QoS. */
+        if( ( status != IOT_MQTT_SUCCESS ) && ( pOperation != NULL ) )
         {
             _IotMqtt_DestroyOperation( pOperation );
         }
-    }
-    else
-    {
-        if( pPublishInfo->qos > IOT_MQTT_QOS_0 )
+        else if( status == IOT_MQTT_SUCCESS )
         {
-            status = IOT_MQTT_STATUS_PENDING;
-        }
+            if( pPublishInfo->qos > IOT_MQTT_QOS_0 )
+            {
+                status = IOT_MQTT_STATUS_PENDING;
+            }
 
-        IotLogInfo( "(MQTT connection %p) MQTT PUBLISH operation queued.",
-                    mqttConnection );
+            IotLogInfo( "(MQTT connection %p) MQTT PUBLISH operation queued.",
+                        mqttConnection );
+        }
     }
 
     return status;
