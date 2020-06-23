@@ -42,7 +42,6 @@ onlinepubs
 opengroup
 org
 outmost
-oxff
 param
 pcbordecoder
 pcborvalue
@@ -71,7 +70,6 @@ sublicense
 tinycbor
 todo
 uint
-unuseful
 xa
 xaa
 xbb
