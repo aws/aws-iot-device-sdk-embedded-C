@@ -30,7 +30,6 @@
 
 void harness()
 {
-    /* Insert argument declarations */
     HTTPRequestHeaders_t * pRequestHeaders = NULL;
     char * pField = NULL;
     char * pValue = NULL;
