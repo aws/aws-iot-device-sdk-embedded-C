@@ -4,9 +4,9 @@
 
 extern _Bool nondet_bool();
 
-void * safeMalloc( size_t xWantedSize )
+void * safeMalloc( size_t wantedSize )
 {
-    return nondet_bool() ? malloc( xWantedSize ) : NULL;
+    return nondet_bool() ? malloc( wantedSize ) : NULL;
 }
 
 HTTPRequestHeaders_t * allocateHttpRequestHeaders()
