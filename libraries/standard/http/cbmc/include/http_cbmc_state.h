@@ -51,4 +51,18 @@ HTTPRequestHeaders_t * allocateHttpRequestHeaders( HTTPRequestHeaders_t * pReque
  */
 int isValidHttpRequestHeaders( const HTTPRequestHeaders_t * pRequestHeaders );
 
+/**
+ * @brief Allocate a request info object.
+ */
+HTTPRequestInfo_t * allocateHttpRequestInfo();
+
+/**
+ * @brief Validates if a request info object is feasible.
+ *
+ * @brief param[in] pRequestInfo Request info to validate.
+ *
+ * @return 1 if request headers is feasible; 0 otherwise.
+ */
+int isValidHttpRequestInfo( const HTTPRequestInfo_t * pRequestInfo );
+
 #endif /* ifndef HTTP_CBMC_STATE_H_ */
