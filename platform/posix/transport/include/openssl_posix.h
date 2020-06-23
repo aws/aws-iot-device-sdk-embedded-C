@@ -135,7 +135,7 @@ typedef struct OpensslCredentials
  *
  * @note A timeout of 0 means infinite timeout.
  *
- * @return #OPENSSL_SUCCESS on success,
+ * @return #OPENSSL_SUCCESS on success;
  * #OPENSSL_INVALID_PARAMETER, #OPENSSL_INVALID_CREDENTIALS,
  * #OPENSSL_INVALID_CREDENTIALS, #OPENSSL_SYSTEM_ERROR on failure.
  */
