@@ -37,17 +37,24 @@ int isValidHttpRequestHeaders( const HTTPRequestHeaders_t * pRequestHeaders )
     return isValid;
 }
 
-void allocateHttpRequestInfo( HTTPRequestInfo_t * pRequestInfo )
+HTTPRequestInfo_t * allocateHttpRequestInfo( HTTPRequestInfo_t * pRequestInfo )
 {
     if( pRequestInfo == NULL )
     {
         pRequestInfo = mallocCanFail( sizeof( HTTPRequestInfo_t ) );
     }
 
-    pRequestInfo->method = mallocCanFail( pRequestInfo->methodLen );
-    pRequestInfo->pHost = mallocCanFail( pRequestInfo->hostLen );
-    pRequestInfo->pPath = mallocCanFail( pRequestInfo->pathLen );
+    if( pRequestInfo != NULL )
+    {
+        __CPROVER_assume( pRequestInfo->methodLen < CBMC_MAX_OBJECT_SIZE );
+        pRequestInfo->method = mallocCanFail( pRequestInfo->methodLen );
 
+        __CPROVER_assume( pRequestInfo->hostLen < CBMC_MAX_OBJECT_SIZE );
+        pRequestInfo->pHost = mallocCanFail( pRequestInfo->hostLen );
+
+        __CPROVER_assume( pRequestInfo->pathLen < CBMC_MAX_OBJECT_SIZE );
+        pRequestInfo->pPath = mallocCanFail( pRequestInfo->pathLen );
+    }
 
     return pRequestInfo;
 }
