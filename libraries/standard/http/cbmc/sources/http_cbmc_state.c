@@ -8,14 +8,18 @@ void * mallocCanFail( size_t size )
     return nondet_bool() ? NULL : malloc( size );
 }
 
-void allocateHttpRequestHeaders( HTTPRequestHeaders_t * pRequestHeaders )
+HTTPRequestHeaders_t * allocateHttpRequestHeaders( HTTPRequestHeaders_t * pRequestHeaders )
 {
     if( pRequestHeaders == NULL )
     {
         pRequestHeaders = mallocCanFail( sizeof( HTTPRequestHeaders_t ) );
     }
 
-    pRequestHeaders->pBuffer = mallocCanFail( pRequestHeaders->bufferLen );
+    if( pRequestHeaders != NULL )
+    {
+        __CPROVER_assume( pRequestHeaders->bufferLen < CBMC_MAX_OBJECT_SIZE );
+        pRequestHeaders->pBuffer = mallocCanFail( pRequestHeaders->bufferLen );
+    }
 
     return pRequestHeaders;
 }

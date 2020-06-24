@@ -30,15 +30,15 @@
 
 void harness()
 {
-    HTTPRequestHeaders_t requestHeaders;
+    HTTPRequestHeaders_t * pRequestHeaders = NULL;
     char * pField = NULL;
     char * pValue = NULL;
     size_t fieldLen;
     size_t valueLen;
 
     /* Initialize and make assumptions for request headers. */
-    allocateHttpRequestHeaders( &requestHeaders );
-    __CPROVER_assume( isValidHttpRequestHeaders( &requestHeaders ) );
+    pRequestHeaders = allocateHttpRequestHeaders( pRequestHeaders );
+    __CPROVER_assume( isValidHttpRequestHeaders( pRequestHeaders ) );
 
     /* Initialize and make assumptions for header field. */
     __CPROVER_assume( fieldLen < CBMC_MAX_OBJECT_SIZE );
@@ -48,6 +48,6 @@ void harness()
     __CPROVER_assume( valueLen < CBMC_MAX_OBJECT_SIZE );
     pValue = mallocCanFail( valueLen );
 
-    HTTPClient_AddHeader( nondet_bool() ? NULL : &requestHeaders,
+    HTTPClient_AddHeader( pRequestHeaders,
                           pField, fieldLen, pValue, valueLen );
 }
