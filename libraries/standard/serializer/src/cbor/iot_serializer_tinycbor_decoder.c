@@ -320,7 +320,7 @@ static IotSerializerError_t _createDecoderObject( _cborValueWrapper_t * pCborVal
 
                         /* Edge case: current value is the last one in map/array and the
                          * map/array has indefinite length. In this case, a special break
-                         * character OxFF is written so the u.value.u.string.pString is
+                         * character 0xFF is written so the u.value.u.string.pString is
                          * offset by 1. Therefore, we should deduct 1 to account for the
                          * break character. */
                         if( ( pCborValueWrapper->pParent != NULL ) &&

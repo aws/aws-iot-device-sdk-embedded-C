@@ -36,6 +36,6 @@ do
 # NOTE: This has some limitations.  For example, it prints
 # non-comment text at the beginning of a comment line.
 #
-    nl -ba $1 | awk '/\/\// {print $0}; /\/\*/ {comment=1; if(comment) print $0}; /\*\// {comment=0}'
+    nl -ba $1 | awk '/\/\// {print $0}; /\/\*/ {comment=1}; {if(comment) print $0}; /\*\// {comment=0}'
     shift
 done

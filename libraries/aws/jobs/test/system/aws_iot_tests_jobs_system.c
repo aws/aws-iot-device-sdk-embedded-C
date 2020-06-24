@@ -721,7 +721,7 @@ TEST( Jobs_System, UpdateBlocking )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests a Job operation with perisistent subscriptions.
+ * @brief Tests a Job operation with persistent subscriptions.
  */
 TEST( Jobs_System, PersistentSubscriptions )
 {
