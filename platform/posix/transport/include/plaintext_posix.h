@@ -53,8 +53,6 @@
 
 /**
  * @brief Definition of the network context.
- *
- * @note An integer is used to store the descriptor of the socket.
  */
 struct NetworkContext
 {
@@ -89,14 +87,14 @@ SocketStatus_t Plaintext_Connect( NetworkContext_t pNetworkContext,
 SocketStatus_t Plaintext_Disconnect( const NetworkContext_t pNetworkContext );
 
 /**
- * @brief The transport receive function that defines the transport interface.
+ * @brief Receives data over an established TCP connection.
  *
- * This is passed as the #TransportInterface.recv function used for reading
- * data received from the network.
+ * This can be used as #TransportInterface.recv function for receiving data
+ * from the network.
  *
- * @param[in] pNetworkContext User defined context (TCP socket descriptor).
- * @param[out] pBuffer Buffer to read network data into.
- * @param[in] bytesToRead Number of bytes requested from the network.
+ * @param[in] pNetworkContext Implementation-defined context (TCP socket descriptor).
+ * @param[out] pBuffer Buffer to receive network data into.
+ * @param[in] bytesToRecv Number of bytes requested from the network.
  *
  * @return Number of bytes received if successful; negative value on error.
  */
@@ -105,12 +103,12 @@ int32_t Plaintext_Recv( NetworkContext_t pNetworkContext,
                         size_t bytesToRecv );
 
 /**
- * @brief The transport send function that defines the transport interface.
+ * @brief Sends data over an established TCP connection.
  *
- * This is passed as the #TransportInterface.send function and used to
- * send data over the network.
+ * This can be used as the #TransportInterface.send function to send data
+ * over the network.
  *
- * @param[in] pNetworkContext User defined context (TCP socket descriptor).
+ * @param[in] pNetworkContext Implementation-defined context (TCP socket descriptor).
  * @param[in] pBuffer Buffer containing the bytes to send over the network stack.
  * @param[in] bytesToSend Number of bytes to send over the network.
  *

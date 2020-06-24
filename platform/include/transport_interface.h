@@ -34,26 +34,26 @@ struct NetworkContext;
 typedef struct NetworkContext * NetworkContext_t;
 
 /**
- * @brief Transport interface for reading data on the network.
+ * @brief Transport interface for receiving data on the network.
  *
  * @param[in] pNetworkContext Application-defined context.
- * @param[in] pBuffer Buffer to read network data into.
- * @param[in] bytesToRead Number of bytes requested from the network.
+ * @param[in] pBuffer Buffer to receive the data into.
+ * @param[in] bytesToRecv Number of bytes requested from the network.
  *
- * @return The number of bytes read or a negative error code.
+ * @return The number of bytes received or a negative error code.
  */
 typedef int32_t ( * TransportRecv_t )( NetworkContext_t pNetworkContext,
                                        void * pBuffer,
-                                       size_t bytesToRead );
+                                       size_t bytesToRecv );
 
 /**
  * @brief Transport interface for sending data over the network.
  *
  * @param[in] pNetworkContext Application-defined context.
  * @param[in] pBuffer Buffer containing the bytes to send over the network stack.
- * @param[in] bytesToSend Number of bytes to write to the network.
+ * @param[in] bytesToSend Number of bytes to send over the network.
  *
- * @return The number of bytes written or a negative error code.
+ * @return The number of bytes sent or a negative error code.
  */
 typedef int32_t ( * TransportSend_t )( NetworkContext_t pNetworkContext,
                                        const void * pBuffer,

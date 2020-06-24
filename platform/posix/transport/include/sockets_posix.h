@@ -69,14 +69,14 @@ typedef enum SocketStatus
 typedef struct ServerInfo
 {
     const char * pHostName; /**< @brief Server host name. */
-    size_t hostNameLength;  /**< @brief Length Server host name. */
+    size_t hostNameLength;  /**< @brief Length of the server host name. */
     uint16_t port;          /**< @brief Server port in host-order. */
 } ServerInfo_t;
 
 /**
- * @brief End connection to server.
+ * @brief Establish a connection to server.
  *
- * @param[out] pTcpSocket Pointer to the socket descriptor.
+ * @param[out] pTcpSocket The output parameter to return the created socket descriptor.
  * @param[in] pServerInfo Server connection info.
  * @param[in] sendTimeoutMs Timeout for transport send.
  * @param[in] recvTimeoutMs Timeout for transport recv.

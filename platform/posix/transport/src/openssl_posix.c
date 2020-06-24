@@ -81,39 +81,39 @@ static void logPath( const char * path,
  * from files into stores, so the file API must be called. Start with the
  * root certificate.
  *
- * @param[out] pSslSetup Destination for the trusted server root CA.
+ * @param[out] pSslContext Destination for the trusted server root CA.
  * @param[in] pRootCaPath Filepath string to the trusted server root CA.
  * @param[in] rootCaPathLen brief Length associated with trusted server root CA.
  *
- * @return 1 on success; otherwise, failure;
+ * @return 1 on success; -1 or 1 on failure;
  */
-static int setRootCa( SSL_CTX * pSslSetup,
+static int setRootCa( SSL_CTX * pSslContext,
                       const char * pRootCaPath,
                       size_t rootCaPathLen );
 
 /**
  * @brief Set X509 certificate as client certificate for the server to authenticate.
  *
- * @param[out] pSslSetup Destination for the client certificate.
+ * @param[out] pSslContext Destination for the client certificate.
  * @param[in] pClientCertPath Filepath string to the client certificate.
  * @param[in] clientCertPathLen brief Length associated with client certificate.
  *
  * @return 1 on success; otherwise, failure;
  */
-static int setClientCertificate( SSL_CTX * pSslSetup,
+static int setClientCertificate( SSL_CTX * pSslContext,
                                  const char * pClientCertPath,
                                  size_t clientCertPathLen );
 
 /**
  * @brief Set private key for the client's certificate.
  *
- * @param[out] pSslSetup Destination for the private key.
+ * @param[out] pSslContext Destination for the private key.
  * @param[in] pPrivateKeyPath Filepath string to the client certificate's private key.
  * @param[in] privateKeyPathLen brief Length associated with client certificate's private key.
  *
  * @return 1 on success; otherwise, failure;
  */
-static int setPrivateKey( SSL_CTX * pSslSetup,
+static int setPrivateKey( SSL_CTX * pSslContext,
                           const char * pPrivateKeyPath,
                           size_t privateKeyPathLen );
 
@@ -124,12 +124,12 @@ static int setPrivateKey( SSL_CTX * pSslSetup,
  * OpenSSL library. If the client certificate or private key is not NULL, mutual
  * authentication is used when performing the TLS handshake.
  *
- * @param[out] pSslSetup Destination for the imported credentials.
+ * @param[out] pSslContext Destination for the imported credentials.
  * @param[in] pOpensslCredentials TLS credentials to be validated.
  *
  * @return 1 on success; otherwise, failure;
  */
-static int setCredentials( SSL_CTX * pSslSetup,
+static int setCredentials( SSL_CTX * pSslContext,
                            const OpensslCredentials_t * pOpensslCredentials );
 
 /**
@@ -137,10 +137,10 @@ static int setCredentials( SSL_CTX * pSslSetup,
  *
  * This function is used to set SNI, MFLN, and ALPN protocols.
  *
- * @param[in] pSslContext Destination for the imported credentials.
+ * @param[in] pSsl Destination for the imported credentials.
  * @param[in] pOpensslCredentials TLS credentials containing configurations.
  */
-static void setOptionalConfigurations( SSL * pSslContext,
+static void setOptionalConfigurations( SSL * pSsl,
                                        const OpensslCredentials_t * pOpensslCredentials );
 
 /*-----------------------------------------------------------*/
@@ -149,7 +149,7 @@ static void logPath( const char * path,
                      size_t pathLen,
                      const char * fileType )
 {
-    char * cwd = getcwd( NULL, 0 );
+    char * cwd = NULL;
 
     /* Log the absolute directory based on first character of path. */
     if( ( path[ 0 ] == '/' ) || ( path[ 0 ] == '\\' ) )
@@ -161,6 +161,7 @@ static void logPath( const char * path,
     }
     else
     {
+        cwd = getcwd( NULL, 0 );
         LogDebug( ( "Attempting to open %s: Path=%s/%.*s.",
                     fileType,
                     cwd,
@@ -175,7 +176,7 @@ static void logPath( const char * path,
     }
 }
 
-static int setRootCa( SSL_CTX * pSslSetup,
+static int setRootCa( SSL_CTX * pSslContext,
                       const char * pRootCaPath,
                       size_t rootCaPathLen )
 {
@@ -215,7 +216,7 @@ static int setRootCa( SSL_CTX * pSslSetup,
     }
     else
     {
-        sslStatus = X509_STORE_add_cert( SSL_CTX_get_cert_store( pSslSetup ),
+        sslStatus = X509_STORE_add_cert( SSL_CTX_get_cert_store( pSslContext ),
                                          pRootCa );
     }
 
@@ -231,7 +232,7 @@ static int setRootCa( SSL_CTX * pSslSetup,
     return sslStatus;
 }
 
-static int setClientCertificate( SSL_CTX * pSslSetup,
+static int setClientCertificate( SSL_CTX * pSslContext,
                                  const char * pClientCertPath,
                                  size_t clientCertPathLen )
 {
@@ -248,7 +249,7 @@ static int setClientCertificate( SSL_CTX * pSslSetup,
                      clientCertPathLen );
     clientCertPathNullTerm[ clientCertPathLen ] = '\0';
 
-    sslStatus = SSL_CTX_use_certificate_chain_file( pSslSetup,
+    sslStatus = SSL_CTX_use_certificate_chain_file( pSslContext,
                                                     clientCertPathNullTerm );
 
     /* Import the client certificate. */
@@ -272,7 +273,7 @@ static int setClientCertificate( SSL_CTX * pSslSetup,
     return sslStatus;
 }
 
-static int setPrivateKey( SSL_CTX * pSslSetup,
+static int setPrivateKey( SSL_CTX * pSslContext,
                           const char * pPrivateKeyPath,
                           size_t privateKeyPathLen )
 {
@@ -289,7 +290,7 @@ static int setPrivateKey( SSL_CTX * pSslSetup,
                      privateKeyPathLen );
     privateKeyPathNullTerm[ privateKeyPathLen ] = '\0';
 
-    sslStatus = SSL_CTX_use_PrivateKey_file( pSslSetup,
+    sslStatus = SSL_CTX_use_PrivateKey_file( pSslContext,
                                              privateKeyPathNullTerm,
                                              SSL_FILETYPE_PEM );
 
@@ -314,7 +315,7 @@ static int setPrivateKey( SSL_CTX * pSslSetup,
     return sslStatus;
 }
 
-static int setCredentials( SSL_CTX * pSslSetup,
+static int setCredentials( SSL_CTX * pSslContext,
                            const OpensslCredentials_t * pOpensslCredentials )
 {
     int sslStatus = 0;
@@ -322,7 +323,7 @@ static int setCredentials( SSL_CTX * pSslSetup,
     if( ( pOpensslCredentials->pRootCaPath != NULL ) &&
         ( pOpensslCredentials->rootCaPathLen > 0 ) )
     {
-        sslStatus = setRootCa( pSslSetup,
+        sslStatus = setRootCa( pSslContext,
                                pOpensslCredentials->pRootCaPath,
                                pOpensslCredentials->rootCaPathLen );
     }
@@ -331,7 +332,7 @@ static int setCredentials( SSL_CTX * pSslSetup,
         ( pOpensslCredentials->pClientCertPath != NULL ) &&
         ( pOpensslCredentials->clientCertPathLen > 0 ) )
     {
-        sslStatus = setClientCertificate( pSslSetup,
+        sslStatus = setClientCertificate( pSslContext,
                                           pOpensslCredentials->pClientCertPath,
                                           pOpensslCredentials->clientCertPathLen );
     }
@@ -340,7 +341,7 @@ static int setCredentials( SSL_CTX * pSslSetup,
         ( pOpensslCredentials->pPrivateKeyPath != NULL ) &&
         ( pOpensslCredentials->privateKeyPathLen > 0 ) )
     {
-        sslStatus = setPrivateKey( pSslSetup,
+        sslStatus = setPrivateKey( pSslContext,
                                    pOpensslCredentials->pPrivateKeyPath,
                                    pOpensslCredentials->privateKeyPathLen );
     }
@@ -348,7 +349,7 @@ static int setCredentials( SSL_CTX * pSslSetup,
     return sslStatus;
 }
 
-static void setOptionalConfigurations( SSL * pSslContext,
+static void setOptionalConfigurations( SSL * pSsl,
                                        const OpensslCredentials_t * pOpensslCredentials )
 {
     int sslStatus = -1;
@@ -359,7 +360,7 @@ static void setOptionalConfigurations( SSL * pSslContext,
         ( pOpensslCredentials->alpnProtosLen > 0 ) )
     {
         LogDebug( ( "Setting ALPN protos." ) );
-        sslStatus = SSL_set_alpn_protos( pSslContext,
+        sslStatus = SSL_set_alpn_protos( pSsl,
                                          ( unsigned char * ) pOpensslCredentials->pAlpnProtos,
                                          ( unsigned int ) pOpensslCredentials->alpnProtosLen );
 
@@ -377,7 +378,7 @@ static void setOptionalConfigurations( SSL * pSslContext,
                     ( unsigned long ) pOpensslCredentials->maxFragmentLength ) );
 
         /* Set the maximum send fragment length. */
-        sslStatus = SSL_set_max_send_fragment( pSslContext,
+        sslStatus = SSL_set_max_send_fragment( pSsl,
                                                ( long ) pOpensslCredentials->maxFragmentLength );
 
         if( sslStatus != 1 )
@@ -389,7 +390,7 @@ static void setOptionalConfigurations( SSL * pSslContext,
         {
             /* Change the size of the read buffer to match the
              * maximum fragment length + some extra bytes for overhead. */
-            SSL_set_default_read_buffer_len( pSslContext,
+            SSL_set_default_read_buffer_len( pSsl,
                                              pOpensslCredentials->maxFragmentLength +
                                              SSL3_RT_MAX_ENCRYPTED_OVERHEAD );
         }
@@ -411,7 +412,7 @@ static void setOptionalConfigurations( SSL * pSslContext,
                          pOpensslCredentials->sniHostNameLen );
         sniHostName[ pOpensslCredentials->sniHostNameLen ] = '\0';
 
-        sslStatus = SSL_set_tlsext_host_name( pSslContext,
+        sslStatus = SSL_set_tlsext_host_name( pSsl,
                                               sniHostName );
 
         if( sslStatus != 1 )
@@ -439,7 +440,7 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t pNetworkContext,
     OpensslStatus_t returnStatus = OPENSSL_SUCCESS;
     long verifyPeerCertStatus = X509_V_OK;
     int sslStatus = 0;
-    SSL_CTX * pSslSetup = NULL;
+    SSL_CTX * pSslContext = NULL;
 
     /* Validate parameters. */
     if( pNetworkContext == NULL )
@@ -486,9 +487,9 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t pNetworkContext,
     /* Setup for creating a TLS client. */
     if( returnStatus == OPENSSL_SUCCESS )
     {
-        pSslSetup = SSL_CTX_new( TLS_client_method() );
+        pSslContext = SSL_CTX_new( TLS_client_method() );
 
-        if( pSslSetup == NULL )
+        if( pSslContext == NULL )
         {
             LogError( ( "Creation of a new SSL_CTX object failed." ) );
             returnStatus = OPENSSL_API_ERROR;
@@ -497,14 +498,14 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t pNetworkContext,
         {
             /* Set auto retry mode for the blocking calls to SSL_read and SSL_write.
              * The mask returned by SSL_CTX_set_mode does not need to be checked. */
-            ( void ) SSL_CTX_set_mode( pSslSetup, SSL_MODE_AUTO_RETRY );
+            ( void ) SSL_CTX_set_mode( pSslContext, SSL_MODE_AUTO_RETRY );
         }
     }
 
     /* Set credentials for the TLS handshake. */
     if( returnStatus == OPENSSL_SUCCESS )
     {
-        sslStatus = setCredentials( pSslSetup,
+        sslStatus = setCredentials( pSslContext,
                                     pOpensslCredentials );
 
         /* Setup authentication. */
@@ -523,9 +524,9 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t pNetworkContext,
     if( returnStatus == OPENSSL_SUCCESS )
     {
         /* Create a new SSL context. */
-        pNetworkContext->pSslContext = SSL_new( pSslSetup );
+        pNetworkContext->pSsl = SSL_new( pSslContext );
 
-        if( pNetworkContext->pSslContext == NULL )
+        if( pNetworkContext->pSsl == NULL )
         {
             LogError( ( "SSL_new failed to create a new SSL context." ) );
             returnStatus = OPENSSL_API_ERROR;
@@ -533,9 +534,9 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t pNetworkContext,
         else
         {
             /* Enable SSL peer verification. */
-            SSL_set_verify( pNetworkContext->pSslContext, SSL_VERIFY_PEER, NULL );
+            SSL_set_verify( pNetworkContext->pSsl, SSL_VERIFY_PEER, NULL );
 
-            sslStatus = SSL_set_fd( pNetworkContext->pSslContext, pNetworkContext->socketDescriptor );
+            sslStatus = SSL_set_fd( pNetworkContext->pSsl, pNetworkContext->socketDescriptor );
 
             if( sslStatus != 1 )
             {
@@ -548,9 +549,9 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t pNetworkContext,
     /* Perform the TLS handshake. */
     if( returnStatus == OPENSSL_SUCCESS )
     {
-        setOptionalConfigurations( pNetworkContext->pSslContext, pOpensslCredentials );
+        setOptionalConfigurations( pNetworkContext->pSsl, pOpensslCredentials );
 
-        sslStatus = SSL_connect( pNetworkContext->pSslContext );
+        sslStatus = SSL_connect( pNetworkContext->pSsl );
 
         if( sslStatus != 1 )
         {
@@ -562,7 +563,7 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t pNetworkContext,
     /* Verify X509 certificate from peer. */
     if( returnStatus == OPENSSL_SUCCESS )
     {
-        verifyPeerCertStatus = SSL_get_verify_result( pNetworkContext->pSslContext );
+        verifyPeerCertStatus = SSL_get_verify_result( pNetworkContext->pSsl );
 
         if( verifyPeerCertStatus != X509_V_OK )
         {
@@ -573,16 +574,16 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t pNetworkContext,
     }
 
     /* Free the SSL context setup. */
-    if( pSslSetup != NULL )
+    if( pSslContext != NULL )
     {
-        SSL_CTX_free( pSslSetup );
+        SSL_CTX_free( pSslContext );
     }
 
     /* Clean up on error. */
     if( ( returnStatus != OPENSSL_SUCCESS ) && ( sslStatus == 0 ) )
     {
-        SSL_free( pNetworkContext->pSslContext );
-        pNetworkContext->pSslContext = NULL;
+        SSL_free( pNetworkContext->pSsl );
+        pNetworkContext->pSsl = NULL;
     }
 
     /* Log failure or success depending on status. */
@@ -608,16 +609,16 @@ OpensslStatus_t Openssl_Disconnect( NetworkContext_t pNetworkContext )
         LogError( ( "Parameter check failed: pNetworkContext is NULL." ) );
         returnStatus = OPENSSL_INVALID_PARAMETER;
     }
-    else if( pNetworkContext->pSslContext != NULL )
+    else if( pNetworkContext->pSsl != NULL )
     {
         /* SSL shutdown should be called twice: once to send "close notify" and
          * once more to receive the peer's "close notify". */
-        if( SSL_shutdown( pNetworkContext->pSslContext ) == 0 )
+        if( SSL_shutdown( pNetworkContext->pSsl ) == 0 )
         {
-            ( void ) SSL_shutdown( pNetworkContext->pSslContext );
+            ( void ) SSL_shutdown( pNetworkContext->pSsl );
         }
 
-        SSL_free( pNetworkContext->pSslContext );
+        SSL_free( pNetworkContext->pSsl );
     }
     else
     {
@@ -641,7 +642,7 @@ int32_t Openssl_Recv( NetworkContext_t pNetworkContext,
     int32_t bytesReceived = 0;
 
     /* SSL read of data. */
-    bytesReceived = ( int32_t ) SSL_read( pNetworkContext->pSslContext,
+    bytesReceived = ( int32_t ) SSL_read( pNetworkContext->pSsl,
                                           pBuffer,
                                           bytesToRecv );
 
@@ -660,7 +661,7 @@ int32_t Openssl_Send( NetworkContext_t pNetworkContext,
 {
     int32_t bytesSent = 0;
 
-    bytesSent = ( int32_t ) SSL_write( pNetworkContext->pSslContext,
+    bytesSent = ( int32_t ) SSL_write( pNetworkContext->pSsl,
                                        pBuffer,
                                        bytesToSend );
 

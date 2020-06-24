@@ -108,20 +108,22 @@ typedef struct OpensslCredentials
     size_t sniHostNameLen;
 
     /**
-     * @brief Set this to a non-zero value to use TLS max fragment length
-     * negotiation (TLS MFLN).
+     * @brief Set the value for the TLS max fragment length (TLS MFLN)
      *
-     * @note The network stack may have a minimum value for this parameter and
-     * may return an error if this parameter is too small.
+     * OpenSSL allows this value to be in the range of:
+     * [512, 16384 (SSL3_RT_MAX_PLAIN_LENGTH)]
+     *
+     * @note By setting this to 0, OpenSSL uses the default value,
+     * which is 16384 (SSL3_RT_MAX_PLAIN_LENGTH).
      */
     size_t maxFragmentLength;
 
     const char * pRootCaPath;     /**< @brief Filepath string to the trusted server root CA. */
-    size_t rootCaPathLen;         /**< @brief Length associated with #NetworkCredentials.pRootCa. */
+    size_t rootCaPathLen;         /**< @brief Length associated with #NetworkCredentials.pRootCaPath. */
     const char * pClientCertPath; /**< @brief Filepath string to the client certificate. */
-    size_t clientCertPathLen;     /**< @brief Length associated with #NetworkCredentials.pClientCert. */
+    size_t clientCertPathLen;     /**< @brief Length associated with #NetworkCredentials.pClientCertPath. */
     const char * pPrivateKeyPath; /**< @brief Filepath string to the client certificate's private key. */
-    size_t privateKeyPathLen;     /**< @brief Length associated with #NetworkCredentials.pPrivateKey. */
+    size_t privateKeyPathLen;     /**< @brief Length associated with #NetworkCredentials.pPrivateKeyPath. */
 } OpensslCredentials_t;
 
 /**
@@ -155,13 +157,13 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t pNetworkContext,
 OpensslStatus_t Openssl_Disconnect( NetworkContext_t pNetworkContext );
 
 /**
- * @brief The transport receive function that defines the transport interface.
+ * @brief Receives data over an established TLS session using the OpenSSL API.
  *
- * This is passed as the #TransportInterface.recv function used for reading
- * data received from the network.
+ * This can be used as #TransportInterface.recv function for receiving data
+ * from the network.
  *
- * @param[in] pNetworkContext Application-defined context (TCP socket and SSL context).
- * @param[out] pBuffer Buffer to read network data into.
+ * @param[in] pNetworkContext Implementation-defined context (TCP socket and SSL context).
+ * @param[out] pBuffer Buffer to receive network data into.
  * @param[in] bytesToRead Number of bytes requested from the network.
  *
  * @return Number of bytes received if successful; negative value on error.
@@ -171,12 +173,12 @@ int32_t Openssl_Recv( NetworkContext_t pNetworkContext,
                       size_t bytesToRecv );
 
 /**
- * @brief The transport send function that defines the transport interface.
+ * @brief Sends data over an established TLS session using the OpenSSL API.
  *
- * This is passed as the #TransportInterface.send function and used to
- * send data over the network.
+ * This can be used as the #TransportInterface.send function to send data
+ * over the network.
  *
- * @param[in] pNetworkContext Application-defined context (TCP socket and SSL context).
+ * @param[in] pNetworkContext Implementation-defined context (TCP socket and SSL context).
  * @param[in] pBuffer Buffer containing the bytes to send over the network stack.
  * @param[in] bytesToSend Number of bytes to send over the network.
  *
