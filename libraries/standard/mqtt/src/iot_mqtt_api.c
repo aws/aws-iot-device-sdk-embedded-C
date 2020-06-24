@@ -281,6 +281,35 @@ static void _handleConnectFailure( IotMqttConnection_t pMqttConnection,
                                    bool ownNetworkConnection );
 
 /**
+ * @brief Send a Publish asynchronously by scheduling operations on the taskpool.
+ * @param[in] mqttConnection The MQTT connection to use for the PUBLISH.
+ * @param[in] pPublishInfo MQTT publish parameters.
+ * @param[in] flags Flags which modify the behavior of this function.
+ * @param[in] pCallbackInfo Asynchronous notification of this function's completion (`NULL` to disable).
+ * @param[out] pPublishOperation Set to a handle by which this operation may be
+ * referenced after this function returns. This reference is invalidated once
+ * the publish operation completes.
+ *
+ * @return This function will return #IOT_MQTT_STATUS_PENDING upon success for
+ * QoS 1 publishes
+ */
+static IotMqttError_t _publishAsync( IotMqttConnection_t mqttConnection,
+                                     const IotMqttPublishInfo_t * pPublishInfo,
+                                     uint32_t flags,
+                                     const IotMqttCallbackInfo_t * pCallbackInfo,
+                                     IotMqttOperation_t * const pPublishOperation );
+
+/**
+ * @brief Sends a Publish message at QoS 0 synchronously.
+ * @param[in] mqttConnection The MQTT connection to use for the PUBLISH.
+ * @param[in] pPublishInfo MQTT publish parameters.
+ *
+ * @return returns #IOT_MQTT_SUCCESS upon success.
+ */
+static IotMqttError_t _publishQos0Sync( IotMqttConnection_t mqttConnection,
+                                        const IotMqttPublishInfo_t * pPublishInfo );
+
+/**
  * @cond DOXYGEN_IGNORE
  * Doxygen should ignore this section.
  *
@@ -1642,24 +1671,11 @@ IotMqttError_t IotMqtt_UnsubscribeSync( IotMqttConnection_t mqttConnection,
 
 /*-----------------------------------------------------------*/
 
-/**
- * @brief Send a Publish asynchronously by scheduling operations on the taskpool.
- * @param[in] mqttConnection The MQTT connection to use for the PUBLISH.
- * @param[in] pPublishInfo MQTT publish parameters.
- * @param[in] flags Flags which modify the behavior of this function.
- * @param[in] pCallbackInfo Asynchronous notification of this function's completion (`NULL` to disable).
- * @param[out] pPublishOperation Set to a handle by which this operation may be
- * referenced after this function returns. This reference is invalidated once
- * the publish operation completes.
- *
- * @return This function will return #IOT_MQTT_STATUS_PENDING upon success for
- * QoS 1 publishes
- */
-IotMqttError_t _publishAsync( IotMqttConnection_t mqttConnection,
-                              const IotMqttPublishInfo_t * pPublishInfo,
-                              uint32_t flags,
-                              const IotMqttCallbackInfo_t * pCallbackInfo,
-                              IotMqttOperation_t * const pPublishOperation )
+static IotMqttError_t _publishAsync( IotMqttConnection_t mqttConnection,
+                                     const IotMqttPublishInfo_t * pPublishInfo,
+                                     uint32_t flags,
+                                     const IotMqttCallbackInfo_t * pCallbackInfo,
+                                     IotMqttOperation_t * const pPublishOperation )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
     _mqttOperation_t * pOperation = NULL;
@@ -1764,15 +1780,10 @@ IotMqttError_t _publishAsync( IotMqttConnection_t mqttConnection,
     return status;
 }
 
-/**
- * @brief Send a Publish asynchronously by scheduling operations on the taskpool.
- * @param[in] mqttConnection The MQTT connection to use for the PUBLISH.
- * @param[in] pPublishInfo MQTT publish parameters.
- *
- *  @return returns #IOT_MQTT_SUCCESS upon success.
- */
-IotMqttError_t _publishQos0AndBlockingOperation( IotMqttConnection_t mqttConnection,
-                                                 const IotMqttPublishInfo_t * pPublishInfo )
+/*-----------------------------------------------------------*/
+
+static IotMqttError_t _publishQos0Sync( IotMqttConnection_t mqttConnection,
+                                        const IotMqttPublishInfo_t * pPublishInfo )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
     uint8_t ** pPacketIdentifierHigh = NULL;
@@ -1780,6 +1791,9 @@ IotMqttError_t _publishQos0AndBlockingOperation( IotMqttConnection_t mqttConnect
     size_t packetSize = 0;
     uint16_t packetIdentifier;
 
+    IotMqtt_Assert( pPublishInfo != NULL );
+
+    /* Check whether the connection handle is valid. */
     if( mqttConnection->disconnected == true )
     {
         status = IOT_MQTT_NETWORK_ERROR;
@@ -1806,6 +1820,7 @@ IotMqttError_t _publishQos0AndBlockingOperation( IotMqttConnection_t mqttConnect
         }
     }
 
+    /* Clean up memory for PUBLISH packet. */
     if( pMqttPacket != NULL )
     {
         IotMqtt_FreeMessage( pMqttPacket );
@@ -1813,6 +1828,8 @@ IotMqttError_t _publishQos0AndBlockingOperation( IotMqttConnection_t mqttConnect
 
     return status;
 }
+
+/*-----------------------------------------------------------*/
 
 IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
                                      const IotMqttPublishInfo_t * pPublishInfo,
@@ -1839,8 +1856,8 @@ IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
                == MQTT_INTERNAL_FLAG_BLOCK_ON_SEND ) &&
              ( pPublishInfo->qos == IOT_MQTT_QOS_0 ) )
     {
-        status = _publishQos0AndBlockingOperation( mqttConnection,
-                                                   pPublishInfo );
+        status = _publishQos0Sync( mqttConnection,
+                                   pPublishInfo );
     }
     else
     {
