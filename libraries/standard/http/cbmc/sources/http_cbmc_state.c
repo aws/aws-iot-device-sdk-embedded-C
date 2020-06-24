@@ -37,51 +37,32 @@ int isValidHttpRequestHeaders( const HTTPRequestHeaders_t * pRequestHeaders )
     return isValid;
 }
 
-HTTPRequestInfo_t * allocateHttpRequestInfo()
+void allocateHttpRequestInfo( HTTPRequestInfo_t * pRequestInfo )
 {
-    HTTPRequestInfo_t * pRequestInfo = NULL;
-
-    pRequestInfo = safeMalloc( sizeof( HTTPRequestInfo_t ) );
-
-    if( pRequestInfo )
+    if( pRequestInfo == NULL )
     {
-        pRequestInfo->method = safeMalloc( pRequestInfo->methodLen );
-        pRequestInfo->pHost = safeMalloc( pRequestInfo->hostLen );
-        pRequestInfo->pPath = safeMalloc( pRequestInfo->pathLen );
+        pRequestInfo = mallocCanFail( sizeof( HTTPRequestInfo_t ) );
     }
+
+    pRequestInfo->method = mallocCanFail( pRequestInfo->methodLen );
+    pRequestInfo->pHost = mallocCanFail( pRequestInfo->hostLen );
+    pRequestInfo->pPath = mallocCanFail( pRequestInfo->pathLen );
+
 
     return pRequestInfo;
 }
 
 int isValidHttpRequestInfo( const HTTPRequestInfo_t * pRequestInfo )
 {
-    int validRequestInfoLengths = 1, validRequestInfoChars = 1;
+    int isValid = 1;
 
     if( pRequestInfo )
     {
-        validRequestInfoLengths = ( pRequestInfo->reqFlags < CBMC_MAX_OBJECT_SIZE ) &&
-                                  ( pRequestInfo->methodLen < CBMC_MAX_OBJECT_SIZE ) &&
-                                  ( pRequestInfo->hostLen < CBMC_MAX_OBJECT_SIZE ) &&
-                                  ( pRequestInfo->pathLen < CBMC_MAX_OBJECT_SIZE );
-
-        if( pRequestInfo->method )
-        {
-            validRequestInfoChars = __CPROVER_r_ok( pRequestInfo->method,
-                                                    pRequestInfo->methodLen );
-        }
-
-        if( pRequestInfo->pHost )
-        {
-            validRequestInfoChars &= __CPROVER_r_ok( pRequestInfo->pHost,
-                                                     pRequestInfo->hostLen );
-        }
-
-        if( pRequestInfo->pPath )
-        {
-            validRequestInfoChars &= __CPROVER_r_ok( pRequestInfo->pPath,
-                                                     pRequestInfo->pathLen );
-        }
+        isValid = ( pRequestInfo->reqFlags < CBMC_MAX_OBJECT_SIZE ) &&
+                  ( pRequestInfo->methodLen < CBMC_MAX_OBJECT_SIZE ) &&
+                  ( pRequestInfo->hostLen < CBMC_MAX_OBJECT_SIZE ) &&
+                  ( pRequestInfo->pathLen < CBMC_MAX_OBJECT_SIZE );
     }
 
-    return validRequestInfoLengths && validRequestInfoChars;
+    return isValid;
 }
