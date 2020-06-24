@@ -1468,9 +1468,12 @@ uint16_t MQTT_GetPacketId( MQTTContext_t * pContext )
     if( pContext != NULL )
     {
         packetId = pContext->nextPacketId;
-        pContext->nextPacketId++;
 
-        if( pContext->nextPacketId == 0U )
+        if( pContext->nextPacketId == UINT16_MAX )
+        {
+            pContext->nextPacketId = 1;
+        }
+        else
         {
             pContext->nextPacketId++;
         }

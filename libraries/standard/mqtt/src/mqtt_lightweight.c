@@ -235,12 +235,27 @@ static MQTTStatus_t validateSubscriptionSerializeParams( const MQTTSubscribeInfo
  * @param[in] pWillInfo Last Will and Testament. Pass NULL if not used.
  * @param[in] remainingLength Remaining Length of MQTT CONNECT packet.
  * @param[out] pBuffer Buffer for packet serialization.
- *
  */
 static void serializeConnectPacket( const MQTTConnectInfo_t * pConnectInfo,
                                     const MQTTPublishInfo_t * pWillInfo,
                                     size_t remainingLength,
                                     const MQTTFixedBuffer_t * pBuffer );
+
+/**
+ * @brief Extract MQTT packet type and length from incoming packet.
+ *
+ * @param[in] readFunc Transport layer read function pointer.
+ * @param[out] pIncomingPacket Pointer to MQTTPacketInfo_t structure.
+ * where type, remaining length and packet identifier are stored.
+ *
+ * @return #MQTTSuccess on successful extraction of type and length,
+ * #MQTTRecvFailed on transport receive failure,
+ * #MQTTBadResponse if an invalid packet is read, and
+ * #MQTTNoDataAvailable if there is nothing to read.
+ */
+MQTTStatus_t getIncomingPacketTypeAndLength( MQTTTransportRecvFunc_t readFunc,
+                                             NetworkContext_t networkContext,
+                                             MQTTPacketInfo_t * pIncomingPacket );
 
 /*-----------------------------------------------------------*/
 
@@ -1292,6 +1307,51 @@ static void serializeConnectPacket( const MQTTConnectInfo_t * pConnectInfo,
 
 /*-----------------------------------------------------------*/
 
+MQTTStatus_t getIncomingPacketTypeAndLength( MQTTTransportRecvFunc_t readFunc,
+                                             NetworkContext_t networkContext,
+                                             MQTTPacketInfo_t * pIncomingPacket )
+{
+    MQTTStatus_t status = MQTTSuccess;
+    int32_t bytesReceived = 0;
+
+    assert( pIncomingPacket != NULL );
+
+    /* Read a single byte. */
+    bytesReceived = readFunc( networkContext, &( pIncomingPacket->type ), 1U );
+
+    if( bytesReceived == 1 )
+    {
+        /* Check validity. */
+        if( incomingPacketValid( pIncomingPacket->type ) == true )
+        {
+            pIncomingPacket->remainingLength = getRemainingLength( readFunc, networkContext );
+
+            if( pIncomingPacket->remainingLength == MQTT_REMAINING_LENGTH_INVALID )
+            {
+                status = MQTTBadResponse;
+            }
+        }
+        else
+        {
+            LogError( ( "Incoming packet invalid: Packet type=%u",
+                        pIncomingPacket->type ) );
+            status = MQTTBadResponse;
+        }
+    }
+    else if( bytesReceived == 0 )
+    {
+        status = MQTTNoDataAvailable;
+    }
+    else
+    {
+        status = MQTTRecvFailed;
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
 MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
                                         const MQTTPublishInfo_t * pWillInfo,
                                         size_t * pRemainingLength,
@@ -2046,35 +2106,17 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( MQTTTransportRecvFunc_t readFu
                                                   MQTTPacketInfo_t * pIncomingPacket )
 {
     MQTTStatus_t status = MQTTSuccess;
-    /* Read a single byte. */
-    int32_t bytesReceived = readFunc( networkContext, &( pIncomingPacket->type ), 1U );
 
-    if( bytesReceived == 1 )
+    if( pIncomingPacket == NULL )
     {
-        /* Check validity. */
-        if( incomingPacketValid( pIncomingPacket->type ) == true )
-        {
-            pIncomingPacket->remainingLength = getRemainingLength( readFunc, networkContext );
-
-            if( pIncomingPacket->remainingLength == MQTT_REMAINING_LENGTH_INVALID )
-            {
-                status = MQTTBadResponse;
-            }
-        }
-        else
-        {
-            LogError( ( "Incoming packet invalid: Packet type=%u",
-                        pIncomingPacket->type ) );
-            status = MQTTBadResponse;
-        }
-    }
-    else if( bytesReceived == 0 )
-    {
-        status = MQTTNoDataAvailable;
+        LogError( ( "Invalid parameter: pIncomingPacket is NULL." ) );
+        status = MQTTBadParameter;
     }
     else
     {
-        status = MQTTRecvFailed;
+        status = getIncomingPacketTypeAndLength( readFunc,
+                                                 networkContext,
+                                                 pIncomingPacket );
     }
 
     return status;
