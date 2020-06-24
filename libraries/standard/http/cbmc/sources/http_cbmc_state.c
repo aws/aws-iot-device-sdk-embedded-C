@@ -4,35 +4,33 @@
 
 extern _Bool nondet_bool();
 
-void * safeMalloc( size_t wantedSize )
+void * mallocCanFail( size_t size )
 {
-    return nondet_bool() ? malloc( wantedSize ) : NULL;
+    __CPROVER_assert( size < CBMC_MAX_OBJECT_SIZE, "mallocCanFail size is too big" );
+    return nondet_bool() ? NULL : malloc( size );
 }
 
-HTTPRequestHeaders_t * allocateHttpRequestHeaders()
+void allocateHttpRequestHeaders( HTTPRequestHeaders_t * pRequestHeaders )
 {
-    HTTPRequestHeaders_t * pRequestHeaders = NULL;
-
-    pRequestHeaders = safeMalloc( sizeof( HTTPRequestHeaders_t ) );
-
-    if( pRequestHeaders )
+    if( pRequestHeaders == NULL )
     {
-        pRequestHeaders->pBuffer = safeMalloc( pRequestHeaders->bufferLen );
+        pRequestHeaders = mallocCanFail( sizeof( HTTPRequestHeaders_t ) );
     }
+
+    pRequestHeaders->pBuffer = mallocCanFail( pRequestHeaders->bufferLen );
 
     return pRequestHeaders;
 }
 
 int isValidHttpRequestHeaders( const HTTPRequestHeaders_t * pRequestHeaders )
 {
-    int validBuffer = 1;
+    int isValid = 1;
 
-    if( pRequestHeaders->pBuffer )
+    if( pRequestHeaders )
     {
-        validBuffer = __CPROVER_r_ok( pRequestHeaders->pBuffer, pRequestHeaders->bufferLen );
+        isValid = pRequestHeaders->bufferLen < CBMC_MAX_OBJECT_SIZE &&
+                  pRequestHeaders->headersLen < CBMC_MAX_OBJECT_SIZE;
     }
 
-    return pRequestHeaders->bufferLen < CBMC_MAX_OBJECT_SIZE &&
-           pRequestHeaders->headersLen < CBMC_MAX_OBJECT_SIZE &&
-           validBuffer;
+    return isValid;
 }
