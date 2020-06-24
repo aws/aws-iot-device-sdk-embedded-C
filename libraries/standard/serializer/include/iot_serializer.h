@@ -353,7 +353,7 @@ typedef struct IotSerializerEncodeInterface
      * @param[in] length: pre-known length of the container or IOT_SERIALIZER_INDEFINITE_LENGTH
      *         map: the length is number of key-value pairs
      *         array: the length is number of elements
-     *         none: the length is unuseful
+     *         none: the length is not useful
      */
     IotSerializerError_t ( * openContainer )( IotSerializerEncoderObject_t * pEncoderObject,
                                               IotSerializerEncoderObject_t * pNewEncoderObject,
@@ -368,7 +368,7 @@ typedef struct IotSerializerEncodeInterface
      * @param[in] length: pre-known length of the container or IOT_SERIALIZER_INDEFINITE_LENGTH
      *         map: the length is number of key-value pairs
      *         array: the length is number of elements
-     *         none: the length is unuseful
+     *         none: the length is not useful
      */
     IotSerializerError_t ( * openContainerWithKey )( IotSerializerEncoderObject_t * pEncoderObject,
                                                      const char * pKey,
