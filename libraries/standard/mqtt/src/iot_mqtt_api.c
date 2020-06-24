@@ -1651,7 +1651,6 @@ IotMqttError_t _publishAsync( IotMqttConnection_t mqttConnection,
     IotMqttError_t status = IOT_MQTT_SUCCESS;
     _mqttOperation_t * pOperation = NULL;
     uint8_t ** pPacketIdentifierHigh = NULL;
-    bool isQoS0AndBlockingOperation = false;
 
     /* Create a PUBLISH operation. */
     status = _IotMqtt_CreateOperation( mqttConnection,
@@ -1748,19 +1747,15 @@ IotMqttError_t _publishAsync( IotMqttConnection_t mqttConnection,
         IotLogInfo( "(MQTT connection %p) MQTT PUBLISH operation queued.",
                     mqttConnection );
     }
+
+    return status;
 }
 
-
-
 IotMqttError_t _publishQos0AndBlockingOperation( IotMqttConnection_t mqttConnection,
-                                                 const IotMqttPublishInfo_t * pPublishInfo,
-                                                 uint32_t flags,
-                                                 const IotMqttCallbackInfo_t * pCallbackInfo,
-                                                 IotMqttOperation_t * const pPublishOperation )
+                                                 const IotMqttPublishInfo_t * pPublishInfo )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
     uint8_t ** pPacketIdentifierHigh = NULL;
-    bool isQoS0AndBlockingOperation = false;
     uint8_t * pMqttPacket = NULL;
     size_t packetSize = 0;
     uint16_t packetIdentifier;
@@ -1769,14 +1764,6 @@ IotMqttError_t _publishQos0AndBlockingOperation( IotMqttConnection_t mqttConnect
     {
         status = IOT_MQTT_NETWORK_ERROR;
     }
-
-    /*isQoS0AndBlockingOperation = true; */
-
-    /* In AWS IoT MQTT mode, a pointer to the packet identifier must be saved. */
-    /* if( mqttConnection->awsIotMqttMode == true ) */
-    /* { */
-    /*     pPacketIdentifierHigh = &( pPacketIdentifierHigh ); */
-    /* } */
 
     if( status == IOT_MQTT_SUCCESS )
     {
@@ -1814,11 +1801,6 @@ IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
                                      IotMqttOperation_t * const pPublishOperation )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
-    uint8_t ** pPacketIdentifierHigh = NULL;
-    bool isQoS0AndBlockingOperation = false;
-    uint8_t * pMqttPacket = NULL;
-    size_t packetSize = 0;
-    uint16_t packetIdentifier;
 
     /* Check that IotMqtt_Init was called. */
     if( _checkInit() == false )
@@ -1838,9 +1820,7 @@ IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
              ( pPublishInfo->qos == IOT_MQTT_QOS_0 ) )
     {
         status = _publishQos0AndBlockingOperation( mqttConnection,
-                                                   pPublishInfo,
-                                                   flags,
-                                                   pCallbackInfo, pPublishOperation );
+                                                   pPublishInfo );
     }
     else
     {
