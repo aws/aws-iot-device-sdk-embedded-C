@@ -11,22 +11,19 @@
 ################################################################
 
 # Flags to pass to goto-cc for compilation (typically those passed to gcc -c)
-COMPILE_FLAGS += \
-        -fPIC \
-        -std=gnu90 \
+COMPILE_FLAGS += -fPIC
+COMPILE_FLAGS += -std=gnu90
 
 # Flags to pass to goto-cc for linking (typically those passed to gcc)
 # LINK_FLAGS =
 
 # Preprocessor include paths -I...
-INCLUDES += \
-        -I$(SRCDIR)/libraries/standard/http/cbmc/include \
-        -I$(SRCDIR)/libraries/standard/http/include \
-        -I$(SRCDIR)/libraries/standard/http/src \
-        -I$(SRCDIR)/libraries/standard/http/third_party/http_parser \
-        -I$(SRCDIR)/demos/logging-stack \
-        -I$(SRCDIR)/demos/http/http_demo_plaintext \
+INCLUDES += -I$(SRCDIR)/libraries/standard/http/cbmc/include
+INCLUDES += -I$(SRCDIR)/libraries/standard/http/include
+INCLUDES += -I$(SRCDIR)/libraries/standard/http/src
+INCLUDES += -I$(SRCDIR)/libraries/standard/http/third_party/http_parser
+INCLUDES += -I$(SRCDIR)/demos/logging-stack
+INCLUDES += -I$(SRCDIR)/demos/http/http_demo_plaintext
 
 # Preprocessor definitions -D...
-DEFINES += \
-        -Dhttp_EXPORTS \
+DEFINES += -Dhttp_EXPORTS
