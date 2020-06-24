@@ -242,11 +242,11 @@ static void serializeConnectPacket( const MQTTConnectInfo_t * pConnectInfo,
                                     const MQTTFixedBuffer_t * pBuffer );
 
 /**
- * @brief Extract MQTT packet type and length from incoming packet.
+ * @brief Extract the MQTT packet type and length from incoming packet.
  *
  * @param[in] readFunc Transport layer read function pointer.
  * @param[out] pIncomingPacket Pointer to MQTTPacketInfo_t structure.
- * where type, remaining length and packet identifier are stored.
+ * This is where type, remaining length and packet identifier are stored.
  *
  * @return #MQTTSuccess on successful extraction of type and length,
  * #MQTTRecvFailed on transport receive failure,

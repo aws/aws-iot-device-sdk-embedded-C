@@ -514,8 +514,8 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
  * @param[out] pIncomingPacket Pointer to MQTTPacketInfo_t structure. This is
  * where type, remaining length and packet identifier are stored.
  *
- * @return #MQTTBadParameter if @p pIncomingPacket is invalid,
- * #MQTTSuccess on successful extraction of type and length,
+ * @return #MQTTSuccess on successful extraction of type and length,
+ * #MQTTBadParameter if @p pIncomingPacket is invalid,
  * #MQTTRecvFailed on transport receive failure,
  * #MQTTBadResponse if an invalid packet is read, and
  * #MQTTNoDataAvailable if there is nothing to read.
