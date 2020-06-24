@@ -340,7 +340,7 @@ static int32_t recvExact( const MQTTContext_t * pContext,
     uint8_t * pIndex = NULL;
     size_t bytesRemaining = bytesToRecv;
     int32_t totalBytesRecvd = 0, bytesRecvd;
-    uint32_t entryTimeMs = 0U, elapsedTime = 0U;
+    uint32_t entryTimeMs = 0U, elapsedTimeMs = 0U;
     MQTTTransportRecvFunc_t recvFunc = NULL;
     MQTTGetCurrentTimeFunc_t getTimeStampMs = NULL;
     bool receiveError = false;
@@ -380,10 +380,11 @@ static int32_t recvExact( const MQTTContext_t * pContext,
 
         if( getTimeStampMs != NULL )
         {
-            elapsedTime = calculateElapsedTime( getTimeStampMs(), entryTimeMs );
+            elapsedTimeMs = calculateElapsedTime( getTimeStampMs(), entryTimeMs );
         }
 
-        if( ( bytesRemaining > 0U ) && ( elapsedTime >= timeoutMs ) )
+        /* If there is no time function, then elapsed time = timeout = 0. */
+        if( ( bytesRemaining > 0U ) && ( elapsedTimeMs >= timeoutMs ) )
         {
             LogError( ( "Time expired while receiving packet." ) );
             receiveError = true;
@@ -695,7 +696,13 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
     MQTTPublishState_t publishRecordState = MQTTStateNull;
     uint16_t packetIdentifier;
     /* Need a dummy variable for MQTT_DeserializeAck(). */
-    bool sessionPresent = false, callAppCallback = false;
+    bool sessionPresent = false;
+    /* We should always invoke the app callback unless we receive a PINGRESP
+     * and are managing keep alive, or if we receive an unknown packet. We
+     * initialize this to false since the callback must be invoked before
+     * sending any PUBREL or PUBCOMP. However, for other cases, we invoke it
+     * at the end to reduce the complexity of this function. */
+    bool invokeAppCallback = false;
     MQTTPubAckType_t ackType;
     MQTTEventCallback_t appCallback = NULL;
 
@@ -741,7 +748,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
 
         case MQTT_PACKET_TYPE_PINGRESP:
             status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, &sessionPresent );
-            callAppCallback = ( manageKeepAlive ) ? false : true;
+            invokeAppCallback = ( manageKeepAlive ) ? false : true;
 
             if( ( status == MQTTSuccess ) && ( manageKeepAlive == true ) )
             {
@@ -754,7 +761,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
         case MQTT_PACKET_TYPE_UNSUBACK:
             /* Deserialize and give these to the app provided callback. */
             status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, &sessionPresent );
-            callAppCallback = true;
+            invokeAppCallback = true;
             break;
 
         default:
@@ -765,7 +772,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
             break;
     }
 
-    if( ( status == MQTTSuccess ) && ( callAppCallback == true ) )
+    if( ( status == MQTTSuccess ) && ( invokeAppCallback == true ) )
     {
         appCallback( pContext, pIncomingPacket, packetIdentifier, NULL );
     }
