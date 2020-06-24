@@ -1395,6 +1395,11 @@ void test_MQTT_ReceiveLoop( void )
     mqttStatus = MQTT_ReceiveLoop( NULL, MQTT_NO_TIMEOUT_MS );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
+    /* Error case, for branch coverage. */
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTRecvFailed );
+    mqttStatus = MQTT_ReceiveLoop( &context, MQTT_NO_TIMEOUT_MS );
+    TEST_ASSERT_EQUAL( MQTTRecvFailed, mqttStatus );
+
     /* With time function. Keep Alive should not trigger.*/
     context.keepAliveIntervalSec = 1;
     MQTT_GetIncomingPacketTypeAndLength_IgnoreAndReturn( MQTTNoDataAvailable );

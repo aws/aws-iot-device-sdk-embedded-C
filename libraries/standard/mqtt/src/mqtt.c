@@ -279,7 +279,8 @@ static int32_t sendPacket( MQTTContext_t * pContext,
         }
     }
 
-    /* Update time of last transmission if the entire packet was successfully sent. */
+    /* Update time of last transmission, if available, when the entire packet
+     * is successfully sent. */
     if( ( totalBytesSent > 0 ) && ( pContext->callbacks.getTime != NULL ) )
     {
         pContext->lastPacketTime = sendTime;
@@ -383,7 +384,8 @@ static int32_t recvExact( const MQTTContext_t * pContext,
             elapsedTimeMs = calculateElapsedTime( getTimeStampMs(), entryTimeMs );
         }
 
-        /* If there is no time function, then elapsed time = timeout = 0. */
+        /* If there is no time function, then elapsed time = timeout = 0. This ensures
+         * that the loop runs only once if the time function is not provided. */
         if( ( bytesRemaining > 0U ) && ( elapsedTimeMs >= timeoutMs ) )
         {
             LogError( ( "Time expired while receiving packet." ) );
@@ -697,6 +699,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
     uint16_t packetIdentifier;
     /* Need a dummy variable for MQTT_DeserializeAck(). */
     bool sessionPresent = false;
+
     /* We should always invoke the app callback unless we receive a PINGRESP
      * and are managing keep alive, or if we receive an unknown packet. We
      * initialize this to false since the callback must be invoked before
@@ -1536,25 +1539,25 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
         status = receiveSingleIteration( pContext, remainingTimeMs, true );
 
         /* We don't need to break here since the status is already checked in
-         * the loop condition, and we do not want multiple breaks in a loop.
-         * Calculating remaining time before exiting is fine since it does not
-         * affect the status. */
+         * the loop condition, and we do not want multiple breaks in a loop. */
         if( status != MQTTSuccess )
         {
             LogError( ( "Exiting process loop. Error status=%s",
                         MQTT_Status_strerror( status ) ) );
         }
-
-        /* Recalculate remaining time and check if loop should exit. This is
-         * done at the end so the loop will run at least a single iteration. */
-        elapsedTimeMs = calculateElapsedTime( getTimeStampMs(), entryTimeMs );
-
-        if( elapsedTimeMs > timeoutMs )
+        else
         {
-            break;
-        }
+            /* Recalculate remaining time and check if loop should exit. This is
+             * done at the end so the loop will run at least a single iteration. */
+            elapsedTimeMs = calculateElapsedTime( getTimeStampMs(), entryTimeMs );
 
-        remainingTimeMs = timeoutMs - elapsedTimeMs;
+            if( elapsedTimeMs > timeoutMs )
+            {
+                break;
+            }
+
+            remainingTimeMs = timeoutMs - elapsedTimeMs;
+        }
     }
 
     return status;
@@ -1595,34 +1598,34 @@ MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext,
         status = receiveSingleIteration( pContext, remainingTimeMs, false );
 
         /* We don't need to break here since the status is already checked in
-         * the loop condition, and we do not want multiple breaks in a loop.
-         * Calculating remaining time before exiting is fine since it does not
-         * affect the status. */
+         * the loop condition, and we do not want multiple breaks in a loop. */
         if( status != MQTTSuccess )
         {
             LogError( ( "Exiting receive loop. Error status=%s",
                         MQTT_Status_strerror( status ) ) );
         }
-
-        /* Recalculate remaining time and check if loop should exit. This is
-         * done at the end so the loop will run at least a single iteration. */
-        if( getTimeStampMs != NULL )
-        {
-            elapsedTimeMs = calculateElapsedTime( getTimeStampMs(), entryTimeMs );
-        }
         else
         {
-            /* If no time function is provided, set elapsed time to timeout so
-             * loop will exit after a single iteration. */
-            elapsedTimeMs = timeoutMs;
-        }
+            /* Recalculate remaining time and check if loop should exit. This is
+             * done at the end so the loop will run at least a single iteration. */
+            if( getTimeStampMs != NULL )
+            {
+                elapsedTimeMs = calculateElapsedTime( getTimeStampMs(), entryTimeMs );
+            }
+            else
+            {
+                /* If no time function is provided, set elapsed time to timeout so
+                 * loop will exit after a single iteration. */
+                elapsedTimeMs = timeoutMs;
+            }
 
-        if( elapsedTimeMs >= timeoutMs )
-        {
-            break;
-        }
+            if( elapsedTimeMs >= timeoutMs )
+            {
+                break;
+            }
 
-        remainingTimeMs = timeoutMs - elapsedTimeMs;
+            remainingTimeMs = timeoutMs - elapsedTimeMs;
+        }
     }
 
     return status;
