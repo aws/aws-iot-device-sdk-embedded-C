@@ -1642,6 +1642,19 @@ IotMqttError_t IotMqtt_UnsubscribeSync( IotMqttConnection_t mqttConnection,
 
 /*-----------------------------------------------------------*/
 
+/**
+ * @brief Send a Publish asynchronously by scheduling operations on the taskpool.
+ * @param[in] mqttConnection The MQTT connection to use for the PUBLISH.
+ * @param[in] pPublishInfo MQTT publish parameters.
+ * @param[in] flags Flags which modify the behavior of this function.
+ * @param[in] pCallbackInfo Asynchronous notification of this function's completion (`NULL` to disable).
+ * @param[out] pPublishOperation Set to a handle by which this operation may be
+ * referenced after this function returns. This reference is invalidated once
+ * the publish operation completes.
+ *
+ * @return This function will return #IOT_MQTT_STATUS_PENDING upon success for
+ * QoS 1 publishes
+ */
 IotMqttError_t _publishAsync( IotMqttConnection_t mqttConnection,
                               const IotMqttPublishInfo_t * pPublishInfo,
                               uint32_t flags,
@@ -1751,6 +1764,13 @@ IotMqttError_t _publishAsync( IotMqttConnection_t mqttConnection,
     return status;
 }
 
+/**
+ * @brief Send a Publish asynchronously by scheduling operations on the taskpool.
+ * @param[in] mqttConnection The MQTT connection to use for the PUBLISH.
+ * @param[in] pPublishInfo MQTT publish parameters.
+ *
+ *  @return returns #IOT_MQTT_SUCCESS upon success.
+ */
 IotMqttError_t _publishQos0AndBlockingOperation( IotMqttConnection_t mqttConnection,
                                                  const IotMqttPublishInfo_t * pPublishInfo )
 {
