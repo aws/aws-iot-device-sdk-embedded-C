@@ -40,7 +40,7 @@ void * mallocCanFail( size_t size );
  *
  * @param[in] pRequestHeaders Request headers to allocate.
  */
-void allocateHttpRequestHeaders( HTTPRequestHeaders_t * pRequestHeaders )
+void allocateHttpRequestHeaders( HTTPRequestHeaders_t * pRequestHeaders );
 
 /**
  * @brief Validates if a request headers object is feasible.

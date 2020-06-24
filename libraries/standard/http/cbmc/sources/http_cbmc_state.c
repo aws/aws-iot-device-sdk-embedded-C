@@ -2,8 +2,6 @@
 
 #include "http_cbmc_state.h"
 
-extern _Bool nondet_bool();
-
 void * mallocCanFail( size_t size )
 {
     __CPROVER_assert( size < CBMC_MAX_OBJECT_SIZE, "mallocCanFail size is too big" );
