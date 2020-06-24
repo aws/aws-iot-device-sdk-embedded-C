@@ -182,6 +182,7 @@ subscribeserializeroverride
 subscribesync
 subscriptionlist
 subscriptionmutex
+taskpool
 tcp
 timeoutms
 toc
