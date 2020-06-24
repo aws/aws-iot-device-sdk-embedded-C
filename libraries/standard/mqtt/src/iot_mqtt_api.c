@@ -1642,37 +1642,22 @@ IotMqttError_t IotMqtt_UnsubscribeSync( IotMqttConnection_t mqttConnection,
 
 /*-----------------------------------------------------------*/
 
-IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
-                                     const IotMqttPublishInfo_t * pPublishInfo,
-                                     uint32_t flags,
-                                     const IotMqttCallbackInfo_t * pCallbackInfo,
-                                     IotMqttOperation_t * const pPublishOperation )
+IotMqttError_t _publishAsync( IotMqttConnection_t mqttConnection,
+                              const IotMqttPublishInfo_t * pPublishInfo,
+                              uint32_t flags,
+                              const IotMqttCallbackInfo_t * pCallbackInfo,
+                              IotMqttOperation_t * const pPublishOperation )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
     _mqttOperation_t * pOperation = NULL;
     uint8_t ** pPacketIdentifierHigh = NULL;
+    bool isQoS0AndBlockingOperation = false;
 
-    /* Check that IotMqtt_Init was called. */
-    if( _checkInit() == false )
-    {
-        status = IOT_MQTT_NOT_INITIALIZED;
-    }
-    else if( _IotMqtt_ValidatePublish( mqttConnection->awsIotMqttMode,
-                                       pPublishInfo,
+    /* Create a PUBLISH operation. */
+    status = _IotMqtt_CreateOperation( mqttConnection,
                                        flags,
                                        pCallbackInfo,
-                                       pPublishOperation ) == false )
-    {
-        status = IOT_MQTT_BAD_PARAMETER;
-    }
-    else
-    {
-        /* Create a PUBLISH operation. */
-        status = _IotMqtt_CreateOperation( mqttConnection,
-                                           flags,
-                                           pCallbackInfo,
-                                           &pOperation );
-    }
+                                       &pOperation );
 
     if( status == IOT_MQTT_SUCCESS )
     {
@@ -1762,6 +1747,107 @@ IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
 
         IotLogInfo( "(MQTT connection %p) MQTT PUBLISH operation queued.",
                     mqttConnection );
+    }
+}
+
+
+
+IotMqttError_t _publishQos0AndBlockingOperation( IotMqttConnection_t mqttConnection,
+                                                 const IotMqttPublishInfo_t * pPublishInfo,
+                                                 uint32_t flags,
+                                                 const IotMqttCallbackInfo_t * pCallbackInfo,
+                                                 IotMqttOperation_t * const pPublishOperation )
+{
+    IotMqttError_t status = IOT_MQTT_SUCCESS;
+    uint8_t ** pPacketIdentifierHigh = NULL;
+    bool isQoS0AndBlockingOperation = false;
+    uint8_t * pMqttPacket = NULL;
+    size_t packetSize = 0;
+    uint16_t packetIdentifier;
+
+    if( mqttConnection->disconnected == true )
+    {
+        status = IOT_MQTT_NETWORK_ERROR;
+    }
+
+    /*isQoS0AndBlockingOperation = true; */
+
+    /* In AWS IoT MQTT mode, a pointer to the packet identifier must be saved. */
+    /* if( mqttConnection->awsIotMqttMode == true ) */
+    /* { */
+    /*     pPacketIdentifierHigh = &( pPacketIdentifierHigh ); */
+    /* } */
+
+    if( status == IOT_MQTT_SUCCESS )
+    {
+        /* Generate a PUBLISH packet from pPublishInfo. */
+        status = _getMqttPublishSerializer( mqttConnection->pSerializer )( pPublishInfo,
+                                                                           &( pMqttPacket ),
+                                                                           &( packetSize ),
+                                                                           &( packetIdentifier ),
+                                                                           pPacketIdentifierHigh );
+    }
+
+    if( status == IOT_MQTT_SUCCESS )
+    {
+        /* Transmit the MQTT packet from the operation over the network. */
+        if( mqttConnection->pNetworkInterface->send( mqttConnection->pNetworkConnection,
+                                                     pMqttPacket,
+                                                     packetSize ) != packetSize )
+        {
+            status = IOT_MQTT_NETWORK_ERROR;
+        }
+    }
+
+    if( pMqttPacket != NULL )
+    {
+        IotMqtt_FreeMessage( pMqttPacket );
+    }
+
+    return status;
+}
+
+IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
+                                     const IotMqttPublishInfo_t * pPublishInfo,
+                                     uint32_t flags,
+                                     const IotMqttCallbackInfo_t * pCallbackInfo,
+                                     IotMqttOperation_t * const pPublishOperation )
+{
+    IotMqttError_t status = IOT_MQTT_SUCCESS;
+    uint8_t ** pPacketIdentifierHigh = NULL;
+    bool isQoS0AndBlockingOperation = false;
+    uint8_t * pMqttPacket = NULL;
+    size_t packetSize = 0;
+    uint16_t packetIdentifier;
+
+    /* Check that IotMqtt_Init was called. */
+    if( _checkInit() == false )
+    {
+        status = IOT_MQTT_NOT_INITIALIZED;
+    }
+    else if( _IotMqtt_ValidatePublish( mqttConnection->awsIotMqttMode,
+                                       pPublishInfo,
+                                       flags,
+                                       pCallbackInfo,
+                                       pPublishOperation ) == false )
+    {
+        status = IOT_MQTT_BAD_PARAMETER;
+    }
+    else if( ( ( flags & MQTT_INTERNAL_FLAG_BLOCK_ON_SEND )
+               == MQTT_INTERNAL_FLAG_BLOCK_ON_SEND ) &&
+             ( pPublishInfo->qos == IOT_MQTT_QOS_0 ) )
+    {
+        status = _publishQos0AndBlockingOperation( mqttConnection,
+                                                   pPublishInfo,
+                                                   flags,
+                                                   pCallbackInfo, pPublishOperation );
+    }
+    else
+    {
+        status = _publishAsync( mqttConnection,
+                                pPublishInfo,
+                                flags,
+                                pCallbackInfo, pPublishOperation );
     }
 
     return status;
