@@ -145,7 +145,7 @@ typedef struct OpensslCredentials
  * #OPENSSL_INVALID_PARAMETER, #OPENSSL_INVALID_CREDENTIALS,
  * #OPENSSL_INVALID_CREDENTIALS, #OPENSSL_SYSTEM_ERROR on failure.
  */
-OpensslStatus_t Openssl_Connect( NetworkContext_t pNetworkContext,
+OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
                                  const ServerInfo_t * pServerInfo,
                                  const OpensslCredentials_t * pOpensslCredentials,
                                  uint32_t sendTimeoutMs,
@@ -159,7 +159,7 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t pNetworkContext,
  *
  * @return #OPENSSL_SUCCESS on success; #OPENSSL_INVALID_PARAMETER on failure.
  */
-OpensslStatus_t Openssl_Disconnect( NetworkContext_t pNetworkContext );
+OpensslStatus_t Openssl_Disconnect( NetworkContext_t * pNetworkContext );
 
 /**
  * @brief Receives data over an established TLS session using the OpenSSL API.
@@ -173,7 +173,7 @@ OpensslStatus_t Openssl_Disconnect( NetworkContext_t pNetworkContext );
  *
  * @return Number of bytes received if successful; negative value on error.
  */
-int32_t Openssl_Recv( NetworkContext_t pNetworkContext,
+int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
                       void * pBuffer,
                       size_t bytesToRecv );
 
@@ -189,7 +189,7 @@ int32_t Openssl_Recv( NetworkContext_t pNetworkContext,
  *
  * @return Number of bytes sent if successful; negative value on error.
  */
-int32_t Openssl_Send( NetworkContext_t pNetworkContext,
+int32_t Openssl_Send( NetworkContext_t * pNetworkContext,
                       const void * pBuffer,
                       size_t bytesToSend );
 

@@ -21,6 +21,7 @@
 
 /* POSIX socket includes. */
 #include <errno.h>
+#include <sys/socket.h>
 
 #include "plaintext_posix.h"
 
@@ -89,8 +90,9 @@ static void logTransportError( void )
             break;
     }
 }
+/*-----------------------------------------------------------*/
 
-SocketStatus_t Plaintext_Connect( NetworkContext_t pNetworkContext,
+SocketStatus_t Plaintext_Connect( NetworkContext_t * pNetworkContext,
                                   const ServerInfo_t * pServerInfo,
                                   uint32_t sendTimeoutMs,
                                   uint32_t recvTimeoutMs )
@@ -100,13 +102,15 @@ SocketStatus_t Plaintext_Connect( NetworkContext_t pNetworkContext,
                             sendTimeoutMs,
                             recvTimeoutMs );
 }
+/*-----------------------------------------------------------*/
 
-SocketStatus_t Plaintext_Disconnect( const NetworkContext_t pNetworkContext )
+SocketStatus_t Plaintext_Disconnect( const NetworkContext_t * pNetworkContext )
 {
     return Sockets_Disconnect( pNetworkContext->socketDescriptor );
 }
+/*-----------------------------------------------------------*/
 
-int32_t Plaintext_Recv( NetworkContext_t pNetworkContext,
+int32_t Plaintext_Recv( NetworkContext_t * pNetworkContext,
                         void * pBuffer,
                         size_t bytesToRecv )
 {
@@ -137,8 +141,9 @@ int32_t Plaintext_Recv( NetworkContext_t pNetworkContext,
 
     return bytesReceived;
 }
+/*-----------------------------------------------------------*/
 
-int32_t Plaintext_Send( NetworkContext_t pNetworkContext,
+int32_t Plaintext_Send( NetworkContext_t * pNetworkContext,
                         const void * pBuffer,
                         size_t bytesToSend )
 {
@@ -160,3 +165,4 @@ int32_t Plaintext_Send( NetworkContext_t pNetworkContext,
 
     return bytesSent;
 }
+/*-----------------------------------------------------------*/

@@ -23,12 +23,11 @@
 #include <assert.h>
 #include <string.h>
 
-/* POSIX socket includes. */
+/* POSIX sockets includes. */
 #include <errno.h>
 #include <netdb.h>
 #include <time.h>
 #include <arpa/inet.h>
-
 #include <sys/socket.h>
 
 #include "sockets_posix.h"
@@ -38,7 +37,7 @@
 /**
  * @brief Number of DNS records to attempt a connection.
  *
- * @note Negative value implies attempting to connect to all DNS records
+ * @note Negative value implies an attempt to connect to all DNS records
  * until successful.
  */
 #define NUM_DNS_RECORDS_TO_TRY    ( -1 )
@@ -67,7 +66,8 @@ extern int errno;
  *
  * @param[in] pHostName Server host name.
  * @param[in] hostNameLength Length associated with host name.
- * @param[out] pListHead List containing resolved DNS records.
+ * @param[out] pListHead The output parameter to return the list containing
+ * resolved DNS records.
  *
  * @return #SOCKETS_SUCCESS if successful; #SOCKETS_DNS_FAILURE, #SOCKETS_CONNECT_FAILURE on error.
  */
@@ -98,7 +98,7 @@ static SocketStatus_t attemptConnection( struct addrinfo * pListHead,
                                          int32_t maxAttempts );
 
 /**
- * @brief Log possible error from setsockopt and return appropriate status.
+ * @brief Log possible error using errno and return appropriate status.
  *
  * @return #SOCKETS_API_ERROR, #SOCKETS_INSUFFICIENT_MEMORY, #SOCKETS_INVALID_PARAMETER on error.
  */
@@ -139,6 +139,7 @@ static SocketStatus_t resolveHostName( const char * pHostName,
 
     return returnStatus;
 }
+/*-----------------------------------------------------------*/
 
 static SocketStatus_t attemptConnection( struct addrinfo * pListHead,
                                          const char * pHostName,
@@ -151,7 +152,7 @@ static SocketStatus_t attemptConnection( struct addrinfo * pListHead,
     struct addrinfo * pIndex = NULL;
     struct sockaddr * pAddrInfo;
     socklen_t addrInfoLength;
-    uint16_t netPort = -1;
+    uint16_t netPort = 0;
     int curAttempts = 0, connectStatus = 0;
     char resolvedIpAddr[ INET6_ADDRSTRLEN ];
 
@@ -210,10 +211,10 @@ static SocketStatus_t attemptConnection( struct addrinfo * pListHead,
 
         if( connectStatus == -1 )
         {
-            LogError( ( "Failed to connect to server: Host=%.*s, IP address=%s.",
-                        ( int32_t ) hostNameLength,
-                        pHostName,
-                        resolvedIpAddr ) );
+            LogWarn( ( "Failed to connect to server: Host=%.*s, IP address=%s.",
+                       ( int32_t ) hostNameLength,
+                       pHostName,
+                       resolvedIpAddr ) );
             close( *pTcpSocket );
         }
         else
@@ -258,6 +259,7 @@ static SocketStatus_t attemptConnection( struct addrinfo * pListHead,
 
     return returnStatus;
 }
+/*-----------------------------------------------------------*/
 
 static SocketStatus_t retreiveError( void )
 {
@@ -318,6 +320,7 @@ static SocketStatus_t retreiveError( void )
 
     return returnStatus;
 }
+/*-----------------------------------------------------------*/
 
 SocketStatus_t Sockets_Connect( int * pTcpSocket,
                                 const ServerInfo_t * pServerInfo,
@@ -383,10 +386,6 @@ SocketStatus_t Sockets_Connect( int * pTcpSocket,
             LogError( ( "Setting socket send timeout failed." ) );
             returnStatus = retreiveError();
         }
-        else
-        {
-            returnStatus = SOCKETS_SUCCESS;
-        }
     }
 
     /* Set the receive timeout. */
@@ -406,14 +405,11 @@ SocketStatus_t Sockets_Connect( int * pTcpSocket,
             LogError( ( "Setting socket receive timeout failed." ) );
             returnStatus = retreiveError();
         }
-        else
-        {
-            returnStatus = SOCKETS_SUCCESS;
-        }
     }
 
     return returnStatus;
 }
+/*-----------------------------------------------------------*/
 
 SocketStatus_t Sockets_Disconnect( int tcpSocket )
 {
@@ -432,3 +428,4 @@ SocketStatus_t Sockets_Disconnect( int tcpSocket )
 
     return returnStatus;
 }
+/*-----------------------------------------------------------*/
