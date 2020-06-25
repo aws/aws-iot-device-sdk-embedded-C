@@ -652,6 +652,13 @@ void test_Http_AddHeader_Invalid_Params()
                                        HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_FIELD_LEN,
                                        HTTP_TEST_HEADER_VALUE, 0 );
     TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, httpStatus );
+
+    /* Test that requestHeaders.headersLen <= requestHeaders.bufferLen. */
+    requestHeaders.headersLen = requestHeaders.bufferLen + 1;
+    httpStatus = HTTPClient_AddHeader( &requestHeaders,
+                                       HTTP_TEST_HEADER_FIELD, HTTP_TEST_HEADER_FIELD_LEN,
+                                       HTTP_TEST_HEADER_VALUE, HTTP_TEST_HEADER_VALUE_LEN );
+    TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, httpStatus );
 }
 
 /**
