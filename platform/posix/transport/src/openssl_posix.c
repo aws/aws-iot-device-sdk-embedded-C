@@ -58,20 +58,22 @@
  *
  * @param[in] path Relative or absolute path.
  * @param[in] pathLen Length of the relative or absolute path.
- * @param[in] fileLabel NULL-terminated string of file label to log.
+ * @param[in] fileLabel NULL-terminated string describing the file label to log.
  */
-static void logPath( const char * path,
-                     size_t pathLen,
-                     const char * fileLabel );
+#if ( LIBRARY_LOG_LEVEL == LOG_DEBUG )
+    static void logPath( const char * path,
+                         size_t pathLen,
+                         const char * fileLabel );
+#endif /* #if ( LIBRARY_LOG_LEVEL == LOG_DEBUG ) */
 
 /**
- * @brief Add X509 certificate to trusted list of root certificates.
+ * @brief Add X509 certificate to the trusted list of root certificates.
  *
  * OpenSSL does not provide a single function for reading and loading certificates
  * from files into stores, so the file API must be called. Start with the
  * root certificate.
  *
- * @param[out] pSslContext Destination for the trusted server root CA.
+ * @param[out] pSslContext SSL context to which the trusted server root CA is to be added.
  * @param[in] pRootCaPath Filepath string to the trusted server root CA.
  * @param[in] rootCaPathLen Length associated with trusted server root CA.
  *
@@ -84,7 +86,7 @@ static int setRootCa( SSL_CTX * pSslContext,
 /**
  * @brief Set X509 certificate as client certificate for the server to authenticate.
  *
- * @param[out] pSslContext Destination for the client certificate.
+ * @param[out] pSslContext SSL context to which the client certificate is to be set.
  * @param[in] pClientCertPath Filepath string to the client certificate.
  * @param[in] clientCertPathLen Length associated with client certificate.
  *
@@ -97,9 +99,9 @@ static int setClientCertificate( SSL_CTX * pSslContext,
 /**
  * @brief Set private key for the client's certificate.
  *
- * @param[out] pSslContext Destination for the private key.
- * @param[in] pPrivateKeyPath Filepath string to the client certificate's private key.
- * @param[in] privateKeyPathLen Length associated with client certificate's private key.
+ * @param[out] pSslContext SSL context to which the private key is to be added.
+ * @param[in] pPrivateKeyPath Filepath string to the client private key.
+ * @param[in] privateKeyPathLen Length associated with client private key.
  *
  * @return 1 on success; 0 on failure;
  */
@@ -114,8 +116,8 @@ static int setPrivateKey( SSL_CTX * pSslContext,
  * OpenSSL library. If the client certificate or private key is not NULL, mutual
  * authentication is used when performing the TLS handshake.
  *
- * @param[out] pSslContext Destination for the imported credentials.
- * @param[in] pOpensslCredentials TLS credentials to be validated.
+ * @param[out] pSslContext SSL context to which the credentials are to be imported.
+ * @param[in] pOpensslCredentials TLS credentials to be imported.
  *
  * @return 1 on success; -1, 0 on failure;
  */
@@ -127,7 +129,7 @@ static int setCredentials( SSL_CTX * pSslContext,
  *
  * This function is used to set SNI, MFLN, and ALPN protocols.
  *
- * @param[in] pSsl Destination for the imported credentials.
+ * @param[in] pSsl SSL context to which the optional configurations are to be set.
  * @param[in] pOpensslCredentials TLS credentials containing configurations.
  */
 static void setOptionalConfigurations( SSL * pSsl,
@@ -135,46 +137,49 @@ static void setOptionalConfigurations( SSL * pSsl,
 
 /*-----------------------------------------------------------*/
 
-static void logPath( const char * path,
-                     size_t pathLen,
-                     const char * fileType )
-{
-    char * cwd = NULL;
-
-    assert( path != NULL );
-    assert( pathLen != 0 );
-    assert( fileType != NULL );
-
-    /* Log the absolute directory based on first character of path. */
-    if( ( path[ 0 ] == '/' ) || ( path[ 0 ] == '\\' ) )
+#if ( LIBRARY_LOG_LEVEL == LOG_DEBUG )
+    static void logPath( const char * path,
+                         size_t pathLen,
+                         const char * fileType )
     {
-        LogDebug( ( "Attempting to open %s: Path=%.*s.",
-                    fileType,
-                    ( int32_t ) pathLen,
-                    path ) );
-    }
-    else
-    {
-        cwd = getcwd( NULL, 0 );
-        LogDebug( ( "Attempting to open %s: Path=%s/%.*s.",
-                    fileType,
-                    cwd,
-                    ( int32_t ) pathLen,
-                    path ) );
-    }
+        char * cwd = NULL;
 
-    /* Free cwd because getcwd calls malloc. */
-    if( cwd != NULL )
-    {
-        free( cwd );
+        assert( path != NULL );
+        assert( pathLen != 0 );
+        assert( fileType != NULL );
+
+        /* Log the absolute directory based on first character of path. */
+        if( ( path[ 0 ] == '/' ) || ( path[ 0 ] == '\\' ) )
+        {
+            LogDebug( ( "Attempting to open %s: Path=%.*s.",
+                        fileType,
+                        ( int32_t ) pathLen,
+                        path ) );
+        }
+        else
+        {
+            cwd = getcwd( NULL, 0 );
+            LogDebug( ( "Attempting to open %s: Path=%s/%.*s.",
+                        fileType,
+                        cwd,
+                        ( int32_t ) pathLen,
+                        path ) );
+        }
+
+        /* Free cwd because getcwd calls malloc. */
+        if( cwd != NULL )
+        {
+            free( cwd );
+        }
     }
-}
+#endif /* #if ( LIBRARY_LOG_LEVEL == LOG_DEBUG ) */
+/*-----------------------------------------------------------*/
 
 static int setRootCa( SSL_CTX * pSslContext,
                       const char * pRootCaPath,
                       size_t rootCaPathLen )
 {
-    int sslStatus = 0;
+    int sslStatus = 1;
     FILE * pRootCaFile = NULL;
     X509 * pRootCa = NULL;
 
@@ -182,7 +187,9 @@ static int setRootCa( SSL_CTX * pSslContext,
     assert( pRootCaPath != NULL );
     assert( rootCaPathLen != 0 );
 
-    logPath( pRootCaPath, rootCaPathLen, ROOT_CA_LABEL );
+    #if ( LIBRARY_LOG_LEVEL == LOG_DEBUG )
+        logPath( pRootCaPath, rootCaPathLen, ROOT_CA_LABEL );
+    #endif
 
     pRootCaFile = fopen( pRootCaPath, "r" );
 
@@ -194,11 +201,35 @@ static int setRootCa( SSL_CTX * pSslContext,
                     pRootCaPath ) );
         sslStatus = -1;
     }
-    else
+
+    if( sslStatus == 1 )
     {
-        /* Read the root CA into an X509 object, then close its file handle. */
+        /* Read the root CA into an X509 object. */
         pRootCa = PEM_read_X509( pRootCaFile, NULL, NULL, NULL );
 
+        if( pRootCa == NULL )
+        {
+            LogError( ( "PEM_read_X509 failed to parse root CA." ) );
+            sslStatus = -1;
+        }
+    }
+
+    if( sslStatus == 1 )
+    {
+        /* Add the certificate to the context. */
+        sslStatus = X509_STORE_add_cert( SSL_CTX_get_cert_store( pSslContext ),
+                                         pRootCa );
+
+        if( sslStatus != 1 )
+        {
+            LogError( ( "X509_STORE_add_cert failed to add root CA to certificate store." ) );
+            sslStatus = -1;
+        }
+    }
+
+    /* Close the file if it was successfully opened. */
+    if( pRootCaFile != NULL )
+    {
         if( fclose( pRootCaFile ) != 0 )
         {
             LogWarn( ( "fclose failed to close file %.*s",
@@ -207,24 +238,10 @@ static int setRootCa( SSL_CTX * pSslContext,
         }
     }
 
-    if( pRootCa == NULL )
+    /* Log the success message if we successfully imported the root CA. */
+    if( sslStatus == 1 )
     {
-        LogError( ( "PEM_read_X509 failed to parse root CA." ) );
-        sslStatus = -1;
-    }
-    else
-    {
-        sslStatus = X509_STORE_add_cert( SSL_CTX_get_cert_store( pSslContext ),
-                                         pRootCa );
-
-        if( sslStatus != 1 )
-        {
-            LogError( ( "X509_STORE_add_cert failed to add root CA to certificate store." ) );
-        }
-        else
-        {
-            LogDebug( ( "Successfully imported root CA." ) );
-        }
+        LogDebug( ( "Successfully imported root CA." ) );
     }
 
     return sslStatus;

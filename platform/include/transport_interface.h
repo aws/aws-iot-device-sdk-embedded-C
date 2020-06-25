@@ -26,12 +26,12 @@
 #include <stddef.h>
 
 /**
- * @brief The NetworkContext is an incomplete type. The application must
- * define NetworkContext to the type of their network context. This context
+ * @brief The NetworkContext is an incomplete type. An implementation of this
+ * interface must define NetworkContext as per the requirements. This context
  * is passed into the network interface functions.
  */
 struct NetworkContext;
-typedef struct NetworkContext * NetworkContext_t;
+typedef struct NetworkContext NetworkContext_t;
 
 /**
  * @brief Transport interface for receiving data on the network.
@@ -42,7 +42,7 @@ typedef struct NetworkContext * NetworkContext_t;
  *
  * @return The number of bytes received or a negative error code.
  */
-typedef int32_t ( * TransportRecv_t )( NetworkContext_t pNetworkContext,
+typedef int32_t ( * TransportRecv_t )( NetworkContext_t * pNetworkContext,
                                        void * pBuffer,
                                        size_t bytesToRecv );
 
@@ -55,7 +55,7 @@ typedef int32_t ( * TransportRecv_t )( NetworkContext_t pNetworkContext,
  *
  * @return The number of bytes sent or a negative error code.
  */
-typedef int32_t ( * TransportSend_t )( NetworkContext_t pNetworkContext,
+typedef int32_t ( * TransportSend_t )( NetworkContext_t * pNetworkContext,
                                        const void * pBuffer,
                                        size_t bytesToSend );
 
@@ -64,9 +64,9 @@ typedef int32_t ( * TransportSend_t )( NetworkContext_t pNetworkContext,
  */
 typedef struct TransportInterface
 {
-    TransportRecv_t recv;             /**< Transport receive interface. */
-    TransportSend_t send;             /**< Transport send interface. */
-    NetworkContext_t pNetworkContext; /**< Implementation-defined network context. */
+    TransportRecv_t recv;               /**< Transport receive interface. */
+    TransportSend_t send;               /**< Transport send interface. */
+    NetworkContext_t * pNetworkContext; /**< Implementation-defined network context. */
 } TransportInterface_t;
 
 #endif /* ifndef TRANSPORT_INTERFACE_H_ */

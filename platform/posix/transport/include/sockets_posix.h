@@ -35,7 +35,7 @@
 /* Include header that defines log levels. */
 #include "logging_levels.h"
 
-/* Logging configuration for the Demo. */
+/* Logging configuration for the Sockets. */
 #ifndef LIBRARY_LOG_NAME
     #define LIBRARY_LOG_NAME     "Sockets"
 #endif

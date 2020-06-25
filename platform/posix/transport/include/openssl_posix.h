@@ -35,9 +35,10 @@
 /* Include header that defines log levels. */
 #include "logging_levels.h"
 
-/* Logging configuration for the Demo. */
+/* Logging configuration for the transport interface implemenation which uses
+ * OpenSSL and Sockets. */
 #ifndef LIBRARY_LOG_NAME
-    #define LIBRARY_LOG_NAME     "OpenSSL"
+    #define LIBRARY_LOG_NAME     "Transport_OpenSSL_Sockets"
 #endif
 #ifndef LIBRARY_LOG_LEVEL
     #define LIBRARY_LOG_LEVEL    LOG_DEBUG
@@ -49,10 +50,13 @@
 
 /* Transport includes. */
 #include "transport_interface.h"
+
+/* Socket includes. */
 #include "sockets_posix.h"
 
 /**
- * @brief Definition of the network context for OpenSSL.
+ * @brief Definition of the network context for the transport interface
+ * implemenation that uses OpenSSL and POSIX sockets.
  *
  * @note For this transport implementation, the socket descriptor and
  * SSL context is used.
@@ -74,7 +78,7 @@ typedef enum OpensslStatus
     OPENSSL_INVALID_CREDENTIALS, /**< Provided credentials were invalid. */
     OPENSSL_HANDSHAKE_FAILED,    /**< Performing TLS handshake with server failed. */
     OPENSSL_API_ERROR,           /**< A call to a system API resulted in an internal error. */
-    OPENSSL_DNS_FAILURE,         /**< Resolving hostname of server failed. */
+    OPENSSL_DNS_FAILURE,         /**< Resolving hostname of the server failed. */
     OPENSSL_CONNECT_FAILURE      /**< Initial connection to the server failed. */
 } OpensslStatus_t;
 

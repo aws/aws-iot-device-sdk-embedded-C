@@ -35,9 +35,10 @@
 /* Include header that defines log levels. */
 #include "logging_levels.h"
 
-/* Logging configuration for the Demo. */
+/* Logging configuration for the transport interface implemenation which uses
+ * Sockets. */
 #ifndef LIBRARY_LOG_NAME
-    #define LIBRARY_LOG_NAME     "TCP"
+    #define LIBRARY_LOG_NAME     "Transport_Sockets"
 #endif
 #ifndef LIBRARY_LOG_LEVEL
     #define LIBRARY_LOG_LEVEL    LOG_DEBUG
@@ -62,17 +63,17 @@ struct NetworkContext
 /**
  * @brief Establish TCP connection to server.
  *
- * @param[out] pNetworkContext The network context created using POSIX sockets API.
+ * @param[out] pNetworkContext The output parameter to return the created network context.
  * @param[in] pServerInfo Server connection info.
- * @param[in] sendTimeout Timeout for transport send.
- * @param[in] recvTimeout Timeout for transport recv.
+ * @param[in] sendTimeout Timeout for socket send.
+ * @param[in] recvTimeout Timeout for socket recv.
  *
  * @note A timeout of 0 means infinite timeout.
  *
  * @return #SOCKETS_SUCCESS if successful;
  * #SOCKETS_INVALID_PARAMETER, #SOCKETS_DNS_FAILURE, #SOCKETS_CONNECT_FAILURE on error.
  */
-SocketStatus_t Plaintext_Connect( NetworkContext_t pNetworkContext,
+SocketStatus_t Plaintext_Connect( NetworkContext_t * pNetworkContext,
                                   const ServerInfo_t * pServerInfo,
                                   uint32_t sendTimeoutMs,
                                   uint32_t recvTimeoutMs );
@@ -84,21 +85,21 @@ SocketStatus_t Plaintext_Connect( NetworkContext_t pNetworkContext,
  *
  * @return #SOCKETS_SUCCESS if successful; #SOCKETS_INVALID_PARAMETER on error.
  */
-SocketStatus_t Plaintext_Disconnect( const NetworkContext_t pNetworkContext );
+SocketStatus_t Plaintext_Disconnect( const NetworkContext_t * pNetworkContext );
 
 /**
  * @brief Receives data over an established TCP connection.
  *
- * This can be used as #TransportInterface.recv function for receiving data
- * from the network.
+ * This can be used as #TransportInterface.recv function to receive data over
+ * the network.
  *
- * @param[in] pNetworkContext The network context created using POSIX sockets API.
+ * @param[in] pNetworkContext The network context created using Plaintext_Connect API.
  * @param[out] pBuffer Buffer to receive network data into.
  * @param[in] bytesToRecv Number of bytes requested from the network.
  *
  * @return Number of bytes received if successful; negative value on error.
  */
-int32_t Plaintext_Recv( NetworkContext_t pNetworkContext,
+int32_t Plaintext_Recv( NetworkContext_t * pNetworkContext,
                         void * pBuffer,
                         size_t bytesToRecv );
 
@@ -108,13 +109,13 @@ int32_t Plaintext_Recv( NetworkContext_t pNetworkContext,
  * This can be used as the #TransportInterface.send function to send data
  * over the network.
  *
- * @param[in] pNetworkContext The network context created using POSIX sockets API.
- * @param[in] pBuffer Buffer containing the bytes to send over the network stack.
+ * @param[in] pNetworkContext The network context created using Plaintext_Connect API.
+ * @param[in] pBuffer Buffer containing the bytes to send over the network.
  * @param[in] bytesToSend Number of bytes to send over the network.
  *
  * @return Number of bytes sent if successful; negative value on error.
  */
-int32_t Plaintext_Send( NetworkContext_t pNetworkContext,
+int32_t Plaintext_Send( NetworkContext_t * pNetworkContext,
                         const void * pBuffer,
                         size_t bytesToSend );
 
