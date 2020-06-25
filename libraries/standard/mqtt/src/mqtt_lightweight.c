@@ -2077,13 +2077,20 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( MQTTTransportRecvFunc_t readFu
             status = MQTTBadResponse;
         }
     }
-    else if( ( bytesReceived == 0 ) && ( status == MQTTSuccess ) )
+    else if( ( status != MQTTBadParameter ) && ( bytesReceived == 0 ) )
     {
         status = MQTTNoDataAvailable;
     }
-    else
+
+    /* If the input packet was valid, then any other number of bytes received is
+     * a failure. */
+    else if( status != MQTTBadParameter )
     {
         status = MQTTRecvFailed;
+    }
+    else
+    {
+        /* Empty else MISRA 15.7 */
     }
 
     return status;
