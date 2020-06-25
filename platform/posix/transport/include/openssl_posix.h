@@ -165,7 +165,7 @@ OpensslStatus_t Openssl_Disconnect( NetworkContext_t pNetworkContext );
  *
  * @param[in] pNetworkContext The network context created using Openssl_Connect API.
  * @param[out] pBuffer Buffer to receive network data into.
- * @param[in] bytesToRead Number of bytes requested from the network.
+ * @param[in] bytesToRecv Number of bytes requested from the network.
  *
  * @return Number of bytes received if successful; negative value on error.
  */
