@@ -1577,6 +1577,11 @@ void test_MQTT_GetIncomingPacketTypeAndLength( void )
     /* Dummy network context - pointer to pointer to a buffer. */
     NetworkContext_t networkContext = ( NetworkContext_t ) &bufPtr;
 
+    /* Test a NULL pIncomingPacket parameter. */
+    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, networkContext, NULL );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Test a typical happy path case for a CONN ACK packet. */ 
     buffer[ 0 ] = 0x20; /* CONN ACK */
     buffer[ 1 ] = 0x02; /* Remaining length. */
 

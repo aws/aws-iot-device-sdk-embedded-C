@@ -235,7 +235,6 @@ static MQTTStatus_t validateSubscriptionSerializeParams( const MQTTSubscribeInfo
  * @param[in] pWillInfo Last Will and Testament. Pass NULL if not used.
  * @param[in] remainingLength Remaining Length of MQTT CONNECT packet.
  * @param[out] pBuffer Buffer for packet serialization.
- *
  */
 static void serializeConnectPacket( const MQTTConnectInfo_t * pConnectInfo,
                                     const MQTTPublishInfo_t * pWillInfo,
@@ -2046,8 +2045,18 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( MQTTTransportRecvFunc_t readFu
                                                   MQTTPacketInfo_t * pIncomingPacket )
 {
     MQTTStatus_t status = MQTTSuccess;
-    /* Read a single byte. */
-    int32_t bytesReceived = readFunc( networkContext, &( pIncomingPacket->type ), 1U );
+    int32_t bytesReceived = 0;
+
+    if( pIncomingPacket == NULL )
+    {
+        LogError( ( "Invalid parameter: pIncomingPacket is NULL." ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        /* Read a single byte. */
+        bytesReceived = readFunc( networkContext, &( pIncomingPacket->type ), 1U );
+    }
 
     if( bytesReceived == 1 )
     {
@@ -2068,13 +2077,20 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( MQTTTransportRecvFunc_t readFu
             status = MQTTBadResponse;
         }
     }
-    else if( bytesReceived == 0 )
+    else if( ( status != MQTTBadParameter ) && ( bytesReceived == 0 ) )
     {
         status = MQTTNoDataAvailable;
     }
-    else
+
+    /* If the input packet was valid, then any other number of bytes received is
+     * a failure. */
+    else if( status != MQTTBadParameter )
     {
         status = MQTTRecvFailed;
+    }
+    else
+    {
+        /* Empty else MISRA 15.7 */
     }
 
     return status;
