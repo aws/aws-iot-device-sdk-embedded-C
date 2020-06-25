@@ -24,9 +24,9 @@ HTTPRequestHeaders_t * allocateHttpRequestHeaders( HTTPRequestHeaders_t * pReque
     return pRequestHeaders;
 }
 
-int isValidHttpRequestHeaders( const HTTPRequestHeaders_t * pRequestHeaders )
+bool isValidHttpRequestHeaders( const HTTPRequestHeaders_t * pRequestHeaders )
 {
-    int isValid = 1;
+    bool isValid = true;
 
     if( pRequestHeaders )
     {
@@ -59,9 +59,9 @@ HTTPRequestInfo_t * allocateHttpRequestInfo( HTTPRequestInfo_t * pRequestInfo )
     return pRequestInfo;
 }
 
-int isValidHttpRequestInfo( const HTTPRequestInfo_t * pRequestInfo )
+bool isValidHttpRequestInfo( const HTTPRequestInfo_t * pRequestInfo )
 {
-    int isValid = 1;
+    bool isValid = true;
 
     if( pRequestInfo )
     {
