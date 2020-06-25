@@ -1697,7 +1697,6 @@ static IotMqttError_t _publishAsync( IotMqttConnection_t mqttConnection,
     uint8_t ** pPacketIdentifierHigh = NULL;
 
     IotMqtt_Assert( pPublishInfo != NULL );
-    IotMqtt_Assert( pCallbackInfo != NULL );
     IotMqtt_Assert( pPublishOperation != NULL );
 
     /* Create a PUBLISH operation. */
