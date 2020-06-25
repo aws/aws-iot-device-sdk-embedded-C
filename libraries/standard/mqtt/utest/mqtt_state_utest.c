@@ -487,10 +487,10 @@ void test_MQTT_UpdateStateAck( void )
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
     /* No matching record found. */
     status = MQTT_UpdateStateAck( &mqttContext, PACKET_ID, ack, operation, &state );
-    TEST_ASSERT_EQUAL( MQTTRecordNotPresent, status );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
     /* Invalid packet ID. */
     status = MQTT_UpdateStateAck( &mqttContext, 0, ack, operation, &state );
-    TEST_ASSERT_EQUAL( MQTTRecordNotPresent, status );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
     /* Invalid transitions. */
     /* Invalid transition from #MQTTPubRelPending. */
@@ -517,7 +517,7 @@ void test_MQTT_UpdateStateAck( void )
 
     /* Invalid ack type. */
     status = MQTT_UpdateStateAck( &mqttContext, 1, MQTTPubcomp + 1, operation, &state );
-    TEST_ASSERT_EQUAL( MQTTRecordNotPresent, status );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
     /* Invalid current state. */
     addToRecord( mqttContext.outgoingPublishRecords, 0, PACKET_ID, MQTTQoS2, MQTTPublishDone );
@@ -580,12 +580,6 @@ void test_MQTT_UpdateStateAck( void )
     status = MQTT_UpdateStateAck( &mqttContext, PACKET_ID, ack, operation, &state );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
     TEST_ASSERT_EQUAL( MQTTPubCompSend, state );
-    /* Incoming. PUBREL is received when record is not present. */
-    resetPublishRecords( &mqttContext );
-    state = MQTTStateNull;
-    status = MQTT_UpdateStateAck( &mqttContext, PACKET_ID, ack, operation, &state );
-    TEST_ASSERT_EQUAL( MQTTRecordNotPresent, status );
-    TEST_ASSERT_EQUAL( MQTTStateNull, state );
 
     /* QoS 2, PUBREC. */
     /* Outgoing. */
@@ -613,7 +607,7 @@ void test_MQTT_UpdateStateAck( void )
     TEST_ASSERT_EQUAL( MQTTPubRelSend, state );
 
     /* Receiving a PUBREC will move the record to the end.
-     * In this case, the record wil be moved to index 2. */
+    * In this case, the record wil be moved to index 2. */
     TEST_ASSERT_EQUAL( PACKET_ID, mqttContext.outgoingPublishRecords[ 2 ].packetId );
     TEST_ASSERT_EQUAL( MQTTQoS2, mqttContext.outgoingPublishRecords[ 2 ].qos );
     TEST_ASSERT_EQUAL( MQTTPubRelSend, mqttContext.outgoingPublishRecords[ 2 ].publishState );
@@ -648,12 +642,6 @@ void test_MQTT_UpdateStateAck( void )
     status = MQTT_UpdateStateAck( &mqttContext, PACKET_ID, ack, operation, &state );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
     TEST_ASSERT_EQUAL( MQTTPublishDone, state );
-
-    /* Incoming. A PUBCOMP is send even when no record exists. This happens when PUBREL
-     * is received when there is no state record exists. */
-    resetPublishRecords( &mqttContext );
-    status = MQTT_UpdateStateAck( &mqttContext, PACKET_ID, ack, operation, &state );
-    TEST_ASSERT_EQUAL( MQTTRecordNotPresent, status );
 }
 
 /* ========================================================================== */

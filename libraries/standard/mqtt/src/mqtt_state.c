@@ -27,16 +27,19 @@
 
 /**
  * @brief Set a bit in an 16-bit unsigned integer.
+ *
+ * @param[in] x The 16-bit unsigned integer to set a bit.
+ * @param[in] position The position at which the bit need to set.
  */
-#define UINT16_SET_BIT( x, position )      ( ( x ) = ( uint16_t ) ( ( x ) | ( 0x01U << ( position ) ) ) )
+#define UINT16_SET_BIT( x, position )      ( ( x ) = ( uint16_t ) ( ( x ) | ( ( uint16_t ) 0x01U << ( ( uint16_t ) position ) ) ) )
 
 /**
- * @brief Macro for checking if a bit is set in a 2-byte unsigned int.
+ * @brief Macro for checking if a bit is set in a 16-bit unsigned integer.
  *
  * @param[in] x The unsigned int to check.
  * @param[in] position Which bit to check.
  */
-#define UINT16_CHECK_BIT( x, position )    ( ( ( x ) & ( 0x01U << ( position ) ) ) == ( 0x01U << ( position ) ) )
+#define UINT16_CHECK_BIT( x, position )    ( ( ( x ) & ( ( uint16_t ) 0x01U << ( ( uint16_t ) position ) ) ) == ( 0x01U << ( ( uint16_t ) position ) ) )
 
 /*-----------------------------------------------------------*/
 
@@ -171,9 +174,9 @@ static uint16_t stateSelect( const MQTTContext_t * pMqttContext,
  * @return #MQTTIllegalState, or #MQTTSuccess.
  */
 static MQTTStatus_t updateStateAck( MQTTPubAckInfo_t * records,
-                                         size_t recordIndex,
-                                         MQTTPublishState_t currentState,
-                                         MQTTPublishState_t * pNewState );
+                                    size_t recordIndex,
+                                    MQTTPublishState_t currentState,
+                                    MQTTPublishState_t * pNewState );
 
 /**
  * @brief Update the state record for a PUBLISH packet after validating
@@ -190,13 +193,13 @@ static MQTTStatus_t updateStateAck( MQTTPubAckInfo_t * records,
  *
  * @return #MQTTIllegalState, #MQTTStateCollision or #MQTTSuccess.
  */
-MQTTStatus_t updateStatePublish( MQTTContext_t * pMqttContext,
-                                 size_t recordIndex,
-                                 uint16_t packetId,
-                                 MQTTStateOperation_t opType,
-                                 MQTTQoS_t qos,
-                                 MQTTPublishState_t currentState,
-                                 MQTTPublishState_t * pNewState );
+static MQTTStatus_t updateStatePublish( MQTTContext_t * pMqttContext,
+                                        size_t recordIndex,
+                                        uint16_t packetId,
+                                        MQTTStateOperation_t opType,
+                                        MQTTQoS_t qos,
+                                        MQTTPublishState_t currentState,
+                                        MQTTPublishState_t * pNewState );
 
 /*-----------------------------------------------------------*/
 
@@ -440,110 +443,39 @@ static void compactRecords( MQTTPubAckInfo_t * records,
                             size_t recordCount )
 {
     size_t index = 0;
-    int32_t emptyIndex = -1, copyBeginIndex = -1;
+    size_t emptyIndex = MQTT_STATE_ARRAY_MAX_COUNT;
 
     assert( records != NULL );
 
     /* Find the empty spots and fill those with non empty values. */
     for( ; index < recordCount; index++ )
     {
-        /* Check if this is the first empty spot.
-         * For example, assume all the non empty spots in the array
-         * are indicated by a 1 and empty spots by a 0.
-         * In an array of size 10 as shown below
-         * 1 1 1 0 0 0 1 1 0 1.
-         * Consider the example for the first instance of moving elements.
-         * emptyIndex will be 3. */
-        if( ( emptyIndex == -1 ) &&
-            ( records[ index ].packetId == MQTT_PACKET_ID_INVALID ) )
+        /* Find the first empty spot. */
+        if( records[ index ].packetId == MQTT_PACKET_ID_INVALID )
         {
-            emptyIndex = index;
-        }
-
-        /* Find first index at which there is a non empty spot after the
-         * empty spot/spots.
-         * In an array of size 10 as shown below
-         * 1 1 1 0 0 0 1 1 0 1.
-         * Consider the example for the first instance of moving elements.
-         * emptyIndex will be 3 and copyBeginIndex will be 6. */
-        else if( ( emptyIndex != -1 ) && ( copyBeginIndex == -1 ) )
-        {
-            if( ( records[ index ].packetId != MQTT_PACKET_ID_INVALID ) )
+            if( emptyIndex == MQTT_STATE_ARRAY_MAX_COUNT )
             {
-                copyBeginIndex = index;
-            }
-        }
-
-        /* Find the later index at which there is an empty spot.
-         * In an array of size 10 as shown below
-         * 1 1 1 0 0 0 1 1 0 1.
-         * Consider the example for the first instance of moving elements.
-         * emptyIndex will be 3 and copyBeginIndex will be 6. An empty spot
-         * will be found after the copyBeginIndex at 8.*/
-        else if( ( copyBeginIndex != -1 ) )
-        {
-            if( ( records[ index ].packetId == MQTT_PACKET_ID_INVALID ) )
-            {
-                /* Copy over all the valid records to the empty index.
-                 * In an array of size 10 as shown below
-                 * 1 1 1 0 0 0 1 1 0 1.
-                 * Consider the example for the first instance of moving elements.
-                 * emptyIndex will be 3 and copyBeginIndex will be 6. An empty spot
-                 * will be found after the copyBeginIndex at 8.
-                 * After copying and clearing data the array will be in the state below.
-                 * 1 1 1 1 1 0 0 0 0 1. */
-                ( void ) memcpy( &records[ emptyIndex ],
-                                 &records[ copyBeginIndex ],
-                                 ( index - copyBeginIndex ) * sizeof( records[ index ] ) );
-
-                /* Consider the example for the first instance of moving elements.
-                 * The array will be in the below state after copying and clearing.
-                 * 1 1 1 1 1 0 0 0 0 1.
-                 * emptyIndex is updated to the index right after the index at which
-                 * final element is copied over.
-                 * emptyIndex will be 5. */
-                emptyIndex += ( index - copyBeginIndex );
-                copyBeginIndex = -1;
-
-                /* Clear all the records that is already copied over and exists
-                 * after the emptyIndex. */
-                ( void ) memset( &records[ emptyIndex ],
-                                 0x00,
-                                 ( index - emptyIndex ) * sizeof( records[ index ] ) );
+                emptyIndex = index;
             }
         }
         else
         {
-            /* Valid records at this index. Continue loop. */
+            if( emptyIndex != MQTT_STATE_ARRAY_MAX_COUNT )
+            {
+                /* Copy over the contents at non empty index to empty index. */
+                records[ emptyIndex ].packetId = records[ index ].packetId;
+                records[ emptyIndex ].qos = records[ index ].qos;
+                records[ emptyIndex ].publishState = records[ index ].publishState;
+
+                /* Clear the record at current non empty index. */
+                records[ index ].packetId = MQTT_PACKET_ID_INVALID;
+                records[ index ].qos = MQTTQoS0;
+                records[ index ].publishState = MQTTStateNull;
+
+                /* Advance the emptyIndex. */
+                emptyIndex++;
+            }
         }
-    }
-
-    /* Check if there is another copy required.
-     * In the example mentioned above, at this step, array will be in the
-     * state,
-     * 1 1 1 1 1 0 0 0 0 1.
-     * emptyIndex will be 5, copyBeginIndex will be 9 and index will be
-     * 10(recordCount). */
-    if( copyBeginIndex != -1 )
-    {
-        /* Copy over all the valid records to the empty index.
-         * In the example mentioned above, at this step, array will be in the
-         * state before copying and clearing,
-         * 1 1 1 1 1 0 0 0 0 1.
-         * After copying and clearing array will be in state
-         * 1 1 1 1 1 1 0 0 0 0. */
-        ( void ) memcpy( &records[ emptyIndex ],
-                         &records[ copyBeginIndex ],
-                         ( index - copyBeginIndex ) * sizeof( records[ index ] ) );
-
-        /* After copying and clearing array will be in state
-         * 1 1 1 1 1 1 0 0 0 0. emptyIndex will need to be updated to 6. */
-        emptyIndex += ( index - copyBeginIndex );
-
-        /* Clear all the records that is already copied over and exists . */
-        ( void ) memset( &records[ emptyIndex ],
-                         0x00,
-                         ( index - emptyIndex ) * sizeof( records[ index ] ) );
     }
 }
 
@@ -556,7 +488,7 @@ static MQTTStatus_t addRecord( MQTTPubAckInfo_t * records,
                                MQTTPublishState_t publishState )
 {
     MQTTStatus_t status = MQTTNoMemory;
-    int32_t index = 0, emptyIndex = -1, copyBeginIndex = -1;
+    int32_t index = 0;
     size_t availableIndex = recordCount;
     bool validEntryFound = false;
 
@@ -627,9 +559,9 @@ static void updateRecord( MQTTPubAckInfo_t * records,
     if( shouldDelete == true )
     {
         /* Clear the record. */
-        ( void ) memset( &records[ recordIndex ],
-                         0x00,
-                         sizeof( records[ recordIndex ] ) );
+        records[ recordIndex ].packetId = MQTT_PACKET_ID_INVALID;
+        records[ recordIndex ].qos = MQTTQoS0;
+        records[ recordIndex ].publishState = MQTTStateNull;
     }
     else
     {
@@ -644,17 +576,18 @@ static void updateRecord( MQTTPubAckInfo_t * records,
             packetId = records[ recordIndex ].packetId;
             qos = records[ recordIndex ].qos;
 
-            /* Delete record. */
-            ( void ) memset( &records[ recordIndex ],
-                             0x00,
-                             sizeof( records[ recordIndex ] ) );
+            /* Clear the record. */
+            records[ recordIndex ].packetId = MQTT_PACKET_ID_INVALID;
+            records[ recordIndex ].qos = MQTTQoS0;
+            records[ recordIndex ].publishState = MQTTStateNull;
 
-            /* Add it as a new record to the end. */
-            addRecord( records,
-                       MQTT_STATE_ARRAY_MAX_COUNT,
-                       packetId,
-                       qos,
-                       newState );
+            /* Add it as a new record to the end. A deletion makes room for
+             * at least one more packet. So ignore return value here. */
+            ( void ) addRecord( records,
+                                MQTT_STATE_ARRAY_MAX_COUNT,
+                                packetId,
+                                qos,
+                                newState );
         }
         else
         {
@@ -670,8 +603,9 @@ static uint16_t stateSelect( const MQTTContext_t * pMqttContext,
                              MQTTStateCursor_t * pCursor )
 {
     uint16_t packetId = MQTT_PACKET_ID_INVALID;
-    uint16_t stateCheck = 0U, outgoingStates = 0U;
+    uint16_t outgoingStates = 0U;
     const MQTTPubAckInfo_t * records = NULL;
+    bool stateCheck = false;
 
     assert( pMqttContext != NULL );
     assert( searchStates != 0U );
@@ -691,9 +625,9 @@ static uint16_t stateSelect( const MQTTContext_t * pMqttContext,
     while( *pCursor < MQTT_STATE_ARRAY_MAX_COUNT )
     {
         /* Check if any of the search states are present. */
-        stateCheck = UINT16_CHECK_BIT( searchStates, records[ *pCursor ].publishState );
+        stateCheck = UINT16_CHECK_BIT( searchStates, records[ *pCursor ].publishState ) ? true : false;
 
-        if( stateCheck > 0U )
+        if( stateCheck == true )
         {
             packetId = records[ *pCursor ].packetId;
             ( *pCursor )++;
@@ -758,9 +692,9 @@ MQTTPublishState_t MQTT_CalculateStateAck( MQTTPubAckType_t packetType,
 /*-----------------------------------------------------------*/
 
 static MQTTStatus_t updateStateAck( MQTTPubAckInfo_t * records,
-                                         size_t recordIndex,
-                                         MQTTPublishState_t currentState,
-                                         MQTTPublishState_t * pNewState )
+                                    size_t recordIndex,
+                                    MQTTPublishState_t currentState,
+                                    MQTTPublishState_t * pNewState )
 {
     MQTTStatus_t status = MQTTIllegalState;
     bool shouldDeleteRecord = false;
@@ -803,13 +737,13 @@ static MQTTStatus_t updateStateAck( MQTTPubAckInfo_t * records,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t updateStatePublish( MQTTContext_t * pMqttContext,
-                                 size_t recordIndex,
-                                 uint16_t packetId,
-                                 MQTTStateOperation_t opType,
-                                 MQTTQoS_t qos,
-                                 MQTTPublishState_t currentState,
-                                 MQTTPublishState_t * pNewState )
+static MQTTStatus_t updateStatePublish( MQTTContext_t * pMqttContext,
+                                        size_t recordIndex,
+                                        uint16_t packetId,
+                                        MQTTStateOperation_t opType,
+                                        MQTTQoS_t qos,
+                                        MQTTPublishState_t currentState,
+                                        MQTTPublishState_t * pNewState )
 {
     MQTTStatus_t status = MQTTSuccess;
     MQTTPublishState_t newState = MQTTStateNull;
@@ -928,7 +862,6 @@ MQTTStatus_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
     MQTTStatus_t mqttStatus = MQTTSuccess;
     size_t recordIndex = MQTT_STATE_ARRAY_MAX_COUNT;
     MQTTQoS_t foundQoS = MQTTQoS0;
-    bool isTransitionValid = false;
 
     if( ( pMqttContext == NULL ) || ( pNewState == NULL ) )
     {
@@ -1001,14 +934,13 @@ MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
     MQTTQoS_t qos = MQTTQoS0;
     size_t recordIndex = MQTT_STATE_ARRAY_MAX_COUNT;
     MQTTPubAckInfo_t * records = NULL;
-    MQTTStatus_t status = MQTTSuccess;
+    MQTTStatus_t status = MQTTBadParameter;
 
     if( ( pMqttContext == NULL ) || ( pNewState == NULL ) )
     {
         LogError( ( "Argument cannot be NULL: pMqttContext=%p, pNewState=%p.",
                     pMqttContext,
                     pNewState ) );
-        status = MQTTBadParameter;
     }
     else
     {
@@ -1036,15 +968,9 @@ MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
         status = updateStateAck( records, recordIndex, currentState, &newState );
         *pNewState = newState;
     }
-    else if( status == MQTTSuccess )
-    {
-        status = MQTTRecordNotPresent;
-        LogWarn( ( "No matching record found for ack with packet id %u.",
-                   packetId ) );
-    }
     else
     {
-        /* Only bad parameter can reach here. Nothing to handle. */
+        LogError( ( "No matching record found for publish %u.", packetId ) );
     }
 
     return status;
@@ -1057,7 +983,6 @@ uint16_t MQTT_AckToResend( const MQTTContext_t * pMqttContext,
                            MQTTPublishState_t * pState )
 {
     uint16_t packetId = MQTT_PACKET_ID_INVALID;
-    MQTTStateCursor_t cursorBegin;
     uint16_t searchStates = 0U;
 
     /* Validate arguments. */
@@ -1093,7 +1018,6 @@ uint16_t MQTT_PublishToResend( const MQTTContext_t * pMqttContext,
                                MQTTStateCursor_t * pCursor )
 {
     uint16_t packetId = MQTT_PACKET_ID_INVALID;
-    MQTTStateCursor_t cursorBegin;
     uint16_t searchStates = 0U;
 
     /* Validate arguments. */
