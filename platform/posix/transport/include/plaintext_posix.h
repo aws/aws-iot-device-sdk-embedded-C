@@ -62,7 +62,7 @@ struct NetworkContext
 /**
  * @brief Establish TCP connection to server.
  *
- * @param[in] pNetworkContext The network context.
+ * @param[out] pNetworkContext The network context created using POSIX sockets API.
  * @param[in] pServerInfo Server connection info.
  * @param[in] sendTimeout Timeout for transport send.
  * @param[in] recvTimeout Timeout for transport recv.
@@ -80,7 +80,7 @@ SocketStatus_t Plaintext_Connect( NetworkContext_t pNetworkContext,
 /**
  * @brief Close TCP connection to server.
  *
- * @param[in] pNetworkContext The network context.
+ * @param[in] pNetworkContext The network context to close the connection.
  *
  * @return #SOCKETS_SUCCESS if successful; #SOCKETS_INVALID_PARAMETER on error.
  */
@@ -92,7 +92,7 @@ SocketStatus_t Plaintext_Disconnect( const NetworkContext_t pNetworkContext );
  * This can be used as #TransportInterface.recv function for receiving data
  * from the network.
  *
- * @param[in] pNetworkContext Implementation-defined context (TCP socket descriptor).
+ * @param[in] pNetworkContext The network context created using POSIX sockets API.
  * @param[out] pBuffer Buffer to receive network data into.
  * @param[in] bytesToRecv Number of bytes requested from the network.
  *
@@ -108,7 +108,7 @@ int32_t Plaintext_Recv( NetworkContext_t pNetworkContext,
  * This can be used as the #TransportInterface.send function to send data
  * over the network.
  *
- * @param[in] pNetworkContext Implementation-defined context (TCP socket descriptor).
+ * @param[in] pNetworkContext The network context created using POSIX sockets API.
  * @param[in] pBuffer Buffer containing the bytes to send over the network stack.
  * @param[in] bytesToSend Number of bytes to send over the network.
  *

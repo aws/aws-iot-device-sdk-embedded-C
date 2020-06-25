@@ -83,9 +83,9 @@ static void logPath( const char * path,
  *
  * @param[out] pSslContext Destination for the trusted server root CA.
  * @param[in] pRootCaPath Filepath string to the trusted server root CA.
- * @param[in] rootCaPathLen brief Length associated with trusted server root CA.
+ * @param[in] rootCaPathLen Length associated with trusted server root CA.
  *
- * @return 1 on success; -1 or 1 on failure;
+ * @return 1 on success; -1, 0 on failure;
  */
 static int setRootCa( SSL_CTX * pSslContext,
                       const char * pRootCaPath,
@@ -96,9 +96,9 @@ static int setRootCa( SSL_CTX * pSslContext,
  *
  * @param[out] pSslContext Destination for the client certificate.
  * @param[in] pClientCertPath Filepath string to the client certificate.
- * @param[in] clientCertPathLen brief Length associated with client certificate.
+ * @param[in] clientCertPathLen Length associated with client certificate.
  *
- * @return 1 on success; otherwise, failure;
+ * @return 1 on success; 0 failure;
  */
 static int setClientCertificate( SSL_CTX * pSslContext,
                                  const char * pClientCertPath,
@@ -109,9 +109,9 @@ static int setClientCertificate( SSL_CTX * pSslContext,
  *
  * @param[out] pSslContext Destination for the private key.
  * @param[in] pPrivateKeyPath Filepath string to the client certificate's private key.
- * @param[in] privateKeyPathLen brief Length associated with client certificate's private key.
+ * @param[in] privateKeyPathLen Length associated with client certificate's private key.
  *
- * @return 1 on success; otherwise, failure;
+ * @return 1 on success; 0 on failure;
  */
 static int setPrivateKey( SSL_CTX * pSslContext,
                           const char * pPrivateKeyPath,
@@ -127,7 +127,7 @@ static int setPrivateKey( SSL_CTX * pSslContext,
  * @param[out] pSslContext Destination for the imported credentials.
  * @param[in] pOpensslCredentials TLS credentials to be validated.
  *
- * @return 1 on success; otherwise, failure;
+ * @return 1 on success; -1, 0 on failure;
  */
 static int setCredentials( SSL_CTX * pSslContext,
                            const OpensslCredentials_t * pOpensslCredentials );
@@ -218,15 +218,15 @@ static int setRootCa( SSL_CTX * pSslContext,
     {
         sslStatus = X509_STORE_add_cert( SSL_CTX_get_cert_store( pSslContext ),
                                          pRootCa );
-    }
 
-    if( sslStatus != 1 )
-    {
-        LogError( ( "X509_STORE_add_cert failed to add root CA to certificate store." ) );
-    }
-    else
-    {
-        LogDebug( ( "Successfully imported root CA." ) );
+        if( sslStatus != 1 )
+        {
+            LogError( ( "X509_STORE_add_cert failed to add root CA to certificate store." ) );
+        }
+        else
+        {
+            LogDebug( ( "Successfully imported root CA." ) );
+        }
     }
 
     return sslStatus;
@@ -249,10 +249,10 @@ static int setClientCertificate( SSL_CTX * pSslContext,
                      clientCertPathLen );
     clientCertPathNullTerm[ clientCertPathLen ] = '\0';
 
+    /* Import the client certificate. */
     sslStatus = SSL_CTX_use_certificate_chain_file( pSslContext,
                                                     clientCertPathNullTerm );
 
-    /* Import the client certificate. */
     if( sslStatus != 1 )
     {
         LogError( ( "SSL_CTX_use_certificate_chain_file failed to import "
@@ -290,11 +290,11 @@ static int setPrivateKey( SSL_CTX * pSslContext,
                      privateKeyPathLen );
     privateKeyPathNullTerm[ privateKeyPathLen ] = '\0';
 
+    /* Import the client certificate private key. */
     sslStatus = SSL_CTX_use_PrivateKey_file( pSslContext,
                                              privateKeyPathNullTerm,
                                              SSL_FILETYPE_PEM );
 
-    /* Import the client certificate private key. */
     if( sslStatus != 1 )
     {
         LogError( ( "SSL_CTX_use_PrivateKey_file failed to import client "
@@ -505,10 +505,10 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t pNetworkContext,
     /* Set credentials for the TLS handshake. */
     if( returnStatus == OPENSSL_SUCCESS )
     {
+        /* Setup authentication. */
         sslStatus = setCredentials( pSslContext,
                                     pOpensslCredentials );
 
-        /* Setup authentication. */
         if( sslStatus != 1 )
         {
             LogError( ( "Setting up credentials failed." ) );
@@ -648,8 +648,8 @@ int32_t Openssl_Recv( NetworkContext_t pNetworkContext,
 
     if( bytesReceived <= 0 )
     {
-        LogError( ( "Transport send of OpenSSL failed"
-                    " with status %d.", bytesReceived ) );
+        LogError( ( "SSL_read of OpenSSL failed to receive data: "
+                    " status=%d.", bytesReceived ) );
     }
 
     return bytesReceived;
@@ -667,8 +667,8 @@ int32_t Openssl_Send( NetworkContext_t pNetworkContext,
 
     if( bytesSent <= 0 )
     {
-        LogError( ( "Transport send of OpenSSL failed"
-                    " with status %d.", bytesSent ) );
+        LogError( ( "SSL_write of OpenSSL failed to send data: "
+                    " status=%d.", bytesSent ) );
     }
 
     return bytesSent;

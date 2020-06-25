@@ -69,9 +69,9 @@ extern int errno;
 /**
  * @brief Resolve a host name.
  *
- * @brief param[in] pHostName Server host name.
- * @brief param[in] hostNameLength Length associated with host name.
- * @brief param[out] pListHead List containing resolved DNS records.
+ * @param[in] pHostName Server host name.
+ * @param[in] hostNameLength Length associated with host name.
+ * @param[out] pListHead List containing resolved DNS records.
  *
  * @return #SOCKETS_SUCCESS if successful; #SOCKETS_DNS_FAILURE, #SOCKETS_CONNECT_FAILURE on error.
  */
@@ -80,14 +80,14 @@ static SocketStatus_t resolveHostName( const char * pHostName,
                                        struct addrinfo ** pListHead );
 
 /**
- * @brief Traverse list of DNS records and return successfully if able to connect to one.
+ * @brief Traverse list of DNS records until a connection is established.
  *
- * @brief param[in] pListHead List containing resolved DNS records.
- * @brief param[in] pHostName Server host name.
- * @brief param[in] hostNameLength Length associated with host name.
- * @brief param[in] port Server port in host-order.
- * @brief param[in] pTcpSocket Pointer to the socket descriptor.
- * @brief param[in] maxAttempts Number of DNS records to attempt connection.
+ * @param[in] pListHead List containing resolved DNS records.
+ * @param[in] pHostName Server host name.
+ * @param[in] hostNameLength Length associated with host name.
+ * @param[in] port Server port in host-order.
+ * @param[out] pTcpSocket The output parameter to return the created socket.
+ * @param[in] maxAttempts Number of DNS records to attempt connection.
  *
  * @note If maxAttempts is negative, attempt to connect to all DNS records
  * until successful.
@@ -340,7 +340,7 @@ SocketStatus_t Sockets_Connect( int * pTcpSocket,
     }
     else if( pTcpSocket == NULL )
     {
-        LogError( ( "Parameter check failed: pOpensslCredentials is NULL." ) );
+        LogError( ( "Parameter check failed: pTcpSocket is NULL." ) );
         returnStatus = SOCKETS_INVALID_PARAMETER;
     }
     else if( pServerInfo->hostNameLength == 0 )

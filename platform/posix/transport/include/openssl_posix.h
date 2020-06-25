@@ -129,7 +129,7 @@ typedef struct OpensslCredentials
 /**
  * @brief Sets up a TLS session on top of a TCP connection using the OpenSSL API.
  *
- * @param[in] pNetworkContext Application-defined context (TCP socket and SSL context).
+ * @param[out] pNetworkContext The output parameter to return the created network context.
  * @param[in] pServerInfo Server connection info.
  * @param[in] pOpensslCredentials Credentials for the TLS connection.
  * @param[in] sendTimeoutMs Timeout for transport send.
@@ -150,7 +150,8 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t pNetworkContext,
 /**
  * @brief Closes a TLS session on top of a TCP connection using the OpenSSL API.
  *
- * @param[in] pNetworkContext Application-defined context (TCP socket and SSL context).
+ * @param[out] pNetworkContext The output parameter to end the session and
+ * clean the created network context.
  *
  * @return #OPENSSL_SUCCESS on success; #OPENSSL_INVALID_PARAMETER on failure.
  */
@@ -162,7 +163,7 @@ OpensslStatus_t Openssl_Disconnect( NetworkContext_t pNetworkContext );
  * This can be used as #TransportInterface.recv function for receiving data
  * from the network.
  *
- * @param[in] pNetworkContext Implementation-defined context (TCP socket and SSL context).
+ * @param[in] pNetworkContext The network context created using Openssl_Connect API.
  * @param[out] pBuffer Buffer to receive network data into.
  * @param[in] bytesToRead Number of bytes requested from the network.
  *
@@ -178,7 +179,7 @@ int32_t Openssl_Recv( NetworkContext_t pNetworkContext,
  * This can be used as the #TransportInterface.send function to send data
  * over the network.
  *
- * @param[in] pNetworkContext Implementation-defined context (TCP socket and SSL context).
+ * @param[in] pNetworkContext The network context created using Openssl_Connect API.
  * @param[in] pBuffer Buffer containing the bytes to send over the network stack.
  * @param[in] bytesToSend Number of bytes to send over the network.
  *
