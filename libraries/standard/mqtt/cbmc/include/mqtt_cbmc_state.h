@@ -20,7 +20,7 @@
  */
 
 /**
- * Proof model for malloc that can fail and return NULL.
+ * @brief Proof model for malloc that can fail and return NULL.
  *
  * @param[in] size The size in bytes of memory to allocate.
  * @return NULL or requested memory.

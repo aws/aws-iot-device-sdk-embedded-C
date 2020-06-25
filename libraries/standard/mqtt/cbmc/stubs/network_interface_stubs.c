@@ -19,14 +19,28 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-/**
- * Application defined network interface receive function.
- *
- * @param[in] context Application defined network interface context.
- * @param[out] pBuffer MQTT network receive buffer.
- * @param[in] bytesToRecv MQTT requested bytes.
- * @return Any value from INT32_MIN to INT32_MAX.
- */
+#include "mqtt.h"
+#include "network_interface_stubs.h"
+
 int32_t NetworkInterfaceReceiveStub( NetworkContext_t context,
                                      void * pBuffer,
-                                     size_t bytesToRecv );
+                                     size_t bytesToRecv )
+{
+    __CPROVER_assert( context != NULL,
+                      "IotNetworkInterfaceReceive pConnection is not NULL." );
+
+    __CPROVER_assert( pBuffer != NULL,
+                      "IotNetworkInterfaceReceive pBuffer is not NULL." );
+
+    __CPROVER_assert( __CPROVER_w_ok( pBuffer, bytesToRecv ),
+                      "pBuffer is writable up to bytesToRecv." );
+
+    __CPROVER_havoc_object( pBuffer );
+
+    /* This is unbounded as the MQTT code should be able to safely handle any
+     * int32_t value returned from the application defined network receive
+     * implementation. */
+    int32_t bytesOrError;
+
+    return bytesOrError;
+}

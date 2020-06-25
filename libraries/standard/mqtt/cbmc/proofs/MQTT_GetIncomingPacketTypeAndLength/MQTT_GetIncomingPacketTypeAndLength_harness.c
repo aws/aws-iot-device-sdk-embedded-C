@@ -24,7 +24,7 @@
  * @brief Implements the proof harness for MQTT_GetIncomingPacketTypeAndLength function.
  */
 #include "mqtt.h"
-#include "NetworkInterfaceReceiveStub.h"
+#include "network_interface_stubs.h"
 #include "mqtt_cbmc_state.h"
 
 void harness()
