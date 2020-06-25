@@ -154,11 +154,34 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
  *
  * @param[in] pContext MQTT Connection context.
  * @param[in] pIncomingPacket Incoming packet.
+ * @param[in] manageKeepAlive Flag indicating if PINGRESPs should not be given
+ * to the application
  *
  * @return MQTTSuccess, MQTTIllegalState, or deserialization error.
  */
 static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
-                                       MQTTPacketInfo_t * pIncomingPacket );
+                                       MQTTPacketInfo_t * pIncomingPacket,
+                                       bool manageKeepAlive );
+
+/**
+ * @brief Run a single iteration of the receive loop.
+ *
+ * @param[in] pContext MQTT Connection context.
+ * @param[in] remainingTimeMs Remaining time for the loop in milliseconds.
+ * @param[in] manageKeepAlive Flag indicating if keep alive should be handled.
+ *
+ * @return #MQTTRecvFailed if a network error occurs during reception;
+ * #MQTTSendFailed if a network error occurs while sending an ACK or PINGREQ;
+ * #MQTTBadResponse if an invalid packet is received;
+ * #MQTTKeepAliveTimeout if the server has not sent a PINGRESP before
+ * pContext->pingRespTimeoutMs milliseconds;
+ * #MQTTIllegalState if an incoming QoS 1/2 publish or ack causes an
+ * invalid transition for the internal state machine;
+ * #MQTTSuccess on success.
+ */
+static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
+                                            uint32_t remainingTimeMs,
+                                            bool manageKeepAlive );
 
 /**
  * @brief Validates parameters of #MQTT_Subscribe or #MQTT_Unsubscribe.
@@ -221,10 +244,12 @@ static int32_t sendPacket( MQTTContext_t * pContext,
     uint32_t sendTime = 0U;
 
     assert( pContext != NULL );
+    assert( pContext->callbacks.getTime != NULL );
+
+    bytesRemaining = bytesToSend;
 
     /* Record the time of transmission. */
     sendTime = pContext->callbacks.getTime();
-    bytesRemaining = bytesToSend;
 
     /* Loop until the entire packet is sent. */
     while( bytesRemaining > 0UL )
@@ -252,7 +277,7 @@ static int32_t sendPacket( MQTTContext_t * pContext,
         }
     }
 
-    /* Update time of last transmission if the entire packet was successfully sent. */
+    /* Update time of last transmission if the entire packet is successfully sent. */
     if( totalBytesSent > 0 )
     {
         pContext->lastPacketTime = sendTime;
@@ -313,16 +338,18 @@ static int32_t recvExact( const MQTTContext_t * pContext,
     uint8_t * pIndex = NULL;
     size_t bytesRemaining = bytesToRecv;
     int32_t totalBytesRecvd = 0, bytesRecvd;
-    uint32_t entryTimeMs = 0U;
+    uint32_t entryTimeMs = 0U, elapsedTimeMs = 0U;
     MQTTTransportRecvFunc_t recvFunc = NULL;
     MQTTGetCurrentTimeFunc_t getTimeStampMs = NULL;
     bool receiveError = false;
 
     assert( pContext != NULL );
     assert( bytesToRecv <= pContext->networkBuffer.size );
+    assert( pContext->callbacks.getTime != NULL );
     pIndex = pContext->networkBuffer.pBuffer;
     recvFunc = pContext->transportInterface.recv;
     getTimeStampMs = pContext->callbacks.getTime;
+
     entryTimeMs = getTimeStampMs();
 
     while( ( bytesRemaining > 0U ) && ( receiveError == false ) )
@@ -345,8 +372,9 @@ static int32_t recvExact( const MQTTContext_t * pContext,
             receiveError = true;
         }
 
-        if( ( bytesRemaining > 0U ) &&
-            ( calculateElapsedTime( getTimeStampMs(), entryTimeMs ) > timeoutMs ) )
+        elapsedTimeMs = calculateElapsedTime( getTimeStampMs(), entryTimeMs );
+
+        if( ( bytesRemaining > 0U ) && ( elapsedTimeMs >= timeoutMs ) )
         {
             LogError( ( "Time expired while receiving packet." ) );
             receiveError = true;
@@ -365,14 +393,16 @@ static MQTTStatus_t discardPacket( const MQTTContext_t * pContext,
     MQTTStatus_t status = MQTTRecvFailed;
     int32_t bytesReceived = 0;
     size_t bytesToReceive = 0U;
-    uint32_t totalBytesReceived = 0U, entryTimeMs, elapsedTimeMs;
+    uint32_t totalBytesReceived = 0U, entryTimeMs = 0U, elapsedTimeMs = 0U;
     uint32_t remainingTimeMs = timeoutMs;
     MQTTGetCurrentTimeFunc_t getTimeStampMs = NULL;
     bool receiveError = false;
 
     assert( pContext != NULL );
+    assert( pContext->callbacks.getTime != NULL );
     bytesToReceive = pContext->networkBuffer.size;
     getTimeStampMs = pContext->callbacks.getTime;
+
     entryTimeMs = getTimeStampMs();
 
     while( ( totalBytesReceived < remainingLength ) && ( receiveError == false ) )
@@ -395,9 +425,10 @@ static MQTTStatus_t discardPacket( const MQTTContext_t * pContext,
         else
         {
             totalBytesReceived += ( uint32_t ) bytesReceived;
-            /* Update remaining time and check for timeout. */
+
             elapsedTimeMs = calculateElapsedTime( getTimeStampMs(), entryTimeMs );
 
+            /* Update remaining time and check for timeout. */
             if( elapsedTimeMs < timeoutMs )
             {
                 remainingTimeMs = timeoutMs - elapsedTimeMs;
@@ -641,15 +672,23 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
 /*-----------------------------------------------------------*/
 
 static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
-                                       MQTTPacketInfo_t * pIncomingPacket )
+                                       MQTTPacketInfo_t * pIncomingPacket,
+                                       bool manageKeepAlive )
 {
     MQTTStatus_t status = MQTTBadResponse;
     MQTTPublishState_t publishRecordState = MQTTStateNull;
     uint16_t packetIdentifier;
     /* Need a dummy variable for MQTT_DeserializeAck(). */
     bool sessionPresent = false;
+
+    /* We should always invoke the app callback unless we receive a PINGRESP
+     * and are managing keep alive, or if we receive an unknown packet. We
+     * initialize this to false since the callback must be invoked before
+     * sending any PUBREL or PUBCOMP. However, for other cases, we invoke it
+     * at the end to reduce the complexity of this function. */
+    bool invokeAppCallback = false;
     MQTTPubAckType_t ackType;
-    MQTTEventCallback_t appCallback;
+    MQTTEventCallback_t appCallback = NULL;
 
     assert( pContext != NULL );
     assert( pIncomingPacket != NULL );
@@ -692,12 +731,12 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
             break;
 
         case MQTT_PACKET_TYPE_PINGRESP:
-            pContext->waitingForPingResp = false;
             status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, &sessionPresent );
+            invokeAppCallback = ( manageKeepAlive ) ? false : true;
 
-            if( status == MQTTSuccess )
+            if( ( status == MQTTSuccess ) && ( manageKeepAlive == true ) )
             {
-                appCallback( pContext, pIncomingPacket, packetIdentifier, NULL );
+                pContext->waitingForPingResp = false;
             }
 
             break;
@@ -706,12 +745,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
         case MQTT_PACKET_TYPE_UNSUBACK:
             /* Deserialize and give these to the app provided callback. */
             status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, &sessionPresent );
-
-            if( status == MQTTSuccess )
-            {
-                appCallback( pContext, pIncomingPacket, packetIdentifier, NULL );
-            }
-
+            invokeAppCallback = true;
             break;
 
         default:
@@ -720,6 +754,81 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
                         pIncomingPacket->type ) );
             status = MQTTBadResponse;
             break;
+    }
+
+    if( ( status == MQTTSuccess ) && ( invokeAppCallback == true ) )
+    {
+        appCallback( pContext, pIncomingPacket, packetIdentifier, NULL );
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
+                                            uint32_t remainingTimeMs,
+                                            bool manageKeepAlive )
+{
+    MQTTStatus_t status = MQTTSuccess;
+    MQTTPacketInfo_t incomingPacket;
+
+    assert( pContext != NULL );
+
+    status = MQTT_GetIncomingPacketTypeAndLength( pContext->transportInterface.recv,
+                                                  pContext->transportInterface.networkContext,
+                                                  &incomingPacket );
+
+    if( status == MQTTNoDataAvailable )
+    {
+        if( manageKeepAlive == true )
+        {
+            /* Assign status so an error can be bubbled up to application,
+             * but reset it on success. */
+            status = handleKeepAlive( pContext );
+        }
+
+        if( status == MQTTSuccess )
+        {
+            /* Reset the status to indicate that we should not try to read
+             * a packet from the transport interface. */
+            status = MQTTNoDataAvailable;
+        }
+    }
+    else if( status != MQTTSuccess )
+    {
+        LogError( ( "Receiving incoming packet length failed. Status=%s",
+                    MQTT_Status_strerror( status ) ) );
+    }
+    else
+    {
+        /* Receive packet. Remaining time is recalculated before calling this
+         * function. */
+        status = receivePacket( pContext, incomingPacket, remainingTimeMs );
+    }
+
+    /* Handle received packet. If no data was read then this will not execute. */
+    if( status == MQTTSuccess )
+    {
+        incomingPacket.pRemainingData = pContext->networkBuffer.pBuffer;
+
+        /* PUBLISH packets allow flags in the lower four bits. For other
+         * packet types, they are reserved. */
+        if( ( incomingPacket.type & 0xF0U ) == MQTT_PACKET_TYPE_PUBLISH )
+        {
+            status = handleIncomingPublish( pContext, &incomingPacket );
+        }
+        else
+        {
+            status = handleIncomingAck( pContext, &incomingPacket, manageKeepAlive );
+        }
+    }
+
+    if( status == MQTTNoDataAvailable )
+    {
+        /* No data available is not an error. Reset to MQTTSuccess so the
+         * return code will indicate success. */
+        status = MQTTSuccess;
     }
 
     return status;
@@ -818,7 +927,11 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
 {
     MQTTStatus_t status = MQTTSuccess;
     MQTTGetCurrentTimeFunc_t getTimeStamp = NULL;
-    uint32_t entryTimeMs = 0U, remainingTimeMs = 0U, timeTakenMs = 0U;
+    uint32_t entryTimeMs = 0U, remainingTimeMs = 0U;
+    /* Initialize time taken to the timeout in case a time function is not provided. */
+    uint32_t timeTakenMs = timeoutMs;
+    /* Initialize loop exit condition to true in case a time function is not provided. */
+    bool timeExpired = true;
 
     assert( pContext != NULL );
     assert( pIncomingPacket != NULL );
@@ -838,9 +951,10 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
                                                       pContext->transportInterface.networkContext,
                                                       pIncomingPacket );
 
+        timeExpired = ( calculateElapsedTime( getTimeStamp(), entryTimeMs ) >= timeoutMs ) ? true : false;
+
         /* Loop until there is data to read or if the timeout has not expired. */
-    } while( ( status == MQTTNoDataAvailable ) &&
-             ( calculateElapsedTime( getTimeStamp(), entryTimeMs ) < timeoutMs ) );
+    } while( ( status == MQTTNoDataAvailable ) && ( timeExpired != true ) );
 
     if( status == MQTTSuccess )
     {
@@ -885,8 +999,8 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
 
     if( status != MQTTSuccess )
     {
-        LogError( ( "CONNACK recv failed with status = %u.",
-                    status ) );
+        LogError( ( "CONNACK recv failed with status = %s.",
+                    MQTT_Status_strerror( status ) ) );
     }
     else
     {
@@ -910,13 +1024,23 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
         ( pCallbacks == NULL ) || ( pNetworkBuffer == NULL ) )
     {
         LogError( ( "Argument cannot be NULL: pContext=%p, "
-                    "pTransportInterface=%p "
-                    "pCallbacks=%p "
+                    "pTransportInterface=%p, "
+                    "pCallbacks=%p, "
                     "pNetworkBuffer=%p.",
                     pContext,
                     pTransportInterface,
                     pCallbacks,
                     pNetworkBuffer ) );
+        status = MQTTBadParameter;
+    }
+    else if( ( pCallbacks->getTime == NULL ) || ( pCallbacks->appCallback == NULL ) ||
+             ( pTransportInterface->recv == NULL ) || ( pTransportInterface->send == NULL ) )
+    {
+        LogError( ( "Functions cannot be NULL: getTime=%p, appCallback=%p, recv=%p, send=%p.",
+                    pCallbacks->getTime,
+                    pCallbacks->appCallback,
+                    pTransportInterface->recv,
+                    pTransportInterface->send ) );
         status = MQTTBadParameter;
     }
     else
@@ -1014,8 +1138,8 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
     }
     else
     {
-        LogError( ( "MQTT connection failed with status = %u.",
-                    status ) );
+        LogError( ( "MQTT connection failed with status = %s.",
+                    MQTT_Status_strerror( status ) ) );
     }
 
     return status;
@@ -1170,19 +1294,19 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
 
             if( status != MQTTSuccess )
             {
-                LogError( ( "Update state for publish failed with status =%u."
+                LogError( ( "Update state for publish failed with status =%s."
                             " However PUBLISH packet is sent to the broker."
                             " Any further handling of ACKs for the packet Id"
                             " will fail.",
-                            status ) );
+                            MQTT_Status_strerror( status ) ) );
             }
         }
     }
 
     if( status != MQTTSuccess )
     {
-        LogError( ( "MQTT PUBLISH failed with status=%u.",
-                    status ) );
+        LogError( ( "MQTT PUBLISH failed with status=%s.",
+                    MQTT_Status_strerror( status ) ) );
     }
 
     return status;
@@ -1374,86 +1498,99 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
     uint32_t entryTimeMs = 0U, remainingTimeMs = timeoutMs, elapsedTimeMs = 0U;
     MQTTPacketInfo_t incomingPacket;
 
-    if( pContext != NULL )
+    if( ( pContext != NULL ) && ( pContext->callbacks.getTime != NULL ) )
     {
         getTimeStampMs = pContext->callbacks.getTime;
         entryTimeMs = getTimeStampMs();
         status = MQTTSuccess;
         pContext->controlPacketSent = false;
     }
-    else
+    else if( pContext == NULL )
     {
         LogError( ( "MQTT Context cannot be NULL." ) );
+    }
+    else
+    {
+        LogError( ( "MQTT Context must set callbacks.getTime." ) );
     }
 
     while( status == MQTTSuccess )
     {
-        status = MQTT_GetIncomingPacketTypeAndLength( pContext->transportInterface.recv,
-                                                      pContext->transportInterface.networkContext,
-                                                      &incomingPacket );
+        status = receiveSingleIteration( pContext, remainingTimeMs, true );
 
-        if( status == MQTTNoDataAvailable )
+        /* We don't need to break here since the status is already checked in
+         * the loop condition, and we do not want multiple breaks in a loop. */
+        if( status != MQTTSuccess )
         {
-            /* Assign status so an error can be bubbled up to application,
-             * but reset it on success. */
-            status = handleKeepAlive( pContext );
-
-            if( status == MQTTSuccess )
-            {
-                /* Reset the status to indicate that we should not try to read
-                 * a packet from the transport interface. */
-                status = MQTTNoDataAvailable;
-            }
-        }
-        else if( status != MQTTSuccess )
-        {
-            LogError( ( "Receiving incoming packet length failed. Status=%d",
-                        status ) );
+            LogError( ( "Exiting process loop. Error status=%s",
+                        MQTT_Status_strerror( status ) ) );
         }
         else
         {
-            /* Receive packet. Remaining time is recalculated at the end of the loop. */
-            status = receivePacket( pContext, incomingPacket, remainingTimeMs );
-        }
+            /* Recalculate remaining time and check if loop should exit. This is
+             * done at the end so the loop will run at least a single iteration. */
+            elapsedTimeMs = calculateElapsedTime( getTimeStampMs(), entryTimeMs );
 
-        /* Handle received packet. If no data was read then this will not execute. */
-        if( status == MQTTSuccess )
-        {
-            incomingPacket.pRemainingData = pContext->networkBuffer.pBuffer;
-
-            /* PUBLISH packets allow flags in the lower four bits. For other
-             * packet types, they are reserved. */
-            if( ( incomingPacket.type & 0xF0U ) == MQTT_PACKET_TYPE_PUBLISH )
+            if( elapsedTimeMs > timeoutMs )
             {
-                status = handleIncomingPublish( pContext, &incomingPacket );
+                break;
             }
-            else
-            {
-                status = handleIncomingAck( pContext, &incomingPacket );
-            }
-        }
 
-        if( status == MQTTNoDataAvailable )
-        {
-            /* No data available is not an error. Reset to MQTTSuccess so the
-             * return code will indicate success. */
-            status = MQTTSuccess;
+            remainingTimeMs = timeoutMs - elapsedTimeMs;
         }
+    }
 
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext,
+                               uint32_t timeoutMs )
+{
+    MQTTStatus_t status = MQTTBadParameter;
+    MQTTGetCurrentTimeFunc_t getTimeStampMs = NULL;
+    uint32_t entryTimeMs = 0U, remainingTimeMs = timeoutMs, elapsedTimeMs = 0U;
+
+    if( ( pContext != NULL ) && ( pContext->callbacks.getTime != NULL ) )
+    {
+        getTimeStampMs = pContext->callbacks.getTime;
+        entryTimeMs = getTimeStampMs();
+        status = MQTTSuccess;
+    }
+    else if( pContext == NULL )
+    {
+        LogError( ( "MQTT Context cannot be NULL." ) );
+    }
+    else
+    {
+        LogError( ( "MQTT Context must set callbacks.getTime." ) );
+    }
+
+    while( status == MQTTSuccess )
+    {
+        status = receiveSingleIteration( pContext, remainingTimeMs, false );
+
+        /* We don't need to break here since the status is already checked in
+         * the loop condition, and we do not want multiple breaks in a loop. */
         if( status != MQTTSuccess )
         {
-            LogError( ( "Exiting receive loop. Error status=%d", status ) );
+            LogError( ( "Exiting receive loop. Error status=%s",
+                        MQTT_Status_strerror( status ) ) );
         }
-
-        /* Recalculate remaining time and check if loop should exit. */
-        elapsedTimeMs = calculateElapsedTime( getTimeStampMs(), entryTimeMs );
-
-        if( elapsedTimeMs > timeoutMs )
+        else
         {
-            break;
-        }
+            /* Recalculate remaining time and check if loop should exit. This is
+             * done at the end so the loop will run at least a single iteration. */
+            elapsedTimeMs = calculateElapsedTime( getTimeStampMs(), entryTimeMs );
 
-        remainingTimeMs = timeoutMs - elapsedTimeMs;
+            if( elapsedTimeMs >= timeoutMs )
+            {
+                break;
+            }
+
+            remainingTimeMs = timeoutMs - elapsedTimeMs;
+        }
     }
 
     return status;
