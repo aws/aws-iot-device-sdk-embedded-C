@@ -6,4 +6,4 @@
 	url = https://github.com/ThrowTheSwitch/CMock
 [submodule "tools/aws-templates-for-cbmc-proofs"]
 	path = tools/aws-templates-for-cbmc-proofs
-	url = https://github.com/awslabs/aws-templates-for-cbmc-proofs
+	url = https://github.com/awslabs/aws-templates-for-cbmc-proofs.git
