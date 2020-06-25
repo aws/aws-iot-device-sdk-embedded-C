@@ -124,9 +124,9 @@ MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
  * @param[in,out] pCursor Index at which to start searching.
  * @param[out] pState State indicating that PUBREL packet need to be sent.
  */
-uint16_t MQTT_AckToResend( const MQTTContext_t * pMqttContext,
-                           MQTTStateCursor_t * pCursor,
-                           MQTTPublishState_t * pState );
+uint16_t MQTT_PubrelToResend( const MQTTContext_t * pMqttContext,
+                              MQTTStateCursor_t * pCursor,
+                              MQTTPublishState_t * pState );
 
 /**
  * @brief Get the packet ID of next pending publish to be resent.

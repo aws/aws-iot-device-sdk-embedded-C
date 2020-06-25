@@ -29,14 +29,14 @@
  * @brief Set a bit in an 16-bit unsigned integer.
  *
  * @param[in] x The 16-bit unsigned integer to set a bit.
- * @param[in] position The position at which the bit need to set.
+ * @param[in] position The position at which the bit need to be set.
  */
 #define UINT16_SET_BIT( x, position )      ( ( x ) = ( uint16_t ) ( ( x ) | ( ( uint16_t ) 0x01U << ( ( uint16_t ) position ) ) ) )
 
 /**
  * @brief Macro for checking if a bit is set in a 16-bit unsigned integer.
  *
- * @param[in] x The unsigned int to check.
+ * @param[in] x The unsigned 16-bit integer to check.
  * @param[in] position Which bit to check.
  */
 #define UINT16_CHECK_BIT( x, position )    ( ( ( x ) & ( ( uint16_t ) 0x01U << ( ( uint16_t ) position ) ) ) == ( 0x01U << ( ( uint16_t ) position ) ) )
@@ -467,10 +467,8 @@ static void compactRecords( MQTTPubAckInfo_t * records,
                 records[ emptyIndex ].qos = records[ index ].qos;
                 records[ emptyIndex ].publishState = records[ index ].publishState;
 
-                /* Clear the record at current non empty index. */
+                /* Mark the record at current non empty index as invalid. */
                 records[ index ].packetId = MQTT_PACKET_ID_INVALID;
-                records[ index ].qos = MQTTQoS0;
-                records[ index ].publishState = MQTTStateNull;
 
                 /* Advance the emptyIndex. */
                 emptyIndex++;
@@ -509,10 +507,12 @@ static MQTTStatus_t addRecord( MQTTPubAckInfo_t * records,
     for( index = ( ( int32_t ) recordCount - 1 ); index >= 0; index-- )
     {
         /* Available index is only found after packet at the highest index. */
-        if( ( validEntryFound == false ) &&
-            ( records[ index ].packetId == MQTT_PACKET_ID_INVALID ) )
+        if( records[ index ].packetId == MQTT_PACKET_ID_INVALID )
         {
-            availableIndex = ( size_t ) index;
+            if( validEntryFound == false )
+            {
+                availableIndex = ( size_t ) index;
+            }
         }
         else
         {
@@ -552,16 +552,13 @@ static void updateRecord( MQTTPubAckInfo_t * records,
                           bool shouldDelete )
 {
     uint16_t packetId;
-    MQTTQoS_t qos;
 
     assert( records != NULL );
 
     if( shouldDelete == true )
     {
-        /* Clear the record. */
+        /* Mark the record as invalid. */
         records[ recordIndex ].packetId = MQTT_PACKET_ID_INVALID;
-        records[ recordIndex ].qos = MQTTQoS0;
-        records[ recordIndex ].publishState = MQTTStateNull;
     }
     else
     {
@@ -571,22 +568,16 @@ static void updateRecord( MQTTPubAckInfo_t * records,
          * a PUBREL needs to be resent in case of a session reestablishment. */
         if( newState == MQTTPubRelSend )
         {
-            /* Delete the record in the current index after saving the
-             * packet id and qos. */
             packetId = records[ recordIndex ].packetId;
-            qos = records[ recordIndex ].qos;
-
-            /* Clear the record. */
+            /* Mark the record at current index as invalid. */
             records[ recordIndex ].packetId = MQTT_PACKET_ID_INVALID;
-            records[ recordIndex ].qos = MQTTQoS0;
-            records[ recordIndex ].publishState = MQTTStateNull;
 
             /* Add it as a new record to the end. A deletion makes room for
              * at least one more packet. So ignore return value here. */
             ( void ) addRecord( records,
                                 MQTT_STATE_ARRAY_MAX_COUNT,
                                 packetId,
-                                qos,
+                                records[ recordIndex ].qos,
                                 newState );
         }
         else
@@ -978,9 +969,9 @@ MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
 
 /*-----------------------------------------------------------*/
 
-uint16_t MQTT_AckToResend( const MQTTContext_t * pMqttContext,
-                           MQTTStateCursor_t * pCursor,
-                           MQTTPublishState_t * pState )
+uint16_t MQTT_PubrelToResend( const MQTTContext_t * pMqttContext,
+                              MQTTStateCursor_t * pCursor,
+                              MQTTPublishState_t * pState )
 {
     uint16_t packetId = MQTT_PACKET_ID_INVALID;
     uint16_t searchStates = 0U;

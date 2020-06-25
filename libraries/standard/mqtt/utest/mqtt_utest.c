@@ -835,7 +835,7 @@ void test_MQTT_Connect_resendPendingAcks( void )
     MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_DeserializeAck_ReturnThruPtr_pSessionPresent( &sessionPresent );
     /* No packets to resend. */
-    MQTT_AckToResend_ExpectAnyArgsAndReturn( MQTT_PACKET_TYPE_INVALID );
+    MQTT_PubrelToResend_ExpectAnyArgsAndReturn( MQTT_PACKET_TYPE_INVALID );
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
@@ -845,11 +845,11 @@ void test_MQTT_Connect_resendPendingAcks( void )
     MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
     MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_DeserializeAck_ReturnThruPtr_pSessionPresent( &sessionPresent );
-    MQTT_AckToResend_ExpectAnyArgsAndReturn( packetIdentifier );
-    MQTT_AckToResend_ReturnThruPtr_pState( &pubRelState );
+    MQTT_PubrelToResend_ExpectAnyArgsAndReturn( packetIdentifier );
+    MQTT_PubrelToResend_ReturnThruPtr_pState( &pubRelState );
     /* Serialize Ack failure. */
     MQTT_SerializeAck_ExpectAnyArgsAndReturn( MQTTBadParameter );
-    MQTT_AckToResend_ExpectAnyArgsAndReturn( MQTT_PACKET_TYPE_INVALID );
+    MQTT_PubrelToResend_ExpectAnyArgsAndReturn( MQTT_PACKET_TYPE_INVALID );
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
     TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
@@ -860,13 +860,13 @@ void test_MQTT_Connect_resendPendingAcks( void )
     MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
     MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_DeserializeAck_ReturnThruPtr_pSessionPresent( &sessionPresent );
-    MQTT_AckToResend_ExpectAnyArgsAndReturn( packetIdentifier );
-    MQTT_AckToResend_ReturnThruPtr_pState( &pubRelState );
+    MQTT_PubrelToResend_ExpectAnyArgsAndReturn( packetIdentifier );
+    MQTT_PubrelToResend_ReturnThruPtr_pState( &pubRelState );
     /* Serialize Ack successful. */
     MQTT_SerializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTSuccess );
     /* Query for any remaining packets pending to ack. */
-    MQTT_AckToResend_ExpectAnyArgsAndReturn( MQTT_PACKET_ID_INVALID );
+    MQTT_PubrelToResend_ExpectAnyArgsAndReturn( MQTT_PACKET_ID_INVALID );
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
@@ -878,18 +878,18 @@ void test_MQTT_Connect_resendPendingAcks( void )
     MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_DeserializeAck_ReturnThruPtr_pSessionPresent( &sessionPresent );
     /* First packet. */
-    MQTT_AckToResend_ExpectAnyArgsAndReturn( packetIdentifier );
-    MQTT_AckToResend_ReturnThruPtr_pState( &pubRelState );
+    MQTT_PubrelToResend_ExpectAnyArgsAndReturn( packetIdentifier );
+    MQTT_PubrelToResend_ReturnThruPtr_pState( &pubRelState );
     /* Serialize Ack successful. */
     MQTT_SerializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTSuccess );
     /* Second packet. */
-    MQTT_AckToResend_ExpectAnyArgsAndReturn( packetIdentifier + 1 );
-    MQTT_AckToResend_ReturnThruPtr_pState( &pubRelState );
+    MQTT_PubrelToResend_ExpectAnyArgsAndReturn( packetIdentifier + 1 );
+    MQTT_PubrelToResend_ReturnThruPtr_pState( &pubRelState );
     /* Serialize Ack failed. */
     MQTT_SerializeAck_ExpectAnyArgsAndReturn( MQTTBadParameter );
     /* Query for any remaining packets pending to ack. */
-    MQTT_AckToResend_ExpectAnyArgsAndReturn( packetIdentifier + 2 );
+    MQTT_PubrelToResend_ExpectAnyArgsAndReturn( packetIdentifier + 2 );
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
     TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
@@ -901,19 +901,19 @@ void test_MQTT_Connect_resendPendingAcks( void )
     MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_DeserializeAck_ReturnThruPtr_pSessionPresent( &sessionPresent );
     /* First packet. */
-    MQTT_AckToResend_ExpectAnyArgsAndReturn( packetIdentifier );
-    MQTT_AckToResend_ReturnThruPtr_pState( &pubRelState );
+    MQTT_PubrelToResend_ExpectAnyArgsAndReturn( packetIdentifier );
+    MQTT_PubrelToResend_ReturnThruPtr_pState( &pubRelState );
     /* Serialize Ack successful. */
     MQTT_SerializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTSuccess );
     /* Second packet. */
-    MQTT_AckToResend_ExpectAnyArgsAndReturn( packetIdentifier + 1 );
-    MQTT_AckToResend_ReturnThruPtr_pState( &pubRelState );
+    MQTT_PubrelToResend_ExpectAnyArgsAndReturn( packetIdentifier + 1 );
+    MQTT_PubrelToResend_ReturnThruPtr_pState( &pubRelState );
     /* Serialize Ack successful. */
     MQTT_SerializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( MQTTSuccess );
     /* Query for any remaining packets pending to ack. */
-    MQTT_AckToResend_ExpectAnyArgsAndReturn( MQTT_PACKET_ID_INVALID );
+    MQTT_PubrelToResend_ExpectAnyArgsAndReturn( MQTT_PACKET_ID_INVALID );
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
