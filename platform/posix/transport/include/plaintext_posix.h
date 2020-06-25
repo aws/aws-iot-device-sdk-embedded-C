@@ -38,7 +38,7 @@
 /* Logging configuration for the transport interface implemenation which uses
  * Sockets. */
 #ifndef LIBRARY_LOG_NAME
-    #define LIBRARY_LOG_NAME     "Transport_Sockets"
+    #define LIBRARY_LOG_NAME     "Transport_Plaintext_Sockets"
 #endif
 #ifndef LIBRARY_LOG_LEVEL
     #define LIBRARY_LOG_LEVEL    LOG_DEBUG
