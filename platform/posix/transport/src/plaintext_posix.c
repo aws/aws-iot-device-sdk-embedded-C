@@ -22,9 +22,6 @@
 /* POSIX socket includes. */
 #include <errno.h>
 
-#include <sys/socket.h>
-#include <sys/types.h>
-
 #include "plaintext_posix.h"
 
 /*-----------------------------------------------------------*/
