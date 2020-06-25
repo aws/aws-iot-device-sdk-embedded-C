@@ -36,7 +36,7 @@ typedef struct NetworkContext * NetworkContext_t;
 /**
  * @brief Transport interface for receiving data on the network.
  *
- * @param[in] pNetworkContext Application-defined context.
+ * @param[in] pNetworkContext Implementation-defined network context.
  * @param[in] pBuffer Buffer to receive the data into.
  * @param[in] bytesToRecv Number of bytes requested from the network.
  *
@@ -49,7 +49,7 @@ typedef int32_t ( * TransportRecv_t )( NetworkContext_t pNetworkContext,
 /**
  * @brief Transport interface for sending data over the network.
  *
- * @param[in] pNetworkContext Application-defined context.
+ * @param[in] pNetworkContext Implementation-defined network context.
  * @param[in] pBuffer Buffer containing the bytes to send over the network stack.
  * @param[in] bytesToSend Number of bytes to send over the network.
  *
@@ -66,7 +66,7 @@ typedef struct TransportInterface
 {
     TransportRecv_t recv;             /**< Transport receive interface. */
     TransportSend_t send;             /**< Transport send interface. */
-    NetworkContext_t pNetworkContext; /**< Application-defined transport interface context. */
+    NetworkContext_t pNetworkContext; /**< Implementation-defined network context. */
 } TransportInterface_t;
 
 #endif /* ifndef TRANSPORT_INTERFACE_H_ */
