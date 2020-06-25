@@ -1844,11 +1844,6 @@ IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
     {
         status = IOT_MQTT_NOT_INITIALIZED;
     }
-    /* Check whether the connection handle is valid. */
-    else if( mqttConnection->disconnected == true )
-    {
-        status = IOT_MQTT_NETWORK_ERROR;
-    }
     else if( _IotMqtt_ValidatePublish( mqttConnection->awsIotMqttMode,
                                        pPublishInfo,
                                        flags,
