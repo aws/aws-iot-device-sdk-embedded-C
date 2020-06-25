@@ -241,22 +241,6 @@ static void serializeConnectPacket( const MQTTConnectInfo_t * pConnectInfo,
                                     size_t remainingLength,
                                     const MQTTFixedBuffer_t * pBuffer );
 
-/**
- * @brief Extract the MQTT packet type and length from incoming packet.
- *
- * @param[in] readFunc Transport layer read function pointer.
- * @param[out] pIncomingPacket Pointer to MQTTPacketInfo_t structure.
- * This is where type, remaining length and packet identifier are stored.
- *
- * @return #MQTTSuccess on successful extraction of type and length,
- * #MQTTRecvFailed on transport receive failure,
- * #MQTTBadResponse if an invalid packet is read, and
- * #MQTTNoDataAvailable if there is nothing to read.
- */
-MQTTStatus_t getIncomingPacketTypeAndLength( MQTTTransportRecvFunc_t readFunc,
-                                             NetworkContext_t networkContext,
-                                             MQTTPacketInfo_t * pIncomingPacket );
-
 /*-----------------------------------------------------------*/
 
 static size_t remainingLengthEncodedSize( size_t length )
@@ -1307,51 +1291,6 @@ static void serializeConnectPacket( const MQTTConnectInfo_t * pConnectInfo,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t getIncomingPacketTypeAndLength( MQTTTransportRecvFunc_t readFunc,
-                                             NetworkContext_t networkContext,
-                                             MQTTPacketInfo_t * pIncomingPacket )
-{
-    MQTTStatus_t status = MQTTSuccess;
-    int32_t bytesReceived = 0;
-
-    assert( pIncomingPacket != NULL );
-
-    /* Read a single byte. */
-    bytesReceived = readFunc( networkContext, &( pIncomingPacket->type ), 1U );
-
-    if( bytesReceived == 1 )
-    {
-        /* Check validity. */
-        if( incomingPacketValid( pIncomingPacket->type ) == true )
-        {
-            pIncomingPacket->remainingLength = getRemainingLength( readFunc, networkContext );
-
-            if( pIncomingPacket->remainingLength == MQTT_REMAINING_LENGTH_INVALID )
-            {
-                status = MQTTBadResponse;
-            }
-        }
-        else
-        {
-            LogError( ( "Incoming packet invalid: Packet type=%u",
-                        pIncomingPacket->type ) );
-            status = MQTTBadResponse;
-        }
-    }
-    else if( bytesReceived == 0 )
-    {
-        status = MQTTNoDataAvailable;
-    }
-    else
-    {
-        status = MQTTRecvFailed;
-    }
-
-    return status;
-}
-
-/*-----------------------------------------------------------*/
-
 MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
                                         const MQTTPublishInfo_t * pWillInfo,
                                         size_t * pRemainingLength,
@@ -2106,6 +2045,7 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( MQTTTransportRecvFunc_t readFu
                                                   MQTTPacketInfo_t * pIncomingPacket )
 {
     MQTTStatus_t status = MQTTSuccess;
+    int32_t bytesReceived = 0;
 
     if( pIncomingPacket == NULL )
     {
@@ -2114,9 +2054,36 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( MQTTTransportRecvFunc_t readFu
     }
     else
     {
-        status = getIncomingPacketTypeAndLength( readFunc,
-                                                 networkContext,
-                                                 pIncomingPacket );
+        /* Read a single byte. */
+        bytesReceived = readFunc( networkContext, &( pIncomingPacket->type ), 1U );
+    }
+
+    if( bytesReceived == 1 )
+    {
+        /* Check validity. */
+        if( incomingPacketValid( pIncomingPacket->type ) == true )
+        {
+            pIncomingPacket->remainingLength = getRemainingLength( readFunc, networkContext );
+
+            if( pIncomingPacket->remainingLength == MQTT_REMAINING_LENGTH_INVALID )
+            {
+                status = MQTTBadResponse;
+            }
+        }
+        else
+        {
+            LogError( ( "Incoming packet invalid: Packet type=%u",
+                        pIncomingPacket->type ) );
+            status = MQTTBadResponse;
+        }
+    }
+    else if( ( bytesReceived == 0 ) && ( status == MQTTSuccess ) )
+    {
+        status = MQTTNoDataAvailable;
+    }
+    else
+    {
+        status = MQTTRecvFailed;
     }
 
     return status;
