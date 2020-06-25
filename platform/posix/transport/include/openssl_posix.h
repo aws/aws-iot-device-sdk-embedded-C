@@ -60,7 +60,7 @@
 struct NetworkContext
 {
     int socketDescriptor;
-    SSL * pSslContext;
+    SSL * pSsl;
 };
 
 /**

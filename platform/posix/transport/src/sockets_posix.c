@@ -21,19 +21,15 @@
 
 /* Standard includes. */
 #include <assert.h>
-#include <stdlib.h>
 #include <string.h>
 
 /* POSIX socket includes. */
 #include <errno.h>
 #include <netdb.h>
 #include <time.h>
-#include <poll.h>
-#include <unistd.h>
 #include <arpa/inet.h>
 
 #include <sys/socket.h>
-#include <sys/types.h>
 
 #include "sockets_posix.h"
 

@@ -21,20 +21,10 @@
 
 /* Standard includes. */
 #include <assert.h>
-#include <stdlib.h>
 #include <string.h>
 
-/* POSIX socket includes. */
-#include <limits.h>
-#include <errno.h>
-#include <netdb.h>
-#include <time.h>
-#include <poll.h>
+/* POSIX socket include. */
 #include <unistd.h>
-#include <arpa/inet.h>
-
-#include <sys/socket.h>
-#include <sys/types.h>
 
 /* OpenSSL include. */
 #include <openssl/ssl.h>
@@ -151,6 +141,10 @@ static void logPath( const char * path,
 {
     char * cwd = NULL;
 
+    assert( path != NULL );
+    assert( pathLen != 0 );
+    assert( fileType != NULL );
+
     /* Log the absolute directory based on first character of path. */
     if( ( path[ 0 ] == '/' ) || ( path[ 0 ] == '\\' ) )
     {
@@ -183,6 +177,10 @@ static int setRootCa( SSL_CTX * pSslContext,
     int sslStatus = 0;
     FILE * pRootCaFile = NULL;
     X509 * pRootCa = NULL;
+
+    assert( pSslContext != NULL );
+    assert( pRootCaPath != NULL );
+    assert( rootCaPathLen != 0 );
 
     logPath( pRootCaPath, rootCaPathLen, ROOT_CA_LABEL );
 
@@ -239,6 +237,10 @@ static int setClientCertificate( SSL_CTX * pSslContext,
     int sslStatus = -1;
     char * clientCertPathNullTerm = NULL;
 
+    assert( pSslContext != NULL );
+    assert( pClientCertPath != NULL );
+    assert( clientCertPathLen != 0 );
+
     logPath( pClientCertPath, clientCertPathLen, CLIENT_CERT_LABEL );
 
     /* NULL-terminated string is required for SSL_CTX_use_certificate_chain_file. */
@@ -280,6 +282,10 @@ static int setPrivateKey( SSL_CTX * pSslContext,
     int sslStatus = -1;
     char * privateKeyPathNullTerm = NULL;
 
+    assert( pSslContext != NULL );
+    assert( pPrivateKeyPath != NULL );
+    assert( privateKeyPathLen != 0 );
+
     logPath( pPrivateKeyPath, privateKeyPathLen, CLIENT_KEY_LABEL );
 
     /* NULL-terminated string is required for SSL_CTX_use_PrivateKey_file. */
@@ -320,6 +326,9 @@ static int setCredentials( SSL_CTX * pSslContext,
 {
     int sslStatus = 0;
 
+    assert( pSslContext != NULL );
+    assert( pOpensslCredentials != NULL );
+
     if( ( pOpensslCredentials->pRootCaPath != NULL ) &&
         ( pOpensslCredentials->rootCaPathLen > 0 ) )
     {
@@ -354,6 +363,9 @@ static void setOptionalConfigurations( SSL * pSsl,
 {
     int sslStatus = -1;
     char * sniHostName = NULL;
+
+    assert( pSsl != NULL );
+    assert( pOpensslCredentials != NULL );
 
     /* Set TLS ALPN if requested. */
     if( ( pOpensslCredentials->pAlpnProtos != NULL ) &&

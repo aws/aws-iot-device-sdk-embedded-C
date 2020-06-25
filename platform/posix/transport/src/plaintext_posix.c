@@ -19,18 +19,8 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-/* Standard includes. */
-#include <assert.h>
-#include <stdlib.h>
-#include <string.h>
-
 /* POSIX socket includes. */
 #include <errno.h>
-#include <netdb.h>
-#include <time.h>
-#include <poll.h>
-#include <unistd.h>
-#include <arpa/inet.h>
 
 #include <sys/socket.h>
 #include <sys/types.h>
