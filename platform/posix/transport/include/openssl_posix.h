@@ -103,13 +103,10 @@ typedef struct OpensslCredentials
 
     /**
      * @brief Set a host name to enable SNI. Set to NULL to disable SNI.
+     *
+     * @note This string must be NULL-terminated because the OpenSSL API requires it to be.
      */
     const char * sniHostName;
-
-    /**
-     * @brief Length of the SNI host name.
-     */
-    size_t sniHostNameLen;
 
     /**
      * @brief Set the value for the TLS max fragment length (TLS MFLN)
@@ -122,12 +119,15 @@ typedef struct OpensslCredentials
      */
     size_t maxFragmentLength;
 
+    /**
+     * @brief Filepaths to certificates and private key that are used when
+     * performing the TLS handshake.
+     *
+     * @note These strings must be NULL-terminated because the OpenSSL API requires them to be.
+     */
     const char * pRootCaPath;     /**< @brief Filepath string to the trusted server root CA. */
-    size_t rootCaPathLen;         /**< @brief Length associated with #NetworkCredentials.pRootCaPath. */
     const char * pClientCertPath; /**< @brief Filepath string to the client certificate. */
-    size_t clientCertPathLen;     /**< @brief Length associated with #NetworkCredentials.pClientCertPath. */
     const char * pPrivateKeyPath; /**< @brief Filepath string to the client certificate's private key. */
-    size_t privateKeyPathLen;     /**< @brief Length associated with #NetworkCredentials.pPrivateKeyPath. */
 } OpensslCredentials_t;
 
 /**

@@ -377,11 +377,9 @@ static void setOptionalConfigurations( SSL * pSsl,
     }
 
     /* Enable SNI if requested. */
-    if( ( pOpensslCredentials->sniHostName != NULL ) &&
-        ( pOpensslCredentials->sniHostNameLen > 0 ) )
+    if( pOpensslCredentials->sniHostName != NULL )
     {
-        LogDebug( ( "Setting server name %.*s for SNI.",
-                    ( int32_t ) pOpensslCredentials->sniHostNameLen,
+        LogDebug( ( "Setting server name %s for SNI.",
                     pOpensslCredentials->sniHostName ) );
 
         sslStatus = SSL_set_tlsext_host_name( pSsl,
@@ -389,8 +387,7 @@ static void setOptionalConfigurations( SSL * pSsl,
 
         if( sslStatus != 1 )
         {
-            LogError( ( "Failed to set server name %.*s for SNI.",
-                        ( int32_t ) pOpensslCredentials->sniHostNameLen,
+            LogError( ( "Failed to set server name %s for SNI.",
                         pOpensslCredentials->sniHostName ) );
         }
     }
