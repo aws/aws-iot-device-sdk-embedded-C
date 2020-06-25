@@ -125,6 +125,11 @@ struct MQTTContext
  * @brief Initialize an MQTT context.
  *
  * This function must be called on an MQTT context before any other function.
+ * 
+ * @note The getTime callback function must be defined. If there is no time
+ * implementation, it is the responsibility of the application to provide a
+ * dummy function to always return 0, and provide 0 timeouts for functions. This
+ * will ensure all time based functions will run for a single iteration.
  *
  * @brief param[in] pContext The context to initialize.
  * @brief param[in] pTransportInterface The transport interface to use with the context.
@@ -249,10 +254,6 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext );
 /**
  * @brief Loop to receive packets from the transport interface. Handles keep
  * alive.
- *
- * @note This function assumes that pContext->callbacks.getTime is defined.
- * This is due to keep alive requiring a reliable method of calculating elapsed
- * time to determine if the keep alive interval has expired.
  *
  * @param[in] pContext Initialized and connected MQTT context.
  * @param[in] timeoutMs Minimum time in milliseconds that the receive loop will

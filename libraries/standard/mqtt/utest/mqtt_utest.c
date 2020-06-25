@@ -204,6 +204,15 @@ static uint32_t getTime( void )
 }
 
 /**
+ * @brief A mocked timer function that could be used on a device with no system
+ * time.
+ */
+static uint32_t getTimeDummy( void )
+{
+    return 0;
+}
+
+/**
  * @brief Mocked successful transport send.
  *
  * @param[in] tcpSocket TCP socket.
@@ -484,6 +493,8 @@ void test_MQTT_Init_Happy_Path( void )
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks;
 
+    setupCallbacks( &callbacks );
+
     mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     TEST_ASSERT_EQUAL( MQTTNotConnected, context.connectStatus );
@@ -505,6 +516,9 @@ void test_MQTT_Init_Invalid_Params( void )
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks;
 
+    setupCallbacks( &callbacks );
+    setupTransportInterface( &transport );
+
     /* Check that MQTTBadParameter is returned if any NULL parameters are passed. */
     mqttStatus = MQTT_Init( NULL, &transport, &callbacks, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
@@ -516,6 +530,26 @@ void test_MQTT_Init_Invalid_Params( void )
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
     mqttStatus = MQTT_Init( &context, &transport, &callbacks, NULL );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
+
+    /* Test if NULL is passed for any callbacks. */
+    callbacks.getTime = NULL;
+    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
+
+    callbacks.appCallback = NULL;
+    callbacks.getTime = getTime;
+    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
+
+    callbacks.appCallback = eventCallback;
+    transport.recv = NULL;
+    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
+
+    transport.recv = transportRecvSuccess;
+    transport.send = NULL;
+    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 }
 
@@ -592,15 +626,6 @@ void test_MQTT_Connect_sendConnect( void )
     MQTT_GetConnectPacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
     /* We know the send was successful if MQTT_GetIncomingPacketTypeAndLength()
      * is called. */
-    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTRecvFailed );
-    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
-    TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
-
-    /* Again, but this time with a NULL time function. */
-    mqttContext.callbacks.getTime = NULL;
-    MQTT_GetConnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_GetConnectPacketSize_ReturnThruPtr_pPacketSize( &packetSize );
-    MQTT_GetConnectPacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTRecvFailed );
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
@@ -715,10 +740,9 @@ void test_MQTT_Connect_partial_receive()
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTNoDataAvailable, status );
 
-    /* Discard packet, no time function provided. This should fail since multiple
+    /* Discard packet, no timeout provided. This should fail since multiple
      * iterations of the discard loop are required to discard the packet, but only
-     * one will run due to lack of a time function. */
-    mqttContext.callbacks.getTime = NULL;
+     * one will run. */
     mqttContext.transportInterface.recv = transportRecvSuccess;
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
@@ -726,7 +750,6 @@ void test_MQTT_Connect_partial_receive()
     TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
 
     /* Timeout while discarding packet. */
-    mqttContext.callbacks.getTime = getTime;
     /* (Mocked) read only one byte at a time to ensure timeout will occur. */
     mqttContext.transportInterface.recv = transportRecvOneByte;
     incomingPacket.remainingLength = 20;
@@ -735,13 +758,13 @@ void test_MQTT_Connect_partial_receive()
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
 
-    /* Receive failure while discarding packet. Time is not necessary for this so
-     * set time function to NULL for branch coverage. */
+    /* Receive failure while discarding packet. */
     mqttContext.transportInterface.recv = transportRecvFailure;
-    mqttContext.callbacks.getTime = NULL;
+    /* Test with dummy get time function to make sure there are no infinite loops. */
+    mqttContext.callbacks.getTime = getTimeDummy;
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
-    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, MQTT_NO_TIMEOUT_MS, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
 }
 
@@ -991,11 +1014,12 @@ void test_MQTT_ProcessLoop_Invalid_Params( void )
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
     setupTransportInterface( &transport );
-    callbacks.appCallback = eventCallback;
+    setupCallbacks( &callbacks );
     mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
     /* Get time function cannot be NULL. */
+    context.callbacks.getTime = NULL;
     mqttStatus = MQTT_ProcessLoop( &context, MQTT_NO_TIMEOUT_MS );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 }
@@ -1395,29 +1419,38 @@ void test_MQTT_ReceiveLoop( void )
     mqttStatus = MQTT_ReceiveLoop( NULL, MQTT_NO_TIMEOUT_MS );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
+    context.callbacks.getTime = NULL;
+    mqttStatus = MQTT_ReceiveLoop( &context, MQTT_NO_TIMEOUT_MS );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
+    context.callbacks.getTime = getTime;
+
     /* Error case, for branch coverage. */
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTRecvFailed );
     mqttStatus = MQTT_ReceiveLoop( &context, MQTT_NO_TIMEOUT_MS );
     TEST_ASSERT_EQUAL( MQTTRecvFailed, mqttStatus );
 
-    /* With time function. Keep Alive should not trigger.*/
+    /* Keep Alive should not trigger.*/
     context.keepAliveIntervalSec = 1;
     MQTT_GetIncomingPacketTypeAndLength_IgnoreAndReturn( MQTTNoDataAvailable );
     mqttStatus = MQTT_ReceiveLoop( &context, 2000 );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     TEST_ASSERT_FALSE( context.controlPacketSent );
 
+    /* Test with a dummy getTime to ensure there's no infinite loops. */
+    context.callbacks.getTime = getTimeDummy;
+    mqttStatus = MQTT_ReceiveLoop( &context, MQTT_NO_TIMEOUT_MS );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    context.callbacks.getTime = getTime;
+
     MQTT_GetIncomingPacketTypeAndLength_StopIgnore();
 
-    /* Set getTime to NULL for single iteration. */
+    /* Receive a PINGRESP. */
     incomingPacket.type = MQTT_PACKET_TYPE_PINGRESP;
     incomingPacket.remainingLength = 0U;
-    context.callbacks.getTime = NULL;
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
     MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
-    /* Set large timeout so if more than one iteration runs, test will fail. */
-    mqttStatus = MQTT_ReceiveLoop( &context, 2000 );
+    mqttStatus = MQTT_ReceiveLoop( &context, MQTT_NO_TIMEOUT_MS );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 }
 
