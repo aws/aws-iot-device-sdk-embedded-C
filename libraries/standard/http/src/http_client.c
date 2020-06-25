@@ -1399,6 +1399,11 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
         LogError( ( "Parameter check failed: valueLen must be greater than 0." ) );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
+    else if( pRequestHeaders->headersLen > pRequestHeaders->bufferLen )
+    {
+        LogError( ( "Parameter check failed: pRequestHeaders->headersLen > pRequestHeaders->bufferLen." ) );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
     else
     {
         /* Empty else MISRA 15.7 */
