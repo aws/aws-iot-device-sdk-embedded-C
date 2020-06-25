@@ -157,12 +157,12 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  * This function will send MQTT CONNECT packet and receive a CONNACK packet.
  * The send and receive from the network is through the transport interface.
  * The maximum wait for receiving a CONNACK is managed in 2 ways.
- * 1. If a #getTime interface function is passed to the MQTT library:
+ * 1. If #timeoutMs is greater than 0:
  *    Parameter #timeoutMs will be used for a #getTime based maximum timeout
- *    for the network read.
- * 2. If a #getTime interface function is not passed to the MQTT library:
+ *    for the network read for CONNACK packet.
+ * 2. If #timeoutMs is 0:
  *    A network read would be retried upto the number of times configured by
- *    #MQTT_CONNACK_RECEIVE_RETRY_COUNT.
+ *    #MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT for the CONNACK packet.
  *
  * @brief param[in] pContext Initialized MQTT context.
  * @brief param[in] pConnectInfo MQTT CONNECT packet parameters.

@@ -741,9 +741,7 @@ void test_MQTT_Connect_receiveConnack( void )
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
-    /* Same set ot tests with retries. MQTT_CONNACK_RECEIVE_RETRY_COUNT is 2*/
-    mqttContext.callbacks.getTime = NULL;
-
+    /* Same set ot tests with retries. MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT is 2*/
     /* Nothing received from transport interface. */
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTNoDataAvailable );
     /* 2 retries. */
@@ -1027,7 +1025,6 @@ void test_MQTT_Connect_happy_path()
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
 
-<<<<<<< HEAD
     /* Request to establish a clean session. */
     mqttContext.connectStatus = MQTTNotConnected;
     connectInfo.cleanSession = true;
@@ -1055,7 +1052,6 @@ void test_MQTT_Connect_happy_path()
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
     TEST_ASSERT_TRUE( sessionPresent );
-=======
     /* CONNACK receive with retries. */
     mqttContext.callbacks.getTime = NULL;
     incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
@@ -1080,7 +1076,6 @@ void test_MQTT_Connect_happy_path()
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, 0U, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
->>>>>>> Unit tests and documentation
 }
 
 /* ========================================================================== */
