@@ -33,11 +33,11 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
-/* Include Demo Config as the first non-system header. */
-#include "demo_config.h"
-
 /* HTTP API header. */
 #include "http_client.h"
+
+/* Demo config header. */
+#include "demo_config.h"
 
 /**
  * @brief Length of an IPv6 address when converted to hex digits.
@@ -69,7 +69,7 @@ static uint8_t userBuffer[ USER_BUFFER_LENGTH ];
  *
  * @note An integer is used to store the descriptor of the socket.
  */
-struct NetworkContext
+struct HTTPNetworkContext
 {
     int tcpSocket;
 };
@@ -77,7 +77,7 @@ struct NetworkContext
 /**
  * @brief Structure based on the definition of the HTTP network context.
  */
-static struct NetworkContext socketContext;
+static HTTPNetworkContext_t socketContext;
 
 /**
  * @brief The HTTP Client library transport layer interface.
@@ -128,7 +128,7 @@ static int connectToServer( const char * pServer,
  *
  * @return Number of bytes sent if successful; otherwise negative value on error.
  */
-static int32_t transportSend( NetworkContext_t pContext,
+static int32_t transportSend( HTTPNetworkContext_t * pContext,
                               const void * pBuffer,
                               size_t bytesToSend );
 
@@ -144,7 +144,7 @@ static int32_t transportSend( NetworkContext_t pContext,
  *
  * @return Number of bytes received if successful; otherwise negative value on error.
  */
-static int32_t transportRecv( NetworkContext_t pContext,
+static int32_t transportRecv( HTTPNetworkContext_t * pContext,
                               void * pBuffer,
                               size_t bytesToRecv );
 
@@ -308,7 +308,7 @@ static int connectToServer( const char * pServer,
 
 /*-----------------------------------------------------------*/
 
-static int32_t transportSend( NetworkContext_t pContext,
+static int32_t transportSend( HTTPNetworkContext_t * pContext,
                               const void * pBuffer,
                               size_t bytesToSend )
 {
@@ -331,7 +331,7 @@ static int32_t transportSend( NetworkContext_t pContext,
 
 /*-----------------------------------------------------------*/
 
-static int32_t transportRecv( NetworkContext_t pContext,
+static int32_t transportRecv( HTTPNetworkContext_t * pContext,
                               void * pBuffer,
                               size_t bytesToRecv )
 {
@@ -381,7 +381,7 @@ static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface
 
     /* Set "Connection" HTTP header to "keep-alive" so that multiple requests
      * can be sent over the same established TCP connection. */
-    requestInfo.reqFlags = HTTP_REQUEST_KEEP_ALIVE_FLAG;
+    requestInfo.flags = HTTP_REQUEST_KEEP_ALIVE_FLAG;
 
     /* Set the buffer used for storing request headers. */
     requestHeaders.pBuffer = userBuffer;
@@ -464,7 +464,6 @@ int main( int argc,
           char ** argv )
 {
     int returnStatus = EXIT_SUCCESS;
-    NetworkContext_t pSocketContext = &socketContext;
 
     ( void ) argc;
     ( void ) argv;
@@ -472,14 +471,14 @@ int main( int argc,
     /**************************** Connect. ******************************/
 
     /* Establish TCP connection. */
-    returnStatus = connectToServer( SERVER_HOST, SERVER_PORT, &pSocketContext->tcpSocket );
+    returnStatus = connectToServer( SERVER_HOST, SERVER_PORT, &socketContext.tcpSocket );
 
     /* Define the transport interface. */
     if( returnStatus == EXIT_SUCCESS )
     {
         transportInterface.recv = transportRecv;
         transportInterface.send = transportSend;
-        transportInterface.pContext = pSocketContext;
+        transportInterface.pContext = &socketContext;
     }
 
     /*********************** Send HTTPS request. ************************/
@@ -512,7 +511,7 @@ int main( int argc,
     }
 
     /* Send POST Request. */
-    if( returnStatus == EXIT_SUCCESS )
+    if( returnStatus != EXIT_SUCCESS )
     {
         returnStatus = sendHttpRequest( &transportInterface,
                                         SERVER_HOST,
@@ -522,10 +521,10 @@ int main( int argc,
 
     /************************** Disconnect. *****************************/
 
-    if( pSocketContext->tcpSocket != -1 )
+    if( socketContext.tcpSocket != -1 )
     {
-        ( void ) shutdown( pSocketContext->tcpSocket, SHUT_RDWR );
-        ( void ) close( pSocketContext->tcpSocket );
+        ( void ) shutdown( socketContext.tcpSocket, SHUT_RDWR );
+        ( void ) close( socketContext.tcpSocket );
     }
 
     return returnStatus;

@@ -150,7 +150,7 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t pNetworkContext,
 /**
  * @brief Closes a TLS session on top of a TCP connection using the OpenSSL API.
  *
- * @param[out] pNetworkContext The output parameter to end the session and
+ * @param[out] pNetworkContext The output parameter to end the TLS session and
  * clean the created network context.
  *
  * @return #OPENSSL_SUCCESS on success; #OPENSSL_INVALID_PARAMETER on failure.
