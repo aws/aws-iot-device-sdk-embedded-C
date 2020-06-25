@@ -1,3 +1,6 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 HARNESS_ENTRY=harness
 HARNESS_FILE=HTTPClient_AddHeader_harness
 
