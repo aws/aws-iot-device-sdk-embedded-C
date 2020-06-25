@@ -294,7 +294,7 @@ static size_t _sendFailure( IotNetworkConnection_t pSendContext,
     ( void ) pMessage;
     ( void ) messageLength;
 
-    /* This function returns the message length to simulate a successful send. */
+    /* This function returns 0 to simulate send failure. */
     return 0;
 }
 
@@ -705,7 +705,7 @@ TEST_GROUP_RUNNER( MQTT_Unit_API )
     RUN_TEST_CASE( MQTT_Unit_API, DisconnectAlreadyDisconnected );
     RUN_TEST_CASE( MQTT_Unit_API, PublishQoS0Parameters );
     RUN_TEST_CASE( MQTT_Unit_API, PublishQoS0MallocFail );
-    RUN_TEST_CASE( MQTT_Unit_API, PublishSyncQoS0WithNetworkFailure );
+    RUN_TEST_CASE( MQTT_Unit_API, PublishQoS0SyncWithNetworkFailure );
     RUN_TEST_CASE( MQTT_Unit_API, PublishQoS1 );
     RUN_TEST_CASE( MQTT_Unit_API, PublishRetryPeriod );
     RUN_TEST_CASE( MQTT_Unit_API, PublishDuplicates );
@@ -1510,7 +1510,7 @@ TEST( MQTT_Unit_API, PublishQoS0MallocFail )
  * @brief Tests the behavior of @ref mqtt_function_publishsync (QoS 0) when network
  * send fails
  */
-TEST( MQTT_Unit_API, PublishSyncQoS0WithNetworkFailure )
+TEST( MQTT_Unit_API, PublishQoS0SyncWithNetworkFailure )
 {
     IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
 
