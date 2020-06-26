@@ -132,7 +132,7 @@ struct MQTTContext
  * @brief Initialize an MQTT context.
  *
  * This function must be called on an MQTT context before any other function.
- * 
+ *
  * @note The getTime callback function must be defined. If there is no time
  * implementation, it is the responsibility of the application to provide a
  * dummy function to always return 0, and provide 0 timeouts for functions. This

@@ -696,7 +696,7 @@ static MQTTStatus_t processPublishFlags( uint8_t publishFlags,
         /* Parse the DUP bit. */
         pPublishInfo->dup = ( UINT8_CHECK_BIT( publishFlags, MQTT_PUBLISH_FLAG_DUP ) ) ? true : false;
 
-        LogDebug( ( "Retain bit is %d.", pPublishInfo->retain ) );
+        LogDebug( ( "DUP bit is %d.", pPublishInfo->dup ) );
     }
 
     return status;

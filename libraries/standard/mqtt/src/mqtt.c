@@ -732,8 +732,8 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
 
         if( status == MQTTSuccess )
         {
-            LogInfo( ( "State record updated. New state=%d.",
-                       publishRecordState ) );
+            LogInfo( ( "State record updated. New state=%s.",
+                       MQTT_State_strerror( publishRecordState ) ) );
         }
 
         /* A collision in the state engine and a duplicate flag set in the
@@ -809,8 +809,8 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
 
         if( status == MQTTSuccess )
         {
-            LogInfo( ( "State record updated. New state=%d.",
-                       publishRecordState ) );
+            LogInfo( ( "State record updated. New state=%s.",
+                       MQTT_State_strerror( publishRecordState ) ) );
         }
         else
         {
@@ -854,7 +854,6 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
      * at the end to reduce the complexity of this function. */
     bool invokeAppCallback = false;
     MQTTEventCallback_t appCallback = NULL;
-    bool pubrelRecordMissing = false;
 
     assert( pContext != NULL );
     assert( pIncomingPacket != NULL );
@@ -1505,7 +1504,7 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
         if( status != MQTTSuccess )
         {
             LogError( ( "Update state for publish failed with status %s."
-                        " However PUBLISH packet is sent to the broker."
+                        " However PUBLISH packet was sent to the broker."
                         " Any further handling of ACKs for the packet Id"
                         " will fail.",
                         MQTT_Status_strerror( status ) ) );

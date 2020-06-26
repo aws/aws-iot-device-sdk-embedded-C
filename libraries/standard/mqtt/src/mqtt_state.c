@@ -167,6 +167,7 @@ static uint16_t stateSelect( const MQTTContext_t * pMqttContext,
  *
  * @param[in] records State records pointer.
  * @param[in] recordIndex Index at which the record is stored.
+ * @param[in] packetId Packet id of the packet.
  * @param[in] currentState Current state of the publish record.
  * @param[in,out] pNewState Input/output pointer to updated state of
  * the publish.
@@ -175,6 +176,7 @@ static uint16_t stateSelect( const MQTTContext_t * pMqttContext,
  */
 static MQTTStatus_t updateStateAck( MQTTPubAckInfo_t * records,
                                     size_t recordIndex,
+                                    uint16_t packetId,
                                     MQTTPublishState_t currentState,
                                     MQTTPublishState_t * pNewState );
 
@@ -495,7 +497,7 @@ static MQTTStatus_t addRecord( MQTTPubAckInfo_t * records,
 
     /* Check if we have to compact the records. This is known by checking if
      * the last spot in the array is filled. */
-    if( records[ ( ( int32_t ) recordCount - 1 ) ].packetId != MQTT_PACKET_ID_INVALID )
+    if( records[ ( recordCount - 1U ) ].packetId != MQTT_PACKET_ID_INVALID )
     {
         compactRecords( records, recordCount );
     }
@@ -551,8 +553,6 @@ static void updateRecord( MQTTPubAckInfo_t * records,
                           MQTTPublishState_t newState,
                           bool shouldDelete )
 {
-    uint16_t packetId;
-
     assert( records != NULL );
 
     if( shouldDelete == true )
@@ -562,28 +562,7 @@ static void updateRecord( MQTTPubAckInfo_t * records,
     }
     else
     {
-        /* For QoS2 messages, in order to preserve the message ordering, when
-         * a PUBREC is received for an outgoing publish, the record should be
-         * moved to the last. This move will help preserve the order in which
-         * a PUBREL needs to be resent in case of a session reestablishment. */
-        if( newState == MQTTPubRelSend )
-        {
-            packetId = records[ recordIndex ].packetId;
-            /* Mark the record at current index as invalid. */
-            records[ recordIndex ].packetId = MQTT_PACKET_ID_INVALID;
-
-            /* Add it as a new record to the end. A deletion makes room for
-             * at least one more packet. So ignore return value here. */
-            ( void ) addRecord( records,
-                                MQTT_STATE_ARRAY_MAX_COUNT,
-                                packetId,
-                                records[ recordIndex ].qos,
-                                newState );
-        }
-        else
-        {
-            records[ recordIndex ].publishState = newState;
-        }
+        records[ recordIndex ].publishState = newState;
     }
 }
 
@@ -684,6 +663,7 @@ MQTTPublishState_t MQTT_CalculateStateAck( MQTTPubAckType_t packetType,
 
 static MQTTStatus_t updateStateAck( MQTTPubAckInfo_t * records,
                                     size_t recordIndex,
+                                    uint16_t packetId,
                                     MQTTPublishState_t currentState,
                                     MQTTPublishState_t * pNewState )
 {
@@ -696,11 +676,18 @@ static MQTTStatus_t updateStateAck( MQTTPubAckInfo_t * records,
     assert( pNewState != NULL );
 
     newState = *pNewState;
-    shouldDeleteRecord = ( newState == MQTTPublishDone ) ? true : false;
+
+    /* Record to be deleted if the state transition is completed or if a PUBREC
+     * is received for an outgoing QoS2 publish. When a PUBREC is received,
+     * record is deleted and added back to the end of the records to maintain
+     * ordering for PUBRELs. */
+    shouldDeleteRecord = ( ( newState == MQTTPublishDone ) || ( newState == MQTTPubRelSend ) ) ? true : false;
     isTransitionValid = validateTransitionAck( currentState, newState );
 
     if( isTransitionValid == true )
     {
+        status = MQTTSuccess;
+
         /* Update record for acks. When sending or receiving acks for packets that
          * are resent during a session reestablishment, the new state and
          * current state can be the same. No update of record required in that case. */
@@ -710,9 +697,16 @@ static MQTTStatus_t updateStateAck( MQTTPubAckInfo_t * records,
                           recordIndex,
                           newState,
                           shouldDeleteRecord );
-        }
 
-        status = MQTTSuccess;
+            /* For QoS2 messages, in order to preserve the message ordering, when
+             * a PUBREC is received for an outgoing publish, the record should be
+             * moved to the last. This move will help preserve the order in which
+             * a PUBREL needs to be resent in case of a session reestablishment. */
+            if( newState == MQTTPubRelSend )
+            {
+                status = addRecord( records, MQTT_STATE_ARRAY_MAX_COUNT, packetId, MQTTQoS2, MQTTPubRelSend );
+            }
+        }
     }
     else
     {
@@ -956,7 +950,7 @@ MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
         newState = MQTT_CalculateStateAck( packetType, opType, qos );
 
         /* Validate state transition and update state record. */
-        status = updateStateAck( records, recordIndex, currentState, &newState );
+        status = updateStateAck( records, recordIndex, packetId, currentState, &newState );
         *pNewState = newState;
     }
     else
