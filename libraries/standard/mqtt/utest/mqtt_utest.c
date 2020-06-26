@@ -769,8 +769,8 @@ void test_MQTT_Connect_receiveConnack_retries( void )
     MQTT_SerializeConnect_IgnoreAndReturn( MQTTSuccess );
     MQTT_GetConnectPacketSize_IgnoreAndReturn( MQTTSuccess );
 
-    /* Test with retries. MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT is 2*/
-    /* Nothing received from transport interface. */
+    /* Test with retries. MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT is 2.
+     * Nothing received from transport interface. */
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTNoDataAvailable );
     /* 2 retries. */
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTNoDataAvailable );

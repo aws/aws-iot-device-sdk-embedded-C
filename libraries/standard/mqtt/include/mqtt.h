@@ -170,11 +170,12 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  * @brief param[in] timeoutMs Timeout in milliseconds for receiving CONNACK
  * packet. In certain conditions, depending on the network conditions or the
  * transport interface receive timeout configured, this function can spend more
- * time in receiving CONNACK packet as compared to the timeout provided. However
- * the probability of exceeding the timeout is very low assuming the the timeouts
+ * time in receiving CONNACK packet than the provided timeout duration. However,
+ * the probability of exceeding the timeout is very low assuming the timeouts
  * for CONNACK receive and transport interface receive are configured correctly.
  * Refer to the transport interface documentation for more details about the
- * timeouts. A zero timeout will make use of the retries for receiving CONNACK.
+ * timeouts. @note A zero timeout will make use of the retries for receiving
+ * CONNACK.
  * @brief param[out] pSessionPresent Whether a previous session was present.
  * Only relevant if not establishing a clean session.
  *
