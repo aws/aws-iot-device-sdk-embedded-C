@@ -1736,6 +1736,17 @@ static HTTPStatus_t receiveHttpData( const TransportInterface_t * pTransport,
                                         pBuffer,
                                         bufferLen );
 
+        << << << < HEAD
+        == == == =
+
+            /* It is a bug in the application's transport receive implementation if
+             * more bytes than expected are received. */
+            assert( transportStatus <= ( int32_t ) bufferLen );
+
+    >> >> >> > Add CBMC proof
+
+    for AddRangeHeader
+
     /* A transport status of less than zero is an error. */
     if( transportStatus < 0 )
     {
@@ -1744,6 +1755,7 @@ static HTTPStatus_t receiveHttpData( const TransportInterface_t * pTransport,
                     transportStatus ) );
         returnStatus = HTTP_NETWORK_ERROR;
     }
+
     else if( transportStatus > 0 )
     {
         /* It is a bug in the application's transport receive implementation if
