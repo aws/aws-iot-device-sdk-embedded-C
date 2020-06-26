@@ -31,8 +31,8 @@
 void harness()
 {
     HTTPRequestHeaders_t * pRequestHeaders = NULL;
-    int32_t rangeStartOrlastNbytes = nondet_int();
-    int32_t rangeEnd = nondet_int();
+    int32_t rangeStartOrlastNbytes;
+    int32_t rangeEnd;
 
     /* Initialize and make assumptions for request headers. */
     pRequestHeaders = allocateHttpRequestHeaders( pRequestHeaders );
