@@ -24,14 +24,51 @@ HTTPRequestHeaders_t * allocateHttpRequestHeaders( HTTPRequestHeaders_t * pReque
     return pRequestHeaders;
 }
 
-int isValidHttpRequestHeaders( const HTTPRequestHeaders_t * pRequestHeaders )
+bool isValidHttpRequestHeaders( const HTTPRequestHeaders_t * pRequestHeaders )
 {
-    int isValid = 1;
+    bool isValid = true;
 
     if( pRequestHeaders )
     {
         isValid = pRequestHeaders->bufferLen < CBMC_MAX_OBJECT_SIZE &&
                   pRequestHeaders->headersLen < CBMC_MAX_OBJECT_SIZE;
+    }
+
+    return isValid;
+}
+
+HTTPRequestInfo_t * allocateHttpRequestInfo( HTTPRequestInfo_t * pRequestInfo )
+{
+    if( pRequestInfo == NULL )
+    {
+        pRequestInfo = mallocCanFail( sizeof( HTTPRequestInfo_t ) );
+    }
+
+    if( pRequestInfo != NULL )
+    {
+        __CPROVER_assume( pRequestInfo->methodLen < CBMC_MAX_OBJECT_SIZE );
+        pRequestInfo->method = mallocCanFail( pRequestInfo->methodLen );
+
+        __CPROVER_assume( pRequestInfo->hostLen < CBMC_MAX_OBJECT_SIZE );
+        pRequestInfo->pHost = mallocCanFail( pRequestInfo->hostLen );
+
+        __CPROVER_assume( pRequestInfo->pathLen < CBMC_MAX_OBJECT_SIZE );
+        pRequestInfo->pPath = mallocCanFail( pRequestInfo->pathLen );
+    }
+
+    return pRequestInfo;
+}
+
+bool isValidHttpRequestInfo( const HTTPRequestInfo_t * pRequestInfo )
+{
+    bool isValid = true;
+
+    if( pRequestInfo )
+    {
+        isValid = ( pRequestInfo->reqFlags < CBMC_MAX_OBJECT_SIZE ) &&
+                  ( pRequestInfo->methodLen < CBMC_MAX_OBJECT_SIZE ) &&
+                  ( pRequestInfo->hostLen < CBMC_MAX_OBJECT_SIZE ) &&
+                  ( pRequestInfo->pathLen < CBMC_MAX_OBJECT_SIZE );
     }
 
     return isValid;

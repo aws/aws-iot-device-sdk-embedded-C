@@ -1,0 +1,7 @@
+{ "expected-missing-functions":
+  [
+
+  ],
+  "proof-name": "HTTPClient_InitializeRequestHeaders",
+  "proof-root": "libraries/standard/http/cbmc/proofs"
+}

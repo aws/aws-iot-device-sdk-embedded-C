@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 HARNESS_ENTRY=harness
-HARNESS_FILE=HTTPClient_AddHeader_harness
+HARNESS_FILE=HTTPClient_InitializeRequestHeaders_harness
 
 DEFINES +=
 INCLUDES +=
@@ -10,7 +10,7 @@ INCLUDES +=
 REMOVE_FUNCTION_BODY +=
 UNWINDSET += strncmp.0:5
 
-PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c 
+PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 PROOF_SOURCES += $(PROOFDIR)/../../sources/http_cbmc_state.c
 
 PROJECT_SOURCES += $(SRCDIR)/libraries/standard/http/src/http_client.c
