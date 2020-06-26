@@ -1121,7 +1121,6 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
          *    A value of 0 for the config will try once to read CONNACK. */
         if( timeoutMs > 0U )
         {
-            /* Loop runs only once for 0 timeoutMs. */
             breakFromLoop = ( calculateElapsedTime( getTimeStamp(), entryTimeMs ) >= timeoutMs ) ? true : false;
         }
         else
@@ -1146,7 +1145,7 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
         }
 
         /* Reading the remainder of the packet by transport recv.
-         * Attempt to read once even if the timeout has expired at this point.
+         * Attempt to read once even if the timeout has expired.
          * Invoking receivePacket with remainingTime as 0 would attempt to
          * recv from network once. If using retries, the remainder of the
          * CONNACK packet is tried to be read only once. Reading once would be
