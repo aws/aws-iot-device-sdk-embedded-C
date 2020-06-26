@@ -1441,6 +1441,11 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
         LogError( ( "Parameter check failed: pRequestHeaders->pBuffer is NULL." ) );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
+    else if( pRequestHeaders->headersLen > pRequestHeaders->bufferLen )
+    {
+        LogError( ( "Parameter check failed: pRequestHeaders->headersLen > pRequestHeaders->bufferLen." ) );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
     else if( rangeEnd < HTTP_RANGE_REQUEST_END_OF_FILE )
     {
         LogError( ( "Parameter check failed: rangeEnd is invalid: "
@@ -1463,6 +1468,13 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
                     "rangeStart should be < rangeEnd when both are >= 0: "
                     "RangeStart=%d, RangeEnd=%d",
                     rangeStartOrlastNbytes, rangeEnd ) );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( rangeStartOrlastNbytes == INT32_MIN )
+    {
+        LogError( ( "Parameter check failed: Arithmetic overflow detected: "
+                    "rangeStart should be > than -2147483648 (INT32_MIN)",
+                    rangeStartOrlastNbytes ) );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else
