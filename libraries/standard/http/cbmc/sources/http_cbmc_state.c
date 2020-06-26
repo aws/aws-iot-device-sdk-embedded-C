@@ -65,10 +65,43 @@ bool isValidHttpRequestInfo( const HTTPRequestInfo_t * pRequestInfo )
 
     if( pRequestInfo )
     {
-        isValid = ( pRequestInfo->reqFlags < CBMC_MAX_OBJECT_SIZE ) &&
-                  ( pRequestInfo->methodLen < CBMC_MAX_OBJECT_SIZE ) &&
+        isValid = ( pRequestInfo->methodLen < CBMC_MAX_OBJECT_SIZE ) &&
                   ( pRequestInfo->hostLen < CBMC_MAX_OBJECT_SIZE ) &&
                   ( pRequestInfo->pathLen < CBMC_MAX_OBJECT_SIZE );
+    }
+
+    return isValid;
+}
+
+HTTPResponse_t * allocateResponse( HTTPResponse_t * pResponse )
+{
+    HTTPClient_ResponseHeaderParsingCallback_t headerParsingCallback;
+
+    if( pResponse == NULL )
+    {
+        pResponse = mallocCanFail( sizeof( HTTPResponse_t ) );
+    }
+
+    if( pResponse != NULL )
+    {
+        __CPROVER_assume( pResponse->bufferLen < CBMC_MAX_OBJECT_SIZE );
+        pResponse->pBuffer = mallocCanFail( pResponse->bufferLen );
+        __CPROVER_assume( pResponse->bodyLen < CBMC_MAX_OBJECT_SIZE );
+        pResponse->pBody = mallocCanFail( pResponse->bodyLen );
+        pResponse->pHeaderParsingCallback = &headerParsingCallback;
+    }
+
+    return pResponse;
+}
+
+bool isValidHttpResponse( const HTTPResponse_t * pResponse )
+{
+    bool isValid = true;
+
+    if( pResponse )
+    {
+        isValid = ( pResponse->bufferLen < CBMC_MAX_OBJECT_SIZE ) &&
+                  ( pResponse->bodyLen < CBMC_MAX_OBJECT_SIZE );
     }
 
     return isValid;

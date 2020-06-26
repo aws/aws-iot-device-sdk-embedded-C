@@ -27,6 +27,11 @@
 #include "http_client.h"
 
 /**
+ * @brief Attains coverage when a variable needs to possibly contain two values.
+ */
+bool nondet_bool();
+
+/**
  * @brief Calls malloc based on given size or returns NULL for coverage.
  *
  * Implementation of safe malloc which returns NULL if the requested size is 0.
@@ -56,7 +61,7 @@ bool isValidHttpRequestHeaders( const HTTPRequestHeaders_t * pRequestHeaders );
 /**
  * @brief Allocate a request info object.
  */
-HTTPRequestInfo_t * allocateHttpRequestInfo();
+HTTPRequestInfo_t * allocateHttpRequestInfo( HTTPRequestInfo_t * pRequestInfo );
 
 /**
  * @brief Validates if a request info object is feasible.
@@ -66,5 +71,9 @@ HTTPRequestInfo_t * allocateHttpRequestInfo();
  * @return true if request headers is feasible; 0 otherwise.
  */
 bool isValidHttpRequestInfo( const HTTPRequestInfo_t * pRequestInfo );
+
+HTTPResponse_t * allocateResponse( HTTPResponse_t * pResponse );
+
+bool isValidHttpResponse( const HTTPResponse_t * pResponse );
 
 #endif /* ifndef HTTP_CBMC_STATE_H_ */
