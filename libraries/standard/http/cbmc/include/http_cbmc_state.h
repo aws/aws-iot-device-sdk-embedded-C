@@ -27,6 +27,11 @@
 #include "http_client.h"
 
 /**
+ * @brief Attains coverage when a variable needs to possibly contain two values.
+ */
+bool nondet_bool();
+
+/**
  * @brief Calls malloc based on given size or returns NULL for coverage.
  *
  * Implementation of safe malloc which returns NULL if the requested size is 0.
