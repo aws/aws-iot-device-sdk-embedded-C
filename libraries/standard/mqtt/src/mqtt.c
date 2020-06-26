@@ -1128,7 +1128,8 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
         }
         else
         {
-            breakFromLoop = ( loopCount++ >= MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT ) ? true : false;
+            breakFromLoop = ( loopCount >= MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT ) ? true : false;
+            loopCount++;
         }
 
         /* Loop until there is data to read or if we have exceeded the timeout/retries. */
@@ -1193,23 +1194,6 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
     if( status == MQTTSuccess )
     {
         LogInfo( ( "Received MQTT CONNACK successfully from broker." ) );
-    }
-    else if( status == MQTTNoDataAvailable )
-    {
-        if( useRetry == false )
-        {
-            LogError( ( "Failed to receive CONNACK within the timeout of %ums."
-                        " Increasing the timeout may help resolve this issue.",
-                        timeoutMs ) );
-        }
-        else
-        {
-            LogError( ( "Failed to receive CONNACK within the max number"
-                        " of retries of %u to read from network. Increasing the"
-                        " number of retries with config MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT"
-                        " may help resolve the issue.",
-                        MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT ) );
-        }
     }
     else
     {

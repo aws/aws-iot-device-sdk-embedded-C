@@ -1053,7 +1053,6 @@ void test_MQTT_Connect_happy_path()
     TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
     TEST_ASSERT_TRUE( sessionPresent );
     /* CONNACK receive with retries. */
-    mqttContext.callbacks.getTime = NULL;
     incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
     incomingPacket.remainingLength = 2;
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -1066,7 +1065,6 @@ void test_MQTT_Connect_happy_path()
     /* CONNACK receive with retries.
      * #MQTTNoDataAvailable for first #MQTT_GetIncomingPacketTypeAndLength
      * and success in the second time. */
-    mqttContext.callbacks.getTime = NULL;
     incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
     incomingPacket.remainingLength = 2;
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTNoDataAvailable );
