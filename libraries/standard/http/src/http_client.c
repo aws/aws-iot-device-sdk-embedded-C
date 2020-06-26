@@ -797,7 +797,7 @@ static int httpParserOnBodyCallback( http_parser * pHttpParser,
     /* MISRA Rule 11.8 flags casting away the const qualifier in the pointer
      * type. This rule is suppressed because when the body is of transfer
      * encoding chunked, the body must be copied over the chunk headers that
-     * preceed it. This is done to have a contiguous response body. This does
+     * precede it. This is done to have a contiguous response body. This does
      * affect future parsing as the changed segment will always be before the
      * next place to parse. */
     /* coverity[misra_c_2012_rule_11_8_violation] */
