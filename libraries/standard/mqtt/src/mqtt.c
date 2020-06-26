@@ -1088,7 +1088,7 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
     MQTTStatus_t status = MQTTSuccess;
     MQTTGetCurrentTimeFunc_t getTimeStamp = NULL;
     uint32_t entryTimeMs = 0U, remainingTimeMs = 0U, timeTakenMs = 0U;
-    bool breakFromLoop = false, useRetry = false;
+    bool breakFromLoop = false;
     uint16_t loopCount = 0U;
 
     assert( pContext != NULL );
@@ -1119,9 +1119,7 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
          *    MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT. This config will control
          *    maximum the number of retry attempts to read the CONNACK packet.
          *    A value of 0 for the config will try once to read CONNACK. */
-        useRetry = ( timeoutMs == 0U ) ? true : false;
-
-        if( useRetry == false )
+        if( timeoutMs > 0U )
         {
             /* Loop runs only once for 0 timeoutMs. */
             breakFromLoop = ( calculateElapsedTime( getTimeStamp(), entryTimeMs ) >= timeoutMs ) ? true : false;
