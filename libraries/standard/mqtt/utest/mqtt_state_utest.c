@@ -89,8 +89,7 @@ void test_MQTT_ReserveState( void )
     const uint16_t PACKET_ID = 1;
     const uint16_t PACKET_ID2 = 2;
     const uint16_t PACKET_ID3 = 3;
-    const size_t index = 0;
-    const size_t index2 = MQTT_STATE_ARRAY_MAX_COUNT / 2;
+    const size_t index = MQTT_STATE_ARRAY_MAX_COUNT / 2;
 
     /* QoS 0 returns success. */
     TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_ReserveState( NULL, MQTT_PACKET_ID_INVALID, MQTTQoS0 ) );
@@ -119,21 +118,23 @@ void test_MQTT_ReserveState( void )
     status = MQTT_ReserveState( &mqttContext, PACKET_ID, MQTTQoS1 );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
     /* Reserve uses first available entry. */
-    TEST_ASSERT_EQUAL( PACKET_ID, mqttContext.outgoingPublishRecords[ index ].packetId );
-    TEST_ASSERT_EQUAL( MQTTQoS1, mqttContext.outgoingPublishRecords[ index ].qos );
-    TEST_ASSERT_EQUAL( MQTTPublishSend, mqttContext.outgoingPublishRecords[ index ].publishState );
+    TEST_ASSERT_EQUAL( PACKET_ID, mqttContext.outgoingPublishRecords[ 0 ].packetId );
+    TEST_ASSERT_EQUAL( MQTTQoS1, mqttContext.outgoingPublishRecords[ 0 ].qos );
+    TEST_ASSERT_EQUAL( MQTTPublishSend, mqttContext.outgoingPublishRecords[ 0 ].publishState );
 
     /* Success.
      * Add record after the highest non empty index.
      * Already an entry exists at index 0. Adding 1 more entry at index 5.
      * The new index used should be 6. */
-    addToRecord( mqttContext.outgoingPublishRecords, index2, PACKET_ID2, MQTTQoS2, MQTTPubRelSend );
+    addToRecord( mqttContext.outgoingPublishRecords, index, PACKET_ID2, MQTTQoS2, MQTTPubRelSend );
     status = MQTT_ReserveState( &mqttContext, PACKET_ID3, MQTTQoS1 );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
-    TEST_ASSERT_EQUAL( PACKET_ID3, mqttContext.outgoingPublishRecords[ index2 + 1 ].packetId );
-    TEST_ASSERT_EQUAL( MQTTQoS1, mqttContext.outgoingPublishRecords[ index2 + 1 ].qos );
-    TEST_ASSERT_EQUAL( MQTTPublishSend, mqttContext.outgoingPublishRecords[ index2 + 1 ].publishState );
+    TEST_ASSERT_EQUAL( PACKET_ID3, mqttContext.outgoingPublishRecords[ index + 1 ].packetId );
+    TEST_ASSERT_EQUAL( MQTTQoS1, mqttContext.outgoingPublishRecords[ index + 1 ].qos );
+    TEST_ASSERT_EQUAL( MQTTPublishSend, mqttContext.outgoingPublishRecords[ index + 1 ].publishState );
 }
+
+/* ========================================================================== */
 
 void test_MQTT_ReserveState_compactRecords( void )
 {
@@ -177,7 +178,7 @@ void test_MQTT_ReserveState_compactRecords( void )
     /* Alternate free spots.
      * Pre condition - 1 0 1 0 1 0 1 0 1 0.
      * Add an element will skip to compact the array and the resulting state
-     * should be - 1 0 1 0 1 0 1 0 1 0. */
+     * should be - 1 0 1 0 1 0 1 0 1 1. */
     fillRecord( mqttContext.outgoingPublishRecords, PACKET_ID2 + 1, MQTTQoS2, MQTTPubRelSend );
     /* Invalidate record at alternate indexes starting from 1. */
     mqttContext.outgoingPublishRecords[ 1 ].packetId = MQTT_PACKET_ID_INVALID;
@@ -256,6 +257,7 @@ void test_MQTT_ReserveState_compactRecords( void )
     validateRecordAt( mqttContext.outgoingPublishRecords, 0, PACKET_ID, MQTTQoS2, MQTTPubRecPending );
     validateRecordAt( mqttContext.outgoingPublishRecords, 1, PACKET_ID2 + 1, MQTTQoS2, MQTTPubCompPending );
 }
+
 /* ========================================================================== */
 
 void test_MQTT_CalculateStatePublish( void )

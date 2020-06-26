@@ -704,7 +704,11 @@ static MQTTStatus_t updateStateAck( MQTTPubAckInfo_t * records,
              * a PUBREL needs to be resent in case of a session reestablishment. */
             if( newState == MQTTPubRelSend )
             {
-                status = addRecord( records, MQTT_STATE_ARRAY_MAX_COUNT, packetId, MQTTQoS2, MQTTPubRelSend );
+                status = addRecord( records,
+                                    MQTT_STATE_ARRAY_MAX_COUNT,
+                                    packetId,
+                                    MQTTQoS2,
+                                    MQTTPubRelSend );
             }
         }
     }

@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdbool.h>
 
 #include "unity.h"
 
@@ -462,7 +463,7 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext,
                     break;
 
                 case MQTTStateCollision:
-                    expectMoreCalls = ( pPubInfo->dup == true ) ? true : false;
+                    expectMoreCalls = pPubInfo->dup;
                     break;
 
                 default:
@@ -653,6 +654,7 @@ void test_MQTT_Connect_sendConnect( void )
     MQTT_GetConnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetConnectPacketSize_ReturnThruPtr_pPacketSize( &packetSize );
     MQTT_GetConnectPacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
+
     /* We know the send was successful if MQTT_GetIncomingPacketTypeAndLength()
      * is called. */
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTRecvFailed );
@@ -805,7 +807,7 @@ void test_MQTT_Connect_resendPendingAcks( void )
     MQTTContext_t mqttContext;
     MQTTConnectInfo_t connectInfo;
     uint32_t timeout = 2;
-    bool sessionPresent;
+    bool sessionPresent, sessionPresentResult;
     MQTTStatus_t status;
     MQTTTransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
@@ -836,11 +838,13 @@ void test_MQTT_Connect_resendPendingAcks( void )
     MQTT_DeserializeAck_ReturnThruPtr_pSessionPresent( &sessionPresent );
     /* No packets to resend. */
     MQTT_PubrelToResend_ExpectAnyArgsAndReturn( MQTT_PACKET_TYPE_INVALID );
-    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresentResult );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
+    TEST_ASSERT_TRUE( sessionPresentResult );
 
     /* Test 2. One packet found in ack pending state, but Sending ack failed. */
+    sessionPresentResult = false;
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
     MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -850,9 +854,10 @@ void test_MQTT_Connect_resendPendingAcks( void )
     /* Serialize Ack failure. */
     MQTT_SerializeAck_ExpectAnyArgsAndReturn( MQTTBadParameter );
     MQTT_PubrelToResend_ExpectAnyArgsAndReturn( MQTT_PACKET_TYPE_INVALID );
-    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresentResult );
     TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
     TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
+    TEST_ASSERT_TRUE( sessionPresentResult );
 
     /* Test 3. One packet found in ack pending state, Sent
      * PUBREL successfully. */
