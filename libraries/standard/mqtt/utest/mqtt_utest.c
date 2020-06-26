@@ -741,7 +741,7 @@ void test_MQTT_Connect_receiveConnack( void )
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
-    /* Same set ot tests with retries. MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT is 2*/
+    /* Same set of tests with retries. MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT is 2*/
     /* Nothing received from transport interface. */
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTNoDataAvailable );
     /* 2 retries. */

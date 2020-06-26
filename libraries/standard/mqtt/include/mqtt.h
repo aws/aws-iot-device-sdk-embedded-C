@@ -152,7 +152,7 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
                         const MQTTFixedBuffer_t * pNetworkBuffer );
 
 /**
- * @brief Establish a MQTT session.
+ * @brief Establish an MQTT session.
  *
  * This function will send MQTT CONNECT packet and receive a CONNACK packet.
  * The send and receive from the network is through the transport interface.
@@ -168,8 +168,8 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  * @brief param[in] pConnectInfo MQTT CONNECT packet parameters.
  * @brief param[in] pWillInfo Last Will and Testament. Pass NULL if not used.
  * @brief param[in] timeoutMs Timeout in milliseconds for receiving
- * CONNACK packet. A zero timeout value will attempt to receive through
- * transport receive once.
+ * CONNACK packet. A zero timeout value will attempt a single reception
+ * from the transport interface.
  * @brief param[out] pSessionPresent Whether a previous session was present.
  * Only relevant if not establishing a clean session.
  *
