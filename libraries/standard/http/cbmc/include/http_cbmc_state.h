@@ -22,6 +22,8 @@
 #ifndef HTTP_CBMC_STATE_H_
 #define HTTP_CBMC_STATE_H_
 
+#include <stdbool.h>
+
 #include "http_client.h"
 
 /**
@@ -38,17 +40,31 @@ void * mallocCanFail( size_t size );
 /**
  * @brief Allocate a request headers object.
  *
- * @param[in] pRequestHeaders Request headers to allocate.
+ * @param[in] pRequestHeaders Request headers object to allocate.
  */
 HTTPRequestHeaders_t * allocateHttpRequestHeaders( HTTPRequestHeaders_t * pRequestHeaders );
 
 /**
  * @brief Validates if a request headers object is feasible.
  *
- * @param[in] pRequestHeaders Request headers to validate.
+ * @param[in] pRequestHeaders Request headers object to validate.
  *
- * @return 1 if request headers is feasible; 0 otherwise.
+ * @return true if request headers is feasible; false otherwise.
  */
-int isValidHttpRequestHeaders( const HTTPRequestHeaders_t * pRequestHeaders );
+bool isValidHttpRequestHeaders( const HTTPRequestHeaders_t * pRequestHeaders );
+
+/**
+ * @brief Allocate a request info object.
+ */
+HTTPRequestInfo_t * allocateHttpRequestInfo();
+
+/**
+ * @brief Validates if a request info object is feasible.
+ *
+ * @param[in] pRequestInfo Request info object to validate.
+ *
+ * @return true if request headers is feasible; 0 otherwise.
+ */
+bool isValidHttpRequestInfo( const HTTPRequestInfo_t * pRequestInfo );
 
 #endif /* ifndef HTTP_CBMC_STATE_H_ */
