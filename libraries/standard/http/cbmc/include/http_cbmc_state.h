@@ -22,6 +22,8 @@
 #ifndef HTTP_CBMC_STATE_H_
 #define HTTP_CBMC_STATE_H_
 
+#include <stdbool.h>
+
 #include "http_client.h"
 
 /**
