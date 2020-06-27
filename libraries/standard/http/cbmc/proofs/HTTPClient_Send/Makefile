@@ -8,12 +8,13 @@ DEFINES +=
 INCLUDES +=
 
 REMOVE_FUNCTION_BODY +=
-UNWINDSET += convertInt32ToAscii.0:11 strncmp.0:5 receiveAndParseHttpResponse.0:5 sendHttpData.0:5
+UNWINDSET += convertInt32ToAscii.0:11 convertInt32ToAscii.1:11 strncmp.0:5
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 PROOF_SOURCES += $(PROOFDIR)/../../sources/http_cbmc_state.c
 PROOF_SOURCES += $(PROOFDIR)/../../stubs/transport_interface_stubs.c
 
 PROJECT_SOURCES += $(SRCDIR)/libraries/standard/http/src/http_client.c
+PROJECT_SOURCES += $(SRCDIR)/libraries/standard/http/third_party/http_parser/http_parser.c
 
 include ../Makefile.common

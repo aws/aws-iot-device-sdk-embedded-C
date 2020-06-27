@@ -22,20 +22,9 @@
 #ifndef TRANSPORT_INTERFACE_STUBS_H_
 #define TRANSPORT_INTERFACE_STUBS_H_
 
-#include "http_client.h"
+#include <stdint.h>
 
-/**
- * @brief Application defined transport interface send function.
- *
- * @param[in] pTransport Transport interface.
- * @param[in] pTransportRecv Transport receive function pointer.
- * @param[in] pTransportSend Transport send function pointer.
- * @return An allocated HTTPTransportInterface_t object to use as a parameter
- * for the function under test.
- */
-HTTPTransportInterface_t * allocateTransportInterface( HTTPTransportInterface_t * pTransport,
-                                                       HTTPTransportRecv_t pTransportRecv,
-                                                       HTTPTransportSend_t pTransportSend );
+#include "http_client.h"
 
 /**
  * @brief Application defined transport interface send function.

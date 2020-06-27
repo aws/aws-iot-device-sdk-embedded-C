@@ -23,8 +23,17 @@
 #define HTTP_CBMC_STATE_H_
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #include "http_client.h"
+
+/**
+ * @brief Definition of the HTTP network context.
+ */
+struct NetworkContext
+{
+    int filler;
+};
 
 /**
  * @brief Attains coverage when a variable needs to possibly contain two values.
@@ -72,8 +81,21 @@ HTTPRequestInfo_t * allocateHttpRequestInfo( HTTPRequestInfo_t * pRequestInfo );
  */
 bool isValidHttpRequestInfo( const HTTPRequestInfo_t * pRequestInfo );
 
-HTTPResponse_t * allocateResponse( HTTPResponse_t * pResponse );
+HTTPResponse_t * allocateHttpResponse( HTTPResponse_t * pResponse );
 
 bool isValidHttpResponse( const HTTPResponse_t * pResponse );
+
+/**
+ * @brief Allocate a transport interface for CBMC.
+ *
+ * @param[in] pTransport Transport interface.
+ * @param[in] pTransportRecv Transport receive function pointer.
+ * @param[in] pTransportSend Transport send function pointer.
+ * @return An allocated HTTPTransportInterface_t object to use as a parameter
+ * for the function under test.
+ */
+HTTPTransportInterface_t * allocateTransportInterface( HTTPTransportInterface_t * pTransport,
+                                                       HTTPTransportRecv_t pTransportRecv,
+                                                       HTTPTransportSend_t pTransportSend );
 
 #endif /* ifndef HTTP_CBMC_STATE_H_ */
