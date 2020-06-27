@@ -116,19 +116,6 @@ static MQTTStatus_t receivePacket( const MQTTContext_t * pContext,
 static uint8_t getAckTypeToSend( MQTTPublishState_t state );
 
 /**
- * @brief Update state records after publish acks are sent.
- *
- * @param[in] pContext MQTT Connection context.
- * @param[in] packetId packet ID of original PUBLISH.
- * @param[in] packetType Packet type of the ack packet sent.
- *
- * @return #MQTTSuccess or #MQTTIllegalState.
- */
-static MQTTStatus_t updateAckSentState( MQTTContext_t * pContext,
-                                        uint16_t packetId,
-                                        MQTTPubAckType_t packetType );
-
-/**
  * @brief Send acks for received QoS 1/2 publishes.
  *
  * @param[in] pContext MQTT Connection context.
@@ -598,37 +585,12 @@ static uint8_t getAckTypeToSend( MQTTPublishState_t state )
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t updateAckSentState( MQTTContext_t * pContext,
-                                        uint16_t packetId,
-                                        MQTTPubAckType_t packetType )
-{
-    MQTTStatus_t status = MQTTSuccess;
-    MQTTPublishState_t newState = MQTTStateNull;
-
-    assert( pContext != NULL );
-    assert( packetId != MQTT_PACKET_ID_INVALID );
-
-    status = MQTT_UpdateStateAck( pContext,
-                                  packetId,
-                                  packetType,
-                                  MQTT_SEND,
-                                  &newState );
-
-    if( status != MQTTSuccess )
-    {
-        LogError( ( "Failed to update state of publish %u.", packetId ) );
-    }
-
-    return status;
-}
-
-/*-----------------------------------------------------------*/
-
 static MQTTStatus_t sendPublishAcks( MQTTContext_t * pContext,
                                      uint16_t packetId,
                                      MQTTPublishState_t publishState )
 {
     MQTTStatus_t status = MQTTSuccess;
+    MQTTPublishState_t newState = MQTTStateNull;
     int32_t bytesSent = 0;
     uint8_t packetTypeByte = 0U;
     MQTTPubAckType_t packetType;
@@ -655,13 +617,22 @@ static MQTTStatus_t sendPublishAcks( MQTTContext_t * pContext,
         if( bytesSent == ( int32_t ) MQTT_PUBLISH_ACK_PACKET_SIZE )
         {
             pContext->controlPacketSent = true;
-            status = updateAckSentState( pContext, packetId, packetType );
+            status = MQTT_UpdateStateAck( pContext,
+                                          packetId,
+                                          packetType,
+                                          MQTT_SEND,
+                                          &newState );
+
+            if( status != MQTTSuccess )
+            {
+                LogError( ( "Failed to update state of publish %u.", packetId ) );
+            }
         }
         else
         {
             LogError( ( "Failed to send ACK packet: PacketType=%02x, "
                         "SentBytes=%d, "
-                        "PacketSize=%lu",
+                        "PacketSize=%lu.",
                         packetTypeByte,
                         bytesSent,
                         MQTT_PUBLISH_ACK_PACKET_SIZE ) );
