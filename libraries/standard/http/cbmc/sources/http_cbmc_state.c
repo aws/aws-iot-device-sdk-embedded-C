@@ -110,3 +110,22 @@ bool isValidHttpResponse( const HTTPResponse_t * pResponse )
 
     return isValid;
 }
+
+HTTPTransportInterface_t * allocateTransportInterface( HTTPTransportInterface_t * pTransport,
+                                                       HTTPTransportRecv_t pTransportRecv,
+                                                       HTTPTransportSend_t pTransportSend )
+{
+    if( pTransport == NULL )
+    {
+        pTransport = mallocCanFail( sizeof( HTTPTransportInterface_t ) );
+    }
+
+    if( pTransport != NULL )
+    {
+        pTransport->pContext = mallocCanFail( sizeof( NetworkContext_t ) );
+        pTransport->recv = nondet_bool() ? NULL : pTransportRecv;
+        pTransport->send = nondet_bool() ? NULL : pTransportSend;
+    }
+
+    return pTransport;
+}

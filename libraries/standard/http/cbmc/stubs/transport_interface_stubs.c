@@ -21,34 +21,9 @@
 
 #include "transport_interface_stubs.h"
 
-#include "http_cbmc_state.h"
-
-HTTPTransportInterface_t * allocateTransportInterface( HTTPTransportInterface_t * pTransport,
-                                                       HTTPTransportRecv_t pTransportRecv,
-                                                       HTTPTransportSend_t pTransportSend )
-{
-    NetworkContext_t pNetworkContext;
-
-    pNetworkContext = nondet_bool() ? NULL : mallocCanFail( sizeof( NetworkContext_t ) );
-
-    if( pTransport == NULL )
-    {
-        pTransport = mallocCanFail( sizeof( HTTPTransportInterface_t ) );
-    }
-
-    if( pTransport != NULL )
-    {
-        pTransport->pContext = pNetworkContext;
-        pTransport->recv = nondet_bool() ? NULL : pTransportRecv;
-        pTransport->send = nondet_bool() ? NULL : pTransportSend;
-    }
-
-    return pTransport;
-}
-
-int32_t TransportInterfaceSendStub( NetworkContext_t context,
-                                    void * pBuffer,
-                                    size_t bytesToSend )
+static int32_t TransportInterfaceSendStub( NetworkContext_t context,
+                                           void * pBuffer,
+                                           size_t bytesToSend )
 {
     /* This is unbounded as the MQTT code should be able to safely handle any
      * int32_t value returned from the application defined network receive
@@ -56,10 +31,10 @@ int32_t TransportInterfaceSendStub( NetworkContext_t context,
     int32_t bytesOrError;
 
     __CPROVER_assert( context != NULL,
-                      "TransportInterfaceReceive pConnection is not NULL." );
+                      "TransportInterfaceSend pConnection is not NULL." );
 
     __CPROVER_assert( pBuffer != NULL,
-                      "TransportInterfaceReceive pBuffer is not NULL." );
+                      "TransportInterfaceSend pBuffer is not NULL." );
 
     __CPROVER_assert( __CPROVER_r_ok( pBuffer, bytesToSend ),
                       "pBuffer is readable up to bytesToSend." );
@@ -69,9 +44,9 @@ int32_t TransportInterfaceSendStub( NetworkContext_t context,
     return bytesOrError;
 }
 
-int32_t TransportInterfaceReceiveStub( NetworkContext_t context,
-                                       void * pBuffer,
-                                       size_t bytesToRecv )
+static int32_t TransportInterfaceReceiveStub( NetworkContext_t context,
+                                              void * pBuffer,
+                                              size_t bytesToRecv )
 {
     /* This is unbounded as the MQTT code should be able to safely handle any
      * int32_t value returned from the application defined network receive
