@@ -191,10 +191,11 @@ static int connectToServer( const char * pServer,
 /**
  * @brief connect to MQTT broker with reconnection retries.
  * If connection fails, retry is attempted after a timeout.
- * Timeout value will exponentially increased till the maximum
- * attemps are reached.
+ * Timeout value will exponentially increased till maximum
+ * timeout value is reached or the number of attemps are exhausted.
  *
- * @param[out] pTcpSocket Pointer to TCP socket file descriptor.
+ * @param[out] pTcpSocket Pointer to TCP socket file descriptor. Upon
+ * successful connect, the pointer will point at connected socket descriptor. 
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on successful connection.
  */
@@ -448,25 +449,32 @@ static int connectToServerWithBackoffRetries( int * pTcpSocket )
     TransportReconnectParams_t reconnectParams;
 
     /* Initialize reconnect attempts and interval */
-    reconnectBackoffReset( &reconnectParams );
+    Transport_reconnectBackoffReset( &reconnectParams );
 
     /* Attempt to connect to MQTT broker. If connection fails, retry after
      * a timeout. Timeout value will exponentially increase till maximum
      * attemps are reached.
      *
      *  while( ( EXIT_FAILURE == connectToServer( BROKER_ENDPOINT, BROKER_PORT, pTcpSocket ) ) &&
-     *  ( true == reconnectBackoffAndSleep() ) ) {}
+     *  ( true == Transport_reconnectBackoffAndSleep() ) ) {}
      */
 
     do
     {
+        /* Establish a TCP connection with the MQTT broker. This example connects
+         * to the MQTT broker as specified in BROKER_ENDPOINT and BROKER_PORT at
+         * the top of this file. */
+        LogInfo( ( "Creating a TCP connection to %.*s:%d.",
+                   BROKER_ENDPOINT_LENGTH,
+                   BROKER_ENDPOINT,
+                   BROKER_PORT ) );
         status = connectToServer( BROKER_ENDPOINT, BROKER_PORT, pTcpSocket );
 
         if( status == EXIT_FAILURE )
         {
             LogWarn( ( "Connection to the broker failed, sleeping %d seconds before the next attempt.",
                        ( reconnectParams.reconnectTimeoutSec > MAX_RECONNECT_TIMEOUT ) ? MAX_RECONNECT_TIMEOUT : reconnectParams.reconnectTimeoutSec ) );
-            backoffSuccess = reconnectBackoffAndSleep( &reconnectParams );
+            backoffSuccess = Transport_reconnectBackoffAndSleep( &reconnectParams );
         }
 
         if( backoffSuccess == false )
@@ -895,14 +903,9 @@ int main( int argc,
     /* Get the entry time to application. */
     globalEntryTimeMs = getTimeMs();
 
-    /* Establish a TCP connection with the MQTT broker. This example connects
-     * to the MQTT broker as specified in BROKER_ENDPOINT and BROKER_PORT at
-     * the top of this file. */
-    LogInfo( ( "Creating a TCP connection to %.*s:%d.",
-               BROKER_ENDPOINT_LENGTH,
-               BROKER_ENDPOINT,
-               BROKER_PORT ) );
-
+    /* Attempt to connect to MQTT broker. If connection fails, retry after
+     * a timeout. Timeout value will exponentially increased till maximum
+     * attemps are reached. */
     status = connectToServerWithBackoffRetries( &tcpSocket );
 
     /* Establish MQTT session on top of TCP connection. */

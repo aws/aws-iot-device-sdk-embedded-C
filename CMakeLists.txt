@@ -57,6 +57,3 @@ add_subdirectory( platform )
 # Build the demos.
 add_subdirectory( demos/transport )
 add_subdirectory( demos )
-
-# Build platform
-add_subdirectory( platform )
