@@ -5,6 +5,11 @@ add_executable(${DEMO_NAME})
 set(OPENSSL_USE_STATIC_LIBS TRUE)
 find_package(OpenSSL REQUIRED)
 
+# Verify the minimum OpenSSL version required
+if( OPENSSL_VERSION MATCHES "0.9$" OR OPENSSL_VERSION MATCHES "1.0$"  )
+    message( FATAL_ERROR "OpenSSL 1.1.0 or later required: OpenSSL ${OPENSSL_VERSION} found." )
+endif()
+
 set( CMAKE_THREAD_PREFER_PTHREAD ON )
 find_package(Threads REQUIRED)
 

@@ -125,6 +125,11 @@ struct MQTTContext
  * @brief Initialize an MQTT context.
  *
  * This function must be called on an MQTT context before any other function.
+ * 
+ * @note The getTime callback function must be defined. If there is no time
+ * implementation, it is the responsibility of the application to provide a
+ * dummy function to always return 0, and provide 0 timeouts for functions. This
+ * will ensure all time based functions will run for a single iteration.
  *
  * @brief param[in] pContext The context to initialize.
  * @brief param[in] pTransportInterface The transport interface to use with the context.
@@ -247,7 +252,8 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
 MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext );
 
 /**
- * @brief Loop to receive packets from the transport interface.
+ * @brief Loop to receive packets from the transport interface. Handles keep
+ * alive.
  *
  * @param[in] pContext Initialized and connected MQTT context.
  * @param[in] timeoutMs Minimum time in milliseconds that the receive loop will
@@ -264,6 +270,27 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext );
  * #MQTTSuccess on success.
  */
 MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
+                               uint32_t timeoutMs );
+
+/**
+ * @brief Loop to receive packets from the transport interface. Does not handle
+ * keep alive.
+ *
+ * @note Passing a timeout value of 0 will run the loop for a single iteration.
+ *
+ * @param[in] pContext Initialized and connected MQTT context.
+ * @param[in] timeoutMs Minimum time in milliseconds that the receive loop will
+ * run, unless an error occurs.
+ *
+ * @return #MQTTBadParameter if context is NULL;
+ * #MQTTRecvFailed if a network error occurs during reception;
+ * #MQTTSendFailed if a network error occurs while sending an ACK or PINGREQ;
+ * #MQTTBadResponse if an invalid packet is received;
+ * #MQTTIllegalState if an incoming QoS 1/2 publish or ack causes an
+ * invalid transition for the internal state machine;
+ * #MQTTSuccess on success.
+ */
+MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext,
                                uint32_t timeoutMs );
 
 /**
