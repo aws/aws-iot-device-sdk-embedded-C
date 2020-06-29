@@ -283,6 +283,24 @@ static size_t _sendSuccess( IotNetworkConnection_t pSendContext,
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief A send function that always "fails" to simulate network disconnection or failure.
+ */
+static size_t _sendFailure( IotNetworkConnection_t pSendContext,
+                            const uint8_t * pMessage,
+                            size_t messageLength )
+{
+    /* Silence warnings about unused parameters. */
+    ( void ) pSendContext;
+    ( void ) pMessage;
+    ( void ) messageLength;
+
+    /* This function returns 0 to simulate send failure. */
+    return 0;
+}
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief A send function for PINGREQ that responds with a PINGRESP.
  */
 static size_t _sendPingreq( IotNetworkConnection_t pSendContext,
@@ -687,12 +705,15 @@ TEST_GROUP_RUNNER( MQTT_Unit_API )
     RUN_TEST_CASE( MQTT_Unit_API, DisconnectAlreadyDisconnected );
     RUN_TEST_CASE( MQTT_Unit_API, PublishQoS0Parameters );
     RUN_TEST_CASE( MQTT_Unit_API, PublishQoS0MallocFail );
+    RUN_TEST_CASE( MQTT_Unit_API, PublishQoS0SyncWithNetworkFailure );
     RUN_TEST_CASE( MQTT_Unit_API, PublishQoS1 );
     RUN_TEST_CASE( MQTT_Unit_API, PublishRetryPeriod );
     RUN_TEST_CASE( MQTT_Unit_API, PublishDuplicates );
     RUN_TEST_CASE( MQTT_Unit_API, SubscribeUnsubscribeParameters );
     RUN_TEST_CASE( MQTT_Unit_API, SubscribeMallocFail );
+    RUN_TEST_CASE( MQTT_Unit_API, SubscribeSyncWhenNetworkSendFails );
     RUN_TEST_CASE( MQTT_Unit_API, UnsubscribeMallocFail );
+    RUN_TEST_CASE( MQTT_Unit_API, UnsubscribeSyncWhenNetworkSendFails );
     RUN_TEST_CASE( MQTT_Unit_API, KeepAlivePeriodic );
     RUN_TEST_CASE( MQTT_Unit_API, KeepAliveJobCleanup );
     RUN_TEST_CASE( MQTT_Unit_API, GetConnectPacketSizeChecks );
@@ -1486,6 +1507,36 @@ TEST( MQTT_Unit_API, PublishQoS0MallocFail )
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Tests the behavior of @ref mqtt_function_publishsync (QoS 0) when network
+ * send fails
+ */
+TEST( MQTT_Unit_API, PublishQoS0SyncWithNetworkFailure )
+{
+    IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
+
+    /* Initialize parameters. */
+    _networkInterface.send = _sendFailure;
+
+    /* Create a new MQTT connection. */
+    _pMqttConnection = IotTestMqtt_createMqttConnection( AWS_IOT_MQTT_SERVER,
+                                                         &_networkInfo,
+                                                         0 );
+    TEST_ASSERT_NOT_NULL( _pMqttConnection );
+
+    /* Set the necessary members of publish info. */
+    publishInfo.pTopicName = TEST_TOPIC_NAME;
+    publishInfo.topicNameLength = TEST_TOPIC_NAME_LENGTH;
+
+    /* Test that the sync Publish API fails on network failure. */
+    TEST_ASSERT_EQUAL( IOT_MQTT_NETWORK_ERROR,
+                       IotMqtt_PublishSync( _pMqttConnection, &publishInfo, 0, 0 ) );
+
+    IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief Tests the behavior of @ref mqtt_function_publishasync (QoS 1) with various
  * invalid parameters. Also tests the behavior of @ref mqtt_function_publishasync
  * (QoS 1) when memory allocation fails at various points.
@@ -1816,6 +1867,43 @@ TEST( MQTT_Unit_API, SubscribeMallocFail )
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Tests the behavior of @ref mqtt_function_subscribesync when network send
+ * fails.
+ */
+TEST( MQTT_Unit_API, SubscribeSyncWhenNetworkSendFails )
+{
+    IotMqttSubscription_t subscription = IOT_MQTT_SUBSCRIPTION_INITIALIZER;
+
+    /* Initializer parameters. */
+    _networkInterface.send = _sendFailure;
+
+    /* Create a new MQTT connection. */
+    _pMqttConnection = IotTestMqtt_createMqttConnection( AWS_IOT_MQTT_SERVER,
+                                                         &_networkInfo,
+                                                         0 );
+    TEST_ASSERT_NOT_NULL( _pMqttConnection );
+
+    /* Set the necessary members of the subscription. */
+    subscription.pTopicFilter = TEST_TOPIC_NAME;
+    subscription.topicFilterLength = TEST_TOPIC_NAME_LENGTH;
+    subscription.callback.function = SUBSCRIPTION_CALLBACK;
+
+    /* Test that the sync SUBSCRIBE API fails when network send fails. */
+    TEST_ASSERT_EQUAL( IOT_MQTT_NETWORK_ERROR, IotMqtt_SubscribeSync( _pMqttConnection,
+                                                                      &subscription,
+                                                                      1 /* subscription count*/,
+                                                                      0 /* flags */,
+                                                                      0 /* timeout */ ) );
+
+    /* No lingering subscriptions should be in the MQTT connection. */
+    TEST_ASSERT_EQUAL_INT( true, IotListDouble_IsEmpty( &( _pMqttConnection->subscriptionList ) ) );
+
+    IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief Tests the behavior of @ref mqtt_function_unsubscribeasync when memory
  * allocation fails at various points.
  */
@@ -1871,6 +1959,42 @@ TEST( MQTT_Unit_API, UnsubscribeMallocFail )
         /* No lingering subscriptions should be in the MQTT connection. */
         TEST_ASSERT_EQUAL_INT( true, IotListDouble_IsEmpty( &( _pMqttConnection->subscriptionList ) ) );
     }
+
+    IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Tests the behavior of @ref mqtt_function_unsubscribesync when network send
+ * fails.
+ */
+TEST( MQTT_Unit_API, UnsubscribeSyncWhenNetworkSendFails )
+{
+    IotMqttSubscription_t subscription = IOT_MQTT_SUBSCRIPTION_INITIALIZER;
+
+    /* Initializer parameters. */
+    _networkInterface.send = _sendFailure;
+
+    /* Create a new MQTT connection. */
+    _pMqttConnection = IotTestMqtt_createMqttConnection( AWS_IOT_MQTT_SERVER,
+                                                         &_networkInfo,
+                                                         0 );
+    TEST_ASSERT_NOT_NULL( _pMqttConnection );
+
+    /* Set the necessary members of the subscription. */
+    subscription.pTopicFilter = TEST_TOPIC_NAME;
+    subscription.topicFilterLength = TEST_TOPIC_NAME_LENGTH;
+
+    /* Test that the sync UNSUBSCRIBE API fails when network send fails. */
+    TEST_ASSERT_EQUAL( IOT_MQTT_NETWORK_ERROR, IotMqtt_UnsubscribeSync( _pMqttConnection,
+                                                                        &subscription,
+                                                                        1 /* subscription count*/,
+                                                                        0 /* flags */,
+                                                                        0 /* timeout */ ) );
+
+    /* No lingering subscriptions should be in the MQTT connection. */
+    TEST_ASSERT_EQUAL_INT( true, IotListDouble_IsEmpty( &( _pMqttConnection->subscriptionList ) ) );
 
     IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
 }
@@ -2900,7 +3024,7 @@ TEST( MQTT_Unit_API, DeserializePublishChecks )
     mqttPacketInfo.remainingLength = 5;
     buffer[ 0 ] = 0;
     buffer[ 1 ] = 1;
-    buffer[ 2 ] = ( uint8_t )'a';
+    buffer[ 2 ] = ( uint8_t ) 'a';
     buffer[ 3 ] = 0;
     buffer[ 4 ] = 0;
     status = IotMqtt_DeserializePublish( &mqttPacketInfo );

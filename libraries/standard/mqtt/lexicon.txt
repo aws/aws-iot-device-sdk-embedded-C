@@ -386,6 +386,7 @@ subscriptioncount
 subscriptionlist
 subscriptionmutex
 subscriptionref
+taskpool
 tcp
 timeoutms
 tls
