@@ -494,6 +494,7 @@ void test_MQTT_Init_Happy_Path( void )
     MQTTApplicationCallbacks_t callbacks;
 
     setupCallbacks( &callbacks );
+    setupTransportInterface( &transport );
 
     mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
