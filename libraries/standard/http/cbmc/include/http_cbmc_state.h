@@ -34,13 +34,17 @@
  * It is possible for malloc(0) to return an address without allocating memory.
  *
  * @param[in] size Requested size to malloc.
+ *
+ * @return Pointer to unconstrained buffer
  */
 void * mallocCanFail( size_t size );
 
 /**
- * @brief Allocate a request headers object.
+ * @brief Allocates a request headers object.
  *
  * @param[in] pRequestHeaders Request headers object to allocate.
+ *
+ * @return Pointer to allocated request headers object.
  */
 HTTPRequestHeaders_t * allocateHttpRequestHeaders( HTTPRequestHeaders_t * pRequestHeaders );
 
@@ -54,9 +58,13 @@ HTTPRequestHeaders_t * allocateHttpRequestHeaders( HTTPRequestHeaders_t * pReque
 bool isValidHttpRequestHeaders( const HTTPRequestHeaders_t * pRequestHeaders );
 
 /**
- * @brief Allocate a request info object.
+ * @brief Allocates a request info object.
+ *
+ * @param[in] pRequestInfo Request info object to allocate.
+ *
+ * @return Pointer to allocated request info object.
  */
-HTTPRequestInfo_t * allocateHttpRequestInfo();
+HTTPRequestInfo_t * allocateHttpRequestInfo( const HTTPRequestInfo_t * pRequestInfo );
 
 /**
  * @brief Validates if a request info object is feasible.
@@ -67,8 +75,22 @@ HTTPRequestInfo_t * allocateHttpRequestInfo();
  */
 bool isValidHttpRequestInfo( const HTTPRequestInfo_t * pRequestInfo );
 
+/**
+ * @brief Allocates a response object with unconstrained values.
+ *
+ * @param[in] pResponse Response object to allocate.
+ *
+ * @return Pointer to allocated response object.
+ */
 HTTPResponse_t * allocateHttpResponse( HTTPResponse_t * pResponse );
 
+/**
+ * @brief Validates if a response object is feasible.
+ *
+ * @param[in] pResponse Response object to validate.
+ *
+ * @return true if request headers is feasible; 0 otherwise.
+ */
 bool isValidHttpResponse( const HTTPResponse_t * pResponse );
 
 #endif /* ifndef HTTP_CBMC_STATE_H_ */
