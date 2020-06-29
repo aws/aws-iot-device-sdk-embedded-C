@@ -740,7 +740,4 @@ HTTPStatus_t HTTPClient_ReadHeader( const HTTPResponse_t * pResponse,
  */
 const char * HTTPClient_strerror( HTTPStatus_t status );
 
-static HTTPStatus_t addContentLengthHeader( HTTPRequestHeaders_t * pRequestHeaders,
-                                            size_t contentLength );
-
 #endif /* ifndef HTTP_CLIENT_H_ */
