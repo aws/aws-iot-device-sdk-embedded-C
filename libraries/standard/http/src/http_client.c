@@ -1580,12 +1580,20 @@ static HTTPStatus_t sendHttpData( const TransportInterface_t * pTransport,
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
     const uint8_t * pIndex = pData;
-    int32_t transportStatus = 0;
-    size_t bytesRemaining = dataLen;
+    int32_t transportStatus = 0, bytesRemaining = 0;
 
     assert( pTransport != NULL );
     assert( pTransport->send != NULL );
     assert( pData != NULL );
+
+    if( dataLen > INT32_MAX )
+    {
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else
+    {
+        bytesRemaining = ( int32_t ) dataLen;
+    }
 
     /* Loop until all data is sent. */
     while( ( bytesRemaining > 0UL ) && ( returnStatus != HTTP_NETWORK_ERROR ) )
@@ -1675,12 +1683,17 @@ static HTTPStatus_t sendHttpHeaders( const TransportInterface_t * pTransport,
     assert( pTransport->send != NULL );
     assert( pRequestHeaders != NULL );
 
+    if( pRequestHeaders->headersLen > INT32_MAX )
+    {
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+
     /* Send the content length header if the flag to disable is not set and the
      * body length is greater than zero. */
     shouldSendContentLength = ( ( ( sendFlags & HTTP_SEND_DISABLE_CONTENT_LENGTH_FLAG ) == 0u ) &&
                                 ( reqBodyLen > 0u ) ) ? 1u : 0u;
 
-    if( shouldSendContentLength == 1u )
+    if( ( returnStatus == HTTP_SUCCESS ) && ( shouldSendContentLength == 1u ) )
     {
         returnStatus = addContentLengthHeader( pRequestHeaders, reqBodyLen );
     }
@@ -1736,16 +1749,9 @@ static HTTPStatus_t receiveHttpData( const TransportInterface_t * pTransport,
                                         pBuffer,
                                         bufferLen );
 
-        << << << < HEAD
-        == == == =
-
-            /* It is a bug in the application's transport receive implementation if
-             * more bytes than expected are received. */
-            assert( transportStatus <= ( int32_t ) bufferLen );
-
-    >> >> >> > Add CBMC proof
-
-    for AddRangeHeader
+    /* It is a bug in the application's transport receive implementation if
+     * more bytes than expected are received. */
+    assert( transportStatus <= ( int32_t ) bufferLen );
 
     /* A transport status of less than zero is an error. */
     if( transportStatus < 0 )
@@ -1758,22 +1764,22 @@ static HTTPStatus_t receiveHttpData( const TransportInterface_t * pTransport,
 
     else if( transportStatus > 0 )
     {
-        /* It is a bug in the application's transport receive implementation if
-         * more bytes than expected are received. To avoid a possible overflow
-         * in converting bytesRemaining from unsigned to signed, this assert
-         * must exist after the check for transportStatus being negative. */
-        assert( ( size_t ) transportStatus <= bufferLen );
+            << << << < HEAD
+
+            /* It is a bug in the application's transport receive implementation if
+             * more bytes than expected are received. To avoid a possible overflow
+             * in converting bytesRemaining from unsigned to signed, this assert
+             * must exist after the check for transportStatus being negative. */
+            assert( ( size_t ) transportStatus <= bufferLen );
 
         /* Some or all of the specified data was received. */
         *pBytesReceived = ( size_t ) ( transportStatus );
-        LogDebug( ( "Received data from the transport: BytesReceived=%d",
-                    transportStatus ) );
+        == == == =
+            >> >> >> > Full coverage but so many weird errors LogDebug( ( "Received data from the transport: BytesReceived=%d",
+                                                                          transportStatus ) );
     }
     else
     {
-        /* When a zero is returned from the transport recv it will not be
-         * invoked again. */
-        *pBytesReceived = 0;
         LogDebug( ( "Received zero bytes from transport recv(). Receiving "
                     "transport data is complete." ) );
     }
@@ -1953,6 +1959,18 @@ HTTPStatus_t HTTPClient_Send( const TransportInterface_t * pTransport,
     else if( pRequestHeaders->headersLen > pRequestHeaders->bufferLen )
     {
         LogError( ( "Parameter check failed: pRequestHeaders->headersLen > pRequestHeaders->bufferLen." ) );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( pRequestHeaders->headersLen > INT32_MAX )
+    {
+        LogError( ( "Parameter check failed: pRequestHeaders->headersLen should be "
+                    " <= 2147483647 (INT32_MAX)." ) );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( reqBodyBufLen > INT32_MAX )
+    {
+        LogError( ( "Parameter check failed: reqBodyBufLen should be "
+                    " <= 2147483647 (INT32_MAX)." ) );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( ( pResponse != NULL ) && ( pResponse->pBuffer == NULL ) )

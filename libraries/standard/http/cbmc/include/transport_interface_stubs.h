@@ -26,28 +26,5 @@
 
 #include "http_client.h"
 
-/**
- * @brief Application defined transport interface send function.
- *
- * @param[in] context Application defined transport interface context.
- * @param[out] pBuffer HTTP transport send buffer.
- * @param[in] bytesToSend Bytes to send over the network.
- * @return Any value from INT32_MIN to INT32_MAX.
- */
-int32_t TransportInterfaceSendStub( NetworkContext_t context,
-                                    void * pBuffer,
-                                    size_t bytesToSend );
-
-/**
- * @brief Application defined transport interface receive function.
- *
- * @param[in] context Application defined transport interface context.
- * @param[out] pBuffer HTTP transport receive buffer.
- * @param[in] bytesToRecv Bytes to receive from the network.
- * @return Any value from INT32_MIN to INT32_MAX.
- */
-int32_t TransportInterfaceReceiveStub( NetworkContext_t context,
-                                       void * pBuffer,
-                                       size_t bytesToRecv );
 
 #endif /* ifndef TRANSPORT_INTERFACE_STUBS_H_ */

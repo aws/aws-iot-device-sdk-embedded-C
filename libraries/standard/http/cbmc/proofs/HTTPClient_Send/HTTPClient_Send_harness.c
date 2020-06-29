@@ -34,15 +34,13 @@ void harness()
 {
     HTTPRequestHeaders_t * pRequestHeaders = NULL;
     HTTPResponse_t * pResponse = NULL;
-    HTTPTransportInterface_t transport;
-    struct NetworkContext networkContext;
+    HTTPTransportInterface_t * pTransport = NULL;
     uint8_t * pRequestBodyBuf = NULL;
     size_t reqBodyBufLen;
     uint32_t sendFlags;
 
-    transport.pContext = nondet_bool() ? NULL : &networkContext;
-    transport.recv = nondet_bool() ? 0 : TransportInterfaceReceiveStub;
-    transport.send = nondet_bool() ? 0 : TransportInterfaceSendStub;
+    pTransport = allocateTransportInterface( pTransport );
+    __CPROVER_assume( isValidTransportInterface( pTransport ) );
 
     /* Initialize and make assumptions for request headers. */
     pRequestHeaders = allocateHttpRequestHeaders( pRequestHeaders );
@@ -56,7 +54,7 @@ void harness()
     pResponse = allocateHttpResponse( pResponse );
     __CPROVER_assume( isValidHttpResponse( pResponse ) );
 
-    HTTPClient_Send( &transport,
+    HTTPClient_Send( pTransport,
                      pRequestHeaders,
                      pRequestBodyBuf,
                      reqBodyBufLen,
