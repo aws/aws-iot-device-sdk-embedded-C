@@ -146,12 +146,8 @@ static void updateRecord( MQTTPubAckInfo_t * records,
                           bool shouldDelete );
 
 /**
- * @brief Get the packet ID and index of a publish in a specified state.
- *
- * @note The API is limited to search states of only outgoing publish records
- * or incoming publish records at a time. The usage of API only demands the
- * search of only either of the records. Hence this is an optimization to
- * limit the search only to one of the records at a time.
+ * @brief Get the packet ID and index of an outgoing publish in specified
+ * states.
  *
  * @param[in] pMqttContext Initialized MQTT context.
  * @param[in] searchStates The states to search for in 2-byte bit map.
@@ -249,18 +245,16 @@ static bool validateTransitionPublish( MQTTPublishState_t currentState,
          * reestablished. */
         case MQTTPubAckPending:
 
-            /* When a session is reestablished outgoing QoS1 publishes in state
-             * #MQTTPubAckPending can be resend. This will result in a no
-             * transition. */
+            /* When a session is reestablished, outgoing QoS1 publishes in state
+             * #MQTTPubAckPending can be resent. The state remains the same. */
             isValid = ( newState == MQTTPubAckPending ) ? true : false;
 
             break;
 
         case MQTTPubRecPending:
 
-            /* When a session is reestablished outgoing QoS2 publishes in state
-             * #MQTTPubRecPending can be resend. This will result in a no
-             * transition. */
+            /* When a session is reestablished, outgoing QoS2 publishes in state
+             * #MQTTPubRecPending can be resent. The state remains the same. */
             isValid = ( newState == MQTTPubRecPending ) ? true : false;
 
             break;
@@ -302,7 +296,7 @@ static bool validateTransitionAck( MQTTPublishState_t currentState,
              *    when publish record state is MQTTPubRelPending. This is the
              *    normal state transition without any connection interuptions.
              * 2. MQTTPubRelPending -> MQTTPubRelPending : Receiving a duplicate
-             *    QoS2 publish can result in this no transition.
+             *    QoS2 publish can result in a transition to the same state.
              *    This can happen in the below state transition.
              *    1. Incoming publish received.
              *    2. PUBREC ack send and state is now MQTTPubRelPending.
@@ -325,13 +319,14 @@ static bool validateTransitionAck( MQTTPublishState_t currentState,
              *    after receiving a PUBREL from broker. This is the
              *    normal state transition without any connection interuptions.
              * 2. MQTTPubCompSend -> MQTTPubCompSend : Receiving a duplicate PUBREL
-             *    can result in this no transition.
+             *    can result in a transition to the same state.
              *    This can happen in the below state transition.
              *    1. A TCP connection failure happened before sending a PUBCOMP
              *       for an incoming PUBREL.
              *    2. Reestablish MQTT session.
              *    3. MQTT broker resends the un-acked PUBREL.
-             *    4. Receiving the PUBREL again will result in this no transition. */
+             *    4. Receiving the PUBREL again will result in this transition
+             *       to the same state. */
             isValid = ( ( newState == MQTTPublishDone ) ||
                         ( newState == MQTTPubCompSend ) ) ? true : false;
             break;
@@ -355,13 +350,14 @@ static bool validateTransitionAck( MQTTPublishState_t currentState,
              *    This is the normal state transition without any connection
              *    interuptions.
              * 2. MQTTPubCompPending -> MQTTPubCompPending : Resending a PUBREL for
-             *    packets in state #MQTTPubCompPending can result in this no
-             *    transition.
+             *    packets in state #MQTTPubCompPending can result in this
+             *    transition to the same state.
              *    This can happen in the below state transition.
              *    1. A TCP connection failure happened before receiving a PUBCOMP
              *       for an outgoing PUBREL.
              *    2. Reestablish MQTT session.
-             *    3. Resend the un-acked PUBREL will result in this no transition. */
+             *    3. Resend the un-acked PUBREL will result in this transition
+             *       to the same state. */
             isValid = ( ( newState == MQTTPublishDone ) ||
                         ( newState == MQTTPubCompPending ) ) ? true : false;
             break;
@@ -590,6 +586,8 @@ static uint16_t stateSelect( const MQTTContext_t * pMqttContext,
 
     /* Only outgoing publish records need to be searched. */
     assert( ( outgoingStates & searchStates ) > 0U );
+    assert( ( ~outgoingStates & searchStates ) == 0 );
+
     records = pMqttContext->outgoingPublishRecords;
 
     while( *pCursor < MQTT_STATE_ARRAY_MAX_COUNT )
@@ -744,6 +742,10 @@ static MQTTStatus_t updateStatePublish( MQTTContext_t * pMqttContext,
     assert( pNewState != NULL );
 
     newState = *pNewState;
+
+    /* This will always succeed for an incoming publish. This is due to the fact
+     * that the passed in currentState must be MQTTStateNull, since
+     * #MQTT_UpdateStatePublish does not perform a lookup for receives. */
     isTransitionValid = validateTransitionPublish( currentState, newState, opType, qos );
 
     if( isTransitionValid == true )

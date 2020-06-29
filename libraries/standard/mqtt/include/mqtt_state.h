@@ -118,7 +118,7 @@ MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
  * This function will need to be called to get the packet for which a PUBREL
  * need to be sent when a session is reestablished. Calling this function
  * repeatedly until packet id is 0 will give all the packets for which
- * a PUBREL need to be resent in the order.
+ * a PUBREL need to be resent in the correct order.
  *
  * @param[in] pMqttContext Initialized MQTT context.
  * @param[in,out] pCursor Index at which to start searching.
@@ -134,7 +134,7 @@ uint16_t MQTT_PubrelToResend( const MQTTContext_t * pMqttContext,
  * This function will need to be called to get the packet for which a publish
  * need to be sent when a session is reestablished. Calling this function
  * repeatedly until packet id is 0 will give all the packets for which
- * a publish need to be resent in the order.
+ * a publish need to be resent in the correct order.
  *
  * @param[in] pMqttContext Initialized MQTT context.
  * @param[in,out] pCursor Index at which to start searching.

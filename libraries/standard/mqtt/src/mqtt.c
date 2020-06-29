@@ -724,8 +724,7 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
          *       state engine. This will be handled by processing the incoming
          *       publish as a new publish ignoring the
          *       #MQTTStateCollision status from the state engine. The publish
-         *       data is passed to the application even if it is a duplicate as
-         *       QoS1 is at least once delivery.
+         *       data is not passed to the application.
          *    b. QoS2 - If a PUBREC is not successfully sent for the incoming
          *       publish or the PUBREC sent is not successfully received by the
          *       broker due to a connection issue, it can result in broker
@@ -733,12 +732,16 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
          *       session is reestablished. It can result in a collision in
          *       state engine. This will be handled by ignoring the
          *       #MQTTStateCollision status from the state engine. The publish
-         *       data is not passed to the application as QoS2 is at most once
-         *       delivery. */
+         *       data is not passed to the application. */
         else if( ( status == MQTTStateCollision ) && ( publishInfo.dup == true ) )
         {
             status = MQTTSuccess;
             duplicatePublish = true;
+
+            /* Calculate the state for the ack packet that needs to be sent out
+             * for the duplicate incoming publish. */
+            publishRecordState = MQTT_CalculateStatePublish( MQTT_RECEIVE,
+                                                             publishInfo.qos );
             LogDebug( ( "Incoming publish packet with packet id %u already exists.",
                         packetIdentifier ) );
         }
@@ -756,8 +759,8 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
         /* Invoke application callback to hand the buffer over to application
          * before sending acks.
          * Application callback will be invoked for all publishes, except for
-         * duplicate QoS2 incoming publish. QoS2 ensures at most once delivery. */
-        if( ( duplicatePublish == false ) || ( publishInfo.qos != MQTTQoS2 ) )
+         * duplicate incoming publishes. */
+        if( ( duplicatePublish == false ) )
         {
             pContext->callbacks.appCallback( pContext,
                                              pIncomingPacket,

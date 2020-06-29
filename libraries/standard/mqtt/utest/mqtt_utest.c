@@ -464,6 +464,12 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext,
 
                 case MQTTStateCollision:
                     expectMoreCalls = pPubInfo->dup;
+
+                    if( pPubInfo->dup == true )
+                    {
+                        MQTT_CalculateStatePublish_ExpectAnyArgsAndReturn( stateAfterDeserialize );
+                    }
+
                     break;
 
                 default:
@@ -1251,7 +1257,7 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Paths( void )
      * expectProcessLoopCalls will take on the following parameters:
      * incomingPublish=true, stateAfterDeserialize=MQTTPubAckSend,
      * updateStateStatus=MQTTStateCollision and pPubInfo is passed with
-     * dup flag set. The event callback should be invoked. */
+     * dup flag set. The event callback should not be invoked. */
     currentPacketType = MQTT_PACKET_TYPE_PUBLISH;
     pubInfo.dup = true;
     pubInfo.qos = MQTTQoS1;
@@ -1259,7 +1265,7 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Paths( void )
     expectProcessLoopCalls( &context, MQTTSuccess, MQTTPubAckSend,
                             MQTTStateCollision, MQTTSuccess, MQTTPublishDone,
                             MQTTSuccess, true, &pubInfo );
-    TEST_ASSERT_TRUE( isEventCallbackInvoked );
+    TEST_ASSERT_FALSE( isEventCallbackInvoked );
 
     /* Duplicate QoS2 publish received.
      * expectProcessLoopCalls will take on the following parameters:
