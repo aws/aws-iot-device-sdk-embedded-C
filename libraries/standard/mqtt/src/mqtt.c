@@ -707,8 +707,34 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
                        MQTT_State_strerror( publishRecordState ) ) );
         }
 
-        /* A collision in the state engine and a duplicate flag set in the
-         * incoming packet would be indicating a duplicate incoming publish. */
+        /* Different cases in which an incoming publish with duplicate flag is
+         * handled are as listed below.
+         * 1. No collision - This is the first instance of the incoming publish
+         *    packet received or an earlier received packet state is lost. This
+         *    will be handled as a new incoming publish for both QoS1 and QoS2
+         *    publishes.
+         * 2. Collision - The incoming packet was received before and a state
+         *    record is present in the state engine. For QoS1 and QoS2 publishes
+         *    this case can happen at 2 different cases and handling is
+         *    different.
+         *    a. QoS1 - If a PUBACK is not successfully sent for the incoming
+         *       publish due to a connection issue, it can result in broker
+         *       sending out a duplicate publish with dup flag set, when a
+         *       session is reestablished. It can result in a collision in
+         *       state engine. This will be handled by processing the incoming
+         *       publish as a new publish ignoring the
+         *       #MQTTStateCollision status from the state engine. The publish
+         *       data is passed to the application even if it is a duplicate as
+         *       QoS1 is at least once delivery.
+         *    b. QoS2 - If a PUBREC is not successfully sent for the incoming
+         *       publish or the PUBREC sent is not successfully received by the
+         *       broker due to a connection issue, it can result in broker
+         *       sending out a duplicate publish with dup flag set, when a
+         *       session is reestablished. It can result in a collision in
+         *       state engine. This will be handled by ignoring the
+         *       #MQTTStateCollision status from the state engine. The publish
+         *       data is not passed to the application as QoS2 is at most once
+         *       delivery. */
         else if( ( status == MQTTStateCollision ) && ( publishInfo.dup == true ) )
         {
             status = MQTTSuccess;
