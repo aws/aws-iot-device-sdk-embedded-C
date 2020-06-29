@@ -1761,22 +1761,18 @@ static HTTPStatus_t receiveHttpData( const TransportInterface_t * pTransport,
                     transportStatus ) );
         returnStatus = HTTP_NETWORK_ERROR;
     }
-
     else if( transportStatus > 0 )
     {
-            << << << < HEAD
-
-            /* It is a bug in the application's transport receive implementation if
-             * more bytes than expected are received. To avoid a possible overflow
-             * in converting bytesRemaining from unsigned to signed, this assert
-             * must exist after the check for transportStatus being negative. */
-            assert( ( size_t ) transportStatus <= bufferLen );
+        /* It is a bug in the application's transport receive implementation if
+         * more bytes than expected are received. To avoid a possible overflow
+         * in converting bytesRemaining from unsigned to signed, this assert
+         * must exist after the check for transportStatus being negative. */
+        assert( ( size_t ) transportStatus <= bufferLen );
 
         /* Some or all of the specified data was received. */
         *pBytesReceived = ( size_t ) ( transportStatus );
-        == == == =
-            >> >> >> > Full coverage but so many weird errors LogDebug( ( "Received data from the transport: BytesReceived=%d",
-                                                                          transportStatus ) );
+        LogDebug( ( "Received data from the transport: BytesReceived=%d",
+                    transportStatus ) );
     }
     else
     {
