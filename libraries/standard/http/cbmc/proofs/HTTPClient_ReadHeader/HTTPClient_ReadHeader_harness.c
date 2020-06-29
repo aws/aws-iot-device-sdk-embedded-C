@@ -36,11 +36,6 @@ void harness()
     size_t fieldLen;
     size_t valueLen;
 
-    /* The lengths must be less than INT32_MAX in order to avoid overflow
-     * errors in the logs. */
-    __CPROVER_assume( fieldLen <= INT32_MAX );
-    __CPROVER_assume( valueLen <= INT32_MAX );
-
     /* Initialize and make assumptions for header field. */
     __CPROVER_assume( fieldLen < CBMC_MAX_OBJECT_SIZE );
     pField = mallocCanFail( fieldLen );
