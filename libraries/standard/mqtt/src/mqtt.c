@@ -1148,9 +1148,8 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
     {
         if( ( cleanSession == true ) && ( *pSessionPresent == true ) )
         {
-            LogError( ( "Received CONNACK with session present from broker."
-                        " This should not happen as a clean session is requested"
-                        " in CONNECT." ) );
+            LogError( ( "Unexpected session present flag in CONNACK response from broker."
+                        " CONNECT request with clean session was made with broker." ) );
             status = MQTTBadResponse;
         }
     }

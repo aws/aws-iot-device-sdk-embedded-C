@@ -677,7 +677,7 @@ void test_MQTT_Connect_receiveConnack( void )
     MQTTContext_t mqttContext;
     MQTTConnectInfo_t connectInfo;
     uint32_t timeout = 0;
-    bool sessionPresent;
+    bool sessionPresent, sessionPresentExpected;
     MQTTStatus_t status;
     MQTTTransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
@@ -729,14 +729,15 @@ void test_MQTT_Connect_receiveConnack( void )
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
-    /* Session present is received when a clean session is requested. */
+    /* Test case when broker sends session present flag in response to a
+     * clean session connection request. */
     mqttContext.transportInterface.recv = transportRecvSuccess;
     connectInfo.cleanSession = true;
-    sessionPresent = true;
+    sessionPresentExpected = true;
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
     MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_DeserializeAck_ReturnThruPtr_pSessionPresent( &sessionPresent );
+    MQTT_DeserializeAck_ReturnThruPtr_pSessionPresent( &sessionPresentExpected );
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 }
@@ -951,7 +952,7 @@ void test_MQTT_Connect_happy_path()
     MQTTConnectInfo_t connectInfo;
     MQTTPublishInfo_t willInfo;
     uint32_t timeout = 2;
-    bool sessionPresent, sessionPresentResult;
+    bool sessionPresent, sessionPresentExpected;
     MQTTStatus_t status;
     MQTTTransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
@@ -993,15 +994,15 @@ void test_MQTT_Connect_happy_path()
      * from broker. */
     mqttContext.connectStatus = MQTTNotConnected;
     connectInfo.cleanSession = false;
-    sessionPresent = true;
+    sessionPresentExpected = true;
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
     MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_DeserializeAck_ReturnThruPtr_pSessionPresent( &sessionPresent );
-    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresentResult );
+    MQTT_DeserializeAck_ReturnThruPtr_pSessionPresent( &sessionPresentExpected );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
-    TEST_ASSERT_TRUE( sessionPresentResult );
+    TEST_ASSERT_TRUE( sessionPresent );
 }
 
 /* ========================================================================== */
