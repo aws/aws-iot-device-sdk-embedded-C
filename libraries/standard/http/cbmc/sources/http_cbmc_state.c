@@ -73,3 +73,35 @@ bool isValidHttpRequestInfo( const HTTPRequestInfo_t * pRequestInfo )
 
     return isValid;
 }
+
+HTTPResponse_t * allocateHttpResponse( HTTPResponse_t * pResponse )
+{
+    if( pResponse == NULL )
+    {
+        pResponse = mallocCanFail( sizeof( HTTPResponse_t ) );
+    }
+
+    if( pResponse != NULL )
+    {
+        __CPROVER_assume( pResponse->bufferLen < CBMC_MAX_OBJECT_SIZE );
+        pResponse->pBuffer = mallocCanFail( pResponse->bufferLen );
+        __CPROVER_assume( pResponse->bodyLen < CBMC_MAX_OBJECT_SIZE );
+        pResponse->pBody = mallocCanFail( pResponse->bodyLen );
+    }
+
+    return pResponse;
+}
+
+bool isValidHttpResponse( const HTTPResponse_t * pResponse )
+{
+    bool isValid = true;
+
+    if( pResponse )
+    {
+        isValid = pResponse->bufferLen < CBMC_MAX_OBJECT_SIZE &&
+                  pResponse->bodyLen < CBMC_MAX_OBJECT_SIZE &&
+                  pResponse->pHeaderParsingCallback == NULL;
+    }
+
+    return isValid;
+}

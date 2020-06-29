@@ -67,4 +67,8 @@ HTTPRequestInfo_t * allocateHttpRequestInfo();
  */
 bool isValidHttpRequestInfo( const HTTPRequestInfo_t * pRequestInfo );
 
+HTTPResponse_t * allocateHttpResponse( HTTPResponse_t * pResponse );
+
+bool isValidHttpResponse( const HTTPResponse_t * pResponse );
+
 #endif /* ifndef HTTP_CBMC_STATE_H_ */
