@@ -141,11 +141,11 @@ int32_t TransportInterfaceSendStub( NetworkContext_t pContext,
     if( tries >= MAX_TRIES )
     {
         tries = 0;
-        return bytesToSend;
+        return size;
     }
 
     tries++;
-    return size;
+    return bytesToSend;
 }
 
 int32_t TransportInterfaceReceiveStub( NetworkContext_t context,
@@ -178,11 +178,11 @@ int32_t TransportInterfaceReceiveStub( NetworkContext_t context,
     if( tries >= MAX_TRIES )
     {
         tries = 0;
-        return bytesToRecv;
+        return size;
     }
 
     tries++;
-    return size;
+    return bytesToRecv;
 }
 
 HTTPTransportInterface_t * allocateTransportInterface( HTTPTransportInterface_t * pTransport )
