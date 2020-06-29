@@ -760,7 +760,7 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
          * before sending acks.
          * Application callback will be invoked for all publishes, except for
          * duplicate incoming publishes. */
-        if( ( duplicatePublish == false ) )
+        if( duplicatePublish == false )
         {
             pContext->callbacks.appCallback( pContext,
                                              pIncomingPacket,
