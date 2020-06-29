@@ -2,6 +2,8 @@
 
 #include "http_cbmc_state.h"
 
+#include "transport_interface_stubs.h"
+
 void * mallocCanFail( size_t size )
 {
     __CPROVER_assert( size < CBMC_MAX_OBJECT_SIZE, "mallocCanFail size is too big" );
@@ -75,8 +77,6 @@ bool isValidHttpRequestInfo( const HTTPRequestInfo_t * pRequestInfo )
 
 HTTPResponse_t * allocateHttpResponse( HTTPResponse_t * pResponse )
 {
-    HTTPClient_ResponseHeaderParsingCallback_t headerParsingCallback;
-
     if( pResponse == NULL )
     {
         pResponse = mallocCanFail( sizeof( HTTPResponse_t ) );
@@ -88,7 +88,6 @@ HTTPResponse_t * allocateHttpResponse( HTTPResponse_t * pResponse )
         pResponse->pBuffer = mallocCanFail( pResponse->bufferLen );
         __CPROVER_assume( pResponse->bodyLen < CBMC_MAX_OBJECT_SIZE );
         pResponse->pBody = mallocCanFail( pResponse->bodyLen );
-        pResponse->pHeaderParsingCallback = &headerParsingCallback;
     }
 
     return pResponse;
@@ -100,16 +99,94 @@ bool isValidHttpResponse( const HTTPResponse_t * pResponse )
 
     if( pResponse )
     {
-        isValid = ( pResponse->bufferLen < CBMC_MAX_OBJECT_SIZE ) &&
-                  ( pResponse->bodyLen < CBMC_MAX_OBJECT_SIZE );
+        isValid = pResponse->bufferLen < CBMC_MAX_OBJECT_SIZE &&
+                  pResponse->bodyLen < CBMC_MAX_OBJECT_SIZE &&
+                  pResponse->pHeaderParsingCallback == NULL;
     }
 
     return isValid;
 }
 
-HTTPTransportInterface_t * allocateTransportInterface( HTTPTransportInterface_t * pTransport,
-                                                       HTTPTransportRecv_t pTransportRecv,
-                                                       HTTPTransportSend_t pTransportSend )
+
+#ifndef MAX_TRIES
+    #define MAX_TRIES    2
+#endif
+
+int32_t TransportInterfaceSendStub( NetworkContext_t pContext,
+                                    void * pBuffer,
+                                    size_t bytesToSend )
+{
+    __CPROVER_assert( pBuffer != NULL,
+                      "TransportInterfaceSendStub pBuffer is NULL" );
+
+    /****************************************************************
+    * The send method sends some portion of the message and returns the
+    * total number of bytes in the prefix sent so far.  The send method
+    * is used in a loop of the form
+    *
+    *   while ( send( conn, msg, len )  < len ) { ... }
+    *
+    * We need to bound the number of loop iterations, so we need to
+    * bound the number of times it takes for send to finish sending the
+    * message.  We use a static variable 'tries' to count the number of
+    * times send has tried to send the message, and we force send to
+    * finish the message after MAX_TRIES tries.
+    ****************************************************************/
+
+    /* The number of tries to send the message before this invocation */
+    static int32_t tries;
+
+    /* The number of bytes considered sent after this invocation */
+    int32_t size;
+
+    if( tries >= MAX_TRIES )
+    {
+        tries = 0;
+        return bytesToSend;
+    }
+
+    tries++;
+    return size;
+}
+
+int32_t TransportInterfaceReceiveStub( NetworkContext_t context,
+                                       void * pBuffer,
+                                       size_t bytesToRecv )
+{
+    __CPROVER_assert( pBuffer != NULL,
+                      "TransportInterfaceSendStub pBuffer is NULL" );
+
+    /****************************************************************
+    * The send method sends some portion of the message and returns the
+    * total number of bytes in the prefix sent so far.  The send method
+    * is used in a loop of the form
+    *
+    *   while ( send( conn, msg, len )  < len ) { ... }
+    *
+    * We need to bound the number of loop iterations, so we need to
+    * bound the number of times it takes for send to finish sending the
+    * message.  We use a static variable 'tries' to count the number of
+    * times send has tried to send the message, and we force send to
+    * finish the message after MAX_TRIES tries.
+    ****************************************************************/
+
+    /* The number of tries to send the message before this invocation */
+    static int32_t tries;
+
+    /* The number of bytes considered sent after this invocation */
+    int32_t size;
+
+    if( tries >= MAX_TRIES )
+    {
+        tries = 0;
+        return bytesToRecv;
+    }
+
+    tries++;
+    return size;
+}
+
+HTTPTransportInterface_t * allocateTransportInterface( HTTPTransportInterface_t * pTransport )
 {
     if( pTransport == NULL )
     {
@@ -118,10 +195,23 @@ HTTPTransportInterface_t * allocateTransportInterface( HTTPTransportInterface_t 
 
     if( pTransport != NULL )
     {
-        pTransport->pContext = mallocCanFail( sizeof( NetworkContext_t ) );
-        pTransport->recv = nondet_bool() ? NULL : pTransportRecv;
-        pTransport->send = nondet_bool() ? NULL : pTransportSend;
+        pTransport->pContext = mallocCanFail( sizeof( struct NetworkContext ) );
     }
 
     return pTransport;
+}
+
+bool isValidTransportInterface( HTTPTransportInterface_t * pTransport )
+{
+    bool isValid = true;
+
+    if( pTransport != NULL )
+    {
+        isValid = ( pTransport->send == NULL ||
+                    pTransport->send == TransportInterfaceSendStub ) &&
+                  ( pTransport->recv == NULL ||
+                    pTransport->recv == TransportInterfaceReceiveStub );
+    }
+
+    return isValid;
 }

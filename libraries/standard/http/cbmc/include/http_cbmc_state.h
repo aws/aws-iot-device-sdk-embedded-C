@@ -27,9 +27,6 @@
 
 #include "http_client.h"
 
-/**
- * @brief Definition of the HTTP network context.
- */
 struct NetworkContext
 {
     int filler;
@@ -86,6 +83,31 @@ HTTPResponse_t * allocateHttpResponse( HTTPResponse_t * pResponse );
 bool isValidHttpResponse( const HTTPResponse_t * pResponse );
 
 /**
+ * @brief Application defined transport interface send function.
+ *
+ * @param[in] context Application defined transport interface context.
+ * @param[out] pBuffer HTTP transport send buffer.
+ * @param[in] bytesToSend Bytes to send over the network.
+ * @return Any value from INT32_MIN to INT32_MAX.
+ */
+int32_t TransportInterfaceSendStub( NetworkContext_t context,
+                                    void * pBuffer,
+                                    size_t bytesToSend );
+
+/**
+ * @brief Application defined transport interface receive function.
+ *
+ * @param[in] context Application defined transport interface context.
+ * @param[out] pBuffer HTTP transport receive buffer.
+ * @param[in] bytesToRecv Bytes to receive from the network.
+ * @return Any value from INT32_MIN to INT32_MAX.
+ */
+int32_t TransportInterfaceReceiveStub( NetworkContext_t context,
+                                       void * pBuffer,
+                                       size_t bytesToRecv );
+
+
+/**
  * @brief Allocate a transport interface for CBMC.
  *
  * @param[in] pTransport Transport interface.
@@ -94,8 +116,9 @@ bool isValidHttpResponse( const HTTPResponse_t * pResponse );
  * @return An allocated HTTPTransportInterface_t object to use as a parameter
  * for the function under test.
  */
-HTTPTransportInterface_t * allocateTransportInterface( HTTPTransportInterface_t * pTransport,
-                                                       HTTPTransportRecv_t pTransportRecv,
-                                                       HTTPTransportSend_t pTransportSend );
+HTTPTransportInterface_t * allocateTransportInterface( HTTPTransportInterface_t * pTransport );
+
+bool isValidTransportInterface( HTTPTransportInterface_t * pTransport );
+
 
 #endif /* ifndef HTTP_CBMC_STATE_H_ */
