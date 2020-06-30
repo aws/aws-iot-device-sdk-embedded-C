@@ -1939,15 +1939,6 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
         /* Empty else for MISRA 15.7 compliance. */
     }
 
-    /* Send the headers, which are at one location in memory. */
-    if( returnStatus == HTTP_SUCCESS )
-    {
-        returnStatus = sendHttpHeaders( pTransport,
-                                        pRequestHeaders,
-                                        reqBodyBufLen,
-                                        sendFlags );
-    }
-
     /* Send the body, which is at another location in memory. */
     if( returnStatus == HTTP_SUCCESS )
     {
