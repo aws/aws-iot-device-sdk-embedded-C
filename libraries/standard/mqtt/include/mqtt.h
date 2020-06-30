@@ -164,19 +164,31 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  *    A network read would be retried upto the number of times configured by
  *    #MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT for the CONNACK packet.
  *
- * @brief param[in] pContext Initialized MQTT context.
- * @brief param[in] pConnectInfo MQTT CONNECT packet parameters.
- * @brief param[in] pWillInfo Last Will and Testament. Pass NULL if not used.
- * @brief param[in] timeoutMs Timeout in milliseconds for receiving CONNACK
- * packet. In certain conditions, depending on the network conditions or the
- * transport interface receive timeout configured, this function can spend more
- * time in receiving CONNACK packet than the provided timeout duration. However,
- * the probability of exceeding the timeout is very low assuming the timeouts
- * for CONNACK receive and transport interface receive are configured correctly.
- * Refer to the transport interface documentation for more details about the
- * timeouts. @note A zero timeout will make use of the retries for receiving
+ * @param[in] pContext Initialized MQTT context.
+ * @param[in] pConnectInfo MQTT CONNECT packet parameters.
+ * @param[in] pWillInfo Last Will and Testament. Pass NULL if not used.
+ * @param[in] timeoutMs Timeout in milliseconds for receiving CONNACK
+ * packet.
+ * @note A zero timeout will make use of the retries for receiving
  * CONNACK.
- * @brief param[out] pSessionPresent Whether a previous session was present.
+ * @note The API may take more time than the given timeout in certain
+ * conditions as listed below.
+ * 1. Timeouts are incorrectly configured - If the timeout passed to this API
+ * is less than the transport receive timeout and if a CONNACK packet is not
+ * received within the transport receive timeout, the API will spend more time
+ * than the timeoutMs parameter passed. The timeoutMs parameter passed to this
+ * API should be greater than the transport receive timeout. Please refer to the
+ * transport interface documentation for more details about timeout
+ * configurations.
+ * 2. CONNACK packet is received right after expiry of the timeout -
+ * It is possible the CONNACK packet is received towards the expiry of the
+ * timeout passed to the API. In the worst case, it can take upto
+ * timeoutMs + transport receive timeout to receive the packet type and
+ * remaining length of CONNACK packet from network. The API will attempt to
+ * read the remaining 2 bytes after reading the packet type and remaining
+ * length. In this case, API will spend more time than timeoutMs for receiving
+ * CONNACK.
+ * @param[out] pSessionPresent Whether a previous session was present.
  * Only relevant if not establishing a clean session.
  *
  * @return #MQTTNoMemory if the #MQTTContext_t.networkBuffer is too small to

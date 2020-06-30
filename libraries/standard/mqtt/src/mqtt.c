@@ -28,13 +28,13 @@
 
 
 /**
- * @brief The number of retries for transport receive of CONNACK.
+ * @brief The number of retries for receiving CONNACK.
  *
- * The config MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT will be used only when a
- * timeout is passed as 0 for #MQTT_Connect(). The transport receive for
- * CONNACK will be retried MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT times before
- * timing out. A value of 0 for this config will try to read transport interface
- * only once.
+ * The MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT will be used only when the
+ * timeoutMs parameter of #MQTT_Connect() is passed as 0 . The transport
+ * receive for CONNACK will be retried MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT
+ * times before timing out. A value of 0 for this config will cause the
+ * transport receive for CONNACK  to be invoked only once.
  */
 #ifndef MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT
     /* Default value for the CONNACK receive retries. */
