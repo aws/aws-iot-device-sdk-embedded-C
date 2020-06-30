@@ -1541,7 +1541,8 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
     const uint8_t * pIndex = pData;
-    int32_t transportStatus = 0, bytesRemaining = 0;
+    int32_t transportStatus = 0;
+    size_t bytesRemaining = 0;
 
     assert( pTransport != NULL );
     assert( pTransport->send != NULL );
@@ -1553,7 +1554,7 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
     }
     else
     {
-        bytesRemaining = ( int32_t ) dataLen;
+        bytesRemaining = dataLen;
     }
 
     /* Loop until all data is sent. */
@@ -1571,7 +1572,7 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
                         transportStatus ) );
             returnStatus = HTTP_NETWORK_ERROR;
         }
-        else if( transportStatus > bytesRemaining )
+        else if( ( size_t ) transportStatus > bytesRemaining )
         {
             LogError( ( "Failed to send HTTP data: Transport send() wrote more data "
                         "than what was expected: BytesSent=%d, BytesRemaining=%lu",
@@ -1581,7 +1582,7 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
         }
         else
         {
-            bytesRemaining = 0UL;
+            bytesRemaining -= ( size_t ) transportStatus;
             pIndex += transportStatus;
             LogDebug( ( "Sent HTTP data over the transport: "
                         "BytesSent=%d, BytesRemaining=%lu, TotalBytesSent=%lu",
