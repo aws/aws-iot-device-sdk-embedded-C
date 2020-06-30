@@ -1638,7 +1638,7 @@ static HTTPStatus_t sendHttpData( const TransportInterface_t * pTransport,
                     transportStatus ) );
     }
 
-    return returnStatus;
+    return HTTP_SUCCESS;
 }
 
 /*-----------------------------------------------------------*/
