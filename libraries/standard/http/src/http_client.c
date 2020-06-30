@@ -1560,9 +1560,7 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
     /* Loop until all data is sent. */
     while( ( bytesRemaining > 0UL ) && ( returnStatus == HTTP_SUCCESS ) )
     {
-        transportStatus = pTransport->send( pTransport->pContext,
-                                            pData,
-                                            bytesRemaining );
+        transportStatus = bytesRemaining;
 
         /* A transport status of less than zero is an error. */
         if( transportStatus < 0 )
