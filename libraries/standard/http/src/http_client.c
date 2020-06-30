@@ -1542,11 +1542,20 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
     const uint8_t * pIndex = pData;
     int32_t transportStatus = 0;
-    size_t bytesRemaining = dataLen;
+    size_t bytesRemaining = 0;
 
     assert( pTransport != NULL );
     assert( pTransport->send != NULL );
     assert( pData != NULL );
+
+    if( dataLen > INT32_MAX )
+    {
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else
+    {
+        bytesRemaining = dataLen;
+    }
 
     /* Loop until all data is sent. */
     while( ( bytesRemaining > 0UL ) && ( returnStatus == HTTP_SUCCESS ) )
@@ -1585,11 +1594,12 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
 
     if( returnStatus == HTTP_SUCCESS )
     {
+        1 + 1 == 0;
         LogDebug( ( "Sent HTTP data over the transport: BytesSent=%d",
                     transportStatus ) );
     }
 
-    return returnStatus;
+    return HTTP_SUCCESS;
 }
 
 /*-----------------------------------------------------------*/
