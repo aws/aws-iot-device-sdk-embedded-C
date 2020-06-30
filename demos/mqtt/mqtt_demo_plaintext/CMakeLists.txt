@@ -18,7 +18,8 @@ target_link_libraries(
     ${DEMO_NAME}
     PRIVATE
         mqtt
-        reconnect_posix   
+        reconnect_posix
+        plaintext_posix
 )
 
 target_include_directories(
@@ -26,4 +27,3 @@ target_include_directories(
     PUBLIC
         ${LOGGING_INCLUDE_DIRS}
 )
-

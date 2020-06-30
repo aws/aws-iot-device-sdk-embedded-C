@@ -37,7 +37,7 @@ bool Transport_reconnectBackoffAndSleep( TransportReconnectParams_t * pReconnect
     bool status = false;
     uint32_t jitter = 0;
 
-    /* MAX_RECONNECT_ATTEMPTS is set to 0, try for ever */
+    /* If MAX_RECONNECT_ATTEMPTS is set to 0, try forever */
     if( ( pReconnectParams->attemptsDone < MAX_RECONNECT_ATTEMPS ) ||
         ( 0 == MAX_RECONNECT_ATTEMPS ) )
     {
@@ -50,11 +50,11 @@ bool Transport_reconnectBackoffAndSleep( TransportReconnectParams_t * pReconnect
         /*  Wait for timer to expire for the next reconnect */
         ( void ) sleep( pReconnectParams->reconnectTimeoutSec );
 
-        /* calculate the next timeout value */
+        /* Calculate the next timeout value */
         if( pReconnectParams->reconnectTimeoutSec < MAX_RECONNECT_TIMEOUT )
         {
             /* Calculate jitter value picking a random number 
-             *  between 0 and  MAX_JITTER_VALUE_SECONDS. */
+             * between 0 and  MAX_JITTER_VALUE_SECONDS. */
             jitter = ( rand() % MAX_JITTER_VALUE_SECONDS );
              /* Double the timeout value for the next iteration */
             pReconnectParams->reconnectTimeoutSec += pReconnectParams->reconnectTimeoutSec;
@@ -66,8 +66,11 @@ bool Transport_reconnectBackoffAndSleep( TransportReconnectParams_t * pReconnect
     }
     else
     {
+        /* When max reconnect attempts are exhausted, let application know by returning
+         * false. Application may choose to restart the connection process after calling 
+         * Transport_reconnectParamsReset() */
         status = false;
-        Transport_reconnectBackoffReset( pReconnectParams );
+        Transport_reconnectParamsReset( pReconnectParams );
     }
 
     return status;
@@ -75,7 +78,7 @@ bool Transport_reconnectBackoffAndSleep( TransportReconnectParams_t * pReconnect
 
 /*-----------------------------------------------------------*/
 
-void Transport_reconnectBackoffReset( TransportReconnectParams_t * pReconnectParams )
+void Transport_reconnectParamsReset( TransportReconnectParams_t * pReconnectParams )
 {
     uint32_t jitter = 0;
     struct timespec tp;

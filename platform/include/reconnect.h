@@ -21,7 +21,8 @@
 
 /**
  * @file reconnect_config.h
- * @brief Declaration of the backoff logic when connection fails to the server fails.
+ * @brief Declaration of the exponential backoff reconnect logic utility functions
+ * and constants.
  */
 
 
@@ -34,8 +35,8 @@
     #define true                             1
 #endif
 
-/* @brief Max number of connect attempts, set this value to 0 if the device
- * must try connecting forever */
+/* @brief Max number of connect attempts, set this value to 0 if the client
+ * must try connecting to the server forever */
 #define MAX_RECONNECT_ATTEMPS                4U
 /* @brief Initial fixed timeout value in seconds between two successive
  connects. A random jitter value is added to every timeout value  */
@@ -56,13 +57,13 @@ typedef struct TransportReconnectParams
 
 /**
  * @brief Reset reconnection timeout value and number of attempts.
- * This must be called by the application before the application wants
- * to start a new connection with the server.
+ * This function must be called by the application before a new connection 
+ * with the server is attempted.
  *
  * @param[in, out] reconnectParam structure containing attempts done and timeout
  * value.
  */
-void Transport_reconnectBackoffReset( TransportReconnectParams_t * reconnectParams );
+void Transport_reconnectParamsReset( TransportReconnectParams_t * reconnectParams );
 
 /**
  * @brief Simple platfrom specific exponential backoff function. The application

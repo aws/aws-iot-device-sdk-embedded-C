@@ -63,7 +63,7 @@
  * This demo uses the Mosquitto test server. This is a public MQTT server; do not
  * publish anything sensitive to this server.
  */
-#define BROKER_ENDPOINT           "foo.mosquitto.org"
+#define BROKER_ENDPOINT           "test.mosquitto.org"
 
 /**
  * @brief Length of MQTT server host name.
@@ -139,6 +139,16 @@
 #define DELAY_BETWEEN_PUBLISHES_SECONDS     ( 1U )
 
 /**
+ * @brief Number of PUBLISH messages sent per iteration.
+ */
+#define MQTT_PUBLISH_COUNT_PER_LOOP         ( 5U )
+
+/**
+ * @brief Delay in seconds between two iterations of subscribePublishLoop()
+ */
+#define MQTT_SUBPUB_LOOP_DELAY_SECONDS      ( 5U )
+
+/**
  * @brief Transport timeout in milliseconds for transport send and receive.
  */
 #define TRANSPORT_SEND_RECV_TIMEOUT_MS      ( 20 )
@@ -195,7 +205,7 @@ static int connectToServer( const char * pServer,
  * timeout value is reached or the number of attemps are exhausted.
  *
  * @param[out] pTcpSocket Pointer to TCP socket file descriptor. Upon
- * successful connect, the pointer will point at connected socket descriptor. 
+ * successful connect, the pointer will point at connected socket descriptor.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on successful connection.
  */
@@ -227,6 +237,19 @@ static int32_t transportSend( NetworkContext_t tcpSocket,
 static int32_t transportRecv( NetworkContext_t tcpSocket,
                               void * pBuffer,
                               size_t bytesToRecv );
+
+/**
+ * @brief A function that connects to MQTT broker,
+ * subscribes a topic, Publishes to the same
+ * topic MQTT_PUBLISH_COUNT_PER_LOOP number of times, and verifies if it
+ * receives the Publish message back.
+ *
+ * @param[in] tcpSocket TCP socket that is already connected to the broker.
+ *
+ * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
+ */
+static int subscribePublishLoop( int tcpSocket );
+
 
 /**
  * @brief The timer query function provided to the MQTT context.
@@ -449,7 +472,7 @@ static int connectToServerWithBackoffRetries( int * pTcpSocket )
     TransportReconnectParams_t reconnectParams;
 
     /* Initialize reconnect attempts and interval */
-    Transport_reconnectBackoffReset( &reconnectParams );
+    Transport_reconnectParamsReset( &reconnectParams );
 
     /* Attempt to connect to MQTT broker. If connection fails, retry after
      * a timeout. Timeout value will exponentially increase till maximum
@@ -877,54 +900,33 @@ static int publishToTopic( MQTTContext_t * pContext )
 
 /*-----------------------------------------------------------*/
 
-/**
- * @brief Entry point of demo.
- *
- * The example shown below uses MQTT APIs to send and receive MQTT packets
- * over the TCP connection established using POSIX sockets.
- * The example is single threaded and uses statically allocated memory;
- * it uses QOS0 and therefore does not implement any retransmission
- * mechanism for Publish messages.
- *
- */
-int main( int argc,
-          char ** argv )
+static int subscribePublishLoop( int tcpSocket )
 {
-    int status = EXIT_SUCCESS, tcpSocket;
+    int status = EXIT_SUCCESS;
     bool mqttSessionEstablished = false;
     MQTTContext_t context;
     MQTTStatus_t mqttStatus;
     uint32_t publishCount = 0;
-    const uint32_t maxPublishCount = 5U;
-
-    ( void ) argc;
-    ( void ) argv;
+    const uint32_t maxPublishCount = MQTT_PUBLISH_COUNT_PER_LOOP;
 
     /* Get the entry time to application. */
     globalEntryTimeMs = getTimeMs();
 
-    /* Attempt to connect to MQTT broker. If connection fails, retry after
-     * a timeout. Timeout value will exponentially increased till maximum
-     * attemps are reached. */
-    status = connectToServerWithBackoffRetries( &tcpSocket );
-
     /* Establish MQTT session on top of TCP connection. */
+    LogInfo( ( "Creating an MQTT connection to %.*s.",
+               BROKER_ENDPOINT_LENGTH,
+               BROKER_ENDPOINT ) );
+
+    /* Sends an MQTT Connect packet over the already connected TCP socket
+     * tcpSocket, and waits for connection acknowledgment (CONNACK) packet. */
+    status = establishMqttSession( &context, tcpSocket );
+
     if( status == EXIT_SUCCESS )
     {
-        /* Sends an MQTT Connect packet over the already connected TCP socket
-         * tcpSocket, and waits for connection acknowledgment (CONNACK) packet. */
-        LogInfo( ( "Creating an MQTT connection to %.*s.",
-                   BROKER_ENDPOINT_LENGTH,
-                   BROKER_ENDPOINT ) );
-        status = establishMqttSession( &context, tcpSocket );
-
-        if( status == EXIT_SUCCESS )
-        {
-            /* Keep a flag for indicating if MQTT session is established. This
-             * flag will mark that an MQTT DISCONNECT has to be send at the end
-             * of the demo even if there are intermediate failures. */
-            mqttSessionEstablished = true;
-        }
+        /* Keep a flag for indicating if MQTT session is established. This
+         * flag will mark that an MQTT DISCONNECT has to be send at the end
+         * of the demo even if there are intermediate failures. */
+        mqttSessionEstablished = true;
     }
 
     if( status == EXIT_SUCCESS )
@@ -1026,18 +1028,72 @@ int main( int argc,
         }
     }
 
-    /* Close the network connection.  */
-    if( tcpSocket != -1 )
+    return status;
+}
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Entry point of demo.
+ *
+ * The example shown below uses MQTT APIs to send and receive MQTT packets
+ * over the TCP connection established using POSIX sockets.
+ * The example is single threaded and uses statically allocated memory;
+ * it uses QOS0 and therefore does not implement any retransmission
+ * mechanism for Publish messages. This example runs forever, if connection to
+ * the broker goes down, the code tries to reconnect to the broker with exponential
+ * backoff mechanism.
+ *
+ */
+int main( int argc,
+          char ** argv )
+{
+    int status = EXIT_SUCCESS;
+    int tcpSocket = -1;
+    bool mqttSessionEstablished = false;
+
+    ( void ) argc;
+    ( void ) argv;
+
+    for( ; ; )
     {
-        shutdown( tcpSocket, SHUT_RDWR );
-        close( tcpSocket );
+        /* Attempt to connect to the MQTT broker. If connection fails, retry after
+         * a timeout. Timeout value will be exponentially increased till the maximum
+         * attemps are reached or maximum timout value is reached. The function
+         * returns EXIT_FAILURE if the TCP connection cannot be established to
+         * broker after configured number of attemps. */
+        status = connectToServerWithBackoffRetries( &tcpSocket );
+
+        if( status == EXIT_FAILURE )
+        {
+            /* Log error to indicate connection failure after all
+             * reconnect attempts are over */
+            LogError( ( "Failed to connect to MQTT broker %.*s.",
+                        BROKER_ENDPOINT_LENGTH,
+                        BROKER_ENDPOINT ) );
+        }
+        else
+        {
+            /* If TCP connection is successful, execute Subscribe Publish loop */
+            status = subscribePublishLoop( tcpSocket );
+        }
+
+        if( status == EXIT_SUCCESS )
+        {
+            /* Log message indicating an iteration completed successfully */
+            LogInfo( ( "Demo completed successfully." ) );
+        }
+
+        /* Close the network connection.  */
+        if( tcpSocket != -1 )
+        {
+            shutdown( tcpSocket, SHUT_RDWR );
+            close( tcpSocket );
+        }
+
+        LogInfo( ( "Short delay before starting the next iteration....\n" ) );
+        sleep( MQTT_SUBPUB_LOOP_DELAY_SECONDS );
     }
 
-    /* Log the success message. */
-    if( status == EXIT_SUCCESS )
-    {
-        LogInfo( ( "Demo completed successfully." ) );
-    }
 
     return status;
 }
