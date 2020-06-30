@@ -51,8 +51,6 @@
 /* MQTT API header. */
 #include "mqtt.h"
 
-/* Demo Config header. */
-#include "demo_config.h"
 
 /* Reconnect parameters. */
 #include "reconnect.h"
@@ -477,11 +475,7 @@ static int connectToServerWithBackoffRetries( int * pTcpSocket )
     /* Attempt to connect to MQTT broker. If connection fails, retry after
      * a timeout. Timeout value will exponentially increase till maximum
      * attemps are reached.
-     *
-     *  while( ( EXIT_FAILURE == connectToServer( BROKER_ENDPOINT, BROKER_PORT, pTcpSocket ) ) &&
-     *  ( true == Transport_reconnectBackoffAndSleep() ) ) {}
      */
-
     do
     {
         /* Establish a TCP connection with the MQTT broker. This example connects
