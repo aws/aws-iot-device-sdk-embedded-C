@@ -83,7 +83,7 @@ fi
 
 TMPFILE=${0##*/}-$USER-$RANDOM
 unknowns=( "not-used" )     # get around empty array with nounset
-extract-comments `find $DIRNAME -name \*.[ch]` |
+extract-comments `find $DIRNAME -name \*.[ch] -not -path \"*/third_party*\"` |
     tr [:upper:] [:lower:] |
     grep -o -E '[a-zA-Z]+' |
     ablexicon -l $LEXICON > $TMPFILE
@@ -103,7 +103,7 @@ do
         continue
     fi
 
-    for file in `find $DIRNAME -name \*.[ch]`
+    for file in `find $DIRNAME -name \*.[ch] -not -path \"*/third_party*\"`
     do
         # Disable errexit here, extract-comments can return non-zero
         set +e
@@ -117,20 +117,21 @@ do
         extract-comments $file | grep -iw $word > /dev/null
         if [ $? == "0" ]
         then
-            if [ $STATUS"" != "1"  ]
-            then
-                echo -e $GREEN"############################################################################"$DEFAULTFG
-                echo -e $GREEN"#"$DEFAULTFG
-                echo -e $GREEN"#  Unknown word(s) found.  Please either correct the spelling or add them"$DEFAULTFG
-                echo -e $GREEN"#  to the lexicon file '"$LEXICON"'".$DEFAULTFG
-                echo -e $GREEN"#"$DEFAULTFG
-                echo -e $GREEN"############################################################################"$DEFAULTFG
-                STATUS=1  # Return non-zero status if any unidentified words are found
-            fi
-            echo ""
-            echo -e $BLUE$file$DEFAULTFG
-            echo ""
-            extract-comments $file | grep --color=always -iw $word | GREP_COLORS="mt=01;32" grep --color=always -E -e '^[ \t]*[0-9]+'
+            echo $word
+            #if [ $STATUS"" != "1"  ]
+            #then
+                #echo -e $GREEN"############################################################################"$DEFAULTFG
+                #echo -e $GREEN"#"$DEFAULTFG
+                #echo -e $GREEN"#  Unknown word(s) found.  Please either correct the spelling or add them"$DEFAULTFG
+                #echo -e $GREEN"#  to the lexicon file '"$LEXICON"'".$DEFAULTFG
+                #echo -e $GREEN"#"$DEFAULTFG
+                #echo -e $GREEN"############################################################################"$DEFAULTFG
+                #STATUS=1  # Return non-zero status if any unidentified words are found
+            #fi
+            #echo ""
+            #echo -e $BLUE$file$DEFAULTFG
+            #echo ""
+            #extract-comments $file | grep --color=always -iw $word | GREP_COLORS="mt=01;32" grep --color=always -E -e '^[ \t]*[0-9]+'
         fi
         # Re-enable errexit
         set -o errexit
