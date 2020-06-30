@@ -1639,7 +1639,7 @@ static HTTPStatus_t sendHttpData( const TransportInterface_t * pTransport,
                     transportStatus ) );
     }
 
-    return HTTP_SUCCESS;
+    return returnStatus;
 }
 
 /*-----------------------------------------------------------*/
