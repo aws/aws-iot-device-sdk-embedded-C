@@ -24,26 +24,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* POSIX socket includes. */
-#include <errno.h>
-#include <netdb.h>
-#include <time.h>
-#include <poll.h>
-#include <unistd.h>
-#include <arpa/inet.h>
-
-#include <sys/socket.h>
-#include <sys/types.h>
-
-/* OpenSSL includes. */
-#include <openssl/ssl.h>
-#include <openssl/bio.h>
-
 /* HTTP API header. */
 #include "http_client.h"
 
 /* Demo Config header. */
 #include "demo_config.h"
+
+/* OpenSSL transport header. */
+#include "openssl_posix.h"
 
 /* Check that AWS IoT Core endpoint is defined. */
 #ifndef IOT_CORE_ENDPOINT
@@ -60,6 +48,26 @@
     #error "Please define a POST_PATH."
 #endif
 
+/* Check that a path for Root CA Certificate is defined. */
+#ifndef ROOT_CA_CERT_PATH
+    #error "Please define a ROOT_CA_CERT_PATH."
+#endif
+
+/* Check that a path for Client Certificate is defined. */
+#ifndef CLIENT_CERT_PATH
+    #error "Please define a CLIENT_CERT_PATH."
+#endif
+
+/* Check that a path for Client's Private Key is defined. */
+#ifndef CLIENT_PRIVATE_KEY_PATH
+    #error "Please define a CLIENT_PRIVATE_KEY_PATH."
+#endif
+
+/* Check that a request body to send for the POST request is defined. */
+#ifndef REQUEST_BODY
+    #error "Please define a REQUEST_BODY."
+#endif
+
 /* Check that transport timeout for transport send and receive is defined. */
 #ifndef TRANSPORT_SEND_RECV_TIMEOUT_MS
     #define TRANSPORT_SEND_RECV_TIMEOUT_MS    ( 1000 )
@@ -70,9 +78,13 @@
     #define USER_BUFFER_LENGTH    ( 1024 )
 #endif
 
-/* Check that a request body to send for PUT and POST requests is defined. */
-#ifndef REQUEST_BODY
-    #error "Please define a REQUEST_BODY."
+/**
+ * @brief ALPN protocol name to be sent as part of the ClientHello message.
+ *
+ * @note When using ALPN, port 443 must be used to connect to AWS IoT Core.
+ */
+#ifndef IOT_CORE_ALPN_PROTOCOL_NAME
+    #define IOT_CORE_ALPN_PROTOCOL_NAME    "\x0ex-amzn-http-ca"
 #endif
 
 /**
@@ -96,21 +108,6 @@
 #define POST_PATH_LENGTH                      ( sizeof( POST_PATH ) - 1 )
 
 /**
- * @brief Length of path to root CA certificate of AWS IoT Core.
- */
-#define ROOT_CA_CERT_PATH_LENGTH              ( sizeof( ROOT_CA_CERT_PATH ) - 1 )
-
-/**
- * @brief Length of path to client's certificate.
- */
-#define CLIENT_CERT_PATH_LENGTH               ( sizeof( CLIENT_CERT_PATH ) - 1 )
-
-/**
- * @brief Length of path to client's key.
- */
-#define CLIENT_PRIVATE_KEY_PATH_LENGTH        ( sizeof( CLIENT_PRIVATE_KEY_PATH ) - 1 )
-
-/**
  * @brief Length of the request body.
  */
 #define REQUEST_BODY_LENGTH                   ( sizeof( REQUEST_BODY ) - 1 )
@@ -130,109 +127,7 @@
  */
 static uint8_t userBuffer[ USER_BUFFER_LENGTH ];
 
-/**
- * @brief Definition of the HTTP network context.
- *
- * @note For this TLS demo, the socket descriptor and SSL context is used.
- */
-struct HTTPNetworkContext
-{
-    int tcpSocket;
-    SSL * pSslContext;
-};
-
-/**
- * @brief Structure based on the definition of the HTTP network context.
- */
-static HTTPNetworkContext_t networkContext;
-
 /*-----------------------------------------------------------*/
-
-/**
- * @brief Performs a DNS lookup on the given host name, then establishes a TCP
- * connection to the server.
- *
- * @param[in] pServer Host name of server.
- * @param[in] port Server port.
- * @param[out] pTcpSocket The output parameter to return the created socket descriptor.
- *
- * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
- */
-static int connectToServer( const char * pServer,
-                            size_t serverLen,
-                            uint16_t port,
-                            int * pTcpSocket );
-
-/**
- * @brief Reads TLS credentials from the filesystem for mutual authentication.
- *
- * Uses OpenSSL to import the root CA certificate, client certificate, and
- * client certificate private key.
- *
- * @param[in] pSslContext Destination for the imported credentials.
- * @param[in] pRootCaPath Path to the root CA certificate.
- * @param[in] rootCaPathLen Length of path to the root CA certificate.
- * @param[in] pClientCertPath Path to the client certificate.
- * @param[in] clientCertPathLen Length of path to the client certificate.
- * @param[in] pClientPrivateKeyPath Path to the client certificate private key.
- * @param[in] clientPrivateKeyPathLen Length of path to the client certificate private key.
- *
- * @return 1 on success; otherwise, failure;
- */
-static int readCredentials( SSL_CTX * pSslContext,
-                            const char * pRootCaPath,
-                            size_t rootCaPathLen,
-                            const char * pClientCertPath,
-                            size_t clientCertPathLen,
-                            const char * pClientPrivateKeyPath,
-                            size_t clientPrivateKeyPathLen );
-
-/**
- * @brief Set up a TLS connection over an existing TCP connection.
- *
- * @param[in] tcpSocket Socket descriptor corresponding to the existing TCP connection.
- * @param[in] pAlpnProtos List of ALPN protocols available to be negotiated.
- * @param[in] alpnProtosLen Length of the ALPN protocols list.
- * @param[out] pSslContext The output parameter to return the created SSL context.
- *
- * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
- */
-static int tlsSetup( int tcpSocket,
-                     const char * pAlpnProtos,
-                     size_t alpnProtosLen,
-                     SSL ** pSslContext );
-
-/**
- * @brief The transport send function that defines the transport interface.
- *
- * This is passed as the #HTTPTransportInterface.send function and used to
- * send data over the network.
- *
- * @param[in] pContext User defined context (TCP socket and SSL context for this demo).
- * @param[in] pBuffer Buffer containing the bytes to send over the network stack.
- * @param[in] bytesToSend Number of bytes to send over the network.
- *
- * @return Number of bytes sent if successful; otherwise negative value on error.
- */
-static int32_t transportSend( HTTPNetworkContext_t * pContext,
-                              const void * pBuffer,
-                              size_t bytesToSend );
-
-/**
- * @brief The transport receive function that defines the transport interface.
- *
- * This is passed as the #HTTPTransportInterface.recv function used for reading
- * data received from the network.
- *
- * @param[in] pContext User defined context (TCP socket and SSL context for this demo).
- * @param[out] pBuffer Buffer to read network data into.
- * @param[in] bytesToRead Number of bytes requested from the network.
- *
- * @return Number of bytes received if successful; otherwise negative value on error.
- */
-static int32_t transportRecv( HTTPNetworkContext_t * pContext,
-                              void * pBuffer,
-                              size_t bytesToRecv );
 
 /**
  * @brief Send an HTTP request based on a specified method and path, then
@@ -246,7 +141,7 @@ static int32_t transportRecv( HTTPNetworkContext_t * pContext,
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
-static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface,
+static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
                             const char * pMethod,
                             size_t methodLen,
                             const char * pPath,
@@ -254,523 +149,7 @@ static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface
 
 /*-----------------------------------------------------------*/
 
-static int connectToServer( const char * pServer,
-                            size_t serverLen,
-                            uint16_t port,
-                            int * pTcpSocket )
-{
-    int returnStatus = EXIT_SUCCESS;
-    struct addrinfo hints, * pIndex, * pListHead = NULL;
-    struct sockaddr * pServerInfo;
-    uint16_t netPort = htons( port );
-    socklen_t serverInfoLength;
-    char resolvedIpAddr[ IPV6_ADDRESS_STRING_LENGTH ];
-
-    /* Initialize string to store the resolved IP address from the host name. */
-    ( void ) memset( resolvedIpAddr, 0, IPV6_ADDRESS_STRING_LENGTH );
-    /* Add hints to retrieve only TCP sockets in getaddrinfo. */
-    ( void ) memset( &hints, 0, sizeof( hints ) );
-    /* Address family of either IPv4 or IPv6. */
-    hints.ai_family = AF_UNSPEC;
-    /* TCP Socket. */
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_protocol = IPPROTO_TCP;
-
-    /* Perform a DNS lookup on the given host name. */
-    returnStatus = getaddrinfo( pServer, NULL, &hints, &pListHead );
-
-    if( returnStatus != -1 )
-    {
-        LogInfo( ( "Performing DNS lookup: Host=%.*s.",
-                   ( int32_t ) IOT_CORE_ENDPOINT_LENGTH, IOT_CORE_ENDPOINT ) );
-
-        /* Attempt to connect to one of the retrieved DNS records. */
-        for( pIndex = pListHead; pIndex != NULL; pIndex = pIndex->ai_next )
-        {
-            *pTcpSocket = socket( pIndex->ai_family, pIndex->ai_socktype, pIndex->ai_protocol );
-
-            if( *pTcpSocket == -1 )
-            {
-                continue;
-            }
-
-            pServerInfo = pIndex->ai_addr;
-
-            if( pServerInfo->sa_family == AF_INET )
-            {
-                /* IPv4 */
-                ( ( struct sockaddr_in * ) pServerInfo )->sin_port = netPort;
-                serverInfoLength = sizeof( struct sockaddr_in );
-                inet_ntop( pServerInfo->sa_family,
-                           &( ( struct sockaddr_in * ) pServerInfo )->sin_addr,
-                           resolvedIpAddr,
-                           sizeof( resolvedIpAddr ) );
-            }
-            else
-            {
-                /* IPv6 */
-                ( ( struct sockaddr_in6 * ) pServerInfo )->sin6_port = netPort;
-                serverInfoLength = sizeof( struct sockaddr_in6 );
-                inet_ntop( pServerInfo->sa_family,
-                           &( ( struct sockaddr_in6 * ) pServerInfo )->sin6_addr,
-                           resolvedIpAddr,
-                           sizeof( resolvedIpAddr ) );
-            }
-
-            LogInfo( ( "Attempting to connect to server: Host=%.*s, IP address=%s.",
-                       ( int32_t ) IOT_CORE_ENDPOINT_LENGTH, IOT_CORE_ENDPOINT, resolvedIpAddr ) );
-
-            returnStatus = connect( *pTcpSocket, pServerInfo, serverInfoLength );
-
-            if( returnStatus == -1 )
-            {
-                LogError( ( "Failed to connect to server: Host=%.*s, IP address=%s.",
-                            ( int32_t ) IOT_CORE_ENDPOINT_LENGTH, IOT_CORE_ENDPOINT, resolvedIpAddr ) );
-                close( *pTcpSocket );
-            }
-            else
-            {
-                LogInfo( ( "Connected to IP address: %s.",
-                           resolvedIpAddr ) );
-                break;
-            }
-        }
-
-        if( pIndex == NULL )
-        {
-            /* Fail if no connection could be established. */
-            LogError( ( "Could not connect to any resolved IP address from %.*s.",
-                        ( int32_t ) serverLen,
-                        pServer ) );
-            returnStatus = EXIT_FAILURE;
-        }
-        else
-        {
-            LogInfo( ( "Established TCP connection: Server=%.*s.\n",
-                       ( int32_t ) serverLen,
-                       pServer ) );
-            returnStatus = EXIT_SUCCESS;
-        }
-    }
-    else
-    {
-        LogError( ( "Could not resolve host %.*s.\n",
-                    ( int32_t ) serverLen,
-                    pServer ) );
-        returnStatus = EXIT_FAILURE;
-    }
-
-    if( pListHead != NULL )
-    {
-        freeaddrinfo( pListHead );
-    }
-
-    return returnStatus;
-}
-
-/*-----------------------------------------------------------*/
-
-static int readCredentials( SSL_CTX * pSslContext,
-                            const char * pRootCaPath,
-                            size_t rootCaPathLen,
-                            const char * pClientCertPath,
-                            size_t clientCertPathLen,
-                            const char * pClientPrivateKeyPath,
-                            size_t clientPrivateKeyPathLen )
-{
-    int sslStatus = 0;
-    char * cwd = getcwd( NULL, 0 );
-    FILE * pRootCaFile = NULL;
-    X509 * pRootCa = NULL;
-
-    assert( pRootCaPath != NULL );
-    assert( rootCaPathLen > 0 );
-    assert( pClientCertPath != NULL );
-    assert( clientCertPathLen > 0 );
-    assert( pClientPrivateKeyPath != NULL );
-    assert( clientPrivateKeyPathLen > 0 );
-
-    /* OpenSSL does not provide a single function for reading and loading certificates
-     * from files into stores, so the file API must be called. Start with the
-     * root certificate. */
-    if( ( pRootCaPath != NULL ) && ( rootCaPathLen > 0 ) )
-    {
-        /* Log the absolute directory based on first character of root CA path. */
-        if( ( pRootCaPath[ 0 ] == '/' ) || ( pRootCaPath[ 0 ] == '\\' ) )
-        {
-            LogInfo( ( "Attempting to open root CA certificate: Path=%.*s.",
-                       ( int32_t ) rootCaPathLen,
-                       pRootCaPath ) );
-        }
-        else
-        {
-            LogInfo( ( "Attempting to open root CA certificate: Path=%s/%.*s.",
-                       cwd,
-                       ( int32_t ) rootCaPathLen,
-                       pRootCaPath ) );
-        }
-
-        pRootCaFile = fopen( pRootCaPath, "r" );
-
-        if( pRootCaFile == NULL )
-        {
-            LogError( ( "fopen failed to find the root CA certificate file: "
-                        "ROOT_CA_PATH=%.*s.",
-                        ( int32_t ) rootCaPathLen,
-                        pRootCaPath ) );
-            sslStatus = -1;
-        }
-        else
-        {
-            /* Read the root CA into an X509 object, then close its file handle. */
-            pRootCa = PEM_read_X509( pRootCaFile, NULL, NULL, NULL );
-
-            if( fclose( pRootCaFile ) != 0 )
-            {
-                LogWarn( ( "fclose failed to close file %.*s",
-                           ( int32_t ) rootCaPathLen,
-                           pRootCaPath ) );
-            }
-        }
-
-        if( pRootCa == NULL )
-        {
-            LogError( ( "PEM_read_X509 failed to parse root CA." ) );
-            sslStatus = -1;
-        }
-        else
-        {
-            sslStatus = X509_STORE_add_cert( SSL_CTX_get_cert_store( pSslContext ),
-                                             pRootCa );
-        }
-
-        if( sslStatus != 1 )
-        {
-            LogError( ( "X509_STORE_add_cert failed to add root CA to certificate store." ) );
-        }
-        else
-        {
-            LogInfo( ( "Successfully imported root CA." ) );
-        }
-    }
-
-    if( ( sslStatus == 1 ) &&
-        ( pClientCertPath != NULL ) && ( clientCertPathLen > 0 ) )
-    {
-        /* Log the absolute directory based on first character of client certificate path. */
-        if( ( pClientCertPath[ 0 ] == '/' ) || ( pClientCertPath[ 0 ] == '\\' ) )
-        {
-            LogInfo( ( "Attempting to open client's certificate: Path=%.*s.",
-                       ( int32_t ) rootCaPathLen,
-                       pRootCaPath ) );
-        }
-        else
-        {
-            LogInfo( ( "Attempting to open client's certificate: Path=%s/%.*s.",
-                       cwd,
-                       ( int32_t ) rootCaPathLen,
-                       pRootCaPath ) );
-        }
-
-        sslStatus = SSL_CTX_use_certificate_chain_file( pSslContext,
-                                                        pClientCertPath );
-
-        /* Import the client certificate. */
-        if( sslStatus != 1 )
-        {
-            LogError( ( "SSL_CTX_use_certificate_chain_file failed to import "
-                        "client certificate at %.*s.",
-                        ( int32_t ) clientCertPathLen,
-                        pClientCertPath ) );
-        }
-        else
-        {
-            LogInfo( ( "Successfully imported client certificate." ) );
-        }
-    }
-
-    if( ( sslStatus == 1 ) &&
-        ( pClientPrivateKeyPath != NULL ) && ( clientPrivateKeyPathLen > 0 ) )
-    {
-        /* Log the absolute directory based on first character of client certificate path. */
-        if( ( pClientPrivateKeyPath[ 0 ] == '/' ) || ( pClientPrivateKeyPath[ 0 ] == '\\' ) )
-        {
-            LogInfo( ( "Attempting to open client's private key: Path=%.*s.",
-                       ( int32_t ) clientPrivateKeyPathLen,
-                       pClientPrivateKeyPath ) );
-        }
-        else
-        {
-            LogInfo( ( "Attempting to open client's private key: Path=%s/%.*s.",
-                       cwd,
-                       ( int32_t ) clientPrivateKeyPathLen,
-                       pClientPrivateKeyPath ) );
-        }
-
-        sslStatus = SSL_CTX_use_PrivateKey_file( pSslContext,
-                                                 pClientPrivateKeyPath,
-                                                 SSL_FILETYPE_PEM );
-
-        /* Import the client certificate private key. */
-        if( sslStatus != 1 )
-        {
-            LogError( ( "SSL_CTX_use_PrivateKey_file failed to import client "
-                        "certificate private key at %.*s.",
-                        ( int32_t ) clientPrivateKeyPathLen,
-                        pClientPrivateKeyPath ) );
-        }
-        else
-        {
-            LogInfo( ( "Successfully imported client certificate private key." ) );
-        }
-    }
-
-    /* Free the root CA object. */
-    if( pRootCa != NULL )
-    {
-        X509_free( pRootCa );
-    }
-
-    /* Free cwd because getcwd calls malloc. */
-    if( cwd != NULL )
-    {
-        free( cwd );
-    }
-
-    return sslStatus;
-}
-
-/*-----------------------------------------------------------*/
-
-static int tlsSetup( int tcpSocket,
-                     const char * pAlpnProtos,
-                     size_t alpnProtosLen,
-                     SSL ** pSslContext )
-{
-    int returnStatus = EXIT_SUCCESS;
-    long verifyPeerCertStatus = X509_V_OK;
-    int sslStatus = 0;
-
-    /* Setup for creating a TLS client. */
-    SSL_CTX * pSslSetup = SSL_CTX_new( TLS_client_method() );
-
-    if( pSslSetup != NULL )
-    {
-        /* Set auto retry mode for the blocking calls to SSL_read and SSL_write.
-         * The mask returned by SSL_CTX_set_mode does not need to be checked. */
-        ( void ) SSL_CTX_set_mode( pSslSetup, SSL_MODE_AUTO_RETRY );
-
-        sslStatus = readCredentials( pSslSetup,
-                                     ROOT_CA_CERT_PATH,
-                                     ROOT_CA_CERT_PATH_LENGTH,
-                                     CLIENT_CERT_PATH,
-                                     CLIENT_CERT_PATH_LENGTH,
-                                     CLIENT_PRIVATE_KEY_PATH,
-                                     CLIENT_PRIVATE_KEY_PATH_LENGTH );
-
-        /* Setup authentication. */
-        if( sslStatus != 1 )
-        {
-            LogError( ( "Setting up credentials failed." ) );
-        }
-        else
-        {
-            LogInfo( ( "Setting up credentials succeeded." ) );
-        }
-    }
-
-    /* Set up the TLS connection. */
-    if( sslStatus == 1 )
-    {
-        /* Create a new SSL context. */
-        *pSslContext = SSL_new( pSslSetup );
-
-        if( *pSslContext == NULL )
-        {
-            LogError( ( "SSL_new failed to create a new SSL context." ) );
-            sslStatus = 0;
-        }
-        else
-        {
-            /* Enable SSL peer verification. */
-            SSL_set_verify( *pSslContext, SSL_VERIFY_PEER, NULL );
-
-            sslStatus = SSL_set_fd( *pSslContext, tcpSocket );
-
-            if( sslStatus != 1 )
-            {
-                LogError( ( "SSL_set_fd failed to set the socket fd to SSL context." ) );
-            }
-        }
-
-        if( ( sslStatus == 1 ) &&
-            ( pAlpnProtos != NULL ) && ( alpnProtosLen > 0 ) )
-        {
-            if( IOT_CORE_PORT != 443 )
-            {
-                LogError( ( "IOT_CORE_PORT must be set to 443 to use ALPN in AWS IoT Core." ) );
-                sslStatus = -1;
-            }
-            else
-            {
-                sslStatus = SSL_set_alpn_protos( *pSslContext,
-                                                 ( unsigned char * ) pAlpnProtos,
-                                                 ( unsigned int ) alpnProtosLen );
-            }
-
-            if( sslStatus != 0 )
-            {
-                LogError( ( "SSL_set_alpn_protos failed to set ALPN protos. %s",
-                            pAlpnProtos ) );
-            }
-            else
-            {
-                sslStatus = 1;
-            }
-        }
-
-        /* Perform the TLS handshake. */
-        if( sslStatus == 1 )
-        {
-            sslStatus = SSL_connect( *pSslContext );
-
-            if( sslStatus != 1 )
-            {
-                LogError( ( "SSL_connect failed to perform TLS handshake." ) );
-            }
-        }
-
-        /* Verify X509 certificate from peer. */
-        if( sslStatus == 1 )
-        {
-            verifyPeerCertStatus = SSL_get_verify_result( *pSslContext );
-
-            if( verifyPeerCertStatus != X509_V_OK )
-            {
-                LogError( ( "SSL_get_verify_result failed to verify X509 "
-                            "certificate from peer." ) );
-                sslStatus = 0;
-            }
-        }
-
-        /* Clean up on error. */
-        if( sslStatus == 0 )
-        {
-            SSL_free( *pSslContext );
-            *pSslContext = NULL;
-        }
-    }
-    else
-    {
-        LogError( ( "X509_STORE_add_cert failed to add certificate to store." ) );
-    }
-
-    /* Log failure or success and return the correct exit status. */
-    if( sslStatus == 0 )
-    {
-        LogError( ( "Failed to establish a TLS connection: Host=%.*s.",
-                    ( int32_t ) IOT_CORE_ENDPOINT_LENGTH,
-                    IOT_CORE_ENDPOINT ) );
-        returnStatus = EXIT_FAILURE;
-    }
-    else
-    {
-        LogInfo( ( "Established a TLS connection: Host=%.*s.\n\n",
-                   ( int32_t ) IOT_CORE_ENDPOINT_LENGTH,
-                   IOT_CORE_ENDPOINT ) );
-        returnStatus = EXIT_SUCCESS;
-    }
-
-    return returnStatus;
-}
-
-/*-----------------------------------------------------------*/
-
-static int32_t transportSend( HTTPNetworkContext_t * pNetworkContext,
-                              const void * pBuffer,
-                              size_t bytesToSend )
-{
-    int32_t bytesSent = 0;
-    int pollStatus = 0;
-    struct pollfd fileDescriptor;
-
-    /* Initialize the file descriptor. */
-    fileDescriptor.events = POLLOUT;
-    fileDescriptor.revents = 0;
-    /* Set the file descriptor for poll. */
-    fileDescriptor.fd = pNetworkContext->tcpSocket;
-
-    /* Poll the file descriptor to check if SSL_Write can be done now. */
-    pollStatus = poll( &fileDescriptor, 1, TRANSPORT_SEND_RECV_TIMEOUT_MS );
-
-    if( pollStatus > 0 )
-    {
-        bytesSent = ( int32_t ) SSL_write( pNetworkContext->pSslContext, pBuffer, bytesToSend );
-    }
-    else if( pollStatus == 0 )
-    {
-        LogDebug( ( "Timed out while polling SSL socket for write buffer availability." ) );
-    }
-    else
-    {
-        LogError( ( "Polling of the SSL socket for write buffer availability failed:"
-                    " status=%d",
-                    pollStatus ) );
-        bytesSent = -1;
-    }
-
-    return bytesSent;
-}
-
-/*-----------------------------------------------------------*/
-
-static int32_t transportRecv( HTTPNetworkContext_t * pNetworkContext,
-                              void * pBuffer,
-                              size_t bytesToRecv )
-{
-    int32_t bytesReceived = 0;
-    int pollStatus = -1, bytesAvailableToRead = 0;
-    struct pollfd fileDescriptor;
-
-    /* Initialize the file descriptor. */
-    fileDescriptor.events = POLLIN | POLLPRI;
-    fileDescriptor.revents = 0;
-    /* Set the file descriptor for poll. */
-    fileDescriptor.fd = SSL_get_fd( pNetworkContext->pSslContext );
-
-    /* Check if there are any pending data available for read. */
-    bytesAvailableToRead = SSL_pending( pNetworkContext->pSslContext );
-
-    /* Poll only if there is no data available yet to read. */
-    if( bytesAvailableToRead <= 0 )
-    {
-        pollStatus = poll( &fileDescriptor, 1, TRANSPORT_SEND_RECV_TIMEOUT_MS );
-    }
-
-    /* bytesAvailableToRead > 0 means that there was pending data to be read.
-     * pollStatus > 0 means that there was no pending data, but it became available
-     * during polling. If either holds true, read the available data. */
-    if( ( bytesAvailableToRead > 0 ) || ( pollStatus > 0 ) )
-    {
-        bytesReceived = ( int32_t ) SSL_read( pNetworkContext->pSslContext, pBuffer, bytesToRecv );
-    }
-    /* Poll timed out. */
-    else if( pollStatus == 0 )
-    {
-        LogInfo( ( "Poll timed out and there is no data to read from the buffer." ) );
-    }
-    else
-    {
-        LogError( ( "Poll returned with status = %d.", pollStatus ) );
-        bytesReceived = -1;
-    }
-
-    return bytesReceived;
-}
-
-/*-----------------------------------------------------------*/
-
-static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface,
+static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
                             const char * pMethod,
                             size_t methodLen,
                             const char * pPath,
@@ -808,7 +187,7 @@ static int sendHttpRequest( const HTTPTransportInterface_t * pTransportInterface
 
     /* Set "Connection" HTTP header to "keep-alive" so that multiple requests
      * can be sent over the same established TCP connection. */
-    requestInfo.flags = HTTP_REQUEST_KEEP_ALIVE_FLAG;
+    requestInfo.reqFlags = HTTP_REQUEST_KEEP_ALIVE_FLAG;
 
     /* Set the buffer used for storing request headers. */
     requestHeaders.pBuffer = userBuffer;
@@ -897,42 +276,47 @@ int main( int argc,
 {
     /* Return value of main. */
     int returnStatus = EXIT_SUCCESS;
-    /* The HTTP Client library transport layer interface. */
-    HTTPTransportInterface_t transportInterface;
+    /* The transport layer interface used by the HTTP Client library. */
+    TransportInterface_t transportInterface;
+    /* The network context for the transport layer interface. */
+    NetworkContext_t networkContext;
+    /* Credentials to establish the TLS connection. */
+    OpensslCredentials_t opensslCredentials;
+    /* Status returned by OpenSSL transport implementation. */
+    OpensslStatus_t opensslStatus;
+    /* Information about the server to send the HTTP request. */
+    ServerInfo_t serverInfo;
 
     ( void ) argc;
     ( void ) argv;
 
+    /* Initialize TLS credentials. */
+    opensslCredentials.pClientCertPath = CLIENT_CERT_PATH;
+    opensslCredentials.pPrivateKeyPath = CLIENT_PRIVATE_KEY_PATH;
+    opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
+    opensslCredentials.pAlpnProtos = IOT_CORE_ALPN_PROTOCOL_NAME;
+    opensslCredentials.alpnProtosLen = IOT_CORE_ALPN_PROTOCOL_NAME_LENGTH;
+
+    /* Initialize server information. */
+    serverInfo.pHostName = IOT_CORE_ENDPOINT;
+    serverInfo.hostNameLength = IOT_CORE_ENDPOINT_LENGTH;
+    serverInfo.port = IOT_CORE_PORT;
+
     /**************************** Connect. ******************************/
 
-    /* Establish TCP connection. */
-    returnStatus = connectToServer( IOT_CORE_ENDPOINT, IOT_CORE_ENDPOINT_LENGTH,
-                                    IOT_CORE_PORT, &networkContext.tcpSocket );
-
-    /* Establish TLS connection on top of TCP connection. */
+    /* Establish TLS connection on top of TCP connection using OpenSSL. */
     if( returnStatus == EXIT_SUCCESS )
     {
         LogInfo( ( "Performing TLS handshake on top of the TCP connection." ) );
 
-        /* Pass the ALPN protocol name depending on the port being used. */
-        if( IOT_CORE_PORT == 443 )
+        opensslStatus = Openssl_Connect( &networkContext,
+                                         &serverInfo,
+                                         &opensslCredentials,
+                                         TRANSPORT_SEND_RECV_TIMEOUT_MS,
+                                         TRANSPORT_SEND_RECV_TIMEOUT_MS );
+
+        if( opensslStatus != OPENSSL_SUCCESS )
         {
-            returnStatus = tlsSetup( networkContext.tcpSocket,
-                                     IOT_CORE_ALPN_PROTOCOL_NAME,
-                                     IOT_CORE_ALPN_PROTOCOL_NAME_LENGTH,
-                                     &networkContext.pSslContext );
-        }
-        else if( IOT_CORE_PORT == 8443 )
-        {
-            returnStatus = tlsSetup( networkContext.tcpSocket,
-                                     NULL,
-                                     0,
-                                     &networkContext.pSslContext );
-        }
-        else
-        {
-            LogError( ( "AWS IoT Core does not support HTTPS through port %d",
-                        IOT_CORE_PORT ) );
             returnStatus = EXIT_FAILURE;
         }
     }
@@ -941,9 +325,9 @@ int main( int argc,
     if( returnStatus == EXIT_SUCCESS )
     {
         ( void ) memset( &transportInterface, 0, sizeof( transportInterface ) );
-        transportInterface.recv = transportRecv;
-        transportInterface.send = transportSend;
-        transportInterface.pContext = &networkContext;
+        transportInterface.recv = Openssl_Recv;
+        transportInterface.send = Openssl_Send;
+        transportInterface.pNetworkContext = &networkContext;
     }
 
     /*********************** Send HTTPS request. ************************/
@@ -959,23 +343,12 @@ int main( int argc,
 
     /************************** Disconnect. *****************************/
 
-    /* Close TLS session if established. */
-    if( networkContext.pSslContext != NULL )
-    {
-        /* SSL shutdown should be called twice: once to send "close notify" and
-         * once more to receive the peer's "close notify". */
-        if( SSL_shutdown( networkContext.pSslContext ) == 0 )
-        {
-            ( void ) SSL_shutdown( networkContext.pSslContext );
-        }
+    /* Close TLS session. */
+    opensslStatus = Openssl_Disconnect( &networkContext );
 
-        SSL_free( networkContext.pSslContext );
-    }
-
-    if( networkContext.tcpSocket != -1 )
+    if( opensslStatus != OPENSSL_SUCCESS )
     {
-        ( void ) shutdown( networkContext.tcpSocket, SHUT_RDWR );
-        ( void ) close( networkContext.tcpSocket );
+        returnStatus = EXIT_FAILURE;
     }
 
     return returnStatus;

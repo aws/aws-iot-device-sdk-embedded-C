@@ -17,7 +17,7 @@
  * bytes than what were specified were sent, then #HTTP_NETWORK_ERROR is
  * returned.
  */
-static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
+static HTTPStatus_t sendHttpData( const TransportInterface_t * pTransport,
                                   const uint8_t * pData,
                                   size_t dataLen );
 
@@ -35,7 +35,7 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
  * bytes than what were specified were sent, then #HTTP_NETWORK_ERROR is
  * returned.
  */
-static HTTPStatus_t sendHttpHeaders( const HTTPTransportInterface_t * pTransport,
+static HTTPStatus_t sendHttpHeaders( const TransportInterface_t * pTransport,
                                      HTTPRequestHeaders_t * pRequestHeaders,
                                      size_t reqBodyLen,
                                      uint32_t sendFlags );
@@ -64,7 +64,7 @@ static HTTPStatus_t addContentLengthHeader( HTTPRequestHeaders_t * pRequestHeade
  * bytes than what was specified were sent, then #HTTP_NETWORK_ERROR is
  * returned.
  */
-static HTTPStatus_t sendHttpBody( const HTTPTransportInterface_t * pTransport,
+static HTTPStatus_t sendHttpBody( const TransportInterface_t * pTransport,
                                   const uint8_t * pRequestBodyBuf,
                                   size_t reqBodyBufLen );
 
@@ -100,7 +100,7 @@ static HTTPStatus_t addHeader( HTTPRequestHeaders_t * pRequestHeaders,
  * more bytes than what was specified were read, then #HTTP_NETWORK_ERROR is
  * returned.
  */
-static HTTPStatus_t receiveHttpData( const HTTPTransportInterface_t * pTransport,
+static HTTPStatus_t receiveHttpData( const TransportInterface_t * pTransport,
                                      uint8_t * pBuffer,
                                      size_t bufferLen,
                                      size_t * pBytesReceived );
@@ -134,7 +134,7 @@ static HTTPStatus_t getFinalResponseStatus( HTTPParsingState_t parsingState,
  * @return Returns #HTTP_SUCCESS if successful. Please see #receiveHttpData,
  * #parseHttpResponse, and #getFinalResponseStatus for other statuses returned.
  */
-static HTTPStatus_t receiveAndParseHttpResponse( const HTTPTransportInterface_t * pTransport,
+static HTTPStatus_t receiveAndParseHttpResponse( const TransportInterface_t * pTransport,
                                                  HTTPResponse_t * pResponse,
                                                  const HTTPRequestHeaders_t * pRequestHeaders );
 
@@ -1441,6 +1441,11 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
         LogError( ( "Parameter check failed: pRequestHeaders->pBuffer is NULL." ) );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
+    else if( pRequestHeaders->headersLen > pRequestHeaders->bufferLen )
+    {
+        LogError( ( "Parameter check failed: pRequestHeaders->headersLen > pRequestHeaders->bufferLen." ) );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
     else if( rangeEnd < HTTP_RANGE_REQUEST_END_OF_FILE )
     {
         LogError( ( "Parameter check failed: rangeEnd is invalid: "
@@ -1463,6 +1468,13 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
                     "rangeStart should be < rangeEnd when both are >= 0: "
                     "RangeStart=%d, RangeEnd=%d",
                     rangeStartOrlastNbytes, rangeEnd ) );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( rangeStartOrlastNbytes == INT32_MIN )
+    {
+        LogError( ( "Parameter check failed: Arithmetic overflow detected: "
+                    "rangeStart should be > -2147483648 (INT32_MIN)",
+                    rangeStartOrlastNbytes ) );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else
@@ -1523,7 +1535,7 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
 
 /*-----------------------------------------------------------*/
 
-static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
+static HTTPStatus_t sendHttpData( const TransportInterface_t * pTransport,
                                   const uint8_t * pData,
                                   size_t dataLen )
 {
@@ -1539,7 +1551,7 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
     /* Loop until all data is sent. */
     while( ( bytesRemaining > 0UL ) && ( returnStatus != HTTP_NETWORK_ERROR ) )
     {
-        transportStatus = pTransport->send( pTransport->pContext,
+        transportStatus = pTransport->send( pTransport->pNetworkContext,
                                             pIndex,
                                             bytesRemaining );
 
@@ -1614,7 +1626,7 @@ static HTTPStatus_t addContentLengthHeader( HTTPRequestHeaders_t * pRequestHeade
 
 /*-----------------------------------------------------------*/
 
-static HTTPStatus_t sendHttpHeaders( const HTTPTransportInterface_t * pTransport,
+static HTTPStatus_t sendHttpHeaders( const TransportInterface_t * pTransport,
                                      HTTPRequestHeaders_t * pRequestHeaders,
                                      size_t reqBodyLen,
                                      uint32_t sendFlags )
@@ -1650,7 +1662,7 @@ static HTTPStatus_t sendHttpHeaders( const HTTPTransportInterface_t * pTransport
 
 /*-----------------------------------------------------------*/
 
-static HTTPStatus_t sendHttpBody( const HTTPTransportInterface_t * pTransport,
+static HTTPStatus_t sendHttpBody( const TransportInterface_t * pTransport,
                                   const uint8_t * pRequestBodyBuf,
                                   size_t reqBodyBufLen )
 {
@@ -1670,7 +1682,7 @@ static HTTPStatus_t sendHttpBody( const HTTPTransportInterface_t * pTransport,
 
 /*-----------------------------------------------------------*/
 
-static HTTPStatus_t receiveHttpData( const HTTPTransportInterface_t * pTransport,
+static HTTPStatus_t receiveHttpData( const TransportInterface_t * pTransport,
                                      uint8_t * pBuffer,
                                      size_t bufferLen,
                                      size_t * pBytesReceived )
@@ -1683,8 +1695,8 @@ static HTTPStatus_t receiveHttpData( const HTTPTransportInterface_t * pTransport
     assert( pBuffer != NULL );
     assert( pBytesReceived != NULL );
 
-    transportStatus = pTransport->recv( pTransport->pContext,
-                                        pBuffer,
+    transportStatus = pTransport->recv( pTransport->pNetworkContext,
+                                        NULL,
                                         bufferLen );
 
     /* A transport status of less than zero is an error. */
@@ -1774,7 +1786,7 @@ static HTTPStatus_t getFinalResponseStatus( HTTPParsingState_t parsingState,
 
 /*-----------------------------------------------------------*/
 
-static HTTPStatus_t receiveAndParseHttpResponse( const HTTPTransportInterface_t * pTransport,
+static HTTPStatus_t receiveAndParseHttpResponse( const TransportInterface_t * pTransport,
                                                  HTTPResponse_t * pResponse,
                                                  const HTTPRequestHeaders_t * pRequestHeaders )
 {
@@ -1851,7 +1863,7 @@ static HTTPStatus_t receiveAndParseHttpResponse( const HTTPTransportInterface_t 
 
 /*-----------------------------------------------------------*/
 
-HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
+HTTPStatus_t HTTPClient_Send( const TransportInterface_t * pTransport,
                               HTTPRequestHeaders_t * pRequestHeaders,
                               const uint8_t * pRequestBodyBuf,
                               size_t reqBodyBufLen,
@@ -1894,6 +1906,23 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
                     ( unsigned long ) ( pRequestHeaders->headersLen ) ) );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
+    else if( pRequestHeaders->headersLen > pRequestHeaders->bufferLen )
+    {
+        LogError( ( "Parameter check failed: pRequestHeaders->headersLen > pRequestHeaders->bufferLen." ) );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( pRequestHeaders->headersLen > INT32_MAX )
+    {
+        LogError( ( "Parameter check failed: pRequestHeaders->headersLen should be "
+                    " <= 2147483647 (INT32_MAX)." ) );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( reqBodyBufLen > INT32_MAX )
+    {
+        LogError( ( "Parameter check failed: reqBodyBufLen should be "
+                    " <= 2147483647 (INT32_MAX)." ) );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
     else if( ( pResponse != NULL ) && ( pResponse->pBuffer == NULL ) )
     {
         LogError( ( "Parameter check failed: pResponse->pBuffer is NULL." ) );
@@ -1908,30 +1937,6 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
     else
     {
         /* Empty else for MISRA 15.7 compliance. */
-    }
-
-    /* Send the headers, which are at one location in memory. */
-    if( returnStatus == HTTP_SUCCESS )
-    {
-        returnStatus = sendHttpHeaders( pTransport,
-                                        pRequestHeaders,
-                                        reqBodyBufLen,
-                                        sendFlags );
-    }
-
-    /* Send the body, which is at another location in memory. */
-    if( returnStatus == HTTP_SUCCESS )
-    {
-        if( pRequestBodyBuf != NULL )
-        {
-            returnStatus = sendHttpBody( pTransport,
-                                         pRequestBodyBuf,
-                                         reqBodyBufLen );
-        }
-        else
-        {
-            LogDebug( ( "A request body was not sent: pRequestBodyBuf is NULL." ) );
-        }
     }
 
     if( returnStatus == HTTP_SUCCESS )

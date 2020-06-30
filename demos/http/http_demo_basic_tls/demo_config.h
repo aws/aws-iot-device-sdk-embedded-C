@@ -68,7 +68,7 @@
  *
  * @note This certificate should be PEM-encoded.
  */
-#define SERVER_CERT_PATH                  "certificates/amazon.crt"
+#define ROOT_CA_CERT_PATH                 "certificates/AmazonRootCA1.crt"
 
 /**
  * @brief Paths for different HTTP methods for specified host.
@@ -89,7 +89,7 @@
 /**
  * @brief The length in bytes of the user buffer.
  */
-#define USER_BUFFER_LENGTH                ( 1024 )
+#define USER_BUFFER_LENGTH                ( 2048 )
 
 /**
  * @brief Request body to send for PUT and POST requests in this demo.

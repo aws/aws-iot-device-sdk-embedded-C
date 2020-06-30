@@ -5,6 +5,11 @@ add_executable(${DEMO_NAME})
 set(OPENSSL_USE_STATIC_LIBS TRUE)
 find_package(OpenSSL REQUIRED)
 
+# Verify the minimum OpenSSL version required
+if( OPENSSL_VERSION MATCHES "0.9$" OR OPENSSL_VERSION MATCHES "1.0$"  )
+    message( FATAL_ERROR "OpenSSL 1.1.0 or later required: OpenSSL ${OPENSSL_VERSION} found." )
+endif()
+
 set( CMAKE_THREAD_PREFER_PTHREAD ON )
 find_package(Threads REQUIRED)
 
@@ -18,6 +23,7 @@ target_link_libraries(
     ${DEMO_NAME}
     PRIVATE
         http
+        openssl_posix
         OpenSSL::Crypto
         OpenSSL::SSL
 	# SSL uses Threads and on some platforms require explicit linking.
@@ -40,6 +46,7 @@ target_include_directories(
 
 # Download the Amazon Root CA certificate
 message( "Downloading the Amazon Root CA certificate..." )
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/certificates)
 execute_process(
     COMMAND curl --url https://www.amazontrust.com/repository/AmazonRootCA1.pem 
     -o ${CMAKE_CURRENT_LIST_DIR}/certificates/AmazonRootCA1.crt
