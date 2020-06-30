@@ -677,7 +677,7 @@ void test_MQTT_Connect_receiveConnack( void )
     MQTTContext_t mqttContext;
     MQTTConnectInfo_t connectInfo;
     uint32_t timeout = 0;
-    bool sessionPresent;
+    bool sessionPresent, sessionPresentExpected;
     MQTTStatus_t status;
     MQTTTransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
@@ -726,6 +726,18 @@ void test_MQTT_Connect_receiveConnack( void )
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
     MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTBadResponse );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+
+    /* Test case when broker sends session present flag in response to a
+     * clean session connection request. */
+    mqttContext.transportInterface.recv = transportRecvSuccess;
+    connectInfo.cleanSession = true;
+    sessionPresentExpected = true;
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_DeserializeAck_ReturnThruPtr_pSessionPresent( &sessionPresentExpected );
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 }
@@ -828,6 +840,7 @@ void test_MQTT_Connect_resendPendingAcks( void )
     setupNetworkBuffer( &networkBuffer );
 
     memset( ( void * ) &mqttContext, 0x0, sizeof( mqttContext ) );
+    memset( ( void * ) &connectInfo, 0x00, sizeof( connectInfo ) );
     MQTT_Init( &mqttContext, &transport, &callbacks, &networkBuffer );
 
     MQTT_SerializeConnect_IgnoreAndReturn( MQTTSuccess );
@@ -940,7 +953,7 @@ void test_MQTT_Connect_happy_path()
     MQTTConnectInfo_t connectInfo;
     MQTTPublishInfo_t willInfo;
     uint32_t timeout = 2;
-    bool sessionPresent;
+    bool sessionPresent, sessionPresentExpected;
     MQTTStatus_t status;
     MQTTTransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
@@ -977,6 +990,34 @@ void test_MQTT_Connect_happy_path()
     status = MQTT_Connect( &mqttContext, &connectInfo, &willInfo, timeout, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
+
+    /* Request to establish a clean session. */
+    mqttContext.connectStatus = MQTTNotConnected;
+    connectInfo.cleanSession = true;
+    sessionPresentExpected = false;
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_DeserializeAck_ReturnThruPtr_pSessionPresent( &sessionPresentExpected );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
+    TEST_ASSERT_FALSE( sessionPresent );
+
+    /* Request to establish a session if present and session present is received
+     * from broker. */
+    mqttContext.connectStatus = MQTTNotConnected;
+    connectInfo.cleanSession = false;
+    sessionPresentExpected = true;
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_DeserializeAck_ReturnThruPtr_pSessionPresent( &sessionPresentExpected );
+    MQTT_PubrelToResend_ExpectAnyArgsAndReturn( MQTT_PACKET_TYPE_INVALID );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
+    TEST_ASSERT_TRUE( sessionPresent );
 }
 
 /* ========================================================================== */
