@@ -743,6 +743,67 @@ void test_MQTT_Connect_receiveConnack( void )
 }
 
 /**
+ * @brief Test CONNACK reception in MQTT_Connect.
+ */
+void test_MQTT_Connect_receiveConnack_retries( void )
+{
+    MQTTContext_t mqttContext;
+    MQTTConnectInfo_t connectInfo;
+    bool sessionPresent;
+    MQTTStatus_t status;
+    MQTTTransportInterface_t transport;
+    MQTTFixedBuffer_t networkBuffer;
+    MQTTApplicationCallbacks_t callbacks;
+    MQTTPacketInfo_t incomingPacket;
+
+    /* Same set of tests with retries. MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT is 2*/
+    setupTransportInterface( &transport );
+    setupCallbacks( &callbacks );
+    setupNetworkBuffer( &networkBuffer );
+    transport.recv = transportRecvFailure;
+
+    memset( ( void * ) &mqttContext, 0x0, sizeof( mqttContext ) );
+    MQTT_Init( &mqttContext, &transport, &callbacks, &networkBuffer );
+
+    /* Everything before receiving the CONNACK should succeed. */
+    MQTT_SerializeConnect_IgnoreAndReturn( MQTTSuccess );
+    MQTT_GetConnectPacketSize_IgnoreAndReturn( MQTTSuccess );
+
+    /* Test with retries. MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT is 2.
+     * Nothing received from transport interface. */
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTNoDataAvailable );
+    /* 2 retries. */
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTNoDataAvailable );
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTNoDataAvailable );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, 0U, &sessionPresent );
+    TEST_ASSERT_EQUAL_INT( MQTTNoDataAvailable, status );
+
+    /* Did not receive a CONNACK. */
+    incomingPacket.type = MQTT_PACKET_TYPE_PINGRESP;
+    incomingPacket.remainingLength = 0;
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, 0U, &sessionPresent );
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+
+    /* Transport receive failure when receiving rest of packet. */
+    incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
+    incomingPacket.remainingLength = 2;
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, 0U, &sessionPresent );
+    TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
+
+    /* Bad response when deserializing CONNACK. */
+    mqttContext.transportInterface.recv = transportRecvSuccess;
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTBadResponse );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, 0U, &sessionPresent );
+    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
+}
+
+/**
  * @brief Test error cases for MQTT_Connect when a timeout occurs or the packet
  * needs to be discarded in MQTT_Connect.
  */
@@ -1018,6 +1079,30 @@ void test_MQTT_Connect_happy_path()
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
     TEST_ASSERT_TRUE( sessionPresent );
+
+    /* CONNACK receive with timeoutMs=0. Retry logic will be used. */
+    sessionPresent = false;
+    incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
+    incomingPacket.remainingLength = 2;
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    MQTT_DeserializeAck_IgnoreAndReturn( MQTTSuccess );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, 0U, &sessionPresent );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
+
+    /* CONNACK receive with timeoutMs=0. Retry logic will be used.
+     * #MQTTNoDataAvailable for first #MQTT_GetIncomingPacketTypeAndLength
+     * and success in the second time. */
+    incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
+    incomingPacket.remainingLength = 2;
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTNoDataAvailable );
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    MQTT_DeserializeAck_IgnoreAndReturn( MQTTSuccess );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, 0U, &sessionPresent );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
 }
 
 /* ========================================================================== */
