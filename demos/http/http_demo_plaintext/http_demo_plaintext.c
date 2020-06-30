@@ -33,6 +33,95 @@
 /* Plaintext sockets transport header. */
 #include "plaintext_posix.h"
 
+/* Check that hostname of the server is defined. */
+#ifndef SERVER_HOST
+    #error "Please define a SERVER_HOST."
+#endif
+
+/* Check that TLS port of the server is defined. */
+#ifndef SERVER_PORT
+    #error "Please define a SERVER_PORT."
+#endif
+
+/* Check that a path for HTTP Method GET is defined. */
+#ifndef GET_PATH
+    #error "Please define a GET_PATH."
+#endif
+
+/* Check that a path for HTTP Method HEAD is defined. */
+#ifndef HEAD_PATH
+    #error "Please define a HEAD_PATH."
+#endif
+
+/* Check that a path for HTTP Method PUT is defined. */
+#ifndef PUT_PATH
+    #error "Please define a PUT_PATH."
+#endif
+
+/* Check that a path for HTTP Method POST is defined. */
+#ifndef POST_PATH
+    #error "Please define a POST_PATH."
+#endif
+
+/* Check that transport timeout for transport send and receive is defined. */
+#ifndef TRANSPORT_SEND_RECV_TIMEOUT_MS
+    #define TRANSPORT_SEND_RECV_TIMEOUT_MS    ( 1000 )
+#endif
+
+/* Check that size of the user buffer is defined. */
+#ifndef USER_BUFFER_LENGTH
+    #define USER_BUFFER_LENGTH    ( 1024 )
+#endif
+
+/**
+ * @brief The length of the HTTP server host name.
+ */
+#define SERVER_HOST_LENGTH         ( sizeof( SERVER_HOST ) - 1 )
+
+/**
+ * @brief The length of the HTTP GET method.
+ */
+#define HTTP_METHOD_GET_LENGTH     ( sizeof( HTTP_METHOD_GET ) - 1 )
+
+/**
+ * @brief The length of the HTTP HEAD method.
+ */
+#define HTTP_METHOD_HEAD_LENGTH    ( sizeof( HTTP_METHOD_HEAD ) - 1 )
+
+/**
+ * @brief The length of the HTTP PUT method.
+ */
+#define HTTP_METHOD_PUT_LENGTH     ( sizeof( HTTP_METHOD_PUT ) - 1 )
+
+/**
+ * @brief The length of the HTTP POST method.
+ */
+#define HTTP_METHOD_POST_LENGTH    ( sizeof( HTTP_METHOD_POST ) - 1 )
+
+/**
+ * @brief The length of the HTTP GET path.
+ */
+#define GET_PATH_LENGTH            ( sizeof( GET_PATH ) - 1 )
+
+/**
+ * @brief The length of the HTTP HEAD path.
+ */
+#define HEAD_PATH_LENGTH           ( sizeof( HEAD_PATH ) - 1 )
+
+/**
+ * @brief The length of the HTTP PUT path.
+ */
+#define PUT_PATH_LENGTH            ( sizeof( PUT_PATH ) - 1 )
+
+/**
+ * @brief The length of the HTTP POST path.
+ */
+#define POST_PATH_LENGTH           ( sizeof( POST_PATH ) - 1 )
+
+/**
+ * @brief Length of the request body.
+ */
+#define REQUEST_BODY_LENGTH        ( sizeof( REQUEST_BODY ) - 1 )
 
 /**
  * @brief A buffer used in the demo for storing HTTP request headers and
