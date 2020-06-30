@@ -26,6 +26,13 @@
 #include "mqtt_config.h"
 #include "mqtt_lightweight.h"
 
+/**
+ * @brief Invalid packet identifier.
+ *
+ * Zero is an invalid packet identifier as per MQTT v3.1.1 spec.
+ */
+#define MQTT_PACKET_ID_INVALID    ( ( uint16_t ) 0U )
+
 struct MQTTApplicationCallbacks;
 typedef struct MQTTApplicationCallbacks   MQTTApplicationCallbacks_t;
 
@@ -125,7 +132,7 @@ struct MQTTContext
  * @brief Initialize an MQTT context.
  *
  * This function must be called on an MQTT context before any other function.
- * 
+ *
  * @note The getTime callback function must be defined. If there is no time
  * implementation, it is the responsibility of the application to provide a
  * dummy function to always return 0, and provide 0 timeouts for functions. This
