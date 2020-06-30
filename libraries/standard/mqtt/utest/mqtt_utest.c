@@ -728,7 +728,7 @@ void test_MQTT_Connect_receiveConnack( void )
     MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTBadResponse );
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
-    
+
     /* Test case when broker sends session present flag in response to a
      * clean session connection request. */
     mqttContext.transportInterface.recv = transportRecvSuccess;
@@ -1081,6 +1081,7 @@ void test_MQTT_Connect_happy_path()
     TEST_ASSERT_TRUE( sessionPresent );
 
     /* CONNACK receive with timeoutMs=0. Retry logic will be used. */
+    sessionPresent = false;
     incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
     incomingPacket.remainingLength = 2;
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
