@@ -30,19 +30,20 @@
 #if defined( __cplusplus ) || __STDC_VERSION__ >= 199901L
     #include <stdbool.h>
 #elif !defined( bool )
-    #define bool                             signed char
-    #define false                            0
-    #define true                             1
+    #define bool     signed char
+    #define false    0
+    #define true     1
 #endif
 
 /* @brief Max number of connect attempts, set this value to 0 if the client
  * must try connecting to the server forever */
 #define MAX_RECONNECT_ATTEMPS                4U
+
 /* @brief Initial fixed timeout value in seconds between two successive
- connects. A random jitter value is added to every timeout value  */
-#define RECONNECT_INITIAL_TIMEOUT_SECONDS    1U
+ * connects. A random jitter value is added to every timeout value  */
+#define INITIAL_RECONNECT_TIMEOUT_SECONDS    1U
 /* @brief Max timout value in seconds */
-#define MAX_RECONNECT_TIMEOUT                32U
+#define MAX_RECONNECT_TIMEOUT_SECONDS        128U
 /* @brief Max jitter value in seconds */
 #define MAX_JITTER_VALUE_SECONDS             5U
 
@@ -57,7 +58,7 @@ typedef struct TransportReconnectParams
 
 /**
  * @brief Reset reconnection timeout value and number of attempts.
- * This function must be called by the application before a new connection 
+ * This function must be called by the application before a new connection
  * with the server is attempted.
  *
  * @param[in, out] reconnectParam structure containing attempts done and timeout
