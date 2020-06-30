@@ -75,7 +75,7 @@
 
 /* Check that size of the user buffer is defined. */
 #ifndef USER_BUFFER_LENGTH
-    #define USER_BUFFER_LENGTH    ( 1024 )
+    #define USER_BUFFER_LENGTH    ( 2048 )
 #endif
 
 /* Check that a request body to send for PUT and POST requests is defined. */
@@ -312,6 +312,7 @@ int main( int argc,
     ( void ) argv;
 
     /* Initialize TLS credentials. */
+    ( void ) memset( &opensslCredentials, 0, sizeof( opensslCredentials ) );
     opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
 
     /* Initialize server information. */

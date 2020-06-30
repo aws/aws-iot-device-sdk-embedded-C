@@ -52,7 +52,7 @@
 /**
  * @brief HTTP server host name.
  *
- * This demo uses httpbin.org: A simple HTTP Request & Response Service.
+ * @note This demo uses httpbin.org: A simple HTTP Request & Response Service.
  */
 #define SERVER_HOST                       "httpbin.org"
 
