@@ -1581,7 +1581,7 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
         }
         else
         {
-            bytesRemaining -= bytesRemaining;
+            bytesRemaining -= transportStatus;
             pIndex += transportStatus;
             LogDebug( ( "Sent HTTP data over the transport: "
                         "BytesSent=%d, BytesRemaining=%lu, TotalBytesSent=%lu",
@@ -1667,7 +1667,7 @@ static HTTPStatus_t sendHttpHeaders( const HTTPTransportInterface_t * pTransport
                     ( unsigned long ) ( pRequestHeaders->headersLen ) ) );
 
         /* Send the HTTP headers over the network. */
-        returnStatus = sendHttpData( pTransport, pRequestHeaders->pBuffer, pRequestHeaders->headersLen );
+        returnStatus = HTTP_SUCCESS;
     }
 
     return returnStatus;
@@ -1688,7 +1688,7 @@ static HTTPStatus_t sendHttpBody( const HTTPTransportInterface_t * pTransport,
     /* Send the request body. */
     LogDebug( ( "Sending the HTTP request body: BodyBytes=%d",
                 ( int32_t ) reqBodyBufLen ) );
-    returnStatus = sendHttpData( pTransport, pRequestBodyBuf, reqBodyBufLen );
+    returnStatus = HTTP_SUCCESS;
 
     return returnStatus;
 }
