@@ -1581,7 +1581,7 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
         }
         else
         {
-            bytesRemaining -= transportStatus;
+            bytesRemaining -= bytesRemaining;
             pIndex += transportStatus;
             LogDebug( ( "Sent HTTP data over the transport: "
                         "BytesSent=%d, BytesRemaining=%lu, TotalBytesSent=%lu",
