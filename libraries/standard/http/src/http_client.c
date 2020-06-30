@@ -1704,7 +1704,7 @@ static HTTPStatus_t sendHttpHeaders( const TransportInterface_t * pTransport,
                     ( unsigned long ) ( pRequestHeaders->headersLen ) ) );
 
         /* Send the HTTP headers over the network. */
-        returnStatus = HTTP_SUCCESS;
+        returnStatus = sendHttpData( pTransport, pRequestHeaders->pBuffer, pRequestHeaders->headersLen );
     }
 
     return returnStatus;
@@ -1725,7 +1725,7 @@ static HTTPStatus_t sendHttpBody( const TransportInterface_t * pTransport,
     /* Send the request body. */
     LogDebug( ( "Sending the HTTP request body: BodyBytes=%d",
                 ( int32_t ) reqBodyBufLen ) );
-    returnStatus = HTTP_SUCCESS;
+    returnStatus = sendHttpData( pTransport, pRequestBodyBuf, reqBodyBufLen );
 
     return returnStatus;
 }
