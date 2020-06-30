@@ -840,6 +840,7 @@ void test_MQTT_Connect_resendPendingAcks( void )
     setupNetworkBuffer( &networkBuffer );
 
     memset( ( void * ) &mqttContext, 0x0, sizeof( mqttContext ) );
+    memset( ( void * ) &connectInfo, 0x00, sizeof( connectInfo ) );
     MQTT_Init( &mqttContext, &transport, &callbacks, &networkBuffer );
 
     MQTT_SerializeConnect_IgnoreAndReturn( MQTTSuccess );
@@ -990,6 +991,19 @@ void test_MQTT_Connect_happy_path()
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
 
+    /* Request to establish a clean session. */
+    mqttContext.connectStatus = MQTTNotConnected;
+    connectInfo.cleanSession = true;
+    sessionPresentExpected = false;
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_DeserializeAck_ReturnThruPtr_pSessionPresent( &sessionPresentExpected );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
+    TEST_ASSERT_FALSE( sessionPresent );
+
     /* Request to establish a session if present and session present is received
      * from broker. */
     mqttContext.connectStatus = MQTTNotConnected;
@@ -999,6 +1013,7 @@ void test_MQTT_Connect_happy_path()
     MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
     MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_DeserializeAck_ReturnThruPtr_pSessionPresent( &sessionPresentExpected );
+    MQTT_PubrelToResend_ExpectAnyArgsAndReturn( MQTT_PACKET_TYPE_INVALID );
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
