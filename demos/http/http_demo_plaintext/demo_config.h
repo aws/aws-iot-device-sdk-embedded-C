@@ -86,9 +86,4 @@
  */
 #define REQUEST_BODY                      "Hello, world!"
 
-/**
- * @brief Length of the request body.
- */
-#define REQUEST_BODY_LENGTH               ( sizeof( REQUEST_BODY ) - 1 )
-
 #endif /* ifndef DEMO_CONFIG_H */

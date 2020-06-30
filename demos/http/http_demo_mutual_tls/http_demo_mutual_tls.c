@@ -113,11 +113,6 @@
 #define REQUEST_BODY_LENGTH                   ( sizeof( REQUEST_BODY ) - 1 )
 
 /**
- * @brief Length of an IPv6 address when converted to hex digits.
- */
-#define IPV6_ADDRESS_STRING_LENGTH            ( 40 )
-
-/**
  * @brief A buffer used in the demo for storing HTTP request headers and
  * HTTP response headers and body.
  *

@@ -86,62 +86,57 @@
 /**
  * @brief The length of the HTTP server host name.
  */
-#define SERVER_HOST_LENGTH            ( sizeof( SERVER_HOST ) - 1 )
+#define SERVER_HOST_LENGTH          ( sizeof( SERVER_HOST ) - 1 )
 
 /**
  * @brief The length of the HTTP GET method.
  */
-#define HTTP_METHOD_GET_LENGTH        ( sizeof( HTTP_METHOD_GET ) - 1 )
+#define HTTP_METHOD_GET_LENGTH      ( sizeof( HTTP_METHOD_GET ) - 1 )
 
 /**
  * @brief The length of the HTTP HEAD method.
  */
-#define HTTP_METHOD_HEAD_LENGTH       ( sizeof( HTTP_METHOD_HEAD ) - 1 )
+#define HTTP_METHOD_HEAD_LENGTH     ( sizeof( HTTP_METHOD_HEAD ) - 1 )
 
 /**
  * @brief The length of the HTTP PUT method.
  */
-#define HTTP_METHOD_PUT_LENGTH        ( sizeof( HTTP_METHOD_PUT ) - 1 )
+#define HTTP_METHOD_PUT_LENGTH      ( sizeof( HTTP_METHOD_PUT ) - 1 )
 
 /**
  * @brief The length of the HTTP POST method.
  */
-#define HTTP_METHOD_POST_LENGTH       ( sizeof( HTTP_METHOD_POST ) - 1 )
+#define HTTP_METHOD_POST_LENGTH     ( sizeof( HTTP_METHOD_POST ) - 1 )
 
 /**
  * @brief The length of the HTTP GET path.
  */
-#define GET_PATH_LENGTH               ( sizeof( GET_PATH ) - 1 )
+#define GET_PATH_LENGTH             ( sizeof( GET_PATH ) - 1 )
 
 /**
  * @brief The length of the HTTP HEAD path.
  */
-#define HEAD_PATH_LENGTH              ( sizeof( HEAD_PATH ) - 1 )
+#define HEAD_PATH_LENGTH            ( sizeof( HEAD_PATH ) - 1 )
 
 /**
  * @brief The length of the HTTP PUT path.
  */
-#define PUT_PATH_LENGTH               ( sizeof( PUT_PATH ) - 1 )
+#define PUT_PATH_LENGTH             ( sizeof( PUT_PATH ) - 1 )
 
 /**
  * @brief The length of the HTTP POST path.
  */
-#define POST_PATH_LENGTH              ( sizeof( POST_PATH ) - 1 )
+#define POST_PATH_LENGTH            ( sizeof( POST_PATH ) - 1 )
 
 /**
  * @brief Length of path to Root CA certificate.
  */
-#define ROOT_CA_CERT_PATH_LENGTH      ( ( uint16_t ) ( sizeof( ROOT_CA_CERT_PATH ) - 1 ) )
+#define ROOT_CA_CERT_PATH_LENGTH    ( ( uint16_t ) ( sizeof( ROOT_CA_CERT_PATH ) - 1 ) )
 
 /**
  * @brief Length of the request body.
  */
-#define REQUEST_BODY_LENGTH           ( sizeof( REQUEST_BODY ) - 1 )
-
-/**
- * @brief Length of an IPv6 address when converted to hex digits.
- */
-#define IPV6_ADDRESS_STRING_LENGTH    ( 40 )
+#define REQUEST_BODY_LENGTH         ( sizeof( REQUEST_BODY ) - 1 )
 
 /**
  * @brief A buffer used in the demo for storing HTTP request headers and
