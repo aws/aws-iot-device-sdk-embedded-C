@@ -874,7 +874,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
 
         case MQTT_PACKET_TYPE_PINGRESP:
             status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, &sessionPresent );
-            invokeAppCallback = ( manageKeepAlive ) ? false : true;
+            invokeAppCallback = ( manageKeepAlive == true ) ? false : true;
 
             if( ( status == MQTTSuccess ) && ( manageKeepAlive == true ) )
             {
@@ -1704,7 +1704,6 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
     MQTTStatus_t status = MQTTBadParameter;
     MQTTGetCurrentTimeFunc_t getTimeStampMs = NULL;
     uint32_t entryTimeMs = 0U, remainingTimeMs = timeoutMs, elapsedTimeMs = 0U;
-    MQTTPacketInfo_t incomingPacket;
 
     if( ( pContext != NULL ) && ( pContext->callbacks.getTime != NULL ) )
     {
@@ -1814,7 +1813,7 @@ uint16_t MQTT_GetPacketId( MQTTContext_t * pContext )
     {
         packetId = pContext->nextPacketId;
 
-        if( pContext->nextPacketId == UINT16_MAX )
+        if( pContext->nextPacketId == ( uint16_t ) UINT16_MAX )
         {
             pContext->nextPacketId = 1;
         }
