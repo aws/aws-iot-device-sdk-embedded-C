@@ -1580,12 +1580,20 @@ static HTTPStatus_t sendHttpData( const TransportInterface_t * pTransport,
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
     const uint8_t * pIndex = pData;
-    int32_t transportStatus = 0;
-    size_t bytesRemaining = dataLen;
+    int32_t transportStatus = 0, bytesRemaining = 0;
 
     assert( pTransport != NULL );
     assert( pTransport->send != NULL );
     assert( pData != NULL );
+
+    if( dataLen > INT32_MAX )
+    {
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else
+    {
+        bytesRemaining = ( int32_t ) dataLen;
+    }
 
     /* Loop until all data is sent. */
     while( ( bytesRemaining > 0UL ) && ( returnStatus != HTTP_NETWORK_ERROR ) )
@@ -1675,12 +1683,17 @@ static HTTPStatus_t sendHttpHeaders( const TransportInterface_t * pTransport,
     assert( pTransport->send != NULL );
     assert( pRequestHeaders != NULL );
 
+    if( pRequestHeaders->headersLen > INT32_MAX )
+    {
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+
     /* Send the content length header if the flag to disable is not set and the
      * body length is greater than zero. */
     shouldSendContentLength = ( ( ( sendFlags & HTTP_SEND_DISABLE_CONTENT_LENGTH_FLAG ) == 0u ) &&
                                 ( reqBodyLen > 0u ) ) ? 1u : 0u;
 
-    if( shouldSendContentLength == 1u )
+    if( ( returnStatus == HTTP_SUCCESS ) && ( shouldSendContentLength == 1u ) )
     {
         returnStatus = addContentLengthHeader( pRequestHeaders, reqBodyLen );
     }
@@ -1763,9 +1776,6 @@ static HTTPStatus_t receiveHttpData( const TransportInterface_t * pTransport,
     }
     else
     {
-        /* When a zero is returned from the transport recv it will not be
-         * invoked again. */
-        *pBytesReceived = 0;
         LogDebug( ( "Received zero bytes from transport recv(). Receiving "
                     "transport data is complete." ) );
     }
@@ -1973,6 +1983,15 @@ HTTPStatus_t HTTPClient_Send( const TransportInterface_t * pTransport,
     else
     {
         /* Empty else for MISRA 15.7 compliance. */
+    }
+
+    /* Send the headers, which are at one location in memory. */
+    if( returnStatus == HTTP_SUCCESS )
+    {
+        returnStatus = sendHttpHeaders( pTransport,
+                                        pRequestHeaders,
+                                        reqBodyBufLen,
+                                        sendFlags );
     }
 
     /* Send the body, which is at another location in memory. */

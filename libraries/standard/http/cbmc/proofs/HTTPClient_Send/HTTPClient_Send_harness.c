@@ -48,6 +48,7 @@ void harness()
 
     /* Initialize and make assumptions for buffer to receive request body. */
     __CPROVER_assume( reqBodyBufLen < CBMC_MAX_OBJECT_SIZE );
+    __CPROVER_assume( reqBodyBufLen < INT32_MAX );
     pRequestBodyBuf = mallocCanFail( reqBodyBufLen );
 
     /* Initialize and make assumptions for response object. */
