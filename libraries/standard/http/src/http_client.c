@@ -1580,7 +1580,8 @@ static HTTPStatus_t sendHttpData( const TransportInterface_t * pTransport,
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
     const uint8_t * pIndex = pData;
-    int32_t transportStatus = 0, bytesRemaining = 0;
+    int32_t transportStatus = 0;
+    size_t bytesRemaining = 0;
 
     assert( pTransport != NULL );
     assert( pTransport->send != NULL );
@@ -1592,7 +1593,7 @@ static HTTPStatus_t sendHttpData( const TransportInterface_t * pTransport,
     }
     else
     {
-        bytesRemaining = ( int32_t ) dataLen;
+        bytesRemaining = dataLen;
     }
 
     /* Loop until all data is sent. */
@@ -1612,12 +1613,15 @@ static HTTPStatus_t sendHttpData( const TransportInterface_t * pTransport,
         }
         else
         {
+<<<<<<< HEAD
             /* It is a bug in the application's transport send implementation if
              * more bytes than expected are sent. To avoid a possible overflow
              * in converting bytesRemaining from unsigned to signed, this assert
              * must exist after the check for transportStatus being negative. */
             assert( ( size_t ) transportStatus <= bytesRemaining );
 
+=======
+>>>>>>> Change bytesRemaining to size_t
             bytesRemaining -= ( size_t ) transportStatus;
             pIndex += transportStatus;
             LogDebug( ( "Sent HTTP data over the transport: "
