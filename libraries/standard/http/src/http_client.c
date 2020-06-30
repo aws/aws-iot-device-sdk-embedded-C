@@ -1557,7 +1557,7 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
     }
 
     /* Loop until all data is sent. */
-    while( ( bytesRemaining > 0UL ) && ( returnStatus != HTTP_NETWORK_ERROR ) )
+    while( ( bytesRemaining > 0UL ) && ( returnStatus == HTTP_SUCCESS ) )
     {
         transportStatus = pTransport->send( pTransport->pContext,
                                             pData,
