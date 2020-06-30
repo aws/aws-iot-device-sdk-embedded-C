@@ -56,5 +56,14 @@ typedef uint8_t ** NetworkContext_t;
  */
 #define MQTT_CLIENT_IDENTIFIER              "testclient"
 
+/**
+ * @brief Retry count for reading CONNACK from network.
+ *
+ * #MQTT_Connect() can be using retries. If timeout passed as 0 to MQTT_Connect(),
+ * retries are used to attempt to read from network. The maximum retry count is
+ * specified by this config.
+ */
+#define MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT    ( 2U )
+
 
 #endif /* ifndef MQTT_CONFIG_H_ */
