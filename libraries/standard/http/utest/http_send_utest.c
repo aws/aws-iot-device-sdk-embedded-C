@@ -146,6 +146,13 @@
 
 /* Test buffer to share among the test. */
 #define HTTP_TEST_BUFFER_LENGTH                 1024
+
+/* Mock a NetworkContext structure for the test. */
+struct NetworkContext
+{
+    int mocked;
+};
+
 static uint8_t httpBuffer[ HTTP_TEST_BUFFER_LENGTH ] = { 0 };
 
 /* Tests are run sequentially. If a response has these variables, then they
@@ -194,7 +201,7 @@ static enum http_errno httpParsingErrno;
 /* Response shared among the tests. */
 static HTTPResponse_t response = { 0 };
 /* Transport interface shared among the tests. */
-static HTTPTransportInterface_t transportInterface = { 0 };
+static TransportInterface_t transportInterface = { 0 };
 /* Request headers shared among the tests. */
 static HTTPRequestHeaders_t requestHeaders = { 0 };
 /* Header parsing callback shared among the tests. */
@@ -232,11 +239,11 @@ static void onHeaderCallback( void * pContext,
 }
 
 /* Successful application transport send interface. */
-static int32_t transportSendSuccess( NetworkContext_t pContext,
+static int32_t transportSendSuccess( NetworkContext_t * pNetworkContext,
                                      const void * pBuffer,
                                      size_t bytesToWrite )
 {
-    ( void ) pContext;
+    ( void ) pNetworkContext;
 
     if( checkContentLength == 1U )
     {
@@ -258,11 +265,11 @@ static int32_t transportSendSuccess( NetworkContext_t pContext,
 /* Application transport send interface that returns a network error depending
 * on the call count. Set sendErrorCall to 0 to return an error on the
 * first call. Set sendErrorCall to 1 to return an error on the second call. */
-static int32_t transportSendNetworkError( NetworkContext_t pContext,
+static int32_t transportSendNetworkError( NetworkContext_t * pNetworkContext,
                                           const void * pBuffer,
                                           size_t bytesToWrite )
 {
-    ( void ) pContext;
+    ( void ) pNetworkContext;
     ( void ) pBuffer;
     int32_t retVal = bytesToWrite;
 
@@ -279,11 +286,11 @@ static int32_t transportSendNetworkError( NetworkContext_t pContext,
  * depending on the call count. Set sendPartialCall to 0 to return less bytes on
  * the first call. Set sendPartialCall to 1 to return less bytes on the second
  * call. */
-static int32_t transportSendLessThanBytesToWrite( NetworkContext_t pContext,
+static int32_t transportSendLessThanBytesToWrite( NetworkContext_t * pNetworkContext,
                                                   const void * pBuffer,
                                                   size_t bytesToWrite )
 {
-    ( void ) pContext;
+    ( void ) pNetworkContext;
     ( void ) pBuffer;
     int32_t retVal = bytesToWrite;
 
@@ -297,11 +304,11 @@ static int32_t transportSendLessThanBytesToWrite( NetworkContext_t pContext,
 }
 
 /* Application transport send that writes more bytes than expected. */
-static int32_t transportSendMoreThanBytesToWrite( NetworkContext_t pContext,
+static int32_t transportSendMoreThanBytesToWrite( NetworkContext_t * pNetworkContext,
                                                   const void * pBuffer,
                                                   size_t bytesToWrite )
 {
-    ( void ) pContext;
+    ( void ) pNetworkContext;
     ( void ) pBuffer;
 
     return( bytesToWrite + 1 );
@@ -313,11 +320,11 @@ static int32_t transportSendMoreThanBytesToWrite( NetworkContext_t pContext,
  * second call. The response to send is set in pNetworkData and the current
  * call count is kept track of in recvCurrentCall. This function will return
  * zero (timeout condition) when recvStopCall matches recvCurrentCall. */
-static int32_t transportRecvSuccess( NetworkContext_t pContext,
+static int32_t transportRecvSuccess( NetworkContext_t * pNetworkContext,
                                      void * pBuffer,
                                      size_t bytesToRead )
 {
-    ( void ) pContext;
+    ( void ) pNetworkContext;
     size_t bytesToCopy = 0;
 
     /* To test stopping in the middle of a response message, check that the
@@ -351,11 +358,11 @@ static int32_t transportRecvSuccess( NetworkContext_t pContext,
 }
 
 /* Application transport receive that return a network error. */
-static int32_t transportRecvNetworkError( NetworkContext_t pContext,
+static int32_t transportRecvNetworkError( NetworkContext_t * pNetworkContext,
                                           void * pBuffer,
                                           size_t bytesToRead )
 {
-    ( void ) pContext;
+    ( void ) pNetworkContext;
     ( void ) pBuffer;
     ( void ) bytesToRead;
 
@@ -363,11 +370,11 @@ static int32_t transportRecvNetworkError( NetworkContext_t pContext,
 }
 
 /* Application transport receive that returns more bytes read than expected. */
-static int32_t transportRecvMoreThanBytesToRead( NetworkContext_t pContext,
+static int32_t transportRecvMoreThanBytesToRead( NetworkContext_t * pNetworkContext,
                                                  void * pBuffer,
                                                  size_t bytesToRead )
 {
-    ( void ) pContext;
+    ( void ) pNetworkContext;
     ( void ) pBuffer;
 
     return( bytesToRead + 1 );
@@ -737,7 +744,7 @@ void setUp( void )
     httpParsingErrno = HPE_OK;
     transportInterface.recv = transportRecvSuccess;
     transportInterface.send = transportSendSuccess;
-    transportInterface.pContext = NULL;
+    transportInterface.pNetworkContext = NULL;
     requestHeaders.pBuffer = httpBuffer;
     requestHeaders.bufferLen = sizeof( httpBuffer );
     memcpy( requestHeaders.pBuffer, HTTP_TEST_REQUEST_HEAD_HEADERS, HTTP_TEST_REQUEST_HEAD_HEADERS_LENGTH );

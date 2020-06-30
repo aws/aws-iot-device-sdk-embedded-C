@@ -5,7 +5,7 @@
 #include <stddef.h>
 /* Include config file before other headers. */
 #include "http_config.h"
-/* Transport layer interface include. */
+/* Transport interface include. */
 #include "transport_interface.h"
 
 /**

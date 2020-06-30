@@ -797,7 +797,7 @@ static int httpParserOnBodyCallback( http_parser * pHttpParser,
     /* MISRA Rule 11.8 flags casting away the const qualifier in the pointer
      * type. This rule is suppressed because when the body is of transfer
      * encoding chunked, the body must be copied over the chunk headers that
-     * precede it. This is done to have a contiguous response body. This does
+     * preceed it. This is done to have a contigous response body. This does
      * affect future parsing as the changed segment will always be before the
      * next place to parse. */
     /* coverity[misra_c_2012_rule_11_8_violation] */
@@ -1441,11 +1441,6 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
         LogError( ( "Parameter check failed: pRequestHeaders->pBuffer is NULL." ) );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
-    else if( pRequestHeaders->headersLen > pRequestHeaders->bufferLen )
-    {
-        LogError( ( "Parameter check failed: pRequestHeaders->headersLen > pRequestHeaders->bufferLen." ) );
-        returnStatus = HTTP_INVALID_PARAMETER;
-    }
     else if( rangeEnd < HTTP_RANGE_REQUEST_END_OF_FILE )
     {
         LogError( ( "Parameter check failed: rangeEnd is invalid: "
@@ -1468,13 +1463,6 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
                     "rangeStart should be < rangeEnd when both are >= 0: "
                     "RangeStart=%d, RangeEnd=%d",
                     rangeStartOrlastNbytes, rangeEnd ) );
-        returnStatus = HTTP_INVALID_PARAMETER;
-    }
-    else if( rangeStartOrlastNbytes == INT32_MIN )
-    {
-        LogError( ( "Parameter check failed: Arithmetic overflow detected: "
-                    "rangeStart should be > -2147483648 (INT32_MIN)",
-                    rangeStartOrlastNbytes ) );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else
@@ -1549,7 +1537,14 @@ static HTTPStatus_t sendHttpData( const TransportInterface_t * pTransport,
     assert( pData != NULL );
 
     /* Loop until all data is sent. */
-    while( ( bytesRemaining > 0UL ) && ( returnStatus != HTTP_NETWORK_ERROR ) )
+
+    /* MISCRA C-2012 Rule 15.4 flags multiple break statements in the while loop
+     * below. There are two only error conditions when reading data from the
+     * network which both need the loop to terminate. Both of these conditions
+     * necessitate different error logs, so two different break statements are
+     * required. */
+    /* coverity[misra_c_2012_rule_15_4_violation] */
+    while( bytesRemaining > 0UL )
     {
         transportStatus = pTransport->send( pTransport->pNetworkContext,
                                             pIndex,
@@ -1562,21 +1557,25 @@ static HTTPStatus_t sendHttpData( const TransportInterface_t * pTransport,
                         " returned error: TransportStatus=%d",
                         transportStatus ) );
             returnStatus = HTTP_NETWORK_ERROR;
+            break;
         }
         else if( ( size_t ) transportStatus > bytesRemaining )
         {
-            LogError( ( "Failed to send HTTP data: Transport send() wrote more data "
-                        "than what was expected: BytesSent=%d, BytesRemaining=%lu",
+            LogError( ( "Failed to send HTTP data: Transport send()"
+                        " wrote more data than what was expected: "
+                        "BytesSent=%d, BytesRemaining=%lu",
                         transportStatus,
                         bytesRemaining ) );
             returnStatus = HTTP_NETWORK_ERROR;
+            break;
         }
         else
         {
             bytesRemaining -= ( size_t ) transportStatus;
             pIndex += transportStatus;
             LogDebug( ( "Sent HTTP data over the transport: "
-                        "BytesSent=%d, BytesRemaining=%lu, TotalBytesSent=%lu",
+                        "BytesSent=%d, BytesRemaining=%lu, "
+                        "TotalBytesSent=%lu",
                         transportStatus,
                         bytesRemaining,
                         ( unsigned long ) ( dataLen - bytesRemaining ) ) );
@@ -1585,7 +1584,8 @@ static HTTPStatus_t sendHttpData( const TransportInterface_t * pTransport,
 
     if( returnStatus == HTTP_SUCCESS )
     {
-        LogDebug( ( "Sent HTTP data over the transport: BytesSent=%d",
+        LogDebug( ( "Sent HTTP data over the transport: "
+                    "BytesSent=%d",
                     transportStatus ) );
     }
 
@@ -1696,7 +1696,7 @@ static HTTPStatus_t receiveHttpData( const TransportInterface_t * pTransport,
     assert( pBytesReceived != NULL );
 
     transportStatus = pTransport->recv( pTransport->pNetworkContext,
-                                        NULL,
+                                        pBuffer,
                                         bufferLen );
 
     /* A transport status of less than zero is an error. */
@@ -1906,23 +1906,6 @@ HTTPStatus_t HTTPClient_Send( const TransportInterface_t * pTransport,
                     ( unsigned long ) ( pRequestHeaders->headersLen ) ) );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
-    else if( pRequestHeaders->headersLen > pRequestHeaders->bufferLen )
-    {
-        LogError( ( "Parameter check failed: pRequestHeaders->headersLen > pRequestHeaders->bufferLen." ) );
-        returnStatus = HTTP_INVALID_PARAMETER;
-    }
-    else if( pRequestHeaders->headersLen > INT32_MAX )
-    {
-        LogError( ( "Parameter check failed: pRequestHeaders->headersLen should be "
-                    " <= 2147483647 (INT32_MAX)." ) );
-        returnStatus = HTTP_INVALID_PARAMETER;
-    }
-    else if( reqBodyBufLen > INT32_MAX )
-    {
-        LogError( ( "Parameter check failed: reqBodyBufLen should be "
-                    " <= 2147483647 (INT32_MAX)." ) );
-        returnStatus = HTTP_INVALID_PARAMETER;
-    }
     else if( ( pResponse != NULL ) && ( pResponse->pBuffer == NULL ) )
     {
         LogError( ( "Parameter check failed: pResponse->pBuffer is NULL." ) );
@@ -1937,6 +1920,30 @@ HTTPStatus_t HTTPClient_Send( const TransportInterface_t * pTransport,
     else
     {
         /* Empty else for MISRA 15.7 compliance. */
+    }
+
+    /* Send the headers, which are at one location in memory. */
+    if( returnStatus == HTTP_SUCCESS )
+    {
+        returnStatus = sendHttpHeaders( pTransport,
+                                        pRequestHeaders,
+                                        reqBodyBufLen,
+                                        sendFlags );
+    }
+
+    /* Send the body, which is at another location in memory. */
+    if( returnStatus == HTTP_SUCCESS )
+    {
+        if( pRequestBodyBuf != NULL )
+        {
+            returnStatus = sendHttpBody( pTransport,
+                                         pRequestBodyBuf,
+                                         reqBodyBufLen );
+        }
+        else
+        {
+            LogDebug( ( "A request body was not sent: pRequestBodyBuf is NULL." ) );
+        }
     }
 
     if( returnStatus == HTTP_SUCCESS )

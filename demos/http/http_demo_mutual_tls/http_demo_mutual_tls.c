@@ -75,7 +75,7 @@
 
 /* Check that size of the user buffer is defined. */
 #ifndef USER_BUFFER_LENGTH
-    #define USER_BUFFER_LENGTH    ( 1024 )
+    #define USER_BUFFER_LENGTH    ( 2048 )
 #endif
 
 /**
@@ -286,6 +286,7 @@ int main( int argc,
     ( void ) argv;
 
     /* Initialize TLS credentials. */
+    ( void ) memset( &opensslCredentials, 0, sizeof( opensslCredentials ) );
     opensslCredentials.pClientCertPath = CLIENT_CERT_PATH;
     opensslCredentials.pPrivateKeyPath = CLIENT_PRIVATE_KEY_PATH;
     opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
