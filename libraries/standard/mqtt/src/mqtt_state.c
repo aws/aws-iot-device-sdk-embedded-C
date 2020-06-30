@@ -192,7 +192,7 @@ static MQTTStatus_t updateStateAck( MQTTPubAckInfo_t * records,
  * @param[in] opType Send or Receive.
  * @param[in] qos 0, 1, or 2.
  * @param[in] currentState Current state of the publish record.
- * @param[in,out] newState New state of the publish record.
+ * @param[in] newState New state of the publish record.
  *
  * @return #MQTTIllegalState, #MQTTStateCollision or #MQTTSuccess.
  */
