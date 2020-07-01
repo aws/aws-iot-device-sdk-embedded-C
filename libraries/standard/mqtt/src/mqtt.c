@@ -1190,12 +1190,105 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
 
     if( status == MQTTSuccess )
     {
-        /* Empty else MISRA 15.7 */
+        LogInfo( ( "Received MQTT CONNACK successfully from broker." ) );
     }
     else
     {
         LogError( ( "CONNACK recv failed with status = %s.",
                     MQTT_Status_strerror( status ) ) );
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+static MQTTStatus_t resendPendingAcks( MQTTContext_t * pContext )
+{
+    MQTTStatus_t status = MQTTSuccess;
+    MQTTStateCursor_t cursor = MQTT_STATE_CURSOR_INITIALIZER;
+    uint16_t packetId = MQTT_PACKET_ID_INVALID;
+    MQTTPublishState_t state = MQTTStateNull;
+
+    assert( pContext != NULL );
+
+    /* Get the next packet Id for which a PUBREL need to be resent. */
+    packetId = MQTT_PubrelToResend( pContext, &cursor, &state );
+
+    /* Resend all the PUBREL acks after session is reestablished. */
+    while( ( packetId != MQTT_PACKET_ID_INVALID ) &&
+           ( status == MQTTSuccess ) )
+    {
+        status = sendPublishAcks( pContext, packetId, state );
+
+        packetId = MQTT_PubrelToResend( pContext, &cursor, &state );
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+static MQTTStatus_t serializePublish( const MQTTContext_t * pContext,
+                                      const MQTTPublishInfo_t * pPublishInfo,
+                                      uint16_t packetId,
+                                      size_t * const pHeaderSize )
+{
+    MQTTStatus_t status = MQTTSuccess;
+    size_t remainingLength = 0UL, packetSize = 0UL;
+
+    assert( pContext != NULL );
+    assert( pPublishInfo != NULL );
+    assert( pHeaderSize != NULL );
+
+    /* Get the remaining length and packet size.*/
+    status = MQTT_GetPublishPacketSize( pPublishInfo,
+                                        &remainingLength,
+                                        &packetSize );
+    LogDebug( ( "PUBLISH packet size is %lu and remaining length is %lu.",
+                packetSize,
+                remainingLength ) );
+
+    if( status == MQTTSuccess )
+    {
+        status = MQTT_SerializePublishHeader( pPublishInfo,
+                                              packetId,
+                                              remainingLength,
+                                              &( pContext->networkBuffer ),
+                                              pHeaderSize );
+        LogDebug( ( "Serialized PUBLISH header size is %lu.",
+                    *pHeaderSize ) );
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+static MQTTStatus_t validatePublishParams( const MQTTContext_t * pContext,
+                                           const MQTTPublishInfo_t * pPublishInfo,
+                                           uint16_t packetId )
+{
+    MQTTStatus_t status = MQTTSuccess;
+
+    /* Validate arguments. */
+    if( ( pContext == NULL ) || ( pPublishInfo == NULL ) )
+    {
+        LogError( ( "Argument cannot be NULL: pContext=%p, "
+                    "pPublishInfo=%p.",
+                    pContext,
+                    pPublishInfo ) );
+        status = MQTTBadParameter;
+    }
+    else if( ( pPublishInfo->qos != MQTTQoS0 ) && ( packetId == 0U ) )
+    {
+        LogError( ( "Packet Id is 0 for PUBLISH with QoS=%u.",
+                    pPublishInfo->qos ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        /* Empty else MISRA 15.7 */
     }
 
     return status;

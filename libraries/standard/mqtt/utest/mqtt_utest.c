@@ -441,14 +441,12 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext,
     {
         if( incomingPublish )
         {
-            MQTT_UpdateStatePublish_ExpectAnyArgsAndReturn( ( stateAfterDeserialize == MQTTStateNull ) ?
-                                                            MQTTIllegalState : MQTTSuccess );
+            MQTT_UpdateStatePublish_ExpectAnyArgsAndReturn( updateStateStatus );
             MQTT_UpdateStatePublish_ReturnThruPtr_pNewState( &stateAfterDeserialize );
         }
         else
         {
-            MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( ( stateAfterDeserialize == MQTTStateNull ) ?
-                                                        MQTTIllegalState : MQTTSuccess );
+            MQTT_UpdateStateAck_ExpectAnyArgsAndReturn( updateStateStatus );
             MQTT_UpdateStateAck_ReturnThruPtr_pNewState( &stateAfterDeserialize );
         }
 
@@ -741,67 +739,6 @@ void test_MQTT_Connect_receiveConnack( void )
     MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_DeserializeAck_ReturnThruPtr_pSessionPresent( &sessionPresentExpected );
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
-    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
-}
-
-/**
- * @brief Test CONNACK reception in MQTT_Connect.
- */
-void test_MQTT_Connect_receiveConnack_retries( void )
-{
-    MQTTContext_t mqttContext;
-    MQTTConnectInfo_t connectInfo;
-    bool sessionPresent;
-    MQTTStatus_t status;
-    MQTTTransportInterface_t transport;
-    MQTTFixedBuffer_t networkBuffer;
-    MQTTApplicationCallbacks_t callbacks;
-    MQTTPacketInfo_t incomingPacket;
-
-    /* Same set of tests with retries. MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT is 2*/
-    setupTransportInterface( &transport );
-    setupCallbacks( &callbacks );
-    setupNetworkBuffer( &networkBuffer );
-    transport.recv = transportRecvFailure;
-
-    memset( ( void * ) &mqttContext, 0x0, sizeof( mqttContext ) );
-    MQTT_Init( &mqttContext, &transport, &callbacks, &networkBuffer );
-
-    /* Everything before receiving the CONNACK should succeed. */
-    MQTT_SerializeConnect_IgnoreAndReturn( MQTTSuccess );
-    MQTT_GetConnectPacketSize_IgnoreAndReturn( MQTTSuccess );
-
-    /* Test with retries. MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT is 2.
-     * Nothing received from transport interface. */
-    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTNoDataAvailable );
-    /* 2 retries. */
-    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTNoDataAvailable );
-    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTNoDataAvailable );
-    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, 0U, &sessionPresent );
-    TEST_ASSERT_EQUAL_INT( MQTTNoDataAvailable, status );
-
-    /* Did not receive a CONNACK. */
-    incomingPacket.type = MQTT_PACKET_TYPE_PINGRESP;
-    incomingPacket.remainingLength = 0;
-    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
-    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, 0U, &sessionPresent );
-    TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
-
-    /* Transport receive failure when receiving rest of packet. */
-    incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
-    incomingPacket.remainingLength = 2;
-    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
-    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, 0U, &sessionPresent );
-    TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
-
-    /* Bad response when deserializing CONNACK. */
-    mqttContext.transportInterface.recv = transportRecvSuccess;
-    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
-    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
-    MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTBadResponse );
-    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, 0U, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 }
 
