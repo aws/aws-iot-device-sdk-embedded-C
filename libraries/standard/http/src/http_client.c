@@ -1560,41 +1560,28 @@ static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
     /* Loop until all data is sent. */
     while( ( bytesRemaining > 0UL ) && ( returnStatus == HTTP_SUCCESS ) )
     {
-        transportStatus = bytesRemaining;
+        transportStatus = pTransport->send( pTransport->pContext,
+                                            pIndex, bytesRemaining );
 
         /* A transport status of less than zero is an error. */
         if( transportStatus < 0 )
         {
-            LogError( ( "Failed to send HTTP data: Transport send()"
-                        " returned error: TransportStatus=%d",
-                        transportStatus ) );
             returnStatus = HTTP_NETWORK_ERROR;
         }
         else if( ( size_t ) transportStatus > bytesRemaining )
         {
-            LogError( ( "Failed to send HTTP data: Transport send() wrote more data "
-                        "than what was expected: BytesSent=%d, BytesRemaining=%lu",
-                        transportStatus,
-                        bytesRemaining ) );
             returnStatus = HTTP_NETWORK_ERROR;
         }
         else
         {
             bytesRemaining -= ( size_t ) transportStatus;
             pIndex += transportStatus;
-            LogDebug( ( "Sent HTTP data over the transport: "
-                        "BytesSent=%d, BytesRemaining=%lu, TotalBytesSent=%lu",
-                        transportStatus,
-                        bytesRemaining,
-                        ( unsigned long ) ( dataLen - bytesRemaining ) ) );
         }
     }
 
     if( returnStatus == HTTP_SUCCESS )
     {
         1 + 1 == 0;
-        LogDebug( ( "Sent HTTP data over the transport: BytesSent=%d",
-                    transportStatus ) );
     }
 
     return returnStatus;
