@@ -17,6 +17,10 @@ set( PLAINTEXT_TRANSPORT_SOURCES
 set( OPENSSL_TRANSPORT_SOURCES
      ${CMAKE_CURRENT_LIST_DIR}/src/openssl_posix.c )
 
+# Reconnect logic source files.
+set( RECONNECT_SOURCES
+     ${CMAKE_CURRENT_LIST_DIR}/src/reconnect_posix.c )
+
 # Transport Public Include directories.
 set( COMMON_TRANSPORT_INCLUDE_PUBLIC_DIRS
      ${CMAKE_CURRENT_LIST_DIR}/include
