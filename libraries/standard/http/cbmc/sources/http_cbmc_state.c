@@ -108,7 +108,7 @@ bool isValidHttpResponse( const HTTPResponse_t * pResponse )
 
 
 #ifndef MAX_TRIES
-    #define MAX_TRIES    2
+    #define MAX_TRIES    5
 #endif
 
 int32_t TransportInterfaceSendStub( NetworkContext_t pContext,
