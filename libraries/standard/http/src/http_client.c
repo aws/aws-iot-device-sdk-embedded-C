@@ -1539,7 +1539,7 @@ static HTTPStatus_t sendHttpData( const TransportInterface_t * pTransport,
     /* Loop until all data is sent. */
     while( ( bytesRemaining > 0UL ) && ( returnStatus != HTTP_NETWORK_ERROR ) )
     {
-        transportStatus = pTransport->send( pTransport->pContext,
+        transportStatus = pTransport->send( pTransport->pNetworkContext,
                                             pIndex,
                                             bytesRemaining );
 
@@ -1683,7 +1683,7 @@ static HTTPStatus_t receiveHttpData( const TransportInterface_t * pTransport,
     assert( pBuffer != NULL );
     assert( pBytesReceived != NULL );
 
-    transportStatus = pTransport->recv( pTransport->pContext,
+    transportStatus = pTransport->recv( pTransport->pNetworkContext,
                                         pBuffer,
                                         bufferLen );
 
