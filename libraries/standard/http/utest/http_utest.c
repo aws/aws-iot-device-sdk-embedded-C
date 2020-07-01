@@ -795,14 +795,14 @@ void test_Http_AddRangeHeader_Invalid_Params( void )
     tearDown();
     retCode = HTTPClient_AddRangeHeader( NULL,
                                          0 /* rangeStart */,
-                                         0 /* rageEnd */ );
+                                         0 /* rangeEnd */ );
     TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, retCode );
 
     /* Underlying buffer is NULL in request headers. */
     tearDown();
     retCode = HTTPClient_AddRangeHeader( &testHeaders,
                                          0 /* rangeStart */,
-                                         0 /* rageEnd */ );
+                                         0 /* rangeEnd */ );
     TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, retCode );
 
     /* Request Header Size is zero. */
@@ -812,7 +812,7 @@ void test_Http_AddRangeHeader_Invalid_Params( void )
     testHeaders.bufferLen = 0u;
     retCode = HTTPClient_AddRangeHeader( &testHeaders,
                                          0 /* rangeStart */,
-                                         10 /* rageEnd */ );
+                                         10 /* rangeEnd */ );
     TEST_ASSERT_EQUAL( retCode, HTTP_INSUFFICIENT_MEMORY );
 
     /* Test incorrect combinations of rangeStart and rangeEnd. */
@@ -822,7 +822,15 @@ void test_Http_AddRangeHeader_Invalid_Params( void )
     testHeaders.pBuffer = &testBuffer[ 0 ];
     retCode = HTTPClient_AddRangeHeader( &testHeaders,
                                          10 /* rangeStart */,
-                                         5 /* rageEnd */ );
+                                         5 /* rangeEnd */ );
+    TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, retCode );
+
+    /* rangeStart == INT32_MIN */
+    tearDown();
+    testHeaders.pBuffer = &testBuffer[ 0 ];
+    retCode = HTTPClient_AddRangeHeader( &testHeaders,
+                                         INT32_MIN /* rangeStart */,
+                                         5 /* rangeEnd */ );
     TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, retCode );
 
     /* rangeStart is negative but rangeStart is non-End of File. */
@@ -830,13 +838,13 @@ void test_Http_AddRangeHeader_Invalid_Params( void )
     testHeaders.pBuffer = &testBuffer[ 0 ];
     retCode = HTTPClient_AddRangeHeader( &testHeaders,
                                          -10 /* rangeStart */,
-                                         HTTP_RANGE_REQUEST_END_OF_FILE + 1 /* rageEnd */ );
+                                         HTTP_RANGE_REQUEST_END_OF_FILE + 1 /* rangeEnd */ );
     TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, retCode );
     tearDown();
     testHeaders.pBuffer = &testBuffer[ 0 ];
     retCode = HTTPClient_AddRangeHeader( &testHeaders,
                                          -50 /* rangeStart */,
-                                         -10 /* rageEnd */ );
+                                         -10 /* rangeEnd */ );
     TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, retCode );
 }
 
