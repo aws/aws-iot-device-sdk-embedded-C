@@ -11,8 +11,7 @@ target_sources(
 target_link_libraries(
     ${DEMO_NAME}
     PRIVATE
-        http
-        plaintext_posix   
+        http   
 )
 
 target_include_directories(

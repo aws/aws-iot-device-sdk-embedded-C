@@ -48,9 +48,6 @@
 
 /************ End of logging configuration ****************/
 
-/* OpenSSL include. */
-#include <openssl/ssl.h>
-
 /* Transport includes. */
 #include "transport_interface.h"
 

@@ -26,6 +26,9 @@
 /* POSIX socket include. */
 #include <unistd.h>
 
+/* OpenSSL include. */
+#include <openssl/ssl.h>
+
 /* Transport interface include. */
 #include "transport_interface.h"
 

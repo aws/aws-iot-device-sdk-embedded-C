@@ -17,7 +17,7 @@
  * bytes than what were specified were sent, then #HTTP_NETWORK_ERROR is
  * returned.
  */
-static HTTPStatus_t sendHttpData( const TransportInterface_t * pTransport,
+static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
                                   const uint8_t * pData,
                                   size_t dataLen );
 
@@ -35,7 +35,7 @@ static HTTPStatus_t sendHttpData( const TransportInterface_t * pTransport,
  * bytes than what were specified were sent, then #HTTP_NETWORK_ERROR is
  * returned.
  */
-static HTTPStatus_t sendHttpHeaders( const TransportInterface_t * pTransport,
+static HTTPStatus_t sendHttpHeaders( const HTTPTransportInterface_t * pTransport,
                                      HTTPRequestHeaders_t * pRequestHeaders,
                                      size_t reqBodyLen,
                                      uint32_t sendFlags );
@@ -64,7 +64,7 @@ static HTTPStatus_t addContentLengthHeader( HTTPRequestHeaders_t * pRequestHeade
  * bytes than what was specified were sent, then #HTTP_NETWORK_ERROR is
  * returned.
  */
-static HTTPStatus_t sendHttpBody( const TransportInterface_t * pTransport,
+static HTTPStatus_t sendHttpBody( const HTTPTransportInterface_t * pTransport,
                                   const uint8_t * pRequestBodyBuf,
                                   size_t reqBodyBufLen );
 
@@ -100,7 +100,7 @@ static HTTPStatus_t addHeader( HTTPRequestHeaders_t * pRequestHeaders,
  * more bytes than what was specified were read, then #HTTP_NETWORK_ERROR is
  * returned.
  */
-static HTTPStatus_t receiveHttpData( const TransportInterface_t * pTransport,
+static HTTPStatus_t receiveHttpData( const HTTPTransportInterface_t * pTransport,
                                      uint8_t * pBuffer,
                                      size_t bufferLen,
                                      size_t * pBytesReceived );
@@ -134,7 +134,7 @@ static HTTPStatus_t getFinalResponseStatus( HTTPParsingState_t parsingState,
  * @return Returns #HTTP_SUCCESS if successful. Please see #receiveHttpData,
  * #parseHttpResponse, and #getFinalResponseStatus for other statuses returned.
  */
-static HTTPStatus_t receiveAndParseHttpResponse( const TransportInterface_t * pTransport,
+static HTTPStatus_t receiveAndParseHttpResponse( const HTTPTransportInterface_t * pTransport,
                                                  HTTPResponse_t * pResponse,
                                                  const HTTPRequestHeaders_t * pRequestHeaders );
 
@@ -1523,7 +1523,7 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
 
 /*-----------------------------------------------------------*/
 
-static HTTPStatus_t sendHttpData( const TransportInterface_t * pTransport,
+static HTTPStatus_t sendHttpData( const HTTPTransportInterface_t * pTransport,
                                   const uint8_t * pData,
                                   size_t dataLen )
 {
@@ -1546,7 +1546,7 @@ static HTTPStatus_t sendHttpData( const TransportInterface_t * pTransport,
     /* coverity[misra_c_2012_rule_15_4_violation] */
     while( bytesRemaining > 0UL )
     {
-        transportStatus = pTransport->send( pTransport->pNetworkContext,
+        transportStatus = pTransport->send( pTransport->pContext,
                                             pIndex,
                                             bytesRemaining );
 
@@ -1626,7 +1626,7 @@ static HTTPStatus_t addContentLengthHeader( HTTPRequestHeaders_t * pRequestHeade
 
 /*-----------------------------------------------------------*/
 
-static HTTPStatus_t sendHttpHeaders( const TransportInterface_t * pTransport,
+static HTTPStatus_t sendHttpHeaders( const HTTPTransportInterface_t * pTransport,
                                      HTTPRequestHeaders_t * pRequestHeaders,
                                      size_t reqBodyLen,
                                      uint32_t sendFlags )
@@ -1662,7 +1662,7 @@ static HTTPStatus_t sendHttpHeaders( const TransportInterface_t * pTransport,
 
 /*-----------------------------------------------------------*/
 
-static HTTPStatus_t sendHttpBody( const TransportInterface_t * pTransport,
+static HTTPStatus_t sendHttpBody( const HTTPTransportInterface_t * pTransport,
                                   const uint8_t * pRequestBodyBuf,
                                   size_t reqBodyBufLen )
 {
@@ -1682,7 +1682,7 @@ static HTTPStatus_t sendHttpBody( const TransportInterface_t * pTransport,
 
 /*-----------------------------------------------------------*/
 
-static HTTPStatus_t receiveHttpData( const TransportInterface_t * pTransport,
+static HTTPStatus_t receiveHttpData( const HTTPTransportInterface_t * pTransport,
                                      uint8_t * pBuffer,
                                      size_t bufferLen,
                                      size_t * pBytesReceived )
@@ -1695,7 +1695,7 @@ static HTTPStatus_t receiveHttpData( const TransportInterface_t * pTransport,
     assert( pBuffer != NULL );
     assert( pBytesReceived != NULL );
 
-    transportStatus = pTransport->recv( pTransport->pNetworkContext,
+    transportStatus = pTransport->recv( pTransport->pContext,
                                         pBuffer,
                                         bufferLen );
 
@@ -1786,7 +1786,7 @@ static HTTPStatus_t getFinalResponseStatus( HTTPParsingState_t parsingState,
 
 /*-----------------------------------------------------------*/
 
-static HTTPStatus_t receiveAndParseHttpResponse( const TransportInterface_t * pTransport,
+static HTTPStatus_t receiveAndParseHttpResponse( const HTTPTransportInterface_t * pTransport,
                                                  HTTPResponse_t * pResponse,
                                                  const HTTPRequestHeaders_t * pRequestHeaders )
 {
@@ -1863,7 +1863,7 @@ static HTTPStatus_t receiveAndParseHttpResponse( const TransportInterface_t * pT
 
 /*-----------------------------------------------------------*/
 
-HTTPStatus_t HTTPClient_Send( const TransportInterface_t * pTransport,
+HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
                               HTTPRequestHeaders_t * pRequestHeaders,
                               const uint8_t * pRequestBodyBuf,
                               size_t reqBodyBufLen,

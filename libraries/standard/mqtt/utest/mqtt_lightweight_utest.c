@@ -1530,8 +1530,7 @@ void test_MQTT_DeserializePublish( void )
 
     /* Test serialization and deserialization of a QoS 1 PUBLISH. */
     publishInfo.qos = MQTTQoS1;
-    /* Mark the publish as duplicate. */
-    publishInfo.dup = true;
+
     status = MQTT_GetPublishPacketSize( &publishInfo, &remainingLength, &packetSize );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_GREATER_OR_EQUAL( packetSize, bufferSize );
@@ -1547,7 +1546,6 @@ void test_MQTT_DeserializePublish( void )
     mqttPacketInfo.pRemainingData = &buffer[ 2 ];
     status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishInfo );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-    TEST_ASSERT_TRUE( publishInfo.dup );
 
     /* QoS 2 PUBLISH. */
     publishInfo.qos = MQTTQoS2;
