@@ -34,13 +34,14 @@ void harness()
 {
     HTTPRequestHeaders_t * pRequestHeaders = NULL;
     HTTPResponse_t * pResponse = NULL;
-    HTTPTransportInterface_t * pTransport = NULL;
+    HTTPTransportInterface_t transportInterface;
     uint8_t * pRequestBodyBuf = NULL;
     size_t reqBodyBufLen;
     uint32_t sendFlags;
 
-    pTransport = allocateTransportInterface( pTransport );
-    __CPROVER_assume( isValidTransportInterface( pTransport ) );
+    /* Initialize transport interface. */
+    transportInterface.send = TransportInterfaceSendStub;
+    transportInterface.recv = TransportInterfaceReceiveStub;
 
     /* Initialize and make assumptions for request headers. */
     pRequestHeaders = allocateHttpRequestHeaders( pRequestHeaders );
@@ -48,14 +49,37 @@ void harness()
 
     /* Initialize and make assumptions for buffer to receive request body. */
     __CPROVER_assume( reqBodyBufLen < CBMC_MAX_OBJECT_SIZE );
-    __CPROVER_assume( reqBodyBufLen < INT32_MAX );
     pRequestBodyBuf = mallocCanFail( reqBodyBufLen );
 
     /* Initialize and make assumptions for response object. */
     pResponse = allocateHttpResponse( pResponse );
     __CPROVER_assume( isValidHttpResponse( pResponse ) );
 
-    HTTPClient_Send( pTransport,
+    HTTPClient_Send( &transportInterface,
+                     pRequestHeaders,
+                     pRequestBodyBuf,
+                     reqBodyBufLen,
+                     pResponse,
+                     sendFlags );
+
+    /* Test NULL transportInterface along with NULL members for coverage. */
+    HTTPClient_Send( NULL,
+                     pRequestHeaders,
+                     pRequestBodyBuf,
+                     reqBodyBufLen,
+                     pResponse,
+                     sendFlags );
+
+    transportInterface.recv = NULL;
+    HTTPClient_Send( &transportInterface,
+                     pRequestHeaders,
+                     pRequestBodyBuf,
+                     reqBodyBufLen,
+                     pResponse,
+                     sendFlags );
+
+    transportInterface.send = NULL;
+    HTTPClient_Send( &transportInterface,
                      pRequestHeaders,
                      pRequestBodyBuf,
                      reqBodyBufLen,
