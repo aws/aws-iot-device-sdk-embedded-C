@@ -34,3 +34,4 @@ target_include_directories( reconnect_posix
                               PUBLIC 
                                 ${COMMON_TRANSPORT_INCLUDE_PUBLIC_DIRS}
                                 ${LOGGING_INCLUDE_DIRS} )
+                                

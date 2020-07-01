@@ -470,7 +470,7 @@ static int connectToServerWithBackoffRetries( int * pTcpSocket )
     TransportReconnectParams_t reconnectParams;
 
     /* Initialize reconnect attempts and interval */
-    Transport_reconnectParamsReset( &reconnectParams );
+    Transport_ReconnectParamsReset( &reconnectParams );
 
     /* Attempt to connect to MQTT broker. If connection fails, retry after
      * a timeout. Timeout value will exponentially increase till maximum
@@ -491,7 +491,7 @@ static int connectToServerWithBackoffRetries( int * pTcpSocket )
         {
             LogWarn( ( "Connection to the broker failed, sleeping %d seconds before the next attempt.",
                        ( reconnectParams.reconnectTimeoutSec > MAX_RECONNECT_TIMEOUT_SECONDS ) ? MAX_RECONNECT_TIMEOUT_SECONDS : reconnectParams.reconnectTimeoutSec ) );
-            backoffSuccess = Transport_reconnectBackoffAndSleep( &reconnectParams );
+            backoffSuccess = Transport_ReconnectBackoffAndSleep( &reconnectParams );
         }
 
         if( backoffSuccess == false )

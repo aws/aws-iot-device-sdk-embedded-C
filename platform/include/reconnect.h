@@ -64,7 +64,7 @@ typedef struct TransportReconnectParams
  * @param[in, out] reconnectParam structure containing attempts done and timeout
  * value.
  */
-void Transport_reconnectParamsReset( TransportReconnectParams_t * reconnectParams );
+void Transport_ReconnectParamsReset( TransportReconnectParams_t * reconnectParams );
 
 /**
  * @brief Simple platfrom specific exponential backoff function. The application
@@ -75,4 +75,4 @@ void Transport_reconnectParamsReset( TransportReconnectParams_t * reconnectParam
  *
  * @return true after successful sleep, false when all attempts are exhausted.
  */
-bool Transport_reconnectBackoffAndSleep( TransportReconnectParams_t * reconnectParams );
+bool Transport_ReconnectBackoffAndSleep( TransportReconnectParams_t * reconnectParams );
