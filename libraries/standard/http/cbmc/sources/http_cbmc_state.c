@@ -132,7 +132,27 @@ int32_t TransportInterfaceSendStub( NetworkContext_t pContext,
     * finish the message after MAX_TRIES tries.
     ****************************************************************/
 
-    return bytesToSend;
+    /* The number of tries to send the message before this invocation */
+    static int32_t tries;
+    tries++;
+
+    /* The number of bytes considered sent after this invocation */
+    int32_t ret;
+
+    if( tries >= MAX_TRIES )
+    {
+        if( bytesToSend > INT32_MAX )
+        {
+            ret = INT32_MAX;
+        }
+        else
+        {
+            tries = 0;
+            ret = bytesToSend;
+        }
+    }
+
+    return ret;
 }
 
 int32_t TransportInterfaceReceiveStub( NetworkContext_t context,
@@ -156,7 +176,20 @@ int32_t TransportInterfaceReceiveStub( NetworkContext_t context,
     * finish the message after MAX_TRIES tries.
     ****************************************************************/
 
-    return bytesToRecv;
+    /* The number of tries to send the message before this invocation */
+    static int32_t tries;
+    tries++;
+
+    /* The number of bytes considered sent after this invocation */
+    int32_t ret;
+
+    if( tries >= MAX_TRIES )
+    {
+        tries = 0;
+        ret = 0;
+    }
+
+    return ret;
 }
 
 HTTPTransportInterface_t * allocateTransportInterface( HTTPTransportInterface_t * pTransport )
