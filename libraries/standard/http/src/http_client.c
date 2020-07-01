@@ -797,7 +797,7 @@ static int httpParserOnBodyCallback( http_parser * pHttpParser,
     /* MISRA Rule 11.8 flags casting away the const qualifier in the pointer
      * type. This rule is suppressed because when the body is of transfer
      * encoding chunked, the body must be copied over the chunk headers that
-     * preceed it. This is done to have a contigous response body. This does
+     * precede it. This is done to have a contiguous response body. This does
      * affect future parsing as the changed segment will always be before the
      * next place to parse. */
     /* coverity[misra_c_2012_rule_11_8_violation] */
@@ -1537,16 +1537,9 @@ static HTTPStatus_t sendHttpData( const TransportInterface_t * pTransport,
     assert( pData != NULL );
 
     /* Loop until all data is sent. */
-
-    /* MISCRA C-2012 Rule 15.4 flags multiple break statements in the while loop
-     * below. There are two only error conditions when reading data from the
-     * network which both need the loop to terminate. Both of these conditions
-     * necessitate different error logs, so two different break statements are
-     * required. */
-    /* coverity[misra_c_2012_rule_15_4_violation] */
-    while( bytesRemaining > 0UL )
+    while( ( bytesRemaining > 0UL ) && ( returnStatus != HTTP_NETWORK_ERROR ) )
     {
-        transportStatus = pTransport->send( pTransport->pNetworkContext,
+        transportStatus = pTransport->send( pTransport->pContext,
                                             pIndex,
                                             bytesRemaining );
 
@@ -1557,25 +1550,21 @@ static HTTPStatus_t sendHttpData( const TransportInterface_t * pTransport,
                         " returned error: TransportStatus=%d",
                         transportStatus ) );
             returnStatus = HTTP_NETWORK_ERROR;
-            break;
         }
         else if( ( size_t ) transportStatus > bytesRemaining )
         {
-            LogError( ( "Failed to send HTTP data: Transport send()"
-                        " wrote more data than what was expected: "
-                        "BytesSent=%d, BytesRemaining=%lu",
+            LogError( ( "Failed to send HTTP data: Transport send() wrote more data "
+                        "than what was expected: BytesSent=%d, BytesRemaining=%lu",
                         transportStatus,
                         bytesRemaining ) );
             returnStatus = HTTP_NETWORK_ERROR;
-            break;
         }
         else
         {
             bytesRemaining -= ( size_t ) transportStatus;
             pIndex += transportStatus;
             LogDebug( ( "Sent HTTP data over the transport: "
-                        "BytesSent=%d, BytesRemaining=%lu, "
-                        "TotalBytesSent=%lu",
+                        "BytesSent=%d, BytesRemaining=%lu, TotalBytesSent=%lu",
                         transportStatus,
                         bytesRemaining,
                         ( unsigned long ) ( dataLen - bytesRemaining ) ) );
@@ -1584,8 +1573,7 @@ static HTTPStatus_t sendHttpData( const TransportInterface_t * pTransport,
 
     if( returnStatus == HTTP_SUCCESS )
     {
-        LogDebug( ( "Sent HTTP data over the transport: "
-                    "BytesSent=%d",
+        LogDebug( ( "Sent HTTP data over the transport: BytesSent=%d",
                     transportStatus ) );
     }
 
@@ -1695,7 +1683,7 @@ static HTTPStatus_t receiveHttpData( const TransportInterface_t * pTransport,
     assert( pBuffer != NULL );
     assert( pBytesReceived != NULL );
 
-    transportStatus = pTransport->recv( pTransport->pNetworkContext,
+    transportStatus = pTransport->recv( pTransport->pContext,
                                         pBuffer,
                                         bufferLen );
 
