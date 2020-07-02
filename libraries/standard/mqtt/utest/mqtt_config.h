@@ -22,9 +22,6 @@
 
 /************ End of logging configuration ****************/
 
-/* Set network context to double pointer to buffer (uint8_t**). */
-typedef uint8_t ** NetworkContext_t;
-
 /**
  * @brief The maximum number of MQTT PUBLISH messages that may be pending
  * acknowledgement at any time.
@@ -35,7 +32,7 @@ typedef uint8_t ** NetworkContext_t;
  * macro sets the limit on how many simultaneous PUBLISH states an MQTT
  * context maintains.
  */
-#define MQTT_MAX_QUEUED_PUBLISH_MESSAGES    10
+#define MQTT_MAX_QUEUED_PUBLISH_MESSAGES        10
 
 /**
  * @brief The maximum number of MQTT PUBLISH messages that may be pending
@@ -47,14 +44,14 @@ typedef uint8_t ** NetworkContext_t;
  * macro sets the limit on how many simultaneous PUBLISH states an MQTT
  * context maintains.
  */
-#define MQTT_STATE_ARRAY_MAX_COUNT          10U
+#define MQTT_STATE_ARRAY_MAX_COUNT              10U
 
 /**
  * @brief MQTT client identifier.
  *
  * No two clients may use the same client identifier simultaneously.
  */
-#define MQTT_CLIENT_IDENTIFIER              "testclient"
+#define MQTT_CLIENT_IDENTIFIER                  "testclient"
 
 /**
  * @brief Retry count for reading CONNACK from network.
@@ -65,5 +62,10 @@ typedef uint8_t ** NetworkContext_t;
  */
 #define MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT    ( 2U )
 
+/* Set network context to double pointer to buffer (uint8_t**).  */
+struct NetworkContext
+{
+    uint8_t ** buffer;
+};
 
 #endif /* ifndef MQTT_CONFIG_H_ */

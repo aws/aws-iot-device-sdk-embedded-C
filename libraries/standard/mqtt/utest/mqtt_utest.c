@@ -148,13 +148,13 @@ int suiteTearDown( int numFailures )
  * @brief Mock successful transport send, and write data into buffer for
  * verification.
  */
-static int32_t mockSend( NetworkContext_t context,
+static int32_t mockSend( NetworkContext_t * pNetworkContext,
                          const void * pMessage,
                          size_t bytesToSend )
 {
     const uint8_t * buffer = ( const uint8_t * ) pMessage;
     /* Treat network context as pointer to buffer for mocking. */
-    uint8_t * mockNetwork = ( *( uint8_t ** ) context );
+    uint8_t * mockNetwork = ( *( uint8_t ** ) pNetworkContext->buffer );
     size_t bytesSent = 0;
 
     while( bytesSent++ < bytesToSend )
@@ -164,7 +164,7 @@ static int32_t mockSend( NetworkContext_t context,
     }
 
     /* Move stream by bytes sent. */
-    ( *( uint8_t ** ) context ) = mockNetwork;
+    ( *( uint8_t ** ) pNetworkContext->buffer ) = mockNetwork;
 
     return bytesToSend;
 }
@@ -231,11 +231,11 @@ static uint32_t getTimeDummy( void )
  * @return Number of bytes sent; negative value on error;
  * 0 for timeout or 0 bytes sent.
  */
-static int32_t transportSendSuccess( NetworkContext_t pContext,
+static int32_t transportSendSuccess( NetworkContext_t * pNetworkContext,
                                      const void * pBuffer,
                                      size_t bytesToWrite )
 {
-    TEST_ASSERT_EQUAL( MQTT_SAMPLE_NETWORK_CONTEXT, pContext );
+    TEST_ASSERT_EQUAL( MQTT_SAMPLE_NETWORK_CONTEXT, pNetworkContext );
     ( void ) pBuffer;
     return bytesToWrite;
 }
@@ -243,11 +243,11 @@ static int32_t transportSendSuccess( NetworkContext_t pContext,
 /**
  * @brief Mocked failed transport send.
  */
-static int32_t transportSendFailure( NetworkContext_t pContext,
+static int32_t transportSendFailure( NetworkContext_t * pNetworkContext,
                                      const void * pBuffer,
                                      size_t bytesToWrite )
 {
-    ( void ) pContext;
+    ( void ) pNetworkContext;
     ( void ) pBuffer;
     ( void ) bytesToWrite;
     return -1;
@@ -256,14 +256,14 @@ static int32_t transportSendFailure( NetworkContext_t pContext,
 /**
  * @brief Mocked transport send that succeeds then fails.
  */
-static int32_t transportSendSucceedThenFail( NetworkContext_t context,
+static int32_t transportSendSucceedThenFail( NetworkContext_t * pNetworkContext,
                                              const void * pMessage,
                                              size_t bytesToSend )
 {
     int32_t retVal = bytesToSend;
     static int counter = 0;
 
-    ( void ) context;
+    ( void ) pNetworkContext;
     ( void ) pMessage;
 
     if( counter++ )
@@ -284,11 +284,11 @@ static int32_t transportSendSucceedThenFail( NetworkContext_t context,
  *
  * @return Number of bytes received; negative value on error.
  */
-static int32_t transportRecvSuccess( NetworkContext_t pContext,
+static int32_t transportRecvSuccess( NetworkContext_t * pNetworkContext,
                                      void * pBuffer,
                                      size_t bytesToRead )
 {
-    TEST_ASSERT_EQUAL( MQTT_SAMPLE_NETWORK_CONTEXT, pContext );
+    TEST_ASSERT_EQUAL( MQTT_SAMPLE_NETWORK_CONTEXT, pNetworkContext );
     ( void ) pBuffer;
     return bytesToRead;
 }
@@ -296,11 +296,11 @@ static int32_t transportRecvSuccess( NetworkContext_t pContext,
 /**
  * @brief Mocked failed transport read.
  */
-static int32_t transportRecvFailure( NetworkContext_t pContext,
+static int32_t transportRecvFailure( NetworkContext_t * pNetworkContext,
                                      void * pBuffer,
                                      size_t bytesToRead )
 {
-    ( void ) pContext;
+    ( void ) pNetworkContext;
     ( void ) pBuffer;
     ( void ) bytesToRead;
     return -1;
@@ -309,11 +309,11 @@ static int32_t transportRecvFailure( NetworkContext_t pContext,
 /**
  * @brief Mocked transport reading one byte at a time.
  */
-static int32_t transportRecvOneByte( NetworkContext_t pContext,
+static int32_t transportRecvOneByte( NetworkContext_t * pNetworkContext,
                                      void * pBuffer,
                                      size_t bytesToRead )
 {
-    ( void ) pContext;
+    ( void ) pNetworkContext;
     ( void ) pBuffer;
     return 1;
 }
@@ -324,9 +324,9 @@ static int32_t transportRecvOneByte( NetworkContext_t pContext,
  *
  * @brief param[in] pTransport The transport interface to use with the context.
  */
-static void setupTransportInterface( MQTTTransportInterface_t * pTransport )
+static void setupTransportInterface( TransportInterface_t * pTransport )
 {
-    pTransport->networkContext = MQTT_SAMPLE_NETWORK_CONTEXT;
+    pTransport->pNetworkContext = MQTT_SAMPLE_NETWORK_CONTEXT;
     pTransport->send = transportSendSuccess;
     pTransport->recv = transportRecvSuccess;
 }
@@ -525,7 +525,7 @@ void test_MQTT_Init_Happy_Path( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
-    MQTTTransportInterface_t transport;
+    TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks;
 
@@ -549,7 +549,7 @@ void test_MQTT_Init_Invalid_Params( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
-    MQTTTransportInterface_t transport;
+    TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks;
 
@@ -603,7 +603,7 @@ void test_MQTT_Connect_sendConnect( void )
     uint32_t timeout = 2;
     bool sessionPresent;
     MQTTStatus_t status;
-    MQTTTransportInterface_t transport;
+    TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks;
     MQTTPacketInfo_t incomingPacket;
@@ -679,7 +679,7 @@ void test_MQTT_Connect_receiveConnack( void )
     uint32_t timeout = 0;
     bool sessionPresent, sessionPresentExpected;
     MQTTStatus_t status;
-    MQTTTransportInterface_t transport;
+    TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks;
     MQTTPacketInfo_t incomingPacket;
@@ -751,7 +751,7 @@ void test_MQTT_Connect_receiveConnack_retries( void )
     MQTTConnectInfo_t connectInfo;
     bool sessionPresent;
     MQTTStatus_t status;
-    MQTTTransportInterface_t transport;
+    TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks;
     MQTTPacketInfo_t incomingPacket;
@@ -814,7 +814,7 @@ void test_MQTT_Connect_partial_receive()
     uint32_t timeout = 0;
     bool sessionPresent;
     MQTTStatus_t status;
-    MQTTTransportInterface_t transport;
+    TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks;
     MQTTPacketInfo_t incomingPacket;
@@ -889,7 +889,7 @@ void test_MQTT_Connect_resendPendingAcks( void )
     uint32_t timeout = 2;
     bool sessionPresent, sessionPresentResult;
     MQTTStatus_t status;
-    MQTTTransportInterface_t transport;
+    TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks;
     MQTTPacketInfo_t incomingPacket;
@@ -1016,7 +1016,7 @@ void test_MQTT_Connect_happy_path()
     uint32_t timeout = 2;
     bool sessionPresent, sessionPresentExpected;
     MQTTStatus_t status;
-    MQTTTransportInterface_t transport;
+    TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks;
     MQTTPacketInfo_t incomingPacket;
@@ -1115,7 +1115,7 @@ void test_MQTT_Publish( void )
     MQTTContext_t mqttContext;
     MQTTPublishInfo_t publishInfo;
     uint16_t packetId;
-    MQTTTransportInterface_t transport;
+    TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks;
     MQTTStatus_t status;
@@ -1241,8 +1241,8 @@ void test_MQTT_Disconnect( void )
     MQTTStatus_t status;
     uint8_t buffer[ 10 ];
     uint8_t * bufPtr = buffer;
-    NetworkContext_t networkContext = ( NetworkContext_t ) &bufPtr;
-    MQTTTransportInterface_t transport;
+    NetworkContext_t networkContext;
+    TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks;
     size_t disconnectSize = 2;
@@ -1250,7 +1250,8 @@ void test_MQTT_Disconnect( void )
     setupTransportInterface( &transport );
     setupCallbacks( &callbacks );
     setupNetworkBuffer( &networkBuffer );
-    transport.networkContext = networkContext;
+    networkContext.buffer = &bufPtr;
+    transport.pNetworkContext = &networkContext;
     transport.recv = transportRecvSuccess;
     transport.send = transportSendFailure;
 
@@ -1290,7 +1291,7 @@ void test_MQTT_Disconnect( void )
 void test_MQTT_GetPacketId( void )
 {
     MQTTContext_t mqttContext;
-    MQTTTransportInterface_t transport;
+    TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks;
     uint16_t packetId;
@@ -1323,7 +1324,7 @@ void test_MQTT_GetPacketId( void )
 void test_MQTT_ProcessLoop_Invalid_Params( void )
 {
     MQTTContext_t context;
-    MQTTTransportInterface_t transport;
+    TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks = { 0 };
     MQTTStatus_t mqttStatus = MQTT_ProcessLoop( NULL, MQTT_NO_TIMEOUT_MS );
@@ -1350,7 +1351,7 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Paths( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
-    MQTTTransportInterface_t transport;
+    TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks;
     MQTTPublishInfo_t pubInfo;
@@ -1429,7 +1430,7 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Error_Paths( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
-    MQTTTransportInterface_t transport;
+    TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks;
     MQTTPublishInfo_t publishInfo = { 0 };
@@ -1482,7 +1483,7 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
-    MQTTTransportInterface_t transport;
+    TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks;
 
@@ -1560,7 +1561,7 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
-    MQTTTransportInterface_t transport;
+    TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks;
 
@@ -1624,7 +1625,7 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
-    MQTTTransportInterface_t transport;
+    TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks;
 
@@ -1686,7 +1687,7 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
-    MQTTTransportInterface_t transport;
+    TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks;
 
@@ -1715,7 +1716,7 @@ void test_MQTT_ProcessLoop_Receive_Failed( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
-    MQTTTransportInterface_t transport;
+    TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks;
 
@@ -1739,7 +1740,7 @@ void test_MQTT_ProcessLoop_Timer_Overflow( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
-    MQTTTransportInterface_t transport;
+    TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks;
     MQTTPacketInfo_t incomingPacket = { 0 };
@@ -1792,7 +1793,7 @@ void test_MQTT_ReceiveLoop( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
-    MQTTTransportInterface_t transport;
+    TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks = { 0 };
     MQTTPacketInfo_t incomingPacket = { 0 };
@@ -1880,7 +1881,7 @@ void test_MQTT_Subscribe_happy_path( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
-    MQTTTransportInterface_t transport;
+    TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks;
     MQTTPacketInfo_t incomingPacket = { 0 };
@@ -1914,7 +1915,7 @@ void test_MQTT_Subscribe_error_paths( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
-    MQTTTransportInterface_t transport;
+    TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks;
     MQTTSubscribeInfo_t subscribeInfo;
@@ -1981,7 +1982,7 @@ void test_MQTT_Unsubscribe_happy_path( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
-    MQTTTransportInterface_t transport;
+    TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks;
     MQTTSubscribeInfo_t subscribeInfo;
@@ -2014,7 +2015,7 @@ void test_MQTT_Unsubscribe_error_path( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
-    MQTTTransportInterface_t transport;
+    TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks;
     MQTTSubscribeInfo_t subscribeInfo;
@@ -2066,7 +2067,7 @@ void test_MQTT_Ping_happy_path( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
-    MQTTTransportInterface_t transport;
+    TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks;
     size_t pingreqSize = MQTT_PACKET_PINGREQ_SIZE;
@@ -2098,7 +2099,7 @@ void test_MQTT_Ping_error_path( void )
 {
     MQTTStatus_t mqttStatus;
     MQTTContext_t context;
-    MQTTTransportInterface_t transport;
+    TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks;
     size_t pingreqSize = MQTT_PACKET_PINGREQ_SIZE;

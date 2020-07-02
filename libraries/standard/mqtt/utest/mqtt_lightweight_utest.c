@@ -152,7 +152,7 @@ int suiteTearDown( int numFailures )
 /**
  * @brief Mock successful transport receive by reading data from a buffer.
  */
-static int32_t mockReceive( NetworkContext_t context,
+static int32_t mockReceive( NetworkContext_t * pNetworkContext,
                             void * pBuffer,
                             size_t bytesToRecv )
 {
@@ -161,7 +161,7 @@ static int32_t mockReceive( NetworkContext_t context,
     size_t bytesRead = 0;
 
     /* Treat network context as pointer to buffer for mocking  */
-    mockNetwork = ( *( uint8_t ** ) context );
+    mockNetwork = ( *( uint8_t ** ) pNetworkContext->buffer );
 
     while( bytesRead++ < bytesToRecv )
     {
@@ -170,7 +170,7 @@ static int32_t mockReceive( NetworkContext_t context,
     }
 
     /* Move stream by bytes read. */
-    ( *( uint8_t ** ) context ) = mockNetwork;
+    ( *( uint8_t ** ) pNetworkContext->buffer ) = mockNetwork;
 
     return bytesToRecv;
 }
@@ -178,7 +178,7 @@ static int32_t mockReceive( NetworkContext_t context,
 /**
  * @brief Mock transport receive with no data available.
  */
-static int32_t mockReceiveNoData( NetworkContext_t context,
+static int32_t mockReceiveNoData( NetworkContext_t * pNetworkContext,
                                   void * pBuffer,
                                   size_t bytesToRecv )
 {
@@ -188,7 +188,7 @@ static int32_t mockReceiveNoData( NetworkContext_t context,
 /**
  * @brief Mock transport receive failure.
  */
-static int32_t mockReceiveFailure( NetworkContext_t context,
+static int32_t mockReceiveFailure( NetworkContext_t * pNetworkContext,
                                    void * pBuffer,
                                    size_t bytesToRecv )
 {
@@ -198,7 +198,7 @@ static int32_t mockReceiveFailure( NetworkContext_t context,
 /**
  * @brief Mock transport receive that succeeds once, then fails.
  */
-static int32_t mockReceiveSucceedThenFail( NetworkContext_t context,
+static int32_t mockReceiveSucceedThenFail( NetworkContext_t * pNetworkContext,
                                            void * pBuffer,
                                            size_t bytesToRecv )
 {
@@ -207,12 +207,12 @@ static int32_t mockReceiveSucceedThenFail( NetworkContext_t context,
 
     if( counter++ )
     {
-        retVal = mockReceiveFailure( context, pBuffer, bytesToRecv );
+        retVal = mockReceiveFailure( pNetworkContext, pBuffer, bytesToRecv );
         counter = 0;
     }
     else
     {
-        retVal = mockReceive( context, pBuffer, bytesToRecv );
+        retVal = mockReceive( pNetworkContext, pBuffer, bytesToRecv );
     }
 
     return retVal;
@@ -1589,21 +1589,22 @@ void test_MQTT_GetIncomingPacketTypeAndLength( void )
 {
     MQTTStatus_t status = MQTTSuccess;
     MQTTPacketInfo_t mqttPacket;
+    NetworkContext_t networkContext;
     uint8_t buffer[ 10 ];
     uint8_t * bufPtr = buffer;
 
     /* Dummy network context - pointer to pointer to a buffer. */
-    NetworkContext_t networkContext = ( NetworkContext_t ) &bufPtr;
+    networkContext.buffer = &bufPtr;
 
     /* Test a NULL pIncomingPacket parameter. */
-    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, networkContext, NULL );
+    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
     /* Test a typical happy path case for a CONN ACK packet. */
     buffer[ 0 ] = 0x20; /* CONN ACK */
     buffer[ 1 ] = 0x02; /* Remaining length. */
 
-    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, networkContext, &mqttPacket );
+    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, &mqttPacket );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_INT( 0x20, mqttPacket.type );
     TEST_ASSERT_EQUAL_INT( 0x02, mqttPacket.remainingLength );
@@ -1613,7 +1614,7 @@ void test_MQTT_GetIncomingPacketTypeAndLength( void )
     buffer[ 0 ] = MQTT_PACKET_TYPE_PUBLISH;
     buffer[ 1 ] = 0x80;
     buffer[ 2 ] = 0x01;
-    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, networkContext, &mqttPacket );
+    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, &mqttPacket );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_INT( MQTT_PACKET_TYPE_PUBLISH, mqttPacket.type );
     TEST_ASSERT_EQUAL_INT( 128, mqttPacket.remainingLength );
@@ -1621,7 +1622,7 @@ void test_MQTT_GetIncomingPacketTypeAndLength( void )
     /* Test with incorrect packet type. */
     bufPtr = buffer;
     buffer[ 0 ] = 0x10; /* INVALID */
-    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, networkContext, &mqttPacket );
+    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, &mqttPacket );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /* Test with invalid remaining length. */
@@ -1634,7 +1635,7 @@ void test_MQTT_GetIncomingPacketTypeAndLength( void )
     buffer[ 2 ] = 0xFF;
     buffer[ 3 ] = 0xFF;
     buffer[ 4 ] = 0xFF;
-    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, networkContext, &mqttPacket );
+    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, &mqttPacket );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /* Check with an encoding that does not conform to the MQTT spec. */
@@ -1643,30 +1644,30 @@ void test_MQTT_GetIncomingPacketTypeAndLength( void )
     buffer[ 2 ] = 0x80;
     buffer[ 3 ] = 0x80;
     buffer[ 4 ] = 0x00;
-    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, networkContext, &mqttPacket );
+    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, &mqttPacket );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /* Check when network receive fails. */
     memset( buffer, 0x00, 10 );
     bufPtr = buffer;
-    status = MQTT_GetIncomingPacketTypeAndLength( mockReceiveFailure, networkContext, &mqttPacket );
+    status = MQTT_GetIncomingPacketTypeAndLength( mockReceiveFailure, &networkContext, &mqttPacket );
     TEST_ASSERT_EQUAL( MQTTRecvFailed, status );
 
     /* Test if no data is available. */
     bufPtr = buffer;
-    status = MQTT_GetIncomingPacketTypeAndLength( mockReceiveNoData, networkContext, &mqttPacket );
+    status = MQTT_GetIncomingPacketTypeAndLength( mockReceiveNoData, &networkContext, &mqttPacket );
     TEST_ASSERT_EQUAL( MQTTNoDataAvailable, status );
 
     /* Branch coverage for PUBREL. */
     bufPtr = buffer;
     buffer[ 0 ] = MQTT_PACKET_TYPE_PUBREL & 0xF0U;
-    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, networkContext, &mqttPacket );
+    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, &mqttPacket );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /* Receive type then fail. */
     bufPtr = buffer;
     buffer[ 0 ] = MQTT_PACKET_TYPE_PUBREL;
-    status = MQTT_GetIncomingPacketTypeAndLength( mockReceiveSucceedThenFail, networkContext, &mqttPacket );
+    status = MQTT_GetIncomingPacketTypeAndLength( mockReceiveSucceedThenFail, &networkContext, &mqttPacket );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 }
 
