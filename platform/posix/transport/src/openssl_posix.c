@@ -24,6 +24,7 @@
 #include <string.h>
 
 /* POSIX socket includes. */
+#include <errno.h>
 #include <poll.h>
 #include <time.h>
 #include <unistd.h>
@@ -41,27 +42,32 @@
 /**
  * @brief Label of root CA when calling @ref logPath.
  */
-#define ROOT_CA_LABEL        "Root CA certificate"
+#define ROOT_CA_LABEL              "Root CA certificate"
 
 /**
  * @brief Label of client certificate when calling @ref logPath.
  */
-#define CLIENT_CERT_LABEL    "client's certificate"
+#define CLIENT_CERT_LABEL          "client's certificate"
 
 /**
  * @brief Label of client key when calling @ref logPath.
  */
-#define CLIENT_KEY_LABEL     "client's key"
+#define CLIENT_KEY_LABEL           "client's key"
 
 /**
  * @brief Number of milliseconds in one second.
  */
-#define ONE_SEC_TO_MS        ( 1000 )
+#define ONE_SEC_TO_MS              ( 1000 )
 
 /**
  * @brief Number of microseconds in one millisecond.
  */
-#define ONE_MS_TO_US         ( 1000 )
+#define ONE_MS_TO_US               ( 1000 )
+
+/**
+ * @brief Default timeout for polling.
+ */
+#define DEFAULT_POLL_TIMEOUT_MS    ( 200 )
 
 /*-----------------------------------------------------------*/
 
@@ -612,10 +618,11 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
                       void * pBuffer,
                       size_t bytesToRecv )
 {
-    int32_t bytesReceived = 0, recvTimeoutMs = -1;
+    int32_t bytesReceived = 0, recvTimeoutMs = DEFAULT_POLL_TIMEOUT_MS;
     int pollStatus = -1, bytesAvailableToRead = 0, getTimeoutStatus = -1;
     struct pollfd fileDescriptor;
-    struct timeval * pTransportTimeout = NULL;
+    struct timeval transportTimeout;
+    socklen_t sockLen = sizeof( transportTimeout );
 
     /* Set the file descriptor for poll. */
     fileDescriptor.events = POLLIN | POLLPRI;
@@ -626,13 +633,15 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
     getTimeoutStatus = getsockopt( fileDescriptor.fd,
                                    SOL_SOCKET,
                                    SO_RCVTIMEO,
-                                   pTransportTimeout,
-                                   sizeof( struct timeval ) );
+                                   &transportTimeout,
+                                   &sockLen );
 
-    if( ( pTransportTimeout != NULL ) && ( getTimeoutStatus == 0 ) )
+    if( ( getTimeoutStatus == 0 ) &&
+        ( transportTimeout.tv_sec > 0 ) &&
+        ( transportTimeout.tv_usec > 0 ) )
     {
-        recvTimeoutMs = ONE_SEC_TO_MS * pTransportTimeout->tv_sec;
-        recvTimeoutMs += pTransportTimeout->tv_usec / ONE_MS_TO_US;
+        recvTimeoutMs = ONE_SEC_TO_MS * transportTimeout.tv_sec;
+        recvTimeoutMs += transportTimeout.tv_usec / ONE_MS_TO_US;
     }
 
     /* Check if there are any pending data available for read. */
@@ -641,7 +650,7 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
     /* Poll only if there is no data available yet to read. */
     if( bytesAvailableToRead <= 0 )
     {
-        pollStatus = poll( &fileDescriptor, 1, recvTimeoutMs );
+        pollStatus = poll( &fileDescriptor, 1, -1 );
     }
 
     /* SSL read of data. */
@@ -650,7 +659,6 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
         bytesReceived = ( int32_t ) SSL_read( pNetworkContext->pSsl,
                                               pBuffer,
                                               bytesToRecv );
-        LogInfo( ( "Bytes received over SSL: %d", bytesReceived ) );
     }
     /* Poll timed out. */
     else if( pollStatus == 0 )
@@ -671,10 +679,11 @@ int32_t Openssl_Send( NetworkContext_t * pNetworkContext,
                       const void * pBuffer,
                       size_t bytesToSend )
 {
-    int32_t bytesSent = 0, sendTimeoutMs = -1;
+    int32_t bytesSent = 0, sendTimeoutMs = DEFAULT_POLL_TIMEOUT_MS;
     int pollStatus = 0, getTimeoutStatus = -1;
     struct pollfd fileDescriptor;
-    struct timeval * pTransportTimeout = NULL;
+    struct timeval transportTimeout;
+    socklen_t sockLen = sizeof( transportTimeout );
 
     /* Set the file descriptor for poll. */
     fileDescriptor.events = POLLOUT;
@@ -685,13 +694,15 @@ int32_t Openssl_Send( NetworkContext_t * pNetworkContext,
     getTimeoutStatus = getsockopt( fileDescriptor.fd,
                                    SOL_SOCKET,
                                    SO_SNDTIMEO,
-                                   pTransportTimeout,
-                                   sizeof( struct timeval ) );
+                                   &transportTimeout,
+                                   &sockLen );
 
-    if( ( pTransportTimeout != NULL ) && ( getTimeoutStatus == 0 ) )
+    if( ( getTimeoutStatus == 0 ) &&
+        ( transportTimeout.tv_sec > 0 ) &&
+        ( transportTimeout.tv_usec > 0 ) )
     {
-        sendTimeoutMs = ONE_SEC_TO_MS * pTransportTimeout->tv_sec;
-        sendTimeoutMs += pTransportTimeout->tv_usec / ONE_MS_TO_US;
+        sendTimeoutMs = ONE_SEC_TO_MS * transportTimeout.tv_sec;
+        sendTimeoutMs += transportTimeout.tv_usec / ONE_MS_TO_US;
     }
 
     /* Poll the file descriptor to check if SSL_Write can be done now. */
