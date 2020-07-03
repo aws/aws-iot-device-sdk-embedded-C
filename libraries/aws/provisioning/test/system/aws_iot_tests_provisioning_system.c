@@ -564,7 +564,7 @@ TEST( Provisioning_System, CreateCertFromCsrNominalCase )
     status = AwsIotProvisioning_CreateCertificateFromCsr( _mqttConnection,
                                                           IOT_MQTT_QOS_1,
                                                           AWS_IOT_TEST_PROVISIONING_CSR_PEM,
-                                                          sizeof( AWS_IOT_TEST_PROVISIONING_CSR_PEM ),
+                                                          strlen( AWS_IOT_TEST_PROVISIONING_CSR_PEM ),
                                                           AWS_IOT_TEST_PROVISIONING_TIMEOUT,
                                                           &callbackInfo );
 
@@ -704,7 +704,7 @@ TEST( Provisioning_System, RegisterThingWithCertFromCsrNominalCase )
     status = AwsIotProvisioning_CreateCertificateFromCsr( _mqttConnection,
                                                           IOT_MQTT_QOS_1,
                                                           AWS_IOT_TEST_PROVISIONING_CSR_PEM,
-                                                          sizeof( AWS_IOT_TEST_PROVISIONING_CSR_PEM ),
+                                                          strlen( AWS_IOT_TEST_PROVISIONING_CSR_PEM ),
                                                           AWS_IOT_TEST_PROVISIONING_TIMEOUT,
                                                           &certFromCsrCallback );
 
