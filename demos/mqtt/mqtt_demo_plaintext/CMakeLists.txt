@@ -18,6 +18,7 @@ target_link_libraries(
     ${DEMO_NAME}
     PRIVATE
         mqtt
+        plaintext_posix
         transport_reconnect_posix   
 )
 
