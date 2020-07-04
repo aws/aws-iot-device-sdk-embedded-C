@@ -466,7 +466,7 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
         }
     }
 
-/* Create SSL context. */
+    /* Create SSL context. */
     if( returnStatus == OPENSSL_SUCCESS )
     {
         pSslContext = SSL_CTX_new( TLS_client_method() );
@@ -636,9 +636,7 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
                                    &transportTimeout,
                                    &sockLen );
 
-    if( ( getTimeoutStatus == 0 ) &&
-        ( transportTimeout.tv_sec > 0 ) &&
-        ( transportTimeout.tv_usec > 0 ) )
+    if( getTimeoutStatus == 0 )
     {
         recvTimeoutMs = ONE_SEC_TO_MS * transportTimeout.tv_sec;
         recvTimeoutMs += transportTimeout.tv_usec / ONE_MS_TO_US;
@@ -697,9 +695,7 @@ int32_t Openssl_Send( NetworkContext_t * pNetworkContext,
                                    &transportTimeout,
                                    &sockLen );
 
-    if( ( getTimeoutStatus == 0 ) &&
-        ( transportTimeout.tv_sec > 0 ) &&
-        ( transportTimeout.tv_usec > 0 ) )
+    if( getTimeoutStatus == 0 )
     {
         sendTimeoutMs = ONE_SEC_TO_MS * transportTimeout.tv_sec;
         sendTimeoutMs += transportTimeout.tv_usec / ONE_MS_TO_US;
