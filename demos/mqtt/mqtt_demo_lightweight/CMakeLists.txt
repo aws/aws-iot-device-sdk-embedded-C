@@ -12,7 +12,9 @@ target_sources(
 target_link_libraries(
     ${DEMO_NAME}
     PRIVATE
-        mqtt   
+        mqtt
+        plaintext_posix
+        reconnect_posix   
 )
 
 target_include_directories(

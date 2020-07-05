@@ -36,14 +36,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* POSIX socket includes. */
-#include <errno.h>
-#include <netdb.h>
-#include <time.h>
+/* POSIX includes. */
 #include <unistd.h>
-
-#include <sys/socket.h>
-#include <sys/types.h>
 
 /* Include Demo Config as the first non-system header. */
 #include "demo_config.h"
@@ -194,7 +188,7 @@ static uint8_t buffer[ NETWORK_BUFFER_SIZE ];
  * timeout value is reached or the number of attemps are exhausted.
  *
  * @param[out] pNetworkContext Network context pointer containing TCP socket
- * file descriptor set after the connection is established.
+ * file descriptor referring to the established connection.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on successful connection.
  */
@@ -899,7 +893,7 @@ int main( int argc,
             LogInfo( ( "Demo completed successfully." ) );
         }
 
-        /* Close the network connection.  */
+        /* Close the TCP connection.  */
         ( void ) Plaintext_Disconnect( &networkContext );
 
         LogInfo( ( "Short delay before starting the next iteration....\n" ) );
