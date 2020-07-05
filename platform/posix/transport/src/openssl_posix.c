@@ -42,32 +42,17 @@
 /**
  * @brief Label of root CA when calling @ref logPath.
  */
-#define ROOT_CA_LABEL              "Root CA certificate"
+#define ROOT_CA_LABEL        "Root CA certificate"
 
 /**
  * @brief Label of client certificate when calling @ref logPath.
  */
-#define CLIENT_CERT_LABEL          "client's certificate"
+#define CLIENT_CERT_LABEL    "client's certificate"
 
 /**
  * @brief Label of client key when calling @ref logPath.
  */
-#define CLIENT_KEY_LABEL           "client's key"
-
-/**
- * @brief Number of milliseconds in one second.
- */
-#define ONE_SEC_TO_MS              ( 1000 )
-
-/**
- * @brief Number of microseconds in one millisecond.
- */
-#define ONE_MS_TO_US               ( 1000 )
-
-/**
- * @brief Default timeout for polling.
- */
-#define DEFAULT_POLL_TIMEOUT_MS    ( 200 )
+#define CLIENT_KEY_LABEL     "client's key"
 
 /*-----------------------------------------------------------*/
 
@@ -619,6 +604,7 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
                       size_t bytesToRecv )
 {
     int32_t bytesReceived = 0;
+    int sslError = 0;
 
     /* SSL read of data. */
     bytesReceived = ( int32_t ) SSL_read( pNetworkContext->pSsl,
@@ -627,8 +613,18 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
 
     if( bytesReceived <= 0 )
     {
-        LogError( ( "SSL_read of OpenSSL failed to receive data: "
-                    " status=%d.", bytesReceived ) );
+        sslError = SSL_get_error( pNetworkContext->pSsl, bytesReceived );
+
+        if( sslError == SSL_ERROR_WANT_READ )
+        {
+            /* There is no data to receive at this time. */
+            bytesReceived = 0;
+        }
+        else
+        {
+            LogError( ( "SSL_read of OpenSSL failed to receive data: "
+                        " status=%d.", bytesReceived ) );
+        }
     }
 
     return bytesReceived;
@@ -640,7 +636,6 @@ int32_t Openssl_Send( NetworkContext_t * pNetworkContext,
                       size_t bytesToSend )
 {
     int32_t bytesSent = 0;
-    int sslError = 0;
 
     /* SSL write of data. */
     bytesSent = ( int32_t ) SSL_write( pNetworkContext->pSsl,
@@ -649,18 +644,8 @@ int32_t Openssl_Send( NetworkContext_t * pNetworkContext,
 
     if( bytesSent <= 0 )
     {
-        sslError = SSL_get_error( pNetworkContext->pSsl, bytesSent );
-
-        if( sslError == SSL_ERROR_WANT_READ )
-        {
-            /* There is no data to receive at this time. */
-            bytesSent = 0;
-        }
-        else
-        {
-            LogError( ( "SSL_write of OpenSSL failed to send data: "
-                        " status=%d.", bytesSent ) );
-        }
+        LogError( ( "SSL_write of OpenSSL failed to send data: "
+                    " status=%d.", bytesSent ) );
     }
 
     return bytesSent;

@@ -28,6 +28,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <assert.h>
+#include <time.h>
 
 /* Include config file before other non-system includes. */
 #include "test_config.h"
@@ -115,7 +116,7 @@
 /**
  * @brief Transport timeout in milliseconds for transport send and receive.
  */
-#define TRANSPORT_SEND_RECV_TIMEOUT_MS      ( 20 )
+#define TRANSPORT_SEND_RECV_TIMEOUT_MS      ( 200U )
 
 /**
  * @brief Timeout for receiving CONNACK packet in milli seconds.
@@ -160,12 +161,6 @@ static uint16_t globalUnsubscribePacketIdentifier = 0U;
  * request.
  */
 static uint16_t globalPublishPacketIdentifier = 0U;
-
-/**
- * @brief Variable to store TCP socket descriptor used for connecting to and
- * disconnecting from the broker.
- */
-static int tcpSocket;
 
 /**
  * @brief Represents the OpenSSL context used for TLS session with the broker
@@ -231,6 +226,15 @@ static bool receivedPubComp = false;
 static MQTTPublishInfo_t incomingInfo;
 
 /**
+ * @brief The timer query function provided to the MQTT context.
+ *
+ * This function returns the elapsed time with reference to #globalEntryTimeMs.
+ *
+ * @return Time in milliseconds.
+ */
+static uint32_t getTimeMs( void );
+
+/**
  * @brief Sends an MQTT CONNECT packet over the already connected TCP socket.
  *
  * @param[in] pContext MQTT context pointer.
@@ -263,13 +267,28 @@ static void eventCallback( MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
+uint32_t getTimeMs( void )
+{
+    uint32_t timeMs;
+    struct timespec timeSpec;
+
+    /* Get the MONOTONIC time. */
+    clock_gettime( CLOCK_MONOTONIC, &timeSpec );
+
+    /* Calculate the milliseconds from timespec. */
+    timeMs = ( uint32_t ) ( timeSpec.tv_sec * 1000 )
+             + ( uint32_t ) ( timeSpec.tv_nsec / ( 1000 * 1000 ) );
+
+    return timeMs;
+}
+
 static void establishMqttSession( MQTTContext_t * pContext,
                                   NetworkContext_t * pNetworkContext,
                                   bool createCleanSession,
                                   bool * pSessionPresent )
 {
     MQTTConnectInfo_t connectInfo;
-    MQTTTransportInterface_t transport;
+    TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks;
 

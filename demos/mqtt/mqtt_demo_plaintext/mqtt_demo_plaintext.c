@@ -393,7 +393,7 @@ static void handleIncomingPublish( MQTTPublishInfo_t * pPublishInfo,
                         pPublishInfo->topicNameLength ) ) )
     {
         LogInfo( ( "Incoming Publish Topic Name: %.*s matches subscribed topic.\n"
-                   "Incoming Publish message Packet Id is %u.\n"
+                   "Incoming Publish message Packet ID is %u.\n"
                    "Incoming Publish Message : %.*s.\n\n",
                    pPublishInfo->topicNameLength,
                    pPublishInfo->pTopicName,

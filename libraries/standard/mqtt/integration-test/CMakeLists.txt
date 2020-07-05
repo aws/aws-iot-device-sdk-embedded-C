@@ -56,3 +56,20 @@ create_test(${stest_name}
             "${stest_dep_list}"
             "${test_include_directories}"
         )
+
+# Download the Mosquitto Root CA certificate.
+message( "Downloading the Mosquitto Root CA certificate..." )
+execute_process(
+    COMMAND curl --url https://test.mosquitto.org/ssl/mosquitto.org.crt
+    -o ${CMAKE_CURRENT_LIST_DIR}/certificates/mosquitto.org.crt
+)
+
+# Copy the certificates and client key to the binary directory.
+add_custom_command(
+    TARGET
+        ${stest_name}
+    POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_CURRENT_LIST_DIR}/certificates"
+        "$<TARGET_FILE_DIR:${stest_name}>/certificates"
+)
