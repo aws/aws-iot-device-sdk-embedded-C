@@ -25,6 +25,7 @@
  * and constants.
  */
 
+#include <stdint.h>
 
 /* bools are only defined in C99+ */
 #if defined( __cplusplus ) || __STDC_VERSION__ >= 199901L
