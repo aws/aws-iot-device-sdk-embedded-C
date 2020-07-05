@@ -1452,6 +1452,8 @@ void test_MQTT_DeserializePublish( void )
 
     const uint16_t PACKET_ID = 1;
 
+    memset( ( void * ) &mqttPacketInfo, 0x00, sizeof( mqttPacketInfo ) );
+
     /* Verify parameters. */
     status = MQTT_DeserializePublish( NULL, &packetIdentifier, &publishInfo );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
@@ -1460,7 +1462,9 @@ void test_MQTT_DeserializePublish( void )
     status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
-    memset( ( void * ) &mqttPacketInfo, 0x00, sizeof( mqttPacketInfo ) );
+    mqttPacketInfo.type = MQTT_PACKET_TYPE_PUBLISH;
+    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishInfo );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
     /* Bad Packet Type. */
     mqttPacketInfo.type = 0x01;
@@ -1583,7 +1587,7 @@ void test_MQTT_GetIncomingPacketTypeAndLength( void )
     status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, networkContext, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
-    /* Test a typical happy path case for a CONN ACK packet. */ 
+    /* Test a typical happy path case for a CONN ACK packet. */
     buffer[ 0 ] = 0x20; /* CONN ACK */
     buffer[ 1 ] = 0x02; /* Remaining length. */
 

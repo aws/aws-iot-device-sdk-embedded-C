@@ -16,7 +16,7 @@
 
 /* Configure name and log level for the HTTP library. */
 #define LIBRARY_LOG_NAME     "HTTP"
-#define LIBRARY_LOG_LEVEL    LOG_DEBUG
+#define LIBRARY_LOG_LEVEL    LOG_NONE
 
 #include "logging_stack.h"
 
