@@ -1354,6 +1354,19 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
         LogError( ( "Mqtt_GetConnectPacketSize() client identifier must be set." ) );
         status = MQTTBadParameter;
     }
+    else if( ( pWillInfo != NULL ) && ( pWillInfo->payloadLength > UINT16_MAX ) )
+    {
+        /* The MQTTPublishInfo_t is reused for the will message. The payload
+         * length for any other message could be larger than 65,535, but
+         * the will message length is required to be represented in 2 bytes.
+         * By bounding the payloadLength of the will message, the CONNECT
+         * packet will never be larger than 327699 bytes. */
+        LogError( ( "The Will Message length must not exceed %d. "
+                    "pWillInfo->payloadLength=%lu",
+                    UINT16_MAX,
+                    pWillInfo->payloadLength ) );
+        status = MQTTBadParameter;
+    }
     else
     {
         /* Add the length of the client identifier. */
@@ -1362,24 +1375,8 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
         /* Add the lengths of the will message and topic name if provided. */
         if( pWillInfo != NULL )
         {
-            /* The MQTTPublishInfo_t is reused for the will message. The payload
-             * length for any other message could be larger than 65,535, but
-             * the will message length is required to be represented in 2 bytes.
-             * By bounding the payloadLength of the will message, the CONNECT
-             * packet will never be larger than 327699 bytes. */
-            if( pWillInfo->payloadLength > ( UINT16_MAX ) )
-            {
-                LogError( ( "The Will Message length must not exceed %d. "
-                            "pWillInfo->payloadLength=%lu",
-                            UINT16_MAX,
-                            pWillInfo->payloadLength ) );
-                status = MQTTBadParameter;
-            }
-            else
-            {
-                connectPacketSize += pWillInfo->topicNameLength + sizeof( uint16_t ) +
-                                     pWillInfo->payloadLength + sizeof( uint16_t );
-            }
+            connectPacketSize += pWillInfo->topicNameLength + sizeof( uint16_t ) +
+                                 pWillInfo->payloadLength + sizeof( uint16_t );
         }
 
         /* Add the lengths of the user name and password if provided. */

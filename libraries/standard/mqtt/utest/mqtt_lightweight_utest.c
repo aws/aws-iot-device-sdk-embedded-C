@@ -424,7 +424,7 @@ void test_MQTT_GetConnectPacketSize( void )
     status = MQTT_GetConnectPacketSize( &connectInfo, NULL, &remainingLength, &packetSize );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
-    /* Test that the will message lengths are beyond 16 bits. */
+    /* Test a will message payload length beyond 16 bits. */
     memset( ( void * ) &connectInfo, 0x0, sizeof( connectInfo ) );
     connectInfo.pClientIdentifier = CLIENT_IDENTIFIER;
     connectInfo.clientIdentifierLength = UINT16_MAX;
