@@ -59,6 +59,7 @@ create_test(${stest_name}
 
 # Download the Mosquitto Root CA certificate.
 message( "Downloading the Mosquitto Root CA certificate..." )
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/certificates)
 execute_process(
     COMMAND curl --url https://test.mosquitto.org/ssl/mosquitto.org.crt
     -o ${CMAKE_CURRENT_LIST_DIR}/certificates/mosquitto.org.crt

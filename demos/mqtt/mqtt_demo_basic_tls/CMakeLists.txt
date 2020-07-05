@@ -2,17 +2,6 @@ set( DEMO_NAME "mqtt_demo_basic_tls" )
 # Demo target.
 add_executable(${DEMO_NAME})
 
-set(OPENSSL_USE_STATIC_LIBS TRUE)
-find_package(OpenSSL REQUIRED)
-
-# Verify the minimum OpenSSL version required
-if( OPENSSL_VERSION MATCHES "0.9$" OR OPENSSL_VERSION MATCHES "1.0$"  )
-    message( FATAL_ERROR "OpenSSL 1.1.0 or later required: OpenSSL ${OPENSSL_VERSION} found." )
-endif()
-
-set( CMAKE_THREAD_PREFER_PTHREAD ON )
-find_package(Threads REQUIRED)
-
 target_sources(
     ${DEMO_NAME}
     PRIVATE
@@ -23,12 +12,8 @@ target_link_libraries(
     ${DEMO_NAME}
     PRIVATE
         mqtt
-        OpenSSL::Crypto
-        OpenSSL::SSL
-	# SSL uses Threads and on some platforms require explicit linking.
-        Threads::Threads
-	# SSL uses Dynamic Loading and on some platforms requires explicit linking.
-        ${CMAKE_DL_LIBS}
+        openssl_posix
+        reconnect_posix
 )
 
 target_include_directories(
@@ -43,12 +28,20 @@ target_include_directories(
         ${LOGGING_INCLUDE_DIRS}
 )
 
-#Copy the server certificate file to the binary directory.
+# Download the Mosquitto Root CA certificate.
+message( "Downloading the Mosquitto Root CA certificate..." )
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/certificates)
+execute_process(
+    COMMAND curl --url https://test.mosquitto.org/ssl/mosquitto.org.crt
+    -o ${CMAKE_CURRENT_LIST_DIR}/certificates/mosquitto.org.crt
+)
+
+# Copy the server certificate file to the binary directory.
 add_custom_command(
     TARGET
         ${DEMO_NAME}
     POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${CMAKE_CURRENT_LIST_DIR}/mosquitto.org.crt"
+        "${CMAKE_CURRENT_LIST_DIR}/certificates/mosquitto.org.crt"
         "$<TARGET_FILE_DIR:${DEMO_NAME}>/certificates/mosquitto.org.crt"
 )

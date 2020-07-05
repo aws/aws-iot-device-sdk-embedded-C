@@ -115,7 +115,7 @@
  *
  * No two clients may use the same client identifier simultaneously.
  */
-#define CLIENT_IDENTIFIER      ""
+#define CLIENT_IDENTIFIER      "testclient"
 
 /**
  * @brief Size of the network buffer for MQTT packets.

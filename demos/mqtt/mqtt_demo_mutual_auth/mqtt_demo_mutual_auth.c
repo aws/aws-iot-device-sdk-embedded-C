@@ -43,15 +43,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* POSIX includes. */
-#include <netdb.h>
-#include <poll.h>
-#include <time.h>
-#include <unistd.h>
-
-#include <sys/socket.h>
-#include <sys/types.h>
-
 /* Demo Config header. */
 #include "demo_config.h"
 
@@ -80,7 +71,9 @@
 #ifndef CLIENT_PRIVATE_KEY_PATH
     #error "Please define path to client private key(CLIENT_PRIVATE_KEY_PATH) in demo_config.h."
 #endif
-
+#ifndef CLIENT_IDENTIFIER
+    #error "Please define a unique CLIENT_IDENTIFIER."
+#endif
 
 /**
  * Provide default values for undefined configuration settings.
@@ -91,10 +84,6 @@
 
 #ifndef NETWORK_BUFFER_SIZE
     #define NETWORK_BUFFER_SIZE    ( 1024U )
-#endif
-
-#ifndef CLIENT_IDENTIFIER
-    #define CLIENT_IDENTIFIER    "testclient"
 #endif
 
 /**

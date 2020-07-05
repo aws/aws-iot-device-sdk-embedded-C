@@ -30,6 +30,7 @@ target_include_directories(
 
 # Download the Amazon Root CA certificate.
 message( "Downloading the Amazon Root CA certificate..." )
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/certificates)
 execute_process(
     COMMAND curl --url https://www.amazontrust.com/repository/AmazonRootCA1.pem
     -o ${CMAKE_CURRENT_LIST_DIR}/certificates/AmazonRootCA1.crt

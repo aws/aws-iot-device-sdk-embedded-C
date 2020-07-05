@@ -38,21 +38,17 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* POSIX socket includes. */
-#include <netdb.h>
-#include <poll.h>
-#include <time.h>
-#include <unistd.h>
-
-#include <sys/socket.h>
-#include <sys/types.h>
-
 /* Include Demo Config as the first non-system header. */
 #include "demo_config.h"
 
 /* MQTT API header. */
 #include "mqtt.h"
 
+/* OpenSSL sockets transport implementation. */
+#include "openssl_posix.h"
+
+/* Reconnect parameters. */
+#include "reconnect.h"
 
 /**
  * @brief Size of the network buffer for MQTT packets.
@@ -1137,21 +1133,21 @@ static MQTTStatus_t unsubscribeFromTopic( MQTTContext_t * pContext )
 
 /*-----------------------------------------------------------*/
 
-static int publishToTopic( MQTTContext_t * pContext )
+static int publishToTopic( MQTTContext_t * pMqttContext )
 {
-    int status = EXIT_SUCCESS;
-    MQTTStatus_t mqttSuccess;
+    int returnStatus = EXIT_SUCCESS;
+    MQTTStatus_t mqttStatus = MQTTSuccess;
     uint8_t publishIndex = MAX_OUTGOING_PUBLISHES;
 
-    assert( pContext != NULL );
+    assert( pMqttContext != NULL );
 
-    /* Get the next free index for the outgoing publish. All QoS2 outgoing
-     * publishes are stored until a PUBREC is received. These messages are
+    /* Get the next free index for the outgoing publish. All QoS1 outgoing
+     * publishes are stored until a PUBACK is received. These messages are
      * stored for supporting a resend if a network connection is broken before
-     * receiving a PUBREC. */
-    status = getNextFreeIndexForOutgoingPublishes( &publishIndex );
+     * receiving a PUBACK. */
+    returnStatus = getNextFreeIndexForOutgoingPublishes( &publishIndex );
 
-    if( status == EXIT_FAILURE )
+    if( returnStatus == EXIT_FAILURE )
     {
         LogError( ( "Unable to find a free spot for outgoing PUBLISH message.\n\n" ) );
     }
@@ -1165,30 +1161,30 @@ static int publishToTopic( MQTTContext_t * pContext )
         outgoingPublishPackets[ publishIndex ].pubInfo.payloadLength = MQTT_EXAMPLE_MESSAGE_LENGTH;
 
         /* Get a new packet id. */
-        outgoingPublishPackets[ publishIndex ].packetId = MQTT_GetPacketId( pContext );
+        outgoingPublishPackets[ publishIndex ].packetId = MQTT_GetPacketId( pMqttContext );
 
         /* Send PUBLISH packet. */
-        mqttSuccess = MQTT_Publish( pContext,
-                                    &outgoingPublishPackets[ publishIndex ].pubInfo,
-                                    outgoingPublishPackets[ publishIndex ].packetId );
+        mqttStatus = MQTT_Publish( pMqttContext,
+                                   &outgoingPublishPackets[ publishIndex ].pubInfo,
+                                   outgoingPublishPackets[ publishIndex ].packetId );
 
-        if( status != MQTTSuccess )
+        if( mqttStatus != MQTTSuccess )
         {
             LogError( ( "Failed to send PUBLISH packet to broker with error = %u.",
-                        mqttSuccess ) );
+                        mqttStatus ) );
             cleanupOutgoingPublishAt( publishIndex );
-            status = EXIT_FAILURE;
+            returnStatus = EXIT_FAILURE;
         }
         else
         {
-            LogInfo( ( "PUBLISH send for topic %.*s to broker with packet id %u.\n\n",
+            LogInfo( ( "PUBLISH sent for topic %.*s to broker with packet ID %u.\n\n",
                        MQTT_EXAMPLE_TOPIC_LENGTH,
                        MQTT_EXAMPLE_TOPIC,
                        outgoingPublishPackets[ publishIndex ].packetId ) );
         }
     }
 
-    return status;
+    return returnStatus;
 }
 
 /*-----------------------------------------------------------*/
