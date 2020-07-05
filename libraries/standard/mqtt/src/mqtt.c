@@ -1802,6 +1802,7 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
+/* Dummy comments. */
 MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext,
                                uint32_t timeoutMs )
 {
