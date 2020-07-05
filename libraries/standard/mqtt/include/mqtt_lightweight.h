@@ -296,7 +296,7 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
  *
  * @param[in] pConnectInfo MQTT CONNECT packet parameters.
  * @param[in] pWillInfo Last Will and Testament. Pass NULL if not used.
- * @param[in] remainingLength Remaining length provided by #MQTT_GetConnectPacketSize.
+ * @param[in] remainingLength Remaining Length provided by #MQTT_GetConnectPacketSize.
  * @param[out] pBuffer Buffer for packet serialization.
  *
  * @return #MQTTNoMemory if pBuffer is too small to hold the MQTT packet;

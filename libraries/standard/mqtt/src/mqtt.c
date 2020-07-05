@@ -1864,7 +1864,7 @@ uint16_t MQTT_GetPacketId( MQTTContext_t * pContext )
         packetId = pContext->nextPacketId;
 
         /* A packet ID of zero is not a valid packet ID. When the max ID
-         * is reached the next one should start 1. */
+         * is reached the next one should start at 1. */
         if( pContext->nextPacketId == ( uint16_t ) UINT16_MAX )
         {
             pContext->nextPacketId = 1;

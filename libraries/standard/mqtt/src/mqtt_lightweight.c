@@ -35,11 +35,6 @@
  */
 #define MQTT_PACKET_CONNECT_HEADER_SIZE             ( 10UL )
 
-/**
- * @brief Maximum size of an MQTT CONNECT packet, per MQTT spec.
- */
-#define MQTT_PACKET_CONNECT_MAX_SIZE                ( 327700UL )
-
 /* MQTT CONNECT flags. */
 #define MQTT_CONNECT_FLAG_CLEAN                     ( 1 ) /**< @brief Clean session. */
 #define MQTT_CONNECT_FLAG_WILL                      ( 2 ) /**< @brief Will present. */
@@ -271,6 +266,19 @@ static uint8_t * encodeRemainingLength( uint8_t * pDestination,
  */
 static size_t remainingLengthEncodedSize( size_t length );
 
+/**
+ * Encode a string whose size is at maximum 16 bits in length.
+ *
+ * @param[out] pDestination Destination buffer for the encoding.
+ * @param[in] pSource The source string to encode.
+ * @param[in] sourceLength The length of the source string to encode.
+ *
+ * @return A pointer to the end of the encoded string.
+ */
+static uint8_t * encodeString( uint8_t * pDestination,
+                               const char * pSource,
+                               uint16_t sourceLength );
+
 /*-----------------------------------------------------------*/
 
 static size_t remainingLengthEncodedSize( size_t length )
@@ -344,14 +352,14 @@ static uint8_t * encodeRemainingLength( uint8_t * pDestination,
 /*-----------------------------------------------------------*/
 
 static uint8_t * encodeString( uint8_t * pDestination,
-                               const char * source,
+                               const char * pSource,
                                uint16_t sourceLength )
 {
     uint8_t * pBuffer = NULL;
 
     /* Typecast const char * typed source buffer to const uint8_t *.
      * This is to use same type buffers in memcpy. */
-    const uint8_t * pSourceBuffer = ( const uint8_t * ) source;
+    const uint8_t * pSourceBuffer = ( const uint8_t * ) pSource;
 
     assert( pDestination != NULL );
 
@@ -1355,15 +1363,17 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
         if( pWillInfo != NULL )
         {
             /* The MQTTPublishInfo_t is reused for the will message. The payload
-             * length for any other message could be larger than 65,536, but
-             * the will message length is required to be represented in 2 bytes. */
+             * length for any other message could be larger than 65,535, but
+             * the will message length is required to be represented in 2 bytes.
+             * By bounding the payloadLength of the will message, the CONNECT
+             * packet will never be larger than 327699 bytes. */
             if( pWillInfo->payloadLength > ( UINT16_MAX ) )
             {
                 LogError( ( "The Will Message length must not exceed %d. "
                             "pWillInfo->payloadLength=%lu",
                             UINT16_MAX,
                             pWillInfo->payloadLength ) );
-                status = MQTTBadResponse;
+                status = MQTTBadParameter;
             }
             else
             {
@@ -1391,20 +1401,8 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
          * the "Remaining Length" field plus 1 byte for the "Packet Type" field. */
         connectPacketSize += 1U + remainingLengthEncodedSize( connectPacketSize );
 
-        /* Check that the CONNECT packet is within the bounds of the MQTT spec. */
-        if( connectPacketSize > MQTT_PACKET_CONNECT_MAX_SIZE )
-        {
-            LogError( ( "CONNECT packet exceeds the maximum MQTT packet size: "
-                        "MaxMQTTPacketSize=%d, PacketSize=%d",
-                        MQTT_PACKET_CONNECT_MAX_SIZE,
-                        connectPacketSize ) );
-            status = MQTTBadParameter;
-        }
-        else
-        {
-            *pRemainingLength = remainingLength;
-            *pPacketSize = connectPacketSize;
-        }
+        *pRemainingLength = remainingLength;
+        *pPacketSize = connectPacketSize;
 
         LogDebug( ( "CONNECT packet remaining length=%lu and packet size=%lu.",
                     *pRemainingLength,
@@ -1434,7 +1432,7 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * pConnectInfo,
         status = MQTTBadParameter;
     }
     /* A buffer must be configured for serialization. */
-    else if( pBuffer->pBuffer == NULL )
+    else if( ( pBuffer != NULL ) && ( pBuffer->pBuffer == NULL ) )
     {
         LogError( ( "Argument cannot be NULL: pBuffer->pBuffer is NULL." ) );
         status = MQTTBadParameter;
