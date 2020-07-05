@@ -618,55 +618,17 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
                       void * pBuffer,
                       size_t bytesToRecv )
 {
-    int32_t bytesReceived = 0, recvTimeoutMs = DEFAULT_POLL_TIMEOUT_MS;
-    int pollStatus = -1, bytesAvailableToRead = 0, getTimeoutStatus = -1;
-    struct pollfd fileDescriptor;
-    struct timeval transportTimeout;
-    socklen_t sockLen = sizeof( transportTimeout );
-
-    /* Set the file descriptor for poll. */
-    fileDescriptor.events = POLLIN | POLLPRI;
-    fileDescriptor.revents = 0;
-    fileDescriptor.fd = pNetworkContext->socketDescriptor;
-
-    /* Get the receive timeout from the socket to use for polling. */
-    getTimeoutStatus = getsockopt( fileDescriptor.fd,
-                                   SOL_SOCKET,
-                                   SO_RCVTIMEO,
-                                   &transportTimeout,
-                                   &sockLen );
-
-    if( getTimeoutStatus == 0 )
-    {
-        recvTimeoutMs = ONE_SEC_TO_MS * transportTimeout.tv_sec;
-        recvTimeoutMs += transportTimeout.tv_usec / ONE_MS_TO_US;
-    }
-
-    /* Check if there are any pending data available for read. */
-    bytesAvailableToRead = SSL_pending( pNetworkContext->pSsl );
-
-    /* Poll only if there is no data available yet to read. */
-    if( bytesAvailableToRead <= 0 )
-    {
-        pollStatus = poll( &fileDescriptor, 1, -1 );
-    }
+    int32_t bytesReceived = 0;
 
     /* SSL read of data. */
-    if( ( pollStatus > 0 ) || ( bytesAvailableToRead > 0 ) )
+    bytesReceived = ( int32_t ) SSL_read( pNetworkContext->pSsl,
+                                          pBuffer,
+                                          bytesToRecv );
+
+    if( bytesReceived <= 0 )
     {
-        bytesReceived = ( int32_t ) SSL_read( pNetworkContext->pSsl,
-                                              pBuffer,
-                                              bytesToRecv );
-    }
-    /* Poll timed out. */
-    else if( pollStatus == 0 )
-    {
-        LogDebug( ( "Poll timed out and there is no data to read from the buffer." ) );
-    }
-    else
-    {
-        LogError( ( "Poll returned with status = %d.", pollStatus ) );
-        bytesReceived = -1;
+        LogError( ( "SSL_read of OpenSSL failed to receive data: "
+                    " status=%d.", bytesReceived ) );
     }
 
     return bytesReceived;
@@ -677,50 +639,28 @@ int32_t Openssl_Send( NetworkContext_t * pNetworkContext,
                       const void * pBuffer,
                       size_t bytesToSend )
 {
-    int32_t bytesSent = 0, sendTimeoutMs = DEFAULT_POLL_TIMEOUT_MS;
-    int pollStatus = 0, getTimeoutStatus = -1;
-    struct pollfd fileDescriptor;
-    struct timeval transportTimeout;
-    socklen_t sockLen = sizeof( transportTimeout );
+    int32_t bytesSent = 0;
+    int sslError = 0;
 
-    /* Set the file descriptor for poll. */
-    fileDescriptor.events = POLLOUT;
-    fileDescriptor.revents = 0;
-    fileDescriptor.fd = pNetworkContext->socketDescriptor;
+    /* SSL write of data. */
+    bytesSent = ( int32_t ) SSL_write( pNetworkContext->pSsl,
+                                       pBuffer,
+                                       bytesToSend );
 
-    /* Get the send timeout from the socket to use for polling. */
-    getTimeoutStatus = getsockopt( fileDescriptor.fd,
-                                   SOL_SOCKET,
-                                   SO_SNDTIMEO,
-                                   &transportTimeout,
-                                   &sockLen );
-
-    if( getTimeoutStatus == 0 )
+    if( bytesSent <= 0 )
     {
-        sendTimeoutMs = ONE_SEC_TO_MS * transportTimeout.tv_sec;
-        sendTimeoutMs += transportTimeout.tv_usec / ONE_MS_TO_US;
-    }
+        sslError = SSL_get_error( pNetworkContext->pSsl, bytesSent );
 
-    /* Poll the file descriptor to check if SSL_Write can be done now. */
-    pollStatus = poll( &fileDescriptor, 1, sendTimeoutMs );
-
-    if( pollStatus > 0 )
-    {
-        bytesSent = ( int32_t ) SSL_write( pNetworkContext->pSsl,
-                                           pBuffer,
-                                           bytesToSend );
-        LogInfo( ( "Bytes sent over SSL: %d", bytesSent ) );
-    }
-    else if( pollStatus == 0 )
-    {
-        LogDebug( ( "Timed out while polling SSL socket for write buffer availability." ) );
-    }
-    else
-    {
-        LogError( ( "Polling of the SSL socket for write buffer availability failed"
-                    " with status %d.",
-                    pollStatus ) );
-        bytesSent = -1;
+        if( sslError == SSL_ERROR_WANT_READ )
+        {
+            /* There is no data to receive at this time. */
+            bytesSent = 0;
+        }
+        else
+        {
+            LogError( ( "SSL_write of OpenSSL failed to send data: "
+                        " status=%d.", bytesSent ) );
+        }
     }
 
     return bytesSent;

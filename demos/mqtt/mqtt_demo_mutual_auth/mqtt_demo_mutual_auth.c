@@ -196,7 +196,7 @@
 /**
  * @brief Timeout in milliseconds for transport send and receive.
  */
-#define TRANSPORT_SEND_RECV_TIMEOUT_MS      ( 200 )
+#define TRANSPORT_SEND_RECV_TIMEOUT_MS      ( 100 )
 
 /*-----------------------------------------------------------*/
 
@@ -1053,7 +1053,7 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
          * client may receive a publish before it receives a subscribe ack. Since this
          * demo is subscribing to the topic to which no one is publishing, probability
          * of receiving publish message before subscribe ack is zero; but application
-         * must be ready to receive any packet.  This demo uses MQTT_ProcessLoop to
+         * must be ready to receive any packet. This demo uses MQTT_ProcessLoop to
          * receive packet from network. */
         mqttStatus = MQTT_ProcessLoop( &mqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
 
