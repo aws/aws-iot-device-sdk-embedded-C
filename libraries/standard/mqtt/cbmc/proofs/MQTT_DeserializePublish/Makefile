@@ -1,14 +1,17 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 HARNESS_ENTRY=harness
-HARNESS_FILE=MQTT_GetIncomingPacketTypeAndLength_harness
+HARNESS_FILE=MQTT_DeserializePublish_harness
 
 DEFINES +=
 INCLUDES +=
+
 REMOVE_FUNCTION_BODY +=
-UNWINDSET += getRemainingLength.0:5
+UNWINDSET +=
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 PROOF_SOURCES += $(PROOFDIR)/../../sources/mqtt_cbmc_state.c
-PROOF_SOURCES += $(PROOFDIR)/../../stubs/network_interface_stubs.c
 PROJECT_SOURCES += $(SRCDIR)/libraries/standard/mqtt/src/mqtt_lightweight.c
 
 include ../Makefile.common
