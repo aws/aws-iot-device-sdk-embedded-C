@@ -43,6 +43,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* POSIX includes. */
+#include <unistd.h>
+
 /* Demo Config header. */
 #include "demo_config.h"
 
@@ -183,7 +186,7 @@
 #define MQTT_SUBPUB_LOOP_DELAY_SECONDS      ( 5U )
 
 /**
- * @brief Timeout in milliseconds for transport send and receive.
+ * @brief Transport timeout in milliseconds for transport send and receive.
  */
 #define TRANSPORT_SEND_RECV_TIMEOUT_MS      ( 100 )
 
@@ -503,7 +506,7 @@ static uint32_t getTimeMs( void )
 
 static int getNextFreeIndexForOutgoingPublishes( uint8_t * pIndex )
 {
-    int status = EXIT_FAILURE;
+    int returnStatus = EXIT_FAILURE;
     uint8_t index = 0;
 
     assert( outgoingPublishPackets != NULL );
@@ -515,7 +518,7 @@ static int getNextFreeIndexForOutgoingPublishes( uint8_t * pIndex )
          * Check if the the index has a free slot. */
         if( outgoingPublishPackets[ index ].packetId == MQTT_PACKET_ID_INVALID )
         {
-            status = EXIT_SUCCESS;
+            returnStatus = EXIT_SUCCESS;
             break;
         }
     }
@@ -523,7 +526,7 @@ static int getNextFreeIndexForOutgoingPublishes( uint8_t * pIndex )
     /* Copy the available index into the output param. */
     *pIndex = index;
 
-    return status;
+    return returnStatus;
 }
 /*-----------------------------------------------------------*/
 
@@ -574,7 +577,7 @@ static void cleanupOutgoingPublishWithPacketID( uint16_t packetId )
 
 static int handlePublishResend( MQTTContext_t * pMqttContext )
 {
-    int status = EXIT_SUCCESS;
+    int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus = MQTTSuccess;
     uint8_t index = 0U;
 
@@ -601,7 +604,7 @@ static int handlePublishResend( MQTTContext_t * pMqttContext )
                             " failed with status %u.",
                             outgoingPublishPackets[ index ].packetId,
                             mqttStatus ) );
-                status = EXIT_FAILURE;
+                returnStatus = EXIT_FAILURE;
                 break;
             }
             else
@@ -612,7 +615,7 @@ static int handlePublishResend( MQTTContext_t * pMqttContext )
         }
     }
 
-    return status;
+    return returnStatus;
 }
 
 /*-----------------------------------------------------------*/
