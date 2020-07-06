@@ -424,7 +424,7 @@ void test_MQTT_GetConnectPacketSize( void )
     status = MQTT_GetConnectPacketSize( &connectInfo, NULL, &remainingLength, &packetSize );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
-    /* Connect packet too large. */
+    /* Test a will message payload length that is too large. */
     memset( ( void * ) &connectInfo, 0x0, sizeof( connectInfo ) );
     connectInfo.pClientIdentifier = CLIENT_IDENTIFIER;
     connectInfo.clientIdentifierLength = UINT16_MAX;
@@ -434,6 +434,7 @@ void test_MQTT_GetConnectPacketSize( void )
     connectInfo.userNameLength = UINT16_MAX;
     willInfo.pTopicName = TEST_TOPIC_NAME;
     willInfo.topicNameLength = UINT16_MAX;
+    /* A valid will message payload is less than the maximum 16 bit integer. */
     willInfo.payloadLength = UINT16_MAX + 2;
     status = MQTT_GetConnectPacketSize( &connectInfo, &willInfo, &remainingLength, &packetSize );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
@@ -502,11 +503,22 @@ void test_MQTT_SerializeConnect( void )
     status = MQTT_SerializeConnect( &connectInfo, NULL, 120, &fixedBuffer );
     TEST_ASSERT_EQUAL_INT( MQTTNoMemory, status );
 
-    /* Good case succeeds */
-    /* Calculate packet size. */
+    /* Create a good connection info. */
     memset( ( void * ) &connectInfo, 0x0, sizeof( connectInfo ) );
     connectInfo.pClientIdentifier = "TEST";
     connectInfo.clientIdentifierLength = 4;
+
+    /* Inject a invalid fixed buffer test with a good connectInfo. */
+    memset( ( void * ) &fixedBuffer, 0x0, sizeof( fixedBuffer ) );
+    status = MQTT_SerializeConnect( &connectInfo, NULL, remainingLength, &fixedBuffer );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Good case succeeds. */
+    /* Set the fixedBuffer properly for the rest of the succeeding test. */
+    fixedBuffer.pBuffer = &buffer[ BUFFER_PADDING_LENGTH ];
+    fixedBuffer.size = bufferSize;
+
+    /* Calculate a good packet size. */
     status = MQTT_GetConnectPacketSize( &connectInfo, NULL, &remainingLength, &packetSize );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     /* Make sure buffer has enough space */
@@ -1452,6 +1464,8 @@ void test_MQTT_DeserializePublish( void )
 
     const uint16_t PACKET_ID = 1;
 
+    memset( ( void * ) &mqttPacketInfo, 0x00, sizeof( mqttPacketInfo ) );
+
     /* Verify parameters. */
     status = MQTT_DeserializePublish( NULL, &packetIdentifier, &publishInfo );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
@@ -1460,7 +1474,9 @@ void test_MQTT_DeserializePublish( void )
     status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
-    memset( ( void * ) &mqttPacketInfo, 0x00, sizeof( mqttPacketInfo ) );
+    mqttPacketInfo.type = MQTT_PACKET_TYPE_PUBLISH;
+    status = MQTT_DeserializePublish( &mqttPacketInfo, &packetIdentifier, &publishInfo );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
     /* Bad Packet Type. */
     mqttPacketInfo.type = 0x01;
