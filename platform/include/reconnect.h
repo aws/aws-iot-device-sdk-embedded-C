@@ -25,6 +25,10 @@
  * and constants.
  */
 
+#ifndef RECONNECT_H_
+#define RECONNECT_H_
+
+#include <stdint.h>
 
 /* bools are only defined in C99+ */
 #if defined( __cplusplus ) || __STDC_VERSION__ >= 199901L
@@ -76,3 +80,5 @@ void Transport_ReconnectParamsReset( TransportReconnectParams_t * reconnectParam
  * @return true after successful sleep, false when all attempts are exhausted.
  */
 bool Transport_ReconnectBackoffAndSleep( TransportReconnectParams_t * reconnectParams );
+
+#endif /* ifndef RECONNECT_H_ */

@@ -5,6 +5,8 @@
 #include <stddef.h>
 /* Include config file before other headers. */
 #include "http_config.h"
+/* Transport interface include. */
+#include "transport_interface.h"
 
 /**
  * @brief Maximum size, in bytes, of headers allowed from the server.
@@ -129,64 +131,6 @@
  * In both cases, this value should be used for the "rangeEnd" parameter.
  */
 #define HTTP_RANGE_REQUEST_END_OF_FILE              -1
-
-/**
- * @brief The NetworkContext is an incomplete type. The application must
- * define NetworkContext to the type of their network context. This context
- * is passed into the network interface functions.
- */
-struct NetworkContext;
-typedef struct NetworkContext * NetworkContext_t;
-
-/**
- * @brief Transport interface for sending data over the network.
- *
- * If the number of bytes written returned is not equal to @p bytesToWrite, then
- * #HTTPClient_Send will return #HTTP_NETWORK_ERROR. If a negative value is
- * returned then this #HTTPClient_Send will also return #HTTP_NETWORK_ERROR.
- *
- * @param[in] context User defined context.
- * @param[in] pBuffer Buffer to write to the network stack.
- * @param[in] bytesToWrite Number of bytes to write to the network.
- *
- * @return The number of bytes written or a negative network error code.
- */
-typedef int32_t ( * HTTPTransportSend_t )( NetworkContext_t pContext,
-                                           const void * pBuffer,
-                                           size_t bytesToWrite );
-
-/**
- * @brief Transport interface for reading data on the network.
- *
- * This function will read up to @p bytesToRead amount of data from the network.
- *
- * If this function returns a value less than zero, then #HTTPClient_Send will
- * return #HTTP_NETWORK_ERROR.
- *
- * If this function returns less than the bytesToRead and greater than zero,
- * then this function will be invoked again if the data in @p pBuffer contains a
- * partial HTTP response message and there is room left in the @p pBuffer.
- * Repeated invocations will stop if this function returns zero.
- *
- * @param[in] context User defined context.
- * @param[in] pBuffer Buffer to read network data into.
- * @param[in] bytesToRead Number of bytes requested from the network.
- *
- * @return The number of bytes read or a negative error code.
- */
-typedef int32_t ( * HTTPTransportRecv_t )( NetworkContext_t pContext,
-                                           void * pBuffer,
-                                           size_t bytesToRead );
-
-/**
- * @brief The HTTP Client library transport layer interface.
- */
-typedef struct HTTPTransportInterface
-{
-    HTTPTransportRecv_t recv;  /**< Transport receive interface */
-    HTTPTransportSend_t send;  /**< Transport interface send interface. */
-    NetworkContext_t pContext; /**< User defined transport interface context. */
-} HTTPTransportInterface_t;
 
 /**
  * @brief The HTTP Client library return status.
@@ -662,7 +606,7 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
  *
  * The @p pResponse returned is valid only if this function returns HTTP_SUCCESS.
  *
- * @param[in] pTransport Transport interface, see #HTTPTransportInterface_t for
+ * @param[in] pTransport Transport interface, see #TransportInterface_t for
  * more information.
  * @param[in] pRequestHeaders Request configuration containing the buffer of
  * headers to send.
@@ -692,7 +636,7 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
  * - #HTTP_SECURITY_ALERT_INVALID_CHARACTER
  * - #HTTP_SECURITY_ALERT_INVALID_CONTENT_LENGTH
  */
-HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
+HTTPStatus_t HTTPClient_Send( const TransportInterface_t * pTransport,
                               HTTPRequestHeaders_t * pRequestHeaders,
                               const uint8_t * pRequestBodyBuf,
                               size_t reqBodyBufLen,
