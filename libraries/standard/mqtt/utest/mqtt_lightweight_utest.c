@@ -1351,17 +1351,17 @@ void test_MQTT_DeserializeAck_pingresp( void )
     uint16_t packetIdentifier;
     bool sessionPresent;
     MQTTStatus_t status = MQTTSuccess;
-    uint8_t buffer[ 10 ] = { 0 };
 
     /* Bad remaining length. */
+    ( void ) memset( ( void * ) &mqttPacketInfo, 0x00, sizeof( mqttPacketInfo ) );
     mqttPacketInfo.type = MQTT_PACKET_TYPE_PINGRESP;
-    mqttPacketInfo.pRemainingData = buffer;
     mqttPacketInfo.remainingLength = MQTT_PACKET_PINGRESP_REMAINING_LENGTH + 1;
     status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
     /* Process a valid PINGRESP. */
     mqttPacketInfo.remainingLength = MQTT_PACKET_PINGRESP_REMAINING_LENGTH;
+    mqttPacketInfo.pRemainingData = NULL;
     status = MQTT_DeserializeAck( &mqttPacketInfo, NULL, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 }
@@ -1583,7 +1583,7 @@ void test_MQTT_GetIncomingPacketTypeAndLength( void )
     status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, networkContext, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
-    /* Test a typical happy path case for a CONN ACK packet. */ 
+    /* Test a typical happy path case for a CONN ACK packet. */
     buffer[ 0 ] = 0x20; /* CONN ACK */
     buffer[ 1 ] = 0x02; /* Remaining length. */
 
