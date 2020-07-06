@@ -1398,20 +1398,20 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
          * the "Remaining Length" field plus 1 byte for the "Packet Type" field. */
         connectPacketSize += 1U + remainingLengthEncodedSize( connectPacketSize );
 
-        /* The connectPacketSize calculated from this function's parameters is 
+        /* The connectPacketSize calculated from this function's parameters is
          * gauranteed to be less than the maximum MQTT CONNECT packet size, which
-         * is 327700. If the maximum client identifier length, the maximum will 
-         * message topic length, the maximum will topic payload length, the 
+         * is 327700. If the maximum client identifier length, the maximum will
+         * message topic length, the maximum will topic payload length, the
          * maximum username length, and the maximum password length are all present
-         * in the MQTT CONNECT packet, the total size will be calculated to be 
+         * in the MQTT CONNECT packet, the total size will be calculated to be
          * 327699:
-         * (variable length header)10 + 
-         * (maximum client identifier length) 65535 + (encoded length) 2 + 
-         * (maximum will message topic name length) 65535 + (encoded length)2 + 
-         * (maximum will message payload length) 65535 + 2 + 
-         * (maximum username length) 65535 + (encoded length) 2 + 
-         * (maximum password length) 65535 + (encoded length) 2 + 
-         * (packet type field length) 1 + 
+         * (variable length header)10 +
+         * (maximum client identifier length) 65535 + (encoded length) 2 +
+         * (maximum will message topic name length) 65535 + (encoded length)2 +
+         * (maximum will message payload length) 65535 + 2 +
+         * (maximum username length) 65535 + (encoded length) 2 +
+         * (maximum password length) 65535 + (encoded length) 2 +
+         * (packet type field length) 1 +
          * (CONNECT packet encoded length) 3 = 327699 */
 
         *pRemainingLength = remainingLength;
@@ -1430,7 +1430,7 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
 MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * pConnectInfo,
                                     const MQTTPublishInfo_t * pWillInfo,
                                     size_t remainingLength,
-                                    const MQTTFixedBuffer_t * pBuffer )
+                                    MQTTFixedBuffer_t * pBuffer )
 {
     MQTTStatus_t status = MQTTSuccess;
     size_t connectPacketSize = 0;
@@ -1458,7 +1458,7 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * pConnectInfo,
     else
     {
         /* Calculate CONNECT packet size. Overflow in in this addition is not checked
-         * because it is part of the API contract to call MQTT_SerializeConnect()
+         * because it is part of the API contract to call Mqtt_GetConnectPacketSize()
          * before this function. */
         connectPacketSize = remainingLength + remainingLengthEncodedSize( remainingLength ) + 1U;
 
@@ -2167,7 +2167,7 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( MQTTTransportRecvFunc_t readFu
     {
         LogError( ( "A single byte was not read from the transport: "
                     "transportStatus=%d",
-                    status ) );
+                    bytesReceived ) );
         status = MQTTRecvFailed;
     }
     else
