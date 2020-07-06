@@ -1354,7 +1354,7 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
         LogError( ( "Mqtt_GetConnectPacketSize() client identifier must be set." ) );
         status = MQTTBadParameter;
     }
-    else if( ( pWillInfo != NULL ) && ( pWillInfo->payloadLength > UINT16_MAX ) )
+    else if( ( pWillInfo != NULL ) && ( pWillInfo->payloadLength > ( size_t ) UINT16_MAX ) )
     {
         /* The MQTTPublishInfo_t is reused for the will message. The payload
          * length for any other message could be larger than 65,535, but
