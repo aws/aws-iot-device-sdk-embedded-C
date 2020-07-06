@@ -1399,7 +1399,7 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
         connectPacketSize += 1U + remainingLengthEncodedSize( connectPacketSize );
 
         /* The connectPacketSize calculated from this function's parameters is
-         * gauranteed to be less than the maximum MQTT CONNECT packet size, which
+         * guaranteed to be less than the maximum MQTT CONNECT packet size, which
          * is 327700. If the maximum client identifier length, the maximum will
          * message topic length, the maximum will topic payload length, the
          * maximum username length, and the maximum password length are all present
@@ -1430,24 +1430,24 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
 MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * pConnectInfo,
                                     const MQTTPublishInfo_t * pWillInfo,
                                     size_t remainingLength,
-                                    const MQTTFixedBuffer_t * pBuffer )
+                                    const MQTTFixedBuffer_t * pFixedBuffer )
 {
     MQTTStatus_t status = MQTTSuccess;
     size_t connectPacketSize = 0;
 
     /* Validate arguments. */
-    if( ( pConnectInfo == NULL ) || ( pBuffer == NULL ) )
+    if( ( pConnectInfo == NULL ) || ( pFixedBuffer == NULL ) )
     {
         LogError( ( "Argument cannot be NULL: pConnectInfo=%p, "
-                    "pBuffer=%p.",
+                    "pFixedBuffer=%p.",
                     pConnectInfo,
-                    pBuffer ) );
+                    pFixedBuffer ) );
         status = MQTTBadParameter;
     }
     /* A buffer must be configured for serialization. */
-    else if( pBuffer->pBuffer == NULL )
+    else if( pFixedBuffer->pBuffer == NULL )
     {
-        LogError( ( "Argument cannot be NULL: pBuffer->pBuffer is NULL." ) );
+        LogError( ( "Argument cannot be NULL: pFixedBuffer->pBuffer is NULL." ) );
         status = MQTTBadParameter;
     }
     else if( ( pWillInfo != NULL ) && ( pWillInfo->pTopicName == NULL ) )
@@ -1463,11 +1463,11 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * pConnectInfo,
         connectPacketSize = remainingLength + remainingLengthEncodedSize( remainingLength ) + 1U;
 
         /* Check that the full packet size fits within the given buffer. */
-        if( connectPacketSize > pBuffer->size )
+        if( connectPacketSize > pFixedBuffer->size )
         {
             LogError( ( "Buffer size of %lu is not sufficient to hold "
                         "serialized CONNECT packet of size of %lu.",
-                        pBuffer->size,
+                        pFixedBuffer->size,
                         connectPacketSize ) );
             status = MQTTNoMemory;
         }
@@ -1476,7 +1476,7 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * pConnectInfo,
             serializeConnectPacket( pConnectInfo,
                                     pWillInfo,
                                     remainingLength,
-                                    pBuffer );
+                                    pFixedBuffer );
         }
     }
 
