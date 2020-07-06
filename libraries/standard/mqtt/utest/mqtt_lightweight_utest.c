@@ -1351,7 +1351,6 @@ void test_MQTT_DeserializeAck_pingresp( void )
     uint16_t packetIdentifier;
     bool sessionPresent;
     MQTTStatus_t status = MQTTSuccess;
-    uint8_t buffer[ 10 ] = { 0 };
 
     /* Bad remaining length. */
     ( void ) memset( ( void * ) &mqttPacketInfo, 0x00, sizeof( mqttPacketInfo ) );
@@ -1360,15 +1359,9 @@ void test_MQTT_DeserializeAck_pingresp( void )
     status = MQTT_DeserializeAck( &mqttPacketInfo, &packetIdentifier, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTBadResponse, status );
 
-    /* Process a valid PINGRESP with remaining data buffer NULL. */
+    /* Process a valid PINGRESP. */
     mqttPacketInfo.remainingLength = MQTT_PACKET_PINGRESP_REMAINING_LENGTH;
     mqttPacketInfo.pRemainingData = NULL;
-    status = MQTT_DeserializeAck( &mqttPacketInfo, NULL, NULL );
-    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
-
-    /* Process a valid PINGRESP with remaining data buffer non-NULL. */
-    mqttPacketInfo.remainingLength = MQTT_PACKET_PINGRESP_REMAINING_LENGTH;
-    mqttPacketInfo.pRemainingData = buffer;
     status = MQTT_DeserializeAck( &mqttPacketInfo, NULL, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
 }
