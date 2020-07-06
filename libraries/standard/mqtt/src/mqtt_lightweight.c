@@ -1398,6 +1398,22 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
          * the "Remaining Length" field plus 1 byte for the "Packet Type" field. */
         connectPacketSize += 1U + remainingLengthEncodedSize( connectPacketSize );
 
+        /* The connectPacketSize calculated from this function's parameters is 
+         * gauranteed to be less than the maximum MQTT CONNECT packet size, which
+         * is 327700. If the maximum client identifier length, the maximum will 
+         * message topic length, the maximum will topic payload length, the 
+         * maximum username length, and the maximum password length are all present
+         * in the MQTT CONNECT packet, the total size will be calculated to be 
+         * 327699:
+         * (variable length header)10 + 
+         * (maximum client identifier length) 65535 + (encoded length) 2 + 
+         * (maximum will message topic name length) 65535 + (encoded length)2 + 
+         * (maximum will message payload length) 65535 + 2 + 
+         * (maximum username length) 65535 + (encoded length) 2 + 
+         * (maximum password length) 65535 + (encoded length) 2 + 
+         * (packet type field length) 1 + 
+         * (CONNECT packet encoded length) 3 = 327699 */
+
         *pRemainingLength = remainingLength;
         *pPacketSize = connectPacketSize;
 
