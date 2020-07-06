@@ -23,14 +23,8 @@
 #include <assert.h>
 #include <string.h>
 
-/* POSIX socket includes. */
-#include <errno.h>
-#include <poll.h>
-#include <time.h>
+/* POSIX socket include. */
 #include <unistd.h>
-
-#include <sys/socket.h>
-#include <sys/types.h>
 
 /* Transport interface include. */
 #include "transport_interface.h"
