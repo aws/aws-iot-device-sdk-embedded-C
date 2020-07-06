@@ -1445,7 +1445,7 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * pConnectInfo,
         status = MQTTBadParameter;
     }
     /* A buffer must be configured for serialization. */
-    else if( ( pBuffer != NULL ) && ( pBuffer->pBuffer == NULL ) )
+    else if( pBuffer->pBuffer == NULL )
     {
         LogError( ( "Argument cannot be NULL: pBuffer->pBuffer is NULL." ) );
         status = MQTTBadParameter;
