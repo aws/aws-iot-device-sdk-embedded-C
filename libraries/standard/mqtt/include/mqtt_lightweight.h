@@ -306,7 +306,7 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
 MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * pConnectInfo,
                                     const MQTTPublishInfo_t * pWillInfo,
                                     size_t remainingLength,
-                                    MQTTFixedBuffer_t * pBuffer );
+                                    const MQTTFixedBuffer_t * pBuffer );
 
 /**
  * @brief Get packet size and Remaining Length of an MQTT SUBSCRIBE packet.
