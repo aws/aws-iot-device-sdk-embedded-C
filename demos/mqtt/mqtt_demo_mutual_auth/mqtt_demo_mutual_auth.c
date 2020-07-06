@@ -46,7 +46,7 @@
 /* POSIX includes. */
 #include <unistd.h>
 
-/* Demo Config header. */
+/* Include Demo Config as the first non-system header. */
 #include "demo_config.h"
 
 /* MQTT API header. */

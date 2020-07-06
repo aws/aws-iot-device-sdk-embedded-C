@@ -54,13 +54,21 @@
 #include "reconnect.h"
 
 /**
- * @brief Size of the network buffer for MQTT packets.
+ * These configuration settings are required to run the mutual auth demo.
+ * Throw compilation error if the below configs are not defined.
  */
-#define NETWORK_BUFFER_SIZE    ( 1024U )
-
-/* Check that client identifier is defined. */
+#ifndef ROOT_CA_CERT_PATH
+    #error "Please define path to root ca certificate of the AWS IoT MQTT broker(ROOT_CA_CERT_PATH) in demo_config.h."
+#endif
 #ifndef CLIENT_IDENTIFIER
     #error "Please define a unique CLIENT_IDENTIFIER."
+#endif
+
+/**
+ * Provide default values for undefined configuration settings.
+ */
+#ifndef BROKER_PORT
+    #define BROKER_PORT    ( 8883 )
 #endif
 
 #ifndef NETWORK_BUFFER_SIZE
@@ -96,7 +104,7 @@
 #define MQTT_EXAMPLE_MESSAGE                "Hello World!"
 
 /**
- * @brief The MQTT message published in this example.
+ * @brief The length of the MQTT message published in this example.
  */
 #define MQTT_EXAMPLE_MESSAGE_LENGTH         ( ( uint16_t ) ( sizeof( MQTT_EXAMPLE_MESSAGE ) - 1 ) )
 
@@ -157,12 +165,12 @@
 typedef struct PublishPackets
 {
     /**
-     * @brief MQTT client identifier. Must be unique per client.
+     * @brief Packet identifier of the publish packet.
      */
     uint16_t packetId;
 
     /**
-     * @brief MQTT client identifier. Must be unique per client.
+     * @brief Publish info of the publish packet.
      */
     MQTTPublishInfo_t pubInfo;
 } PublishPackets_t;
@@ -211,7 +219,7 @@ static uint8_t buffer[ NETWORK_BUFFER_SIZE ];
  * timeout value is reached or the number of attemps are exhausted.
  *
  * @param[out] pNetworkContext Network context pointer containing TCP socket
- * file descriptor set after the connection is established.
+ * file descriptor referring to the established connection.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on successful connection.
  */
@@ -455,6 +463,7 @@ static int getNextFreeIndexForOutgoingPublishes( uint8_t * pIndex )
     uint8_t index = 0;
 
     assert( outgoingPublishPackets != NULL );
+    assert( pIndex != NULL );
 
     for( index = 0; index < MAX_OUTGOING_PUBLISHES; index++ )
     {
@@ -568,6 +577,8 @@ static void handleIncomingPublish( MQTTPublishInfo_t * pPublishInfo,
                                    uint16_t packetIdentifier )
 {
     assert( pPublishInfo != NULL );
+
+    ( void ) packetIdentifier;
 
     /* Process incoming Publish. */
     LogInfo( ( "Incoming QOS : %d.", pPublishInfo->qos ) );

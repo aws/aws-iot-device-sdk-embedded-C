@@ -52,40 +52,33 @@
 #include "transport_reconnect.h"
 
 /**
- * @brief MQTT server host name.
- *
- * This demo uses the Mosquitto test server. This is a public MQTT server; do not
- * publish anything sensitive to this server.
+ * These configuration settings are required to run the mutual auth demo.
+ * Throw compilation error if the below configs are not defined.
  */
-#define BROKER_ENDPOINT           "test.mosquitto.org"
-
-/**
- * @brief Length of MQTT server host name.
- */
-#define BROKER_ENDPOINT_LENGTH    ( ( uint16_t ) ( sizeof( BROKER_ENDPOINT ) - 1 ) )
-
-/**
- * @brief MQTT server port number.
- *
- * In general, port 1883 is for unsecured MQTT connections.
- */
-#define BROKER_PORT               ( 1883 )
+#ifndef CLIENT_IDENTIFIER
+    #error "Please define a unique CLIENT_IDENTIFIER."
+#endif
 
 /**
  * Provide default values for undefined configuration settings.
  */
-#ifndef NETWORK_BUFFER_SIZE
-    #define NETWORK_BUFFER_SIZE    ( 1024U )
+#ifndef BROKER_PORT
+    #define BROKER_PORT    ( 1883 )
 #endif
 
-#ifndef CLIENT_IDENTIFIER
-    #define CLIENT_IDENTIFIER    "testclient"
+#ifndef NETWORK_BUFFER_SIZE
+    #define NETWORK_BUFFER_SIZE    ( 1024U )
 #endif
 
 /**
  * @brief Length of client identifier.
  */
 #define CLIENT_IDENTIFIER_LENGTH            ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) )
+
+/**
+ * @brief Length of MQTT server host name.
+ */
+#define BROKER_ENDPOINT_LENGTH              ( ( uint16_t ) ( sizeof( BROKER_ENDPOINT ) - 1 ) )
 
 /**
  * @brief Timeout for receiving CONNACK packet in milli seconds.
@@ -154,7 +147,7 @@
 /*-----------------------------------------------------------*/
 
 /**
- * @brief globalEntryTime entry time into the application to use as a reference
+ * @brief globalEntryTime Entry time into the application to use as a reference
  * timestamp in #getTimeMs function. #getTimeMs will always return the difference
  * of current time with the globalEntryTime. This will reduce the chances of
  * overflow for 32 bit unsigned integer used for holding the timestamp.
@@ -387,7 +380,7 @@ static void handleIncomingPublish( MQTTPublishInfo_t * pPublishInfo,
                         pPublishInfo->topicNameLength ) ) )
     {
         LogInfo( ( "Incoming Publish Topic Name: %.*s matches subscribed topic.\n"
-                   "Incoming Publish message Packet ID is %u.\n"
+                   "Incoming Publish message Packet Id is %u.\n"
                    "Incoming Publish Message : %.*s.\n\n",
                    pPublishInfo->topicNameLength,
                    pPublishInfo->pTopicName,
@@ -444,10 +437,10 @@ static void eventCallback( MQTTContext_t * pMqttContext,
                 break;
 
             case MQTT_PACKET_TYPE_PINGRESP:
-                LogInfo( ( "PINGRESP received.\n\n" ) );
 
                 /* Nothing to be done from application as library handles
                  * PINGRESP. */
+                LogInfo( ( "PINGRESP received.\n\n" ) );
                 break;
 
             /* Any other packet type is invalid. */
@@ -751,7 +744,7 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
          * client may receive a publish before it receives a subscribe ack. Since this
          * demo is subscribing to the topic to which no one is publishing, probability
          * of receiving publish message before subscribe ack is zero; but application
-         * must be ready to receive any packet.  This demo uses MQTT_ProcessLoop to
+         * must be ready to receive any packet. This demo uses MQTT_ProcessLoop to
          * receive packet from network. */
         mqttStatus = MQTT_ProcessLoop( &mqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
 
