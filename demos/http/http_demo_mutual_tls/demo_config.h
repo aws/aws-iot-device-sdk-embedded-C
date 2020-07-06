@@ -66,7 +66,7 @@
  * @note Port 443 requires use of the ALPN TLS extension with the ALPN protocol
  * name being x-amzn-http-ca. When using port 8443, ALPN is not required.
  */
-#define IOT_CORE_PORT        443
+#define IOT_CORE_PORT                  443
 
 /**
  * @brief Path of the file containing Amazon's root CA certificate for TLS
@@ -78,7 +78,14 @@
  *
  * @note This certificate should be PEM-encoded.
  */
-#define ROOT_CA_CERT_PATH    "certificates/AmazonRootCA1.crt"
+#define ROOT_CA_CERT_PATH              "certificates/AmazonRootCA1.crt"
+
+/**
+ * @brief ALPN protocol name to be sent as part of the ClientHello message.
+ *
+ * @note When using ALPN, port 443 must be used to connect to AWS IoT Core.
+ */
+#define IOT_CORE_ALPN_PROTOCOL_NAME    "\x0ex-amzn-http-ca"
 
 /**
  * @brief Path of the file containing the client's certificate for TLS
@@ -98,7 +105,6 @@
  * policy from AWS IoT core for the demo to function correctly.
  *
  * #define CLIENT_PRIVATE_KEY_PATH           "certificates/client.key"
- *
  */
 
 /**
