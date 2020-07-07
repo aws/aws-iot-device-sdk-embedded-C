@@ -37,6 +37,7 @@
 #include <string.h>
 
 /* POSIX includes. */
+#include <time.h>
 #include <unistd.h>
 
 /* Include Demo Config as the first non-system header. */
