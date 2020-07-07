@@ -91,7 +91,7 @@ bool isValidMqttConnectInfo( const MQTTConnectInfo_t * pConnectInfo );
 /**
  * @brief Allocate a #MQTTFixedBuffer_t object.
  *
- * @param[in] pConnectInfo #MQTTFixedBuffer_t object information.
+ * @param[in] pBuffer #MQTTFixedBuffer_t object information.
  *
  * @return NULL or allocated #MQTTFixedBuffer_t memory.
  */
@@ -100,7 +100,7 @@ MQTTFixedBuffer_t * allocateMqttFixedBuffer( MQTTFixedBuffer_t * pBuffer );
 /**
  * @brief Validate a #MQTTFixedBuffer_t object.
  *
- * @param[in] pConnectInfo #MQTTFixedBuffer_t object to validate.
+ * @param[in] pBuffer #MQTTFixedBuffer_t object to validate.
  *
  * @return True if the #MQTTFixedBuffer_t object is valid, false otherwise.
  */
