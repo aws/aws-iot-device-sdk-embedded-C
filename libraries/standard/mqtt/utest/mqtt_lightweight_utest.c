@@ -170,7 +170,7 @@ static int32_t mockReceive( NetworkContext_t * pNetworkContext,
     }
 
     /* Move stream by bytes read. */
-    ( *( uint8_t ** ) pNetworkContext->buffer ) = mockNetwork;
+    *( pNetworkContext->buffer ) = mockNetwork;
 
     return bytesToRecv;
 }

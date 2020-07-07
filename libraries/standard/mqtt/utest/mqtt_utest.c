@@ -154,7 +154,7 @@ static int32_t mockSend( NetworkContext_t * pNetworkContext,
 {
     const uint8_t * buffer = ( const uint8_t * ) pMessage;
     /* Treat network context as pointer to buffer for mocking. */
-    uint8_t * mockNetwork = ( *( uint8_t ** ) pNetworkContext->buffer );
+    uint8_t * mockNetwork = *( pNetworkContext->buffer );
     size_t bytesSent = 0;
 
     while( bytesSent++ < bytesToSend )
@@ -164,7 +164,7 @@ static int32_t mockSend( NetworkContext_t * pNetworkContext,
     }
 
     /* Move stream by bytes sent. */
-    ( *( uint8_t ** ) pNetworkContext->buffer ) = mockNetwork;
+    *( pNetworkContext->buffer ) = mockNetwork;
 
     return bytesToSend;
 }
