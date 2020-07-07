@@ -22,20 +22,8 @@
 
 /************ End of logging configuration ****************/
 
-/* Set network context to double pointer to buffer (uint8_t**). */
-typedef uint8_t ** NetworkContext_t;
-
-/**
- * @brief The maximum number of MQTT PUBLISH messages that may be pending
- * acknowledgement at any time.
- *
- * QoS 1 and 2 MQTT PUBLISHes require acknowlegement from the server before
- * they can be completed. While they are awaiting the acknowledgement, the
- * client must maintain information about their state. The value of this
- * macro sets the limit on how many simultaneous PUBLISH states an MQTT
- * context maintains.
- */
-#define MQTT_MAX_QUEUED_PUBLISH_MESSAGES    10
+/* Set network context to a socket (int). */
+typedef int NetworkContext_t;
 
 /**
  * @brief The maximum number of MQTT PUBLISH messages that may be pending
@@ -47,14 +35,6 @@ typedef uint8_t ** NetworkContext_t;
  * macro sets the limit on how many simultaneous PUBLISH states an MQTT
  * context maintains.
  */
-#define MQTT_STATE_ARRAY_MAX_COUNT          10U
-
-/**
- * @brief MQTT client identifier.
- *
- * No two clients may use the same client identifier simultaneously.
- */
-#define MQTT_CLIENT_IDENTIFIER              "cbmcclient"
-
+#define MQTT_STATE_ARRAY_MAX_COUNT    ( 10U )
 
 #endif /* ifndef MQTT_CONFIG_H_ */
