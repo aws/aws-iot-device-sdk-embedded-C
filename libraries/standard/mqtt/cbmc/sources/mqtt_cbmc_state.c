@@ -21,7 +21,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include "mqtt_cbmc_state.h"
-#include "mqtt.h"
 
 void * mallocCanFail( size_t size )
 {

@@ -26,21 +26,6 @@
 #include "mqtt.h"
 #include "mqtt_cbmc_state.h"
 
-/**
- * @brief Size of the fixed and variable header of a CONNECT packet.
- */
-#define MQTT_PACKET_CONNECT_HEADER_SIZE      ( 10UL )
-
-/**
- * @brief Maximum size of an MQTT CONNECT packet, per MQTT spec.
- */
-#define MQTT_PACKET_CONNECT_MAX_SIZE         ( 327700UL )
-
-/**
- * @brief the maximum encoded length of the "Remaing Length".
- */
-#define MQTT_MAX_ENCODED_REMAINING_LENGTH    ( 4UL )
-
 void harness()
 {
     MQTTConnectInfo_t * pConnectInfo = NULL;

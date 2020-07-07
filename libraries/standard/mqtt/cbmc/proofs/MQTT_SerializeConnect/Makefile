@@ -8,7 +8,7 @@ DEFINES +=
 INCLUDES +=
 
 REMOVE_FUNCTION_BODY +=
-UNWINDSET += encodeRemainingLength.0:9
+UNWINDSET += encodeRemainingLength.0:3
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 PROOF_SOURCES += $(PROOFDIR)/../../sources/mqtt_cbmc_state.c
