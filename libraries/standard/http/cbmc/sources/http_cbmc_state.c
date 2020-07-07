@@ -99,8 +99,7 @@ bool isValidHttpResponse( const HTTPResponse_t * pResponse )
     if( pResponse )
     {
         isValid = pResponse->bufferLen < CBMC_MAX_OBJECT_SIZE &&
-                  pResponse->bodyLen < CBMC_MAX_OBJECT_SIZE &&
-                  pResponse->pHeaderParsingCallback == NULL;
+                  pResponse->bodyLen < CBMC_MAX_OBJECT_SIZE;
     }
 
     return isValid;
