@@ -119,9 +119,9 @@ bool isValidMqttConnectInfo( const MQTTConnectInfo_t * pConnectInfo )
 
     if( pConnectInfo != NULL )
     {
-        isValid &= ( pConnectInfo->clientIdentifierLength < CBMC_MAX_OBJECT_SIZE );
-        isValid &= ( pConnectInfo->userNameLength < CBMC_MAX_OBJECT_SIZE );
-        isValid &= ( pConnectInfo->passwordLength < CBMC_MAX_OBJECT_SIZE );
+        isValid = isValid && ( pConnectInfo->clientIdentifierLength < CBMC_MAX_OBJECT_SIZE );
+        isValid = isValid && ( pConnectInfo->userNameLength < CBMC_MAX_OBJECT_SIZE );
+        isValid = isValid && ( pConnectInfo->passwordLength < CBMC_MAX_OBJECT_SIZE );
     }
 
     return isValid;
