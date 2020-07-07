@@ -89,7 +89,7 @@ HTTPResponse_t * allocateHttpResponse( HTTPResponse_t * pResponse );
  *
  * @param[in] pResponse #HTTPResponse_t object to validate.
  *
- * @return True if #HTTPResponse_t is feasible; 0 otherwise.
+ * @return True if #HTTPResponse_t is feasible; false otherwise.
  */
 bool isValidHttpResponse( const HTTPResponse_t * pResponse );
 
