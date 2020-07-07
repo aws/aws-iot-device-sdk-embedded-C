@@ -161,7 +161,7 @@ static int32_t mockReceive( NetworkContext_t * pNetworkContext,
     size_t bytesRead = 0;
 
     /* Treat network context as pointer to buffer for mocking  */
-    mockNetwork = ( *( uint8_t ** ) pNetworkContext->buffer );
+    mockNetwork = *( pNetworkContext->buffer );
 
     while( bytesRead++ < bytesToRecv )
     {
