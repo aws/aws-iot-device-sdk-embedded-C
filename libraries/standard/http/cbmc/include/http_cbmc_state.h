@@ -35,61 +35,61 @@
  *
  * @param[in] size Requested size to malloc.
  *
- * @return Pointer to unconstrained buffer
+ * @return Requested memory or NULL.
  */
 void * mallocCanFail( size_t size );
 
 /**
- * @brief Allocates a request headers object.
+ * @brief Allocates an #HTTPRequestHeaders_t object.
  *
- * @param[in] pRequestHeaders Request headers object to allocate.
+ * @param[in] pRequestHeaders #HTTPRequestHeaders_t object to allocate.
  *
- * @return Pointer to allocated request headers object.
+ * @return NULL or pointer to allocated #HTTPRequestHeaders_t object.
  */
 HTTPRequestHeaders_t * allocateHttpRequestHeaders( HTTPRequestHeaders_t * pRequestHeaders );
 
 /**
- * @brief Validates if a request headers object is feasible.
+ * @brief Validates if a #HTTPRequestHeaders_t object is feasible.
  *
- * @param[in] pRequestHeaders Request headers object to validate.
+ * @param[in] pRequestHeaders #HTTPRequestHeaders_t object to validate.
  *
- * @return true if request headers is feasible; false otherwise.
+ * @return True if #pRequestHeaders is feasible; false otherwise.
  */
 bool isValidHttpRequestHeaders( const HTTPRequestHeaders_t * pRequestHeaders );
 
 /**
- * @brief Allocates a request info object.
+ * @brief Allocates a #HTTPRequestInfo_t object.
  *
- * @param[in] pRequestInfo Request info object to allocate.
+ * @param[in] pRequestInfo #HTTPRequestInfo_t object to allocate.
  *
- * @return Pointer to allocated request info object.
+ * @return NULL or pointer to allocated #HTTPRequestInfo_t object.
  */
 HTTPRequestInfo_t * allocateHttpRequestInfo( const HTTPRequestInfo_t * pRequestInfo );
 
 /**
- * @brief Validates if a request info object is feasible.
+ * @brief Validates if a #HTTPRequestInfo_t object is feasible.
  *
- * @param[in] pRequestInfo Request info object to validate.
+ * @param[in] pRequestInfo #HTTPRequestInfo_t object to validate.
  *
- * @return true if request headers is feasible; 0 otherwise.
+ * @return True if #pRequestInfo is feasible; false otherwise.
  */
 bool isValidHttpRequestInfo( const HTTPRequestInfo_t * pRequestInfo );
 
 /**
- * @brief Allocates a response object with unconstrained values.
+ * @brief Allocates a #HTTPResponse_t object with unconstrained values.
  *
- * @param[in] pResponse Response object to allocate.
+ * @param[in] pResponse #HTTPResponse_t object to allocate.
  *
- * @return Pointer to allocated response object.
+ * @return NULL or pointer to allocated #HTTPResponse_t object.
  */
 HTTPResponse_t * allocateHttpResponse( HTTPResponse_t * pResponse );
 
 /**
- * @brief Validates if a response object is feasible.
+ * @brief Validates if a #HTTPResponse_t object is feasible.
  *
- * @param[in] pResponse Response object to validate.
+ * @param[in] pResponse #HTTPResponse_t object to validate.
  *
- * @return true if request headers is feasible; 0 otherwise.
+ * @return True if #HTTPResponse_t is feasible; 0 otherwise.
  */
 bool isValidHttpResponse( const HTTPResponse_t * pResponse );
 

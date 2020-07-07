@@ -40,6 +40,10 @@ void harness()
     __CPROVER_assume( fieldLen < CBMC_MAX_OBJECT_SIZE );
     pField = mallocCanFail( fieldLen );
 
+    /* Initialize and make assumptions for header value. */
+    __CPROVER_assume( valueLen < CBMC_MAX_OBJECT_SIZE );
+    pValue = mallocCanFail( valueLen );
+
     /* Initialize and make assumptions for response object. */
     pResponse = allocateHttpResponse( pResponse );
     __CPROVER_assume( isValidHttpResponse( pResponse ) );
@@ -47,6 +51,6 @@ void harness()
     HTTPClient_ReadHeader( pResponse,
                            pField,
                            fieldLen,
-                           nondet_bool() ? NULL : &pValue,
-                           nondet_bool() ? NULL : &valueLen );
+                           pValue,
+                           valueLen );
 }
