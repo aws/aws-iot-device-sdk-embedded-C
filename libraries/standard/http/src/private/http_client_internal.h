@@ -42,10 +42,10 @@
 #define HTTP_HEADER_END_INDICATOR_LEN      ( sizeof( HTTP_HEADER_END_INDICATOR ) - 1u )
 #define HTTP_HEADER_FIELD_SEPARATOR        ": "
 #define HTTP_HEADER_FIELD_SEPARATOR_LEN    ( sizeof( HTTP_HEADER_FIELD_SEPARATOR ) - 1u )
-#define SPACE_CHARACTER                    " "
-#define SPACE_CHARACTER_LEN                ( sizeof( SPACE_CHARACTER ) - 1u )
-#define DASH_CHARACTER                     "-"
-#define DASH_CHARACTER_LEN                 ( sizeof( DASH_CHARACTER ) - 1u )
+#define SPACE_CHARACTER                    ' '
+#define SPACE_CHARACTER_LEN                ( 1u )
+#define DASH_CHARACTER                     '-'
+#define DASH_CHARACTER_LEN                 ( 1u )
 
 /**
  * @brief Constants for header fields added automatically during the request
