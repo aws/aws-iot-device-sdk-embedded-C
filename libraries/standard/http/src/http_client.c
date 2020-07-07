@@ -1216,6 +1216,8 @@ static HTTPStatus_t addRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
 
+    assert( pRequestHeaders != NULL );
+
     /* This buffer uses a char type instead of the general purpose uint8_t because
     * the range value expected to be written is within the ASCII character set. */
     char rangeValueBuffer[ HTTP_MAX_RANGE_REQUEST_VALUE_LEN ] = { '\0' };
