@@ -1215,13 +1215,14 @@ static HTTPStatus_t addRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
                                     int32_t rangeEnd )
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
+    char rangeValueBuffer[ HTTP_MAX_RANGE_REQUEST_VALUE_LEN ];
+    size_t rangeValueLength = 0u;
 
     assert( pRequestHeaders != NULL );
 
     /* This buffer uses a char type instead of the general purpose uint8_t because
     * the range value expected to be written is within the ASCII character set. */
-    char rangeValueBuffer[ HTTP_MAX_RANGE_REQUEST_VALUE_LEN ] = { '\0' };
-    size_t rangeValueLength = 0u;
+    ( void ) memset( rangeValueBuffer, '\0', HTTP_MAX_RANGE_REQUEST_VALUE_LEN );
 
     /* Generate the value data for the Range Request header.*/
 
@@ -1242,9 +1243,7 @@ static HTTPStatus_t addRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
     if( rangeEnd != HTTP_RANGE_REQUEST_END_OF_FILE )
     {
         /* Write the "-" character to the buffer.*/
-        ( void ) memcpy( rangeValueBuffer + rangeValueLength,
-                         DASH_CHARACTER,
-                         DASH_CHARACTER_LEN );
+        *( rangeValueBuffer + rangeValueLength ) = DASH_CHARACTER;
         rangeValueLength += DASH_CHARACTER_LEN;
 
         /* Write the rangeEnd value of the request range to the buffer .*/
@@ -1256,9 +1255,7 @@ static HTTPStatus_t addRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
     else if( rangeStartOrlastNbytes >= 0 )
     {
         /* Write the "-" character to the buffer.*/
-        ( void ) memcpy( rangeValueBuffer + rangeValueLength,
-                         DASH_CHARACTER,
-                         DASH_CHARACTER_LEN );
+        *( rangeValueBuffer + rangeValueLength ) = DASH_CHARACTER;
         rangeValueLength += DASH_CHARACTER_LEN;
     }
     else
@@ -1310,8 +1307,7 @@ static HTTPStatus_t writeRequestLine( HTTPRequestHeaders_t * pRequestHeaders,
         ( void ) memcpy( pBufferCur, pMethod, methodLen );
         pBufferCur += methodLen;
 
-        ( void ) memcpy( pBufferCur, SPACE_CHARACTER, SPACE_CHARACTER_LEN );
-
+        *pBufferCur = SPACE_CHARACTER;
         pBufferCur += SPACE_CHARACTER_LEN;
 
         /* Use "/" as default value if <PATH> is NULL. */
@@ -1328,9 +1324,7 @@ static HTTPStatus_t writeRequestLine( HTTPRequestHeaders_t * pRequestHeaders,
             pBufferCur += pathLen;
         }
 
-        ( void ) memcpy( pBufferCur,
-                         SPACE_CHARACTER,
-                         SPACE_CHARACTER_LEN );
+        *pBufferCur = SPACE_CHARACTER;
         pBufferCur += SPACE_CHARACTER_LEN;
 
         ( void ) memcpy( pBufferCur,
@@ -1554,7 +1548,8 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
     else if( rangeStartOrlastNbytes == INT32_MIN )
     {
         LogError( ( "Parameter check failed: Arithmetic overflow detected: "
-                    "rangeStart should be > -2147483648 (INT32_MIN)",
+                    "rangeStart should be > -2147483648 (INT32_MIN): ",
+                    "RangeStart=%d",
                     rangeStartOrlastNbytes ) );
         returnStatus = HTTP_INVALID_PARAMETER;
     }

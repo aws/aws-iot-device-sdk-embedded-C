@@ -399,11 +399,11 @@ static void helper_parse_status_line( const char ** pNext,
 
     /* For purposes of unit testing the response is well formed in the non-error
      * cases, so the reason-phrase is always after HTTP/1.1 and the three digit
-     * status code. strstr() is used only for unit testing where test input are \
-     * always string literals. strstr() should not be used in application code. */
-    *pNext = strstr( *pNext, SPACE_CHARACTER ); /* Get the space before the status-code. */
+     * status code. strchr() is used only for unit testing where test input are \
+     * always string literals. strchr() should not be used in application code. */
+    *pNext = strchr( *pNext, SPACE_CHARACTER ); /* Get the space before the status-code. */
     *pNext += SPACE_CHARACTER_LEN;
-    *pNext = strstr( *pNext, SPACE_CHARACTER ); /* Get the space before the reason-phrase. */
+    *pNext = strchr( *pNext, SPACE_CHARACTER ); /* Get the space before the reason-phrase. */
     *pNext += SPACE_CHARACTER_LEN;
     pReasonPhraseStart = *pNext;
     *pNext = strstr( *pNext, HTTP_HEADER_LINE_SEPARATOR );
