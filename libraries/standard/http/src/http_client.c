@@ -89,6 +89,24 @@ static HTTPStatus_t addHeader( HTTPRequestHeaders_t * pRequestHeaders,
                                size_t valueLen );
 
 /**
+ * @brief Add the byte range request header to the request headers store in
+ * #HTTPRequestHeaders_t.pBuffer once all the parameters are validated.
+ *
+ * @param[in] pRequestHeaders Request header buffer information.
+ * @param[in] rangeStartOrlastNbytes Represents either the starting byte
+ * for a range OR the last N number of bytes in the requested file.
+ * @param[in] rangeEnd The ending range for the requested file. For end of file
+ * byte in Range Specifications 2. and 3., #HTTP_RANGE_REQUEST_END_OF_FILE
+ * should be passed.
+ *
+ * @return #HTTP_SUCCESS if successful. If there was insufficient memory in the
+ * application buffer, then #HTTP_INSUFFICIENT_MEMORY is returned.
+ */
+static HTTPStatus_t addRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
+                                    int32_t rangeStartOrlastNbytes,
+                                    int32_t rangeEnd );
+
+/**
  * @brief Receive HTTP response from the transport receive interface.
  *
  * @param[in] pTransport Transport interface.
@@ -1192,6 +1210,71 @@ static HTTPStatus_t addHeader( HTTPRequestHeaders_t * pRequestHeaders,
 
 /*-----------------------------------------------------------*/
 
+static HTTPStatus_t addRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
+                                    int32_t rangeStartOrlastNbytes,
+                                    int32_t rangeEnd )
+{
+    HTTPStatus_t returnStatus = HTTP_SUCCESS;
+    char rangeValueBuffer[ HTTP_MAX_RANGE_REQUEST_VALUE_LEN ];
+    size_t rangeValueLength = 0u;
+
+    assert( pRequestHeaders != NULL );
+
+    /* This buffer uses a char type instead of the general purpose uint8_t because
+    * the range value expected to be written is within the ASCII character set. */
+    ( void ) memset( rangeValueBuffer, '\0', HTTP_MAX_RANGE_REQUEST_VALUE_LEN );
+
+    /* Generate the value data for the Range Request header.*/
+
+    /* Write the range value prefix in the buffer. */
+    ( void ) memcpy( rangeValueBuffer,
+                     HTTP_RANGE_REQUEST_HEADER_VALUE_PREFIX,
+                     HTTP_RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN );
+    rangeValueLength += HTTP_RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN;
+
+    /* Write the range start value in the buffer. */
+    rangeValueLength += convertInt32ToAscii( rangeStartOrlastNbytes,
+                                             rangeValueBuffer + rangeValueLength,
+                                             sizeof( rangeValueBuffer ) - rangeValueLength );
+
+    /* Add remaining value data depending on the range specification type. */
+
+    /* Add rangeEnd value if request is for [rangeStart, rangeEnd] byte range */
+    if( rangeEnd != HTTP_RANGE_REQUEST_END_OF_FILE )
+    {
+        /* Write the "-" character to the buffer.*/
+        *( rangeValueBuffer + rangeValueLength ) = DASH_CHARACTER;
+        rangeValueLength += DASH_CHARACTER_LEN;
+
+        /* Write the rangeEnd value of the request range to the buffer .*/
+        rangeValueLength += convertInt32ToAscii( rangeEnd,
+                                                 rangeValueBuffer + rangeValueLength,
+                                                 sizeof( rangeValueBuffer ) - rangeValueLength );
+    }
+    /* Case when request is for bytes in the range [rangeStart, EoF). */
+    else if( rangeStartOrlastNbytes >= 0 )
+    {
+        /* Write the "-" character to the buffer.*/
+        *( rangeValueBuffer + rangeValueLength ) = DASH_CHARACTER;
+        rangeValueLength += DASH_CHARACTER_LEN;
+    }
+    else
+    {
+        /* Empty else MISRA 15.7 */
+    }
+
+    /* Add the Range Request header field and value to the buffer. */
+    returnStatus = addHeader( pRequestHeaders,
+                              HTTP_RANGE_REQUEST_HEADER_FIELD,
+                              HTTP_RANGE_REQUEST_HEADER_FIELD_LEN,
+                              rangeValueBuffer,
+                              rangeValueLength );
+
+    return returnStatus;
+}
+
+/*-----------------------------------------------------------*/
+
 static HTTPStatus_t writeRequestLine( HTTPRequestHeaders_t * pRequestHeaders,
                                       const char * pMethod,
                                       size_t methodLen,
@@ -1224,8 +1307,7 @@ static HTTPStatus_t writeRequestLine( HTTPRequestHeaders_t * pRequestHeaders,
         ( void ) memcpy( pBufferCur, pMethod, methodLen );
         pBufferCur += methodLen;
 
-        ( void ) memcpy( pBufferCur, SPACE_CHARACTER, SPACE_CHARACTER_LEN );
-
+        *pBufferCur = SPACE_CHARACTER;
         pBufferCur += SPACE_CHARACTER_LEN;
 
         /* Use "/" as default value if <PATH> is NULL. */
@@ -1242,9 +1324,7 @@ static HTTPStatus_t writeRequestLine( HTTPRequestHeaders_t * pRequestHeaders,
             pBufferCur += pathLen;
         }
 
-        ( void ) memcpy( pBufferCur,
-                         SPACE_CHARACTER,
-                         SPACE_CHARACTER_LEN );
+        *pBufferCur = SPACE_CHARACTER;
         pBufferCur += SPACE_CHARACTER_LEN;
 
         ( void ) memcpy( pBufferCur,
@@ -1426,11 +1506,6 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
 {
     HTTPStatus_t returnStatus = HTTP_SUCCESS;
 
-    /* This buffer uses a char type instead of the general purpose uint8_t because
-    * the range value expected to be written is within the ASCII character set. */
-    char rangeValueBuffer[ HTTP_MAX_RANGE_REQUEST_VALUE_LEN ] = { '\0' };
-    size_t rangeValueLength = 0u;
-
     if( pRequestHeaders == NULL )
     {
         LogError( ( "Parameter check failed: pRequestHeaders is NULL." ) );
@@ -1439,6 +1514,11 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
     else if( pRequestHeaders->pBuffer == NULL )
     {
         LogError( ( "Parameter check failed: pRequestHeaders->pBuffer is NULL." ) );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( pRequestHeaders->headersLen > pRequestHeaders->bufferLen )
+    {
+        LogError( ( "Parameter check failed: pRequestHeaders->headersLen > pRequestHeaders->bufferLen." ) );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( rangeEnd < HTTP_RANGE_REQUEST_END_OF_FILE )
@@ -1465,57 +1545,19 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
                     rangeStartOrlastNbytes, rangeEnd ) );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
+    else if( rangeStartOrlastNbytes == INT32_MIN )
+    {
+        LogError( ( "Parameter check failed: Arithmetic overflow detected: "
+                    "rangeStart should be > -2147483648 (INT32_MIN): ",
+                    "RangeStart=%d",
+                    rangeStartOrlastNbytes ) );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
     else
     {
-        /* Generate the value data for the Range Request header.*/
-
-        /* Write the range value prefix in the buffer. */
-        ( void ) memcpy( rangeValueBuffer,
-                         HTTP_RANGE_REQUEST_HEADER_VALUE_PREFIX,
-                         HTTP_RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN );
-        rangeValueLength += HTTP_RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN;
-
-        /* Write the range start value in the buffer. */
-        rangeValueLength += convertInt32ToAscii( rangeStartOrlastNbytes,
-                                                 rangeValueBuffer + rangeValueLength,
-                                                 sizeof( rangeValueBuffer ) - rangeValueLength );
-
-        /* Add remaining value data depending on the range specification type. */
-
-        /* Add rangeEnd value if request is for [rangeStart, rangeEnd] byte range */
-        if( rangeEnd != HTTP_RANGE_REQUEST_END_OF_FILE )
-        {
-            /* Write the "-" character to the buffer.*/
-            ( void ) memcpy( rangeValueBuffer + rangeValueLength,
-                             DASH_CHARACTER,
-                             DASH_CHARACTER_LEN );
-            rangeValueLength += DASH_CHARACTER_LEN;
-
-            /* Write the rangeEnd value of the request range to the buffer .*/
-            rangeValueLength += convertInt32ToAscii( rangeEnd,
-                                                     rangeValueBuffer + rangeValueLength,
-                                                     sizeof( rangeValueBuffer ) - rangeValueLength );
-        }
-        /* Case when request is for bytes in the range [rangeStart, EoF). */
-        else if( rangeStartOrlastNbytes >= 0 )
-        {
-            /* Write the "-" character to the buffer.*/
-            ( void ) memcpy( rangeValueBuffer + rangeValueLength,
-                             DASH_CHARACTER,
-                             DASH_CHARACTER_LEN );
-            rangeValueLength += DASH_CHARACTER_LEN;
-        }
-        else
-        {
-            /* Empty else MISRA 15.7 */
-        }
-
-        /* Add the Range Request header field and value to the buffer. */
-        returnStatus = addHeader( pRequestHeaders,
-                                  HTTP_RANGE_REQUEST_HEADER_FIELD,
-                                  HTTP_RANGE_REQUEST_HEADER_FIELD_LEN,
-                                  rangeValueBuffer,
-                                  rangeValueLength );
+        returnStatus = addRangeHeader( pRequestHeaders,
+                                       rangeStartOrlastNbytes,
+                                       rangeEnd );
     }
 
     return returnStatus;
