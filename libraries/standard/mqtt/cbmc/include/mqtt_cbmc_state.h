@@ -23,6 +23,7 @@
 
 #include <stdbool.h>
 
+/* For MQTT Client library types. */
 #include "mqtt.h"
 
 /**

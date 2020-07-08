@@ -22,18 +22,22 @@
 
 /************ End of logging configuration ****************/
 
-/* Set network context to a socket (int). */
+/* Set network context to a socket (int). This is a stub and passed through to
+ * the application define transport send and receive. */
 typedef int NetworkContext_t;
 
 /**
  * @brief The maximum number of MQTT PUBLISH messages that may be pending
- * acknowledgement at any time.
+ * acknowledgement at any time. 
  *
  * QoS 1 and 2 MQTT PUBLISHes require acknowledgement from the server before
  * they can be completed. While they are awaiting the acknowledgement, the
  * client must maintain information about their state. The value of this
  * macro sets the limit on how many simultaneous PUBLISH states an MQTT
  * context maintains.
+ * 
+ * @note This definition must exist in order to compile. 10U is a typical value
+ * used in the MQTT demos.
  */
 #define MQTT_STATE_ARRAY_MAX_COUNT    ( 10U )
 

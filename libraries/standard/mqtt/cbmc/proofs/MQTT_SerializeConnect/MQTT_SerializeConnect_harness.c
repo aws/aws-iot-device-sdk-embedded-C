@@ -55,6 +55,8 @@ void harness()
 
     if( status == MQTTSuccess )
     {
+        /* For coverage, it is expected that a NULL pConnectInfo will reach this
+         * function. */
         MQTT_SerializeConnect( pConnectInfo, pWillInfo, remainingLength, pBuffer );
     }
 }
