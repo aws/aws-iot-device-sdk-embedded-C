@@ -432,8 +432,8 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     Transport_ReconnectParamsReset( &reconnectParams );
 
     /* Attempt to connect to MQTT broker. If connection fails, retry after
-     * a timeout. Timeout value will exponentially increase till maximum
-     * attemps are reached.
+     * a timeout. Timeout value will exponentially increase until maximum
+     * attempts are reached.
      */
     do
     {
