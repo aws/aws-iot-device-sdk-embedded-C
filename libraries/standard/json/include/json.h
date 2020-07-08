@@ -19,8 +19,8 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef JSON_H
-#define JSON_H
+#ifndef JSON_H_
+#define JSON_H_
 
 #include <stddef.h>
 
@@ -37,7 +37,7 @@ typedef enum JSONStatus
  * @brief Parse a buffer to determine if it contains a valid JSON document.
  *
  * @param[in] buf  The buffer to parse.
- * @param[in] length  The size of the buffer.
+ * @param[in] max  The size of the buffer.
  *
  * @return #JSONSuccess if the buffer contents are valid JSON;
  * #JSONIllegalDocument if the buffer contents are NOT valid JSON;
@@ -52,13 +52,13 @@ typedef enum JSONStatus
  * contain an object or array, define JSON_VALIDATE_COLLECTIONS_ONLY.
  */
 JSONStatus_t JSON_Validate( const char * buf,
-                            size_t length );
+                            size_t max );
 
 /**
  * @brief Find a key in a JSON object and output a pointer to its value.
  *
  * @param[in] buf  The buffer to search.
- * @param[in] length  size of the buffer.
+ * @param[in] max  size of the buffer.
  * @param[in] queryKey  The key to search for.
  * @param[in] queryKeyLength  Length of the key.
  * @param[in] separator  A character between a key and a sub-key in queryKey.
@@ -71,8 +71,9 @@ JSONStatus_t JSON_Validate( const char * buf,
  * key strings joined by a separator.
  *
  * For example, if buf contains '{"foo":"abc","bar":{"foo","xyz"}}', then a 
- * search for 'foo' would output 'abc' and a search for 'bar.foo' would
- * output 'xyz' (given separator is specified as '.').
+ * search for 'foo' would output 'abc', 'bar' would output '{"foo","xyz"}',
+ * and a search for 'bar.foo' would output 'xyz' (given separator is
+ * specified as '.').
  *
  * On success, the pointer to the value points to a location in buf.  No null
  * termination is done for the value.  For valid JSON it is safe to place
@@ -101,11 +102,11 @@ JSONStatus_t JSON_Validate( const char * buf,
  * key and its value.  To validate the entire JSON document, use JSON_Validate().
  */
 JSONStatus_t JSON_Search( char * buf,
-                          size_t length,
+                          size_t max,
                           char * queryKey,
                           size_t queryKeyLength,
                           char separator,
                           char ** outValue,
                           size_t * outValueLength );
 
-#endif /* ifndef JSON_H */
+#endif /* ifndef JSON_H_ */
