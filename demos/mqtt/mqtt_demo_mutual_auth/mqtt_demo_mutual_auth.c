@@ -242,7 +242,7 @@ static uint8_t buffer[ NETWORK_BUFFER_SIZE ];
 /*-----------------------------------------------------------*/
 
 /**
- * @brief connect to MQTT broker with reconnection retries.
+ * @brief Connect to MQTT broker with reconnection retries.
  * If connection fails, retry is attempted after a timeout.
  * Timeout value will exponentially increased till maximum
  * timeout value is reached or the number of attemps are exhausted.
