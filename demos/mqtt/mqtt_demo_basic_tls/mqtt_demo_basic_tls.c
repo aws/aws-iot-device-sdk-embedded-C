@@ -406,7 +406,8 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
         if( opensslStatus != OPENSSL_SUCCESS )
         {
             LogWarn( ( "Connection to the broker failed, sleeping %d seconds before the next attempt.",
-                       ( reconnectParams.reconnectTimeoutSec > MAX_RECONNECT_TIMEOUT_SECONDS ) ? MAX_RECONNECT_TIMEOUT_SECONDS : reconnectParams.reconnectTimeoutSec ) );
+                       ( reconnectParams.reconnectTimeoutSec > MAX_RECONNECT_TIMEOUT_SECONDS ) ?
+                       MAX_RECONNECT_TIMEOUT_SECONDS : reconnectParams.reconnectTimeoutSec ) );
             backoffSuccess = Transport_ReconnectBackoffAndSleep( &reconnectParams );
         }
 

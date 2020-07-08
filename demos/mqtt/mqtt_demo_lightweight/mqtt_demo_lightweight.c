@@ -148,7 +148,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
 /**
  * @brief Establish an MQTT session over a TCP connection by sending MQTT CONNECT.
  *
- * @param[in] pNetworkContext Network context pointer containing TCP socket.
+ * @param[in] pNetworkContext Pointer to a network context that contains a TCP socket.
  * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and its length.
  * The buffer is used for serialzing CONNECT packet and deserializing CONN-ACK.
  *
@@ -161,7 +161,7 @@ static int createMQTTConnectionWithBroker( NetworkContext_t * pNetworkContext,
  * @brief Subscribes to the topic as specified in MQTT_EXAMPLE_TOPIC at the top of
  * this file.
  *
- * @param[in] pNetworkContext Network context pointer containing TCP socket.
+ * @param[in] pNetworkContext Pointer to a network context that contains a TCP socket.
  * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and its length.
  * The buffer is used for serialzing SUBSCRIBE packet.
  *
@@ -172,7 +172,7 @@ static void mqttSubscribeToTopic( NetworkContext_t * pNetworkContext,
 /**
  * @brief  Publishes a message MQTT_EXAMPLE_MESSAGE on MQTT_EXAMPLE_TOPIC topic.
  *
- * @param[in] pNetworkContext Network context pointer containing TCP socket.
+ * @param[in] pNetworkContext Pointer to a network context that contains a TCP socket.
  * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and its length.
  * The buffer is used for serialzing PUBLISH packet.
  *
@@ -184,7 +184,7 @@ static void mqttPublishToTopic( NetworkContext_t * pNetworkContext,
  * @brief Unsubscribes from the previously subscribed topic as specified
  * in MQTT_EXAMPLE_TOPIC.
  *
- * @param[in] pNetworkContext Network context pointer containing TCP socket.
+ * @param[in] pNetworkContext Pointer to a network context that contains a TCP socket.
  * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and its length.
  * The buffer is used for serialzing UNSUBSCRIBE packet.
  *
@@ -195,7 +195,7 @@ static void mqttUnsubscribeFromTopic( NetworkContext_t * pNetworkContext,
 /**
  * @brief Disconnect From the MQTT broker.
  *
- * @param[in] pNetworkContext Network context pointer containing TCP socket.
+ * @param[in] pNetworkContext Pointer to a network context that contains a TCP socket.
  * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and its length.
  * The buffer is used for serialzing DISCONNECT packet.
  */
@@ -205,7 +205,7 @@ static void mqttDisconnect( NetworkContext_t * pNetworkContext,
 /**
  * @brief Send Ping Request to the MQTT broker.
  *
- * @param[in] pNetworkContext Network context pointer containing TCP socket.
+ * @param[in] pNetworkContext Pointer to a network context that contains a TCP socket.
  * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and its length.
  * The buffer is used for serialzing PING request packet.
  */
@@ -216,7 +216,7 @@ static void mqttKeepAlive( NetworkContext_t * pNetworkContext,
  * @brief Receive and validate MQTT packet from the broker, determine the type
  * of the packet and process the packet based on the type.
  *
- * @param[in] pNetworkContext Network context pointer containing TCP socket.
+ * @param[in] pNetworkContext Pointer to a network context that contains a TCP socket.
  * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and its length.
  * The buffer is used to deserialize incoming MQTT packet.
  *
@@ -352,7 +352,8 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
         if( socketStatus != SOCKETS_SUCCESS )
         {
             LogWarn( ( "Connection to the broker failed, sleeping %d seconds before the next attempt.",
-                       ( reconnectParams.reconnectTimeoutSec > MAX_RECONNECT_TIMEOUT_SECONDS ) ? MAX_RECONNECT_TIMEOUT_SECONDS : reconnectParams.reconnectTimeoutSec ) );
+                       ( reconnectParams.reconnectTimeoutSec > MAX_RECONNECT_TIMEOUT_SECONDS ) ?
+                       MAX_RECONNECT_TIMEOUT_SECONDS : reconnectParams.reconnectTimeoutSec ) );
             backoffSuccess = Transport_ReconnectBackoffAndSleep( &reconnectParams );
         }
 
