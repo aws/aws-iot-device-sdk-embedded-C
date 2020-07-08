@@ -12,6 +12,7 @@ target_link_libraries(
     ${DEMO_NAME}
     PRIVATE
         mqtt
+        clock_posix
         openssl_posix
         reconnect_posix
 )

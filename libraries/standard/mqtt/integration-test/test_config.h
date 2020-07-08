@@ -72,14 +72,16 @@
  *
  * In general, port 8883 is for secured MQTT connections.
  */
-#define BROKER_PORT                 ( 8883 )
+#define BROKER_PORT    ( 8883 )
 
 /**
  * @brief Path of the file containing the server's root CA certificate.
  *
  * This certificate should be PEM-encoded.
  */
-#define SERVER_ROOT_CA_CERT_PATH    "certificates/mosquitto.org.crt"
+#ifndef SERVER_ROOT_CA_CERT_PATH
+    #define SERVER_ROOT_CA_CERT_PATH    "certificates/mosquitto.org.crt"
+#endif
 
 /**
  * @brief MQTT client identifier.

@@ -40,6 +40,9 @@
 /* Include OpenSSL implementation of transport interface. */
 #include "openssl_posix.h"
 
+/* Include clock for timer. */
+#include "clock.h"
+
 #ifndef BROKER_ENDPOINT
     #error "BROKER_ENDPOINT should be defined for the MQTT integration tests."
 #endif
@@ -226,15 +229,6 @@ static bool receivedPubComp = false;
 static MQTTPublishInfo_t incomingInfo;
 
 /**
- * @brief The timer query function provided to the MQTT context.
- *
- * This function returns the elapsed time with reference to #globalEntryTimeMs.
- *
- * @return Time in milliseconds.
- */
-static uint32_t getTimeMs( void );
-
-/**
  * @brief Sends an MQTT CONNECT packet over the already connected TCP socket.
  *
  * @param[in] pContext MQTT context pointer.
@@ -267,21 +261,6 @@ static void eventCallback( MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
-uint32_t getTimeMs( void )
-{
-    uint32_t timeMs;
-    struct timespec timeSpec;
-
-    /* Get the MONOTONIC time. */
-    clock_gettime( CLOCK_MONOTONIC, &timeSpec );
-
-    /* Calculate the milliseconds from timespec. */
-    timeMs = ( uint32_t ) ( timeSpec.tv_sec * 1000 )
-             + ( uint32_t ) ( timeSpec.tv_nsec / ( 1000 * 1000 ) );
-
-    return timeMs;
-}
-
 static void establishMqttSession( MQTTContext_t * pContext,
                                   NetworkContext_t * pNetworkContext,
                                   bool createCleanSession,
@@ -313,7 +292,7 @@ static void establishMqttSession( MQTTContext_t * pContext,
 
     /* Application callback for getting the time for MQTT library. This time
      * function will be used to calculate intervals in MQTT library.*/
-    callbacks.getTime = getTimeMs;
+    callbacks.getTime = Clock_GetTimeMs;
 
     /* Initialize MQTT library. */
     TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_Init( pContext,

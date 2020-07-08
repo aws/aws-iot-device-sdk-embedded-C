@@ -45,6 +45,7 @@ list(APPEND stest_link_list
 
 list(APPEND stest_dep_list
             ${real_name}
+            clock_posix
             openssl_posix
         )
 

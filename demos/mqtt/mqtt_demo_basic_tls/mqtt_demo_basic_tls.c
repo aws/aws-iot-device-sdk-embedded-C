@@ -53,6 +53,9 @@
 /* Reconnect parameters. */
 #include "reconnect.h"
 
+/* Clock for timer. */
+#include "clock.h"
+
 /**
  * These configuration settings are required to run the mutual auth demo.
  * Throw compilation error if the below configs are not defined.
@@ -178,14 +181,6 @@ typedef struct PublishPackets
 /*-----------------------------------------------------------*/
 
 /**
- * @brief globalEntryTime Entry time into the application to use as a reference
- * timestamp in #getTimeMs function. #getTimeMs will always return the difference
- * of current time with the globalEntryTime. This will reduce the chances of
- * overflow for 32 bit unsigned integer used for holding the timestamp.
- */
-static uint32_t globalEntryTimeMs = 0U;
-
-/**
  * @brief Packet Identifier generated when Subscribe request was sent to the broker;
  * it is used to match received Subscribe ACK to the transmitted subscribe.
  */
@@ -236,15 +231,6 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
 static int subscribePublishLoop( NetworkContext_t * pNetworkContext );
-
-/**
- * @brief The timer query function provided to the MQTT context.
- *
- * This function returns the elapsed time with reference to #globalEntryTimeMs.
- *
- * @return Time in milliseconds.
- */
-static uint32_t getTimeMs( void );
 
 /**
  * @brief The function to handle the incoming publishes.
@@ -432,27 +418,6 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     } while( ( opensslStatus != OPENSSL_SUCCESS ) && ( backoffSuccess == true ) );
 
     return returnStatus;
-}
-
-/*-----------------------------------------------------------*/
-
-static uint32_t getTimeMs( void )
-{
-    uint32_t timeMs;
-    struct timespec timeSpec;
-
-    /* Get the MONOTONIC time. */
-    clock_gettime( CLOCK_MONOTONIC, &timeSpec );
-
-    /* Calculate the milliseconds from timespec. */
-    timeMs = ( uint32_t ) ( timeSpec.tv_sec * 1000 )
-             + ( uint32_t ) ( timeSpec.tv_nsec / ( 1000 * 1000 ) );
-
-    /* Reduce globalEntryTime from obtained time so as to always return the
-     * elapsed time in the application. */
-    timeMs = ( uint32_t ) ( timeMs - globalEntryTimeMs );
-
-    return timeMs;
 }
 
 /*-----------------------------------------------------------*/
@@ -718,7 +683,7 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
 
     /* Application callback for getting the time for MQTT library. This time
      * function will be used to calculate intervals in MQTT library.*/
-    callbacks.getTime = getTimeMs;
+    callbacks.getTime = Clock_GetTimeMs;
 
     /* Initialize MQTT library. */
     mqttStatus = MQTT_Init( pMqttContext, &transport, &callbacks, &networkBuffer );
@@ -950,9 +915,6 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
     MQTTStatus_t mqttStatus = MQTTSuccess;
     uint32_t publishCount = 0;
     const uint32_t maxPublishCount = MQTT_PUBLISH_COUNT_PER_LOOP;
-
-    /* Get the entry time to application. */
-    globalEntryTimeMs = getTimeMs();
 
     /* Establish MQTT session on top of TCP+TLS connection. */
     LogInfo( ( "Creating an MQTT connection to %.*s.",
