@@ -2,7 +2,7 @@ HARNESS_ENTRY=harness
 HARNESS_FILE=MQTT_GetPacketId_harness
 
 DEFINES +=
-INCLUDES += $(PROOFDIR)/../../include
+INCLUDES +=
 
 REMOVE_FUNCTION_BODY +=
 UNWINDSET +=
