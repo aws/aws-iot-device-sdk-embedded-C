@@ -612,13 +612,6 @@ static void eventCallback( MQTTContext_t * pMqttContext,
                 assert( globalUnsubscribePacketIdentifier == packetIdentifier );
                 break;
 
-            case MQTT_PACKET_TYPE_PINGRESP:
-
-                /* Nothing to be done from application as library handles
-                 * PINGRESP. */
-                LogWarn( ( "PINGRESP should not be handled by the application callback.\n\n" ) );
-                break;
-
             case MQTT_PACKET_TYPE_PUBREC:
                 LogInfo( ( "PUBREC received for packet id %u.\n\n",
                            packetIdentifier ) );

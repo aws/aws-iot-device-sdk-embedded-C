@@ -402,14 +402,6 @@ static void eventCallback( MQTTContext_t * pMqttContext,
                 assert( globalUnsubscribePacketIdentifier == packetIdentifier );
                 break;
 
-            case MQTT_PACKET_TYPE_PINGRESP:
-
-                /* Nothing to be done from application as library handles
-                 * PINGRESP. */
-                LogWarn( ( "PINGRESP should not be handled by the application "
-                           "callback when using MQTT_ProcessLoop.\n\n" ) );
-                break;
-
             /* Any other packet type is invalid. */
             default:
                 LogError( ( "Unknown packet type received:(%02x).\n\n",

@@ -354,6 +354,8 @@ static void eventCallback( MQTTContext_t * pContext,
     }
     else
     {
+        TEST_ASSERT_NOT_EQUAL( MQTT_PACKET_TYPE_PINGRESP, pPacketInfo->type );
+
         /* Handle other packets. */
         switch( pPacketInfo->type )
         {
@@ -386,13 +388,6 @@ static void eventCallback( MQTTContext_t * pContext,
 
                 LogDebug( ( "Received PUBACK: PacketID=%u",
                             packetIdentifier ) );
-                break;
-
-            case MQTT_PACKET_TYPE_PINGRESP:
-
-                /* Nothing to be done from application as library handles
-                 * PINGRESP. */
-                LogDebug( ( "Received PINGRESP" ) );
                 break;
 
             case MQTT_PACKET_TYPE_PUBREC:

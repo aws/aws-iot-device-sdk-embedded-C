@@ -109,10 +109,10 @@
 /*-----------------------------------------------------------*/
 
 /**
- * @brief connect to MQTT broker with reconnection retries.
+ * @brief Connect to MQTT broker with reconnection retries.
  * If connection fails, retry is attempted after a timeout.
- * Timeout value will exponentially increase until maximum
- * timeout value is reached or the number of attempts are exhausted.
+ * Timeout value will exponentially increase until until maximum reconnection
+ * backoff time is reached or the number of attempts are exhausted.
  *
  * @param[out] pNetworkContext Network context pointer containing TCP socket
  * file descriptor referring to the established connection.
