@@ -38,24 +38,32 @@ bool Transport_ReconnectBackoffAndSleep( TransportReconnectParams_t * pReconnect
     uint32_t jitter = 0;
 
     /* If MAX_RECONNECT_ATTEMPTS is set to 0, try forever */
-    if( ( ( pReconnectParams->attemptsDone < MAX_RECONNECT_ATTEMPTS ) &&
-          ( pReconnectParams->nextBackOffSec <= MAX_RECONNECT_BACKOFF_SECONDS ) ) ||
+    if( ( pReconnectParams->attemptsDone < MAX_RECONNECT_ATTEMPTS ) ||
         ( 0 == MAX_RECONNECT_ATTEMPTS ) )
     {
+        /* Reduce backoff value if more than max backoff time value. */
+        if( pReconnectParams->nextBackOffSec > MAX_RECONNECT_BACKOFF_SECONDS )
+        {
+            pReconnectParams->nextBackOffSec = MAX_RECONNECT_BACKOFF_SECONDS;
+        }
+
         /*  Wait for timer to expire for the next reconnect */
         ( void ) sleep( pReconnectParams->nextBackOffSec );
 
         /* Increment backoff counts. */
         pReconnectParams->attemptsDone++;
 
-        /* Calculate the next backoff value. */
-
-        /* Calculate jitter value picking a random number
-         * between 0 and  MAX_JITTER_VALUE_SECONDS. */
-        jitter = ( rand() % MAX_JITTER_VALUE_SECONDS );
-        /* Double the backoff value for the next iteration. */
-        pReconnectParams->nextBackOffSec += pReconnectParams->nextBackOffSec;
-        pReconnectParams->nextBackOffSec += jitter;
+        /* Update the next backoff value ony if the exponential update will not cross the
+         * max backoff time threshold. */
+        if( pReconnectParams->nextBackOffSec < ( MAX_RECONNECT_BACKOFF_SECONDS / 2U ) )
+        {
+            /* Calculate jitter value picking a random number
+             * between 0 and  MAX_JITTER_VALUE_SECONDS. */
+            jitter = ( rand() % MAX_JITTER_VALUE_SECONDS );
+            /* Double the backoff value for the next iteration. */
+            pReconnectParams->nextBackOffSec += pReconnectParams->nextBackOffSec;
+            pReconnectParams->nextBackOffSec += jitter;
+        }
 
         status = true;
     }
