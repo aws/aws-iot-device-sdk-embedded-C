@@ -20,43 +20,19 @@
  */
 
 /**
- * @file MQTT_SerializeConnect_harness.c
- * @brief Implements the proof harness for MQTT_SerializeConnect function.
+ * @file MQTT_SerializeAck_harness.c
+ * @brief Implements the proof harness for MQTT_SerializeAck function.
  */
 #include "mqtt.h"
 #include "mqtt_cbmc_state.h"
 
 void harness()
 {
-    MQTTConnectInfo_t * pConnectInfo = NULL;
-    MQTTPublishInfo_t * pWillInfo = NULL;
-    size_t remainingLength = 0;
     MQTTFixedBuffer_t * pFixedBuffer = NULL;
-    size_t packetSize = 0;
-    MQTTStatus_t status = MQTTSuccess;
-
-    pConnectInfo = allocateMqttConnectInfo( pConnectInfo );
-    __CPROVER_assume( isValidMqttConnectInfo( pConnectInfo ) );
-
-    pWillInfo = allocateMqttPublishInfo( pWillInfo );
-    __CPROVER_assume( isValidMqttPublishInfo( pWillInfo ) );
+    uint8_t packetType;
+    uint16_t packetId;
 
     pFixedBuffer = allocateMqttFixedBuffer( pFixedBuffer );
-    __CPROVER_assume( isValidMqttFixedBuffer( pFixedBuffer ) );
 
-    /* Before calling MQTT_SerializeConnect() it is up to the application to make
-    * sure that the information in MQTTConnectInfo_t and MQTTPublishInfo_t can
-    * fit into the MQTTFixedBuffer_t. It is a violation of the API to call
-    * MQTT_SerializeConnect without first calling MQTT_GetConnectPacketSize(). */
-    if( pConnectInfo != NULL )
-    {
-        status = MQTT_GetConnectPacketSize( pConnectInfo, pWillInfo, &remainingLength, &packetSize );
-    }
-
-    if( status == MQTTSuccess )
-    {
-        /* For coverage, it is expected that a NULL pConnectInfo will reach this
-         * function. */
-        MQTT_SerializeConnect( pConnectInfo, pWillInfo, remainingLength, pFixedBuffer );
-    }
+    MQTT_SerializeAck( pFixedBuffer, packetType, packetId );
 }

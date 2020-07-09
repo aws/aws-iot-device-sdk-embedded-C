@@ -96,7 +96,7 @@ bool isValidMqttConnectInfo( const MQTTConnectInfo_t * pConnectInfo );
  *
  * @return NULL or allocated #MQTTFixedBuffer_t memory.
  */
-MQTTFixedBuffer_t * allocateMqttFixedBuffer( MQTTFixedBuffer_t * pBuffer );
+MQTTFixedBuffer_t * allocateMqttFixedBuffer( MQTTFixedBuffer_t * pFixedBuffer );
 
 /**
  * @brief Validate a #MQTTFixedBuffer_t object.
@@ -105,6 +105,28 @@ MQTTFixedBuffer_t * allocateMqttFixedBuffer( MQTTFixedBuffer_t * pBuffer );
  *
  * @return True if the #MQTTFixedBuffer_t object is valid, false otherwise.
  */
-bool isValidMqttFixedBuffer( const MQTTFixedBuffer_t * pBuffer );
+bool isValidMqttFixedBuffer( const MQTTFixedBuffer_t * pFixedBuffer );
+
+/**
+ * @brief Allocate an array of #MQTTSubscribeInfo_t objects.
+ *
+ * @param[in] pSubscriptionList #MQTTSubscribeInfo_t object information.
+ * @param[in] subscriptionCount The amount of #MQTTSubscribeInfo_t objects to allocate.
+ *
+ * @return NULL or allocated #MQTTSubscribeInfo_t array.
+ */
+MQTTSubscribeInfo_t * allocateMqttSubscriptionList( MQTTSubscribeInfo_t * pSubscriptionList,
+                                                    size_t subscriptionCount );
+
+/**
+ * @brief Validate an array of #MQTTSubscribeInfo_t objects.
+ *
+ * @param[in] pSubscriptionList #MQTTSubscribeInfo_t object information.
+ * @param[in] subscriptionCount The length of #MQTTSubscribeInfo_t objects in the pSubscriptionList.
+ *
+ * @return True if the #MQTTSubscribeInfo_t is valid.
+ */
+bool isValidMqttSubscriptionList( MQTTSubscribeInfo_t * pSubscriptionList,
+                                  size_t subscriptionCount );
 
 #endif /* ifndef MQTT_CBMC_STATE_H_ */
