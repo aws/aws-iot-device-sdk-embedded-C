@@ -24,7 +24,5 @@ INCLUDES += -I$(SRCDIR)/libraries/standard/mqtt/src
 INCLUDES += -I$(SRCDIR)/demos/logging-stack
 INCLUDES += -I$(SRCDIR)/platform/include
 
->>>>>>> Update CBMC proofs to follow suit
-
 # Preprocessor definitions -D...
 DEFINES += -Dmqtt_EXPORTS
