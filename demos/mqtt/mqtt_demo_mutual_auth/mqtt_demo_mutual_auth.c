@@ -69,7 +69,7 @@
     #error "Please define AWS IoT MQTT broker endpoint(AWS_IOT_ENDPOINT) in demo_config.h."
 #endif
 #ifndef ROOT_CA_CERT_PATH
-    #error "Please define path to root ca certificate of the AWS IoT MQTT broker(ROOT_CA_CERT_PATH) in demo_config.h."
+    #error "Please define path to Root CA certificate of the MQTT broker(ROOT_CA_CERT_PATH) in demo_config.h."
 #endif
 #ifndef CLIENT_CERT_PATH
     #error "Please define path to client certificate(CLIENT_CERT_PATH) in demo_config.h."
@@ -661,7 +661,8 @@ static void eventCallback( MQTTContext_t * pMqttContext,
 
                 /* Nothing to be done from application as library handles
                  * PINGRESP. */
-                LogError( ( "PINGRESP should not be handled by the application callback.\n\n" ) );
+                LogWarn( ( "PINGRESP should not be handled by the application "
+                           "callback when using MQTT_ProcessLoop.\n\n" ) );
                 break;
 
             case MQTT_PACKET_TYPE_PUBACK:

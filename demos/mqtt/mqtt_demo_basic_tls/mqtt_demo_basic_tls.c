@@ -61,7 +61,7 @@
  * Throw compilation error if the below configs are not defined.
  */
 #ifndef ROOT_CA_CERT_PATH
-    #error "Please define path to root ca certificate of the AWS IoT MQTT broker(ROOT_CA_CERT_PATH) in demo_config.h."
+    #error "Please define path to Root CA certificate of the MQTT broker(ROOT_CA_CERT_PATH) in demo_config.h."
 #endif
 #ifndef CLIENT_IDENTIFIER
     #error "Please define a unique CLIENT_IDENTIFIER."
@@ -616,7 +616,7 @@ static void eventCallback( MQTTContext_t * pMqttContext,
 
                 /* Nothing to be done from application as library handles
                  * PINGRESP. */
-                LogError( ( "PINGRESP should not be handled by the application callback.\n\n" ) );
+                LogWarn( ( "PINGRESP should not be handled by the application callback.\n\n" ) );
                 break;
 
             case MQTT_PACKET_TYPE_PUBREC:

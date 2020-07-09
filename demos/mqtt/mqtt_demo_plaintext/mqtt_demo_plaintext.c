@@ -406,7 +406,8 @@ static void eventCallback( MQTTContext_t * pMqttContext,
 
                 /* Nothing to be done from application as library handles
                  * PINGRESP. */
-                LogError( ( "PINGRESP should not be handled by the application callback.\n\n" ) );
+                LogWarn( ( "PINGRESP should not be handled by the application "
+                           "callback when using MQTT_ProcessLoop.\n\n" ) );
                 break;
 
             /* Any other packet type is invalid. */

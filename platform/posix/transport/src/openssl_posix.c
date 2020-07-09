@@ -617,7 +617,7 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
         else
         {
             LogError( ( "SSL_read of OpenSSL failed to receive data: "
-                        " status=%d.", bytesReceived ) );
+                        "status=%d.", bytesReceived ) );
         }
     }
 
