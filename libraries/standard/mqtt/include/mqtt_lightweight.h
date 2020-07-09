@@ -313,7 +313,7 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * pConnectInfo,
  *
  * This function must be called before #MQTT_SerializeSubscribe in order to
  * verify the size of the MQTT SUBSCRIBE packet that is generated from list of
- * #MQTTSubscribeInfo_t. The parameters @p pSubscriptionList  and
+ * #MQTTSubscribeInfo_t. The parameters @p pSubscriptionList and
  * @p pRemainingLength are valid only if this function returns #MQTTSuccess.
  * @p pPacketSize returned is used to verify the size of a #MQTTFixedBuffer_t
  * that will hold the MQTT SUBSCRIBE packet.
@@ -361,7 +361,7 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionL
  *
  * This function must be called before #MQTT_SerializeUnsubscribe in order to
  * verify the size of the MQTT UNSUBSCRIBE packet that is generated from list of
- * #MQTTSubscribeInfo_t. The parameters @p pSubscriptionList  and
+ * #MQTTSubscribeInfo_t. The parameters @p pSubscriptionList and
  * @p pRemainingLength are valid only if this function returns #MQTTSuccess.
  * @p pPacketSize returned is used to verify the size of a #MQTTFixedBuffer_t
  * that will hold the MQTT UNSUBSCRIBE packet.

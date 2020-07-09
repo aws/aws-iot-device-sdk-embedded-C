@@ -1778,10 +1778,6 @@ MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * pPublishInfo,
                     pPublishInfo->pPayload ) );
         status = MQTTBadParameter;
     }
-
-    /* Because it is required by the application to call MQTT_GetPublishPacketSize()
-     * before this function, this case may not be reached. This parameter check is
-     * defensive. */
     else if( ( pPublishInfo->pTopicName == NULL ) || ( pPublishInfo->topicNameLength == 0U ) )
     {
         LogError( ( "Invalid topic name for PUBLISH: pTopicName=%p, "
