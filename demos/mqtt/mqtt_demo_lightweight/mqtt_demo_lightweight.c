@@ -55,31 +55,6 @@
 /* Reconnect parameters. */
 #include "reconnect.h"
 
-/**
- * @brief MQTT server host name.
- *
- * This demo uses the Mosquitto test server. This is a public MQTT server; do not
- * publish anything sensitive to this server.
- */
-#define MQTT_BROKER_ENDPOINT           "test.mosquitto.org"
-
-/**
- * @brief Length of MQTT server host name.
- */
-#define MQTT_BROKER_ENDPOINT_LENGTH    ( ( uint16_t ) ( sizeof( MQTT_BROKER_ENDPOINT ) - 1 ) )
-
-/**
- * @brief MQTT server port number.
- *
- * In general, port 1883 is for unsecured MQTT connections.
- */
-#define MQTT_BROKER_PORT               1883
-
-/**
- * @brief Size of the network buffer for MQTT packets.
- */
-#define NETWORK_BUFFER_SIZE            ( 1024U )
-
 /* Check that client identifier is defined. */
 #ifndef CLIENT_IDENTIFIER
     #error "Please define a unique CLIENT_IDENTIFIER."
@@ -91,44 +66,45 @@
  * The topic name starts with the client identifier to ensure that each demo
  * interacts with a unique topic name.
  */
-#define MQTT_EXAMPLE_TOPIC                   CLIENT_IDENTIFIER "/example/topic"
+#define MQTT_EXAMPLE_TOPIC           CLIENT_IDENTIFIER "/example/topic"
 
 /**
  * @brief Length of client MQTT topic.
  */
-#define MQTT_EXAMPLE_TOPIC_LENGTH            ( ( uint16_t ) ( sizeof( MQTT_EXAMPLE_TOPIC ) - 1 ) )
+#define MQTT_EXAMPLE_TOPIC_LENGTH    ( ( uint16_t ) ( sizeof( MQTT_EXAMPLE_TOPIC ) - 1 ) )
 
 /**
- * @brief Dimensions a file scope buffer currently used to send and receive MQTT data
- * from a socket.
+ * @brief Size of the network buffer for MQTT packets.
  */
-#define SHARED_BUFFER_SIZE                   500U
+#ifndef NETWORK_BUFFER_SIZE
+    #define NETWORK_BUFFER_SIZE    ( 1024U )
+#endif
 
 /**
  * @brief The MQTT message published in this example.
  */
-#define MQTT_EXAMPLE_MESSAGE                 "Hello Light Weight MQTT World!"
+#define MQTT_EXAMPLE_MESSAGE                 "Hello World!"
 
 /**
  * @brief Keep alive period in seconds for MQTT connection.
  */
-#define MQTT_KEEP_ALIVE_PERIOD_SECONDS       5U
+#define MQTT_KEEP_ALIVE_INTERVAL_SECONDS     ( 5U )
 
 /**
  * @brief Socket layer transportTimeout in milliseconds.
  */
-#define TRANSPORT_SEND_RECV_TIMEOUT_MS       200U
+#define TRANSPORT_SEND_RECV_TIMEOUT_MS       ( 200U )
 
 /**
  * @brief Number of time network receive will be attempted
  * if it fails due to transportTimeout.
  */
-#define MQTT_MAX_RECV_ATTEMPTS               10U
+#define MQTT_MAX_RECV_ATTEMPTS               ( 10U )
 
 /**
  * @brief Delay between two demo iterations.
  */
-#define MQTT_DEMO_ITERATION_DELAY_SECONDS    5U
+#define MQTT_DEMO_ITERATION_DELAY_SECONDS    ( 5U )
 
 /*-----------------------------------------------------------*/
 
@@ -280,7 +256,7 @@ static uint32_t calculateElapsedTime( uint32_t later,
 /**
  * @brief Static buffer used to hold MQTT messages being sent and received.
  */
-static uint8_t mqttSharedBuffer[ SHARED_BUFFER_SIZE ];
+static uint8_t buffer[ NETWORK_BUFFER_SIZE ];
 
 /**
  * @brief Packet Identifier generated when Subscribe request was sent to the broker;
@@ -324,9 +300,9 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     ServerInfo_t serverInfo;
 
     /* Initialize information to connect to the MQTT broker. */
-    serverInfo.pHostName = MQTT_BROKER_ENDPOINT;
-    serverInfo.hostNameLength = MQTT_BROKER_ENDPOINT_LENGTH;
-    serverInfo.port = MQTT_BROKER_PORT;
+    serverInfo.pHostName = BROKER_ENDPOINT;
+    serverInfo.hostNameLength = BROKER_ENDPOINT_LENGTH;
+    serverInfo.port = BROKER_PORT;
 
     /* Initialize reconnect attempts and interval */
     Transport_ReconnectParamsReset( &reconnectParams );
@@ -338,12 +314,12 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     do
     {
         /* Establish a TCP connection with the MQTT broker. This example connects
-         * to the MQTT broker as specified in MQTT_BROKER_ENDPOINT and MQTT_BROKER_PORT at
+         * to the MQTT broker as specified in BROKER_ENDPOINT and BROKER_PORT at
          * the top of this file. */
         LogInfo( ( "Creating a TCP connection to %.*s:%d.",
-                   MQTT_BROKER_ENDPOINT_LENGTH,
-                   MQTT_BROKER_ENDPOINT,
-                   MQTT_BROKER_PORT ) );
+                   BROKER_ENDPOINT_LENGTH,
+                   BROKER_ENDPOINT,
+                   BROKER_PORT ) );
         socketStatus = Plaintext_Connect( pNetworkContext,
                                           &serverInfo,
                                           TRANSPORT_SEND_RECV_TIMEOUT_MS,
@@ -406,7 +382,7 @@ static int createMQTTConnectionWithBroker( NetworkContext_t * pNetworkContext,
     /* Set MQTT keep-alive period. It is the responsibility of the application to ensure
      * that the interval between Control Packets being sent does not exceed the Keep Alive value.
      * In the absence of sending any other Control Packets, the Client MUST send a PINGREQ Packet. */
-    mqttConnectInfo.keepAliveSeconds = MQTT_KEEP_ALIVE_PERIOD_SECONDS;
+    mqttConnectInfo.keepAliveSeconds = MQTT_KEEP_ALIVE_INTERVAL_SECONDS;
 
     /* Get size requirement for the connect packet */
     result = MQTT_GetConnectPacketSize( &mqttConnectInfo, NULL, &remainingLength, &packetSize );
@@ -812,25 +788,25 @@ int main( int argc,
 
     /***
      * Set Fixed size buffer structure that is required by API to serialize
-     * and deserialize data. pBuffer is pointing to a fixed sized mqttSharedBuffer.
+     * and deserialize data. pBuffer is pointing to a fixed sized buffer.
      * The application may allocate dynamic memory as well.
      ***/
-    fixedBuffer.pBuffer = mqttSharedBuffer;
-    fixedBuffer.size = SHARED_BUFFER_SIZE;
+    fixedBuffer.pBuffer = buffer;
+    fixedBuffer.size = NETWORK_BUFFER_SIZE;
 
     for( demoIterations = 0; demoIterations < maxDemoIterations; demoIterations++ )
     {
         /* Establish a TCP connection with the MQTT broker. This example connects to
-         * the MQTT broker as specified in MQTT_BROKER_ENDPOINT and
-         * MQTT_BROKER_PORT at the top of this file. */
-        LogInfo( ( "Establishing TCP connection to the broker  %s.\r\n", MQTT_BROKER_ENDPOINT ) );
+         * the MQTT broker as specified in BROKER_ENDPOINT and
+         * BROKER_PORT at the top of this file. */
+        LogInfo( ( "Establishing TCP connection to the broker  %s.\r\n", BROKER_ENDPOINT ) );
         returnStatus = connectToServerWithBackoffRetries( &networkContext );
 
         if( returnStatus == EXIT_SUCCESS )
         {
             /* Sends an MQTT Connect packet over the already connected TCP socket
              * and waits for connection acknowledgment (CONNACK) packet. */
-            LogInfo( ( "Establishing MQTT connection to the broker  %s.\r\n", MQTT_BROKER_ENDPOINT ) );
+            LogInfo( ( "Establishing MQTT connection to the broker  %s.\r\n", BROKER_ENDPOINT ) );
             returnStatus = createMQTTConnectionWithBroker( &networkContext, &fixedBuffer );
             assert( returnStatus == EXIT_SUCCESS );
 
@@ -888,7 +864,7 @@ int main( int argc,
                     timeDiff = calculateElapsedTime( currentTimeStamp.tv_sec, lastControlPacketSentTimeStamp );
                     LogInfo( ( "Time since last control packet %u \r\n", timeDiff ) );
 
-                    if( timeDiff >= MQTT_KEEP_ALIVE_PERIOD_SECONDS )
+                    if( timeDiff >= MQTT_KEEP_ALIVE_INTERVAL_SECONDS )
                     {
                         /* Send PINGREQ to the broker */
                         LogInfo( ( "Sending PINGREQ to the broker\n " ) );
@@ -919,7 +895,7 @@ int main( int argc,
                  * loop will send out a PINGREQ if PUBLISH was not sent for this iteration.
                  * The broker will wait till 1.5 times keep-alive period before it disconnects
                  * the client. */
-                ( void ) sleep( MQTT_KEEP_ALIVE_PERIOD_SECONDS );
+                ( void ) sleep( MQTT_KEEP_ALIVE_INTERVAL_SECONDS );
             }
 
             /* Unsubscribe from the previously subscribed topic */

@@ -175,7 +175,7 @@ static uint8_t buffer[ NETWORK_BUFFER_SIZE ];
  * Timeout value will exponentially increased till maximum
  * timeout value is reached or the number of attemps are exhausted.
  *
- * @param[out] pNetworkContext Network context pointer containing TCP socket
+ * @param[out] pNetworkContext Pointer to a network context that contains a TCP socket.
  * file descriptor referring to the established connection.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on successful connection.
@@ -188,7 +188,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
  * topic MQTT_PUBLISH_COUNT_PER_LOOP number of times, and verifies if it
  * receives the Publish message back.
  *
- * @param[in] pNetworkContext Network context pointer containing TCP socket.
+ * @param[in] pNetworkContext Pointer to a network context that contains a TCP socket.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
@@ -222,7 +222,7 @@ static void eventCallback( MQTTContext_t * pMqttContext,
  * @brief Sends an MQTT CONNECT packet over the already connected TCP socket.
  *
  * @param[in] pMqttContext MQTT context pointer.
- * @param[in] pNetworkContext Network context pointer for OpenSSL.
+ * @param[in] pNetworkContext Pointer to a network context that contains a TCP socket.
  *
  * @return EXIT_SUCCESS if an MQTT session is established;
  * EXIT_FAILURE otherwise.
@@ -406,12 +406,12 @@ static void eventCallback( MQTTContext_t * pMqttContext,
 
                 /* Nothing to be done from application as library handles
                  * PINGRESP. */
-                LogInfo( ( "PINGRESP received.\n\n" ) );
+                LogError( ( "PINGRESP should not be handled by the application callback.\n\n" ) );
                 break;
 
             /* Any other packet type is invalid. */
             default:
-                LogError( ( "Unknown packet type received:(%02x).",
+                LogError( ( "Unknown packet type received:(%02x).\n\n",
                             pPacketInfo->type ) );
         }
     }

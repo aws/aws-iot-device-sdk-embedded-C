@@ -28,7 +28,6 @@
 #include <string.h>
 #include <stdbool.h>
 #include <assert.h>
-#include <time.h>
 
 /* Include config file before other non-system includes. */
 #include "test_config.h"

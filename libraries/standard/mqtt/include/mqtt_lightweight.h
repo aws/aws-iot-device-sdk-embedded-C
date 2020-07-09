@@ -515,6 +515,7 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
  * #MQTTPacketInfo_t is not valid until this routine has been invoked.
  *
  * @param[in] readFunc Transport layer read function pointer.
+ * @param[in] pNetworkContext The network context pointer provided by the application.
  * @param[out] pIncomingPacket Pointer to MQTTPacketInfo_t structure. This is
  * where type, remaining length and packet identifier are stored.
  *

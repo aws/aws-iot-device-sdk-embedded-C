@@ -247,7 +247,7 @@ static uint8_t buffer[ NETWORK_BUFFER_SIZE ];
  * Timeout value will exponentially increase until maximum
  * timeout value is reached or the number of attempts are exhausted.
  *
- * @param[out] pNetworkContext Network context pointer containing TCP socket
+ * @param[out] pNetworkContext Network context pointer for OpenSSL.
  * file descriptor set after the connection is established.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on successful connection.
@@ -260,7 +260,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
  * topic MQTT_PUBLISH_COUNT_PER_LOOP number of times, and verifies if it
  * receives the Publish message back.
  *
- * @param[in] pNetworkContext Network context pointer containing TCP socket.
+ * @param[in] pNetworkContext Network context pointer for OpenSSL.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
@@ -661,11 +661,11 @@ static void eventCallback( MQTTContext_t * pMqttContext,
 
                 /* Nothing to be done from application as library handles
                  * PINGRESP. */
-                LogInfo( ( "PINGRESP received.\n\n" ) );
+                LogError( ( "PINGRESP should not be handled by the application callback.\n\n" ) );
                 break;
 
             case MQTT_PACKET_TYPE_PUBACK:
-                LogInfo( ( "PUBACK received for packet id %u.",
+                LogInfo( ( "PUBACK received for packet id %u.\n\n",
                            packetIdentifier ) );
                 /* Cleanup publish packet when a PUBACK is received. */
                 cleanupOutgoingPublishWithPacketID( packetIdentifier );
@@ -673,7 +673,7 @@ static void eventCallback( MQTTContext_t * pMqttContext,
 
             /* Any other packet type is invalid. */
             default:
-                LogError( ( "Unknown packet type received:(%02x).",
+                LogError( ( "Unknown packet type received:(%02x).\n\n",
                             pPacketInfo->type ) );
         }
     }
