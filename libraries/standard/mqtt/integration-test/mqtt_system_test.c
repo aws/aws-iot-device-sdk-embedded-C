@@ -367,6 +367,13 @@ static void eventCallback( MQTTContext_t * pContext,
                 TEST_ASSERT_EQUAL( globalSubscribePacketIdentifier, packetIdentifier );
                 break;
 
+            case MQTT_PACKET_TYPE_PINGRESP:
+
+                /* Nothing to be done from application as library handles
+                 * PINGRESP. */
+                LogDebug( ( "Received PINGRESP" ) );
+                break;
+
             case MQTT_PACKET_TYPE_UNSUBACK:
                 /* Set the flag to represent reception of UNSUBACK. */
                 receivedUnsubAck = true;
