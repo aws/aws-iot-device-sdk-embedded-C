@@ -863,7 +863,7 @@ static int publishToTopic( MQTTContext_t * pMqttContext )
     /* Get the next free index for the outgoing publish. All QoS2 outgoing
      * publishes are stored until a PUBACK is received. These messages are
      * stored for supporting a resend if a network connection is broken before
-     * receiving a PUBACK. */
+     * receiving a PUBREC. */
     returnStatus = getNextFreeIndexForOutgoingPublishes( &publishIndex );
 
     if( returnStatus == EXIT_FAILURE )
