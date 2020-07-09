@@ -20,28 +20,22 @@
  */
 
 /**
- * @file MQTT_GetIncomingPacketTypeAndLength_harness.c
- * @brief Implements the proof harness for MQTT_GetIncomingPacketTypeAndLength function.
+ * @file MQTT_DeserializeAck_harness.c
+ * @brief Implements the proof harness for MQTT_DeserializeAck function.
  */
 #include "mqtt.h"
-#include "network_interface_stubs.h"
 #include "mqtt_cbmc_state.h"
 
 void harness()
 {
-    /* NetworkContext_t is an application defined network interface context. It
-     * is passed through to the readFunc parameter of
-     * MQTT_GetIncomingPacketTypeAndLength(). */
-    NetworkContext_t networkContext;
-
-    /* MQTT_GetIncomingPacketTypeAndLength() will set only the remainingLength
-     * field in the input MQTTPacketInfo_t structure. */
     MQTTPacketInfo_t * pIncomingPacket = NULL;
+    uint16_t * pPacketId;
+    bool * pSessionPresent;
 
     pIncomingPacket = allocateMqttPacketInfo( pIncomingPacket );
     __CPROVER_assume( isValidMqttPacketInfo( pIncomingPacket ) );
 
-    MQTT_GetIncomingPacketTypeAndLength( NetworkInterfaceReceiveStub,
-                                         networkContext,
-                                         pIncomingPacket );
+    MQTT_DeserializeAck( pIncomingPacket,
+                         pPacketId,
+                         pSessionPresent );
 }

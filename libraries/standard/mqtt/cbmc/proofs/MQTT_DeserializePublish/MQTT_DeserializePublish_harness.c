@@ -20,28 +20,26 @@
  */
 
 /**
- * @file MQTT_GetIncomingPacketTypeAndLength_harness.c
- * @brief Implements the proof harness for MQTT_GetIncomingPacketTypeAndLength function.
+ * @file MQTT_DeserializePublish_harness.c
+ * @brief Implements the proof harness for MQTT_DeserializePublish function.
  */
+
 #include "mqtt.h"
-#include "network_interface_stubs.h"
 #include "mqtt_cbmc_state.h"
 
 void harness()
 {
-    /* NetworkContext_t is an application defined network interface context. It
-     * is passed through to the readFunc parameter of
-     * MQTT_GetIncomingPacketTypeAndLength(). */
-    NetworkContext_t networkContext;
-
-    /* MQTT_GetIncomingPacketTypeAndLength() will set only the remainingLength
-     * field in the input MQTTPacketInfo_t structure. */
     MQTTPacketInfo_t * pIncomingPacket = NULL;
+    MQTTPublishInfo_t * pPublishInfo = NULL;
+    uint16_t packetId;
 
     pIncomingPacket = allocateMqttPacketInfo( pIncomingPacket );
     __CPROVER_assume( isValidMqttPacketInfo( pIncomingPacket ) );
 
-    MQTT_GetIncomingPacketTypeAndLength( NetworkInterfaceReceiveStub,
-                                         networkContext,
-                                         pIncomingPacket );
+    pPublishInfo = allocateMqttPublishInfo( pPublishInfo );
+    __CPROVER_assume( isValidMqttPublishInfo( pPublishInfo ) );
+
+    /* This function grabs the topic name, the topic name length, the
+     * the payload, and the payload length. */
+    MQTT_DeserializePublish( pIncomingPacket, packetId, pPublishInfo );
 }

@@ -1,0 +1,7 @@
+{ "expected-missing-functions":
+  [
+
+  ],
+  "proof-name": "MQTT_SerializeConnect",
+  "proof-root": "libraries/standard/mqtt/cbmc/proofs"
+}

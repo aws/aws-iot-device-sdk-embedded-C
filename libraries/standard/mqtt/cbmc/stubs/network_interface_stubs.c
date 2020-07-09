@@ -26,9 +26,6 @@ int32_t NetworkInterfaceReceiveStub( NetworkContext_t context,
                                      void * pBuffer,
                                      size_t bytesToRecv )
 {
-    __CPROVER_assert( context != NULL,
-                      "IotNetworkInterfaceReceive pConnection is not NULL." );
-
     __CPROVER_assert( pBuffer != NULL,
                       "IotNetworkInterfaceReceive pBuffer is not NULL." );
 
