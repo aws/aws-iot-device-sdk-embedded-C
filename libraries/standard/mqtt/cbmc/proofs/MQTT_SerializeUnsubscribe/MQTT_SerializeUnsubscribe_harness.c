@@ -20,43 +20,44 @@
  */
 
 /**
- * @file MQTT_SerializeConnect_harness.c
- * @brief Implements the proof harness for MQTT_SerializeConnect function.
+ * @file MQTT_SerializeUnsubscribe_harness.c
+ * @brief Implements the proof harness for MQTT_SerializeUnsubscribe function.
  */
 #include "mqtt.h"
 #include "mqtt_cbmc_state.h"
 
 void harness()
 {
-    MQTTConnectInfo_t * pConnectInfo = NULL;
-    MQTTPublishInfo_t * pWillInfo = NULL;
+    MQTTSubscribeInfo_t * pSubscriptionList = NULL;
+    size_t subscriptionCount;
     size_t remainingLength = 0;
-    MQTTFixedBuffer_t * pFixedBuffer = NULL;
+    uint16_t packetId;
     size_t packetSize = 0;
+    MQTTFixedBuffer_t * pFixedBuffer = NULL;
     MQTTStatus_t status = MQTTSuccess;
 
-    pConnectInfo = allocateMqttConnectInfo( pConnectInfo );
-    __CPROVER_assume( isValidMqttConnectInfo( pConnectInfo ) );
+    __CPROVER_assume( subscriptionCount < SUBSCRIPTION_COUNT_MAX );
 
-    pWillInfo = allocateMqttPublishInfo( pWillInfo );
-    __CPROVER_assume( isValidMqttPublishInfo( pWillInfo ) );
+    pSubscriptionList = allocateMqttSubscriptionList( pSubscriptionList, subscriptionCount );
+    __CPROVER_assume( isValidMqttSubscriptionList( pSubscriptionList, subscriptionCount ) );
 
     pFixedBuffer = allocateMqttFixedBuffer( pFixedBuffer );
     __CPROVER_assume( isValidMqttFixedBuffer( pFixedBuffer ) );
 
-    /* Before calling MQTT_SerializeConnect() it is up to the application to make
-    * sure that the information in MQTTConnectInfo_t and MQTTPublishInfo_t can
-    * fit into the MQTTFixedBuffer_t. It is a violation of the API to call
-    * MQTT_SerializeConnect without first calling MQTT_GetConnectPacketSize(). */
-    if( pConnectInfo != NULL )
+    if( pSubscriptionList != NULL )
     {
-        status = MQTT_GetConnectPacketSize( pConnectInfo, pWillInfo, &remainingLength, &packetSize );
+        status = MQTT_GetUnsubscribePacketSize( pSubscriptionList,
+                                                subscriptionCount,
+                                                &remainingLength,
+                                                &packetSize );
     }
 
     if( status == MQTTSuccess )
     {
-        /* For coverage, it is expected that a NULL pConnectInfo will reach this
-         * function. */
-        MQTT_SerializeConnect( pConnectInfo, pWillInfo, remainingLength, pFixedBuffer );
+        MQTT_SerializeUnsubscribe( pSubscriptionList,
+                                   subscriptionCount,
+                                   packetId,
+                                   remainingLength,
+                                   pFixedBuffer );
     }
 }
