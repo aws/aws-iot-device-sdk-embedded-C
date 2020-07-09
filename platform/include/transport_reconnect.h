@@ -20,14 +20,15 @@
  */
 
 /**
- * @file reconnect_config.h
+ * @file transport_reconnect.h
  * @brief Declaration of the exponential backoff reconnect logic utility functions
  * and constants.
  */
 
-#ifndef RECONNECT_H_
-#define RECONNECT_H_
+#ifndef TRANSPORT_RECONNECT_H_
+#define TRANSPORT_RECONNECT_H_
 
+/* Standard include. */
 #include <stdint.h>
 
 /* bools are only defined in C99+ */
@@ -51,10 +52,15 @@
 /* @brief Max jitter value in seconds */
 #define MAX_JITTER_VALUE_SECONDS             5U
 
-/* @brief Transport reconnect parameter */
+/* @brief Represents parameters required for reconnect logic. */
 typedef struct TransportReconnectParams
 {
+    /* @brief The backoff delay time value for next iteration of
+     * reconnection. */
     uint32_t nextBackOffSec;
+
+    /* @brief The cumulative count of backoff delay cycles completed
+     * for reconnection. */
     uint32_t attemptsDone;
 } TransportReconnectParams_t;
 
@@ -80,4 +86,4 @@ void Transport_ReconnectParamsReset( TransportReconnectParams_t * reconnectParam
  */
 bool Transport_ReconnectBackoffAndSleep( TransportReconnectParams_t * reconnectParams );
 
-#endif /* ifndef RECONNECT_H_ */
+#endif /* ifndef TRANSPORT_RECONNECT_H_ */

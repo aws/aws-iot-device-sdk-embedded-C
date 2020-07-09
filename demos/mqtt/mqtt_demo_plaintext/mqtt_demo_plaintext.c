@@ -53,7 +53,7 @@
 
 
 /* Reconnect parameters. */
-#include "reconnect.h"
+#include "transport_reconnect.h"
 
 /**
  * @brief MQTT server host name.
@@ -498,7 +498,7 @@ static int connectToServerWithBackoffRetries( int * pTcpSocket )
         {
             LogError( ( "Connection to the broker failed, all attempts exhausted." ) );
         }
-    } while ( ( status == EXIT_FAILURE ) && ( backoffSuccess == true ) );
+    } while( ( status == EXIT_FAILURE ) && ( backoffSuccess == true ) );
 
     return status;
 }
@@ -1087,7 +1087,6 @@ int main( int argc,
         LogInfo( ( "Short delay before starting the next iteration....\n" ) );
         sleep( MQTT_SUBPUB_LOOP_DELAY_SECONDS );
     }
-
 
     return status;
 }

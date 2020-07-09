@@ -20,7 +20,7 @@
  */
 
 /**
- * @file reconnect_posix.c
+ * @file transport_reconnect_posix.c
  * @brief Implementation of the backoff logic when connection fails to the server fails.
  */
 
@@ -28,7 +28,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <time.h>
-#include "reconnect.h"
+#include "transport_reconnect.h"
 
 /*-----------------------------------------------------------*/
 
