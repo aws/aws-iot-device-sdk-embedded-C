@@ -354,8 +354,6 @@ static void eventCallback( MQTTContext_t * pContext,
     }
     else
     {
-        TEST_ASSERT_NOT_EQUAL( MQTT_PACKET_TYPE_PINGRESP, pPacketInfo->type );
-
         /* Handle other packets. */
         switch( pPacketInfo->type )
         {
