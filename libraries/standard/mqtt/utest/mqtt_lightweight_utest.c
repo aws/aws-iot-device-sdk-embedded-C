@@ -769,6 +769,18 @@ void test_MQTT_SerializeSubscribe( void )
                                       NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
+    /* Verify a NULL buffer in the fixed buffer struct fails */
+    fixedBuffer.pBuffer = NULL;
+    status = MQTT_SerializeSubscribe( &subscriptionList,
+                                      subscriptionCount,
+                                      PACKET_ID,
+                                      remainingLength,
+                                      &fixedBuffer );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Restore the fixed buffer. */
+    fixedBuffer.pBuffer = &buffer[ BUFFER_PADDING_LENGTH ];
+
     /* Get correct values of packet size and remaining length. */
     memset( ( void * ) &subscriptionList, 0x0, sizeof( subscriptionList ) );
     subscriptionList.qos = MQTTQoS0;
@@ -864,6 +876,18 @@ void test_MQTT_SerializeUnsubscribe( void )
                                         remainingLength,
                                         NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Verify a NULL buffer in the fixed buffer struct fails */
+    fixedBuffer.pBuffer = NULL;
+    status = MQTT_SerializeUnsubscribe( &subscriptionList,
+                                        subscriptionCount,
+                                        PACKET_ID,
+                                        remainingLength,
+                                        &fixedBuffer );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Restore the fixed buffer. */
+    fixedBuffer.pBuffer = &buffer[ BUFFER_PADDING_LENGTH ];
 
     /* Get correct values of packetsize and remaining length. */
     memset( ( void * ) &subscriptionList, 0x0, sizeof( subscriptionList ) );
@@ -1018,13 +1042,49 @@ void test_MQTT_SerializePublish( void )
                                     NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
-    /* 0 packet ID for QoS > 0. */
+    /* Verify a NULL buffer in the fixed buffer struct fails */
+    fixedBuffer.pBuffer = NULL;
+    status = MQTT_SerializePublish( &publishInfo,
+                                    PACKET_ID,
+                                    remainingLength,
+                                    &fixedBuffer );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Restore the fixed buffer. */
+    fixedBuffer.pBuffer = &buffer[ BUFFER_PADDING_LENGTH ];
+
+    /* Verify that a non-zero payload length and a NULL payload fails. */
+    publishInfo.payloadLength = 1;
+    publishInfo.pPayload = NULL;
+    status = MQTT_SerializePublish( &publishInfo,
+                                    PACKET_ID,
+                                    remainingLength,
+                                    &fixedBuffer );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Restore the payload length to valid for tests. */
+    publishInfo.payloadLength = 0;
+
+    /* Verify that 0 packet ID for QoS > 0 fails. */
     publishInfo.qos = MQTTQoS1;
     status = MQTT_SerializePublish( &publishInfo,
                                     0,
                                     remainingLength,
                                     &fixedBuffer );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Verify that a duplicate flag for Qos 0 fails. */
+    publishInfo.qos = MQTTQoS0;
+    publishInfo.dup = true;
+    status = MQTT_SerializePublish( &publishInfo,
+                                    PACKET_ID,
+                                    remainingLength,
+                                    &fixedBuffer );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Restore the previous flags for other tests. */
+    publishInfo.qos = MQTTQoS1;
+    publishInfo.dup = false;
 
     /* Empty topic fails. */
     publishInfo.pTopicName = NULL;
@@ -1201,6 +1261,14 @@ void test_MQTT_SerializePingreq( void )
     /* NULL buffer fails. */
     status = MQTT_SerializePingreq( NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Verify a NULL buffer in the fixed buffer struct fails */
+    fixedBuffer.pBuffer = NULL;
+    status = MQTT_SerializePingreq( &fixedBuffer );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Restore the fixed buffer. */
+    fixedBuffer.pBuffer = &buffer[ BUFFER_PADDING_LENGTH ];
 
     /* Good case succeeds. */
     fixedBuffer.size = 2;
@@ -1717,6 +1785,17 @@ void test_MQTT_SerializePublishHeader( void )
                                           NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
+    /* Verify a NULL buffer in the fixed buffer struct fails */
+    fixedBuffer.pBuffer = NULL;
+    status = MQTT_SerializePublishHeader( &publishInfo,
+                                          PACKET_ID,
+                                          remainingLength,
+                                          &fixedBuffer,
+                                          &headerSize );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+    /* Restore the fixed buffer. */
+    fixedBuffer.pBuffer = &buffer[ BUFFER_PADDING_LENGTH ];
+
     /* Empty topic fails. */
     publishInfo.pTopicName = NULL;
     publishInfo.topicNameLength = TEST_TOPIC_NAME_LENGTH;
@@ -1745,6 +1824,20 @@ void test_MQTT_SerializePublishHeader( void )
                                           &fixedBuffer,
                                           &headerSize );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Verify that a duplicate flag for Qos 0 fails. */
+    publishInfo.qos = MQTTQoS0;
+    publishInfo.dup = true;
+    status = MQTT_SerializePublishHeader( &publishInfo,
+                                          PACKET_ID,
+                                          remainingLength,
+                                          &fixedBuffer,
+                                          &headerSize );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Restore the previous flags for other tests. */
+    publishInfo.qos = MQTTQoS1;
+    publishInfo.dup = false;
 
     /* Buffer too small. */
     fixedBuffer.size = 1;
@@ -1804,6 +1897,31 @@ void test_MQTT_SerializePublishHeader( void )
     /* Payload should not be serialized. */
     TEST_ASSERT_EQUAL_MEMORY( expectedPacket, &buffer[ BUFFER_PADDING_LENGTH ], packetSize );
     checkBufferOverflow( buffer, sizeof( buffer ) );
+
+
+    /* Again with QoS2 and dup. */
+    publishInfo.qos = MQTTQoS2;
+    publishInfo.dup = true;
+    status = MQTT_GetPublishPacketSize( &publishInfo, &remainingLength, &packetSize );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    padAndResetBuffer( buffer, sizeof( buffer ) );
+    status = MQTT_SerializePublishHeader( &publishInfo,
+                                          PACKET_ID,
+                                          remainingLength,
+                                          &fixedBuffer,
+                                          &headerSize );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+
+    memset( ( void * ) expectedPacket, 0x00, sizeof( expectedPacket ) );
+    pIterator = expectedPacket;
+    /* Dup = 0x8, QoS2 = 0x4, 8 + 4 = 0xC. */
+    *pIterator++ = MQTT_PACKET_TYPE_PUBLISH | 0xC;
+    pIterator += encodeRemainingLength( pIterator, remainingLength );
+    pIterator += encodeString( pIterator, publishInfo.pTopicName, publishInfo.topicNameLength );
+    *pIterator++ = UINT16_HIGH_BYTE( PACKET_ID );
+    *pIterator++ = UINT16_LOW_BYTE( PACKET_ID );
+    TEST_ASSERT_EQUAL_MEMORY( expectedPacket, &buffer[ BUFFER_PADDING_LENGTH ], packetSize );
+    checkBufferOverflow( buffer, sizeof( buffer ) );
 }
 
 /* ========================================================================== */
@@ -1827,12 +1945,20 @@ void test_MQTT_SerializeAck( void )
     expectedPacket[ 2 ] = UINT16_HIGH_BYTE( PACKET_ID );
     expectedPacket[ 3 ] = UINT16_LOW_BYTE( PACKET_ID );
 
-    /* Verify parameters. */
+    /* Verify invalid parameter failures. */
     status = MQTT_SerializeAck( NULL, packetType, PACKET_ID );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
     status = MQTT_SerializeAck( &fixedBuffer, packetType, 0 );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Verify a NULL buffer in the fixed buffer struct fails */
+    fixedBuffer.pBuffer = NULL;
+    status = MQTT_SerializeAck( &fixedBuffer, packetType, PACKET_ID );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Restore the fixed buffer. */
+    fixedBuffer.pBuffer = &buffer[ BUFFER_PADDING_LENGTH ];
 
     /* Not a PUBACK, PUBREC, PUBREL, or PUBCOMP. */
     status = MQTT_SerializeAck( &fixedBuffer, MQTT_PACKET_TYPE_CONNACK, PACKET_ID );
@@ -2149,8 +2275,8 @@ void test_MQTT_SerializeConnect_Happy_Paths()
 /* ==================  Testing MQTT_SerializeDisconnect ===================== */
 
 /**
- * @brief Call Mqtt_SerializeDisconnect using NULL pBuffer and insufficient buffer
- * size in order to receive MQTTBadParameter and MQTTNoMemory errors.
+ * @brief Call Mqtt_SerializeDisconnect using a NULL pBuffer and an insufficient
+ * buffer size in order to receive MQTTBadParameter and MQTTNoMemory errors.
  */
 void test_MQTT_SerializeDisconnect_Invalid_Params()
 {
@@ -2158,11 +2284,16 @@ void test_MQTT_SerializeDisconnect_Invalid_Params()
     size_t packetSize = 0;
     MQTTFixedBuffer_t networkBuffer;
 
-    /* Test NULL pBuffer. */
+    /* Test NULL pFixedBuffer. */
     mqttStatus = MQTT_SerializeDisconnect( NULL );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
-    /* Test disconnectPacketSize > pBuffer->size. */
+    /* Test a NULL pFixedBuffer->pBuffer. */
+    networkBuffer.pBuffer = NULL;
+    mqttStatus = MQTT_SerializeDisconnect( &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
+
+    /* Test disconnectPacketSize > pFixedBuffer->size. */
     /* Get MQTT disconnect packet size and remaining length. */
     mqttStatus = MQTT_GetDisconnectPacketSize( &packetSize );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
