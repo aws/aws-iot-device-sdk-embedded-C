@@ -41,21 +41,20 @@
 
 /* @brief Max number of connect attempts, set this value to 0 if the client
  * must try connecting to the server forever */
-#define MAX_RECONNECT_ATTEMPS                4U
+#define MAX_RECONNECT_ATTEMPTS               4U
 
-/* @brief Initial fixed timeout value in seconds between two successive
- * connects. A random jitter value is added to every timeout value  */
-#define INITIAL_RECONNECT_TIMEOUT_SECONDS    1U
-/* @brief Max timout value in seconds */
-#define MAX_RECONNECT_TIMEOUT_SECONDS        128U
+/* @brief Initial fixed backoff value in seconds between two successive
+ * connects. A random jitter value is added to every backoff value  */
+#define INITIAL_RECONNECT_BACKOFF_SECONDS    1U
+/* @brief Max backoff value in seconds */
+#define MAX_RECONNECT_BACKOFF_SECONDS        128U
 /* @brief Max jitter value in seconds */
 #define MAX_JITTER_VALUE_SECONDS             5U
-
 
 /* @brief Transport reconnect parameter */
 typedef struct TransportReconnectParams
 {
-    uint32_t reconnectTimeoutSec;
+    uint32_t nextBackOffSec;
     uint32_t attemptsDone;
 } TransportReconnectParams_t;
 

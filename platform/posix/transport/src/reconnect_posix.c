@@ -38,32 +38,32 @@ bool Transport_ReconnectBackoffAndSleep( TransportReconnectParams_t * pReconnect
     uint32_t jitter = 0;
 
     /* If MAX_RECONNECT_ATTEMPTS is set to 0, try forever */
-    if( ( pReconnectParams->attemptsDone < MAX_RECONNECT_ATTEMPS ) ||
-        ( 0 == MAX_RECONNECT_ATTEMPS ) )
+    if( ( ( pReconnectParams->attemptsDone < MAX_RECONNECT_ATTEMPTS ) &&
+          ( pReconnectParams->nextBackOffSec <= MAX_RECONNECT_BACKOFF_SECONDS ) ) ||
+        ( 0 == MAX_RECONNECT_ATTEMPTS ) )
     {
         /*  Wait for timer to expire for the next reconnect */
-        ( void ) sleep( pReconnectParams->reconnectTimeoutSec );
+        ( void ) sleep( pReconnectParams->nextBackOffSec );
 
-        /* Calculate the next timeout value only if timeout value has not 
-         * exceeded  MAX_RECONNECT_TIMEOUT_SECONDS */
-        if( pReconnectParams->reconnectTimeoutSec < MAX_RECONNECT_TIMEOUT_SECONDS )
-        {
-            /* Calculate jitter value picking a random number 
-             * between 0 and  MAX_JITTER_VALUE_SECONDS. */
-            jitter = ( rand() % MAX_JITTER_VALUE_SECONDS );
-             /* Double the timeout value for the next iteration */
-            pReconnectParams->reconnectTimeoutSec += pReconnectParams->reconnectTimeoutSec;
-            pReconnectParams->reconnectTimeoutSec += jitter;
-        }
-
+        /* Increment backoff counts. */
         pReconnectParams->attemptsDone++;
+
+        /* Calculate the next backoff value. */
+
+        /* Calculate jitter value picking a random number
+         * between 0 and  MAX_JITTER_VALUE_SECONDS. */
+        jitter = ( rand() % MAX_JITTER_VALUE_SECONDS );
+        /* Double the backoff value for the next iteration. */
+        pReconnectParams->nextBackOffSec += pReconnectParams->nextBackOffSec;
+        pReconnectParams->nextBackOffSec += jitter;
+
         status = true;
     }
     else
     {
         /* When max reconnect attempts are exhausted, let application know by returning
-         * false. Application may choose to restart the connection process after calling 
-         * Transport_ReconnectParamsReset() */
+         * false. Application may choose to restart the connection process after calling
+         * Transport_ReconnectParamsReset(). */
         status = false;
         Transport_ReconnectParamsReset( pReconnectParams );
     }
@@ -78,20 +78,20 @@ void Transport_ReconnectParamsReset( TransportReconnectParams_t * pReconnectPara
     uint32_t jitter = 0;
     struct timespec tp;
 
-    /* Reset attempts done to zero so that the next connect cycle can start */
+    /* Reset attempts done to zero so that the next connect cycle can start. */
     pReconnectParams->attemptsDone = 0;
 
-    /* Get current time to seed pseudo random number generator */
+    /* Get current time to seed pseudo random number generator. */
     ( void ) clock_gettime( CLOCK_REALTIME, &tp );
 
-    /* Seed pseudo ramdom number generator with nano seconds */
+    /* Seed pseudo ramdom number generator with nano seconds. */
     srand( tp.tv_nsec );
 
     /* Calculate jitter value using picking a random number. */
     jitter = ( rand() % MAX_JITTER_VALUE_SECONDS );
 
-    /* Reset the timout value to the initial time out value plus jitter */
-    pReconnectParams->reconnectTimeoutSec = INITIAL_RECONNECT_TIMEOUT_SECONDS + jitter;
+    /* Reset the backoff value to the initial time out value plus jitter. */
+    pReconnectParams->nextBackOffSec = INITIAL_RECONNECT_BACKOFF_SECONDS + jitter;
 }
 
 /*-----------------------------------------------------------*/
