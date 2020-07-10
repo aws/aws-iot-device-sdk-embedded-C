@@ -22,10 +22,6 @@
 
 /************ End of logging configuration ****************/
 
-/* Set network context to a socket (int). This is a stub and passed through to
- * the application defined transport send and receive. */
-typedef int NetworkContext_t;
-
 /**
  * @brief The maximum number of MQTT PUBLISH messages that may be pending
  * acknowledgement at any time.

@@ -572,8 +572,8 @@ static void serializePublishCommon( const MQTTPublishInfo_t * pPublishInfo,
     assert( ( ( size_t ) ( pIndex - pFixedBuffer->pBuffer ) ) <= pFixedBuffer->size );
 }
 
-static size_t getRemainingLength( MQTTTransportRecvFunc_t recvFunc,
-                                  NetworkContext_t networkContext )
+static size_t getRemainingLength( TransportRecv_t recvFunc,
+                                  NetworkContext_t * pNetworkContext )
 {
     size_t remainingLength = 0, multiplier = 1, bytesDecoded = 0, expectedSize = 0;
     uint8_t encodedByte = 0;
@@ -588,7 +588,7 @@ static size_t getRemainingLength( MQTTTransportRecvFunc_t recvFunc,
         }
         else
         {
-            bytesReceived = recvFunc( networkContext, &encodedByte, 1U );
+            bytesReceived = recvFunc( pNetworkContext, &encodedByte, 1U );
 
             if( bytesReceived == 1 )
             {
@@ -2192,8 +2192,8 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( MQTTTransportRecvFunc_t readFunc,
-                                                  NetworkContext_t networkContext,
+MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
+                                                  NetworkContext_t * pNetworkContext,
                                                   MQTTPacketInfo_t * pIncomingPacket )
 {
     MQTTStatus_t status = MQTTSuccess;
@@ -2207,7 +2207,7 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( MQTTTransportRecvFunc_t readFu
     else
     {
         /* Read a single byte. */
-        bytesReceived = readFunc( networkContext,
+        bytesReceived = readFunc( pNetworkContext,
                                   &( pIncomingPacket->type ),
                                   1U );
     }
@@ -2218,7 +2218,7 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( MQTTTransportRecvFunc_t readFu
         if( incomingPacketValid( pIncomingPacket->type ) == true )
         {
             pIncomingPacket->remainingLength = getRemainingLength( readFunc,
-                                                                   networkContext );
+                                                                   pNetworkContext );
 
             if( pIncomingPacket->remainingLength == MQTT_REMAINING_LENGTH_INVALID )
             {

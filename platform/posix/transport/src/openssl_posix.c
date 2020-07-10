@@ -445,7 +445,7 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
         }
     }
 
-/* Create SSL context. */
+    /* Create SSL context. */
     if( returnStatus == OPENSSL_SUCCESS )
     {
         pSslContext = SSL_CTX_new( TLS_client_method() );
@@ -598,6 +598,7 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
                       size_t bytesToRecv )
 {
     int32_t bytesReceived = 0;
+    int sslError = 0;
 
     /* SSL read of data. */
     bytesReceived = ( int32_t ) SSL_read( pNetworkContext->pSsl,
@@ -606,8 +607,18 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
 
     if( bytesReceived <= 0 )
     {
-        LogError( ( "SSL_read of OpenSSL failed to receive data: "
-                    " status=%d.", bytesReceived ) );
+        sslError = SSL_get_error( pNetworkContext->pSsl, bytesReceived );
+
+        if( sslError == SSL_ERROR_WANT_READ )
+        {
+            /* There is no data to receive at this time. */
+            bytesReceived = 0;
+        }
+        else
+        {
+            LogError( ( "SSL_read of OpenSSL failed to receive data: "
+                        "status=%d.", bytesReceived ) );
+        }
     }
 
     return bytesReceived;
