@@ -36,9 +36,7 @@
 bool Transport_ReconnectBackoffAndSleep( TransportReconnectParams_t * pReconnectParams )
 {
     bool status = false;
-    uint32_t nextBackOffAndJitter = 0;
-    uint32_t nextMaxBackOff = 0;
-    uint32_t jitterUpperLimit = MAX_RECONNECT_BACKOFF_SECONDS;
+    uint32_t nextMaxJitterLimit = MAX_RECONNECT_BACKOFF_SECONDS;
 
     /* If MAX_RECONNECT_ATTEMPTS is set to 0, try forever */
     if( ( pReconnectParams->attemptsDone < MAX_RECONNECT_ATTEMPTS ) ||
@@ -52,15 +50,17 @@ bool Transport_ReconnectBackoffAndSleep( TransportReconnectParams_t * pReconnect
 
         /* Calculate the delay time for the next reconnect attempt. */
 
-        /* Calculate upper limit of range for selecting a random value. */
-        nextMaxBackOff = INITIAL_RECONNECT_BACKOFF_SECONDS *
-                         ( 2 << pReconnectParams->attemptsDone );
-        jitterUpperLimit = ( nextMaxBackOff < MAX_RECONNECT_BACKOFF_SECONDS ) ?
-                           nextMaxBackOff : MAX_RECONNECT_BACKOFF_SECONDS;
+        if( ( pReconnectParams->attemptsDone < sizeof( pReconnectParams->attemptsDone ) * 8U ) &&
+            ( ( 2U << pReconnectParams->attemptsDone ) < MAX_RECONNECT_BACKOFF_SECONDS ) )
+        {
+            /* Calculate upper limit of range for selecting a random value. */
+            nextMaxJitterLimit = INITIAL_RECONNECT_BACKOFF_SECONDS *
+                                 ( 2 << pReconnectParams->attemptsDone );
+        }
 
         /* Calculate jitter value picking a random number
          * between 0 and above calculated upper limit for the next retry. */
-        nextBackOffAndJitter = rand() % jitterUpperLimit;
+        pReconnectParams->nextBackOffSec = rand() % nextMaxJitterLimit;
 
         status = true;
     }
