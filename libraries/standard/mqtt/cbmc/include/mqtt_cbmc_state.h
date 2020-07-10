@@ -50,6 +50,9 @@ MQTTPacketInfo_t * allocateMqttPacketInfo( MQTTPacketInfo_t * pPacketInfo );
  * @param[in] pPacketInfo #MQTTPacketInfo_t object to validate.
  *
  * @return True if the #MQTTPacketInfo_t object is valid, false otherwise.
+ *
+ * @note A NULL object is a valid object. This is for coverage of the NULL
+ * parameter checks in the function under proof.
  */
 bool isValidMqttPacketInfo( const MQTTPacketInfo_t * pPacketInfo );
 
@@ -68,6 +71,9 @@ MQTTPublishInfo_t * allocateMqttPublishInfo( MQTTPublishInfo_t * pPublishInfo );
  * @param[in] pPublishInfo #MQTTPublishInfo_t object to validate.
  *
  * @return True if the #MQTTPublishInfo_t object is valid, false otherwise.
+ *
+ * @note A NULL object is a valid object. This is for coverage of the NULL
+ * parameter checks in the function under proof.
  */
 bool isValidMqttPublishInfo( const MQTTPublishInfo_t * pPublishInfo );
 
@@ -86,6 +92,9 @@ MQTTConnectInfo_t * allocateMqttConnectInfo( MQTTConnectInfo_t * pConnectInfo );
  * @param[in] pConnectInfo #MQTTConnectInfo_t object to validate.
  *
  * @return True if the #MQTTConnectInfo_t object is valid, false otherwise.
+ *
+ * @note A NULL object is a valid object. This is for coverage of the NULL
+ * parameter checks in the function under proof.
  */
 bool isValidMqttConnectInfo( const MQTTConnectInfo_t * pConnectInfo );
 
@@ -104,6 +113,9 @@ MQTTFixedBuffer_t * allocateMqttFixedBuffer( MQTTFixedBuffer_t * pFixedBuffer );
  * @param[in] pBuffer #MQTTFixedBuffer_t object to validate.
  *
  * @return True if the #MQTTFixedBuffer_t object is valid, false otherwise.
+ *
+ * @note A NULL object is a valid object. This is for coverage of the NULL
+ * parameter checks in the function under proof.
  */
 bool isValidMqttFixedBuffer( const MQTTFixedBuffer_t * pFixedBuffer );
 
@@ -125,6 +137,9 @@ MQTTSubscribeInfo_t * allocateMqttSubscriptionList( MQTTSubscribeInfo_t * pSubsc
  * @param[in] subscriptionCount The length of #MQTTSubscribeInfo_t objects in the pSubscriptionList.
  *
  * @return True if the #MQTTSubscribeInfo_t is valid.
+ *
+ * @note A NULL object is a valid object. This is for coverage of the NULL
+ * parameter checks in the function under proof.
  */
 bool isValidMqttSubscriptionList( MQTTSubscribeInfo_t * pSubscriptionList,
                                   size_t subscriptionCount );
