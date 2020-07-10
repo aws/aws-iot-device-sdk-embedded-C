@@ -327,7 +327,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
 
         if( socketStatus != SOCKETS_SUCCESS )
         {
-            LogWarn( ( "Connection to the broker failed, sleeping %d seconds before the next attempt." ) );
+            LogWarn( ( "Connection to the broker failed. Retrying connection with backoff and jitter." ) );
             retriesArePending = Transport_ReconnectBackoffAndSleep( &reconnectParams );
         }
 
