@@ -14,7 +14,7 @@ target_link_libraries(
         mqtt
         clock_posix
         openssl_posix
-        reconnect_posix
+        transport_reconnect_posix
 )
 
 target_include_directories(
