@@ -288,8 +288,8 @@ static uint8_t * encodeString( uint8_t * pDestination,
  *
  * @return The Remaining Length of the incoming packet.
  */
-static size_t getRemainingLength( MQTTTransportRecvFunc_t recvFunc,
-                                  NetworkContext_t networkContext );
+static size_t getRemainingLength( TransportRecv_t recvFunc,
+                                  NetworkContext_t * pNetworkContext );
 
 /*-----------------------------------------------------------*/
 
