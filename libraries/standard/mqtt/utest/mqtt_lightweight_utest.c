@@ -1167,7 +1167,7 @@ void test_MQTT_SerializePublish( void )
     checkBufferOverflow( buffer, sizeof( buffer ) );
     memset( ( void * ) expectedPacket, 0x00, sizeof( expectedPacket ) );
     pIterator = expectedPacket;
-    /* Dup = 0x8, QoS2 = 0x4, Retain = 0x1. 8 + 4 + 1 = 0xD. */
+    /* Set the flags as follows: Dup = 0x8, QoS2 = 0x4, Retain = 0x1. 8 | 4 | 1 = 0xD. */
     *pIterator++ = MQTT_PACKET_TYPE_PUBLISH | 0xD;
     pIterator += encodeRemainingLength( pIterator, remainingLength );
     pIterator += encodeString( pIterator, publishInfo.pTopicName, publishInfo.topicNameLength );
@@ -1914,7 +1914,7 @@ void test_MQTT_SerializePublishHeader( void )
 
     memset( ( void * ) expectedPacket, 0x00, sizeof( expectedPacket ) );
     pIterator = expectedPacket;
-    /* Dup = 0x8, QoS2 = 0x4, 8 + 4 = 0xC. */
+    /* Set the flags as follows: Dup = 0x8, QoS2 = 0x4, 8 | 4 = 0xC. */
     *pIterator++ = MQTT_PACKET_TYPE_PUBLISH | 0xC;
     pIterator += encodeRemainingLength( pIterator, remainingLength );
     pIterator += encodeString( pIterator, publishInfo.pTopicName, publishInfo.topicNameLength );

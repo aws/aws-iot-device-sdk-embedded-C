@@ -81,14 +81,14 @@ typedef struct MQTTPacketInfo      MQTTPacketInfo_t;
  * data off the network.
  *
  * @param[in] context The network context provided with this function.
- * @param[out] pFixedBuffer Buffer to receive network data.
+ * @param[out] pBuffer Buffer to receive network data.
  * @param[in] bytesToRecv Bytes to receive from the network. pFixedBuffer must be at
  * least this size.
  *
  * @return The number of bytes received; negative value on failure.
  */
 typedef int32_t (* MQTTTransportRecvFunc_t )( NetworkContext_t context,
-                                              void * pFixedBuffer,
+                                              void * pBuffer,
                                               size_t bytesToRecv );
 
 /**
@@ -263,13 +263,14 @@ struct MQTTPacketInfo
 /**
  * @brief Get the size and Remaining Length of an MQTT CONNECT packet.
  *
- * This function must be called before #MQTT_SerializeConnect in order to verify
- * the size of the MQTT CONNECT packet that is generated from
- * #MQTTConnectInfo_t and optional #MQTTPublishInfo_t. The parameters
- * @p pConnectInfo , @p pWillInfo , and @p pRemainingLength are valid only if
- * this function returns #MQTTSuccess.
- * @p pPacketSize returned is used to verify the size of a #MQTTFixedBuffer_t
- * that will hold the MQTT CONNECT packet.
+ * This function must be called before #MQTT_SerializeConnect in order to get
+ * the size of the MQTT CONNECT packet that is generated from #MQTTConnectInfo_t
+ * and optional #MQTTPublishInfo_t. The size of the #MQTTFixedBuffer_t supplied
+ * to #MQTT_SerializeConnect must be at least @p pPacketSize. The provided
+ * @p pConnectInfo and @p pWillInfo are valid for serialization with
+ * #MQTT_SerializeConnect only if this function returns #MQTTSuccess. The
+ * remaining length returned in @p pRemainingLength and the packet size returned
+ * in @p pPacketSize are valid only if this function returns #MQTTSuccess.
  *
  * @param[in] pConnectInfo MQTT CONNECT packet parameters.
  * @param[in] pWillInfo Last Will and Testament. Pass NULL if not used.
@@ -288,11 +289,10 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
  * @brief Serialize an MQTT CONNECT packet in the given fixed buffer @p pFixedBuffer.
  *
  * #MQTT_GetConnectPacketSize should be called with @p pConnectInfo and
- * @p pWillInfo before invoking this routine.
- * The @p remainingLength was calculated from the parameters in @p pConnectInfo
- * and @p pWillInfo using function #MQTT_GetConnectPacketSize. @p pConnectInfo,
- * @p pWillInfo , and @p remainingLength are valid only if
- * #MQTT_GetConnectPacketSize returned #MQTTSuccess.
+ * @p pWillInfo before invoking this function to get the size of the required
+ * #MQTTFixedBuffer_t and @p remainingLength. The @p remainingLength must be
+ * the same as returned by #MQTT_GetConnectPacketSize. The #MQTTFixedBuffer_t
+ * must be at least as large as the size returned by #MQTT_GetConnectPacketSize.
  *
  * @param[in] pConnectInfo MQTT CONNECT packet parameters.
  * @param[in] pWillInfo Last Will and Testament. Pass NULL if not used.
@@ -311,12 +311,14 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * pConnectInfo,
 /**
  * @brief Get packet size and Remaining Length of an MQTT SUBSCRIBE packet.
  *
- * This function must be called before #MQTT_SerializeSubscribe in order to
- * verify the size of the MQTT SUBSCRIBE packet that is generated from list of
- * #MQTTSubscribeInfo_t. The parameters @p pSubscriptionList and
- * @p pRemainingLength are valid only if this function returns #MQTTSuccess.
- * @p pPacketSize returned is used to verify the size of a #MQTTFixedBuffer_t
- * that will hold the MQTT SUBSCRIBE packet.
+ * This function must be called before #MQTT_SerializeSubscribe in order to get
+ * the size of the MQTT SUBSCRIBE packet that is generated from the list of
+ * #MQTTSubscribeInfo_t. The size of the #MQTTFixedBuffer_t supplied
+ * to #MQTT_SerializeSubscribe must be at least @p pPacketSize. The provided
+ * @p pSubscriptionList is valid for serialization with #MQTT_SerializeSubscribe
+ * only if this function returns #MQTTSuccess. The remaining length returned in
+ * @p pRemainingLength and the packet size returned in @p pPacketSize are valid
+ * only if this function returns #MQTTSuccess.
  *
  * @param[in] pSubscriptionList List of MQTT subscription info.
  * @param[in] subscriptionCount The number of elements in pSubscriptionList.
@@ -335,10 +337,10 @@ MQTTStatus_t MQTT_GetSubscribePacketSize( const MQTTSubscribeInfo_t * pSubscript
  * @brief Serialize an MQTT SUBSCRIBE packet in the given buffer.
  *
  * #MQTT_GetSubscribePacketSize should be called with @p pSubscriptionList
- * before invoking this function. The @p remainingLength was calculated from the
- * parameters in @p pSubscriptionList using #MQTT_GetSubscribePacketSize.
- * @p pSubscriptionList and @p remainingLength are valid only if
- * #MQTT_GetSubscribePacketSize returned success.
+ * before invoking this function to get the size of the required
+ * #MQTTFixedBuffer_t and @p remainingLength. The @p remainingLength must be
+ * the same as returned by #MQTT_GetSubscribePacketSize. The #MQTTFixedBuffer_t
+ * must be at least as large as the size returned by #MQTT_GetSubscribePacketSize.
  *
  * @param[in] pSubscriptionList List of MQTT subscription info.
  * @param[in] subscriptionCount The number of elements in pSubscriptionList.
@@ -360,11 +362,13 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionL
  * @brief Get packet size and Remaining Length of an MQTT UNSUBSCRIBE packet.
  *
  * This function must be called before #MQTT_SerializeUnsubscribe in order to
- * verify the size of the MQTT UNSUBSCRIBE packet that is generated from list of
- * #MQTTSubscribeInfo_t. The parameters @p pSubscriptionList and
- * @p pRemainingLength are valid only if this function returns #MQTTSuccess.
- * @p pPacketSize returned is used to verify the size of a #MQTTFixedBuffer_t
- * that will hold the MQTT UNSUBSCRIBE packet.
+ * get the size of the MQTT UNSUBSCRIBE packet that is generated from the list
+ * of #MQTTSubscribeInfo_t. The size of the #MQTTFixedBuffer_t supplied
+ * to #MQTT_SerializeUnsubscribe must be at least @p pPacketSize. The provided
+ * @p pSubscriptionList is valid for serialization with #MQTT_SerializeUnsubscribe
+ * only if this function returns #MQTTSuccess. The remaining length returned in
+ * @p pRemainingLength and the packet size returned in @p pPacketSize are valid
+ * only if this function returns #MQTTSuccess.
  *
  * @param[in] pSubscriptionList List of MQTT subscription info.
  * @param[in] subscriptionCount The number of elements in pSubscriptionList.
@@ -383,10 +387,10 @@ MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * pSubscri
  * @brief Serialize an MQTT UNSUBSCRIBE packet in the given buffer.
  *
  * #MQTT_GetUnsubscribePacketSize should be called with @p pSubscriptionList
- * before invoking this function. The @p remainingLength was calculated from the
- * parameters in @p pSubscriptionList using #MQTT_GetUnsubscribePacketSize.
- * @p pSubscriptionList and @p remainingLength are valid only if
- * #MQTT_GetUnsubscribePacketSize returned success.
+ * before invoking this function to get the size of the required
+ * #MQTTFixedBuffer_t and @p remainingLength. The @p remainingLength must be
+ * the same as returned by #MQTT_GetUnsubscribePacketSize. The #MQTTFixedBuffer_t
+ * must be at least as large as the size returned by #MQTT_GetUnsubscribePacketSize.
  *
  * @param[in] pSubscriptionList List of MQTT subscription info.
  * @param[in] subscriptionCount The number of elements in pSubscriptionList.
@@ -407,12 +411,14 @@ MQTTStatus_t MQTT_SerializeUnsubscribe( const MQTTSubscribeInfo_t * pSubscriptio
 /**
  * @brief Get the packet size and remaining length of an MQTT PUBLISH packet.
  *
- * This function must be called before #MQTT_SerializePublish or
- * #MQTT_SerializePublishHeader in order to verify the size of the MQTT PUBLISH
- * packet that is generated from #MQTTPublishInfo_t. The parameters
- * @p pPublishInfo and @p pRemainingLength are valid only if this function
- * returns #MQTTSuccess. @p pPacketSize returned is used to verify the size of a
- * #MQTTFixedBuffer_t that will hold the MQTT PUBLISH packet.
+ * This function must be called before #MQTT_SerializePublish in order to get
+ * the size of the MQTT PUBLISH packet that is generated from #MQTTPublishInfo_t.
+ * The size of the #MQTTFixedBuffer_t supplied to #MQTT_SerializePublish must be
+ * at least @p pPacketSize. The provided @p pPublishInfo is valid for
+ * serialization with #MQTT_SerializePublish only if this function returns
+ * #MQTTSuccess. The remaining length returned in @p pRemainingLength and the
+ * packet size returned in @p pPacketSize are valid only if this function
+ * returns #MQTTSuccess.
  *
  * @param[in] pPublishInfo MQTT PUBLISH packet parameters.
  * @param[out] pRemainingLength The Remaining Length of the MQTT PUBLISH packet.
@@ -434,10 +440,10 @@ MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
  * only the PUBLISH header into the buffer.
  *
  * #MQTT_GetPublishPacketSize should be called with @p pPublishInfo before
- * invoking this function. The @p remainingLength was calculated from the
- * parameters in @p pPublishInfo using function #MQTT_GetPublishPacketSize.
- *  @p pPublishInfo and @p remainingLength are valid only if
- * #MQTT_GetPublishPacketSize returned #MQTTSuccess.
+ * invoking this function to get the size of the required #MQTTFixedBuffer_t and
+ * @p remainingLength. The @p remainingLength must be the same as returned by
+ * #MQTT_GetPublishPacketSize. The #MQTTFixedBuffer_t must be at least as large
+ * as the size returned by #MQTT_GetPublishPacketSize.
  *
  * @param[in] pPublishInfo MQTT PUBLISH packet parameters.
  * @param[in] packetId packet ID generated by #MQTT_GetPacketId.
@@ -458,15 +464,15 @@ MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * pPublishInfo,
  *
  * This function serializes PUBLISH header in to the given buffer. The payload
  * for PUBLISH will not be copied over to the buffer. This will help reduce
- * the memory needed for the buffer and avoid an unwanted copy operataion of the
+ * the memory needed for the buffer and avoid an unwanted copy operation of the
  * PUBLISH payload into the buffer. If the payload also would need to be part of
  * the serialized buffer, consider using #MQTT_SerializePublish.
  *
  * #MQTT_GetPublishPacketSize should be called with @p pPublishInfo before
- * invoking this function. The @p remainingLength was calculated from the
- * parameters in @p pPublishInfo using function #MQTT_GetPublishPacketSize.
- *  @p pPublishInfo and @p remainingLength are valid only if
- * #MQTT_GetPublishPacketSize returned #MQTTSuccess.
+ * invoking this function to get the size of the required #MQTTFixedBuffer_t and
+ * @p remainingLength. The @p remainingLength must be the same as returned by
+ * #MQTT_GetPublishPacketSize. The #MQTTFixedBuffer_t must be at least as large
+ * as the size returned by #MQTT_GetPublishPacketSize.
  *
  * @param[in] pPublishInfo MQTT PUBLISH packet parameters.
  * @param[in] packetId packet ID generated by #MQTT_GetPacketId.
@@ -533,6 +539,9 @@ MQTTStatus_t MQTT_GetPingreqPacketSize( size_t * pPacketSize );
 
 /**
  * @brief Serialize an MQTT PINGREQ packet into the given buffer.
+ *
+ * The input #MQTTFixedBuffer_t.size must be at least the size returned by
+ * #MQTT_GetPingreqPacketSize.
  *
  * @param[out] pFixedBuffer Buffer for packet serialization.
  *

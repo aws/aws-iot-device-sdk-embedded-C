@@ -83,7 +83,7 @@
 
 /**
  * @brief Per the MQTT 3.1.1 spec, the largest "Remaining Length" of an MQTT
- * packet is this value. This is 256 MB.
+ * packet is this value, 256 MB.
  */
 #define MQTT_MAX_REMAINING_LENGTH                   ( 268435455UL )
 
@@ -1794,8 +1794,7 @@ MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * pPublishInfo,
     }
     else if( ( pPublishInfo->dup ) && ( pPublishInfo->qos == MQTTQoS0 ) )
     {
-        LogError( ( "Duplicate flag is set for PUBLISH with Qos=%u,",
-                    pPublishInfo->qos ) );
+        LogError( ( "Duplicate flag is set for PUBLISH with Qos 0," ) );
         status = MQTTBadParameter;
     }
     else if( packetSize > pFixedBuffer->size )
@@ -1870,8 +1869,7 @@ MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * pPublishInfo
     }
     else if( ( pPublishInfo->dup ) && ( pPublishInfo->qos == MQTTQoS0 ) )
     {
-        LogError( ( "Duplicate flag is set for PUBLISH with Qos=%u,",
-                    pPublishInfo->qos ) );
+        LogError( ( "Duplicate flag is set for PUBLISH with Qos 0," ) );
         status = MQTTBadParameter;
     }
     else if( ( packetSize - pPublishInfo->payloadLength ) > pFixedBuffer->size )
