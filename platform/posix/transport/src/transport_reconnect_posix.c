@@ -41,6 +41,12 @@ bool Transport_ReconnectBackoffAndSleep( TransportReconnectParams_t * pReconnect
     if( ( pReconnectParams->attemptsDone < MAX_RECONNECT_ATTEMPTS ) ||
         ( 0 == MAX_RECONNECT_ATTEMPTS ) )
     {
+        /* Reduce backoff value if more than max backoff time value. */
+        if( pReconnectParams->nextBackOffSec > MAX_RECONNECT_BACKOFF_SECONDS )
+        {
+            pReconnectParams->nextBackOffSec = MAX_RECONNECT_BACKOFF_SECONDS;
+        }
+
         /*  Wait for timer to expire for the next reconnect */
         ( void ) sleep( pReconnectParams->nextBackOffSec );
 
