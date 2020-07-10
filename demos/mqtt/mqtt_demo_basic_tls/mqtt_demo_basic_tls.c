@@ -405,7 +405,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
 
         if( opensslStatus != OPENSSL_SUCCESS )
         {
-            LogWarn( ( "Connection to the broker failed. Retrying connection with backoff and jitter." );
+            LogWarn( ( "Connection to the broker failed. Retrying connection with backoff and jitter." ) );
             retriesArePending = Transport_ReconnectBackoffAndSleep( &reconnectParams );
         }
 
