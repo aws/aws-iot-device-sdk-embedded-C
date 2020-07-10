@@ -25,7 +25,7 @@
 #include <stdint.h>
 #include "json.h"
 
-typedef enum bool_
+typedef enum
 {
     true = 1, false = 0
 } bool_;
@@ -45,7 +45,7 @@ static void skipSpace( const char * buf,
 
     for( ; i < max; i++ )
     {
-        if( isspace( buf[ i ] ) == 0U )
+        if( isspace( ( uint8_t ) buf[ i ] ) == 0U )
         {
             break;
         }
@@ -241,23 +241,23 @@ static bool_ skipUTF8( const char * buf,
  *
  * @return the integer value upon success or UINT8_MAX on failure.
  */
-static uint8_t hexToInt( char c )
+static uint8_t hexToInt( uint8_t c )
 {
     uint8_t n = UINT8_MAX;
 
     if( isxdigit( c ) != 0U )
     {
-        if( c >= 'a' )
+        if( c >= ( uint8_t ) 'a' )
         {
-            n = 10U + ( ( uint8_t ) c - ( uint8_t ) 'a' );
+            n = 10U + ( c - ( uint8_t ) 'a' );
         }
-        else if( c >= 'A' )
+        else if( c >= ( uint8_t ) 'A' )
         {
-            n = 10U + ( ( uint8_t ) c - ( uint8_t ) 'A' );
+            n = 10U + ( c - ( uint8_t ) 'A' );
         }
         else
         {
-            n = ( uint8_t ) c - ( uint8_t ) '0';
+            n = c - ( uint8_t ) '0';
         }
     }
 
@@ -284,6 +284,13 @@ static uint8_t hexToInt( char c )
  */
 #define isHighSurrogate( x )    ( ( ( x ) >= 0xD800U ) && ( ( x ) <= 0xDBFFU ) )
 #define isLowSurrogate( x )     ( ( ( x ) >= 0xDC00U ) && ( ( x ) <= 0xDFFFU ) )
+
+/* MISRA Rule 17.2 prohibits recursion due to the
+ * risk of exceeding available stack space.  In this
+ * function, recursion is limited to exactly one level;
+ * the recursive call sets the final argument to true
+ * which satisfies the base case. */
+/* coverity[misra_c_2012_rule_17_2_violation] */
 static bool_ skipHexEscape( const char * buf,
                             size_t * start,
                             size_t max,
@@ -297,7 +304,7 @@ static bool_ skipHexEscape( const char * buf,
     {
         for( i += 2U; i < end; i++ )
         {
-            uint8_t n = hexToInt( buf[ i ] );
+            uint8_t n = hexToInt( ( uint8_t ) buf[ i ] );
 
             if( n == UINT8_MAX )
             {
@@ -561,7 +568,7 @@ static bool_ skipDigits( const char * buf,
 
     for( ; i < max; i++ )
     {
-        if( isdigit( buf[ i ] ) == 0U )
+        if( isdigit( ( uint8_t ) buf[ i ] ) == 0U )
         {
             break;
         }
