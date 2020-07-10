@@ -8,7 +8,7 @@ if( NOT DEFINED PLATFORM_NAME )
 endif()
 
 # Include each subdirectory that has a CMakeLists.txt file in it
-file(GLOB demo_dirs "${DEMOS_DIR}/*/*")
+file(GLOB demo_dirs "${DEMOS_DIR}/mqtt/*")
 foreach(demo_dir IN LISTS demo_dirs)
     if(IS_DIRECTORY "${demo_dir}" AND EXISTS "${demo_dir}/CMakeLists.txt")
         get_filename_component( DEMO_EXE_NAME ${demo_dir} NAME )

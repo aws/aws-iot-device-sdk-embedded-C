@@ -36,8 +36,11 @@
 /* Include paths for public enums, structures, and macros. */
 #include "mqtt.h"
 
-/* Include header for TLS utilities. */
-#include "transport_utils.h"
+/* Include OpenSSL implementation of transport interface. */
+#include "openssl_posix.h"
+
+/* Include clock for timer. */
+#include "clock.h"
 
 #ifndef BROKER_ENDPOINT
     #error "BROKER_ENDPOINT should be defined for the MQTT integration tests."
@@ -113,6 +116,11 @@
 #define TEST_CLIENT_IDENTIFIER_LENGTH       ( sizeof( TEST_CLIENT_IDENTIFIER ) - 1u )
 
 /**
+ * @brief Transport timeout in milliseconds for transport send and receive.
+ */
+#define TRANSPORT_SEND_RECV_TIMEOUT_MS      ( 200U )
+
+/**
  * @brief Timeout for receiving CONNACK packet in milli seconds.
  */
 #define CONNACK_RECV_TIMEOUT_MS             ( 1000U )
@@ -157,16 +165,20 @@ static uint16_t globalUnsubscribePacketIdentifier = 0U;
 static uint16_t globalPublishPacketIdentifier = 0U;
 
 /**
- * @brief Variable to store TCP socket descriptor used for connecting to and
- * disconnecting from the broker.
- */
-static int tcpSocket;
-
-/**
  * @brief Represents the OpenSSL context used for TLS session with the broker
  * for tests.
  */
-static SSL * pSslContext;
+static NetworkContext_t networkContext;
+
+/**
+ * @brief Represents the hostname and port of the broker.
+ */
+static ServerInfo_t serverInfo;
+
+/**
+ * @brief TLS credentials needed to connect to the broker.
+ */
+static OpensslCredentials_t opensslCredentials;
 
 /**
  * @brief The context representing the MQTT connection with the broker for
@@ -219,7 +231,7 @@ static MQTTPublishInfo_t incomingInfo;
  * @brief Sends an MQTT CONNECT packet over the already connected TCP socket.
  *
  * @param[in] pContext MQTT context pointer.
- * @param[in] pSslContext SSL context.
+ * @param[in] pNetworkContext Network context for OpenSSL transport implementation.
  * @param[in] createCleanSession Creates a new MQTT session if true.
  * If false, tries to establish the existing session if there was session
  * already present in broker.
@@ -227,7 +239,7 @@ static MQTTPublishInfo_t incomingInfo;
  * Session present response is obtained from the CONNACK from broker.
  */
 static void establishMqttSession( MQTTContext_t * pContext,
-                                  SSL * pSslContext,
+                                  NetworkContext_t * pNetworkContext,
                                   bool createCleanSession,
                                   bool * pSessionPresent );
 
@@ -249,25 +261,25 @@ static void eventCallback( MQTTContext_t * pContext,
 /*-----------------------------------------------------------*/
 
 static void establishMqttSession( MQTTContext_t * pContext,
-                                  SSL * pSslContext,
+                                  NetworkContext_t * pNetworkContext,
                                   bool createCleanSession,
                                   bool * pSessionPresent )
 {
     MQTTConnectInfo_t connectInfo;
-    MQTTTransportInterface_t transport;
+    TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks;
 
     assert( pContext != NULL );
-    assert( pSslContext != NULL );
+    assert( pNetworkContext != NULL );
 
     /* The network buffer must remain valid for the lifetime of the MQTT context. */
     static uint8_t buffer[ NETWORK_BUFFER_SIZE ];
 
     /* Setup the transport interface object for the library. */
-    transport.networkContext = pSslContext;
-    transport.send = transportSend;
-    transport.recv = transportRecv;
+    transport.pNetworkContext = pNetworkContext;
+    transport.send = Openssl_Send;
+    transport.recv = Openssl_Recv;
 
     /* Fill the values for network buffer. */
     networkBuffer.pBuffer = buffer;
@@ -279,7 +291,7 @@ static void establishMqttSession( MQTTContext_t * pContext,
 
     /* Application callback for getting the time for MQTT library. This time
      * function will be used to calculate intervals in MQTT library.*/
-    callbacks.getTime = getTimeMs;
+    callbacks.getTime = Clock_GetTimeMs;
 
     /* Initialize MQTT library. */
     TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_Init( pContext,
@@ -355,6 +367,13 @@ static void eventCallback( MQTTContext_t * pContext,
                 TEST_ASSERT_EQUAL( globalSubscribePacketIdentifier, packetIdentifier );
                 break;
 
+            case MQTT_PACKET_TYPE_PINGRESP:
+
+                /* Nothing to be done from application as library handles
+                 * PINGRESP. */
+                LogDebug( ( "Received PINGRESP" ) );
+                break;
+
             case MQTT_PACKET_TYPE_UNSUBACK:
                 /* Set the flag to represent reception of UNSUBACK. */
                 receivedUnsubAck = true;
@@ -374,13 +393,6 @@ static void eventCallback( MQTTContext_t * pContext,
 
                 LogDebug( ( "Received PUBACK: PacketID=%u",
                             packetIdentifier ) );
-                break;
-
-            case MQTT_PACKET_TYPE_PINGRESP:
-
-                /* Nothing to be done from application as library handles
-                 * PINGRESP. */
-                LogDebug( ( "Received PINGRESP" ) );
                 break;
 
             case MQTT_PACKET_TYPE_PUBREC:
@@ -516,18 +528,24 @@ void setUp()
     receivedPubComp = false;
     persistentSession = false;
     memset( &incomingInfo, 0u, sizeof( MQTTPublishInfo_t ) );
+    memset( &opensslCredentials, 0u, sizeof( OpensslCredentials_t ) );
+    opensslCredentials.pRootCaPath = SERVER_ROOT_CA_CERT_PATH;
+    serverInfo.pHostName = BROKER_ENDPOINT;
+    serverInfo.hostNameLength = BROKER_ENDPOINT_LENGTH;
+    serverInfo.port = BROKER_PORT;
 
-    /* Establish a TCP connection with the server endpoint. */
-    TEST_ASSERT_EQUAL( EXIT_SUCCESS,
-                       tcpConnectToServer( BROKER_ENDPOINT, BROKER_PORT, &tcpSocket ) );
-    TEST_ASSERT_NOT_EQUAL( -1, tcpSocket );
-
-    /* Establish TLS connection on top of TCP connection. */
-    TEST_ASSERT_EQUAL( EXIT_SUCCESS, tlsSetup( tcpSocket, SERVER_ROOT_CA_CERT_PATH, &pSslContext ) );
-    TEST_ASSERT_NOT_NULL( pSslContext );
+    /* Establish a TCP connection with the server endpoint, then
+     * establish TLS session on top of TCP connection. */
+    TEST_ASSERT_EQUAL( OPENSSL_SUCCESS, Openssl_Connect( &networkContext,
+                                                         &serverInfo,
+                                                         &opensslCredentials,
+                                                         TRANSPORT_SEND_RECV_TIMEOUT_MS,
+                                                         TRANSPORT_SEND_RECV_TIMEOUT_MS ) );
+    TEST_ASSERT_NOT_EQUAL( -1, networkContext.socketDescriptor );
+    TEST_ASSERT_NOT_NULL( networkContext.pSsl );
 
     /* Establish MQTT session on top of the TCP+TLS connection. */
-    establishMqttSession( &context, pSslContext, true, &persistentSession );
+    establishMqttSession( &context, &networkContext, true, &persistentSession );
 }
 
 /* Called after each test method. */
@@ -547,11 +565,8 @@ void tearDown()
     /* Terminate MQTT connection. */
     TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_Disconnect( &context ) );
 
-    /* Terminate TLS session. */
-    ( void ) closeTlsSession( pSslContext );
-
-    /* Terminate TCP connection. */
-    ( void ) closeTcpConnection( tcpSocket );
+    /* Terminate TLS session and TCP connection. */
+    ( void ) Openssl_Disconnect( &networkContext );
 }
 
 /* ========================== Test Cases ============================ */

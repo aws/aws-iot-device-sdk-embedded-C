@@ -22,7 +22,7 @@
 #include "mqtt.h"
 #include "network_interface_stubs.h"
 
-int32_t NetworkInterfaceReceiveStub( NetworkContext_t context,
+int32_t NetworkInterfaceReceiveStub( NetworkContext_t * pNetworkContext,
                                      void * pBuffer,
                                      size_t bytesToRecv )
 {

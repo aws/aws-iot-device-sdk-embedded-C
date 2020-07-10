@@ -54,7 +54,7 @@
 /* Transport includes. */
 #include "transport_interface.h"
 
-/* Socket includes. */
+/* Socket include. */
 #include "sockets_posix.h"
 
 /**

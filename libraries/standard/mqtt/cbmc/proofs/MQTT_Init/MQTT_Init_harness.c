@@ -30,7 +30,7 @@
 void harness()
 {
     MQTTContext_t * pContext = NULL;
-    MQTTTransportInterface_t * pTransportInterface = NULL;
+    TransportInterface_t * pTransportInterface = NULL;
     MQTTApplicationCallbacks_t * pCallbacks = NULL;
     MQTTFixedBuffer_t * pNetworkBuffer = NULL;
 
