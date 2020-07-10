@@ -184,7 +184,7 @@
 #define MQTT_PUBLISH_COUNT_PER_LOOP         ( 5U )
 
 /**
- * @brief Delay in seconds between two iterations of subscribePublishLoop()
+ * @brief Delay in seconds between two iterations of subscribePublishLoop().
  */
 #define MQTT_SUBPUB_LOOP_DELAY_SECONDS      ( 5U )
 
@@ -243,12 +243,12 @@ static uint8_t buffer[ NETWORK_BUFFER_SIZE ];
 
 /**
  * @brief Connect to MQTT broker with reconnection retries.
+ *
  * If connection fails, retry is attempted after a timeout.
  * Timeout value will exponentially increase until maximum
  * timeout value is reached or the number of attempts are exhausted.
  *
- * @param[out] pNetworkContext Network context pointer for OpenSSL.
- * file descriptor set after the connection is established.
+ * @param[out] pNetworkContext The output parameter to return the created network context.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on successful connection.
  */
@@ -256,11 +256,11 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
 
 /**
  * @brief A function that connects to MQTT broker,
- * subscribes a topic, Publishes to the same
+ * subscribes a topic, publishes to the same
  * topic MQTT_PUBLISH_COUNT_PER_LOOP number of times, and verifies if it
  * receives the Publish message back.
  *
- * @param[in] pNetworkContext Network context pointer for OpenSSL.
+ * @param[in] pNetworkContext Pointer to the network context created using Openssl_Connect.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
@@ -294,7 +294,7 @@ static void eventCallback( MQTTContext_t * pMqttContext,
  * @brief Sends an MQTT CONNECT packet over the already connected TCP socket.
  *
  * @param[in] pMqttContext MQTT context pointer.
- * @param[in] pNetworkContext Network context pointer for OpenSSL.
+ * @param[in] pNetworkContext Pointer to the network context created using Openssl_Connect.
  * @param[in] createCleanSession Creates a new MQTT session if true.
  * If false, tries to establish the existing session if there was session
  * already present in broker.
@@ -400,7 +400,7 @@ static int handlePublishResend( MQTTContext_t * pMqttContext );
 static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext )
 {
     int returnStatus = EXIT_SUCCESS;
-    bool backoffSuccess = true;
+    bool retriesArePending = true;
     OpensslStatus_t opensslStatus = OPENSSL_SUCCESS;
     TransportReconnectParams_t reconnectParams;
     ServerInfo_t serverInfo;
@@ -437,10 +437,10 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
      */
     do
     {
-        /* Establish a TCP connection with the MQTT broker. This example connects
-         * to the MQTT broker as specified in AWS_IOT_ENDPOINT and AWS_MQTT_PORT at
-         * the top of this file. */
-        LogInfo( ( "Creating a TCP connection to %.*s:%d.",
+        /* Establish a TLS session with the MQTT broker. This example connects
+         * to the MQTT broker as specified in AWS_IOT_ENDPOINT and AWS_MQTT_PORT
+         * at the demo config header. */
+        LogInfo( ( "Establishing a TLS session to %.*s:%d.",
                    AWS_IOT_ENDPOINT_LENGTH,
                    AWS_IOT_ENDPOINT,
                    AWS_MQTT_PORT ) );
@@ -455,15 +455,15 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
             LogWarn( ( "Connection to the broker failed, sleeping %d seconds before the next attempt.",
                        ( reconnectParams.reconnectTimeoutSec > MAX_RECONNECT_TIMEOUT_SECONDS ) ?
                        MAX_RECONNECT_TIMEOUT_SECONDS : reconnectParams.reconnectTimeoutSec ) );
-            backoffSuccess = Transport_ReconnectBackoffAndSleep( &reconnectParams );
+            retriesArePending = Transport_ReconnectBackoffAndSleep( &reconnectParams );
         }
 
-        if( backoffSuccess == false )
+        if( retriesArePending == false )
         {
             LogError( ( "Connection to the broker failed, all attempts exhausted." ) );
             returnStatus = EXIT_FAILURE;
         }
-    } while( ( opensslStatus != OPENSSL_SUCCESS ) && ( backoffSuccess == true ) );
+    } while( ( opensslStatus != OPENSSL_SUCCESS ) && ( retriesArePending == true ) );
 
     return returnStatus;
 }

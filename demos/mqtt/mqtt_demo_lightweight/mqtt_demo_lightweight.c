@@ -110,12 +110,12 @@
 
 /**
  * @brief Connect to MQTT broker with reconnection retries.
+ *
  * If connection fails, retry is attempted after a timeout.
  * Timeout value will exponentially increase until until maximum reconnection
  * backoff time is reached or the number of attempts are exhausted.
  *
- * @param[out] pNetworkContext Network context pointer containing TCP socket
- * file descriptor referring to the established connection.
+ * @param[out] pNetworkContext The output parameter to return the created network context.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on successful connection.
  */
@@ -124,7 +124,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
 /**
  * @brief Establish an MQTT session over a TCP connection by sending MQTT CONNECT.
  *
- * @param[in] pNetworkContext Pointer to a network context that contains a TCP socket.
+ * @param[in] pNetworkContext Pointer to the network context created using Plaintext_Connect.
  * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and its length.
  * The buffer is used for serialzing CONNECT packet and deserializing CONN-ACK.
  *
@@ -137,7 +137,7 @@ static int createMQTTConnectionWithBroker( NetworkContext_t * pNetworkContext,
  * @brief Subscribes to the topic as specified in MQTT_EXAMPLE_TOPIC at the top of
  * this file.
  *
- * @param[in] pNetworkContext Pointer to a network context that contains a TCP socket.
+ * @param[in] pNetworkContext Pointer to the network context created using Plaintext_Connect.
  * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and its length.
  * The buffer is used for serialzing SUBSCRIBE packet.
  *
@@ -148,7 +148,7 @@ static void mqttSubscribeToTopic( NetworkContext_t * pNetworkContext,
 /**
  * @brief  Publishes a message MQTT_EXAMPLE_MESSAGE on MQTT_EXAMPLE_TOPIC topic.
  *
- * @param[in] pNetworkContext Pointer to a network context that contains a TCP socket.
+ * @param[in] pNetworkContext Pointer to the network context created using Plaintext_Connect.
  * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and its length.
  * The buffer is used for serialzing PUBLISH packet.
  *
@@ -160,7 +160,7 @@ static void mqttPublishToTopic( NetworkContext_t * pNetworkContext,
  * @brief Unsubscribes from the previously subscribed topic as specified
  * in MQTT_EXAMPLE_TOPIC.
  *
- * @param[in] pNetworkContext Pointer to a network context that contains a TCP socket.
+ * @param[in] pNetworkContext Pointer to the network context created using Plaintext_Connect.
  * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and its length.
  * The buffer is used for serialzing UNSUBSCRIBE packet.
  *
@@ -171,7 +171,7 @@ static void mqttUnsubscribeFromTopic( NetworkContext_t * pNetworkContext,
 /**
  * @brief Disconnect From the MQTT broker.
  *
- * @param[in] pNetworkContext Pointer to a network context that contains a TCP socket.
+ * @param[in] pNetworkContext Pointer to the network context created using Plaintext_Connect.
  * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and its length.
  * The buffer is used for serialzing DISCONNECT packet.
  */
@@ -181,7 +181,7 @@ static void mqttDisconnect( NetworkContext_t * pNetworkContext,
 /**
  * @brief Send Ping Request to the MQTT broker.
  *
- * @param[in] pNetworkContext Pointer to a network context that contains a TCP socket.
+ * @param[in] pNetworkContext Pointer to the network context created using Plaintext_Connect.
  * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and its length.
  * The buffer is used for serialzing PING request packet.
  */
@@ -192,7 +192,7 @@ static void mqttKeepAlive( NetworkContext_t * pNetworkContext,
  * @brief Receive and validate MQTT packet from the broker, determine the type
  * of the packet and process the packet based on the type.
  *
- * @param[in] pNetworkContext Pointer to a network context that contains a TCP socket.
+ * @param[in] pNetworkContext Pointer to the network context created using Plaintext_Connect.
  * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and its length.
  * The buffer is used to deserialize incoming MQTT packet.
  *
@@ -294,7 +294,7 @@ static uint16_t getNextPacketIdentifier( void )
 static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext )
 {
     int returnStatus = EXIT_SUCCESS;
-    bool backoffSuccess = true;
+    bool retriesArePending = true;
     SocketStatus_t socketStatus = SOCKETS_SUCCESS;
     TransportReconnectParams_t reconnectParams;
     ServerInfo_t serverInfo;
@@ -314,8 +314,8 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     do
     {
         /* Establish a TCP connection with the MQTT broker. This example connects
-         * to the MQTT broker as specified in BROKER_ENDPOINT and BROKER_PORT at
-         * the top of this file. */
+         * to the MQTT broker as specified in BROKER_ENDPOINT and BROKER_PORT
+         * at the demo config header. */
         LogInfo( ( "Creating a TCP connection to %.*s:%d.",
                    BROKER_ENDPOINT_LENGTH,
                    BROKER_ENDPOINT,
@@ -330,15 +330,15 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
             LogWarn( ( "Connection to the broker failed, sleeping %d seconds before the next attempt.",
                        ( reconnectParams.reconnectTimeoutSec > MAX_RECONNECT_TIMEOUT_SECONDS ) ?
                        MAX_RECONNECT_TIMEOUT_SECONDS : reconnectParams.reconnectTimeoutSec ) );
-            backoffSuccess = Transport_ReconnectBackoffAndSleep( &reconnectParams );
+            retriesArePending = Transport_ReconnectBackoffAndSleep( &reconnectParams );
         }
 
-        if( backoffSuccess == false )
+        if( retriesArePending == false )
         {
             LogError( ( "Connection to the broker failed, all attempts exhausted." ) );
             returnStatus = EXIT_FAILURE;
         }
-    } while( ( socketStatus != SOCKETS_SUCCESS ) && ( backoffSuccess == true ) );
+    } while( ( socketStatus != SOCKETS_SUCCESS ) && ( retriesArePending == true ) );
 
     return returnStatus;
 }
@@ -797,8 +797,8 @@ int main( int argc,
     for( demoIterations = 0; demoIterations < maxDemoIterations; demoIterations++ )
     {
         /* Establish a TCP connection with the MQTT broker. This example connects to
-         * the MQTT broker as specified in BROKER_ENDPOINT and
-         * BROKER_PORT at the top of this file. */
+         * the MQTT broker as specified in BROKER_ENDPOINT and BROKER_PORT
+         * at the demo config header. */
         LogInfo( ( "Establishing TCP connection to the broker  %s.\r\n", BROKER_ENDPOINT ) );
         returnStatus = connectToServerWithBackoffRetries( &networkContext );
 

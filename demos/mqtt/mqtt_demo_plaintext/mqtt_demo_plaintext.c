@@ -55,7 +55,7 @@
 #include "clock.h"
 
 /**
- * These configuration settings are required to run the mutual auth demo.
+ * These configuration settings are required to run the plaintext demo.
  * Throw compilation error if the below configs are not defined.
  */
 #ifndef CLIENT_IDENTIFIER
@@ -138,7 +138,7 @@
 #define MQTT_PUBLISH_COUNT_PER_LOOP         ( 5U )
 
 /**
- * @brief Delay in seconds between two iterations of subscribePublishLoop()
+ * @brief Delay in seconds between two iterations of subscribePublishLoop().
  */
 #define MQTT_SUBPUB_LOOP_DELAY_SECONDS      ( 5U )
 
@@ -170,13 +170,13 @@ static uint8_t buffer[ NETWORK_BUFFER_SIZE ];
 /*-----------------------------------------------------------*/
 
 /**
- * @brief connect to MQTT broker with reconnection retries.
+ * @brief Connect to MQTT broker with reconnection retries.
+ *
  * If connection fails, retry is attempted after a timeout.
  * Timeout value will exponentially increased till maximum
  * timeout value is reached or the number of attemps are exhausted.
  *
- * @param[out] pNetworkContext Pointer to a network context that contains a TCP socket.
- * file descriptor referring to the established connection.
+ * @param[out] pNetworkContext The output parameter to return the created network context.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on successful connection.
  */
@@ -184,11 +184,11 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
 
 /**
  * @brief A function that connects to MQTT broker,
- * subscribes a topic, Publishes to the same
+ * subscribes a topic, publishes to the same
  * topic MQTT_PUBLISH_COUNT_PER_LOOP number of times, and verifies if it
  * receives the Publish message back.
  *
- * @param[in] pNetworkContext Pointer to a network context that contains a TCP socket.
+ * @param[in] pNetworkContext Pointer to the network context created using Plaintext_Connect.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
@@ -222,7 +222,7 @@ static void eventCallback( MQTTContext_t * pMqttContext,
  * @brief Sends an MQTT CONNECT packet over the already connected TCP socket.
  *
  * @param[in] pMqttContext MQTT context pointer.
- * @param[in] pNetworkContext Pointer to a network context that contains a TCP socket.
+ * @param[in] pNetworkContext Pointer to the network context created using Plaintext_Connect.
  *
  * @return EXIT_SUCCESS if an MQTT session is established;
  * EXIT_FAILURE otherwise.
@@ -278,7 +278,7 @@ static int publishToTopic( MQTTContext_t * pMqttContext );
 static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext )
 {
     int returnStatus = EXIT_SUCCESS;
-    bool backoffSuccess = true;
+    bool retriesArePending = true;
     SocketStatus_t socketStatus = SOCKETS_SUCCESS;
     TransportReconnectParams_t reconnectParams;
     ServerInfo_t serverInfo;
@@ -298,8 +298,8 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     do
     {
         /* Establish a TCP connection with the MQTT broker. This example connects
-         * to the MQTT broker as specified in BROKER_ENDPOINT and BROKER_PORT at
-         * the top of this file. */
+         * to the MQTT broker as specified in BROKER_ENDPOINT and BROKER_PORT
+         * at the demo config header. */
         LogInfo( ( "Creating a TCP connection to %.*s:%d.",
                    BROKER_ENDPOINT_LENGTH,
                    BROKER_ENDPOINT,
@@ -314,15 +314,15 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
             LogWarn( ( "Connection to the broker failed, sleeping %d seconds before the next attempt.",
                        ( reconnectParams.reconnectTimeoutSec > MAX_RECONNECT_TIMEOUT_SECONDS ) ?
                        MAX_RECONNECT_TIMEOUT_SECONDS : reconnectParams.reconnectTimeoutSec ) );
-            backoffSuccess = Transport_ReconnectBackoffAndSleep( &reconnectParams );
+            retriesArePending = Transport_ReconnectBackoffAndSleep( &reconnectParams );
         }
 
-        if( backoffSuccess == false )
+        if( retriesArePending == false )
         {
             LogError( ( "Connection to the broker failed, all attempts exhausted." ) );
             returnStatus = EXIT_FAILURE;
         }
-    } while( ( socketStatus != SOCKETS_SUCCESS ) && ( backoffSuccess == true ) );
+    } while( ( socketStatus != SOCKETS_SUCCESS ) && ( retriesArePending == true ) );
 
     return returnStatus;
 }
