@@ -28,6 +28,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <time.h>
+#include <math.h>
 #include "transport_reconnect.h"
 
 /*-----------------------------------------------------------*/
@@ -36,17 +37,13 @@ bool Transport_ReconnectBackoffAndSleep( TransportReconnectParams_t * pReconnect
 {
     bool status = false;
     uint32_t nextBackOffAndJitter = 0;
+    uint32_t nextMaxBackOff = 0;
+    uint32_t jitterUpperLimit = MAX_RECONNECT_BACKOFF_SECONDS;
 
     /* If MAX_RECONNECT_ATTEMPTS is set to 0, try forever */
     if( ( pReconnectParams->attemptsDone < MAX_RECONNECT_ATTEMPTS ) ||
         ( 0 == MAX_RECONNECT_ATTEMPTS ) )
     {
-        /* Reduce backoff value if more than max backoff time value. */
-        if( pReconnectParams->nextBackOffSec > MAX_RECONNECT_BACKOFF_SECONDS )
-        {
-            pReconnectParams->nextBackOffSec = MAX_RECONNECT_BACKOFF_SECONDS;
-        }
-
         /*  Wait for timer to expire for the next reconnect */
         ( void ) sleep( pReconnectParams->nextBackOffSec );
 
@@ -55,17 +52,15 @@ bool Transport_ReconnectBackoffAndSleep( TransportReconnectParams_t * pReconnect
 
         /* Calculate the delay time for the next reconnect attempt. */
 
+        /* Calculate upper limit of range for selecting a random value. */
+        nextMaxBackOff = INITIAL_RECONNECT_BACKOFF_SECONDS *
+                         ( 2 << pReconnectParams->attemptsDone );
+        jitterUpperLimit = ( nextMaxBackOff < MAX_RECONNECT_BACKOFF_SECONDS ) ?
+                           nextMaxBackOff : MAX_RECONNECT_BACKOFF_SECONDS;
 
         /* Calculate jitter value picking a random number
-         * between 0 and twice the previous backoff delay time value. */
-        nextBackOffAndJitter = rand() % ( pReconnectParams->nextBackOffSec * 2 );
-
-        /* Update the next backoff value ony if calculated jitter does not cross the
-         * max backoff time threshold. */
-        if( nextBackOffAndJitter <= MAX_RECONNECT_BACKOFF_SECONDS )
-        {
-            pReconnectParams->nextBackOffSec = nextBackOffAndJitter;
-        }
+         * between 0 and above calculated upper limit for the next retry. */
+        nextBackOffAndJitter = rand() % jitterUpperLimit;
 
         status = true;
     }
