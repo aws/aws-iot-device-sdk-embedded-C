@@ -39,4 +39,4 @@ int32_t NetworkInterfaceReceiveStub( NetworkContext_t * pNetworkContext,
                                      void * pBuffer,
                                      size_t bytesToRecv );
 
-#endif
+#endif /* ifndef NETWORK_INTERFACE_STUBS_H_ */
