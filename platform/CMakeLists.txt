@@ -1,2 +1,2 @@
-# Add the transport target
-add_subdirectory( ${PLATFORM_DIR}/posix/transport ) 
+# Add the posix targets
+add_subdirectory( ${PLATFORM_DIR}/posix ) 

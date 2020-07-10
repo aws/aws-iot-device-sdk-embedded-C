@@ -42,6 +42,6 @@ void harness()
     __CPROVER_assume( isValidMqttPacketInfo( pIncomingPacket ) );
 
     MQTT_GetIncomingPacketTypeAndLength( NetworkInterfaceReceiveStub,
-                                         networkContext,
+                                         &networkContext,
                                          pIncomingPacket );
 }

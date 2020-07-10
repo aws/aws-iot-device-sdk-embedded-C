@@ -6,13 +6,15 @@ target_sources(
     ${DEMO_NAME}
     PRIVATE
         "${DEMO_NAME}.c"
-        ${LOGGING_SOURCES}
 )
 
 target_link_libraries(
     ${DEMO_NAME}
     PRIVATE
-        mqtt   
+        mqtt
+        clock_posix
+        plaintext_posix
+        transport_reconnect_posix   
 )
 
 target_include_directories(

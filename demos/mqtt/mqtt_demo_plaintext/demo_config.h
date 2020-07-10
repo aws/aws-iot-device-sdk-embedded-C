@@ -48,6 +48,21 @@
 /************ End of logging configuration ****************/
 
 /**
+ * @brief MQTT server host name.
+ *
+ * This demo uses the Mosquitto test server. This is a public MQTT server; do not
+ * publish anything sensitive to this server.
+ */
+#define BROKER_ENDPOINT      "test.mosquitto.org"
+
+/**
+ * @brief MQTT server port number.
+ *
+ * In general, port 1883 is for unsecured MQTT connections.
+ */
+#define BROKER_PORT          ( 1883 )
+
+/**
  * @brief MQTT client identifier.
  *
  * No two clients may use the same client identifier simultaneously.
