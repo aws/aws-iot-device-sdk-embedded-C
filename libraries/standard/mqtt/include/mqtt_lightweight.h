@@ -517,8 +517,8 @@ MQTTStatus_t MQTT_GetDisconnectPacketSize( size_t * pPacketSize );
 /**
  * @brief Serialize an MQTT DISCONNECT packet into the given buffer.
  *
- * The input #MQTTFixedBuffer_t.size must be at least the size returned by
- * #MQTT_GetDisconnectPacketSize.
+ * The input #MQTTFixedBuffer_t.size must be at least as large as the size
+ * returned by #MQTT_GetDisconnectPacketSize.
  *
  * @param[out] pFixedBuffer Buffer for packet serialization.
  *
@@ -540,8 +540,8 @@ MQTTStatus_t MQTT_GetPingreqPacketSize( size_t * pPacketSize );
 /**
  * @brief Serialize an MQTT PINGREQ packet into the given buffer.
  *
- * The input #MQTTFixedBuffer_t.size must be at least the size returned by
- * #MQTT_GetPingreqPacketSize.
+ * The input #MQTTFixedBuffer_t.size must be at least as large as the size
+ * returned by #MQTT_GetPingreqPacketSize.
  *
  * @param[out] pFixedBuffer Buffer for packet serialization.
  *
