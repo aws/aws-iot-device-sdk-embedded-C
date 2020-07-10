@@ -58,6 +58,7 @@
  *
  * #define AWS_IOT_ENDPOINT               "...insert here..."
  */
+#define AWS_IOT_ENDPOINT           "a36385mjytouy4-ats.iot.us-west-2.amazonaws.com"
 
 /**
  * @brief AWS IoT MQTT broker port number.
@@ -67,7 +68,7 @@
  * @note Port 443 requires use of the ALPN TLS extension with the ALPN protocol
  * name. When using port 8883, ALPN is not required.
  */
-#define AWS_MQTT_PORT        ( 8883 )
+#define AWS_MQTT_PORT              ( 8883 )
 
 /**
  * @brief Path of the file containing the server's root CA certificate.
@@ -84,7 +85,7 @@
  * @note This path is relative from the demo binary created. Update
  * ROOT_CA_CERT_PATH to the absolute path if this demo is executed from elsewhere.
  */
-#define ROOT_CA_CERT_PATH    "certificates/AmazonRootCA1.crt"
+#define ROOT_CA_CERT_PATH          "certificates/AmazonRootCA1.crt"
 
 /**
  * @brief Path of the file containing the client certificate.
@@ -97,6 +98,7 @@
  *
  * #define CLIENT_CERT_PATH    "...insert here..."
  */
+#define CLIENT_CERT_PATH           "certificates/client.crt"
 
 /**
  * @brief Path of the file containing the client's private key.
@@ -109,18 +111,19 @@
  *
  * #define CLIENT_PRIVATE_KEY_PATH    "...insert here..."
  */
+#define CLIENT_PRIVATE_KEY_PATH    "certificates/client.key"
 
 /**
  * @brief MQTT client identifier.
  *
  * No two clients may use the same client identifier simultaneously.
  */
-#define CLIENT_IDENTIFIER      "testclient"
+#define CLIENT_IDENTIFIER          "testclient"
 
 /**
  * @brief Size of the network buffer for MQTT packets.
  */
-#define NETWORK_BUFFER_SIZE    ( 1024U )
+#define NETWORK_BUFFER_SIZE        ( 1024U )
 
 
 #endif /* ifndef DEMO_CONFIG_H_ */

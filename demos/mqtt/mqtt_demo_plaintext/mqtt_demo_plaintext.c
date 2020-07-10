@@ -311,9 +311,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
 
         if( socketStatus != SOCKETS_SUCCESS )
         {
-            LogWarn( ( "Connection to the broker failed, sleeping %d seconds before the next attempt.",
-                       ( reconnectParams.reconnectTimeoutSec > MAX_RECONNECT_TIMEOUT_SECONDS ) ?
-                       MAX_RECONNECT_TIMEOUT_SECONDS : reconnectParams.reconnectTimeoutSec ) );
+            LogWarn( ( "Connection to the broker failed, sleeping %d seconds before the next attempt." ) );
             retriesArePending = Transport_ReconnectBackoffAndSleep( &reconnectParams );
         }
 

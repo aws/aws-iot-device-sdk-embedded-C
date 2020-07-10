@@ -56,7 +56,7 @@
 #include "openssl_posix.h"
 
 /* Reconnect parameters. */
-#include "reconnect.h"
+#include "transport_reconnect.h"
 
 /* Clock for timer. */
 #include "clock.h"
@@ -452,9 +452,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
 
         if( opensslStatus != OPENSSL_SUCCESS )
         {
-            LogWarn( ( "Connection to the broker failed, sleeping %d seconds before the next attempt.",
-                       ( reconnectParams.reconnectTimeoutSec > MAX_RECONNECT_TIMEOUT_SECONDS ) ?
-                       MAX_RECONNECT_TIMEOUT_SECONDS : reconnectParams.reconnectTimeoutSec ) );
+            LogWarn( ( "Connection to the broker failed, sleeping %d seconds before the next attempt." ) );
             retriesArePending = Transport_ReconnectBackoffAndSleep( &reconnectParams );
         }
 
