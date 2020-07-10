@@ -38,20 +38,13 @@
 bool Transport_ReconnectBackoffAndSleep( TransportReconnectParams_t * pReconnectParams )
 {
     bool status = false;
-    uint32_t jitterMax = MAX_RECONNECT_BACKOFF_SECONDS;
 
     /* If MAX_RECONNECT_ATTEMPTS is set to 0, try forever */
     if( ( pReconnectParams->attemptsDone < MAX_RECONNECT_ATTEMPTS ) ||
         ( 0 == MAX_RECONNECT_ATTEMPTS ) )
     {
-        /* Calculate back-off time to use for reconnection attempt. */
-        if( pReconnectParams->nextJitterMax < MAX_RECONNECT_BACKOFF_SECONDS )
-        {
-            jitterMax = pReconnectParams->nextJitterMax;
-        }
-
         /*  Wait for backoff time to expire for the next reconnect. */
-        ( void ) sleep( ( rand() % jitterMax ) );
+        ( void ) sleep( ( rand() % pReconnectParams->nextJitterMax ) );
 
         /* Increment backoff counts. */
         pReconnectParams->attemptsDone++;
@@ -61,6 +54,10 @@ bool Transport_ReconnectBackoffAndSleep( TransportReconnectParams_t * pReconnect
         if( pReconnectParams->nextJitterMax < ( MAX_RECONNECT_BACKOFF_SECONDS / 2U ) )
         {
             pReconnectParams->nextJitterMax += pReconnectParams->nextJitterMax;
+        }
+        else
+        {
+            pReconnectParams->nextJitterMax = MAX_RECONNECT_BACKOFF_SECONDS;
         }
 
         status = true;
