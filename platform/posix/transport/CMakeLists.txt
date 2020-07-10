@@ -47,10 +47,10 @@ target_link_libraries( openssl_posix
                            ${CMAKE_DL_LIBS} )
 
 # Create target for POSIX implementation of reconnect logic.
-add_library( reconnect_posix 
+add_library( transport_reconnect_posix 
                ${RECONNECT_SOURCES} )
 
-target_include_directories( reconnect_posix 
+target_include_directories( transport_reconnect_posix 
                               PUBLIC 
                                 ${COMMON_TRANSPORT_INCLUDE_PUBLIC_DIRS}
                                 ${LOGGING_INCLUDE_DIRS} )

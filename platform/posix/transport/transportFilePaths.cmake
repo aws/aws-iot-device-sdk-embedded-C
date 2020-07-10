@@ -19,7 +19,7 @@ set( OPENSSL_TRANSPORT_SOURCES
 
 # Reconnect logic source files.
 set( RECONNECT_SOURCES
-     ${CMAKE_CURRENT_LIST_DIR}/src/reconnect_posix.c )
+     ${CMAKE_CURRENT_LIST_DIR}/src/transport_reconnect_posix.c )
 
 # Transport Public Include directories.
 set( COMMON_TRANSPORT_INCLUDE_PUBLIC_DIRS

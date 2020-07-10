@@ -20,14 +20,15 @@
  */
 
 /**
- * @file reconnect_config.h
+ * @file transport_reconnect.h
  * @brief Declaration of the exponential backoff reconnect logic utility functions
  * and constants.
  */
 
-#ifndef RECONNECT_H_
-#define RECONNECT_H_
+#ifndef TRANSPORT_RECONNECT_H_
+#define TRANSPORT_RECONNECT_H_
 
+/* Standard include. */
 #include <stdint.h>
 
 /* bools are only defined in C99+ */
@@ -41,22 +42,25 @@
 
 /* @brief Max number of connect attempts, set this value to 0 if the client
  * must try connecting to the server forever */
-#define MAX_RECONNECT_ATTEMPS                4U
+#define MAX_RECONNECT_ATTEMPTS               4U
 
-/* @brief Initial fixed timeout value in seconds between two successive
- * connects. A random jitter value is added to every timeout value  */
-#define INITIAL_RECONNECT_TIMEOUT_SECONDS    1U
-/* @brief Max timout value in seconds */
-#define MAX_RECONNECT_TIMEOUT_SECONDS        128U
+/* @brief Initial fixed backoff value in seconds between two successive
+ * connects. A random jitter value is added to every backoff value  */
+#define INITIAL_RECONNECT_BACKOFF_SECONDS    1U
+/* @brief Max backoff value in seconds */
+#define MAX_RECONNECT_BACKOFF_SECONDS        128U
 /* @brief Max jitter value in seconds */
 #define MAX_JITTER_VALUE_SECONDS             5U
 
-
-/* @brief Transport reconnect parameter */
+/* @brief Represents parameters required for reconnect logic. */
 typedef struct TransportReconnectParams
 {
-    uint32_t reconnectTimeoutSec;
+    /* @brief The cumulative count of backoff delay cycles completed
+     * for reconnection. */
     uint32_t attemptsDone;
+
+    /** @brief The max jitter value for backoff time in reconnection attempt. */
+    uint32_t nextJitterMax;
 } TransportReconnectParams_t;
 
 
@@ -81,4 +85,4 @@ void Transport_ReconnectParamsReset( TransportReconnectParams_t * reconnectParam
  */
 bool Transport_ReconnectBackoffAndSleep( TransportReconnectParams_t * reconnectParams );
 
-#endif /* ifndef RECONNECT_H_ */
+#endif /* ifndef TRANSPORT_RECONNECT_H_ */
