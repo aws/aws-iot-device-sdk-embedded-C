@@ -29,9 +29,8 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
-#include "transport_reconnect.h"
 
-#define JITTER_MAX_MSB_BIT_MASK    ( )
+#include "transport_reconnect.h"
 
 /*-----------------------------------------------------------*/
 
