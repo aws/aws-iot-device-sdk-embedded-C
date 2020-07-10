@@ -34,13 +34,13 @@ It is required to setup an AWS account and access the AWS IoT Console for runnin
 1. Run this command to build the demos: `make`
 1. Go to the `build/bin` directory and run any demo executables from there.
 
-### Installing Mosquitto to run MQTT demos locally
+### Optional: Installing Mosquitto to run MQTT demos locally
 1. [Download and install Mosquitto](https://mosquitto.org/download/)
 1. `BROKER_ENDPOINT` defined in `demos/mqtt/mqtt_demo_basic_tls/demo_config.h` can now be set `localhost`. 
 1. [Follow these instructions](https://dzone.com/articles/secure-communication-with-tls-and-the-mosquitto-broker) to setup TLS authentication for your local Mosquitto server.
 1. Set `ROOT_CA_CERT_PATH` to the server certificate used when setting up TLS authentication for your local Mosquitto server.
 
-### Installing httpbin to run HTTP demos locally 
+### Optional: Installing httpbin to run HTTP demos locally 
 1. Install `Docker`:
 ```shell
 curl -fsSL https://get.docker.com -o get-docker.sh
