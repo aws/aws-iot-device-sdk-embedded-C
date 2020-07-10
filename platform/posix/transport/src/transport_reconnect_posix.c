@@ -31,25 +31,37 @@
 #include <math.h>
 #include "transport_reconnect.h"
 
+#define JITTER_MAX_MSB_BIT_MASK    ( )
+
 /*-----------------------------------------------------------*/
 
 bool Transport_ReconnectBackoffAndSleep( TransportReconnectParams_t * pReconnectParams )
 {
     bool status = false;
-    uint32_t nextMaxJitterLimit = MAX_RECONNECT_BACKOFF_SECONDS;
+    uint32_t jitterMax = MAX_RECONNECT_BACKOFF_SECONDS;
 
     /* If MAX_RECONNECT_ATTEMPTS is set to 0, try forever */
     if( ( pReconnectParams->attemptsDone < MAX_RECONNECT_ATTEMPTS ) ||
         ( 0 == MAX_RECONNECT_ATTEMPTS ) )
     {
-        /*  Wait for timer to expire for the next reconnect */
-        ( void ) sleep( ( rand() % pReconnectParams->nextJitterMax ) );
+        /* Calculate back-off time to use for reconnection attempt. */
+        if( pReconnectParams->nextJitterMax < MAX_RECONNECT_BACKOFF_SECONDS )
+        {
+            jitterMax = pReconnectParams->nextJitterMax;
+        }
+
+        /*  Wait for backoff time to expire for the next reconnect. */
+        ( void ) sleep( ( rand() % jitterMax ) );
 
         /* Increment backoff counts. */
         pReconnectParams->attemptsDone++;
 
-        /* Double the max jitter value for the next reconnect attempt. */
-        pReconnectParams->nextJitterMax += pReconnectParams->nextJitterMax;
+        /* Double the max jitter value for the next reconnect attempt, only
+        * if the new value will be less than the max backoff time value. */
+        if( pReconnectParams->nextJitterMax < ( MAX_RECONNECT_BACKOFF_SECONDS / 2U ) )
+        {
+            pReconnectParams->nextJitterMax += pReconnectParams->nextJitterMax;
+        }
 
         status = true;
     }
