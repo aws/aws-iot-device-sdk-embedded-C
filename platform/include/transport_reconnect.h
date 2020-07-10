@@ -55,13 +55,12 @@
 /* @brief Represents parameters required for reconnect logic. */
 typedef struct TransportReconnectParams
 {
-    /* @brief The backoff delay time value for next iteration of
-     * reconnection. */
-    uint32_t nextBackOffSec;
-
     /* @brief The cumulative count of backoff delay cycles completed
      * for reconnection. */
     uint32_t attemptsDone;
+
+    /** @brief The max jitter value for backoff time in reconnection attempt. */
+    uint32_t nextJitterMax;
 } TransportReconnectParams_t;
 
 

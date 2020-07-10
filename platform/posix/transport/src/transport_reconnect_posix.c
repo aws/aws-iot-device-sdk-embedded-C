@@ -43,24 +43,13 @@ bool Transport_ReconnectBackoffAndSleep( TransportReconnectParams_t * pReconnect
         ( 0 == MAX_RECONNECT_ATTEMPTS ) )
     {
         /*  Wait for timer to expire for the next reconnect */
-        ( void ) sleep( pReconnectParams->nextBackOffSec );
+        ( void ) sleep( ( rand() % pReconnectParams->nextJitterMax ) );
 
         /* Increment backoff counts. */
         pReconnectParams->attemptsDone++;
 
-        /* Calculate the delay time for the next reconnect attempt. */
-
-        if( ( pReconnectParams->attemptsDone < sizeof( pReconnectParams->attemptsDone ) * 8U ) &&
-            ( ( 2U << pReconnectParams->attemptsDone ) < MAX_RECONNECT_BACKOFF_SECONDS ) )
-        {
-            /* Calculate upper limit of range for selecting a random value. */
-            nextMaxJitterLimit = INITIAL_RECONNECT_BACKOFF_SECONDS *
-                                 ( 2 << pReconnectParams->attemptsDone );
-        }
-
-        /* Calculate jitter value picking a random number
-         * between 0 and above calculated upper limit for the next retry. */
-        pReconnectParams->nextBackOffSec = rand() % nextMaxJitterLimit;
+        /* Double the max jitter value for the next reconnect attempt. */
+        pReconnectParams->nextJitterMax += pReconnectParams->nextJitterMax;
 
         status = true;
     }
@@ -96,7 +85,7 @@ void Transport_ReconnectParamsReset( TransportReconnectParams_t * pReconnectPara
     jitter = ( rand() % MAX_JITTER_VALUE_SECONDS );
 
     /* Reset the backoff value to the initial time out value plus jitter. */
-    pReconnectParams->nextBackOffSec = INITIAL_RECONNECT_BACKOFF_SECONDS + jitter;
+    pReconnectParams->nextJitterMax = INITIAL_RECONNECT_BACKOFF_SECONDS + jitter;
 }
 
 /*-----------------------------------------------------------*/

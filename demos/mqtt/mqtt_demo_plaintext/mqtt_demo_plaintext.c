@@ -489,7 +489,7 @@ static int connectToServerWithBackoffRetries( int * pTcpSocket )
 
         if( status == EXIT_FAILURE )
         {
-            LogWarn( ( "Connection to the broker failed, sleeping %d seconds before the next attempt.",
+            LogWarn( ( "Connection to the broker failed. Retrying connection with backoff and jitter.",
                        ( reconnectParams.reconnectTimeoutSec > MAX_RECONNECT_TIMEOUT_SECONDS ) ? MAX_RECONNECT_TIMEOUT_SECONDS : reconnectParams.reconnectTimeoutSec ) );
             backoffSuccess = Transport_ReconnectBackoffAndSleep( &reconnectParams );
         }
