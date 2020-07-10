@@ -284,7 +284,7 @@ static uint8_t * encodeString( uint8_t * pDestination,
  * reading a single byte at a time.
  *
  * @param[in] recvFunc Network interface receive function.
- * @param[in] networkContext Network interface context to the receive function.
+ * @param[in] pNetworkContext Network interface context to the receive function.
  *
  * @return The Remaining Length of the incoming packet.
  */
