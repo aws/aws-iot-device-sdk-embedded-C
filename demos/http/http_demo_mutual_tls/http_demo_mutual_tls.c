@@ -34,13 +34,13 @@
 #include "openssl_posix.h"
 
 /* Check that AWS IoT Core endpoint is defined. */
-#ifndef IOT_CORE_ENDPOINT
-    #error "IOT_CORE_ENDPOINT must be defined to your AWS IoT Core endpoint."
+#ifndef AWS_IOT_ENDPOINT
+    #error "AWS_IOT_ENDPOINT must be defined to your AWS IoT Core endpoint."
 #endif
 
 /* Check that TLS port used for AWS IoT Core is defined. */
-#ifndef IOT_CORE_PORT
-    #error "Please define a IOT_CORE_PORT."
+#ifndef AWS_IOT_PORT
+    #error "Please define a AWS_IOT_PORT."
 #endif
 
 /* Check that a path for HTTP Method POST is defined. */
@@ -79,18 +79,9 @@
 #endif
 
 /**
- * @brief ALPN protocol name to be sent as part of the ClientHello message.
- *
- * @note When using ALPN, port 443 must be used to connect to AWS IoT Core.
- */
-#ifndef IOT_CORE_ALPN_PROTOCOL_NAME
-    #define IOT_CORE_ALPN_PROTOCOL_NAME    "\x0ex-amzn-http-ca"
-#endif
-
-/**
  * @brief The length of the HTTP server host name.
  */
-#define IOT_CORE_ENDPOINT_LENGTH              ( sizeof( IOT_CORE_ENDPOINT ) - 1 )
+#define AWS_IOT_ENDPOINT_LENGTH               ( sizeof( AWS_IOT_ENDPOINT ) - 1 )
 
 /**
  * @brief The length of the ALPN protocol name.
@@ -173,8 +164,8 @@ static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
     ( void ) memset( &requestHeaders, 0, sizeof( requestHeaders ) );
 
     /* Initialize the request object. */
-    requestInfo.pHost = IOT_CORE_ENDPOINT;
-    requestInfo.hostLen = IOT_CORE_ENDPOINT_LENGTH;
+    requestInfo.pHost = AWS_IOT_ENDPOINT;
+    requestInfo.hostLen = AWS_IOT_ENDPOINT_LENGTH;
     requestInfo.method = pMethod;
     requestInfo.methodLen = methodLen;
     requestInfo.pPath = pPath;
@@ -200,7 +191,7 @@ static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
 
         LogInfo( ( "Sending HTTP %.*s request to %.*s%.*s...",
                    ( int32_t ) methodLen, pMethod,
-                   ( int32_t ) IOT_CORE_ENDPOINT_LENGTH, IOT_CORE_ENDPOINT,
+                   ( int32_t ) AWS_IOT_ENDPOINT_LENGTH, AWS_IOT_ENDPOINT,
                    ( int32_t ) pathLen, pPath ) );
         LogDebug( ( "Request Headers:\n%.*s\n"
                     "Request Body:\n%.*s\n",
@@ -228,7 +219,7 @@ static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
                    "Response Headers:\n%.*s\n"
                    "Response Status:\n%u\n"
                    "Response Body:\n%.*s\n",
-                   ( int32_t ) IOT_CORE_ENDPOINT_LENGTH, IOT_CORE_ENDPOINT,
+                   ( int32_t ) AWS_IOT_ENDPOINT_LENGTH, AWS_IOT_ENDPOINT,
                    ( int32_t ) pathLen, pPath,
                    ( int32_t ) response.headersLen, response.pHeaders,
                    response.statusCode,
@@ -238,7 +229,7 @@ static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
     {
         LogError( ( "Failed to send HTTP %.*s request to %.*s%.*s: Error=%s.",
                     ( int32_t ) methodLen, pMethod,
-                    ( int32_t ) IOT_CORE_ENDPOINT_LENGTH, IOT_CORE_ENDPOINT,
+                    ( int32_t ) AWS_IOT_ENDPOINT_LENGTH, AWS_IOT_ENDPOINT,
                     ( int32_t ) pathLen, pPath,
                     HTTPClient_strerror( httpStatus ) ) );
     }
@@ -294,9 +285,9 @@ int main( int argc,
     opensslCredentials.alpnProtosLen = IOT_CORE_ALPN_PROTOCOL_NAME_LENGTH;
 
     /* Initialize server information. */
-    serverInfo.pHostName = IOT_CORE_ENDPOINT;
-    serverInfo.hostNameLength = IOT_CORE_ENDPOINT_LENGTH;
-    serverInfo.port = IOT_CORE_PORT;
+    serverInfo.pHostName = AWS_IOT_ENDPOINT;
+    serverInfo.hostNameLength = AWS_IOT_ENDPOINT_LENGTH;
+    serverInfo.port = AWS_IOT_PORT;
 
     /**************************** Connect. ******************************/
 
