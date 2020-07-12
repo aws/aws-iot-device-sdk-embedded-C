@@ -339,7 +339,7 @@ static int subscribeToTopic( MQTTContext_t * pMqttContext );
  * @return EXIT_SUCCESS if UNSUBSCRIBE was successfully sent;
  * EXIT_FAILURE otherwise.
  */
-static MQTTStatus_t unsubscribeFromTopic( MQTTContext_t * pMqttContext );
+static int unsubscribeFromTopic( MQTTContext_t * pMqttContext );
 
 /**
  * @brief Sends an MQTT PUBLISH to #MQTT_EXAMPLE_TOPIC defined at
@@ -836,7 +836,7 @@ static int subscribeToTopic( MQTTContext_t * pMqttContext )
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t unsubscribeFromTopic( MQTTContext_t * pMqttContext )
+static int unsubscribeFromTopic( MQTTContext_t * pMqttContext )
 {
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus;
