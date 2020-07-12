@@ -83,7 +83,7 @@ fi
 
 TMPFILE=${0##*/}-$USER-$RANDOM
 unknowns=( "not-used" )     # get around empty array with nounset
-extract-comments `find $DIRNAME -name \*.[ch] -not -path \"*/third_party*\"` |
+extract-comments `find $DIRNAME -name \*.[ch] -not -path "$DIRNAME""third_party/*"` |
     tr [:upper:] [:lower:] |
     grep -o -E '[a-zA-Z]+' |
     ablexicon -l $LEXICON > $TMPFILE
@@ -103,7 +103,7 @@ do
         continue
     fi
 
-    for file in `find $DIRNAME -name \*.[ch] -not -path \"*/third_party*\"`
+    for file in `find $DIRNAME -name \*.[ch] -not -path "$DIRNAME""third_party/*"`
     do
         # Disable errexit here, extract-comments can return non-zero
         set +e
