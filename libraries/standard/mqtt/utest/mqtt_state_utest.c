@@ -610,7 +610,7 @@ void test_MQTT_UpdateStateAck( void )
     TEST_ASSERT_EQUAL( PACKET_ID, mqttContext.outgoingPublishRecords[ 2 ].packetId );
     TEST_ASSERT_EQUAL( MQTTQoS2, mqttContext.outgoingPublishRecords[ 2 ].qos );
     TEST_ASSERT_EQUAL( MQTTPubRelSend, mqttContext.outgoingPublishRecords[ 2 ].publishState );
-    /* Record at the current index will be marked as onvalid. */
+    /* Record at the current index will be marked as invalid. */
     TEST_ASSERT_EQUAL( MQTT_PACKET_ID_INVALID, mqttContext.outgoingPublishRecords[ 0 ].packetId );
 
     /* Incoming. */
