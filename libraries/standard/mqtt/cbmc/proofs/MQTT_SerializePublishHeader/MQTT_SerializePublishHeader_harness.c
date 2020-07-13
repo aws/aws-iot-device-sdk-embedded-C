@@ -36,10 +36,10 @@ void harness()
     size_t * pHeaderSize;
     MQTTStatus_t status = MQTTSuccess;
 
-    pPublishInfo = allocateMqttPublishInfo( pPublishInfo );
+    pPublishInfo = allocateMqttPublishInfo( NULL );
     __CPROVER_assume( isValidMqttPublishInfo( pPublishInfo ) );
 
-    pFixedBuffer = allocateMqttFixedBuffer( pFixedBuffer );
+    pFixedBuffer = allocateMqttFixedBuffer( NULL );
     __CPROVER_assume( isValidMqttFixedBuffer( pFixedBuffer ) );
 
     /* Allocate space for a returned header size to get coverage of a possibly

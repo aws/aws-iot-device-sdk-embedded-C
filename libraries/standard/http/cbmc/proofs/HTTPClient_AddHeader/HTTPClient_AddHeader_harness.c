@@ -37,7 +37,7 @@ void harness()
     size_t valueLen;
 
     /* Initialize and make assumptions for request headers. */
-    pRequestHeaders = allocateHttpRequestHeaders( pRequestHeaders );
+    pRequestHeaders = allocateHttpRequestHeaders( NULL );
     __CPROVER_assume( isValidHttpRequestHeaders( pRequestHeaders ) );
 
     /* Initialize and make assumptions for header field. */
