@@ -11,7 +11,7 @@ REMOVE_FUNCTION_BODY +=
 UNWINDSET += encodeRemainingLength.0:3
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
-PROOF_SOURCES += $(PROOFDIR)/../../sources/mqtt_cbmc_state.c
+PROOF_SOURCES += $(SRCDIR)/libraries/standard/mqtt/cbmc/sources/mqtt_cbmc_state.c
 PROJECT_SOURCES += $(SRCDIR)/libraries/standard/mqtt/src/mqtt_lightweight.c
 
 include ../Makefile.common
