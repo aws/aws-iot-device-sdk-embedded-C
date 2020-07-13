@@ -41,10 +41,10 @@ void harness()
 
     __CPROVER_assume( subscriptionCount < SUBSCRIPTION_COUNT_MAX );
 
-    pSubscriptionList = allocateMqttSubscriptionList( pSubscriptionList, subscriptionCount );
+    pSubscriptionList = allocateMqttSubscriptionList( NULL, subscriptionCount );
     __CPROVER_assume( isValidMqttSubscriptionList( pSubscriptionList, subscriptionCount ) );
 
-    pFixedBuffer = allocateMqttFixedBuffer( pFixedBuffer );
+    pFixedBuffer = allocateMqttFixedBuffer( NULL );
     __CPROVER_assume( isValidMqttFixedBuffer( pFixedBuffer ) );
 
     /* Before calling MQTT_SerializeUnsubscribe() it is up to the application to

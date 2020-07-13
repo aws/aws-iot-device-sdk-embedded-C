@@ -35,7 +35,7 @@ void harness()
     int32_t rangeEnd;
 
     /* Initialize and make assumptions for request headers. */
-    pRequestHeaders = allocateHttpRequestHeaders( pRequestHeaders );
+    pRequestHeaders = allocateHttpRequestHeaders( NULL );
     __CPROVER_assume( isValidHttpRequestHeaders( pRequestHeaders ) );
 
     HTTPClient_AddRangeHeader( pRequestHeaders, rangeStartOrlastNbytes, rangeEnd );

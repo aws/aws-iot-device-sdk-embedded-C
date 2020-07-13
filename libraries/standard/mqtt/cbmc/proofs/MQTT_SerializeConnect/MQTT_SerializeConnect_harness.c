@@ -35,13 +35,13 @@ void harness()
     size_t packetSize = 0;
     MQTTStatus_t status = MQTTSuccess;
 
-    pConnectInfo = allocateMqttConnectInfo( pConnectInfo );
+    pConnectInfo = allocateMqttConnectInfo( NULL );
     __CPROVER_assume( isValidMqttConnectInfo( pConnectInfo ) );
 
-    pWillInfo = allocateMqttPublishInfo( pWillInfo );
+    pWillInfo = allocateMqttPublishInfo( NULL );
     __CPROVER_assume( isValidMqttPublishInfo( pWillInfo ) );
 
-    pFixedBuffer = allocateMqttFixedBuffer( pFixedBuffer );
+    pFixedBuffer = allocateMqttFixedBuffer( NULL );
     __CPROVER_assume( isValidMqttFixedBuffer( pFixedBuffer ) );
 
     /* Before calling MQTT_SerializeConnect() it is up to the application to make

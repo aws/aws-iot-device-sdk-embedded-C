@@ -32,7 +32,7 @@ void harness()
     uint16_t * pPacketId;
     bool * pSessionPresent;
 
-    pIncomingPacket = allocateMqttPacketInfo( pIncomingPacket );
+    pIncomingPacket = allocateMqttPacketInfo( NULL );
     __CPROVER_assume( isValidMqttPacketInfo( pIncomingPacket ) );
 
     MQTT_DeserializeAck( pIncomingPacket,

@@ -45,7 +45,7 @@ void harness()
     pValue = mallocCanFail( valueLen );
 
     /* Initialize and make assumptions for response object. */
-    pResponse = allocateHttpResponse( pResponse );
+    pResponse = allocateHttpResponse( NULL );
     __CPROVER_assume( isValidHttpResponse( pResponse ) );
 
     HTTPClient_ReadHeader( pResponse,
