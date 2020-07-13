@@ -30,8 +30,8 @@
 
 void harness()
 {
-    HTTPRequestHeaders_t * pRequestHeaders = NULL;
-    HTTPRequestInfo_t * pRequestInfo = NULL;
+    HTTPRequestHeaders_t * pRequestHeaders;
+    HTTPRequestInfo_t * pRequestInfo;
 
     /* Initialize and make assumptions for request headers object. */
     pRequestHeaders = allocateHttpRequestHeaders( pRequestHeaders );

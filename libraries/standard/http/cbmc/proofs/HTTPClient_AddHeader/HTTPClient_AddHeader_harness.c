@@ -30,9 +30,9 @@
 
 void harness()
 {
-    HTTPRequestHeaders_t * pRequestHeaders = NULL;
-    char * pField = NULL;
-    char * pValue = NULL;
+    HTTPRequestHeaders_t * pRequestHeaders;
+    char * pField;
+    char * pValue;
     size_t fieldLen;
     size_t valueLen;
 

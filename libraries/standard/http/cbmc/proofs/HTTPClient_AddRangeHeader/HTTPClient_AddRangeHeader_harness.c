@@ -30,7 +30,7 @@
 
 void harness()
 {
-    HTTPRequestHeaders_t * pRequestHeaders = NULL;
+    HTTPRequestHeaders_t * pRequestHeaders;
     int32_t rangeStartOrlastNbytes;
     int32_t rangeEnd;
 
