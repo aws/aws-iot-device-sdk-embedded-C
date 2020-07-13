@@ -30,9 +30,9 @@
 
 void harness()
 {
-    HTTPResponse_t * pResponse = NULL;
-    char * pField = NULL;
-    char * pValue = NULL;
+    HTTPResponse_t * pResponse;
+    char * pField;
+    char * pValue;
     size_t fieldLen;
     size_t valueLen;
 
