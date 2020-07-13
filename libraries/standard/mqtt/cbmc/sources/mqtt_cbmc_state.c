@@ -22,7 +22,7 @@
 #include <stdlib.h>
 #include "mqtt_cbmc_state.h"
 
-/* Default bind on the subscription count. Iterating over possibly SIZE_MAX
+/* A default bound on the subscription count. Iterating over possibly SIZE_MAX
  * number of subscriptions does not add any value to the proofs. An application
  * can allocate memory for as many subscriptions as their system can handle.
  * The proofs verify that the code can handle the maximum topicFilterLength in
