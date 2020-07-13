@@ -1,4 +1,4 @@
-set( DEMO_NAME "http_demo_mutual_tls" )
+set( DEMO_NAME "http_demo_mutual_auth" )
 # Demo target.
 add_executable(${DEMO_NAME})
 
