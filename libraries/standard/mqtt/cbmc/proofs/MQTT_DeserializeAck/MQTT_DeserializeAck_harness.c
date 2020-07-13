@@ -28,7 +28,7 @@
 
 void harness()
 {
-    MQTTPacketInfo_t * pIncomingPacket = NULL;
+    MQTTPacketInfo_t * pIncomingPacket;
     uint16_t * pPacketId;
     bool * pSessionPresent;
 

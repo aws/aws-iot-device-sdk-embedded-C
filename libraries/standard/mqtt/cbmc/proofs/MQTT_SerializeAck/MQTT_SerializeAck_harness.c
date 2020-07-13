@@ -28,7 +28,7 @@
 
 void harness()
 {
-    MQTTFixedBuffer_t * pFixedBuffer = NULL;
+    MQTTFixedBuffer_t * pFixedBuffer;
     uint8_t packetType;
     uint16_t packetId;
 
