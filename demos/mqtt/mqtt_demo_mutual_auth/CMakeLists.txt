@@ -1,4 +1,16 @@
+include(CheckSymbolExists)
+
 set( DEMO_NAME "mqtt_demo_mutual_auth" )
+
+# Check if all required macros needed to run this demo are defined
+set(FILES_TO_CHECK "demo_config.h;${DEMO_NAME}.c")
+check_symbol_exists("AWS_IOT_ENDPOINT" ${FILES_TO_CHECK} HAVE_AWS_ENDPOINT)
+check_symbol_exists("CLIENT_CERT_PATH" ${FILES_TO_CHECK} HAVE_CLIENT_CERT)
+check_symbol_exists("CLIENT_PRIVATE_KEY_PATH" ${FILES_TO_CHECK} HAVE_PRIVATE_KEY)
+if(NOT(HAVE_AWS_ENDPOINT AND HAVE_CLIENT_CERT AND HAVE_PRIVATE_KEY))
+    return()
+endif()
+
 # Demo target.
 add_executable(${DEMO_NAME})
 
