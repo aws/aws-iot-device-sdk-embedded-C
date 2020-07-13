@@ -15,3 +15,10 @@ foreach(demo_dir IN LISTS demo_dirs)
         add_subdirectory(${demo_dir})
     endif()
 endforeach()
+
+# Replace macro definition if defined
+if(AWS_IOT_ENDPOINT AND CLIENT_CERT_PATH AND CLIENT_PRIVATE_KEY_PATH)
+    set_target_properties(http_demo_mutual_auth mqtt_demo_mutual_auth 
+                            PROPERTIES COMPILE_DEFINITIONS 
+                            "AWS_IOT_ENDPOINT;CLIENT_CERT_PATH;CLIENT_PRIVATE_KEY_PATH")
+endif()

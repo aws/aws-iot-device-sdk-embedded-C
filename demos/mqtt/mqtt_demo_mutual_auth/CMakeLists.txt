@@ -4,6 +4,9 @@ set( DEMO_NAME "mqtt_demo_mutual_auth" )
 
 # Check if all required macros needed to run this demo are defined
 list(APPEND CMAKE_REQUIRED_INCLUDES "${CMAKE_CURRENT_LIST_DIR};${LOGGING_INCLUDE_DIRS}")
+if(AWS_IOT_ENDPOINT AND CLIENT_CERT_PATH AND CLIENT_PRIVATE_KEY_PATH)
+    set(CMAKE_REQUIRED_DEFINITIONS -DAWS_IOT_ENDPOINT -DCLIENT_CERT_PATH -DCLIENT_PRIVATE_KEY_PATH)
+endif()
 unset(HAVE_AWS_ENDPOINT CACHE)
 unset(HAVE_CLIENT_CERT CACHE)
 unset(HAVE_PRIVATE_KEY CACHE)
@@ -13,6 +16,7 @@ check_symbol_exists(CLIENT_CERT_PATH ${FILES_TO_CHECK} HAVE_CLIENT_CERT)
 check_symbol_exists(CLIENT_PRIVATE_KEY_PATH ${FILES_TO_CHECK} HAVE_PRIVATE_KEY)
 if(NOT(HAVE_AWS_ENDPOINT AND HAVE_CLIENT_CERT AND HAVE_PRIVATE_KEY))
     message("To run ${DEMO_NAME}, define AWS_IOT_ENDPOINT, CLIENT_CERT_PATH, CLIENT_PRIVATE_KEY_PATH in demos/${DEMO_NAME}/demo_config.h")
+    message("After doing this, rebuild using cmake ..")
     return()
 endif()
 
