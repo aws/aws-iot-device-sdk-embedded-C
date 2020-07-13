@@ -26,3 +26,32 @@ target_include_directories(cmock PUBLIC
         )
 
 target_link_libraries(cmock unity)
+
+# jsmn
+add_library(jsmn INTERFACE IMPORTED GLOBAL)
+target_sources(jsmn
+    INTERFACE
+    "${3RDPARTY_DIR}/jsmn/jsmn.h"
+    "${3RDPARTY_DIR}/jsmn/jsmn.c"
+)
+target_include_directories(jsmn
+    SYSTEM INTERFACE
+    "${3RDPARTY_DIR}/jsmn"
+)
+
+# tinycbor
+add_library(tinycbor INTERFACE IMPORTED GLOBAL)
+target_sources(tinycbor
+    INTERFACE
+    "${3RDPARTY_DIR}/tinycbor/src/cborpretty.c"
+    "${3RDPARTY_DIR}/tinycbor/src/cborpretty_stdio.c"
+    "${3RDPARTY_DIR}/tinycbor/src/cborencoder.c"
+    "${3RDPARTY_DIR}/tinycbor/src/cborencoder_close_container_checked.c"
+    "${3RDPARTY_DIR}/tinycbor/src/cborerrorstrings.c"
+    "${3RDPARTY_DIR}/tinycbor/src/cborparser.c"
+    "${3RDPARTY_DIR}/tinycbor/src/cborparser_dup_string.c"
+)
+target_include_directories(tinycbor
+    SYSTEM INTERFACE
+    "${3RDPARTY_DIR}/tinycbor/src"
+)
