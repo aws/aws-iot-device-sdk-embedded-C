@@ -3,11 +3,13 @@ include(CheckSymbolExists)
 set( DEMO_NAME "mqtt_demo_mutual_auth" )
 
 # Check if all required macros needed to run this demo are defined
-set(FILES_TO_CHECK "demo_config.h;${DEMO_NAME}.c")
-check_symbol_exists("AWS_IOT_ENDPOINT" ${FILES_TO_CHECK} HAVE_AWS_ENDPOINT)
-check_symbol_exists("CLIENT_CERT_PATH" ${FILES_TO_CHECK} HAVE_CLIENT_CERT)
-check_symbol_exists("CLIENT_PRIVATE_KEY_PATH" ${FILES_TO_CHECK} HAVE_PRIVATE_KEY)
+list(APPEND CMAKE_REQUIRED_INCLUDES "${CMAKE_CURRENT_LIST_DIR};${LOGGING_INCLUDE_DIRS}")
+set(FILES_TO_CHECK "demo_config.h")
+check_symbol_exists(AWS_IOT_ENDPOINT ${FILES_TO_CHECK} HAVE_AWS_ENDPOINT)
+check_symbol_exists(CLIENT_CERT_PATH ${FILES_TO_CHECK} HAVE_CLIENT_CERT)
+check_symbol_exists(CLIENT_PRIVATE_KEY_PATH ${FILES_TO_CHECK} HAVE_PRIVATE_KEY)
 if(NOT(HAVE_AWS_ENDPOINT AND HAVE_CLIENT_CERT AND HAVE_PRIVATE_KEY))
+    message("To run mqtt_demo_mutual_auth, define AWS_IOT_ENDPOINT, CLIENT_CERT_PATH, CLIENT_PRIVATE_KEY_PATH in demos/mqtt_demo_mutual_auth/demo_config.h")
     return()
 endif()
 
