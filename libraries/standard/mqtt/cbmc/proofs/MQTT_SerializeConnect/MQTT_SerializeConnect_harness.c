@@ -28,10 +28,10 @@
 
 void harness()
 {
-    MQTTConnectInfo_t * pConnectInfo = NULL;
-    MQTTPublishInfo_t * pWillInfo = NULL;
+    MQTTConnectInfo_t * pConnectInfo;
+    MQTTPublishInfo_t * pWillInfo;
     size_t remainingLength;
-    MQTTFixedBuffer_t * pFixedBuffer = NULL;
+    MQTTFixedBuffer_t * pFixedBuffer;
     size_t packetSize = 0;
     MQTTStatus_t status = MQTTSuccess;
 
@@ -45,12 +45,20 @@ void harness()
     __CPROVER_assume( isValidMqttFixedBuffer( pFixedBuffer ) );
 
     /* Before calling MQTT_SerializeConnect() it is up to the application to make
-    * sure that the information in MQTTConnectInfo_t and MQTTPublishInfo_t can
-    * fit into the MQTTFixedBuffer_t. It is a violation of the API to call
-    * MQTT_SerializeConnect without first calling MQTT_GetConnectPacketSize(). */
+     * sure that the information in MQTTConnectInfo_t and MQTTPublishInfo_t can
+     * fit into the MQTTFixedBuffer_t. It is a violation of the API to call
+     * MQTT_SerializeConnect() without first calling MQTT_GetConnectPacketSize(). */
     if( pConnectInfo != NULL )
     {
-        status = MQTT_GetConnectPacketSize( pConnectInfo, pWillInfo, &remainingLength, &packetSize );
+        /* packetSize must be non-NULL in order for the verification to proceed.
+         * The packetSize returned is not used in this proof, but is used normally
+         * by the application to verify the size of their MQTTFixedBuffer_t.
+         * MQTT_SerializeConnect() will use the remainingLength to recalculate
+         * the packetSize. */
+        status = MQTT_GetConnectPacketSize( pConnectInfo,
+                                            pWillInfo,
+                                            &remainingLength,
+                                            &packetSize );
     }
 
     if( status == MQTTSuccess )

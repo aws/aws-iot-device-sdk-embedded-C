@@ -28,11 +28,11 @@
 
 void harness()
 {
-    MQTTPublishInfo_t * pPublishInfo = NULL;
+    MQTTPublishInfo_t * pPublishInfo;
     uint16_t packetId;
     size_t remainingLength = 0;
     size_t packetSize = 0;
-    const MQTTFixedBuffer_t * pFixedBuffer = NULL;
+    const MQTTFixedBuffer_t * pFixedBuffer;
     MQTTStatus_t status = MQTTSuccess;
 
     pPublishInfo = allocateMqttPublishInfo( pPublishInfo );
@@ -41,13 +41,24 @@ void harness()
     pFixedBuffer = allocateMqttFixedBuffer( pFixedBuffer );
     __CPROVER_assume( isValidMqttFixedBuffer( pFixedBuffer ) );
 
+    /* Before calling MQTT_SerializePublish() it is up to the application to
+     * make sure that the information in MQTTPublishInfo_t can fit into the
+     * MQTTFixedBuffer_t. It is a violation of the API to call
+     * MQTT_SerializePublish() without first calling MQTT_GetPublishPacketSize(). */
     if( pPublishInfo != NULL )
     {
+        /* packetSize must be non-NULL in order for the verification to proceed.
+         * The packetSize returned is not used in this proof, but is used normally
+         * by the application to verify the size of their MQTTFixedBuffer_t.
+         * MQTT_SerializePublish() will use the remainingLength to
+         * recalculate the packetSize. */
         status = MQTT_GetPublishPacketSize( pPublishInfo, &remainingLength, &packetSize );
     }
 
     if( status == MQTTSuccess )
     {
+        /* For coverage it is expected that a NULL pPublishInfo could
+         * reach this function. */
         MQTT_SerializePublish( pPublishInfo,
                                packetId,
                                remainingLength,

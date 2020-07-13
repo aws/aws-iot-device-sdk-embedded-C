@@ -28,12 +28,15 @@
 
 void harness()
 {
-    MQTTSubscribeInfo_t * pSubscriptionList = NULL;
+    MQTTSubscribeInfo_t * pSubscriptionList;
     size_t subscriptionCount;
-    size_t remainingLength = 0;
+    size_t remainingLength;
     uint16_t packetId;
-    size_t packetSize = 0;
-    MQTTFixedBuffer_t * pFixedBuffer = NULL;
+
+    /* This variable is not used but is needed for MQTT_GetUnsubscribePacketSize()
+     * to verify the pSubscriptionList. */
+    size_t packetSize;
+    MQTTFixedBuffer_t * pFixedBuffer;
     MQTTStatus_t status = MQTTSuccess;
 
     __CPROVER_assume( subscriptionCount < SUBSCRIPTION_COUNT_MAX );
@@ -44,8 +47,17 @@ void harness()
     pFixedBuffer = allocateMqttFixedBuffer( pFixedBuffer );
     __CPROVER_assume( isValidMqttFixedBuffer( pFixedBuffer ) );
 
+    /* Before calling MQTT_SerializeUnsubscribe() it is up to the application to
+     * make sure that the information in the list of MQTTSubscribeInfo_t can fit
+     * into the MQTTFixedBuffer_t. It is a violation of the API to call
+     * MQTT_SerializeUnsubscribe() without first calling MQTT_GetUnsubscribePacketSize(). */
     if( pSubscriptionList != NULL )
     {
+        /* packetSize must be non-NULL in order for the verification to proceed.
+         * The packetSize returned is not used in this proof, but is used normally
+         * by the application to verify the size of their MQTTFixedBuffer_t.
+         * MQTT_SerializeUnsubscribe() will use the remainingLength to
+         * recalculate the packetSize. */
         status = MQTT_GetUnsubscribePacketSize( pSubscriptionList,
                                                 subscriptionCount,
                                                 &remainingLength,
@@ -54,6 +66,8 @@ void harness()
 
     if( status == MQTTSuccess )
     {
+        /* For coverage it is expected that a NULL pSubscriptionList could
+         * reach this function. */
         MQTT_SerializeUnsubscribe( pSubscriptionList,
                                    subscriptionCount,
                                    packetId,

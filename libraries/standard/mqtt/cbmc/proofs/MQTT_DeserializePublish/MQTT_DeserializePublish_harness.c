@@ -29,8 +29,8 @@
 
 void harness()
 {
-    MQTTPacketInfo_t * pIncomingPacket = NULL;
-    MQTTPublishInfo_t * pPublishInfo = NULL;
+    MQTTPacketInfo_t * pIncomingPacket;
+    MQTTPublishInfo_t * pPublishInfo;
     uint16_t packetId;
 
     pIncomingPacket = allocateMqttPacketInfo( pIncomingPacket );

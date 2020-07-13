@@ -28,7 +28,7 @@
 
 void harness()
 {
-    MQTTFixedBuffer_t * pFixedBuffer = NULL;
+    MQTTFixedBuffer_t * pFixedBuffer;
 
     pFixedBuffer = allocateMqttFixedBuffer( pFixedBuffer );
     __CPROVER_ASSUME( isValidMqttFixedBuffer( pFixedBuffer ) );

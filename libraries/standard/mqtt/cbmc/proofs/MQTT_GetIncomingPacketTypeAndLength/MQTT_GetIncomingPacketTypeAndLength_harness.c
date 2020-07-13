@@ -36,7 +36,7 @@ void harness()
 
     /* MQTT_GetIncomingPacketTypeAndLength() will set only the remainingLength
      * field in the input MQTTPacketInfo_t structure. */
-    MQTTPacketInfo_t * pIncomingPacket = NULL;
+    MQTTPacketInfo_t * pIncomingPacket;
 
     pIncomingPacket = allocateMqttPacketInfo( pIncomingPacket );
     __CPROVER_assume( isValidMqttPacketInfo( pIncomingPacket ) );
