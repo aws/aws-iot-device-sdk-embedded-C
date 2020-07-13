@@ -33,6 +33,7 @@ void harness()
     uint16_t packetId;
 
     pFixedBuffer = allocateMqttFixedBuffer( pFixedBuffer );
+    __CPROVER_ASSUME( isValidMqttFixedBuffer( pFixedBuffer ) );
 
     MQTT_SerializeAck( pFixedBuffer, packetType, packetId );
 }

@@ -31,6 +31,7 @@ void harness()
     MQTTFixedBuffer_t * pFixedBuffer = NULL;
 
     pFixedBuffer = allocateMqttFixedBuffer( pFixedBuffer );
+    __CPROVER_ASSUME( isValidMqttFixedBuffer( pFixedBuffer ) );
 
     MQTT_SerializeDisconnect( pFixedBuffer );
 }
