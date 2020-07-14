@@ -7,3 +7,7 @@
 [submodule "tools/aws-templates-for-cbmc-proofs"]
 	path = tools/aws-templates-for-cbmc-proofs
 	url = https://github.com/awslabs/aws-templates-for-cbmc-proofs.git
+[submodule "jsmn"]
+	path = libraries/3rdparty/jsmn
+	url = https://github.com/zserge/jsmn.git
+	branch = v1.1.0
