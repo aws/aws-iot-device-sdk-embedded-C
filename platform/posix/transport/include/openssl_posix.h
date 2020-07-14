@@ -35,7 +35,7 @@
 /* Include header that defines log levels. */
 #include "logging_levels.h"
 
-/* Logging configuration for the transport interface implemenation which uses
+/* Logging configuration for the transport interface implementation which uses
  * OpenSSL and Sockets. */
 #ifndef LIBRARY_LOG_NAME
     #define LIBRARY_LOG_NAME     "Transport_OpenSSL_Sockets"
@@ -59,7 +59,7 @@
 
 /**
  * @brief Definition of the network context for the transport interface
- * implemenation that uses OpenSSL and POSIX sockets.
+ * implementation that uses OpenSSL and POSIX sockets.
  *
  * @note For this transport implementation, the socket descriptor and
  * SSL context is used.

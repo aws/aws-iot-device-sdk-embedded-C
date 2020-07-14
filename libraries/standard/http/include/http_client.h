@@ -23,7 +23,7 @@
 /**
  * @brief The HTTP header "User-Agent" value.
  *
- * The following headerline is automatically written to
+ * The following header line is automatically written to
  * #HTTPRequestHeaders_t.pBuffer:
  * "User-Agent: my-platform-name\r\n"
  */
@@ -308,7 +308,7 @@ typedef struct HTTPRequestHeaders
      *
      * This buffer is owned by the library during #HTTPClient_AddHeader,
      * #HTTPClient_AddRangeHeader, #HTTPClient_InitializeRequestHeaders, and
-     * #HTTPClient_Send. This buffer should not be modifed until
+     * #HTTPClient_Send. This buffer should not be modified until
      * after these functions return.
      *
      * For optimization this buffer may be re-used with the response. The user
@@ -396,7 +396,7 @@ typedef struct HTTPResponse
      * This buffer is supplied by the application.
      *
      * This buffer is owned by the library during #HTTPClient_Send and
-     * #HTTPClient_ReadHeader. This buffer should not be modifed until after
+     * #HTTPClient_ReadHeader. This buffer should not be modified until after
      * these functions return.
      *
      * For optimization this buffer may be used with the request headers. The

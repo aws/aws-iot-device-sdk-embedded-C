@@ -346,7 +346,7 @@ static int httpParserOnHeaderFieldCallback( http_parser * pHttpParser,
  * header value is found.
  *
  * This header value corresponds to the header field that was found in the
- * immediately preceeding httpParserOnHeaderFieldCallback().
+ * immediately preceding httpParserOnHeaderFieldCallback().
  *
  * If only part of the header value was found, then parsing of the next part of
  * the response message will invoke this callback in succession.
@@ -432,7 +432,7 @@ static int httpParserOnBodyCallback( http_parser * pHttpParser,
  * zero length-ed parsing data to indicate the end of the response.
  *
  * For a "Transfer-Encoding: chunked" type of response message, the complete
- * response message is signalled by a terminating chunk header with length zero.
+ * response message is signaled by a terminating chunk header with length zero.
  *
  * See https://github.com/nodejs/http-parser for more information.
  *
@@ -950,7 +950,7 @@ static HTTPStatus_t processHttpParserError( const http_parser * pHttpParser )
         case HPE_STRICT:
         case HPE_INVALID_CONSTANT:
             LogError( ( "Response parsing error: Invalid character found in "
-                        "Status-Line or header delimitters." ) );
+                        "Status-Line or header delimiters." ) );
             returnStatus = HTTP_SECURITY_ALERT_INVALID_CHARACTER;
             break;
 
@@ -993,7 +993,7 @@ static HTTPStatus_t processHttpParserError( const http_parser * pHttpParser )
     }
 
     /* Errors with CB_ prepending are manual returns of non-zero in the
-     * response parsing callbacked. */
+     * response parsing callback. */
     LogDebug( ( "http-parser errno description: %s",
                 http_errno_description( HTTP_PARSER_ERRNO( pHttpParser ) ) ) );
 
@@ -1791,7 +1791,7 @@ static HTTPStatus_t getFinalResponseStatus( HTTPParsingState_t parsingState,
     {
         if( totalReceived == responseBufferLen )
         {
-            LogError( ( "Cannot receive complete response from tansport"
+            LogError( ( "Cannot receive complete response from transport"
                         " interface: Response buffer has insufficient "
                         "space: responseBufferLen=%lu",
                         ( unsigned long ) responseBufferLen ) );
