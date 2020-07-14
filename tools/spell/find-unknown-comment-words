@@ -121,7 +121,6 @@ do
         extract-comments $file | grep -iw $word > /dev/null
         if [ $? == "0" ]
         then
-            echo $word
             if [ $STATUS"" != "1"  ]
             then
                 echo -e $GREEN"############################################################################"$DEFAULTFG
