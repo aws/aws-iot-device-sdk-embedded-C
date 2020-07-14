@@ -89,13 +89,8 @@ bool isValidMqttPublishInfo( const MQTTPublishInfo_t * pPublishInfo )
 
     if( pPublishInfo != NULL )
     {
-        bool validQos = ( ( pPublishInfo->qos >= MQTTQoS0 ) &&
-                          ( pPublishInfo->qos <= MQTTQoS2 ) );
-
-        bool validTopicNameLength = pPublishInfo->topicNameLength < CBMC_MAX_OBJECT_SIZE;
-        bool validPayloadLength = pPublishInfo->payloadLength < CBMC_MAX_OBJECT_SIZE;
-
-        isValid = validQos && validTopicNameLength && validPayloadLength;
+        isValid = isValid && ( pPublishInfo->topicNameLength < CBMC_MAX_OBJECT_SIZE );
+        isValid = isValid && ( pPublishInfo->payloadLength < CBMC_MAX_OBJECT_SIZE );
     }
 
     return isValid;
