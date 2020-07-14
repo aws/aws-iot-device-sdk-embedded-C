@@ -956,7 +956,7 @@ void test_MQTT_GetPublishPacketSize( void )
     size_t packetSize;
     MQTTStatus_t status = MQTTSuccess;
 
-    /* Verify bad paramameters fail. */
+    /* Verify bad parameters fail. */
     status = MQTT_GetPublishPacketSize( NULL, &remainingLength, &packetSize );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
