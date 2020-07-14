@@ -32,7 +32,7 @@ void harness()
     MQTTPublishInfo_t * pWillInfo;
     size_t remainingLength;
     MQTTFixedBuffer_t * pFixedBuffer;
-    size_t packetSize = 0;
+    size_t packetSize;
     MQTTStatus_t status = MQTTSuccess;
 
     pConnectInfo = allocateMqttConnectInfo( NULL );

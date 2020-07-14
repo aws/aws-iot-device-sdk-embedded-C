@@ -30,9 +30,9 @@ void harness()
 {
     MQTTSubscribeInfo_t * pSubscriptionList;
     size_t subscriptionCount;
-    size_t remainingLength = 0;
+    size_t remainingLength;
     uint16_t packetId;
-    size_t packetSize = 0;
+    size_t packetSize;
     MQTTFixedBuffer_t * pFixedBuffer;
     MQTTStatus_t status = MQTTSuccess;
 
