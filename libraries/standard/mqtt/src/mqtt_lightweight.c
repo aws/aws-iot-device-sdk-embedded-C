@@ -1772,9 +1772,9 @@ MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * pPublishInfo,
      * cannot be NULL. */
     else if( ( pPublishInfo->payloadLength > 0 ) && ( pPublishInfo->pPayload == NULL ) )
     {
-        LogError( ( "A nonzero payload length requires a non-NULL payload: ",
-                    "payloadLength=%u, pPayload=%p.",
-                    pPublishInfo->payloadLength,
+        LogError( ( "A nonzero payload length requires a non-NULL payload: "
+                    "payloadLength=%lu, pPayload=%p.",
+                    ( unsigned long ) pPublishInfo->payloadLength,
                     pPublishInfo->pPayload ) );
         status = MQTTBadParameter;
     }
