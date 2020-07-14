@@ -83,7 +83,6 @@ qos
 resending
 resp
 sdk
-serialzing
 ssl
 structs
 suback
@@ -91,7 +90,6 @@ sublicense
 subscribepublishloop
 tcp
 tcpsocket
-timout
 tls
 transportinterface
 transporttimeout

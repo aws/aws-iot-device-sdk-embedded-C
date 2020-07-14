@@ -5,7 +5,6 @@ addrecord
 api
 app
 aws
-bools
 bufferlength
 bytesreceived
 bytestoread

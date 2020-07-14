@@ -126,7 +126,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
  *
  * @param[in] pNetworkContext Pointer to the network context created using Plaintext_Connect.
  * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and its length.
- * The buffer is used for serialzing CONNECT packet and deserializing CONN-ACK.
+ * The buffer is used for serializing CONNECT packet and deserializing CONN-ACK.
  *
  * @return EXIT_SUCCESS if an MQTT session is established; EXIT_FAILURE otherwise.
  */
@@ -139,7 +139,7 @@ static int createMQTTConnectionWithBroker( NetworkContext_t * pNetworkContext,
  *
  * @param[in] pNetworkContext Pointer to the network context created using Plaintext_Connect.
  * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and its length.
- * The buffer is used for serialzing SUBSCRIBE packet.
+ * The buffer is used for serializing SUBSCRIBE packet.
  *
  */
 static void mqttSubscribeToTopic( NetworkContext_t * pNetworkContext,
@@ -150,7 +150,7 @@ static void mqttSubscribeToTopic( NetworkContext_t * pNetworkContext,
  *
  * @param[in] pNetworkContext Pointer to the network context created using Plaintext_Connect.
  * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and its length.
- * The buffer is used for serialzing PUBLISH packet.
+ * The buffer is used for serializing PUBLISH packet.
  *
  */
 static void mqttPublishToTopic( NetworkContext_t * pNetworkContext,
@@ -162,7 +162,7 @@ static void mqttPublishToTopic( NetworkContext_t * pNetworkContext,
  *
  * @param[in] pNetworkContext Pointer to the network context created using Plaintext_Connect.
  * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and its length.
- * The buffer is used for serialzing UNSUBSCRIBE packet.
+ * The buffer is used for serializing UNSUBSCRIBE packet.
  *
  */
 static void mqttUnsubscribeFromTopic( NetworkContext_t * pNetworkContext,
@@ -173,7 +173,7 @@ static void mqttUnsubscribeFromTopic( NetworkContext_t * pNetworkContext,
  *
  * @param[in] pNetworkContext Pointer to the network context created using Plaintext_Connect.
  * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and its length.
- * The buffer is used for serialzing DISCONNECT packet.
+ * The buffer is used for serializing DISCONNECT packet.
  */
 static void mqttDisconnect( NetworkContext_t * pNetworkContext,
                             MQTTFixedBuffer_t * pFixedBuffer );
@@ -183,7 +183,7 @@ static void mqttDisconnect( NetworkContext_t * pNetworkContext,
  *
  * @param[in] pNetworkContext Pointer to the network context created using Plaintext_Connect.
  * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and its length.
- * The buffer is used for serialzing PING request packet.
+ * The buffer is used for serializing PING request packet.
  */
 static void mqttKeepAlive( NetworkContext_t * pNetworkContext,
                            MQTTFixedBuffer_t * pFixedBuffer );
