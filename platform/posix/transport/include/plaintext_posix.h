@@ -35,7 +35,7 @@
 /* Include header that defines log levels. */
 #include "logging_levels.h"
 
-/* Logging configuration for the transport interface implemenation which uses
+/* Logging configuration for the transport interface implementation which uses
  * Sockets. */
 #ifndef LIBRARY_LOG_NAME
     #define LIBRARY_LOG_NAME     "Transport_Plaintext_Sockets"

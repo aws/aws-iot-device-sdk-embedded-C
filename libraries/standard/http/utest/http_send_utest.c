@@ -188,7 +188,7 @@ static size_t firstPartBytes = 0;
 /* The count of times a test invoked the transport receive interface. */
 static uint8_t recvCurrentCall = 0;
 
-/* The test sets this variable to indcate which call count count of transport
+/* The test sets this variable to indicate which call count count of transport
  * receive to return an error from. */
 static uint8_t recvStopCall = 0;
 /* The count of times a mocked http_parser_execute callback has been invoked. */
@@ -1089,7 +1089,7 @@ void test_HTTPClient_Send_response_larger_than_buffer( void )
     firstPartBytes = HTTP_TEST_RESPONSE_GET_PARTIAL_BODY_LENGTH;
     response.bufferLen = HTTP_TEST_RESPONSE_GET_PARTIAL_BODY_LENGTH;
 
-    /* For everage of no header parsing callback configured. */
+    /* For coverage of no header parsing callback configured. */
     response.pHeaderParsingCallback = NULL;
 
     returnStatus = HTTPClient_Send( &transportInterface,
@@ -1426,7 +1426,7 @@ void test_HTTPClient_Send_not_enough_request_headers( void )
 
 /*-----------------------------------------------------------*/
 
-/* Test a NULL request body but a non-zero requets body length.
+/* Test a NULL request body but a non-zero requests body length.
  */
 void test_HTTPClient_Send_null_request_body_nonzero_body_length( void )
 {
