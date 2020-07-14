@@ -34,13 +34,14 @@ void harness()
      * MQTT_GetIncomingPacketTypeAndLength(). */
     NetworkContext_t networkContext;
 
-    __CPROVER_assume( networkContext != NULL );
-
     /* MQTT_GetIncomingPacketTypeAndLength() will set only the remainingLength
      * field in the input MQTTPacketInfo_t structure. */
-    MQTTPacketInfo_t * pIncomingPacketInfo = mallocCanFail( sizeof( MQTTPacketInfo_t ) );
+    MQTTPacketInfo_t * pIncomingPacket = NULL;
+
+    pIncomingPacket = allocateMqttPacketInfo( pIncomingPacket );
+    __CPROVER_assume( isValidMqttPacketInfo( pIncomingPacket ) );
 
     MQTT_GetIncomingPacketTypeAndLength( NetworkInterfaceReceiveStub,
-                                         networkContext,
-                                         pIncomingPacketInfo );
+                                         &networkContext,
+                                         pIncomingPacket );
 }

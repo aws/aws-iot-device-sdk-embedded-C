@@ -18,7 +18,9 @@ target_link_libraries(
     ${DEMO_NAME}
     PRIVATE
         mqtt
-        reconnect_posix   
+        clock_posix
+        plaintext_posix
+        transport_reconnect_posix   
 )
 
 target_include_directories(

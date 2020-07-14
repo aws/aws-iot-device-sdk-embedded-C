@@ -55,7 +55,7 @@
  * @note Your AWS IoT Core endpoint can be found in the AWS IoT console under
  * Settings/Custom Endpoint, or using the describe-endpoint API.
  *
- * #define IOT_CORE_ENDPOINT                 "your-aws-iot-core-endpoint"
+ * #define AWS_IOT_ENDPOINT                 "your-aws-iot-core-endpoint"
  */
 
 /**
@@ -66,7 +66,7 @@
  * @note Port 443 requires use of the ALPN TLS extension with the ALPN protocol
  * name being x-amzn-http-ca. When using port 8443, ALPN is not required.
  */
-#define IOT_CORE_PORT                  443
+#define AWS_IOT_PORT                   443
 
 /**
  * @brief Path of the file containing Amazon's root CA certificate for TLS

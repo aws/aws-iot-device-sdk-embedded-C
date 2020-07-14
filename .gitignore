@@ -18,3 +18,4 @@ build/
 **/cbmc/proofs/**/html
 **/cbmc/proofs/**/logs
 **/cbmc/proofs/**/TAGS-*
+**/cbmc/proofs/**/report

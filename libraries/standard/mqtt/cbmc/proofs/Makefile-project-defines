@@ -20,10 +20,9 @@ LINK_FLAGS =
 # Preprocessor include paths -I...
 INCLUDES += -I$(SRCDIR)/libraries/standard/mqtt/cbmc/include
 INCLUDES += -I$(SRCDIR)/libraries/standard/mqtt/include
-INCLUDES += -I$(SRCDIR)/libraries/standard/utilities/include
 INCLUDES += -I$(SRCDIR)/libraries/standard/mqtt/src
 INCLUDES += -I$(SRCDIR)/demos/logging-stack
-INCLUDES += -I$(SRCDIR)/demos/mqtt/mqtt_demo_plaintext
+INCLUDES += -I$(SRCDIR)/platform/include
 
 # Preprocessor definitions -D...
 DEFINES += -Dmqtt_EXPORTS

@@ -1548,7 +1548,7 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
     else if( rangeStartOrlastNbytes == INT32_MIN )
     {
         LogError( ( "Parameter check failed: Arithmetic overflow detected: "
-                    "rangeStart should be > -2147483648 (INT32_MIN): ",
+                    "rangeStart should be > -2147483648 (INT32_MIN): "
                     "RangeStart=%d",
                     rangeStartOrlastNbytes ) );
         returnStatus = HTTP_INVALID_PARAMETER;
@@ -2099,8 +2099,8 @@ static int findHeaderOnHeaderCompleteCallback( http_parser * pHttpParser )
     /* If we have reached here, all headers in the response have been parsed but the requested
      * header has not been found in the response buffer. */
     LogDebug( ( "Reached end of header parsing: Header not found in response: "
-                "RequestedHeader=%u*s",
-                ( pContext->fieldLen ),
+                "RequestedHeader=%.*s",
+                ( int ) ( pContext->fieldLen ),
                 pContext->pField ) );
 
     /* No further parsing is required; thus, indicate the parser to stop parsing. */
@@ -2160,9 +2160,8 @@ static HTTPStatus_t findHeaderInResponse( const uint8_t * pBuffer,
         assert( context.valueFound == 0u );
 
         /* Header is not present in buffer. */
-        LogWarn( ( "Header not found in response buffer: "
-                   "RequestedHeader=%u*s",
-                   fieldLen,
+        LogWarn( ( "Header not found in response buffer: RequestedHeader=%.*s",
+                   ( int ) fieldLen,
                    pField ) );
 
         returnStatus = HTTP_HEADER_NOT_FOUND;
@@ -2173,8 +2172,8 @@ static HTTPStatus_t findHeaderInResponse( const uint8_t * pBuffer,
          * in the "<field>: <value>\r\n" format of an HTTP header. */
         LogError( ( "Unable to find header value in response: "
                     "Response data is invalid: "
-                    "RequestedHeader=%u*s, ParserError=%s",
-                    fieldLen,
+                    "RequestedHeader=%.*s, ParserError=%s",
+                    ( int ) fieldLen,
                     pField,
                     http_errno_description( HTTP_PARSER_ERRNO( &( parser ) ) ) ) );
         returnStatus = HTTP_INVALID_RESPONSE;
@@ -2188,10 +2187,10 @@ static HTTPStatus_t findHeaderInResponse( const uint8_t * pBuffer,
         assert( ( context.fieldFound == 1u ) && ( context.valueFound == 1u ) );
 
         LogDebug( ( "Found requested header in response: "
-                    "HeaderName=%u*s, HeaderValue=%u*s",
-                    fieldLen,
+                    "HeaderName=%.*s, HeaderValue=%.*s",
+                    ( int ) fieldLen,
                     pField,
-                    *pValueLen,
+                    ( int ) ( *pValueLen ),
                     *pValueLoc ) );
     }
 

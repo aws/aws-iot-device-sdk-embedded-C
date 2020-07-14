@@ -152,7 +152,7 @@ int suiteTearDown( int numFailures )
 /**
  * @brief Mock successful transport receive by reading data from a buffer.
  */
-static int32_t mockReceive( NetworkContext_t context,
+static int32_t mockReceive( NetworkContext_t * pNetworkContext,
                             void * pBuffer,
                             size_t bytesToRecv )
 {
@@ -161,7 +161,7 @@ static int32_t mockReceive( NetworkContext_t context,
     size_t bytesRead = 0;
 
     /* Treat network context as pointer to buffer for mocking  */
-    mockNetwork = ( *( uint8_t ** ) context );
+    mockNetwork = *( pNetworkContext->buffer );
 
     while( bytesRead++ < bytesToRecv )
     {
@@ -170,7 +170,7 @@ static int32_t mockReceive( NetworkContext_t context,
     }
 
     /* Move stream by bytes read. */
-    ( *( uint8_t ** ) context ) = mockNetwork;
+    *( pNetworkContext->buffer ) = mockNetwork;
 
     return bytesToRecv;
 }
@@ -178,7 +178,7 @@ static int32_t mockReceive( NetworkContext_t context,
 /**
  * @brief Mock transport receive with no data available.
  */
-static int32_t mockReceiveNoData( NetworkContext_t context,
+static int32_t mockReceiveNoData( NetworkContext_t * pNetworkContext,
                                   void * pBuffer,
                                   size_t bytesToRecv )
 {
@@ -188,7 +188,7 @@ static int32_t mockReceiveNoData( NetworkContext_t context,
 /**
  * @brief Mock transport receive failure.
  */
-static int32_t mockReceiveFailure( NetworkContext_t context,
+static int32_t mockReceiveFailure( NetworkContext_t * pNetworkContext,
                                    void * pBuffer,
                                    size_t bytesToRecv )
 {
@@ -198,7 +198,7 @@ static int32_t mockReceiveFailure( NetworkContext_t context,
 /**
  * @brief Mock transport receive that succeeds once, then fails.
  */
-static int32_t mockReceiveSucceedThenFail( NetworkContext_t context,
+static int32_t mockReceiveSucceedThenFail( NetworkContext_t * pNetworkContext,
                                            void * pBuffer,
                                            size_t bytesToRecv )
 {
@@ -207,12 +207,12 @@ static int32_t mockReceiveSucceedThenFail( NetworkContext_t context,
 
     if( counter++ )
     {
-        retVal = mockReceiveFailure( context, pBuffer, bytesToRecv );
+        retVal = mockReceiveFailure( pNetworkContext, pBuffer, bytesToRecv );
         counter = 0;
     }
     else
     {
-        retVal = mockReceive( context, pBuffer, bytesToRecv );
+        retVal = mockReceive( pNetworkContext, pBuffer, bytesToRecv );
     }
 
     return retVal;
@@ -769,6 +769,18 @@ void test_MQTT_SerializeSubscribe( void )
                                       NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
+    /* Verify a NULL buffer in the fixed buffer struct fails */
+    fixedBuffer.pBuffer = NULL;
+    status = MQTT_SerializeSubscribe( &subscriptionList,
+                                      subscriptionCount,
+                                      PACKET_ID,
+                                      remainingLength,
+                                      &fixedBuffer );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Restore the fixed buffer. */
+    fixedBuffer.pBuffer = &buffer[ BUFFER_PADDING_LENGTH ];
+
     /* Get correct values of packet size and remaining length. */
     memset( ( void * ) &subscriptionList, 0x0, sizeof( subscriptionList ) );
     subscriptionList.qos = MQTTQoS0;
@@ -864,6 +876,18 @@ void test_MQTT_SerializeUnsubscribe( void )
                                         remainingLength,
                                         NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Verify a NULL buffer in the fixed buffer struct fails */
+    fixedBuffer.pBuffer = NULL;
+    status = MQTT_SerializeUnsubscribe( &subscriptionList,
+                                        subscriptionCount,
+                                        PACKET_ID,
+                                        remainingLength,
+                                        &fixedBuffer );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Restore the fixed buffer. */
+    fixedBuffer.pBuffer = &buffer[ BUFFER_PADDING_LENGTH ];
 
     /* Get correct values of packetsize and remaining length. */
     memset( ( void * ) &subscriptionList, 0x0, sizeof( subscriptionList ) );
@@ -1018,13 +1042,49 @@ void test_MQTT_SerializePublish( void )
                                     NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
-    /* 0 packet ID for QoS > 0. */
+    /* Verify a NULL buffer in the fixed buffer struct fails */
+    fixedBuffer.pBuffer = NULL;
+    status = MQTT_SerializePublish( &publishInfo,
+                                    PACKET_ID,
+                                    remainingLength,
+                                    &fixedBuffer );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Restore the fixed buffer. */
+    fixedBuffer.pBuffer = &buffer[ BUFFER_PADDING_LENGTH ];
+
+    /* Verify that a non-zero payload length and a NULL payload fails. */
+    publishInfo.payloadLength = 1;
+    publishInfo.pPayload = NULL;
+    status = MQTT_SerializePublish( &publishInfo,
+                                    PACKET_ID,
+                                    remainingLength,
+                                    &fixedBuffer );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Restore the payload length to valid for tests. */
+    publishInfo.payloadLength = 0;
+
+    /* Verify that 0 packet ID for QoS > 0 fails. */
     publishInfo.qos = MQTTQoS1;
     status = MQTT_SerializePublish( &publishInfo,
                                     0,
                                     remainingLength,
                                     &fixedBuffer );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Verify that a duplicate flag for Qos 0 fails. */
+    publishInfo.qos = MQTTQoS0;
+    publishInfo.dup = true;
+    status = MQTT_SerializePublish( &publishInfo,
+                                    PACKET_ID,
+                                    remainingLength,
+                                    &fixedBuffer );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Restore the previous flags for other tests. */
+    publishInfo.qos = MQTTQoS1;
+    publishInfo.dup = false;
 
     /* Empty topic fails. */
     publishInfo.pTopicName = NULL;
@@ -1107,7 +1167,7 @@ void test_MQTT_SerializePublish( void )
     checkBufferOverflow( buffer, sizeof( buffer ) );
     memset( ( void * ) expectedPacket, 0x00, sizeof( expectedPacket ) );
     pIterator = expectedPacket;
-    /* Dup = 0x8, QoS2 = 0x4, Retain = 0x1. 8 + 4 + 1 = 0xD. */
+    /* Set the flags as follows: Dup = 0x8, QoS2 = 0x4, Retain = 0x1. 8 | 4 | 1 = 0xD. */
     *pIterator++ = MQTT_PACKET_TYPE_PUBLISH | 0xD;
     pIterator += encodeRemainingLength( pIterator, remainingLength );
     pIterator += encodeString( pIterator, publishInfo.pTopicName, publishInfo.topicNameLength );
@@ -1201,6 +1261,14 @@ void test_MQTT_SerializePingreq( void )
     /* NULL buffer fails. */
     status = MQTT_SerializePingreq( NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Verify a NULL buffer in the fixed buffer struct fails */
+    fixedBuffer.pBuffer = NULL;
+    status = MQTT_SerializePingreq( &fixedBuffer );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Restore the fixed buffer. */
+    fixedBuffer.pBuffer = &buffer[ BUFFER_PADDING_LENGTH ];
 
     /* Good case succeeds. */
     fixedBuffer.size = 2;
@@ -1589,21 +1657,22 @@ void test_MQTT_GetIncomingPacketTypeAndLength( void )
 {
     MQTTStatus_t status = MQTTSuccess;
     MQTTPacketInfo_t mqttPacket;
+    NetworkContext_t networkContext;
     uint8_t buffer[ 10 ];
     uint8_t * bufPtr = buffer;
 
     /* Dummy network context - pointer to pointer to a buffer. */
-    NetworkContext_t networkContext = ( NetworkContext_t ) &bufPtr;
+    networkContext.buffer = &bufPtr;
 
     /* Test a NULL pIncomingPacket parameter. */
-    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, networkContext, NULL );
+    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
     /* Test a typical happy path case for a CONN ACK packet. */
     buffer[ 0 ] = 0x20; /* CONN ACK */
     buffer[ 1 ] = 0x02; /* Remaining length. */
 
-    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, networkContext, &mqttPacket );
+    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, &mqttPacket );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_INT( 0x20, mqttPacket.type );
     TEST_ASSERT_EQUAL_INT( 0x02, mqttPacket.remainingLength );
@@ -1613,7 +1682,7 @@ void test_MQTT_GetIncomingPacketTypeAndLength( void )
     buffer[ 0 ] = MQTT_PACKET_TYPE_PUBLISH;
     buffer[ 1 ] = 0x80;
     buffer[ 2 ] = 0x01;
-    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, networkContext, &mqttPacket );
+    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, &mqttPacket );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_INT( MQTT_PACKET_TYPE_PUBLISH, mqttPacket.type );
     TEST_ASSERT_EQUAL_INT( 128, mqttPacket.remainingLength );
@@ -1621,7 +1690,7 @@ void test_MQTT_GetIncomingPacketTypeAndLength( void )
     /* Test with incorrect packet type. */
     bufPtr = buffer;
     buffer[ 0 ] = 0x10; /* INVALID */
-    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, networkContext, &mqttPacket );
+    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, &mqttPacket );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /* Test with invalid remaining length. */
@@ -1634,7 +1703,7 @@ void test_MQTT_GetIncomingPacketTypeAndLength( void )
     buffer[ 2 ] = 0xFF;
     buffer[ 3 ] = 0xFF;
     buffer[ 4 ] = 0xFF;
-    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, networkContext, &mqttPacket );
+    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, &mqttPacket );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /* Check with an encoding that does not conform to the MQTT spec. */
@@ -1643,30 +1712,30 @@ void test_MQTT_GetIncomingPacketTypeAndLength( void )
     buffer[ 2 ] = 0x80;
     buffer[ 3 ] = 0x80;
     buffer[ 4 ] = 0x00;
-    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, networkContext, &mqttPacket );
+    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, &mqttPacket );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /* Check when network receive fails. */
     memset( buffer, 0x00, 10 );
     bufPtr = buffer;
-    status = MQTT_GetIncomingPacketTypeAndLength( mockReceiveFailure, networkContext, &mqttPacket );
+    status = MQTT_GetIncomingPacketTypeAndLength( mockReceiveFailure, &networkContext, &mqttPacket );
     TEST_ASSERT_EQUAL( MQTTRecvFailed, status );
 
     /* Test if no data is available. */
     bufPtr = buffer;
-    status = MQTT_GetIncomingPacketTypeAndLength( mockReceiveNoData, networkContext, &mqttPacket );
+    status = MQTT_GetIncomingPacketTypeAndLength( mockReceiveNoData, &networkContext, &mqttPacket );
     TEST_ASSERT_EQUAL( MQTTNoDataAvailable, status );
 
     /* Branch coverage for PUBREL. */
     bufPtr = buffer;
     buffer[ 0 ] = MQTT_PACKET_TYPE_PUBREL & 0xF0U;
-    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, networkContext, &mqttPacket );
+    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, &mqttPacket );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /* Receive type then fail. */
     bufPtr = buffer;
     buffer[ 0 ] = MQTT_PACKET_TYPE_PUBREL;
-    status = MQTT_GetIncomingPacketTypeAndLength( mockReceiveSucceedThenFail, networkContext, &mqttPacket );
+    status = MQTT_GetIncomingPacketTypeAndLength( mockReceiveSucceedThenFail, &networkContext, &mqttPacket );
     TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 }
 
@@ -1717,6 +1786,17 @@ void test_MQTT_SerializePublishHeader( void )
                                           NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
+    /* Verify a NULL buffer in the fixed buffer struct fails */
+    fixedBuffer.pBuffer = NULL;
+    status = MQTT_SerializePublishHeader( &publishInfo,
+                                          PACKET_ID,
+                                          remainingLength,
+                                          &fixedBuffer,
+                                          &headerSize );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+    /* Restore the fixed buffer. */
+    fixedBuffer.pBuffer = &buffer[ BUFFER_PADDING_LENGTH ];
+
     /* Empty topic fails. */
     publishInfo.pTopicName = NULL;
     publishInfo.topicNameLength = TEST_TOPIC_NAME_LENGTH;
@@ -1745,6 +1825,20 @@ void test_MQTT_SerializePublishHeader( void )
                                           &fixedBuffer,
                                           &headerSize );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Verify that a duplicate flag for Qos 0 fails. */
+    publishInfo.qos = MQTTQoS0;
+    publishInfo.dup = true;
+    status = MQTT_SerializePublishHeader( &publishInfo,
+                                          PACKET_ID,
+                                          remainingLength,
+                                          &fixedBuffer,
+                                          &headerSize );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Restore the previous flags for other tests. */
+    publishInfo.qos = MQTTQoS1;
+    publishInfo.dup = false;
 
     /* Buffer too small. */
     fixedBuffer.size = 1;
@@ -1804,6 +1898,31 @@ void test_MQTT_SerializePublishHeader( void )
     /* Payload should not be serialized. */
     TEST_ASSERT_EQUAL_MEMORY( expectedPacket, &buffer[ BUFFER_PADDING_LENGTH ], packetSize );
     checkBufferOverflow( buffer, sizeof( buffer ) );
+
+
+    /* Again with QoS2 and dup. */
+    publishInfo.qos = MQTTQoS2;
+    publishInfo.dup = true;
+    status = MQTT_GetPublishPacketSize( &publishInfo, &remainingLength, &packetSize );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    padAndResetBuffer( buffer, sizeof( buffer ) );
+    status = MQTT_SerializePublishHeader( &publishInfo,
+                                          PACKET_ID,
+                                          remainingLength,
+                                          &fixedBuffer,
+                                          &headerSize );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+
+    memset( ( void * ) expectedPacket, 0x00, sizeof( expectedPacket ) );
+    pIterator = expectedPacket;
+    /* Set the flags as follows: Dup = 0x8, QoS2 = 0x4, 8 | 4 = 0xC. */
+    *pIterator++ = MQTT_PACKET_TYPE_PUBLISH | 0xC;
+    pIterator += encodeRemainingLength( pIterator, remainingLength );
+    pIterator += encodeString( pIterator, publishInfo.pTopicName, publishInfo.topicNameLength );
+    *pIterator++ = UINT16_HIGH_BYTE( PACKET_ID );
+    *pIterator++ = UINT16_LOW_BYTE( PACKET_ID );
+    TEST_ASSERT_EQUAL_MEMORY( expectedPacket, &buffer[ BUFFER_PADDING_LENGTH ], packetSize );
+    checkBufferOverflow( buffer, sizeof( buffer ) );
 }
 
 /* ========================================================================== */
@@ -1827,12 +1946,20 @@ void test_MQTT_SerializeAck( void )
     expectedPacket[ 2 ] = UINT16_HIGH_BYTE( PACKET_ID );
     expectedPacket[ 3 ] = UINT16_LOW_BYTE( PACKET_ID );
 
-    /* Verify parameters. */
+    /* Verify invalid parameter failures. */
     status = MQTT_SerializeAck( NULL, packetType, PACKET_ID );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
     status = MQTT_SerializeAck( &fixedBuffer, packetType, 0 );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Verify a NULL buffer in the fixed buffer struct fails */
+    fixedBuffer.pBuffer = NULL;
+    status = MQTT_SerializeAck( &fixedBuffer, packetType, PACKET_ID );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Restore the fixed buffer. */
+    fixedBuffer.pBuffer = &buffer[ BUFFER_PADDING_LENGTH ];
 
     /* Not a PUBACK, PUBREC, PUBREL, or PUBCOMP. */
     status = MQTT_SerializeAck( &fixedBuffer, MQTT_PACKET_TYPE_CONNACK, PACKET_ID );
@@ -2149,8 +2276,8 @@ void test_MQTT_SerializeConnect_Happy_Paths()
 /* ==================  Testing MQTT_SerializeDisconnect ===================== */
 
 /**
- * @brief Call Mqtt_SerializeDisconnect using NULL pBuffer and insufficient buffer
- * size in order to receive MQTTBadParameter and MQTTNoMemory errors.
+ * @brief Call Mqtt_SerializeDisconnect using a NULL pBuffer and an insufficient
+ * buffer size in order to receive MQTTBadParameter and MQTTNoMemory errors.
  */
 void test_MQTT_SerializeDisconnect_Invalid_Params()
 {
@@ -2158,11 +2285,16 @@ void test_MQTT_SerializeDisconnect_Invalid_Params()
     size_t packetSize = 0;
     MQTTFixedBuffer_t networkBuffer;
 
-    /* Test NULL pBuffer. */
+    /* Test NULL pFixedBuffer. */
     mqttStatus = MQTT_SerializeDisconnect( NULL );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
-    /* Test disconnectPacketSize > pBuffer->size. */
+    /* Test a NULL pFixedBuffer->pBuffer. */
+    networkBuffer.pBuffer = NULL;
+    mqttStatus = MQTT_SerializeDisconnect( &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
+
+    /* Test disconnectPacketSize > pFixedBuffer->size. */
     /* Get MQTT disconnect packet size and remaining length. */
     mqttStatus = MQTT_GetDisconnectPacketSize( &packetSize );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );

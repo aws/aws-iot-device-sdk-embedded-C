@@ -47,10 +47,6 @@
 
 /************ End of logging configuration ****************/
 
-/* Set network context to OpenSSL SSL context. */
-#include <openssl/ssl.h>
-typedef SSL * NetworkContext_t;
-
 /**
  * @brief The maximum number of MQTT PUBLISH messages that may be pending
  * acknowledgement at any time.

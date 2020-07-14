@@ -20,7 +20,7 @@
  */
 
 /**
- * @file reconnect_posix.c
+ * @file transport_reconnect_posix.c
  * @brief Implementation of the backoff logic when connection fails to the server fails.
  */
 
@@ -28,42 +28,48 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <time.h>
-#include "reconnect.h"
+#include <math.h>
+
+#include "transport_reconnect.h"
 
 /*-----------------------------------------------------------*/
 
 bool Transport_ReconnectBackoffAndSleep( TransportReconnectParams_t * pReconnectParams )
 {
     bool status = false;
-    uint32_t jitter = 0;
+    int backOffDelay = 0;
 
     /* If MAX_RECONNECT_ATTEMPTS is set to 0, try forever */
-    if( ( pReconnectParams->attemptsDone < MAX_RECONNECT_ATTEMPS ) ||
-        ( 0 == MAX_RECONNECT_ATTEMPS ) )
+    if( ( pReconnectParams->attemptsDone < MAX_RECONNECT_ATTEMPTS ) ||
+        ( 0 == MAX_RECONNECT_ATTEMPTS ) )
     {
-        /*  Wait for timer to expire for the next reconnect */
-        ( void ) sleep( pReconnectParams->reconnectTimeoutSec );
+        /* Choose a random value for back-off time between 0 and the max jitter value. */
+        backOffDelay = rand() % pReconnectParams->nextJitterMax;
 
-        /* Calculate the next timeout value only if timeout value has not 
-         * exceeded  MAX_RECONNECT_TIMEOUT_SECONDS */
-        if( pReconnectParams->reconnectTimeoutSec < MAX_RECONNECT_TIMEOUT_SECONDS )
+        /*  Wait for backoff time to expire for the next reconnect. */
+        ( void ) sleep( backOffDelay );
+
+        /* Increment backoff counts. */
+        pReconnectParams->attemptsDone++;
+
+        /* Double the max jitter value for the next reconnect attempt, only
+        * if the new value will be less than the max backoff time value. */
+        if( pReconnectParams->nextJitterMax < ( MAX_RECONNECT_BACKOFF_SECONDS / 2U ) )
         {
-            /* Calculate jitter value picking a random number 
-             * between 0 and  MAX_JITTER_VALUE_SECONDS. */
-            jitter = ( rand() % MAX_JITTER_VALUE_SECONDS );
-             /* Double the timeout value for the next iteration */
-            pReconnectParams->reconnectTimeoutSec += pReconnectParams->reconnectTimeoutSec;
-            pReconnectParams->reconnectTimeoutSec += jitter;
+            pReconnectParams->nextJitterMax += pReconnectParams->nextJitterMax;
+        }
+        else
+        {
+            pReconnectParams->nextJitterMax = MAX_RECONNECT_BACKOFF_SECONDS;
         }
 
-        pReconnectParams->attemptsDone++;
         status = true;
     }
     else
     {
         /* When max reconnect attempts are exhausted, let application know by returning
-         * false. Application may choose to restart the connection process after calling 
-         * Transport_ReconnectParamsReset() */
+         * false. Application may choose to restart the connection process after calling
+         * Transport_ReconnectParamsReset(). */
         status = false;
         Transport_ReconnectParamsReset( pReconnectParams );
     }
@@ -78,20 +84,20 @@ void Transport_ReconnectParamsReset( TransportReconnectParams_t * pReconnectPara
     uint32_t jitter = 0;
     struct timespec tp;
 
-    /* Reset attempts done to zero so that the next connect cycle can start */
+    /* Reset attempts done to zero so that the next connect cycle can start. */
     pReconnectParams->attemptsDone = 0;
 
-    /* Get current time to seed pseudo random number generator */
+    /* Get current time to seed pseudo random number generator. */
     ( void ) clock_gettime( CLOCK_REALTIME, &tp );
 
-    /* Seed pseudo ramdom number generator with nano seconds */
+    /* Seed pseudo ramdom number generator with nano seconds. */
     srand( tp.tv_nsec );
 
     /* Calculate jitter value using picking a random number. */
     jitter = ( rand() % MAX_JITTER_VALUE_SECONDS );
 
-    /* Reset the timout value to the initial time out value plus jitter */
-    pReconnectParams->reconnectTimeoutSec = INITIAL_RECONNECT_TIMEOUT_SECONDS + jitter;
+    /* Reset the backoff value to the initial time out value plus jitter. */
+    pReconnectParams->nextJitterMax = INITIAL_RECONNECT_BACKOFF_SECONDS + jitter;
 }
 
 /*-----------------------------------------------------------*/

@@ -25,16 +25,22 @@
  */
 
 #include "mqtt.h"
+#include "mqtt_cbmc_state.h"
 
 void harness()
 {
-    MQTTContext_t context;
-    MQTTTransportInterface_t transportInterface;
-    MQTTApplicationCallbacks_t callbacks;
-    MQTTFixedBuffer_t networkBuffer;
+    MQTTContext_t * pContext = NULL;
+    TransportInterface_t * pTransportInterface = NULL;
+    MQTTApplicationCallbacks_t * pCallbacks = NULL;
+    MQTTFixedBuffer_t * pNetworkBuffer = NULL;
 
-    MQTT_Init( nondet_bool() ? NULL : &context,
-               nondet_bool() ? NULL : &transportInterface,
-               nondet_bool() ? NULL : &callbacks,
-               nondet_bool() ? NULL : &networkBuffer );
+    pContext = mallocCanFail( sizeof( MQTTContext_t ) );
+    pTransportInterface = mallocCanFail( sizeof( MQTTContext_t ) );
+    pCallbacks = mallocCanFail( sizeof( MQTTApplicationCallbacks_t ) );
+    pNetworkBuffer = mallocCanFail( sizeof( MQTTFixedBuffer_t ) );
+
+    MQTT_Init( pContext,
+               pTransportInterface,
+               pCallbacks,
+               pNetworkBuffer );
 }

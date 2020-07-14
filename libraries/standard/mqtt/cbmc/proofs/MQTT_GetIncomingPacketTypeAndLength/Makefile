@@ -2,7 +2,7 @@ HARNESS_ENTRY=harness
 HARNESS_FILE=MQTT_GetIncomingPacketTypeAndLength_harness
 
 DEFINES +=
-INCLUDES += $(PROOFDIR)/../../include
+INCLUDES +=
 REMOVE_FUNCTION_BODY +=
 UNWINDSET += __CPROVER_file_local_mqtt_lightweight_c_getRemainingLength.0:5
 

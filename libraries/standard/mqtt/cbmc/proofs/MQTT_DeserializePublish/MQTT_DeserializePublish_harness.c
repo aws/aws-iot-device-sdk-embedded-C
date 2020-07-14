@@ -19,32 +19,27 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef TRANSPORT_CONFIG_H_
-#define TRANSPORT_CONFIG_H_
-
-/**************************************************/
-/******* DO NOT CHANGE the following order ********/
-/**************************************************/
-
-/* Include logging header files and define logging macros in the following order:
- * 1. Include the header file "logging_levels.h".
- * 2. Define the LIBRARY_LOG_NAME and LIBRARY_LOG_LEVEL macros depending on
- * the logging configuration for TLS Utils library.
- * 3. Include the header file "logging_stack.h", if logging is enabled for DEMO.
+/**
+ * @file MQTT_DeserializePublish_harness.c
+ * @brief Implements the proof harness for MQTT_DeserializePublish function.
  */
 
-#include "logging_levels.h"
+#include "mqtt.h"
+#include "mqtt_cbmc_state.h"
 
-/* Logging configuration for the Transport. */
-#ifndef LIBRARY_LOG_NAME
-    #define LIBRARY_LOG_NAME    "TRANSPORT"
-#endif
+void harness()
+{
+    MQTTPacketInfo_t * pIncomingPacket = NULL;
+    MQTTPublishInfo_t * pPublishInfo = NULL;
+    uint16_t packetId;
 
-#ifndef LIBRARY_LOG_LEVEL
-    #define LIBRARY_LOG_LEVEL    LOG_NONE
-#endif
-#include "logging_stack.h"
+    pIncomingPacket = allocateMqttPacketInfo( pIncomingPacket );
+    __CPROVER_assume( isValidMqttPacketInfo( pIncomingPacket ) );
 
-/************ End of logging configuration ****************/
+    pPublishInfo = allocateMqttPublishInfo( pPublishInfo );
+    __CPROVER_assume( isValidMqttPublishInfo( pPublishInfo ) );
 
-#endif /* ifndef TRANSPORT_CONFIG_H_ */
+    /* This function grabs the topic name, the topic name length, the
+     * the payload, and the payload length. */
+    MQTT_DeserializePublish( pIncomingPacket, packetId, pPublishInfo );
+}
