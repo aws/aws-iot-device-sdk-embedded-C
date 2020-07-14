@@ -606,7 +606,7 @@ void test_MQTT_UpdateStateAck( void )
     TEST_ASSERT_EQUAL( MQTTPubRelSend, state );
 
     /* Receiving a PUBREC will move the record to the end.
-    * In this case, the record wil be moved to index 2. */
+    * In this case, the record will be moved to index 2. */
     TEST_ASSERT_EQUAL( PACKET_ID, mqttContext.outgoingPublishRecords[ 2 ].packetId );
     TEST_ASSERT_EQUAL( MQTTQoS2, mqttContext.outgoingPublishRecords[ 2 ].qos );
     TEST_ASSERT_EQUAL( MQTTPubRelSend, mqttContext.outgoingPublishRecords[ 2 ].publishState );

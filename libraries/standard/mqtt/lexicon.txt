@@ -1,6 +1,5 @@
 ack
 acked
-acknowlegement
 acks
 addrecord
 api
@@ -70,7 +69,6 @@ lwt
 malloc
 managekeepalive
 memcpy
-mib
 milli
 min
 misra
@@ -216,7 +214,6 @@ tcpsocket
 testcase
 timeoutms
 tls
-transistion
 uint
 un
 unsuback
@@ -226,7 +223,6 @@ updatestatestatus
 utest
 utf
 validatesubscribeunsubscribeparams
-wil
 xa
 xb
 xc
