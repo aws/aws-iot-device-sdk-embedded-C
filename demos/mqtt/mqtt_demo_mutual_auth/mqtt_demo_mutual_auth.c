@@ -1126,9 +1126,9 @@ int main( int argc,
     {
         /* Attempt to connect to the MQTT broker. If connection fails, retry after
          * a timeout. Timeout value will be exponentially increased till the maximum
-         * attemps are reached or maximum timout value is reached. The function
+         * attempts are reached or maximum timout value is reached. The function
          * returns EXIT_FAILURE if the TCP connection cannot be established to
-         * broker after configured number of attemps. */
+         * broker after configured number of attempts. */
         returnStatus = connectToServerWithBackoffRetries( &networkContext );
 
         if( returnStatus == EXIT_FAILURE )
