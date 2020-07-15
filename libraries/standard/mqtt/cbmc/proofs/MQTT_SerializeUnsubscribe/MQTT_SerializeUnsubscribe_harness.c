@@ -53,11 +53,11 @@ void harness()
      * MQTT_SerializeUnsubscribe() without first calling MQTT_GetUnsubscribePacketSize(). */
     if( pSubscriptionList != NULL )
     {
-        /* packetSize must be non-NULL in order for the verification to proceed.
-         * The packetSize returned is not used in this proof, but is used normally
-         * by the application to verify the size of their MQTTFixedBuffer_t.
-         * MQTT_SerializeUnsubscribe() will use the remainingLength to
-         * recalculate the packetSize. */
+        /* The output parameter pPacketSize of the function MQTT_GetConnectPacketSize()
+         * must not be NULL. packetSize returned is not used in this proof, but 
+         * is used normally by the application to verify the size of their 
+         * MQTTFixedBuffer_t. MQTT_SerializeConnect() will use the remainingLength 
+         * to recalculate the packetSize. */
         status = MQTT_GetUnsubscribePacketSize( pSubscriptionList,
                                                 subscriptionCount,
                                                 &remainingLength,
