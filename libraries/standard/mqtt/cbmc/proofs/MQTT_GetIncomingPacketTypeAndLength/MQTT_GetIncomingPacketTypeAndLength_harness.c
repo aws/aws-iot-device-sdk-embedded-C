@@ -36,9 +36,9 @@ void harness()
 
     /* MQTT_GetIncomingPacketTypeAndLength() will set only the remainingLength
      * field in the input MQTTPacketInfo_t structure. */
-    MQTTPacketInfo_t * pIncomingPacket = NULL;
+    MQTTPacketInfo_t * pIncomingPacket;
 
-    pIncomingPacket = allocateMqttPacketInfo( pIncomingPacket );
+    pIncomingPacket = allocateMqttPacketInfo( NULL );
     __CPROVER_assume( isValidMqttPacketInfo( pIncomingPacket ) );
 
     MQTT_GetIncomingPacketTypeAndLength( NetworkInterfaceReceiveStub,

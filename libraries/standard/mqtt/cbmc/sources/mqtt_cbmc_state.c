@@ -22,6 +22,15 @@
 #include <stdlib.h>
 #include "mqtt_cbmc_state.h"
 
+/* A default bound on the subscription count. Iterating over possibly SIZE_MAX
+ * number of subscriptions does not add any value to the proofs. An application
+ * can allocate memory for as many subscriptions as their system can handle.
+ * The proofs verify that the code can handle the maximum topicFilterLength in
+ * each subscription. */
+#ifndef SUBSCRIPTION_COUNT_MAX
+    #define SUBSCRIPTION_COUNT_MAX    1U
+#endif
+
 void * mallocCanFail( size_t size )
 {
     __CPROVER_assert( size < CBMC_MAX_OBJECT_SIZE, "mallocCanFail size is too big" );
@@ -126,29 +135,66 @@ bool isValidMqttConnectInfo( const MQTTConnectInfo_t * pConnectInfo )
     return isValid;
 }
 
-MQTTFixedBuffer_t * allocateMqttFixedBuffer( MQTTFixedBuffer_t * pBuffer )
+MQTTFixedBuffer_t * allocateMqttFixedBuffer( MQTTFixedBuffer_t * pFixedBuffer )
 {
-    if( pBuffer == NULL )
+    if( pFixedBuffer == NULL )
     {
-        pBuffer = mallocCanFail( sizeof( MQTTFixedBuffer_t ) );
+        pFixedBuffer = mallocCanFail( sizeof( MQTTFixedBuffer_t ) );
     }
 
-    if( pBuffer != NULL )
+    if( pFixedBuffer != NULL )
     {
-        __CPROVER_assume( pBuffer->size < CBMC_MAX_OBJECT_SIZE );
-        pBuffer->pBuffer = mallocCanFail( pBuffer->size );
+        __CPROVER_assume( pFixedBuffer->size < CBMC_MAX_OBJECT_SIZE );
+        pFixedBuffer->pBuffer = mallocCanFail( pFixedBuffer->size );
     }
 
-    return pBuffer;
+    return pFixedBuffer;
 }
 
-bool isValidMqttFixedBuffer( const MQTTFixedBuffer_t * pBuffer )
+bool isValidMqttFixedBuffer( const MQTTFixedBuffer_t * pFixedBuffer )
 {
     bool isValid = true;
 
-    if( pBuffer != NULL )
+    if( pFixedBuffer != NULL )
     {
-        isValid = pBuffer->size < CBMC_MAX_OBJECT_SIZE;
+        isValid = pFixedBuffer->size < CBMC_MAX_OBJECT_SIZE;
+    }
+
+    return isValid;
+}
+
+MQTTSubscribeInfo_t * allocateMqttSubscriptionList( MQTTSubscribeInfo_t * pSubscriptionList,
+                                                    size_t subscriptionCount )
+{
+    if( pSubscriptionList == NULL )
+    {
+        __CPROVER_assume( sizeof( MQTTSubscribeInfo_t ) * subscriptionCount < CBMC_MAX_OBJECT_SIZE );
+        pSubscriptionList = mallocCanFail( sizeof( MQTTSubscribeInfo_t ) * subscriptionCount );
+    }
+
+    if( pSubscriptionList != NULL )
+    {
+        for( int i = 0; i < subscriptionCount; i++ )
+        {
+            __CPROVER_assume( pSubscriptionList[ i ].topicFilterLength < CBMC_MAX_OBJECT_SIZE );
+            pSubscriptionList[ i ].pTopicFilter = mallocCanFail( pSubscriptionList[ i ].topicFilterLength );
+        }
+    }
+
+    return pSubscriptionList;
+}
+
+bool isValidMqttSubscriptionList( MQTTSubscribeInfo_t * pSubscriptionList,
+                                  size_t subscriptionCount )
+{
+    bool isValid = true;
+
+    if( pSubscriptionList != NULL )
+    {
+        for( int i = 0; i < subscriptionCount; i++ )
+        {
+            isValid = isValid && ( pSubscriptionList[ i ].topicFilterLength < CBMC_MAX_OBJECT_SIZE );
+        }
     }
 
     return isValid;

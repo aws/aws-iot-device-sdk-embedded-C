@@ -30,15 +30,15 @@
 
 void harness()
 {
-    HTTPRequestHeaders_t * pRequestHeaders = NULL;
-    HTTPRequestInfo_t * pRequestInfo = NULL;
+    HTTPRequestHeaders_t * pRequestHeaders;
+    HTTPRequestInfo_t * pRequestInfo;
 
     /* Initialize and make assumptions for request headers object. */
-    pRequestHeaders = allocateHttpRequestHeaders( pRequestHeaders );
+    pRequestHeaders = allocateHttpRequestHeaders( NULL );
     __CPROVER_assume( isValidHttpRequestHeaders( pRequestHeaders ) );
 
     /* Initialize and make assumptions for request info object. */
-    pRequestInfo = allocateHttpRequestInfo( pRequestInfo );
+    pRequestInfo = allocateHttpRequestInfo( NULL );
     __CPROVER_assume( isValidHttpRequestInfo( pRequestInfo ) );
 
     HTTPClient_InitializeRequestHeaders( pRequestHeaders, pRequestInfo );

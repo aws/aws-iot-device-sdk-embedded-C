@@ -50,6 +50,9 @@ MQTTPacketInfo_t * allocateMqttPacketInfo( MQTTPacketInfo_t * pPacketInfo );
  * @param[in] pPacketInfo #MQTTPacketInfo_t object to validate.
  *
  * @return True if the #MQTTPacketInfo_t object is valid, false otherwise.
+ *
+ * @note A NULL object is a valid object. This is for coverage of the NULL
+ * parameter checks in the function under proof.
  */
 bool isValidMqttPacketInfo( const MQTTPacketInfo_t * pPacketInfo );
 
@@ -68,6 +71,9 @@ MQTTPublishInfo_t * allocateMqttPublishInfo( MQTTPublishInfo_t * pPublishInfo );
  * @param[in] pPublishInfo #MQTTPublishInfo_t object to validate.
  *
  * @return True if the #MQTTPublishInfo_t object is valid, false otherwise.
+ *
+ * @note A NULL object is a valid object. This is for coverage of the NULL
+ * parameter checks in the function under proof.
  */
 bool isValidMqttPublishInfo( const MQTTPublishInfo_t * pPublishInfo );
 
@@ -86,6 +92,9 @@ MQTTConnectInfo_t * allocateMqttConnectInfo( MQTTConnectInfo_t * pConnectInfo );
  * @param[in] pConnectInfo #MQTTConnectInfo_t object to validate.
  *
  * @return True if the #MQTTConnectInfo_t object is valid, false otherwise.
+ *
+ * @note A NULL object is a valid object. This is for coverage of the NULL
+ * parameter checks in the function under proof.
  */
 bool isValidMqttConnectInfo( const MQTTConnectInfo_t * pConnectInfo );
 
@@ -96,7 +105,7 @@ bool isValidMqttConnectInfo( const MQTTConnectInfo_t * pConnectInfo );
  *
  * @return NULL or allocated #MQTTFixedBuffer_t memory.
  */
-MQTTFixedBuffer_t * allocateMqttFixedBuffer( MQTTFixedBuffer_t * pBuffer );
+MQTTFixedBuffer_t * allocateMqttFixedBuffer( MQTTFixedBuffer_t * pFixedBuffer );
 
 /**
  * @brief Validate a #MQTTFixedBuffer_t object.
@@ -104,7 +113,35 @@ MQTTFixedBuffer_t * allocateMqttFixedBuffer( MQTTFixedBuffer_t * pBuffer );
  * @param[in] pBuffer #MQTTFixedBuffer_t object to validate.
  *
  * @return True if the #MQTTFixedBuffer_t object is valid, false otherwise.
+ *
+ * @note A NULL object is a valid object. This is for coverage of the NULL
+ * parameter checks in the function under proof.
  */
-bool isValidMqttFixedBuffer( const MQTTFixedBuffer_t * pBuffer );
+bool isValidMqttFixedBuffer( const MQTTFixedBuffer_t * pFixedBuffer );
+
+/**
+ * @brief Allocate an array of #MQTTSubscribeInfo_t objects.
+ *
+ * @param[in] pSubscriptionList #MQTTSubscribeInfo_t object information.
+ * @param[in] subscriptionCount The amount of #MQTTSubscribeInfo_t objects to allocate.
+ *
+ * @return NULL or allocated #MQTTSubscribeInfo_t array.
+ */
+MQTTSubscribeInfo_t * allocateMqttSubscriptionList( MQTTSubscribeInfo_t * pSubscriptionList,
+                                                    size_t subscriptionCount );
+
+/**
+ * @brief Validate an array of #MQTTSubscribeInfo_t objects.
+ *
+ * @param[in] pSubscriptionList #MQTTSubscribeInfo_t object information.
+ * @param[in] subscriptionCount The length of #MQTTSubscribeInfo_t objects in the pSubscriptionList.
+ *
+ * @return True if the #MQTTSubscribeInfo_t is valid.
+ *
+ * @note A NULL object is a valid object. This is for coverage of the NULL
+ * parameter checks in the function under proof.
+ */
+bool isValidMqttSubscriptionList( MQTTSubscribeInfo_t * pSubscriptionList,
+                                  size_t subscriptionCount );
 
 #endif /* ifndef MQTT_CBMC_STATE_H_ */
