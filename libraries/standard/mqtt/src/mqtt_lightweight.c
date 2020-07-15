@@ -2234,6 +2234,7 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
     }
     else if( ( status != MQTTBadParameter ) && ( bytesReceived == 0 ) )
     {
+        LogDebug( ( "No data was received from the transport." ) );
         status = MQTTNoDataAvailable;
     }
 
