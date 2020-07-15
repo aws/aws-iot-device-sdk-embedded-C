@@ -1677,15 +1677,28 @@ void test_MQTT_GetIncomingPacketTypeAndLength( void )
     TEST_ASSERT_EQUAL_INT( 0x20, mqttPacket.type );
     TEST_ASSERT_EQUAL_INT( 0x02, mqttPacket.remainingLength );
 
-    /* Remaining length of 128 needs 2 bytes. */
+    /* Remaining length of 128. MQTT uses 7 bits for data and 1 continuation
+     * bit in each byte. Since 128 is 8 bits, it needs 2 bytes. */
     bufPtr = buffer;
     buffer[ 0 ] = MQTT_PACKET_TYPE_PUBLISH;
-    buffer[ 1 ] = 0x80;
-    buffer[ 2 ] = 0x01;
+    buffer[ 1 ] = 0x80; /* LSB: CB=1, value=0x00 */
+    buffer[ 2 ] = 0x01; /* MSB: CB=0, value=0x01 */
     status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, &mqttPacket );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_INT( MQTT_PACKET_TYPE_PUBLISH, mqttPacket.type );
     TEST_ASSERT_EQUAL_INT( 128, mqttPacket.remainingLength );
+
+    /* Remaining length of 16384. MQTT uses 7 bits for data and 1 continuation
+     * bit in each byte. Since 16384 is 15 bits, it needs 3 bytes. */
+    bufPtr = buffer;
+    buffer[ 0 ] = MQTT_PACKET_TYPE_PUBLISH;
+    buffer[ 1 ] = 0x80; /* LSB   : CB=1, value=0x00 */
+    buffer[ 2 ] = 0x80; /* Byte 1: CB=1, value=0x00 */
+    buffer[ 3 ] = 0x01; /* MSB   : CB=0, value=0x01 */
+    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, &mqttPacket );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL_INT( MQTT_PACKET_TYPE_PUBLISH, mqttPacket.type );
+    TEST_ASSERT_EQUAL_INT( 16384, mqttPacket.remainingLength );
 
     /* Test with incorrect packet type. */
     bufPtr = buffer;

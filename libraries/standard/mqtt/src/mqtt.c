@@ -1430,6 +1430,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
     {
         LogInfo( ( "MQTT connection established with the broker." ) );
         pContext->connectStatus = MQTTConnected;
+        pContext->keepAliveIntervalSec = pConnectInfo->keepAliveSeconds;
     }
     else
     {
