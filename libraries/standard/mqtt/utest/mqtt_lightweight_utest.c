@@ -1687,6 +1687,17 @@ void test_MQTT_GetIncomingPacketTypeAndLength( void )
     TEST_ASSERT_EQUAL_INT( MQTT_PACKET_TYPE_PUBLISH, mqttPacket.type );
     TEST_ASSERT_EQUAL_INT( 128, mqttPacket.remainingLength );
 
+    /* Remaining length of 16384 needs 3 bytes. */
+    bufPtr = buffer;
+    buffer[ 0 ] = MQTT_PACKET_TYPE_PUBLISH;
+    buffer[ 1 ] = 0x80;
+    buffer[ 2 ] = 0x80;
+    buffer[ 3 ] = 0x01;
+    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, &mqttPacket );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL_INT( MQTT_PACKET_TYPE_PUBLISH, mqttPacket.type );
+    TEST_ASSERT_EQUAL_INT( 16384, mqttPacket.remainingLength );
+
     /* Test with incorrect packet type. */
     bufPtr = buffer;
     buffer[ 0 ] = 0x10; /* INVALID */

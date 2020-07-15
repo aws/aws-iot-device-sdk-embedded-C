@@ -906,6 +906,7 @@ void test_MQTT_Connect_resendPendingAcks( void )
 
     MQTT_SerializeConnect_IgnoreAndReturn( MQTTSuccess );
     MQTT_GetConnectPacketSize_IgnoreAndReturn( MQTTSuccess );
+    connectInfo.keepAliveSeconds = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
 
     /* Test 1. No packets to resend reestablishing a session. */
     /* successful receive CONNACK packet. */
@@ -922,10 +923,13 @@ void test_MQTT_Connect_resendPendingAcks( void )
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresentResult );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
+    TEST_ASSERT_EQUAL_INT( connectInfo.keepAliveSeconds, mqttContext.keepAliveIntervalSec );
     TEST_ASSERT_TRUE( sessionPresentResult );
 
     /* Test 2. One packet found in ack pending state, but Sending ack failed. */
     sessionPresentResult = false;
+    mqttContext.connectStatus = MQTTNotConnected;
+    mqttContext.keepAliveIntervalSec = 0;
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
     MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -937,7 +941,7 @@ void test_MQTT_Connect_resendPendingAcks( void )
     MQTT_PubrelToResend_ExpectAnyArgsAndReturn( MQTT_PACKET_TYPE_INVALID );
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresentResult );
     TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
-    TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
+    TEST_ASSERT_EQUAL_INT( MQTTNotConnected, mqttContext.connectStatus );
     TEST_ASSERT_TRUE( sessionPresentResult );
 
     /* Test 3. One packet found in ack pending state, Sent
@@ -956,9 +960,12 @@ void test_MQTT_Connect_resendPendingAcks( void )
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
+    TEST_ASSERT_EQUAL_INT( connectInfo.keepAliveSeconds, mqttContext.keepAliveIntervalSec );
 
     /* Test 4. Three packets found in ack pending state. Sent PUBREL successfully
      * for first and failed for second and no attempt for third. */
+    mqttContext.keepAliveIntervalSec = 0;
+    mqttContext.connectStatus = MQTTNotConnected;
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
     MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -978,7 +985,7 @@ void test_MQTT_Connect_resendPendingAcks( void )
     MQTT_PubrelToResend_ExpectAnyArgsAndReturn( packetIdentifier + 2 );
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
-    TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
+    TEST_ASSERT_EQUAL_INT( MQTTNotConnected, mqttContext.connectStatus );
 
     /* Test 5. Two packets found in ack pending state. Sent PUBREL successfully
      * for first and failed for second. */
@@ -1003,6 +1010,7 @@ void test_MQTT_Connect_resendPendingAcks( void )
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
+    TEST_ASSERT_EQUAL_INT( connectInfo.keepAliveSeconds, mqttContext.keepAliveIntervalSec );
 }
 
 /**
@@ -1028,6 +1036,7 @@ void test_MQTT_Connect_happy_path()
 
     memset( ( void * ) &mqttContext, 0x0, sizeof( mqttContext ) );
     MQTT_Init( &mqttContext, &transport, &callbacks, &networkBuffer );
+    connectInfo.keepAliveSeconds = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
 
     MQTT_SerializeConnect_IgnoreAndReturn( MQTTSuccess );
     MQTT_GetConnectPacketSize_IgnoreAndReturn( MQTTSuccess );
@@ -1041,9 +1050,11 @@ void test_MQTT_Connect_happy_path()
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
+    TEST_ASSERT_EQUAL_INT( connectInfo.keepAliveSeconds, mqttContext.keepAliveIntervalSec );
 
     /* With non-NULL Will. */
     mqttContext.connectStatus = MQTTNotConnected;
+    mqttContext.keepAliveIntervalSec = 0;
     willInfo.pTopicName = "test";
     willInfo.topicNameLength = 4;
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -1051,9 +1062,11 @@ void test_MQTT_Connect_happy_path()
     status = MQTT_Connect( &mqttContext, &connectInfo, &willInfo, timeout, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
+    TEST_ASSERT_EQUAL_INT( connectInfo.keepAliveSeconds, mqttContext.keepAliveIntervalSec );
 
     /* Request to establish a clean session. */
     mqttContext.connectStatus = MQTTNotConnected;
+    mqttContext.keepAliveIntervalSec = 0;
     connectInfo.cleanSession = true;
     sessionPresentExpected = false;
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -1063,11 +1076,13 @@ void test_MQTT_Connect_happy_path()
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
+    TEST_ASSERT_EQUAL_INT( connectInfo.keepAliveSeconds, mqttContext.keepAliveIntervalSec );
     TEST_ASSERT_FALSE( sessionPresent );
 
     /* Request to establish a session if present and session present is received
      * from broker. */
     mqttContext.connectStatus = MQTTNotConnected;
+    mqttContext.keepAliveIntervalSec = 0;
     connectInfo.cleanSession = false;
     sessionPresentExpected = true;
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -1078,9 +1093,12 @@ void test_MQTT_Connect_happy_path()
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
+    TEST_ASSERT_EQUAL_INT( connectInfo.keepAliveSeconds, mqttContext.keepAliveIntervalSec );
     TEST_ASSERT_TRUE( sessionPresent );
 
     /* CONNACK receive with timeoutMs=0. Retry logic will be used. */
+    mqttContext.connectStatus = MQTTNotConnected;
+    mqttContext.keepAliveIntervalSec = 0;
     sessionPresent = false;
     incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
     incomingPacket.remainingLength = 2;
@@ -1090,10 +1108,13 @@ void test_MQTT_Connect_happy_path()
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, 0U, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
+    TEST_ASSERT_EQUAL_INT( connectInfo.keepAliveSeconds, mqttContext.keepAliveIntervalSec );
 
     /* CONNACK receive with timeoutMs=0. Retry logic will be used.
      * #MQTTNoDataAvailable for first #MQTT_GetIncomingPacketTypeAndLength
      * and success in the second time. */
+    mqttContext.connectStatus = MQTTNotConnected;
+    mqttContext.keepAliveIntervalSec = 0;
     incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
     incomingPacket.remainingLength = 2;
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTNoDataAvailable );
@@ -1103,6 +1124,7 @@ void test_MQTT_Connect_happy_path()
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, 0U, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
+    TEST_ASSERT_EQUAL_INT( connectInfo.keepAliveSeconds, mqttContext.keepAliveIntervalSec );
 }
 
 /* ========================================================================== */
