@@ -44,7 +44,7 @@
 /**
  * @brief A return code indicating an error from the transport interface.
  */
-#define TRANSPORT_RETURNED_ERROR    ( -1 )
+#define TRANSPORT_ERROR    ( -1 )
 
 /*-----------------------------------------------------------*/
 
@@ -345,8 +345,8 @@ static int32_t sendPacket( MQTTContext_t * pContext,
         }
         else
         {
-            LogError( ( "Transport send failed, BytesSent=%d.", bytesSent ) );
-            totalBytesSent = TRANSPORT_RETURNED_ERROR;
+            LogError( ( "Transport send failed. Error code=%d.", bytesSent ) );
+            totalBytesSent = TRANSPORT_ERROR;
             break;
         }
     }
