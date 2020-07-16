@@ -321,7 +321,7 @@ static size_t remainingLengthEncodedSize( size_t length )
         encodedSize = 4U;
     }
 
-    LogDebug( ( "Encoded size for length =%ul is %ul.",
+    LogDebug( ( "Encoded size for length %lu is %lu bytes.",
                 length,
                 encodedSize ) );
 

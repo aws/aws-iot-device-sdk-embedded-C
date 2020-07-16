@@ -468,7 +468,7 @@ static void eventCallback( MQTTContext_t * pContext,
 
                 /* Nothing to be done from application as library handles
                  * PUBCOMP. */
-                LogDebug( ( "Unexpected PUBCOMP received: PacketID=%u",
+                LogDebug( ( "Received PUBCOMP: PacketID=%u",
                             packetIdentifier ) );
                 break;
 
@@ -834,17 +834,13 @@ void test_MQTT_Connect_LWT( void )
 
 void test_MQTT_ProcessLoop_KeepAlive( void )
 {
-    int i;
     uint32_t connectPacketTime = context.lastPacketTime;
     uint32_t elapsedTime = 0;
-    TEST_ASSERT_EQUAL( connectPacketTime, context.lastPacketTime );
     TEST_ASSERT_EQUAL( 0, context.pingReqSendTimeMs );
 
-    /* TODO Change busy wait to sleep once implemented. */
-    for( i = 0; i < MQTT_KEEP_ALIVE_INTERVAL_SECONDS + 1; i++ )
-    {
-        TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_ProcessLoop( &context, 1000 ) );
-    }
+    /* Sleep until control packet needs to be sent. */
+    Clock_SleepMs( MQTT_KEEP_ALIVE_INTERVAL_SECONDS * 1000 );
+    TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
 
     TEST_ASSERT_NOT_EQUAL( 0, context.pingReqSendTimeMs );
     TEST_ASSERT_NOT_EQUAL( connectPacketTime, context.lastPacketTime );
