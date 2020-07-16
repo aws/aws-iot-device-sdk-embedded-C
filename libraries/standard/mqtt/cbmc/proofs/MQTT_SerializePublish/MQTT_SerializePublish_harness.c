@@ -48,9 +48,9 @@ void harness()
     if( pPublishInfo != NULL )
     {
         /* The output parameter pPacketSize of the function MQTT_GetConnectPacketSize()
-         * must not be NULL. packetSize returned is not used in this proof, but 
-         * is used normally by the application to verify the size of their 
-         * MQTTFixedBuffer_t. MQTT_SerializeConnect() will use the remainingLength 
+         * must not be NULL. packetSize returned is not used in this proof, but
+         * is used normally by the application to verify the size of their
+         * MQTTFixedBuffer_t. MQTT_SerializeConnect() will use the remainingLength
          * to recalculate the packetSize. */
         status = MQTT_GetPublishPacketSize( pPublishInfo, &remainingLength, &packetSize );
     }

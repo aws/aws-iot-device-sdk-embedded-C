@@ -27,15 +27,30 @@ int32_t NetworkInterfaceReceiveStub( NetworkContext_t * pNetworkContext,
                                      size_t bytesToRecv )
 {
     __CPROVER_assert( pBuffer != NULL,
-                      "IotNetworkInterfaceReceive pBuffer is not NULL." );
+                      "NetworkInterfaceReceiveStub pBuffer is not NULL." );
 
     __CPROVER_assert( __CPROVER_w_ok( pBuffer, bytesToRecv ),
-                      "pBuffer is writable up to bytesToRecv." );
+                      "NetworkInterfaceReceiveStub pBuffer is writable up to bytesToRecv." );
 
     __CPROVER_havoc_object( pBuffer );
 
     /* This is unbounded as the MQTT code should be able to safely handle any
      * int32_t value returned from the application defined network receive
+     * implementation. */
+    int32_t bytesOrError;
+
+    return bytesOrError;
+}
+
+int32_t NetworkInterfaceSendStub( NetworkContext_t * pNetworkContext,
+                                  const void * pBuffer,
+                                  size_t bytesToSend )
+{
+    __CPROVER_assert( pBuffer != NULL,
+                      "NetworkInterfaceSendStub pBuffer is not NULL." );
+
+    /* This is unbounded as the MQTT code should be able to safely handle any
+     * int32_t value returned from the application defined network send
      * implementation. */
     int32_t bytesOrError;
 

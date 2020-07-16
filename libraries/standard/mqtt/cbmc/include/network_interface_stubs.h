@@ -33,10 +33,24 @@ struct NetworkContext
  * @param[in] pNetworkContext Application defined network interface context.
  * @param[out] pBuffer MQTT network receive buffer.
  * @param[in] bytesToRecv MQTT requested bytes.
+ *
  * @return Any value from INT32_MIN to INT32_MAX.
  */
 int32_t NetworkInterfaceReceiveStub( NetworkContext_t * pNetworkContext,
                                      void * pBuffer,
                                      size_t bytesToRecv );
+
+/**
+ * @brief Application defined network interface send function.
+ *
+ * @param[in] pNetworkContext Application defined network interface context.
+ * @param[out] pBuffer MQTT network send buffer.
+ * @param[in] bytesToSend Number of bytes to send over the network.
+ *
+ * @return Any value from INT32_MIN to INT32_MAX.
+ */
+int32_t NetworkInterfaceSendStub( NetworkContext_t * pNetworkContext,
+                                  const void * pBuffer,
+                                  size_t bytesToSend );
 
 #endif /* ifndef NETWORK_INTERFACE_STUBS_H_ */
