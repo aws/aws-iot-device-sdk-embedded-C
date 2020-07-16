@@ -144,4 +144,25 @@ MQTTSubscribeInfo_t * allocateMqttSubscriptionList( MQTTSubscribeInfo_t * pSubsc
 bool isValidMqttSubscriptionList( MQTTSubscribeInfo_t * pSubscriptionList,
                                   size_t subscriptionCount );
 
+/**
+ * @brief Allocate a #MQTTContext_t object.
+ *
+ * @param[in] pBuffer #MQTTContext_t object information.
+ *
+ * @return NULL or allocated #MQTTContext_t memory.
+ */
+MQTTContext_t * allocateMqttContext( MQTTContext_t * pContext );
+
+/**
+ * @brief Validate a #MQTTContext_t object.
+ *
+ * @param[in] pBuffer #MQTTContext_t object to validate.
+ *
+ * @return True if the #MQTTContext_t object is valid, false otherwise.
+ *
+ * @note A NULL object is a valid object. This is for coverage of the NULL
+ * parameter checks in the function under proof.
+ */
+bool isValidMqttContext( const MQTTContext_t * pContext );
+
 #endif /* ifndef MQTT_CBMC_STATE_H_ */

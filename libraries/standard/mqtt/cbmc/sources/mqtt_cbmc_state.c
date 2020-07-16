@@ -194,3 +194,35 @@ bool isValidMqttSubscriptionList( MQTTSubscribeInfo_t * pSubscriptionList,
 
     return isValid;
 }
+
+MQTTContext_t * allocateMqttContext( MQTTContext_t * pContext )
+{
+    if( pContext == NULL )
+    {
+        pContext = mallocCanFail( sizeof( MQTTContext_t ) );
+    }
+
+    if( pContext != NULL )
+    {
+        /* The networkBuffer is the only field in the MQTTContext_t which has a
+         * buffer of variable length. Since it is pat of the API contract to
+         * call MQTT_Init first with a MQTTFixedBuffer_t, we do not need to
+         * allocate one here. */
+        /*__CPROVER_assume( pContext->networkBuffer.size < CBMC_MAX_OBJECT_SIZE ); */
+        /*pContext->networkBuffer.pBuffer = mallocCanFail( pContext->networkBuffer.size ); */
+    }
+
+    return pContext;
+}
+
+bool isValidMqttContext( const MQTTContext_t * pContext )
+{
+    bool isValid = true;
+
+    if( pContext != NULL )
+    {
+        isValid = pContext->networkBuffer.size < CBMC_MAX_OBJECT_SIZE;
+    }
+
+    return isValid;
+}
