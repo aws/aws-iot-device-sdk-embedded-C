@@ -5,6 +5,7 @@ addrecord
 api
 app
 aws
+bool
 bufferlength
 bytesreceived
 bytestoread
@@ -14,6 +15,7 @@ bytestosend
 bytestowrite
 ca
 calculatestatepublish
+cb
 cbmc
 cleansession
 cmock
@@ -64,6 +66,7 @@ init
 int
 iot
 isn
+lsb
 lwt
 malloc
 managekeepalive
@@ -213,6 +216,7 @@ tcpsocket
 testcase
 timeoutms
 tls
+topicFilterLength
 uint
 un
 unsuback
