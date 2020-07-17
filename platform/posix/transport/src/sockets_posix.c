@@ -103,7 +103,7 @@ static SocketStatus_t attemptConnection( struct addrinfo * pListHead,
  *
  * @return #SOCKETS_API_ERROR, #SOCKETS_INSUFFICIENT_MEMORY, #SOCKETS_INVALID_PARAMETER on error.
  */
-static SocketStatus_t retreiveError( void );
+static SocketStatus_t retrieveError( void );
 
 /*-----------------------------------------------------------*/
 
@@ -262,7 +262,7 @@ static SocketStatus_t attemptConnection( struct addrinfo * pListHead,
 }
 /*-----------------------------------------------------------*/
 
-static SocketStatus_t retreiveError( void )
+static SocketStatus_t retrieveError( void )
 {
     SocketStatus_t returnStatus = SOCKETS_API_ERROR;
 
@@ -385,7 +385,7 @@ SocketStatus_t Sockets_Connect( int * pTcpSocket,
         if( setTimeoutStatus < 0 )
         {
             LogError( ( "Setting socket send timeout failed." ) );
-            returnStatus = retreiveError();
+            returnStatus = retrieveError();
         }
     }
 
@@ -404,7 +404,7 @@ SocketStatus_t Sockets_Connect( int * pTcpSocket,
         if( setTimeoutStatus < 0 )
         {
             LogError( ( "Setting socket receive timeout failed." ) );
-            returnStatus = retreiveError();
+            returnStatus = retrieveError();
         }
     }
 
