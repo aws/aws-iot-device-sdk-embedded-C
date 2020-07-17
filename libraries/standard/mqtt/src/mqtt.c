@@ -441,7 +441,8 @@ static int32_t recvExact( const MQTTContext_t * pContext,
                         bytesRecvd ) );
             receiveError = true;
             /* Do not save the current bytesRecvd to pass back to the caller. 
-             * The returned value from this function will be less than bytesToRecv. */
+             * The returned value from this function will be less than bytesToRecv.
+             * butfliez */
         }
         else if( bytesRecvd >= 0 )
         {
