@@ -23,18 +23,22 @@ HARNESS_ENTRY=harness
 HARNESS_FILE=MQTT_ProcessLoop_harness
 
 # Bound on the timeout in MQTT_ProcessLoop. This timeout is bounded because 
-# memory saftey can be proven in a single iteration of the MQTT operations.
-# Each iteration will try to receive a single packet in its entirey. If the 
-# timeout is not reached, then another iteration will be performed unnecessarily
-# duplicating the proof.
-MQTT_PROCESS_LOOP_TIMEOUT=0
+# memory saftey can be proven in a only a few iteration of the MQTT operations.
+# Each iteration will try to receive a single packet in its entirey. With a time
+# out of 2 we can get coverage of the entire function. Another iteration will 
+# performed unnecessarily duplicating of the proof.
+MQTT_PROCESS_LOOP_TIMEOUT=2
 DEFINES += -DMQTT_PROCESS_LOOP_TIMEOUT=$(MQTT_PROCESS_LOOP_TIMEOUT)
 INCLUDES +=
 
 REMOVE_FUNCTION_BODY +=
-UNWINDSET += MQTT_ProcessLoop.0:2
-UNWINDSET += __CPROVER_file_local_mqtt_c_discardPacket.0:2
-UNWINDSET += __CPROVER_file_local_mqtt_c_recvExact.0:2
+# The loops below are unwound once more than the timeout. 
+UNWINDSET += MQTT_ProcessLoop.0:3
+UNWINDSET += __CPROVER_file_local_mqtt_c_discardPacket.0:3
+UNWINDSET += __CPROVER_file_local_mqtt_c_recvExact.0:3
+# The getRemainingLength loop is unwound 5 times because getRemainingLength()
+# divides a size_t variable by 128 until it zero to stop the loop.
+# log128(SIZE_MAX) = 4.571...
 UNWINDSET += __CPROVER_file_local_mqtt_lightweight_c_getRemainingLength.0:5
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
