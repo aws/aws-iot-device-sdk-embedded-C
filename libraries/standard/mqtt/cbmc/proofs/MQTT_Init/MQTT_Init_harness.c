@@ -29,10 +29,10 @@
 
 void harness()
 {
-    MQTTContext_t * pContext = NULL;
-    TransportInterface_t * pTransportInterface = NULL;
-    MQTTApplicationCallbacks_t * pCallbacks = NULL;
-    MQTTFixedBuffer_t * pNetworkBuffer = NULL;
+    MQTTContext_t * pContext;
+    TransportInterface_t * pTransportInterface;
+    MQTTApplicationCallbacks_t * pCallbacks;
+    MQTTFixedBuffer_t * pNetworkBuffer;
 
     pContext = mallocCanFail( sizeof( MQTTContext_t ) );
     pTransportInterface = mallocCanFail( sizeof( MQTTContext_t ) );

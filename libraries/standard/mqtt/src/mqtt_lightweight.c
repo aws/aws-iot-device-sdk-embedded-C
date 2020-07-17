@@ -1086,7 +1086,7 @@ static MQTTStatus_t deserializePublish( const MQTTPacketInfo_t * pIncomingPacket
                                         MQTTPublishInfo_t * pPublishInfo )
 {
     MQTTStatus_t status = MQTTSuccess;
-    const uint8_t * pVariableHeader, * pPacketIdentifierHigh;
+    const uint8_t * pVariableHeader, * pPacketIdentifierHigh = NULL;
 
     assert( pIncomingPacket != NULL );
     assert( pPacketId != NULL );
@@ -2234,7 +2234,7 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
     }
     else if( ( status != MQTTBadParameter ) && ( bytesReceived == 0 ) )
     {
-        LogError( ( "No data was received from the transport." ) );
+        LogDebug( ( "No data was received from the transport." ) );
         status = MQTTNoDataAvailable;
     }
 
