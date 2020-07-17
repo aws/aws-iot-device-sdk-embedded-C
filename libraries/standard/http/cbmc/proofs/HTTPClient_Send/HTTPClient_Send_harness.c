@@ -39,12 +39,8 @@ void harness()
     size_t reqBodyBufLen;
     uint32_t sendFlags;
 
-    /* Initialize transport interface. */
-    transportInterface.send = TransportInterfaceSendStub;
-    transportInterface.recv = TransportInterfaceReceiveStub;
-
     /* Initialize and make assumptions for request headers. */
-    pRequestHeaders = allocateHttpRequestHeaders( pRequestHeaders );
+    pRequestHeaders = allocateHttpRequestHeaders( NULL );
     __CPROVER_assume( isValidHttpRequestHeaders( pRequestHeaders ) );
 
     /* Initialize and make assumptions for buffer to receive request body. */
@@ -52,37 +48,24 @@ void harness()
     pRequestBodyBuf = mallocCanFail( reqBodyBufLen );
 
     /* Initialize and make assumptions for response object. */
-    pResponse = allocateHttpResponse( pResponse );
+    pResponse = allocateHttpResponse( NULL );
     __CPROVER_assume( isValidHttpResponse( pResponse ) );
 
-    HTTPClient_Send( &transportInterface,
-                     pRequestHeaders,
-                     pRequestBodyBuf,
-                     reqBodyBufLen,
-                     pResponse,
-                     sendFlags );
-
-    /* Test NULL transportInterface along with NULL members for coverage. */
-    HTTPClient_Send( NULL,
-                     pRequestHeaders,
-                     pRequestBodyBuf,
-                     reqBodyBufLen,
-                     pResponse,
-                     sendFlags );
-
-    transportInterface.recv = NULL;
-    HTTPClient_Send( &transportInterface,
-                     pRequestHeaders,
-                     pRequestBodyBuf,
-                     reqBodyBufLen,
-                     pResponse,
-                     sendFlags );
-
-    transportInterface.send = NULL;
-    HTTPClient_Send( &transportInterface,
-                     pRequestHeaders,
-                     pRequestBodyBuf,
-                     reqBodyBufLen,
-                     pResponse,
-                     sendFlags );
+    if (nondet_bool()) {
+	transportInterface.send = nondet_bool() ? NULL : TransportInterfaceSendStub;
+	transportInterface.recv = nondet_bool() ? NULL : TransportInterfaceReceiveStub;
+	HTTPClient_Send( &transportInterface,
+			 pRequestHeaders,
+			 pRequestBodyBuf,
+			 reqBodyBufLen,
+			 pResponse,
+			 sendFlags );
+    } else {
+	HTTPClient_Send( NULL,
+			 pRequestHeaders,
+			 pRequestBodyBuf,
+			 reqBodyBufLen,
+			 pResponse,
+			 sendFlags );
+    }
 }

@@ -7,10 +7,21 @@ HARNESS_FILE=HTTPClient_Send_harness
 DEFINES +=
 INCLUDES +=
 
-REMOVE_FUNCTION_BODY += httpParserOnHeadersCompleteCallback
-REMOVE_FUNCTION_BODY += httpParserOnMessageBeginCallback
-REMOVE_FUNCTION_BODY += httpParserOnMessageCompleteCallback
-UNWINDSET += convertInt32ToAscii.0:11 convertInt32ToAscii.1:11 strncmp.0:5 sendHttpData.0:10 receiveAndParseHttpResponse.0:10
+#REMOVE_FUNCTION_BODY += __CPROVER_file_local_http_client_c_findHeaderFieldParserCallback
+#REMOVE_FUNCTION_BODY += __CPROVER_file_local_http_client_c_findHeaderValueParserCallback
+#REMOVE_FUNCTION_BODY += __CPROVER_file_local_http_client_c_httpParserOnBodyCallback
+#REMOVE_FUNCTION_BODY += __CPROVER_file_local_http_client_c_httpParserOnHeaderFieldCallback
+#REMOVE_FUNCTION_BODY += __CPROVER_file_local_http_client_c_httpParserOnHeaderValueCallback
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_http_client_c_httpParserOnHeadersCompleteCallback
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_http_client_c_httpParserOnMessageBeginCallback
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_http_client_c_httpParserOnMessageCompleteCallback
+#REMOVE_FUNCTION_BODY += __CPROVER_file_local_http_client_c_httpParserOnStatusCallback
+
+UNWINDSET += __CPROVER_file_local_http_client_c_convertInt32ToAscii.0:11
+UNWINDSET += __CPROVER_file_local_http_client_c_convertInt32ToAscii.1:11
+UNWINDSET += __CPROVER_file_local_http_client_c_receiveAndParseHttpResponse.0:10
+UNWINDSET += __CPROVER_file_local_http_client_c_sendHttpData.0:10
+UNWINDSET += strncmp.0:5
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 PROOF_SOURCES += $(PROOFDIR)/../../sources/http_cbmc_state.c
