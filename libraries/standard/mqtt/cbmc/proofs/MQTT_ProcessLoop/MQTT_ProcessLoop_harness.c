@@ -27,6 +27,7 @@
 #include "mqtt_cbmc_state.h"
 #include "network_interface_stubs.h"
 #include "get_time_stub.h"
+#include "event_callback_stub.h"
 
 void harness()
 {
@@ -55,6 +56,7 @@ void harness()
     if( pCallbacks )
     {
         pCallbacks->getTime = GetCurrentTimeStub;
+        pCallbacks->appCallback = EventCallbackStub;
     }
 
     pNetworkBuffer = allocateMqttFixedBuffer( NULL );

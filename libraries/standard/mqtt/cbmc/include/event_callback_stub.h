@@ -19,18 +19,28 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "mqtt.h"
-#include "get_time_stub.h"
+/**
+ * @file event_callback_stub.h
+ * @brief Stub definition for the application defined MQTT library incoming 
+ * event callback.
+ */
+#ifndef EVENT_CALLBACK_STUB_H_
+#define EVENT_CALLBACK_STUB_H_
 
-uint32_t GetCurrentTimeStub( void )
-{
-    /* There exists loops in the MQTT library that rely on the timestamp being 
-     * reasonable in order to complete. Returning an unbounded timestamp does 
-     * not add value to the proofs as the MQTT library uses the timestamp for 
-     * only arithmetic operations. In C arithmetic operations on unsigned 
-     * integers are guaranteed to reliably wrap around with no adverse side 
-     * effects. */
-    static uint32_t globalEntryTime = 0;
-    
-    return ++globalEntryTime;
-}
+/* mqtt.h must preceed including this header. */
+
+/**
+ * @brief Application callbacks for receiving incoming publishes and incoming
+ * acks.
+ * 
+ * @param[in] pContext Initialized MQTT context.
+ * @param[in] pPacketInfo Information on the type of incoming MQTT packet.
+ * @param[in] packetIdentifier Packet identifier of incoming PUBLISH packet.
+ * @param[in] pPublishInfo Incoming PUBLISH packet parameters.
+ */
+void EventCallbackStub( MQTTContext_t * pContext,
+                        MQTTPacketInfo_t * pPacketInfo,
+                        uint16_t packetIdentifier,
+                        MQTTPublishInfo_t * pPublishInfo );
+
+#endif

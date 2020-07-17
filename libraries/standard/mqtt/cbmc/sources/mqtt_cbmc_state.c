@@ -20,6 +20,7 @@
  */
 #include <stdint.h>
 #include <stdlib.h>
+#include "mqtt.h"
 #include "mqtt_cbmc_state.h"
 
 /* A default bound on the subscription count. Iterating over possibly SIZE_MAX

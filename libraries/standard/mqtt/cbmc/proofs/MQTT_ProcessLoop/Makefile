@@ -33,11 +33,15 @@ INCLUDES +=
 
 REMOVE_FUNCTION_BODY +=
 UNWINDSET += MQTT_ProcessLoop.0:2
+UNWINDSET += __CPROVER_file_local_mqtt_c_discardPacket.0:2
+UNWINDSET += __CPROVER_file_local_mqtt_c_recvExact.0:2
+UNWINDSET += __CPROVER_file_local_mqtt_lightweight_c_getRemainingLength.0:5
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 PROOF_SOURCES += $(SRCDIR)/libraries/standard/mqtt/cbmc/sources/mqtt_cbmc_state.c
 PROOF_SOURCES += $(SRCDIR)/libraries/standard/mqtt/cbmc/stubs/network_interface_stubs.c
 PROOF_SOURCES += $(SRCDIR)/libraries/standard/mqtt/cbmc/stubs/get_time_stub.c
+PROOF_SOURCES += $(SRCDIR)/libraries/standard/mqtt/cbmc/stubs/event_callback_stub.c
 PROJECT_SOURCES += $(SRCDIR)/libraries/standard/mqtt/src/mqtt.c
 PROJECT_SOURCES += $(SRCDIR)/libraries/standard/mqtt/src/mqtt_lightweight.c
 PROJECT_SOURCES += $(SRCDIR)/libraries/standard/mqtt/src/mqtt_state.c

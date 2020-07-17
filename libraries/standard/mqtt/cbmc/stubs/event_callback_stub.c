@@ -18,19 +18,17 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
 #include "mqtt.h"
-#include "get_time_stub.h"
+#include "event_callback_stub.h"
 
-uint32_t GetCurrentTimeStub( void )
+void EventCallbackStub( MQTTContext_t * pContext,
+                        MQTTPacketInfo_t * pPacketInfo,
+                        uint16_t packetIdentifier,
+                        MQTTPublishInfo_t * pPublishInfo )
 {
-    /* There exists loops in the MQTT library that rely on the timestamp being 
-     * reasonable in order to complete. Returning an unbounded timestamp does 
-     * not add value to the proofs as the MQTT library uses the timestamp for 
-     * only arithmetic operations. In C arithmetic operations on unsigned 
-     * integers are guaranteed to reliably wrap around with no adverse side 
-     * effects. */
-    static uint32_t globalEntryTime = 0;
-    
-    return ++globalEntryTime;
+    __CPROVER_assert( pContext != NULL, 
+                      "EventCallbackStub pContext is not NULL" );
+    __CPROVER_assert( pPacketInfo != NULL, 
+                      "EventCallbackStub pPacketInfo is not NULL" );
+    /* pPublishInfo will be NULL for an incoming ACK event. */
 }

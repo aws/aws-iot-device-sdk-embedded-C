@@ -18,13 +18,17 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
+/**
+ * @file mqtt_cbmc_state.h
+ * @brief Allocation and assumption utilities for the MQTT library CBMC proofs.
+ */
 #ifndef MQTT_CBMC_STATE_H_
 #define MQTT_CBMC_STATE_H_
 
 #include <stdbool.h>
 
-/* For MQTT Client library types. */
-#include "mqtt.h"
+/* mqtt.h must preceed including this header. */
 
 /**
  * @brief Proof model for malloc that can fail and return NULL.

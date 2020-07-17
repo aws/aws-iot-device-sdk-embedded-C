@@ -18,8 +18,16 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
+/**
+ * @file get_time_stub.h
+ * @brief Stub definition for the application defined callback to retrieve the
+ * current time in milliseconds.
+ */
 #ifndef GET_TIME_STUB_H_
 #define GET_TIME_STUB_H_
+
+/* mqtt.h must preceed including this header. */
 
 /**
  * Application defined function to retreive the current time in milliseconds.

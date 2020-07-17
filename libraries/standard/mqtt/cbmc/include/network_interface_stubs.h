@@ -18,8 +18,16 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
+/**
+ * @file network_interface_stubs.h
+ * @brief Stub definitions for the application defined transport interface send
+ * and receive callback.
+ */
 #ifndef NETWORK_INTERFACE_STUBS_H_
 #define NETWORK_INTERfACE_STUBS_H_
+
+/* mqtt.h must preceed including this header. */
 
 /**
  * @brief Application defined network interface receive function.
