@@ -22,11 +22,17 @@
 HARNESS_ENTRY=harness
 HARNESS_FILE=MQTT_ProcessLoop_harness
 
-DEFINES +=
+# Bound on the timeout in MQTT_ProcessLoop. This timeout is bounded because 
+# memory saftey can be proven in a single iteration of the MQTT operations.
+# Each iteration will try to receive a single packet in its entirey. If the 
+# timeout is not reached, then another iteration will be performed unnecessarily
+# duplicating the proof.
+MQTT_PROCESS_LOOP_TIMEOUT=0
+DEFINES += -DMQTT_PROCESS_LOOP_TIMEOUT=$(MQTT_PROCESS_LOOP_TIMEOUT)
 INCLUDES +=
 
 REMOVE_FUNCTION_BODY +=
-UNWINDSET +=
+UNWINDSET += MQTT_ProcessLoop.0:2
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 PROOF_SOURCES += $(SRCDIR)/libraries/standard/mqtt/cbmc/sources/mqtt_cbmc_state.c

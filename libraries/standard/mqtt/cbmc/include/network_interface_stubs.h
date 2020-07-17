@@ -21,12 +21,6 @@
 #ifndef NETWORK_INTERFACE_STUBS_H_
 #define NETWORK_INTERfACE_STUBS_H_
 
-/* Mock a network context for the CBMC proofs. */
-struct NetworkContext
-{
-    int NetworkContext;
-};
-
 /**
  * @brief Application defined network interface receive function.
  *

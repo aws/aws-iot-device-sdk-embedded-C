@@ -433,7 +433,16 @@ static int32_t recvExact( const MQTTContext_t * pContext,
                                pIndex,
                                bytesRemaining );
 
-        if( bytesRecvd >= 0 )
+        if( bytesRecvd > ( int32_t )bytesRemaining )
+        {
+            LogError( ( "Transport receive returned more bytes than expected:  "
+                        "BytesExpected=%d, BytesReceived=%d",
+                        bytesRemaining,
+                        bytesRecvd ) );
+            receiveError = true;
+            totalBytesRecvd += ( int32_t ) bytesRecvd;
+        }
+        else if( bytesRecvd >= 0 )
         {
             bytesRemaining -= ( size_t ) bytesRecvd;
             totalBytesRecvd += ( int32_t ) bytesRecvd;
@@ -538,6 +547,7 @@ static MQTTStatus_t receivePacket( const MQTTContext_t * pContext,
     size_t bytesToReceive = 0U;
 
     assert( pContext != NULL );
+    assert( pContext->networkBuffer.pBuffer != NULL );
 
     if( incomingPacket.remainingLength > pContext->networkBuffer.size )
     {
@@ -965,9 +975,17 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
     }
     else
     {
-        /* Receive packet. Remaining time is recalculated before calling this
-         * function. */
-        status = receivePacket( pContext, incomingPacket, remainingTimeMs );
+        if( pContext->networkBuffer.pBuffer != NULL )
+        {
+            /* Receive packet. Remaining time is recalculated before calling this
+             * function. */
+            status = receivePacket( pContext, incomingPacket, remainingTimeMs );
+        }
+        else
+        {
+            LogError( ( "The MQTT context's networkBuffer must not be NULL." ) );
+            status = MQTTBadParameter;
+        }
     }
 
     /* Handle received packet. If no data was read then this will not execute. */

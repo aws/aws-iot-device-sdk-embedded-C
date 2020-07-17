@@ -71,6 +71,6 @@ void harness()
     {
         /* For coverage, it is expected that a NULL pContext will reach this
          * function. */
-        MQTT_ProcessLoop( pContext, timeout );
+        MQTT_ProcessLoop( pContext, MQTT_PROCESS_LOOP_TIMEOUT );
     }
 }

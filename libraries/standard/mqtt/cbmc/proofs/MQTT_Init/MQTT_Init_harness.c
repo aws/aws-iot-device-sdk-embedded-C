@@ -35,7 +35,7 @@ void harness()
     MQTTFixedBuffer_t * pNetworkBuffer;
 
     pContext = mallocCanFail( sizeof( MQTTContext_t ) );
-    pTransportInterface = mallocCanFail( sizeof( MQTTContext_t ) );
+    pTransportInterface = mallocCanFail( sizeof( TransportInterface_t ) );
     pCallbacks = mallocCanFail( sizeof( MQTTApplicationCallbacks_t ) );
     pNetworkBuffer = mallocCanFail( sizeof( MQTTFixedBuffer_t ) );
 
