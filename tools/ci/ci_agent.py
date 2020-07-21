@@ -86,13 +86,9 @@ def cli_run(args):
 
     _log_save_result(build_result, f"build_{_junit_filename}.xml")
 
-    run_targets = [
-        _k
-        for _k, _v in build_result.items()
-        if _v.get("Build", {}).get("status") == "PASS"
-    ]
     run_result = _run_targets(
-        run_targets, f"{args.build_path}/{_default_config.get('output_loc', '')}"
+        build_result.keys(),
+        f"{args.build_path}/{_default_config.get('output_loc', '')}",
     )
     _log_save_result(run_result, f"run_{_junit_filename}.xml")
     _check_status(run_result)
