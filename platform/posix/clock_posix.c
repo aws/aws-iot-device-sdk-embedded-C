@@ -37,7 +37,6 @@
 /*
  * Time conversion constants.
  */
-#define NANOSECONDS_PER_SECOND         ( 1000000000 ) /**< @brief Nanoseconds per second. */
 #define NANOSECONDS_PER_MILLISECOND    ( 1000000 )    /**< @brief Nanoseconds per millisecond. */
 #define MILLISECONDS_PER_SECOND        ( 1000 )       /**< @brief Milliseconds per second. */
 
