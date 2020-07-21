@@ -2,17 +2,17 @@
 
 # _default section consists of config common to all targets
 _default:
-  name: demos
+  name: unittest
   build_flags:
     # Provide list of flags required for configuring build using cmake
-    - ""
+    - "-DBUILD_TESTS=1"
   allow:
     # Provide list of allowed targets [Accepts regex]
-    - ".*_demo_.*"
+    - ".*utest.*"
   c_flags:
     # Provide list of c_flags common for all targets
     - "-Wall -Wextra -Werror"
-  output_loc: "bin"
+  output_loc: "bin/tests"
 
 
 #<target_name>:
