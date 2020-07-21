@@ -12,7 +12,8 @@ import yaml
 def cli_config_build(args):
     _file = Path(args.config_file)
     _config = _read_config(_file)
-    _build_flags = _config.get("_default", {}).get("build_flags", [])
+    _default_config = _config.get("_default", {})
+    _build_flags = _default_config.get("build_flags", [])
 
     _del_dir(args.build_path)
     _config_build(args.src, _build_flags, args.build_path)
@@ -26,35 +27,75 @@ def cli_get_targets(args):
 def cli_build_targets(args):
     _file = Path(args.config_file)
     _config = _read_config(_file)
+    _default_config = _config.get("_default", {})
+    _junit_filename = _default_config.get("name", None)
     result = _build_targets(args.targets, _config, args.build_path)
 
-    _junit_filename = _config.get("_default", {}).get("name", None)
-    if _junit_filename:
-        _junit_filename = f"build_{_junit_filename}.xml"
-
-    _log_save_result(result, _junit_filename)
+    _log_save_result(result, f"build_{_junit_filename}.xml")
     _check_status(result)
+
+
+def cli_run_targets(args):
+    _file = Path(args.config_file)
+    _config = _read_config(_file)
+    _default_config = _config.get("_default", {})
+    _junit_filename = _default_config.get("name", None)
+
+    run_result = _run_targets(
+        args.targets, f"{args.build_path}/{_default_config.get('output_loc', '')}"
+    )
+    _log_save_result(run_result, f"run_{_junit_filename}.xml")
+    _check_status(run_result)
 
 
 def cli_build(args):
     _file = Path(args.config_file)
     _config = _read_config(_file)
-    _build_flags = _config.get("_default", {}).get("build_flags", [])
+    _default_config = _config.get("_default", {})
+    _junit_filename = _default_config.get("name", None)
+    _build_flags = _default_config.get("build_flags", [])
 
+    _del_dir(args.build_path)
     _config_build(args.src, _build_flags, args.build_path)
     _targets = _get_targets(args.build_path)
 
-    allowed = "|".join(_config.get("_default", {}).get("allow", []))
+    allowed = "|".join(_default_config.get("allow", []))
     _targets = [_target for _target in _targets if re.match(allowed, _target)]
 
-    result = _build_targets(_targets, _config, args.build_path)
+    build_result = _build_targets(_targets, _config, args.build_path)
 
-    _junit_filename = _config.get("_default", {}).get("name", None)
-    if _junit_filename:
-        _junit_filename = f"build_{_junit_filename}.xml"
+    _log_save_result(build_result, f"build_{_junit_filename}.xml")
+    _check_status(build_result)
 
-    _log_save_result(result, _junit_filename)
-    _check_status(result)
+
+def cli_run(args):
+    _file = Path(args.config_file)
+    _config = _read_config(_file)
+    _default_config = _config.get("_default", {})
+    _junit_filename = _default_config.get("name", None)
+    _build_flags = _default_config.get("build_flags", [])
+
+    _del_dir(args.build_path)
+    _config_build(args.src, _build_flags, args.build_path)
+    _targets = _get_targets(args.build_path)
+
+    allowed = "|".join(_default_config.get("allow", []))
+    _targets = [_target for _target in _targets if re.match(allowed, _target)]
+
+    build_result = _build_targets(_targets, _config, args.build_path)
+
+    _log_save_result(build_result, f"build_{_junit_filename}.xml")
+
+    run_targets = [
+        _k
+        for _k, _v in build_result.items()
+        if _v.get("Build", {}).get("status") == "PASS"
+    ]
+    run_result = _run_targets(
+        run_targets, f"{args.build_path}/{_default_config.get('output_loc', '')}"
+    )
+    _log_save_result(run_result, f"run_{_junit_filename}.xml")
+    _check_status(run_result)
 
 
 def cli_invoke(args_list):
@@ -98,9 +139,17 @@ def get_parser():
     add_arguments(cmd_build_targets, "--config-file", "--targets", "--build-path")
     cmd_build_targets.set_defaults(func="build-targets")
 
+    cmd_run_targets = subparsers.add_parser("run-targets")
+    add_arguments(cmd_run_targets, "--config-file", "--targets", "--build-path")
+    cmd_run_targets.set_defaults(func="run-targets")
+
     cmd_build = subparsers.add_parser("build")
     add_arguments(cmd_build, "--config-file", "--src", "--build-path", "--build-args")
     cmd_build.set_defaults(func="build")
+
+    cmd_run = subparsers.add_parser("run")
+    add_arguments(cmd_run, "--config-file", "--src", "--build-path", "--build-args")
+    cmd_run.set_defaults(func="run")
     return parser
 
 
@@ -136,7 +185,7 @@ def _build_target(_target, _c_flags, build_path):
     print("----------------------------------------------------------------")
     _c_flags = " ".join(_c_flags)
     cmd = f"make -C {build_path} {_c_flags} {_target}"
-    print(_run_cmd(cmd))
+    return _run_cmd(cmd)
 
 
 def _get_targets(build_path):
@@ -147,20 +196,40 @@ def _get_targets(build_path):
 
 def _build_targets(_targets, _config, build_path):
     result = {}
+    _default_config = _config.get("_default", {})
 
     for _target in _targets:
         _target_result = result.setdefault(_target, {})
         _target_build_result = _target_result.setdefault("Build", {})
         try:
-            _c_flags = _config.get("_default", {}).get("c_flags", []) + _config.get(
+            _c_flags = _default_config.get("c_flags", []) + _config.get(
                 _target, {}
             ).get("c_flags", [])
-            _build_target(_target, _c_flags, build_path)
+            out = _build_target(_target, _c_flags, build_path)
+            print(out)
             _target_build_result["status"] = "PASS"
-        except subprocess.CalledProcessError as err:
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as err:
             print(err.stdout)
             _target_build_result["status"] = "FAIL"
             _target_build_result["details"] = "Build Failure"
+    return result
+
+
+def _run_targets(_targets, _path):
+    result = {}
+    for _target in _targets:
+        _target_result = result.setdefault(_target, {})
+        _target_run_result = _target_result.setdefault("Run", {})
+        print("\n----------------------------------------------------------------")
+        print(f"Running Target: {_target}")
+        print("----------------------------------------------------------------")
+        try:
+            print(_run_cmd(f"{_path}/{_target}"))
+            _target_run_result["status"] = "PASS"
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as err:
+            print(err.stdout)
+            _target_run_result["status"] = "FAIL"
+            _target_run_result["details"] = "Run Failure"
     return result
 
 
@@ -190,19 +259,22 @@ def _run_cmd(cmd):
         shell=True,
         encoding="utf-8",
         check=True,
+        timeout=180,
     )
     return result.stdout
 
 
 def _check_status(result):
-    status = any([_k for _k, _v in result.items() if _v.get("status") == "FAIL"])
+    status = any(
+        [_k for _k, _v in result.items() if _v.get("Build", {}).get("status") == "FAIL"]
+    )
     if status:
         sys.exit(1)
 
 
 def _log_save_result(result, filename):
     print("\n----------------------------------------------------------------")
-    print("Build Result")
+    print(f"{filename.split('_')[0].title()} Result")
     print("----------------------------------------------------------------")
     print(yaml.dump(result))
 
