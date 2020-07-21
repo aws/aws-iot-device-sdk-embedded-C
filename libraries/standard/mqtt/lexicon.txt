@@ -216,7 +216,7 @@ tcpsocket
 testcase
 timeoutms
 tls
-topicFilterLength
+topicfilterlength
 uint
 un
 unsuback
