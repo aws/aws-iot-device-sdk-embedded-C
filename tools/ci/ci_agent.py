@@ -255,14 +255,19 @@ def _run_cmd(cmd):
         shell=True,
         encoding="utf-8",
         check=True,
-        timeout=180,
+        timeout=10,
     )
     return result.stdout
 
 
 def _check_status(result):
     status = any(
-        [_k for _k, _v in result.items() if _v.get("Build", {}).get("status") == "FAIL"]
+        [
+            _k
+            for _k, _v in result.items()
+            for _k1, _v1 in _v.items()
+            if not _v1.get("status") == "PASS"
+        ]
     )
     if status:
         sys.exit(1)
