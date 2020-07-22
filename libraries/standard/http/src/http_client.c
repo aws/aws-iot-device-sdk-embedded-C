@@ -533,6 +533,9 @@ static int httpParserOnMessageBeginCallback( http_parser * pHttpParser )
     HTTPParsingContext_t * pParsingContext = NULL;
     HTTPResponse_t * pResponse = NULL;
 
+    /* Disable unused variable warning. */
+    ( void ) pResponse;
+
     assert( pHttpParser != NULL );
     assert( pHttpParser->data != NULL );
 
@@ -655,6 +658,9 @@ static int httpParserOnHeaderValueCallback( http_parser * pHttpParser,
 {
     HTTPParsingContext_t * pParsingContext = NULL;
     HTTPResponse_t * pResponse = NULL;
+
+    /* Disable unused variable warning. */
+    ( void ) pResponse;
 
     assert( pHttpParser != NULL );
     assert( pHttpParser->data != NULL );
@@ -1010,6 +1016,9 @@ static HTTPStatus_t parseHttpResponse( HTTPParsingContext_t * pParsingContext,
     HTTPStatus_t returnStatus;
     http_parser_settings parserSettings = { 0 };
     size_t bytesParsed = 0u;
+
+    /* Disable unused variable warning. */
+    ( void ) bytesParsed;
 
     assert( pParsingContext != NULL );
     assert( pResponse != NULL );
@@ -2091,6 +2100,8 @@ static int findHeaderOnHeaderCompleteCallback( http_parser * pHttpParser )
 
     /* Disable unused parameter warning. */
     ( void ) pHttpParser;
+    /* Disable unused variable warning. */
+    ( void ) pContext;
 
     assert( pHttpParser != NULL );
 
