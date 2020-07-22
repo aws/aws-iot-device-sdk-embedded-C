@@ -533,6 +533,9 @@ static int httpParserOnMessageBeginCallback( http_parser * pHttpParser )
     HTTPParsingContext_t * pParsingContext = NULL;
     HTTPResponse_t * pResponse = NULL;
 
+    /* Disable unused variable warning. */
+    ( void ) pResponse;
+
     assert( pHttpParser != NULL );
     assert( pHttpParser->data != NULL );
 
@@ -655,6 +658,9 @@ static int httpParserOnHeaderValueCallback( http_parser * pHttpParser,
 {
     HTTPParsingContext_t * pParsingContext = NULL;
     HTTPResponse_t * pResponse = NULL;
+
+    /* Disable unused variable warning. */
+    ( void ) pResponse;
 
     assert( pHttpParser != NULL );
     assert( pHttpParser->data != NULL );
