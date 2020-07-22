@@ -337,7 +337,7 @@ static int32_t sendPacket( MQTTContext_t * pContext,
             bytesRemaining -= ( size_t ) bytesSent;
             totalBytesSent += bytesSent;
             pIndex += bytesSent;
-            LogDebug( ( "Bytes sent=%d, bytes remaining=%ul,"
+            LogDebug( ( "Bytes sent=%d, bytes remaining=%lu,"
                         "total bytes sent=%d.",
                         bytesSent,
                         bytesRemaining,

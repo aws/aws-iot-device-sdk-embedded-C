@@ -101,6 +101,16 @@
 #define TEST_MQTT_TOPIC_LENGTH              ( sizeof( TEST_MQTT_TOPIC ) - 1 )
 
 /**
+ * @brief Sample topic filter to subscribe to.
+ */
+#define TEST_MQTT_LWT_TOPIC                 "/iot/integration/test/lwt"
+
+/**
+ * @brief Length of sample topic filter.
+ */
+#define TEST_MQTT_LWT_TOPIC_LENGTH          ( sizeof( TEST_MQTT_LWT_TOPIC ) - 1 )
+
+/**
  * @brief Size of the network buffer for MQTT packets.
  */
 #define NETWORK_BUFFER_SIZE                 ( 1024U )
@@ -116,6 +126,16 @@
 #define TEST_CLIENT_IDENTIFIER_LENGTH       ( sizeof( TEST_CLIENT_IDENTIFIER ) - 1u )
 
 /**
+ * @brief Client identifier for use in LWT tests.
+ */
+#define TEST_CLIENT_IDENTIFIER_LWT          "MQTT-Test-LWT"
+
+/**
+ * @brief Length of LWT client identifier.
+ */
+#define TEST_CLIENT_IDENTIFIER_LWT_LENGTH   ( sizeof( TEST_CLIENT_IDENTIFIER_LWT ) - 1u )
+
+/**
  * @brief Transport timeout in milliseconds for transport send and receive.
  */
 #define TRANSPORT_SEND_RECV_TIMEOUT_MS      ( 200U )
@@ -129,7 +149,7 @@
  * @brief Time interval in seconds at which an MQTT PINGREQ need to be sent to
  * broker.
  */
-#define MQTT_KEEP_ALIVE_INTERVAL_SECONDS    ( 30U )
+#define MQTT_KEEP_ALIVE_INTERVAL_SECONDS    ( 5U )
 
 /**
  * @brief Timeout for MQTT_ProcessLoop() function in milliseconds.
@@ -187,10 +207,15 @@ static OpensslCredentials_t opensslCredentials;
 static MQTTContext_t context;
 
 /**
- * @brief Flag that represents whether a persistent session should be
- * established with the broker for the test.
+ * @brief Flag that represents whether a persistent session was resumed
+ * with the broker for the test.
  */
 static bool persistentSession = false;
+
+/**
+ * @brief Flag to indicate if LWT is being used when establishing a connection.
+ */
+static bool useLWTClientIdentifier = false;
 
 /**
  * @brief Flag to represent whether a SUBACK is received from the broker.
@@ -269,6 +294,7 @@ static void establishMqttSession( MQTTContext_t * pContext,
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks;
+    MQTTPublishInfo_t lwtInfo;
 
     assert( pContext != NULL );
     assert( pNetworkContext != NULL );
@@ -303,8 +329,16 @@ static void establishMqttSession( MQTTContext_t * pContext,
 
     connectInfo.cleanSession = createCleanSession;
 
-    connectInfo.pClientIdentifier = TEST_CLIENT_IDENTIFIER;
-    connectInfo.clientIdentifierLength = TEST_CLIENT_IDENTIFIER_LENGTH;
+    if( useLWTClientIdentifier )
+    {
+        connectInfo.pClientIdentifier = TEST_CLIENT_IDENTIFIER_LWT;
+        connectInfo.clientIdentifierLength = TEST_CLIENT_IDENTIFIER_LWT_LENGTH;
+    }
+    else
+    {
+        connectInfo.pClientIdentifier = TEST_CLIENT_IDENTIFIER;
+        connectInfo.clientIdentifierLength = TEST_CLIENT_IDENTIFIER_LENGTH;
+    }
 
     /* The interval at which an MQTT PINGREQ needs to be sent out to broker. */
     connectInfo.keepAliveSeconds = MQTT_KEEP_ALIVE_INTERVAL_SECONDS;
@@ -315,10 +349,19 @@ static void establishMqttSession( MQTTContext_t * pContext,
     connectInfo.pPassword = NULL;
     connectInfo.passwordLength = 0U;
 
+    /* LWT Info. */
+    lwtInfo.pTopicName = TEST_MQTT_LWT_TOPIC;
+    lwtInfo.topicNameLength = TEST_MQTT_LWT_TOPIC_LENGTH;
+    lwtInfo.pPayload = MQTT_EXAMPLE_MESSAGE;
+    lwtInfo.payloadLength = strlen( MQTT_EXAMPLE_MESSAGE );
+    lwtInfo.qos = MQTTQoS0;
+    lwtInfo.dup = false;
+    lwtInfo.retain = false;
+
     /* Send MQTT CONNECT packet to broker. */
     TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_Connect( pContext,
                                                   &connectInfo,
-                                                  NULL,
+                                                  &lwtInfo,
                                                   CONNACK_RECV_TIMEOUT_MS,
                                                   pSessionPresent ) );
 }
@@ -425,7 +468,7 @@ static void eventCallback( MQTTContext_t * pContext,
 
                 /* Nothing to be done from application as library handles
                  * PUBCOMP. */
-                LogDebug( ( "Unexpected PUBCOMP received: PacketID=%u",
+                LogDebug( ( "Received PUBCOMP: PacketID=%u",
                             packetIdentifier ) );
                 break;
 
@@ -527,6 +570,7 @@ void setUp()
     receivedPubRel = false;
     receivedPubComp = false;
     persistentSession = false;
+    useLWTClientIdentifier = false;
     memset( &incomingInfo, 0u, sizeof( MQTTPublishInfo_t ) );
     memset( &opensslCredentials, 0u, sizeof( OpensslCredentials_t ) );
     opensslCredentials.pRootCaPath = SERVER_ROOT_CA_CERT_PATH;
@@ -702,9 +746,11 @@ void test_MQTT_Subscribe_Publish_With_Qos_2( void )
     /* We expect PUBREC and PUBCOMP responses for the PUBLISH request, and
      * incoming PUBLISH with the same message that we published (as we are subscribed
      * to the same topic). Also, we expect a PUBREL ack response from the server for
-     * the incoming PUBLISH (as we subscribed and publish with QoS 2). */
+     * the incoming PUBLISH (as we subscribed and publish with QoS 2). Since it takes
+     * longer to complete a QoS 2 publish, we run the process loop longer to allow it
+     * ample time. */
     TEST_ASSERT_EQUAL( MQTTSuccess,
-                       MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+                       MQTT_ProcessLoop( &context, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_FALSE( receivedPubAck );
     TEST_ASSERT_TRUE( receivedPubRec );
     TEST_ASSERT_TRUE( receivedPubComp );
@@ -730,4 +776,75 @@ void test_MQTT_Subscribe_Publish_With_Qos_2( void )
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_TRUE( receivedUnsubAck );
+}
+
+void test_MQTT_Connect_LWT( void )
+{
+    int secondTcpSocket;
+    NetworkContext_t secondNetworkContext = { 0 };
+    bool sessionPresent;
+    MQTTContext_t secondContext;
+
+    /* Establish a second TCP connection with the server endpoint, then
+     * a TLS session. The server info and credentials can be reused. */
+    TEST_ASSERT_EQUAL( OPENSSL_SUCCESS, Openssl_Connect( &secondNetworkContext,
+                                                         &serverInfo,
+                                                         &opensslCredentials,
+                                                         TRANSPORT_SEND_RECV_TIMEOUT_MS,
+                                                         TRANSPORT_SEND_RECV_TIMEOUT_MS ) );
+    TEST_ASSERT_NOT_EQUAL( -1, secondNetworkContext.socketDescriptor );
+    TEST_ASSERT_NOT_NULL( secondNetworkContext.pSsl );
+
+    /* Establish MQTT session on top of the TCP+TLS connection. */
+    useLWTClientIdentifier = true;
+    establishMqttSession( &secondContext, &secondNetworkContext, true, &sessionPresent );
+
+    /* Subscribe to LWT Topic. */
+    TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic(
+                           &context, TEST_MQTT_LWT_TOPIC, MQTTQoS0 ) );
+
+    /* Abruptly terminate TCP connection. */
+    ( void ) Openssl_Disconnect( &secondNetworkContext );
+
+    /* Run the process loop to receive the LWT. Allow some more time for the
+     * server to realize the connection is closed. */
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       MQTT_ProcessLoop( &context, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+
+    /* Test if we have received the LWT. */
+    TEST_ASSERT_EQUAL( MQTTQoS0, incomingInfo.qos );
+    TEST_ASSERT_EQUAL( TEST_MQTT_LWT_TOPIC_LENGTH, incomingInfo.topicNameLength );
+    TEST_ASSERT_EQUAL_MEMORY( TEST_MQTT_LWT_TOPIC,
+                              incomingInfo.pTopicName,
+                              TEST_MQTT_LWT_TOPIC_LENGTH );
+    TEST_ASSERT_EQUAL( strlen( MQTT_EXAMPLE_MESSAGE ), incomingInfo.payloadLength );
+    TEST_ASSERT_EQUAL_MEMORY( MQTT_EXAMPLE_MESSAGE,
+                              incomingInfo.pPayload,
+                              incomingInfo.payloadLength );
+
+    /* Un-subscribe from a topic with Qos 0. */
+    TEST_ASSERT_EQUAL( MQTTSuccess, unsubscribeFromTopic(
+                           &context, TEST_MQTT_TOPIC, MQTTQoS0 ) );
+
+    /* We expect an UNSUBACK from the broker for the unsubscribe operation. */
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    TEST_ASSERT_TRUE( receivedUnsubAck );
+}
+
+void test_MQTT_ProcessLoop_KeepAlive( void )
+{
+    uint32_t connectPacketTime = context.lastPacketTime;
+    uint32_t elapsedTime = 0;
+    TEST_ASSERT_EQUAL( 0, context.pingReqSendTimeMs );
+
+    /* Sleep until control packet needs to be sent. */
+    Clock_SleepMs( MQTT_KEEP_ALIVE_INTERVAL_SECONDS * 1000 );
+    TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+
+    TEST_ASSERT_NOT_EQUAL( 0, context.pingReqSendTimeMs );
+    TEST_ASSERT_NOT_EQUAL( connectPacketTime, context.lastPacketTime );
+    /* Test that the ping was sent within 1.5 times the keep alive interval. */
+    elapsedTime = context.lastPacketTime - connectPacketTime;
+    TEST_ASSERT_LESS_OR_EQUAL( MQTT_KEEP_ALIVE_INTERVAL_SECONDS * 1500, elapsedTime );
 }
