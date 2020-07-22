@@ -1308,7 +1308,7 @@ void test_MQTT_ProcessLoop_Invalid_Params( void )
     MQTTContext_t context;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTStatus_t mqttStatus = MQTT_ProcessLoop( NULL, MQTT_ZERO_PROCESS_LOOP_TIMEOUT_MS );
+    MQTTStatus_t mqttStatus = MQTT_ProcessLoop( NULL, MQTT_NO_TIMEOUT_MS );
 
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
@@ -1318,7 +1318,7 @@ void test_MQTT_ProcessLoop_Invalid_Params( void )
 
     /* Get time function cannot be NULL. */
     context.getTime = NULL;
-    mqttStatus = MQTT_ProcessLoop( &context, MQTT_ZERO_PROCESS_LOOP_TIMEOUT_MS );
+    mqttStatus = MQTT_ProcessLoop( &context, MQTT_NO_TIMEOUT_MS );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 }
 
@@ -1772,7 +1772,7 @@ void test_MQTT_ReceiveLoop( void )
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
     context.getTime = NULL;
-    mqttStatus = MQTT_ReceiveLoop( &context, MQTT_ZERO_PROCESS_LOOP_TIMEOUT_MS );
+    mqttStatus = MQTT_ReceiveLoop( &context, MQTT_NO_TIMEOUT_MS );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
     context.getTime = getTime;
 
@@ -1790,7 +1790,7 @@ void test_MQTT_ReceiveLoop( void )
 
     /* Test with a dummy getTime to ensure there's no infinite loops. */
     context.getTime = getTimeDummy;
-    mqttStatus = MQTT_ReceiveLoop( &context, MQTT_ZERO_PROCESS_LOOP_TIMEOUT_MS );
+    mqttStatus = MQTT_ReceiveLoop( &context, MQTT_NO_TIMEOUT_MS );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     context.getTime = getTime;
 
