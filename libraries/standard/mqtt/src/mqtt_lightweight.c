@@ -321,7 +321,7 @@ static size_t remainingLengthEncodedSize( size_t length )
         encodedSize = 4U;
     }
 
-    LogDebug( ( "Encoded size for length =%ul is %ul.",
+    LogDebug( ( "Encoded size for length %lu is %lu bytes.",
                 length,
                 encodedSize ) );
 
@@ -2096,7 +2096,7 @@ MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * pIncomingPacket,
     }
     else if( ( pIncomingPacket->type & 0xF0U ) != MQTT_PACKET_TYPE_PUBLISH )
     {
-        LogError( ( "Packet is not publish. Packet type: %hu.",
+        LogError( ( "Packet is not publish. Packet type: %02x.",
                     pIncomingPacket->type ) );
         status = MQTTBadParameter;
     }
