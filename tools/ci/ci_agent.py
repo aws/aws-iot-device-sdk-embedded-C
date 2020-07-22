@@ -9,6 +9,10 @@ import junitparser as junit
 import yaml
 
 
+def log(message):
+    print(message)
+
+
 def cli_config_build(args):
     _file = Path(args.config_file)
     _config = _read_config(_file)
@@ -21,7 +25,7 @@ def cli_config_build(args):
 
 def cli_get_targets(args):
     _targets = _get_targets(args.build_path)
-    print(" ".join(_targets))
+    log(" ".join(_targets))
 
 
 def cli_build_targets(args):
@@ -176,9 +180,9 @@ def _config_build(_src, _build_flags, _build_path):
 
 
 def _build_target(_target, _c_flags, build_path):
-    print("\n----------------------------------------------------------------")
-    print(f"Building target: {_target}")
-    print("----------------------------------------------------------------")
+    log("\n----------------------------------------------------------------")
+    log(f"Building target: {_target}")
+    log("----------------------------------------------------------------")
     _c_flags = " ".join(_c_flags)
     cmd = f"make -C {build_path} {_c_flags} {_target}"
     return _run_cmd(cmd)
@@ -202,10 +206,10 @@ def _build_targets(_targets, _config, build_path):
                 _target, {}
             ).get("c_flags", [])
             out = _build_target(_target, _c_flags, build_path)
-            print(out)
+            log(out)
             _target_build_result["status"] = "PASS"
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as err:
-            print(err.stdout)
+            log(err.stdout)
             _target_build_result["status"] = "FAIL"
             _target_build_result["details"] = "Build Failure"
     return result
@@ -216,14 +220,14 @@ def _run_targets(_targets, _path):
     for _target in _targets:
         _target_result = result.setdefault(_target, {})
         _target_run_result = _target_result.setdefault("Run", {})
-        print("\n----------------------------------------------------------------")
-        print(f"Running Target: {_target}")
-        print("----------------------------------------------------------------")
+        log("\n----------------------------------------------------------------")
+        log(f"Running Target: {_target}")
+        log("----------------------------------------------------------------")
         try:
-            print(_run_cmd(f"{_path}/{_target}"))
+            log(_run_cmd(f"cd {_path} && ./{_target}"))
             _target_run_result["status"] = "PASS"
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as err:
-            print(err.stdout)
+            log(err.stdout)
             _target_run_result["status"] = "FAIL"
             _target_run_result["details"] = "Run Failure"
     return result
@@ -231,10 +235,10 @@ def _run_targets(_targets, _path):
 
 def _del_dir(dir_name):
     try:
-        print(f"Deleting dir: {dir_name}")
+        log(f"Deleting dir: {dir_name}")
         shutil.rmtree(dir_name)
     except OSError as err:
-        print("Error: %s - %s." % (err.filename, err.strerror))
+        log("Error: %s - %s." % (err.filename, err.strerror))
 
 
 def _read_config(_path):
@@ -242,12 +246,12 @@ def _read_config(_path):
         _config = yaml.load(_path.read_text())
         return _config
     except yaml.YAMLError:
-        print(f"Error: Unable to load file {_path.name}")
+        log(f"Error: Unable to load file {_path.name}")
         sys.exit(1)
 
 
 def _run_cmd(cmd):
-    print(f"Executing command: {cmd}")
+    log(f"Executing command: {cmd}")
     result = subprocess.run(
         cmd,
         stdout=subprocess.PIPE,
@@ -255,7 +259,7 @@ def _run_cmd(cmd):
         shell=True,
         encoding="utf-8",
         check=True,
-        timeout=10,
+        timeout=180,
     )
     return result.stdout
 
@@ -274,10 +278,10 @@ def _check_status(result):
 
 
 def _log_save_result(result, filename):
-    print("\n----------------------------------------------------------------")
-    print(f"{filename.split('_')[0].title()} Result")
-    print("----------------------------------------------------------------")
-    print(yaml.dump(result))
+    log("\n----------------------------------------------------------------")
+    log(f"{filename.split('_')[0].title()} Result")
+    log("----------------------------------------------------------------")
+    log(yaml.dump(result))
 
     if filename:
         _write_junit(_to_junit(result, "linux.cmake"), filename)
@@ -312,7 +316,7 @@ def _write_junit(junit_report, file_name):
     try:
         junit_report.write(file_name, pretty=True)
     except Exception as err:
-        print(f"[ERROR] Unable to write junit_file: {str(err)}")
+        log(f"[ERROR] Unable to write junit_file: {str(err)}")
 
 
 if __name__ == "__main__":
