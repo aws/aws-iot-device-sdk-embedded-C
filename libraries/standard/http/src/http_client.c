@@ -1011,6 +1011,9 @@ static HTTPStatus_t parseHttpResponse( HTTPParsingContext_t * pParsingContext,
     http_parser_settings parserSettings = { 0 };
     size_t bytesParsed = 0u;
 
+    /* Disable unused variable warning. */
+    ( void ) bytesParsed;
+
     assert( pParsingContext != NULL );
     assert( pResponse != NULL );
     assert( isHeadResponse <= 1 );
@@ -2091,6 +2094,8 @@ static int findHeaderOnHeaderCompleteCallback( http_parser * pHttpParser )
 
     /* Disable unused parameter warning. */
     ( void ) pHttpParser;
+    /* Disable unused variable warning. */
+    ( void ) pContext;
 
     assert( pHttpParser != NULL );
 
