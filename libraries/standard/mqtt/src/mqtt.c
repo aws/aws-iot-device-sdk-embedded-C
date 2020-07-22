@@ -1015,11 +1015,6 @@ static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * pC
                     pSubscriptionList ) );
         status = MQTTBadParameter;
     }
-    else if( subscriptionCount == 0UL )
-    {
-        LogError( ( "Subscription count is 0." ) );
-        status = MQTTBadParameter;
-    }
     else if( packetId == 0U )
     {
         LogError( ( "Packet Id for subscription packet is 0." ) );
