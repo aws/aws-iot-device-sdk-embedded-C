@@ -2096,7 +2096,7 @@ MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * pIncomingPacket,
     }
     else if( ( pIncomingPacket->type & 0xF0U ) != MQTT_PACKET_TYPE_PUBLISH )
     {
-        LogError( ( "Packet is not publish. Packet type: %hu.",
+        LogError( ( "Packet is not publish. Packet type: %02x.",
                     pIncomingPacket->type ) );
         status = MQTTBadParameter;
     }
