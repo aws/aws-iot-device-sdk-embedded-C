@@ -86,7 +86,7 @@
 /**
  * @brief Timeout for receiving CONNACK packet in milli seconds.
  */
-#define CONNACK_RECV_TIMEOUT_MS             ( 1000U )
+#define CONNACK_RECV_TIMEOUT_MS             ( 3000U )
 
 /**
  * @brief The topic to subscribe and publish to in the example.
@@ -145,7 +145,7 @@
 /**
  * @brief Transport timeout in milliseconds for transport send and receive.
  */
-#define TRANSPORT_SEND_RECV_TIMEOUT_MS      ( 20 )
+#define TRANSPORT_SEND_RECV_TIMEOUT_MS      ( 1000 )
 
 /*-----------------------------------------------------------*/
 
