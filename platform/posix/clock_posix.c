@@ -62,14 +62,10 @@ uint32_t Clock_GetTimeMs( void )
 void Clock_SleepMs( uint32_t sleepTimeMs )
 {
     /* Convert parameter to timespec. */
-    struct timespec sleepTime =
-    {
-        .tv_sec = sleepTimeMs / MILLISECONDS_PER_SECOND,
-        .tv_nsec = ( sleepTimeMs % MILLISECONDS_PER_SECOND ) * NANOSECONDS_PER_MILLISECOND
-    };
+    struct timespec sleepTime = { 0 };
+    sleepTime.tv_sec = sleepTimeMs / MILLISECONDS_PER_SECOND;
+    sleepTime.tv_nsec = ( sleepTimeMs % MILLISECONDS_PER_SECOND ) * NANOSECONDS_PER_MILLISECOND;
 
     /* High resolution sleep. */
     ( void ) nanosleep( &sleepTime, NULL );
-
-    return;
 }
