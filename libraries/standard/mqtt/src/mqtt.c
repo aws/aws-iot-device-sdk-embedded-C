@@ -328,23 +328,15 @@ static int32_t sendPacket( MQTTContext_t * pContext,
                                                        pIndex,
                                                        bytesRemaining );
 
+        /* It is a bug in the application's transport send implementation if
+         * more bytes than expected are sent. */
+        assert( bytesSent <= ( int32_t ) bytesRemaining );
+
         if( bytesSent <= 0 )
         {
             LogError( ( "Transport send failed. Error code=%d.", bytesSent ) );
             totalBytesSent = bytesSent;
             sendError = true;
-        }
-        else if( ( size_t ) bytesSent > bytesRemaining )
-        {
-            LogError( ( "Transport send returned more bytes than expected: "
-                        "BytesExpected=%lu, BytesReceived=%d.",
-                        bytesRemaining,
-                        bytesSent ) );
-            sendError = true;
-
-            /* In this error condition, the total amount of bytes sent is
-             * not saved. The returned value from this function will be less
-             * than bytesToSend, which will be seen as an error. */
         }
         else
         {
@@ -441,24 +433,16 @@ static int32_t recvExact( const MQTTContext_t * pContext,
                                pIndex,
                                bytesRemaining );
 
+        /* It is a bug in the application's transport receive implementation if
+         * more bytes than expected are received. */
+        assert( bytesRecvd <= ( int32_t ) bytesRemaining );
+
         if( bytesRecvd < 0 )
         {
             LogError( ( "Network error while receiving packet: ReturnCode=%d.",
                         bytesRecvd ) );
             totalBytesRecvd = bytesRecvd;
             receiveError = true;
-        }
-        else if( bytesRecvd > ( int32_t ) bytesRemaining )
-        {
-            LogError( ( "Transport receive returned more bytes than expected: "
-                        "BytesExpected=%lu, BytesReceived=%d.",
-                        bytesRemaining,
-                        bytesRecvd ) );
-            receiveError = true;
-
-            /* In this error condition, the total amount of bytes received is
-             * not saved. The returned value from this function will be less
-             * than bytesToRecv, which will be seen as an error. */
         }
         else
         {
