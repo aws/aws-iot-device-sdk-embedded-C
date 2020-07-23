@@ -30,7 +30,9 @@ typedef enum
     JSONSuccess,
     JSONIllegalDocument,
     JSONMaxDepthExceeded,
-    JSONNotFound
+    JSONNotFound,
+    JSONNullParameter,
+    JSONBadParameter
 } JSONStatus_t;
 
 /**
@@ -91,6 +93,7 @@ JSONStatus_t JSON_Validate( const char * buf,
  *     }
  *
  * @return #JSONSuccess if the queryKey is found and the value output;
+ * #JSONBadParameter if the queryKey is empty, or any subpart is empty;
  * #JSONIllegalDocument if the buffer contents are NOT valid JSON;
  * #JSONMaxDepthExceeded if object and array nesting exceeds a threshold;
  * #JSONNotFound if the queryKey is NOT found.

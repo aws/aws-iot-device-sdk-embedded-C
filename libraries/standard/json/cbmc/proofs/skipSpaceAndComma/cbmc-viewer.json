@@ -1,0 +1,7 @@
+{ "expected-missing-functions":
+  [
+
+  ],
+  "proof-name": "skipSpaceAndComma",
+  "proof-root": "libraries/standard/json/cbmc/proofs"
+}

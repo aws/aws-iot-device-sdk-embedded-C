@@ -1,0 +1,7 @@
+{ "expected-missing-functions":
+  [
+
+  ],
+  "proof-name": "skipUTF8",
+  "proof-root": "libraries/standard/json/cbmc/proofs"
+}

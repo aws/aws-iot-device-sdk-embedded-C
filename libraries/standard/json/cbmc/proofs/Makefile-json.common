@@ -1,0 +1,20 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+HARNESS_ENTRY=harness
+
+DEFINES += -DCBMC_MAX_BUFSIZE=$(CBMC_MAX_BUFSIZE)
+INCLUDES += -I$(PROOFDIR) -I$(CBMC_ROOT)/include
+
+PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
+ifneq (,$(wildcard glue.c))
+PROOF_SOURCES += $(PROOFDIR)/glue.c
+PROOF_SOURCES += $(CBMC_ROOT)/sources/skipGeneric.c
+endif
+
+PROJECT_SOURCES += $(PROOFDIR)/json.c
+
+include ../Makefile.common
+
+cleanclean: veryclean
+	-$(RM) $(PROOFDIR)/json.c
