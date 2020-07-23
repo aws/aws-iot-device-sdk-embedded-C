@@ -9,15 +9,12 @@ _default:
   allow:
     # Provide list of allowed targets [Accepts regex]
     - ".*utest.*"
-  c_flags:
-    # Provide list of c_flags common for all targets
-    - "-Wall -Wextra -Werror"
   output_loc: "bin/tests"
 
 
 #<target_name>:
-  #c_flags:
-    # Provide list of c_flags specific to target
+  #build_flags:
+    # Provide list of build_flags specific to target
     #- <flag1>
     #- <flag2>
     #- <flag3>
