@@ -123,8 +123,8 @@ struct MQTTContext
  *
  * @brief param[in] pContext The context to initialize.
  * @brief param[in] pTransportInterface The transport interface to use with the context.
- * @brief param[in] getTimeFunction The platform-specific time function to use with the context.
- * @brief param[in] userCallback The user-callback to use with the context to notify about
+ * @brief param[in] getTimeFunction The time utility function to use with the context.
+ * @brief param[in] userCallback The user callback to use with the context to notify about
  * incoming packet events.
  * @brief param[in] pNetworkBuffer Network buffer provided for the context.
  *
