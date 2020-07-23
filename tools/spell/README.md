@@ -7,9 +7,9 @@
    apt-get install getopt
    ```
 
-1. Add **tools/spell/ablexicon**, **tools/spell/extract-comments**, and **tools/spell/find-unknown-comment-words** to your system's PATH.
+1. Add the folder containing the **tools/spell/ablexicon**, **tools/spell/extract-comments**, and **tools/spell/find-unknown-comment-words** scripts to your system's PATH.
    ```shell
-   export PATH=<CSDK_ROOT>/tools/spell/ablexicon:tools/spell/extract-comments:<CSDK_ROOT>/tools/spell/find-unknown-comment-words:$PATH
+   export PATH=<CSDK_ROOT>/tools/spell:$PATH
    ```
 
 1. Ensure there does not exist a file called "lexicon.txt" in your library's directory. Run the following command to create a lexicon.txt for your library:  
