@@ -14,8 +14,8 @@ def log(message):
 
 
 def cli_config_build(args):
-    file = Path(args.config_file)
-    config = _read_config(file)
+    _file = Path(args.config_file)
+    config = _read_config(_file)
     build_flags = args.build_flags or _get_flags(config, "build_flags")
     c_flags = args.c_flags or _get_flags(config, "c_flags")
 
@@ -23,13 +23,14 @@ def cli_config_build(args):
 
 
 def cli_get_targets(args):
-    targets = _get_targets(args.build_path, args.pattern)
+    allow = args.allow or [""]
+    targets = _get_targets(args.build_path, allow)
     log(" ".join(targets))
 
 
 def cli_build_targets(args):
-    file = Path(args.config_file)
-    config = _read_config(file)
+    _file = Path(args.config_file)
+    config = _read_config(_file)
     default_config = config.get("_default", {})
     junit_filename = default_config.get("name", None)
     result = _build_targets(args.targets, args.src, args.build_path, config)
@@ -39,8 +40,8 @@ def cli_build_targets(args):
 
 
 def cli_run_targets(args):
-    file = Path(args.config_file)
-    config = _read_config(file)
+    _file = Path(args.config_file)
+    config = _read_config(_file)
     default_config = config.get("_default", {})
     junit_filename = default_config.get("name", None)
 
@@ -50,8 +51,8 @@ def cli_run_targets(args):
 
 
 def cli_build(args):
-    file = Path(args.config_file)
-    config = _read_config(file)
+    _file = Path(args.config_file)
+    config = _read_config(_file)
     default_config = config.get("_default", {})
     junit_filename = default_config.get("name", None)
 
@@ -59,7 +60,7 @@ def cli_build(args):
     c_flags = _get_flags(config, "c_flags")
     _config_build(args.src, args.build_path, build_flags, c_flags)
 
-    allowed = default_config.get("allow", [""])
+    allowed = args.allow or default_config.get("allow", [""])
     targets = args.targets or _get_targets(args.build_path, allowed)
 
     build_result = _build_targets(targets, args.src, args.build_path, config)
@@ -69,8 +70,8 @@ def cli_build(args):
 
 
 def cli_run(args):
-    file = Path(args.config_file)
-    config = _read_config(file)
+    _file = Path(args.config_file)
+    config = _read_config(_file)
     default_config = config.get("_default", {})
     junit_filename = default_config.get("name", None)
 
@@ -78,7 +79,7 @@ def cli_run(args):
     c_flags = _get_flags(config, "c_flags")
     _config_build(args.src, args.build_path, build_flags, c_flags)
 
-    allowed = default_config.get("allow", [""])
+    allowed = args.allow or default_config.get("allow", [""])
     targets = args.targets or _get_targets(args.build_path, allowed)
 
     result = _run_targets(targets, args.src, args.build_path, config)
@@ -113,9 +114,7 @@ def get_parser():
     new_argument(
         "--c-flags", nargs="+", help="Optional c_flags required to configure build",
     )
-    new_argument(
-        "--pattern", nargs="+", default=[""], help="Pattern for target selection"
-    )
+    new_argument("--allow", nargs="+", help="Pattern for target selection")
 
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers()
@@ -132,7 +131,7 @@ def get_parser():
     cmd_config_build.set_defaults(func="config-build")
 
     cmd_get_targets = subparsers.add_parser("get-targets")
-    add_arguments(cmd_get_targets, "--build-path", "--pattern")
+    add_arguments(cmd_get_targets, "--build-path", "--allow")
     cmd_get_targets.set_defaults(func="get-targets")
 
     cmd_build_targets = subparsers.add_parser("build-targets")
@@ -148,12 +147,16 @@ def get_parser():
     cmd_run_targets.set_defaults(func="run-targets")
 
     cmd_build = subparsers.add_parser("build")
-    add_arguments(cmd_build, "--config-file", "--src", "--build-path", "--build-flags")
+    add_arguments(
+        cmd_build, "--config-file", "--src", "--build-path", "--build-flags", "--allow"
+    )
     add_argument(cmd_build, "--targets", required=False)
     cmd_build.set_defaults(func="build")
 
     cmd_run = subparsers.add_parser("run")
-    add_arguments(cmd_run, "--config-file", "--src", "--build-path", "--build-flags")
+    add_arguments(
+        cmd_run, "--config-file", "--src", "--build-path", "--build-flags", "--allow"
+    )
     add_argument(cmd_run, "--targets", required=False)
     cmd_run.set_defaults(func="run")
     return parser
@@ -199,12 +202,11 @@ def _get_flags(config, flag_type, target="all"):
     return flags
 
 
-def _get_targets(build_path, pattern):
+def _get_targets(build_path, allow):
     targets = _run_cmd(f"make help -C {build_path} | tr -d '. '")
     targets = [t.strip() for t in targets.split()]
-    pattern = "|".join(pattern)
-    print(pattern)
-    targets = [target for target in targets if re.search(pattern, target)]
+    allow = "|".join(allow)
+    targets = [target for target in targets if re.search(allow, target)]
     return targets
 
 
