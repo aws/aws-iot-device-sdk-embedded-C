@@ -13,8 +13,8 @@ _default:
 
 
 #<target_name>:
-  #build_flags:
-    # Provide list of build_flags specific to target
+  #c_flags:
+    # Provide list of c_flags specific to target
     #- <flag1>
     #- <flag2>
     #- <flag3>

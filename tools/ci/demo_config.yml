@@ -5,28 +5,33 @@ _default:
   name: demos
   build_flags:
     # Provide list of flags required for configuring build using cmake
-    - "-DCMAKE_C_FLAGS='-Wall -Wextra -Werror'"
+    - ""
+  c_flags:
+    # Provide list of c_flags common to all target
+    - -Wall
+    - -Wextra
+    - -Werror
   allow:
     # Provide list of allowed targets [Accepts regex]
-    - ".*_demo_.*"
+    - "_demo_"
   output_loc: "bin"
 
 
 #<target_name>:
-  #build_flags:
-  # Provide list of build_flags specific to target
+  #c_flags:
+    # Provide list of c_flags specific to target
     #- <flag1>
     #- <flag2>
     #- <flag3>
     
 mqtt_demo_mutual_auth:
-  build_flags:
-    - '-DAWS_IOT_ENDPOINT="aws-iot-endpoint"'
-    - '-DCLIENT_CERT_PATH="certificate-path"'
-    - '-DCLIENT_PRIVATE_KEY_PATH="private-key-path"' 
+  c_flags:
+    - -DAWS_IOT_ENDPOINT='aws-iot-endpoint'
+    - -DCLIENT_CERT_PATH="certificate-path"
+    - -DCLIENT_PRIVATE_KEY_PATH="private-key-path" 
 
 http_demo_mutual_auth:
-  build_flags:
-    - '-DAWS_IOT_ENDPOINT="aws-iot-endpoint"'
-    - '-DCLIENT_CERT_PATH="certificate-path"'
-    - '-DCLIENT_PRIVATE_KEY_PATH="private-key-path"' 
+  c_flags:
+    - -DAWS_IOT_ENDPOINT="aws-iot-endpoint"
+    - -DCLIENT_CERT_PATH="certificate-path"
+    - -DCLIENT_PRIVATE_KEY_PATH="private-key-path"

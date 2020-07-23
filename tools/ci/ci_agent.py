@@ -16,9 +16,10 @@ def log(message):
 def cli_config_build(args):
     file = Path(args.config_file)
     config = _read_config(file)
-    build_flags = args.build_flags or _get_build_flags(config)
+    build_flags = args.build_flags or _get_flags(config, "build_flags")
+    c_flags = args.c_flags or _get_flags(config, "c_flags")
 
-    _config_build(args.src, build_flags, args.build_path)
+    _config_build(args.src, args.build_path, build_flags, c_flags)
 
 
 def cli_get_targets(args):
@@ -54,8 +55,9 @@ def cli_build(args):
     default_config = config.get("_default", {})
     junit_filename = default_config.get("name", None)
 
-    build_flags = _get_build_flags(config)
-    _config_build(args.src, build_flags, args.build_path)
+    build_flags = _get_flags(config, "build_flags")
+    c_flags = _get_flags(config, "c_flags")
+    _config_build(args.src, args.build_path, build_flags, c_flags)
 
     allowed = default_config.get("allow", [""])
     targets = args.targets or _get_targets(args.build_path, allowed)
@@ -72,8 +74,9 @@ def cli_run(args):
     default_config = config.get("_default", {})
     junit_filename = default_config.get("name", None)
 
-    build_flags = _get_build_flags(config)
-    _config_build(args.src, build_flags, args.build_path)
+    build_flags = _get_flags(config, "build_flags")
+    c_flags = _get_flags(config, "c_flags")
+    _config_build(args.src, args.build_path, build_flags, c_flags)
 
     allowed = default_config.get("allow", [""])
     targets = args.targets or _get_targets(args.build_path, allowed)
@@ -108,6 +111,9 @@ def get_parser():
         "--build-flags", nargs="+", help="Optional flags required to configure build",
     )
     new_argument(
+        "--c-flags", nargs="+", help="Optional c_flags required to configure build",
+    )
+    new_argument(
         "--pattern", nargs="+", default=[""], help="Pattern for target selection"
     )
 
@@ -116,7 +122,12 @@ def get_parser():
 
     cmd_config_build = subparsers.add_parser("configure-build")
     add_arguments(
-        cmd_config_build, "--config-file", "--src", "--build-path", "--build-flags"
+        cmd_config_build,
+        "--config-file",
+        "--src",
+        "--build-path",
+        "--build-flags",
+        "--c-flags",
     )
     cmd_config_build.set_defaults(func="config-build")
 
@@ -169,19 +180,23 @@ def _cli_invoke_next(args_list, prefix="cli"):
     return func(*func_args)
 
 
-def _config_build(src, build_flags, build_path):
+def _config_build(src, build_path, build_flags, c_flags):
     build_flags = " ".join(build_flags)
+    c_flags = " ".join(c_flags).replace("'", '"').replace('"', '\\"')
+    c_flags = f"-DCMAKE_C_FLAGS='{c_flags}'"
     _del_dir(build_path)
-    _run_cmd(f'cmake -S {src} -B {build_path} {build_flags}  -G "Unix Makefiles"')
+    _run_cmd(
+        f'cmake -S {src} -B {build_path} {build_flags} {c_flags} -G "Unix Makefiles"'
+    )
 
 
-def _get_build_flags(config, target="all"):
+def _get_flags(config, flag_type, target="all"):
     targets = config.keys() if target == "all" else ["_default", target]
 
-    build_flags = []
+    flags = []
     for _target in targets:
-        build_flags += config.get(_target, {}).get("build_flags", [])
-    return build_flags
+        flags += config.get(_target, {}).get(flag_type, [])
+    return flags
 
 
 def _get_targets(build_path, pattern):
@@ -193,12 +208,12 @@ def _get_targets(build_path, pattern):
     return targets
 
 
-def _build_target(target, src, build_path, build_flags):
+def _build_target(target, src, build_path, build_flags, c_flags):
     log("\n----------------------------------------------------------------")
     log(f"Building target: {target}")
     log("----------------------------------------------------------------")
 
-    _config_build(src, build_flags, build_path)
+    _config_build(src, build_path, build_flags, c_flags)
 
     cmd = f"make -C {build_path} {target}"
     return _run_cmd(cmd)
@@ -211,8 +226,9 @@ def _build_targets(targets, src, build_path, config):
         target_result = result.setdefault(target, {})
         target_build_result = target_result.setdefault("Build", {})
         try:
-            build_flags = _get_build_flags(config, target)
-            out = _build_target(target, src, build_path, build_flags)
+            build_flags = _get_flags(config, "build_flags", target)
+            c_flags = _get_flags(config, "c_flags", target)
+            out = _build_target(target, src, build_path, build_flags, c_flags)
             log(out)
             target_build_result["status"] = "PASS"
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as err:
@@ -237,8 +253,9 @@ def _run_targets(targets, src, build_path, config):
 
         target_build_result = target_result.setdefault("Build", {})
         try:
-            build_flags = _get_build_flags(config, target)
-            out = _build_target(target, src, build_path, build_flags)
+            build_flags = _get_flags(config, "build_flags", target)
+            c_flags = _get_flags(config, "c_flags", target)
+            out = _build_target(target, src, build_path, build_flags, c_flags)
             log(out)
             target_build_result["status"] = "PASS"
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as err:
