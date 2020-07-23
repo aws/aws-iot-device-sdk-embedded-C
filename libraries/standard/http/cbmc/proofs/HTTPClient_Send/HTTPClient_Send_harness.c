@@ -51,21 +51,31 @@ void harness()
     pResponse = allocateHttpResponse( NULL );
     __CPROVER_assume( isValidHttpResponse( pResponse ) );
 
-    if (nondet_bool()) {
-	transportInterface.send = nondet_bool() ? NULL : TransportInterfaceSendStub;
-	transportInterface.recv = nondet_bool() ? NULL : TransportInterfaceReceiveStub;
-	HTTPClient_Send( &transportInterface,
-			 pRequestHeaders,
-			 pRequestBodyBuf,
-			 reqBodyBufLen,
-			 pResponse,
-			 sendFlags );
-    } else {
-	HTTPClient_Send( NULL,
-			 pRequestHeaders,
-			 pRequestBodyBuf,
-			 reqBodyBufLen,
-			 pResponse,
-			 sendFlags );
+    /* Initialize and make assumptions for transport interface.
+     * Unfortunately, we couldn't get this to run without allocating transport
+     * interface on the stack. */
+    ( void ) allocateTransportInterface( &transportInterface );
+
+    if( nondet_bool() )
+    {
+        /* Ideally, we want to set the function pointers below with __CPROVER_assume(),
+         * but doing it that way makes the proof run out of memory. */
+        transportInterface.send = nondet_bool() ? NULL : TransportInterfaceSendStub;
+        transportInterface.recv = nondet_bool() ? NULL : TransportInterfaceReceiveStub;
+        HTTPClient_Send( &transportInterface,
+                         pRequestHeaders,
+                         pRequestBodyBuf,
+                         reqBodyBufLen,
+                         pResponse,
+                         sendFlags );
+    }
+    else
+    {
+        HTTPClient_Send( NULL,
+                         pRequestHeaders,
+                         pRequestBodyBuf,
+                         reqBodyBufLen,
+                         pResponse,
+                         sendFlags );
     }
 }
