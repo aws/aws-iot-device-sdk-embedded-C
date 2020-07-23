@@ -963,6 +963,7 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
     MQTTPacketInfo_t incomingPacket;
 
     assert( pContext != NULL );
+    assert( pContext->networkBuffer.pBuffer != NULL );
 
     status = MQTT_GetIncomingPacketTypeAndLength( pContext->transportInterface.recv,
                                                   pContext->transportInterface.pNetworkContext,
@@ -991,17 +992,9 @@ static MQTTStatus_t receiveSingleIteration( MQTTContext_t * pContext,
     }
     else
     {
-        if( pContext->networkBuffer.pBuffer != NULL )
-        {
-            /* Receive packet. Remaining time is recalculated before calling this
-             * function. */
-            status = receivePacket( pContext, incomingPacket, remainingTimeMs );
-        }
-        else
-        {
-            LogError( ( "The MQTT context's networkBuffer must not be NULL." ) );
-            status = MQTTBadParameter;
-        }
+        /* Receive packet. Remaining time is recalculated before calling this
+         * function. */
+        status = receivePacket( pContext, incomingPacket, remainingTimeMs );
     }
 
     /* Handle received packet. If no data was read then this will not execute. */
@@ -1795,20 +1788,24 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
     MQTTGetCurrentTimeFunc_t getTimeStampMs = NULL;
     uint32_t entryTimeMs = 0U, remainingTimeMs = timeoutMs, elapsedTimeMs = 0U;
 
-    if( ( pContext != NULL ) && ( pContext->callbacks.getTime != NULL ) )
-    {
-        getTimeStampMs = pContext->callbacks.getTime;
-        entryTimeMs = getTimeStampMs();
-        status = MQTTSuccess;
-        pContext->controlPacketSent = false;
-    }
-    else if( pContext == NULL )
+    if( pContext == NULL )
     {
         LogError( ( "MQTT Context cannot be NULL." ) );
     }
-    else
+    else if( pContext->callbacks.getTime == NULL )
     {
         LogError( ( "MQTT Context must set callbacks.getTime." ) );
+    }
+    else if( pContext->networkBuffer.pBuffer == NULL )
+    {
+        LogError( ( "The MQTT context's networkBuffer must not be NULL." ) );
+    }
+    else
+    {
+        getTimeStampMs = pContext->callbacks.getTime;
+        entryTimeMs = getTimeStampMs();
+        pContext->controlPacketSent = false;
+        status = MQTTSuccess;
     }
 
     while( status == MQTTSuccess )
@@ -1849,19 +1846,23 @@ MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext,
     MQTTGetCurrentTimeFunc_t getTimeStampMs = NULL;
     uint32_t entryTimeMs = 0U, remainingTimeMs = timeoutMs, elapsedTimeMs = 0U;
 
-    if( ( pContext != NULL ) && ( pContext->callbacks.getTime != NULL ) )
+    if( pContext == NULL )
+    {
+        LogError( ( "MQTT Context cannot be NULL." ) );
+    }
+    else if( pContext->callbacks.getTime == NULL )
+    {
+        LogError( ( "MQTT Context must set callbacks.getTime." ) );
+    }
+    else if( pContext->networkBuffer.pBuffer == NULL )
+    {
+        LogError( ( "The MQTT context's networkBuffer must not be NULL." ) );
+    }
+    else
     {
         getTimeStampMs = pContext->callbacks.getTime;
         entryTimeMs = getTimeStampMs();
         status = MQTTSuccess;
-    }
-    else if( pContext == NULL )
-    {
-        LogError( ( "MQTT Context cannot be NULL." ) );
-    }
-    else
-    {
-        LogError( ( "MQTT Context must set callbacks.getTime." ) );
     }
 
     while( status == MQTTSuccess )
