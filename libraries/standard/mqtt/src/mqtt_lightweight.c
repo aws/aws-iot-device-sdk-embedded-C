@@ -211,7 +211,7 @@ static MQTTStatus_t calculateSubscriptionPacketSize( const MQTTSubscribeInfo_t *
  * @param[in] subscriptionCount The number of elements in pSubscriptionList.
  * @param[in] packetId Packet identifier.
  * @param[in] remainingLength Remaining length of the packet.
- * @param[in] pBuffer Buffer for packet serialization.
+ * @param[in] pFixedBuffer Buffer for packet serialization.
  *
  * @return #MQTTNoMemory if pBuffer is too small to hold the MQTT packet;
  * #MQTTBadParameter if invalid parameters are passed;
@@ -221,7 +221,7 @@ static MQTTStatus_t validateSubscriptionSerializeParams( const MQTTSubscribeInfo
                                                          size_t subscriptionCount,
                                                          uint16_t packetId,
                                                          size_t remainingLength,
-                                                         const MQTTFixedBuffer_t * pBuffer );
+                                                         const MQTTFixedBuffer_t * pFixedBuffer );
 
 /**
  * @brief Serialize an MQTT CONNECT packet in the given buffer.
@@ -229,12 +229,12 @@ static MQTTStatus_t validateSubscriptionSerializeParams( const MQTTSubscribeInfo
  * @param[in] pConnectInfo MQTT CONNECT packet parameters.
  * @param[in] pWillInfo Last Will and Testament. Pass NULL if not used.
  * @param[in] remainingLength Remaining Length of MQTT CONNECT packet.
- * @param[out] pBuffer Buffer for packet serialization.
+ * @param[out] pFixedBuffer Buffer for packet serialization.
  */
 static void serializeConnectPacket( const MQTTConnectInfo_t * pConnectInfo,
                                     const MQTTPublishInfo_t * pWillInfo,
                                     size_t remainingLength,
-                                    const MQTTFixedBuffer_t * pBuffer );
+                                    const MQTTFixedBuffer_t * pFixedBuffer );
 
 /**
  * Prints the appropriate message for the CONNACK response code if logs are
@@ -496,7 +496,7 @@ static void serializePublishCommon( const MQTTPublishInfo_t * pPublishInfo,
     /* Packet Id should be non zero for QoS1 and QoS2. */
     assert( ( pPublishInfo->qos == MQTTQoS0 ) || ( packetIdentifier != 0U ) );
     /* Duplicate flag should be set only for Qos1 or Qos2. */
-    assert( !( pPublishInfo->dup ) || ( pPublishInfo->qos != MQTTQoS0 ) );
+    assert( ( pPublishInfo->dup == false ) || ( pPublishInfo->qos != MQTTQoS0 ) );
 
     /* Get the start address of the buffer. */
     pIndex = pFixedBuffer->pBuffer;
@@ -1230,16 +1230,16 @@ static MQTTStatus_t deserializePingresp( const MQTTPacketInfo_t * pPingresp )
 static void serializeConnectPacket( const MQTTConnectInfo_t * pConnectInfo,
                                     const MQTTPublishInfo_t * pWillInfo,
                                     size_t remainingLength,
-                                    const MQTTFixedBuffer_t * pBuffer )
+                                    const MQTTFixedBuffer_t * pFixedBuffer )
 {
     uint8_t connectFlags = 0U;
     uint8_t * pIndex = NULL;
 
     assert( pConnectInfo != NULL );
-    assert( pBuffer != NULL );
-    assert( pBuffer->pBuffer != NULL );
+    assert( pFixedBuffer != NULL );
+    assert( pFixedBuffer->pBuffer != NULL );
 
-    pIndex = pBuffer->pBuffer;
+    pIndex = pFixedBuffer->pBuffer;
     /* The first byte in the CONNECT packet is the control packet type. */
     *pIndex = MQTT_PACKET_TYPE_CONNECT;
     pIndex++;
@@ -1337,11 +1337,11 @@ static void serializeConnectPacket( const MQTTConnectInfo_t * pConnectInfo,
     }
 
     LogDebug( ( "Length of serialized CONNECT packet is %lu.",
-                ( ( size_t ) ( pIndex - pBuffer->pBuffer ) ) ) );
+                ( ( size_t ) ( pIndex - pFixedBuffer->pBuffer ) ) ) );
 
     /* Ensure that the difference between the end and beginning of the buffer
      * is less than the buffer size. */
-    assert( ( ( size_t ) ( pIndex - pBuffer->pBuffer ) ) <= pBuffer->size );
+    assert( ( ( size_t ) ( pIndex - pFixedBuffer->pBuffer ) ) <= pFixedBuffer->size );
 }
 
 /*-----------------------------------------------------------*/
@@ -1553,7 +1553,7 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionL
                                       size_t subscriptionCount,
                                       uint16_t packetId,
                                       size_t remainingLength,
-                                      const MQTTFixedBuffer_t * pBuffer )
+                                      const MQTTFixedBuffer_t * pFixedBuffer )
 {
     size_t i = 0;
     uint8_t * pIndex = NULL;
@@ -1564,11 +1564,11 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionL
                                              subscriptionCount,
                                              packetId,
                                              remainingLength,
-                                             pBuffer );
+                                             pFixedBuffer );
 
     if( status == MQTTSuccess )
     {
-        pIndex = pBuffer->pBuffer;
+        pIndex = pFixedBuffer->pBuffer;
 
         /* The first byte in SUBSCRIBE is the packet type. */
         *pIndex = MQTT_PACKET_TYPE_SUBSCRIBE;
@@ -1595,7 +1595,7 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionL
         }
 
         LogDebug( ( "Length of serialized SUBSCRIBE packet is %lu.",
-                    ( ( size_t ) ( pIndex - pBuffer->pBuffer ) ) ) );
+                    ( ( size_t ) ( pIndex - pFixedBuffer->pBuffer ) ) ) );
     }
 
     return status;
@@ -1652,7 +1652,7 @@ MQTTStatus_t MQTT_SerializeUnsubscribe( const MQTTSubscribeInfo_t * pSubscriptio
                                         size_t subscriptionCount,
                                         uint16_t packetId,
                                         size_t remainingLength,
-                                        const MQTTFixedBuffer_t * pBuffer )
+                                        const MQTTFixedBuffer_t * pFixedBuffer )
 {
     MQTTStatus_t status = MQTTSuccess;
     size_t i = 0;
@@ -1663,12 +1663,12 @@ MQTTStatus_t MQTT_SerializeUnsubscribe( const MQTTSubscribeInfo_t * pSubscriptio
                                                   subscriptionCount,
                                                   packetId,
                                                   remainingLength,
-                                                  pBuffer );
+                                                  pFixedBuffer );
 
     if( status == MQTTSuccess )
     {
         /* Get the start of the buffer to the iterator variable. */
-        pIndex = pBuffer->pBuffer;
+        pIndex = pFixedBuffer->pBuffer;
 
         /* The first byte in UNSUBSCRIBE is the packet type. */
         *pIndex = MQTT_PACKET_TYPE_UNSUBSCRIBE;
@@ -1691,7 +1691,7 @@ MQTTStatus_t MQTT_SerializeUnsubscribe( const MQTTSubscribeInfo_t * pSubscriptio
         }
 
         LogDebug( ( "Length of serialized UNSUBSCRIBE packet is %lu.",
-                    ( ( size_t ) ( pIndex - pBuffer->pBuffer ) ) ) );
+                    ( ( size_t ) ( pIndex - pFixedBuffer->pBuffer ) ) ) );
     }
 
     return status;
@@ -1770,7 +1770,7 @@ MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * pPublishInfo,
 
     /* For serializing a publish, if there exists a payload, then the buffer
      * cannot be NULL. */
-    else if( ( pPublishInfo->payloadLength > 0 ) && ( pPublishInfo->pPayload == NULL ) )
+    else if( ( pPublishInfo->payloadLength > 0U ) && ( pPublishInfo->pPayload == NULL ) )
     {
         LogError( ( "A nonzero payload length requires a non-NULL payload: "
                     "payloadLength=%lu, pPayload=%p.",
@@ -1792,7 +1792,7 @@ MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * pPublishInfo,
                     pPublishInfo->qos ) );
         status = MQTTBadParameter;
     }
-    else if( ( pPublishInfo->dup ) && ( pPublishInfo->qos == MQTTQoS0 ) )
+    else if( ( pPublishInfo->dup == true ) && ( pPublishInfo->qos == MQTTQoS0 ) )
     {
         LogError( ( "Duplicate flag is set for PUBLISH with Qos 0," ) );
         status = MQTTBadParameter;
@@ -1867,7 +1867,7 @@ MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * pPublishInfo
                     pPublishInfo->qos ) );
         status = MQTTBadParameter;
     }
-    else if( ( pPublishInfo->dup ) && ( pPublishInfo->qos == MQTTQoS0 ) )
+    else if( ( pPublishInfo->dup == true ) && ( pPublishInfo->qos == MQTTQoS0 ) )
     {
         LogError( ( "Duplicate flag is set for PUBLISH with Qos 0," ) );
         status = MQTTBadParameter;

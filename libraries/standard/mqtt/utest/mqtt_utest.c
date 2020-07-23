@@ -256,6 +256,20 @@ static int32_t transportSendFailure( NetworkContext_t * pNetworkContext,
 }
 
 /**
+ * @brief Mocked transport send that fails because more than bytesToWrite is
+ * returned.
+ */
+static int32_t transportSendFailureTooManyBytes( NetworkContext_t * pNetworkContext,
+                                                 const void * pBuffer,
+                                                 size_t bytesToWrite )
+{
+    ( void ) pNetworkContext;
+    ( void ) pBuffer;
+    ( void ) bytesToWrite;
+    return bytesToWrite + 1;
+}
+
+/**
  * @brief Mocked transport send that succeeds then fails.
  */
 static int32_t transportSendSucceedThenFail( NetworkContext_t * pNetworkContext,
@@ -271,6 +285,29 @@ static int32_t transportSendSucceedThenFail( NetworkContext_t * pNetworkContext,
     if( counter++ )
     {
         retVal = -1;
+        counter = 0;
+    }
+
+    return retVal;
+}
+
+/**
+ * @brief Mocked transport send that succeeds then fails with sending more bytes
+ * than expected.
+ */
+static int32_t transportSendSucceedThenFailTooManyBytes( NetworkContext_t * pNetworkContext,
+                                                         const void * pMessage,
+                                                         size_t bytesToSend )
+{
+    int32_t retVal = bytesToSend;
+    static int counter = 0;
+
+    ( void ) pNetworkContext;
+    ( void ) pMessage;
+
+    if( counter++ )
+    {
+        retVal = bytesToSend + 1;
         counter = 0;
     }
 
@@ -306,6 +343,20 @@ static int32_t transportRecvFailure( NetworkContext_t * pNetworkContext,
     ( void ) pBuffer;
     ( void ) bytesToRead;
     return -1;
+}
+
+/**
+ * @brief Mocked transport receive that fails because more than bytesToRead is
+ * returned.
+ */
+static int32_t transportRecvFailureTooManyBytes( NetworkContext_t * pNetworkContext,
+                                                 void * pBuffer,
+                                                 size_t bytesToRead )
+{
+    ( void ) pNetworkContext;
+    ( void ) pBuffer;
+    ( void ) bytesToRead;
+    return bytesToRead + 1;
 }
 
 /**
@@ -659,6 +710,15 @@ void test_MQTT_Connect_sendConnect( void )
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
 
+    mqttContext.transportInterface.send = transportSendFailureTooManyBytes;
+    MQTT_GetConnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetConnectPacketSize_IgnoreArg_pPacketSize();
+    MQTT_GetConnectPacketSize_IgnoreArg_pRemainingLength();
+    MQTT_GetConnectPacketSize_ReturnThruPtr_pPacketSize( &packetSize );
+    MQTT_GetConnectPacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
+    TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
+
     /* Send the CONNECT successfully. This provides branch coverage for sendPacket. */
     mqttContext.transportInterface.send = transportSendSuccess;
     MQTT_GetConnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -719,6 +779,17 @@ void test_MQTT_Connect_receiveConnack( void )
     incomingPacket.remainingLength = 2;
     timeout = 2;
     mqttContext.transportInterface.recv = transportRecvFailure;
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
+    TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
+
+    /* Test a transport receive failure again, but with receiving more bytes
+     * expected. */
+    incomingPacket.type = MQTT_PACKET_TYPE_CONNACK;
+    incomingPacket.remainingLength = 2;
+    timeout = 2;
+    mqttContext.transportInterface.recv = transportRecvFailureTooManyBytes;
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, timeout, &sessionPresent );
@@ -1191,9 +1262,26 @@ void test_MQTT_Publish( void )
     status = MQTT_Publish( &mqttContext, &publishInfo, 0 );
     TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
 
+    /* Test send again with more bytes than expected returned. */
+    mqttContext.transportInterface.send = transportSendFailureTooManyBytes;
+    headerSize = 1;
+    MQTT_SerializePublishHeader_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_SerializePublishHeader_ReturnThruPtr_pHeaderSize( &headerSize );
+    status = MQTT_Publish( &mqttContext, &publishInfo, 0 );
+    TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
+
     /* We want to test the first call to sendPacket within sendPublish succeeding,
      * and the second one failing. */
     mqttContext.transportInterface.send = transportSendSucceedThenFail;
+    MQTT_SerializePublishHeader_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_SerializePublishHeader_ReturnThruPtr_pHeaderSize( &headerSize );
+    publishInfo.pPayload = "Test";
+    publishInfo.payloadLength = 4;
+    status = MQTT_Publish( &mqttContext, &publishInfo, 0 );
+    TEST_ASSERT_EQUAL_INT( MQTTSendFailed, status );
+
+    /* Test again failing when more bytes than expected are sent. */
+    mqttContext.transportInterface.send = transportSendSucceedThenFailTooManyBytes;
     MQTT_SerializePublishHeader_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_SerializePublishHeader_ReturnThruPtr_pHeaderSize( &headerSize );
     publishInfo.pPayload = "Test";
@@ -1288,7 +1376,15 @@ void test_MQTT_Disconnect( void )
     status = MQTT_Disconnect( NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
-    /* Send failure. */
+    /* Send failure with network error. */
+    MQTT_GetDisconnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetDisconnectPacketSize_ReturnThruPtr_pPacketSize( &disconnectSize );
+    MQTT_SerializeDisconnect_ExpectAnyArgsAndReturn( MQTTSuccess );
+    status = MQTT_Disconnect( &mqttContext );
+    TEST_ASSERT_EQUAL( MQTTSendFailed, status );
+
+    /* Send failure with more bytes than expected. */
+    mqttContext.transportInterface.send = transportSendFailureTooManyBytes;
     MQTT_GetDisconnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetDisconnectPacketSize_ReturnThruPtr_pPacketSize( &disconnectSize );
     MQTT_SerializeDisconnect_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -1363,6 +1459,14 @@ void test_MQTT_ProcessLoop_Invalid_Params( void )
 
     /* Get time function cannot be NULL. */
     context.callbacks.getTime = NULL;
+    mqttStatus = MQTT_ProcessLoop( &context, MQTT_NO_TIMEOUT_MS );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
+    /* Restore the time function for the next test. */
+    context.callbacks.getTime = getTime;
+
+    /* The fixed network buffer cannot be NULL. */
+    context.networkBuffer.pBuffer = NULL;
+    MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
     mqttStatus = MQTT_ProcessLoop( &context, MQTT_NO_TIMEOUT_MS );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 }
@@ -1968,6 +2072,17 @@ void test_MQTT_Subscribe_error_paths( void )
     /* Expect the above calls when running MQTT_Subscribe. */
     mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID );
     TEST_ASSERT_EQUAL( MQTTSendFailed, mqttStatus );
+
+    /* Test a failure is returned when receiving too many bytes from transport
+     * send. */
+    context.transportInterface.send = transportSendFailureTooManyBytes;
+    MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetSubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
+    MQTT_GetSubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
+    MQTT_SerializeSubscribe_ExpectAnyArgsAndReturn( MQTTSuccess );
+    /* Expect the above calls when running MQTT_Subscribe. */
+    mqttStatus = MQTT_Subscribe( &context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID );
+    TEST_ASSERT_EQUAL( MQTTSendFailed, mqttStatus );
 }
 
 /* ========================================================================== */
@@ -2068,6 +2183,17 @@ void test_MQTT_Unsubscribe_error_path( void )
     /* Expect the above calls when running MQTT_Unsubscribe. */
     mqttStatus = MQTT_Unsubscribe( &context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID );
     TEST_ASSERT_EQUAL( MQTTSendFailed, mqttStatus );
+
+    /* Test that MQTTSendFailed is returned when receiving too many bytes from
+     * the transport send. */
+    context.transportInterface.send = transportSendFailureTooManyBytes;
+    MQTT_GetUnsubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetUnsubscribePacketSize_ReturnThruPtr_pPacketSize( &packetSize );
+    MQTT_GetUnsubscribePacketSize_ReturnThruPtr_pRemainingLength( &remainingLength );
+    MQTT_SerializeUnsubscribe_ExpectAnyArgsAndReturn( MQTTSuccess );
+    /* Expect the above calls when running MQTT_Unsubscribe. */
+    mqttStatus = MQTT_Unsubscribe( &context, &subscribeInfo, 1, MQTT_FIRST_VALID_PACKET_ID );
+    TEST_ASSERT_EQUAL( MQTTSendFailed, mqttStatus );
 }
 
 /* ========================================================================== */
@@ -2134,8 +2260,24 @@ void test_MQTT_Ping_error_path( void )
     setupCallbacks( &callbacks );
     setupNetworkBuffer( &networkBuffer );
 
+    /* Test a network error is returned from sending the PING packet over the
+     * transport send . */
     transport.send = transportSendFailure;
     transport.recv = transportRecvFailure;
+
+    /* Initialize context. */
+    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    /* Verify MQTTSendFailed is propagated when transport interface returns an error. */
+    MQTT_GetPingreqPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_GetPingreqPacketSize_ReturnThruPtr_pPacketSize( &pingreqSize );
+    MQTT_SerializePingreq_ExpectAnyArgsAndReturn( MQTTSuccess );
+    /* Expect the above calls when running MQTT_Ping. */
+    mqttStatus = MQTT_Ping( &context );
+    TEST_ASSERT_EQUAL( MQTTSendFailed, mqttStatus );
+
+    /* Test more bytes than expected are received from sending the PING packet. */
+    transport.send = transportSendFailureTooManyBytes;
 
     /* Initialize context. */
     mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
