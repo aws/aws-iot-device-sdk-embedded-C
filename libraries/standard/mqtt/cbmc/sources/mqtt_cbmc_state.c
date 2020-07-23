@@ -20,7 +20,11 @@
  */
 #include <stdint.h>
 #include <stdlib.h>
+#include "mqtt.h"
 #include "mqtt_cbmc_state.h"
+#include "network_interface_stubs.h"
+#include "get_time_stub.h"
+#include "event_callback_stub.h"
 
 /* A default bound on the subscription count. Iterating over possibly SIZE_MAX
  * number of subscriptions does not add any value to the proofs. An application
@@ -29,6 +33,15 @@
  * each subscription. */
 #ifndef SUBSCRIPTION_COUNT_MAX
     #define SUBSCRIPTION_COUNT_MAX    1U
+#endif
+
+/* A default bound on the remainingLength in an incoming packet. This bound
+ * is used for the MQTT_DeserializeAck() proof to limit the number of iterations
+ * on a SUBACK packet's payload bytes. We do not need to iterate an unbounded
+ * remaining length amount of bytes to verify memory safety in the dereferencing
+ * the SUBACK payload's bytes. */
+#ifndef REMAINING_LENGTH_MAX
+    #define REMAINING_LENGTH_MAX    CBMC_MAX_OBJECT_SIZE
 #endif
 
 void * mallocCanFail( size_t size )
@@ -46,7 +59,7 @@ MQTTPacketInfo_t * allocateMqttPacketInfo( MQTTPacketInfo_t * pPacketInfo )
 
     if( pPacketInfo != NULL )
     {
-        __CPROVER_assume( pPacketInfo->remainingLength < CBMC_MAX_OBJECT_SIZE );
+        __CPROVER_assume( pPacketInfo->remainingLength < REMAINING_LENGTH_MAX );
         pPacketInfo->pRemainingData = mallocCanFail( pPacketInfo->remainingLength );
     }
 
@@ -59,7 +72,7 @@ bool isValidMqttPacketInfo( const MQTTPacketInfo_t * pPacketInfo )
 
     if( pPacketInfo != NULL )
     {
-        isValid = pPacketInfo->remainingLength < CBMC_MAX_OBJECT_SIZE;
+        isValid = pPacketInfo->remainingLength < REMAINING_LENGTH_MAX;
     }
 
     return isValid;
@@ -89,13 +102,8 @@ bool isValidMqttPublishInfo( const MQTTPublishInfo_t * pPublishInfo )
 
     if( pPublishInfo != NULL )
     {
-        bool validQos = ( ( pPublishInfo->qos >= MQTTQoS0 ) &&
-                          ( pPublishInfo->qos <= MQTTQoS2 ) );
-
-        bool validTopicNameLength = pPublishInfo->topicNameLength < CBMC_MAX_OBJECT_SIZE;
-        bool validPayloadLength = pPublishInfo->payloadLength < CBMC_MAX_OBJECT_SIZE;
-
-        isValid = validQos && validTopicNameLength && validPayloadLength;
+        isValid = isValid && ( pPublishInfo->topicNameLength < CBMC_MAX_OBJECT_SIZE );
+        isValid = isValid && ( pPublishInfo->payloadLength < CBMC_MAX_OBJECT_SIZE );
     }
 
     return isValid;
@@ -195,6 +203,62 @@ bool isValidMqttSubscriptionList( MQTTSubscribeInfo_t * pSubscriptionList,
         {
             isValid = isValid && ( pSubscriptionList[ i ].topicFilterLength < CBMC_MAX_OBJECT_SIZE );
         }
+    }
+
+    return isValid;
+}
+
+MQTTContext_t * allocateMqttContext( MQTTContext_t * pContext )
+{
+    TransportInterface_t * pTransportInterface;
+    MQTTFixedBuffer_t * pNetworkBuffer;
+    MQTTStatus_t status = MQTTSuccess;
+
+    if( pContext == NULL )
+    {
+        pContext = mallocCanFail( sizeof( MQTTContext_t ) );
+    }
+
+    pTransportInterface = mallocCanFail( sizeof( TransportInterface_t ) );
+
+    if( pTransportInterface != NULL )
+    {
+        pTransportInterface->recv = NetworkInterfaceReceiveStub;
+        pTransportInterface->send = NetworkInterfaceSendStub;
+    }
+
+    pNetworkBuffer = allocateMqttFixedBuffer( NULL );
+    __CPROVER_assume( isValidMqttFixedBuffer( pNetworkBuffer ) );
+
+    /* It is part of the API contract to call MQTT_Init() with the MQTTContext_t
+     * before any other function in mqtt.h. */
+    if( pContext != NULL )
+    {
+        status = MQTT_Init( pContext,
+                            pTransportInterface,
+                            GetCurrentTimeStub,
+                            EventCallbackStub,
+                            pNetworkBuffer );
+    }
+
+    /* If the MQTTContext_t initialization failed, then set the context to NULL
+     * so that function under harness will return immediately upon a NULL
+     * parameter check. */
+    if( status != MQTTSuccess )
+    {
+        pContext = NULL;
+    }
+
+    return pContext;
+}
+
+bool isValidMqttContext( const MQTTContext_t * pContext )
+{
+    bool isValid = true;
+
+    if( pContext != NULL )
+    {
+        isValid = pContext->networkBuffer.size < CBMC_MAX_OBJECT_SIZE;
     }
 
     return isValid;

@@ -20,30 +20,20 @@
  */
 
 /**
- * @file MQTT_Init_harness.c
- * @brief Implements the proof harness for MQTT_Init function.
+ * @file get_time_stub.h
+ * @brief Stub definition for the application defined callback to retrieve the
+ * current time in milliseconds.
  */
+#ifndef GET_TIME_STUB_H_
+#define GET_TIME_STUB_H_
 
-#include "mqtt.h"
-#include "mqtt_cbmc_state.h"
+/* mqtt.h must precede including this header. */
 
-void harness()
-{
-    MQTTContext_t * pContext;
-    TransportInterface_t * pTransportInterface;
-    MQTTGetCurrentTimeFunc_t getTimeFunction;
-    MQTTEventCallback_t userCallback;
-    MQTTFixedBuffer_t * pNetworkBuffer;
+/**
+ * Application defined function to retrieve the current time in milliseconds.
+ *
+ * @return The current time in milliseconds.
+ */
+uint32_t GetCurrentTimeStub( void );
 
-    pContext = mallocCanFail( sizeof( MQTTContext_t ) );
-    pTransportInterface = mallocCanFail( sizeof( TransportInterface_t ) );
-    getTimeFunction = mallocCanFail( sizeof ( MQTTGetCurrentTimeFunc_t ) );
-    userCallback = mallocCanFail( sizeof ( MQTTEventCallback_t ) );
-    pNetworkBuffer = mallocCanFail( sizeof( MQTTFixedBuffer_t ) );
-
-    MQTT_Init( pContext,
-               pTransportInterface,
-               getTimeFunction,
-               userCallback,
-               pNetworkBuffer );
-}
+#endif

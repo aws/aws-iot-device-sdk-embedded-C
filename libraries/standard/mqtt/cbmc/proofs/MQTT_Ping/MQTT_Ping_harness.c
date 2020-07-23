@@ -20,30 +20,18 @@
  */
 
 /**
- * @file MQTT_Init_harness.c
- * @brief Implements the proof harness for MQTT_Init function.
+ * @file MQTT_Ping_harness.c
+ * @brief Implements the proof harness for MQTT_Ping function.
  */
-
 #include "mqtt.h"
 #include "mqtt_cbmc_state.h"
 
 void harness()
 {
     MQTTContext_t * pContext;
-    TransportInterface_t * pTransportInterface;
-    MQTTGetCurrentTimeFunc_t getTimeFunction;
-    MQTTEventCallback_t userCallback;
-    MQTTFixedBuffer_t * pNetworkBuffer;
 
-    pContext = mallocCanFail( sizeof( MQTTContext_t ) );
-    pTransportInterface = mallocCanFail( sizeof( TransportInterface_t ) );
-    getTimeFunction = mallocCanFail( sizeof ( MQTTGetCurrentTimeFunc_t ) );
-    userCallback = mallocCanFail( sizeof ( MQTTEventCallback_t ) );
-    pNetworkBuffer = mallocCanFail( sizeof( MQTTFixedBuffer_t ) );
+    pContext = allocateMqttContext( NULL );
+    __CPROVER_assume( isValidMqttContext( pContext ) );
 
-    MQTT_Init( pContext,
-               pTransportInterface,
-               getTimeFunction,
-               userCallback,
-               pNetworkBuffer );
+    MQTT_Ping( pContext );
 }

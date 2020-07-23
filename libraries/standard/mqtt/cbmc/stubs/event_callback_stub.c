@@ -18,32 +18,17 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
-/**
- * @file MQTT_Init_harness.c
- * @brief Implements the proof harness for MQTT_Init function.
- */
-
 #include "mqtt.h"
-#include "mqtt_cbmc_state.h"
+#include "event_callback_stub.h"
 
-void harness()
+void EventCallbackStub( MQTTContext_t * pContext,
+                        MQTTPacketInfo_t * pPacketInfo,
+                        uint16_t packetIdentifier,
+                        MQTTPublishInfo_t * pPublishInfo )
 {
-    MQTTContext_t * pContext;
-    TransportInterface_t * pTransportInterface;
-    MQTTGetCurrentTimeFunc_t getTimeFunction;
-    MQTTEventCallback_t userCallback;
-    MQTTFixedBuffer_t * pNetworkBuffer;
-
-    pContext = mallocCanFail( sizeof( MQTTContext_t ) );
-    pTransportInterface = mallocCanFail( sizeof( TransportInterface_t ) );
-    getTimeFunction = mallocCanFail( sizeof ( MQTTGetCurrentTimeFunc_t ) );
-    userCallback = mallocCanFail( sizeof ( MQTTEventCallback_t ) );
-    pNetworkBuffer = mallocCanFail( sizeof( MQTTFixedBuffer_t ) );
-
-    MQTT_Init( pContext,
-               pTransportInterface,
-               getTimeFunction,
-               userCallback,
-               pNetworkBuffer );
+    __CPROVER_assert( pContext != NULL,
+                      "EventCallbackStub pContext is not NULL" );
+    __CPROVER_assert( pPacketInfo != NULL,
+                      "EventCallbackStub pPacketInfo is not NULL" );
+    /* pPublishInfo will be NULL for an incoming ACK event. */
 }

@@ -19,31 +19,18 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-/**
- * @file MQTT_Init_harness.c
- * @brief Implements the proof harness for MQTT_Init function.
- */
-
 #include "mqtt.h"
-#include "mqtt_cbmc_state.h"
+#include "get_time_stub.h"
 
-void harness()
+uint32_t GetCurrentTimeStub( void )
 {
-    MQTTContext_t * pContext;
-    TransportInterface_t * pTransportInterface;
-    MQTTGetCurrentTimeFunc_t getTimeFunction;
-    MQTTEventCallback_t userCallback;
-    MQTTFixedBuffer_t * pNetworkBuffer;
+    /* There exists loops in the MQTT library that rely on the timestamp being
+     * reasonable in order to complete. Returning an unbounded timestamp does
+     * not add value to the proofs as the MQTT library uses the timestamp for
+     * only arithmetic operations. In C arithmetic operations on unsigned
+     * integers are guaranteed to reliably wrap around with no adverse side
+     * effects. */
+    static uint32_t globalEntryTime = 0;
 
-    pContext = mallocCanFail( sizeof( MQTTContext_t ) );
-    pTransportInterface = mallocCanFail( sizeof( TransportInterface_t ) );
-    getTimeFunction = mallocCanFail( sizeof ( MQTTGetCurrentTimeFunc_t ) );
-    userCallback = mallocCanFail( sizeof ( MQTTEventCallback_t ) );
-    pNetworkBuffer = mallocCanFail( sizeof( MQTTFixedBuffer_t ) );
-
-    MQTT_Init( pContext,
-               pTransportInterface,
-               getTimeFunction,
-               userCallback,
-               pNetworkBuffer );
+    return ++globalEntryTime;
 }

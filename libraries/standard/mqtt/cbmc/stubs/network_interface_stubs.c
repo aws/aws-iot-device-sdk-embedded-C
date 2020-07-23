@@ -22,15 +22,21 @@
 #include "mqtt.h"
 #include "network_interface_stubs.h"
 
+/* The maximum number of times that the NetworkInterfaceSendStub will be invoked
+ * before returned a timeout. */
+#ifndef MAX_NETWORK_SEND_TRIES
+    #define MAX_NETWORK_SEND_TRIES    2
+#endif
+
 int32_t NetworkInterfaceReceiveStub( NetworkContext_t * pNetworkContext,
                                      void * pBuffer,
                                      size_t bytesToRecv )
 {
     __CPROVER_assert( pBuffer != NULL,
-                      "IotNetworkInterfaceReceive pBuffer is not NULL." );
+                      "NetworkInterfaceReceiveStub pBuffer is not NULL." );
 
     __CPROVER_assert( __CPROVER_w_ok( pBuffer, bytesToRecv ),
-                      "pBuffer is writable up to bytesToRecv." );
+                      "NetworkInterfaceReceiveStub pBuffer is writable up to bytesToRecv." );
 
     __CPROVER_havoc_object( pBuffer );
 
@@ -39,6 +45,40 @@ int32_t NetworkInterfaceReceiveStub( NetworkContext_t * pNetworkContext,
      * implementation. */
     int32_t bytesOrError;
     __CPROVER_assume( bytesOrError <= bytesToRecv );
+
+    return bytesOrError;
+}
+
+int32_t NetworkInterfaceSendStub( NetworkContext_t * pNetworkContext,
+                                  const void * pBuffer,
+                                  size_t bytesToSend )
+{
+    __CPROVER_assert( pBuffer != NULL,
+                      "NetworkInterfaceSendStub pBuffer is not NULL." );
+
+    /* The number of tries to send the message before this invocation. */
+    static size_t tries;
+
+    /* This is unbounded as the MQTT code should be able to safely handle any
+     * int32_t value returned from the application defined network send
+     * implementation. */
+    int32_t bytesOrError;
+
+    /* If the maximum tries are reached, then return a timeout. In the MQTT library
+     * this stub is wrapped in a loop that will does not end until the bytesOrError
+     * returned is zero or less. This means we could loop possibly INT32_MAX
+     * iterations. Looping for INT32_MAX times adds no value to the proof.
+     * What matters is that the MQTT library can handle all the possible values
+     * that could be returned. */
+    if( tries >= MAX_NETWORK_SEND_TRIES )
+    {
+        tries = 0;
+        bytesOrError = 0;
+    }
+    else
+    {
+        tries++;
+    }
 
     return bytesOrError;
 }

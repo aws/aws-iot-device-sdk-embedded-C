@@ -20,30 +20,27 @@
  */
 
 /**
- * @file MQTT_Init_harness.c
- * @brief Implements the proof harness for MQTT_Init function.
+ * @file event_callback_stub.h
+ * @brief Stub definition for the application defined MQTT library incoming
+ * event callback.
  */
+#ifndef EVENT_CALLBACK_STUB_H_
+#define EVENT_CALLBACK_STUB_H_
 
-#include "mqtt.h"
-#include "mqtt_cbmc_state.h"
+/* mqtt.h must precede including this header. */
 
-void harness()
-{
-    MQTTContext_t * pContext;
-    TransportInterface_t * pTransportInterface;
-    MQTTGetCurrentTimeFunc_t getTimeFunction;
-    MQTTEventCallback_t userCallback;
-    MQTTFixedBuffer_t * pNetworkBuffer;
+/**
+ * @brief Application callbacks for receiving incoming publishes and incoming
+ * acks.
+ *
+ * @param[in] pContext Initialized MQTT context.
+ * @param[in] pPacketInfo Information on the type of incoming MQTT packet.
+ * @param[in] packetIdentifier Packet identifier of incoming PUBLISH packet.
+ * @param[in] pPublishInfo Incoming PUBLISH packet parameters.
+ */
+void EventCallbackStub( MQTTContext_t * pContext,
+                        MQTTPacketInfo_t * pPacketInfo,
+                        uint16_t packetIdentifier,
+                        MQTTPublishInfo_t * pPublishInfo );
 
-    pContext = mallocCanFail( sizeof( MQTTContext_t ) );
-    pTransportInterface = mallocCanFail( sizeof( TransportInterface_t ) );
-    getTimeFunction = mallocCanFail( sizeof ( MQTTGetCurrentTimeFunc_t ) );
-    userCallback = mallocCanFail( sizeof ( MQTTEventCallback_t ) );
-    pNetworkBuffer = mallocCanFail( sizeof( MQTTFixedBuffer_t ) );
-
-    MQTT_Init( pContext,
-               pTransportInterface,
-               getTimeFunction,
-               userCallback,
-               pNetworkBuffer );
-}
+#endif /* ifndef EVENT_CALLBACK_STUB_H_ */
