@@ -48,7 +48,7 @@
 /**
  * @brief Zero timeout in the process loop implies one iteration.
  */
-#define MQTT_ZERO_PROCESS_LOOP_TIMEOUT_MS      ( 0U )
+#define MQTT_NO_TIMEOUT_MS                     ( 0U )
 
 /**
  * @brief Sample length of remaining serialized data.
@@ -500,7 +500,7 @@ static void expectProcessLoopCalls( MQTTContext_t * const pContext,
     }
 
     /* Expect the above calls when running MQTT_ProcessLoop. */
-    mqttStatus = MQTT_ProcessLoop( pContext, MQTT_ZERO_PROCESS_LOOP_TIMEOUT_MS );
+    mqttStatus = MQTT_ProcessLoop( pContext, MQTT_NO_TIMEOUT_MS );
     TEST_ASSERT_EQUAL( processLoopStatus, mqttStatus );
 
     /* Any final assertions to end the test. */
@@ -878,7 +878,7 @@ void test_MQTT_Connect_partial_receive()
     mqttContext.callbacks.getTime = getTimeDummy;
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
-    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, MQTT_ZERO_PROCESS_LOOP_TIMEOUT_MS, &sessionPresent );
+    status = MQTT_Connect( &mqttContext, &connectInfo, NULL, MQTT_NO_TIMEOUT_MS, &sessionPresent );
     TEST_ASSERT_EQUAL_INT( MQTTRecvFailed, status );
 }
 
@@ -1352,7 +1352,7 @@ void test_MQTT_ProcessLoop_Invalid_Params( void )
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTApplicationCallbacks_t callbacks = { 0 };
-    MQTTStatus_t mqttStatus = MQTT_ProcessLoop( NULL, MQTT_ZERO_PROCESS_LOOP_TIMEOUT_MS );
+    MQTTStatus_t mqttStatus = MQTT_ProcessLoop( NULL, MQTT_NO_TIMEOUT_MS );
 
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
@@ -1363,7 +1363,7 @@ void test_MQTT_ProcessLoop_Invalid_Params( void )
 
     /* Get time function cannot be NULL. */
     context.callbacks.getTime = NULL;
-    mqttStatus = MQTT_ProcessLoop( &context, MQTT_ZERO_PROCESS_LOOP_TIMEOUT_MS );
+    mqttStatus = MQTT_ProcessLoop( &context, MQTT_NO_TIMEOUT_MS );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 }
 
@@ -1831,17 +1831,17 @@ void test_MQTT_ReceiveLoop( void )
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
     /* NULL Context. */
-    mqttStatus = MQTT_ReceiveLoop( NULL, MQTT_ZERO_PROCESS_LOOP_TIMEOUT_MS );
+    mqttStatus = MQTT_ReceiveLoop( NULL, MQTT_NO_TIMEOUT_MS );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
     context.callbacks.getTime = NULL;
-    mqttStatus = MQTT_ReceiveLoop( &context, MQTT_ZERO_PROCESS_LOOP_TIMEOUT_MS );
+    mqttStatus = MQTT_ReceiveLoop( &context, MQTT_NO_TIMEOUT_MS );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
     context.callbacks.getTime = getTime;
 
     /* Error case, for branch coverage. */
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTRecvFailed );
-    mqttStatus = MQTT_ReceiveLoop( &context, MQTT_ZERO_PROCESS_LOOP_TIMEOUT_MS );
+    mqttStatus = MQTT_ReceiveLoop( &context, MQTT_NO_TIMEOUT_MS );
     TEST_ASSERT_EQUAL( MQTTRecvFailed, mqttStatus );
 
     /* Keep Alive should not trigger.*/
@@ -1853,7 +1853,7 @@ void test_MQTT_ReceiveLoop( void )
 
     /* Test with a dummy getTime to ensure there's no infinite loops. */
     context.callbacks.getTime = getTimeDummy;
-    mqttStatus = MQTT_ReceiveLoop( &context, MQTT_ZERO_PROCESS_LOOP_TIMEOUT_MS );
+    mqttStatus = MQTT_ReceiveLoop( &context, MQTT_NO_TIMEOUT_MS );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     context.callbacks.getTime = getTime;
 
@@ -1865,7 +1865,7 @@ void test_MQTT_ReceiveLoop( void )
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
     MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
-    mqttStatus = MQTT_ReceiveLoop( &context, MQTT_ZERO_PROCESS_LOOP_TIMEOUT_MS );
+    mqttStatus = MQTT_ReceiveLoop( &context, MQTT_NO_TIMEOUT_MS );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 }
 
