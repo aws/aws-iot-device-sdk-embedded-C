@@ -655,7 +655,7 @@ static bool incomingPacketValid( uint8_t packetType )
 
         /* Any other packet type is invalid. */
         default:
-            LogWarn( ( "Incoming packet invalid: Packet type=%u",
+            LogWarn( ( "Incoming packet invalid: Packet type=%u.",
                        packetType ) );
             break;
     }
@@ -1381,7 +1381,7 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
          * By bounding the payloadLength of the will message, the CONNECT
          * packet will never be larger than 327699 bytes. */
         LogError( ( "The Will Message length must not exceed %d. "
-                    "pWillInfo->payloadLength=%lu",
+                    "pWillInfo->payloadLength=%lu.",
                     UINT16_MAX,
                     pWillInfo->payloadLength ) );
         status = MQTTBadParameter;
@@ -2227,7 +2227,7 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
         }
         else
         {
-            LogError( ( "Incoming packet invalid: Packet type=%u",
+            LogError( ( "Incoming packet invalid: Packet type=%u.",
                         pIncomingPacket->type ) );
             status = MQTTBadResponse;
         }
@@ -2243,7 +2243,7 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
     else if( status != MQTTBadParameter )
     {
         LogError( ( "A single byte was not read from the transport: "
-                    "transportStatus=%d",
+                    "transportStatus=%d.",
                     bytesReceived ) );
         status = MQTTRecvFailed;
     }

@@ -337,10 +337,14 @@ static int32_t sendPacket( MQTTContext_t * pContext,
         else if( ( size_t ) bytesSent > bytesRemaining )
         {
             LogError( ( "Transport send returned more bytes than expected: "
-                        "BytesExpected=%lu, BytesReceived=%d",
+                        "BytesExpected=%lu, BytesReceived=%d.",
                         bytesRemaining,
                         bytesSent ) );
             sendError = true;
+
+            /* In this error condition, the total amount of bytes sent is
+             * not saved. The returned value from this function will be less
+             * than bytesToSend, which will be seen as an error. */
         }
         else
         {
@@ -439,7 +443,7 @@ static int32_t recvExact( const MQTTContext_t * pContext,
 
         if( bytesRecvd < 0 )
         {
-            LogError( ( "Network error while receiving packet: ReturnCode=%d",
+            LogError( ( "Network error while receiving packet: ReturnCode=%d.",
                         bytesRecvd ) );
             totalBytesRecvd = bytesRecvd;
             receiveError = true;
@@ -447,15 +451,14 @@ static int32_t recvExact( const MQTTContext_t * pContext,
         else if( bytesRecvd > ( int32_t ) bytesRemaining )
         {
             LogError( ( "Transport receive returned more bytes than expected: "
-                        "BytesExpected=%lu, BytesReceived=%d",
+                        "BytesExpected=%lu, BytesReceived=%d.",
                         bytesRemaining,
                         bytesRecvd ) );
             receiveError = true;
 
-            /* Do not save this returned error in the total amount of bytes
-             * received to pass back to the caller. The returned value from this
-             * function will be less than bytesToRecv, which will be seen as an
-             * error. */
+            /* In this error condition, the total amount of bytes received is
+             * not saved. The returned value from this function will be less
+             * than bytesToRecv, which will be seen as an error. */
         }
         else
         {
@@ -463,7 +466,7 @@ static int32_t recvExact( const MQTTContext_t * pContext,
             totalBytesRecvd += ( int32_t ) bytesRecvd;
             pIndex += bytesRecvd;
             LogDebug( ( "BytesReceived=%d, BytesRemaining=%lu, "
-                        "TotalBytesReceived=%d",
+                        "TotalBytesReceived=%d.",
                         bytesRecvd,
                         bytesRemaining,
                         totalBytesRecvd ) );
@@ -566,7 +569,7 @@ static MQTTStatus_t receivePacket( const MQTTContext_t * pContext,
     {
         LogError( ( "Incoming packet will be dumped: "
                     "Packet length exceeds network buffer size."
-                    "PacketSize=%lu, NetworkBufferSize=%lu",
+                    "PacketSize=%lu, NetworkBufferSize=%lu.",
                     incomingPacket.remainingLength,
                     pContext->networkBuffer.size ) );
         status = discardPacket( pContext,
@@ -737,7 +740,7 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
     assert( pIncomingPacket != NULL );
 
     status = MQTT_DeserializePublish( pIncomingPacket, &packetIdentifier, &publishInfo );
-    LogInfo( ( "De-serialized incoming PUBLISH packet: DeserializerResult=%d", status ) );
+    LogInfo( ( "De-serialized incoming PUBLISH packet: DeserializerResult=%d.", status ) );
 
     if( status == MQTTSuccess )
     {
