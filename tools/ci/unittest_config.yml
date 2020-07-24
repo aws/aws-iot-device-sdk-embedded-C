@@ -6,6 +6,12 @@ _default:
   build_flags:
     # Provide list of flags required for configuring build using cmake
     - "-DBUILD_TESTS=1"
+    - "-DCMAKE_BUILD_TYPE=Release"
+  c_flags:
+    # Provide list of c_flags common to all target
+    - -Wall
+    - -Wextra
+    #- -Werror
   allow:
     # Provide list of allowed targets [Accepts regex]
     - ".*utest.*"
