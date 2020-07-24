@@ -809,7 +809,7 @@ void test_MQTT_Connect_LWT( void )
     MQTTContext_t secondContext;
 
     /* Establish a second TCP connection with the server endpoint, then
-     * a TLS session.The server info and credentials can be reused. */
+     * a TLS session. The server info and credentials can be reused. */
     TEST_ASSERT_EQUAL( OPENSSL_SUCCESS, Openssl_Connect( &secondNetworkContext,
                                                          &serverInfo,
                                                          &opensslCredentials,
