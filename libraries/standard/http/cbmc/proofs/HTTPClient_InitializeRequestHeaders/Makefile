@@ -18,8 +18,6 @@ REMOVE_FUNCTION_BODY += __CPROVER_file_local_http_client_c_httpParserOnHeadersCo
 REMOVE_FUNCTION_BODY += __CPROVER_file_local_http_client_c_httpParserOnMessageBeginCallback
 REMOVE_FUNCTION_BODY += __CPROVER_file_local_http_client_c_httpParserOnMessageCompleteCallback
 
-#REMOVE_FUNCTION_BODY += __CPROVER_file_local_http_client_c_writeRequestLine
-#REMOVE_FUNCTION_BODY += __CPROVER_file_local_http_client_c_addHeader
 REMOVE_FUNCTION_BODY += memcpy
 
 UNWINDSET += strncmp.0:5
