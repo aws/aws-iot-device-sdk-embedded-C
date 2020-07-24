@@ -1314,9 +1314,7 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
     {
         LogError( ( "Argument cannot be NULL: pContext=%p, "
                     "pTransportInterface=%p, "
-                    "getTimeFunction=%p, "
-                    "userCallback=%p, "
-                    "pNetworkBuffer=%p.",
+                    "pNetworkBuffer=%p",
                     pContext,
                     pTransportInterface,
                     pNetworkBuffer ) );
@@ -1325,7 +1323,7 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
     else if( ( getTimeFunction == NULL ) || ( userCallback == NULL ) ||
              ( pTransportInterface->recv == NULL ) || ( pTransportInterface->send == NULL ) )
     {
-        LogError( ( "Functions cannot be NULL: getTimeFunction=%p, userCallback=%p, "
+        LogError( ( "Function pointers cannot be NULL: getTimeFunction=%p, userCallback=%p, "
                     "transportRecv=%p, transportRecvSend=%p",
                     getTimeFunction,
                     userCallback,
