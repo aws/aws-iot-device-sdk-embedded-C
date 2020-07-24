@@ -903,12 +903,11 @@ void test_MQTT_Connect_Restore_Session( void )
     TEST_ASSERT_EQUAL( MQTTSuccess, publishToTopic(
                            &context, TEST_MQTT_TOPIC, MQTTQoS2 ) );
 
-    /* Disconnect on receiving PUBREC so that we aren't able to complete the QoS 2 PUBLISH in the current connection. */
+    /* Disconnect on receiving PUBREC so that we are not able to complete the QoS 2 PUBLISH in the current connection. */
     disconnectOnPacketType = MQTT_PACKET_TYPE_PUBREC;
 
     TEST_ASSERT_EQUAL( MQTTSendFailed,
                        MQTT_ProcessLoop( &context, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
-    /*TEST_ASSERT_TRUE( receivedPubRec ); */
     TEST_ASSERT_FALSE( receivedPubRel );
     TEST_ASSERT_FALSE( receivedPubComp );
 

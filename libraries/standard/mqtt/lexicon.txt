@@ -63,6 +63,7 @@ inc
 incomingpacket
 incomingpublish
 init
+initializeContext
 int
 iot
 isn
