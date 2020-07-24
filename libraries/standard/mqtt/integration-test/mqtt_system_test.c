@@ -643,235 +643,240 @@ void tearDown()
  * The test subscribes to a topic, and then publishes to the same topic. The
  * broker is expected to route the publish message back to the test.
  */
-/* void test_MQTT_Subscribe_Publish_With_Qos_0( void ) */
-/* { */
-/*     / * Subscribe to a topic with Qos 0. * / */
-/*     TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic( */
-/*                            &context, TEST_MQTT_TOPIC, MQTTQoS0 ) ); */
+void test_MQTT_Subscribe_Publish_With_Qos_0( void )
+{
+    /* Subscribe to a topic with Qos 0. */
+    TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic(
+                           &context, TEST_MQTT_TOPIC, MQTTQoS0 ) );
 
-/*     / * We expect a SUBACK from the broker for the subscribe operation. * / */
-/*     TEST_ASSERT_EQUAL( MQTTSuccess, */
-/*                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) ); */
-/*     TEST_ASSERT_TRUE( receivedSubAck ); */
+    /* We expect a SUBACK from the broker for the subscribe operation. */
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    TEST_ASSERT_TRUE( receivedSubAck );
 
-/*     / * Publish to the same topic, that we subscribed to, with Qos 0. * / */
-/*     TEST_ASSERT_EQUAL( MQTTSuccess, publishToTopic( */
-/*                            &context, TEST_MQTT_TOPIC, MQTTQoS0 ) ); */
+    /* Publish to the same topic, that we subscribed to, with Qos 0. */
+    TEST_ASSERT_EQUAL( MQTTSuccess, publishToTopic(
+                           &context, TEST_MQTT_TOPIC, MQTTQoS0 ) );
 
-/*     / * Call the MQTT library for the expectation to read an incoming PUBLISH for */
-/*      * the same message that we published (as we have subscribed to the same topic). * / */
-/*     TEST_ASSERT_EQUAL( MQTTSuccess, */
-/*                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) ); */
-/*     / * We do not expect a PUBACK from the broker for the QoS 0 PUBLISH. * / */
-/*     TEST_ASSERT_FALSE( receivedPubAck ); */
+    /* Call the MQTT library for the expectation to read an incoming PUBLISH for
+     * the same message that we published (as we have subscribed to the same topic). */
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    /* We do not expect a PUBACK from the broker for the QoS 0 PUBLISH. */
+    TEST_ASSERT_FALSE( receivedPubAck );
 
-/*     / * Make sure that we have received the same message from the server, */
-/*      * that was published (as we have subscribed to the same topic). * / */
-/*     TEST_ASSERT_EQUAL( MQTTQoS0, incomingInfo.qos ); */
-/*     TEST_ASSERT_EQUAL( TEST_MQTT_TOPIC_LENGTH, incomingInfo.topicNameLength ); */
-/*     TEST_ASSERT_EQUAL_MEMORY( TEST_MQTT_TOPIC, */
-/*                               incomingInfo.pTopicName, */
-/*                               TEST_MQTT_TOPIC_LENGTH ); */
-/*     TEST_ASSERT_EQUAL( strlen( MQTT_EXAMPLE_MESSAGE ), incomingInfo.payloadLength ); */
-/*     TEST_ASSERT_EQUAL_MEMORY( MQTT_EXAMPLE_MESSAGE, */
-/*                               incomingInfo.pPayload, */
-/*                               incomingInfo.payloadLength ); */
+    /* Make sure that we have received the same message from the server,
+     * that was published (as we have subscribed to the same topic). */
+    TEST_ASSERT_EQUAL( MQTTQoS0, incomingInfo.qos );
+    TEST_ASSERT_EQUAL( TEST_MQTT_TOPIC_LENGTH, incomingInfo.topicNameLength );
+    TEST_ASSERT_EQUAL_MEMORY( TEST_MQTT_TOPIC,
+                              incomingInfo.pTopicName,
+                              TEST_MQTT_TOPIC_LENGTH );
+    TEST_ASSERT_EQUAL( strlen( MQTT_EXAMPLE_MESSAGE ), incomingInfo.payloadLength );
+    TEST_ASSERT_EQUAL_MEMORY( MQTT_EXAMPLE_MESSAGE,
+                              incomingInfo.pPayload,
+                              incomingInfo.payloadLength );
 
-/*     / * Un-subscribe from a topic with Qos 0. * / */
-/*     TEST_ASSERT_EQUAL( MQTTSuccess, unsubscribeFromTopic( */
-/*                            &context, TEST_MQTT_TOPIC, MQTTQoS0 ) ); */
+    /* Un-subscribe from a topic with Qos 0. */
+    TEST_ASSERT_EQUAL( MQTTSuccess, unsubscribeFromTopic(
+                           &context, TEST_MQTT_TOPIC, MQTTQoS0 ) );
 
-/*     / * We expect an UNSUBACK from the broker for the unsubscribe operation. * / */
-/*     TEST_ASSERT_EQUAL( MQTTSuccess, */
-/*                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) ); */
-/*     TEST_ASSERT_TRUE( receivedUnsubAck ); */
-/* } */
+    /* We expect an UNSUBACK from the broker for the unsubscribe operation. */
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    TEST_ASSERT_TRUE( receivedUnsubAck );
+}
 
-/* / ** */
-/*  * @brief Tests Subscribe and Publish operations with the MQTT broken using QoS 1. */
-/*  * The test subscribes to a topic, and then publishes to the same topic. The */
-/*  * broker is expected to route the publish message back to the test. */
-/*  * / */
-/* void test_MQTT_Subscribe_Publish_With_Qos_1( void ) */
-/* { */
-/*     / * Subscribe to a topic with Qos 1. * / */
-/*     TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic( */
-/*                            &context, TEST_MQTT_TOPIC, MQTTQoS1 ) ); */
+/**
+ * @brief Tests Subscribe and Publish operations with the MQTT broken using QoS 1.
+ * The test subscribes to a topic, and then publishes to the same topic. The
+ * broker is expected to route the publish message back to the test.
+ */
+void test_MQTT_Subscribe_Publish_With_Qos_1( void )
+{
+    /* Subscribe to a topic with Qos 1. */
+    TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic(
+                           &context, TEST_MQTT_TOPIC, MQTTQoS1 ) );
 
-/*     / * Expect a SUBACK from the broker for the subscribe operation. * / */
-/*     TEST_ASSERT_EQUAL( MQTTSuccess, */
-/*                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) ); */
-/*     TEST_ASSERT_TRUE( receivedSubAck ); */
+    /* Expect a SUBACK from the broker for the subscribe operation. */
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    TEST_ASSERT_TRUE( receivedSubAck );
 
-/*     / * Publish to the same topic, that we subscribed to, with Qos 1. * / */
-/*     TEST_ASSERT_EQUAL( MQTTSuccess, publishToTopic( */
-/*                            &context, TEST_MQTT_TOPIC, MQTTQoS1 ) ); */
+    /* Publish to the same topic, that we subscribed to, with Qos 1. */
+    TEST_ASSERT_EQUAL( MQTTSuccess, publishToTopic(
+                           &context, TEST_MQTT_TOPIC, MQTTQoS1 ) );
 
-/*     / * Make sure that the MQTT context state was updated after the PUBLISH request. * / */
-/*     TEST_ASSERT_EQUAL( MQTTQoS1, context.outgoingPublishRecords[ 0 ].qos ); */
-/*     TEST_ASSERT_EQUAL( globalPublishPacketIdentifier, context.outgoingPublishRecords[ 0 ].packetId ); */
-/*     TEST_ASSERT_EQUAL( MQTTPubAckPending, context.outgoingPublishRecords[ 0 ].publishState ); */
+    /* Make sure that the MQTT context state was updated after the PUBLISH request. */
+    TEST_ASSERT_EQUAL( MQTTQoS1, context.outgoingPublishRecords[ 0 ].qos );
+    TEST_ASSERT_EQUAL( globalPublishPacketIdentifier, context.outgoingPublishRecords[ 0 ].packetId );
+    TEST_ASSERT_EQUAL( MQTTPubAckPending, context.outgoingPublishRecords[ 0 ].publishState );
 
-/*     / * Expect a PUBACK response for the PUBLISH and an incoming PUBLISH for the */
-/*      * same message that we published (as we have subscribed to the same topic). * / */
-/*     TEST_ASSERT_EQUAL( MQTTSuccess, */
-/*                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) ); */
-/*     / * Make sure we have received PUBACK response. * / */
-/*     TEST_ASSERT_TRUE( receivedPubAck ); */
+    /* Expect a PUBACK response for the PUBLISH and an incoming PUBLISH for the
+     * same message that we published (as we have subscribed to the same topic). */
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    /* Make sure we have received PUBACK response. */
+    TEST_ASSERT_TRUE( receivedPubAck );
 
-/*     / * Make sure that we have received the same message from the server, */
-/*      * that was published (as we have subscribed to the same topic). * / */
-/*     TEST_ASSERT_EQUAL( MQTTQoS1, incomingInfo.qos ); */
-/*     TEST_ASSERT_EQUAL( TEST_MQTT_TOPIC_LENGTH, incomingInfo.topicNameLength ); */
-/*     TEST_ASSERT_EQUAL_MEMORY( TEST_MQTT_TOPIC, */
-/*                               incomingInfo.pTopicName, */
-/*                               TEST_MQTT_TOPIC_LENGTH ); */
-/*     TEST_ASSERT_EQUAL( strlen( MQTT_EXAMPLE_MESSAGE ), incomingInfo.payloadLength ); */
-/*     TEST_ASSERT_EQUAL_MEMORY( MQTT_EXAMPLE_MESSAGE, */
-/*                               incomingInfo.pPayload, */
-/*                               incomingInfo.payloadLength ); */
+    /* Make sure that we have received the same message from the server,
+     * that was published (as we have subscribed to the same topic). */
+    TEST_ASSERT_EQUAL( MQTTQoS1, incomingInfo.qos );
+    TEST_ASSERT_EQUAL( TEST_MQTT_TOPIC_LENGTH, incomingInfo.topicNameLength );
+    TEST_ASSERT_EQUAL_MEMORY( TEST_MQTT_TOPIC,
+                              incomingInfo.pTopicName,
+                              TEST_MQTT_TOPIC_LENGTH );
+    TEST_ASSERT_EQUAL( strlen( MQTT_EXAMPLE_MESSAGE ), incomingInfo.payloadLength );
+    TEST_ASSERT_EQUAL_MEMORY( MQTT_EXAMPLE_MESSAGE,
+                              incomingInfo.pPayload,
+                              incomingInfo.payloadLength );
 
-/*     / * Un-subscribe from a topic with Qos 1. * / */
-/*     TEST_ASSERT_EQUAL( MQTTSuccess, unsubscribeFromTopic( */
-/*                            &context, TEST_MQTT_TOPIC, MQTTQoS1 ) ); */
+    /* Un-subscribe from a topic with Qos 1. */
+    TEST_ASSERT_EQUAL( MQTTSuccess, unsubscribeFromTopic(
+                           &context, TEST_MQTT_TOPIC, MQTTQoS1 ) );
 
-/*     / * Expect an UNSUBACK from the broker for the unsubscribe operation. * / */
-/*     TEST_ASSERT_EQUAL( MQTTSuccess, */
-/*                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) ); */
-/*     TEST_ASSERT_TRUE( receivedUnsubAck ); */
-/* } */
+    /* Expect an UNSUBACK from the broker for the unsubscribe operation. */
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    TEST_ASSERT_TRUE( receivedUnsubAck );
+}
 
-/* / ** */
-/*  * @brief Tests Subscribe and Publish operations with the MQTT broken using QoS 2. */
-/*  * The test subscribes to a topic, and then publishes to the same topic. The */
-/*  * broker is expected to route the publish message back to the test. */
-/*  * / */
-/* void test_MQTT_Subscribe_Publish_With_Qos_2( void ) */
-/* { */
-/*     / * Subscribe to a topic with Qos 2. * / */
-/*     TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic( */
-/*                            &context, TEST_MQTT_TOPIC, MQTTQoS2 ) ); */
+/**
+ * @brief Tests Subscribe and Publish operations with the MQTT broken using QoS 2.
+ * The test subscribes to a topic, and then publishes to the same topic. The
+ * broker is expected to route the publish message back to the test.
+ */
+void test_MQTT_Subscribe_Publish_With_Qos_2( void )
+{
+    /* Subscribe to a topic with Qos 2. */
+    TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic(
+                           &context, TEST_MQTT_TOPIC, MQTTQoS2 ) );
 
-/*     / * Expect a SUBACK from the broker for the subscribe operation. * / */
-/*     TEST_ASSERT_EQUAL( MQTTSuccess, */
-/*                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) ); */
-/*     TEST_ASSERT_TRUE( receivedSubAck ); */
+    /* Expect a SUBACK from the broker for the subscribe operation. */
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    TEST_ASSERT_TRUE( receivedSubAck );
 
-/*     / * Publish to the same topic, that we subscribed to, with Qos 2. * / */
-/*     TEST_ASSERT_EQUAL( MQTTSuccess, publishToTopic( */
-/*                            &context, TEST_MQTT_TOPIC, MQTTQoS2 ) ); */
+    /* Publish to the same topic, that we subscribed to, with Qos 2. */
+    TEST_ASSERT_EQUAL( MQTTSuccess, publishToTopic(
+                           &context, TEST_MQTT_TOPIC, MQTTQoS2 ) );
 
-/*     / * Make sure that the MQTT context state was updated after the PUBLISH request. * / */
-/*     TEST_ASSERT_EQUAL( MQTTQoS2, context.outgoingPublishRecords[ 0 ].qos ); */
-/*     TEST_ASSERT_EQUAL( globalPublishPacketIdentifier, context.outgoingPublishRecords[ 0 ].packetId ); */
-/*     TEST_ASSERT_EQUAL( MQTTPubRecPending, context.outgoingPublishRecords[ 0 ].publishState ); */
+    /* Make sure that the MQTT context state was updated after the PUBLISH request. */
+    TEST_ASSERT_EQUAL( MQTTQoS2, context.outgoingPublishRecords[ 0 ].qos );
+    TEST_ASSERT_EQUAL( globalPublishPacketIdentifier, context.outgoingPublishRecords[ 0 ].packetId );
+    TEST_ASSERT_EQUAL( MQTTPubRecPending, context.outgoingPublishRecords[ 0 ].publishState );
 
-/*     / * We expect PUBREC and PUBCOMP responses for the PUBLISH request, and */
-/*      * incoming PUBLISH with the same message that we published (as we are subscribed */
-/*      * to the same topic). Also, we expect a PUBREL ack response from the server for */
-/*      * the incoming PUBLISH (as we subscribed and publish with QoS 2). Since it takes */
-/*      * longer to complete a QoS 2 publish, we run the process loop longer to allow it */
-/*      * ample time. * / */
-/*     TEST_ASSERT_EQUAL( MQTTSuccess, */
-/*                        MQTT_ProcessLoop( &context, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) ); */
-/*     TEST_ASSERT_FALSE( receivedPubAck ); */
-/*     TEST_ASSERT_TRUE( receivedPubRec ); */
-/*     TEST_ASSERT_TRUE( receivedPubComp ); */
-/*     TEST_ASSERT_TRUE( receivedPubRel ); */
+    /* We expect PUBREC and PUBCOMP responses for the PUBLISH request, and
+     * incoming PUBLISH with the same message that we published (as we are subscribed
+     * to the same topic). Also, we expect a PUBREL ack response from the server for
+     * the incoming PUBLISH (as we subscribed and publish with QoS 2). Since it takes
+     * longer to complete a QoS 2 publish, we run the process loop longer to allow it
+     * ample time. */
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       MQTT_ProcessLoop( &context, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    TEST_ASSERT_FALSE( receivedPubAck );
+    TEST_ASSERT_TRUE( receivedPubRec );
+    TEST_ASSERT_TRUE( receivedPubComp );
+    TEST_ASSERT_TRUE( receivedPubRel );
 
-/*     / * Make sure that we have received the same message from the server, */
-/*      * that was published (as we have subscribed to the same topic). * / */
-/*     TEST_ASSERT_EQUAL( MQTTQoS2, incomingInfo.qos ); */
-/*     TEST_ASSERT_EQUAL( TEST_MQTT_TOPIC_LENGTH, incomingInfo.topicNameLength ); */
-/*     TEST_ASSERT_EQUAL_MEMORY( TEST_MQTT_TOPIC, */
-/*                               incomingInfo.pTopicName, */
-/*                               TEST_MQTT_TOPIC_LENGTH ); */
-/*     TEST_ASSERT_EQUAL( strlen( MQTT_EXAMPLE_MESSAGE ), incomingInfo.payloadLength ); */
-/*     TEST_ASSERT_EQUAL_MEMORY( MQTT_EXAMPLE_MESSAGE, */
-/*                               incomingInfo.pPayload, */
-/*                               incomingInfo.payloadLength ); */
+    /* Make sure that we have received the same message from the server,
+     * that was published (as we have subscribed to the same topic). */
+    TEST_ASSERT_EQUAL( MQTTQoS2, incomingInfo.qos );
+    TEST_ASSERT_EQUAL( TEST_MQTT_TOPIC_LENGTH, incomingInfo.topicNameLength );
+    TEST_ASSERT_EQUAL_MEMORY( TEST_MQTT_TOPIC,
+                              incomingInfo.pTopicName,
+                              TEST_MQTT_TOPIC_LENGTH );
+    TEST_ASSERT_EQUAL( strlen( MQTT_EXAMPLE_MESSAGE ), incomingInfo.payloadLength );
+    TEST_ASSERT_EQUAL_MEMORY( MQTT_EXAMPLE_MESSAGE,
+                              incomingInfo.pPayload,
+                              incomingInfo.payloadLength );
 
-/*     / * Un-subscribe from a topic with Qos 2. * / */
-/*     TEST_ASSERT_EQUAL( MQTTSuccess, unsubscribeFromTopic( */
-/*                            &context, TEST_MQTT_TOPIC, MQTTQoS2 ) ); */
+    /* Un-subscribe from a topic with Qos 2. */
+    TEST_ASSERT_EQUAL( MQTTSuccess, unsubscribeFromTopic(
+                           &context, TEST_MQTT_TOPIC, MQTTQoS2 ) );
 
-/*     / * Expect an UNSUBACK from the broker for the unsubscribe operation. * / */
-/*     TEST_ASSERT_EQUAL( MQTTSuccess, */
-/*                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) ); */
-/*     TEST_ASSERT_TRUE( receivedUnsubAck ); */
-/* } */
+    /* Expect an UNSUBACK from the broker for the unsubscribe operation. */
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    TEST_ASSERT_TRUE( receivedUnsubAck );
+}
 
-/* void test_MQTT_Connect_LWT( void ) */
-/* { */
-/*     int secondTcpSocket; */
-/*     NetworkContext_t secondNetworkContext = { 0 }; */
-/*     bool sessionPresent; */
-/*     MQTTContext_t secondContext; */
+void test_MQTT_Connect_LWT( void )
+{
+    NetworkContext_t secondNetworkContext = { 0 };
+    bool sessionPresent;
+    MQTTContext_t secondContext;
 
-/*     / * Establish a second TCP connection with the server endpoint, then */
-/*      * a TLS session. The server info and credentials can be reused. * / */
-/*     TEST_ASSERT_EQUAL( OPENSSL_SUCCESS, Openssl_Connect( &secondNetworkContext, */
-/*                                                          &serverInfo, */
-/*                                                          &opensslCredentials, */
-/*                                                          TRANSPORT_SEND_RECV_TIMEOUT_MS, */
-/*                                                          TRANSPORT_SEND_RECV_TIMEOUT_MS ) ); */
-/*     TEST_ASSERT_NOT_EQUAL( -1, secondNetworkContext.socketDescriptor ); */
-/*     TEST_ASSERT_NOT_NULL( secondNetworkContext.pSsl ); */
+    /*Establish a second TCP connection with the server endpoint, then
+     * a TLS session.The server info and credentials can be reused. */
+    TEST_ASSERT_EQUAL( OPENSSL_SUCCESS, Openssl_Connect( &secondNetworkContext,
+                                                         &serverInfo,
+                                                         &opensslCredentials,
+                                                         TRANSPORT_SEND_RECV_TIMEOUT_MS,
+                                                         TRANSPORT_SEND_RECV_TIMEOUT_MS ) );
+    TEST_ASSERT_NOT_EQUAL( -1, secondNetworkContext.socketDescriptor );
+    TEST_ASSERT_NOT_NULL( secondNetworkContext.pSsl );
 
-/*     / * Establish MQTT session on top of the TCP+TLS connection. * / */
-/*     useLWTClientIdentifier = true; */
-/*     establishMqttSession( &secondContext, true, &secondNetworkContext, true, &sessionPresent ); */
+    /*Establish MQTT session on top of the TCP + TLS connection. */
+    useLWTClientIdentifier = true;
+    establishMqttSession( &secondContext, true, &secondNetworkContext, true, &sessionPresent );
 
-/*     / * Subscribe to LWT Topic. * / */
-/*     TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic( */
-/*                            &context, TEST_MQTT_LWT_TOPIC, MQTTQoS0 ) ); */
+    /*Subscribe to LWT Topic. */
+    TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic(
+                           &context, TEST_MQTT_LWT_TOPIC, MQTTQoS0 ) );
 
-/*     / * Abruptly terminate TCP connection. * / */
-/*     ( void ) Openssl_Disconnect( &secondNetworkContext ); */
+    /*Abruptly terminate TCP connection. */
+    ( void ) Openssl_Disconnect( &secondNetworkContext );
 
-/*     / * Run the process loop to receive the LWT. Allow some more time for the */
-/*      * server to realize the connection is closed. * / */
-/*     TEST_ASSERT_EQUAL( MQTTSuccess, */
-/*                        MQTT_ProcessLoop( &context, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) ); */
+    /*Run the process loop to receive the LWT.Allow some more time
+     *
+     * for the
+     * server to realize the connection is closed. */
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       MQTT_ProcessLoop( &context, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
 
-/*     / * Test if we have received the LWT. * / */
-/*     TEST_ASSERT_EQUAL( MQTTQoS0, incomingInfo.qos ); */
-/*     TEST_ASSERT_EQUAL( TEST_MQTT_LWT_TOPIC_LENGTH, incomingInfo.topicNameLength ); */
-/*     TEST_ASSERT_EQUAL_MEMORY( TEST_MQTT_LWT_TOPIC, */
-/*                               incomingInfo.pTopicName, */
-/*                               TEST_MQTT_LWT_TOPIC_LENGTH ); */
-/*     TEST_ASSERT_EQUAL( strlen( MQTT_EXAMPLE_MESSAGE ), incomingInfo.payloadLength ); */
-/*     TEST_ASSERT_EQUAL_MEMORY( MQTT_EXAMPLE_MESSAGE, */
-/*                               incomingInfo.pPayload, */
-/*                               incomingInfo.payloadLength ); */
+    /*Test
+     *
+     * if we have received the LWT. */
+    TEST_ASSERT_EQUAL( MQTTQoS0, incomingInfo.qos );
+    TEST_ASSERT_EQUAL( TEST_MQTT_LWT_TOPIC_LENGTH, incomingInfo.topicNameLength );
+    TEST_ASSERT_EQUAL_MEMORY( TEST_MQTT_LWT_TOPIC,
+                              incomingInfo.pTopicName,
+                              TEST_MQTT_LWT_TOPIC_LENGTH );
+    TEST_ASSERT_EQUAL( strlen( MQTT_EXAMPLE_MESSAGE ), incomingInfo.payloadLength );
+    TEST_ASSERT_EQUAL_MEMORY( MQTT_EXAMPLE_MESSAGE,
+                              incomingInfo.pPayload,
+                              incomingInfo.payloadLength );
 
-/*     / * Un-subscribe from a topic with Qos 0. * / */
-/*     TEST_ASSERT_EQUAL( MQTTSuccess, unsubscribeFromTopic( */
-/*                            &context, TEST_MQTT_TOPIC, MQTTQoS0 ) ); */
+    /*Un - subscribe from a topic with Qos 0. */
+    TEST_ASSERT_EQUAL( MQTTSuccess, unsubscribeFromTopic(
+                           &context, TEST_MQTT_TOPIC, MQTTQoS0 ) );
 
-/*     / * We expect an UNSUBACK from the broker for the unsubscribe operation. * / */
-/*     TEST_ASSERT_EQUAL( MQTTSuccess, */
-/*                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) ); */
-/*     TEST_ASSERT_TRUE( receivedUnsubAck ); */
-/* } */
+    /*We expect an UNSUBACK from the broker
+     *
+     * for the unsubscribe operation. */
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    TEST_ASSERT_TRUE( receivedUnsubAck );
+}
 
-/* void test_MQTT_ProcessLoop_KeepAlive( void ) */
-/* { */
-/*     uint32_t connectPacketTime = context.lastPacketTime; */
-/*     uint32_t elapsedTime = 0; */
+void test_MQTT_ProcessLoop_KeepAlive( void )
+{
+    uint32_t connectPacketTime = context.lastPacketTime;
+    uint32_t elapsedTime = 0;
 
-/*     TEST_ASSERT_EQUAL( 0, context.pingReqSendTimeMs ); */
+    TEST_ASSERT_EQUAL( 0, context.pingReqSendTimeMs );
 
-/*     / * Sleep until control packet needs to be sent. * / */
-/*     Clock_SleepMs( MQTT_KEEP_ALIVE_INTERVAL_SECONDS * 1000 ); */
-/*     TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) ); */
+    /*Sleep until control packet needs to be sent. */
+    Clock_SleepMs( MQTT_KEEP_ALIVE_INTERVAL_SECONDS * 1000 );
+    TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
 
-/*     TEST_ASSERT_NOT_EQUAL( 0, context.pingReqSendTimeMs ); */
-/*     TEST_ASSERT_NOT_EQUAL( connectPacketTime, context.lastPacketTime ); */
-/*     / * Test that the ping was sent within 1.5 times the keep alive interval. * / */
-/*     elapsedTime = context.lastPacketTime - connectPacketTime; */
-/*     TEST_ASSERT_LESS_OR_EQUAL( MQTT_KEEP_ALIVE_INTERVAL_SECONDS * 1500, elapsedTime ); */
-/* } */
+    TEST_ASSERT_NOT_EQUAL( 0, context.pingReqSendTimeMs );
+    TEST_ASSERT_NOT_EQUAL( connectPacketTime, context.lastPacketTime );
+    /*Test that the ping was sent within 1.5 times the keep alive interval. */
+    elapsedTime = context.lastPacketTime - connectPacketTime;
+    TEST_ASSERT_LESS_OR_EQUAL( MQTT_KEEP_ALIVE_INTERVAL_SECONDS * 1500, elapsedTime );
+}
 
 void test_MQTT_Connect_Restore_Session( void )
 {
