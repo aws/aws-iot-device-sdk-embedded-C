@@ -1827,7 +1827,6 @@ MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext,
                                uint32_t timeoutMs )
 {
     MQTTStatus_t status = MQTTBadParameter;
-    MQTTGetCurrentTimeFunc_t getTimeStampMs = NULL;
     uint32_t entryTimeMs = 0U, remainingTimeMs = timeoutMs, elapsedTimeMs = 0U;
 
     if( pContext == NULL )
@@ -1844,8 +1843,7 @@ MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext,
     }
     else
     {
-        getTimeStampMs = pContext->getTime;
-        entryTimeMs = getTimeStampMs();
+        entryTimeMs = pContext->getTime();
         status = MQTTSuccess;
     }
 
@@ -1864,7 +1862,7 @@ MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext,
         {
             /* Recalculate remaining time and check if loop should exit. This is
              * done at the end so the loop will run at least a single iteration. */
-            elapsedTimeMs = calculateElapsedTime( getTimeStampMs(), entryTimeMs );
+            elapsedTimeMs = calculateElapsedTime( pContext->getTime(), entryTimeMs );
 
             if( elapsedTimeMs >= timeoutMs )
             {
