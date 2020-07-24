@@ -88,6 +88,22 @@ def cli_run(args):
     _check_status(result)
 
 
+def cli_code_coverage(args):
+    _file = Path(args.config_file)
+    config = _read_config(_file)
+    default_config = config.get("_default", {})
+
+    build_flags = args.build_flags or _get_flags(config, "build_flags")
+    c_flags = args.c_flags or _get_flags(config, "c_flags")
+    codecov_token = args.codecov_token or default_config.get("codecov_token", None)
+
+    result = _build_code_coverage(
+        args.src, args.build_path, build_flags, c_flags, codecov_token
+    )
+    _log_save_result(result, f"build_coverage.xml")
+    _check_status(result)
+
+
 def cli_invoke(args_list):
     _cli_invoke_next(args_list)
 
@@ -115,6 +131,9 @@ def get_parser():
         "--c-flags", nargs="+", help="Optional c_flags required to configure build",
     )
     new_argument("--allow", nargs="+", help="Pattern for target selection")
+    new_argument(
+        "--codecov-token", help="Optional token to uplode coverage report to codecov.io"
+    )
 
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers()
@@ -159,6 +178,19 @@ def get_parser():
     )
     add_argument(cmd_run, "--targets", required=False)
     cmd_run.set_defaults(func="run")
+
+    cmd_code_coverage = subparsers.add_parser("code-coverage")
+    add_arguments(
+        cmd_code_coverage,
+        "--config-file",
+        "--src",
+        "--build-path",
+        "--build-flags",
+        "--c-flags",
+        "--codecov-token",
+    )
+    cmd_code_coverage.set_defaults(func="code-coverage")
+
     return parser
 
 
@@ -275,6 +307,33 @@ def _run_targets(targets, src, build_path, config):
             log(err.stdout)
             target_run_result["status"] = "FAIL"
             target_run_result["details"] = "Run Failure"
+    return result
+
+
+def _build_code_coverage(src, build_path, build_flags, c_flags, codecov_token):
+    result = {}
+    try:
+        target_result = result.setdefault("coverage", {})
+        target_build_result = target_result.setdefault("CodeCoverage", {})
+        out = _build_target("coverage", src, build_path, build_flags, c_flags)
+        log(out)
+
+        if codecov_token:
+            log("\n----------------------------------------------------------------")
+            log("Upload Code Coverage report to codecov.io")
+            log("----------------------------------------------------------------")
+            cmd = f"curl -s https://codecov.io/bash | bash -s - -t {codecov_token}"
+            out = _run_cmd(cmd)
+            log(out)
+        else:
+            log(
+                "Provide '--codecov-token' in commandline, if you want to upload coverage report to codecov.io"
+            )
+        target_build_result["status"] = "PASS"
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as err:
+        log(err.stdout)
+        target_build_result["status"] = "FAIL"
+        target_build_result["details"] = "Code Coverage Failure"
     return result
 
 
