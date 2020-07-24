@@ -20,8 +20,8 @@
  */
 
 /**
- * @file MQTT_ProcessLoop_harness.c
- * @brief Implements the proof harness for MQTT_ProcessLoop function.
+ * @file MQTT_Publish_harness.c
+ * @brief Implements the proof harness for MQTT_Publish function.
  */
 #include "mqtt.h"
 #include "mqtt_cbmc_state.h"
@@ -29,15 +29,14 @@
 void harness()
 {
     MQTTContext_t * pContext;
-    uint32_t timeoutMs;
+    MQTTPublishInfo_t * pPublishInfo;
+    uint16_t packetId;
 
     pContext = allocateMqttContext( NULL );
     __CPROVER_assume( isValidMqttContext( pContext ) );
 
-    /* The MQTT_RECEIVE_TIMEOUT is used here to control the number of loops
-     * when receiving on the network. The default is used here because memory
-     * safety can be proven in only a few iterations. */
-    __CPROVER_assume( timeoutMs < MQTT_RECEIVE_TIMEOUT );
+    pPublishInfo = allocateMqttPublishInfo( NULL );
+    __CPROVER_assume( isValidMqttPublishInfo( pPublishInfo ) );
 
-    MQTT_ProcessLoop( pContext, timeoutMs );
+    MQTT_Publish( pContext, pPublishInfo, packetId );
 }

@@ -20,8 +20,8 @@
  */
 
 /**
- * @file MQTT_ProcessLoop_harness.c
- * @brief Implements the proof harness for MQTT_ProcessLoop function.
+ * @file MQTT_Unsubscribe_harness.c
+ * @brief Implements the proof harness for MQTT_Unsubscribe function.
  */
 #include "mqtt.h"
 #include "mqtt_cbmc_state.h"
@@ -29,15 +29,17 @@
 void harness()
 {
     MQTTContext_t * pContext;
-    uint32_t timeoutMs;
+    MQTTSubscribeInfo_t * pSubscriptionList;
+    size_t subscriptionCount;
+    uint16_t packetId;
 
     pContext = allocateMqttContext( NULL );
     __CPROVER_assume( isValidMqttContext( pContext ) );
 
-    /* The MQTT_RECEIVE_TIMEOUT is used here to control the number of loops
-     * when receiving on the network. The default is used here because memory
-     * safety can be proven in only a few iterations. */
-    __CPROVER_assume( timeoutMs < MQTT_RECEIVE_TIMEOUT );
+    __CPROVER_assume( subscriptionCount < SUBSCRIPTION_COUNT_MAX );
 
-    MQTT_ProcessLoop( pContext, timeoutMs );
+    pSubscriptionList = allocateMqttSubscriptionList( NULL, subscriptionCount );
+    __CPROVER_assume( isValidMqttSubscriptionList( pSubscriptionList, subscriptionCount ) );
+
+    MQTT_Unsubscribe( pContext, pSubscriptionList, subscriptionCount, packetId );
 }
