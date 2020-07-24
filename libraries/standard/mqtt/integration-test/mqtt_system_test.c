@@ -808,7 +808,7 @@ void test_MQTT_Connect_LWT( void )
     bool sessionPresent;
     MQTTContext_t secondContext;
 
-    /*Establish a second TCP connection with the server endpoint, then
+    /* Establish a second TCP connection with the server endpoint, then
      * a TLS session.The server info and credentials can be reused. */
     TEST_ASSERT_EQUAL( OPENSSL_SUCCESS, Openssl_Connect( &secondNetworkContext,
                                                          &serverInfo,
@@ -818,7 +818,7 @@ void test_MQTT_Connect_LWT( void )
     TEST_ASSERT_NOT_EQUAL( -1, secondNetworkContext.socketDescriptor );
     TEST_ASSERT_NOT_NULL( secondNetworkContext.pSsl );
 
-    /* Establish MQTT session on top of the TCP + TLS connection. */
+    /* Establish MQTT session on top of the TCP+TLS connection. */
     useLWTClientIdentifier = true;
     establishMqttSession( &secondContext, &secondNetworkContext, true, &sessionPresent );
 
@@ -826,10 +826,10 @@ void test_MQTT_Connect_LWT( void )
     TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic(
                            &context, TEST_MQTT_LWT_TOPIC, MQTTQoS0 ) );
 
-    /*Abruptly terminate TCP connection. */
+    /* Abruptly terminate TCP connection. */
     ( void ) Openssl_Disconnect( &secondNetworkContext );
 
-    /* Run the process loop to receive the LWT.Allow some more time for the
+    /* Run the process loop to receive the LWT. Allow some more time for the
      * server to realize the connection is closed. */
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
@@ -909,10 +909,8 @@ void test_MQTT_Connect_Restore_Session( void )
 
     /* Disconnect on receiving PUBREC so that we are not able to complete the QoS 2 PUBLISH in the current connection. */
     disconnectOnPacketType = MQTT_PACKET_TYPE_PUBREC;
-
     TEST_ASSERT_EQUAL( MQTTSendFailed,
                        MQTT_ProcessLoop( &context, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
-    TEST_ASSERT_FALSE( receivedPubRel );
     TEST_ASSERT_FALSE( receivedPubComp );
 
     /* Verify that the connection with the broker has been disconnected. */
