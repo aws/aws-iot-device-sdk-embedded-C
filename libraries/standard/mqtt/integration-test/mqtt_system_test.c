@@ -262,6 +262,8 @@ static uint8_t disconnectOnPacketType = 0U;
  * @brief Sends an MQTT CONNECT packet over the already connected TCP socket.
  *
  * @param[in] pContext MQTT context pointer.
+ * @param[in] initializeContext Flag to indicate whether the @p pContext should
+ * be initialized before establishing connection.
  * @param[in] pNetworkContext Network context for OpenSSL transport implementation.
  * @param[in] createCleanSession Creates a new MQTT session if true.
  * If false, tries to establish the existing session if there was session
@@ -270,6 +272,7 @@ static uint8_t disconnectOnPacketType = 0U;
  * Session present response is obtained from the CONNACK from broker.
  */
 static void establishMqttSession( MQTTContext_t * pContext,
+                                  bool initContext,
                                   NetworkContext_t * pNetworkContext,
                                   bool createCleanSession,
                                   bool * pSessionPresent );
@@ -292,6 +295,7 @@ static void eventCallback( MQTTContext_t * pContext,
 /*-----------------------------------------------------------*/
 
 static void establishMqttSession( MQTTContext_t * pContext,
+                                  bool initializeContext,
                                   NetworkContext_t * pNetworkContext,
                                   bool createCleanSession,
                                   bool * pSessionPresent )
@@ -325,11 +329,14 @@ static void establishMqttSession( MQTTContext_t * pContext,
      * function will be used to calculate intervals in MQTT library.*/
     callbacks.getTime = Clock_GetTimeMs;
 
-    /* Initialize MQTT library. */
-    TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_Init( pContext,
-                                               &transport,
-                                               &callbacks,
-                                               &networkBuffer ) );
+    if( initializeContext == true )
+    {
+        /* Initialize MQTT library. */
+        TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_Init( pContext,
+                                                   &transport,
+                                                   &callbacks,
+                                                   &networkBuffer ) );
+    }
 
     /* Establish MQTT session with a CONNECT packet. */
 
@@ -605,7 +612,7 @@ void setUp()
     TEST_ASSERT_NOT_NULL( networkContext.pSsl );
 
     /* Establish MQTT session on top of the TCP+TLS connection. */
-    establishMqttSession( &context, &networkContext, true, &persistentSession );
+    establishMqttSession( &context, true, &networkContext, true, &persistentSession );
 }
 
 /* Called after each test method. */
@@ -813,7 +820,7 @@ void tearDown()
 
 /*     / * Establish MQTT session on top of the TCP+TLS connection. * / */
 /*     useLWTClientIdentifier = true; */
-/*     establishMqttSession( &secondContext, &secondNetworkContext, true, &sessionPresent ); */
+/*     establishMqttSession( &secondContext, true, &secondNetworkContext, true, &sessionPresent ); */
 
 /*     / * Subscribe to LWT Topic. * / */
 /*     TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic( */
@@ -884,7 +891,7 @@ void test_MQTT_Connect_Restore_Session( void )
     TEST_ASSERT_NOT_NULL( networkContext.pSsl );
 
     /* Establish a new MQTT connection for a persistent session with the broker. */
-    establishMqttSession( &context, &networkContext, false, &persistentSession );
+    establishMqttSession( &context, false, &networkContext, false, &persistentSession );
     TEST_ASSERT_FALSE( persistentSession );
 
     /* Publish to a topic with Qos 2. */
@@ -915,7 +922,7 @@ void test_MQTT_Connect_Restore_Session( void )
     TEST_ASSERT_NOT_NULL( networkContext.pSsl );
 
     /* Re-establish the persistent session with the broker by connecting with "clean session" flag set to 0. */
-    establishMqttSession( &context, &networkContext, false, &persistentSession );
+    establishMqttSession( &context, false, &networkContext, false, &persistentSession );
 
     /* Verify that the session was resumed. */
     TEST_ASSERT_TRUE( persistentSession );
