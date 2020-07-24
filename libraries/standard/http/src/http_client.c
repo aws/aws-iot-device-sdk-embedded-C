@@ -1744,10 +1744,6 @@ static HTTPStatus_t receiveHttpData( const TransportInterface_t * pTransport,
                                         pBuffer,
                                         bufferLen );
 
-    /* It is a bug in the application's transport receive implementation if
-     * more bytes than expected are received. */
-    assert( transportStatus <= ( int32_t ) bufferLen );
-
     /* A transport status of less than zero is an error. */
     if( transportStatus < 0 )
     {
