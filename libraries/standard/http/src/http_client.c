@@ -1956,12 +1956,6 @@ HTTPStatus_t HTTPClient_Send( const TransportInterface_t * pTransport,
                     "pRequestHeaders->bufferLen." ) );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
-    else if( pRequestHeaders->headersLen > INT32_MAX )
-    {
-        LogError( ( "Parameter check failed: pRequestHeaders->headersLen > "
-                    "2147483647 (INT32_MAX)." ) );
-        returnStatus = HTTP_INVALID_PARAMETER;
-    }
     else if( reqBodyBufLen > INT32_MAX )
     {
         LogError( ( "Parameter check failed: reqBodyBufLen > "
