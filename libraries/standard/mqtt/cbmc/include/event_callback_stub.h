@@ -30,7 +30,7 @@
 /* mqtt.h must precede including this header. */
 
 /**
- * @brief Application callbacks for receiving incoming publishes and incoming
+ * @brief User defined callback for receiving incoming publishes and incoming
  * acks.
  *
  * @param[in] pContext Initialized MQTT context.

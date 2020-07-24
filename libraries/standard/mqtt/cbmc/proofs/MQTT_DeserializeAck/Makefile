@@ -30,8 +30,7 @@ DEFINES += -DREMAINING_LENGTH_MAX=$(REMAINING_LENGTH_MAX)
 INCLUDES +=
 
 REMOVE_FUNCTION_BODY +=
-# The loop is unwound REMAINING_LENGTH_MAX + 1 times.
-UNWINDSET += __CPROVER_file_local_mqtt_lightweight_c_readSubackStatus.0:4
+UNWINDSET += __CPROVER_file_local_mqtt_lightweight_c_readSubackStatus.0:$(REMAINING_LENGTH_MAX)
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 PROOF_SOURCES += $(SRCDIR)/libraries/standard/mqtt/cbmc/sources/mqtt_cbmc_state.c

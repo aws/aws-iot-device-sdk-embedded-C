@@ -30,10 +30,10 @@
 /* mqtt.h must precede including this header. */
 
 /**
- * Application defined function to retrieve the current time in milliseconds.
+ * Application defined callback to retrieve the current time in milliseconds.
  *
  * @return The current time in milliseconds.
  */
 uint32_t GetCurrentTimeStub( void );
 
-#endif
+#endif /* ifndef GET_TIME_STUB_H_ */

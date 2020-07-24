@@ -40,10 +40,10 @@ int32_t NetworkInterfaceReceiveStub( NetworkContext_t * pNetworkContext,
 
     __CPROVER_havoc_object( pBuffer );
 
-    /* This is unbounded as the MQTT code should be able to safely handle any
-     * int32_t value returned from the application defined network receive
-     * implementation. */
     int32_t bytesOrError;
+
+    /* It is a bug for the application defined transport send function to return
+     * more than bytesToRecv. */
     __CPROVER_assume( bytesOrError <= bytesToRecv );
 
     return bytesOrError;
@@ -59,10 +59,11 @@ int32_t NetworkInterfaceSendStub( NetworkContext_t * pNetworkContext,
     /* The number of tries to send the message before this invocation. */
     static size_t tries;
 
-    /* This is unbounded as the MQTT code should be able to safely handle any
-     * int32_t value returned from the application defined network send
-     * implementation. */
     int32_t bytesOrError;
+
+    /* It is a bug for the application defined transport send function to return
+     * more than bytesToSend. */
+    __CPROVER_assume( bytesOrError <= bytesToSend );
 
     /* If the maximum tries are reached, then return a timeout. In the MQTT library
      * this stub is wrapped in a loop that will does not end until the bytesOrError
