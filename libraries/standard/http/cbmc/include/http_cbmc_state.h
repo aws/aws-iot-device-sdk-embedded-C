@@ -26,6 +26,8 @@
 #include <stdint.h>
 
 #include "http_client.h"
+#include "private/http_client_internal.h"
+#include "http_parser.h"
 
 struct NetworkContext
 {
@@ -133,14 +135,15 @@ int32_t TransportInterfaceReceiveStub( NetworkContext_t context,
  * @brief Allocate a transport interface for CBMC.
  *
  * @param[in] pTransport Transport interface.
- * @param[in] pTransportRecv Transport receive function pointer.
- * @param[in] pTransportSend Transport send function pointer.
  * @return An allocated HTTPTransportInterface_t object to use as a parameter
  * for the function under test.
  */
 HTTPTransportInterface_t * allocateTransportInterface( HTTPTransportInterface_t * pTransport );
 
-bool isValidTransportInterface( HTTPTransportInterface_t * pTransport );
-
+/* Model the third party HTTP Parser. */
+size_t http_parser_execute( http_parser * parser,
+                            const http_parser_settings * settings,
+                            const char * data,
+                            size_t len );
 
 #endif /* ifndef HTTP_CBMC_STATE_H_ */

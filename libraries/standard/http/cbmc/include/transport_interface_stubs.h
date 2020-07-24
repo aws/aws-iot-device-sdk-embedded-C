@@ -26,5 +26,16 @@
 
 #include "http_client.h"
 
+#ifndef MAX_TRIES
+    #define MAX_TRIES    5
+#endif
+
+int32_t TransportInterfaceSendStub( NetworkContext_t * pContext,
+                                    void * pBuffer,
+                                    size_t bytesToSend );
+
+int32_t TransportInterfaceReceiveStub( NetworkContext_t * pContext,
+                                       void * pBuffer,
+                                       size_t bytesToRecv );
 
 #endif /* ifndef TRANSPORT_INTERFACE_STUBS_H_ */

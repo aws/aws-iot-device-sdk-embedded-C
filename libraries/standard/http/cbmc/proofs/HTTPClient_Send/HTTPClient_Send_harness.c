@@ -34,6 +34,9 @@ void harness()
 {
     HTTPRequestHeaders_t * pRequestHeaders = NULL;
     HTTPResponse_t * pResponse = NULL;
+
+    /* Ideally, this should be allocated in the heap but doing so makes CBMC
+     * run out of memory. */
     HTTPTransportInterface_t transportInterface;
     uint8_t * pRequestBodyBuf = NULL;
     size_t reqBodyBufLen;
@@ -51,15 +54,13 @@ void harness()
     pResponse = allocateHttpResponse( NULL );
     __CPROVER_assume( isValidHttpResponse( pResponse ) );
 
-    /* Initialize and make assumptions for transport interface.
-     * Unfortunately, we couldn't get this to run without allocating transport
-     * interface on the stack. */
+    /* Initialize transport interface. */
     ( void ) allocateTransportInterface( &transportInterface );
 
     if( nondet_bool() )
     {
-        /* Ideally, we want to set the function pointers below with __CPROVER_assume(),
-         * but doing it that way makes the proof run out of memory. */
+        /* Ideally, we want to set the function pointers below with __CPROVER_assume()
+         * but doing so makes CBMC run out of memory. */
         transportInterface.send = nondet_bool() ? NULL : TransportInterfaceSendStub;
         transportInterface.recv = nondet_bool() ? NULL : TransportInterfaceReceiveStub;
         HTTPClient_Send( &transportInterface,

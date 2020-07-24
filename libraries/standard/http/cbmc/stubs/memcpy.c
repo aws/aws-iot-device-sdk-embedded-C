@@ -20,27 +20,35 @@
  */
 
 /**
- * @file HTTPClient_InitializeRequestHeaders_harness.c
- * @brief Implements the proof harness for HTTPClient_InitializeRequestHeaders function.
+ * @file memcpy.c
+ * @brief Creates a stub for memcpy so that the proof for
+ * HTTPClient_InitializeRequestHeaders runs much faster.
  */
 
 #include <string.h>
 
 /* This is a clang macro not available on linux */
 #ifndef __has_builtin
-#define __has_builtin(x) 0
+    #define __has_builtin( x )    0
 #endif
 
-#if __has_builtin(__builtin___memcpy_chk)
-void *__builtin___memcpy_chk(void *dest, const void *src, size_t n, size_t m) {
-  __CPROVER_assert(__CPROVER_w_ok(dest, n), "write");
-  __CPROVER_assert(__CPROVER_r_ok(src, n), "read");
-  return dest;
-}
+#if __has_builtin( __builtin___memcpy_chk )
+    void * __builtin___memcpy_chk( void * dest,
+                                   const void * src,
+                                   size_t n,
+                                   size_t m )
+    {
+        __CPROVER_assert( __CPROVER_w_ok( dest, n ), "write" );
+        __CPROVER_assert( __CPROVER_r_ok( src, n ), "read" );
+        return dest;
+    }
 #else
-void *memcpy(void *dest, const void *src, size_t n) {
-  __CPROVER_assert(__CPROVER_w_ok(dest, n), "write");
-  __CPROVER_assert(__CPROVER_r_ok(src, n), "read");
-  return dest;
-}
-#endif
+    void * memcpy( void * dest,
+                   const void * src,
+                   size_t n )
+    {
+        __CPROVER_assert( __CPROVER_w_ok( dest, n ), "write" );
+        __CPROVER_assert( __CPROVER_r_ok( src, n ), "read" );
+        return dest;
+    }
+#endif /* if __has_builtin( __builtin___memcpy_chk ) */
