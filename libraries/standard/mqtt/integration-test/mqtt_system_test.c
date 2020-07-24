@@ -1024,7 +1024,6 @@ void test_MQTT_Connect_Restore_Session_Received_Duplicate_PubRel( void )
 
     /* Make sure that the library sent a PUBCOMP packet in response to the PUBREL packet
      * from the server to complete the incoming PUBLISH QoS2 transaction. */
-    TEST_ASSERT_EQUAL( MQTTPubCompSend, context.incomingPublishRecords[ 0 ].publishState );
-    TEST_ASSERT_EQUAL( 0u, context.incomingPublishRecords[ 0 ].packetId );
+    TEST_ASSERT_EQUAL( MQTT_PACKET_ID_INVALID, context.incomingPublishRecords[ 0 ].packetId );
     TEST_ASSERT_EQUAL( true, context.controlPacketSent );
 }
