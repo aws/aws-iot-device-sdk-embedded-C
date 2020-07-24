@@ -1594,20 +1594,16 @@ static HTTPStatus_t sendHttpData( const TransportInterface_t * pTransport,
                                             pIndex,
                                             bytesRemaining );
 
+        /* It is a bug in the application's transport send implementation if
+         * more bytes than expected are sent. */
+        assert( transportStatus <= (int32_t)bytesRemaining );
+
         /* A transport status of less than zero is an error. */
         if( transportStatus < 0 )
         {
             LogError( ( "Failed to send HTTP data: Transport send()"
                         " returned error: TransportStatus=%d",
                         transportStatus ) );
-            returnStatus = HTTP_NETWORK_ERROR;
-        }
-        else if( ( size_t ) transportStatus > bytesRemaining )
-        {
-            LogError( ( "Failed to send HTTP data: Transport send() wrote more data "
-                        "than what was expected: BytesSent=%d, BytesRemaining=%lu",
-                        transportStatus,
-                        bytesRemaining ) );
             returnStatus = HTTP_NETWORK_ERROR;
         }
         else
@@ -1738,23 +1734,16 @@ static HTTPStatus_t receiveHttpData( const TransportInterface_t * pTransport,
                                         pBuffer,
                                         bufferLen );
 
+    /* It is a bug in the application's transport receive implementation if
+     * more bytes than expected are received. */
+    assert( transportStatus <= (int32_t)bufferLen );
+
     /* A transport status of less than zero is an error. */
     if( transportStatus < 0 )
     {
         LogError( ( "Failed to receive HTTP data: Transport recv() "
                     "returned error: TransportStatus=%d",
                     transportStatus ) );
-        returnStatus = HTTP_NETWORK_ERROR;
-    }
-    else if( ( size_t ) transportStatus > bufferLen )
-    {
-        /* There is a bug in the transport recv if more bytes are reported
-         * to have been read than the bytes asked for. */
-        LogError( ( "Failed to receive HTTP data: Transport recv() "
-                    " read more bytes than requested: BytesReceived=%d, "
-                    "BytesRequested=%lu",
-                    transportStatus,
-                    ( unsigned long ) bufferLen ) );
         returnStatus = HTTP_NETWORK_ERROR;
     }
     else if( transportStatus > 0 )

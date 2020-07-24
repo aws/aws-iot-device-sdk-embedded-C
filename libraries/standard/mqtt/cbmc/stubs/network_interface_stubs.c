@@ -38,6 +38,7 @@ int32_t NetworkInterfaceReceiveStub( NetworkContext_t * pNetworkContext,
      * int32_t value returned from the application defined network receive
      * implementation. */
     int32_t bytesOrError;
+    __CPROVER_assume( bytesOrError <= bytesToRecv );
 
     return bytesOrError;
 }
