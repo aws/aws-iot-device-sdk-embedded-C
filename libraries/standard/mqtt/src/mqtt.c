@@ -1301,26 +1301,34 @@ static MQTTStatus_t validatePublishParams( const MQTTContext_t * pContext,
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
-                        TransportInterface_t transportInterface,
-                        MQTTApplicationCallbacks_t callbacks,
-                        MQTTFixedBuffer_t networkBuffer )
+                        const TransportInterface_t * pTransportInterface,
+                        const MQTTApplicationCallbacks_t * pCallbacks,
+                        const MQTTFixedBuffer_t * pNetworkBuffer )
 {
     MQTTStatus_t status = MQTTSuccess;
 
     /* Validate arguments. */
-    if( pContext == NULL )
+    if( ( pContext == NULL ) || ( pTransportInterface == NULL ) ||
+        ( pCallbacks == NULL ) || ( pNetworkBuffer == NULL ) )
     {
-        LogError( ( "pContext argument cannot be NULL" ) );
+        LogError( ( "Argument cannot be NULL: pContext=%p, "
+                    "pTransportInterface=%p, "
+                    "pCallbacks=%p, "
+                    "pNetworkBuffer=%p.",
+                    pContext,
+                    pTransportInterface,
+                    pCallbacks,
+                    pNetworkBuffer ) );
         status = MQTTBadParameter;
     }
-    else if( ( callbacks.getTime == NULL ) || ( callbacks.appCallback == NULL ) ||
-             ( transportInterface.recv == NULL ) || ( transportInterface.send == NULL ) )
+    else if( ( pCallbacks->getTime == NULL ) || ( pCallbacks->appCallback == NULL ) ||
+             ( pTransportInterface->recv == NULL ) || ( pTransportInterface->send == NULL ) )
     {
         LogError( ( "Functions cannot be NULL: getTime=%p, appCallback=%p, recv=%p, send=%p.",
-                    callbacks.getTime,
-                    callbacks.appCallback,
-                    transportInterface.recv,
-                    transportInterface.send ) );
+                    pCallbacks->getTime,
+                    pCallbacks->appCallback,
+                    pTransportInterface->recv,
+                    pTransportInterface->send ) );
         status = MQTTBadParameter;
     }
     else
@@ -1328,9 +1336,9 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
         ( void ) memset( pContext, 0x00, sizeof( MQTTContext_t ) );
 
         pContext->connectStatus = MQTTNotConnected;
-        pContext->transportInterface = transportInterface;
-        pContext->callbacks = callbacks;
-        pContext->networkBuffer = networkBuffer;
+        pContext->transportInterface = *pTransportInterface;
+        pContext->callbacks = *pCallbacks;
+        pContext->networkBuffer = *pNetworkBuffer;
 
         /* Zero is not a valid packet ID per MQTT spec. Start from 1. */
         pContext->nextPacketId = 1;

@@ -686,7 +686,7 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
     callbacks.getTime = Clock_GetTimeMs;
 
     /* Initialize MQTT library. */
-    mqttStatus = MQTT_Init( pMqttContext, transport, callbacks, networkBuffer );
+    mqttStatus = MQTT_Init( pMqttContext, &transport, &callbacks, &networkBuffer );
 
     if( mqttStatus != MQTTSuccess )
     {
