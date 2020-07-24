@@ -54,7 +54,10 @@ int32_t TransportInterfaceReceiveStub( NetworkContext_t * pContext,
     /* The number of bytes considered received after this invocation */
     int32_t ret;
 
-    __CPROVER_assume( ret <= ( int32_t ) bytesToRecv );
+    if( bytesToRecv < INT32_MAX )
+    {
+        __CPROVER_assume( ret <= ( int32_t ) bytesToRecv );
+    }
 
     __CPROVER_assert( pBuffer != NULL,
                       "TransportInterfaceReceiveStub pBuffer is NULL" );

@@ -1952,27 +1952,23 @@ HTTPStatus_t HTTPClient_Send( const TransportInterface_t * pTransport,
                     "pRequestHeaders->bufferLen." ) );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
-    else if( reqBodyBufLen > INT32_MAX )
-    {
-        LogError( ( "Parameter check failed: reqBodyBufLen > "
-                    "2147483647 (INT32_MAX)." ) );
-        returnStatus = HTTP_INVALID_PARAMETER;
-    }
     else if( ( pResponse != NULL ) && ( pResponse->pBuffer == NULL ) )
     {
         LogError( ( "Parameter check failed: pResponse->pBuffer is NULL." ) );
-        returnStatus = HTTP_INVALID_PARAMETER;
-    }
-    else if( ( pResponse != NULL ) && ( pResponse->bufferLen > INT32_MAX ) )
-    {
-        LogError( ( "Parameter check failed: pRequestHeaders->bufferLen > "
-                    "2147483647 (INT32_MAX)." ) );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else if( ( pRequestBodyBuf == NULL ) && ( reqBodyBufLen > 0u ) )
     {
         LogError( ( "Parameter check failed: pRequestBodyBuf is NULL, but "
                     "reqBodyBufLen is greater than zero." ) );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( reqBodyBufLen > INT32_MAX )
+    {
+        /* This check is needed because convertInt32ToAscii() is used on the
+         * reqBodyBufLen to create a Content-Length header value string. */
+        LogError( ( "Parameter check failed: reqBodyBufLen > "
+                    "2147483647 (INT32_MAX)." ) );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else
