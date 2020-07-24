@@ -56,9 +56,13 @@ iso
 lastheaderfieldlen
 lastheadervaluelen
 latin
+len
+linux
 malloc
 methodlen
+memcpy
 misra
+msg
 networkcontext
 nodejs
 noninfringement
@@ -114,6 +118,7 @@ pvalueloc
 rangeend
 rangestart
 rangestartorlastnbytes
+readheadervalue
 receivehttpdata
 recv
 recvcurrentcall
