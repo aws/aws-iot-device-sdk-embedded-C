@@ -333,9 +333,9 @@ static void establishMqttSession( MQTTContext_t * pContext,
     {
         /* Initialize MQTT library. */
         TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_Init( pContext,
-                                                   &transport,
-                                                   &callbacks,
-                                                   &networkBuffer ) );
+                                                   transport,
+                                                   callbacks,
+                                                   networkBuffer ) );
     }
 
     /* Establish MQTT session with a CONNECT packet. */
