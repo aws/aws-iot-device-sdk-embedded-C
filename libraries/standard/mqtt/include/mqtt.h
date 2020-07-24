@@ -44,8 +44,23 @@ typedef struct MQTTPubAckInfo             MQTTPubAckInfo_t;
 struct MQTTContext;
 typedef struct MQTTContext                MQTTContext_t;
 
+/**
+ * @brief Application provided callback to retrieve the current time in
+ * milliseconds.
+ *
+ * @return The current time in milliseconds.
+ */
 typedef uint32_t (* MQTTGetCurrentTimeFunc_t )( void );
 
+/**
+ * @brief Application callback for receiving incoming publishes and incoming
+ * acks.
+ *
+ * @param[in] pContext Initialized MQTT context.
+ * @param[in] pPacketInfo Information on the type of incoming MQTT packet.
+ * @param[in] packetIdentifier Packet identifier of incoming PUBLISH packet.
+ * @param[in] pPublishInfo Incoming PUBLISH packet parameters.
+ */
 typedef void (* MQTTEventCallback_t )( MQTTContext_t * pContext,
                                        MQTTPacketInfo_t * pPacketInfo,
                                        uint16_t packetIdentifier,

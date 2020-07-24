@@ -196,6 +196,7 @@ static void eventCallback( MQTTContext_t * pContext,
                            uint16_t packetIdentifier,
                            MQTTPublishInfo_t * pPublishInfo )
 {
+    ( void ) pContext;
     ( void ) pPacketInfo;
     ( void ) packetIdentifier;
     ( void ) pPublishInfo;
@@ -317,6 +318,7 @@ static int32_t transportRecvOneByte( NetworkContext_t * pNetworkContext,
 {
     ( void ) pNetworkContext;
     ( void ) pBuffer;
+    ( void ) bytesToRead;
     return 1;
 }
 
@@ -580,13 +582,11 @@ void test_MQTT_Connect_sendConnect( void )
 {
     MQTTContext_t mqttContext;
     MQTTConnectInfo_t connectInfo;
-    MQTTPublishInfo_t willInfo;
     uint32_t timeout = 2;
     bool sessionPresent;
     MQTTStatus_t status;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTPacketInfo_t incomingPacket;
     size_t remainingLength, packetSize;
 
     setupTransportInterface( &transport );
@@ -998,7 +998,6 @@ void test_MQTT_Connect_happy_path()
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTPacketInfo_t incomingPacket;
-    size_t remainingLength, packetSize;
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -1105,7 +1104,6 @@ void test_MQTT_Publish( void )
 {
     MQTTContext_t mqttContext;
     MQTTPublishInfo_t publishInfo;
-    uint16_t packetId;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTStatus_t status;
@@ -1250,7 +1248,7 @@ void test_MQTT_Disconnect( void )
     status = MQTT_Disconnect( NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
-    /* Send failure. */
+    /* Send failure with network error. */
     MQTT_GetDisconnectPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetDisconnectPacketSize_ReturnThruPtr_pPacketSize( &disconnectSize );
     MQTT_SerializeDisconnect_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -1321,6 +1319,13 @@ void test_MQTT_ProcessLoop_Invalid_Params( void )
 
     /* Get time function cannot be NULL. */
     context.getTime = NULL;
+    mqttStatus = MQTT_ProcessLoop( &context, MQTT_NO_TIMEOUT_MS );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
+    /* Restore the time function for the next test. */
+    context.getTime = getTime;
+
+    /* The fixed network buffer cannot be NULL. */
+    context.networkBuffer.pBuffer = NULL;
     mqttStatus = MQTT_ProcessLoop( &context, MQTT_NO_TIMEOUT_MS );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 }
@@ -1770,14 +1775,21 @@ void test_MQTT_ReceiveLoop( void )
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
-    /* NULL Context. */
+    /* Verify that a NULL Context returns an error. */
     mqttStatus = MQTT_ReceiveLoop( NULL, MQTT_NO_TIMEOUT_MS );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
+    /* Verify that a NULL time function returns an error. */
     context.getTime = NULL;
     mqttStatus = MQTT_ReceiveLoop( &context, MQTT_NO_TIMEOUT_MS );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
     context.getTime = getTime;
+
+    /* Verify that a null fixed network buffer returns an error. */
+    context.networkBuffer.pBuffer = NULL;
+    mqttStatus = MQTT_ReceiveLoop( &context, MQTT_NO_TIMEOUT_MS );
+    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
+    setupNetworkBuffer( &( context.networkBuffer ) );
 
     /* Error case, for branch coverage. */
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTRecvFailed );
@@ -1849,7 +1861,6 @@ void test_MQTT_Subscribe_happy_path( void )
     MQTTContext_t context;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTPacketInfo_t incomingPacket = { 0 };
     MQTTSubscribeInfo_t subscribeInfo;
     size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
     size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
@@ -2062,6 +2073,8 @@ void test_MQTT_Ping_error_path( void )
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
 
+    /* Test a network error is returned from sending the PING packet over the
+     * transport send . */
     transport.send = transportSendFailure;
     transport.recv = transportRecvFailure;
 
@@ -2075,7 +2088,6 @@ void test_MQTT_Ping_error_path( void )
     /* Expect the above calls when running MQTT_Ping. */
     mqttStatus = MQTT_Ping( &context );
     TEST_ASSERT_EQUAL( MQTTSendFailed, mqttStatus );
-
 
     /* Initialize context. */
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );

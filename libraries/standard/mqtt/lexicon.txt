@@ -7,6 +7,7 @@ app
 aws
 bool
 bufferlength
+bytesorerror
 bytesreceived
 bytestoread
 bytestoreceive
@@ -111,6 +112,7 @@ mqttsuccess
 msb
 networkbuffer
 networkcontext
+networkinterfacesendstub
 newstate
 nextpacketid
 noninfringement
