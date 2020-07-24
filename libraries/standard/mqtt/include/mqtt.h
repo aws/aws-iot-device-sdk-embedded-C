@@ -142,17 +142,17 @@ struct MQTTContext
  * will ensure all time based functions will run for a single iteration.
  *
  * @brief param[in] pContext The context to initialize.
- * @brief param[in] pTransportInterface The transport interface to use with the context.
- * @brief param[in] pCallbacks Callbacks to use with the context.
- * @brief param[in] pNetworkBuffer Network buffer provided for the context.
+ * @brief param[in] transportInterface The transport interface to use with the context.
+ * @brief param[in] callbacks Callbacks to use with the context.
+ * @brief param[in] networkBuffer Network buffer provided for the context.
  *
  * @return #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSuccess otherwise.
  */
 MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
-                        const TransportInterface_t * pTransportInterface,
-                        const MQTTApplicationCallbacks_t * pCallbacks,
-                        const MQTTFixedBuffer_t * pNetworkBuffer );
+                        TransportInterface_t transportInterface,
+                        MQTTApplicationCallbacks_t callbacks,
+                        MQTTFixedBuffer_t networkBuffer );
 
 /**
  * @brief Establish an MQTT session.
