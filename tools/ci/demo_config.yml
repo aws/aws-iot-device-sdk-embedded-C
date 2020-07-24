@@ -5,12 +5,12 @@ _default:
   name: demos
   build_flags:
     # Provide list of flags required for configuring build using cmake
-    - ""
+    - "-DCMAKE_BUILD_TYPE=Release"
   c_flags:
     # Provide list of c_flags common to all target
     - -Wall
     - -Wextra
-    - -Werror
+    #- -Werror
   allow:
     # Provide list of allowed targets [Accepts regex]
     - "_demo_"
