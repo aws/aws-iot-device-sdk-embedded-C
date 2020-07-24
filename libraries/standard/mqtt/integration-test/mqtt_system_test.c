@@ -389,7 +389,8 @@ static void eventCallback( MQTTContext_t * pContext,
         /* Terminate MQTT connection with server for session restoration test. */
         TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_Disconnect( &context ) );
 
-        /* Graceless disconnect. Terminate TLS session and TCP connection. */
+        /* Terminate TLS session and TCP connection to test session restoration
+         * across network connection. */
         ( void ) Openssl_Disconnect( &networkContext );
     }
 
@@ -866,13 +867,13 @@ void test_MQTT_ProcessLoop_KeepAlive( void )
 
     TEST_ASSERT_EQUAL( 0, context.pingReqSendTimeMs );
 
-    /*Sleep until control packet needs to be sent. */
+    /* Sleep until control packet needs to be sent. */
     Clock_SleepMs( MQTT_KEEP_ALIVE_INTERVAL_SECONDS * 1000 );
     TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
 
     TEST_ASSERT_NOT_EQUAL( 0, context.pingReqSendTimeMs );
     TEST_ASSERT_NOT_EQUAL( connectPacketTime, context.lastPacketTime );
-    /*Test that the ping was sent within 1.5 times the keep alive interval. */
+    /* Test that the ping was sent within 1.5 times the keep alive interval. */
     elapsedTime = context.lastPacketTime - connectPacketTime;
     TEST_ASSERT_LESS_OR_EQUAL( MQTT_KEEP_ALIVE_INTERVAL_SECONDS * 1500, elapsedTime );
 }
@@ -884,7 +885,8 @@ void test_MQTT_ProcessLoop_KeepAlive( void )
  */
 void test_MQTT_Connect_Restore_Session( void )
 {
-    /* Graceless disconnect. Terminate TLS session and TCP connection. */
+    /* Terminate TLS session and TCP connection network connection to discard current MQTT session
+     * that was created as a "clean session". */
     ( void ) Openssl_Disconnect( &networkContext );
 
     /* Establish a new MQTT connection over TLS with the broker with the "clean session" flag set to 0
