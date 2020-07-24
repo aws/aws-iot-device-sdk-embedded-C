@@ -1836,7 +1836,7 @@ MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext,
     }
     else if( pContext->getTime == NULL )
     {
-        LogError( ( "Invalid input parameter: MQTT Context have valid getTime function." ) );
+        LogError( ( "Invalid input parameter: MQTT Context must have a valid getTime function." ) );
     }
     else if( pContext->networkBuffer.pBuffer == NULL )
     {
