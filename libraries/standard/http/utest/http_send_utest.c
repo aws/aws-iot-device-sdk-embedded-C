@@ -303,18 +303,6 @@ static int32_t transportSendLessThanBytesToWrite( NetworkContext_t * pNetworkCon
     return retVal;
 }
 
-/* Application transport send that writes more bytes than expected. */
-static int32_t transportSendMoreThanBytesToWrite( NetworkContext_t * pNetworkContext,
-                                                  const void * pBuffer,
-                                                  size_t bytesToWrite )
-{
-    ( void ) pNetworkContext;
-    ( void ) pBuffer;
-
-    return( bytesToWrite + 1 );
-}
-
-
 /* Application transport receive interface that sends the bytes specified in
  * firstPartBytes on the first call, then sends the rest of the response in the
  * second call. The response to send is set in pNetworkData and the current
@@ -367,17 +355,6 @@ static int32_t transportRecvNetworkError( NetworkContext_t * pNetworkContext,
     ( void ) bytesToRead;
 
     return -1;
-}
-
-/* Application transport receive that returns more bytes read than expected. */
-static int32_t transportRecvMoreThanBytesToRead( NetworkContext_t * pNetworkContext,
-                                                 void * pBuffer,
-                                                 size_t bytesToRead )
-{
-    ( void ) pNetworkContext;
-    ( void ) pBuffer;
-
-    return( bytesToRead + 1 );
 }
 
 /* Mocked http_parser_execute callback that sets the internal http_errno. */
@@ -1251,46 +1228,6 @@ void test_HTTPClient_Send_network_error_response( void )
     http_parser_init_Ignore();
 
     transportInterface.recv = transportRecvNetworkError;
-    returnStatus = HTTPClient_Send( &transportInterface,
-                                    &requestHeaders,
-                                    NULL,
-                                    0,
-                                    &response,
-                                    0 );
-    TEST_ASSERT_EQUAL( HTTP_NETWORK_ERROR, returnStatus );
-}
-
-/*-----------------------------------------------------------*/
-
-/* Test when more bytes are received than expected, when receiving a response
- * from the network. */
-void test_HTTPClient_Send_recv_too_many_bytes( void )
-{
-    HTTPStatus_t returnStatus = HTTP_SUCCESS;
-
-    http_parser_init_Ignore();
-
-    transportInterface.recv = transportRecvMoreThanBytesToRead;
-    returnStatus = HTTPClient_Send( &transportInterface,
-                                    &requestHeaders,
-                                    NULL,
-                                    0,
-                                    &response,
-                                    0 );
-    TEST_ASSERT_EQUAL( HTTP_NETWORK_ERROR, returnStatus );
-}
-
-/*-----------------------------------------------------------*/
-
-/* Test when more bytes are sent than expected, when sending data
- * over the socket. */
-void test_HTTPClient_Send_send_too_many_bytes( void )
-{
-    HTTPStatus_t returnStatus = HTTP_SUCCESS;
-
-    http_parser_init_Ignore();
-
-    transportInterface.send = transportSendMoreThanBytesToWrite;
     returnStatus = HTTPClient_Send( &transportInterface,
                                     &requestHeaders,
                                     NULL,
