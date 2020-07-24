@@ -801,6 +801,10 @@ void test_MQTT_Subscribe_Publish_With_Qos_2( void )
     TEST_ASSERT_TRUE( receivedUnsubAck );
 }
 
+/**
+ * @brief Verifies that the MQTT library supports the "Last Will and Testament" feature when
+ * establishing a connection with a broker.
+ */
 void test_MQTT_Connect_LWT( void )
 {
     NetworkContext_t secondNetworkContext = { 0 };
@@ -817,27 +821,23 @@ void test_MQTT_Connect_LWT( void )
     TEST_ASSERT_NOT_EQUAL( -1, secondNetworkContext.socketDescriptor );
     TEST_ASSERT_NOT_NULL( secondNetworkContext.pSsl );
 
-    /*Establish MQTT session on top of the TCP + TLS connection. */
+    /* Establish MQTT session on top of the TCP + TLS connection. */
     useLWTClientIdentifier = true;
     establishMqttSession( &secondContext, true, &secondNetworkContext, true, &sessionPresent );
 
-    /*Subscribe to LWT Topic. */
+    /* Subscribe to LWT Topic. */
     TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic(
                            &context, TEST_MQTT_LWT_TOPIC, MQTTQoS0 ) );
 
     /*Abruptly terminate TCP connection. */
     ( void ) Openssl_Disconnect( &secondNetworkContext );
 
-    /*Run the process loop to receive the LWT.Allow some more time
-     *
-     * for the
+    /* Run the process loop to receive the LWT.Allow some more time for the
      * server to realize the connection is closed. */
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
 
-    /*Test
-     *
-     * if we have received the LWT. */
+    /* Test if we have received the LWT. */
     TEST_ASSERT_EQUAL( MQTTQoS0, incomingInfo.qos );
     TEST_ASSERT_EQUAL( TEST_MQTT_LWT_TOPIC_LENGTH, incomingInfo.topicNameLength );
     TEST_ASSERT_EQUAL_MEMORY( TEST_MQTT_LWT_TOPIC,
@@ -848,18 +848,20 @@ void test_MQTT_Connect_LWT( void )
                               incomingInfo.pPayload,
                               incomingInfo.payloadLength );
 
-    /*Un - subscribe from a topic with Qos 0. */
+    /* Un-subscribe from a topic with Qos 0. */
     TEST_ASSERT_EQUAL( MQTTSuccess, unsubscribeFromTopic(
                            &context, TEST_MQTT_TOPIC, MQTTQoS0 ) );
 
-    /*We expect an UNSUBACK from the broker
-     *
-     * for the unsubscribe operation. */
+    /* We expect an UNSUBACK from the broker for the unsubscribe operation. */
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_TRUE( receivedUnsubAck );
 }
 
+/**
+ * @brief Verifies that the MQTT library sends a Ping Request packet if the connection is
+ * idle for more than the keep-alive period.
+ */
 void test_MQTT_ProcessLoop_KeepAlive( void )
 {
     uint32_t connectPacketTime = context.lastPacketTime;
@@ -878,6 +880,11 @@ void test_MQTT_ProcessLoop_KeepAlive( void )
     TEST_ASSERT_LESS_OR_EQUAL( MQTT_KEEP_ALIVE_INTERVAL_SECONDS * 1500, elapsedTime );
 }
 
+/**
+ * @brief Verifies the behavior of the MQTT library in a restored session connection with the broker.
+ * Tests that the library resends PUBREL packets to the broker in a restored session for an incomplete
+ * PUBLISH operation in a previous connection.
+ */
 void test_MQTT_Connect_Restore_Session( void )
 {
     /* Graceless disconnect. Terminate TLS session and TCP connection. */
