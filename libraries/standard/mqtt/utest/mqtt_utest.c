@@ -1609,6 +1609,7 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths( void )
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
 
+    setupNetworkBuffer( &networkBuffer );
     setupTransportInterface( &transport );
 
     modifyIncomingPacketStatus = MQTTNoDataAvailable;
@@ -1696,6 +1697,7 @@ void test_MQTT_ProcessLoop_Receive_Failed( void )
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
 
+    setupNetworkBuffer( &networkBuffer );
     setupTransportInterface( &transport );
 
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
