@@ -28,16 +28,27 @@ int32_t TransportInterfaceSendStub( NetworkContext_t * pContext,
     /* The number of bytes considered sent after this invocation */
     int32_t ret;
 
+    /* The logic below prevents overflow from unsigned to signed conversion. */
+    if( bytesToSend > INT32_MAX )
+    {
+        ret = INT32_MAX;
+    }
+    else
+    {
+        __CPROVER_assume( ret <= ( int32_t ) bytesToSend );
+    }
+
     if( tries >= MAX_TRIES )
     {
-        if( bytesToSend > INT32_MAX )
+        tries = 0;
+
+        if( bytesToSend <= INT32_MAX )
         {
-            ret = INT32_MAX;
+            ret = bytesToSend;
         }
         else
         {
-            tries = 0;
-            ret = bytesToSend;
+            ret = INT32_MAX;
         }
     }
 
@@ -48,11 +59,13 @@ int32_t TransportInterfaceReceiveStub( NetworkContext_t * pContext,
                                        void * pBuffer,
                                        size_t bytesToRecv )
 {
-    __CPROVER_assert( pBuffer != NULL,
-                      "TransportInterfaceReceiveStub pBuffer is NULL" );
-
     /* The number of bytes considered received after this invocation */
     int32_t ret;
+
+    __CPROVER_assume( ret <= ( int32_t ) bytesToRecv );
+
+    __CPROVER_assert( pBuffer != NULL,
+                      "TransportInterfaceReceiveStub pBuffer is NULL" );
 
     return ret;
 }

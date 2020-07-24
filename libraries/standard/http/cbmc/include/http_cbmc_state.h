@@ -77,7 +77,7 @@ bool isValidHttpRequestHeaders( const HTTPRequestHeaders_t * pRequestHeaders );
  *
  * @return NULL or pointer to allocated #HTTPRequestInfo_t object.
  */
-HTTPRequestInfo_t * allocateHttpRequestInfo( const HTTPRequestInfo_t * pRequestInfo );
+HTTPRequestInfo_t * allocateHttpRequestInfo( HTTPRequestInfo_t * pRequestInfo );
 
 /**
  * @brief Validates if a #HTTPRequestInfo_t object is feasible.
@@ -107,43 +107,12 @@ HTTPResponse_t * allocateHttpResponse( HTTPResponse_t * pResponse );
 bool isValidHttpResponse( const HTTPResponse_t * pResponse );
 
 /**
- * @brief Application defined transport interface send function.
- *
- * @param[in] context Application defined transport interface context.
- * @param[out] pBuffer HTTP transport send buffer.
- * @param[in] bytesToSend Bytes to send over the network.
- * @return Any value from INT32_MIN to INT32_MAX.
- */
-int32_t TransportInterfaceSendStub( NetworkContext_t context,
-                                    void * pBuffer,
-                                    size_t bytesToSend );
-
-/**
- * @brief Application defined transport interface receive function.
- *
- * @param[in] context Application defined transport interface context.
- * @param[out] pBuffer HTTP transport receive buffer.
- * @param[in] bytesToRecv Bytes to receive from the network.
- * @return Any value from INT32_MIN to INT32_MAX.
- */
-int32_t TransportInterfaceReceiveStub( NetworkContext_t context,
-                                       void * pBuffer,
-                                       size_t bytesToRecv );
-
-
-/**
  * @brief Allocate a transport interface for CBMC.
  *
  * @param[in] pTransport Transport interface.
- * @return An allocated HTTPTransportInterface_t object to use as a parameter
+ * @return An allocated TransportInterface_t object to use as a parameter
  * for the function under test.
  */
-HTTPTransportInterface_t * allocateTransportInterface( HTTPTransportInterface_t * pTransport );
-
-/* Model the third party HTTP Parser. */
-size_t http_parser_execute( http_parser * parser,
-                            const http_parser_settings * settings,
-                            const char * data,
-                            size_t len );
+TransportInterface_t * allocateTransportInterface( TransportInterface_t * pTransport );
 
 #endif /* ifndef HTTP_CBMC_STATE_H_ */

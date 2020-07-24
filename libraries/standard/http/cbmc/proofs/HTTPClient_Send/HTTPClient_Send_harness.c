@@ -37,7 +37,7 @@ void harness()
 
     /* Ideally, this should be allocated in the heap but doing so makes CBMC
      * run out of memory. */
-    HTTPTransportInterface_t transportInterface;
+    TransportInterface_t transportInterface;
     uint8_t * pRequestBodyBuf = NULL;
     size_t reqBodyBufLen;
     uint32_t sendFlags;

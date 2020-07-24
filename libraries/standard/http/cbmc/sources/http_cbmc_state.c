@@ -104,32 +104,17 @@ bool isValidHttpResponse( const HTTPResponse_t * pResponse )
     return isValid;
 }
 
-HTTPTransportInterface_t * allocateTransportInterface( HTTPTransportInterface_t * pTransport )
+TransportInterface_t * allocateTransportInterface( TransportInterface_t * pTransport )
 {
     if( pTransport == NULL )
     {
-        pTransport = mallocCanFail( sizeof( HTTPTransportInterface_t ) );
+        pTransport = mallocCanFail( sizeof( TransportInterface_t ) );
     }
 
     if( pTransport != NULL )
     {
-        pTransport->pContext = mallocCanFail( sizeof( struct NetworkContext ) );
+        pTransport->pNetworkContext = mallocCanFail( sizeof( NetworkContext_t ) );
     }
 
     return pTransport;
-}
-
-bool isValidTransportInterface( HTTPTransportInterface_t * pTransport )
-{
-    bool isValid = true;
-
-    if( pTransport != NULL )
-    {
-        isValid = ( pTransport->send == NULL ||
-                    pTransport->send == TransportInterfaceSendStub ) &&
-                  ( pTransport->recv == NULL ||
-                    pTransport->recv == TransportInterfaceReceiveStub );
-    }
-
-    return isValid;
 }
