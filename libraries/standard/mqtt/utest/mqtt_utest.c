@@ -554,7 +554,7 @@ void test_MQTT_Init_Invalid_Params( void )
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, NULL );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
-    /* Test if NULL is passed for any functors. */
+    /* Test if NULL is passed for any of the function pointers. */
     mqttStatus = MQTT_Init( &context, &transport, NULL, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
