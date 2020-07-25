@@ -1594,10 +1594,6 @@ static HTTPStatus_t sendHttpData( const TransportInterface_t * pTransport,
                                             pIndex,
                                             bytesRemaining );
 
-        /* It is a bug in the application's transport send implementation if
-         * more bytes than expected are sent. */
-        assert( transportStatus <= (int32_t)bytesRemaining );
-
         /* A transport status of less than zero is an error. */
         if( transportStatus < 0 )
         {
@@ -1608,6 +1604,10 @@ static HTTPStatus_t sendHttpData( const TransportInterface_t * pTransport,
         }
         else
         {
+            /* It is a bug in the application's transport send implementation if
+             * more bytes than expected are sent. */
+            assert( ( size_t ) transportStatus <= bytesRemaining );
+
             bytesRemaining -= ( size_t ) transportStatus;
             pIndex += transportStatus;
             LogDebug( ( "Sent HTTP data over the transport: "
@@ -1734,10 +1734,6 @@ static HTTPStatus_t receiveHttpData( const TransportInterface_t * pTransport,
                                         pBuffer,
                                         bufferLen );
 
-    /* It is a bug in the application's transport receive implementation if
-     * more bytes than expected are received. */
-    assert( transportStatus <= (int32_t)bufferLen );
-
     /* A transport status of less than zero is an error. */
     if( transportStatus < 0 )
     {
@@ -1748,6 +1744,10 @@ static HTTPStatus_t receiveHttpData( const TransportInterface_t * pTransport,
     }
     else if( transportStatus > 0 )
     {
+        /* It is a bug in the application's transport receive implementation if
+         * more bytes than expected are received. */
+        assert( ( size_t ) transportStatus <= bufferLen );
+
         /* Some or all of the specified data was received. */
         *pBytesReceived = ( size_t ) ( transportStatus );
         LogDebug( ( "Received data from the transport: BytesReceived=%d",
