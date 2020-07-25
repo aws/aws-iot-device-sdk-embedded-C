@@ -25,7 +25,7 @@
  * and receive callback.
  */
 #ifndef NETWORK_INTERFACE_STUBS_H_
-#define NETWORK_INTERfACE_STUBS_H_
+#define NETWORK_INTERFACE_STUBS_H_
 
 /* mqtt.h must precede including this header. */
 
