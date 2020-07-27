@@ -330,7 +330,7 @@ static int32_t sendPacket( MQTTContext_t * pContext,
                                                        pIndex,
                                                        bytesRemaining );
 
-        if( bytesSent <= 0 )
+        if( bytesSent < 0 )
         {
             LogError( ( "Transport send failed. Error code=%d.", bytesSent ) );
             totalBytesSent = bytesSent;
@@ -1086,7 +1086,7 @@ static MQTTStatus_t sendPublish( MQTTContext_t * pContext,
                                     pPublishInfo->pPayload,
                                     pPublishInfo->payloadLength );
 
-            if( bytesSent < 0 )
+            if( bytesSent <= 0 )
             {
                 LogError( ( "Transport send failed for PUBLISH payload." ) );
                 status = MQTTSendFailed;
