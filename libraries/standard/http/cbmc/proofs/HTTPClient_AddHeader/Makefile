@@ -7,6 +7,17 @@ HARNESS_FILE=HTTPClient_AddHeader_harness
 DEFINES +=
 INCLUDES +=
 
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_http_client_c_findHeaderFieldParserCallback
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_http_client_c_findHeaderValueParserCallback
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_http_client_c_httpParserOnBodyCallback
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_http_client_c_httpParserOnHeaderFieldCallback
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_http_client_c_httpParserOnHeaderValueCallback
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_http_client_c_httpParserOnStatusCallback
+
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_http_client_c_httpParserOnHeadersCompleteCallback
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_http_client_c_httpParserOnMessageBeginCallback
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_http_client_c_httpParserOnMessageCompleteCallback
+
 REMOVE_FUNCTION_BODY += memcpy
 
 UNWINDSET += strncmp.0:5
