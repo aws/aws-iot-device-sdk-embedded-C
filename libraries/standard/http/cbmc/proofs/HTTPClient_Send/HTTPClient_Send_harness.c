@@ -25,9 +25,7 @@
  */
 
 #include "http_client.h"
-
 #include "http_cbmc_state.h"
-
 #include "transport_interface_stubs.h"
 
 void harness()

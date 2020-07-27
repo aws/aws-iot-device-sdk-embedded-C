@@ -45,10 +45,14 @@ size_t http_parser_execute( http_parser * parser,
     size_t valueLength;
     HTTPParsingContext_t * pParsingContext;
 
-    __CPROVER_assert( parser, "http_parser_execute parser nonnull" );
-    __CPROVER_assert( settings, "http_parser_execute settings nonnull" );
-    __CPROVER_assert( data, "http_parser_execute data nonnull" );
+    __CPROVER_assert( parser != NULL,
+                      "http_parser_execute parser is NULL" );
+    __CPROVER_assert( settings != NULL,
+                      "http_parser_execute settings is NULL" );
+    __CPROVER_assert( data != NULL,
+                      "http_parser_execute data is NULL" );
 
+    __CPROVER_assume( len < CBMC_MAX_OBJECT_SIZE );
     __CPROVER_assume( fieldLength <= len );
     __CPROVER_assume( valueLength <= len );
 
@@ -60,15 +64,15 @@ size_t http_parser_execute( http_parser * parser,
     if( pParsingContext->pLastHeaderField )
     {
         pParsingContext->lastHeaderFieldLen = fieldLength;
-
         pParsingContext->pLastHeaderValue = malloc( valueLength );
         pParsingContext->lastHeaderValueLen = valueLength;
     }
     else
     {
-        pParsingContext->lastHeaderFieldLen = 0;
+        pParsingContext->lastHeaderFieldLen = 0u;
+        pParsingContext->pLastHeaderValue = NULL;
+        pParsingContext->lastHeaderValueLen = 0u;
     }
 
-    /* Return the number of characters in ReadHeaderValue */
-    return pParsingContext->pLastHeaderField ? valueLength : 0;
+    return pParsingContext->lastHeaderValueLen;
 }
