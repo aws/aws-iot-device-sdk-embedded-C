@@ -47,3 +47,11 @@ foreach(module IN LISTS standard_modules )
         add_subdirectory(${module})
     endif()
 endforeach()
+
+# Add all CMakeLists.txts in the aws folder.
+file(GLOB aws_modules "${MODULES_DIR}/aws/*")
+foreach(module IN LISTS aws_modules )
+    if(IS_DIRECTORY "${module}" AND EXISTS "${module}/CMakeLists.txt")
+        add_subdirectory(${module})
+    endif()
+endforeach()
