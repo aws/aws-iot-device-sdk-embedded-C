@@ -51,8 +51,9 @@ size_t http_parser_execute( http_parser * parser,
                       "http_parser_execute settings is NULL" );
     __CPROVER_assert( data != NULL,
                       "http_parser_execute data is NULL" );
+    __CPROVER_assert( len < CBMC_MAX_OBJECT_SIZE,
+                      "http_parser_execute len >= CBMC_MAX_OBJECT_SIZE" );
 
-    __CPROVER_assume( len < CBMC_MAX_OBJECT_SIZE );
     __CPROVER_assume( fieldLength <= len );
     __CPROVER_assume( valueLength <= len );
 
