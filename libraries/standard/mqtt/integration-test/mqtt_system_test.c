@@ -879,13 +879,14 @@ void test_MQTT_ProcessLoop_KeepAlive( void )
 }
 
 /**
- * @brief Verifies the behavior of the MQTT library in a restored session connection with the broker.
+ * @brief Verifies the behavior of the MQTT library in a restored session connection with the broker
+ * for a PUBLISH operation that was incomplete in the previous connection.
  * Tests that the library resends PUBREL packets to the broker in a restored session for an incomplete
  * PUBLISH operation in a previous connection.
  */
-void test_MQTT_Connect_Restore_Session( void )
+void test_MQTT_Restore_Session_Resend_PubRel( void )
 {
-    /* Terminate TLS session and TCP connection network connection to discard current MQTT session
+    /* Terminate TLS session and TCP network connection to discard the current MQTT session
      * that was created as a "clean session". */
     ( void ) Openssl_Disconnect( &networkContext );
 
@@ -950,7 +951,7 @@ void test_MQTT_Connect_Restore_Session( void )
  * incoming QoS 2 PUBLISH operation that was incomplete in a previous connection
  * of the same session.
  */
-void test_MQTT_Connect_Restore_Session_Received_Duplicate_PubRel( void )
+void test_MQTT_Restore_Session_Complete_Incoming_Publish( void )
 {
     /* Terminate TLS session and TCP connection network connection to discard current MQTT session
      * that was created as a "clean session". */
