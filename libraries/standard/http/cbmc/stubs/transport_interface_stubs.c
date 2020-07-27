@@ -4,6 +4,11 @@ int32_t TransportInterfaceSendStub( NetworkContext_t * pContext,
                                     void * pBuffer,
                                     size_t bytesToSend )
 {
+    /* The number of tries to send the message before this invocation */
+    static int32_t tries;
+    /* The number of bytes considered sent after this invocation */
+    int32_t ret;
+
     __CPROVER_assert( pBuffer != NULL,
                       "TransportInterfaceSendStub pBuffer is NULL" );
 
@@ -21,14 +26,9 @@ int32_t TransportInterfaceSendStub( NetworkContext_t * pContext,
     * finish the message after MAX_TRIES tries.
     ****************************************************************/
 
-    /* The number of tries to send the message before this invocation */
-    static int32_t tries;
-    tries++;
-
-    /* The number of bytes considered sent after this invocation */
-    int32_t ret;
-
     __CPROVER_assume( ret <= ( int32_t ) bytesToSend );
+
+    tries++;
 
     if( tries >= MAX_TRIES )
     {
@@ -54,13 +54,13 @@ int32_t TransportInterfaceReceiveStub( NetworkContext_t * pContext,
     /* The number of bytes considered received after this invocation */
     int32_t ret;
 
+    __CPROVER_assert( pBuffer != NULL,
+                      "TransportInterfaceReceiveStub pBuffer is NULL" );
+
     if( bytesToRecv <= INT32_MAX )
     {
         __CPROVER_assume( ret <= ( int32_t ) bytesToRecv );
     }
-
-    __CPROVER_assert( pBuffer != NULL,
-                      "TransportInterfaceReceiveStub pBuffer is NULL" );
 
     return ret;
 }
