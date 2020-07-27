@@ -290,25 +290,20 @@ static void eventCallback( MQTTContext_t * pContext,
                            uint16_t packetIdentifier,
                            MQTTPublishInfo_t * pPublishInfo );
 
+/**
+ * @brief Implementation of TransportSend_t interface that terminates the TLS
+ * and TCP connection with the broker and returns failure.
+ *
+ * @param[in] pNetworkContext The context associated with the network connection
+ * to be disconnected.
+ * @param[in] pBuffer This parameter is ingored.
+ * @param[in] bytesToRecv This parameter is ingored.
+ *
+ * @return -1 to represent failure.
+ */
 static int32_t failedRecv( NetworkContext_t * pNetworkContext,
                            void * pBuffer,
                            size_t bytesToRecv );
-
-
-/*-----------------------------------------------------------*/
-
-static int32_t failedRecv( NetworkContext_t * pNetworkContext,
-                           void * pBuffer,
-                           size_t bytesToRecv )
-{
-    ( void ) pBuffer;
-    ( void ) bytesToRecv;
-
-    /* Terminate the TLS+TCP connection with the broker for the test. */
-    ( void ) Openssl_Disconnect( pNetworkContext );
-
-    return MQTTRecvFailed;
-}
 
 /*-----------------------------------------------------------*/
 
@@ -405,7 +400,8 @@ static void eventCallback( MQTTContext_t * pContext,
     assert( pContext != NULL );
     assert( pPacketInfo != NULL );
 
-    if( pPacketInfo->type == disconnectOnPacketType )
+    if( ( pPacketInfo->type == disconnectOnPacketType ) ||
+        ( ( pPacketInfo->type & 0xF0U ) == disconnectOnPacketType ) )
     {
         /* Terminate MQTT connection with server for session restoration test. */
         TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_Disconnect( &context ) );
@@ -599,6 +595,20 @@ static MQTTStatus_t publishToTopic( MQTTContext_t * pContext,
                          &publishInfo,
                          packetId );
 }
+
+static int32_t failedRecv( NetworkContext_t * pNetworkContext,
+                           void * pBuffer,
+                           size_t bytesToRecv )
+{
+    ( void ) pBuffer;
+    ( void ) bytesToRecv;
+
+    /* Terminate the TLS+TCP connection with the broker for the test. */
+    ( void ) Openssl_Disconnect( pNetworkContext );
+
+    return -1;
+}
+
 
 /* ============================   UNITY FIXTURES ============================ */
 
@@ -1224,4 +1234,173 @@ void test_MQTT_Restore_Session_Resend_Unacked_Publish_QoS2( void )
 
     /* Make sure that the library has removed the record for the outgoing PUBLISH packet. */
     TEST_ASSERT_EQUAL( MQTT_PACKET_ID_INVALID, context.outgoingPublishRecords[ 0 ].packetId );
+}
+
+/**
+ * @brief Verifies the behavior of the MQTT library on receiving a duplicate
+ * QoS 1 PUBLISH packet from the broker in a restored session connection.
+ * Tests that the library responds with a PUBACK to for the duplicate incoming QoS 1 PUBLISH
+ * packet that was un-acknowledged in a previous connection of the same session.
+ */
+void test_MQTT_MQTT_Restore_Session_Duplicate_Incoming_Publish_Qos1( void )
+{
+    /* Terminate TLS session and TCP connection network connection to discard current MQTT session
+     * that was created as a "clean session". */
+    ( void ) Openssl_Disconnect( &networkContext );
+
+    /* Establish a new MQTT connection over TLS with the broker with the "clean session" flag set to 0
+     * to start a persistent session with the broker. */
+
+    /* Create the TLS+TCP connection with the broker. */
+    TEST_ASSERT_EQUAL( OPENSSL_SUCCESS, Openssl_Connect( &networkContext,
+                                                         &serverInfo,
+                                                         &opensslCredentials,
+                                                         TRANSPORT_SEND_RECV_TIMEOUT_MS,
+                                                         TRANSPORT_SEND_RECV_TIMEOUT_MS ) );
+    TEST_ASSERT_NOT_EQUAL( -1, networkContext.socketDescriptor );
+    TEST_ASSERT_NOT_NULL( networkContext.pSsl );
+
+    /* Establish a new MQTT connection for starting a persistent session with the broker
+     * by setting the "clean session" flag to 0. */
+    establishMqttSession( &context, &networkContext, false, &persistentSession );
+    TEST_ASSERT_FALSE( persistentSession );
+
+    /* Subscribe to a topic from which we will be receiving an incomplete incoming
+     * QoS 2 PUBLISH transaction in this connection. */
+    TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic(
+                           &context, TEST_MQTT_TOPIC, MQTTQoS1 ) );
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    TEST_ASSERT_TRUE( receivedSubAck );
+
+    /* Publish to the same topic with Qos 1 (so that the broker can re-publish it back to us). */
+    TEST_ASSERT_EQUAL( MQTTSuccess, publishToTopic(
+                           &context, TEST_MQTT_TOPIC, false, MQTTQoS1, MQTT_GetPacketId( &context ) ) );
+
+    /* Disconnect on receiving the incoming PUBLISH packet from the broker so that
+     * an acknowledgement cannot be sent to the broker. */
+    disconnectOnPacketType = MQTT_PACKET_TYPE_PUBLISH;
+    TEST_ASSERT_EQUAL( MQTTSendFailed,
+                       MQTT_ProcessLoop( &context, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+
+    /* Make sure that a record was created for the incoming PUBLISH packet. */
+    TEST_ASSERT_NOT_EQUAL( MQTT_PACKET_ID_INVALID, context.incomingPublishRecords[ 0 ].packetId );
+
+    /* Verify that the connection with the broker has been disconnected. */
+    TEST_ASSERT_EQUAL( MQTTNotConnected, context.connectStatus );
+
+    /* We will re-establish an MQTT over TLS connection with the broker to restore the persistent session. */
+
+    /* Create a new TLS+TCP network connection with the server. */
+    TEST_ASSERT_EQUAL( OPENSSL_SUCCESS, Openssl_Connect( &networkContext,
+                                                         &serverInfo,
+                                                         &opensslCredentials,
+                                                         TRANSPORT_SEND_RECV_TIMEOUT_MS,
+                                                         TRANSPORT_SEND_RECV_TIMEOUT_MS ) );
+    TEST_ASSERT_NOT_EQUAL( -1, networkContext.socketDescriptor );
+    TEST_ASSERT_NOT_NULL( networkContext.pSsl );
+
+    /* Re-establish the persistent session with the broker by connecting with "clean session" flag set to 0. */
+    establishMqttSession( &context, &networkContext, false, &persistentSession );
+
+    /* Verify that the session was resumed. */
+    TEST_ASSERT_TRUE( persistentSession );
+
+    /* Clear the global variable for not disconnecting on the duplicate PUBLISH
+     * packet that we receive from the broker on the session restoration. */
+    disconnectOnPacketType = MQTT_PACKET_TYPE_INVALID;
+
+    /* Process the duplicate incoming QoS 1 PUBLISH that will be sent by the broker
+     * to re-attempt the PUBLISH operation. */
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       MQTT_ProcessLoop( &context, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+
+    /* Make sure that the library cleared the record for the incoming QoS 1 PUBLISH packet. */
+    TEST_ASSERT_EQUAL( MQTT_PACKET_ID_INVALID, context.incomingPublishRecords[ 0 ].packetId );
+}
+
+/**
+ * @brief Verifies the behavior of the MQTT library on receiving a duplicate
+ * QoS2 PUBLISH packet from the broker in a restored session connection.
+ * Tests that the library responds with the ack packets for the incoming duplicate
+ * QoS 2 PUBLISH packet that was un-acknowledged in a previous connection of the same session.
+ */
+void test_MQTT_Restore_Session_Duplicate_Incoming_Publish_Qos2( void )
+{
+    /* Terminate TLS session and TCP connection network connection to discard current MQTT session
+     * that was created as a "clean session". */
+    ( void ) Openssl_Disconnect( &networkContext );
+
+    /* Establish a new MQTT connection over TLS with the broker with the "clean session" flag set to 0
+     * to start a persistent session with the broker. */
+
+    /* Create the TLS+TCP connection with the broker. */
+    TEST_ASSERT_EQUAL( OPENSSL_SUCCESS, Openssl_Connect( &networkContext,
+                                                         &serverInfo,
+                                                         &opensslCredentials,
+                                                         TRANSPORT_SEND_RECV_TIMEOUT_MS,
+                                                         TRANSPORT_SEND_RECV_TIMEOUT_MS ) );
+    TEST_ASSERT_NOT_EQUAL( -1, networkContext.socketDescriptor );
+    TEST_ASSERT_NOT_NULL( networkContext.pSsl );
+
+    /* Establish a new MQTT connection for starting a persistent session with the broker
+     * by setting the "clean session" flag to 0. */
+    establishMqttSession( &context, &networkContext, false, &persistentSession );
+    TEST_ASSERT_FALSE( persistentSession );
+
+    /* Subscribe to a topic from which we will be receiving an incomplete incoming
+     * QoS 2 PUBLISH transaction in this connection. */
+    TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic(
+                           &context, TEST_MQTT_TOPIC, MQTTQoS2 ) );
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    TEST_ASSERT_TRUE( receivedSubAck );
+
+    /* Publish to the same topic with Qos 1 (so that the broker can re-publish it back to us). */
+    TEST_ASSERT_EQUAL( MQTTSuccess, publishToTopic(
+                           &context, TEST_MQTT_TOPIC, false, MQTTQoS2, MQTT_GetPacketId( &context ) ) );
+
+    /* Disconnect on receiving the incoming PUBLISH packet from the broker so that
+     * an acknowledgement cannot be sent to the broker. */
+    disconnectOnPacketType = MQTT_PACKET_TYPE_PUBLISH;
+    TEST_ASSERT_EQUAL( MQTTSendFailed,
+                       MQTT_ProcessLoop( &context, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+
+    /* Make sure that a record was created for the incoming PUBLISH packet. */
+    TEST_ASSERT_NOT_EQUAL( MQTT_PACKET_ID_INVALID, context.incomingPublishRecords[ 0 ].packetId );
+
+    /* Verify that the connection with the broker has been disconnected. */
+    TEST_ASSERT_EQUAL( MQTTNotConnected, context.connectStatus );
+
+    /* We will re-establish an MQTT over TLS connection with the broker to restore the persistent session. */
+
+    /* Create a new TLS+TCP network connection with the server. */
+    TEST_ASSERT_EQUAL( OPENSSL_SUCCESS, Openssl_Connect( &networkContext,
+                                                         &serverInfo,
+                                                         &opensslCredentials,
+                                                         TRANSPORT_SEND_RECV_TIMEOUT_MS,
+                                                         TRANSPORT_SEND_RECV_TIMEOUT_MS ) );
+    TEST_ASSERT_NOT_EQUAL( -1, networkContext.socketDescriptor );
+    TEST_ASSERT_NOT_NULL( networkContext.pSsl );
+
+    /* Re-establish the persistent session with the broker by connecting with "clean session" flag set to 0. */
+    establishMqttSession( &context, &networkContext, false, &persistentSession );
+
+    /* Verify that the session was resumed. */
+    TEST_ASSERT_TRUE( persistentSession );
+
+    /* Clear the global variable for not disconnecting on the duplicate PUBLISH
+     * packet that we receive from the broker on the session restoration. */
+    disconnectOnPacketType = MQTT_PACKET_TYPE_INVALID;
+
+    /* Process the duplicate incoming QoS 1 PUBLISH that will be sent by the broker
+     * to re-attempt the PUBLISH operation. */
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       MQTT_ProcessLoop( &context, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+
+    /* Make sure that the incoming QoS 2 transaction was completed. */
+    TEST_ASSERT_TRUE( receivedPubRel );
+
+    /* Make sure that the library cleared the record for the incoming QoS 2 PUBLISH packet. */
+    TEST_ASSERT_EQUAL( MQTT_PACKET_ID_INVALID, context.incomingPublishRecords[ 0 ].packetId );
 }
