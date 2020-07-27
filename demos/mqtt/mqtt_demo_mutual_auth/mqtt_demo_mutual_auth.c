@@ -689,8 +689,6 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
     MQTTStatus_t mqttStatus;
     MQTTConnectInfo_t connectInfo;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTGetCurrentTimeFunc_t getTimeFunction;
-    MQTTEventCallback_t userCallback;
     TransportInterface_t transport;
 
     assert( pMqttContext != NULL );
@@ -707,16 +705,12 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
     networkBuffer.pBuffer = buffer;
     networkBuffer.size = NETWORK_BUFFER_SIZE;
 
-    /* User-callback for receiving incoming publishes and incoming acks
-     * from MQTT library. */
-    userCallback = eventCallback;
-
-    /* Platform-specific utility function for getting the time for MQTT library. This time
-     * function will be used to calculate intervals in MQTT library.*/
-    getTimeFunction = Clock_GetTimeMs;
-
     /* Initialize MQTT library. */
-    mqttStatus = MQTT_Init( pMqttContext, &transport, getTimeFunction, userCallback, &networkBuffer );
+    mqttStatus = MQTT_Init( pMqttContext,
+                            &transport,
+                            Clock_GetTimeMs,
+                            eventCallback,
+                            &networkBuffer );
 
     if( mqttStatus != MQTTSuccess )
     {

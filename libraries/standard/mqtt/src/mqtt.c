@@ -1313,8 +1313,8 @@ static MQTTStatus_t validatePublishParams( const MQTTContext_t * pContext,
 
 MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
                         const TransportInterface_t * pTransportInterface,
-                        const MQTTGetCurrentTimeFunc_t getTimeFunction,
-                        const MQTTEventCallback_t userCallback,
+                        MQTTGetCurrentTimeFunc_t getTimeFunction,
+                        MQTTEventCallback_t userCallback,
                         const MQTTFixedBuffer_t * pNetworkBuffer )
 {
     MQTTStatus_t status = MQTTSuccess;

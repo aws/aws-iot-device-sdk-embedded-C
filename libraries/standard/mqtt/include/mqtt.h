@@ -148,8 +148,8 @@ struct MQTTContext
  */
 MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
                         const TransportInterface_t * pTransportInterface,
-                        const MQTTGetCurrentTimeFunc_t getTimeFunction,
-                        const MQTTEventCallback_t userCallback,
+                        MQTTGetCurrentTimeFunc_t getTimeFunction,
+                        MQTTEventCallback_t userCallback,
                         const MQTTFixedBuffer_t * pNetworkBuffer );
 
 /**
