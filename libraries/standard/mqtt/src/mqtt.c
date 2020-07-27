@@ -450,7 +450,7 @@ static int32_t recvExact( const MQTTContext_t * pContext,
              * more bytes than expected are received. */
             assert( ( size_t ) bytesRecvd <= bytesRemaining );
 
-            bytesRemaining -= bytesRecvd;
+            bytesRemaining -= ( size_t ) bytesRecvd;
             totalBytesRecvd += ( int32_t ) bytesRecvd;
             pIndex += bytesRecvd;
             LogDebug( ( "BytesReceived=%d, BytesRemaining=%lu, "
@@ -1080,7 +1080,7 @@ static MQTTStatus_t sendPublish( MQTTContext_t * pContext,
 
         /* Send Payload if there is one to send. It is valid for a PUBLISH
          * Packet to contain a zero length payload.*/
-        if( pPublishInfo->payloadLength > 0 )
+        if( pPublishInfo->payloadLength > 0U )
         {
             bytesSent = sendPacket( pContext,
                                     pPublishInfo->pPayload,
