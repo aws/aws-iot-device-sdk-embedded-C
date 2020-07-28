@@ -45,9 +45,11 @@ dup
 emptyindex
 endif
 enums
+eventcallbackstub
 expectprocessloopcalls
 fixedbuffer
 getconnectpacketsize
+getcurrenttimestub
 getdisconnectpacketsize
 getincomingpackettypeandlength
 getpacketid

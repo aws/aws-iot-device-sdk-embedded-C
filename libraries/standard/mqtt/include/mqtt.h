@@ -35,14 +35,11 @@
  */
 #define MQTT_PACKET_ID_INVALID    ( ( uint16_t ) 0U )
 
-struct MQTTApplicationCallbacks;
-typedef struct MQTTApplicationCallbacks   MQTTApplicationCallbacks_t;
-
 struct MQTTPubAckInfo;
-typedef struct MQTTPubAckInfo             MQTTPubAckInfo_t;
+typedef struct MQTTPubAckInfo   MQTTPubAckInfo_t;
 
 struct MQTTContext;
-typedef struct MQTTContext                MQTTContext_t;
+typedef struct MQTTContext      MQTTContext_t;
 
 /**
  * @brief Application provided callback to retrieve the current time in

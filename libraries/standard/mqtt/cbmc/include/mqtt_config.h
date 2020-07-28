@@ -20,6 +20,12 @@
 
 #include "logging_stack.h"
 
+/* Mock a network context for the CBMC proofs. */
+struct NetworkContext
+{
+    int NetworkContext;
+};
+
 /************ End of logging configuration ****************/
 
 /**

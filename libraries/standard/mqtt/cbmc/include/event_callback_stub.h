@@ -20,26 +20,27 @@
  */
 
 /**
- * @file MQTT_DeserializeAck_harness.c
- * @brief Implements the proof harness for MQTT_DeserializeAck function.
+ * @file event_callback_stub.h
+ * @brief Stub definition for the application defined MQTT library incoming
+ * event callback.
  */
-#include "mqtt.h"
-#include "mqtt_cbmc_state.h"
+#ifndef EVENT_CALLBACK_STUB_H_
+#define EVENT_CALLBACK_STUB_H_
 
-void harness()
-{
-    MQTTPacketInfo_t * pIncomingPacket;
-    uint16_t * pPacketId;
-    bool * pSessionPresent;
+/* mqtt.h must precede including this header. */
 
-    pIncomingPacket = allocateMqttPacketInfo( NULL );
-    __CPROVER_assume( isValidMqttPacketInfo( pIncomingPacket ) );
+/**
+ * @brief User defined callback for receiving incoming publishes and incoming
+ * acks.
+ *
+ * @param[in] pContext Initialized MQTT context.
+ * @param[in] pPacketInfo Information on the type of incoming MQTT packet.
+ * @param[in] packetIdentifier Packet identifier of incoming PUBLISH packet.
+ * @param[in] pPublishInfo Incoming PUBLISH packet parameters.
+ */
+void EventCallbackStub( MQTTContext_t * pContext,
+                        MQTTPacketInfo_t * pPacketInfo,
+                        uint16_t packetIdentifier,
+                        MQTTPublishInfo_t * pPublishInfo );
 
-    /* These are allocated for coverage of a NULL input. */
-    pPacketId = mallocCanFail( sizeof( uint16_t ) );
-    pSessionPresent = mallocCanFail( sizeof( bool ) );
-
-    MQTT_DeserializeAck( pIncomingPacket,
-                         pPacketId,
-                         pSessionPresent );
-}
+#endif /* ifndef EVENT_CALLBACK_STUB_H_ */
