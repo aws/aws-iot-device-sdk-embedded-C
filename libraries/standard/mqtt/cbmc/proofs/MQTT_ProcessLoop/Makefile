@@ -53,7 +53,7 @@ UNWINDSET += __CPROVER_file_local_mqtt_c_recvExact.0:$(MQTT_PROCESS_LOOP_TIMEOUT
 # information.
 UNWINDSET += __CPROVER_file_local_mqtt_c_sendPacket.0:$(MAX_NETWORK_SEND_TRIES)
 # The getRemainingLength loop is unwound 5 times because getRemainingLength()
-# divides a size_t variable by 128 until it is zero to stop the loop.
+# divides a size_t variable by 128 until it reaches zero to stop the loop.
 # log128(SIZE_MAX) = 4.571...
 UNWINDSET += __CPROVER_file_local_mqtt_lightweight_c_getRemainingLength.0:5
 # These loops will run for the maximum number of publishes pending

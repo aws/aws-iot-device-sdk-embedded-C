@@ -27,7 +27,7 @@
 #ifndef NETWORK_INTERFACE_STUBS_H_
 #define NETWORK_INTERFACE_STUBS_H_
 
-/* mqtt.h must precede including this header. */
+/* transport_interface.h must precede including this header. */
 
 /**
  * @brief Application defined network interface receive function.

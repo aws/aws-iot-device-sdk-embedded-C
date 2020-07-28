@@ -24,7 +24,7 @@
 
 uint32_t GetCurrentTimeStub( void )
 {
-    /* There exists loops in the MQTT library that rely on the timestamp being
+    /* There are loops in the MQTT library that rely on the timestamp being
      * reasonable in order to complete. Returning an unbounded timestamp does
      * not add value to the proofs as the MQTT library uses the timestamp for
      * only arithmetic operations. In C arithmetic operations on unsigned

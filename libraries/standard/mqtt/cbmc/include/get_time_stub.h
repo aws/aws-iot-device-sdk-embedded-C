@@ -27,8 +27,6 @@
 #ifndef GET_TIME_STUB_H_
 #define GET_TIME_STUB_H_
 
-/* mqtt.h must precede including this header. */
-
 /**
  * Application defined callback to retrieve the current time in milliseconds.
  *
