@@ -37,8 +37,8 @@ void harness()
 
     pContext = mallocCanFail( sizeof( MQTTContext_t ) );
     pTransportInterface = mallocCanFail( sizeof( TransportInterface_t ) );
-    getTimeFunction = mallocCanFail( sizeof ( MQTTGetCurrentTimeFunc_t ) );
-    userCallback = mallocCanFail( sizeof ( MQTTEventCallback_t ) );
+    getTimeFunction = mallocCanFail( sizeof( MQTTGetCurrentTimeFunc_t ) );
+    userCallback = mallocCanFail( sizeof( MQTTEventCallback_t ) );
     pNetworkBuffer = mallocCanFail( sizeof( MQTTFixedBuffer_t ) );
 
     MQTT_Init( pContext,

@@ -22,8 +22,9 @@
 #include "mqtt.h"
 #include "network_interface_stubs.h"
 
-/* An exclusive bound on the times that the NetworkInterfaceSendStub will be 
- * invoked before returning a loop terminating value. */
+/* An exclusive bound on the times that the NetworkInterfaceSendStub will be
+ * invoked before returning a loop terminating value. This is usually defined
+ * in the Makefile of the harnessed function. */
 #ifndef MAX_NETWORK_SEND_TRIES
     #define MAX_NETWORK_SEND_TRIES    3
 #endif
@@ -57,7 +58,7 @@ int32_t NetworkInterfaceSendStub( NetworkContext_t * pNetworkContext,
                       "NetworkInterfaceSendStub pBuffer is not NULL." );
 
     /* The number of tries to send the message before this invocation. */
-    static size_t tries;
+    static size_t tries = 1;
 
     int32_t bytesOrError;
 
@@ -71,10 +72,13 @@ int32_t NetworkInterfaceSendStub( NetworkContext_t * pNetworkContext,
      * iterations. Looping for INT32_MAX times adds no value to the proof.
      * What matters is that the MQTT library can handle all the possible values
      * that could be returned. */
-    tries++;
-    if( tries >= ( MAX_NETWORK_SEND_TRIES - 1 ) )
+    if( tries < MAX_NETWORK_SEND_TRIES )
     {
-        tries = 0;
+        tries++;
+    }
+    else
+    {
+        tries = 1;
         bytesOrError = bytesToSend;
     }
 
