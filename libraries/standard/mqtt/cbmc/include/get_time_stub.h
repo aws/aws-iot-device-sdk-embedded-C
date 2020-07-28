@@ -20,26 +20,18 @@
  */
 
 /**
- * @file MQTT_DeserializeAck_harness.c
- * @brief Implements the proof harness for MQTT_DeserializeAck function.
+ * @file get_time_stub.h
+ * @brief Stub definition for the application defined callback to retrieve the
+ * current time in milliseconds.
  */
-#include "mqtt.h"
-#include "mqtt_cbmc_state.h"
+#ifndef GET_TIME_STUB_H_
+#define GET_TIME_STUB_H_
 
-void harness()
-{
-    MQTTPacketInfo_t * pIncomingPacket;
-    uint16_t * pPacketId;
-    bool * pSessionPresent;
+/**
+ * Application defined callback to retrieve the current time in milliseconds.
+ *
+ * @return The current time in milliseconds.
+ */
+uint32_t GetCurrentTimeStub( void );
 
-    pIncomingPacket = allocateMqttPacketInfo( NULL );
-    __CPROVER_assume( isValidMqttPacketInfo( pIncomingPacket ) );
-
-    /* These are allocated for coverage of a NULL input. */
-    pPacketId = mallocCanFail( sizeof( uint16_t ) );
-    pSessionPresent = mallocCanFail( sizeof( bool ) );
-
-    MQTT_DeserializeAck( pIncomingPacket,
-                         pPacketId,
-                         pSessionPresent );
-}
+#endif /* ifndef GET_TIME_STUB_H_ */
