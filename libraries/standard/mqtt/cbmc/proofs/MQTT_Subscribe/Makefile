@@ -24,7 +24,7 @@ HARNESS_FILE=MQTT_Subscribe_harness
 
 # Please see libraries/mqtt/cbmc/stubs/network_interface_subs.c for more
 # information on the MAX_NETWORK_SEND_TRIES.
-MAX_NETWORK_SEND_TRIES=2
+MAX_NETWORK_SEND_TRIES=3
 # Bound on the the subscription count. Please see the default value in 
 # mqtt_cbmc_state.c for more information on this bound. This is set to 2 
 # currently to have the proof run quickly.
@@ -37,16 +37,16 @@ INCLUDES +=
 REMOVE_FUNCTION_BODY +=
 # Unlike recvExact, sendPacket is not bounded by the timeout. The loop in
 # sendPacket will continue until all the bytes are sent or a network error
-# occurs. It is unwound the MAX_NETWORK_SEND_TRIES time + 2. Please see
-# NetworkInterfaceReceiveStub in libraries\standard\mqtt\cbmc\stubs\network_interface_stubs.c
-# for more information.
-UNWINDSET += __CPROVER_file_local_mqtt_c_sendPacket.0:4
+# occurs. Please see NetworkInterfaceReceiveStub in 
+# libraries\standard\mqtt\cbmc\stubs\network_interface_stubs.c for more 
+# information.
+UNWINDSET += __CPROVER_file_local_mqtt_c_sendPacket.0:$(MAX_NETWORK_SEND_TRIES)
 UNWINDSET += allocateMqttSubscriptionList.0:$(SUBSCRIPTION_COUNT_MAX)
 UNWINDSET += isValidMqttSubscriptionList.0:$(SUBSCRIPTION_COUNT_MAX)
 UNWINDSET += __CPROVER_file_local_mqtt_lightweight_c_calculateSubscriptionPacketSize.0:$(SUBSCRIPTION_COUNT_MAX)
 UNWINDSET += MQTT_SerializeSubscribe.0:$(SUBSCRIPTION_COUNT_MAX)
 # The encodeRemainingLength loop is unwound 5 times because encodeRemainingLength()
-# divides a size_t variable by 128 until it is zero to stop the loop.
+# divides a size_t variable by 128 until it reaches zero to stop the loop.
 # log128(SIZE_MAX) = 4.571...
 UNWINDSET += __CPROVER_file_local_mqtt_lightweight_c_encodeRemainingLength.0:5
 

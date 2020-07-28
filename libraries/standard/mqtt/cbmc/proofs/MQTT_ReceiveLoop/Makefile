@@ -12,7 +12,7 @@ HARNESS_FILE=MQTT_ReceiveLoop_harness
 MQTT_RECEIVE_TIMEOUT=2
 # Please see libraries/mqtt/cbmc/stubs/network_interface_subs.c for more
 # information on the MAX_NETWORK_SEND_TRIES.
-MAX_NETWORK_SEND_TRIES=2
+MAX_NETWORK_SEND_TRIES=3
 DEFINES += -DMQTT_RECEIVE_TIMEOUT=$(MQTT_RECEIVE_TIMEOUT)
 DEFINES += -DMAX_NETWORK_SEND_TRIES=$(MAX_NETWORK_SEND_TRIES)
 INCLUDES +=
@@ -29,12 +29,12 @@ UNWINDSET += __CPROVER_file_local_mqtt_c_discardPacket.0:3
 UNWINDSET += __CPROVER_file_local_mqtt_c_recvExact.0:3
 # Unlike recvExact, sendPacket is not bounded by the timeout. The loop in
 # sendPacket will continue until all the bytes are sent or a network error
-# occurs. It is unwound the MAX_NETWORK_SEND_TRIES time + 1. Please see
-# NetworkInterfaceReceiveStub in libraries\standard\mqtt\cbmc\stubs\network_interface_stubs.c
-# for more information.
-UNWINDSET += __CPROVER_file_local_mqtt_c_sendPacket.0:3
+# occurs. Please see NetworkInterfaceReceiveStub in 
+# libraries\standard\mqtt\cbmc\stubs\network_interface_stubs.c for more 
+# information.
+UNWINDSET += __CPROVER_file_local_mqtt_c_sendPacket.0:$(MAX_NETWORK_SEND_TRIES)
 # The getRemainingLength loop is unwound 5 times because getRemainingLength()
-# divides a size_t variable by 128 until it is zero to stop the loop.
+# divides a size_t variable by 128 until it reaches zero to stop the loop.
 # log128(SIZE_MAX) = 4.571...
 UNWINDSET += __CPROVER_file_local_mqtt_lightweight_c_getRemainingLength.0:5
 # These loops will run for the maximum number of publishes pending acknowledgement.
