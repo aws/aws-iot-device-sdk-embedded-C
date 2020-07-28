@@ -1,4 +1,5 @@
 import argparse
+import os
 import re
 import shutil
 import subprocess
@@ -6,6 +7,7 @@ import sys
 from pathlib import Path
 
 import junitparser as junit
+import requests
 import yaml
 
 
@@ -317,18 +319,53 @@ def _build_code_coverage(src, build_path, build_flags, c_flags, codecov_token):
         target_build_result = target_result.setdefault("CodeCoverage", {})
         out = _build_target("coverage", src, build_path, build_flags, c_flags)
         log(out)
+        out = _run_cmd(f"gcovr -r . -x -o {build_path}/cobertura.xml")
+        log(out)
 
-        if codecov_token:
+        commit_id = os.environ.get("ghprbActualCommit") or ""
+
+        if codecov_token and commit_id:
             log("\n----------------------------------------------------------------")
             log("Upload Code Coverage report to codecov.io")
             log("----------------------------------------------------------------")
-            cmd = f"curl -s https://codecov.io/bash | bash -s - -t {codecov_token}"
-            out = _run_cmd(cmd)
-            log(out)
+
+            params = {
+                "token": codecov_token,
+                "commit": commit_id,
+                "branch": "",
+                "build": "",
+                "build_url": "",
+                "name": "",
+                "tag": "",
+                "slug": "",
+                "service": "",
+                "flags": "",
+                "pr": "",
+                "job": "",
+                "cmd_args": "",
+            }
+            headers = {"content-type": "application/x-www-form-urlencoded"}
+            with open(f"{build_path}/cobertura.xml", "rb") as payload:
+                try:
+                    requests.post(
+                        "https://codecov.io/upload/v2",
+                        data=payload,
+                        verify=True,
+                        headers=headers,
+                        params=params,
+                    )
+                except requests.exceptions.RequestException as err:
+                    log(f"Error calling codecov.io: {err}")
         else:
-            log(
-                "Provide '--codecov-token' in commandline, if you want to upload coverage report to codecov.io"
-            )
+            if not commit_id:
+                log(
+                    "Please provide commit id, if you want to upload coverage report to codecov.io"
+                )
+            if not codecov_token:
+                log(
+                    "Provide '--codecov-token' in commandline, \
+                    if you want to upload coverage report to codecov.io"
+                )
         target_build_result["status"] = "PASS"
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as err:
         log(err.stdout)
