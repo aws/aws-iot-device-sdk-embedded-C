@@ -299,7 +299,6 @@ static void establishMqttSession( MQTTContext_t * pContext,
     MQTTConnectInfo_t connectInfo;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTApplicationCallbacks_t callbacks;
     MQTTPublishInfo_t lwtInfo;
 
     assert( pContext != NULL );
@@ -317,21 +316,14 @@ static void establishMqttSession( MQTTContext_t * pContext,
     networkBuffer.pBuffer = buffer;
     networkBuffer.size = NETWORK_BUFFER_SIZE;
 
-    /* Application callbacks for receiving incoming publishes and incoming acks
-     * from MQTT library. */
-    callbacks.appCallback = eventCallback;
-
-    /* Application callback for getting the time for MQTT library. This time
-     * function will be used to calculate intervals in MQTT library.*/
-    callbacks.getTime = Clock_GetTimeMs;
-
     /* Clear the state of the MQTT context when creating a clean session. */
     if( createCleanSession == true )
     {
         /* Initialize MQTT library. */
         TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_Init( pContext,
                                                    &transport,
-                                                   &callbacks,
+                                                   Clock_GetTimeMs,
+                                                   eventCallback,
                                                    &networkBuffer ) );
     }
 

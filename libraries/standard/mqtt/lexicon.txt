@@ -9,6 +9,9 @@ bool
 bufferlength
 bytesorerror
 bytesreceived
+bytesrecvd
+bytesremaining
+bytessent
 bytestoread
 bytestoreceive
 bytestorecv
@@ -52,6 +55,7 @@ getpingreqpacketsize
 getpublishpacketsize
 getsubscribepacketsize
 gettime
+gettimefunction
 getunsubscribepacketsize
 handleincomingack
 handleincomingpublish
@@ -225,6 +229,7 @@ unsuback
 updatestateack
 updatestatepublish
 updatestatestatus
+usercallback
 utest
 utf
 validatesubscribeunsubscribeparams
