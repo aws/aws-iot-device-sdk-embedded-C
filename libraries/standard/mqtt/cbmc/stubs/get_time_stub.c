@@ -29,7 +29,8 @@ uint32_t GetCurrentTimeStub( void )
      * not add value to the proofs as the MQTT library uses the timestamp for
      * only arithmetic operations. In C arithmetic operations on unsigned
      * integers are guaranteed to reliably wrap around with no adverse side
-     * effects. */
+     * effects. If the time returned was unbounded, the loops could be unwound
+     * a large number of times making the proof execution very long. */
     static uint32_t globalEntryTime = 0;
 
     return ++globalEntryTime;
