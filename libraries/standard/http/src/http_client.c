@@ -1605,9 +1605,14 @@ static HTTPStatus_t sendHttpData( const TransportInterface_t * pTransport,
         else
         {
             /* It is a bug in the application's transport send implementation if
+<<<<<<< HEAD
              * more bytes than expected are sent. To avoid a possible overflow
              * in converting bytesRemaining from unsigned to signed, this assert
              * must exist after the check for transportStatus being negative. */
+=======
+             * more bytes than expected are sent. This can only happen when
+             * transportStatus is non-negative. */
+>>>>>>> Address PR comments
             assert( ( size_t ) transportStatus <= bytesRemaining );
 
             bytesRemaining -= ( size_t ) transportStatus;
@@ -1754,10 +1759,16 @@ static HTTPStatus_t receiveHttpData( const TransportInterface_t * pTransport,
     }
     else if( transportStatus > 0 )
     {
+<<<<<<< HEAD
         /* It is a bug in the application's transport receive implementation if
          * more bytes than expected are received. To avoid a possible overflow
          * in converting bytesRemaining from unsigned to signed, this assert
          * must exist after the check for transportStatus being negative. */
+=======
+        /* It is a bug in the application's transport send implementation if
+         * more bytes than expected are sent. This can only happen when
+         * transportStatus is non-negative. */
+>>>>>>> Address PR comments
         assert( ( size_t ) transportStatus <= bufferLen );
 
         /* Some or all of the specified data was received. */

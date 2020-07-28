@@ -30,10 +30,28 @@
     #define MAX_TRIES    5
 #endif
 
+/**
+ * @brief Transport interface stub for mocking data sent over the network.
+ *
+ * @param[in] pNetworkContext Implementation-defined network context.
+ * @param[in] pBuffer Buffer containing the bytes to send over the network stack.
+ * @param[in] bytesToSend Number of bytes to send over the network.
+ *
+ * @return The number of bytes sent or a negative error code.
+ */
 int32_t TransportInterfaceSendStub( NetworkContext_t * pContext,
                                     void * pBuffer,
                                     size_t bytesToSend );
 
+/**
+ * @brief Transport interface for mocking data received over the network.
+ *
+ * @param[in] pNetworkContext Implementation-defined network context.
+ * @param[in] pBuffer Buffer to receive the data into.
+ * @param[in] bytesToRecv Number of bytes requested from the network.
+ *
+ * @return The number of bytes received or a negative error code.
+ */
 int32_t TransportInterfaceReceiveStub( NetworkContext_t * pContext,
                                        void * pBuffer,
                                        size_t bytesToRecv );

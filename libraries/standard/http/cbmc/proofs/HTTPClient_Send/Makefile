@@ -7,6 +7,8 @@ HARNESS_FILE=HTTPClient_Send_harness
 DEFINES +=
 INCLUDES +=
 
+# We remove these function bodies so that they aren't categorized as possible
+# function pointer targets, leading to faster execution time.
 REMOVE_FUNCTION_BODY += __CPROVER_file_local_http_client_c_findHeaderFieldParserCallback
 REMOVE_FUNCTION_BODY += __CPROVER_file_local_http_client_c_findHeaderValueParserCallback
 REMOVE_FUNCTION_BODY += __CPROVER_file_local_http_client_c_httpParserOnBodyCallback
