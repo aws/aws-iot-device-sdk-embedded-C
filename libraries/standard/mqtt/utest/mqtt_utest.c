@@ -336,18 +336,6 @@ static void setupTransportInterface( TransportInterface_t * pTransport )
 }
 
 /**
- * @brief Initialize our event and time callback with the mocked functions
- * defined for the purposes this test.
- *
- * @brief param[in] pCallbacks Callbacks to use with the context.
- */
-static void setupCallbacks( MQTTApplicationCallbacks_t * pCallbacks )
-{
-    pCallbacks->appCallback = eventCallback;
-    pCallbacks->getTime = getTime;
-}
-
-/**
  * @brief Initialize pSubscribeInfo using test-defined macros.
  *
  * @param[in] pSubscribeInfo Pointer to MQTT subscription info.
@@ -531,19 +519,18 @@ void test_MQTT_Init_Happy_Path( void )
     MQTTContext_t context;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTApplicationCallbacks_t callbacks;
 
-    setupCallbacks( &callbacks );
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
 
-    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     TEST_ASSERT_EQUAL( MQTTNotConnected, context.connectStatus );
     TEST_ASSERT_EQUAL( MQTT_FIRST_VALID_PACKET_ID, context.nextPacketId );
+    TEST_ASSERT_EQUAL_PTR( getTime, context.getTime );
+    TEST_ASSERT_EQUAL_PTR( eventCallback, context.appCallback );
     /* These Unity assertions take pointers and compare their contents. */
     TEST_ASSERT_EQUAL_MEMORY( &transport, &context.transportInterface, sizeof( transport ) );
-    TEST_ASSERT_EQUAL_MEMORY( &callbacks, &context.callbacks, sizeof( callbacks ) );
     TEST_ASSERT_EQUAL_MEMORY( &networkBuffer, &context.networkBuffer, sizeof( networkBuffer ) );
 }
 
@@ -556,42 +543,33 @@ void test_MQTT_Init_Invalid_Params( void )
     MQTTContext_t context;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTApplicationCallbacks_t callbacks;
 
-    setupCallbacks( &callbacks );
     setupTransportInterface( &transport );
 
     /* Check that MQTTBadParameter is returned if any NULL parameters are passed. */
-    mqttStatus = MQTT_Init( NULL, &transport, &callbacks, &networkBuffer );
+    mqttStatus = MQTT_Init( NULL, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
-    mqttStatus = MQTT_Init( &context, NULL, &callbacks, &networkBuffer );
+    mqttStatus = MQTT_Init( &context, NULL, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
-    mqttStatus = MQTT_Init( &context, &transport, NULL, &networkBuffer );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, NULL );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
-    mqttStatus = MQTT_Init( &context, &transport, &callbacks, NULL );
+    /* Test if NULL is passed for any of the function pointers. */
+    mqttStatus = MQTT_Init( &context, &transport, NULL, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
-    /* Test if NULL is passed for any callbacks. */
-    callbacks.getTime = NULL;
-    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, NULL, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
-    callbacks.appCallback = NULL;
-    callbacks.getTime = getTime;
-    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
-    TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
-
-    callbacks.appCallback = eventCallback;
     transport.recv = NULL;
-    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
     transport.recv = transportRecvSuccess;
     transport.send = NULL;
-    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 }
 
@@ -609,15 +587,13 @@ void test_MQTT_Connect_sendConnect( void )
     MQTTStatus_t status;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTApplicationCallbacks_t callbacks;
     size_t remainingLength, packetSize;
 
     setupTransportInterface( &transport );
-    setupCallbacks( &callbacks );
     setupNetworkBuffer( &networkBuffer );
 
     memset( ( void * ) &mqttContext, 0x0, sizeof( mqttContext ) );
-    MQTT_Init( &mqttContext, &transport, &callbacks, &networkBuffer );
+    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
 
     /* Check parameters */
     status = MQTT_Connect( NULL, &connectInfo, NULL, timeout, &sessionPresent );
@@ -684,16 +660,14 @@ void test_MQTT_Connect_receiveConnack( void )
     MQTTStatus_t status;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTApplicationCallbacks_t callbacks;
     MQTTPacketInfo_t incomingPacket;
 
     setupTransportInterface( &transport );
-    setupCallbacks( &callbacks );
     setupNetworkBuffer( &networkBuffer );
     transport.recv = transportRecvFailure;
 
     memset( ( void * ) &mqttContext, 0x0, sizeof( mqttContext ) );
-    MQTT_Init( &mqttContext, &transport, &callbacks, &networkBuffer );
+    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
 
     /* Everything before receiving the CONNACK should succeed. */
     MQTT_SerializeConnect_IgnoreAndReturn( MQTTSuccess );
@@ -756,17 +730,15 @@ void test_MQTT_Connect_receiveConnack_retries( void )
     MQTTStatus_t status;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTApplicationCallbacks_t callbacks;
     MQTTPacketInfo_t incomingPacket;
 
     /* Same set of tests with retries. MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT is 2*/
     setupTransportInterface( &transport );
-    setupCallbacks( &callbacks );
     setupNetworkBuffer( &networkBuffer );
     transport.recv = transportRecvFailure;
 
     memset( ( void * ) &mqttContext, 0x0, sizeof( mqttContext ) );
-    MQTT_Init( &mqttContext, &transport, &callbacks, &networkBuffer );
+    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
 
     /* Everything before receiving the CONNACK should succeed. */
     MQTT_SerializeConnect_IgnoreAndReturn( MQTTSuccess );
@@ -819,16 +791,14 @@ void test_MQTT_Connect_partial_receive()
     MQTTStatus_t status;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTApplicationCallbacks_t callbacks;
     MQTTPacketInfo_t incomingPacket;
 
     setupTransportInterface( &transport );
-    setupCallbacks( &callbacks );
     setupNetworkBuffer( &networkBuffer );
     transport.recv = transportRecvOneByte;
 
     memset( ( void * ) &mqttContext, 0x0, sizeof( mqttContext ) );
-    MQTT_Init( &mqttContext, &transport, &callbacks, &networkBuffer );
+    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
 
     /* Everything before receiving the CONNACK should succeed. */
     MQTT_SerializeConnect_IgnoreAndReturn( MQTTSuccess );
@@ -875,7 +845,7 @@ void test_MQTT_Connect_partial_receive()
     /* Receive failure while discarding packet. */
     mqttContext.transportInterface.recv = transportRecvFailure;
     /* Test with dummy get time function to make sure there are no infinite loops. */
-    mqttContext.callbacks.getTime = getTimeDummy;
+    mqttContext.getTime = getTimeDummy;
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
     status = MQTT_Connect( &mqttContext, &connectInfo, NULL, MQTT_NO_TIMEOUT_MS, &sessionPresent );
@@ -894,18 +864,16 @@ void test_MQTT_Connect_resendPendingAcks( void )
     MQTTStatus_t status;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTApplicationCallbacks_t callbacks;
     MQTTPacketInfo_t incomingPacket;
     uint16_t packetIdentifier = 1;
     MQTTPublishState_t pubRelState = MQTTPubRelSend;
 
     setupTransportInterface( &transport );
-    setupCallbacks( &callbacks );
     setupNetworkBuffer( &networkBuffer );
 
     memset( ( void * ) &mqttContext, 0x0, sizeof( mqttContext ) );
     memset( ( void * ) &connectInfo, 0x00, sizeof( connectInfo ) );
-    MQTT_Init( &mqttContext, &transport, &callbacks, &networkBuffer );
+    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
 
     MQTT_SerializeConnect_IgnoreAndReturn( MQTTSuccess );
     MQTT_GetConnectPacketSize_IgnoreAndReturn( MQTTSuccess );
@@ -1029,15 +997,13 @@ void test_MQTT_Connect_happy_path()
     MQTTStatus_t status;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTApplicationCallbacks_t callbacks;
     MQTTPacketInfo_t incomingPacket;
 
     setupTransportInterface( &transport );
-    setupCallbacks( &callbacks );
     setupNetworkBuffer( &networkBuffer );
 
     memset( ( void * ) &mqttContext, 0x0, sizeof( mqttContext ) );
-    MQTT_Init( &mqttContext, &transport, &callbacks, &networkBuffer );
+    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
     connectInfo.keepAliveSeconds = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
 
     MQTT_SerializeConnect_IgnoreAndReturn( MQTTSuccess );
@@ -1140,7 +1106,6 @@ void test_MQTT_Publish( void )
     MQTTPublishInfo_t publishInfo;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTApplicationCallbacks_t callbacks;
     MQTTStatus_t status;
     size_t headerSize;
     MQTTPublishState_t expectedState;
@@ -1148,13 +1113,12 @@ void test_MQTT_Publish( void )
     const uint16_t PACKET_ID = 1;
 
     setupTransportInterface( &transport );
-    setupCallbacks( &callbacks );
     setupNetworkBuffer( &networkBuffer );
     transport.send = transportSendFailure;
 
     memset( ( void * ) &mqttContext, 0x0, sizeof( mqttContext ) );
     memset( ( void * ) &publishInfo, 0x0, sizeof( publishInfo ) );
-    MQTT_Init( &mqttContext, &transport, &callbacks, &networkBuffer );
+    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
 
     /* Verify parameters. */
     status = MQTT_Publish( NULL, &publishInfo, PACKET_ID );
@@ -1283,11 +1247,9 @@ void test_MQTT_Disconnect( void )
     NetworkContext_t networkContext;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTApplicationCallbacks_t callbacks;
     size_t disconnectSize = 2;
 
     setupTransportInterface( &transport );
-    setupCallbacks( &callbacks );
     setupNetworkBuffer( &networkBuffer );
     networkContext.buffer = &bufPtr;
     transport.pNetworkContext = &networkContext;
@@ -1295,7 +1257,7 @@ void test_MQTT_Disconnect( void )
     transport.send = transportSendFailure;
 
     memset( ( void * ) &mqttContext, 0x0, sizeof( mqttContext ) );
-    MQTT_Init( &mqttContext, &transport, &callbacks, &networkBuffer );
+    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
     mqttContext.connectStatus = MQTTConnected;
 
     /* Verify parameters. */
@@ -1332,14 +1294,12 @@ void test_MQTT_GetPacketId( void )
     MQTTContext_t mqttContext;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTApplicationCallbacks_t callbacks;
     uint16_t packetId;
 
     setupTransportInterface( &transport );
-    setupCallbacks( &callbacks );
     setupNetworkBuffer( &networkBuffer );
     memset( ( void * ) &mqttContext, 0x0, sizeof( mqttContext ) );
-    MQTT_Init( &mqttContext, &transport, &callbacks, &networkBuffer );
+    MQTT_Init( &mqttContext, &transport, getTime, eventCallback, &networkBuffer );
 
     /* Verify parameters. */
     packetId = MQTT_GetPacketId( NULL );
@@ -1365,22 +1325,20 @@ void test_MQTT_ProcessLoop_Invalid_Params( void )
     MQTTContext_t context;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTApplicationCallbacks_t callbacks = { 0 };
     MQTTStatus_t mqttStatus = MQTT_ProcessLoop( NULL, MQTT_NO_TIMEOUT_MS );
 
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
     setupTransportInterface( &transport );
-    setupCallbacks( &callbacks );
-    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
     /* Get time function cannot be NULL. */
-    context.callbacks.getTime = NULL;
+    context.getTime = NULL;
     mqttStatus = MQTT_ProcessLoop( &context, MQTT_NO_TIMEOUT_MS );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
     /* Restore the time function for the next test. */
-    context.callbacks.getTime = getTime;
+    context.getTime = getTime;
 
     /* The fixed network buffer cannot be NULL. */
     context.networkBuffer.pBuffer = NULL;
@@ -1399,14 +1357,12 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Happy_Paths( void )
     MQTTContext_t context;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTApplicationCallbacks_t callbacks;
     MQTTPublishInfo_t pubInfo;
 
     setupTransportInterface( &transport );
-    setupCallbacks( &callbacks );
     setupNetworkBuffer( &networkBuffer );
 
-    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
     modifyIncomingPacketStatus = MQTTSuccess;
@@ -1478,14 +1434,12 @@ void test_MQTT_ProcessLoop_handleIncomingPublish_Error_Paths( void )
     MQTTContext_t context;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTApplicationCallbacks_t callbacks;
     MQTTPublishInfo_t publishInfo = { 0 };
 
     setupTransportInterface( &transport );
-    setupCallbacks( &callbacks );
     setupNetworkBuffer( &networkBuffer );
 
-    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
     modifyIncomingPacketStatus = MQTTSuccess;
@@ -1531,13 +1485,11 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Happy_Paths( void )
     MQTTContext_t context;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTApplicationCallbacks_t callbacks;
 
     setupTransportInterface( &transport );
-    setupCallbacks( &callbacks );
     setupNetworkBuffer( &networkBuffer );
 
-    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
     modifyIncomingPacketStatus = MQTTSuccess;
@@ -1609,13 +1561,11 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths( void )
     MQTTContext_t context;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTApplicationCallbacks_t callbacks;
 
     setupTransportInterface( &transport );
-    setupCallbacks( &callbacks );
     setupNetworkBuffer( &networkBuffer );
 
-    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
     modifyIncomingPacketStatus = MQTTSuccess;
@@ -1674,16 +1624,15 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths( void )
     MQTTContext_t context;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTApplicationCallbacks_t callbacks;
 
+    setupNetworkBuffer( &networkBuffer );
     setupTransportInterface( &transport );
-    setupCallbacks( &callbacks );
 
     modifyIncomingPacketStatus = MQTTNoDataAvailable;
     globalEntryTime = MQTT_ONE_SECOND_TO_MS;
 
     /* Coverage for the branch path where keep alive interval is 0. */
-    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     context.waitingForPingResp = false;
     context.keepAliveIntervalSec = 0;
@@ -1693,7 +1642,7 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths( void )
 
     /* Coverage for the branch path where keep alive interval is greater than 0,
      * and the interval has expired. */
-    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     context.waitingForPingResp = true;
     context.keepAliveIntervalSec = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
@@ -1703,7 +1652,7 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths( void )
                             MQTTSuccess, false, NULL );
 
     /* Coverage for the branch path where PINGRESP timeout interval hasn't expired. */
-    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     context.waitingForPingResp = true;
     context.keepAliveIntervalSec = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
@@ -1715,7 +1664,7 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths( void )
                             MQTTSuccess, false, NULL );
 
     /* Coverage for the branch path where a PINGRESP hasn't been sent out yet. */
-    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     context.waitingForPingResp = false;
     context.keepAliveIntervalSec = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
@@ -1736,16 +1685,14 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths( void )
     MQTTContext_t context;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTApplicationCallbacks_t callbacks;
 
     setupTransportInterface( &transport );
-    setupCallbacks( &callbacks );
 
     modifyIncomingPacketStatus = MQTTNoDataAvailable;
     globalEntryTime = MQTT_ONE_SECOND_TO_MS;
 
     /* Coverage for the branch path where PING timeout interval hasn't expired. */
-    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     context.lastPacketTime = 0;
     context.keepAliveIntervalSec = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
@@ -1765,12 +1712,11 @@ void test_MQTT_ProcessLoop_Receive_Failed( void )
     MQTTContext_t context;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTApplicationCallbacks_t callbacks;
 
+    setupNetworkBuffer( &networkBuffer );
     setupTransportInterface( &transport );
-    setupCallbacks( &callbacks );
 
-    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTRecvFailed );
@@ -1789,7 +1735,6 @@ void test_MQTT_ProcessLoop_Timer_Overflow( void )
     MQTTContext_t context;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTApplicationCallbacks_t callbacks;
     MQTTPacketInfo_t incomingPacket = { 0 };
     MQTTPublishState_t publishState = MQTTPubAckSend;
     MQTTPublishState_t ackState = MQTTPublishDone;
@@ -1798,7 +1743,6 @@ void test_MQTT_ProcessLoop_Timer_Overflow( void )
     uint32_t expectedFinalTime;
 
     setupTransportInterface( &transport );
-    setupCallbacks( &callbacks );
 
     networkBuffer.size = 1000;
     incomingPacket.type = MQTT_PACKET_TYPE_PUBLISH;
@@ -1807,7 +1751,7 @@ void test_MQTT_ProcessLoop_Timer_Overflow( void )
     globalEntryTime = UINT32_MAX - MQTT_OVERFLOW_OFFSET;
     expectedFinalTime = MQTT_TIMER_CALLS_PER_ITERATION * numIterations - MQTT_OVERFLOW_OFFSET;
 
-    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
     /* Verify that we run the expected number of iterations despite overflowing. */
@@ -1842,13 +1786,11 @@ void test_MQTT_ReceiveLoop( void )
     MQTTContext_t context;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTApplicationCallbacks_t callbacks = { 0 };
     MQTTPacketInfo_t incomingPacket = { 0 };
 
     setupTransportInterface( &transport );
-    setupCallbacks( &callbacks );
 
-    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
 
     /* Verify that a NULL Context returns an error. */
@@ -1856,10 +1798,10 @@ void test_MQTT_ReceiveLoop( void )
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
 
     /* Verify that a NULL time function returns an error. */
-    context.callbacks.getTime = NULL;
+    context.getTime = NULL;
     mqttStatus = MQTT_ReceiveLoop( &context, MQTT_NO_TIMEOUT_MS );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
-    context.callbacks.getTime = getTime;
+    context.getTime = getTime;
 
     /* Verify that a null fixed network buffer returns an error. */
     context.networkBuffer.pBuffer = NULL;
@@ -1880,10 +1822,10 @@ void test_MQTT_ReceiveLoop( void )
     TEST_ASSERT_FALSE( context.controlPacketSent );
 
     /* Test with a dummy getTime to ensure there's no infinite loops. */
-    context.callbacks.getTime = getTimeDummy;
+    context.getTime = getTimeDummy;
     mqttStatus = MQTT_ReceiveLoop( &context, MQTT_NO_TIMEOUT_MS );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
-    context.callbacks.getTime = getTime;
+    context.getTime = getTime;
 
     MQTT_GetIncomingPacketTypeAndLength_StopIgnore();
 
@@ -1937,18 +1879,16 @@ void test_MQTT_Subscribe_happy_path( void )
     MQTTContext_t context;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTApplicationCallbacks_t callbacks;
     MQTTSubscribeInfo_t subscribeInfo;
     size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
     size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
 
     setupTransportInterface( &transport );
-    setupCallbacks( &callbacks );
     setupNetworkBuffer( &networkBuffer );
     setupSubscriptionInfo( &subscribeInfo );
 
     /* Initialize context. */
-    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     /* Verify MQTTSuccess is returned with the following mocks. */
     MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -1970,14 +1910,12 @@ void test_MQTT_Subscribe_error_paths( void )
     MQTTContext_t context;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTApplicationCallbacks_t callbacks;
     MQTTSubscribeInfo_t subscribeInfo;
     size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
     size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
 
     /* Verify that an error is propagated when transport interface returns an error. */
     setupTransportInterface( &transport );
-    setupCallbacks( &callbacks );
     setupNetworkBuffer( &networkBuffer );
     setupSubscriptionInfo( &subscribeInfo );
 
@@ -1985,7 +1923,7 @@ void test_MQTT_Subscribe_error_paths( void )
     transport.recv = transportRecvFailure;
 
     /* Initialize context. */
-    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     /* Verify MQTTSendFailed is propagated when transport interface returns an error. */
     MQTT_GetSubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -2037,18 +1975,16 @@ void test_MQTT_Unsubscribe_happy_path( void )
     MQTTContext_t context;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTApplicationCallbacks_t callbacks;
     MQTTSubscribeInfo_t subscribeInfo;
     size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
     size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
 
     setupTransportInterface( &transport );
-    setupCallbacks( &callbacks );
     setupNetworkBuffer( &networkBuffer );
     setupSubscriptionInfo( &subscribeInfo );
 
     /* Initialize context. */
-    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     /* Verify MQTTSuccess is returned with the following mocks. */
     MQTT_GetUnsubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -2070,14 +2006,12 @@ void test_MQTT_Unsubscribe_error_path( void )
     MQTTContext_t context;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTApplicationCallbacks_t callbacks;
     MQTTSubscribeInfo_t subscribeInfo;
     size_t remainingLength = MQTT_SAMPLE_REMAINING_LENGTH;
     size_t packetSize = MQTT_SAMPLE_REMAINING_LENGTH;
 
     /* Verify that an error is propagated when transport interface returns an error. */
     setupTransportInterface( &transport );
-    setupCallbacks( &callbacks );
     setupNetworkBuffer( &networkBuffer );
     setupSubscriptionInfo( &subscribeInfo );
 
@@ -2085,7 +2019,7 @@ void test_MQTT_Unsubscribe_error_path( void )
     transport.recv = transportRecvFailure;
 
     /* Initialize context. */
-    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     /* Verify MQTTSendFailed is propagated when transport interface returns an error. */
     MQTT_GetUnsubscribePacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -2122,15 +2056,13 @@ void test_MQTT_Ping_happy_path( void )
     MQTTContext_t context;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTApplicationCallbacks_t callbacks;
     size_t pingreqSize = MQTT_PACKET_PINGREQ_SIZE;
 
     setupTransportInterface( &transport );
-    setupCallbacks( &callbacks );
     setupNetworkBuffer( &networkBuffer );
 
     /* Initialize context. */
-    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     /* Verify MQTTSuccess is returned. */
     MQTT_GetPingreqPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -2154,11 +2086,9 @@ void test_MQTT_Ping_error_path( void )
     MQTTContext_t context;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTApplicationCallbacks_t callbacks;
     size_t pingreqSize = MQTT_PACKET_PINGREQ_SIZE;
 
     setupTransportInterface( &transport );
-    setupCallbacks( &callbacks );
     setupNetworkBuffer( &networkBuffer );
 
     /* Test a network error is returned from sending the PING packet over the
@@ -2167,7 +2097,7 @@ void test_MQTT_Ping_error_path( void )
     transport.recv = transportRecvFailure;
 
     /* Initialize context. */
-    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     /* Verify MQTTSendFailed is propagated when transport interface returns an error. */
     MQTT_GetPingreqPacketSize_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -2178,7 +2108,7 @@ void test_MQTT_Ping_error_path( void )
     TEST_ASSERT_EQUAL( MQTTSendFailed, mqttStatus );
 
     /* Initialize context. */
-    mqttStatus = MQTT_Init( &context, &transport, &callbacks, &networkBuffer );
+    mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
     /* Verify MQTTBadParameter is propagated when getting PINGREQ packet size fails. */
     MQTT_GetPingreqPacketSize_ExpectAnyArgsAndReturn( MQTTBadParameter );

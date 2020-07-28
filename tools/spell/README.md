@@ -1,15 +1,14 @@
 # How to create a lexicon.txt for a new library.
 
-1. In your GNU environment install programs: *spell* and *getopt*  
-   For Linux here are the commands to install these programs:  
+1. In your GNU environment, install the *spell* and *getopt* programs. Use the following commands in Debian distributions, to install the packages (*getopt* is part of the `util-linux` package):
    ```shell
    apt-get install spell
-   apt-get install getopt
+   apt-get install util-linux
    ```
 
-1. Add **tools/spell/ablexicon**, **tools/spell/extract-comments**, and **tools/spell/find-unknown-comment-words** to your system's PATH.
+1. Add the folder containing the **tools/spell/ablexicon**, **tools/spell/extract-comments**, and **tools/spell/find-unknown-comment-words** scripts to your system's PATH.
    ```shell
-   export PATH=<CSDK_ROOT>/tools/spell/ablexicon:tools/spell/extract-comments:<CSDK_ROOT>/tools/spell/find-unknown-comment-words:$PATH
+   export PATH=<CSDK_ROOT>/tools/spell:$PATH
    ```
 
 1. Ensure there does not exist a file called "lexicon.txt" in your library's directory. Run the following command to create a lexicon.txt for your library:  

@@ -57,99 +57,99 @@
 /**
  * @brief A valid starting packet ID per MQTT spec. Start from 1.
  */
-#define MQTT_FIRST_VALID_PACKET_ID          ( 1 )
+#define MQTT_FIRST_VALID_PACKET_ID           ( 1 )
 
 /**
  * @brief A PINGREQ packet is always 2 bytes in size, defined by MQTT 3.1.1 spec.
  */
-#define MQTT_PACKET_PINGREQ_SIZE            ( 2U )
+#define MQTT_PACKET_PINGREQ_SIZE             ( 2U )
 
 /**
  * @brief A packet type not handled by MQTT_ProcessLoop.
  */
-#define MQTT_PACKET_TYPE_INVALID            ( 0U )
+#define MQTT_PACKET_TYPE_INVALID             ( 0U )
 
 /**
  * @brief Number of milliseconds in a second.
  */
-#define MQTT_ONE_SECOND_TO_MS               ( 1000U )
+#define MQTT_ONE_SECOND_TO_MS                ( 1000U )
 
 /**
  * @brief Length of the MQTT network buffer.
  */
-#define MQTT_TEST_BUFFER_LENGTH             ( 128 )
+#define MQTT_TEST_BUFFER_LENGTH              ( 128 )
 
 /**
  * @brief Sample length of remaining serialized data.
  */
-#define MQTT_SAMPLE_REMAINING_LENGTH        ( 64 )
+#define MQTT_SAMPLE_REMAINING_LENGTH         ( 64 )
 
 /**
  * @brief Subtract this value from max value of global entry time
  * for the timer overflow test.
  */
-#define MQTT_OVERFLOW_OFFSET                ( 3 )
+#define MQTT_OVERFLOW_OFFSET                 ( 3 )
 
 /**
  * @brief Sample topic filter to subscribe to.
  */
-#define TEST_MQTT_TOPIC                     "/iot/integration/test"
+#define TEST_MQTT_TOPIC                      "/iot/integration/test"
 
 /**
  * @brief Length of sample topic filter.
  */
-#define TEST_MQTT_TOPIC_LENGTH              ( sizeof( TEST_MQTT_TOPIC ) - 1 )
+#define TEST_MQTT_TOPIC_LENGTH               ( sizeof( TEST_MQTT_TOPIC ) - 1 )
 
 /**
  * @brief Sample topic filter to subscribe to.
  */
-#define TEST_MQTT_LWT_TOPIC                 "/iot/integration/test/lwt"
+#define TEST_MQTT_LWT_TOPIC                  "/iot/integration/test/lwt"
 
 /**
  * @brief Length of sample topic filter.
  */
-#define TEST_MQTT_LWT_TOPIC_LENGTH          ( sizeof( TEST_MQTT_LWT_TOPIC ) - 1 )
+#define TEST_MQTT_LWT_TOPIC_LENGTH           ( sizeof( TEST_MQTT_LWT_TOPIC ) - 1 )
 
 /**
  * @brief Size of the network buffer for MQTT packets.
  */
-#define NETWORK_BUFFER_SIZE                 ( 1024U )
+#define NETWORK_BUFFER_SIZE                  ( 1024U )
 
 /**
  * @brief Client identifier for MQTT session in the tests.
  */
-#define TEST_CLIENT_IDENTIFIER              "MQTT-Test"
+#define TEST_CLIENT_IDENTIFIER               "MQTT-Test"
 
 /**
  * @brief Length of the client identifier.
  */
-#define TEST_CLIENT_IDENTIFIER_LENGTH       ( sizeof( TEST_CLIENT_IDENTIFIER ) - 1u )
+#define TEST_CLIENT_IDENTIFIER_LENGTH        ( sizeof( TEST_CLIENT_IDENTIFIER ) - 1u )
 
 /**
  * @brief Client identifier for use in LWT tests.
  */
-#define TEST_CLIENT_IDENTIFIER_LWT          "MQTT-Test-LWT"
+#define TEST_CLIENT_IDENTIFIER_LWT           "MQTT-Test-LWT"
 
 /**
  * @brief Length of LWT client identifier.
  */
-#define TEST_CLIENT_IDENTIFIER_LWT_LENGTH   ( sizeof( TEST_CLIENT_IDENTIFIER_LWT ) - 1u )
+#define TEST_CLIENT_IDENTIFIER_LWT_LENGTH    ( sizeof( TEST_CLIENT_IDENTIFIER_LWT ) - 1u )
 
 /**
  * @brief Transport timeout in milliseconds for transport send and receive.
  */
-#define TRANSPORT_SEND_RECV_TIMEOUT_MS      ( 200U )
+#define TRANSPORT_SEND_RECV_TIMEOUT_MS       ( 200U )
 
 /**
  * @brief Timeout for receiving CONNACK packet in milli seconds.
  */
-#define CONNACK_RECV_TIMEOUT_MS             ( 1000U )
+#define CONNACK_RECV_TIMEOUT_MS              ( 1000U )
 
 /**
  * @brief Time interval in seconds at which an MQTT PINGREQ need to be sent to
  * broker.
  */
-#define MQTT_KEEP_ALIVE_INTERVAL_SECONDS    ( 5U )
+#define MQTT_KEEP_ALIVE_INTERVAL_SECONDS     ( 5U )
 
 /**
  * @brief Timeout for MQTT_ProcessLoop() function in milliseconds.
@@ -157,12 +157,12 @@
  * PUBLISH message and ack responses for QoS 1 and QoS 2 communications
  * with the broker.
  */
-#define MQTT_PROCESS_LOOP_TIMEOUT_MS        ( 700U )
+#define MQTT_PROCESS_LOOP_TIMEOUT_MS         ( 700U )
 
 /**
  * @brief The MQTT message published in this example.
  */
-#define MQTT_EXAMPLE_MESSAGE                "Hello World!"
+#define MQTT_EXAMPLE_MESSAGE                 "Hello World!"
 
 /**
  * @brief Packet Identifier generated when Subscribe request was sent to the broker;
@@ -293,7 +293,6 @@ static void establishMqttSession( MQTTContext_t * pContext,
     MQTTConnectInfo_t connectInfo;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTApplicationCallbacks_t callbacks;
     MQTTPublishInfo_t lwtInfo;
 
     assert( pContext != NULL );
@@ -311,18 +310,11 @@ static void establishMqttSession( MQTTContext_t * pContext,
     networkBuffer.pBuffer = buffer;
     networkBuffer.size = NETWORK_BUFFER_SIZE;
 
-    /* Application callbacks for receiving incoming publishes and incoming acks
-     * from MQTT library. */
-    callbacks.appCallback = eventCallback;
-
-    /* Application callback for getting the time for MQTT library. This time
-     * function will be used to calculate intervals in MQTT library.*/
-    callbacks.getTime = Clock_GetTimeMs;
-
     /* Initialize MQTT library. */
     TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_Init( pContext,
                                                &transport,
-                                               &callbacks,
+                                               Clock_GetTimeMs,
+                                               eventCallback,
                                                &networkBuffer ) );
 
     /* Establish MQTT session with a CONNECT packet. */
@@ -780,7 +772,6 @@ void test_MQTT_Subscribe_Publish_With_Qos_2( void )
 
 void test_MQTT_Connect_LWT( void )
 {
-    int secondTcpSocket;
     NetworkContext_t secondNetworkContext = { 0 };
     bool sessionPresent;
     MQTTContext_t secondContext;
@@ -836,6 +827,7 @@ void test_MQTT_ProcessLoop_KeepAlive( void )
 {
     uint32_t connectPacketTime = context.lastPacketTime;
     uint32_t elapsedTime = 0;
+
     TEST_ASSERT_EQUAL( 0, context.pingReqSendTimeMs );
 
     /* Sleep until control packet needs to be sent. */

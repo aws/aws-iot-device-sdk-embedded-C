@@ -95,12 +95,6 @@ typedef enum MQTTPubAckType
     MQTTPubcomp
 } MQTTPubAckType_t;
 
-struct MQTTApplicationCallbacks
-{
-    MQTTGetCurrentTimeFunc_t getTime;
-    MQTTEventCallback_t appCallback;
-};
-
 struct MQTTPubAckInfo
 {
     uint16_t packetId;
@@ -120,7 +114,8 @@ struct MQTTContext
 
     uint16_t nextPacketId;
     MQTTConnectionStatus_t connectStatus;
-    MQTTApplicationCallbacks_t callbacks;
+    MQTTGetCurrentTimeFunc_t getTime;
+    MQTTEventCallback_t appCallback;
     uint32_t lastPacketTime;
     bool controlPacketSent;
 
@@ -143,7 +138,9 @@ struct MQTTContext
  *
  * @brief param[in] pContext The context to initialize.
  * @brief param[in] pTransportInterface The transport interface to use with the context.
- * @brief param[in] pCallbacks Callbacks to use with the context.
+ * @brief param[in] getTimeFunction The time utility function to use with the context.
+ * @brief param[in] userCallback The user callback to use with the context to notify about
+ * incoming packet events.
  * @brief param[in] pNetworkBuffer Network buffer provided for the context.
  *
  * @return #MQTTBadParameter if invalid parameters are passed;
@@ -151,7 +148,8 @@ struct MQTTContext
  */
 MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
                         const TransportInterface_t * pTransportInterface,
-                        const MQTTApplicationCallbacks_t * pCallbacks,
+                        MQTTGetCurrentTimeFunc_t getTimeFunction,
+                        MQTTEventCallback_t userCallback,
                         const MQTTFixedBuffer_t * pNetworkBuffer );
 
 /**
