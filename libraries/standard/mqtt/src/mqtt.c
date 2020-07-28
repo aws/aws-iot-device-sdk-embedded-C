@@ -314,14 +314,14 @@ static int32_t sendPacket( MQTTContext_t * pContext,
     bool sendError = false;
 
     assert( pContext != NULL );
-    assert( pContext->callbacks.getTime != NULL );
+    assert( pContext->getTime != NULL );
     assert( pContext->transportInterface.send != NULL );
     assert( pIndex != NULL );
 
     bytesRemaining = bytesToSend;
 
     /* Record the time of transmission. */
-    sendTime = pContext->callbacks.getTime();
+    sendTime = pContext->getTime();
 
     /* Loop until the entire packet is sent. */
     while( ( bytesRemaining > 0UL ) && ( sendError == false ) )
@@ -423,13 +423,13 @@ static int32_t recvExact( const MQTTContext_t * pContext,
 
     assert( pContext != NULL );
     assert( bytesToRecv <= pContext->networkBuffer.size );
-    assert( pContext->callbacks.getTime != NULL );
+    assert( pContext->getTime != NULL );
     assert( pContext->transportInterface.recv != NULL );
     assert( pContext->networkBuffer.pBuffer != NULL );
 
     pIndex = pContext->networkBuffer.pBuffer;
     recvFunc = pContext->transportInterface.recv;
-    getTimeStampMs = pContext->callbacks.getTime;
+    getTimeStampMs = pContext->getTime;
 
     entryTimeMs = getTimeStampMs();
 
@@ -492,9 +492,9 @@ static MQTTStatus_t discardPacket( const MQTTContext_t * pContext,
     bool receiveError = false;
 
     assert( pContext != NULL );
-    assert( pContext->callbacks.getTime != NULL );
+    assert( pContext->getTime != NULL );
     bytesToReceive = pContext->networkBuffer.size;
-    getTimeStampMs = pContext->callbacks.getTime;
+    getTimeStampMs = pContext->getTime;
 
     entryTimeMs = getTimeStampMs();
 
@@ -693,7 +693,7 @@ static MQTTStatus_t handleKeepAlive( MQTTContext_t * pContext )
     uint32_t now = 0U, keepAliveMs = 0U;
 
     assert( pContext != NULL );
-    now = pContext->callbacks.getTime();
+    now = pContext->getTime();
     keepAliveMs = 1000U * ( uint32_t ) pContext->keepAliveIntervalSec;
 
     /* If keep alive interval is 0, it is disabled. */
@@ -804,10 +804,10 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
          * duplicate incoming publishes. */
         if( duplicatePublish == false )
         {
-            pContext->callbacks.appCallback( pContext,
-                                             pIncomingPacket,
-                                             packetIdentifier,
-                                             &publishInfo );
+            pContext->appCallback( pContext,
+                                   pIncomingPacket,
+                                   packetIdentifier,
+                                   &publishInfo );
         }
 
         /* Send PUBACK or PUBREC if necessary. */
@@ -832,9 +832,9 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
 
     assert( pContext != NULL );
     assert( pIncomingPacket != NULL );
-    assert( pContext->callbacks.appCallback != NULL );
+    assert( pContext->appCallback != NULL );
 
-    appCallback = pContext->callbacks.appCallback;
+    appCallback = pContext->appCallback;
 
     ackType = getAckFromPacketType( pIncomingPacket->type );
     status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, NULL );
@@ -898,7 +898,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
     assert( pContext != NULL );
     assert( pIncomingPacket != NULL );
 
-    appCallback = pContext->callbacks.appCallback;
+    appCallback = pContext->appCallback;
 
     switch( pIncomingPacket->type )
     {
@@ -1127,9 +1127,9 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
 
     assert( pContext != NULL );
     assert( pIncomingPacket != NULL );
-    assert( pContext->callbacks.getTime != NULL );
+    assert( pContext->getTime != NULL );
 
-    getTimeStamp = pContext->callbacks.getTime;
+    getTimeStamp = pContext->getTime;
 
     /* Get the entry time for the function. */
     entryTimeMs = getTimeStamp();
@@ -1340,31 +1340,31 @@ static MQTTStatus_t validatePublishParams( const MQTTContext_t * pContext,
 
 MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
                         const TransportInterface_t * pTransportInterface,
-                        const MQTTApplicationCallbacks_t * pCallbacks,
+                        MQTTGetCurrentTimeFunc_t getTimeFunction,
+                        MQTTEventCallback_t userCallback,
                         const MQTTFixedBuffer_t * pNetworkBuffer )
 {
     MQTTStatus_t status = MQTTSuccess;
 
     /* Validate arguments. */
     if( ( pContext == NULL ) || ( pTransportInterface == NULL ) ||
-        ( pCallbacks == NULL ) || ( pNetworkBuffer == NULL ) )
+        ( pNetworkBuffer == NULL ) )
     {
         LogError( ( "Argument cannot be NULL: pContext=%p, "
                     "pTransportInterface=%p, "
-                    "pCallbacks=%p, "
-                    "pNetworkBuffer=%p.",
+                    "pNetworkBuffer=%p",
                     pContext,
                     pTransportInterface,
-                    pCallbacks,
                     pNetworkBuffer ) );
         status = MQTTBadParameter;
     }
-    else if( ( pCallbacks->getTime == NULL ) || ( pCallbacks->appCallback == NULL ) ||
+    else if( ( getTimeFunction == NULL ) || ( userCallback == NULL ) ||
              ( pTransportInterface->recv == NULL ) || ( pTransportInterface->send == NULL ) )
     {
-        LogError( ( "Functions cannot be NULL: getTime=%p, appCallback=%p, recv=%p, send=%p.",
-                    pCallbacks->getTime,
-                    pCallbacks->appCallback,
+        LogError( ( "Function pointers cannot be NULL: getTimeFunction=%p, userCallback=%p, "
+                    "transportRecv=%p, transportRecvSend=%p",
+                    getTimeFunction,
+                    userCallback,
                     pTransportInterface->recv,
                     pTransportInterface->send ) );
         status = MQTTBadParameter;
@@ -1375,7 +1375,8 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
 
         pContext->connectStatus = MQTTNotConnected;
         pContext->transportInterface = *pTransportInterface;
-        pContext->callbacks = *pCallbacks;
+        pContext->getTime = getTimeFunction;
+        pContext->appCallback = userCallback;
         pContext->networkBuffer = *pNetworkBuffer;
 
         /* Zero is not a valid packet ID per MQTT spec. Start from 1. */
@@ -1796,25 +1797,23 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
                                uint32_t timeoutMs )
 {
     MQTTStatus_t status = MQTTBadParameter;
-    MQTTGetCurrentTimeFunc_t getTimeStampMs = NULL;
     uint32_t entryTimeMs = 0U, remainingTimeMs = timeoutMs, elapsedTimeMs = 0U;
 
     if( pContext == NULL )
     {
-        LogError( ( "MQTT Context cannot be NULL." ) );
+        LogError( ( "Invalid input parameter: MQTT Context cannot be NULL." ) );
     }
-    else if( pContext->callbacks.getTime == NULL )
+    else if( pContext->getTime == NULL )
     {
-        LogError( ( "MQTT Context must set callbacks.getTime." ) );
+        LogError( ( "Invalid input parameter: MQTT Context must have valid getTime." ) );
     }
     else if( pContext->networkBuffer.pBuffer == NULL )
     {
-        LogError( ( "The MQTT context's networkBuffer must not be NULL." ) );
+        LogError( ( "Invalid input parameter: The MQTT context's networkBuffer must not be NULL." ) );
     }
     else
     {
-        getTimeStampMs = pContext->callbacks.getTime;
-        entryTimeMs = getTimeStampMs();
+        entryTimeMs = pContext->getTime();
         pContext->controlPacketSent = false;
         status = MQTTSuccess;
     }
@@ -1827,14 +1826,15 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
          * the loop condition, and we do not want multiple breaks in a loop. */
         if( status != MQTTSuccess )
         {
-            LogError( ( "Exiting process loop. Error status=%s",
+            LogError( ( "Exiting process loop due to failure: ErrorStatus=%s",
                         MQTT_Status_strerror( status ) ) );
         }
         else
         {
             /* Recalculate remaining time and check if loop should exit. This is
              * done at the end so the loop will run at least a single iteration. */
-            elapsedTimeMs = calculateElapsedTime( getTimeStampMs(), entryTimeMs );
+            elapsedTimeMs = calculateElapsedTime( pContext->getTime(),
+                                                  entryTimeMs );
 
             if( elapsedTimeMs > timeoutMs )
             {
@@ -1854,25 +1854,23 @@ MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext,
                                uint32_t timeoutMs )
 {
     MQTTStatus_t status = MQTTBadParameter;
-    MQTTGetCurrentTimeFunc_t getTimeStampMs = NULL;
     uint32_t entryTimeMs = 0U, remainingTimeMs = timeoutMs, elapsedTimeMs = 0U;
 
     if( pContext == NULL )
     {
-        LogError( ( "MQTT Context cannot be NULL." ) );
+        LogError( ( "Invalid input parameter: MQTT Context cannot be NULL." ) );
     }
-    else if( pContext->callbacks.getTime == NULL )
+    else if( pContext->getTime == NULL )
     {
-        LogError( ( "MQTT Context must set callbacks.getTime." ) );
+        LogError( ( "Invalid input parameter: MQTT Context must have a valid getTime function." ) );
     }
     else if( pContext->networkBuffer.pBuffer == NULL )
     {
-        LogError( ( "The MQTT context's networkBuffer must not be NULL." ) );
+        LogError( ( "Invalid input parameter: MQTT context's networkBuffer must not be NULL." ) );
     }
     else
     {
-        getTimeStampMs = pContext->callbacks.getTime;
-        entryTimeMs = getTimeStampMs();
+        entryTimeMs = pContext->getTime();
         status = MQTTSuccess;
     }
 
@@ -1891,7 +1889,7 @@ MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext,
         {
             /* Recalculate remaining time and check if loop should exit. This is
              * done at the end so the loop will run at least a single iteration. */
-            elapsedTimeMs = calculateElapsedTime( getTimeStampMs(), entryTimeMs );
+            elapsedTimeMs = calculateElapsedTime( pContext->getTime(), entryTimeMs );
 
             if( elapsedTimeMs >= timeoutMs )
             {

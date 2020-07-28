@@ -55,6 +55,7 @@ getpingreqpacketsize
 getpublishpacketsize
 getsubscribepacketsize
 gettime
+gettimefunction
 getunsubscribepacketsize
 handleincomingack
 handleincomingpublish
@@ -228,6 +229,7 @@ unsuback
 updatestateack
 updatestatepublish
 updatestatestatus
+usercallback
 utest
 utf
 validatesubscribeunsubscribeparams
