@@ -339,7 +339,9 @@ static int32_t sendPacket( MQTTContext_t * pContext,
         else
         {
             /* It is a bug in the application's transport send implementation if
-             * more bytes than expected are sent. */
+             * more bytes than expected are sent. To avoid a possible overflow
+             * in converting bytesRemaining from unsigned to signed, this assert
+             * must exist after the check for bytesSent being negative. */
             assert( ( size_t ) bytesSent <= bytesRemaining );
 
             bytesRemaining -= ( size_t ) bytesSent;
@@ -446,8 +448,11 @@ static int32_t recvExact( const MQTTContext_t * pContext,
         }
         else
         {
-            /* It is a bug in the application's transport receive implementation if
-             * more bytes than expected are received. */
+            /* It is a bug in the application's transport receive implementation
+             * if more bytes than expected are received. To avoid a possible
+             * overflow in converting bytesRemaining from unsigned to signed,
+             * this assert must exist after the check for bytesSent being
+             * negative. */
             assert( ( size_t ) bytesRecvd <= bytesRemaining );
 
             bytesRemaining -= ( size_t ) bytesRecvd;
@@ -1099,7 +1104,7 @@ static MQTTStatus_t sendPublish( MQTTContext_t * pContext,
         }
         else
         {
-            LogDebug( "PUSHLISH payload was not sent. Payload length was zero." );
+            LogDebug( "PUBLISH payload was not sent. Payload length was zero." );
         }
     }
 

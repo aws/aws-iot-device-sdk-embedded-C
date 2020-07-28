@@ -1167,6 +1167,7 @@ void test_MQTT_Publish( void )
     publishInfo.payloadLength = 1;
     publishInfo.pPayload = NULL;
     status = MQTT_Publish( &mqttContext, &publishInfo, PACKET_ID );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
     memset( ( void * ) &publishInfo, 0x0, sizeof( publishInfo ) );
 
     /* Bad Parameter when getting packet size. */
