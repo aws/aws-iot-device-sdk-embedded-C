@@ -44,7 +44,7 @@ int32_t NetworkInterfaceReceiveStub( NetworkContext_t * pNetworkContext,
 
     /* It is a bug for the application defined transport send function to return
      * more than bytesToRecv. */
-    __CPROVER_assume( bytesOrError <= bytesToRecv );
+    __CPROVER_assume( bytesOrError <= ( int32_t ) bytesToRecv );
 
     return bytesOrError;
 }
@@ -63,7 +63,7 @@ int32_t NetworkInterfaceSendStub( NetworkContext_t * pNetworkContext,
 
     /* It is a bug for the application defined transport send function to return
      * more than bytesToSend. */
-    __CPROVER_assume( bytesOrError <= bytesToSend );
+    __CPROVER_assume( bytesOrError <= ( int32_t ) bytesToSend );
 
     /* If the maximum tries are reached, then return a timeout. In the MQTT library
      * this stub is wrapped in a loop that will does not end until the bytesOrError

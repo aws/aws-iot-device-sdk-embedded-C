@@ -59,6 +59,8 @@ MQTTPacketInfo_t * allocateMqttPacketInfo( MQTTPacketInfo_t * pPacketInfo )
 
     if( pPacketInfo != NULL )
     {
+        __CPROVER_assert( REMAINING_LENGTH_MAX < CBMC_MAX_OBJECT_SIZE, 
+                          "REMAINING_LENGTH_MAX size is too big" );
         __CPROVER_assume( pPacketInfo->remainingLength < REMAINING_LENGTH_MAX );
         pPacketInfo->pRemainingData = mallocCanFail( pPacketInfo->remainingLength );
     }
@@ -72,6 +74,8 @@ bool isValidMqttPacketInfo( const MQTTPacketInfo_t * pPacketInfo )
 
     if( pPacketInfo != NULL )
     {
+        __CPROVER_assert( REMAINING_LENGTH_MAX < CBMC_MAX_OBJECT_SIZE, 
+                          "REMAINING_LENGTH_MAX size is too big" );
         isValid = pPacketInfo->remainingLength < REMAINING_LENGTH_MAX;
     }
 
