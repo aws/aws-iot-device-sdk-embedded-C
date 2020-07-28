@@ -1121,7 +1121,7 @@ void test_MQTT_Resend_Unacked_Publish_QoS1( void )
     establishMqttSession( &context, &networkContext, false, &persistentSession );
 
     /* Obtain the packet ID of the PUBLISH packet that didn't complete in the previous connection. */
-    MQTTStateCursor_t cursor = 0u;
+    MQTTStateCursor_t cursor = MQTT_STATE_CURSOR_INITIALIZER;
     uint16_t publishPackedId = MQTT_PublishToResend( &context, &cursor );
     TEST_ASSERT_EQUAL( context.outgoingPublishRecords[ 0 ].packetId, publishPackedId );
 
@@ -1182,7 +1182,7 @@ void test_MQTT_Resend_Unacked_Publish_QoS2( void )
     establishMqttSession( &context, &networkContext, false, &persistentSession );
 
     /* Obtain the packet ID of the PUBLISH packet that didn't complete in the previous connection. */
-    MQTTStateCursor_t cursor = 0u;
+    MQTTStateCursor_t cursor = MQTT_STATE_CURSOR_INITIALIZER;
     uint16_t publishPackedId = MQTT_PublishToResend( &context, &cursor );
     TEST_ASSERT_EQUAL( context.outgoingPublishRecords[ 0 ].packetId, publishPackedId );
 
@@ -1207,7 +1207,7 @@ void test_MQTT_Resend_Unacked_Publish_QoS2( void )
 /**
  * @brief Verifies the behavior of the MQTT library on receiving a duplicate
  * QoS 1 PUBLISH packet from the broker in a restored session connection.
- * Tests that the library responds with a PUBACK to for the duplicate incoming QoS 1 PUBLISH
+ * Tests that the library responds with a PUBACK to the duplicate incoming QoS 1 PUBLISH
  * packet that was un-acknowledged in a previous connection of the same session.
  */
 void test_MQTT_MQTT_Restore_Session_Duplicate_Incoming_Publish_Qos1( void )
@@ -1259,7 +1259,7 @@ void test_MQTT_MQTT_Restore_Session_Duplicate_Incoming_Publish_Qos1( void )
 
 /**
  * @brief Verifies the behavior of the MQTT library on receiving a duplicate
- * QoS2 PUBLISH packet from the broker in a restored session connection.
+ * QoS 2 PUBLISH packet from the broker in a restored session connection.
  * Tests that the library responds with the ack packets for the incoming duplicate
  * QoS 2 PUBLISH packet that was un-acknowledged in a previous connection of the same session.
  */
