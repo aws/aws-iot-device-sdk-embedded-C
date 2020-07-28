@@ -275,6 +275,14 @@ static void establishMqttSession( MQTTContext_t * pContext,
                                   bool * pSessionPresent );
 
 /**
+ * @brief Handler for incoming acknowledgement packets from the broker.
+ * @param[in] pPacketInfo Info for the incoming acknowledgement packet.
+ * @param[in] packetIdentifier The ID of the incoming packet.
+ */
+static void handleAckEvents( MQTTPacketInfo_t * pPacketInfo,
+                             uint16_t packetIdentifier );
+
+/**
  * @brief The application callback function that is expected to be invoked by the
  * MQTT library for incoming publish and incoming acks received over the network.
  *
@@ -368,6 +376,91 @@ static void establishMqttSession( MQTTContext_t * pContext,
                                                   pSessionPresent ) );
 }
 
+static void handleAckEvents( MQTTPacketInfo_t * pPacketInfo,
+                             uint16_t packetIdentifier )
+{
+    /* Handle other packets. */
+    switch( pPacketInfo->type )
+    {
+        case MQTT_PACKET_TYPE_SUBACK:
+            /* Set the flag to represent reception of SUBACK. */
+            receivedSubAck = true;
+
+            LogDebug( ( "Received SUBACK: PacketID=%u",
+                        packetIdentifier ) );
+            /* Make sure ACK packet identifier matches with Request packet identifier. */
+            TEST_ASSERT_EQUAL( globalSubscribePacketIdentifier, packetIdentifier );
+            break;
+
+        case MQTT_PACKET_TYPE_PINGRESP:
+
+            /* Nothing to be done from application as library handles
+             * PINGRESP. */
+            LogDebug( ( "Received PINGRESP" ) );
+            break;
+
+        case MQTT_PACKET_TYPE_UNSUBACK:
+            /* Set the flag to represent reception of UNSUBACK. */
+            receivedUnsubAck = true;
+
+            LogDebug( ( "Received UNSUBACK: PacketID=%u",
+                        packetIdentifier ) );
+            /* Make sure ACK packet identifier matches with Request packet identifier. */
+            TEST_ASSERT_EQUAL( globalUnsubscribePacketIdentifier, packetIdentifier );
+            break;
+
+        case MQTT_PACKET_TYPE_PUBACK:
+            /* Set the flag to represent reception of PUBACK. */
+            receivedPubAck = true;
+
+            /* Make sure ACK packet identifier matches with Request packet identifier. */
+            TEST_ASSERT_EQUAL( globalPublishPacketIdentifier, packetIdentifier );
+
+            LogDebug( ( "Received PUBACK: PacketID=%u",
+                        packetIdentifier ) );
+            break;
+
+        case MQTT_PACKET_TYPE_PUBREC:
+            /* Set the flag to represent reception of PUBREC. */
+            receivedPubRec = true;
+
+            /* Make sure ACK packet identifier matches with Request packet identifier. */
+            TEST_ASSERT_EQUAL( globalPublishPacketIdentifier, packetIdentifier );
+
+            LogDebug( ( "Received PUBREC: PacketID=%u",
+                        packetIdentifier ) );
+            break;
+
+        case MQTT_PACKET_TYPE_PUBREL:
+            /* Set the flag to represent reception of PUBREL. */
+            receivedPubRel = true;
+
+            /* Nothing to be done from application as library handles
+             * PUBREL. */
+            LogDebug( ( "Received PUBREL: PacketID=%u",
+                        packetIdentifier ) );
+            break;
+
+        case MQTT_PACKET_TYPE_PUBCOMP:
+            /* Set the flag to represent reception of PUBACK. */
+            receivedPubComp = true;
+
+            /* Make sure ACK packet identifier matches with Request packet identifier. */
+            TEST_ASSERT_EQUAL( globalPublishPacketIdentifier, packetIdentifier );
+
+            /* Nothing to be done from application as library handles
+             * PUBCOMP. */
+            LogDebug( ( "Received PUBCOMP: PacketID=%u",
+                        packetIdentifier ) );
+            break;
+
+        /* Any other packet type is invalid. */
+        default:
+            LogError( ( "Unknown packet type received:(%02x).",
+                        pPacketInfo->type ) );
+    }
+}
+
 static void eventCallback( MQTTContext_t * pContext,
                            MQTTPacketInfo_t * pPacketInfo,
                            uint16_t packetIdentifier,
@@ -385,109 +478,33 @@ static void eventCallback( MQTTContext_t * pContext,
          * across network connection. */
         ( void ) Openssl_Disconnect( &networkContext );
     }
-
-    /* Handle incoming publish. The lower 4 bits of the publish packet
-     * type is used for the dup, QoS, and retain flags. Hence masking
-     * out the lower bits to check if the packet is publish. */
-    else if( ( pPacketInfo->type & 0xF0U ) == MQTT_PACKET_TYPE_PUBLISH )
-    {
-        assert( pPublishInfo != NULL );
-        /* Handle incoming publish. */
-
-        /* Cache information about the incoming PUBLISH message to process
-         * in test case. */
-        memcpy( &incomingInfo, pPublishInfo, sizeof( MQTTPublishInfo_t ) );
-        incomingInfo.pTopicName = NULL;
-        incomingInfo.pPayload = NULL;
-        /* Allocate buffers and copy information of topic name and payload. */
-        incomingInfo.pTopicName = malloc( pPublishInfo->topicNameLength );
-        TEST_ASSERT_NOT_NULL( incomingInfo.pTopicName );
-        memcpy( ( void * ) incomingInfo.pTopicName, pPublishInfo->pTopicName, pPublishInfo->topicNameLength );
-        incomingInfo.pPayload = malloc( pPublishInfo->payloadLength );
-        TEST_ASSERT_NOT_NULL( incomingInfo.pPayload );
-        memcpy( ( void * ) incomingInfo.pPayload, pPublishInfo->pPayload, pPublishInfo->payloadLength );
-    }
     else
     {
-        /* Handle other packets. */
-        switch( pPacketInfo->type )
+        /* Handle incoming publish. The lower 4 bits of the publish packet
+         * type is used for the dup, QoS, and retain flags. Hence masking
+         * out the lower bits to check if the packet is publish. */
+        if( ( pPacketInfo->type & 0xF0U ) == MQTT_PACKET_TYPE_PUBLISH )
         {
-            case MQTT_PACKET_TYPE_SUBACK:
-                /* Set the flag to represent reception of SUBACK. */
-                receivedSubAck = true;
+            assert( pPublishInfo != NULL );
+            /* Handle incoming publish. */
 
-                LogDebug( ( "Received SUBACK: PacketID=%u",
-                            packetIdentifier ) );
-                /* Make sure ACK packet identifier matches with Request packet identifier. */
-                TEST_ASSERT_EQUAL( globalSubscribePacketIdentifier, packetIdentifier );
-                break;
-
-            case MQTT_PACKET_TYPE_PINGRESP:
-
-                /* Nothing to be done from application as library handles
-                 * PINGRESP. */
-                LogDebug( ( "Received PINGRESP" ) );
-                break;
-
-            case MQTT_PACKET_TYPE_UNSUBACK:
-                /* Set the flag to represent reception of UNSUBACK. */
-                receivedUnsubAck = true;
-
-                LogDebug( ( "Received UNSUBACK: PacketID=%u",
-                            packetIdentifier ) );
-                /* Make sure ACK packet identifier matches with Request packet identifier. */
-                TEST_ASSERT_EQUAL( globalUnsubscribePacketIdentifier, packetIdentifier );
-                break;
-
-            case MQTT_PACKET_TYPE_PUBACK:
-                /* Set the flag to represent reception of PUBACK. */
-                receivedPubAck = true;
-
-                /* Make sure ACK packet identifier matches with Request packet identifier. */
-                TEST_ASSERT_EQUAL( globalPublishPacketIdentifier, packetIdentifier );
-
-                LogDebug( ( "Received PUBACK: PacketID=%u",
-                            packetIdentifier ) );
-                break;
-
-            case MQTT_PACKET_TYPE_PUBREC:
-                /* Set the flag to represent reception of PUBREC. */
-                receivedPubRec = true;
-
-                /* Make sure ACK packet identifier matches with Request packet identifier. */
-                TEST_ASSERT_EQUAL( globalPublishPacketIdentifier, packetIdentifier );
-
-                LogDebug( ( "Received PUBREC: PacketID=%u",
-                            packetIdentifier ) );
-                break;
-
-            case MQTT_PACKET_TYPE_PUBREL:
-                /* Set the flag to represent reception of PUBREL. */
-                receivedPubRel = true;
-
-                /* Nothing to be done from application as library handles
-                 * PUBREL. */
-                LogDebug( ( "Received PUBREL: PacketID=%u",
-                            packetIdentifier ) );
-                break;
-
-            case MQTT_PACKET_TYPE_PUBCOMP:
-                /* Set the flag to represent reception of PUBACK. */
-                receivedPubComp = true;
-
-                /* Make sure ACK packet identifier matches with Request packet identifier. */
-                TEST_ASSERT_EQUAL( globalPublishPacketIdentifier, packetIdentifier );
-
-                /* Nothing to be done from application as library handles
-                 * PUBCOMP. */
-                LogDebug( ( "Received PUBCOMP: PacketID=%u",
-                            packetIdentifier ) );
-                break;
-
-            /* Any other packet type is invalid. */
-            default:
-                LogError( ( "Unknown packet type received:(%02x).",
-                            pPacketInfo->type ) );
+            /* Cache information about the incoming PUBLISH message to process
+             * in test case. */
+            memcpy( &incomingInfo, pPublishInfo, sizeof( MQTTPublishInfo_t ) );
+            incomingInfo.pTopicName = NULL;
+            incomingInfo.pPayload = NULL;
+            /* Allocate buffers and copy information of topic name and payload. */
+            incomingInfo.pTopicName = malloc( pPublishInfo->topicNameLength );
+            TEST_ASSERT_NOT_NULL( incomingInfo.pTopicName );
+            memcpy( ( void * ) incomingInfo.pTopicName, pPublishInfo->pTopicName, pPublishInfo->topicNameLength );
+            incomingInfo.pPayload = malloc( pPublishInfo->payloadLength );
+            TEST_ASSERT_NOT_NULL( incomingInfo.pPayload );
+            memcpy( ( void * ) incomingInfo.pPayload, pPublishInfo->pPayload, pPublishInfo->payloadLength );
+        }
+        else
+        {
+            handleAckEvents( pPacketInfo,
+                             packetIdentifier );
         }
     }
 }
