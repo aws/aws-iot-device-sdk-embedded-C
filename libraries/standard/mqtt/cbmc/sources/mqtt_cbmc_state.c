@@ -59,7 +59,7 @@ MQTTPacketInfo_t * allocateMqttPacketInfo( MQTTPacketInfo_t * pPacketInfo )
 
     if( pPacketInfo != NULL )
     {
-        __CPROVER_assert( REMAINING_LENGTH_MAX < CBMC_MAX_OBJECT_SIZE, 
+        __CPROVER_assert( REMAINING_LENGTH_MAX <= CBMC_MAX_OBJECT_SIZE,
                           "REMAINING_LENGTH_MAX size is too big" );
         __CPROVER_assume( pPacketInfo->remainingLength < REMAINING_LENGTH_MAX );
         pPacketInfo->pRemainingData = mallocCanFail( pPacketInfo->remainingLength );
@@ -74,7 +74,7 @@ bool isValidMqttPacketInfo( const MQTTPacketInfo_t * pPacketInfo )
 
     if( pPacketInfo != NULL )
     {
-        __CPROVER_assert( REMAINING_LENGTH_MAX < CBMC_MAX_OBJECT_SIZE, 
+        __CPROVER_assert( REMAINING_LENGTH_MAX <= CBMC_MAX_OBJECT_SIZE,
                           "REMAINING_LENGTH_MAX size is too big" );
         isValid = pPacketInfo->remainingLength < REMAINING_LENGTH_MAX;
     }
@@ -227,6 +227,9 @@ MQTTContext_t * allocateMqttContext( MQTTContext_t * pContext )
 
     if( pTransportInterface != NULL )
     {
+        /* The possibility that recv and send callbacks ar NULL is tested in the
+         * MQTT_Init proof. MQTT_Init is required to be called before any other
+         * function in mqtt.h. */
         pTransportInterface->recv = NetworkInterfaceReceiveStub;
         pTransportInterface->send = NetworkInterfaceSendStub;
     }
