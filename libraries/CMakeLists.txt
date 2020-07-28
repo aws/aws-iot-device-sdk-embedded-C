@@ -40,18 +40,12 @@ if( ${BUILD_TESTS} )
     )
 endif()
             
-# Add all CMakeLists.txts in the standard folder.
+# Add all modules.
 file(GLOB standard_modules "${MODULES_DIR}/standard/*")
-foreach(module IN LISTS standard_modules )
+file(GLOB aws_modules "${MODULES_DIR}/aws/*")
+foreach(module IN LISTS standard_modules aws_modules)
     if(IS_DIRECTORY "${module}" AND EXISTS "${module}/CMakeLists.txt")
         add_subdirectory(${module})
     endif()
 endforeach()
 
-# Add all CMakeLists.txts in the aws folder.
-file(GLOB aws_modules "${MODULES_DIR}/aws/*")
-foreach(module IN LISTS aws_modules )
-    if(IS_DIRECTORY "${module}" AND EXISTS "${module}/CMakeLists.txt")
-        add_subdirectory(${module})
-    endif()
-endforeach()
