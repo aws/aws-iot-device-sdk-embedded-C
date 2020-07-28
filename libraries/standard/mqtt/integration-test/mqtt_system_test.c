@@ -296,8 +296,8 @@ static void eventCallback( MQTTContext_t * pContext,
  *
  * @param[in] pNetworkContext The context associated with the network connection
  * to be disconnected.
- * @param[in] pBuffer This parameter is ingored.
- * @param[in] bytesToRecv This parameter is ingored.
+ * @param[in] pBuffer This parameter is ignored.
+ * @param[in] bytesToRecv This parameter is ignored.
  *
  * @return -1 to represent failure.
  */
@@ -1100,8 +1100,8 @@ void test_MQTT_Restore_Session_Resend_Unacked_Publish_QoS1( void )
 
     /* Attempt to complete the PUBLISH operation at QoS1 which should fail due
      * to terminated network connection.
-     * The failed PUBLISH operation should cause the PUBLISH packet to be left
-     * in an "unacked" state in the MQTT context. */
+     * The abrupt network disconnection should cause the PUBLISH packet to be left
+     * in an un-acknowledged state in the MQTT context. */
     TEST_ASSERT_EQUAL( MQTTRecvFailed,
                        MQTT_ProcessLoop( &context, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
 
@@ -1187,8 +1187,8 @@ void test_MQTT_Restore_Session_Resend_Unacked_Publish_QoS2( void )
 
     /* Attempt to complete the PUBLISH operation at QoS 2 which should fail due
      * to terminated network connection.
-     * The failed PUBLISH operation should cause the PUBLISH packet to be left
-     * in an "unacked" state in the MQTT context. */
+     * The abrupt network disconnection should cause the PUBLISH packet to be left
+     * in an un-acknowledged state in the MQTT context. */
     TEST_ASSERT_EQUAL( MQTTRecvFailed,
                        MQTT_ProcessLoop( &context, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
 
