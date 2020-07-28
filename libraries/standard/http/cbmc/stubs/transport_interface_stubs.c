@@ -1,6 +1,6 @@
 #include "transport_interface_stubs.h"
 
-int32_t TransportInterfaceSendStub( NetworkContext_t * pContext,
+int32_t TransportInterfaceSendStub( NetworkContext_t * pNetworkContext,
                                     void * pBuffer,
                                     size_t bytesToSend )
 {
@@ -47,7 +47,7 @@ int32_t TransportInterfaceSendStub( NetworkContext_t * pContext,
     return ret;
 }
 
-int32_t TransportInterfaceReceiveStub( NetworkContext_t * pContext,
+int32_t TransportInterfaceReceiveStub( NetworkContext_t * pNetworkContext,
                                        void * pBuffer,
                                        size_t bytesToRecv )
 {
