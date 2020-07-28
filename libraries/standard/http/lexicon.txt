@@ -7,6 +7,8 @@ ascii
 br
 bufferlen
 bytesremaining
+bytestorecv
+bytestosend
 cbmc
 chunked
 com
@@ -98,6 +100,7 @@ plastheadervalue
 ploc
 pmethod
 pname
+pnetworkcontext
 pnetworkdata
 pnext
 pnextwriteloc
