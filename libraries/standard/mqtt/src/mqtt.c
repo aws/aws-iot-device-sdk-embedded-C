@@ -451,7 +451,7 @@ static int32_t recvExact( const MQTTContext_t * pContext,
             /* It is a bug in the application's transport receive implementation
              * if more bytes than expected are received. To avoid a possible
              * overflow in converting bytesRemaining from unsigned to signed,
-             * this assert must exist after the check for bytesSent being
+             * this assert must exist after the check for bytesRecvd being
              * negative. */
             assert( ( size_t ) bytesRecvd <= bytesRemaining );
 
