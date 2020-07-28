@@ -175,7 +175,7 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  * Testament is not used.
  * @param[in] timeoutMs Maximum time in milliseconds to wait for a CONNACK packet.
  * A zero timeout makes use of the retries for receiving CONNACK as configured with
- * #MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT .
+ * #MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT.
  * @param[out] pSessionPresent Whether a previous session was present.
  * Only relevant if not establishing a clean session.
  *

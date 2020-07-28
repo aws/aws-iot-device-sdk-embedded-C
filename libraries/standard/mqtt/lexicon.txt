@@ -9,6 +9,9 @@ bool
 bufferlength
 bytesorerror
 bytesreceived
+bytesrecvd
+bytesremaining
+bytessent
 bytestoread
 bytestoreceive
 bytestorecv

@@ -6,6 +6,7 @@ api
 ascii
 br
 bufferlen
+bytesremaining
 cbmc
 chunked
 com
@@ -134,6 +135,7 @@ statuscode
 strchr
 sublicense
 totalreceived
+transportstatus
 txt
 uri
 utest
