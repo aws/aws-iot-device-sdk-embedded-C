@@ -134,7 +134,7 @@ static ShadowMessageType_t validateShadowMessageType( const char * pTopic,
                                                       uint16_t topicLength,
                                                       uint8_t thingNameLength )
 {
-    char * pMessageTypeStart = NULL;
+    const char * pMessageTypeStart = NULL;
     ShadowMessageType_t ret = ShadowMessageTypeMaxNum;
     ShadowMessageType_t index = ShadowMessageTypeGetAccepted;
 
@@ -165,7 +165,7 @@ static ShadowMessageType_t validateShadowMessageType( const char * pTopic,
     };
 
     /* The message type starts immediately after "$aws/things/<thingName>/". */
-    pMessageTypeStart =  pTopic + ( uint8_t ) SHADOW_TOPIC_PREFIX_LENGTH + thingNameLength;
+    pMessageTypeStart = pTopic + ( uint8_t ) SHADOW_TOPIC_PREFIX_LENGTH + thingNameLength;
 
     for( ; index < ShadowMessageTypeMaxNum; index++ )
     {
@@ -174,7 +174,7 @@ static ShadowMessageType_t validateShadowMessageType( const char * pTopic,
         {
             /* strncmp uses char * as input, casting typedef to char. */
             /* coverity[misra_c_2012_directive_4_6_violation] */
-            if( strncmp( ( const char * ) pMessageTypeStart, ( const char * ) pMessageString[ index ], pMessageStringLength[ index ] ) == 0 )
+            if( strncmp( pMessageTypeStart, pMessageString[ index ], pMessageStringLength[ index ] ) == 0 )
             {
                 ret = index;
                 break;
@@ -185,34 +185,38 @@ static ShadowMessageType_t validateShadowMessageType( const char * pTopic,
     return ret;
 }
 
-int16_t Shadow_ValidateTopic( const char * pTopic,
-                              uint16_t topicLength,
-                              ShadowMessageInfo_t * pMsgInfo )
+ShadowStatus_t Shadow_MatchTopic( const char * pTopic,
+                                  uint16_t topicLength,
+                                  ShadowMessageType_t * pMessageType,
+                                  const char ** pThingName,
+                                  uint8_t * pThingNameLength )
 {
-    char * pThingNameStart = NULL;
-    int16_t shadowStatus = SHADOW_STATUS_SUCCESS;
+    uint8_t thingNameLength = 0U;
+    const char * pThingNameStart = NULL;
+    ShadowMessageType_t messageType = ShadowMessageTypeMaxNum;
+    ShadowStatus_t shadowStatus = SHADOW_STATUS_SUCCESS;
 
-    if( ( pTopic == NULL ) || ( topicLength == 0U ) || ( pMsgInfo == NULL ) )
+    if( ( pTopic == NULL ) || ( topicLength == 0U ) ||
+        ( pMessageType == NULL ) || ( pThingNameLength == NULL ) )
     {
         shadowStatus = SHADOW_STATUS_BAD_PARAMETER;
     }
     else
     {
         /* The Thing Name starts immediately after the topic prefix. */
-        pThingNameStart = pTopic + SHADOW_TOPIC_PREFIX_LENGTH;
-        pMsgInfo->thingNameLength = 0U;
-        pMsgInfo->messageType = ShadowMessageTypeMaxNum;
+         pThingNameStart = pTopic + SHADOW_TOPIC_PREFIX_LENGTH;
 
         /* Calculate the length of the Thing Name, which is terminated with a '/'. */
-        while( ( ( pMsgInfo->thingNameLength + SHADOW_TOPIC_PREFIX_LENGTH ) < topicLength ) &&
-               ( pThingNameStart[ pMsgInfo->thingNameLength ] != '/' ) )
+        while( ( ( thingNameLength + SHADOW_TOPIC_PREFIX_LENGTH ) < topicLength ) &&
+               ( pThingNameStart[ thingNameLength ] != '/' ) )
         {
-            pMsgInfo->thingNameLength++;
+            thingNameLength++;
         }
 
-        if( pMsgInfo->thingNameLength > 0U )
+        if( thingNameLength > 0U )
         {
-            pMsgInfo->pThingName = ( const char * ) pThingNameStart;
+            * pThingName = pThingNameStart;
+            * pThingNameLength = thingNameLength;
         }
         else
         {
@@ -221,10 +225,14 @@ int16_t Shadow_ValidateTopic( const char * pTopic,
 
         if( shadowStatus == SHADOW_STATUS_SUCCESS )
         {
-            pMsgInfo->messageType = validateShadowMessageType( pTopic, topicLength, pMsgInfo->thingNameLength );
-            if( pMsgInfo->messageType == ShadowMessageTypeMaxNum )
+            messageType = validateShadowMessageType( pTopic, topicLength, thingNameLength );
+            if( messageType == ShadowMessageTypeMaxNum )
             {
                 shadowStatus = SHADOW_STATUS_FAIL;
+            }
+            else
+            {
+                * pMessageType = messageType;
             }
         }
     } 
@@ -232,14 +240,15 @@ int16_t Shadow_ValidateTopic( const char * pTopic,
     return shadowStatus;
 }
 
-int16_t Shadow_GetTopicString( ShadowTopicStringType_t topicType,
-                               const char * pThingName,
-                               uint8_t thingNameLength,
-                               char * pTopicBuffer,
-                               uint16_t bufferSize )
+ShadowStatus_t Shadow_GetTopicString( ShadowTopicStringType_t topicType,
+                                      const char * pThingName,
+                                      uint8_t thingNameLength,
+                                      char * pTopicBuffer,
+                                      uint16_t bufferSize,
+                                      uint16_t * pOutLength )
 {
-    uint16_t offset = 0;
-    int16_t retSetBytes = ( int16_t ) ( SHADOW_TOPIC_LENGTH_MAX( thingNameLength ) );
+    uint16_t offset = 0U;
+    ShadowStatus_t shadowStatus = SHADOW_STATUS_SUCCESS;
 
     /* Lookup table for Shadow operation string. */
     static const char * pTopicString[ SHADOW_TOPIC_STRING_TYPE_MAX_NUM ] =
@@ -273,13 +282,15 @@ int16_t Shadow_GetTopicString( ShadowTopicStringType_t topicType,
         SHADOW_TOPIC_OPERATION_LENGTH_UPDATE_DELTA
     };
 
-    if( ( pTopicBuffer == NULL ) || ( pThingName == NULL ) || ( thingNameLength == 0U ) || ( topicType >= SHADOW_TOPIC_STRING_TYPE_MAX_NUM ) )
+    if( ( pTopicBuffer == NULL ) || ( pThingName == NULL ) ||
+        ( thingNameLength == 0U ) || ( topicType >= SHADOW_TOPIC_STRING_TYPE_MAX_NUM ) ||
+        ( pOutLength == NULL ) )
     {
-        retSetBytes = SHADOW_STATUS_BAD_PARAMETER;
+        shadowStatus = SHADOW_STATUS_BAD_PARAMETER;
     }
     else if( bufferSize < ( SHADOW_TOPIC_PREFIX_LENGTH + pTopicStringLength[ topicType ] +  thingNameLength ) )
     {
-        retSetBytes = SHADOW_STATUS_INVALID_BUFFER_LENGTH;
+        shadowStatus = SHADOW_STATUS_INVALID_BUFFER_LENGTH;
     }
     else 
     {
@@ -294,9 +305,9 @@ int16_t Shadow_GetTopicString( ShadowTopicStringType_t topicType,
         ( void ) memcpy( ( void * ) ( pTopicBuffer + offset ),
                          pTopicString[ topicType ],
                          pTopicStringLength[ topicType ] );
-        retSetBytes = ( int16_t ) ( offset + ( uint16_t ) pTopicStringLength[ topicType ] );
+        * pOutLength = ( offset + pTopicStringLength[ topicType ] );
     }
 
-    return retSetBytes;
+    return shadowStatus;
 }
 /*-----------------------------------------------------------*/

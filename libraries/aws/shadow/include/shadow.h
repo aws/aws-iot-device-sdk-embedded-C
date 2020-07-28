@@ -29,16 +29,6 @@
 
 #include <stdint.h>
 
-
-/**
- * @brief Return codes from Shadow functions.
- */
-#define SHADOW_STATUS_SUCCESS                           ( 0 )       /**< @brief Shadow function success. */
-#define SHADOW_STATUS_FAIL                              ( -1 )      /**< @brief Shadow function encountered error. */
-#define SHADOW_STATUS_BAD_PARAMETER                     ( -2 )      /**< @brief Input parameter is invalid. */
-#define SHADOW_STATUS_INVALID_BUFFER_LENGTH             ( -3 )      /**< @brief Input buffer length is invalid. */
-#define SHADOW_STATUS_THINGNAME_PARSE_FAILED            ( -4 )      /**< @brief Could not parse the thing name. */
-
 /*--------------------------- Shadow types ---------------------------*/
 
 /**
@@ -59,17 +49,6 @@ typedef enum ShadowMessageType
 } ShadowMessageType_t;
 
 /**
- * @brief Structure that tells top-level details about a shadow message.
- *        Filled in by Shadow_ValidateTopic().
- */
-typedef struct ShadowMessageInfo {
-  ShadowMessageType_t messageType;   /**< @brief What type of shadow message it is. */
-  const char * pThingName;           /**< @brief Points to the 1st character of Thing
-                                      *          Name inside of the topic string.   */
-  uint8_t     thingNameLength;       /**< @brief Length in bytes of the Thing Name. */
-} ShadowMessageInfo_t;
-
-/**
  * @brief enum that tells Shadow_GetTopicString() what topic string to assemble.
  */
 typedef enum ShadowTopicStringType
@@ -87,6 +66,18 @@ typedef enum ShadowTopicStringType
     SHADOW_TOPIC_STRING_TYPE_UPDATE_DELTA,
     SHADOW_TOPIC_STRING_TYPE_MAX_NUM
 } ShadowTopicStringType_t;
+
+/**
+ * @brief Return codes from Shadow functions.
+ */
+typedef enum ShadowStatus
+{
+    SHADOW_STATUS_SUCCESS = 0,              /**< @brief Shadow function success. */
+    SHADOW_STATUS_FAIL,                     /**< @brief Shadow function encountered error. */
+    SHADOW_STATUS_BAD_PARAMETER,            /**< @brief Input parameter is invalid. */
+    SHADOW_STATUS_INVALID_BUFFER_LENGTH,    /**< @brief Input buffer length is invalid. */
+    SHADOW_STATUS_THINGNAME_PARSE_FAILED    /**< @brief Could not parse the thing name. */
+} ShadowStatus_t;
 
 /*------------------------ Shadow library functions -------------------------*/
 
@@ -414,37 +405,42 @@ typedef enum ShadowTopicStringType
  *             a buffer that does not have space for holding the null character.
  * @param[in]  bufferSize Length of pTopicBuffer. This function will return error if
  *             bufferSize is less than the length of the assembled topic string.
+ * @param[out] pOutLength Pointer to caller-supplied memory for returning the length of the topic string.
  * @return     One of the following:
- *             - Length of the assembled topic string if successful.
- *             - A negative value if failed to assemble.
+ *             - SHADOW_STATUS_SUCCESS if successful.
+ *             - An error code if failed to assemble.
  */
-int16_t Shadow_GetTopicString( ShadowTopicStringType_t topicType,
-                               const char * pThingName,
-                               uint8_t thingNameLength,
-                               char * pTopicBuffer,
-                               uint16_t bufferSize );
+ShadowStatus_t Shadow_GetTopicString( ShadowTopicStringType_t topicType,
+                                      const char * pThingName,
+                                      uint8_t thingNameLength,
+                                      char * pTopicBuffer,
+                                      uint16_t bufferSize,
+                                      uint16_t * pOutLength );
 
 /**
  * @brief Given the topic string of an incoming message, determine whether it is 
  *        related to a device shadow; if it is, return information about the type of
  *        device shadow message, and a pointer to the Thing Name inside of the topic string.
  *
- * @note When this function returns, the pointer pThingName in the ShadowMessageInfo_t structure
- *       points at the first character of the <thingName> segment inside of the topic string.
+ * @note When this function returns, the pointer pThingName points at the first character
+ *       of the <thingName> segment inside of the topic string.
  *       Caller is responsible for keeping the memory holding the topic strings around.
  *
  * @param[in]  pTopic Pointer to the MQTT topic string. Does not have to be null-terminated.
  * @param[in]  topicLength Length of the MQTT topic string.
- * @param[out] pMsgInfo Pointer to ShadowMessageInfo_t containing details of the message.
- *             Caller is responsible for supplying memory pointed to by pMsgInfo.
+ * @param[out] pMessageType Pointer to call-supplied memory for returning the type of the shadow message.
+ * @param[out] pThingName Points to the 1st character of Thing Name inside of the topic string.
+ * @param[out] pThingNameLength Pointer to caller-supplied memory for returning the length of the Thing Name.
  * @return     One of the following:
  *             - SHADOW_STATUS_SUCCESS if the message is related to a device shadow;
- *             - A negative value if the message is not related to a device shadow,
+ *             - An error code if the message is not related to a device shadow,
  *               if any input parameter is invalid, or if the function fails to
  *               parse the topic string.
  */
-int16_t Shadow_ValidateTopic( const char * pTopic,
-                              uint16_t topicLength,
-                              ShadowMessageInfo_t * pMsgInfo );
+ShadowStatus_t Shadow_MatchTopic( const char * pTopic,
+                                  uint16_t topicLength,
+                                  ShadowMessageType_t * pMessageType,
+                                  const char ** pThingName,
+                                  uint8_t * pThingNameLength );
 
 #endif /* ifndef _SHADOW_H_ */
