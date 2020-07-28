@@ -1164,6 +1164,11 @@ void test_MQTT_Publish( void )
     publishInfo.qos = MQTTQoS1;
     status = MQTT_Publish( &mqttContext, &publishInfo, 0 );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+    publishInfo.payloadLength = 1;
+    publishInfo.pPayload = NULL;
+    status = MQTT_Publish( &mqttContext, &publishInfo, PACKET_ID );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+    memset( ( void * ) &publishInfo, 0x0, sizeof( publishInfo ) );
 
     /* Bad Parameter when getting packet size. */
     publishInfo.qos = MQTTQoS0;
@@ -1204,6 +1209,17 @@ void test_MQTT_Publish( void )
     MQTT_SerializePublishHeader_ReturnThruPtr_pHeaderSize( &headerSize );
     status = MQTT_Publish( &mqttContext, &publishInfo, 0 );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+
+    /* Test that sending a publish without a payload succeeds. */
+    publishInfo.pPayload = NULL;
+    publishInfo.payloadLength = 0;
+    MQTT_SerializePublishHeader_ExpectAnyArgsAndReturn( MQTTSuccess );
+    MQTT_SerializePublishHeader_ReturnThruPtr_pHeaderSize( &headerSize );
+    status = MQTT_Publish( &mqttContext, &publishInfo, 0 );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    /* Restore the test payload and length. */
+    publishInfo.pPayload = "Test";
+    publishInfo.payloadLength = 4;
 
     /* Now for non zero QoS, which uses state engine. */
     publishInfo.qos = MQTTQoS2;

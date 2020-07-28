@@ -315,6 +315,8 @@ static int32_t sendPacket( MQTTContext_t * pContext,
 
     assert( pContext != NULL );
     assert( pContext->callbacks.getTime != NULL );
+    assert( pContext->transportInterface.send != NULL );
+    assert( pIndex != NULL );
 
     bytesRemaining = bytesToSend;
 
@@ -328,11 +330,7 @@ static int32_t sendPacket( MQTTContext_t * pContext,
                                                        pIndex,
                                                        bytesRemaining );
 
-        /* It is a bug in the application's transport send implementation if
-         * more bytes than expected are sent. */
-        assert( bytesSent <= ( int32_t ) bytesRemaining );
-
-        if( bytesSent <= 0 )
+        if( bytesSent < 0 )
         {
             LogError( ( "Transport send failed. Error code=%d.", bytesSent ) );
             totalBytesSent = bytesSent;
@@ -340,6 +338,12 @@ static int32_t sendPacket( MQTTContext_t * pContext,
         }
         else
         {
+            /* It is a bug in the application's transport send implementation if
+             * more bytes than expected are sent. To avoid a possible overflow
+             * in converting bytesRemaining from unsigned to signed, this assert
+             * must exist after the check for bytesSent being negative. */
+            assert( ( size_t ) bytesSent <= bytesRemaining );
+
             bytesRemaining -= ( size_t ) bytesSent;
             totalBytesSent += bytesSent;
             pIndex += bytesSent;
@@ -352,7 +356,7 @@ static int32_t sendPacket( MQTTContext_t * pContext,
     }
 
     /* Update time of last transmission if the entire packet is successfully sent. */
-    if( bytesRemaining == 0U )
+    if( totalBytesSent > 0 )
     {
         pContext->lastPacketTime = sendTime;
         LogDebug( ( "Successfully sent packet at time %u.",
@@ -420,6 +424,8 @@ static int32_t recvExact( const MQTTContext_t * pContext,
     assert( pContext != NULL );
     assert( bytesToRecv <= pContext->networkBuffer.size );
     assert( pContext->callbacks.getTime != NULL );
+    assert( pContext->transportInterface.recv != NULL );
+    assert( pContext->networkBuffer.pBuffer != NULL );
 
     pIndex = pContext->networkBuffer.pBuffer;
     recvFunc = pContext->transportInterface.recv;
@@ -433,10 +439,6 @@ static int32_t recvExact( const MQTTContext_t * pContext,
                                pIndex,
                                bytesRemaining );
 
-        /* It is a bug in the application's transport receive implementation if
-         * more bytes than expected are received. */
-        assert( bytesRecvd <= ( int32_t ) bytesRemaining );
-
         if( bytesRecvd < 0 )
         {
             LogError( ( "Network error while receiving packet: ReturnCode=%d.",
@@ -446,6 +448,13 @@ static int32_t recvExact( const MQTTContext_t * pContext,
         }
         else
         {
+            /* It is a bug in the application's transport receive implementation
+             * if more bytes than expected are received. To avoid a possible
+             * overflow in converting bytesRemaining from unsigned to signed,
+             * this assert must exist after the check for bytesRecvd being
+             * negative. */
+            assert( ( size_t ) bytesRecvd <= bytesRemaining );
+
             bytesRemaining -= ( size_t ) bytesRecvd;
             totalBytesRecvd += ( int32_t ) bytesRecvd;
             pIndex += bytesRecvd;
@@ -1056,13 +1065,15 @@ static MQTTStatus_t sendPublish( MQTTContext_t * pContext,
     assert( pContext != NULL );
     assert( pPublishInfo != NULL );
     assert( headerSize > 0 );
+    assert( pContext->networkBuffer.pBuffer != NULL );
+    assert( !( pPublishInfo->payloadLength > 0 ) || ( pPublishInfo->pPayload != NULL ) );
 
     /* Send header first. */
     bytesSent = sendPacket( pContext,
                             pContext->networkBuffer.pBuffer,
                             headerSize );
 
-    if( ( bytesSent < 0 ) || ( ( size_t ) bytesSent != headerSize ) )
+    if( bytesSent < 0 )
     {
         LogError( ( "Transport send failed for PUBLISH header." ) );
         status = MQTTSendFailed;
@@ -1072,20 +1083,28 @@ static MQTTStatus_t sendPublish( MQTTContext_t * pContext,
         LogDebug( ( "Sent %d bytes of PUBLISH header.",
                     bytesSent ) );
 
-        /* Send Payload. */
-        bytesSent = sendPacket( pContext,
-                                pPublishInfo->pPayload,
-                                pPublishInfo->payloadLength );
-
-        if( ( bytesSent < 0 ) || ( ( size_t ) bytesSent != pPublishInfo->payloadLength ) )
+        /* Send Payload if there is one to send. It is valid for a PUBLISH
+         * Packet to contain a zero length payload.*/
+        if( pPublishInfo->payloadLength > 0U )
         {
-            LogError( ( "Transport send failed for PUBLISH payload." ) );
-            status = MQTTSendFailed;
+            bytesSent = sendPacket( pContext,
+                                    pPublishInfo->pPayload,
+                                    pPublishInfo->payloadLength );
+
+            if( bytesSent < 0 )
+            {
+                LogError( ( "Transport send failed for PUBLISH payload." ) );
+                status = MQTTSendFailed;
+            }
+            else
+            {
+                LogDebug( ( "Sent %d bytes of PUBLISH payload.",
+                            bytesSent ) );
+            }
         }
         else
         {
-            LogDebug( ( "Sent %d bytes of PUBLISH payload.",
-                        bytesSent ) );
+            LogDebug( "PUBLISH payload was not sent. Payload length was zero." );
         }
     }
 
@@ -1301,6 +1320,14 @@ static MQTTStatus_t validatePublishParams( const MQTTContext_t * pContext,
                     pPublishInfo->qos ) );
         status = MQTTBadParameter;
     }
+    else if( ( pPublishInfo->payloadLength > 0U ) && ( pPublishInfo->pPayload == NULL ) )
+    {
+        LogError( ( "A nonzero payload length requires a non-NULL payload: "
+                    "payloadLength=%lu, pPayload=%p.",
+                    ( unsigned long ) pPublishInfo->payloadLength,
+                    pPublishInfo->pPayload ) );
+        status = MQTTBadParameter;
+    }
     else
     {
         /* Empty else MISRA 15.7 */
@@ -1409,7 +1436,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
                                 pContext->networkBuffer.pBuffer,
                                 packetSize );
 
-        if( ( bytesSent < 0 ) || ( ( size_t ) bytesSent != packetSize ) )
+        if( bytesSent < 0 )
         {
             LogError( ( "Transport send failed for CONNECT packet." ) );
             status = MQTTSendFailed;
@@ -1497,7 +1524,7 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
                                 pContext->networkBuffer.pBuffer,
                                 packetSize );
 
-        if( ( bytesSent < 0 ) || ( ( size_t ) bytesSent != packetSize ) )
+        if( bytesSent < 0 )
         {
             LogError( ( "Transport send failed for SUBSCRIBE packet." ) );
             status = MQTTSendFailed;
@@ -1630,7 +1657,7 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext )
                                 packetSize );
 
         /* It is an error to not send the entire PINGREQ packet. */
-        if( ( bytesSent < 0 ) || ( ( size_t ) bytesSent != packetSize ) )
+        if( bytesSent < 0 )
         {
             LogError( ( "Transport send failed for PINGREQ packet." ) );
             status = MQTTSendFailed;
@@ -1692,7 +1719,7 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
                                 pContext->networkBuffer.pBuffer,
                                 packetSize );
 
-        if( ( bytesSent < 0 ) || ( ( size_t ) bytesSent != packetSize ) )
+        if( bytesSent < 0 )
         {
             LogError( ( "Transport send failed for UNSUBSCRIBE packet." ) );
             status = MQTTSendFailed;
@@ -1742,7 +1769,7 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext )
                                 pContext->networkBuffer.pBuffer,
                                 packetSize );
 
-        if( ( bytesSent < 0 ) || ( ( size_t ) bytesSent != packetSize ) )
+        if( bytesSent < 0 )
         {
             LogError( ( "Transport send failed for DISCONNECT packet." ) );
             status = MQTTSendFailed;
