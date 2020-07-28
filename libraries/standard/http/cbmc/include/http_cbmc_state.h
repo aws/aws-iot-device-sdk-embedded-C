@@ -23,8 +23,21 @@
 #define HTTP_CBMC_STATE_H_
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #include "http_client.h"
+#include "private/http_client_internal.h"
+#include "http_parser.h"
+
+struct NetworkContext
+{
+    int filler;
+};
+
+/**
+ * @brief Attains coverage when a variable needs to possibly contain two values.
+ */
+bool nondet_bool();
 
 /**
  * @brief Calls malloc based on given size or returns NULL for coverage.
@@ -64,7 +77,7 @@ bool isValidHttpRequestHeaders( const HTTPRequestHeaders_t * pRequestHeaders );
  *
  * @return NULL or pointer to allocated #HTTPRequestInfo_t object.
  */
-HTTPRequestInfo_t * allocateHttpRequestInfo( const HTTPRequestInfo_t * pRequestInfo );
+HTTPRequestInfo_t * allocateHttpRequestInfo( HTTPRequestInfo_t * pRequestInfo );
 
 /**
  * @brief Validates if a #HTTPRequestInfo_t object is feasible.
@@ -92,5 +105,15 @@ HTTPResponse_t * allocateHttpResponse( HTTPResponse_t * pResponse );
  * @return True if #HTTPResponse_t is feasible; false otherwise.
  */
 bool isValidHttpResponse( const HTTPResponse_t * pResponse );
+
+/**
+ * @brief Allocate a transport interface for CBMC.
+ *
+ * @param[in] pTransport Transport interface.
+ *
+ * @return An allocated TransportInterface_t object to use as a parameter
+ * for the function under test.
+ */
+TransportInterface_t * allocateTransportInterface( TransportInterface_t * pTransport );
 
 #endif /* ifndef HTTP_CBMC_STATE_H_ */

@@ -276,6 +276,14 @@ static void establishMqttSession( MQTTContext_t * pContext,
                                   bool * pSessionPresent );
 
 /**
+ * @brief Handler for incoming acknowledgement packets from the broker.
+ * @param[in] pPacketInfo Info for the incoming acknowledgement packet.
+ * @param[in] packetIdentifier The ID of the incoming packet.
+ */
+static void handleAckEvents( MQTTPacketInfo_t * pPacketInfo,
+                             uint16_t packetIdentifier );
+
+/**
  * @brief The application callback function that is expected to be invoked by the
  * MQTT library for incoming publish and incoming acks received over the network.
  *
@@ -332,7 +340,6 @@ static void establishMqttSession( MQTTContext_t * pContext,
     MQTTConnectInfo_t connectInfo;
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTApplicationCallbacks_t callbacks;
     MQTTPublishInfo_t lwtInfo;
 
     assert( pContext != NULL );
@@ -350,21 +357,14 @@ static void establishMqttSession( MQTTContext_t * pContext,
     networkBuffer.pBuffer = buffer;
     networkBuffer.size = NETWORK_BUFFER_SIZE;
 
-    /* Application callbacks for receiving incoming publishes and incoming acks
-     * from MQTT library. */
-    callbacks.appCallback = eventCallback;
-
-    /* Application callback for getting the time for MQTT library. This time
-     * function will be used to calculate intervals in MQTT library.*/
-    callbacks.getTime = Clock_GetTimeMs;
-
     /* Clear the state of the MQTT context when creating a clean session. */
     if( createCleanSession == true )
     {
         /* Initialize MQTT library. */
         TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_Init( pContext,
                                                    &transport,
-                                                   &callbacks,
+                                                   Clock_GetTimeMs,
+                                                   eventCallback,
                                                    &networkBuffer ) );
     }
 
@@ -409,6 +409,91 @@ static void establishMqttSession( MQTTContext_t * pContext,
                                                   pSessionPresent ) );
 }
 
+static void handleAckEvents( MQTTPacketInfo_t * pPacketInfo,
+                             uint16_t packetIdentifier )
+{
+    /* Handle other packets. */
+    switch( pPacketInfo->type )
+    {
+        case MQTT_PACKET_TYPE_SUBACK:
+            /* Set the flag to represent reception of SUBACK. */
+            receivedSubAck = true;
+
+            LogDebug( ( "Received SUBACK: PacketID=%u",
+                        packetIdentifier ) );
+            /* Make sure ACK packet identifier matches with Request packet identifier. */
+            TEST_ASSERT_EQUAL( globalSubscribePacketIdentifier, packetIdentifier );
+            break;
+
+        case MQTT_PACKET_TYPE_PINGRESP:
+
+            /* Nothing to be done from application as library handles
+             * PINGRESP. */
+            LogDebug( ( "Received PINGRESP" ) );
+            break;
+
+        case MQTT_PACKET_TYPE_UNSUBACK:
+            /* Set the flag to represent reception of UNSUBACK. */
+            receivedUnsubAck = true;
+
+            LogDebug( ( "Received UNSUBACK: PacketID=%u",
+                        packetIdentifier ) );
+            /* Make sure ACK packet identifier matches with Request packet identifier. */
+            TEST_ASSERT_EQUAL( globalUnsubscribePacketIdentifier, packetIdentifier );
+            break;
+
+        case MQTT_PACKET_TYPE_PUBACK:
+            /* Set the flag to represent reception of PUBACK. */
+            receivedPubAck = true;
+
+            /* Make sure ACK packet identifier matches with Request packet identifier. */
+            TEST_ASSERT_EQUAL( globalPublishPacketIdentifier, packetIdentifier );
+
+            LogDebug( ( "Received PUBACK: PacketID=%u",
+                        packetIdentifier ) );
+            break;
+
+        case MQTT_PACKET_TYPE_PUBREC:
+            /* Set the flag to represent reception of PUBREC. */
+            receivedPubRec = true;
+
+            /* Make sure ACK packet identifier matches with Request packet identifier. */
+            TEST_ASSERT_EQUAL( globalPublishPacketIdentifier, packetIdentifier );
+
+            LogDebug( ( "Received PUBREC: PacketID=%u",
+                        packetIdentifier ) );
+            break;
+
+        case MQTT_PACKET_TYPE_PUBREL:
+            /* Set the flag to represent reception of PUBREL. */
+            receivedPubRel = true;
+
+            /* Nothing to be done from application as library handles
+             * PUBREL. */
+            LogDebug( ( "Received PUBREL: PacketID=%u",
+                        packetIdentifier ) );
+            break;
+
+        case MQTT_PACKET_TYPE_PUBCOMP:
+            /* Set the flag to represent reception of PUBACK. */
+            receivedPubComp = true;
+
+            /* Make sure ACK packet identifier matches with Request packet identifier. */
+            TEST_ASSERT_EQUAL( globalPublishPacketIdentifier, packetIdentifier );
+
+            /* Nothing to be done from application as library handles
+             * PUBCOMP. */
+            LogDebug( ( "Received PUBCOMP: PacketID=%u",
+                        packetIdentifier ) );
+            break;
+
+        /* Any other packet type is invalid. */
+        default:
+            LogError( ( "Unknown packet type received:(%02x).",
+                        pPacketInfo->type ) );
+    }
+}
+
 static void eventCallback( MQTTContext_t * pContext,
                            MQTTPacketInfo_t * pPacketInfo,
                            uint16_t packetIdentifier,
@@ -427,109 +512,33 @@ static void eventCallback( MQTTContext_t * pContext,
          * across network connection. */
         ( void ) Openssl_Disconnect( &networkContext );
     }
-
-    /* Handle incoming publish. The lower 4 bits of the publish packet
-     * type is used for the dup, QoS, and retain flags. Hence masking
-     * out the lower bits to check if the packet is publish. */
-    else if( ( pPacketInfo->type & 0xF0U ) == MQTT_PACKET_TYPE_PUBLISH )
-    {
-        assert( pPublishInfo != NULL );
-        /* Handle incoming publish. */
-
-        /* Cache information about the incoming PUBLISH message to process
-         * in test case. */
-        memcpy( &incomingInfo, pPublishInfo, sizeof( MQTTPublishInfo_t ) );
-        incomingInfo.pTopicName = NULL;
-        incomingInfo.pPayload = NULL;
-        /* Allocate buffers and copy information of topic name and payload. */
-        incomingInfo.pTopicName = malloc( pPublishInfo->topicNameLength );
-        TEST_ASSERT_NOT_NULL( incomingInfo.pTopicName );
-        memcpy( ( void * ) incomingInfo.pTopicName, pPublishInfo->pTopicName, pPublishInfo->topicNameLength );
-        incomingInfo.pPayload = malloc( pPublishInfo->payloadLength );
-        TEST_ASSERT_NOT_NULL( incomingInfo.pPayload );
-        memcpy( ( void * ) incomingInfo.pPayload, pPublishInfo->pPayload, pPublishInfo->payloadLength );
-    }
     else
     {
-        /* Handle other packets. */
-        switch( pPacketInfo->type )
+        /* Handle incoming publish. The lower 4 bits of the publish packet
+         * type is used for the dup, QoS, and retain flags. Hence masking
+         * out the lower bits to check if the packet is publish. */
+        if( ( pPacketInfo->type & 0xF0U ) == MQTT_PACKET_TYPE_PUBLISH )
         {
-            case MQTT_PACKET_TYPE_SUBACK:
-                /* Set the flag to represent reception of SUBACK. */
-                receivedSubAck = true;
+            assert( pPublishInfo != NULL );
+            /* Handle incoming publish. */
 
-                LogDebug( ( "Received SUBACK: PacketID=%u",
-                            packetIdentifier ) );
-                /* Make sure ACK packet identifier matches with Request packet identifier. */
-                TEST_ASSERT_EQUAL( globalSubscribePacketIdentifier, packetIdentifier );
-                break;
-
-            case MQTT_PACKET_TYPE_PINGRESP:
-
-                /* Nothing to be done from application as library handles
-                 * PINGRESP. */
-                LogDebug( ( "Received PINGRESP" ) );
-                break;
-
-            case MQTT_PACKET_TYPE_UNSUBACK:
-                /* Set the flag to represent reception of UNSUBACK. */
-                receivedUnsubAck = true;
-
-                LogDebug( ( "Received UNSUBACK: PacketID=%u",
-                            packetIdentifier ) );
-                /* Make sure ACK packet identifier matches with Request packet identifier. */
-                TEST_ASSERT_EQUAL( globalUnsubscribePacketIdentifier, packetIdentifier );
-                break;
-
-            case MQTT_PACKET_TYPE_PUBACK:
-                /* Set the flag to represent reception of PUBACK. */
-                receivedPubAck = true;
-
-                /* Make sure ACK packet identifier matches with Request packet identifier. */
-                TEST_ASSERT_EQUAL( globalPublishPacketIdentifier, packetIdentifier );
-
-                LogDebug( ( "Received PUBACK: PacketID=%u",
-                            packetIdentifier ) );
-                break;
-
-            case MQTT_PACKET_TYPE_PUBREC:
-                /* Set the flag to represent reception of PUBREC. */
-                receivedPubRec = true;
-
-                /* Make sure ACK packet identifier matches with Request packet identifier. */
-                TEST_ASSERT_EQUAL( globalPublishPacketIdentifier, packetIdentifier );
-
-                LogDebug( ( "Received PUBREC: PacketID=%u",
-                            packetIdentifier ) );
-                break;
-
-            case MQTT_PACKET_TYPE_PUBREL:
-                /* Set the flag to represent reception of PUBREL. */
-                receivedPubRel = true;
-
-                /* Nothing to be done from application as library handles
-                 * PUBREL. */
-                LogDebug( ( "Received PUBREL: PacketID=%u",
-                            packetIdentifier ) );
-                break;
-
-            case MQTT_PACKET_TYPE_PUBCOMP:
-                /* Set the flag to represent reception of PUBACK. */
-                receivedPubComp = true;
-
-                /* Make sure ACK packet identifier matches with Request packet identifier. */
-                TEST_ASSERT_EQUAL( globalPublishPacketIdentifier, packetIdentifier );
-
-                /* Nothing to be done from application as library handles
-                 * PUBCOMP. */
-                LogDebug( ( "Received PUBCOMP: PacketID=%u",
-                            packetIdentifier ) );
-                break;
-
-            /* Any other packet type is invalid. */
-            default:
-                LogError( ( "Unknown packet type received:(%02x).",
-                            pPacketInfo->type ) );
+            /* Cache information about the incoming PUBLISH message to process
+             * in test case. */
+            memcpy( &incomingInfo, pPublishInfo, sizeof( MQTTPublishInfo_t ) );
+            incomingInfo.pTopicName = NULL;
+            incomingInfo.pPayload = NULL;
+            /* Allocate buffers and copy information of topic name and payload. */
+            incomingInfo.pTopicName = malloc( pPublishInfo->topicNameLength );
+            TEST_ASSERT_NOT_NULL( incomingInfo.pTopicName );
+            memcpy( ( void * ) incomingInfo.pTopicName, pPublishInfo->pTopicName, pPublishInfo->topicNameLength );
+            incomingInfo.pPayload = malloc( pPublishInfo->payloadLength );
+            TEST_ASSERT_NOT_NULL( incomingInfo.pPayload );
+            memcpy( ( void * ) incomingInfo.pPayload, pPublishInfo->pPayload, pPublishInfo->payloadLength );
+        }
+        else
+        {
+            handleAckEvents( pPacketInfo,
+                             packetIdentifier );
         }
     }
 }
@@ -738,6 +747,7 @@ void test_MQTT_Subscribe_Publish_With_Qos_0( void )
                            &context, TEST_MQTT_TOPIC, MQTTQoS0 ) );
 
     /* We expect a SUBACK from the broker for the subscribe operation. */
+    TEST_ASSERT_FALSE( receivedSubAck );
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_TRUE( receivedSubAck );
@@ -748,6 +758,7 @@ void test_MQTT_Subscribe_Publish_With_Qos_0( void )
 
     /* Call the MQTT library for the expectation to read an incoming PUBLISH for
      * the same message that we published (as we have subscribed to the same topic). */
+    TEST_ASSERT_FALSE( receivedPubAck );
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     /* We do not expect a PUBACK from the broker for the QoS 0 PUBLISH. */
@@ -787,6 +798,7 @@ void test_MQTT_Subscribe_Publish_With_Qos_1( void )
                            &context, TEST_MQTT_TOPIC, MQTTQoS1 ) );
 
     /* Expect a SUBACK from the broker for the subscribe operation. */
+    TEST_ASSERT_FALSE( receivedSubAck );
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_TRUE( receivedSubAck );
@@ -802,6 +814,7 @@ void test_MQTT_Subscribe_Publish_With_Qos_1( void )
 
     /* Expect a PUBACK response for the PUBLISH and an incoming PUBLISH for the
      * same message that we published (as we have subscribed to the same topic). */
+    TEST_ASSERT_FALSE( receivedPubAck );
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     /* Make sure we have received PUBACK response. */
@@ -841,6 +854,7 @@ void test_MQTT_Subscribe_Publish_With_Qos_2( void )
                            &context, TEST_MQTT_TOPIC, MQTTQoS2 ) );
 
     /* Expect a SUBACK from the broker for the subscribe operation. */
+    TEST_ASSERT_FALSE( receivedSubAck );
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_TRUE( receivedSubAck );
@@ -860,6 +874,10 @@ void test_MQTT_Subscribe_Publish_With_Qos_2( void )
      * the incoming PUBLISH (as we subscribed and publish with QoS 2). Since it takes
      * longer to complete a QoS 2 publish, we run the process loop longer to allow it
      * ample time. */
+    TEST_ASSERT_FALSE( receivedPubAck );
+    TEST_ASSERT_FALSE( receivedPubRec );
+    TEST_ASSERT_FALSE( receivedPubComp );
+    TEST_ASSERT_FALSE( receivedPubRel );
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_FALSE( receivedPubAck );
@@ -941,6 +959,7 @@ void test_MQTT_Connect_LWT( void )
                            &context, TEST_MQTT_TOPIC, MQTTQoS0 ) );
 
     /* We expect an UNSUBACK from the broker for the unsubscribe operation. */
+    TEST_ASSERT_FALSE( receivedUnsubAck );
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_TRUE( receivedUnsubAck );
@@ -984,6 +1003,7 @@ void test_MQTT_Restore_Session_Resend_PubRel( void )
                            &context, TEST_MQTT_TOPIC, false, MQTTQoS2, MQTT_GetPacketId( &context ) ) );
 
     /* Disconnect on receiving PUBREC so that we are not able to complete the QoS 2 PUBLISH in the current connection. */
+    TEST_ASSERT_FALSE( receivedPubComp );
     disconnectOnPacketType = MQTT_PACKET_TYPE_PUBREC;
     TEST_ASSERT_EQUAL( MQTTSendFailed,
                        MQTT_ProcessLoop( &context, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
@@ -1019,6 +1039,7 @@ void test_MQTT_Restore_Session_Complete_Incoming_Publish( void )
      * QoS 2 PUBLISH transaction in this connection. */
     TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic(
                            &context, TEST_MQTT_TOPIC, MQTTQoS2 ) );
+    TEST_ASSERT_FALSE( receivedSubAck );
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_TRUE( receivedSubAck );
@@ -1045,6 +1066,7 @@ void test_MQTT_Restore_Session_Complete_Incoming_Publish( void )
     disconnectOnPacketType = MQTT_PACKET_TYPE_INVALID;
 
     /* Resume the incomplete incoming QoS 2 PUBLISH transaction from the previous MQTT connection. */
+    TEST_ASSERT_FALSE( receivedPubRel );
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
 

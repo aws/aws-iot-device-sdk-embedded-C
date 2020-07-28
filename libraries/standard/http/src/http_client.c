@@ -1594,10 +1594,6 @@ static HTTPStatus_t sendHttpData( const TransportInterface_t * pTransport,
                                             pIndex,
                                             bytesRemaining );
 
-        /* It is a bug in the application's transport send implementation if
-         * more bytes than expected are sent. */
-        assert( transportStatus <= (int32_t)bytesRemaining );
-
         /* A transport status of less than zero is an error. */
         if( transportStatus < 0 )
         {
@@ -1608,6 +1604,12 @@ static HTTPStatus_t sendHttpData( const TransportInterface_t * pTransport,
         }
         else
         {
+            /* It is a bug in the application's transport send implementation if
+             * more bytes than expected are sent. To avoid a possible overflow
+             * in converting bytesRemaining from unsigned to signed, this assert
+             * must exist after the check for transportStatus being negative. */
+            assert( ( size_t ) transportStatus <= bytesRemaining );
+
             bytesRemaining -= ( size_t ) transportStatus;
             pIndex += transportStatus;
             LogDebug( ( "Sent HTTP data over the transport: "
@@ -1685,11 +1687,19 @@ static HTTPStatus_t sendHttpHeaders( const TransportInterface_t * pTransport,
 
     if( returnStatus == HTTP_SUCCESS )
     {
-        LogDebug( ( "Sending HTTP request headers: HeaderBytes=%lu",
-                    ( unsigned long ) ( pRequestHeaders->headersLen ) ) );
-
         /* Send the HTTP headers over the network. */
-        returnStatus = sendHttpData( pTransport, pRequestHeaders->pBuffer, pRequestHeaders->headersLen );
+        if( pRequestHeaders->headersLen > INT32_MAX )
+        {
+            LogError( ( "Parameter check failed: pRequestHeaders->headersLen > "
+                        "2147483647 (INT32_MAX)." ) );
+            returnStatus = HTTP_INVALID_PARAMETER;
+        }
+        else
+        {
+            LogDebug( ( "Sending HTTP request headers: HeaderBytes=%lu",
+                        ( unsigned long ) ( pRequestHeaders->headersLen ) ) );
+            returnStatus = sendHttpData( pTransport, pRequestHeaders->pBuffer, pRequestHeaders->headersLen );
+        }
     }
 
     return returnStatus;
@@ -1734,10 +1744,6 @@ static HTTPStatus_t receiveHttpData( const TransportInterface_t * pTransport,
                                         pBuffer,
                                         bufferLen );
 
-    /* It is a bug in the application's transport receive implementation if
-     * more bytes than expected are received. */
-    assert( transportStatus <= (int32_t)bufferLen );
-
     /* A transport status of less than zero is an error. */
     if( transportStatus < 0 )
     {
@@ -1748,6 +1754,12 @@ static HTTPStatus_t receiveHttpData( const TransportInterface_t * pTransport,
     }
     else if( transportStatus > 0 )
     {
+        /* It is a bug in the application's transport receive implementation if
+         * more bytes than expected are received. To avoid a possible overflow
+         * in converting bytesRemaining from unsigned to signed, this assert
+         * must exist after the check for transportStatus being negative. */
+        assert( ( size_t ) transportStatus <= bufferLen );
+
         /* Some or all of the specified data was received. */
         *pBytesReceived = ( size_t ) ( transportStatus );
         LogDebug( ( "Received data from the transport: BytesReceived=%d",
@@ -1934,6 +1946,12 @@ HTTPStatus_t HTTPClient_Send( const TransportInterface_t * pTransport,
                     ( unsigned long ) ( pRequestHeaders->headersLen ) ) );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
+    else if( pRequestHeaders->headersLen > pRequestHeaders->bufferLen )
+    {
+        LogError( ( "Parameter check failed: pRequestHeaders->headersLen > "
+                    "pRequestHeaders->bufferLen." ) );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
     else if( ( pResponse != NULL ) && ( pResponse->pBuffer == NULL ) )
     {
         LogError( ( "Parameter check failed: pResponse->pBuffer is NULL." ) );
@@ -1943,6 +1961,14 @@ HTTPStatus_t HTTPClient_Send( const TransportInterface_t * pTransport,
     {
         LogError( ( "Parameter check failed: pRequestBodyBuf is NULL, but "
                     "reqBodyBufLen is greater than zero." ) );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+    else if( reqBodyBufLen > INT32_MAX )
+    {
+        /* This check is needed because convertInt32ToAscii() is used on the
+         * reqBodyBufLen to create a Content-Length header value string. */
+        LogError( ( "Parameter check failed: reqBodyBufLen > "
+                    "2147483647 (INT32_MAX)." ) );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
     else
