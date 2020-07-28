@@ -7,6 +7,8 @@ ascii
 br
 bufferlen
 bytesremaining
+bytestorecv
+bytestosend
 cbmc
 chunked
 com
@@ -56,9 +58,13 @@ iso
 lastheaderfieldlen
 lastheadervaluelen
 latin
+len
+linux
 malloc
 methodlen
+memcpy
 misra
+msg
 networkcontext
 nodejs
 noninfringement
@@ -94,6 +100,7 @@ plastheadervalue
 ploc
 pmethod
 pname
+pnetworkcontext
 pnetworkdata
 pnext
 pnextwriteloc
@@ -114,6 +121,7 @@ pvalueloc
 rangeend
 rangestart
 rangestartorlastnbytes
+readheadervalue
 receivehttpdata
 recv
 recvcurrentcall
