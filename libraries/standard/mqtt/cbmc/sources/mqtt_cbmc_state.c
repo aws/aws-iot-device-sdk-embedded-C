@@ -235,7 +235,7 @@ MQTTContext_t * allocateMqttContext( MQTTContext_t * pContext )
     }
 
     pNetworkBuffer = allocateMqttFixedBuffer( NULL );
-    __CPROVER_assume( isValidMqttFixedBuffer( pNetworkBuffer ) );
+    __CPROVER_assume( isValidMqttFixedBuffer( pNetworkBuffer );
 
     /* It is part of the API contract to call MQTT_Init() with the MQTTContext_t
      * before any other function in mqtt.h. */
@@ -265,7 +265,8 @@ bool isValidMqttContext( const MQTTContext_t * pContext )
 
     if( pContext != NULL )
     {
-        isValid = pContext->networkBuffer.size < CBMC_MAX_OBJECT_SIZE;
+        isValid = isValid && pContext->networkBuffer.size < CBMC_MAX_OBJECT_SIZE;
+        isValid = isValid && isValidMqttFixedBuffer( &( pContext->networkBuffer ) );
     }
 
     return isValid;
