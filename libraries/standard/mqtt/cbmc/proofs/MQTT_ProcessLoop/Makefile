@@ -22,15 +22,18 @@
 HARNESS_ENTRY=harness
 HARNESS_FILE=MQTT_ProcessLoop_harness
 
-# Bound on the timeout in MQTT_ProcessLoop. This timeout is bounded because 
+# Bound on the timeout in MQTT_ProcessLoop. This timeout is bounded because
 # memory saftey can be proven in a only a few iteration of the MQTT operations.
 # Each iteration will try to receive a single packet in its entirey. With a time
-# out of 2 we can get coverage of the entire function. Another iteration will 
+# out of 2 we can get coverage of the entire function. Another iteration will
 # performed unnecessarily duplicating of the proof.
-MQTT_PROCESS_LOOP_TIMEOUT=2
+MQTT_PROCESS_LOOP_TIMEOUT=3
 # Please see libraries/mqtt/cbmc/stubs/network_interface_subs.c for more
 # information on the MAX_NETWORK_SEND_TRIES.
-MAX_NETWORK_SEND_TRIES=2
+MAX_NETWORK_SEND_TRIES=3
+# Please see libraries/standard/mqtt/cbmc/include/mqtt_config.h for more
+# information.
+MQTT_STATE_ARRAY_MAX_COUNT=11
 DEFINES += -DMQTT_PROCESS_LOOP_TIMEOUT=$(MQTT_PROCESS_LOOP_TIMEOUT)
 DEFINES += -DMAX_NETWORK_SEND_TRIES=$(MAX_NETWORK_SEND_TRIES)
 INCLUDES +=
@@ -40,25 +43,24 @@ REMOVE_FUNCTION_BODY += MQTT_Ping
 REMOVE_FUNCTION_BODY += MQTT_DeserializeAck
 REMOVE_FUNCTION_BODY += MQTT_SerializeAck
 
-
-# The loops below are unwound once more than the timeout.
-UNWINDSET += MQTT_ProcessLoop.0:3
-UNWINDSET += __CPROVER_file_local_mqtt_c_discardPacket.0:3
-UNWINDSET += __CPROVER_file_local_mqtt_c_recvExact.0:3
+UNWINDSET += MQTT_ProcessLoop.0:$(MQTT_PROCESS_LOOP_TIMEOUT)
+UNWINDSET += __CPROVER_file_local_mqtt_c_discardPacket.0:$(MQTT_PROCESS_LOOP_TIMEOUT)
+UNWINDSET += __CPROVER_file_local_mqtt_c_recvExact.0:$(MQTT_PROCESS_LOOP_TIMEOUT)
 # Unlike recvExact, sendPacket is not bounded by the timeout. The loop in
 # sendPacket will continue until all the bytes are sent or a network error
-# occurs. It is unwound the MAX_NETWORK_SEND_TRIES time + 1. Please see
-# NetworkInterfaceReceiveStub in libraries\standard\mqtt\cbmc\stubs\network_interface_stubs.c
-# for more information.
-UNWINDSET += __CPROVER_file_local_mqtt_c_sendPacket.0:3
+# occurs. Please see NetworkInterfaceReceiveStub in
+# libraries\standard\mqtt\cbmc\stubs\network_interface_stubs.c for more
+# information.
+UNWINDSET += __CPROVER_file_local_mqtt_c_sendPacket.0:$(MAX_NETWORK_SEND_TRIES)
 # The getRemainingLength loop is unwound 5 times because getRemainingLength()
 # divides a size_t variable by 128 until it is zero to stop the loop.
 # log128(SIZE_MAX) = 4.571...
 UNWINDSET += __CPROVER_file_local_mqtt_lightweight_c_getRemainingLength.0:5
-# These loops will run for the maximum number of publishes pending acknowledgement.
-# This is set in libraries/standard/mqtt/cbmc/include/mqtt_config.h.
-UNWINDSET += __CPROVER_file_local_mqtt_state_c_addRecord.0:11
-UNWINDSET += __CPROVER_file_local_mqtt_state_c_findInRecord.0:11
+# These loops will run for the maximum number of publishes pending
+# acknowledgements plus one. This value is set in
+# libraries/standard/mqtt/cbmc/include/mqtt_config.h.
+UNWINDSET += __CPROVER_file_local_mqtt_state_c_addRecord.0:$(MQTT_STATE_ARRAY_MAX_COUNT)
+UNWINDSET += __CPROVER_file_local_mqtt_state_c_findInRecord.0:$(MQTT_STATE_ARRAY_MAX_COUNT)
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 PROOF_SOURCES += $(SRCDIR)/libraries/standard/mqtt/cbmc/sources/mqtt_cbmc_state.c

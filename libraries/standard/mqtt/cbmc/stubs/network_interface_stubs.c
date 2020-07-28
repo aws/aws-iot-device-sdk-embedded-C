@@ -22,10 +22,10 @@
 #include "mqtt.h"
 #include "network_interface_stubs.h"
 
-/* The maximum number of times that the NetworkInterfaceSendStub will be invoked
- * before returned a timeout. */
+/* An exclusive bound on the times that the NetworkInterfaceSendStub will be 
+ * invoked before returning a loop terminating value. */
 #ifndef MAX_NETWORK_SEND_TRIES
-    #define MAX_NETWORK_SEND_TRIES    2
+    #define MAX_NETWORK_SEND_TRIES    3
 #endif
 
 int32_t NetworkInterfaceReceiveStub( NetworkContext_t * pNetworkContext,
@@ -67,18 +67,15 @@ int32_t NetworkInterfaceSendStub( NetworkContext_t * pNetworkContext,
 
     /* If the maximum tries are reached, then return a timeout. In the MQTT library
      * this stub is wrapped in a loop that will does not end until the bytesOrError
-     * returned is zero or less. This means we could loop possibly INT32_MAX
+     * returned is negative. This means we could loop possibly INT32_MAX
      * iterations. Looping for INT32_MAX times adds no value to the proof.
      * What matters is that the MQTT library can handle all the possible values
      * that could be returned. */
-    if( tries >= MAX_NETWORK_SEND_TRIES )
+    tries++;
+    if( tries >= ( MAX_NETWORK_SEND_TRIES - 1 ) )
     {
         tries = 0;
-        bytesOrError = 0;
-    }
-    else
-    {
-        tries++;
+        bytesOrError = bytesToSend;
     }
 
     return bytesOrError;

@@ -24,17 +24,16 @@ HARNESS_FILE=MQTT_Ping_harness
 
 # Please see libraries/standard/mqtt/cbmc/stubs/network_interface_subs.c for
 # more information on the MAX_NETWORK_SEND_TRIES.
-MAX_NETWORK_SEND_TRIES=2
+MAX_NETWORK_SEND_TRIES=3
 DEFINES += -DMAX_NETWORK_SEND_TRIES=$(MAX_NETWORK_SEND_TRIES)
 INCLUDES +=
 
-REMOVE_FUNCTION_BODY +=
-# Unlike recvExact(), sendPacket() is not bounded by the timeout. The loop in
-# sendPacket() will continue until all the bytes are sent or a network error 
-# occurs. It is unwound the MAX_NETWORK_SEND_TRIES time + 1 below. Please see 
-# NetworkInterfaceReceiveStub in libraries/standard/mqtt/cbmc/stubs/network_interface_stubs.c 
-# for more information.
-UNWINDSET += __CPROVER_file_local_mqtt_c_sendPacket.0:3
+# Unlike recvExact, sendPacket is not bounded by the timeout. The loop in
+# sendPacket will continue until all the bytes are sent or a network error
+# occurs. Please see NetworkInterfaceReceiveStub in
+# libraries/standard/mqtt/cbmc/stubs/network_interface_stubs.c for more
+# information.
+UNWINDSET += __CPROVER_file_local_mqtt_c_sendPacket.0:$(MAX_NETWORK_SEND_TRIES)
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 PROOF_SOURCES += $(SRCDIR)/libraries/standard/mqtt/cbmc/sources/mqtt_cbmc_state.c
