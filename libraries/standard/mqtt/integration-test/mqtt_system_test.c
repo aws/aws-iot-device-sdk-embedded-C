@@ -648,6 +648,7 @@ void test_MQTT_Subscribe_Publish_With_Qos_0( void )
                            &context, TEST_MQTT_TOPIC, MQTTQoS0 ) );
 
     /* We expect a SUBACK from the broker for the subscribe operation. */
+    TEST_ASSERT_FALSE( receivedSubAck );
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_TRUE( receivedSubAck );
@@ -658,6 +659,7 @@ void test_MQTT_Subscribe_Publish_With_Qos_0( void )
 
     /* Call the MQTT library for the expectation to read an incoming PUBLISH for
      * the same message that we published (as we have subscribed to the same topic). */
+    TEST_ASSERT_FALSE( receivedPubAck );
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     /* We do not expect a PUBACK from the broker for the QoS 0 PUBLISH. */
@@ -697,6 +699,7 @@ void test_MQTT_Subscribe_Publish_With_Qos_1( void )
                            &context, TEST_MQTT_TOPIC, MQTTQoS1 ) );
 
     /* Expect a SUBACK from the broker for the subscribe operation. */
+    TEST_ASSERT_FALSE( receivedSubAck );
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_TRUE( receivedSubAck );
@@ -712,6 +715,7 @@ void test_MQTT_Subscribe_Publish_With_Qos_1( void )
 
     /* Expect a PUBACK response for the PUBLISH and an incoming PUBLISH for the
      * same message that we published (as we have subscribed to the same topic). */
+    TEST_ASSERT_FALSE( receivedPubAck );
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     /* Make sure we have received PUBACK response. */
@@ -751,6 +755,7 @@ void test_MQTT_Subscribe_Publish_With_Qos_2( void )
                            &context, TEST_MQTT_TOPIC, MQTTQoS2 ) );
 
     /* Expect a SUBACK from the broker for the subscribe operation. */
+    TEST_ASSERT_FALSE( receivedSubAck );
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_TRUE( receivedSubAck );
@@ -770,6 +775,10 @@ void test_MQTT_Subscribe_Publish_With_Qos_2( void )
      * the incoming PUBLISH (as we subscribed and publish with QoS 2). Since it takes
      * longer to complete a QoS 2 publish, we run the process loop longer to allow it
      * ample time. */
+    TEST_ASSERT_FALSE( receivedPubAck );
+    TEST_ASSERT_FALSE( receivedPubRec );
+    TEST_ASSERT_FALSE( receivedPubComp );
+    TEST_ASSERT_FALSE( receivedPubRel );
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_FALSE( receivedPubAck );
@@ -851,6 +860,7 @@ void test_MQTT_Connect_LWT( void )
                            &context, TEST_MQTT_TOPIC, MQTTQoS0 ) );
 
     /* We expect an UNSUBACK from the broker for the unsubscribe operation. */
+    TEST_ASSERT_FALSE( receivedUnsubAck );
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_TRUE( receivedUnsubAck );
@@ -911,6 +921,7 @@ void test_MQTT_Restore_Session_Resend_PubRel( void )
                            &context, TEST_MQTT_TOPIC, MQTTQoS2 ) );
 
     /* Disconnect on receiving PUBREC so that we are not able to complete the QoS 2 PUBLISH in the current connection. */
+    TEST_ASSERT_FALSE( receivedPubComp );
     disconnectOnPacketType = MQTT_PACKET_TYPE_PUBREC;
     TEST_ASSERT_EQUAL( MQTTSendFailed,
                        MQTT_ProcessLoop( &context, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
@@ -937,6 +948,7 @@ void test_MQTT_Restore_Session_Resend_PubRel( void )
     TEST_ASSERT_TRUE( persistentSession );
 
     /* Resume the incomplete QoS 2 PUBLISH in previous MQTT connection. */
+    TEST_ASSERT_FALSE( receivedPubComp );
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
 
@@ -978,6 +990,7 @@ void test_MQTT_Restore_Session_Complete_Incoming_Publish( void )
      * QoS 2 PUBLISH transaction in this connection. */
     TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic(
                            &context, TEST_MQTT_TOPIC, MQTTQoS2 ) );
+    TEST_ASSERT_FALSE( receivedSubAck );
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_TRUE( receivedSubAck );
@@ -1017,6 +1030,7 @@ void test_MQTT_Restore_Session_Complete_Incoming_Publish( void )
     disconnectOnPacketType = MQTT_PACKET_TYPE_INVALID;
 
     /* Resume the incomplete incoming QoS 2 PUBLISH transaction from the previous MQTT connection. */
+    TEST_ASSERT_FALSE( receivedPubRel );
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
 
