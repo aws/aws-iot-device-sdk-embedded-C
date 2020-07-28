@@ -1137,7 +1137,7 @@ void test_MQTT_Restore_Session_Resend_Unacked_Publish_QoS1( void )
     TEST_ASSERT_EQUAL( MQTTSuccess, publishToTopic(
                            &context, TEST_MQTT_TOPIC, true, MQTTQoS1, publishPackedId ) );
 
-    /* Complete the QoS 0 PUBLISH resend operation. */
+    /* Complete the QoS 1 PUBLISH resend operation. */
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
 
@@ -1224,7 +1224,7 @@ void test_MQTT_Restore_Session_Resend_Unacked_Publish_QoS2( void )
     TEST_ASSERT_EQUAL( MQTTSuccess, publishToTopic(
                            &context, TEST_MQTT_TOPIC, true, MQTTQoS2, publishPackedId ) );
 
-    /* Complete the QoS 0 PUBLISH resend operation. */
+    /* Complete the QoS 2 PUBLISH resend operation. */
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
 
@@ -1356,7 +1356,7 @@ void test_MQTT_Restore_Session_Duplicate_Incoming_Publish_Qos2( void )
                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_TRUE( receivedSubAck );
 
-    /* Publish to the same topic with Qos 1 (so that the broker can re-publish it back to us). */
+    /* Publish to the same topic with Qos 2 (so that the broker can re-publish it back to us). */
     TEST_ASSERT_EQUAL( MQTTSuccess, publishToTopic(
                            &context, TEST_MQTT_TOPIC, false, MQTTQoS2, MQTT_GetPacketId( &context ) ) );
 
