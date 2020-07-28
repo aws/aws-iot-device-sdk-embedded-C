@@ -227,7 +227,7 @@ MQTTContext_t * allocateMqttContext( MQTTContext_t * pContext )
 
     if( pTransportInterface != NULL )
     {
-        /* The possibility that recv and send callbacks ar NULL is tested in the
+        /* The possibility that recv and send callbacks are NULL is tested in the
          * MQTT_Init proof. MQTT_Init is required to be called before any other
          * function in mqtt.h. */
         pTransportInterface->recv = NetworkInterfaceReceiveStub;
