@@ -354,7 +354,7 @@ static int32_t sendPacket( MQTTContext_t * pContext,
     }
 
     /* Update time of last transmission if the entire packet is successfully sent. */
-    if( bytesRemaining == 0U )
+    if( totalBytesSent > 0 )
     {
         pContext->lastPacketTime = sendTime;
         LogDebug( ( "Successfully sent packet at time %u.",
