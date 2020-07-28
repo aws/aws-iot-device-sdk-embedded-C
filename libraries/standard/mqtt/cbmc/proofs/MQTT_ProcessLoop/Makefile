@@ -28,8 +28,8 @@ HARNESS_FILE=MQTT_ProcessLoop_harness
 # out of 2 we can get coverage of the entire function. Another iteration will
 # performed unnecessarily duplicating of the proof.
 MQTT_RECEIVE_TIMEOUT=3
-# Please see libraries/mqtt/cbmc/stubs/network_interface_subs.c for more
-# information on the MAX_NETWORK_SEND_TRIES.
+# Please see libraries/standard/mqtt/cbmc/stubs/network_interface_subs.c for
+# more information on MAX_NETWORK_SEND_TRIES.
 MAX_NETWORK_SEND_TRIES=3
 # Please see libraries/standard/mqtt/cbmc/include/mqtt_config.h for more
 # information.
