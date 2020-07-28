@@ -65,8 +65,7 @@ bool isValidHttpRequestInfo( const HTTPRequestInfo_t * pRequestInfo )
 
     if( pRequestInfo )
     {
-        isValid = ( pRequestInfo->reqFlags < CBMC_MAX_OBJECT_SIZE ) &&
-                  ( pRequestInfo->methodLen < CBMC_MAX_OBJECT_SIZE ) &&
+        isValid = ( pRequestInfo->methodLen < CBMC_MAX_OBJECT_SIZE ) &&
                   ( pRequestInfo->hostLen < CBMC_MAX_OBJECT_SIZE ) &&
                   ( pRequestInfo->pathLen < CBMC_MAX_OBJECT_SIZE );
     }
@@ -98,9 +97,24 @@ bool isValidHttpResponse( const HTTPResponse_t * pResponse )
 
     if( pResponse )
     {
-        isValid = pResponse->bufferLen < CBMC_MAX_OBJECT_SIZE &&
-                  pResponse->bodyLen < CBMC_MAX_OBJECT_SIZE;
+        isValid = ( pResponse->bufferLen < CBMC_MAX_OBJECT_SIZE ) &&
+                  ( pResponse->bodyLen < CBMC_MAX_OBJECT_SIZE );
     }
 
     return isValid;
+}
+
+TransportInterface_t * allocateTransportInterface( TransportInterface_t * pTransport )
+{
+    if( pTransport == NULL )
+    {
+        pTransport = mallocCanFail( sizeof( TransportInterface_t ) );
+    }
+
+    if( pTransport != NULL )
+    {
+        pTransport->pNetworkContext = mallocCanFail( sizeof( NetworkContext_t ) );
+    }
+
+    return pTransport;
 }
