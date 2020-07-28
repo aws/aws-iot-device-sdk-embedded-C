@@ -22,8 +22,8 @@
 HARNESS_ENTRY=harness
 HARNESS_FILE=MQTT_Connect_harness
 
-# Please see libraries/mqtt/cbmc/stubs/network_interface_subs.c for more
-# information on the MAX_NETWORK_SEND_TRIES.
+# Please see libraries/standard/mqtt/cbmc/stubs/network_interface_subs.c for
+# more information on MAX_NETWORK_SEND_TRIES.
 MAX_NETWORK_SEND_TRIES=2
 # Bound on the timeout in receiveConnack. This timeout is bounded because 
 # memory saftey can be proven in a only a few iteration of the MQTT operations.

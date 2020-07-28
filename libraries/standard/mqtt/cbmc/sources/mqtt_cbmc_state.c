@@ -262,7 +262,6 @@ MQTTContext_t * allocateMqttContext( MQTTContext_t * pContext )
 bool isValidMqttContext( const MQTTContext_t * pContext )
 {
     bool isValid = true;
-    MQTTStatus_t status = MQTTSuccess;
 
     if( pContext != NULL )
     {
