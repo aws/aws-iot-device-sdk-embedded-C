@@ -253,6 +253,12 @@ static bool receivedPubComp = false;
 static MQTTPublishInfo_t incomingInfo;
 
 /**
+ * @brief Disconnect when receiving this packet type. Used for session
+ * restoration tests.
+ */
+static uint8_t disconnectOnPacketType = 0U;
+
+/**
  * @brief Sends an MQTT CONNECT packet over the already connected TCP socket.
  *
  * @param[in] pContext MQTT context pointer.
@@ -267,6 +273,14 @@ static void establishMqttSession( MQTTContext_t * pContext,
                                   NetworkContext_t * pNetworkContext,
                                   bool createCleanSession,
                                   bool * pSessionPresent );
+
+/**
+ * @brief Handler for incoming acknowledgement packets from the broker.
+ * @param[in] pPacketInfo Info for the incoming acknowledgement packet.
+ * @param[in] packetIdentifier The ID of the incoming packet.
+ */
+static void handleAckEvents( MQTTPacketInfo_t * pPacketInfo,
+                             uint16_t packetIdentifier );
 
 /**
  * @brief The application callback function that is expected to be invoked by the
@@ -310,12 +324,16 @@ static void establishMqttSession( MQTTContext_t * pContext,
     networkBuffer.pBuffer = buffer;
     networkBuffer.size = NETWORK_BUFFER_SIZE;
 
-    /* Initialize MQTT library. */
-    TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_Init( pContext,
-                                               &transport,
-                                               Clock_GetTimeMs,
-                                               eventCallback,
-                                               &networkBuffer ) );
+    /* Clear the state of the MQTT context when creating a clean session. */
+    if( createCleanSession == true )
+    {
+        /* Initialize MQTT library. */
+        TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_Init( pContext,
+                                                   &transport,
+                                                   Clock_GetTimeMs,
+                                                   eventCallback,
+                                                   &networkBuffer ) );
+    }
 
     /* Establish MQTT session with a CONNECT packet. */
 
@@ -358,6 +376,91 @@ static void establishMqttSession( MQTTContext_t * pContext,
                                                   pSessionPresent ) );
 }
 
+static void handleAckEvents( MQTTPacketInfo_t * pPacketInfo,
+                             uint16_t packetIdentifier )
+{
+    /* Handle other packets. */
+    switch( pPacketInfo->type )
+    {
+        case MQTT_PACKET_TYPE_SUBACK:
+            /* Set the flag to represent reception of SUBACK. */
+            receivedSubAck = true;
+
+            LogDebug( ( "Received SUBACK: PacketID=%u",
+                        packetIdentifier ) );
+            /* Make sure ACK packet identifier matches with Request packet identifier. */
+            TEST_ASSERT_EQUAL( globalSubscribePacketIdentifier, packetIdentifier );
+            break;
+
+        case MQTT_PACKET_TYPE_PINGRESP:
+
+            /* Nothing to be done from application as library handles
+             * PINGRESP. */
+            LogDebug( ( "Received PINGRESP" ) );
+            break;
+
+        case MQTT_PACKET_TYPE_UNSUBACK:
+            /* Set the flag to represent reception of UNSUBACK. */
+            receivedUnsubAck = true;
+
+            LogDebug( ( "Received UNSUBACK: PacketID=%u",
+                        packetIdentifier ) );
+            /* Make sure ACK packet identifier matches with Request packet identifier. */
+            TEST_ASSERT_EQUAL( globalUnsubscribePacketIdentifier, packetIdentifier );
+            break;
+
+        case MQTT_PACKET_TYPE_PUBACK:
+            /* Set the flag to represent reception of PUBACK. */
+            receivedPubAck = true;
+
+            /* Make sure ACK packet identifier matches with Request packet identifier. */
+            TEST_ASSERT_EQUAL( globalPublishPacketIdentifier, packetIdentifier );
+
+            LogDebug( ( "Received PUBACK: PacketID=%u",
+                        packetIdentifier ) );
+            break;
+
+        case MQTT_PACKET_TYPE_PUBREC:
+            /* Set the flag to represent reception of PUBREC. */
+            receivedPubRec = true;
+
+            /* Make sure ACK packet identifier matches with Request packet identifier. */
+            TEST_ASSERT_EQUAL( globalPublishPacketIdentifier, packetIdentifier );
+
+            LogDebug( ( "Received PUBREC: PacketID=%u",
+                        packetIdentifier ) );
+            break;
+
+        case MQTT_PACKET_TYPE_PUBREL:
+            /* Set the flag to represent reception of PUBREL. */
+            receivedPubRel = true;
+
+            /* Nothing to be done from application as library handles
+             * PUBREL. */
+            LogDebug( ( "Received PUBREL: PacketID=%u",
+                        packetIdentifier ) );
+            break;
+
+        case MQTT_PACKET_TYPE_PUBCOMP:
+            /* Set the flag to represent reception of PUBACK. */
+            receivedPubComp = true;
+
+            /* Make sure ACK packet identifier matches with Request packet identifier. */
+            TEST_ASSERT_EQUAL( globalPublishPacketIdentifier, packetIdentifier );
+
+            /* Nothing to be done from application as library handles
+             * PUBCOMP. */
+            LogDebug( ( "Received PUBCOMP: PacketID=%u",
+                        packetIdentifier ) );
+            break;
+
+        /* Any other packet type is invalid. */
+        default:
+            LogError( ( "Unknown packet type received:(%02x).",
+                        pPacketInfo->type ) );
+    }
+}
+
 static void eventCallback( MQTTContext_t * pContext,
                            MQTTPacketInfo_t * pPacketInfo,
                            uint16_t packetIdentifier,
@@ -366,108 +469,42 @@ static void eventCallback( MQTTContext_t * pContext,
     assert( pContext != NULL );
     assert( pPacketInfo != NULL );
 
-    /* Handle incoming publish. The lower 4 bits of the publish packet
-     * type is used for the dup, QoS, and retain flags. Hence masking
-     * out the lower bits to check if the packet is publish. */
-    if( ( pPacketInfo->type & 0xF0U ) == MQTT_PACKET_TYPE_PUBLISH )
+    if( pPacketInfo->type == disconnectOnPacketType )
     {
-        assert( pPublishInfo != NULL );
-        /* Handle incoming publish. */
+        /* Terminate MQTT connection with server for session restoration test. */
+        TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_Disconnect( &context ) );
 
-        /* Cache information about the incoming PUBLISH message to process
-         * in test case. */
-        memcpy( &incomingInfo, pPublishInfo, sizeof( MQTTPublishInfo_t ) );
-        incomingInfo.pTopicName = NULL;
-        incomingInfo.pPayload = NULL;
-        /* Allocate buffers and copy information of topic name and payload. */
-        incomingInfo.pTopicName = malloc( pPublishInfo->topicNameLength );
-        TEST_ASSERT_NOT_NULL( incomingInfo.pTopicName );
-        memcpy( ( void * ) incomingInfo.pTopicName, pPublishInfo->pTopicName, pPublishInfo->topicNameLength );
-        incomingInfo.pPayload = malloc( pPublishInfo->payloadLength );
-        TEST_ASSERT_NOT_NULL( incomingInfo.pPayload );
-        memcpy( ( void * ) incomingInfo.pPayload, pPublishInfo->pPayload, pPublishInfo->payloadLength );
+        /* Terminate TLS session and TCP connection to test session restoration
+         * across network connection. */
+        ( void ) Openssl_Disconnect( &networkContext );
     }
     else
     {
-        /* Handle other packets. */
-        switch( pPacketInfo->type )
+        /* Handle incoming publish. The lower 4 bits of the publish packet
+         * type is used for the dup, QoS, and retain flags. Hence masking
+         * out the lower bits to check if the packet is publish. */
+        if( ( pPacketInfo->type & 0xF0U ) == MQTT_PACKET_TYPE_PUBLISH )
         {
-            case MQTT_PACKET_TYPE_SUBACK:
-                /* Set the flag to represent reception of SUBACK. */
-                receivedSubAck = true;
+            assert( pPublishInfo != NULL );
+            /* Handle incoming publish. */
 
-                LogDebug( ( "Received SUBACK: PacketID=%u",
-                            packetIdentifier ) );
-                /* Make sure ACK packet identifier matches with Request packet identifier. */
-                TEST_ASSERT_EQUAL( globalSubscribePacketIdentifier, packetIdentifier );
-                break;
-
-            case MQTT_PACKET_TYPE_PINGRESP:
-
-                /* Nothing to be done from application as library handles
-                 * PINGRESP. */
-                LogDebug( ( "Received PINGRESP" ) );
-                break;
-
-            case MQTT_PACKET_TYPE_UNSUBACK:
-                /* Set the flag to represent reception of UNSUBACK. */
-                receivedUnsubAck = true;
-
-                LogDebug( ( "Received UNSUBACK: PacketID=%u",
-                            packetIdentifier ) );
-                /* Make sure ACK packet identifier matches with Request packet identifier. */
-                TEST_ASSERT_EQUAL( globalUnsubscribePacketIdentifier, packetIdentifier );
-                break;
-
-            case MQTT_PACKET_TYPE_PUBACK:
-                /* Set the flag to represent reception of PUBACK. */
-                receivedPubAck = true;
-
-                /* Make sure ACK packet identifier matches with Request packet identifier. */
-                TEST_ASSERT_EQUAL( globalPublishPacketIdentifier, packetIdentifier );
-
-                LogDebug( ( "Received PUBACK: PacketID=%u",
-                            packetIdentifier ) );
-                break;
-
-            case MQTT_PACKET_TYPE_PUBREC:
-                /* Set the flag to represent reception of PUBREC. */
-                receivedPubRec = true;
-
-                /* Make sure ACK packet identifier matches with Request packet identifier. */
-                TEST_ASSERT_EQUAL( globalPublishPacketIdentifier, packetIdentifier );
-
-                LogDebug( ( "Received PUBREC: PacketID=%u",
-                            packetIdentifier ) );
-                break;
-
-            case MQTT_PACKET_TYPE_PUBREL:
-                /* Set the flag to represent reception of PUBREL. */
-                receivedPubRel = true;
-
-                /* Nothing to be done from application as library handles
-                 * PUBREL. */
-                LogDebug( ( "Received PUBREL: PacketID=%u",
-                            packetIdentifier ) );
-                break;
-
-            case MQTT_PACKET_TYPE_PUBCOMP:
-                /* Set the flag to represent reception of PUBACK. */
-                receivedPubComp = true;
-
-                /* Make sure ACK packet identifier matches with Request packet identifier. */
-                TEST_ASSERT_EQUAL( globalPublishPacketIdentifier, packetIdentifier );
-
-                /* Nothing to be done from application as library handles
-                 * PUBCOMP. */
-                LogDebug( ( "Received PUBCOMP: PacketID=%u",
-                            packetIdentifier ) );
-                break;
-
-            /* Any other packet type is invalid. */
-            default:
-                LogError( ( "Unknown packet type received:(%02x).",
-                            pPacketInfo->type ) );
+            /* Cache information about the incoming PUBLISH message to process
+             * in test case. */
+            memcpy( &incomingInfo, pPublishInfo, sizeof( MQTTPublishInfo_t ) );
+            incomingInfo.pTopicName = NULL;
+            incomingInfo.pPayload = NULL;
+            /* Allocate buffers and copy information of topic name and payload. */
+            incomingInfo.pTopicName = malloc( pPublishInfo->topicNameLength );
+            TEST_ASSERT_NOT_NULL( incomingInfo.pTopicName );
+            memcpy( ( void * ) incomingInfo.pTopicName, pPublishInfo->pTopicName, pPublishInfo->topicNameLength );
+            incomingInfo.pPayload = malloc( pPublishInfo->payloadLength );
+            TEST_ASSERT_NOT_NULL( incomingInfo.pPayload );
+            memcpy( ( void * ) incomingInfo.pPayload, pPublishInfo->pPayload, pPublishInfo->payloadLength );
+        }
+        else
+        {
+            handleAckEvents( pPacketInfo,
+                             packetIdentifier );
         }
     }
 }
@@ -563,6 +600,7 @@ void setUp()
     receivedPubComp = false;
     persistentSession = false;
     useLWTClientIdentifier = false;
+    disconnectOnPacketType = 0U;
     memset( &incomingInfo, 0u, sizeof( MQTTPublishInfo_t ) );
     memset( &opensslCredentials, 0u, sizeof( OpensslCredentials_t ) );
     opensslCredentials.pRootCaPath = SERVER_ROOT_CA_CERT_PATH;
@@ -619,6 +657,7 @@ void test_MQTT_Subscribe_Publish_With_Qos_0( void )
                            &context, TEST_MQTT_TOPIC, MQTTQoS0 ) );
 
     /* We expect a SUBACK from the broker for the subscribe operation. */
+    TEST_ASSERT_FALSE( receivedSubAck );
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_TRUE( receivedSubAck );
@@ -629,6 +668,7 @@ void test_MQTT_Subscribe_Publish_With_Qos_0( void )
 
     /* Call the MQTT library for the expectation to read an incoming PUBLISH for
      * the same message that we published (as we have subscribed to the same topic). */
+    TEST_ASSERT_FALSE( receivedPubAck );
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     /* We do not expect a PUBACK from the broker for the QoS 0 PUBLISH. */
@@ -668,6 +708,7 @@ void test_MQTT_Subscribe_Publish_With_Qos_1( void )
                            &context, TEST_MQTT_TOPIC, MQTTQoS1 ) );
 
     /* Expect a SUBACK from the broker for the subscribe operation. */
+    TEST_ASSERT_FALSE( receivedSubAck );
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_TRUE( receivedSubAck );
@@ -683,6 +724,7 @@ void test_MQTT_Subscribe_Publish_With_Qos_1( void )
 
     /* Expect a PUBACK response for the PUBLISH and an incoming PUBLISH for the
      * same message that we published (as we have subscribed to the same topic). */
+    TEST_ASSERT_FALSE( receivedPubAck );
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     /* Make sure we have received PUBACK response. */
@@ -722,6 +764,7 @@ void test_MQTT_Subscribe_Publish_With_Qos_2( void )
                            &context, TEST_MQTT_TOPIC, MQTTQoS2 ) );
 
     /* Expect a SUBACK from the broker for the subscribe operation. */
+    TEST_ASSERT_FALSE( receivedSubAck );
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_TRUE( receivedSubAck );
@@ -741,6 +784,10 @@ void test_MQTT_Subscribe_Publish_With_Qos_2( void )
      * the incoming PUBLISH (as we subscribed and publish with QoS 2). Since it takes
      * longer to complete a QoS 2 publish, we run the process loop longer to allow it
      * ample time. */
+    TEST_ASSERT_FALSE( receivedPubAck );
+    TEST_ASSERT_FALSE( receivedPubRec );
+    TEST_ASSERT_FALSE( receivedPubComp );
+    TEST_ASSERT_FALSE( receivedPubRel );
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_FALSE( receivedPubAck );
@@ -770,6 +817,10 @@ void test_MQTT_Subscribe_Publish_With_Qos_2( void )
     TEST_ASSERT_TRUE( receivedUnsubAck );
 }
 
+/**
+ * @brief Verifies that the MQTT library supports the "Last Will and Testament" feature when
+ * establishing a connection with a broker.
+ */
 void test_MQTT_Connect_LWT( void )
 {
     NetworkContext_t secondNetworkContext = { 0 };
@@ -818,11 +869,16 @@ void test_MQTT_Connect_LWT( void )
                            &context, TEST_MQTT_TOPIC, MQTTQoS0 ) );
 
     /* We expect an UNSUBACK from the broker for the unsubscribe operation. */
+    TEST_ASSERT_FALSE( receivedUnsubAck );
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_TRUE( receivedUnsubAck );
 }
 
+/**
+ * @brief Verifies that the MQTT library sends a Ping Request packet if the connection is
+ * idle for more than the keep-alive period.
+ */
 void test_MQTT_ProcessLoop_KeepAlive( void )
 {
     uint32_t connectPacketTime = context.lastPacketTime;
@@ -839,4 +895,158 @@ void test_MQTT_ProcessLoop_KeepAlive( void )
     /* Test that the ping was sent within 1.5 times the keep alive interval. */
     elapsedTime = context.lastPacketTime - connectPacketTime;
     TEST_ASSERT_LESS_OR_EQUAL( MQTT_KEEP_ALIVE_INTERVAL_SECONDS * 1500, elapsedTime );
+}
+
+/**
+ * @brief Verifies the behavior of the MQTT library in a restored session connection with the broker
+ * for a PUBLISH operation that was incomplete in the previous connection.
+ * Tests that the library resends PUBREL packets to the broker in a restored session for an incomplete
+ * PUBLISH operation in a previous connection.
+ */
+void test_MQTT_Restore_Session_Resend_PubRel( void )
+{
+    /* Terminate TLS session and TCP network connection to discard the current MQTT session
+     * that was created as a "clean session". */
+    ( void ) Openssl_Disconnect( &networkContext );
+
+    /* Establish a new MQTT connection over TLS with the broker with the "clean session" flag set to 0
+     * to start a persistent session with the broker. */
+
+    /* Create the TLS+TCP connection with the broker. */
+    TEST_ASSERT_EQUAL( OPENSSL_SUCCESS, Openssl_Connect( &networkContext,
+                                                         &serverInfo,
+                                                         &opensslCredentials,
+                                                         TRANSPORT_SEND_RECV_TIMEOUT_MS,
+                                                         TRANSPORT_SEND_RECV_TIMEOUT_MS ) );
+    TEST_ASSERT_NOT_EQUAL( -1, networkContext.socketDescriptor );
+    TEST_ASSERT_NOT_NULL( networkContext.pSsl );
+
+    /* Establish a new MQTT connection for a persistent session with the broker. */
+    establishMqttSession( &context, &networkContext, false, &persistentSession );
+    TEST_ASSERT_FALSE( persistentSession );
+
+    /* Publish to a topic with Qos 2. */
+    TEST_ASSERT_EQUAL( MQTTSuccess, publishToTopic(
+                           &context, TEST_MQTT_TOPIC, MQTTQoS2 ) );
+
+    /* Disconnect on receiving PUBREC so that we are not able to complete the QoS 2 PUBLISH in the current connection. */
+    TEST_ASSERT_FALSE( receivedPubComp );
+    disconnectOnPacketType = MQTT_PACKET_TYPE_PUBREC;
+    TEST_ASSERT_EQUAL( MQTTSendFailed,
+                       MQTT_ProcessLoop( &context, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    TEST_ASSERT_FALSE( receivedPubComp );
+
+    /* Verify that the connection with the broker has been disconnected. */
+    TEST_ASSERT_EQUAL( MQTTNotConnected, context.connectStatus );
+
+    /* We will re-establish an MQTT over TLS connection with the broker to restore the persistent session. */
+
+    /* Create a new TLS+TCP network connection with the server. */
+    TEST_ASSERT_EQUAL( OPENSSL_SUCCESS, Openssl_Connect( &networkContext,
+                                                         &serverInfo,
+                                                         &opensslCredentials,
+                                                         TRANSPORT_SEND_RECV_TIMEOUT_MS,
+                                                         TRANSPORT_SEND_RECV_TIMEOUT_MS ) );
+    TEST_ASSERT_NOT_EQUAL( -1, networkContext.socketDescriptor );
+    TEST_ASSERT_NOT_NULL( networkContext.pSsl );
+
+    /* Re-establish the persistent session with the broker by connecting with "clean session" flag set to 0. */
+    establishMqttSession( &context, &networkContext, false, &persistentSession );
+
+    /* Verify that the session was resumed. */
+    TEST_ASSERT_TRUE( persistentSession );
+
+    /* Resume the incomplete QoS 2 PUBLISH in previous MQTT connection. */
+    TEST_ASSERT_FALSE( receivedPubComp );
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       MQTT_ProcessLoop( &context, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+
+    /* Test that the MQTT library has completed the QoS 2 publish by sending the PUBREL flag. */
+    TEST_ASSERT_TRUE( receivedPubComp );
+}
+
+/**
+ * @brief Verifies the behavior of the MQTT library on receiving a duplicate
+ * PUBREL packet from the broker in a restored session connection.
+ * Tests that the library sends a PUBCOMP packet in response to the broker for the
+ * incoming QoS 2 PUBLISH operation that was incomplete in a previous connection
+ * of the same session.
+ */
+void test_MQTT_Restore_Session_Complete_Incoming_Publish( void )
+{
+    /* Terminate TLS session and TCP connection network connection to discard current MQTT session
+     * that was created as a "clean session". */
+    ( void ) Openssl_Disconnect( &networkContext );
+
+    /* Establish a new MQTT connection over TLS with the broker with the "clean session" flag set to 0
+     * to start a persistent session with the broker. */
+
+    /* Create the TLS+TCP connection with the broker. */
+    TEST_ASSERT_EQUAL( OPENSSL_SUCCESS, Openssl_Connect( &networkContext,
+                                                         &serverInfo,
+                                                         &opensslCredentials,
+                                                         TRANSPORT_SEND_RECV_TIMEOUT_MS,
+                                                         TRANSPORT_SEND_RECV_TIMEOUT_MS ) );
+    TEST_ASSERT_NOT_EQUAL( -1, networkContext.socketDescriptor );
+    TEST_ASSERT_NOT_NULL( networkContext.pSsl );
+
+    /* Establish a new MQTT connection for starting a persistent session with the broker
+     * by setting the "clean session" flag to 0. */
+    establishMqttSession( &context, &networkContext, false, &persistentSession );
+    TEST_ASSERT_FALSE( persistentSession );
+
+    /* Subscribe to a topic from which we will be receiving an incomplete incoming
+     * QoS 2 PUBLISH transaction in this connection. */
+    TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic(
+                           &context, TEST_MQTT_TOPIC, MQTTQoS2 ) );
+    TEST_ASSERT_FALSE( receivedSubAck );
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    TEST_ASSERT_TRUE( receivedSubAck );
+
+    /* Publish to the same topic with Qos 2 (so that the broker can re-publish it back to us). */
+    TEST_ASSERT_EQUAL( MQTTSuccess, publishToTopic(
+                           &context, TEST_MQTT_TOPIC, MQTTQoS2 ) );
+
+    /* Disconnect on receiving PUBREL so that we are not able to complete in the incoming QoS2
+     * PUBLISH in the current connection. */
+    disconnectOnPacketType = MQTT_PACKET_TYPE_PUBREL;
+    TEST_ASSERT_EQUAL( MQTTSendFailed,
+                       MQTT_ProcessLoop( &context, 3 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+
+    /* Verify that the connection with the broker has been disconnected. */
+    TEST_ASSERT_EQUAL( MQTTNotConnected, context.connectStatus );
+
+    /* We will re-establish an MQTT over TLS connection with the broker to restore the persistent session. */
+
+    /* Create a new TLS+TCP network connection with the server. */
+    TEST_ASSERT_EQUAL( OPENSSL_SUCCESS, Openssl_Connect( &networkContext,
+                                                         &serverInfo,
+                                                         &opensslCredentials,
+                                                         TRANSPORT_SEND_RECV_TIMEOUT_MS,
+                                                         TRANSPORT_SEND_RECV_TIMEOUT_MS ) );
+    TEST_ASSERT_NOT_EQUAL( -1, networkContext.socketDescriptor );
+    TEST_ASSERT_NOT_NULL( networkContext.pSsl );
+
+    /* Re-establish the persistent session with the broker by connecting with "clean session" flag set to 0. */
+    establishMqttSession( &context, &networkContext, false, &persistentSession );
+
+    /* Verify that the session was resumed. */
+    TEST_ASSERT_TRUE( persistentSession );
+
+    /* Clear the global variable for not disconnecting on PUBREL
+     * that we receive from the broker on the session restoration. */
+    disconnectOnPacketType = MQTT_PACKET_TYPE_INVALID;
+
+    /* Resume the incomplete incoming QoS 2 PUBLISH transaction from the previous MQTT connection. */
+    TEST_ASSERT_FALSE( receivedPubRel );
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       MQTT_ProcessLoop( &context, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+
+    /* Make sure that the broker resent the PUBREL packet on session restoration. */
+    TEST_ASSERT_TRUE( receivedPubRel );
+
+    /* Make sure that the library sent a PUBCOMP packet in response to the PUBREL packet
+     * from the server to complete the incoming PUBLISH QoS2 transaction. */
+    TEST_ASSERT_EQUAL( MQTT_PACKET_ID_INVALID, context.incomingPublishRecords[ 0 ].packetId );
 }
