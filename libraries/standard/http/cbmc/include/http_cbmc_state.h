@@ -110,8 +110,8 @@ bool isValidHttpResponse( const HTTPResponse_t * pResponse );
  * @brief Allocate a transport interface for CBMC.
  *
  * @param[in] pTransport Transport interface.
- * @return
- * An allocated TransportInterface_t object to use as a parameter
+ *
+ * @return An allocated TransportInterface_t object to use as a parameter
  * for the function under test.
  */
 TransportInterface_t * allocateTransportInterface( TransportInterface_t * pTransport );
