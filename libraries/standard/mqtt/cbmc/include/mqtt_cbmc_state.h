@@ -18,13 +18,17 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
+/**
+ * @file mqtt_cbmc_state.h
+ * @brief Allocation and assumption utilities for the MQTT library CBMC proofs.
+ */
 #ifndef MQTT_CBMC_STATE_H_
 #define MQTT_CBMC_STATE_H_
 
 #include <stdbool.h>
 
-/* For MQTT Client library types. */
-#include "mqtt.h"
+/* mqtt.h must precede including this header. */
 
 /**
  * @brief Proof model for malloc that can fail and return NULL.
@@ -143,5 +147,26 @@ MQTTSubscribeInfo_t * allocateMqttSubscriptionList( MQTTSubscribeInfo_t * pSubsc
  */
 bool isValidMqttSubscriptionList( MQTTSubscribeInfo_t * pSubscriptionList,
                                   size_t subscriptionCount );
+
+/**
+ * @brief Allocate a #MQTTContext_t object.
+ *
+ * @param[in] pBuffer #MQTTContext_t object information.
+ *
+ * @return NULL or allocated #MQTTContext_t memory.
+ */
+MQTTContext_t * allocateMqttContext( MQTTContext_t * pContext );
+
+/**
+ * @brief Validate a #MQTTContext_t object.
+ *
+ * @param[in] pBuffer #MQTTContext_t object to validate.
+ *
+ * @return True if the #MQTTContext_t object is valid, false otherwise.
+ *
+ * @note A NULL object is a valid object. This is for coverage of the NULL
+ * parameter checks in the function under proof.
+ */
+bool isValidMqttContext( const MQTTContext_t * pContext );
 
 #endif /* ifndef MQTT_CBMC_STATE_H_ */

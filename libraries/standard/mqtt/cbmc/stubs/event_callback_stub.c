@@ -18,28 +18,17 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
-/**
- * @file MQTT_DeserializeAck_harness.c
- * @brief Implements the proof harness for MQTT_DeserializeAck function.
- */
 #include "mqtt.h"
-#include "mqtt_cbmc_state.h"
+#include "event_callback_stub.h"
 
-void harness()
+void EventCallbackStub( MQTTContext_t * pContext,
+                        MQTTPacketInfo_t * pPacketInfo,
+                        uint16_t packetIdentifier,
+                        MQTTPublishInfo_t * pPublishInfo )
 {
-    MQTTPacketInfo_t * pIncomingPacket;
-    uint16_t * pPacketId;
-    bool * pSessionPresent;
-
-    pIncomingPacket = allocateMqttPacketInfo( NULL );
-    __CPROVER_assume( isValidMqttPacketInfo( pIncomingPacket ) );
-
-    /* These are allocated for coverage of a NULL input. */
-    pPacketId = mallocCanFail( sizeof( uint16_t ) );
-    pSessionPresent = mallocCanFail( sizeof( bool ) );
-
-    MQTT_DeserializeAck( pIncomingPacket,
-                         pPacketId,
-                         pSessionPresent );
+    __CPROVER_assert( pContext != NULL,
+                      "EventCallbackStub pContext is not NULL" );
+    __CPROVER_assert( pPacketInfo != NULL,
+                      "EventCallbackStub pPacketInfo is not NULL" );
+    /* pPublishInfo will be NULL for an incoming ACK event. */
 }

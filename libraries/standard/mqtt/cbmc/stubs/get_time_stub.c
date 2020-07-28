@@ -19,27 +19,19 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-/**
- * @file MQTT_DeserializeAck_harness.c
- * @brief Implements the proof harness for MQTT_DeserializeAck function.
- */
 #include "mqtt.h"
-#include "mqtt_cbmc_state.h"
+#include "get_time_stub.h"
 
-void harness()
+uint32_t GetCurrentTimeStub( void )
 {
-    MQTTPacketInfo_t * pIncomingPacket;
-    uint16_t * pPacketId;
-    bool * pSessionPresent;
+    /* There are loops in the MQTT library that rely on the timestamp being
+     * reasonable in order to complete. Returning an unbounded timestamp does
+     * not add value to the proofs as the MQTT library uses the timestamp for
+     * only arithmetic operations. In C arithmetic operations on unsigned
+     * integers are guaranteed to reliably wrap around with no adverse side
+     * effects. If the time returned was unbounded, the loops could be unwound
+     * a large number of times making the proof execution very long. */
+    static uint32_t globalEntryTime = 0;
 
-    pIncomingPacket = allocateMqttPacketInfo( NULL );
-    __CPROVER_assume( isValidMqttPacketInfo( pIncomingPacket ) );
-
-    /* These are allocated for coverage of a NULL input. */
-    pPacketId = mallocCanFail( sizeof( uint16_t ) );
-    pSessionPresent = mallocCanFail( sizeof( bool ) );
-
-    MQTT_DeserializeAck( pIncomingPacket,
-                         pPacketId,
-                         pSessionPresent );
+    return ++globalEntryTime;
 }

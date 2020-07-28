@@ -20,26 +20,27 @@
  */
 
 /**
- * @file MQTT_DeserializeAck_harness.c
- * @brief Implements the proof harness for MQTT_DeserializeAck function.
+ * @file MQTT_ProcessLoop_harness.c
+ * @brief Implements the proof harness for MQTT_ProcessLoop function.
  */
 #include "mqtt.h"
 #include "mqtt_cbmc_state.h"
+#include "network_interface_stubs.h"
+#include "get_time_stub.h"
+#include "event_callback_stub.h"
 
 void harness()
 {
-    MQTTPacketInfo_t * pIncomingPacket;
-    uint16_t * pPacketId;
-    bool * pSessionPresent;
+    MQTTContext_t * pContext;
+    uint32_t timeoutMs;
 
-    pIncomingPacket = allocateMqttPacketInfo( NULL );
-    __CPROVER_assume( isValidMqttPacketInfo( pIncomingPacket ) );
+    pContext = allocateMqttContext( NULL );
+    __CPROVER_assume( isValidMqttContext( pContext ) );
 
-    /* These are allocated for coverage of a NULL input. */
-    pPacketId = mallocCanFail( sizeof( uint16_t ) );
-    pSessionPresent = mallocCanFail( sizeof( bool ) );
+    __CPROVER_assume( timeoutMs < MQTT_PROCESS_LOOP_TIMEOUT );
 
-    MQTT_DeserializeAck( pIncomingPacket,
-                         pPacketId,
-                         pSessionPresent );
+    /* The MQTT_PROCESS_LOOP_TIMEOUT is used here to control the number of loops
+     * when receiving on the network. The default is used here because memory
+     * safety can be proven in only a few iterations. */
+    MQTT_ProcessLoop( pContext, timeoutMs );
 }
