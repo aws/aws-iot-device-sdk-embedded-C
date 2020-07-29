@@ -47,6 +47,7 @@
 #define MAX_SIZE_CLIENT_ID_WITH_SEQUENCE MAX_SIZE_OF_UNIQUE_CLIENT_ID_BYTES + 10 ///< This is size of the extra sequence number that will be appended to the Unique client Id
 #define MAX_SIZE_CLIENT_TOKEN_CLIENT_SEQUENCE MAX_SIZE_CLIENT_ID_WITH_SEQUENCE + 20 ///< This is size of the the total clientToken key and value pair in the JSON
 #define MAX_SIZE_OF_THING_NAME 30 ///< The Thing Name should not be bigger than this value. Modify this if the Thing Name needs to be bigger
+#define MAX_SIZE_OF_SHADOW_NAME 20 ///< The Shadow Name should not be bigger than this value. Modify this if the Shadow Name needs to be bigger
 
 // Thing Shadow specific configs
 #define SHADOW_MAX_SIZE_OF_RX_BUFFER 512 ///< Maximum size of the SHADOW buffer to store the received Shadow message
