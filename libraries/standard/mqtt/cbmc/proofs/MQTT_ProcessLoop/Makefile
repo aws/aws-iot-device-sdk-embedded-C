@@ -42,7 +42,6 @@ INCLUDES +=
 REMOVE_FUNCTION_BODY += MQTT_Ping
 REMOVE_FUNCTION_BODY += MQTT_DeserializeAck
 REMOVE_FUNCTION_BODY += MQTT_SerializeAck
-# REMOVE_FUNCTION_BODY += _CPROVER_file_local_mqtt_c_handleKeepAlive
 
 UNWINDSET += MQTT_ProcessLoop.0:$(MQTT_RECEIVE_TIMEOUT)
 UNWINDSET += __CPROVER_file_local_mqtt_c_discardPacket.0:$(MQTT_RECEIVE_TIMEOUT)
