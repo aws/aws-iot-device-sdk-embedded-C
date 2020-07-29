@@ -21,10 +21,8 @@ DEFINES += -DMAX_NETWORK_SEND_TRIES=$(MAX_NETWORK_SEND_TRIES)
 INCLUDES +=
 
 # These functions have their memory saftey proven in other harnesses.
-REMOVE_FUNCTION_BODY += MQTT_Ping
 REMOVE_FUNCTION_BODY += MQTT_DeserializeAck
 REMOVE_FUNCTION_BODY += MQTT_SerializeAck
-
 
 # The loops below are unwound once more than the exclusive timeout bound.
 UNWINDSET += MQTT_ReceiveLoop.0:$(MQTT_RECEIVE_TIMEOUT)
