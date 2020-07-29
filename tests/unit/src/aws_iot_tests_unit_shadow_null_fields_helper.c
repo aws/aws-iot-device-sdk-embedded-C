@@ -36,9 +36,10 @@ static Shadow_Ack_Status_t ackStatusRx;
 static ShadowActions_t actionRx;
 static char jsonFullDocument[200];
 
-void actionCallbackNullTest(const char *pThingName, ShadowActions_t action, Shadow_Ack_Status_t status,
+void actionCallbackNullTest(const char *pThingName, const char *pShadowName, ShadowActions_t action, Shadow_Ack_Status_t status,
 							const char *pReceivedJsonDocument, void *pContextData) {
 	IOT_UNUSED(pThingName);
+	IOT_UNUSED(pShadowName);
 	IOT_UNUSED(pContextData);
 	IOT_DEBUG("%s", pReceivedJsonDocument);
 	actionRx = action;
@@ -114,7 +115,7 @@ TEST_C(ShadowNullFields, NullClientConnect) {
 }
 
 TEST_C(ShadowNullFields, NullUpdateDocument) {
-	IoT_Error_t rc = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, SHADOW_UPDATE, NULL, 0, actionCallbackNullTest,
+	IoT_Error_t rc = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, NULL, SHADOW_UPDATE, NULL, 0, actionCallbackNullTest,
 													NULL, 4, false);
 	CHECK_EQUAL_C_INT(NULL_VALUE_ERROR, rc);
 }
@@ -130,18 +131,18 @@ TEST_C(ShadowNullFields, NullClientDisconnect) {
 }
 
 TEST_C(ShadowNullFields, NullClientShadowGet) {
-	IoT_Error_t rc = aws_iot_shadow_get(NULL, AWS_IOT_MY_THING_NAME, actionCallbackNullTest, NULL, 100, true);
+	IoT_Error_t rc = aws_iot_shadow_get(NULL, AWS_IOT_MY_THING_NAME, NULL, actionCallbackNullTest, NULL, 100, true);
 	CHECK_EQUAL_C_INT(NULL_VALUE_ERROR, rc);
 }
 
 TEST_C(ShadowNullFields, NullClientShadowUpdate) {
-	IoT_Error_t rc = aws_iot_shadow_update(NULL, AWS_IOT_MY_THING_NAME, jsonFullDocument,
+	IoT_Error_t rc = aws_iot_shadow_update(NULL, AWS_IOT_MY_THING_NAME, NULL, jsonFullDocument,
 										   actionCallbackNullTest, NULL, 100, true);
 	CHECK_EQUAL_C_INT(NULL_VALUE_ERROR, rc);
 }
 
 TEST_C(ShadowNullFields, NullClientShadowDelete) {
-	IoT_Error_t rc = aws_iot_shadow_delete(NULL, AWS_IOT_MY_THING_NAME, actionCallbackNullTest, NULL, 100, true);
+	IoT_Error_t rc = aws_iot_shadow_delete(NULL, AWS_IOT_MY_THING_NAME, NULL, actionCallbackNullTest, NULL, 100, true);
 	CHECK_EQUAL_C_INT(NULL_VALUE_ERROR, rc);
 }
 

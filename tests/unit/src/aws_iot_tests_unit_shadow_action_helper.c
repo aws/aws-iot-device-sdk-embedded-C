@@ -103,9 +103,10 @@ TEST_GROUP_C_TEARDOWN(ShadowActionTests) {
 	IOT_UNUSED(rc);
 }
 
-static void actionCallback(const char *pThingName, ShadowActions_t action, Shadow_Ack_Status_t status,
+static void actionCallback(const char *pThingName, const char *pShadowName, ShadowActions_t action, Shadow_Ack_Status_t status,
 					const char *pReceivedJsonDocument, void *pContextData) {
 	IOT_UNUSED(pThingName);
+	IOT_UNUSED(pShadowName);
 	IOT_UNUSED(pContextData);
 	IOT_DEBUG("%s", pReceivedJsonDocument);
 	actionRx = action;
@@ -124,7 +125,7 @@ TEST_C(ShadowActionTests, GetTheFullJSONDocument) {
 	IOT_DEBUG("-->Running Shadow Action Tests - Get full json document \n");
 
 	aws_iot_shadow_internal_get_request_json(getRequestJson, TEST_JSON_SIZE);
-	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL, 4,
+	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, NULL, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL, 4,
 											 false);
 	CHECK_EQUAL_C_INT(SUCCESS, ret_val);
 
@@ -152,7 +153,7 @@ TEST_C(ShadowActionTests, DeleteTheJSONDocument) {
 	IOT_DEBUG("-->Running Shadow Action Tests - Delete json document \n");
 
 	aws_iot_shadow_internal_delete_request_json(deleteRequestJson, TEST_JSON_SIZE);
-	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, SHADOW_DELETE, deleteRequestJson, TEST_JSON_SIZE, actionCallback,
+	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, NULL, SHADOW_DELETE, deleteRequestJson, TEST_JSON_SIZE, actionCallback,
 											 NULL, 4, false);
 	CHECK_EQUAL_C_INT(SUCCESS, ret_val);
 
@@ -218,7 +219,7 @@ TEST_C(ShadowActionTests, UpdateTheJSONDocument) {
 			AWS_IOT_MQTT_CLIENT_ID);
 	CHECK_EQUAL_C_STRING(expectedUpdateRequestJson, updateRequestJson);
 
-	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, SHADOW_UPDATE, updateRequestJson, SIZE_OF_UPDATE_DOCUMENT, actionCallback,
+	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, NULL, SHADOW_UPDATE, updateRequestJson, SIZE_OF_UPDATE_DOCUMENT, actionCallback,
 											 NULL, 4, false);
 	CHECK_EQUAL_C_INT(SUCCESS, ret_val);
 
@@ -247,7 +248,7 @@ TEST_C(ShadowActionTests, GetTheFullJSONDocumentTimeout) {
 	IOT_DEBUG("-->Running Shadow Action Tests - Get full json document timeout \n");
 
 	aws_iot_shadow_internal_get_request_json(getRequestJson, TEST_JSON_SIZE);
-	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL, 4,
+	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, NULL, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL, 4,
 											 false);
 	CHECK_EQUAL_C_INT(SUCCESS, ret_val);
 
@@ -285,7 +286,7 @@ TEST_C(ShadowActionTests, SubscribeToAcceptedRejectedOnGet) {
 	snprintf(SecondLastSubscribeMessage, secondLastSubscribeMsgLen, "No Message");
 
 	aws_iot_shadow_internal_get_request_json(getRequestJson, TEST_JSON_SIZE);
-	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL, 4,
+	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, NULL, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL, 4,
 											 false);
 	CHECK_EQUAL_C_INT(SUCCESS, ret_val);
 
@@ -317,7 +318,7 @@ TEST_C(ShadowActionTests, UnSubscribeToAcceptedRejectedOnGetResponse) {
 	snprintf(SecondLastSubscribeMessage, secondLastSubscribeMsgLen, "No Message");
 
 	aws_iot_shadow_internal_get_request_json(getRequestJson, TEST_JSON_SIZE);
-	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL, 4,
+	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, NULL, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL, 4,
 											 false);
 	CHECK_EQUAL_C_INT(SUCCESS, ret_val);
 
@@ -350,7 +351,7 @@ TEST_C(ShadowActionTests, UnSubscribeToAcceptedRejectedOnGetTimeout) {
 	snprintf(SecondLastSubscribeMessage, secondLastSubscribeMsgLen, "No Message");
 
 	aws_iot_shadow_internal_get_request_json(getRequestJson, TEST_JSON_SIZE);
-	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL, 4,
+	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, NULL, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL, 4,
 											 false);
 	CHECK_EQUAL_C_INT(SUCCESS, ret_val);
 
@@ -387,7 +388,7 @@ TEST_C(ShadowActionTests, UnSubscribeToAcceptedRejectedOnGetTimeoutWithSticky) {
 	snprintf(SecondLastSubscribeMessage, secondLastSubscribeMsgLen, "No Message");
 
 	aws_iot_shadow_internal_get_request_json(getRequestJson, TEST_JSON_SIZE);
-	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL, 4,
+	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, NULL, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL, 4,
 											 true);
 	CHECK_EQUAL_C_INT(SUCCESS, ret_val);
 
@@ -423,7 +424,7 @@ TEST_C(ShadowActionTests, GetVersionFromAckStatus) {
 	snprintf(jsonFullDocument, 200, "timeout");
 
 	aws_iot_shadow_internal_get_request_json(getRequestJson, TEST_JSON_SIZE);
-	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL, 4,
+	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, NULL, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL, 4,
 											 true);
 	CHECK_EQUAL_C_INT(SUCCESS, ret_val);
 
@@ -464,7 +465,7 @@ TEST_C(ShadowActionTests, WrongTokenInGetResponse) {
 	snprintf(jsonFullDocument, 200, "timeout");
 
 	aws_iot_shadow_internal_get_request_json(getRequestJson, TEST_JSON_SIZE);
-	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL, 4,
+	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, NULL, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL, 4,
 											 false);
 	CHECK_EQUAL_C_INT(SUCCESS, ret_val);
 
@@ -497,7 +498,7 @@ TEST_C(ShadowActionTests, NoTokenInGetResponse) {
 	snprintf(jsonFullDocument, 200, "timeout");
 
 	aws_iot_shadow_internal_get_request_json(getRequestJson, TEST_JSON_SIZE);
-	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL, 4,
+	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, NULL, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL, 4,
 											 false);
 	CHECK_EQUAL_C_INT(SUCCESS, ret_val);
 
@@ -528,7 +529,7 @@ TEST_C(ShadowActionTests, InvalidInboundJSONInGetResponse) {
 	snprintf(jsonFullDocument, 200, "NOT_VISITED");
 
 	aws_iot_shadow_internal_get_request_json(getRequestJson, TEST_JSON_SIZE);
-	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL, 4,
+	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, NULL, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL, 4,
 											 false);
 	CHECK_EQUAL_C_INT(SUCCESS, ret_val);
 
@@ -556,7 +557,7 @@ TEST_C(ShadowActionTests, AcceptedSubFailsGetRequest) {
 
 	ResetTLSBuffer();
 	aws_iot_shadow_internal_get_request_json(getRequestJson, TEST_JSON_SIZE);
-	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL, 4,
+	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, NULL, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL, 4,
 											 false);
 	CHECK_EQUAL_C_INT(MQTT_REQUEST_TIMEOUT_ERROR, ret_val); // Should never subscribe and publish
 
@@ -590,7 +591,7 @@ TEST_C(ShadowActionTests, RejectedSubFailsGetRequest) {
 	ResetTLSBuffer();
 	setTLSRxBufferForSuback(GET_ACCEPTED_TOPIC, strlen(GET_ACCEPTED_TOPIC), QOS0, params);
 	aws_iot_shadow_internal_get_request_json(getRequestJson, TEST_JSON_SIZE);
-	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL, 4,
+	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, NULL, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL, 4,
 											 false);
 	CHECK_EQUAL_C_INT(MQTT_REQUEST_TIMEOUT_ERROR, ret_val); // Should never subscribe and publish
 
@@ -617,7 +618,7 @@ TEST_C(ShadowActionTests, PublishFailsGetRequest) {
 	ResetTLSBuffer();
 
 	aws_iot_shadow_internal_get_request_json(getRequestJson, TEST_JSON_SIZE);
-	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL, 4,
+	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, NULL, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL, 4,
 											 false);
 	CHECK_EQUAL_C_INT(MQTT_REQUEST_TIMEOUT_ERROR, ret_val); // Should never subscribe and publish
 
@@ -648,7 +649,7 @@ TEST_C(ShadowActionTests, StickyNonStickyNeverConflict) {
 	snprintf(SecondLastSubscribeMessage, secondLastSubscribeMsgLen, "No Message");
 
 	aws_iot_shadow_internal_get_request_json(getRequestJson, TEST_JSON_SIZE);
-	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL, 4,
+	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, NULL, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL, 4,
 											 true);
 	CHECK_EQUAL_C_INT(SUCCESS, ret_val);
 
@@ -671,7 +672,7 @@ TEST_C(ShadowActionTests, StickyNonStickyNeverConflict) {
 
 	// Non-sticky shadow get, same thing name. Should never unsub since they are sticky
 	aws_iot_shadow_internal_get_request_json(getRequestJson, TEST_JSON_SIZE);
-	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL, 4,
+	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, NULL, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL, 4,
 											 false);
 	CHECK_EQUAL_C_INT(SUCCESS, ret_val);
 
@@ -704,58 +705,58 @@ TEST_C(ShadowActionTests, ACKWaitingMoreThanAllowed) {
 
 	// 1st
 	aws_iot_shadow_internal_get_request_json(getRequestJson, TEST_JSON_SIZE);
-	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL,
+	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, NULL, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL,
 											 100, false); // 100 sec to timeout
 	CHECK_EQUAL_C_INT(SUCCESS, ret_val);
 	// 2nd
 	aws_iot_shadow_internal_get_request_json(getRequestJson, TEST_JSON_SIZE);
-	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL,
+	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, NULL, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL,
 											 100, false); // 100 sec to timeout
 	CHECK_EQUAL_C_INT(SUCCESS, ret_val);
 	// 3rd
 	aws_iot_shadow_internal_get_request_json(getRequestJson, TEST_JSON_SIZE);
-	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL,
+	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, NULL, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL,
 											 100, false); // 100 sec to timeout
 	CHECK_EQUAL_C_INT(SUCCESS, ret_val);
 	// 4th
 	aws_iot_shadow_internal_get_request_json(getRequestJson, TEST_JSON_SIZE);
-	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL,
+	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, NULL, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL,
 											 100, false); // 100 sec to timeout
 	CHECK_EQUAL_C_INT(SUCCESS, ret_val);
 	// 5th
 	aws_iot_shadow_internal_get_request_json(getRequestJson, TEST_JSON_SIZE);
-	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL,
+	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, NULL, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL,
 											 100, false); // 100 sec to timeout
 	CHECK_EQUAL_C_INT(SUCCESS, ret_val);
 	// 6th
 	aws_iot_shadow_internal_get_request_json(getRequestJson, TEST_JSON_SIZE);
-	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL,
+	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, NULL, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL,
 											 100, false); // 100 sec to timeout
 	CHECK_EQUAL_C_INT(SUCCESS, ret_val);
 	// 7th
 	aws_iot_shadow_internal_get_request_json(getRequestJson, TEST_JSON_SIZE);
-	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL,
+	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, NULL, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL,
 											 100, false); // 100 sec to timeout
 	CHECK_EQUAL_C_INT(SUCCESS, ret_val);
 	// 8th
 	aws_iot_shadow_internal_get_request_json(getRequestJson, TEST_JSON_SIZE);
-	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL,
+	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, NULL, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL,
 											 100, false); // 100 sec to timeout
 	CHECK_EQUAL_C_INT(SUCCESS, ret_val);
 	// 9th
 	aws_iot_shadow_internal_get_request_json(getRequestJson, TEST_JSON_SIZE);
-	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL,
+	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, NULL, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL,
 											 100, false); // 100 sec to timeout
 	CHECK_EQUAL_C_INT(SUCCESS, ret_val);
 	// 10th
 	aws_iot_shadow_internal_get_request_json(getRequestJson, TEST_JSON_SIZE);
-	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL,
+	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, NULL, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL,
 											 100, false); // 100 sec to timeout
 	CHECK_EQUAL_C_INT(SUCCESS, ret_val);
 	// 11th
 	// Should return some error code, since we are running out of ACK space
 	aws_iot_shadow_internal_get_request_json(getRequestJson, TEST_JSON_SIZE);
-	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL,
+	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, NULL, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL,
 											 100, false); // 100 sec to timeout
 	CHECK_EQUAL_C_INT(FAILURE, ret_val);
 
@@ -774,7 +775,7 @@ TEST_C(ShadowActionTests, InboundDataTooBigForBuffer) {
 	snprintf(jsonFullDocument, 200, "NOT_VISITED");
 
 	aws_iot_shadow_internal_get_request_json(getRequestJson, TEST_JSON_SIZE);
-	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL, 4,
+	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, NULL, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL, 4,
 											 false);
 	CHECK_EQUAL_C_INT(SUCCESS, ret_val);
 
@@ -811,7 +812,7 @@ TEST_C(ShadowActionTests, NoClientTokenForShadowAction) {
 	snprintf(getRequestJson, TEST_JSON_SIZE, "{}");
 	snprintf(jsonFullDocument, 200, "NOT_VISITED");
 
-	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL, 4,
+	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, NULL, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, actionCallback, NULL, 4,
 											 false);
 	CHECK_EQUAL_C_INT(SUCCESS, ret_val);
 
@@ -842,19 +843,19 @@ TEST_C(ShadowActionTests, IsReceivedJsonValid)
 {
 	bool ret_val;
 	char getRequestJson[TEST_JSON_SIZE];
-	
+
 	IOT_DEBUG("-->Running Shadow Action Tests - IsReceivedJsonValid \n");
-		
-	snprintf(getRequestJson, TEST_JSON_SIZE, TEST_JSON_RESPONSE_FULL_DOCUMENT);	
-	
+
+	snprintf(getRequestJson, TEST_JSON_SIZE, TEST_JSON_RESPONSE_FULL_DOCUMENT);
+
 	//Test by cutting the JSON document
 	ret_val = isReceivedJsonValid(getRequestJson, 3);
 	CHECK_EQUAL_C_INT(false, ret_val);
-		
+
 	//Happy path
 	ret_val = isReceivedJsonValid(getRequestJson, TEST_JSON_SIZE);
 	CHECK_EQUAL_C_INT(true, ret_val);
-	
+
 	IOT_DEBUG("-->Success - IsReceivedJsonValid");
 }
 
@@ -863,44 +864,44 @@ TEST_C(ShadowActionTests, ExtractClientToken)
 	bool ret_val;
 	char getRequestJson[TEST_JSON_SIZE];
 	char extractedClientToken[MAX_SIZE_CLIENT_ID_WITH_SEQUENCE];
-	
+
 	IOT_DEBUG("-->Running Shadow Action Tests - ExtractClientToken \n");
 
 	//Try JSON with no token
 	snprintf(getRequestJson, TEST_JSON_SIZE, "{}");
 	ret_val = extractClientToken(getRequestJson, TEST_JSON_SIZE, extractedClientToken, MAX_SIZE_CLIENT_ID_WITH_SEQUENCE );
 	CHECK_EQUAL_C_INT(false, ret_val);
-	
+
 	//Try JSON with token but not enough memory
-	snprintf(getRequestJson, TEST_JSON_SIZE, TEST_JSON_RESPONSE_FULL_DOCUMENT);	
+	snprintf(getRequestJson, TEST_JSON_SIZE, TEST_JSON_RESPONSE_FULL_DOCUMENT);
 	ret_val = extractClientToken(getRequestJson, TEST_JSON_SIZE, extractedClientToken, 1 );
 	CHECK_EQUAL_C_INT(false, ret_val);
-	
+
 	//Happy path
 	ret_val = extractClientToken(getRequestJson, TEST_JSON_SIZE, extractedClientToken, MAX_SIZE_CLIENT_ID_WITH_SEQUENCE );
 	CHECK_EQUAL_C_INT(true, ret_val);
-	
+
 	IOT_DEBUG("-->Success - ExtractClientToken");
 }
 
 TEST_C(ShadowActionTests, GetAndDeleteRequest) {
 	IoT_Error_t ret_val = SUCCESS;
 	char getRequestJson[TEST_JSON_SIZE];
-	
+
 	IOT_DEBUG("-->Running Shadow Action Tests - GetAndDeleteRequest \n");
-		
+
 	ret_val = aws_iot_shadow_internal_get_request_json(NULL, TEST_JSON_SIZE);
 	CHECK_EQUAL_C_INT(FAILURE, ret_val);
-	
+
 	ret_val = aws_iot_shadow_internal_get_request_json(getRequestJson, 1);
 	CHECK_EQUAL_C_INT(FAILURE, ret_val);
-	
+
 		ret_val = aws_iot_shadow_internal_delete_request_json(NULL, TEST_JSON_SIZE);
 	CHECK_EQUAL_C_INT(FAILURE, ret_val);
-	
+
 	ret_val = aws_iot_shadow_internal_delete_request_json(getRequestJson, 1);
 	CHECK_EQUAL_C_INT(FAILURE, ret_val);
-	
+
 	IOT_DEBUG("-->Success - GetAndDeleteRequest");
 }
 
@@ -918,7 +919,7 @@ TEST_C(ShadowActionTests, NoCallbackForShadowAction) {
 	snprintf(jsonFullDocument, 200, "NOT_VISITED");
 
 	aws_iot_shadow_internal_get_request_json(getRequestJson, TEST_JSON_SIZE);
-	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, NULL, NULL, 4, false);
+	ret_val = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, NULL, SHADOW_GET, getRequestJson, TEST_JSON_SIZE, NULL, NULL, 4, false);
 	CHECK_EQUAL_C_INT(SUCCESS, ret_val);
 
 	params.payloadLen = strlen(TEST_JSON_RESPONSE_FULL_DOCUMENT);
