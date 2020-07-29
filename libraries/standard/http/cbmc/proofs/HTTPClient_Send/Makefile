@@ -47,9 +47,9 @@ UNWINDSET += __CPROVER_file_local_http_client_c_sendHttpData.0:10
 UNWINDSET += strncmp.0:5
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
-PROOF_SOURCES += $(PROOFDIR)/../../sources/http_cbmc_state.c
-PROOF_SOURCES += $(PROOFDIR)/../../stubs/HTTPClient_Send_http_parser_execute.c
-PROOF_SOURCES += $(PROOFDIR)/../../stubs/transport_interface_stubs.c
+PROOF_SOURCES += $(SRCDIR)/libraries/standard/http/cbmc/sources/http_cbmc_state.c
+PROOF_SOURCES += $(SRCDIR)/libraries/standard/http/cbmc/stubs/HTTPClient_Send_http_parser_execute.c
+PROOF_SOURCES += $(SRCDIR)/libraries/standard/http/cbmc/stubs/transport_interface_stubs.c
 
 PROJECT_SOURCES += $(SRCDIR)/libraries/standard/http/src/http_client.c
 

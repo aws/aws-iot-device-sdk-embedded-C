@@ -20,35 +20,35 @@
  */
 
 /**
- * @file MQTT_Connect_harness.c
- * @brief Implements the proof harness for MQTT_Connect function.
+ * @file memcpy.c
+ * @brief Creates a stub for memcpy so that the proofs for functions that call
+ * memcpy run much faster.
  */
-#include "mqtt.h"
-#include "mqtt_cbmc_state.h"
 
-void harness()
-{
-    MQTTContext_t * pContext;
-    MQTTConnectInfo_t * pConnectInfo;
-    MQTTPublishInfo_t * pWillInfo;
-    uint32_t timeoutMs;
-    bool * pSessionPresent;
+#include <string.h>
 
-    pContext = allocateMqttContext( NULL );
-    __CPROVER_assume( isValidMqttContext( pContext ) );
+/* This is a clang macro not available on linux */
+#ifndef __has_builtin
+    #define __has_builtin( x )    0
+#endif
 
-    pConnectInfo = allocateMqttConnectInfo( NULL );
-    __CPROVER_assume( isValidMqttConnectInfo( pConnectInfo ) );
-
-    pWillInfo = allocateMqttPublishInfo( NULL );
-    __CPROVER_assume( isValidMqttPublishInfo( pWillInfo ) );
-
-    pSessionPresent = mallocCanFail( sizeof( bool ) );
-
-    /* The MQTT_RECEIVE_TIMEOUT is used here to control the number of loops
-     * when receiving on the network. The default is used here because memory
-     * safety can be proven in only a few iterations. */
-    __CPROVER_assume( timeoutMs < MQTT_RECEIVE_TIMEOUT );
-
-    MQTT_Connect( pContext, pConnectInfo, pWillInfo, timeoutMs, pSessionPresent );
-}
+#if __has_builtin( __builtin___memcpy_chk )
+    void * __builtin___memcpy_chk( void * dest,
+                                   const void * src,
+                                   size_t n,
+                                   size_t m )
+    {
+        __CPROVER_assert( __CPROVER_w_ok( dest, n ), "write" );
+        __CPROVER_assert( __CPROVER_r_ok( src, n ), "read" );
+        return dest;
+    }
+#else
+    void * memcpy( void * dest,
+                   const void * src,
+                   size_t n )
+    {
+        __CPROVER_assert( __CPROVER_w_ok( dest, n ), "write" );
+        __CPROVER_assert( __CPROVER_r_ok( src, n ), "read" );
+        return dest;
+    }
+#endif /* if __has_builtin( __builtin___memcpy_chk ) */
