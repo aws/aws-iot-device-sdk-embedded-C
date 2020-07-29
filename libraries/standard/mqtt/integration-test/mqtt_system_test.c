@@ -548,10 +548,7 @@ static void eventCallback( MQTTContext_t * pContext,
 
             /* Update the global variable if the incoming PUBLISH packet
              * represents a retained message. */
-            if( pPublishInfo->retain == true )
-            {
-                receivedRetainedMessage = true;
-            }
+            receivedRetainedMessage = pPublishInfo->retain;
         }
         else
         {
@@ -1435,7 +1432,7 @@ void test_MQTT_Publish_With_Retain_Flag( void )
 
     /* Again, subscribe to the same topic that we just published to.
      * We don't expect the broker to send the message to us (as we
-     *  PUBLISHed without a retain flag set).. */
+     * PUBLISHed without a retain flag set). */
     TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic(
                            &context, TEST_MQTT_TOPIC_2, MQTTQoS1 ) );
     TEST_ASSERT_FALSE( receivedSubAck );
