@@ -73,6 +73,7 @@ init
 int
 iot
 isn
+linux
 lsb
 lwt
 malloc

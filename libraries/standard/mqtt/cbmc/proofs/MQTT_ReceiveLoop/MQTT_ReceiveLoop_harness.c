@@ -29,9 +29,15 @@
 void harness()
 {
     MQTTContext_t * pContext;
+    uint32_t timeoutMs;
 
     pContext = allocateMqttContext( NULL );
     __CPROVER_assume( isValidMqttContext( pContext ) );
 
-    MQTT_ReceiveLoop( pContext, MQTT_RECEIVE_TIMEOUT );
+    /* The MQTT_RECEIVE_TIMEOUT is used here to control the number of loops
+     * when receiving on the network. The default is used here because memory
+     * safety can be proven in only a few iterations. */
+    __CPROVER_assume( timeoutMs < MQTT_RECEIVE_TIMEOUT );
+
+    MQTT_ReceiveLoop( pContext, timeoutMs );
 }

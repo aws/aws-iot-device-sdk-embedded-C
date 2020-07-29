@@ -25,6 +25,9 @@ HARNESS_FILE=MQTT_Publish_harness
 # Please see libraries/standard/mqtt/cbmc/stubs/network_interface_subs.c for
 # more information on MAX_NETWORK_SEND_TRIES.
 MAX_NETWORK_SEND_TRIES=3
+# Please see libraries/standard/mqtt/cbmc/include/mqtt_config.h for more
+# information.
+MQTT_STATE_ARRAY_MAX_COUNT=11
 DEFINES += -DMAX_NETWORK_SEND_TRIES=$(MAX_NETWORK_SEND_TRIES)
 INCLUDES +=
 
@@ -38,8 +41,8 @@ REMOVE_FUNCTION_BODY +=
 UNWINDSET += __CPROVER_file_local_mqtt_c_sendPacket.0:$(MAX_NETWORK_SEND_TRIES)
 # These loops will run for the maximum number of publishes pending acknowledgement.
 # This is set in libraries/standard/mqtt/cbmc/include/mqtt_config.h.
-UNWINDSET += __CPROVER_file_local_mqtt_state_c_addRecord.0:11
-UNWINDSET += __CPROVER_file_local_mqtt_state_c_findInRecord.0:11
+UNWINDSET += __CPROVER_file_local_mqtt_state_c_addRecord.0:$(MQTT_STATE_ARRAY_MAX_COUNT)
+UNWINDSET += __CPROVER_file_local_mqtt_state_c_findInRecord.0:$(MQTT_STATE_ARRAY_MAX_COUNT)
 # The encodeRemainingLength loop is unwound 5 times because encodeRemainingLength()
 # divides a size_t variable by 128 until it reaches zero to stop the loop.
 # log128(SIZE_MAX) = 4.571...
