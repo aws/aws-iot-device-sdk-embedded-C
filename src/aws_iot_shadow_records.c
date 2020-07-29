@@ -161,7 +161,7 @@ static void topicNameFromThingAndAction(char *pTopic, const char *pThingName, co
 		strncpy(ackTypeBuf, "rejected", 10);
 	}
 
-	if ( NULL == pShadowName ) {
+	if ( NULL == pShadowName || 0 == strlen(pShadowName) ) {
 		if (SHADOW_ACTION == ackType) {
 			snprintf(pTopic, MAX_SHADOW_TOPIC_LENGTH_BYTES, "$aws/things/%s/shadow/%s", pThingName, actionBuf);
 		}
@@ -459,10 +459,9 @@ void addToAckWaitList(uint8_t indexAckWaitList, const char *pThingName, const ch
 	AckWaitList[indexAckWaitList].callback = callback;
 	memcpy(AckWaitList[indexAckWaitList].clientTokenID, pExtractedClientToken, MAX_SIZE_CLIENT_ID_WITH_SEQUENCE);
 	memcpy(AckWaitList[indexAckWaitList].thingName, pThingName, MAX_SIZE_OF_THING_NAME);
+	memset(AckWaitList[indexAckWaitList].shadowName, 0, MAX_SIZE_OF_SHADOW_NAME);
 	if (pShadowName) {
-		memcpy(AckWaitList[indexAckWaitList].shadowName, pShadowName, MAX_SIZE_OF_SHADOW_NAME);
-	} else {
-		AckWaitList[indexAckWaitList].shadowName = NULL;
+		strncpy(AckWaitList[indexAckWaitList].shadowName, pShadowName, MAX_SIZE_OF_SHADOW_NAME);
 	}
 	AckWaitList[indexAckWaitList].pCallbackContext = pCallbackContext;
 	AckWaitList[indexAckWaitList].action = action;
