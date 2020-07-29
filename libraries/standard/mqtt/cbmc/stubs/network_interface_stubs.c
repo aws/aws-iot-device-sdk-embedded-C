@@ -69,7 +69,7 @@ int32_t NetworkInterfaceSendStub( NetworkContext_t * pNetworkContext,
                       "NetworkInterfaceSendStub MAX_NETWORK_SEND_TRIES must be greater than or equal to 2." );
 
     /* The number of tries to send the message before this invocation. */
-    static size_t tries = 2;
+    static size_t tries = 1;
 
     int32_t bytesOrError;
 
@@ -89,7 +89,7 @@ int32_t NetworkInterfaceSendStub( NetworkContext_t * pNetworkContext,
     }
     else
     {
-        tries = 2;
+        tries = 1;
         bytesOrError = bytesToSend;
     }
 
