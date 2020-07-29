@@ -28,11 +28,13 @@
 #define _SHADOW_H_
 
 #include <stdint.h>
+/* Include config file before other headers. */
+#include "shadow_config.h"
 
 /*--------------------------- Shadow types ---------------------------*/
 
 /**
- * @brief Each of these values indicate what type of shadow message it is.
+ * @brief Each of these values describe the type of a shadow message.
  *        https://docs.aws.amazon.com/iot/latest/developerguide/device-shadow-mqtt.html
  */
 typedef enum ShadowMessageType
@@ -49,20 +51,65 @@ typedef enum ShadowMessageType
 } ShadowMessageType_t;
 
 /**
- * @brief enum that tells Shadow_GetTopicString() what topic string to assemble.
+ * @brief Each of these values describe the type of a shadow topic string.
+ *
+ * These are used for topicType parameter of Shadow_GetTopicString() to tell it
+ * what topic string to assemble.
  */
 typedef enum ShadowTopicStringType
 {
     SHADOW_TOPIC_STRING_TYPE_GET = 0,
+
+    /* MISRA Rule 5.2 flags the following member's name as ambiguous from the one
+     * without _ACCEPTED suffix. This rule is suppressed for naming consistency with other Shadow
+     * header field and value string and length macros in this file.*/
+    /* coverity[misra_c_2012_rule_5_2_violation] */
     SHADOW_TOPIC_STRING_TYPE_GET_ACCEPTED,
+
+    /* MISRA Rule 5.2 flags the following member's name as ambiguous from the one
+     * without _REJECTED suffix. This rule is suppressed for naming consistency with other Shadow
+     * header field and value string and length macros in this file.*/
+    /* coverity[misra_c_2012_rule_5_2_violation] */
     SHADOW_TOPIC_STRING_TYPE_GET_REJECTED,
+
     SHADOW_TOPIC_STRING_TYPE_DELETE,
+
+    /* MISRA Rule 5.2 flags the following member's name as ambiguous from the one
+     * without _ACCEPTED suffix. This rule is suppressed for naming consistency with other Shadow
+     * header field and value string and length macros in this file.*/
+    /* coverity[misra_c_2012_rule_5_2_violation] */
     SHADOW_TOPIC_STRING_TYPE_DELETE_ACCEPTED,
+
+    /* MISRA Rule 5.2 flags the following member's name as ambiguous from the one
+     * without _REJECTED suffix. This rule is suppressed for naming consistency with other Shadow
+     * header field and value string and length macros in this file.*/
+    /* coverity[misra_c_2012_rule_5_2_violation] */
     SHADOW_TOPIC_STRING_TYPE_DELETE_REJECTED,
+
     SHADOW_TOPIC_STRING_TYPE_UPDATE,
+
+    /* MISRA Rule 5.2 flags the following member's name as ambiguous from the one
+     * without _ACCEPTED suffix. This rule is suppressed for naming consistency with other Shadow
+     * header field and value string and length macros in this file.*/
+    /* coverity[misra_c_2012_rule_5_2_violation] */
     SHADOW_TOPIC_STRING_TYPE_UPDATE_ACCEPTED,
+
+    /* MISRA Rule 5.2 flags the following member's name as ambiguous from the one
+     * without _REJECTED suffix. This rule is suppressed for naming consistency with other Shadow
+     * header field and value string and length macros in this file.*/
+    /* coverity[misra_c_2012_rule_5_2_violation] */
     SHADOW_TOPIC_STRING_TYPE_UPDATE_REJECTED,
+
+    /* MISRA Rule 5.2 flags the following member's name as ambiguous from the one
+     * without _DOCUMENTS suffix. This rule is suppressed for naming consistency with other Shadow
+     * header field and value string and length macros in this file.*/
+    /* coverity[misra_c_2012_rule_5_2_violation] */
     SHADOW_TOPIC_STRING_TYPE_UPDATE_DOCUMENTS,
+
+    /* MISRA Rule 5.2 flags the following member's name as ambiguous from the one
+     * without _DELTA suffix. This rule is suppressed for naming consistency with other Shadow
+     * header field and value string and length macros in this file.*/
+    /* coverity[misra_c_2012_rule_5_2_violation] */
     SHADOW_TOPIC_STRING_TYPE_UPDATE_DELTA,
     SHADOW_TOPIC_STRING_TYPE_MAX_NUM
 } ShadowTopicStringType_t;
@@ -72,11 +119,12 @@ typedef enum ShadowTopicStringType
  */
 typedef enum ShadowStatus
 {
-    SHADOW_STATUS_SUCCESS = 0,              /**< @brief Shadow function success. */
-    SHADOW_STATUS_FAIL,                     /**< @brief Shadow function encountered error. */
-    SHADOW_STATUS_BAD_PARAMETER,            /**< @brief Input parameter is invalid. */
-    SHADOW_STATUS_INVALID_BUFFER_LENGTH,    /**< @brief Input buffer length is invalid. */
-    SHADOW_STATUS_THINGNAME_PARSE_FAILED    /**< @brief Could not parse the thing name. */
+    SHADOW_STATUS_SUCCESS = 0,                          /**< @brief Shadow function success. */
+    SHADOW_STATUS_FAIL,                                 /**< @brief Shadow function encountered error. */
+    SHADOW_STATUS_BAD_PARAMETER,                        /**< @brief Input parameter is invalid. */
+    SHADOW_STATUS_BUFFER_TOO_SMALL,                     /**< @brief The provided buffer is too small. */
+    SHADOW_STATUS_THINGNAME_PARSE_FAILED,               /**< @brief Could not parse the thing name. */
+    SHADOW_STATUS_SHADOW_MESSAGE_TYPE_PARSE_FAILED      /**< @brief Could not parse the shadow type. */
 } ShadowStatus_t;
 
 /*------------------------ Shadow library functions -------------------------*/
@@ -195,7 +243,7 @@ typedef enum ShadowStatus
  *     SHADOW_TOPIC_LENGTH( SHADOW_TOPIC_OPERATION_LENGTH_UPDATE, SHADOW_TOPIC_SUFFIX_LENGTH_DELTA, 7 )
  *
  * When thingName is only known at run time and held in a variable myThingName, invoke
- * the macro like this: (This cannot be use for allocating static memory.)
+ * the macro like this:
  *
  *     SHADOW_TOPIC_LENGTH( SHADOW_TOPIC_OPERATION_LENGTH_UPDATE, SHADOW_TOPIC_SUFFIX_LENGTH_DELTA,
  *                       strlen( ( const char * ) myThingName ) )
@@ -211,7 +259,8 @@ typedef enum ShadowStatus
  *                          - SHADOW_TOPIC_SUFFIX_LENGTH_DELTA
  *                          - SHADOW_TOPIC_SUFFIX_LENGTH_DOCUMENTS
  * @param[thingNameLength] Length of the thingName excluding the ending NULL.
- * @return              Length of the shadow topic in bytes.
+ *
+ * @return Length of the shadow topic in bytes.
  */
 #define SHADOW_TOPIC_LENGTH( operationLength,  suffixLength,  thingNameLength )   \
                            ( operationLength + suffixLength + thingNameLength + SHADOW_TOPIC_PREFIX_LENGTH )
@@ -310,7 +359,8 @@ typedef enum ShadowStatus
  *                       - SHADOW_TOPIC_SUFFIX_STRING_DOCUMENTS
  *                          
  * @param[thingName] Thing Name.
- * @return           Topic string.
+ *
+ * @return Topic string.
  */                       
 #define SHADOW_TOPIC_STRING( thingName, operation, suffix )     \
                            ( SHADOW_TOPIC_PREFIX_STRING thingName operation suffix )
@@ -384,7 +434,7 @@ typedef enum ShadowStatus
 /**
  * @brief Assemble shadow topic strings when Thing Name is only known at run time.
  *
- * @param[in]  topicType Indicates what topic will be returned in the buffer pointed to by pTopicBuffer.
+ * @param[in]  topicType Indicates what topic will be written into the buffer pointed to by pTopicBuffer.
  *             can be one of:
  *                 - SHADOW_TOPIC_STRING_TYPE_GET
  *                 - SHADOW_TOPIC_STRING_TYPE_GET_ACCEPTED
@@ -397,12 +447,12 @@ typedef enum ShadowStatus
  *                 - SHADOW_TOPIC_STRING_TYPE_UPDATE_REJECTED
  *                 - SHADOW_TOPIC_STRING_TYPE_UPDATE_DOCUMENTS
  *                 - SHADOW_TOPIC_STRING_TYPE_UPDATE_DELTA
- * @param[in]  pThingName Thing Name string. Must not be NULL.
+ * @param[in]  pThingName Thing Name string. No need to be null terminated. Must not be NULL.
  * @param[in]  thingNameLength Length of Thing Name string pointed to by pThingName. Must not be zero.
  * @param[out] pTopicBuffer Pointer to buffer for returning the topic string.
  *             Caller is responsible for supplying memory pointed to by pTopicBuffer.
- *             This function does not fill in the ending null character. The app can supply
- *             a buffer that does not have space for holding the null character.
+ *             This function does not fill in the terminating null character. The app
+ *             can supply a buffer that does not have space for holding the null character.
  * @param[in]  bufferSize Length of pTopicBuffer. This function will return error if
  *             bufferSize is less than the length of the assembled topic string.
  * @param[out] pOutLength Pointer to caller-supplied memory for returning the length of the topic string.
@@ -441,6 +491,6 @@ ShadowStatus_t Shadow_MatchTopic( const char * pTopic,
                                   uint16_t topicLength,
                                   ShadowMessageType_t * pMessageType,
                                   const char ** pThingName,
-                                  uint8_t * pThingNameLength );
+                                  uint16_t * pThingNameLength );
 
 #endif /* ifndef _SHADOW_H_ */

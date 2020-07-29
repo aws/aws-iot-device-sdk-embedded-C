@@ -6,10 +6,11 @@ add_library( shadow
              ${SHADOW_SOURCES} )
 
 # SHADOW public include path.
-target_include_directories( shadow PUBLIC ${SHADOW_INCLUDE_PUBLIC_DIRS} )
+target_include_directories( shadow PUBLIC ${SHADOW_INCLUDE_PUBLIC_DIRS}
+                                          ${LOGGING_INCLUDE_DIRS} )
 
 # Organization of SHADOW in IDE projects.
-set_target_properties( shadow  PROPERTIES FOLDER libraries/standard )
+set_target_properties( shadow  PROPERTIES FOLDER libraries/aws )
 source_group( include FILES include/shadow.h)
 source_group( src FILES ${SHADOW_SOURCES} )
 
