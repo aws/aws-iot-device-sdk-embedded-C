@@ -27,7 +27,7 @@ INCLUDES +=
 
 # This function does not coincide with the call graph of MQTT_Serialize, but are
 # found by CBMC during processing in logs/MQTT_Connect_harness3.txt. We remove
-# the function body to increase the excution time of this proof.
+# the function body to increase the execution time of this proof.
 REMOVE_FUNCTION_BODY += MQTT_GetIncomingPacketTypeAndLength
 
 # The encodeRemainingLength loop is unwound 5 times because encodeRemainingLength()

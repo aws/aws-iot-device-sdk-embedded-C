@@ -29,7 +29,9 @@ INCLUDES +=
 # function pointer targets, leading to faster execution time.
 REMOVE_FUNCTION_BODY += __CPROVER_file_local_http_client_c_findHeaderFieldParserCallback
 REMOVE_FUNCTION_BODY += __CPROVER_file_local_http_client_c_findHeaderValueParserCallback
-# The memory safety of the http-parser callbacks are proven separately. 
+# The memory safety of the http-parser callbacks are proven separately. The
+# proofs for the functions below must have assumptions that are satisfied by the
+# calling context in HTTPClient_Send.
 REMOVE_FUNCTION_BODY += __CPROVER_file_local_http_client_c_httpParserOnBodyCallback
 REMOVE_FUNCTION_BODY += __CPROVER_file_local_http_client_c_httpParserOnHeaderFieldCallback
 REMOVE_FUNCTION_BODY += __CPROVER_file_local_http_client_c_httpParserOnHeaderValueCallback

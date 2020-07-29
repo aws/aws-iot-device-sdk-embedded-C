@@ -37,7 +37,7 @@ INCLUDES +=
 
 # These functions do not coincide with the call graph of MQTT_Connect, but are
 # found by CBMC during processing in logs/MQTT_Connect_harness3.txt. We remove
-# the function bodies to increase the excution time of this proof.
+# the function bodies to help with coverage.
 REMOVE_FUNCTION_BODY += MQTT_ProcessLoop
 REMOVE_FUNCTION_BODY += MQTT_ReceiveLoop
 REMOVE_FUNCTION_BODY += __CPROVER_file_local_mqtt_c_handleIncomingPublish
