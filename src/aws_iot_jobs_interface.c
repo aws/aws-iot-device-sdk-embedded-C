@@ -61,7 +61,7 @@ IoT_Error_t aws_iot_jobs_subscribe_to_all_job_messages(
 
 IoT_Error_t aws_iot_jobs_unsubscribe_from_job_messages(
 		AWS_IoT_Client *pClient,
-		char *topicBuffer) 
+		char *topicBuffer)
 {
 	return aws_iot_mqtt_unsubscribe(pClient, topicBuffer, (uint16_t)strlen(topicBuffer));
 }

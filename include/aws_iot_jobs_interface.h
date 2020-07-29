@@ -61,8 +61,8 @@ extern "C" {
  * \param pClient the client to use
  * \param qos the qos to use
  * \param thingName the name of the thing to subscribe to
- * \param jobId the job id to subscribe to. To subscribe to messages not related to 
- *   a job the jobId passed should be null. The jobId can also be "+" to subscribe to 
+ * \param jobId the job id to subscribe to. To subscribe to messages not related to
+ *   a job the jobId passed should be null. The jobId can also be "+" to subscribe to
  *   messages related to any job, or "$next" to indicate the next pending job.
  * \param topicType the topic type to subscribe to
  * \param replyType the reply topic type to subscribe to
@@ -120,7 +120,7 @@ IoT_Error_t aws_iot_jobs_subscribe_to_all_job_messages(
  *   #aws_iot_jobs_subscribe_to_all_job_messages.
  *
  * \param pClient the client to use
- * \param topicBuffer the topic buffer passed to #aws_iot_jobs_subscribe_to_job_messages or 
+ * \param topicBuffer the topic buffer passed to #aws_iot_jobs_subscribe_to_job_messages or
  *   #aws_iot_jobs_subscribe_to_all_job_messages when the subscription was created.
  * \return #SUCCESS or the first error encountered.
  */

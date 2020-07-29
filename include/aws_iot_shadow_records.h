@@ -35,12 +35,12 @@ extern char mqttClientID[MAX_SIZE_OF_UNIQUE_CLIENT_ID_BYTES];
 extern uint16_t mqttClientIDLen;
 
 void initializeRecords(AWS_IoT_Client *pClient);
-bool isSubscriptionPresent(const char *pThingName, ShadowActions_t action);
-IoT_Error_t subscribeToShadowActionAcks(const char *pThingName, ShadowActions_t action, bool isSticky);
-void incrementSubscriptionCnt(const char *pThingName, ShadowActions_t action, bool isSticky);
+bool isSubscriptionPresent(const char *pThingName, const char *pShadowName, ShadowActions_t action);
+IoT_Error_t subscribeToShadowActionAcks(const char *pThingName, const char *pShadowName, ShadowActions_t action, bool isSticky);
+void incrementSubscriptionCnt(const char *pThingName, const char *pShadowName, ShadowActions_t action, bool isSticky);
 
-IoT_Error_t publishToShadowAction(const char *pThingName, ShadowActions_t action, const char *pJsonDocumentToBeSent);
-void addToAckWaitList(uint8_t indexAckWaitList, const char *pThingName, ShadowActions_t action,
+IoT_Error_t publishToShadowAction(const char *pThingName, const char *pShadowName, ShadowActions_t action, const char *pJsonDocumentToBeSent);
+void addToAckWaitList(uint8_t indexAckWaitList, const char *pThingName, const char *pShadowName, ShadowActions_t action,
 					  const char *pExtractedClientToken, fpActionCallback_t callback, void *pCallbackContext,
 					  uint32_t timeout_seconds);
 bool getNextFreeIndexOfAckWaitList(uint8_t *pIndex);

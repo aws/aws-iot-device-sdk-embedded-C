@@ -170,7 +170,7 @@ IoT_Error_t aws_iot_shadow_disconnect(AWS_IoT_Client *pClient) {
 	return aws_iot_mqtt_disconnect(pClient);
 }
 
-IoT_Error_t aws_iot_shadow_update(AWS_IoT_Client *pClient, const char *pThingName, char *pJsonString,
+IoT_Error_t aws_iot_shadow_update(AWS_IoT_Client *pClient, const char *pThingName, const char *pShadowName, char *pJsonString,
 								  fpActionCallback_t callback, void *pContextData, uint8_t timeout_seconds,
 								  bool isPersistentSubscribe) {
 	IoT_Error_t rc;
@@ -183,13 +183,13 @@ IoT_Error_t aws_iot_shadow_update(AWS_IoT_Client *pClient, const char *pThingNam
 		FUNC_EXIT_RC(MQTT_CONNECTION_ERROR);
 	}
 
-	rc = aws_iot_shadow_internal_action(pThingName, SHADOW_UPDATE, pJsonString, strlen(pJsonString), callback, pContextData,
+	rc = aws_iot_shadow_internal_action(pThingName, pShadowName, SHADOW_UPDATE, pJsonString, strlen(pJsonString), callback, pContextData,
 										timeout_seconds, isPersistentSubscribe);
 
 	FUNC_EXIT_RC(rc);
 }
 
-IoT_Error_t aws_iot_shadow_delete(AWS_IoT_Client *pClient, const char *pThingName, fpActionCallback_t callback,
+IoT_Error_t aws_iot_shadow_delete(AWS_IoT_Client *pClient, const char *pThingName, const char *pShadowName, fpActionCallback_t callback,
 								  void *pContextData, uint8_t timeout_seconds, bool isPersistentSubscribe) {
 	char deleteRequestJsonBuf[MAX_SIZE_CLIENT_TOKEN_CLIENT_SEQUENCE];
 	IoT_Error_t rc;
@@ -209,13 +209,13 @@ IoT_Error_t aws_iot_shadow_delete(AWS_IoT_Client *pClient, const char *pThingNam
         FUNC_EXIT_RC( rc );
     }
 
-	rc = aws_iot_shadow_internal_action(pThingName, SHADOW_DELETE, deleteRequestJsonBuf, MAX_SIZE_CLIENT_TOKEN_CLIENT_SEQUENCE, callback, pContextData,
+	rc = aws_iot_shadow_internal_action(pThingName, pShadowName, SHADOW_DELETE, deleteRequestJsonBuf, MAX_SIZE_CLIENT_TOKEN_CLIENT_SEQUENCE, callback, pContextData,
 										timeout_seconds, isPersistentSubscribe);
 
 	FUNC_EXIT_RC(rc);
 }
 
-IoT_Error_t aws_iot_shadow_get(AWS_IoT_Client *pClient, const char *pThingName, fpActionCallback_t callback,
+IoT_Error_t aws_iot_shadow_get(AWS_IoT_Client *pClient, const char *pThingName, const char *pShadowName, fpActionCallback_t callback,
 							   void *pContextData, uint8_t timeout_seconds, bool isPersistentSubscribe) {
 	char getRequestJsonBuf[MAX_SIZE_CLIENT_TOKEN_CLIENT_SEQUENCE];
 	IoT_Error_t rc;
@@ -235,7 +235,7 @@ IoT_Error_t aws_iot_shadow_get(AWS_IoT_Client *pClient, const char *pThingName, 
         FUNC_EXIT_RC(rc);
     }
 
-	rc = aws_iot_shadow_internal_action(pThingName, SHADOW_GET, getRequestJsonBuf, MAX_SIZE_CLIENT_TOKEN_CLIENT_SEQUENCE, callback, pContextData,
+	rc = aws_iot_shadow_internal_action(pThingName, pShadowName, SHADOW_GET, getRequestJsonBuf, MAX_SIZE_CLIENT_TOKEN_CLIENT_SEQUENCE, callback, pContextData,
 										timeout_seconds, isPersistentSubscribe);
 	FUNC_EXIT_RC(rc);
 }

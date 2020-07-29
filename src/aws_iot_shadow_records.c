@@ -36,6 +36,7 @@ extern "C" {
 typedef struct {
 	char clientTokenID[MAX_SIZE_CLIENT_ID_WITH_SEQUENCE];
 	char thingName[MAX_SIZE_OF_THING_NAME];
+	char shadowName[MAX_SIZE_OF_SHADOW_NAME];
 	ShadowActions_t action;
 	fpActionCallback_t callback;
 	void *pCallbackContext;
@@ -89,7 +90,7 @@ static void AckStatusCallback(AWS_IoT_Client *pClient, char *topicName,
 static void shadow_delta_callback(AWS_IoT_Client *pClient, char *topicName,
 								  uint16_t topicNameLen, IoT_Publish_Message_Params *params, void *pData);
 
-static void topicNameFromThingAndAction(char *pTopic, const char *pThingName, ShadowActions_t action,
+static void topicNameFromThingAndAction(char *pTopic, const char *pThingName, const char *pShadowName, ShadowActions_t action,
 										ShadowAckTopicTypes_t ackType);
 
 static int16_t getNextFreeIndexOfSubscriptionList(void);
@@ -140,7 +141,7 @@ static int16_t getNextFreeIndexOfSubscriptionList(void) {
 	return -1;
 }
 
-static void topicNameFromThingAndAction(char *pTopic, const char *pThingName, ShadowActions_t action,
+static void topicNameFromThingAndAction(char *pTopic, const char *pThingName, const char * pShadowName, ShadowActions_t action,
 										ShadowAckTopicTypes_t ackType) {
 
 	char actionBuf[10];
@@ -160,11 +161,22 @@ static void topicNameFromThingAndAction(char *pTopic, const char *pThingName, Sh
 		strncpy(ackTypeBuf, "rejected", 10);
 	}
 
-	if(SHADOW_ACTION == ackType) {
-		snprintf(pTopic, MAX_SHADOW_TOPIC_LENGTH_BYTES, "$aws/things/%s/shadow/%s", pThingName, actionBuf);
+	if ( NULL == pShadowName ) {
+		if (SHADOW_ACTION == ackType) {
+			snprintf(pTopic, MAX_SHADOW_TOPIC_LENGTH_BYTES, "$aws/things/%s/shadow/%s", pThingName, actionBuf);
+		}
+		else {
+			snprintf(pTopic, MAX_SHADOW_TOPIC_LENGTH_BYTES, "$aws/things/%s/shadow/%s/%s", pThingName, actionBuf,
+					 ackTypeBuf);
+		}
 	} else {
-		snprintf(pTopic, MAX_SHADOW_TOPIC_LENGTH_BYTES, "$aws/things/%s/shadow/%s/%s", pThingName, actionBuf,
-				 ackTypeBuf);
+		if (SHADOW_ACTION == ackType) {
+			snprintf(pTopic, MAX_SHADOW_TOPIC_LENGTH_BYTES, "$aws/things/%s/shadow/name/%s/%s", pThingName, pShadowName, actionBuf);
+		}
+		else {
+			snprintf(pTopic, MAX_SHADOW_TOPIC_LENGTH_BYTES, "$aws/things/%s/shadow/name/%s/%s/%s", pThingName, pShadowName, actionBuf,
+					 ackTypeBuf);
+		}
 	}
 }
 
@@ -222,7 +234,7 @@ static void AckStatusCallback(AWS_IoT_Client *pClient, char *topicName, uint16_t
 					}
 					if(status == SHADOW_ACK_ACCEPTED || status == SHADOW_ACK_REJECTED) {
 						if(AckWaitList[i].callback != NULL) {
-							AckWaitList[i].callback(AckWaitList[i].thingName, AckWaitList[i].action, status,
+							AckWaitList[i].callback(AckWaitList[i].thingName, AckWaitList[i].shadowName, AckWaitList[i].action, status,
 													shadowRxBuf, AckWaitList[i].pCallbackContext);
 						}
 						unsubscribeFromAcceptedAndRejected(i);
@@ -255,9 +267,9 @@ static void unsubscribeFromAcceptedAndRejected(uint8_t index) {
 
 	int16_t indexSubList;
 
-	topicNameFromThingAndAction(TemporaryTopicNameAccepted, AckWaitList[index].thingName, AckWaitList[index].action,
+	topicNameFromThingAndAction(TemporaryTopicNameAccepted, AckWaitList[index].thingName, AckWaitList[index].shadowName, AckWaitList[index].action,
 								SHADOW_ACCEPTED);
-	topicNameFromThingAndAction(TemporaryTopicNameRejected, AckWaitList[index].thingName, AckWaitList[index].action,
+	topicNameFromThingAndAction(TemporaryTopicNameRejected, AckWaitList[index].thingName, AckWaitList[index].shadowName, AckWaitList[index].action,
 								SHADOW_REJECTED);
 
 	indexSubList = findIndexOfSubscriptionList(TemporaryTopicNameAccepted);
@@ -301,7 +313,7 @@ void initializeRecords(AWS_IoT_Client *pClient) {
 	pMqttClient = pClient;
 }
 
-bool isSubscriptionPresent(const char *pThingName, ShadowActions_t action) {
+bool isSubscriptionPresent(const char *pThingName, const char *pShadowName, ShadowActions_t action) {
 
 	uint8_t i = 0;
 	bool isAcceptedPresent = false;
@@ -309,8 +321,8 @@ bool isSubscriptionPresent(const char *pThingName, ShadowActions_t action) {
 	char TemporaryTopicNameAccepted[MAX_SHADOW_TOPIC_LENGTH_BYTES];
 	char TemporaryTopicNameRejected[MAX_SHADOW_TOPIC_LENGTH_BYTES];
 
-	topicNameFromThingAndAction(TemporaryTopicNameAccepted, pThingName, action, SHADOW_ACCEPTED);
-	topicNameFromThingAndAction(TemporaryTopicNameRejected, pThingName, action, SHADOW_REJECTED);
+	topicNameFromThingAndAction(TemporaryTopicNameAccepted, pThingName, pShadowName, action, SHADOW_ACCEPTED);
+	topicNameFromThingAndAction(TemporaryTopicNameRejected, pThingName, pShadowName, action, SHADOW_REJECTED);
 
 	for(i = 0; i < MAX_TOPICS_AT_ANY_GIVEN_TIME; i++) {
 		if(!SubscriptionList[i].isFree) {
@@ -329,7 +341,7 @@ bool isSubscriptionPresent(const char *pThingName, ShadowActions_t action) {
 	return false;
 }
 
-IoT_Error_t subscribeToShadowActionAcks(const char *pThingName, ShadowActions_t action, bool isSticky) {
+IoT_Error_t subscribeToShadowActionAcks(const char *pThingName, const char *pShadowName, ShadowActions_t action, bool isSticky) {
 	IoT_Error_t ret_val = SUCCESS;
 
 	bool clearBothEntriesFromList = true;
@@ -340,14 +352,14 @@ IoT_Error_t subscribeToShadowActionAcks(const char *pThingName, ShadowActions_t 
 	indexRejectedSubList = getNextFreeIndexOfSubscriptionList();
 
 	if(indexAcceptedSubList >= 0 && indexRejectedSubList >= 0) {
-		topicNameFromThingAndAction(SubscriptionList[indexAcceptedSubList].Topic, pThingName, action, SHADOW_ACCEPTED);
+		topicNameFromThingAndAction(SubscriptionList[indexAcceptedSubList].Topic, pThingName, pShadowName, action, SHADOW_ACCEPTED);
 		ret_val = aws_iot_mqtt_subscribe(pMqttClient, SubscriptionList[indexAcceptedSubList].Topic,
 										 (uint16_t) strlen(SubscriptionList[indexAcceptedSubList].Topic), QOS0,
 										 AckStatusCallback, NULL);
 		if(ret_val == SUCCESS) {
 			SubscriptionList[indexAcceptedSubList].count = 1;
 			SubscriptionList[indexAcceptedSubList].isSticky = isSticky;
-			topicNameFromThingAndAction(SubscriptionList[indexRejectedSubList].Topic, pThingName, action,
+			topicNameFromThingAndAction(SubscriptionList[indexRejectedSubList].Topic, pThingName, pShadowName, action,
 										SHADOW_REJECTED);
 			ret_val = aws_iot_mqtt_subscribe(pMqttClient, SubscriptionList[indexRejectedSubList].Topic,
 											 (uint16_t) strlen(SubscriptionList[indexRejectedSubList].Topic), QOS0,
@@ -369,7 +381,7 @@ IoT_Error_t subscribeToShadowActionAcks(const char *pThingName, ShadowActions_t 
 	if(clearBothEntriesFromList) {
 		if(indexAcceptedSubList >= 0) {
 			SubscriptionList[indexAcceptedSubList].isFree = true;
-			
+
 			if(SubscriptionList[indexAcceptedSubList].count == 1) {
 			    aws_iot_mqtt_unsubscribe(pMqttClient, SubscriptionList[indexAcceptedSubList].Topic,
 				(uint16_t) strlen(SubscriptionList[indexAcceptedSubList].Topic));
@@ -384,12 +396,12 @@ IoT_Error_t subscribeToShadowActionAcks(const char *pThingName, ShadowActions_t 
 	return ret_val;
 }
 
-void incrementSubscriptionCnt(const char *pThingName, ShadowActions_t action, bool isSticky) {
+void incrementSubscriptionCnt(const char *pThingName, const char *pShadowName, ShadowActions_t action, bool isSticky) {
 	char TemporaryTopicNameAccepted[MAX_SHADOW_TOPIC_LENGTH_BYTES];
 	char TemporaryTopicNameRejected[MAX_SHADOW_TOPIC_LENGTH_BYTES];
 	uint8_t i;
-	topicNameFromThingAndAction(TemporaryTopicNameAccepted, pThingName, action, SHADOW_ACCEPTED);
-	topicNameFromThingAndAction(TemporaryTopicNameRejected, pThingName, action, SHADOW_REJECTED);
+	topicNameFromThingAndAction(TemporaryTopicNameAccepted, pThingName, pShadowName, action, SHADOW_ACCEPTED);
+	topicNameFromThingAndAction(TemporaryTopicNameRejected, pThingName, pShadowName, action, SHADOW_REJECTED);
 
 	for(i = 0; i < MAX_TOPICS_AT_ANY_GIVEN_TIME; i++) {
 		if(!SubscriptionList[i].isFree) {
@@ -402,7 +414,7 @@ void incrementSubscriptionCnt(const char *pThingName, ShadowActions_t action, bo
 	}
 }
 
-IoT_Error_t publishToShadowAction(const char *pThingName, ShadowActions_t action, const char *pJsonDocumentToBeSent) {
+IoT_Error_t publishToShadowAction(const char *pThingName, const char *pShadowName, ShadowActions_t action, const char *pJsonDocumentToBeSent) {
 	IoT_Error_t ret_val = SUCCESS;
 	char TemporaryTopicName[MAX_SHADOW_TOPIC_LENGTH_BYTES];
 	IoT_Publish_Message_Params msgParams;
@@ -411,7 +423,7 @@ IoT_Error_t publishToShadowAction(const char *pThingName, ShadowActions_t action
 		return NULL_VALUE_ERROR;
 	}
 
-	topicNameFromThingAndAction(TemporaryTopicName, pThingName, action, SHADOW_ACTION);
+	topicNameFromThingAndAction(TemporaryTopicName, pThingName, pShadowName, action, SHADOW_ACTION);
 
 	msgParams.qos = QOS0;
 	msgParams.isRetained = 0;
@@ -441,12 +453,17 @@ bool getNextFreeIndexOfAckWaitList(uint8_t *pIndex) {
 	return rc;
 }
 
-void addToAckWaitList(uint8_t indexAckWaitList, const char *pThingName, ShadowActions_t action,
+void addToAckWaitList(uint8_t indexAckWaitList, const char *pThingName, const char *pShadowName, ShadowActions_t action,
 					  const char *pExtractedClientToken, fpActionCallback_t callback, void *pCallbackContext,
 					  uint32_t timeout_seconds) {
 	AckWaitList[indexAckWaitList].callback = callback;
 	memcpy(AckWaitList[indexAckWaitList].clientTokenID, pExtractedClientToken, MAX_SIZE_CLIENT_ID_WITH_SEQUENCE);
 	memcpy(AckWaitList[indexAckWaitList].thingName, pThingName, MAX_SIZE_OF_THING_NAME);
+	if (pShadowName) {
+		memcpy(AckWaitList[indexAckWaitList].shadowName, pShadowName, MAX_SIZE_OF_SHADOW_NAME);
+	} else {
+		AckWaitList[indexAckWaitList].shadowName = NULL;
+	}
 	AckWaitList[indexAckWaitList].pCallbackContext = pCallbackContext;
 	AckWaitList[indexAckWaitList].action = action;
 	init_timer(&(AckWaitList[indexAckWaitList].timer));
@@ -460,7 +477,7 @@ void HandleExpiredResponseCallbacks(void) {
 		if(!AckWaitList[i].isFree) {
 			if(has_timer_expired(&(AckWaitList[i].timer))) {
 				if(AckWaitList[i].callback != NULL) {
-					AckWaitList[i].callback(AckWaitList[i].thingName, AckWaitList[i].action, SHADOW_ACK_TIMEOUT,
+					AckWaitList[i].callback(AckWaitList[i].thingName, AckWaitList[i].shadowName, AckWaitList[i].action, SHADOW_ACK_TIMEOUT,
 											shadowRxBuf, AckWaitList[i].pCallbackContext);
 				}
 				AckWaitList[i].isFree = true;

@@ -96,7 +96,7 @@ extern const ShadowConnectParameters_t ShadowConnectParametersDefault;
 /**
 * @brief Clean shadow client from all dynamic memory allocate
 *
-* This function will free up memory that was dynamically allocated for the client. 
+* This function will free up memory that was dynamically allocated for the client.
 *
 * @param pClient MQTT Client that was previously created by calling aws_iot_shadow_init
 * @return An IoT Error Type defining successful/failed freeing
@@ -174,13 +174,14 @@ typedef enum {
  * This function will be called from the context of \c aws_iot_shadow_yield() context
  *
  * @param pThingName Thing Name of the response received
+ * @param pShadowName Shadow Name of the response received
  * @param action The response of the action
  * @param status Informs if the action was Accepted/Rejected or Timed out
  * @param pReceivedJsonDocument Received JSON document
  * @param pContextData the void* data passed in during the action call(update, get or delete)
  *
  */
-typedef void (*fpActionCallback_t)(const char *pThingName, ShadowActions_t action, Shadow_Ack_Status_t status,
+typedef void (*fpActionCallback_t)(const char *pThingName, const char *pShadowName, ShadowActions_t action, Shadow_Ack_Status_t status,
 								   const char *pReceivedJsonDocument, void *pContextData);
 
 /**
@@ -199,6 +200,7 @@ typedef void (*fpActionCallback_t)(const char *pThingName, ShadowActions_t actio
  *
  * @param pClient	MQTT Client used as the protocol layer
  * @param pThingName Thing Name of the shadow that needs to be Updated
+ * @param pShadowName Shadow Name of the shadow that needs to be updated
  * @param pJsonString The update action expects a JSON document to send. The JSON String should be a null terminated string. This JSON document should adhere to the AWS IoT Thing Shadow specification. To help in the process of creating this document- SDK provides apis in \c aws_iot_shadow_json_data.h
  * @param callback This is the callback that will be used to inform the caller of the response from the AWS IoT Shadow service.Callback could be set to NULL if response is not important
  * @param pContextData This is an extra parameter that could be passed along with the callback. It should be set to NULL if not used
@@ -206,7 +208,7 @@ typedef void (*fpActionCallback_t)(const char *pThingName, ShadowActions_t actio
  * @param isPersistentSubscribe As mentioned above, every  time if a device updates the same shadow then this should be set to true to avoid repeated subscription and unsubscription. If the Thing Name is one off update then this should be set to false
  * @return An IoT Error Type defining successful/failed update action
  */
-IoT_Error_t aws_iot_shadow_update(AWS_IoT_Client *pClient, const char *pThingName, char *pJsonString,
+IoT_Error_t aws_iot_shadow_update(AWS_IoT_Client *pClient, const char *pThingName, const char *pShadowName, char *pJsonString,
 								  fpActionCallback_t callback, void *pContextData, uint8_t timeout_seconds,
 								  bool isPersistentSubscribe);
 
@@ -218,13 +220,14 @@ IoT_Error_t aws_iot_shadow_update(AWS_IoT_Client *pClient, const char *pThingNam
  *
  * @param pClient	MQTT Client used as the protocol layer
  * @param pThingName Thing Name of the JSON document that is needed
+ * @param pShadowName Shadow Name of the Shadow that is needed
  * @param callback This is the callback that will be used to inform the caller of the response from the AWS IoT Shadow service.Callback could be set to NULL if response is not important
  * @param pContextData This is an extra parameter that could be passed along with the callback. It should be set to NULL if not used
  * @param timeout_seconds It is the time the SDK will wait for the response on either accepted/rejected before declaring timeout on the action
  * @param isPersistentSubscribe As mentioned above, every  time if a device gets the same Sahdow (JSON document) then this should be set to true to avoid repeated subscription and un-subscription. If the Thing Name is one off get then this should be set to false
  * @return An IoT Error Type defining successful/failed get action
  */
-IoT_Error_t aws_iot_shadow_get(AWS_IoT_Client *pClient, const char *pThingName, fpActionCallback_t callback,
+IoT_Error_t aws_iot_shadow_get(AWS_IoT_Client *pClient, const char *pThingName, const char *pShadowName, fpActionCallback_t callback,
 							   void *pContextData, uint8_t timeout_seconds, bool isPersistentSubscribe);
 
 /**
@@ -235,13 +238,14 @@ IoT_Error_t aws_iot_shadow_get(AWS_IoT_Client *pClient, const char *pThingName, 
  *
  * @param pClient MQTT Client used as the protocol layer
  * @param pThingName Thing Name of the Shadow that should be deleted
+ * @param pShadowName Thing Name of the Shadow that should be deleted
  * @param callback This is the callback that will be used to inform the caller of the response from the AWS IoT Shadow service.Callback could be set to NULL if response is not important
  * @param pContextData This is an extra parameter that could be passed along with the callback. It should be set to NULL if not used
  * @param timeout_seconds It is the time the SDK will wait for the response on either accepted/rejected before declaring timeout on the action
  * @param isPersistentSubscribe As mentioned above, every  time if a device deletes the same Shadow (JSON document) then this should be set to true to avoid repeated subscription and un-subscription. If the Thing Name is one off delete then this should be set to false
  * @return An IoT Error Type defining successful/failed delete action
  */
-IoT_Error_t aws_iot_shadow_delete(AWS_IoT_Client *pClient, const char *pThingName, fpActionCallback_t callback,
+IoT_Error_t aws_iot_shadow_delete(AWS_IoT_Client *pClient, const char *pThingName, const char *pShadowName, fpActionCallback_t callback,
 								  void *pContextData, uint8_t timeout_seconds, bool isPersistentSubscriptions);
 
 /**
