@@ -21,8 +21,8 @@
 
 /**
  * @file memcpy.c
- * @brief Creates a stub for memcpy so that the proofs for functions that call
- * memcpy run much faster.
+ * @brief A stub for memcpy so that the proofs for functions that call memcpy
+ * run much faster.
  */
 
 #include <string.h>
