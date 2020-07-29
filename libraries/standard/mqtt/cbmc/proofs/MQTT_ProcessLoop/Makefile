@@ -42,10 +42,11 @@ INCLUDES +=
 REMOVE_FUNCTION_BODY += MQTT_Ping
 REMOVE_FUNCTION_BODY += MQTT_DeserializeAck
 REMOVE_FUNCTION_BODY += MQTT_SerializeAck
+# REMOVE_FUNCTION_BODY += _CPROVER_file_local_mqtt_c_handleKeepAlive
 
-UNWINDSET += MQTT_ProcessLoop.0:$(MQTT_PROCESS_LOOP_TIMEOUT)
-UNWINDSET += __CPROVER_file_local_mqtt_c_discardPacket.0:$(MQTT_PROCESS_LOOP_TIMEOUT)
-UNWINDSET += __CPROVER_file_local_mqtt_c_recvExact.0:$(MQTT_PROCESS_LOOP_TIMEOUT)
+UNWINDSET += MQTT_ProcessLoop.0:$(MQTT_RECEIVE_TIMEOUT)
+UNWINDSET += __CPROVER_file_local_mqtt_c_discardPacket.0:$(MQTT_RECEIVE_TIMEOUT)
+UNWINDSET += __CPROVER_file_local_mqtt_c_recvExact.0:$(MQTT_RECEIVE_TIMEOUT)
 # Unlike recvExact, sendPacket is not bounded by the timeout. The loop in
 # sendPacket will continue until all the bytes are sent or a network error
 # occurs. Please see NetworkInterfaceReceiveStub in
