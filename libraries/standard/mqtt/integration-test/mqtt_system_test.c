@@ -1397,8 +1397,10 @@ void test_MQTT_Publish_With_Retain_Flag( void )
                                                     MQTTQoS1,
                                                     MQTT_GetPacketId( &context ) ) );
     /* Complete the QoS 1 PUBLISH operation. */
+    TEST_ASSERT_FALSE( receivedPubAck );
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    TEST_ASSERT_TRUE( receivedPubAck );
 
     /* Subscribe to the same topic that we published the message to.
      * The broker should send the "retained" message with the "retain" flag set. */
@@ -1414,6 +1416,7 @@ void test_MQTT_Publish_With_Retain_Flag( void )
     TEST_ASSERT_TRUE( receivedRetainedMessage );
 
     /* Reset the global variables for the remainder of the test. */
+    receivedPubAck = false;
     receivedSubAck = false;
     receivedUnsubAck = false;
     receivedRetainedMessage = false;
@@ -1427,8 +1430,10 @@ void test_MQTT_Publish_With_Retain_Flag( void )
                                                     MQTT_GetPacketId( &context ) ) );
 
     /* Complete the QoS 1 PUBLISH operation. */
+    TEST_ASSERT_FALSE( receivedPubAck );
     TEST_ASSERT_EQUAL( MQTTSuccess,
                        MQTT_ProcessLoop( &context, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    TEST_ASSERT_TRUE( receivedPubAck );
 
     /* Again, subscribe to the same topic that we just published to.
      * We don't expect the broker to send the message to us (as we
