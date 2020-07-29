@@ -26,7 +26,7 @@
 #include "get_time_stub.h"
 #include "event_callback_stub.h"
 
-/* A exclusive default bound on the subscription count. Iterating over possibly
+/* An exclusive default bound on the subscription count. Iterating over possibly
  * SIZE_MAX number of subscriptions does not add any value to the proofs. An
  * application can allocate memory for as many subscriptions as their system can
  * handle. The proofs verify that the code can handle the maximum
@@ -35,7 +35,7 @@
     #define SUBSCRIPTION_COUNT_MAX    2U
 #endif
 
-/* A exclusive default bound on the remainingLength in an incoming packet. This
+/* An exclusive default bound on the remainingLength in an incoming packet. This
  * bound is used for the MQTT_DeserializeAck() proof to limit the number of
  * iterations on a SUBACK packet's payload bytes. We do not need to iterate an
  * unbounded remaining length amount of bytes to verify memory safety in the
