@@ -31,6 +31,10 @@ MAX_NETWORK_SEND_TRIES=3
 # time out of 3 we can get coverage of the entire function. Another iteration
 # performed will unnecessarily duplicate the proof.
 MQTT_RECEIVE_TIMEOUT=3
+# Please see libraries/standard/mqtt/cbmc/include/mqtt_config.h for more
+# information on these defines.
+MQTT_STATE_ARRAY_MAX_COUNT=11
+MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT=3
 DEFINES += -DMQTT_RECEIVE_TIMEOUT=$(MQTT_RECEIVE_TIMEOUT)
 DEFINES += -DMAX_NETWORK_SEND_TRIES=$(MAX_NETWORK_SEND_TRIES)
 INCLUDES +=
@@ -43,9 +47,13 @@ REMOVE_FUNCTION_BODY += MQTT_ReceiveLoop
 REMOVE_FUNCTION_BODY += __CPROVER_file_local_mqtt_c_handleIncomingPublish
 REMOVE_FUNCTION_BODY += __CPROVER_file_local_mqtt_c_handleKeepAlive
 
-# The loops below are unwound once more than the timeout.
+# The loops below are unwound once more than the timeout. The loops below use
+# the user passed in timeout to break the loop.
 UNWINDSET += __CPROVER_file_local_mqtt_c_recvExact.0:$(MQTT_RECEIVE_TIMEOUT)
-UNWINDSET += __CPROVER_file_local_mqtt_c_receiveConnack.0:$(MQTT_RECEIVE_TIMEOUT)
+UNWINDSET += __CPROVER_file_local_mqtt_c_discardPacket.0:$(MQTT_RECEIVE_TIMEOUT)
+# If the user passed in timeout is zero, then the loop will run until the
+# MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT is reached.
+UNWINDSET += __CPROVER_file_local_mqtt_c_receiveConnack.0:$(MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT)
 # Unlike recvExact, sendPacket is not bounded by the timeout. The loop in
 # sendPacket will continue until all the bytes are sent or a network error
 # occurs. Please see NetworkInterfaceReceiveStub in
@@ -57,6 +65,10 @@ UNWINDSET += __CPROVER_file_local_mqtt_c_sendPacket.0:$(MAX_NETWORK_SEND_TRIES)
 # log128(SIZE_MAX) = 4.571...
 UNWINDSET += __CPROVER_file_local_mqtt_lightweight_c_encodeRemainingLength.0:5
 UNWINDSET += __CPROVER_file_local_mqtt_lightweight_c_getRemainingLength.0:5
+# This loop will run for the maximum number of publishes pending
+# acknowledgements plus one. This value is set in
+# libraries/standard/mqtt/cbmc/include/mqtt_config.h.
+UNWINDSET += __CPROVER_file_local_mqtt_state_c_stateSelect.0:$(MQTT_STATE_ARRAY_MAX_COUNT)
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 PROOF_SOURCES += $(SRCDIR)/libraries/standard/mqtt/cbmc/sources/mqtt_cbmc_state.c
