@@ -81,7 +81,9 @@ sh get-docker.sh
 
 ```
 
-## Installing Mosquitto to run MQTT demos locally
+#### Installing Mosquitto to run MQTT demos locally
+
+The following instructions have been tested on an Ubuntu 18.04 environment with Docker and OpenSSL installed.
 
 1.  Download the official Docker image for Mosquitto.
 
@@ -133,7 +135,7 @@ docker run -it -p 8883:8883 -v $(pwd):/mosquitto/config/ --name mosquitto-basic-
 6. Set `ROOT_CA_CERT_PATH` to the absolute path of the CA certificate created in step 3. for the local Mosquitto server.
 
 
-## Optional: Installing httpbin to run HTTP demos locally
+#### Installing httpbin to run HTTP demos locally
 
 1. Run httpbin through port 80:
 
