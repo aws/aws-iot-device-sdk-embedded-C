@@ -90,9 +90,9 @@ sh get-docker.sh
 docker pull eclipse-mosquitto:latest
 
 ```
-1.  `BROKER_ENDPOINT` defined in `demos/mqtt/mqtt_demo_basic_tls/demo_config.h` can now be set to `localhost`.
+2.  `BROKER_ENDPOINT` defined in `demos/mqtt/mqtt_demo_basic_tls/demo_config.h` can now be set to `localhost`.
 
-1. For TLS communication with Mosquitto broker, server and CA credentials need to be created. Use OpenSSL commands to generate the credentials for the Mosquitto server.
+3. For TLS communication with Mosquitto broker, server and CA credentials need to be created. Use OpenSSL commands to generate the credentials for the Mosquitto server.
 
 Generate CA key and certificate. Provide the Subject field information as appropriate.
 ```shell
@@ -108,7 +108,7 @@ openssl x509 -req -sha256 -in server.csr -CA ca.crt -CAkey ca.key -CAcreateseria
 
 ```
 
-2. Create a mosquitto.conf file to use port 8883 (for TLS communication) and providing path to the generated credentials.
+4. Create a mosquitto.conf file to use port 8883 (for TLS communication) and providing path to the generated credentials.
 
 ```
 port 8883
@@ -124,15 +124,14 @@ tls_version tlsv1.2
 
 ```
 
-3. Run the docker container from the local directory containing the generated credential and mosquitto.conf files.
+5. Run the docker container from the local directory containing the generated credential and mosquitto.conf files.
 
 ```shell
 docker run -it -p 8883:8883 -v $(pwd):/mosquitto/config/ --name mosquitto-basic-tls eclipse-mosquitto:latest
 ```
 
-4. Set `ROOT_CA_CERT_PATH` to the server certificate used when setting up TLS authentication for your local Mosquitto server.
+6. Set `ROOT_CA_CERT_PATH` to the absolute path of the CA certificate created in step 3. for the local Mosquitto server.
 
-  
 
 ## Optional: Installing httpbin to run HTTP demos locally
 
