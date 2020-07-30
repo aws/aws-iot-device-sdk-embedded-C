@@ -57,19 +57,8 @@ int32_t NetworkInterfaceSendStub( NetworkContext_t * pNetworkContext,
     __CPROVER_assert( pBuffer != NULL,
                       "NetworkInterfaceSendStub pBuffer is not NULL." );
 
-    /* MAX_NETWORK_SEND_TRIES is an exclusive integer bound the number of times
-     * this function will be called. Therefore MAX_NETWORK_SEND_TRIES must be
-     * greater than equal to 2.
-     * If MAX_NETWORK_SEND_TRIES == 1, then this function should not be called
-     * at all and is therefore an invalid bound.
-     * If MAX_NETWORK_SEND_TRIES == 2, then this function should be called once.
-     * If MAX_NETWORK_SEND_TRIES == 3, then this function should be called twice.
-     * etc.. */
-    __CPROVER_assert( MAX_NETWORK_SEND_TRIES >= 2,
-                      "NetworkInterfaceSendStub MAX_NETWORK_SEND_TRIES must be greater than or equal to 2." );
-
     /* The number of tries to send the message before this invocation. */
-    static size_t tries = 2;
+    static size_t tries = 1;
 
     int32_t bytesOrError;
 
@@ -83,13 +72,13 @@ int32_t NetworkInterfaceSendStub( NetworkContext_t * pNetworkContext,
      * iterations. Looping for INT32_MAX times adds no value to the proof.
      * What matters is that the MQTT library can handle all the possible values
      * that could be returned. */
-    if( tries < MAX_NETWORK_SEND_TRIES )
+    if( tries < ( MAX_NETWORK_SEND_TRIES - 1 ) )
     {
         tries++;
     }
     else
     {
-        tries = 2;
+        tries = 1;
         bytesOrError = bytesToSend;
     }
 
