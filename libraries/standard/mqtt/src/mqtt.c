@@ -920,7 +920,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
 
         case MQTT_PACKET_TYPE_PINGRESP:
             status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, NULL );
-            invokeAppCallback = ( manageKeepAlive == true ) ? false : true;
+            invokeAppCallback = ( ( status == MQTTSuccess ) && ( manageKeepAlive == false ) ) ? true : false;
 
             if( ( status == MQTTSuccess ) && ( manageKeepAlive == true ) )
             {
@@ -933,7 +933,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
         case MQTT_PACKET_TYPE_UNSUBACK:
             /* Deserialize and give these to the app provided callback. */
             status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, NULL );
-            invokeAppCallback = true;
+            invokeAppCallback = ( ( status == MQTTSuccess ) || ( status == MQTTServerRefused ) ) ? true : false;
             break;
 
         default:
@@ -944,7 +944,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
             break;
     }
 
-    if( ( status == MQTTSuccess ) && ( invokeAppCallback == true ) )
+    if( invokeAppCallback == true )
     {
         appCallback( pContext, pIncomingPacket, packetIdentifier, NULL );
     }

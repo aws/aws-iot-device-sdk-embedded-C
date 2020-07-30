@@ -1605,6 +1605,15 @@ void test_MQTT_ProcessLoop_handleIncomingAck_Error_Paths( void )
                             MQTTIllegalState, MQTTBadResponse, MQTTStateNull,
                             MQTTBadResponse, false, NULL );
 
+    /* Verify that MQTTServerRefused is propagated when SUBACK indicates a
+     * server refusal. */
+    currentPacketType = MQTT_PACKET_TYPE_SUBACK;
+    isEventCallbackInvoked = false;
+    expectProcessLoopCalls( &context, MQTTServerRefused, MQTTStateNull,
+                            MQTTIllegalState, MQTTBadResponse, MQTTStateNull,
+                            MQTTServerRefused, false, NULL );
+    TEST_ASSERT_TRUE( isEventCallbackInvoked );
+
     /* Verify that MQTTIllegalState is returned if MQTT_UpdateStateAck(...)
      * provides an unknown state such as MQTTStateNull to sendPublishAcks(...). */
     currentPacketType = MQTT_PACKET_TYPE_PUBREC;
