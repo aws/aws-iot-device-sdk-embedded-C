@@ -27,8 +27,19 @@ int httpParserOnMessageBeginCallback( http_parser * pHttpParser );
 void harness()
 {
     http_parser * pHttpParser = NULL;
+    HTTPResponse_t * pHttpResponse;
+    HTTPParsingContext_t * pHttpParsingContext;
 
-    pHttpParser = allocateHttpParser( pHttpParser );
+    /* Initialize and make assumptions for response object. */
+    pHttpResponse = allocateHttpResponse( NULL );
+    __CPROVER_assume( pHttpResponse != NULL );
+    __CPROVER_assume( isValidHttpResponse( pHttpResponse ) );
+
+    pHttpParsingContext = allocateHttpParsingContext( NULL );
+    __CPROVER_assume( isValidHttpParser( pHttpParsingContext, pHttpResponse ) );
+
+    pHttpParser = allocateHttpParser( NULL );
+    __CPROVER_assume( isValidHttpParser( pHttpParser, pHttpParsingContext ) );
 
     httpParserOnMessageBeginCallback( pHttpParser );
 }

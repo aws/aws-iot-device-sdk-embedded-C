@@ -306,7 +306,7 @@ static HTTPStatus_t parseHttpResponse( HTTPParsingContext_t * pParsingContext,
  *
  * @return #HTTP_PARSER_CONTINUE_PARSING to continue parsing.
  */
-static int httpParserOnMessageBeginCallback( http_parser * pHttpParser );
+int httpParserOnMessageBeginCallback( http_parser * pHttpParser );
 
 /**
  * @brief Callback invoked during http_parser_execute() when the HTTP response
@@ -528,7 +528,7 @@ static void processCompleteHeader( HTTPParsingContext_t * pParsingContext )
 
 /*-----------------------------------------------------------*/
 
-static int httpParserOnMessageBeginCallback( http_parser * pHttpParser )
+int httpParserOnMessageBeginCallback( http_parser * pHttpParser )
 {
     HTTPParsingContext_t * pParsingContext = NULL;
     HTTPResponse_t * pResponse = NULL;

@@ -128,27 +128,31 @@ http_parser * allocateHttpParser( http_parser * pHttpParser )
     if( pHttpParser == NULL )
     {
         pHttpParser = malloc( sizeof( http_parser ) );
-        pHttpParsingContext = allocateHttpParsingContext( pHttpParsingContext );
-        pHttpParser->data = ( void * ) pHttpParsingContext;
+        pHttpParsingContext = pHttpParsingContext;
     }
 
     return pHttpParser;
 }
 
+bool isValidHttpParser( const http_parser * pHttpParser,
+                        HTTPParsingContext_t * pHttpParsingContext )
+{
+    return pHttpParser->data == pHttpParsingContext;
+}
+
 HTTPParsingContext_t * allocateHttpParsingContext( HTTPParsingContext_t * pHttpParsingContext )
 {
-    HTTPResponse_t * pHttpResponse = malloc( sizeof( HTTPResponse_t ) );
-
     if( pHttpParsingContext == NULL )
     {
         pHttpParsingContext = malloc( sizeof( HTTPParsingContext_t ) );
     }
 
-    if( pHttpParsingContext != NULL )
-    {
-        pHttpParsingContext->pResponse = allocateHttpResponse( pHttpResponse );
-        pHttpParsingContext->pBufferCur = pHttpResponse->pBuffer;
-    }
-
     return pHttpParsingContext;
+}
+
+bool isValidHttpParsingContext( HTTPParsingContext_t * pHttpParsingContext,
+                                HTTPResponse_t * pHttpResponse )
+{
+    return pHttpParsingContext->pResponse == pHttpResponse &&
+           pHttpParsingContext->pBufferCur == pHttpResponse->pBuffer;
 }
