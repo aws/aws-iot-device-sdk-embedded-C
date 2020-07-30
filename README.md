@@ -94,22 +94,21 @@ docker pull eclipse-mosquitto:latest
 
 1. For TLS communication with Mosquitto broker, server and CA credentials need to be created. Use OpenSSL commands to generate the credentials for the Mosquitto server.
 
-Generating CA key and certificate. Provide the Subject field information as appropriate.
+Generate CA key and certificate. Provide the Subject field information as appropriate.
 ```shell
-
 openssl req -x509 -nodes -sha256 -days 365 -newkey rsa:2048 -keyout ca.key -out ca.crt
-
 ```
 
-Generating server key and certificate by getting it signed by the CA cert.
+Generate server key and certificate by getting it signed by the CA cert.
 ```shell
 
 openssl req -nodes -sha256 -new -keyout server.key -out server.csr
+
 openssl x509 -req -sha256 -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -days 365
 
 ```
 
-1. Create a mosquitto.conf file to use port 8883 (for TLS communication) and providing path to the generated credentials.
+2. Create a mosquitto.conf file to use port 8883 (for TLS communication) and providing path to the generated credentials.
 
 ```
 port 8883
@@ -125,15 +124,13 @@ tls_version tlsv1.2
 
 ```
 
-1. Run the docker container from the local directory containing the generated credential and mosquitto.conf files.
+3. Run the docker container from the local directory containing the generated credential and mosquitto.conf files.
 
 ```shell
-
 docker run -it -p 8883:8883 -v $(pwd):/mosquitto/config/ --name mosquitto-basic-tls eclipse-mosquitto:latest
-
 ```
 
-1. Set `ROOT_CA_CERT_PATH` to the server certificate used when setting up TLS authentication for your local Mosquitto server.
+4. Set `ROOT_CA_CERT_PATH` to the server certificate used when setting up TLS authentication for your local Mosquitto server.
 
   
 
@@ -149,18 +146,16 @@ docker run -p 80:80 kennethreitz/httpbin
 
 ```
 
-1.  `SERVER_HOST` defined in `demos/http/http_demo_plaintext/demo_config.h` can now be set to `localhost`.
+2.  `SERVER_HOST` defined in `demos/http/http_demo_plaintext/demo_config.h` can now be set to `localhost`.
 
-1. To run `http_demo_basic_tls`, [download ngrok](https://ngrok.com/download) in order to create an HTTPS tunnel to the httpbin server currently hosted on port 80:
+3. To run `http_demo_basic_tls`, [download ngrok](https://ngrok.com/download) in order to create an HTTPS tunnel to the httpbin server currently hosted on port 80:
 
 ```shell
-
 ./ngrok http 80 # May have to use ./ngrok.exe depending on OS or filename of the executable
-
 ```
 
-1.  `ngrok` will provide an https link that can be substituted in `demos/http/http_demo_basic_tls/demo_config.h` and has a format of `https://ABCDEFG12345.ngrok.io`.
+4.  `ngrok` will provide an https link that can be substituted in `demos/http/http_demo_basic_tls/demo_config.h` and has a format of `https://ABCDEFG12345.ngrok.io`.
 
-1. Set `SERVER_HOST` in `demos/http/http_demo_basic_tls/demo_config.h` to the https link provided by ngrok.
+5. Set `SERVER_HOST` in `demos/http/http_demo_basic_tls/demo_config.h` to the https link provided by ngrok.
 
-1. You must also download the Root CA certificate provided by ngrok and set `ROOT_CA_CERT_PATH` in `demo_config.h` to the file path of the downloaded certificate.
+6. You must also download the Root CA certificate provided by ngrok and set `ROOT_CA_CERT_PATH` in `demo_config.h` to the file path of the downloaded certificate.
