@@ -116,4 +116,8 @@ bool isValidHttpResponse( const HTTPResponse_t * pResponse );
  */
 TransportInterface_t * allocateTransportInterface( TransportInterface_t * pTransport );
 
+http_parser * allocateHttpParser( http_parser * pHttpParser );
+
+HTTPParsingContext_t * allocateHttpParsingContext( HTTPParsingContext_t * pHttpParsingContext );
+
 #endif /* ifndef HTTP_CBMC_STATE_H_ */

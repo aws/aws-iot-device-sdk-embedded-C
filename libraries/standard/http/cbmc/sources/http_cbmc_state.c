@@ -118,3 +118,37 @@ TransportInterface_t * allocateTransportInterface( TransportInterface_t * pTrans
 
     return pTransport;
 }
+
+http_parser * allocateHttpParser( http_parser * pHttpParser )
+{
+    size_t dataLen;
+    size_t responseLen;
+    HTTPParsingContext_t * pHttpParsingContext;
+
+    if( pHttpParser == NULL )
+    {
+        pHttpParser = malloc( sizeof( http_parser ) );
+        pHttpParsingContext = allocateHttpParsingContext( pHttpParsingContext );
+        pHttpParser->data = ( void * ) pHttpParsingContext;
+    }
+
+    return pHttpParser;
+}
+
+HTTPParsingContext_t * allocateHttpParsingContext( HTTPParsingContext_t * pHttpParsingContext )
+{
+    HTTPResponse_t * pHttpResponse = malloc( sizeof( HTTPResponse_t ) );
+
+    if( pHttpParsingContext == NULL )
+    {
+        pHttpParsingContext = malloc( sizeof( HTTPParsingContext_t ) );
+    }
+
+    if( pHttpParsingContext != NULL )
+    {
+        pHttpParsingContext->pResponse = allocateHttpResponse( pHttpResponse );
+        pHttpParsingContext->pBufferCur = pHttpResponse->pBuffer;
+    }
+
+    return pHttpParsingContext;
+}
