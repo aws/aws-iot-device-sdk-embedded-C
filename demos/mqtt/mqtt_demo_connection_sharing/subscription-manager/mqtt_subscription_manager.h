@@ -26,7 +26,7 @@
 
 /* Callback type that would be invoked for the incoming PUBLISH message on the topic(s)
  * that it is registered with the subscription manager. */
-typedef void (* SubscriptionManager_Callback_t )( uint16_t packetIdentifier,
+typedef void (* SubscriptionManager_Callback_t )( MQTTContext_t * pContext,
                                                   MQTTPublishInfo_t * pPublishInfo );
 
 /* Dispatch Handler that dispatches incoming PUBLISH message on the topic that has
@@ -38,7 +38,7 @@ typedef void (* SubscriptionManager_Callback_t )( uint16_t packetIdentifier,
  *   * Only PUBLISH messages will be forwarded to this message dispatcher/handler as
  *     individual callbacks only want to process incoming PUBLISH message.
  */
-void SubscriptionManager_DispatchHandler( uint16_t packetIdentifier,
+void SubscriptionManager_DispatchHandler( MQTTContext_t * pContext,
                                           MQTTPublishInfo_t * pPublishInfo );
 
 /* Utility to register a callback to be invoked for incoming PUBLISH messages on the

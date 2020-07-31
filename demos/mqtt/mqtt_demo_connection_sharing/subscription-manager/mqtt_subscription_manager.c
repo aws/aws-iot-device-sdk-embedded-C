@@ -22,8 +22,6 @@
 #include <string.h>
 #include "mqtt_subscription_manager.h"
 
-#define MAX_SUBSCRIPTION_CALLBACK_RECORDS    5
-
 typedef struct SubscriptionManager_Record
 {
     const char * pTopicFilter;
@@ -31,11 +29,13 @@ typedef struct SubscriptionManager_Record
     SubscriptionManager_Callback_t callback;
 } SubscriptionManager_Record_t;
 
+#define MAX_SUBSCRIPTION_CALLBACK_RECORDS    5
 static SubscriptionManager_Record_t callbackRecordList[ MAX_SUBSCRIPTION_CALLBACK_RECORDS ] = { 0 };
 
 static const recordListSize = sizeof( callbackRecordList ) / sizeof( SubscriptionManager_Record_t );
 static size_t recordListCount = 0u;
-static size_t maxRecordIndex = 0u;
+
+/*-----------------------------------------------------------*/
 
 static bool matchEndWildcards( const char * pTopicFilter,
                                uint16_t topicNameLength,
@@ -175,8 +175,7 @@ static bool topicFilterMatch( const char * pTopicName,
 static bool matchTopic( const char * pTopicName,
                         const uint16_t topicNameLength,
                         const char * pTopicFilter,
-                        const uint16_t topicFilterLength,
-                        bool requiresExactMatch )
+                        const uint16_t topicFilterLength )
 {
     bool status = false;
 
@@ -194,16 +193,18 @@ static bool matchTopic( const char * pTopicName,
     return status;
 }
 
+/*-----------------------------------------------------------*/
+
 /* Design -
  *   * Common handler can contain logic of processing acks and retries.
  *   * Only forward PUBLISH message to message dispatcher/handler as individual callbacks
  *     only want to process incoming PUBLISH message.
  */
-void SubscriptionManager_DispatchHandler( uint16_t packetIdentifier,
+void SubscriptionManager_DispatchHandler( MQTTContext_t * pContext,
                                           MQTTPublishInfo_t * pPublishInfo )
 {
     assert( pPublishInfo != NULL );
-    assert( packetIdentifier != MQTT_PACKET_ID_INVALID );
+    assert( pContext != NULL );
 
     size_t listIndex = 0u;
 
@@ -213,17 +214,20 @@ void SubscriptionManager_DispatchHandler( uint16_t packetIdentifier,
         if( matchTopic( pPublishInfo->pTopicName,
                         pPublishInfo->topicNameLength,
                         callbackRecordList[ listIndex ].pTopicFilter,
-                        callbackRecordList[ listIndex ].topicFilterLength,
-                        callbackRecordList[ listIndex ].requiresExactMatch ) == true )
+                        callbackRecordList[ listIndex ].topicFilterLength ) == true )
         {
             /* Invoke the callback associated with the record as the topics match. */
-            callbackRecordList[ listIndex++ ].callback( packetIdentifier, pPublishInfo );
+            callbackRecordList[ listIndex ].callback( pContext, pPublishInfo );
         }
+
+        listIndex++;
     }
 }
 
+/*-----------------------------------------------------------*/
+
 bool SubscriptionManager_RegisterCallback( const char * pTopicFilter,
-                                           uint16_t topicFileterLength,
+                                           uint16_t topicFilterLength,
                                            SubscriptionManager_Callback_t callback )
 {
     bool recordAdded = false;
@@ -244,23 +248,19 @@ bool SubscriptionManager_RegisterCallback( const char * pTopicFilter,
     {
         /* Should the topic string be copied? */
         callbackRecordList[ recordListCount ].pTopicFilter = pTopicFilter;
-        callbackRecordList[ recordListCount ].topicFilterLength = topicFileterLength;
+        callbackRecordList[ recordListCount ].topicFilterLength = topicFilterLength;
         callbackRecordList[ recordListCount ].callback = callback;
 
         recordAdded = true;
-
-        /* Update the max index tracker if a higher index spot is found. */
-        if( availableIndex > maxRecordIndex )
-        {
-            maxRecordIndex = availableIndex;
-        }
     }
 
     return recordAdded;
 }
 
+/*-----------------------------------------------------------*/
+
 void SubscriptionManager_RemoveCallbackRecord( const char * pTopicFilter,
-                                               uint16_t topicFileterLength )
+                                               uint16_t topicFilterLength )
 {
     size_t matchingRecordIndex = 0u;
     bool recordFound = false;
@@ -271,12 +271,12 @@ void SubscriptionManager_RemoveCallbackRecord( const char * pTopicFilter,
     {
         pRecord = &callbackRecordList[ matchingRecordIndex ];
 
-        if( ( topicFileterLength == pRecord->pTopicFilter ) &&
-            ( strncmp( pTopicFilter, pRecord->pTopicFilter, topicFileterLength ) == 0 ) )
+        if( ( topicFilterLength == pRecord->pTopicFilter ) &&
+            ( strncmp( pTopicFilter, pRecord->pTopicFilter, topicFilterLength ) == 0 ) )
         {
             recordFound = true;
         }
-    } while( ( matchingRecordIndex < recordListSize ) && ( recordFound == false ) );
+    } while( ( ++matchingRecordIndex < recordListSize ) && ( recordFound == false ) );
 
     /* Delete the record by clearing the found entry in the records list. */
     if( recordFound == true )
