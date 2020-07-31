@@ -27,7 +27,6 @@
 #include "http_cbmc_state.h"
 #include "http_parser.h"
 
-int httpParserOnMessageBeginCallback( http_parser * pHttpParser );
 
 void harness()
 {
@@ -35,5 +34,5 @@ void harness()
 
     pHttpParser = allocateHttpParser( NULL );
 
-    httpParserOnMessageBeginCallback( pHttpParser );
+    __CPROVER_file_local_http_client_c_httpParserOnMessageBeginCallback( pHttpParser );
 }

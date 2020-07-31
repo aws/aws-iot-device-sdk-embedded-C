@@ -28,12 +28,12 @@
 #include "http_parser.h"
 #include "callback_stubs.h"
 
-int httpParserOnHeadersCompleteCallback( http_parser * pHttpParser );
 
 void harness()
 {
     http_parser * pHttpParser = NULL;
     HTTPParsingContext_t * pParsingContext = NULL;
+    HTTPResponse_t * pResponse = NULL;
     HTTPClient_ResponseHeaderParsingCallback_t headerParserCallback;
 
     pHttpParser = allocateHttpParser( NULL );
@@ -42,5 +42,10 @@ void harness()
     headerParserCallback.onHeaderCallback = onHeaderCallbackStub;
     pParsingContext->pResponse->pHeaderParsingCallback = &headerParserCallback;
 
-    httpParserOnHeadersCompleteCallback( pHttpParser );
+    pResponse = pParsingContext->pResponse;
+    __CPROVER_assume( pResponse->pHeaders < pParsingContext->pBufferCur );
+    /* This assumption suppresses an overflow error when incrementing pResponse->headerCount. */
+    __CPROVER_assume( pResponse->headerCount < SIZE_MAX );
+
+    __CPROVER_file_local_http_client_c_httpParserOnHeadersCompleteCallback( pHttpParser );
 }

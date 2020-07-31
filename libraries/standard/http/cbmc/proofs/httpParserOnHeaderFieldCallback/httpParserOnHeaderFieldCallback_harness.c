@@ -28,18 +28,15 @@
 #include "http_parser.h"
 #include "callback_stubs.h"
 
-int httpParserOnHeaderFieldCallback( http_parser * pHttpParser,
-                                     const char * pLoc,
-                                     size_t length );
 
 void harness()
 {
     http_parser * pHttpParser = NULL;
     HTTPParsingContext_t * pParsingContext = NULL;
+    HTTPResponse_t * pResponse = NULL;
     HTTPClient_ResponseHeaderParsingCallback_t headerParserCallback;
     size_t length;
     char * pLoc;
-
 
     pHttpParser = allocateHttpParser( NULL );
 
@@ -47,9 +44,15 @@ void harness()
     headerParserCallback.onHeaderCallback = onHeaderCallbackStub;
     pParsingContext->pResponse->pHeaderParsingCallback = &headerParserCallback;
 
-    __CPROVER_assume( length < CBMC_MAX_OBJECT_SIZE );
-    __CPROVER_assume( ( const char * ) pResponse->pBuffer < pLoc &&
+    pResponse = pParsingContext->pResponse;
+    __CPROVER_assume( __CPROVER_same_object( pResponse->pBuffer,
+                                             pLoc ) );
+    __CPROVER_assume( ( const char * ) pResponse->pBuffer <= pLoc &&
                       pLoc < ( const char * ) ( pResponse->pBuffer + pResponse->bufferLen ) );
 
-    httpParserOnHeaderFieldCallback( pHttpParser, pLoc, length );
+    __CPROVER_assume( length < CBMC_MAX_OBJECT_SIZE );
+    /* This assumption suppresses an overflow error when incrementing pResponse->headerCount. */
+    __CPROVER_assume( pResponse->headerCount < SIZE_MAX );
+
+    __CPROVER_file_local_http_client_c_httpParserOnHeaderFieldCallback( pHttpParser, pLoc, length );
 }

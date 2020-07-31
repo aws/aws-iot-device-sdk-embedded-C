@@ -27,9 +27,6 @@
 #include "http_cbmc_state.h"
 #include "http_parser.h"
 
-int httpParserOnHeaderValueCallback( http_parser * pHttpParser,
-                                     const char * pLoc,
-                                     size_t length );
 
 void harness()
 {
@@ -42,12 +39,17 @@ void harness()
     pHttpParser = allocateHttpParser( NULL );
 
     pParsingContext = ( HTTPParsingContext_t * ) pHttpParser->data;
-    pResponse = pParsingContext->pResponse;
     __CPROVER_assume( pParsingContext->pLastHeaderField != NULL );
 
-    __CPROVER_assume( length < CBMC_MAX_OBJECT_SIZE );
-    __CPROVER_assume( ( const char * ) pResponse->pBuffer < pLoc &&
+    pResponse = pParsingContext->pResponse;
+    __CPROVER_assume( __CPROVER_same_object( pResponse->pBuffer,
+                                             pLoc ) );
+    __CPROVER_assume( __CPROVER_same_object( pResponse->pHeaders,
+                                             pParsingContext->pBufferCur ) );
+    __CPROVER_assume( ( const char * ) pResponse->pBuffer <= pLoc &&
                       pLoc < ( const char * ) ( pResponse->pBuffer + pResponse->bufferLen ) );
 
-    httpParserOnHeaderValueCallback( pHttpParser, pLoc, length );
+    __CPROVER_assume( length < CBMC_MAX_OBJECT_SIZE );
+
+    __CPROVER_file_local_http_client_c_httpParserOnHeaderValueCallback( pHttpParser, pLoc, length );
 }
