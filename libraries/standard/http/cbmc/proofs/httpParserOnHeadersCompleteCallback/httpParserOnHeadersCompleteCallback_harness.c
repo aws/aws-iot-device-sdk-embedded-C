@@ -31,10 +31,12 @@
 
 void harness()
 {
-    http_parser * pHttpParser = NULL;
-    HTTPParsingContext_t * pParsingContext = NULL;
-    HTTPResponse_t * pResponse = NULL;
+    http_parser * pHttpParser;
+    HTTPParsingContext_t * pParsingContext;
+    HTTPResponse_t * pResponse;
     HTTPClient_ResponseHeaderParsingCallback_t headerParserCallback;
+    size_t bufferIndexOffset;
+    size_t headerIndexOffset;
 
     pHttpParser = allocateHttpParser( NULL );
 
@@ -43,8 +45,15 @@ void harness()
     pParsingContext->pResponse->pHeaderParsingCallback = &headerParserCallback;
 
     pResponse = pParsingContext->pResponse;
-    __CPROVER_assume( __CPROVER_same_object( pResponse->pHeaders,
-                                             pParsingContext->pBufferCur ) );
+
+    HTTPResponse_t debug = *pResponse;
+    __CPROVER_assume( bufferIndexOffset <= pResponse->bufferLen );
+    /*.. = &pResponse->PHeaders[bufferIndexOffset] */
+    pParsingContext->pBufferCur = pResponse->pBuffer + bufferIndexOffset;
+
+    __CPROVER_assume( headerIndexOffset <= pResponse->bufferLen );
+    pResponse->pHeaders = pResponse->pBuffer + headerIndexOffset;
+
     __CPROVER_assume( pResponse->pHeaders < pParsingContext->pBufferCur );
     /* This assumption suppresses an overflow error when incrementing pResponse->headerCount. */
     __CPROVER_assume( pResponse->headerCount < SIZE_MAX );

@@ -97,9 +97,7 @@ bool isValidHttpResponse( const HTTPResponse_t * pResponse )
     {
         isValid = ( pResponse->bufferLen < CBMC_MAX_OBJECT_SIZE ) &&
                   ( pResponse->bodyLen < pResponse->bufferLen ) &&
-                  ( pResponse->headersLen < pResponse->bufferLen ) &&
-                  __CPROVER_same_object( pResponse->pBuffer, pResponse->pBody ) &&
-                  __CPROVER_same_object( pResponse->pBuffer, pResponse->pHeaders );
+                  ( pResponse->headersLen < pResponse->bufferLen );
         isValid = isValid || pResponse->pBody == NULL;
     }
 
@@ -153,8 +151,6 @@ HTTPParsingContext_t * allocateHttpParsingContext( HTTPParsingContext_t * pHttpP
                           pResponse != NULL &&
                           pResponse->pBuffer != NULL );
         pHttpParsingContext->pResponse = pResponse;
-        __CPROVER_assume( __CPROVER_same_object( pHttpParsingContext->pBufferCur,
-                                                 pResponse->pBuffer ) );
     }
 
     return pHttpParsingContext;
