@@ -84,8 +84,6 @@ HTTPResponse_t * allocateHttpResponse( HTTPResponse_t * pResponse )
     {
         __CPROVER_assume( pResponse->bufferLen < CBMC_MAX_OBJECT_SIZE );
         pResponse->pBuffer = mallocCanFail( pResponse->bufferLen );
-        __CPROVER_assume( pResponse->bodyLen < CBMC_MAX_OBJECT_SIZE );
-        pResponse->pBody = mallocCanFail( pResponse->bodyLen );
     }
 
     return pResponse;
@@ -98,8 +96,12 @@ bool isValidHttpResponse( const HTTPResponse_t * pResponse )
     if( pResponse )
     {
         isValid = ( pResponse->bufferLen < CBMC_MAX_OBJECT_SIZE ) &&
-                  ( pResponse->bodyLen < CBMC_MAX_OBJECT_SIZE ) &&
+                  ( pResponse->bodyLen < pResponse->bufferLen ) &&
+                  ( pResponse->headersLen < pResponse->bufferLen ) &&
+                  __CPROVER_same_object( pResponse->pBuffer, pResponse->pBody ) &&
+                  __CPROVER_same_object( pResponse->pBuffer, pResponse->pHeaders ) &&
                   ( pResponse->headerCount < SIZE_MAX );
+        isValid = isValid || pResponse->pBody == NULL;
     }
 
     return isValid;
@@ -130,8 +132,8 @@ http_parser * allocateHttpParser( http_parser * pHttpParser )
     }
 
     pHttpParsingContext = allocateHttpParsingContext( NULL );
-    pHttpParser->data = ( void * ) pHttpParsingContext;
     __CPROVER_assume( isValidHttpParsingContext( pHttpParsingContext ) );
+    pHttpParser->data = ( void * ) pHttpParsingContext;
 
     return pHttpParser;
 }

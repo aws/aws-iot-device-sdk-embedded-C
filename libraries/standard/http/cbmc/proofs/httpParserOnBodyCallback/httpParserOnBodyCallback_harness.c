@@ -45,8 +45,11 @@ void harness()
     pResponse = pParsingContext->pResponse;
 
     __CPROVER_assume( length < CBMC_MAX_OBJECT_SIZE );
-    __CPROVER_assume( ( const char * ) pResponse->pBuffer < pLoc &&
-                      pLoc < ( const char * ) ( pResponse->pBuffer + pResponse->bufferLen ) );
+    __CPROVER_assume( pResponse->bodyLen < CBMC_MAX_OBJECT_SIZE );
+    __CPROVER_assume( ( char * ) pResponse->pBuffer < pLoc &&
+                      pLoc < ( char * ) ( pResponse->pBuffer + pResponse->bufferLen ) );
+    __CPROVER_assume( ( pLoc + length ) <
+                      ( pResponse->pBody + pResponse->bodyLen ) );
 
     httpParserOnBodyCallback( pHttpParser, pLoc, length );
 }
