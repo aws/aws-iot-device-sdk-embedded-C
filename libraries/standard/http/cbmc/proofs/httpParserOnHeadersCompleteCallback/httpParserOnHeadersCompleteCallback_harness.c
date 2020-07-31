@@ -43,6 +43,8 @@ void harness()
     pParsingContext->pResponse->pHeaderParsingCallback = &headerParserCallback;
 
     pResponse = pParsingContext->pResponse;
+    __CPROVER_assume( __CPROVER_same_object( pResponse->pHeaders,
+                                             pParsingContext->pBufferCur ) );
     __CPROVER_assume( pResponse->pHeaders < pParsingContext->pBufferCur );
     /* This assumption suppresses an overflow error when incrementing pResponse->headerCount. */
     __CPROVER_assume( pResponse->headerCount < SIZE_MAX );
