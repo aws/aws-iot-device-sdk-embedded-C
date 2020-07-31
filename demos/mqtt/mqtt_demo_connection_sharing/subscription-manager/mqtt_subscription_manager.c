@@ -27,8 +27,7 @@
 typedef struct SubscriptionManager_Record
 {
     const char * pTopicFilter;
-    size_t topicFilterLength;
-    bool requiresExactMatch;
+    uint16_t topicFilterLength;
     SubscriptionManager_Callback_t callback;
 } SubscriptionManager_Record_t;
 
@@ -37,8 +36,6 @@ static SubscriptionManager_Record_t callbackRecordList[ MAX_SUBSCRIPTION_CALLBAC
 static const recordListSize = sizeof( callbackRecordList ) / sizeof( SubscriptionManager_Record_t );
 static size_t recordListCount = 0u;
 static size_t maxRecordIndex = 0u;
-
-
 
 static bool matchEndWildcards( const char * pTopicFilter,
                                uint16_t topicNameLength,
@@ -175,7 +172,7 @@ static bool topicFilterMatch( const char * pTopicName,
 
 /*-----------------------------------------------------------*/
 
-static bool topicMatch( const char * pTopicName,
+static bool matchTopic( const char * pTopicName,
                         const uint16_t topicNameLength,
                         const char * pTopicFilter,
                         const uint16_t topicFilterLength,
@@ -183,42 +180,19 @@ static bool topicMatch( const char * pTopicName,
 {
     bool status = false;
 
-    /* Check for an exact match. */
+    /* Check for an exact match if the incoming topic name and the registered
+     * topic filter length match. */
     if( topicNameLength == topicFilterLength )
     {
         status = ( strncmp( pTopicName, pTopicFilter, topicNameLength ) == 0 );
     }
-
-    /* If  an exact match is required, return the result of the comparison above.
-     * Otherwise, attempt to match with MQTT wildcards in topic filters. */
-    if( requiresExactMatch == false )
+    else
     {
         status = topicFilterMatch( pTopicName, topicNameLength, pTopicFilter, topicFilterLength );
     }
 
     return status;
 }
-
-/* Iterate in the record list till the first record (from the starting index passed) has a topic match. */
-bool findRecordForTopic( const char * pTopicName,
-                         size_t topicNameLength,
-                         size_t * pCursor )
-{
-    bool matchFound = false;
-
-    do
-    {
-        matchFound = topicMatch( pTopicName,
-                                 topicNameLength,
-                                 callbackRecordList[ *pCursor ].pTopicFilter,
-                                 callbackRecordList[ *pCursor ].topicFilterLength,
-                                 callbackRecordList[ *pCursor ].requiresExactMatch );
-        /* code */
-    } while( ++( *pCursor ) < recordListSize && ( matchFound == false ) );
-
-    return matchFound;
-}
-
 
 /* Design -
  *   * Common handler can contain logic of processing acks and retries.
@@ -231,18 +205,25 @@ void SubscriptionManager_DispatchHandler( uint16_t packetIdentifier,
     assert( pPublishInfo != NULL );
     assert( packetIdentifier != MQTT_PACKET_ID_INVALID );
 
-    size_t recordListCursor = 0u;
+    size_t listIndex = 0u;
 
-    while( findRecordForTopic( pPublishInfo->pTopicName,
-                               pPublishInfo->topicNameLength,
-                               &recordListCursor ) != false )
+    /* Iterate through record list to find matching topics, and invoke their callbacks. */
+    while( listIndex < recordListCount )
     {
-        callbackRecordList[ recordListCursor ].callback( packetIdentifier, pPublishInfo );
+        if( matchTopic( pPublishInfo->pTopicName,
+                        pPublishInfo->topicNameLength,
+                        callbackRecordList[ listIndex ].pTopicFilter,
+                        callbackRecordList[ listIndex ].topicFilterLength,
+                        callbackRecordList[ listIndex ].requiresExactMatch ) == true )
+        {
+            /* Invoke the callback associated with the record as the topics match. */
+            callbackRecordList[ listIndex++ ].callback( packetIdentifier, pPublishInfo );
+        }
     }
 }
 
 bool SubscriptionManager_RegisterCallback( const char * pTopicFilter,
-                                           size_t topicFileterLength,
+                                           uint16_t topicFileterLength,
                                            SubscriptionManager_Callback_t callback )
 {
     bool recordAdded = false;
@@ -279,7 +260,7 @@ bool SubscriptionManager_RegisterCallback( const char * pTopicFilter,
 }
 
 void SubscriptionManager_RemoveCallbackRecord( const char * pTopicFilter,
-                                               size_t topicFileterLength )
+                                               uint16_t topicFileterLength )
 {
     size_t matchingRecordIndex = 0u;
     bool recordFound = false;
@@ -303,6 +284,5 @@ void SubscriptionManager_RemoveCallbackRecord( const char * pTopicFilter,
         pRecord->pTopicFilter = NULL;
         pRecord->topicFilterLength = 0u;
         pRecord->callback = NULL;
-        pRecord->requiresExactMatch = false;
     }
 }

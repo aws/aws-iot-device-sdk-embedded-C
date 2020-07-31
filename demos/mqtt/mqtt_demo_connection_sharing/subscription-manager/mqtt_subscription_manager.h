@@ -41,15 +41,15 @@ typedef void (* SubscriptionManager_Callback_t )( uint16_t packetIdentifier,
 void SubscriptionManager_DispatchHandler( uint16_t packetIdentifier,
                                           MQTTPublishInfo_t * pPublishInfo );
 
-/* Utility to register a callback for incoming PUBLISH topic(s). */
+/* Utility to register a callback to be invoked for incoming PUBLISH messages on the
+ * topic(s) that match the passed topic filter. The passed topic filter can be a wildcard.*/
 bool SubscriptionManager_RegisterCallback( const char * pTopicFilter,
-                                           size_t topicFileterLength,
+                                           uint16_t topicFileterLength,
                                            SubscriptionManager_Callback_t callback );
 
-/* Utility to remove the callback registered for invocation on incoming PUBLISH messages
- * on the passed topic filter . */
+/* Utility to remove the single callback registered for the passed topic filter. */
 void SubscriptionManager_RemoveCallback( const char * pTopicFilter,
-                                         size_t topicFileterLength );
+                                         uint16_t topicFileterLength );
 
 
 #endif /* ifndef SUBSCRIPTION_MANAGER_H_ */
