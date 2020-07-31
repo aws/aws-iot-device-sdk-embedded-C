@@ -118,12 +118,8 @@ TransportInterface_t * allocateTransportInterface( TransportInterface_t * pTrans
 
 http_parser * allocateHttpParser( http_parser * pHttpParser );
 
-bool isValidHttpParser( const http_parser * pHttpParser,
-                        HTTPParsingContext_t * pHttpParsingContext );
-
 HTTPParsingContext_t * allocateHttpParsingContext( HTTPParsingContext_t * pHttpParsingContext );
 
-bool isValidHttpParsingContext( HTTPParsingContext_t * pHttpParsingContext,
-                                HTTPResponse_t * pHttpResponse );
+bool isValidHttpParsingContext( const HTTPParsingContext_t * pHttpParsingContext );
 
 #endif /* ifndef HTTP_CBMC_STATE_H_ */

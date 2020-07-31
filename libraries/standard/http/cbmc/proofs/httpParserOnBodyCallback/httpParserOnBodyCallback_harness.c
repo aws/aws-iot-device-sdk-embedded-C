@@ -20,20 +20,34 @@
  */
 
 /**
- * @file httpParserOnMessageBeginCallback_harness.c
- * @brief Implements the proof harness for httpParserOnMessageBeginCallback function.
+ * @file httpParserOnBodyCallback_harness.c
+ * @brief Implements the proof harness for httpParserOnBodyCallback function.
  */
 
 #include "http_cbmc_state.h"
 #include "http_parser.h"
 
-int httpParserOnMessageBeginCallback( http_parser * pHttpParser );
+int httpParserOnBodyCallback( http_parser * pHttpParser,
+                              const char * pLoc,
+                              size_t length );
 
 void harness()
 {
     http_parser * pHttpParser = NULL;
+    HTTPParsingContext_t * pParsingContext = NULL;
+    HTTPResponse_t * pResponse = NULL;
+    size_t length;
+    char * pLoc;
 
     pHttpParser = allocateHttpParser( NULL );
 
-    httpParserOnMessageBeginCallback( pHttpParser );
+    __CPROVER_assume( length < CBMC_MAX_OBJECT_SIZE );
+    pLoc = malloc( length );
+
+    pParsingContext = ( HTTPParsingContext_t * ) pHttpParser->data;
+    pResponse = pParsingContext->pResponse;
+    __CPROVER_assume( pParsingContext->pResponse->pBuffer != NULL );
+    __CPROVER_assume( pLoc < ( const char * ) ( pResponse->pBuffer + pResponse->bufferLen ) );
+
+    httpParserOnBodyCallback( pHttpParser, pLoc, length );
 }

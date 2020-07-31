@@ -319,9 +319,9 @@ int httpParserOnMessageBeginCallback( http_parser * pHttpParser );
  *
  * @return #HTTP_PARSER_CONTINUE_PARSING to continue parsing.
  */
-static int httpParserOnStatusCallback( http_parser * pHttpParser,
-                                       const char * pLoc,
-                                       size_t length );
+int httpParserOnStatusCallback( http_parser * pHttpParser,
+                                const char * pLoc,
+                                size_t length );
 
 /**
  * @brief Callback invoked during http_parser_execute() when an HTTP response
@@ -337,9 +337,9 @@ static int httpParserOnStatusCallback( http_parser * pHttpParser,
  *
  * @return #HTTP_PARSER_CONTINUE_PARSING to continue parsing.
  */
-static int httpParserOnHeaderFieldCallback( http_parser * pHttpParser,
-                                            const char * pLoc,
-                                            size_t length );
+int httpParserOnHeaderFieldCallback( http_parser * pHttpParser,
+                                     const char * pLoc,
+                                     size_t length );
 
 /**
  * @brief Callback invoked during http_parser_execute() when an HTTP response
@@ -357,9 +357,9 @@ static int httpParserOnHeaderFieldCallback( http_parser * pHttpParser,
  *
  * @return #HTTP_PARSER_CONTINUE_PARSING to continue parsing.
  */
-static int httpParserOnHeaderValueCallback( http_parser * pHttpParser,
-                                            const char * pLoc,
-                                            size_t length );
+int httpParserOnHeaderValueCallback( http_parser * pHttpParser,
+                                     const char * pLoc,
+                                     size_t length );
 
 /**
  * @brief Callback invoked during http_parser_execute() when the end of the
@@ -373,7 +373,7 @@ static int httpParserOnHeaderValueCallback( http_parser * pHttpParser,
  * @return #HTTP_PARSER_CONTINUE_PARSING to continue parsing.
  * #HTTP_PARSER_STOP_PARSING is returned if the response is for a HEAD request.
  */
-static int httpParserOnHeadersCompleteCallback( http_parser * pHttpParser );
+int httpParserOnHeadersCompleteCallback( http_parser * pHttpParser );
 
 /**
  * @brief Callback invoked during http_parser_execute() when the HTTP response
@@ -415,9 +415,9 @@ static int httpParserOnHeadersCompleteCallback( http_parser * pHttpParser );
  * @return Zero to continue parsing. All other return values will stop parsing
  * and http_parser_execute() will return with status HPE_CB_body.
  */
-static int httpParserOnBodyCallback( http_parser * pHttpParser,
-                                     const char * pLoc,
-                                     size_t length );
+int httpParserOnBodyCallback( http_parser * pHttpParser,
+                              const char * pLoc,
+                              size_t length );
 
 /**
  * @brief Callback invoked during http_parser_execute() to indicate the the
@@ -441,7 +441,7 @@ static int httpParserOnBodyCallback( http_parser * pHttpParser,
  * @return Zero to continue parsing. All other return values will stop parsing
  * and http_parser_execute() will return with status HPE_CB_message_complete.
  */
-static int httpParserOnMessageCompleteCallback( http_parser * pHttpParser );
+int httpParserOnMessageCompleteCallback( http_parser * pHttpParser );
 
 /**
  * @brief When a complete header is found the HTTP response header count
@@ -494,6 +494,7 @@ static void processCompleteHeader( HTTPParsingContext_t * pParsingContext )
     if( ( pParsingContext->pLastHeaderField != NULL ) &&
         ( pParsingContext->pLastHeaderValue != NULL ) )
     {
+        assert( pResponse->headerCount < SIZE_MAX );
         /* Increase the header count. */
         pResponse->headerCount++;
 
@@ -554,9 +555,9 @@ int httpParserOnMessageBeginCallback( http_parser * pHttpParser )
 
 /*-----------------------------------------------------------*/
 
-static int httpParserOnStatusCallback( http_parser * pHttpParser,
-                                       const char * pLoc,
-                                       size_t length )
+int httpParserOnStatusCallback( http_parser * pHttpParser,
+                                const char * pLoc,
+                                size_t length )
 {
     HTTPParsingContext_t * pParsingContext = NULL;
     HTTPResponse_t * pResponse = NULL;
@@ -595,9 +596,9 @@ static int httpParserOnStatusCallback( http_parser * pHttpParser,
 
 /*-----------------------------------------------------------*/
 
-static int httpParserOnHeaderFieldCallback( http_parser * pHttpParser,
-                                            const char * pLoc,
-                                            size_t length )
+int httpParserOnHeaderFieldCallback( http_parser * pHttpParser,
+                                     const char * pLoc,
+                                     size_t length )
 {
     HTTPParsingContext_t * pParsingContext = NULL;
     HTTPResponse_t * pResponse = NULL;
@@ -639,6 +640,7 @@ static int httpParserOnHeaderFieldCallback( http_parser * pHttpParser,
     }
     else
     {
+        assert( pParsingContext->lastHeaderFieldLen <= SIZE_MAX - length );
         pParsingContext->lastHeaderFieldLen += length;
     }
 
@@ -652,9 +654,9 @@ static int httpParserOnHeaderFieldCallback( http_parser * pHttpParser,
 
 /*-----------------------------------------------------------*/
 
-static int httpParserOnHeaderValueCallback( http_parser * pHttpParser,
-                                            const char * pLoc,
-                                            size_t length )
+int httpParserOnHeaderValueCallback( http_parser * pHttpParser,
+                                     const char * pLoc,
+                                     size_t length )
 {
     HTTPParsingContext_t * pParsingContext = NULL;
     HTTPResponse_t * pResponse = NULL;
@@ -704,7 +706,7 @@ static int httpParserOnHeaderValueCallback( http_parser * pHttpParser,
 
 /*-----------------------------------------------------------*/
 
-static int httpParserOnHeadersCompleteCallback( http_parser * pHttpParser )
+int httpParserOnHeadersCompleteCallback( http_parser * pHttpParser )
 {
     int shouldContinueParse = HTTP_PARSER_CONTINUE_PARSING;
     HTTPParsingContext_t * pParsingContext = NULL;
@@ -742,7 +744,7 @@ static int httpParserOnHeadersCompleteCallback( http_parser * pHttpParser )
 
     /* If the Content-Length header was found, then pHttpParser->content_length
      * will not be equal to the maximum 64 bit integer. */
-    if( pHttpParser->content_length != ( ( uint64_t ) -1 ) )
+    if( pHttpParser->content_length != ( UINT64_MAX ) )
     {
         pResponse->contentLength = ( size_t ) ( pHttpParser->content_length );
     }
@@ -787,9 +789,9 @@ static int httpParserOnHeadersCompleteCallback( http_parser * pHttpParser )
 
 /*-----------------------------------------------------------*/
 
-static int httpParserOnBodyCallback( http_parser * pHttpParser,
-                                     const char * pLoc,
-                                     size_t length )
+int httpParserOnBodyCallback( http_parser * pHttpParser,
+                              const char * pLoc,
+                              size_t length )
 {
     int shouldContinueParse = HTTP_PARSER_CONTINUE_PARSING;
     HTTPParsingContext_t * pParsingContext = NULL;
@@ -857,7 +859,7 @@ static int httpParserOnBodyCallback( http_parser * pHttpParser,
 
 /*-----------------------------------------------------------*/
 
-static int httpParserOnMessageCompleteCallback( http_parser * pHttpParser )
+int httpParserOnMessageCompleteCallback( http_parser * pHttpParser )
 {
     HTTPParsingContext_t * pParsingContext = NULL;
 

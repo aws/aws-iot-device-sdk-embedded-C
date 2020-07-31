@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 HARNESS_ENTRY=harness
-HARNESS_FILE=httpParserOnMessageBeginCallback_harness
+HARNESS_FILE=httpParserOnHeaderFieldCallback_harness
 
 DEFINES +=
 INCLUDES +=
@@ -12,6 +12,7 @@ UNWINDSET +=
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 PROOF_SOURCES += $(PROOFDIR)/../../sources/http_cbmc_state.c
+PROOF_SOURCES += $(PROOFDIR)/../../stubs/callback_stubs.c
 
 PROJECT_SOURCES += $(SRCDIR)/libraries/standard/http/src/http_client.c
 

@@ -98,7 +98,8 @@ bool isValidHttpResponse( const HTTPResponse_t * pResponse )
     if( pResponse )
     {
         isValid = ( pResponse->bufferLen < CBMC_MAX_OBJECT_SIZE ) &&
-                  ( pResponse->bodyLen < CBMC_MAX_OBJECT_SIZE );
+                  ( pResponse->bodyLen < CBMC_MAX_OBJECT_SIZE ) &&
+                  ( pResponse->headerCount < SIZE_MAX );
     }
 
     return isValid;
@@ -121,38 +122,46 @@ TransportInterface_t * allocateTransportInterface( TransportInterface_t * pTrans
 
 http_parser * allocateHttpParser( http_parser * pHttpParser )
 {
-    size_t dataLen;
-    size_t responseLen;
     HTTPParsingContext_t * pHttpParsingContext;
 
     if( pHttpParser == NULL )
     {
         pHttpParser = malloc( sizeof( http_parser ) );
-        pHttpParsingContext = pHttpParsingContext;
     }
+
+    pHttpParsingContext = allocateHttpParsingContext( NULL );
+    pHttpParser->data = ( void * ) pHttpParsingContext;
+    __CPROVER_assume( isValidHttpParsingContext( pHttpParsingContext ) );
 
     return pHttpParser;
 }
 
-bool isValidHttpParser( const http_parser * pHttpParser,
-                        HTTPParsingContext_t * pHttpParsingContext )
-{
-    return pHttpParser->data == pHttpParsingContext;
-}
-
 HTTPParsingContext_t * allocateHttpParsingContext( HTTPParsingContext_t * pHttpParsingContext )
 {
+    HTTPResponse_t * pResponse;
+
     if( pHttpParsingContext == NULL )
     {
         pHttpParsingContext = malloc( sizeof( HTTPParsingContext_t ) );
     }
 
+    if( pHttpParsingContext != NULL )
+    {
+        pResponse = allocateHttpResponse( NULL );
+        __CPROVER_assume( isValidHttpResponse( pResponse ) && pResponse != NULL );
+        pHttpParsingContext->pResponse = pResponse;
+        pHttpParsingContext->pBufferCur = ( char * ) pResponse->pBuffer;
+    }
+
     return pHttpParsingContext;
 }
 
-bool isValidHttpParsingContext( HTTPParsingContext_t * pHttpParsingContext,
-                                HTTPResponse_t * pHttpResponse )
+bool isValidHttpParsingContext( const HTTPParsingContext_t * pHttpParsingContext )
 {
-    return pHttpParsingContext->pResponse == pHttpResponse &&
-           pHttpParsingContext->pBufferCur == pHttpResponse->pBuffer;
+    bool isValid = true;
+
+    isValid = isValid && ( pHttpParsingContext->lastHeaderFieldLen ) <= ( SIZE_MAX - CBMC_MAX_OBJECT_SIZE );
+    isValid = isValid && ( pHttpParsingContext->lastHeaderValueLen ) <= ( SIZE_MAX - CBMC_MAX_OBJECT_SIZE );
+
+    return isValid;
 }

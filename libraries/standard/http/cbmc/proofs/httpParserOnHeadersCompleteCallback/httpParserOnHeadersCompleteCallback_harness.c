@@ -20,20 +20,27 @@
  */
 
 /**
- * @file httpParserOnMessageBeginCallback_harness.c
- * @brief Implements the proof harness for httpParserOnMessageBeginCallback function.
+ * @file httpParserOnHeadersCompleteCallback_harness.c
+ * @brief Implements the proof harness for httpParserOnHeadersCompleteCallback function.
  */
 
 #include "http_cbmc_state.h"
 #include "http_parser.h"
+#include "callback_stubs.h"
 
-int httpParserOnMessageBeginCallback( http_parser * pHttpParser );
+int httpParserOnHeadersCompleteCallback( http_parser * pHttpParser );
 
 void harness()
 {
     http_parser * pHttpParser = NULL;
+    HTTPParsingContext_t * pParsingContext = NULL;
+    HTTPClient_ResponseHeaderParsingCallback_t headerParserCallback;
 
     pHttpParser = allocateHttpParser( NULL );
 
-    httpParserOnMessageBeginCallback( pHttpParser );
+    pParsingContext = ( HTTPParsingContext_t * ) ( pHttpParser->data );
+    headerParserCallback.onHeaderCallback = onHeaderCallbackStub;
+    pParsingContext->pResponse->pHeaderParsingCallback = &headerParserCallback;
+
+    httpParserOnHeadersCompleteCallback( pHttpParser );
 }
