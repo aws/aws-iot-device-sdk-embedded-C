@@ -36,10 +36,13 @@
 #define MQTT_PACKET_ID_INVALID    ( ( uint16_t ) 0U )
 
 struct MQTTPubAckInfo;
-typedef struct MQTTPubAckInfo   MQTTPubAckInfo_t;
+typedef struct MQTTPubAckInfo         MQTTPubAckInfo_t;
 
 struct MQTTContext;
-typedef struct MQTTContext      MQTTContext_t;
+typedef struct MQTTContext            MQTTContext_t;
+
+struct MQTTDeserializedInfo;
+typedef struct MQTTDeserializedInfo   MQTTDeserializedInfo_t;
 
 /**
  * @brief Application provided callback to retrieve the current time in
@@ -55,13 +58,11 @@ typedef uint32_t (* MQTTGetCurrentTimeFunc_t )( void );
  *
  * @param[in] pContext Initialized MQTT context.
  * @param[in] pPacketInfo Information on the type of incoming MQTT packet.
- * @param[in] packetIdentifier Packet identifier of incoming PUBLISH packet.
- * @param[in] pPublishInfo Incoming PUBLISH packet parameters.
+ * @param[in] pDeserialized Deserialized information from incoming packet.
  */
 typedef void (* MQTTEventCallback_t )( MQTTContext_t * pContext,
                                        MQTTPacketInfo_t * pPacketInfo,
-                                       uint16_t packetIdentifier,
-                                       MQTTPublishInfo_t * pPublishInfo );
+                                       MQTTDeserializedInfo_t * pDeserialized );
 
 typedef enum MQTTConnectionStatus
 {
@@ -121,6 +122,13 @@ struct MQTTContext
     uint32_t pingReqSendTimeMs;
     uint32_t pingRespTimeoutMs;
     bool waitingForPingResp;
+};
+
+struct MQTTDeserializedInfo
+{
+    uint16_t packetIdentifier;
+    MQTTPublishInfo_t * pPublishInfo;
+    MQTTStatus_t status;
 };
 
 /**

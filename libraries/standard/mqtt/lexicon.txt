@@ -140,6 +140,7 @@ pconnectinfo
 pcontext
 pcurrentstate
 pcursor
+pdeserialized
 pdestination
 pem
 pfixedbuffer

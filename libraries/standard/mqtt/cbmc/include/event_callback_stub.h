@@ -35,12 +35,10 @@
  *
  * @param[in] pContext Initialized MQTT context.
  * @param[in] pPacketInfo Information on the type of incoming MQTT packet.
- * @param[in] packetIdentifier Packet identifier of incoming PUBLISH packet.
- * @param[in] pPublishInfo Incoming PUBLISH packet parameters.
+ * @param[in] pDeserialized Deserialized information from incoming packet.
  */
 void EventCallbackStub( MQTTContext_t * pContext,
                         MQTTPacketInfo_t * pPacketInfo,
-                        uint16_t packetIdentifier,
-                        MQTTPublishInfo_t * pPublishInfo );
+                        MQTTDeserializedInfo_t * pDeserialized );
 
 #endif /* ifndef EVENT_CALLBACK_STUB_H_ */

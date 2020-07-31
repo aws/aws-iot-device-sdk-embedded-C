@@ -300,14 +300,11 @@ static void handleAckEvents( MQTTPacketInfo_t * pPacketInfo,
  *
  * @param[in] pContext MQTT context pointer.
  * @param[in] pPacketInfo Packet Info pointer for the incoming packet.
- * @param[in] packetIdentifier Packet identifier of the incoming packet.
- * @param[in] pPublishInfo Deserialized publish info pointer for the incoming
- * packet.
+ * @param[in] pDeserialized Deserialized information from the incoming packet.
  */
 static void eventCallback( MQTTContext_t * pContext,
                            MQTTPacketInfo_t * pPacketInfo,
-                           uint16_t packetIdentifier,
-                           MQTTPublishInfo_t * pPublishInfo );
+                           MQTTDeserializedInfo_t * pDeserialized );
 
 /**
  * @brief Implementation of TransportSend_t interface that terminates the TLS
@@ -507,11 +504,16 @@ static void handleAckEvents( MQTTPacketInfo_t * pPacketInfo,
 
 static void eventCallback( MQTTContext_t * pContext,
                            MQTTPacketInfo_t * pPacketInfo,
-                           uint16_t packetIdentifier,
-                           MQTTPublishInfo_t * pPublishInfo )
+                           MQTTDeserializedInfo_t * pDeserialized )
 {
+    MQTTPublishInfo_t * pPublishInfo = NULL;
+
     assert( pContext != NULL );
     assert( pPacketInfo != NULL );
+    assert( pDeserialized != NULL );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, pDeserialized->status );
+    pPublishInfo = pDeserialized->pPublishInfo;
 
     if( ( pPacketInfo->type == disconnectOnPacketType ) ||
         ( ( pPacketInfo->type & 0xF0U ) == disconnectOnPacketType ) )
@@ -552,8 +554,7 @@ static void eventCallback( MQTTContext_t * pContext,
         }
         else
         {
-            handleAckEvents( pPacketInfo,
-                             packetIdentifier );
+            handleAckEvents( pPacketInfo, pDeserialized->packetIdentifier );
         }
     }
 }
