@@ -101,7 +101,7 @@ Generate CA key and certificate. Provide the Subject field information as approp
 openssl req -x509 -nodes -sha256 -days 365 -newkey rsa:2048 -keyout ca.key -out ca.crt
 ```
 
-Generate server key and certificate by getting it signed by the CA cert.
+Generate server key and certificate and sign with the CA cert.
 ```shell
 
 openssl req -nodes -sha256 -new -keyout server.key -out server.csr
