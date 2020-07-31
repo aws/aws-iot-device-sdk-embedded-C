@@ -35,15 +35,19 @@ void harness()
 {
     http_parser * pHttpParser = NULL;
     HTTPParsingContext_t * pParsingContext = NULL;
+    HTTPResponse_t * pResponse = NULL;
     size_t length;
     char * pLoc;
 
     pHttpParser = allocateHttpParser( NULL );
-    pParsingContext = ( HTTPParsingContext_t * ) ( pHttpParser->data );
+
+    pParsingContext = ( HTTPParsingContext_t * ) pHttpParser->data;
+    pResponse = pParsingContext->pResponse;
     __CPROVER_assume( pParsingContext->pLastHeaderField != NULL );
 
     __CPROVER_assume( length < CBMC_MAX_OBJECT_SIZE );
-    pLoc = malloc( length );
+    __CPROVER_assume( ( const char * ) pResponse->pBuffer < pLoc &&
+                      pLoc < ( const char * ) ( pResponse->pBuffer + pResponse->bufferLen ) );
 
     httpParserOnHeaderValueCallback( pHttpParser, pLoc, length );
 }

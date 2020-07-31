@@ -148,7 +148,9 @@ HTTPParsingContext_t * allocateHttpParsingContext( HTTPParsingContext_t * pHttpP
     if( pHttpParsingContext != NULL )
     {
         pResponse = allocateHttpResponse( NULL );
-        __CPROVER_assume( isValidHttpResponse( pResponse ) && pResponse != NULL );
+        __CPROVER_assume( isValidHttpResponse( pResponse ) &&
+                          pResponse != NULL &&
+                          pResponse->pBuffer != NULL );
         pHttpParsingContext->pResponse = pResponse;
         pHttpParsingContext->pBufferCur = ( char * ) pResponse->pBuffer;
     }
