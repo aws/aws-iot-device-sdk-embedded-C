@@ -72,6 +72,7 @@ incomingpublish
 init
 int
 iot
+isduplicate
 isn
 linux
 lsb
@@ -207,6 +208,7 @@ serializepublish
 serializepublishheader
 serializesubscribe
 serializeunsubscribe
+setretainflag
 shoulddelete
 shouldn
 sizeof
