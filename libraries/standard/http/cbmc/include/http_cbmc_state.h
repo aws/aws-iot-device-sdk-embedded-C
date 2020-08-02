@@ -28,6 +28,7 @@
 #include "http_client.h"
 #include "private/http_client_internal.h"
 #include "http_parser.h"
+#include "transport_interface_stubs.h"
 
 struct NetworkContext
 {
@@ -114,6 +115,15 @@ bool isValidHttpResponse( const HTTPResponse_t * pResponse );
  * @return NULL or pointer to allocated #TransportInterface_t object.
  */
 TransportInterface_t * allocateTransportInterface( TransportInterface_t * pTransport );
+
+/**
+ * @brief Validates if a #TransportInterface_t object is feasible.
+ *
+ * @param[in] pTransportInterface #TransportInterface_t object to validate.
+ *
+ * @return True if #pTransportInterface is feasible; false otherwise.
+ */
+bool isValidTransportInterface( TransportInterface_t * pTransportInterface );
 
 /**
  * @brief Allocate an #http_parser object.

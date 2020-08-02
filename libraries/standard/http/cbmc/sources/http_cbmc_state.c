@@ -133,6 +133,19 @@ TransportInterface_t * allocateTransportInterface( TransportInterface_t * pTrans
     return pTransport;
 }
 
+bool isValidTransportInterface( TransportInterface_t * pTransportInterface )
+{
+    bool isValid = true;
+
+    if( pTransportInterface )
+    {
+        isValid = isValid && ( pTransportInterface->send == TransportInterfaceSendStub ||
+                               pTransportInterface->send == NULL );
+        isValid = isValid && ( pTransportInterface->recv == TransportInterfaceReceiveStub ||
+                               pTransportInterface->recv == NULL );
+    }
+}
+
 http_parser * allocateHttpParser( http_parser * pHttpParser )
 {
     HTTPParsingContext_t * pHttpParsingContext;
