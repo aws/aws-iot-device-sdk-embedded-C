@@ -72,7 +72,7 @@ int32_t NetworkInterfaceSendStub( NetworkContext_t * pNetworkContext,
      * iterations. Looping for INT32_MAX times adds no value to the proof.
      * What matters is that the MQTT library can handle all the possible values
      * that could be returned. */
-    if( tries < MAX_NETWORK_SEND_TRIES )
+    if( tries < ( MAX_NETWORK_SEND_TRIES - 1 ) )
     {
         tries++;
     }

@@ -35,8 +35,8 @@ void harness()
 
     /* Ideally, this should be allocated in the heap but doing so makes CBMC
      * run out of memory. */
-    TransportInterface_t transportInterface;
-    uint8_t * pRequestBodyBuf = NULL;
+    TransportInterface_t * pTransportInterface;
+    uint8_t * pRequestBodyBuf;
     size_t reqBodyBufLen;
     uint32_t sendFlags;
 
@@ -53,28 +53,20 @@ void harness()
     __CPROVER_assume( isValidHttpResponse( pResponse ) );
 
     /* Initialize transport interface. */
-    ( void ) allocateTransportInterface( &transportInterface );
+    pTransportInterface = allocateTransportInterface( NULL );
 
-    if( nondet_bool() )
+    if( pTransportInterface != NULL )
     {
         /* Ideally, we want to set the function pointers below with __CPROVER_assume()
          * but doing so makes CBMC run out of memory. */
-        transportInterface.send = nondet_bool() ? NULL : TransportInterfaceSendStub;
-        transportInterface.recv = nondet_bool() ? NULL : TransportInterfaceReceiveStub;
-        HTTPClient_Send( &transportInterface,
-                         pRequestHeaders,
-                         pRequestBodyBuf,
-                         reqBodyBufLen,
-                         pResponse,
-                         sendFlags );
+        pTransportInterface->send = nondet_bool() ? NULL : TransportInterfaceSendStub;
+        pTransportInterface->recv = nondet_bool() ? NULL : TransportInterfaceReceiveStub;
     }
-    else
-    {
-        HTTPClient_Send( NULL,
-                         pRequestHeaders,
-                         pRequestBodyBuf,
-                         reqBodyBufLen,
-                         pResponse,
-                         sendFlags );
-    }
+
+    HTTPClient_Send( pTransportInterface,
+                     pRequestHeaders,
+                     pRequestBodyBuf,
+                     reqBodyBufLen,
+                     pResponse,
+                     sendFlags );
 }

@@ -41,6 +41,17 @@ struct NetworkContext
  * @note This definition must exist in order to compile. 10U is a typical value
  * used in the MQTT demos.
  */
-#define MQTT_STATE_ARRAY_MAX_COUNT    ( 10U )
+#define MQTT_STATE_ARRAY_MAX_COUNT              ( 10U )
+
+/**
+ * @brief Retry count for reading CONNACK from network.
+ *
+ * The MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT will be used only when the
+ * timeoutMs parameter of #MQTT_Connect() is passed as 0 . The transport
+ * receive for CONNACK will be retried MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT
+ * times before timing out. A value of 0 for this config will cause the
+ * transport receive for CONNACK  to be invoked only once.
+ */
+#define MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT    ( 2U )
 
 #endif /* ifndef MQTT_CONFIG_H_ */

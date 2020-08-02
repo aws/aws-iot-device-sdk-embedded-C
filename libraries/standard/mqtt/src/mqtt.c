@@ -493,6 +493,7 @@ static MQTTStatus_t discardPacket( const MQTTContext_t * pContext,
 
     assert( pContext != NULL );
     assert( pContext->getTime != NULL );
+
     bytesToReceive = pContext->networkBuffer.size;
     getTimeStampMs = pContext->getTime;
 
@@ -693,6 +694,8 @@ static MQTTStatus_t handleKeepAlive( MQTTContext_t * pContext )
     uint32_t now = 0U, keepAliveMs = 0U;
 
     assert( pContext != NULL );
+    assert( pContext->getTime != NULL );
+
     now = pContext->getTime();
     keepAliveMs = 1000U * ( uint32_t ) pContext->keepAliveIntervalSec;
 
@@ -731,6 +734,7 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
 
     assert( pContext != NULL );
     assert( pIncomingPacket != NULL );
+    assert( pContext->appCallback != NULL );
 
     status = MQTT_DeserializePublish( pIncomingPacket, &packetIdentifier, &publishInfo );
     LogInfo( ( "De-serialized incoming PUBLISH packet: DeserializerResult=%d.", status ) );
@@ -897,6 +901,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
 
     assert( pContext != NULL );
     assert( pIncomingPacket != NULL );
+    assert( pContext->appCallback != NULL );
 
     appCallback = pContext->appCallback;
 
