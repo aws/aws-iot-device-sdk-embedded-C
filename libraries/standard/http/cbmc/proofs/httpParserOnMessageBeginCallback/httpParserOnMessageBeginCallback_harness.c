@@ -30,7 +30,7 @@
 
 void harness()
 {
-    http_parser * pHttpParser = NULL;
+    http_parser * pHttpParser;
 
     pHttpParser = allocateHttpParser( NULL );
 

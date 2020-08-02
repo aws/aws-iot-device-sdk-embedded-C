@@ -75,6 +75,8 @@ bool isValidHttpRequestInfo( const HTTPRequestInfo_t * pRequestInfo )
 
 HTTPResponse_t * allocateHttpResponse( HTTPResponse_t * pResponse )
 {
+    size_t headerOffset, bodyOffset;
+
     if( pResponse == NULL )
     {
         pResponse = mallocCanFail( sizeof( HTTPResponse_t ) );
@@ -83,7 +85,19 @@ HTTPResponse_t * allocateHttpResponse( HTTPResponse_t * pResponse )
     if( pResponse != NULL )
     {
         __CPROVER_assume( pResponse->bufferLen < CBMC_MAX_OBJECT_SIZE );
+        __CPROVER_assume( pResponse->bodyLen < pResponse->bufferLen );
+        __CPROVER_assume( pResponse->headersLen < pResponse->bodyLen );
+
         pResponse->pBuffer = mallocCanFail( pResponse->bufferLen );
+
+        __CPROVER_assume( headerOffset <= pResponse->headersLen );
+        pResponse->pHeaders = nondet_bool() ? NULL :
+                              pResponse->pBuffer + headerOffset;
+
+        __CPROVER_assume( pResponse->headersLen < bodyOffset &&
+                          bodyOffset <= pResponse->bufferLen );
+        pResponse->pBody = nondet_bool() ? NULL :
+                           pResponse->pBuffer + bodyOffset;
     }
 
     return pResponse;
@@ -138,6 +152,7 @@ http_parser * allocateHttpParser( http_parser * pHttpParser )
 HTTPParsingContext_t * allocateHttpParsingContext( HTTPParsingContext_t * pHttpParsingContext )
 {
     HTTPResponse_t * pResponse;
+    size_t bufferOffset;
 
     if( pHttpParsingContext == NULL )
     {
@@ -151,6 +166,9 @@ HTTPParsingContext_t * allocateHttpParsingContext( HTTPParsingContext_t * pHttpP
                           pResponse != NULL &&
                           pResponse->pBuffer != NULL );
         pHttpParsingContext->pResponse = pResponse;
+
+        __CPROVER_assume( bufferOffset <= pResponse->bufferLen );
+        pHttpParsingContext->pBufferCur = pResponse->pBuffer + bufferOffset;
     }
 
     return pHttpParsingContext;

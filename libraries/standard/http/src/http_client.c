@@ -841,7 +841,7 @@ static int httpParserOnBodyCallback( http_parser * pHttpParser,
     /* coverity[misra_c_2012_rule_18_3_violation] */
     if( pLoc > pNextWriteLoc )
     {
-        ( void ) memcpy( pNextWriteLoc, pLoc, length );
+        ( void ) memmove( pNextWriteLoc, pLoc, length );
     }
 
     /* Increase the length of the body found. */

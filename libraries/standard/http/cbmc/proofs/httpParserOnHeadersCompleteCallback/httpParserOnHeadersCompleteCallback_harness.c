@@ -35,26 +35,20 @@ void harness()
     HTTPParsingContext_t * pParsingContext;
     HTTPResponse_t * pResponse;
     HTTPClient_ResponseHeaderParsingCallback_t headerParserCallback;
-    size_t bufferIndexOffset;
-    size_t headerIndexOffset;
+    size_t bufferOffset;
 
     pHttpParser = allocateHttpParser( NULL );
 
     pParsingContext = ( HTTPParsingContext_t * ) ( pHttpParser->data );
     headerParserCallback.onHeaderCallback = onHeaderCallbackStub;
-    pParsingContext->pResponse->pHeaderParsingCallback = &headerParserCallback;
 
     pResponse = pParsingContext->pResponse;
+    pResponse->pHeaderParsingCallback = &headerParserCallback;
 
-    HTTPResponse_t debug = *pResponse;
-    __CPROVER_assume( bufferIndexOffset <= pResponse->bufferLen );
-    /*.. = &pResponse->PHeaders[bufferIndexOffset] */
-    pParsingContext->pBufferCur = pResponse->pBuffer + bufferIndexOffset;
+    __CPROVER_assume( pResponse->headersLen <= bufferOffset &&
+                      bufferOffset <= pResponse->bufferLen );
+    pParsingContext->pBufferCur = pResponse->pBuffer + bufferOffset;
 
-    __CPROVER_assume( headerIndexOffset <= pResponse->bufferLen );
-    pResponse->pHeaders = pResponse->pBuffer + headerIndexOffset;
-
-    __CPROVER_assume( pResponse->pHeaders < pParsingContext->pBufferCur );
     /* This assumption suppresses an overflow error when incrementing pResponse->headerCount. */
     __CPROVER_assume( pResponse->headerCount < SIZE_MAX );
 

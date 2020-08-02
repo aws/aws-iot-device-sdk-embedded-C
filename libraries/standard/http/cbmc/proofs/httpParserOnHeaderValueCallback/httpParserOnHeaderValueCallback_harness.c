@@ -30,9 +30,9 @@
 
 void harness()
 {
-    http_parser * pHttpParser = NULL;
-    HTTPParsingContext_t * pParsingContext = NULL;
-    HTTPResponse_t * pResponse = NULL;
+    http_parser * pHttpParser;
+    HTTPParsingContext_t * pParsingContext;
+    HTTPResponse_t * pResponse;
     size_t length;
     char * pLoc;
 
@@ -42,14 +42,8 @@ void harness()
     __CPROVER_assume( pParsingContext->pLastHeaderField != NULL );
 
     pResponse = pParsingContext->pResponse;
-    __CPROVER_assume( __CPROVER_same_object( pResponse->pBuffer,
-                                             pLoc ) );
-    __CPROVER_assume( __CPROVER_same_object( pResponse->pHeaders,
-                                             pParsingContext->pBufferCur ) );
-    __CPROVER_assume( ( const char * ) pResponse->pBuffer <= pLoc &&
-                      pLoc < ( const char * ) ( pResponse->pBuffer + pResponse->bufferLen ) );
-
-    __CPROVER_assume( length < CBMC_MAX_OBJECT_SIZE );
+    __CPROVER_assume( length <= pResponse->bufferLen );
+    pLoc = pResponse->pBuffer + length;
 
     __CPROVER_file_local_http_client_c_httpParserOnHeaderValueCallback( pHttpParser, pLoc, length );
 }
