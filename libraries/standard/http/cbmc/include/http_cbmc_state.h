@@ -89,7 +89,7 @@ HTTPRequestInfo_t * allocateHttpRequestInfo( HTTPRequestInfo_t * pRequestInfo );
 bool isValidHttpRequestInfo( const HTTPRequestInfo_t * pRequestInfo );
 
 /**
- * @brief Allocates a #HTTPResponse_t object with unconstrained values.
+ * @brief Allocates a #HTTPResponse_t object.
  *
  * @param[in] pResponse #HTTPResponse_t object to allocate.
  *
@@ -107,19 +107,40 @@ HTTPResponse_t * allocateHttpResponse( HTTPResponse_t * pResponse );
 bool isValidHttpResponse( const HTTPResponse_t * pResponse );
 
 /**
- * @brief Allocate a transport interface for CBMC.
+ * @brief Allocates a #TransportInterface_t object.
  *
- * @param[in] pTransport Transport interface.
+ * @param[in] pTransport #TransportInterface_t object to allocate.
  *
- * @return An allocated TransportInterface_t object to use as a parameter
- * for the function under test.
+ * @return NULL or pointer to allocated #TransportInterface_t object.
  */
 TransportInterface_t * allocateTransportInterface( TransportInterface_t * pTransport );
 
+/**
+ * @brief Allocate an #http_parser object.
+ *
+ * @param[in] pHttpParser #http_parser object to allocate.
+ *
+ * @return NULL or pointer to allocated #http_parser object.
+ */
 http_parser * allocateHttpParser( http_parser * pHttpParser );
 
+/**
+ * @brief Allocate an #HTTPParsingContext_t object.
+ *
+ * @param[in] pHttpParsingContext #HTTPParsingContext_t object to allocate.
+ *
+ * @return NULL or pointer to allocated #HTTPParsingContext_t object.
+ */
 HTTPParsingContext_t * allocateHttpParsingContext( HTTPParsingContext_t * pHttpParsingContext );
 
+/**
+ * @brief Validates if a #HTTPParsingContext_t object is feasible.
+ *
+ * @param[in] pHttpParsingContext #HTTPParsingContext_t object to validate.
+ *
+ * @return True if #pHttpParsingContext is feasible; false otherwise.
+ */
 bool isValidHttpParsingContext( const HTTPParsingContext_t * pHttpParsingContext );
+
 
 #endif /* ifndef HTTP_CBMC_STATE_H_ */
