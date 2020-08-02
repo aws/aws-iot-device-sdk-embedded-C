@@ -1,0 +1,7 @@
+{ "expected-missing-functions":
+  [
+
+  ],
+  "proof-name": "MQTT_Subscribe",
+  "proof-root": "libraries/standard/mqtt/cbmc/proofs"
+}

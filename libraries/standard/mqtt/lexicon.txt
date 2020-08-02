@@ -74,6 +74,7 @@ int
 iot
 isduplicate
 isn
+linux
 lsb
 lwt
 malloc
