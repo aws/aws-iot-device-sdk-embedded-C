@@ -744,7 +744,7 @@ static int httpParserOnHeadersCompleteCallback( http_parser * pHttpParser )
 
     /* If the Content-Length header was found, then pHttpParser->content_length
      * will not be equal to the maximum 64 bit integer. */
-    if( pHttpParser->content_length != ( UINT64_MAX ) )
+    if( pHttpParser->content_length != UINT64_MAX )
     {
         pResponse->contentLength = ( size_t ) ( pHttpParser->content_length );
     }
