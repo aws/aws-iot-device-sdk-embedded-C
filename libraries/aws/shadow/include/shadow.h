@@ -58,58 +58,78 @@ typedef enum ShadowMessageType
  */
 typedef enum ShadowTopicStringType
 {
+    /* MISRA Rule 5.2 flags the following member's name as ambiguous from the
+     * one with suffix. This rule is suppressed for naming consistency with
+     * other Shadow header field and value string and length macros in this file.*/
+    /* coverity[other_declaration] */
     SHADOW_TOPIC_STRING_TYPE_GET = 0,
 
     /* MISRA Rule 5.2 flags the following member's name as ambiguous from the one
      * without _ACCEPTED suffix. This rule is suppressed for naming consistency with other Shadow
      * header field and value string and length macros in this file.*/
     /* coverity[misra_c_2012_rule_5_2_violation] */
+    /* coverity[other_declaration] */
     SHADOW_TOPIC_STRING_TYPE_GET_ACCEPTED,
 
     /* MISRA Rule 5.2 flags the following member's name as ambiguous from the one
      * without _REJECTED suffix. This rule is suppressed for naming consistency with other Shadow
      * header field and value string and length macros in this file.*/
     /* coverity[misra_c_2012_rule_5_2_violation] */
+    /* coverity[other_declaration] */
     SHADOW_TOPIC_STRING_TYPE_GET_REJECTED,
 
+    /* MISRA Rule 5.2 flags the following member's name as ambiguous from the
+     * one with suffix. This rule is suppressed for naming consistency with
+     * other HTTP header field and value string and length macros in this file.*/
+    /* coverity[other_declaration] */
     SHADOW_TOPIC_STRING_TYPE_DELETE,
 
     /* MISRA Rule 5.2 flags the following member's name as ambiguous from the one
      * without _ACCEPTED suffix. This rule is suppressed for naming consistency with other Shadow
      * header field and value string and length macros in this file.*/
     /* coverity[misra_c_2012_rule_5_2_violation] */
+    /* coverity[other_declaration] */
     SHADOW_TOPIC_STRING_TYPE_DELETE_ACCEPTED,
 
     /* MISRA Rule 5.2 flags the following member's name as ambiguous from the one
      * without _REJECTED suffix. This rule is suppressed for naming consistency with other Shadow
      * header field and value string and length macros in this file.*/
     /* coverity[misra_c_2012_rule_5_2_violation] */
+    /* coverity[other_declaration] */
     SHADOW_TOPIC_STRING_TYPE_DELETE_REJECTED,
 
+    /* MISRA Rule 5.2 flags the following member's name as ambiguous from the
+     * one with suffix. This rule is suppressed for naming consistency with
+     * other Shadow header field and value string and length macros in this file.*/
+    /* coverity[other_declaration] */
     SHADOW_TOPIC_STRING_TYPE_UPDATE,
 
     /* MISRA Rule 5.2 flags the following member's name as ambiguous from the one
      * without _ACCEPTED suffix. This rule is suppressed for naming consistency with other Shadow
      * header field and value string and length macros in this file.*/
     /* coverity[misra_c_2012_rule_5_2_violation] */
+    /* coverity[other_declaration] */
     SHADOW_TOPIC_STRING_TYPE_UPDATE_ACCEPTED,
 
     /* MISRA Rule 5.2 flags the following member's name as ambiguous from the one
      * without _REJECTED suffix. This rule is suppressed for naming consistency with other Shadow
      * header field and value string and length macros in this file.*/
     /* coverity[misra_c_2012_rule_5_2_violation] */
+    /* coverity[other_declaration] */
     SHADOW_TOPIC_STRING_TYPE_UPDATE_REJECTED,
 
     /* MISRA Rule 5.2 flags the following member's name as ambiguous from the one
      * without _DOCUMENTS suffix. This rule is suppressed for naming consistency with other Shadow
      * header field and value string and length macros in this file.*/
     /* coverity[misra_c_2012_rule_5_2_violation] */
+    /* coverity[other_declaration] */
     SHADOW_TOPIC_STRING_TYPE_UPDATE_DOCUMENTS,
 
     /* MISRA Rule 5.2 flags the following member's name as ambiguous from the one
      * without _DELTA suffix. This rule is suppressed for naming consistency with other Shadow
      * header field and value string and length macros in this file.*/
     /* coverity[misra_c_2012_rule_5_2_violation] */
+    /* coverity[other_declaration] */
     SHADOW_TOPIC_STRING_TYPE_UPDATE_DELTA,
     SHADOW_TOPIC_STRING_TYPE_MAX_NUM
 } ShadowTopicStringType_t;
@@ -143,31 +163,61 @@ typedef enum ShadowStatus
 /**
  * @brief The string representing a Shadow "DELETE" operation in a Shadow MQTT topic.
  */
+
+/* MISRA Rule 5.4 flags the following macro's name as ambiguous from the
+ * one without suffix. This rule is suppressed for naming consistency with
+ * other Shadow header field and value string and length macros in this file.*/
+/* coverity[other_declaration] */
 #define SHADOW_TOPIC_OPERATION_STRING_DELETE                        "/shadow/delete"
 
 /**
  * @brief The length of #SHADOW_TOPIC_OPERATION_STRING_DELETE.
  */
+
+/* MISRA Rule 5.4 flags the following macro's name as ambiguous from the
+ * one without suffix. This rule is suppressed for naming consistency with
+ * other Shadow header field and value string and length macros in this file.*/
+/* coverity[other_declaration] */
 #define SHADOW_TOPIC_OPERATION_LENGTH_DELETE                        ( ( uint16_t ) ( sizeof( SHADOW_TOPIC_OPERATION_STRING_DELETE ) - 1U ) )
 
 /**
  * @brief The string representing a Shadow "GET" operation in a Shadow MQTT topic.
  */
+
+/* MISRA Rule 5.4 flags the following macro's name as ambiguous from the
+ * one without suffix. This rule is suppressed for naming consistency with
+ * other Shadow header field and value string and length macros in this file.*/
+/* coverity[other_declaration] */
 #define SHADOW_TOPIC_OPERATION_STRING_GET                           "/shadow/get"
 
 /**
  * @brief The length of #SHADOW_TOPIC_OPERATION_STRING_GET.
  */
+
+/* MISRA Rule 5.4 flags the following macro's name as ambiguous from the
+ * one without suffix. This rule is suppressed for naming consistency with
+ * other Shadow header field and value string and length macros in this file.*/
+/* coverity[other_declaration] */
 #define SHADOW_TOPIC_OPERATION_LENGTH_GET                           ( ( uint16_t ) ( sizeof( SHADOW_TOPIC_OPERATION_STRING_GET ) - 1U ) )
 
 /**
  * @brief The string representing a Shadow "UPDATE" operation in a Shadow MQTT topic.
  */
+
+/* MISRA Rule 5.4 flags the following macro's name as ambiguous from the
+ * one without suffix. This rule is suppressed for naming consistency with
+ * other Shadow header field and value string and length macros in this file.*/
+/* coverity[other_declaration] */
 #define SHADOW_TOPIC_OPERATION_STRING_UPDATE                        "/shadow/update"
 
 /**
  * @brief The length of #SHADOW_TOPIC_OPERATION_STRING_UPDATE.
  */
+
+/* MISRA Rule 5.4 flags the following macro's name as ambiguous from the
+ * one without suffix. This rule is suppressed for naming consistency with
+ * other Shadow header field and value string and length macros in this file.*/
+/* coverity[other_declaration] */
 #define SHADOW_TOPIC_OPERATION_LENGTH_UPDATE                        ( ( uint16_t ) ( sizeof( SHADOW_TOPIC_OPERATION_STRING_UPDATE ) - 1U ) )
 
 /**

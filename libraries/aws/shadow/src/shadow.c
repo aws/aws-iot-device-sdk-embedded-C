@@ -242,7 +242,6 @@ static ShadowStatus_t containsSubString( const char * pString,
                                          const char * pSubString,
                                          uint16_t subStringLength )
 {
-    int strncmpResult = 0;
     ShadowStatus_t returnStatus = SHADOW_STATUS_FAIL;
 
     /* The string must be at least as long as the substring to contain it
@@ -251,8 +250,7 @@ static ShadowStatus_t containsSubString( const char * pString,
     {
         /* We are only checking up to subStringLength characters in the original
          * string. The string may be longer and contain additional characters. */
-        strncmpResult = strncmp( pString, pSubString, subStringLength );
-        if( strncmpResult == 0 )
+        if( strncmp( pString, pSubString, ( size_t  ) subStringLength ) == 0 )
         {
             returnStatus = SHADOW_STATUS_SUCCESS;
         }
