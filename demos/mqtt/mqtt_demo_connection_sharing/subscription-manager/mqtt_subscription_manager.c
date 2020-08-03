@@ -19,10 +19,26 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/**
+ * @file mqtt_subscription_manager.c
+ * @brief Implementation of the API of a subscription manager for handling subscription callbacks
+ * to topic filters in MQTT operations.
+ */
+
+/* Standard includes. */
 #include <string.h>
 #include <assert.h>
+
+/* Include demo config file. */
+#include "demo_config.h"
+
+/* Include header for the subscription manager. */
 #include "mqtt_subscription_manager.h"
 
+/**
+ * @brief Represents a registered record of the topic filter and its associated callback
+ * in the subscription manager registry.
+ */
 typedef struct SubscriptionManager_Record
 {
     const char * pTopicFilter;
@@ -30,17 +46,97 @@ typedef struct SubscriptionManager_Record
     SubscriptionManager_Callback_t callback;
 } SubscriptionManager_Record_t;
 
-#define MAX_SUBSCRIPTION_CALLBACK_RECORDS    5
+/**
+ * @brief The default value for the maximum size of the callback registry in the
+ * subscription manager.
+ */
+#ifndef MAX_SUBSCRIPTION_CALLBACK_RECORDS
+    #define MAX_SUBSCRIPTION_CALLBACK_RECORDS    5
+#endif
+
+/**
+ * @brief The registry to store records of topic filters and their subscription callbacks.
+ */
 static SubscriptionManager_Record_t callbackRecordList[ MAX_SUBSCRIPTION_CALLBACK_RECORDS ] = { 0 };
 
-static const size_t recordListSize = sizeof( callbackRecordList ) / sizeof( SubscriptionManager_Record_t );
-static size_t recordListCount = 0u;
+/**
+ * @brief Handle special corner cases regarding wildcards at the end of topic
+ * filters, as documented by the MQTT protocol spec.
+ *
+ * @param[in] pTopicFilter The topic filter containing the wildcard.
+ * @param[in] topicFilterLength Length of the topic filter being examined.
+ * @param[in] topicNameLength Length of the topic name being examined.
+ * @param[in] nameIndex Index of the topic name being examined.
+ * @param[in] filterIndex Index of the topic filter being examined.
+ * @param[out] pMatch Whether the topic filter and topic name match.
+ *
+ * @return `true` if the caller of this function should exit; `false` if the caller
+ * should continue parsing the topics.
+ */
+static bool matchEndWildcards( const char * pTopicFilter,
+                               uint16_t topicFilterLength,
+                               uint16_t topicNameLength,
+                               uint16_t nameIndex,
+                               uint16_t filterIndex,
+                               bool * pMatch );
+
+/**
+ * @brief Attempt to match characters in a topic filter by wildcards.
+ *
+ * @param[in] pTopicFilter The topic filter containing the wildcard.
+ * @param[in] pTopicName The topic name to check.
+ * @param[in] topicNameLength Length of the topic name.
+ * @param[in] filterIndex Index of the wildcard in the topic filter.
+ * @param[in,out] pNameIndex Index of character in topic name. This variable is
+ * advanced for `+` wildcards.
+ * @param[out] pMatch Whether the topic filter and topic name match.
+ *
+ * @return `true` if the caller of this function should exit; `false` if the caller
+ * should continue parsing the topics.
+ */
+static bool matchWildcards( const char * pTopicFilter,
+                            const char * pTopicName,
+                            uint16_t topicNameLength,
+                            uint16_t filterIndex,
+                            uint16_t * pNameIndex,
+                            bool * pMatch );
+
+/**
+ * @brief Match a topic name and topic filter allowing the use of wildcards.
+ *
+ * @param[in] pTopicName The topic name to check.
+ * @param[in] topicNameLength Length of the topic name.
+ * @param[in] pTopicFilter The topic filter to check.
+ * @param[in] topicFilterLength Length of topic filter.
+ *
+ * @return `true` if the topic name and topic filter match; `false` otherwise.
+ */
+static bool topicFilterMatch( const char * pTopicName,
+                              uint16_t topicNameLength,
+                              const char * pTopicFilter,
+                              uint16_t topicFilterLength );
+
+/**
+ * @brief Matches a topic name (from a incoming PUBLISH) with a topic filter.
+ *
+ * @param[in] pTopicName The topic name to check.
+ * @param[in] topicNameLength Length of the topic name.
+ * @param[in] pTopicFilter The topic filter to check.
+ * @param[in] topicFilterLength Length of topic filter.
+ *
+ * @return `true` if the topic name and topic filter match; `false`
+ * otherwise.
+ */
+static bool matchTopic( const char * pTopicName,
+                        const uint16_t topicNameLength,
+                        const char * pTopicFilter,
+                        const uint16_t topicFilterLength );
 
 /*-----------------------------------------------------------*/
 
 static bool matchEndWildcards( const char * pTopicFilter,
-                               uint16_t topicNameLength,
                                uint16_t topicFilterLength,
+                               uint16_t topicNameLength,
                                uint16_t nameIndex,
                                uint16_t filterIndex,
                                bool * pMatch )
@@ -126,6 +222,11 @@ static bool topicFilterMatch( const char * pTopicName,
     bool status = false, matchFound = false;
     uint16_t nameIndex = 0, filterIndex = 0;
 
+    assert( pTopicName != NULL );
+    assert( topicNameLength != 0 );
+    assert( pTopicFilter != NULL );
+    assert( topicFilterLength != 0 );
+
     while( ( nameIndex < topicNameLength ) && ( filterIndex < topicFilterLength ) )
     {
         /* Check if the character in the topic name matches the corresponding
@@ -135,8 +236,8 @@ static bool topicFilterMatch( const char * pTopicName,
             /* Handle special corner cases regarding wildcards at the end of
              * topic filters, as documented by the MQTT protocol spec. */
             matchFound = matchEndWildcards( pTopicFilter,
-                                            topicNameLength,
                                             topicFilterLength,
+                                            topicNameLength,
                                             nameIndex,
                                             filterIndex,
                                             &status );
@@ -178,6 +279,11 @@ static bool matchTopic( const char * pTopicName,
                         const char * pTopicFilter,
                         const uint16_t topicFilterLength )
 {
+    assert( pTopicName != NULL );
+    assert( topicNameLength != 0 );
+    assert( pTopicFilter != NULL );
+    assert( topicFilterLength != 0 );
+
     bool status = false;
 
     /* Check for an exact match if the incoming topic name and the registered
@@ -186,7 +292,10 @@ static bool matchTopic( const char * pTopicName,
     {
         status = ( strncmp( pTopicName, pTopicFilter, topicNameLength ) == 0 );
     }
-    else
+
+    /* Match against wildcard characters in topic filter only if the incoming
+     * PUBLISH topic name does not start with a "$" character. */
+    else if( pTopicName[ 0 ] != '$' )
     {
         status = topicFilterMatch( pTopicName, topicNameLength, pTopicFilter, topicFilterLength );
     }
@@ -210,7 +319,7 @@ void SubscriptionManager_DispatchHandler( MQTTContext_t * pContext,
     size_t listIndex = 0u;
 
     /* Iterate through record list to find matching topics, and invoke their callbacks. */
-    while( listIndex < recordListSize )
+    while( listIndex < MAX_SUBSCRIPTION_CALLBACK_RECORDS )
     {
         if( matchTopic( pPublishInfo->pTopicName,
                         pPublishInfo->topicNameLength,
@@ -231,19 +340,31 @@ bool SubscriptionManager_RegisterCallback( const char * pTopicFilter,
                                            uint16_t topicFilterLength,
                                            SubscriptionManager_Callback_t callback )
 {
+    assert( pTopicFilter != NULL );
+    assert( topicFilterLength != 0 );
+
     bool recordAdded = false;
     size_t availableIndex = 0u;
+    bool recordExists = false;
 
     /* Search for an available spot in the list to store the record */
-    while( ( availableIndex < recordListSize ) &&
+    while( ( availableIndex < MAX_SUBSCRIPTION_CALLBACK_RECORDS ) &&
            ( callbackRecordList[ availableIndex ].pTopicFilter != NULL ) )
     {
+        /* Check if a record for the topic filter already exists in the registry. */
+        if( ( callbackRecordList[ availableIndex ].topicFilterLength == topicFilterLength ) &&
+            ( strncmp( pTopicFilter, callbackRecordList[ availableIndex ].pTopicFilter, topicFilterLength )
+              == 0 ) )
+        {
+            recordExists = true;
+        }
+
         availableIndex++;
     }
 
-    if( availableIndex == recordListSize )
+    if( ( availableIndex == MAX_SUBSCRIPTION_CALLBACK_RECORDS ) || ( recordExists == true ) )
     {
-        /* Record list is full. */
+        /* Either the record list is full OR the record for the topic filter already exists. */
     }
     else
     {
@@ -277,7 +398,7 @@ void SubscriptionManager_RemoveCallback( const char * pTopicFilter,
         {
             recordFound = true;
         }
-    } while( ( ++matchingRecordIndex < recordListSize ) && ( recordFound == false ) );
+    } while( ( ++matchingRecordIndex < MAX_SUBSCRIPTION_CALLBACK_RECORDS ) && ( recordFound == false ) );
 
     /* Delete the record by clearing the found entry in the records list. */
     if( recordFound == true )
