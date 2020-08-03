@@ -319,8 +319,7 @@ static int unsubscribeFromTopic( MQTTContext_t * pMqttContext,
  */
 static int publishToTopic( MQTTContext_t * pMqttContext,
                            const char * pTopic,
-                           const char * pMessage,
-                           MQTTQoS_t qos );
+                           const char * pMessage );
 
 /**
  * @brief Function to get the free index at which an outgoing publish
@@ -572,11 +571,11 @@ void demoApp1SubscriptionCallback( MQTTContext_t * pContext,
 
     /* Send a Publish to App 2 topic. */
     LogInfo( ( "Sending PUBLISH to App 2 topic." ) );
-    publishToTopic( pContext, DEMO_APP_2_TOPIC, DEMO_MESSAGE_APP_2, MQTTQoS1 );
+    publishToTopic( pContext, DEMO_APP_2_TOPIC, DEMO_MESSAGE_APP_2 );
 
     /* Send a Publish to the notify topic to signal that the App 1 callback has been invoked! */
     LogInfo( ( "Sending PUBLISH to notify topic of App 1." ) );
-    publishToTopic( pContext, DEMO_APP_1_NOTIFY_TOPIC, DEMO_MESSAGE_NOTIFY_APP_1, MQTTQoS1 );
+    publishToTopic( pContext, DEMO_APP_1_NOTIFY_TOPIC, DEMO_MESSAGE_NOTIFY_APP_1 );
 
     status = MQTT_ProcessLoop( pContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
 
@@ -599,7 +598,7 @@ void demoApp2SubscriptionCallback( MQTTContext_t * pContext,
 
     /* Send a Publish to the notify topic to signal that the App 1 callback has been invoked! */
     LogInfo( ( "Sending PUBLISH to notify topic of App 2." ) );
-    publishToTopic( pContext, DEMO_APP_2_NOTIFY_TOPIC, DEMO_MESSAGE_NOTIFY_APP_2, MQTTQoS1 );
+    publishToTopic( pContext, DEMO_APP_2_NOTIFY_TOPIC, DEMO_MESSAGE_NOTIFY_APP_2 );
 
     status = MQTT_ProcessLoop( pContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
 
@@ -889,8 +888,7 @@ static int unsubscribeFromTopic( MQTTContext_t * pMqttContext,
 
 static int publishToTopic( MQTTContext_t * pMqttContext,
                            const char * pTopic,
-                           const char * pMessage,
-                           MQTTQoS_t qos )
+                           const char * pMessage )
 {
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus = MQTTSuccess;
@@ -910,8 +908,8 @@ static int publishToTopic( MQTTContext_t * pMqttContext,
     }
     else
     {
-        /* This example publishes to only one topic and uses QOS2. */
-        outgoingPublishPackets[ publishIndex ].pubInfo.qos = qos;
+        /* This example publishes with QOS1. */
+        outgoingPublishPackets[ publishIndex ].pubInfo.qos = MQTTQoS1;
         outgoingPublishPackets[ publishIndex ].pubInfo.pTopicName = pTopic;
         outgoingPublishPackets[ publishIndex ].pubInfo.topicNameLength = strlen( pTopic );
         outgoingPublishPackets[ publishIndex ].pubInfo.pPayload = pMessage;
@@ -1128,7 +1126,7 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
         LogInfo( ( "Publish to topic %.*s.",
                    DEMO_APP_1_TOPIC ) );
 
-        returnStatus = publishToTopic( &mqttContext, DEMO_APP_1_TOPIC, DEMO_MESSAGE_APP_1, MQTTQoS0 );
+        returnStatus = publishToTopic( &mqttContext, DEMO_APP_1_TOPIC, DEMO_MESSAGE_APP_1 );
 
         /* Calling MQTT_ProcessLoop to process incoming publish echo, since
          * application subscribed to the same topic the broker will send
