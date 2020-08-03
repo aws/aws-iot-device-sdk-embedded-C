@@ -210,7 +210,7 @@ void SubscriptionManager_DispatchHandler( MQTTContext_t * pContext,
     size_t listIndex = 0u;
 
     /* Iterate through record list to find matching topics, and invoke their callbacks. */
-    while( listIndex < recordListCount )
+    while( listIndex < recordListSize )
     {
         if( matchTopic( pPublishInfo->pTopicName,
                         pPublishInfo->topicNameLength,
@@ -235,8 +235,8 @@ bool SubscriptionManager_RegisterCallback( const char * pTopicFilter,
     size_t availableIndex = 0u;
 
     /* Search for an available spot in the list to store the record */
-    while( ( callbackRecordList[ availableIndex ].pTopicFilter != NULL ) &&
-           ( availableIndex < recordListSize ) )
+    while( ( availableIndex < recordListSize ) &&
+           ( callbackRecordList[ availableIndex ].pTopicFilter != NULL ) )
     {
         availableIndex++;
     }
@@ -248,9 +248,9 @@ bool SubscriptionManager_RegisterCallback( const char * pTopicFilter,
     else
     {
         /* Should the topic string be copied? */
-        callbackRecordList[ recordListCount ].pTopicFilter = pTopicFilter;
-        callbackRecordList[ recordListCount ].topicFilterLength = topicFilterLength;
-        callbackRecordList[ recordListCount ].callback = callback;
+        callbackRecordList[ availableIndex ].pTopicFilter = pTopicFilter;
+        callbackRecordList[ availableIndex ].topicFilterLength = topicFilterLength;
+        callbackRecordList[ availableIndex ].callback = callback;
 
         recordAdded = true;
     }

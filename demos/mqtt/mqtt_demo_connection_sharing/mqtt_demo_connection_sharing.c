@@ -101,7 +101,7 @@
 #define DEMO_APP_2_TOPIC                    "/demo/topic/app2"
 #define DEMO_APP_1_NOTIFY_TOPIC             "/demo/topic/notify/app1"
 #define DEMO_APP_2_NOTIFY_TOPIC             "/demo/topic/notify/app2"
-#define DEMO_APP_NOTIFY_TOPIC_FILTER        "/demo/topic/"
+#define DEMO_APP_NOTIFY_TOPIC_FILTER        "/demo/topic/notify/+"
 
 /**
  * @brief The MQTT message published in this example.
@@ -504,7 +504,7 @@ static int handlePublishResend( MQTTContext_t * pMqttContext )
 
     assert( outgoingPublishPackets != NULL );
 
-    /* Resend all the QoS2 publishes still in the array. These are the
+    /* Resend all the QoS1 publishes still in the array. These are the
      * publishes that hasn't received a PUBREC. When a PUBREC is
      * received, the publish is removed from the array. */
     for( index = 0U; index < MAX_OUTGOING_PUBLISHES; index++ )
@@ -566,7 +566,7 @@ void demoApp1SubscriptionCallback( MQTTContext_t * pContext,
 
     assert( pPublishInfo != NULL );
 
-    LogInfo( ( "Invoked App 2 subscription callback." ) );
+    LogInfo( ( "Invoked App 1 subscription callback." ) );
 
     handleIncomingPublish( pPublishInfo );
 
@@ -673,27 +673,11 @@ static void commonEventHandler( MQTTContext_t * pMqttContext,
                            "callback when using MQTT_ProcessLoop.\n\n" ) );
                 break;
 
-            case MQTT_PACKET_TYPE_PUBREC:
-                LogInfo( ( "PUBREC received for packet id %u.\n\n",
+            case MQTT_PACKET_TYPE_PUBACK:
+                LogInfo( ( "PUBACK received for packet id %u.\n\n",
                            packetIdentifier ) );
                 /* Cleanup publish packet when a PUBREC is received. */
                 cleanupOutgoingPublishWithPacketID( packetIdentifier );
-                break;
-
-            case MQTT_PACKET_TYPE_PUBREL:
-
-                /* Nothing to be done from application as library handles
-                 * PUBREL. */
-                LogInfo( ( "PUBREL received for packet id %u.\n\n",
-                           packetIdentifier ) );
-                break;
-
-            case MQTT_PACKET_TYPE_PUBCOMP:
-
-                /* Nothing to be done from application as library handles
-                 * PUBCOMP. */
-                LogInfo( ( "PUBCOMP received for packet id %u.\n\n",
-                           packetIdentifier ) );
                 break;
 
             /* Any other packet type is invalid. */
@@ -1025,8 +1009,8 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
          * to be sent back to it from the broker. This demo uses QOS2 in Subscribe,
          * therefore, the Publish messages received from the broker will have QOS2. */
         LogInfo( ( "Subscribing to the MQTT topic %.*s.",
-                   DEMO_APP_1_TOPIC,
-                   strlen( DEMO_APP_1_TOPIC ) ) );
+                   strlen( DEMO_APP_1_TOPIC ),
+                   DEMO_APP_1_TOPIC ) );
         returnStatus = subscribeToTopic( &mqttContext, DEMO_APP_1_TOPIC );
     }
 
@@ -1046,11 +1030,11 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
             returnStatus = EXIT_FAILURE;
             LogError( ( "MQTT_ProcessLoop returned with status = %u.",
                         mqttStatus ) );
-        }
 
-        /* Remove registered callback for App 1 topic. */
-        ( void ) SubscriptionManager_RemoveCallback( DEMO_APP_1_TOPIC,
-                                                     strlen( DEMO_APP_1_TOPIC ) );
+            /* Remove registered callback for App 1 topic. */
+            ( void ) SubscriptionManager_RemoveCallback( DEMO_APP_1_TOPIC,
+                                                         strlen( DEMO_APP_1_TOPIC ) );
+        }
     }
 
     if( returnStatus == EXIT_SUCCESS )
@@ -1067,8 +1051,8 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
          * to be sent back to it from the broker. This demo uses QOS2 in Subscribe,
          * therefore, the Publish messages received from the broker will have QOS2. */
         LogInfo( ( "Subscribing to the MQTT topic %.*s.",
-                   DEMO_APP_2_TOPIC,
-                   strlen( DEMO_APP_2_TOPIC ) ) );
+                   strlen( DEMO_APP_2_TOPIC ),
+                   DEMO_APP_2_TOPIC ) );
         returnStatus = subscribeToTopic( &mqttContext, DEMO_APP_2_TOPIC );
     }
 
@@ -1088,11 +1072,11 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
             returnStatus = EXIT_FAILURE;
             LogError( ( "MQTT_ProcessLoop returned with status = %u.",
                         mqttStatus ) );
-        }
 
-        /* Remove registered callback for App 2 topic. */
-        ( void ) SubscriptionManager_RemoveCallback( DEMO_APP_2_TOPIC,
-                                                     strlen( DEMO_APP_2_TOPIC ) );
+            /* Remove registered callback for App 2 topic. */
+            ( void ) SubscriptionManager_RemoveCallback( DEMO_APP_2_TOPIC,
+                                                         strlen( DEMO_APP_2_TOPIC ) );
+        }
     }
 
     if( returnStatus == EXIT_SUCCESS )
@@ -1109,8 +1093,8 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
          * to be sent back to it from the broker. This demo uses QOS2 in Subscribe,
          * therefore, the Publish messages received from the broker will have QOS2. */
         LogInfo( ( "Subscribing to the MQTT topic %.*s.",
-                   DEMO_APP_NOTIFY_TOPIC_FILTER,
-                   strlen( DEMO_APP_NOTIFY_TOPIC_FILTER ) ) );
+                   strlen( DEMO_APP_NOTIFY_TOPIC_FILTER ),
+                   DEMO_APP_NOTIFY_TOPIC_FILTER ) );
         returnStatus = subscribeToTopic( &mqttContext, DEMO_APP_NOTIFY_TOPIC_FILTER );
     }
 
@@ -1130,11 +1114,11 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
             returnStatus = EXIT_FAILURE;
             LogError( ( "MQTT_ProcessLoop returned with status = %u.",
                         mqttStatus ) );
-        }
 
-        /* Remove registered callback for the notify wildcard topic filter. */
-        ( void ) SubscriptionManager_RemoveCallback( DEMO_APP_NOTIFY_TOPIC_FILTER,
-                                                     strlen( DEMO_APP_NOTIFY_TOPIC_FILTER ) );
+            /* Remove registered callback for the notify wildcard topic filter. */
+            ( void ) SubscriptionManager_RemoveCallback( DEMO_APP_NOTIFY_TOPIC_FILTER,
+                                                         strlen( DEMO_APP_NOTIFY_TOPIC_FILTER ) );
+        }
     }
 
     if( returnStatus == EXIT_SUCCESS )
@@ -1172,8 +1156,8 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
     {
         /* Unsubscribe from the topic. */
         LogInfo( ( "Unsubscribing from the MQTT topic %.*s.",
-                   DEMO_APP_1_TOPIC,
-                   strlen( DEMO_APP_1_TOPIC ) ) );
+                   strlen( DEMO_APP_1_TOPIC ),
+                   DEMO_APP_1_TOPIC ) );
         returnStatus = unsubscribeFromTopic( &mqttContext, DEMO_APP_1_TOPIC );
     }
 
@@ -1194,8 +1178,8 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
     {
         /* Unsubscribe from the topic. */
         LogInfo( ( "Unsubscribing from the MQTT topic %.*s.",
-                   DEMO_APP_2_TOPIC,
-                   strlen( DEMO_APP_2_TOPIC ) ) );
+                   strlen( DEMO_APP_2_TOPIC ),
+                   DEMO_APP_2_TOPIC ) );
         returnStatus = unsubscribeFromTopic( &mqttContext, DEMO_APP_2_TOPIC );
     }
 
@@ -1216,8 +1200,8 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
     {
         /* Unsubscribe from the topic. */
         LogInfo( ( "Unsubscribing from the MQTT topic %.*s.",
-                   DEMO_APP_NOTIFY_TOPIC_FILTER,
-                   strlen( DEMO_APP_NOTIFY_TOPIC_FILTER ) ) );
+                   strlen( DEMO_APP_NOTIFY_TOPIC_FILTER ),
+                   DEMO_APP_NOTIFY_TOPIC_FILTER ) );
         returnStatus = unsubscribeFromTopic( &mqttContext, DEMO_APP_NOTIFY_TOPIC_FILTER );
     }
 
