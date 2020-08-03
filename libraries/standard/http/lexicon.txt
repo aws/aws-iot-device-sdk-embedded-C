@@ -31,6 +31,8 @@ fieldlentoreturn
 fieldloc
 findheaderfieldparsercallback
 findheaderinresponse
+findheaderonheadercompletecallback
+findheadervalueparsercallback
 firstpartbytes
 getfinalresponsestatus
 github
@@ -46,6 +48,7 @@ httpparseronheaderfieldcallback
 httpparseronheaderscompletecallback
 httpparseronheadervaluecallback
 httpparseronmessagebegincallback
+httpparseronmessagecompletecallback
 httpparseronstatuscallback
 httpparserxxxxcallback
 httpparserxxxxcallbacks
@@ -96,6 +99,7 @@ pcontext
 pdata
 pfield
 pfieldloc
+pfindheadercontext
 pheaders
 phost
 phttpparser
