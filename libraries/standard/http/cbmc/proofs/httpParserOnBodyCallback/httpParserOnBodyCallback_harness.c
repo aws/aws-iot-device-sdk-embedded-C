@@ -36,7 +36,7 @@ void harness()
     size_t length;
     char * pLoc;
 
-    pHttpParser = allocateHttpParser( NULL );
+    pHttpParser = allocateHttpSendParser( NULL );
 
     pParsingContext = ( HTTPParsingContext_t * ) pHttpParser->data;
 

@@ -237,7 +237,7 @@ static int findHeaderFieldParserCallback( http_parser * pHttpParser,
  * @ref findHeaderFieldParserCallback function.
  *
  * @param[in] pHttpParser Parsing object containing state and callback context.
- * @param[in] pVaLueLoc The location of the parsed header value in the response
+ * @param[in] pValueLoc The location of the parsed header value in the response
  * buffer.
  * @param[in] valueLen The length of the header value.
  *
@@ -245,7 +245,7 @@ static int findHeaderFieldParserCallback( http_parser * pHttpParser,
  * found, otherwise #HTTP_PARSING_CONTINUE_PARSING is returned.
  */
 static int findHeaderValueParserCallback( http_parser * pHttpParser,
-                                          const char * pVaLueLoc,
+                                          const char * pValueLoc,
                                           size_t valueLen );
 
 /**
@@ -2064,14 +2064,14 @@ static int findHeaderFieldParserCallback( http_parser * pHttpParser,
 /*-----------------------------------------------------------*/
 
 static int findHeaderValueParserCallback( http_parser * pHttpParser,
-                                          const char * pVaLueLoc,
+                                          const char * pValueLoc,
                                           size_t valueLen )
 {
     int retCode = HTTP_PARSER_CONTINUE_PARSING;
     findHeaderContext_t * pContext = NULL;
 
     assert( pHttpParser != NULL );
-    assert( pVaLueLoc != NULL );
+    assert( pValueLoc != NULL );
     assert( valueLen > 0u );
 
     pContext = ( findHeaderContext_t * ) pHttpParser->data;
@@ -2088,10 +2088,10 @@ static int findHeaderValueParserCallback( http_parser * pHttpParser,
     {
         LogDebug( ( "Found header value in response: "
                     "RequestedField=%.*s, ValueLocation=0x%p",
-                    ( int ) ( pContext->fieldLen ), pContext->pField, pVaLueLoc ) );
+                    ( int ) ( pContext->fieldLen ), pContext->pField, pValueLoc ) );
 
         /* Populate the output parameters with the location of the header value in the response buffer. */
-        *pContext->pValueLoc = pVaLueLoc;
+        *pContext->pValueLoc = pValueLoc;
         *pContext->pValueLen = valueLen;
 
         /* Set the header value found flag. */

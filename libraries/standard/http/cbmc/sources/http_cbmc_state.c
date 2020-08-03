@@ -154,7 +154,7 @@ bool isValidTransportInterface( TransportInterface_t * pTransportInterface )
     }
 }
 
-http_parser * allocateHttpParser( http_parser * pHttpParser )
+http_parser * allocateHttpSendParser( http_parser * pHttpParser )
 {
     HTTPParsingContext_t * pHttpParsingContext;
 
@@ -163,14 +163,14 @@ http_parser * allocateHttpParser( http_parser * pHttpParser )
         pHttpParser = malloc( sizeof( http_parser ) );
     }
 
-    pHttpParsingContext = allocateHttpParsingContext( NULL );
-    __CPROVER_assume( isValidHttpParsingContext( pHttpParsingContext ) );
+    pHttpParsingContext = allocateHttpSendParsingContext( NULL );
+    __CPROVER_assume( isValidHttpSendParsingContext( pHttpParsingContext ) );
     pHttpParser->data = ( void * ) pHttpParsingContext;
 
     return pHttpParser;
 }
 
-HTTPParsingContext_t * allocateHttpParsingContext( HTTPParsingContext_t * pHttpParsingContext )
+HTTPParsingContext_t * allocateHttpSendParsingContext( HTTPParsingContext_t * pHttpParsingContext )
 {
     HTTPResponse_t * pResponse;
     size_t bufferOffset;
@@ -185,7 +185,8 @@ HTTPParsingContext_t * allocateHttpParsingContext( HTTPParsingContext_t * pHttpP
         pResponse = allocateHttpResponse( NULL );
         __CPROVER_assume( isValidHttpResponse( pResponse ) &&
                           pResponse != NULL &&
-                          pResponse->pBuffer != NULL );
+                          pResponse->pBuffer != NULL &&
+                          pResponse->bufferLen > 0 );
         pHttpParsingContext->pResponse = pResponse;
 
         __CPROVER_assume( bufferOffset <= pResponse->bufferLen );
@@ -195,7 +196,7 @@ HTTPParsingContext_t * allocateHttpParsingContext( HTTPParsingContext_t * pHttpP
     return pHttpParsingContext;
 }
 
-bool isValidHttpParsingContext( const HTTPParsingContext_t * pHttpParsingContext )
+bool isValidHttpSendParsingContext( const HTTPParsingContext_t * pHttpParsingContext )
 {
     bool isValid = true;
 
@@ -203,4 +204,29 @@ bool isValidHttpParsingContext( const HTTPParsingContext_t * pHttpParsingContext
     isValid = isValid && ( pHttpParsingContext->lastHeaderValueLen ) <= ( SIZE_MAX - CBMC_MAX_OBJECT_SIZE );
 
     return isValid;
+}
+
+http_parser * allocateHttpReadHeaderParser( http_parser * pHttpParser )
+{
+    HTTPParsingContext_t * pFindHeaderContext;
+
+    if( pHttpParser == NULL )
+    {
+        pHttpParser = malloc( sizeof( http_parser ) );
+    }
+
+    pFindHeaderContext = allocateFindHeaderContext( NULL );
+    pHttpParser->data = ( void * ) pFindHeaderContext;
+
+    return pHttpParser;
+}
+
+findHeaderContext_t * allocateFindHeaderContext( findHeaderContext_t * pFindHeaderContext )
+{
+    if( pFindHeaderContext == NULL )
+    {
+        pFindHeaderContext = malloc( sizeof( findHeaderContext_t ) );
+    }
+
+    return pFindHeaderContext;
 }

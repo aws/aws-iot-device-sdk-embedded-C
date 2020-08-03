@@ -32,7 +32,7 @@ void harness()
 {
     http_parser * pHttpParser;
 
-    pHttpParser = allocateHttpParser( NULL );
+    pHttpParser = allocateHttpSendParser( NULL );
 
     __CPROVER_file_local_http_client_c_httpParserOnMessageBeginCallback( pHttpParser );
 }

@@ -25,7 +25,16 @@ HARNESS_FILE=HTTPClient_ReadHeader_harness
 DEFINES +=
 INCLUDES +=
 
-REMOVE_FUNCTION_BODY +=
+# The memory safety of the http-parser callbacks are proven separately.
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_http_client_c_findHeaderFieldParserCallback
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_http_client_c_findHeaderValueParserCallback
+REMOVE_FUNCTION_BODY += __CPROVER_file_local_http_client_c_findHeaderOnHeaderCompleteCallback
+
+# Remove any unused functions for http parser
+REMOVE_FUNCTION_BODY += http_parser_init
+REMOVE_FUNCTION_BODY += http_parser_set_max_header_size
+REMOVE_FUNCTION_BODY += http_parser_settings_init
+
 UNWINDSET +=
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c

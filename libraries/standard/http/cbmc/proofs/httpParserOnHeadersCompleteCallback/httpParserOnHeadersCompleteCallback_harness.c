@@ -37,7 +37,7 @@ void harness()
     HTTPClient_ResponseHeaderParsingCallback_t headerParserCallback;
     size_t bufferOffset;
 
-    pHttpParser = allocateHttpParser( NULL );
+    pHttpParser = allocateHttpSendParser( NULL );
 
     pParsingContext = ( HTTPParsingContext_t * ) ( pHttpParser->data );
     headerParserCallback.onHeaderCallback = onHeaderCallbackStub;

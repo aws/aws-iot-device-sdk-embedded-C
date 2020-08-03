@@ -26,23 +26,24 @@
 
 #include "http_cbmc_state.h"
 #include "http_parser.h"
-
+#include "http_client.h"
 
 void harness()
 {
     http_parser * pHttpParser;
     HTTPParsingContext_t * pParsingContext;
     HTTPResponse_t * pResponse;
-    size_t length;
+    size_t length, locOffset;
     char * pLoc;
 
-    pHttpParser = allocateHttpParser( NULL );
+    pHttpParser = allocateHttpSendParser( NULL );
 
     pParsingContext = ( HTTPParsingContext_t * ) pHttpParser->data;
 
     pResponse = pParsingContext->pResponse;
     __CPROVER_assume( length <= pResponse->bufferLen );
-    pLoc = pResponse->pBuffer + length;
+    __CPROVER_assume( locOffset <= length );
+    pLoc = pResponse->pBuffer + locOffset;
 
     __CPROVER_file_local_http_client_c_httpParserOnStatusCallback( pHttpParser, pLoc, length );
 }

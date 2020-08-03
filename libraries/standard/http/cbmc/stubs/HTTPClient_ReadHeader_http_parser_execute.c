@@ -41,7 +41,7 @@ size_t http_parser_execute( http_parser * parser,
                             const char * data,
                             size_t len )
 {
-    const char * pValue;
+    char * pValue;
     size_t fieldLength, fieldOffset, valueLength, valueOffset;
     unsigned int http_errno;
     findHeaderContext_t * pParsingContext;

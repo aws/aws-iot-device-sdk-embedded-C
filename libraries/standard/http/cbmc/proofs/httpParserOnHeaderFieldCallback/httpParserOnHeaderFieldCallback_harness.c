@@ -36,9 +36,9 @@ void harness()
     HTTPResponse_t * pResponse;
     HTTPClient_ResponseHeaderParsingCallback_t headerParserCallback;
     size_t length;
-    char * pLoc;
+    char * pLoc, locOffset;
 
-    pHttpParser = allocateHttpParser( NULL );
+    pHttpParser = allocateHttpSendParser( NULL );
 
     pParsingContext = ( HTTPParsingContext_t * ) ( pHttpParser->data );
     headerParserCallback.onHeaderCallback = onHeaderCallbackStub;
@@ -47,7 +47,8 @@ void harness()
     pResponse->pHeaderParsingCallback = &headerParserCallback;
 
     __CPROVER_assume( length <= pResponse->bufferLen );
-    pLoc = pResponse->pBuffer + length;
+    __CPROVER_assume( locOffset <= length );
+    pLoc = pResponse->pBuffer + locOffset;
 
     /* This assumption suppresses an overflow error when incrementing pResponse->headerCount. */
     __CPROVER_assume( pResponse->headerCount < SIZE_MAX );

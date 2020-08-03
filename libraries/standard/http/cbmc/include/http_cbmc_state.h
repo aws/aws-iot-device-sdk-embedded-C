@@ -132,7 +132,7 @@ bool isValidTransportInterface( TransportInterface_t * pTransportInterface );
  *
  * @return NULL or pointer to allocated #http_parser object.
  */
-http_parser * allocateHttpParser( http_parser * pHttpParser );
+http_parser * allocateHttpSendParser( http_parser * pHttpParser );
 
 /**
  * @brief Allocate an #HTTPParsingContext_t object.
@@ -141,7 +141,7 @@ http_parser * allocateHttpParser( http_parser * pHttpParser );
  *
  * @return NULL or pointer to allocated #HTTPParsingContext_t object.
  */
-HTTPParsingContext_t * allocateHttpParsingContext( HTTPParsingContext_t * pHttpParsingContext );
+HTTPParsingContext_t * allocateHttpSendParsingContext( HTTPParsingContext_t * pHttpParsingContext );
 
 /**
  * @brief Validates if a #HTTPParsingContext_t object is feasible.
@@ -150,7 +150,10 @@ HTTPParsingContext_t * allocateHttpParsingContext( HTTPParsingContext_t * pHttpP
  *
  * @return True if #pHttpParsingContext is feasible; false otherwise.
  */
-bool isValidHttpParsingContext( const HTTPParsingContext_t * pHttpParsingContext );
+bool isValidHttpSendParsingContext( const HTTPParsingContext_t * pHttpParsingContext );
 
+http_parser * allocateHttpReadHeaderParser( http_parser * pHttpParser );
+
+findHeaderContext_t * allocateFindHeaderContext( HTTPParsingContext_t * pFindHeaderContext );
 
 #endif /* ifndef HTTP_CBMC_STATE_H_ */

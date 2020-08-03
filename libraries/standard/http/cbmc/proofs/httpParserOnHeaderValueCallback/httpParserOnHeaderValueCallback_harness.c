@@ -33,17 +33,18 @@ void harness()
     http_parser * pHttpParser;
     HTTPParsingContext_t * pParsingContext;
     HTTPResponse_t * pResponse;
-    size_t length;
+    size_t length, locOffset;
     char * pLoc;
 
-    pHttpParser = allocateHttpParser( NULL );
+    pHttpParser = allocateHttpSendParser( NULL );
 
     pParsingContext = ( HTTPParsingContext_t * ) pHttpParser->data;
     __CPROVER_assume( pParsingContext->pLastHeaderField != NULL );
 
     pResponse = pParsingContext->pResponse;
     __CPROVER_assume( length <= pResponse->bufferLen );
-    pLoc = pResponse->pBuffer + length;
+    __CPROVER_assume( locOffset <= length );
+    pLoc = pResponse->pBuffer + locOffset;
 
     __CPROVER_file_local_http_client_c_httpParserOnHeaderValueCallback( pHttpParser, pLoc, length );
 }
