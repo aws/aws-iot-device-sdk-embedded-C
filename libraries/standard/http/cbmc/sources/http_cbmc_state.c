@@ -85,8 +85,8 @@ HTTPResponse_t * allocateHttpResponse( HTTPResponse_t * pResponse )
     if( pResponse != NULL )
     {
         __CPROVER_assume( pResponse->bufferLen < CBMC_MAX_OBJECT_SIZE );
-        __CPROVER_assume( pResponse->bodyLen < pResponse->bufferLen );
-        __CPROVER_assume( pResponse->headersLen < pResponse->bodyLen );
+        __CPROVER_assume( pResponse->bodyLen <= pResponse->bufferLen );
+        __CPROVER_assume( pResponse->headersLen <= pResponse->bufferLen );
 
         pResponse->pBuffer = mallocCanFail( pResponse->bufferLen );
 
@@ -94,8 +94,16 @@ HTTPResponse_t * allocateHttpResponse( HTTPResponse_t * pResponse )
         pResponse->pHeaders = nondet_bool() ? NULL :
                               pResponse->pBuffer + headerOffset;
 
-        __CPROVER_assume( pResponse->headersLen < bodyOffset &&
-                          bodyOffset <= pResponse->bufferLen );
+        if( pResponse->bufferLen == 0 )
+        {
+            bodyOffset = 0;
+        }
+        else
+        {
+            __CPROVER_assume( pResponse->headersLen < bodyOffset &&
+                              bodyOffset <= pResponse->bufferLen );
+        }
+
         pResponse->pBody = nondet_bool() ? NULL :
                            pResponse->pBuffer + bodyOffset;
     }
