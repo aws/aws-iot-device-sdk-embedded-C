@@ -42,8 +42,7 @@ size_t http_parser_execute( http_parser * parser,
                             size_t len )
 {
     const char * pValue;
-    size_t fieldLength;
-    size_t valueLength;
+    size_t fieldLength, fieldOffset, valueLength, valueOffset;
     unsigned int http_errno;
     findHeaderContext_t * pParsingContext;
 
@@ -59,10 +58,12 @@ size_t http_parser_execute( http_parser * parser,
     parser->http_errno = http_errno;
 
     __CPROVER_assume( fieldLength <= len );
+    __CPROVER_assume( fieldOffset <= fieldLength );
     __CPROVER_assume( valueLength <= len );
+    __CPROVER_assume( valueOffset <= valueLength );
 
     pParsingContext = ( findHeaderContext_t * ) ( parser->data );
-    pParsingContext->pField = nondet_bool() ? NULL : malloc( fieldLength );
+    pParsingContext->pField = data + fieldOffset;
     pParsingContext->fieldLen = fieldLength;
     pParsingContext->pValueLoc = NULL;
     pParsingContext->pValueLen = 0;
@@ -79,7 +80,7 @@ size_t http_parser_execute( http_parser * parser,
 
     if( pParsingContext->valueFound )
     {
-        pValue = malloc( valueLength );
+        pValue = data + valueOffset;
         pParsingContext->pValueLen = &valueLength;
         pParsingContext->pValueLoc = &pValue;
     }
