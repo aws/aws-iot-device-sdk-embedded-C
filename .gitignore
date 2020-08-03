@@ -12,10 +12,3 @@ build/
 *.gcda
 *.gcno
 *.gcov
-
-# Ignore CBMC proof artifacts
-**/cbmc/proofs/**/gotos
-**/cbmc/proofs/**/html
-**/cbmc/proofs/**/logs
-**/cbmc/proofs/**/TAGS-*
-**/cbmc/proofs/**/report
