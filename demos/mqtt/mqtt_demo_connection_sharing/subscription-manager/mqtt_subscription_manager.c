@@ -20,6 +20,7 @@
  */
 
 #include <string.h>
+#include <assert.h>
 #include "mqtt_subscription_manager.h"
 
 typedef struct SubscriptionManager_Record
@@ -32,7 +33,7 @@ typedef struct SubscriptionManager_Record
 #define MAX_SUBSCRIPTION_CALLBACK_RECORDS    5
 static SubscriptionManager_Record_t callbackRecordList[ MAX_SUBSCRIPTION_CALLBACK_RECORDS ] = { 0 };
 
-static const recordListSize = sizeof( callbackRecordList ) / sizeof( SubscriptionManager_Record_t );
+static const size_t recordListSize = sizeof( callbackRecordList ) / sizeof( SubscriptionManager_Record_t );
 static size_t recordListCount = 0u;
 
 /*-----------------------------------------------------------*/
@@ -259,8 +260,8 @@ bool SubscriptionManager_RegisterCallback( const char * pTopicFilter,
 
 /*-----------------------------------------------------------*/
 
-void SubscriptionManager_RemoveCallbackRecord( const char * pTopicFilter,
-                                               uint16_t topicFilterLength )
+void SubscriptionManager_RemoveCallback( const char * pTopicFilter,
+                                         uint16_t topicFilterLength )
 {
     size_t matchingRecordIndex = 0u;
     bool recordFound = false;
@@ -271,7 +272,7 @@ void SubscriptionManager_RemoveCallbackRecord( const char * pTopicFilter,
     {
         pRecord = &callbackRecordList[ matchingRecordIndex ];
 
-        if( ( topicFilterLength == pRecord->pTopicFilter ) &&
+        if( ( topicFilterLength == pRecord->topicFilterLength ) &&
             ( strncmp( pTopicFilter, pRecord->pTopicFilter, topicFilterLength ) == 0 ) )
         {
             recordFound = true;

@@ -100,7 +100,7 @@
 #define DEMO_APP_1_TOPIC                    "/demo/topic/app1"
 #define DEMO_APP_2_TOPIC                    "/demo/topic/app2"
 #define DEMO_APP_1_NOTIFY_TOPIC             "/demo/topic/notify/app1"
-#define DEMO_APP_2_NOTIY_TOPIC              "/demo/topic/notify/app2"
+#define DEMO_APP_2_NOTIFY_TOPIC             "/demo/topic/notify/app2"
 #define DEMO_APP_NOTIFY_TOPIC_FILTER        "/demo/topic/"
 
 /**
@@ -110,11 +110,6 @@
 #define DEMO_MESSAGE_APP_2                  "Hello App2!"
 #define DEMO_MESSAGE_NOTIFY_APP_1           "Notifying about App1!"
 #define DEMO_MESSAGE_NOTIFY_APP_2           "Notifying about App2!"
-
-/**
- * @brief The length of the MQTT message published in this example.
- */
-#define MQTT_EXAMPLE_MESSAGE_LENGTH         ( ( uint16_t ) ( sizeof( MQTT_EXAMPLE_MESSAGE ) - 1 ) )
 
 /**
  * @brief Maximum number of outgoing publishes maintained in the application
@@ -298,7 +293,8 @@ static int disconnectMqttSession( MQTTContext_t * pMqttContext );
  * @return EXIT_SUCCESS if SUBSCRIBE was successfully sent;
  * EXIT_FAILURE otherwise.
  */
-static int subscribeToTopic( MQTTContext_t * pMqttContext );
+static int subscribeToTopic( MQTTContext_t * pMqttContext,
+                             const char * pTopicFilter );
 
 /**
  * @brief Sends an MQTT UNSUBSCRIBE to unsubscribe from
@@ -309,7 +305,8 @@ static int subscribeToTopic( MQTTContext_t * pMqttContext );
  * @return EXIT_SUCCESS if UNSUBSCRIBE was successfully sent;
  * EXIT_FAILURE otherwise.
  */
-static int unsubscribeFromTopic( MQTTContext_t * pMqttContext );
+static int unsubscribeFromTopic( MQTTContext_t * pMqttContext,
+                                 const char * pTopicFilter );
 
 /**
  * @brief Sends an MQTT PUBLISH to #MQTT_EXAMPLE_TOPIC defined at
@@ -548,30 +545,16 @@ static void handleIncomingPublish( MQTTPublishInfo_t * pPublishInfo )
 {
     assert( pPublishInfo != NULL );
 
-    ( void ) packetIdentifier;
-
     /* Process incoming Publish. */
     LogInfo( ( "Incoming QOS : %d.", pPublishInfo->qos ) );
 
-    /* Verify the received publish is for the topic we have subscribed to. */
-    if( ( pPublishInfo->topicNameLength == MQTT_EXAMPLE_TOPIC_LENGTH ) &&
-        ( 0 == strncmp( MQTT_EXAMPLE_TOPIC,
-                        pPublishInfo->pTopicName,
-                        pPublishInfo->topicNameLength ) ) )
-    {
-        LogInfo( ( "Incoming Publish Topic Name: %.*s matches subscribed topic.\n"
-                   "Incoming Publish Message : %.*s.\n\n",
-                   pPublishInfo->topicNameLength,
-                   pPublishInfo->pTopicName,
-                   ( int ) pPublishInfo->payloadLength,
-                   ( const char * ) pPublishInfo->pPayload ) );
-    }
-    else
-    {
-        LogInfo( ( "Incoming Publish Topic Name: %.*s does not match subscribed topic.",
-                   pPublishInfo->topicNameLength,
-                   pPublishInfo->pTopicName ) );
-    }
+
+    LogInfo( ( "Incoming Publish Topic Name: %.*s matches subscribed topic.\n"
+               "Incoming Publish Message : %.*s.\n\n",
+               pPublishInfo->topicNameLength,
+               pPublishInfo->pTopicName,
+               ( int ) pPublishInfo->payloadLength,
+               ( const char * ) pPublishInfo->pPayload ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -582,8 +565,6 @@ void demoApp1SubscriptionCallback( MQTTContext_t * pContext,
     MQTTStatus_t status = MQTTSuccess;
 
     assert( pPublishInfo != NULL );
-
-    ( void ) packetIdentifier;
 
     LogInfo( ( "Invoked App 2 subscription callback." ) );
 
@@ -612,8 +593,6 @@ void demoApp2SubscriptionCallback( MQTTContext_t * pContext,
 
     assert( pPublishInfo != NULL );
 
-    ( void ) packetIdentifier;
-
     LogInfo( ( "Invoked App 2 subscription callback." ) );
 
     handleIncomingPublish( pPublishInfo );
@@ -635,12 +614,9 @@ void commonNotifySubscriptionCallback( MQTTContext_t * pContext,
                                        MQTTPublishInfo_t * pPublishInfo )
 {
     assert( pPublishInfo != NULL );
-
-    ( void ) packetIdentifier;
-
     LogInfo( ( "Invoked the notify topic subscription callback." ) );
 
-    handleIncomingPublish( pPublishInfo, packetIdentifier );
+    handleIncomingPublish( pPublishInfo );
 
     /* Logic to recognize whether App 1 or App 2 has completed. */
     if( strncmp( pPublishInfo->pTopicName + pPublishInfo->topicNameLength - 4u,
@@ -680,19 +656,13 @@ static void commonEventHandler( MQTTContext_t * pMqttContext,
         switch( pPacketInfo->type )
         {
             case MQTT_PACKET_TYPE_SUBACK:
-                LogInfo( ( "Subscribed to the topic %.*s.\n\n",
-                           MQTT_EXAMPLE_TOPIC_LENGTH,
-                           MQTT_EXAMPLE_TOPIC ) );
+                LogInfo( ( "Received SUBACK\n\n" ) );
                 /* Make sure ACK packet identifier matches with Request packet identifier. */
-                assert( globalSubscribePacketIdentifier == packetIdentifier );
                 break;
 
             case MQTT_PACKET_TYPE_UNSUBACK:
-                LogInfo( ( "Unsubscribed from the topic %.*s.\n\n",
-                           MQTT_EXAMPLE_TOPIC_LENGTH,
-                           MQTT_EXAMPLE_TOPIC ) );
+                LogInfo( ( "Received UNSUBACK %.*s.\n\n" ) );
                 /* Make sure ACK packet identifier matches with Request packet identifier. */
-                assert( globalUnsubscribePacketIdentifier == packetIdentifier );
                 break;
 
             case MQTT_PACKET_TYPE_PINGRESP:
@@ -765,7 +735,7 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
     mqttStatus = MQTT_Init( pMqttContext,
                             &transport,
                             Clock_GetTimeMs,
-                            eventCallback,
+                            commonEventHandler,
                             &networkBuffer );
 
     if( mqttStatus != MQTTSuccess )
@@ -844,7 +814,8 @@ static int disconnectMqttSession( MQTTContext_t * pMqttContext )
 
 /*-----------------------------------------------------------*/
 
-static int subscribeToTopic( MQTTContext_t * pMqttContext )
+static int subscribeToTopic( MQTTContext_t * pMqttContext,
+                             const char * pTopicFilter )
 {
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus;
@@ -857,8 +828,8 @@ static int subscribeToTopic( MQTTContext_t * pMqttContext )
 
     /* This example subscribes to only one topic and uses QOS2. */
     pSubscriptionList[ 0 ].qos = MQTTQoS2;
-    pSubscriptionList[ 0 ].pTopicFilter = MQTT_EXAMPLE_TOPIC;
-    pSubscriptionList[ 0 ].topicFilterLength = MQTT_EXAMPLE_TOPIC_LENGTH;
+    pSubscriptionList[ 0 ].pTopicFilter = pTopicFilter;
+    pSubscriptionList[ 0 ].topicFilterLength = strlen( pTopicFilter );
 
     /* Generate packet identifier for the SUBSCRIBE packet. */
     globalSubscribePacketIdentifier = MQTT_GetPacketId( pMqttContext );
@@ -878,8 +849,8 @@ static int subscribeToTopic( MQTTContext_t * pMqttContext )
     else
     {
         LogInfo( ( "SUBSCRIBE sent for topic %.*s to broker.\n\n",
-                   MQTT_EXAMPLE_TOPIC_LENGTH,
-                   MQTT_EXAMPLE_TOPIC ) );
+                   strlen( pTopicFilter ),
+                   pTopicFilter ) );
     }
 
     return returnStatus;
@@ -887,7 +858,8 @@ static int subscribeToTopic( MQTTContext_t * pMqttContext )
 
 /*-----------------------------------------------------------*/
 
-static int unsubscribeFromTopic( MQTTContext_t * pMqttContext )
+static int unsubscribeFromTopic( MQTTContext_t * pMqttContext,
+                                 const char * pTopicFilter )
 {
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus;
@@ -901,8 +873,8 @@ static int unsubscribeFromTopic( MQTTContext_t * pMqttContext )
     /* This example subscribes to and unsubscribes from only one topic
      * and uses QOS2. */
     pSubscriptionList[ 0 ].qos = MQTTQoS2;
-    pSubscriptionList[ 0 ].pTopicFilter = MQTT_EXAMPLE_TOPIC;
-    pSubscriptionList[ 0 ].topicFilterLength = MQTT_EXAMPLE_TOPIC_LENGTH;
+    pSubscriptionList[ 0 ].pTopicFilter = pTopicFilter;
+    pSubscriptionList[ 0 ].topicFilterLength = strlen( pTopicFilter );
 
     /* Generate packet identifier for the UNSUBSCRIBE packet. */
     globalUnsubscribePacketIdentifier = MQTT_GetPacketId( pMqttContext );
@@ -922,8 +894,8 @@ static int unsubscribeFromTopic( MQTTContext_t * pMqttContext )
     else
     {
         LogInfo( ( "UNSUBSCRIBE sent for topic %.*s to broker.\n\n",
-                   MQTT_EXAMPLE_TOPIC_LENGTH,
-                   MQTT_EXAMPLE_TOPIC ) );
+                   strlen( pTopicFilter ),
+                   pTopicFilter ) );
     }
 
     return returnStatus;
@@ -979,8 +951,8 @@ static int publishToTopic( MQTTContext_t * pMqttContext,
         else
         {
             LogInfo( ( "PUBLISH sent for topic %.*s to broker with packet ID %u.\n\n",
-                       MQTT_EXAMPLE_TOPIC_LENGTH,
-                       MQTT_EXAMPLE_TOPIC,
+                       strlen( pTopic ),
+                       pTopic,
                        outgoingPublishPackets[ publishIndex ].packetId ) );
         }
     }
@@ -1054,8 +1026,8 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
          * therefore, the Publish messages received from the broker will have QOS2. */
         LogInfo( ( "Subscribing to the MQTT topic %.*s.",
                    DEMO_APP_1_TOPIC,
-                   strlen( MQTT_EXAMPLE_TOPIC ) ) );
-        returnStatus = subscribeToTopic( &mqttContext );
+                   strlen( DEMO_APP_1_TOPIC ) ) );
+        returnStatus = subscribeToTopic( &mqttContext, DEMO_APP_1_TOPIC );
     }
 
     if( returnStatus == EXIT_SUCCESS )
@@ -1096,8 +1068,8 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
          * therefore, the Publish messages received from the broker will have QOS2. */
         LogInfo( ( "Subscribing to the MQTT topic %.*s.",
                    DEMO_APP_2_TOPIC,
-                   strlen( MQTT_EXAMPLE_TOPIC ) ) );
-        returnStatus = subscribeToTopic( &mqttContext );
+                   strlen( DEMO_APP_2_TOPIC ) ) );
+        returnStatus = subscribeToTopic( &mqttContext, DEMO_APP_2_TOPIC );
     }
 
     if( returnStatus == EXIT_SUCCESS )
@@ -1137,9 +1109,9 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
          * to be sent back to it from the broker. This demo uses QOS2 in Subscribe,
          * therefore, the Publish messages received from the broker will have QOS2. */
         LogInfo( ( "Subscribing to the MQTT topic %.*s.",
-                   DEMO_APP_1_TOPIC,
-                   strlen( MQTT_EXAMPLE_TOPIC ) ) );
-        returnStatus = subscribeToTopic( &mqttContext );
+                   DEMO_APP_NOTIFY_TOPIC_FILTER,
+                   strlen( DEMO_APP_NOTIFY_TOPIC_FILTER ) ) );
+        returnStatus = subscribeToTopic( &mqttContext, DEMO_APP_NOTIFY_TOPIC_FILTER );
     }
 
     if( returnStatus == EXIT_SUCCESS )
@@ -1190,9 +1162,9 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
 
         LogInfo( ( "Delay before continuing to next iteration.\n\n" ) );
 
-        if((globalReceivedApp1Notification == true ) && (globalReceivedApp2Notification == true))
+        if( ( globalReceivedApp1Notification == true ) && ( globalReceivedApp2Notification == true ) )
         {
-            LogInfo(("Both App 1 and App 2 callbacks have been invoked!");
+            LogInfo( ( "Both App 1 and App 2 callbacks have been invoked!" ) );
         }
     }
 
@@ -1200,9 +1172,53 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
     {
         /* Unsubscribe from the topic. */
         LogInfo( ( "Unsubscribing from the MQTT topic %.*s.",
-                   MQTT_EXAMPLE_TOPIC_LENGTH,
-                   MQTT_EXAMPLE_TOPIC ) );
-        returnStatus = unsubscribeFromTopic( &mqttContext );
+                   DEMO_APP_1_TOPIC,
+                   strlen( DEMO_APP_1_TOPIC ) ) );
+        returnStatus = unsubscribeFromTopic( &mqttContext, DEMO_APP_1_TOPIC );
+    }
+
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        /* Process Incoming UNSUBACK packet from the broker. */
+        mqttStatus = MQTT_ProcessLoop( &mqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
+
+        if( mqttStatus != MQTTSuccess )
+        {
+            returnStatus = EXIT_FAILURE;
+            LogError( ( "MQTT_ProcessLoop returned with status = %u.",
+                        mqttStatus ) );
+        }
+    }
+
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        /* Unsubscribe from the topic. */
+        LogInfo( ( "Unsubscribing from the MQTT topic %.*s.",
+                   DEMO_APP_2_TOPIC,
+                   strlen( DEMO_APP_2_TOPIC ) ) );
+        returnStatus = unsubscribeFromTopic( &mqttContext, DEMO_APP_2_TOPIC );
+    }
+
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        /* Process Incoming UNSUBACK packet from the broker. */
+        mqttStatus = MQTT_ProcessLoop( &mqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
+
+        if( mqttStatus != MQTTSuccess )
+        {
+            returnStatus = EXIT_FAILURE;
+            LogError( ( "MQTT_ProcessLoop returned with status = %u.",
+                        mqttStatus ) );
+        }
+    }
+
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        /* Unsubscribe from the topic. */
+        LogInfo( ( "Unsubscribing from the MQTT topic %.*s.",
+                   DEMO_APP_NOTIFY_TOPIC_FILTER,
+                   strlen( DEMO_APP_NOTIFY_TOPIC_FILTER ) ) );
+        returnStatus = unsubscribeFromTopic( &mqttContext, DEMO_APP_NOTIFY_TOPIC_FILTER );
     }
 
     if( returnStatus == EXIT_SUCCESS )
