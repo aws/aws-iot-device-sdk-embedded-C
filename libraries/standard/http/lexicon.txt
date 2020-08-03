@@ -33,6 +33,7 @@ findheaderinresponse
 firstpartbytes
 getfinalresponsestatus
 github
+headercount
 headerslen
 hostlen
 html
@@ -43,6 +44,7 @@ httpparseronbodycallback
 httpparseronheaderfieldcallback
 httpparseronheaderscompletecallback
 httpparseronheadervaluecallback
+httpparseronmessagebegincallback
 httpparseronstatuscallback
 httpparserxxxxcallback
 httpparserxxxxcallbacks
@@ -63,6 +65,7 @@ linux
 malloc
 methodlen
 memcpy
+memmove
 misra
 msg
 networkcontext
@@ -95,6 +98,7 @@ pfieldloc
 pheaders
 phost
 phttpparser
+phttpparsingcontext
 plastheaderfield
 plastheadervalue
 ploc
@@ -115,6 +119,7 @@ prequestinfo
 presponse
 processhttpparsererror
 ptransport
+ptransportinterface
 pvalue
 pvaluelen
 pvalueloc
