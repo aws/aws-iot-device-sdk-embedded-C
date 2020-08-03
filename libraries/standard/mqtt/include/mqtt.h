@@ -128,7 +128,7 @@ struct MQTTDeserializedInfo
 {
     uint16_t packetIdentifier;
     MQTTPublishInfo_t * pPublishInfo;
-    MQTTStatus_t status;
+    MQTTStatus_t deserializationResult;
 };
 
 /**

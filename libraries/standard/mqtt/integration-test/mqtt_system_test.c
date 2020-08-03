@@ -512,7 +512,7 @@ static void eventCallback( MQTTContext_t * pContext,
     assert( pPacketInfo != NULL );
     assert( pDeserialized != NULL );
 
-    TEST_ASSERT_EQUAL( MQTTSuccess, pDeserialized->status );
+    TEST_ASSERT_EQUAL( MQTTSuccess, pDeserialized->deserializationResult );
     pPublishInfo = pDeserialized->pPublishInfo;
 
     if( ( pPacketInfo->type == disconnectOnPacketType ) ||
