@@ -152,8 +152,23 @@ HTTPParsingContext_t * allocateHttpSendParsingContext( HTTPParsingContext_t * pH
  */
 bool isValidHttpSendParsingContext( const HTTPParsingContext_t * pHttpParsingContext );
 
+/**
+ * @brief Allocate an #http_parser object.
+ *
+ * @param[in] pHttpParser #http_parser object to allocate.
+ *
+ * @return NULL or pointer to allocated #http_parser object.
+ */
 http_parser * allocateHttpReadHeaderParser( http_parser * pHttpParser );
 
-findHeaderContext_t * allocateFindHeaderContext( HTTPParsingContext_t * pFindHeaderContext );
+/**
+ * @brief Allocate an #findHeaderContext_t object.
+ *
+ * @param[in] pFindHeaderContext #findHeaderContext_t object to allocate.
+ *
+ * @return NULL or pointer to allocated #findHeaderContext_t object.
+ */
+findHeaderContext_t * allocateFindHeaderContext( findHeaderContext_t * pFindHeaderContext );
+
 
 #endif /* ifndef HTTP_CBMC_STATE_H_ */
