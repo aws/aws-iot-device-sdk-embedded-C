@@ -31,6 +31,7 @@ developerguide
 doesn
 dup
 endif
+filterindex
 hasn
 html
 http
@@ -47,6 +48,7 @@ methodlen
 milli
 mosquitto
 mqtt
+nameindex
 noninfringement
 openssl
 org
@@ -56,6 +58,7 @@ packetidentifier
 param
 pathlen
 pbuffer
+pcontext
 pem
 pfixedbuffer
 pincomingpacket
@@ -63,6 +66,7 @@ pindex
 pingreq
 pingresp
 plaintext
+pmatch
 pmethod
 pmqttcontext
 pnetworkcontext
@@ -73,6 +77,8 @@ ppubinfo
 ppublishinfo
 processloop
 psessionpresent
+ptopicfilter
+ptopicname
 ptransportinterface
 puback
 pubcomp
@@ -91,6 +97,8 @@ subscribepublishloop
 tcp
 tcpsocket
 tls
+topicfilterlength
+topicnamelength
 transportinterface
 transporttimeout
 uint
