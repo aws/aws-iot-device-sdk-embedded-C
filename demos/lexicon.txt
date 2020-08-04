@@ -69,6 +69,7 @@ plaintext
 pmatch
 pmethod
 pmqttcontext
+pnameindex
 pnetworkcontext
 posix
 ppacketinfo
