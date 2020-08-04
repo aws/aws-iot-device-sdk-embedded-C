@@ -91,6 +91,20 @@ def cli_run(args):
 
 
 def cli_code_coverage(args):
+    """
+    Generates Code Coverage report.
+
+    Create code coverage report using gcov.
+
+    Parameters:
+    src: location of csdk src
+    build_path: location of build dir
+    config_file: Specifies configuration for setting cmake build.
+    build_flags: [Optional] Array of build flags to setup cmake build.
+    c_flags: [Optional] Array of c flags used by compiler
+    codecov_token: [Optional] codecov token required to upload code to codecov.io
+    """
+
     _file = Path(args.config_file)
     config = _read_config(_file)
     default_config = config.get("_default", {})
@@ -134,7 +148,7 @@ def get_parser():
     )
     new_argument("--allow", nargs="+", help="Pattern for target selection")
     new_argument(
-        "--codecov-token", help="Optional token to uplode coverage report to codecov.io"
+        "--codecov-token", help="Optional token to upload coverage report to codecov.io"
     )
 
     parser = argparse.ArgumentParser()
@@ -313,6 +327,16 @@ def _run_targets(targets, src, build_path, config):
 
 
 def _build_code_coverage(src, build_path, build_flags, c_flags, codecov_token):
+    """
+    Private code coverage function.
+
+    Parameters:
+    src: location of csdk src
+    build_path: location of build dir
+    build_flags: Array of build flags to setup cmake build.
+    c_flags: Array of c flags used by compiler
+    codecov_token: codecov token required to upload code to codecov.io
+    """
     result = {}
     try:
         target_result = result.setdefault("coverage", {})
