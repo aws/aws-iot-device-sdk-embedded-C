@@ -56,6 +56,7 @@
  *
  * #define AWS_IOT_ENDPOINT               "...insert here..."
  */
+#define AWS_IOT_ENDPOINT     "a3c4bx1snc0lp8-beta.iot.us-east-1.amazonaws.com"
 
 /**
  * @brief AWS IoT MQTT broker port number.
@@ -109,6 +110,39 @@
  *
  * #define CLIENT_PRIVATE_KEY_PATH    "...insert here..."
  */
+
+/**
+ * @brief The username string, required to authenticate to your MQTT broker.
+ *
+ * Refer to the AWS IoT documentation below for details regarding client
+ * authentication with username and password.
+ * https://docs.aws.amazon.com/iot/latest/developerguide/enhanced-custom-authentication.html
+ * An authorizer setup needs to be done as mentioned in the above link to use
+ * username/password based client authentication.
+ *
+ * @note AWS IoT message broker would require either a set of client certificate/private key
+ * or username/password to authenticate the client. If this config is defined, username
+ * password will be used instead of client certificate and private key for client authentication.
+ *
+ * #define CLIENT_USERNAME    "...insert here..."
+ */
+#define CLIENT_USERNAME        "...insert here..."
+
+/**
+ * @brief The password string, required to authenticate to your MQTT broker.
+ *
+ * Refer to the AWS IoT documentation below for details regarding client
+ * authentication with username and password.
+ * https://docs.aws.amazon.com/iot/latest/developerguide/enhanced-custom-authentication.html
+ * An authorizer setup needs to be done as mentioned in the above link to use
+ * username/password based client authentication.
+ *
+ * @note AWS IoT message broker would require either a set of client certificate/private key
+ * or username/password to authenticate the client.
+ *
+ * #define CLIENT_PASSWORD    "...insert here..."
+ */
+#define CLIENT_PASSWORD        "...insert here..."
 
 /**
  * @brief MQTT client identifier.

@@ -72,14 +72,19 @@
 #ifndef ROOT_CA_CERT_PATH
     #error "Please define path to Root CA certificate of the MQTT broker(ROOT_CA_CERT_PATH) in demo_config.h."
 #endif
-#ifndef CLIENT_CERT_PATH
-    #error "Please define path to client certificate(CLIENT_CERT_PATH) in demo_config.h."
-#endif
-#ifndef CLIENT_PRIVATE_KEY_PATH
-    #error "Please define path to client private key(CLIENT_PRIVATE_KEY_PATH) in demo_config.h."
-#endif
 #ifndef CLIENT_IDENTIFIER
     #error "Please define a unique CLIENT_IDENTIFIER."
+#endif
+
+/* AWS IoT message broker would require either a set of client certificate/private key
+ * or username/password to authenticate the client. */
+#ifndef CLIENT_USERNAME
+    #ifndef CLIENT_CERT_PATH
+        #error "Please define path to client certificate(CLIENT_CERT_PATH) in demo_config.h."
+    #endif
+    #ifndef CLIENT_PRIVATE_KEY_PATH
+        #error "Please define path to client private key(CLIENT_PRIVATE_KEY_PATH) in demo_config.h."
+    #endif
 #endif
 
 /**
@@ -129,6 +134,18 @@
  * @brief Length of ALPN protocol name.
  */
 #define ALPN_PROTOCOL_NAME_LENGTH           ( ( uint16_t ) ( sizeof( ALPN_PROTOCOL_NAME ) - 1 ) )
+
+/**
+ * @brief This is the ALPN (Application-Layer Protocol Negotiation) string
+ * required by AWS IoT for password-based authentication to the MQTT broker,
+ * using TCP port 443.
+ */
+#define AWS_IOT_PASSWORD_ALPN               "\x04mqtt"
+
+/**
+ * @brief Length of password ALPN.
+ */
+#define AWS_IOT_PASSWORD_ALPN_LENGTH        ( ( uint16_t ) ( sizeof( AWS_IOT_PASSWORD_ALPN ) - 1 ) )
 
 /**
  * @brief Timeout for receiving CONNACK packet in milli seconds.
@@ -434,8 +451,13 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     /* Initialize credentials for establishing TLS session. */
     memset( &opensslCredentials, 0, sizeof( OpensslCredentials_t ) );
     opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
-    opensslCredentials.pClientCertPath = CLIENT_CERT_PATH;
-    opensslCredentials.pPrivateKeyPath = CLIENT_PRIVATE_KEY_PATH;
+
+    /* If #CLIENT_USERNAME is defined, username/password is used for authenticating
+     * client. */
+    #ifndef CLIENT_USERNAME
+        opensslCredentials.pClientCertPath = CLIENT_CERT_PATH;
+        opensslCredentials.pPrivateKeyPath = CLIENT_PRIVATE_KEY_PATH;
+    #endif
 
     if( AWS_MQTT_PORT == 443 )
     {
@@ -443,9 +465,16 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
          * Please see more details about the ALPN protocol for AWS IoT MQTT endpoint
          * in the link below.
          * https://aws.amazon.com/blogs/iot/mqtt-with-tls-client-authentication-on-port-443-why-it-is-useful-and-how-it-works/
+         *
+         * For username and password based authentication a different ALPN string is used.
          */
-        opensslCredentials.pAlpnProtos = ALPN_PROTOCOL_NAME;
-        opensslCredentials.alpnProtosLen = ALPN_PROTOCOL_NAME_LENGTH;
+        #ifdef CLIENT_USERNAME
+            opensslCredentials.pAlpnProtos = AWS_IOT_PASSWORD_ALPN;
+            opensslCredentials.alpnProtosLen = AWS_IOT_PASSWORD_ALPN_LENGTH;
+        #else
+            opensslCredentials.pAlpnProtos = ALPN_PROTOCOL_NAME;
+            opensslCredentials.alpnProtosLen = ALPN_PROTOCOL_NAME_LENGTH;
+        #endif
     }
 
     /* Initialize reconnect attempts and interval */
