@@ -841,8 +841,8 @@ static int httpParserOnBodyCallback( http_parser * pHttpParser,
     /* coverity[misra_c_2012_rule_18_3_violation] */
     if( pLoc > pNextWriteLoc )
     {
-        /* memmove is used instead of memcpy because memcpy cannot handle
-         * cases in which src and dest overlap. */
+        /* memmove is used instead of memcpy because memcpy has undefined behavior
+         * when source and destination locations in memory overlap. */
         ( void ) memmove( pNextWriteLoc, pLoc, length );
     }
 

@@ -11,7 +11,7 @@ REMOVE_FUNCTION_BODY +=
 UNWINDSET +=
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
-PROOF_SOURCES += $(PROOFDIR)/../../sources/http_cbmc_state.c
+PROOF_SOURCES += $(SRCDIR)/libraries/standard/http/cbmc/sources/http_cbmc_state.c
 
 PROJECT_SOURCES += $(SRCDIR)/libraries/standard/http/src/http_client.c
 

@@ -126,7 +126,8 @@ TransportInterface_t * allocateTransportInterface( TransportInterface_t * pTrans
 bool isValidTransportInterface( TransportInterface_t * pTransportInterface );
 
 /**
- * @brief Allocate an #http_parser object.
+ * @brief Allocate an #http_parser object that is valid in the context of the
+ * HTTPClient_Send() function.
  *
  * @param[in] pHttpParser #http_parser object to allocate.
  *
@@ -153,7 +154,8 @@ HTTPParsingContext_t * allocateHttpSendParsingContext( HTTPParsingContext_t * pH
 bool isValidHttpSendParsingContext( const HTTPParsingContext_t * pHttpParsingContext );
 
 /**
- * @brief Allocate an #http_parser object.
+ * @brief Allocate an #http_parser object that is valid in the context of the
+ * HTTPClient_ReadHeader() function.
  *
  * @param[in] pHttpParser #http_parser object to allocate.
  *
