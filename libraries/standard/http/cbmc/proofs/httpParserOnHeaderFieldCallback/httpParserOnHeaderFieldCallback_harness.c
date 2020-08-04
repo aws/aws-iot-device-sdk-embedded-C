@@ -47,7 +47,7 @@ void harness()
     pResponse->pHeaderParsingCallback = &headerParserCallback;
 
     __CPROVER_assume( length <= pResponse->bufferLen );
-    __CPROVER_assume( locOffset <= length );
+    __CPROVER_assume( locOffset < length );
     pLoc = pResponse->pBuffer + locOffset;
 
     /* This assumption suppresses an overflow error when incrementing pResponse->headerCount. */

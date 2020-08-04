@@ -90,7 +90,7 @@ HTTPResponse_t * allocateHttpResponse( HTTPResponse_t * pResponse )
 
         pResponse->pBuffer = mallocCanFail( pResponse->bufferLen );
 
-        __CPROVER_assume( headerOffset <= pResponse->headersLen );
+        __CPROVER_assume( headerOffset < pResponse->headersLen );
         pResponse->pHeaders = nondet_bool() ? NULL :
                               pResponse->pBuffer + headerOffset;
 
@@ -101,7 +101,7 @@ HTTPResponse_t * allocateHttpResponse( HTTPResponse_t * pResponse )
         else
         {
             __CPROVER_assume( pResponse->headersLen < bodyOffset &&
-                              bodyOffset <= pResponse->bufferLen );
+                              bodyOffset < pResponse->bufferLen );
         }
 
         pResponse->pBody = nondet_bool() ? NULL :
@@ -189,7 +189,7 @@ HTTPParsingContext_t * allocateHttpSendParsingContext( HTTPParsingContext_t * pH
                           pResponse->bufferLen > 0 );
         pHttpParsingContext->pResponse = pResponse;
 
-        __CPROVER_assume( bufferOffset <= pResponse->bufferLen );
+        __CPROVER_assume( bufferOffset < pResponse->bufferLen );
         pHttpParsingContext->pBufferCur = pResponse->pBuffer + bufferOffset;
     }
 

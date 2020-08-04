@@ -42,7 +42,7 @@ void harness()
 
     pResponse = pParsingContext->pResponse;
     __CPROVER_assume( length <= pResponse->bufferLen );
-    __CPROVER_assume( locOffset <= length );
+    __CPROVER_assume( locOffset < length );
     pLoc = pResponse->pBuffer + locOffset;
 
     __CPROVER_file_local_http_client_c_httpParserOnStatusCallback( pHttpParser, pLoc, length );

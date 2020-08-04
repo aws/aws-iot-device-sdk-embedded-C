@@ -46,7 +46,7 @@ void harness()
                       pResponse->bufferLen > 0 );
 
     __CPROVER_assume( 0 < fieldLen && fieldLen <= MAX_HEADER_FIELD_LENGTH && fieldLen <= pResponse->bufferLen );
-    __CPROVER_assume( fieldOffset <= fieldLen );
+    __CPROVER_assume( fieldOffset < fieldLen );
     pFieldLoc = pResponse->pBuffer + fieldOffset;
     __CPROVER_assume( pFieldLoc + fieldLen < pResponse->pBuffer + pResponse->bufferLen );
 

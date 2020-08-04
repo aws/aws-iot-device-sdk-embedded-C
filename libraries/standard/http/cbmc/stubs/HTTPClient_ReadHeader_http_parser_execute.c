@@ -58,9 +58,9 @@ size_t http_parser_execute( http_parser * parser,
     parser->http_errno = http_errno;
 
     __CPROVER_assume( fieldLength <= len );
-    __CPROVER_assume( fieldOffset <= fieldLength );
+    __CPROVER_assume( fieldOffset < fieldLength );
     __CPROVER_assume( valueLength <= len );
-    __CPROVER_assume( valueOffset <= valueLength );
+    __CPROVER_assume( valueOffset < valueLength );
 
     pParsingContext = ( findHeaderContext_t * ) ( parser->data );
     pParsingContext->pField = data + fieldOffset;

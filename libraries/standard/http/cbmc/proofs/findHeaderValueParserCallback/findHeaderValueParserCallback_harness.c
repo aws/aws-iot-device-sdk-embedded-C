@@ -46,11 +46,11 @@ void harness()
                       pResponse->bufferLen > 0 );
 
     __CPROVER_assume( 0 < valueLen && valueLen <= pResponse->bufferLen );
-    __CPROVER_assume( valueOffset <= valueLen );
+    __CPROVER_assume( valueOffset < valueLen );
     pValueLoc = pResponse->pBuffer + valueOffset;
 
     __CPROVER_assume( 0 < fieldLen && fieldLen <= pResponse->bufferLen );
-    __CPROVER_assume( fieldOffset <= fieldLen );
+    __CPROVER_assume( fieldOffset < fieldLen );
     pFindHeaderContext->pField = pResponse->pBuffer + fieldOffset;
     pFindHeaderContext->fieldLen = fieldLen;
     pFindHeaderContext->pValueLen = &valueLen;
