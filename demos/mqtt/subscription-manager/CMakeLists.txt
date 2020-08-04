@@ -1,6 +1,6 @@
 set( LIBRARY_NAME "mqtt_subscription_manager" )
 # Library target.
-add_library(${LIBRARY_NAME}
+add_library( ${LIBRARY_NAME}
             "${LIBRARY_NAME}.c" )
 
 target_link_libraries(

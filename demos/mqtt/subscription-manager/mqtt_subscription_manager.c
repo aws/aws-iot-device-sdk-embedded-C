@@ -325,8 +325,8 @@ void SubscriptionManager_DispatchHandler( MQTTContext_t * pContext,
         {
             LogInfo( ( "Invoking subscription callback of matching topic filter: "
                        "TopicFilter=%.*s, TopicName=%.*s",
-                       topicFilterLength,
-                       pTopicFilter,
+                       callbackRecordList[ listIndex ].topicFilterLength,
+                       callbackRecordList[ listIndex ].pTopicFilter,
                        pPublishInfo->topicNameLength,
                        pPublishInfo->pTopicName ) );
 
