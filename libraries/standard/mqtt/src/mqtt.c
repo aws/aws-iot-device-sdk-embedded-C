@@ -1109,7 +1109,7 @@ static MQTTStatus_t sendPublish( MQTTContext_t * pContext,
         }
         else
         {
-            LogDebug( "PUBLISH payload was not sent. Payload length was zero." );
+            LogDebug( ( "PUBLISH payload was not sent. Payload length was zero." ) );
         }
     }
 

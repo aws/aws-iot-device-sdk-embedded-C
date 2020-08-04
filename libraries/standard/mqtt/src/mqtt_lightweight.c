@@ -1164,7 +1164,7 @@ static MQTTStatus_t deserializePublish( const MQTTPacketInfo_t * pIncomingPacket
             pPublishInfo->pPayload = pPacketIdentifierHigh + sizeof( uint16_t );
         }
 
-        LogDebug( ( "Payload length %hu.", pPublishInfo->payloadLength ) );
+        LogDebug( ( "Payload length %lu.", pPublishInfo->payloadLength ) );
     }
 
     return status;
