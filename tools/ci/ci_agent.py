@@ -1,3 +1,4 @@
+from shlex import quote
 import argparse
 import os
 import re
@@ -237,7 +238,7 @@ def _config_build(src, build_path, build_flags, c_flags):
     c_flags = f"-DCMAKE_C_FLAGS='{c_flags}'"
     _del_dir(build_path)
     _run_cmd(
-        f'cmake -S {src} -B {build_path} {build_flags} {c_flags} -G "Unix Makefiles"'
+        f'cmake -S {quote(src)} -B {quote(build_path)} {build_flags} {c_flags} -G "Unix Makefiles"'
     )
 
 
@@ -251,7 +252,7 @@ def _get_flags(config, flag_type, target="all"):
 
 
 def _get_targets(build_path, allow):
-    targets = _run_cmd(f"make help -C {build_path} | tr -d '. '")
+    targets = _run_cmd(f"make help -C {quote(build_path)} | tr -d '. '")
     targets = [t.strip() for t in targets.split()]
     allow = "|".join(allow)
     targets = [target for target in targets if re.search(allow, target)]
@@ -265,7 +266,7 @@ def _build_target(target, src, build_path, build_flags, c_flags):
 
     _config_build(src, build_path, build_flags, c_flags)
 
-    cmd = f"make -C {build_path} {target}"
+    cmd = f"make -C {quote(build_path)} {quote(target)}"
     return _run_cmd(cmd)
 
 
@@ -292,7 +293,7 @@ def _run_target(target, run_path):
     log("\n----------------------------------------------------------------")
     log(f"Running Target: {target}")
     log("----------------------------------------------------------------")
-    return _run_cmd(f"cd {run_path} && ./{target}")
+    return _run_cmd(f"cd {quote(run_path)} && './{target}'")
 
 
 def _run_targets(targets, src, build_path, config):
@@ -343,7 +344,7 @@ def _build_code_coverage(src, build_path, build_flags, c_flags, codecov_token):
         target_build_result = target_result.setdefault("CodeCoverage", {})
         out = _build_target("coverage", src, build_path, build_flags, c_flags)
         log(out)
-        out = _run_cmd(f"gcovr -r . -x -o {build_path}/cobertura.xml")
+        out = _run_cmd(f"gcovr -r . -x -o {quote(build_path)}/cobertura.xml")
         log(out)
 
         commit_id = os.environ.get("ghprbActualCommit") or ""
