@@ -1,4 +1,3 @@
-from shlex import quote
 import argparse
 import os
 import re
@@ -6,6 +5,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from shlex import quote
 
 import junitparser as junit
 import requests
