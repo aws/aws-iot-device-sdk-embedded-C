@@ -964,6 +964,8 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
         deserializedInfo.packetIdentifier = packetIdentifier;
         deserializedInfo.deserializationResult = status;
         appCallback( pContext, pIncomingPacket, &deserializedInfo );
+        /* In case a SUBACK indicated refusal, reset the status to continue the loop. */
+        status = MQTTSuccess;
     }
 
     return status;

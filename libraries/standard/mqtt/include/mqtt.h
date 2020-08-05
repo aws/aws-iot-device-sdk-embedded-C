@@ -56,6 +56,10 @@ typedef uint32_t (* MQTTGetCurrentTimeFunc_t )( void );
  * @brief Application callback for receiving incoming publishes and incoming
  * acks.
  *
+ * @note This callback will be called only if packets are deserialized with a
+ * result of #MQTTSuccess or #MQTTServerRefused. The latter can be obtained
+ * when deserializing a SUBACK, indicating a broker's rejection of a subscribe.
+ *
  * @param[in] pContext Initialized MQTT context.
  * @param[in] pPacketInfo Information on the type of incoming MQTT packet.
  * @param[in] pDeserialized Deserialized information from incoming packet.
