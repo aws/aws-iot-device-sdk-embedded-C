@@ -737,7 +737,8 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
     assert( pContext->appCallback != NULL );
 
     status = MQTT_DeserializePublish( pIncomingPacket, &packetIdentifier, &publishInfo );
-    LogInfo( ( "De-serialized incoming PUBLISH packet: DeserializerResult=%d.", status ) );
+    LogInfo( ( "De-serialized incoming PUBLISH packet: DeserializerResult=%s.",
+               MQTT_Status_strerror( status ) ) );
 
     if( status == MQTTSuccess )
     {
