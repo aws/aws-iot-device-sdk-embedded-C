@@ -55,7 +55,7 @@ add_custom_command(
         "$<TARGET_FILE_DIR:${DEMO_NAME}>/certificates/mosquitto.org.crt"
 )
 
-# Set the ROOT_CA_CERT_PATH configuration to the absolute path of the 
+# Set the ROOT_CA_CERT_PATH configuration for the demo to the absolute path of the 
 # Mosquitto Root CA certificate.
 target_compile_definitions(
     ${DEMO_NAME} 
