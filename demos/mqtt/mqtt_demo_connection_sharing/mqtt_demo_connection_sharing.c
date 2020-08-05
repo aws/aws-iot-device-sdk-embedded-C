@@ -1308,7 +1308,7 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
 
     /* As we don't have any further PUBLISH/SUBSCRIBE operations in the loop iteration further
      * we will perform clean-up operations of removing the subscription callbacks registrations,
-     * and un-subscribing from the temperature and humidity topic filters.*/
+     * and unsubscribing from the temperature and humidity topic filters.*/
 
     /* Remove all callbacks from the subscription manager. */
     if( returnStatus == EXIT_SUCCESS )

@@ -67,6 +67,7 @@ pingreq
 pingresp
 plaintext
 pmatch
+pmessage
 pmethod
 pmqttcontext
 pnameindex
@@ -78,6 +79,7 @@ ppubinfo
 ppublishinfo
 processloop
 psessionpresent
+ptopic
 ptopicfilter
 ptopicname
 ptransportinterface
@@ -99,6 +101,7 @@ tcp
 tcpsocket
 tls
 topicfilterlength
+topiclength
 topicnamelength
 transportinterface
 transporttimeout
