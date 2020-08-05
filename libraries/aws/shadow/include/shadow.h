@@ -77,12 +77,12 @@ typedef enum ShadowTopicStringType
  */
 typedef enum ShadowStatus
 {
-    SHADOW_STATUS_SUCCESS = 0,                          /**< @brief Shadow function success. */
-    SHADOW_STATUS_FAIL,                                 /**< @brief Shadow function encountered error. */
-    SHADOW_STATUS_BAD_PARAMETER,                        /**< @brief Input parameter is invalid. */
-    SHADOW_STATUS_BUFFER_TOO_SMALL,                     /**< @brief The provided buffer is too small. */
-    SHADOW_STATUS_THINGNAME_PARSE_FAILED,               /**< @brief Could not parse the thing name. */
-    SHADOW_STATUS_SHADOW_MESSAGE_TYPE_PARSE_FAILED      /**< @brief Could not parse the shadow type. */
+    SHADOW_SUCCESS = 0,                          /**< @brief Shadow function success. */
+    SHADOW_FAIL,                                 /**< @brief Shadow function encountered error. */
+    SHADOW_BAD_PARAMETER,                        /**< @brief Input parameter is invalid. */
+    SHADOW_BUFFER_TOO_SMALL,                     /**< @brief The provided buffer is too small. */
+    SHADOW_THINGNAME_PARSE_FAILED,               /**< @brief Could not parse the thing name. */
+    SHADOW_SHADOW_MESSAGE_TYPE_PARSE_FAILED      /**< @brief Could not parse the shadow type. */
 } ShadowStatus_t;
 
 /*------------------------ Shadow library functions -------------------------*/
@@ -445,7 +445,7 @@ typedef enum ShadowStatus
  *             bufferSize is less than the length of the assembled topic string.
  * @param[out] pOutLength Pointer to caller-supplied memory for returning the length of the topic string.
  * @return     One of the following:
- *             - SHADOW_STATUS_SUCCESS if successful.
+ *             - SHADOW_SUCCESS if successful.
  *             - An error code if failed to assemble.
  */
 ShadowStatus_t Shadow_GetTopicString( ShadowTopicStringType_t topicType,
@@ -470,7 +470,7 @@ ShadowStatus_t Shadow_GetTopicString( ShadowTopicStringType_t topicType,
  * @param[out] pThingName Points to the 1st character of Thing Name inside of the topic string.
  * @param[out] pThingNameLength Pointer to caller-supplied memory for returning the length of the Thing Name.
  * @return     One of the following:
- *             - SHADOW_STATUS_SUCCESS if the message is related to a device shadow;
+ *             - SHADOW_SUCCESS if the message is related to a device shadow;
  *             - An error code if the message is not related to a device shadow,
  *               if any input parameter is invalid, or if the function fails to
  *               parse the topic string.

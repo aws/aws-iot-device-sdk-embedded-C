@@ -199,8 +199,8 @@
  * @param[in] pSubString Pointer to the substring.
  * @param[in] subStringLength Length of pSubString.
  *
- * @return Return SHADOW_STATUS_SUCCESS if it contains;
- *         return SHADOW_STATUS_FAIL if not.
+ * @return Return SHADOW_SUCCESS if it contains;
+ *         return SHADOW_FAIL if not.
  */
 static ShadowStatus_t containsSubString( const char * pString,
                                          uint16_t stringLength,
@@ -214,8 +214,8 @@ static ShadowStatus_t containsSubString( const char * pString,
  * @param[out] pThingName Points to the 1st character of Thing Name inside of the topic string.
  * @param[out] pThingNameLength Pointer to caller-supplied memory for returning the length of the Thing Name.
  *
- * @return Return SHADOW_STATUS_SUCCESS if successfully extracted;
- *         return SHADOW_STATUS_THINGNAME_PARSE_FAILED if failed.
+ * @return Return SHADOW_SUCCESS if successfully extracted;
+ *         return SHADOW_THINGNAME_PARSE_FAILED if failed.
  */
 static ShadowStatus_t extractThingName( const char * pString,
                                         uint16_t stringLength,
@@ -229,8 +229,8 @@ static ShadowStatus_t extractThingName( const char * pString,
  * @param[in] stringLength Length of pString.
  * @param[out] pMessageType Pointer to call-supplied memory for returning the type of the shadow message.
  *
- * @return Return SHADOW_STATUS_SUCCESS if successfully extracted;
- *         return SHADOW_STATUS_SHADOW_MESSAGE_TYPE_PARSE_FAILED if failed.
+ * @return Return SHADOW_SUCCESS if successfully extracted;
+ *         return SHADOW_SHADOW_MESSAGE_TYPE_PARSE_FAILED if failed.
  */
 static ShadowStatus_t extractShadowMessageType( const char * pString,
                                                 uint16_t stringLength,
@@ -242,7 +242,7 @@ static ShadowStatus_t containsSubString( const char * pString,
                                          const char * pSubString,
                                          uint16_t subStringLength )
 {
-    ShadowStatus_t returnStatus = SHADOW_STATUS_FAIL;
+    ShadowStatus_t returnStatus = SHADOW_FAIL;
 
     /* The string must be at least as long as the substring to contain it
      * completely. */
@@ -252,7 +252,7 @@ static ShadowStatus_t containsSubString( const char * pString,
          * string. The string may be longer and contain additional characters. */
         if( strncmp( pString, pSubString, ( size_t  ) subStringLength ) == 0 )
         {
-            returnStatus = SHADOW_STATUS_SUCCESS;
+            returnStatus = SHADOW_SUCCESS;
         }
     }
 
@@ -266,7 +266,7 @@ static ShadowStatus_t extractThingName( const char * pString,
                                         uint16_t * pThingNameLength )
 {
     uint16_t index = 0U;
-    ShadowStatus_t returnStatus = SHADOW_STATUS_THINGNAME_PARSE_FAILED;
+    ShadowStatus_t returnStatus = SHADOW_THINGNAME_PARSE_FAILED;
 
     for( ; index < stringLength; index++ )
     {
@@ -287,7 +287,7 @@ static ShadowStatus_t extractThingName( const char * pString,
     {
         * pThingName = pString;
         * pThingNameLength = index;
-        returnStatus = SHADOW_STATUS_SUCCESS;
+        returnStatus = SHADOW_SUCCESS;
     }
 
     return returnStatus;
@@ -299,7 +299,7 @@ static ShadowStatus_t extractShadowMessageType( const char * pString,
                                                 ShadowMessageType_t * pMessageType )
 {
     uint32_t index = 0U;
-    ShadowStatus_t returnStatus = SHADOW_STATUS_FAIL;
+    ShadowStatus_t returnStatus = SHADOW_FAIL;
 
     /* Lookup table for Shadow message string. */
     static const char * const pMessageStrings[ ShadowMessageTypeMaxNum ] =
@@ -349,11 +349,11 @@ static ShadowStatus_t extractShadowMessageType( const char * pString,
 
         /* If the operation string matches, there must not be any other extra
          * character remaining in the string. */
-        if( returnStatus == SHADOW_STATUS_SUCCESS )
+        if( returnStatus == SHADOW_SUCCESS )
         {
             if( stringLength != pMessageStringsLength[ index ] )
             {
-                returnStatus = SHADOW_STATUS_FAIL;
+                returnStatus = SHADOW_FAIL;
             }
             else
             {
@@ -374,7 +374,7 @@ ShadowStatus_t Shadow_MatchTopic( const char * pTopic,
                                   uint16_t * pThingNameLength )
 {
     uint16_t consumedTopicLength = 0U;
-    ShadowStatus_t shadowStatus = SHADOW_STATUS_SUCCESS;
+    ShadowStatus_t shadowStatus = SHADOW_SUCCESS;
 
     if( ( pTopic == NULL ) ||
         ( topicLength == 0U ) ||
@@ -382,7 +382,7 @@ ShadowStatus_t Shadow_MatchTopic( const char * pTopic,
         ( pThingName == NULL ) ||
         ( pThingNameLength == NULL ) )
     {
-        shadowStatus = SHADOW_STATUS_BAD_PARAMETER;
+        shadowStatus = SHADOW_BAD_PARAMETER;
         LogError( ( "Invalid input parameters pTopic: %p, topicLength: %u, pMessageType: %p, pThingName: %p, pThingNameLength: %p",
                     pTopic,
                     topicLength,
@@ -400,21 +400,21 @@ ShadowStatus_t Shadow_MatchTopic( const char * pTopic,
      * 2. Thing Name.
      * 3. Shadow operation and suffix.
      */
-    if( shadowStatus == SHADOW_STATUS_SUCCESS )
+    if( shadowStatus == SHADOW_SUCCESS )
     {
         /* First match the prefix. */
         shadowStatus = containsSubString( & ( pTopic[ consumedTopicLength ] ),
                                           topicLength - consumedTopicLength,
                                           SHADOW_TOPIC_PREFIX_STRING,
                                           SHADOW_TOPIC_PREFIX_LENGTH );
-        if( shadowStatus == SHADOW_STATUS_SUCCESS )
+        if( shadowStatus == SHADOW_SUCCESS )
         {
             consumedTopicLength += SHADOW_TOPIC_PREFIX_LENGTH;
 
             /* If no more topic string is left to parse, fail. */
             if( consumedTopicLength >= topicLength )
             {
-                shadowStatus = SHADOW_STATUS_THINGNAME_PARSE_FAILED;
+                shadowStatus = SHADOW_THINGNAME_PARSE_FAILED;
                 LogDebug( ( "Not related to Shadow, thing name is not in pTopic %s, failed to parse thing name", pTopic ) );
             }
         }
@@ -424,21 +424,21 @@ ShadowStatus_t Shadow_MatchTopic( const char * pTopic,
         }
     }
 
-    if( shadowStatus == SHADOW_STATUS_SUCCESS )
+    if( shadowStatus == SHADOW_SUCCESS )
     {
         /* Extract thing name. */
         shadowStatus = extractThingName( & ( pTopic[ consumedTopicLength ] ),
                                          topicLength - consumedTopicLength,
                                          pThingName,
                                          pThingNameLength );
-        if( shadowStatus == SHADOW_STATUS_SUCCESS )
+        if( shadowStatus == SHADOW_SUCCESS )
         {
             consumedTopicLength += * pThingNameLength;
 
             /* If no more topic string is left to parse, fail. */
             if( consumedTopicLength >= topicLength )
             {
-                shadowStatus = SHADOW_STATUS_SHADOW_MESSAGE_TYPE_PARSE_FAILED;
+                shadowStatus = SHADOW_SHADOW_MESSAGE_TYPE_PARSE_FAILED;
                 LogDebug( ( "Not related to Shadow, shadow message type is not in pTopic %s, failed to parse shadow message type", pTopic ) );
             }
         }
@@ -448,13 +448,13 @@ ShadowStatus_t Shadow_MatchTopic( const char * pTopic,
         }
     }
 
-    if( shadowStatus == SHADOW_STATUS_SUCCESS )
+    if( shadowStatus == SHADOW_SUCCESS )
     {
         /* Extract shadow message type. */
         shadowStatus = extractShadowMessageType( & ( pTopic[ consumedTopicLength ] ),
                                                  topicLength - consumedTopicLength,
                                                  pMessageType );
-        if( shadowStatus != SHADOW_STATUS_SUCCESS )
+        if( shadowStatus != SHADOW_SUCCESS )
         {
             LogDebug( ( "Not related to Shadow, failed to match shadow message type in pTopic %s", pTopic ) );
         }
@@ -472,7 +472,7 @@ ShadowStatus_t Shadow_GetTopicString( ShadowTopicStringType_t topicType,
                                       uint16_t * pOutLength )
 {
     uint16_t offset = 0U, generatedTopicStringLength = 0U;
-    ShadowStatus_t shadowStatus = SHADOW_STATUS_SUCCESS;
+    ShadowStatus_t shadowStatus = SHADOW_SUCCESS;
 
     /* Lookup table for Shadow operation string. */
     static const char * const pTopicString[ ShadowTopicStringTypeMaxNum ] =
@@ -512,7 +512,7 @@ ShadowStatus_t Shadow_GetTopicString( ShadowTopicStringType_t topicType,
         ( topicType >= ShadowTopicStringTypeMaxNum ) ||
         ( pOutLength == NULL ) )
     {
-        shadowStatus = SHADOW_STATUS_BAD_PARAMETER;
+        shadowStatus = SHADOW_BAD_PARAMETER;
         LogError( ( "Invalid input parameters pTopicBuffer: %p, pThingName: %p, thingNameLength: %u, topicType: %u, pOutLength: %p",
                     pTopicBuffer,
                     pThingName,
@@ -528,7 +528,7 @@ ShadowStatus_t Shadow_GetTopicString( ShadowTopicStringType_t topicType,
 
         if( bufferSize < generatedTopicStringLength )
         {
-            shadowStatus = SHADOW_STATUS_BUFFER_TOO_SMALL;
+            shadowStatus = SHADOW_BUFFER_TOO_SMALL;
             LogError( ( "Input bufferSize too small, bufferSize %d, required ", bufferSize, generatedTopicStringLength) );
         }
         else
