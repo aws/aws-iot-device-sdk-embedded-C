@@ -318,10 +318,11 @@ void SubscriptionManager_DispatchHandler( MQTTContext_t * pContext,
     /* Iterate through record list to find matching topics, and invoke their callbacks. */
     while( listIndex < MAX_SUBSCRIPTION_CALLBACK_RECORDS )
     {
-        if( matchTopic( pPublishInfo->pTopicName,
-                        pPublishInfo->topicNameLength,
-                        callbackRecordList[ listIndex ].pTopicFilter,
-                        callbackRecordList[ listIndex ].topicFilterLength ) == true )
+        if( ( callbackRecordList[ listIndex ].pTopicFilter != NULL ) &&
+            ( matchTopic( pPublishInfo->pTopicName,
+                          pPublishInfo->topicNameLength,
+                          callbackRecordList[ listIndex ].pTopicFilter,
+                          callbackRecordList[ listIndex ].topicFilterLength ) == true ) )
         {
             LogInfo( ( "Invoking subscription callback of matching topic filter: "
                        "TopicFilter=%.*s, TopicName=%.*s",
