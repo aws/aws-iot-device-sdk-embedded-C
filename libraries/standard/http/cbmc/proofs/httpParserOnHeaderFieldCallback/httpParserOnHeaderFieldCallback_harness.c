@@ -35,8 +35,8 @@ void harness()
     HTTPParsingContext_t * pParsingContext;
     HTTPResponse_t * pResponse;
     HTTPClient_ResponseHeaderParsingCallback_t headerParserCallback;
-    size_t length;
-    char * pLoc, locOffset;
+    size_t length, locOffset;
+    char * pLoc;
 
     pHttpParser = allocateHttpSendParser( NULL );
 

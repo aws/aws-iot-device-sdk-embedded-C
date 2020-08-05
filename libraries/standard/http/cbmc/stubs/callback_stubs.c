@@ -34,9 +34,9 @@ void onHeaderCallbackStub( void * pContext,
                            uint16_t statusCode )
 {
     ( void ) pContext;
-    ( void ) fieldLoc;
+    __CPROVER_assert( fieldLoc != NULL, "onHeaderCallbackStub fieldLoc is NULL" );
     ( void ) fieldLen;
-    ( void ) valueLoc;
+    __CPROVER_assert( valueLoc != NULL, "onHeaderCallbackStub valueLoc is NULL" );
     ( void ) valueLen;
     ( void ) statusCode;
 }
