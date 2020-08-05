@@ -108,7 +108,7 @@
 /**
  * @brief The length of the temperature topic filter.
  */
-#define DEMO_TEMPERATURE_TOPIC_FILTER_LENGTH    ( ( uint16_t ) ( sizeof( DEMO_TEMPERATURE_TOPIC_FILTER ) ) )
+#define DEMO_TEMPERATURE_TOPIC_FILTER_LENGTH    ( ( uint16_t ) ( sizeof( DEMO_TEMPERATURE_TOPIC_FILTER ) - 1U ) )
 
 /**
  * @brief The MQTT topic for the high temperature data value that the demo will
@@ -122,7 +122,7 @@
 /**
  * @brief The length of the high temperature topic name.
  */
-#define DEMO_TEMPERATURE_HIGH_TOPIC_LENGTH      ( ( uint16_t ) ( sizeof( DEMO_TEMPERATURE_HIGH_TOPIC ) ) )
+#define DEMO_TEMPERATURE_HIGH_TOPIC_LENGTH      ( ( uint16_t ) ( sizeof( DEMO_TEMPERATURE_HIGH_TOPIC ) - 1U ) )
 
 /**
  * @brief The MQTT topic for the high temperature data value that the demo will
@@ -136,7 +136,7 @@
 /**
  * @brief The length of the high temperature topic name.
  */
-#define DEMO_TEMPERATURE_LOW_TOPIC_LENGTH       ( ( uint16_t ) ( sizeof( DEMO_TEMPERATURE_LOW_TOPIC ) ) )
+#define DEMO_TEMPERATURE_LOW_TOPIC_LENGTH       ( ( uint16_t ) ( sizeof( DEMO_TEMPERATURE_LOW_TOPIC ) - 1U ) )
 
 /**
  * @brief The MQTT topic filter to subscribe to for humidity data in the demo.
@@ -149,7 +149,7 @@
 /**
  * @brief The length of the humidity topic filter length.
  */
-#define DEMO_HUMIDITY_TOPIC_FILTER_LENGTH       ( ( uint16_t ) ( sizeof( DEMO_HUMIDITY_TOPIC_FILTER ) ) )
+#define DEMO_HUMIDITY_TOPIC_FILTER_LENGTH       ( ( uint16_t ) ( sizeof( DEMO_HUMIDITY_TOPIC_FILTER ) - 1U ) )
 
 /**
  * @brief The MQTT topic for the humidity data value that the demo will
@@ -158,12 +158,12 @@
  * The topic name starts with the client identifier to ensure that each demo
  * interacts with a unique topic name.
  */
-#define DEMO_HUMIDITY_TOPIC                     CLIENT_IDENTIFIER "/demo/demo/humidity"
+#define DEMO_HUMIDITY_TOPIC                     CLIENT_IDENTIFIER "/demo/humidity"
 
 /**
  * @brief The length of the humidity topic filter.
  */
-#define DEMO_HUMIDITY_TOPIC_LENGTH              sizeof( DEMO_HUMIDITY_TOPIC )
+#define DEMO_HUMIDITY_TOPIC_LENGTH              ( ( uint16_t ) sizeof( DEMO_HUMIDITY_TOPIC ) - 1U )
 
 /**
  * @brief The MQTT message for the #DEMO_TEMPERATURE_HIGH_TOPIC topic published
@@ -184,23 +184,22 @@
 
 
 
-
 /**
  * @brief Maximum number of outgoing publishes maintained in the application
  * until an ack is received from the broker.
  */
-#define MAX_OUTGOING_PUBLISHES                  ( 5U )
+#define MAX_OUTGOING_PUBLISHES              ( 5U )
 
 /**
  * @brief Invalid packet identifier for the MQTT packets. Zero is always an
  * invalid packet identifier as per MQTT 3.1.1 spec.
  */
-#define MQTT_PACKET_ID_INVALID                  ( ( uint16_t ) 0U )
+#define MQTT_PACKET_ID_INVALID              ( ( uint16_t ) 0U )
 
 /**
  * @brief Timeout for MQTT_ProcessLoop function in milliseconds.
  */
-#define MQTT_PROCESS_LOOP_TIMEOUT_MS            ( 500U )
+#define MQTT_PROCESS_LOOP_TIMEOUT_MS        ( 500U )
 
 /**
  * @brief The maximum time interval in seconds which is allowed to elapse
@@ -211,17 +210,17 @@
  *  absence of sending any other Control Packets, the Client MUST send a
  *  PINGREQ Packet.
  */
-#define MQTT_KEEP_ALIVE_INTERVAL_SECONDS        ( 60U )
+#define MQTT_KEEP_ALIVE_INTERVAL_SECONDS    ( 60U )
 
 /**
  * @brief Delay in seconds between two iterations of subscribePublishLoop().
  */
-#define MQTT_SUBPUB_LOOP_DELAY_SECONDS          ( 5U )
+#define MQTT_SUBPUB_LOOP_DELAY_SECONDS      ( 5U )
 
 /**
  * @brief Transport timeout in milliseconds for transport send and receive.
  */
-#define TRANSPORT_SEND_RECV_TIMEOUT_MS          ( 200 )
+#define TRANSPORT_SEND_RECV_TIMEOUT_MS      ( 200 )
 
 /*-----------------------------------------------------------*/
 
@@ -1074,7 +1073,7 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
          * re-establishing a session which was already present. */
         if( sessionPresent == true )
         {
-            LogInfo( ( "An MQTT session with broker is re - established."
+            LogInfo( ( "An MQTT session with broker is re-established."
                        "Resending unacked publishes." ) );
 
             /* Handle all the resend of publish messages. */
@@ -1283,9 +1282,6 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
                                        DEMO_HUMIDITY_TOPIC_LENGTH,
                                        DEMO_HUMIDITY_MESSAGE );
 
-
-
-
         /* Calling MQTT_ProcessLoop to process incoming publish echo, since
          * application subscribed to the same topic the broker will send
          * publish message back to the application. This function also
@@ -1310,10 +1306,23 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
         }
     }
 
+    /* As we don't have any further PUBLISH/SUBSCRIBE operations in the loop iteration further
+     * we will perform clean-up operations of removing the subscription callbacks registrations,
+     * and un-subscribing from the temperature and humidity topic filters.*/
+
+    /* Remove all callbacks from the subscription manager. */
     if( returnStatus == EXIT_SUCCESS )
     {
-        /* Unsubscribe from the topic. */
-        LogInfo( ( "Unsubscribing from the MQTT topic %.*s.",
+        /* Remove the callback for temperature topics. */
+        SubscriptionManager_RemoveCallback( DEMO_TEMPERATURE_TOPIC_FILTER,
+                                            DEMO_TEMPERATURE_TOPIC_FILTER_LENGTH );
+
+        /* Remove the callback for the humidity topic. */
+        SubscriptionManager_RemoveCallback( DEMO_HUMIDITY_TOPIC_FILTER,
+                                            DEMO_HUMIDITY_TOPIC_FILTER_LENGTH );
+
+        /* Unsubscribe from the temperature topic filter. */
+        LogInfo( ( "Unsubscribing from the MQTT temperature topic filter: %.*s.",
                    DEMO_TEMPERATURE_TOPIC_FILTER_LENGTH,
                    DEMO_TEMPERATURE_TOPIC_FILTER ) );
         returnStatus = unsubscribeFromTopic( &mqttContext,
@@ -1336,8 +1345,8 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
 
     if( returnStatus == EXIT_SUCCESS )
     {
-        /* Unsubscribe from the topic. */
-        LogInfo( ( "Unsubscribing from the MQTT topic %s.",
+        /* Unsubscribe from the humidity topic. */
+        LogInfo( ( "Unsubscribing from the MQTT humidity topic filter %s.",
                    DEMO_HUMIDITY_TOPIC_FILTER ) );
         returnStatus = unsubscribeFromTopic( &mqttContext,
                                              DEMO_HUMIDITY_TOPIC_FILTER,
