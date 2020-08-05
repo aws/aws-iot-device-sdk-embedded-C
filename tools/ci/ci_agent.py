@@ -1,4 +1,6 @@
+from shlex import quote
 import argparse
+import os
 import re
 import shutil
 import subprocess
@@ -6,6 +8,7 @@ import sys
 from pathlib import Path
 
 import junitparser as junit
+import requests
 import yaml
 
 
@@ -88,6 +91,36 @@ def cli_run(args):
     _check_status(result)
 
 
+def cli_code_coverage(args):
+    """
+    Generates Code Coverage report.
+
+    Create code coverage report using gcov.
+
+    Parameters:
+    src: location of csdk src
+    build_path: location of build dir
+    config_file: Specifies configuration for setting cmake build.
+    build_flags: [Optional] Array of build flags to setup cmake build.
+    c_flags: [Optional] Array of c flags used by compiler
+    codecov_token: [Optional] codecov token required to upload code to codecov.io
+    """
+
+    _file = Path(args.config_file)
+    config = _read_config(_file)
+    default_config = config.get("_default", {})
+
+    build_flags = args.build_flags or _get_flags(config, "build_flags")
+    c_flags = args.c_flags or _get_flags(config, "c_flags")
+    codecov_token = args.codecov_token or default_config.get("codecov_token", None)
+
+    result = _build_code_coverage(
+        args.src, args.build_path, build_flags, c_flags, codecov_token
+    )
+    _log_save_result(result, f"build_coverage.xml")
+    _check_status(result)
+
+
 def cli_invoke(args_list):
     _cli_invoke_next(args_list)
 
@@ -115,6 +148,9 @@ def get_parser():
         "--c-flags", nargs="+", help="Optional c_flags required to configure build",
     )
     new_argument("--allow", nargs="+", help="Pattern for target selection")
+    new_argument(
+        "--codecov-token", help="Optional token to upload coverage report to codecov.io"
+    )
 
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers()
@@ -159,6 +195,19 @@ def get_parser():
     )
     add_argument(cmd_run, "--targets", required=False)
     cmd_run.set_defaults(func="run")
+
+    cmd_code_coverage = subparsers.add_parser("code-coverage")
+    add_arguments(
+        cmd_code_coverage,
+        "--config-file",
+        "--src",
+        "--build-path",
+        "--build-flags",
+        "--c-flags",
+        "--codecov-token",
+    )
+    cmd_code_coverage.set_defaults(func="code-coverage")
+
     return parser
 
 
@@ -189,7 +238,7 @@ def _config_build(src, build_path, build_flags, c_flags):
     c_flags = f"-DCMAKE_C_FLAGS='{c_flags}'"
     _del_dir(build_path)
     _run_cmd(
-        f'cmake -S {src} -B {build_path} {build_flags} {c_flags} -G "Unix Makefiles"'
+        f'cmake -S {quote(src)} -B {quote(build_path)} {build_flags} {c_flags} -G "Unix Makefiles"'
     )
 
 
@@ -203,7 +252,7 @@ def _get_flags(config, flag_type, target="all"):
 
 
 def _get_targets(build_path, allow):
-    targets = _run_cmd(f"make help -C {build_path} | tr -d '. '")
+    targets = _run_cmd(f"make help -C {quote(build_path)} | tr -d '. '")
     targets = [t.strip() for t in targets.split()]
     allow = "|".join(allow)
     targets = [target for target in targets if re.search(allow, target)]
@@ -217,7 +266,7 @@ def _build_target(target, src, build_path, build_flags, c_flags):
 
     _config_build(src, build_path, build_flags, c_flags)
 
-    cmd = f"make -C {build_path} {target}"
+    cmd = f"make -C {quote(build_path)} {quote(target)}"
     return _run_cmd(cmd)
 
 
@@ -244,7 +293,7 @@ def _run_target(target, run_path):
     log("\n----------------------------------------------------------------")
     log(f"Running Target: {target}")
     log("----------------------------------------------------------------")
-    return _run_cmd(f"cd {run_path} && ./{target}")
+    return _run_cmd(f"cd {quote(run_path)} && './{target}'")
 
 
 def _run_targets(targets, src, build_path, config):
@@ -275,6 +324,78 @@ def _run_targets(targets, src, build_path, config):
             log(err.stdout)
             target_run_result["status"] = "FAIL"
             target_run_result["details"] = "Run Failure"
+    return result
+
+
+def _build_code_coverage(src, build_path, build_flags, c_flags, codecov_token):
+    """
+    Private code coverage function.
+
+    Parameters:
+    src: location of csdk src
+    build_path: location of build dir
+    build_flags: Array of build flags to setup cmake build.
+    c_flags: Array of c flags used by compiler
+    codecov_token: codecov token required to upload code to codecov.io
+    """
+    result = {}
+    try:
+        target_result = result.setdefault("coverage", {})
+        target_build_result = target_result.setdefault("CodeCoverage", {})
+        out = _build_target("coverage", src, build_path, build_flags, c_flags)
+        log(out)
+        out = _run_cmd(f"gcovr -r . -x -o {quote(build_path)}/cobertura.xml")
+        log(out)
+
+        commit_id = os.environ.get("ghprbActualCommit") or ""
+
+        if codecov_token and commit_id:
+            log("\n----------------------------------------------------------------")
+            log("Upload Code Coverage report to codecov.io")
+            log("----------------------------------------------------------------")
+
+            params = {
+                "token": codecov_token,
+                "commit": commit_id,
+                "branch": "",
+                "build": "",
+                "build_url": "",
+                "name": "",
+                "tag": "",
+                "slug": "",
+                "service": "",
+                "flags": "",
+                "pr": "",
+                "job": "",
+                "cmd_args": "",
+            }
+            headers = {"content-type": "application/x-www-form-urlencoded"}
+            with open(f"{build_path}/cobertura.xml", "rb") as payload:
+                try:
+                    requests.post(
+                        "https://codecov.io/upload/v2",
+                        data=payload,
+                        verify=True,
+                        headers=headers,
+                        params=params,
+                    )
+                except requests.exceptions.RequestException as err:
+                    log(f"Error calling codecov.io: {err}")
+        else:
+            if not commit_id:
+                log(
+                    "Please provide commit id, if you want to upload coverage report to codecov.io"
+                )
+            if not codecov_token:
+                log(
+                    "Provide '--codecov-token' in commandline, \
+                    if you want to upload coverage report to codecov.io"
+                )
+        target_build_result["status"] = "PASS"
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as err:
+        log(err.stdout)
+        target_build_result["status"] = "FAIL"
+        target_build_result["details"] = "Code Coverage Failure"
     return result
 
 
