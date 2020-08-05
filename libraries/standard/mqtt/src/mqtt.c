@@ -350,7 +350,7 @@ static int32_t sendPacket( MQTTContext_t * pContext,
             LogDebug( ( "BytesSent=%d, BytesRemaining=%lu,"
                         " TotalBytesSent=%d.",
                         bytesSent,
-                        bytesRemaining,
+                        ( unsigned long ) bytesRemaining,
                         totalBytesSent ) );
         }
     }
@@ -461,7 +461,7 @@ static int32_t recvExact( const MQTTContext_t * pContext,
             LogDebug( ( "BytesReceived=%d, BytesRemaining=%lu, "
                         "TotalBytesReceived=%d.",
                         bytesRecvd,
-                        bytesRemaining,
+                        ( unsigned long ) bytesRemaining,
                         totalBytesRecvd ) );
         }
 
@@ -513,7 +513,7 @@ static MQTTStatus_t discardPacket( const MQTTContext_t * pContext,
             LogError( ( "Receive error while discarding packet."
                         "ReceivedBytes=%d, ExpectedBytes=%lu.",
                         bytesReceived,
-                        bytesToReceive ) );
+                        ( unsigned long ) bytesToReceive ) );
             receiveError = true;
         }
         else
@@ -564,8 +564,8 @@ static MQTTStatus_t receivePacket( const MQTTContext_t * pContext,
         LogError( ( "Incoming packet will be dumped: "
                     "Packet length exceeds network buffer size."
                     "PacketSize=%lu, NetworkBufferSize=%lu.",
-                    incomingPacket.remainingLength,
-                    pContext->networkBuffer.size ) );
+                    ( unsigned long ) incomingPacket.remainingLength,
+                    ( unsigned long ) pContext->networkBuffer.size ) );
         status = discardPacket( pContext,
                                 incomingPacket.remainingLength,
                                 remainingTimeMs );
@@ -586,7 +586,7 @@ static MQTTStatus_t receivePacket( const MQTTContext_t * pContext,
             LogError( ( "Packet reception failed. ReceivedBytes=%d, "
                         "ExpectedBytes=%lu.",
                         bytesReceived,
-                        bytesToReceive ) );
+                        ( unsigned long ) bytesToReceive ) );
             status = MQTTRecvFailed;
         }
     }
@@ -1285,8 +1285,8 @@ static MQTTStatus_t serializePublish( const MQTTContext_t * pContext,
                                         &remainingLength,
                                         &packetSize );
     LogDebug( ( "PUBLISH packet size is %lu and remaining length is %lu.",
-                packetSize,
-                remainingLength ) );
+                ( unsigned long ) packetSize,
+                ( unsigned long ) remainingLength ) );
 
     if( status == MQTTSuccess )
     {
@@ -1296,7 +1296,7 @@ static MQTTStatus_t serializePublish( const MQTTContext_t * pContext,
                                               &( pContext->networkBuffer ),
                                               pHeaderSize );
         LogDebug( ( "Serialized PUBLISH header size is %lu.",
-                    *pHeaderSize ) );
+                    ( unsigned long ) *pHeaderSize ) );
     }
 
     return status;
@@ -1424,8 +1424,8 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
                                             &remainingLength,
                                             &packetSize );
         LogDebug( ( "CONNECT packet size is %lu and remaining length is %lu.",
-                    packetSize,
-                    remainingLength ) );
+                    ( unsigned long ) packetSize,
+                    ( unsigned long ) remainingLength ) );
     }
 
     if( status == MQTTSuccess )
@@ -1509,8 +1509,8 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
                                               &remainingLength,
                                               &packetSize );
         LogDebug( ( "SUBSCRIBE packet size is %lu and remaining length is %lu.",
-                    packetSize,
-                    remainingLength ) );
+                    ( unsigned long ) packetSize,
+                    ( unsigned long ) remainingLength ) );
     }
 
     if( status == MQTTSuccess )
@@ -1641,7 +1641,7 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext )
         if( status == MQTTSuccess )
         {
             LogDebug( ( "MQTT PINGREQ packet size is %lu.",
-                        packetSize ) );
+                        ( unsigned long ) packetSize ) );
         }
         else
         {
@@ -1704,8 +1704,8 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
                                                 &remainingLength,
                                                 &packetSize );
         LogDebug( ( "UNSUBSCRIBE packet size is %lu and remaining length is %lu.",
-                    packetSize,
-                    remainingLength ) );
+                    ( unsigned long ) packetSize,
+                    ( unsigned long ) remainingLength ) );
     }
 
     if( status == MQTTSuccess )
@@ -1760,7 +1760,7 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext )
         /* Get MQTT DISCONNECT packet size. */
         status = MQTT_GetDisconnectPacketSize( &packetSize );
         LogDebug( ( "MQTT DISCONNECT packet size is %lu.",
-                    packetSize ) );
+                    ( unsigned long ) packetSize ) );
     }
 
     if( status == MQTTSuccess )
