@@ -843,8 +843,7 @@ static MQTTStatus_t deserializeConnack( const MQTTPacketInfo_t * pConnack,
         /* In MQTT 3.1.1, only values 0 through 5 are valid CONNACK response codes. */
         if( pRemainingData[ 1 ] > 5U )
         {
-            LogError( ( "CONNACK response %hhu is not valid.",
-                        pRemainingData[ 1 ] ) );
+            LogError( ( "CONNACK response %u is invalid.", pRemainingData[ 1 ] ) );
 
             status = MQTTBadResponse;
         }
@@ -955,7 +954,7 @@ static MQTTStatus_t readSubackStatus( size_t statusCount,
             case 0x01:
             case 0x02:
 
-                LogDebug( ( "Topic filter %lu accepted, max QoS %hhu.",
+                LogDebug( ( "Topic filter %lu accepted, max QoS %u.",
                             ( unsigned long ) i, subscriptionStatus ) );
                 break;
 
@@ -969,7 +968,7 @@ static MQTTStatus_t readSubackStatus( size_t statusCount,
                 break;
 
             default:
-                LogDebug( ( "Bad SUBSCRIBE status %hhu.", subscriptionStatus ) );
+                LogDebug( ( "Bad SUBSCRIBE status %u.", subscriptionStatus ) );
 
                 status = MQTTBadResponse;
 
