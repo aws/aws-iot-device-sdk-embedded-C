@@ -383,7 +383,12 @@ ShadowStatus_t Shadow_MatchTopic( const char * pTopic,
         ( pThingNameLength == NULL ) )
     {
         shadowStatus = SHADOW_STATUS_BAD_PARAMETER;
-        LogError( ( "Invalid input parameters" ) );
+        LogError( ( "Invalid input parameters pTopic: %p, topicLength: %u, pMessageType: %p, pThingName: %p, pThingNameLength: %p",
+                    pTopic,
+                    topicLength,
+                    pMessageType,
+                    pThingName,
+                    pThingNameLength ) );
     }
 
     /* A shadow topic string takes one of the two forms:
@@ -470,7 +475,7 @@ ShadowStatus_t Shadow_GetTopicString( ShadowTopicStringType_t topicType,
     ShadowStatus_t shadowStatus = SHADOW_STATUS_SUCCESS;
 
     /* Lookup table for Shadow operation string. */
-    static const char * const pTopicString[ SHADOW_TOPIC_STRING_TYPE_MAX_NUM ] =
+    static const char * const pTopicString[ ShadowTopicStringTypeMaxNum ] =
     {
         SHADOW_TOPIC_OPERATION_STRING_GET,
         SHADOW_TOPIC_OPERATION_STRING_GET_ACCEPTED,
@@ -486,7 +491,7 @@ ShadowStatus_t Shadow_GetTopicString( ShadowTopicStringType_t topicType,
     };
 
     /* Lookup table for Shadow operation string length. */
-    static const uint16_t pTopicStringLength[ SHADOW_TOPIC_STRING_TYPE_MAX_NUM ] =
+    static const uint16_t pTopicStringLength[ ShadowTopicStringTypeMaxNum ] =
     {
         SHADOW_TOPIC_OPERATION_LENGTH_GET,
         SHADOW_TOPIC_OPERATION_LENGTH_GET_ACCEPTED,
@@ -504,11 +509,16 @@ ShadowStatus_t Shadow_GetTopicString( ShadowTopicStringType_t topicType,
     if( ( pTopicBuffer == NULL ) ||
         ( pThingName == NULL ) ||
         ( thingNameLength == 0U ) ||
-        ( topicType >= SHADOW_TOPIC_STRING_TYPE_MAX_NUM ) ||
+        ( topicType >= ShadowTopicStringTypeMaxNum ) ||
         ( pOutLength == NULL ) )
     {
         shadowStatus = SHADOW_STATUS_BAD_PARAMETER;
-        LogError( ( "Invalid input parameters" ) );
+        LogError( ( "Invalid input parameters pTopicBuffer: %p, pThingName: %p, thingNameLength: %u, topicType: %u, pOutLength: %p",
+                    pTopicBuffer,
+                    pThingName,
+                    thingNameLength,
+                    topicType,
+                    pOutLength ) );
     }
     else
     {

@@ -58,80 +58,18 @@ typedef enum ShadowMessageType
  */
 typedef enum ShadowTopicStringType
 {
-    /* MISRA Rule 5.2 flags the following member's name as ambiguous from the
-     * one with suffix. This rule is suppressed for naming consistency with
-     * other Shadow header field and value string and length macros in this file.*/
-    /* coverity[other_declaration] */
-    SHADOW_TOPIC_STRING_TYPE_GET = 0,
-
-    /* MISRA Rule 5.2 flags the following member's name as ambiguous from the one
-     * without _ACCEPTED suffix. This rule is suppressed for naming consistency with other Shadow
-     * header field and value string and length macros in this file.*/
-    /* coverity[misra_c_2012_rule_5_2_violation] */
-    /* coverity[other_declaration] */
-    SHADOW_TOPIC_STRING_TYPE_GET_ACCEPTED,
-
-    /* MISRA Rule 5.2 flags the following member's name as ambiguous from the one
-     * without _REJECTED suffix. This rule is suppressed for naming consistency with other Shadow
-     * header field and value string and length macros in this file.*/
-    /* coverity[misra_c_2012_rule_5_2_violation] */
-    /* coverity[other_declaration] */
-    SHADOW_TOPIC_STRING_TYPE_GET_REJECTED,
-
-    /* MISRA Rule 5.2 flags the following member's name as ambiguous from the
-     * one with suffix. This rule is suppressed for naming consistency with
-     * other HTTP header field and value string and length macros in this file.*/
-    /* coverity[other_declaration] */
-    SHADOW_TOPIC_STRING_TYPE_DELETE,
-
-    /* MISRA Rule 5.2 flags the following member's name as ambiguous from the one
-     * without _ACCEPTED suffix. This rule is suppressed for naming consistency with other Shadow
-     * header field and value string and length macros in this file.*/
-    /* coverity[misra_c_2012_rule_5_2_violation] */
-    /* coverity[other_declaration] */
-    SHADOW_TOPIC_STRING_TYPE_DELETE_ACCEPTED,
-
-    /* MISRA Rule 5.2 flags the following member's name as ambiguous from the one
-     * without _REJECTED suffix. This rule is suppressed for naming consistency with other Shadow
-     * header field and value string and length macros in this file.*/
-    /* coverity[misra_c_2012_rule_5_2_violation] */
-    /* coverity[other_declaration] */
-    SHADOW_TOPIC_STRING_TYPE_DELETE_REJECTED,
-
-    /* MISRA Rule 5.2 flags the following member's name as ambiguous from the
-     * one with suffix. This rule is suppressed for naming consistency with
-     * other Shadow header field and value string and length macros in this file.*/
-    /* coverity[other_declaration] */
-    SHADOW_TOPIC_STRING_TYPE_UPDATE,
-
-    /* MISRA Rule 5.2 flags the following member's name as ambiguous from the one
-     * without _ACCEPTED suffix. This rule is suppressed for naming consistency with other Shadow
-     * header field and value string and length macros in this file.*/
-    /* coverity[misra_c_2012_rule_5_2_violation] */
-    /* coverity[other_declaration] */
-    SHADOW_TOPIC_STRING_TYPE_UPDATE_ACCEPTED,
-
-    /* MISRA Rule 5.2 flags the following member's name as ambiguous from the one
-     * without _REJECTED suffix. This rule is suppressed for naming consistency with other Shadow
-     * header field and value string and length macros in this file.*/
-    /* coverity[misra_c_2012_rule_5_2_violation] */
-    /* coverity[other_declaration] */
-    SHADOW_TOPIC_STRING_TYPE_UPDATE_REJECTED,
-
-    /* MISRA Rule 5.2 flags the following member's name as ambiguous from the one
-     * without _DOCUMENTS suffix. This rule is suppressed for naming consistency with other Shadow
-     * header field and value string and length macros in this file.*/
-    /* coverity[misra_c_2012_rule_5_2_violation] */
-    /* coverity[other_declaration] */
-    SHADOW_TOPIC_STRING_TYPE_UPDATE_DOCUMENTS,
-
-    /* MISRA Rule 5.2 flags the following member's name as ambiguous from the one
-     * without _DELTA suffix. This rule is suppressed for naming consistency with other Shadow
-     * header field and value string and length macros in this file.*/
-    /* coverity[misra_c_2012_rule_5_2_violation] */
-    /* coverity[other_declaration] */
-    SHADOW_TOPIC_STRING_TYPE_UPDATE_DELTA,
-    SHADOW_TOPIC_STRING_TYPE_MAX_NUM
+    ShadowTopicStringTypeGet = 0,
+    ShadowTopicStringTypeGetAccepted,
+    ShadowTopicStringTypeGetRejected,
+    ShadowTopicStringTypeDelete,
+    ShadowTopicStringTypeDeleteAccepted,
+    ShadowTopicStringTypeDeleteRejected,
+    ShadowTopicStringTypeUpdate,
+    ShadowTopicStringTypeUpdateAccepted,
+    ShadowTopicStringTypeUpdateRejected,
+    ShadowTopicStringTypeUpdateDocuments,
+    ShadowTopicStringTypeUpdateDelta,
+    ShadowTopicStringTypeMaxNum
 } ShadowTopicStringType_t;
 
 /**
@@ -486,17 +424,17 @@ typedef enum ShadowStatus
  *
  * @param[in]  topicType Indicates what topic will be written into the buffer pointed to by pTopicBuffer.
  *             can be one of:
- *                 - SHADOW_TOPIC_STRING_TYPE_GET
- *                 - SHADOW_TOPIC_STRING_TYPE_GET_ACCEPTED
- *                 - SHADOW_TOPIC_STRING_TYPE_GET_REJECTED
- *                 - SHADOW_TOPIC_STRING_TYPE_DELETE
- *                 - SHADOW_TOPIC_STRING_TYPE_DELETE_ACCEPTED
- *                 - SHADOW_TOPIC_STRING_TYPE_DELETE_REJECTED
- *                 - SHADOW_TOPIC_STRING_TYPE_UPDATE
- *                 - SHADOW_TOPIC_STRING_TYPE_UPDATE_ACCEPTED
- *                 - SHADOW_TOPIC_STRING_TYPE_UPDATE_REJECTED
- *                 - SHADOW_TOPIC_STRING_TYPE_UPDATE_DOCUMENTS
- *                 - SHADOW_TOPIC_STRING_TYPE_UPDATE_DELTA
+ *                 - ShadowTopicStringTypeGet
+ *                 - ShadowTopicStringTypeGetAccepted
+ *                 - ShadowTopicStringTypeGetRejected
+ *                 - ShadowTopicStringTypeDelete
+ *                 - ShadowTopicStringTypeDeleteAccepted
+ *                 - ShadowTopicStringTypeDeleteRejected
+ *                 - ShadowTopicStringTypeUpdate
+ *                 - ShadowTopicStringTypeUpdateAccepted
+ *                 - ShadowTopicStringTypeUpdateRejected
+ *                 - ShadowTopicStringTypeUpdateDocuments
+ *                 - ShadowTopicStringTypeUpdateDelta
  * @param[in]  pThingName Thing Name string. No need to be null terminated. Must not be NULL.
  * @param[in]  thingNameLength Length of Thing Name string pointed to by pThingName. Must not be zero.
  * @param[out] pTopicBuffer Pointer to buffer for returning the topic string.
