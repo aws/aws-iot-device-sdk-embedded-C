@@ -34,6 +34,7 @@
 /* Standard Include. */
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
 
 /* Macro to extract only the file name from file path to use for metadata in
  * log messages. */
