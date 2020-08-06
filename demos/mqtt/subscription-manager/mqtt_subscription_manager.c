@@ -294,9 +294,12 @@ static bool matchTopic( const char * pTopicName,
         status = ( strncmp( pTopicName, pTopicFilter, topicNameLength ) == 0 ) ? true : false;
     }
 
-    /* Match against wildcard characters in topic filter only if the incoming
-     * PUBLISH topic name does not start with a "$" character. */
-    if( ( status == false ) && ( pTopicName[ 0 ] != '$' ) )
+    /* If an exact match wasn't found, match against wildcard characters in topic filter.
+     * Note: According to the MQTT 3.1.1 specification, incoming PUBLISH topic names starting
+     * the "$" character cannot be matched against topic filter starting with a wildcard. */
+    if( ( status == false ) && ( ( pTopicName[ 0 ] != '$' ) &&
+                                 ( pTopicFilter[ 0 ] != '+' ) &&
+                                 ( pTopicFilter[ 0 ] != '#' ) ) )
     {
         status = topicFilterMatch( pTopicName, topicNameLength, pTopicFilter, topicFilterLength );
     }
@@ -372,9 +375,10 @@ bool SubscriptionManager_RegisterCallback( const char * pTopicFilter,
     if( ( availableIndex == MAX_SUBSCRIPTION_CALLBACK_RECORDS ) )
     {
         /* The record list is full. */
-        LogError( ( "Unable to register callback: Registry list is full: TopicFilter=%.*s",
+        LogError( ( "Unable to register callback: Registry list is full: TopicFilter=%.*s, MaxRegistrySize=%u",
                     topicFilterLength,
-                    pTopicFilter ) );
+                    pTopicFilter,
+                    MAX_SUBSCRIPTION_CALLBACK_RECORDS ) );
     }
     else if( recordExists == true )
     {
@@ -405,6 +409,9 @@ bool SubscriptionManager_RegisterCallback( const char * pTopicFilter,
 void SubscriptionManager_RemoveCallback( const char * pTopicFilter,
                                          uint16_t topicFilterLength )
 {
+    assert( pTopicFilter != NULL );
+    assert( topicFilterLength != 0 );
+
     size_t matchingRecordIndex = 0u;
     bool recordFound = false;
     SubscriptionManager_Record_t * pRecord = NULL;

@@ -44,7 +44,7 @@
 /* Logging configuration for the transport interface implementation which uses
  * OpenSSL and Sockets. */
 #ifndef LIBRARY_LOG_NAME
-    #define LIBRARY_LOG_NAME     "Transport_OpenSSL_Sockets"
+    #define LIBRARY_LOG_NAME     "Subscription Manager"
 #endif
 #ifndef LIBRARY_LOG_LEVEL
     #define LIBRARY_LOG_LEVEL    LOG_DEBUG
@@ -88,6 +88,12 @@ void SubscriptionManager_DispatchHandler( MQTTContext_t * pContext,
  * @param[in] pTopicFilter The topic filter to register the callback for.
  * @param[in] topicFilterLength The length of the topic filter string.
  * @param[in] callback The callback to be registered for the topic filter.
+ *
+ * @note The subscription manager does not allow more than one callback to be registered
+ * for the same topic filter.
+ * @note The passed topic filter, @a pTopicFilter, is saved in the registry.
+ * The application must keep the lifetime of the pointer active until the callback
+ * for the topic filter is not removed.
  *
  * @return true if registration of the callback is successful; otherwise, false
  * if the either the registry is full OR a registered callback already exists for
