@@ -499,7 +499,7 @@ static int handlePublishResend( MQTTContext_t * pMqttContext )
     MQTTStatus_t mqttStatus = MQTTSuccess;
     uint8_t index = 0U;
     MQTTStateCursor_t cursor = MQTT_STATE_CURSOR_INITIALIZER;
-    uint16_t packetIdToResend = 0;
+    uint16_t packetIdToResend = MQTT_PACKET_ID_INVALID;
 
     assert( pMqttContext != NULL );
     assert( outgoingPublishPackets != NULL );
