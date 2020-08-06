@@ -550,12 +550,13 @@ static int handlePublishResend( MQTTContext_t * pMqttContext )
     assert( pMqttContext != NULL );
     assert( outgoingPublishPackets != NULL );
 
-    /* For the sake of demonstrating how to use MQTT_PublishToResend(), the 
-     * outgoingPublishPackets array is iterated through for the next pending 
-     * publish packet to be resent. If the application requires increased 
-     * efficiency in the look up of the packetIdToResend, then a hashmap of 
+    /* For the sake of demonstrating how to use MQTT_PublishToResend(), the
+     * outgoingPublishPackets array is iterated through for the next pending
+     * publish packet to be resent. If the application requires increased
+     * efficiency in the look up of the packetIdToResend, then a hashmap of
      * packetId key and PublishPacket_t values may be used instead. */
-    packetIdToResend = MQTT_PublishToResend( pMqttContext, &cursor);
+    packetIdToResend = MQTT_PublishToResend( pMqttContext, &cursor );
+
     while( packetIdToResend != 0 )
     {
         for( index = 0U; index < MAX_OUTGOING_PUBLISHES; index++ )
@@ -565,10 +566,10 @@ static int handlePublishResend( MQTTContext_t * pMqttContext )
                 outgoingPublishPackets[ index ].pubInfo.dup = true;
 
                 LogInfo( ( "Sending duplicate PUBLISH with packet id %u.",
-                        outgoingPublishPackets[ index ].packetId ) );
+                           outgoingPublishPackets[ index ].packetId ) );
                 mqttStatus = MQTT_Publish( pMqttContext,
-                                        &outgoingPublishPackets[ index ].pubInfo,
-                                        outgoingPublishPackets[ index ].packetId );
+                                           &outgoingPublishPackets[ index ].pubInfo,
+                                           outgoingPublishPackets[ index ].packetId );
 
                 if( mqttStatus != MQTTSuccess )
                 {
@@ -582,12 +583,13 @@ static int handlePublishResend( MQTTContext_t * pMqttContext )
                 else
                 {
                     LogInfo( ( "Sent duplicate PUBLISH successfully for packet id %u.\n\n",
-                            outgoingPublishPackets[ index ].packetId ) );
+                               outgoingPublishPackets[ index ].packetId ) );
                 }
             }
         }
+
         /* Get the next packetID to be resent. */
-        packetIdToResend = MQTT_PublishToResend( pMqttContext, &cursor);
+        packetIdToResend = MQTT_PublishToResend( pMqttContext, &cursor );
     }
 
     return returnStatus;

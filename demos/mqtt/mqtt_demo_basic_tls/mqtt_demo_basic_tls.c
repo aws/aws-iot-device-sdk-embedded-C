@@ -57,6 +57,8 @@
 /* Clock for timer. */
 #include "clock.h"
 
+#include <signal.h>
+
 /**
  * These configuration settings are required to run the basic TLS demo.
  * Throw compilation error if the below configs are not defined.
@@ -504,12 +506,13 @@ static int handlePublishResend( MQTTContext_t * pMqttContext )
     assert( pMqttContext != NULL );
     assert( outgoingPublishPackets != NULL );
 
-    /* For the sake of demonstrating how to use MQTT_PublishToResend(), the 
-     * outgoingPublishPackets array is iterated through for the next pending 
-     * publish packet to be resent. If the application requires increased 
-     * efficiency in the look up of the packetIdToResend, then a hashmap of 
+    /* For the sake of demonstrating how to use MQTT_PublishToResend(), the
+     * outgoingPublishPackets array is iterated through for the next pending
+     * publish packet to be resent. If the application requires increased
+     * efficiency in the look up of the packetIdToResend, then a hashmap of
      * packetId key and PublishPacket_t values may be used instead. */
-    packetIdToResend = MQTT_PublishToResend( pMqttContext, &cursor);
+    packetIdToResend = MQTT_PublishToResend( pMqttContext, &cursor );
+
     while( packetIdToResend != 0 )
     {
         for( index = 0U; index < MAX_OUTGOING_PUBLISHES; index++ )
@@ -519,10 +522,10 @@ static int handlePublishResend( MQTTContext_t * pMqttContext )
                 outgoingPublishPackets[ index ].pubInfo.dup = true;
 
                 LogInfo( ( "Sending duplicate PUBLISH with packet id %u.",
-                        outgoingPublishPackets[ index ].packetId ) );
+                           outgoingPublishPackets[ index ].packetId ) );
                 mqttStatus = MQTT_Publish( pMqttContext,
-                                        &outgoingPublishPackets[ index ].pubInfo,
-                                        outgoingPublishPackets[ index ].packetId );
+                                           &outgoingPublishPackets[ index ].pubInfo,
+                                           outgoingPublishPackets[ index ].packetId );
 
                 if( mqttStatus != MQTTSuccess )
                 {
@@ -536,12 +539,13 @@ static int handlePublishResend( MQTTContext_t * pMqttContext )
                 else
                 {
                     LogInfo( ( "Sent duplicate PUBLISH successfully for packet id %u.\n\n",
-                            outgoingPublishPackets[ index ].packetId ) );
+                               outgoingPublishPackets[ index ].packetId ) );
                 }
             }
         }
+
         /* Get the next packetID to be resent. */
-        packetIdToResend = MQTT_PublishToResend( pMqttContext, &cursor);
+        packetIdToResend = MQTT_PublishToResend( pMqttContext, &cursor );
     }
 
     return returnStatus;
@@ -1075,6 +1079,19 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
     return returnStatus;
 }
 
+void handler(int sig) {
+  void *array[10];
+  size_t size;
+
+  // get void*'s for all entries on the stack
+  size = backtrace(array, 10);
+
+  // print out all the frames to stderr
+  fprintf(stderr, "Error: signal %d:\n", sig);
+  backtrace_symbols_fd(array, size, STDERR_FILENO);
+  exit(1);
+}
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -1099,6 +1116,8 @@ int main( int argc,
 
     ( void ) argc;
     ( void ) argv;
+
+    signal(SIGSEGV, handler);
 
     for( ; ; )
     {
