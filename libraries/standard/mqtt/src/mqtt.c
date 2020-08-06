@@ -917,8 +917,6 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
     assert( pContext->appCallback != NULL );
 
     appCallback = pContext->appCallback;
-    /* We did not receive a publish. */
-    deserializedInfo.pPublishInfo = NULL;
 
     switch( pIncomingPacket->type )
     {
@@ -963,6 +961,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
         /* Set fields of deserialized struct. */
         deserializedInfo.packetIdentifier = packetIdentifier;
         deserializedInfo.deserializationResult = status;
+        deserializedInfo.pPublishInfo = NULL;
         appCallback( pContext, pIncomingPacket, &deserializedInfo );
         /* In case a SUBACK indicated refusal, reset the status to continue the loop. */
         status = MQTTSuccess;
