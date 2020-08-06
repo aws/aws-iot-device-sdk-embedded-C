@@ -511,7 +511,7 @@ static int handlePublishResend( MQTTContext_t * pMqttContext )
      * packetId key and PublishPacket_t values may be used instead. */
     packetIdToResend = MQTT_PublishToResend( pMqttContext, &cursor );
 
-    while( packetIdToResend != 0 )
+    while( packetIdToResend != MQTT_PACKET_ID_INVALID )
     {
         for( index = 0U; index < MAX_OUTGOING_PUBLISHES; index++ )
         {
