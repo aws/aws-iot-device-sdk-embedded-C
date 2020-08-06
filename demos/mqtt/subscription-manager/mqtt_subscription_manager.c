@@ -294,7 +294,7 @@ static bool matchTopic( const char * pTopicName,
         status = ( strncmp( pTopicName, pTopicFilter, topicNameLength ) == 0 ) ? true : false;
     }
 
-    /* If an exact match wasn't found, match against wildcard characters in topic filter.
+    /* If an exact match was not found, match against wildcard characters in topic filter.
      * Note: According to the MQTT 3.1.1 specification, incoming PUBLISH topic names starting
      * the "$" character cannot be matched against topic filter starting with a wildcard. */
     if( ( status == false ) && ( ( pTopicName[ 0 ] != '$' ) &&
