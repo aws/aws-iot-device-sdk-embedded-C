@@ -21,7 +21,7 @@
 
 /**
  * @file shadow.h
- * @brief user-facing Shadow functions, and parameter structs.
+ * @brief User-facing Shadow functions, and parameter structs.
  */
 
 #ifndef _SHADOW_H_
@@ -35,7 +35,7 @@
 /*--------------------------- Shadow types ---------------------------*/
 
 /**
- * @brief Each of these values describe the type of a shadow message.
+ * @brief Each of these values describes the type of a shadow message.
  *        https://docs.aws.amazon.com/iot/latest/developerguide/device-shadow-mqtt.html
  */
 typedef enum ShadowMessageType
@@ -52,7 +52,7 @@ typedef enum ShadowMessageType
 } ShadowMessageType_t;
 
 /**
- * @brief Each of these values describe the type of a shadow topic string.
+ * @brief Each of these values describes the type of a shadow topic string.
  *
  * These are used for topicType parameter of Shadow_GetTopicString() to tell it
  * what topic string to assemble.

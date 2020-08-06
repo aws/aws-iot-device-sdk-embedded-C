@@ -25,7 +25,6 @@
  */
 
 /* Standard includes. */
-#include <stdbool.h>
 #include <string.h>
 
 /* Shadow includes. */
@@ -127,14 +126,14 @@ static ShadowStatus_t containsSubString( const char * pString,
                                          const char * pSubString,
                                          uint16_t subStringLength );
 /**
- * @brief Chek if the Thing Name is valid.
+ * @brief Check if the Thing Name is valid.
  *
  * @param[in] pString Pointer to the starting of thing name.
  * @param[in] stringLength Length of pString.
  * @param[out] pThingNameLength Pointer to caller-supplied memory for returning the length of the Thing Name.
  *
  * @return Return SHADOW_SUCCESS if it is valid;
- *         return SHADOW_THINGNAME_PARSE_FAILED if failed.
+ *         return SHADOW_THINGNAME_PARSE_FAILED if it is not.
  */
 static ShadowStatus_t validateThingName( const char * pString,
                                         uint16_t stringLength,
@@ -310,66 +309,53 @@ static const char * getShadowOperationString( ShadowTopicStringType_t topicType 
     switch( topicType )
     {
         case ShadowTopicStringTypeGet:
-        {
             shadowOperationString = SHADOW_OP_GET;
             break;
-        }
+
         case ShadowTopicStringTypeGetAccepted:
-        {
             shadowOperationString = SHADOW_OP_GET_ACCEPTED;
             break;
-        }
+
         case ShadowTopicStringTypeGetRejected:
-        {
             shadowOperationString = SHADOW_OP_GET_REJECTED;
             break;
-        }
+
         case ShadowTopicStringTypeDelete:
-        {
             shadowOperationString = SHADOW_OP_DELETE;
             break;
-        }
+
         case ShadowTopicStringTypeDeleteAccepted:
-        {
             shadowOperationString = SHADOW_OP_DELETE_ACCEPTED;
             break;
-        }
+
         case ShadowTopicStringTypeDeleteRejected:
-        {
             shadowOperationString = SHADOW_OP_DELETE_REJECTED;
             break;
-        }
+
         case ShadowTopicStringTypeUpdate:
-        {
             shadowOperationString = SHADOW_OP_UPDATE;
             break;
-        }
+
         case ShadowTopicStringTypeUpdateAccepted:
-        {
             shadowOperationString = SHADOW_OP_UPDATE_ACCEPTED;
             break;
-        }
+
         case ShadowTopicStringTypeUpdateRejected:
-        {
             shadowOperationString = SHADOW_OP_UPDATE_REJECTED;
             break;
-        }
+
         case ShadowTopicStringTypeUpdateDocuments:
-        {
             shadowOperationString = SHADOW_OP_UPDATE_DOCUMENTS;
             break;
-        }
+
         case ShadowTopicStringTypeUpdateDelta:
-        {
             shadowOperationString = SHADOW_OP_UPDATE_DELTA;
             break;
-        }
+
         default:
-        {
             LogError( ( "Unexpected  topicType: %u", topicType ) );
             shadowOperationString = NULL;
             break;
-        }
     }
 
     return shadowOperationString;
@@ -384,65 +370,53 @@ static uint16_t getShadowOperationLength( ShadowTopicStringType_t topicType )
     switch( topicType )
     {
         case ShadowTopicStringTypeGet:
-        {
             shadowOperationLength = SHADOW_OP_GET_LENGTH;
             break;
-        }
+
         case ShadowTopicStringTypeGetAccepted:
-        {
             shadowOperationLength = SHADOW_OP_GET_ACCEPTED_LENGTH;
             break;
-        }
+
         case ShadowTopicStringTypeGetRejected:
-        {
             shadowOperationLength = SHADOW_OP_GET_REJECTED_LENGTH;
             break;
-        }
+
         case ShadowTopicStringTypeDelete:
-        {
             shadowOperationLength = SHADOW_OP_DELETE_LENGTH;
             break;
-        }
+
         case ShadowTopicStringTypeDeleteAccepted:
-        {
             shadowOperationLength = SHADOW_OP_DELETE_ACCEPTED_LENGTH;
             break;
-        }
+
         case ShadowTopicStringTypeDeleteRejected:
-        {
             shadowOperationLength = SHADOW_OP_DELETE_REJECTED_LENGTH;
             break;
-        }
+
         case ShadowTopicStringTypeUpdate:
-        {
             shadowOperationLength = SHADOW_OP_UPDATE_LENGTH;
             break;
-        }
+
         case ShadowTopicStringTypeUpdateAccepted:
-        {
             shadowOperationLength = SHADOW_OP_UPDATE_ACCEPTED_LENGTH;
             break;
-        }
+
         case ShadowTopicStringTypeUpdateRejected:
-        {
             shadowOperationLength = SHADOW_OP_UPDATE_REJECTED_LENGTH;
             break;
-        }
+
         case ShadowTopicStringTypeUpdateDocuments:
-        {
             shadowOperationLength = SHADOW_OP_UPDATE_DOCUMENTS_LENGTH;
             break;
-        }
+
         case ShadowTopicStringTypeUpdateDelta:
-        {
             shadowOperationLength = SHADOW_OP_UPDATE_DELTA_LENGTH;
             break;
-        }
+
         default:
-        {
             LogError( ( "Unexpected  topicType: %u", topicType ) );
             break;
-        }
+
     }
 
     return shadowOperationLength;
