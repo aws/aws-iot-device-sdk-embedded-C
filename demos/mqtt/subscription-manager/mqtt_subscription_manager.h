@@ -94,7 +94,7 @@ void SubscriptionManager_DispatchHandler( MQTTContext_t * pContext,
  * the topic filter in the subscription manager.
  */
 bool SubscriptionManager_RegisterCallback( const char * pTopicFilter,
-                                           uint16_t topicFileterLength,
+                                           uint16_t topicFilterLength,
                                            SubscriptionManager_Callback_t pCallback );
 
 /**
@@ -105,7 +105,7 @@ bool SubscriptionManager_RegisterCallback( const char * pTopicFilter,
  * @param[in] topicFilterLength The length of the topic filter string.
  */
 void SubscriptionManager_RemoveCallback( const char * pTopicFilter,
-                                         uint16_t topicFileterLength );
+                                         uint16_t topicFilterLength );
 
 
 #endif /* ifndef MQTT_SUBSCRIPTION_MANAGER_H_ */
