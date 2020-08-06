@@ -67,15 +67,13 @@ static SubscriptionManager_Record_t callbackRecordList[ MAX_SUBSCRIPTION_CALLBAC
  * @param[in] filterIndex Index of the topic filter being examined.
  * @param[out] pMatch Whether the topic filter and topic name match.
  *
- * @return `true` if the caller of this function should exit; `false` if the caller
- * should continue parsing the topics.
+ * @return Returns whether the topic filter and the topic name match.
  */
 static bool matchEndWildcards( const char * pTopicFilter,
                                uint16_t topicFilterLength,
                                uint16_t topicNameLength,
                                uint16_t nameIndex,
-                               uint16_t filterIndex,
-                               bool * pMatch );
+                               uint16_t filterIndex );
 
 /**
  * @brief Attempt to match characters in a topic filter by wildcards.
@@ -135,37 +133,39 @@ static bool matchEndWildcards( const char * pTopicFilter,
                                uint16_t topicFilterLength,
                                uint16_t topicNameLength,
                                uint16_t nameIndex,
-                               uint16_t filterIndex,
-                               bool * pMatch )
+                               uint16_t filterIndex )
 {
-    bool status = false, endChar = false;
+    bool matchFound = false, endChar = false;
 
-    /* Determine if the last character is reached for both topic name and topic
-     * filter for the '#' wildcard. */
-    endChar = ( nameIndex == ( topicNameLength - 1U ) ) && ( filterIndex == ( topicFilterLength - 3U ) );
+    /* Determine if the last character is reached for the topic name, and the
+     * second last character for the topic filter to match for the '#' wildcard. */
+    endChar = ( nameIndex == ( topicNameLength - 1U ) ) &&
+              ( filterIndex == ( topicFilterLength - 3U ) ) ? true : false;
 
     if( endChar == true )
     {
-        /* Determine if the topic filter ends with the '#' wildcard. */
-        status = ( pTopicFilter[ filterIndex + 2U ] == '#' );
+        /* Determine if the topic filter contains "/#" as the last 2 characters for the '#' wildcard.
+         * The '#' wildcard represents the parent and any number of child levels in the topic name.
+         * For example, the filter "sport/#" matches "sport" as well as "sport/tennis" topics. */
+        matchFound = ( ( pTopicFilter[ filterIndex + 1U ] == '/' ) &&
+                       ( pTopicFilter[ filterIndex + 2U ] == '#' ) ) ? true : false;
     }
 
-    if( status == false )
+    if( matchFound == false )
     {
         /* Determine if the last character is reached for both topic name and topic
-         * filter for the '+' wildcard. */
-        endChar = ( nameIndex == ( topicNameLength - 1U ) ) && ( filterIndex == ( topicFilterLength - 2U ) );
+         * filter to match for the '+' wildcard. */
+        endChar = ( nameIndex == ( topicNameLength - 1U ) ) &&
+                  ( filterIndex == ( topicFilterLength - 2U ) ) ? true : false;
 
         if( endChar == true )
         {
-            /* Filter "sport/+" also matches the "sport/" but not "sport". */
-            status = ( pTopicFilter[ filterIndex + 1U ] == '+' );
+            /* Filter "sport/+" matches the "sport/" but not "sport". */
+            matchFound = ( pTopicFilter[ filterIndex + 1U ] == '+' ) ? true : false;
         }
     }
 
-    *pMatch = status;
-
-    return status;
+    return matchFound;
 }
 
 /*-----------------------------------------------------------*/
@@ -177,7 +177,7 @@ static bool matchWildcards( const char * pTopicFilter,
                             uint16_t * pNameIndex,
                             bool * pMatch )
 {
-    bool status = false;
+    bool shouldStopMatching = false;
 
     /* Check for wildcards. */
     if( pTopicFilter[ filterIndex ] == '+' )
@@ -196,17 +196,17 @@ static bool matchWildcards( const char * pTopicFilter,
         /* Subsequent characters don't need to be checked for the
          * multi-level wildcard. */
         *pMatch = true;
-        status = true;
+        shouldStopMatching = true;
     }
     else
     {
         /* Any character mismatch other than '+' or '#' means the topic
          * name does not match the topic filter. */
         *pMatch = false;
-        status = true;
+        shouldStopMatching = true;
     }
 
-    return status;
+    return shouldStopMatching;
 }
 
 /*-----------------------------------------------------------*/
@@ -216,7 +216,7 @@ static bool topicFilterMatch( const char * pTopicName,
                               const char * pTopicFilter,
                               uint16_t topicFilterLength )
 {
-    bool status = false, matchFound = false;
+    bool matchFound = false, shouldStopMatching = false;
     uint16_t nameIndex = 0, filterIndex = 0;
 
     assert( pTopicName != NULL );
@@ -232,25 +232,25 @@ static bool topicFilterMatch( const char * pTopicName,
         {
             /* Handle special corner cases regarding wildcards at the end of
              * topic filters, as documented by the MQTT protocol spec. */
-            matchFound = matchEndWildcards( pTopicFilter,
-                                            topicFilterLength,
-                                            topicNameLength,
-                                            nameIndex,
-                                            filterIndex,
-                                            &status );
+            shouldStopMatching = matchEndWildcards( pTopicFilter,
+                                                    topicFilterLength,
+                                                    topicNameLength,
+                                                    nameIndex,
+                                                    filterIndex );
+            matchFound = shouldStopMatching;
         }
         else
         {
             /* Check for matching wildcards. */
-            matchFound = matchWildcards( pTopicFilter,
-                                         pTopicName,
-                                         topicNameLength,
-                                         filterIndex,
-                                         &nameIndex,
-                                         &status );
+            shouldStopMatching = matchWildcards( pTopicFilter,
+                                                 pTopicName,
+                                                 topicNameLength,
+                                                 filterIndex,
+                                                 &nameIndex,
+                                                 &matchFound );
         }
 
-        if( matchFound == true )
+        if( shouldStopMatching == true )
         {
             break;
         }
@@ -260,13 +260,17 @@ static bool topicFilterMatch( const char * pTopicName,
         filterIndex++;
     }
 
-    if( status == false )
+    if( matchFound == false )
     {
-        /* If the end of both strings has been reached, they match. */
-        status = ( ( nameIndex == topicNameLength ) && ( filterIndex == topicFilterLength ) );
+        /* If the end of both strings has been reached, they match. This represents the
+         * case when the topic filter contains a wildcard but neither at the starting nor
+         * the ending. For example, when matching "sport/+/player" topic filter with
+         * "sport/hockey/player" topic name. */
+        matchFound = ( ( nameIndex == topicNameLength ) &&
+                       ( filterIndex == topicFilterLength ) ) ? true : false;
     }
 
-    return status;
+    return matchFound;
 }
 
 /*-----------------------------------------------------------*/
@@ -287,12 +291,12 @@ static bool matchTopic( const char * pTopicName,
      * topic filter length match. */
     if( topicNameLength == topicFilterLength )
     {
-        status = ( strncmp( pTopicName, pTopicFilter, topicNameLength ) == 0 );
+        status = ( strncmp( pTopicName, pTopicFilter, topicNameLength ) == 0 ) ? true : false;
     }
 
     /* Match against wildcard characters in topic filter only if the incoming
      * PUBLISH topic name does not start with a "$" character. */
-    else if( pTopicName[ 0 ] != '$' )
+    if( ( status == false ) && ( pTopicName[ 0 ] != '$' ) )
     {
         status = topicFilterMatch( pTopicName, topicNameLength, pTopicFilter, topicFilterLength );
     }
@@ -316,7 +320,7 @@ void SubscriptionManager_DispatchHandler( MQTTContext_t * pContext,
     size_t listIndex = 0u;
 
     /* Iterate through record list to find matching topics, and invoke their callbacks. */
-    while( listIndex < MAX_SUBSCRIPTION_CALLBACK_RECORDS )
+    for( listIndex = 0; listIndex < MAX_SUBSCRIPTION_CALLBACK_RECORDS; listIndex++ )
     {
         if( ( callbackRecordList[ listIndex ].pTopicFilter != NULL ) &&
             ( matchTopic( pPublishInfo->pTopicName,
@@ -334,8 +338,6 @@ void SubscriptionManager_DispatchHandler( MQTTContext_t * pContext,
             /* Invoke the callback associated with the record as the topics match. */
             callbackRecordList[ listIndex ].callback( pContext, pPublishInfo );
         }
-
-        listIndex++;
     }
 }
 
