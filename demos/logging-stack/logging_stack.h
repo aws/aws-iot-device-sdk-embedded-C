@@ -38,11 +38,11 @@
 
 /* Macro to extract only the file name from file path to use for metadata in
  * log messages. */
-#define __FILENAME__           ( strrchr( __FILE__, '/' ) ? strrchr( __FILE__, '/' ) + 1 : __FILE__ )
+#define FILENAME               ( strrchr( __FILE__, '/' ) ? strrchr( __FILE__, '/' ) + 1 : __FILE__ )
 
 /* Metadata information to prepend to every log message. */
 #define LOG_METADATA_FORMAT    "[%s:%d] "
-#define LOG_METADATA_ARGS      __FILENAME__, __LINE__
+#define LOG_METADATA_ARGS      FILENAME, __LINE__
 
 /* Common macro for all logging interface macros. */
 #if !defined( DISABLE_LOGGING )
