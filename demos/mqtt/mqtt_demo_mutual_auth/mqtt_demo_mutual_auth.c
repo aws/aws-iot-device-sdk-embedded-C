@@ -544,39 +544,50 @@ static int handlePublishResend( MQTTContext_t * pMqttContext )
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus = MQTTSuccess;
     uint8_t index = 0U;
+    MQTTStateCursor_t cursor = MQTT_STATE_CURSOR_INITIALIZER;
+    uint16_t packetIdToResend = 0;
 
+    assert( pMqttContext != NULL );
     assert( outgoingPublishPackets != NULL );
 
-    /* Resend all the QoS1 publishes still in the array. These are the
-     * publishes that hasn't received a PUBACK. When a PUBACK is
-     * received, the publish is removed from the array. */
-    for( index = 0U; index < MAX_OUTGOING_PUBLISHES; index++ )
+    /* For the sake of demonstrating how to use MQTT_PublishToResend(), the 
+     * outgoingPublishPackets array is iterated through for the next pending 
+     * publish packet to be resent. If the application requires increased 
+     * efficiency in the look up of the packetIdToResend, then a hashmap of 
+     * packetId key and PublishPacket_t values may be used instead. */
+    packetIdToResend = MQTT_PublishToResend( pMqttContext, &cursor);
+    while( packetIdToResend != 0 )
     {
-        if( outgoingPublishPackets[ index ].packetId != MQTT_PACKET_ID_INVALID )
+        for( index = 0U; index < MAX_OUTGOING_PUBLISHES; index++ )
         {
-            outgoingPublishPackets[ index ].pubInfo.dup = true;
-
-            LogInfo( ( "Sending duplicate PUBLISH with packet id %u.",
-                       outgoingPublishPackets[ index ].packetId ) );
-            mqttStatus = MQTT_Publish( pMqttContext,
-                                       &outgoingPublishPackets[ index ].pubInfo,
-                                       outgoingPublishPackets[ index ].packetId );
-
-            if( mqttStatus != MQTTSuccess )
+            if( outgoingPublishPackets[ index ].packetId == packetIdToResend )
             {
-                LogError( ( "Sending duplicate PUBLISH for packet id %u "
-                            " failed with status %u.",
-                            outgoingPublishPackets[ index ].packetId,
-                            mqttStatus ) );
-                returnStatus = EXIT_FAILURE;
-                break;
-            }
-            else
-            {
-                LogInfo( ( "Sent duplicate PUBLISH successfully for packet id %u.\n\n",
-                           outgoingPublishPackets[ index ].packetId ) );
+                outgoingPublishPackets[ index ].pubInfo.dup = true;
+
+                LogInfo( ( "Sending duplicate PUBLISH with packet id %u.",
+                        outgoingPublishPackets[ index ].packetId ) );
+                mqttStatus = MQTT_Publish( pMqttContext,
+                                        &outgoingPublishPackets[ index ].pubInfo,
+                                        outgoingPublishPackets[ index ].packetId );
+
+                if( mqttStatus != MQTTSuccess )
+                {
+                    LogError( ( "Sending duplicate PUBLISH for packet id %u "
+                                " failed with status %u.",
+                                outgoingPublishPackets[ index ].packetId,
+                                mqttStatus ) );
+                    returnStatus = EXIT_FAILURE;
+                    break;
+                }
+                else
+                {
+                    LogInfo( ( "Sent duplicate PUBLISH successfully for packet id %u.\n\n",
+                            outgoingPublishPackets[ index ].packetId ) );
+                }
             }
         }
+        /* Get the next packetID to be resent. */
+        packetIdToResend = MQTT_PublishToResend( pMqttContext, &cursor);
     }
 
     return returnStatus;
