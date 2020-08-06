@@ -127,16 +127,16 @@ static ShadowStatus_t containsSubString( const char * pString,
                                          const char * pSubString,
                                          uint16_t subStringLength );
 /**
- * @brief Extract the Thing Name from a string.
+ * @brief Chek if the Thing Name is valid.
  *
  * @param[in] pString Pointer to the starting of thing name.
  * @param[in] stringLength Length of pString.
  * @param[out] pThingNameLength Pointer to caller-supplied memory for returning the length of the Thing Name.
  *
- * @return Return SHADOW_SUCCESS if successfully extracted;
+ * @return Return SHADOW_SUCCESS if it is valid;
  *         return SHADOW_THINGNAME_PARSE_FAILED if failed.
  */
-static ShadowStatus_t extractThingName( const char * pString,
+static ShadowStatus_t validateThingName( const char * pString,
                                         uint16_t stringLength,
                                         uint16_t * pThingNameLength );
 
@@ -197,7 +197,7 @@ static ShadowStatus_t containsSubString( const char * pString,
 }
 /*-----------------------------------------------------------*/
 
-static ShadowStatus_t extractThingName( const char * pString,
+static ShadowStatus_t validateThingName( const char * pString,
                                         uint16_t stringLength,
                                         uint16_t * pThingNameLength )
 {
@@ -512,7 +512,7 @@ ShadowStatus_t Shadow_MatchTopic( const char * pTopic,
     if( shadowStatus == SHADOW_SUCCESS )
     {
         /* Extract thing name. */
-        shadowStatus = extractThingName( & ( pTopic[ consumedTopicLength ] ),
+        shadowStatus = validateThingName( & ( pTopic[ consumedTopicLength ] ),
                                          topicLength - consumedTopicLength,
                                          pThingNameLength );
         if( shadowStatus == SHADOW_SUCCESS )
