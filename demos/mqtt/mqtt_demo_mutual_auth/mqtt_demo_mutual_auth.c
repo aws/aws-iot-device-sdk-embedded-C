@@ -563,6 +563,7 @@ static int handlePublishResend( MQTTContext_t * pMqttContext )
 
     while( packetIdToResend != MQTT_PACKET_ID_INVALID )
     {
+        foundPacketId = false;
         for( index = 0U; index < MAX_OUTGOING_PUBLISHES; index++ )
         {
             if( outgoingPublishPackets[ index ].packetId == packetIdToResend )
