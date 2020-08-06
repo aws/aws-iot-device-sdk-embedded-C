@@ -27,6 +27,7 @@
 #ifndef _SHADOW_H_
 #define _SHADOW_H_
 
+/* Standard includes. */
 #include <stdint.h>
 /* Include config file before other headers. */
 #include "shadow_config.h"
@@ -45,7 +46,7 @@ typedef enum ShadowMessageType
     ShadowMessageTypeDeleteRejected,
     ShadowMessageTypeUpdateAccepted,
     ShadowMessageTypeUpdateRejected,
-    ShadowMessageTypeUpdateDocument,
+    ShadowMessageTypeUpdateDocuments,
     ShadowMessageTypeUpdateDelta,
     ShadowMessageTypeMaxNum
 } ShadowMessageType_t;
@@ -91,122 +92,92 @@ typedef enum ShadowStatus
  * @brief The common prefix of all Shadow MQTT topics
  *        from here https://docs.aws.amazon.com/iot/latest/developerguide/device-shadow-mqtt.html.
  */
-#define SHADOW_TOPIC_PREFIX_STRING                                  "$aws/things/"
+#define SHADOW_PREFIX                                               "$aws/things/"
 
 /**
- * @brief The length of #SHADOW_TOPIC_PREFIX.
+ * @brief The length of #SHADOW_PREFIX.
  */
-#define SHADOW_TOPIC_PREFIX_LENGTH                                  ( ( uint16_t ) ( sizeof( SHADOW_TOPIC_PREFIX_STRING ) - 1U ) )
+#define SHADOW_PREFIX_LENGTH                                        ( ( uint16_t ) ( sizeof( SHADOW_PREFIX ) - 1U ) )
 
 /**
  * @brief The string representing a Shadow "DELETE" operation in a Shadow MQTT topic.
  */
-
-/* MISRA Rule 5.4 flags the following macro's name as ambiguous from the
- * one without suffix. This rule is suppressed for naming consistency with
- * other Shadow header field and value string and length macros in this file.*/
-/* coverity[other_declaration] */
-#define SHADOW_TOPIC_OPERATION_STRING_DELETE                        "/shadow/delete"
+#define SHADOW_OP_DELETE                                            "/shadow/delete"
 
 /**
- * @brief The length of #SHADOW_TOPIC_OPERATION_STRING_DELETE.
+ * @brief The length of #SHADOW_OP_DELETE.
  */
-
-/* MISRA Rule 5.4 flags the following macro's name as ambiguous from the
- * one without suffix. This rule is suppressed for naming consistency with
- * other Shadow header field and value string and length macros in this file.*/
-/* coverity[other_declaration] */
-#define SHADOW_TOPIC_OPERATION_LENGTH_DELETE                        ( ( uint16_t ) ( sizeof( SHADOW_TOPIC_OPERATION_STRING_DELETE ) - 1U ) )
+#define SHADOW_OP_DELETE_LENGTH                                     ( ( uint16_t ) ( sizeof( SHADOW_OP_DELETE ) - 1U ) )
 
 /**
  * @brief The string representing a Shadow "GET" operation in a Shadow MQTT topic.
  */
-
-/* MISRA Rule 5.4 flags the following macro's name as ambiguous from the
- * one without suffix. This rule is suppressed for naming consistency with
- * other Shadow header field and value string and length macros in this file.*/
-/* coverity[other_declaration] */
-#define SHADOW_TOPIC_OPERATION_STRING_GET                           "/shadow/get"
+#define SHADOW_OP_GET                                               "/shadow/get"
 
 /**
- * @brief The length of #SHADOW_TOPIC_OPERATION_STRING_GET.
+ * @brief The length of #SHADOW_OP_GET.
  */
-
-/* MISRA Rule 5.4 flags the following macro's name as ambiguous from the
- * one without suffix. This rule is suppressed for naming consistency with
- * other Shadow header field and value string and length macros in this file.*/
-/* coverity[other_declaration] */
-#define SHADOW_TOPIC_OPERATION_LENGTH_GET                           ( ( uint16_t ) ( sizeof( SHADOW_TOPIC_OPERATION_STRING_GET ) - 1U ) )
+#define SHADOW_OP_GET_LENGTH                                        ( ( uint16_t ) ( sizeof( SHADOW_OP_GET ) - 1U ) )
 
 /**
  * @brief The string representing a Shadow "UPDATE" operation in a Shadow MQTT topic.
  */
-
-/* MISRA Rule 5.4 flags the following macro's name as ambiguous from the
- * one without suffix. This rule is suppressed for naming consistency with
- * other Shadow header field and value string and length macros in this file.*/
-/* coverity[other_declaration] */
-#define SHADOW_TOPIC_OPERATION_STRING_UPDATE                        "/shadow/update"
+#define SHADOW_OP_UPDATE                                            "/shadow/update"
 
 /**
- * @brief The length of #SHADOW_TOPIC_OPERATION_STRING_UPDATE.
+ * @brief The length of #SHADOW_OP_UPDATE.
  */
-
-/* MISRA Rule 5.4 flags the following macro's name as ambiguous from the
- * one without suffix. This rule is suppressed for naming consistency with
- * other Shadow header field and value string and length macros in this file.*/
-/* coverity[other_declaration] */
-#define SHADOW_TOPIC_OPERATION_LENGTH_UPDATE                        ( ( uint16_t ) ( sizeof( SHADOW_TOPIC_OPERATION_STRING_UPDATE ) - 1U ) )
+#define SHADOW_OP_UPDATE_LENGTH                                     ( ( uint16_t ) ( sizeof( SHADOW_OP_UPDATE ) - 1U ) )
 
 /**
  * @brief The suffix for a Shadow operation "accepted" topic.
  */
-#define SHADOW_TOPIC_SUFFIX_STRING_ACCEPTED                         "/accepted"
+#define SHADOW_SUFFIX_ACCEPTED                                      "/accepted"
 
 /**
- * @brief The length of #SHADOW_TOPIC_SUFFIX_STRING_ACCEPTED.
+ * @brief The length of #SHADOW_SUFFIX_ACCEPTED.
  */
-#define SHADOW_TOPIC_SUFFIX_LENGTH_ACCEPTED                         ( ( uint16_t ) ( sizeof( SHADOW_TOPIC_SUFFIX_STRING_ACCEPTED ) - 1U ) )
+#define SHADOW_SUFFIX_ACCEPTED_LENGTH                               ( ( uint16_t ) ( sizeof( SHADOW_SUFFIX_ACCEPTED ) - 1U ) )
 
 /**
  * @brief The suffix for a Shadow operation "rejected" topic.
  */
-#define SHADOW_TOPIC_SUFFIX_STRING_REJECTED                         "/rejected"
+#define SHADOW_SUFFIX_REJECTED                                      "/rejected"
 
 /**
- * @brief The length of #SHADOW_TOPIC_SUFFIX_STRING_REJECTED.
+ * @brief The length of #SHADOW_SUFFIX_REJECTED.
  */
-#define SHADOW_TOPIC_SUFFIX_LENGTH_REJECTED                         ( ( uint16_t ) ( sizeof( SHADOW_TOPIC_SUFFIX_STRING_REJECTED ) - 1U ) )
+#define SHADOW_SUFFIX_REJECTED_LENGTH                               ( ( uint16_t ) ( sizeof( SHADOW_SUFFIX_REJECTED ) - 1U ) )
 
 /**
  * @brief The suffix for a Shadow "delta" topic.
  */
-#define SHADOW_TOPIC_SUFFIX_STRING_DELTA                            "/delta"
+#define SHADOW_SUFFIX_DELTA                                         "/delta"
 
 /**
- * @brief The length of #SHADOW_TOPIC_SUFFIX_STRING_DELTA.
+ * @brief The length of #SHADOW_SUFFIX_DELTA.
  */
-#define SHADOW_TOPIC_SUFFIX_LENGTH_DELTA                            ( ( uint16_t ) ( sizeof( SHADOW_TOPIC_SUFFIX_STRING_DELTA ) - 1U ) )
+#define SHADOW_SUFFIX_DELTA_LENGTH                                  ( ( uint16_t ) ( sizeof( SHADOW_SUFFIX_DELTA ) - 1U ) )
 
 /**
  * @brief The suffix for a Shadow "documents" topic.
  */
-#define SHADOW_TOPIC_SUFFIX_STRING_DOCUMENTS                        "/documents"
+#define SHADOW_SUFFIX_DOCUMENTS                                     "/documents"
 
 /**
- * @brief The length of #SHADOW_TOPIC_SUFFIX_STRING_DOCUMENTS.
+ * @brief The length of #SHADOW_SUFFIX_DOCUMENTS.
  */
-#define SHADOW_TOPIC_SUFFIX_LENGTH_DOCUMENTS                        ( ( uint16_t ) ( sizeof( SHADOW_TOPIC_SUFFIX_STRING_DOCUMENTS ) - 1U ) )
+#define SHADOW_SUFFIX_DOCUMENTS_LENGTH                              ( ( uint16_t ) ( sizeof( SHADOW_SUFFIX_DOCUMENTS ) - 1U ) )
 
 /**
  * @brief The suffix for a "null" suffix.
  */
-#define SHADOW_TOPIC_SUFFIX_STRING_NULL
+#define SHADOW_SUFFIX_NULL
 
 /**
  * @brief The length of null suffix.
  */
-#define SHADOW_TOPIC_SUFFIX_LENGTH_NULL                             ( 0U )
+#define SHADOW_SUFFIX_NULL_LENGTH                                   ( 0U )
 
 /**
  * @brief The maximum length of Thing Name.
@@ -228,196 +199,196 @@ typedef enum ShadowStatus
  * When thingName is known to be "myThing" at compile time, invoke the macro like this:
  * (In this case, the length is a constant at compile time.)
  *
- *     SHADOW_TOPIC_LENGTH( SHADOW_TOPIC_OPERATION_LENGTH_UPDATE, SHADOW_TOPIC_SUFFIX_LENGTH_DELTA, 7 )
+ *     SHADOW_TOPIC_LENGTH( SHADOW_OP_UPDATE_LENGTH, SHADOW_SUFFIX_DELTA_LENGTH, 7 )
  *
  * When thingName is only known at run time and held in a variable myThingName, invoke
  * the macro like this:
  *
- *     SHADOW_TOPIC_LENGTH( SHADOW_TOPIC_OPERATION_LENGTH_UPDATE, SHADOW_TOPIC_SUFFIX_LENGTH_DELTA,
+ *     SHADOW_TOPIC_LENGTH( SHADOW_OP_UPDATE_LENGTH, SHADOW_SUFFIX_DELTA_LENGTH,
  *                       strlen( ( const char * ) myThingName ) )
  *
  * @param[operationLen] Can be one of:
- *                          - SHADOW_TOPIC_OPERATION_LENGTH_UPDATE
- *                          - SHADOW_TOPIC_OPERATION_LENGTH_DELETE
- *                          - SHADOW_TOPIC_OPERATION_LENGTH_GET
+ *                          - SHADOW_OP_UPDATE_LENGTH
+ *                          - SHADOW_OP_DELETE_LENGTH
+ *                          - SHADOW_OP_GET_LENGTH
  * @param[suffixLen]    Can be one of:
- *                          - SHADOW_TOPIC_SUFFIX_LENGTH_NULL
- *                          - SHADOW_TOPIC_SUFFIX_LENGTH_ACCEPTED
- *                          - SHADOW_TOPIC_SUFFIX_LENGTH_REJECTED
- *                          - SHADOW_TOPIC_SUFFIX_LENGTH_DELTA
- *                          - SHADOW_TOPIC_SUFFIX_LENGTH_DOCUMENTS
+ *                          - SHADOW_SUFFIX_NULL_LENGTH
+ *                          - SHADOW_SUFFIX_ACCEPTED_LENGTH
+ *                          - SHADOW_SUFFIX_REJECTED_LENGTH
+ *                          - SHADOW_SUFFIX_DELTA_LENGTH
+ *                          - SHADOW_SUFFIX_DOCUMENTS_LENGTH
  * @param[thingNameLength] Length of the thingName excluding the ending NULL.
  *
  * @return Length of the shadow topic in bytes.
  */
 #define SHADOW_TOPIC_LENGTH( operationLength,  suffixLength,  thingNameLength )   \
-                           ( operationLength + suffixLength + thingNameLength + SHADOW_TOPIC_PREFIX_LENGTH )
+                           ( operationLength + suffixLength + thingNameLength + SHADOW_PREFIX_LENGTH )
 
 /**
  * @brief Compute the length of shadow topic "$aws/things/<thingName>/shadow/update".
  */
 #define SHADOW_TOPIC_LENGTH_UPDATE( thingNameLength )                       \
-        SHADOW_TOPIC_LENGTH( SHADOW_TOPIC_OPERATION_LENGTH_UPDATE, SHADOW_TOPIC_SUFFIX_LENGTH_NULL, thingNameLength )
+        SHADOW_TOPIC_LENGTH( SHADOW_OP_UPDATE_LENGTH, SHADOW_SUFFIX_NULL_LENGTH, thingNameLength )
 
 /**
  * @brief Compute the length of shadow topic "$aws/things/<thingName>/shadow/update/accepted".
  */
 #define SHADOW_TOPIC_LENGTH_UPDATE_ACCEPTED( thingNameLength )              \
-        SHADOW_TOPIC_LENGTH( SHADOW_TOPIC_OPERATION_LENGTH_UPDATE, SHADOW_TOPIC_SUFFIX_LENGTH_ACCEPTED, thingNameLength )
+        SHADOW_TOPIC_LENGTH( SHADOW_OP_UPDATE_LENGTH, SHADOW_SUFFIX_ACCEPTED_LENGTH, thingNameLength )
 
 /**
  * @brief Compute the length of shadow topic "$aws/things/<thingName>/shadow/update/rejected".
  */
 #define SHADOW_TOPIC_LENGTH_UPDATE_REJECTED( thingNameLength )              \
-        SHADOW_TOPIC_LENGTH( SHADOW_TOPIC_OPERATION_LENGTH_UPDATE, SHADOW_TOPIC_SUFFIX_LENGTH_REJECTED, thingNameLength )
+        SHADOW_TOPIC_LENGTH( SHADOW_OP_UPDATE_LENGTH, SHADOW_SUFFIX_REJECTED_LENGTH, thingNameLength )
 
 /**
  * @brief Compute the length of shadow topic "$aws/things/<thingName>/shadow/update/documents".
  */
 #define SHADOW_TOPIC_LENGTH_UPDATE_DOCUMENTS( thingNameLength )             \
-        SHADOW_TOPIC_LENGTH( SHADOW_TOPIC_OPERATION_LENGTH_UPDATE, SHADOW_TOPIC_SUFFIX_LENGTH_DOCUMENTS, thingNameLength )
+        SHADOW_TOPIC_LENGTH( SHADOW_OP_UPDATE_LENGTH, SHADOW_SUFFIX_DOCUMENTS_LENGTH, thingNameLength )
 
 /**
  * @brief Compute the length of shadow topic "$aws/things/<thingName>/shadow/update/delta".
  */
 #define SHADOW_TOPIC_LENGTH_UPDATE_DELTA( thingNameLength )                 \
-        SHADOW_TOPIC_LENGTH( SHADOW_TOPIC_OPERATION_LENGTH_UPDATE, SHADOW_TOPIC_SUFFIX_LENGTH_DELTA, thingNameLength )
+        SHADOW_TOPIC_LENGTH( SHADOW_OP_UPDATE_LENGTH, SHADOW_SUFFIX_DELTA_LENGTH, thingNameLength )
 
 /**
  * @brief Compute the length of shadow topic "$aws/things/<thingName>/shadow/get".
  */
 #define SHADOW_TOPIC_LENGTH_GET( thingNameLength )                          \
-        SHADOW_TOPIC_LENGTH( SHADOW_TOPIC_OPERATION_LENGTH_GET, SHADOW_TOPIC_SUFFIX_LENGTH_NULL, thingNameLength )
+        SHADOW_TOPIC_LENGTH( SHADOW_OP_GET_LENGTH, SHADOW_SUFFIX_NULL_LENGTH, thingNameLength )
 
 /**
  * @brief Compute the length of shadow topic "$aws/things/<thingName>/shadow/get/accepted".
  */
 #define SHADOW_TOPIC_LENGTH_GET_ACCEPTED( thingNameLength )                 \
-        SHADOW_TOPIC_LENGTH( SHADOW_TOPIC_OPERATION_LENGTH_GET, SHADOW_TOPIC_SUFFIX_LENGTH_ACCEPTED, thingNameLength )
+        SHADOW_TOPIC_LENGTH( SHADOW_OP_GET_LENGTH, SHADOW_SUFFIX_ACCEPTED_LENGTH, thingNameLength )
 
 /**
  * @brief Compute the length of shadow topic "$aws/things/<thingName>/shadow/get/rejected".
  */
 #define SHADOW_TOPIC_LENGTH_GET_REJECTED( thingNameLength )                 \
-        SHADOW_TOPIC_LENGTH( SHADOW_TOPIC_OPERATION_LENGTH_GET, SHADOW_TOPIC_SUFFIX_LENGTH_REJECTED, thingNameLength )
+        SHADOW_TOPIC_LENGTH( SHADOW_OP_GET_LENGTH, SHADOW_SUFFIX_REJECTED_LENGTH, thingNameLength )
 
 /**
  * @brief Compute the length of shadow topic "$aws/things/<thingName>/shadow/delete".
  */
 #define SHADOW_TOPIC_LENGTH_DELETE( thingNameLength )                       \
-        SHADOW_TOPIC_LENGTH( SHADOW_TOPIC_OPERATION_LENGTH_DELETE, SHADOW_TOPIC_SUFFIX_LENGTH_NULL, thingNameLength )
+        SHADOW_TOPIC_LENGTH( SHADOW_OP_DELETE_LENGTH, SHADOW_SUFFIX_NULL_LENGTH, thingNameLength )
 
 /**
  * @brief Compute the length of shadow topic "$aws/things/<thingName>/shadow/delete/accepted".
  */
 #define SHADOW_TOPIC_LENGTH_DELETE_ACCEPTED( thingNameLength )              \
-        SHADOW_TOPIC_LENGTH( SHADOW_TOPIC_OPERATION_LENGTH_DELETE, SHADOW_TOPIC_SUFFIX_LENGTH_ACCEPTED, thingNameLength )
+        SHADOW_TOPIC_LENGTH( SHADOW_OP_DELETE_LENGTH, SHADOW_SUFFIX_ACCEPTED_LENGTH, thingNameLength )
 
 /**
  * @brief Compute the length of shadow topic "$aws/things/<thingName>/shadow/delete/rejected".
  */
 #define SHADOW_TOPIC_LENGTH_DELETE_REJECTED( thingNameLength )              \
-        SHADOW_TOPIC_LENGTH( SHADOW_TOPIC_OPERATION_LENGTH_DELETE, SHADOW_TOPIC_SUFFIX_LENGTH_REJECTED, thingNameLength )
+        SHADOW_TOPIC_LENGTH( SHADOW_OP_DELETE_LENGTH, SHADOW_SUFFIX_REJECTED_LENGTH, thingNameLength )
 
 /**
  * @brief Compute the length of the longest shadow topic.
  */
 #define SHADOW_TOPIC_LENGTH_MAX( thingNameLength )                          \
-        SHADOW_TOPIC_LENGTH( SHADOW_TOPIC_OPERATION_LENGTH_UPDATE, SHADOW_TOPIC_SUFFIX_LENGTH_DOCUMENTS, thingNameLength )
+        SHADOW_TOPIC_LENGTH( SHADOW_OP_UPDATE_LENGTH, SHADOW_SUFFIX_DOCUMENTS_LENGTH, thingNameLength )
 
 /**
  * @brief Assemble constant shadow topic strings when Thing Name is known at compile time.
  *
  * When thingName is known to be "myThing" at compile time, invoke the macro like this:
  *
- *     SHADOW_TOPIC_STRING( SHADOW_TOPIC_OPERATION_STRING_UPDATE, SHADOW_TOPIC_SUFFIX_STRING_DELTA, "myThing" )
+ *     SHADOW_TOPIC_STRING( SHADOW_OP_UPDATE, SHADOW_SUFFIX_DELTA, "myThing" )
  *
  * When thingName is only known at run time, do not use this macro. Use the
  * Shadow_GetTopicString() function instead.
  *
  * @param[operation] Can be one of:
- *                       - SHADOW_TOPIC_OPERATION_STRING_UPDATE
- *                       - SHADOW_TOPIC_OPERATION_STRING_DELETE
- *                       - SHADOW_TOPIC_OPERATION_STRING_GET
+ *                       - SHADOW_OP_UPDATE
+ *                       - SHADOW_OP_DELETE
+ *                       - SHADOW_OP_GET
  * @param[suffix]    Can be one of: 
- *                       - SHADOW_TOPIC_SUFFIX_STRING_NULL
- *                       - SHADOW_TOPIC_SUFFIX_STRING_ACCEPTED
- *                       - SHADOW_TOPIC_SUFFIX_STRING_REJECTED
- *                       - SHADOW_TOPIC_SUFFIX_STRING_DELTA
- *                       - SHADOW_TOPIC_SUFFIX_STRING_DOCUMENTS
+ *                       - SHADOW_SUFFIX_NULL
+ *                       - SHADOW_SUFFIX_ACCEPTED
+ *                       - SHADOW_SUFFIX_REJECTED
+ *                       - SHADOW_SUFFIX_DELTA
+ *                       - SHADOW_SUFFIX_DOCUMENTS
  *                          
  * @param[thingName] Thing Name.
  *
  * @return Topic string.
  */                       
 #define SHADOW_TOPIC_STRING( thingName, operation, suffix )     \
-                           ( SHADOW_TOPIC_PREFIX_STRING thingName operation suffix )
+                           ( SHADOW_PREFIX thingName operation suffix )
 
 /**
  * @brief Assemble shadow topic string "$aws/things/<thingName>/shadow/update".
  */
 #define SHADOW_TOPIC_STRING_UPDATE( thingName )                 \
-        SHADOW_TOPIC_STRING( thingName, SHADOW_TOPIC_OPERATION_STRING_UPDATE, SHADOW_TOPIC_SUFFIX_STRING_NULL )
+        SHADOW_TOPIC_STRING( thingName, SHADOW_OP_UPDATE, SHADOW_SUFFIX_NULL )
 
 /**
  * @brief Assemble shadow topic string "$aws/things/<thingName>/shadow/update/accepted".
  */
 #define SHADOW_TOPIC_STRING_UPDATE_ACCEPTED( thingName )        \
-        SHADOW_TOPIC_STRING( thingName, SHADOW_TOPIC_OPERATION_STRING_UPDATE, SHADOW_TOPIC_SUFFIX_STRING_ACCEPTED )
+        SHADOW_TOPIC_STRING( thingName, SHADOW_OP_UPDATE, SHADOW_SUFFIX_ACCEPTED )
 
 /**
  * @brief Assemble shadow topic string "$aws/things/<thingName>/shadow/update/rejected".
  */
 #define SHADOW_TOPIC_STRING_UPDATE_REJECTED( thingName )        \
-        SHADOW_TOPIC_STRING( thingName, SHADOW_TOPIC_OPERATION_STRING_UPDATE, SHADOW_TOPIC_SUFFIX_STRING_REJECTED )
+        SHADOW_TOPIC_STRING( thingName, SHADOW_OP_UPDATE, SHADOW_SUFFIX_REJECTED )
 
 /**
  * @brief Assemble shadow topic string "$aws/things/<thingName>/shadow/update/documents".
  */
 #define SHADOW_TOPIC_STRING_UPDATE_DOCUMENTS( thingName )        \
-        SHADOW_TOPIC_STRING( thingName, SHADOW_TOPIC_OPERATION_STRING_UPDATE, SHADOW_TOPIC_SUFFIX_STRING_DOCUMENTS )
+        SHADOW_TOPIC_STRING( thingName, SHADOW_OP_UPDATE, SHADOW_SUFFIX_DOCUMENTS )
 
 /**
  * @brief Assemble shadow topic string "$aws/things/<thingName>/shadow/update/delta".
  */
 #define SHADOW_TOPIC_STRING_UPDATE_DELTA( thingName )           \
-        SHADOW_TOPIC_STRING( thingName, SHADOW_TOPIC_OPERATION_STRING_UPDATE, SHADOW_TOPIC_SUFFIX_STRING_DELTA )
+        SHADOW_TOPIC_STRING( thingName, SHADOW_OP_UPDATE, SHADOW_SUFFIX_DELTA )
 
 /**
  * @brief Assemble shadow topic string "$aws/things/<thingName>/shadow/get".
  */
 #define SHADOW_TOPIC_STRING_GET( thingName )                    \
-        SHADOW_TOPIC_STRING( thingName, SHADOW_TOPIC_OPERATION_STRING_GET, SHADOW_TOPIC_SUFFIX_STRING_NULL )
+        SHADOW_TOPIC_STRING( thingName, SHADOW_OP_GET, SHADOW_SUFFIX_NULL )
 
 /**
  * @brief Assemble shadow topic string "$aws/things/<thingName>/shadow/get/accepted".
  */
 #define SHADOW_TOPIC_STRING_GET_ACCEPTED( thingName )           \
-        SHADOW_TOPIC_STRING( thingName, SHADOW_TOPIC_OPERATION_STRING_GET, SHADOW_TOPIC_SUFFIX_STRING_ACCEPTED )
+        SHADOW_TOPIC_STRING( thingName, SHADOW_OP_GET, SHADOW_SUFFIX_ACCEPTED )
 
 /**
  * @brief Assemble shadow topic string "$aws/things/<thingName>/shadow/get/rejected".
  */
 #define SHADOW_TOPIC_STRING_GET_REJECTED( thingName )           \
-        SHADOW_TOPIC_STRING( thingName, SHADOW_TOPIC_OPERATION_STRING_GET, SHADOW_TOPIC_SUFFIX_STRING_REJECTED )
+        SHADOW_TOPIC_STRING( thingName, SHADOW_OP_GET, SHADOW_SUFFIX_REJECTED )
 
 /**
  * @brief Assemble shadow topic string "$aws/things/<thingName>/shadow/delete".
  */
 #define SHADOW_TOPIC_STRING_DELETE( thingName )                 \
-        SHADOW_TOPIC_STRING( thingName, SHADOW_TOPIC_OPERATION_STRING_DELETE, SHADOW_TOPIC_SUFFIX_STRING_NULL )
+        SHADOW_TOPIC_STRING( thingName, SHADOW_OP_DELETE, SHADOW_SUFFIX_NULL )
 
 /**
  * @brief Assemble shadow topic string "$aws/things/<thingName>/shadow/delete/accepted".
  */
 #define SHADOW_TOPIC_STRING_DELETE_ACCEPTED( thingName )        \
-        SHADOW_TOPIC_STRING( thingName, SHADOW_TOPIC_OPERATION_STRING_DELETE, SHADOW_TOPIC_SUFFIX_STRING_ACCEPTED )
+        SHADOW_TOPIC_STRING( thingName, SHADOW_OP_DELETE, SHADOW_SUFFIX_ACCEPTED )
 
 /**
  * @brief Assemble shadow topic string "$aws/things/<thingName>/shadow/delete/rejected".
  */
 #define SHADOW_TOPIC_STRING_DELETE_REJECTED( thingName )        \
-        SHADOW_TOPIC_STRING( thingName, SHADOW_TOPIC_OPERATION_STRING_DELETE, SHADOW_TOPIC_SUFFIX_STRING_REJECTED )
+        SHADOW_TOPIC_STRING( thingName, SHADOW_OP_DELETE, SHADOW_SUFFIX_REJECTED )
 
 /**
  * @brief Assemble shadow topic strings when Thing Name is only known at run time.

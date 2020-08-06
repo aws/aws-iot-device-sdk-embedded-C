@@ -292,7 +292,7 @@ void test_Shadow_MacrosLength( void )
 /**
  * @brief Tests the behavior of Shadow_GetTopicString() with valid parameters.
  */
-void test_Shaodw_GetTopicString_Happy_Path( void )
+void test_Shadow_GetTopicString_Happy_Path( void )
 {
     ShadowStatus_t shadowStatus = SHADOW_SUCCESS;
     uint16_t outLength = 0;
@@ -335,7 +335,7 @@ void test_Shaodw_GetTopicString_Happy_Path( void )
 /**
  * @brief Tests the behavior of Shadow_GetTopicString() with invalid parameters.
  */
-void test_Shaodw_GetTopicString_Invalid_Parameters( void )
+void test_Shadow_GetTopicString_Invalid_Parameters( void )
 {
     ShadowStatus_t shadowStatus = SHADOW_SUCCESS;
     uint16_t outLength = 0;
@@ -344,7 +344,7 @@ void test_Shaodw_GetTopicString_Invalid_Parameters( void )
     uint16_t bufferSize = TEST_SHADOW_TOPIC_BUFFER_LENGTH;
 
     /* Call Shadow_GetTopicString() with various combinations of
-     * incorrect paramters. */
+     * incorrect parameters. */
     shadowStatus = Shadow_GetTopicString( 0,
                                           "",
                                           0,
@@ -408,7 +408,7 @@ void test_Shadow_MatchTopic_Happy_Path( void )
     const char topicBuffer[ TEST_SHADOW_TOPIC_LENGTH_UPDATE_ACCEPTED ] = TEST_SHADOW_TOPIC_STRING_UPDATE_ACCEPTED;
     uint16_t bufferSize = TEST_SHADOW_TOPIC_LENGTH_UPDATE_ACCEPTED;
 
-    /* Call Shadow_MatchTopic() with valid paramters and verify result. */
+    /* Call Shadow_MatchTopic() with valid parameters and verify result. */
     shadowStatus = Shadow_MatchTopic( & ( topicBuffer[ 0 ] ),
                                       bufferSize,
                                       & messageType,

@@ -34,162 +34,82 @@
 /**
  * @brief The string representing "/shadow/update/accepted".
  */
-
-/* MISRA Rule 5.4 flags the following macro's name as ambiguous from the
- * one without _ACCEPTED suffix. This rule is suppressed for naming consistency with
- * other Shadow header field and value string and length macros in this file.*/
-/* coverity[misra_c_2012_rule_5_4_violation] */
-#define SHADOW_TOPIC_OPERATION_STRING_UPDATE_ACCEPTED               SHADOW_TOPIC_OPERATION_STRING_UPDATE SHADOW_TOPIC_SUFFIX_STRING_ACCEPTED
+#define SHADOW_OP_UPDATE_ACCEPTED               SHADOW_OP_UPDATE SHADOW_SUFFIX_ACCEPTED
 
 /**
  * @brief The string representing "/shadow/update/rejected".
  */
-
-/* MISRA Rule 5.4 flags the following macro's name as ambiguous from the
- * one without _REJECTED suffix. This rule is suppressed for naming consistency with
- * other Shadow header field and value string and length macros in this file.*/
-/* coverity[misra_c_2012_rule_5_4_violation] */
-#define SHADOW_TOPIC_OPERATION_STRING_UPDATE_REJECTED               SHADOW_TOPIC_OPERATION_STRING_UPDATE SHADOW_TOPIC_SUFFIX_STRING_REJECTED
+#define SHADOW_OP_UPDATE_REJECTED               SHADOW_OP_UPDATE SHADOW_SUFFIX_REJECTED
 
 /**
  * @brief The string representing "/shadow/update/delta".
  */
-
-/* MISRA Rule 5.4 flags the following macro's name as ambiguous from the
- * one without _DELTA suffix. This rule is suppressed for naming consistency with
- * other Shadow header field and value string and length macros in this file.*/
-/* coverity[misra_c_2012_rule_5_4_violation] */
-#define SHADOW_TOPIC_OPERATION_STRING_UPDATE_DELTA                  SHADOW_TOPIC_OPERATION_STRING_UPDATE SHADOW_TOPIC_SUFFIX_STRING_DELTA
+#define SHADOW_OP_UPDATE_DELTA                  SHADOW_OP_UPDATE SHADOW_SUFFIX_DELTA
 
 /**
  * @brief The string representing "/shadow/update/document".
  */
-
-/* MISRA Rule 5.4 flags the following macro's name as ambiguous from the
- * one without DOCUMENTS suffix. This rule is suppressed for naming consistency with
- * other Shadow header field and value string and length macros in this file.*/
-/* coverity[misra_c_2012_rule_5_4_violation] */
-#define SHADOW_TOPIC_OPERATION_STRING_UPDATE_DOCUMENTS              SHADOW_TOPIC_OPERATION_STRING_UPDATE SHADOW_TOPIC_SUFFIX_STRING_DOCUMENTS
+#define SHADOW_OP_UPDATE_DOCUMENTS              SHADOW_OP_UPDATE SHADOW_SUFFIX_DOCUMENTS
 
 /**
  * @brief The string representing "/shadow/delete/accepted".
  */
-
-/* MISRA Rule 5.4 flags the following macro's name as ambiguous from the
- * one without _ACCEPTED suffix. This rule is suppressed for naming consistency with
- * other Shadow header field and value string and length macros in this file.*/
-/* coverity[misra_c_2012_rule_5_4_violation] */
-#define SHADOW_TOPIC_OPERATION_STRING_DELETE_ACCEPTED               SHADOW_TOPIC_OPERATION_STRING_DELETE SHADOW_TOPIC_SUFFIX_STRING_ACCEPTED
+#define SHADOW_OP_DELETE_ACCEPTED               SHADOW_OP_DELETE SHADOW_SUFFIX_ACCEPTED
 
 /**
  * @brief The string representing "/shadow/delete/accepted".
  */
-
-/* MISRA Rule 5.4 flags the following macro's name as ambiguous from the
- * one without _REJECTED suffix. This rule is suppressed for naming consistency with
- * other Shadow header field and value string and length macros in this file.*/
-/* coverity[misra_c_2012_rule_5_4_violation] */
-#define SHADOW_TOPIC_OPERATION_STRING_DELETE_REJECTED               SHADOW_TOPIC_OPERATION_STRING_DELETE SHADOW_TOPIC_SUFFIX_STRING_REJECTED
+#define SHADOW_OP_DELETE_REJECTED               SHADOW_OP_DELETE SHADOW_SUFFIX_REJECTED
 
 /**
  * @brief The string representing "/shadow/get/accepted".
  */
-
-/* MISRA Rule 5.4 flags the following macro's name as ambiguous from the
- * one without _ACCEPTED suffix. This rule is suppressed for naming consistency with
- * other Shadow header field and value string and length macros in this file.*/
-/* coverity[misra_c_2012_rule_5_4_violation] */
-#define SHADOW_TOPIC_OPERATION_STRING_GET_ACCEPTED                  SHADOW_TOPIC_OPERATION_STRING_GET SHADOW_TOPIC_SUFFIX_STRING_ACCEPTED
+#define SHADOW_OP_GET_ACCEPTED                  SHADOW_OP_GET SHADOW_SUFFIX_ACCEPTED
 
 /**
  * @brief The string representing "/shadow/get/accepted".
  */
-
-/* MISRA Rule 5.4 flags the following macro's name as ambiguous from the
- * one without _REJECTED suffix. This rule is suppressed for naming consistency with
- * other Shadow header field and value string and length macros in this file.*/
-/* coverity[misra_c_2012_rule_5_4_violation] */
-#define SHADOW_TOPIC_OPERATION_STRING_GET_REJECTED                  SHADOW_TOPIC_OPERATION_STRING_GET SHADOW_TOPIC_SUFFIX_STRING_REJECTED
+#define SHADOW_OP_GET_REJECTED                  SHADOW_OP_GET SHADOW_SUFFIX_REJECTED
 
 /**
  * @brief The length of "/shadow/update/accepted".
  */
-
-/* MISRA Rule 5.4 flags the following macro's name as ambiguous from the
- * one without _ACCEPTED suffix. This rule is suppressed for naming consistency with
- * other Shadow header field and value string and length macros in this file.*/
-/* coverity[misra_c_2012_rule_5_4_violation] */
-#define SHADOW_TOPIC_OPERATION_LENGTH_UPDATE_ACCEPTED               ( SHADOW_TOPIC_OPERATION_LENGTH_UPDATE + SHADOW_TOPIC_SUFFIX_LENGTH_ACCEPTED )
+#define SHADOW_OP_UPDATE_ACCEPTED_LENGTH               ( SHADOW_OP_UPDATE_LENGTH + SHADOW_SUFFIX_ACCEPTED_LENGTH )
 
 /**
  * @brief The length of "/shadow/update/rejected".
  */
-
-/* MISRA Rule 5.4 flags the following macro's name as ambiguous from the
- * one without _REJECTED suffix. This rule is suppressed for naming consistency with
- * other Shadow header field and value string and length macros in this file.*/
-/* coverity[misra_c_2012_rule_5_4_violation] */
-#define SHADOW_TOPIC_OPERATION_LENGTH_UPDATE_REJECTED               ( SHADOW_TOPIC_OPERATION_LENGTH_UPDATE + SHADOW_TOPIC_SUFFIX_LENGTH_REJECTED )
+#define SHADOW_OP_UPDATE_REJECTED_LENGTH               ( SHADOW_OP_UPDATE_LENGTH + SHADOW_SUFFIX_REJECTED_LENGTH )
 
 /**
  * @brief The length of "/shadow/update/document".
  */
-
-/* MISRA Rule 5.4 flags the following macro's name as ambiguous from the
- * one without DOCUMENTS suffix. This rule is suppressed for naming consistency with
- * other Shadow header field and value string and length macros in this file.*/
-/* coverity[misra_c_2012_rule_5_4_violation] */
-#define SHADOW_TOPIC_OPERATION_LENGTH_UPDATE_DOCUMENTS              ( SHADOW_TOPIC_OPERATION_LENGTH_UPDATE + SHADOW_TOPIC_SUFFIX_LENGTH_DOCUMENTS )
+#define SHADOW_OP_UPDATE_DOCUMENTS_LENGTH              ( SHADOW_OP_UPDATE_LENGTH + SHADOW_SUFFIX_DOCUMENTS_LENGTH )
 
 /**
  * @brief The length of "/shadow/update/rejected".
  */
-
-/* MISRA Rule 5.4 flags the following macro's name as ambiguous from the
- * one without _DELTA suffix. This rule is suppressed for naming consistency with
- * other Shadow header field and value string and length macros in this file.*/
-/* coverity[misra_c_2012_rule_5_4_violation] */
-#define SHADOW_TOPIC_OPERATION_LENGTH_UPDATE_DELTA                  ( SHADOW_TOPIC_OPERATION_LENGTH_UPDATE + SHADOW_TOPIC_SUFFIX_LENGTH_DELTA )
+#define SHADOW_OP_UPDATE_DELTA_LENGTH                  ( SHADOW_OP_UPDATE_LENGTH + SHADOW_SUFFIX_DELTA_LENGTH )
 
 /**
  * @brief The length of "/shadow/get/accepted".
  */
-
-/* MISRA Rule 5.4 flags the following macro's name as ambiguous from the
- * one without _ACCEPTED suffix. This rule is suppressed for naming consistency with
- * other Shadow header field and value string and length macros in this file.*/
-/* coverity[misra_c_2012_rule_5_4_violation] */
-#define SHADOW_TOPIC_OPERATION_LENGTH_GET_ACCEPTED                  ( SHADOW_TOPIC_OPERATION_LENGTH_GET + SHADOW_TOPIC_SUFFIX_LENGTH_ACCEPTED )
+#define SHADOW_OP_GET_ACCEPTED_LENGTH                  ( SHADOW_OP_GET_LENGTH + SHADOW_SUFFIX_ACCEPTED_LENGTH )
 
 /**
  * @brief The length of "/shadow/get/rejected".
  */
-
-/* MISRA Rule 5.4 flags the following macro's name as ambiguous from the
- * one without _REJECTED suffix. This rule is suppressed for naming consistency with
- * other Shadow header field and value string and length macros in this file.*/
-/* coverity[misra_c_2012_rule_5_4_violation] */
-#define SHADOW_TOPIC_OPERATION_LENGTH_GET_REJECTED                  ( SHADOW_TOPIC_OPERATION_LENGTH_GET + SHADOW_TOPIC_SUFFIX_LENGTH_REJECTED )
+#define SHADOW_OP_GET_REJECTED_LENGTH                  ( SHADOW_OP_GET_LENGTH + SHADOW_SUFFIX_REJECTED_LENGTH )
 
 /**
  * @brief The length of "/shadow/get/accepted".
  */
-
-/* MISRA Rule 5.4 flags the following macro's name as ambiguous from the
- * one without _ACCEPTED suffix. This rule is suppressed for naming consistency with
- * other Shadow header field and value string and length macros in this file.*/
-/* coverity[misra_c_2012_rule_5_4_violation] */
-#define SHADOW_TOPIC_OPERATION_LENGTH_DELETE_ACCEPTED               ( SHADOW_TOPIC_OPERATION_LENGTH_DELETE + SHADOW_TOPIC_SUFFIX_LENGTH_ACCEPTED )
+#define SHADOW_OP_DELETE_ACCEPTED_LENGTH               ( SHADOW_OP_DELETE_LENGTH + SHADOW_SUFFIX_ACCEPTED_LENGTH )
 
 /**
  * @brief The length of "/shadow/delete/rejected".
  */
-
-/* MISRA Rule 5.4 flags the following macro's name as ambiguous from the
- * one without _REJECTED suffix. This rule is suppressed for naming consistency with
- * other Shadow header field and value string and length macros in this file.*/
-/* coverity[misra_c_2012_rule_5_4_violation] */
-#define SHADOW_TOPIC_OPERATION_LENGTH_DELETE_REJECTED               ( SHADOW_TOPIC_OPERATION_LENGTH_DELETE + SHADOW_TOPIC_SUFFIX_LENGTH_REJECTED )
+#define SHADOW_OP_DELETE_REJECTED_LENGTH               ( SHADOW_OP_DELETE_LENGTH + SHADOW_SUFFIX_REJECTED_LENGTH )
 
 /**
  * @brief Determine if the string contains the substring.
@@ -209,9 +129,8 @@ static ShadowStatus_t containsSubString( const char * pString,
 /**
  * @brief Extract the Thing Name from a string.
  *
- * @param[in] pString Pointer to the string.
+ * @param[in] pString Pointer to the starting of thing name.
  * @param[in] stringLength Length of pString.
- * @param[out] pThingName Points to the 1st character of Thing Name inside of the topic string.
  * @param[out] pThingNameLength Pointer to caller-supplied memory for returning the length of the Thing Name.
  *
  * @return Return SHADOW_SUCCESS if successfully extracted;
@@ -219,7 +138,6 @@ static ShadowStatus_t containsSubString( const char * pString,
  */
 static ShadowStatus_t extractThingName( const char * pString,
                                         uint16_t stringLength,
-                                        const char ** pThingName,
                                         uint16_t * pThingNameLength );
 
 /**
@@ -235,6 +153,25 @@ static ShadowStatus_t extractThingName( const char * pString,
 static ShadowStatus_t extractShadowMessageType( const char * pString,
                                                 uint16_t stringLength,
                                                 ShadowMessageType_t * pMessageType );
+
+/**
+ * @brief Get the shadow operation string for a given shadow topic type.
+ *
+ * @param[in] topicType The given shadow topic type.
+ *
+ * @return The shadow operation string for the given shadow type.
+ */
+static const char * getShadowOperationString( ShadowTopicStringType_t topicType );
+
+/**
+ * @brief Get the shadow operation string length for a given shadow topic type.
+ *
+ * @param[in] topicType The given shadow topic type.
+ *
+ * @return The shadow operation string length for the given shadow type.
+ */
+static uint16_t getShadowOperationLength( ShadowTopicStringType_t topicType );
+
 /*-----------------------------------------------------------*/
 
 static ShadowStatus_t containsSubString( const char * pString,
@@ -262,7 +199,6 @@ static ShadowStatus_t containsSubString( const char * pString,
 
 static ShadowStatus_t extractThingName( const char * pString,
                                         uint16_t stringLength,
-                                        const char ** pThingName,
                                         uint16_t * pThingNameLength )
 {
     uint16_t index = 0U;
@@ -285,7 +221,6 @@ static ShadowStatus_t extractThingName( const char * pString,
      */
     if( index > 0U )
     {
-        * pThingName = pString;
         * pThingNameLength = index;
         returnStatus = SHADOW_SUCCESS;
     }
@@ -304,27 +239,27 @@ static ShadowStatus_t extractShadowMessageType( const char * pString,
     /* Lookup table for Shadow message string. */
     static const char * const pMessageStrings[ ShadowMessageTypeMaxNum ] =
     {
-        SHADOW_TOPIC_OPERATION_STRING_GET_ACCEPTED,
-        SHADOW_TOPIC_OPERATION_STRING_GET_REJECTED,
-        SHADOW_TOPIC_OPERATION_STRING_DELETE_ACCEPTED,
-        SHADOW_TOPIC_OPERATION_STRING_DELETE_REJECTED,
-        SHADOW_TOPIC_OPERATION_STRING_UPDATE_ACCEPTED,
-        SHADOW_TOPIC_OPERATION_STRING_UPDATE_REJECTED,
-        SHADOW_TOPIC_OPERATION_STRING_UPDATE_DOCUMENTS,
-        SHADOW_TOPIC_OPERATION_STRING_UPDATE_DELTA
+        SHADOW_OP_GET_ACCEPTED,
+        SHADOW_OP_GET_REJECTED,
+        SHADOW_OP_DELETE_ACCEPTED,
+        SHADOW_OP_DELETE_REJECTED,
+        SHADOW_OP_UPDATE_ACCEPTED,
+        SHADOW_OP_UPDATE_REJECTED,
+        SHADOW_OP_UPDATE_DOCUMENTS,
+        SHADOW_OP_UPDATE_DELTA
     };
 
     /* Lookup table for Shadow message string length. */
     static const uint16_t pMessageStringsLength[ ShadowMessageTypeMaxNum ] =
     {
-        SHADOW_TOPIC_OPERATION_LENGTH_GET_ACCEPTED,
-        SHADOW_TOPIC_OPERATION_LENGTH_GET_REJECTED,
-        SHADOW_TOPIC_OPERATION_LENGTH_DELETE_ACCEPTED,
-        SHADOW_TOPIC_OPERATION_LENGTH_DELETE_REJECTED,
-        SHADOW_TOPIC_OPERATION_LENGTH_UPDATE_ACCEPTED,
-        SHADOW_TOPIC_OPERATION_LENGTH_UPDATE_REJECTED,
-        SHADOW_TOPIC_OPERATION_LENGTH_UPDATE_DOCUMENTS,
-        SHADOW_TOPIC_OPERATION_LENGTH_UPDATE_DELTA
+        SHADOW_OP_GET_ACCEPTED_LENGTH,
+        SHADOW_OP_GET_REJECTED_LENGTH,
+        SHADOW_OP_DELETE_ACCEPTED_LENGTH,
+        SHADOW_OP_DELETE_REJECTED_LENGTH,
+        SHADOW_OP_UPDATE_ACCEPTED_LENGTH,
+        SHADOW_OP_UPDATE_REJECTED_LENGTH,
+        SHADOW_OP_UPDATE_DOCUMENTS_LENGTH,
+        SHADOW_OP_UPDATE_DELTA_LENGTH
     };
 
     /* Lookup table for Shadow message types. */
@@ -336,7 +271,7 @@ static ShadowStatus_t extractShadowMessageType( const char * pString,
         ShadowMessageTypeDeleteRejected,
         ShadowMessageTypeUpdateAccepted,
         ShadowMessageTypeUpdateRejected,
-        ShadowMessageTypeUpdateDocument,
+        ShadowMessageTypeUpdateDocuments,
         ShadowMessageTypeUpdateDelta
     };
 
@@ -365,6 +300,156 @@ static ShadowStatus_t extractShadowMessageType( const char * pString,
 
     return returnStatus;
 }
+
+/*-----------------------------------------------------------*/
+
+static const char * getShadowOperationString( ShadowTopicStringType_t topicType )
+{
+    const char *shadowOperationString = NULL;
+
+    switch( topicType )
+    {
+        case ShadowTopicStringTypeGet:
+        {
+            shadowOperationString = SHADOW_OP_GET;
+            break;
+        }
+        case ShadowTopicStringTypeGetAccepted:
+        {
+            shadowOperationString = SHADOW_OP_GET_ACCEPTED;
+            break;
+        }
+        case ShadowTopicStringTypeGetRejected:
+        {
+            shadowOperationString = SHADOW_OP_GET_REJECTED;
+            break;
+        }
+        case ShadowTopicStringTypeDelete:
+        {
+            shadowOperationString = SHADOW_OP_DELETE;
+            break;
+        }
+        case ShadowTopicStringTypeDeleteAccepted:
+        {
+            shadowOperationString = SHADOW_OP_DELETE_ACCEPTED;
+            break;
+        }
+        case ShadowTopicStringTypeDeleteRejected:
+        {
+            shadowOperationString = SHADOW_OP_DELETE_REJECTED;
+            break;
+        }
+        case ShadowTopicStringTypeUpdate:
+        {
+            shadowOperationString = SHADOW_OP_UPDATE;
+            break;
+        }
+        case ShadowTopicStringTypeUpdateAccepted:
+        {
+            shadowOperationString = SHADOW_OP_UPDATE_ACCEPTED;
+            break;
+        }
+        case ShadowTopicStringTypeUpdateRejected:
+        {
+            shadowOperationString = SHADOW_OP_UPDATE_REJECTED;
+            break;
+        }
+        case ShadowTopicStringTypeUpdateDocuments:
+        {
+            shadowOperationString = SHADOW_OP_UPDATE_DOCUMENTS;
+            break;
+        }
+        case ShadowTopicStringTypeUpdateDelta:
+        {
+            shadowOperationString = SHADOW_OP_UPDATE_DELTA;
+            break;
+        }
+        default:
+        {
+            LogError( ( "Unexpected  topicType: %u", topicType ) );
+            shadowOperationString = NULL;
+            break;
+        }
+    }
+
+    return shadowOperationString;
+}
+
+/*-----------------------------------------------------------*/
+
+static uint16_t getShadowOperationLength( ShadowTopicStringType_t topicType )
+{
+    uint16_t shadowOperationLength = 0U;
+
+    switch( topicType )
+    {
+        case ShadowTopicStringTypeGet:
+        {
+            shadowOperationLength = SHADOW_OP_GET_LENGTH;
+            break;
+        }
+        case ShadowTopicStringTypeGetAccepted:
+        {
+            shadowOperationLength = SHADOW_OP_GET_ACCEPTED_LENGTH;
+            break;
+        }
+        case ShadowTopicStringTypeGetRejected:
+        {
+            shadowOperationLength = SHADOW_OP_GET_REJECTED_LENGTH;
+            break;
+        }
+        case ShadowTopicStringTypeDelete:
+        {
+            shadowOperationLength = SHADOW_OP_DELETE_LENGTH;
+            break;
+        }
+        case ShadowTopicStringTypeDeleteAccepted:
+        {
+            shadowOperationLength = SHADOW_OP_DELETE_ACCEPTED_LENGTH;
+            break;
+        }
+        case ShadowTopicStringTypeDeleteRejected:
+        {
+            shadowOperationLength = SHADOW_OP_DELETE_REJECTED_LENGTH;
+            break;
+        }
+        case ShadowTopicStringTypeUpdate:
+        {
+            shadowOperationLength = SHADOW_OP_UPDATE_LENGTH;
+            break;
+        }
+        case ShadowTopicStringTypeUpdateAccepted:
+        {
+            shadowOperationLength = SHADOW_OP_UPDATE_ACCEPTED_LENGTH;
+            break;
+        }
+        case ShadowTopicStringTypeUpdateRejected:
+        {
+            shadowOperationLength = SHADOW_OP_UPDATE_REJECTED_LENGTH;
+            break;
+        }
+        case ShadowTopicStringTypeUpdateDocuments:
+        {
+            shadowOperationLength = SHADOW_OP_UPDATE_DOCUMENTS_LENGTH;
+            break;
+        }
+        case ShadowTopicStringTypeUpdateDelta:
+        {
+            shadowOperationLength = SHADOW_OP_UPDATE_DELTA_LENGTH;
+            break;
+        }
+        default:
+        {
+            LogError( ( "Unexpected  topicType: %u", topicType ) );
+            break;
+        }
+    }
+
+    return shadowOperationLength;
+}
+
+/*-----------------------------------------------------------*/
+
 /*-----------------------------------------------------------*/
 
 ShadowStatus_t Shadow_MatchTopic( const char * pTopic,
@@ -405,11 +490,11 @@ ShadowStatus_t Shadow_MatchTopic( const char * pTopic,
         /* First match the prefix. */
         shadowStatus = containsSubString( & ( pTopic[ consumedTopicLength ] ),
                                           topicLength - consumedTopicLength,
-                                          SHADOW_TOPIC_PREFIX_STRING,
-                                          SHADOW_TOPIC_PREFIX_LENGTH );
+                                          SHADOW_PREFIX,
+                                          SHADOW_PREFIX_LENGTH );
         if( shadowStatus == SHADOW_SUCCESS )
         {
-            consumedTopicLength += SHADOW_TOPIC_PREFIX_LENGTH;
+            consumedTopicLength += SHADOW_PREFIX_LENGTH;
 
             /* If no more topic string is left to parse, fail. */
             if( consumedTopicLength >= topicLength )
@@ -429,10 +514,12 @@ ShadowStatus_t Shadow_MatchTopic( const char * pTopic,
         /* Extract thing name. */
         shadowStatus = extractThingName( & ( pTopic[ consumedTopicLength ] ),
                                          topicLength - consumedTopicLength,
-                                         pThingName,
                                          pThingNameLength );
         if( shadowStatus == SHADOW_SUCCESS )
         {
+            /* Update the out parameter if we successfully extracted the thing name. */
+            * pThingName = & ( pTopic[ consumedTopicLength ] );
+
             consumedTopicLength += * pThingNameLength;
 
             /* If no more topic string is left to parse, fail. */
@@ -471,40 +558,9 @@ ShadowStatus_t Shadow_GetTopicString( ShadowTopicStringType_t topicType,
                                       uint16_t bufferSize,
                                       uint16_t * pOutLength )
 {
-    uint16_t offset = 0U, generatedTopicStringLength = 0U;
+    uint16_t offset = 0U, generatedTopicStringLength = 0U, operationStringLength = 0U;
     ShadowStatus_t shadowStatus = SHADOW_SUCCESS;
-
-    /* Lookup table for Shadow operation string. */
-    static const char * const pTopicString[ ShadowTopicStringTypeMaxNum ] =
-    {
-        SHADOW_TOPIC_OPERATION_STRING_GET,
-        SHADOW_TOPIC_OPERATION_STRING_GET_ACCEPTED,
-        SHADOW_TOPIC_OPERATION_STRING_GET_REJECTED,
-        SHADOW_TOPIC_OPERATION_STRING_DELETE,
-        SHADOW_TOPIC_OPERATION_STRING_DELETE_ACCEPTED,
-        SHADOW_TOPIC_OPERATION_STRING_DELETE_REJECTED,
-        SHADOW_TOPIC_OPERATION_STRING_UPDATE,
-        SHADOW_TOPIC_OPERATION_STRING_UPDATE_ACCEPTED,
-        SHADOW_TOPIC_OPERATION_STRING_UPDATE_REJECTED,
-        SHADOW_TOPIC_OPERATION_STRING_UPDATE_DOCUMENTS,
-        SHADOW_TOPIC_OPERATION_STRING_UPDATE_DELTA
-    };
-
-    /* Lookup table for Shadow operation string length. */
-    static const uint16_t pTopicStringLength[ ShadowTopicStringTypeMaxNum ] =
-    {
-        SHADOW_TOPIC_OPERATION_LENGTH_GET,
-        SHADOW_TOPIC_OPERATION_LENGTH_GET_ACCEPTED,
-        SHADOW_TOPIC_OPERATION_LENGTH_GET_REJECTED,
-        SHADOW_TOPIC_OPERATION_LENGTH_DELETE,
-        SHADOW_TOPIC_OPERATION_LENGTH_DELETE_ACCEPTED,
-        SHADOW_TOPIC_OPERATION_LENGTH_DELETE_REJECTED,
-        SHADOW_TOPIC_OPERATION_LENGTH_UPDATE,
-        SHADOW_TOPIC_OPERATION_LENGTH_UPDATE_ACCEPTED,
-        SHADOW_TOPIC_OPERATION_LENGTH_UPDATE_REJECTED,
-        SHADOW_TOPIC_OPERATION_LENGTH_UPDATE_DOCUMENTS,
-        SHADOW_TOPIC_OPERATION_LENGTH_UPDATE_DELTA
-    };
+    const char * pOperationString = NULL;
 
     if( ( pTopicBuffer == NULL ) ||
         ( pThingName == NULL ) ||
@@ -522,9 +578,9 @@ ShadowStatus_t Shadow_GetTopicString( ShadowTopicStringType_t topicType,
     }
     else
     {
-        generatedTopicStringLength = SHADOW_TOPIC_PREFIX_LENGTH +       /* Prefix ("$aws/things/"). */
-                                     thingNameLength +                  /* Thing name. */
-                                     pTopicStringLength[ topicType ];   /* Shadow operation. */
+        generatedTopicStringLength = SHADOW_PREFIX_LENGTH +           /* Prefix ("$aws/things/"). */
+                                     thingNameLength +                      /* Thing name. */
+                                     getShadowOperationLength( topicType ); /* Shadow operation. */
 
         if( bufferSize < generatedTopicStringLength )
         {
@@ -535,9 +591,9 @@ ShadowStatus_t Shadow_GetTopicString( ShadowTopicStringType_t topicType,
         {
             /* Copy the Shadow topic prefix into the topic buffer. */
             ( void ) memcpy( ( void * ) pTopicBuffer,
-                             ( const void * ) SHADOW_TOPIC_PREFIX_STRING,
-                             ( size_t ) SHADOW_TOPIC_PREFIX_LENGTH );
-            offset = ( uint16_t ) ( offset + SHADOW_TOPIC_PREFIX_LENGTH );
+                             ( const void * ) SHADOW_PREFIX,
+                             ( size_t ) SHADOW_PREFIX_LENGTH );
+            offset = ( uint16_t ) ( offset + SHADOW_PREFIX_LENGTH );
 
             /* Copy the Thing Name into the topic buffer. */
             ( void ) memcpy( ( void * ) & ( pTopicBuffer[ offset ] ),
@@ -545,10 +601,12 @@ ShadowStatus_t Shadow_GetTopicString( ShadowTopicStringType_t topicType,
                              ( size_t ) thingNameLength );
             offset = ( uint16_t ) ( offset + thingNameLength );
 
+            pOperationString = getShadowOperationString( topicType );
+            operationStringLength = getShadowOperationLength( topicType );
             /* Copy the Shadow operation string into the topic buffer. */
             ( void ) memcpy( ( void * ) & ( pTopicBuffer[ offset ] ),
-                             ( const void * ) pTopicString[ topicType ],
-                             ( size_t ) pTopicStringLength[ topicType ] );
+                             ( const void * ) pOperationString,
+                             ( size_t ) operationStringLength );
 
             /* Return the generated topic string length to the caller. */
             * pOutLength = generatedTopicStringLength;
