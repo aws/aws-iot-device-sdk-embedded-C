@@ -51,6 +51,7 @@
 
 /* MQTT API header. */
 #include "mqtt.h"
+#include "mqtt_state.h"
 
 /* OpenSSL sockets transport implementation. */
 #include "openssl_posix.h"
