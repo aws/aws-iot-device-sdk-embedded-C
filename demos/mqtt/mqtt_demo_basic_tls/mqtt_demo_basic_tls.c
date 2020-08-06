@@ -500,14 +500,17 @@ static int handlePublishResend( MQTTContext_t * pMqttContext )
     uint8_t index = 0U;
     MQTTStateCursor_t cursor = MQTT_STATE_CURSOR_INITIALIZER;
     uint16_t packetIdToResend = MQTT_PACKET_ID_INVALID;
+    bool foundPacketId = false;
 
     assert( pMqttContext != NULL );
     assert( outgoingPublishPackets != NULL );
 
-    /* For the sake of demonstrating how to use MQTT_PublishToResend(), the
-     * outgoingPublishPackets array is iterated through for the next pending
-     * publish packet to be resent. If the application requires increased
-     * efficiency in the look up of the packetIdToResend, then a hashmap of
+    /* MQTT_PublishToResend() provides a packet ID of the next PUBLISH packet
+     * that should be resent. In accordance with the MQTT v3.1.1 spec,
+     * MQTT_PublishToResend() preserves the ordering of when the original
+     * PUBLISH packets were sent. The outgoingPublishPackets array is searched
+     * through for the associated packet ID. If the application requires
+     * increased efficiency in the look up of the packet ID, then a hashmap of
      * packetId key and PublishPacket_t values may be used instead. */
     packetIdToResend = MQTT_PublishToResend( pMqttContext, &cursor );
 
@@ -517,6 +520,7 @@ static int handlePublishResend( MQTTContext_t * pMqttContext )
         {
             if( outgoingPublishPackets[ index ].packetId == packetIdToResend )
             {
+                foundPacketId = true;
                 outgoingPublishPackets[ index ].pubInfo.dup = true;
 
                 LogInfo( ( "Sending duplicate PUBLISH with packet id %u.",
@@ -542,8 +546,19 @@ static int handlePublishResend( MQTTContext_t * pMqttContext )
             }
         }
 
-        /* Get the next packetID to be resent. */
-        packetIdToResend = MQTT_PublishToResend( pMqttContext, &cursor );
+        if( foundPacketId == false )
+        {
+            LogError( ( "Packet id %u requires resend, but was not found in "
+                        "outgoingPublishPackets.",
+                        packetIdToResend ) );
+            returnStatus = EXIT_FAILURE;
+            break;
+        }
+        else
+        {
+            /* Get the next packetID to be resent. */
+            packetIdToResend = MQTT_PublishToResend( pMqttContext, &cursor );
+        }
     }
 
     return returnStatus;
