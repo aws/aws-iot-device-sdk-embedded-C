@@ -36,10 +36,13 @@
 #define MQTT_PACKET_ID_INVALID    ( ( uint16_t ) 0U )
 
 struct MQTTPubAckInfo;
-typedef struct MQTTPubAckInfo   MQTTPubAckInfo_t;
+typedef struct MQTTPubAckInfo         MQTTPubAckInfo_t;
 
 struct MQTTContext;
-typedef struct MQTTContext      MQTTContext_t;
+typedef struct MQTTContext            MQTTContext_t;
+
+struct MQTTDeserializedInfo;
+typedef struct MQTTDeserializedInfo   MQTTDeserializedInfo_t;
 
 /**
  * @brief Application provided callback to retrieve the current time in
@@ -53,15 +56,17 @@ typedef uint32_t (* MQTTGetCurrentTimeFunc_t )( void );
  * @brief Application callback for receiving incoming publishes and incoming
  * acks.
  *
+ * @note This callback will be called only if packets are deserialized with a
+ * result of #MQTTSuccess or #MQTTServerRefused. The latter can be obtained
+ * when deserializing a SUBACK, indicating a broker's rejection of a subscribe.
+ *
  * @param[in] pContext Initialized MQTT context.
  * @param[in] pPacketInfo Information on the type of incoming MQTT packet.
- * @param[in] packetIdentifier Packet identifier of incoming PUBLISH packet.
- * @param[in] pPublishInfo Incoming PUBLISH packet parameters.
+ * @param[in] pDeserializedInfo Deserialized information from incoming packet.
  */
 typedef void (* MQTTEventCallback_t )( MQTTContext_t * pContext,
                                        MQTTPacketInfo_t * pPacketInfo,
-                                       uint16_t packetIdentifier,
-                                       MQTTPublishInfo_t * pPublishInfo );
+                                       MQTTDeserializedInfo_t * pDeserializedInfo );
 
 typedef enum MQTTConnectionStatus
 {
@@ -121,6 +126,13 @@ struct MQTTContext
     uint32_t pingReqSendTimeMs;
     uint32_t pingRespTimeoutMs;
     bool waitingForPingResp;
+};
+
+struct MQTTDeserializedInfo
+{
+    uint16_t packetIdentifier;
+    MQTTPublishInfo_t * pPublishInfo;
+    MQTTStatus_t deserializationResult;
 };
 
 /**

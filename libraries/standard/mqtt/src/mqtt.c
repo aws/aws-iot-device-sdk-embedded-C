@@ -730,6 +730,7 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
     MQTTPublishState_t publishRecordState = MQTTStateNull;
     uint16_t packetIdentifier = 0U;
     MQTTPublishInfo_t publishInfo;
+    MQTTDeserializedInfo_t deserializedInfo;
     bool duplicatePublish = false;
 
     assert( pContext != NULL );
@@ -803,6 +804,11 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
 
     if( status == MQTTSuccess )
     {
+        /* Set fields of deserialized struct. */
+        deserializedInfo.packetIdentifier = packetIdentifier;
+        deserializedInfo.pPublishInfo = &publishInfo;
+        deserializedInfo.deserializationResult = status;
+
         /* Invoke application callback to hand the buffer over to application
          * before sending acks.
          * Application callback will be invoked for all publishes, except for
@@ -811,8 +817,7 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
         {
             pContext->appCallback( pContext,
                                    pIncomingPacket,
-                                   packetIdentifier,
-                                   &publishInfo );
+                                   &deserializedInfo );
         }
 
         /* Send PUBACK or PUBREC if necessary. */
@@ -834,6 +839,7 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
     uint16_t packetIdentifier;
     MQTTPubAckType_t ackType;
     MQTTEventCallback_t appCallback;
+    MQTTDeserializedInfo_t deserializedInfo;
 
     assert( pContext != NULL );
     assert( pIncomingPacket != NULL );
@@ -870,9 +876,14 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
 
     if( status == MQTTSuccess )
     {
+        /* Set fields of deserialized struct. */
+        deserializedInfo.packetIdentifier = packetIdentifier;
+        deserializedInfo.deserializationResult = status;
+        deserializedInfo.pPublishInfo = NULL;
+
         /* Invoke application callback to hand the buffer over to application
          * before sending acks. */
-        appCallback( pContext, pIncomingPacket, packetIdentifier, NULL );
+        appCallback( pContext, pIncomingPacket, &deserializedInfo );
 
         /* Send PUBREL or PUBCOMP if necessary. */
         status = sendPublishAcks( pContext,
@@ -891,6 +902,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
 {
     MQTTStatus_t status = MQTTBadResponse;
     uint16_t packetIdentifier = MQTT_PACKET_ID_INVALID;
+    MQTTDeserializedInfo_t deserializedInfo;
 
     /* We should always invoke the app callback unless we receive a PINGRESP
      * and are managing keep alive, or if we receive an unknown packet. We
@@ -920,7 +932,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
 
         case MQTT_PACKET_TYPE_PINGRESP:
             status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, NULL );
-            invokeAppCallback = ( manageKeepAlive == true ) ? false : true;
+            invokeAppCallback = ( ( status == MQTTSuccess ) && ( manageKeepAlive == false ) ) ? true : false;
 
             if( ( status == MQTTSuccess ) && ( manageKeepAlive == true ) )
             {
@@ -933,7 +945,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
         case MQTT_PACKET_TYPE_UNSUBACK:
             /* Deserialize and give these to the app provided callback. */
             status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, NULL );
-            invokeAppCallback = true;
+            invokeAppCallback = ( ( status == MQTTSuccess ) || ( status == MQTTServerRefused ) ) ? true : false;
             break;
 
         default:
@@ -944,9 +956,15 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
             break;
     }
 
-    if( ( status == MQTTSuccess ) && ( invokeAppCallback == true ) )
+    if( invokeAppCallback == true )
     {
-        appCallback( pContext, pIncomingPacket, packetIdentifier, NULL );
+        /* Set fields of deserialized struct. */
+        deserializedInfo.packetIdentifier = packetIdentifier;
+        deserializedInfo.deserializationResult = status;
+        deserializedInfo.pPublishInfo = NULL;
+        appCallback( pContext, pIncomingPacket, &deserializedInfo );
+        /* In case a SUBACK indicated refusal, reset the status to continue the loop. */
+        status = MQTTSuccess;
     }
 
     return status;

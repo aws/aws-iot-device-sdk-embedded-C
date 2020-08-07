@@ -960,7 +960,7 @@ static MQTTStatus_t readSubackStatus( size_t statusCount,
 
             case 0x80:
 
-                LogDebug( ( "Topic filter %lu refused.", ( unsigned long ) i ) );
+                LogWarn( ( "Topic filter %lu refused.", ( unsigned long ) i ) );
 
                 /* Application should remove subscription from the list */
                 status = MQTTServerRefused;

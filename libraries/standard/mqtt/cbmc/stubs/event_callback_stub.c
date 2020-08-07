@@ -23,12 +23,12 @@
 
 void EventCallbackStub( MQTTContext_t * pContext,
                         MQTTPacketInfo_t * pPacketInfo,
-                        uint16_t packetIdentifier,
-                        MQTTPublishInfo_t * pPublishInfo )
+                        MQTTDeserializedInfo_t * pDeserializedInfo )
 {
     __CPROVER_assert( pContext != NULL,
                       "EventCallbackStub pContext is not NULL" );
     __CPROVER_assert( pPacketInfo != NULL,
                       "EventCallbackStub pPacketInfo is not NULL" );
-    /* pPublishInfo will be NULL for an incoming ACK event. */
+    __CPROVER_assert( pDeserializedInfo != NULL,
+                      "EventCallbackStub pDeserializedInfo is not NULL" );
 }
