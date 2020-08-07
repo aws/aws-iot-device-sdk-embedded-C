@@ -59,8 +59,9 @@
 
 /**
  * @brief Callback type to be registered for a topic filter with the subscription manager.
- * For incoming PUBLISH messages received on topics that match the registered topic filter
- * with the callback, the callback would be invoked by the subscription manager.
+ *
+ * For incoming PUBLISH messages received on topics that match the registered topic filter,
+ * the callback would be invoked by the subscription manager.
  *
  * @param[in] pContext The context associated with the MQTT connection.
  * @param[in] pPublishInfo The incoming PUBLISH message information.
@@ -81,9 +82,10 @@ void SubscriptionManager_DispatchHandler( MQTTContext_t * pContext,
 
 /**
  * @brief Utility to register a callback for a topic filter in the subscription manager.
- * The callback will be invoked when an incoming PUBLISH message on a topic that matches
- * the topic filter, @a pTopicFilter, is dispatched by the subscription manager.
- * The subscription manager accepts wildcard topics.
+ *
+ * The callback will be invoked when an incoming PUBLISH message is received on
+ * a topic that matches the topic filter, @a pTopicFilter. The subscription manager
+ * accepts wildcard topic filters.
  *
  * @param[in] pTopicFilter The topic filter to register the callback for.
  * @param[in] topicFilterLength The length of the topic filter string.
@@ -92,8 +94,8 @@ void SubscriptionManager_DispatchHandler( MQTTContext_t * pContext,
  * @note The subscription manager does not allow more than one callback to be registered
  * for the same topic filter.
  * @note The passed topic filter, @a pTopicFilter, is saved in the registry.
- * The application must keep the lifetime of the pointer active until the callback
- * for the topic filter is not removed.
+ * The application must not free the memory or alter the content until the callback
+ * for the topic filter is removed from the subscription manager.
  *
  * @return true if registration of the callback is successful; otherwise, false
  * if the either the registry is full OR a registered callback already exists for
