@@ -44,8 +44,9 @@
 /* Include Demo Config as the first non-system header. */
 #include "demo_config.h"
 
-/* MQTT API header. */
+/* MQTT API headers. */
 #include "mqtt.h"
+#include "mqtt_state.h"
 
 /* OpenSSL sockets transport implementation. */
 #include "openssl_posix.h"
@@ -497,38 +498,67 @@ static int handlePublishResend( MQTTContext_t * pMqttContext )
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus = MQTTSuccess;
     uint8_t index = 0U;
+    MQTTStateCursor_t cursor = MQTT_STATE_CURSOR_INITIALIZER;
+    uint16_t packetIdToResend = MQTT_PACKET_ID_INVALID;
+    bool foundPacketId = false;
 
+    assert( pMqttContext != NULL );
     assert( outgoingPublishPackets != NULL );
 
-    /* Resend all the QoS2 publishes still in the array. These are the
-     * publishes that hasn't received a PUBREC. When a PUBREC is
-     * received, the publish is removed from the array. */
-    for( index = 0U; index < MAX_OUTGOING_PUBLISHES; index++ )
+    /* MQTT_PublishToResend() provides a packet ID of the next PUBLISH packet
+     * that should be resent. In accordance with the MQTT v3.1.1 spec,
+     * MQTT_PublishToResend() preserves the ordering of when the original
+     * PUBLISH packets were sent. The outgoingPublishPackets array is searched
+     * through for the associated packet ID. If the application requires
+     * increased efficiency in the look up of the packet ID, then a hashmap of
+     * packetId key and PublishPacket_t values may be used instead. */
+    packetIdToResend = MQTT_PublishToResend( pMqttContext, &cursor );
+
+    while( packetIdToResend != MQTT_PACKET_ID_INVALID )
     {
-        if( outgoingPublishPackets[ index ].packetId != MQTT_PACKET_ID_INVALID )
+        foundPacketId = false;
+        for( index = 0U; index < MAX_OUTGOING_PUBLISHES; index++ )
         {
-            outgoingPublishPackets[ index ].pubInfo.dup = true;
-
-            LogInfo( ( "Sending duplicate PUBLISH with packet id %u.",
-                       outgoingPublishPackets[ index ].packetId ) );
-            mqttStatus = MQTT_Publish( pMqttContext,
-                                       &outgoingPublishPackets[ index ].pubInfo,
-                                       outgoingPublishPackets[ index ].packetId );
-
-            if( mqttStatus != MQTTSuccess )
+            if( outgoingPublishPackets[ index ].packetId == packetIdToResend )
             {
-                LogError( ( "Sending duplicate PUBLISH for packet id %u "
-                            " failed with status %u.",
-                            outgoingPublishPackets[ index ].packetId,
-                            mqttStatus ) );
-                returnStatus = EXIT_FAILURE;
-                break;
-            }
-            else
-            {
-                LogInfo( ( "Sent duplicate PUBLISH successfully for packet id %u.\n\n",
+                foundPacketId = true;
+                outgoingPublishPackets[ index ].pubInfo.dup = true;
+
+                LogInfo( ( "Sending duplicate PUBLISH with packet id %u.",
                            outgoingPublishPackets[ index ].packetId ) );
+                mqttStatus = MQTT_Publish( pMqttContext,
+                                           &outgoingPublishPackets[ index ].pubInfo,
+                                           outgoingPublishPackets[ index ].packetId );
+
+                if( mqttStatus != MQTTSuccess )
+                {
+                    LogError( ( "Sending duplicate PUBLISH for packet id %u "
+                                " failed with status %u.",
+                                outgoingPublishPackets[ index ].packetId,
+                                mqttStatus ) );
+                    returnStatus = EXIT_FAILURE;
+                    break;
+                }
+                else
+                {
+                    LogInfo( ( "Sent duplicate PUBLISH successfully for packet id %u.\n\n",
+                               outgoingPublishPackets[ index ].packetId ) );
+                }
             }
+        }
+
+        if( foundPacketId == false )
+        {
+            LogError( ( "Packet id %u requires resend, but was not found in "
+                        "outgoingPublishPackets.",
+                        packetIdToResend ) );
+            returnStatus = EXIT_FAILURE;
+            break;
+        }
+        else
+        {
+            /* Get the next packetID to be resent. */
+            packetIdToResend = MQTT_PublishToResend( pMqttContext, &cursor );
         }
     }
 
