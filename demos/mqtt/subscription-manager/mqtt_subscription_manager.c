@@ -484,3 +484,4 @@ void SubscriptionManager_RemoveCallback( const char * pTopicFilter,
                    pTopicFilter ) );
     }
 }
+/*-----------------------------------------------------------*/
