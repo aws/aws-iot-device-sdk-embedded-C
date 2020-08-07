@@ -384,9 +384,9 @@ SubscriptionManagerStatus_t SubscriptionManager_RegisterCallback( const char * p
      * a record for the topic filter already exists. */
     while( ( recordExists == false ) && ( index < MAX_SUBSCRIPTION_CALLBACK_RECORDS ) )
     {
-        /* Check if the index represents an empty spot in the records list. If we had already
+        /* Check if the index represents an empty spot in the registry. If we had already
          * found an empty spot in the list, we will not update it. */
-        if( ( availableIndex != MAX_SUBSCRIPTION_CALLBACK_RECORDS ) &&
+        if( ( availableIndex == MAX_SUBSCRIPTION_CALLBACK_RECORDS ) &&
             ( callbackRecordList[ index ].pTopicFilter == NULL ) )
         {
             availableIndex = index;
