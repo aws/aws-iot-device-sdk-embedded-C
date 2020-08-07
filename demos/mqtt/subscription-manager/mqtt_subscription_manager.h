@@ -119,7 +119,7 @@ void SubscriptionManager_DispatchHandler( MQTTContext_t * pContext,
  * The application must not free or alter the content of the topic filter memory
  * until the callback for the topic filter is removed from the subscription manager.
  *
- * @return Returns the following:
+ * @return Returns one of the following:
  * - #SUBSCRIPTION_MANAGER_SUCCESS if registration of the callback is successful.
  * - #SUBSCRIPTION_MANAGER_REGISTRY_FULL if the registration failed due to registry
  * being already full.
