@@ -196,6 +196,12 @@ static bool matchWildcards( const char * pTopicFilter,
             ( *pNameIndex )++;
         }
 
+        /* Decrement the topic name index for 2 different cases:
+         * - If the break condition is ( *pNameIndex < topicNameLength ), then
+         * we have reached the end of the topic name.
+         * - If the break condition is ( pTopicName[ *pNameIndex ] != '/' ),
+         * we move back the index on the '/' character to be at the last
+         * position in the current topic level. */
         ( *pNameIndex )--;
     }
     else if( pTopicFilter[ filterIndex ] == '#' )
