@@ -367,63 +367,76 @@ void SubscriptionManager_DispatchHandler( MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
-bool SubscriptionManager_RegisterCallback( const char * pTopicFilter,
-                                           uint16_t topicFilterLength,
-                                           SubscriptionManagerCallback_t callback )
+SubscriptionManagerStatus_t SubscriptionManager_RegisterCallback( const char * pTopicFilter,
+                                                                  uint16_t topicFilterLength,
+                                                                  SubscriptionManagerCallback_t callback )
 {
     assert( pTopicFilter != NULL );
     assert( topicFilterLength != 0 );
     assert( callback != NULL );
 
-    bool recordAdded = false;
-    size_t availableIndex = 0u;
+    SubscriptionManagerStatus_t returnStatus = SUBSCRIPTION_MANAGER_INVALID;
+    size_t availableIndex = MAX_SUBSCRIPTION_CALLBACK_RECORDS;
     bool recordExists = false;
+    size_t index = 0u;
 
-    /* Search for an available spot in the list to store the record */
-    while( ( availableIndex < MAX_SUBSCRIPTION_CALLBACK_RECORDS ) &&
-           ( callbackRecordList[ availableIndex ].pTopicFilter != NULL ) )
+    /* Search for the first available spot in the list to store the record, and also check if
+     * a record for the topic filter already exists. */
+    while( ( recordExists == false ) && ( index < MAX_SUBSCRIPTION_CALLBACK_RECORDS ) )
     {
-        /* Check if a record for the topic filter already exists in the registry. */
-        if( ( callbackRecordList[ availableIndex ].topicFilterLength == topicFilterLength ) &&
-            ( strncmp( pTopicFilter, callbackRecordList[ availableIndex ].pTopicFilter, topicFilterLength )
-              == 0 ) )
+        /* Check if the index represents an empty spot in the records list. If we had already
+         * found an empty spot in the list, we will not update it. */
+        if( ( availableIndex != MAX_SUBSCRIPTION_CALLBACK_RECORDS ) &&
+            ( callbackRecordList[ index ].pTopicFilter == NULL ) )
+        {
+            availableIndex = index;
+        }
+
+        /* Check if the current record's topic filter in the registry matches the topic filter
+         * we are trying to register. */
+        else if( ( callbackRecordList[ index ].topicFilterLength == topicFilterLength ) &&
+                 ( strncmp( pTopicFilter, callbackRecordList[ index ].pTopicFilter, topicFilterLength )
+                   == 0 ) )
         {
             recordExists = true;
         }
 
-        availableIndex++;
+        index++;
     }
 
-    if( ( availableIndex == MAX_SUBSCRIPTION_CALLBACK_RECORDS ) )
+    if( recordExists == true )
+    {
+        /* The record for the topic filter already exists. */
+        LogError( ( "Failed to register callback: Record for topic filter already exists: TopicFilter=%.*s",
+                    topicFilterLength,
+                    pTopicFilter ) );
+
+        returnStatus = SUBSCRIPTION_MANAGER_RECORD_EXISTS;
+    }
+    else if( ( availableIndex == MAX_SUBSCRIPTION_CALLBACK_RECORDS ) )
     {
         /* The record list is full. */
         LogError( ( "Unable to register callback: Registry list is full: TopicFilter=%.*s, MaxRegistrySize=%u",
                     topicFilterLength,
                     pTopicFilter,
                     MAX_SUBSCRIPTION_CALLBACK_RECORDS ) );
-    }
-    else if( recordExists == true )
-    {
-        /* The record for the topic filter already exists. */
-        LogError( ( "Failed to register callback: Record for topic filter already exists: TopicFilter=%.*s",
-                    topicFilterLength,
-                    pTopicFilter ) );
+
+        returnStatus = SUBSCRIPTION_MANAGER_REGISTRY_FULL;
     }
     else
     {
-        /* Should the topic string be copied? */
         callbackRecordList[ availableIndex ].pTopicFilter = pTopicFilter;
         callbackRecordList[ availableIndex ].topicFilterLength = topicFilterLength;
         callbackRecordList[ availableIndex ].callback = callback;
 
-        recordAdded = true;
+        returnStatus = SUBSCRIPTION_MANAGER_SUCCESS;
 
         LogDebug( ( "Added callback to registry: TopicFilter=%.*s",
                     topicFilterLength,
                     pTopicFilter ) );
     }
 
-    return recordAdded;
+    return returnStatus;
 }
 
 /*-----------------------------------------------------------*/
@@ -434,24 +447,27 @@ void SubscriptionManager_RemoveCallback( const char * pTopicFilter,
     assert( pTopicFilter != NULL );
     assert( topicFilterLength != 0 );
 
-    size_t matchingRecordIndex = 0u;
-    bool recordFound = false;
+    size_t index;
     SubscriptionManagerRecord_t * pRecord = NULL;
 
     /* Iterate through the records list to find the matching record. */
-    do
+    for( index = 0; index < MAX_SUBSCRIPTION_CALLBACK_RECORDS; index++ )
     {
-        pRecord = &callbackRecordList[ matchingRecordIndex ];
+        pRecord = &callbackRecordList[ index ];
 
-        if( ( topicFilterLength == pRecord->topicFilterLength ) &&
-            ( strncmp( pTopicFilter, pRecord->pTopicFilter, topicFilterLength ) == 0 ) )
+        /* Only match the non-empty records. */
+        if( pRecord->pTopicFilter != NULL )
         {
-            recordFound = true;
+            if( ( topicFilterLength == pRecord->topicFilterLength ) &&
+                ( strncmp( pTopicFilter, pRecord->pTopicFilter, topicFilterLength ) == 0 ) )
+            {
+                break;
+            }
         }
-    } while( ( ++matchingRecordIndex < MAX_SUBSCRIPTION_CALLBACK_RECORDS ) && ( recordFound == false ) );
+    }
 
     /* Delete the record by clearing the found entry in the records list. */
-    if( recordFound == true )
+    if( index < MAX_SUBSCRIPTION_CALLBACK_RECORDS )
     {
         pRecord->pTopicFilter = NULL;
         pRecord->topicFilterLength = 0u;

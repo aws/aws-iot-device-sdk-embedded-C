@@ -56,6 +56,29 @@
 /* Include MQTT library. */
 #include "mqtt.h"
 
+/* Enumeration type for return status value from Subscription Manager API. */
+typedef enum SubscriptionManagerStatus
+{
+    SUBSCRIPTION_MANAGER_INVALID = 0,
+
+    /**
+     * @brief Success return value from Subscription Manager API.
+     */
+    SUBSCRIPTION_MANAGER_SUCCESS = 1,
+
+    /**
+     * @brief Failure return value from registry being full.
+     */
+    SUBSCRIPTION_MANAGER_REGISTRY_FULL = 2,
+
+    /**
+     * @brief Failure return value due an existing record in registry being present
+     * for the topic filter that is requested for a new callback registration.
+     */
+    SUBSCRIPTION_MANAGER_RECORD_EXISTS = 3
+} SubscriptionManagerStatus_t;
+
+
 /**
  * @brief Callback type to be registered for a topic filter with the subscription manager.
  *
@@ -96,13 +119,16 @@ void SubscriptionManager_DispatchHandler( MQTTContext_t * pContext,
  * The application must not free or alter the content of the topic filter memory
  * until the callback for the topic filter is removed from the subscription manager.
  *
- * @return true if registration of the callback is successful; otherwise, false
- * if the either the registry is full OR a registered callback already exists for
- * the topic filter in the subscription manager.
+ * @return Returns the following:
+ * - #SUBSCRIPTION_MANAGER_SUCCESS if registration of the callback is successful.
+ * - #SUBSCRIPTION_MANAGER_REGISTRY_FULL if the registration failed due to registry
+ * being already full.
+ * - #SUBSCRIPTION_MANAGER_RECORD_EXISTS, if a registered callback already exists for
+ * the requested topic filter in the subscription manager.
  */
-bool SubscriptionManager_RegisterCallback( const char * pTopicFilter,
-                                           uint16_t topicFilterLength,
-                                           SubscriptionManagerCallback_t pCallback );
+SubscriptionManagerStatus_t SubscriptionManager_RegisterCallback( const char * pTopicFilter,
+                                                                  uint16_t topicFilterLength,
+                                                                  SubscriptionManagerCallback_t pCallback );
 
 /**
  * @brief Utility to remove the callback registered for a topic filter from the
