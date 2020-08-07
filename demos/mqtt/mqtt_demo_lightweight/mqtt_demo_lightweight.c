@@ -532,7 +532,7 @@ static void mqttPublishToTopic( NetworkContext_t * pNetworkContext,
                                           pFixedBuffer,
                                           &headerSize );
     LogDebug( ( "Serialized PUBLISH header size is %lu.",
-                headerSize ) );
+                ( unsigned long ) headerSize ) );
     assert( result == MQTTSuccess );
     /* Send Publish header to the broker. */
     status = Plaintext_Send( pNetworkContext, ( void * ) pFixedBuffer->pBuffer, headerSize );
