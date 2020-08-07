@@ -16,6 +16,7 @@ _default:
     # Provide list of allowed targets [Accepts regex]
     - ".*utest.*"
   output_loc: "bin/tests"
+  codecov_token: ""
 
 
 #<target_name>:
