@@ -209,14 +209,11 @@ static void handleIncomingPublish( MQTTPublishInfo_t * pPublishInfo,
  *
  * @param[in] pMqttContext MQTT context pointer.
  * @param[in] pPacketInfo Packet Info pointer for the incoming packet.
- * @param[in] packetIdentifier Packet identifier of the incoming packet.
- * @param[in] pPublishInfo Deserialized publish info pointer for the incoming
- * packet.
+ * @param[in] pDeserializedInfo Deserialized information from the incoming packet.
  */
 static void eventCallback( MQTTContext_t * pMqttContext,
                            MQTTPacketInfo_t * pPacketInfo,
-                           uint16_t packetIdentifier,
-                           MQTTPublishInfo_t * pPublishInfo );
+                           MQTTDeserializedInfo_t * pDeserializedInfo );
 
 /**
  * @brief Sends an MQTT CONNECT packet over the already connected TCP socket.
@@ -364,20 +361,24 @@ static void handleIncomingPublish( MQTTPublishInfo_t * pPublishInfo,
 
 static void eventCallback( MQTTContext_t * pMqttContext,
                            MQTTPacketInfo_t * pPacketInfo,
-                           uint16_t packetIdentifier,
-                           MQTTPublishInfo_t * pPublishInfo )
+                           MQTTDeserializedInfo_t * pDeserializedInfo )
 {
+    uint16_t packetIdentifier;
+
     assert( pMqttContext != NULL );
     assert( pPacketInfo != NULL );
+    assert( pDeserializedInfo != NULL );
+
+    packetIdentifier = pDeserializedInfo->packetIdentifier;
 
     /* Handle incoming publish. The lower 4 bits of the publish packet
      * type is used for the dup, QoS, and retain flags. Hence masking
      * out the lower bits to check if the packet is publish. */
     if( ( pPacketInfo->type & 0xF0U ) == MQTT_PACKET_TYPE_PUBLISH )
     {
-        assert( pPublishInfo != NULL );
+        assert( pDeserializedInfo->pPublishInfo != NULL );
         /* Handle incoming publish. */
-        handleIncomingPublish( pPublishInfo, packetIdentifier );
+        handleIncomingPublish( pDeserializedInfo->pPublishInfo, packetIdentifier );
     }
     else
     {
