@@ -1,5 +1,5 @@
-#ifndef HTTP_CONFIG_H__
-#define HTTP_CONFIG_H__
+#ifndef SHADOW_CONFIG_H__
+#define SHADOW_CONFIG_H__
 
 /**************************************************/
 /******* DO NOT CHANGE the following order ********/
@@ -14,17 +14,12 @@
 /* Include header that defines log levels. */
 #include "logging_levels.h"
 
-/* Configure name and log level for the HTTP library. */
-#ifndef LIBRARY_LOG_NAME
-    #define LIBRARY_LOG_NAME    "HTTP"
-#endif
-
-#ifndef LIBRARY_LOG_LEVEL
-    #define LIBRARY_LOG_LEVEL    LOG_NONE
-#endif
+/* Configure name and log level for the Shadow library. */
+#define LIBRARY_LOG_NAME     "SHADOW"
+#define LIBRARY_LOG_LEVEL    LOG_NONE
 
 #include "logging_stack.h"
 
 /************ End of logging configuration ****************/
 
-#endif /* ifndef HTTP_CONFIG_H__ */
+#endif /* ifndef SHADOW_CONFIG_H__ */
