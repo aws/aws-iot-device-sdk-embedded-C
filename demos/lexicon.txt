@@ -58,7 +58,7 @@ packetidtoresend
 param
 pathlen
 pbuffer
-pdeserialized
+pdeserializedinfo
 pem
 pfixedbuffer
 pincomingpacket

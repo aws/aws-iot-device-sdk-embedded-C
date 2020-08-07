@@ -35,10 +35,10 @@
  *
  * @param[in] pContext Initialized MQTT context.
  * @param[in] pPacketInfo Information on the type of incoming MQTT packet.
- * @param[in] pDeserialized Deserialized information from incoming packet.
+ * @param[in] pDeserializedInfo Deserialized information from incoming packet.
  */
 void EventCallbackStub( MQTTContext_t * pContext,
                         MQTTPacketInfo_t * pPacketInfo,
-                        MQTTDeserializedInfo_t * pDeserialized );
+                        MQTTDeserializedInfo_t * pDeserializedInfo );
 
 #endif /* ifndef EVENT_CALLBACK_STUB_H_ */

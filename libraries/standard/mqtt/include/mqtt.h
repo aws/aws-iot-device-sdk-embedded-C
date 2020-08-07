@@ -62,11 +62,11 @@ typedef uint32_t (* MQTTGetCurrentTimeFunc_t )( void );
  *
  * @param[in] pContext Initialized MQTT context.
  * @param[in] pPacketInfo Information on the type of incoming MQTT packet.
- * @param[in] pDeserialized Deserialized information from incoming packet.
+ * @param[in] pDeserializedInfo Deserialized information from incoming packet.
  */
 typedef void (* MQTTEventCallback_t )( MQTTContext_t * pContext,
                                        MQTTPacketInfo_t * pPacketInfo,
-                                       MQTTDeserializedInfo_t * pDeserialized );
+                                       MQTTDeserializedInfo_t * pDeserializedInfo );
 
 typedef enum MQTTConnectionStatus
 {

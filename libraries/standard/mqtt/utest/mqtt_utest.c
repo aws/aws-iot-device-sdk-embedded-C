@@ -187,15 +187,15 @@ static void setupNetworkBuffer( MQTTFixedBuffer_t * const pNetworkBuffer )
  *
  * @param[in] pContext MQTT context pointer.
  * @param[in] pPacketInfo Packet Info pointer for the incoming packet.
- * @param[in] pDeserialized Deserialized information from the incoming packet.
+ * @param[in] pDeserializedInfo Deserialized information from the incoming packet.
  */
 static void eventCallback( MQTTContext_t * pContext,
                            MQTTPacketInfo_t * pPacketInfo,
-                           MQTTDeserializedInfo_t * pDeserialized )
+                           MQTTDeserializedInfo_t * pDeserializedInfo )
 {
     ( void ) pContext;
     ( void ) pPacketInfo;
-    ( void ) pDeserialized;
+    ( void ) pDeserializedInfo;
 
     /* Update the global state to indicate that event callback is invoked. */
     isEventCallbackInvoked = true;
