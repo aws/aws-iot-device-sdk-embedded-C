@@ -32,9 +32,6 @@
 void harness()
 {
     http_parser * pHttpParser;
-    findHeaderContext_t * pFindHeaderContext;
-    uint8_t * pBuffer;
-    size_t bufferLen;
 
     pHttpParser = allocateHttpReadHeaderParser( NULL );
 
