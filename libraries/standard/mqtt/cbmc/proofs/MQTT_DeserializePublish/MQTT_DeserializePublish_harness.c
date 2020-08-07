@@ -31,7 +31,7 @@ void harness()
 {
     MQTTPacketInfo_t * pIncomingPacket;
     MQTTPublishInfo_t * pPublishInfo;
-    uint16_t packetId;
+    uint16_t * pPacketId;
 
     pIncomingPacket = allocateMqttPacketInfo( NULL );
     __CPROVER_assume( isValidMqttPacketInfo( pIncomingPacket ) );
@@ -39,7 +39,9 @@ void harness()
     pPublishInfo = allocateMqttPublishInfo( NULL );
     __CPROVER_assume( isValidMqttPublishInfo( pPublishInfo ) );
 
+    pPacketId = mallocCanFail( sizeof( uint16_t ) );
+
     /* This function grabs the topic name, the topic name length, the
      * the payload, and the payload length. */
-    MQTT_DeserializePublish( pIncomingPacket, packetId, pPublishInfo );
+    MQTT_DeserializePublish( pIncomingPacket, pPacketId, pPublishInfo );
 }

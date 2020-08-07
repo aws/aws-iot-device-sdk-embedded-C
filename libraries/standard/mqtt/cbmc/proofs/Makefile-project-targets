@@ -1,1 +1,7 @@
-../../../../../tools/aws-templates-for-cbmc-proofs/template-for-repository/proofs/Makefile-project-targets
+# -*- mode: makefile -*-
+# The first line sets the emacs major mode to Makefile
+
+################################################################
+# Use this file to give project-specific targets, including targets
+# that may depend on targets defined in Makefile.common.
+################################################################

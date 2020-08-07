@@ -9,6 +9,9 @@ bool
 bufferlength
 bytesorerror
 bytesreceived
+bytesrecvd
+bytesremaining
+bytessent
 bytestoread
 bytestoreceive
 bytestorecv
@@ -42,9 +45,11 @@ dup
 emptyindex
 endif
 enums
+eventcallbackstub
 expectprocessloopcalls
 fixedbuffer
 getconnectpacketsize
+getcurrenttimestub
 getdisconnectpacketsize
 getincomingpackettypeandlength
 getpacketid
@@ -52,6 +57,7 @@ getpingreqpacketsize
 getpublishpacketsize
 getsubscribepacketsize
 gettime
+gettimefunction
 getunsubscribepacketsize
 handleincomingack
 handleincomingpublish
@@ -66,7 +72,9 @@ incomingpublish
 init
 int
 iot
+isduplicate
 isn
+linux
 lsb
 lwt
 malloc
@@ -200,6 +208,7 @@ serializepublish
 serializepublishheader
 serializesubscribe
 serializeunsubscribe
+setretainflag
 shoulddelete
 shouldn
 sizeof
@@ -225,6 +234,7 @@ unsuback
 updatestateack
 updatestatepublish
 updatestatestatus
+usercallback
 utest
 utf
 validatesubscribeunsubscribeparams

@@ -39,6 +39,8 @@ void harness()
     MQTTFixedBuffer_t * pFixedBuffer;
     MQTTStatus_t status = MQTTSuccess;
 
+    /* Please see the default bound description on SUBSCRIPTION_COUNT_MAX in
+     * mqtt_cbmc_state.c for more information. */
     __CPROVER_assume( subscriptionCount < SUBSCRIPTION_COUNT_MAX );
 
     pSubscriptionList = allocateMqttSubscriptionList( NULL, subscriptionCount );
@@ -54,9 +56,9 @@ void harness()
     if( pSubscriptionList != NULL )
     {
         /* The output parameter pPacketSize of the function MQTT_GetConnectPacketSize()
-         * must not be NULL. packetSize returned is not used in this proof, but 
-         * is used normally by the application to verify the size of their 
-         * MQTTFixedBuffer_t. MQTT_SerializeConnect() will use the remainingLength 
+         * must not be NULL. packetSize returned is not used in this proof, but
+         * is used normally by the application to verify the size of its
+         * MQTTFixedBuffer_t. MQTT_SerializeConnect() will use the remainingLength
          * to recalculate the packetSize. */
         status = MQTT_GetUnsubscribePacketSize( pSubscriptionList,
                                                 subscriptionCount,
