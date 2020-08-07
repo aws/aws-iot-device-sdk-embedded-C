@@ -41,8 +41,7 @@
 /* Include header that defines log levels. */
 #include "logging_levels.h"
 
-/* Logging configuration for the transport interface implementation which uses
- * OpenSSL and Sockets. */
+/* Logging configuration for the Subscription Manager module. */
 #ifndef LIBRARY_LOG_NAME
     #define LIBRARY_LOG_NAME     "Subscription Manager"
 #endif
@@ -66,8 +65,8 @@
  * @param[in] pContext The context associated with the MQTT connection.
  * @param[in] pPublishInfo The incoming PUBLISH message information.
  */
-typedef void (* SubscriptionManager_Callback_t )( MQTTContext_t * pContext,
-                                                  MQTTPublishInfo_t * pPublishInfo );
+typedef void (* SubscriptionManagerCallback_t )( MQTTContext_t * pContext,
+                                                 MQTTPublishInfo_t * pPublishInfo );
 
 /**
  * @brief Dispatches the incoming PUBLISH message to the callbacks that have their
@@ -94,8 +93,8 @@ void SubscriptionManager_DispatchHandler( MQTTContext_t * pContext,
  * @note The subscription manager does not allow more than one callback to be registered
  * for the same topic filter.
  * @note The passed topic filter, @a pTopicFilter, is saved in the registry.
- * The application must not free the memory or alter the content until the callback
- * for the topic filter is removed from the subscription manager.
+ * The application must not free or alter the content of the topic filter memory
+ * until the callback for the topic filter is removed from the subscription manager.
  *
  * @return true if registration of the callback is successful; otherwise, false
  * if the either the registry is full OR a registered callback already exists for
@@ -103,7 +102,7 @@ void SubscriptionManager_DispatchHandler( MQTTContext_t * pContext,
  */
 bool SubscriptionManager_RegisterCallback( const char * pTopicFilter,
                                            uint16_t topicFilterLength,
-                                           SubscriptionManager_Callback_t pCallback );
+                                           SubscriptionManagerCallback_t pCallback );
 
 /**
  * @brief Utility to remove the callback registered for a topic filter from the
