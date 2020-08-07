@@ -580,9 +580,9 @@ static int handlePublishResend( MQTTContext_t * pMqttContext )
                 if( mqttStatus != MQTTSuccess )
                 {
                     LogError( ( "Sending duplicate PUBLISH for packet id %u "
-                                " failed with status %u.",
+                                " failed with status %s.",
                                 outgoingPublishPackets[ index ].packetId,
-                                mqttStatus ) );
+                                MQTT_Status_strerror( mqttStatus ) ) );
                     returnStatus = EXIT_FAILURE;
                     break;
                 }
@@ -745,7 +745,7 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
     if( mqttStatus != MQTTSuccess )
     {
         returnStatus = EXIT_FAILURE;
-        LogError( ( "MQTT init failed with status %u.", mqttStatus ) );
+        LogError( ( "MQTT init failed: Status=%s.", MQTT_Status_strerror( mqttStatus ) ) );
     }
     else
     {
@@ -783,7 +783,8 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
         if( mqttStatus != MQTTSuccess )
         {
             returnStatus = EXIT_FAILURE;
-            LogError( ( "Connection with MQTT broker failed with status %u.", mqttStatus ) );
+            LogError( ( "Connection with MQTT broker failed with status %s.",
+                        MQTT_Status_strerror( mqttStatus ) ) );
         }
         else
         {
@@ -808,8 +809,8 @@ static int disconnectMqttSession( MQTTContext_t * pMqttContext )
 
     if( mqttStatus != MQTTSuccess )
     {
-        LogError( ( "Sending MQTT DISCONNECT failed with status=%u.",
-                    mqttStatus ) );
+        LogError( ( "Sending MQTT DISCONNECT failed with status=%s.",
+                    MQTT_Status_strerror( mqttStatus ) ) );
         returnStatus = EXIT_FAILURE;
     }
 
@@ -845,8 +846,8 @@ static int subscribeToTopic( MQTTContext_t * pMqttContext )
 
     if( mqttStatus != MQTTSuccess )
     {
-        LogError( ( "Failed to send SUBSCRIBE packet to broker with error = %u.",
-                    mqttStatus ) );
+        LogError( ( "Failed to send SUBSCRIBE packet to broker with error = %s.",
+                    MQTT_Status_strerror( mqttStatus ) ) );
         returnStatus = EXIT_FAILURE;
     }
     else
@@ -889,8 +890,8 @@ static int unsubscribeFromTopic( MQTTContext_t * pMqttContext )
 
     if( mqttStatus != MQTTSuccess )
     {
-        LogError( ( "Failed to send UNSUBSCRIBE packet to broker with error = %u.",
-                    mqttStatus ) );
+        LogError( ( "Failed to send UNSUBSCRIBE packet to broker with error = %s.",
+                    MQTT_Status_strerror( mqttStatus ) ) );
         returnStatus = EXIT_FAILURE;
     }
     else
@@ -942,8 +943,8 @@ static int publishToTopic( MQTTContext_t * pMqttContext )
 
         if( mqttStatus != MQTTSuccess )
         {
-            LogError( ( "Failed to send PUBLISH packet to broker with error = %u.",
-                        mqttStatus ) );
+            LogError( ( "Failed to send PUBLISH packet to broker with error = %s.",
+                        MQTT_Status_strerror( mqttStatus ) ) );
             cleanupOutgoingPublishAt( publishIndex );
             returnStatus = EXIT_FAILURE;
         }
@@ -1039,8 +1040,8 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
         if( mqttStatus != MQTTSuccess )
         {
             returnStatus = EXIT_FAILURE;
-            LogError( ( "MQTT_ProcessLoop returned with status = %u.",
-                        mqttStatus ) );
+            LogError( ( "MQTT_ProcessLoop returned with status = %s.",
+                        MQTT_Status_strerror( mqttStatus ) ) );
         }
     }
 
@@ -1065,8 +1066,8 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
 
             if( mqttStatus != MQTTSuccess )
             {
-                LogWarn( ( "MQTT_ProcessLoop returned with status = %u.",
-                           mqttStatus ) );
+                LogWarn( ( "MQTT_ProcessLoop returned with status = %s.",
+                           MQTT_Status_strerror( mqttStatus ) ) );
             }
 
             LogInfo( ( "Delay before continuing to next iteration.\n\n" ) );
@@ -1093,8 +1094,8 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
         if( mqttStatus != MQTTSuccess )
         {
             returnStatus = EXIT_FAILURE;
-            LogError( ( "MQTT_ProcessLoop returned with status = %u.",
-                        mqttStatus ) );
+            LogError( ( "MQTT_ProcessLoop returned with status = %s.",
+                        MQTT_Status_strerror( mqttStatus ) ) );
         }
     }
 
