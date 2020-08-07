@@ -97,6 +97,7 @@ structs
 suback
 sublicense
 subscribepublishloop
+sys
 tcp
 tcpsocket
 tls
