@@ -1144,7 +1144,7 @@ int main( int argc,
           char ** argv )
 {
     int returnStatus = EXIT_SUCCESS;
-    NetworkContext_t networkContext;
+    NetworkContext_t networkContext = { 0 };
 
     ( void ) argc;
     ( void ) argv;
