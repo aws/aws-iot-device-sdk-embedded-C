@@ -30,6 +30,7 @@
 #include "transport_interface.h"
 
 #include "openssl_posix.h"
+#include <openssl/err.h>
 
 /*-----------------------------------------------------------*/
 
@@ -401,6 +402,7 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
     OpensslStatus_t returnStatus = OPENSSL_SUCCESS;
     long verifyPeerCertStatus = X509_V_OK;
     int sslStatus = 0;
+    uint8_t sslObjectCreated = 0;
     SSL_CTX * pSslContext = NULL;
 
     /* Validate parameters. */
@@ -484,6 +486,10 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
             LogError( ( "SSL_new failed to create a new SSL context." ) );
             returnStatus = OPENSSL_API_ERROR;
         }
+        else
+        {
+            sslObjectCreated = 1u;
+        }
     }
 
     /* Setup the socket to use for communication. */
@@ -535,7 +541,7 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
     }
 
     /* Clean up on error. */
-    if( ( returnStatus != OPENSSL_SUCCESS ) && ( sslStatus == 0 ) )
+    if( ( returnStatus != OPENSSL_SUCCESS ) && ( sslObjectCreated == 1u ) )
     {
         SSL_free( pNetworkContext->pSsl );
         pNetworkContext->pSsl = NULL;
@@ -575,6 +581,7 @@ OpensslStatus_t Openssl_Disconnect( NetworkContext_t * pNetworkContext )
         }
 
         SSL_free( pNetworkContext->pSsl );
+        pNetworkContext->pSsl = NULL;
     }
     else
     {
@@ -617,7 +624,7 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
         else
         {
             LogError( ( "SSL_read of OpenSSL failed to receive data: "
-                        "status=%d.", bytesReceived ) );
+                        "status=%s.", ERR_reason_error_string( sslError ) ) );
         }
     }
 

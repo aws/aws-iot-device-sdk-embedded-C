@@ -779,7 +779,7 @@ int main( int argc,
     uint32_t timeDiff = 0;
     bool controlPacketSent = false;
     bool publishPacketSent = false;
-    NetworkContext_t networkContext;
+    NetworkContext_t networkContext = { 0 };
 
     ( void ) argc;
     ( void ) argv;
