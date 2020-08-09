@@ -41,8 +41,10 @@ size_t http_parser_execute( http_parser * parser,
                             const char * data,
                             size_t len )
 {
-    size_t fieldLength, valueLength;
-    HTTPParsingContext_t * pParsingContext;
+    char * pValue;
+    size_t fieldLength, fieldOffset, valueLength, valueOffset;
+    unsigned int http_errno;
+    findHeaderContext_t * pParsingContext;
 
     __CPROVER_assert( parser != NULL,
                       "http_parser_execute parser is NULL" );
@@ -53,26 +55,35 @@ size_t http_parser_execute( http_parser * parser,
     __CPROVER_assert( len < CBMC_MAX_OBJECT_SIZE,
                       "http_parser_execute len >= CBMC_MAX_OBJECT_SIZE" );
 
+    parser->http_errno = http_errno;
+
     __CPROVER_assume( fieldLength <= len );
+    __CPROVER_assume( fieldOffset < fieldLength );
     __CPROVER_assume( valueLength <= len );
+    __CPROVER_assume( valueOffset < valueLength );
 
-    pParsingContext = ( HTTPParsingContext_t * ) ( parser->data );
-    /* Choose whether the parser found the header */
-    pParsingContext->pLastHeaderField = nondet_bool() ? NULL : malloc( fieldLength );
-    pParsingContext->state = HTTP_PARSING_COMPLETE;
+    pParsingContext = ( findHeaderContext_t * ) ( parser->data );
+    pParsingContext->pField = data + fieldOffset;
+    pParsingContext->fieldLen = fieldLength;
+    pParsingContext->pValueLoc = NULL;
+    pParsingContext->pValueLen = 0;
+    pParsingContext->fieldFound = nondet_bool() ? 0 : 1;
 
-    if( pParsingContext->pLastHeaderField )
+    if( pParsingContext->fieldFound )
     {
-        pParsingContext->lastHeaderFieldLen = fieldLength;
-        pParsingContext->pLastHeaderValue = malloc( valueLength );
-        pParsingContext->lastHeaderValueLen = valueLength;
+        pParsingContext->valueFound = nondet_bool() ? 0 : 1;
     }
     else
     {
-        pParsingContext->lastHeaderFieldLen = 0u;
-        pParsingContext->pLastHeaderValue = NULL;
-        pParsingContext->lastHeaderValueLen = 0u;
+        pParsingContext->valueFound = 0;
     }
 
-    return pParsingContext->lastHeaderValueLen;
+    if( pParsingContext->valueFound )
+    {
+        pValue = data + valueOffset;
+        pParsingContext->pValueLen = &valueLength;
+        pParsingContext->pValueLoc = &pValue;
+    }
+
+    return pParsingContext->fieldFound ? valueLength : 0;
 }
