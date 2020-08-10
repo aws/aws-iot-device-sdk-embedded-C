@@ -298,7 +298,6 @@ static bool matchTopic( const char * pTopicName,
     assert( topicFilterLength != 0 );
 
     bool status = false;
-    bool topicNameStartsWithDollar = false;
     bool topicFilterStartsWithWildcard = false;
 
     /* Check for an exact match if the incoming topic name and the registered
@@ -308,9 +307,6 @@ static bool matchTopic( const char * pTopicName,
         status = ( strncmp( pTopicName, pTopicFilter, topicNameLength ) == 0 ) ? true : false;
     }
 
-    /* Determine if topic name starts with '$'. */
-    topicNameStartsWithDollar = ( pTopicName[ 0 ] == '$' ) ? true : false;
-
     /* Determine if topic filters starts with a wildcard. */
     topicFilterStartsWithWildcard = ( ( pTopicFilter[ 0 ] == '+' ) ||
                                       ( pTopicFilter[ 0 ] == '#' ) ) ? true : false;
@@ -319,7 +315,7 @@ static bool matchTopic( const char * pTopicName,
      * Note: According to the MQTT 3.1.1 specification, incoming PUBLISH topic names starting
      * the "$" character cannot be matched against topic filter starting with a wildcard.
      * i.e. for example, "$SYS/sport" cannot be matched with "#" or "+/sport" topic filters. */
-    if( ( status == false ) && !( ( topicNameStartsWithDollar == true ) &&
+    if( ( status == false ) && !( ( ( pTopicName[ 0 ] == '$' ) ) &&
                                   ( topicFilterStartsWithWildcard == true ) ) )
     {
         status = matchTopicFilter( pTopicName, topicNameLength, pTopicFilter, topicFilterLength );
