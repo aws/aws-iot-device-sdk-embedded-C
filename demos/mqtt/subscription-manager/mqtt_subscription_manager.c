@@ -409,7 +409,7 @@ SubscriptionManagerStatus_t SubscriptionManager_RegisterCallback( const char * p
 
         returnStatus = SUBSCRIPTION_MANAGER_RECORD_EXISTS;
     }
-    else if( ( availableIndex == MAX_SUBSCRIPTION_CALLBACK_RECORDS ) )
+    else if( availableIndex == MAX_SUBSCRIPTION_CALLBACK_RECORDS )
     {
         /* The record list is full. */
         LogError( ( "Unable to register callback: Registry list is full: TopicFilter=%.*s, MaxRegistrySize=%u",
