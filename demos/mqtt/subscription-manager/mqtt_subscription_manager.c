@@ -315,7 +315,7 @@ static bool matchTopic( const char * pTopicName,
      * Note: According to the MQTT 3.1.1 specification, incoming PUBLISH topic names starting
      * the "$" character cannot be matched against topic filter starting with a wildcard.
      * i.e. for example, "$SYS/sport" cannot be matched with "#" or "+/sport" topic filters. */
-    if( ( status == false ) && !( ( ( pTopicName[ 0 ] == '$' ) ) &&
+    if( ( status == false ) && !( ( pTopicName[ 0 ] == '$' ) &&
                                   ( topicFilterStartsWithWildcard == true ) ) )
     {
         status = matchTopicFilter( pTopicName, topicNameLength, pTopicFilter, topicFilterLength );
