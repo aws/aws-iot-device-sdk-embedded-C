@@ -31,11 +31,8 @@ developerguide
 doesn
 dup
 endif
-<<<<<<< HEAD
 filterindex
-=======
 hashmap
->>>>>>> 5099702fd986bf72fc45869ef3736c8d72ab87f0
 hasn
 html
 http
