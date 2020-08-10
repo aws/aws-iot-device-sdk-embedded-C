@@ -357,13 +357,12 @@ static void humidityDataCallback( MQTTContext_t * pContext,
  * @param[in] pMqttContext MQTT context pointer.
  * @param[in] pPacketInfo Packet Info pointer for the incoming packet.
  * @param[in] packetIdentifier Packet identifier of the incoming packet.
- * @param[in] pPublishInfo Deserialized publish info pointer for the incoming
+ * @param[in] pDeserializedInfo Deserialized information from the incoming packet.
  * packet.
  */
 static void commonEventHandler( MQTTContext_t * pMqttContext,
                                 MQTTPacketInfo_t * pPacketInfo,
-                                uint16_t packetIdentifier,
-                                MQTTPublishInfo_t * pPublishInfo );
+                                MQTTDeserializedInfo_t * pDeserializedInfo );
 
 /**
  * @brief Sends an MQTT CONNECT packet over the already connected TCP socket.
@@ -727,20 +726,21 @@ static void humidityDataCallback( MQTTContext_t * pContext,
 
 static void commonEventHandler( MQTTContext_t * pMqttContext,
                                 MQTTPacketInfo_t * pPacketInfo,
-                                uint16_t packetIdentifier,
-                                MQTTPublishInfo_t * pPublishInfo )
+                                MQTTDeserializedInfo_t * pDeserializedInfo )
 {
     assert( pMqttContext != NULL );
     assert( pPacketInfo != NULL );
+    assert( pDeserializedInfo != NULL );
+    assert( pDeserializedInfo->packetIdentifier != MQTT_PACKET_ID_INVALID );
 
     /* Handle incoming publish. The lower 4 bits of the publish packet
      * type is used for the dup, QoS, and retain flags. Hence masking
      * out the lower bits to check if the packet is publish. */
     if( ( pPacketInfo->type & 0xF0U ) == MQTT_PACKET_TYPE_PUBLISH )
     {
-        assert( pPublishInfo != NULL );
+        assert( pDeserializedInfo->pPublishInfo != NULL );
         /* Handle incoming publish. */
-        SubscriptionManager_DispatchHandler( pMqttContext, pPublishInfo );
+        SubscriptionManager_DispatchHandler( pMqttContext, pDeserializedInfo->pPublishInfo );
     }
     else
     {
@@ -750,13 +750,13 @@ static void commonEventHandler( MQTTContext_t * pMqttContext,
             case MQTT_PACKET_TYPE_SUBACK:
                 LogInfo( ( "Received SUBACK.\n\n" ) );
                 /* Make sure ACK packet identifier matches with Request packet identifier. */
-                assert( globalSubscribePacketIdentifier == packetIdentifier );
+                assert( globalSubscribePacketIdentifier == pDeserializedInfo->packetIdentifier );
                 break;
 
             case MQTT_PACKET_TYPE_UNSUBACK:
                 LogInfo( ( "Received UNSUBACK.\n\n" ) );
                 /* Make sure ACK packet identifier matches with Request packet identifier. */
-                assert( globalUnsubscribePacketIdentifier == packetIdentifier );
+                assert( globalUnsubscribePacketIdentifier == pDeserializedInfo->packetIdentifier );
                 break;
 
             case MQTT_PACKET_TYPE_PINGRESP:
@@ -769,9 +769,9 @@ static void commonEventHandler( MQTTContext_t * pMqttContext,
 
             case MQTT_PACKET_TYPE_PUBACK:
                 LogInfo( ( "PUBACK received for packet id %u.\n\n",
-                           packetIdentifier ) );
+                           pDeserializedInfo->packetIdentifier ) );
                 /* Cleanup publish packet when a PUBREC is received. */
-                cleanupOutgoingPublishWithPacketID( packetIdentifier );
+                cleanupOutgoingPublishWithPacketID( pDeserializedInfo->packetIdentifier );
                 break;
 
             /* Any other packet type is invalid. */
