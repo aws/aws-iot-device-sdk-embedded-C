@@ -1874,7 +1874,6 @@ MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * pPublishInfo
          *                               + Length of encoded remaining length
          *                               + Remaining length
          *                               - Payload Length.
-         * Payload length will be subtracted after verifying pPublishInfo parameter.
          */
         packetSize = 1U + remainingLengthEncodedSize( remainingLength )
                      + remainingLength
