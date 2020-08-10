@@ -632,7 +632,7 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
     else if( pNetworkContext->pSsl == NULL )
     {
         LogError( ( "Failed to receive data over network: "
-                    "Network context has invalid SSL object." ) );
+                    "SSL object in network context is NULL." ) );
     }
 
     return bytesReceived;
@@ -658,13 +658,13 @@ int32_t Openssl_Send( NetworkContext_t * pNetworkContext,
             sslError = SSL_get_error( pNetworkContext->pSsl, bytesSent );
 
             LogError( ( "Failed to send data over network: SSL_write of OpenSSL failed: "
-                        " ErrorStatus=%s.", ERR_reason_error_string( sslError ) ) );
+                        "ErrorStatus=%s.", ERR_reason_error_string( sslError ) ) );
         }
     }
     else
     {
         LogError( ( "Failed to send data over network: "
-                    "Network context has invalid SSL object." ) );
+                    "SSL object in network context is NULL." ) );
     }
 
     return bytesSent;
