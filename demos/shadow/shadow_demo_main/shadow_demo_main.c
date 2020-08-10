@@ -161,11 +161,6 @@ static bool stateChanged = false;
  */
 static uint32_t clientToken = 0U;
 
-/**
- * @brief The flag to indicate to disconnect from MQTT.
- */
-static bool disconnectRequest = false;
-
 /*-----------------------------------------------------------*/
 
 /**
@@ -622,8 +617,6 @@ int main( int argc,
             else
             {
                 LogInfo( ( "No change from /update/delta, unsubscribe all shadow topics and disconnect from MQTT.\r\n") );
-                /* No changes, set flag to unsubscribe the topics and disconnect it. */
-                disconnectRequest = true;
             }
         }
 
