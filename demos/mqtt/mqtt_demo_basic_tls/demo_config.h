@@ -56,7 +56,9 @@
  * the instructions in https://mosquitto.org/ for running a Mosquitto broker
  * locally.
  */
-#define BROKER_ENDPOINT           "test.mosquitto.org"
+#ifndef BROKER_ENDPOINT
+    #define BROKER_ENDPOINT    "test.mosquitto.org"
+#endif
 
 /**
  * @brief Length of MQTT server host name.

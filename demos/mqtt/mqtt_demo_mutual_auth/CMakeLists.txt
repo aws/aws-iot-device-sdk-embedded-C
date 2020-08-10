@@ -52,10 +52,3 @@ add_custom_command(
         "${CMAKE_CURRENT_LIST_DIR}/certificates"
         "$<TARGET_FILE_DIR:${DEMO_NAME}>/certificates"
 )
-
-# Set the ROOT_CA_CERT_PATH configuration for the demo to the absolute path of the 
-# copied Amazon Root CA certificate.
-target_compile_definitions(
-    ${DEMO_NAME} 
-    PRIVATE 
-    ROOT_CA_CERT_PATH="$<TARGET_FILE_DIR:${DEMO_NAME}>/certificates/AmazonRootCA1.crt" )

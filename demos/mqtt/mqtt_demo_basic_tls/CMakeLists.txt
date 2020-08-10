@@ -46,10 +46,3 @@ add_custom_command(
         "${CMAKE_CURRENT_LIST_DIR}/certificates/mosquitto.org.crt"
         "$<TARGET_FILE_DIR:${DEMO_NAME}>/certificates/mosquitto.org.crt"
 )
-
-# Set the ROOT_CA_CERT_PATH configuration for the demo to the absolute path of the 
-# copied Mosquitto Root CA certificate.
-target_compile_definitions(
-    ${DEMO_NAME} 
-    PRIVATE 
-    ROOT_CA_CERT_PATH="$<TARGET_FILE_DIR:${DEMO_NAME}>/certificates/mosquitto.org.crt" )

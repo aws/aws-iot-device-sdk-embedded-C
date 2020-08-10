@@ -53,7 +53,9 @@
  * This demo uses the Mosquitto test server. This is a public MQTT server; do not
  * publish anything sensitive to this server.
  */
-#define BROKER_ENDPOINT           "test.mosquitto.org"
+#ifndef BROKER_ENDPOINT
+    #define BROKER_ENDPOINT    "test.mosquitto.org"
+#endif
 
 /**
  * @brief Length of MQTT server host name.
