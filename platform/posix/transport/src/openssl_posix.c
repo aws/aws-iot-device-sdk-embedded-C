@@ -616,29 +616,28 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
         bytesReceived = ( int32_t ) SSL_read( pNetworkContext->pSsl,
                                               pBuffer,
                                               bytesToRecv );
+
+        /* Handle error return status if transport read did not succeed. */
+        if( bytesReceived <= 0 )
+        {
+            sslError = SSL_get_error( pNetworkContext->pSsl, bytesReceived );
+
+            if( sslError == SSL_ERROR_WANT_READ )
+            {
+                /* There is no data to receive at this time. */
+                bytesReceived = 0;
+            }
+            else
+            {
+                LogError( ( "Failed to receive data over network: SSL_read failed: "
+                            "ErrorStatus=%s.", ERR_reason_error_string( sslError ) ) );
+            }
+        }
     }
     else
     {
         LogError( ( "Failed to receive data over network: "
                     "SSL object in network context is NULL." ) );
-    }
-
-    /* Handle error return status if transport read did not succeed. */
-    if( ( pNetworkContext != NULL ) && ( pNetworkContext->pSsl != NULL ) &&
-        ( bytesReceived <= 0 ) )
-    {
-        sslError = SSL_get_error( pNetworkContext->pSsl, bytesReceived );
-
-        if( sslError == SSL_ERROR_WANT_READ )
-        {
-            /* There is no data to receive at this time. */
-            bytesReceived = 0;
-        }
-        else
-        {
-            LogError( ( "Failed to receive data over network: SSL_read failed: "
-                        "ErrorStatus=%s.", ERR_reason_error_string( sslError ) ) );
-        }
     }
 
     return bytesReceived;
