@@ -30,11 +30,8 @@
 
 void harness()
 {
-    HTTPRequestHeaders_t * pRequestHeaders = NULL;
-    HTTPResponse_t * pResponse = NULL;
-
-    /* Ideally, this should be allocated in the heap but doing so makes CBMC
-     * run out of memory. */
+    HTTPRequestHeaders_t * pRequestHeaders;
+    HTTPResponse_t * pResponse;
     TransportInterface_t * pTransportInterface;
     uint8_t * pRequestBodyBuf;
     size_t reqBodyBufLen;

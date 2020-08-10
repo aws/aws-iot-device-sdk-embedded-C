@@ -40,6 +40,11 @@ REMOVE_FUNCTION_BODY += __CPROVER_file_local_http_client_c_httpParserOnHeadersCo
 REMOVE_FUNCTION_BODY += __CPROVER_file_local_http_client_c_httpParserOnMessageBeginCallback
 REMOVE_FUNCTION_BODY += __CPROVER_file_local_http_client_c_httpParserOnMessageCompleteCallback
 
+# Remove any unused functions for http parser
+REMOVE_FUNCTION_BODY += http_parser_init
+REMOVE_FUNCTION_BODY += http_parser_set_max_header_size
+REMOVE_FUNCTION_BODY += http_parser_settings_init
+
 # There is a total of 10 digits in INT32_MAX. These loops are unwound once more
 # than the total possible iterations in the int32_t to ASCII converation.
 UNWINDSET += __CPROVER_file_local_http_client_c_convertInt32ToAscii.0:11

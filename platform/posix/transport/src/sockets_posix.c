@@ -130,11 +130,12 @@ static SocketStatus_t resolveHostName( const char * pHostName,
     /* Perform a DNS lookup on the given host name. */
     dnsStatus = getaddrinfo( pHostName, NULL, &hints, pListHead );
 
-    if( dnsStatus == -1 )
+    if( dnsStatus != 0 )
     {
-        LogError( ( "Could not resolve host %.*s.\n",
+        LogError( ( "Failed to resolve DNS: Hostname=%.*s, ErrorCode=%d.\n",
                     ( int32_t ) hostNameLength,
-                    pHostName ) );
+                    pHostName,
+                    dnsStatus ) );
         returnStatus = SOCKETS_DNS_FAILURE;
     }
 
