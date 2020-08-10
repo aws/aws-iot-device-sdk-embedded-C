@@ -350,7 +350,7 @@ static int32_t sendPacket( MQTTContext_t * pContext,
             LogDebug( ( "BytesSent=%d, BytesRemaining=%lu,"
                         " TotalBytesSent=%d.",
                         bytesSent,
-                        bytesRemaining,
+                        ( unsigned long ) bytesRemaining,
                         totalBytesSent ) );
         }
     }
@@ -461,7 +461,7 @@ static int32_t recvExact( const MQTTContext_t * pContext,
             LogDebug( ( "BytesReceived=%d, BytesRemaining=%lu, "
                         "TotalBytesReceived=%d.",
                         bytesRecvd,
-                        bytesRemaining,
+                        ( unsigned long ) bytesRemaining,
                         totalBytesRecvd ) );
         }
 
@@ -513,7 +513,7 @@ static MQTTStatus_t discardPacket( const MQTTContext_t * pContext,
             LogError( ( "Receive error while discarding packet."
                         "ReceivedBytes=%d, ExpectedBytes=%lu.",
                         bytesReceived,
-                        bytesToReceive ) );
+                        ( unsigned long ) bytesToReceive ) );
             receiveError = true;
         }
         else
@@ -564,8 +564,8 @@ static MQTTStatus_t receivePacket( const MQTTContext_t * pContext,
         LogError( ( "Incoming packet will be dumped: "
                     "Packet length exceeds network buffer size."
                     "PacketSize=%lu, NetworkBufferSize=%lu.",
-                    incomingPacket.remainingLength,
-                    pContext->networkBuffer.size ) );
+                    ( unsigned long ) incomingPacket.remainingLength,
+                    ( unsigned long ) pContext->networkBuffer.size ) );
         status = discardPacket( pContext,
                                 incomingPacket.remainingLength,
                                 remainingTimeMs );
@@ -586,7 +586,7 @@ static MQTTStatus_t receivePacket( const MQTTContext_t * pContext,
             LogError( ( "Packet reception failed. ReceivedBytes=%d, "
                         "ExpectedBytes=%lu.",
                         bytesReceived,
-                        bytesToReceive ) );
+                        ( unsigned long ) bytesToReceive ) );
             status = MQTTRecvFailed;
         }
     }
@@ -730,6 +730,7 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
     MQTTPublishState_t publishRecordState = MQTTStateNull;
     uint16_t packetIdentifier = 0U;
     MQTTPublishInfo_t publishInfo;
+    MQTTDeserializedInfo_t deserializedInfo;
     bool duplicatePublish = false;
 
     assert( pContext != NULL );
@@ -737,7 +738,8 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
     assert( pContext->appCallback != NULL );
 
     status = MQTT_DeserializePublish( pIncomingPacket, &packetIdentifier, &publishInfo );
-    LogInfo( ( "De-serialized incoming PUBLISH packet: DeserializerResult=%d.", status ) );
+    LogInfo( ( "De-serialized incoming PUBLISH packet: DeserializerResult=%s.",
+               MQTT_Status_strerror( status ) ) );
 
     if( status == MQTTSuccess )
     {
@@ -802,6 +804,11 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
 
     if( status == MQTTSuccess )
     {
+        /* Set fields of deserialized struct. */
+        deserializedInfo.packetIdentifier = packetIdentifier;
+        deserializedInfo.pPublishInfo = &publishInfo;
+        deserializedInfo.deserializationResult = status;
+
         /* Invoke application callback to hand the buffer over to application
          * before sending acks.
          * Application callback will be invoked for all publishes, except for
@@ -810,8 +817,7 @@ static MQTTStatus_t handleIncomingPublish( MQTTContext_t * pContext,
         {
             pContext->appCallback( pContext,
                                    pIncomingPacket,
-                                   packetIdentifier,
-                                   &publishInfo );
+                                   &deserializedInfo );
         }
 
         /* Send PUBACK or PUBREC if necessary. */
@@ -833,6 +839,7 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
     uint16_t packetIdentifier;
     MQTTPubAckType_t ackType;
     MQTTEventCallback_t appCallback;
+    MQTTDeserializedInfo_t deserializedInfo;
 
     assert( pContext != NULL );
     assert( pIncomingPacket != NULL );
@@ -869,9 +876,14 @@ static MQTTStatus_t handlePublishAcks( MQTTContext_t * pContext,
 
     if( status == MQTTSuccess )
     {
+        /* Set fields of deserialized struct. */
+        deserializedInfo.packetIdentifier = packetIdentifier;
+        deserializedInfo.deserializationResult = status;
+        deserializedInfo.pPublishInfo = NULL;
+
         /* Invoke application callback to hand the buffer over to application
          * before sending acks. */
-        appCallback( pContext, pIncomingPacket, packetIdentifier, NULL );
+        appCallback( pContext, pIncomingPacket, &deserializedInfo );
 
         /* Send PUBREL or PUBCOMP if necessary. */
         status = sendPublishAcks( pContext,
@@ -890,6 +902,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
 {
     MQTTStatus_t status = MQTTBadResponse;
     uint16_t packetIdentifier = MQTT_PACKET_ID_INVALID;
+    MQTTDeserializedInfo_t deserializedInfo;
 
     /* We should always invoke the app callback unless we receive a PINGRESP
      * and are managing keep alive, or if we receive an unknown packet. We
@@ -919,7 +932,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
 
         case MQTT_PACKET_TYPE_PINGRESP:
             status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, NULL );
-            invokeAppCallback = ( manageKeepAlive == true ) ? false : true;
+            invokeAppCallback = ( ( status == MQTTSuccess ) && ( manageKeepAlive == false ) ) ? true : false;
 
             if( ( status == MQTTSuccess ) && ( manageKeepAlive == true ) )
             {
@@ -932,7 +945,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
         case MQTT_PACKET_TYPE_UNSUBACK:
             /* Deserialize and give these to the app provided callback. */
             status = MQTT_DeserializeAck( pIncomingPacket, &packetIdentifier, NULL );
-            invokeAppCallback = true;
+            invokeAppCallback = ( ( status == MQTTSuccess ) || ( status == MQTTServerRefused ) ) ? true : false;
             break;
 
         default:
@@ -943,9 +956,15 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
             break;
     }
 
-    if( ( status == MQTTSuccess ) && ( invokeAppCallback == true ) )
+    if( invokeAppCallback == true )
     {
-        appCallback( pContext, pIncomingPacket, packetIdentifier, NULL );
+        /* Set fields of deserialized struct. */
+        deserializedInfo.packetIdentifier = packetIdentifier;
+        deserializedInfo.deserializationResult = status;
+        deserializedInfo.pPublishInfo = NULL;
+        appCallback( pContext, pIncomingPacket, &deserializedInfo );
+        /* In case a SUBACK indicated refusal, reset the status to continue the loop. */
+        status = MQTTSuccess;
     }
 
     return status;
@@ -1285,8 +1304,8 @@ static MQTTStatus_t serializePublish( const MQTTContext_t * pContext,
                                         &remainingLength,
                                         &packetSize );
     LogDebug( ( "PUBLISH packet size is %lu and remaining length is %lu.",
-                packetSize,
-                remainingLength ) );
+                ( unsigned long ) packetSize,
+                ( unsigned long ) remainingLength ) );
 
     if( status == MQTTSuccess )
     {
@@ -1296,7 +1315,7 @@ static MQTTStatus_t serializePublish( const MQTTContext_t * pContext,
                                               &( pContext->networkBuffer ),
                                               pHeaderSize );
         LogDebug( ( "Serialized PUBLISH header size is %lu.",
-                    *pHeaderSize ) );
+                    ( unsigned long ) *pHeaderSize ) );
     }
 
     return status;
@@ -1424,8 +1443,8 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
                                             &remainingLength,
                                             &packetSize );
         LogDebug( ( "CONNECT packet size is %lu and remaining length is %lu.",
-                    packetSize,
-                    remainingLength ) );
+                    ( unsigned long ) packetSize,
+                    ( unsigned long ) remainingLength ) );
     }
 
     if( status == MQTTSuccess )
@@ -1509,8 +1528,8 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
                                               &remainingLength,
                                               &packetSize );
         LogDebug( ( "SUBSCRIBE packet size is %lu and remaining length is %lu.",
-                    packetSize,
-                    remainingLength ) );
+                    ( unsigned long ) packetSize,
+                    ( unsigned long ) remainingLength ) );
     }
 
     if( status == MQTTSuccess )
@@ -1641,7 +1660,7 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext )
         if( status == MQTTSuccess )
         {
             LogDebug( ( "MQTT PINGREQ packet size is %lu.",
-                        packetSize ) );
+                        ( unsigned long ) packetSize ) );
         }
         else
         {
@@ -1704,8 +1723,8 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
                                                 &remainingLength,
                                                 &packetSize );
         LogDebug( ( "UNSUBSCRIBE packet size is %lu and remaining length is %lu.",
-                    packetSize,
-                    remainingLength ) );
+                    ( unsigned long ) packetSize,
+                    ( unsigned long ) remainingLength ) );
     }
 
     if( status == MQTTSuccess )
@@ -1760,7 +1779,7 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext )
         /* Get MQTT DISCONNECT packet size. */
         status = MQTT_GetDisconnectPacketSize( &packetSize );
         LogDebug( ( "MQTT DISCONNECT packet size is %lu.",
-                    packetSize ) );
+                    ( unsigned long ) packetSize ) );
     }
 
     if( status == MQTTSuccess )
