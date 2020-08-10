@@ -606,7 +606,11 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
     int32_t bytesReceived = 0;
     int sslError = 0;
 
-    if( pNetworkContext->pSsl != NULL )
+    if( pNetworkContext == NULL )
+    {
+        LogError( ( "Parameter check failed: pNetworkContext is NULL." ) );
+    }
+    else if( pNetworkContext->pSsl != NULL )
     {
         /* SSL read of data. */
         bytesReceived = ( int32_t ) SSL_read( pNetworkContext->pSsl,
@@ -620,7 +624,8 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
     }
 
     /* Handle error return status if transport read did not succeed. */
-    if( ( pNetworkContext->pSsl != NULL ) && ( bytesReceived <= 0 ) )
+    if( ( pNetworkContext != NULL ) && ( pNetworkContext->pSsl != NULL ) &&
+        ( bytesReceived <= 0 ) )
     {
         sslError = SSL_get_error( pNetworkContext->pSsl, bytesReceived );
 
@@ -647,7 +652,11 @@ int32_t Openssl_Send( NetworkContext_t * pNetworkContext,
     int32_t bytesSent = 0;
     int32_t sslError = 0;
 
-    if( pNetworkContext->pSsl != NULL )
+    if( pNetworkContext == NULL )
+    {
+        LogError( ( "Parameter check failed: pNetworkContext is NULL." ) );
+    }
+    else if( pNetworkContext->pSsl != NULL )
     {
         /* SSL write of data. */
         bytesSent = ( int32_t ) SSL_write( pNetworkContext->pSsl,
