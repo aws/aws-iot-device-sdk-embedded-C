@@ -950,15 +950,15 @@ static MQTTStatus_t readSubackStatus( size_t statusCount,
         /* MQTT 3.1.1 defines the following values as status codes. */
         switch( subscriptionStatus )
         {
-            case 0x00:
-            case 0x01:
-            case 0x02:
+            case MQTTQoS0:
+            case MQTTQoS1:
+            case MQTTQoS2:
 
                 LogDebug( ( "Topic filter %lu accepted, max QoS %u.",
                             ( unsigned long ) i, subscriptionStatus ) );
                 break;
 
-            case 0x80:
+            case MQTT_SUBACK_STATUS_FAILURE:
 
                 LogWarn( ( "Topic filter %lu refused.", ( unsigned long ) i ) );
 
@@ -2238,8 +2238,8 @@ MQTTStatus_t MQTT_GetSubAckPayload( MQTTPacketInfo_t * pSubackPacket,
          * length of the variable header (2 bytes) plus the length of the payload.
          * Therefore, we add 2 positions for the starting address of the payload, and
          * subtract 2 bytes from the remaining length for the length of the payload.*/
-        *pPayloadStart = pSubackPacket->pRemainingData + 2;
-        *pPayloadSize = pSubackPacket->remainingLength - 2;
+        *pPayloadStart = pSubackPacket->pRemainingData + sizeof( uint16_t );
+        *pPayloadSize = pSubackPacket->remainingLength - sizeof( uint16_t );
     }
 
     return status;
