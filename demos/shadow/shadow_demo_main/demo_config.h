@@ -59,8 +59,6 @@
  * #define AWS_IOT_ENDPOINT               "...insert here..."
  */
 
-#define AWS_IOT_ENDPOINT        "a331jlimbhi6p3-ats.iot.ap-northeast-1.amazonaws.com"
-
 /**
  * @brief AWS IoT MQTT broker port number.
  *
@@ -86,7 +84,7 @@
  * @note This path is relative from the demo binary created. Update
  * ROOT_CA_CERT_PATH to the absolute path if this demo is executed from elsewhere.
  */
-#define ROOT_CA_CERT_PATH               "certificates/AmazonRootCA1.crt"
+#define ROOT_CA_CERT_PATH    "certificates/AmazonRootCA1.crt"
 
 /**
  * @brief Path of the file containing the client certificate.
@@ -99,7 +97,6 @@
  *
  * #define CLIENT_CERT_PATH    "...insert here..."
  */
-#define CLIENT_CERT_PATH                "certificates/f39246f998-certificate.pem.crt"
 
 /**
  * @brief Path of the file containing the client's private key.
@@ -112,8 +109,6 @@
  *
  * #define CLIENT_PRIVATE_KEY_PATH    "...insert here..."
  */
-
-#define CLIENT_PRIVATE_KEY_PATH         "certificates/f39246f998-private.pem.key"
 
 /**
  * @brief MQTT client identifier.
