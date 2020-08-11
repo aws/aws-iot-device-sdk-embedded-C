@@ -92,3 +92,5 @@ Existing ports (which may be used as examples) are present in `ports`. A blank t
 ## License
 
 This library is licensed under the [MIT License](LICENSE).
+
+This repository uses Mbed TLS under Apache 2.0

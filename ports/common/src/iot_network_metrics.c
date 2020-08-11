@@ -279,7 +279,8 @@ static void _getServerInfo( int socket,
             }
             else
             {
-                IotLogError( "(Socket %d) Failed to add port to IP address buffer." );
+                IotLogError( "(Socket %d) Failed to add port to IP address buffer.",
+                             socket );
             }
         }
         else

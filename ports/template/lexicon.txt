@@ -9,12 +9,15 @@ gettimestring
 html
 https
 ifndef
+inc
 iot
+mutex
 mutexcreate
 mutexdestroy
 mutexlock
 mutextrylock
 mutexunlock
+noninfringement
 sdk
 semaphorecreate
 semaphoredestroy
@@ -24,6 +27,7 @@ semaphoretimedwait
 semaphoretrywait
 semaphorewait
 sleepms
+sublicense
 timerarm
 timercreate
 timerdestroy
