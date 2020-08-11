@@ -93,6 +93,18 @@
     #define NETWORK_BUFFER_SIZE    ( 1024U )
 #endif
 
+#ifndef SDK_NAME
+    #define SDK_NAME    "aws-iot-device-sdk-embedded-C"
+#endif
+
+#ifndef SDK_VERSION
+    #define SDK_VERSION    "4.0.0"
+#endif
+
+#ifndef HARDWARE_PLATFORM_NAME
+    #define HARDWARE_PLATFORM_NAME    "Posix"
+#endif
+
 /**
  * @brief Length of MQTT server host name.
  */
@@ -193,6 +205,16 @@
  * @brief Transport timeout in milliseconds for transport send and receive.
  */
 #define TRANSPORT_SEND_RECV_TIMEOUT_MS      ( 100 )
+
+/**
+ * @brief The MQTT metrics string expected by AWS IoT.
+ */
+#define METRICS_STRING                      "?SDK=" SDK_NAME "&Version=" SDK_VERSION "&Platform=" HARDWARE_PLATFORM_NAME
+
+/**
+ * @brief The length of the MQTT metrics string expected by AWS IoT.
+ */
+#define METRICS_STRING_LENGTH               ( ( uint16_t ) ( sizeof( METRICS_STRING ) - 1 ) )
 
 /*-----------------------------------------------------------*/
 
@@ -561,6 +583,7 @@ static int handlePublishResend( MQTTContext_t * pMqttContext )
     while( packetIdToResend != MQTT_PACKET_ID_INVALID )
     {
         foundPacketId = false;
+
         for( index = 0U; index < MAX_OUTGOING_PUBLISHES; index++ )
         {
             if( outgoingPublishPackets[ index ].packetId == packetIdToResend )
@@ -772,9 +795,14 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
          * PINGREQ Packet. */
         connectInfo.keepAliveSeconds = MQTT_KEEP_ALIVE_INTERVAL_SECONDS;
 
-        /* Username and password for authentication. Not used in this demo. */
-        connectInfo.pUserName = NULL;
-        connectInfo.userNameLength = 0U;
+        /* The username field is populated with voluntary metrics to AWS IoT.
+         * The metrics collected by AWS IoT are the current operating system or
+         * SDK and its version. These metrics help AWS IoT improve security and
+         * provide better technical support. */
+        connectInfo.pUserName = METRICS_STRING;
+        connectInfo.userNameLength = METRICS_STRING_LENGTH;
+
+        /* Password for authentication is not used in this demo. */
         connectInfo.pPassword = NULL;
         connectInfo.passwordLength = 0U;
 
