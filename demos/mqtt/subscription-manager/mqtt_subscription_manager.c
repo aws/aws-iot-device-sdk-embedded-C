@@ -379,7 +379,7 @@ SubscriptionManagerStatus_t SubscriptionManager_RegisterCallback( const char * p
     assert( topicFilterLength != 0 );
     assert( callback != NULL );
 
-    SubscriptionManagerStatus_t returnStatus = SUBSCRIPTION_MANAGER_INVALID;
+    SubscriptionManagerStatus_t returnStatus;
     size_t availableIndex = MAX_SUBSCRIPTION_CALLBACK_RECORDS;
     bool recordExists = false;
     size_t index = 0u;

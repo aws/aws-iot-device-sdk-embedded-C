@@ -59,8 +59,6 @@
 /* Enumeration type for return status value from Subscription Manager API. */
 typedef enum SubscriptionManagerStatus
 {
-    SUBSCRIPTION_MANAGER_INVALID = 0,
-
     /**
      * @brief Success return value from Subscription Manager API.
      */
