@@ -149,25 +149,28 @@ static bool matchWildcardsSpecialCases( const char * pTopicFilter,
     bool matchFound = false;
 
     /* Determine if the last character is reached for the topic name, and the
-     * third last character for the topic filter to match for the '#' wildcard. */
+     * third last character is reached for the topic filter. */
     if( ( nameIndex == ( topicNameLength - 1U ) ) &&
         ( filterIndex == ( topicFilterLength - 3U ) ) )
     {
-        /* Determine if the topic filter contains "/#" as the last 2 characters for the '#' wildcard.
-         * The '#' wildcard represents the parent and any number of child levels in the topic name.
-         * For example, the filter "sport/#" matches "sport" as well as "sport/tennis" topics. */
+        /* Determine if the topic filter contains "/#" as the last 2 characters.
+         * The '#' wildcard represents the parent and any number of child levels
+         * in the topic name. For example, the filter "sport/#" matches "sport"
+         * as well as "sport/tennis" topics. */
         matchFound = ( ( pTopicFilter[ filterIndex + 1U ] == '/' ) &&
                        ( pTopicFilter[ filterIndex + 2U ] == '#' ) ) ? true : false;
     }
     else
     {
         /* Determine if the last character is reached for the topic name and,
-         * the second last character for the topic filter to match for the
-         * '+' wildcard. */
+         * the second last character is reached for the topic filter. */
         if( ( nameIndex == ( topicNameLength - 1U ) ) &&
             ( filterIndex == ( topicFilterLength - 2U ) ) )
         {
-            /* Filter "sport/+" matches the "sport/" but not "sport". */
+            /* Determine if the topic filter contains "+" as the last character.
+             * This covers the special case of topic matching when the topic name
+             * ends with '/' but the topic filter ends with "/+". Thus, for example,
+             * topic filter "sport/+" matches the "sport/" but not "sport". */
             matchFound = ( pTopicFilter[ filterIndex + 1U ] == '+' ) ? true : false;
         }
     }
@@ -307,18 +310,24 @@ static bool matchTopic( const char * pTopicName,
         status = ( strncmp( pTopicName, pTopicFilter, topicNameLength ) == 0 ) ? true : false;
     }
 
-    /* Determine if topic filters starts with a wildcard. */
-    topicFilterStartsWithWildcard = ( ( pTopicFilter[ 0 ] == '+' ) ||
-                                      ( pTopicFilter[ 0 ] == '#' ) ) ? true : false;
-
-    /* If an exact match was not found, match against wildcard characters in topic filter.
-     * Note: According to the MQTT 3.1.1 specification, incoming PUBLISH topic names starting
-     * the "$" character cannot be matched against topic filter starting with a wildcard.
-     * i.e. for example, "$SYS/sport" cannot be matched with "#" or "+/sport" topic filters. */
-    if( ( status == false ) && !( ( ( pTopicName[ 0 ] == '$' ) ) &&
-                                  ( topicFilterStartsWithWildcard == true ) ) )
+    if( status == false )
     {
-        status = matchTopicFilter( pTopicName, topicNameLength, pTopicFilter, topicFilterLength );
+        /* If an exact match was not found, match against wildcard characters in
+         * topic filter.*/
+
+        /* Determine if topic filter starts with a wildcard. */
+        topicFilterStartsWithWildcard = ( ( pTopicFilter[ 0 ] == '+' ) ||
+                                          ( pTopicFilter[ 0 ] == '#' ) ) ? true : false;
+
+        /* Note: According to the MQTT 3.1.1 specification, incoming PUBLISH topic names
+         * starting the "$" character cannot be matched against topic filter starting with
+         * a wildcard, i.e. for example, "$SYS/sport" cannot be matched with "#" or
+         * "+/sport" topic filters. */
+        if( !( ( ( pTopicName[ 0 ] == '$' ) ) &&
+               ( topicFilterStartsWithWildcard == true ) ) )
+        {
+            status = matchTopicFilter( pTopicName, topicNameLength, pTopicFilter, topicFilterLength );
+        }
     }
 
     return status;
@@ -411,7 +420,7 @@ SubscriptionManagerStatus_t SubscriptionManager_RegisterCallback( const char * p
     }
     else if( availableIndex == MAX_SUBSCRIPTION_CALLBACK_RECORDS )
     {
-        /* The record list is full. */
+        /* The reistry is full. */
         LogError( ( "Unable to register callback: Registry list is full: TopicFilter=%.*s, MaxRegistrySize=%u",
                     topicFilterLength,
                     pTopicFilter,
