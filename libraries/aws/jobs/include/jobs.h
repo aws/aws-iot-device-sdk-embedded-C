@@ -88,6 +88,10 @@ typedef enum
 
 /**
  * @brief Topic values for subscription requests.
+ *
+ * @note The ordering is important, providing a means
+ * to divide topics into those that use a job ID
+ * and those that do not.
  */
 typedef enum
 {
@@ -98,6 +102,7 @@ typedef enum
     JobsGetPendingFailed,
     JobsStartNextSuccess,
     JobsStartNextFailed,
+    /* Topics below use a job ID. */
     JobsDescribeSuccess,
     JobsDescribeFailed,
     JobsUpdateSuccess,

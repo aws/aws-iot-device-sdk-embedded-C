@@ -95,6 +95,29 @@ static JobsStatus_t strnAppend( char * buffer,
     return ( i < max ) ? JobsSuccess : JobsBufferTooSmall;
 }
 
+/**
+ * @brief Populate the common leading portion of a topic string.
+ *
+ * @param[in] buffer  The buffer to contain the topic string.
+ * @param[in,out] start  The index at which to begin.
+ * @param[in] length  The size of the buffer.
+ * @param[in] thingName  The device's thingName as registered with AWS IoT.
+ * @param[in] thingNameLength  The length of the thingName.
+ */
+static void writePreamble( char * buffer,
+                           size_t * start,
+                           size_t length,
+                           const char * thingName,
+                           uint16_t thingNameLength )
+{
+    ( void ) strnAppend( buffer, start, length,
+                         JOBS_API_PREFIX, JOBS_API_PREFIX_LENGTH );
+    ( void ) strnAppend( buffer, start, length,
+                         thingName, thingNameLength );
+    ( void ) strnAppend( buffer, start, length,
+                         JOBS_API_BRIDGE, JOBS_API_BRIDGE_LENGTH );
+}
+
 #define checkThingParams()                                 \
     ( ( thingName != NULL ) && ( thingNameLength > 0U ) && \
       ( thingNameLength <= JOBS_THINGNAME_MAX_LENGTH ) )
@@ -121,12 +144,7 @@ JobsStatus_t Jobs_GetTopic( char * buffer,
     if( checkCommonParams() &&
         ( api > JobsInvalidTopic ) && ( api < JobsMaxTopic ) )
     {
-        ( void ) strnAppend( buffer, &start, length,
-                             JOBS_API_PREFIX, JOBS_API_PREFIX_LENGTH );
-        ( void ) strnAppend( buffer, &start, length,
-                             thingName, thingNameLength );
-        ( void ) strnAppend( buffer, &start, length,
-                             JOBS_API_BRIDGE, JOBS_API_BRIDGE_LENGTH );
+        writePreamble( buffer, &start, length, thingName, thingNameLength );
 
         if( api >= JobsDescribeSuccess )
         {
@@ -199,7 +217,7 @@ static JobsStatus_t strnnEq( const char * a,
  */
 static bool_ isJobIdChar( char a )
 {
-    bool_ ret = false;
+    bool_ ret;
 
     if( ( a == '-' ) || ( a == '_' ) )
     {
@@ -216,6 +234,10 @@ static bool_ isJobIdChar( char a )
     else if( ( a >= 'a' ) && ( a <= 'z' ) )
     {
         ret = true;
+    }
+    else
+    {
+        ret = false;
     }
 
     return ret;
@@ -295,15 +317,22 @@ static JobsStatus_t matchApi( const char * topic,
         {
             if( ( i > 0U ) && ( p[ i ] == '/' ) )
             {
+                /* Save the leading job ID and its length. */
                 jobId = p;
-                p = &p[ i + 1U ];
                 jobIdLength = ( uint16_t ) i;
+
+                /* Advance p to after the '/' and reduce buffer length
+                 * for the remaining API search. */
+                p = &p[ i + 1U ];
                 length = length - i - 1U;
                 break;
             }
             else if( isJobIdChar( p[ i ] ) == false )
             {
                 break;
+            }
+            else
+            {
             }
         }
 
@@ -371,7 +400,7 @@ JobsStatus_t Jobs_MatchTopic( const char * topic,
 
     if( outJobId != NULL )
     {
-        *outJobId = ( char * ) jobId;
+        *outJobId = jobId;
     }
 
     if( outJobIdLength != NULL )
@@ -398,12 +427,8 @@ JobsStatus_t Jobs_GetPending( char * buffer,
 
     if( checkCommonParams() )
     {
-        ( void ) strnAppend( buffer, &start, length,
-                             JOBS_API_PREFIX, JOBS_API_PREFIX_LENGTH );
-        ( void ) strnAppend( buffer, &start, length,
-                             thingName, thingNameLength );
-        ( void ) strnAppend( buffer, &start, length,
-                             JOBS_API_BRIDGE, JOBS_API_BRIDGE_LENGTH );
+        writePreamble( buffer, &start, length, thingName, thingNameLength );
+
         ret = strnAppend( buffer, &start, length,
                           JOBS_API_GETPENDING, JOBS_API_GETPENDING_LENGTH );
 
@@ -435,12 +460,8 @@ JobsStatus_t Jobs_StartNext( char * buffer,
 
     if( checkCommonParams() )
     {
-        ( void ) strnAppend( buffer, &start, length,
-                             JOBS_API_PREFIX, JOBS_API_PREFIX_LENGTH );
-        ( void ) strnAppend( buffer, &start, length,
-                             thingName, thingNameLength );
-        ( void ) strnAppend( buffer, &start, length,
-                             JOBS_API_BRIDGE, JOBS_API_BRIDGE_LENGTH );
+        writePreamble( buffer, &start, length, thingName, thingNameLength );
+
         ret = strnAppend( buffer, &start, length,
                           JOBS_API_STARTNEXT, JOBS_API_STARTNEXT_LENGTH );
 
@@ -475,12 +496,8 @@ JobsStatus_t Jobs_Describe( char * buffer,
     if( checkCommonParams() &&
         ( isValidJobId( jobId, jobIdLength ) == true ) )
     {
-        ( void ) strnAppend( buffer, &start, length,
-                             JOBS_API_PREFIX, JOBS_API_PREFIX_LENGTH );
-        ( void ) strnAppend( buffer, &start, length,
-                             thingName, thingNameLength );
-        ( void ) strnAppend( buffer, &start, length,
-                             JOBS_API_BRIDGE, JOBS_API_BRIDGE_LENGTH );
+        writePreamble( buffer, &start, length, thingName, thingNameLength );
+
         ( void ) strnAppend( buffer, &start, length,
                              jobId, jobIdLength );
         ( void ) strnAppend( buffer, &start, length,
@@ -519,12 +536,8 @@ JobsStatus_t Jobs_Update( char * buffer,
     if( checkCommonParams() &&
         ( isValidJobId( jobId, jobIdLength ) == true ) )
     {
-        ( void ) strnAppend( buffer, &start, length,
-                             JOBS_API_PREFIX, JOBS_API_PREFIX_LENGTH );
-        ( void ) strnAppend( buffer, &start, length,
-                             thingName, thingNameLength );
-        ( void ) strnAppend( buffer, &start, length,
-                             JOBS_API_BRIDGE, JOBS_API_BRIDGE_LENGTH );
+        writePreamble( buffer, &start, length, thingName, thingNameLength );
+
         ( void ) strnAppend( buffer, &start, length,
                              jobId, jobIdLength );
         ( void ) strnAppend( buffer, &start, length,
