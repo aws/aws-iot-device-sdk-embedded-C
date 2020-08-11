@@ -21,7 +21,7 @@
 
 /**
  * @file shadow_demo_main.c
- * @brief "Demo for showing how to use the Device Shadow library's API. This version
+ * @brief Demo for showing how to use the Device Shadow library's API. This version
  * of Device Shadow API provide macros and helper functions for assembling MQTT topics
  * strings, and for determining whether an incoming MQTT message is related to the
  * device shadow. The Device Shadow library does not depend on a MQTT library,
@@ -31,11 +31,16 @@
  * This example assumes there is a powerOn state in the device shadow. It does the
  * following operations:
  * 1. Establish a MQTT connection by using the helper functions in shadow_demo_helpers.c.
- * 2. Assemble strings for the MQTT topics of interest, by using macros defined by the Device Shadow library.
+ * 2. Assemble strings for the MQTT topics of device shadow, by using macros defined by the Device Shadow library.
  * 3. Subscribe to those MQTT topics by using helper functions in shadow_demo_helpers.c.
- * 4. Publish a desire state of powerOn by using helper functions in shadow_demo_helpers.c.
- * 5. Handle incoming MQTT messages in eventCallback, determine whether the message is related to
- * the device shadow by using a function defined by the Device Shadow library (Shadow_MatchTopic).
+ * 4. Publish a desired state of powerOn by using helper functions in shadow_demo_helpers.c.  That will cause
+ * a delta message to be sent to device.
+ * 5. Handle incoming MQTT messages in eventCallback, determine whether the message is related to the device
+ * shadow by using a function defined by the Device Shadow library (Shadow_MatchTopic). If the message is a
+ * device shadow delta message, set a flag for the main function to know, then the main function will publish
+ * a second message to update the reported state of powerOn.
+ * 6. Handle incoming message again in eventCallback. If the message is from update/accepted, verify that it
+ * has the same clientToken as previously published in the update message. That will mark the end of the demo.
  */
 
 /* Standard includes. */
@@ -97,7 +102,7 @@
 /**
  * @brief Format string representing a Shadow document with a "reported" state.
  *
- * The real json pay will look like this:
+ * The real json document will look like this:
  * {
  *   "state": {
  *     "reported": {
@@ -157,7 +162,7 @@ static bool stateChanged = false;
 /**
  * @brief When we send an update to the device shadow, and if we care about
  * the response from cloud (accepted/rejected), remember the clientToken and
- * use it to match with the response..
+ * use it to match with the response.
  */
 static uint32_t clientToken = 0U;
 
@@ -167,18 +172,16 @@ static uint32_t clientToken = 0U;
  * @brief This example uses the MQTT library of the AWS IoT Device SDK for
  * Embedded C. This is the prototype of the callback function defined by
  * that library. It will be invoked whenever the MQTT library receives an
- * incoming message..
+ * incoming message.
  *
  * @param[in] pMqttContext MQTT context pointer.
  * @param[in] pPacketInfo Packet Info pointer for the incoming packet.
- * @param[in] packetIdentifier Packet identifier of the incoming packet.
- * @param[in] pPublishInfo Deserialized publish info pointer for the incoming
+ * @param[in] pDeserializedInfo Deserialized information from the incoming packet.
  * packet.
  */
 static void eventCallback( MQTTContext_t * pMqttContext,
                            MQTTPacketInfo_t * pPacketInfo,
-                           uint16_t packetIdentifier,
-                           MQTTPublishInfo_t * pPublishInfo );
+                           MQTTDeserializedInfo_t * pDeserializedInfo );
 
 /**
  * @brief Process payload from /update/delta topic.
@@ -406,51 +409,53 @@ static void updateAcceptedHandler( MQTTPublishInfo_t * pPublishInfo )
  */
 static void eventCallback( MQTTContext_t * pMqttContext,
                            MQTTPacketInfo_t * pPacketInfo,
-                           uint16_t packetIdentifier,
-                           MQTTPublishInfo_t * pPublishInfo )
+                           MQTTDeserializedInfo_t * pDeserializedInfo )
 {
     ShadowMessageType_t messageType = ShadowMessageTypeMaxNum;
     const char * pThingName = NULL;
     uint16_t thingNameLength = 0U;
     MQTTStatus_t mqttStatus = MQTTSuccess;
+    uint16_t packetIdentifier;
 
+    assert( pDeserializedInfo != NULL );
     assert( pMqttContext != NULL );
     assert( pPacketInfo != NULL );
+
+    packetIdentifier = pDeserializedInfo->packetIdentifier;
 
     /* Handle incoming publish. The lower 4 bits of the publish packet
      * type is used for the dup, QoS, and retain flags. Hence masking
      * out the lower bits to check if the packet is publish. */
     if( ( pPacketInfo->type & 0xF0U ) == MQTT_PACKET_TYPE_PUBLISH )
     {
-        assert( pPublishInfo != NULL );
-        LogInfo( ( "pPublishInfo->pTopicName:%s.\n\n", pPublishInfo->pTopicName ) );
+        assert( pDeserializedInfo->pPublishInfo != NULL );
+        LogInfo( ( "pPublishInfo->pTopicName:%s.\n\n", pDeserializedInfo->pPublishInfo->pTopicName ) );
 
-        /* Handle incoming publish. */
         /* Let the Device Shadow library tell us whether this is a device shadow message. */
-        if( SHADOW_SUCCESS == Shadow_MatchTopic( pPublishInfo->pTopicName,
-                                                        pPublishInfo->topicNameLength,
-                                                        & messageType,
-                                                        & pThingName,
-                                                        & thingNameLength ) )
+        if( SHADOW_SUCCESS == Shadow_MatchTopic( pDeserializedInfo->pPublishInfo->pTopicName,
+                                                 pDeserializedInfo->pPublishInfo->topicNameLength,
+                                                 & messageType,
+                                                 & pThingName,
+                                                 & thingNameLength ) )
         {
             /* Upon successful return, the messageType has been filled in. */
             if( messageType == ShadowMessageTypeUpdateDelta )
             {
                 /* Handler function to process payload. */
-                updateDeltaHandler( pPublishInfo );
-            }
-            else if ( messageType == ShadowMessageTypeUpdateDocuments )
-            {
-                LogInfo( ( "/update/documents json payload:%s.\n\n", pPublishInfo->pPayload ) );
+                updateDeltaHandler( pDeserializedInfo->pPublishInfo );
             }
             else if ( messageType == ShadowMessageTypeUpdateAccepted )
             {
                 /* Handler function to process payload. */
-                updateAcceptedHandler( pPublishInfo );
+                updateAcceptedHandler( pDeserializedInfo->pPublishInfo );
+            }
+            else if ( messageType == ShadowMessageTypeUpdateDocuments )
+            {
+                LogInfo( ( "/update/documents json payload:%s.\n\n", pDeserializedInfo->pPublishInfo->pPayload ) );
             }
             else if ( messageType == ShadowMessageTypeUpdateRejected )
             {
-                LogInfo( ( "/update/rejected json payload:%s.\n\n", pPublishInfo->pPayload ) );
+                LogInfo( ( "/update/rejected json payload:%s.\n\n", pDeserializedInfo->pPublishInfo->pPayload ) );
             }
             else
             {
@@ -459,7 +464,7 @@ static void eventCallback( MQTTContext_t * pMqttContext,
         }
         else
         {
-            LogError( ( "Shadow_MatchTopic parse failed:%s !!\n\n", pPublishInfo->pTopicName ) );
+            LogError( ( "Shadow_MatchTopic parse failed:%s !!\n\n", pDeserializedInfo->pPublishInfo->pTopicName ) );
         }
     }
     else
@@ -485,7 +490,7 @@ static void eventCallback( MQTTContext_t * pMqttContext,
  * - SHADOW_TOPIC_STRING_UPDATE for "$aws/things/thingName/shadow/update"
  *
  * The helper functions this demo uses for MQTT operations have internal
- * loops process incoming messages. Those are not the focus of this demo
+ * loops to process incoming messages. Those are not the focus of this demo
  * therefore placed in a separate file shadow_demo_helpers.c.
  */
 int main( int argc,
@@ -504,8 +509,7 @@ int main( int argc,
 
     if( returnStatus == EXIT_FAILURE )
     {
-        /* Log error to indicate connection failure after all
-         * reconnect attempts are over. */
+        /* Log error to indicate connection failure. */
         LogError( ( "Failed to connect to MQTT broker." ) );
     }
     else
@@ -535,9 +539,10 @@ int main( int argc,
             returnStatus = subscribeToTopic( SHADOW_TOPIC_STRING_UPDATE_REJECTED( THING_NAME ),
                                              SHADOW_TOPIC_LENGTH_UPDATE_REJECTED( THING_NAME_LENGTH ) );
         }
-        /* The shadow topics above could be decided at compile time because of known #THING_NAME in macro.
+        /* This demo uses a constant #THING_NAME known at compile time therefore we can use macros to
+         * assemble shadow topic strings.
          * If the thing name is known at run time, then we could use the API #Shadow_GetTopicString to
-         * generate shadow topics, here is the example for /update/delta:
+         * assemble shadow topic strings, here is the example for /update/delta:
          *
          * For /update/delta:
          *
@@ -554,16 +559,15 @@ int main( int argc,
          *                                       & ( topicBuffer[ 0 ] ),
          *                                       bufferSize,
          *                                       & outLength );
-         * if ( shadowStatus == SHADOW_STATUS_SUCCESS )
-         * {
-         *      // You could get shadow topic at topicBuffer with length outLength.
-         * }
          */
 
-        /* Then we public desired state change to the shadow topic /update.
+        /* Then we publish a desired state to the /update topic. Since we've deleted
+         * the device shadow at the beginning of the demo, this will cause a delta message
+         * to be published, which we have subscribed to.
          * In many real applications, the desired state is not published by
          * the device itself. But for the purpose of making this demo self-contained,
-         * we publish one here so that we can receive a delta message later.*/
+         * we publish one here so that we can receive a delta message later.
+         */
         if( returnStatus == EXIT_SUCCESS )
         {
             /* desired power on state . */
@@ -585,13 +589,15 @@ int main( int argc,
                                            ( SHADOW_DESIRED_JSON_LENGTH + 1 ) );
         }
 
-        /* Check if the state change flag modified or not. If it's modified,
-         * then we publish reported state to update topic.*/
+
         if( returnStatus == EXIT_SUCCESS )
         {
             /* Note that publishToTopic already called MQTT_ProcessLoop,
              * therefore responses may have been received and the eventCallback
-             * may have been called, which may have changed the powerOn state. */
+             * may have been called, which may have changed the stateChanged flag.
+             * Check if the state change flag has been modified or not. If it's modified,
+             * then we publish reported state to update topic.
+             */
             if ( stateChanged == true )
             {
                 /* Report the latest power state back to device shadow. */
@@ -599,7 +605,7 @@ int main( int argc,
                 ( void ) memset( updateDocument,
                                  0x00,
                                  sizeof( updateDocument ) );
-                /* keep the client token in global variable used to compare if
+                /* Keep the client token in global variable used to compare if
                    the same token in /update/accepted. */
                 clientToken = ( Clock_GetTimeMs() % 1000000 );
 
