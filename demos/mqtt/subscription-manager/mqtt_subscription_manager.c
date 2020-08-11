@@ -323,8 +323,7 @@ static bool matchTopic( const char * pTopicName,
          * starting the "$" character cannot be matched against topic filter starting with
          * a wildcard, i.e. for example, "$SYS/sport" cannot be matched with "#" or
          * "+/sport" topic filters. */
-        if( !( ( ( pTopicName[ 0 ] == '$' ) ) &&
-               ( topicFilterStartsWithWildcard == true ) ) )
+        if( !( ( ( pTopicName[ 0 ] == '$' ) ) && ( topicFilterStartsWithWildcard == true ) ) )
         {
             status = matchTopicFilter( pTopicName, topicNameLength, pTopicFilter, topicFilterLength );
         }
