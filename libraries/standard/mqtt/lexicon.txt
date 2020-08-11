@@ -159,6 +159,8 @@ posix
 ppacketid
 ppacketinfo
 ppacketsize
+ppayloadsize
+ppayloadstart
 ppubinfo
 ppublishinfo
 pqos
@@ -169,6 +171,7 @@ processloop
 psessionpresent
 psource
 pstate
+psubackpacket
 psubscribeinfo
 psubscriptionlist
 ptr
