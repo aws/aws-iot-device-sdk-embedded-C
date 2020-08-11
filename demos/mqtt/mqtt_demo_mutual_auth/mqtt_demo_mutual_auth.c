@@ -796,9 +796,9 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
         connectInfo.keepAliveSeconds = MQTT_KEEP_ALIVE_INTERVAL_SECONDS;
 
         /* The username field is populated with voluntary metrics to AWS IoT.
-         * The metrics collected by AWS IoT are the current operating system and
-         * its version. These metrics help AWS IoT improve security and provide
-         * better technical support. */
+         * The metrics collected by AWS IoT are the current operating system or
+         * SDK and its version. These metrics help AWS IoT improve security and
+         * provide better technical support. */
         connectInfo.pUserName = METRICS_STRING;
         connectInfo.userNameLength = METRICS_STRING_LENGTH;
 
