@@ -33,6 +33,7 @@ createcleansession
 currentstate
 defragmenting
 deserialization
+deserializationresult
 deserialize
 deserializeack
 deserialized
@@ -74,6 +75,7 @@ int
 iot
 isduplicate
 isn
+keepaliveintervalsec
 linux
 lsb
 lwt
@@ -88,6 +90,7 @@ mosquitto
 mqtt
 mqttbadparameter
 mqttbadresponse
+mqttconnected
 mqttconnectinfo
 mqttcontext
 mqttfixedbuffer
@@ -95,17 +98,22 @@ mqttillegalstate
 mqttkeepalivetimeout
 mqttnodataavailable
 mqttnomemory
+mqttnotconnected
 mqttpacketinfo
+mqttpuback
 mqttpubackpending
 mqttpubacksend
 mqttpubacktype
+mqttpubcomp
 mqttpubcomppending
 mqttpubcompsend
 mqttpublishdone
 mqttpublishinfo
 mqttpublishsend
+mqttpubrec
 mqttpubrecpending
 mqttpubrecsend
+mqttpubrel
 mqttpubrelpending
 mqttpubrelsend
 mqttqos
@@ -147,6 +155,7 @@ pfixedbuffer
 pheadersize
 pincomingpacket
 pingreq
+pingreqsendtimems
 pingresp
 pingresps
 pingresptimeoutms
@@ -175,9 +184,12 @@ ptr
 ptransport
 ptransportinterface
 puback
+pubacks
 pubcomp
+pubcomps
 publishstate
 pubrec
+pubrecs
 pubrel
 pubrels
 pwillinfo
@@ -239,6 +251,7 @@ usercallback
 utest
 utf
 validatesubscribeunsubscribeparams
+waitingforpingresp
 xa
 xb
 xc
