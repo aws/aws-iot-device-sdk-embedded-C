@@ -104,6 +104,7 @@ rom
 sdk
 shadowstatus
 ssl
+statechanged
 structs
 suback
 sublicense
