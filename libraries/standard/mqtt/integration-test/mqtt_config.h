@@ -72,4 +72,12 @@
  */
 #define MQTT_MAX_QUEUED_PUBLISH_MESSAGES    10
 
+/**
+ * @brief Default timeout for receiving a response to a PINGREQ.
+ * 
+ * If the time expires without receiving a response to a PINGREQ, then 
+ * #MQTT_ProcessLoop() will return #MQTTKeepAliveTimeout.
+ */
+#define MQTT_DEFAULT_PINGRESP_TIMEOUT_MS    500U
+
 #endif /* ifndef MQTT_CONFIG_H_ */

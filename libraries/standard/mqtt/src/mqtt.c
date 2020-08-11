@@ -41,6 +41,14 @@
     #define MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT    ( 5U )
 #endif
 
+/**
+ * @brief Default number of milliseconds to wait for a ping response.
+ */
+#ifndef MQTT_DEFAULT_PINGRESP_TIMEOUT_MS
+    /* Wait 0.5 seconds by default for a ping response. */
+    #define MQTT_DEFAULT_PINGRESP_TIMEOUT_MS        ( 500U )
+#endif
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -1411,6 +1419,9 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
         pContext->getTime = getTimeFunction;
         pContext->appCallback = userCallback;
         pContext->networkBuffer = *pNetworkBuffer;
+
+        /* Set ping response timeout for process loop. */
+        pContext->pingRespTimeoutMs = MQTT_DEFAULT_PINGRESP_TIMEOUT_MS;
 
         /* Zero is not a valid packet ID per MQTT spec. Start from 1. */
         pContext->nextPacketId = 1;
