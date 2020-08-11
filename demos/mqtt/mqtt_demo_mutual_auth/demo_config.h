@@ -115,12 +115,29 @@
  *
  * No two clients may use the same client identifier simultaneously.
  */
-#define CLIENT_IDENTIFIER      "testclient"
+#define CLIENT_IDENTIFIER         "testclient"
 
 /**
  * @brief Size of the network buffer for MQTT packets.
  */
-#define NETWORK_BUFFER_SIZE    ( 1024U )
+#define NETWORK_BUFFER_SIZE       ( 1024U )
+
+/**
+ * @brief The name of the operating system or SDK that the application is
+ * running a part of.
+ */
+#define OS_NAME                   "aws-iot-embedded-c-sdk"
+
+/**
+ * @brief The version of the operating system or SDK that the application is
+ * running a part of.
+ */
+#define OS_VERSION                "4.0.0"
+
+/**
+ * @brief The name of the hardware platform the application is running on.
+ */
+#define HARDWARE_PLATFORM_NAME    "Posix"
 
 
 #endif /* ifndef DEMO_CONFIG_H_ */
