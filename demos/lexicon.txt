@@ -52,7 +52,7 @@ lastcontrolpacketsent
 latestversion
 metadata
 methodlen
-messageType
+messagetype
 milli
 mosquitto
 mqtt
