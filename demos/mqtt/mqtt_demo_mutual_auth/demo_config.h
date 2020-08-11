@@ -126,7 +126,7 @@
  * @brief The name of the operating system or SDK that the application is
  * running a part of.
  */
-#define OS_NAME                   "aws-iot-embedded-c-sdk"
+#define OS_NAME                   "aws-iot-device-sdk-embedded-C"
 
 /**
  * @brief The version of the operating system or SDK that the application is

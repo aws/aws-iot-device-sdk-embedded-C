@@ -94,7 +94,7 @@
 #endif
 
 #ifndef OS_NAME
-    #define OS_NAME    "aws-iot-embedded-c-sdk"
+    #define OS_NAME    "aws-iot-device-sdk-embedded-C"
 #endif
 
 #ifndef OS_VERSION
@@ -207,14 +207,14 @@
 #define TRANSPORT_SEND_RECV_TIMEOUT_MS      ( 100 )
 
 /**
- * @brief The format of the MQTT metrics expected by AWS IoT.
+ * @brief The MQTT metrics string expected by AWS IoT.
  */
-#define METRICS_FORMAT                      "?SDK=" OS_NAME "&Version=" OS_VERSION "&Platform=" HARDWARE_PLATFORM_NAME
+#define METRICS_STRING                      "?SDK=" OS_NAME "&Version=" OS_VERSION "&Platform=" HARDWARE_PLATFORM_NAME
 
 /**
  * @brief The length of the MQTT metrics string expected by AWS IoT.
  */
-#define METRICS_FORMAT_LENGTH               ( ( uint16_t ) ( sizeof( METRICS_FORMAT ) - 1 ) )
+#define METRICS_STRING_LENGTH               ( ( uint16_t ) ( sizeof( METRICS_STRING ) - 1 ) )
 
 /*-----------------------------------------------------------*/
 
@@ -799,8 +799,8 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
          * The metrics collected by AWS IoT are the current operating system and
          * its version. These metrics help AWS IoT improve security and provide
          * better technical support. */
-        connectInfo.pUserName = METRICS_FORMAT;
-        connectInfo.userNameLength = METRICS_FORMAT_LENGTH;
+        connectInfo.pUserName = METRICS_STRING;
+        connectInfo.userNameLength = METRICS_STRING_LENGTH;
 
         /* Password for authentication is not used in this demo. */
         connectInfo.pPassword = NULL;
