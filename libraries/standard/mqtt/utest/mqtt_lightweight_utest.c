@@ -1511,6 +1511,71 @@ void test_MQTT_DeserializeAck_puback( void )
 /* ========================================================================== */
 
 /**
+ * @brief Tests that MQTT_GetSubAckPayload works as expected in parsing the
+ * payload information of a SUBACK packet.
+ */
+void test_MQTT_GetSubAckPayload( void )
+{
+    MQTTPacketInfo_t mqttPacketInfo;
+    uint16_t payloadSize;
+    uint8_t * pPayloadStart;
+    bool sessionPresent;
+    MQTTStatus_t status = MQTTSuccess;
+    uint8_t buffer[ 10 ] = { 0 };
+
+    buffer[ 0 ] = 0;
+    buffer[ 1 ] = 1;
+    buffer[ 2 ] = 0x00;
+    buffer[ 3 ] = 0x01;
+    buffer[ 4 ] = 0x02;
+    buffer[ 5 ] = MQTT_SUBACK_STATUS_FAILURE;
+
+    /* Process a valid SUBACK packet containing whole range of server response codes. */
+    mqttPacketInfo.type = MQTT_PACKET_TYPE_SUBACK;
+    mqttPacketInfo.pRemainingData = buffer;
+    mqttPacketInfo.remainingLength = 6;
+    status = MQTT_GetSubAckPayload( &mqttPacketInfo, &pPayloadStart, &payloadSize );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL_PTR( &buffer[ 2 ], pPayloadStart );
+    TEST_ASSERT_EQUAL_INT( MQTTQoS0, pPayloadStart[ 0 ] );
+    TEST_ASSERT_EQUAL_INT( MQTTQoS1, pPayloadStart[ 1 ] );
+    TEST_ASSERT_EQUAL_INT( MQTTQoS2, pPayloadStart[ 2 ] );
+    TEST_ASSERT_EQUAL_INT( MQTT_SUBACK_STATUS_FAILURE, pPayloadStart[ 3 ] );
+    TEST_ASSERT_EQUAL_INT( 4, payloadSize );
+
+    /* Packet is NULL. */
+    status = MQTT_GetSubAckPayload( NULL, &pPayloadStart, &payloadSize );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Output parameter, pPayloadStart, is NULL. */
+    status = MQTT_GetSubAckPayload( &mqttPacketInfo, NULL, &payloadSize );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Output parameter, payloadSize, is NULL. */
+    status = MQTT_GetSubAckPayload( &mqttPacketInfo, &pPayloadStart, NULL );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Remaining Data is NULL. */
+    mqttPacketInfo.pRemainingData = NULL;
+    status = MQTT_GetSubAckPayload( &mqttPacketInfo, &pPayloadStart, &payloadSize );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* non-SUBACK packet type. */
+    mqttPacketInfo.type = MQTT_PACKET_TYPE_CONNACK;
+    mqttPacketInfo.pRemainingData = buffer;
+    status = MQTT_GetSubAckPayload( &mqttPacketInfo, &pPayloadStart, &payloadSize );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Invalid remaining length value in packet. */
+    mqttPacketInfo.remainingLength = 0;
+    mqttPacketInfo.type = MQTT_PACKET_TYPE_SUBACK;
+    status = MQTT_GetSubAckPayload( &mqttPacketInfo, &pPayloadStart, &payloadSize );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+}
+
+/* ========================================================================== */
+
+/**
  * @brief Tests that MQTT_DeserializePublish works as intended.
  */
 void test_MQTT_DeserializePublish( void )

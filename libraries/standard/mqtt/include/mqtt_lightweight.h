@@ -40,21 +40,23 @@
 #include "transport_interface.h"
 
 /* MQTT packet types. */
-#define MQTT_PACKET_TYPE_CONNECT        ( ( uint8_t ) 0x10U )  /**< @brief CONNECT (client-to-server). */
-#define MQTT_PACKET_TYPE_CONNACK        ( ( uint8_t ) 0x20U )  /**< @brief CONNACK (server-to-client). */
-#define MQTT_PACKET_TYPE_PUBLISH        ( ( uint8_t ) 0x30U )  /**< @brief PUBLISH (bidirectional). */
-#define MQTT_PACKET_TYPE_PUBACK         ( ( uint8_t ) 0x40U )  /**< @brief PUBACK (bidirectional). */
-#define MQTT_PACKET_TYPE_PUBREC         ( ( uint8_t ) 0x50U )  /**< @brief PUBREC (bidirectional). */
-#define MQTT_PACKET_TYPE_PUBREL         ( ( uint8_t ) 0x62U )  /**< @brief PUBREL (bidirectional). */
-#define MQTT_PACKET_TYPE_PUBCOMP        ( ( uint8_t ) 0x70U )  /**< @brief PUBCOMP (bidirectional). */
-#define MQTT_PACKET_TYPE_SUBSCRIBE      ( ( uint8_t ) 0x82U )  /**< @brief SUBSCRIBE (client-to-server). */
-#define MQTT_PACKET_TYPE_SUBACK         ( ( uint8_t ) 0x90U )  /**< @brief SUBACK (server-to-client). */
-#define MQTT_PACKET_TYPE_UNSUBSCRIBE    ( ( uint8_t ) 0xA2U )  /**< @brief UNSUBSCRIBE (client-to-server). */
-#define MQTT_PACKET_TYPE_UNSUBACK       ( ( uint8_t ) 0xB0U )  /**< @brief UNSUBACK (server-to-client). */
-#define MQTT_PACKET_TYPE_PINGREQ        ( ( uint8_t ) 0xC0U )  /**< @brief PINGREQ (client-to-server). */
-#define MQTT_PACKET_TYPE_PINGRESP       ( ( uint8_t ) 0xD0U )  /**< @brief PINGRESP (server-to-client). */
-#define MQTT_PACKET_TYPE_DISCONNECT     ( ( uint8_t ) 0xE0U )  /**< @brief DISCONNECT (client-to-server). */
+#define MQTT_PACKET_TYPE_CONNECT        ( ( uint8_t ) 0x10U )    /**< @brief CONNECT (client-to-server). */
+#define MQTT_PACKET_TYPE_CONNACK        ( ( uint8_t ) 0x20U )    /**< @brief CONNACK (server-to-client). */
+#define MQTT_PACKET_TYPE_PUBLISH        ( ( uint8_t ) 0x30U )    /**< @brief PUBLISH (bidirectional). */
+#define MQTT_PACKET_TYPE_PUBACK         ( ( uint8_t ) 0x40U )    /**< @brief PUBACK (bidirectional). */
+#define MQTT_PACKET_TYPE_PUBREC         ( ( uint8_t ) 0x50U )    /**< @brief PUBREC (bidirectional). */
+#define MQTT_PACKET_TYPE_PUBREL         ( ( uint8_t ) 0x62U )    /**< @brief PUBREL (bidirectional). */
+#define MQTT_PACKET_TYPE_PUBCOMP        ( ( uint8_t ) 0x70U )    /**< @brief PUBCOMP (bidirectional). */
+#define MQTT_PACKET_TYPE_SUBSCRIBE      ( ( uint8_t ) 0x82U )    /**< @brief SUBSCRIBE (client-to-server). */
+#define MQTT_PACKET_TYPE_SUBACK         ( ( uint8_t ) 0x90U )    /**< @brief SUBACK (server-to-client). */
+#define MQTT_PACKET_TYPE_UNSUBSCRIBE    ( ( uint8_t ) 0xA2U )    /**< @brief UNSUBSCRIBE (client-to-server). */
+#define MQTT_PACKET_TYPE_UNSUBACK       ( ( uint8_t ) 0xB0U )    /**< @brief UNSUBACK (server-to-client). */
+#define MQTT_PACKET_TYPE_PINGREQ        ( ( uint8_t ) 0xC0U )    /**< @brief PINGREQ (client-to-server). */
+#define MQTT_PACKET_TYPE_PINGRESP       ( ( uint8_t ) 0xD0U )    /**< @brief PINGRESP (server-to-client). */
+#define MQTT_PACKET_TYPE_DISCONNECT     ( ( uint8_t ) 0xE0U )    /**< @brief DISCONNECT (client-to-server). */
 
+/* SUBACK return code for failure. */
+#define MQTT_SUBACK_STATUS_FAILURE      ( ( uint8_t ) 0X80 )
 
 /**
  * @brief The size of MQTT PUBACK, PUBREC, PUBREL, and PUBCOMP packets, per MQTT spec.
@@ -563,6 +565,26 @@ MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * pIncomingPacket,
 MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
                                   uint16_t * pPacketId,
                                   bool * pSessionPresent );
+
+/**
+ * @brief Parses the payload of an MQTT SUBACK packet that contains the status
+ * code of subscription request made for topic filters in the equivalent
+ * subscribe packet.
+ *
+ * This function can be used to iterate over the status code
+ *
+ * @param[in] pSubackPacket The SUBACK packet whose payload is to be parsed.
+ * @param[out] pPayloadStart This is populated with the starting address
+ * of the payload (or return codes for topic filters) in the SUBACK packet.
+ * @param[out] pPayloadSize This is populated with the size of the payload
+ * in the SUBACK packet. It represents the number of topic filters whose
+ * SUBACK status is present in the packet.
+ *
+ * @return  #MQTTBadParameter, or #MQTTSuccess.
+ */
+MQTTStatus_t MQTT_GetSubAckPayload( MQTTPacketInfo_t * pSubackPacket,
+                                    uint8_t ** pPayloadStart,
+                                    uint16_t * pPayloadSize );
 
 /**
  * @brief Extract the MQTT packet type and length from incoming packet.
