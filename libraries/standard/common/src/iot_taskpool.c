@@ -1588,6 +1588,7 @@ static IotTaskPoolError_t _tryCancelInternal( _taskPool_t * const pTaskPool,
         case IOT_TASKPOOL_STATUS_COMPLETED:
             /* Log message for debug purposes. */
             IotLogWarn( "Attempt to cancel a job that is already executing, or canceled." );
+            TASKPOOL_SET_AND_GOTO_CLEANUP( IOT_TASKPOOL_SUCCESS );
             break;
 
         default:
