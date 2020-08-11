@@ -2223,7 +2223,10 @@ MQTTStatus_t MQTT_GetSubAckPayload( MQTTPacketInfo_t * pSubackPacket,
         LogError( ( "Invalid parameter: pSubackPacket->pRemainingData is NULL" ) );
         status = MQTTBadParameter;
     }
-    else if( pSubackPacket->remainingLength <= 2U )
+
+    /* A SUBACK must have a remaining length of at least 3 to accommodate the
+     * packet identifier and at least 1 return code. */
+    else if( pSubackPacket->remainingLength < 3U )
     {
         LogError( ( "Invalid parameter: Packet remaining length is invalid: "
                     "Remaining length should be greater than 2" ) );

@@ -1551,7 +1551,7 @@ void test_MQTT_GetSubAckPayload( void )
     status = MQTT_GetSubAckPayload( &mqttPacketInfo, NULL, &payloadSize );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
-    /* Output parameter, payloadSize, is NULL. */
+    /* Output parameter, pPayloadSize, is NULL. */
     status = MQTT_GetSubAckPayload( &mqttPacketInfo, &pPayloadStart, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
