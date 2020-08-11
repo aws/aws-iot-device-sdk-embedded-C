@@ -541,7 +541,7 @@ int establishMqttSession( MQTTEventCallback_t eventCallback )
         networkBuffer.size = NETWORK_BUFFER_SIZE;
 
         /* Initialize MQTT library. */
-    mqttStatus = MQTT_Init( pMqttContext,
+        mqttStatus = MQTT_Init( pMqttContext,
                             &transport,
                             Clock_GetTimeMs,
                             eventCallback,

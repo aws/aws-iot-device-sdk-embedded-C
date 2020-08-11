@@ -209,7 +209,7 @@ static void updateDeltaHandler( MQTTPublishInfo_t * pPublishInfo )
     static uint32_t currentVersion = 0; /* Remember the latestVersion # we've ever received */
     uint32_t version = 0U;
     uint32_t newState = 0U;
-    static char * outValue = NULL;
+    char * outValue = NULL;
     uint32_t outValueLength = 0U;
 
     assert( pPublishInfo != NULL );
@@ -320,7 +320,7 @@ static void updateDeltaHandler( MQTTPublishInfo_t * pPublishInfo )
 
 static void updateAcceptedHandler( MQTTPublishInfo_t * pPublishInfo )
 {
-    static char * outValue = NULL;
+    char * outValue = NULL;
     uint32_t outValueLength = 0U;
     uint32_t receivedToken = 0U;
 
@@ -477,12 +477,12 @@ static void eventCallback( MQTTContext_t * pMqttContext,
  * by AWS IoT Device Shadow. It uses these macros for topics to subscribe
  * to:
  * - SHADOW_TOPIC_STRING_UPDATE_DELTA for "$aws/things/thingName/shadow/update/delta"
- * - SHADOW_TOPIC_STRING_UPDATE_UPDATE_ACCEPTED for "$aws/things/thingName/shadow/update/accepted"
- * - SHADOW_TOPIC_STRING_UPDATE_UPDATE_REJECTED for "$aws/things/thingName/shadow/update/rejected"
+ * - SHADOW_TOPIC_STRING_UPDATE_ACCEPTED for "$aws/things/thingName/shadow/update/accepted"
+ * - SHADOW_TOPIC_STRING_UPDATE_REJECTED for "$aws/things/thingName/shadow/update/rejected"
  *
  * It also used these macros for topics to publish to:
  * - SHADOW_TOPIC_STIRNG_DELETE for "$aws/things/thingName/shadow/delete"
- * - SHADOW_TOPIC_STRING_UPDATE_UPDATE for "$aws/things/thingName/shadow/update"
+ * - SHADOW_TOPIC_STRING_UPDATE for "$aws/things/thingName/shadow/update"
  *
  * The helper functions this demo uses for MQTT operations have internal
  * loops process incoming messages. Those are not the focus of this demo
