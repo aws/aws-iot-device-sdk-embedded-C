@@ -149,7 +149,7 @@ static bool matchWildcardsSpecialCases( const char * pTopicFilter,
     bool matchFound = false;
 
     /* Determine if the last character is reached for the topic name, and the
-     * third last character is reached for the topic filter. */
+     * third to last character is reached for the topic filter. */
     if( ( nameIndex == ( topicNameLength - 1U ) ) &&
         ( filterIndex == ( topicFilterLength - 3U ) ) )
     {
@@ -163,7 +163,7 @@ static bool matchWildcardsSpecialCases( const char * pTopicFilter,
     else
     {
         /* Determine if the last character is reached for the topic name and,
-         * the second last character is reached for the topic filter. */
+         * the second to last character for the topic filter. */
         if( ( nameIndex == ( topicNameLength - 1U ) ) &&
             ( filterIndex == ( topicFilterLength - 2U ) ) )
         {
@@ -323,7 +323,7 @@ static bool matchTopic( const char * pTopicName,
          * starting the "$" character cannot be matched against topic filter starting with
          * a wildcard, i.e. for example, "$SYS/sport" cannot be matched with "#" or
          * "+/sport" topic filters. */
-        if( !( ( ( pTopicName[ 0 ] == '$' ) ) && ( topicFilterStartsWithWildcard == true ) ) )
+        if( !( ( pTopicName[ 0 ] == '$' ) && ( topicFilterStartsWithWildcard == true ) ) )
         {
             status = matchTopicFilter( pTopicName, topicNameLength, pTopicFilter, topicFilterLength );
         }

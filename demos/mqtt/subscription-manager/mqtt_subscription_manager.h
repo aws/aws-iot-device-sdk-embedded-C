@@ -72,9 +72,8 @@ typedef enum SubscriptionManagerStatus
     SUBSCRIPTION_MANAGER_REGISTRY_FULL = 2,
 
     /**
-     * @brief Failure return value due an existing record in registry being
-     * present for the topic filter that is requested for a new callback
-     * registration.
+     * @brief Failure return value due to an already existing record in the
+     * registry for a new callback registration's requested topic filter.
      */
     SUBSCRIPTION_MANAGER_RECORD_EXISTS = 3
 } SubscriptionManagerStatus_t;
