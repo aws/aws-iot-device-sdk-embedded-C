@@ -55,11 +55,11 @@ struct NetworkContext
 #define MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT    ( 2U )
 
 /**
- * @brief Default timeout for receiving a response to a PINGREQ.
- * 
- * If the time expires without receiving a response to a PINGREQ, then 
+ * @brief Timeout for receiving a response to a PINGREQ.
+ *
+ * If the time expires without receiving a response to a PINGREQ, then
  * #MQTT_ProcessLoop() will return #MQTTKeepAliveTimeout.
  */
-#define MQTT_DEFAULT_PINGRESP_TIMEOUT_MS        ( 500U )
+#define MQTT_PINGRESP_TIMEOUT_MS                ( 500U )
 
 #endif /* ifndef MQTT_CONFIG_H_ */
