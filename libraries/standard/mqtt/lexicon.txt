@@ -123,6 +123,7 @@ mqttserverrefused
 mqttstatecollision
 mqttstatenull
 mqttsubackfailure
+mqttsubackstatus
 mqttsubscribeinfo
 mqttsuccess
 msb
