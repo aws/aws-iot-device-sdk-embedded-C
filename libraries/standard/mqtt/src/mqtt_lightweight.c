@@ -1878,27 +1878,28 @@ MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * pPublishInfo
         packetSize = 1U + remainingLengthEncodedSize( remainingLength )
                      + remainingLength
                      - pPublishInfo->payloadLength;
+    }
 
-        if( packetSize > pFixedBuffer->size )
-        {
-            LogError( ( "Buffer size of %lu is not sufficient to hold "
-                        "serialized PUBLISH header packet of size of %lu.",
-                        ( unsigned long ) pFixedBuffer->size,
-                        ( unsigned long ) ( packetSize - pPublishInfo->payloadLength ) ) );
-            status = MQTTNoMemory;
-        }
-        else
-        {
-            /* Serialize publish without copying the payload. */
-            serializePublishCommon( pPublishInfo,
-                                    remainingLength,
-                                    packetId,
-                                    pFixedBuffer,
-                                    false );
+    if( ( status == MQTTSuccess ) && ( packetSize > pFixedBuffer->size ) )
+    {
+        LogError( ( "Buffer size of %lu is not sufficient to hold "
+                    "serialized PUBLISH header packet of size of %lu.",
+                    ( unsigned long ) pFixedBuffer->size,
+                    ( unsigned long ) ( packetSize - pPublishInfo->payloadLength ) ) );
+        status = MQTTNoMemory;
+    }
 
-            /* Header size is the same as calculated packet size. */
-            *pHeaderSize = packetSize;
-        }
+    if( status == MQTTSuccess )
+    {
+        /* Serialize publish without copying the payload. */
+        serializePublishCommon( pPublishInfo,
+                                remainingLength,
+                                packetId,
+                                pFixedBuffer,
+                                false );
+
+        /* Header size is the same as calculated packet size. */
+        *pHeaderSize = packetSize;
     }
 
     return status;
