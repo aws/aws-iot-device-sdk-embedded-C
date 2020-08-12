@@ -1897,7 +1897,7 @@ MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * pPublishInfo
                                     false );
 
             /* Header size is the same as calculated packet size. */
-            *pHeaderSize = ( packetSize - pPublishInfo->payloadLength );
+            *pHeaderSize = packetSize;
         }
     }
 
