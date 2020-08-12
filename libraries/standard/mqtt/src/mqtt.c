@@ -42,7 +42,11 @@
 #endif
 
 /**
- * @brief Number of milliseconds to wait for a ping response.
+ * @brief Number of milliseconds to wait for a ping response to a ping request
+ * as part of the keep-alive mechanism.
+ *
+ * If a ping response is not received before this timeout, then
+ * #MQTT_ProcessLoop will return #MQTTKeepAliveTimeout.
  */
 #ifndef MQTT_PINGRESP_TIMEOUT_MS
     /* Wait 0.5 seconds by default for a ping response. */
