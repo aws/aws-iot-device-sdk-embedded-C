@@ -1055,8 +1055,8 @@ static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * pC
     {
         LogError( ( "Argument cannot be NULL: pContext=%p, "
                     "pSubscriptionList=%p.",
-                    pContext,
-                    pSubscriptionList ) );
+                    ( void * ) pContext,
+                    ( void * ) pSubscriptionList ) );
         status = MQTTBadParameter;
     }
     else if( subscriptionCount == 0UL )
@@ -1334,8 +1334,8 @@ static MQTTStatus_t validatePublishParams( const MQTTContext_t * pContext,
     {
         LogError( ( "Argument cannot be NULL: pContext=%p, "
                     "pPublishInfo=%p.",
-                    pContext,
-                    pPublishInfo ) );
+                    ( void * ) pContext,
+                    ( void * ) pPublishInfo ) );
         status = MQTTBadParameter;
     }
     else if( ( pPublishInfo->qos != MQTTQoS0 ) && ( packetId == 0U ) )
@@ -1377,20 +1377,29 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
         LogError( ( "Argument cannot be NULL: pContext=%p, "
                     "pTransportInterface=%p, "
                     "pNetworkBuffer=%p",
-                    pContext,
-                    pTransportInterface,
-                    pNetworkBuffer ) );
+                    ( void * ) pContext,
+                    ( void * ) pTransportInterface,
+                    ( void * ) pNetworkBuffer ) );
         status = MQTTBadParameter;
     }
-    else if( ( getTimeFunction == NULL ) || ( userCallback == NULL ) ||
-             ( pTransportInterface->recv == NULL ) || ( pTransportInterface->send == NULL ) )
+    else if( getTimeFunction == NULL )
     {
-        LogError( ( "Function pointers cannot be NULL: getTimeFunction=%p, userCallback=%p, "
-                    "transportRecv=%p, transportRecvSend=%p",
-                    getTimeFunction,
-                    userCallback,
-                    pTransportInterface->recv,
-                    pTransportInterface->send ) );
+        LogError( ( "Invalid parameter: getTimeFunction is NULL" ) );
+        status = MQTTBadParameter;
+    }
+    else if( userCallback == NULL )
+    {
+        LogError( ( "Invalid parameter: userCallback is NULL" ) );
+        status = MQTTBadParameter;
+    }
+    else if( pTransportInterface->recv == NULL )
+    {
+        LogError( ( "Invalid parameter: pTransportInterface->recv is NULL" ) );
+        status = MQTTBadParameter;
+    }
+    else if( pTransportInterface->send == NULL )
+    {
+        LogError( ( "Invalid parameter: pTransportInterface->send is NULL" ) );
         status = MQTTBadParameter;
     }
     else
@@ -1429,9 +1438,9 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
     {
         LogError( ( "Argument cannot be NULL: pContext=%p, "
                     "pConnectInfo=%p, pSessionPresent=%p.",
-                    pContext,
-                    pConnectInfo,
-                    pSessionPresent ) );
+                    ( void * ) pContext,
+                    ( void * ) pConnectInfo,
+                    ( void * ) pSessionPresent ) );
         status = MQTTBadParameter;
     }
 
