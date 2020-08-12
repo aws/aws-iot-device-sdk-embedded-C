@@ -2142,7 +2142,7 @@ void test_MQTT_GetSubAckPayload( void )
     buffer[ 2 ] = 0x00;
     buffer[ 3 ] = 0x01;
     buffer[ 4 ] = 0x02;
-    buffer[ 5 ] = MQTT_SUBACK_STATUS_FAILURE;
+    buffer[ 5 ] = 0x80;
 
     /* Process a valid SUBACK packet containing whole range of server response codes. */
     mqttPacketInfo.type = MQTT_PACKET_TYPE_SUBACK;
@@ -2151,10 +2151,10 @@ void test_MQTT_GetSubAckPayload( void )
     status = MQTT_GetSubAckStatusCodes( &mqttPacketInfo, &pPayloadStart, &payloadSize );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_PTR( &buffer[ 2 ], pPayloadStart );
-    TEST_ASSERT_EQUAL_INT( MQTTQoS0, pPayloadStart[ 0 ] );
-    TEST_ASSERT_EQUAL_INT( MQTTQoS1, pPayloadStart[ 1 ] );
-    TEST_ASSERT_EQUAL_INT( MQTTQoS2, pPayloadStart[ 2 ] );
-    TEST_ASSERT_EQUAL_INT( MQTT_SUBACK_STATUS_FAILURE, pPayloadStart[ 3 ] );
+    TEST_ASSERT_EQUAL_INT( MQTTSubAckSuccessQos0, pPayloadStart[ 0 ] );
+    TEST_ASSERT_EQUAL_INT( MQTTSubAckSuccessQos1, pPayloadStart[ 1 ] );
+    TEST_ASSERT_EQUAL_INT( MQTTSubAckSuccessQos2, pPayloadStart[ 2 ] );
+    TEST_ASSERT_EQUAL_INT( MQTTSubAckFailure, pPayloadStart[ 3 ] );
     TEST_ASSERT_EQUAL_INT( 4, payloadSize );
 
     /* Packet is NULL. */
