@@ -117,6 +117,17 @@ struct MQTTPubAckInfo
 };
 
 /**
+ * @brief The status codes in the SUBACK response to a subscription request.
+ */
+typedef enum MQTTSubAckStatus
+{
+    MQTTSubAckSuccessQos0 = 0x00, /**< @brief Success with a maximum delivery at QoS 0 . */
+    MQTTSubAckSuccessQos1 = 0x01, /**< @brief Success with a maximum delivery at QoS 1. */
+    MQTTSubAckSuccessQos2 = 0x02, /**< @brief Success with a maximum delivery at QoS 2. */
+    MQTTSubAckFailure = 0x80      /**< @brief Failure. */
+} MQTTSubAckStatus_t;
+
+/**
  * @brief A struct representing an MQTT connection.
  */
 struct MQTTContext
@@ -418,6 +429,7 @@ uint16_t MQTT_GetPacketId( MQTTContext_t * pContext );
  *  - 0x01 - Success - Maximum QoS 1
  *  - 0x02 - Success - Maximum QoS 2
  *  - 0x80 - Failure
+ * Refer to @ref MQTTSubAckStatus for the status codes.
  *
  * @param[in] pSubackPacket The SUBACK packet whose payload is to be parsed.
  * @param[out] pPayloadStart This is populated with the starting address

@@ -40,28 +40,21 @@
 #include "transport_interface.h"
 
 /* MQTT packet types. */
-#define MQTT_PACKET_TYPE_CONNECT        ( ( uint8_t ) 0x10U )    /**< @brief CONNECT (client-to-server). */
-#define MQTT_PACKET_TYPE_CONNACK        ( ( uint8_t ) 0x20U )    /**< @brief CONNACK (server-to-client). */
-#define MQTT_PACKET_TYPE_PUBLISH        ( ( uint8_t ) 0x30U )    /**< @brief PUBLISH (bidirectional). */
-#define MQTT_PACKET_TYPE_PUBACK         ( ( uint8_t ) 0x40U )    /**< @brief PUBACK (bidirectional). */
-#define MQTT_PACKET_TYPE_PUBREC         ( ( uint8_t ) 0x50U )    /**< @brief PUBREC (bidirectional). */
-#define MQTT_PACKET_TYPE_PUBREL         ( ( uint8_t ) 0x62U )    /**< @brief PUBREL (bidirectional). */
-#define MQTT_PACKET_TYPE_PUBCOMP        ( ( uint8_t ) 0x70U )    /**< @brief PUBCOMP (bidirectional). */
-#define MQTT_PACKET_TYPE_SUBSCRIBE      ( ( uint8_t ) 0x82U )    /**< @brief SUBSCRIBE (client-to-server). */
-#define MQTT_PACKET_TYPE_SUBACK         ( ( uint8_t ) 0x90U )    /**< @brief SUBACK (server-to-client). */
-#define MQTT_PACKET_TYPE_UNSUBSCRIBE    ( ( uint8_t ) 0xA2U )    /**< @brief UNSUBSCRIBE (client-to-server). */
-#define MQTT_PACKET_TYPE_UNSUBACK       ( ( uint8_t ) 0xB0U )    /**< @brief UNSUBACK (server-to-client). */
-#define MQTT_PACKET_TYPE_PINGREQ        ( ( uint8_t ) 0xC0U )    /**< @brief PINGREQ (client-to-server). */
-#define MQTT_PACKET_TYPE_PINGRESP       ( ( uint8_t ) 0xD0U )    /**< @brief PINGRESP (server-to-client). */
-#define MQTT_PACKET_TYPE_DISCONNECT     ( ( uint8_t ) 0xE0U )    /**< @brief DISCONNECT (client-to-server). */
+#define MQTT_PACKET_TYPE_CONNECT        ( ( uint8_t ) 0x10U )  /**< @brief CONNECT (client-to-server). */
+#define MQTT_PACKET_TYPE_CONNACK        ( ( uint8_t ) 0x20U )  /**< @brief CONNACK (server-to-client). */
+#define MQTT_PACKET_TYPE_PUBLISH        ( ( uint8_t ) 0x30U )  /**< @brief PUBLISH (bidirectional). */
+#define MQTT_PACKET_TYPE_PUBACK         ( ( uint8_t ) 0x40U )  /**< @brief PUBACK (bidirectional). */
+#define MQTT_PACKET_TYPE_PUBREC         ( ( uint8_t ) 0x50U )  /**< @brief PUBREC (bidirectional). */
+#define MQTT_PACKET_TYPE_PUBREL         ( ( uint8_t ) 0x62U )  /**< @brief PUBREL (bidirectional). */
+#define MQTT_PACKET_TYPE_PUBCOMP        ( ( uint8_t ) 0x70U )  /**< @brief PUBCOMP (bidirectional). */
+#define MQTT_PACKET_TYPE_SUBSCRIBE      ( ( uint8_t ) 0x82U )  /**< @brief SUBSCRIBE (client-to-server). */
+#define MQTT_PACKET_TYPE_SUBACK         ( ( uint8_t ) 0x90U )  /**< @brief SUBACK (server-to-client). */
+#define MQTT_PACKET_TYPE_UNSUBSCRIBE    ( ( uint8_t ) 0xA2U )  /**< @brief UNSUBSCRIBE (client-to-server). */
+#define MQTT_PACKET_TYPE_UNSUBACK       ( ( uint8_t ) 0xB0U )  /**< @brief UNSUBACK (server-to-client). */
+#define MQTT_PACKET_TYPE_PINGREQ        ( ( uint8_t ) 0xC0U )  /**< @brief PINGREQ (client-to-server). */
+#define MQTT_PACKET_TYPE_PINGRESP       ( ( uint8_t ) 0xD0U )  /**< @brief PINGRESP (server-to-client). */
+#define MQTT_PACKET_TYPE_DISCONNECT     ( ( uint8_t ) 0xE0U )  /**< @brief DISCONNECT (client-to-server). */
 
-/* QoS values in MQTT 3.1.1 specification. */
-#define MQTT_QOS_0                      ( ( uint8_t ) 0x00 )
-#define MQTT_QOS_1                      ( ( uint8_t ) 0x01 )
-#define MQTT_QOS_2                      ( ( uint8_t ) 0x02 )
-
-/* SUBACK return code for failure. */
-#define MQTT_SUBACK_STATUS_FAILURE      ( ( uint8_t ) 0x80 )
 
 /**
  * @brief The size of MQTT PUBACK, PUBREC, PUBREL, and PUBCOMP packets, per MQTT spec.
@@ -106,9 +99,9 @@ typedef enum MQTTStatus
  */
 typedef enum MQTTQoS
 {
-    MQTTQoS0 = MQTT_QOS_0, /**< Delivery at most once. */
-    MQTTQoS1 = MQTT_QOS_1, /**< Delivery at least once. */
-    MQTTQoS2 = MQTT_QOS_2  /**< Delivery exactly once. */
+    MQTTQoS0 = 0, /**< Delivery at most once. */
+    MQTTQoS1 = 1, /**< Delivery at least once. */
+    MQTTQoS2 = 2  /**< Delivery exactly once. */
 } MQTTQoS_t;
 
 /**

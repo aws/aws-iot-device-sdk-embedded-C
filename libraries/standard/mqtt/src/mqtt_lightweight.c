@@ -950,15 +950,15 @@ static MQTTStatus_t readSubackStatus( size_t statusCount,
         /* MQTT 3.1.1 defines the following values as status codes. */
         switch( subscriptionStatus )
         {
-            case MQTT_QOS_0:
-            case MQTT_QOS_1:
-            case MQTT_QOS_2:
+            case 0x00:
+            case 0x01:
+            case 0x02:
 
                 LogDebug( ( "Topic filter %lu accepted, max QoS %u.",
                             ( unsigned long ) i, subscriptionStatus ) );
                 break;
 
-            case MQTT_SUBACK_STATUS_FAILURE:
+            case 0x80:
 
                 LogWarn( ( "Topic filter %lu refused.", ( unsigned long ) i ) );
 
