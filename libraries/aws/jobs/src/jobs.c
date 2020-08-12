@@ -213,7 +213,7 @@ static JobsStatus_t strnnEq( const char * a,
 }
 
 /**
- * @brief predicate returns true for a valid job ID character
+ * @brief Predicate returns true for a valid job ID character
  */
 static bool_ isJobIdChar( char a )
 {
@@ -244,7 +244,7 @@ static bool_ isJobIdChar( char a )
 }
 
 /**
- * @brief predicate returns true for a valid job ID string
+ * @brief Predicate returns true for a valid job ID string
  */
 static bool_ isValidJobId( const char * jobId,
                            uint16_t jobIdLength )
@@ -271,6 +271,69 @@ static bool_ isValidJobId( const char * jobId,
 }
 
 /**
+ * @brief Parse a job ID and search for the API portion of a topic string in a table
+ *
+ * @param[in] topic  The topic string to check.
+ * @param[in] topicLength  The length of the topic string.
+ * @param[out] outApi  The jobs topic API value if present, e.g., #JobsUpdateSuccess.
+ * @param[out] outJobId  The beginning of the jobID in the topic string.
+ * @param[out] outJobIdLength  The length of the jobID in the topic string.
+ *
+ * @return #JobsSuccess if a matching topic was found;
+ * #JobsNoMatch if a matching topic was NOT found
+ *   (parameter outApi gets #JobsInvalidTopic ).
+ */
+static JobsStatus_t matchIdApi( const char * topic,
+                                size_t topicLength,
+                                JobsTopic_t * outApi,
+                                char ** outJobId,
+                                uint16_t * outJobIdLength )
+{
+    JobsStatus_t ret = JobsNoMatch;
+    size_t i;
+    const char * p = topic;
+    size_t length = topicLength;
+    const char * jobId = NULL;
+    uint16_t jobIdLength = 0U;
+
+    for( i = 0U; i < length; i++ )
+    {
+        if( ( i > 0U ) && ( p[ i ] == '/' ) )
+        {
+            /* Save the leading job ID and its length. */
+            jobId = p;
+            jobIdLength = ( uint16_t ) i;
+
+            /* Advance p to after the '/' and reduce buffer length
+             * for the remaining API search. */
+            p = &p[ i + 1U ];
+            length = length - i - 1U;
+            break;
+        }
+    }
+
+    if( ( jobId != NULL ) && ( isValidJobId( jobId, jobIdLength ) == true ) )
+    {
+        JobsTopic_t api;
+
+        for( api = JobsDescribeSuccess; api < JobsMaxTopic; api++ )
+        {
+            ret = strnnEq( p, length, apiTopic[ api ], apiTopicLength[ api ] );
+
+            if( ret == JobsSuccess )
+            {
+                *outApi = api;
+                *outJobId = ( char * ) jobId;
+                *outJobIdLength = jobIdLength;
+                break;
+            }
+        }
+    }
+
+    return ret;
+}
+
+/**
  * @brief Search for the API portion of a topic string in a table
  *
  * @param[in] topic  The topic string to check.
@@ -290,16 +353,12 @@ static JobsStatus_t matchApi( const char * topic,
                               uint16_t * outJobIdLength )
 {
     JobsStatus_t ret = JobsNoMatch;
-    char * p = ( char * ) topic;
     JobsTopic_t api;
-    size_t length = topicLength;
-    char * jobId = NULL;
-    uint16_t jobIdLength = 0U;
 
     /* The first set of APIs do not have job IDs. */
     for( api = JobsJobsChanged; api < JobsDescribeSuccess; api++ )
     {
-        ret = strnnEq( p, length, apiTopic[ api ], apiTopicLength[ api ] );
+        ret = strnnEq( topic, topicLength, apiTopic[ api ], apiTopicLength[ api ] );
 
         if( ret == JobsSuccess )
         {
@@ -311,43 +370,7 @@ static JobsStatus_t matchApi( const char * topic,
     /* The remaining APIs must have a job ID. */
     if( ret == JobsNoMatch )
     {
-        size_t i;
-
-        for( i = 0U; i < length; i++ )
-        {
-            if( ( i > 0U ) && ( p[ i ] == '/' ) )
-            {
-                /* Save the leading job ID and its length. */
-                jobId = p;
-                jobIdLength = ( uint16_t ) i;
-
-                /* Advance p to after the '/' and reduce buffer length
-                 * for the remaining API search. */
-                p = &p[ i + 1U ];
-                length = length - i - 1U;
-                break;
-            }
-            else if( isJobIdChar( p[ i ] ) == false )
-            {
-                break;
-            }
-            else
-            {
-            }
-        }
-
-        for( api = JobsDescribeSuccess; api < JobsMaxTopic; api++ )
-        {
-            ret = strnnEq( p, length, apiTopic[ api ], apiTopicLength[ api ] );
-
-            if( ret == JobsSuccess )
-            {
-                *outApi = api;
-                *outJobId = jobId;
-                *outJobIdLength = jobIdLength;
-                break;
-            }
-        }
+        ret = matchIdApi( topic, topicLength, outApi, outJobId, outJobIdLength );
     }
 
     return ret;
@@ -432,11 +455,7 @@ JobsStatus_t Jobs_GetPending( char * buffer,
         ret = strnAppend( buffer, &start, length,
                           JOBS_API_GETPENDING, JOBS_API_GETPENDING_LENGTH );
 
-        if( start == length )
-        {
-            start--;
-        }
-
+        start = ( start >= length ) ? ( length - 1U ) : start;
         buffer[ start ] = '\0';
         *outLength = start;
     }
@@ -465,11 +484,7 @@ JobsStatus_t Jobs_StartNext( char * buffer,
         ret = strnAppend( buffer, &start, length,
                           JOBS_API_STARTNEXT, JOBS_API_STARTNEXT_LENGTH );
 
-        if( start == length )
-        {
-            start--;
-        }
-
+        start = ( start >= length ) ? ( length - 1U ) : start;
         buffer[ start ] = '\0';
         *outLength = start;
     }
@@ -505,11 +520,7 @@ JobsStatus_t Jobs_Describe( char * buffer,
         ret = strnAppend( buffer, &start, length,
                           JOBS_API_DESCRIBE, JOBS_API_DESCRIBE_LENGTH );
 
-        if( start == length )
-        {
-            start--;
-        }
-
+        start = ( start >= length ) ? ( length - 1U ) : start;
         buffer[ start ] = '\0';
         *outLength = start;
     }
@@ -545,11 +556,7 @@ JobsStatus_t Jobs_Update( char * buffer,
         ret = strnAppend( buffer, &start, length,
                           JOBS_API_UPDATE, JOBS_API_UPDATE_LENGTH );
 
-        if( start == length )
-        {
-            start--;
-        }
-
+        start = ( start >= length ) ? ( length - 1U ) : start;
         buffer[ start ] = '\0';
         *outLength = start;
     }
