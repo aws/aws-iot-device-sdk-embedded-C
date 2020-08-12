@@ -572,26 +572,6 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
                                   bool * pSessionPresent );
 
 /**
- * @brief Parses the payload of an MQTT SUBACK packet that contains the status
- * code of subscription request made for topic filters in the equivalent
- * subscribe packet.
- *
- * This function can be used to iterate over the status code
- *
- * @param[in] pSubackPacket The SUBACK packet whose payload is to be parsed.
- * @param[out] pPayloadStart This is populated with the starting address
- * of the payload (or return codes for topic filters) in the SUBACK packet.
- * @param[out] pPayloadSize This is populated with the size of the payload
- * in the SUBACK packet. It represents the number of topic filters whose
- * SUBACK status is present in the packet.
- *
- * @return  #MQTTBadParameter, or #MQTTSuccess.
- */
-MQTTStatus_t MQTT_GetSubAckPayload( const MQTTPacketInfo_t * pSubackPacket,
-                                    uint8_t ** pPayloadStart,
-                                    uint16_t * pPayloadSize );
-
-/**
  * @brief Extract the MQTT packet type and length from incoming packet.
  *
  * This function must be called for every incoming packet to retrieve the

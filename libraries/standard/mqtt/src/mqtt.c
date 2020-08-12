@@ -1954,6 +1954,62 @@ uint16_t MQTT_GetPacketId( MQTTContext_t * pContext )
 
 /*-----------------------------------------------------------*/
 
+MQTTStatus_t MQTT_GetSubAckPayload( const MQTTPacketInfo_t * pSubackPacket,
+                                    uint8_t ** pPayloadStart,
+                                    uint16_t * pPayloadSize )
+{
+    MQTTStatus_t status = MQTTSuccess;
+
+    if( pSubackPacket == NULL )
+    {
+        LogError( ( "Invalid parameter: pSubackPacket is NULL." ) );
+        status = MQTTBadParameter;
+    }
+    else if( pPayloadStart == NULL )
+    {
+        LogError( ( "Invalid parameter: pPayloadStart is NULL." ) );
+        status = MQTTBadParameter;
+    }
+    else if( pPayloadSize == NULL )
+    {
+        LogError( ( "Invalid parameter: pPayloadSize is NULL." ) );
+        status = MQTTBadParameter;
+    }
+    else if( pSubackPacket->type != MQTT_PACKET_TYPE_SUBACK )
+    {
+        LogError( ( "Invalid parameter: Input packet is not a SUBACK packet: "
+                    "ExpectedType=%u, InputType=%u", MQTT_PACKET_TYPE_SUBACK, pSubackPacket->type ) );
+        status = MQTTBadParameter;
+    }
+    else if( pSubackPacket->pRemainingData == NULL )
+    {
+        LogError( ( "Invalid parameter: pSubackPacket->pRemainingData is NULL" ) );
+        status = MQTTBadParameter;
+    }
+
+    /* A SUBACK must have a remaining length of at least 3 to accommodate the
+     * packet identifier and at least 1 return code. */
+    else if( pSubackPacket->remainingLength < 3U )
+    {
+        LogError( ( "Invalid parameter: Packet remaining length is invalid: "
+                    "Remaining length should be greater than 2" ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        /* According to the MQTT 3.1.1 protocol specification, the "Remaining Length" field is a
+         * length of the variable header (2 bytes) plus the length of the payload.
+         * Therefore, we add 2 positions for the starting address of the payload, and
+         * subtract 2 bytes from the remaining length for the length of the payload.*/
+        *pPayloadStart = pSubackPacket->pRemainingData + ( ( uint16_t ) sizeof( uint16_t ) );
+        *pPayloadSize = pSubackPacket->remainingLength - ( ( uint16_t ) sizeof( uint16_t ) );
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
 const char * MQTT_Status_strerror( MQTTStatus_t status )
 {
     const char * str = NULL;
