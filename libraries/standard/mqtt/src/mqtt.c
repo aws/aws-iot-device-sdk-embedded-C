@@ -2013,7 +2013,7 @@ MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
          * Therefore, we add 2 positions for the starting address of the payload, and
          * subtract 2 bytes from the remaining length for the length of the payload.*/
         *pPayloadStart = pSubackPacket->pRemainingData + ( ( uint16_t ) sizeof( uint16_t ) );
-        *pPayloadSize = pSubackPacket->remainingLength - ( ( uint16_t ) sizeof( uint16_t ) );
+        *pPayloadSize = ( uint16_t ) ( pSubackPacket->remainingLength - sizeof( uint16_t ) );
     }
 
     return status;
