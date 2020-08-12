@@ -55,8 +55,13 @@
 #define MQTT_PACKET_TYPE_PINGRESP       ( ( uint8_t ) 0xD0U )    /**< @brief PINGRESP (server-to-client). */
 #define MQTT_PACKET_TYPE_DISCONNECT     ( ( uint8_t ) 0xE0U )    /**< @brief DISCONNECT (client-to-server). */
 
+/* QoS values in MQTT 3.1.1 specification. */
+#define MQTT_QOS_0                      ( ( uint8_t ) 0x00 )
+#define MQTT_QOS_1                      ( ( uint8_t ) 0x01 )
+#define MQTT_QOS_2                      ( ( uint8_t ) 0x02 )
+
 /* SUBACK return code for failure. */
-#define MQTT_SUBACK_STATUS_FAILURE      ( ( uint8_t ) 0X80 )
+#define MQTT_SUBACK_STATUS_FAILURE      ( ( uint8_t ) 0x80 )
 
 /**
  * @brief The size of MQTT PUBACK, PUBREC, PUBREL, and PUBCOMP packets, per MQTT spec.
@@ -101,9 +106,9 @@ typedef enum MQTTStatus
  */
 typedef enum MQTTQoS
 {
-    MQTTQoS0 = 0, /**< Delivery at most once. */
-    MQTTQoS1 = 1, /**< Delivery at least once. */
-    MQTTQoS2 = 2  /**< Delivery exactly once. */
+    MQTTQoS0 = MQTT_QOS_0, /**< Delivery at most once. */
+    MQTTQoS1 = MQTT_QOS_1, /**< Delivery at least once. */
+    MQTTQoS2 = MQTT_QOS_2  /**< Delivery exactly once. */
 } MQTTQoS_t;
 
 /**
@@ -582,7 +587,7 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
  *
  * @return  #MQTTBadParameter, or #MQTTSuccess.
  */
-MQTTStatus_t MQTT_GetSubAckPayload( MQTTPacketInfo_t * pSubackPacket,
+MQTTStatus_t MQTT_GetSubAckPayload( const MQTTPacketInfo_t * pSubackPacket,
                                     uint8_t ** pPayloadStart,
                                     uint16_t * pPayloadSize );
 
