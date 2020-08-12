@@ -730,6 +730,7 @@ void _IotMqtt_CloseNetworkConnection( IotMqttDisconnectReason_t disconnectReason
     IotMqttCallbackParam_t callbackParam = { .u.message = { 0 } };
     IotNetworkConnection_t pNetworkConnection = NULL;
     void * pDisconnectCallbackContext = NULL;
+    IotTaskPoolJobStatus_t keepAliveJobStatus = IOT_TASKPOOL_STATUS_UNDEFINED;
 
     /* Disconnect callback function. */
     void ( * disconnectCallback )( void * pContext,
@@ -755,11 +756,11 @@ void _IotMqtt_CloseNetworkConnection( IotMqttDisconnectReason_t disconnectReason
         /* Attempt to cancel the keep-alive job. */
         taskPoolStatus = IotTaskPool_TryCancel( IOT_SYSTEM_TASKPOOL,
                                                 pMqttConnection->pingreq.job,
-                                                NULL );
+                                                &keepAliveJobStatus );
 
         /* Clean up keep-alive if its job was successfully canceled. Otherwise,
          * the executing keep-alive job will clean up itself. */
-        if( taskPoolStatus == IOT_TASKPOOL_SUCCESS )
+        if( ( taskPoolStatus == IOT_TASKPOOL_SUCCESS ) || ( keepAliveJobStatus == IOT_TASKPOOL_STATUS_COMPLETED ) )
         {
             /* Free the packet */
             _getMqttFreePacketFunc( pMqttConnection->pSerializer )( pMqttConnection->pingreq.u.operation.pMqttPacket );
