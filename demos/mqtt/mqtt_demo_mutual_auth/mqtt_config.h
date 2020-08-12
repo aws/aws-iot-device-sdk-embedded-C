@@ -59,4 +59,12 @@
  */
 #define MQTT_STATE_ARRAY_MAX_COUNT    ( 10U )
 
+/**
+ * @brief Timeout for receiving a response to a PINGREQ.
+ *
+ * If the time expires without receiving a response to a PINGREQ, then
+ * #MQTT_ProcessLoop() will return #MQTTKeepAliveTimeout.
+ */
+#define MQTT_PINGRESP_TIMEOUT_MS      ( 500U )
+
 #endif /* ifndef MQTT_CONFIG_H_ */
