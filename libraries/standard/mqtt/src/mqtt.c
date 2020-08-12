@@ -1954,9 +1954,9 @@ uint16_t MQTT_GetPacketId( MQTTContext_t * pContext )
 
 /*-----------------------------------------------------------*/
 
-MQTTStatus_t MQTT_GetSubAckPayload( const MQTTPacketInfo_t * pSubackPacket,
-                                    uint8_t ** pPayloadStart,
-                                    uint16_t * pPayloadSize )
+MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
+                                        uint8_t ** pPayloadStart,
+                                        uint16_t * pPayloadSize )
 {
     MQTTStatus_t status = MQTTSuccess;
 
@@ -1978,7 +1978,8 @@ MQTTStatus_t MQTT_GetSubAckPayload( const MQTTPacketInfo_t * pSubackPacket,
     else if( pSubackPacket->type != MQTT_PACKET_TYPE_SUBACK )
     {
         LogError( ( "Invalid parameter: Input packet is not a SUBACK packet: "
-                    "ExpectedType=%02x, InputType=%02x", MQTT_PACKET_TYPE_SUBACK, pSubackPacket->type ) );
+                    "ExpectedType=%02x, InputType=%02x",
+                    MQTT_PACKET_TYPE_SUBACK, pSubackPacket->type ) );
         status = MQTTBadParameter;
     }
     else if( pSubackPacket->pRemainingData == NULL )
@@ -1992,7 +1993,8 @@ MQTTStatus_t MQTT_GetSubAckPayload( const MQTTPacketInfo_t * pSubackPacket,
     else if( pSubackPacket->remainingLength < 3U )
     {
         LogError( ( "Invalid parameter: Packet remaining length is invalid: "
-                    "Remaining length should be greater than 2" ) );
+                    "Should be greater than 2 for SUBACK packet: InputRemainingLength=%u",
+                    pSubackPacket->remainingLength ) );
         status = MQTTBadParameter;
     }
     else

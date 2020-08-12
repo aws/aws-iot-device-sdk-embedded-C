@@ -2148,7 +2148,7 @@ void test_MQTT_GetSubAckPayload( void )
     mqttPacketInfo.type = MQTT_PACKET_TYPE_SUBACK;
     mqttPacketInfo.pRemainingData = buffer;
     mqttPacketInfo.remainingLength = 6;
-    status = MQTT_GetSubAckPayload( &mqttPacketInfo, &pPayloadStart, &payloadSize );
+    status = MQTT_GetSubAckStatusCodes( &mqttPacketInfo, &pPayloadStart, &payloadSize );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_PTR( &buffer[ 2 ], pPayloadStart );
     TEST_ASSERT_EQUAL_INT( MQTTQoS0, pPayloadStart[ 0 ] );
@@ -2158,32 +2158,32 @@ void test_MQTT_GetSubAckPayload( void )
     TEST_ASSERT_EQUAL_INT( 4, payloadSize );
 
     /* Packet is NULL. */
-    status = MQTT_GetSubAckPayload( NULL, &pPayloadStart, &payloadSize );
+    status = MQTT_GetSubAckStatusCodes( NULL, &pPayloadStart, &payloadSize );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
     /* Output parameter, pPayloadStart, is NULL. */
-    status = MQTT_GetSubAckPayload( &mqttPacketInfo, NULL, &payloadSize );
+    status = MQTT_GetSubAckStatusCodes( &mqttPacketInfo, NULL, &payloadSize );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
     /* Output parameter, pPayloadSize, is NULL. */
-    status = MQTT_GetSubAckPayload( &mqttPacketInfo, &pPayloadStart, NULL );
+    status = MQTT_GetSubAckStatusCodes( &mqttPacketInfo, &pPayloadStart, NULL );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
     /* Remaining Data is NULL. */
     mqttPacketInfo.pRemainingData = NULL;
-    status = MQTT_GetSubAckPayload( &mqttPacketInfo, &pPayloadStart, &payloadSize );
+    status = MQTT_GetSubAckStatusCodes( &mqttPacketInfo, &pPayloadStart, &payloadSize );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
     /* non-SUBACK packet type. */
     mqttPacketInfo.type = MQTT_PACKET_TYPE_CONNACK;
     mqttPacketInfo.pRemainingData = buffer;
-    status = MQTT_GetSubAckPayload( &mqttPacketInfo, &pPayloadStart, &payloadSize );
+    status = MQTT_GetSubAckStatusCodes( &mqttPacketInfo, &pPayloadStart, &payloadSize );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
     /* Invalid remaining length value in packet. */
     mqttPacketInfo.remainingLength = 0;
     mqttPacketInfo.type = MQTT_PACKET_TYPE_SUBACK;
-    status = MQTT_GetSubAckPayload( &mqttPacketInfo, &pPayloadStart, &payloadSize );
+    status = MQTT_GetSubAckStatusCodes( &mqttPacketInfo, &pPayloadStart, &payloadSize );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 }
 

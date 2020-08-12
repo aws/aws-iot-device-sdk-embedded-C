@@ -411,7 +411,13 @@ uint16_t MQTT_GetPacketId( MQTTContext_t * pContext );
  * corresponding to topic filter subscription requests from the original
  * subscribe packet.
  *
- * This function can be used to iterate over the status code
+ * Each return code in the SUBACK packet corresponds to a topic filter in the
+ * SUBSCRIBE Packet being acknowledged.
+ * The status codes can be one of the following:
+ *  - 0x00 - Success - Maximum QoS 0
+ *  - 0x01 - Success - Maximum QoS 1
+ *  - 0x02 - Success - Maximum QoS 2
+ *  - 0x80 - Failure
  *
  * @param[in] pSubackPacket The SUBACK packet whose payload is to be parsed.
  * @param[out] pPayloadStart This is populated with the starting address
@@ -420,11 +426,13 @@ uint16_t MQTT_GetPacketId( MQTTContext_t * pContext );
  * in the SUBACK packet. It represents the number of topic filters whose
  * SUBACK status is present in the packet.
  *
- * @return #MQTTBadParameter, or #MQTTSuccess.
+ * @return Returns one of the following:
+ * - #MQTTBadParameter if the input SUBACK packet is invalid.
+ * - #MQTTSuccess if parsing the payload was successful.
  */
-MQTTStatus_t MQTT_GetSubAckPayload( const MQTTPacketInfo_t * pSubackPacket,
-                                    uint8_t ** pPayloadStart,
-                                    uint16_t * pPayloadSize );
+MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
+                                        uint8_t ** pPayloadStart,
+                                        uint16_t * pPayloadSize );
 
 /**
  * @brief Error code to string conversion for MQTT statuses.
