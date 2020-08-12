@@ -1368,12 +1368,12 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
         LogError( ( "Parameter check failed: pRequestHeaders->pBuffer is NULL." ) );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
-    else if( ( pRequestInfo == NULL ) )
+    else if( pRequestInfo == NULL )
     {
         LogError( ( "Parameter check failed: pRequestInfo is NULL." ) );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
-    else if( ( pRequestInfo->method == NULL ) )
+    else if( pRequestInfo->method == NULL )
     {
         LogError( ( "Parameter check failed: pRequestInfo->method is NULL." ) );
         returnStatus = HTTP_INVALID_PARAMETER;
@@ -1468,12 +1468,12 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
         LogError( ( "Parameter check failed: pRequestHeaders->pBuffer is NULL." ) );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
-    else if( ( pField == NULL ) )
+    else if( pField == NULL )
     {
         LogError( ( "Parameter check failed: pField is NULL." ) );
         returnStatus = HTTP_INVALID_PARAMETER;
     }
-    else if( ( pValue == NULL ) )
+    else if( pValue == NULL )
     {
         LogError( ( "Parameter check failed: pValue is NULL." ) );
         returnStatus = HTTP_INVALID_PARAMETER;
