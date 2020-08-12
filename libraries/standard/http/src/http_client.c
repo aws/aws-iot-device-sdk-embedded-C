@@ -237,7 +237,7 @@ static int findHeaderFieldParserCallback( http_parser * pHttpParser,
  * @ref findHeaderFieldParserCallback function.
  *
  * @param[in] pHttpParser Parsing object containing state and callback context.
- * @param[in] pVaLueLoc The location of the parsed header value in the response
+ * @param[in] pValueLoc The location of the parsed header value in the response
  * buffer.
  * @param[in] valueLen The length of the header value.
  *
@@ -245,7 +245,7 @@ static int findHeaderFieldParserCallback( http_parser * pHttpParser,
  * found, otherwise #HTTP_PARSING_CONTINUE_PARSING is returned.
  */
 static int findHeaderValueParserCallback( http_parser * pHttpParser,
-                                          const char * pVaLueLoc,
+                                          const char * pValueLoc,
                                           size_t valueLen );
 
 /**
@@ -494,6 +494,7 @@ static void processCompleteHeader( HTTPParsingContext_t * pParsingContext )
     if( ( pParsingContext->pLastHeaderField != NULL ) &&
         ( pParsingContext->pLastHeaderValue != NULL ) )
     {
+        assert( pResponse->headerCount < SIZE_MAX );
         /* Increase the header count. */
         pResponse->headerCount++;
 
@@ -639,6 +640,7 @@ static int httpParserOnHeaderFieldCallback( http_parser * pHttpParser,
     }
     else
     {
+        assert( pParsingContext->lastHeaderFieldLen <= SIZE_MAX - length );
         pParsingContext->lastHeaderFieldLen += length;
     }
 
@@ -742,7 +744,7 @@ static int httpParserOnHeadersCompleteCallback( http_parser * pHttpParser )
 
     /* If the Content-Length header was found, then pHttpParser->content_length
      * will not be equal to the maximum 64 bit integer. */
-    if( pHttpParser->content_length != ( ( uint64_t ) -1 ) )
+    if( pHttpParser->content_length != UINT64_MAX )
     {
         pResponse->contentLength = ( size_t ) ( pHttpParser->content_length );
     }
@@ -805,7 +807,7 @@ static int httpParserOnBodyCallback( http_parser * pHttpParser,
 
     assert( pResponse != NULL );
     assert( pResponse->pBuffer != NULL );
-    assert( pLoc > ( const char * ) ( pResponse->pBuffer ) );
+    assert( pLoc >= ( const char * ) ( pResponse->pBuffer ) );
     assert( pLoc < ( const char * ) ( pResponse->pBuffer + pResponse->bufferLen ) );
 
     /* If this is the first time httpParserOnBodyCallback() has been invoked,
@@ -839,7 +841,9 @@ static int httpParserOnBodyCallback( http_parser * pHttpParser,
     /* coverity[misra_c_2012_rule_18_3_violation] */
     if( pLoc > pNextWriteLoc )
     {
-        ( void ) memcpy( pNextWriteLoc, pLoc, length );
+        /* memmove is used instead of memcpy because memcpy has undefined behavior
+         * when source and destination locations in memory overlap. */
+        ( void ) memmove( pNextWriteLoc, pLoc, length );
     }
 
     /* Increase the length of the body found. */
@@ -2062,14 +2066,14 @@ static int findHeaderFieldParserCallback( http_parser * pHttpParser,
 /*-----------------------------------------------------------*/
 
 static int findHeaderValueParserCallback( http_parser * pHttpParser,
-                                          const char * pVaLueLoc,
+                                          const char * pValueLoc,
                                           size_t valueLen )
 {
     int retCode = HTTP_PARSER_CONTINUE_PARSING;
     findHeaderContext_t * pContext = NULL;
 
     assert( pHttpParser != NULL );
-    assert( pVaLueLoc != NULL );
+    assert( pValueLoc != NULL );
     assert( valueLen > 0u );
 
     pContext = ( findHeaderContext_t * ) pHttpParser->data;
@@ -2086,10 +2090,10 @@ static int findHeaderValueParserCallback( http_parser * pHttpParser,
     {
         LogDebug( ( "Found header value in response: "
                     "RequestedField=%.*s, ValueLocation=0x%p",
-                    ( int ) ( pContext->fieldLen ), pContext->pField, pVaLueLoc ) );
+                    ( int ) ( pContext->fieldLen ), pContext->pField, pValueLoc ) );
 
         /* Populate the output parameters with the location of the header value in the response buffer. */
-        *pContext->pValueLoc = pVaLueLoc;
+        *pContext->pValueLoc = pValueLoc;
         *pContext->pValueLen = valueLen;
 
         /* Set the header value found flag. */
