@@ -407,8 +407,8 @@ MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext,
 uint16_t MQTT_GetPacketId( MQTTContext_t * pContext );
 
 /**
- * @brief Parses the payload of an MQTT SUBACK packet that contains the status
- * code of subscription request made for topic filters in the equivalent
+ * @brief Parses the payload of an MQTT SUBACK packet that contains status codes
+ * corresponding to topic filter subscription requests from the original
  * subscribe packet.
  *
  * This function can be used to iterate over the status code

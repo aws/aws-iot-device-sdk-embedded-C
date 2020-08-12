@@ -1978,7 +1978,7 @@ MQTTStatus_t MQTT_GetSubAckPayload( const MQTTPacketInfo_t * pSubackPacket,
     else if( pSubackPacket->type != MQTT_PACKET_TYPE_SUBACK )
     {
         LogError( ( "Invalid parameter: Input packet is not a SUBACK packet: "
-                    "ExpectedType=%u, InputType=%u", MQTT_PACKET_TYPE_SUBACK, pSubackPacket->type ) );
+                    "ExpectedType=%02x, InputType=%02x", MQTT_PACKET_TYPE_SUBACK, pSubackPacket->type ) );
         status = MQTTBadParameter;
     }
     else if( pSubackPacket->pRemainingData == NULL )
