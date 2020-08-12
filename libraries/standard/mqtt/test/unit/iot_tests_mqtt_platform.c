@@ -785,7 +785,6 @@ TEST( MQTT_Unit_Platform, ConnectScheduleFailure )
     TEST_ASSERT_EQUAL( IOT_MQTT_SCHEDULING_ERROR, status );
 
     /* Clean up. */
-    pMqttConnection->references--;
     IotMqtt_Disconnect( pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
 }
 
