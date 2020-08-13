@@ -2297,7 +2297,7 @@ void test_MQTT_MatchTopic_Wildcard_SingleLevel( void )
     TEST_ASSERT_EQUAL( false, matchResult );
 
     /* Invalid topic filter where non-starting '+' is not placed after '/'.*/
-    pTopicName = "test/match/level";
+    pTopicName = "test/match/level1";
     pTopicFilter = "test/match/level+";
     TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_MatchTopic( pTopicName,
                                                      strlen( pTopicName ),
@@ -2407,7 +2407,7 @@ void test_MQTT_MatchTopic_Wildcard_MultiLevel( void )
     TEST_ASSERT_EQUAL( false, matchResult );
 
     /* Invalid topic filter where non-starting '#' is not placed after '/'.*/
-    pTopicName = "test/match/level";
+    pTopicName = "test/match/level1";
     pTopicFilter = "test/match/level#";
     TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_MatchTopic( pTopicName,
                                                      strlen( pTopicName ),
