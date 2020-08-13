@@ -2194,7 +2194,7 @@ void test_MQTT_MatchTopic_ExactMatch( void )
                                                      pTopicAndFilter,
                                                      strlen( pTopicAndFilter ),
                                                      &matchResult ) );
-    TEST_ASSERT_EQUAL( true, matchResult );
+    TEST_ASSERT_EQUAL( false, matchResult );
 }
 
 /**
