@@ -117,6 +117,17 @@ struct MQTTPubAckInfo
 };
 
 /**
+ * @brief The status codes in the SUBACK response to a subscription request.
+ */
+typedef enum MQTTSubAckStatus
+{
+    MQTTSubAckSuccessQos0 = 0x00, /**< @brief Success with a maximum delivery at QoS 0 . */
+    MQTTSubAckSuccessQos1 = 0x01, /**< @brief Success with a maximum delivery at QoS 1. */
+    MQTTSubAckSuccessQos2 = 0x02, /**< @brief Success with a maximum delivery at QoS 2. */
+    MQTTSubAckFailure = 0x80      /**< @brief Failure. */
+} MQTTSubAckStatus_t;
+
+/**
  * @brief A struct representing an MQTT connection.
  */
 struct MQTTContext
@@ -426,6 +437,35 @@ MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
                               const char * pTopicFilter,
                               const uint16_t topicFilterLength,
                               bool * pIsMatch );
+
+/**
+ * @brief Parses the payload of an MQTT SUBACK packet that contains status codes
+ * corresponding to topic filter subscription requests from the original
+ * subscribe packet.
+ *
+ * Each return code in the SUBACK packet corresponds to a topic filter in the
+ * SUBSCRIBE Packet being acknowledged.
+ * The status codes can be one of the following:
+ *  - 0x00 - Success - Maximum QoS 0
+ *  - 0x01 - Success - Maximum QoS 1
+ *  - 0x02 - Success - Maximum QoS 2
+ *  - 0x80 - Failure
+ * Refer to @ref MQTTSubAckStatus for the status codes.
+ *
+ * @param[in] pSubackPacket The SUBACK packet whose payload is to be parsed.
+ * @param[out] pPayloadStart This is populated with the starting address
+ * of the payload (or return codes for topic filters) in the SUBACK packet.
+ * @param[out] pPayloadSize This is populated with the size of the payload
+ * in the SUBACK packet. It represents the number of topic filters whose
+ * SUBACK status is present in the packet.
+ *
+ * @return Returns one of the following:
+ * - #MQTTBadParameter if the input SUBACK packet is invalid.
+ * - #MQTTSuccess if parsing the payload was successful.
+ */
+MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
+                                        uint8_t ** pPayloadStart,
+                                        uint16_t * pPayloadSize );
 
 /**
  * @brief Error code to string conversion for MQTT statuses.
