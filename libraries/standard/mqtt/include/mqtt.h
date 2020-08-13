@@ -407,6 +407,27 @@ MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext,
 uint16_t MQTT_GetPacketId( MQTTContext_t * pContext );
 
 /**
+ * @brief A utility function that determines whether the passed topic filter and
+ * topic name match according to the MQTT 3.1.1 protocol specification.
+ *
+ * @param[in] pTopicName The topic name to check.
+ * @param[in] topicNameLength Length of the topic name.
+ * @param[in] pTopicFilter The topic filter to check.
+ * @param[in] topicFilterLength Length of topic filter.
+ * @param[out] pIsMatch This is filled with the whether there
+ * exists a match or not.
+ *
+ * @return Returns one of the following:
+ * - #MQTTBadParameter, if any of the input parameters is invalid.
+ * - #MQTTSuccess, if the matching operation was performed.
+ */
+MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
+                              const uint16_t topicNameLength,
+                              const char * pTopicFilter,
+                              const uint16_t topicFilterLength,
+                              bool * pIsMatch );
+
+/**
  * @brief Error code to string conversion for MQTT statuses.
  *
  * @param[in] status The status to convert to a string.

@@ -301,6 +301,231 @@ static MQTTStatus_t validatePublishParams( const MQTTContext_t * pContext,
                                            const MQTTPublishInfo_t * pPublishInfo,
                                            uint16_t packetId );
 
+/**
+ * @brief Handle special corner cases for wildcards at the end of topic
+ * filters, as documented by the MQTT protocol spec.
+ *
+ * It concludes a match between the topic name and topic filter for the
+ * following special cases:
+ * - When the topic filter ends with '+' character, but the topic name only
+ * ends with '/'.
+ * - When the topic filter ends with "/#" characters, but the topic name
+ * ends at the parent level.
+ *
+ * @param[in] pTopicFilter The topic filter containing the wildcard.
+ * @param[in] topicFilterLength Length of the topic filter being examined.
+ * @param[in] topicNameLength Length of the topic name being examined.
+ * @param[in] nameIndex Index of the topic name being examined.
+ * @param[in] filterIndex Index of the topic filter being examined.
+ *
+ * @return Returns whether the topic filter and the topic name match.
+ */
+static bool matchWildcardsSpecialCases( const char * pTopicFilter,
+                                        uint16_t topicFilterLength,
+                                        uint16_t topicNameLength,
+                                        uint16_t nameIndex,
+                                        uint16_t filterIndex );
+
+/**
+ * @brief Attempt to match topic name with a topic filter starting with a wildcard.
+ *
+ * If the topic filter starts with a '+' (single-level) wildcard, the function
+ * advances the @a pNameIndex by a level in the topic name.
+ * If the topic filter starts with a '#' (multi-level) wildcard, the function
+ * concludes that both the topic name and topic filter match.
+ *
+ * @param[in] pTopicFilter The topic filter containing the wildcard.
+ * @param[in] topicFilterLength Length of the topic filter.
+ * @param[in] pTopicName The topic name to check.
+ * @param[in] topicNameLength Length of the topic name.
+ * @param[in] filterIndex Index of the wildcard in the topic filter.
+ * @param[in,out] pNameIndex Index of character in topic name. This variable is
+ * advanced for `+` wildcards.
+ * @param[out] pMatch Whether the topic filter and topic name match.
+ *
+ * @return `true` if the caller of this function should exit; `false` if the caller
+ * should continue parsing the topics.
+ */
+static bool matchWildcards( const char * pTopicFilter,
+                            uint16_t topicFilterLength,
+                            const char * pTopicName,
+                            uint16_t topicNameLength,
+                            uint16_t filterIndex,
+                            uint16_t * pNameIndex,
+                            bool * pMatch );
+
+/**
+ * @brief Match a topic name and topic filter allowing the use of wildcards.
+ *
+ * @param[in] pTopicName The topic name to check.
+ * @param[in] topicNameLength Length of the topic name.
+ * @param[in] pTopicFilter The topic filter to check.
+ * @param[in] topicFilterLength Length of topic filter.
+ *
+ * @return `true` if the topic name and topic filter match; `false` otherwise.
+ */
+static bool matchTopicFilter( const char * pTopicName,
+                              uint16_t topicNameLength,
+                              const char * pTopicFilter,
+                              uint16_t topicFilterLength );
+
+/*-----------------------------------------------------------*/
+
+static bool matchWildcardsSpecialCases( const char * pTopicFilter,
+                                        uint16_t topicFilterLength,
+                                        uint16_t topicNameLength,
+                                        uint16_t nameIndex,
+                                        uint16_t filterIndex )
+{
+    /* The smallest topic filter accepted by this function is "/+". */
+    assert( topicFilterLength > 1 );
+
+    bool matchFound = false;
+
+    /* Determine if the last character is reached for the topic name, and the
+     * third to last character is reached for the topic filter. */
+    if( ( nameIndex == ( topicNameLength - 1U ) ) &&
+        ( filterIndex == ( topicFilterLength - 3U ) ) )
+    {
+        /* Determine if the topic filter contains "/#" as the last 2 characters.
+         * The '#' wildcard represents the parent and any number of child levels
+         * in the topic name. For example, the filter "sport/#" matches "sport"
+         * as well as "sport/tennis" topics. */
+        matchFound = ( ( pTopicFilter[ filterIndex + 1U ] == '/' ) &&
+                       ( pTopicFilter[ filterIndex + 2U ] == '#' ) ) ? true : false;
+    }
+    else
+    {
+        /* Determine if the last character is reached for the topic name and,
+         * the second to last character for the topic filter. */
+        if( ( nameIndex == ( topicNameLength - 1U ) ) &&
+            ( filterIndex == ( topicFilterLength - 2U ) ) )
+        {
+            /* Determine if the topic filter contains "/+" as the last 2 characters.
+             * This covers the special case of topic matching when the topic name
+             * ends with '/' but the topic filter ends with "/+". Thus, for example,
+             * topic filter "sport/+" matches the "sport/" but not "sport". */
+            matchFound = ( ( pTopicFilter[ filterIndex ] == '/' ) &&
+                           ( pTopicFilter[ filterIndex + 1U ] == '+' ) ) ? true : false;
+        }
+    }
+
+    return matchFound;
+}
+
+/*-----------------------------------------------------------*/
+
+static bool matchWildcards( const char * pTopicFilter,
+                            uint16_t topicFilterLength,
+                            const char * pTopicName,
+                            uint16_t topicNameLength,
+                            uint16_t filterIndex,
+                            uint16_t * pNameIndex,
+                            bool * pMatch )
+{
+    bool shouldStopMatching = false;
+
+    /* Check for wildcards. */
+    if( pTopicFilter[ filterIndex ] == '+' )
+    {
+        /* Move topic name index to the end of the current level.
+         * This is identified by '/'. */
+        while( ( *pNameIndex < topicNameLength ) && ( pTopicName[ *pNameIndex ] != '/' ) )
+        {
+            ( *pNameIndex )++;
+        }
+
+        /* Decrement the topic name index for 2 different cases:
+         * - If the break condition is ( *pNameIndex < topicNameLength ), then
+         * we have reached the end of the topic name.
+         * - If the break condition is ( pTopicName[ *pNameIndex ] != '/' ),
+         * we move back the index on the '/' character to be at the last
+         * position in the current topic level. */
+        ( *pNameIndex )--;
+    }
+    else if( ( pTopicFilter[ filterIndex ] == '#' ) &&
+             ( filterIndex == ( topicFilterLength - 1U ) ) )
+    {
+        /* Subsequent characters don't need to be checked for the
+         * multi-level wildcard. */
+        *pMatch = true;
+        shouldStopMatching = true;
+    }
+    else
+    {
+        /* Any character mismatch other than '+' or '#' means the topic
+         * name does not match the topic filter. */
+        *pMatch = false;
+        shouldStopMatching = true;
+    }
+
+    return shouldStopMatching;
+}
+
+/*-----------------------------------------------------------*/
+
+static bool matchTopicFilter( const char * pTopicName,
+                              uint16_t topicNameLength,
+                              const char * pTopicFilter,
+                              uint16_t topicFilterLength )
+{
+    bool matchFound = false, shouldStopMatching = false;
+    uint16_t nameIndex = 0, filterIndex = 0;
+
+    assert( pTopicName != NULL );
+    assert( topicNameLength != 0 );
+    assert( pTopicFilter != NULL );
+    assert( topicFilterLength != 0 );
+
+    while( ( nameIndex < topicNameLength ) && ( filterIndex < topicFilterLength ) )
+    {
+        /* Check if the character in the topic name matches the corresponding
+         * character in the topic filter string. */
+        if( pTopicName[ nameIndex ] == pTopicFilter[ filterIndex ] )
+        {
+            /* Handle special corner cases regarding wildcards at the end of
+             * topic filters, as documented by the MQTT protocol spec. */
+            matchFound = matchWildcardsSpecialCases( pTopicFilter,
+                                                     topicFilterLength,
+                                                     topicNameLength,
+                                                     nameIndex,
+                                                     filterIndex );
+        }
+        else
+        {
+            /* Check for matching wildcards. */
+            shouldStopMatching = matchWildcards( pTopicFilter,
+                                                 topicFilterLength,
+                                                 pTopicName,
+                                                 topicNameLength,
+                                                 filterIndex,
+                                                 &nameIndex,
+                                                 &matchFound );
+        }
+
+        if( ( matchFound == true ) || ( shouldStopMatching == true ) )
+        {
+            break;
+        }
+
+        /* Increment indexes. */
+        nameIndex++;
+        filterIndex++;
+    }
+
+    if( matchFound == false )
+    {
+        /* If the end of both strings has been reached, they match. This represents the
+         * case when the topic filter contains the '+' wildcard at a non-starting position.
+         * For example, when matching either of "sport/+/player" OR "sport/hockey/+" topic
+         * filters with "sport/hockey/player" topic name. */
+        matchFound = ( ( nameIndex == topicNameLength ) &&
+                       ( filterIndex == topicFilterLength ) ) ? true : false;
+    }
+
+    return matchFound;
+}
+
 /*-----------------------------------------------------------*/
 
 static int32_t sendPacket( MQTTContext_t * pContext,
@@ -1959,6 +2184,71 @@ uint16_t MQTT_GetPacketId( MQTTContext_t * pContext )
     }
 
     return packetId;
+}
+
+/*-----------------------------------------------------------*/
+
+MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
+                              const uint16_t topicNameLength,
+                              const char * pTopicFilter,
+                              const uint16_t topicFilterLength,
+                              bool * pIsMatch )
+{
+    MQTTStatus_t status = MQTTSuccess;
+    bool topicFilterStartsWithWildcard = false;
+
+    if( ( pTopicName == NULL ) || ( topicNameLength == 0u ) )
+    {
+        LogError( ( "Invalid paramater: Topic name should be non-NULL and its "
+                    "length should be > 0: TopicName=%p, TopicNameLength=%u",
+                    ( void * ) pTopicName,
+                    topicNameLength ) );
+
+        status = MQTTBadParameter;
+    }
+    else if( ( pTopicFilter == NULL ) || ( topicFilterLength == 0u ) )
+    {
+        LogError( ( "Invalid paramater: Topic filter should be non-NULL and "
+                    "its length should be > 0: TopicName=%p, TopicFilterLength=%u",
+                    ( void * ) pTopicFilter,
+                    topicFilterLength ) );
+        status = MQTTBadParameter;
+    }
+    else if( pIsMatch == NULL )
+    {
+        LogError( ( "Invalid paramater: Output parameter, pIsMatch, is NULL" ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        /* Check for an exact match if the incoming topic name and the registered
+         * topic filter length match. */
+        if( topicNameLength == topicFilterLength )
+        {
+            *pIsMatch = ( strncmp( pTopicName, pTopicFilter, topicNameLength ) == 0 ) ? true : false;
+        }
+
+        if( status == false )
+        {
+            /* If an exact match was not found, match against wildcard characters in
+             * topic filter.*/
+
+            /* Determine if topic filter starts with a wildcard. */
+            topicFilterStartsWithWildcard = ( ( pTopicFilter[ 0 ] == '+' ) ||
+                                              ( pTopicFilter[ 0 ] == '#' ) ) ? true : false;
+
+            /* Note: According to the MQTT 3.1.1 specification, incoming PUBLISH topic names
+             * starting the "$" character cannot be matched against topic filter starting with
+             * a wildcard, i.e. for example, "$SYS/sport" cannot be matched with "#" or
+             * "+/sport" topic filters. */
+            if( !( ( pTopicName[ 0 ] == '$' ) && ( topicFilterStartsWithWildcard == true ) ) )
+            {
+                *pIsMatch = matchTopicFilter( pTopicName, topicNameLength, pTopicFilter, topicFilterLength );
+            }
+        }
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/
