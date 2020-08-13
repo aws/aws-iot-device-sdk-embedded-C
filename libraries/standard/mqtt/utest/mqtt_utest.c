@@ -2367,6 +2367,16 @@ void test_MQTT_MatchTopic_Wildcard_MultiLevel( void )
                                                      &matchResult ) );
     TEST_ASSERT_EQUAL( true, matchResult );
 
+    /* Edge case where filter ending with '/#' matches topic ending with '/'. */
+    pTopicName = "/test/match/";
+    pTopicFilter = "/test/match/#";
+    TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_MatchTopic( pTopicName,
+                                                     strlen( pTopicName ),
+                                                     pTopicFilter,
+                                                     strlen( pTopicFilter ),
+                                                     &matchResult ) );
+    TEST_ASSERT_EQUAL( true, matchResult );
+
     /* Test for topic filters containing both '+' and '#' wildcard characters. */
     pTopicName = "/test/match";
     pTopicFilter = "+/test/match/#";

@@ -307,8 +307,8 @@ static MQTTStatus_t validatePublishParams( const MQTTContext_t * pContext,
  *
  * It concludes a match between the topic name and topic filter for the
  * following special cases:
- * - When the topic filter ends with '+' character, but the topic name only
- * ends with '/'.
+ * - When the topic filter ends with "/+" or "/#" characters, but the topic
+ * name only ends with '/'.
  * - When the topic filter ends with "/#" characters, but the topic name
  * ends at the parent level.
  *
@@ -400,12 +400,14 @@ static bool matchWildcardsSpecialCases( const char * pTopicFilter,
         if( ( nameIndex == ( topicNameLength - 1U ) ) &&
             ( filterIndex == ( topicFilterLength - 2U ) ) )
         {
-            /* Determine if the topic filter contains "/+" as the last 2 characters.
+            /* Determine if the topic filter contains "/+" or "/#" as the last 2 characters.
              * This covers the special case of topic matching when the topic name
-             * ends with '/' but the topic filter ends with "/+". Thus, for example,
-             * topic filter "sport/+" matches the "sport/" but not "sport". */
+             * ends with '/' but the topic filter ends with "/+" or "/#".
+             * Thus, for example, topic filter "sport/+" matches the "sport/" but not "sport",
+             * and topic filter "sport/#" matches both "sport/" and "sport". */
             matchFound = ( ( pTopicFilter[ filterIndex ] == '/' ) &&
-                           ( pTopicFilter[ filterIndex + 1U ] == '+' ) ) ? true : false;
+                           ( ( pTopicFilter[ filterIndex + 1U ] == '+' ) ||
+                             ( pTopicFilter[ filterIndex + 1U ] == '#' ) ) ) ? true : false;
         }
     }
 
