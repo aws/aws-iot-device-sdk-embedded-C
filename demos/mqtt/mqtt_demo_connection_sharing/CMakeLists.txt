@@ -1,5 +1,7 @@
 include(CheckSymbolExists)
 
+add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/subscription-manager )
+
 set( DEMO_NAME "mqtt_demo_connection_sharing" )
 
 # Demo target.
@@ -34,7 +36,7 @@ target_include_directories(
     ${DEMO_NAME}
     PUBLIC
         ${LOGGING_INCLUDE_DIRS}
-        ${CMAKE_CURRENT_LIST_DIR}/../subscription-manager
+        ${CMAKE_CURRENT_LIST_DIR}/subscription-manager
 )
 
 # Download the Mosquitto Root CA certificate.
