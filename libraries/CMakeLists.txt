@@ -35,11 +35,11 @@ if( ${BUILD_TESTS} )
     # Add a target for running coverage on tests.
     add_custom_target(coverage
         COMMAND ${CMAKE_COMMAND} -P ${CMAKE_SOURCE_DIR}/tools/cmock/coverage.cmake
-        DEPENDS cmock unity http_utest mqtt_utest mqtt_lightweight_utest mqtt_state_utest http_send_utest
+        DEPENDS cmock unity http_utest mqtt_utest mqtt_lightweight_utest mqtt_state_utest http_send_utest json_utest
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     )
 endif()
-            
+
 # Add all modules.
 file(GLOB standard_modules "${MODULES_DIR}/standard/*")
 file(GLOB aws_modules "${MODULES_DIR}/aws/*")
@@ -48,4 +48,3 @@ foreach(module IN LISTS standard_modules aws_modules)
         add_subdirectory(${module})
     endif()
 endforeach()
-
