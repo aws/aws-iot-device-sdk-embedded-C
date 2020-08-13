@@ -622,8 +622,13 @@ static uint16_t stateSelect( const MQTTContext_t * pMqttContext,
 /*-----------------------------------------------------------*/
 
 /**
- * @cond DOXYGEN_IGNORE
- * Doxygen should ignore this private function.
+ * @brief Calculate the state from a PUBACK, PUBREC, PUBREL, or PUBCOMP.
+ *
+ * @param[in] packetType PUBACK, PUBREC, PUBREL, or PUBCOMP.
+ * @param[in] opType Send or Receive.
+ * @param[in] qos 1 or 2.
+ *
+ * @return The calculated state.
  */
 MQTTPublishState_t MQTT_CalculateStateAck( MQTTPubAckType_t packetType,
                                            MQTTStateOperation_t opType,
@@ -791,8 +796,13 @@ static MQTTStatus_t updateStatePublish( MQTTContext_t * pMqttContext,
 /*-----------------------------------------------------------*/
 
 /**
- * @cond DOXYGEN_IGNORE
- * Doxygen should ignore this private function.
+ * @brief Reserve an entry for an outgoing QoS 1 or Qos 2 publish.
+ *
+ * @param[in] pMqttContext Initialized MQTT context.
+ * @param[in] packetId The ID of the publish packet.
+ * @param[in] qos 1 or 2.
+ *
+ * @return MQTTSuccess, MQTTNoMemory, or MQTTStateCollision.
  */
 MQTTStatus_t MQTT_ReserveState( MQTTContext_t * pMqttContext,
                                 uint16_t packetId,
@@ -825,8 +835,12 @@ MQTTStatus_t MQTT_ReserveState( MQTTContext_t * pMqttContext,
 /*-----------------------------------------------------------*/
 
 /**
- * @cond DOXYGEN_IGNORE
- * Doxygen should ignore this private function.
+ * @brief Calculate the new state for a publish from its qos and operation type.
+ *
+ * @param[in] opType Send or Receive.
+ * @param[in] qos 0, 1, or 2.
+ *
+ * @return The calculated state.
  */
 MQTTPublishState_t MQTT_CalculateStatePublish( MQTTStateOperation_t opType,
                                                MQTTQoS_t qos )
@@ -859,8 +873,16 @@ MQTTPublishState_t MQTT_CalculateStatePublish( MQTTStateOperation_t opType,
 /*-----------------------------------------------------------*/
 
 /**
- * @cond DOXYGEN_IGNORE
- * Doxygen should ignore this private function.
+ * @brief Update the state record for a PUBLISH packet.
+ *
+ * @param[in] pMqttContext Initialized MQTT context.
+ * @param[in] packetId ID of the PUBLISH packet.
+ * @param[in] opType Send or Receive.
+ * @param[in] qos 0, 1, or 2.
+ * @param[out] pNewState Updated state of the publish.
+ *
+ * @return #MQTTBadParameter, #MQTTIllegalState, #MQTTStateCollision or
+ * #MQTTSuccess.
  */
 MQTTStatus_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
                                       uint16_t packetId,
@@ -938,8 +960,15 @@ MQTTStatus_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
 /*-----------------------------------------------------------*/
 
 /**
- * @cond DOXYGEN_IGNORE
- * Doxygen should ignore this private function.
+ * @brief Update the state record for an ACKed publish.
+ *
+ * @param[in] pMqttContext Initialized MQTT context.
+ * @param[in] packetId ID of the ack packet.
+ * @param[in] packetType PUBACK, PUBREC, PUBREL, or PUBCOMP.
+ * @param[in] opType Send or Receive.
+ * @param[out] pNewState Updated state of the publish.
+ *
+ * @return #MQTTBadParameter, #MQTTIllegalState, or #MQTTSuccess.
  */
 MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
                                   uint16_t packetId,
@@ -1004,8 +1033,16 @@ MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
 /*-----------------------------------------------------------*/
 
 /**
- * @cond DOXYGEN_IGNORE
- * Doxygen should ignore this private function.
+ * @brief Get the packet ID of next pending PUBREL ack to be resent.
+ *
+ * This function will need to be called to get the packet for which a PUBREL
+ * need to be sent when a session is reestablished. Calling this function
+ * repeatedly until packet id is 0 will give all the packets for which
+ * a PUBREL need to be resent in the correct order.
+ *
+ * @param[in] pMqttContext Initialized MQTT context.
+ * @param[in,out] pCursor Index at which to start searching.
+ * @param[out] pState State indicating that PUBREL packet need to be sent.
  */
 uint16_t MQTT_PubrelToResend( const MQTTContext_t * pMqttContext,
                               MQTTStateCursor_t * pCursor,
@@ -1075,8 +1112,11 @@ uint16_t MQTT_PublishToResend( const MQTTContext_t * pMqttContext,
 /*-----------------------------------------------------------*/
 
 /**
- * @cond DOXYGEN_IGNORE
- * Doxygen should ignore this private function.
+ * @brief State to string conversion for state engine.
+ *
+ * @param[in] state The state to convert to a string.
+ *
+ * @return The string representation of the state.
  */
 const char * MQTT_State_strerror( MQTTPublishState_t state )
 {
