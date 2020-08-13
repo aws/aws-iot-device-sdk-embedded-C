@@ -12,3 +12,6 @@ build/
 *.gcda
 *.gcno
 *.gcov
+
+# Ignore certificates.
+*.crt
