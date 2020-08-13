@@ -56,10 +56,11 @@
 #define MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT    ( 2U )
 
 /**
- * @brief Timeout for receiving a response to a PINGREQ.
+ * @brief Number of milliseconds to wait for a ping response to a ping
+ * request as part of the keep-alive mechanism.
  *
- * If the time expires without receiving a response to a PINGREQ, then
- * #MQTT_ProcessLoop() will return #MQTTKeepAliveTimeout.
+ * If a ping response is not received before this timeout, then
+ * #MQTT_ProcessLoop will return #MQTTKeepAliveTimeout.
  */
 #define MQTT_PINGRESP_TIMEOUT_MS                ( 1000U )
 
