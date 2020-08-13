@@ -21,7 +21,7 @@
 
 /**
  * @file mqtt_lightweight.c
- * @brief Implements the user facing functions in mqtt_lightweight.h.
+ * @brief Implements the user-facing functions in mqtt_lightweight.h.
  */
 #include <string.h>
 #include <assert.h>
@@ -387,7 +387,7 @@ static MQTTStatus_t deserializeSuback( const MQTTPacketInfo_t * pSuback,
  * @param[in] pIncomingPacket Pointer to an MQTT packet struct representing a
  * PUBLISH.
  * @param[out] pPacketId Packet identifier of the PUBLISH.
- * @param[out] pPublishInfo Pointer to #MQTTPublishInfo_t where write output is
+ * @param[out] pPublishInfo Pointer to #MQTTPublishInfo_t where output is
  * written.
  *
  * @return #MQTTSuccess if PUBLISH is valid; #MQTTBadResponse
@@ -398,7 +398,7 @@ static MQTTStatus_t deserializePublish( const MQTTPacketInfo_t * pIncomingPacket
                                         MQTTPublishInfo_t * pPublishInfo );
 
 /**
- * @brief Deserialize a UNSUBACK, PUBACK, PUBREC, PUBREL, or PUBCOMP packet.
+ * @brief Deserialize an UNSUBACK, PUBACK, PUBREC, PUBREL, or PUBCOMP packet.
  *
  * Converts the packet from a stream of bytes to an #MQTTStatus_t and extracts
  * the packet identifier.
