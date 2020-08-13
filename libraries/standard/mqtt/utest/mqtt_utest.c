@@ -2276,7 +2276,7 @@ void test_MQTT_MatchTopic_Wildcard_SingleLevel( void )
                                                      &matchResult ) );
     TEST_ASSERT_EQUAL( true, matchResult );
 
-    /* Edge case where filter ending with '/+' matches topic ending with ''. */
+    /* Edge case where filter ending with '/+' should not match a topic ending with ''. */
     pTopicName = "/test/match";
     pTopicFilter = "/test/match/+";
     TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_MatchTopic( pTopicName,
@@ -2388,7 +2388,7 @@ void test_MQTT_MatchTopic_Wildcard_MultiLevel( void )
 
     /* Edge case where topic filter starts with '#' and topic name starts with '$'. */
     pTopicName = "$/test/match";
-    pTopicFilter = "#/test/match";
+    pTopicFilter = "#";
     TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_MatchTopic( pTopicName,
                                                      strlen( pTopicName ),
                                                      pTopicFilter,

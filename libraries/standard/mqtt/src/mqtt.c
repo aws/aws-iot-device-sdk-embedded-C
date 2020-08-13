@@ -2228,7 +2228,7 @@ MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
             *pIsMatch = ( strncmp( pTopicName, pTopicFilter, topicNameLength ) == 0 ) ? true : false;
         }
 
-        if( status == false )
+        if( *pIsMatch == false )
         {
             /* If an exact match was not found, match against wildcard characters in
              * topic filter.*/
