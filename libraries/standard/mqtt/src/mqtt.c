@@ -425,6 +425,8 @@ static bool matchWildcards( const char * pTopicFilter,
                             bool * pMatch )
 {
     bool shouldStopMatching = false;
+    bool locationIsValidForWildcard = ( ( filterIndex == 0u ) ||
+                                        ( pTopicFilter[ filterIndex - 1U ] == '/' ) ) ? true : false;
 
     assert( pTopicFilter != NULL );
     assert( pTopicName != NULL );
@@ -433,8 +435,7 @@ static bool matchWildcards( const char * pTopicFilter,
 
     /* Check for '+' wildcard character and verify that it is either at the starting position
      * or is preceded by a '/'. */
-    if( ( pTopicFilter[ filterIndex ] == '+' ) &&
-        ( ( filterIndex == 0u ) || ( pTopicFilter[ filterIndex - 1U ] == '/' ) ) )
+    if( ( pTopicFilter[ filterIndex ] == '+' ) && ( locationIsValidForWildcard == true ) )
     {
         /* Move topic name index to the end of the current level.
          * This is identified by '/'. */
@@ -457,8 +458,9 @@ static bool matchWildcards( const char * pTopicFilter,
     * Note: '#' should be the last character in a topic filter. If the
     * topic filter has multiple level, "/#" should be the last 2 characters. */
     else if( ( pTopicFilter[ filterIndex ] == '#' ) &&
-             ( filterIndex == ( topicFilterLength - 1U ) ) && /* '#' should be the last character. */
-             ( ( filterIndex == 0u ) || ( pTopicFilter[ filterIndex - 1U ] == '/' ) ) )
+             /* '#' should be the last character in the filter. */
+             ( filterIndex == ( topicFilterLength - 1U ) ) &&
+             ( locationIsValidForWildcard == true ) )
     {
         /* Subsequent characters don't need to be checked for the
          * multi-level wildcard. */
