@@ -1,3 +1,4 @@
+
 ack
 acked
 acks
@@ -48,6 +49,7 @@ endif
 enums
 eventcallbackstub
 expectprocessloopcalls
+filterindex
 fixedbuffer
 getconnectpacketsize
 getcurrenttimestub
@@ -127,6 +129,7 @@ mqttsubackstatus
 mqttsubscribeinfo
 mqttsuccess
 msb
+nameindex
 networkbuffer
 networkcontext
 networkinterfacesendstub
@@ -161,8 +164,11 @@ pingreqsendtimems
 pingresp
 pingresps
 pingresptimeoutms
+pismatch
+pmatch
 pmessage
 pmqttcontext
+pnameindex
 pnetworkbuffer
 pnetworkcontext
 pnewstate
@@ -185,6 +191,8 @@ pstate
 psubackpacket
 psubscribeinfo
 psubscriptionlist
+ptopicfilter
+ptopicname
 ptr
 ptransport
 ptransportinterface
@@ -240,12 +248,14 @@ suback
 sublicense
 subscriptioncount
 subscriptiontype
+sys
 tcp
 tcpsocket
 testcase
 timeoutms
 tls
 topicfilterlength
+topicnamelength
 uint
 un
 unsuback
