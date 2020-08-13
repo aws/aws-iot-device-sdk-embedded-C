@@ -68,71 +68,137 @@ typedef void (* MQTTEventCallback_t )( MQTTContext_t * pContext,
                                        MQTTPacketInfo_t * pPacketInfo,
                                        MQTTDeserializedInfo_t * pDeserializedInfo );
 
+/**
+ * @brief Values indicating if an MQTT connection exists.
+ */
 typedef enum MQTTConnectionStatus
 {
-    MQTTNotConnected,
-    MQTTConnected
+    MQTTNotConnected, /**< @brief MQTT Connection is inactive. */
+    MQTTConnected     /**< @brief MQTT Connection is active. */
 } MQTTConnectionStatus_t;
 
+/**
+ * @brief The state of QoS 1 or QoS 2 MQTT publishes, used in the state engine.
+ */
 typedef enum MQTTPublishState
 {
-    MQTTStateNull = 0,
-    MQTTPublishSend,
-    MQTTPubAckSend,
-    MQTTPubRecSend,
-    MQTTPubRelSend,
-    MQTTPubCompSend,
-    MQTTPubAckPending,
-    MQTTPubRelPending,
-    MQTTPubRecPending,
-    MQTTPubCompPending,
-    MQTTPublishDone
+    MQTTStateNull = 0,  /**< @brief An empty state with no corresponding PUBLISH. */
+    MQTTPublishSend,    /**< @brief The library will send an outgoing PUBLISH packet. */
+    MQTTPubAckSend,     /**< @brief The library will send a PUBACK for a received PUBLISH. */
+    MQTTPubRecSend,     /**< @brief The library will send a PUBREC for a received PUBLISH. */
+    MQTTPubRelSend,     /**< @brief The library will send a PUBREL for a received PUBREC. */
+    MQTTPubCompSend,    /**< @brief The library will send a PUBCOMP for a received PUBREL. */
+    MQTTPubAckPending,  /**< @brief The library is awaiting a PUBACK for an outgoing PUBLISH. */
+    MQTTPubRecPending,  /**< @brief The library is awaiting a PUBREC for an outgoing PUBLISH. */
+    MQTTPubRelPending,  /**< @brief The library is awaiting a PUBREL for an incoming PUBLISH. */
+    MQTTPubCompPending, /**< @brief The library is awaiting a PUBCOMP for an outgoing PUBLISH. */
+    MQTTPublishDone     /**< @brief The PUBLISH has been completed. */
 } MQTTPublishState_t;
 
+/**
+ * @brief Packet types used in acknowledging QoS 1 or QoS 2 publishes.
+ */
 typedef enum MQTTPubAckType
 {
-    MQTTPuback,
-    MQTTPubrec,
-    MQTTPubrel,
-    MQTTPubcomp
+    MQTTPuback, /**< @brief PUBACKs are sent in response to a QoS 1 PUBLISH. */
+    MQTTPubrec, /**< @brief PUBRECs are sent in response to a QoS 2 PUBLISH. */
+    MQTTPubrel, /**< @brief PUBRELs are sent in response to a PUBREC. */
+    MQTTPubcomp /**< @brief PUBCOMPs are sent in response to a PUBREL. */
 } MQTTPubAckType_t;
 
+/**
+ * @brief An element of the state engine records for QoS 1/2 publishes.
+ */
 struct MQTTPubAckInfo
 {
-    uint16_t packetId;
-    MQTTQoS_t qos;
-    MQTTPublishState_t publishState;
+    uint16_t packetId;               /**< @brief The packet ID of the original PUBLISH. */
+    MQTTQoS_t qos;                   /**< @brief The QoS of the original PUBLISH. */
+    MQTTPublishState_t publishState; /**< @brief The current state of the publish process. */
 };
 
+/**
+ * @brief The status codes in the SUBACK response to a subscription request.
+ */
+typedef enum MQTTSubAckStatus
+{
+    MQTTSubAckSuccessQos0 = 0x00, /**< @brief Success with a maximum delivery at QoS 0 . */
+    MQTTSubAckSuccessQos1 = 0x01, /**< @brief Success with a maximum delivery at QoS 1. */
+    MQTTSubAckSuccessQos2 = 0x02, /**< @brief Success with a maximum delivery at QoS 2. */
+    MQTTSubAckFailure = 0x80      /**< @brief Failure. */
+} MQTTSubAckStatus_t;
+
+/**
+ * @brief A struct representing an MQTT connection.
+ */
 struct MQTTContext
 {
+    /**
+     * @brief State engine records for outgoing publishes.
+     */
     MQTTPubAckInfo_t outgoingPublishRecords[ MQTT_STATE_ARRAY_MAX_COUNT ];
-    size_t outgoingPublishCount;
-    MQTTPubAckInfo_t incomingPublishRecords[ MQTT_STATE_ARRAY_MAX_COUNT ];
-    size_t incomingPublishCount;
 
+    /**
+     * @brief State engine records for incoming publishes.
+     */
+    MQTTPubAckInfo_t incomingPublishRecords[ MQTT_STATE_ARRAY_MAX_COUNT ];
+
+    /**
+     * @brief The transport interface used by the MQTT connection.
+     */
     TransportInterface_t transportInterface;
+
+    /**
+     * @brief The buffer used in sending and receiving packets from the network.
+     */
     MQTTFixedBuffer_t networkBuffer;
 
+    /**
+     * @brief The next available ID for outgoing MQTT packets.
+     */
     uint16_t nextPacketId;
+
+    /**
+     * @brief Whether the context currently has a connection to the broker.
+     */
     MQTTConnectionStatus_t connectStatus;
+
+    /**
+     * @brief Function used to get millisecond timestamps.
+     */
     MQTTGetCurrentTimeFunc_t getTime;
+
+    /**
+     * @brief Callback function used to give deserialized MQTT packets to the application.
+     */
     MQTTEventCallback_t appCallback;
+
+    /**
+     * @brief Timestamp of the last packet sent by the library.
+     */
     uint32_t lastPacketTime;
+
+    /**
+     * @brief Whether the library sent a packet during a call of #MQTT_ProcessLoop or
+     * #MQTT_ReceiveLoop.
+     */
     bool controlPacketSent;
 
     /* Keep alive members. */
-    uint16_t keepAliveIntervalSec;
-    uint32_t pingReqSendTimeMs;
-    uint32_t pingRespTimeoutMs;
-    bool waitingForPingResp;
+    uint16_t keepAliveIntervalSec; /**< @brief Keep Alive interval. */
+    uint32_t pingReqSendTimeMs;    /**< @brief Timestamp of the last sent PINGREQ. */
+    uint32_t pingRespTimeoutMs;    /**< @brief Timeout for waiting for a PINGRESP. */
+    bool waitingForPingResp;       /**< @brief If the library is currently awaiting a PINGRESP. */
 };
 
+/**
+ * @brief Struct to hold deserialized packet information for an #MQTTEventCallback_t
+ * callback.
+ */
 struct MQTTDeserializedInfo
 {
-    uint16_t packetIdentifier;
-    MQTTPublishInfo_t * pPublishInfo;
-    MQTTStatus_t deserializationResult;
+    uint16_t packetIdentifier;          /**< @brief Packet ID of deserialized packet. */
+    MQTTPublishInfo_t * pPublishInfo;   /**< @brief Pointer to deserialized publish info. */
+    MQTTStatus_t deserializationResult; /**< @brief Return code of deserialization. */
 };
 
 /**
@@ -350,6 +416,35 @@ MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext,
  * @return A non-zero number.
  */
 uint16_t MQTT_GetPacketId( MQTTContext_t * pContext );
+
+/**
+ * @brief Parses the payload of an MQTT SUBACK packet that contains status codes
+ * corresponding to topic filter subscription requests from the original
+ * subscribe packet.
+ *
+ * Each return code in the SUBACK packet corresponds to a topic filter in the
+ * SUBSCRIBE Packet being acknowledged.
+ * The status codes can be one of the following:
+ *  - 0x00 - Success - Maximum QoS 0
+ *  - 0x01 - Success - Maximum QoS 1
+ *  - 0x02 - Success - Maximum QoS 2
+ *  - 0x80 - Failure
+ * Refer to @ref MQTTSubAckStatus for the status codes.
+ *
+ * @param[in] pSubackPacket The SUBACK packet whose payload is to be parsed.
+ * @param[out] pPayloadStart This is populated with the starting address
+ * of the payload (or return codes for topic filters) in the SUBACK packet.
+ * @param[out] pPayloadSize This is populated with the size of the payload
+ * in the SUBACK packet. It represents the number of topic filters whose
+ * SUBACK status is present in the packet.
+ *
+ * @return Returns one of the following:
+ * - #MQTTBadParameter if the input SUBACK packet is invalid.
+ * - #MQTTSuccess if parsing the payload was successful.
+ */
+MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
+                                        uint8_t ** pPayloadStart,
+                                        uint16_t * pPayloadSize );
 
 /**
  * @brief Error code to string conversion for MQTT statuses.
