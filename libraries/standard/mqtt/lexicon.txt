@@ -50,7 +50,6 @@ enums
 eventcallbackstub
 expectprocessloopcalls
 filterindex
-filterIndex
 fixedbuffer
 getconnectpacketsize
 getcurrenttimestub
