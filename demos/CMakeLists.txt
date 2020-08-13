@@ -47,12 +47,6 @@ if(DOWNLOAD_CERTS)
         COMMAND curl --url https://www.amazontrust.com/repository/AmazonRootCA1.pem
         -o ${CMAKE_CURRENT_LIST_DIR}/certificates/AmazonRootCA1.crt
     )
-    # Download the Mosquitto Root CA certificate.
-    message( "Downloading the Mosquitto Root CA certificate..." )
-    execute_process(
-        COMMAND curl --url https://test.mosquitto.org/ssl/mosquitto.org.crt
-        -o ${CMAKE_CURRENT_LIST_DIR}/certificates/mosquitto.org.crt
-    )
 endif()
 
 # Copy the certificates and client keys to the build directory.
