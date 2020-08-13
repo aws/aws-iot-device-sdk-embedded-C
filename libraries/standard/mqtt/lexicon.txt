@@ -24,6 +24,7 @@ cbmc
 cleansession
 cmock
 com
+cond
 config
 connack
 connectinfo
@@ -31,6 +32,7 @@ connectpacketsize
 const
 createcleansession
 currentstate
+csdk
 defragmenting
 deserialization
 deserializationresult
@@ -42,9 +44,12 @@ deserializing
 didn
 disconnectpacketsize
 doesn
+doxygen
 dup
+endcond
 emptyindex
 endif
+enum
 enums
 eventcallbackstub
 expectprocessloopcalls
@@ -146,12 +151,15 @@ payloadlength
 pbuffer
 pbuffertosend
 pcallbacks
+pconnack
 pconnectinfo
 pcontext
 pcurrentstate
 pcursor
 pdeserializedinfo
 pdestination
+ppacketidentifier
+ppingresp
 pem
 pfixedbuffer
 pheadersize
@@ -182,6 +190,8 @@ processloop
 psessionpresent
 psource
 pstate
+pstatusstart
+psuback
 psubackpacket
 psubscribeinfo
 psubscriptionlist
@@ -192,6 +202,7 @@ puback
 pubacks
 pubcomp
 pubcomps
+publishflags
 publishstate
 pubrec
 pubrecs
@@ -233,6 +244,8 @@ sizeof
 sourcelength
 src
 stateafterdeserialize
+stateful
+statuscount
 strerror
 struct
 structs

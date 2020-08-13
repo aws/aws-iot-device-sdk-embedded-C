@@ -19,6 +19,10 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/**
+ * @file mqtt_state.c
+ * @brief Implements the user facing functions in mqtt_state.h.
+ */
 #include <assert.h>
 #include <string.h>
 #include "mqtt_state.h"
@@ -127,11 +131,11 @@ static void compactRecords( MQTTPubAckInfo_t * records,
  *
  * @param[in] records State record array.
  * @param[in] recordCount Length of record array.
- * @param[in] packetId, packet ID of new entry.
+ * @param[in] packetId Packet ID of new entry.
  * @param[in] qos QoS of new entry.
- * @param[in] publishState state of new entry.
+ * @param[in] publishState State of new entry.
  *
- * @return MQTTSuccess, MQTTNoMemory, MQTTStateCollision.
+ * @return #MQTTSuccess, #MQTTNoMemory, or #MQTTStateCollision.
  */
 static MQTTStatus_t addRecord( MQTTPubAckInfo_t * records,
                                size_t recordCount,
@@ -159,6 +163,8 @@ static void updateRecord( MQTTPubAckInfo_t * records,
  * @param[in] pMqttContext Initialized MQTT context.
  * @param[in] searchStates The states to search for in 2-byte bit map.
  * @param[in,out] pCursor Index at which to start searching.
+ *
+ * @return Packet ID of the outgoing publish.
  */
 static uint16_t stateSelect( const MQTTContext_t * pMqttContext,
                              uint16_t searchStates,
@@ -615,6 +621,10 @@ static uint16_t stateSelect( const MQTTContext_t * pMqttContext,
 
 /*-----------------------------------------------------------*/
 
+/**
+ * @cond DOXYGEN_IGNORE
+ * Doxygen should ignore this private function.
+ */
 MQTTPublishState_t MQTT_CalculateStateAck( MQTTPubAckType_t packetType,
                                            MQTTStateOperation_t opType,
                                            MQTTQoS_t qos )
@@ -661,6 +671,7 @@ MQTTPublishState_t MQTT_CalculateStateAck( MQTTPubAckType_t packetType,
 
     return calculatedState;
 }
+/** @endcond */
 
 /*-----------------------------------------------------------*/
 
@@ -779,6 +790,10 @@ static MQTTStatus_t updateStatePublish( MQTTContext_t * pMqttContext,
 
 /*-----------------------------------------------------------*/
 
+/**
+ * @cond DOXYGEN_IGNORE
+ * Doxygen should ignore this private function.
+ */
 MQTTStatus_t MQTT_ReserveState( MQTTContext_t * pMqttContext,
                                 uint16_t packetId,
                                 MQTTQoS_t qos )
@@ -805,9 +820,14 @@ MQTTStatus_t MQTT_ReserveState( MQTTContext_t * pMqttContext,
 
     return status;
 }
+/** @endcond */
 
 /*-----------------------------------------------------------*/
 
+/**
+ * @cond DOXYGEN_IGNORE
+ * Doxygen should ignore this private function.
+ */
 MQTTPublishState_t MQTT_CalculateStatePublish( MQTTStateOperation_t opType,
                                                MQTTQoS_t qos )
 {
@@ -834,9 +854,14 @@ MQTTPublishState_t MQTT_CalculateStatePublish( MQTTStateOperation_t opType,
 
     return calculatedState;
 }
+/** @endcond */
 
 /*-----------------------------------------------------------*/
 
+/**
+ * @cond DOXYGEN_IGNORE
+ * Doxygen should ignore this private function.
+ */
 MQTTStatus_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
                                       uint16_t packetId,
                                       MQTTStateOperation_t opType,
@@ -908,9 +933,14 @@ MQTTStatus_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
 
     return mqttStatus;
 }
+/** @endcond */
 
 /*-----------------------------------------------------------*/
 
+/**
+ * @cond DOXYGEN_IGNORE
+ * Doxygen should ignore this private function.
+ */
 MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
                                   uint16_t packetId,
                                   MQTTPubAckType_t packetType,
@@ -969,9 +999,14 @@ MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
 
     return status;
 }
+/** @endcond */
 
 /*-----------------------------------------------------------*/
 
+/**
+ * @cond DOXYGEN_IGNORE
+ * Doxygen should ignore this private function.
+ */
 uint16_t MQTT_PubrelToResend( const MQTTContext_t * pMqttContext,
                               MQTTStateCursor_t * pCursor,
                               MQTTPublishState_t * pState )
@@ -1005,6 +1040,7 @@ uint16_t MQTT_PubrelToResend( const MQTTContext_t * pMqttContext,
 
     return packetId;
 }
+/** @endcond */
 
 /*-----------------------------------------------------------*/
 
@@ -1038,6 +1074,10 @@ uint16_t MQTT_PublishToResend( const MQTTContext_t * pMqttContext,
 
 /*-----------------------------------------------------------*/
 
+/**
+ * @cond DOXYGEN_IGNORE
+ * Doxygen should ignore this private function.
+ */
 const char * MQTT_State_strerror( MQTTPublishState_t state )
 {
     const char * str = NULL;
@@ -1096,5 +1136,6 @@ const char * MQTT_State_strerror( MQTTPublishState_t state )
 
     return str;
 }
+/** @endcond */
 
 /*-----------------------------------------------------------*/

@@ -19,11 +19,22 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/**
+ * @file mqtt_lightweight.h
+ * @brief User-facing functions for serializing MQTT 3.1.1 packets. This header
+ * should be included for building a light-weight MQTT client bypassing the
+ * stateful CSDK MQTT library API in mqtt.h.
+ */
 #ifndef MQTT_LIGHTWEIGHT_H
 #define MQTT_LIGHTWEIGHT_H
 
 #include <stddef.h>
 #include <stdint.h>
+
+/**
+ * @cond DOXYGEN_IGNORE
+ * Doxygen should ignore this section.
+ */
 
 /* bool is defined in only C99+. */
 #if defined( __cplusplus ) || ( defined( __STDC_VERSION__ ) && ( __STDC_VERSION__ >= 199901L ) )
@@ -33,6 +44,7 @@
     #define false    ( int8_t ) 0
     #define true     ( int8_t ) 1
 #endif
+/** @endcond */
 
 /* Include config file before other headers. */
 #include "mqtt_config.h"
@@ -55,26 +67,10 @@
 #define MQTT_PACKET_TYPE_PINGRESP       ( ( uint8_t ) 0xD0U )  /**< @brief PINGRESP (server-to-client). */
 #define MQTT_PACKET_TYPE_DISCONNECT     ( ( uint8_t ) 0xE0U )  /**< @brief DISCONNECT (client-to-server). */
 
-
 /**
  * @brief The size of MQTT PUBACK, PUBREC, PUBREL, and PUBCOMP packets, per MQTT spec.
  */
 #define MQTT_PUBLISH_ACK_PACKET_SIZE    ( 4UL )
-
-struct MQTTFixedBuffer;
-typedef struct MQTTFixedBuffer     MQTTFixedBuffer_t;
-
-struct MQTTConnectInfo;
-typedef struct MQTTConnectInfo     MQTTConnectInfo_t;
-
-struct MQTTSubscribeInfo;
-typedef struct MQTTSubscribeInfo   MQTTSubscribeInfo_t;
-
-struct MqttPublishInfo;
-typedef struct MqttPublishInfo     MQTTPublishInfo_t;
-
-struct MQTTPacketInfo;
-typedef struct MQTTPacketInfo      MQTTPacketInfo_t;
 
 /**
  * @brief Return codes from MQTT functions.
@@ -110,16 +106,16 @@ typedef enum MQTTQoS
  * These buffers are not copied and must remain in scope for the duration of the
  * MQTT operation.
  */
-struct MQTTFixedBuffer
+typedef struct MQTTFixedBuffer
 {
     uint8_t * pBuffer; /**< @brief Pointer to buffer. */
     size_t size;       /**< @brief Size of buffer. */
-};
+} MQTTFixedBuffer_t;
 
 /**
  * @brief MQTT CONNECT packet parameters.
  */
-struct MQTTConnectInfo
+typedef struct MQTTConnectInfo
 {
     /**
      * @brief Whether to establish a new, clean session or resume a previous session.
@@ -160,12 +156,12 @@ struct MQTTConnectInfo
      * @brief Length of MQTT password. Set to 0 if not used.
      */
     uint16_t passwordLength;
-};
+} MQTTConnectInfo_t;
 
 /**
  * @brief MQTT SUBSCRIBE packet parameters.
  */
-struct MQTTSubscribeInfo
+typedef struct MQTTSubscribeInfo
 {
     /**
      * @brief Quality of Service for subscription.
@@ -181,12 +177,12 @@ struct MQTTSubscribeInfo
      * @brief Length of subscription topic filter.
      */
     uint16_t topicFilterLength;
-};
+} MQTTSubscribeInfo_t;
 
 /**
  * @brief MQTT PUBLISH packet parameters.
  */
-struct MqttPublishInfo
+typedef struct MQTTPublishInfo
 {
     /**
      * @brief Quality of Service for message.
@@ -222,12 +218,12 @@ struct MqttPublishInfo
      * @brief Message payload length.
      */
     size_t payloadLength;
-};
+} MQTTPublishInfo_t;
 
 /**
  * @brief MQTT incoming packet parameters.
  */
-struct MQTTPacketInfo
+typedef struct MQTTPacketInfo
 {
     /**
      * @brief Type of incoming MQTT packet.
@@ -243,7 +239,7 @@ struct MQTTPacketInfo
      * @brief Length of remaining serialized data.
      */
     size_t remainingLength;
-};
+} MQTTPacketInfo_t;
 
 /**
  * @brief Get the size and Remaining Length of an MQTT CONNECT packet.
