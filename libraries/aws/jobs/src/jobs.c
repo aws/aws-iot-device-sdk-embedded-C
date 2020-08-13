@@ -196,6 +196,14 @@ static JobsStatus_t strnEq( const char * a,
 
 /**
  * @brief Wrap strnEq() with a check to compare two lengths.
+ *
+ * @param[in] a  first character sequence
+ * @param[in] aLength  Length of a
+ * @param[in] b  second character sequence
+ * @param[in] bLength  Length of b
+ *
+ * @return JobsSuccess if the sequences are the same;
+ * JobsNoMatch otherwise
  */
 static JobsStatus_t strnnEq( const char * a,
                              size_t aLength,
@@ -214,6 +222,11 @@ static JobsStatus_t strnnEq( const char * a,
 
 /**
  * @brief Predicate returns true for a valid job ID character
+ *
+ * @param[in] a  character to check
+ *
+ * @return true if the character is valid;
+ * false otherwise
  */
 static bool_ isJobIdChar( char a )
 {
@@ -245,6 +258,12 @@ static bool_ isJobIdChar( char a )
 
 /**
  * @brief Predicate returns true for a valid job ID string
+ *
+ * @param[in] jobId  character sequence to check
+ * @param[in] jobIdLength  length of the character sequence
+ *
+ * @return true if the job ID is valid;
+ * false otherwise
  */
 static bool_ isValidJobId( const char * jobId,
                            uint16_t jobIdLength )
@@ -312,7 +331,7 @@ static JobsStatus_t matchIdApi( const char * topic,
         }
     }
 
-    if( ( jobId != NULL ) && ( isValidJobId( jobId, jobIdLength ) == true ) )
+    if( isValidJobId( jobId, jobIdLength ) == true )
     {
         JobsTopic_t api;
 
