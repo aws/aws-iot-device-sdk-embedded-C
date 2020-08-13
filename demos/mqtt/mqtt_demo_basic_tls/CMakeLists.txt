@@ -28,21 +28,3 @@ target_include_directories(
     PUBLIC
         ${LOGGING_INCLUDE_DIRS}
 )
-
-# Download the Mosquitto Root CA certificate.
-message( "Downloading the Mosquitto Root CA certificate..." )
-file(MAKE_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/certificates)
-execute_process(
-    COMMAND curl --url https://test.mosquitto.org/ssl/mosquitto.org.crt
-    -o ${CMAKE_CURRENT_LIST_DIR}/certificates/mosquitto.org.crt
-)
-
-# Copy the server certificate file to the binary directory.
-add_custom_command(
-    TARGET
-        ${DEMO_NAME}
-    POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${CMAKE_CURRENT_LIST_DIR}/certificates/mosquitto.org.crt"
-        "$<TARGET_FILE_DIR:${DEMO_NAME}>/certificates/mosquitto.org.crt"
-)
