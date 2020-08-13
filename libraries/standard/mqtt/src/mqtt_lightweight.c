@@ -308,7 +308,7 @@ static bool incomingPacketValid( uint8_t packetType );
 
 /**
  * @brief Check the remaining length of an incoming PUBLISH packet against some
- * value for QoS 0 or QoS 1 and 2.
+ * value for QoS 0, or for QoS 1 and 2.
  *
  * The remaining length for a QoS 1 and 2 packet will always be two greater than
  * for a QoS 0.
@@ -324,13 +324,13 @@ static MQTTStatus_t checkPublishRemainingLength( size_t remainingLength,
                                                  size_t qos0Minimum );
 
 /**
- * @brief Process incoming publish flags.
+ * @brief Process the flags of an incoming PUBLISH packet.
  *
- * @param[in] publishFlags Incoming publish flags.
+ * @param[in] publishFlags Flags of an incoming PUBLISH.
  * @param[in, out] pPublishInfo Pointer to #MQTTPublishInfo_t struct where
  * output will be written.
  *
- * @return #MQTTSuccess, #MQTTBadResponse.
+ * @return #MQTTSuccess or #MQTTBadResponse.
  */
 static MQTTStatus_t processPublishFlags( uint8_t publishFlags,
                                          MQTTPublishInfo_t * pPublishInfo );
