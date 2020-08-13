@@ -39,7 +39,8 @@
  */
 #define MQTT_PACKET_ID_INVALID    ( ( uint16_t ) 0U )
 
-/* Forward declared structs for the MQTTEventCallback_t. */
+/* Structures defined in this file. */
+struct MQTTPubAckInfo;
 struct MQTTContext;
 struct MQTTDeserializedInfo;
 

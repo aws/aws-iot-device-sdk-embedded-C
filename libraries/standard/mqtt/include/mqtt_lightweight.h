@@ -72,6 +72,13 @@
  */
 #define MQTT_PUBLISH_ACK_PACKET_SIZE    ( 4UL )
 
+/* Structures defined in this file. */
+struct MQTTFixedBuffer;
+struct MQTTConnectInfo;
+struct MQTTSubscribeInfo;
+struct MQTTPublishInfo;
+struct MQTTPacketInfo;
+
 /**
  * @brief Return codes from MQTT functions.
  */
