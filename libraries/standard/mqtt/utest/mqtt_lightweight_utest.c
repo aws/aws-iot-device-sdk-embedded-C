@@ -621,7 +621,6 @@ void test_MQTT_SerializeConnect( void )
     status = MQTT_SerializeConnect( &connectInfo, NULL, remainingLength, &fixedBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
     checkBufferOverflow( buffer, sizeof( buffer ) );
-
 }
 
 /* ========================================================================== */
