@@ -49,6 +49,7 @@ endif
 enums
 eventcallbackstub
 expectprocessloopcalls
+filterindex
 filterIndex
 fixedbuffer
 getconnectpacketsize
