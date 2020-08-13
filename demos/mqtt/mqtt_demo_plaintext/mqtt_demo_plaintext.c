@@ -58,8 +58,11 @@
  * These configuration settings are required to run the plaintext demo.
  * Throw compilation error if the below configs are not defined.
  */
+#ifndef BROKER_ENDPOINT
+    #error "Please define an MQTT broker endpoint, BROKER_ENDPOINT, in demo_config.h."
+#endif
 #ifndef CLIENT_IDENTIFIER
-    #error "Please define a unique CLIENT_IDENTIFIER."
+    #error "Please define a unique CLIENT_IDENTIFIER in demo_config.h."
 #endif
 
 /**
