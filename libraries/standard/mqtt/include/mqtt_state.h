@@ -56,7 +56,7 @@ typedef size_t MQTTStateCursor_t;
  * @cond DOXYGEN_IGNORE
  * Doxygen should ignore this section, this function is private.
  *
- * @brief Reserve an entry for an outgoing QoS 1 or Qos2 publish.
+ * @brief Reserve an entry for an outgoing QoS 1 or Qos 2 publish.
  *
  * @param[in] pMqttContext Initialized MQTT context.
  * @param[in] packetId The ID of the publish packet.

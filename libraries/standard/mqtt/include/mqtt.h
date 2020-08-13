@@ -118,7 +118,7 @@ typedef enum MQTTSubAckStatus
 } MQTTSubAckStatus_t;
 
 /**
- * @brief An element of the state engine records for QoS 1/2 publishes.
+ * @brief An element of the state engine records for QoS 1 or Qos 2 publishes.
  */
 typedef struct MQTTPubAckInfo
 {

@@ -626,9 +626,9 @@ static void serializePublishCommon( const MQTTPublishInfo_t * pPublishInfo,
     assert( pPublishInfo != NULL );
     assert( pFixedBuffer != NULL );
     assert( pFixedBuffer->pBuffer != NULL );
-    /* Packet Id should be non zero for QoS1 and QoS2. */
+    /* Packet Id should be non zero for Qos 1 and Qos 2. */
     assert( ( pPublishInfo->qos == MQTTQoS0 ) || ( packetIdentifier != 0U ) );
-    /* Duplicate flag should be set only for Qos1 or Qos2. */
+    /* Duplicate flag should be set only for Qos 1 or Qos 2. */
     assert( ( pPublishInfo->dup != true ) || ( pPublishInfo->qos != MQTTQoS0 ) );
 
     /* Get the start address of the buffer. */
