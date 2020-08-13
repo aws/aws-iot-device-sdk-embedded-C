@@ -160,7 +160,6 @@ pingreq
 pingreqsendtimems
 pingresp
 pingresps
-pingresptimeoutms
 pmessage
 pmqttcontext
 pnetworkbuffer
