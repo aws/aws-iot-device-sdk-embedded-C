@@ -19,6 +19,10 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/**
+ * @file mqtt.h
+ * @brief User-facing functions of the MQTT 3.1.1 library.
+ */
 #ifndef MQTT_H
 #define MQTT_H
 
@@ -34,15 +38,6 @@
  * Zero is an invalid packet identifier as per MQTT v3.1.1 spec.
  */
 #define MQTT_PACKET_ID_INVALID    ( ( uint16_t ) 0U )
-
-struct MQTTPubAckInfo;
-typedef struct MQTTPubAckInfo         MQTTPubAckInfo_t;
-
-struct MQTTContext;
-typedef struct MQTTContext            MQTTContext_t;
-
-struct MQTTDeserializedInfo;
-typedef struct MQTTDeserializedInfo   MQTTDeserializedInfo_t;
 
 /**
  * @brief Application provided callback to retrieve the current time in
@@ -109,12 +104,12 @@ typedef enum MQTTPubAckType
 /**
  * @brief An element of the state engine records for QoS 1/2 publishes.
  */
-struct MQTTPubAckInfo
+typedef struct MQTTPubAckInfo
 {
     uint16_t packetId;               /**< @brief The packet ID of the original PUBLISH. */
     MQTTQoS_t qos;                   /**< @brief The QoS of the original PUBLISH. */
     MQTTPublishState_t publishState; /**< @brief The current state of the publish process. */
-};
+} MQTTPubAckInfo_t;
 
 /**
  * @brief The status codes in the SUBACK response to a subscription request.
@@ -130,7 +125,7 @@ typedef enum MQTTSubAckStatus
 /**
  * @brief A struct representing an MQTT connection.
  */
-struct MQTTContext
+typedef struct MQTTContext
 {
     /**
      * @brief State engine records for outgoing publishes.
@@ -188,38 +183,41 @@ struct MQTTContext
     uint32_t pingReqSendTimeMs;    /**< @brief Timestamp of the last sent PINGREQ. */
     uint32_t pingRespTimeoutMs;    /**< @brief Timeout for waiting for a PINGRESP. */
     bool waitingForPingResp;       /**< @brief If the library is currently awaiting a PINGRESP. */
-};
+} MQTTContext_t;
 
 /**
  * @brief Struct to hold deserialized packet information for an #MQTTEventCallback_t
  * callback.
  */
-struct MQTTDeserializedInfo
+typedef struct MQTTDeserializedInfo
 {
     uint16_t packetIdentifier;          /**< @brief Packet ID of deserialized packet. */
     MQTTPublishInfo_t * pPublishInfo;   /**< @brief Pointer to deserialized publish info. */
     MQTTStatus_t deserializationResult; /**< @brief Return code of deserialization. */
-};
+} MQTTDeserializedInfo_t;
 
 /**
  * @brief Initialize an MQTT context.
  *
- * This function must be called on an MQTT context before any other function.
+ * This function must be called on a #MQTTContext_t before any other function.
  *
- * @note The getTime callback function must be defined. If there is no time
- * implementation, it is the responsibility of the application to provide a
- * dummy function to always return 0, and provide 0 timeouts for functions. This
- * will ensure all time based functions will run for a single iteration.
+ * @note The #MQTTGetCurrentTimeFunc_t callback function must be defined. If
+ * there is no time implementation, it is the responsibility of the application
+ * to provide a dummy function to always return 0, and provide 0 timeouts for
+ * functions. This will ensure all time based functions will run for a single
+ * iteration.
  *
  * @brief param[in] pContext The context to initialize.
- * @brief param[in] pTransportInterface The transport interface to use with the context.
- * @brief param[in] getTimeFunction The time utility function to use with the context.
- * @brief param[in] userCallback The user callback to use with the context to notify about
- * incoming packet events.
+ * @brief param[in] pTransportInterface The transport interface to use with the
+ * context.
+ * @brief param[in] getTimeFunction The time utility function to use with the
+ * context.
+ * @brief param[in] userCallback The user callback to use with the context to
+ * notify about incoming packet events.
  * @brief param[in] pNetworkBuffer Network buffer provided for the context.
  *
- * @return #MQTTBadParameter if invalid parameters are passed;
- * #MQTTSuccess otherwise.
+ * @return #MQTTBadParameter if invalid parameters are passed; #MQTTSuccess
+ * otherwise.
  */
 MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
                         const TransportInterface_t * pTransportInterface,
@@ -235,12 +233,12 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  *
  * The maximum time this function waits for a CONNACK is decided in one of the
  * following ways:
- * 1. If #timeoutMs is greater than 0:
- *    #getTime is used to ensure that the function does not wait more than #timeoutMs
- *    for CONNACK.
- * 2. If #timeoutMs is 0:
- *    The network receive for CONNACK is retried up to the number of times configured
- *    by #MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT.
+ * 1. If @p timeoutMs is greater than 0:
+ *    #MQTTContext_t.getTime is used to ensure that the function does not wait
+ *    more than @p timeoutMs for CONNACK.
+ * 2. If @p timeoutMs is 0:
+ *    The network receive for CONNACK is retried up to the number of times
+ *    configured by #MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT.
  *
  * @param[in] pContext Initialized MQTT context.
  * @param[in] pConnectInfo MQTT CONNECT packet information.
@@ -258,7 +256,7 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  * #MQTTSendFailed if transport send failed;
  * #MQTTRecvFailed if transport receive failed for CONNACK;
  * #MQTTNoDataAvailable if no data available to receive in transport until
- * the #timeoutMs for CONNACK;
+ * the @p timeoutMs for CONNACK;
  * #MQTTSuccess otherwise.
  *
  * @note This API may spend more time than provided in the timeoutMS parameters in
@@ -292,7 +290,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
  * @param[in] pContext Initialized MQTT context.
  * @param[in] pSubscriptionList List of MQTT subscription info.
  * @param[in] subscriptionCount The number of elements in pSubscriptionList.
- * @param[in] packetId packet ID generated by #MQTT_GetPacketId.
+ * @param[in] packetId Packet ID generated by #MQTT_GetPacketId.
  *
  * @return #MQTTNoMemory if the #MQTTContext_t.networkBuffer is too small to
  * hold the MQTT packet;
@@ -429,7 +427,7 @@ uint16_t MQTT_GetPacketId( MQTTContext_t * pContext );
  *  - 0x01 - Success - Maximum QoS 1
  *  - 0x02 - Success - Maximum QoS 2
  *  - 0x80 - Failure
- * Refer to @ref MQTTSubAckStatus for the status codes.
+ * Refer to #MQTTSubAckStatus_t for the status codes.
  *
  * @param[in] pSubackPacket The SUBACK packet whose payload is to be parsed.
  * @param[out] pPayloadStart This is populated with the starting address
