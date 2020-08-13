@@ -314,17 +314,17 @@ static MQTTStatus_t validatePublishParams( const MQTTContext_t * pContext,
  *
  * @param[in] pTopicFilter The topic filter containing the wildcard.
  * @param[in] topicFilterLength Length of the topic filter being examined.
+ * @param[in] filterIndex Index of the topic filter being examined.
  * @param[in] topicNameLength Length of the topic name being examined.
  * @param[in] nameIndex Index of the topic name being examined.
- * @param[in] filterIndex Index of the topic filter being examined.
  *
  * @return Returns whether the topic filter and the topic name match.
  */
 static bool matchWildcardsSpecialCases( const char * pTopicFilter,
                                         uint16_t topicFilterLength,
+                                        uint16_t filterIndex,
                                         uint16_t topicNameLength,
-                                        uint16_t nameIndex,
-                                        uint16_t filterIndex );
+                                        uint16_t nameIndex );
 
 /**
  * @brief Attempt to match topic name with a topic filter starting with a wildcard.
@@ -336,9 +336,9 @@ static bool matchWildcardsSpecialCases( const char * pTopicFilter,
  *
  * @param[in] pTopicFilter The topic filter containing the wildcard.
  * @param[in] topicFilterLength Length of the topic filter.
+ * @param[in] filterIndex Index of the wildcard in the topic filter.
  * @param[in] pTopicName The topic name to check.
  * @param[in] topicNameLength Length of the topic name.
- * @param[in] filterIndex Index of the wildcard in the topic filter.
  * @param[in,out] pNameIndex Index of character in topic name. This variable is
  * advanced for `+` wildcards.
  * @param[out] pMatch Whether the topic filter and topic name match.
@@ -348,9 +348,9 @@ static bool matchWildcardsSpecialCases( const char * pTopicFilter,
  */
 static bool matchWildcards( const char * pTopicFilter,
                             uint16_t topicFilterLength,
+                            uint16_t filterIndex,
                             const char * pTopicName,
                             uint16_t topicNameLength,
-                            uint16_t filterIndex,
                             uint16_t * pNameIndex,
                             bool * pMatch );
 
@@ -373,14 +373,13 @@ static bool matchTopicFilter( const char * pTopicName,
 
 static bool matchWildcardsSpecialCases( const char * pTopicFilter,
                                         uint16_t topicFilterLength,
+                                        uint16_t filterIndex,
                                         uint16_t topicNameLength,
-                                        uint16_t nameIndex,
-                                        uint16_t filterIndex )
+                                        uint16_t nameIndex )
 {
-    /* The smallest topic filter accepted by this function is "/+". */
-    assert( topicFilterLength > 1 );
-
     bool matchFound = false;
+
+    assert( pTopicFilter != NULL );
 
     /* Determine if the last character is reached for the topic name, and the
      * third to last character is reached for the topic filter. */
@@ -417,13 +416,18 @@ static bool matchWildcardsSpecialCases( const char * pTopicFilter,
 
 static bool matchWildcards( const char * pTopicFilter,
                             uint16_t topicFilterLength,
+                            uint16_t filterIndex,
                             const char * pTopicName,
                             uint16_t topicNameLength,
-                            uint16_t filterIndex,
                             uint16_t * pNameIndex,
                             bool * pMatch )
 {
     bool shouldStopMatching = false;
+
+    assert( pTopicFilter != NULL );
+    assert( pTopicName != NULL );
+    assert( pNameIndex != NULL );
+    assert( pMatch != NULL );
 
     /* Check for wildcards. */
     if( pTopicFilter[ filterIndex ] == '+' )
@@ -487,18 +491,18 @@ static bool matchTopicFilter( const char * pTopicName,
              * topic filters, as documented by the MQTT protocol spec. */
             matchFound = matchWildcardsSpecialCases( pTopicFilter,
                                                      topicFilterLength,
+                                                     filterIndex,
                                                      topicNameLength,
-                                                     nameIndex,
-                                                     filterIndex );
+                                                     nameIndex );
         }
         else
         {
             /* Check for matching wildcards. */
             shouldStopMatching = matchWildcards( pTopicFilter,
                                                  topicFilterLength,
+                                                 filterIndex,
                                                  pTopicName,
                                                  topicNameLength,
-                                                 filterIndex,
                                                  &nameIndex,
                                                  &matchFound );
         }
@@ -2196,6 +2200,7 @@ MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
 {
     MQTTStatus_t status = MQTTSuccess;
     bool topicFilterStartsWithWildcard = false;
+    bool matchStatus = false;
 
     if( ( pTopicName == NULL ) || ( topicNameLength == 0u ) )
     {
@@ -2225,10 +2230,10 @@ MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
          * topic filter length match. */
         if( topicNameLength == topicFilterLength )
         {
-            *pIsMatch = ( strncmp( pTopicName, pTopicFilter, topicNameLength ) == 0 ) ? true : false;
+            matchStatus = ( strncmp( pTopicName, pTopicFilter, topicNameLength ) == 0 ) ? true : false;
         }
 
-        if( *pIsMatch == false )
+        if( matchStatus == false )
         {
             /* If an exact match was not found, match against wildcard characters in
              * topic filter.*/
@@ -2243,9 +2248,12 @@ MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
              * "+/sport" topic filters. */
             if( !( ( pTopicName[ 0 ] == '$' ) && ( topicFilterStartsWithWildcard == true ) ) )
             {
-                *pIsMatch = matchTopicFilter( pTopicName, topicNameLength, pTopicFilter, topicFilterLength );
+                matchStatus = matchTopicFilter( pTopicName, topicNameLength, pTopicFilter, topicFilterLength );
             }
         }
+
+        /* Update the output parameter with the match result. */
+        *pIsMatch = matchStatus;
     }
 
     return status;
