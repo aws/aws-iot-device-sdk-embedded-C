@@ -1663,7 +1663,6 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths( void )
     context.keepAliveIntervalSec = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
     context.lastPacketTime = 0;
     context.pingReqSendTimeMs = MQTT_ONE_SECOND_TO_MS;
-    context.pingRespTimeoutMs = MQTT_ONE_SECOND_TO_MS;
     expectProcessLoopCalls( &context, MQTTStateNull, MQTTStateNull,
                             MQTTIllegalState, MQTTSuccess, MQTTStateNull,
                             MQTTSuccess, false, NULL );
@@ -1696,11 +1695,12 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths( void )
     modifyIncomingPacketStatus = MQTTNoDataAvailable;
     globalEntryTime = MQTT_ONE_SECOND_TO_MS;
 
-    /* Coverage for the branch path where PING timeout interval hasn't expired. */
+    /* Coverage for the branch path where PINGRESP timeout interval has expired. */
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
-    context.lastPacketTime = 0;
     context.keepAliveIntervalSec = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
+    context.lastPacketTime = 0;
+    context.pingReqSendTimeMs = 0;
     context.waitingForPingResp = true;
     expectProcessLoopCalls( &context, MQTTStateNull, MQTTStateNull,
                             MQTTIllegalState, MQTTSuccess, MQTTStateNull,

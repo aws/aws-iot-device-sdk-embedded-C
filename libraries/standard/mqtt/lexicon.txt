@@ -163,9 +163,6 @@ pingreq
 pingreqsendtimems
 pingresp
 pingresps
-pingresptimeoutms
-pismatch
-pmatch
 pmessage
 pmqttcontext
 pnameindex
