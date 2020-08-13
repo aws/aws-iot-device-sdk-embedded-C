@@ -284,8 +284,6 @@ uint
 un
 unsuback
 unsubscribelist
-unsubscription
-unsubscriptions
 updatestateack
 updatestatepublish
 updatestatestatus
