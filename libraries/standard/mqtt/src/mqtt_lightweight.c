@@ -1042,8 +1042,8 @@ static MQTTStatus_t validateSubscriptionSerializeParams( const MQTTSubscribeInfo
     {
         LogError( ( "Argument cannot be NULL: pFixedBuffer=%p, "
                     "pSubscriptionList=%p.",
-                    pFixedBuffer,
-                    pSubscriptionList ) );
+                    ( void * ) pFixedBuffer,
+                    ( void * ) pSubscriptionList ) );
         status = MQTTBadParameter;
     }
     /* A buffer must be configured for serialization. */
@@ -1362,9 +1362,9 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
     {
         LogError( ( "Argument cannot be NULL: pConnectInfo=%p, "
                     "pRemainingLength=%p, pPacketSize=%p.",
-                    pConnectInfo,
-                    pRemainingLength,
-                    pPacketSize ) );
+                    ( void * ) pConnectInfo,
+                    ( void * ) pRemainingLength,
+                    ( void * ) pPacketSize ) );
         status = MQTTBadParameter;
     }
     else if( ( pConnectInfo->clientIdentifierLength == 0U ) || ( pConnectInfo->pClientIdentifier == NULL ) )
@@ -1458,8 +1458,8 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * pConnectInfo,
     {
         LogError( ( "Argument cannot be NULL: pConnectInfo=%p, "
                     "pFixedBuffer=%p.",
-                    pConnectInfo,
-                    pFixedBuffer ) );
+                    ( void * ) pConnectInfo,
+                    ( void * ) pFixedBuffer ) );
         status = MQTTBadParameter;
     }
     /* A buffer must be configured for serialization. */
@@ -1516,9 +1516,9 @@ MQTTStatus_t MQTT_GetSubscribePacketSize( const MQTTSubscribeInfo_t * pSubscript
     {
         LogError( ( "Argument cannot be NULL: pSubscriptionList=%p, "
                     "pRemainingLength=%p, pPacketSize=%p.",
-                    pSubscriptionList,
-                    pRemainingLength,
-                    pPacketSize ) );
+                    ( void * ) pSubscriptionList,
+                    ( void * ) pRemainingLength,
+                    ( void * ) pPacketSize ) );
         status = MQTTBadParameter;
     }
     else if( subscriptionCount == 0U )
@@ -1615,9 +1615,9 @@ MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * pSubscri
     {
         LogError( ( "Argument cannot be NULL: pSubscriptionList=%p, "
                     "pRemainingLength=%p, pPacketSize=%p.",
-                    pSubscriptionList,
-                    pRemainingLength,
-                    pPacketSize ) );
+                    ( void * ) pSubscriptionList,
+                    ( void * ) pRemainingLength,
+                    ( void * ) pPacketSize ) );
         status = MQTTBadParameter;
     }
     else if( subscriptionCount == 0U )
@@ -1708,9 +1708,9 @@ MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
     {
         LogError( ( "Argument cannot be NULL: pPublishInfo=%p, "
                     "pRemainingLength=%p, pPacketSize=%p.",
-                    pPublishInfo,
-                    pRemainingLength,
-                    pPacketSize ) );
+                    ( void * ) pPublishInfo,
+                    ( void * ) pRemainingLength,
+                    ( void * ) pPacketSize ) );
         status = MQTTBadParameter;
     }
     else if( ( pPublishInfo->pTopicName == NULL ) || ( pPublishInfo->topicNameLength == 0U ) )
@@ -1756,8 +1756,8 @@ MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * pPublishInfo,
     {
         LogError( ( "Argument cannot be NULL: pFixedBuffer=%p, "
                     "pPublishInfo=%p.",
-                    pFixedBuffer,
-                    pPublishInfo ) );
+                    ( void * ) pFixedBuffer,
+                    ( void * ) pPublishInfo ) );
         status = MQTTBadParameter;
     }
     /* A buffer must be configured for serialization. */
@@ -1841,9 +1841,9 @@ MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * pPublishInfo
     {
         LogError( ( "Argument cannot be NULL: pFixedBuffer=%p, "
                     "pPublishInfo=%p, pHeaderSize=%p.",
-                    pFixedBuffer,
-                    pPublishInfo,
-                    pHeaderSize ) );
+                    ( void * ) pFixedBuffer,
+                    ( void * ) pPublishInfo,
+                    ( void * ) pHeaderSize ) );
         status = MQTTBadParameter;
     }
     /* A buffer must be configured for serialization. */
@@ -2088,9 +2088,9 @@ MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * pIncomingPacket,
     {
         LogError( ( "Argument cannot be NULL: pIncomingPacket=%p, "
                     "pPacketId=%p, pPublishInfo=%p",
-                    pIncomingPacket,
-                    pPacketId,
-                    pPublishInfo ) );
+                    ( void * ) pIncomingPacket,
+                    ( void * ) pPacketId,
+                    ( void * ) pPublishInfo ) );
         status = MQTTBadParameter;
     }
     else if( ( pIncomingPacket->type & 0xF0U ) != MQTT_PACKET_TYPE_PUBLISH )

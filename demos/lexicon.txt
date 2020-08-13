@@ -31,6 +31,7 @@ developerguide
 doesn
 dup
 endif
+filterindex
 hashmap
 hasn
 html
@@ -48,6 +49,8 @@ methodlen
 milli
 mosquitto
 mqtt
+mqttkeepalivetimeout
+nameindex
 noninfringement
 openssl
 org
@@ -58,6 +61,7 @@ packetidtoresend
 param
 pathlen
 pbuffer
+pcontext
 pdeserializedinfo
 pem
 pfixedbuffer
@@ -66,8 +70,10 @@ pindex
 pingreq
 pingresp
 plaintext
+pmatch
 pmethod
 pmqttcontext
+pnameindex
 pnetworkcontext
 posix
 ppacketinfo
@@ -76,6 +82,8 @@ ppubinfo
 ppublishinfo
 processloop
 psessionpresent
+ptopicfilter
+ptopicname
 ptransportinterface
 puback
 pubcomp
@@ -91,9 +99,12 @@ structs
 suback
 sublicense
 subscribepublishloop
+sys
 tcp
 tcpsocket
 tls
+topicfilterlength
+topicnamelength
 transportinterface
 transporttimeout
 uint

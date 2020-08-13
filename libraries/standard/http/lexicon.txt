@@ -18,6 +18,7 @@ contentlength
 copybrief
 coverity
 datalen
+dest
 doesn
 endif
 enums
@@ -30,9 +31,12 @@ fieldlentoreturn
 fieldloc
 findheaderfieldparsercallback
 findheaderinresponse
+findheaderonheadercompletecallback
+findheadervalueparsercallback
 firstpartbytes
 getfinalresponsestatus
 github
+headercount
 headerslen
 hostlen
 html
@@ -43,6 +47,8 @@ httpparseronbodycallback
 httpparseronheaderfieldcallback
 httpparseronheaderscompletecallback
 httpparseronheadervaluecallback
+httpparseronmessagebegincallback
+httpparseronmessagecompletecallback
 httpparseronstatuscallback
 httpparserxxxxcallback
 httpparserxxxxcallbacks
@@ -63,6 +69,7 @@ linux
 malloc
 methodlen
 memcpy
+memmove
 misra
 msg
 networkcontext
@@ -92,9 +99,11 @@ pcontext
 pdata
 pfield
 pfieldloc
+pfindheadercontext
 pheaders
 phost
 phttpparser
+phttpparsingcontext
 plastheaderfield
 plastheadervalue
 ploc
@@ -115,6 +124,7 @@ prequestinfo
 presponse
 processhttpparsererror
 ptransport
+ptransportinterface
 pvalue
 pvaluelen
 pvalueloc

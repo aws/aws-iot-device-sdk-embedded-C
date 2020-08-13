@@ -1663,7 +1663,6 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Happy_Paths( void )
     context.keepAliveIntervalSec = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
     context.lastPacketTime = 0;
     context.pingReqSendTimeMs = MQTT_ONE_SECOND_TO_MS;
-    context.pingRespTimeoutMs = MQTT_ONE_SECOND_TO_MS;
     expectProcessLoopCalls( &context, MQTTStateNull, MQTTStateNull,
                             MQTTIllegalState, MQTTSuccess, MQTTStateNull,
                             MQTTSuccess, false, NULL );
@@ -1696,11 +1695,12 @@ void test_MQTT_ProcessLoop_handleKeepAlive_Error_Paths( void )
     modifyIncomingPacketStatus = MQTTNoDataAvailable;
     globalEntryTime = MQTT_ONE_SECOND_TO_MS;
 
-    /* Coverage for the branch path where PING timeout interval hasn't expired. */
+    /* Coverage for the branch path where PINGRESP timeout interval has expired. */
     mqttStatus = MQTT_Init( &context, &transport, getTime, eventCallback, &networkBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
-    context.lastPacketTime = 0;
     context.keepAliveIntervalSec = MQTT_SAMPLE_KEEPALIVE_INTERVAL_S;
+    context.lastPacketTime = 0;
+    context.pingReqSendTimeMs = 0;
     context.waitingForPingResp = true;
     expectProcessLoopCalls( &context, MQTTStateNull, MQTTStateNull,
                             MQTTIllegalState, MQTTSuccess, MQTTStateNull,
@@ -2121,6 +2121,70 @@ void test_MQTT_Ping_error_path( void )
     /* Expect the above calls when running MQTT_Ping. */
     mqttStatus = MQTT_Ping( &context );
     TEST_ASSERT_EQUAL( MQTTBadParameter, mqttStatus );
+}
+
+/* ========================================================================== */
+
+/**
+ * @brief Tests that MQTT_GetSubAckPayload works as expected in parsing the
+ * payload information of a SUBACK packet.
+ */
+void test_MQTT_GetSubAckPayload( void )
+{
+    MQTTPacketInfo_t mqttPacketInfo;
+    uint16_t payloadSize;
+    uint8_t * pPayloadStart;
+    MQTTStatus_t status = MQTTSuccess;
+    uint8_t buffer[ 10 ] = { 0 };
+
+    buffer[ 0 ] = 0;
+    buffer[ 1 ] = 1;
+    buffer[ 2 ] = 0x00;
+    buffer[ 3 ] = 0x01;
+    buffer[ 4 ] = 0x02;
+    buffer[ 5 ] = 0x80;
+
+    /* Process a valid SUBACK packet containing whole range of server response codes. */
+    mqttPacketInfo.type = MQTT_PACKET_TYPE_SUBACK;
+    mqttPacketInfo.pRemainingData = buffer;
+    mqttPacketInfo.remainingLength = 6;
+    status = MQTT_GetSubAckStatusCodes( &mqttPacketInfo, &pPayloadStart, &payloadSize );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL_PTR( &buffer[ 2 ], pPayloadStart );
+    TEST_ASSERT_EQUAL_INT( MQTTSubAckSuccessQos0, pPayloadStart[ 0 ] );
+    TEST_ASSERT_EQUAL_INT( MQTTSubAckSuccessQos1, pPayloadStart[ 1 ] );
+    TEST_ASSERT_EQUAL_INT( MQTTSubAckSuccessQos2, pPayloadStart[ 2 ] );
+    TEST_ASSERT_EQUAL_INT( MQTTSubAckFailure, pPayloadStart[ 3 ] );
+    TEST_ASSERT_EQUAL_INT( 4, payloadSize );
+
+    /* Packet is NULL. */
+    status = MQTT_GetSubAckStatusCodes( NULL, &pPayloadStart, &payloadSize );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Output parameter, pPayloadStart, is NULL. */
+    status = MQTT_GetSubAckStatusCodes( &mqttPacketInfo, NULL, &payloadSize );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Output parameter, pPayloadSize, is NULL. */
+    status = MQTT_GetSubAckStatusCodes( &mqttPacketInfo, &pPayloadStart, NULL );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Remaining Data is NULL. */
+    mqttPacketInfo.pRemainingData = NULL;
+    status = MQTT_GetSubAckStatusCodes( &mqttPacketInfo, &pPayloadStart, &payloadSize );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* non-SUBACK packet type. */
+    mqttPacketInfo.type = MQTT_PACKET_TYPE_CONNACK;
+    mqttPacketInfo.pRemainingData = buffer;
+    status = MQTT_GetSubAckStatusCodes( &mqttPacketInfo, &pPayloadStart, &payloadSize );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Invalid remaining length value in packet. */
+    mqttPacketInfo.remainingLength = 0;
+    mqttPacketInfo.type = MQTT_PACKET_TYPE_SUBACK;
+    status = MQTT_GetSubAckStatusCodes( &mqttPacketInfo, &pPayloadStart, &payloadSize );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 }
 
 /* ========================================================================== */
