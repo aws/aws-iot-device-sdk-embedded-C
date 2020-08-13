@@ -605,6 +605,23 @@ void test_MQTT_SerializeConnect( void )
     status = MQTT_SerializeConnect( &connectInfo, &willInfo, remainingLength, &fixedBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
     checkBufferOverflow( buffer, sizeof( buffer ) );
+
+    /* Success right on the buffer boundary. */
+    connectInfo.pUserName = "USER";
+    connectInfo.userNameLength = 4;
+    /* Throwing in a possible valid zero length password. */
+    connectInfo.pPassword = "PASS";
+    connectInfo.passwordLength = 0;
+    status = MQTT_GetConnectPacketSize( &connectInfo, NULL, &remainingLength, &packetSize );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_GREATER_OR_EQUAL( packetSize, bufferSize );
+    /* Set the fixed buffer to exactly the size of the packet. */
+    fixedBuffer.size = packetSize;
+    padAndResetBuffer( buffer, sizeof( buffer ) );
+    status = MQTT_SerializeConnect( &connectInfo, NULL, remainingLength, &fixedBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    checkBufferOverflow( buffer, sizeof( buffer ) );
+
 }
 
 /* ========================================================================== */
