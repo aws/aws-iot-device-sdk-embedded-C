@@ -53,7 +53,8 @@ if(BUILD_TESTS)
          DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/tests")
 endif()
 
-# Set prefix to PWD if any path flags are relative
+# Set prefix to PWD if any path flags are relative.
+# PWD is set to the path where you run the cmake command.
 if(DEFINED ENV{PWD})
     if(ROOT_CA_CERT_PATH AND NOT IS_ABSOLUTE ${ROOT_CA_CERT_PATH})
         set(ROOT_CA_CERT_PATH "$ENV{PWD}/${ROOT_CA_CERT_PATH}")
