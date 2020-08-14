@@ -2,6 +2,7 @@ ack
 acked
 acks
 addrecord
+ansi
 api
 app
 aws
@@ -176,7 +177,6 @@ pingreq
 pingreqsendtimems
 pingresp
 pingresps
-pingresptimeoutms
 pmessage
 pmqttcontext
 pnetworkbuffer

@@ -52,7 +52,9 @@
  *
  * @note This demo uses httpbin.org: A simple HTTP Request & Response Service.
  */
-#define SERVER_HOST                       "httpbin.org"
+#ifndef SERVER_HOST
+    #define SERVER_HOST    "httpbin.org"
+#endif
 
 /**
  * @brief HTTP server port number.

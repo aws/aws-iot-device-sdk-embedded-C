@@ -53,20 +53,24 @@
  * This demo uses the Mosquitto test server. This is a public MQTT server; do not
  * publish anything sensitive to this server.
  */
-#define BROKER_ENDPOINT      "test.mosquitto.org"
+#ifndef BROKER_ENDPOINT
+    #define BROKER_ENDPOINT    "test.mosquitto.org"
+#endif
 
 /**
  * @brief MQTT server port number.
  *
  * In general, port 1883 is for unsecured MQTT connections.
  */
-#define BROKER_PORT          ( 1883 )
+#define BROKER_PORT    ( 1883 )
 
 /**
  * @brief MQTT client identifier.
  *
  * No two clients may use the same client identifier simultaneously.
  */
-#define CLIENT_IDENTIFIER    "testclient"
+#ifndef CLIENT_IDENTIFIER
+    #define CLIENT_IDENTIFIER    "testclient"
+#endif
 
 #endif /* ifndef DEMO_CONFIG_H */
