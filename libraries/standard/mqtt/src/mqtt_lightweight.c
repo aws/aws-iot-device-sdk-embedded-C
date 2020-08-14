@@ -1163,12 +1163,7 @@ static MQTTStatus_t validateSubscriptionSerializeParams( const MQTTSubscribeInfo
                                                          const MQTTFixedBuffer_t * pFixedBuffer )
 {
     MQTTStatus_t status = MQTTSuccess;
-
-    /* The serialized packet size = First byte
-     *  + length of encoded size of remaining length
-     *  + remaining length. */
-    size_t packetSize = 1U + remainingLengthEncodedSize( remainingLength )
-                        + remainingLength;
+    size_t packetSize = 0;
 
     /* Validate all the parameters. */
     if( ( pFixedBuffer == NULL ) || ( pSubscriptionList == NULL ) )
@@ -1195,17 +1190,22 @@ static MQTTStatus_t validateSubscriptionSerializeParams( const MQTTSubscribeInfo
         LogError( ( "Packet Id for subscription packet is 0." ) );
         status = MQTTBadParameter;
     }
-    else if( packetSize > pFixedBuffer->size )
-    {
-        LogError( ( "Buffer size of %lu is not sufficient to hold "
-                    "serialized packet of size of %lu.",
-                    ( unsigned long ) pFixedBuffer->size,
-                    ( unsigned long ) packetSize ) );
-        status = MQTTNoMemory;
-    }
     else
     {
-        /* Empty else MISRA 15.7 */
+        /* The serialized packet size = First byte
+         * + length of encoded size of remaining length
+         * + remaining length. */
+        packetSize = 1U + remainingLengthEncodedSize( remainingLength )
+                     + remainingLength;
+
+        if( packetSize > pFixedBuffer->size )
+        {
+            LogError( ( "Buffer size of %lu is not sufficient to hold "
+                        "serialized packet of size of %lu.",
+                        ( unsigned long ) pFixedBuffer->size,
+                        ( unsigned long ) packetSize ) );
+            status = MQTTNoMemory;
+        }
     }
 
     return status;
@@ -1878,12 +1878,7 @@ MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * pPublishInfo,
                                     const MQTTFixedBuffer_t * pFixedBuffer )
 {
     MQTTStatus_t status = MQTTSuccess;
-
-    /* Length of serialized packet = First byte
-     *                               + Length of encoded remaining length
-     *                               + Remaining length. */
-    size_t packetSize = 1U + remainingLengthEncodedSize( remainingLength )
-                        + remainingLength;
+    size_t packetSize = 0;
 
     if( ( pFixedBuffer == NULL ) || ( pPublishInfo == NULL ) )
     {
@@ -1929,7 +1924,16 @@ MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * pPublishInfo,
         LogError( ( "Duplicate flag is set for PUBLISH with Qos 0," ) );
         status = MQTTBadParameter;
     }
-    else if( packetSize > pFixedBuffer->size )
+    else
+    {
+        /* Length of serialized packet = First byte
+         *                                + Length of encoded remaining length
+         *                                + Remaining length. */
+        packetSize = 1U + remainingLengthEncodedSize( remainingLength )
+                     + remainingLength;
+    }
+
+    if( ( status == MQTTSuccess ) && ( packetSize > pFixedBuffer->size ) )
     {
         LogError( ( "Buffer size of %lu is not sufficient to hold "
                     "serialized PUBLISH packet of size of %lu.",
@@ -1937,7 +1941,8 @@ MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * pPublishInfo,
                     ( unsigned long ) packetSize ) );
         status = MQTTNoMemory;
     }
-    else
+
+    if( status == MQTTSuccess )
     {
         /* Serialize publish with header and payload. */
         serializePublishCommon( pPublishInfo,
@@ -1959,15 +1964,7 @@ MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * pPublishInfo
                                           size_t * pHeaderSize )
 {
     MQTTStatus_t status = MQTTSuccess;
-
-    /* Length of serialized packet = First byte
-     *                               + Length of encoded remaining length
-     *                               + Remaining length
-     *                               - Payload Length.
-     * Payload length will be subtracted after verifying pPublishInfo parameter.
-     */
-    size_t packetSize = 1U + remainingLengthEncodedSize( remainingLength )
-                        + remainingLength;
+    size_t packetSize = 0;
 
     if( ( pFixedBuffer == NULL ) || ( pPublishInfo == NULL ) ||
         ( pHeaderSize == NULL ) )
@@ -2004,7 +2001,19 @@ MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * pPublishInfo
         LogError( ( "Duplicate flag is set for PUBLISH with Qos 0," ) );
         status = MQTTBadParameter;
     }
-    else if( ( packetSize - pPublishInfo->payloadLength ) > pFixedBuffer->size )
+    else
+    {
+        /* Length of serialized packet = First byte
+         *                               + Length of encoded remaining length
+         *                               + Remaining length
+         *                               - Payload Length.
+         */
+        packetSize = 1U + remainingLengthEncodedSize( remainingLength )
+                     + remainingLength
+                     - pPublishInfo->payloadLength;
+    }
+
+    if( ( status == MQTTSuccess ) && ( packetSize > pFixedBuffer->size ) )
     {
         LogError( ( "Buffer size of %lu is not sufficient to hold "
                     "serialized PUBLISH header packet of size of %lu.",
@@ -2012,7 +2021,8 @@ MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * pPublishInfo
                     ( unsigned long ) ( packetSize - pPublishInfo->payloadLength ) ) );
         status = MQTTNoMemory;
     }
-    else
+
+    if( status == MQTTSuccess )
     {
         /* Serialize publish without copying the payload. */
         serializePublishCommon( pPublishInfo,
@@ -2022,7 +2032,7 @@ MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * pPublishInfo
                                 false );
 
         /* Header size is the same as calculated packet size. */
-        *pHeaderSize = ( packetSize - pPublishInfo->payloadLength );
+        *pHeaderSize = packetSize;
     }
 
     return status;

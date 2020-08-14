@@ -26,3 +26,10 @@ target_include_directories(
     PUBLIC
         ${LOGGING_INCLUDE_DIRS}
 )
+
+if(SERVER_HOST)
+    target_compile_definitions(
+        ${DEMO_NAME} PRIVATE
+            SERVER_HOST="${SERVER_HOST}"
+    )
+endif()
