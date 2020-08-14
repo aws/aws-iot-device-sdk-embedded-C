@@ -91,6 +91,8 @@
  *
  * No two clients may use the same client identifier simultaneously.
  */
-#define CLIENT_IDENTIFIER           "testclient"
+#ifndef CLIENT_IDENTIFIER
+    #define CLIENT_IDENTIFIER    "testclient"
+#endif
 
 #endif /* ifndef DEMO_CONFIG_H */

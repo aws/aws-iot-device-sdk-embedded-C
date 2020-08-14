@@ -35,11 +35,41 @@ function(check_aws_credentials demo_name)
     endif()
 endfunction()
 
+if(DOWNLOAD_CERTS)
+    # Download the Amazon Root CA certificate.
+    message( "Downloading the Amazon Root CA certificate..." )
+    file(MAKE_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/certificates)
+    execute_process(
+        COMMAND curl --url https://www.amazontrust.com/repository/AmazonRootCA1.pem
+        -o ${CMAKE_CURRENT_LIST_DIR}/certificates/AmazonRootCA1.crt
+    )
+endif()
+
+# Copy the certificates and client keys to the build directory.
+file(COPY "${CMAKE_CURRENT_LIST_DIR}/certificates"
+     DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+if(BUILD_TESTS)
+    file(COPY "${CMAKE_CURRENT_LIST_DIR}/certificates"
+         DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/tests")
+endif()
+
+# Set prefix to PWD if any path flags are relative
+if(DEFINED ENV{PWD})
+    if(NOT ROOT_CA_CERT_PATH MATCHES "/$")
+        set(ROOT_CA_CERT_PATH "$ENV{PWD}/${ROOT_CA_CERT_PATH}")
+    endif()
+    if(NOT CLIENT_CERT_PATH MATCHES "/$")
+        set(CLIENT_CERT_PATH "$ENV{PWD}/${CLIENT_CERT_PATH}")
+    endif()
+    if(NOT CLIENT_PRIVATE_KEY_PATH MATCHES "/$")
+        set(CLIENT_PRIVATE_KEY_PATH "$ENV{PWD}/${CLIENT_PRIVATE_KEY_PATH}")
+    endif()
+endif()
+
 # Include each subdirectory that has a CMakeLists.txt file in it
 file(GLOB demo_dirs "${DEMOS_DIR}/*/*")
 foreach(demo_dir IN LISTS demo_dirs)
     if(IS_DIRECTORY "${demo_dir}" AND EXISTS "${demo_dir}/CMakeLists.txt")
-        get_filename_component( DEMO_EXE_NAME ${demo_dir} NAME )
         add_subdirectory(${demo_dir})
     endif()
 endforeach()

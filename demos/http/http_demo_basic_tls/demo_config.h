@@ -54,21 +54,25 @@
  *
  * @note This demo uses httpbin.org: A simple HTTP Request & Response Service.
  */
-#define SERVER_HOST                       "httpbin.org"
+#ifndef SERVER_HOST
+    #define SERVER_HOST    "httpbin.org"
+#endif
 
 /**
  * @brief HTTP server port number.
  *
  * In general, port 443 is for TLS HTTP connections.
  */
-#define SERVER_PORT                       443
+#define SERVER_PORT    443
 
 /**
  * @brief Path of the file containing the server's root CA certificate for TLS authentication.
  *
  * @note This certificate should be PEM-encoded.
  */
-#define ROOT_CA_CERT_PATH                 "certificates/AmazonRootCA1.crt"
+#ifndef ROOT_CA_CERT_PATH
+    #define ROOT_CA_CERT_PATH    "certificates/AmazonRootCA1.crt"
+#endif
 
 /**
  * @brief Paths for different HTTP methods for specified host.
