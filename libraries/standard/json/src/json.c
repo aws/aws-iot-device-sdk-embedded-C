@@ -838,7 +838,7 @@ static void skipObjectScalars( const char * buf,
  * @param[in] buf  The buffer to parse.
  * @param[in,out] start  The index at which to begin.
  * @param[in] max  The size of the buffer.
- * @param[in] mode  The start marker of a collection or object.
+ * @param[in] mode  The start marker of an array or object.
  */
 static void skipScalars( const char * buf,
                          size_t * start,
