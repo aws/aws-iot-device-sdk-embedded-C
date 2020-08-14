@@ -50,9 +50,6 @@
 /**
  * @brief MQTT server host name.
  *
- * @note If using AWS IoT Core, the endpoint can be found in the AWS IoT console
- *  under Settings/Custom Endpoint, or using the describe-endpoint API.
- *
  * #define BROKER_ENDPOINT               "...insert here..."
  */
 
@@ -66,23 +63,11 @@
 /**
  * @brief Path of the file containing the client certificate.
  *
- * @note If using AWS IoT, refer to the AWS documentation below for details
- * regarding client authentication.
- * https://docs.aws.amazon.com/iot/latest/developerguide/client-authentication.html
- *
- * @note This certificate should be PEM-encoded.
- *
  * #define CLIENT_CERT_PATH    "...insert here..."
  */
 
 /**
  * @brief Path of the file containing the client's private key.
- *
- * @note If using AWS IoT, refer to the AWS documentation below for details
- * regarding client authentication.
- * https://docs.aws.amazon.com/iot/latest/developerguide/client-authentication.html
- *
- * @note This private key should be PEM-encoded.
  *
  * #define CLIENT_PRIVATE_KEY_PATH    "...insert here..."
  */
@@ -91,9 +76,8 @@
  * @brief Path of the file containing the server's root CA certificate.
  *
  * This certificate should be PEM-encoded.
+ *
+ * * #define SERVER_ROOT_CA_CERT_PATH    "...insert here..."
  */
-#ifndef SERVER_ROOT_CA_CERT_PATH
-    #define SERVER_ROOT_CA_CERT_PATH    "certificates/AmazonRootCA1.crt"
-#endif
 
 #endif /* ifndef TEST_CONFIG_H_ */

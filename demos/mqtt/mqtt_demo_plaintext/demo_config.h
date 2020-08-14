@@ -56,8 +56,6 @@
  * a Mosquitto broker locally.
  * Alternatively,instructions to run Mosquitto server on Docker container can
  * be viewed in the README.md of the root directory.
- *
- * #define BROKER_ENDPOINT               "...insert here..."
  */
 #ifndef BROKER_ENDPOINT
     #define BROKER_ENDPOINT    "localhost"
