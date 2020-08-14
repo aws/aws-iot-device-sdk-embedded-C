@@ -33,6 +33,9 @@ option( BUILD_TESTS
 option( BUILD_CLONE_SUBMODULES
         "Set this to ON to automatically clone any required Git submodules. When OFF, submodules must be manually cloned."
         ON )
+option( DOWNLOAD_CERTS
+        "Set this to ON to automatically download certificates needed to run the demo. When OFF, certificates must be manually downloaded." 
+        ON )
 
 # Unity test framework does not export the correct symbols for DLLs.
 set( ALLOW_SHARED_LIBRARIES ON )
