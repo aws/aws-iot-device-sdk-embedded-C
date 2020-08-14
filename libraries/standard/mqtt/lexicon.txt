@@ -163,6 +163,8 @@ pingreq
 pingreqsendtimems
 pingresp
 pingresps
+pismatch
+pmatch
 pmessage
 pmqttcontext
 pnameindex
