@@ -233,6 +233,18 @@
  */
 #define METRICS_STRING_LENGTH               ( ( uint16_t ) ( sizeof( METRICS_STRING ) - 1 ) )
 
+
+#ifdef CLIENT_USERNAME
+
+/**
+ * @brief Append username with the metrics string if #CLIENT_USERNAME is defined.
+ *
+ * This is to support both metrics reporting and username/password based client
+ * authentication by AWS IoT.
+ */
+    #define CLIENT_USERNAME_WITH_METRICS    CLIENT_USERNAME METRICS_STRING
+#endif
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -471,6 +483,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
         #ifdef CLIENT_USERNAME
             opensslCredentials.pAlpnProtos = AWS_IOT_PASSWORD_ALPN;
             opensslCredentials.alpnProtosLen = AWS_IOT_PASSWORD_ALPN_LENGTH;
+            opensslCredentials.sniHostName = AWS_IOT_ENDPOINT;
         #else
             opensslCredentials.pAlpnProtos = ALPN_PROTOCOL_NAME;
             opensslCredentials.alpnProtosLen = ALPN_PROTOCOL_NAME_LENGTH;
@@ -828,12 +841,22 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
          * The metrics collected by AWS IoT are the current operating system or
          * SDK and its version. These metrics help AWS IoT improve security and
          * provide better technical support. */
-        connectInfo.pUserName = METRICS_STRING;
-        connectInfo.userNameLength = METRICS_STRING_LENGTH;
+        #ifdef CLIENT_USERNAME
 
-        /* Password for authentication is not used in this demo. */
-        connectInfo.pPassword = NULL;
-        connectInfo.passwordLength = 0U;
+            /* If client authentication is based on username/password in AWS IoT,
+             * the metrics string is appended to the username to support both
+             * client authentication and metrics collection. */
+            connectInfo.pUserName = CLIENT_USERNAME_WITH_METRICS;
+            connectInfo.userNameLength = strlen( CLIENT_USERNAME_WITH_METRICS );
+            connectInfo.pPassword = CLIENT_PASSWORD;
+            connectInfo.passwordLength = strlen( CLIENT_PASSWORD );
+        #else
+            connectInfo.pUserName = METRICS_STRING;
+            connectInfo.userNameLength = METRICS_STRING_LENGTH;
+            /* Password for authentication is not used. */
+            connectInfo.pPassword = NULL;
+            connectInfo.passwordLength = 0U;
+        #endif /* ifdef CLIENT_USERNAME */
 
         /* Send MQTT CONNECT packet to broker. */
         mqttStatus = MQTT_Connect( pMqttContext, &connectInfo, NULL, CONNACK_RECV_TIMEOUT_MS, pSessionPresent );
