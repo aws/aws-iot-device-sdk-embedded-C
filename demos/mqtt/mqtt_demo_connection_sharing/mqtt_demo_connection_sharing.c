@@ -139,21 +139,7 @@
 #define DEMO_TEMPERATURE_LOW_TOPIC_LENGTH       ( ( uint16_t ) ( sizeof( DEMO_TEMPERATURE_LOW_TOPIC ) - 1U ) )
 
 /**
- * @brief The MQTT topic filter to subscribe to for humidity data in the demo.
- *
- * The topic name starts with the client identifier to ensure that each demo
- * interacts with a unique topic name.
- */
-#define DEMO_HUMIDITY_TOPIC_FILTER              CLIENT_IDENTIFIER "/demo/humidity"
-
-/**
- * @brief The length of the humidity topic filter length.
- */
-#define DEMO_HUMIDITY_TOPIC_FILTER_LENGTH       ( ( uint16_t ) ( sizeof( DEMO_HUMIDITY_TOPIC_FILTER ) - 1U ) )
-
-/**
- * @brief The MQTT topic for the humidity data value that the demo will
- * publish to.
+ * @brief The MQTT topic filter to subscribe and publish to for humidity data in the demo.
  *
  * The topic name starts with the client identifier to ensure that each demo
  * interacts with a unique topic name.
@@ -161,45 +147,61 @@
 #define DEMO_HUMIDITY_TOPIC                     CLIENT_IDENTIFIER "/demo/humidity"
 
 /**
- * @brief The length of the humidity topic filter.
+ * @brief The length of the humidity topic.
  */
-#define DEMO_HUMIDITY_TOPIC_LENGTH              ( ( uint16_t ) sizeof( DEMO_HUMIDITY_TOPIC ) - 1U )
+#define DEMO_HUMIDITY_TOPIC_LENGTH              ( ( uint16_t ) ( sizeof( DEMO_HUMIDITY_TOPIC ) - 1U ) )
+
+/**
+ * @brief The MQTT topic filter to subscribe and publish to for precipitation data in the demo.
+ *
+ * The topic name starts with the client identifier to ensure that each demo
+ * interacts with a unique topic name.
+ */
+#define DEMO_PRECIPITATION_TOPIC                CLIENT_IDENTIFIER "/demo/precipitation"
+
+/**
+ * @brief The length of the precipitation topic.
+ */
+#define DEMO_PRECIPITATION_TOPIC_LENGTH         ( ( uint16_t ) ( sizeof( DEMO_PRECIPITATION_TOPIC ) - 1U ) )
 
 /**
  * @brief The MQTT message for the #DEMO_TEMPERATURE_HIGH_TOPIC topic published
  * in this example.
  */
-#define DEMO_TEMPERATURE_HIGH_MESSAGE           "Today's High: 80"
+#define DEMO_TEMPERATURE_HIGH_MESSAGE           "Today's High is 80 degree F"
 
 /**
  * @brief The MQTT message for the #DEMO_TEMPERATURE_LOW_TOPIC topic published
  * in this example.
  */
-#define DEMO_TEMPERATURE_LOW_MESSAGE            "Today's Low: 52"
+#define DEMO_TEMPERATURE_LOW_MESSAGE            "Today's Low 52 degree F"
 
 /**
  * @brief The MQTT message for the #DEMO_HUMIDITY_TOPIC topic published in this example.
  */
 #define DEMO_HUMIDITY_MESSAGE                   "Today's humidity at 58%"
 
-
+/**
+ * @brief The MQTT message for the #DEMO_PRECIPITATION_TOPIC_LENGTH topic published in this example.
+ */
+#define DEMO_PRECIPITATION_MESSAGE              "Today's precipitation at 9%"
 
 /**
  * @brief Maximum number of outgoing publishes maintained in the application
  * until an ack is received from the broker.
  */
-#define MAX_OUTGOING_PUBLISHES              ( 5U )
+#define MAX_OUTGOING_PUBLISHES                  ( 5U )
 
 /**
  * @brief Invalid packet identifier for the MQTT packets. Zero is always an
  * invalid packet identifier as per MQTT 3.1.1 spec.
  */
-#define MQTT_PACKET_ID_INVALID              ( ( uint16_t ) 0U )
+#define MQTT_PACKET_ID_INVALID                  ( ( uint16_t ) 0U )
 
 /**
  * @brief Timeout for MQTT_ProcessLoop function in milliseconds.
  */
-#define MQTT_PROCESS_LOOP_TIMEOUT_MS        ( 500U )
+#define MQTT_PROCESS_LOOP_TIMEOUT_MS            ( 500U )
 
 /**
  * @brief The maximum time interval in seconds which is allowed to elapse
@@ -210,17 +212,17 @@
  *  absence of sending any other Control Packets, the Client MUST send a
  *  PINGREQ Packet.
  */
-#define MQTT_KEEP_ALIVE_INTERVAL_SECONDS    ( 60U )
+#define MQTT_KEEP_ALIVE_INTERVAL_SECONDS        ( 60U )
 
 /**
  * @brief Delay in seconds between two iterations of subscribePublishLoop().
  */
-#define MQTT_SUBPUB_LOOP_DELAY_SECONDS      ( 5U )
+#define MQTT_SUBPUB_LOOP_DELAY_SECONDS          ( 5U )
 
 /**
  * @brief Transport timeout in milliseconds for transport send and receive.
  */
-#define TRANSPORT_SEND_RECV_TIMEOUT_MS      ( 200 )
+#define TRANSPORT_SEND_RECV_TIMEOUT_MS          ( 200 )
 
 /*-----------------------------------------------------------*/
 
@@ -285,6 +287,11 @@ static bool globalReceivedLowTemperatureData = false;
  */
 static bool globalReceivedHumidityData = false;
 
+/**
+ * @brief Flag to represent whether that the precipitation topic callback has been invoked.
+ */
+static bool globalReceivedPrecipitationData = false;
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -321,7 +328,7 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext );
 static void handleIncomingPublish( MQTTPublishInfo_t * pPublishInfo );
 
 /**
- * @brief Callback that is registered for the temperature topic filter,
+ * @brief Callback that is registered for the temperature data topic filter,
  * #DEMO_TEMPERATURE_TOPIC_FILTER, with the subscription manager.
  *
  * The callback determines the type of temperature data ("high" or "low") received
@@ -336,8 +343,8 @@ static void temperatureDataCallback( MQTTContext_t * pContext,
                                      MQTTPublishInfo_t * pPublishInfo );
 
 /**
- * @brief Callback that is registered for the humidity topic filter,
- * #DEMO_HUMIDITY_TOPIC_FILTER, with the subscription manager.
+ * @brief Callback that is registered for the humidity data topic filter,
+ * #DEMO_HUMIDITY_TOPIC, with the subscription manager.
  *
  * The callback prints the received humidity data, and sets a global
  * flag to indicate invocation of the callback.
@@ -348,6 +355,20 @@ static void temperatureDataCallback( MQTTContext_t * pContext,
  */
 static void humidityDataCallback( MQTTContext_t * pContext,
                                   MQTTPublishInfo_t * pPublishInfo );
+
+/**
+ * @brief Callback that is registered for the precipitation data topic filter,
+ * #DEMO_PRECIPITATION_TOPIC, with the subscription manager.
+ *
+ * The callback prints the received precipitation data, and sets a global
+ * flag to indicate invocation of the callback.
+ *
+ * @param[in] pContext The MQTT context associated with the incoming PUBLISH.
+ * @param[in] pPublishInfo Deserialized publish info pointer for the incoming
+ * packet.
+ */
+static void precipitationDataCallback( MQTTContext_t * pContext,
+                                       MQTTPublishInfo_t * pPublishInfo );
 
 /**
  * @brief The callback function that is registered with the MQTT connection
@@ -720,6 +741,20 @@ static void humidityDataCallback( MQTTContext_t * pContext,
 
     /* Set the global flag to indicate that the humidity data has been received. */
     globalReceivedHumidityData = true;
+
+    handleIncomingPublish( pPublishInfo );
+}
+
+static void precipitationDataCallback( MQTTContext_t * pContext,
+                                       MQTTPublishInfo_t * pPublishInfo )
+{
+    assert( pPublishInfo != NULL );
+    assert( pContext != NULL );
+
+    LogInfo( ( "Invoked precipitation callback." ) );
+
+    /* Set the global flag to indicate that the humidity data has been received. */
+    globalReceivedPrecipitationData = true;
 
     handleIncomingPublish( pPublishInfo );
 }
@@ -1227,21 +1262,20 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
     if( returnStatus == EXIT_SUCCESS )
     {
         /* Register subscription callback for the wildcard notification topic filter. */
-        ( void ) SubscriptionManager_RegisterCallback( DEMO_HUMIDITY_TOPIC_FILTER,
-                                                       DEMO_HUMIDITY_TOPIC_FILTER_LENGTH,
+        ( void ) SubscriptionManager_RegisterCallback( DEMO_HUMIDITY_TOPIC,
+                                                       DEMO_HUMIDITY_TOPIC_LENGTH,
                                                        humidityDataCallback );
 
-        /* The client is now connected to the broker. Subscribe to the topic
-         * as specified in MQTT_EXAMPLE_TOPIC at the top of this file by sending a
-         * subscribe packet. This client will then publish to the same topic it
-         * subscribed to, so it will expect all the messages it sends to the broker
-         * to be sent back to it from the broker. This demo uses QOS2 in Subscribe,
-         * therefore, the Publish messages received from the broker will have QOS2. */
+        /* The client is now connected to the broker. Subscribe to the humidity topic
+        * by sending a subscribe packet. This client will then publish to the same topic it
+        * subscribed to, so it will expect all the messages it sends to the broker
+        * to be sent back to it from the broker. This demo uses QOS2 in Subscribe,
+        * therefore, the Publish messages received from the broker will have QOS2. */
         LogInfo( ( "Subscribing to the MQTT topic %s.",
-                   DEMO_HUMIDITY_TOPIC_FILTER ) );
+                   DEMO_HUMIDITY_TOPIC ) );
         returnStatus = subscribeToTopic( &mqttContext,
-                                         DEMO_HUMIDITY_TOPIC_FILTER,
-                                         DEMO_HUMIDITY_TOPIC_FILTER_LENGTH );
+                                         DEMO_HUMIDITY_TOPIC,
+                                         DEMO_HUMIDITY_TOPIC_LENGTH );
     }
 
     if( returnStatus == EXIT_SUCCESS )
@@ -1262,8 +1296,8 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
                         mqttStatus ) );
 
             /* Remove registered callback for the notify wildcard topic filter. */
-            ( void ) SubscriptionManager_RemoveCallback( DEMO_HUMIDITY_TOPIC_FILTER,
-                                                         strlen( DEMO_HUMIDITY_TOPIC_FILTER ) );
+            ( void ) SubscriptionManager_RemoveCallback( DEMO_HUMIDITY_TOPIC,
+                                                         strlen( DEMO_HUMIDITY_TOPIC ) );
         }
     }
 
@@ -1275,7 +1309,7 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
         /* Publish messages to all service topics so that broker will forward it back to us,
          * and cause registered callbacks to be invoked.  */
         LogInfo( ( "Publish to topic %s.",
-                   DEMO_HUMIDITY_TOPIC_FILTER ) );
+                   DEMO_HUMIDITY_TOPIC ) );
 
         returnStatus = publishToTopic( &mqttContext,
                                        DEMO_HUMIDITY_TOPIC,
@@ -1296,13 +1330,96 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
                        MQTT_Status_strerror( mqttStatus ) ) );
         }
 
-        /* The temperature callback should have been invoked for handling the incoming
-         * PUBLISH message on the "low" temperature topic. */
+        /* The humidity callback should have been invoked for handling the incoming
+         * PUBLISH message on the humidity topic. */
         else if( globalReceivedHumidityData != true )
         {
             returnStatus = EXIT_FAILURE;
             LogError( ( "Registered callback was not invoked on sending a PUBLISH to "
                         "the humidity topic: Topic=%s", DEMO_HUMIDITY_TOPIC ) );
+        }
+    }
+
+    /* Subscribe to the precipitation topic filter, this time also without any wildcard characters,
+     * so that we can receive incoming PUBLISH message only on the same topic from the broker. */
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        /* Register subscription callback for the wildcard notification topic filter. */
+        ( void ) SubscriptionManager_RegisterCallback( DEMO_PRECIPITATION_TOPIC,
+                                                       DEMO_PRECIPITATION_TOPIC_LENGTH,
+                                                       precipitationDataCallback );
+
+        /* The client is now connected to the broker. Subscribe to the precipitation topic
+         * by sending a subscribe packet. This client will then publish to the same topic it
+         * subscribed to, so it will expect all the messages it sends to the broker
+         * to be sent back to it from the broker. This demo uses QOS2 in Subscribe,
+         * therefore, the Publish messages received from the broker will have QOS2. */
+        LogInfo( ( "Subscribing to the MQTT topic %s.",
+                   DEMO_PRECIPITATION_TOPIC ) );
+        returnStatus = subscribeToTopic( &mqttContext,
+                                         DEMO_PRECIPITATION_TOPIC,
+                                         DEMO_PRECIPITATION_TOPIC_LENGTH );
+    }
+
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        /* Process incoming packet from the broker. Acknowledgment for subscription
+         * ( SUBACK ) will be received here. However after sending the subscribe, the
+         * client may receive a publish before it receives a subscribe ack. Since this
+         * demo is subscribing to the topic to which no one is publishing, probability
+         * of receiving publish message before subscribe ack is zero; but application
+         * must be ready to receive any packet. This demo uses MQTT_ProcessLoop to
+         * receive packet from network. */
+        mqttStatus = MQTT_ProcessLoop( &mqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
+
+        if( mqttStatus != MQTTSuccess )
+        {
+            returnStatus = EXIT_FAILURE;
+            LogError( ( "MQTT_ProcessLoop returned with status = %u.",
+                        mqttStatus ) );
+
+            /* Remove registered callback for the notify wildcard topic filter. */
+            ( void ) SubscriptionManager_RemoveCallback( DEMO_PRECIPITATION_TOPIC,
+                                                         strlen( DEMO_PRECIPITATION_TOPIC ) );
+        }
+    }
+
+    /* PUBLISH to the precipitation topic, so that the broker can send the PUBLISH message
+     * back to us. The precipitation callback should be invoked on receiving the message back
+     * from the broker, as we have registered the callback for the precipitation topic filter. */
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        /* Publish messages to all service topics so that broker will forward it back to us,
+         * and cause registered callbacks to be invoked.  */
+        LogInfo( ( "Publish to topic %s.",
+                   DEMO_PRECIPITATION_TOPIC ) );
+
+        returnStatus = publishToTopic( &mqttContext,
+                                       DEMO_PRECIPITATION_TOPIC,
+                                       DEMO_PRECIPITATION_TOPIC_LENGTH,
+                                       DEMO_PRECIPITATION_MESSAGE );
+
+        /* Calling MQTT_ProcessLoop to process incoming publish echo, since
+         * application subscribed to the same topic the broker will send
+         * publish message back to the application. This function also
+         * sends ping request to broker if MQTT_KEEP_ALIVE_INTERVAL_SECONDS
+         * has expired since the last MQTT packet sent and receive
+         * ping responses. */
+        mqttStatus = MQTT_ProcessLoop( &mqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
+
+        if( mqttStatus != MQTTSuccess )
+        {
+            LogWarn( ( "MQTT_ProcessLoop failed: Error = %s.",
+                       MQTT_Status_strerror( mqttStatus ) ) );
+        }
+
+        /* The precipitation callback should have been invoked for handling the incoming
+         * PUBLISH message on the precipitation topic. */
+        else if( globalReceivedPrecipitationData != true )
+        {
+            returnStatus = EXIT_FAILURE;
+            LogError( ( "Registered callback was not invoked on sending a PUBLISH to "
+                        "the precipitation topic: Topic=%s", DEMO_PRECIPITATION_TOPIC ) );
         }
     }
 
@@ -1317,9 +1434,13 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
         SubscriptionManager_RemoveCallback( DEMO_TEMPERATURE_TOPIC_FILTER,
                                             DEMO_TEMPERATURE_TOPIC_FILTER_LENGTH );
 
-        /* Remove the callback for the humidity topic. */
-        SubscriptionManager_RemoveCallback( DEMO_HUMIDITY_TOPIC_FILTER,
-                                            DEMO_HUMIDITY_TOPIC_FILTER_LENGTH );
+        /* Remove the callback for the humidity topic filter. */
+        SubscriptionManager_RemoveCallback( DEMO_HUMIDITY_TOPIC,
+                                            DEMO_HUMIDITY_TOPIC_LENGTH );
+
+        /* Remove the callback for the precipitation topic filter. */
+        SubscriptionManager_RemoveCallback( DEMO_PRECIPITATION_TOPIC,
+                                            DEMO_PRECIPITATION_TOPIC_LENGTH );
 
         /* Unsubscribe from the temperature topic filter. */
         LogInfo( ( "Unsubscribing from the MQTT temperature topic filter: %.*s.",
@@ -1347,10 +1468,33 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
     {
         /* Unsubscribe from the humidity topic. */
         LogInfo( ( "Unsubscribing from the MQTT humidity topic filter %s.",
-                   DEMO_HUMIDITY_TOPIC_FILTER ) );
+                   DEMO_HUMIDITY_TOPIC ) );
         returnStatus = unsubscribeFromTopic( &mqttContext,
-                                             DEMO_HUMIDITY_TOPIC_FILTER,
-                                             DEMO_HUMIDITY_TOPIC_FILTER_LENGTH );
+                                             DEMO_HUMIDITY_TOPIC,
+                                             DEMO_HUMIDITY_TOPIC_LENGTH );
+    }
+
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        /* Process Incoming UNSUBACK packet from the broker. */
+        mqttStatus = MQTT_ProcessLoop( &mqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
+
+        if( mqttStatus != MQTTSuccess )
+        {
+            returnStatus = EXIT_FAILURE;
+            LogError( ( "MQTT_ProcessLoop returned with status = %u.",
+                        mqttStatus ) );
+        }
+    }
+
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        /* Unsubscribe from the precipitation topic filter. */
+        LogInfo( ( "Unsubscribing from the MQTT precipitation topic filter %s.",
+                   DEMO_PRECIPITATION_TOPIC ) );
+        returnStatus = unsubscribeFromTopic( &mqttContext,
+                                             DEMO_PRECIPITATION_TOPIC,
+                                             DEMO_PRECIPITATION_TOPIC_LENGTH );
     }
 
     if( returnStatus == EXIT_SUCCESS )
