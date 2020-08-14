@@ -35,10 +35,6 @@ function(check_aws_credentials demo_name)
     endif()
 endfunction()
 
-function(copy_certs_into_target_dir demo_target)
-
-endfunction()
-
 if(DOWNLOAD_CERTS)
     # Download the Amazon Root CA certificate.
     message( "Downloading the Amazon Root CA certificate..." )
@@ -67,7 +63,6 @@ endif()
 file(GLOB demo_dirs "${DEMOS_DIR}/*/*")
 foreach(demo_dir IN LISTS demo_dirs)
     if(IS_DIRECTORY "${demo_dir}" AND EXISTS "${demo_dir}/CMakeLists.txt")
-        get_filename_component( DEMO_TARGET_NAME ${demo_dir} NAME )
         add_subdirectory(${demo_dir})
     endif()
 endforeach()
