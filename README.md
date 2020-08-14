@@ -44,11 +44,8 @@ It is required to setup an AWS account and access the AWS IoT Console for runnin
 ### Configuring the mutual auth demos
 
 - You can pass the following configuration settings as command line options in order to run the mutual auth demos: 
-```cmake
-cmake .. 
--DAWS_IOT_ENDPOINT="aws-iot-endpoint" 
--DROOT_CA_CERT_PATH="root-ca-path" 
--DCLIENT_CERT_PATH="certificate-path" -DCLIENT_PRIVATE_KEY_PATH="private-key-path" 
+```bash
+cmake .. -DAWS_IOT_ENDPOINT="aws-iot-endpoint" -DROOT_CA_CERT_PATH="root-ca-path" -DCLIENT_CERT_PATH="certificate-path" -DCLIENT_PRIVATE_KEY_PATH="private-key-path" 
 ```
 
 - In order to set these configurations manually, edit `demo_config.h` in `demos/mqtt/mqtt_demo_mutual_auth/` and `demos/http/http_demo_mutual_auth/` to `#define` the following:
