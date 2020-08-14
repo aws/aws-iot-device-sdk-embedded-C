@@ -186,7 +186,6 @@ typedef struct MQTTContext
     /* Keep alive members. */
     uint16_t keepAliveIntervalSec; /**< @brief Keep Alive interval. */
     uint32_t pingReqSendTimeMs;    /**< @brief Timestamp of the last sent PINGREQ. */
-    uint32_t pingRespTimeoutMs;    /**< @brief Timeout for waiting for a PINGRESP. */
     bool waitingForPingResp;       /**< @brief If the library is currently awaiting a PINGRESP. */
 } MQTTContext_t;
 
@@ -382,7 +381,7 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext );
  * #MQTTSendFailed if a network error occurs while sending an ACK or PINGREQ;
  * #MQTTBadResponse if an invalid packet is received;
  * #MQTTKeepAliveTimeout if the server has not sent a PINGRESP before
- * pContext->pingRespTimeoutMs milliseconds;
+ * #MQTT_PINGRESP_TIMEOUT_MS milliseconds;
  * #MQTTIllegalState if an incoming QoS 1/2 publish or ack causes an
  * invalid transition for the internal state machine;
  * #MQTTSuccess on success.

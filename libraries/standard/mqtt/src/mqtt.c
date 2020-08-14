@@ -45,6 +45,18 @@
     #define MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT    ( 5U )
 #endif
 
+/**
+ * @brief Number of milliseconds to wait for a ping response to a ping
+ * request as part of the keep-alive mechanism.
+ *
+ * If a ping response is not received before this timeout, then
+ * #MQTT_ProcessLoop will return #MQTTKeepAliveTimeout.
+ */
+#ifndef MQTT_PINGRESP_TIMEOUT_MS
+    /* Wait 0.5 seconds by default for a ping response. */
+    #define MQTT_PINGRESP_TIMEOUT_MS    ( 500U )
+#endif
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -204,7 +216,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
  * #MQTTSendFailed if a network error occurs while sending an ACK or PINGREQ;
  * #MQTTBadResponse if an invalid packet is received;
  * #MQTTKeepAliveTimeout if the server has not sent a PINGRESP before
- * pContext->pingRespTimeoutMs milliseconds;
+ * #MQTT_PINGRESP_TIMEOUT_MS milliseconds;
  * #MQTTIllegalState if an incoming QoS 1/2 publish or ack causes an
  * invalid transition for the internal state machine;
  * #MQTTSuccess on success.
@@ -711,7 +723,7 @@ static MQTTStatus_t handleKeepAlive( MQTTContext_t * pContext )
         {
             /* Has time expired? */
             if( calculateElapsedTime( now, pContext->pingReqSendTimeMs ) >
-                pContext->pingRespTimeoutMs )
+                MQTT_PINGRESP_TIMEOUT_MS )
             {
                 status = MQTTKeepAliveTimeout;
             }
