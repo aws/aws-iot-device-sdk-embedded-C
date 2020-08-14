@@ -6,9 +6,11 @@
 #include "json.h"
 
 /* Sample test from the docs. */
-#define JSON_2_LEVELS                   "{\"foo\":\"abc\",\"bar\":{\"foo\",\"xyz\"}}"
+#define JSON_DEPTH_2                       "{\"foo\":\"abc\",\"bar\":{\"foo\":\"xyz\"}}"
+#define JSON_DEPTH_2_LEN                   ( sizeof( JSON_DEPTH_2 ) - 1 )
 
-#define JSON_2_LEVELS_TRAILING_COMMA    "{\"foo\":\"abc\",\"bar\":{\"foo\",\"xyz\",}}"
+#define JSON_DEPTH_2_TRAILING_COMMA        "{\"foo\":\"abc\",\"bar\":{\"foo\":\"xyz\",}}"
+#define JSON_DEPTH_2_TRAILING_COMMA_LEN    ( sizeof( JSON_DEPTH_2_TRAILING_COMMA ) - 1 )
 
 /* ============================   UNITY FIXTURES ============================ */
 
@@ -42,9 +44,10 @@ void test_JSON_Validate_Happy_Path( void )
 {
     JSONStatus_t jsonStatus;
 
-    jsonStatus = JSON_Validate( JSON_2_LEVELS, sizeof( JSON_2_LEVELS ) );
+    jsonStatus = JSON_Validate( JSON_DEPTH_2, JSON_DEPTH_2_LEN );
     TEST_ASSERT_EQUAL( JSONSuccess, jsonStatus );
 
-    jsonStatus = JSON_Validate( JSON_2_LEVELS_TRAILING_COMMA, sizeof( JSON_2_LEVELS_TRAILING_COMMA ) );
+    jsonStatus = JSON_Validate( JSON_DEPTH_2_TRAILING_COMMA,
+                                JSON_DEPTH_2_TRAILING_COMMA_LEN );
     TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
 }
