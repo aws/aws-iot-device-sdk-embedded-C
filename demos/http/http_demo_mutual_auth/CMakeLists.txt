@@ -32,3 +32,10 @@ target_include_directories(
     PUBLIC
         ${LOGGING_INCLUDE_DIRS}
 )
+
+if(ROOT_CA_CERT_PATH)
+    target_compile_definitions(
+        ${DEMO_NAME} PRIVATE
+            ROOT_CA_CERT_PATH="${ROOT_CA_CERT_PATH}"
+    )
+endif()

@@ -46,17 +46,11 @@ if(DOWNLOAD_CERTS)
 endif()
 
 # Copy the certificates and client keys to the build directory.
-file(COPY
-        "${CMAKE_CURRENT_LIST_DIR}/certificates"
-     DESTINATION
-        "${CMAKE_BINARY_DIR}/bin"
-)
+file(COPY "${CMAKE_CURRENT_LIST_DIR}/certificates"
+     DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
 if(BUILD_TESTS)
-    file(COPY
-            "${CMAKE_CURRENT_LIST_DIR}/certificates"
-         DESTINATION
-            "${CMAKE_BINARY_DIR}/bin/tests"
-    )
+    file(COPY "${CMAKE_CURRENT_LIST_DIR}/certificates"
+         DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/tests")
 endif()
 
 # Include each subdirectory that has a CMakeLists.txt file in it
