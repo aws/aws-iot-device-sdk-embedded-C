@@ -15,3 +15,4 @@ build/
 
 # Ignore certificates.
 *.crt
+demos/certificates/*
