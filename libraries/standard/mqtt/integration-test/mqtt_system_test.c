@@ -51,9 +51,10 @@
     #error "SERVER_ROOT_CA_CERT_PATH should be defined for the MQTT integration tests."
 #endif
 
-#ifndef CLIENT_IDENTIFIER
-    #error "CLIENT_IDENTIFIER should be defined for the MQTT integration tests."
-#endif
+/**
+ * @brief Length of MQTT server host name.
+ */
+#define BROKER_ENDPOINT_LENGTH               ( ( uint16_t ) ( sizeof( BROKER_ENDPOINT ) - 1 ) )
 
 /**
  * @brief A valid starting packet ID per MQTT spec. Start from 1.
@@ -715,7 +716,7 @@ void setUp()
     opensslCredentials.pPrivateKeyPath = CLIENT_PRIVATE_KEY_PATH;
 
     serverInfo.pHostName = BROKER_ENDPOINT;
-    serverInfo.hostNameLength = strlen( BROKER_ENDPOINT );
+    serverInfo.hostNameLength = BROKER_ENDPOINT_LENGTH;
     serverInfo.port = BROKER_PORT;
 
     /* Establish a TCP connection with the server endpoint, then

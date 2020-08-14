@@ -96,13 +96,4 @@
     #define SERVER_ROOT_CA_CERT_PATH    "certificates/AmazonRootCA1.crt"
 #endif
 
-/**
- * @brief MQTT client identifier.
- *
- * No two clients may use the same client identifier simultaneously.
- */
-#ifndef CLIENT_IDENTIFIER
-    #define CLIENT_IDENTIFIER    "testclient"
-#endif
-
 #endif /* ifndef TEST_CONFIG_H_ */
