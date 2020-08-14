@@ -8,7 +8,12 @@
 /* Sample test from the docs. */
 #define JSON_QUERY_SEPARATOR               '.'
 
-#define JSON_DEPTH_2                       "{\"foo\":\"abc\",\"bar\":{\"foo\":\"xyz\"}}"
+#define JSON_DEPTH_2                                                                 \
+    "{\"literal\":true, \"more_literals\": {\"literal2\":false, \"literal3\":null}," \
+    "\"exp1\": 5E+3, \"more_exponents\": [5e+2, 4e-2, 93E-5, 128E-6],  "             \
+    "\"number\": 123412, "                                                           \
+    "\"decimal\":109238.42091289, "                                                  \
+    "\"foo\":\"abc\",\"bar\":{\"foo\":\"xyz\"}}"
 #define JSON_DEPTH_2_LEN                   ( sizeof( JSON_DEPTH_2 ) - 1 )
 
 #define JSON_DEPTH_2_QUERY_KEY             "bar.foo"

@@ -498,6 +498,8 @@ static bool_ strnEq( const char * a,
  * @param[in] buf  The buffer to parse.
  * @param[in,out] start  The index at which to begin.
  * @param[in] max  The size of the buffer.
+ * @param[in] literal  The literal to compare
+ * @param[in] length  The length of the literal
  *
  * @return true if the literal was present;
  * false otherwise.
@@ -836,6 +838,7 @@ static void skipObjectScalars( const char * buf,
  * @param[in] buf  The buffer to parse.
  * @param[in,out] start  The index at which to begin.
  * @param[in] max  The size of the buffer.
+ * @param[in] mode  The start marker of a collection or object.
  */
 static void skipScalars( const char * buf,
                          size_t * start,
