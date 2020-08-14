@@ -1327,6 +1327,24 @@ void test_HTTPClient_Send_null_request_header_buffer( void )
 
 /*-----------------------------------------------------------*/
 
+/* Test when the length of request headers is greater than length of buffer. */
+void test_HTTPClient_Send_request_headers_gt_buffer( void )
+{
+    HTTPStatus_t returnStatus = HTTP_SUCCESS;
+
+    requestHeaders.headersLen = requestHeaders.bufferLen + 1;
+    returnStatus = HTTPClient_Send( &transportInterface,
+                                    &requestHeaders,
+                                    NULL,
+                                    0,
+                                    &response,
+                                    0 );
+
+    TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, returnStatus );
+}
+
+/*-----------------------------------------------------------*/
+
 /* Test a NULL response buffer passed to the API. */
 void test_HTTPClient_Send_null_response_buffer( void )
 {
@@ -1337,6 +1355,27 @@ void test_HTTPClient_Send_null_response_buffer( void )
                                     &requestHeaders,
                                     NULL,
                                     0,
+                                    &response,
+                                    0 );
+
+    TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, returnStatus );
+}
+
+/*-----------------------------------------------------------*/
+
+/* Test when reqBodyBufLen is greater than the max value of a 32-bit integer. */
+void test_HTTPClient_Send_request_body_buffer_length_gt_max( void )
+{
+    HTTPStatus_t returnStatus = HTTP_SUCCESS;
+    size_t reqBodyBufLen = INT32_MAX;
+
+    /* Increment separately to prevent an overflow warning. */
+    reqBodyBufLen++;
+
+    returnStatus = HTTPClient_Send( &transportInterface,
+                                    &requestHeaders,
+                                    ( uint8_t * ) HTTP_TEST_REQUEST_PUT_BODY,
+                                    reqBodyBufLen,
                                     &response,
                                     0 );
 
@@ -1358,6 +1397,28 @@ void test_HTTPClient_Send_not_enough_request_headers( void )
                                     0,
                                     &response,
                                     0 );
+    TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, returnStatus );
+}
+
+/*-----------------------------------------------------------*/
+
+/* Test when length of headers is greater than the max value of a 32-bit integer. */
+void test_HTTPClient_Send_headers_length_gt_max( void )
+{
+    HTTPStatus_t returnStatus = HTTP_SUCCESS;
+
+    requestHeaders.headersLen = INT32_MAX;
+    /* Increment separately to prevent an overflow warning. */
+    requestHeaders.headersLen++;
+    requestHeaders.bufferLen = requestHeaders.headersLen;
+
+    returnStatus = HTTPClient_Send( &transportInterface,
+                                    &requestHeaders,
+                                    NULL,
+                                    0,
+                                    &response,
+                                    0 );
+
     TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, returnStatus );
 }
 
