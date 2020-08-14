@@ -711,8 +711,11 @@ void setUp()
     memset( &incomingInfo, 0u, sizeof( MQTTPublishInfo_t ) );
     memset( &opensslCredentials, 0u, sizeof( OpensslCredentials_t ) );
     opensslCredentials.pRootCaPath = SERVER_ROOT_CA_CERT_PATH;
+    opensslCredentials.pClientCertPath = CLIENT_CERT_PATH;
+    opensslCredentials.pPrivateKeyPath = CLIENT_PRIVATE_KEY_PATH;
+
     serverInfo.pHostName = BROKER_ENDPOINT;
-    serverInfo.hostNameLength = BROKER_ENDPOINT_LENGTH;
+    serverInfo.hostNameLength = strlen( BROKER_ENDPOINT );
     serverInfo.port = BROKER_PORT;
 
     /* Establish a TCP connection with the server endpoint, then
