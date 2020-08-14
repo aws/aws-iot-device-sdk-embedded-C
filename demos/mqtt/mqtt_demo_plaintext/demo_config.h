@@ -60,7 +60,7 @@
  * #define BROKER_ENDPOINT               "...insert here..."
  */
 #ifndef BROKER_ENDPOINT
-    #define BROKER    ENDPOINT "localhost"
+    #define BROKER_ENDPOINT    "localhost"
 #endif
 
 /**

@@ -58,7 +58,7 @@
  * be viewed in the README.md of the root directory.
  */
 #ifndef BROKER_ENDPOINT
-    #define BROKER    ENDPOINT "localhost"
+    #define BROKER_ENDPOINT    "localhost"
 #endif
 
 /**
