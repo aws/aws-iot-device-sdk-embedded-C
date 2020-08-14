@@ -676,7 +676,6 @@ MQTTPublishState_t MQTT_CalculateStateAck( MQTTPubAckType_t packetType,
 
     return calculatedState;
 }
-/** @endcond */
 
 /*-----------------------------------------------------------*/
 
@@ -830,7 +829,6 @@ MQTTStatus_t MQTT_ReserveState( MQTTContext_t * pMqttContext,
 
     return status;
 }
-/** @endcond */
 
 /*-----------------------------------------------------------*/
 
@@ -868,7 +866,6 @@ MQTTPublishState_t MQTT_CalculateStatePublish( MQTTStateOperation_t opType,
 
     return calculatedState;
 }
-/** @endcond */
 
 /*-----------------------------------------------------------*/
 
@@ -955,7 +952,6 @@ MQTTStatus_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
 
     return mqttStatus;
 }
-/** @endcond */
 
 /*-----------------------------------------------------------*/
 
@@ -1028,7 +1024,6 @@ MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
 
     return status;
 }
-/** @endcond */
 
 /*-----------------------------------------------------------*/
 
@@ -1077,7 +1072,6 @@ uint16_t MQTT_PubrelToResend( const MQTTContext_t * pMqttContext,
 
     return packetId;
 }
-/** @endcond */
 
 /*-----------------------------------------------------------*/
 
@@ -1176,6 +1170,5 @@ const char * MQTT_State_strerror( MQTTPublishState_t state )
 
     return str;
 }
-/** @endcond */
 
 /*-----------------------------------------------------------*/

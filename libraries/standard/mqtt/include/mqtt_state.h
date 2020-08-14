@@ -21,7 +21,7 @@
 
 /**
  * @file mqtt_state.h
- * @brief User-facing functions for keeping state of MQTT 3.1.1 packets.
+ * @brief Function to keep state of MQTT PUBLISH packet deliveries.
  */
 #ifndef MQTT_STATE_H
 #define MQTT_STATE_H
