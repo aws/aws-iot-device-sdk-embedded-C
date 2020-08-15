@@ -56,7 +56,6 @@
  *
  * #define AWS_IOT_ENDPOINT               "...insert here..."
  */
-#define AWS_IOT_ENDPOINT    "a4u5xx3zul7za-beta.iot.us-east-1.amazonaws.com"
 
 /**
  * @brief AWS IoT MQTT broker port number.
@@ -66,7 +65,7 @@
  * @note Port 443 requires use of the ALPN TLS extension with the ALPN protocol
  * name. When using port 8883, ALPN is not required.
  */
-#define AWS_MQTT_PORT       ( 8883 )
+#define AWS_MQTT_PORT    ( 8883 )
 
 /**
  * @brief Path of the file containing the server's root CA certificate.
@@ -121,12 +120,11 @@
  * username/password based client authentication.
  *
  * @note AWS IoT message broker would require either a set of client certificate/private key
- * or username/password to authenticate the client. If this config is defined, username
+ * or username/password to authenticate the client. If this config is defined, username and
  * password will be used instead of client certificate and private key for client authentication.
  *
  * #define CLIENT_USERNAME    "...insert here..."
  */
-#define CLIENT_USERNAME           "...insert here..."
 
 /**
  * @brief The password string, required to authenticate to your MQTT broker.
@@ -142,7 +140,6 @@
  *
  * #define CLIENT_PASSWORD    "...insert here..."
  */
-#define CLIENT_PASSWORD           "...insert here..."
 
 /**
  * @brief MQTT client identifier.

@@ -25,9 +25,20 @@
  * unsubscribe from a topic and disconnect the MQTT session.
  *
  * A mutually authenticated TLS connection is used to connect to the AWS IoT
- * MQTT message broker in this example. Define ROOT_CA_CERT_PATH,
- * CLIENT_CERT_PATH, and CLIENT_PRIVATE_KEY_PATH in demo_config.h to achieve
- * mutual authentication.
+ * MQTT message broker in this example. Define ROOT_CA_CERT_PATH for server
+ * authentication in client. Client authentication can be achieved in either
+ * of the 2 different ways mentioned below.
+ * 1. Define CLIENT_CERT_PATH and CLIENT_PRIVATE_KEY_PATH in demo_config.h
+ *    for client authentication to be done based on the client certificate
+ *    and client private key. More details about this client authentication
+ *    can be found in the link below.
+ *    https://docs.aws.amazon.com/iot/latest/developerguide/client-authentication.html
+ * 2. Define CLIENT_USERNAME and CLIENT_PASSWORD in demo_config.h for client
+ *    authentication to be done using username and password. More details about
+ *    this client authentication can be found in the link below.
+ *    https://docs.aws.amazon.com/iot/latest/developerguide/enhanced-custom-authentication.html
+ *    An authorizer setup needs to be done as mentioned in the above link to use
+ *    username/password based client authentication.
  *
  * The example is single threaded and uses statically allocated memory;
  * it uses QOS1 and therefore implements a retransmission mechanism
@@ -85,7 +96,20 @@
     #ifndef CLIENT_PRIVATE_KEY_PATH
         #error "Please define path to client private key(CLIENT_PRIVATE_KEY_PATH) in demo_config.h."
     #endif
-#endif
+#else
+
+/* If username is defined, a client password also would need to be defined for
+ * client authentication. */
+    #ifndef CLIENT_PASSWORD
+        #error "Please define client password(CLIENT_PASSWORD) in demo_config.h for client authentication based on username/password."
+    #endif
+
+/* AWS IoT MQTT broker port needs to be 443 for client authentication based on
+ * username/password. */
+    #if AWS_MQTT_PORT != 443
+        #error "Please define broker port(AWS_MQTT_PORT) as 443 in demo_config.h for client authentication based on username/password."
+    #endif
+#endif /* ifndef CLIENT_USERNAME */
 
 /**
  * Provide default values for undefined configuration settings.
@@ -121,24 +145,23 @@
 #define CLIENT_IDENTIFIER_LENGTH            ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) )
 
 /**
- * @brief ALPN protocol name for AWS IoT MQTT.
+ * @brief ALPN (Application-Layer Protocol Negotiation) protocol name for AWS IoT MQTT.
  *
  * This will be used if the AWS_MQTT_PORT is configured as 443 for AWS IoT MQTT broker.
  * Please see more details about the ALPN protocol for AWS IoT MQTT endpoint
  * in the link below.
  * https://aws.amazon.com/blogs/iot/mqtt-with-tls-client-authentication-on-port-443-why-it-is-useful-and-how-it-works/
  */
-#define ALPN_PROTOCOL_NAME                  "\x0ex-amzn-mqtt-ca"
+#define AWS_IOT_MQTT_ALPN                   "\x0ex-amzn-mqtt-ca"
 
 /**
  * @brief Length of ALPN protocol name.
  */
-#define ALPN_PROTOCOL_NAME_LENGTH           ( ( uint16_t ) ( sizeof( ALPN_PROTOCOL_NAME ) - 1 ) )
+#define AWS_IOT_MQTT_ALPN_LENGTH            ( ( uint16_t ) ( sizeof( AWS_IOT_MQTT_ALPN ) - 1 ) )
 
 /**
  * @brief This is the ALPN (Application-Layer Protocol Negotiation) string
- * required by AWS IoT for password-based authentication to the MQTT broker,
- * using TCP port 443.
+ * required by AWS IoT for password-based authentication, using TCP port 443.
  */
 #define AWS_IOT_PASSWORD_ALPN               "\x04mqtt"
 
@@ -471,22 +494,31 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
         opensslCredentials.pPrivateKeyPath = CLIENT_PRIVATE_KEY_PATH;
     #endif
 
+    /* AWS IoT requires devices to send the Server Name Indication (SNI)
+     * extension to the Transport Layer Security (TLS) protocol and provide
+     * the complete endpoint address in the host_name field. Details about
+     * SNI for AWS IoT can be found in the link below.
+     * https://docs.aws.amazon.com/iot/latest/developerguide/transport-security.html */
+    opensslCredentials.sniHostName = AWS_IOT_ENDPOINT;
+
     if( AWS_MQTT_PORT == 443 )
     {
         /* Pass the ALPN protocol name depending on the port being used.
-         * Please see more details about the ALPN protocol for AWS IoT MQTT endpoint
-         * in the link below.
+         * Please see more details about the ALPN protocol for AWS IoT MQTT
+         * endpoint in the link below.
          * https://aws.amazon.com/blogs/iot/mqtt-with-tls-client-authentication-on-port-443-why-it-is-useful-and-how-it-works/
          *
-         * For username and password based authentication a different ALPN string is used.
+         * For username and password based authentication in AWS IoT,
+         * #AWS_IOT_PASSWORD_ALPN is used. More details can be found in the
+         * link below.
+         * https://docs.aws.amazon.com/iot/latest/developerguide/enhanced-custom-auth-using.html
          */
         #ifdef CLIENT_USERNAME
             opensslCredentials.pAlpnProtos = AWS_IOT_PASSWORD_ALPN;
             opensslCredentials.alpnProtosLen = AWS_IOT_PASSWORD_ALPN_LENGTH;
-            opensslCredentials.sniHostName = AWS_IOT_ENDPOINT;
         #else
-            opensslCredentials.pAlpnProtos = ALPN_PROTOCOL_NAME;
-            opensslCredentials.alpnProtosLen = ALPN_PROTOCOL_NAME_LENGTH;
+            opensslCredentials.pAlpnProtos = AWS_IOT_MQTT_ALPN;
+            opensslCredentials.alpnProtosLen = AWS_IOT_MQTT_ALPN_LENGTH;
         #endif
     }
 
@@ -783,9 +815,9 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
 {
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus;
-    MQTTConnectInfo_t connectInfo;
-    MQTTFixedBuffer_t networkBuffer;
-    TransportInterface_t transport;
+    MQTTConnectInfo_t connectInfo = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    TransportInterface_t transport = { 0 };
 
     assert( pMqttContext != NULL );
     assert( pNetworkContext != NULL );
@@ -837,15 +869,22 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
          * PINGREQ Packet. */
         connectInfo.keepAliveSeconds = MQTT_KEEP_ALIVE_INTERVAL_SECONDS;
 
-        /* The username field is populated with voluntary metrics to AWS IoT.
+        /* Username and password for authentication.
+         * Refer to the AWS IoT documentation below for details regarding client
+         * authentication with username and password.
+         * https://docs.aws.amazon.com/iot/latest/developerguide/enhanced-custom-authentication.html
+         * An authorizer setup needs to be done as mentioned in the above link to use
+         * username/password based client authentication.
+         *
+         * The username field is populated with voluntary metrics to AWS IoT.
          * The metrics collected by AWS IoT are the current operating system or
          * SDK and its version. These metrics help AWS IoT improve security and
-         * provide better technical support. */
+         * provide better technical support.
+         *
+         * If client authentication is based on username/password in AWS IoT,
+         * the metrics string is appended to the username to support both client
+         * authentication and metrics collection. */
         #ifdef CLIENT_USERNAME
-
-            /* If client authentication is based on username/password in AWS IoT,
-             * the metrics string is appended to the username to support both
-             * client authentication and metrics collection. */
             connectInfo.pUserName = CLIENT_USERNAME_WITH_METRICS;
             connectInfo.userNameLength = strlen( CLIENT_USERNAME_WITH_METRICS );
             connectInfo.pPassword = CLIENT_PASSWORD;
