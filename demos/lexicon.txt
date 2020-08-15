@@ -49,6 +49,7 @@ methodlen
 milli
 mosquitto
 mqtt
+mqttkeepalivetimeout
 nameindex
 noninfringement
 openssl

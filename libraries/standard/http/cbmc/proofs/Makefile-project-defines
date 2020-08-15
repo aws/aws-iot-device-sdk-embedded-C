@@ -27,3 +27,7 @@ INCLUDES += -I$(SRCDIR)/platform/include
 
 # Preprocessor definitions -D...
 DEFINES += -Dhttp_EXPORTS
+
+# Ensure that all assumptions are sound by checking that "all pointers
+# in pointer primitives are valid or null"
+CHECKFLAGS += --pointer-primitive-check

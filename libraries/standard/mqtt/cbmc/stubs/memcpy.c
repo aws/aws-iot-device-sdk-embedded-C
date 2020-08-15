@@ -47,8 +47,10 @@
                    const void * src,
                    size_t n )
     {
-        __CPROVER_assert( __CPROVER_w_ok( dest, n ), "write" );
-        __CPROVER_assert( __CPROVER_r_ok( src, n ), "read" );
+        /* Per ANSI C specification, memcpy must be able to handle a copy length
+         * of zero. */
+        __CPROVER_assert( ( n == 0 ) || __CPROVER_w_ok( dest, n ), "write" );
+        __CPROVER_assert( ( n == 0 ) || __CPROVER_r_ok( src, n ), "read" );
         return dest;
     }
 #endif /* if __has_builtin( __builtin___memcpy_chk ) */
