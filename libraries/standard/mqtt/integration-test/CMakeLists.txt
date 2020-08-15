@@ -83,9 +83,3 @@ if(CLIENT_PRIVATE_KEY_PATH)
         CLIENT_PRIVATE_KEY_PATH="${CLIENT_PRIVATE_KEY_PATH}"
     )
 endif()
-if(CLIENT_IDENTIFIER)
-    target_compile_definitions(
-        ${stest_name} PRIVATE
-            CLIENT_IDENTIFIER="${CLIENT_IDENTIFIER}"
-    )
-endif()
