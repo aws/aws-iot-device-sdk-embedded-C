@@ -72,10 +72,9 @@
  * @brief Path of the file containing the server's root CA certificate.
  *
  * This certificate should be PEM-encoded.
+ *
+ * #define ROOT_CA_CERT_PATH         ".....inster here...."
  */
-#ifndef ROOT_CA_CERT_PATH
-    #define ROOT_CA_CERT_PATH    "certificates/mosquitto.org.crt"
-#endif
 
 /**
  * @brief Length of path to server certificate.
