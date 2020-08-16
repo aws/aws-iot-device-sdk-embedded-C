@@ -73,7 +73,7 @@
  *
  * This certificate should be PEM-encoded.
  *
- * #define ROOT_CA_CERT_PATH         ".....inster here...."
+ * #define ROOT_CA_CERT_PATH         ".....insert here...."
  */
 
 /**
