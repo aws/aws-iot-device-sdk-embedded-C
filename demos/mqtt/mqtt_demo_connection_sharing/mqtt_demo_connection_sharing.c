@@ -25,12 +25,12 @@
  * unsubscribe from a topic and disconnect the MQTT session.
  *
  * The example is single threaded and uses statically allocated memory;
- * it uses QOS2 and therefore implements a retransmission mechanism
+ * it uses QOS1 and therefore implements a retransmission mechanism
  * for Publish messages. Retransmission of publish messages are attempted
  * when a MQTT connection is established with a session that was already
- * present. All the outgoing publish messages waiting to receive PUBREC
+ * present. All the outgoing publish messages waiting to receive PUBACK
  * are resend in this demo. In order to support retransmission all the outgoing
- * publishes are stored until a PUBREC is received.
+ * publishes are stored until a PUBACK is received.
  */
 
 /**
@@ -69,12 +69,25 @@
  * These configuration settings are required to run the basic TLS demo.
  * Throw compilation error if the below configs are not defined.
  */
+#ifndef BROKER_ENDPOINT
+    #error "Please define an MQTT broker endpoint, BROKER_ENDPOINT, in demo_config.h."
+#endif
 #ifndef ROOT_CA_CERT_PATH
-    #error "Please define path to Root CA certificate of the MQTT broker(ROOT_CA_CERT_PATH) in demo_config.h."
+    #error "Please define path to Root CA certificate of the MQTT broker, ROOT_CA_CERT_PATH, in demo_config.h."
 #endif
 #ifndef CLIENT_IDENTIFIER
     #error "Please define a unique CLIENT_IDENTIFIER."
 #endif
+
+/**
+ * @brief Length of MQTT server host name.
+ */
+#define BROKER_ENDPOINT_LENGTH      ( ( uint16_t ) ( sizeof( BROKER_ENDPOINT ) - 1 ) )
+
+/**
+ * @brief Length of path to server certificate.
+ */
+#define ROOT_CA_CERT_PATH_LENGTH    ( ( uint16_t ) ( sizeof( ROOT_CA_CERT_PATH ) - 1 ) )
 
 /**
  * Provide default values for undefined configuration settings.
@@ -191,12 +204,6 @@
  * until an ack is received from the broker.
  */
 #define MAX_OUTGOING_PUBLISHES                  ( 5U )
-
-/**
- * @brief Invalid packet identifier for the MQTT packets. Zero is always an
- * invalid packet identifier as per MQTT 3.1.1 spec.
- */
-#define MQTT_PACKET_ID_INVALID                  ( ( uint16_t ) 0U )
 
 /**
  * @brief Timeout for MQTT_ProcessLoop function in milliseconds.
@@ -415,8 +422,8 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
 static int disconnectMqttSession( MQTTContext_t * pMqttContext );
 
 /**
- * @brief Sends an MQTT SUBSCRIBE to subscribe to the passed
- * topic filter.
+ * @brief Subscribes to the passed topic filter by sending an MQTT SUBSCRIBE
+ * packet and waiting for a SUBACK acknowledgement response from the broker.
  *
  * @param[in] pMqttContext MQTT context pointer.
  * @param[in] pTopicFilter The topic filter to subscribe to.
@@ -430,8 +437,32 @@ static int subscribeToTopic( MQTTContext_t * pMqttContext,
                              uint16_t topicFilterLength );
 
 /**
- * @brief Sends an MQTT UNSUBSCRIBE to unsubscribe from
- * #MQTT_EXAMPLE_TOPIC defined at the top of the file.
+ * @brief Utility to subscribe to the passed topic filter and register
+ * a callback for it in the subscription manager.
+ *
+ * The registered callback will be invoked by the subscription manager
+ * when PUBLISH messages on topic(s) that match the registered topic filter
+ * are received from the broker.
+ *
+ * @param[in] pContext The MQTT context representing the MQTT connection.
+ * @param[in] pTopicFilter The topic filter to subscribe to and register a
+ * callback for in the subscription manager.
+ * @param[in] topicFilterLength The length of the topic filter, @p pTopicFilter.
+ * @param[in] callback The callback to register for the topic filter with the
+ * subscription manager.
+ *
+ * @return EXIT_SUCCESS if subscription and callback registration operations
+ * for the topic filter were successfully; EXIT_FAILURE otherwise.
+ */
+static int subscribeToAndRegisterTopicFilter( MQTTContext_t * pContext,
+                                              const char * pTopicFilter,
+                                              uint16_t topicFilterLength,
+                                              SubscriptionManagerCallback_t callback );
+
+/**
+ * @brief Unsubscribed from the passed topic filter by sending
+ * an MQTT UNSUBSCRIBE packet to the broker and waiting for
+ * an acknowledgement response with UNSUBACK packet.
  *
  * @param[in] pMqttContext MQTT context pointer.
  * @param[in] pTopicFilter The topic filter to subscribe to.
@@ -446,12 +477,14 @@ static int unsubscribeFromTopic( MQTTContext_t * pMqttContext,
 
 /**
  * @brief Sends an MQTT PUBLISH to the passed topic
- * with the passed message.
+ * with the passed message and waits for acknowledgement response
+ * from the broker.
  *
  * @param[in] pMqttContext MQTT context pointer.
  * @param[in] pTopic The topic on which to send a PUBLISH message.
  * @param[in] topicLength The length of the topic.
  * @param[in] pMessage The message payload to PUBLISH.
+ *
  * @return EXIT_SUCCESS if PUBLISH was successfully sent;
  * EXIT_FAILURE otherwise.
  */
@@ -643,7 +676,7 @@ static int handlePublishResend( MQTTContext_t * pMqttContext )
     assert( outgoingPublishPackets != NULL );
 
     /* Resend all the QoS1 publishes still in the array. These are the
-     * publishes that hasn't received a PUBREC. When a PUBREC is
+     * publishes that hasn't received a PUBACK. When a PUBACK is
      * received, the publish is removed from the array. */
     for( index = 0U; index < MAX_OUTGOING_PUBLISHES; index++ )
     {
@@ -805,7 +838,7 @@ static void commonEventHandler( MQTTContext_t * pMqttContext,
             case MQTT_PACKET_TYPE_PUBACK:
                 LogInfo( ( "PUBACK received for packet id %u.\n\n",
                            pDeserializedInfo->packetIdentifier ) );
-                /* Cleanup publish packet when a PUBREC is received. */
+                /* Cleanup publish packet when a PUBACK is received. */
                 cleanupOutgoingPublishWithPacketID( pDeserializedInfo->packetIdentifier );
                 break;
 
@@ -917,8 +950,8 @@ static int disconnectMqttSession( MQTTContext_t * pMqttContext )
 
     if( mqttStatus != MQTTSuccess )
     {
-        LogError( ( "Sending MQTT DISCONNECT failed with status = %u.",
-                    mqttStatus ) );
+        LogError( ( "MQTT disconnect failed: Error=%s",
+                    MQTT_Status_strerror( mqttStatus ) ) );
         returnStatus = EXIT_FAILURE;
     }
 
@@ -965,6 +998,72 @@ static int subscribeToTopic( MQTTContext_t * pMqttContext,
         LogInfo( ( "SUBSCRIBE sent for topic %.*s to broker.\n\n",
                    topicFilterLength,
                    pTopicFilter ) );
+
+        /* Process incoming packet from the broker. Acknowledgment for subscription
+         * ( SUBACK ) will be received here. However after sending the subscribe, the
+         * client may receive a publish before it receives a subscribe ack. Since this
+         * demo is subscribing to the topic to which no one is publishing, probability
+         * of receiving publish message before subscribe ack is zero; but application
+         * must be ready to receive any packet. This demo uses MQTT_ProcessLoop to
+         * receive packet from network. */
+        mqttStatus = MQTT_ProcessLoop( pMqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
+
+        if( mqttStatus != MQTTSuccess )
+        {
+            returnStatus = EXIT_FAILURE;
+            LogError( ( "MQTT_ProcessLoop failed: Status=%s.",
+                        MQTT_Status_strerror( mqttStatus ) ) );
+        }
+    }
+
+    return returnStatus;
+}
+
+/*-----------------------------------------------------------*/
+
+static int subscribeToAndRegisterTopicFilter( MQTTContext_t * pContext,
+                                              const char * pTopicFilter,
+                                              uint16_t topicFilterLength,
+                                              SubscriptionManagerCallback_t callback )
+{
+    int returnStatus = EXIT_SUCCESS;
+    SubscriptionManagerStatus_t managerStatus = 0u;
+
+    /* Register the topic filter and its callback with subscription manager.
+     * On an incoming PUBLISH message whose topic name that matches the topic filter
+     * being registered, its callback will be invoked. */
+    managerStatus = SubscriptionManager_RegisterCallback( pTopicFilter,
+                                                          topicFilterLength,
+                                                          callback );
+
+    if( managerStatus != SUBSCRIPTION_MANAGER_SUCCESS )
+    {
+        returnStatus = EXIT_FAILURE;
+    }
+    else
+    {
+        /* The client is now connected to the broker. Subscribe to the passed topic
+         * by sending a subscribe packet. This client will then publish to the topic(s)
+         * related to the subscribed topic filter, so it will expect all the messages it sends to
+         * the broker to be sent back to it from the broker. The subscription manager would
+         * then dispatch all messages from the incoming PUBLISH topic to the above registered
+         * callback. This demo uses QOS1 in Subscribe, therefore, the Publish messages received
+         * from the broker will have QOS1. */
+        LogInfo( ( "Subscribing to the MQTT topic %.*s.",
+                   topicFilterLength,
+                   pTopicFilter ) );
+
+        returnStatus = subscribeToTopic( pContext,
+                                         pTopicFilter,
+                                         topicFilterLength );
+    }
+
+    if( returnStatus != EXIT_SUCCESS )
+    {
+        /* Remove the registered callback for the temperature topic filter as
+        * the subscription operation for the topic filter did not succeed. */
+        ( void ) SubscriptionManager_RemoveCallback( pTopicFilter,
+                                                     topicFilterLength );
     }
 
     return returnStatus;
@@ -985,9 +1084,6 @@ static int unsubscribeFromTopic( MQTTContext_t * pMqttContext,
     /* Start with everything at 0. */
     ( void ) memset( ( void * ) pSubscriptionList, 0x00, sizeof( pSubscriptionList ) );
 
-    /* This example subscribes to and unsubscribes from only one topic
-     * and uses QOS2. */
-    pSubscriptionList[ 0 ].qos = MQTTQoS2;
     pSubscriptionList[ 0 ].pTopicFilter = pTopicFilter;
     pSubscriptionList[ 0 ].topicFilterLength = topicFilterLength;
 
@@ -1011,6 +1107,16 @@ static int unsubscribeFromTopic( MQTTContext_t * pMqttContext,
         LogInfo( ( "UNSUBSCRIBE sent for topic %.*s to broker.\n\n",
                    topicFilterLength,
                    pTopicFilter ) );
+
+        /* Process Incoming UNSUBACK packet from the broker. */
+        mqttStatus = MQTT_ProcessLoop( pMqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
+
+        if( mqttStatus != MQTTSuccess )
+        {
+            returnStatus = EXIT_FAILURE;
+            LogError( ( "MQTT_ProcessLoop failed: Status=%s.",
+                        MQTT_Status_strerror( mqttStatus ) ) );
+        }
     }
 
     return returnStatus;
@@ -1024,15 +1130,16 @@ static int publishToTopic( MQTTContext_t * pMqttContext,
                            const char * pMessage )
 {
     int returnStatus = EXIT_SUCCESS;
+
     MQTTStatus_t mqttStatus = MQTTSuccess;
     uint8_t publishIndex = MAX_OUTGOING_PUBLISHES;
 
     assert( pMqttContext != NULL );
 
     /* Get the next free index for the outgoing publish. All QoS2 outgoing
-     * publishes are stored until a PUBREC is received. These messages are
+     * publishes are stored until a PUBACK is received. These messages are
      * stored for supporting a resend if a network connection is broken before
-     * receiving a PUBREC. */
+     * receiving a PUBACK. */
     returnStatus = getNextFreeIndexForOutgoingPublishes( &publishIndex );
 
     if( returnStatus == EXIT_FAILURE )
@@ -1069,6 +1176,20 @@ static int publishToTopic( MQTTContext_t * pMqttContext,
                        topicLength,
                        pTopic,
                        outgoingPublishPackets[ publishIndex ].packetId ) );
+
+            /* Calling MQTT_ProcessLoop to process incoming publish echo, since
+             * application subscribed to the same topic the broker will send
+             * publish message back to the application. This function also
+             * sends ping request to broker if MQTT_KEEP_ALIVE_INTERVAL_SECONDS
+             * has expired since the last MQTT packet sent and receive
+             * ping responses. */
+            mqttStatus = MQTT_ProcessLoop( pMqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
+
+            if( mqttStatus != MQTTSuccess )
+            {
+                LogWarn( ( "MQTT_ProcessLoop failed: Error = %s.",
+                           MQTT_Status_strerror( mqttStatus ) ) );
+            }
         }
     }
 
@@ -1082,7 +1203,6 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
     int returnStatus = EXIT_SUCCESS;
     bool mqttSessionEstablished = false, sessionPresent;
     MQTTContext_t mqttContext;
-    MQTTStatus_t mqttStatus = MQTTSuccess;
 
     /* Establish MQTT session on top of TCP+TLS connection. */
     LogInfo( ( "Creating an MQTT connection to %.*s.",
@@ -1133,48 +1253,10 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
          * '+' wildcard character, so that the incoming PUBLISH messages from the broker for
          * both temperature topic types (for "high" and "low" topics) can be handled by the
          * callback. */
-        ( void ) SubscriptionManager_RegisterCallback( DEMO_TEMPERATURE_TOPIC_FILTER,
-                                                       DEMO_TEMPERATURE_TOPIC_FILTER_LENGTH,
-                                                       temperatureDataCallback );
-
-        /* The client is now connected to the broker. Subscribe to the topic
-         * as specified in DEMO_TEMPERATURE_TOPIC_FILTER at the top of this file by sending a
-         * subscribe packet. This client will then publish to the two temperature topics
-         * specified at the top of the file, so it will expect all the messages it sends to
-         * the broker to be sent back to it from the broker. The subscription manager would
-         * then dispatch all messages from the temperature topics to the above registered
-         * callback. This demo uses QOS1 in Subscribe, therefore, the Publish messages received
-         * from the broker will have QOS1. */
-        LogInfo( ( "Subscribing to the MQTT topic %.*s.",
-                   DEMO_TEMPERATURE_TOPIC_FILTER_LENGTH,
-                   DEMO_TEMPERATURE_TOPIC_FILTER ) );
-        returnStatus = subscribeToTopic( &mqttContext,
-                                         DEMO_TEMPERATURE_TOPIC_FILTER,
-                                         DEMO_TEMPERATURE_TOPIC_FILTER_LENGTH );
-    }
-
-    if( returnStatus == EXIT_SUCCESS )
-    {
-        /* Process incoming packet from the broker. Acknowledgment for subscription
-         * ( SUBACK ) will be received here. However after sending the subscribe, the
-         * client may receive a publish before it receives a subscribe ack. Since this
-         * demo is subscribing to the topic to which no one is publishing, probability
-         * of receiving publish message before subscribe ack is zero; but application
-         * must be ready to receive any packet. This demo uses MQTT_ProcessLoop to
-         * receive packet from network. */
-        mqttStatus = MQTT_ProcessLoop( &mqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
-
-        if( mqttStatus != MQTTSuccess )
-        {
-            returnStatus = EXIT_FAILURE;
-            LogError( ( "MQTT_ProcessLoop returned with status = %u.",
-                        mqttStatus ) );
-
-            /* Remove the registered callback for the temperature topic filter as
-            * the subscription operation for the topic filter did not succeed. */
-            ( void ) SubscriptionManager_RemoveCallback( DEMO_TEMPERATURE_TOPIC_FILTER,
-                                                         DEMO_TEMPERATURE_TOPIC_FILTER_LENGTH );
-        }
+        returnStatus = subscribeToAndRegisterTopicFilter( &mqttContext,
+                                                          DEMO_TEMPERATURE_TOPIC_FILTER,
+                                                          DEMO_TEMPERATURE_TOPIC_FILTER_LENGTH,
+                                                          temperatureDataCallback );
     }
 
     /* PUBLISH to the "high" temperature topic, so that the broker can send the PUBLISH message
@@ -1192,24 +1274,13 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
                                        DEMO_TEMPERATURE_HIGH_TOPIC,
                                        DEMO_TEMPERATURE_HIGH_TOPIC_LENGTH,
                                        DEMO_TEMPERATURE_HIGH_MESSAGE );
+    }
 
-        /* Calling MQTT_ProcessLoop to process incoming publish echo, since
-         * application subscribed to the same topic the broker will send
-         * publish message back to the application. This function also
-         * sends ping request to broker if MQTT_KEEP_ALIVE_INTERVAL_SECONDS
-         * has expired since the last MQTT packet sent and receive
-         * ping responses. */
-        mqttStatus = MQTT_ProcessLoop( &mqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
-
-        if( mqttStatus != MQTTSuccess )
-        {
-            LogWarn( ( "MQTT_ProcessLoop failed: Error = %s.",
-                       MQTT_Status_strerror( mqttStatus ) ) );
-        }
-
-        /* The temperature callback should have been invoked for handling the incoming
-         * PUBLISH message on the "high" temperature topic. */
-        else if( globalReceivedHighTemperatureData != true )
+    /* The temperature callback should have been invoked for handling the incoming
+     * PUBLISH message on the "high" temperature topic. */
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        if( globalReceivedHighTemperatureData != true )
         {
             returnStatus = EXIT_FAILURE;
             LogError( ( "Registered callback was not invoked on sending a PUBLISH to "
@@ -1232,24 +1303,13 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
                                        DEMO_TEMPERATURE_LOW_TOPIC,
                                        DEMO_TEMPERATURE_LOW_TOPIC_LENGTH,
                                        DEMO_TEMPERATURE_LOW_MESSAGE );
+    }
 
-        /* Calling MQTT_ProcessLoop to process incoming publish echo, since
-         * application subscribed to the same topic the broker will send
-         * publish message back to the application. This function also
-         * sends ping request to broker if MQTT_KEEP_ALIVE_INTERVAL_SECONDS
-         * has expired since the last MQTT packet sent and receive
-         * ping responses. */
-        mqttStatus = MQTT_ProcessLoop( &mqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
-
-        if( mqttStatus != MQTTSuccess )
-        {
-            LogWarn( ( "MQTT_ProcessLoop failed: Error = %s.",
-                       MQTT_Status_strerror( mqttStatus ) ) );
-        }
-
-        /* The temperature callback should have been invoked for handling the incoming
-         * PUBLISH message on the "low" temperature topic. */
-        else if( globalReceivedLowTemperatureData != true )
+    /* The temperature callback should have been invoked for handling the incoming
+     * PUBLISH message on the "low" temperature topic. */
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        if( globalReceivedLowTemperatureData != true )
         {
             returnStatus = EXIT_FAILURE;
             LogError( ( "Registered callback was not invoked on sending a PUBLISH to "
@@ -1261,44 +1321,10 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
      * receive incoming PUBLISH message only on the same topic from the broker. */
     if( returnStatus == EXIT_SUCCESS )
     {
-        /* Register subscription callback for the wildcard notification topic filter. */
-        ( void ) SubscriptionManager_RegisterCallback( DEMO_HUMIDITY_TOPIC,
-                                                       DEMO_HUMIDITY_TOPIC_LENGTH,
-                                                       humidityDataCallback );
-
-        /* The client is now connected to the broker. Subscribe to the humidity topic
-        * by sending a subscribe packet. This client will then publish to the same topic it
-        * subscribed to, so it will expect all the messages it sends to the broker
-        * to be sent back to it from the broker. This demo uses QOS2 in Subscribe,
-        * therefore, the Publish messages received from the broker will have QOS2. */
-        LogInfo( ( "Subscribing to the MQTT topic %s.",
-                   DEMO_HUMIDITY_TOPIC ) );
-        returnStatus = subscribeToTopic( &mqttContext,
-                                         DEMO_HUMIDITY_TOPIC,
-                                         DEMO_HUMIDITY_TOPIC_LENGTH );
-    }
-
-    if( returnStatus == EXIT_SUCCESS )
-    {
-        /* Process incoming packet from the broker. Acknowledgment for subscription
-         * ( SUBACK ) will be received here. However after sending the subscribe, the
-         * client may receive a publish before it receives a subscribe ack. Since this
-         * demo is subscribing to the topic to which no one is publishing, probability
-         * of receiving publish message before subscribe ack is zero; but application
-         * must be ready to receive any packet. This demo uses MQTT_ProcessLoop to
-         * receive packet from network. */
-        mqttStatus = MQTT_ProcessLoop( &mqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
-
-        if( mqttStatus != MQTTSuccess )
-        {
-            returnStatus = EXIT_FAILURE;
-            LogError( ( "MQTT_ProcessLoop returned with status = %u.",
-                        mqttStatus ) );
-
-            /* Remove registered callback for the notify wildcard topic filter. */
-            ( void ) SubscriptionManager_RemoveCallback( DEMO_HUMIDITY_TOPIC,
-                                                         strlen( DEMO_HUMIDITY_TOPIC ) );
-        }
+        returnStatus = subscribeToAndRegisterTopicFilter( &mqttContext,
+                                                          DEMO_HUMIDITY_TOPIC,
+                                                          DEMO_HUMIDITY_TOPIC_LENGTH,
+                                                          humidityDataCallback );
     }
 
     /* PUBLISH to the humidity topic, so that the broker can send the PUBLISH message
@@ -1315,24 +1341,13 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
                                        DEMO_HUMIDITY_TOPIC,
                                        DEMO_HUMIDITY_TOPIC_LENGTH,
                                        DEMO_HUMIDITY_MESSAGE );
+    }
 
-        /* Calling MQTT_ProcessLoop to process incoming publish echo, since
-         * application subscribed to the same topic the broker will send
-         * publish message back to the application. This function also
-         * sends ping request to broker if MQTT_KEEP_ALIVE_INTERVAL_SECONDS
-         * has expired since the last MQTT packet sent and receive
-         * ping responses. */
-        mqttStatus = MQTT_ProcessLoop( &mqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
-
-        if( mqttStatus != MQTTSuccess )
-        {
-            LogWarn( ( "MQTT_ProcessLoop failed: Error = %s.",
-                       MQTT_Status_strerror( mqttStatus ) ) );
-        }
-
-        /* The humidity callback should have been invoked for handling the incoming
-         * PUBLISH message on the humidity topic. */
-        else if( globalReceivedHumidityData != true )
+    /* The humidity callback should have been invoked for handling the incoming
+     * PUBLISH message on the humidity topic. */
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        if( globalReceivedHumidityData != true )
         {
             returnStatus = EXIT_FAILURE;
             LogError( ( "Registered callback was not invoked on sending a PUBLISH to "
@@ -1344,44 +1359,10 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
      * so that we can receive incoming PUBLISH message only on the same topic from the broker. */
     if( returnStatus == EXIT_SUCCESS )
     {
-        /* Register subscription callback for the wildcard notification topic filter. */
-        ( void ) SubscriptionManager_RegisterCallback( DEMO_PRECIPITATION_TOPIC,
-                                                       DEMO_PRECIPITATION_TOPIC_LENGTH,
-                                                       precipitationDataCallback );
-
-        /* The client is now connected to the broker. Subscribe to the precipitation topic
-         * by sending a subscribe packet. This client will then publish to the same topic it
-         * subscribed to, so it will expect all the messages it sends to the broker
-         * to be sent back to it from the broker. This demo uses QOS2 in Subscribe,
-         * therefore, the Publish messages received from the broker will have QOS2. */
-        LogInfo( ( "Subscribing to the MQTT topic %s.",
-                   DEMO_PRECIPITATION_TOPIC ) );
-        returnStatus = subscribeToTopic( &mqttContext,
-                                         DEMO_PRECIPITATION_TOPIC,
-                                         DEMO_PRECIPITATION_TOPIC_LENGTH );
-    }
-
-    if( returnStatus == EXIT_SUCCESS )
-    {
-        /* Process incoming packet from the broker. Acknowledgment for subscription
-         * ( SUBACK ) will be received here. However after sending the subscribe, the
-         * client may receive a publish before it receives a subscribe ack. Since this
-         * demo is subscribing to the topic to which no one is publishing, probability
-         * of receiving publish message before subscribe ack is zero; but application
-         * must be ready to receive any packet. This demo uses MQTT_ProcessLoop to
-         * receive packet from network. */
-        mqttStatus = MQTT_ProcessLoop( &mqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
-
-        if( mqttStatus != MQTTSuccess )
-        {
-            returnStatus = EXIT_FAILURE;
-            LogError( ( "MQTT_ProcessLoop returned with status = %u.",
-                        mqttStatus ) );
-
-            /* Remove registered callback for the notify wildcard topic filter. */
-            ( void ) SubscriptionManager_RemoveCallback( DEMO_PRECIPITATION_TOPIC,
-                                                         strlen( DEMO_PRECIPITATION_TOPIC ) );
-        }
+        returnStatus = subscribeToAndRegisterTopicFilter( &mqttContext,
+                                                          DEMO_PRECIPITATION_TOPIC,
+                                                          DEMO_PRECIPITATION_TOPIC_LENGTH,
+                                                          precipitationDataCallback );
     }
 
     /* PUBLISH to the precipitation topic, so that the broker can send the PUBLISH message
@@ -1398,24 +1379,13 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
                                        DEMO_PRECIPITATION_TOPIC,
                                        DEMO_PRECIPITATION_TOPIC_LENGTH,
                                        DEMO_PRECIPITATION_MESSAGE );
+    }
 
-        /* Calling MQTT_ProcessLoop to process incoming publish echo, since
-         * application subscribed to the same topic the broker will send
-         * publish message back to the application. This function also
-         * sends ping request to broker if MQTT_KEEP_ALIVE_INTERVAL_SECONDS
-         * has expired since the last MQTT packet sent and receive
-         * ping responses. */
-        mqttStatus = MQTT_ProcessLoop( &mqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
-
-        if( mqttStatus != MQTTSuccess )
-        {
-            LogWarn( ( "MQTT_ProcessLoop failed: Error = %s.",
-                       MQTT_Status_strerror( mqttStatus ) ) );
-        }
-
-        /* The precipitation callback should have been invoked for handling the incoming
-         * PUBLISH message on the precipitation topic. */
-        else if( globalReceivedPrecipitationData != true )
+    /* The precipitation callback should have been invoked for handling the incoming
+     * PUBLISH message on the precipitation topic. */
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        if( globalReceivedPrecipitationData != true )
         {
             returnStatus = EXIT_FAILURE;
             LogError( ( "Registered callback was not invoked on sending a PUBLISH to "
@@ -1451,22 +1421,9 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
                                              DEMO_TEMPERATURE_TOPIC_FILTER_LENGTH );
     }
 
+    /* Unsubscribe from the humidity topic. */
     if( returnStatus == EXIT_SUCCESS )
     {
-        /* Process Incoming UNSUBACK packet from the broker. */
-        mqttStatus = MQTT_ProcessLoop( &mqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
-
-        if( mqttStatus != MQTTSuccess )
-        {
-            returnStatus = EXIT_FAILURE;
-            LogError( ( "MQTT_ProcessLoop returned with status = %u.",
-                        mqttStatus ) );
-        }
-    }
-
-    if( returnStatus == EXIT_SUCCESS )
-    {
-        /* Unsubscribe from the humidity topic. */
         LogInfo( ( "Unsubscribing from the MQTT humidity topic filter %s.",
                    DEMO_HUMIDITY_TOPIC ) );
         returnStatus = unsubscribeFromTopic( &mqttContext,
@@ -1474,40 +1431,14 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
                                              DEMO_HUMIDITY_TOPIC_LENGTH );
     }
 
+    /* Unsubscribe from the precipitation topic filter. */
     if( returnStatus == EXIT_SUCCESS )
     {
-        /* Process Incoming UNSUBACK packet from the broker. */
-        mqttStatus = MQTT_ProcessLoop( &mqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
-
-        if( mqttStatus != MQTTSuccess )
-        {
-            returnStatus = EXIT_FAILURE;
-            LogError( ( "MQTT_ProcessLoop returned with status = %u.",
-                        mqttStatus ) );
-        }
-    }
-
-    if( returnStatus == EXIT_SUCCESS )
-    {
-        /* Unsubscribe from the precipitation topic filter. */
         LogInfo( ( "Unsubscribing from the MQTT precipitation topic filter %s.",
                    DEMO_PRECIPITATION_TOPIC ) );
         returnStatus = unsubscribeFromTopic( &mqttContext,
                                              DEMO_PRECIPITATION_TOPIC,
                                              DEMO_PRECIPITATION_TOPIC_LENGTH );
-    }
-
-    if( returnStatus == EXIT_SUCCESS )
-    {
-        /* Process Incoming UNSUBACK packet from the broker. */
-        mqttStatus = MQTT_ProcessLoop( &mqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
-
-        if( mqttStatus != MQTTSuccess )
-        {
-            returnStatus = EXIT_FAILURE;
-            LogError( ( "MQTT_ProcessLoop returned with status = %u.",
-                        mqttStatus ) );
-        }
     }
 
     /* Send an MQTT Disconnect packet over the already connected TCP socket.
@@ -1543,12 +1474,12 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
  * over the TLS connection established using OpenSSL.
  *
  * The example is single threaded and uses statically allocated memory;
- * it uses QOS2 and therefore implements a retransmission mechanism
+ * it uses QOS1 and therefore implements a retransmission mechanism
  * for Publish messages. Retransmission of publish messages are attempted
  * when a MQTT connection is established with a session that was already
- * present. All the outgoing publish messages waiting to receive PUBREC
+ * present. All the outgoing publish messages waiting to receive PUBACK
  * are resent in this demo. In order to support retransmission all the outgoing
- * publishes are stored until a PUBREC is received.
+ * publishes are stored until a PUBACK is received.
  */
 int main( int argc,
           char ** argv )
