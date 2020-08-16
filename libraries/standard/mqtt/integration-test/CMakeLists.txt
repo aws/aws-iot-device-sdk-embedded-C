@@ -57,13 +57,3 @@ create_test(${stest_name}
             "${stest_dep_list}"
             "${test_include_directories}"
         )
-
-# Copy the certificates and client key to the binary directory.
-add_custom_command(
-    TARGET
-        ${stest_name}
-    POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${CMAKE_CURRENT_LIST_DIR}/certificates"
-        "$<TARGET_FILE_DIR:${stest_name}>/certificates"
-)
