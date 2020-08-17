@@ -22,9 +22,6 @@
 #define JSON_EXPECTED_QUERY_ANSWER         "xyz"
 #define JSON_EXPECTED_QUERY_ANSWER_LEN     ( sizeof( JSON_EXPECTED_QUERY_ANSWER ) - 1 )
 
-#define SAMPLE_JSON_TRAILING_COMMA         "{\"foo\":\"abc\",\"bar\":{\"foo\" : \"xyz\",}}"
-#define SAMPLE_JSON_TRAILING_COMMA_LEN     ( sizeof( SAMPLE_JSON_TRAILING_COMMA ) - 1 )
-
 #define SINGLE_SCALAR                      "\"4102985123a\""
 #define SINGLE_SCALAR_LEN                  ( sizeof( SINGLE_SCALAR ) - 1 )
 
@@ -42,6 +39,12 @@
 
 #define ILLEGAL_LEADING_ZEROS              "07"
 #define ILLEGAL_LEADING_ZEROS_LENGTH       ( sizeof( ILLEGAL_LEADING_ZEROS ) - 1 )
+
+#define TRAILING_COMMA_IN_OBJECT           "{\"foo\":\"abc\",\"bar\":{\"foo\" : \"xyz\",}}"
+#define TRAILING_COMMA_IN_OBJECT_LENGTH    ( sizeof( TRAILING_COMMA_IN_OBJECT ) - 1 )
+
+#define TRAILING_COMMA_IN_ARRAY            "{\"hello\": [\"world\",]}"
+#define TRAILING_COMMA_IN_ARRAY_LENGTH     ( sizeof( TRAILING_COMMA_IN_ARRAY ) - 1 )
 
 /*#define UNICODE_CHARS                      "\"\\u\xf0\x9f\xa7\x99\"" */
 /*#define UNICODE_CHARS_LENGTH               ( sizeof( UNICODE_CHARS ) - 1 ) */
@@ -106,9 +109,17 @@
 #define WHITE_SPACE                                  "   "
 #define WHITE_SPACE_LENGTH                           ( sizeof( WHITE_SPACE ) - 1 )
 
+/* Triggers the cases in which i < max for skipObjectScalars. */
+#define NOTHING_AFTER_ARRAY_START_MARKER             "{\"hello\": ["
+#define NOTHING_AFTER_ARRAY_START_MARKER_LENGTH      ( sizeof( NOTHING_AFTER_ARRAY_START_MARKER ) - 1 )
+
 /* A non-number after the exponent marker is illegal. */
 #define INVALID_EXPONENT                             "5Ea"
 #define INVALID_EXPONENT_LENGTH                      ( sizeof( INVALID_EXPONENT ) - 1 )
+
+/* Illegal scalar entry in the array. */
+#define ILLEGAL_SCALAR_IN_ARRAY                      "{\"hello\": [5, world]\""
+#define ILLEGAL_SCALAR_IN_ARRAY_LENGTH               ( sizeof( ILLEGAL_SCALAR_IN_ARRAY ) - 1 )
 
 #define UNKNOWN_ESCAPE                               "\"\\\x20\""
 #define UNKNOWN_ESCAPE_LENGTH                        ( sizeof( UNKNOWN_ESCAPE ) - 1 )
@@ -171,8 +182,12 @@ void test_JSON_Validate_Invalid_JSON( void )
 {
     JSONStatus_t jsonStatus;
 
-    jsonStatus = JSON_Validate( SAMPLE_JSON_TRAILING_COMMA,
-                                SAMPLE_JSON_TRAILING_COMMA_LEN );
+    jsonStatus = JSON_Validate( TRAILING_COMMA_IN_OBJECT,
+                                TRAILING_COMMA_IN_OBJECT_LENGTH );
+    TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
+
+    jsonStatus = JSON_Validate( TRAILING_COMMA_IN_ARRAY,
+                                TRAILING_COMMA_IN_ARRAY_LENGTH );
     TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
 
     jsonStatus = JSON_Validate( SAMPLE_JSON_TRAILING_CHAR,
@@ -195,6 +210,10 @@ void test_JSON_Validate_Invalid_JSON( void )
                                 NOTHING_AFTER_NUMBER_LENGTH );
     TEST_ASSERT_EQUAL( JSONPartial, jsonStatus );
 
+    jsonStatus = JSON_Validate( NOTHING_AFTER_ARRAY_START_MARKER,
+                                NOTHING_AFTER_ARRAY_START_MARKER_LENGTH );
+    TEST_ASSERT_EQUAL( JSONPartial, jsonStatus );
+
     jsonStatus = JSON_Validate( NOTHING_AFTER_EXPONENT_MARKER,
                                 NOTHING_AFTER_EXPONENT_MARKER_LENGTH );
     TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
@@ -209,6 +228,10 @@ void test_JSON_Validate_Invalid_JSON( void )
 
     jsonStatus = JSON_Validate( ILLEGAL_LEADING_ZEROS,
                                 ILLEGAL_LEADING_ZEROS_LENGTH );
+    TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
+
+    jsonStatus = JSON_Validate( ILLEGAL_SCALAR_IN_ARRAY,
+                                ILLEGAL_SCALAR_IN_ARRAY_LENGTH );
     TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
 
     jsonStatus = JSON_Validate( ESCAPE_CHAR_ALONE_NOT_ENCLOSED,
