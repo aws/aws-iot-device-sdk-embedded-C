@@ -332,11 +332,11 @@ static MQTTStatus_t validatePublishParams( const MQTTContext_t * pContext,
  *
  * @return Returns whether the topic filter and the topic name match.
  */
-static bool matchEndWildcardsSpecialCases( const char * pTopicFilter,
-                                           uint16_t topicFilterLength,
-                                           uint16_t filterIndex,
-                                           uint16_t topicNameLength,
-                                           uint16_t nameIndex );
+static bool matchWildcardsSpecialCases( const char * pTopicFilter,
+                                        uint16_t topicFilterLength,
+                                        uint16_t filterIndex,
+                                        uint16_t topicNameLength,
+                                        uint16_t nameIndex );
 
 /**
  * @brief Attempt to match topic name with a topic filter starting with a wildcard.
@@ -383,11 +383,11 @@ static bool matchTopicFilter( const char * pTopicName,
 
 /*-----------------------------------------------------------*/
 
-static bool matchEndWildcardsSpecialCases( const char * pTopicFilter,
-                                           uint16_t topicFilterLength,
-                                           uint16_t filterIndex,
-                                           uint16_t topicNameLength,
-                                           uint16_t nameIndex )
+static bool matchWildcardsSpecialCases( const char * pTopicFilter,
+                                        uint16_t topicFilterLength,
+                                        uint16_t filterIndex,
+                                        uint16_t topicNameLength,
+                                        uint16_t nameIndex )
 {
     bool matchFound = false;
 
@@ -513,11 +513,11 @@ static bool matchTopicFilter( const char * pTopicName,
         {
             /* Handle special corner cases regarding wildcards at the end of
              * topic filters, as documented by the MQTT protocol spec. */
-            matchFound = matchEndWildcardsSpecialCases( pTopicFilter,
-                                                        topicFilterLength,
-                                                        filterIndex,
-                                                        topicNameLength,
-                                                        nameIndex );
+            matchFound = matchWildcardsSpecialCases( pTopicFilter,
+                                                     topicFilterLength,
+                                                     filterIndex,
+                                                     topicNameLength,
+                                                     nameIndex );
         }
         else
         {
