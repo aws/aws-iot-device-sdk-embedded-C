@@ -314,15 +314,15 @@ static MQTTStatus_t validatePublishParams( const MQTTContext_t * pContext,
                                            uint16_t packetId );
 
 /**
- * @brief Performs topic matching for special cases of topic filters ending
- * with wildcards, as documented by the MQTT protocol spec.
- *
- * When the topic name has been completely consumed in matching with the
  * topic filter, this function handles the following 2 cases:
  * - When the topic filter ends with "/+" or "/#" characters, but the topic
  * name only ends with '/'.
  * - When the topic filter ends with "/#" characters, but the topic name
  * ends at the parent level.
+ *
+ * @note This function ASSUMES that the topic name been consumed in linear
+ * matching with the topic filer, but the topic filter has remaining characters
+ * to be matched.
  *
  * @param[in] pTopicFilter The topic filter containing the wildcard.
  * @param[in] topicFilterLength Length of the topic filter being examined.
@@ -334,9 +334,7 @@ static MQTTStatus_t validatePublishParams( const MQTTContext_t * pContext,
  */
 static bool matchEndWildcardsSpecialCases( const char * pTopicFilter,
                                            uint16_t topicFilterLength,
-                                           uint16_t filterIndex,
-                                           uint16_t topicNameLength,
-                                           uint16_t nameIndex );
+                                           uint16_t filterIndex );
 
 /**
  * @brief Attempt to match topic name with a topic filter starting with a wildcard.
@@ -385,46 +383,39 @@ static bool matchTopicFilter( const char * pTopicName,
 
 static bool matchEndWildcardsSpecialCases( const char * pTopicFilter,
                                            uint16_t topicFilterLength,
-                                           uint16_t filterIndex,
-                                           uint16_t topicNameLength,
-                                           uint16_t nameIndex )
+                                           uint16_t filterIndex )
 {
     bool matchFound = false;
 
     assert( pTopicFilter != NULL );
     assert( topicFilterLength != 0 );
 
-    /* The special cases of matching occur only when the topic name has been
-     * consumed but there exists remaining characters to match in the topic filter. */
-    if( nameIndex == topicNameLength - 1U )
+    /* Check if the topic filter has 2 remaining characters and it ends in
+     * "/#". This check handles the case to match filter "sport/#" with topic
+     * "sport". The reason is that the '#' wildcard represents the parent and
+     * any number of child levels in the topic name.*/
+    if( ( filterIndex == ( topicFilterLength - 3U ) ) &&
+        ( pTopicFilter[ filterIndex + 1U ] == '/' ) &&
+        ( pTopicFilter[ filterIndex + 2U ] == '#' ) )
+
     {
-        /* Check if the topic filter has 2 remaining characters and it ends in
-         * "/#". This check handles the case to match filter "sport/#" with topic
-         * "sport". The reason is that the '#' wildcard represents the parent and
-         * any number of child levels in the topic name.*/
-        if( ( filterIndex == ( topicFilterLength - 3U ) ) &&
-            ( pTopicFilter[ filterIndex + 1U ] == '/' ) &&
-            ( pTopicFilter[ filterIndex + 2U ] == '#' ) )
+        matchFound = true;
+    }
 
-        {
-            matchFound = true;
-        }
-
-        /* Check if the next character is "#" or "+" and the topic filter ends in
-         * "/#" or "/+". This check handles the cases to match:
-         *
-         * - Topic filter "sport/+" with topic "sport/".
-         * - Topic filter "sport/#" with topic "sport/".
-         */
-        if( ( filterIndex == ( topicFilterLength - 2U ) ) &&
-            ( pTopicFilter[ filterIndex ] == '/' ) &&
-            (
-                ( pTopicFilter[ filterIndex + 1U ] == '+' ) ||
-                ( pTopicFilter[ filterIndex + 1U ] == '#' )
-            ) )
-        {
-            matchFound = true;
-        }
+    /* Check if the next character is "#" or "+" and the topic filter ends in
+     * "/#" or "/+". This check handles the cases to match:
+     *
+     * - Topic filter "sport/+" with topic "sport/".
+     * - Topic filter "sport/#" with topic "sport/".
+     */
+    if( ( filterIndex == ( topicFilterLength - 2U ) ) &&
+        ( pTopicFilter[ filterIndex ] == '/' ) &&
+        (
+            ( pTopicFilter[ filterIndex + 1U ] == '+' ) ||
+            ( pTopicFilter[ filterIndex + 1U ] == '#' )
+        ) )
+    {
+        matchFound = true;
     }
 
     return matchFound;
@@ -526,11 +517,16 @@ static bool matchTopicFilter( const char * pTopicName,
          * character in the topic filter string. */
         if( pTopicName[ nameIndex ] == pTopicFilter[ filterIndex ] )
         {
-            matchFound = matchEndWildcardsSpecialCases( pTopicFilter,
-                                                        topicFilterLength,
-                                                        filterIndex,
-                                                        topicNameLength,
-                                                        nameIndex );
+            /* If the topic name has been consumed but the topic filter has not
+             * been consumed, match for special cases when the topic filter ends
+             * with wildcard character. */
+            if( ( nameIndex == ( topicNameLength - 1U ) ) &&
+                ( filterIndex < ( topicFilterLength - 1U ) ) )
+            {
+                matchFound = matchEndWildcardsSpecialCases( pTopicFilter,
+                                                            topicFilterLength,
+                                                            filterIndex );
+            }
         }
         else
         {
