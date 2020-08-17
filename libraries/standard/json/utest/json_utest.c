@@ -55,6 +55,9 @@
 #define INVALID_UTF8_PREMATURE_CUT                   "{\"foo\":\"abc\",\"bar\":{\"\xc2\xa9 "
 #define INVALID_UTF8_PREMATURE_CUT_LENGTH            ( sizeof( INVALID_UTF8_PREMATURE_CUT ) - 1 )
 
+#define WRONG_KEY_VALUE_SEPARATOR                    "{\"hello\";\"world\""
+#define WRONG_KEY_VALUE_SEPARATOR_LENGTH             ( sizeof( WRONG_KEY_VALUE_SEPARATOR ) - 1 )
+
 #define INVALID_UTF8_NEXT_BYTE                       "\"\xc2\x00\""
 #define INVALID_UTF8_NEXT_BYTE_LENGTH                ( sizeof( INVALID_UTF8_NEXT_BYTE ) - 1 )
 
@@ -109,9 +112,16 @@
 #define WHITE_SPACE                                  "   "
 #define WHITE_SPACE_LENGTH                           ( sizeof( WHITE_SPACE ) - 1 )
 
-/* Triggers the cases in which i < max for skipObjectScalars. */
+/* Triggers the case in which i < max for skipArrayScalars. */
 #define NOTHING_AFTER_ARRAY_START_MARKER             "{\"hello\": ["
 #define NOTHING_AFTER_ARRAY_START_MARKER_LENGTH      ( sizeof( NOTHING_AFTER_ARRAY_START_MARKER ) - 1 )
+
+/* Triggers the cases in which i < max for skipObjectScalars. */
+#define NOTHING_AFTER_OBJECT_START_MARKER            "{\"hello\": {"
+#define NOTHING_AFTER_OBJECT_START_MARKER_LENGTH     ( sizeof( NOTHING_AFTER_OBJECT_START_MARKER ) - 1 )
+
+#define NOTHING_AFTER_KEY                            "{\"hello\""
+#define NOTHING_AFTER_KEY_LENGTH                     ( sizeof( NOTHING_AFTER_KEY ) - 1 )
 
 /* A non-number after the exponent marker is illegal. */
 #define INVALID_EXPONENT                             "5Ea"
@@ -213,6 +223,18 @@ void test_JSON_Validate_Invalid_JSON( void )
     jsonStatus = JSON_Validate( NOTHING_AFTER_ARRAY_START_MARKER,
                                 NOTHING_AFTER_ARRAY_START_MARKER_LENGTH );
     TEST_ASSERT_EQUAL( JSONPartial, jsonStatus );
+
+    jsonStatus = JSON_Validate( NOTHING_AFTER_OBJECT_START_MARKER,
+                                NOTHING_AFTER_OBJECT_START_MARKER_LENGTH );
+    TEST_ASSERT_EQUAL( JSONPartial, jsonStatus );
+
+    jsonStatus = JSON_Validate( NOTHING_AFTER_KEY,
+                                NOTHING_AFTER_KEY_LENGTH );
+    TEST_ASSERT_EQUAL( JSONPartial, jsonStatus );
+
+    jsonStatus = JSON_Validate( WRONG_KEY_VALUE_SEPARATOR,
+                                WRONG_KEY_VALUE_SEPARATOR_LENGTH );
+    TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
 
     jsonStatus = JSON_Validate( NOTHING_AFTER_EXPONENT_MARKER,
                                 NOTHING_AFTER_EXPONENT_MARKER_LENGTH );
