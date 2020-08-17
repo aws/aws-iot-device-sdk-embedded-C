@@ -80,4 +80,6 @@ PROJECT_SOURCES += $(SRCDIR)/libraries/standard/mqtt/src/mqtt.c
 PROJECT_SOURCES += $(SRCDIR)/libraries/standard/mqtt/src/mqtt_lightweight.c
 PROJECT_SOURCES += $(SRCDIR)/libraries/standard/mqtt/src/mqtt_state.c
 
+CBMCFLAGS += --sat-solver-invocation kissat
+
 include ../Makefile.common
