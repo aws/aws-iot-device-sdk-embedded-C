@@ -2126,13 +2126,13 @@ void test_MQTT_Ping_error_path( void )
 /* ========================================================================== */
 
 /**
- * @brief Tests that MQTT_GetSubAckPayload works as expected in parsing the
+ * @brief Tests that MQTT_GetSubAckStatusCodes works as expected in parsing the
  * payload information of a SUBACK packet.
  */
-void test_MQTT_GetSubAckPayload( void )
+void test_MQTT_GetSubAckStatusCodes( void )
 {
     MQTTPacketInfo_t mqttPacketInfo;
-    uint16_t payloadSize;
+    size_t payloadSize;
     uint8_t * pPayloadStart;
     MQTTStatus_t status = MQTTSuccess;
     uint8_t buffer[ 10 ] = { 0 };
