@@ -2356,7 +2356,7 @@ void test_MQTT_MatchTopic_Wildcard_SingleLevel( void )
  * @brief Verifies that MQTT_MatchTopic meets the MQTT 3.1.1 specification of all
  * cases of matching topic filters that contain the multi-level '#' wildcard.
  */
-void test_MQTT_MatchTopic_Wildcard_MultiLevel( void )
+void test_MQTT_MatchTopic_Wildcard_MultiLevel_Match_Cases( void )
 {
     const char * pTopicName = NULL;
     const char * pTopicFilter = NULL;
@@ -2449,6 +2449,17 @@ void test_MQTT_MatchTopic_Wildcard_MultiLevel( void )
                                                      strlen( pTopicFilter ),
                                                      &matchResult ) );
     TEST_ASSERT_EQUAL( true, matchResult );
+}
+
+/**
+ * @brief Verifies that MQTT_MatchTopic meets the MQTT 3.1.1 specification for
+ * cases of where topic filter containing '#' wildcard do not match topic name.
+ */
+void test_MQTT_MatchTopic_Wildcard_MultiLevel_No_Match_Cases( void )
+{
+    const char * pTopicName = NULL;
+    const char * pTopicFilter = NULL;
+    bool matchResult = false;
 
     /* Edge case where topic filter starts with '#' and topic name starts with '$'. */
     pTopicName = "$/test/match";
