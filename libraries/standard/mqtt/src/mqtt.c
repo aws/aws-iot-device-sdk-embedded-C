@@ -409,13 +409,11 @@ static bool matchEndWildcardsSpecialCases( const char * pTopicFilter,
      * - Topic filter "sport/#" with topic "sport/".
      */
     if( ( filterIndex == ( topicFilterLength - 2U ) ) &&
-        ( pTopicFilter[ filterIndex ] == '/' ) &&
-        (
-            ( pTopicFilter[ filterIndex + 1U ] == '+' ) ||
-            ( pTopicFilter[ filterIndex + 1U ] == '#' )
-        ) )
+        ( pTopicFilter[ filterIndex ] == '/' ) )
     {
-        matchFound = true;
+        /* Check that the last character is a wildcard. */
+        matchFound = ( ( pTopicFilter[ filterIndex + 1U ] == '+' ) || 
+                       ( pTopicFilter[ filterIndex + 1U ] == '#' ) ) ? true : false;
     }
 
     return matchFound;
@@ -520,8 +518,7 @@ static bool matchTopicFilter( const char * pTopicName,
             /* If the topic name has been consumed but the topic filter has not
              * been consumed, match for special cases when the topic filter ends
              * with wildcard character. */
-            if( ( nameIndex == ( topicNameLength - 1U ) ) &&
-                ( filterIndex < ( topicFilterLength - 1U ) ) )
+            if( nameIndex == ( topicNameLength - 1U ) )
             {
                 matchFound = matchEndWildcardsSpecialCases( pTopicFilter,
                                                             topicFilterLength,
