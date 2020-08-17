@@ -11,7 +11,7 @@
 #define SAMPLE_JSON                                                                  \
     "{\"literal\":true, \"more_literals\": {\"literal2\":false, \"literal3\":null}," \
     "\"exp1\": 5E+3, \"more_exponents\": [5e+2, 4e-2, 93E-5, 128E-6],  "             \
-    "\"number\": 123412, "                                                           \
+    "\"number\": -123412, "                                                          \
     "\"decimal\":109238.42091289, "                                                  \
     "\"foo\":\"abc\",\"bar\":{\"foo\":\"xyz\"}}"
 #define SAMPLE_JSON_LEN                    ( sizeof( SAMPLE_JSON ) - 1 )
@@ -34,14 +34,23 @@
 #define SAMPLE_JSON_TRAILING_SPACES        "{\"foo\":\"abc\",\"bar\":{\"foo\" : \"xyz\"}}  "
 #define SAMPLE_JSON_TRAILING_SPACES_LEN    ( sizeof( SAMPLE_JSON_TRAILING_SPACES ) - 1 )
 
+#define SAMPLE_JSON_KEY_CUT                "{\"foo\":\"abc\",\"bar\":{\""
+#define SAMPLE_JSON_KEY_CUT_LEN            ( sizeof( SAMPLE_JSON_KEY_CUT ) - 1 )
+
 #define MULTIPLE_VALID_ESCAPES             "\"\\\\ \\\" \\/ \\b \\f \\n \\r \\t \\\x12\" "
 #define MULTIPLE_VALID_ESCAPES_LENGTH      ( sizeof( MULTIPLE_VALID_ESCAPES ) - 1 )
+
+#define ILLEGAL_LEADING_ZEROS              "07"
+#define ILLEGAL_LEADING_ZEROS_LENGTH       ( sizeof( ILLEGAL_LEADING_ZEROS ) - 1 )
 
 /*#define UNICODE_CHARS                      "\"\\u\xf0\x9f\xa7\x99\"" */
 /*#define UNICODE_CHARS_LENGTH               ( sizeof( UNICODE_CHARS ) - 1 ) */
 
 #define VALID_UTF8                                   "\"\xc2\xa9 \xe2\x98\x95 \xf0\x9f\x98\x80\""
 #define VALID_UTF8_LENGTH                            ( sizeof( VALID_UTF8 ) - 1 )
+
+#define INVALID_UTF8_PREMATURE_CUT                   "{\"foo\":\"abc\",\"bar\":{\"\xc2\xa9 "
+#define INVALID_UTF8_PREMATURE_CUT_LENGTH            ( sizeof( INVALID_UTF8_PREMATURE_CUT ) - 1 )
 
 #define INVALID_UTF8_NEXT_BYTE                       "\"\xc2\x00\""
 #define INVALID_UTF8_NEXT_BYTE_LENGTH                ( sizeof( INVALID_UTF8_NEXT_BYTE ) - 1 )
@@ -76,6 +85,18 @@
 
 #define ESCAPE_CHAR_ALONE                            "\"\\\""
 #define ESCAPE_CHAR_ALONE_LENGTH                     ( sizeof( ESCAPE_CHAR_ALONE ) - 1 )
+
+/* Triggers the case in which i < max for skipDigits. */
+#define NOTHING_AFTER_DECIMAL_POINT                  "{\"decimal\": 1."
+#define NOTHING_AFTER_DECIMAL_POINT_LENGTH           ( sizeof( NOTHING_AFTER_DECIMAL_POINT ) - 1 )
+
+/* Triggers the case in which i < max for skipEscape. */
+#define ESCAPE_CHAR_ALONE_NOT_ENCLOSED               "\"\\"
+#define ESCAPE_CHAR_ALONE_NOT_ENCLOSED_LENGTH        ( sizeof( ESCAPE_CHAR_ALONE_NOT_ENCLOSED ) - 1 )
+
+/* Triggers the case in which i < max for skipString. */
+#define WHITE_SPACE                                  "   "
+#define WHITE_SPACE_LENGTH                           ( sizeof( WHITE_SPACE ) - 1 )
 
 #define UNKNOWN_ESCAPE                               "\"\\\x20\""
 #define UNKNOWN_ESCAPE_LENGTH                        ( sizeof( UNKNOWN_ESCAPE ) - 1 )
@@ -152,6 +173,24 @@ void test_JSON_Validate_Invalid_JSON( void )
     jsonStatus = JSON_Validate( UNKNOWN_ESCAPE, UNKNOWN_ESCAPE_LENGTH );
     TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
 
+    jsonStatus = JSON_Validate( ESCAPE_CHAR_ALONE, ESCAPE_CHAR_ALONE_LENGTH );
+    TEST_ASSERT_EQUAL( JSONPartial, jsonStatus );
+
+    jsonStatus = JSON_Validate( WHITE_SPACE, WHITE_SPACE_LENGTH );
+    TEST_ASSERT_EQUAL( JSONPartial, jsonStatus );
+
+    jsonStatus = JSON_Validate( NOTHING_AFTER_DECIMAL_POINT,
+                                NOTHING_AFTER_DECIMAL_POINT_LENGTH );
+    TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
+
+    jsonStatus = JSON_Validate( ILLEGAL_LEADING_ZEROS,
+                                ILLEGAL_LEADING_ZEROS_LENGTH );
+    TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
+
+    jsonStatus = JSON_Validate( ESCAPE_CHAR_ALONE_NOT_ENCLOSED,
+                                ESCAPE_CHAR_ALONE_NOT_ENCLOSED_LENGTH );
+    TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
+
     jsonStatus = JSON_Validate( UNESCAPED_CONTROL_CHAR, UNESCAPED_CONTROL_CHAR_LENGTH );
     TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
 
@@ -159,9 +198,6 @@ void test_JSON_Validate_Invalid_JSON( void )
     TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
 
     jsonStatus = JSON_Validate( INVALID_UTF8_START_C1, INVALID_UTF8_START_C1_LENGTH );
-    TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
-
-    jsonStatus = JSON_Validate( INVALID_UTF8_START_F5, INVALID_UTF8_START_F5_LENGTH );
     TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
 
     jsonStatus = JSON_Validate( INVALID_UTF8_START_F5, INVALID_UTF8_START_F5_LENGTH );
@@ -189,10 +225,14 @@ void test_JSON_Validate_Invalid_JSON( void )
     jsonStatus = JSON_Validate( INVALID_UTF8_SURROGATE_RANGE_MAX,
                                 INVALID_UTF8_SURROGATE_RANGE_MAX_LENGTH );
     TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
+
+    jsonStatus = JSON_Validate( INVALID_UTF8_SURROGATE_RANGE_MAX,
+                                INVALID_UTF8_SURROGATE_RANGE_MAX_LENGTH );
+    TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
 }
 
 /**
- * @brief Test that JSON_Search is able to classify invalid JSON correctly.
+ * @brief Test that JSON_Search can find the right value given a query key.
  */
 void test_JSON_Search_Valid_JSON( void )
 {
@@ -211,4 +251,25 @@ void test_JSON_Search_Valid_JSON( void )
     TEST_ASSERT_EQUAL( JSONSuccess, jsonStatus );
     TEST_ASSERT_EQUAL( outValueLength, JSON_EXPECTED_QUERY_ANSWER_LEN );
     TEST_ASSERT_EQUAL_STRING_LEN( JSON_EXPECTED_QUERY_ANSWER, outValue, outValueLength );
+}
+
+/**
+ * @brief Test that JSON_Search can find the right value given an incorrect query key
+ * or invalid JSON string.
+ */
+void test_JSON_Search_Invalid_JSON( void )
+{
+    JSONStatus_t jsonStatus;
+    char * outValue;
+    size_t outValueLength;
+
+    jsonStatus = JSON_Search( SAMPLE_JSON_KEY_CUT,
+                              SAMPLE_JSON_KEY_CUT_LEN,
+                              SAMPLE_JSON_QUERY_KEY,
+                              SAMPLE_JSON_QUERY_KEY_LEN,
+                              JSON_QUERY_SEPARATOR,
+                              &outValue,
+                              &outValueLength );
+
+    TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
 }
