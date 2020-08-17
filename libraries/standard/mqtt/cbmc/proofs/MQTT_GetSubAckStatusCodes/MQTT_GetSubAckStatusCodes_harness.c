@@ -31,7 +31,7 @@ void harness()
 {
     MQTTPacketInfo_t * pSubackPacket;
     uint8_t * pPayloadStart;
-    uint16_t payloadSize;
+    size_t payloadSize;
 
     pSubackPacket = allocateMqttPacketInfo( NULL );
     __CPROVER_assume( isValidMqttPacketInfo( pSubackPacket ) );

@@ -322,7 +322,7 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  *
  * <b>Example</b>
  * @code{c}
- * 
+ *
  * // Variables used in this example.
  * MQTTStatus_t status;
  * MQTTConnectInfo_t connectInfo = { 0 };
@@ -336,7 +336,7 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  * // Client ID must be unique to broker. This field is required.
  * connectInfo.pClientIdentifier = "someClientID";
  * connectInfo.clientIdentifierLength = strlen( connectInfo.pClientIdentifier );
- * 
+ *
  * // The following fields are optional.
  * // Value for keep alive.
  * connectInfo.keepAliveSeconds = 60;
@@ -345,7 +345,7 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  * connectInfo.userNameLength = strlen( connectInfo.pUserName );
  * connectInfo.pPassword = "somePassword";
  * connectInfo.passwordLength = strlen( connectInfo.pPassword );
- * 
+ *
  * // The last will and testament is optional, it will be published by the broker
  * // should this client disconnect without sending a DISCONNECT packet.
  * willInfo.qos = MQTTQoS0;
@@ -356,12 +356,12 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  *
  * // Send the connect packet. Use 100 ms as the timeout to wait for the CONNACK packet.
  * status = MQTT_Connect( pContext, &connectInfo, &willInfo, 100, &sessionPresent );
- * 
+ *
  * if( status == MQTTSuccess )
  * {
  *      // Since we requested a clean session, this must be false
  *      assert( sessionPresent == false );
- * 
+ *
  *      // Do something with the connection.
  * }
  * @endcode
@@ -386,7 +386,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
  * #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSendFailed if transport write failed;
  * #MQTTSuccess otherwise.
- * 
+ *
  * <b>Example</b>
  * @code{c}
  *
@@ -398,7 +398,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
  * MQTTContext_t * pContext;
  * // This is assumed to be a list of filters we want to subscribe to.
  * const char * filters[ NUMBER_OF_SUBSCRIPTIONS ];
- * 
+ *
  * // Set each subscription.
  * for( int i = 0; i < NUMBER_OF_SUBSCRIPTIONS; i++ )
  * {
@@ -407,12 +407,12 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
  *      subscriptionList[ i ].pTopicFilter = filters[ i ];
  *      subscriptionList[ i ].topicFilterLength = strlen( filters[ i ] );
  * }
- * 
+ *
  * // Obtain a new packet id for the subscription.
  * packetId = MQTT_GetPacketId( pContext );
- * 
+ *
  * status = MQTT_Subscribe( pContext, &subscriptionList[ 0 ], NUMBER_OF_SUBSCRIPTIONS, packetId );
- * 
+ *
  * if( status == MQTTSuccess )
  * {
  *      // We must now call MQTT_ReceiveLoop() or MQTT_ProcessLoop() to receive the SUBACK.
@@ -437,29 +437,29 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
  * #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSendFailed if transport write failed;
  * #MQTTSuccess otherwise.
- * 
+ *
  * <b>Example</b>
  * @code{c}
- * 
+ *
  * // Variables used in this example.
  * MQTTStatus_t status;
  * MQTTPublishInfo_t publishInfo;
  * uint16_t packetId;
  * // This context is assumed to be initialized and connected.
  * MQTTContext_t * pContext;
- * 
+ *
  * // QoS of publish.
  * publishInfo.qos = MQTTQoS1;
  * publishInfo.pTopicName = "/some/topic/name";
  * publishInfo.topicNameLength = strlen( publishInfo.pTopicName );
  * publishInfo.pPayload = "Hello World!";
  * publishInfo.payloadLength = strlen( "Hello World!" );
- * 
+ *
  * // Packet ID is needed for QoS > 0.
  * packetId = MQTT_GetPacketId( pContext );
- * 
+ *
  * status = MQTT_Publish( pContext, &publishInfo, packetId );
- * 
+ *
  * if( status == MQTTSuccess )
  * {
  *      // Since the QoS is > 0, we will need to call MQTT_ReceiveLoop()
@@ -497,7 +497,7 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext );
  * #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSendFailed if transport write failed;
  * #MQTTSuccess otherwise.
- * 
+ *
  * <b>Example</b>
  * @code{c}
  *
@@ -509,7 +509,7 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext );
  * MQTTContext_t * pContext;
  * // This is assumed to be a list of filters we want to unsubscribe from.
  * const char * filters[ NUMBER_OF_SUBSCRIPTIONS ];
- * 
+ *
  * // Set information for each unsubscribe request.
  * for( int i = 0; i < NUMBER_OF_SUBSCRIPTIONS; i++ )
  * {
@@ -518,12 +518,12 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext );
  *
  *      // The QoS field of MQTT_SubscribeInfo_t is unused for unsubscribing.
  * }
- * 
+ *
  * // Obtain a new packet id for the unsubscribe request.
  * packetId = MQTT_GetPacketId( pContext );
- * 
+ *
  * status = MQTT_Subscribe( pContext, &unsubscribeList[ 0 ], NUMBER_OF_SUBSCRIPTIONS, packetId );
- * 
+ *
  * if( status == MQTTSuccess )
  * {
  *      // We must now call MQTT_ReceiveLoop() or MQTT_ProcessLoop() to receive the UNSUBACK.
@@ -566,20 +566,20 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext );
  * #MQTTIllegalState if an incoming QoS 1/2 publish or ack causes an
  * invalid transition for the internal state machine;
  * #MQTTSuccess on success.
- * 
+ *
  * <b>Example</b>
  * @code{c}
- * 
+ *
  * // Variables used in this example.
  * MQTTStatus_t status;
  * uint32_t timeoutMs = 100;
  * // This context is assumed to be initialized and connected.
  * MQTTContext_t * pContext;
- * 
+ *
  * while( true )
  * {
  *      status = MQTT_ProcessLoop( pContext, timeoutMs );
- * 
+ *
  *      if( status != MQTTSuccess )
  *      {
  *          // Determine the error. It's possible we might need to disconnect TCP.
@@ -614,18 +614,18 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
  *
  * <b>Example</b>
  * @code{c}
- * 
+ *
  * // Variables used in this example.
  * MQTTStatus_t status;
  * uint32_t timeoutMs = 100;
  * uint32_t keepAliveMs = 60 * 1000;
  * // This context is assumed to be initialized and connected.
  * MQTTContext_t * pContext;
- * 
+ *
  * while( true )
  * {
  *      status = MQTT_ReceiveLoop( pContext, timeoutMs );
- * 
+ *
  *      if( status != MQTTSuccess )
  *      {
  *          // Determine the error. It's possible we might need to disconnect TCP.
@@ -638,7 +638,7 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
  *          {
  *              status = MQTT_Ping( pContext );
  *          }
- * 
+ *
  *          // Other application functions.
  *      }
  * }
@@ -683,7 +683,7 @@ uint16_t MQTT_GetPacketId( MQTTContext_t * pContext );
  */
 MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
                                         uint8_t ** pPayloadStart,
-                                        uint16_t * pPayloadSize );
+                                        size_t * pPayloadSize );
 
 /**
  * @brief Error code to string conversion for MQTT statuses.
