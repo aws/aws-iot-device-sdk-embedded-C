@@ -86,6 +86,10 @@
 #define ESCAPE_CHAR_ALONE                            "\"\\\""
 #define ESCAPE_CHAR_ALONE_LENGTH                     ( sizeof( ESCAPE_CHAR_ALONE ) - 1 )
 
+/* Triggers the case in which i < max for skipDecimals. */
+#define NOTHING_AFTER_NUMBER                         "{\"decimal\": 1"
+#define NOTHING_AFTER_NUMBER_LENGTH                  ( sizeof( NOTHING_AFTER_NUMBER ) - 1 )
+
 /* Triggers the case in which i < max for skipDigits. */
 #define NOTHING_AFTER_DECIMAL_POINT                  "{\"decimal\": 1."
 #define NOTHING_AFTER_DECIMAL_POINT_LENGTH           ( sizeof( NOTHING_AFTER_DECIMAL_POINT ) - 1 )
@@ -94,9 +98,17 @@
 #define ESCAPE_CHAR_ALONE_NOT_ENCLOSED               "\"\\"
 #define ESCAPE_CHAR_ALONE_NOT_ENCLOSED_LENGTH        ( sizeof( ESCAPE_CHAR_ALONE_NOT_ENCLOSED ) - 1 )
 
+/* Triggers the case in which i < max for skipExponent. */
+#define NOTHING_AFTER_EXPONENT_MARKER                "4e"
+#define NOTHING_AFTER_EXPONENT_MARKER_LENGTH         ( sizeof( NOTHING_AFTER_EXPONENT_MARKER ) - 1 )
+
 /* Triggers the case in which i < max for skipString. */
 #define WHITE_SPACE                                  "   "
 #define WHITE_SPACE_LENGTH                           ( sizeof( WHITE_SPACE ) - 1 )
+
+/* A non-number after the exponent marker is illegal. */
+#define INVALID_EXPONENT                             "5Ea"
+#define INVALID_EXPONENT_LENGTH                      ( sizeof( INVALID_EXPONENT ) - 1 )
 
 #define UNKNOWN_ESCAPE                               "\"\\\x20\""
 #define UNKNOWN_ESCAPE_LENGTH                        ( sizeof( UNKNOWN_ESCAPE ) - 1 )
@@ -178,6 +190,18 @@ void test_JSON_Validate_Invalid_JSON( void )
 
     jsonStatus = JSON_Validate( WHITE_SPACE, WHITE_SPACE_LENGTH );
     TEST_ASSERT_EQUAL( JSONPartial, jsonStatus );
+
+    jsonStatus = JSON_Validate( NOTHING_AFTER_NUMBER,
+                                NOTHING_AFTER_NUMBER_LENGTH );
+    TEST_ASSERT_EQUAL( JSONPartial, jsonStatus );
+
+    jsonStatus = JSON_Validate( NOTHING_AFTER_EXPONENT_MARKER,
+                                NOTHING_AFTER_EXPONENT_MARKER_LENGTH );
+    TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
+
+    jsonStatus = JSON_Validate( INVALID_EXPONENT,
+                                INVALID_EXPONENT_LENGTH );
+    TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
 
     jsonStatus = JSON_Validate( NOTHING_AFTER_DECIMAL_POINT,
                                 NOTHING_AFTER_DECIMAL_POINT_LENGTH );
