@@ -21,7 +21,7 @@
 
 /**
  * @file mqtt_state.c
- * @brief Implements the user-facing functions in mqtt_state.h.
+ * @brief Implements the functions in mqtt_state.h.
  */
 #include <assert.h>
 #include <string.h>
