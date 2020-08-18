@@ -26,6 +26,7 @@ cleansession
 clientidentifierlength
 cmock
 com
+cond
 config
 connack
 connectinfo
@@ -33,6 +34,7 @@ connectpacketsize
 const
 createcleansession
 currentstate
+csdk
 defragmenting
 deserialization
 deserializationresult
@@ -41,17 +43,22 @@ deserializeack
 deserialized
 deserializepublish
 deserializing
+developerguide
 didn
 disconnectpacketsize
 doesn
+doxygen
 dup
+endcond
 emptyindex
 endcode
 endif
+enum
 enums
 eventcallback
 eventcallbackstub
 expectprocessloopcalls
+filterindex
 fixedbuffer
 getconnectpacketsize
 getcurrenttimestub
@@ -71,6 +78,7 @@ handleincomingpublish
 handlekeepalive
 hasn
 headersize
+html
 https
 ifndef
 inc
@@ -145,6 +153,7 @@ mqttsubackstatus
 mqttsubscribeinfo
 mqttsuccess
 msb
+nameindex
 networkbuffer
 networkcontext
 networkinterfacesendstub
@@ -166,6 +175,8 @@ passwordlength
 payloadlength
 pbuffer
 pbuffertosend
+pcallbacks
+pconnack
 pclientidentifier
 pconnectinfo
 pcontext
@@ -174,6 +185,8 @@ pcursor
 pdeserialized
 pdeserializedinfo
 pdestination
+ppacketidentifier
+ppingresp
 pem
 pfixedbuffer
 pheadersize
@@ -182,8 +195,11 @@ pingreq
 pingreqsendtimems
 pingresp
 pingresps
+pismatch
+pmatch
 pmessage
 pmqttcontext
+pnameindex
 pnetworkbuffer
 pnetworkcontext
 pnetworkinterface
@@ -206,6 +222,8 @@ processloop
 psessionpresent
 psource
 pstate
+pstatusstart
+psuback
 psubackpacket
 psubscribeinfo
 psubscriptionlist
@@ -218,6 +236,7 @@ puback
 pubacks
 pubcomp
 pubcomps
+publishflags
 publishinfo
 publishpacketid
 publishstate
@@ -268,6 +287,8 @@ someusername
 sourcelength
 src
 stateafterdeserialize
+stateful
+statuscount
 strerror
 strlen
 struct
@@ -278,6 +299,7 @@ subscribeinfo
 subscriptioncount
 subscriptionlist
 subscriptiontype
+sys
 tcp
 tcpsocket
 testcase

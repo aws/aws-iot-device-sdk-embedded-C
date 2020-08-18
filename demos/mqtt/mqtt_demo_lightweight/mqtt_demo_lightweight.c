@@ -66,6 +66,11 @@
 #endif
 
 /**
+ * @brief Length of MQTT server host name.
+ */
+#define BROKER_ENDPOINT_LENGTH       ( ( uint16_t ) ( sizeof( BROKER_ENDPOINT ) - 1 ) )
+
+/**
  * @brief The topic to subscribe and publish to in the example.
  *
  * The topic name starts with the client identifier to ensure that each demo
