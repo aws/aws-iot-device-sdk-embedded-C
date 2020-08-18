@@ -28,6 +28,7 @@
 #include "http_client.h"
 #include "private/http_client_internal.h"
 #include "http_parser.h"
+#include "transport_interface_stubs.h"
 
 struct NetworkContext
 {
@@ -89,7 +90,7 @@ HTTPRequestInfo_t * allocateHttpRequestInfo( HTTPRequestInfo_t * pRequestInfo );
 bool isValidHttpRequestInfo( const HTTPRequestInfo_t * pRequestInfo );
 
 /**
- * @brief Allocates a #HTTPResponse_t object with unconstrained values.
+ * @brief Allocates a #HTTPResponse_t object.
  *
  * @param[in] pResponse #HTTPResponse_t object to allocate.
  *
@@ -107,13 +108,69 @@ HTTPResponse_t * allocateHttpResponse( HTTPResponse_t * pResponse );
 bool isValidHttpResponse( const HTTPResponse_t * pResponse );
 
 /**
- * @brief Allocate a transport interface for CBMC.
+ * @brief Allocates a #TransportInterface_t object.
  *
- * @param[in] pTransport Transport interface.
+ * @param[in] pTransport #TransportInterface_t object to allocate.
  *
- * @return An allocated TransportInterface_t object to use as a parameter
- * for the function under test.
+ * @return NULL or pointer to allocated #TransportInterface_t object.
  */
 TransportInterface_t * allocateTransportInterface( TransportInterface_t * pTransport );
+
+/**
+ * @brief Validates if a #TransportInterface_t object is feasible.
+ *
+ * @param[in] pTransportInterface #TransportInterface_t object to validate.
+ *
+ * @return True if #pTransportInterface is feasible; false otherwise.
+ */
+bool isValidTransportInterface( TransportInterface_t * pTransportInterface );
+
+/**
+ * @brief Allocate an #http_parser object that is valid in the context of the
+ * HTTPClient_Send() function.
+ *
+ * @param[in] pHttpParser #http_parser object to allocate.
+ *
+ * @return NULL or pointer to allocated #http_parser object.
+ */
+http_parser * allocateHttpSendParser( http_parser * pHttpParser );
+
+/**
+ * @brief Allocate an #HTTPParsingContext_t object.
+ *
+ * @param[in] pHttpParsingContext #HTTPParsingContext_t object to allocate.
+ *
+ * @return NULL or pointer to allocated #HTTPParsingContext_t object.
+ */
+HTTPParsingContext_t * allocateHttpSendParsingContext( HTTPParsingContext_t * pHttpParsingContext );
+
+/**
+ * @brief Validates if a #HTTPParsingContext_t object is feasible.
+ *
+ * @param[in] pHttpParsingContext #HTTPParsingContext_t object to validate.
+ *
+ * @return True if #pHttpParsingContext is feasible; false otherwise.
+ */
+bool isValidHttpSendParsingContext( const HTTPParsingContext_t * pHttpParsingContext );
+
+/**
+ * @brief Allocate an #http_parser object that is valid in the context of the
+ * HTTPClient_ReadHeader() function.
+ *
+ * @param[in] pHttpParser #http_parser object to allocate.
+ *
+ * @return NULL or pointer to allocated #http_parser object.
+ */
+http_parser * allocateHttpReadHeaderParser( http_parser * pHttpParser );
+
+/**
+ * @brief Allocate an #findHeaderContext_t object.
+ *
+ * @param[in] pFindHeaderContext #findHeaderContext_t object to allocate.
+ *
+ * @return NULL or pointer to allocated #findHeaderContext_t object.
+ */
+findHeaderContext_t * allocateFindHeaderContext( findHeaderContext_t * pFindHeaderContext );
+
 
 #endif /* ifndef HTTP_CBMC_STATE_H_ */

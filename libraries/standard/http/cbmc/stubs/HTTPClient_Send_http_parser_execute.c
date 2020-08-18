@@ -41,8 +41,7 @@ size_t http_parser_execute( http_parser * parser,
                             const char * data,
                             size_t len )
 {
-    size_t fieldLength;
-    size_t valueLength;
+    size_t fieldLength, valueLength;
     HTTPParsingContext_t * pParsingContext;
 
     __CPROVER_assert( parser != NULL,

@@ -31,6 +31,7 @@ developerguide
 doesn
 dup
 endif
+filterindex
 hashmap
 hasn
 html
@@ -43,11 +44,14 @@ inc
 initializerequestheaders
 iot
 lastcontrolpacketsent
+md
 metadata
 methodlen
 milli
 mosquitto
 mqtt
+mqttkeepalivetimeout
+nameindex
 noninfringement
 openssl
 org
@@ -58,6 +62,7 @@ packetidtoresend
 param
 pathlen
 pbuffer
+pcontext
 pdeserializedinfo
 pem
 pfixedbuffer
@@ -66,8 +71,10 @@ pindex
 pingreq
 pingresp
 plaintext
+pmatch
 pmethod
 pmqttcontext
+pnameindex
 pnetworkcontext
 posix
 ppacketinfo
@@ -76,6 +83,8 @@ ppubinfo
 ppublishinfo
 processloop
 psessionpresent
+ptopicfilter
+ptopicname
 ptransportinterface
 puback
 pubcomp
@@ -83,6 +92,7 @@ publishpacketsent
 pubrec
 pubrel
 qos
+readme
 resending
 resp
 sdk
@@ -91,9 +101,12 @@ structs
 suback
 sublicense
 subscribepublishloop
+sys
 tcp
 tcpsocket
 tls
+topicfilterlength
+topicnamelength
 transportinterface
 transporttimeout
 uint

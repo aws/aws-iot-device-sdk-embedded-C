@@ -33,15 +33,7 @@ int32_t TransportInterfaceSendStub( NetworkContext_t * pNetworkContext,
     if( tries >= MAX_TRIES )
     {
         tries = 0;
-
-        if( bytesToSend <= INT32_MAX )
-        {
-            ret = bytesToSend;
-        }
-        else
-        {
-            ret = INT32_MAX;
-        }
+        ret = bytesToSend;
     }
 
     return ret;

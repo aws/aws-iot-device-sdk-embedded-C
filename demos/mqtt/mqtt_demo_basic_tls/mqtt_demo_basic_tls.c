@@ -61,8 +61,11 @@
  * These configuration settings are required to run the basic TLS demo.
  * Throw compilation error if the below configs are not defined.
  */
+#ifndef BROKER_ENDPOINT
+    #error "Please define an MQTT broker endpoint, BROKER_ENDPOINT, in demo_config.h."
+#endif
 #ifndef ROOT_CA_CERT_PATH
-    #error "Please define path to Root CA certificate of the MQTT broker(ROOT_CA_CERT_PATH) in demo_config.h."
+    #error "Please define path to Root CA certificate of the MQTT broker, ROOT_CA_CERT_PATH, in demo_config.h."
 #endif
 #ifndef CLIENT_IDENTIFIER
     #error "Please define a unique CLIENT_IDENTIFIER."
@@ -78,6 +81,11 @@
 #ifndef NETWORK_BUFFER_SIZE
     #define NETWORK_BUFFER_SIZE    ( 1024U )
 #endif
+
+/**
+ * @brief Length of MQTT server host name.
+ */
+#define BROKER_ENDPOINT_LENGTH              ( ( uint16_t ) ( sizeof( BROKER_ENDPOINT ) - 1 ) )
 
 /**
  * @brief Length of client identifier.
@@ -514,6 +522,7 @@ static int handlePublishResend( MQTTContext_t * pMqttContext )
     while( packetIdToResend != MQTT_PACKET_ID_INVALID )
     {
         foundPacketId = false;
+
         for( index = 0U; index < MAX_OUTGOING_PUBLISHES; index++ )
         {
             if( outgoingPublishPackets[ index ].packetId == packetIdToResend )

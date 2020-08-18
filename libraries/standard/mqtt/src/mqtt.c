@@ -41,6 +41,18 @@
     #define MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT    ( 5U )
 #endif
 
+/**
+ * @brief Number of milliseconds to wait for a ping response to a ping
+ * request as part of the keep-alive mechanism.
+ *
+ * If a ping response is not received before this timeout, then
+ * #MQTT_ProcessLoop will return #MQTTKeepAliveTimeout.
+ */
+#ifndef MQTT_PINGRESP_TIMEOUT_MS
+    /* Wait 0.5 seconds by default for a ping response. */
+    #define MQTT_PINGRESP_TIMEOUT_MS    ( 500U )
+#endif
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -200,7 +212,7 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
  * #MQTTSendFailed if a network error occurs while sending an ACK or PINGREQ;
  * #MQTTBadResponse if an invalid packet is received;
  * #MQTTKeepAliveTimeout if the server has not sent a PINGRESP before
- * pContext->pingRespTimeoutMs milliseconds;
+ * #MQTT_PINGRESP_TIMEOUT_MS milliseconds;
  * #MQTTIllegalState if an incoming QoS 1/2 publish or ack causes an
  * invalid transition for the internal state machine;
  * #MQTTSuccess on success.
@@ -707,7 +719,7 @@ static MQTTStatus_t handleKeepAlive( MQTTContext_t * pContext )
         {
             /* Has time expired? */
             if( calculateElapsedTime( now, pContext->pingReqSendTimeMs ) >
-                pContext->pingRespTimeoutMs )
+                MQTT_PINGRESP_TIMEOUT_MS )
             {
                 status = MQTTKeepAliveTimeout;
             }
@@ -1055,8 +1067,8 @@ static MQTTStatus_t validateSubscribeUnsubscribeParams( const MQTTContext_t * pC
     {
         LogError( ( "Argument cannot be NULL: pContext=%p, "
                     "pSubscriptionList=%p.",
-                    pContext,
-                    pSubscriptionList ) );
+                    ( void * ) pContext,
+                    ( void * ) pSubscriptionList ) );
         status = MQTTBadParameter;
     }
     else if( subscriptionCount == 0UL )
@@ -1334,8 +1346,8 @@ static MQTTStatus_t validatePublishParams( const MQTTContext_t * pContext,
     {
         LogError( ( "Argument cannot be NULL: pContext=%p, "
                     "pPublishInfo=%p.",
-                    pContext,
-                    pPublishInfo ) );
+                    ( void * ) pContext,
+                    ( void * ) pPublishInfo ) );
         status = MQTTBadParameter;
     }
     else if( ( pPublishInfo->qos != MQTTQoS0 ) && ( packetId == 0U ) )
@@ -1377,20 +1389,29 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
         LogError( ( "Argument cannot be NULL: pContext=%p, "
                     "pTransportInterface=%p, "
                     "pNetworkBuffer=%p",
-                    pContext,
-                    pTransportInterface,
-                    pNetworkBuffer ) );
+                    ( void * ) pContext,
+                    ( void * ) pTransportInterface,
+                    ( void * ) pNetworkBuffer ) );
         status = MQTTBadParameter;
     }
-    else if( ( getTimeFunction == NULL ) || ( userCallback == NULL ) ||
-             ( pTransportInterface->recv == NULL ) || ( pTransportInterface->send == NULL ) )
+    else if( getTimeFunction == NULL )
     {
-        LogError( ( "Function pointers cannot be NULL: getTimeFunction=%p, userCallback=%p, "
-                    "transportRecv=%p, transportRecvSend=%p",
-                    getTimeFunction,
-                    userCallback,
-                    pTransportInterface->recv,
-                    pTransportInterface->send ) );
+        LogError( ( "Invalid parameter: getTimeFunction is NULL" ) );
+        status = MQTTBadParameter;
+    }
+    else if( userCallback == NULL )
+    {
+        LogError( ( "Invalid parameter: userCallback is NULL" ) );
+        status = MQTTBadParameter;
+    }
+    else if( pTransportInterface->recv == NULL )
+    {
+        LogError( ( "Invalid parameter: pTransportInterface->recv is NULL" ) );
+        status = MQTTBadParameter;
+    }
+    else if( pTransportInterface->send == NULL )
+    {
+        LogError( ( "Invalid parameter: pTransportInterface->send is NULL" ) );
         status = MQTTBadParameter;
     }
     else
@@ -1429,9 +1450,9 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
     {
         LogError( ( "Argument cannot be NULL: pContext=%p, "
                     "pConnectInfo=%p, pSessionPresent=%p.",
-                    pContext,
-                    pConnectInfo,
-                    pSessionPresent ) );
+                    ( void * ) pContext,
+                    ( void * ) pConnectInfo,
+                    ( void * ) pSessionPresent ) );
         status = MQTTBadParameter;
     }
 
@@ -1950,6 +1971,64 @@ uint16_t MQTT_GetPacketId( MQTTContext_t * pContext )
     }
 
     return packetId;
+}
+
+/*-----------------------------------------------------------*/
+
+MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
+                                        uint8_t ** pPayloadStart,
+                                        uint16_t * pPayloadSize )
+{
+    MQTTStatus_t status = MQTTSuccess;
+
+    if( pSubackPacket == NULL )
+    {
+        LogError( ( "Invalid parameter: pSubackPacket is NULL." ) );
+        status = MQTTBadParameter;
+    }
+    else if( pPayloadStart == NULL )
+    {
+        LogError( ( "Invalid parameter: pPayloadStart is NULL." ) );
+        status = MQTTBadParameter;
+    }
+    else if( pPayloadSize == NULL )
+    {
+        LogError( ( "Invalid parameter: pPayloadSize is NULL." ) );
+        status = MQTTBadParameter;
+    }
+    else if( pSubackPacket->type != MQTT_PACKET_TYPE_SUBACK )
+    {
+        LogError( ( "Invalid parameter: Input packet is not a SUBACK packet: "
+                    "ExpectedType=%02x, InputType=%02x",
+                    MQTT_PACKET_TYPE_SUBACK, pSubackPacket->type ) );
+        status = MQTTBadParameter;
+    }
+    else if( pSubackPacket->pRemainingData == NULL )
+    {
+        LogError( ( "Invalid parameter: pSubackPacket->pRemainingData is NULL" ) );
+        status = MQTTBadParameter;
+    }
+
+    /* A SUBACK must have a remaining length of at least 3 to accommodate the
+     * packet identifier and at least 1 return code. */
+    else if( pSubackPacket->remainingLength < 3U )
+    {
+        LogError( ( "Invalid parameter: Packet remaining length is invalid: "
+                    "Should be greater than 2 for SUBACK packet: InputRemainingLength=%lu",
+                    ( unsigned long ) pSubackPacket->remainingLength ) );
+        status = MQTTBadParameter;
+    }
+    else
+    {
+        /* According to the MQTT 3.1.1 protocol specification, the "Remaining Length" field is a
+         * length of the variable header (2 bytes) plus the length of the payload.
+         * Therefore, we add 2 positions for the starting address of the payload, and
+         * subtract 2 bytes from the remaining length for the length of the payload.*/
+        *pPayloadStart = pSubackPacket->pRemainingData + ( ( uint16_t ) sizeof( uint16_t ) );
+        *pPayloadSize = ( uint16_t ) ( pSubackPacket->remainingLength - sizeof( uint16_t ) );
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/
