@@ -2529,7 +2529,7 @@ void test_MQTT_MatchTopic_Wildcard_MultiLevel_No_Match_Cases( void )
 void test_MQTT_GetSubAckStatusCodes( void )
 {
     MQTTPacketInfo_t mqttPacketInfo;
-    uint16_t payloadSize;
+    size_t payloadSize;
     uint8_t * pPayloadStart;
     MQTTStatus_t status = MQTTSuccess;
     uint8_t buffer[ 10 ] = { 0 };

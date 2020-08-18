@@ -713,7 +713,7 @@ MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
  */
 MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
                                         uint8_t ** pPayloadStart,
-                                        uint16_t * pPayloadSize );
+                                        size_t * pPayloadSize );
 
 /**
  * @brief Error code to string conversion for MQTT statuses.
