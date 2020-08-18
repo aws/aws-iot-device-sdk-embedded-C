@@ -232,7 +232,7 @@ typedef struct MQTTDeserializedInfo
  * void eventCallback(
  *      MQTTContext_t * pContext,
  *      MQTTPacketInfo_t * pPacketInfo,
- *      MQTTDeserializedInfo_t * pDeserialized
+ *      MQTTDeserializedInfo_t * pDeserializedInfo
  * );
  * // Network send.
  * int32_t networkSend( NetworkContext_t * pContext, const void * pBuffer, size_t bytes );
@@ -406,7 +406,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
  * for( int i = 0; i < NUMBER_OF_SUBSCRIPTIONS; i++ )
  * {
  *      subscriptionList[ i ].qos = MQTTQoS0;
- *      // Each subscription needs a topic filter
+ *      // Each subscription needs a topic filter.
  *      subscriptionList[ i ].pTopicFilter = filters[ i ];
  *      subscriptionList[ i ].topicFilterLength = strlen( filters[ i ] );
  * }
@@ -585,7 +585,8 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext );
  *
  *      if( status != MQTTSuccess )
  *      {
- *          // Determine the error. It's possible we might need to disconnect TCP.
+ *          // Determine the error. It's possible we might need to disconnect
+ *          // the underlying transport connection.
  *      }
  *      else
  *      {
@@ -631,7 +632,8 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
  *
  *      if( status != MQTTSuccess )
  *      {
- *          // Determine the error. It's possible we might need to disconnect TCP.
+ *          // Determine the error. It's possible we might need to disconnect
+ *          // the underlying transport connection.
  *      }
  *      else
  *      {
