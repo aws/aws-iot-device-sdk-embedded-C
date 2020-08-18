@@ -191,7 +191,6 @@ pingreq
 pingreqsendtimems
 pingresp
 pingresps
-pingresptimeoutms
 pismatch
 pmatch
 pmessage
