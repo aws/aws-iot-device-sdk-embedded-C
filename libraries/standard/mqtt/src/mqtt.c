@@ -327,8 +327,6 @@ static MQTTStatus_t validatePublishParams( const MQTTContext_t * pContext,
  * @param[in] pTopicFilter The topic filter containing the wildcard.
  * @param[in] topicFilterLength Length of the topic filter being examined.
  * @param[in] filterIndex Index of the topic filter being examined.
- * @param[in] topicNameLength Length of the topic name being examined.
- * @param[in] nameIndex Index of the topic name being examined.
  *
  * @return Returns whether the topic filter and the topic name match.
  */
@@ -412,7 +410,7 @@ static bool matchEndWildcardsSpecialCases( const char * pTopicFilter,
         ( pTopicFilter[ filterIndex ] == '/' ) )
     {
         /* Check that the last character is a wildcard. */
-        matchFound = ( ( pTopicFilter[ filterIndex + 1U ] == '+' ) || 
+        matchFound = ( ( pTopicFilter[ filterIndex + 1U ] == '+' ) ||
                        ( pTopicFilter[ filterIndex + 1U ] == '#' ) ) ? true : false;
     }
 
