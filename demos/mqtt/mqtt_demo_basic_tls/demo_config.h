@@ -56,10 +56,9 @@
  * a Mosquitto broker locally.
  * Alternatively,instructions to run Mosquitto server on Docker container can
  * be viewed in the README.md of the root directory.
+ *
+ * #define BROKER_ENDPOINT               "...insert here..."
  */
-#ifndef BROKER_ENDPOINT
-    #define BROKER_ENDPOINT    "localhost"
-#endif
 
 /**
  * @brief MQTT server port number.
@@ -75,11 +74,6 @@
  *
  * #define ROOT_CA_CERT_PATH         ".....insert here...."
  */
-
-/**
- * @brief Length of path to server certificate.
- */
-#define ROOT_CA_CERT_PATH_LENGTH    ( ( uint16_t ) ( sizeof( ROOT_CA_CERT_PATH ) - 1 ) )
 
 /**
  * @brief MQTT client identifier.
