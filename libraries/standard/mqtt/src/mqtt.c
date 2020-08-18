@@ -19,6 +19,10 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/**
+ * @file mqtt.c
+ * @brief Implements the user-facing functions in mqtt.h.
+ */
 #include <string.h>
 #include <assert.h>
 
@@ -109,7 +113,7 @@ static int32_t recvExact( const MQTTContext_t * pContext,
 /**
  * @brief Discard a packet from the transport interface.
  *
- * @param[in] PContext MQTT Connection context.
+ * @param[in] pContext MQTT Connection context.
  * @param[in] remainingLength Remaining length of the packet to dump.
  * @param[in] timeoutMs Time remaining to discard the packet.
  *
