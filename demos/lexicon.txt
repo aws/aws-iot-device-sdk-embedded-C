@@ -44,6 +44,7 @@ inc
 initializerequestheaders
 iot
 lastcontrolpacketsent
+md
 metadata
 methodlen
 milli
@@ -93,6 +94,7 @@ publishpacketsent
 pubrec
 pubrel
 qos
+readme
 resending
 resp
 sdk
