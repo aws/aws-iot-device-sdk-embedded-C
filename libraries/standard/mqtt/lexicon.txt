@@ -57,6 +57,7 @@ getconnectpacketsize
 getcurrenttimestub
 getdisconnectpacketsize
 getincomingpackettypeandlength
+getnewpacketid
 getpacketid
 getpingreqpacketsize
 getpublishpacketsize
@@ -76,6 +77,9 @@ inc
 incomingpacket
 incomingpublish
 init
+initializeconnectinfo
+initializesubscribeinfo
+initializewillinfo
 int
 iot
 isduplicate
@@ -132,6 +136,7 @@ mqttqos
 mqttrecvfailed
 mqttsendfailed
 mqttserverrefused
+mqttsocket
 mqttstatecollision
 mqttstatenull
 mqttstatus
@@ -214,6 +219,7 @@ pubacks
 pubcomp
 pubcomps
 publishinfo
+publishpacketid
 publishstate
 pubrec
 pubrecs
@@ -223,6 +229,7 @@ pusername
 pwillinfo
 qos
 readfunc
+receiveincomingpacket
 receiveloop
 receivepacket
 recordcount
