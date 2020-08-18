@@ -39,6 +39,7 @@ http
 httpbin
 httpclient
 https
+ifdef
 ifndef
 inc
 initializerequestheaders
@@ -96,6 +97,7 @@ readme
 resending
 resp
 sdk
+sni
 ssl
 structs
 suback
