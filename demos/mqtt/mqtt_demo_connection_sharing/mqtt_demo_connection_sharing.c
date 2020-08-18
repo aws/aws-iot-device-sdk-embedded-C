@@ -465,8 +465,8 @@ static int subscribeToAndRegisterTopicFilter( MQTTContext_t * pContext,
  * an acknowledgement response with UNSUBACK packet.
  *
  * @param[in] pMqttContext MQTT context pointer.
- * @param[in] pTopicFilter The topic filter to subscribe to.
- * @param[in] topicFilterLength The length of the topic filter.
+ * @param[in] pTopicFilters The list of topic filter to unsubscribe from.
+ * @param[in] numOfTopicFilters The number of topic filters in the list.
  *
  * @return EXIT_SUCCESS if UNSUBSCRIBE was successfully sent;
  * EXIT_FAILURE otherwise.
@@ -1089,7 +1089,7 @@ static int unsubscribeFromTopicFilters( MQTTContext_t * pMqttContext,
 
         for( index = 0U; index < numOfTopicFilters; index++ )
         {
-            LogInfo( ( "Testing=%.*s",
+            LogInfo( ( "%.*s",
                        pTopicFilters[ index ].topicFilterLength,
                        pTopicFilters[ index ].pTopicFilter ) );
         }
