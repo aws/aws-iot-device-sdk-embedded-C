@@ -37,6 +37,20 @@ option( DOWNLOAD_CERTS
         "Set this to ON to automatically download certificates needed to run the demo. When OFF, certificates must be manually downloaded." 
         ON )
 
+# Set prefix to PWD if any path flags are relative.
+# PWD is set to the path where you run the cmake command.
+if(DEFINED ENV{PWD})
+    if(ROOT_CA_CERT_PATH AND NOT IS_ABSOLUTE ${ROOT_CA_CERT_PATH})
+        set(ROOT_CA_CERT_PATH "$ENV{PWD}/${ROOT_CA_CERT_PATH}")
+    endif()
+    if(CLIENT_CERT_PATH AND NOT IS_ABSOLUTE ${CLIENT_CERT_PATH})
+        set(CLIENT_CERT_PATH "$ENV{PWD}/${CLIENT_CERT_PATH}")
+    endif()
+    if(CLIENT_PRIVATE_KEY_PATH AND NOT IS_ABSOLUTE ${CLIENT_PRIVATE_KEY_PATH})
+        set(CLIENT_PRIVATE_KEY_PATH "$ENV{PWD}/${CLIENT_PRIVATE_KEY_PATH}")
+    endif()
+endif()
+
 # Unity test framework does not export the correct symbols for DLLs.
 set( ALLOW_SHARED_LIBRARIES ON )
     
