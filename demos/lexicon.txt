@@ -53,6 +53,7 @@ mqtt
 mqttkeepalivetimeout
 nameindex
 noninfringement
+numoftopicfilters
 openssl
 org
 outgoingpublishpackets
@@ -86,6 +87,7 @@ processloop
 psessionpresent
 ptopic
 ptopicfilter
+ptopicfilters
 ptopicname
 ptransportinterface
 puback
