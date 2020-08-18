@@ -2014,8 +2014,8 @@ MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
     else if( pSubackPacket->remainingLength < 3U )
     {
         LogError( ( "Invalid parameter: Packet remaining length is invalid: "
-                    "Should be greater than 2 for SUBACK packet: InputRemainingLength=%u",
-                    pSubackPacket->remainingLength ) );
+                    "Should be greater than 2 for SUBACK packet: InputRemainingLength=%lu",
+                    ( unsigned long ) pSubackPacket->remainingLength ) );
         status = MQTTBadParameter;
     }
     else

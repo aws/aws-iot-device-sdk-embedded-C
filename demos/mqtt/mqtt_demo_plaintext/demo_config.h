@@ -50,11 +50,15 @@
 /**
  * @brief MQTT server host name.
  *
- * This demo uses the Mosquitto test server. This is a public MQTT server; do not
- * publish anything sensitive to this server.
+ * This demo can be run using the open-source Mosquitto broker tool.
+ * A Mosquitto MQTT broker can be setup locally for running this demo against
+ * it. Please refer to the instructions in https://mosquitto.org/ for running
+ * a Mosquitto broker locally.
+ * Alternatively,instructions to run Mosquitto server on Docker container can
+ * be viewed in the README.md of the root directory.
  */
 #ifndef BROKER_ENDPOINT
-    #define BROKER_ENDPOINT    "test.mosquitto.org"
+    #define BROKER_ENDPOINT    "localhost"
 #endif
 
 /**
