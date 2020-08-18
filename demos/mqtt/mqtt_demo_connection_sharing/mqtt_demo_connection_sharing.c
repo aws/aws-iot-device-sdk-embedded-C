@@ -235,7 +235,7 @@
 
 /**
  * @brief Structure to keep the MQTT publish packets until an ack is received
- * for QoS2 publishes.
+ * for QoS1 publishes.
  */
 typedef struct PublishPackets
 {
@@ -256,14 +256,14 @@ typedef struct PublishPackets
  * @brief Packet Identifier generated when Subscribe request was sent to the broker;
  * it is used to match received Subscribe ACK to the transmitted subscribe.
  */
-static uint16_t globalSubscribePacketIdentifier = 0U;
+static uint16_t lastSubscribePacketIdentifier = 0U;
 
 /**
  * @brief Packet Identifier generated when Unsubscribe request was sent to the broker;
  * it is used to match received Unsubscribe ACK to the transmitted unsubscribe
  * request.
  */
-static uint16_t globalUnsubscribePacketIdentifier = 0U;
+static uint16_t lastUnsubscribePacketIdentifier = 0U;
 
 /**
  * @brief Array to keep the outgoing publish messages.
@@ -460,8 +460,8 @@ static int subscribeToAndRegisterTopicFilter( MQTTContext_t * pContext,
                                               SubscriptionManagerCallback_t callback );
 
 /**
- * @brief Unsubscribed from the passed topic filter by sending
- * an MQTT UNSUBSCRIBE packet to the broker and waiting for
+ * @brief Unsubscribe from the passed topic filters by sending
+ * a single MQTT UNSUBSCRIBE packet to the broker and waiting for
  * an acknowledgement response with UNSUBACK packet.
  *
  * @param[in] pMqttContext MQTT context pointer.
@@ -471,9 +471,9 @@ static int subscribeToAndRegisterTopicFilter( MQTTContext_t * pContext,
  * @return EXIT_SUCCESS if UNSUBSCRIBE was successfully sent;
  * EXIT_FAILURE otherwise.
  */
-static int unsubscribeFromTopic( MQTTContext_t * pMqttContext,
-                                 const char * pTopicFilter,
-                                 uint16_t topicFilterLength );
+static int unsubscribeFromTopicFilters( MQTTContext_t * pMqttContext,
+                                        const MQTTSubscribeInfo_t * pTopicFilters,
+                                        size_t numOfTopicFilters );
 
 /**
  * @brief Sends an MQTT PUBLISH to the passed topic
@@ -529,7 +529,7 @@ static void cleanupOutgoingPublishWithPacketID( uint16_t packetId );
 
 /**
  * @brief Function to resend the publishes if a session is re-established with
- * the broker. This function handles the resending of the QoS2 publish packets,
+ * the broker. This function handles the resending of the QoS1 publish packets,
  * which are maintained locally.
  *
  * @param[in] pMqttContext MQTT context pointer.
@@ -818,13 +818,13 @@ static void commonEventHandler( MQTTContext_t * pMqttContext,
             case MQTT_PACKET_TYPE_SUBACK:
                 LogInfo( ( "Received SUBACK.\n\n" ) );
                 /* Make sure ACK packet identifier matches with Request packet identifier. */
-                assert( globalSubscribePacketIdentifier == pDeserializedInfo->packetIdentifier );
+                assert( lastSubscribePacketIdentifier == pDeserializedInfo->packetIdentifier );
                 break;
 
             case MQTT_PACKET_TYPE_UNSUBACK:
                 LogInfo( ( "Received UNSUBACK.\n\n" ) );
                 /* Make sure ACK packet identifier matches with Request packet identifier. */
-                assert( globalUnsubscribePacketIdentifier == pDeserializedInfo->packetIdentifier );
+                assert( lastUnsubscribePacketIdentifier == pDeserializedInfo->packetIdentifier );
                 break;
 
             case MQTT_PACKET_TYPE_PINGRESP:
@@ -973,19 +973,20 @@ static int subscribeToTopic( MQTTContext_t * pMqttContext,
     /* Start with everything at 0. */
     ( void ) memset( ( void * ) pSubscriptionList, 0x00, sizeof( pSubscriptionList ) );
 
-    /* This example subscribes to only one topic and uses QOS1. */
+    /* This demo subscribes and publishes to topics at Qos1, so the publish
+     * messages received from the broker should have QoS1 as well. */
     pSubscriptionList[ 0 ].qos = MQTTQoS1;
     pSubscriptionList[ 0 ].pTopicFilter = pTopicFilter;
     pSubscriptionList[ 0 ].topicFilterLength = topicFilterLength;
 
     /* Generate packet identifier for the SUBSCRIBE packet. */
-    globalSubscribePacketIdentifier = MQTT_GetPacketId( pMqttContext );
+    lastSubscribePacketIdentifier = MQTT_GetPacketId( pMqttContext );
 
     /* Send SUBSCRIBE packet. */
     mqttStatus = MQTT_Subscribe( pMqttContext,
                                  pSubscriptionList,
                                  sizeof( pSubscriptionList ) / sizeof( MQTTSubscribeInfo_t ),
-                                 globalSubscribePacketIdentifier );
+                                 lastSubscribePacketIdentifier );
 
     if( mqttStatus != MQTTSuccess )
     {
@@ -999,13 +1000,8 @@ static int subscribeToTopic( MQTTContext_t * pMqttContext,
                    topicFilterLength,
                    pTopicFilter ) );
 
-        /* Process incoming packet from the broker. Acknowledgment for subscription
-         * ( SUBACK ) will be received here. However after sending the subscribe, the
-         * client may receive a publish before it receives a subscribe ack. Since this
-         * demo is subscribing to the topic to which no one is publishing, probability
-         * of receiving publish message before subscribe ack is zero; but application
-         * must be ready to receive any packet. This demo uses MQTT_ProcessLoop to
-         * receive packet from network. */
+        /* Wait for acknowledgement packet (SUBACK) from the broker in response to the
+         * subscribe request. */
         mqttStatus = MQTT_ProcessLoop( pMqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
 
         if( mqttStatus != MQTTSuccess )
@@ -1042,13 +1038,6 @@ static int subscribeToAndRegisterTopicFilter( MQTTContext_t * pContext,
     }
     else
     {
-        /* The client is now connected to the broker. Subscribe to the passed topic
-         * by sending a subscribe packet. This client will then publish to the topic(s)
-         * related to the subscribed topic filter, so it will expect all the messages it sends to
-         * the broker to be sent back to it from the broker. The subscription manager would
-         * then dispatch all messages from the incoming PUBLISH topic to the above registered
-         * callback. This demo uses QOS1 in Subscribe, therefore, the Publish messages received
-         * from the broker will have QOS1. */
         LogInfo( ( "Subscribing to the MQTT topic %.*s.",
                    topicFilterLength,
                    pTopicFilter ) );
@@ -1071,42 +1060,39 @@ static int subscribeToAndRegisterTopicFilter( MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
-static int unsubscribeFromTopic( MQTTContext_t * pMqttContext,
-                                 const char * pTopicFilter,
-                                 uint16_t topicFilterLength )
+static int unsubscribeFromTopicFilters( MQTTContext_t * pMqttContext,
+                                        const MQTTSubscribeInfo_t * pTopicFilters,
+                                        size_t numOfTopicFilters )
 {
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus;
-    MQTTSubscribeInfo_t pSubscriptionList[ 1 ];
-
-    assert( pMqttContext != NULL );
-
-    /* Start with everything at 0. */
-    ( void ) memset( ( void * ) pSubscriptionList, 0x00, sizeof( pSubscriptionList ) );
-
-    pSubscriptionList[ 0 ].pTopicFilter = pTopicFilter;
-    pSubscriptionList[ 0 ].topicFilterLength = topicFilterLength;
+    size_t index = 0U;
 
     /* Generate packet identifier for the UNSUBSCRIBE packet. */
-    globalUnsubscribePacketIdentifier = MQTT_GetPacketId( pMqttContext );
+    lastUnsubscribePacketIdentifier = MQTT_GetPacketId( pMqttContext );
 
     /* Send UNSUBSCRIBE packet. */
     mqttStatus = MQTT_Unsubscribe( pMqttContext,
-                                   pSubscriptionList,
-                                   sizeof( pSubscriptionList ) / sizeof( MQTTSubscribeInfo_t ),
-                                   globalUnsubscribePacketIdentifier );
+                                   pTopicFilters,
+                                   numOfTopicFilters,
+                                   lastUnsubscribePacketIdentifier );
 
     if( mqttStatus != MQTTSuccess )
     {
-        LogError( ( "Failed to send UNSUBSCRIBE packet to broker with error = %u.",
-                    mqttStatus ) );
+        LogError( ( "Failed to send UNSUBSCRIBE packet to broker. Error=%s.",
+                    MQTT_Status_strerror( mqttStatus ) ) );
         returnStatus = EXIT_FAILURE;
     }
     else
     {
-        LogInfo( ( "UNSUBSCRIBE sent for topic %.*s to broker.\n\n",
-                   topicFilterLength,
-                   pTopicFilter ) );
+        LogInfo( ( "UNSUBSCRIBE sent for the following topic filter(s)" ) );
+
+        for( index = 0U; index < numOfTopicFilters; index++ )
+        {
+            LogInfo( ( "Testing=%.*s",
+                       pTopicFilters[ index ].topicFilterLength,
+                       pTopicFilters[ index ].pTopicFilter ) );
+        }
 
         /* Process Incoming UNSUBACK packet from the broker. */
         mqttStatus = MQTT_ProcessLoop( pMqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
@@ -1203,6 +1189,7 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
     int returnStatus = EXIT_SUCCESS;
     bool mqttSessionEstablished = false, sessionPresent;
     MQTTContext_t mqttContext;
+    MQTTSubscribeInfo_t pSubscriptionList[ 3 ];
 
     /* Establish MQTT session on top of TCP+TLS connection. */
     LogInfo( ( "Creating an MQTT connection to %.*s.",
@@ -1412,33 +1399,27 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
         SubscriptionManager_RemoveCallback( DEMO_PRECIPITATION_TOPIC,
                                             DEMO_PRECIPITATION_TOPIC_LENGTH );
 
+        /* Set the subscription list memory to zero . */
+        ( void ) memset( ( void * ) pSubscriptionList, 0x00, sizeof( pSubscriptionList ) );
+
+        /* Populate the array with topic filters to unsubscribe from.
+         * We will use a single UNSUBSCRIBE packet to unsubscribe from all
+         * topic filters. */
+        pSubscriptionList[ 0 ].pTopicFilter = DEMO_TEMPERATURE_TOPIC_FILTER;
+        pSubscriptionList[ 0 ].topicFilterLength = DEMO_TEMPERATURE_TOPIC_FILTER_LENGTH;
+        pSubscriptionList[ 1 ].pTopicFilter = DEMO_HUMIDITY_TOPIC;
+        pSubscriptionList[ 1 ].topicFilterLength = DEMO_HUMIDITY_TOPIC_LENGTH;
+        pSubscriptionList[ 2 ].pTopicFilter = DEMO_PRECIPITATION_TOPIC;
+        pSubscriptionList[ 2 ].topicFilterLength = DEMO_PRECIPITATION_TOPIC_LENGTH;
+
         /* Unsubscribe from the temperature topic filter. */
         LogInfo( ( "Unsubscribing from the MQTT temperature topic filter: %.*s.",
                    DEMO_TEMPERATURE_TOPIC_FILTER_LENGTH,
                    DEMO_TEMPERATURE_TOPIC_FILTER ) );
-        returnStatus = unsubscribeFromTopic( &mqttContext,
-                                             DEMO_TEMPERATURE_TOPIC_FILTER,
-                                             DEMO_TEMPERATURE_TOPIC_FILTER_LENGTH );
-    }
-
-    /* Unsubscribe from the humidity topic. */
-    if( returnStatus == EXIT_SUCCESS )
-    {
-        LogInfo( ( "Unsubscribing from the MQTT humidity topic filter %s.",
-                   DEMO_HUMIDITY_TOPIC ) );
-        returnStatus = unsubscribeFromTopic( &mqttContext,
-                                             DEMO_HUMIDITY_TOPIC,
-                                             DEMO_HUMIDITY_TOPIC_LENGTH );
-    }
-
-    /* Unsubscribe from the precipitation topic filter. */
-    if( returnStatus == EXIT_SUCCESS )
-    {
-        LogInfo( ( "Unsubscribing from the MQTT precipitation topic filter %s.",
-                   DEMO_PRECIPITATION_TOPIC ) );
-        returnStatus = unsubscribeFromTopic( &mqttContext,
-                                             DEMO_PRECIPITATION_TOPIC,
-                                             DEMO_PRECIPITATION_TOPIC_LENGTH );
+        returnStatus = unsubscribeFromTopicFilters( &mqttContext,
+                                                    pSubscriptionList,
+                                                    sizeof( pSubscriptionList )
+                                                    / sizeof( MQTTSubscribeInfo_t ) );
     }
 
     /* Send an MQTT Disconnect packet over the already connected TCP socket.
@@ -1522,7 +1503,8 @@ int main( int argc,
         /* End TLS session, then close TCP connection. */
         ( void ) Openssl_Disconnect( &networkContext );
 
-        LogInfo( ( "Short delay before starting the next iteration ....\n " ) );
+        LogInfo( ( "Short delay (of %u seconds) before starting the next iteration ....\n",
+                   MQTT_SUBPUB_LOOP_DELAY_SECONDS ) );
         sleep( MQTT_SUBPUB_LOOP_DELAY_SECONDS );
     }
 
