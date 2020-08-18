@@ -19,6 +19,10 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/**
+ * @file mqtt.h
+ * @brief User-facing functions of the MQTT 3.1.1 library.
+ */
 #ifndef MQTT_H
 #define MQTT_H
 
@@ -35,14 +39,10 @@
  */
 #define MQTT_PACKET_ID_INVALID    ( ( uint16_t ) 0U )
 
+/* Structures defined in this file. */
 struct MQTTPubAckInfo;
-typedef struct MQTTPubAckInfo         MQTTPubAckInfo_t;
-
 struct MQTTContext;
-typedef struct MQTTContext            MQTTContext_t;
-
 struct MQTTDeserializedInfo;
-typedef struct MQTTDeserializedInfo   MQTTDeserializedInfo_t;
 
 /**
  * @brief Application provided callback to retrieve the current time in
@@ -64,9 +64,9 @@ typedef uint32_t (* MQTTGetCurrentTimeFunc_t )( void );
  * @param[in] pPacketInfo Information on the type of incoming MQTT packet.
  * @param[in] pDeserializedInfo Deserialized information from incoming packet.
  */
-typedef void (* MQTTEventCallback_t )( MQTTContext_t * pContext,
-                                       MQTTPacketInfo_t * pPacketInfo,
-                                       MQTTDeserializedInfo_t * pDeserializedInfo );
+typedef void (* MQTTEventCallback_t )( struct MQTTContext * pContext,
+                                       struct MQTTPacketInfo * pPacketInfo,
+                                       struct MQTTDeserializedInfo * pDeserializedInfo );
 
 /**
  * @brief Values indicating if an MQTT connection exists.
@@ -107,16 +107,6 @@ typedef enum MQTTPubAckType
 } MQTTPubAckType_t;
 
 /**
- * @brief An element of the state engine records for QoS 1/2 publishes.
- */
-struct MQTTPubAckInfo
-{
-    uint16_t packetId;               /**< @brief The packet ID of the original PUBLISH. */
-    MQTTQoS_t qos;                   /**< @brief The QoS of the original PUBLISH. */
-    MQTTPublishState_t publishState; /**< @brief The current state of the publish process. */
-};
-
-/**
  * @brief The status codes in the SUBACK response to a subscription request.
  */
 typedef enum MQTTSubAckStatus
@@ -128,9 +118,19 @@ typedef enum MQTTSubAckStatus
 } MQTTSubAckStatus_t;
 
 /**
+ * @brief An element of the state engine records for QoS 1 or Qos 2 publishes.
+ */
+typedef struct MQTTPubAckInfo
+{
+    uint16_t packetId;               /**< @brief The packet ID of the original PUBLISH. */
+    MQTTQoS_t qos;                   /**< @brief The QoS of the original PUBLISH. */
+    MQTTPublishState_t publishState; /**< @brief The current state of the publish process. */
+} MQTTPubAckInfo_t;
+
+/**
  * @brief A struct representing an MQTT connection.
  */
-struct MQTTContext
+typedef struct MQTTContext
 {
     /**
      * @brief State engine records for outgoing publishes.
@@ -187,34 +187,37 @@ struct MQTTContext
     uint16_t keepAliveIntervalSec; /**< @brief Keep Alive interval. */
     uint32_t pingReqSendTimeMs;    /**< @brief Timestamp of the last sent PINGREQ. */
     bool waitingForPingResp;       /**< @brief If the library is currently awaiting a PINGRESP. */
-};
+} MQTTContext_t;
 
 /**
  * @brief Struct to hold deserialized packet information for an #MQTTEventCallback_t
  * callback.
  */
-struct MQTTDeserializedInfo
+typedef struct MQTTDeserializedInfo
 {
     uint16_t packetIdentifier;          /**< @brief Packet ID of deserialized packet. */
     MQTTPublishInfo_t * pPublishInfo;   /**< @brief Pointer to deserialized publish info. */
     MQTTStatus_t deserializationResult; /**< @brief Return code of deserialization. */
-};
+} MQTTDeserializedInfo_t;
 
 /**
  * @brief Initialize an MQTT context.
  *
- * This function must be called on an MQTT context before any other function.
+ * This function must be called on a #MQTTContext_t before any other function.
  *
- * @note The getTime callback function must be defined. If there is no time
- * implementation, it is the responsibility of the application to provide a
- * dummy function to always return 0, and provide 0 timeouts for functions. This
- * will ensure all time based functions will run for a single iteration.
+ * @note The #MQTTGetCurrentTimeFunc_t callback function must be defined. If
+ * there is no time implementation, it is the responsibility of the application
+ * to provide a dummy function to always return 0, and provide 0 timeouts for
+ * functions. This will ensure all time based functions will run for a single
+ * iteration.
  *
  * @brief param[in] pContext The context to initialize.
- * @brief param[in] pTransportInterface The transport interface to use with the context.
- * @brief param[in] getTimeFunction The time utility function to use with the context.
- * @brief param[in] userCallback The user callback to use with the context to notify about
- * incoming packet events.
+ * @brief param[in] pTransportInterface The transport interface to use with the
+ * context.
+ * @brief param[in] getTimeFunction The time utility function to use with the
+ * context.
+ * @brief param[in] userCallback The user callback to use with the context to
+ * notify about incoming packet events.
  * @brief param[in] pNetworkBuffer Network buffer provided for the context.
  *
  * @return #MQTTBadParameter if invalid parameters are passed;
@@ -276,12 +279,12 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  *
  * The maximum time this function waits for a CONNACK is decided in one of the
  * following ways:
- * 1. If #timeoutMs is greater than 0:
- *    #getTime is used to ensure that the function does not wait more than #timeoutMs
- *    for CONNACK.
- * 2. If #timeoutMs is 0:
- *    The network receive for CONNACK is retried up to the number of times configured
- *    by #MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT.
+ * 1. If @p timeoutMs is greater than 0:
+ *    #MQTTContext_t.getTime is used to ensure that the function does not wait
+ *    more than @p timeoutMs for CONNACK.
+ * 2. If @p timeoutMs is 0:
+ *    The network receive for CONNACK is retried up to the number of times
+ *    configured by #MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT.
  *
  * @param[in] pContext Initialized MQTT context.
  * @param[in] pConnectInfo MQTT CONNECT packet information.
@@ -299,7 +302,7 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  * #MQTTSendFailed if transport send failed;
  * #MQTTRecvFailed if transport receive failed for CONNACK;
  * #MQTTNoDataAvailable if no data available to receive in transport until
- * the #timeoutMs for CONNACK;
+ * the @p timeoutMs for CONNACK;
  * #MQTTSuccess otherwise.
  *
  * @note This API may spend more time than provided in the timeoutMS parameters in
@@ -322,7 +325,7 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  *
  * <b>Example</b>
  * @code{c}
- * 
+ *
  * // Variables used in this example.
  * MQTTStatus_t status;
  * MQTTConnectInfo_t connectInfo = { 0 };
@@ -336,7 +339,7 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  * // Client ID must be unique to broker. This field is required.
  * connectInfo.pClientIdentifier = "someClientID";
  * connectInfo.clientIdentifierLength = strlen( connectInfo.pClientIdentifier );
- * 
+ *
  * // The following fields are optional.
  * // Value for keep alive.
  * connectInfo.keepAliveSeconds = 60;
@@ -345,7 +348,7 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  * connectInfo.userNameLength = strlen( connectInfo.pUserName );
  * connectInfo.pPassword = "somePassword";
  * connectInfo.passwordLength = strlen( connectInfo.pPassword );
- * 
+ *
  * // The last will and testament is optional, it will be published by the broker
  * // should this client disconnect without sending a DISCONNECT packet.
  * willInfo.qos = MQTTQoS0;
@@ -356,12 +359,12 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  *
  * // Send the connect packet. Use 100 ms as the timeout to wait for the CONNACK packet.
  * status = MQTT_Connect( pContext, &connectInfo, &willInfo, 100, &sessionPresent );
- * 
+ *
  * if( status == MQTTSuccess )
  * {
  *      // Since we requested a clean session, this must be false
  *      assert( sessionPresent == false );
- * 
+ *
  *      // Do something with the connection.
  * }
  * @endcode
@@ -379,14 +382,14 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
  * @param[in] pContext Initialized MQTT context.
  * @param[in] pSubscriptionList List of MQTT subscription info.
  * @param[in] subscriptionCount The number of elements in pSubscriptionList.
- * @param[in] packetId packet ID generated by #MQTT_GetPacketId.
+ * @param[in] packetId Packet ID generated by #MQTT_GetPacketId.
  *
  * @return #MQTTNoMemory if the #MQTTContext_t.networkBuffer is too small to
  * hold the MQTT packet;
  * #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSendFailed if transport write failed;
  * #MQTTSuccess otherwise.
- * 
+ *
  * <b>Example</b>
  * @code{c}
  *
@@ -398,7 +401,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
  * MQTTContext_t * pContext;
  * // This is assumed to be a list of filters we want to subscribe to.
  * const char * filters[ NUMBER_OF_SUBSCRIPTIONS ];
- * 
+ *
  * // Set each subscription.
  * for( int i = 0; i < NUMBER_OF_SUBSCRIPTIONS; i++ )
  * {
@@ -407,12 +410,12 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
  *      subscriptionList[ i ].pTopicFilter = filters[ i ];
  *      subscriptionList[ i ].topicFilterLength = strlen( filters[ i ] );
  * }
- * 
+ *
  * // Obtain a new packet id for the subscription.
  * packetId = MQTT_GetPacketId( pContext );
- * 
+ *
  * status = MQTT_Subscribe( pContext, &subscriptionList[ 0 ], NUMBER_OF_SUBSCRIPTIONS, packetId );
- * 
+ *
  * if( status == MQTTSuccess )
  * {
  *      // We must now call MQTT_ReceiveLoop() or MQTT_ProcessLoop() to receive the SUBACK.
@@ -437,29 +440,29 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
  * #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSendFailed if transport write failed;
  * #MQTTSuccess otherwise.
- * 
+ *
  * <b>Example</b>
  * @code{c}
- * 
+ *
  * // Variables used in this example.
  * MQTTStatus_t status;
  * MQTTPublishInfo_t publishInfo;
  * uint16_t packetId;
  * // This context is assumed to be initialized and connected.
  * MQTTContext_t * pContext;
- * 
+ *
  * // QoS of publish.
  * publishInfo.qos = MQTTQoS1;
  * publishInfo.pTopicName = "/some/topic/name";
  * publishInfo.topicNameLength = strlen( publishInfo.pTopicName );
  * publishInfo.pPayload = "Hello World!";
  * publishInfo.payloadLength = strlen( "Hello World!" );
- * 
+ *
  * // Packet ID is needed for QoS > 0.
  * packetId = MQTT_GetPacketId( pContext );
- * 
+ *
  * status = MQTT_Publish( pContext, &publishInfo, packetId );
- * 
+ *
  * if( status == MQTTSuccess )
  * {
  *      // Since the QoS is > 0, we will need to call MQTT_ReceiveLoop()
@@ -497,7 +500,7 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext );
  * #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSendFailed if transport write failed;
  * #MQTTSuccess otherwise.
- * 
+ *
  * <b>Example</b>
  * @code{c}
  *
@@ -509,7 +512,7 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext );
  * MQTTContext_t * pContext;
  * // This is assumed to be a list of filters we want to unsubscribe from.
  * const char * filters[ NUMBER_OF_SUBSCRIPTIONS ];
- * 
+ *
  * // Set information for each unsubscribe request.
  * for( int i = 0; i < NUMBER_OF_SUBSCRIPTIONS; i++ )
  * {
@@ -518,12 +521,12 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext );
  *
  *      // The QoS field of MQTT_SubscribeInfo_t is unused for unsubscribing.
  * }
- * 
+ *
  * // Obtain a new packet id for the unsubscribe request.
  * packetId = MQTT_GetPacketId( pContext );
- * 
+ *
  * status = MQTT_Subscribe( pContext, &unsubscribeList[ 0 ], NUMBER_OF_SUBSCRIPTIONS, packetId );
- * 
+ *
  * if( status == MQTTSuccess )
  * {
  *      // We must now call MQTT_ReceiveLoop() or MQTT_ProcessLoop() to receive the UNSUBACK.
@@ -566,20 +569,20 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext );
  * #MQTTIllegalState if an incoming QoS 1/2 publish or ack causes an
  * invalid transition for the internal state machine;
  * #MQTTSuccess on success.
- * 
+ *
  * <b>Example</b>
  * @code{c}
- * 
+ *
  * // Variables used in this example.
  * MQTTStatus_t status;
  * uint32_t timeoutMs = 100;
  * // This context is assumed to be initialized and connected.
  * MQTTContext_t * pContext;
- * 
+ *
  * while( true )
  * {
  *      status = MQTT_ProcessLoop( pContext, timeoutMs );
- * 
+ *
  *      if( status != MQTTSuccess )
  *      {
  *          // Determine the error. It's possible we might need to disconnect TCP.
@@ -614,18 +617,18 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
  *
  * <b>Example</b>
  * @code{c}
- * 
+ *
  * // Variables used in this example.
  * MQTTStatus_t status;
  * uint32_t timeoutMs = 100;
  * uint32_t keepAliveMs = 60 * 1000;
  * // This context is assumed to be initialized and connected.
  * MQTTContext_t * pContext;
- * 
+ *
  * while( true )
  * {
  *      status = MQTT_ReceiveLoop( pContext, timeoutMs );
- * 
+ *
  *      if( status != MQTTSuccess )
  *      {
  *          // Determine the error. It's possible we might need to disconnect TCP.
@@ -638,7 +641,7 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
  *          {
  *              status = MQTT_Ping( pContext );
  *          }
- * 
+ *
  *          // Other application functions.
  *      }
  * }
@@ -667,6 +670,12 @@ uint16_t MQTT_GetPacketId( MQTTContext_t * pContext );
  * @param[out] pIsMatch This is filled with the whether there
  * exists a match or not.
  *
+ * @note The API assumes that the passed topic name is valid to meet the
+ * requirements of the MQTT 3.1.1 specification. Invalid topic names (for example,
+ * containing wildcard characters) should not be passed to the function.
+ * Also, the API checks validity of topic filter for wildcard characters ONLY if
+ * the passed topic name and topic filter do not have an exact string match.
+ *
  * @return Returns one of the following:
  * - #MQTTBadParameter, if any of the input parameters is invalid.
  * - #MQTTSuccess, if the matching operation was performed.
@@ -689,7 +698,7 @@ MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
  *  - 0x01 - Success - Maximum QoS 1
  *  - 0x02 - Success - Maximum QoS 2
  *  - 0x80 - Failure
- * Refer to @ref MQTTSubAckStatus for the status codes.
+ * Refer to #MQTTSubAckStatus_t for the status codes.
  *
  * @param[in] pSubackPacket The SUBACK packet whose payload is to be parsed.
  * @param[out] pPayloadStart This is populated with the starting address
@@ -704,7 +713,7 @@ MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
  */
 MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
                                         uint8_t ** pPayloadStart,
-                                        uint16_t * pPayloadSize );
+                                        size_t * pPayloadSize );
 
 /**
  * @brief Error code to string conversion for MQTT statuses.

@@ -26,6 +26,7 @@ cleansession
 clientidentifierlength
 cmock
 com
+cond
 config
 connack
 connectinfo
@@ -33,6 +34,7 @@ connectpacketsize
 const
 createcleansession
 currentstate
+csdk
 defragmenting
 deserialization
 deserializationresult
@@ -41,13 +43,17 @@ deserializeack
 deserialized
 deserializepublish
 deserializing
+developerguide
 didn
 disconnectpacketsize
 doesn
+doxygen
 dup
+endcond
 emptyindex
 endcode
 endif
+enum
 enums
 eventcallback
 eventcallbackstub
@@ -71,6 +77,7 @@ handleincomingpublish
 handlekeepalive
 hasn
 headersize
+html
 https
 ifndef
 inc
@@ -163,6 +170,8 @@ passwordlength
 payloadlength
 pbuffer
 pbuffertosend
+pcallbacks
+pconnack
 pclientidentifier
 pconnectinfo
 pcontext
@@ -171,6 +180,8 @@ pcursor
 pdeserialized
 pdeserializedinfo
 pdestination
+ppacketidentifier
+ppingresp
 pem
 pfixedbuffer
 pheadersize
@@ -206,6 +217,8 @@ processloop
 psessionpresent
 psource
 pstate
+pstatusstart
+psuback
 psubackpacket
 psubscribeinfo
 psubscriptionlist
@@ -218,6 +231,7 @@ puback
 pubacks
 pubcomp
 pubcomps
+publishflags
 publishinfo
 publishstate
 pubrec
@@ -266,6 +280,8 @@ someusername
 sourcelength
 src
 stateafterdeserialize
+stateful
+statuscount
 strerror
 strlen
 struct

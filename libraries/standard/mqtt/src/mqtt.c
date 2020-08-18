@@ -19,6 +19,10 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/**
+ * @file mqtt.c
+ * @brief Implements the user-facing functions in mqtt.h.
+ */
 #include <string.h>
 #include <assert.h>
 
@@ -109,7 +113,7 @@ static int32_t recvExact( const MQTTContext_t * pContext,
 /**
  * @brief Discard a packet from the transport interface.
  *
- * @param[in] PContext MQTT Connection context.
+ * @param[in] pContext MQTT Connection context.
  * @param[in] remainingLength Remaining length of the packet to dump.
  * @param[in] timeoutMs Time remaining to discard the packet.
  *
@@ -327,8 +331,6 @@ static MQTTStatus_t validatePublishParams( const MQTTContext_t * pContext,
  * @param[in] pTopicFilter The topic filter containing the wildcard.
  * @param[in] topicFilterLength Length of the topic filter being examined.
  * @param[in] filterIndex Index of the topic filter being examined.
- * @param[in] topicNameLength Length of the topic name being examined.
- * @param[in] nameIndex Index of the topic name being examined.
  *
  * @return Returns whether the topic filter and the topic name match.
  */
@@ -412,7 +414,7 @@ static bool matchEndWildcardsSpecialCases( const char * pTopicFilter,
         ( pTopicFilter[ filterIndex ] == '/' ) )
     {
         /* Check that the last character is a wildcard. */
-        matchFound = ( ( pTopicFilter[ filterIndex + 1U ] == '+' ) || 
+        matchFound = ( ( pTopicFilter[ filterIndex + 1U ] == '+' ) ||
                        ( pTopicFilter[ filterIndex + 1U ] == '#' ) ) ? true : false;
     }
 
@@ -2293,7 +2295,7 @@ MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
 
 MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
                                         uint8_t ** pPayloadStart,
-                                        uint16_t * pPayloadSize )
+                                        size_t * pPayloadSize )
 {
     MQTTStatus_t status = MQTTSuccess;
 
@@ -2331,7 +2333,7 @@ MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
     {
         LogError( ( "Invalid parameter: Packet remaining length is invalid: "
                     "Should be greater than 2 for SUBACK packet: InputRemainingLength=%lu",
-                    pSubackPacket->remainingLength ) );
+                    ( unsigned long ) pSubackPacket->remainingLength ) );
         status = MQTTBadParameter;
     }
     else
@@ -2341,7 +2343,7 @@ MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
          * Therefore, we add 2 positions for the starting address of the payload, and
          * subtract 2 bytes from the remaining length for the length of the payload.*/
         *pPayloadStart = pSubackPacket->pRemainingData + ( ( uint16_t ) sizeof( uint16_t ) );
-        *pPayloadSize = ( uint16_t ) ( pSubackPacket->remainingLength - sizeof( uint16_t ) );
+        *pPayloadSize = pSubackPacket->remainingLength - sizeof( uint16_t );
     }
 
     return status;
