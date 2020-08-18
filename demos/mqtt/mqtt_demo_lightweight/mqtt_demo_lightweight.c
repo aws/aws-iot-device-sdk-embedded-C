@@ -55,10 +55,20 @@
 /* Reconnect parameters. */
 #include "transport_reconnect.h"
 
+/* Check that the broker endpoint is defined. */
+#ifndef BROKER_ENDPOINT
+    #error "Please define an MQTT broker endpoint, BROKER_ENDPOINT, in demo_config.h."
+#endif
+
 /* Check that client identifier is defined. */
 #ifndef CLIENT_IDENTIFIER
     #error "Please define a unique CLIENT_IDENTIFIER."
 #endif
+
+/**
+ * @brief Length of MQTT server host name.
+ */
+#define BROKER_ENDPOINT_LENGTH       ( ( uint16_t ) ( sizeof( BROKER_ENDPOINT ) - 1 ) )
 
 /**
  * @brief The topic to subscribe and publish to in the example.
