@@ -1981,7 +1981,7 @@ uint16_t MQTT_GetPacketId( MQTTContext_t * pContext )
 
 MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
                                         uint8_t ** pPayloadStart,
-                                        uint16_t * pPayloadSize )
+                                        size_t * pPayloadSize )
 {
     MQTTStatus_t status = MQTTSuccess;
 
@@ -2029,7 +2029,7 @@ MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
          * Therefore, we add 2 positions for the starting address of the payload, and
          * subtract 2 bytes from the remaining length for the length of the payload.*/
         *pPayloadStart = pSubackPacket->pRemainingData + ( ( uint16_t ) sizeof( uint16_t ) );
-        *pPayloadSize = ( uint16_t ) ( pSubackPacket->remainingLength - sizeof( uint16_t ) );
+        *pPayloadSize = pSubackPacket->remainingLength - sizeof( uint16_t );
     }
 
     return status;
