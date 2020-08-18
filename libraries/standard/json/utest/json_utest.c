@@ -9,22 +9,22 @@
 
 
 /* Sample test from the docs. */
-#define JSON_QUERY_SEPARATOR                 "."
+#define JSON_QUERY_SEPARATOR         "."
 
-#define FIRST_QUERY_KEY                      "bar"
-#define FIRST_QUERY_KEY_LENGTH               ( sizeof( FIRST_QUERY_KEY ) - 1 )
+#define FIRST_QUERY_KEY              "bar"
+#define FIRST_QUERY_KEY_LENGTH       ( sizeof( FIRST_QUERY_KEY ) - 1 )
 
-#define SECOND_QUERY_KEY                     "foo"
-#define SECOND_QUERY_KEY_LENGTH              ( sizeof( SECOND_QUERY_KEY ) - 1 )
+#define SECOND_QUERY_KEY             "foo"
+#define SECOND_QUERY_KEY_LENGTH      ( sizeof( SECOND_QUERY_KEY ) - 1 )
 
 #define COMPLETE_QUERY_KEY \
     FIRST_QUERY_KEY        \
     JSON_QUERY_SEPARATOR   \
     SECOND_QUERY_KEY
-#define COMPLETE_QUERY_KEY_LENGTH            ( sizeof( COMPLETE_QUERY_KEY ) - 1 )
+#define COMPLETE_QUERY_KEY_LENGTH    ( sizeof( COMPLETE_QUERY_KEY ) - 1 )
 
-#define JSON_EXPECTED_QUERY_ANSWER           "xyz"
-#define JSON_EXPECTED_QUERY_ANSWER_LENGTH    ( sizeof( JSON_EXPECTED_QUERY_ANSWER ) - 1 )
+#define QUERY_ANSWER                 "xyz"
+#define QUERY_ANSWER_LENGTH          ( sizeof( QUERY_ANSWER ) - 1 )
 
 /* This JSON document covers all cases where scalars are exponents, literals, numbers, and decimals. */
 #define JSON_DOC_VARIED_SCALARS                                                      \
@@ -33,19 +33,19 @@
     "\"number\": -123412, "                                                          \
     "\"decimal\":109238.42091289, "                                                  \
     "\"foo\":\"abc\",\"" FIRST_QUERY_KEY "\":{\"" SECOND_QUERY_KEY "\":\""           \
-    JSON_EXPECTED_QUERY_ANSWER "\"}}"
+    QUERY_ANSWER "\"}}"
 #define JSON_DOC_VARIED_SCALARS_LENGTH                     ( sizeof( JSON_DOC_VARIED_SCALARS ) - 1 )
 
-#define MULTIPLE_VALID_ESCAPES                             "\"\\\\ \\\" \\/ \\b \\f \\n \\r \\t \\\x12\" "
+#define MULTIPLE_VALID_ESCAPES                             "\\\\ \\\" \\/ \\b \\f \\n \\r \\t \\\x12"
 #define MULTIPLE_VALID_ESCAPES_LENGTH                      ( sizeof( MULTIPLE_VALID_ESCAPES ) - 1 )
 
 #define JSON_DOC_MULTIPLE_VALID_ESCAPES   \
     "{\"foo\":\"abc\",\"" FIRST_QUERY_KEY \
-    "\":{\"" SECOND_QUERY_KEY "\" : \"" MULTIPLE_VALID_ESCAPES "\"}}"
+    "\":{\"" SECOND_QUERY_KEY "\" :\t\"" MULTIPLE_VALID_ESCAPES "\"}}"
 #define JSON_DOC_MULTIPLE_VALID_ESCAPES_LENGTH             ( sizeof( JSON_DOC_MULTIPLE_VALID_ESCAPES ) - 1 )
 
 /* A single byte in UTF-8 is just an ASCII character, so it's not included here. */
-#define LEGAL_UTF8_BYTE_SEQUENCES                          "\"\xc2\xa9 \xe2\x98\x95 \xf0\x9f\x98\x80\""
+#define LEGAL_UTF8_BYTE_SEQUENCES                          "\xc2\xa9 \xe2\x98\x95 \xf0\x9f\x98\x80"
 #define LEGAL_UTF8_BYTE_SEQUENCES_LENGTH                   ( sizeof( LEGAL_UTF8_BYTE_SEQUENCES ) - 1 )
 
 #define JSON_DOC_LEGAL_UTF8_BYTE_SEQUENCES \
@@ -54,7 +54,7 @@
 #define JSON_DOC_LEGAL_UTF8_BYTE_SEQUENCES_LENGTH          ( sizeof( JSON_DOC_LEGAL_UTF8_BYTE_SEQUENCES ) - 1 )
 
 /* Unicode escape sequences in the Basic Multilingual Plane. */
-#define UNICODE_ESCAPE_SEQUENCES_BMP                       "\"\\uCB00\\uEFFF\""
+#define UNICODE_ESCAPE_SEQUENCES_BMP                       "\\uCB00\\uEFFF"
 #define UNICODE_ESCAPE_SEQUENCES_BMP_LENGTH                ( sizeof( UNICODE_ESCAPE_SEQUENCES_BMP ) - 1 )
 
 #define JSON_DOC_UNICODE_ESCAPE_SEQUENCES_BMP \
@@ -63,13 +63,18 @@
 #define JSON_DOC_UNICODE_ESCAPE_SEQUENCES_BMP_LENGTH       ( sizeof( JSON_DOC_UNICODE_ESCAPE_SEQUENCES_BMP ) - 1 )
 
 /* Unicode escape sequences using surrogates for Astral Code Points (outside BMP). */
-#define LEGAL_UNICODE_ESCAPE_SURROGATES                    "\"\\uD83D\\ude07\""
+#define LEGAL_UNICODE_ESCAPE_SURROGATES                    "\\uD83D\\ude07"
 #define LEGAL_UNICODE_ESCAPE_SURROGATES_LENGTH             ( sizeof( LEGAL_UNICODE_ESCAPE_SURROGATES ) - 1 )
 
 #define JSON_DOC_LEGAL_UNICODE_ESCAPE_SURROGATES \
     "{\"foo\":\"abc\",\"" FIRST_QUERY_KEY        \
     "\":{\"" SECOND_QUERY_KEY "\" : \"" LEGAL_UNICODE_ESCAPE_SURROGATES "\"}}"
 #define JSON_DOC_LEGAL_UNICODE_ESCAPE_SURROGATES_LENGTH    ( sizeof( JSON_DOC_LEGAL_UNICODE_ESCAPE_SURROGATES ) - 1 )
+
+#define JSON_DOC_LEGAL_TRAILING_SPACE     \
+    "{\"foo\":\"abc\",\"" FIRST_QUERY_KEY \
+    "\":{\"" SECOND_QUERY_KEY "\" : \"" QUERY_ANSWER "\"}}  "
+#define JSON_DOC_LEGAL_TRAILING_SPACE_LENGTH               ( sizeof( JSON_DOC_LEGAL_TRAILING_SPACE ) - 1 )
 
 /* A single scalar is still considered a valid JSON document. */
 #define SINGLE_SCALAR                                      "\"l33t\""
@@ -81,16 +86,11 @@
 
 #define TRAILING_COMMA_AFTER_VALUE        \
     "{\"foo\":\"abc\",\"" FIRST_QUERY_KEY \
-    "\":{\"" SECOND_QUERY_KEY "\" : \"xyz\",}}"
+    "\":{\"" SECOND_QUERY_KEY "\" : \"" QUERY_ANSWER "\",}}"
 #define TRAILING_COMMA_AFTER_VALUE_LENGTH                  ( sizeof( TRAILING_COMMA_AFTER_VALUE ) - 1 )
 
 #define INCORRECT_OBJECT_SEPARATOR                         "{\"foo\": \"bar\"; \"bar\": \"foo\"}"
 #define INCORRECT_OBJECT_SEPARATOR_LENGTH                  ( sizeof( INCORRECT_OBJECT_SEPARATOR ) - 1 )
-
-#define TRAILING_SPACE_AFTER_LEGAL_JSON   \
-    "{\"foo\":\"abc\",\"" FIRST_QUERY_KEY \
-    "\":{\"" SECOND_QUERY_KEY "\" : \"xyz\"}}  "
-#define TRAILING_SPACE_AFTER_LEGAL_JSON_LENGTH             ( sizeof( TRAILING_SPACE_AFTER_LEGAL_JSON ) - 1 )
 
 #define MISSING_ENCLOSING_ARRAY_MARKER    \
     "{\"foo\":\"abc\",\"" FIRST_QUERY_KEY \
@@ -99,7 +99,7 @@
 
 #define MISSING_ENCLOSING_OBJECT_MARKER   \
     "{\"foo\":\"abc\",\"" FIRST_QUERY_KEY \
-    "\":{\"" SECOND_QUERY_KEY "\" : \"xyz\"}"
+    "\":{\"" SECOND_QUERY_KEY "\" : \"" QUERY_ANSWER "\"}"
 #define MISSING_ENCLOSING_OBJECT_MARKER_LENGTH             ( sizeof( MISSING_ENCLOSING_OBJECT_MARKER ) - 1 )
 
 #define CUT_AFTER_OBJECT_OPEN_BRACE                        "{\"foo\":\"abc\",\"bar\":{\""
@@ -128,13 +128,13 @@
 /* Separator between a key and a value must be a colon (:). */
 #define WRONG_KEY_VALUE_SEPARATOR         \
     "{\"foo\";\"abc\",\"" FIRST_QUERY_KEY \
-    "\":{\"" SECOND_QUERY_KEY "\":\"xyz\"}}  "
+    "\":{\"" SECOND_QUERY_KEY "\":\"" QUERY_ANSWER "\"}}  "
 #define WRONG_KEY_VALUE_SEPARATOR_LENGTH    ( sizeof( WRONG_KEY_VALUE_SEPARATOR ) - 1 )
 
 /* Key must be a string. */
 #define ILLEGAL_KEY_NOT_STRING        \
     "{foo:\"abc\",\"" FIRST_QUERY_KEY \
-    "\":{\"" SECOND_QUERY_KEY "\" : \"xyz\"}}"
+    "\":{\"" SECOND_QUERY_KEY "\" : \"" QUERY_ANSWER "\"}}"
 #define ILLEGAL_KEY_NOT_STRING_LENGTH    ( sizeof( ILLEGAL_KEY_NOT_STRING ) - 1 )
 
 /* A non-number after the exponent marker is illegal. */
@@ -388,36 +388,38 @@ char * allocateMaxDepthObject( void )
 /**
  * @brief Test that JSON_Validate is able to classify valid JSON correctly.
  */
-void test_JSON_Validate_Legal_JSON( void )
+void test_JSON_Validate_Legal_Documents( void )
 {
     JSONStatus_t jsonStatus;
 
     jsonStatus = JSON_Validate( JSON_DOC_VARIED_SCALARS, JSON_DOC_VARIED_SCALARS_LENGTH );
     TEST_ASSERT_EQUAL( JSONSuccess, jsonStatus );
 
-    jsonStatus = JSON_Validate( TRAILING_SPACE_AFTER_LEGAL_JSON,
-                                TRAILING_SPACE_AFTER_LEGAL_JSON_LENGTH );
+    jsonStatus = JSON_Validate( JSON_DOC_LEGAL_TRAILING_SPACE,
+                                JSON_DOC_LEGAL_TRAILING_SPACE_LENGTH );
     TEST_ASSERT_EQUAL( JSONSuccess, jsonStatus );
 
-    jsonStatus = JSON_Validate( MULTIPLE_VALID_ESCAPES, MULTIPLE_VALID_ESCAPES_LENGTH );
+    jsonStatus = JSON_Validate( JSON_DOC_MULTIPLE_VALID_ESCAPES,
+                                JSON_DOC_MULTIPLE_VALID_ESCAPES_LENGTH );
     TEST_ASSERT_EQUAL( JSONSuccess, jsonStatus );
 
-    jsonStatus = JSON_Validate( LEGAL_UTF8_BYTE_SEQUENCES, LEGAL_UTF8_BYTE_SEQUENCES_LENGTH );
+    jsonStatus = JSON_Validate( JSON_DOC_LEGAL_UTF8_BYTE_SEQUENCES,
+                                JSON_DOC_LEGAL_UTF8_BYTE_SEQUENCES_LENGTH );
     TEST_ASSERT_EQUAL( JSONSuccess, jsonStatus );
 
-    jsonStatus = JSON_Validate( LEGAL_UNICODE_ESCAPE_SURROGATES,
-                                LEGAL_UNICODE_ESCAPE_SURROGATES_LENGTH );
+    jsonStatus = JSON_Validate( JSON_DOC_LEGAL_UNICODE_ESCAPE_SURROGATES,
+                                JSON_DOC_LEGAL_UNICODE_ESCAPE_SURROGATES_LENGTH );
     TEST_ASSERT_EQUAL( JSONSuccess, jsonStatus );
 
-    jsonStatus = JSON_Validate( UNICODE_ESCAPE_SEQUENCES_BMP,
-                                UNICODE_ESCAPE_SEQUENCES_BMP_LENGTH );
+    jsonStatus = JSON_Validate( JSON_DOC_UNICODE_ESCAPE_SEQUENCES_BMP,
+                                JSON_DOC_UNICODE_ESCAPE_SEQUENCES_BMP_LENGTH );
     TEST_ASSERT_EQUAL( JSONSuccess, jsonStatus );
 }
 
 /**
  * @brief Test that JSON_Validate is able to classify an illegal JSON document correctly.
  */
-void test_JSON_Validate_Illegal_Document( void )
+void test_JSON_Validate_Illegal_Documents( void )
 {
     JSONStatus_t jsonStatus;
 
@@ -546,8 +548,10 @@ void test_JSON_Validate_Illegal_Document( void )
 /**
  * @brief Test that JSON_Validate is able to classify a partial JSON document correctly.
  */
-void test_JSON_Validate_Partial_Document( void )
+void test_JSON_Validate_Partial_Documents( void )
 {
+    JSONStatus_t jsonStatus;
+
     jsonStatus = JSON_Validate( ESCAPE_CHAR_ALONE, ESCAPE_CHAR_ALONE_LENGTH );
     TEST_ASSERT_EQUAL( JSONPartial, jsonStatus );
 
@@ -574,11 +578,22 @@ void test_JSON_Validate_Partial_Document( void )
 /**
  * @brief Test that JSON_Search can find the right value given a query key.
  */
-void test_JSON_Search_Legal_JSON( void )
+void test_JSON_Search_Legal_Documents( void )
 {
     JSONStatus_t jsonStatus;
     char * outValue;
     size_t outValueLength;
+
+    jsonStatus = JSON_Search( JSON_DOC_LEGAL_TRAILING_SPACE,
+                              JSON_DOC_LEGAL_TRAILING_SPACE_LENGTH,
+                              COMPLETE_QUERY_KEY,
+                              COMPLETE_QUERY_KEY_LENGTH,
+                              JSON_QUERY_SEPARATOR[ 0 ],
+                              &outValue,
+                              &outValueLength );
+    TEST_ASSERT_EQUAL( JSONSuccess, jsonStatus );
+    TEST_ASSERT_EQUAL( outValueLength, QUERY_ANSWER_LENGTH );
+    TEST_ASSERT_EQUAL_STRING_LEN( QUERY_ANSWER, outValue, outValueLength );
 
     jsonStatus = JSON_Search( JSON_DOC_VARIED_SCALARS,
                               JSON_DOC_VARIED_SCALARS_LENGTH,
@@ -588,40 +603,67 @@ void test_JSON_Search_Legal_JSON( void )
                               &outValue,
                               &outValueLength );
     TEST_ASSERT_EQUAL( JSONSuccess, jsonStatus );
-    TEST_ASSERT_EQUAL( outValueLength, JSON_EXPECTED_QUERY_ANSWER_LENGTH );
-    TEST_ASSERT_EQUAL_STRING_LEN( JSON_EXPECTED_QUERY_ANSWER, outValue, outValueLength );
-}
+    TEST_ASSERT_EQUAL( QUERY_ANSWER_LENGTH, outValueLength );
+    TEST_ASSERT_EQUAL_STRING_LEN( QUERY_ANSWER, outValue, QUERY_ANSWER_LENGTH );
 
-/**
- * @brief Test that a nested collection can only only have JSON_MAX_DEPTH levels
- * of nesting.
- */
-void test_JSON_Max_Depth( void )
-{
-    JSONStatus_t jsonStatus;
-    char * maxNestedObject, * maxNestedArray, * outValue;
-    size_t outValueLength;
+    jsonStatus = JSON_Search( JSON_DOC_MULTIPLE_VALID_ESCAPES,
+                              JSON_DOC_MULTIPLE_VALID_ESCAPES_LENGTH,
+                              COMPLETE_QUERY_KEY,
+                              COMPLETE_QUERY_KEY_LENGTH,
+                              JSON_QUERY_SEPARATOR[ 0 ],
+                              &outValue,
+                              &outValueLength );
+    TEST_ASSERT_EQUAL( JSONSuccess, jsonStatus );
+    TEST_ASSERT_EQUAL( MULTIPLE_VALID_ESCAPES_LENGTH, outValueLength );
+    TEST_ASSERT_EQUAL_STRING_LEN( MULTIPLE_VALID_ESCAPES,
+                                  outValue,
+                                  MULTIPLE_VALID_ESCAPES_LENGTH );
 
-    maxNestedArray = allocateMaxDepthArray();
-    jsonStatus = JSON_Validate( maxNestedArray,
-                                strlen( maxNestedArray ) );
-    TEST_ASSERT_EQUAL( JSONMaxDepthExceeded, jsonStatus );
+    jsonStatus = JSON_Search( JSON_DOC_LEGAL_UTF8_BYTE_SEQUENCES,
+                              JSON_DOC_LEGAL_UTF8_BYTE_SEQUENCES_LENGTH,
+                              COMPLETE_QUERY_KEY,
+                              COMPLETE_QUERY_KEY_LENGTH,
+                              JSON_QUERY_SEPARATOR[ 0 ],
+                              &outValue,
+                              &outValueLength );
+    TEST_ASSERT_EQUAL( JSONSuccess, jsonStatus );
+    TEST_ASSERT_EQUAL( LEGAL_UTF8_BYTE_SEQUENCES_LENGTH, outValueLength );
+    TEST_ASSERT_EQUAL_STRING_LEN( LEGAL_UTF8_BYTE_SEQUENCES,
+                                  outValue,
+                                  LEGAL_UTF8_BYTE_SEQUENCES_LENGTH );
 
+    jsonStatus = JSON_Search( JSON_DOC_LEGAL_UNICODE_ESCAPE_SURROGATES,
+                              JSON_DOC_LEGAL_UNICODE_ESCAPE_SURROGATES_LENGTH,
+                              COMPLETE_QUERY_KEY,
+                              COMPLETE_QUERY_KEY_LENGTH,
+                              JSON_QUERY_SEPARATOR[ 0 ],
+                              &outValue,
+                              &outValueLength );
+    TEST_ASSERT_EQUAL( JSONSuccess, jsonStatus );
+    TEST_ASSERT_EQUAL( LEGAL_UNICODE_ESCAPE_SURROGATES_LENGTH, outValueLength );
+    TEST_ASSERT_EQUAL_STRING_LEN( LEGAL_UNICODE_ESCAPE_SURROGATES,
+                                  outValue,
+                                  LEGAL_UNICODE_ESCAPE_SURROGATES_LENGTH );
 
-    maxNestedObject = allocateMaxDepthObject();
-    jsonStatus = JSON_Validate( maxNestedObject,
-                                strlen( maxNestedObject ) );
-    TEST_ASSERT_EQUAL( JSONMaxDepthExceeded, jsonStatus );
-
-    free( maxNestedArray );
-    free( maxNestedObject );
+    jsonStatus = JSON_Search( JSON_DOC_UNICODE_ESCAPE_SEQUENCES_BMP,
+                              JSON_DOC_UNICODE_ESCAPE_SEQUENCES_BMP_LENGTH,
+                              COMPLETE_QUERY_KEY,
+                              COMPLETE_QUERY_KEY_LENGTH,
+                              JSON_QUERY_SEPARATOR[ 0 ],
+                              &outValue,
+                              &outValueLength );
+    TEST_ASSERT_EQUAL( JSONSuccess, jsonStatus );
+    TEST_ASSERT_EQUAL( UNICODE_ESCAPE_SEQUENCES_BMP_LENGTH, outValueLength );
+    TEST_ASSERT_EQUAL_STRING_LEN( UNICODE_ESCAPE_SEQUENCES_BMP,
+                                  outValue,
+                                  UNICODE_ESCAPE_SEQUENCES_BMP_LENGTH );
 }
 
 /**
  * @brief Test that JSON_Search can find the right value given an incorrect query
  * key or Illegal JSON string.
  */
-void test_JSON_Search_Illegal_Document( void )
+void test_JSON_Search_Illegal_Documents( void )
 {
     JSONStatus_t jsonStatus;
     char * outValue;
@@ -698,4 +740,95 @@ void test_JSON_Search_Illegal_Document( void )
                               &outValue,
                               &outValueLength );
     TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
+}
+
+/**
+ * @brief Test that JSON_Search is able to classify a partial JSON document correctly.
+ *
+ * @note JSON_Search returns JSONIllegalDocument when it finds a partial document.
+ */
+void test_JSON_Search_Partial_Documents( void )
+{
+    JSONStatus_t jsonStatus;
+    char * outValue;
+    size_t outValueLength;
+
+    jsonStatus = JSON_Search( ESCAPE_CHAR_ALONE,
+                              ESCAPE_CHAR_ALONE_LENGTH,
+                              COMPLETE_QUERY_KEY,
+                              COMPLETE_QUERY_KEY_LENGTH,
+                              JSON_QUERY_SEPARATOR[ 0 ],
+                              &outValue,
+                              &outValueLength );
+    TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
+
+    jsonStatus = JSON_Search( WHITE_SPACE,
+                              WHITE_SPACE_LENGTH,
+                              COMPLETE_QUERY_KEY,
+                              COMPLETE_QUERY_KEY_LENGTH,
+                              JSON_QUERY_SEPARATOR[ 0 ],
+                              &outValue,
+                              &outValueLength );
+    TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
+
+    jsonStatus = JSON_Search( CUT_AFTER_NUMBER,
+                              CUT_AFTER_NUMBER_LENGTH,
+                              COMPLETE_QUERY_KEY,
+                              COMPLETE_QUERY_KEY_LENGTH,
+                              JSON_QUERY_SEPARATOR[ 0 ],
+                              &outValue,
+                              &outValueLength );
+    TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
+
+    jsonStatus = JSON_Search( CUT_AFTER_ARRAY_START_MARKER,
+                              CUT_AFTER_ARRAY_START_MARKER_LENGTH,
+                              COMPLETE_QUERY_KEY,
+                              COMPLETE_QUERY_KEY_LENGTH,
+                              JSON_QUERY_SEPARATOR[ 0 ],
+                              &outValue,
+                              &outValueLength );
+    TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
+
+    jsonStatus = JSON_Search( CUT_AFTER_OBJECT_START_MARKER,
+                              CUT_AFTER_OBJECT_START_MARKER_LENGTH,
+                              COMPLETE_QUERY_KEY,
+                              COMPLETE_QUERY_KEY_LENGTH,
+                              JSON_QUERY_SEPARATOR[ 0 ],
+                              &outValue,
+                              &outValueLength );
+    TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
+
+    jsonStatus = JSON_Search( CUT_AFTER_KEY,
+                              CUT_AFTER_KEY_LENGTH,
+                              COMPLETE_QUERY_KEY,
+                              COMPLETE_QUERY_KEY_LENGTH,
+                              JSON_QUERY_SEPARATOR[ 0 ],
+                              &outValue,
+                              &outValueLength );
+    TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
+}
+
+/**
+ * @brief Test that a nested collection can only only have JSON_MAX_DEPTH levels
+ * of nesting.
+ */
+void test_JSON_Max_Depth( void )
+{
+    JSONStatus_t jsonStatus;
+    char * maxNestedObject, * maxNestedArray, * outValue;
+    size_t outValueLength;
+
+    maxNestedArray = allocateMaxDepthArray();
+    jsonStatus = JSON_Validate( maxNestedArray,
+                                strlen( maxNestedArray ) );
+    TEST_ASSERT_EQUAL( JSONMaxDepthExceeded, jsonStatus );
+
+
+    maxNestedObject = allocateMaxDepthObject();
+    jsonStatus = JSON_Validate( maxNestedObject,
+                                strlen( maxNestedObject ) );
+    TEST_ASSERT_EQUAL( JSONMaxDepthExceeded, jsonStatus );
+
+    free( maxNestedArray );
+    free( maxNestedObject );
 }
