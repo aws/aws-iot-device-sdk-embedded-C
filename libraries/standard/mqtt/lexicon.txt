@@ -58,6 +58,7 @@ enums
 eventcallback
 eventcallbackstub
 expectprocessloopcalls
+filterindex
 fixedbuffer
 getconnectpacketsize
 getcurrenttimestub
@@ -147,6 +148,7 @@ mqttsubackstatus
 mqttsubscribeinfo
 mqttsuccess
 msb
+nameindex
 networkbuffer
 networkcontext
 networkinterfacesendstub
@@ -188,8 +190,11 @@ pingreq
 pingreqsendtimems
 pingresp
 pingresps
+pismatch
+pmatch
 pmessage
 pmqttcontext
+pnameindex
 pnetworkbuffer
 pnetworkcontext
 pnetworkinterface
@@ -287,6 +292,7 @@ subscribeinfo
 subscriptioncount
 subscriptionlist
 subscriptiontype
+sys
 tcp
 tcpsocket
 testcase
