@@ -12,7 +12,3 @@ set( SHADOW_SOURCES
 # SHADOW library Public Include directories.
 set( SHADOW_INCLUDE_PUBLIC_DIRS
      ${MODULES_DIR}/aws/shadow/include )
-
-# SHADOW library Private Include directories.
-set( SHADOW_INCLUDE_PRIVATE_DIRS
-     "${MODULES_DIR}/aws/shadow/src" )
