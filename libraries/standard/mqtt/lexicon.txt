@@ -41,6 +41,7 @@ deserializeack
 deserialized
 deserializepublish
 deserializing
+developerguide
 didn
 disconnectpacketsize
 doesn
@@ -70,6 +71,7 @@ handleincomingpublish
 handlekeepalive
 hasn
 headersize
+html
 https
 ifndef
 inc
