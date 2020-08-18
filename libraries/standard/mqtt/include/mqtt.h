@@ -660,6 +660,33 @@ MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext,
 uint16_t MQTT_GetPacketId( MQTTContext_t * pContext );
 
 /**
+ * @brief A utility function that determines whether the passed topic filter and
+ * topic name match according to the MQTT 3.1.1 protocol specification.
+ *
+ * @param[in] pTopicName The topic name to check.
+ * @param[in] topicNameLength Length of the topic name.
+ * @param[in] pTopicFilter The topic filter to check.
+ * @param[in] topicFilterLength Length of topic filter.
+ * @param[out] pIsMatch This is filled with the whether there
+ * exists a match or not.
+ *
+ * @note The API assumes that the passed topic name is valid to meet the
+ * requirements of the MQTT 3.1.1 specification. Invalid topic names (for example,
+ * containing wildcard characters) should not be passed to the function.
+ * Also, the API checks validity of topic filter for wildcard characters ONLY if
+ * the passed topic name and topic filter do not have an exact string match.
+ *
+ * @return Returns one of the following:
+ * - #MQTTBadParameter, if any of the input parameters is invalid.
+ * - #MQTTSuccess, if the matching operation was performed.
+ */
+MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
+                              const uint16_t topicNameLength,
+                              const char * pTopicFilter,
+                              const uint16_t topicFilterLength,
+                              bool * pIsMatch );
+
+/**
  * @brief Parses the payload of an MQTT SUBACK packet that contains status codes
  * corresponding to topic filter subscription requests from the original
  * subscribe packet.
