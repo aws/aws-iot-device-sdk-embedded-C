@@ -20,37 +20,28 @@
  */
 
 /**
- * @file mqtt_internal.h
- * @brief Internal header of the MQTT library. This header should not be
- * included in typical application code.
+ * @file MQTT_GetSubAckStatusCodes_harness.c
+ * @brief Implements the proof harness for MQTT_GetSubAckStatusCodes function.
  */
-#ifndef MQTT_INTERNAL_H_
-#define MQTT_INTERNAL_H_
 
-/* Include config file before other headers. */
-#include "mqtt_config.h"
+#include "mqtt.h"
+#include "mqtt_cbmc_state.h"
 
-/**
- * @cond DOXYGEN_IGNORE
- * Doxygen should ignore this section.
- *
- * Configure logs for MQTT functions.
- */
-#ifndef LogError
-    #define LogError( message )
-#endif
+void harness()
+{
+    MQTTPacketInfo_t * pSubackPacket;
+    uint8_t ** pPayloadStart;
+    size_t * pPayloadSize;
 
-#ifndef LogWarn
-    #define LogWarn( message )
-#endif
+    pSubackPacket = allocateMqttPacketInfo( NULL );
+    __CPROVER_assume( isValidMqttPacketInfo( pSubackPacket ) );
 
-#ifndef LogInfo
-    #define LogInfo( message )
-#endif
+    /* pPayloadStart and pPayloadSize are output parameters, and
+     * thus, don't carry any assumptions. */
+    pPayloadStart = mallocCanFail( sizeof( uint8_t * ) );
+    pPayloadSize = mallocCanFail( sizeof( size_t ) );
 
-#ifndef LogDebug
-    #define LogDebug( message )
-#endif
-/** @endcond */
-
-#endif /* ifndef MQTT_INTERNAL_H_ */
+    MQTT_GetSubAckStatusCodes( pSubackPacket,
+                               pPayloadStart,
+                               pPayloadSize );
+}

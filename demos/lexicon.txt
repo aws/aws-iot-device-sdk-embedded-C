@@ -51,6 +51,7 @@ iot
 json
 lastcontrolpacketsent
 latestversion
+md
 metadata
 methodlen
 messagetype
@@ -106,6 +107,7 @@ publishtotopic
 pubrec
 pubrel
 qos
+readme
 resending
 resp
 rom
