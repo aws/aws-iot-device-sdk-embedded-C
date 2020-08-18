@@ -36,8 +36,8 @@ void harness()
     pSubackPacket = allocateMqttPacketInfo( NULL );
     __CPROVER_assume( isValidMqttPacketInfo( pSubackPacket ) );
 
-    pPayloadStart = safeMalloc( sizeof( uint8_t * ) );
-    pPayloadSize = safeMalloc( sizeof( uint8_t ) );
+    pPayloadStart = mallocCanFail( sizeof( uint8_t * ) );
+    pPayloadSize = mallocCanFail( sizeof( uint8_t ) );
 
     MQTT_GetSubAckStatusCodes( pSubackPacket,
                                pPayloadStart,
