@@ -1412,10 +1412,8 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
         pSubscriptionList[ 2 ].pTopicFilter = DEMO_PRECIPITATION_TOPIC;
         pSubscriptionList[ 2 ].topicFilterLength = DEMO_PRECIPITATION_TOPIC_LENGTH;
 
-        /* Unsubscribe from the temperature topic filter. */
-        LogInfo( ( "Unsubscribing from the MQTT temperature topic filter: %.*s.",
-                   DEMO_TEMPERATURE_TOPIC_FILTER_LENGTH,
-                   DEMO_TEMPERATURE_TOPIC_FILTER ) );
+        /* Unsubscribe from all topic filters of temperature, humidity and
+         * precipitation data. */
         returnStatus = unsubscribeFromTopicFilters( &mqttContext,
                                                     pSubscriptionList,
                                                     sizeof( pSubscriptionList )
