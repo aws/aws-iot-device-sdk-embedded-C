@@ -4,6 +4,7 @@ bf
 buf
 buflength
 com
+coverity
 dbff
 df
 dfff
