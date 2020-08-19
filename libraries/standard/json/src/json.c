@@ -217,18 +217,17 @@ static bool_ skipUTF8( const char * buf,
 {
     bool_ ret = false;
 
-    if( *start < max )
+    assert( *start < max );
+
+    /* an ASCII byte */
+    if( ( ( ( uint8_t ) buf[ *start ] ) & 0x80U ) == 0U )
     {
-        /* an ASCII byte */
-        if( ( ( ( uint8_t ) buf[ *start ] ) & 0x80U ) == 0U )
-        {
-            *start += 1U;
-            ret = true;
-        }
-        else
-        {
-            ret = skipUTF8MultiByte( buf, start, max );
-        }
+        *start += 1U;
+        ret = true;
+    }
+    else
+    {
+        ret = skipUTF8MultiByte( buf, start, max );
     }
 
     return ret;
@@ -366,7 +365,9 @@ static bool_ skipEscape( const char * buf,
     bool_ ret = false;
     size_t i = *start;
 
-    if( ( ( i + 1U ) < max ) && ( buf[ i ] == '\\' ) )
+    assert( buf[ i ] == '\\' );
+
+    if( ( i + 1U ) < max )
     {
         char c = buf[ i + 1U ];
 
@@ -498,8 +499,8 @@ static bool_ strnEq( const char * a,
  * @param[in] buf  The buffer to parse.
  * @param[in,out] start  The index at which to begin.
  * @param[in] max  The size of the buffer.
- * @param[in] literal  The literal to compare
- * @param[in] length  The length of the literal
+ * @param[in] literal  The type of literal to compare.
+ * @param[in] length  The length of the literal.
  *
  * @return true if the literal was present;
  * false otherwise.

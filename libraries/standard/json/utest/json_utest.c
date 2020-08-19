@@ -105,10 +105,10 @@
 #define CUT_AFTER_OBJECT_OPEN_BRACE                        "{\"foo\":\"abc\",\"bar\":{"
 #define CUT_AFTER_OBJECT_OPEN_BRACE_LENGTH                 ( sizeof( CUT_AFTER_OBJECT_OPEN_BRACE ) - 1 )
 
-#define ILLEGAL_LEADING_ZEROS             \
+#define LEADING_ZEROS_IN_NUMBER           \
     "{\"foo\":\"abc\",\"" FIRST_QUERY_KEY \
     "\":{\"" SECOND_QUERY_KEY "\" : 07}}"
-#define ILLEGAL_LEADING_ZEROS_LENGTH                       ( sizeof( ILLEGAL_LEADING_ZEROS ) - 1 )
+#define LEADING_ZEROS_IN_NUMBER_LENGTH                     ( sizeof( LEADING_ZEROS_IN_NUMBER ) - 1 )
 
 #define TRAILING_COMMA_IN_ARRAY                            "[{\"hello\": [\"foo\",]}]"
 #define TRAILING_COMMA_IN_ARRAY_LENGTH                     ( sizeof( TRAILING_COMMA_IN_ARRAY ) - 1 )
@@ -138,10 +138,10 @@
 #define ILLEGAL_KEY_NOT_STRING_LENGTH    ( sizeof( ILLEGAL_KEY_NOT_STRING ) - 1 )
 
 /* A non-number after the exponent marker is illegal. */
-#define ILLEGAL_EXPONENT                  \
+#define LETTER_AS_EXPONENT                \
     "{\"foo\":\"abc\",\"" FIRST_QUERY_KEY \
     "\":{\"" SECOND_QUERY_KEY "\" : 5Ea}}"
-#define ILLEGAL_EXPONENT_LENGTH    ( sizeof( ILLEGAL_EXPONENT ) - 1 )
+#define LETTER_AS_EXPONENT_LENGTH    ( sizeof( LETTER_AS_EXPONENT ) - 1 )
 
 /* The octet values C0, C1, and F5 to FF are illegal, since C0 and C1
  * would introduce a non-shortest sequence, and F5 or above would
@@ -194,27 +194,32 @@
 #define ILLEGAL_UNICODE_LITERAL_HEX       \
     "{\"foo\":\"abc\",\"" FIRST_QUERY_KEY \
     "\":{\"" SECOND_QUERY_KEY "\" : \"\\u\xD8\x3D\\u\xde\x07\"}}"
-#define ILLEGAL_UNICODE_LITERAL_HEX_LENGTH                 ( sizeof( ILLEGAL_UNICODE_LITERAL_HEX ) - 1 )
+#define ILLEGAL_UNICODE_LITERAL_HEX_LENGTH                  ( sizeof( ILLEGAL_UNICODE_LITERAL_HEX ) - 1 )
 
-#define PREMATURE_UNICODE_LOW_SURROGATE   \
+#define UNICODE_PREMATURE_LOW_SURROGATE   \
     "{\"foo\":\"abc\",\"" FIRST_QUERY_KEY \
     "\":{\"" SECOND_QUERY_KEY "\" : \"\\ude07\\uD83D\"}}"
-#define PREMATURE_UNICODE_LOW_SURROGATE_LENGTH             ( sizeof( PREMATURE_UNICODE_LOW_SURROGATE ) - 1 )
+#define UNICODE_PREMATURE_LOW_SURROGATE_LENGTH              ( sizeof( UNICODE_PREMATURE_LOW_SURROGATE ) - 1 )
 
 #define UNICODE_VALID_HIGH_NO_LOW_SURROGATE \
     "{\"foo\":\"abc\",\"" FIRST_QUERY_KEY   \
-    "\":{\"" SECOND_QUERY_KEY "\" : \"\\uD83D\"}}"
-#define UNICODE_VALID_HIGH_NO_LOW_SURROGATE_LENGTH         ( sizeof( UNICODE_VALID_HIGH_NO_LOW_SURROGATE ) - 1 )
+    "\":{\"" SECOND_QUERY_KEY "\" : \"\\uD83D. Hello there!\"}}"
+#define UNICODE_VALID_HIGH_NO_LOW_SURROGATE_LENGTH          ( sizeof( UNICODE_VALID_HIGH_NO_LOW_SURROGATE ) - 1 )
+
+#define UNICODE_WRONG_ESCAPE_AFTER_HIGH_SURROGATE \
+    "{\"foo\":\"abc\",\"" FIRST_QUERY_KEY         \
+    "\":{\"" SECOND_QUERY_KEY "\" : \"\\uD83D\\Ude07\"}}"
+#define UNICODE_WRONG_ESCAPE_AFTER_HIGH_SURROGATE_LENGTH    ( sizeof( UNICODE_WRONG_ESCAPE_AFTER_HIGH_SURROGATE ) - 1 )
 
 #define UNICODE_VALID_HIGH_INVALID_LOW_SURROGATE \
     "{\"foo\":\"abc\",\"" FIRST_QUERY_KEY        \
     "\":{\"" SECOND_QUERY_KEY "\" : \"\\uD83D\\uEFFF\"}}"
-#define UNICODE_VALID_HIGH_INVALID_LOW_SURROGATE_LENGTH    ( sizeof( UNICODE_VALID_HIGH_INVALID_LOW_SURROGATE ) - 1 )
+#define UNICODE_VALID_HIGH_INVALID_LOW_SURROGATE_LENGTH     ( sizeof( UNICODE_VALID_HIGH_INVALID_LOW_SURROGATE ) - 1 )
 
-#define ILLEGAL_UNICODE_BOTH_SURROGATES_HIGH \
-    "{\"foo\":\"abc\",\"" FIRST_QUERY_KEY    \
+#define UNICODE_BOTH_SURROGATES_HIGH      \
+    "{\"foo\":\"abc\",\"" FIRST_QUERY_KEY \
     "\":{\"" SECOND_QUERY_KEY "\" : \"\\uD83D\\uD83D\"}}"
-#define ILLEGAL_UNICODE_BOTH_SURROGATES_HIGH_LENGTH        ( sizeof( ILLEGAL_UNICODE_BOTH_SURROGATES_HIGH ) - 1 )
+#define UNICODE_BOTH_SURROGATES_HIGH_LENGTH                 ( sizeof( UNICODE_BOTH_SURROGATES_HIGH ) - 1 )
 
 /* For security, \u0000 is disallowed. */
 #define UNICODE_ESCAPE_SEQUENCE_ZERO_CP   \
@@ -245,7 +250,7 @@
     "\":{\"" SECOND_QUERY_KEY "\" : \"\x15\"}}"
 #define UNESCAPED_CONTROL_CHAR_LENGTH    ( sizeof( UNESCAPED_CONTROL_CHAR ) - 1 )
 
-/* Triggers the case in which *start >= max for skipUTF8MultiByte.
+/* Triggers the case in which i >= max for skipUTF8MultiByte.
  * UTF-8 is illegal if the number of bytes in the sequence is
  * less than what was expected from the first byte. */
 #define CUT_AFTER_UTF8_FIRST_BYTE         \
@@ -253,35 +258,41 @@
     "\":{\"" SECOND_QUERY_KEY "\" : \"\xC2"
 #define CUT_AFTER_UTF8_FIRST_BYTE_LENGTH    ( sizeof( CUT_AFTER_UTF8_FIRST_BYTE ) - 1 )
 
-/* Triggers the case in which *start >= max for skipDigits. */
+/* Triggers the case in which end >= max for skipHexEscape. */
+#define UNICODE_STRING_END_AFTER_HIGH_SURROGATE \
+    "{\"foo\":\"abc\",\"" FIRST_QUERY_KEY       \
+    "\":{\"" SECOND_QUERY_KEY "\" : \"\\uD83D\"}}"
+#define UNICODE_STRING_END_AFTER_HIGH_SURROGATE_LENGTH    ( sizeof( UNICODE_STRING_END_AFTER_HIGH_SURROGATE ) - 1 )
+
+/* Triggers the case in which i >= max for skipDigits. */
 #define CUT_AFTER_NUMBER                  \
     "{\"foo\":\"abc\",\"" FIRST_QUERY_KEY \
     "\":{\"" SECOND_QUERY_KEY "\" : 1"
 #define CUT_AFTER_NUMBER_LENGTH    ( sizeof( CUT_AFTER_NUMBER ) - 1 )
 
-/* Triggers the case in which *start >= max for skipDecimals. */
+/* Triggers the case in which i >= max for skipDecimals. */
 #define CUT_AFTER_DECIMAL_POINT           \
     "{\"foo\":\"abc\",\"" FIRST_QUERY_KEY \
     "\":{\"" SECOND_QUERY_KEY "\" : 1."
 #define CUT_AFTER_DECIMAL_POINT_LENGTH           ( sizeof( CUT_AFTER_DECIMAL_POINT ) - 1 )
 
-/* Triggers the case in which *start >= max for skipEscape. */
+/* Triggers the case in which ( i + 1U ) >= max for skipEscape. */
 #define ESCAPE_CHAR_ALONE_NOT_ENCLOSED           "\"\\"
 #define ESCAPE_CHAR_ALONE_NOT_ENCLOSED_LENGTH    ( sizeof( ESCAPE_CHAR_ALONE_NOT_ENCLOSED ) - 1 )
 
-/* Triggers the case in which *start >= max for skipExponent. */
+/* Triggers the case in which i >= max for skipExponent. */
 #define CUT_AFTER_EXPONENT_MARKER                "4e"
 #define CUT_AFTER_EXPONENT_MARKER_LENGTH         ( sizeof( CUT_AFTER_EXPONENT_MARKER ) - 1 )
 
-/* Triggers the case in which *start >= max for skipString. */
+/* Triggers the case in which i >= max for skipString. */
 #define WHITE_SPACE                              " \t"
 #define WHITE_SPACE_LENGTH                       ( sizeof( WHITE_SPACE ) - 1 )
 
-/* Triggers the case in which *start >= max for skipArrayScalars. */
+/* Triggers the case in which i >= max for skipArrayScalars. */
 #define CUT_AFTER_ARRAY_START_MARKER             "{\"hello\": ["
 #define CUT_AFTER_ARRAY_START_MARKER_LENGTH      ( sizeof( CUT_AFTER_ARRAY_START_MARKER ) - 1 )
 
-/* Triggers the cases in which *start >= max for skipObjectScalars and nextKeyValuePair. */
+/* Triggers the cases in which i >= max for skipObjectScalars and nextKeyValuePair. */
 #define CUT_AFTER_OBJECT_START_MARKER            "{\"hello\": {"
 #define CUT_AFTER_OBJECT_START_MARKER_LENGTH     ( sizeof( CUT_AFTER_OBJECT_START_MARKER ) - 1 )
 #define CUT_AFTER_KEY                            "{\"hello\""
@@ -361,16 +372,12 @@ char * allocateMaxDepthObject( void )
 
     while( i < ( JSON_MAX_DEPTH + 1 ) * NESTED_OBJECT_PREFIX_LENGTH )
     {
-        nestedObjectCur = memcpy( nestedObjectCur,
-                                  NESTED_OBJECT_PREFIX,
-                                  NESTED_OBJECT_PREFIX_LENGTH );
+        memcpy( nestedObjectCur, NESTED_OBJECT_PREFIX, NESTED_OBJECT_PREFIX_LENGTH );
         i += NESTED_OBJECT_PREFIX_LENGTH;
         nestedObjectCur += NESTED_OBJECT_PREFIX_LENGTH;
     }
 
-    nestedObjectCur = strncpy( nestedObjectCur,
-                               NESTED_OBJECT_VALUE,
-                               NESTED_OBJECT_VALUE_LENGTH );
+    memcpy( nestedObjectCur, NESTED_OBJECT_VALUE, NESTED_OBJECT_VALUE_LENGTH );
     i += NESTED_OBJECT_VALUE_LENGTH;
     nestedObjectCur += NESTED_OBJECT_VALUE_LENGTH;
 
@@ -469,16 +476,16 @@ void test_JSON_Validate_Illegal_Documents( void )
                                 MISSING_ENCLOSING_ARRAY_MARKER_LENGTH );
     TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
 
-    jsonStatus = JSON_Validate( ILLEGAL_EXPONENT,
-                                ILLEGAL_EXPONENT_LENGTH );
+    jsonStatus = JSON_Validate( LETTER_AS_EXPONENT,
+                                LETTER_AS_EXPONENT_LENGTH );
     TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
 
     jsonStatus = JSON_Validate( CUT_AFTER_DECIMAL_POINT,
                                 CUT_AFTER_DECIMAL_POINT_LENGTH );
     TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
 
-    jsonStatus = JSON_Validate( ILLEGAL_LEADING_ZEROS,
-                                ILLEGAL_LEADING_ZEROS_LENGTH );
+    jsonStatus = JSON_Validate( LEADING_ZEROS_IN_NUMBER,
+                                LEADING_ZEROS_IN_NUMBER_LENGTH );
     TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
 
     jsonStatus = JSON_Validate( ILLEGAL_SCALAR_IN_ARRAY,
@@ -536,12 +543,20 @@ void test_JSON_Validate_Illegal_Documents( void )
                                 UNICODE_VALID_HIGH_NO_LOW_SURROGATE_LENGTH );
     TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
 
-    jsonStatus = JSON_Validate( PREMATURE_UNICODE_LOW_SURROGATE,
-                                PREMATURE_UNICODE_LOW_SURROGATE_LENGTH );
+    jsonStatus = JSON_Validate( UNICODE_WRONG_ESCAPE_AFTER_HIGH_SURROGATE,
+                                UNICODE_WRONG_ESCAPE_AFTER_HIGH_SURROGATE_LENGTH );
     TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
 
-    jsonStatus = JSON_Validate( ILLEGAL_UNICODE_BOTH_SURROGATES_HIGH,
-                                ILLEGAL_UNICODE_BOTH_SURROGATES_HIGH_LENGTH );
+    jsonStatus = JSON_Validate( UNICODE_STRING_END_AFTER_HIGH_SURROGATE,
+                                UNICODE_STRING_END_AFTER_HIGH_SURROGATE_LENGTH );
+    TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
+
+    jsonStatus = JSON_Validate( UNICODE_PREMATURE_LOW_SURROGATE,
+                                UNICODE_PREMATURE_LOW_SURROGATE_LENGTH );
+    TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
+
+    jsonStatus = JSON_Validate( UNICODE_BOTH_SURROGATES_HIGH,
+                                UNICODE_BOTH_SURROGATES_HIGH_LENGTH );
     TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
 
     jsonStatus = JSON_Validate( UNICODE_ESCAPE_SEQUENCE_ZERO_CP,
@@ -830,8 +845,8 @@ void test_JSON_Search_Illegal_Documents( void )
                               &outValueLength );
     TEST_ASSERT_EQUAL( JSONSuccess, jsonStatus );
 
-    jsonStatus = JSON_Search( ILLEGAL_EXPONENT,
-                              ILLEGAL_EXPONENT_LENGTH,
+    jsonStatus = JSON_Search( LETTER_AS_EXPONENT,
+                              LETTER_AS_EXPONENT_LENGTH,
                               COMPLETE_QUERY_KEY,
                               COMPLETE_QUERY_KEY_LENGTH,
                               JSON_QUERY_SEPARATOR[ 0 ],
@@ -848,8 +863,8 @@ void test_JSON_Search_Illegal_Documents( void )
                               &outValueLength );
     TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
 
-    jsonStatus = JSON_Search( ILLEGAL_LEADING_ZEROS,
-                              ILLEGAL_LEADING_ZEROS_LENGTH,
+    jsonStatus = JSON_Search( LEADING_ZEROS_IN_NUMBER,
+                              LEADING_ZEROS_IN_NUMBER_LENGTH,
                               COMPLETE_QUERY_KEY,
                               COMPLETE_QUERY_KEY_LENGTH,
                               JSON_QUERY_SEPARATOR[ 0 ],
@@ -992,8 +1007,8 @@ void test_JSON_Search_Illegal_Documents( void )
                               &outValueLength );
     TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
 
-    jsonStatus = JSON_Search( PREMATURE_UNICODE_LOW_SURROGATE,
-                              PREMATURE_UNICODE_LOW_SURROGATE_LENGTH,
+    jsonStatus = JSON_Search( UNICODE_WRONG_ESCAPE_AFTER_HIGH_SURROGATE,
+                              UNICODE_WRONG_ESCAPE_AFTER_HIGH_SURROGATE_LENGTH,
                               COMPLETE_QUERY_KEY,
                               COMPLETE_QUERY_KEY_LENGTH,
                               JSON_QUERY_SEPARATOR[ 0 ],
@@ -1001,8 +1016,26 @@ void test_JSON_Search_Illegal_Documents( void )
                               &outValueLength );
     TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
 
-    jsonStatus = JSON_Search( ILLEGAL_UNICODE_BOTH_SURROGATES_HIGH,
-                              ILLEGAL_UNICODE_BOTH_SURROGATES_HIGH_LENGTH,
+    jsonStatus = JSON_Search( UNICODE_STRING_END_AFTER_HIGH_SURROGATE,
+                              UNICODE_STRING_END_AFTER_HIGH_SURROGATE_LENGTH,
+                              COMPLETE_QUERY_KEY,
+                              COMPLETE_QUERY_KEY_LENGTH,
+                              JSON_QUERY_SEPARATOR[ 0 ],
+                              &outValue,
+                              &outValueLength );
+    TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
+
+    jsonStatus = JSON_Search( UNICODE_PREMATURE_LOW_SURROGATE,
+                              UNICODE_PREMATURE_LOW_SURROGATE_LENGTH,
+                              COMPLETE_QUERY_KEY,
+                              COMPLETE_QUERY_KEY_LENGTH,
+                              JSON_QUERY_SEPARATOR[ 0 ],
+                              &outValue,
+                              &outValueLength );
+    TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
+
+    jsonStatus = JSON_Search( UNICODE_BOTH_SURROGATES_HIGH,
+                              UNICODE_BOTH_SURROGATES_HIGH_LENGTH,
                               COMPLETE_QUERY_KEY,
                               COMPLETE_QUERY_KEY_LENGTH,
                               JSON_QUERY_SEPARATOR[ 0 ],
@@ -1102,8 +1135,7 @@ void test_JSON_Search_Partial_Documents( void )
 void test_JSON_Max_Depth( void )
 {
     JSONStatus_t jsonStatus;
-    char * maxNestedObject, * maxNestedArray, * outValue;
-    size_t outValueLength;
+    char * maxNestedObject, * maxNestedArray;
 
     maxNestedArray = allocateMaxDepthArray();
     jsonStatus = JSON_Validate( maxNestedArray,
