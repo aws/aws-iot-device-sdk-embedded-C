@@ -25,6 +25,7 @@
  */
 
 #include "mqtt.h"
+#include "mqtt_cbmc_state.h"
 
 void harness()
 {
@@ -34,10 +35,10 @@ void harness()
     uint16_t filterLength;
     bool * pMatchResult;
 
-    pTopicName = mallocCanFail( sizeof( char ) );
-    __CPROVER_assume( nameLength <= MAX_TOPIC_NAME_FILTER_LENGTH );
-    pTopicFilter = mallocCanFail( sizeof( char ) );
-    __CPROVER_assume( filterLength <= MAX_TOPIC_NAME_FILTER_LENGTH );
+    __CPROVER_assume( nameLength < MAX_TOPIC_NAME_FILTER_LENGTH );
+    pTopicName = mallocCanFail( ( sizeof( char ) * nameLength ) );
+    __CPROVER_assume( filterLength < MAX_TOPIC_NAME_FILTER_LENGTH );
+    pTopicFilter = mallocCanFail( ( sizeof( char ) * filterLength ) );
     pMatchResult = mallocCanFail( sizeof( bool ) );
 
     MQTT_MatchTopic( pTopicName,
