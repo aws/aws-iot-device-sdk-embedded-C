@@ -356,7 +356,7 @@ static bool matchEndWildcardsSpecialCases( const char * pTopicFilter,
  * @param[in] topicFilterLength Length of the topic filter.
  * @param[in,out] pNameIndex Current index in topic name being examined. It is
  * advanced by one level for `+` wildcards.
- * @param[in, out] filterIndex Current index in the topic filter being examined.
+ * @param[in, out] pFilterIndex Current index in the topic filter being examined.
  * It is advanced to position of '/' level separator for '+' wildcard.
  * @param[out] pMatch Whether the topic filter and topic name match.
  *
@@ -368,7 +368,7 @@ static bool matchWildcards( const char * pTopicName,
                             const char * pTopicFilter,
                             uint16_t topicFilterLength,
                             uint16_t * pNameIndex,
-                            uint16_t * filterIndex,
+                            uint16_t * pFilterIndex,
                             bool * pMatch );
 
 /**
@@ -401,7 +401,8 @@ static bool matchEndWildcardsSpecialCases( const char * pTopicFilter,
      * "/#". This check handles the case to match filter "sport/#" with topic
      * "sport". The reason is that the '#' wildcard represents the parent and
      * any number of child levels in the topic name.*/
-    if( ( ( filterIndex + 3U ) == topicFilterLength ) &&
+    if( ( topicFilterLength >= 3U ) &&
+        ( filterIndex == ( topicFilterLength - 3U ) ) &&
         ( pTopicFilter[ filterIndex + 1U ] == '/' ) &&
         ( pTopicFilter[ filterIndex + 2U ] == '#' ) )
 
