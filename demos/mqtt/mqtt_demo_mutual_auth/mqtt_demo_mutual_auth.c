@@ -26,7 +26,7 @@
  *
  * A mutually authenticated TLS connection is used to connect to the AWS IoT
  * MQTT message broker in this example. Define ROOT_CA_CERT_PATH for server
- * authentication in client. Client authentication can be achieved in either
+ * authentication in the client. Client authentication can be achieved in either
  * of the 2 different ways mentioned below.
  * 1. Define CLIENT_CERT_PATH and CLIENT_PRIVATE_KEY_PATH in demo_config.h
  *    for client authentication to be done based on the client certificate
@@ -34,10 +34,10 @@
  *    can be found in the link below.
  *    https://docs.aws.amazon.com/iot/latest/developerguide/client-authentication.html
  * 2. Define CLIENT_USERNAME and CLIENT_PASSWORD in demo_config.h for client
- *    authentication to be done using username and password. More details about
+ *    authentication to be done using a username and password. More details about
  *    this client authentication can be found in the link below.
  *    https://docs.aws.amazon.com/iot/latest/developerguide/enhanced-custom-authentication.html
- *    An authorizer setup needs to be done as mentioned in the above link to use
+ *    An authorizer setup needs to be done, as mentioned in the above link, to use
  *    username/password based client authentication.
  *
  * The example is single threaded and uses statically allocated memory;
@@ -87,7 +87,7 @@
 |    #error "Please define a unique client identifier, CLIENT_IDENTIFIER, in demo_config.h."
 #endif
 
-/* AWS IoT message broker would require either a set of client certificate/private key
+/* The AWS IoT message broker requires either a set of client certificate/private key
  * or username/password to authenticate the client. */
 #ifndef CLIENT_USERNAME
     #ifndef CLIENT_CERT_PATH
@@ -98,7 +98,7 @@
     #endif
 #else
 
-/* If username is defined, a client password also would need to be defined for
+/* If a username is defined, a client password also would need to be defined for
  * client authentication. */
     #ifndef CLIENT_PASSWORD
         #error "Please define client password(CLIENT_PASSWORD) in demo_config.h for client authentication based on username/password."
@@ -161,7 +161,7 @@
 
 /**
  * @brief This is the ALPN (Application-Layer Protocol Negotiation) string
- * required by AWS IoT for password-based authentication, using TCP port 443.
+ * required by AWS IoT for password-based authentication using TCP port 443.
  */
 #define AWS_IOT_PASSWORD_ALPN               "\x04mqtt"
 
@@ -260,7 +260,7 @@
 #ifdef CLIENT_USERNAME
 
 /**
- * @brief Append username with the metrics string if #CLIENT_USERNAME is defined.
+ * @brief Append the username with the metrics string if #CLIENT_USERNAME is defined.
  *
  * This is to support both metrics reporting and username/password based client
  * authentication by AWS IoT.
@@ -488,7 +488,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
 
     /* If #CLIENT_USERNAME is defined, username/password is used for authenticating
-     * client. */
+     * the client. */
     #ifndef CLIENT_USERNAME
         opensslCredentials.pClientCertPath = CLIENT_CERT_PATH;
         opensslCredentials.pPrivateKeyPath = CLIENT_PRIVATE_KEY_PATH;
@@ -504,7 +504,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     if( AWS_MQTT_PORT == 443 )
     {
         /* Pass the ALPN protocol name depending on the port being used.
-         * Please see more details about the ALPN protocol for AWS IoT MQTT
+         * Please see more details about the ALPN protocol for the AWS IoT MQTT
          * endpoint in the link below.
          * https://aws.amazon.com/blogs/iot/mqtt-with-tls-client-authentication-on-port-443-why-it-is-useful-and-how-it-works/
          *
@@ -869,11 +869,11 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
          * PINGREQ Packet. */
         connectInfo.keepAliveSeconds = MQTT_KEEP_ALIVE_INTERVAL_SECONDS;
 
-        /* Username and password for authentication.
+        /* Use the username and password for authentication, if they are defined.
          * Refer to the AWS IoT documentation below for details regarding client
-         * authentication with username and password.
+         * authentication with a username and password.
          * https://docs.aws.amazon.com/iot/latest/developerguide/enhanced-custom-authentication.html
-         * An authorizer setup needs to be done as mentioned in the above link to use
+         * An authorizer setup needs to be done, as mentioned in the above link, to use
          * username/password based client authentication.
          *
          * The username field is populated with voluntary metrics to AWS IoT.

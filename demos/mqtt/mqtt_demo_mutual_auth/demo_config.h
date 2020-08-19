@@ -111,12 +111,12 @@
  */
 
 /**
- * @brief The username string, required to authenticate to your MQTT broker.
+ * @brief The username string required for authentication to your MQTT broker.
  *
  * Refer to the AWS IoT documentation below for details regarding client
- * authentication with username and password.
+ * authentication with a username and password.
  * https://docs.aws.amazon.com/iot/latest/developerguide/enhanced-custom-authentication.html
- * An authorizer setup needs to be done as mentioned in the above link to use
+ * As mentioned in the link above, an authorizer setup needs to be done to use
  * username/password based client authentication.
  *
  * @note AWS IoT message broker requires either a set of client certificate/private key
@@ -127,12 +127,12 @@
  */
 
 /**
- * @brief The password string, required to authenticate to your MQTT broker.
+ * @brief The password string required for authentication to your MQTT broker.
  *
  * Refer to the AWS IoT documentation below for details regarding client
- * authentication with username and password.
+ * authentication with a username and password.
  * https://docs.aws.amazon.com/iot/latest/developerguide/enhanced-custom-authentication.html
- * An authorizer setup needs to be done as mentioned in the above link to use
+ * As mentioned in the link above, an authorizer setup needs to be done to use
  * username/password based client authentication.
  *
  * @note AWS IoT message broker requires either a set of client certificate/private key
