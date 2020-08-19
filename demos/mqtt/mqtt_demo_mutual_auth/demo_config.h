@@ -111,7 +111,8 @@
  */
 
 /**
- * @brief The username string required for authentication to your MQTT broker.
+ * @brief The username value for authenticating client to MQTT broker when
+ * username/password based client authentication is used.
  *
  * Refer to the AWS IoT documentation below for details regarding client
  * authentication with a username and password.
@@ -127,7 +128,8 @@
  */
 
 /**
- * @brief The password string required for authentication to your MQTT broker.
+ * @brief The password value for authenticating client to MQTT broker when
+ * username/password based client authentication is used.
  *
  * Refer to the AWS IoT documentation below for details regarding client
  * authentication with a username and password.

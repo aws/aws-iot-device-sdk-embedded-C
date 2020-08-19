@@ -107,7 +107,7 @@
 /* AWS IoT MQTT broker port needs to be 443 for client authentication based on
  * username/password. */
     #if AWS_MQTT_PORT != 443
-        #error "Please define broker port(AWS_MQTT_PORT) as 443 in demo_config.h for client authentication based on username/password."
+        #error "Broker port, AWS_MQTT_PORT, should be defined as 443 in demo_config.h for client authentication based on username/password."
     #endif
 #endif /* ifndef CLIENT_USERNAME */
 
