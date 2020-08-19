@@ -83,3 +83,4 @@ PROJECT_SOURCES += $(SRCDIR)/libraries/standard/mqtt/src/mqtt_state.c
 CHECKFLAGS += --sat-solver-invocation kissat
 
 include ../Makefile.common
+
