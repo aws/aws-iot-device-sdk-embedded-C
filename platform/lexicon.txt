@@ -62,6 +62,7 @@ sendtimeout
 sendtimeoutms
 sleeptimems
 sni
+socketstatus
 src
 ssl
 sublicense
