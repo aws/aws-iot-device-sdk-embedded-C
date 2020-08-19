@@ -14,18 +14,14 @@ list(APPEND real_source_files
         )
 # list the directories the module under test includes
 list(APPEND real_include_directories
-            .
             ${JSON_INCLUDE_PUBLIC_DIRS}
-            ${LOGGING_INCLUDE_DIRS}
         )
 
 # =====================  Create UnitTest Code here (edit)  =====================
 
 # list the directories your test needs to include
 list(APPEND test_include_directories
-            .
             ${JSON_INCLUDE_PUBLIC_DIRS}
-            ${LOGGING_INCLUDE_DIRS}
         )
 
 # =============================  (end edit)  ===================================
