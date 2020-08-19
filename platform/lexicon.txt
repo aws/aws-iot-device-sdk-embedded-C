@@ -24,6 +24,7 @@ hostnamelength
 https
 ifndef
 implemenation
+ip
 inc
 iot
 logpath
@@ -37,6 +38,7 @@ networkcontext
 noninfringement
 openssl
 openssl_invalid_parameter
+paddrinfo
 param
 pbuffer
 pclientcertpath
