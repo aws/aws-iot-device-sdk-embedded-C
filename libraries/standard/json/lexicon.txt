@@ -1,6 +1,7 @@
 abc
 ascii
 bf
+bmp
 buf
 buflength
 com
@@ -10,6 +11,7 @@ df
 dfff
 ef
 endif
+enum
 fb
 fc
 fd
@@ -27,6 +29,7 @@ jsonsuccess
 keylength
 misra
 multibyte
+nextkeyvaluepair
 noninfringement
 nul
 outvalue
@@ -37,6 +40,7 @@ querykey
 querykeylength
 requirelowsurrogate
 sizeof
+skip
 src
 sublicense
 unescaped
