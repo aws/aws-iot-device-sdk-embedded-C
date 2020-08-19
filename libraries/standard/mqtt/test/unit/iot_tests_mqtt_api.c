@@ -453,12 +453,13 @@ static size_t _receivePingresp( IotNetworkConnection_t pReceiveContext,
                                 size_t bytesRequested )
 {
     size_t bytesReceived = 0;
-    static size_t receiveIndex = 0;
-    const uint8_t pPingresp[ 2 ] = { MQTT_PACKET_TYPE_PINGRESP, 0x00 };
+    // static size_t receiveIndex = 0;
+    // const uint8_t pPingresp[ 2 ] = { MQTT_PACKET_TYPE_PINGRESP, 0x00 };
 
     /* Silence warnings about unused parameters. */
     ( void ) pReceiveContext;
-
+    (void ) pBuffer;
+    (void ) bytesRequested;
     /* Receive of PINGRESP should only ever request 1 byte. */
     // if( bytesRequested == 1 )
     // {
