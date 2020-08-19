@@ -51,8 +51,6 @@
 /**
  * @brief Details of the MQTT broker to connect to.
  *
- * This is the Thing's Rest API Endpoint for AWS IoT.
- *
  * @note Your AWS IoT Core endpoint can be found in the AWS IoT console under
  * Settings/Custom Endpoint, or using the describe-endpoint API.
  *
@@ -67,7 +65,7 @@
  * @note Port 443 requires use of the ALPN TLS extension with the ALPN protocol
  * name. When using port 8883, ALPN is not required.
  */
-#define AWS_MQTT_PORT        ( 8883 )
+#define AWS_MQTT_PORT    ( 8883 )
 
 /**
  * @brief Path of the file containing the server's root CA certificate.
@@ -84,7 +82,9 @@
  * @note This path is relative from the demo binary created. Update
  * ROOT_CA_CERT_PATH to the absolute path if this demo is executed from elsewhere.
  */
-#define ROOT_CA_CERT_PATH    "certificates/AmazonRootCA1.crt"
+#ifndef ROOT_CA_CERT_PATH
+    #define ROOT_CA_CERT_PATH    "certificates/AmazonRootCA1.crt"
+#endif
 
 /**
  * @brief Path of the file containing the client certificate.

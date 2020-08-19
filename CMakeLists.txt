@@ -33,6 +33,9 @@ option( BUILD_TESTS
 option( BUILD_CLONE_SUBMODULES
         "Set this to ON to automatically clone any required Git submodules. When OFF, submodules must be manually cloned."
         ON )
+option( DOWNLOAD_CERTS
+        "Set this to ON to automatically download certificates needed to run the demo. When OFF, certificates must be manually downloaded." 
+        ON )
 
 # Unity test framework does not export the correct symbols for DLLs.
 set( ALLOW_SHARED_LIBRARIES ON )
@@ -48,6 +51,20 @@ set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin )
 set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
 set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
 
+# Set prefix to PWD if any path flags are relative.
+# PWD is set to the path where you run the cmake command.
+if(DEFINED ENV{PWD})
+    if(ROOT_CA_CERT_PATH AND NOT IS_ABSOLUTE ${ROOT_CA_CERT_PATH})
+        set(ROOT_CA_CERT_PATH "$ENV{PWD}/${ROOT_CA_CERT_PATH}")
+    endif()
+    if(CLIENT_CERT_PATH AND NOT IS_ABSOLUTE ${CLIENT_CERT_PATH})
+        set(CLIENT_CERT_PATH "$ENV{PWD}/${CLIENT_CERT_PATH}")
+    endif()
+    if(CLIENT_PRIVATE_KEY_PATH AND NOT IS_ABSOLUTE ${CLIENT_PRIVATE_KEY_PATH})
+        set(CLIENT_PRIVATE_KEY_PATH "$ENV{PWD}/${CLIENT_PRIVATE_KEY_PATH}")
+    endif()
+endif()
+
 # Add libraries.
 add_subdirectory( libraries )
 
@@ -56,3 +73,5 @@ add_subdirectory( platform )
 
 # Build the demos.
 add_subdirectory( demos )
+
+

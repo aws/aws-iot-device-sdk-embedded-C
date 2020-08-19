@@ -35,11 +35,28 @@ function(check_aws_credentials demo_name)
     endif()
 endfunction()
 
+if(DOWNLOAD_CERTS)
+    # Download the Amazon Root CA certificate.
+    message( "Downloading the Amazon Root CA certificate..." )
+    file(MAKE_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/certificates)
+    execute_process(
+        COMMAND curl --url https://www.amazontrust.com/repository/AmazonRootCA1.pem
+        -o ${CMAKE_CURRENT_LIST_DIR}/certificates/AmazonRootCA1.crt
+    )
+endif()
+
+# Copy the certificates and client keys to the build directory.
+file(COPY "${CMAKE_CURRENT_LIST_DIR}/certificates"
+     DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+if(BUILD_TESTS)
+    file(COPY "${CMAKE_CURRENT_LIST_DIR}/certificates"
+         DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/tests")
+endif()
+
 # Include each subdirectory that has a CMakeLists.txt file in it
 file(GLOB demo_dirs "${DEMOS_DIR}/*/*")
 foreach(demo_dir IN LISTS demo_dirs)
     if(IS_DIRECTORY "${demo_dir}" AND EXISTS "${demo_dir}/CMakeLists.txt")
-        get_filename_component( DEMO_EXE_NAME ${demo_dir} NAME )
         add_subdirectory(${demo_dir})
     endif()
 endforeach()

@@ -83,6 +83,11 @@
 #endif
 
 /**
+ * @brief Length of MQTT server host name.
+ */
+#define BROKER_ENDPOINT_LENGTH              ( ( uint16_t ) ( sizeof( BROKER_ENDPOINT ) - 1 ) )
+
+/**
  * @brief Length of client identifier.
  */
 #define CLIENT_IDENTIFIER_LENGTH            ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) )
