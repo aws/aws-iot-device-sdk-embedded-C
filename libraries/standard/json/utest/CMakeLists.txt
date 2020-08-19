@@ -1,6 +1,5 @@
 include("../jsonFilePaths.cmake")
 project ("json unit test")
-cmake_minimum_required (VERSION 3.13)
 
 # ====================  Define your project name (edit) ========================
 set(project_name "json")
