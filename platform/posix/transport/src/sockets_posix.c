@@ -200,7 +200,8 @@ static SocketStatus_t connectToAddress( struct sockaddr * pAddrInfo,
                             sizeof( resolvedIpAddr ) );
     }
 
-    LogDebug( ( "Attempting to connect to server: Host=%.*s, IP address=%s.",
+    LogDebug( ( "Attempting to connect to server using a resolved IP address:"
+                " Host=%.*s, IP address=%s.",
                 ( int32_t ) hostNameLength,
                 pHostName,
                 resolvedIpAddr ) );
