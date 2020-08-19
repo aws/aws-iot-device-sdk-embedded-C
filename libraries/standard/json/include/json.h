@@ -24,7 +24,7 @@
 
 #include <stddef.h>
 
-typedef enum JSONStatus
+typedef enum
 {
     JSONPartial = 0,
     JSONSuccess,
@@ -70,8 +70,8 @@ JSONStatus_t JSON_Validate( const char * buf,
  * may descend through nested objects when the queryKey contains matching
  * key strings joined by a separator.
  *
- * For example, if buf contains '{"foo":"abc","bar":{"foo","xyz"}}', then a 
- * search for 'foo' would output 'abc', 'bar' would output '{"foo","xyz"}',
+ * For example, if buf contains '{"foo":"abc","bar":{"foo":"xyz"}}', then a
+ * search for 'foo' would output 'abc', 'bar' would output '{"foo":"xyz"}',
  * and a search for 'bar.foo' would output 'xyz' (given separator is
  * specified as '.').
  *
