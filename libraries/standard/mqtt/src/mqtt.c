@@ -322,7 +322,7 @@ static MQTTStatus_t validatePublishParams( const MQTTContext_t * pContext,
  * wildcard character.
  *
  * When the topic name has been consumed but there are remaining characters to
- * to match in topic filter, this function handles the following 2 cases:
+ * to match in the topic filter, this function handles the following 2 cases:
  * - When the topic filter ends with "/+" or "/#" characters, but the topic
  * name only ends with '/'.
  * - When the topic filter ends with "/#" characters, but the topic name
@@ -354,7 +354,7 @@ static bool matchEndWildcardsSpecialCases( const char * pTopicFilter,
  * @param[in] topicNameLength Length of the topic name.
  * @param[in] pTopicFilter The topic filter to match.
  * @param[in] topicFilterLength Length of the topic filter.
- * @param[in,out] pNameIndex Current index in topic name being examined. It is
+ * @param[in,out] pNameIndex Current index in the topic name being examined. It is
  * advanced by one level for `+` wildcards.
  * @param[in, out] pFilterIndex Current index in the topic filter being examined.
  * It is advanced to position of '/' level separator for '+' wildcard.
