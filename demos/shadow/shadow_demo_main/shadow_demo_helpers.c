@@ -21,6 +21,7 @@
 
 /**
  * @file shadow_demo_helpers.c
+ * 
  * @brief This file provides helper functions used by shadow demo application to
  * do MQTT operation based on mutually authenticated TLS connection.
  *
@@ -35,14 +36,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* shadow includes */
+/* Shadow includes */
 #include "shadow_demo_helpers.h"
 
 /* POSIX includes. */
 #include <unistd.h>
-
-/* Include Demo Config as the first non-system header. */
-#include "demo_config.h"
 
 /* OpenSSL sockets transport implementation. */
 #include "openssl_posix.h"
@@ -55,7 +53,7 @@
 
 
 /**
- * These configuration settings are required to run the mutual auth demo.
+ * These configuration settings are required to run the shadow demo.
  * Throw compilation error if the below configs are not defined.
  */
 #ifndef AWS_IOT_ENDPOINT
@@ -147,6 +145,16 @@
  * @brief Transport timeout in milliseconds for transport send and receive.
  */
 #define TRANSPORT_SEND_RECV_TIMEOUT_MS      ( 100 )
+
+/**
+ * @brief The MQTT metrics string expected by AWS IoT.
+ */
+#define METRICS_STRING                      "?SDK=" SDK_NAME "&Version=" SDK_VERSION "&Platform=" HARDWARE_PLATFORM_NAME
+
+/**
+ * @brief The length of the MQTT metrics string expected by AWS IoT.
+ */
+#define METRICS_STRING_LENGTH               ( ( uint16_t ) ( sizeof( METRICS_STRING ) - 1 ) )
 
 /*-----------------------------------------------------------*/
 
@@ -411,7 +419,7 @@ static void cleanupOutgoingPublishWithPacketID( uint16_t packetId )
 
 /*-----------------------------------------------------------*/
 
-void handleOtherIncomingPacket( MQTTPacketInfo_t * pPacketInfo,
+void HandleOtherIncomingPacket( MQTTPacketInfo_t * pPacketInfo,
                                 uint16_t packetIdentifier )
 {
     /* Handle other packets. */
@@ -498,7 +506,7 @@ static int handlePublishResend( MQTTContext_t * pMqttContext )
 
 /*-----------------------------------------------------------*/
 
-int establishMqttSession( MQTTEventCallback_t eventCallback )
+int EstablishMqttSession( MQTTEventCallback_t eventCallback )
 {
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus;
@@ -577,8 +585,8 @@ int establishMqttSession( MQTTEventCallback_t eventCallback )
             connectInfo.keepAliveSeconds = MQTT_KEEP_ALIVE_INTERVAL_SECONDS;
 
             /* Username and password for authentication. Not used in this demo. */
-            connectInfo.pUserName = NULL;
-            connectInfo.userNameLength = 0U;
+            connectInfo.pUserName = METRICS_STRING;
+            connectInfo.userNameLength = METRICS_STRING_LENGTH;
             connectInfo.pPassword = NULL;
             connectInfo.passwordLength = 0U;
 
@@ -637,7 +645,7 @@ int establishMqttSession( MQTTEventCallback_t eventCallback )
 
 /*-----------------------------------------------------------*/
 
-int32_t disconnectMqttSession( void )
+int32_t DisconnectMqttSession( void )
 {
     MQTTStatus_t mqttStatus = MQTTSuccess;
     int returnStatus = EXIT_SUCCESS;
@@ -668,8 +676,8 @@ int32_t disconnectMqttSession( void )
 
 /*-----------------------------------------------------------*/
 
-int32_t subscribeToTopic( const char * pTopicBuffer,
-                          uint16_t topicLength )
+int32_t SubscribeToTopic( const char * pTopicFilter,
+                          uint16_t topicFilterLength )
 {
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus;
@@ -677,16 +685,16 @@ int32_t subscribeToTopic( const char * pTopicBuffer,
     MQTTSubscribeInfo_t pSubscriptionList[ 1 ];
 
     assert( pMqttContext != NULL );
-    assert( pTopicBuffer != NULL );
-    assert( topicLength > 0 );
+    assert( pTopicFilter != NULL );
+    assert( topicFilterLength > 0 );
 
     /* Start with everything at 0. */
     ( void ) memset( ( void * ) pSubscriptionList, 0x00, sizeof( pSubscriptionList ) );
 
     /* This example subscribes to only one topic and uses QOS1. */
     pSubscriptionList[ 0 ].qos = MQTTQoS1;
-    pSubscriptionList[ 0 ].pTopicFilter = pTopicBuffer;
-    pSubscriptionList[ 0 ].topicFilterLength = topicLength;
+    pSubscriptionList[ 0 ].pTopicFilter = pTopicFilter;
+    pSubscriptionList[ 0 ].topicFilterLength = topicFilterLength;
 
     /* Generate packet identifier for the SUBSCRIBE packet. */
     globalSubscribePacketIdentifier = MQTT_GetPacketId( pMqttContext );
@@ -706,8 +714,8 @@ int32_t subscribeToTopic( const char * pTopicBuffer,
     else
     {
         LogInfo( ( "SUBSCRIBE topic %.*s to broker.\n\n",
-                   topicLength,
-                   pTopicBuffer) );
+                   topicFilterLength,
+                   pTopicFilter) );
 
         /* Process incoming packet from the broker. Acknowledgment for subscription
          * ( SUBACK ) will be received here. However after sending the subscribe, the
@@ -731,8 +739,8 @@ int32_t subscribeToTopic( const char * pTopicBuffer,
 
 /*-----------------------------------------------------------*/
 
-int32_t unsubscribeFromTopic( const char * pTopicBuffer,
-                                    uint16_t topicLength )
+int32_t UnsubscribeFromTopic( const char * pTopicFilter,
+                              uint16_t topicFilterLength )
 {
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus;
@@ -740,16 +748,16 @@ int32_t unsubscribeFromTopic( const char * pTopicBuffer,
     MQTTSubscribeInfo_t pSubscriptionList[ 1 ];
 
     assert( pMqttContext != NULL );
-    assert( pTopicBuffer != NULL );
-    assert( topicLength > 0 );
+    assert( pTopicFilter != NULL );
+    assert( topicFilterLength > 0 );
 
     /* Start with everything at 0. */
     ( void ) memset( ( void * ) pSubscriptionList, 0x00, sizeof( pSubscriptionList ) );
 
     /* This example subscribes to only one topic and uses QOS1. */
     pSubscriptionList[ 0 ].qos = MQTTQoS1;
-    pSubscriptionList[ 0 ].pTopicFilter = pTopicBuffer;
-    pSubscriptionList[ 0 ].topicFilterLength = topicLength;
+    pSubscriptionList[ 0 ].pTopicFilter = pTopicFilter;
+    pSubscriptionList[ 0 ].topicFilterLength = topicFilterLength;
 
     /* Generate packet identifier for the UNSUBSCRIBE packet. */
     globalUnsubscribePacketIdentifier = MQTT_GetPacketId( pMqttContext );
@@ -769,8 +777,8 @@ int32_t unsubscribeFromTopic( const char * pTopicBuffer,
     else
     {
         LogInfo( ( "UNSUBSCRIBE sent topic %.*s to broker.\n\n",
-                   topicLength,
-                   pTopicBuffer) );
+                   topicFilterLength,
+                   pTopicFilter) );
 
         /* Process incoming packet from the broker. Acknowledgment for subscription
          * ( SUBACK ) will be received here. However after sending the subscribe, the
@@ -794,10 +802,10 @@ int32_t unsubscribeFromTopic( const char * pTopicBuffer,
 
 /*-----------------------------------------------------------*/
 
-int32_t publishToTopic( const char * pTopicBuffer,
-                              int32_t topicLength,
-                              const char * pPayload,
-                              size_t payloadLength )
+int32_t PublishToTopic( const char * pTopicFilter,
+                        int32_t topicFilterLength,
+                        const char * pPayload,
+                        size_t payloadLength )
 {
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus = MQTTSuccess;
@@ -806,8 +814,8 @@ int32_t publishToTopic( const char * pTopicBuffer,
     MQTTContext_t * pMqttContext = &mqttContext;
 
     assert( pMqttContext != NULL );
-    assert( pTopicBuffer != NULL );
-    assert( topicLength > 0 );
+    assert( pTopicFilter != NULL );
+    assert( topicFilterLength > 0 );
 
     /* Get the next free index for the outgoing publish. All QoS1 outgoing
      * publishes are stored until a PUBACK is received. These messages are
@@ -824,8 +832,8 @@ int32_t publishToTopic( const char * pTopicBuffer,
         LogInfo( ( "the published payload:%s \r\n ", pPayload ) );
         /* This example publishes to only one topic and uses QOS1. */
         outgoingPublishPackets[ publishIndex ].pubInfo.qos = MQTTQoS1;
-        outgoingPublishPackets[ publishIndex ].pubInfo.pTopicName = pTopicBuffer;
-        outgoingPublishPackets[ publishIndex ].pubInfo.topicNameLength = topicLength;
+        outgoingPublishPackets[ publishIndex ].pubInfo.pTopicName = pTopicFilter;
+        outgoingPublishPackets[ publishIndex ].pubInfo.topicNameLength = topicFilterLength;
         outgoingPublishPackets[ publishIndex ].pubInfo.pPayload = pPayload;
         outgoingPublishPackets[ publishIndex ].pubInfo.payloadLength = payloadLength;
 
@@ -847,8 +855,8 @@ int32_t publishToTopic( const char * pTopicBuffer,
         else
         {
             LogInfo( ( "PUBLISH sent for topic %.*s to broker with packet ID %u.\n\n",
-                       topicLength,
-                       pTopicBuffer,
+                       topicFilterLength,
+                       pTopicFilter,
                        outgoingPublishPackets[ publishIndex ].packetId ) );
 
             /* Calling MQTT_ProcessLoop to process incoming publish echo, since

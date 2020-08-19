@@ -1,5 +1,5 @@
-#ifndef SHADOW_CONFIG_H__
-#define SHADOW_CONFIG_H__
+#ifndef SHADOW_CONFIG_H_
+#define SHADOW_CONFIG_H_
 
 /**************************************************/
 /******* DO NOT CHANGE the following order ********/
@@ -15,11 +15,11 @@
 #include "logging_levels.h"
 
 /* Configure name and log level for the Shadow library. */
-#define LIBRARY_LOG_NAME     "SHADOW_DEMO"
+#define LIBRARY_LOG_NAME     "SHADOW"
 #define LIBRARY_LOG_LEVEL    LOG_INFO
 
 #include "logging_stack.h"
 
 /************ End of logging configuration ****************/
 
-#endif /* ifndef SHADOW_CONFIG_H__ */
+#endif /* ifndef SHADOW_CONFIG_H_ */

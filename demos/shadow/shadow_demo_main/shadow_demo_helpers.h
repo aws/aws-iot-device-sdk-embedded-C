@@ -22,6 +22,9 @@
 #ifndef SHADOW_DEMO_HELPERS_H_
 #define SHADOW_DEMO_HELPERS_H_
 
+/* Include Demo Config as the first non-system header. */
+#include "demo_config.h"
+
 /* MQTT API header. */
 #include "mqtt.h"
 
@@ -34,7 +37,7 @@
  * @return EXIT_SUCCESS if an MQTT session is established;
  * EXIT_FAILURE otherwise.
  */
-int32_t establishMqttSession( MQTTEventCallback_t eventCallback );
+int32_t EstablishMqttSession( MQTTEventCallback_t eventCallback );
 
 /**
  * @brief Handle the incoming packet if it's not related to the device shadow.
@@ -42,7 +45,7 @@ int32_t establishMqttSession( MQTTEventCallback_t eventCallback );
  * @param[in] pPacketInfo Packet Info pointer for the incoming packet.
  * @param[in] packetIdentifier Packet identifier of the incoming packet.
  */
-void handleOtherIncomingPacket( MQTTPacketInfo_t * pPacketInfo,
+void HandleOtherIncomingPacket( MQTTPacketInfo_t * pPacketInfo,
                                 uint16_t packetIdentifier );
 
 /**
@@ -51,48 +54,48 @@ void handleOtherIncomingPacket( MQTTPacketInfo_t * pPacketInfo,
  * @return EXIT_SUCCESS if DISCONNECT was successfully sent;
  * EXIT_FAILURE otherwise.
  */
-int32_t disconnectMqttSession( void );
+int32_t DisconnectMqttSession( void );
 
 /**
- * @brief Subscribe to a MQTT topic.
+ * @brief Subscribe to a MQTT topic filter.
  *
- * @param[in] pTopicBuffer Pointer to the shadow topic buffer.
- * @param[in] topicLength Indicates the length of the shadow
+ * @param[in] pTopicFilter Pointer to the shadow topic buffer.
+ * @param[in] topicFilterLength Indicates the length of the shadow
  * topic buffer.
  *
  * @return EXIT_SUCCESS if SUBSCRIBE was successfully sent;
  * EXIT_FAILURE otherwise.
  */
-int32_t subscribeToTopic( const char * pTopicBuffer,
-                          uint16_t topicLength );
+int32_t SubscribeToTopic( const char * pTopicFilter,
+                          uint16_t topicFilterLength );
 
 /**
  * @brief Sends an MQTT UNSUBSCRIBE to unsubscribe from the shadow
  * topic.
  *
- * @param[in] pTopicBuffer Pointer to the shadow topic buffer.
- * @param[in] topicLength Indicates the length of the shadow
+ * @param[in] pTopicFilter Pointer to the shadow topic buffer.
+ * @param[in] topicFilterLength Indicates the length of the shadow
  * topic buffer.
  *
  * @return EXIT_SUCCESS if UNSUBSCRIBE was successfully sent;
  * EXIT_FAILURE otherwise.
  */
-int32_t unsubscribeFromTopic( const char * pTopicBuffer,
-                              uint16_t topicLength );
+int32_t UnsubscribeFromTopic( const char * pTopicFilter,
+                              uint16_t topicFilterLength );
 
 /**
  * @brief Publish a message to a MQTT topic.
  *
- * @param[in] pTopic Points to the topic .
- * @param[in] topicLength The length of the topic.
- * @param[in] pPayload Points to the payload .
+ * @param[in] pTopicFilter Points to the topic.
+ * @param[in] topicFilterLength The length of the topic.
+ * @param[in] pPayload Points to the payload.
  * @param[in] payloadLength The length of the payload.
  *
  * @return EXIT_SUCCESS if PUBLISH was successfully sent;
  * EXIT_FAILURE otherwise.
  */
-int32_t publishToTopic( const char * pTopicBuffer,
-                        int32_t topicLength,
+int32_t PublishToTopic( const char * pTopicFilter,
+                        int32_t topicFilterLength,
                         const char * pPayload,
                         size_t payloadLength );
 

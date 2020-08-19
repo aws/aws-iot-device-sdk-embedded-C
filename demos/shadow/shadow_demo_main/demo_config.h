@@ -84,7 +84,9 @@
  * @note This path is relative from the demo binary created. Update
  * ROOT_CA_CERT_PATH to the absolute path if this demo is executed from elsewhere.
  */
-#define ROOT_CA_CERT_PATH    "certificates/AmazonRootCA1.crt"
+#ifndef ROOT_CA_CERT_PATH
+    #define ROOT_CA_CERT_PATH    "certificates/AmazonRootCA1.crt"
+#endif
 
 /**
  * @brief Path of the file containing the client certificate.
@@ -122,5 +124,33 @@
  */
 #define NETWORK_BUFFER_SIZE    ( 1024U )
 
+/**
+ * @brief The name of the operating system or SDK that the application is
+ * running a part of.
+ */
+#define SDK_NAME                  "aws-iot-device-sdk-embedded-C"
+
+/**
+ * @brief The version of the operating system or SDK that the application is
+ * running a part of.
+ */
+#define SDK_VERSION               "4.0.0"
+
+/**
+ * @brief The name of the hardware platform the application is running on.
+ */
+#define HARDWARE_PLATFORM_NAME    "Posix"
+
+/**
+ * @brief Predefined thing name.
+ *
+ * This is the example predefine thing name and could be compiled in ROM code.
+ */
+#define THING_NAME                          "testShadow"
+
+/**
+ * @brief The length of #THING_NAME.
+ */
+#define THING_NAME_LENGTH                   ( ( uint16_t ) ( sizeof( THING_NAME ) - 1 ) )
 
 #endif /* ifndef DEMO_CONFIG_H_ */

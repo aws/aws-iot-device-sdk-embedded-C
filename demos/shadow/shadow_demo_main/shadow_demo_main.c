@@ -21,6 +21,7 @@
 
 /**
  * @file shadow_demo_main.c
+ * 
  * @brief Demo for showing how to use the Device Shadow library's API. This version
  * of Device Shadow API provide macros and helper functions for assembling MQTT topics
  * strings, and for determining whether an incoming MQTT message is related to the
@@ -51,6 +52,7 @@
 /* POSIX includes. */
 #include <unistd.h>
 
+/* Shadow config include. */
 #include "shadow_config.h"
 
 /* SHADOW API header. */
@@ -76,7 +78,7 @@
  *   "clientToken": "021909"
  * }
  *
- * Note the client token, which is required for all Shadow updates. The client
+ * Note the client token, which is optional for all Shadow updates. The client
  * token must be unique at any given time, but may be reused once the update is
  * completed. For this demo, a timestamp is used for a client token.
  */
@@ -94,7 +96,7 @@
  * @brief The expected size of #SHADOW_DESIRED_JSON.
  *
  * Because all the format specifiers in #SHADOW_DESIRED_JSON include a length,
- * its full size is known at compile-time. "In your own application, this might
+ * its full size is known at compile-time. In your own application, this might
  * not be true, then you should calculate the size of the json doc at run time.
  */
 #define SHADOW_DESIRED_JSON_LENGTH    ( sizeof( SHADOW_DESIRED_JSON ) - 3 )
@@ -130,22 +132,10 @@
  * @brief The expected size of #SHADOW_REPORTED_JSON.
  *
  * Because all the format specifiers in #SHADOW_REPORTED_JSON include a length,
- * its full size is known at compile-time. "In your own application, this might
+ * its full size is known at compile-time. In your own application, this might
  * not be true, then you should calculate the size of the json doc at run time.
  */
 #define SHADOW_REPORTED_JSON_LENGTH    ( sizeof( SHADOW_REPORTED_JSON ) - 3 )
-
-/**
- * @brief Predefined thing name.
- *
- * This is the example predefine thing name and could be compiled in ROM code.
- */
-#define THING_NAME                          "testShadow"
-
-/**
- * @brief The length of #THING_NAME.
- */
-#define THING_NAME_LENGTH                   ( ( uint16_t ) ( sizeof( THING_NAME ) - 1 ) )
 
 /*-----------------------------------------------------------*/
 
@@ -213,11 +203,12 @@ static void updateDeltaHandler( MQTTPublishInfo_t * pPublishInfo )
     uint32_t newState = 0U;
     char * outValue = NULL;
     uint32_t outValueLength = 0U;
+    JSONStatus_t result = JSONSuccess;
 
     assert( pPublishInfo != NULL );
     assert( pPublishInfo->pPayload != NULL );
 
-    LogInfo( ( "/update/delta json payload:%s.\n\n", pPublishInfo->pPayload ) );
+    LogInfo( ( "/update/delta json payload:%s.\n\n", ( const char * ) pPublishInfo->pPayload ) );
     /* Make sure the payload is json document. */
     if ( JSONSuccess == JSON_Validate( pPublishInfo->pPayload,
                                        pPublishInfo->payloadLength ) )
@@ -244,7 +235,6 @@ static void updateDeltaHandler( MQTTPublishInfo_t * pPublishInfo )
          *      "clientToken": "388062"
          *  }
          */
-        JSONStatus_t result = JSONSuccess;
 
         result = JSON_Search( ( char * ) pPublishInfo->pPayload,
                               pPublishInfo->payloadLength,
@@ -291,9 +281,9 @@ static void updateDeltaHandler( MQTTPublishInfo_t * pPublishInfo )
                         currentPowerOnState = newState;
 
                         /* State change will be handled in main(), where we will publish a "reported"
-                        * state to the device shadow. We do not do it here because we are inside of
-                        * a callback from the MQTT library, so that we don't re-enter
-                        * the MQTT library (even though the library might support re-entrance.) */
+                         * state to the device shadow. We do not do it here because we are inside of
+                         * a callback from the MQTT library, so that we don't re-enter
+                         * the MQTT library. */
                         stateChanged = true;
                     }
                 }
@@ -304,7 +294,7 @@ static void updateDeltaHandler( MQTTPublishInfo_t * pPublishInfo )
             }
             else
             {
-                LogError( ( "The received version is smaller than current one!!\n\n" ) );
+                LogWarn( ( "The received version is smaller than current one!!\n\n" ) );
             }
         }
         else
@@ -329,7 +319,7 @@ static void updateAcceptedHandler( MQTTPublishInfo_t * pPublishInfo )
     assert( pPublishInfo != NULL );
     assert( pPublishInfo->pPayload != NULL );
 
-    LogInfo( ( "/update/accepted json payload:%s.\n\n", pPublishInfo->pPayload ) );
+    LogInfo( ( "/update/accepted json payload:%s.\n\n", ( const char * ) pPublishInfo->pPayload ) );
 
     /* Handle the reported state with state change in /update/accepted topic. */
     /* Thus we will retrieve the client token from the json document to see if
@@ -387,6 +377,11 @@ static void updateAcceptedHandler( MQTTPublishInfo_t * pPublishInfo )
             {
                 LogInfo( ( "Received response from the device shadow. Previously published "
                            "update with clientToken=%u has been accepted. \n\n", clientToken) );
+            }
+            else
+            {
+                LogWarn( ( "The received clientToken=%u is not identical with the one=%u we sent "
+                           , receivedToken, clientToken) );
             }
         }
         else
@@ -450,11 +445,11 @@ static void eventCallback( MQTTContext_t * pMqttContext,
             }
             else if ( messageType == ShadowMessageTypeUpdateDocuments )
             {
-                LogInfo( ( "/update/documents json payload:%s.\n\n", pDeserializedInfo->pPublishInfo->pPayload ) );
+                LogInfo( ( "/update/documents json payload:%s.\n\n", ( const char * ) pDeserializedInfo->pPublishInfo->pPayload ) );
             }
             else if ( messageType == ShadowMessageTypeUpdateRejected )
             {
-                LogInfo( ( "/update/rejected json payload:%s.\n\n", pDeserializedInfo->pPublishInfo->pPayload ) );
+                LogInfo( ( "/update/rejected json payload:%s.\n\n", ( const char * ) pDeserializedInfo->pPublishInfo->pPayload ) );
             }
             else
             {
@@ -463,12 +458,12 @@ static void eventCallback( MQTTContext_t * pMqttContext,
         }
         else
         {
-            LogError( ( "Shadow_MatchTopic parse failed:%s !!\n\n", pDeserializedInfo->pPublishInfo->pTopicName ) );
+            LogError( ( "Shadow_MatchTopic parse failed:%s !!\n\n", ( const char * ) pDeserializedInfo->pPublishInfo->pTopicName ) );
         }
     }
     else
     {
-        handleOtherIncomingPacket( pPacketInfo, packetIdentifier );
+        HandleOtherIncomingPacket( pPacketInfo, packetIdentifier );
     }
 }
 
@@ -484,13 +479,13 @@ static void eventCallback( MQTTContext_t * pMqttContext,
  * - SHADOW_TOPIC_STRING_UPDATE_ACCEPTED for "$aws/things/thingName/shadow/update/accepted"
  * - SHADOW_TOPIC_STRING_UPDATE_REJECTED for "$aws/things/thingName/shadow/update/rejected"
  *
- * It also used these macros for topics to publish to:
+ * It also uses these macros for topics to publish to:
  * - SHADOW_TOPIC_STIRNG_DELETE for "$aws/things/thingName/shadow/delete"
  * - SHADOW_TOPIC_STRING_UPDATE for "$aws/things/thingName/shadow/update"
  *
  * The helper functions this demo uses for MQTT operations have internal
  * loops to process incoming messages. Those are not the focus of this demo
- * therefore placed in a separate file shadow_demo_helpers.c.
+ * and therefor, are placed in a separate file shadow_demo_helpers.c.
  */
 int main( int argc,
           char ** argv )
@@ -504,7 +499,7 @@ int main( int argc,
     ( void ) argc;
     ( void ) argv;
 
-    returnStatus = establishMqttSession( eventCallback );
+    returnStatus = EstablishMqttSession( eventCallback );
 
     if( returnStatus == EXIT_FAILURE )
     {
@@ -514,7 +509,7 @@ int main( int argc,
     else
     {
         /* First of all, try to delete any Shadow document in the cloud. */
-        returnStatus = publishToTopic( SHADOW_TOPIC_STRING_DELETE( THING_NAME ),
+        returnStatus = PublishToTopic( SHADOW_TOPIC_STRING_DELETE( THING_NAME ),
                                        SHADOW_TOPIC_LENGTH_DELETE( THING_NAME_LENGTH ),
                                        updateDocument,
                                        0U );
@@ -523,19 +518,19 @@ int main( int argc,
          * to subscribe shadow topics. */
         if( returnStatus == EXIT_SUCCESS )
         {
-            returnStatus = subscribeToTopic( SHADOW_TOPIC_STRING_UPDATE_DELTA( THING_NAME ),
+            returnStatus = SubscribeToTopic( SHADOW_TOPIC_STRING_UPDATE_DELTA( THING_NAME ),
                                              SHADOW_TOPIC_LENGTH_UPDATE_DELTA( THING_NAME_LENGTH ) );
         }
 
         if( returnStatus == EXIT_SUCCESS )
         {
-            returnStatus = subscribeToTopic( SHADOW_TOPIC_STRING_UPDATE_ACCEPTED( THING_NAME ),
+            returnStatus = SubscribeToTopic( SHADOW_TOPIC_STRING_UPDATE_ACCEPTED( THING_NAME ),
                                              SHADOW_TOPIC_LENGTH_UPDATE_ACCEPTED( THING_NAME_LENGTH ) );
         }
 
         if( returnStatus == EXIT_SUCCESS )
         {
-            returnStatus = subscribeToTopic( SHADOW_TOPIC_STRING_UPDATE_REJECTED( THING_NAME ),
+            returnStatus = SubscribeToTopic( SHADOW_TOPIC_STRING_UPDATE_REJECTED( THING_NAME ),
                                              SHADOW_TOPIC_LENGTH_UPDATE_REJECTED( THING_NAME_LENGTH ) );
         }
         /* This demo uses a constant #THING_NAME known at compile time therefore we can use macros to
@@ -551,10 +546,12 @@ int main( int argc,
          * char topicBuffer[ SHADOW_TOPIC_MAX_LENGTH ] = { 0 };
          * uint16_t bufferSize = SHADOW_TOPIC_MAX_LENGTH;
          * uint16_t outLength = 0;
+         * const char * thingName = "TestThingName";
+         * uint16_t thingNameLength  = ( sizeof( thingName ) - 1U );
          *
          * shadowStatus = Shadow_GetTopicString( SHADOW_TOPIC_STRING_TYPE_UPDATE_DELTA,
-         *                                       TEST_THING_NAME,
-         *                                       TEST_THING_NAME_LENGTH,
+         *                                       thingName,
+         *                                       thingNameLength,
          *                                       & ( topicBuffer[ 0 ] ),
          *                                       bufferSize,
          *                                       & outLength );
@@ -582,7 +579,7 @@ int main( int argc,
                       ( int ) 1,
                       ( long unsigned ) ( Clock_GetTimeMs() % 1000000 ) );
 
-            returnStatus = publishToTopic( SHADOW_TOPIC_STRING_UPDATE( THING_NAME ),
+            returnStatus = PublishToTopic( SHADOW_TOPIC_STRING_UPDATE( THING_NAME ),
                                            SHADOW_TOPIC_LENGTH_UPDATE( THING_NAME_LENGTH ),
                                            updateDocument,
                                            ( SHADOW_DESIRED_JSON_LENGTH + 1 ) );
@@ -591,7 +588,7 @@ int main( int argc,
 
         if( returnStatus == EXIT_SUCCESS )
         {
-            /* Note that publishToTopic already called MQTT_ProcessLoop,
+            /* Note that PublishToTopic already called MQTT_ProcessLoop,
              * therefore responses may have been received and the eventCallback
              * may have been called, which may have changed the stateChanged flag.
              * Check if the state change flag has been modified or not. If it's modified,
@@ -614,7 +611,7 @@ int main( int argc,
                           ( int ) currentPowerOnState,
                           ( long unsigned ) clientToken );
 
-                returnStatus= publishToTopic( SHADOW_TOPIC_STRING_UPDATE( THING_NAME ),
+                returnStatus= PublishToTopic( SHADOW_TOPIC_STRING_UPDATE( THING_NAME ),
                                               SHADOW_TOPIC_LENGTH_UPDATE( THING_NAME_LENGTH ),
                                               updateDocument,
                                               ( SHADOW_DESIRED_JSON_LENGTH + 1 ) );
@@ -626,16 +623,16 @@ int main( int argc,
         }
 
         LogInfo( ( "Start to unsubscribe shadow topics and disconnect from MQTT. \r\n") );
-        unsubscribeFromTopic( SHADOW_TOPIC_STRING_UPDATE_DELTA( THING_NAME ),
+        UnsubscribeFromTopic( SHADOW_TOPIC_STRING_UPDATE_DELTA( THING_NAME ),
                               SHADOW_TOPIC_LENGTH_UPDATE_DELTA( THING_NAME_LENGTH ) );
 
-        unsubscribeFromTopic( SHADOW_TOPIC_STRING_UPDATE_ACCEPTED( THING_NAME ),
+        UnsubscribeFromTopic( SHADOW_TOPIC_STRING_UPDATE_ACCEPTED( THING_NAME ),
                               SHADOW_TOPIC_LENGTH_UPDATE_ACCEPTED( THING_NAME_LENGTH ) );
 
-        unsubscribeFromTopic( SHADOW_TOPIC_STRING_UPDATE_REJECTED( THING_NAME ),
+        UnsubscribeFromTopic( SHADOW_TOPIC_STRING_UPDATE_REJECTED( THING_NAME ),
                               SHADOW_TOPIC_LENGTH_UPDATE_REJECTED( THING_NAME_LENGTH ) );
 
-        disconnectMqttSession();
+        DisconnectMqttSession();
     }
 
     return returnStatus;
