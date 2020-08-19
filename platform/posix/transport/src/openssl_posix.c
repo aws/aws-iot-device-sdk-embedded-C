@@ -125,6 +125,16 @@ static int setCredentials( SSL_CTX * pSslContext,
 static void setOptionalConfigurations( SSL * pSsl,
                                        const OpensslCredentials_t * pOpensslCredentials );
 
+/**
+ * @brief Converts the sockets wrapper statuses to openssl statuses.
+ *
+ * @param[in] socketStatus Sockets wrapper status.
+ *
+ * @return #OPENSSL_SUCCESS, #OPENSSL_INVALID_PARAMETER, #OPENSSL_DNS_FAILURE,
+ * and #OPENSSL_CONNECT_FAILURE.
+ */
+static OpensslStatus_t convertToOpensslStatus( SocketStatus_t socketStatus );
+
 /*-----------------------------------------------------------*/
 
 #if ( LIBRARY_LOG_LEVEL == LOG_DEBUG )
@@ -159,6 +169,37 @@ static void setOptionalConfigurations( SSL * pSsl,
         }
     }
 #endif /* #if ( LIBRARY_LOG_LEVEL == LOG_DEBUG ) */
+/*-----------------------------------------------------------*/
+
+static OpensslStatus_t convertToOpensslStatus( SocketStatus_t socketStatus )
+{
+    OpensslStatus_t opensslStatus = OPENSSL_INVALID_PARAMETER;
+
+    switch( socketStatus )
+    {
+        case SOCKETS_SUCCESS:
+            opensslStatus = OPENSSL_SUCCESS;
+            break;
+
+        case SOCKETS_INVALID_PARAMETER:
+            opensslStatus = OPENSSL_INVALID_PARAMETER;
+            break;
+
+        case SOCKETS_DNS_FAILURE:
+            opensslStatus = OPENSSL_DNS_FAILURE;
+            break;
+
+        case SOCKETS_CONNECT_FAILURE:
+            opensslStatus = OPENSSL_CONNECT_FAILURE;
+            break;
+
+        default:
+            LogError( ( "Unexpected status received from socket wrapper: Socket status = %u",
+                        socketStatus ) );
+    }
+
+    return opensslStatus;
+}
 /*-----------------------------------------------------------*/
 
 static int setRootCa( SSL_CTX * pSslContext,
@@ -429,22 +470,8 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
                                         sendTimeoutMs,
                                         recvTimeoutMs );
 
-        if( socketStatus == SOCKETS_INVALID_PARAMETER )
-        {
-            returnStatus = OPENSSL_INVALID_PARAMETER;
-        }
-        else if( socketStatus == SOCKETS_DNS_FAILURE )
-        {
-            returnStatus = OPENSSL_DNS_FAILURE;
-        }
-        else if( socketStatus == SOCKETS_CONNECT_FAILURE )
-        {
-            returnStatus = OPENSSL_CONNECT_FAILURE;
-        }
-        else
-        {
-            /* Empty else. */
-        }
+        /* Convert socket wrapper status to openssl status. */
+        returnStatus = convertToOpensslStatus( socketStatus );
     }
 
     /* Create SSL context. */
@@ -590,10 +617,8 @@ OpensslStatus_t Openssl_Disconnect( NetworkContext_t * pNetworkContext )
     /* Tear down the socket connection. */
     socketStatus = Sockets_Disconnect( pNetworkContext->socketDescriptor );
 
-    if( socketStatus == SOCKETS_INVALID_PARAMETER )
-    {
-        returnStatus = OPENSSL_INVALID_PARAMETER;
-    }
+    /* Convert socket wrapper status to openssl status. */
+    returnStatus = convertToOpensslStatus( socketStatus );
 
     return returnStatus;
 }
