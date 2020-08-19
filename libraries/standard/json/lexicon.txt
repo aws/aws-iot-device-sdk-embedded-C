@@ -11,7 +11,7 @@ df
 dfff
 ef
 endif
-enum
+enums
 fb
 fc
 fd
@@ -40,7 +40,14 @@ querykey
 querykeylength
 requirelowsurrogate
 sizeof
-skip
+skiparrayscalars
+skipdecimals
+skipdigits
+skipescape
+skipexponent
+skiphexescape
+skipobjectscalars
+skipstring
 src
 sublicense
 unescaped
