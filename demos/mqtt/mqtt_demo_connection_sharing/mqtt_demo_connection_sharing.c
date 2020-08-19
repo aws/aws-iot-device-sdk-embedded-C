@@ -478,20 +478,25 @@ static int unsubscribeFromTopicFilters( MQTTContext_t * pMqttContext,
 /**
  * @brief Sends an MQTT PUBLISH to the passed topic
  * with the passed message and waits for acknowledgement response
- * from the broker.
+ * from the broker. Also, this function processes an incoming PUBLISH
+ * packet of the same message that the broker should send back to us.
+ *
+ * As this demo subscribes to topic filters that match the topics
+ * that it publishes to, the broker should send back to us the same
+ * message that we publish to it.
  *
  * @param[in] pMqttContext MQTT context pointer.
  * @param[in] pTopic The topic on which to send a PUBLISH message.
  * @param[in] topicLength The length of the topic.
  * @param[in] pMessage The message payload to PUBLISH.
  *
- * @return EXIT_SUCCESS if PUBLISH was successfully sent;
- * EXIT_FAILURE otherwise.
+ * @return EXIT_SUCCESS if PUBLISH was successfully sent and processing
+ * of incoming PUBLISH was successful; EXIT_FAILURE otherwise.
  */
-static int publishToTopic( MQTTContext_t * pMqttContext,
-                           const char * pTopic,
-                           uint16_t topicLength,
-                           const char * pMessage );
+static int publishToTopicAndProcessIncomingMessage( MQTTContext_t * pMqttContext,
+                                                    const char * pTopic,
+                                                    uint16_t topicLength,
+                                                    const char * pMessage );
 
 /**
  * @brief Function to get the free index at which an outgoing publish
@@ -1110,10 +1115,10 @@ static int unsubscribeFromTopicFilters( MQTTContext_t * pMqttContext,
 
 /*-----------------------------------------------------------*/
 
-static int publishToTopic( MQTTContext_t * pMqttContext,
-                           const char * pTopic,
-                           uint16_t topicLength,
-                           const char * pMessage )
+static int publishToTopicAndProcessIncomingMessage( MQTTContext_t * pMqttContext,
+                                                    const char * pTopic,
+                                                    uint16_t topicLength,
+                                                    const char * pMessage )
 {
     int returnStatus = EXIT_SUCCESS;
 
@@ -1257,10 +1262,10 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
         LogInfo( ( "Publishing to topic %s.",
                    DEMO_TEMPERATURE_HIGH_TOPIC ) );
 
-        returnStatus = publishToTopic( &mqttContext,
-                                       DEMO_TEMPERATURE_HIGH_TOPIC,
-                                       DEMO_TEMPERATURE_HIGH_TOPIC_LENGTH,
-                                       DEMO_TEMPERATURE_HIGH_MESSAGE );
+        returnStatus = publishToTopicAndProcessIncomingMessage( &mqttContext,
+                                                                DEMO_TEMPERATURE_HIGH_TOPIC,
+                                                                DEMO_TEMPERATURE_HIGH_TOPIC_LENGTH,
+                                                                DEMO_TEMPERATURE_HIGH_MESSAGE );
     }
 
     /* The temperature callback should have been invoked for handling the incoming
@@ -1286,10 +1291,10 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
         LogInfo( ( "Publishing to topic %s.",
                    DEMO_TEMPERATURE_LOW_TOPIC ) );
 
-        returnStatus = publishToTopic( &mqttContext,
-                                       DEMO_TEMPERATURE_LOW_TOPIC,
-                                       DEMO_TEMPERATURE_LOW_TOPIC_LENGTH,
-                                       DEMO_TEMPERATURE_LOW_MESSAGE );
+        returnStatus = publishToTopicAndProcessIncomingMessage( &mqttContext,
+                                                                DEMO_TEMPERATURE_LOW_TOPIC,
+                                                                DEMO_TEMPERATURE_LOW_TOPIC_LENGTH,
+                                                                DEMO_TEMPERATURE_LOW_MESSAGE );
     }
 
     /* The temperature callback should have been invoked for handling the incoming
@@ -1324,10 +1329,10 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
         LogInfo( ( "Publish to topic %s.",
                    DEMO_HUMIDITY_TOPIC ) );
 
-        returnStatus = publishToTopic( &mqttContext,
-                                       DEMO_HUMIDITY_TOPIC,
-                                       DEMO_HUMIDITY_TOPIC_LENGTH,
-                                       DEMO_HUMIDITY_MESSAGE );
+        returnStatus = publishToTopicAndProcessIncomingMessage( &mqttContext,
+                                                                DEMO_HUMIDITY_TOPIC,
+                                                                DEMO_HUMIDITY_TOPIC_LENGTH,
+                                                                DEMO_HUMIDITY_MESSAGE );
     }
 
     /* The humidity callback should have been invoked for handling the incoming
@@ -1362,10 +1367,10 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
         LogInfo( ( "Publish to topic %s.",
                    DEMO_PRECIPITATION_TOPIC ) );
 
-        returnStatus = publishToTopic( &mqttContext,
-                                       DEMO_PRECIPITATION_TOPIC,
-                                       DEMO_PRECIPITATION_TOPIC_LENGTH,
-                                       DEMO_PRECIPITATION_MESSAGE );
+        returnStatus = publishToTopicAndProcessIncomingMessage( &mqttContext,
+                                                                DEMO_PRECIPITATION_TOPIC,
+                                                                DEMO_PRECIPITATION_TOPIC_LENGTH,
+                                                                DEMO_PRECIPITATION_MESSAGE );
     }
 
     /* The precipitation callback should have been invoked for handling the incoming
