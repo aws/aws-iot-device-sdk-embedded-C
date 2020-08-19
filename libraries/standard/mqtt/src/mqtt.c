@@ -1179,6 +1179,8 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
 
     appCallback = pContext->appCallback;
 
+    LogDebug( ( "Received packet of type %02x.", pIncomingPacket->type ) );
+
     switch( pIncomingPacket->type )
     {
         case MQTT_PACKET_TYPE_PUBACK:

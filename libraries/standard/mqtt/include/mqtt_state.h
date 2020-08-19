@@ -135,7 +135,8 @@ MQTTPublishState_t MQTT_CalculateStateAck( MQTTPubAckType_t packetType,
  * @param[in] opType Send or Receive.
  * @param[out] pNewState Updated state of the publish.
  *
- * @return #MQTTBadParameter, #MQTTIllegalState, or #MQTTSuccess.
+ * @return #MQTTBadParameter, #MQTTBadResponse, #MQTTIllegalState, or
+ * #MQTTSuccess.
  */
 MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
                                   uint16_t packetId,
