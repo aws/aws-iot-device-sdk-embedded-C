@@ -40,6 +40,6 @@ PROOF_SOURCES += $(SRCDIR)/libraries/standard/mqtt/cbmc/sources/mqtt_cbmc_state.
 PROOF_SOURCES += $(SRCDIR)/libraries/standard/mqtt/cbmc/stubs/memcpy.c
 PROJECT_SOURCES += $(SRCDIR)/libraries/standard/mqtt/src/mqtt_lightweight.c
 
-CBMCFLAGS += --sat-solver-invocation kissat
+CHECKFLAGS += --sat-solver-invocation kissat
 
 include ../Makefile.common

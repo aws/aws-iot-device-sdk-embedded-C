@@ -48,6 +48,6 @@ PROOF_SOURCES += $(SRCDIR)/libraries/standard/http/cbmc/stubs/memcpy.c
 
 PROJECT_SOURCES += $(SRCDIR)/libraries/standard/http/src/http_client.c
 
-CBMCFLAGS += --sat-solver-invocation kissat
+CHECKFLAGS += --sat-solver-invocation kissat
 
 include ../Makefile.common
