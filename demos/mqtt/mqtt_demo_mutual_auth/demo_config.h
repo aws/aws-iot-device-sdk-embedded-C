@@ -119,7 +119,7 @@
  * An authorizer setup needs to be done as mentioned in the above link to use
  * username/password based client authentication.
  *
- * @note AWS IoT message broker would require either a set of client certificate/private key
+ * @note AWS IoT message broker requires either a set of client certificate/private key
  * or username/password to authenticate the client. If this config is defined, username and
  * password will be used instead of client certificate and private key for client authentication.
  *
@@ -135,7 +135,7 @@
  * An authorizer setup needs to be done as mentioned in the above link to use
  * username/password based client authentication.
  *
- * @note AWS IoT message broker would require either a set of client certificate/private key
+ * @note AWS IoT message broker requires either a set of client certificate/private key
  * or username/password to authenticate the client.
  *
  * #define CLIENT_PASSWORD    "...insert here..."

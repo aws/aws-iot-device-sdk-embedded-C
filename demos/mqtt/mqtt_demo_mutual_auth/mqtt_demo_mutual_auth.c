@@ -84,7 +84,7 @@
     #error "Please define path to Root CA certificate of the MQTT broker(ROOT_CA_CERT_PATH) in demo_config.h."
 #endif
 #ifndef CLIENT_IDENTIFIER
-    #error "Please define a unique CLIENT_IDENTIFIER."
+|    #error "Please define a unique client identifier, CLIENT_IDENTIFIER, in demo_config.h."
 #endif
 
 /* AWS IoT message broker would require either a set of client certificate/private key
