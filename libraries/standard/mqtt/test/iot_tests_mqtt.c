@@ -50,11 +50,11 @@ void RunMqttTests( bool disableNetworkTests, bool disableLongTests )
     // RUN_TEST_GROUP( MQTT_Unit_Platform );
     RUN_TEST_GROUP( MQTT_Unit_API );
 
-    // if( disableNetworkTests == false )
-    // {
-    //     RUN_TEST_GROUP( MQTT_System_Platform );
-    //     RUN_TEST_GROUP( MQTT_System );
-    // }
+    if( disableNetworkTests == false )
+    {
+        RUN_TEST_GROUP( MQTT_System_Platform );
+        RUN_TEST_GROUP( MQTT_System );
+    }
 }
 
 /*-----------------------------------------------------------*/
