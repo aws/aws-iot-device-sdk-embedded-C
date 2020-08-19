@@ -181,7 +181,7 @@ pdeserialized
 pdeserializedinfo
 pdestination
 pem
-pFilterIndex 
+pfilterindex 
 pfixedbuffer
 pheadersize
 pincomingpacket
