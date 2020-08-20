@@ -14,6 +14,9 @@ target_sources(
         "${DEMO_NAME}.c"
 )
 
+# Treat warnings as error for demo target.
+target_compile_options( ${DEMO_NAME} PUBLIC "-Werror" )  
+
 target_link_libraries(
     ${DEMO_NAME}
     PRIVATE
