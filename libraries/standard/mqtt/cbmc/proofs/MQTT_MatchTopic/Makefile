@@ -23,12 +23,11 @@ HARNESS_ENTRY=harness
 HARNESS_FILE=MQTT_MatchTopic_harness
 
 # The topic name/filter length are bounded, so that the loops in topic matching algorithmic
-# functions called by MQTT_MatchTopic can be unwounded to an expected
+# functions called by MQTT_MatchTopic can be unwound to an expected
 # amount that won't make the proof run too long.
 MAX_TOPIC_NAME_FILTER_LENGTH=10
 
 DEFINES += -DMAX_TOPIC_NAME_FILTER_LENGTH=$(MAX_TOPIC_NAME_FILTER_LENGTH)
-INCLUDES +=
 INCLUDES +=
 
 REMOVE_FUNCTION_BODY +=
