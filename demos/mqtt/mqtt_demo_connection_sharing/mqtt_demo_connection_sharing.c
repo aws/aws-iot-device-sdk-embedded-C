@@ -112,9 +112,6 @@
 
 /**
  * @brief The MQTT topic filter to subscribe to for temperature data in the demo.
- *
- * The topic name starts with the client identifier to ensure that each demo
- * interacts with a unique topic name.
  */
 #define DEMO_TEMPERATURE_TOPIC_FILTER           CLIENT_IDENTIFIER "/demo/temperature/+"
 
@@ -126,9 +123,6 @@
 /**
  * @brief The MQTT topic for the high temperature data value that the demo will
  * publish to.
- *
- * The topic name starts with the client identifier to ensure that each demo
- * interacts with a unique topic name.
  */
 #define DEMO_TEMPERATURE_HIGH_TOPIC             CLIENT_IDENTIFIER "/demo/temperature/high"
 
@@ -140,9 +134,6 @@
 /**
  * @brief The MQTT topic for the high temperature data value that the demo will
  * publish to.
- *
- * The topic name starts with the client identifier to ensure that each demo
- * interacts with a unique topic name.
  */
 #define DEMO_TEMPERATURE_LOW_TOPIC              CLIENT_IDENTIFIER "/demo/temperature/low"
 
@@ -198,12 +189,6 @@
  * @brief The MQTT message for the #DEMO_PRECIPITATION_TOPIC_LENGTH topic published in this example.
  */
 #define DEMO_PRECIPITATION_MESSAGE              "Today's precipitation at 9%"
-
-/**
- * @brief Maximum number of outgoing publishes maintained in the application
- * until an ack is received from the broker.
- */
-#define MAX_OUTGOING_PUBLISHES                  ( 5U )
 
 /**
  * @brief Timeout for MQTT_ProcessLoop function in milliseconds.
@@ -264,13 +249,6 @@ static uint16_t lastSubscribePacketIdentifier = 0U;
  * request.
  */
 static uint16_t lastUnsubscribePacketIdentifier = 0U;
-
-/**
- * @brief Array to keep the outgoing publish messages.
- * These stored outgoing publish messages are kept until a successful ack
- * is received.
- */
-static PublishPackets_t outgoingPublishPackets[ MAX_OUTGOING_PUBLISHES ] = { 0 };
 
 /**
  * @brief The network buffer must remain valid for the lifetime of the MQTT context.
@@ -497,49 +475,6 @@ static int publishToTopicAndProcessIncomingMessage( MQTTContext_t * pMqttContext
                                                     uint16_t topicLength,
                                                     const char * pMessage );
 
-/**
- * @brief Function to get the free index at which an outgoing publish
- * can be stored.
- *
- * @param[out] pIndex The output parameter to return the index at which an
- * outgoing publish message can be stored.
- *
- * @return EXIT_FAILURE if no more publishes can be stored;
- * EXIT_SUCCESS if an index to store the next outgoing publish is obtained.
- */
-static int getNextFreeIndexForOutgoingPublishes( uint8_t * pIndex );
-
-/**
- * @brief Function to clean up an outgoing publish at given index from the
- * #outgoingPublishPackets array.
- *
- * @param[in] index The index at which a publish message has to be cleaned up.
- */
-static void cleanupOutgoingPublishAt( uint8_t index );
-
-/**
- * @brief Function to clean up all the outgoing publishes maintained in the
- * array.
- */
-static void cleanupOutgoingPublishes( void );
-
-/**
- * @brief Function to clean up the publish packet with the given packet id.
- *
- * @param[in] packetId Packet identifier of the packet to be cleaned up from
- * the array.
- */
-static void cleanupOutgoingPublishWithPacketID( uint16_t packetId );
-
-/**
- * @brief Function to resend the publishes if a session is re-established with
- * the broker. This function handles the resending of the QoS1 publish packets,
- * which are maintained locally.
- *
- * @param[in] pMqttContext MQTT context pointer.
- */
-static int handlePublishResend( MQTTContext_t * pMqttContext );
-
 /*-----------------------------------------------------------*/
 
 static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext )
@@ -594,122 +529,6 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
             returnStatus = EXIT_FAILURE;
         }
     } while( ( opensslStatus != OPENSSL_SUCCESS ) && ( retriesArePending == true ) );
-
-    return returnStatus;
-}
-
-/*-----------------------------------------------------------*/
-
-static int getNextFreeIndexForOutgoingPublishes( uint8_t * pIndex )
-{
-    int returnStatus = EXIT_FAILURE;
-    uint8_t index = 0;
-
-    assert( outgoingPublishPackets != NULL );
-    assert( pIndex != NULL );
-
-    for( index = 0; index < MAX_OUTGOING_PUBLISHES; index++ )
-    {
-        /* A free index is marked by invalid packet id.
-         * Check if the the index has a free slot. */
-        if( outgoingPublishPackets[ index ].packetId == MQTT_PACKET_ID_INVALID )
-        {
-            returnStatus = EXIT_SUCCESS;
-            break;
-        }
-    }
-
-    /* Copy the available index into the output param. */
-    *pIndex = index;
-
-    return returnStatus;
-}
-/*-----------------------------------------------------------*/
-
-static void cleanupOutgoingPublishAt( uint8_t index )
-{
-    assert( outgoingPublishPackets != NULL );
-    assert( index < MAX_OUTGOING_PUBLISHES );
-
-    /* Clear the outgoing publish packet. */
-    ( void ) memset( &( outgoingPublishPackets[ index ] ),
-                     0x00,
-                     sizeof( outgoingPublishPackets[ index ] ) );
-}
-
-/*-----------------------------------------------------------*/
-
-static void cleanupOutgoingPublishes( void )
-{
-    assert( outgoingPublishPackets != NULL );
-
-    /* Clean up all the outgoing publish packets. */
-    ( void ) memset( outgoingPublishPackets, 0x00, sizeof( outgoingPublishPackets ) );
-}
-
-/*-----------------------------------------------------------*/
-
-static void cleanupOutgoingPublishWithPacketID( uint16_t packetId )
-{
-    uint8_t index = 0;
-
-    assert( outgoingPublishPackets != NULL );
-    assert( packetId != MQTT_PACKET_ID_INVALID );
-
-    /* Clean up all the saved outgoing publishes. */
-    for( ; index < MAX_OUTGOING_PUBLISHES; index++ )
-    {
-        if( outgoingPublishPackets[ index ].packetId == packetId )
-        {
-            cleanupOutgoingPublishAt( index );
-            LogInfo( ( "Cleaned up outgoing publish packet with packet id %u.\n\n",
-                       packetId ) );
-            break;
-        }
-    }
-}
-
-/*-----------------------------------------------------------*/
-
-static int handlePublishResend( MQTTContext_t * pMqttContext )
-{
-    int returnStatus = EXIT_SUCCESS;
-    MQTTStatus_t mqttStatus = MQTTSuccess;
-    uint8_t index = 0U;
-
-    assert( outgoingPublishPackets != NULL );
-
-    /* Resend all the QoS1 publishes still in the array. These are the
-     * publishes that hasn't received a PUBACK. When a PUBACK is
-     * received, the publish is removed from the array. */
-    for( index = 0U; index < MAX_OUTGOING_PUBLISHES; index++ )
-    {
-        if( outgoingPublishPackets[ index ].packetId != MQTT_PACKET_ID_INVALID )
-        {
-            outgoingPublishPackets[ index ].pubInfo.dup = true;
-
-            LogInfo( ( "Sending duplicate PUBLISH with packet id %u.",
-                       outgoingPublishPackets[ index ].packetId ) );
-            mqttStatus = MQTT_Publish( pMqttContext,
-                                       &outgoingPublishPackets[ index ].pubInfo,
-                                       outgoingPublishPackets[ index ].packetId );
-
-            if( mqttStatus != MQTTSuccess )
-            {
-                LogError( ( "Sending duplicate PUBLISH for packet id %u "
-                            " failed with status %u.",
-                            outgoingPublishPackets[ index ].packetId,
-                            mqttStatus ) );
-                returnStatus = EXIT_FAILURE;
-                break;
-            }
-            else
-            {
-                LogInfo( ( "Sent duplicate PUBLISH successfully for packet id %u.\n\n",
-                           outgoingPublishPackets[ index ].packetId ) );
-            }
-        }
-    }
 
     return returnStatus;
 }
@@ -842,8 +661,6 @@ static void commonEventHandler( MQTTContext_t * pMqttContext,
             case MQTT_PACKET_TYPE_PUBACK:
                 LogInfo( ( "PUBACK received for packet id %u.\n\n",
                            pDeserializedInfo->packetIdentifier ) );
-                /* Cleanup publish packet when a PUBACK is received. */
-                cleanupOutgoingPublishWithPacketID( pDeserializedInfo->packetIdentifier );
                 break;
 
             /* Any other packet type is invalid. */
@@ -1122,15 +939,10 @@ static int publishToTopicAndProcessIncomingMessage( MQTTContext_t * pMqttContext
     int returnStatus = EXIT_SUCCESS;
 
     MQTTStatus_t mqttStatus = MQTTSuccess;
-    uint8_t publishIndex = MAX_OUTGOING_PUBLISHES;
+    MQTTPublishInfo_t publishInfo = { 0 };
+    uint16_t pubPacketId = MQTT_PACKET_ID_INVALID;
 
     assert( pMqttContext != NULL );
-
-    /* Get the next free index for the outgoing publish. All QoS1 outgoing
-     * publishes are stored until a PUBACK is received. These messages are
-     * stored for supporting a resend if a network connection is broken before
-     * receiving a PUBACK. */
-    returnStatus = getNextFreeIndexForOutgoingPublishes( &publishIndex );
 
     if( returnStatus == EXIT_FAILURE )
     {
@@ -1139,25 +951,24 @@ static int publishToTopicAndProcessIncomingMessage( MQTTContext_t * pMqttContext
     else
     {
         /* This example publishes with QOS1. */
-        outgoingPublishPackets[ publishIndex ].pubInfo.qos = MQTTQoS1;
-        outgoingPublishPackets[ publishIndex ].pubInfo.pTopicName = pTopic;
-        outgoingPublishPackets[ publishIndex ].pubInfo.topicNameLength = topicLength;
-        outgoingPublishPackets[ publishIndex ].pubInfo.pPayload = pMessage;
-        outgoingPublishPackets[ publishIndex ].pubInfo.payloadLength = strlen( pMessage );
+        publishInfo.qos = MQTTQoS1;
+        publishInfo.pTopicName = pTopic;
+        publishInfo.topicNameLength = topicLength;
+        publishInfo.pPayload = pMessage;
+        publishInfo.payloadLength = strlen( pMessage );
 
-        /* Get a new packet id. */
-        outgoingPublishPackets[ publishIndex ].packetId = MQTT_GetPacketId( pMqttContext );
+        /* Get a new packet ID for the publish. */
+        pubPacketId = MQTT_GetPacketId( pMqttContext );
 
         /* Send PUBLISH packet. */
         mqttStatus = MQTT_Publish( pMqttContext,
-                                   &outgoingPublishPackets[ publishIndex ].pubInfo,
-                                   outgoingPublishPackets[ publishIndex ].packetId );
+                                   &publishInfo,
+                                   pubPacketId );
 
         if( mqttStatus != MQTTSuccess )
         {
             LogError( ( "Failed to send PUBLISH packet to broker with error = %u.",
                         mqttStatus ) );
-            cleanupOutgoingPublishAt( publishIndex );
             returnStatus = EXIT_FAILURE;
         }
         else
@@ -1165,7 +976,7 @@ static int publishToTopicAndProcessIncomingMessage( MQTTContext_t * pMqttContext
             LogInfo( ( "PUBLISH sent for topic %.*s to broker with packet ID %u.\n\n",
                        topicLength,
                        pTopic,
-                       outgoingPublishPackets[ publishIndex ].packetId ) );
+                       pubPacketId ) );
 
             /* Calling MQTT_ProcessLoop to process incoming publish echo, since
              * application subscribed to the same topic the broker will send
@@ -1191,7 +1002,7 @@ static int publishToTopicAndProcessIncomingMessage( MQTTContext_t * pMqttContext
 static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
 {
     int returnStatus = EXIT_SUCCESS;
-    bool mqttSessionEstablished = false, sessionPresent;
+    bool mqttSessionEstablished = false, sessionPresent = false;
     MQTTContext_t mqttContext;
     MQTTSubscribeInfo_t pSubscriptionList[ 3 ];
 
@@ -1200,9 +1011,13 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
                BROKER_ENDPOINT_LENGTH,
                BROKER_ENDPOINT ) );
 
-    /* Sends an MQTT Connect packet using the established TLS session,
-     * then waits for connection acknowledgment (CONNACK) packet. */
-    returnStatus = establishMqttSession( &mqttContext, pNetworkContext, false, &sessionPresent );
+    /* Sends an MQTT Connect packet to establish a clean connection over the
+     * established TLS session, then waits for connection acknowledgment
+     * (CONNACK) packet. */
+    returnStatus = establishMqttSession( &mqttContext,
+                                         pNetworkContext,
+                                         true, /* clean session */
+                                         &sessionPresent );
 
     if( returnStatus == EXIT_SUCCESS )
     {
@@ -1210,30 +1025,11 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
          * flag will mark that an MQTT DISCONNECT has to be sent at the end
          * of the demo even if there are intermediate failures. */
         mqttSessionEstablished = true;
-    }
 
-    if( returnStatus == EXIT_SUCCESS )
-    {
-        /* Check if session is present and if there are any outgoing publishes
-         * that need to resend. This is only valid if the broker is
-         * re-establishing a session which was already present. */
-        if( sessionPresent == true )
-        {
-            LogInfo( ( "An MQTT session with broker is re-established."
-                       "Resending unacked publishes." ) );
-
-            /* Handle all the resend of publish messages. */
-            returnStatus = handlePublishResend( &mqttContext );
-        }
-        else
-        {
-            LogInfo( ( "A clean MQTT connection is established."
-                       " Cleaning up all the stored outgoing publishes.\n\n" ) );
-
-            /* Clean up the outgoing publishes waiting for ack as this new
-             * connection doesn't re-establish an existing session. */
-            cleanupOutgoingPublishes();
-        }
+        /* As we requested a clean session with the MQTT broker, the broker
+         * should have sent the acknowledgement packet (CONNACK) with the
+         * session present bit set to 0. */
+        assert( sessionPresent == false );
     }
 
     /* Subscribe to a wildcard temperature topic filter so that we can receive incoming PUBLISH
