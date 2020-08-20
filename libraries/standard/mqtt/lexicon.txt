@@ -33,8 +33,8 @@ connectinfo
 connectpacketsize
 const
 createcleansession
-currentstate
 csdk
+currentstate
 defragmenting
 deserialization
 deserializationresult
@@ -49,9 +49,9 @@ disconnectpacketsize
 doesn
 doxygen
 dup
-endcond
 emptyindex
 endcode
+endcond
 endif
 enum
 enums
@@ -176,8 +176,8 @@ payloadlength
 pbuffer
 pbuffertosend
 pcallbacks
-pconnack
 pclientidentifier
+pconnack
 pconnectinfo
 pcontext
 pcurrentstate
@@ -185,9 +185,8 @@ pcursor
 pdeserialized
 pdeserializedinfo
 pdestination
-ppacketidentifier
-ppingresp
 pem
+pfilterindex
 pfixedbuffer
 pheadersize
 pincomingpacket
@@ -206,12 +205,14 @@ pnetworkinterface
 pnewstate
 posix
 ppacketid
+ppacketidentifier
 ppacketinfo
 ppacketsize
 ppassword
 ppayload
 ppayloadsize
 ppayloadstart
+ppingresp
 ppubinfo
 ppublishinfo
 pqos
