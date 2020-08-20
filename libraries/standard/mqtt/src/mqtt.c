@@ -277,14 +277,17 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
                                     bool * pSessionPresent );
 
 /**
- * @brief Resends pending acks for a re-established MQTT session.
+ * @brief Resends pending acks for a re-established MQTT session, or
+ * clears existing state records for a clean session.
  *
  * @param[in] pContext Initialized MQTT context.
+ * @param[in] sessionPresent Session present flag from the MQTT broker.
  *
- * @return #MQTTSendFailed if transport send failed;
+ * @return #MQTTSendFailed if transport send during resend failed;
  * #MQTTSuccess otherwise.
  */
-static MQTTStatus_t resendPendingAcks( MQTTContext_t * pContext );
+static MQTTStatus_t handleSessionResumption( MQTTContext_t * pContext,
+                                             bool sessionPresent );
 
 /**
  * @brief Serializes a PUBLISH message.
@@ -1560,25 +1563,39 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t resendPendingAcks( MQTTContext_t * pContext )
+static MQTTStatus_t handleSessionResumption( MQTTContext_t * pContext,
+                                             bool sessionPresent )
 {
     MQTTStatus_t status = MQTTSuccess;
-    MQTTStateCursor_t cursor = MQTT_STATE_CURSOR_INITIALIZER;
-    uint16_t packetId = MQTT_PACKET_ID_INVALID;
-    MQTTPublishState_t state = MQTTStateNull;
 
     assert( pContext != NULL );
 
-    /* Get the next packet Id for which a PUBREL need to be resent. */
-    packetId = MQTT_PubrelToResend( pContext, &cursor, &state );
-
-    /* Resend all the PUBREL acks after session is reestablished. */
-    while( ( packetId != MQTT_PACKET_ID_INVALID ) &&
-           ( status == MQTTSuccess ) )
+    if( sessionPresent == true )
     {
-        status = sendPublishAcks( pContext, packetId, state );
+        MQTTStateCursor_t cursor = MQTT_STATE_CURSOR_INITIALIZER;
+        uint16_t packetId = MQTT_PACKET_ID_INVALID;
+        MQTTPublishState_t state = MQTTStateNull;
 
+        /* Get the next packet ID for which a PUBREL need to be resent. */
         packetId = MQTT_PubrelToResend( pContext, &cursor, &state );
+
+        /* Resend all the PUBREL acks after session is reestablished. */
+        while( ( packetId != MQTT_PACKET_ID_INVALID ) &&
+               ( status == MQTTSuccess ) )
+        {
+            status = sendPublishAcks( pContext, packetId, state );
+
+            packetId = MQTT_PubrelToResend( pContext, &cursor, &state );
+        }
+    }
+    else
+    {
+        ( void ) memset( pContext->outgoingPublishRecords,
+                         0x00,
+                         sizeof( pContext->outgoingPublishRecords ) );
+        ( void ) memset( pContext->incomingPublishRecords,
+                         0x00,
+                         sizeof( pContext->incomingPublishRecords ) );
     }
 
     return status;
@@ -1791,10 +1808,10 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
                                  pSessionPresent );
     }
 
-    /* Resend all the PUBREL when reestablishing a session. */
-    if( ( status == MQTTSuccess ) && ( *pSessionPresent == true ) )
+    if( status == MQTTSuccess )
     {
-        status = resendPendingAcks( pContext );
+        /* Resend PUBRELs when reestablishing a session, or clear records for new sessions. */
+        status = handleSessionResumption( pContext, *pSessionPresent );
     }
 
     if( status == MQTTSuccess )
