@@ -767,8 +767,8 @@ MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
  *
  *          for( int i = 0; i < numCodes; i++ )
  *          {
- *              // The only failure code is 0x80.
- *              if( pCodes[ i ] == 0x80 )
+ *              // The only failure code is 0x80 = MQTTSubAckFailure.
+ *              if( pCodes[ i ] == MQTTSubAckFailure )
  *              {
  *                  // The subscription failed, we may want to retry the
  *                  // subscription in pSubscribes[ i ] outside of this callback.

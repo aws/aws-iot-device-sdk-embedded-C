@@ -211,7 +211,7 @@ uint16_t MQTT_PubrelToResend( const MQTTContext_t * pMqttContext,
  *      if( sessionPresent )
  *      {
  *          // Loop while packet ID is nonzero.
- *          while( packetID = MQTT_PublishToResend( pContext, &cursor ) )
+ *          while( ( packetID = MQTT_PublishToResend( pContext, &cursor ) ) != 0 )
  *          {
  *              // Assume this function will succeed.
  *              pResendPublish = getPublish( packetID );
