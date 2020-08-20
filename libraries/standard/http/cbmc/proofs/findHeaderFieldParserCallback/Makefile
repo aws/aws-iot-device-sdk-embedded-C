@@ -4,7 +4,7 @@
 HARNESS_ENTRY=harness
 HARNESS_FILE=findHeaderFieldParserCallback_harness
 
-# The header field length is bounded, so strncmp can be unwounded to an expected
+# The header field length is bounded, so strncmp can be unwound to an expected
 # amount that won't make the proof run too long.
 MAX_HEADER_FIELD_LENGTH=10
 
