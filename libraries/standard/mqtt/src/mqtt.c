@@ -318,11 +318,11 @@ static MQTTStatus_t validatePublishParams( const MQTTContext_t * pContext,
                                            uint16_t packetId );
 
 /**
- * @brief Performs matching for special cases when the passed topic filter
- * ends with a wildcard character.
+ * @brief Performs matching for special cases when a topic filter ends
+ * with a wildcard character.
  *
  * When the topic name has been consumed but there are remaining characters to
- * to match in the topic filter, this function handles the following 2 cases:
+ * to match in topic filter, this function handles the following 2 cases:
  * - When the topic filter ends with "/+" or "/#" characters, but the topic
  * name only ends with '/'.
  * - When the topic filter ends with "/#" characters, but the topic name
