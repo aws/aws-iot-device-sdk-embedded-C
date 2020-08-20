@@ -58,12 +58,28 @@ create_test(${stest_name}
             "${test_include_directories}"
         )
 
-# Copy the certificates and client key to the binary directory.
-add_custom_command(
-    TARGET
-        ${stest_name}
-    POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${CMAKE_CURRENT_LIST_DIR}/certificates"
-        "$<TARGET_FILE_DIR:${stest_name}>/certificates"
-)
+# Set preprocessor defines for test if configured in build.
+if(BROKER_ENDPOINT)
+    target_compile_definitions(
+        ${stest_name} PRIVATE
+            BROKER_ENDPOINT="${BROKER_ENDPOINT}"
+    )
+endif()
+if(ROOT_CA_CERT_PATH)
+    target_compile_definitions(
+        ${stest_name} PRIVATE
+            SERVER_ROOT_CA_CERT_PATH="${ROOT_CA_CERT_PATH}"
+    )
+endif()
+if(CLIENT_CERT_PATH)
+    target_compile_definitions(
+        ${stest_name} PRIVATE
+        CLIENT_CERT_PATH="${CLIENT_CERT_PATH}"
+    )
+endif()
+if(CLIENT_PRIVATE_KEY_PATH)
+    target_compile_definitions(
+        ${stest_name} PRIVATE
+        CLIENT_PRIVATE_KEY_PATH="${CLIENT_PRIVATE_KEY_PATH}"
+    )
+endif()

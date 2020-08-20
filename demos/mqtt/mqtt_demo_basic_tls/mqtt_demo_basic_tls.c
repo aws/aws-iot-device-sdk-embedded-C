@@ -83,6 +83,11 @@
 #endif
 
 /**
+ * @brief Length of MQTT server host name.
+ */
+#define BROKER_ENDPOINT_LENGTH              ( ( uint16_t ) ( sizeof( BROKER_ENDPOINT ) - 1 ) )
+
+/**
  * @brief Length of client identifier.
  */
 #define CLIENT_IDENTIFIER_LENGTH            ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) )
@@ -392,7 +397,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     do
     {
         /* Establish a TLS session with the MQTT broker. This example connects
-         * to the MQTT broker as specified in AWS_IOT_ENDPOINT and AWS_MQTT_PORT at
+         * to the MQTT broker as specified in BROKER_ENDPOINT and BROKER_PORT at
          * the top of this file. */
         LogInfo( ( "Establishing a TLS session to %.*s:%d.",
                    BROKER_ENDPOINT_LENGTH,
@@ -437,6 +442,10 @@ static int getNextFreeIndexForOutgoingPublishes( uint8_t * pIndex )
         if( outgoingPublishPackets[ index ].packetId == MQTT_PACKET_ID_INVALID )
         {
             returnStatus = EXIT_SUCCESS;
+
+            /* Copy the available index into the output param. */
+            *pIndex = index;
+
             break;
         }
     }

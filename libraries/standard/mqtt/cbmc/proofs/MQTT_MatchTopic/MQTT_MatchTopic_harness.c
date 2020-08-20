@@ -20,37 +20,30 @@
  */
 
 /**
- * @file mqtt_internal.h
- * @brief Internal header of the MQTT library. This header should not be
- * included in typical application code.
+ * @file MQTT_MatchTopic_harness.c
+ * @brief Implements the proof harness for MQTT_MatchTopic function.
  */
-#ifndef MQTT_INTERNAL_H_
-#define MQTT_INTERNAL_H_
 
-/* Include config file before other headers. */
-#include "mqtt_config.h"
+#include "mqtt.h"
+#include "mqtt_cbmc_state.h"
 
-/**
- * @cond DOXYGEN_IGNORE
- * Doxygen should ignore this section.
- *
- * Configure logs for MQTT functions.
- */
-#ifndef LogError
-    #define LogError( message )
-#endif
+void harness()
+{
+    const char * pTopicName;
+    uint16_t nameLength;
+    const char * pTopicFilter;
+    uint16_t filterLength;
+    bool * pMatchResult;
 
-#ifndef LogWarn
-    #define LogWarn( message )
-#endif
+    __CPROVER_assume( nameLength < MAX_TOPIC_NAME_FILTER_LENGTH );
+    pTopicName = mallocCanFail( ( sizeof( char ) * nameLength ) );
+    __CPROVER_assume( filterLength < MAX_TOPIC_NAME_FILTER_LENGTH );
+    pTopicFilter = mallocCanFail( ( sizeof( char ) * filterLength ) );
+    pMatchResult = mallocCanFail( sizeof( bool ) );
 
-#ifndef LogInfo
-    #define LogInfo( message )
-#endif
-
-#ifndef LogDebug
-    #define LogDebug( message )
-#endif
-/** @endcond */
-
-#endif /* ifndef MQTT_INTERNAL_H_ */
+    MQTT_MatchTopic( pTopicName,
+                     nameLength,
+                     pTopicFilter,
+                     filterLength,
+                     pMatchResult );
+}

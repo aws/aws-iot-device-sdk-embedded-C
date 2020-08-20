@@ -44,6 +44,7 @@ inc
 initializerequestheaders
 iot
 lastcontrolpacketsent
+md
 metadata
 methodlen
 milli
@@ -52,6 +53,7 @@ mqtt
 mqttkeepalivetimeout
 nameindex
 noninfringement
+numoftopicfilters
 openssl
 org
 outgoingpublishpackets
@@ -71,6 +73,7 @@ pingreq
 pingresp
 plaintext
 pmatch
+pmessage
 pmethod
 pmqttcontext
 pnameindex
@@ -82,7 +85,9 @@ ppubinfo
 ppublishinfo
 processloop
 psessionpresent
+ptopic
 ptopicfilter
+ptopicfilters
 ptopicname
 ptransportinterface
 puback
@@ -91,6 +96,7 @@ publishpacketsent
 pubrec
 pubrel
 qos
+readme
 resending
 resp
 sdk
@@ -104,6 +110,7 @@ tcp
 tcpsocket
 tls
 topicfilterlength
+topiclength
 topicnamelength
 transportinterface
 transporttimeout

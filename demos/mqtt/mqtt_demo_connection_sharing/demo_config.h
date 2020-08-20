@@ -72,7 +72,7 @@
  *
  * This certificate should be PEM-encoded.
  *
- * #define ROOT_CA_CERT_PATH         ".....insert here...."
+ * #define ROOT_CA_CERT_PATH               "....insert here...."
  */
 
 /**
@@ -80,8 +80,6 @@
  *
  * No two clients may use the same client identifier simultaneously.
  */
-#ifndef CLIENT_IDENTIFIER
-    #define CLIENT_IDENTIFIER    "testclient"
-#endif
+#define CLIENT_IDENTIFIER    "testclient1"
 
 #endif /* ifndef DEMO_CONFIG_H */

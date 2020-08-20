@@ -53,19 +53,6 @@ if(BUILD_TESTS)
          DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/tests")
 endif()
 
-# Set prefix to PWD if any path flags are relative
-if(DEFINED ENV{PWD})
-    if(ROOT_CA_CERT_PATH AND NOT ROOT_CA_CERT_PATH MATCHES "/$")
-        set(ROOT_CA_CERT_PATH "$ENV{PWD}/${ROOT_CA_CERT_PATH}")
-    endif()
-    if(CLIENT_CERT_PATH AND NOT CLIENT_CERT_PATH MATCHES "/$")
-        set(CLIENT_CERT_PATH "$ENV{PWD}/${CLIENT_CERT_PATH}")
-    endif()
-    if(CLIENT_PRIVATE_KEY_PATH AND NOT CLIENT_PRIVATE_KEY_PATH MATCHES "/$")
-        set(CLIENT_PRIVATE_KEY_PATH "$ENV{PWD}/${CLIENT_PRIVATE_KEY_PATH}")
-    endif()
-endif()
-
 # Include each subdirectory that has a CMakeLists.txt file in it
 file(GLOB demo_dirs "${DEMOS_DIR}/*/*")
 foreach(demo_dir IN LISTS demo_dirs)
