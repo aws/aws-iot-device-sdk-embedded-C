@@ -212,12 +212,12 @@
 
 /**
  * @brief The maximum time interval in seconds which is allowed to elapse
- *  between two Control Packets.
+ * between two Control Packets.
  *
- *  It is the responsibility of the Client to ensure that the interval between
- *  Control Packets being sent does not exceed the this Keep Alive value. In the
- *  absence of sending any other Control Packets, the Client MUST send a
- *  PINGREQ Packet.
+ * It is the responsibility of the Client to ensure that the interval between
+ * Control Packets being sent does not exceed the this Keep Alive value. In the
+ * absence of sending any other Control Packets, the Client MUST send a
+ * PINGREQ Packet.
  */
 #define MQTT_KEEP_ALIVE_INTERVAL_SECONDS        ( 60U )
 
@@ -315,7 +315,7 @@ static bool globalReceivedPrecipitationData = false;
 static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext );
 
 /**
- * @brief A function that connects to MQTT broker,
+ * @brief A function that connects to the MQTT broker,
  * subscribes to a topic, publishes to the same topic
  * MQTT_PUBLISH_COUNT_PER_LOOP number of times, and verifies if it
  * receives the Publish message back.
@@ -330,7 +330,6 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext );
  * @brief The function to handle the incoming publishes.
  *
  * @param[in] pPublishInfo Pointer to publish info of the incoming publish.
- * @param[in] packetIdentifier Packet identifier of the incoming publish.
  */
 static void handleIncomingPublish( MQTTPublishInfo_t * pPublishInfo );
 
@@ -561,11 +560,11 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     memset( &opensslCredentials, 0, sizeof( OpensslCredentials_t ) );
     opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
 
-    /* Initialize reconnect attempts and interval */
+    /* Initialize reconnect attempts and interval. */
     Transport_ReconnectParamsReset( &reconnectParams );
 
     /* Attempt to connect to MQTT broker. If connection fails, retry after
-     * a timeout. Timeout value will exponentially increase till maximum
+     * a timeout. Timeout value will exponentially increase until maximum
      * attempts are reached.
      */
     do
@@ -892,7 +891,7 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
     if( mqttStatus != MQTTSuccess )
     {
         returnStatus = EXIT_FAILURE;
-        LogError( ( "MQTT init failed with status %u.", mqttStatus ) );
+        LogError( ( "MQTT init failed with status %s.", MQTT_Status_strerror( mqttStatus ) ) );
     }
     else
     {
@@ -1127,7 +1126,7 @@ static int publishToTopicAndProcessIncomingMessage( MQTTContext_t * pMqttContext
 
     assert( pMqttContext != NULL );
 
-    /* Get the next free index for the outgoing publish. All QoS2 outgoing
+    /* Get the next free index for the outgoing publish. All QoS1 outgoing
      * publishes are stored until a PUBACK is received. These messages are
      * stored for supporting a resend if a network connection is broken before
      * receiving a PUBACK. */
