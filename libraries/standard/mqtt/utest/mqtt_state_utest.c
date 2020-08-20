@@ -30,7 +30,7 @@ int suiteTearDown( int numFailures )
 
 static void resetPublishRecords( MQTTContext_t * pMqttContext )
 {
-    int i = 0;
+    uint32_t i = 0;
 
     for( ; i < MQTT_STATE_ARRAY_MAX_COUNT; i++ )
     {
@@ -59,7 +59,7 @@ static void fillRecord( MQTTPubAckInfo_t * records,
                         MQTTQoS_t qos,
                         MQTTPublishState_t state )
 {
-    int i;
+    uint32_t i;
 
     for( i = 0; i < MQTT_STATE_ARRAY_MAX_COUNT; i++ )
     {
@@ -725,7 +725,6 @@ void test_MQTT_PublishToResend( void )
 {
     MQTTContext_t mqttContext = { 0 };
     MQTTStateCursor_t cursor = MQTT_STATE_CURSOR_INITIALIZER;
-    MQTTPublishState_t state = MQTTStateNull;
     uint16_t packetId;
     const uint16_t PACKET_ID = 1;
     const uint16_t PACKET_ID2 = 2;

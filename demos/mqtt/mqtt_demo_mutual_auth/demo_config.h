@@ -51,8 +51,6 @@
 /**
  * @brief Details of the MQTT broker to connect to.
  *
- * This is the Thing's Rest API Endpoint for AWS IoT.
- *
  * @note Your AWS IoT Core endpoint can be found in the AWS IoT console under
  * Settings/Custom Endpoint, or using the describe-endpoint API.
  *
