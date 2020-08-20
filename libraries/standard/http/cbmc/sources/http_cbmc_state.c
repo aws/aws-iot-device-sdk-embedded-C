@@ -101,7 +101,7 @@ HTTPResponse_t * allocateHttpResponse( HTTPResponse_t * pResponse )
         else
         {
             __CPROVER_assume( pResponse->headersLen < bodyOffset &&
-                              bodyOffset < pResponse->bufferLen );
+                              bodyOffset <= pResponse->bufferLen );
         }
 
         pResponse->pBody = nondet_bool() ? NULL :
