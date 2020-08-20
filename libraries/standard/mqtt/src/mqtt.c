@@ -496,8 +496,7 @@ static bool matchWildcards( const char * pTopicName,
          * can be performed in the next level.
          * Note: The name index already points to the level separator in the topic
          * name. */
-        else if( ( nextLevelExistsInTopicName == true ) &&
-                 ( nextLevelExistsinTopicFilter == true ) )
+        else if( nextLevelExistsInTopicName == true )
         {
             ( *pFilterIndex )++;
         }
