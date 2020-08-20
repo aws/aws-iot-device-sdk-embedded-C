@@ -282,9 +282,9 @@ static bool globalReceivedPrecipitationData = false;
 /**
  * @brief Connect to MQTT broker with reconnection retries.
  *
- * If connection fails, retry is attempted after a timeout.
- * Timeout value will exponentially increased till maximum
- * timeout value is reached or the number of attempts are exhausted.
+ * If connection fails, retry is attempted after a back-off period.
+ * The back-off period will exponentially increase until either the maximum
+ * back-off period is reached or the number of attempts are exhausted.
  *
  * @param[out] pNetworkContext The output parameter to return the created network context.
  *
@@ -1252,13 +1252,8 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
  * The example shown below uses MQTT APIs to send and receive MQTT packets
  * over the TLS connection established using OpenSSL.
  *
- * The example is single threaded and uses statically allocated memory;
- * it uses QOS1 and therefore implements a retransmission mechanism
- * for Publish messages. Retransmission of publish messages are attempted
- * when a MQTT connection is established with a session that was already
- * present. All the outgoing publish messages waiting to receive PUBACK
- * are resent in this demo. In order to support retransmission all the outgoing
- * publishes are stored until a PUBACK is received.
+ * The example is single threaded, uses statically allocated memory, and
+ * uses QOS1 for publishing messages to the broker.
  */
 int main( int argc,
           char ** argv )
