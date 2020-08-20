@@ -618,6 +618,9 @@ static void eventCallback( MQTTContext_t * pMqttContext,
     assert( pPacketInfo != NULL );
     assert( pDeserializedInfo != NULL );
 
+    /* Suppress unused parameter warning when asserts are disabled in build. */
+    ( void ) pMqttContext;
+
     packetIdentifier = pDeserializedInfo->packetIdentifier;
 
     /* Handle incoming publish. The lower 4 bits of the publish packet
