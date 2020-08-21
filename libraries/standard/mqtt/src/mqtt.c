@@ -318,7 +318,11 @@ static MQTTStatus_t validatePublishParams( const MQTTContext_t * pContext,
                                            uint16_t packetId );
 
 /**
- * topic filter, this function handles the following 2 cases:
+ * @brief Performs matching for special cases when a topic filter ends
+ * with a wildcard character.
+ *
+ * When the topic name has been consumed but there are remaining characters to
+ * to match in topic filter, this function handles the following 2 cases:
  * - When the topic filter ends with "/+" or "/#" characters, but the topic
  * name only ends with '/'.
  * - When the topic filter ends with "/#" characters, but the topic name
@@ -350,9 +354,10 @@ static bool matchEndWildcardsSpecialCases( const char * pTopicFilter,
  * @param[in] topicNameLength Length of the topic name.
  * @param[in] pTopicFilter The topic filter to match.
  * @param[in] topicFilterLength Length of the topic filter.
- * @param[in,out] pNameIndex Current index in topic name being examined.. It is
+ * @param[in,out] pNameIndex Current index in the topic name being examined. It is
  * advanced by one level for `+` wildcards.
- * @param[in] filterIndex Current index in the topic filter being examined..
+ * @param[in, out] pFilterIndex Current index in the topic filter being examined.
+ * It is advanced to position of '/' level separator for '+' wildcard.
  * @param[out] pMatch Whether the topic filter and topic name match.
  *
  * @return `true` if the caller of this function should exit; `false` if the
@@ -363,7 +368,7 @@ static bool matchWildcards( const char * pTopicName,
                             const char * pTopicFilter,
                             uint16_t topicFilterLength,
                             uint16_t * pNameIndex,
-                            uint16_t filterIndex,
+                            uint16_t * pFilterIndex,
                             bool * pMatch );
 
 /**
@@ -396,7 +401,8 @@ static bool matchEndWildcardsSpecialCases( const char * pTopicFilter,
      * "/#". This check handles the case to match filter "sport/#" with topic
      * "sport". The reason is that the '#' wildcard represents the parent and
      * any number of child levels in the topic name.*/
-    if( ( filterIndex == ( topicFilterLength - 3U ) ) &&
+    if( ( topicFilterLength >= 3U ) &&
+        ( filterIndex == ( topicFilterLength - 3U ) ) &&
         ( pTopicFilter[ filterIndex + 1U ] == '/' ) &&
         ( pTopicFilter[ filterIndex + 2U ] == '#' ) )
 
@@ -428,7 +434,7 @@ static bool matchWildcards( const char * pTopicName,
                             const char * pTopicFilter,
                             uint16_t topicFilterLength,
                             uint16_t * pNameIndex,
-                            uint16_t filterIndex,
+                            uint16_t * pFilterIndex,
                             bool * pMatch )
 {
     bool shouldStopMatching = false;
@@ -439,56 +445,86 @@ static bool matchWildcards( const char * pTopicName,
     assert( pTopicFilter != NULL );
     assert( topicFilterLength != 0 );
     assert( pNameIndex != NULL );
+    assert( pFilterIndex != NULL );
     assert( pMatch != NULL );
 
     /* Wild card in a topic filter is only valid either at the starting position
      * or when it is preceded by a '/'.*/
-    locationIsValidForWildcard = ( ( filterIndex == 0u ) ||
-                                   ( pTopicFilter[ filterIndex - 1U ] == '/' )
+    locationIsValidForWildcard = ( ( *pFilterIndex == 0u ) ||
+                                   ( pTopicFilter[ *pFilterIndex - 1U ] == '/' )
                                    ) ? true : false;
 
-    if( locationIsValidForWildcard == true )
+    if( ( pTopicFilter[ *pFilterIndex ] == '+' ) && ( locationIsValidForWildcard == true ) )
     {
-        if( pTopicFilter[ filterIndex ] == '+' )
+        bool nextLevelExistsInTopicName = false;
+        bool nextLevelExistsinTopicFilter = false;
+
+        /* Move topic name index to the end of the current level. The end of the
+         * current level is identified by the last character before the next level
+         * separator '/'. */
+        while( *pNameIndex < topicNameLength )
         {
-            /* Move topic name index to the end of the current level. The end of the
-             * current level is identified by '/'. */
-            while( ( *pNameIndex < topicNameLength ) && ( pTopicName[ *pNameIndex ] != '/' ) )
+            /* Exit the loop if we hit the level separator. */
+            if( pTopicName[ *pNameIndex ] == '/' )
             {
-                ( *pNameIndex )++;
+                nextLevelExistsInTopicName = true;
+                break;
             }
 
-            /* Decrement the topic name index for 2 different cases:
-             * - If the break condition is ( *pNameIndex < topicNameLength ), then
-             *   we have reached past the end of the topic name and we move back the
-             *   the index on the last character.
-             * - If the break condition is ( pTopicName[ *pNameIndex ] != '/' ), we
-             *   move back the index on the '/' character. */
-            ( *pNameIndex )--;
+            ( *pNameIndex )++;
         }
 
-        /* '#' matches everything remaining in the topic name. It must be the
-         * last character in a topic filter. */
-        else if( ( pTopicFilter[ filterIndex ] == '#' ) &&
-                 ( filterIndex == ( topicFilterLength - 1U ) ) )
+        /* Determine if the topic filter contains a child level after the current level
+         * represented by the '+' wildcard. */
+        if( ( *pFilterIndex < ( topicFilterLength - 1U ) ) &&
+            ( pTopicFilter[ *pFilterIndex + 1U ] == '/' ) )
         {
-            /* Subsequent characters don't need to be checked for the
-             * multi-level wildcard. */
-            *pMatch = true;
-            shouldStopMatching = true;
+            nextLevelExistsinTopicFilter = true;
         }
-        else
+
+        /* If the topic name contains a child level but the topic filter ends at
+         * the current level, then there does not exist a match. */
+        if( ( nextLevelExistsInTopicName == true ) &&
+            ( nextLevelExistsinTopicFilter == false ) )
         {
-            /* Any character mismatch other than '+' or '#' means the topic
-             * name does not match the topic filter. */
             *pMatch = false;
             shouldStopMatching = true;
         }
+
+        /* If the topic name and topic filter have child levels, then advance the
+         * filter index to the level separator in the topic filter, so that match
+         * can be performed in the next level.
+         * Note: The name index already points to the level separator in the topic
+         * name. */
+        else if( nextLevelExistsInTopicName == true )
+        {
+            ( *pFilterIndex )++;
+        }
+        else
+        {
+            /* If we have reached here, the the loop terminated on the
+             * ( *pNameIndex < topicNameLength) condition, which means that have
+             * reached past the end of the topic name, and thus, we decrement the
+             * index to the last character in the topic name.*/
+            ( *pNameIndex )--;
+        }
+    }
+
+    /* '#' matches everything remaining in the topic name. It must be the
+     * last character in a topic filter. */
+    else if( ( pTopicFilter[ *pFilterIndex ] == '#' ) &&
+             ( *pFilterIndex == ( topicFilterLength - 1U ) ) &&
+             ( locationIsValidForWildcard == true ) )
+    {
+        /* Subsequent characters don't need to be checked for the
+         * multi-level wildcard. */
+        *pMatch = true;
+        shouldStopMatching = true;
     }
     else
     {
-        /* If the location is not valid for a wildcard, the topic name does not
-         * match the topic filter. */
+        /* Any character mismatch other than '+' or '#' means the topic
+         * name does not match the topic filter. */
         *pMatch = false;
         shouldStopMatching = true;
     }
@@ -535,7 +571,7 @@ static bool matchTopicFilter( const char * pTopicName,
                                                  pTopicFilter,
                                                  topicFilterLength,
                                                  &nameIndex,
-                                                 filterIndex,
+                                                 &filterIndex,
                                                  &matchFound );
         }
 
