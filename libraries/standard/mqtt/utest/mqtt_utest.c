@@ -2251,6 +2251,15 @@ void test_MQTT_MatchTopic_Wildcard_SingleLevel( void )
                                                      &matchResult ) );
     TEST_ASSERT_EQUAL( false, matchResult );
 
+    pTopicName = "/";
+    pTopicFilter = "+";
+    TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_MatchTopic( pTopicName,
+                                                     strlen( pTopicName ),
+                                                     pTopicFilter,
+                                                     strlen( pTopicFilter ),
+                                                     &matchResult ) );
+    TEST_ASSERT_EQUAL( false, matchResult );
+
     /* Test with '+' as the topic filter. */
     pTopicName = "test";
     pTopicFilter = "+";
