@@ -101,17 +101,13 @@ static SocketStatus_t attemptConnection( struct addrinfo * pListHead,
 /**
  * @brief Connect to server using the provided address record.
  *
- * @param[in] pAddrInfo Address record of the server.
- * @param[in] pHostName Server host name.
- * @param[in] hostNameLength Length associated with host name.
+ * @param[in, out] pAddrInfo Address record of the server.
  * @param[in] port Server port in host-order.
  * @param[in] pTcpSocket Socket handle.
  *
  * @return #SOCKETS_SUCCESS if successful; #SOCKETS_CONNECT_FAILURE on error.
  */
 static SocketStatus_t connectToAddress( struct sockaddr * pAddrInfo,
-                                        const char * pHostName,
-                                        size_t hostNameLength,
                                         uint16_t port,
                                         int tcpSocket );
 
@@ -161,8 +157,6 @@ static SocketStatus_t resolveHostName( const char * pHostName,
 /*-----------------------------------------------------------*/
 
 static SocketStatus_t connectToAddress( struct sockaddr * pAddrInfo,
-                                        const char * pHostName,
-                                        size_t hostNameLength,
                                         uint16_t port,
                                         int tcpSocket )
 {
@@ -173,8 +167,9 @@ static SocketStatus_t connectToAddress( struct sockaddr * pAddrInfo,
     uint16_t netPort = 0;
 
     assert( pAddrInfo != NULL );
-    assert( pHostName != NULL );
-    assert( hostNameLength > 0 );
+    assert( pAddrInfo->sa_family == AF_INET || pAddrInfo->sa_family == AF_INET6 );
+    assert( tcpSocket >= 0 );
+
 
     /* Convert port from host byte order to network byte order. */
     netPort = htons( port );
@@ -200,10 +195,8 @@ static SocketStatus_t connectToAddress( struct sockaddr * pAddrInfo,
                             sizeof( resolvedIpAddr ) );
     }
 
-    LogDebug( ( "Attempting to connect to server using a resolved IP address:"
-                " Host=%.*s, IP address=%s.",
-                ( int32_t ) hostNameLength,
-                pHostName,
+    LogDebug( ( "Attempting to connect to server using the resolved IP address:"
+                " IP address=%s.",
                 resolvedIpAddr ) );
 
     /* Attempt to connect. */
@@ -211,17 +204,10 @@ static SocketStatus_t connectToAddress( struct sockaddr * pAddrInfo,
 
     if( connectStatus == -1 )
     {
-        LogWarn( ( "Failed to connect to server: Host=%.*s, IP address=%s.",
-                   ( int32_t ) hostNameLength,
-                   pHostName,
+        LogWarn( ( "Failed to connect to server using the resolved IP address: IP address=%s.",
                    resolvedIpAddr ) );
         close( tcpSocket );
         returnStatus = SOCKETS_CONNECT_FAILURE;
-    }
-    else
-    {
-        LogDebug( ( "Connected to IP address: %s.",
-                    resolvedIpAddr ) );
     }
 
     return returnStatus;
@@ -261,7 +247,7 @@ static SocketStatus_t attemptConnection( struct addrinfo * pListHead,
         }
 
         /* Attempt to connect to a resolved DNS address of the host. */
-        returnStatus = connectToAddress( pIndex->ai_addr, pHostName, hostNameLength, port, *pTcpSocket );
+        returnStatus = connectToAddress( pIndex->ai_addr, port, *pTcpSocket );
 
         /* If connected to an IP address successfully, exit from the loop. */
         if( returnStatus == SOCKETS_SUCCESS )
