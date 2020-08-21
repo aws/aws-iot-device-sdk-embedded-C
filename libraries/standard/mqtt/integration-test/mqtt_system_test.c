@@ -513,6 +513,9 @@ static void eventCallback( MQTTContext_t * pContext,
     assert( pPacketInfo != NULL );
     assert( pDeserializedInfo != NULL );
 
+    /* Suppress unused parameter warning when asserts are disabled in build. */
+    ( void ) pContext;
+
     TEST_ASSERT_EQUAL( MQTTSuccess, pDeserializedInfo->deserializationResult );
     pPublishInfo = pDeserializedInfo->pPublishInfo;
 
@@ -970,6 +973,11 @@ void test_MQTT_Connect_LWT( void )
     /* Subscribe to LWT Topic. */
     TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic(
                            &context, TEST_MQTT_LWT_TOPIC, MQTTQoS0 ) );
+
+    /* Wait for the SUBACK response from the broker for the subscribe request. */
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    TEST_ASSERT_TRUE( receivedSubAck );
 
     /* Abruptly terminate TCP connection. */
     ( void ) Openssl_Disconnect( &secondNetworkContext );
