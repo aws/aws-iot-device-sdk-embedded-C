@@ -50,5 +50,4 @@ void harness()
                                           & ( topicBuffer[ 0 ] ),
                                           bufferSize,
                                           & outLength );
-
 }

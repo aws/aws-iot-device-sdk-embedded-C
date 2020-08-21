@@ -41,11 +41,9 @@ void harness()
     __CPROVER_assume( topicNameLength < TOPIC_STRING_LENGTH_MAX );
     pTopicName = mallocCanFail( topicNameLength );
 
-
     Shadow_MatchTopic( pTopicName,
                        topicNameLength,
                        & messageType,
                        & pThingName,
                        & thingNameLength );
-
 }
