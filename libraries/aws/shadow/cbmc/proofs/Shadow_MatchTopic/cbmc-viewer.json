@@ -1,0 +1,7 @@
+{ "expected-missing-functions":
+  [
+
+  ],
+  "proof-name": "Shadow_MatchTopic",
+  "proof-root": "../cbmc/proofs"
+}
