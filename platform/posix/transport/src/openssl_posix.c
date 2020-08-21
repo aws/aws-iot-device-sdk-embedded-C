@@ -126,7 +126,7 @@ static void setOptionalConfigurations( SSL * pSsl,
                                        const OpensslCredentials_t * pOpensslCredentials );
 
 /**
- * @brief Converts the sockets wrapper statuses to openssl statuses.
+ * @brief Converts the sockets wrapper status to openssl status.
  *
  * @param[in] socketStatus Sockets wrapper status.
  *
