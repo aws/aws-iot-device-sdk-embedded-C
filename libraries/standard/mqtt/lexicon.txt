@@ -2,11 +2,13 @@ ack
 acked
 acks
 addrecord
+addtogroup
 ansi
 api
 app
 aws
 bool
+br
 bufferlength
 bytesorerror
 bytesreceived
@@ -60,6 +62,7 @@ eventcallbackstub
 expectprocessloopcalls
 filterindex
 fixedbuffer
+fn
 getconnectpacketsize
 getcurrenttimestub
 getdisconnectpacketsize
@@ -84,6 +87,7 @@ ifndef
 inc
 incomingpacket
 incomingpublish
+ingroup
 init
 initializeconnectinfo
 initializesubscribeinfo

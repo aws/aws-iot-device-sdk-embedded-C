@@ -30,33 +30,6 @@
 #include "mqtt_state.h"
 #include "private/mqtt_internal.h"
 
-
-/**
- * @brief The number of retries for receiving CONNACK.
- *
- * The MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT will be used only when the
- * timeoutMs parameter of #MQTT_Connect() is passed as 0 . The transport
- * receive for CONNACK will be retried MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT
- * times before timing out. A value of 0 for this config will cause the
- * transport receive for CONNACK  to be invoked only once.
- */
-#ifndef MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT
-    /* Default value for the CONNACK receive retries. */
-    #define MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT    ( 5U )
-#endif
-
-/**
- * @brief Number of milliseconds to wait for a ping response to a ping
- * request as part of the keep-alive mechanism.
- *
- * If a ping response is not received before this timeout, then
- * #MQTT_ProcessLoop will return #MQTTKeepAliveTimeout.
- */
-#ifndef MQTT_PINGRESP_TIMEOUT_MS
-    /* Wait 0.5 seconds by default for a ping response. */
-    #define MQTT_PINGRESP_TIMEOUT_MS    ( 500U )
-#endif
-
 /*-----------------------------------------------------------*/
 
 /**
