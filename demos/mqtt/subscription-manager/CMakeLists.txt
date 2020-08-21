@@ -3,10 +3,6 @@ set( LIBRARY_NAME "mqtt_subscription_manager" )
 add_library( ${LIBRARY_NAME}
             "${LIBRARY_NAME}.c" )
 
-# Treat warnings as error for subscription manager target.
-target_compile_options( ${LIBRARY_NAME} PUBLIC "-Werror" )  
-
-
 target_link_libraries(
     ${LIBRARY_NAME}
     PRIVATE

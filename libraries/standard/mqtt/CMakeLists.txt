@@ -5,9 +5,6 @@ include( mqttFilePaths.cmake )
 add_library( mqtt
              ${MQTT_SOURCES} )
 
-# Treat warnings as error for MQTT target.
-target_compile_options( mqtt PUBLIC "-Werror" )                 
-
 # MQTT public include path.
 target_include_directories( mqtt PUBLIC ${MQTT_INCLUDE_PUBLIC_DIRS} )
 
