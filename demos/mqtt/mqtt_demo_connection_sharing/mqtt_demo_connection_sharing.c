@@ -559,6 +559,9 @@ static void temperatureDataCallback( MQTTContext_t * pContext,
     assert( pPublishInfo != NULL );
     assert( pContext != NULL );
 
+    /* Suppress unused parameter warning when asserts are disabled in build. */
+    ( void ) pContext;
+
     LogInfo( ( "Invoked temperature callback." ) );
 
     /* Determine whether the incoming PUBLISH message is for "high"
@@ -593,6 +596,9 @@ static void humidityDataCallback( MQTTContext_t * pContext,
     assert( pPublishInfo != NULL );
     assert( pContext != NULL );
 
+    /* Suppress unused parameter warning when asserts are disabled in build. */
+    ( void ) pContext;
+
     LogInfo( ( "Invoked humidity callback." ) );
 
     /* Set the global flag to indicate that the humidity data has been received. */
@@ -606,6 +612,9 @@ static void precipitationDataCallback( MQTTContext_t * pContext,
 {
     assert( pPublishInfo != NULL );
     assert( pContext != NULL );
+
+    /* Suppress unused parameter warning when asserts are disabled in build. */
+    ( void ) pContext;
 
     LogInfo( ( "Invoked precipitation callback." ) );
 
