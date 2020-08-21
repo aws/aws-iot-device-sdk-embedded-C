@@ -36,6 +36,7 @@ nano
 networkcontext
 noninfringement
 openssl
+openssl_invalid_parameter
 param
 pbuffer
 pclientcertpath
@@ -62,6 +63,8 @@ sendtimeout
 sendtimeoutms
 sleeptimems
 sni
+socketstatus
+sockets_invalid_parameter
 src
 ssl
 sublicense
