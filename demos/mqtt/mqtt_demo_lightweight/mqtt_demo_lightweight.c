@@ -462,6 +462,10 @@ static void mqttSubscribeToTopic( NetworkContext_t * pNetworkContext,
     size_t packetSize;
     int status;
 
+    /* Suppress unused variable warnings when asserts are disabled in build. */
+    ( void ) status;
+    ( void ) result;
+
     /***
      * For readability, error handling in this function is restricted to the use of
      * asserts().
@@ -509,6 +513,10 @@ static void mqttPublishToTopic( NetworkContext_t * pNetworkContext,
     size_t packetSize = 0;
     size_t headerSize = 0;
     int status;
+
+    /* Suppress unused variable warnings when asserts are disabled in build. */
+    ( void ) status;
+    ( void ) result;
 
     /***
      * For readability, error handling in this function is restricted to the use of
@@ -562,6 +570,10 @@ static void mqttUnsubscribeFromTopic( NetworkContext_t * pNetworkContext,
     size_t packetSize;
     int status;
 
+    /* Suppress unused variable warnings when asserts are disabled in build. */
+    ( void ) status;
+    ( void ) result;
+
     /* Some fields not used by this demo so start with everything at 0. */
     memset( ( void * ) &mqttSubscription, 0x00, sizeof( mqttSubscription ) );
 
@@ -601,6 +613,10 @@ static void mqttKeepAlive( NetworkContext_t * pNetworkContext,
     int status;
     size_t packetSize = 0;
 
+    /* Suppress unused variable warnings when asserts are disabled in build. */
+    ( void ) status;
+    ( void ) result;
+
     /* Calculate PING request size. */
     status = MQTT_GetPingreqPacketSize( &packetSize );
 
@@ -624,6 +640,10 @@ static void mqttDisconnect( NetworkContext_t * pNetworkContext,
     int32_t status;
     size_t packetSize = 0;
 
+    /* Suppress unused variable warnings when asserts are disabled in build. */
+    ( void ) status;
+    ( void ) result;
+
     status = MQTT_GetDisconnectPacketSize( &packetSize );
 
     assert( packetSize <= pFixedBuffer->size );
@@ -641,6 +661,9 @@ static void mqttDisconnect( NetworkContext_t * pNetworkContext,
 static void mqttProcessResponse( MQTTPacketInfo_t * pIncomingPacket,
                                  uint16_t packetId )
 {
+    /* Suppress unused parameter warnings when asserts are disabled in build. */
+    ( void ) packetId;
+
     switch( pIncomingPacket->type & 0xf0 )
     {
         case MQTT_PACKET_TYPE_SUBACK:
@@ -712,6 +735,9 @@ static void mqttProcessIncomingPacket( NetworkContext_t * pNetworkContext,
     int status;
     bool sessionPresent = false;
     uint16_t receiveAttempts = 0;
+
+    /* Suppress unused variable warning when asserts are disabled in build. */
+    ( void ) status;
 
     /***
      * For readability, error handling in this function is restricted to the use of
