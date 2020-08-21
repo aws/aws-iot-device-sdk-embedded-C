@@ -1034,7 +1034,8 @@ void test_MQTT_Connect_happy_path()
     mqttContext.keepAliveIntervalSec = 0;
     connectInfo.cleanSession = true;
     sessionPresentExpected = false;
-    /* Populate some state records to make sure they are cleared. */
+    /* Populate some state records to make sure they are cleared since a clean session
+     * will be established. */
     mqttContext.outgoingPublishRecords[ 0 ].packetId = 1;
     mqttContext.outgoingPublishRecords[ 0 ].qos = MQTTQoS2;
     mqttContext.outgoingPublishRecords[ 0 ].publishState = MQTTPublishSend;

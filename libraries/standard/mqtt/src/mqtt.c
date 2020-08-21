@@ -281,7 +281,7 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
  * clears existing state records for a clean session.
  *
  * @param[in] pContext Initialized MQTT context.
- * @param[in] sessionPresent Session present flag from the MQTT broker.
+ * @param[in] sessionPresent Session present flag received from the MQTT broker.
  *
  * @return #MQTTSendFailed if transport send during resend failed;
  * #MQTTSuccess otherwise.
@@ -1590,6 +1590,7 @@ static MQTTStatus_t handleSessionResumption( MQTTContext_t * pContext,
     }
     else
     {
+        /* Clear any existing records if a new session is established. */
         ( void ) memset( pContext->outgoingPublishRecords,
                          0x00,
                          sizeof( pContext->outgoingPublishRecords ) );
