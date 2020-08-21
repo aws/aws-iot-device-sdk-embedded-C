@@ -32,7 +32,7 @@ void harness()
 {
     HTTPResponse_t * pResponse;
     char * pField;
-    char * pValue;
+    char ** pValue;
     size_t fieldLen;
     size_t valueLen;
 
@@ -42,7 +42,7 @@ void harness()
 
     /* Initialize and make assumptions for header value. */
     __CPROVER_assume( valueLen < CBMC_MAX_OBJECT_SIZE );
-    pValue = mallocCanFail( valueLen );
+    pValue = mallocCanFail( sizeof( char * ) );
 
     /* Initialize and make assumptions for response object. */
     pResponse = allocateHttpResponse( NULL );
