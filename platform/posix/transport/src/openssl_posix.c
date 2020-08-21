@@ -590,37 +590,31 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
 
 OpensslStatus_t Openssl_Disconnect( NetworkContext_t * pNetworkContext )
 {
-    OpensslStatus_t returnStatus = OPENSSL_SUCCESS;
-    SocketStatus_t socketStatus = SOCKETS_SUCCESS;
+    SocketStatus_t socketStatus = SOCKETS_INVALID_PARAMETER;
 
     if( pNetworkContext == NULL )
     {
         LogError( ( "Parameter check failed: pNetworkContext is NULL." ) );
-        returnStatus = OPENSSL_INVALID_PARAMETER;
-    }
-    else if( pNetworkContext->pSsl != NULL )
-    {
-        /* SSL shutdown should be called twice: once to send "close notify" and
-         * once more to receive the peer's "close notify". */
-        if( SSL_shutdown( pNetworkContext->pSsl ) == 0 )
-        {
-            ( void ) SSL_shutdown( pNetworkContext->pSsl );
-        }
-
-        SSL_free( pNetworkContext->pSsl );
     }
     else
     {
-        /* Empty else. */
+        if( pNetworkContext->pSsl != NULL )
+        {
+            /* SSL shutdown should be called twice: once to send "close notify" and
+             * once more to receive the peer's "close notify". */
+            if( SSL_shutdown( pNetworkContext->pSsl ) == 0 )
+            {
+                ( void ) SSL_shutdown( pNetworkContext->pSsl );
+            }
+
+            SSL_free( pNetworkContext->pSsl );
+        }
+
+        /* Tear down the socket connection, pNetworkContext != NULL here. */
+        socketStatus = Sockets_Disconnect( pNetworkContext->socketDescriptor );
     }
 
-    /* Tear down the socket connection. */
-    socketStatus = Sockets_Disconnect( pNetworkContext->socketDescriptor );
-
-    /* Convert socket wrapper status to openssl status. */
-    returnStatus = convertToOpensslStatus( socketStatus );
-
-    return returnStatus;
+    return convertToOpensslStatus( socketStatus );
 }
 /*-----------------------------------------------------------*/
 
