@@ -424,22 +424,17 @@ static size_t findInRecord( const MQTTPubAckInfo_t * records,
 {
     size_t index = 0;
 
+    assert( packetId != MQTT_PACKET_ID_INVALID );
+
     *pCurrentState = MQTTStateNull;
 
-    if( packetId == MQTT_PACKET_ID_INVALID )
+    for( index = 0; index < recordCount; index++ )
     {
-        index = recordCount;
-    }
-    else
-    {
-        for( index = 0; index < recordCount; index++ )
+        if( records[ index ].packetId == packetId )
         {
-            if( records[ index ].packetId == packetId )
-            {
-                *pQos = records[ index ].qos;
-                *pCurrentState = records[ index ].publishState;
-                break;
-            }
+            *pQos = records[ index ].qos;
+            *pCurrentState = records[ index ].publishState;
+            break;
         }
     }
 
@@ -964,7 +959,10 @@ MQTTStatus_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
  * @param[in] opType Send or Receive.
  * @param[out] pNewState Updated state of the publish.
  *
- * @return #MQTTBadParameter, #MQTTIllegalState, or #MQTTSuccess.
+ * @return #MQTTBadParameter if an invalid parameter is passed;
+ * #MQTTBadResponse if the packet from the network is not found in the records;
+ * #MQTTIllegalState if the requested update would result in an illegal transition;
+ * #MQTTSuccess otherwise.
  */
 MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
                                   uint16_t packetId,
@@ -978,13 +976,24 @@ MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
     MQTTQoS_t qos = MQTTQoS0;
     size_t recordIndex = MQTT_STATE_ARRAY_MAX_COUNT;
     MQTTPubAckInfo_t * records = NULL;
-    MQTTStatus_t status = MQTTBadParameter;
+    MQTTStatus_t status = MQTTBadResponse;
 
     if( ( pMqttContext == NULL ) || ( pNewState == NULL ) )
     {
         LogError( ( "Argument cannot be NULL: pMqttContext=%p, pNewState=%p.",
                     ( void * ) pMqttContext,
                     ( void * ) pNewState ) );
+        status = MQTTBadParameter;
+    }
+    else if( packetId == MQTT_PACKET_ID_INVALID )
+    {
+        LogError( ( "Packet ID must be nonzero." ) );
+        status = MQTTBadParameter;
+    }
+    else if( packetType > MQTTPubcomp )
+    {
+        LogError( ( "Invalid packet type %u.", packetType ) );
+        status = MQTTBadParameter;
     }
     else
     {
@@ -1019,7 +1028,7 @@ MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
     }
     else
     {
-        LogError( ( "No matching record found for publish %u.", packetId ) );
+        LogError( ( "No matching record found for publish: PacketId=%u.", packetId ) );
     }
 
     return status;
