@@ -594,6 +594,10 @@ OpensslStatus_t Openssl_Disconnect( NetworkContext_t * pNetworkContext )
 
     if( pNetworkContext == NULL )
     {
+        /* No need to update the status here. The socket status
+         * SOCKETS_INVALID_PARAMETER will be converted to
+         * OPENSSL_INVALID_PARAMETER before returning from this
+         * function. */
         LogError( ( "Parameter check failed: pNetworkContext is NULL." ) );
     }
     else
