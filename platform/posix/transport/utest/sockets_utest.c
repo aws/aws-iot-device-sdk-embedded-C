@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include "/usr/include/errno.h"
 
 #include "unity.h"
 
@@ -17,32 +18,7 @@
 #define HOSTNAME             "amazon.com"
 #define PORT                 80
 
-/* ============================   UNITY FIXTURES ============================ */
-
-/* Called before each test method. */
-void setUp()
-{
-}
-
-/* Called after each test method. */
-void tearDown()
-{
-}
-
-/* Called at the beginning of the whole suite. */
-void suiteSetUp()
-{
-}
-
-/* Called at the end of the whole suite. */
-int suiteTearDown( int numFailures )
-{
-    return numFailures;
-}
-
-/* ========================================================================== */
-
-int32_t errno;
+static struct addrinfo * addrInfo;
 
 static void allocateAddrInfoLinkedList( struct addrinfo ** head )
 {
@@ -103,14 +79,39 @@ static void freeAddrInfoLinkedList( struct addrinfo * head )
     }
 }
 
-static void setsockoptFailWithError( int32_t errorNumber )
-{
-    SocketStatus_t socketStatus;
-    ServerInfo_t serverInfo;
-    int tcpSocket = 1, i = 1;
-    struct addrinfo * addrInfo;
+/* ============================   UNITY FIXTURES ============================ */
 
+/* Called before each test method. */
+void setUp()
+{
+}
+
+/* Called after each test method. */
+void tearDown()
+{
+}
+
+/* Called at the beginning of the whole suite. */
+void suiteSetUp()
+{
     allocateAddrInfoLinkedList( &addrInfo );
+}
+
+/* Called at the end of the whole suite. */
+int suiteTearDown( int numFailures )
+{
+    freeAddrInfoLinkedList( addrInfo );
+    return numFailures;
+}
+
+/* ========================================================================== */
+
+static void expectSocketsConnectCalls( int32_t connectSucceedIter )
+{
+    int i;
+
+    TEST_ASSERT_TRUE( connectSucceedIter <= NUM_ADDR_INFO );
+
     getaddrinfo_ExpectAnyArgsAndReturn( 0 );
     getaddrinfo_ReturnThruPtr___pai( &addrInfo );
 
@@ -129,16 +130,20 @@ static void setsockoptFailWithError( int32_t errorNumber )
 
         inet_ntop_ExpectAnyArgsAndReturn( NULL );
 
-        /* Every call to connect() should fail. */
-        connect_ExpectAnyArgsAndReturn( -1 );
-        close_ExpectAnyArgsAndReturn( 0 );
+        /* The last iteration should make connect() succeed. */
+        if( i == connectSucceedIter )
+        {
+            connect_ExpectAnyArgsAndReturn( 0 );
+            break;
+        }
+        else
+        {
+            connect_ExpectAnyArgsAndReturn( -1 );
+            close_ExpectAnyArgsAndReturn( 0 );
+        }
     }
 
     freeaddrinfo_ExpectAnyArgs();
-
-    errno = errorNumber;
-
-    freeAddrInfoLinkedList( addrInfo );
 }
 
 /**
@@ -218,95 +223,81 @@ void test_Sockets_Connect_Every_IP_Address_Fails( void )
 {
     SocketStatus_t socketStatus;
     ServerInfo_t serverInfo;
-    int tcpSocket = 1, i = 1;
-    struct addrinfo * addrInfo;
+    int tcpSocket = 1;
 
     serverInfo.pHostName = HOSTNAME;
     serverInfo.hostNameLength = strlen( HOSTNAME );
     serverInfo.port = PORT;
 
-    allocateAddrInfoLinkedList( &addrInfo );
-    getaddrinfo_ExpectAnyArgsAndReturn( 0 );
-    getaddrinfo_ReturnThruPtr___pai( &addrInfo );
-
-    for( i = 1; i <= NUM_ADDR_INFO; i++ )
-    {
-        /* Fail the first socket() call for coverage. */
-        if( i == 1 )
-        {
-            socket_ExpectAnyArgsAndReturn( -1 );
-            continue;
-        }
-        else
-        {
-            socket_ExpectAnyArgsAndReturn( 1 );
-        }
-
-        inet_ntop_ExpectAnyArgsAndReturn( NULL );
-
-        /* Every call to connect() should fail. */
-        connect_ExpectAnyArgsAndReturn( -1 );
-        close_ExpectAnyArgsAndReturn( 0 );
-    }
-
-    freeaddrinfo_ExpectAnyArgs();
+    expectSocketsConnectCalls( -1 );
 
     socketStatus = Sockets_Connect( &tcpSocket,
                                     &serverInfo,
                                     SEND_RECV_TIMEOUT,
                                     SEND_RECV_TIMEOUT );
     TEST_ASSERT_EQUAL( SOCKETS_CONNECT_FAILURE, socketStatus );
-
-    freeAddrInfoLinkedList( addrInfo );
 }
 
 void test_Sockets_Connect_Fail_setsockopt( void )
 {
+    SocketStatus_t socketStatus, expectedSocketStatus;
+    ServerInfo_t serverInfo;
+    int tcpSocket = 1, i = 1;
+    int32_t allErrorCases[] = { EBADF, EDOM, EINVAL, EISCONN, ENOPROTOOPT, ENOTSOCK, ENOMEM, ENOBUFS };
+
+    serverInfo.pHostName = HOSTNAME;
+
+    serverInfo.hostNameLength = strlen( HOSTNAME );
+    serverInfo.port = PORT;
+
+    for( i = 0; i < sizeof( allErrorCases ); i++ )
+    {
+        expectSocketsConnectCalls( NUM_ADDR_INFO );
+        errno = allErrorCases[ i ];
+
+        if( i % 2 )
+        {
+            setsockopt_ExpectAnyArgsAndReturn( -1 );
+        }
+        else
+        {
+            setsockopt_ExpectAnyArgsAndReturn( 0 );
+            setsockopt_ExpectAnyArgsAndReturn( -1 );
+        }
+
+        socketStatus = Sockets_Connect( &tcpSocket,
+                                        &serverInfo,
+                                        SEND_RECV_TIMEOUT,
+                                        SEND_RECV_TIMEOUT );
+
+        if( ( errno == ENOMEM ) || ( errno == ENOBUFS ) )
+        {
+            expectedSocketStatus = SOCKETS_INSUFFICIENT_MEMORY;
+        }
+        else if( ( errno == ENOTSOCK ) || ( errno == EDOM ) || ( errno == EBADF ) )
+        {
+            expectedSocketStatus = SOCKETS_INVALID_PARAMETER;
+        }
+        else
+        {
+            expectedSocketStatus = SOCKETS_API_ERROR;
+        }
+
+        TEST_ASSERT_EQUAL( expectedSocketStatus, socketStatus );
+    }
 }
 
 void test_Sockets_Connect_Succeed_On_Nth_IP_Address( void )
 {
     SocketStatus_t socketStatus;
     ServerInfo_t serverInfo;
-    int tcpSocket = 1, i = 1;
-    struct addrinfo * addrInfo;
+    int tcpSocket = 1;
 
     serverInfo.pHostName = HOSTNAME;
     serverInfo.hostNameLength = strlen( HOSTNAME );
     serverInfo.port = PORT;
 
-    allocateAddrInfoLinkedList( &addrInfo );
-    getaddrinfo_ExpectAnyArgsAndReturn( 0 );
-    getaddrinfo_ReturnThruPtr___pai( &addrInfo );
-
-    for( i = 1; i <= NUM_ADDR_INFO; i++ )
-    {
-        /* Fail the first socket() call for coverage. */
-        if( i == 1 )
-        {
-            socket_ExpectAnyArgsAndReturn( -1 );
-            continue;
-        }
-        else
-        {
-            socket_ExpectAnyArgsAndReturn( 1 );
-        }
-
-        inet_ntop_ExpectAnyArgsAndReturn( NULL );
-
-        /* The last iteration should make connect() succeed. */
-        if( i < NUM_ADDR_INFO )
-        {
-            connect_ExpectAnyArgsAndReturn( -1 );
-            close_ExpectAnyArgsAndReturn( 0 );
-        }
-        else
-        {
-            connect_ExpectAnyArgsAndReturn( 0 );
-        }
-    }
-
-    freeaddrinfo_ExpectAnyArgs();
+    expectSocketsConnectCalls( NUM_ADDR_INFO );
     setsockopt_ExpectAnyArgsAndReturn( 0 );
     setsockopt_ExpectAnyArgsAndReturn( 0 );
 
@@ -315,6 +306,4 @@ void test_Sockets_Connect_Succeed_On_Nth_IP_Address( void )
                                     SEND_RECV_TIMEOUT,
                                     SEND_RECV_TIMEOUT );
     TEST_ASSERT_EQUAL( SOCKETS_SUCCESS, socketStatus );
-
-    freeAddrInfoLinkedList( addrInfo );
 }
