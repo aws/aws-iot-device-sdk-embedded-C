@@ -14,6 +14,8 @@
 
 #define NUM_ADDR_INFO        3
 #define SEND_RECV_TIMEOUT    0
+#define HOSTNAME             "amazon.com"
+#define PORT                 80
 
 /* ============================   UNITY FIXTURES ============================ */
 
@@ -40,24 +42,27 @@ int suiteTearDown( int numFailures )
 
 /* ========================================================================== */
 
-void allocateAddrInfoLinkedList( struct addrinfo ** head )
+int32_t errno;
+
+static void allocateAddrInfoLinkedList( struct addrinfo ** head )
 {
-    struct addrinfo * index = NULL;
+    struct addrinfo * index = NULL, * next = NULL;
+    struct sockaddr * ai_addr = NULL;
     int i;
 
     TEST_ASSERT_NOT_NULL( head );
 
     for( i = 0; i < NUM_ADDR_INFO; i++ )
     {
-        struct addrinfo * next = malloc( sizeof( struct addrinfo ) );
+        next = malloc( sizeof( struct addrinfo ) );
         memset( next, 0, sizeof( struct addrinfo ) );
-        next->ai_family = AF_INET;
+        next->ai_family = AF_UNSPEC;
         next->ai_socktype = SOCK_STREAM;
         next->ai_protocol = IPPROTO_TCP;
         next->ai_next = NULL;
 
         /* Every other IP address will be IPv4 for coverage. */
-        struct sockaddr * ai_addr = malloc( sizeof( struct sockaddr ) );
+        ai_addr = malloc( sizeof( struct sockaddr ) );
 
         if( i % 2 )
         {
@@ -83,7 +88,7 @@ void allocateAddrInfoLinkedList( struct addrinfo ** head )
     }
 }
 
-void freeAddrInfoLinkedList( struct addrinfo * head )
+static void freeAddrInfoLinkedList( struct addrinfo * head )
 {
     struct addrinfo * tmp;
 
@@ -96,6 +101,44 @@ void freeAddrInfoLinkedList( struct addrinfo * head )
         free( tmp );
         free( tmp->ai_addr );
     }
+}
+
+static void setsockoptFailWithError( int32_t errorNumber )
+{
+    SocketStatus_t socketStatus;
+    ServerInfo_t serverInfo;
+    int tcpSocket = 1, i = 1;
+    struct addrinfo * addrInfo;
+
+    allocateAddrInfoLinkedList( &addrInfo );
+    getaddrinfo_ExpectAnyArgsAndReturn( 0 );
+    getaddrinfo_ReturnThruPtr___pai( &addrInfo );
+
+    for( i = 1; i <= NUM_ADDR_INFO; i++ )
+    {
+        /* Fail the first socket() call for coverage. */
+        if( i == 1 )
+        {
+            socket_ExpectAnyArgsAndReturn( -1 );
+            continue;
+        }
+        else
+        {
+            socket_ExpectAnyArgsAndReturn( 1 );
+        }
+
+        inet_ntop_ExpectAnyArgsAndReturn( NULL );
+
+        /* Every call to connect() should fail. */
+        connect_ExpectAnyArgsAndReturn( -1 );
+        close_ExpectAnyArgsAndReturn( 0 );
+    }
+
+    freeaddrinfo_ExpectAnyArgs();
+
+    errno = errorNumber;
+
+    freeAddrInfoLinkedList( addrInfo );
 }
 
 /**
@@ -122,16 +165,65 @@ void test_Sockets_Disconnect_Invalid_Socket( void )
     TEST_ASSERT_EQUAL( SOCKETS_INVALID_PARAMETER, socketStatus );
 }
 
-void test_Sockets_Connect_Valid_Socket( void )
+void test_Sockets_Connect_Invalid_Params( void )
+{
+    SocketStatus_t socketStatus;
+    ServerInfo_t serverInfo;
+    int tcpSocket = 1;
+
+    /* Passing a NULL socket should fail. */
+    socketStatus = Sockets_Connect( NULL,
+                                    &serverInfo,
+                                    SEND_RECV_TIMEOUT,
+                                    SEND_RECV_TIMEOUT );
+    TEST_ASSERT_EQUAL( SOCKETS_INVALID_PARAMETER, socketStatus );
+
+    /* Passing a hostName should fail. */
+    memset( &serverInfo, 0, sizeof( ServerInfo_t ) );
+    socketStatus = Sockets_Connect( &tcpSocket,
+                                    &serverInfo,
+                                    SEND_RECV_TIMEOUT,
+                                    SEND_RECV_TIMEOUT );
+    TEST_ASSERT_EQUAL( SOCKETS_INVALID_PARAMETER, socketStatus );
+
+    /* This should still fail because hostNameLength is initialized to 0. */
+    serverInfo.pHostName = HOSTNAME;
+    socketStatus = Sockets_Connect( &tcpSocket,
+                                    &serverInfo,
+                                    SEND_RECV_TIMEOUT,
+                                    SEND_RECV_TIMEOUT );
+    TEST_ASSERT_EQUAL( SOCKETS_INVALID_PARAMETER, socketStatus );
+}
+
+void test_Sockets_Connect_DNS_Lookup_Fails( void )
+{
+    SocketStatus_t socketStatus;
+    ServerInfo_t serverInfo;
+    int tcpSocket = 1;
+
+    serverInfo.pHostName = HOSTNAME;
+    serverInfo.hostNameLength = strlen( HOSTNAME );
+    serverInfo.port = PORT;
+
+    getaddrinfo_ExpectAnyArgsAndReturn( -1 );
+
+    socketStatus = Sockets_Connect( &tcpSocket,
+                                    &serverInfo,
+                                    SEND_RECV_TIMEOUT,
+                                    SEND_RECV_TIMEOUT );
+    TEST_ASSERT_EQUAL( SOCKETS_DNS_FAILURE, socketStatus );
+}
+
+void test_Sockets_Connect_Every_IP_Address_Fails( void )
 {
     SocketStatus_t socketStatus;
     ServerInfo_t serverInfo;
     int tcpSocket = 1, i = 1;
     struct addrinfo * addrInfo;
 
-    serverInfo.pHostName = "google";
-    serverInfo.hostNameLength = strlen( "google" );
-    serverInfo.port = 80;
+    serverInfo.pHostName = HOSTNAME;
+    serverInfo.hostNameLength = strlen( HOSTNAME );
+    serverInfo.port = PORT;
 
     allocateAddrInfoLinkedList( &addrInfo );
     getaddrinfo_ExpectAnyArgsAndReturn( 0 );
@@ -139,7 +231,67 @@ void test_Sockets_Connect_Valid_Socket( void )
 
     for( i = 1; i <= NUM_ADDR_INFO; i++ )
     {
-        socket_ExpectAnyArgsAndReturn( tcpSocket );
+        /* Fail the first socket() call for coverage. */
+        if( i == 1 )
+        {
+            socket_ExpectAnyArgsAndReturn( -1 );
+            continue;
+        }
+        else
+        {
+            socket_ExpectAnyArgsAndReturn( 1 );
+        }
+
+        inet_ntop_ExpectAnyArgsAndReturn( NULL );
+
+        /* Every call to connect() should fail. */
+        connect_ExpectAnyArgsAndReturn( -1 );
+        close_ExpectAnyArgsAndReturn( 0 );
+    }
+
+    freeaddrinfo_ExpectAnyArgs();
+
+    socketStatus = Sockets_Connect( &tcpSocket,
+                                    &serverInfo,
+                                    SEND_RECV_TIMEOUT,
+                                    SEND_RECV_TIMEOUT );
+    TEST_ASSERT_EQUAL( SOCKETS_CONNECT_FAILURE, socketStatus );
+
+    freeAddrInfoLinkedList( addrInfo );
+}
+
+void test_Sockets_Connect_Fail_setsockopt( void )
+{
+}
+
+void test_Sockets_Connect_Succeed_On_Nth_IP_Address( void )
+{
+    SocketStatus_t socketStatus;
+    ServerInfo_t serverInfo;
+    int tcpSocket = 1, i = 1;
+    struct addrinfo * addrInfo;
+
+    serverInfo.pHostName = HOSTNAME;
+    serverInfo.hostNameLength = strlen( HOSTNAME );
+    serverInfo.port = PORT;
+
+    allocateAddrInfoLinkedList( &addrInfo );
+    getaddrinfo_ExpectAnyArgsAndReturn( 0 );
+    getaddrinfo_ReturnThruPtr___pai( &addrInfo );
+
+    for( i = 1; i <= NUM_ADDR_INFO; i++ )
+    {
+        /* Fail the first socket() call for coverage. */
+        if( i == 1 )
+        {
+            socket_ExpectAnyArgsAndReturn( -1 );
+            continue;
+        }
+        else
+        {
+            socket_ExpectAnyArgsAndReturn( 1 );
+        }
+
         inet_ntop_ExpectAnyArgsAndReturn( NULL );
 
         /* The last iteration should make connect() succeed. */
