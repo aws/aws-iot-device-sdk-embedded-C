@@ -36,6 +36,6 @@
     - (.*)sendmmsg((.|\n|\r)+?\;) #socket.h
     - (.*)recvmsg((.|\n|\r)+?\;) #socket.h
     - (.*)recvmmsg((.|\n|\r)+?\;) #socket.h
-    - (.*)getaddrinfo_a((.|\n|\r)*);
-    - (.*)\sgai_((.|\n|\r)*)
+    - (.*)getaddrinfo_a((.|\n|\r)+?\;) #netdb.h
+    - (.*)gai_((.|\n|\r)+?\;) #netdb.h
     - '(?:fcntl\s*\(+.*?\)+)' # this function is causing some trouble with code coverage as the annotations are calling the mocked one, so we won't mock it
