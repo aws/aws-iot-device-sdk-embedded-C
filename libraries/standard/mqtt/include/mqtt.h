@@ -742,7 +742,7 @@ MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
  * MQTTSubscribeInfo_t pSubscribes[ NUMBER_OF_SUBSCRIPTIONS ];
  *
  * // MQTT_GetSubAckStatusCodes is intended to be used from the application
- * // callback that is called by the library in the process/receive loop.
+ * // callback that is called by the library in MQTT_ProcessLoop or MQTT_ReceiveLoop.
  * void eventCallback(
  *      MQTTContext_t * pContext,
  *      MQTTPacketInfo_t * pPacketInfo,

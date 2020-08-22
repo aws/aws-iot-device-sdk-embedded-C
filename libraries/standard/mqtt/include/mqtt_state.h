@@ -203,7 +203,7 @@ uint16_t MQTT_PubrelToResend( const MQTTContext_t * pMqttContext,
  * connectInfo.keepAliveSeconds = 60;
  * // Optional connect parameters are not relevant to this example.
  *
- * // Create MQTT connection. Use 100 milliseconds as a timeout.
+ * // Create an MQTT connection. Use 100 milliseconds as a timeout.
  * status = MQTT_Connect( pContext, &connectInfo, NULL, 100, &sessionPresent );
  *
  * if( status == MQTTSuccess )
