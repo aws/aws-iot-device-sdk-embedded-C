@@ -21,8 +21,7 @@
   :includes:        # This will add these includes to each mock.
     - <stdbool.h>
     - <stdint.h>
-    - <fcntl.h>
-  :treat_externs: :exclude  # Now the extern-ed functions will be mocked.
+  :treat_externs: :include  # Now the extern-ed functions will be mocked.
   :weak: __attribute__((weak))
   :verbosity: 3
   :attributes:
@@ -31,5 +30,12 @@
   :strippables:
     - PRIVILEGED_FUNCTION
     - portDONT_DISCARD
+    - __restrict
+    - \s__THROW
+    - (.*)sendmsg((.|\n|\r)+?\;) #socket.h
+    - (.*)sendmmsg((.|\n|\r)+?\;) #socket.h
+    - (.*)recvmsg((.|\n|\r)+?\;) #socket.h
+    - (.*)recvmmsg((.|\n|\r)+?\;) #socket.h
+    - (.*)getaddrinfo_a((.|\n|\r)*);
+    - (.*)\sgai_((.|\n|\r)*)
     - '(?:fcntl\s*\(+.*?\)+)' # this function is causing some trouble with code coverage as the annotations are calling the mocked one, so we won't mock it
-  :treat_externs: :include
