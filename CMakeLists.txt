@@ -65,15 +65,6 @@ if(DEFINED ENV{PWD})
     endif()
 endif()
 
-# Add libraries.
-add_subdirectory( libraries )
-
-# Add platform.
-add_subdirectory( platform )
-
-# Build the demos.
-add_subdirectory( demos )
-
 # Build the tests if flag enabled.
 if(${BUILD_TESTS})
     # Check if the CMock source directory exists.	
@@ -119,3 +110,12 @@ if(${BUILD_TESTS})
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     )
 endif()
+
+# Add libraries.
+add_subdirectory( libraries )
+
+# Add platform.
+add_subdirectory( platform )
+
+# Build the demos.
+add_subdirectory( demos )
