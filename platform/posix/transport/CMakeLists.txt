@@ -10,11 +10,6 @@ target_include_directories( sockets_posix
                                 ${COMMON_TRANSPORT_INCLUDE_PUBLIC_DIRS}
                                 ${LOGGING_INCLUDE_DIRS} )
 
-# Organization of HTTP in IDE projects.
-set_target_properties( sockets_posix PROPERTIES FOLDER platform/posix )
-source_group( include FILES include/sockets_posix.h )
-source_group( src FILES ${SOCKETS_SOURCES} )
-
 # Create target for plaintext transport.
 add_library( plaintext_posix
                 ${PLAINTEXT_TRANSPORT_SOURCES} )
