@@ -109,7 +109,7 @@ typedef struct OpensslCredentials
      *
      * @note This string must be NULL-terminated because the OpenSSL API requires it to be.
      */
-    const char * sniHostName;
+    char * sniHostName;
 
     /**
      * @brief Set the value for the TLS max fragment length (TLS MFLN)
