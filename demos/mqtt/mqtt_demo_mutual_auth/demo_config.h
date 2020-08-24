@@ -111,11 +111,47 @@
  */
 
 /**
+ * @brief The username value for authenticating client to MQTT broker when
+ * username/password based client authentication is used.
+ *
+ * Refer to the AWS IoT documentation below for details regarding client
+ * authentication with a username and password.
+ * https://docs.aws.amazon.com/iot/latest/developerguide/enhanced-custom-authentication.html
+ * As mentioned in the link above, an authorizer setup needs to be done to use
+ * username/password based client authentication.
+ *
+ * @note AWS IoT message broker requires either a set of client certificate/private key
+ * or username/password to authenticate the client. If this config is defined,
+ * the username and password will be used instead of the client certificate and
+ * private key for client authentication.
+ *
+ * #define CLIENT_USERNAME    "...insert here..."
+ */
+
+/**
+ * @brief The password value for authenticating client to MQTT broker when
+ * username/password based client authentication is used.
+ *
+ * Refer to the AWS IoT documentation below for details regarding client
+ * authentication with a username and password.
+ * https://docs.aws.amazon.com/iot/latest/developerguide/enhanced-custom-authentication.html
+ * As mentioned in the link above, an authorizer setup needs to be done to use
+ * username/password based client authentication.
+ *
+ * @note AWS IoT message broker requires either a set of client certificate/private key
+ * or username/password to authenticate the client.
+ *
+ * #define CLIENT_PASSWORD    "...insert here..."
+ */
+
+/**
  * @brief MQTT client identifier.
  *
  * No two clients may use the same client identifier simultaneously.
  */
-#define CLIENT_IDENTIFIER         "testclient"
+#ifndef CLIENT_IDENTIFIER
+    #define CLIENT_IDENTIFIER         "testclient"
+#endif
 
 /**
  * @brief Size of the network buffer for MQTT packets.

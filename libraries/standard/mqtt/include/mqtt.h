@@ -759,6 +759,27 @@ uint16_t MQTT_GetPacketId( MQTTContext_t * pContext );
  * @return Returns one of the following:
  * - #MQTTBadParameter, if any of the input parameters is invalid.
  * - #MQTTSuccess, if the matching operation was performed.
+ *
+ * <b>Example</b>
+ * @code{c}
+ *
+ * // Variables used in this example.
+ * const char * pTopic = "topic/match/1";
+ * const char * pFilter = "topic/#";
+ * MQTTStatus_t status = MQTTSuccess;
+ * bool match = false;
+ *
+ * status = MQTT_MatchTopic( pTopic, strlen( pTopic ), pFilter, strlen( pFilter ), &match );
+ * // Our parameters were valid, so this will return success.
+ * assert( status == MQTTSuccess );
+ *
+ * // For this specific example, we already know this value is true. This
+ * // check is placed here as an example for use with variable topic names.
+ * if( match )
+ * {
+ *      // Application can decide what to do with the matching topic name.
+ * }
+ * @endcode
  */
 MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
                               const uint16_t topicNameLength,
@@ -790,6 +811,63 @@ MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
  * @return Returns one of the following:
  * - #MQTTBadParameter if the input SUBACK packet is invalid.
  * - #MQTTSuccess if parsing the payload was successful.
+ *
+ * <b>Example</b>
+ * @code{c}
+ *
+ * // Global variable used in this example.
+ * // This is assumed to be the subscription list in the original SUBSCRIBE packet.
+ * MQTTSubscribeInfo_t pSubscribes[ NUMBER_OF_SUBSCRIPTIONS ];
+ *
+ * // MQTT_GetSubAckStatusCodes is intended to be used from the application
+ * // callback that is called by the library in MQTT_ProcessLoop or MQTT_ReceiveLoop.
+ * void eventCallback(
+ *      MQTTContext_t * pContext,
+ *      MQTTPacketInfo_t * pPacketInfo,
+ *      MQTTDeserializedInfo_t * pDeserializedInfo
+ * )
+ * {
+ *      MQTTStatus_t status = MQTTSuccess;
+ *      uint8_t * pCodes;
+ *      size_t numCodes;
+ *
+ *      if( pPacketInfo->type == MQTT_PACKET_TYPE_SUBACK )
+ *      {
+ *          status = MQTT_GetSubAckStatusCodes( pPacketInfo, &pCodes, &numCodes );
+ *
+ *          // Since the pointers to the payload and payload size are not NULL, and
+ *          // we use the packet info struct passed to the app callback (verified
+ *          // to be valid by the library), this function must return success.
+ *          assert( status == MQTTSuccess );
+ *          // The server must send a response code for each topic filter in the
+ *          // original SUBSCRIBE packet.
+ *          assert( numCodes == NUMBER_OF_SUBSCRIPTIONS );
+ *
+ *          for( int i = 0; i < numCodes; i++ )
+ *          {
+ *              // The only failure code is 0x80 = MQTTSubAckFailure.
+ *              if( pCodes[ i ] == MQTTSubAckFailure )
+ *              {
+ *                  // The subscription failed, we may want to retry the
+ *                  // subscription in pSubscribes[ i ] outside of this callback.
+ *              }
+ *              else
+ *              {
+ *                  // The subscription was granted, but the maximum QoS may be
+ *                  // lower than what was requested. We can verify the granted QoS.
+ *                  if( pSubscribes[ i ].qos != pCodes[ i ] )
+ *                  {
+ *                      LogWarn( (
+ *                          "Requested QoS %u, but granted QoS %u for %s",
+ *                          pSubscribes[ i ].qos, pCodes[ i ], pSubscribes[ i ].pTopicFilter
+ *                      ) );
+ *                  }
+ *              }
+ *          }
+ *      }
+ *      // Handle other packet types.
+ * }
+ * @endcode
  */
 /* @[declare_mqtt_getsubackstatuscodes] */
 MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,

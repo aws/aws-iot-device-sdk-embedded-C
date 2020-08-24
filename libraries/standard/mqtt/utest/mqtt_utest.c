@@ -2209,6 +2209,16 @@ void test_MQTT_MatchTopic_ExactMatch( void )
                                                      MQTT_SAMPLE_TOPIC_FILTER_LENGTH,
                                                      &matchResult ) );
     TEST_ASSERT_EQUAL( false, matchResult );
+
+    /* Test for match at end with no wildcards. */
+    pTopicName = "/test/match/";
+    pTopicFilter = "/test/match/a";
+    TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_MatchTopic( pTopicName,
+                                                     strlen( pTopicName ),
+                                                     pTopicFilter,
+                                                     strlen( pTopicFilter ),
+                                                     &matchResult ) );
+    TEST_ASSERT_EQUAL( false, matchResult );
 }
 
 /**

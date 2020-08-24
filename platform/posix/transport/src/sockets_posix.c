@@ -99,6 +99,19 @@ static SocketStatus_t attemptConnection( struct addrinfo * pListHead,
                                          int32_t maxAttempts );
 
 /**
+ * @brief Connect to server using the provided address record.
+ *
+ * @param[in, out] pAddrInfo Address record of the server.
+ * @param[in] port Server port in host-order.
+ * @param[in] pTcpSocket Socket handle.
+ *
+ * @return #SOCKETS_SUCCESS if successful; #SOCKETS_CONNECT_FAILURE on error.
+ */
+static SocketStatus_t connectToAddress( struct sockaddr * pAddrInfo,
+                                        uint16_t port,
+                                        int tcpSocket );
+
+/**
  * @brief Log possible error using errno and return appropriate status.
  *
  * @return #SOCKETS_API_ERROR, #SOCKETS_INSUFFICIENT_MEMORY, #SOCKETS_INVALID_PARAMETER on error.
@@ -143,6 +156,64 @@ static SocketStatus_t resolveHostName( const char * pHostName,
 }
 /*-----------------------------------------------------------*/
 
+static SocketStatus_t connectToAddress( struct sockaddr * pAddrInfo,
+                                        uint16_t port,
+                                        int tcpSocket )
+{
+    SocketStatus_t returnStatus = SOCKETS_SUCCESS;
+    int connectStatus = 0;
+    char resolvedIpAddr[ INET6_ADDRSTRLEN ];
+    socklen_t addrInfoLength;
+    uint16_t netPort = 0;
+
+    assert( pAddrInfo != NULL );
+    assert( pAddrInfo->sa_family == AF_INET || pAddrInfo->sa_family == AF_INET6 );
+    assert( tcpSocket >= 0 );
+
+
+    /* Convert port from host byte order to network byte order. */
+    netPort = htons( port );
+
+    if( pAddrInfo->sa_family == AF_INET )
+    {
+        /* Store IPv4 in string to log. */
+        ( ( struct sockaddr_in * ) pAddrInfo )->sin_port = netPort;
+        addrInfoLength = sizeof( struct sockaddr_in );
+        ( void ) inet_ntop( pAddrInfo->sa_family,
+                            &( ( struct sockaddr_in * ) pAddrInfo )->sin_addr,
+                            resolvedIpAddr,
+                            sizeof( resolvedIpAddr ) );
+    }
+    else
+    {
+        /* Store IPv6 in string to log. */
+        ( ( struct sockaddr_in6 * ) pAddrInfo )->sin6_port = netPort;
+        addrInfoLength = sizeof( struct sockaddr_in6 );
+        ( void ) inet_ntop( pAddrInfo->sa_family,
+                            &( ( struct sockaddr_in6 * ) pAddrInfo )->sin6_addr,
+                            resolvedIpAddr,
+                            sizeof( resolvedIpAddr ) );
+    }
+
+    LogDebug( ( "Attempting to connect to server using the resolved IP address:"
+                " IP address=%s.",
+                resolvedIpAddr ) );
+
+    /* Attempt to connect. */
+    connectStatus = connect( tcpSocket, pAddrInfo, addrInfoLength );
+
+    if( connectStatus == -1 )
+    {
+        LogWarn( ( "Failed to connect to server using the resolved IP address: IP address=%s.",
+                   resolvedIpAddr ) );
+        close( tcpSocket );
+        returnStatus = SOCKETS_CONNECT_FAILURE;
+    }
+
+    return returnStatus;
+}
+/*-----------------------------------------------------------*/
+
 static SocketStatus_t attemptConnection( struct addrinfo * pListHead,
                                          const char * pHostName,
                                          size_t hostNameLength,
@@ -150,22 +221,16 @@ static SocketStatus_t attemptConnection( struct addrinfo * pListHead,
                                          int * pTcpSocket,
                                          int32_t maxAttempts )
 {
-    SocketStatus_t returnStatus = SOCKETS_SUCCESS;
+    SocketStatus_t returnStatus = SOCKETS_CONNECT_FAILURE;
     struct addrinfo * pIndex = NULL;
-    struct sockaddr * pAddrInfo;
-    socklen_t addrInfoLength;
-    uint16_t netPort = 0;
-    int curAttempts = 0, connectStatus = 0;
-    char resolvedIpAddr[ INET6_ADDRSTRLEN ];
+    int curAttempts = 0;
 
     assert( pListHead != NULL );
     assert( pHostName != NULL );
     assert( hostNameLength > 0 );
     assert( pTcpSocket != NULL );
 
-    netPort = htons( port );
-
-    LogDebug( ( "Performing DNS lookup: Host=%.*s.",
+    LogDebug( ( "Attempting to connect to: Host=%.*s.",
                 ( int32_t ) hostNameLength,
                 pHostName ) );
 
@@ -181,48 +246,12 @@ static SocketStatus_t attemptConnection( struct addrinfo * pListHead,
             continue;
         }
 
-        pAddrInfo = pIndex->ai_addr;
+        /* Attempt to connect to a resolved DNS address of the host. */
+        returnStatus = connectToAddress( pIndex->ai_addr, port, *pTcpSocket );
 
-        if( pAddrInfo->sa_family == AF_INET )
+        /* If connected to an IP address successfully, exit from the loop. */
+        if( returnStatus == SOCKETS_SUCCESS )
         {
-            /* Store IPv4 in string to log. */
-            ( ( struct sockaddr_in * ) pAddrInfo )->sin_port = netPort;
-            addrInfoLength = sizeof( struct sockaddr_in );
-            ( void ) inet_ntop( pAddrInfo->sa_family,
-                                &( ( struct sockaddr_in * ) pAddrInfo )->sin_addr,
-                                resolvedIpAddr,
-                                sizeof( resolvedIpAddr ) );
-        }
-        else
-        {
-            /* Store IPv6 in string to log. */
-            ( ( struct sockaddr_in6 * ) pAddrInfo )->sin6_port = netPort;
-            addrInfoLength = sizeof( struct sockaddr_in6 );
-            ( void ) inet_ntop( pAddrInfo->sa_family,
-                                &( ( struct sockaddr_in6 * ) pAddrInfo )->sin6_addr,
-                                resolvedIpAddr,
-                                sizeof( resolvedIpAddr ) );
-        }
-
-        LogDebug( ( "Attempting to connect to server: Host=%.*s, IP address=%s.",
-                    ( int32_t ) hostNameLength,
-                    pHostName,
-                    resolvedIpAddr ) );
-
-        connectStatus = connect( *pTcpSocket, pAddrInfo, addrInfoLength );
-
-        if( connectStatus == -1 )
-        {
-            LogWarn( ( "Failed to connect to server: Host=%.*s, IP address=%s.",
-                       ( int32_t ) hostNameLength,
-                       pHostName,
-                       resolvedIpAddr ) );
-            close( *pTcpSocket );
-        }
-        else
-        {
-            LogDebug( ( "Connected to IP address: %s.",
-                        resolvedIpAddr ) );
             break;
         }
 
@@ -236,25 +265,21 @@ static SocketStatus_t attemptConnection( struct addrinfo * pListHead,
                         ( int32_t ) hostNameLength,
                         pHostName,
                         curAttempts ) );
-            returnStatus = SOCKETS_CONNECT_FAILURE;
             break;
         }
     }
 
-    if( pIndex == NULL )
-    {
-        /* Fail if no connection could be established. */
-        LogError( ( "Could not connect to any resolved IP address from %.*s.",
-                    ( int32_t ) hostNameLength,
-                    pHostName ) );
-        returnStatus = SOCKETS_CONNECT_FAILURE;
-    }
-    else
+    if( returnStatus == SOCKETS_SUCCESS )
     {
         LogDebug( ( "Established TCP connection: Server=%.*s.\n",
                     ( int32_t ) hostNameLength,
                     pHostName ) );
-        returnStatus = SOCKETS_SUCCESS;
+    }
+    else
+    {
+        LogError( ( "Could not connect to any resolved IP address from %.*s.",
+                    ( int32_t ) hostNameLength,
+                    pHostName ) );
     }
 
     freeaddrinfo( pListHead );

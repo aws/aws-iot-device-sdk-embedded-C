@@ -24,6 +24,7 @@ hostnamelength
 https
 ifndef
 implemenation
+ip
 inc
 iot
 logpath
@@ -36,6 +37,8 @@ nano
 networkcontext
 noninfringement
 openssl
+openssl_invalid_parameter
+paddrinfo
 param
 pbuffer
 pclientcertpath
@@ -62,6 +65,8 @@ sendtimeout
 sendtimeoutms
 sleeptimems
 sni
+socketstatus
+sockets_invalid_parameter
 src
 ssl
 sublicense
