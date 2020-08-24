@@ -30,14 +30,14 @@
 
 void harness()
 {
-    HTTPRequestHeaders_t * pRequestHeaders = NULL;
-    char * pField = NULL;
-    char * pValue = NULL;
+    HTTPRequestHeaders_t * pRequestHeaders;
+    char * pField;
+    char * pValue;
     size_t fieldLen;
     size_t valueLen;
 
     /* Initialize and make assumptions for request headers. */
-    pRequestHeaders = allocateHttpRequestHeaders( pRequestHeaders );
+    pRequestHeaders = allocateHttpRequestHeaders( NULL );
     __CPROVER_assume( isValidHttpRequestHeaders( pRequestHeaders ) );
 
     /* Initialize and make assumptions for header field. */

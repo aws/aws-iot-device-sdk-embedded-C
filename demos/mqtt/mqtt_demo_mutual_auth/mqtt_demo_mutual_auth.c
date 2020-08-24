@@ -25,9 +25,20 @@
  * unsubscribe from a topic and disconnect the MQTT session.
  *
  * A mutually authenticated TLS connection is used to connect to the AWS IoT
- * MQTT message broker in this example. Define ROOT_CA_CERT_PATH,
- * CLIENT_CERT_PATH, and CLIENT_PRIVATE_KEY_PATH in demo_config.h to achieve
- * mutual authentication.
+ * MQTT message broker in this example. Define ROOT_CA_CERT_PATH for server
+ * authentication in the client. Client authentication can be achieved in either
+ * of the 2 different ways mentioned below.
+ * 1. Define CLIENT_CERT_PATH and CLIENT_PRIVATE_KEY_PATH in demo_config.h
+ *    for client authentication to be done based on the client certificate
+ *    and client private key. More details about this client authentication
+ *    can be found in the link below.
+ *    https://docs.aws.amazon.com/iot/latest/developerguide/client-authentication.html
+ * 2. Define CLIENT_USERNAME and CLIENT_PASSWORD in demo_config.h for client
+ *    authentication to be done using a username and password. More details about
+ *    this client authentication can be found in the link below.
+ *    https://docs.aws.amazon.com/iot/latest/developerguide/enhanced-custom-authentication.html
+ *    An authorizer setup needs to be done, as mentioned in the above link, to use
+ *    username/password based client authentication.
  *
  * The example is single threaded and uses statically allocated memory;
  * it uses QOS1 and therefore implements a retransmission mechanism
@@ -49,8 +60,9 @@
 /* Include Demo Config as the first non-system header. */
 #include "demo_config.h"
 
-/* MQTT API header. */
+/* MQTT API headers. */
 #include "mqtt.h"
+#include "mqtt_state.h"
 
 /* OpenSSL sockets transport implementation. */
 #include "openssl_posix.h"
@@ -71,15 +83,33 @@
 #ifndef ROOT_CA_CERT_PATH
     #error "Please define path to Root CA certificate of the MQTT broker(ROOT_CA_CERT_PATH) in demo_config.h."
 #endif
-#ifndef CLIENT_CERT_PATH
-    #error "Please define path to client certificate(CLIENT_CERT_PATH) in demo_config.h."
-#endif
-#ifndef CLIENT_PRIVATE_KEY_PATH
-    #error "Please define path to client private key(CLIENT_PRIVATE_KEY_PATH) in demo_config.h."
-#endif
 #ifndef CLIENT_IDENTIFIER
-    #error "Please define a unique CLIENT_IDENTIFIER."
+    #error "Please define a unique client identifier, CLIENT_IDENTIFIER, in demo_config.h."
 #endif
+
+/* The AWS IoT message broker requires either a set of client certificate/private key
+ * or username/password to authenticate the client. */
+#ifndef CLIENT_USERNAME
+    #ifndef CLIENT_CERT_PATH
+        #error "Please define path to client certificate(CLIENT_CERT_PATH) in demo_config.h."
+    #endif
+    #ifndef CLIENT_PRIVATE_KEY_PATH
+        #error "Please define path to client private key(CLIENT_PRIVATE_KEY_PATH) in demo_config.h."
+    #endif
+#else
+
+/* If a username is defined, a client password also would need to be defined for
+ * client authentication. */
+    #ifndef CLIENT_PASSWORD
+        #error "Please define client password(CLIENT_PASSWORD) in demo_config.h for client authentication based on username/password."
+    #endif
+
+/* AWS IoT MQTT broker port needs to be 443 for client authentication based on
+ * username/password. */
+    #if AWS_MQTT_PORT != 443
+        #error "Broker port, AWS_MQTT_PORT, should be defined as 443 in demo_config.h for client authentication based on username/password."
+    #endif
+#endif /* ifndef CLIENT_USERNAME */
 
 /**
  * Provide default values for undefined configuration settings.
@@ -90,6 +120,18 @@
 
 #ifndef NETWORK_BUFFER_SIZE
     #define NETWORK_BUFFER_SIZE    ( 1024U )
+#endif
+
+#ifndef SDK_NAME
+    #define SDK_NAME    "aws-iot-device-sdk-embedded-C"
+#endif
+
+#ifndef SDK_VERSION
+    #define SDK_VERSION    "4.0.0"
+#endif
+
+#ifndef HARDWARE_PLATFORM_NAME
+    #define HARDWARE_PLATFORM_NAME    "Posix"
 #endif
 
 /**
@@ -103,19 +145,30 @@
 #define CLIENT_IDENTIFIER_LENGTH            ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) )
 
 /**
- * @brief ALPN protocol name for AWS IoT MQTT.
+ * @brief ALPN (Application-Layer Protocol Negotiation) protocol name for AWS IoT MQTT.
  *
  * This will be used if the AWS_MQTT_PORT is configured as 443 for AWS IoT MQTT broker.
  * Please see more details about the ALPN protocol for AWS IoT MQTT endpoint
  * in the link below.
  * https://aws.amazon.com/blogs/iot/mqtt-with-tls-client-authentication-on-port-443-why-it-is-useful-and-how-it-works/
  */
-#define ALPN_PROTOCOL_NAME                  "\x0ex-amzn-mqtt-ca"
+#define AWS_IOT_MQTT_ALPN                   "\x0ex-amzn-mqtt-ca"
 
 /**
  * @brief Length of ALPN protocol name.
  */
-#define ALPN_PROTOCOL_NAME_LENGTH           ( ( uint16_t ) ( sizeof( ALPN_PROTOCOL_NAME ) - 1 ) )
+#define AWS_IOT_MQTT_ALPN_LENGTH            ( ( uint16_t ) ( sizeof( AWS_IOT_MQTT_ALPN ) - 1 ) )
+
+/**
+ * @brief This is the ALPN (Application-Layer Protocol Negotiation) string
+ * required by AWS IoT for password-based authentication using TCP port 443.
+ */
+#define AWS_IOT_PASSWORD_ALPN               "\x04mqtt"
+
+/**
+ * @brief Length of password ALPN.
+ */
+#define AWS_IOT_PASSWORD_ALPN_LENGTH        ( ( uint16_t ) ( sizeof( AWS_IOT_PASSWORD_ALPN ) - 1 ) )
 
 /**
  * @brief Timeout for receiving CONNACK packet in milli seconds.
@@ -192,6 +245,28 @@
  * @brief Transport timeout in milliseconds for transport send and receive.
  */
 #define TRANSPORT_SEND_RECV_TIMEOUT_MS      ( 100 )
+
+/**
+ * @brief The MQTT metrics string expected by AWS IoT.
+ */
+#define METRICS_STRING                      "?SDK=" SDK_NAME "&Version=" SDK_VERSION "&Platform=" HARDWARE_PLATFORM_NAME
+
+/**
+ * @brief The length of the MQTT metrics string expected by AWS IoT.
+ */
+#define METRICS_STRING_LENGTH               ( ( uint16_t ) ( sizeof( METRICS_STRING ) - 1 ) )
+
+
+#ifdef CLIENT_USERNAME
+
+/**
+ * @brief Append the username with the metrics string if #CLIENT_USERNAME is defined.
+ *
+ * This is to support both metrics reporting and username/password based client
+ * authentication by AWS IoT.
+ */
+    #define CLIENT_USERNAME_WITH_METRICS    CLIENT_USERNAME METRICS_STRING
+#endif
 
 /*-----------------------------------------------------------*/
 
@@ -281,14 +356,11 @@ static void handleIncomingPublish( MQTTPublishInfo_t * pPublishInfo,
  *
  * @param[in] pMqttContext MQTT context pointer.
  * @param[in] pPacketInfo Packet Info pointer for the incoming packet.
- * @param[in] packetIdentifier Packet identifier of the incoming packet.
- * @param[in] pPublishInfo Deserialized publish info pointer for the incoming
- * packet.
+ * @param[in] pDeserializedInfo Deserialized information from the incoming packet.
  */
 static void eventCallback( MQTTContext_t * pMqttContext,
                            MQTTPacketInfo_t * pPacketInfo,
-                           uint16_t packetIdentifier,
-                           MQTTPublishInfo_t * pPublishInfo );
+                           MQTTDeserializedInfo_t * pDeserializedInfo );
 
 /**
  * @brief Sends an MQTT CONNECT packet over the already connected TCP socket.
@@ -414,18 +486,40 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     /* Initialize credentials for establishing TLS session. */
     memset( &opensslCredentials, 0, sizeof( OpensslCredentials_t ) );
     opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
-    opensslCredentials.pClientCertPath = CLIENT_CERT_PATH;
-    opensslCredentials.pPrivateKeyPath = CLIENT_PRIVATE_KEY_PATH;
+
+    /* If #CLIENT_USERNAME is defined, username/password is used for authenticating
+     * the client. */
+    #ifndef CLIENT_USERNAME
+        opensslCredentials.pClientCertPath = CLIENT_CERT_PATH;
+        opensslCredentials.pPrivateKeyPath = CLIENT_PRIVATE_KEY_PATH;
+    #endif
+
+    /* AWS IoT requires devices to send the Server Name Indication (SNI)
+     * extension to the Transport Layer Security (TLS) protocol and provide
+     * the complete endpoint address in the host_name field. Details about
+     * SNI for AWS IoT can be found in the link below.
+     * https://docs.aws.amazon.com/iot/latest/developerguide/transport-security.html */
+    opensslCredentials.sniHostName = AWS_IOT_ENDPOINT;
 
     if( AWS_MQTT_PORT == 443 )
     {
         /* Pass the ALPN protocol name depending on the port being used.
-         * Please see more details about the ALPN protocol for AWS IoT MQTT endpoint
-         * in the link below.
+         * Please see more details about the ALPN protocol for the AWS IoT MQTT
+         * endpoint in the link below.
          * https://aws.amazon.com/blogs/iot/mqtt-with-tls-client-authentication-on-port-443-why-it-is-useful-and-how-it-works/
+         *
+         * For username and password based authentication in AWS IoT,
+         * #AWS_IOT_PASSWORD_ALPN is used. More details can be found in the
+         * link below.
+         * https://docs.aws.amazon.com/iot/latest/developerguide/enhanced-custom-auth-using.html
          */
-        opensslCredentials.pAlpnProtos = ALPN_PROTOCOL_NAME;
-        opensslCredentials.alpnProtosLen = ALPN_PROTOCOL_NAME_LENGTH;
+        #ifdef CLIENT_USERNAME
+            opensslCredentials.pAlpnProtos = AWS_IOT_PASSWORD_ALPN;
+            opensslCredentials.alpnProtosLen = AWS_IOT_PASSWORD_ALPN_LENGTH;
+        #else
+            opensslCredentials.pAlpnProtos = AWS_IOT_MQTT_ALPN;
+            opensslCredentials.alpnProtosLen = AWS_IOT_MQTT_ALPN_LENGTH;
+        #endif
     }
 
     /* Initialize reconnect attempts and interval */
@@ -544,38 +638,68 @@ static int handlePublishResend( MQTTContext_t * pMqttContext )
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus = MQTTSuccess;
     uint8_t index = 0U;
+    MQTTStateCursor_t cursor = MQTT_STATE_CURSOR_INITIALIZER;
+    uint16_t packetIdToResend = MQTT_PACKET_ID_INVALID;
+    bool foundPacketId = false;
 
+    assert( pMqttContext != NULL );
     assert( outgoingPublishPackets != NULL );
 
-    /* Resend all the QoS1 publishes still in the array. These are the
-     * publishes that hasn't received a PUBACK. When a PUBACK is
-     * received, the publish is removed from the array. */
-    for( index = 0U; index < MAX_OUTGOING_PUBLISHES; index++ )
+    /* MQTT_PublishToResend() provides a packet ID of the next PUBLISH packet
+     * that should be resent. In accordance with the MQTT v3.1.1 spec,
+     * MQTT_PublishToResend() preserves the ordering of when the original
+     * PUBLISH packets were sent. The outgoingPublishPackets array is searched
+     * through for the associated packet ID. If the application requires
+     * increased efficiency in the look up of the packet ID, then a hashmap of
+     * packetId key and PublishPacket_t values may be used instead. */
+    packetIdToResend = MQTT_PublishToResend( pMqttContext, &cursor );
+
+    while( packetIdToResend != MQTT_PACKET_ID_INVALID )
     {
-        if( outgoingPublishPackets[ index ].packetId != MQTT_PACKET_ID_INVALID )
+        foundPacketId = false;
+
+        for( index = 0U; index < MAX_OUTGOING_PUBLISHES; index++ )
         {
-            outgoingPublishPackets[ index ].pubInfo.dup = true;
-
-            LogInfo( ( "Sending duplicate PUBLISH with packet id %u.",
-                       outgoingPublishPackets[ index ].packetId ) );
-            mqttStatus = MQTT_Publish( pMqttContext,
-                                       &outgoingPublishPackets[ index ].pubInfo,
-                                       outgoingPublishPackets[ index ].packetId );
-
-            if( mqttStatus != MQTTSuccess )
+            if( outgoingPublishPackets[ index ].packetId == packetIdToResend )
             {
-                LogError( ( "Sending duplicate PUBLISH for packet id %u "
-                            " failed with status %u.",
-                            outgoingPublishPackets[ index ].packetId,
-                            mqttStatus ) );
-                returnStatus = EXIT_FAILURE;
-                break;
-            }
-            else
-            {
-                LogInfo( ( "Sent duplicate PUBLISH successfully for packet id %u.\n\n",
+                foundPacketId = true;
+                outgoingPublishPackets[ index ].pubInfo.dup = true;
+
+                LogInfo( ( "Sending duplicate PUBLISH with packet id %u.",
                            outgoingPublishPackets[ index ].packetId ) );
+                mqttStatus = MQTT_Publish( pMqttContext,
+                                           &outgoingPublishPackets[ index ].pubInfo,
+                                           outgoingPublishPackets[ index ].packetId );
+
+                if( mqttStatus != MQTTSuccess )
+                {
+                    LogError( ( "Sending duplicate PUBLISH for packet id %u "
+                                " failed with status %s.",
+                                outgoingPublishPackets[ index ].packetId,
+                                MQTT_Status_strerror( mqttStatus ) ) );
+                    returnStatus = EXIT_FAILURE;
+                    break;
+                }
+                else
+                {
+                    LogInfo( ( "Sent duplicate PUBLISH successfully for packet id %u.\n\n",
+                               outgoingPublishPackets[ index ].packetId ) );
+                }
             }
+        }
+
+        if( foundPacketId == false )
+        {
+            LogError( ( "Packet id %u requires resend, but was not found in "
+                        "outgoingPublishPackets.",
+                        packetIdToResend ) );
+            returnStatus = EXIT_FAILURE;
+            break;
+        }
+        else
+        {
+            /* Get the next packetID to be resent. */
+            packetIdToResend = MQTT_PublishToResend( pMqttContext, &cursor );
         }
     }
 
@@ -619,20 +743,27 @@ static void handleIncomingPublish( MQTTPublishInfo_t * pPublishInfo,
 
 static void eventCallback( MQTTContext_t * pMqttContext,
                            MQTTPacketInfo_t * pPacketInfo,
-                           uint16_t packetIdentifier,
-                           MQTTPublishInfo_t * pPublishInfo )
+                           MQTTDeserializedInfo_t * pDeserializedInfo )
 {
+    uint16_t packetIdentifier;
+
     assert( pMqttContext != NULL );
     assert( pPacketInfo != NULL );
+    assert( pDeserializedInfo != NULL );
+
+    /* Suppress unused parameter warning when asserts are disabled in build. */
+    ( void ) pMqttContext;
+
+    packetIdentifier = pDeserializedInfo->packetIdentifier;
 
     /* Handle incoming publish. The lower 4 bits of the publish packet
      * type is used for the dup, QoS, and retain flags. Hence masking
      * out the lower bits to check if the packet is publish. */
     if( ( pPacketInfo->type & 0xF0U ) == MQTT_PACKET_TYPE_PUBLISH )
     {
-        assert( pPublishInfo != NULL );
+        assert( pDeserializedInfo->pPublishInfo != NULL );
         /* Handle incoming publish. */
-        handleIncomingPublish( pPublishInfo, packetIdentifier );
+        handleIncomingPublish( pDeserializedInfo->pPublishInfo, packetIdentifier );
     }
     else
     {
@@ -687,10 +818,9 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
 {
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus;
-    MQTTConnectInfo_t connectInfo;
-    MQTTFixedBuffer_t networkBuffer;
-    MQTTApplicationCallbacks_t callbacks;
-    TransportInterface_t transport;
+    MQTTConnectInfo_t connectInfo = { 0 };
+    MQTTFixedBuffer_t networkBuffer = { 0 };
+    TransportInterface_t transport = { 0 };
 
     assert( pMqttContext != NULL );
     assert( pNetworkContext != NULL );
@@ -706,21 +836,17 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
     networkBuffer.pBuffer = buffer;
     networkBuffer.size = NETWORK_BUFFER_SIZE;
 
-    /* Application callbacks for receiving incoming publishes and incoming acks
-     * from MQTT library. */
-    callbacks.appCallback = eventCallback;
-
-    /* Application callback for getting the time for MQTT library. This time
-     * function will be used to calculate intervals in MQTT library.*/
-    callbacks.getTime = Clock_GetTimeMs;
-
     /* Initialize MQTT library. */
-    mqttStatus = MQTT_Init( pMqttContext, &transport, &callbacks, &networkBuffer );
+    mqttStatus = MQTT_Init( pMqttContext,
+                            &transport,
+                            Clock_GetTimeMs,
+                            eventCallback,
+                            &networkBuffer );
 
     if( mqttStatus != MQTTSuccess )
     {
         returnStatus = EXIT_FAILURE;
-        LogError( ( "MQTT init failed with status %u.", mqttStatus ) );
+        LogError( ( "MQTT init failed: Status=%s.", MQTT_Status_strerror( mqttStatus ) ) );
     }
     else
     {
@@ -746,11 +872,33 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
          * PINGREQ Packet. */
         connectInfo.keepAliveSeconds = MQTT_KEEP_ALIVE_INTERVAL_SECONDS;
 
-        /* Username and password for authentication. Not used in this demo. */
-        connectInfo.pUserName = NULL;
-        connectInfo.userNameLength = 0U;
-        connectInfo.pPassword = NULL;
-        connectInfo.passwordLength = 0U;
+        /* Use the username and password for authentication, if they are defined.
+         * Refer to the AWS IoT documentation below for details regarding client
+         * authentication with a username and password.
+         * https://docs.aws.amazon.com/iot/latest/developerguide/enhanced-custom-authentication.html
+         * An authorizer setup needs to be done, as mentioned in the above link, to use
+         * username/password based client authentication.
+         *
+         * The username field is populated with voluntary metrics to AWS IoT.
+         * The metrics collected by AWS IoT are the current operating system or
+         * SDK and its version. These metrics help AWS IoT improve security and
+         * provide better technical support.
+         *
+         * If client authentication is based on username/password in AWS IoT,
+         * the metrics string is appended to the username to support both client
+         * authentication and metrics collection. */
+        #ifdef CLIENT_USERNAME
+            connectInfo.pUserName = CLIENT_USERNAME_WITH_METRICS;
+            connectInfo.userNameLength = strlen( CLIENT_USERNAME_WITH_METRICS );
+            connectInfo.pPassword = CLIENT_PASSWORD;
+            connectInfo.passwordLength = strlen( CLIENT_PASSWORD );
+        #else
+            connectInfo.pUserName = METRICS_STRING;
+            connectInfo.userNameLength = METRICS_STRING_LENGTH;
+            /* Password for authentication is not used. */
+            connectInfo.pPassword = NULL;
+            connectInfo.passwordLength = 0U;
+        #endif /* ifdef CLIENT_USERNAME */
 
         /* Send MQTT CONNECT packet to broker. */
         mqttStatus = MQTT_Connect( pMqttContext, &connectInfo, NULL, CONNACK_RECV_TIMEOUT_MS, pSessionPresent );
@@ -758,7 +906,8 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
         if( mqttStatus != MQTTSuccess )
         {
             returnStatus = EXIT_FAILURE;
-            LogError( ( "Connection with MQTT broker failed with status %u.", mqttStatus ) );
+            LogError( ( "Connection with MQTT broker failed with status %s.",
+                        MQTT_Status_strerror( mqttStatus ) ) );
         }
         else
         {
@@ -783,8 +932,8 @@ static int disconnectMqttSession( MQTTContext_t * pMqttContext )
 
     if( mqttStatus != MQTTSuccess )
     {
-        LogError( ( "Sending MQTT DISCONNECT failed with status=%u.",
-                    mqttStatus ) );
+        LogError( ( "Sending MQTT DISCONNECT failed with status=%s.",
+                    MQTT_Status_strerror( mqttStatus ) ) );
         returnStatus = EXIT_FAILURE;
     }
 
@@ -820,8 +969,8 @@ static int subscribeToTopic( MQTTContext_t * pMqttContext )
 
     if( mqttStatus != MQTTSuccess )
     {
-        LogError( ( "Failed to send SUBSCRIBE packet to broker with error = %u.",
-                    mqttStatus ) );
+        LogError( ( "Failed to send SUBSCRIBE packet to broker with error = %s.",
+                    MQTT_Status_strerror( mqttStatus ) ) );
         returnStatus = EXIT_FAILURE;
     }
     else
@@ -864,8 +1013,8 @@ static int unsubscribeFromTopic( MQTTContext_t * pMqttContext )
 
     if( mqttStatus != MQTTSuccess )
     {
-        LogError( ( "Failed to send UNSUBSCRIBE packet to broker with error = %u.",
-                    mqttStatus ) );
+        LogError( ( "Failed to send UNSUBSCRIBE packet to broker with error = %s.",
+                    MQTT_Status_strerror( mqttStatus ) ) );
         returnStatus = EXIT_FAILURE;
     }
     else
@@ -917,8 +1066,8 @@ static int publishToTopic( MQTTContext_t * pMqttContext )
 
         if( mqttStatus != MQTTSuccess )
         {
-            LogError( ( "Failed to send PUBLISH packet to broker with error = %u.",
-                        mqttStatus ) );
+            LogError( ( "Failed to send PUBLISH packet to broker with error = %s.",
+                        MQTT_Status_strerror( mqttStatus ) ) );
             cleanupOutgoingPublishAt( publishIndex );
             returnStatus = EXIT_FAILURE;
         }
@@ -1014,8 +1163,8 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
         if( mqttStatus != MQTTSuccess )
         {
             returnStatus = EXIT_FAILURE;
-            LogError( ( "MQTT_ProcessLoop returned with status = %u.",
-                        mqttStatus ) );
+            LogError( ( "MQTT_ProcessLoop returned with status = %s.",
+                        MQTT_Status_strerror( mqttStatus ) ) );
         }
     }
 
@@ -1040,8 +1189,8 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
 
             if( mqttStatus != MQTTSuccess )
             {
-                LogWarn( ( "MQTT_ProcessLoop returned with status = %u.",
-                           mqttStatus ) );
+                LogWarn( ( "MQTT_ProcessLoop returned with status = %s.",
+                           MQTT_Status_strerror( mqttStatus ) ) );
             }
 
             LogInfo( ( "Delay before continuing to next iteration.\n\n" ) );
@@ -1068,8 +1217,8 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
         if( mqttStatus != MQTTSuccess )
         {
             returnStatus = EXIT_FAILURE;
-            LogError( ( "MQTT_ProcessLoop returned with status = %u.",
-                        mqttStatus ) );
+            LogError( ( "MQTT_ProcessLoop returned with status = %s.",
+                        MQTT_Status_strerror( mqttStatus ) ) );
         }
     }
 
@@ -1117,7 +1266,7 @@ int main( int argc,
           char ** argv )
 {
     int returnStatus = EXIT_SUCCESS;
-    NetworkContext_t networkContext;
+    NetworkContext_t networkContext = { 0 };
 
     ( void ) argc;
     ( void ) argv;
@@ -1126,9 +1275,9 @@ int main( int argc,
     {
         /* Attempt to connect to the MQTT broker. If connection fails, retry after
          * a timeout. Timeout value will be exponentially increased till the maximum
-         * attemps are reached or maximum timout value is reached. The function
+         * attempts are reached or maximum timeout value is reached. The function
          * returns EXIT_FAILURE if the TCP connection cannot be established to
-         * broker after configured number of attemps. */
+         * broker after configured number of attempts. */
         returnStatus = connectToServerWithBackoffRetries( &networkContext );
 
         if( returnStatus == EXIT_FAILURE )

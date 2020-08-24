@@ -1,5 +1,5 @@
 # Check if the http_parser source directory exists.
-if( NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/http_parser )
+if( NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/http_parser/http_parser.c )
     # Attempt to clone http_parser.
     if( ${BUILD_CLONE_SUBMODULES} )
         find_package( Git REQUIRED )

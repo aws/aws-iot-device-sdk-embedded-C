@@ -58,8 +58,11 @@
  * These configuration settings are required to run the plaintext demo.
  * Throw compilation error if the below configs are not defined.
  */
+#ifndef BROKER_ENDPOINT
+    #error "Please define an MQTT broker endpoint, BROKER_ENDPOINT, in demo_config.h."
+#endif
 #ifndef CLIENT_IDENTIFIER
-    #error "Please define a unique CLIENT_IDENTIFIER."
+    #error "Please define a unique CLIENT_IDENTIFIER in demo_config.h."
 #endif
 
 /**
@@ -174,7 +177,7 @@ static uint8_t buffer[ NETWORK_BUFFER_SIZE ];
  *
  * If connection fails, retry is attempted after a timeout.
  * Timeout value will exponentially increased till maximum
- * timeout value is reached or the number of attemps are exhausted.
+ * timeout value is reached or the number of attempts are exhausted.
  *
  * @param[out] pNetworkContext The output parameter to return the created network context.
  *
@@ -209,14 +212,11 @@ static void handleIncomingPublish( MQTTPublishInfo_t * pPublishInfo,
  *
  * @param[in] pMqttContext MQTT context pointer.
  * @param[in] pPacketInfo Packet Info pointer for the incoming packet.
- * @param[in] packetIdentifier Packet identifier of the incoming packet.
- * @param[in] pPublishInfo Deserialized publish info pointer for the incoming
- * packet.
+ * @param[in] pDeserializedInfo Deserialized information from the incoming packet.
  */
 static void eventCallback( MQTTContext_t * pMqttContext,
                            MQTTPacketInfo_t * pPacketInfo,
-                           uint16_t packetIdentifier,
-                           MQTTPublishInfo_t * pPublishInfo );
+                           MQTTDeserializedInfo_t * pDeserializedInfo );
 
 /**
  * @brief Sends an MQTT CONNECT packet over the already connected TCP socket.
@@ -293,7 +293,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
 
     /* Attempt to connect to MQTT broker. If connection fails, retry after
      * a timeout. Timeout value will exponentially increase till maximum
-     * attemps are reached.
+     * attempts are reached.
      */
     do
     {
@@ -364,20 +364,27 @@ static void handleIncomingPublish( MQTTPublishInfo_t * pPublishInfo,
 
 static void eventCallback( MQTTContext_t * pMqttContext,
                            MQTTPacketInfo_t * pPacketInfo,
-                           uint16_t packetIdentifier,
-                           MQTTPublishInfo_t * pPublishInfo )
+                           MQTTDeserializedInfo_t * pDeserializedInfo )
 {
+    uint16_t packetIdentifier;
+
     assert( pMqttContext != NULL );
     assert( pPacketInfo != NULL );
+    assert( pDeserializedInfo != NULL );
+
+    /* Suppress unused parameter warning when asserts are disabled in build. */
+    ( void ) pMqttContext;
+
+    packetIdentifier = pDeserializedInfo->packetIdentifier;
 
     /* Handle incoming publish. The lower 4 bits of the publish packet
      * type is used for the dup, QoS, and retain flags. Hence masking
      * out the lower bits to check if the packet is publish. */
     if( ( pPacketInfo->type & 0xF0U ) == MQTT_PACKET_TYPE_PUBLISH )
     {
-        assert( pPublishInfo != NULL );
+        assert( pDeserializedInfo->pPublishInfo != NULL );
         /* Handle incoming publish. */
-        handleIncomingPublish( pPublishInfo, packetIdentifier );
+        handleIncomingPublish( pDeserializedInfo->pPublishInfo, packetIdentifier );
     }
     else
     {
@@ -426,7 +433,6 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
     MQTTConnectInfo_t connectInfo;
     bool sessionPresent;
     MQTTFixedBuffer_t networkBuffer;
-    MQTTApplicationCallbacks_t callbacks;
     TransportInterface_t transport;
 
     assert( pMqttContext != NULL );
@@ -443,21 +449,17 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
     networkBuffer.pBuffer = buffer;
     networkBuffer.size = NETWORK_BUFFER_SIZE;
 
-    /* Application callbacks for receiving incoming publishes and incoming acks
-     * from MQTT library. */
-    callbacks.appCallback = eventCallback;
-
-    /* Application callback for getting the time for MQTT library. This time
-     * function will be used to calculate intervals in MQTT library.*/
-    callbacks.getTime = Clock_GetTimeMs;
-
     /* Initialize MQTT library. */
-    mqttStatus = MQTT_Init( pMqttContext, &transport, &callbacks, &networkBuffer );
+    mqttStatus = MQTT_Init( pMqttContext,
+                            &transport,
+                            Clock_GetTimeMs,
+                            eventCallback,
+                            &networkBuffer );
 
     if( mqttStatus != MQTTSuccess )
     {
         returnStatus = EXIT_FAILURE;
-        LogError( ( "MQTT init failed with status %u.", mqttStatus ) );
+        LogError( ( "MQTT init failed: Status=%s.", MQTT_Status_strerror( mqttStatus ) ) );
     }
     else
     {
@@ -495,7 +497,8 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
         if( mqttStatus != MQTTSuccess )
         {
             returnStatus = EXIT_FAILURE;
-            LogError( ( "Connection with MQTT broker failed with status %u.", mqttStatus ) );
+            LogError( ( "Connection with MQTT broker failed with status %s.",
+                        MQTT_Status_strerror( mqttStatus ) ) );
         }
         else
         {
@@ -520,8 +523,8 @@ static int disconnectMqttSession( MQTTContext_t * pMqttContext )
 
     if( mqttStatus != MQTTSuccess )
     {
-        LogError( ( "Sending MQTT DISCONNECT failed with status=%u.",
-                    mqttStatus ) );
+        LogError( ( "Sending MQTT DISCONNECT failed with status=%s.",
+                    MQTT_Status_strerror( mqttStatus ) ) );
         returnStatus = EXIT_FAILURE;
     }
 
@@ -557,8 +560,8 @@ static int subscribeToTopic( MQTTContext_t * pMqttContext )
 
     if( mqttStatus != MQTTSuccess )
     {
-        LogError( ( "Failed to send SUBSCRIBE packet to broker with error = %u.",
-                    mqttStatus ) );
+        LogError( ( "Failed to send SUBSCRIBE packet to broker with error = %s.",
+                    MQTT_Status_strerror( mqttStatus ) ) );
         returnStatus = EXIT_FAILURE;
     }
     else
@@ -601,8 +604,8 @@ static int unsubscribeFromTopic( MQTTContext_t * pMqttContext )
 
     if( mqttStatus != MQTTSuccess )
     {
-        LogError( ( "Failed to send UNSUBSCRIBE packet to broker with error = %u.",
-                    mqttStatus ) );
+        LogError( ( "Failed to send UNSUBSCRIBE packet to broker with error = %s.",
+                    MQTT_Status_strerror( mqttStatus ) ) );
         returnStatus = EXIT_FAILURE;
     }
     else
@@ -620,7 +623,7 @@ static int unsubscribeFromTopic( MQTTContext_t * pMqttContext )
 static int publishToTopic( MQTTContext_t * pMqttContext )
 {
     int returnStatus = EXIT_SUCCESS;
-    MQTTStatus_t mqttSuccess = MQTTSuccess;
+    MQTTStatus_t mqttStatus = MQTTSuccess;
     MQTTPublishInfo_t publishInfo;
 
     assert( pMqttContext != NULL );
@@ -637,14 +640,12 @@ static int publishToTopic( MQTTContext_t * pMqttContext )
 
     /* Send PUBLISH packet. Packet Id is not used for a QoS0 publish.
      * Hence 0 is passed as packet id. */
-    mqttSuccess = MQTT_Publish( pMqttContext,
-                                &publishInfo,
-                                0U );
+    mqttStatus = MQTT_Publish( pMqttContext, &publishInfo, 0U );
 
-    if( returnStatus != MQTTSuccess )
+    if( mqttStatus != MQTTSuccess )
     {
-        LogError( ( "Failed to send PUBLISH packet to broker with error = %u.",
-                    mqttSuccess ) );
+        LogError( ( "Failed to send PUBLISH packet to broker with error = %s.",
+                    MQTT_Status_strerror( mqttStatus ) ) );
         returnStatus = EXIT_FAILURE;
     }
     else
@@ -713,8 +714,8 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
         if( mqttStatus != MQTTSuccess )
         {
             returnStatus = EXIT_FAILURE;
-            LogError( ( "MQTT_ProcessLoop returned with status = %u.",
-                        mqttStatus ) );
+            LogError( ( "MQTT_ProcessLoop returned with status = %s.",
+                        MQTT_Status_strerror( mqttStatus ) ) );
         }
     }
 
@@ -739,8 +740,8 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
 
             if( mqttStatus != MQTTSuccess )
             {
-                LogWarn( ( "MQTT_ProcessLoop returned with status = %u.",
-                           mqttStatus ) );
+                LogWarn( ( "MQTT_ProcessLoop returned with status = %s.",
+                           MQTT_Status_strerror( mqttStatus ) ) );
             }
 
             LogInfo( ( "Delay before continuing to next iteration.\n\n" ) );
@@ -767,8 +768,8 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
         if( mqttStatus != MQTTSuccess )
         {
             returnStatus = EXIT_FAILURE;
-            LogError( ( "MQTT_ProcessLoop returned with status = %u.",
-                        mqttStatus ) );
+            LogError( ( "MQTT_ProcessLoop returned with status = %s.",
+                        MQTT_Status_strerror( mqttStatus ) ) );
         }
     }
 
@@ -814,7 +815,7 @@ int main( int argc,
           char ** argv )
 {
     int returnStatus = EXIT_SUCCESS;
-    NetworkContext_t networkContext;
+    NetworkContext_t networkContext = { 0 };
 
     ( void ) argc;
     ( void ) argv;
@@ -823,9 +824,9 @@ int main( int argc,
     {
         /* Attempt to connect to the MQTT broker. If connection fails, retry after
          * a timeout. Timeout value will be exponentially increased till the maximum
-         * attemps are reached or maximum timout value is reached. The function
+         * attempts are reached or maximum timeout value is reached. The function
          * returns EXIT_FAILURE if the TCP connection cannot be established to
-         * broker after configured number of attemps. */
+         * broker after configured number of attempts. */
         returnStatus = connectToServerWithBackoffRetries( &networkContext );
 
         if( returnStatus == EXIT_FAILURE )

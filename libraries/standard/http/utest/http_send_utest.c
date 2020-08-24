@@ -188,7 +188,7 @@ static size_t firstPartBytes = 0;
 /* The count of times a test invoked the transport receive interface. */
 static uint8_t recvCurrentCall = 0;
 
-/* The test sets this variable to indcate which call count count of transport
+/* The test sets this variable to indicate which call count count of transport
  * receive to return an error from. */
 static uint8_t recvStopCall = 0;
 /* The count of times a mocked http_parser_execute callback has been invoked. */
@@ -303,18 +303,6 @@ static int32_t transportSendLessThanBytesToWrite( NetworkContext_t * pNetworkCon
     return retVal;
 }
 
-/* Application transport send that writes more bytes than expected. */
-static int32_t transportSendMoreThanBytesToWrite( NetworkContext_t * pNetworkContext,
-                                                  const void * pBuffer,
-                                                  size_t bytesToWrite )
-{
-    ( void ) pNetworkContext;
-    ( void ) pBuffer;
-
-    return( bytesToWrite + 1 );
-}
-
-
 /* Application transport receive interface that sends the bytes specified in
  * firstPartBytes on the first call, then sends the rest of the response in the
  * second call. The response to send is set in pNetworkData and the current
@@ -367,17 +355,6 @@ static int32_t transportRecvNetworkError( NetworkContext_t * pNetworkContext,
     ( void ) bytesToRead;
 
     return -1;
-}
-
-/* Application transport receive that returns more bytes read than expected. */
-static int32_t transportRecvMoreThanBytesToRead( NetworkContext_t * pNetworkContext,
-                                                 void * pBuffer,
-                                                 size_t bytesToRead )
-{
-    ( void ) pNetworkContext;
-    ( void ) pBuffer;
-
-    return( bytesToRead + 1 );
 }
 
 /* Mocked http_parser_execute callback that sets the internal http_errno. */
@@ -1089,7 +1066,7 @@ void test_HTTPClient_Send_response_larger_than_buffer( void )
     firstPartBytes = HTTP_TEST_RESPONSE_GET_PARTIAL_BODY_LENGTH;
     response.bufferLen = HTTP_TEST_RESPONSE_GET_PARTIAL_BODY_LENGTH;
 
-    /* For everage of no header parsing callback configured. */
+    /* For coverage of no header parsing callback configured. */
     response.pHeaderParsingCallback = NULL;
 
     returnStatus = HTTPClient_Send( &transportInterface,
@@ -1262,46 +1239,6 @@ void test_HTTPClient_Send_network_error_response( void )
 
 /*-----------------------------------------------------------*/
 
-/* Test when more bytes are received than expected, when receiving a response
- * from the network. */
-void test_HTTPClient_Send_recv_too_many_bytes( void )
-{
-    HTTPStatus_t returnStatus = HTTP_SUCCESS;
-
-    http_parser_init_Ignore();
-
-    transportInterface.recv = transportRecvMoreThanBytesToRead;
-    returnStatus = HTTPClient_Send( &transportInterface,
-                                    &requestHeaders,
-                                    NULL,
-                                    0,
-                                    &response,
-                                    0 );
-    TEST_ASSERT_EQUAL( HTTP_NETWORK_ERROR, returnStatus );
-}
-
-/*-----------------------------------------------------------*/
-
-/* Test when more bytes are sent than expected, when sending data
- * over the socket. */
-void test_HTTPClient_Send_send_too_many_bytes( void )
-{
-    HTTPStatus_t returnStatus = HTTP_SUCCESS;
-
-    http_parser_init_Ignore();
-
-    transportInterface.send = transportSendMoreThanBytesToWrite;
-    returnStatus = HTTPClient_Send( &transportInterface,
-                                    &requestHeaders,
-                                    NULL,
-                                    0,
-                                    &response,
-                                    0 );
-    TEST_ASSERT_EQUAL( HTTP_NETWORK_ERROR, returnStatus );
-}
-
-/*-----------------------------------------------------------*/
-
 /* Test a NULL transport interface passed to the API. */
 void test_HTTPClient_Send_null_transport_interface( void )
 {
@@ -1390,6 +1327,24 @@ void test_HTTPClient_Send_null_request_header_buffer( void )
 
 /*-----------------------------------------------------------*/
 
+/* Test when the length of request headers is greater than length of buffer. */
+void test_HTTPClient_Send_request_headers_gt_buffer( void )
+{
+    HTTPStatus_t returnStatus = HTTP_SUCCESS;
+
+    requestHeaders.headersLen = requestHeaders.bufferLen + 1;
+    returnStatus = HTTPClient_Send( &transportInterface,
+                                    &requestHeaders,
+                                    NULL,
+                                    0,
+                                    &response,
+                                    0 );
+
+    TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, returnStatus );
+}
+
+/*-----------------------------------------------------------*/
+
 /* Test a NULL response buffer passed to the API. */
 void test_HTTPClient_Send_null_response_buffer( void )
 {
@@ -1400,6 +1355,27 @@ void test_HTTPClient_Send_null_response_buffer( void )
                                     &requestHeaders,
                                     NULL,
                                     0,
+                                    &response,
+                                    0 );
+
+    TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, returnStatus );
+}
+
+/*-----------------------------------------------------------*/
+
+/* Test when reqBodyBufLen is greater than the max value of a 32-bit integer. */
+void test_HTTPClient_Send_request_body_buffer_length_gt_max( void )
+{
+    HTTPStatus_t returnStatus = HTTP_SUCCESS;
+    size_t reqBodyBufLen = INT32_MAX;
+
+    /* Increment separately to prevent an overflow warning. */
+    reqBodyBufLen++;
+
+    returnStatus = HTTPClient_Send( &transportInterface,
+                                    &requestHeaders,
+                                    ( uint8_t * ) HTTP_TEST_REQUEST_PUT_BODY,
+                                    reqBodyBufLen,
                                     &response,
                                     0 );
 
@@ -1426,7 +1402,29 @@ void test_HTTPClient_Send_not_enough_request_headers( void )
 
 /*-----------------------------------------------------------*/
 
-/* Test a NULL request body but a non-zero requets body length.
+/* Test when length of headers is greater than the max value of a 32-bit integer. */
+void test_HTTPClient_Send_headers_length_gt_max( void )
+{
+    HTTPStatus_t returnStatus = HTTP_SUCCESS;
+
+    requestHeaders.headersLen = INT32_MAX;
+    /* Increment separately to prevent an overflow warning. */
+    requestHeaders.headersLen++;
+    requestHeaders.bufferLen = requestHeaders.headersLen;
+
+    returnStatus = HTTPClient_Send( &transportInterface,
+                                    &requestHeaders,
+                                    NULL,
+                                    0,
+                                    &response,
+                                    0 );
+
+    TEST_ASSERT_EQUAL( HTTP_INVALID_PARAMETER, returnStatus );
+}
+
+/*-----------------------------------------------------------*/
+
+/* Test a NULL request body but a non-zero requests body length.
  */
 void test_HTTPClient_Send_null_request_body_nonzero_body_length( void )
 {

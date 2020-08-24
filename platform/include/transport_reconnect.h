@@ -31,7 +31,7 @@
 /* Standard include. */
 #include <stdint.h>
 
-/* bools are only defined in C99+ */
+/* bool is defined in only C99+. */
 #if defined( __cplusplus ) || __STDC_VERSION__ >= 199901L
     #include <stdbool.h>
 #elif !defined( bool )
@@ -75,7 +75,7 @@ typedef struct TransportReconnectParams
 void Transport_ReconnectParamsReset( TransportReconnectParams_t * reconnectParams );
 
 /**
- * @brief Simple platfrom specific exponential backoff function. The application
+ * @brief Simple platform specific exponential backoff function. The application
  * must use this function between connection failures to add exponential delay.
  * This function will block the calling task for the current timeout value.
  *

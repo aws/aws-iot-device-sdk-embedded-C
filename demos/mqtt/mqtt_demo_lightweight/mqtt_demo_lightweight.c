@@ -55,10 +55,20 @@
 /* Reconnect parameters. */
 #include "transport_reconnect.h"
 
+/* Check that the broker endpoint is defined. */
+#ifndef BROKER_ENDPOINT
+    #error "Please define an MQTT broker endpoint, BROKER_ENDPOINT, in demo_config.h."
+#endif
+
 /* Check that client identifier is defined. */
 #ifndef CLIENT_IDENTIFIER
     #error "Please define a unique CLIENT_IDENTIFIER."
 #endif
+
+/**
+ * @brief Length of MQTT server host name.
+ */
+#define BROKER_ENDPOINT_LENGTH       ( ( uint16_t ) ( sizeof( BROKER_ENDPOINT ) - 1 ) )
 
 /**
  * @brief The topic to subscribe and publish to in the example.
@@ -126,7 +136,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
  *
  * @param[in] pNetworkContext Pointer to the network context created using Plaintext_Connect.
  * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and its length.
- * The buffer is used for serialzing CONNECT packet and deserializing CONN-ACK.
+ * The buffer is used for serializing CONNECT packet and deserializing CONN-ACK.
  *
  * @return EXIT_SUCCESS if an MQTT session is established; EXIT_FAILURE otherwise.
  */
@@ -139,7 +149,7 @@ static int createMQTTConnectionWithBroker( NetworkContext_t * pNetworkContext,
  *
  * @param[in] pNetworkContext Pointer to the network context created using Plaintext_Connect.
  * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and its length.
- * The buffer is used for serialzing SUBSCRIBE packet.
+ * The buffer is used for serializing SUBSCRIBE packet.
  *
  */
 static void mqttSubscribeToTopic( NetworkContext_t * pNetworkContext,
@@ -150,7 +160,7 @@ static void mqttSubscribeToTopic( NetworkContext_t * pNetworkContext,
  *
  * @param[in] pNetworkContext Pointer to the network context created using Plaintext_Connect.
  * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and its length.
- * The buffer is used for serialzing PUBLISH packet.
+ * The buffer is used for serializing PUBLISH packet.
  *
  */
 static void mqttPublishToTopic( NetworkContext_t * pNetworkContext,
@@ -162,7 +172,7 @@ static void mqttPublishToTopic( NetworkContext_t * pNetworkContext,
  *
  * @param[in] pNetworkContext Pointer to the network context created using Plaintext_Connect.
  * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and its length.
- * The buffer is used for serialzing UNSUBSCRIBE packet.
+ * The buffer is used for serializing UNSUBSCRIBE packet.
  *
  */
 static void mqttUnsubscribeFromTopic( NetworkContext_t * pNetworkContext,
@@ -173,7 +183,7 @@ static void mqttUnsubscribeFromTopic( NetworkContext_t * pNetworkContext,
  *
  * @param[in] pNetworkContext Pointer to the network context created using Plaintext_Connect.
  * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and its length.
- * The buffer is used for serialzing DISCONNECT packet.
+ * The buffer is used for serializing DISCONNECT packet.
  */
 static void mqttDisconnect( NetworkContext_t * pNetworkContext,
                             MQTTFixedBuffer_t * pFixedBuffer );
@@ -183,7 +193,7 @@ static void mqttDisconnect( NetworkContext_t * pNetworkContext,
  *
  * @param[in] pNetworkContext Pointer to the network context created using Plaintext_Connect.
  * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and its length.
- * The buffer is used for serialzing PING request packet.
+ * The buffer is used for serializing PING request packet.
  */
 static void mqttKeepAlive( NetworkContext_t * pNetworkContext,
                            MQTTFixedBuffer_t * pFixedBuffer );
@@ -309,7 +319,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
 
     /* Attempt to connect to MQTT broker. If connection fails, retry after
      * a timeout. Timeout value will exponentially increase till maximum
-     * attemps are reached.
+     * attempts are reached.
      */
     do
     {
@@ -452,6 +462,10 @@ static void mqttSubscribeToTopic( NetworkContext_t * pNetworkContext,
     size_t packetSize;
     int status;
 
+    /* Suppress unused variable warnings when asserts are disabled in build. */
+    ( void ) status;
+    ( void ) result;
+
     /***
      * For readability, error handling in this function is restricted to the use of
      * asserts().
@@ -500,6 +514,10 @@ static void mqttPublishToTopic( NetworkContext_t * pNetworkContext,
     size_t headerSize = 0;
     int status;
 
+    /* Suppress unused variable warnings when asserts are disabled in build. */
+    ( void ) status;
+    ( void ) result;
+
     /***
      * For readability, error handling in this function is restricted to the use of
      * asserts().
@@ -532,7 +550,7 @@ static void mqttPublishToTopic( NetworkContext_t * pNetworkContext,
                                           pFixedBuffer,
                                           &headerSize );
     LogDebug( ( "Serialized PUBLISH header size is %lu.",
-                headerSize ) );
+                ( unsigned long ) headerSize ) );
     assert( result == MQTTSuccess );
     /* Send Publish header to the broker. */
     status = Plaintext_Send( pNetworkContext, ( void * ) pFixedBuffer->pBuffer, headerSize );
@@ -551,6 +569,10 @@ static void mqttUnsubscribeFromTopic( NetworkContext_t * pNetworkContext,
     size_t remainingLength;
     size_t packetSize;
     int status;
+
+    /* Suppress unused variable warnings when asserts are disabled in build. */
+    ( void ) status;
+    ( void ) result;
 
     /* Some fields not used by this demo so start with everything at 0. */
     memset( ( void * ) &mqttSubscription, 0x00, sizeof( mqttSubscription ) );
@@ -591,6 +613,10 @@ static void mqttKeepAlive( NetworkContext_t * pNetworkContext,
     int status;
     size_t packetSize = 0;
 
+    /* Suppress unused variable warnings when asserts are disabled in build. */
+    ( void ) status;
+    ( void ) result;
+
     /* Calculate PING request size. */
     status = MQTT_GetPingreqPacketSize( &packetSize );
 
@@ -614,6 +640,10 @@ static void mqttDisconnect( NetworkContext_t * pNetworkContext,
     int32_t status;
     size_t packetSize = 0;
 
+    /* Suppress unused variable warnings when asserts are disabled in build. */
+    ( void ) status;
+    ( void ) result;
+
     status = MQTT_GetDisconnectPacketSize( &packetSize );
 
     assert( packetSize <= pFixedBuffer->size );
@@ -631,6 +661,9 @@ static void mqttDisconnect( NetworkContext_t * pNetworkContext,
 static void mqttProcessResponse( MQTTPacketInfo_t * pIncomingPacket,
                                  uint16_t packetId )
 {
+    /* Suppress unused parameter warnings when asserts are disabled in build. */
+    ( void ) packetId;
+
     switch( pIncomingPacket->type & 0xf0 )
     {
         case MQTT_PACKET_TYPE_SUBACK:
@@ -702,6 +735,9 @@ static void mqttProcessIncomingPacket( NetworkContext_t * pNetworkContext,
     int status;
     bool sessionPresent = false;
     uint16_t receiveAttempts = 0;
+
+    /* Suppress unused variable warning when asserts are disabled in build. */
+    ( void ) status;
 
     /***
      * For readability, error handling in this function is restricted to the use of
@@ -779,7 +815,7 @@ int main( int argc,
     uint32_t timeDiff = 0;
     bool controlPacketSent = false;
     bool publishPacketSent = false;
-    NetworkContext_t networkContext;
+    NetworkContext_t networkContext = { 0 };
 
     ( void ) argc;
     ( void ) argv;

@@ -15,24 +15,17 @@
 #include "logging_levels.h"
 
 /* Configure name and log level for the MQTT library. */
-#define LIBRARY_LOG_NAME     "MQTT"
-#define LIBRARY_LOG_LEVEL    LOG_NONE
+#ifndef LIBRARY_LOG_NAME
+    #define LIBRARY_LOG_NAME    "MQTT"
+#endif
+
+#ifndef LIBRARY_LOG_LEVEL
+    #define LIBRARY_LOG_LEVEL    LOG_ERROR
+#endif
 
 #include "logging_stack.h"
 
 /************ End of logging configuration ****************/
-
-/**
- * @brief The maximum number of MQTT PUBLISH messages that may be pending
- * acknowledgement at any time.
- *
- * QoS 1 and 2 MQTT PUBLISHes require acknowlegement from the server before
- * they can be completed. While they are awaiting the acknowledgement, the
- * client must maintain information about their state. The value of this
- * macro sets the limit on how many simultaneous PUBLISH states an MQTT
- * context maintains.
- */
-#define MQTT_MAX_QUEUED_PUBLISH_MESSAGES        10
 
 /**
  * @brief The maximum number of MQTT PUBLISH messages that may be pending
@@ -61,6 +54,15 @@
  * specified by this config.
  */
 #define MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT    ( 2U )
+
+/**
+ * @brief Number of milliseconds to wait for a ping response to a ping
+ * request as part of the keep-alive mechanism.
+ *
+ * If a ping response is not received before this timeout, then
+ * #MQTT_ProcessLoop will return #MQTTKeepAliveTimeout.
+ */
+#define MQTT_PINGRESP_TIMEOUT_MS                ( 1000U )
 
 /* Set network context to double pointer to buffer (uint8_t**).  */
 struct NetworkContext

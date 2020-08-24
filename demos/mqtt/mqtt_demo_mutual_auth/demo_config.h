@@ -51,14 +51,11 @@
 /**
  * @brief Details of the MQTT broker to connect to.
  *
- * This is the Thing's Rest API Endpoint for AWS IoT.
- *
  * @note Your AWS IoT Core endpoint can be found in the AWS IoT console under
  * Settings/Custom Endpoint, or using the describe-endpoint API.
  *
  * #define AWS_IOT_ENDPOINT               "...insert here..."
  */
-#define AWS_IOT_ENDPOINT           "a36385mjytouy4-ats.iot.us-west-2.amazonaws.com"
 
 /**
  * @brief AWS IoT MQTT broker port number.
@@ -68,7 +65,7 @@
  * @note Port 443 requires use of the ALPN TLS extension with the ALPN protocol
  * name. When using port 8883, ALPN is not required.
  */
-#define AWS_MQTT_PORT              ( 8883 )
+#define AWS_MQTT_PORT    ( 8883 )
 
 /**
  * @brief Path of the file containing the server's root CA certificate.
@@ -85,7 +82,9 @@
  * @note This path is relative from the demo binary created. Update
  * ROOT_CA_CERT_PATH to the absolute path if this demo is executed from elsewhere.
  */
-#define ROOT_CA_CERT_PATH          "certificates/AmazonRootCA1.crt"
+#ifndef ROOT_CA_CERT_PATH
+    #define ROOT_CA_CERT_PATH    "certificates/AmazonRootCA1.crt"
+#endif
 
 /**
  * @brief Path of the file containing the client certificate.
@@ -98,7 +97,6 @@
  *
  * #define CLIENT_CERT_PATH    "...insert here..."
  */
-#define CLIENT_CERT_PATH           "certificates/client.crt"
 
 /**
  * @brief Path of the file containing the client's private key.
@@ -111,19 +109,71 @@
  *
  * #define CLIENT_PRIVATE_KEY_PATH    "...insert here..."
  */
-#define CLIENT_PRIVATE_KEY_PATH    "certificates/client.key"
+
+/**
+ * @brief The username value for authenticating client to MQTT broker when
+ * username/password based client authentication is used.
+ *
+ * Refer to the AWS IoT documentation below for details regarding client
+ * authentication with a username and password.
+ * https://docs.aws.amazon.com/iot/latest/developerguide/enhanced-custom-authentication.html
+ * As mentioned in the link above, an authorizer setup needs to be done to use
+ * username/password based client authentication.
+ *
+ * @note AWS IoT message broker requires either a set of client certificate/private key
+ * or username/password to authenticate the client. If this config is defined,
+ * the username and password will be used instead of the client certificate and
+ * private key for client authentication.
+ *
+ * #define CLIENT_USERNAME    "...insert here..."
+ */
+
+/**
+ * @brief The password value for authenticating client to MQTT broker when
+ * username/password based client authentication is used.
+ *
+ * Refer to the AWS IoT documentation below for details regarding client
+ * authentication with a username and password.
+ * https://docs.aws.amazon.com/iot/latest/developerguide/enhanced-custom-authentication.html
+ * As mentioned in the link above, an authorizer setup needs to be done to use
+ * username/password based client authentication.
+ *
+ * @note AWS IoT message broker requires either a set of client certificate/private key
+ * or username/password to authenticate the client.
+ *
+ * #define CLIENT_PASSWORD    "...insert here..."
+ */
 
 /**
  * @brief MQTT client identifier.
  *
  * No two clients may use the same client identifier simultaneously.
  */
-#define CLIENT_IDENTIFIER          "testclient"
+#ifndef CLIENT_IDENTIFIER
+    #define CLIENT_IDENTIFIER         "testclient"
+#endif
 
 /**
  * @brief Size of the network buffer for MQTT packets.
  */
-#define NETWORK_BUFFER_SIZE        ( 1024U )
+#define NETWORK_BUFFER_SIZE       ( 1024U )
+
+/**
+ * @brief The name of the operating system or SDK that the application is
+ * running a part of.
+ */
+#define SDK_NAME                  "aws-iot-device-sdk-embedded-C"
+
+/**
+ * @brief The version of the operating system or SDK that the application is
+ * running a part of.
+ */
+#define SDK_VERSION               "4.0.0"
+
+/**
+ * @brief The name of the hardware platform the application is running on.
+ */
+#define HARDWARE_PLATFORM_NAME    "Posix"
 
 
 #endif /* ifndef DEMO_CONFIG_H_ */

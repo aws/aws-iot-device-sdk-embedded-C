@@ -30,7 +30,7 @@ int suiteTearDown( int numFailures )
 
 static void resetPublishRecords( MQTTContext_t * pMqttContext )
 {
-    int i = 0;
+    uint32_t i = 0;
 
     for( ; i < MQTT_STATE_ARRAY_MAX_COUNT; i++ )
     {
@@ -59,7 +59,7 @@ static void fillRecord( MQTTPubAckInfo_t * records,
                         MQTTQoS_t qos,
                         MQTTPublishState_t state )
 {
-    int i;
+    uint32_t i;
 
     for( i = 0; i < MQTT_STATE_ARRAY_MAX_COUNT; i++ )
     {
@@ -487,12 +487,12 @@ void test_MQTT_UpdateStateAck( void )
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
     status = MQTT_UpdateStateAck( &mqttContext, PACKET_ID, ack, operation, NULL );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
-    /* No matching record found. */
-    status = MQTT_UpdateStateAck( &mqttContext, PACKET_ID, ack, operation, &state );
-    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
     /* Invalid packet ID. */
     status = MQTT_UpdateStateAck( &mqttContext, 0, ack, operation, &state );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+    /* No matching record found. */
+    status = MQTT_UpdateStateAck( &mqttContext, PACKET_ID, ack, operation, &state );
+    TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /* Invalid transitions. */
     /* Invalid transition from #MQTTPubRelPending. */
@@ -606,11 +606,11 @@ void test_MQTT_UpdateStateAck( void )
     TEST_ASSERT_EQUAL( MQTTPubRelSend, state );
 
     /* Receiving a PUBREC will move the record to the end.
-    * In this case, the record wil be moved to index 2. */
+    * In this case, the record will be moved to index 2. */
     TEST_ASSERT_EQUAL( PACKET_ID, mqttContext.outgoingPublishRecords[ 2 ].packetId );
     TEST_ASSERT_EQUAL( MQTTQoS2, mqttContext.outgoingPublishRecords[ 2 ].qos );
     TEST_ASSERT_EQUAL( MQTTPubRelSend, mqttContext.outgoingPublishRecords[ 2 ].publishState );
-    /* Record at the current index will be marked as onvalid. */
+    /* Record at the current index will be marked as invalid. */
     TEST_ASSERT_EQUAL( MQTT_PACKET_ID_INVALID, mqttContext.outgoingPublishRecords[ 0 ].packetId );
 
     /* Incoming. */
@@ -725,7 +725,6 @@ void test_MQTT_PublishToResend( void )
 {
     MQTTContext_t mqttContext = { 0 };
     MQTTStateCursor_t cursor = MQTT_STATE_CURSOR_INITIALIZER;
-    MQTTPublishState_t state = MQTTStateNull;
     uint16_t packetId;
     const uint16_t PACKET_ID = 1;
     const uint16_t PACKET_ID2 = 2;

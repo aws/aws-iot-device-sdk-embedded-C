@@ -30,6 +30,7 @@
 #include "transport_interface.h"
 
 #include "openssl_posix.h"
+#include <openssl/err.h>
 
 /*-----------------------------------------------------------*/
 
@@ -124,6 +125,16 @@ static int setCredentials( SSL_CTX * pSslContext,
 static void setOptionalConfigurations( SSL * pSsl,
                                        const OpensslCredentials_t * pOpensslCredentials );
 
+/**
+ * @brief Converts the sockets wrapper status to openssl status.
+ *
+ * @param[in] socketStatus Sockets wrapper status.
+ *
+ * @return #OPENSSL_SUCCESS, #OPENSSL_INVALID_PARAMETER, #OPENSSL_DNS_FAILURE,
+ * and #OPENSSL_CONNECT_FAILURE.
+ */
+static OpensslStatus_t convertToOpensslStatus( SocketStatus_t socketStatus );
+
 /*-----------------------------------------------------------*/
 
 #if ( LIBRARY_LOG_LEVEL == LOG_DEBUG )
@@ -158,6 +169,37 @@ static void setOptionalConfigurations( SSL * pSsl,
         }
     }
 #endif /* #if ( LIBRARY_LOG_LEVEL == LOG_DEBUG ) */
+/*-----------------------------------------------------------*/
+
+static OpensslStatus_t convertToOpensslStatus( SocketStatus_t socketStatus )
+{
+    OpensslStatus_t opensslStatus = OPENSSL_INVALID_PARAMETER;
+
+    switch( socketStatus )
+    {
+        case SOCKETS_SUCCESS:
+            opensslStatus = OPENSSL_SUCCESS;
+            break;
+
+        case SOCKETS_INVALID_PARAMETER:
+            opensslStatus = OPENSSL_INVALID_PARAMETER;
+            break;
+
+        case SOCKETS_DNS_FAILURE:
+            opensslStatus = OPENSSL_DNS_FAILURE;
+            break;
+
+        case SOCKETS_CONNECT_FAILURE:
+            opensslStatus = OPENSSL_CONNECT_FAILURE;
+            break;
+
+        default:
+            LogError( ( "Unexpected status received from socket wrapper: Socket status = %u",
+                        socketStatus ) );
+    }
+
+    return opensslStatus;
+}
 /*-----------------------------------------------------------*/
 
 static int setRootCa( SSL_CTX * pSslContext,
@@ -401,6 +443,7 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
     OpensslStatus_t returnStatus = OPENSSL_SUCCESS;
     long verifyPeerCertStatus = X509_V_OK;
     int sslStatus = 0;
+    uint8_t sslObjectCreated = 0;
     SSL_CTX * pSslContext = NULL;
 
     /* Validate parameters. */
@@ -427,22 +470,8 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
                                         sendTimeoutMs,
                                         recvTimeoutMs );
 
-        if( socketStatus == SOCKETS_INVALID_PARAMETER )
-        {
-            returnStatus = OPENSSL_INVALID_PARAMETER;
-        }
-        else if( socketStatus == SOCKETS_DNS_FAILURE )
-        {
-            returnStatus = OPENSSL_DNS_FAILURE;
-        }
-        else if( socketStatus == SOCKETS_CONNECT_FAILURE )
-        {
-            returnStatus = OPENSSL_CONNECT_FAILURE;
-        }
-        else
-        {
-            /* Empty else. */
-        }
+        /* Convert socket wrapper status to openssl status. */
+        returnStatus = convertToOpensslStatus( socketStatus );
     }
 
     /* Create SSL context. */
@@ -483,6 +512,10 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
         {
             LogError( ( "SSL_new failed to create a new SSL context." ) );
             returnStatus = OPENSSL_API_ERROR;
+        }
+        else
+        {
+            sslObjectCreated = 1u;
         }
     }
 
@@ -535,7 +568,7 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
     }
 
     /* Clean up on error. */
-    if( ( returnStatus != OPENSSL_SUCCESS ) && ( sslStatus == 0 ) )
+    if( ( returnStatus != OPENSSL_SUCCESS ) && ( sslObjectCreated == 1u ) )
     {
         SSL_free( pNetworkContext->pSsl );
         pNetworkContext->pSsl = NULL;
@@ -557,39 +590,35 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
 
 OpensslStatus_t Openssl_Disconnect( NetworkContext_t * pNetworkContext )
 {
-    OpensslStatus_t returnStatus = OPENSSL_SUCCESS;
-    SocketStatus_t socketStatus = SOCKETS_SUCCESS;
+    SocketStatus_t socketStatus = SOCKETS_INVALID_PARAMETER;
 
     if( pNetworkContext == NULL )
     {
+        /* No need to update the status here. The socket status
+         * SOCKETS_INVALID_PARAMETER will be converted to openssl
+         * status OPENSSL_INVALID_PARAMETER before returning from this
+         * function. */
         LogError( ( "Parameter check failed: pNetworkContext is NULL." ) );
-        returnStatus = OPENSSL_INVALID_PARAMETER;
-    }
-    else if( pNetworkContext->pSsl != NULL )
-    {
-        /* SSL shutdown should be called twice: once to send "close notify" and
-         * once more to receive the peer's "close notify". */
-        if( SSL_shutdown( pNetworkContext->pSsl ) == 0 )
-        {
-            ( void ) SSL_shutdown( pNetworkContext->pSsl );
-        }
-
-        SSL_free( pNetworkContext->pSsl );
     }
     else
     {
-        /* Empty else. */
+        if( pNetworkContext->pSsl != NULL )
+        {
+            /* SSL shutdown should be called twice: once to send "close notify" and
+             * once more to receive the peer's "close notify". */
+            if( SSL_shutdown( pNetworkContext->pSsl ) == 0 )
+            {
+                ( void ) SSL_shutdown( pNetworkContext->pSsl );
+            }
+
+            SSL_free( pNetworkContext->pSsl );
+        }
+
+        /* Tear down the socket connection, pNetworkContext != NULL here. */
+        socketStatus = Sockets_Disconnect( pNetworkContext->socketDescriptor );
     }
 
-    /* Tear down the socket connection. */
-    socketStatus = Sockets_Disconnect( pNetworkContext->socketDescriptor );
-
-    if( socketStatus == SOCKETS_INVALID_PARAMETER )
-    {
-        returnStatus = OPENSSL_INVALID_PARAMETER;
-    }
-
-    return returnStatus;
+    return convertToOpensslStatus( socketStatus );
 }
 /*-----------------------------------------------------------*/
 
@@ -600,25 +629,38 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
     int32_t bytesReceived = 0;
     int sslError = 0;
 
-    /* SSL read of data. */
-    bytesReceived = ( int32_t ) SSL_read( pNetworkContext->pSsl,
-                                          pBuffer,
-                                          bytesToRecv );
-
-    if( bytesReceived <= 0 )
+    if( pNetworkContext == NULL )
     {
-        sslError = SSL_get_error( pNetworkContext->pSsl, bytesReceived );
+        LogError( ( "Parameter check failed: pNetworkContext is NULL." ) );
+    }
+    else if( pNetworkContext->pSsl != NULL )
+    {
+        /* SSL read of data. */
+        bytesReceived = ( int32_t ) SSL_read( pNetworkContext->pSsl,
+                                              pBuffer,
+                                              bytesToRecv );
 
-        if( sslError == SSL_ERROR_WANT_READ )
+        /* Handle error return status if transport read did not succeed. */
+        if( bytesReceived <= 0 )
         {
-            /* There is no data to receive at this time. */
-            bytesReceived = 0;
+            sslError = SSL_get_error( pNetworkContext->pSsl, bytesReceived );
+
+            if( sslError == SSL_ERROR_WANT_READ )
+            {
+                /* There is no data to receive at this time. */
+                bytesReceived = 0;
+            }
+            else
+            {
+                LogError( ( "Failed to receive data over network: SSL_read failed: "
+                            "ErrorStatus=%s.", ERR_reason_error_string( sslError ) ) );
+            }
         }
-        else
-        {
-            LogError( ( "SSL_read of OpenSSL failed to receive data: "
-                        "status=%d.", bytesReceived ) );
-        }
+    }
+    else
+    {
+        LogError( ( "Failed to receive data over network: "
+                    "SSL object in network context is NULL." ) );
     }
 
     return bytesReceived;
@@ -630,16 +672,31 @@ int32_t Openssl_Send( NetworkContext_t * pNetworkContext,
                       size_t bytesToSend )
 {
     int32_t bytesSent = 0;
+    int32_t sslError = 0;
 
-    /* SSL write of data. */
-    bytesSent = ( int32_t ) SSL_write( pNetworkContext->pSsl,
-                                       pBuffer,
-                                       bytesToSend );
-
-    if( bytesSent <= 0 )
+    if( pNetworkContext == NULL )
     {
-        LogError( ( "SSL_write of OpenSSL failed to send data: "
-                    " status=%d.", bytesSent ) );
+        LogError( ( "Parameter check failed: pNetworkContext is NULL." ) );
+    }
+    else if( pNetworkContext->pSsl != NULL )
+    {
+        /* SSL write of data. */
+        bytesSent = ( int32_t ) SSL_write( pNetworkContext->pSsl,
+                                           pBuffer,
+                                           bytesToSend );
+
+        if( bytesSent <= 0 )
+        {
+            sslError = SSL_get_error( pNetworkContext->pSsl, bytesSent );
+
+            LogError( ( "Failed to send data over network: SSL_write of OpenSSL failed: "
+                        "ErrorStatus=%s.", ERR_reason_error_string( sslError ) ) );
+        }
+    }
+    else
+    {
+        LogError( ( "Failed to send data over network: "
+                    "SSL object in network context is NULL." ) );
     }
 
     return bytesSent;

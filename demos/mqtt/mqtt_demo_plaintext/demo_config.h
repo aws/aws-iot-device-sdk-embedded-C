@@ -50,23 +50,30 @@
 /**
  * @brief MQTT server host name.
  *
- * This demo uses the Mosquitto test server. This is a public MQTT server; do not
- * publish anything sensitive to this server.
+ * This demo can be run using the open-source Mosquitto broker tool.
+ * A Mosquitto MQTT broker can be setup locally for running this demo against
+ * it. Please refer to the instructions in https://mosquitto.org/ for running
+ * a Mosquitto broker locally.
+ * Alternatively, instructions to run a Mosquitto broker on a Docker container
+ * can be viewed in the README.md of the root directory.
+ *
+ * #define BROKER_ENDPOINT               "...insert here..."
  */
-#define BROKER_ENDPOINT      "test.mosquitto.org"
 
 /**
  * @brief MQTT server port number.
  *
  * In general, port 1883 is for unsecured MQTT connections.
  */
-#define BROKER_PORT          ( 1883 )
+#define BROKER_PORT    ( 1883 )
 
 /**
  * @brief MQTT client identifier.
  *
  * No two clients may use the same client identifier simultaneously.
  */
-#define CLIENT_IDENTIFIER    "testclient"
+#ifndef CLIENT_IDENTIFIER
+    #define CLIENT_IDENTIFIER    "testclient"
+#endif
 
 #endif /* ifndef DEMO_CONFIG_H */

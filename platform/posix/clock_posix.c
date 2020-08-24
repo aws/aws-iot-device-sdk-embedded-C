@@ -34,6 +34,12 @@
 /* Platform clock include. */
 #include "clock.h"
 
+/*
+ * Time conversion constants.
+ */
+#define NANOSECONDS_PER_MILLISECOND    ( 1000000 )    /**< @brief Nanoseconds per millisecond. */
+#define MILLISECONDS_PER_SECOND        ( 1000 )       /**< @brief Milliseconds per second. */
+
 /*-----------------------------------------------------------*/
 
 uint32_t Clock_GetTimeMs( void )
@@ -49,4 +55,17 @@ uint32_t Clock_GetTimeMs( void )
              + ( uint32_t ) ( timeSpec.tv_nsec / ( 1000 * 1000 ) );
 
     return timeMs;
+}
+
+/*-----------------------------------------------------------*/
+
+void Clock_SleepMs( uint32_t sleepTimeMs )
+{
+    /* Convert parameter to timespec. */
+    struct timespec sleepTime = { 0 };
+    sleepTime.tv_sec = sleepTimeMs / MILLISECONDS_PER_SECOND;
+    sleepTime.tv_nsec = ( sleepTimeMs % MILLISECONDS_PER_SECOND ) * NANOSECONDS_PER_MILLISECOND;
+
+    /* High resolution sleep. */
+    ( void ) nanosleep( &sleepTime, NULL );
 }

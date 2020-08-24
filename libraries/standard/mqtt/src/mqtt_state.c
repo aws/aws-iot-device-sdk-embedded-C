@@ -19,6 +19,10 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/**
+ * @file mqtt_state.c
+ * @brief Implements the functions in mqtt_state.h.
+ */
 #include <assert.h>
 #include <string.h>
 #include "mqtt_state.h"
@@ -127,11 +131,11 @@ static void compactRecords( MQTTPubAckInfo_t * records,
  *
  * @param[in] records State record array.
  * @param[in] recordCount Length of record array.
- * @param[in] packetId, packet ID of new entry.
+ * @param[in] packetId Packet ID of new entry.
  * @param[in] qos QoS of new entry.
- * @param[in] publishState state of new entry.
+ * @param[in] publishState State of new entry.
  *
- * @return MQTTSuccess, MQTTNoMemory, MQTTStateCollision.
+ * @return #MQTTSuccess, #MQTTNoMemory, or #MQTTStateCollision.
  */
 static MQTTStatus_t addRecord( MQTTPubAckInfo_t * records,
                                size_t recordCount,
@@ -159,6 +163,8 @@ static void updateRecord( MQTTPubAckInfo_t * records,
  * @param[in] pMqttContext Initialized MQTT context.
  * @param[in] searchStates The states to search for in 2-byte bit map.
  * @param[in,out] pCursor Index at which to start searching.
+ *
+ * @return Packet ID of the outgoing publish.
  */
 static uint16_t stateSelect( const MQTTContext_t * pMqttContext,
                              uint16_t searchStates,
@@ -299,7 +305,7 @@ static bool validateTransitionAck( MQTTPublishState_t currentState,
              * There are 2 valid transitions possible.
              * 1. MQTTPubRelPending -> MQTTPubCompSend : A PUBREL ack is received
              *    when publish record state is MQTTPubRelPending. This is the
-             *    normal state transition without any connection interuptions.
+             *    normal state transition without any connection interruptions.
              * 2. MQTTPubRelPending -> MQTTPubRelPending : Receiving a duplicate
              *    QoS2 publish can result in a transition to the same state.
              *    This can happen in the below state transition.
@@ -322,7 +328,7 @@ static bool validateTransitionAck( MQTTPublishState_t currentState,
              * There are 2 valid transitions possible.
              * 1. MQTTPubCompSend -> MQTTPublishDone : A PUBCOMP ack is sent
              *    after receiving a PUBREL from broker. This is the
-             *    normal state transition without any connection interuptions.
+             *    normal state transition without any connection interruptions.
              * 2. MQTTPubCompSend -> MQTTPubCompSend : Receiving a duplicate PUBREL
              *    can result in a transition to the same state.
              *    This can happen in the below state transition.
@@ -351,9 +357,9 @@ static bool validateTransitionAck( MQTTPublishState_t currentState,
             /* Outgoing publish, Qos 2.
              * There are 2 valid transitions possible.
              * 1. MQTTPubCompPending -> MQTTPublishDone : A PUBCOMP is received.
-             *    This marks the complete state transistion for the publish packet.
+             *    This marks the complete state transition for the publish packet.
              *    This is the normal state transition without any connection
-             *    interuptions.
+             *    interruptions.
              * 2. MQTTPubCompPending -> MQTTPubCompPending : Resending a PUBREL for
              *    packets in state #MQTTPubCompPending can result in this
              *    transition to the same state.
@@ -418,22 +424,17 @@ static size_t findInRecord( const MQTTPubAckInfo_t * records,
 {
     size_t index = 0;
 
+    assert( packetId != MQTT_PACKET_ID_INVALID );
+
     *pCurrentState = MQTTStateNull;
 
-    if( packetId == MQTT_PACKET_ID_INVALID )
+    for( index = 0; index < recordCount; index++ )
     {
-        index = recordCount;
-    }
-    else
-    {
-        for( index = 0; index < recordCount; index++ )
+        if( records[ index ].packetId == packetId )
         {
-            if( records[ index ].packetId == packetId )
-            {
-                *pQos = records[ index ].qos;
-                *pCurrentState = records[ index ].publishState;
-                break;
-            }
+            *pQos = records[ index ].qos;
+            *pCurrentState = records[ index ].publishState;
+            break;
         }
     }
 
@@ -525,7 +526,7 @@ static MQTTStatus_t addRecord( MQTTPubAckInfo_t * records,
             if( records[ index ].packetId == packetId )
             {
                 /* Collision. */
-                LogError( ( "Collision when adding PacketID=%u at index=%u",
+                LogError( ( "Collision when adding PacketID=%u at index=%u.",
                             packetId,
                             index ) );
 
@@ -615,6 +616,15 @@ static uint16_t stateSelect( const MQTTContext_t * pMqttContext,
 
 /*-----------------------------------------------------------*/
 
+/**
+ * @brief Calculate the state from a PUBACK, PUBREC, PUBREL, or PUBCOMP.
+ *
+ * @param[in] packetType PUBACK, PUBREC, PUBREL, or PUBCOMP.
+ * @param[in] opType Send or Receive.
+ * @param[in] qos 1 or 2.
+ *
+ * @return The calculated state.
+ */
 MQTTPublishState_t MQTT_CalculateStateAck( MQTTPubAckType_t packetType,
                                            MQTTStateOperation_t opType,
                                            MQTTQoS_t qos )
@@ -779,6 +789,15 @@ static MQTTStatus_t updateStatePublish( MQTTContext_t * pMqttContext,
 
 /*-----------------------------------------------------------*/
 
+/**
+ * @brief Reserve an entry for an outgoing QoS 1 or Qos 2 publish.
+ *
+ * @param[in] pMqttContext Initialized MQTT context.
+ * @param[in] packetId The ID of the publish packet.
+ * @param[in] qos 1 or 2.
+ *
+ * @return MQTTSuccess, MQTTNoMemory, or MQTTStateCollision.
+ */
 MQTTStatus_t MQTT_ReserveState( MQTTContext_t * pMqttContext,
                                 uint16_t packetId,
                                 MQTTQoS_t qos )
@@ -808,6 +827,14 @@ MQTTStatus_t MQTT_ReserveState( MQTTContext_t * pMqttContext,
 
 /*-----------------------------------------------------------*/
 
+/**
+ * @brief Calculate the new state for a publish from its qos and operation type.
+ *
+ * @param[in] opType Send or Receive.
+ * @param[in] qos 0, 1, or 2.
+ *
+ * @return The calculated state.
+ */
 MQTTPublishState_t MQTT_CalculateStatePublish( MQTTStateOperation_t opType,
                                                MQTTQoS_t qos )
 {
@@ -837,6 +864,18 @@ MQTTPublishState_t MQTT_CalculateStatePublish( MQTTStateOperation_t opType,
 
 /*-----------------------------------------------------------*/
 
+/**
+ * @brief Update the state record for a PUBLISH packet.
+ *
+ * @param[in] pMqttContext Initialized MQTT context.
+ * @param[in] packetId ID of the PUBLISH packet.
+ * @param[in] opType Send or Receive.
+ * @param[in] qos 0, 1, or 2.
+ * @param[out] pNewState Updated state of the publish.
+ *
+ * @return #MQTTBadParameter, #MQTTIllegalState, #MQTTStateCollision or
+ * #MQTTSuccess.
+ */
 MQTTStatus_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
                                       uint16_t packetId,
                                       MQTTStateOperation_t opType,
@@ -852,8 +891,8 @@ MQTTStatus_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
     if( ( pMqttContext == NULL ) || ( pNewState == NULL ) )
     {
         LogError( ( "Argument cannot be NULL: pMqttContext=%p, pNewState=%p",
-                    pMqttContext,
-                    pNewState ) );
+                    ( void * ) pMqttContext,
+                    ( void * ) pNewState ) );
 
         mqttStatus = MQTTBadParameter;
     }
@@ -911,6 +950,20 @@ MQTTStatus_t MQTT_UpdateStatePublish( MQTTContext_t * pMqttContext,
 
 /*-----------------------------------------------------------*/
 
+/**
+ * @brief Update the state record for an ACKed publish.
+ *
+ * @param[in] pMqttContext Initialized MQTT context.
+ * @param[in] packetId ID of the ack packet.
+ * @param[in] packetType PUBACK, PUBREC, PUBREL, or PUBCOMP.
+ * @param[in] opType Send or Receive.
+ * @param[out] pNewState Updated state of the publish.
+ *
+ * @return #MQTTBadParameter if an invalid parameter is passed;
+ * #MQTTBadResponse if the packet from the network is not found in the records;
+ * #MQTTIllegalState if the requested update would result in an illegal transition;
+ * #MQTTSuccess otherwise.
+ */
 MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
                                   uint16_t packetId,
                                   MQTTPubAckType_t packetType,
@@ -923,13 +976,24 @@ MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
     MQTTQoS_t qos = MQTTQoS0;
     size_t recordIndex = MQTT_STATE_ARRAY_MAX_COUNT;
     MQTTPubAckInfo_t * records = NULL;
-    MQTTStatus_t status = MQTTBadParameter;
+    MQTTStatus_t status = MQTTBadResponse;
 
     if( ( pMqttContext == NULL ) || ( pNewState == NULL ) )
     {
         LogError( ( "Argument cannot be NULL: pMqttContext=%p, pNewState=%p.",
-                    pMqttContext,
-                    pNewState ) );
+                    ( void * ) pMqttContext,
+                    ( void * ) pNewState ) );
+        status = MQTTBadParameter;
+    }
+    else if( packetId == MQTT_PACKET_ID_INVALID )
+    {
+        LogError( ( "Packet ID must be nonzero." ) );
+        status = MQTTBadParameter;
+    }
+    else if( packetType > MQTTPubcomp )
+    {
+        LogError( ( "Invalid packet type %u.", packetType ) );
+        status = MQTTBadParameter;
     }
     else
     {
@@ -964,7 +1028,7 @@ MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
     }
     else
     {
-        LogError( ( "No matching record found for publish %u.", packetId ) );
+        LogError( ( "No matching record found for publish: PacketId=%u.", packetId ) );
     }
 
     return status;
@@ -972,6 +1036,18 @@ MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
 
 /*-----------------------------------------------------------*/
 
+/**
+ * @brief Get the packet ID of next pending PUBREL ack to be resent.
+ *
+ * This function will need to be called to get the packet for which a PUBREL
+ * need to be sent when a session is reestablished. Calling this function
+ * repeatedly until packet id is 0 will give all the packets for which
+ * a PUBREL need to be resent in the correct order.
+ *
+ * @param[in] pMqttContext Initialized MQTT context.
+ * @param[in,out] pCursor Index at which to start searching.
+ * @param[out] pState State indicating that PUBREL packet need to be sent.
+ */
 uint16_t MQTT_PubrelToResend( const MQTTContext_t * pMqttContext,
                               MQTTStateCursor_t * pCursor,
                               MQTTPublishState_t * pState )
@@ -982,11 +1058,11 @@ uint16_t MQTT_PubrelToResend( const MQTTContext_t * pMqttContext,
     /* Validate arguments. */
     if( ( pMqttContext == NULL ) || ( pCursor == NULL ) || ( pState == NULL ) )
     {
-        LogError( ( "Arguments cannot be NULL pMqttContext =%p, pCursor=%p"
+        LogError( ( "Arguments cannot be NULL pMqttContext=%p, pCursor=%p"
                     " pState=%p.",
-                    pMqttContext,
-                    pCursor,
-                    pState ) );
+                    ( void * ) pMqttContext,
+                    ( void * ) pCursor,
+                    ( void * ) pState ) );
     }
     else
     {
@@ -1018,8 +1094,8 @@ uint16_t MQTT_PublishToResend( const MQTTContext_t * pMqttContext,
     if( ( pMqttContext == NULL ) || ( pCursor == NULL ) )
     {
         LogError( ( "Arguments cannot be NULL pMqttContext =%p, pCursor=%p",
-                    pMqttContext,
-                    pCursor ) );
+                    ( void * ) pMqttContext,
+                    ( void * ) pCursor ) );
     }
     else
     {
@@ -1038,6 +1114,13 @@ uint16_t MQTT_PublishToResend( const MQTTContext_t * pMqttContext,
 
 /*-----------------------------------------------------------*/
 
+/**
+ * @brief State to string conversion for state engine.
+ *
+ * @param[in] state The state to convert to a string.
+ *
+ * @return The string representation of the state.
+ */
 const char * MQTT_State_strerror( MQTTPublishState_t state )
 {
     const char * str = NULL;

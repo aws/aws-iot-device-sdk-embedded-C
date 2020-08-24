@@ -90,7 +90,7 @@ void Transport_ReconnectParamsReset( TransportReconnectParams_t * pReconnectPara
     /* Get current time to seed pseudo random number generator. */
     ( void ) clock_gettime( CLOCK_REALTIME, &tp );
 
-    /* Seed pseudo ramdom number generator with nano seconds. */
+    /* Seed pseudo random number generator with nano seconds. */
     srand( tp.tv_nsec );
 
     /* Calculate jitter value using picking a random number. */

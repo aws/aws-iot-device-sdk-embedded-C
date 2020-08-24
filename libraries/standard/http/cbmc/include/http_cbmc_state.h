@@ -23,8 +23,22 @@
 #define HTTP_CBMC_STATE_H_
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #include "http_client.h"
+#include "private/http_client_internal.h"
+#include "http_parser.h"
+#include "transport_interface_stubs.h"
+
+struct NetworkContext
+{
+    int filler;
+};
+
+/**
+ * @brief Attains coverage when a variable needs to possibly contain two values.
+ */
+bool nondet_bool();
 
 /**
  * @brief Calls malloc based on given size or returns NULL for coverage.
@@ -64,7 +78,7 @@ bool isValidHttpRequestHeaders( const HTTPRequestHeaders_t * pRequestHeaders );
  *
  * @return NULL or pointer to allocated #HTTPRequestInfo_t object.
  */
-HTTPRequestInfo_t * allocateHttpRequestInfo( const HTTPRequestInfo_t * pRequestInfo );
+HTTPRequestInfo_t * allocateHttpRequestInfo( HTTPRequestInfo_t * pRequestInfo );
 
 /**
  * @brief Validates if a #HTTPRequestInfo_t object is feasible.
@@ -76,7 +90,7 @@ HTTPRequestInfo_t * allocateHttpRequestInfo( const HTTPRequestInfo_t * pRequestI
 bool isValidHttpRequestInfo( const HTTPRequestInfo_t * pRequestInfo );
 
 /**
- * @brief Allocates a #HTTPResponse_t object with unconstrained values.
+ * @brief Allocates a #HTTPResponse_t object.
  *
  * @param[in] pResponse #HTTPResponse_t object to allocate.
  *
@@ -92,5 +106,71 @@ HTTPResponse_t * allocateHttpResponse( HTTPResponse_t * pResponse );
  * @return True if #HTTPResponse_t is feasible; false otherwise.
  */
 bool isValidHttpResponse( const HTTPResponse_t * pResponse );
+
+/**
+ * @brief Allocates a #TransportInterface_t object.
+ *
+ * @param[in] pTransport #TransportInterface_t object to allocate.
+ *
+ * @return NULL or pointer to allocated #TransportInterface_t object.
+ */
+TransportInterface_t * allocateTransportInterface( TransportInterface_t * pTransport );
+
+/**
+ * @brief Validates if a #TransportInterface_t object is feasible.
+ *
+ * @param[in] pTransportInterface #TransportInterface_t object to validate.
+ *
+ * @return True if #pTransportInterface is feasible; false otherwise.
+ */
+bool isValidTransportInterface( TransportInterface_t * pTransportInterface );
+
+/**
+ * @brief Allocate an #http_parser object that is valid in the context of the
+ * HTTPClient_Send() function.
+ *
+ * @param[in] pHttpParser #http_parser object to allocate.
+ *
+ * @return NULL or pointer to allocated #http_parser object.
+ */
+http_parser * allocateHttpSendParser( http_parser * pHttpParser );
+
+/**
+ * @brief Allocate an #HTTPParsingContext_t object.
+ *
+ * @param[in] pHttpParsingContext #HTTPParsingContext_t object to allocate.
+ *
+ * @return NULL or pointer to allocated #HTTPParsingContext_t object.
+ */
+HTTPParsingContext_t * allocateHttpSendParsingContext( HTTPParsingContext_t * pHttpParsingContext );
+
+/**
+ * @brief Validates if a #HTTPParsingContext_t object is feasible.
+ *
+ * @param[in] pHttpParsingContext #HTTPParsingContext_t object to validate.
+ *
+ * @return True if #pHttpParsingContext is feasible; false otherwise.
+ */
+bool isValidHttpSendParsingContext( const HTTPParsingContext_t * pHttpParsingContext );
+
+/**
+ * @brief Allocate an #http_parser object that is valid in the context of the
+ * HTTPClient_ReadHeader() function.
+ *
+ * @param[in] pHttpParser #http_parser object to allocate.
+ *
+ * @return NULL or pointer to allocated #http_parser object.
+ */
+http_parser * allocateHttpReadHeaderParser( http_parser * pHttpParser );
+
+/**
+ * @brief Allocate an #findHeaderContext_t object.
+ *
+ * @param[in] pFindHeaderContext #findHeaderContext_t object to allocate.
+ *
+ * @return NULL or pointer to allocated #findHeaderContext_t object.
+ */
+findHeaderContext_t * allocateFindHeaderContext( findHeaderContext_t * pFindHeaderContext );
+
 
 #endif /* ifndef HTTP_CBMC_STATE_H_ */

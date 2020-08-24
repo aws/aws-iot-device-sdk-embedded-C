@@ -182,6 +182,11 @@ static int32_t mockReceiveNoData( NetworkContext_t * pNetworkContext,
                                   void * pBuffer,
                                   size_t bytesToRecv )
 {
+    /* Suppress unused parameter warning. */
+    ( void ) pNetworkContext;
+    ( void ) pBuffer;
+    ( void ) bytesToRecv;
+
     return 0;
 }
 
@@ -192,6 +197,11 @@ static int32_t mockReceiveFailure( NetworkContext_t * pNetworkContext,
                                    void * pBuffer,
                                    size_t bytesToRecv )
 {
+    /* Suppress unused parameter warning. */
+    ( void ) pNetworkContext;
+    ( void ) pBuffer;
+    ( void ) bytesToRecv;
+
     return -1;
 }
 
@@ -595,6 +605,22 @@ void test_MQTT_SerializeConnect( void )
     status = MQTT_SerializeConnect( &connectInfo, &willInfo, remainingLength, &fixedBuffer );
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
     checkBufferOverflow( buffer, sizeof( buffer ) );
+
+    /* Success right on the buffer boundary. */
+    connectInfo.pUserName = "USER";
+    connectInfo.userNameLength = 4;
+    /* Throwing in a possible valid zero length password. */
+    connectInfo.pPassword = "PASS";
+    connectInfo.passwordLength = 0;
+    status = MQTT_GetConnectPacketSize( &connectInfo, NULL, &remainingLength, &packetSize );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    TEST_ASSERT_GREATER_OR_EQUAL( packetSize, bufferSize );
+    /* Set the fixed buffer to exactly the size of the packet. */
+    fixedBuffer.size = packetSize;
+    padAndResetBuffer( buffer, sizeof( buffer ) );
+    status = MQTT_SerializeConnect( &connectInfo, NULL, remainingLength, &fixedBuffer );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
+    checkBufferOverflow( buffer, sizeof( buffer ) );
 }
 
 /* ========================================================================== */
@@ -683,6 +709,8 @@ void test_MQTT_GetUnsubscribePacketSize( void )
     size_t remainingLength = 0;
     size_t packetSize = 0;
     MQTTStatus_t status = MQTTSuccess;
+    MQTTSubscribeInfo_t fourThousandSubscriptions[ 4096 ] = { 0 };
+    int i;
 
     /* Verify parameters. */
 
@@ -714,6 +742,23 @@ void test_MQTT_GetUnsubscribePacketSize( void )
                                             &packetSize );
     TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
 
+    /* Verify packet size cannot exceed limit. Note the max remaining length of
+     * an MQTT packet is 2^28-1 = 268435455, or 256MiB. Since the only way to increase
+     * the subscribe packet size is with the topic filters of the subscriptions
+     * (the lengths of which are only 2 bytes), we need at least
+     * 2^28 / 2^16 = 2^12 = 4096 of them. */
+    for( i = 0; i < 4096; i++ )
+    {
+        fourThousandSubscriptions[ i ].topicFilterLength = UINT16_MAX;
+    }
+
+    subscriptionCount = sizeof( fourThousandSubscriptions ) / sizeof( fourThousandSubscriptions[ 0 ] );
+    status = MQTT_GetUnsubscribePacketSize( fourThousandSubscriptions,
+                                            subscriptionCount,
+                                            &remainingLength,
+                                            &packetSize );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
     /* Verify good case. */
     memset( ( void * ) &subscriptionList, 0x0, sizeof( subscriptionList ) );
     subscriptionList.qos = MQTTQoS0;
@@ -736,7 +781,6 @@ void test_MQTT_SerializeSubscribe( void )
     MQTTSubscribeInfo_t subscriptionList;
     size_t subscriptionCount = 1;
     size_t remainingLength = 0;
-    uint16_t packetIdentifier;
     uint8_t buffer[ 25 + 2 * BUFFER_PADDING_LENGTH ];
     size_t bufferSize = sizeof( buffer ) - 2 * BUFFER_PADDING_LENGTH;
     size_t packetSize = bufferSize;
@@ -845,7 +889,6 @@ void test_MQTT_SerializeUnsubscribe( void )
     MQTTSubscribeInfo_t subscriptionList;
     size_t subscriptionCount = 1;
     size_t remainingLength = 0;
-    uint16_t packetIdentifier;
     uint8_t buffer[ 25 + 2 * BUFFER_PADDING_LENGTH ];
     size_t bufferSize = sizeof( buffer ) - 2 * BUFFER_PADDING_LENGTH;
     size_t packetSize = bufferSize;
@@ -956,7 +999,7 @@ void test_MQTT_GetPublishPacketSize( void )
     size_t packetSize;
     MQTTStatus_t status = MQTTSuccess;
 
-    /* Verify bad paramameters fail. */
+    /* Verify bad parameters fail. */
     status = MQTT_GetPublishPacketSize( NULL, &remainingLength, &packetSize );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
 
@@ -1011,8 +1054,6 @@ void test_MQTT_SerializePublish( void )
 {
     MQTTPublishInfo_t publishInfo;
     size_t remainingLength = 98;
-    uint16_t packetIdentifier;
-    uint8_t * pPacketIdentifierHigh;
     uint8_t buffer[ 200 + 2 * BUFFER_PADDING_LENGTH ];
     size_t bufferSize = sizeof( buffer ) - 2 * BUFFER_PADDING_LENGTH;
     size_t packetSize = bufferSize;
@@ -1525,7 +1566,6 @@ void test_MQTT_DeserializePublish( void )
 
     size_t remainingLength = 0;
     uint16_t packetIdentifier;
-    uint8_t * pPacketIdentifierHigh;
 
     fixedBuffer.pBuffer = buffer;
     fixedBuffer.size = bufferSize;
@@ -1677,15 +1717,28 @@ void test_MQTT_GetIncomingPacketTypeAndLength( void )
     TEST_ASSERT_EQUAL_INT( 0x20, mqttPacket.type );
     TEST_ASSERT_EQUAL_INT( 0x02, mqttPacket.remainingLength );
 
-    /* Remaining length of 128 needs 2 bytes. */
+    /* Remaining length of 128. MQTT uses 7 bits for data and 1 continuation
+     * bit in each byte. Since 128 is 8 bits, it needs 2 bytes. */
     bufPtr = buffer;
     buffer[ 0 ] = MQTT_PACKET_TYPE_PUBLISH;
-    buffer[ 1 ] = 0x80;
-    buffer[ 2 ] = 0x01;
+    buffer[ 1 ] = 0x80; /* LSB: CB=1, value=0x00 */
+    buffer[ 2 ] = 0x01; /* MSB: CB=0, value=0x01 */
     status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, &mqttPacket );
     TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
     TEST_ASSERT_EQUAL_INT( MQTT_PACKET_TYPE_PUBLISH, mqttPacket.type );
     TEST_ASSERT_EQUAL_INT( 128, mqttPacket.remainingLength );
+
+    /* Remaining length of 16384. MQTT uses 7 bits for data and 1 continuation
+     * bit in each byte. Since 16384 is 15 bits, it needs 3 bytes. */
+    bufPtr = buffer;
+    buffer[ 0 ] = MQTT_PACKET_TYPE_PUBLISH;
+    buffer[ 1 ] = 0x80; /* LSB   : CB=1, value=0x00 */
+    buffer[ 2 ] = 0x80; /* Byte 1: CB=1, value=0x00 */
+    buffer[ 3 ] = 0x01; /* MSB   : CB=0, value=0x01 */
+    status = MQTT_GetIncomingPacketTypeAndLength( mockReceive, &networkContext, &mqttPacket );
+    TEST_ASSERT_EQUAL_INT( MQTTSuccess, status );
+    TEST_ASSERT_EQUAL_INT( MQTT_PACKET_TYPE_PUBLISH, mqttPacket.type );
+    TEST_ASSERT_EQUAL_INT( 16384, mqttPacket.remainingLength );
 
     /* Test with incorrect packet type. */
     bufPtr = buffer;
@@ -1748,8 +1801,6 @@ void test_MQTT_SerializePublishHeader( void )
 {
     MQTTPublishInfo_t publishInfo;
     size_t remainingLength = 0;
-    uint16_t packetIdentifier;
-    uint8_t * pPacketIdentifierHigh;
     uint8_t buffer[ 200 + 2 * BUFFER_PADDING_LENGTH ];
     uint8_t expectedPacket[ 200 ];
     uint8_t * pIterator;
@@ -2311,7 +2362,6 @@ void test_MQTT_SerializeDisconnect_Invalid_Params()
 void test_MQTT_SerializeDisconnect_Happy_Path()
 {
     MQTTStatus_t mqttStatus = MQTTSuccess;
-    size_t packetSize = 0;
     MQTTFixedBuffer_t networkBuffer;
 
     /* Fill structs to pass into methods to be tested. */

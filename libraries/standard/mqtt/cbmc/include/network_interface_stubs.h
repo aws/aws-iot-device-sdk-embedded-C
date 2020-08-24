@@ -18,14 +18,16 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef NETWORK_INTERFACE_STUBS_H_
-#define NETWORK_INTERfACE_STUBS_H_
 
-/* Mock a network context for the CBMC proofs. */
-struct NetworkContext
-{
-    int NetworkContext;
-};
+/**
+ * @file network_interface_stubs.h
+ * @brief Stub definitions for the application defined transport interface send
+ * and receive callback.
+ */
+#ifndef NETWORK_INTERFACE_STUBS_H_
+#define NETWORK_INTERFACE_STUBS_H_
+
+/* transport_interface.h must precede including this header. */
 
 /**
  * @brief Application defined network interface receive function.
@@ -33,10 +35,24 @@ struct NetworkContext
  * @param[in] pNetworkContext Application defined network interface context.
  * @param[out] pBuffer MQTT network receive buffer.
  * @param[in] bytesToRecv MQTT requested bytes.
+ *
  * @return Any value from INT32_MIN to INT32_MAX.
  */
 int32_t NetworkInterfaceReceiveStub( NetworkContext_t * pNetworkContext,
                                      void * pBuffer,
                                      size_t bytesToRecv );
+
+/**
+ * @brief Application defined network interface send function.
+ *
+ * @param[in] pNetworkContext Application defined network interface context.
+ * @param[out] pBuffer MQTT network send buffer.
+ * @param[in] bytesToSend Number of bytes to send over the network.
+ *
+ * @return Any value from INT32_MIN to INT32_MAX.
+ */
+int32_t NetworkInterfaceSendStub( NetworkContext_t * pNetworkContext,
+                                  const void * pBuffer,
+                                  size_t bytesToSend );
 
 #endif /* ifndef NETWORK_INTERFACE_STUBS_H_ */

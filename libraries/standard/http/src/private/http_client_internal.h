@@ -34,7 +34,7 @@
 #define HTTP_EMPTY_PATH_LEN                ( sizeof( HTTP_EMPTY_PATH ) - 1u )
 
 /**
- * @brief Consants for HTTP header formatting
+ * @brief Constants for HTTP header formatting
  */
 #define HTTP_HEADER_LINE_SEPARATOR         "\r\n"
 #define HTTP_HEADER_LINE_SEPARATOR_LEN     ( sizeof( HTTP_HEADER_LINE_SEPARATOR ) - 1u )
@@ -184,7 +184,7 @@ typedef struct findHeaderContext
  * The registered callbacks are private functions of the form
  * httpParserXXXXCallbacks().
  *
- * The transitions of the httpParserXXXXCallback() functions are shown belown.
+ * The transitions of the httpParserXXXXCallback() functions are shown below.
  * The  XXXX is replaced by the strings in the state boxes:
  *
  * +---------------------+
