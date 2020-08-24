@@ -54,8 +54,8 @@
  * A Mosquitto MQTT broker can be setup locally for running this demo against
  * it. Please refer to the instructions in https://mosquitto.org/ for running
  * a Mosquitto broker locally.
- * Alternatively, instructions to run a Mosquitto broker on a Docker container
- * can be viewed in the README.md of the root directory.
+ * Alternatively,instructions to run Mosquitto server on Docker container can
+ * be viewed in the README.md of the root directory.
  *
  * #define BROKER_ENDPOINT               "...insert here..."
  */
@@ -72,7 +72,7 @@
  *
  * This certificate should be PEM-encoded.
  *
- * #define ROOT_CA_CERT_PATH         ".....insert here...."
+ * #define ROOT_CA_CERT_PATH               "....insert here...."
  */
 
 /**
@@ -80,8 +80,6 @@
  *
  * No two clients may use the same client identifier simultaneously.
  */
-#ifndef CLIENT_IDENTIFIER
-    #define CLIENT_IDENTIFIER    "testclient"
-#endif
+#define CLIENT_IDENTIFIER    "testclient1"
 
 #endif /* ifndef DEMO_CONFIG_H */

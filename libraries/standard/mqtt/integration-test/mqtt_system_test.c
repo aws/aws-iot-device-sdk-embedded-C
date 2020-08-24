@@ -43,12 +43,21 @@
 /* Include clock for timer. */
 #include "clock.h"
 
+/* Ensure that config macros, required for TLS connection, have been defined. */
 #ifndef BROKER_ENDPOINT
     #error "BROKER_ENDPOINT should be defined for the MQTT integration tests."
 #endif
 
 #ifndef SERVER_ROOT_CA_CERT_PATH
     #error "SERVER_ROOT_CA_CERT_PATH should be defined for the MQTT integration tests."
+#endif
+
+#ifndef CLIENT_CERT_PATH
+    #error "CLIENT_CERT_PATH should be defined for the MQTT integration tests."
+#endif
+
+#ifndef CLIENT_PRIVATE_KEY_PATH
+    #error "CLIENT_PRIVATE_KEY_PATH should be defined for the MQTT integration tests."
 #endif
 
 /**
@@ -513,6 +522,9 @@ static void eventCallback( MQTTContext_t * pContext,
     assert( pPacketInfo != NULL );
     assert( pDeserializedInfo != NULL );
 
+    /* Suppress unused parameter warning when asserts are disabled in build. */
+    ( void ) pContext;
+
     TEST_ASSERT_EQUAL( MQTTSuccess, pDeserializedInfo->deserializationResult );
     pPublishInfo = pDeserializedInfo->pPublishInfo;
 
@@ -970,6 +982,11 @@ void test_MQTT_Connect_LWT( void )
     /* Subscribe to LWT Topic. */
     TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic(
                            &context, TEST_MQTT_LWT_TOPIC, MQTTQoS0 ) );
+
+    /* Wait for the SUBACK response from the broker for the subscribe request. */
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       MQTT_ProcessLoop( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    TEST_ASSERT_TRUE( receivedSubAck );
 
     /* Abruptly terminate TCP connection. */
     ( void ) Openssl_Disconnect( &secondNetworkContext );
