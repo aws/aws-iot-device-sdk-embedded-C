@@ -39,6 +39,7 @@ http
 httpbin
 httpclient
 https
+ifdef
 ifndef
 inc
 initializerequestheaders
@@ -53,6 +54,7 @@ mqtt
 mqttkeepalivetimeout
 nameindex
 noninfringement
+numoftopicfilters
 openssl
 org
 outgoingpublishpackets
@@ -72,6 +74,7 @@ pingreq
 pingresp
 plaintext
 pmatch
+pmessage
 pmethod
 pmqttcontext
 pnameindex
@@ -83,7 +86,9 @@ ppubinfo
 ppublishinfo
 processloop
 psessionpresent
+ptopic
 ptopicfilter
+ptopicfilters
 ptopicname
 ptransportinterface
 puback
@@ -96,6 +101,7 @@ readme
 resending
 resp
 sdk
+sni
 ssl
 structs
 suback
@@ -106,6 +112,7 @@ tcp
 tcpsocket
 tls
 topicfilterlength
+topiclength
 topicnamelength
 transportinterface
 transporttimeout
