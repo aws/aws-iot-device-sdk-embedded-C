@@ -1567,15 +1567,14 @@ static MQTTStatus_t handleSessionResumption( MQTTContext_t * pContext,
                                              bool sessionPresent )
 {
     MQTTStatus_t status = MQTTSuccess;
+    MQTTStateCursor_t cursor = MQTT_STATE_CURSOR_INITIALIZER;
+    uint16_t packetId = MQTT_PACKET_ID_INVALID;
+    MQTTPublishState_t state = MQTTStateNull;
 
     assert( pContext != NULL );
 
     if( sessionPresent == true )
     {
-        MQTTStateCursor_t cursor = MQTT_STATE_CURSOR_INITIALIZER;
-        uint16_t packetId = MQTT_PACKET_ID_INVALID;
-        MQTTPublishState_t state = MQTTStateNull;
-
         /* Get the next packet ID for which a PUBREL need to be resent. */
         packetId = MQTT_PubrelToResend( pContext, &cursor, &state );
 
