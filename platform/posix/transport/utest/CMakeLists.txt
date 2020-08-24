@@ -17,6 +17,7 @@ list(APPEND mock_list
             /usr/include/x86_64-linux-gnu/sys/socket.h
             /usr/include/netdb.h
             ${CMAKE_CURRENT_LIST_DIR}/mocks/close.h
+            ${CMAKE_CURRENT_LIST_DIR}/mocks/openssl_api.h
         )
 # list the directories your mocks need
 list(APPEND mock_include_list
@@ -32,6 +33,9 @@ list(APPEND mock_define_list
 # list the files you would like to test here
 list(APPEND real_source_files
             ${SOCKETS_SOURCES}
+            ${PLAINTEXT_TRANSPORT_SOURCES}
+            ${OPENSSL_TRANSPORT_SOURCES}
+            ${RECONNECT_SOURCES}
         )
 # list the directories the module under test includes
 list(APPEND real_include_directories
@@ -82,6 +86,15 @@ list(APPEND utest_dep_list
 
 set(utest_name "sockets_utest")
 set(utest_source "sockets_utest.c")
+create_test(${utest_name}
+            ${utest_source}
+            "${utest_link_list}"
+            "${utest_dep_list}"
+            "${test_include_directories}"
+        )
+
+set(utest_name "openssl_utest")
+set(utest_source "openssl_utest.c")
 create_test(${utest_name}
             ${utest_source}
             "${utest_link_list}"
