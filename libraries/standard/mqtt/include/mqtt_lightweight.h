@@ -52,6 +52,10 @@
 #include "transport_interface.h"
 
 /* MQTT packet types. */
+/**
+ * @addtogroup mqtt_constants
+ * @{
+ */
 #define MQTT_PACKET_TYPE_CONNECT        ( ( uint8_t ) 0x10U )  /**< @brief CONNECT (client-to-server). */
 #define MQTT_PACKET_TYPE_CONNACK        ( ( uint8_t ) 0x20U )  /**< @brief CONNACK (server-to-client). */
 #define MQTT_PACKET_TYPE_PUBLISH        ( ( uint8_t ) 0x30U )  /**< @brief PUBLISH (bidirectional). */
@@ -66,8 +70,10 @@
 #define MQTT_PACKET_TYPE_PINGREQ        ( ( uint8_t ) 0xC0U )  /**< @brief PINGREQ (client-to-server). */
 #define MQTT_PACKET_TYPE_PINGRESP       ( ( uint8_t ) 0xD0U )  /**< @brief PINGRESP (server-to-client). */
 #define MQTT_PACKET_TYPE_DISCONNECT     ( ( uint8_t ) 0xE0U )  /**< @brief DISCONNECT (client-to-server). */
+/** @} */
 
 /**
+ * @ingroup mqtt_constants
  * @brief The size of MQTT PUBACK, PUBREC, PUBREL, and PUBCOMP packets, per MQTT spec.
  */
 #define MQTT_PUBLISH_ACK_PACKET_SIZE    ( 4UL )
@@ -80,6 +86,7 @@ struct MQTTPublishInfo;
 struct MQTTPacketInfo;
 
 /**
+ * @ingroup mqtt_enum_types
  * @brief Return codes from MQTT functions.
  */
 typedef enum MQTTStatus
@@ -98,6 +105,7 @@ typedef enum MQTTStatus
 } MQTTStatus_t;
 
 /**
+ * @ingroup mqtt_enum_types
  * @brief MQTT Quality of Service values.
  */
 typedef enum MQTTQoS
@@ -108,6 +116,7 @@ typedef enum MQTTQoS
 } MQTTQoS_t;
 
 /**
+ * @ingroup mqtt_struct_types
  * @brief Buffer passed to MQTT library.
  *
  * These buffers are not copied and must remain in scope for the duration of the
@@ -120,6 +129,7 @@ typedef struct MQTTFixedBuffer
 } MQTTFixedBuffer_t;
 
 /**
+ * @ingroup mqtt_struct_types
  * @brief MQTT CONNECT packet parameters.
  */
 typedef struct MQTTConnectInfo
@@ -166,6 +176,7 @@ typedef struct MQTTConnectInfo
 } MQTTConnectInfo_t;
 
 /**
+ * @ingroup mqtt_struct_types
  * @brief MQTT SUBSCRIBE packet parameters.
  */
 typedef struct MQTTSubscribeInfo
@@ -187,6 +198,7 @@ typedef struct MQTTSubscribeInfo
 } MQTTSubscribeInfo_t;
 
 /**
+ * @ingroup mqtt_struct_types
  * @brief MQTT PUBLISH packet parameters.
  */
 typedef struct MQTTPublishInfo
@@ -228,6 +240,7 @@ typedef struct MQTTPublishInfo
 } MQTTPublishInfo_t;
 
 /**
+ * @ingroup mqtt_struct_types
  * @brief MQTT incoming packet parameters.
  */
 typedef struct MQTTPacketInfo
@@ -295,10 +308,12 @@ typedef struct MQTTPacketInfo
  * }
  * @endcode
  */
+/* @[declare_mqtt_getconnectpacketsize] */
 MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
                                         const MQTTPublishInfo_t * pWillInfo,
                                         size_t * pRemainingLength,
                                         size_t * pPacketSize );
+/* @[declare_mqtt_getconnectpacketsize] */
 
 /**
  * @brief Serialize an MQTT CONNECT packet in the given fixed buffer @p pFixedBuffer.
@@ -349,10 +364,12 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * pConnectInfo,
  * }
  * @endcode
  */
+/* @[declare_mqtt_serializeconnect] */
 MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * pConnectInfo,
                                     const MQTTPublishInfo_t * pWillInfo,
                                     size_t remainingLength,
                                     const MQTTFixedBuffer_t * pFixedBuffer );
+/* @[declare_mqtt_serializeconnect] */
 
 /**
  * @brief Get packet size and Remaining Length of an MQTT SUBSCRIBE packet.
@@ -405,10 +422,12 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * pConnectInfo,
  * }
  * @endcode
  */
+/* @[declare_mqtt_getsubscribepacketsize] */
 MQTTStatus_t MQTT_GetSubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
                                           size_t subscriptionCount,
                                           size_t * pRemainingLength,
                                           size_t * pPacketSize );
+/* @[declare_mqtt_getsubscribepacketsize] */
 
 /**
  * @brief Serialize an MQTT SUBSCRIBE packet in the given buffer.
@@ -469,11 +488,13 @@ MQTTStatus_t MQTT_GetSubscribePacketSize( const MQTTSubscribeInfo_t * pSubscript
  * }
  * @endcode
  */
+/* @[declare_mqtt_serializesubscribe] */
 MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionList,
                                       size_t subscriptionCount,
                                       uint16_t packetId,
                                       size_t remainingLength,
                                       const MQTTFixedBuffer_t * pFixedBuffer );
+/* @[declare_mqtt_serializesubscribe] */
 
 /**
  * @brief Get packet size and Remaining Length of an MQTT UNSUBSCRIBE packet.
@@ -518,10 +539,12 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * pSubscriptionL
  * }
  * @endcode
  */
+/* @[declare_mqtt_getunsubscribepacketsize] */
 MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * pSubscriptionList,
                                             size_t subscriptionCount,
                                             size_t * pRemainingLength,
                                             size_t * pPacketSize );
+/* @[declare_mqtt_getunsubscribepacketsize] */
 
 /**
  * @brief Serialize an MQTT UNSUBSCRIBE packet in the given buffer.
@@ -582,11 +605,13 @@ MQTTStatus_t MQTT_GetUnsubscribePacketSize( const MQTTSubscribeInfo_t * pSubscri
  * }
  * @endcode
  */
+/* @[declare_mqtt_serializeunsubscribe] */
 MQTTStatus_t MQTT_SerializeUnsubscribe( const MQTTSubscribeInfo_t * pSubscriptionList,
                                         size_t subscriptionCount,
                                         uint16_t packetId,
                                         size_t remainingLength,
                                         const MQTTFixedBuffer_t * pFixedBuffer );
+/* @[declare_mqtt_serializeunsubscribe] */
 
 /**
  * @brief Get the packet size and remaining length of an MQTT PUBLISH packet.
@@ -634,9 +659,11 @@ MQTTStatus_t MQTT_SerializeUnsubscribe( const MQTTSubscribeInfo_t * pSubscriptio
  * }
  * @endcode
  */
+/* @[declare_mqtt_getpublishpacketsize] */
 MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
                                         size_t * pRemainingLength,
                                         size_t * pPacketSize );
+/* @[declare_mqtt_getpublishpacketsize] */
 
 /**
  * @brief Serialize an MQTT PUBLISH packet in the given buffer.
@@ -700,10 +727,12 @@ MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * pPublishInfo,
  * }
  * @endcode
  */
+/* @[declare_mqtt_serializepublish] */
 MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * pPublishInfo,
                                     uint16_t packetId,
                                     size_t remainingLength,
                                     const MQTTFixedBuffer_t * pFixedBuffer );
+/* @[declare_mqtt_serializepublish] */
 
 /**
  * @brief Serialize an MQTT PUBLISH packet header in the given buffer.
@@ -778,11 +807,13 @@ MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * pPublishInfo,
  * }
  * @endcode
  */
+/* @[declare_mqtt_serializepublishheader] */
 MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * pPublishInfo,
                                           uint16_t packetId,
                                           size_t remainingLength,
                                           const MQTTFixedBuffer_t * pFixedBuffer,
                                           size_t * pHeaderSize );
+/* @[declare_mqtt_serializepublishheader] */
 
 /**
  * @brief Serialize an MQTT PUBACK, PUBREC, PUBREL, or PUBCOMP into the given
@@ -825,9 +856,11 @@ MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * pPublishInfo
  * }
  * @endcode
  */
+/* @[declare_mqtt_serializeack] */
 MQTTStatus_t MQTT_SerializeAck( const MQTTFixedBuffer_t * pFixedBuffer,
                                 uint8_t packetType,
                                 uint16_t packetId );
+/* @[declare_mqtt_serializeack] */
 
 /**
  * @brief Get the size of an MQTT DISCONNECT packet.
@@ -853,7 +886,9 @@ MQTTStatus_t MQTT_SerializeAck( const MQTTFixedBuffer_t * pFixedBuffer,
  *
  * @endcode
  */
+/* @[declare_mqtt_getdisconnectpacketsize] */
 MQTTStatus_t MQTT_GetDisconnectPacketSize( size_t * pPacketSize );
+/* @[declare_mqtt_getdisconnectpacketsize] */
 
 /**
  * @brief Serialize an MQTT DISCONNECT packet into the given buffer.
@@ -892,7 +927,9 @@ MQTTStatus_t MQTT_GetDisconnectPacketSize( size_t * pPacketSize );
  * }
  * @endcode
  */
+/* @[declare_mqtt_serializedisconnect] */
 MQTTStatus_t MQTT_SerializeDisconnect( const MQTTFixedBuffer_t * pFixedBuffer );
+/* @[declare_mqtt_serializedisconnect] */
 
 /**
  * @brief Get the size of an MQTT PINGREQ packet.
@@ -918,7 +955,9 @@ MQTTStatus_t MQTT_SerializeDisconnect( const MQTTFixedBuffer_t * pFixedBuffer );
  *
  * @endcode
  */
+/* @[declare_mqtt_getpingreqpacketsize] */
 MQTTStatus_t MQTT_GetPingreqPacketSize( size_t * pPacketSize );
+/* @[declare_mqtt_getpingreqpacketsize] */
 
 /**
  * @brief Serialize an MQTT PINGREQ packet into the given buffer.
@@ -957,7 +996,9 @@ MQTTStatus_t MQTT_GetPingreqPacketSize( size_t * pPacketSize );
  * }
  * @endcode
  */
+/* @[declare_mqtt_serializepingreq] */
 MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * pFixedBuffer );
+/* @[declare_mqtt_serializepingreq] */
 
 /**
  * @brief Deserialize an MQTT PUBLISH packet.
@@ -1016,9 +1057,11 @@ MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * pFixedBuffer );
  * }
  * @endcode
  */
+/* @[declare_mqtt_deserializepublish] */
 MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * pIncomingPacket,
                                       uint16_t * pPacketId,
                                       MQTTPublishInfo_t * pPublishInfo );
+/* @[declare_mqtt_deserializepublish] */
 
 /**
  * @brief Deserialize an MQTT CONNACK, SUBACK, UNSUBACK, PUBACK, PUBREC, PUBREL,
@@ -1058,9 +1101,11 @@ MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * pIncomingPacket,
  * }
  * @endcode
  */
+/* @[declare_mqtt_deserializeack] */
 MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
                                   uint16_t * pPacketId,
                                   bool * pSessionPresent );
+/* @[declare_mqtt_deserializeack] */
 
 /**
  * @brief Extract the MQTT packet type and length from incoming packet.
@@ -1122,8 +1167,10 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
  * incomingPacket.pRemainingData = buffer;
  * @endcode
  */
+/* @[declare_mqtt_getincomingpackettypeandlength] */
 MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
                                                   NetworkContext_t * pNetworkContext,
                                                   MQTTPacketInfo_t * pIncomingPacket );
+/* @[declare_mqtt_getincomingpackettypeandlength] */
 
 #endif /* ifndef MQTT_LIGHTWEIGHT_H */
