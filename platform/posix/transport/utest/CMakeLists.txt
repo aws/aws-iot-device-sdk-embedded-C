@@ -47,8 +47,8 @@ list(APPEND test_include_directories
             .
             ${COMMON_TRANSPORT_INCLUDE_PUBLIC_DIRS}
             ${LOGGING_INCLUDE_DIRS}
-            ${OPENSSL_INCLUDE_DIR}/arpa
-            ${OPENSSL_INCLUDE_DIR}/x86_64-linux-gnu/sys
+            /usr/include/arpa
+            /usr/include/x86_64-linux-gnu/sys
             ${OPENSSL_INCLUDE_DIR}
             mocks
         )
