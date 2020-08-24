@@ -93,6 +93,6 @@ target_compile_definitions(${utest_name} PUBLIC
             ${mock_define_list}
         )
 
-        target_compile_definitions(${real_name} PUBLIC
+target_compile_definitions(${real_name} PUBLIC
             ${mock_define_list}
         )
