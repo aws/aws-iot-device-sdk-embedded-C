@@ -1,0 +1,260 @@
+/**
+@mainpage Overview
+@brief MQTT 3.1.1 client library.
+
+> MQTT stands for MQ Telemetry Transport. It is a publish/subscribe, extremely simple and lightweight messaging protocol, designed for constrained devices and low-bandwidth, high-latency or unreliable networks. The design principles are to minimise network bandwidth and device resource requirements whilst also attempting to ensure reliability and some degree of assurance of delivery. These principles also turn out to make the protocol ideal of the emerging "machine-to-machine" (M2M) or "Internet of Things" world of connected devices, and for mobile applications where bandwidth and battery power are at a premium.
+<span style="float:right;margin-right:4em"> &mdash; <i>Official description of MQTT from [mqtt.org](http://mqtt.org)</i></span><br>
+
+This MQTT library implements the client side of the MQTT 3.1.1 protocol. This library is optimized for resource constrained embedded devices. Features of this library include:
+- Fully synchronous API, to allow applications to completely manage their concurrency and multi-threading method.
+- Operations on fixed buffers, so that applications may control their memory allocation strategy.
+- Scalable performance and footprint. The [configuration settings](@ref mqtt_config) allow this library to be tailored to a system's resources.
+
+Please see https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/development/demos/mqtt for example code demonstrating integration with TLS.
+
+@section mqtt_memory_requirements Memory Requirements
+@brief Memory requirements of the MQTT library.
+
+The configurations for memory estimation are defined <a href="https://github.com/FreeRTOS/FreeRTOS/tree/lts-development/tools/memory_estimator" target="_blank" rel="noopener noreferrer">here</a>.
+
+<table>
+    <tr>
+        <td colspan="3"><b>Code Size of MQTT LTS rc1(example generated with GCC for ARM Cortex-M)</b></td>
+    </tr>
+    <tr>
+        <td><b>File</b></td>
+        <td><b>With -O1 Optimisation</b></td>
+        <td><b>With -Os Optimisation</b></td>
+    </tr>
+    <tr>
+        <td>mqtt.c</td>
+        <td>3.3K</td>
+        <td>2.9K</td>
+    </tr>
+    <tr>
+        <td>mqtt_state.c</td>
+        <td>2.1K</td>
+        <td>1.6K</td>
+    </tr>
+    <tr>
+        <td>mqtt_lightweight.c</td>
+        <td>3.5K</td>
+        <td>2.9K</td>
+    </tr>
+    <tr>
+        <td><b>Total estimates</b></td>
+        <td>8.9K</td>
+        <td>7.4K</td>
+    </tr>
+</table>
+ */
+
+/**
+@page mqtt_design Design
+MQTT Library Design
+*/
+
+/**
+@page mqtt_config Configurations
+@brief Configurations of the MQTT Library.
+<!-- @par configpagestyle allows the @section titles to be styled according to style.css -->
+@par configpagestyle
+
+Configuration settings are C pre-processor constants. They can be set with a \#define in the config file (mqtt_config.h) or by using a compiler option such as -D in gcc.
+
+@section MQTT_STATE_ARRAY_MAX_COUNT
+<br>
+@copydoc MQTT_STATE_ARRAY_MAX_COUNT
+
+@section MQTT_PINGRESP_TIMEOUT_MS
+<br>
+@copydoc MQTT_PINGRESP_TIMEOUT_MS
+
+@section MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT
+<br>
+@copydoc MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT
+*/
+
+/**
+@page mqtt_functions Functions
+@brief Primary functions of the MQTT library:<br><br>
+@subpage mqtt_init_function <br>
+@subpage mqtt_connect_function <br>
+@subpage mqtt_subscribe_function <br>
+@subpage mqtt_publish_function <br>
+@subpage mqtt_ping_function <br>
+@subpage mqtt_unsubscribe_function <br>
+@subpage mqtt_disconnect_function <br>
+@subpage mqtt_processloop_function <br>
+@subpage mqtt_receiveloop_function <br>
+@subpage mqtt_getpacketid_function <br>
+@subpage mqtt_getsubackstatuscodes_function <br>
+@subpage mqtt_status_strerror_function <br>
+@subpage mqtt_publishtoresend_function <br><br>
+
+Lightweight functions of the MQTT library:<br><br>
+@subpage mqtt_getconnectpacketsize_function <br>
+@subpage mqtt_serializeconnect_function <br>
+@subpage mqtt_getsubscribepacketsize_function <br>
+@subpage mqtt_serializesubscribe_function <br>
+@subpage mqtt_getunsubscribepacketsize_function <br>
+@subpage mqtt_serializeunsubscribe_function <br>
+@subpage mqtt_getpublishpacketsize_function <br>
+@subpage mqtt_serializepublish_function <br>
+@subpage mqtt_serializepublishheader_function <br>
+@subpage mqtt_serializeack_function <br>
+@subpage mqtt_getdisconnectpacketsize_function <br>
+@subpage mqtt_serializedisconnect_function <br>
+@subpage mqtt_getpingreqpacketsize_function <br>
+@subpage mqtt_serializepingreq_function <br>
+@subpage mqtt_deserializepublish_function <br>
+@subpage mqtt_deserializeack_function <br>
+@subpage mqtt_getincomingpackettypeandlength_function <br>
+
+@page mqtt_init_function MQTT_Init
+@snippet mqtt.h declare_mqtt_init
+@copydoc MQTT_Init
+
+@page mqtt_connect_function MQTT_Connect
+@snippet mqtt.h declare_mqtt_connect
+@copydoc MQTT_Connect
+
+@page mqtt_subscribe_function MQTT_Subscribe
+@snippet mqtt.h declare_mqtt_subscribe
+@copydoc MQTT_Subscribe
+
+@page mqtt_publish_function MQTT_Publish
+@snippet mqtt.h declare_mqtt_publish
+@copydoc MQTT_Publish
+
+@page mqtt_ping_function MQTT_Ping
+@snippet mqtt.h declare_mqtt_ping
+@copydoc MQTT_Ping
+
+@page mqtt_unsubscribe_function MQTT_Unsubscribe
+@snippet mqtt.h declare_mqtt_unsubscribe
+@copydoc MQTT_Unsubscribe
+
+@page mqtt_disconnect_function MQTT_Disconnect
+@snippet mqtt.h declare_mqtt_disconnect
+@copydoc MQTT_Disconnect
+
+@page mqtt_processloop_function MQTT_ProcessLoop
+@snippet mqtt.h declare_mqtt_processloop
+@copydoc MQTT_ProcessLoop
+
+@page mqtt_receiveloop_function MQTT_ReceiveLoop
+@snippet mqtt.h declare_mqtt_receiveloop
+@copydoc MQTT_ReceiveLoop
+
+@page mqtt_getpacketid_function MQTT_GetPacketId
+@snippet mqtt.h declare_mqtt_getpacketid
+@copydoc MQTT_GetPacketId
+
+@page mqtt_getsubackstatuscodes_function MQTT_GetSubAckStatusCodes
+@snippet mqtt.h declare_mqtt_getsubackstatuscodes
+@copydoc MQTT_GetSubAckStatusCodes
+
+@page mqtt_status_strerror_function MQTT_Status_strerror
+@snippet mqtt.h declare_mqtt_status_strerror
+@copydoc MQTT_Status_strerror
+
+@page mqtt_publishtoresend_function MQTT_PublishToResend
+@snippet mqtt_state.h declare_mqtt_publishtoresend
+@copydoc MQTT_PublishToResend
+
+@page mqtt_getconnectpacketsize_function MQTT_GetConnectPacketSize
+@snippet mqtt_lightweight.h declare_mqtt_getconnectpacketsize
+@copydoc MQTT_GetConnectPacketSize
+
+@page mqtt_serializeconnect_function MQTT_SerializeConnect
+@snippet mqtt_lightweight.h declare_mqtt_serializeconnect
+@copydoc MQTT_SerializeConnect
+
+@page mqtt_getsubscribepacketsize_function MQTT_GetSubscribePacketSize
+@snippet mqtt_lightweight.h declare_mqtt_getsubscribepacketsize
+@copydoc MQTT_GetSubscribePacketSize
+
+@page mqtt_serializesubscribe_function MQTT_SerializeSubscribe
+@snippet mqtt_lightweight.h declare_mqtt_serializesubscribe
+@copydoc MQTT_SerializeSubscribe
+
+@page mqtt_getunsubscribepacketsize_function MQTT_GetUnsubscribePacketSize
+@snippet mqtt_lightweight.h declare_mqtt_getunsubscribepacketsize
+@copydoc MQTT_GetUnsubscribePacketSize
+
+@page mqtt_serializeunsubscribe_function MQTT_SerializeUnsubscribe
+@snippet mqtt_lightweight.h declare_mqtt_serializeunsubscribe
+@copydoc MQTT_SerializeUnsubscribe
+
+@page mqtt_getpublishpacketsize_function MQTT_GetPublishPacketSize
+@snippet mqtt_lightweight.h declare_mqtt_getpublishpacketsize
+@copydoc MQTT_GetPublishPacketSize
+
+@page mqtt_serializepublish_function MQTT_SerializePublish
+@snippet mqtt_lightweight.h declare_mqtt_serializepublish
+@copydoc MQTT_SerializePublish
+
+@page mqtt_serializepublishheader_function MQTT_SerializePublishHeader
+@snippet mqtt_lightweight.h declare_mqtt_serializepublishheader
+@copydoc MQTT_SerializePublishHeader
+
+@page mqtt_serializeack_function MQTT_SerializeAck
+@snippet mqtt_lightweight.h declare_mqtt_serializeack
+@copydoc MQTT_SerializeAck
+
+@page mqtt_getdisconnectpacketsize_function MQTT_GetDisconnectPacketSize
+@snippet mqtt_lightweight.h declare_mqtt_getdisconnectpacketsize
+@copydoc MQTT_GetDisconnectPacketSize
+
+@page mqtt_serializedisconnect_function MQTT_SerializeDisconnect
+@snippet mqtt_lightweight.h declare_mqtt_serializedisconnect
+@copydoc MQTT_SerializeDisconnect
+
+@page mqtt_getpingreqpacketsize_function MQTT_GetPingreqPacketSize
+@snippet mqtt_lightweight.h declare_mqtt_getpingreqpacketsize
+@copydoc MQTT_GetPingreqPacketSize
+
+@page mqtt_serializepingreq_function MQTT_SerializePingreq
+@snippet mqtt_lightweight.h declare_mqtt_serializepingreq
+@copydoc MQTT_SerializePingreq
+
+@page mqtt_deserializepublish_function MQTT_DeserializePublish
+@snippet mqtt_lightweight.h declare_mqtt_deserializepublish
+@copydoc MQTT_DeserializePublish
+
+@page mqtt_deserializeack_function MQTT_DeserializeAck
+@snippet mqtt_lightweight.h declare_mqtt_deserializeack
+@copydoc MQTT_DeserializeAck
+
+@page mqtt_getincomingpackettypeandlength_function MQTT_GetIncomingPacketTypeAndLength
+@snippet mqtt_lightweight.h declare_mqtt_getincomingpackettypeandlength
+@copydoc MQTT_GetIncomingPacketTypeAndLength
+*/
+
+/**
+@defgroup mqtt_enum_types Enumerated Types
+@brief Enumerated types of the MQTT library
+*/
+
+/**
+@defgroup mqtt_callbacks_types Callback Types
+@brief Callback function pointer types of the MQTT library
+*/
+
+/**
+@defgroup mqtt_struct_types Parameter Structures
+@brief Structures passed as parameters to [MQTT library functions](@ref mqtt_functions)
+
+These structures are passed as parameters to library functions. Documentation for these structures will state the functions associated with each parameter structure and the purpose of each member.
+*/
+
+/**
+@defgroup mqtt_basic_types Basic Types
+@brief Primitive types of the MQTT library.
+*/
+
+/**
+@defgroup mqtt_constants Constants
+@brief Constants defined in the MQTT library
+*/
