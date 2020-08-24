@@ -26,16 +26,17 @@
   :verbosity: 3
   :attributes:
     - PRIVILEGED_FUNCTION
-    - 'int fcntl(int s, int cmd, ...);'
   :strippables:
     - PRIVILEGED_FUNCTION
     - portDONT_DISCARD
+    # These keywords are found in many POSIX APIs but is stripped as it cannot be parsed by CMock.
     - __restrict
-    - \s__THROW
-    - (.*)sendmsg((.|\n|\r)+?\;) #socket.h
-    - (.*)sendmmsg((.|\n|\r)+?\;) #socket.h
-    - (.*)recvmsg((.|\n|\r)+?\;) #socket.h
-    - (.*)recvmmsg((.|\n|\r)+?\;) #socket.h
-    - (.*)getaddrinfo_a((.|\n|\r)+?\;) #netdb.h
-    - (.*)gai_((.|\n|\r)+?\;) #netdb.h
-    - '(?:fcntl\s*\(+.*?\)+)' # this function is causing some trouble with code coverage as the annotations are calling the mocked one, so we won't mock it
+    - \s__THROW 
+    # These functions in socket.h cannot be parsed correctly by CMock, so we won't mock them.
+    - (.*)sendmsg((.|\n|\r)+?\;)
+    - (.*)sendmmsg((.|\n|\r)+?\;)
+    - (.*)recvmsg((.|\n|\r)+?\;)
+    - (.*)recvmmsg((.|\n|\r)+?\;)
+    # These functions in netdb.h cannot be parsed correctly by CMock, so we won't mock them.
+    - (.*)getaddrinfo_a((.|\n|\r)+?\;)
+    - (.*)gai_((.|\n|\r)+?\;)
