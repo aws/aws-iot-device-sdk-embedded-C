@@ -10,10 +10,13 @@ This MQTT library implements the client side of the MQTT 3.1.1 protocol. This li
 - Operations on fixed buffers, so that applications may control their memory allocation strategy.
 - Scalable performance and footprint. The [configuration settings](@ref mqtt_config) allow this library to be tailored to a system's resources.
 
-Please see https://github.com/aws/aws-iot-device-sdk-embedded-C/ for example code demonstrating integration with TLS.
+Please see https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/development/demos/mqtt for example code demonstrating integration with TLS.
 
 @section mqtt_memory_requirements Memory Requirements
 @brief Memory requirements of the MQTT library.
+
+The configurations for memory estimation are defined <a href="https://github.com/FreeRTOS/FreeRTOS/tree/lts-development/tools/memory_estimator" target="_blank" rel="noopener noreferrer">here</a>.
+
 <table>
     <tr>
         <td colspan="3"><b>Code Size of MQTT LTS rc1(example generated with GCC for ARM Cortex-M)</b></td>
@@ -39,7 +42,7 @@ Please see https://github.com/aws/aws-iot-device-sdk-embedded-C/ for example cod
         <td>2.9K</td>
     </tr>
     <tr>
-        <td><b>Total estimate (configurations defined <a href="https://github.com/FreeRTOS/FreeRTOS/tree/lts-development/tools/memory_estimator" target="_blank" rel="noopener noreferrer">here</a>)</b></td>
+        <td><b>Total estimates</b></td>
         <td>8.9K</td>
         <td>7.4K</td>
     </tr>
