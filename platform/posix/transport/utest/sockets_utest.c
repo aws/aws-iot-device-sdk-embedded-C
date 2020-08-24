@@ -246,7 +246,6 @@ void test_Sockets_Connect_Fail_setsockopt( void )
     int32_t allErrorCases[] = { EBADF, EDOM, EINVAL, EISCONN, ENOPROTOOPT, ENOTSOCK, ENOMEM, ENOBUFS };
 
     serverInfo.pHostName = HOSTNAME;
-
     serverInfo.hostNameLength = strlen( HOSTNAME );
     serverInfo.port = PORT;
 

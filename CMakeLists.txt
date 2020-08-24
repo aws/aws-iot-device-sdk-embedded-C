@@ -66,7 +66,7 @@ if(DEFINED ENV{PWD})
 endif()
 
 
-if (BUILD_TESTS)
+if(${BUILD_TESTS})
     enable_testing()
     # Check if the CMock source directory exists.
     if( NOT EXISTS ${3RDPARTY_DIR}/CMock/src )
@@ -82,9 +82,9 @@ if (BUILD_TESTS)
         if( NOT ${CMOCK_CLONE_RESULT} STREQUAL "0" )
             message( FATAL_ERROR "Failed to clone CMock submodule." )
         endif()
-    else()
-        message( FATAL_ERROR "The required submodule CMock does not exist. Either clone it manually, or set BUILD_CLONE_SUBMODULES to 1 to automatically clone it during build." )
-    endif()
+        else()
+            message( FATAL_ERROR "The required submodule CMock does not exist. Either clone it manually, or set BUILD_CLONE_SUBMODULES to 1 to automatically clone it during build." )
+        endif()
     endif()
 
     include("${ROOT_DIR}/tools/cmock/create_test.cmake")
