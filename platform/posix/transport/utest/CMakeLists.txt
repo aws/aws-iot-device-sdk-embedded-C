@@ -88,11 +88,3 @@ create_test(${utest_name}
             "${utest_dep_list}"
             "${test_include_directories}"
         )
-
-target_compile_definitions(${utest_name} PUBLIC
-            ${mock_define_list}
-        )
-
-target_compile_definitions(${real_name} PUBLIC
-            ${mock_define_list}
-        )
