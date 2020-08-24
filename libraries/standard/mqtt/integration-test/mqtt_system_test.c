@@ -43,12 +43,21 @@
 /* Include clock for timer. */
 #include "clock.h"
 
+/* Ensure that config macros, required for TLS connection, have been defined. */
 #ifndef BROKER_ENDPOINT
     #error "BROKER_ENDPOINT should be defined for the MQTT integration tests."
 #endif
 
 #ifndef SERVER_ROOT_CA_CERT_PATH
     #error "SERVER_ROOT_CA_CERT_PATH should be defined for the MQTT integration tests."
+#endif
+
+#ifndef CLIENT_CERT_PATH
+    #error "CLIENT_CERT_PATH should be defined for the MQTT integration tests."
+#endif
+
+#ifndef CLIENT_PRIVATE_KEY_PATH
+    #error "CLIENT_PRIVATE_KEY_PATH should be defined for the MQTT integration tests."
 #endif
 
 /**
