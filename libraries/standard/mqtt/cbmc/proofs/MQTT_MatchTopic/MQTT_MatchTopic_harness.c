@@ -20,37 +20,30 @@
  */
 
 /**
- * @file HTTPClient_ReadHeader_harness.c
- * @brief Implements the proof harness for HTTPClient_ReadHeader function.
+ * @file MQTT_MatchTopic_harness.c
+ * @brief Implements the proof harness for MQTT_MatchTopic function.
  */
 
-#include "http_client.h"
-
-#include "http_cbmc_state.h"
+#include "mqtt.h"
+#include "mqtt_cbmc_state.h"
 
 void harness()
 {
-    HTTPResponse_t * pResponse;
-    char * pField;
-    char ** pValue;
-    size_t fieldLen;
-    size_t valueLen;
+    const char * pTopicName;
+    uint16_t nameLength;
+    const char * pTopicFilter;
+    uint16_t filterLength;
+    bool * pMatchResult;
 
-    /* Initialize and make assumptions for header field. */
-    __CPROVER_assume( fieldLen < CBMC_MAX_OBJECT_SIZE );
-    pField = mallocCanFail( fieldLen );
+    __CPROVER_assume( nameLength < MAX_TOPIC_NAME_FILTER_LENGTH );
+    pTopicName = mallocCanFail( ( sizeof( char ) * nameLength ) );
+    __CPROVER_assume( filterLength < MAX_TOPIC_NAME_FILTER_LENGTH );
+    pTopicFilter = mallocCanFail( ( sizeof( char ) * filterLength ) );
+    pMatchResult = mallocCanFail( sizeof( bool ) );
 
-    /* Initialize and make assumptions for header value. */
-    __CPROVER_assume( valueLen < CBMC_MAX_OBJECT_SIZE );
-    pValue = mallocCanFail( sizeof( char * ) );
-
-    /* Initialize and make assumptions for response object. */
-    pResponse = allocateHttpResponse( NULL );
-    __CPROVER_assume( isValidHttpResponse( pResponse ) );
-
-    HTTPClient_ReadHeader( pResponse,
-                           pField,
-                           fieldLen,
-                           pValue,
-                           valueLen );
+    MQTT_MatchTopic( pTopicName,
+                     nameLength,
+                     pTopicFilter,
+                     filterLength,
+                     pMatchResult );
 }

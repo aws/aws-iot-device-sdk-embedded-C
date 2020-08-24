@@ -45,6 +45,7 @@ http
 httpbin
 httpclient
 https
+ifdef
 ifndef
 inc
 initializerequestheaders
@@ -62,6 +63,7 @@ mqtt
 mqttkeepalivetimeout
 nameindex
 noninfringement
+numoftopicfilters
 openssl
 org
 outlength
@@ -83,6 +85,7 @@ pingreq
 pingresp
 plaintext
 pmatch
+pmessage
 pmethod
 pmqttcontext
 pnameindex
@@ -100,6 +103,7 @@ psessionpresent
 ptopic
 ptopicbuffer
 ptopicfilter
+ptopicfilters
 ptopicname
 ptransportinterface
 puback
@@ -116,6 +120,7 @@ rom
 sdk
 shadowstatus
 sizeof
+sni
 ssl
 statechanged
 structs
@@ -132,6 +137,7 @@ tls
 topicbuffer
 topiclength
 topicfilterlength
+topiclength
 topicnamelength
 transportinterface
 transporttimeout

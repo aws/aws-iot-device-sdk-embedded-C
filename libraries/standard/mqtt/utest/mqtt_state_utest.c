@@ -487,12 +487,12 @@ void test_MQTT_UpdateStateAck( void )
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
     status = MQTT_UpdateStateAck( &mqttContext, PACKET_ID, ack, operation, NULL );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
-    /* No matching record found. */
-    status = MQTT_UpdateStateAck( &mqttContext, PACKET_ID, ack, operation, &state );
-    TEST_ASSERT_EQUAL( MQTTBadParameter, status );
     /* Invalid packet ID. */
     status = MQTT_UpdateStateAck( &mqttContext, 0, ack, operation, &state );
     TEST_ASSERT_EQUAL( MQTTBadParameter, status );
+    /* No matching record found. */
+    status = MQTT_UpdateStateAck( &mqttContext, PACKET_ID, ack, operation, &state );
+    TEST_ASSERT_EQUAL( MQTTBadResponse, status );
 
     /* Invalid transitions. */
     /* Invalid transition from #MQTTPubRelPending. */
