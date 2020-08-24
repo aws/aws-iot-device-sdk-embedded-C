@@ -109,7 +109,7 @@ typedef struct OpensslCredentials
      *
      * @note This string must be NULL-terminated because the OpenSSL API requires it to be.
      */
-    char * sniHostName;
+    const char * sniHostName;
 
     /**
      * @brief Set the value for the TLS max fragment length (TLS MFLN)
@@ -120,7 +120,7 @@ typedef struct OpensslCredentials
      * @note By setting this to 0, OpenSSL uses the default value,
      * which is 16384 (SSL3_RT_MAX_PLAIN_LENGTH).
      */
-    size_t maxFragmentLength;
+    uint64_t maxFragmentLength;
 
     /**
      * @brief Filepaths to certificates and private key that are used when

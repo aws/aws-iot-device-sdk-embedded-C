@@ -398,24 +398,24 @@ static void setOptionalConfigurations( SSL * pSsl,
     if( pOpensslCredentials->maxFragmentLength > 0UL )
     {
         LogDebug( ( "Setting max send fragment length %lu.",
-                    ( unsigned long ) pOpensslCredentials->maxFragmentLength ) );
+                    pOpensslCredentials->maxFragmentLength ) );
 
         /* Set the maximum send fragment length. */
         sslStatus = ( int32_t ) SSL_set_max_send_fragment( pSsl,
-                                                           ( int64_t ) pOpensslCredentials->maxFragmentLength );
+                                                           pOpensslCredentials->maxFragmentLength );
 
         if( sslStatus != 1 )
         {
             LogError( ( "Failed to set max send fragment length %lu.",
-                        ( uint64_t ) pOpensslCredentials->maxFragmentLength ) );
+                        pOpensslCredentials->maxFragmentLength ) );
         }
         else
         {
             /* Change the size of the read buffer to match the
              * maximum fragment length + some extra bytes for overhead. */
             SSL_set_default_read_buffer_len( pSsl,
-                                             ( int64_t ) pOpensslCredentials->maxFragmentLength +
-                                             ( int64_t ) SSL3_RT_MAX_ENCRYPTED_OVERHEAD );
+                                             pOpensslCredentials->maxFragmentLength +
+                                             ( uint64_t ) SSL3_RT_MAX_ENCRYPTED_OVERHEAD );
         }
     }
 
