@@ -135,7 +135,10 @@ MQTTPublishState_t MQTT_CalculateStateAck( MQTTPubAckType_t packetType,
  * @param[in] opType Send or Receive.
  * @param[out] pNewState Updated state of the publish.
  *
- * @return #MQTTBadParameter, #MQTTIllegalState, or #MQTTSuccess.
+ * @return #MQTTBadParameter if an invalid parameter is passed;
+ * #MQTTBadResponse if the packet from the network is not found in the records;
+ * #MQTTIllegalState if the requested update would result in an illegal transition;
+ * #MQTTSuccess otherwise.
  */
 MQTTStatus_t MQTT_UpdateStateAck( MQTTContext_t * pMqttContext,
                                   uint16_t packetId,
@@ -174,6 +177,61 @@ uint16_t MQTT_PubrelToResend( const MQTTContext_t * pMqttContext,
  *
  * @param[in] pMqttContext Initialized MQTT context.
  * @param[in,out] pCursor Index at which to start searching.
+ *
+ * <b>Example</b>
+ * @code{c}
+ *
+ * // For this example assume this function returns an outgoing unacknowledged
+ * // QoS 1 or 2 publish from its packet identifier.
+ * MQTTPublishInfo_t * getPublish( uint16_t packetID );
+ *
+ * // Variables used in this example.
+ * MQTTStatus_t status;
+ * MQTTStateCursor_t cursor = MQTT_STATE_CURSOR_INITIALIZER;
+ * bool sessionPresent;
+ * uint16_t packetID;
+ * MQTTPublishInfo_t * pResendPublish = NULL;
+ * MQTTConnectInfo_t connectInfo = { 0 };
+ *
+ * // This is assumed to have been initialized before the call to MQTT_Connect().
+ * MQTTContext_t * pContext;
+ *
+ * // Set clean session to false to attempt session resumption.
+ * connectInfo.cleanSession = false;
+ * connectInfo.pClientIdentifier = "someClientID";
+ * connectInfo.clientIdentifierLength = strlen( connectInfo.pClientIdentifier );
+ * connectInfo.keepAliveSeconds = 60;
+ * // Optional connect parameters are not relevant to this example.
+ *
+ * // Create an MQTT connection. Use 100 milliseconds as a timeout.
+ * status = MQTT_Connect( pContext, &connectInfo, NULL, 100, &sessionPresent );
+ *
+ * if( status == MQTTSuccess )
+ * {
+ *      if( sessionPresent )
+ *      {
+ *          // Loop while packet ID is nonzero.
+ *          while( ( packetID = MQTT_PublishToResend( pContext, &cursor ) ) != 0 )
+ *          {
+ *              // Assume this function will succeed.
+ *              pResendPublish = getPublish( packetID );
+ *              // Set DUP flag.
+ *              pResendPublish->dup = true;
+ *              status = MQTT_Publish( pContext, pResendPublish, packetID );
+ *
+ *              if( status != MQTTSuccess )
+ *              {
+ *                  // Application can decide how to handle a failure.
+ *              }
+ *          }
+ *      }
+ *      else
+ *      {
+ *          // The broker did not resume a session, so we can clean up the
+ *          // list of outgoing publishes.
+ *      }
+ * }
+ * @endcode
  */
 uint16_t MQTT_PublishToResend( const MQTTContext_t * pMqttContext,
                                MQTTStateCursor_t * pCursor );

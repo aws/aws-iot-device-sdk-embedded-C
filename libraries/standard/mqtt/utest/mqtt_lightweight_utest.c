@@ -709,6 +709,8 @@ void test_MQTT_GetUnsubscribePacketSize( void )
     size_t remainingLength = 0;
     size_t packetSize = 0;
     MQTTStatus_t status = MQTTSuccess;
+    MQTTSubscribeInfo_t fourThousandSubscriptions[ 4096 ] = { 0 };
+    int i;
 
     /* Verify parameters. */
 
@@ -735,6 +737,23 @@ void test_MQTT_GetUnsubscribePacketSize( void )
     memset( ( void * ) &subscriptionList, 0x0, sizeof( subscriptionList ) );
     subscriptionCount = 0;
     status = MQTT_GetUnsubscribePacketSize( &subscriptionList,
+                                            subscriptionCount,
+                                            &remainingLength,
+                                            &packetSize );
+    TEST_ASSERT_EQUAL_INT( MQTTBadParameter, status );
+
+    /* Verify packet size cannot exceed limit. Note the max remaining length of
+     * an MQTT packet is 2^28-1 = 268435455, or 256MiB. Since the only way to increase
+     * the subscribe packet size is with the topic filters of the subscriptions
+     * (the lengths of which are only 2 bytes), we need at least
+     * 2^28 / 2^16 = 2^12 = 4096 of them. */
+    for( i = 0; i < 4096; i++ )
+    {
+        fourThousandSubscriptions[ i ].topicFilterLength = UINT16_MAX;
+    }
+
+    subscriptionCount = sizeof( fourThousandSubscriptions ) / sizeof( fourThousandSubscriptions[ 0 ] );
+    status = MQTT_GetUnsubscribePacketSize( fourThousandSubscriptions,
                                             subscriptionCount,
                                             &remainingLength,
                                             &packetSize );

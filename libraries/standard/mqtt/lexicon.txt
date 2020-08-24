@@ -67,6 +67,7 @@ getincomingpackettypeandlength
 getnewpacketid
 getpacketid
 getpingreqpacketsize
+getpublish
 getpublishpacketsize
 getsubscribepacketsize
 gettime
@@ -97,6 +98,7 @@ keepalivems
 keepaliveseconds
 lastpackettime
 linux
+logwarn
 lsb
 lwt
 malloc
@@ -162,6 +164,7 @@ networksend
 newstate
 nextpacketid
 noninfringement
+numcodes
 openssl
 optype
 org
@@ -177,6 +180,7 @@ pbuffer
 pbuffertosend
 pcallbacks
 pclientidentifier
+pcodes
 pconnack
 pconnectinfo
 pcontext
@@ -186,6 +190,7 @@ pdeserialized
 pdeserializedinfo
 pdestination
 pem
+pfilter
 pfilterindex
 pfixedbuffer
 pheadersize
@@ -219,6 +224,7 @@ pqos
 pre
 premainingdata
 premaininglength
+presendpublish
 processloop
 psessionpresent
 psource
@@ -227,7 +233,9 @@ pstatusstart
 psuback
 psubackpacket
 psubscribeinfo
+psubscribes
 psubscriptionlist
+ptopic
 ptopicfilter
 ptopicname
 ptr
