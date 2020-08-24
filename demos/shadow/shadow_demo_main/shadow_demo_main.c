@@ -96,8 +96,15 @@
  * @brief The expected size of #SHADOW_DESIRED_JSON.
  *
  * Because all the format specifiers in #SHADOW_DESIRED_JSON include a length,
- * its full size is known at compile-time. In your own application, this might
- * not be true, then you should calculate the size of the json doc at run time.
+ * its full actual size is known by pre-calculation, here's the formula why
+ * the length need to minus 3:
+ * 1. The length of "%01d" is 4.
+ * 2. The length of %06lu is 5.
+ * 3. The actual length we will use in case 1. is 1 ( for the state of powerOn ).
+ * 4. The actual length we will use in case 2. is 6 ( for the clientToken length ).
+ * 5. Thus the additional size 3 = 4 + 5 - 1 - 6 + 1 (termination character).
+ * 
+ * In your own application, you could calculate the size of the json doc in this way.
  */
 #define SHADOW_DESIRED_JSON_LENGTH    ( sizeof( SHADOW_DESIRED_JSON ) - 3 )
 
@@ -132,8 +139,8 @@
  * @brief The expected size of #SHADOW_REPORTED_JSON.
  *
  * Because all the format specifiers in #SHADOW_REPORTED_JSON include a length,
- * its full size is known at compile-time. In your own application, this might
- * not be true, then you should calculate the size of the json doc at run time.
+ * its full size is known at compile-time by pre-calculation. Users could refer to 
+ * the way how to calculate the actual length in #SHADOW_DESIRED_JSON_LENGTH.
  */
 #define SHADOW_REPORTED_JSON_LENGTH    ( sizeof( SHADOW_REPORTED_JSON ) - 3 )
 
@@ -209,33 +216,30 @@ static void updateDeltaHandler( MQTTPublishInfo_t * pPublishInfo )
     assert( pPublishInfo->pPayload != NULL );
 
     LogInfo( ( "/update/delta json payload:%s.\n\n", ( const char * ) pPublishInfo->pPayload ) );
-    /* Make sure the payload is json document. */
-    if ( JSONSuccess == JSON_Validate( pPublishInfo->pPayload,
-                                       pPublishInfo->payloadLength ) )
+    
+    /* The payload will look similar to this:
+     * {
+     *      "version": 12,
+     *      "timestamp": 1595437367,
+     *      "state": {
+     *          "powerOn": 1
+     *      },
+     *      "metadata": {
+     *          "powerOn": {
+     *          "timestamp": 1595437367
+     *          }
+     *      },
+     *      "clientToken": "388062"
+     *  }
+     */
+
+    /* Make sure the payload is a valid json document. */
+    result = JSON_Validate( pPublishInfo->pPayload,
+                            pPublishInfo->payloadLength );
+
+    if ( result == JSONSuccess )
     {
-        /* In this demo, we discard the incoming message
-         * if the version number is not newer than the latest
-         * that we've received before. Your application may use a
-         * different approach. 
-         */
-
-        /* Then we start to get the version value by JSON keyword "version".
-         * The payload will look similar to this:
-         * {
-         *      "version": 12,
-         *      "timestamp": 1595437367,
-         *      "state": {
-         *          "powerOn": 1
-         *      },
-         *      "metadata": {
-         *          "powerOn": {
-         *          "timestamp": 1595437367
-         *          }
-         *      },
-         *      "clientToken": "388062"
-         *  }
-         */
-
+        /* Then we start to get the version value by JSON keyword "version". */
         result = JSON_Search( ( char * ) pPublishInfo->pPayload,
                               pPublishInfo->payloadLength,
                               "version",
@@ -243,68 +247,78 @@ static void updateDeltaHandler( MQTTPublishInfo_t * pPublishInfo )
                               '.',
                               & outValue,
                               ( size_t * ) & outValueLength );
-        if ( result == JSONSuccess )
-        {
-            LogInfo( ( "version: %.*s\n\n",
-                        outValueLength,
-                        outValue ) );
-
-            /* Convert the code to an unsigned integer value. */
-            version = ( uint32_t ) strtoul( outValue, NULL, 10 );
-
-            LogInfo( ( "version:%d, currentVersion:%d \r\n", version,  currentVersion) );
-
-            if ( version > currentVersion )
-            {
-                /* Set to received version as the current version. */
-                currentVersion = version;
-
-                /* Get powerOn state from json documents. */
-                result = JSON_Search( ( char * ) pPublishInfo->pPayload,
-                                      pPublishInfo->payloadLength,
-                                      "state.powerOn",
-                                      sizeof("state.powerOn") - 1,
-                                      '.',
-                                      & outValue,
-                                      ( size_t * ) & outValueLength );
-
-                if ( result == JSONSuccess )
-                {
-                    /* Convert the code to an unsigned integer value. */
-                    newState = ( uint32_t ) strtoul( outValue, NULL, 10 );
-
-                    LogInfo( ( "The new power on state newState:%d, currentPowerOnState:%d \r\n",
-                               newState,  currentPowerOnState) );
-
-                    if ( newState != currentPowerOnState )
-                    {
-                        currentPowerOnState = newState;
-
-                        /* State change will be handled in main(), where we will publish a "reported"
-                         * state to the device shadow. We do not do it here because we are inside of
-                         * a callback from the MQTT library, so that we don't re-enter
-                         * the MQTT library. */
-                        stateChanged = true;
-                    }
-                }
-                else
-                {
-                    LogError( ( "No powerOn in json document!!\n\n" ) );
-                }
-            }
-            else
-            {
-                LogWarn( ( "The received version is smaller than current one!!\n\n" ) );
-            }
-        }
-        else
-        {
-            LogError( ( "No version in json document!!\n\n" ) );
-        }
     }
     else
     {
         LogError( ( "The json document is invalid!!\n\n" ) );
+    }
+
+    if ( result == JSONSuccess )
+    {
+        LogInfo( ( "version: %.*s\n\n",
+                    outValueLength,
+                    outValue ) );
+
+        /* Convert the extracted value to an unsigned integer value. */
+        version = ( uint32_t ) strtoul( outValue, NULL, 10 );
+    }
+    else
+    {
+        LogError( ( "No version in json document!!\n\n" ) );
+    }
+
+    LogInfo( ( "version:%d, currentVersion:%d \r\n", version,  currentVersion ) );
+
+    /* When the version is much newer than the on we retained, that means the powerOn
+     * state is valid for us. */
+    if ( version > currentVersion )
+    {
+        /* Set to received version as the current version. */
+        currentVersion = version;
+
+        /* Get powerOn state from json documents. */
+        result = JSON_Search( ( char * ) pPublishInfo->pPayload,
+                                pPublishInfo->payloadLength,
+                                "state.powerOn",
+                                sizeof("state.powerOn") - 1,
+                                '.',
+                                & outValue,
+                                ( size_t * ) & outValueLength );
+    }
+    else
+    {
+        /* In this demo, we discard the incoming message
+         * if the version number is not newer than the latest
+         * that we've received before. Your application may use a
+         * different approach. 
+         */
+        LogWarn( ( "The received version is smaller than current one!!\n\n" ) );
+    }
+
+    if ( result == JSONSuccess )
+    {
+        /* Convert the powerOn state value to an unsigned integer value. */
+        newState = ( uint32_t ) strtoul( outValue, NULL, 10 );
+
+        LogInfo( ( "The new power on state newState:%d, currentPowerOnState:%d \r\n",
+                    newState,  currentPowerOnState ) );
+
+        if ( newState != currentPowerOnState )
+        {
+            /* The received powerOn state is different from the one we retained before, so we switch them
+             * and set the flag. */
+            currentPowerOnState = newState;
+
+            /* State change will be handled in main(), where we will publish a "reported"
+             * state to the device shadow. We do not do it here because we are inside of
+             * a callback from the MQTT library, so that we don't re-enter
+             * the MQTT library. */
+            stateChanged = true;
+        }
+    }
+    else
+    {
+        LogError( ( "No powerOn in json document!!\n\n" ) );
     }
 }
 
@@ -315,42 +329,42 @@ static void updateAcceptedHandler( MQTTPublishInfo_t * pPublishInfo )
     char * outValue = NULL;
     uint32_t outValueLength = 0U;
     uint32_t receivedToken = 0U;
+    JSONStatus_t result = JSONSuccess;
 
     assert( pPublishInfo != NULL );
     assert( pPublishInfo->pPayload != NULL );
 
     LogInfo( ( "/update/accepted json payload:%s.\n\n", ( const char * ) pPublishInfo->pPayload ) );
 
-    /* Handle the reported state with state change in /update/accepted topic. */
-    /* Thus we will retrieve the client token from the json document to see if
+    /* Handle the reported state with state change in /update/accepted topic.
+     * Thus we will retrieve the client token from the json document to see if
      * it's the same one we sent with reported state on the /update topic.
+     * The payload will look similar to this:
+     *  {
+     *      "state": {
+     *          "reported": {
+     *          "powerOn": 1
+     *          }
+     *      },
+     *      "metadata": {
+     *          "reported": {
+     *          "powerOn": {
+     *              "timestamp": 1596573647
+     *          }
+     *          }
+     *      },
+     *      "version": 14698,
+     *      "timestamp": 1596573647,
+     *      "clientToken": "022485"
+     *  }
      */
-    if ( JSONSuccess == JSON_Validate( pPublishInfo->pPayload,
-                                       pPublishInfo->payloadLength ) )
+
+    /* Make sure the payload is a valid json document. */
+    result = JSON_Validate( pPublishInfo->pPayload,
+                            pPublishInfo->payloadLength );
+
+    if ( result == JSONSuccess )
     {
-        /*
-         * The payload will look similar to this:
-         *  {
-         *      "state": {
-         *          "reported": {
-         *          "powerOn": 1
-         *          }
-         *      },
-         *      "metadata": {
-         *          "reported": {
-         *          "powerOn": {
-         *              "timestamp": 1596573647
-         *          }
-         *          }
-         *      },
-         *      "version": 14698,
-         *      "timestamp": 1596573647,
-         *      "clientToken": "022485"
-         *  }
-         */
-
-        JSONStatus_t result = JSONSuccess;
-
         /* Get clientToken from json documents. */
         result = JSON_Search( ( char * ) pPublishInfo->pPayload,
                               pPublishInfo->payloadLength,
@@ -359,39 +373,39 @@ static void updateAcceptedHandler( MQTTPublishInfo_t * pPublishInfo )
                               '.',
                               & outValue,
                               ( size_t * ) & outValueLength );
-
-        if ( result == JSONSuccess )
-        {
-            LogInfo( ( "clientToken: %.*s\n\n", outValueLength,
-                                                outValue ) );
-
-            /* Convert the code to an unsigned integer value. */
-            receivedToken = ( uint32_t ) strtoul( outValue, NULL, 10 );
-
-            LogInfo( ( "receivedToken:%d, clientToken:%u \r\n", receivedToken,  clientToken) );
-
-            /* If the clientToken in this update/accepted message matches the one we
-             * published before, it means the device shadow has accepted our latest
-             * reported state. We are done. */
-            if ( receivedToken == clientToken )
-            {
-                LogInfo( ( "Received response from the device shadow. Previously published "
-                           "update with clientToken=%u has been accepted. \n\n", clientToken) );
-            }
-            else
-            {
-                LogWarn( ( "The received clientToken=%u is not identical with the one=%u we sent "
-                           , receivedToken, clientToken) );
-            }
-        }
-        else
-        {
-            LogError( ( "No clientToken in json document!!\n\n" ) );
-        }
     }
     else
     {
         LogError( ( "Invalid json documents !!\n\n" ) );
+    }
+
+    if ( result == JSONSuccess )
+    {
+        LogInfo( ( "clientToken: %.*s\n\n", outValueLength,
+                                            outValue ) );
+
+        /* Convert the code to an unsigned integer value. */
+        receivedToken = ( uint32_t ) strtoul( outValue, NULL, 10 );
+
+        LogInfo( ( "receivedToken:%d, clientToken:%u \r\n", receivedToken,  clientToken) );
+
+        /* If the clientToken in this update/accepted message matches the one we
+         * published before, it means the device shadow has accepted our latest
+         * reported state. We are done. */
+        if ( receivedToken == clientToken )
+        {
+            LogInfo( ( "Received response from the device shadow. Previously published "
+                        "update with clientToken=%u has been accepted. \n\n", clientToken) );
+        }
+        else
+        {
+            LogWarn( ( "The received clientToken=%u is not identical with the one=%u we sent "
+                        , receivedToken, clientToken) );
+        }
+    }
+    else
+    {
+        LogError( ( "No clientToken in json document!!\n\n" ) );
     }
 }
 
