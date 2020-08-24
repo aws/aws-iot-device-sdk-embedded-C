@@ -9,22 +9,27 @@
 
 
 /* Sample test from the docs. */
-#define JSON_QUERY_SEPARATOR         "."
+#define JSON_QUERY_SEPARATOR                "."
 
-#define FIRST_QUERY_KEY              "bar"
-#define FIRST_QUERY_KEY_LENGTH       ( sizeof( FIRST_QUERY_KEY ) - 1 )
+#define FIRST_QUERY_KEY                     "bar"
+#define FIRST_QUERY_KEY_LENGTH              ( sizeof( FIRST_QUERY_KEY ) - 1 )
 
-#define SECOND_QUERY_KEY             "foo"
-#define SECOND_QUERY_KEY_LENGTH      ( sizeof( SECOND_QUERY_KEY ) - 1 )
+#define SECOND_QUERY_KEY                    "foo"
+#define SECOND_QUERY_KEY_LENGTH             ( sizeof( SECOND_QUERY_KEY ) - 1 )
 
 #define COMPLETE_QUERY_KEY \
     FIRST_QUERY_KEY        \
     JSON_QUERY_SEPARATOR   \
     SECOND_QUERY_KEY
-#define COMPLETE_QUERY_KEY_LENGTH    ( sizeof( COMPLETE_QUERY_KEY ) - 1 )
+#define COMPLETE_QUERY_KEY_LENGTH           ( sizeof( COMPLETE_QUERY_KEY ) - 1 )
 
-#define QUERY_ANSWER                 "xyz"
-#define QUERY_ANSWER_LENGTH          ( sizeof( QUERY_ANSWER ) - 1 )
+#define COMPLETE_QUERY_KEY_ANSWER           "xyz"
+#define COMPLETE_QUERY_KEY_ANSWER_LENGTH    ( sizeof( COMPLETE_QUERY_KEY_ANSWER ) - 1 )
+
+#define FIRST_QUERY_KEY_ANSWER     \
+    "{\"" SECOND_QUERY_KEY "\":\"" \
+    COMPLETE_QUERY_KEY_ANSWER "\"}"
+#define FIRST_QUERY_KEY_ANSWER_LENGTH       ( sizeof( FIRST_QUERY_KEY_ANSWER ) - 1 )
 
 /* This JSON document covers all cases where scalars are exponents, literals, numbers, and decimals. */
 #define JSON_DOC_VARIED_SCALARS                                                      \
@@ -32,8 +37,7 @@
     "\"exp1\": 5E+3, \"more_exponents\": [5e+2, 4e-2, 93E-5, 128E-6],  "             \
     "\"number\": -123412, "                                                          \
     "\"decimal\":109238.42091289, "                                                  \
-    "\"foo\":\"abc\",\"" FIRST_QUERY_KEY "\":{\"" SECOND_QUERY_KEY "\":\""           \
-    QUERY_ANSWER "\"}}"
+    "\"foo\":\"abc\",\"" FIRST_QUERY_KEY "\":" FIRST_QUERY_KEY_ANSWER "}"
 #define JSON_DOC_VARIED_SCALARS_LENGTH                     ( sizeof( JSON_DOC_VARIED_SCALARS ) - 1 )
 
 #define MULTIPLE_VALID_ESCAPES                             "\\\\ \\\" \\/ \\b \\f \\n \\r \\t \\\x12"
@@ -73,7 +77,7 @@
 
 #define JSON_DOC_LEGAL_TRAILING_SPACE     \
     "{\"foo\":\"abc\",\"" FIRST_QUERY_KEY \
-    "\":{\"" SECOND_QUERY_KEY "\" : \"" QUERY_ANSWER "\"}}  "
+    "\":{\"" SECOND_QUERY_KEY "\" : \"" COMPLETE_QUERY_KEY_ANSWER "\"}}  "
 #define JSON_DOC_LEGAL_TRAILING_SPACE_LENGTH               ( sizeof( JSON_DOC_LEGAL_TRAILING_SPACE ) - 1 )
 
 /* A single scalar is still considered a valid JSON document. */
@@ -86,7 +90,7 @@
 
 #define TRAILING_COMMA_AFTER_VALUE        \
     "{\"foo\":\"abc\",\"" FIRST_QUERY_KEY \
-    "\":{\"" SECOND_QUERY_KEY "\" : \"" QUERY_ANSWER "\",}}"
+    "\":{\"" SECOND_QUERY_KEY "\" : \"" COMPLETE_QUERY_KEY_ANSWER "\",}}"
 #define TRAILING_COMMA_AFTER_VALUE_LENGTH                  ( sizeof( TRAILING_COMMA_AFTER_VALUE ) - 1 )
 
 #define INCORRECT_OBJECT_SEPARATOR                         "{\"foo\": \"bar\"; \"bar\": \"foo\"}"
@@ -99,7 +103,7 @@
 
 #define MISSING_ENCLOSING_OBJECT_MARKER   \
     "{\"foo\":\"abc\",\"" FIRST_QUERY_KEY \
-    "\":{\"" SECOND_QUERY_KEY "\" : \"" QUERY_ANSWER "\"}"
+    "\":{\"" SECOND_QUERY_KEY "\" : \"" COMPLETE_QUERY_KEY_ANSWER "\"}"
 #define MISSING_ENCLOSING_OBJECT_MARKER_LENGTH             ( sizeof( MISSING_ENCLOSING_OBJECT_MARKER ) - 1 )
 
 #define CUT_AFTER_OBJECT_OPEN_BRACE                        "{\"foo\":\"abc\",\"bar\":{"
@@ -128,13 +132,13 @@
 /* Separator between a key and a value must be a colon (:). */
 #define WRONG_KEY_VALUE_SEPARATOR         \
     "{\"foo\";\"abc\",\"" FIRST_QUERY_KEY \
-    "\":{\"" SECOND_QUERY_KEY "\":\"" QUERY_ANSWER "\"}}  "
+    "\":{\"" SECOND_QUERY_KEY "\":\"" COMPLETE_QUERY_KEY_ANSWER "\"}}  "
 #define WRONG_KEY_VALUE_SEPARATOR_LENGTH    ( sizeof( WRONG_KEY_VALUE_SEPARATOR ) - 1 )
 
 /* Key must be a string. */
 #define ILLEGAL_KEY_NOT_STRING        \
     "{foo:\"abc\",\"" FIRST_QUERY_KEY \
-    "\":{\"" SECOND_QUERY_KEY "\" : \"" QUERY_ANSWER "\"}}"
+    "\":{\"" SECOND_QUERY_KEY "\" : \"" COMPLETE_QUERY_KEY_ANSWER "\"}}"
 #define ILLEGAL_KEY_NOT_STRING_LENGTH    ( sizeof( ILLEGAL_KEY_NOT_STRING ) - 1 )
 
 /* A non-number after the exponent marker is illegal. */
@@ -249,6 +253,9 @@
     "{\"foo\":\"abc\",\"" FIRST_QUERY_KEY \
     "\":{\"" SECOND_QUERY_KEY "\" : \"\x15\"}}"
 #define UNESCAPED_CONTROL_CHAR_LENGTH    ( sizeof( UNESCAPED_CONTROL_CHAR ) - 1 )
+
+/* Each skip function has a check that the iterator i has not exceeded the
+ * length of the buffer. The cases below test that those checks work as intended. */
 
 /* Triggers the case in which i >= max for skipUTF8MultiByte.
  * UTF-8 is illegal if the number of bytes in the sequence is
@@ -381,6 +388,8 @@ char * allocateMaxDepthObject( void )
     i += NESTED_OBJECT_VALUE_LENGTH;
     nestedObjectCur += NESTED_OBJECT_VALUE_LENGTH;
 
+    /* This loop writes the correct number of closing brackets so long as there
+     * are JSON_MAX_DEPTH + 1 entries for each bracket accounted for in len. */
     while( i < len )
     {
         *( nestedObjectCur++ ) = '}';
@@ -624,8 +633,23 @@ void test_JSON_Search_Legal_Documents( void )
                               &outValue,
                               &outValueLength );
     TEST_ASSERT_EQUAL( JSONSuccess, jsonStatus );
-    TEST_ASSERT_EQUAL( outValueLength, QUERY_ANSWER_LENGTH );
-    TEST_ASSERT_EQUAL_STRING_LEN( QUERY_ANSWER, outValue, outValueLength );
+    TEST_ASSERT_EQUAL( outValueLength, COMPLETE_QUERY_KEY_ANSWER_LENGTH );
+    TEST_ASSERT_EQUAL_STRING_LEN( COMPLETE_QUERY_KEY_ANSWER,
+                                  outValue,
+                                  outValueLength );
+
+    jsonStatus = JSON_Search( JSON_DOC_LEGAL_TRAILING_SPACE,
+                              JSON_DOC_LEGAL_TRAILING_SPACE_LENGTH,
+                              COMPLETE_QUERY_KEY,
+                              COMPLETE_QUERY_KEY_LENGTH,
+                              JSON_QUERY_SEPARATOR[ 0 ],
+                              &outValue,
+                              &outValueLength );
+    TEST_ASSERT_EQUAL( JSONSuccess, jsonStatus );
+    TEST_ASSERT_EQUAL( outValueLength, COMPLETE_QUERY_KEY_ANSWER_LENGTH );
+    TEST_ASSERT_EQUAL_STRING_LEN( COMPLETE_QUERY_KEY_ANSWER,
+                                  outValue,
+                                  outValueLength );
 
     jsonStatus = JSON_Search( JSON_DOC_VARIED_SCALARS,
                               JSON_DOC_VARIED_SCALARS_LENGTH,
@@ -635,8 +659,23 @@ void test_JSON_Search_Legal_Documents( void )
                               &outValue,
                               &outValueLength );
     TEST_ASSERT_EQUAL( JSONSuccess, jsonStatus );
-    TEST_ASSERT_EQUAL( QUERY_ANSWER_LENGTH, outValueLength );
-    TEST_ASSERT_EQUAL_STRING_LEN( QUERY_ANSWER, outValue, QUERY_ANSWER_LENGTH );
+    TEST_ASSERT_EQUAL( COMPLETE_QUERY_KEY_ANSWER_LENGTH, outValueLength );
+    TEST_ASSERT_EQUAL_STRING_LEN( COMPLETE_QUERY_KEY_ANSWER,
+                                  outValue,
+                                  COMPLETE_QUERY_KEY_ANSWER_LENGTH );
+
+    jsonStatus = JSON_Search( JSON_DOC_VARIED_SCALARS,
+                              JSON_DOC_VARIED_SCALARS_LENGTH,
+                              FIRST_QUERY_KEY,
+                              FIRST_QUERY_KEY_LENGTH,
+                              JSON_QUERY_SEPARATOR[ 0 ],
+                              &outValue,
+                              &outValueLength );
+    TEST_ASSERT_EQUAL( JSONSuccess, jsonStatus );
+    TEST_ASSERT_EQUAL( FIRST_QUERY_KEY_ANSWER_LENGTH, outValueLength );
+    TEST_ASSERT_EQUAL_STRING_LEN( FIRST_QUERY_KEY_ANSWER,
+                                  outValue,
+                                  FIRST_QUERY_KEY_ANSWER_LENGTH );
 
     jsonStatus = JSON_Search( JSON_DOC_MULTIPLE_VALID_ESCAPES,
                               JSON_DOC_MULTIPLE_VALID_ESCAPES_LENGTH,
@@ -1129,7 +1168,7 @@ void test_JSON_Search_Partial_Documents( void )
 }
 
 /**
- * @brief Test that a nested collection can only only have JSON_MAX_DEPTH levels
+ * @brief Test that a nested collection can only have up to JSON_MAX_DEPTH levels
  * of nesting.
  */
 void test_JSON_Max_Depth( void )
@@ -1141,7 +1180,6 @@ void test_JSON_Max_Depth( void )
     jsonStatus = JSON_Validate( maxNestedArray,
                                 strlen( maxNestedArray ) );
     TEST_ASSERT_EQUAL( JSONMaxDepthExceeded, jsonStatus );
-
 
     maxNestedObject = allocateMaxDepthObject();
     jsonStatus = JSON_Validate( maxNestedObject,
