@@ -994,6 +994,7 @@ void test_MQTT_Connect_happy_path()
     TransportInterface_t transport;
     MQTTFixedBuffer_t networkBuffer;
     MQTTPacketInfo_t incomingPacket;
+    MQTTPubAckInfo_t cleanRecords[ MQTT_STATE_ARRAY_MAX_COUNT ] = { 0 };
 
     setupTransportInterface( &transport );
     setupNetworkBuffer( &networkBuffer );
@@ -1033,6 +1034,12 @@ void test_MQTT_Connect_happy_path()
     mqttContext.keepAliveIntervalSec = 0;
     connectInfo.cleanSession = true;
     sessionPresentExpected = false;
+    /* Populate some state records to make sure they are cleared since a clean session
+     * will be established. */
+    mqttContext.outgoingPublishRecords[ 0 ].packetId = 1;
+    mqttContext.outgoingPublishRecords[ 0 ].qos = MQTTQoS2;
+    mqttContext.outgoingPublishRecords[ 0 ].publishState = MQTTPublishSend;
+    mqttContext.incomingPublishRecords[ MQTT_STATE_ARRAY_MAX_COUNT - 1 ].packetId = 1;
     MQTT_GetIncomingPacketTypeAndLength_ExpectAnyArgsAndReturn( MQTTSuccess );
     MQTT_GetIncomingPacketTypeAndLength_ReturnThruPtr_pIncomingPacket( &incomingPacket );
     MQTT_DeserializeAck_ExpectAnyArgsAndReturn( MQTTSuccess );
@@ -1042,6 +1049,9 @@ void test_MQTT_Connect_happy_path()
     TEST_ASSERT_EQUAL_INT( MQTTConnected, mqttContext.connectStatus );
     TEST_ASSERT_EQUAL_INT( connectInfo.keepAliveSeconds, mqttContext.keepAliveIntervalSec );
     TEST_ASSERT_FALSE( sessionPresent );
+    /* Test old records were cleared. */
+    TEST_ASSERT_EQUAL_MEMORY( cleanRecords, mqttContext.outgoingPublishRecords, sizeof( cleanRecords ) );
+    TEST_ASSERT_EQUAL_MEMORY( cleanRecords, mqttContext.incomingPublishRecords, sizeof( cleanRecords ) );
 
     /* Request to establish a session if present and session present is received
      * from broker. */
