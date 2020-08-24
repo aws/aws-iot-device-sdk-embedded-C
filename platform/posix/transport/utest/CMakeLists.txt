@@ -13,19 +13,19 @@ set(project_name "transport")
 
 # list the files to mock here
 list(APPEND mock_list
-                ${OPENSSL_INCLUDE_DIR}/arpa/inet.h
-                ${OPENSSL_INCLUDE_DIR}/x86_64-linux-gnu/sys/socket.h
-                ${OPENSSL_INCLUDE_DIR}/netdb.h
-                ${CMAKE_CURRENT_LIST_DIR}/mocks/close.h
-)
+            /usr/include/arpa/inet.h
+            /usr/include/x86_64-linux-gnu/sys/socket.h
+            /usr/include/netdb.h
+            ${CMAKE_CURRENT_LIST_DIR}/mocks/close.h
+        )
 # list the directories your mocks need
 list(APPEND mock_include_list
             ""
-)
+        )
 #list the definitions of your mocks to control what to be included
 list(APPEND mock_define_list
             ""
-       )
+        )
 
 # ================= Create the library under test here (edit) ==================
 
