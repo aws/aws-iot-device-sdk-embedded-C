@@ -12,9 +12,11 @@ coverity
 cwd
 dns
 endif
+enums
 errno
 errornumber
 fclose
+fd
 filelabel
 filepath
 filepaths
@@ -31,6 +33,7 @@ ifndef
 implemenation
 ip
 inc
+int
 iot
 ip
 logpath
@@ -87,3 +90,4 @@ tcpsocket
 timespec
 tls
 transportinterface
+unistd
