@@ -27,6 +27,7 @@ jsonnotfound
 jsonpartial
 jsonsuccess
 keylength
+len
 misra
 multibyte
 nextkeyvaluepair
