@@ -55,11 +55,11 @@
  * @brief Log the absolute path given a relative or absolute path.
  *
  * @param[in] path Relative or absolute path.
- * @param[in] fileLabel NULL-terminated string describing the file label to log.
+ * @param[in] fileType NULL-terminated string describing the file type to log.
  */
 #if ( LIBRARY_LOG_LEVEL == LOG_DEBUG )
     static void logPath( const char * path,
-                         const char * fileLabel );
+                         const char * fileType );
 #endif /* #if ( LIBRARY_LOG_LEVEL == LOG_DEBUG ) */
 
 /**
@@ -74,8 +74,8 @@
  *
  * @return 1 on success; -1, 0 on failure;
  */
-static int setRootCa( SSL_CTX * pSslContext,
-                      const char * pRootCaPath );
+static int32_t setRootCa( SSL_CTX * pSslContext,
+                          const char * pRootCaPath );
 
 /**
  * @brief Set X509 certificate as client certificate for the server to authenticate.
@@ -85,8 +85,8 @@ static int setRootCa( SSL_CTX * pSslContext,
  *
  * @return 1 on success; 0 failure;
  */
-static int setClientCertificate( SSL_CTX * pSslContext,
-                                 const char * pClientCertPath );
+static int32_t setClientCertificate( SSL_CTX * pSslContext,
+                                     const char * pClientCertPath );
 
 /**
  * @brief Set private key for the client's certificate.
@@ -96,8 +96,8 @@ static int setClientCertificate( SSL_CTX * pSslContext,
  *
  * @return 1 on success; 0 on failure;
  */
-static int setPrivateKey( SSL_CTX * pSslContext,
-                          const char * pPrivateKeyPath );
+static int32_t setPrivateKey( SSL_CTX * pSslContext,
+                              const char * pPrivateKeyPath );
 
 /**
  * @brief Passes TLS credentials to the OpenSSL library.
@@ -111,8 +111,8 @@ static int setPrivateKey( SSL_CTX * pSslContext,
  *
  * @return 1 on success; -1, 0 on failure;
  */
-static int setCredentials( SSL_CTX * pSslContext,
-                           const OpensslCredentials_t * pOpensslCredentials );
+static int32_t setCredentials( SSL_CTX * pSslContext,
+                               const OpensslCredentials_t * pOpensslCredentials );
 
 /**
  * @brief Set optional configurations for the TLS connection.
@@ -145,6 +145,9 @@ static OpensslStatus_t convertToOpensslStatus( SocketStatus_t socketStatus );
 
         assert( path != NULL );
         assert( fileType != NULL );
+
+        /* Unused parameter when logs are disabled. */
+        ( void ) fileType;
 
         /* Log the absolute directory based on first character of path. */
         if( ( path[ 0 ] == '/' ) || ( path[ 0 ] == '\\' ) )
@@ -196,16 +199,17 @@ static OpensslStatus_t convertToOpensslStatus( SocketStatus_t socketStatus )
         default:
             LogError( ( "Unexpected status received from socket wrapper: Socket status = %u",
                         socketStatus ) );
+            break;
     }
 
     return opensslStatus;
 }
 /*-----------------------------------------------------------*/
 
-static int setRootCa( SSL_CTX * pSslContext,
-                      const char * pRootCaPath )
+static int32_t setRootCa( const SSL_CTX * pSslContext,
+                          const char * pRootCaPath )
 {
-    int sslStatus = 1;
+    int32_t sslStatus = 1;
     FILE * pRootCaFile = NULL;
     X509 * pRootCa = NULL;
 
@@ -271,10 +275,10 @@ static int setRootCa( SSL_CTX * pSslContext,
 }
 /*-----------------------------------------------------------*/
 
-static int setClientCertificate( SSL_CTX * pSslContext,
-                                 const char * pClientCertPath )
+static int32_t setClientCertificate( SSL_CTX * pSslContext,
+                                     const char * pClientCertPath )
 {
-    int sslStatus = -1;
+    int32_t sslStatus = -1;
 
     assert( pSslContext != NULL );
     assert( pClientCertPath != NULL );
@@ -302,10 +306,10 @@ static int setClientCertificate( SSL_CTX * pSslContext,
 }
 /*-----------------------------------------------------------*/
 
-static int setPrivateKey( SSL_CTX * pSslContext,
-                          const char * pPrivateKeyPath )
+static int32_t setPrivateKey( SSL_CTX * pSslContext,
+                              const char * pPrivateKeyPath )
 {
-    int sslStatus = -1;
+    int32_t sslStatus = -1;
 
     assert( pSslContext != NULL );
     assert( pPrivateKeyPath != NULL );
@@ -334,10 +338,10 @@ static int setPrivateKey( SSL_CTX * pSslContext,
 }
 /*-----------------------------------------------------------*/
 
-static int setCredentials( SSL_CTX * pSslContext,
-                           const OpensslCredentials_t * pOpensslCredentials )
+static int32_t setCredentials( SSL_CTX * pSslContext,
+                               const OpensslCredentials_t * pOpensslCredentials )
 {
-    int sslStatus = 0;
+    int32_t sslStatus = 0;
 
     assert( pSslContext != NULL );
     assert( pOpensslCredentials != NULL );
@@ -369,19 +373,19 @@ static int setCredentials( SSL_CTX * pSslContext,
 static void setOptionalConfigurations( SSL * pSsl,
                                        const OpensslCredentials_t * pOpensslCredentials )
 {
-    int sslStatus = -1;
+    int32_t sslStatus = -1;
 
     assert( pSsl != NULL );
     assert( pOpensslCredentials != NULL );
 
     /* Set TLS ALPN if requested. */
     if( ( pOpensslCredentials->pAlpnProtos != NULL ) &&
-        ( pOpensslCredentials->alpnProtosLen > 0 ) )
+        ( pOpensslCredentials->alpnProtosLen > 0UL ) )
     {
         LogDebug( ( "Setting ALPN protos." ) );
         sslStatus = SSL_set_alpn_protos( pSsl,
-                                         ( unsigned char * ) pOpensslCredentials->pAlpnProtos,
-                                         ( unsigned int ) pOpensslCredentials->alpnProtosLen );
+                                         ( const unsigned char * ) pOpensslCredentials->pAlpnProtos,
+                                         ( unsigned int32_t ) pOpensslCredentials->alpnProtosLen );
 
         if( sslStatus != 0 )
         {
@@ -391,14 +395,14 @@ static void setOptionalConfigurations( SSL * pSsl,
     }
 
     /* Set TLS MFLN if requested. */
-    if( pOpensslCredentials->maxFragmentLength > 0 )
+    if( pOpensslCredentials->maxFragmentLength > 0UL )
     {
         LogDebug( ( "Setting max send fragment length %lu.",
                     ( unsigned long ) pOpensslCredentials->maxFragmentLength ) );
 
         /* Set the maximum send fragment length. */
-        sslStatus = SSL_set_max_send_fragment( pSsl,
-                                               ( long ) pOpensslCredentials->maxFragmentLength );
+        sslStatus = ( int32_t ) SSL_set_max_send_fragment( pSsl,
+                                                           ( long ) pOpensslCredentials->maxFragmentLength );
 
         if( sslStatus != 1 )
         {
@@ -410,7 +414,7 @@ static void setOptionalConfigurations( SSL * pSsl,
             /* Change the size of the read buffer to match the
              * maximum fragment length + some extra bytes for overhead. */
             SSL_set_default_read_buffer_len( pSsl,
-                                             pOpensslCredentials->maxFragmentLength +
+                                             ( unsigned long ) pOpensslCredentials->maxFragmentLength +
                                              SSL3_RT_MAX_ENCRYPTED_OVERHEAD );
         }
     }
@@ -421,8 +425,8 @@ static void setOptionalConfigurations( SSL * pSsl,
         LogDebug( ( "Setting server name %s for SNI.",
                     pOpensslCredentials->sniHostName ) );
 
-        sslStatus = SSL_set_tlsext_host_name( pSsl,
-                                              pOpensslCredentials->sniHostName );
+        sslStatus = ( int32_t ) SSL_set_tlsext_host_name( pSsl,
+                                                          ( const char * ) pOpensslCredentials->sniHostName );
 
         if( sslStatus != 1 )
         {
@@ -442,7 +446,7 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
     SocketStatus_t socketStatus = SOCKETS_SUCCESS;
     OpensslStatus_t returnStatus = OPENSSL_SUCCESS;
     long verifyPeerCertStatus = X509_V_OK;
-    int sslStatus = 0;
+    int32_t sslStatus = 0;
     uint8_t sslObjectCreated = 0;
     SSL_CTX * pSslContext = NULL;
 
@@ -491,7 +495,7 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
     {
         /* Set auto retry mode for the blocking calls to SSL_read and SSL_write.
          * The mask returned by SSL_CTX_set_mode does not need to be checked. */
-        ( void ) SSL_CTX_set_mode( pSslContext, SSL_MODE_AUTO_RETRY );
+        ( void ) SSL_CTX_set_mode( pSslContext, ( int64_t ) SSL_MODE_AUTO_RETRY );
 
         sslStatus = setCredentials( pSslContext,
                                     pOpensslCredentials );
@@ -588,7 +592,7 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
 }
 /*-----------------------------------------------------------*/
 
-OpensslStatus_t Openssl_Disconnect( NetworkContext_t * pNetworkContext )
+OpensslStatus_t Openssl_Disconnect( const NetworkContext_t * pNetworkContext )
 {
     SocketStatus_t socketStatus = SOCKETS_INVALID_PARAMETER;
 
@@ -627,7 +631,7 @@ int32_t Openssl_Recv( const NetworkContext_t * pNetworkContext,
                       size_t bytesToRecv )
 {
     int32_t bytesReceived = 0;
-    int sslError = 0;
+    int32_t sslError = 0;
 
     if( pNetworkContext == NULL )
     {
@@ -638,7 +642,7 @@ int32_t Openssl_Recv( const NetworkContext_t * pNetworkContext,
         /* SSL read of data. */
         bytesReceived = ( int32_t ) SSL_read( pNetworkContext->pSsl,
                                               pBuffer,
-                                              bytesToRecv );
+                                              ( int32_t ) bytesToRecv );
 
         /* Handle error return status if transport read did not succeed. */
         if( bytesReceived <= 0 )
@@ -683,7 +687,7 @@ int32_t Openssl_Send( const NetworkContext_t * pNetworkContext,
         /* SSL write of data. */
         bytesSent = ( int32_t ) SSL_write( pNetworkContext->pSsl,
                                            pBuffer,
-                                           bytesToSend );
+                                           ( int32_t ) bytesToSend );
 
         if( bytesSent <= 0 )
         {

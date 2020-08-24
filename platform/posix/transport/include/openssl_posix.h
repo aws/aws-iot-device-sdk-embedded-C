@@ -41,7 +41,7 @@
     #define LIBRARY_LOG_NAME     "Transport_OpenSSL_Sockets"
 #endif
 #ifndef LIBRARY_LOG_LEVEL
-    #define LIBRARY_LOG_LEVEL    LOG_DEBUG
+    #define LIBRARY_LOG_LEVEL    LOG_ERROR
 #endif
 
 #include "logging_stack.h"
@@ -66,7 +66,7 @@
  */
 struct NetworkContext
 {
-    int socketDescriptor;
+    int32_t socketDescriptor;
     SSL * pSsl;
 };
 
@@ -162,7 +162,7 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
  *
  * @return #OPENSSL_SUCCESS on success; #OPENSSL_INVALID_PARAMETER on failure.
  */
-OpensslStatus_t Openssl_Disconnect( NetworkContext_t * pNetworkContext );
+OpensslStatus_t Openssl_Disconnect( const NetworkContext_t * pNetworkContext );
 
 /**
  * @brief Receives data over an established TLS session using the OpenSSL API.
