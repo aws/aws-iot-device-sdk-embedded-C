@@ -2210,9 +2210,29 @@ void test_MQTT_MatchTopic_ExactMatch( void )
                                                      &matchResult ) );
     TEST_ASSERT_EQUAL( false, matchResult );
 
-    /* Test for match at end with no wildcards. */
+    /* Edge case tests (for branch coverage) to match at end with no wildcards. */
     pTopicName = "/test/match/";
     pTopicFilter = "/test/match/a";
+    TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_MatchTopic( pTopicName,
+                                                     strlen( pTopicName ),
+                                                     pTopicFilter,
+                                                     strlen( pTopicFilter ),
+                                                     &matchResult ) );
+    TEST_ASSERT_EQUAL( false, matchResult );
+
+    pTopicName = "a";
+    pTopicFilter = "a/";
+    TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_MatchTopic( pTopicName,
+                                                     strlen( pTopicName ),
+                                                     pTopicFilter,
+                                                     strlen( pTopicFilter ),
+                                                     &matchResult ) );
+    TEST_ASSERT_EQUAL( false, matchResult );
+
+    /* Edge case test (for branch coverage) when topic name has more levels
+     * than topic filter. */
+    pTopicName = "test/match";
+    pTopicFilter = "test";
     TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_MatchTopic( pTopicName,
                                                      strlen( pTopicName ),
                                                      pTopicFilter,
@@ -2225,7 +2245,7 @@ void test_MQTT_MatchTopic_ExactMatch( void )
  * @brief Verifies that MQTT_MatchTopic meets the MQTT 3.1.1 specification of all
  * cases of matching topic filters that contain the single-level '+' wildcard.
  */
-void test_MQTT_MatchTopic_Wildcard_SingleLevel( void )
+void test_MQTT_MatchTopic_Wildcard_SingleLevel_Match_Cases( void )
 {
     const char * pTopicName = NULL;
     const char * pTopicFilter = NULL;
@@ -2250,25 +2270,6 @@ void test_MQTT_MatchTopic_Wildcard_SingleLevel( void )
                                                      strlen( pTopicFilter ),
                                                      &matchResult ) );
     TEST_ASSERT_EQUAL( true, matchResult );
-
-    /* Test that match fails when topic name has more levels than topic filter. */
-    pTopicName = "/test/match/level1/level2";
-    pTopicFilter = "/test/match/+";
-    TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_MatchTopic( pTopicName,
-                                                     strlen( pTopicName ),
-                                                     pTopicFilter,
-                                                     strlen( pTopicFilter ),
-                                                     &matchResult ) );
-    TEST_ASSERT_EQUAL( false, matchResult );
-
-    pTopicName = "/";
-    pTopicFilter = "+";
-    TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_MatchTopic( pTopicName,
-                                                     strlen( pTopicName ),
-                                                     pTopicFilter,
-                                                     strlen( pTopicFilter ),
-                                                     &matchResult ) );
-    TEST_ASSERT_EQUAL( false, matchResult );
 
     /* Test with '+' as the topic filter. */
     pTopicName = "test";
@@ -2319,6 +2320,25 @@ void test_MQTT_MatchTopic_Wildcard_SingleLevel( void )
                                                      &matchResult ) );
     TEST_ASSERT_EQUAL( true, matchResult );
 
+    /* Test that match fails when topic name has more levels than topic filter. */
+    pTopicName = "/test/match/level1/level2";
+    pTopicFilter = "/test/match/+";
+    TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_MatchTopic( pTopicName,
+                                                     strlen( pTopicName ),
+                                                     pTopicFilter,
+                                                     strlen( pTopicFilter ),
+                                                     &matchResult ) );
+    TEST_ASSERT_EQUAL( false, matchResult );
+
+    pTopicName = "/";
+    pTopicFilter = "+";
+    TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_MatchTopic( pTopicName,
+                                                     strlen( pTopicName ),
+                                                     pTopicFilter,
+                                                     strlen( pTopicFilter ),
+                                                     &matchResult ) );
+    TEST_ASSERT_EQUAL( false, matchResult );
+
     /* Edge case where filter ending with '/+' matches topic ending with '/'. */
     pTopicName = "/test/match/";
     pTopicFilter = "/test/match/+";
@@ -2328,6 +2348,17 @@ void test_MQTT_MatchTopic_Wildcard_SingleLevel( void )
                                                      strlen( pTopicFilter ),
                                                      &matchResult ) );
     TEST_ASSERT_EQUAL( true, matchResult );
+}
+
+/**
+ * @brief Verifies that MQTT_MatchTopic meets the MQTT 3.1.1 specification for
+ * cases of where topic filter containing '+' wildcard do not match topic name.
+ */
+void test_MQTT_MatchTopic_Wildcard_SingleLevel_No_Match_Cases( void )
+{
+    const char * pTopicName = NULL;
+    const char * pTopicFilter = NULL;
+    bool matchResult = false;
 
     /* Edge case where filter ending with '/+' should not match a topic ending with
      * at parent level. */
@@ -2363,6 +2394,16 @@ void test_MQTT_MatchTopic_Wildcard_SingleLevel( void )
     /* Invalid topic filter where non-starting '+' is not placed after '/'.*/
     pTopicName = "test/match/level1";
     pTopicFilter = "test/match/level+";
+    TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_MatchTopic( pTopicName,
+                                                     strlen( pTopicName ),
+                                                     pTopicFilter,
+                                                     strlen( pTopicFilter ),
+                                                     &matchResult ) );
+    TEST_ASSERT_EQUAL( false, matchResult );
+
+    /* Invalid topic filter where intermediate '+' is not followed by '/'.*/
+    pTopicName = "test/match/level";
+    pTopicFilter = "test/+?level";
     TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_MatchTopic( pTopicName,
                                                      strlen( pTopicName ),
                                                      pTopicFilter,
