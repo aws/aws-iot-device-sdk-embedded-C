@@ -74,7 +74,7 @@
  *
  * @return 1 on success; -1, 0 on failure;
  */
-static int32_t setRootCa( SSL_CTX * pSslContext,
+static int32_t setRootCa( const SSL_CTX * pSslContext,
                           const char * pRootCaPath );
 
 /**
@@ -384,8 +384,8 @@ static void setOptionalConfigurations( SSL * pSsl,
     {
         LogDebug( ( "Setting ALPN protos." ) );
         sslStatus = SSL_set_alpn_protos( pSsl,
-                                         ( const unsigned char * ) pOpensslCredentials->pAlpnProtos,
-                                         ( unsigned int32_t ) pOpensslCredentials->alpnProtosLen );
+                                         ( const uint8_t * ) pOpensslCredentials->pAlpnProtos,
+                                         ( uint32_t ) pOpensslCredentials->alpnProtosLen );
 
         if( sslStatus != 0 )
         {
@@ -402,20 +402,20 @@ static void setOptionalConfigurations( SSL * pSsl,
 
         /* Set the maximum send fragment length. */
         sslStatus = ( int32_t ) SSL_set_max_send_fragment( pSsl,
-                                                           ( long ) pOpensslCredentials->maxFragmentLength );
+                                                           ( int64_t ) pOpensslCredentials->maxFragmentLength );
 
         if( sslStatus != 1 )
         {
             LogError( ( "Failed to set max send fragment length %lu.",
-                        ( unsigned long ) pOpensslCredentials->maxFragmentLength ) );
+                        ( uint64_t ) pOpensslCredentials->maxFragmentLength ) );
         }
         else
         {
             /* Change the size of the read buffer to match the
              * maximum fragment length + some extra bytes for overhead. */
             SSL_set_default_read_buffer_len( pSsl,
-                                             ( unsigned long ) pOpensslCredentials->maxFragmentLength +
-                                             SSL3_RT_MAX_ENCRYPTED_OVERHEAD );
+                                             ( uint64_t ) pOpensslCredentials->maxFragmentLength +
+                                             ( uint64_t ) SSL3_RT_MAX_ENCRYPTED_OVERHEAD );
         }
     }
 
@@ -426,7 +426,7 @@ static void setOptionalConfigurations( SSL * pSsl,
                     pOpensslCredentials->sniHostName ) );
 
         sslStatus = ( int32_t ) SSL_set_tlsext_host_name( pSsl,
-                                                          ( const char * ) pOpensslCredentials->sniHostName );
+                                                          pOpensslCredentials->sniHostName );
 
         if( sslStatus != 1 )
         {
@@ -445,7 +445,7 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
 {
     SocketStatus_t socketStatus = SOCKETS_SUCCESS;
     OpensslStatus_t returnStatus = OPENSSL_SUCCESS;
-    long verifyPeerCertStatus = X509_V_OK;
+    int64_t verifyPeerCertStatus = X509_V_OK;
     int32_t sslStatus = 0;
     uint8_t sslObjectCreated = 0;
     SSL_CTX * pSslContext = NULL;
