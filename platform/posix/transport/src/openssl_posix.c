@@ -414,7 +414,7 @@ static void setOptionalConfigurations( SSL * pSsl,
             /* Change the size of the read buffer to match the
              * maximum fragment length + some extra bytes for overhead. */
             SSL_set_default_read_buffer_len( pSsl,
-                                             pOpensslCredentials->maxFragmentLength +
+                                             ( int64_t ) pOpensslCredentials->maxFragmentLength +
                                              ( int64_t ) SSL3_RT_MAX_ENCRYPTED_OVERHEAD );
         }
     }
