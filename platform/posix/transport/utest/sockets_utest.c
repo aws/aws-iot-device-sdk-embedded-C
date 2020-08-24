@@ -19,6 +19,7 @@
 #define PORT                 80
 
 static struct addrinfo * addrInfo;
+static ServerInfo_t serverInfo;
 
 static void allocateAddrInfoLinkedList( struct addrinfo ** head )
 {
@@ -84,6 +85,9 @@ static void freeAddrInfoLinkedList( struct addrinfo * head )
 /* Called before each test method. */
 void setUp()
 {
+    serverInfo.pHostName = HOSTNAME;
+    serverInfo.hostNameLength = strlen( HOSTNAME );
+    serverInfo.port = PORT;
 }
 
 /* Called after each test method. */
@@ -173,7 +177,6 @@ void test_Sockets_Disconnect_Invalid_Socket( void )
 void test_Sockets_Connect_Invalid_Params( void )
 {
     SocketStatus_t socketStatus;
-    ServerInfo_t serverInfo;
     int tcpSocket = 1;
 
     /* Passing a NULL socket should fail. */
@@ -203,12 +206,7 @@ void test_Sockets_Connect_Invalid_Params( void )
 void test_Sockets_Connect_DNS_Lookup_Fails( void )
 {
     SocketStatus_t socketStatus;
-    ServerInfo_t serverInfo;
     int tcpSocket = 1;
-
-    serverInfo.pHostName = HOSTNAME;
-    serverInfo.hostNameLength = strlen( HOSTNAME );
-    serverInfo.port = PORT;
 
     getaddrinfo_ExpectAnyArgsAndReturn( -1 );
 
@@ -222,12 +220,7 @@ void test_Sockets_Connect_DNS_Lookup_Fails( void )
 void test_Sockets_Connect_Every_IP_Address_Fails( void )
 {
     SocketStatus_t socketStatus;
-    ServerInfo_t serverInfo;
     int tcpSocket = 1;
-
-    serverInfo.pHostName = HOSTNAME;
-    serverInfo.hostNameLength = strlen( HOSTNAME );
-    serverInfo.port = PORT;
 
     expectSocketsConnectCalls( -1 );
 
@@ -241,13 +234,12 @@ void test_Sockets_Connect_Every_IP_Address_Fails( void )
 void test_Sockets_Connect_Fail_setsockopt( void )
 {
     SocketStatus_t socketStatus, expectedSocketStatus;
-    ServerInfo_t serverInfo;
     int tcpSocket = 1, i = 1;
-    int32_t allErrorCases[] = { EBADF, EDOM, EINVAL, EISCONN, ENOPROTOOPT, ENOTSOCK, ENOMEM, ENOBUFS };
-
-    serverInfo.pHostName = HOSTNAME;
-    serverInfo.hostNameLength = strlen( HOSTNAME );
-    serverInfo.port = PORT;
+    int32_t allErrorCases[] =
+    {
+        EBADF,       EDOM,     EINVAL, EISCONN,
+        ENOPROTOOPT, ENOTSOCK, ENOMEM, ENOBUFS
+    };
 
     for( i = 0; i < sizeof( allErrorCases ); i++ )
     {
@@ -289,12 +281,7 @@ void test_Sockets_Connect_Fail_setsockopt( void )
 void test_Sockets_Connect_Succeed_On_Nth_IP_Address( void )
 {
     SocketStatus_t socketStatus;
-    ServerInfo_t serverInfo;
     int tcpSocket = 1;
-
-    serverInfo.pHostName = HOSTNAME;
-    serverInfo.hostNameLength = strlen( HOSTNAME );
-    serverInfo.port = PORT;
 
     expectSocketsConnectCalls( NUM_ADDR_INFO );
     setsockopt_ExpectAnyArgsAndReturn( 0 );
