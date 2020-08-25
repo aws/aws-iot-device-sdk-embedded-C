@@ -381,12 +381,12 @@ static void setOptionalConfigurations( SSL * pSsl,
 
     /* Set TLS ALPN if requested. */
     if( ( pOpensslCredentials->pAlpnProtos != NULL ) &&
-        ( pOpensslCredentials->alpnProtosLen > 0UL ) )
+        ( pOpensslCredentials->alpnProtosLen > 0U ) )
     {
         LogDebug( ( "Setting ALPN protos." ) );
         sslStatus = SSL_set_alpn_protos( pSsl,
                                          ( const uint8_t * ) pOpensslCredentials->pAlpnProtos,
-                                         ( uint32_t ) pOpensslCredentials->alpnProtosLen );
+                                         pOpensslCredentials->alpnProtosLen );
 
         if( sslStatus != 0 )
         {

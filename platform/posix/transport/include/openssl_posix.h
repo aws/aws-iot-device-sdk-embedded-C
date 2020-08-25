@@ -102,7 +102,7 @@ typedef struct OpensslCredentials
     /**
      * @brief Length of the ALPN protocols array.
      */
-    size_t alpnProtosLen;
+    uint32_t alpnProtosLen;
 
     /**
      * @brief Set a host name to enable SNI. Set to NULL to disable SNI.
