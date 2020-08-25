@@ -33,11 +33,62 @@
 #include "transport_interface.h"
 
 /**
+ * @ingroup mqtt_constants
  * @brief Invalid packet identifier.
  *
  * Zero is an invalid packet identifier as per MQTT v3.1.1 spec.
  */
 #define MQTT_PACKET_ID_INVALID    ( ( uint16_t ) 0U )
+
+/**
+ * @brief The maximum number of MQTT PUBLISH messages that may be pending
+ * acknowledgement at any time.
+ *
+ * QoS 1 and 2 MQTT PUBLISHes require acknowledgement from the server before
+ * they can be completed. While they are awaiting the acknowledgement, the
+ * client must maintain information about their state. The value of this
+ * macro sets the limit on how many simultaneous PUBLISH states an MQTT
+ * context maintains.
+ * 
+ * <b>Possible values:</b> Any positive 32 bit integer. <br>
+ * <b>Default value:</b> `10`
+ */
+#ifndef MQTT_STATE_ARRAY_MAX_COUNT
+    /* Default value for the maximum acknowledgement pending PUBLISH messages. */
+    #define MQTT_STATE_ARRAY_MAX_COUNT              ( 10U )
+#endif
+
+/**
+ * @brief The number of retries for receiving CONNACK.
+ *
+ * The MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT will be used only when the
+ * timeoutMs parameter of #MQTT_Connect is passed as 0 . The transport
+ * receive for CONNACK will be retried MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT
+ * times before timing out. A value of 0 for this config will cause the
+ * transport receive for CONNACK  to be invoked only once.
+ * 
+ * <b>Possible values:</b> Any positive 16 bit integer. <br>
+ * <b>Default value:</b> `5`
+ */
+#ifndef MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT
+    /* Default value for the CONNACK receive retries. */
+    #define MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT    ( 5U )
+#endif
+
+/**
+ * @brief Number of milliseconds to wait for a ping response to a ping
+ * request as part of the keep-alive mechanism.
+ *
+ * If a ping response is not received before this timeout, then
+ * #MQTT_ProcessLoop will return #MQTTKeepAliveTimeout.
+ * 
+ * <b>Possible values:</b> Any positive integer up to SIZE_MAX. <br>
+ * <b>Default value:</b> `500`
+ */
+#ifndef MQTT_PINGRESP_TIMEOUT_MS
+    /* Wait 0.5 seconds by default for a ping response. */
+    #define MQTT_PINGRESP_TIMEOUT_MS    ( 500U )
+#endif
 
 /* Structures defined in this file. */
 struct MQTTPubAckInfo;
@@ -45,6 +96,7 @@ struct MQTTContext;
 struct MQTTDeserializedInfo;
 
 /**
+ * @ingroup mqtt_callbacks_types
  * @brief Application provided callback to retrieve the current time in
  * milliseconds.
  *
@@ -53,6 +105,7 @@ struct MQTTDeserializedInfo;
 typedef uint32_t (* MQTTGetCurrentTimeFunc_t )( void );
 
 /**
+ * @ingroup mqtt_callbacks_types
  * @brief Application callback for receiving incoming publishes and incoming
  * acks.
  *
@@ -69,6 +122,7 @@ typedef void (* MQTTEventCallback_t )( struct MQTTContext * pContext,
                                        struct MQTTDeserializedInfo * pDeserializedInfo );
 
 /**
+ * @ingroup mqtt_enum_types
  * @brief Values indicating if an MQTT connection exists.
  */
 typedef enum MQTTConnectionStatus
@@ -78,6 +132,7 @@ typedef enum MQTTConnectionStatus
 } MQTTConnectionStatus_t;
 
 /**
+ * @ingroup mqtt_enum_types
  * @brief The state of QoS 1 or QoS 2 MQTT publishes, used in the state engine.
  */
 typedef enum MQTTPublishState
@@ -96,6 +151,7 @@ typedef enum MQTTPublishState
 } MQTTPublishState_t;
 
 /**
+ * @ingroup mqtt_enum_types
  * @brief Packet types used in acknowledging QoS 1 or QoS 2 publishes.
  */
 typedef enum MQTTPubAckType
@@ -107,6 +163,7 @@ typedef enum MQTTPubAckType
 } MQTTPubAckType_t;
 
 /**
+ * @ingroup mqtt_enum_types
  * @brief The status codes in the SUBACK response to a subscription request.
  */
 typedef enum MQTTSubAckStatus
@@ -118,6 +175,7 @@ typedef enum MQTTSubAckStatus
 } MQTTSubAckStatus_t;
 
 /**
+ * @ingroup mqtt_struct_types
  * @brief An element of the state engine records for QoS 1 or Qos 2 publishes.
  */
 typedef struct MQTTPubAckInfo
@@ -128,6 +186,7 @@ typedef struct MQTTPubAckInfo
 } MQTTPubAckInfo_t;
 
 /**
+ * @ingroup mqtt_struct_types
  * @brief A struct representing an MQTT connection.
  */
 typedef struct MQTTContext
@@ -190,6 +249,7 @@ typedef struct MQTTContext
 } MQTTContext_t;
 
 /**
+ * @ingroup mqtt_struct_types
  * @brief Struct to hold deserialized packet information for an #MQTTEventCallback_t
  * callback.
  */
@@ -211,14 +271,12 @@ typedef struct MQTTDeserializedInfo
  * functions. This will ensure all time based functions will run for a single
  * iteration.
  *
- * @brief param[in] pContext The context to initialize.
- * @brief param[in] pTransportInterface The transport interface to use with the
- * context.
- * @brief param[in] getTimeFunction The time utility function to use with the
- * context.
- * @brief param[in] userCallback The user callback to use with the context to
+ * @param[in] pContext The context to initialize.
+ * @param[in] pTransportInterface The transport interface to use with the context.
+ * @param[in] getTimeFunction The time utility function to use with the context.
+ * @param[in] userCallback The user callback to use with the context to
  * notify about incoming packet events.
- * @brief param[in] pNetworkBuffer Network buffer provided for the context.
+ * @param[in] pNetworkBuffer Network buffer provided for the context.
  *
  * @return #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSuccess otherwise.
@@ -265,11 +323,13 @@ typedef struct MQTTDeserializedInfo
  * }
  * @endcode
  */
+/* @[declare_mqtt_init] */
 MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
                         const TransportInterface_t * pTransportInterface,
                         MQTTGetCurrentTimeFunc_t getTimeFunction,
                         MQTTEventCallback_t userCallback,
                         const MQTTFixedBuffer_t * pNetworkBuffer );
+/* @[declare_mqtt_init] */
 
 /**
  * @brief Establish an MQTT session.
@@ -369,11 +429,13 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  * }
  * @endcode
  */
+/* @[declare_mqtt_connect] */
 MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
                            const MQTTConnectInfo_t * pConnectInfo,
                            const MQTTPublishInfo_t * pWillInfo,
                            uint32_t timeoutMs,
                            bool * pSessionPresent );
+/* @[declare_mqtt_connect] */
 
 /**
  * @brief Sends MQTT SUBSCRIBE for the given list of topic filters to
@@ -424,17 +486,19 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
  * }
  * @endcode
  */
+/* @[declare_mqtt_subscribe] */
 MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
                              const MQTTSubscribeInfo_t * pSubscriptionList,
                              size_t subscriptionCount,
                              uint16_t packetId );
+/* @[declare_mqtt_subscribe] */
 
 /**
  * @brief Publishes a message to the given topic name.
  *
- * @brief param[in] pContext Initialized MQTT context.
- * @brief param[in] pPublishInfo MQTT PUBLISH packet parameters.
- * @brief param[in] packetId packet ID generated by #MQTT_GetPacketId.
+ * @param[in] pContext Initialized MQTT context.
+ * @param[in] pPublishInfo MQTT PUBLISH packet parameters.
+ * @param[in] packetId packet ID generated by #MQTT_GetPacketId.
  *
  * @return #MQTTNoMemory if pBuffer is too small to hold the MQTT packet;
  * #MQTTBadParameter if invalid parameters are passed;
@@ -470,9 +534,11 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
  * }
  * @endcode
  */
+/* @[declare_mqtt_publish] */
 MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
                            const MQTTPublishInfo_t * pPublishInfo,
                            uint16_t packetId );
+/* @[declare_mqtt_publish] */
 
 /**
  * @brief Sends an MQTT PINGREQ to broker.
@@ -484,7 +550,9 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
  * #MQTTSendFailed if transport write failed;
  * #MQTTSuccess otherwise.
  */
+/* @[declare_mqtt_ping] */
 MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext );
+/* @[declare_mqtt_ping] */
 
 /**
  * @brief Sends MQTT UNSUBSCRIBE for the given list of topic filters to
@@ -534,10 +602,12 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext );
  * }
  * @endcode
  */
+/* @[declare_mqtt_unsubscribe] */
 MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
                                const MQTTSubscribeInfo_t * pSubscriptionList,
                                size_t subscriptionCount,
                                uint16_t packetId );
+/* @[declare_mqtt_unsubscribe] */
 
 /**
  * @brief Disconnect an MQTT session.
@@ -550,7 +620,9 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
  * #MQTTSendFailed if transport send failed;
  * #MQTTSuccess otherwise.
  */
+/* @[declare_mqtt_disconnect] */
 MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext );
+/* @[declare_mqtt_disconnect] */
 
 /**
  * @brief Loop to receive packets from the transport interface. Handles keep
@@ -595,8 +667,10 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext );
  * }
  * @endcode
  */
+/* @[declare_mqtt_processloop] */
 MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
                                uint32_t timeoutMs );
+/* @[declare_mqtt_processloop] */
 
 /**
  * @brief Loop to receive packets from the transport interface. Does not handle
@@ -649,8 +723,10 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
  * }
  * @endcode
  */
+/* @[declare_mqtt_receiveloop] */
 MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext,
                                uint32_t timeoutMs );
+/* @[declare_mqtt_receiveloop] */
 
 /**
  * @brief Get a packet ID that is valid according to the MQTT 3.1.1 spec.
@@ -659,7 +735,9 @@ MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext,
  *
  * @return A non-zero number.
  */
+/* @[declare_mqtt_getpacketid] */
 uint16_t MQTT_GetPacketId( MQTTContext_t * pContext );
+/* @[declare_mqtt_getpacketid] */
 
 /**
  * @brief A utility function that determines whether the passed topic filter and
@@ -681,6 +759,27 @@ uint16_t MQTT_GetPacketId( MQTTContext_t * pContext );
  * @return Returns one of the following:
  * - #MQTTBadParameter, if any of the input parameters is invalid.
  * - #MQTTSuccess, if the matching operation was performed.
+ *
+ * <b>Example</b>
+ * @code{c}
+ *
+ * // Variables used in this example.
+ * const char * pTopic = "topic/match/1";
+ * const char * pFilter = "topic/#";
+ * MQTTStatus_t status = MQTTSuccess;
+ * bool match = false;
+ *
+ * status = MQTT_MatchTopic( pTopic, strlen( pTopic ), pFilter, strlen( pFilter ), &match );
+ * // Our parameters were valid, so this will return success.
+ * assert( status == MQTTSuccess );
+ *
+ * // For this specific example, we already know this value is true. This
+ * // check is placed here as an example for use with variable topic names.
+ * if( match )
+ * {
+ *      // Application can decide what to do with the matching topic name.
+ * }
+ * @endcode
  */
 MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
                               const uint16_t topicNameLength,
@@ -712,10 +811,69 @@ MQTTStatus_t MQTT_MatchTopic( const char * pTopicName,
  * @return Returns one of the following:
  * - #MQTTBadParameter if the input SUBACK packet is invalid.
  * - #MQTTSuccess if parsing the payload was successful.
+ *
+ * <b>Example</b>
+ * @code{c}
+ *
+ * // Global variable used in this example.
+ * // This is assumed to be the subscription list in the original SUBSCRIBE packet.
+ * MQTTSubscribeInfo_t pSubscribes[ NUMBER_OF_SUBSCRIPTIONS ];
+ *
+ * // MQTT_GetSubAckStatusCodes is intended to be used from the application
+ * // callback that is called by the library in MQTT_ProcessLoop or MQTT_ReceiveLoop.
+ * void eventCallback(
+ *      MQTTContext_t * pContext,
+ *      MQTTPacketInfo_t * pPacketInfo,
+ *      MQTTDeserializedInfo_t * pDeserializedInfo
+ * )
+ * {
+ *      MQTTStatus_t status = MQTTSuccess;
+ *      uint8_t * pCodes;
+ *      size_t numCodes;
+ *
+ *      if( pPacketInfo->type == MQTT_PACKET_TYPE_SUBACK )
+ *      {
+ *          status = MQTT_GetSubAckStatusCodes( pPacketInfo, &pCodes, &numCodes );
+ *
+ *          // Since the pointers to the payload and payload size are not NULL, and
+ *          // we use the packet info struct passed to the app callback (verified
+ *          // to be valid by the library), this function must return success.
+ *          assert( status == MQTTSuccess );
+ *          // The server must send a response code for each topic filter in the
+ *          // original SUBSCRIBE packet.
+ *          assert( numCodes == NUMBER_OF_SUBSCRIPTIONS );
+ *
+ *          for( int i = 0; i < numCodes; i++ )
+ *          {
+ *              // The only failure code is 0x80 = MQTTSubAckFailure.
+ *              if( pCodes[ i ] == MQTTSubAckFailure )
+ *              {
+ *                  // The subscription failed, we may want to retry the
+ *                  // subscription in pSubscribes[ i ] outside of this callback.
+ *              }
+ *              else
+ *              {
+ *                  // The subscription was granted, but the maximum QoS may be
+ *                  // lower than what was requested. We can verify the granted QoS.
+ *                  if( pSubscribes[ i ].qos != pCodes[ i ] )
+ *                  {
+ *                      LogWarn( (
+ *                          "Requested QoS %u, but granted QoS %u for %s",
+ *                          pSubscribes[ i ].qos, pCodes[ i ], pSubscribes[ i ].pTopicFilter
+ *                      ) );
+ *                  }
+ *              }
+ *          }
+ *      }
+ *      // Handle other packet types.
+ * }
+ * @endcode
  */
+/* @[declare_mqtt_getsubackstatuscodes] */
 MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
                                         uint8_t ** pPayloadStart,
                                         size_t * pPayloadSize );
+/* @[declare_mqtt_getsubackstatuscodes] */
 
 /**
  * @brief Error code to string conversion for MQTT statuses.
@@ -724,6 +882,8 @@ MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
  *
  * @return The string representation of the status.
  */
+/* @[declare_mqtt_status_strerror] */
 const char * MQTT_Status_strerror( MQTTStatus_t status );
+/* @[declare_mqtt_status_strerror] */
 
 #endif /* ifndef MQTT_H */
