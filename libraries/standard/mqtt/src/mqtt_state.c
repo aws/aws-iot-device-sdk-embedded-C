@@ -26,6 +26,7 @@
 #include <assert.h>
 #include <string.h>
 #include "mqtt_state.h"
+#include "private/mqtt_internal.h"
 
 /*-----------------------------------------------------------*/
 
@@ -1029,7 +1030,7 @@ uint16_t MQTT_PublishToResend( const MQTTContext_t * pMqttContext,
     /* Validate arguments. */
     if( ( pMqttContext == NULL ) || ( pCursor == NULL ) )
     {
-        LogError( ( "Arguments cannot be NULL pMqttContext =%p, pCursor=%p",
+        LogError( ( "Arguments cannot be NULL pMqttContext=%p, pCursor=%p",
                     ( void * ) pMqttContext,
                     ( void * ) pCursor ) );
     }
