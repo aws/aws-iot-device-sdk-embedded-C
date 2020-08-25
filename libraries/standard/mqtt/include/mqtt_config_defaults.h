@@ -29,40 +29,6 @@
 #define MQTT_CONFIG_DEFAULTS_H_
 
 /**
- * @brief Definition of logging macros to map logging calls within MQTT
- * library to application-specific logging implementation.
- *
- * Each logging macro represents a different logging level. Only define those
- * logging macros whose corresponding logging level messages are desired in
- * the MQTT library build.
- *
- * @note The logging macros are called in MQTT library with paramerers wrapped in
- * double parantheses to be ISO C89/C90 standard compliant. For an example
- * implementation of the logging macros, refer to mqtt_config.h files of MQTT demo folder
- * and the reference implementation of logging-stack in demos.
- *
- * #define LogError( X )           MyErrorLoggingFunction( X )
- * #define LogWarn( X )            MyWarnLoggingFunction( X )
- * #define LogInfo( X )            MyInfoLoggingFunction( X )
- * #define LogDebug( X )           MyDebugLoggingFunction( X )
- *
- * <b>Default values</b>: Logging is turned off, and no code is generated for logging calls
- * in the MQTT library on compilation.
- */
-#ifndef LogError
-    #define LogError( message )
-#endif
-#ifndef LogWarn
-    #define LogWarn( message )
-#endif
-#ifndef LogInfo
-    #define LogInfo( message )
-#endif
-#ifndef LogDebug
-    #define LogDebug( message )
-#endif
-
-/**
  * @brief The maximum number of MQTT PUBLISH messages that may be pending
  * acknowledgement at any time.
  *
@@ -70,7 +36,12 @@
  * they can be completed. While they are awaiting the acknowledgement, the
  * client must maintain information about their state. The value of this
  * macro sets the limit on how many simultaneous PUBLISH states an MQTT
- * context maintains.
+ * context maintains, separately, for both incoming and outgoing direction of
+ * PUBLISHes.
+ *
+ * @note The MQTT context maintains separate state records for outgoing
+ * and incoming PUBLISHes, and thus, 2 * MQTT_STATE_ARRAY_MAX_COUNT amount
+ * of memory is statically allocated for the state records.
  *
  * <b>Possible values:</b> Any positive 32 bit integer. <br>
  * <b>Default value:</b> `10`
@@ -112,5 +83,38 @@
     #define MQTT_PINGRESP_TIMEOUT_MS    ( 500U )
 #endif
 
+/**
+ * @brief Definition of logging macros to map logging calls within MQTT
+ * library to application-specific logging implementation.
+ *
+ * Each logging macro represents a different logging level. Only define those
+ * logging macros whose corresponding logging level messages are desired in
+ * the MQTT library build.
+ *
+ * @note The logging macros are called in MQTT library with parameters wrapped in
+ * double parantheses to be ISO C89/C90 standard compliant. For an example
+ * implementation of the logging macros, refer to mqtt_config.h files of MQTT demo folder
+ * and the reference implementation of logging-stack in demos.
+ *
+ * #define LogError( X )           MyErrorLoggingFunction( X )
+ * #define LogWarn( X )            MyWarnLoggingFunction( X )
+ * #define LogInfo( X )            MyInfoLoggingFunction( X )
+ * #define LogDebug( X )           MyDebugLoggingFunction( X )
+ *
+ * <b>Default values</b>: Logging is turned off, and no code is generated for logging calls
+ * in the MQTT library on compilation.
+ */
+#ifndef LogError
+    #define LogError( message )
+#endif
+#ifndef LogWarn
+    #define LogWarn( message )
+#endif
+#ifndef LogInfo
+    #define LogInfo( message )
+#endif
+#ifndef LogDebug
+    #define LogDebug( message )
+#endif
 
 #endif /* ifndef MQTT_CONFIG_DEFAULTS_H_ */
