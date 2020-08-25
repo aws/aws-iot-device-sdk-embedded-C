@@ -12,6 +12,7 @@ cwd
 dns
 endif
 errno
+errornumber
 filelabel
 filepath
 filepaths

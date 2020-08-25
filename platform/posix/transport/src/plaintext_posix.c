@@ -85,7 +85,7 @@ static void logTransportError( int32_t errorNumber )
             break;
 
         default:
-            LogError( ( "Unexpected error code: error number=%d", errorNumber ) );
+            LogError( ( "Unexpected error code: errno=%d.", errorNumber ) );
             break;
     }
 }
