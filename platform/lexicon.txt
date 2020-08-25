@@ -17,6 +17,7 @@ errornumber
 filelabel
 filepath
 filepaths
+filetype
 functionname
 functionpage
 functionspage
