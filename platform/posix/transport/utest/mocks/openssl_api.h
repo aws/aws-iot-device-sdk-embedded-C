@@ -38,10 +38,6 @@ struct ssl_method_st
     int filler;
 };
 
-#undef SSL_set_max_send_fragment
-#undef SSL_set_tlsext_host_name
-#undef SSL_CTX_set_mode
-
 /* The functions prototypes below are used by CMock to generate mocks
  * for any OpenSSL API calls used by the OpenSSL transport wrapper.
  *
@@ -69,21 +65,17 @@ extern int SSL_set_alpn_protos( SSL * ssl,
                                 const unsigned char * protos,
                                 unsigned int protos_len );
 
-extern int SSL_set_max_send_fragment( SSL * ssl,
-                                      long m );
-
 extern void SSL_set_default_read_buffer_len( SSL * s,
                                              size_t len );
-
-extern int SSL_set_tlsext_host_name( const SSL * s,
-                                     const char * name );
 
 extern SSL_CTX * SSL_CTX_new( const SSL_METHOD * meth );
 
 extern const SSL_METHOD * TLS_client_method( void );
 
-extern long SSL_CTX_set_mode( SSL_CTX * ctx,
-                              long mode );
+extern long SSL_CTX_ctrl( SSL_CTX * ctx,
+                          int cmd,
+                          long larg,
+                          void * parg );
 
 extern SSL * SSL_new( SSL_CTX * ctx );
 
@@ -102,11 +94,16 @@ extern void SSL_CTX_free( SSL_CTX * );
 
 extern void SSL_free( SSL * ssl );
 
+/* Macro wrappers:
+ * SSL_CTX_set_mode */
 extern long SSL_CTX_ctrl( SSL_CTX * ctx,
                           int cmd,
                           long larg,
                           void * parg );
 
+/* Macro wrappers:
+ * SSL_set_tlsext_host_name
+ * SSL_set_max_send_fragment */
 extern long SSL_ctrl( SSL * ssl,
                       int cmd,
                       long larg,

@@ -16,8 +16,9 @@ list(APPEND mock_list
             /usr/include/arpa/inet.h
             /usr/include/x86_64-linux-gnu/sys/socket.h
             /usr/include/netdb.h
-            ${CMAKE_CURRENT_LIST_DIR}/mocks/close.h
+            ${CMAKE_CURRENT_LIST_DIR}/mocks/unistd_api.h
             ${CMAKE_CURRENT_LIST_DIR}/mocks/openssl_api.h
+            ${CMAKE_CURRENT_LIST_DIR}/mocks/stdio_api.h
             ${PLATFORM_DIR}/posix/transport/include/sockets_posix.h
         )
 # list the directories your mocks need
@@ -63,7 +64,7 @@ set(real_name "sockets_real")
 
 create_mock_list(${mock_name}
                 "${mock_list}"
-                "${ROOT_DIR}/tools/cmock/project.yml"
+                "${ROOT_DIR}/tools/cmock/transport.yml"
                 "${mock_include_list}"
                 "${mock_define_list}"
         )
@@ -97,6 +98,7 @@ set(real_source_files
         ${OPENSSL_TRANSPORT_SOURCES}
         )
 set(real_name "openssl_real")
+
 create_real_library(${real_name}
                     "${real_source_files}"
                     "${real_include_directories}"
