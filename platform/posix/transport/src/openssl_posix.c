@@ -374,6 +374,7 @@ static void setOptionalConfigurations( SSL * pSsl,
                                        const OpensslCredentials_t * pOpensslCredentials )
 {
     int32_t sslStatus = -1;
+    uint64_t readBufferLength = 0;
 
     assert( pSsl != NULL );
     assert( pOpensslCredentials != NULL );
@@ -402,7 +403,7 @@ static void setOptionalConfigurations( SSL * pSsl,
 
         /* Set the maximum send fragment length. */
         sslStatus = ( int32_t ) SSL_set_max_send_fragment( pSsl,
-                                                           pOpensslCredentials->maxFragmentLength );
+                                                           ( int64_t ) pOpensslCredentials->maxFragmentLength );
 
         if( sslStatus != 1 )
         {
@@ -411,11 +412,20 @@ static void setOptionalConfigurations( SSL * pSsl,
         }
         else
         {
+            /* MISRA Rule 10.8 flags the following line for casting of a composite
+             * expression of signed type to essential type unsigned. This rule is
+             * suppressed because #SSL3_RT_MAX_ENCRYPTED_OVERHEAD is defined by
+             * openssl library to be a composite expression of signed type.
+             * However, #SSL_set_default_read_buffer_len() function requires the
+             * length parameter to be of unsigned type. */
+            /* coverity[misra_c_2012_rule_10_8_violation] */
+            readBufferLength = pOpensslCredentials->maxFragmentLength +
+                               ( uint64_t ) SSL3_RT_MAX_ENCRYPTED_OVERHEAD;
+
             /* Change the size of the read buffer to match the
              * maximum fragment length + some extra bytes for overhead. */
             SSL_set_default_read_buffer_len( pSsl,
-                                             pOpensslCredentials->maxFragmentLength +
-                                             ( uint64_t ) SSL3_RT_MAX_ENCRYPTED_OVERHEAD );
+                                             readBufferLength );
         }
     }
 
@@ -425,6 +435,11 @@ static void setOptionalConfigurations( SSL * pSsl,
         LogDebug( ( "Setting server name %s for SNI.",
                     pOpensslCredentials->sniHostName ) );
 
+        /* MISRA Rule 11.8 flags the following line for removing the const
+         * qualifier from the point to type. This rule is suppressed because
+         * openssl implementation of #SSL_set_tlsext_host_name internally casts
+         * the pointer to a string literal to a `void *` pointer. */
+        /* coverity[misra_c_2012_rule_11_8_violation] */
         sslStatus = ( int32_t ) SSL_set_tlsext_host_name( pSsl,
                                                           pOpensslCredentials->sniHostName );
 
