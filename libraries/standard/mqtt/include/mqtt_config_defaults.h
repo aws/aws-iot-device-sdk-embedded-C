@@ -92,7 +92,7 @@
  * the MQTT library build.
  *
  * @note The logging macros are called in MQTT library with parameters wrapped in
- * double parantheses to be ISO C89/C90 standard compliant. For an example
+ * double parentheses to be ISO C89/C90 standard compliant. For an example
  * implementation of the logging macros, refer to mqtt_config.h files of MQTT demo folder
  * and the reference implementation of logging-stack in demos.
  *
