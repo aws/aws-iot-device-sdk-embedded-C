@@ -59,7 +59,7 @@ a group so that it will appear in the custom Doxygen pages.
     #define MQTT_PACKET_ID_INVALID    ( ( uint16_t ) 0U )
 
     /**
-     * @ingroup mqtt_callbacks_types
+     * @ingroup mqtt_callback_types
      * @brief Application provided callback to retrieve the current time in
      * milliseconds.
      *
@@ -103,7 +103,7 @@ For our CI to detect files correctly, please keep the folder name as *doc/doxyge
 and all of the files names the same.
 
     ```console
-    cp -r <csdk_root>/doc/doxygen_templates <library_root>/doc/doxygen
+    cp -R <csdk_root>/doc/doxygen_templates <library_root>/doc/doxygen
     ```
 
 1. Search for "FIXME"s in <library_root>/doc/doxygen/config.doxygen and update with

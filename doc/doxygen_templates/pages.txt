@@ -4,8 +4,6 @@
 
 [<FIXME: Some useful overview text>]
 
-Please see https://github.com/aws/aws-iot-device-sdk-embedded-C/ for example code demonstrating integration with TLS.
-
 @section [<FIXME: Lowercase library name>]_memory_requirements Memory Requirements
 @brief Memory requirements of the [<FIXME: Library name>] library.
 <table>
@@ -78,7 +76,7 @@ Configuration settings are C pre-processor constants. They can be set with a \#d
 @copydoc [<FIXME: Function name>]
 */
 
-<!-- We do not use doxygen ALIASs here because there have been issues in the past versions with "^^" newlines within the alias definition. -->
+<!-- We do not use doxygen ALIASes here because there have been issues in the past versions with "^^" newlines within the alias definition. -->
 /**
 @defgroup [<FIXME: Lowercase library name>]_enum_types Enumerated Types
 @brief Enumerated types of the [<FIXME: Library name>] library
