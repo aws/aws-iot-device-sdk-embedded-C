@@ -110,7 +110,7 @@ SocketStatus_t Plaintext_Disconnect( const NetworkContext_t * pNetworkContext )
 }
 /*-----------------------------------------------------------*/
 
-int32_t Plaintext_Recv( NetworkContext_t * pNetworkContext,
+int32_t Plaintext_Recv( const NetworkContext_t * pNetworkContext,
                         void * pBuffer,
                         size_t bytesToRecv )
 {
@@ -143,7 +143,7 @@ int32_t Plaintext_Recv( NetworkContext_t * pNetworkContext,
 }
 /*-----------------------------------------------------------*/
 
-int32_t Plaintext_Send( NetworkContext_t * pNetworkContext,
+int32_t Plaintext_Send( const NetworkContext_t * pNetworkContext,
                         const void * pBuffer,
                         size_t bytesToSend )
 {
