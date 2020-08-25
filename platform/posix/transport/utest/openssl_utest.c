@@ -13,6 +13,7 @@
 #include "mock_inet.h"
 #include "mock_openssl_api.h"
 #include "mock_sockets_posix.h"
+#include "mock_stdio_api.h"
 
 #define NUM_ADDR_INFO        3
 #define SEND_RECV_TIMEOUT    0
@@ -24,20 +25,6 @@
 static ServerInfo_t serverInfo = { 0 };
 static OpensslCredentials_t opensslCredentials = { 0 };
 static NetworkContext_t networkContext = { 0 };
-
-static void (* func_ptr[])() =
-{
-    Sockets_Connect_ExpectAnyArgsAndReturn,
-    TLS_client_method_ExpectAndReturn,
-    SSL_CTX_new_ExpectAnyArgsAndReturn
-};
-
-static void * successReturnVal[] =
-{
-    SOCKETS_SUCCESS
-    NULL,
-    NULL
-};
 
 /* ============================   UNITY FIXTURES ============================ */
 
@@ -70,50 +57,178 @@ int suiteTearDown( int numFailures )
 
 /* ========================================================================== */
 
-static void failNthExpectedMethodFromConnect( int index )
+static OpensslStatus_t convertToOpensslStatus( SocketStatus_t socketStatus )
 {
+    OpensslStatus_t opensslStatus = OPENSSL_INVALID_PARAMETER;
+
+    switch( socketStatus )
+    {
+        case SOCKETS_SUCCESS:
+            opensslStatus = OPENSSL_SUCCESS;
+            break;
+
+        case SOCKETS_INVALID_PARAMETER:
+            opensslStatus = OPENSSL_INVALID_PARAMETER;
+            break;
+
+        case SOCKETS_DNS_FAILURE:
+            opensslStatus = OPENSSL_DNS_FAILURE;
+            break;
+
+        case SOCKETS_CONNECT_FAILURE:
+            opensslStatus = OPENSSL_CONNECT_FAILURE;
+            break;
+
+        default:
+            LogError( ( "Unexpected status received from socket wrapper: Socket status = %u",
+                        socketStatus ) );
+    }
+
+    return opensslStatus;
+}
+
+static OpensslStatus_t failNthExpectedMethodFromConnect( int n,
+                                                         void * retValue )
+{
+    int index = 0;
+    SSL_METHOD sslMethod;
+    SSL_CTX sslCtx;
+    FILE rootCaFile;
+    X509 rootCa;
+    X509_STORE CaStore;
+
+    /* If index matches n,
+     * then we should fail and return the correct status to expect. */
+    if( index == n )
+    {
+        TEST_ASSERT_NOT_NULL( retValue );
+        SocketStatus_t socketStatus = *( ( SocketStatus_t * ) retValue );
+        Sockets_Connect_ExpectAnyArgsAndReturn( socketStatus );
+        return convertToOpensslStatus( socketStatus );
+    }
+    else
+    {
+        Sockets_Connect_ExpectAnyArgsAndReturn( SOCKETS_SUCCESS );
+        index++;
+    }
+
+    TLS_client_method_ExpectAndReturn( &sslMethod );
+    index++;
+
+    if( index == n )
+    {
+        SSL_CTX_new_ExpectAnyArgsAndReturn( ( SSL_CTX * ) retValue );
+        return OPENSSL_API_ERROR;
+    }
+    else
+    {
+        SSL_CTX_new_ExpectAnyArgsAndReturn( &sslCtx );
+        index++;
+    }
+
+    SSL_CTX_set_mode_ExpectAnyArgsAndReturn( 1 );
+    index++;
+
+    if( index == n )
+    {
+        fopen_ExpectAnyArgsAndReturn( NULL );
+        return OPENSSL_INVALID_CREDENTIALS;
+    }
+    else
+    {
+        fopen_ExpectAnyArgsAndReturn( &rootCaFile );
+        index++;
+    }
+
+    if( index == n )
+    {
+        PEM_read_X509_ExpectAnyArgsAndReturn( NULL );
+        return OPENSSL_INVALID_CREDENTIALS;
+    }
+    else
+    {
+        PEM_read_X509_ExpectAnyArgsAndReturn( &rootCa );
+        index++;
+    }
+
+    SSL_CTX_get_cert_store_ExpectAnyArgsAndReturn( &CaStore );
+    index++;
+
+    if( index == n )
+    {
+        X509_STORE_add_cert_ExpectAnyArgsAndReturn( -1 );
+        return OPENSSL_INVALID_CREDENTIALS;
+    }
+    else
+    {
+        X509_STORE_add_cert_ExpectAnyArgsAndReturn( 1 );
+        index++;
+    }
 }
 
 void test_Openssl_Connect_Invalid_Params( void )
 {
-    OpensslStatus_t opensslStatus;
+    OpensslStatus_t returnStatus, expectedStatus;
+    SocketStatus_t socketError;
 
-    opensslStatus = Openssl_Connect( NULL,
-                                     &serverInfo,
-                                     &opensslCredentials,
-                                     SEND_RECV_TIMEOUT,
-                                     SEND_RECV_TIMEOUT );
-    TEST_ASSERT_EQUAL( OPENSSL_INVALID_PARAMETER, opensslStatus );
+    returnStatus = Openssl_Connect( NULL,
+                                    &serverInfo,
+                                    &opensslCredentials,
+                                    SEND_RECV_TIMEOUT,
+                                    SEND_RECV_TIMEOUT );
+    TEST_ASSERT_EQUAL( OPENSSL_INVALID_PARAMETER, returnStatus );
+
+    /* Fail Sockets_Connect(...) */
 
     /* NULL serverInfo is handled by Sockets_Connect, so we appropriately
      * return SOCKETS_INVALID_PARAMETER. */
-    Sockets_Connect_ExpectAnyArgsAndReturn( SOCKETS_INVALID_PARAMETER );
-    opensslStatus = Openssl_Connect( &networkContext,
-                                     NULL,
-                                     &opensslCredentials,
-                                     SEND_RECV_TIMEOUT,
-                                     SEND_RECV_TIMEOUT );
-    TEST_ASSERT_EQUAL( OPENSSL_INVALID_PARAMETER, opensslStatus );
+    socketError = SOCKETS_INVALID_PARAMETER;
+    expectedStatus = failNthExpectedMethodFromConnect( 0, &socketError );
+    returnStatus = Openssl_Connect( &networkContext,
+                                    NULL,
+                                    &opensslCredentials,
+                                    SEND_RECV_TIMEOUT,
+                                    SEND_RECV_TIMEOUT );
+    TEST_ASSERT_EQUAL( expectedStatus, returnStatus );
 
-    opensslStatus = Openssl_Connect( &networkContext,
-                                     &serverInfo,
-                                     NULL,
-                                     SEND_RECV_TIMEOUT,
-                                     SEND_RECV_TIMEOUT );
-    TEST_ASSERT_EQUAL( OPENSSL_INVALID_PARAMETER, opensslStatus );
+    /* Suppose a DNS failure occurs from the call to the sockets connect wrapper. */
+    socketError = SOCKETS_DNS_FAILURE;
+    expectedStatus = failNthExpectedMethodFromConnect( 0, &socketError );
+    returnStatus = Openssl_Connect( &networkContext,
+                                    &serverInfo,
+                                    &opensslCredentials,
+                                    SEND_RECV_TIMEOUT,
+                                    SEND_RECV_TIMEOUT );
+    TEST_ASSERT_EQUAL( expectedStatus, returnStatus );
+
+    /* Suppose a connection failure occurs from the call to the sockets connect wrapper. */
+    socketError = SOCKETS_CONNECT_FAILURE;
+    expectedStatus = failNthExpectedMethodFromConnect( 0, &socketError );
+    returnStatus = Openssl_Connect( &networkContext,
+                                    NULL,
+                                    &opensslCredentials,
+                                    SEND_RECV_TIMEOUT,
+                                    SEND_RECV_TIMEOUT );
+    TEST_ASSERT_EQUAL( expectedStatus, returnStatus );
+
+    returnStatus = Openssl_Connect( &networkContext,
+                                    &serverInfo,
+                                    NULL,
+                                    SEND_RECV_TIMEOUT,
+                                    SEND_RECV_TIMEOUT );
+    TEST_ASSERT_EQUAL( OPENSSL_INVALID_PARAMETER, returnStatus );
 }
 
-void test_Openssl_Connect_SSL_CTX_new_fails( void )
+void test_Openssl_Connect_API_calls_fail( void )
 {
-    OpensslStatus_t opensslStatus;
+    OpensslStatus_t returnStatus, expectedStatus;
 
-    Sockets_Connect_ExpectAnyArgsAndReturn( SOCKETS_SUCCESS );
-    TLS_client_method_ExpectAndReturn( NULL );
-    SSL_CTX_new_ExpectAnyArgsAndReturn( NULL );
-    opensslStatus = Openssl_Connect( &networkContext,
-                                     &serverInfo,
-                                     &opensslCredentials,
-                                     SEND_RECV_TIMEOUT,
-                                     SEND_RECV_TIMEOUT );
-    TEST_ASSERT_EQUAL( OPENSSL_API_ERROR, opensslStatus );
+    /* Fail SSL_CTX_new(...) */
+    expectedStatus = failNthExpectedMethodFromConnect( 2, NULL );
+    returnStatus = Openssl_Connect( &networkContext,
+                                    &serverInfo,
+                                    &opensslCredentials,
+                                    SEND_RECV_TIMEOUT,
+                                    SEND_RECV_TIMEOUT );
+    TEST_ASSERT_EQUAL( expectedStatus, returnStatus );
 }
