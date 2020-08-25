@@ -173,7 +173,7 @@ static SocketStatus_t connectToAddress( struct sockaddr * pAddrInfo,
     /* Convert port from host byte order to network byte order. */
     netPort = htons( port );
 
-    if( pAddrInfo->sa_family == AF_INET )
+    if( pAddrInfo->sa_family == ( sa_family_t ) AF_INET )
     {
         /* MISRA Rule 11.3 flags the following line for casting a pointer of
          * a object type to a pointer of a different object type. This rule
@@ -235,8 +235,9 @@ static SocketStatus_t attemptConnection( struct addrinfo * pListHead,
                                          int32_t maxAttempts )
 {
     SocketStatus_t returnStatus = SOCKETS_CONNECT_FAILURE;
-    struct addrinfo * pIndex = NULL;
+    const struct addrinfo * pIndex = NULL;
     int32_t curAttempts = 0;
+    int8_t breakFromLoop = 0;
 
     assert( pListHead != NULL );
     assert( pHostName != NULL );
@@ -269,19 +270,28 @@ static SocketStatus_t attemptConnection( struct addrinfo * pListHead,
         /* If connected to an IP address successfully, exit from the loop. */
         if( returnStatus == SOCKETS_SUCCESS )
         {
-            break;
+            breakFromLoop = 1;
         }
 
-        curAttempts += 1;
-
-        if( ( maxAttempts >= 0 ) && ( curAttempts >= maxAttempts ) )
+        if( breakFromLoop == 0 )
         {
-            /* Fail if no connection could be established. */
-            LogError( ( "Could not connect to any resolved IP address from %.*s "
-                        "after %d attempts.",
-                        ( int32_t ) hostNameLength,
-                        pHostName,
-                        curAttempts ) );
+            curAttempts += 1;
+
+            if( ( maxAttempts >= 0 ) && ( curAttempts >= maxAttempts ) )
+            {
+                /* Fail if no connection could be established. */
+                LogError( ( "Could not connect to any resolved IP address from %.*s "
+                            "after %d attempts.",
+                            ( int32_t ) hostNameLength,
+                            pHostName,
+                            curAttempts ) );
+                /* Exit loop if number of attempts has exceeded maximum attempts. */
+                breakFromLoop = 1;
+            }
+        }
+
+        if( breakFromLoop == 1 )
+        {
             break;
         }
     }
