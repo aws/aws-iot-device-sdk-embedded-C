@@ -20,9 +20,9 @@
  */
 
 /**
- * @file mqtt_config.h.template
- * @brief This represents a template of the mqtt_config.h file required by the MQTT
- * library. All the macros shown in this file
+ * @file mqtt_config.h
+ * @brief This represents a template of the mqtt_config.h file for definining
+ * preprocessor macros that configure the the MQTT library.
  */
 
 #ifndef MQTT_CONFIG_H_
@@ -60,8 +60,31 @@
  * macro sets the limit on how many simultaneous PUBLISH states an MQTT
  * context maintains.
  *
+ * <b>Possible values:</b> Any positive 32 bit integer. <br>
  *
+ * Following is an example definition:
+ *
+ * @code{c}
  *  #define MQTT_STATE_ARRAY_MAX_COUNT          ( 10U )
+ * @endcode
+ */
+
+/**
+ * @brief The number of retries for receiving CONNACK.
+ *
+ * The MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT will be used only when the
+ * timeoutMs parameter of #MQTT_Connect is passed as 0 . The transport
+ * receive for CONNACK will be retried MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT
+ * times before timing out. A value of 0 for this config will cause the
+ * transport receive for CONNACK  to be invoked only once.
+ *
+ * <b>Possible values:</b> Any positive 16 bit integer. <br>
+ *
+ * Following is an example definition:
+ *
+ * @code{c}
+ *  #define MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT    ( 5U )
+ * @endcode
  */
 
 /**
@@ -71,8 +94,13 @@
  * If a ping response is not received before this timeout, then
  * #MQTT_ProcessLoop will return #MQTTKeepAliveTimeout.
  *
+ * <b>Possible values:</b> Any positive integer up to SIZE_MAX. <br>
  *
- * #define MQTT_PINGRESP_TIMEOUT_MS             ( 500U )
+ * Following is an example definition:
+ *
+ * @code{c}
+ *  #define MQTT_PINGRESP_TIMEOUT_MS             ( 500U )
+ * @endcode
  */
 
 #endif /* ifndef MQTT_CONFIG_H_ */
