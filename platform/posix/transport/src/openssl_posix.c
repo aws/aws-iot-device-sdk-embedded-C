@@ -436,7 +436,7 @@ static void setOptionalConfigurations( SSL * pSsl,
                     pOpensslCredentials->sniHostName ) );
 
         /* MISRA Rule 11.8 flags the following line for removing the const
-         * qualifier from the point to type. This rule is suppressed because
+         * qualifier from the pointed to type. This rule is suppressed because
          * openssl implementation of #SSL_set_tlsext_host_name internally casts
          * the pointer to a string literal to a `void *` pointer. */
         /* coverity[misra_c_2012_rule_11_8_violation] */
