@@ -44,16 +44,20 @@
 
 uint32_t Clock_GetTimeMs( void )
 {
-    uint64_t timeMs;
+    int64_t timeMs;
     struct timespec timeSpec;
 
     /* Get the MONOTONIC time. */
     ( void ) clock_gettime( CLOCK_MONOTONIC, &timeSpec );
 
     /* Calculate the milliseconds from timespec. */
-    timeMs = ( uint64_t ) ( ( timeSpec.tv_sec * MILLISECONDS_PER_SECOND )
-                            + ( timeSpec.tv_nsec / NANOSECONDS_PER_MILLISECOND ) );
+    timeMs = ( timeSpec.tv_sec * MILLISECONDS_PER_SECOND )
+             + ( timeSpec.tv_nsec / NANOSECONDS_PER_MILLISECOND );
 
+    /* Libraries need only the lower 32 bits of the time in milliseconds, since
+     * this function is used only for a calculating the time difference.
+     * Also, the possible overflows of this time value is handled in the
+     * libraries. */
     return ( uint32_t ) timeMs;
 }
 
