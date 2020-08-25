@@ -26,7 +26,6 @@
 #include <assert.h>
 #include <string.h>
 #include "mqtt_state.h"
-#include "private/mqtt_internal.h"
 
 /*-----------------------------------------------------------*/
 

@@ -27,7 +27,6 @@
 #include <assert.h>
 
 #include "mqtt_lightweight.h"
-#include "private/mqtt_internal.h"
 
 /**
  * @brief MQTT protocol version 3.1.1.
