@@ -20,13 +20,13 @@
  */
 
 /**
- * @file mqtt_config.h
- * @brief This represents a template of the mqtt_config.h file for definining
- * preprocessor macros that configure the the MQTT library.
+ * @file mqtt_config_defaults.h
+ * @brief This represents the default values for the configuration macros
+ * for the MQTT library.
  */
 
-#ifndef MQTT_CONFIG_H_
-#define MQTT_CONFIG_H_
+#ifndef MQTT_CONFIG_DEFAULTS_H_
+#define MQTT_CONFIG_DEFAULTS_H_
 
 /**
  * @brief Definition of logging macros to map logging calls within MQTT
@@ -35,9 +35,6 @@
  * Each logging macro represents a different logging level. Only define those
  * logging macros whose corresponding logging level messages are desired in
  * the MQTT library build.
- *
- * By default, logging is turned off, and no code is generated for logging calls
- * in the MQTT library on compilation.
  *
  * @note The logging macros are called in MQTT library with paramerers wrapped in
  * double parantheses to be ISO C89/C90 standard compliant. For an example
@@ -48,7 +45,22 @@
  * #define LogWarn( X )            MyWarnLoggingFunction( X )
  * #define LogInfo( X )            MyInfoLoggingFunction( X )
  * #define LogDebug( X )           MyDebugLoggingFunction( X )
+ *
+ * <b>Default values</b>: Logging is turned off, and no code is generated for logging calls
+ * in the MQTT library on compilation.
  */
+#ifndef LogError
+    #define LogError( message )
+#endif
+#ifndef LogWarn
+    #define LogWarn( message )
+#endif
+#ifndef LogInfo
+    #define LogInfo( message )
+#endif
+#ifndef LogDebug
+    #define LogDebug( message )
+#endif
 
 /**
  * @brief The maximum number of MQTT PUBLISH messages that may be pending
@@ -61,13 +73,12 @@
  * context maintains.
  *
  * <b>Possible values:</b> Any positive 32 bit integer. <br>
- *
- * Following is an example definition:
- *
- * @code{c}
- *  #define MQTT_STATE_ARRAY_MAX_COUNT          ( 10U )
- * @endcode
+ * <b>Default value:</b> `10`
  */
+#ifndef MQTT_STATE_ARRAY_MAX_COUNT
+    /* Default value for the maximum acknowledgement pending PUBLISH messages. */
+    #define MQTT_STATE_ARRAY_MAX_COUNT    ( 10U )
+#endif
 
 /**
  * @brief The number of retries for receiving CONNACK.
@@ -79,13 +90,12 @@
  * transport receive for CONNACK  to be invoked only once.
  *
  * <b>Possible values:</b> Any positive 16 bit integer. <br>
- *
- * Following is an example definition:
- *
- * @code{c}
- *  #define MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT    ( 5U )
- * @endcode
+ * <b>Default value:</b> `5`
  */
+#ifndef MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT
+    /* Default value for the CONNACK receive retries. */
+    #define MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT    ( 5U )
+#endif
 
 /**
  * @brief Number of milliseconds to wait for a ping response to a ping
@@ -95,12 +105,12 @@
  * #MQTT_ProcessLoop will return #MQTTKeepAliveTimeout.
  *
  * <b>Possible values:</b> Any positive integer up to SIZE_MAX. <br>
- *
- * Following is an example definition:
- *
- * @code{c}
- *  #define MQTT_PINGRESP_TIMEOUT_MS             ( 500U )
- * @endcode
+ * <b>Default value:</b> `500`
  */
+#ifndef MQTT_PINGRESP_TIMEOUT_MS
+    /* Wait 0.5 seconds by default for a ping response. */
+    #define MQTT_PINGRESP_TIMEOUT_MS    ( 500U )
+#endif
 
-#endif /* ifndef MQTT_CONFIG_H_ */
+
+#endif /* ifndef MQTT_CONFIG_DEFAULTS_H_ */
