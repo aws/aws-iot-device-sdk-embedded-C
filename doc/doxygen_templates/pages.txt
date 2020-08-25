@@ -6,6 +6,9 @@
 
 @section [<FIXME: Lowercase library name>]_memory_requirements Memory Requirements
 @brief Memory requirements of the [<FIXME: Library name>] library.
+
+The configurations for memory estimation are defined <a href="https://github.com/FreeRTOS/FreeRTOS/tree/lts-development/tools/memory_estimator" target="_blank" rel="noopener noreferrer">here</a>.
+
 <table>
     <tr>
         <td colspan="3"><b>Code Size of [<FIXME: Library name and version>](example generated with GCC for ARM Cortex-M)</b></td>
@@ -21,7 +24,7 @@
         <td>[<FIXME: Code size>]</td>
     </tr>
     <tr>
-        <td><b>Total estimate (configurations defined <a href="https://github.com/FreeRTOS/FreeRTOS/tree/lts-development/tools/memory_estimator" target="_blank" rel="noopener noreferrer">here</a>)</b></td>
+        <td><b>Total estimates</b></td>
         <td>[<FIXME: Total code size>]</td>
         <td>[<FIXME: Total code size>]</td>
     </tr>
