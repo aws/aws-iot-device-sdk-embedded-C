@@ -51,8 +51,8 @@ uint32_t Clock_GetTimeMs( void )
     ( void ) clock_gettime( CLOCK_MONOTONIC, &timeSpec );
 
     /* Calculate the milliseconds from timespec. */
-    timeMs = ( timeSpec.tv_sec * MILLISECONDS_PER_SECOND )
-             + ( timeSpec.tv_nsec / NANOSECONDS_PER_MILLISECOND );
+    timeMs = ( uint64_t ) ( ( timeSpec.tv_sec * MILLISECONDS_PER_SECOND )
+                            + ( timeSpec.tv_nsec / NANOSECONDS_PER_MILLISECOND ) );
 
     return ( uint32_t ) timeMs;
 }
