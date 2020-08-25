@@ -83,7 +83,7 @@ Configuration settings are C pre-processor constants. They can be set with a \#d
 */
 
 /**
-@defgroup [<FIXME: Lowercase library name>]_callbacks_types Callback Types
+@defgroup [<FIXME: Lowercase library name>]_callback_types Callback Types
 @brief Callback function pointer types of the [<FIXME: Library name>] library
 */
 
