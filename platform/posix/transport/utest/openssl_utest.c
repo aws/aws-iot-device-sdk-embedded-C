@@ -25,6 +25,20 @@ static ServerInfo_t serverInfo = { 0 };
 static OpensslCredentials_t opensslCredentials = { 0 };
 static NetworkContext_t networkContext = { 0 };
 
+static void (* func_ptr[])() =
+{
+    Sockets_Connect_ExpectAnyArgsAndReturn,
+    TLS_client_method_ExpectAndReturn,
+    SSL_CTX_new_ExpectAnyArgsAndReturn
+};
+
+static void * successReturnVal[] =
+{
+    SOCKETS_SUCCESS
+    NULL,
+    NULL
+};
+
 /* ============================   UNITY FIXTURES ============================ */
 
 /* Called before each test method. */
@@ -56,6 +70,10 @@ int suiteTearDown( int numFailures )
 
 /* ========================================================================== */
 
+static void failNthExpectedMethodFromConnect( int index )
+{
+}
+
 void test_Openssl_Connect_Invalid_Params( void )
 {
     OpensslStatus_t opensslStatus;
@@ -83,4 +101,19 @@ void test_Openssl_Connect_Invalid_Params( void )
                                      SEND_RECV_TIMEOUT,
                                      SEND_RECV_TIMEOUT );
     TEST_ASSERT_EQUAL( OPENSSL_INVALID_PARAMETER, opensslStatus );
+}
+
+void test_Openssl_Connect_SSL_CTX_new_fails( void )
+{
+    OpensslStatus_t opensslStatus;
+
+    Sockets_Connect_ExpectAnyArgsAndReturn( SOCKETS_SUCCESS );
+    TLS_client_method_ExpectAndReturn( NULL );
+    SSL_CTX_new_ExpectAnyArgsAndReturn( NULL );
+    opensslStatus = Openssl_Connect( &networkContext,
+                                     &serverInfo,
+                                     &opensslCredentials,
+                                     SEND_RECV_TIMEOUT,
+                                     SEND_RECV_TIMEOUT );
+    TEST_ASSERT_EQUAL( OPENSSL_API_ERROR, opensslStatus );
 }

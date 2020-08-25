@@ -11,6 +11,8 @@
  * errors from parsing its macros.
  */
 
+/* These structs must be defined to avoid a build error because the
+ * they are set as opaque types by the OpenSSL library. */
 struct ssl_st
 {
     int filler;
@@ -39,6 +41,12 @@ struct ssl_method_st
 #undef SSL_set_max_send_fragment
 #undef SSL_set_tlsext_host_name
 #undef SSL_CTX_set_mode
+
+/* The functions prototypes below are used by CMock to generate mocks
+ * for any OpenSSL API calls used by the OpenSSL transport wrapper.
+ *
+ * IMPORTANT: If a new function is added to the OpenSSL transport wrapper,
+ * it MUST also be added here.*/
 
 extern int X509_STORE_add_cert( X509_STORE * ctx,
                                 X509 * x );
