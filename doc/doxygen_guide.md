@@ -1,5 +1,5 @@
 # Creating Doxygen documentation for a new library
-1. All supporting files were created with Doxygen version 1.8.19. Please download
+1. All supporting files were created with Doxygen version 1.8.20. Please download
 from https://sourceforge.net/projects/doxygen/files/.
 
 1. Your library API should have each function, data type, and constant documented 
