@@ -25,12 +25,7 @@ HARNESS_FILE=Shadow_GetTopicString_harness
 DEFINES +=
 INCLUDES +=
 
-# The thing name field length is bounded.
-MAX_THINGNAME_FIELD_LENGTH=128
-
 REMOVE_FUNCTION_BODY +=
-UNWINDSET += strncmp.0:$(MAX_THINGNAME_FIELD_LENGTH)
-UNWINDSET += __CPROVER_file_local_shadow_c_validateThingName.0:$(MAX_THINGNAME_FIELD_LENGTH)
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 PROOF_SOURCES += $(SRCDIR)/libraries/aws/shadow/cbmc/sources/shadow_cbmc_state.c

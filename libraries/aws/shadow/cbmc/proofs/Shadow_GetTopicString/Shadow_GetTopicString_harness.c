@@ -27,27 +27,23 @@
 #include "shadow.h"
 #include "shadow_cbmc_state.h"
 
-#ifndef TOPIC_STRING_LENGTH_MAX
-    #define TOPIC_STRING_LENGTH_MAX    ( 128U )
-#endif
-
-#define TEST_THING_NAME          "testThingName"
-#define TEST_THING_NAME_LENGTH   ( sizeof( TEST_THING_NAME ) - 1U )
-
 void harness()
 {
-    ShadowStatus_t shadowStatus = SHADOW_SUCCESS;
     char * topicBuffer;
     uint16_t bufferSize;
-    uint16_t outLength = 0;
+    uint16_t * pOutLength;
+    char * pThingName;
+    uint8_t thingNameLength;
+    uint8_t topicType;
 
-    __CPROVER_assume( bufferSize < TOPIC_STRING_LENGTH_MAX );
     topicBuffer = mallocCanFail( bufferSize );
+    pOutLength = mallocCanFail( sizeof( uint16_t ) );
+    pThingName = mallocCanFail( thingNameLength );
 
-    shadowStatus = Shadow_GetTopicString( ShadowTopicStringTypeUpdateDelta,
-                                          TEST_THING_NAME,
-                                          TEST_THING_NAME_LENGTH,
-                                          & ( topicBuffer[ 0 ] ),
-                                          bufferSize,
-                                          & outLength );
+    Shadow_GetTopicString( topicType,
+                           pThingName,
+                           thingNameLength,
+                           & ( topicBuffer[ 0 ] ),
+                           bufferSize,
+                           pOutLength );
 }

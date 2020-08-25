@@ -25,12 +25,17 @@ HARNESS_FILE=Shadow_MatchTopic_harness
 DEFINES +=
 INCLUDES +=
 
-# The thing name field length is bounded.
-MAX_THINGNAME_FIELD_LENGTH=128
+# The thing name field length is bounded because it's maximum length is 64KB which
+# we need to bound it because it's too long. 
+MAX_THINGNAME_FIELD_LENGTH=256
 
-UNWINDSET += strncmp.0:$(MAX_THINGNAME_FIELD_LENGTH)
+# The maximum length of the message type ( /shadow/update/documents ) is 24.
+UNWINDSET += strncmp.0:25
+
 UNWINDSET += __CPROVER_file_local_shadow_c_validateThingName.0:$(MAX_THINGNAME_FIELD_LENGTH)
-UNWINDSET += __CPROVER_file_local_shadow_c_extractShadowMessageType.0:$(MAX_THINGNAME_FIELD_LENGTH)
+
+# The number of message type is 8.
+UNWINDSET += __CPROVER_file_local_shadow_c_extractShadowMessageType.0:9
 
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
