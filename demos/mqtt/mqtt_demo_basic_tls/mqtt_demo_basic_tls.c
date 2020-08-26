@@ -266,6 +266,18 @@ static void eventCallback( MQTTContext_t * pMqttContext,
                            MQTTDeserializedInfo_t * pDeserializedInfo );
 
 /**
+ * @brief Initializes the MQTT library.
+ *
+ * @param[in, out] pMqttContext MQTT context pointer.
+ * @param[in] pNetworkContext The network context pointer.
+ *
+ * @return EXIT_SUCCESS if the MQTT library is initialized;
+ * EXIT_FAILURE otherwise.
+ */
+static int initializeMqtt( MQTTContext_t * pMqttContext,
+                           NetworkContext_t * pNetworkContext );
+
+/**
  * @brief Sends an MQTT CONNECT packet over the already connected TCP socket.
  *
  * @param[in] pMqttContext MQTT context pointer.
@@ -919,6 +931,46 @@ static int publishToTopic( MQTTContext_t * pMqttContext )
 
 /*-----------------------------------------------------------*/
 
+static int initializeMqtt( MQTTContext_t * pMqttContext,
+                           NetworkContext_t * pNetworkContext )
+{
+    int returnStatus = EXIT_SUCCESS;
+    MQTTStatus_t mqttStatus;
+    MQTTFixedBuffer_t networkBuffer;
+    TransportInterface_t transport;
+
+    assert( pMqttContext != NULL );
+    assert( pNetworkContext != NULL );
+
+    /* Fill in TransportInterface send and receive function pointers.
+     * For this demo, TCP sockets are used to send and receive data
+     * from network. Network context is SSL context for OpenSSL.*/
+    transport.pNetworkContext = pNetworkContext;
+    transport.send = Openssl_Send;
+    transport.recv = Openssl_Recv;
+
+    /* Fill the values for network buffer. */
+    networkBuffer.pBuffer = buffer;
+    networkBuffer.size = NETWORK_BUFFER_SIZE;
+
+    /* Initialize MQTT library. */
+    mqttStatus = MQTT_Init( pMqttContext,
+                            &transport,
+                            Clock_GetTimeMs,
+                            eventCallback,
+                            &networkBuffer );
+
+    if( mqttStatus != MQTTSuccess )
+    {
+        returnStatus = EXIT_FAILURE;
+        LogError( ( "MQTT init failed: Status = %s.", MQTT_Status_strerror( mqttStatus ) ) );
+    }
+
+    return returnStatus;
+}
+
+/*-----------------------------------------------------------*/
+
 static int subscribePublishLoop( MQTTContext_t * pMqttContext,
                                  bool * pClientSessionPresent )
 {
@@ -1099,46 +1151,6 @@ static int subscribePublishLoop( MQTTContext_t * pMqttContext,
         {
             returnStatus = disconnectMqttSession( pMqttContext );
         }
-    }
-
-    return returnStatus;
-}
-
-/*-----------------------------------------------------------*/
-
-static int initializeMqtt( MQTTContext_t * pMqttContext,
-                           NetworkContext_t * pNetworkContext )
-{
-    int returnStatus = EXIT_SUCCESS;
-    MQTTStatus_t mqttStatus;
-    MQTTFixedBuffer_t networkBuffer;
-    TransportInterface_t transport;
-
-    assert( pMqttContext != NULL );
-    assert( pNetworkContext != NULL );
-
-    /* Fill in TransportInterface send and receive function pointers.
-     * For this demo, TCP sockets are used to send and receive data
-     * from network. Network context is SSL context for OpenSSL.*/
-    transport.pNetworkContext = pNetworkContext;
-    transport.send = Openssl_Send;
-    transport.recv = Openssl_Recv;
-
-    /* Fill the values for network buffer. */
-    networkBuffer.pBuffer = buffer;
-    networkBuffer.size = NETWORK_BUFFER_SIZE;
-
-    /* Initialize MQTT library. */
-    mqttStatus = MQTT_Init( pMqttContext,
-                            &transport,
-                            Clock_GetTimeMs,
-                            eventCallback,
-                            &networkBuffer );
-
-    if( mqttStatus != MQTTSuccess )
-    {
-        returnStatus = EXIT_FAILURE;
-        LogError( ( "MQTT init failed: Status = %s.", MQTT_Status_strerror( mqttStatus ) ) );
     }
 
     return returnStatus;
