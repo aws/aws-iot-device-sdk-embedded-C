@@ -238,7 +238,7 @@ Lightweight functions of the MQTT library:<br><br>
 */
 
 /**
-@defgroup mqtt_callbacks_types Callback Types
+@defgroup mqtt_callback_types Callback Types
 @brief Callback function pointer types of the MQTT library
 */
 
