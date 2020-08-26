@@ -34,7 +34,6 @@ static NetworkContext_t networkContext = { 0 };
 typedef enum FunctionNames
 {
     Sockets_Connect_fn = 0,
-    TLS_client_method_fn,
     SSL_CTX_new_fn,
     fopen_fn,
     PEM_read_X509_fn,
@@ -153,7 +152,7 @@ static OpensslStatus_t failFunction_Openssl_Connect( FunctionNames_t functionToF
 
     if( functionToFail == SSL_CTX_new_fn )
     {
-        SSL_CTX_new_ExpectAnyArgsAndReturn( ( SSL_CTX * ) retValue );
+        SSL_CTX_new_ExpectAnyArgsAndReturn( NULL );
         returnStatus = OPENSSL_API_ERROR;
     }
     else if( returnStatus == OPENSSL_SUCCESS )
@@ -402,14 +401,31 @@ void test_Openssl_Connect_Invalid_Params( void )
     TEST_ASSERT_EQUAL( OPENSSL_INVALID_PARAMETER, returnStatus );
 }
 
-void test_Openssl_Connect_API_calls_fail( void )
+void test_Openssl_Connect_Initializing_Objects_Fails( void )
+{
+    OpensslStatus_t returnStatus, expectedStatus;
+    int i;
+    uint8_t initializers[] = { SSL_CTX_new_fn, SSL_new_fn, SSL_set_fd_fn };
+
+    for( i = 0; i < sizeof( initializers ); i++ )
+    {
+        expectedStatus = failFunction_Openssl_Connect( initializers[ i ],
+                                                       NULL );
+        returnStatus = Openssl_Connect( &networkContext,
+                                        &serverInfo,
+                                        &opensslCredentials,
+                                        SEND_RECV_TIMEOUT,
+                                        SEND_RECV_TIMEOUT );
+        TEST_ASSERT_EQUAL( expectedStatus, returnStatus );
+    }
+}
+
+void test_Openssl_Connect_Setting_TLS_Credentials_Fails( void )
 {
     OpensslStatus_t returnStatus, expectedStatus;
     int i;
 
-    /* The last iteration is one more that the enum for the function names, so as to
-     * get coverage for the happy path case. */
-    for( i = TLS_client_method_fn; i <= SSL_get_verify_result_fn + 1; i++ )
+    for( i = fopen_fn; i <= SSL_CTX_use_PrivateKey_file_fn; i++ )
     {
         expectedStatus = failFunction_Openssl_Connect( i, NULL );
         returnStatus = Openssl_Connect( &networkContext,
@@ -419,4 +435,54 @@ void test_Openssl_Connect_API_calls_fail( void )
                                         SEND_RECV_TIMEOUT );
         TEST_ASSERT_EQUAL( expectedStatus, returnStatus );
     }
+}
+
+void test_Openssl_Connect_Setting_TLS_Configurations_Fails( void )
+{
+    OpensslStatus_t returnStatus, expectedStatus;
+    int i;
+
+    for( i = SSL_set_alpn_protos_fn; i <= SSL_set_tlsext_host_name_fn; i++ )
+    {
+        expectedStatus = failFunction_Openssl_Connect( i, NULL );
+        returnStatus = Openssl_Connect( &networkContext,
+                                        &serverInfo,
+                                        &opensslCredentials,
+                                        SEND_RECV_TIMEOUT,
+                                        SEND_RECV_TIMEOUT );
+        TEST_ASSERT_EQUAL( expectedStatus, returnStatus );
+    }
+}
+
+void test_Openssl_Connect_Handshake_Fails( void )
+{
+    OpensslStatus_t returnStatus, expectedStatus;
+    int i;
+
+    for( i = SSL_connect_fn; i <= SSL_get_verify_result_fn; i++ )
+    {
+        expectedStatus = failFunction_Openssl_Connect( i, NULL );
+        returnStatus = Openssl_Connect( &networkContext,
+                                        &serverInfo,
+                                        &opensslCredentials,
+                                        SEND_RECV_TIMEOUT,
+                                        SEND_RECV_TIMEOUT );
+        TEST_ASSERT_EQUAL( expectedStatus, returnStatus );
+    }
+}
+
+void test_Openssl_Connect_Succeeds( void )
+{
+    OpensslStatus_t returnStatus, expectedStatus;
+
+    /* Set the parameter to one more that the max enum value of the function names
+     * so that no functions fail for this happy path case. */
+    expectedStatus = failFunction_Openssl_Connect( SSL_get_verify_result_fn + 1,
+                                                   NULL );
+    returnStatus = Openssl_Connect( &networkContext,
+                                    &serverInfo,
+                                    &opensslCredentials,
+                                    SEND_RECV_TIMEOUT,
+                                    SEND_RECV_TIMEOUT );
+    TEST_ASSERT_EQUAL( expectedStatus, returnStatus );
 }
