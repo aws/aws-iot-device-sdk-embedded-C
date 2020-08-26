@@ -96,7 +96,7 @@ struct MQTTContext;
 struct MQTTDeserializedInfo;
 
 /**
- * @ingroup mqtt_callbacks_types
+ * @ingroup mqtt_callback_types
  * @brief Application provided callback to retrieve the current time in
  * milliseconds.
  *
@@ -105,7 +105,7 @@ struct MQTTDeserializedInfo;
 typedef uint32_t (* MQTTGetCurrentTimeFunc_t )( void );
 
 /**
- * @ingroup mqtt_callbacks_types
+ * @ingroup mqtt_callback_types
  * @brief Application callback for receiving incoming publishes and incoming
  * acks.
  *
