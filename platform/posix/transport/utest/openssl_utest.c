@@ -21,6 +21,8 @@
 #define CLIENT_CERT_PATH     "\\fake\\path"
 #define PRIVATE_KEY_PATH     "/fake/path"
 #define SOCKET_FD            5
+#define MFLN                 42
+#define ALPN_PROTOS          "x-amzn-mqtt-ca"
 
 static ServerInfo_t serverInfo = { 0 };
 static OpensslCredentials_t opensslCredentials = { 0 };
@@ -61,6 +63,10 @@ void setUp()
     opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
     opensslCredentials.pClientCertPath = CLIENT_CERT_PATH;
     opensslCredentials.pPrivateKeyPath = PRIVATE_KEY_PATH;
+    opensslCredentials.pAlpnProtos = ALPN_PROTOS;
+    opensslCredentials.alpnProtosLen = strlen( ALPN_PROTOS );
+    opensslCredentials.maxFragmentLength = MFLN;
+    opensslCredentials.sniHostName = HOSTNAME;
 }
 
 /* Called after each test method. */
@@ -210,7 +216,15 @@ static OpensslStatus_t failFunction_Openssl_Connect( FunctionNames_t functionToF
 
         if( fileOpened )
         {
-            fclose_ExpectAnyArgsAndReturn( 0 );
+            /* Fail fclose on a branch path for coverage. */
+            if( functionToFail == PEM_read_X509_fn )
+            {
+                fclose_ExpectAnyArgsAndReturn( -1 );
+            }
+            else
+            {
+                fclose_ExpectAnyArgsAndReturn( 0 );
+            }
         }
     }
 
@@ -270,14 +284,14 @@ static OpensslStatus_t failFunction_Openssl_Connect( FunctionNames_t functionToF
         SSL_set_fd_ExpectAnyArgsAndReturn( 1 );
     }
 
+    /* For any functions that set optional TLS configurations,
+     * none of them should cause Openssl_Connect to fail even when they do. */
     if( ( opensslCredentials.pAlpnProtos != NULL ) &&
         ( opensslCredentials.alpnProtosLen > 0 ) )
     {
         if( functionToFail == SSL_set_alpn_protos_fn )
         {
             SSL_set_alpn_protos_ExpectAnyArgsAndReturn( 1 );
-            returnStatus = OPENSSL_API_ERROR;
-            failed = true;
         }
         else if( !failed )
         {
@@ -289,17 +303,11 @@ static OpensslStatus_t failFunction_Openssl_Connect( FunctionNames_t functionToF
     {
         if( functionToFail == SSL_set_max_send_fragment_fn )
         {
-            SSL_ctrl_ExpectAnyArgsAndReturn( -1 );
-            returnStatus = OPENSSL_API_ERROR;
-            failed = true;
+            SSL_ctrl_ExpectAnyArgsAndReturn( 0 );
         }
         else if( !failed )
         {
             SSL_ctrl_ExpectAnyArgsAndReturn( 1 );
-        }
-
-        if( !failed )
-        {
             SSL_set_default_read_buffer_len_ExpectAnyArgs();
         }
     }
@@ -308,9 +316,7 @@ static OpensslStatus_t failFunction_Openssl_Connect( FunctionNames_t functionToF
     {
         if( functionToFail == SSL_set_tlsext_host_name_fn )
         {
-            SSL_ctrl_ExpectAnyArgsAndReturn( -1 );
-            returnStatus = OPENSSL_API_ERROR;
-            failed = true;
+            SSL_ctrl_ExpectAnyArgsAndReturn( 0 );
         }
         else if( !failed )
         {
