@@ -415,6 +415,21 @@ char * allocateMaxDepthObject( void )
 }
 
 /**
+ * @brief Test that JSON_Validate is able to classify any null or bad parameters.
+ */
+void test_JSON_Validate_Invalid_Params( void )
+{
+    JSONStatus_t jsonStatus;
+
+    jsonStatus = JSON_Validate( NULL, 0 );
+    TEST_ASSERT_EQUAL( JSONNullParameter, jsonStatus );
+
+    jsonStatus = JSON_Validate( JSON_DOC_LEGAL_TRAILING_SPACE,
+                                0 );
+    TEST_ASSERT_EQUAL( JSONBadParameter, jsonStatus );
+}
+
+/**
  * @brief Test that JSON_Validate is able to classify valid JSON correctly.
  */
 void test_JSON_Validate_Legal_Documents( void )
