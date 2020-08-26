@@ -1,15 +1,9 @@
 #include "skipGeneric.h"
 
 /**
- * @brief Advance buffer index beyond some minimum value.
+ * See skipGeneric.h for docs
  *
- * This function models the behavior of most of the skip* functions
- * from json.c.
- *
- * @param[in] buf  The buffer to parse.
- * @param[in,out] start  The index at which to begin.
- * @param[in] max  The size of the buffer.
- * @param[in] min  The smallest size required for a true result.
+ * Advance buffer index beyond some minimum value.
  */
 static bool_ skipGeneric( const char * buf,
                           size_t * start,
