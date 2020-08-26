@@ -34,7 +34,7 @@
 /* This JSON document covers all cases where scalars are exponents, literals, numbers, and decimals. */
 #define JSON_DOC_VARIED_SCALARS                                                      \
     "{\"literal\":true, \"more_literals\": {\"literal2\":false, \"literal3\":null}," \
-    "\"exp1\": 5E+3, \"more_exponents\": [5e+2, 4e-2, 93E-5, 128E-6],  "             \
+    "\"exp1\": 5E+3, \"more_exponents\": [5e+2,\t4e-2,\r93E-5, 128E-6],\n "          \
     "\"number\": -123412, "                                                          \
     "\"decimal\":109238.42091289, "                                                  \
     "\"foo\":\"abc\",\"" FIRST_QUERY_KEY "\":" FIRST_QUERY_KEY_ANSWER "}"
@@ -42,6 +42,9 @@
 
 #define MULTIPLE_VALID_ESCAPES                             "\\\\ \\\" \\/ \\b \\f \\n \\r \\t \\\x12"
 #define MULTIPLE_VALID_ESCAPES_LENGTH                      ( sizeof( MULTIPLE_VALID_ESCAPES ) - 1 )
+
+#define JSON_DOC_QUERY_KEY_NOT_FOUND                       "{\"hello\": \"world\"}"
+#define JSON_DOC_QUERY_KEY_NOT_FOUND_LENGTH                ( sizeof( JSON_DOC_QUERY_KEY_NOT_FOUND ) - 1 )
 
 #define JSON_DOC_MULTIPLE_VALID_ESCAPES   \
     "{\"foo\":\"abc\",\"" FIRST_QUERY_KEY \
@@ -263,6 +266,10 @@
 /* Each skip function has a check that the iterator i has not exceeded the
  * length of the buffer. The cases below test that those checks work as intended. */
 
+/* Triggers the case in which i >= max for search. */
+#define PADDED_OPENING_CURLY_BRACKET           "  {  "
+#define PADDED_OPENING_CURLY_BRACKET_LENGTH    ( sizeof( PADDED_OPENING_CURLY_BRACKET ) - 1 )
+
 /* Triggers the case in which i >= max for skipUTF8MultiByte.
  * UTF-8 is illegal if the number of bytes in the sequence is
  * less than what was expected from the first byte. */
@@ -298,7 +305,7 @@
 #define CUT_AFTER_EXPONENT_MARKER_LENGTH         ( sizeof( CUT_AFTER_EXPONENT_MARKER ) - 1 )
 
 /* Triggers the case in which i >= max for skipString. */
-#define WHITE_SPACE                              " \t"
+#define WHITE_SPACE                              "    "
 #define WHITE_SPACE_LENGTH                       ( sizeof( WHITE_SPACE ) - 1 )
 
 /* Triggers the case in which i >= max for skipArrayScalars. */
@@ -737,6 +744,26 @@ void test_JSON_Search_Legal_Documents( void )
 }
 
 /**
+ * @brief Test that JSON_Search can returns JSONNotFound when a query key does
+ * not apply to a JSON document.
+ */
+void test_JSON_Search_Query_Key_Not_Found( void )
+{
+    JSONStatus_t jsonStatus;
+    char * outValue;
+    size_t outValueLength;
+
+    jsonStatus = JSON_Search( JSON_DOC_QUERY_KEY_NOT_FOUND,
+                              JSON_DOC_QUERY_KEY_NOT_FOUND_LENGTH,
+                              COMPLETE_QUERY_KEY,
+                              COMPLETE_QUERY_KEY_LENGTH,
+                              JSON_QUERY_SEPARATOR[ 0 ],
+                              &outValue,
+                              &outValueLength );
+    TEST_ASSERT_EQUAL( JSONNotFound, jsonStatus );
+}
+
+/**
  * @brief Test that JSON_Search can find the right value given an incorrect query
  * key or Illegal JSON string.
  */
@@ -745,6 +772,24 @@ void test_JSON_Search_Illegal_Documents( void )
     JSONStatus_t jsonStatus;
     char * outValue;
     size_t outValueLength;
+
+    jsonStatus = JSON_Search( WHITE_SPACE,
+                              WHITE_SPACE_LENGTH,
+                              COMPLETE_QUERY_KEY,
+                              COMPLETE_QUERY_KEY_LENGTH,
+                              JSON_QUERY_SEPARATOR[ 0 ],
+                              &outValue,
+                              &outValueLength );
+    TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
+
+    jsonStatus = JSON_Search( PADDED_OPENING_CURLY_BRACKET,
+                              PADDED_OPENING_CURLY_BRACKET_LENGTH,
+                              COMPLETE_QUERY_KEY,
+                              COMPLETE_QUERY_KEY_LENGTH,
+                              JSON_QUERY_SEPARATOR[ 0 ],
+                              &outValue,
+                              &outValueLength );
+    TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
 
     jsonStatus = JSON_Search( CUT_AFTER_OBJECT_OPEN_BRACE,
                               CUT_AFTER_OBJECT_OPEN_BRACE_LENGTH,
