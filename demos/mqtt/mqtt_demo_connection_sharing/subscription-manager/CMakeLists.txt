@@ -13,5 +13,5 @@ target_include_directories(
     ${LIBRARY_NAME}
     PUBLIC
         ${LOGGING_INCLUDE_DIRS}
+        ${CMAKE_CURRENT_LIST_DIR}
 )
-

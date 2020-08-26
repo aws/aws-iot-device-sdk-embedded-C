@@ -28,7 +28,6 @@
  * @brief CBOR encode/decode routines for AWS IoT Over-the-Air updates.
  */
 
-#include "FreeRTOS.h"
 #include "cbor.h"
 #include "aws_iot_ota_cbor.h"
 #include "aws_iot_ota_cbor_internal.h"
@@ -51,13 +50,13 @@ typedef struct OTAMessageDecodeContext
 /**
  * @brief Decode a Get Stream response message from AWS IoT OTA.
  */
-BaseType_t OTA_CBOR_Decode_GetStreamResponseMessage( const uint8_t * pucMessageBuffer,
-                                                     size_t xMessageSize,
-                                                     int32_t * plFileId,
-                                                     int32_t * plBlockId,
-                                                     int32_t * plBlockSize,
-                                                     uint8_t ** ppucPayload,
-                                                     size_t * pxPayloadSize )
+bool OTA_CBOR_Decode_GetStreamResponseMessage( const uint8_t * pucMessageBuffer,
+                                               size_t xMessageSize,
+                                               int32_t * plFileId,
+                                               int32_t * plBlockId,
+                                               int32_t * plBlockSize,
+                                               uint8_t ** ppucPayload,
+                                               size_t * pxPayloadSize )
 {
     CborError xCborResult = CborNoError;
     CborParser xCborParser;
@@ -170,16 +169,6 @@ BaseType_t OTA_CBOR_Decode_GetStreamResponseMessage( const uint8_t * pucMessageB
 
     if( CborNoError == xCborResult )
     {
-        *ppucPayload = pvPortMalloc( *pxPayloadSize );
-
-        if( NULL == *ppucPayload )
-        {
-            xCborResult = CborErrorOutOfMemory;
-        }
-    }
-
-    if( CborNoError == xCborResult )
-    {
         xCborResult = cbor_value_copy_byte_string( &xCborValue,
                                                    *ppucPayload,
                                                    pxPayloadSize,
@@ -196,16 +185,16 @@ BaseType_t OTA_CBOR_Decode_GetStreamResponseMessage( const uint8_t * pucMessageB
  * service. The service allows block count or block bitmap to be requested,
  * but not both.
  */
-BaseType_t OTA_CBOR_Encode_GetStreamRequestMessage( uint8_t * pucMessageBuffer,
-                                                    size_t xMessageBufferSize,
-                                                    size_t * pxEncodedMessageSize,
-                                                    const char * pcClientToken,
-                                                    int32_t lFileId,
-                                                    int32_t lBlockSize,
-                                                    int32_t lBlockOffset,
-                                                    uint8_t * pucBlockBitmap,
-                                                    size_t xBlockBitmapSize,
-                                                    int32_t lNumOfBlocksRequested )
+bool OTA_CBOR_Encode_GetStreamRequestMessage( uint8_t * pucMessageBuffer,
+                                              size_t xMessageBufferSize,
+                                              size_t * pxEncodedMessageSize,
+                                              const char * pcClientToken,
+                                              int32_t lFileId,
+                                              int32_t lBlockSize,
+                                              int32_t lBlockOffset,
+                                              uint8_t * pucBlockBitmap,
+                                              size_t xBlockBitmapSize,
+                                              int32_t lNumOfBlocksRequested )
 {
     CborError xCborResult = CborNoError;
     CborEncoder xCborEncoder, xCborMapEncoder;

@@ -33,12 +33,11 @@
 #include <stdio.h>
 
 /* MQTT includes. */
-#include "iot_mqtt.h"
+#include "mqtt.h"
 
 /* OTA includes. */
 #include "aws_iot_ota_agent.h"
 #include "aws_iot_ota_agent_internal.h"
-#include "aws_application_version.h"
 #include "aws_iot_ota_cbor.h"
 
 /* General constants. */
@@ -148,7 +147,7 @@ static bool prvSubscribeToJobNotificationTopics( const OTA_AgentContext_t * pxAg
 
     bool bResult = false;
     char pcJobTopic[ OTA_MAX_TOPIC_LEN ];
-    IotMqttSubscription_t stJobsSubscription;
+    MQTTSubscribeInfo_t stJobsSubscription[ 1 ];
     IotMqttError_t eResult = IOT_MQTT_STATUS_PENDING;
     uint16_t usTopicLen = 0;
     OTA_ConnectionContext_t * pvConnContext = pxAgentCtx->pvConnectionContext;
@@ -161,22 +160,19 @@ static bool prvSubscribeToJobNotificationTopics( const OTA_AgentContext_t * pxAg
 
     /* Clear subscription struct and set common parameters for job topics used by OTA. */
     memset( &stJobsSubscription, 0, sizeof( stJobsSubscription ) );
-    stJobsSubscription.qos = IOT_MQTT_QOS_1;
-    stJobsSubscription.pTopicFilter = ( const char * ) pcJobTopic;        /* Point to local string storage. Built below. */
-    stJobsSubscription.callback.pCallbackContext = ( void * ) pxAgentCtx; /*lint !e923 The publish callback context is implementing data hiding with a void* type.*/
-    stJobsSubscription.callback.function = prvJobPublishCallback;
-    stJobsSubscription.topicFilterLength = usTopicLen;
+    stJobsSubscription[ 0 ].qos = MQTTQoS1;
+    stJobsSubscription[ 0 ].pTopicFilter = ( const char * ) pcJobTopic;
+    stJobsSubscription[ 0 ].topicFilterLength = usTopicLen;
 
     if( ( usTopicLen > 0U ) && ( usTopicLen < sizeof( pcJobTopic ) ) )
     {
         /* Subscribe to the first of two jobs topics. */
-        eResult = IotMqtt_TimedSubscribe( pvConnContext->pvControlClient,
-                                          &stJobsSubscription,
-                                          1, /* Subscriptions count */
-                                          0, /* flags */
-                                          OTA_SUBSCRIBE_WAIT_MS );
+        eResult = MQTT_Subscribe( pvConnContext->pvControlClient,
+                                  stJobsSubscription,
+                                  1, /* Subscriptions count */
+                                  MQTT_GetPacketId( pvConnContext->pvControlClient ) );
 
-        if( eResult == IOT_MQTT_SUCCESS )
+        if( eResult == MQTTSuccess )
         {
             OTA_LOG_L1( "[%s] OK: %s\n\r", OTA_METHOD_NAME, stJobsSubscription.pTopicFilter );
             /* Build the second topic. */
@@ -191,17 +187,16 @@ static bool prvSubscribeToJobNotificationTopics( const OTA_AgentContext_t * pxAg
         }
     }
 
-    if( ( eResult == IOT_MQTT_SUCCESS ) && ( usTopicLen > 0U ) && ( usTopicLen < sizeof( pcJobTopic ) ) )
+    if( ( eResult == MQTTSuccess ) && ( usTopicLen > 0U ) && ( usTopicLen < sizeof( pcJobTopic ) ) )
     {
         /* Subscribe to the second of two jobs topics. */
         stJobsSubscription.topicFilterLength = usTopicLen;
-        eResult = IotMqtt_TimedSubscribe( pvConnContext->pvControlClient,
-                                          &stJobsSubscription,
-                                          1, /* Subscriptions count */
-                                          0, /* flags */
-                                          OTA_SUBSCRIBE_WAIT_MS );
+        eResult = MQTT_Subscribe( pvConnContext->pvControlClient,
+                                  stJobsSubscription,
+                                  1, /* Subscriptions count */
+                                  MQTT_GetPacketId( pvConnContext->pvControlClient ) );
 
-        if( eResult == IOT_MQTT_SUCCESS )
+        if( eResult == MQTTSuccess )
         {
             OTA_LOG_L1( "[%s] OK: %s\n\r", OTA_METHOD_NAME, stJobsSubscription.pTopicFilter );
             bResult = true;
@@ -758,26 +753,25 @@ OTA_Err_t prvInitFileTransfer_Mqtt( OTA_AgentContext_t * pxAgentCtx )
 
     OTA_Err_t xResult = kOTA_Err_PublishFailed;
     char pcOTA_RxStreamTopic[ OTA_MAX_TOPIC_LEN ];
-    IotMqttSubscription_t xOTAUpdateDataSubscription;
+    MQTTSubscribeInfo_t xOTAUpdateDataSubscription[ 1 ];
+    OTA_ConnectionContext_t * pvConnContext = pxAgentCtx->pvConnectionContext;
 
     memset( &xOTAUpdateDataSubscription, 0, sizeof( xOTAUpdateDataSubscription ) );
-    xOTAUpdateDataSubscription.qos = IOT_MQTT_QOS_0;
-    xOTAUpdateDataSubscription.pTopicFilter = ( const char * ) pcOTA_RxStreamTopic;
-    xOTAUpdateDataSubscription.callback.pCallbackContext = ( void * ) pxAgentCtx;              /*lint !e923 The publish callback context is implementing data hiding with a void* type.*/
-    xOTAUpdateDataSubscription.callback.function = prvDataPublishCallback;
-    xOTAUpdateDataSubscription.topicFilterLength = ( uint16_t ) snprintf( pcOTA_RxStreamTopic, /*lint -e586 Intentionally using snprintf. */
-                                                                          sizeof( pcOTA_RxStreamTopic ),
-                                                                          pcOTA_StreamData_TopicTemplate,
-                                                                          pxAgentCtx->pcThingName,
-                                                                          ( const char * ) pxAgentCtx->pxOTA_Files->pucStreamName );
+    xOTAUpdateDataSubscription[ 0 ].qos = IOT_MQTT_QOS_0;
+    xOTAUpdateDataSubscription[ 0 ].pTopicFilter = ( const char * ) pcOTA_RxStreamTopic;
+    xOTAUpdateDataSubscription[ 0 ].topicFilterLength = ( uint16_t ) snprintf( pcOTA_RxStreamTopic, /*lint -e586 Intentionally using snprintf. */
+                                                                               sizeof( pcOTA_RxStreamTopic ),
+                                                                               pcOTA_StreamData_TopicTemplate,
+                                                                               pxAgentCtx->pcThingName,
+                                                                               ( const char * ) pxAgentCtx->pxOTA_Files->pucStreamName );
 
-    if( ( xOTAUpdateDataSubscription.topicFilterLength > 0U ) && ( xOTAUpdateDataSubscription.topicFilterLength < sizeof( pcOTA_RxStreamTopic ) ) )
+    if( ( xOTAUpdateDataSubscription[ 0 ].topicFilterLength > 0U ) &&
+        ( xOTAUpdateDataSubscription[ 0 ].topicFilterLength < sizeof( pcOTA_RxStreamTopic ) ) )
     {
-        if( IotMqtt_TimedSubscribe( ( ( OTA_ConnectionContext_t * ) pxAgentCtx->pvConnectionContext )->pvControlClient,
-                                    &xOTAUpdateDataSubscription,
-                                    1, /* Subscriptions count */
-                                    0, /* flags */
-                                    OTA_SUBSCRIBE_WAIT_MS ) != IOT_MQTT_SUCCESS )
+        if( MQTT_Subscribe( pvConnContext->pvControlClient,
+                            xOTAUpdateDataSubscription,
+                            1, /* Subscriptions count */
+                            MQTT_GetPacketId( pvConnContext->pvControlClient ) ) != MQTTSuccess )
         {
             OTA_LOG_L1( "[%s] Failed: %s\n\r", OTA_METHOD_NAME, xOTAUpdateDataSubscription.pTopicFilter );
         }

@@ -18,7 +18,7 @@ target_include_directories(ota
 )
 
 target_link_libraries(ota
-    PRIVATE ota_mqtt ota_http ota_pal jsmn
+    PRIVATE ota_mqtt ota_pal jsmn
 )
 
 # Link to this INTERFACE target to enable the MQTT backend.

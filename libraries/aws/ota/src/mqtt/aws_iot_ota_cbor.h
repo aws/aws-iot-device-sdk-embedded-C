@@ -29,27 +29,27 @@
 /**
  * @brief Decode a Get Stream response message from AWS IoT OTA.
  */
-BaseType_t OTA_CBOR_Decode_GetStreamResponseMessage( const uint8_t * pucMessageBuffer,
-                                                     size_t xMessageSize,
-                                                     int32_t * plFileId,
-                                                     int32_t * plBlockId,
-                                                     int32_t * plBlockSize,
-                                                     uint8_t ** ppucPayload,
-                                                     size_t * pxPayloadSize );
+bool OTA_CBOR_Decode_GetStreamResponseMessage( const uint8_t * pucMessageBuffer,
+                                               size_t xMessageSize,
+                                               int32_t * plFileId,
+                                               int32_t * plBlockId,
+                                               int32_t * plBlockSize,
+                                               uint8_t ** ppucPayload,
+                                               size_t * pxPayloadSize );
 
 /**
  * @brief Create an encoded Get Stream Request message for the AWS IoT OTA
  * service.
  */
-BaseType_t OTA_CBOR_Encode_GetStreamRequestMessage( uint8_t * pucMessageBuffer,
-                                                    size_t xMessageBufferSize,
-                                                    size_t * pxEncodedMessageSize,
-                                                    const char * pcClientToken,
-                                                    int32_t lFileId,
-                                                    int32_t lBlockSize,
-                                                    int32_t lBlockOffset,
-                                                    uint8_t * pucBlockBitmap,
-                                                    size_t xBlockBitmapSize,
-                                                    int32_t lNumOfBlocksRequested );
+bool OTA_CBOR_Encode_GetStreamRequestMessage( uint8_t * pucMessageBuffer,
+                                              size_t xMessageBufferSize,
+                                              size_t * pxEncodedMessageSize,
+                                              const char * pcClientToken,
+                                              int32_t lFileId,
+                                              int32_t lBlockSize,
+                                              int32_t lBlockOffset,
+                                              uint8_t * pucBlockBitmap,
+                                              size_t xBlockBitmapSize,
+                                              int32_t lNumOfBlocksRequested );
 
 #endif /* ifndef __AWS_OTACBOR__H__ */

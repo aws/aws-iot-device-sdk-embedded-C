@@ -29,9 +29,6 @@ if( ${BUILD_TESTS} )
     link_directories("${CMAKE_BINARY_DIR}/lib"
             )
 
-    # Include the 3rdparty CMakeLists.txt for CMock build configuration.
-    add_subdirectory(${3RDPARTY_DIR})
-
     # Add a target for running coverage on tests.
     add_custom_target(coverage
         COMMAND ${CMAKE_COMMAND} -P ${CMAKE_SOURCE_DIR}/tools/cmock/coverage.cmake
@@ -39,6 +36,9 @@ if( ${BUILD_TESTS} )
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     )
 endif()
+
+# Include the 3rdparty CMakeLists.txt.
+add_subdirectory(${3RDPARTY_DIR})
 
 # Add all CMakeLists.txts in the standard folder.
 file(GLOB standard_modules "${MODULES_DIR}/standard/*")
