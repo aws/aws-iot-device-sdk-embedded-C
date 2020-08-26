@@ -8,6 +8,7 @@ bytestosend
 ca
 com
 const
+coverity
 cwd
 dns
 endif
@@ -28,11 +29,13 @@ implemenation
 ip
 inc
 iot
+ip
 logpath
 malloc
 maxattempts
 messagelevel
 mfln
+misra
 mqtt
 nano
 networkcontext
@@ -66,10 +69,13 @@ sendtimeout
 sendtimeoutms
 sleeptimems
 sni
+sockaddr
 socketstatus
 sockets_invalid_parameter
 src
 ssl
+stddef
+struct
 sublicense
 tcp
 tcpsocket
