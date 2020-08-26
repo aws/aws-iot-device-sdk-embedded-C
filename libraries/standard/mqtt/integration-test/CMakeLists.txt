@@ -10,6 +10,7 @@ set(project_name "mqtt_system")
 # list the files you would like to test here
 list(APPEND real_source_files
             ${MQTT_SOURCES}
+            ${LIGHTWEIGHT_MQTT_SOURCES}
         )
 # list the directories the module under test includes
 list(APPEND real_include_directories
