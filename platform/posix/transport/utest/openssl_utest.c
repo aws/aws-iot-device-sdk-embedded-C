@@ -121,7 +121,7 @@ static OpensslStatus_t failFunction_Openssl_Connect( FunctionNames_t functionToF
                                                      void * retValue )
 {
     OpensslStatus_t returnStatus = OPENSSL_SUCCESS;
-    bool failed = false, fileOpened = false,
+    bool fileOpened = false,
          sslCtxCreated = false, sslCreated = false;
     SSL ssl;
     SSL_METHOD sslMethod;
@@ -139,15 +139,14 @@ static OpensslStatus_t failFunction_Openssl_Connect( FunctionNames_t functionToF
         SocketStatus_t socketStatus = *( ( SocketStatus_t * ) retValue );
         Sockets_Connect_ExpectAnyArgsAndReturn( socketStatus );
         returnStatus = convertToOpensslStatus( socketStatus );
-        failed = true;
     }
-    else if( !failed )
+    else if( returnStatus == OPENSSL_SUCCESS )
     {
         Sockets_Connect_ExpectAnyArgsAndReturn( SOCKETS_SUCCESS );
     }
 
     /* Calls like this can't fail no matter what you return. */
-    if( !failed )
+    if( returnStatus == OPENSSL_SUCCESS )
     {
         TLS_client_method_ExpectAndReturn( &sslMethod );
     }
@@ -156,9 +155,8 @@ static OpensslStatus_t failFunction_Openssl_Connect( FunctionNames_t functionToF
     {
         SSL_CTX_new_ExpectAnyArgsAndReturn( ( SSL_CTX * ) retValue );
         returnStatus = OPENSSL_API_ERROR;
-        failed = true;
     }
-    else if( !failed )
+    else if( returnStatus == OPENSSL_SUCCESS )
     {
         SSL_CTX_new_ExpectAnyArgsAndReturn( &sslCtx );
         sslCtxCreated = true;
@@ -168,7 +166,7 @@ static OpensslStatus_t failFunction_Openssl_Connect( FunctionNames_t functionToF
     {
         /* SSL_CTX_set_mode is actually what the API uses, but CMock expects the
          * actual method rather than the macro wrapper. */
-        if( !failed )
+        if( returnStatus == OPENSSL_SUCCESS )
         {
             SSL_CTX_ctrl_ExpectAnyArgsAndReturn( 1 );
             getcwd_ExpectAnyArgsAndReturn( ROOT_CA_CERT_PATH );
@@ -179,9 +177,8 @@ static OpensslStatus_t failFunction_Openssl_Connect( FunctionNames_t functionToF
         {
             fopen_ExpectAnyArgsAndReturn( NULL );
             returnStatus = OPENSSL_INVALID_CREDENTIALS;
-            failed = true;
         }
-        else if( !failed )
+        else if( returnStatus == OPENSSL_SUCCESS )
         {
             fopen_ExpectAnyArgsAndReturn( &rootCaFile );
             fileOpened = true;
@@ -191,14 +188,13 @@ static OpensslStatus_t failFunction_Openssl_Connect( FunctionNames_t functionToF
         {
             PEM_read_X509_ExpectAnyArgsAndReturn( NULL );
             returnStatus = OPENSSL_INVALID_CREDENTIALS;
-            failed = true;
         }
-        else if( !failed )
+        else if( returnStatus == OPENSSL_SUCCESS )
         {
             PEM_read_X509_ExpectAnyArgsAndReturn( &rootCa );
         }
 
-        if( !failed )
+        if( returnStatus == OPENSSL_SUCCESS )
         {
             SSL_CTX_get_cert_store_ExpectAnyArgsAndReturn( &CaStore );
         }
@@ -207,9 +203,8 @@ static OpensslStatus_t failFunction_Openssl_Connect( FunctionNames_t functionToF
         {
             X509_STORE_add_cert_ExpectAnyArgsAndReturn( -1 );
             returnStatus = OPENSSL_INVALID_CREDENTIALS;
-            failed = true;
         }
-        else if( !failed )
+        else if( returnStatus == OPENSSL_SUCCESS )
         {
             X509_STORE_add_cert_ExpectAnyArgsAndReturn( 1 );
         }
@@ -234,9 +229,8 @@ static OpensslStatus_t failFunction_Openssl_Connect( FunctionNames_t functionToF
         {
             SSL_CTX_use_certificate_chain_file_ExpectAnyArgsAndReturn( -1 );
             returnStatus = OPENSSL_INVALID_CREDENTIALS;
-            failed = true;
         }
-        else if( !failed )
+        else if( returnStatus == OPENSSL_SUCCESS )
         {
             SSL_CTX_use_certificate_chain_file_ExpectAnyArgsAndReturn( 1 );
         }
@@ -248,9 +242,8 @@ static OpensslStatus_t failFunction_Openssl_Connect( FunctionNames_t functionToF
         {
             SSL_CTX_use_PrivateKey_file_ExpectAnyArgsAndReturn( -1 );
             returnStatus = OPENSSL_INVALID_CREDENTIALS;
-            failed = true;
         }
-        else if( !failed )
+        else if( returnStatus == OPENSSL_SUCCESS )
         {
             SSL_CTX_use_PrivateKey_file_ExpectAnyArgsAndReturn( 1 );
         }
@@ -260,15 +253,14 @@ static OpensslStatus_t failFunction_Openssl_Connect( FunctionNames_t functionToF
     {
         SSL_new_ExpectAnyArgsAndReturn( NULL );
         returnStatus = OPENSSL_API_ERROR;
-        failed = true;
     }
-    else if( !failed )
+    else if( returnStatus == OPENSSL_SUCCESS )
     {
         SSL_new_ExpectAnyArgsAndReturn( &ssl );
         sslCreated = true;
     }
 
-    if( !failed )
+    if( returnStatus == OPENSSL_SUCCESS )
     {
         SSL_set_verify_ExpectAnyArgs();
     }
@@ -277,9 +269,8 @@ static OpensslStatus_t failFunction_Openssl_Connect( FunctionNames_t functionToF
     {
         SSL_set_fd_ExpectAnyArgsAndReturn( -1 );
         returnStatus = OPENSSL_API_ERROR;
-        failed = true;
     }
-    else if( !failed )
+    else if( returnStatus == OPENSSL_SUCCESS )
     {
         SSL_set_fd_ExpectAnyArgsAndReturn( 1 );
     }
@@ -293,7 +284,7 @@ static OpensslStatus_t failFunction_Openssl_Connect( FunctionNames_t functionToF
         {
             SSL_set_alpn_protos_ExpectAnyArgsAndReturn( 1 );
         }
-        else if( !failed )
+        else if( returnStatus == OPENSSL_SUCCESS )
         {
             SSL_set_alpn_protos_ExpectAnyArgsAndReturn( 0 );
         }
@@ -305,7 +296,7 @@ static OpensslStatus_t failFunction_Openssl_Connect( FunctionNames_t functionToF
         {
             SSL_ctrl_ExpectAnyArgsAndReturn( 0 );
         }
-        else if( !failed )
+        else if( returnStatus == OPENSSL_SUCCESS )
         {
             SSL_ctrl_ExpectAnyArgsAndReturn( 1 );
             SSL_set_default_read_buffer_len_ExpectAnyArgs();
@@ -318,7 +309,7 @@ static OpensslStatus_t failFunction_Openssl_Connect( FunctionNames_t functionToF
         {
             SSL_ctrl_ExpectAnyArgsAndReturn( 0 );
         }
-        else if( !failed )
+        else if( returnStatus == OPENSSL_SUCCESS )
         {
             SSL_ctrl_ExpectAnyArgsAndReturn( 1 );
         }
@@ -328,9 +319,8 @@ static OpensslStatus_t failFunction_Openssl_Connect( FunctionNames_t functionToF
     {
         SSL_connect_ExpectAnyArgsAndReturn( -1 );
         returnStatus = OPENSSL_HANDSHAKE_FAILED;
-        failed = true;
     }
-    else if( !failed )
+    else if( returnStatus == OPENSSL_SUCCESS )
     {
         SSL_connect_ExpectAnyArgsAndReturn( 1 );
     }
@@ -339,9 +329,8 @@ static OpensslStatus_t failFunction_Openssl_Connect( FunctionNames_t functionToF
     {
         SSL_get_verify_result_ExpectAnyArgsAndReturn( -1 );
         returnStatus = OPENSSL_HANDSHAKE_FAILED;
-        failed = true;
     }
-    else if( !failed )
+    else if( returnStatus == OPENSSL_SUCCESS )
     {
         SSL_get_verify_result_ExpectAnyArgsAndReturn( X509_V_OK );
     }
