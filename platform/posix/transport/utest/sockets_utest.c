@@ -11,7 +11,7 @@
 #include "mock_netdb.h"
 #include "mock_socket.h"
 #include "mock_inet.h"
-#include "mock_close.h"
+#include "mock_unistd_api.h"
 
 /* The number of #addrinfo objects to create in the linked list. */
 #define NUM_ADDR_INFO        3

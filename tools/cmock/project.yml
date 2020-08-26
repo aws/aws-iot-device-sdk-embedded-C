@@ -4,7 +4,7 @@
   :when_no_prototypes: :warn
   :enforce_strict_ordering: TRUE
   :plugins:
-    - :ignore_stateless
+    - :ignore
     - :ignore_arg
     - :expect_any_args
     - :array
@@ -29,3 +29,6 @@
   :strippables:
     - PRIVILEGED_FUNCTION
     - portDONT_DISCARD
+    # These keywords are found in many POSIX APIs but is stripped as it cannot be parsed by CMock.
+    - __restrict
+    - \s__THROW
