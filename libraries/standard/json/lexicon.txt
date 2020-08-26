@@ -21,14 +21,17 @@ foo
 ifndef
 inc
 json
+jsonbadparameter
 jsonillegaldocument
 jsonmaxdepthexceeded
 jsonnotfound
+jsonnullparameter
 jsonpartial
 jsonsuccess
 keylength
 len
 misra
+msb
 multibyte
 nextkeyvaluepair
 noninfringement
