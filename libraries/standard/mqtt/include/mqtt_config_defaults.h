@@ -92,13 +92,13 @@
  * @brief Macro that is called in the MQTT library for logging "Error" level
  * messages.
  *
- * To enable error logging from MQTT library, this macro should be mapped to the
+ * To enable error level logging in the MQTT library, this macro should be mapped to the
  * application-specific logging implementation that supports error logging.
  *
- * @note The logging macro is called in MQTT library with parameters wrapped in
+ * @note This logging macro is called in the MQTT library with parameters wrapped in
  * double parentheses to be ISO C89/C90 standard compliant. For an example
- * implementation of the logging macros, refer to mqtt_config.h files of MQTT demo folder
- * and the reference implementation of logging-stack in demos.
+ * implementation of the logging macros, refer to mqtt_config.h files in the MQTT 
+ * demo folder and the reference implementation of the logging-stack in demos.
  *
  * <b>Default value</b>: Error logging is turned off, and no code is generated for calls
  * to the macro in the MQTT library on compilation.
@@ -111,13 +111,13 @@
  * @brief Macro that is called in the MQTT library for logging "Warning" level
  * messages.
  *
- * To enable logging of warning messages, this macro should be mapped to the
+ * To enable warning level logging in the MQTT library, this macro should be mapped to the
  * application-specific logging implementation that supports warning logging.
  *
- * @note The logging macro is called in MQTT library with parameters wrapped in
+ * @note This logging macro is called in the MQTT library with parameters wrapped in
  * double parentheses to be ISO C89/C90 standard compliant. For an example
- * implementation of the logging macros, refer to mqtt_config.h files of MQTT demo folder
- * and the reference implementation of logging-stack in demos.
+ * implementation of the logging macros, refer to mqtt_config.h files in the MQTT 
+ * demo folder and the reference implementation of the logging-stack in demos.
  *
  * <b>Default value</b>: Warning logs are turned off, and no code is generated for calls
  * to the macro in the MQTT library on compilation.
@@ -130,13 +130,13 @@
  * @brief Macro that is called in the MQTT library for logging "Info" level
  * messages.
  *
- * To enable info level logging from MQTT library, this macro should be mapped to the
+ * To enable info level logging in the MQTT library, this macro should be mapped to the
  * application-specific logging implementation that supports info logging.
  *
- * @note The logging macro is called in MQTT library with parameters wrapped in
+ * @note This logging macro is called in the MQTT library with parameters wrapped in
  * double parentheses to be ISO C89/C90 standard compliant. For an example
- * implementation of the logging macros, refer to mqtt_config.h files of MQTT demo folder
- * and the reference implementation of logging-stack in demos.
+ * implementation of the logging macros, refer to mqtt_config.h files in the MQTT 
+ * demo folder and the reference implementation of the logging-stack in demos.
  *
  * <b>Default value</b>: Info logging is turned off, and no code is generated for calls
  * to the macro in the MQTT library on compilation.
@@ -152,10 +152,10 @@
  * To enable debug level logging from MQTT library, this macro should be mapped to the
  * application-specific logging implementation that supports debug logging.
  *
- * @note The logging macro is called in MQTT library with parameters wrapped in
+ * @note This logging macro is called in the MQTT library with parameters wrapped in
  * double parentheses to be ISO C89/C90 standard compliant. For an example
- * implementation of the logging macros, refer to mqtt_config.h files of MQTT demo folder
- * and the reference implementation of logging-stack in demos.
+ * implementation of the logging macros, refer to mqtt_config.h files in the MQTT 
+ * demo folder and the reference implementation of the logging-stack in demos.
  *
  * <b>Default value</b>: Debug logging is turned off, and no code is generated for calls
  * to the macro in the MQTT library on compilation.
