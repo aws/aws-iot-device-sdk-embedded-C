@@ -174,7 +174,13 @@
 #define ILLEGAL_UTF8_START_F5             \
     "{\"foo\":\"abc\",\"" FIRST_QUERY_KEY \
     "\":{\"" SECOND_QUERY_KEY "\" : \"\xF5\"}}"
-#define ILLEGAL_UTF8_START_F5_LENGTH                 ( sizeof( ILLEGAL_UTF8_START_F5 ) - 1 )
+#define ILLEGAL_UTF8_START_F5_LENGTH    ( sizeof( ILLEGAL_UTF8_START_F5 ) - 1 )
+
+/* Additional bytes must match 10xxxxxx, so this case is illegal UTF8. */
+#define ILLEGAL_UTF8_NEXT_BYTES           \
+    "{\"foo\":\"abc\",\"" FIRST_QUERY_KEY \
+    "\":{\"" SECOND_QUERY_KEY "\" : \"\xc2\xC0\"}}"
+#define ILLEGAL_UTF8_NEXT_BYTES_LENGTH               ( sizeof( ILLEGAL_UTF8_NEXT_BYTES ) - 1 )
 
 #define ILLEGAL_UTF8_SURROGATE_RANGE_MIN  \
     "{\"foo\":\"abc\",\"" FIRST_QUERY_KEY \
@@ -214,6 +220,21 @@
     "\":{\"" SECOND_QUERY_KEY "\" : \"\\ude07\\uD83D\"}}"
 #define UNICODE_PREMATURE_LOW_SURROGATE_LENGTH              ( sizeof( UNICODE_PREMATURE_LOW_SURROGATE ) - 1 )
 
+#define UNICODE_INVALID_LOWERCASE_HEX     \
+    "{\"foo\":\"abc\",\"" FIRST_QUERY_KEY \
+    "\":{\"" SECOND_QUERY_KEY "\" : \"\\uge07\\uD83D\"}}"
+#define UNICODE_INVALID_LOWERCASE_HEX_LENGTH                ( sizeof( UNICODE_INVALID_LOWERCASE_HEX ) - 1 )
+
+#define UNICODE_INVALID_UPPERCASE_HEX     \
+    "{\"foo\":\"abc\",\"" FIRST_QUERY_KEY \
+    "\":{\"" SECOND_QUERY_KEY "\" : \"\\ude07\\uG83D\"}}"
+#define UNICODE_INVALID_UPPERCASE_HEX_LENGTH                ( sizeof( UNICODE_INVALID_UPPERCASE_HEX ) - 1 )
+
+#define UNICODE_NON_LETTER_OR_DIGIT_HEX   \
+    "{\"foo\":\"abc\",\"" FIRST_QUERY_KEY \
+    "\":{\"" SECOND_QUERY_KEY "\" : \"\\u\0e07\\uG83D\"}}"
+#define UNICODE_NON_LETTER_OR_DIGIT_HEX_LENGTH              ( sizeof( UNICODE_NON_LETTER_OR_DIGIT_HEX ) - 1 )
+
 #define UNICODE_VALID_HIGH_NO_LOW_SURROGATE \
     "{\"foo\":\"abc\",\"" FIRST_QUERY_KEY   \
     "\":{\"" SECOND_QUERY_KEY "\" : \"\\uD83D. Hello there!\"}}"
@@ -251,11 +272,18 @@
     "\":{\"" SECOND_QUERY_KEY "\" : \"\\\"}}"
 #define ESCAPE_CHAR_ALONE_LENGTH    ( sizeof( ESCAPE_CHAR_ALONE ) - 1 )
 
-/* Any escape character less than 0x21 is considered illegal. */
-#define UNKNOWN_ESCAPE                    \
+/* Valid control characters are those in the range of (NUL,SPACE).
+ * Therefore, both cases below are invalid. */
+#define SPACE_CONTROL_CHAR                \
     "{\"foo\":\"abc\",\"" FIRST_QUERY_KEY \
-    "\":{\"" SECOND_QUERY_KEY "\" : \"\\\x20\"}}"
-#define UNKNOWN_ESCAPE_LENGTH    ( sizeof( UNKNOWN_ESCAPE ) - 1 )
+    "\":{\"" SECOND_QUERY_KEY "\" : \"\\ \"}}"
+#define SPACE_CONTROL_CHAR_LENGTH    ( sizeof( SPACE_CONTROL_CHAR ) - 1 )
+
+/* \x80 implies a single one in the MSB, leading to a negative value. */
+#define LT_ZERO_CONTROL_CHAR              \
+    "{\"foo\":\"abc\",\"" FIRST_QUERY_KEY \
+    "\":{\"" SECOND_QUERY_KEY "\" : \"\\\x80 \"}}"
+#define LT_ZERO_CONTROL_CHAR_LENGTH    ( sizeof( LT_ZERO_CONTROL_CHAR ) - 1 )
 
 /* An unescaped control character is considered ILLEGAL. */
 #define UNESCAPED_CONTROL_CHAR            \
@@ -494,7 +522,10 @@ void test_JSON_Validate_Illegal_Documents( void )
     jsonStatus = JSON_Validate( NUL_ESCAPE, NUL_ESCAPE_LENGTH );
     TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
 
-    jsonStatus = JSON_Validate( UNKNOWN_ESCAPE, UNKNOWN_ESCAPE_LENGTH );
+    jsonStatus = JSON_Validate( SPACE_CONTROL_CHAR, SPACE_CONTROL_CHAR_LENGTH );
+    TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
+
+    jsonStatus = JSON_Validate( LT_ZERO_CONTROL_CHAR, LT_ZERO_CONTROL_CHAR_LENGTH );
     TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
 
     jsonStatus = JSON_Validate( CLOSING_SQUARE_BRACKET,
@@ -548,6 +579,9 @@ void test_JSON_Validate_Illegal_Documents( void )
     jsonStatus = JSON_Validate( ILLEGAL_UTF8_START_F5, ILLEGAL_UTF8_START_F5_LENGTH );
     TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
 
+    jsonStatus = JSON_Validate( ILLEGAL_UTF8_NEXT_BYTES, ILLEGAL_UTF8_NEXT_BYTES_LENGTH );
+    TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
+
     jsonStatus = JSON_Validate( CUT_AFTER_UTF8_FIRST_BYTE, CUT_AFTER_UTF8_FIRST_BYTE_LENGTH );
     TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
 
@@ -593,6 +627,18 @@ void test_JSON_Validate_Illegal_Documents( void )
 
     jsonStatus = JSON_Validate( UNICODE_PREMATURE_LOW_SURROGATE,
                                 UNICODE_PREMATURE_LOW_SURROGATE_LENGTH );
+    TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
+
+    jsonStatus = JSON_Validate( UNICODE_INVALID_LOWERCASE_HEX,
+                                UNICODE_INVALID_LOWERCASE_HEX_LENGTH );
+    TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
+
+    jsonStatus = JSON_Validate( UNICODE_INVALID_UPPERCASE_HEX,
+                                UNICODE_INVALID_UPPERCASE_HEX_LENGTH );
+    TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
+
+    jsonStatus = JSON_Validate( UNICODE_NON_LETTER_OR_DIGIT_HEX,
+                                UNICODE_NON_LETTER_OR_DIGIT_HEX_LENGTH );
     TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
 
     jsonStatus = JSON_Validate( UNICODE_BOTH_SURROGATES_HIGH,
@@ -914,8 +960,8 @@ void test_JSON_Search_Illegal_Documents( void )
                               &outValueLength );
     TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
 
-    jsonStatus = JSON_Search( UNKNOWN_ESCAPE,
-                              UNKNOWN_ESCAPE_LENGTH,
+    jsonStatus = JSON_Search( SPACE_CONTROL_CHAR,
+                              SPACE_CONTROL_CHAR_LENGTH,
                               COMPLETE_QUERY_KEY,
                               COMPLETE_QUERY_KEY_LENGTH,
                               JSON_QUERY_SEPARATOR[ 0 ],
