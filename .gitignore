@@ -1,6 +1,5 @@
 # Ignore documentation output.
-doc/output/*
-doc/tag/*
+**/doc/**/output/*
 
 # Ignore CMake build directory.
 build/

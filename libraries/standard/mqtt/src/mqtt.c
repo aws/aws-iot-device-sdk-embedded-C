@@ -30,33 +30,6 @@
 #include "mqtt_state.h"
 #include "private/mqtt_internal.h"
 
-
-/**
- * @brief The number of retries for receiving CONNACK.
- *
- * The MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT will be used only when the
- * timeoutMs parameter of #MQTT_Connect() is passed as 0 . The transport
- * receive for CONNACK will be retried MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT
- * times before timing out. A value of 0 for this config will cause the
- * transport receive for CONNACK  to be invoked only once.
- */
-#ifndef MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT
-    /* Default value for the CONNACK receive retries. */
-    #define MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT    ( 5U )
-#endif
-
-/**
- * @brief Number of milliseconds to wait for a ping response to a ping
- * request as part of the keep-alive mechanism.
- *
- * If a ping response is not received before this timeout, then
- * #MQTT_ProcessLoop will return #MQTTKeepAliveTimeout.
- */
-#ifndef MQTT_PINGRESP_TIMEOUT_MS
-    /* Wait 0.5 seconds by default for a ping response. */
-    #define MQTT_PINGRESP_TIMEOUT_MS    ( 500U )
-#endif
-
 /*-----------------------------------------------------------*/
 
 /**
@@ -277,14 +250,17 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
                                     bool * pSessionPresent );
 
 /**
- * @brief Resends pending acks for a re-established MQTT session.
+ * @brief Resends pending acks for a re-established MQTT session, or
+ * clears existing state records for a clean session.
  *
  * @param[in] pContext Initialized MQTT context.
+ * @param[in] sessionPresent Session present flag received from the MQTT broker.
  *
- * @return #MQTTSendFailed if transport send failed;
+ * @return #MQTTSendFailed if transport send during resend failed;
  * #MQTTSuccess otherwise.
  */
-static MQTTStatus_t resendPendingAcks( MQTTContext_t * pContext );
+static MQTTStatus_t handleSessionResumption( MQTTContext_t * pContext,
+                                             bool sessionPresent );
 
 /**
  * @brief Serializes a PUBLISH message.
@@ -1215,6 +1191,8 @@ static MQTTStatus_t handleIncomingAck( MQTTContext_t * pContext,
 
     appCallback = pContext->appCallback;
 
+    LogDebug( ( "Received packet of type %02x.", pIncomingPacket->type ) );
+
     switch( pIncomingPacket->type )
     {
         case MQTT_PACKET_TYPE_PUBACK:
@@ -1558,7 +1536,8 @@ static MQTTStatus_t receiveConnack( const MQTTContext_t * pContext,
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t resendPendingAcks( MQTTContext_t * pContext )
+static MQTTStatus_t handleSessionResumption( MQTTContext_t * pContext,
+                                             bool sessionPresent )
 {
     MQTTStatus_t status = MQTTSuccess;
     MQTTStateCursor_t cursor = MQTT_STATE_CURSOR_INITIALIZER;
@@ -1567,16 +1546,29 @@ static MQTTStatus_t resendPendingAcks( MQTTContext_t * pContext )
 
     assert( pContext != NULL );
 
-    /* Get the next packet Id for which a PUBREL need to be resent. */
-    packetId = MQTT_PubrelToResend( pContext, &cursor, &state );
-
-    /* Resend all the PUBREL acks after session is reestablished. */
-    while( ( packetId != MQTT_PACKET_ID_INVALID ) &&
-           ( status == MQTTSuccess ) )
+    if( sessionPresent == true )
     {
-        status = sendPublishAcks( pContext, packetId, state );
-
+        /* Get the next packet ID for which a PUBREL need to be resent. */
         packetId = MQTT_PubrelToResend( pContext, &cursor, &state );
+
+        /* Resend all the PUBREL acks after session is reestablished. */
+        while( ( packetId != MQTT_PACKET_ID_INVALID ) &&
+               ( status == MQTTSuccess ) )
+        {
+            status = sendPublishAcks( pContext, packetId, state );
+
+            packetId = MQTT_PubrelToResend( pContext, &cursor, &state );
+        }
+    }
+    else
+    {
+        /* Clear any existing records if a new session is established. */
+        ( void ) memset( pContext->outgoingPublishRecords,
+                         0x00,
+                         sizeof( pContext->outgoingPublishRecords ) );
+        ( void ) memset( pContext->incomingPublishRecords,
+                         0x00,
+                         sizeof( pContext->incomingPublishRecords ) );
     }
 
     return status;
@@ -1789,10 +1781,10 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
                                  pSessionPresent );
     }
 
-    /* Resend all the PUBREL when reestablishing a session. */
-    if( ( status == MQTTSuccess ) && ( *pSessionPresent == true ) )
+    if( status == MQTTSuccess )
     {
-        status = resendPendingAcks( pContext );
+        /* Resend PUBRELs when reestablishing a session, or clear records for new sessions. */
+        status = handleSessionResumption( pContext, *pSessionPresent );
     }
 
     if( status == MQTTSuccess )
