@@ -33,8 +33,9 @@
 #define MQTT_CONFIG_DEFAULTS_H_
 
 /**
- * @brief The maximum number of MQTT PUBLISH messages that may be pending
- * acknowledgement at any time.
+ * @brief Determines the maximum number of MQTT PUBLISH messages, pending
+ * acknowledgement at a time, that are supported for incoming and outgoing
+ * direction of messages, separately.
  *
  * QoS 1 and 2 MQTT PUBLISHes require acknowledgement from the server before
  * they can be completed. While they are awaiting the acknowledgement, the
