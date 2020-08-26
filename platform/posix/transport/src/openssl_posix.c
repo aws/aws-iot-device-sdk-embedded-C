@@ -220,6 +220,12 @@ static int32_t setRootCa( const SSL_CTX * pSslContext,
         logPath( pRootCaPath, ROOT_CA_LABEL );
     #endif
 
+    /* MISRA Rule 21.6 flags the following line for using the standard
+     * library input/output function `fopen()`. This rule is suppressed because
+     * openssl function #PEM_read_X509 takes an argument of type `FILE *` for
+     * reading the root ca PEM file and `fopen()` needs to be used to get the
+     * file pointer.  */
+    /* coverity[misra_c_2012_rule_21_6_violation] */
     pRootCaFile = fopen( pRootCaPath, "r" );
 
     if( pRootCaFile == NULL )
@@ -258,6 +264,13 @@ static int32_t setRootCa( const SSL_CTX * pSslContext,
     /* Close the file if it was successfully opened. */
     if( pRootCaFile != NULL )
     {
+        /* MISRA Rule 21.6 flags the following line for using the standard
+         * library input/output function `fclose()`. This rule is suppressed
+         * because openssl function #PEM_read_X509 takes an argument of type
+         * `FILE *` for reading the root ca PEM file and `fopen()` is used to
+         * get the file pointer. The file opened with `fopen()` needs to be
+         * closed by calling `fclose()`.*/
+        /* coverity[misra_c_2012_rule_21_6_violation] */
         if( fclose( pRootCaFile ) != 0 )
         {
             LogWarn( ( "fclose failed to close file %s",
@@ -374,7 +387,7 @@ static void setOptionalConfigurations( SSL * pSsl,
                                        const OpensslCredentials_t * pOpensslCredentials )
 {
     int32_t sslStatus = -1;
-    uint64_t readBufferLength = 0;
+    size_t readBufferLength = 0;
 
     assert( pSsl != NULL );
     assert( pOpensslCredentials != NULL );
@@ -386,7 +399,7 @@ static void setOptionalConfigurations( SSL * pSsl,
         LogDebug( ( "Setting ALPN protos." ) );
         sslStatus = SSL_set_alpn_protos( pSsl,
                                          ( const uint8_t * ) pOpensslCredentials->pAlpnProtos,
-                                         pOpensslCredentials->alpnProtosLen );
+                                         ( uint32_t ) pOpensslCredentials->alpnProtosLen );
 
         if( sslStatus != 0 )
         {
@@ -402,8 +415,14 @@ static void setOptionalConfigurations( SSL * pSsl,
                     pOpensslCredentials->maxFragmentLength ) );
 
         /* Set the maximum send fragment length. */
+
+        /* MISRA Directive 4.6 flags the following line for using basic
+         * numerical type long. This directive is suppressed because openssl
+         * function #SSL_set_max_send_fragment expects a length argument
+         * type of long. */
+        /* coverity[misra_c_2012_directive_4_6_violation] */
         sslStatus = ( int32_t ) SSL_set_max_send_fragment( pSsl,
-                                                           ( int64_t ) pOpensslCredentials->maxFragmentLength );
+                                                           ( long ) pOpensslCredentials->maxFragmentLength );
 
         if( sslStatus != 1 )
         {
@@ -420,7 +439,7 @@ static void setOptionalConfigurations( SSL * pSsl,
              * length parameter to be of unsigned type. */
             /* coverity[misra_c_2012_rule_10_8_violation] */
             readBufferLength = pOpensslCredentials->maxFragmentLength +
-                               ( uint64_t ) SSL3_RT_MAX_ENCRYPTED_OVERHEAD;
+                               ( size_t ) SSL3_RT_MAX_ENCRYPTED_OVERHEAD;
 
             /* Change the size of the read buffer to match the
              * maximum fragment length + some extra bytes for overhead. */
@@ -460,10 +479,10 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
 {
     SocketStatus_t socketStatus = SOCKETS_SUCCESS;
     OpensslStatus_t returnStatus = OPENSSL_SUCCESS;
-    int64_t verifyPeerCertStatus = X509_V_OK;
     int32_t sslStatus = 0;
     uint8_t sslObjectCreated = 0;
     SSL_CTX * pSslContext = NULL;
+    int32_t verifyPeerCertStatus = X509_V_OK;
 
     /* Validate parameters. */
     if( pNetworkContext == NULL )
@@ -510,7 +529,11 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
     {
         /* Set auto retry mode for the blocking calls to SSL_read and SSL_write.
          * The mask returned by SSL_CTX_set_mode does not need to be checked. */
-        ( void ) SSL_CTX_set_mode( pSslContext, ( int64_t ) SSL_MODE_AUTO_RETRY );
+        /* MISRA Directive 4.6 flags the following line for using basic
+        * numerical type long. This directive is suppressed because openssl
+        * function #SSL_CTX_set_mode takes an argument of type long. */
+        /* coverity[misra_c_2012_directive_4_6_violation] */
+        ( void ) SSL_CTX_set_mode( pSslContext, ( long ) SSL_MODE_AUTO_RETRY );
 
         sslStatus = setCredentials( pSslContext,
                                     pOpensslCredentials );
@@ -570,7 +593,7 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
     /* Verify X509 certificate from peer. */
     if( returnStatus == OPENSSL_SUCCESS )
     {
-        verifyPeerCertStatus = SSL_get_verify_result( pNetworkContext->pSsl );
+        verifyPeerCertStatus = ( int32_t ) SSL_get_verify_result( pNetworkContext->pSsl );
 
         if( verifyPeerCertStatus != X509_V_OK )
         {
@@ -692,6 +715,9 @@ int32_t Openssl_Send( const NetworkContext_t * pNetworkContext,
 {
     int32_t bytesSent = 0;
     int32_t sslError = 0;
+
+    /* Unused parameter when logs are disabled. */
+    ( void ) sslError;
 
     if( pNetworkContext == NULL )
     {
