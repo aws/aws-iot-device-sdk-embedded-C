@@ -64,6 +64,7 @@ packetidtoresend
 param
 pathlen
 pbuffer
+pclientsessionpresent
 pcontext
 pdeserializedinfo
 pem

@@ -1221,7 +1221,7 @@ static int subscribePublishLoop( MQTTContext_t * pMqttContext,
              * ping responses. */
             mqttStatus = MQTT_ProcessLoop( pMqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
 
-            /* No data availble from the transport interface may be due to network
+            /* No data available from the transport interface may be due to network
              * delays or low timeout passed to #MQTT_ProcessLoop. */
             if( mqttStatus == MQTTNoDataAvailable )
             {
