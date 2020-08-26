@@ -54,6 +54,7 @@ pnetworkcontext
 popensslcredentials
 posix
 pprivatekeypath
+preconnectparams
 prootcapath
 pserverinfo
 pssl
