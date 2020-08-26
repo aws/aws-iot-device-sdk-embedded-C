@@ -129,6 +129,12 @@
 #define OPENING_CURLY_BRACKET                              "{"
 #define OPENING_CURLY_BRACKET_LENGTH                       ( sizeof( OPENING_CURLY_BRACKET ) - 1 )
 
+#define QUERY_KEY_TRAILING_SEPARATOR                       FIRST_QUERY_KEY JSON_QUERY_SEPARATOR
+#define QUERY_KEY_TRAILING_SEPARATOR_LENGTH                ( sizeof( QUERY_KEY_TRAILING_SEPARATOR ) - 1 )
+
+#define QUERY_KEY_EMPTY                                    JSON_QUERY_SEPARATOR SECOND_QUERY_KEY
+#define QUERY_KEY_EMPTY_LENGTH                             ( sizeof( QUERY_KEY_EMPTY ) - 1 )
+
 /* Separator between a key and a value must be a colon (:). */
 #define WRONG_KEY_VALUE_SEPARATOR         \
     "{\"foo\";\"abc\",\"" FIRST_QUERY_KEY \
@@ -501,6 +507,9 @@ void test_JSON_Validate_Illegal_Documents( void )
                                 ILLEGAL_SCALAR_IN_ARRAY_LENGTH );
     TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
 
+    jsonStatus = JSON_Validate( ESCAPE_CHAR_ALONE, ESCAPE_CHAR_ALONE_LENGTH );
+    TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
+
     jsonStatus = JSON_Validate( ESCAPE_CHAR_ALONE_NOT_ENCLOSED,
                                 ESCAPE_CHAR_ALONE_NOT_ENCLOSED_LENGTH );
     TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
@@ -587,9 +596,6 @@ void test_JSON_Validate_Partial_Documents( void )
 
     jsonStatus = JSON_Validate( OPENING_CURLY_BRACKET,
                                 OPENING_CURLY_BRACKET_LENGTH );
-    TEST_ASSERT_EQUAL( JSONPartial, jsonStatus );
-
-    jsonStatus = JSON_Validate( ESCAPE_CHAR_ALONE, ESCAPE_CHAR_ALONE_LENGTH );
     TEST_ASSERT_EQUAL( JSONPartial, jsonStatus );
 
     jsonStatus = JSON_Validate( WHITE_SPACE, WHITE_SPACE_LENGTH );
@@ -765,7 +771,16 @@ void test_JSON_Search_Illegal_Documents( void )
                               JSON_QUERY_SEPARATOR[ 0 ],
                               &outValue,
                               &outValueLength );
-    TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
+    TEST_ASSERT_EQUAL( JSONNotFound, jsonStatus );
+
+    jsonStatus = JSON_Search( CLOSING_SQUARE_BRACKET,
+                              CLOSING_SQUARE_BRACKET_LENGTH,
+                              COMPLETE_QUERY_KEY,
+                              COMPLETE_QUERY_KEY_LENGTH,
+                              JSON_QUERY_SEPARATOR[ 0 ],
+                              &outValue,
+                              &outValueLength );
+    TEST_ASSERT_EQUAL( JSONNotFound, jsonStatus );
 
     jsonStatus = JSON_Search( INCORRECT_OBJECT_SEPARATOR,
                               INCORRECT_OBJECT_SEPARATOR_LENGTH,
@@ -848,15 +863,6 @@ void test_JSON_Search_Illegal_Documents( void )
                               &outValueLength );
     TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
 
-    jsonStatus = JSON_Search( CLOSING_SQUARE_BRACKET,
-                              CLOSING_SQUARE_BRACKET_LENGTH,
-                              COMPLETE_QUERY_KEY,
-                              COMPLETE_QUERY_KEY_LENGTH,
-                              JSON_QUERY_SEPARATOR[ 0 ],
-                              &outValue,
-                              &outValueLength );
-    TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
-
     jsonStatus = JSON_Search( CLOSING_CURLY_BRACKET,
                               CLOSING_CURLY_BRACKET_LENGTH,
                               COMPLETE_QUERY_KEY,
@@ -865,15 +871,6 @@ void test_JSON_Search_Illegal_Documents( void )
                               &outValue,
                               &outValueLength );
     TEST_ASSERT_EQUAL( JSONNotFound, jsonStatus );
-
-    jsonStatus = JSON_Search( CUT_AFTER_EXPONENT_MARKER,
-                              CUT_AFTER_EXPONENT_MARKER_LENGTH,
-                              COMPLETE_QUERY_KEY,
-                              COMPLETE_QUERY_KEY_LENGTH,
-                              JSON_QUERY_SEPARATOR[ 0 ],
-                              &outValue,
-                              &outValueLength );
-    TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
 
     jsonStatus = JSON_Search( MISSING_ENCLOSING_ARRAY_MARKER,
                               MISSING_ENCLOSING_ARRAY_MARKER_LENGTH,
@@ -920,8 +917,8 @@ void test_JSON_Search_Illegal_Documents( void )
                               &outValueLength );
     TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
 
-    jsonStatus = JSON_Search( ESCAPE_CHAR_ALONE_NOT_ENCLOSED,
-                              ESCAPE_CHAR_ALONE_NOT_ENCLOSED_LENGTH,
+    jsonStatus = JSON_Search( ESCAPE_CHAR_ALONE,
+                              ESCAPE_CHAR_ALONE_LENGTH,
                               COMPLETE_QUERY_KEY,
                               COMPLETE_QUERY_KEY_LENGTH,
                               JSON_QUERY_SEPARATOR[ 0 ],
@@ -1102,6 +1099,88 @@ void test_JSON_Search_Illegal_Documents( void )
 }
 
 /**
+ * @brief Test that JSON_Search is able to classify any null or bad parameters.
+ */
+void test_JSON_Search_Invalid_Params( void )
+{
+    JSONStatus_t jsonStatus;
+    char * outValue;
+    size_t outValueLength;
+
+    jsonStatus = JSON_Search( NULL,
+                              0,
+                              COMPLETE_QUERY_KEY,
+                              COMPLETE_QUERY_KEY_LENGTH,
+                              JSON_QUERY_SEPARATOR[ 0 ],
+                              &outValue,
+                              &outValueLength );
+    TEST_ASSERT_EQUAL( JSONNullParameter, jsonStatus );
+
+    jsonStatus = JSON_Search( JSON_DOC_VARIED_SCALARS,
+                              JSON_DOC_VARIED_SCALARS_LENGTH,
+                              NULL,
+                              0,
+                              JSON_QUERY_SEPARATOR[ 0 ],
+                              &outValue,
+                              &outValueLength );
+    TEST_ASSERT_EQUAL( JSONNullParameter, jsonStatus );
+
+    jsonStatus = JSON_Search( JSON_DOC_VARIED_SCALARS,
+                              JSON_DOC_VARIED_SCALARS_LENGTH,
+                              COMPLETE_QUERY_KEY,
+                              COMPLETE_QUERY_KEY_LENGTH,
+                              JSON_QUERY_SEPARATOR[ 0 ],
+                              NULL,
+                              &outValueLength );
+    TEST_ASSERT_EQUAL( JSONNullParameter, jsonStatus );
+
+    jsonStatus = JSON_Search( JSON_DOC_VARIED_SCALARS,
+                              JSON_DOC_VARIED_SCALARS_LENGTH,
+                              COMPLETE_QUERY_KEY,
+                              COMPLETE_QUERY_KEY_LENGTH,
+                              JSON_QUERY_SEPARATOR[ 0 ],
+                              &outValue,
+                              NULL );
+    TEST_ASSERT_EQUAL( JSONNullParameter, jsonStatus );
+
+    jsonStatus = JSON_Search( JSON_DOC_VARIED_SCALARS,
+                              0,
+                              COMPLETE_QUERY_KEY,
+                              COMPLETE_QUERY_KEY_LENGTH,
+                              JSON_QUERY_SEPARATOR[ 0 ],
+                              &outValue,
+                              &outValueLength );
+    TEST_ASSERT_EQUAL( JSONBadParameter, jsonStatus );
+
+    jsonStatus = JSON_Search( JSON_DOC_VARIED_SCALARS,
+                              JSON_DOC_VARIED_SCALARS_LENGTH,
+                              COMPLETE_QUERY_KEY,
+                              0,
+                              JSON_QUERY_SEPARATOR[ 0 ],
+                              &outValue,
+                              &outValueLength );
+    TEST_ASSERT_EQUAL( JSONBadParameter, jsonStatus );
+
+    jsonStatus = JSON_Search( JSON_DOC_VARIED_SCALARS,
+                              JSON_DOC_VARIED_SCALARS_LENGTH,
+                              QUERY_KEY_TRAILING_SEPARATOR,
+                              QUERY_KEY_TRAILING_SEPARATOR_LENGTH,
+                              JSON_QUERY_SEPARATOR[ 0 ],
+                              &outValue,
+                              &outValueLength );
+    TEST_ASSERT_EQUAL( JSONBadParameter, jsonStatus );
+
+    jsonStatus = JSON_Search( JSON_DOC_VARIED_SCALARS,
+                              JSON_DOC_VARIED_SCALARS_LENGTH,
+                              QUERY_KEY_EMPTY,
+                              QUERY_KEY_EMPTY_LENGTH,
+                              JSON_QUERY_SEPARATOR[ 0 ],
+                              &outValue,
+                              &outValueLength );
+    TEST_ASSERT_EQUAL( JSONBadParameter, jsonStatus );
+}
+
+/**
  * @brief Test that JSON_Search is able to classify a partial JSON document correctly.
  *
  * @note JSON_Search returns JSONIllegalDocument when it finds a partial document.
@@ -1111,24 +1190,6 @@ void test_JSON_Search_Partial_Documents( void )
     JSONStatus_t jsonStatus;
     char * outValue;
     size_t outValueLength;
-
-    jsonStatus = JSON_Search( ESCAPE_CHAR_ALONE,
-                              ESCAPE_CHAR_ALONE_LENGTH,
-                              COMPLETE_QUERY_KEY,
-                              COMPLETE_QUERY_KEY_LENGTH,
-                              JSON_QUERY_SEPARATOR[ 0 ],
-                              &outValue,
-                              &outValueLength );
-    TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
-
-    jsonStatus = JSON_Search( WHITE_SPACE,
-                              WHITE_SPACE_LENGTH,
-                              COMPLETE_QUERY_KEY,
-                              COMPLETE_QUERY_KEY_LENGTH,
-                              JSON_QUERY_SEPARATOR[ 0 ],
-                              &outValue,
-                              &outValueLength );
-    TEST_ASSERT_EQUAL( JSONIllegalDocument, jsonStatus );
 
     jsonStatus = JSON_Search( CUT_AFTER_NUMBER,
                               CUT_AFTER_NUMBER_LENGTH,
