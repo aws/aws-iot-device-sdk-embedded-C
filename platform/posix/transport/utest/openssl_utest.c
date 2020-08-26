@@ -26,6 +26,28 @@ static ServerInfo_t serverInfo = { 0 };
 static OpensslCredentials_t opensslCredentials = { 0 };
 static NetworkContext_t networkContext = { 0 };
 
+/**
+ * @brief OpenSSL Connect / Disconnect return status.
+ */
+typedef enum FunctionNames
+{
+    Sockets_Connect_fn = 0,
+    TLS_client_method_fn,
+    SSL_CTX_new_fn,
+    fopen_fn,
+    PEM_read_X509_fn,
+    X509_STORE_add_cert_fn,
+    SSL_CTX_use_certificate_chain_file_fn,
+    SSL_CTX_use_PrivateKey_file_fn,
+    SSL_new_fn,
+    SSL_set_fd_fn,
+    SSL_set_alpn_protos_fn,
+    SSL_set_max_send_fragment_fn,
+    SSL_set_tlsext_host_name_fn,
+    SSL_connect_fn,
+    SSL_get_verify_result_fn
+} FunctionNames_t;
+
 /* ============================   UNITY FIXTURES ============================ */
 
 /* Called before each test method. */
@@ -89,21 +111,12 @@ static OpensslStatus_t convertToOpensslStatus( SocketStatus_t socketStatus )
     return opensslStatus;
 }
 
-static OpensslStatus_t setClientCertificate_failNthMethod( int n,
-                                                           int * start )
-{
-    int index = *start;
-
-    *start = index;
-}
-
-static OpensslStatus_t failNthMethod_Openssl_Connect( int n,
-                                                      void * retValue )
+static OpensslStatus_t failFunction_Openssl_Connect( FunctionNames_t functionToFail,
+                                                     void * retValue )
 {
     OpensslStatus_t returnStatus = OPENSSL_SUCCESS;
     bool failed = false, fileOpened = false,
          sslCtxCreated = false, sslCreated = false;
-    int index = 0;
     SSL ssl;
     SSL_METHOD sslMethod;
     SSL_CTX sslCtx;
@@ -111,11 +124,10 @@ static OpensslStatus_t failNthMethod_Openssl_Connect( int n,
     X509 rootCa;
     X509_STORE CaStore;
 
-    /* If index matches n,
-     * then we should fail and return the correct status to expect. */
+    /* Depending on the function to fail,
+     * this function must return the correct status to expect. */
 
-    /* The index == 0. */
-    if( index == n )
+    if( functionToFail == Sockets_Connect_fn )
     {
         TEST_ASSERT_NOT_NULL( retValue );
         SocketStatus_t socketStatus = *( ( SocketStatus_t * ) retValue );
@@ -123,48 +135,33 @@ static OpensslStatus_t failNthMethod_Openssl_Connect( int n,
         returnStatus = convertToOpensslStatus( socketStatus );
         failed = true;
     }
-    else
+    else if( !failed )
     {
-        if( !failed )
-        {
-            Sockets_Connect_ExpectAnyArgsAndReturn( SOCKETS_SUCCESS );
-        }
+        Sockets_Connect_ExpectAnyArgsAndReturn( SOCKETS_SUCCESS );
     }
 
-    index++;
-
-    /* The index == 1, but this call can't fail no matter what you return. */
+    /* Calls like this can't fail no matter what you return. */
     if( !failed )
     {
         TLS_client_method_ExpectAndReturn( &sslMethod );
     }
 
-    index++;
-
-    /* The index == 2. */
-    if( index == n )
+    if( functionToFail == SSL_CTX_new_fn )
     {
         SSL_CTX_new_ExpectAnyArgsAndReturn( ( SSL_CTX * ) retValue );
         returnStatus = OPENSSL_API_ERROR;
         failed = true;
     }
-    else
+    else if( !failed )
     {
-        if( !failed )
-        {
-            SSL_CTX_new_ExpectAnyArgsAndReturn( &sslCtx );
-            sslCtxCreated = true;
-        }
+        SSL_CTX_new_ExpectAnyArgsAndReturn( &sslCtx );
+        sslCtxCreated = true;
     }
-
-    index++;
-
-    /* The index == 3, but these calls can't fail. */
 
     if( opensslCredentials.pRootCaPath != NULL )
     {
         /* SSL_CTX_set_mode is actually what the API uses, but CMock expects the
-         * actual method rather than the method wrapper. */
+         * actual method rather than the macro wrapper. */
         if( !failed )
         {
             SSL_CTX_ctrl_ExpectAnyArgsAndReturn( 1 );
@@ -172,67 +169,44 @@ static OpensslStatus_t failNthMethod_Openssl_Connect( int n,
             free_ExpectAnyArgs();
         }
 
-        index++;
-
-        /* The index == 4. */
-        if( index == n )
+        if( functionToFail == fopen_fn )
         {
             fopen_ExpectAnyArgsAndReturn( NULL );
             returnStatus = OPENSSL_INVALID_CREDENTIALS;
             failed = true;
         }
-        else
+        else if( !failed )
         {
-            if( !failed )
-            {
-                fopen_ExpectAnyArgsAndReturn( &rootCaFile );
-                fileOpened = true;
-            }
+            fopen_ExpectAnyArgsAndReturn( &rootCaFile );
+            fileOpened = true;
         }
 
-        index++;
-
-        /* The index == 5. */
-        if( index == n )
+        if( functionToFail == PEM_read_X509_fn )
         {
             PEM_read_X509_ExpectAnyArgsAndReturn( NULL );
             returnStatus = OPENSSL_INVALID_CREDENTIALS;
             failed = true;
         }
-        else
+        else if( !failed )
         {
-            if( !failed )
-            {
-                PEM_read_X509_ExpectAnyArgsAndReturn( &rootCa );
-            }
+            PEM_read_X509_ExpectAnyArgsAndReturn( &rootCa );
         }
 
-        index++;
-
-        /* The index == 6. */
         if( !failed )
         {
             SSL_CTX_get_cert_store_ExpectAnyArgsAndReturn( &CaStore );
         }
 
-        index++;
-
-        /* The index == 7. */
-        if( index == n )
+        if( functionToFail == X509_STORE_add_cert_fn )
         {
             X509_STORE_add_cert_ExpectAnyArgsAndReturn( -1 );
             returnStatus = OPENSSL_INVALID_CREDENTIALS;
             failed = true;
         }
-        else
+        else if( !failed )
         {
-            if( !failed )
-            {
-                X509_STORE_add_cert_ExpectAnyArgsAndReturn( 1 );
-            }
+            X509_STORE_add_cert_ExpectAnyArgsAndReturn( 1 );
         }
-
-        index++;
 
         if( fileOpened )
         {
@@ -242,119 +216,86 @@ static OpensslStatus_t failNthMethod_Openssl_Connect( int n,
 
     if( opensslCredentials.pClientCertPath != NULL )
     {
-        /* The index == 8. */
-        if( index == n )
+        if( functionToFail == SSL_CTX_use_certificate_chain_file_fn )
         {
             SSL_CTX_use_certificate_chain_file_ExpectAnyArgsAndReturn( -1 );
             returnStatus = OPENSSL_INVALID_CREDENTIALS;
             failed = true;
         }
-        else
+        else if( !failed )
         {
-            if( !failed )
-            {
-                SSL_CTX_use_certificate_chain_file_ExpectAnyArgsAndReturn( 1 );
-            }
+            SSL_CTX_use_certificate_chain_file_ExpectAnyArgsAndReturn( 1 );
         }
-
-        index++;
     }
 
     if( opensslCredentials.pPrivateKeyPath != NULL )
     {
-        /* The index == 9. */
-        if( index == n )
+        if( functionToFail == SSL_CTX_use_PrivateKey_file_fn )
         {
             SSL_CTX_use_PrivateKey_file_ExpectAnyArgsAndReturn( -1 );
             returnStatus = OPENSSL_INVALID_CREDENTIALS;
             failed = true;
         }
-        else
+        else if( !failed )
         {
-            if( !failed )
-            {
-                SSL_CTX_use_PrivateKey_file_ExpectAnyArgsAndReturn( 1 );
-            }
+            SSL_CTX_use_PrivateKey_file_ExpectAnyArgsAndReturn( 1 );
         }
-
-        index++;
     }
 
-    /* The index == 10. */
-    if( index == n )
+    if( functionToFail == SSL_new_fn )
     {
         SSL_new_ExpectAnyArgsAndReturn( NULL );
         returnStatus = OPENSSL_API_ERROR;
         failed = true;
     }
-    else
+    else if( !failed )
     {
-        if( !failed )
-        {
-            SSL_new_ExpectAnyArgsAndReturn( &ssl );
-            sslCreated = true;
-        }
+        SSL_new_ExpectAnyArgsAndReturn( &ssl );
+        sslCreated = true;
     }
 
-    index++;
-
-    /* The index == 11. */
     if( !failed )
     {
         SSL_set_verify_ExpectAnyArgs();
     }
 
-    index++;
-
-    /* The index == 12. */
-    if( index == n )
+    if( functionToFail == SSL_set_fd_fn )
     {
         SSL_set_fd_ExpectAnyArgsAndReturn( -1 );
         returnStatus = OPENSSL_API_ERROR;
         failed = true;
     }
-    else
+    else if( !failed )
     {
-        if( !failed )
-        {
-            SSL_set_fd_ExpectAnyArgsAndReturn( 1 );
-        }
+        SSL_set_fd_ExpectAnyArgsAndReturn( 1 );
     }
-
-    index++;
 
     if( ( opensslCredentials.pAlpnProtos != NULL ) &&
         ( opensslCredentials.alpnProtosLen > 0 ) )
     {
-        if( index == n )
+        if( functionToFail == SSL_set_alpn_protos_fn )
         {
             SSL_set_alpn_protos_ExpectAnyArgsAndReturn( 1 );
             returnStatus = OPENSSL_API_ERROR;
             failed = true;
         }
-        else
+        else if( !failed )
         {
-            if( !failed )
-            {
-                SSL_set_alpn_protos_ExpectAnyArgsAndReturn( 0 );
-            }
+            SSL_set_alpn_protos_ExpectAnyArgsAndReturn( 0 );
         }
     }
 
     if( opensslCredentials.maxFragmentLength > 0 )
     {
-        if( index == n )
+        if( functionToFail == SSL_set_max_send_fragment_fn )
         {
             SSL_ctrl_ExpectAnyArgsAndReturn( -1 );
             returnStatus = OPENSSL_API_ERROR;
             failed = true;
         }
-        else
+        else if( !failed )
         {
-            if( !failed )
-            {
-                SSL_ctrl_ExpectAnyArgsAndReturn( 1 );
-            }
+            SSL_ctrl_ExpectAnyArgsAndReturn( 1 );
         }
 
         if( !failed )
@@ -363,56 +304,41 @@ static OpensslStatus_t failNthMethod_Openssl_Connect( int n,
         }
     }
 
-    if( opensslCredentials.sniHostName > 0 )
+    if( opensslCredentials.sniHostName != NULL )
     {
-        if( index == n )
+        if( functionToFail == SSL_set_tlsext_host_name_fn )
         {
             SSL_ctrl_ExpectAnyArgsAndReturn( -1 );
             returnStatus = OPENSSL_API_ERROR;
             failed = true;
         }
-        else
+        else if( !failed )
         {
-            if( !failed )
-            {
-                SSL_ctrl_ExpectAnyArgsAndReturn( 1 );
-            }
+            SSL_ctrl_ExpectAnyArgsAndReturn( 1 );
         }
     }
 
-    /* The index == 13. */
-    if( index == n )
+    if( functionToFail == SSL_connect_fn )
     {
         SSL_connect_ExpectAnyArgsAndReturn( -1 );
-        returnStatus = OPENSSL_API_ERROR;
+        returnStatus = OPENSSL_HANDSHAKE_FAILED;
         failed = true;
     }
-    else
+    else if( !failed )
     {
-        if( !failed )
-        {
-            SSL_connect_ExpectAnyArgsAndReturn( 1 );
-        }
+        SSL_connect_ExpectAnyArgsAndReturn( 1 );
     }
 
-    index++;
-
-    /* The index == 14. */
-    if( index == n )
+    if( functionToFail == SSL_get_verify_result_fn )
     {
         SSL_get_verify_result_ExpectAnyArgsAndReturn( -1 );
-        returnStatus = OPENSSL_API_ERROR;
+        returnStatus = OPENSSL_HANDSHAKE_FAILED;
         failed = true;
     }
-    else
+    else if( !failed )
     {
-        if( !failed )
-        {
-            SSL_get_verify_result_ExpectAnyArgsAndReturn( X509_V_OK );
-        }
+        SSL_get_verify_result_ExpectAnyArgsAndReturn( X509_V_OK );
     }
-
-    index++;
 
     /* Expect objects to be freed depending upon whether they were created. */
     if( sslCtxCreated )
@@ -445,7 +371,7 @@ void test_Openssl_Connect_Invalid_Params( void )
     /* NULL serverInfo is handled by Sockets_Connect, so we appropriately
      * return SOCKETS_INVALID_PARAMETER. */
     socketError = SOCKETS_INVALID_PARAMETER;
-    expectedStatus = failNthMethod_Openssl_Connect( 0, &socketError );
+    expectedStatus = failFunction_Openssl_Connect( 0, &socketError );
     returnStatus = Openssl_Connect( &networkContext,
                                     NULL,
                                     &opensslCredentials,
@@ -453,9 +379,9 @@ void test_Openssl_Connect_Invalid_Params( void )
                                     SEND_RECV_TIMEOUT );
     TEST_ASSERT_EQUAL( expectedStatus, returnStatus );
 
-    /* Suppose a DNS failure occurs from the call to the sockets connect wrapper. */
+    /* Mock a DNS failure from the call to the sockets connect wrapper. */
     socketError = SOCKETS_DNS_FAILURE;
-    expectedStatus = failNthMethod_Openssl_Connect( 0, &socketError );
+    expectedStatus = failFunction_Openssl_Connect( 0, &socketError );
     returnStatus = Openssl_Connect( &networkContext,
                                     &serverInfo,
                                     &opensslCredentials,
@@ -463,9 +389,9 @@ void test_Openssl_Connect_Invalid_Params( void )
                                     SEND_RECV_TIMEOUT );
     TEST_ASSERT_EQUAL( expectedStatus, returnStatus );
 
-    /* Suppose a connection failure occurs from the call to the sockets connect wrapper. */
+    /* Mock a connection failure from the call to the sockets connect wrapper. */
     socketError = SOCKETS_CONNECT_FAILURE;
-    expectedStatus = failNthMethod_Openssl_Connect( 0, &socketError );
+    expectedStatus = failFunction_Openssl_Connect( 0, &socketError );
     returnStatus = Openssl_Connect( &networkContext,
                                     NULL,
                                     &opensslCredentials,
@@ -484,92 +410,18 @@ void test_Openssl_Connect_Invalid_Params( void )
 void test_Openssl_Connect_API_calls_fail( void )
 {
     OpensslStatus_t returnStatus, expectedStatus;
+    int i;
 
-    /* Fail SSL_CTX_new(...) */
-    expectedStatus = failNthMethod_Openssl_Connect( 2, NULL );
-    returnStatus = Openssl_Connect( &networkContext,
-                                    &serverInfo,
-                                    &opensslCredentials,
-                                    SEND_RECV_TIMEOUT,
-                                    SEND_RECV_TIMEOUT );
-    TEST_ASSERT_EQUAL( expectedStatus, returnStatus );
-
-    /* Fail fopen(...) */
-    expectedStatus = failNthMethod_Openssl_Connect( 4, NULL );
-    returnStatus = Openssl_Connect( &networkContext,
-                                    &serverInfo,
-                                    &opensslCredentials,
-                                    SEND_RECV_TIMEOUT,
-                                    SEND_RECV_TIMEOUT );
-    TEST_ASSERT_EQUAL( expectedStatus, returnStatus );
-
-    /* Fail fopen(...) */
-    expectedStatus = failNthMethod_Openssl_Connect( 4, NULL );
-    returnStatus = Openssl_Connect( &networkContext,
-                                    &serverInfo,
-                                    &opensslCredentials,
-                                    SEND_RECV_TIMEOUT,
-                                    SEND_RECV_TIMEOUT );
-    TEST_ASSERT_EQUAL( expectedStatus, returnStatus );
-
-    /* Fail PEM_read_X509(...). */
-    expectedStatus = failNthMethod_Openssl_Connect( 5, NULL );
-    returnStatus = Openssl_Connect( &networkContext,
-                                    &serverInfo,
-                                    &opensslCredentials,
-                                    SEND_RECV_TIMEOUT,
-                                    SEND_RECV_TIMEOUT );
-    TEST_ASSERT_EQUAL( expectedStatus, returnStatus );
-
-    /* Fail PEM_read_X509(...) but fail fclose(...) for coverage. */
-
-    /*expectedStatus = failNthMethod_Openssl_Connect( 5, NULL );
-     * fclose_ExpectAnyArgsAndReturn( -1 );
-     * returnStatus = Openssl_Connect( &networkContext,
-     *                              &serverInfo,
-     *                              &opensslCredentials,
-     *                              SEND_RECV_TIMEOUT,
-     *                              SEND_RECV_TIMEOUT );
-     * TEST_ASSERT_EQUAL( expectedStatus, returnStatus );*/
-
-    /* Fail X509_STORE_add_cert(...). */
-    expectedStatus = failNthMethod_Openssl_Connect( 7, NULL );
-    returnStatus = Openssl_Connect( &networkContext,
-                                    &serverInfo,
-                                    &opensslCredentials,
-                                    SEND_RECV_TIMEOUT,
-                                    SEND_RECV_TIMEOUT );
-    TEST_ASSERT_EQUAL( expectedStatus, returnStatus );
-
-    expectedStatus = failNthMethod_Openssl_Connect( 8, NULL );
-    returnStatus = Openssl_Connect( &networkContext,
-                                    &serverInfo,
-                                    &opensslCredentials,
-                                    SEND_RECV_TIMEOUT,
-                                    SEND_RECV_TIMEOUT );
-    TEST_ASSERT_EQUAL( expectedStatus, returnStatus );
-
-    expectedStatus = failNthMethod_Openssl_Connect( 9, NULL );
-    returnStatus = Openssl_Connect( &networkContext,
-                                    &serverInfo,
-                                    &opensslCredentials,
-                                    SEND_RECV_TIMEOUT,
-                                    SEND_RECV_TIMEOUT );
-    TEST_ASSERT_EQUAL( expectedStatus, returnStatus );
-
-    expectedStatus = failNthMethod_Openssl_Connect( 10, NULL );
-    returnStatus = Openssl_Connect( &networkContext,
-                                    &serverInfo,
-                                    &opensslCredentials,
-                                    SEND_RECV_TIMEOUT,
-                                    SEND_RECV_TIMEOUT );
-    TEST_ASSERT_EQUAL( expectedStatus, returnStatus );
-
-    expectedStatus = failNthMethod_Openssl_Connect( 11, NULL );
-    returnStatus = Openssl_Connect( &networkContext,
-                                    &serverInfo,
-                                    &opensslCredentials,
-                                    SEND_RECV_TIMEOUT,
-                                    SEND_RECV_TIMEOUT );
-    TEST_ASSERT_EQUAL( expectedStatus, returnStatus );
+    /* The last iteration is one more that the enum for the function names, so as to
+     * get coverage for the happy path case. */
+    for( i = TLS_client_method_fn; i <= SSL_get_verify_result_fn + 1; i++ )
+    {
+        expectedStatus = failFunction_Openssl_Connect( i, NULL );
+        returnStatus = Openssl_Connect( &networkContext,
+                                        &serverInfo,
+                                        &opensslCredentials,
+                                        SEND_RECV_TIMEOUT,
+                                        SEND_RECV_TIMEOUT );
+        TEST_ASSERT_EQUAL( expectedStatus, returnStatus );
+    }
 }
