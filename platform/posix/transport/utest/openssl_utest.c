@@ -418,8 +418,7 @@ void test_Openssl_Connect_NULL_TLS_Credentials_Or_Configurations( void )
 void test_Openssl_Connect_Initializing_Objects_Fails( void )
 {
     OpensslStatus_t returnStatus, expectedStatus;
-
-    uint16_t;
+    uint16_t i;
     uint8_t initializers[] = { SSL_CTX_new_fn, SSL_new_fn, SSL_set_fd_fn };
 
     for( i = 0; i < sizeof( initializers ); i++ )
@@ -438,8 +437,7 @@ void test_Openssl_Connect_Initializing_Objects_Fails( void )
 void test_Openssl_Connect_Setting_TLS_Credentials_Fails( void )
 {
     OpensslStatus_t returnStatus, expectedStatus;
-
-    uint16_t;
+    uint16_t i;
 
     for( i = fopen_fn; i <= SSL_CTX_use_PrivateKey_file_fn; i++ )
     {
@@ -456,8 +454,7 @@ void test_Openssl_Connect_Setting_TLS_Credentials_Fails( void )
 void test_Openssl_Connect_Setting_TLS_Configurations_Fails( void )
 {
     OpensslStatus_t returnStatus, expectedStatus;
-
-    uint16_t;
+    uint16_t i;
 
     for( i = SSL_set_alpn_protos_fn; i <= SSL_set_tlsext_host_name_fn; i++ )
     {
@@ -474,8 +471,7 @@ void test_Openssl_Connect_Setting_TLS_Configurations_Fails( void )
 void test_Openssl_Connect_Handshake_Fails( void )
 {
     OpensslStatus_t returnStatus, expectedStatus;
-
-    uint16_t;
+    uint16_t i;
 
     for( i = SSL_connect_fn; i <= SSL_get_verify_result_fn; i++ )
     {
