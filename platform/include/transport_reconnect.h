@@ -32,7 +32,7 @@
 #include <stdint.h>
 
 /* bool is defined in only C99+. */
-#if defined( __cplusplus ) || __STDC_VERSION__ >= 199901L
+#if defined( __cplusplus ) || ( ( defined( __STDC_VERSION__ ) ) && ( __STDC_VERSION__ >= 199901L ) )
     #include <stdbool.h>
 #elif !defined( bool )
     #define bool     signed char
@@ -69,20 +69,20 @@ typedef struct TransportReconnectParams
  * This function must be called by the application before a new connection
  * with the server is attempted.
  *
- * @param[in, out] reconnectParam structure containing attempts done and timeout
+ * @param[in, out] pReconnectParams structure containing attempts done and timeout
  * value.
  */
-void Transport_ReconnectParamsReset( TransportReconnectParams_t * reconnectParams );
+void Transport_ReconnectParamsReset( TransportReconnectParams_t * pReconnectParams );
 
 /**
  * @brief Simple platform specific exponential backoff function. The application
  * must use this function between connection failures to add exponential delay.
  * This function will block the calling task for the current timeout value.
  *
- * @param[in, out] reconnectParam structure containing reconnection parameters.
+ * @param[in, out] pReconnectParams structure containing reconnection parameters.
  *
  * @return true after successful sleep, false when all attempts are exhausted.
  */
-bool Transport_ReconnectBackoffAndSleep( TransportReconnectParams_t * reconnectParams );
+bool Transport_ReconnectBackoffAndSleep( TransportReconnectParams_t * pReconnectParams );
 
 #endif /* ifndef TRANSPORT_RECONNECT_H_ */
