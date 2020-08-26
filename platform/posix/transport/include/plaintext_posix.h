@@ -57,7 +57,7 @@
  */
 struct NetworkContext
 {
-    int socketDescriptor;
+    int32_t socketDescriptor;
 };
 
 /**

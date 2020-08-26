@@ -28,22 +28,17 @@
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Defined by transport layer to check send or receive error.
- */
-extern int errno;
-
-/*-----------------------------------------------------------*/
-
-/**
  * @brief Log possible error from send/recv.
+ *
+ * @param[in] errorNumber Error number to be logged.
  */
-static void logTransportError( void );
+static void logTransportError( int32_t errorNumber );
 
 /*-----------------------------------------------------------*/
 
-static void logTransportError( void )
+static void logTransportError( int32_t errorNumber )
 {
-    switch( errno )
+    switch( errorNumber )
     {
         case EBADF:
             LogError( ( "The socket argument is not a valid file descriptor." ) );
@@ -88,6 +83,10 @@ static void logTransportError( void )
         case EPIPE:
             LogError( ( "The socket is shut down for writing, or the socket is connection-mode and is no longer connected. In the latter case, and if the socket is of type SOCK_STREAM or SOCK_SEQPACKET and the MSG_NOSIGNAL flag is not set, the SIGPIPE signal is generated to the calling thread." ) );
             break;
+
+        default:
+            LogError( ( "Unexpected error code: errno=%d.", errorNumber ) );
+            break;
     }
 }
 /*-----------------------------------------------------------*/
@@ -116,7 +115,7 @@ int32_t Plaintext_Recv( const NetworkContext_t * pNetworkContext,
 {
     int32_t bytesReceived = 0;
 
-    bytesReceived = recv( pNetworkContext->socketDescriptor, pBuffer, bytesToRecv, 0 );
+    bytesReceived = ( int32_t ) recv( pNetworkContext->socketDescriptor, pBuffer, bytesToRecv, 0 );
 
     if( bytesReceived == 0 )
     {
@@ -125,7 +124,7 @@ int32_t Plaintext_Recv( const NetworkContext_t * pNetworkContext,
     }
     else if( bytesReceived < 0 )
     {
-        logTransportError();
+        logTransportError( errno );
 
         /* Check if it was time out. */
         if( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) )
@@ -149,11 +148,11 @@ int32_t Plaintext_Send( const NetworkContext_t * pNetworkContext,
 {
     int32_t bytesSent = 0;
 
-    bytesSent = send( pNetworkContext->socketDescriptor, pBuffer, bytesToSend, 0 );
+    bytesSent = ( int32_t ) send( pNetworkContext->socketDescriptor, pBuffer, bytesToSend, 0 );
 
     if( bytesSent < 0 )
     {
-        logTransportError();
+        logTransportError( errno );
 
         /* Check if it was time out */
         if( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) )
