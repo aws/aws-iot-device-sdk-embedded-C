@@ -471,7 +471,7 @@ void startOTAUpdateDemo( NetworkContext_t * pNetworkContext )
         mqttProcessTimeMs = pMqttContext->getTime() - mqttProcessTimeMs;
 
         /* Check if the connection is lost. */
-        if( mqttStatus == MQTTKeepAliveTimeout || mqttStatus == MQTTSendFailed )
+        if( mqttStatus != MQTTSuccess )
         {
             mqttSessionEstablished = false;
         }

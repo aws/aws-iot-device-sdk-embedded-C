@@ -146,64 +146,75 @@ static bool prvSubscribeToJobNotificationTopics( const OTA_AgentContext_t * pxAg
     DEFINE_OTA_METHOD_NAME( "prvSubscribeToJobNotificationTopics" );
 
     bool bResult = false;
+    MQTTStatus_t mqttStatus = MQTTBadParameter;
+    MQTTContext_t * pMqttContext = pxAgentCtx->pvConnectionContext;
+    MQTTSubscribeInfo_t subscriptionInfo;
+    size_t subscriptionCount = 1;
     char pcJobTopic[ OTA_MAX_TOPIC_LEN ];
-    MQTTSubscribeInfo_t stJobsSubscription[ 1 ];
-    IotMqttError_t eResult = IOT_MQTT_STATUS_PENDING;
     uint16_t usTopicLen = 0;
-    OTA_ConnectionContext_t * pvConnContext = pxAgentCtx->pvConnectionContext;
 
     /* Build the first topic. */
-    usTopicLen = ( uint16_t ) snprintf( pcJobTopic, /*lint -e586 Intentionally using snprintf. */
+    usTopicLen = ( uint16_t ) snprintf( pcJobTopic,
                                         sizeof( pcJobTopic ),
                                         pcOTA_JobsGetNextAccepted_TopicTemplate,
                                         pxAgentCtx->pcThingName );
 
     /* Clear subscription struct and set common parameters for job topics used by OTA. */
-    memset( &stJobsSubscription, 0, sizeof( stJobsSubscription ) );
-    stJobsSubscription[ 0 ].qos = MQTTQoS1;
-    stJobsSubscription[ 0 ].pTopicFilter = ( const char * ) pcJobTopic;
-    stJobsSubscription[ 0 ].topicFilterLength = usTopicLen;
+    memset( &subscriptionInfo, 0, sizeof( subscriptionInfo ) );
+    subscriptionInfo.qos = MQTTQoS1;
+    subscriptionInfo.pTopicFilter = ( const char * ) pcJobTopic;
+    subscriptionInfo.topicFilterLength = usTopicLen;
 
     if( ( usTopicLen > 0U ) && ( usTopicLen < sizeof( pcJobTopic ) ) )
     {
         /* Subscribe to the first of two jobs topics. */
-        eResult = MQTT_Subscribe( pvConnContext->pvControlClient,
-                                  stJobsSubscription,
-                                  1, /* Subscriptions count */
-                                  MQTT_GetPacketId( pvConnContext->pvControlClient ) );
+        mqttStatus = MQTT_Subscribe( pMqttContext,
+                                     &subscriptionInfo,
+                                     subscriptionCount,
+                                     MQTT_GetPacketId( pMqttContext ) );
 
-        if( eResult == MQTTSuccess )
+        if( mqttStatus == MQTTSuccess )
         {
-            OTA_LOG_L1( "[%s] OK: %s\n\r", OTA_METHOD_NAME, stJobsSubscription.pTopicFilter );
+            OTA_LOG_L1( "[%s] OK: %s\n\r", OTA_METHOD_NAME, subscriptionInfo.pTopicFilter );
             /* Build the second topic. */
-            usTopicLen = ( uint16_t ) snprintf( pcJobTopic, /*lint -e586 Intentionally using snprintf. */
+            usTopicLen = ( uint16_t ) snprintf( pcJobTopic,
                                                 sizeof( pcJobTopic ),
                                                 pcOTA_JobsNotifyNext_TopicTemplate,
                                                 pxAgentCtx->pcThingName );
         }
         else
         {
-            OTA_LOG_L1( "[%s] Failed: %s\n\r", OTA_METHOD_NAME, stJobsSubscription.pTopicFilter );
+            OTA_LOG_L1( "[%s] Failed: %s\n\r", OTA_METHOD_NAME, subscriptionInfo.pTopicFilter );
         }
     }
 
-    if( ( eResult == MQTTSuccess ) && ( usTopicLen > 0U ) && ( usTopicLen < sizeof( pcJobTopic ) ) )
+    if( ( mqttStatus == MQTTSuccess ) && ( usTopicLen > 0U ) && ( usTopicLen < sizeof( pcJobTopic ) ) )
     {
         /* Subscribe to the second of two jobs topics. */
-        stJobsSubscription.topicFilterLength = usTopicLen;
-        eResult = MQTT_Subscribe( pvConnContext->pvControlClient,
-                                  stJobsSubscription,
-                                  1, /* Subscriptions count */
-                                  MQTT_GetPacketId( pvConnContext->pvControlClient ) );
+        subscriptionInfo.topicFilterLength = usTopicLen;
+        mqttStatus = MQTT_Subscribe( pMqttContext,
+                                     subscriptionInfo,
+                                     subscriptionCount,
+                                     MQTT_GetPacketId( pMqttContext ) );
 
-        if( eResult == MQTTSuccess )
+        if( mqttStatus == MQTTSuccess )
         {
-            OTA_LOG_L1( "[%s] OK: %s\n\r", OTA_METHOD_NAME, stJobsSubscription.pTopicFilter );
+            OTA_LOG_L1( "[%s] OK: %s\n\r", OTA_METHOD_NAME, subscriptionInfo.pTopicFilter );
             bResult = true;
         }
         else
         {
-            OTA_LOG_L1( "[%s] Failed: %s\n\r", OTA_METHOD_NAME, stJobsSubscription.pTopicFilter );
+            OTA_LOG_L1( "[%s] Failed: %s\n\r", OTA_METHOD_NAME, subscriptionInfo.pTopicFilter );
+        }
+    }
+
+    if( mqttStatus == MQTTSuccess )
+    {
+        /* Wait for the subscription to complete. */
+        mqttStatus = MQTT_ProcessLoop( pMqttContext, OTA_SUBSCRIBE_WAIT_MS );
+        if( mqttStatus != MQTTSuccess )
+        {
+            OTA_LOG_L1( "[%s] Subscribe wait failed.\n\r", OTA_METHOD_NAME );
         }
     }
 
@@ -217,44 +228,60 @@ static bool prvUnSubscribeFromDataStream( const OTA_AgentContext_t * pxAgentCtx 
 {
     DEFINE_OTA_METHOD_NAME( "prvUnSubscribeFromDataStream" );
 
-    IotMqttSubscription_t xUnSub;
-
     bool bResult = false;
+    MQTTStatus_t mqttStatus = MQTTBadParameter;
+    MQTTContext_t * pMqttContext = pxAgentCtx->pvConnectionContext;
+    MQTTSubscribeInfo_t subscriptionInfo;
+    size_t subscriptionCount = 1;
+
     char pcOTA_RxStreamTopic[ OTA_MAX_TOPIC_LEN ];
+    uint16_t usTopicLen = 0;
+    const OTA_FileContext_t * pFileContext = &( pxAgentCtx->pxOTA_Files[ pxAgentCtx->ulFileIndex ] );
 
-    xUnSub.qos = IOT_MQTT_QOS_0;
-
-    if( pxAgentCtx != NULL )
+    if( ( pFileContext != NULL ) && ( pFileContext->pucStreamName != NULL ) )
     {
-        /* Try to build the dynamic data stream topic and un-subscribe from it. */
+        /* Try to build the dynamic data stream topic. */
+        usTopicLen = ( uint16_t ) snprintf( pcOTA_RxStreamTopic,
+                                            sizeof( pcOTA_RxStreamTopic ),
+                                            pcOTA_StreamData_TopicTemplate,
+                                            pxAgentCtx->pcThingName,
+                                            ( const char * ) pFileContext->pucStreamName );
 
-        xUnSub.topicFilterLength = ( uint16_t ) snprintf( pcOTA_RxStreamTopic, /*lint -e586 Intentionally using snprintf. */
-                                                          sizeof( pcOTA_RxStreamTopic ),
-                                                          pcOTA_StreamData_TopicTemplate,
-                                                          pxAgentCtx->pcThingName,
-                                                          ( const char * ) pxAgentCtx->pxOTA_Files[ 0 ].pucStreamName );
+        /* Clear subscription struct and set common parameters for job topics used by OTA. */
+        memset( &subscriptionInfo, 0, sizeof( subscriptionInfo ) );
+        subscriptionInfo.qos = MQTTQoS0;
+        subscriptionInfo.pTopicFilter = ( const char * ) pcOTA_RxStreamTopic;
+        subscriptionInfo.topicFilterLength = usTopicLen;
 
-        if( ( xUnSub.topicFilterLength > 0U ) && ( xUnSub.topicFilterLength < sizeof( pcOTA_RxStreamTopic ) ) )
+        if( ( usTopicLen > 0U ) && ( usTopicLen < sizeof( pcOTA_RxStreamTopic ) ) )
         {
-            xUnSub.pTopicFilter = ( const char * ) pcOTA_RxStreamTopic;
+            mqttStatus = Mqtt_Unsubscribe( pMqttContext,
+                                        &subscriptionInfo,
+                                        subscriptionCount,
+                                        MQTT_GetPacketId( pMqttContext ) );
 
-            if( IotMqtt_TimedUnsubscribe( ( ( OTA_ConnectionContext_t * ) pxAgentCtx->pvConnectionContext )->pvControlClient,
-                                          &xUnSub,
-                                          1, /* Subscriptions count */
-                                          0, /* flags */
-                                          OTA_UNSUBSCRIBE_WAIT_MS ) != IOT_MQTT_SUCCESS )
+            if( mqttStatus == MQTTSuccess )
             {
-                OTA_LOG_L1( "[%s] Failed: %s\n\r", OTA_METHOD_NAME, pcOTA_RxStreamTopic );
+                OTA_LOG_L1( "[%s] OK: %s\n\r", OTA_METHOD_NAME, xUnSub.pTopicFilter );
             }
             else
             {
-                OTA_LOG_L1( "[%s] OK: %s\n\r", OTA_METHOD_NAME, pcOTA_RxStreamTopic );
-                bResult = true;
+                OTA_LOG_L1( "[%s] FAIL: %s\n\r", OTA_METHOD_NAME, xUnSub.pTopicFilter );
             }
         }
         else
         {
             OTA_LOG_L1( "[%s] Failed to build stream topic.\n\r", OTA_METHOD_NAME );
+        }
+    }
+
+    if( mqttStatus == MQTTSuccess )
+    {
+        /* Wait for the unsubscription to complete. */
+        mqttStatus = MQTT_ProcessLoop( pMqttContext, OTA_UNSUBSCRIBE_WAIT_MS );
+        if( mqttStatus != MQTTSuccess )
+        {
+            OTA_LOG_L1( "[%s] Unsubscribe wait failed.\n\r", OTA_METHOD_NAME );
         }
     }
 
@@ -268,73 +295,72 @@ static void prvUnSubscribeFromJobNotificationTopic( const OTA_AgentContext_t * p
 {
     DEFINE_OTA_METHOD_NAME( "prvUnSubscribeFromJobNotificationTopic" );
 
-    IotMqttSubscription_t xUnSub;
-    IotMqttOperation_t paUnubscribeOperation[ 2 ] = { NULL };
+    MQTTStatus_t mqttStatus;
+    MQTTContext_t * pMqttContext = pxAgentCtx->pvConnectionContext;
+    MQTTSubscribeInfo_t subscriptionInfo;
+    size_t subscriptionCount = 1;
     char pcJobTopic[ OTA_MAX_TOPIC_LEN ];
+    uint16_t usTopicLen = 0;
 
-    OTA_ConnectionContext_t * pvConnContext = pxAgentCtx->pvConnectionContext;
+    /* Build the first topic. */
+    usTopicLen = ( uint16_t ) snprintf( pcJobTopic,
+                                        sizeof( pcJobTopic ),
+                                        pcOTA_JobsNotifyNext_TopicTemplate,
+                                        pxAgentCtx->pcThingName );
 
-    /* Try to unsubscribe from the first of two job topics. */
-    xUnSub.qos = IOT_MQTT_QOS_0;
-    xUnSub.pTopicFilter = ( const char * ) pcJobTopic;            /* Point to local string storage. Built below. */
-    xUnSub.topicFilterLength = ( uint16_t ) snprintf( pcJobTopic, /*lint -e586 Intentionally using snprintf. */
-                                                      sizeof( pcJobTopic ),
-                                                      pcOTA_JobsNotifyNext_TopicTemplate,
-                                                      pxAgentCtx->pcThingName );
+    /* Clear subscription struct and set common parameters for job topics used by OTA. */
+    memset( &subscriptionInfo, 0, sizeof( subscriptionInfo ) );
+    subscriptionInfo.qos = MQTTQoS0;
+    subscriptionInfo.pTopicFilter = ( const char * ) pcJobTopic;
+    subscriptionInfo.topicFilterLength = usTopicLen;
 
-    if( ( xUnSub.topicFilterLength > 0U ) && ( xUnSub.topicFilterLength < sizeof( pcJobTopic ) ) )
+    if( ( usTopicLen > 0U ) && ( usTopicLen < sizeof( pcJobTopic ) ) )
     {
-        if( IotMqtt_Unsubscribe( pvConnContext->pvControlClient,
-                                 &xUnSub,
-                                 1,                      /* Subscriptions count */
-                                 IOT_MQTT_FLAG_WAITABLE, /* flags */
-                                 NULL,
-                                 &( paUnubscribeOperation[ 0 ] ) ) != IOT_MQTT_STATUS_PENDING )
+        /* Unsubscribe to the first of two jobs topics. */
+        mqttStatus = MQTT_Unsubscribe( pMqttContext,
+                                       &subscriptionInfo,
+                                       subscriptionCount,
+                                       MQTT_GetPacketId( pMqttContext );
+        if( mqttStatus == MQTTSuccess )
         {
-            OTA_LOG_L1( "[%s] FAIL: %s\n\r", OTA_METHOD_NAME, xUnSub.pTopicFilter );
+            OTA_LOG_L1( "[%s] OK: %s\n\r", OTA_METHOD_NAME, subscriptionInfo.pTopicFilter );
+            /* Build the second topic. */
+            usTopicLen = ( uint16_t ) snprintf( pcJobTopic,
+                                                sizeof( pcJobTopic ),
+                                                pcOTA_JobsGetNextAccepted_TopicTemplate,
+                                                pxAgentCtx->pcThingName );
         }
         else
         {
-            OTA_LOG_L1( "[%s] OK: %s\n\r", OTA_METHOD_NAME, xUnSub.pTopicFilter );
+            OTA_LOG_L1( "[%s] Failed: %s\n\r", OTA_METHOD_NAME, subscriptionInfo.pTopicFilter );
         }
     }
 
-    /* Try to unsubscribe from the second of two job topics. */
-    xUnSub.topicFilterLength = ( uint16_t ) snprintf( pcJobTopic, /*lint -e586 Intentionally using snprintf. */
-                                                      sizeof( pcJobTopic ),
-                                                      pcOTA_JobsGetNextAccepted_TopicTemplate,
-                                                      pxAgentCtx->pcThingName );
-
-    if( ( xUnSub.topicFilterLength > 0U ) && ( xUnSub.topicFilterLength < sizeof( pcJobTopic ) ) )
+    if( ( mqttStatus == MQTTSuccess ) && ( usTopicLen > 0U ) && ( usTopicLen < sizeof( pcJobTopic ) ) )
     {
-        if( IotMqtt_Unsubscribe( pvConnContext->pvControlClient,
-                                 &xUnSub,
-                                 1,                      /* Subscriptions count */
-                                 IOT_MQTT_FLAG_WAITABLE, /* flags */
-                                 NULL,
-                                 &( paUnubscribeOperation[ 1 ] ) ) != IOT_MQTT_STATUS_PENDING )
+        /* Unsubscribe from the second of two jobs topics. */
+        subscriptionInfo.topicFilterLength = usTopicLen;
+        mqttStatus = MQTT_Unsubscribe( pMqttContext,
+                                       &subscriptionInfo,
+                                       subscriptionCount,
+                                       MQTT_GetPacketId( pMqttContext ) );
+        if( mqttStatus != MQTTSuccess )
         {
-            OTA_LOG_L1( "[%s] FAIL: %s\n\r", OTA_METHOD_NAME, xUnSub.pTopicFilter );
+            OTA_LOG_L1( "[%s] Failed: %s\n\r", OTA_METHOD_NAME, subscriptionInfo.pTopicFilter );
         }
         else
         {
-            OTA_LOG_L1( "[%s] OK: %s\n\r", OTA_METHOD_NAME, xUnSub.pTopicFilter );
+            OTA_LOG_L1( "[%s] OK: %s\n\r", OTA_METHOD_NAME, subscriptionInfo.pTopicFilter );
         }
     }
 
-    if( paUnubscribeOperation[ 0 ] != NULL )
+    if( mqttStatus == MQTTSuccess )
     {
-        if( IotMqtt_Wait( paUnubscribeOperation[ 0 ], OTA_UNSUBSCRIBE_WAIT_MS ) != IOT_MQTT_SUCCESS )
+        /* Wait for the unsubscription to complete. */
+        mqttStatus = MQTT_ProcessLoop( pMqttContext, OTA_UNSUBSCRIBE_WAIT_MS );
+        if( mqttStatus != MQTTSuccess )
         {
-            OTA_LOG_L1( "[%s] Unsubscribe wait failed on topic %d\n\r", OTA_METHOD_NAME, 0 );
-        }
-    }
-
-    if( paUnubscribeOperation[ 1 ] != NULL )
-    {
-        if( IotMqtt_Wait( paUnubscribeOperation[ 1 ], OTA_UNSUBSCRIBE_WAIT_MS ) != IOT_MQTT_SUCCESS )
-        {
-            OTA_LOG_L1( "[%s] Unsubscribe wait failed on topic %d\n\r", OTA_METHOD_NAME, 1 );
+            OTA_LOG_L1( "[%s] Unsubscribe wait failed.\n\r", OTA_METHOD_NAME );
         }
     }
 }
@@ -342,29 +368,42 @@ static void prvUnSubscribeFromJobNotificationTopic( const OTA_AgentContext_t * p
 /*
  * Publish a message to the specified client/topic at the given QOS.
  */
-static IotMqttError_t prvPublishMessage( const OTA_AgentContext_t * pxAgentCtx,
+static MQTTStatus_t prvPublishMessage( const OTA_AgentContext_t * pxAgentCtx,
                                          const char * const pacTopic,
                                          uint16_t usTopicLen,
                                          const char * pcMsg,
                                          uint32_t ulMsgSize,
                                          IotMqttQos_t eQOS )
 {
-    IotMqttError_t eResult;
-    IotMqttPublishInfo_t xPublishParams;
-    OTA_ConnectionContext_t * pvConnContext = pxAgentCtx->pvConnectionContext;
+    MQTTStatus_t mqttStatus = MQTTBadParameter;
+    MQTTPublishInfo_t publishInfo;
+    MQTTContext_t * pMqttContext = pxAgentCtx->pvConnectionContext;
 
-    xPublishParams.pTopicName = pacTopic;
-    xPublishParams.topicNameLength = usTopicLen;
-    xPublishParams.qos = eQOS;
-    xPublishParams.pPayload = pcMsg;
-    xPublishParams.payloadLength = ulMsgSize;
-    xPublishParams.retryLimit = OTA_MAX_PUBLISH_RETRIES;
-    xPublishParams.retryMs = OTA_RETRY_DELAY_MS;
-    xPublishParams.retain = false;
+    publishInfo.pTopicName = pacTopic;
+    publishInfo.topicNameLength = usTopicLen;
+    publishInfo.qos = eQOS;
+    publishInfo.pPayload = pcMsg;
+    publishInfo.payloadLength = ulMsgSize;
 
-    eResult = IotMqtt_TimedPublish( pvConnContext->pvControlClient, &xPublishParams, 0, OTA_PUBLISH_WAIT_MS );
+    mqttStatus = Mqtt_Publish( pMqttContext,
+                               &publishInfo,
+                               MQTT_GetPacketId( pMqttContext ) );
 
-    return eResult;
+    if( mqttStatus == MQTTSuccess )
+    {
+        /* Wait for the publish to complete. */
+        mqttStatus = MQTT_ProcessLoop( pMqttContext, OTA_PUBLISH_WAIT_MS );
+        if( mqttStatus != MQTTSuccess )
+        {
+            OTA_LOG_L1( "[%s] Publish ack wait failed.\n\r", OTA_METHOD_NAME );
+        }
+    }
+    else
+    {
+        OTA_LOG_L1( "[%s] Failed to send PUBLISH packet to broker with error = %u.", mqttStatus );
+    }
+
+    return mqttStatus;
 }
 
 /*
@@ -374,12 +413,12 @@ static void prvPublishStatusMessage( OTA_AgentContext_t * pxAgentCtx,
                                      OTA_JobStatus_t eStatus,
                                      const char * pcMsg,
                                      uint32_t ulMsgSize,
-                                     IotMqttQos_t eQOS )
+                                     MQTTQoS_t eQOS )
 {
     DEFINE_OTA_METHOD_NAME( "prvPublishStatusMessage" );
 
     uint32_t ulTopicLen = 0;
-    IotMqttError_t eResult;
+    MQTTStatus_t mqttStatus = MQTTBadParameter;
     char pcTopicBuffer[ OTA_MAX_TOPIC_LEN ];
 
     /* Try to build the dynamic job status topic . */
@@ -393,15 +432,14 @@ static void prvPublishStatusMessage( OTA_AgentContext_t * pxAgentCtx,
     if( ( ulTopicLen > 0UL ) && ( ulTopicLen < sizeof( pcTopicBuffer ) ) )
     {
         OTA_LOG_L1( "[%s] Msg: %s\r\n", OTA_METHOD_NAME, pcMsg );
-        eResult = prvPublishMessage(
-            pxAgentCtx,
-            pcTopicBuffer,
-            ( uint16_t ) ulTopicLen,
-            &pcMsg[ 0 ],
-            ulMsgSize,
-            eQOS );
+        mqttStatus = prvPublishMessage( pxAgentCtx,
+                                        pcTopicBuffer,
+                                        ( uint16_t ) ulTopicLen,
+                                        &pcMsg[ 0 ],
+                                        ulMsgSize,
+                                        eQOS );
 
-        if( eResult != IOT_MQTT_SUCCESS )
+        if( mqttStatus != MQTTSuccess )
         {
             OTA_LOG_L1( "[%s] Failed: %s\r\n", OTA_METHOD_NAME, pcTopicBuffer );
         }
@@ -543,7 +581,7 @@ static void prvSendCallbackEvent( void * pvCallbackContext,
 {
     DEFINE_OTA_METHOD_NAME( "prvSendCallbackEvent" );
     OTA_EventMsg_t xEventMsg = { 0 };
-    BaseType_t xErr = pdFALSE;
+    bool succeed = false;
     OTA_EventData_t * pxData;
 
     /* Get the OTA agent context. */
@@ -562,7 +600,7 @@ static void prvSendCallbackEvent( void * pvCallbackContext,
             xEventMsg.pxEventData = pxData;
 
             /* Send job document received event. */
-            xErr = OTA_SignalEvent( &xEventMsg );
+            succeed = OTA_SignalEvent( &xEventMsg );
         }
         else
         {
@@ -574,7 +612,7 @@ static void prvSendCallbackEvent( void * pvCallbackContext,
         OTA_LOG_L1( "Error: buffers are too small %d to contains the payload %d.\r\n", OTA_DATA_BLOCK_SIZE, pxPublishData->u.message.info.payloadLength );
     }
 
-    if( xErr == pdTRUE )
+    if( succeed )
     {
         /* Update packet received statistics counter. */
         pxAgentCtx->xStatistics.ulOTA_PacketsReceived++;
@@ -656,15 +694,9 @@ OTA_Err_t prvRequestJob_Mqtt( OTA_AgentContext_t * pxAgentCtx )
 
         if( ( usTopicLen > 0U ) && ( usTopicLen < sizeof( pcJobTopic ) ) )
         {
-            eResult = prvPublishMessage(
-                pxAgentCtx,
-                pcJobTopic,
-                usTopicLen,
-                pcMsg,
-                ulMsgLen,
-                IOT_MQTT_QOS_1 );
+            eResult = prvPublishMessage( pxAgentCtx, pcJobTopic, usTopicLen, pcMsg, ulMsgLen, MQTTQoS1 );
 
-            if( eResult != IOT_MQTT_SUCCESS )
+            if( eResult != MQTTSuccess )
             {
                 OTA_LOG_L1( "[%s] Failed to publish MQTT message.\r\n", OTA_METHOD_NAME );
                 xError = kOTA_Err_PublishFailed;
@@ -699,7 +731,7 @@ OTA_Err_t prvUpdateJobStatus_Mqtt( OTA_AgentContext_t * pxAgentCtx,
     /* A message size of zero means don't publish anything. */
     uint32_t ulMsgSize = 0;
     /* All job state transitions except streaming progress use QOS 1 since it is required to have status in the job document. */
-    IotMqttQos_t eQOS = IOT_MQTT_QOS_1;
+    MQTTQoS_t eQOS = MQTTQoS1;
     char pcMsg[ OTA_STATUS_MSG_MAX_SIZE ];
 
     /* Get the current file context. */
@@ -714,7 +746,7 @@ OTA_Err_t prvUpdateJobStatus_Mqtt( OTA_AgentContext_t * pxAgentCtx,
             if( ulMsgSize > 0 )
             {
                 /* Downgrade Progress updates to QOS 0 to avoid overloading MQTT buffers during active streaming. */
-                eQOS = IOT_MQTT_QOS_0;
+                eQOS = MQTTQoS0;
             }
         }
         else
@@ -752,38 +784,58 @@ OTA_Err_t prvInitFileTransfer_Mqtt( OTA_AgentContext_t * pxAgentCtx )
     DEFINE_OTA_METHOD_NAME( "prvInitFileTransfer_Mqtt" );
 
     OTA_Err_t xResult = kOTA_Err_PublishFailed;
+    MQTTStatus_t mqttStatus = MQTTBadParameter;
+    MQTTContext_t * pMqttContext = pxAgentCtx->pvConnectionContext;
+    MQTTSubscribeInfo_t xOTAUpdateDataSubscription;
+    size_t subscriptionCount = 1;
+
     char pcOTA_RxStreamTopic[ OTA_MAX_TOPIC_LEN ];
-    MQTTSubscribeInfo_t xOTAUpdateDataSubscription[ 1 ];
-    OTA_ConnectionContext_t * pvConnContext = pxAgentCtx->pvConnectionContext;
+    uint16_t usTopicLen = 0;
+    const OTA_FileContext_t * pFileContext = &( pxAgentCtx->pxOTA_Files[ pxAgentCtx->ulFileIndex ] );
+
+    usTopicLen = ( uint16_t ) snprintf( pcOTA_RxStreamTopic,
+                                        sizeof( pcOTA_RxStreamTopic ),
+                                        pcOTA_StreamData_TopicTemplate,
+                                        pxAgentCtx->pcThingName,
+                                        ( const char * ) pFileContext->pucStreamName );
 
     memset( &xOTAUpdateDataSubscription, 0, sizeof( xOTAUpdateDataSubscription ) );
-    xOTAUpdateDataSubscription[ 0 ].qos = IOT_MQTT_QOS_0;
-    xOTAUpdateDataSubscription[ 0 ].pTopicFilter = ( const char * ) pcOTA_RxStreamTopic;
-    xOTAUpdateDataSubscription[ 0 ].topicFilterLength = ( uint16_t ) snprintf( pcOTA_RxStreamTopic, /*lint -e586 Intentionally using snprintf. */
-                                                                               sizeof( pcOTA_RxStreamTopic ),
-                                                                               pcOTA_StreamData_TopicTemplate,
-                                                                               pxAgentCtx->pcThingName,
-                                                                               ( const char * ) pxAgentCtx->pxOTA_Files->pucStreamName );
+    xOTAUpdateDataSubscription.qos = MQTTQoS0;
+    xOTAUpdateDataSubscription.pTopicFilter = ( const char * ) pcOTA_RxStreamTopic;
+    xOTAUpdateDataSubscription.topicFilterLength = usTopicLen;
 
-    if( ( xOTAUpdateDataSubscription[ 0 ].topicFilterLength > 0U ) &&
-        ( xOTAUpdateDataSubscription[ 0 ].topicFilterLength < sizeof( pcOTA_RxStreamTopic ) ) )
+    if( ( usTopicLen > 0U ) && ( usTopicLen < sizeof( pcOTA_RxStreamTopic ) ) )
     {
-        if( MQTT_Subscribe( pvConnContext->pvControlClient,
-                            xOTAUpdateDataSubscription,
-                            1, /* Subscriptions count */
-                            MQTT_GetPacketId( pvConnContext->pvControlClient ) ) != MQTTSuccess )
+        mqttStatus = MQTT_Subscribe( pMqttContext,
+                                     xOTAUpdateDataSubscription,
+                                     subscriptionCount,
+                                     MQTT_GetPacketId( pMqttContext ) );
+        if( mqttStatus != MQTTSuccess )
         {
             OTA_LOG_L1( "[%s] Failed: %s\n\r", OTA_METHOD_NAME, xOTAUpdateDataSubscription.pTopicFilter );
         }
         else
         {
             OTA_LOG_L1( "[%s] OK: %s\n\r", OTA_METHOD_NAME, xOTAUpdateDataSubscription.pTopicFilter );
-            xResult = kOTA_Err_None;
         }
     }
     else
     {
         OTA_LOG_L1( "[%s] Failed to build stream topic.\n\r", OTA_METHOD_NAME );
+    }
+
+    if( mqttStatus == MQTTSuccess )
+    {
+        /* Wait for the subscription to complete. */
+        mqttStatus = MQTT_ProcessLoop( pMqttContext, OTA_SUBSCRIBE_WAIT_MS );
+        if( mqttStatus != MQTTSuccess )
+        {
+            OTA_LOG_L1( "[%s] Subscribe wait failed.\n\r", OTA_METHOD_NAME );
+        }
+        else
+        {
+            xResult = kOTA_Err_None;
+        }
     }
 
     return xResult;
@@ -800,7 +852,7 @@ OTA_Err_t prvRequestFileBlock_Mqtt( OTA_AgentContext_t * pxAgentCtx )
     uint32_t ulNumBlocks, ulBitmapLen;
     uint32_t ulMsgSizeToPublish = 0;
     uint32_t ulTopicLen = 0;
-    IotMqttError_t eResult = IOT_MQTT_STATUS_PENDING;
+    MQTTStatus_t mqttStatus = MQTTBadParameter;
     OTA_Err_t xErr = kOTA_Err_Uninitialized;
     char pcMsg[ OTA_REQUEST_MSG_MAX_SIZE ];
     char pcTopicBuffer[ OTA_MAX_TOPIC_LEN ];
@@ -818,7 +870,7 @@ OTA_Err_t prvRequestFileBlock_Mqtt( OTA_AgentContext_t * pxAgentCtx )
         ulNumBlocks = ( C->ulFileSize + ( OTA_FILE_BLOCK_SIZE - 1U ) ) >> otaconfigLOG2_FILE_BLOCK_SIZE;
         ulBitmapLen = ( ulNumBlocks + ( BITS_PER_BYTE - 1U ) ) >> LOG2_BITS_PER_BYTE;
 
-        if( pdTRUE == OTA_CBOR_Encode_GetStreamRequestMessage(
+        if( OTA_CBOR_Encode_GetStreamRequestMessage(
                 ( uint8_t * ) pcMsg,
                 sizeof( pcMsg ),
                 &xMsgSizeFromStream,
@@ -864,15 +916,14 @@ OTA_Err_t prvRequestFileBlock_Mqtt( OTA_AgentContext_t * pxAgentCtx )
 
     if( xErr == kOTA_Err_None )
     {
-        eResult = prvPublishMessage(
-            pxAgentCtx,
-            pcTopicBuffer,
-            ( uint16_t ) ulTopicLen,
-            &pcMsg[ 0 ],
-            ulMsgSizeToPublish,
-            IOT_MQTT_QOS_0 );
+        mqttStatus = prvPublishMessage( pxAgentCtx,
+                                        pcTopicBuffer,
+                                        ( uint16_t ) ulTopicLen,
+                                        &pcMsg[ 0 ],
+                                        ulMsgSizeToPublish,
+                                        MQTTQoS0 );
 
-        if( eResult != IOT_MQTT_SUCCESS )
+        if( mqttStatus != MQTTSuccess )
         {
             OTA_LOG_L1( "[%s] Failed: %s\r\n", OTA_METHOD_NAME, pcTopicBuffer );
             xErr = kOTA_Err_PublishFailed;
@@ -902,7 +953,7 @@ OTA_Err_t prvDecodeFileBlock_Mqtt( uint8_t * pucMessageBuffer,
     OTA_Err_t xErr = kOTA_Err_Uninitialized;
 
     /* Decode the CBOR content. */
-    if( pdFALSE == OTA_CBOR_Decode_GetStreamResponseMessage(
+    if( !OTA_CBOR_Decode_GetStreamResponseMessage(
             pucMessageBuffer,
             xMessageSize,
             plFileId,
