@@ -1148,6 +1148,9 @@ void test_MQTT_Restore_Session_Complete_Incoming_Publish( void )
  */
 void test_MQTT_Resend_Unacked_Publish_QoS1( void )
 {
+    /* Start a persistent session with the broker. */
+    startPersistentSession();
+
     /* Initiate the PUBLISH operation at QoS 1. The library should add an
      * outgoing PUBLISH record in the context. */
     TEST_ASSERT_EQUAL( MQTTSuccess, publishToTopic(
@@ -1175,22 +1178,16 @@ void test_MQTT_Resend_Unacked_Publish_QoS1( void )
     /* Reset the transport receive function in the context. */
     context.transportInterface.recv = Openssl_Recv;
 
-    /* Re-establish a TLS+TCP network connection with the server. */
-    TEST_ASSERT_EQUAL( OPENSSL_SUCCESS, Openssl_Connect( &networkContext,
-                                                         &serverInfo,
-                                                         &opensslCredentials,
-                                                         TRANSPORT_SEND_RECV_TIMEOUT_MS,
-                                                         TRANSPORT_SEND_RECV_TIMEOUT_MS ) );
-    TEST_ASSERT_NOT_EQUAL( -1, networkContext.socketDescriptor );
-    TEST_ASSERT_NOT_NULL( networkContext.pSsl );
-
-    /* Re-establish a connection with the broker to resend the PUBLISH packet. */
-    establishMqttSession( &context, &networkContext, false, &persistentSession );
+    /* We will re-establish an MQTT over TLS connection with the broker to restore
+     * the persistent session. */
+    resumePersistentSession();
 
     /* Obtain the packet ID of the PUBLISH packet that didn't complete in the previous connection. */
     MQTTStateCursor_t cursor = MQTT_STATE_CURSOR_INITIALIZER;
     uint16_t publishPackedId = MQTT_PublishToResend( &context, &cursor );
+    TEST_ASSERT_NOT_EQUAL( MQTT_PACKET_ID_INVALID, publishPackedId );
 
+    /* Make sure that the packet ID is maintained in the outgoing publish state records. */
     TEST_ASSERT_EQUAL( context.outgoingPublishRecords[ 0 ].packetId, publishPackedId );
 
     /* Resend the PUBLISH packet that didn't complete in the previous connection. */
@@ -1221,6 +1218,9 @@ void test_MQTT_Resend_Unacked_Publish_QoS1( void )
  */
 void test_MQTT_Resend_Unacked_Publish_QoS2( void )
 {
+    /* Start a persistent session with the broker. */
+    startPersistentSession();
+
     /* Initiate the PUBLISH operation at QoS 2. The library should add an
      * outgoing PUBLISH record in the context. */
     TEST_ASSERT_EQUAL( MQTTSuccess, publishToTopic(
@@ -1247,22 +1247,16 @@ void test_MQTT_Resend_Unacked_Publish_QoS2( void )
     /* Reset the transport receive function in the context. */
     context.transportInterface.recv = Openssl_Recv;
 
-    /* Re-establish a TLS+TCP network connection with the server. */
-    TEST_ASSERT_EQUAL( OPENSSL_SUCCESS, Openssl_Connect( &networkContext,
-                                                         &serverInfo,
-                                                         &opensslCredentials,
-                                                         TRANSPORT_SEND_RECV_TIMEOUT_MS,
-                                                         TRANSPORT_SEND_RECV_TIMEOUT_MS ) );
-    TEST_ASSERT_NOT_EQUAL( -1, networkContext.socketDescriptor );
-    TEST_ASSERT_NOT_NULL( networkContext.pSsl );
-
-    /* Re-establish a connection with the broker to resend the PUBLISH packet. */
-    establishMqttSession( &context, &networkContext, false, &persistentSession );
+    /* We will re-establish an MQTT over TLS connection with the broker to restore
+     * the persistent session. */
+    resumePersistentSession();
 
     /* Obtain the packet ID of the PUBLISH packet that didn't complete in the previous connection. */
     MQTTStateCursor_t cursor = MQTT_STATE_CURSOR_INITIALIZER;
     uint16_t publishPackedId = MQTT_PublishToResend( &context, &cursor );
+    TEST_ASSERT_NOT_EQUAL( MQTT_PACKET_ID_INVALID, publishPackedId );
 
+    /* Make sure that the packet ID is maintained in the outgoing publish state records. */
     TEST_ASSERT_EQUAL( context.outgoingPublishRecords[ 0 ].packetId, publishPackedId );
 
     /* Resend the PUBLISH packet that didn't complete in the previous connection. */
