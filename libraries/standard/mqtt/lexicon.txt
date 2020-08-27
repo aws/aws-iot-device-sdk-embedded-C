@@ -2,11 +2,13 @@ ack
 acked
 acks
 addrecord
+addtogroup
 ansi
 api
 app
 aws
 bool
+br
 bufferlength
 bytesorerror
 bytesreceived
@@ -28,6 +30,7 @@ cmock
 com
 cond
 config
+configs
 connack
 connectinfo
 connectpacketsize
@@ -60,6 +63,7 @@ eventcallbackstub
 expectprocessloopcalls
 filterindex
 fixedbuffer
+fn
 getconnectpacketsize
 getcurrenttimestub
 getdisconnectpacketsize
@@ -67,6 +71,7 @@ getincomingpackettypeandlength
 getnewpacketid
 getpacketid
 getpingreqpacketsize
+getpublish
 getpublishpacketsize
 getsubscribepacketsize
 gettime
@@ -84,6 +89,7 @@ ifndef
 inc
 incomingpacket
 incomingpublish
+ingroup
 init
 initializeconnectinfo
 initializesubscribeinfo
@@ -92,11 +98,17 @@ int
 iot
 isduplicate
 isn
+iso
 keepaliveintervalsec
 keepalivems
 keepaliveseconds
 lastpackettime
 linux
+logdebug
+logerror
+loginfo
+logwarn
+logwarn
 lsb
 lwt
 malloc
@@ -153,6 +165,10 @@ mqttsubackstatus
 mqttsubscribeinfo
 mqttsuccess
 msb
+mydebugloggingfunction
+myerrorloggingfunction
+myinfologgingfunction
+mywarnloggingfunction
 nameindex
 networkbuffer
 networkcontext
@@ -162,6 +178,7 @@ networksend
 newstate
 nextpacketid
 noninfringement
+numcodes
 openssl
 optype
 org
@@ -177,6 +194,7 @@ pbuffer
 pbuffertosend
 pcallbacks
 pclientidentifier
+pcodes
 pconnack
 pconnectinfo
 pcontext
@@ -186,6 +204,7 @@ pdeserialized
 pdeserializedinfo
 pdestination
 pem
+pfilter
 pfilterindex
 pfixedbuffer
 pheadersize
@@ -219,6 +238,7 @@ pqos
 pre
 premainingdata
 premaininglength
+presendpublish
 processloop
 psessionpresent
 psource
@@ -227,7 +247,9 @@ pstatusstart
 psuback
 psubackpacket
 psubscribeinfo
+psubscribes
 psubscriptionlist
+ptopic
 ptopicfilter
 ptopicname
 ptr

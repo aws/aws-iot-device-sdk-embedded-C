@@ -42,7 +42,7 @@ typedef struct NetworkContext NetworkContext_t;
  *
  * @return The number of bytes received or a negative error code.
  */
-typedef int32_t ( * TransportRecv_t )( NetworkContext_t * pNetworkContext,
+typedef int32_t ( * TransportRecv_t )( const NetworkContext_t * pNetworkContext,
                                        void * pBuffer,
                                        size_t bytesToRecv );
 
@@ -55,7 +55,7 @@ typedef int32_t ( * TransportRecv_t )( NetworkContext_t * pNetworkContext,
  *
  * @return The number of bytes sent or a negative error code.
  */
-typedef int32_t ( * TransportSend_t )( NetworkContext_t * pNetworkContext,
+typedef int32_t ( * TransportSend_t )( const NetworkContext_t * pNetworkContext,
                                        const void * pBuffer,
                                        size_t bytesToSend );
 

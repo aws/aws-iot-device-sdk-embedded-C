@@ -43,12 +43,21 @@
 /* Include clock for timer. */
 #include "clock.h"
 
+/* Ensure that config macros, required for TLS connection, have been defined. */
 #ifndef BROKER_ENDPOINT
     #error "BROKER_ENDPOINT should be defined for the MQTT integration tests."
 #endif
 
 #ifndef SERVER_ROOT_CA_CERT_PATH
     #error "SERVER_ROOT_CA_CERT_PATH should be defined for the MQTT integration tests."
+#endif
+
+#ifndef CLIENT_CERT_PATH
+    #error "CLIENT_CERT_PATH should be defined for the MQTT integration tests."
+#endif
+
+#ifndef CLIENT_PRIVATE_KEY_PATH
+    #error "CLIENT_PRIVATE_KEY_PATH should be defined for the MQTT integration tests."
 #endif
 
 /**
@@ -318,7 +327,7 @@ static void eventCallback( MQTTContext_t * pContext,
  *
  * @return -1 to represent failure.
  */
-static int32_t failedRecv( NetworkContext_t * pNetworkContext,
+static int32_t failedRecv( const NetworkContext_t * pNetworkContext,
                            void * pBuffer,
                            size_t bytesToRecv );
 
@@ -641,7 +650,7 @@ static MQTTStatus_t publishToTopic( MQTTContext_t * pContext,
                          packetId );
 }
 
-static int32_t failedRecv( NetworkContext_t * pNetworkContext,
+static int32_t failedRecv( const NetworkContext_t * pNetworkContext,
                            void * pBuffer,
                            size_t bytesToRecv )
 {
@@ -1181,6 +1190,7 @@ void test_MQTT_Resend_Unacked_Publish_QoS1( void )
     /* Obtain the packet ID of the PUBLISH packet that didn't complete in the previous connection. */
     MQTTStateCursor_t cursor = MQTT_STATE_CURSOR_INITIALIZER;
     uint16_t publishPackedId = MQTT_PublishToResend( &context, &cursor );
+
     TEST_ASSERT_EQUAL( context.outgoingPublishRecords[ 0 ].packetId, publishPackedId );
 
     /* Resend the PUBLISH packet that didn't complete in the previous connection. */
@@ -1252,6 +1262,7 @@ void test_MQTT_Resend_Unacked_Publish_QoS2( void )
     /* Obtain the packet ID of the PUBLISH packet that didn't complete in the previous connection. */
     MQTTStateCursor_t cursor = MQTT_STATE_CURSOR_INITIALIZER;
     uint16_t publishPackedId = MQTT_PublishToResend( &context, &cursor );
+
     TEST_ASSERT_EQUAL( context.outgoingPublishRecords[ 0 ].packetId, publishPackedId );
 
     /* Resend the PUBLISH packet that didn't complete in the previous connection. */
