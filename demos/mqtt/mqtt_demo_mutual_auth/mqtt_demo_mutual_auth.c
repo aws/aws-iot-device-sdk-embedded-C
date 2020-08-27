@@ -368,7 +368,7 @@ static void eventCallback( MQTTContext_t * pMqttContext,
 /**
  * @brief Initializes the MQTT library.
  *
- * @param[in, out] pMqttContext MQTT context pointer.
+ * @param[in,out] pMqttContext MQTT context pointer.
  * @param[in] pNetworkContext The network context pointer.
  *
  * @return EXIT_SUCCESS if the MQTT library is initialized;
@@ -1221,24 +1221,14 @@ static int subscribePublishLoop( MQTTContext_t * pMqttContext,
              * ping responses. */
             mqttStatus = MQTT_ProcessLoop( pMqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
 
-            /* No data available from the transport interface may be due to network
-             * delays or low timeout passed to #MQTT_ProcessLoop. */
-            if( mqttStatus == MQTTNoDataAvailable )
-            {
-                LogWarn( ( "No data available to read from transport interface."
-                           " This may be due to network delays or low timeout value passed"
-                           " to MQTT_ProcessLoop." ) );
-            }
-            else if( mqttStatus != MQTTSuccess )
+            /* For any error in #MQTT_ProcessLoop, exit the loop and disconnect
+             * from the broker. */
+            if( mqttStatus != MQTTSuccess )
             {
                 LogError( ( "MQTT_ProcessLoop returned with status = %s.",
                             MQTT_Status_strerror( mqttStatus ) ) );
                 returnStatus = EXIT_FAILURE;
                 break;
-            }
-            else
-            {
-                /* Empty else marker. */
             }
 
             LogInfo( ( "Delay before continuing to next iteration.\n\n" ) );
