@@ -810,7 +810,6 @@ int32_t PublishToTopic( const char * pTopicFilter,
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus = MQTTSuccess;
     uint8_t publishIndex = MAX_OUTGOING_PUBLISHES;
-    int status = EXIT_SUCCESS;
     MQTTContext_t * pMqttContext = &mqttContext;
 
     assert( pMqttContext != NULL );

@@ -61,6 +61,9 @@
 /* JSON API header. */
 #include "json.h"
 
+/* Clock for timer. */
+#include "clock.h"
+
 /* shadow demo helpers header. */
 #include "shadow_demo_helpers.h"
 
@@ -422,8 +425,9 @@ static void eventCallback( MQTTContext_t * pMqttContext,
     ShadowMessageType_t messageType = ShadowMessageTypeMaxNum;
     const char * pThingName = NULL;
     uint16_t thingNameLength = 0U;
-    MQTTStatus_t mqttStatus = MQTTSuccess;
     uint16_t packetIdentifier;
+
+    ( void ) pMqttContext;
 
     assert( pDeserializedInfo != NULL );
     assert( pMqttContext != NULL );
@@ -508,7 +512,6 @@ int main( int argc,
     /* A buffer containing the update document. It has static duration to prevent
     * it from being placed on the call stack. */
     static char updateDocument[ SHADOW_REPORTED_JSON_LENGTH + 1 ] = { 0 };
-    int state = 1;
 
     ( void ) argc;
     ( void ) argv;

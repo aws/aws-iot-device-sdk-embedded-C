@@ -2,6 +2,9 @@ include(CheckSymbolExists)
 
 set( DEMO_NAME "shadow_demo_main" )
 
+# Include MQTT library's source and header path variables.
+include( ${CMAKE_SOURCE_DIR}/libraries/standard/mqtt/mqttFilePaths.cmake )
+
 # Demo target.
 add_executable(${DEMO_NAME})
 
@@ -13,6 +16,8 @@ target_sources(
     PRIVATE
         "${DEMO_NAME}.c"
         "shadow_demo_helpers.c"
+        ${MQTT_SOURCES}
+        ${LIGHTWEIGHT_MQTT_SOURCES}
 )
 
 # JSON library Public Include directories.
@@ -53,6 +58,8 @@ target_include_directories(
     ${DEMO_NAME}
     PUBLIC
         ${LOGGING_INCLUDE_DIRS}
+        ${MQTT_INCLUDE_PUBLIC_DIRS}
+        ${MQTT_INCLUDE_PRIVATE_DIRS}
 )
 
 if(ROOT_CA_CERT_PATH)
