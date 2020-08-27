@@ -80,6 +80,21 @@
  *
  * No two clients may use the same client identifier simultaneously.
  */
-#define CLIENT_IDENTIFIER    "testclient1"
+#define CLIENT_IDENTIFIER                    "testclient1"
+
+/**
+ * @brief The max size of the registry in the subscription manager.
+ *
+ * The registry of the subscription manager component of the demo represents
+ * a list of pairs of topic filter and its subscription callback. The
+ * subscription callback is invoked when an incoming PUBLISH message is received
+ * on a matching topic in the demo.
+ * The memory of the registry is statically allocated whose size is dependent
+ * on the value of this macro.
+ *
+ * As this demo uses 3 topic filters, the minimum value of this config should be
+ * 3 for a successful execution of the demo.
+ */
+#define MAX_SUBSCRIPTION_CALLBACK_RECORDS    5
 
 #endif /* ifndef DEMO_CONFIG_H */

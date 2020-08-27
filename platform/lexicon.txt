@@ -14,9 +14,12 @@ dns
 endif
 errno
 errornumber
+fclose
 filelabel
 filepath
 filepaths
+filetype
+fopen
 functionname
 functionpage
 functionspage
@@ -46,6 +49,7 @@ paddrinfo
 param
 pbuffer
 pclientcertpath
+pem
 pformat
 phostname
 platfrom
