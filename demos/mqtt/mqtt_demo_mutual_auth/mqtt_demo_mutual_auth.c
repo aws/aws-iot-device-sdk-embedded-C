@@ -336,7 +336,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
  * receives the Publish message back.
  *
  * @param[in] pMqttContext MQTT context pointer.
- * @param[in, out] pClientSessionPresent Pointer to flag indicating if an
+ * @param[in,out] pClientSessionPresent Pointer to flag indicating if an
  * MQTT session is present in the client.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
