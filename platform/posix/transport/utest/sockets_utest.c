@@ -13,14 +13,25 @@
 #include "mock_inet.h"
 #include "mock_close.h"
 
+/* The number of #addrinfo objects to create in the linked list. */
 #define NUM_ADDR_INFO        3
+
+/* The send and receive timeout to set for the socket. */
 #define SEND_RECV_TIMEOUT    0
+
+/* The host and port from which to establish the connection. */
 #define HOSTNAME             "amazon.com"
 #define PORT                 80
 
 static struct addrinfo * addrInfo;
 static ServerInfo_t serverInfo;
 
+/**
+ * @brief Allocate a linked list that mocks a set of DNS records returned from
+ * a call to #getaddrinfo.
+ *
+ * @param[in] head The first entry of the linked list.
+ */
 static void allocateAddrInfoLinkedList( struct addrinfo ** head )
 {
     struct addrinfo * index = NULL, * next = NULL;
@@ -65,6 +76,11 @@ static void allocateAddrInfoLinkedList( struct addrinfo ** head )
     }
 }
 
+/**
+ * @brief Deallocate the linked list created by a call to #allocateAddrInfoLinkedList.
+ *
+ * @param[in] head The first entry of the linked list.
+ */
 static void freeAddrInfoLinkedList( struct addrinfo * head )
 {
     struct addrinfo * tmp;
@@ -110,11 +126,16 @@ int suiteTearDown( int numFailures )
 
 /* ========================================================================== */
 
-static void expectSocketsConnectCalls( int32_t connectSucceedIter )
+/**
+ * @brief Expect any methods called from #Sockets_Connect.
+ *
+ * @param[in] connectSuccessIndex The index at which the #connect function succeeds.
+ */
+static void expectSocketsConnectCalls( int32_t connectSuccessIndex )
 {
     int i;
 
-    TEST_ASSERT_TRUE( connectSucceedIter <= NUM_ADDR_INFO );
+    TEST_ASSERT_TRUE( connectSuccessIndex <= NUM_ADDR_INFO );
 
     getaddrinfo_ExpectAnyArgsAndReturn( 0 );
     getaddrinfo_ReturnThruPtr___pai( &addrInfo );
@@ -135,7 +156,7 @@ static void expectSocketsConnectCalls( int32_t connectSucceedIter )
         inet_ntop_ExpectAnyArgsAndReturn( NULL );
 
         /* The last iteration should make connect() succeed. */
-        if( i == connectSucceedIter )
+        if( i == connectSuccessIndex )
         {
             connect_ExpectAnyArgsAndReturn( 0 );
             break;
@@ -151,7 +172,7 @@ static void expectSocketsConnectCalls( int32_t connectSucceedIter )
 }
 
 /**
- * @brief Test Sockets_Disconnect.
+ * @brief Test that #Sockets_Disconnect succeeds when a valid socket is passed.
  */
 void test_Sockets_Disconnect_Valid_Socket( void )
 {
@@ -165,6 +186,10 @@ void test_Sockets_Disconnect_Valid_Socket( void )
     TEST_ASSERT_EQUAL( SOCKETS_SUCCESS, socketStatus );
 }
 
+/**
+ * @brief Test that #Sockets_Disconnect fails when an invalid socket (non-positive)
+ * is passed.
+ */
 void test_Sockets_Disconnect_Invalid_Socket( void )
 {
     SocketStatus_t socketStatus;
@@ -174,6 +199,10 @@ void test_Sockets_Disconnect_Invalid_Socket( void )
     TEST_ASSERT_EQUAL( SOCKETS_INVALID_PARAMETER, socketStatus );
 }
 
+/**
+ * @brief Test that #Sockets_Connect fails when invalid parameters are passed
+ * to the function.
+ */
 void test_Sockets_Connect_Invalid_Params( void )
 {
     SocketStatus_t socketStatus;
@@ -210,6 +239,10 @@ void test_Sockets_Connect_Invalid_Params( void )
     TEST_ASSERT_EQUAL( SOCKETS_INVALID_PARAMETER, socketStatus );
 }
 
+/**
+ * @brief Test that #SOCKETS_DNS_FAILURE is correctly returned when the call
+ * to #getaddrinfo returns an error.
+ */
 void test_Sockets_Connect_DNS_Lookup_Fails( void )
 {
     SocketStatus_t socketStatus;
@@ -224,6 +257,10 @@ void test_Sockets_Connect_DNS_Lookup_Fails( void )
     TEST_ASSERT_EQUAL( SOCKETS_DNS_FAILURE, socketStatus );
 }
 
+/**
+ * @brief Test that #Sockets_Connect returns #SOCKETS_CONNECT_FAILURE during
+ * an attempt to connect to all IP addresses returned from the DNS lookup.
+ */
 void test_Sockets_Connect_Every_IP_Address_Fails( void )
 {
     SocketStatus_t socketStatus;
@@ -238,6 +275,10 @@ void test_Sockets_Connect_Every_IP_Address_Fails( void )
     TEST_ASSERT_EQUAL( SOCKETS_CONNECT_FAILURE, socketStatus );
 }
 
+/**
+ * @brief Test that #Sockets_Connect returns the right error depending upon
+ * the status received from #errno.
+ */
 void test_Sockets_Connect_Fail_setsockopt( void )
 {
     SocketStatus_t socketStatus, expectedSocketStatus;
@@ -285,6 +326,10 @@ void test_Sockets_Connect_Fail_setsockopt( void )
     }
 }
 
+/**
+ * @brief Test the happy path case in which #Sockets_Connect is able to connect
+ * to one of the IP addresses from the retrieved DNS records.
+ */
 void test_Sockets_Connect_Succeed_On_Nth_IP_Address( void )
 {
     SocketStatus_t socketStatus;
