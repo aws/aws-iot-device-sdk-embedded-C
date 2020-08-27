@@ -25,6 +25,7 @@ jsonbadparameter
 jsonillegaldocument
 jsonmaxdepthexceeded
 jsonnotfound
+jsonnullparameter
 jsonpartial
 jsonsuccess
 keylength
