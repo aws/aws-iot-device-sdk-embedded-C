@@ -49,13 +49,13 @@
  * client must maintain information about their state. The value of this
  * macro sets the limit on how many simultaneous PUBLISH states an MQTT
  * context maintains.
- * 
+ *
  * <b>Possible values:</b> Any positive 32 bit integer. <br>
  * <b>Default value:</b> `10`
  */
 #ifndef MQTT_STATE_ARRAY_MAX_COUNT
     /* Default value for the maximum acknowledgement pending PUBLISH messages. */
-    #define MQTT_STATE_ARRAY_MAX_COUNT              ( 10U )
+    #define MQTT_STATE_ARRAY_MAX_COUNT    ( 10U )
 #endif
 
 /**
@@ -66,7 +66,7 @@
  * receive for CONNACK will be retried MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT
  * times before timing out. A value of 0 for this config will cause the
  * transport receive for CONNACK  to be invoked only once.
- * 
+ *
  * <b>Possible values:</b> Any positive 16 bit integer. <br>
  * <b>Default value:</b> `5`
  */
@@ -81,7 +81,7 @@
  *
  * If a ping response is not received before this timeout, then
  * #MQTT_ProcessLoop will return #MQTTKeepAliveTimeout.
- * 
+ *
  * <b>Possible values:</b> Any positive integer up to SIZE_MAX. <br>
  * <b>Default value:</b> `500`
  */
@@ -165,6 +165,12 @@ typedef enum MQTTPubAckType
 /**
  * @ingroup mqtt_enum_types
  * @brief The status codes in the SUBACK response to a subscription request.
+ *
+ * MISRA Rule 2.3 flags the enumeration type as is defined but never used.
+ * This violation is suppressed because this type is meant to be added by the
+ * calling code for interpreting suback status codes returned by
+ * @ref MQTT_GetSubAckStatusCodes
+ * coverity[misra_c_2012_rule_10_8_violation]
  */
 typedef enum MQTTSubAckStatus
 {
