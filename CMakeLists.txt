@@ -65,6 +65,10 @@ if(DEFINED ENV{PWD})
     endif()
 endif()
 
+if (BUILD_TESTS)
+    enable_testing()
+endif()
+
 # Add libraries.
 add_subdirectory( libraries )
 
