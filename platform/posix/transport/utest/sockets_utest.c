@@ -36,7 +36,7 @@ static void allocateAddrInfoLinkedList( struct addrinfo ** head )
 {
     struct addrinfo * index = NULL, * next = NULL;
     struct sockaddr * ai_addr = NULL;
-    int i;
+    uint16_t i;
 
     TEST_ASSERT_NOT_NULL( head );
 
@@ -133,7 +133,7 @@ int suiteTearDown( int numFailures )
  */
 static void expectSocketsConnectCalls( int32_t connectSuccessIndex )
 {
-    int i;
+    uint16_t i;
 
     TEST_ASSERT_TRUE( connectSuccessIndex <= NUM_ADDR_INFO );
 
@@ -282,7 +282,8 @@ void test_Sockets_Connect_Every_IP_Address_Fails( void )
 void test_Sockets_Connect_Fail_setsockopt( void )
 {
     SocketStatus_t socketStatus, expectedSocketStatus;
-    int tcpSocket = 1, i = 1;
+    int tcpSocket = 1;
+    uint16_t i = 1;
     int32_t allErrorCases[] =
     {
         EBADF,       EDOM,     EINVAL, EISCONN,

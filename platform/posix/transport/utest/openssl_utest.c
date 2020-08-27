@@ -215,11 +215,15 @@ static OpensslStatus_t failFunctionFrom_Openssl_Connect( FunctionNames_t functio
     }
     else
     {
-        if( returnStatus == OPENSSL_SUCCESS )
-        {
-            getcwd_ExpectAnyArgsAndReturn( ROOT_CA_CERT_PATH );
-            free_ExpectAnyArgs();
-        }
+        /* These calls are only expected when #LIBRARY_LOG_LEVEL
+         * is set to #LOG_DEBUG. */
+        #if ( LIBRARY_LOG_LEVEL == LOG_DEBUG )
+            if( returnStatus == OPENSSL_SUCCESS )
+            {
+                getcwd_ExpectAnyArgsAndReturn( ROOT_CA_CERT_PATH );
+                free_ExpectAnyArgs();
+            }
+        #endif
 
         if( functionToFail == fopen_fn )
         {
