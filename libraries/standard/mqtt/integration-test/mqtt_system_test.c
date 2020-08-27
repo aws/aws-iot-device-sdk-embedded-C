@@ -1148,6 +1148,9 @@ void test_MQTT_Restore_Session_Complete_Incoming_Publish( void )
  */
 void test_MQTT_Resend_Unacked_Publish_QoS1( void )
 {
+    /* Start a persistent session with the broker. */
+    startPersistentSession();
+
     /* Initiate the PUBLISH operation at QoS 1. The library should add an
      * outgoing PUBLISH record in the context. */
     TEST_ASSERT_EQUAL( MQTTSuccess, publishToTopic(
@@ -1220,6 +1223,9 @@ void test_MQTT_Resend_Unacked_Publish_QoS1( void )
  */
 void test_MQTT_Resend_Unacked_Publish_QoS2( void )
 {
+    /* Start a persistent session with the broker. */
+    startPersistentSession();
+
     /* Initiate the PUBLISH operation at QoS 2. The library should add an
      * outgoing PUBLISH record in the context. */
     TEST_ASSERT_EQUAL( MQTTSuccess, publishToTopic(
