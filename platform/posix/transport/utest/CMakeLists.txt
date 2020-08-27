@@ -122,3 +122,33 @@ create_test(${utest_name}
             "${utest_dep_list}"
             "${test_include_directories}"
         )
+
+# list the files you would like to test here
+set(real_source_files
+        ${PLAINTEXT_TRANSPORT_SOURCES}
+        )
+set(real_name "plaintext_real")
+
+create_real_library(${real_name}
+                    "${real_source_files}"
+                    "${real_include_directories}"
+                    "${mock_name}"
+        )
+
+set(utest_link_list
+        lib${real_name}.a
+        -l${mock_name}
+        )
+
+set(utest_dep_list
+        ${real_name}
+        )
+
+set(utest_name "plaintext_utest")
+set(utest_source "plaintext_utest.c")
+create_test(${utest_name}
+           ${utest_source}
+           "${utest_link_list}"
+           "${utest_dep_list}"
+           "${test_include_directories}"
+        )

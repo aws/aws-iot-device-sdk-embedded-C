@@ -2,7 +2,7 @@
   :mock_prefix: mock_
   :when_no_prototypes: :warn
   :enforce_strict_ordering: true
-  # fclose is called after program terminates, so this will avoid a segfault
+  # fclose is called after program terminates, so this will avoid a segfault.
   :fail_on_unexpected_calls: false
   :plugins:
     - :ignore

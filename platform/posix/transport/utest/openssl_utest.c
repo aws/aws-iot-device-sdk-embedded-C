@@ -1,7 +1,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdlib.h>
-#include "/usr/include/errno.h"
+#include <errno.h>
 
 #include "unity.h"
 
@@ -220,8 +220,7 @@ static OpensslStatus_t failFunctionFrom_Openssl_Connect( FunctionNames_t functio
         #if ( LIBRARY_LOG_LEVEL == LOG_DEBUG )
             if( returnStatus == OPENSSL_SUCCESS )
             {
-                getcwd_ExpectAnyArgsAndReturn( ROOT_CA_CERT_PATH );
-                free_ExpectAnyArgs();
+                getcwd_ExpectAnyArgsAndReturn( NULL );
             }
         #endif
 
@@ -732,7 +731,7 @@ void test_Openssl_Recv_Invalid_Params( void )
  * @brief Test the happy path case when #Openssl_Recv is able to receive all
  * expected bytes over the network stack successfully.
  */
-void test_Openssl_Recv_All_Bytes_Sent_Successfully( void )
+void test_Openssl_Recv_All_Bytes_Received_Successfully( void )
 {
     int32_t bytesReceived;
 

@@ -16,7 +16,4 @@ extern _IO_FILE * fopen( const char * __filename,
 /* Close STREAM. */
 extern int fclose( _IO_FILE * __stream );
 
-/* Free dynamically allocated memory. */
-extern void free( void * ptr );
-
 #endif /* ifndef STDIO_API_H_ */
