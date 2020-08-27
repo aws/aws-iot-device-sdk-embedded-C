@@ -13,20 +13,26 @@
 #include "mock_sockets_posix.h"
 #include "mock_stdio_api.h"
 
-#define NUM_ADDR_INFO        3
-#define SEND_RECV_TIMEOUT    0
-#define HOSTNAME             "amazon.com"
-#define PORT                 80
-#define ROOT_CA_CERT_PATH    "fake/path"
-#define CLIENT_CERT_PATH     "\\fake\\path"
-#define PRIVATE_KEY_PATH     "/fake/path"
-#define SOCKET_FD            5
-#define MFLN                 42
-#define ALPN_PROTOS          "x-amzn-mqtt-ca"
+#define NUM_ADDR_INFO           3
+#define SEND_RECV_TIMEOUT       0
+#define HOSTNAME                "amazon.com"
+#define PORT                    80
+#define ROOT_CA_CERT_PATH       "fake/path"
+#define CLIENT_CERT_PATH        "\\fake\\path"
+#define PRIVATE_KEY_PATH        "/fake/path"
+#define SOCKET_FD               5
+#define MFLN                    42
+#define ALPN_PROTOS             "x-amzn-mqtt-ca"
+#define BUFFER_LEN              4
+#define BYTES_TO_SEND           4
+#define BYTES_TO_RECV           4
+#define SSL_READ_WRITE_ERROR    -1
 
 static ServerInfo_t serverInfo = { 0 };
 static OpensslCredentials_t opensslCredentials = { 0 };
 static NetworkContext_t networkContext = { 0 };
+static uint8_t opensslBuffer[ BUFFER_LEN ] = { 0 };
+static SSL ssl;
 
 /**
  * @brief OpenSSL Connect / Disconnect return status.
@@ -120,9 +126,10 @@ static OpensslStatus_t failFunctionFrom_Openssl_Connect( FunctionNames_t functio
                                                          void * retValue )
 {
     OpensslStatus_t returnStatus = OPENSSL_SUCCESS;
+    SocketStatus_t socketStatus = SOCKETS_SUCCESS;
     bool fileOpened = false,
          sslCtxCreated = false, sslCreated = false;
-    SSL ssl;
+
     SSL_METHOD sslMethod;
     SSL_CTX sslCtx;
     FILE rootCaFile;
@@ -135,7 +142,7 @@ static OpensslStatus_t failFunctionFrom_Openssl_Connect( FunctionNames_t functio
     if( functionToFail == Sockets_Connect_fn )
     {
         TEST_ASSERT_NOT_NULL( retValue );
-        SocketStatus_t socketStatus = *( ( SocketStatus_t * ) retValue );
+        socketStatus = *( ( SocketStatus_t * ) retValue );
         Sockets_Connect_ExpectAnyArgsAndReturn( socketStatus );
         returnStatus = convertToOpensslStatus( socketStatus );
     }
@@ -161,7 +168,12 @@ static OpensslStatus_t failFunctionFrom_Openssl_Connect( FunctionNames_t functio
         sslCtxCreated = true;
     }
 
-    if( opensslCredentials.pRootCaPath != NULL )
+    /* Path to Root CA must be set for handshake to succeed. */
+    if( opensslCredentials.pRootCaPath == NULL )
+    {
+        returnStatus = OPENSSL_INVALID_CREDENTIALS;
+    }
+    else
     {
         /* SSL_CTX_set_mode is actually what the API uses, but CMock expects the
          * actual method rather than the macro wrapper. */
@@ -485,6 +497,34 @@ void test_Openssl_Connect_Handshake_Fails( void )
     }
 }
 
+void test_Openssl_Connect_NULL_Members_In_Creds_And_Configs( void )
+{
+    OpensslStatus_t returnStatus, expectedStatus;
+
+    /* Coverage for NULL pClientCertPath, pPrivateKeyPath, pAlpnProtos, sniHostName,
+     * and maxFragmentLength == 0. */
+    memset( &opensslCredentials, 0, sizeof( OpensslCredentials_t ) );
+    opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
+    expectedStatus = failFunctionFrom_Openssl_Connect( SSL_get_verify_result_fn, NULL );
+    returnStatus = Openssl_Connect( &networkContext,
+                                    &serverInfo,
+                                    &opensslCredentials,
+                                    SEND_RECV_TIMEOUT,
+                                    SEND_RECV_TIMEOUT );
+    TEST_ASSERT_EQUAL( expectedStatus, returnStatus );
+
+    /* Coverage for alpnProtosLen == 0. */
+    opensslCredentials.pAlpnProtos = ALPN_PROTOS;
+    expectedStatus = failFunctionFrom_Openssl_Connect( SSL_get_verify_result_fn,
+                                                       NULL );
+    returnStatus = Openssl_Connect( &networkContext,
+                                    &serverInfo,
+                                    &opensslCredentials,
+                                    SEND_RECV_TIMEOUT,
+                                    SEND_RECV_TIMEOUT );
+    TEST_ASSERT_EQUAL( expectedStatus, returnStatus );
+}
+
 void test_Openssl_Connect_Succeeds( void )
 {
     OpensslStatus_t returnStatus, expectedStatus;
@@ -499,4 +539,128 @@ void test_Openssl_Connect_Succeeds( void )
                                     SEND_RECV_TIMEOUT,
                                     SEND_RECV_TIMEOUT );
     TEST_ASSERT_EQUAL( expectedStatus, returnStatus );
+}
+
+void test_Openssl_Disconnect_NULL_Network_Context( void )
+{
+    OpensslStatus_t returnStatus;
+
+    returnStatus = Openssl_Disconnect( NULL );
+    TEST_ASSERT_EQUAL( OPENSSL_INVALID_PARAMETER, returnStatus );
+}
+
+void test_Openssl_Disconnect_Succeeds( void )
+{
+    OpensslStatus_t returnStatus;
+
+
+    /* First, SSL object is NULL. */
+    memset( &networkContext, 0, sizeof( NetworkContext_t ) );
+    Sockets_Disconnect_ExpectAnyArgsAndReturn( SOCKETS_SUCCESS );
+    returnStatus = Openssl_Disconnect( &networkContext );
+    TEST_ASSERT_EQUAL( OPENSSL_SUCCESS, returnStatus );
+
+    /* Now, set SSL object for coverage. */
+    networkContext.pSsl = &ssl;
+    SSL_shutdown_ExpectAnyArgsAndReturn( 0 );
+    SSL_shutdown_ExpectAnyArgsAndReturn( 0 );
+    SSL_free_ExpectAnyArgs();
+    Sockets_Disconnect_ExpectAnyArgsAndReturn( SOCKETS_SUCCESS );
+    returnStatus = Openssl_Disconnect( &networkContext );
+    TEST_ASSERT_EQUAL( OPENSSL_SUCCESS, returnStatus );
+
+    /* Coverage for the case in which the first SSL_shutdown fails. */
+    networkContext.pSsl = &ssl;
+    SSL_shutdown_ExpectAnyArgsAndReturn( 1 );
+    SSL_free_ExpectAnyArgs();
+    Sockets_Disconnect_ExpectAnyArgsAndReturn( SOCKETS_SUCCESS );
+    returnStatus = Openssl_Disconnect( &networkContext );
+    TEST_ASSERT_EQUAL( OPENSSL_SUCCESS, returnStatus );
+}
+
+void test_Openssl_Send_Invalid_Params( void )
+{
+    int32_t bytesSent;
+
+    bytesSent = Openssl_Send( NULL, opensslBuffer, BYTES_TO_SEND );
+    TEST_ASSERT_EQUAL( 0, bytesSent );
+
+    /* SSL object must not be NULL. Otherwise, no bytes are sent. */
+    networkContext.pSsl = NULL;
+    bytesSent = Openssl_Send( &networkContext, opensslBuffer, BYTES_TO_SEND );
+    TEST_ASSERT_EQUAL( 0, bytesSent );
+}
+
+void test_Openssl_Send_All_Bytes_Sent_Successfully( void )
+{
+    int32_t bytesSent;
+
+
+    networkContext.pSsl = &ssl;
+    SSL_write_ExpectAnyArgsAndReturn( BYTES_TO_SEND );
+    bytesSent = Openssl_Send( &networkContext, opensslBuffer, BYTES_TO_SEND );
+    TEST_ASSERT_EQUAL( BYTES_TO_SEND, bytesSent );
+}
+
+void test_Openssl_Send_Network_Error( void )
+{
+    int32_t bytesSent;
+
+    networkContext.pSsl = &ssl;
+    SSL_write_ExpectAnyArgsAndReturn( SSL_READ_WRITE_ERROR );
+
+    /* Several errors can be returned from the OpenSSL API as mentioned here:
+     * https://www.openssl.org/docs/man1.1.1/man3/SSL_get_error.html */
+    SSL_get_error_ExpectAnyArgsAndReturn( SSL_ERROR_WANT_WRITE );
+    bytesSent = Openssl_Send( &networkContext, opensslBuffer, BYTES_TO_SEND );
+    TEST_ASSERT_EQUAL( SSL_READ_WRITE_ERROR, bytesSent );
+}
+
+void test_Openssl_Recv_Invalid_Params( void )
+{
+    int32_t bytesReceived;
+
+    bytesReceived = Openssl_Recv( NULL, opensslBuffer, BYTES_TO_RECV );
+    TEST_ASSERT_EQUAL( 0, bytesReceived );
+
+    /* SSL object must not be NULL. Otherwise, no bytes are sent. */
+    networkContext.pSsl = NULL;
+    bytesReceived = Openssl_Recv( &networkContext, opensslBuffer, BYTES_TO_RECV );
+    TEST_ASSERT_EQUAL( 0, bytesReceived );
+}
+
+void test_Openssl_Recv_All_Bytes_Sent_Successfully( void )
+{
+    int32_t bytesReceived;
+
+    networkContext.pSsl = &ssl;
+    SSL_read_ExpectAnyArgsAndReturn( BYTES_TO_RECV );
+    bytesReceived = Openssl_Recv( &networkContext, opensslBuffer, BYTES_TO_RECV );
+    TEST_ASSERT_EQUAL( BYTES_TO_RECV, bytesReceived );
+}
+
+void test_Openssl_Recv_Network_Error( void )
+{
+    int32_t bytesReceived;
+
+    networkContext.pSsl = &ssl;
+    SSL_read_ExpectAnyArgsAndReturn( SSL_READ_WRITE_ERROR );
+
+    /* Several errors can be returned from the OpenSSL API as mentioned here:
+     * https://www.openssl.org/docs/man1.1.1/man3/SSL_get_error.html */
+    SSL_get_error_ExpectAnyArgsAndReturn( SSL_ERROR_WANT_READ );
+    bytesReceived = Openssl_Recv( &networkContext, opensslBuffer, BYTES_TO_RECV );
+
+    /* SSL_ERROR_WANT_READ implies there is no data to receive, so we expect
+     * that no bytes have been received. */
+    TEST_ASSERT_EQUAL( 0, bytesReceived );
+
+    SSL_read_ExpectAnyArgsAndReturn( SSL_READ_WRITE_ERROR );
+    /* SSL_ERROR_ZERO_RETURN means the peer has closed the connection. */
+    SSL_get_error_ExpectAnyArgsAndReturn( SSL_ERROR_ZERO_RETURN );
+    bytesReceived = Openssl_Recv( &networkContext, opensslBuffer, BYTES_TO_RECV );
+
+    /* SSL_ERROR_WANT_READ implies there is no data to receive, so we expect
+     * that no bytes have been received. */
+    TEST_ASSERT_EQUAL( SSL_READ_WRITE_ERROR, bytesReceived );
 }
