@@ -36,22 +36,14 @@
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Number of DNS records to attempt a connection.
- *
- * @note Negative value implies an attempt to connect to all DNS records
- * until successful.
- */
-#define NUM_DNS_RECORDS_TO_TRY    ( -1 )
-
-/**
  * @brief Number of milliseconds in one second.
  */
-#define ONE_SEC_TO_MS             ( 1000 )
+#define ONE_SEC_TO_MS    ( 1000 )
 
 /**
  * @brief Number of microseconds in one millisecond.
  */
-#define ONE_MS_TO_US              ( 1000 )
+#define ONE_MS_TO_US     ( 1000 )
 
 /*-----------------------------------------------------------*/
 
@@ -77,10 +69,6 @@ static SocketStatus_t resolveHostName( const char * pHostName,
  * @param[in] hostNameLength Length associated with host name.
  * @param[in] port Server port in host-order.
  * @param[out] pTcpSocket The output parameter to return the created socket.
- * @param[in] maxAttempts Number of DNS records to attempt connection.
- *
- * @note If maxAttempts is negative, attempt to connect to all DNS records
- * until successful.
  *
  * @return #SOCKETS_SUCCESS if successful; #SOCKETS_CONNECT_FAILURE on error.
  */
@@ -88,8 +76,7 @@ static SocketStatus_t attemptConnection( struct addrinfo * pListHead,
                                          const char * pHostName,
                                          size_t hostNameLength,
                                          uint16_t port,
-                                         int32_t * pTcpSocket,
-                                         int32_t maxAttempts );
+                                         int32_t * pTcpSocket );
 
 /**
  * @brief Connect to server using the provided address record.
@@ -231,13 +218,10 @@ static SocketStatus_t attemptConnection( struct addrinfo * pListHead,
                                          const char * pHostName,
                                          size_t hostNameLength,
                                          uint16_t port,
-                                         int32_t * pTcpSocket,
-                                         int32_t maxAttempts )
+                                         int32_t * pTcpSocket )
 {
     SocketStatus_t returnStatus = SOCKETS_CONNECT_FAILURE;
     const struct addrinfo * pIndex = NULL;
-    int32_t curAttempts = 0;
-    int8_t breakFromLoop = 0;
 
     assert( pListHead != NULL );
     assert( pHostName != NULL );
@@ -269,30 +253,6 @@ static SocketStatus_t attemptConnection( struct addrinfo * pListHead,
 
         /* If connected to an IP address successfully, exit from the loop. */
         if( returnStatus == SOCKETS_SUCCESS )
-        {
-            breakFromLoop = 1;
-        }
-
-        if( breakFromLoop == 0 )
-        {
-            curAttempts += 1;
-
-            /* It is not possible to have coverage for this block because the
-             * number of max attempts is set to be unbounded. */
-            if( ( maxAttempts >= 0 ) && ( curAttempts >= maxAttempts ) )
-            {
-                /* Fail if no connection could be established. */
-                LogError( ( "Could not connect to any resolved IP address from %.*s "
-                            "after %d attempts.",
-                            ( int32_t ) hostNameLength,
-                            pHostName,
-                            curAttempts ) );
-                /* Exit loop if number of attempts has exceeded maximum attempts. */
-                breakFromLoop = 1;
-            }
-        }
-
-        if( breakFromLoop == 1 )
         {
             break;
         }
@@ -430,8 +390,7 @@ SocketStatus_t Sockets_Connect( int32_t * pTcpSocket,
                                           pServerInfo->pHostName,
                                           pServerInfo->hostNameLength,
                                           pServerInfo->port,
-                                          pTcpSocket,
-                                          NUM_DNS_RECORDS_TO_TRY );
+                                          pTcpSocket );
     }
 
     /* Set the send timeout. */
