@@ -18,7 +18,7 @@ couldn
 coverity
 cwd
 dns
-egain
+EAGAIN
 endif
 enum
 enums
