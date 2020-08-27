@@ -127,7 +127,7 @@ int32_t Plaintext_Recv( const NetworkContext_t * pNetworkContext,
         logTransportError( errno );
 
         /* Check if it was time out. Note that for most POSIX implementations,
-         * EGAIN and EWOULDBLOCK have the same value. */
+         * EAGAIN and EWOULDBLOCK have the same value. */
         if( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) )
         {
             /* Set return value to 0 to indicate nothing to receive. */
@@ -156,7 +156,7 @@ int32_t Plaintext_Send( const NetworkContext_t * pNetworkContext,
         logTransportError( errno );
 
         /* Check if it was time out. Note that for most POSIX implementations,
-         * EGAIN and EWOULDBLOCK have the same value. */
+         * EAGAIN and EWOULDBLOCK have the same value. */
         if( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) )
         {
             /* Set return value to 0 to indicate that send had timed out. */
