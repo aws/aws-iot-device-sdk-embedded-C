@@ -186,7 +186,14 @@ void test_Sockets_Connect_Invalid_Params( void )
                                     SEND_RECV_TIMEOUT );
     TEST_ASSERT_EQUAL( SOCKETS_INVALID_PARAMETER, socketStatus );
 
-    /* Passing a hostName should fail. */
+    /* Passing a NULL #ServerInfo_t object should fail. */
+    socketStatus = Sockets_Connect( &tcpSocket,
+                                    NULL,
+                                    SEND_RECV_TIMEOUT,
+                                    SEND_RECV_TIMEOUT );
+    TEST_ASSERT_EQUAL( SOCKETS_INVALID_PARAMETER, socketStatus );
+
+    /* Passing a NULL hostName should fail. */
     memset( &serverInfo, 0, sizeof( ServerInfo_t ) );
     socketStatus = Sockets_Connect( &tcpSocket,
                                     &serverInfo,

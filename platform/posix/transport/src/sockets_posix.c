@@ -277,6 +277,8 @@ static SocketStatus_t attemptConnection( struct addrinfo * pListHead,
         {
             curAttempts += 1;
 
+            /* It is not possible to have coverage for this block because the
+             * number of max attempts is set to be unbounded. */
             if( ( maxAttempts >= 0 ) && ( curAttempts >= maxAttempts ) )
             {
                 /* Fail if no connection could be established. */
@@ -390,9 +392,14 @@ SocketStatus_t Sockets_Connect( int32_t * pTcpSocket,
     struct timeval transportTimeout;
     int32_t setTimeoutStatus = -1;
 
-    if( pServerInfo->pHostName == NULL )
+    if( pServerInfo == NULL )
     {
-        LogError( ( "Parameter check failed: pHostName is NULL." ) );
+        LogError( ( "Parameter check failed: pServerInfo is NULL." ) );
+        returnStatus = SOCKETS_INVALID_PARAMETER;
+    }
+    else if( pServerInfo->pHostName == NULL )
+    {
+        LogError( ( "Parameter check failed: pServerInfo->pHostName is NULL." ) );
         returnStatus = SOCKETS_INVALID_PARAMETER;
     }
     else if( pTcpSocket == NULL )
