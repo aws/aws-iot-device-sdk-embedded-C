@@ -2,7 +2,6 @@
 #define OPENSSL_API_H_
 
 #include <openssl/ssl.h>
-#include <openssl/err.h>
 
 /**
  * @file openssl_api.h
