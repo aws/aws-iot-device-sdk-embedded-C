@@ -46,12 +46,17 @@
 #endif
 /** @endcond */
 
-/* Include config file before other headers. */
+/* Include main config file before other headers. */
 #include "mqtt_config.h"
+
+/* Include config defaults file after main config file to get
+ * default values of configs not defined in main config file. */
+#include "mqtt_config_defaults.h"
 
 #include "transport_interface.h"
 
 /* MQTT packet types. */
+
 /**
  * @addtogroup mqtt_constants
  * @{

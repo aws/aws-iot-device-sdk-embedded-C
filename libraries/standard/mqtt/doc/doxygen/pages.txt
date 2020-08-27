@@ -73,6 +73,18 @@ Configuration settings are C pre-processor constants. They can be set with a \#d
 @section MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT
 <br>
 @copydoc MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT
+
+@section LogError
+<br>
+@copydoc LogError
+
+@section LogWarn
+<br>
+@copydoc LogWarn
+
+@section LogInfo
+<br>
+@copydoc LogInfo
 */
 
 /**
