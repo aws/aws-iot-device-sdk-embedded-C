@@ -387,7 +387,7 @@ static void setOptionalConfigurations( SSL * pSsl,
                                        const OpensslCredentials_t * pOpensslCredentials )
 {
     int32_t sslStatus = -1;
-    size_t readBufferLength = 0;
+    int16_t readBufferLength = 0;
 
     assert( pSsl != NULL );
     assert( pOpensslCredentials != NULL );
@@ -409,9 +409,9 @@ static void setOptionalConfigurations( SSL * pSsl,
     }
 
     /* Set TLS MFLN if requested. */
-    if( pOpensslCredentials->maxFragmentLength > 0UL )
+    if( pOpensslCredentials->maxFragmentLength > 0U )
     {
-        LogDebug( ( "Setting max send fragment length %lu.",
+        LogDebug( ( "Setting max send fragment length %u.",
                     pOpensslCredentials->maxFragmentLength ) );
 
         /* Set the maximum send fragment length. */
@@ -426,25 +426,18 @@ static void setOptionalConfigurations( SSL * pSsl,
 
         if( sslStatus != 1 )
         {
-            LogError( ( "Failed to set max send fragment length %lu.",
+            LogError( ( "Failed to set max send fragment length %u.",
                         pOpensslCredentials->maxFragmentLength ) );
         }
         else
         {
-            /* MISRA Rule 10.8 flags the following line for casting of a composite
-             * expression of signed type to essential type unsigned. This rule is
-             * suppressed because #SSL3_RT_MAX_ENCRYPTED_OVERHEAD is defined by
-             * openssl library to be a composite expression of signed type.
-             * However, #SSL_set_default_read_buffer_len() function requires the
-             * length parameter to be of unsigned type. */
-            /* coverity[misra_c_2012_rule_10_8_violation] */
-            readBufferLength = pOpensslCredentials->maxFragmentLength +
-                               ( size_t ) SSL3_RT_MAX_ENCRYPTED_OVERHEAD;
+            readBufferLength = ( int16_t ) pOpensslCredentials->maxFragmentLength +
+                               SSL3_RT_MAX_ENCRYPTED_OVERHEAD;
 
             /* Change the size of the read buffer to match the
              * maximum fragment length + some extra bytes for overhead. */
             SSL_set_default_read_buffer_len( pSsl,
-                                             readBufferLength );
+                                             ( size_t ) readBufferLength );
         }
     }
 

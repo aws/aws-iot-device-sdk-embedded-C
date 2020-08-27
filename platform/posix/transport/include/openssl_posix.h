@@ -102,7 +102,7 @@ typedef struct OpensslCredentials
     /**
      * @brief Length of the ALPN protocols array.
      */
-    size_t alpnProtosLen;
+    uint32_t alpnProtosLen;
 
     /**
      * @brief Set a host name to enable SNI. Set to NULL to disable SNI.
@@ -120,7 +120,7 @@ typedef struct OpensslCredentials
      * @note By setting this to 0, OpenSSL uses the default value,
      * which is 16384 (SSL3_RT_MAX_PLAIN_LENGTH).
      */
-    size_t maxFragmentLength;
+    uint16_t maxFragmentLength;
 
     /**
      * @brief Filepaths to certificates and private key that are used when
