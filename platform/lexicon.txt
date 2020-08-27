@@ -14,11 +14,13 @@ cmock
 com
 connectsuccessindex
 const
+couldn
 coverity
 cwd
 dns
 eagain
 endif
+enum
 enums
 errno
 errornumber
@@ -62,6 +64,7 @@ openssl
 openssl_invalid_parameter
 org
 paddrinfo
+palpnprotos
 param
 pbuffer
 pclientcertpath
