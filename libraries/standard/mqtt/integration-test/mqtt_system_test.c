@@ -658,7 +658,7 @@ static int32_t failedRecv( const NetworkContext_t * pNetworkContext,
     ( void ) bytesToRecv;
 
     /* Terminate the TLS+TCP connection with the broker for the test. */
-    ( void ) Openssl_Disconnect( ( NetworkContext_t * ) pNetworkContext );
+    ( void ) Openssl_Disconnect( pNetworkContext );
 
     return -1;
 }
@@ -1190,6 +1190,7 @@ void test_MQTT_Resend_Unacked_Publish_QoS1( void )
     /* Obtain the packet ID of the PUBLISH packet that didn't complete in the previous connection. */
     MQTTStateCursor_t cursor = MQTT_STATE_CURSOR_INITIALIZER;
     uint16_t publishPackedId = MQTT_PublishToResend( &context, &cursor );
+
     TEST_ASSERT_EQUAL( context.outgoingPublishRecords[ 0 ].packetId, publishPackedId );
 
     /* Resend the PUBLISH packet that didn't complete in the previous connection. */
@@ -1261,6 +1262,7 @@ void test_MQTT_Resend_Unacked_Publish_QoS2( void )
     /* Obtain the packet ID of the PUBLISH packet that didn't complete in the previous connection. */
     MQTTStateCursor_t cursor = MQTT_STATE_CURSOR_INITIALIZER;
     uint16_t publishPackedId = MQTT_PublishToResend( &context, &cursor );
+
     TEST_ASSERT_EQUAL( context.outgoingPublishRecords[ 0 ].packetId, publishPackedId );
 
     /* Resend the PUBLISH packet that didn't complete in the previous connection. */
