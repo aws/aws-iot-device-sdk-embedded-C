@@ -33,6 +33,11 @@ static OpensslCredentials_t opensslCredentials = { 0 };
 static NetworkContext_t networkContext = { 0 };
 static uint8_t opensslBuffer[ BUFFER_LEN ] = { 0 };
 static SSL ssl;
+static SSL_METHOD sslMethod;
+static SSL_CTX sslCtx;
+static FILE rootCaFile;
+static X509 rootCa;
+static X509_STORE CaStore;
 
 /**
  * @brief OpenSSL Connect / Disconnect return status.
@@ -130,12 +135,6 @@ static OpensslStatus_t failFunctionFrom_Openssl_Connect( FunctionNames_t functio
     bool fileOpened = false,
          sslCtxCreated = false, sslCreated = false;
 
-    SSL_METHOD sslMethod;
-    SSL_CTX sslCtx;
-    FILE rootCaFile;
-    X509 rootCa;
-    X509_STORE CaStore;
-
     /* Depending on the function to fail,
      * this function must return the correct status to expect. */
 
@@ -168,6 +167,13 @@ static OpensslStatus_t failFunctionFrom_Openssl_Connect( FunctionNames_t functio
         sslCtxCreated = true;
     }
 
+    /* SSL_CTX_set_mode is actually what the API uses, but CMock expects the
+     * actual method rather than the macro wrapper. */
+    if( returnStatus == OPENSSL_SUCCESS )
+    {
+        SSL_CTX_ctrl_ExpectAnyArgsAndReturn( 1 );
+    }
+
     /* Path to Root CA must be set for handshake to succeed. */
     if( opensslCredentials.pRootCaPath == NULL )
     {
@@ -175,11 +181,8 @@ static OpensslStatus_t failFunctionFrom_Openssl_Connect( FunctionNames_t functio
     }
     else
     {
-        /* SSL_CTX_set_mode is actually what the API uses, but CMock expects the
-         * actual method rather than the macro wrapper. */
         if( returnStatus == OPENSSL_SUCCESS )
         {
-            SSL_CTX_ctrl_ExpectAnyArgsAndReturn( 1 );
             getcwd_ExpectAnyArgsAndReturn( ROOT_CA_CERT_PATH );
             free_ExpectAnyArgs();
         }
@@ -423,10 +426,6 @@ void test_Openssl_Connect_Invalid_Params( void )
     TEST_ASSERT_EQUAL( OPENSSL_INVALID_PARAMETER, returnStatus );
 }
 
-void test_Openssl_Connect_NULL_TLS_Credentials_Or_Configurations( void )
-{
-}
-
 void test_Openssl_Connect_Initializing_Objects_Fails( void )
 {
     OpensslStatus_t returnStatus, expectedStatus;
@@ -499,13 +498,26 @@ void test_Openssl_Connect_Handshake_Fails( void )
 
 void test_Openssl_Connect_NULL_Members_In_Creds_And_Configs( void )
 {
-    OpensslStatus_t returnStatus, expectedStatus;
+    OpensslStatus_t returnStatus, expectedStatus = OPENSSL_INVALID_CREDENTIALS;
+
+    /* Coverage for NULL pRootCaPath. */
+    memset( &opensslCredentials, 0, sizeof( OpensslCredentials_t ) );
+    /* Make it so that no functions fail. */
+    expectedStatus = failFunctionFrom_Openssl_Connect( SSL_get_verify_result_fn + 1,
+                                                       NULL );
+
+    returnStatus = Openssl_Connect( &networkContext,
+                                    &serverInfo,
+                                    &opensslCredentials,
+                                    SEND_RECV_TIMEOUT,
+                                    SEND_RECV_TIMEOUT );
+    TEST_ASSERT_EQUAL( expectedStatus, returnStatus );
 
     /* Coverage for NULL pClientCertPath, pPrivateKeyPath, pAlpnProtos, sniHostName,
      * and maxFragmentLength == 0. */
-    memset( &opensslCredentials, 0, sizeof( OpensslCredentials_t ) );
     opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
-    expectedStatus = failFunctionFrom_Openssl_Connect( SSL_get_verify_result_fn, NULL );
+    expectedStatus = failFunctionFrom_Openssl_Connect( SSL_get_verify_result_fn + 1,
+                                                       NULL );
     returnStatus = Openssl_Connect( &networkContext,
                                     &serverInfo,
                                     &opensslCredentials,
@@ -515,7 +527,7 @@ void test_Openssl_Connect_NULL_Members_In_Creds_And_Configs( void )
 
     /* Coverage for alpnProtosLen == 0. */
     opensslCredentials.pAlpnProtos = ALPN_PROTOS;
-    expectedStatus = failFunctionFrom_Openssl_Connect( SSL_get_verify_result_fn,
+    expectedStatus = failFunctionFrom_Openssl_Connect( SSL_get_verify_result_fn + 1,
                                                        NULL );
     returnStatus = Openssl_Connect( &networkContext,
                                     &serverInfo,
