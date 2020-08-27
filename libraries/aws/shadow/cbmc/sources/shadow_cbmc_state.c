@@ -23,10 +23,6 @@
 #include "shadow.h"
 #include "shadow_cbmc_state.h"
 
-#ifndef TOPIC_STRING_LENGTH_MAX
-    #define TOPIC_STRING_LENGTH_MAX    256U
-#endif
-
 void * mallocCanFail( size_t size )
 {
     __CPROVER_assert( size < CBMC_MAX_OBJECT_SIZE, "mallocCanFail size is too big" );
