@@ -30,6 +30,7 @@ cmock
 com
 cond
 config
+configs
 connack
 connectinfo
 connectpacketsize
@@ -97,11 +98,16 @@ int
 iot
 isduplicate
 isn
+iso
 keepaliveintervalsec
 keepalivems
 keepaliveseconds
 lastpackettime
 linux
+logdebug
+logerror
+loginfo
+logwarn
 logwarn
 lsb
 lwt
@@ -159,6 +165,10 @@ mqttsubackstatus
 mqttsubscribeinfo
 mqttsuccess
 msb
+mydebugloggingfunction
+myerrorloggingfunction
+myinfologgingfunction
+mywarnloggingfunction
 nameindex
 networkbuffer
 networkcontext

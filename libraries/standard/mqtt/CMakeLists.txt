@@ -16,7 +16,6 @@ target_include_directories( mqtt PRIVATE ${MQTT_INCLUDE_PRIVATE_DIRS}
 set_target_properties( mqtt PROPERTIES FOLDER libraries/standard )
 source_group( include FILES include/mqtt.h include/mqtt_lightweight.h include/mqtt_state.h )
 source_group( src FILES ${MQTT_SOURCES} )
-source_group( src\\private FILES src/private/mqtt_internal.h )
 
 if(BUILD_TESTS)
     add_subdirectory( utest )
