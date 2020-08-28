@@ -268,7 +268,7 @@ static void eventCallback( MQTTContext_t * pMqttContext,
 /**
  * @brief Initializes the MQTT library.
  *
- * @param[in,out] pMqttContext MQTT context pointer.
+ * @param[in] pMqttContext MQTT context pointer.
  * @param[in] pNetworkContext The network context pointer.
  *
  * @return EXIT_SUCCESS if the MQTT library is initialized;
