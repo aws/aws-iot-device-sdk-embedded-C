@@ -84,7 +84,7 @@ if(${BUILD_TESTS})
             endif()	
         else()	
             message( FATAL_ERROR "The required submodule CMock does not exist. Either clone it manually, or set BUILD_CLONE_SUBMODULES to 1 to automatically clone it during build." )	
-        endif()	
+        endif()
     endif()
 
     include("${ROOT_DIR}/tools/cmock/create_test.cmake")
