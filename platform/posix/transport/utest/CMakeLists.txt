@@ -152,3 +152,33 @@ create_test(${utest_name}
            "${utest_dep_list}"
            "${test_include_directories}"
         )
+
+# list the files you would like to test here
+set(real_source_files
+        ${RECONNECT_SOURCES}
+        )
+set(real_name "transport_reconnect_real")
+
+create_real_library(${real_name}
+                    "${real_source_files}"
+                    "${real_include_directories}"
+                    "${mock_name}"
+        )
+
+set(utest_link_list
+        lib${real_name}.a
+        -l${mock_name}
+        )
+
+set(utest_dep_list
+        ${real_name}
+        )
+
+set(utest_name "reconnect_utest")
+set(utest_source "reconnect_utest.c")
+create_test(${utest_name}
+           ${utest_source}
+           "${utest_link_list}"
+           "${utest_dep_list}"
+           "${test_include_directories}"
+        )
