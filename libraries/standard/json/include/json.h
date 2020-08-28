@@ -30,7 +30,9 @@ typedef enum
     JSONSuccess,
     JSONIllegalDocument,
     JSONMaxDepthExceeded,
-    JSONNotFound
+    JSONNotFound,
+    JSONNullParameter,
+    JSONBadParameter
 } JSONStatus_t;
 
 /**
@@ -40,6 +42,8 @@ typedef enum
  * @param[in] max  The size of the buffer.
  *
  * @return #JSONSuccess if the buffer contents are valid JSON;
+ * #JSONNullParameter if buf is NULL;
+ * #JSONBadParameter if max is 0;
  * #JSONIllegalDocument if the buffer contents are NOT valid JSON;
  * #JSONMaxDepthExceeded if object and array nesting exceeds a threshold;
  * #JSONPartial if the buffer contents are potentially valid but incomplete.
@@ -91,6 +95,8 @@ JSONStatus_t JSON_Validate( const char * buf,
  *     }
  *
  * @return #JSONSuccess if the queryKey is found and the value output;
+ * #JSONNullParameter if any pointer parameters are NULL;
+ * #JSONBadParameter if the queryKey is empty, or any subpart is empty, or max is 0;
  * #JSONIllegalDocument if the buffer contents are NOT valid JSON;
  * #JSONMaxDepthExceeded if object and array nesting exceeds a threshold;
  * #JSONNotFound if the queryKey is NOT found.

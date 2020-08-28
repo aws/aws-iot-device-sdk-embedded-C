@@ -20,23 +20,6 @@ target_sources(
         ${LIGHTWEIGHT_MQTT_SOURCES}
 )
 
-# JSON library Public Include directories.
-set( JSON_INCLUDE_PUBLIC_DIRS
-     "${MODULES_DIR}/standard/json/include" )
-
-# JSON library source files.
-set( JSON_SOURCES
-     "${MODULES_DIR}/standard/json/src/json.c" )
-
-# Create target for JSON utility.
-add_library( json
-                ${JSON_SOURCES} )
-
-# JSON library Public Include directories.
-target_include_directories( json
-                            PUBLIC
-                                "${MODULES_DIR}/standard/json/include" )
-
 target_link_libraries(
     ${DEMO_NAME}
     PRIVATE
