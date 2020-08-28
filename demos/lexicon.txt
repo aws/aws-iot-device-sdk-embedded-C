@@ -75,6 +75,7 @@ param
 pathlen
 payloadlength
 pbuffer
+pclientsessionpresent
 pcontext
 pdeserializedinfo
 pem
