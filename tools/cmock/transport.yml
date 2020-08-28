@@ -1,8 +1,9 @@
-# Taken from amazon-freertos repository
 :cmock:
   :mock_prefix: mock_
   :when_no_prototypes: :warn
-  :enforce_strict_ordering: TRUE
+  :enforce_strict_ordering: true
+  # fclose is called after program terminates, so this will avoid a segfault.
+  :fail_on_unexpected_calls: false
   :plugins:
     - :ignore
     - :ignore_arg
@@ -31,4 +32,12 @@
     - portDONT_DISCARD
     # These keywords are found in many POSIX APIs but is stripped as it cannot be parsed by CMock.
     - __restrict
-    - \s__THROW
+    - \s__THROW 
+    # These functions in socket.h cannot be parsed correctly by CMock, so we won't mock them.
+    - (.*)sendmsg((.|\n|\r)+?\;)
+    - (.*)sendmmsg((.|\n|\r)+?\;)
+    - (.*)recvmsg((.|\n|\r)+?\;)
+    - (.*)recvmmsg((.|\n|\r)+?\;)
+    # These functions in netdb.h cannot be parsed correctly by CMock, so we won't mock them.
+    - (.*)getaddrinfo_a((.|\n|\r)+?\;)
+    - (.*)gai_((.|\n|\r)+?\;)

@@ -65,8 +65,26 @@ if(DEFINED ENV{PWD})
     endif()
 endif()
 
-if (BUILD_TESTS)
+# Build the tests if flag enabled.
+if(${BUILD_TESTS})
     enable_testing()
+    include(${ROOT_DIR}/tools/cmock/cmock_dependencies.cmake)
+    
+    # Create a list for each unit test target.
+    set(utest_targets 
+        http_utest mqtt_utest 
+        mqtt_lightweight_utest mqtt_state_utest 
+        http_send_utest json_utest
+        sockets_utest plaintext_utest
+        openssl_utest)
+
+    # Add a target for running coverage on tests.
+    add_custom_target(coverage
+        COMMAND ${CMAKE_COMMAND} -DROOT_DIR=${ROOT_DIR}
+        -P ${CMAKE_SOURCE_DIR}/tools/cmock/coverage.cmake
+        DEPENDS cmock unity ${utest_targets}
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    )
 endif()
 
 # Add libraries.
@@ -77,5 +95,3 @@ add_subdirectory( platform )
 
 # Build the demos.
 add_subdirectory( demos )
-
-

@@ -166,10 +166,7 @@ static OpensslStatus_t convertToOpensslStatus( SocketStatus_t socketStatus );
         }
 
         /* Free cwd because getcwd calls malloc. */
-        if( cwd != NULL )
-        {
-            free( cwd );
-        }
+        free( cwd );
     }
 #endif /* #if ( LIBRARY_LOG_LEVEL == LOG_DEBUG ) */
 /*-----------------------------------------------------------*/
@@ -522,6 +519,7 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
     {
         /* Set auto retry mode for the blocking calls to SSL_read and SSL_write.
          * The mask returned by SSL_CTX_set_mode does not need to be checked. */
+
         /* MISRA Directive 4.6 flags the following line for using basic
         * numerical type long. This directive is suppressed because openssl
         * function #SSL_CTX_set_mode takes an argument of type long. */
