@@ -267,6 +267,7 @@ void test_Sockets_Connect_Every_IP_Address_Fails( void )
     SocketStatus_t socketStatus;
     int tcpSocket = 1;
 
+    /* -1 implies that every call to #connect will fail. */
     expectSocketsConnectCalls( -1 );
 
     socketStatus = Sockets_Connect( &tcpSocket,

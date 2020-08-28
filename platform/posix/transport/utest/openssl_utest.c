@@ -162,7 +162,7 @@ static OpensslStatus_t convertToOpensslStatus( SocketStatus_t socketStatus )
  * #OPENSSL_HANDSHAKE_FAILED, and #OPENSSL_CONNECT_FAILURE.
  */
 static OpensslStatus_t failFunctionFrom_Openssl_Connect( FunctionNames_t functionToFail,
-                                                         void * retValue )
+                                                         const void * retValue )
 {
     OpensslStatus_t returnStatus = OPENSSL_SUCCESS;
     SocketStatus_t socketStatus = SOCKETS_SUCCESS;
@@ -171,7 +171,6 @@ static OpensslStatus_t failFunctionFrom_Openssl_Connect( FunctionNames_t functio
 
     /* Depending on the function to fail,
      * this function must return the correct status to expect. */
-
     if( functionToFail == Sockets_Connect_fn )
     {
         TEST_ASSERT_NOT_NULL( retValue );
@@ -421,7 +420,7 @@ void test_Openssl_Connect_Invalid_Params( void )
     /* NULL serverInfo is handled by Sockets_Connect, so we appropriately
      * return SOCKETS_INVALID_PARAMETER. */
     socketError = SOCKETS_INVALID_PARAMETER;
-    expectedStatus = failFunctionFrom_Openssl_Connect( 0, &socketError );
+    expectedStatus = failFunctionFrom_Openssl_Connect( Sockets_Connect_fn, &socketError );
     returnStatus = Openssl_Connect( &networkContext,
                                     NULL,
                                     &opensslCredentials,
@@ -431,7 +430,7 @@ void test_Openssl_Connect_Invalid_Params( void )
 
     /* Mock a DNS failure from the call to the sockets connect wrapper. */
     socketError = SOCKETS_DNS_FAILURE;
-    expectedStatus = failFunctionFrom_Openssl_Connect( 0, &socketError );
+    expectedStatus = failFunctionFrom_Openssl_Connect( Sockets_Connect_fn, &socketError );
     returnStatus = Openssl_Connect( &networkContext,
                                     &serverInfo,
                                     &opensslCredentials,
@@ -441,7 +440,7 @@ void test_Openssl_Connect_Invalid_Params( void )
 
     /* Mock a connection failure from the call to the sockets connect wrapper. */
     socketError = SOCKETS_CONNECT_FAILURE;
-    expectedStatus = failFunctionFrom_Openssl_Connect( 0, &socketError );
+    expectedStatus = failFunctionFrom_Openssl_Connect( Sockets_Connect_fn, &socketError );
     returnStatus = Openssl_Connect( &networkContext,
                                     NULL,
                                     &opensslCredentials,
@@ -451,7 +450,7 @@ void test_Openssl_Connect_Invalid_Params( void )
 
     /* Mock an unknown SOCKETS error for the default case in the switch. */
     socketError = SOCKETS_INSUFFICIENT_MEMORY;
-    expectedStatus = failFunctionFrom_Openssl_Connect( 0, &socketError );
+    expectedStatus = failFunctionFrom_Openssl_Connect( Sockets_Connect_fn, &socketError );
     returnStatus = Openssl_Connect( &networkContext,
                                     NULL,
                                     &opensslCredentials,
@@ -474,12 +473,12 @@ void test_Openssl_Connect_Invalid_Params( void )
 void test_Openssl_Connect_Initializing_Objects_Fails( void )
 {
     OpensslStatus_t returnStatus, expectedStatus;
+    FunctionNames_t initializeFunctions[] = { SSL_CTX_new_fn, SSL_new_fn, SSL_set_fd_fn };
     uint16_t i;
-    uint8_t initializers[] = { SSL_CTX_new_fn, SSL_new_fn, SSL_set_fd_fn };
 
-    for( i = 0; i < sizeof( initializers ); i++ )
+    for( i = 0; i < sizeof( initializeFunctions ) / sizeof( FunctionNames_t ); i++ )
     {
-        expectedStatus = failFunctionFrom_Openssl_Connect( initializers[ i ],
+        expectedStatus = failFunctionFrom_Openssl_Connect( initializeFunctions[ i ],
                                                            NULL );
         returnStatus = Openssl_Connect( &networkContext,
                                         &serverInfo,
@@ -497,11 +496,17 @@ void test_Openssl_Connect_Initializing_Objects_Fails( void )
 void test_Openssl_Connect_Setting_TLS_Credentials_Fails( void )
 {
     OpensslStatus_t returnStatus, expectedStatus;
+    FunctionNames_t credentialFunctions[] =
+    {
+        fopen_fn,               PEM_read_X509_fn,
+        X509_STORE_add_cert_fn, SSL_CTX_use_certificate_chain_file_fn,
+        SSL_CTX_use_PrivateKey_file_fn
+    };
     uint16_t i;
 
-    for( i = fopen_fn; i <= SSL_CTX_use_PrivateKey_file_fn; i++ )
+    for( i = 0; i < sizeof( credentialFunctions ) / sizeof( FunctionNames_t ); i++ )
     {
-        expectedStatus = failFunctionFrom_Openssl_Connect( i, NULL );
+        expectedStatus = failFunctionFrom_Openssl_Connect( credentialFunctions[ i ], NULL );
         returnStatus = Openssl_Connect( &networkContext,
                                         &serverInfo,
                                         &opensslCredentials,
@@ -518,11 +523,16 @@ void test_Openssl_Connect_Setting_TLS_Credentials_Fails( void )
 void test_Openssl_Connect_Setting_TLS_Configurations_Fails( void )
 {
     OpensslStatus_t returnStatus, expectedStatus;
+    FunctionNames_t configFunctions[] =
+    {
+        SSL_set_alpn_protos_fn, SSL_set_max_send_fragment_fn,
+        SSL_set_tlsext_host_name_fn
+    };
     uint16_t i;
 
-    for( i = SSL_set_alpn_protos_fn; i <= SSL_set_tlsext_host_name_fn; i++ )
+    for( i = 0; i < sizeof( configFunctions ) / sizeof( FunctionNames_t ); i++ )
     {
-        expectedStatus = failFunctionFrom_Openssl_Connect( i, NULL );
+        expectedStatus = failFunctionFrom_Openssl_Connect( configFunctions[ i ], NULL );
         returnStatus = Openssl_Connect( &networkContext,
                                         &serverInfo,
                                         &opensslCredentials,
@@ -539,11 +549,16 @@ void test_Openssl_Connect_Setting_TLS_Configurations_Fails( void )
 void test_Openssl_Connect_Handshake_Fails( void )
 {
     OpensslStatus_t returnStatus, expectedStatus;
+    FunctionNames_t connectFunctions[] =
+    {
+        SSL_connect_fn, SSL_get_verify_result_fn
+    };
     uint16_t i;
 
-    for( i = SSL_connect_fn; i <= SSL_get_verify_result_fn; i++ )
+    for( i = 0; i < sizeof( connectFunctions ) / sizeof( FunctionNames_t ); i++ )
     {
-        expectedStatus = failFunctionFrom_Openssl_Connect( i, NULL );
+        expectedStatus = failFunctionFrom_Openssl_Connect( connectFunctions[ i ],
+                                                           NULL );
         returnStatus = Openssl_Connect( &networkContext,
                                         &serverInfo,
                                         &opensslCredentials,
@@ -563,11 +578,8 @@ void test_Openssl_Connect_NULL_Members_In_Creds_And_Configs( void )
 
     /* Coverage for NULL pRootCaPath. */
     memset( &opensslCredentials, 0, sizeof( OpensslCredentials_t ) );
-    /*expectedStatus = failFunctionFrom_Openssl_Connect( SSL_get_verify_result_fn, NULL );*/
-    Sockets_Connect_ExpectAnyArgsAndReturn( SOCKETS_SUCCESS );
-    TLS_client_method_ExpectAndReturn( &sslMethod );
-    SSL_CTX_new_ExpectAnyArgsAndReturn( &sslCtx );
-    SSL_CTX_free_ExpectAnyArgs();
+    expectedStatus = failFunctionFrom_Openssl_Connect( SSL_get_verify_result_fn + 1,
+                                                       NULL );
     returnStatus = Openssl_Connect( &networkContext,
                                     &serverInfo,
                                     &opensslCredentials,
@@ -578,7 +590,8 @@ void test_Openssl_Connect_NULL_Members_In_Creds_And_Configs( void )
     /* Coverage for NULL pClientCertPath, pPrivateKeyPath, pAlpnProtos, sniHostName,
      * and maxFragmentLength == 0. */
     opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
-    expectedStatus = failFunctionFrom_Openssl_Connect( SSL_get_verify_result_fn, NULL );
+    expectedStatus = failFunctionFrom_Openssl_Connect( SSL_get_verify_result_fn + 1,
+                                                       NULL );
     returnStatus = Openssl_Connect( &networkContext,
                                     &serverInfo,
                                     &opensslCredentials,
@@ -588,7 +601,7 @@ void test_Openssl_Connect_NULL_Members_In_Creds_And_Configs( void )
 
     /* Coverage for alpnProtosLen == 0. */
     opensslCredentials.pAlpnProtos = ALPN_PROTOS;
-    expectedStatus = failFunctionFrom_Openssl_Connect( SSL_get_verify_result_fn,
+    expectedStatus = failFunctionFrom_Openssl_Connect( SSL_get_verify_result_fn + 1,
                                                        NULL );
     returnStatus = Openssl_Connect( &networkContext,
                                     &serverInfo,
@@ -603,18 +616,18 @@ void test_Openssl_Connect_NULL_Members_In_Creds_And_Configs( void )
  */
 void test_Openssl_Connect_Succeeds( void )
 {
-    OpensslStatus_t returnStatus, expectedStatus;
+    OpensslStatus_t returnStatus;
 
     /* Set the parameter to one more that the max enum value of the function names
      * so that no functions fail for this happy path case. */
-    expectedStatus = failFunctionFrom_Openssl_Connect( SSL_get_verify_result_fn + 1,
-                                                       NULL );
+    ( void ) failFunctionFrom_Openssl_Connect( SSL_get_verify_result_fn + 1,
+                                               NULL );
     returnStatus = Openssl_Connect( &networkContext,
                                     &serverInfo,
                                     &opensslCredentials,
                                     SEND_RECV_TIMEOUT,
                                     SEND_RECV_TIMEOUT );
-    TEST_ASSERT_EQUAL( expectedStatus, returnStatus );
+    TEST_ASSERT_EQUAL( OPENSSL_SUCCESS, returnStatus );
 }
 
 /**
