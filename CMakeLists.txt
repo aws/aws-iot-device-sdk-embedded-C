@@ -70,7 +70,7 @@ if(${BUILD_TESTS})
     enable_testing()
     include(${ROOT_DIR}/tools/cmock/cmock_dependencies.cmake)
     
-    # Create a list for each unit test target
+    # Create a list for each unit test target.
     set(utest_targets 
         http_utest mqtt_utest 
         mqtt_lightweight_utest mqtt_state_utest 
