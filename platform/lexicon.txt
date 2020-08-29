@@ -1,9 +1,13 @@
 alpn
 api
+apis
 aws
 backoff
 bool
+br
 bytestorecv
+bytesreceived
+bytessent
 bytestosend
 ca
 com
@@ -11,6 +15,7 @@ const
 coverity
 cwd
 dns
+endcode
 endif
 errno
 errornumber
@@ -37,6 +42,12 @@ messagelevel
 mfln
 misra
 mqtt
+mynetworkrecvimplementation
+mynetworksendimplementation
+mysocketrecv
+mysocketsend
+mytcpsocketcontext
+mytlscontext
 nano
 networkcontext
 noninfringement
@@ -83,3 +94,7 @@ tcpsocket
 timespec
 tls
 transportinterface
+tcpsocketcontext
+tlscontext
+transportcallback
+transportstruct
