@@ -559,7 +559,7 @@ ShadowStatus_t Shadow_GetTopicString( ShadowTopicStringType_t topicType,
         if( bufferSize < generatedTopicStringLength )
         {
             shadowStatus = SHADOW_BUFFER_TOO_SMALL;
-            LogError( ( "Input bufferSize too small, bufferSize %d, required ", bufferSize, generatedTopicStringLength) );
+            LogError( ( "Input bufferSize too small, bufferSize %d, required %d", bufferSize, generatedTopicStringLength) );
         }
         else
         {

@@ -5,10 +5,10 @@
 # Files specific to the repository such as test runner, platform tests
 # are not added to the variables.
 
-# SHADOW library source files.
-set( SHADOW_SOURCES
-     ${MODULES_DIR}/aws/shadow/src/shadow.c )
+# JSON library source files.
+set( JSON_SOURCES
+     ${MODULES_DIR}/standard/json/src/json.c )
 
-# SHADOW library Public Include directories.
-set( SHADOW_INCLUDE_PUBLIC_DIRS
-     ${MODULES_DIR}/aws/shadow/include )
+# JSON library Public Include directories.
+set( JSON_INCLUDE_PUBLIC_DIRS
+     ${MODULES_DIR}/standard/json/include )

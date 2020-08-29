@@ -35,3 +35,10 @@ http_demo_mutual_auth:
     - -DAWS_IOT_ENDPOINT="aws-iot-endpoint"
     - -DCLIENT_CERT_PATH="certificate-path"
     - -DCLIENT_PRIVATE_KEY_PATH="private-key-path"
+
+shadow_demo_main:
+  c_flags:
+    - -DAWS_IOT_ENDPOINT='aws-iot-endpoint'
+    - -DCLIENT_CERT_PATH="certificate-path"
+    - -DCLIENT_PRIVATE_KEY_PATH="private-key-path"
+

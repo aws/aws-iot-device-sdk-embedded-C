@@ -27,7 +27,6 @@
 #include <assert.h>
 
 #include "mqtt_lightweight.h"
-#include "private/mqtt_internal.h"
 
 /**
  * @brief MQTT protocol version 3.1.1.
@@ -295,7 +294,7 @@ static uint8_t * encodeString( uint8_t * pDestination,
  * @return The Remaining Length of the incoming packet.
  */
 static size_t getRemainingLength( TransportRecv_t recvFunc,
-                                  NetworkContext_t * pNetworkContext );
+                                  const NetworkContext_t * pNetworkContext );
 
 /**
  * @brief Check if an incoming packet type is valid.
@@ -706,7 +705,7 @@ static void serializePublishCommon( const MQTTPublishInfo_t * pPublishInfo,
 }
 
 static size_t getRemainingLength( TransportRecv_t recvFunc,
-                                  NetworkContext_t * pNetworkContext )
+                                  const NetworkContext_t * pNetworkContext )
 {
     size_t remainingLength = 0, multiplier = 1, bytesDecoded = 0, expectedSize = 0;
     uint8_t encodedByte = 0;
@@ -2335,7 +2334,7 @@ MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * pIncomingPacket,
 /*-----------------------------------------------------------*/
 
 MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
-                                                  NetworkContext_t * pNetworkContext,
+                                                  const NetworkContext_t * pNetworkContext,
                                                   MQTTPacketInfo_t * pIncomingPacket )
 {
     MQTTStatus_t status = MQTTSuccess;
