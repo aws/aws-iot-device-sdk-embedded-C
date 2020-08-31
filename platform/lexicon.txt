@@ -16,6 +16,8 @@ connectsuccessindex
 const
 couldn
 coverity
+cpu
+cpus
 cwd
 didn
 dns
