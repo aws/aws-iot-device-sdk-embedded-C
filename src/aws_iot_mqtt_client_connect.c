@@ -45,6 +45,7 @@ extern "C" {
 #include "aws_iot_mqtt_client_interface.h"
 #include "aws_iot_mqtt_client_common_internal.h"
 
+/** connect flags byte */
 typedef union {
 	uint8_t all;    /**< all connect flags */
 #if defined(REVERSED)
@@ -57,27 +58,21 @@ typedef union {
 		unsigned int will : 1;			/**< will flag */
 		unsigned int cleansession : 1;	/**< clean session flag */
 		unsigned int : 1;				/**< unused */
-	} bits;
+	} bits; /**< connect flags byte (reversed order) */
 #else
 	struct {
-		unsigned int : 1;
-		/**< unused */
-		unsigned int cleansession : 1;
-		/**< cleansession flag */
-		unsigned int will : 1;
-		/**< will flag */
-		unsigned int willQoS : 2;
-		/**< will QoS value */
-		unsigned int willRetain : 1;
-		/**< will retain setting */
-		unsigned int password : 1;
-		/**< 3.1 password */
-		unsigned int username : 1;        /**< 3.1 user name */
-	} bits;
+		unsigned int : 1; /**< unused */
+		unsigned int cleansession : 1; /**< cleansession flag */
+		unsigned int will : 1; /**< will flag */
+		unsigned int willQoS : 2; /**< will QoS value */
+		unsigned int willRetain : 1; /**< will retain setting */
+		unsigned int password : 1; /**< 3.1 password */
+		unsigned int username : 1; /**< 3.1 user name */
+	} bits; /**< connect flags byte (normal order) */
 #endif
 } MQTT_Connect_Header_Flags;
-/**< connect flags byte */
 
+/** connack flags byte */
 typedef union {
 	uint8_t all;                            /**< all connack flags */
 #if defined(REVERSED)
@@ -85,26 +80,24 @@ typedef union {
 	{
 		unsigned int sessionpresent : 1;	/**< session present flag */
 		unsigned int : 7;					/**< unused */
-	} bits;
+	} bits; /**< connect flags byte (reverse order) */
 #else
 	struct {
-		unsigned int : 7;
-		/**< unused */
-		unsigned int sessionpresent : 1;    /**< session present flag */
-	} bits;
+		unsigned int : 7; /**< unused */
+		unsigned int sessionpresent : 1; /**< session present flag */
+	} bits; /**< connect flags byte (normal order) */
 #endif
 } MQTT_Connack_Header_Flags;
-/**< connack flags byte */
 
+/** @brief Connect request response codes from server */
 typedef enum {
-	CONNACK_CONNECTION_ACCEPTED = 0,
-	CONNACK_UNACCEPTABLE_PROTOCOL_VERSION_ERROR = 1,
-	CONNACK_IDENTIFIER_REJECTED_ERROR = 2,
-	CONNACK_SERVER_UNAVAILABLE_ERROR = 3,
-	CONNACK_BAD_USERDATA_ERROR = 4,
-	CONNACK_NOT_AUTHORIZED_ERROR = 5
-} MQTT_Connack_Return_Codes;    /**< Connect request response codes from server */
-
+	CONNACK_CONNECTION_ACCEPTED = 0, /**< Connection accepted */
+	CONNACK_UNACCEPTABLE_PROTOCOL_VERSION_ERROR = 1, /**< Unacceptable protocol version */
+	CONNACK_IDENTIFIER_REJECTED_ERROR = 2, /**< Client identifier rejected */
+	CONNACK_SERVER_UNAVAILABLE_ERROR = 3, /**< Server unavailable */
+	CONNACK_BAD_USERDATA_ERROR = 4, /**< Bad username */
+	CONNACK_NOT_AUTHORIZED_ERROR = 5 /**< Not authorized */
+} MQTT_Connack_Return_Codes;
 
 /**
   * Determines the length of the MQTT connect packet that would be produced using the supplied connect options.
@@ -437,8 +430,9 @@ static IoT_Error_t _aws_iot_mqtt_internal_connect(AWS_IoT_Client *pClient, IoT_C
 		FUNC_EXIT_RC(connack_rc);
 	}
 
+	/* Ensure that a ping request is sent after keepAliveInterval. */
 	pClient->clientStatus.isPingOutstanding = false;
-	countdown_sec(&pClient->pingTimer, pClient->clientData.keepAliveInterval);
+	countdown_sec(&pClient->pingReqTimer, pClient->clientData.keepAliveInterval);
 
 	FUNC_EXIT_RC(SUCCESS);
 }
@@ -527,7 +521,7 @@ static IoT_Error_t _aws_iot_mqtt_internal_disconnect(AWS_IoT_Client *pClient) {
 	/* Clean network stack */
 	pClient->networkStack.disconnect(&(pClient->networkStack));
 	rc = pClient->networkStack.destroy(&(pClient->networkStack));
-	if(0 != rc) {
+	if(SUCCESS != rc) {
 		/* TLS Destroy failed, return error */
 		FUNC_EXIT_RC(FAILURE);
 	}
@@ -535,17 +529,6 @@ static IoT_Error_t _aws_iot_mqtt_internal_disconnect(AWS_IoT_Client *pClient) {
 	FUNC_EXIT_RC(SUCCESS);
 }
 
-/**
- * @brief Disconnect an MQTT Connection
- *
- * Called to send a disconnect message to the broker.
- * This is the outer function which does the validations and calls the internal disconnect above
- * to perform the actual operation. It is also responsible for client state changes
- *
- * @param pClient Reference to the IoT Client
- *
- * @return An IoT Error Type defining successful/failed send of the disconnect control packet.
- */
 IoT_Error_t aws_iot_mqtt_disconnect(AWS_IoT_Client *pClient) {
 	ClientState clientState;
 	IoT_Error_t rc;
@@ -579,22 +562,8 @@ IoT_Error_t aws_iot_mqtt_disconnect(AWS_IoT_Client *pClient) {
 	FUNC_EXIT_RC(rc);
 }
 
-/**
- * @brief MQTT Manual Re-Connection Function
- *
- * Called to establish an MQTT connection with the AWS IoT Service
- * using parameters from the last time a connection was attempted
- * Use after disconnect to start the reconnect process manually
- * Makes only one reconnect attempt. Sets the client state to
- * pending reconnect in case of failure
- *
- * @param pClient Reference to the IoT Client
- *
- * @return An IoT Error Type defining successful/failed connection
- */
 IoT_Error_t aws_iot_mqtt_attempt_reconnect(AWS_IoT_Client *pClient) {
 	IoT_Error_t rc;
-	ClientState currentState = aws_iot_mqtt_get_client_state(pClient);
 
 	FUNC_ENTRY;
 

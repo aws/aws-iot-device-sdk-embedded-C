@@ -353,6 +353,10 @@ int main(int argc, char **argv) {
 	paramsQOS0.payloadLen = strlen(cPayload);
 
 	rc = aws_iot_jobs_send_query(&client, QOS0, AWS_IOT_MY_THING_NAME, NULL, NULL, topicToPublishGetPending, sizeof(topicToPublishGetPending), NULL, 0, JOB_GET_PENDING_TOPIC);
+	if(SUCCESS != rc) {
+		IOT_ERROR("Error calling aws_iot_jobs_send_query: %d ", rc);
+		return rc;
+	}
 
 	AwsIotDescribeJobExecutionRequest describeRequest;
 	describeRequest.executionNumber = 0;

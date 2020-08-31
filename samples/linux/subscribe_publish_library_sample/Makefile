@@ -31,7 +31,7 @@ IOT_SRC_FILES += $(shell find $(PLATFORM_COMMON_DIR)/ -name '*.c')
 #TLS - mbedtls
 MBEDTLS_DIR = $(IOT_CLIENT_DIR)/external_libs/mbedTLS
 TLS_LIB_DIR = $(MBEDTLS_DIR)/library
-CRYPTO_LIB_DIR = $(MBEDTLS_DIR)/crypto/library
+CRYPTO_LIB_DIR = $(MBEDTLS_DIR)/library
 TLS_INCLUDE_DIR = -I $(MBEDTLS_DIR)/include
 EXTERNAL_LIBS += -L$(TLS_LIB_DIR)
 LD_FLAG += -Wl,-rpath,$(TLS_LIB_DIR)

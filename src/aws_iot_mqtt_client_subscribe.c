@@ -273,26 +273,6 @@ static IoT_Error_t _aws_iot_mqtt_internal_subscribe(AWS_IoT_Client *pClient, con
 	FUNC_EXIT_RC(SUCCESS);
 }
 
-/**
- * @brief Subscribe to an MQTT topic.
- *
- * Called to send a subscribe message to the broker requesting a subscription
- * to an MQTT topic. This is the outer function which does the validations and
- * calls the internal subscribe above to perform the actual operation.
- * It is also responsible for client state changes
- * @note Call is blocking.  The call returns after the receipt of the SUBACK control packet.
- * @warning pTopicName and pApplicationHandlerData need to be static in memory.
- *
- * @param pClient Reference to the IoT Client
- * @param pTopicName Topic Name to publish to. pTopicName needs to be static in memory since
- *     no malloc are performed by the SDK
- * @param topicNameLen Length of the topic name
- * @param pApplicationHandler_t Reference to the handler function for this subscription
- * @param pApplicationHandlerData Point to data passed to the callback.
- *    pApplicationHandlerData also needs to be static in memory  since no malloc are performed by the SDK
- *
- * @return An IoT Error Type defining successful/failed subscription
- */
 IoT_Error_t aws_iot_mqtt_subscribe(AWS_IoT_Client *pClient, const char *pTopicName, uint16_t topicNameLen,
 								   QoS qos, pApplicationHandler_t pApplicationHandler, void *pApplicationHandlerData) {
 	ClientState clientState;
@@ -406,19 +386,6 @@ static IoT_Error_t _aws_iot_mqtt_internal_resubscribe(AWS_IoT_Client *pClient) {
 	FUNC_EXIT_RC(SUCCESS);
 }
 
-/**
- * @brief Subscribe to an MQTT topic.
- *
- * Called to send a subscribe message to the broker requesting a subscription
- * to an MQTT topic.
- * This is the outer function which does the validations and calls the internal resubscribe above
- * to perform the actual operation. It is also responsible for client state changes
- * @note Call is blocking.  The call returns after the receipt of the SUBACK control packet.
- *
- * @param pClient Reference to the IoT Client
- *
- * @return An IoT Error Type defining successful/failed subscription
- */
 IoT_Error_t aws_iot_mqtt_resubscribe(AWS_IoT_Client *pClient) {
 	IoT_Error_t rc, resubRc;
 	ClientState currentState = aws_iot_mqtt_get_client_state(pClient);
