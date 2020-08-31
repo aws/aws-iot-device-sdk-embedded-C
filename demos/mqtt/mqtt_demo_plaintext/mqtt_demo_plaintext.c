@@ -43,7 +43,7 @@
 #include "demo_config.h"
 
 /* MQTT API header. */
-#include "mqtt.h"
+#include "core_mqtt.h"
 
 /* Plaintext sockets transport implementation. */
 #include "plaintext_posix.h"

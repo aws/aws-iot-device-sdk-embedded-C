@@ -54,7 +54,7 @@
 /************ End of logging configuration ****************/
 
 /* Include MQTT library. */
-#include "mqtt.h"
+#include "core_mqtt.h"
 
 /* Enumeration type for return status value from Subscription Manager API. */
 typedef enum SubscriptionManagerStatus

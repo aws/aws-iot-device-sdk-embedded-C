@@ -47,7 +47,7 @@
 #include <unistd.h>
 
 /* MQTT LightWeight API header. */
-#include "mqtt_lightweight.h"
+#include "core_mqtt_lightweight.h"
 
 /* Plaintext transport implementation. */
 #include "plaintext_posix.h"

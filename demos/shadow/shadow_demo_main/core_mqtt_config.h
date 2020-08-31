@@ -19,8 +19,8 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef MQTT_CONFIG_H_
-#define MQTT_CONFIG_H_
+#ifndef CORE_MQTT_CONFIG_H_
+#define CORE_MQTT_CONFIG_H_
 
 /**************************************************/
 /******* DO NOT CHANGE the following order ********/
@@ -64,7 +64,7 @@
  * and incoming PUBLISHes, and thus, 2 * MQTT_STATE_ARRAY_MAX_COUNT amount
  * of memory is statically allocated for the state records.
  */
-#define MQTT_STATE_ARRAY_MAX_COUNT    10U
+#define MQTT_STATE_ARRAY_MAX_COUNT    ( 10U )
 
 /**
  * @brief Number of milliseconds to wait for a ping response to a ping
@@ -73,6 +73,6 @@
  * If a ping response is not received before this timeout, then
  * #MQTT_ProcessLoop will return #MQTTKeepAliveTimeout.
  */
-#define MQTT_PINGRESP_TIMEOUT_MS      500U
+#define MQTT_PINGRESP_TIMEOUT_MS      ( 500U )
 
-#endif /* ifndef MQTT_CONFIG_H_ */
+#endif /* ifndef CORE_MQTT_CONFIG_H_ */

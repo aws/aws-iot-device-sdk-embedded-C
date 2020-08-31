@@ -34,8 +34,8 @@
 
 #include "unity.h"
 /* Include paths for public enums, structures, and macros. */
-#include "mqtt.h"
-#include "mqtt_state.h"
+#include "core_mqtt.h"
+#include "core_mqtt_state.h"
 
 /* Include OpenSSL implementation of transport interface. */
 #include "openssl_posix.h"
