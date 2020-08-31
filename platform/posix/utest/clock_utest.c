@@ -90,11 +90,10 @@ int suiteTearDown( int numFailures )
 /* ========================================================================== */
 
 /**
- * @brief Test that #Clock_GetTimeMs returns the expected time.
- *
- * @note Overflow is allowed to happen as it is handled by the libraries.
+ * @brief Test that #Clock_GetTimeMs returns the expected time when there is no
+ * possible overflow.
  */
-void test_Clock_GetTimeMs_Returns_Expected_Time( void )
+void test_Clock_GetTimeMs_Returns_Expected_Time_No_Overflow( void )
 {
     uint32_t actualTimeMs, expectedTimeMs;
     struct timespec timeSpec;
@@ -111,6 +110,19 @@ void test_Clock_GetTimeMs_Returns_Expected_Time( void )
                      + ( timeSpec.tv_nsec / NANOSECONDS_PER_MILLISECOND );
 
     TEST_ASSERT_EQUAL( expectedTimeMs, actualTimeMs );
+}
+
+/**
+ * @brief Test that #Clock_GetTimeMs returns the expected time when there is a
+ * guaranteed overflow.
+ *
+ * @note Overflow is allowed to happen as it is handled by the libraries. The
+ * returned value is just the overflowed sum.
+ */
+void test_Clock_GetTimeMs_Returns_Expected_Time_Guaranteed_Overflow( void )
+{
+    uint32_t actualTimeMs, expectedTimeMs;
+    struct timespec timeSpec;
 
     /* This case will cause the time to overflow. */
     timeSpec.tv_sec = LONG_MAX;
