@@ -51,6 +51,13 @@ create_mock_list(${mock_name}
                 "${mock_define_list}"
         )
 
+create_mock_list(${mock_name}
+                "${mock_list}"
+                "${ROOT_DIR}/tools/cmock/project.yml"
+                "${mock_include_list}"
+                "${mock_define_list}"
+        )
+
 create_real_library(${real_name}
                     "${real_source_files}"
                     "${real_include_directories}"

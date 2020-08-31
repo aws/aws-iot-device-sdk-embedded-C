@@ -27,14 +27,40 @@
 /* Include paths for public enums, structures, and macros. */
 #include "clock.h"
 
-/* The number of iterations to run when testing #Clock_GetTimeMs. */
-#define GET_TIME_ITERATIONS      ( 5 )
-/* The number of iterations to run when testing #Clock_SleepMs. */
-#define SLEEP_TIME_ITERATIONS    ( 5 )
+#include "mock_time_api.h"
+
 /* The amount of time to sleep, which is a parameter passed to #Clock_SleepMs. */
-#define SLEEP_TIME_MS            ( 1 )
-/* The amount of excess time to tolerate when checking how much time has elapsed. */
-#define SLEEP_TOLERANCE_MS       ( 3 )
+#define SLEEP_TIME_MS                  ( 500 )
+
+/*
+ * Time conversion constants.
+ */
+#define NANOSECONDS_PER_MILLISECOND    ( 1000000L )    /**< @brief Nanoseconds per millisecond. */
+#define MILLISECONDS_PER_SECOND        ( 1000L )
+
+/**
+ * @brief Used to make assertions on the arguments passed to #nanosleep
+ * from #Clock_SleepMs.
+ *
+ * @param[in] __requested_time The requested time to sleep.
+ * @param[in] __remaining The remaining time left to sleep.
+ *
+ * @return Successful status returned by #nanosleep or 0
+ */
+int nanosleep_validate_args( const struct timespec * __requested_time,
+                             struct timespec * __remaining,
+                             int numCalls )
+{
+    TEST_ASSERT_NOT_NULL( __requested_time );
+    TEST_ASSERT_NULL( __remaining );
+    TEST_ASSERT_EQUAL( ( time_t ) SLEEP_TIME_MS / ( time_t ) MILLISECONDS_PER_SECOND,
+                       __requested_time->tv_sec );
+    TEST_ASSERT_EQUAL( ( ( int64_t ) SLEEP_TIME_MS % MILLISECONDS_PER_SECOND )
+                       * NANOSECONDS_PER_MILLISECOND,
+                       __requested_time->tv_nsec );
+
+    return 0;
+}
 
 /* ============================   UNITY FIXTURES ============================ */
 
@@ -62,56 +88,41 @@ int suiteTearDown( int numFailures )
 /* ========================================================================== */
 
 /**
- * @brief Test that #Clock_GetTimeMs is monotonically increasing.
+ * @brief Test that #Clock_GetTimeMs returns the expected time.
+ *
+ * @note Overflow is allowed to happen as it is handled by the libraries.
  */
-void test_Clock_GetTimeMs_Is_Monotonic( void )
+void test_Clock_GetTimeMs_Returns_Expected_Time( void )
 {
-    uint32_t prevTime = 0, curTime = 1;
-    uint16_t t;
+    uint32_t actualTimeMs, expectedTimeMs;
+    struct timespec timeSpec;
 
-    for( t = 0; t < GET_TIME_ITERATIONS; t++ )
-    {
-        Clock_SleepMs( SLEEP_TIME_MS );
-        curTime = Clock_GetTimeMs();
+    /* Libraries need only the lower 32 bits of the time in milliseconds, since
+     * this function is used only for calculating the time difference.
+     * Also, the possible overflows of this time value are handled by the
+     * libraries. */
+    timeSpec.tv_sec = LONG_MAX;
+    timeSpec.tv_nsec = LONG_MAX;
 
-        /* Equality is not asserted because instructions may take longer
-         * to execute depending on the CPU running the test. */
-        TEST_ASSERT_GREATER_THAN_UINT32( prevTime, curTime );
+    clock_gettime_ExpectAnyArgsAndReturn( 0 );
+    clock_gettime_ReturnThruPtr___tp( &timeSpec );
+    actualTimeMs = Clock_GetTimeMs();
 
-        /* Test that the elapsed time is not larger than the time we slept plus
-         * some tolerance for slower CPUs. */
-        if( prevTime != 0 )
-        {
-            TEST_ASSERT_LESS_OR_EQUAL_UINT32( prevTime + SLEEP_TIME_MS + SLEEP_TOLERANCE_MS,
-                                              curTime );
-        }
+    expectedTimeMs = ( timeSpec.tv_sec * MILLISECONDS_PER_SECOND )
+                     + ( timeSpec.tv_nsec / NANOSECONDS_PER_MILLISECOND );
 
-        prevTime = curTime;
-    }
+    TEST_ASSERT_EQUAL( expectedTimeMs, actualTimeMs );
 }
 
 /**
- * @brief Test that #Clock_SleepMs sleeps within a specified tolerance.
+ * @brief Test that the call to #nanosleep in #Clock_SleepMs receives the
+ * expected parameter values.
  */
 void test_Clock_SleepMs_Is_Sleep()
 {
-    uint32_t timeBeforeSleep, timeAfterSleep, timeSlept;
-    uint16_t t;
+    struct timespec timeSpec;
+    uint32_t sleepTimeMs = SLEEP_TIME_MS;
 
-    for( t = 0; t < SLEEP_TIME_ITERATIONS; t++ )
-    {
-        timeBeforeSleep = Clock_GetTimeMs();
-        Clock_SleepMs( SLEEP_TIME_MS );
-        timeAfterSleep = Clock_GetTimeMs();
-        timeSlept = timeAfterSleep - timeBeforeSleep;
-
-        /* Equality is not asserted because instructions may take longer
-         * to execute depending on the CPU running the test. */
-        TEST_ASSERT_GREATER_OR_EQUAL_UINT32( SLEEP_TIME_MS, timeSlept );
-
-        /* Test that the the time slept is not longer than the elapsed time plus
-         * some tolerance for slower CPUs. */
-        TEST_ASSERT_LESS_OR_EQUAL_UINT32( SLEEP_TIME_MS + SLEEP_TOLERANCE_MS,
-                                          timeSlept );
-    }
+    nanosleep_Stub( nanosleep_validate_args );
+    Clock_SleepMs( sleepTimeMs );
 }

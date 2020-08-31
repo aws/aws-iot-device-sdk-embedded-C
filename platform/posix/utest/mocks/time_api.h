@@ -29,6 +29,8 @@
 #ifndef TIME_API_H_
 #define TIME_API_H_
 
+#include <time.h>
+
 /* Make the process sleep for SECONDS seconds, or until a signal arrives
  * and is not ignored.  The function returns the number of seconds less
  * than SECONDS which it actually slept (thus zero if it slept the full time).
@@ -41,4 +43,15 @@
  * __THROW.  */
 extern unsigned int sleep( unsigned int seconds );
 
-#endif /* ifndef TIME_API_H_ */
+/* Get current value of clock CLOCK_ID and store it in TP.  */
+extern int clock_gettime( clockid_t __clock_id,
+                          struct timespec * __tp );
+
+/* Pause execution for a number of nanoseconds.
+ *
+ * This function is a cancellation point and therefore not marked with
+ * __THROW.  */
+extern int nanosleep( const struct timespec * __requested_time,
+                      struct timespec * __remaining );
+
+#endif /* ifndef TIME_API_ */
