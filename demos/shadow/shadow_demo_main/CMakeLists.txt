@@ -23,7 +23,6 @@ target_sources(
 target_link_libraries(
     ${DEMO_NAME}
     PRIVATE
-        mqtt
         shadow
         json
         clock_posix
