@@ -142,7 +142,7 @@ void test_Clock_GetTimeMs_Returns_Expected_Time_Guaranteed_Overflow( void )
  * @brief Test that the call to #nanosleep in #Clock_SleepMs receives the
  * expected parameter values.
  */
-void test_Clock_SleepMs_Is_Sleep()
+void test_Clock_SleepMs_Passes_Expected_Values_To_nanosleep()
 {
     struct timespec timeSpec;
     uint32_t sleepTimeMs = SLEEP_TIME_MS;
