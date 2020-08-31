@@ -44,14 +44,14 @@
 extern unsigned int sleep( unsigned int seconds );
 
 /* Get current value of clock CLOCK_ID and store it in TP.  */
-extern int clock_gettime( clockid_t __clock_id,
-                          struct timespec * __tp );
+extern int clock_gettime( clockid_t clock_id,
+                          struct timespec * tp );
 
 /* Pause execution for a number of nanoseconds.
  *
  * This function is a cancellation point and therefore not marked with
  * __THROW.  */
-extern int nanosleep( const struct timespec * __requested_time,
-                      struct timespec * __remaining );
+extern int nanosleep( const struct timespec * requested_time,
+                      struct timespec * remaining );
 
 #endif /* ifndef TIME_API_ */
