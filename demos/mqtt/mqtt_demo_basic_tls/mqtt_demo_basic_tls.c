@@ -210,7 +210,7 @@ static uint16_t globalUnsubscribePacketIdentifier = 0U;
 static PublishPackets_t outgoingPublishPackets[ MAX_OUTGOING_PUBLISHES ] = { 0 };
 
 /**
- * @brief Array to keep subscription topic filters.
+ * @brief Array to keep subscription topics.
  * Used to re-subscribe to topics that failed initial subscription attempts.
  */
 static MQTTSubscribeInfo_t pSubscriptionList[ 1 ] = { 0 };
@@ -222,7 +222,8 @@ static uint8_t buffer[ NETWORK_BUFFER_SIZE ];
 
 /**
  * @brief Status of latest Subscribe ACK;
- * it is updated everytime the callback function processes a Subscribe ACK.
+ * it is updated everytime the callback function processes a Subscribe ACK
+ * and accounts for subscription to a single topic.
  */
 static MQTTSubAckStatus_t globalSubscribeStatus = MQTTSubAckFailure;
 
@@ -402,7 +403,7 @@ static int handlePublishResend( MQTTContext_t * pMqttContext );
 static void updateSubscribeStatus( MQTTPacketInfo_t * pPacketInfo );
 
 /**
- * @brief Function to handle resubscription of topic filters on Subscribe
+ * @brief Function to handle resubscription of topics on Subscribe
  * ACK failure. Uses an exponential backoff strategy with jitter.
  *
  * @param[in] pMqttContext MQTT context pointer.
@@ -669,7 +670,7 @@ static void updateSubscribeStatus( MQTTPacketInfo_t * pPacketInfo )
 
     if( mqttStatus == MQTTSuccess )
     {
-        /* Demo only subscribes to one topic filter, so only one status code is returned. */
+        /* Demo only subscribes to one topic, so only one status code is returned. */
         subscriptionStatus = pPayload[ 0 ];
 
         globalSubscribeStatus = subscriptionStatus;
@@ -733,7 +734,7 @@ static int handleResubscribe( MQTTContext_t * pMqttContext )
 
         if( retriesArePending == false )
         {
-            LogError( ( "Subscription to topic filter failed, all attempts exhausted." ) );
+            LogError( ( "Subscription to topic failed, all attempts exhausted." ) );
             returnStatus = EXIT_FAILURE;
         }
     } while ( ( globalSubscribeStatus == MQTTSubAckFailure ) && ( retriesArePending == true ) );
@@ -1192,7 +1193,7 @@ static int subscribePublishLoop( MQTTContext_t * pMqttContext,
     if( ( returnStatus == EXIT_SUCCESS ) && ( globalSubscribeStatus == MQTTSubAckFailure ) )
     {
         /* If SUBACK is decoded as server rejection (in function updateSubscribeStatus, called by eventCallback),
-         * attempt to resubscribe to topic filter. Attempts are made according to the exponential backoff
+         * attempt to resubscribe to topic. Attempts are made according to the exponential backoff
          * retry strategy implemented in transport_reconnect. */
         LogInfo( ( "Server rejected initial subscription request. Attempting to re-subscribe to topic %.*s.",
                    MQTT_EXAMPLE_TOPIC_LENGTH,
