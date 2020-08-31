@@ -19,8 +19,8 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef MQTT_CONFIG_H_
-#define MQTT_CONFIG_H_
+#ifndef CORE_MQTT_CONFIG_H_
+#define CORE_MQTT_CONFIG_H_
 
 /**************************************************/
 /******* DO NOT CHANGE the following order ********/
@@ -69,4 +69,4 @@
  */
 #define MQTT_PINGRESP_TIMEOUT_MS      ( 500U )
 
-#endif /* ifndef MQTT_CONFIG_H_ */
+#endif /* ifndef CORE_MQTT_CONFIG_H_ */

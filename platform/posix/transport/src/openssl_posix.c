@@ -258,6 +258,12 @@ static int32_t setRootCa( const SSL_CTX * pSslContext,
         }
     }
 
+    /* Free the X509 object used to set the root CA. */
+    if( pRootCa != NULL )
+    {
+        X509_free( pRootCa );
+    }
+
     /* Close the file if it was successfully opened. */
     if( pRootCaFile != NULL )
     {
