@@ -24,16 +24,4 @@ extern int close( int __fd );
 extern char * getcwd( char * __buf,
                       size_t __size );
 
-/* Make the process sleep for SECONDS seconds, or until a signal arrives
- * and is not ignored.  The function returns the number of seconds less
- * than SECONDS which it actually slept (thus zero if it slept the full time).
- * If a signal handler does a `longjmp' or modifies the handling of the
- * SIGALRM signal while inside `sleep' call, the handling of the SIGALRM
- * signal afterwards is undefined.  There is no return value to indicate
- * error, but if `sleep' returns SECONDS, it probably didn't work.
- *
- * This function is a cancellation point and therefore not marked with
- * __THROW.  */
-extern unsigned int sleep( unsigned int __seconds );
-
 #endif /* ifndef UNISTD_API_H_ */
