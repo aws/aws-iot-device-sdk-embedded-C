@@ -126,7 +126,7 @@
  * <b>Example code:</b>
  * @code{c}
  * int32_t myNetworkSendImplementation( const NetworkContext_t * pNetworkContext,
- *                                      void * pBuffer,
+ *                                      const void * pBuffer,
  *                                      size_t bytesToSend )
  * {
  *     int32_t bytesSent = 0;
