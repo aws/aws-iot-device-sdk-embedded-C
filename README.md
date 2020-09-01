@@ -1,3 +1,5 @@
+# AWS IoT Device SDK for Embedded C
+
 **We have released version 4.0.0 beta 1 of this SDK on the [v4_beta](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v4_beta) branch and encourage everyone to give it a try.**
 
 Version 4 is a new design, and therefore **NOT** backwards compatible with version 3.0.1. We will continue to fix bugs in v3.0.1 even after v4.0.0 is released, but we may not add new features to v3.0.1.
