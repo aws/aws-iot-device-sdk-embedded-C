@@ -56,14 +56,14 @@
  * @snippet this define_transportinterface
  * <br>
  *
- * The follow steps give guidance on implementing the transport interface:
+ * The following steps give guidance on implementing the transport interface:
  *
  * -# Implementing the @ref NetworkContext_t<br><br>
  * @snippet this define_networkcontext
  * <br>
  * @ref NetworkContext_t is the incomplete type <b>struct NetworkContext</b>.
- * The application implemented struct NetworkContext should contain all of the
- * information that is needed to receive and send data with the @ref TransportRecv_t
+ * The implemented struct NetworkContext should contain all of the information
+ * that is needed to receive and send data with the @ref TransportRecv_t
  * and the @ref TransportSend_t implementations.<br>
  * struct NetworkContext is typically implemented with the TCP socket context
  * and a TLS context.<br><br>
