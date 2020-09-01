@@ -2,6 +2,8 @@ include("../transportFilePaths.cmake")
 project ("transport unit test")
 cmake_minimum_required (VERSION 3.13)
 
+set( CMAKE_C_FLAGS "-isystem /usr/include ${CMAKE_C_FLAGS}" )
+
 # CMock does not have a built-in C parser. 
 # https://github.com/ThrowTheSwitch/CMock/issues/71
 # Therefore, header files need to be preprocessed before mocks are generated.
