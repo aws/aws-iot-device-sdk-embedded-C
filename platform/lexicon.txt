@@ -87,6 +87,7 @@ pssl
 psslcontext
 ptcpsocket
 ramdom
+rand
 reconnectparam
 recv
 recvtimeout
