@@ -82,6 +82,7 @@ pclientcertpath
 pem
 pformat
 phostname
+plaintext
 platfrom
 plisthead
 pnetworkcontext
