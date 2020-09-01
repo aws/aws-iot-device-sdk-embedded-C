@@ -85,10 +85,9 @@
  * network.
  * The @ref TransportRecv_t is typically implemented by calling directly the
  * TLS layer function to receive data. If one is transferring over plaintext TCP,
- * without TLS, then a call directly to the TCP layer function to receive data is
- * made.
- * @ref TransportRecv_t may be invoked multiple times by the library if less
- * bytes than were requested to receive are returned.
+ * without TLS, then a call is made directly to the TCP layer function to receive
+ * data. @ref TransportRecv_t may be invoked multiple times by the library if
+ * fewer bytes than were requested to receive are returned.
  * <br><br>
  * <b>Example code:</b>
  * @code{c}
@@ -120,9 +119,9 @@
  * network.
  * The @ref TransportSend_t is typically implemented by calling directly the
  * TLS layer function to send data. If one is transferring over plaintext TCP,
- * without TLS, then a call directly to the TCP layer function to send data is
- * @ref TransportSend_t may be invoked multiple times by the library if less
- * bytes than were requested to send are returned.
+ * without TLS, then a call is made directly to the TCP layer function to send
+ * data. @ref TransportSend_t may be invoked multiple times by the library if
+ * fewer bytes than were requested to send are returned.
  * <br><br>
  * <b>Example code:</b>
  * @code{c}
