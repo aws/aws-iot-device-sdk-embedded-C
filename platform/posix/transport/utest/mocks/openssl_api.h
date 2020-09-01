@@ -123,4 +123,6 @@ extern int SSL_write( SSL * ssl,
 
 const char * ERR_reason_error_string( unsigned long e );
 
+void X509_free( X509 * a );
+
 #endif /* ifndef OPENSSL_API_H_ */
