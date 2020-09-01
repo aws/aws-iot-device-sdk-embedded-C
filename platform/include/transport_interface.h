@@ -56,15 +56,15 @@
  * @snippet this define_transportinterface
  * <br>
  *
- * The follow steps give guidance on implementing the transport interface.
+ * The follow steps give guidance on implementing the transport interface:
  *
  * -# Implementing the @ref NetworkContext_t<br><br>
  * @snippet this define_networkcontext
  * <br>
- * @ref NetworkContext_t is an opaque pointer of the incomplete type <b>struct
- * NetworkContext</b>. The struct NetworkContext should contain all the
- * information that is needed to send data with the @ref TransportRecv_t and the
- * @ref TransportSend_t implementations.<br>
+ * @ref NetworkContext_t is the incomplete type <b>struct NetworkContext</b>.
+ * The application implemented struct NetworkContext should contain all of the
+ * information that is needed to receive and send data with the @ref TransportRecv_t
+ * and the @ref TransportSend_t implementations.<br>
  * struct NetworkContext is typically implemented with the TCP socket context
  * and a TLS context.<br><br>
  * <b>Example code:</b>
@@ -84,7 +84,7 @@
  * been made before invoking any library routines that receive data over the
  * network.
  * The @ref TransportRecv_t is typically implemented by calling directly the
- * TLS layer function to receive data. If one is transferring over plain text TCP,
+ * TLS layer function to receive data. If one is transferring over plaintext TCP,
  * without TLS, then a call directly to the TCP layer function to receive data is
  * made.
  * @ref TransportRecv_t may be invoked multiple times by the library if less
@@ -119,7 +119,7 @@
  * been made before invoking any library routines that send data over the
  * network.
  * The @ref TransportSend_t is typically implemented by calling directly the
- * TLS layer function to send data. If one is transferring over plain text TCP,
+ * TLS layer function to send data. If one is transferring over plaintext TCP,
  * without TLS, then a call directly to the TCP layer function to send data is
  * @ref TransportSend_t may be invoked multiple times by the library if less
  * bytes than were requested to send are returned.
@@ -128,12 +128,12 @@
  * @code{c}
  * int32_t myNetworkSendImplementation( const NetworkContext_t * pNetworkContext,
  *                                      void * pBuffer,
- *                                      size_t bytesToRecv )
+ *                                      size_t bytesToSend )
  * {
  *     int32_t bytesSent = 0;
  *     bytesSent = mySocketSend( pNetworkContext->tcpSocketContext,
  *                               pBuffer,
- *                               bytesToRecv,
+ *                               bytesToSend,
  *                               MY_SOCKET_TIMEOUT );
  *     if( bytesSent < 0 )
  *     {
