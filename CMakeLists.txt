@@ -72,8 +72,7 @@ if(${BUILD_TESTS})
     
     # Create a list for each unit test target.
     set(utest_targets 
-        http_utest mqtt_utest 
-        mqtt_lightweight_utest mqtt_state_utest 
+        http_utest
         http_send_utest json_utest
         sockets_utest plaintext_utest
         openssl_utest)
