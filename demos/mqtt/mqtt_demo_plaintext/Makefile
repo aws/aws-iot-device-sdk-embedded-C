@@ -1,11 +1,11 @@
 CC = gcc
 
 INCLUDE_DIRS = -I . \
-               -I ../../../libraries/standard/mqtt/include \
+               -I ../../../libraries/standard/coreMQTT/include \
                -I ../../logging-stack/
 
 SRC_FILES = mqtt_demo_plaintext.c \
-            $(shell find ../../../libraries/standard/mqtt/src -name '*.c')
+            $(shell find ../../../libraries/standard/coreMQTT/src -name '*.c')
 
 FLAGS = -g -O0 -Wall -Wextra -Wpedantic
 

@@ -3,7 +3,7 @@ include(CheckSymbolExists)
 set( DEMO_NAME "shadow_demo_main" )
 
 # Include MQTT library's source and header path variables.
-include( ${CMAKE_SOURCE_DIR}/libraries/standard/mqtt/mqttFilePaths.cmake )
+include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreMQTT/mqttFilePaths.cmake )
 
 # Demo target.
 add_executable(${DEMO_NAME})
