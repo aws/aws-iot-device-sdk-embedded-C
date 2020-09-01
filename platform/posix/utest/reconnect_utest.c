@@ -60,7 +60,7 @@ static void verifyReconnectParamsAfterReset( void )
 
 /**
  * @brief Test that #Transport_ReconnectParamsReset initializes the #nextJitterMax
- * to be equal to the some configurable backoff plus jitter.
+ * to be equal to some configurable backoff plus jitter.
  */
 void test_Transport_ReconnectParamsReset_Sets_Jitter_Correctly( void )
 {
