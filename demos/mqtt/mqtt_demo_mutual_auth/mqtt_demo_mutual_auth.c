@@ -322,7 +322,7 @@ static uint8_t buffer[ NETWORK_BUFFER_SIZE ];
 
 /**
  * @brief Status of latest Subscribe ACK;
- * it is updated everytime the callback function processes a Subscribe ACK
+ * it is updated every time the callback function processes a Subscribe ACK
  * and accounts for subscription to a single topic.
  */
 static MQTTSubAckStatus_t globalSubscribeStatus = MQTTSubAckFailure;

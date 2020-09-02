@@ -283,7 +283,7 @@ static uint16_t unsubscribePacketIdentifier;
 
 /**
  * @brief Status of latest Subscribe ACK;
- * it is updated everytime a Subscribe ACK is processed.
+ * it is updated every time a Subscribe ACK is processed.
  */
 static bool globalSubscribeStatus = false;
 

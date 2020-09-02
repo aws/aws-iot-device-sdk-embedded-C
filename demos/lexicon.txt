@@ -38,6 +38,7 @@ dup
 endif
 eventcallback
 filterindex
+globalsubscribestatus
 hashmap
 hasn
 html
@@ -117,6 +118,8 @@ qos
 readme
 resending
 resp
+resubscribe
+resubscription
 rom
 sdk
 shadowstatus
@@ -145,6 +148,7 @@ transporttimeout
 uint
 unsub
 unsuback
+updatesubscribestatus
 uri
 ve
 www
