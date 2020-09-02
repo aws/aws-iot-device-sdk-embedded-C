@@ -344,7 +344,7 @@ def _build_code_coverage(src, build_path, build_flags, c_flags, codecov_token):
         target_build_result = target_result.setdefault("CodeCoverage", {})
         out = _build_target("coverage", src, build_path, build_flags, c_flags)
         log(out)
-        out = _run_cmd(f"gcovr -r . -x -o {quote(build_path)}/cobertura.xml")
+        out = _run_cmd(f"gcovr --exclude-unreachable-branches -r . -x -o {quote(build_path)}/cobertura.xml")
         log(out)
 
         commit_id = os.environ.get("ghprbActualCommit") or ""
