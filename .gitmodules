@@ -9,4 +9,4 @@
 	url = https://github.com/awslabs/aws-templates-for-cbmc-proofs.git
 [submodule "libraries/standard/coreMQTT"]
 	path = libraries/standard/coreMQTT
-	url = git@github.com:FreeRTOS/coreMQTT.git
+	url = https://github.com/FreeRTOS/coreMQTT.git
