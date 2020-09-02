@@ -171,8 +171,8 @@ typedef enum MQTTPubAckType
 /** MISRA Rule 2.3 flags the enumeration type as is defined but never used.
  * This violation is suppressed because this type is meant to be added by the
  * calling code for interpreting suback status codes returned by
- * @ref MQTT_GetSubAckStatusCodes
- * coverity[misra_c_2012_rule_2_3_violation] */
+ * @ref MQTT_GetSubAckStatusCodes */
+/* coverity[ misra_c_2012_rule_2_3_violation ] */
 typedef enum MQTTSubAckStatus
 {
     MQTTSubAckSuccessQos0 = 0x00, /**< @brief Success with a maximum delivery at QoS 0 . */
