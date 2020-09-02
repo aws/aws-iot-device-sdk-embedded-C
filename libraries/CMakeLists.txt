@@ -6,10 +6,9 @@ foreach(module IN LISTS aws_modules)
     endif()
 endforeach()
 
-# Add build configuration for only JSON and HTTP modules. 
+# Add build configuration for only JSON module. 
 # Note: This is temporary and expected to be removed when
-# submodules to coreHTTP and coreJSON repositories are added.
-add_subdirectory( standard/http )
+# submodule to coreJSON repository is added.
 add_subdirectory( standard/json )
 
 add_subdirectory(${3RDPARTY_DIR})
