@@ -75,7 +75,7 @@ if(${BUILD_TESTS})
         http_utest
         http_send_utest json_utest
         sockets_utest plaintext_utest
-        openssl_utest)
+        openssl_utest reconnect_utest)
 
     # Add a target for running coverage on tests.
     add_custom_target(coverage
