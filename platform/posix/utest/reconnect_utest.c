@@ -52,7 +52,8 @@ int suiteTearDown( int numFailures )
 static void verifyReconnectParamsAfterReset( void )
 {
     TEST_ASSERT_EQUAL( 0, reconnectParams.attemptsDone );
-    TEST_ASSERT_EQUAL( EXPECTED_NEXT_JITTER, reconnectParams.nextJitterMax - EXPECTED_NEXT_JITTER );
+    TEST_ASSERT_EQUAL( INITIAL_RECONNECT_BACKOFF_SECONDS + EXPECTED_NEXT_JITTER,
+                       reconnectParams.nextJitterMax );
     TEST_ASSERT_GREATER_OR_EQUAL_UINT32( INITIAL_RECONNECT_BACKOFF_SECONDS,
                                          reconnectParams.nextJitterMax );
     TEST_ASSERT_LESS_THAN_UINT32( ( INITIAL_RECONNECT_BACKOFF_SECONDS +
