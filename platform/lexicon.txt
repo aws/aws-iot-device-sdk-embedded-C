@@ -21,6 +21,7 @@ const
 couldn
 coverity
 cwd
+didn
 dns
 eagain
 endcode
@@ -55,6 +56,7 @@ int
 iot
 ip
 logpath
+longjmp
 malloc
 maxattempts
 maxfragmentlength
@@ -70,6 +72,7 @@ mytcpsocketcontext
 mytlscontext
 nano
 networkcontext
+nextjittermax
 noninfringement
 openssl
 openssl_invalid_parameter
@@ -96,6 +99,7 @@ pssl
 psslcontext
 ptcpsocket
 ramdom
+rand
 reconnectparam
 recv
 recvtimeout
@@ -105,6 +109,7 @@ sdk
 sendtimeout
 sendtimeoutms
 serverinfo
+sigalrm
 sleeptimems
 sni
 snihostname

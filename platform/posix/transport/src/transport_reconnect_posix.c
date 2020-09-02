@@ -39,7 +39,7 @@ bool Transport_ReconnectBackoffAndSleep( TransportReconnectParams_t * pReconnect
     bool status = false;
     int backOffDelay = 0;
 
-    /* If MAX_RECONNECT_ATTEMPTS is set to 0, try forever */
+    /* If MAX_RECONNECT_ATTEMPTS is set to 0, try forever. */
     if( ( pReconnectParams->attemptsDone < MAX_RECONNECT_ATTEMPTS ) ||
         ( 0 == MAX_RECONNECT_ATTEMPTS ) )
     {

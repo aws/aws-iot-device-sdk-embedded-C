@@ -1,0 +1,76 @@
+project ("posix unit test")
+
+# ====================  Define your project name (edit) ========================
+set(project_name "posix")
+
+# =====================  Create your mock here  (edit)  ========================
+
+# list the files to mock here
+list(APPEND mock_list
+            ${CMAKE_CURRENT_LIST_DIR}/mocks/time_api.h
+            ${CMAKE_CURRENT_LIST_DIR}/mocks/math_api.h
+        )
+# list the directories your mocks need
+list(APPEND mock_include_list
+            ${PLATFORM_DIR}/include
+        )
+#list the definitions of your mocks to control what to be included
+list(APPEND mock_define_list
+            ""
+        )
+
+# ================= Create the library under test here (edit) ==================
+
+# list the files you would like to test here
+list(APPEND real_source_files
+            ${PLATFORM_DIR}/posix/transport/src/transport_reconnect_posix.c
+        )
+# list the directories the module under test includes
+list(APPEND real_include_directories
+            ${PLATFORM_DIR}/include
+        )
+
+# =====================  Create UnitTest Code here (edit)  =====================
+
+# list the directories your test needs to include
+list(APPEND test_include_directories
+            ${PLATFORM_DIR}/include
+            /usr/include
+            mocks
+        )
+
+# =============================  (end edit)  ===================================
+
+set(mock_name "reconnect_mock")
+set(real_name "reconnect_real")
+
+create_mock_list(${mock_name}
+                "${mock_list}"
+                "${ROOT_DIR}/tools/cmock/project.yml"
+                "${mock_include_list}"
+                "${mock_define_list}"
+        )
+
+create_real_library(${real_name}
+                    "${real_source_files}"
+                    "${real_include_directories}"
+                    "${mock_name}"
+        )
+
+list(APPEND utest_link_list
+            lib${real_name}.a
+            -l${mock_name}
+        )
+
+list(APPEND utest_dep_list
+            ${real_name}
+        )
+
+set(utest_name "reconnect_utest")
+set(utest_source "reconnect_utest.c")
+create_test(${utest_name}
+            ${utest_source}
+            "${utest_link_list}"
+            "${utest_dep_list}"
+            "${test_include_directories}"
+        )

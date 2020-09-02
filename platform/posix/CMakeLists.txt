@@ -6,5 +6,9 @@ target_include_directories( clock_posix
                               PRIVATE 
                                 ${PLATFORM_DIR}/include )
 
+if(BUILD_TESTS)
+  add_subdirectory(utest)
+endif()
+
 # Add the transport targets
 add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/transport )
