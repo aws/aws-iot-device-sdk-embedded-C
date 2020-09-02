@@ -149,7 +149,7 @@
 /**
  * @brief The MQTT metrics string expected by AWS IoT.
  */
-#define METRICS_STRING                      "?SDK=" OS_NAME "&Version=" OS_VERSION "&Platform=" HARDWARE_PLATFORM_NAME "&MQTTLib=" MQTT_LIBRARY_NAME_AND_VERSION
+#define METRICS_STRING                      "?SDK=" OS_NAME "&Version=" OS_VERSION "&Platform=" HARDWARE_PLATFORM_NAME "&MQTTLib=" MQTT_LIB
 
 /**
  * @brief The length of the MQTT metrics string expected by AWS IoT.

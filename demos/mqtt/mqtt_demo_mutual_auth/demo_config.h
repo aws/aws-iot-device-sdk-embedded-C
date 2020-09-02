@@ -156,29 +156,29 @@
 /**
  * @brief Size of the network buffer for MQTT packets.
  */
-#define NETWORK_BUFFER_SIZE              ( 1024U )
+#define NETWORK_BUFFER_SIZE       ( 1024U )
 
 /**
  * @brief The name of the operating system or SDK that the application is
  * running a part of.
  */
-#define OS_NAME                          "Ubuntu"
+#define OS_NAME                   "Ubuntu"
 
 /**
  * @brief The version of the operating system or SDK that the application is
  * running a part of.
  */
-#define OS_VERSION                       "18.04 LTS"
+#define OS_VERSION                "18.04 LTS"
 
 /**
  * @brief The name of the hardware platform the application is running on.
  */
-#define HARDWARE_PLATFORM_NAME           "PC"
+#define HARDWARE_PLATFORM_NAME    "PC"
 
 /**
  * @brief The name of the MQTT library used and its version, following an "@"
  * symbol.
  */
-#define MQTT_LIBRARY_NAME_AND_VERSION    "core-mqtt@1.0.0"
+#define MQTT_LIB                  "core-mqtt@1.0.0"
 
 #endif /* ifndef DEMO_CONFIG_H_ */

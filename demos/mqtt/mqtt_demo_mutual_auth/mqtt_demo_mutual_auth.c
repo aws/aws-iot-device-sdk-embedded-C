@@ -123,7 +123,7 @@
 #endif
 
 #ifndef OS_NAME
-    #define OS_NAME    "aws-iot-device-sdk-embedded-C"
+    #define OS_NAME    "Ubuntu"
 #endif
 
 #ifndef OS_VERSION
@@ -249,7 +249,7 @@
 /**
  * @brief The MQTT metrics string expected by AWS IoT.
  */
-#define METRICS_STRING                      "?SDK=" OS_NAME "&Version=" OS_VERSION "&Platform=" HARDWARE_PLATFORM_NAME "&MQTTLib=" MQTT_LIBRARY_NAME_AND_VERSION
+#define METRICS_STRING                      "?SDK=" OS_NAME "&Version=" OS_VERSION "&Platform=" HARDWARE_PLATFORM_NAME "&MQTTLib=" MQTT_LIB
 
 /**
  * @brief The length of the MQTT metrics string expected by AWS IoT.
