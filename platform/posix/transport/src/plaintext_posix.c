@@ -20,6 +20,7 @@
  */
 
 /* POSIX socket includes. */
+#include <assert.h>
 #include <errno.h>
 #include <sys/socket.h>
 
@@ -115,7 +116,16 @@ int32_t Plaintext_Recv( const NetworkContext_t * pNetworkContext,
 {
     int32_t bytesReceived = 0;
 
-    bytesReceived = ( int32_t ) recv( pNetworkContext->socketDescriptor, pBuffer, bytesToRecv, 0 );
+    assert( pNetworkContext != NULL );
+    assert( pBuffer != NULL );
+
+    do
+    {
+        bytesReceived = ( int32_t ) recv( pNetworkContext->socketDescriptor,
+                                          pBuffer,
+                                          bytesToRecv,
+                                          0 );
+    } while( bytesReceived == -1 && errno == EAGAIN );
 
     if( bytesReceived == 0 )
     {
@@ -125,20 +135,6 @@ int32_t Plaintext_Recv( const NetworkContext_t * pNetworkContext,
     else if( bytesReceived < 0 )
     {
         logTransportError( errno );
-
-        /* Check if there was a timeout then set return value to 0.
-         * Note that for most POSIX implementations, EAGAIN and EWOULDBLOCK have
-         * the same value. Therefore, both values are checked with two separate
-         * if statements to achieve branch coverage. */
-        if( errno == EAGAIN )
-        {
-            bytesReceived = 0;
-        }
-
-        if( errno == EWOULDBLOCK )
-        {
-            bytesReceived = 0;
-        }
     }
     else
     {
@@ -155,25 +151,20 @@ int32_t Plaintext_Send( const NetworkContext_t * pNetworkContext,
 {
     int32_t bytesSent = 0;
 
-    bytesSent = ( int32_t ) send( pNetworkContext->socketDescriptor, pBuffer, bytesToSend, 0 );
+    assert( pNetworkContext != NULL );
+    assert( pBuffer != NULL );
+
+    do
+    {
+        bytesSent = ( int32_t ) send( pNetworkContext->socketDescriptor,
+                                      pBuffer,
+                                      bytesToSend,
+                                      0 );
+    } while( bytesSent == -1 && errno == EAGAIN );
 
     if( bytesSent < 0 )
     {
         logTransportError( errno );
-
-        /* Check if there was a timeout then set return value to 0.
-         * Note that for most POSIX implementations, EAGAIN and EWOULDBLOCK have
-         * the same value. Therefore, both values are checked with two separate
-         * if statements to achieve branch coverage. */
-        if( errno == EAGAIN )
-        {
-            bytesSent = 0;
-        }
-
-        if( errno == EWOULDBLOCK )
-        {
-            bytesSent = 0;
-        }
     }
 
     return bytesSent;
