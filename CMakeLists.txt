@@ -76,7 +76,7 @@ if(${BUILD_TESTS})
         mqtt_lightweight_utest mqtt_state_utest 
         http_send_utest json_utest
         sockets_utest plaintext_utest
-        openssl_utest reconnect_utest)
+        openssl_utest retry_utils_utest)
 
     # Add a target for running coverage on tests.
     add_custom_target(coverage

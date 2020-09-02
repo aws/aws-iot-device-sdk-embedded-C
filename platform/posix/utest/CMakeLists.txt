@@ -23,7 +23,7 @@ list(APPEND mock_define_list
 
 # list the files you would like to test here
 list(APPEND real_source_files
-            ${PLATFORM_DIR}/posix/transport/src/transport_reconnect_posix.c
+            ${PLATFORM_DIR}/posix/retry_utils_posix.c
         )
 # list the directories the module under test includes
 list(APPEND real_include_directories
@@ -41,8 +41,8 @@ list(APPEND test_include_directories
 
 # =============================  (end edit)  ===================================
 
-set(mock_name "reconnect_mock")
-set(real_name "reconnect_real")
+set(mock_name "retry_utils_mock")
+set(real_name "retry_utils_real")
 
 create_mock_list(${mock_name}
                 "${mock_list}"
@@ -66,8 +66,8 @@ list(APPEND utest_dep_list
             ${real_name}
         )
 
-set(utest_name "reconnect_utest")
-set(utest_source "reconnect_utest.c")
+set(utest_name "retry_utils_utest")
+set(utest_source "retry_utils_utest.c")
 create_test(${utest_name}
             ${utest_source}
             "${utest_link_list}"
