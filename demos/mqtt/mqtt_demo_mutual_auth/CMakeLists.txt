@@ -44,7 +44,7 @@ endif()
 if(BROKER_ENDPOINT)
     target_compile_definitions(
         ${DEMO_NAME} PRIVATE
-            BROKER_ENDPOINT="${BROKER_ENDPOINT}"
+            BROKER_ENDPOINT="${AWS_IOT_ENDPOINT}"
     )
 endif()
 if(CLIENT_IDENTIFIER)
