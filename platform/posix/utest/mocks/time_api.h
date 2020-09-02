@@ -31,6 +31,7 @@
 
 #include <time.h>
 
+<<<<<<< HEAD
 /* Make the process sleep for SECONDS seconds, or until a signal arrives
  * and is not ignored.  The function returns the number of seconds less
  * than SECONDS which it actually slept (thus zero if it slept the full time).
@@ -44,8 +45,11 @@
 extern unsigned int sleep( unsigned int seconds );
 
 /* Get current value of clock CLOCK_ID and store it in TP.  */
+=======
+/* Get current value of clock CLOCK_ID and store it in the timespec.  */
+>>>>>>> Update parameter names for clock_gettime mock
 extern int clock_gettime( clockid_t clock_id,
-                          struct timespec * tp );
+                          struct timespec * time_point );
 
 /* Pause execution for a number of nanoseconds.
  *
