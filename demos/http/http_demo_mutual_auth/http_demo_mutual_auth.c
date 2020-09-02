@@ -25,7 +25,7 @@
 #include <string.h>
 
 /* HTTP API header. */
-#include "http_client.h"
+#include "core_http_client.h"
 
 /* Demo Config header. */
 #include "demo_config.h"

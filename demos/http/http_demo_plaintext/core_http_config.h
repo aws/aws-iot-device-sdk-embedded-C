@@ -19,14 +19,14 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef HTTP_CONFIG_H_
-#define HTTP_CONFIG_H_
+#ifndef CORE_HTTP_CONFIG_H_
+#define CORE_HTTP_CONFIG_H_
 
 /**************************************************/
 /******* DO NOT CHANGE the following order ********/
 /**************************************************/
 
-/* Logging config definition and header files inclusion are required in the following order:
+/* Include logging header files and define logging macros in the following order:
  * 1. Include the header file "logging_levels.h".
  * 2. Define the LIBRARY_LOG_NAME and LIBRARY_LOG_LEVEL macros depending on
  * the logging configuration for HTTP.
@@ -46,6 +46,7 @@
 
 #include "logging_stack.h"
 
+
 /************ End of logging configuration ****************/
 
-#endif /* ifndef HTTP_CONFIG_H_ */
+#endif /* ifndef CORE_HTTP_CONFIG_H_ */
