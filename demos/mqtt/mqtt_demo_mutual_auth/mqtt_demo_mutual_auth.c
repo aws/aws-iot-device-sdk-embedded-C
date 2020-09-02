@@ -249,7 +249,7 @@
 /**
  * @brief The MQTT metrics string expected by AWS IoT.
  */
-#define METRICS_STRING                      "?SDK=" SDK_NAME "&Version=" SDK_VERSION "&Platform=" HARDWARE_PLATFORM_NAME
+#define METRICS_STRING                      "?SDK=" SDK_NAME "&Version=" SDK_VERSION "&Platform=" HARDWARE_PLATFORM_NAME "&MQTTLib=" MQTT_LIBRARY_NAME_AND_VERSION
 
 /**
  * @brief The length of the MQTT metrics string expected by AWS IoT.
@@ -258,13 +258,12 @@
 
 
 #ifdef CLIENT_USERNAME
-
-/**
- * @brief Append the username with the metrics string if #CLIENT_USERNAME is defined.
- *
- * This is to support both metrics reporting and username/password based client
- * authentication by AWS IoT.
- */
+    /**
+     * @brief Append the username with the metrics string if #CLIENT_USERNAME is defined.
+     *
+     * This is to support both metrics reporting and username/password based client
+     * authentication by AWS IoT.
+     */
     #define CLIENT_USERNAME_WITH_METRICS    CLIENT_USERNAME METRICS_STRING
 #endif
 
