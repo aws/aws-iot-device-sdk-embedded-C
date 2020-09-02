@@ -130,7 +130,7 @@ int32_t Plaintext_Recv( const NetworkContext_t * pNetworkContext,
          * Note that for most POSIX implementations, EAGAIN and EWOULDBLOCK have
          * the same value. Therefore, branch coverage is suppressed to achieve
          * full branch coverage for all UNIX systems. */
-        if( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) ) /* GCOVR_EXCL_LINE */
+        if( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) ) /* LCOV_EXCL_LINE */
         {
             /* Set return value to 0 to indicate nothing to receive. */
             bytesReceived = 0;
@@ -161,7 +161,7 @@ int32_t Plaintext_Send( const NetworkContext_t * pNetworkContext,
          * Note that for most POSIX implementations, EAGAIN and EWOULDBLOCK have
          * the same value. Therefore, branch coverage is suppressed to achieve
          * full branch coverage for all UNIX systems. */
-        if( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) ) /* GCOVR_EXCL_LINE */
+        if( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) ) /* LCOV_EXCL_LINE */
         {
             /* Set return value to 0 to indicate that send had timed out. */
             bytesSent = 0;
