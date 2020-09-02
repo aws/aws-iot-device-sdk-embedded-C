@@ -20,13 +20,13 @@
  */
 
 /**
- * @file transport_reconnect.h
- * @brief Declaration of the exponential backoff reconnect logic utility functions
+ * @file retry_utils.h
+ * @brief Declaration of the exponential backoff retry logic utility functions
  * and constants.
  */
 
-#ifndef TRANSPORT_RECONNECT_H_
-#define TRANSPORT_RECONNECT_H_
+#ifndef RETRY_UTILS__H_
+#define RETRY_UTILS__H_
 
 /* Standard include. */
 #include <stdint.h>
@@ -40,49 +40,48 @@
     #define true     1
 #endif
 
-/* @brief Max number of connect attempts, set this value to 0 if the client
- * must try connecting to the server forever */
-#define MAX_RECONNECT_ATTEMPTS               4U
+/* @brief Max number of retry attempts, set this value to 0 if the client
+ * must retry forever */
+#define MAX_RETRY_ATTEMPTS               4U
 
 /* @brief Initial fixed backoff value in seconds between two successive
- * connects. A random jitter value is added to every backoff value  */
-#define INITIAL_RECONNECT_BACKOFF_SECONDS    1U
+ * retries. A random jitter value is added to every backoff value  */
+#define INITIAL_RETRY_BACKOFF_SECONDS    1U
 /* @brief Max backoff value in seconds */
-#define MAX_RECONNECT_BACKOFF_SECONDS        128U
+#define MAX_RETRY_BACKOFF_SECONDS        128U
 /* @brief Max jitter value in seconds */
-#define MAX_JITTER_VALUE_SECONDS             5U
+#define MAX_JITTER_VALUE_SECONDS         5U
 
-/* @brief Represents parameters required for reconnect logic. */
-typedef struct TransportReconnectParams
+/* @brief Represents parameters required for retry logic. */
+typedef struct RetryUtilsParams
 {
     /* @brief The cumulative count of backoff delay cycles completed
-     * for reconnection. */
+     * for retries. */
     uint32_t attemptsDone;
 
-    /** @brief The max jitter value for backoff time in reconnection attempt. */
+    /** @brief The max jitter value for backoff time in retry attempt. */
     uint32_t nextJitterMax;
-} TransportReconnectParams_t;
+} RetryUtilsParams_t;
 
 
 /**
- * @brief Reset reconnection timeout value and number of attempts.
- * This function must be called by the application before a new connection
- * with the server is attempted.
+ * @brief Reset retry timeout value and number of attempts.
+ * This function must be called by the application before a new retry attempt.
  *
- * @param[in, out] pReconnectParams structure containing attempts done and timeout
+ * @param[in, out] pRetryParams structure containing attempts done and timeout
  * value.
  */
-void Transport_ReconnectParamsReset( TransportReconnectParams_t * pReconnectParams );
+void RetryUtils_ParamsReset( RetryUtilsParams_t * pRetryParams );
 
 /**
  * @brief Simple platform specific exponential backoff function. The application
- * must use this function between connection failures to add exponential delay.
+ * must use this function between retry failures to add exponential delay.
  * This function will block the calling task for the current timeout value.
  *
- * @param[in, out] pReconnectParams structure containing reconnection parameters.
+ * @param[in, out] pRetryParams structure containing retry parameters.
  *
  * @return true after successful sleep, false when all attempts are exhausted.
  */
-bool Transport_ReconnectBackoffAndSleep( TransportReconnectParams_t * pReconnectParams );
+bool RetryUtils_BackoffAndSleep( RetryUtilsParams_t * pRetryParams );
 
-#endif /* ifndef TRANSPORT_RECONNECT_H_ */
+#endif /* ifndef RETRY_UTILS_H_ */

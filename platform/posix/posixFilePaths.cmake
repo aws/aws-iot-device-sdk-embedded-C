@@ -7,21 +7,24 @@
 
 # Sockets utility source files.
 set( SOCKETS_SOURCES
-     ${CMAKE_CURRENT_LIST_DIR}/src/sockets_posix.c )
+     ${CMAKE_CURRENT_LIST_DIR}/transport/src/sockets_posix.c )
 
 # Plaintext transport source files.
 set( PLAINTEXT_TRANSPORT_SOURCES
-     ${CMAKE_CURRENT_LIST_DIR}/src/plaintext_posix.c )
+     ${CMAKE_CURRENT_LIST_DIR}/transport/src/plaintext_posix.c )
 
 # OpenSSL transport source files.
 set( OPENSSL_TRANSPORT_SOURCES
-     ${CMAKE_CURRENT_LIST_DIR}/src/openssl_posix.c )
-
-# Reconnect logic source files.
-set( RECONNECT_SOURCES
-     ${CMAKE_CURRENT_LIST_DIR}/src/transport_reconnect_posix.c )
+     ${CMAKE_CURRENT_LIST_DIR}/transport/src/openssl_posix.c )
 
 # Transport Public Include directories.
 set( COMMON_TRANSPORT_INCLUDE_PUBLIC_DIRS
-     ${CMAKE_CURRENT_LIST_DIR}/include
+     ${CMAKE_CURRENT_LIST_DIR}/transport/include
+     ${PLATFORM_DIR}/include )
+
+# Retry logic source files.
+set( RETRY_SOURCES
+     ${CMAKE_CURRENT_LIST_DIR}/retry_utils_posix.c )
+# Retry Public Include directories.
+set( COMMON_RETRY_INCLUDE_PUBLIC_DIRS
      ${PLATFORM_DIR}/include )

@@ -1,5 +1,5 @@
 # Include filepaths for source and include.
-include(transportFilePaths.cmake)
+include(${PLATFORM_DIR}/posix/posixFilePaths.cmake)
 
 # Create target for sockets utility.
 add_library( sockets_posix
@@ -45,15 +45,6 @@ target_link_libraries( openssl_posix
                            # SSL uses Dynamic Loading and on some platforms 
                            # requires explicit linking.
                            ${CMAKE_DL_LIBS} )
-
-# Create target for POSIX implementation of reconnect logic.
-add_library( transport_reconnect_posix 
-               ${RECONNECT_SOURCES} )
-
-target_include_directories( transport_reconnect_posix 
-                              PUBLIC 
-                                ${COMMON_TRANSPORT_INCLUDE_PUBLIC_DIRS}
-                                ${LOGGING_INCLUDE_DIRS} )
 
 if(BUILD_TESTS)
   add_subdirectory(utest)
