@@ -176,7 +176,7 @@
 #define HARDWARE_PLATFORM_NAME           "PC"
 
 /**
- * @brief The name of the MQTT library used and its version, following an "@" 
+ * @brief The name of the MQTT library used and its version, following an "@"
  * symbol.
  */
 #define MQTT_LIBRARY_NAME_AND_VERSION    "core-mqtt@1.0.0"

@@ -67,7 +67,7 @@
  * @note Port 443 requires use of the ALPN TLS extension with the ALPN protocol
  * name. When using port 8883, ALPN is not required.
  */
-#define AWS_MQTT_PORT        ( 8883 )
+#define AWS_MQTT_PORT    ( 8883 )
 
 /**
  * @brief Path of the file containing the server's root CA certificate.
@@ -117,44 +117,44 @@
  *
  * No two clients may use the same client identifier simultaneously.
  */
-#define CLIENT_IDENTIFIER      "testclient"
+#define CLIENT_IDENTIFIER                "testclient"
 
 /**
  * @brief Size of the network buffer for MQTT packets.
  */
-#define NETWORK_BUFFER_SIZE    ( 1024U )
+#define NETWORK_BUFFER_SIZE              ( 1024U )
 
 /**
  * @brief The name of the operating system or SDK that the application is
  * running a part of.
  */
-#define OS_NAME                  "Ubuntu"
+#define OS_NAME                          "Ubuntu"
 
 /**
  * @brief The version of the operating system or SDK that the application is
  * running a part of.
  */
-#define OS_VERSION               "18.04 LTS"
+#define OS_VERSION                       "18.04 LTS"
 
 /**
  * @brief The name of the hardware platform the application is running on.
  */
-#define HARDWARE_PLATFORM_NAME    "PC"
+#define HARDWARE_PLATFORM_NAME           "PC"
 
 /**
  * @brief Predefined thing name.
  *
  * This is the example predefine thing name and could be compiled in ROM code.
  */
-#define THING_NAME                          "testShadow"
+#define THING_NAME                       "testShadow"
 
 /**
  * @brief The length of #THING_NAME.
  */
-#define THING_NAME_LENGTH                   ( ( uint16_t ) ( sizeof( THING_NAME ) - 1 ) )
+#define THING_NAME_LENGTH                ( ( uint16_t ) ( sizeof( THING_NAME ) - 1 ) )
 
 /**
- * @brief The name of the MQTT library used and its version, following an "@" 
+ * @brief The name of the MQTT library used and its version, following an "@"
  * symbol.
  */
 #define MQTT_LIBRARY_NAME_AND_VERSION    "core-mqtt@1.0.0"
