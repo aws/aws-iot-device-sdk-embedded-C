@@ -122,12 +122,12 @@
     #define NETWORK_BUFFER_SIZE    ( 1024U )
 #endif
 
-#ifndef SDK_NAME
-    #define SDK_NAME    "aws-iot-device-sdk-embedded-C"
+#ifndef OS_NAME
+    #define OS_NAME    "aws-iot-device-sdk-embedded-C"
 #endif
 
-#ifndef SDK_VERSION
-    #define SDK_VERSION    "4.0.0"
+#ifndef OS_VERSION
+    #define OS_VERSION    "18.04 LTS"
 #endif
 
 #ifndef HARDWARE_PLATFORM_NAME
@@ -249,7 +249,7 @@
 /**
  * @brief The MQTT metrics string expected by AWS IoT.
  */
-#define METRICS_STRING                      "?SDK=" SDK_NAME "&Version=" SDK_VERSION "&Platform=" HARDWARE_PLATFORM_NAME "&MQTTLib=" MQTT_LIBRARY_NAME_AND_VERSION
+#define METRICS_STRING                      "?SDK=" OS_NAME "&Version=" OS_VERSION "&Platform=" HARDWARE_PLATFORM_NAME "&MQTTLib=" MQTT_LIBRARY_NAME_AND_VERSION
 
 /**
  * @brief The length of the MQTT metrics string expected by AWS IoT.

@@ -128,18 +128,18 @@
  * @brief The name of the operating system or SDK that the application is
  * running a part of.
  */
-#define SDK_NAME                  "aws-iot-device-sdk-embedded-C"
+#define OS_NAME                  "Ubuntu"
 
 /**
  * @brief The version of the operating system or SDK that the application is
  * running a part of.
  */
-#define SDK_VERSION               "4.0.0"
+#define OS_VERSION               "18.04 LTS"
 
 /**
  * @brief The name of the hardware platform the application is running on.
  */
-#define HARDWARE_PLATFORM_NAME    "Posix"
+#define HARDWARE_PLATFORM_NAME    "PC"
 
 /**
  * @brief Predefined thing name.
@@ -152,5 +152,11 @@
  * @brief The length of #THING_NAME.
  */
 #define THING_NAME_LENGTH                   ( ( uint16_t ) ( sizeof( THING_NAME ) - 1 ) )
+
+/**
+ * @brief The name of the MQTT library used and its version, following an "@" 
+ * symbol.
+ */
+#define MQTT_LIBRARY_NAME_AND_VERSION    "core-mqtt@1.0.0"
 
 #endif /* ifndef DEMO_CONFIG_H_ */
