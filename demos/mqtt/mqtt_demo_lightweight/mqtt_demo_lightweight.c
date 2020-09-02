@@ -261,6 +261,18 @@ static uint16_t getNextPacketIdentifier( void );
 static uint32_t calculateElapsedTime( uint32_t later,
                                       uint32_t start );
 
+/* / ** */
+/*  * @brief Attempts to resubscribe to topic filter after server refusal */
+/*  * (decoded from SUBACK). */
+/*  * */
+/*  * @param[in] pNetworkContext Pointer to the network context created using Plaintext_Connect. */
+/*  * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and its length. */
+/*  * The buffer is used for serializing SUBSCRIBE packet, deserializing incoming MQTT packet. */
+/*  * */
+/*  * / */
+/* static void handleResubscribe( NetworkContext_t * pNetworkContext, */
+/*                                        MQTTFixedBuffer_t * pFixedBuffer ); */
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -508,6 +520,48 @@ static void mqttSubscribeToTopic( NetworkContext_t * pNetworkContext,
     status = Plaintext_Send( pNetworkContext, ( void * ) pFixedBuffer->pBuffer, packetSize );
     assert( status == ( int ) packetSize );
 }
+
+/* / *-----------------------------------------------------------* / */
+
+/* static void handleResubscribe( NetworkContext_t * pNetworkContext, */
+/*                                MQTTFixedBuffer_t * pFixedBuffer ) */
+/* { */
+/*     int returnStatus = EXIT_SUCCESS; */
+/*     bool retriesArePending = true; */
+/*     TransportReconnectParams_t reconnectParams; */
+
+/*     / * Initialize retry attempts and interval * / */
+/*     Transport_ReconnectParamsReset( &reconnectParams ); */
+
+/*     do */
+/*     { */
+/*         / * Send SUBSCRIBE packet. * / */
+/*         mqttSubscribeToTopic( pNetworkContext, pFixedBuffer ); */
+
+
+/*         / * Process incoming packet. * / */
+/*         returnStatus = clock_gettime( CLOCK_MONOTONIC, &currentTimeStamp ); */
+/*         assert( returnStatus == 0 ); */
+/*         lastControlPacketSentTimeStamp = currentTimeStamp.tv_sec; */
+
+/*         mqttProcessIncomingPacket( &networkContext, &fixedBuffer ); */
+
+/*         if( globalSubscribeStatus == MQTTServerRefused ) */
+/*         { */
+/*             LogWarn( ( "Server rejected subscription request. Retrying subscribe with backoff and jitter." ) ); */
+/*             retriesArePending = Transport_ReconnectBackoffAndSleep( &reconnectParams ); */
+/*         } */
+
+/*         if( retriesArePending == false ) */
+/*         { */
+/*             LogError( ( "Subscription to topic filter failed, all attempts exhausted." ) ); */
+/*             returnStatus = EXIT_FAILURE; */
+/*         } */
+/*     } while ( ( globalSubscribeStatus == MQTTServerRefused )  && ( retriesArePending == true ) ); */
+
+/*     return returnStatus; */
+/* } */
+
 /*-----------------------------------------------------------*/
 
 static void mqttPublishToTopic( NetworkContext_t * pNetworkContext,
@@ -798,7 +852,7 @@ static void mqttProcessIncomingPacket( NetworkContext_t * pNetworkContext,
          * to NULL */
         result = MQTT_DeserializeAck( &incomingPacket, &packetId, &sessionPresent );
 
-        if( ( incomingPacket.type & 0xf0 ) == MQTT_PACKET_TYPE_SUBACK )
+        if( incomingPacket.type == MQTT_PACKET_TYPE_SUBACK )
         {
             globalSubscribeStatus = ( result == MQTTSuccess );
             assert( result == MQTTSuccess || result == MQTTServerRefused );

@@ -394,28 +394,19 @@ static void handleIncomingPublish( MQTTPublishInfo_t * pPublishInfo,
 
 static void updateSubscribeStatus( MQTTPacketInfo_t * pPacketInfo )
 {
-    MQTTStatus_t mqttStatus = MQTTSuccess;
     uint8_t subscriptionStatus = 0;
 
     assert( pPacketInfo != NULL );
     assert( pPacketInfo->pRemainingData != NULL );
 
-    uint8_t * pPayload = pPacketInfo->pRemainingData;
-    size_t pSize = pPacketInfo->remainingLength;
+    uint8_t * pPayload = NULL;
+    size_t pSize = 0;
 
     mqttStatus = MQTT_GetSubAckStatusCodes( pPacketInfo, &pPayload, &pSize );
 
-    if( mqttStatus == MQTTSuccess )
-    {
-        /* Demo only subscribes to one topic, so only one status code is returned. */
-        subscriptionStatus = pPayload[ 0 ];
-
-        globalSubscribeStatus = subscriptionStatus;
-    }
-    else
-    {
-        globalSubscribeStatus = MQTTSubAckFailure;
-    }
+    /* Demo only subscribes to one topic, so only one status code is returned. */
+    subscriptionStatus = pPayload[ 0 ];
+    globalSubscribeStatus = subscriptionStatus;
 }
 
 /*-----------------------------------------------------------*/
@@ -425,12 +416,12 @@ static int handleResubscribe( MQTTContext_t * pMqttContext )
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus = MQTTSuccess;
     bool retriesArePending = true;
-    TransportReconnectParams_t reconnectParams;
+    TransportReconnectParams_t retryParams;
 
     assert( pMqttContext != NULL );
 
     /* Initialize retry attempts and interval */
-    Transport_ReconnectParamsReset( &reconnectParams );
+    Transport_ReconnectParamsReset( &retryParams );
 
     do
     {
@@ -466,7 +457,7 @@ static int handleResubscribe( MQTTContext_t * pMqttContext )
         if( globalSubscribeStatus == MQTTSubAckFailure )
         {
             LogWarn( ( "Server rejected subscription request. Retrying subscribe with backoff and jitter." ) );
-            retriesArePending = Transport_ReconnectBackoffAndSleep( &reconnectParams );
+            retriesArePending = Transport_ReconnectBackoffAndSleep( &retryParams );
         }
 
         if( retriesArePending == false )
@@ -517,9 +508,10 @@ static void eventCallback( MQTTContext_t * pMqttContext,
 
                 if( ( globalSubscribeStatus != MQTTSubAckFailure ) )
                 {
-                    LogInfo( ( "Subscribed to the topic %.*s.\n\n",
+                    LogInfo( ( "Subscribed to the topic %.*s. with maximum QoS %u.\n\n",
                                MQTT_EXAMPLE_TOPIC_LENGTH,
-                               MQTT_EXAMPLE_TOPIC ) );
+                               MQTT_EXAMPLE_TOPIC,
+                               globalSubscribeStatus ) );
                 }
 
                 /* Make sure ACK packet identifier matches with Request packet identifier. */
