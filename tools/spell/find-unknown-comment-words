@@ -105,7 +105,7 @@ do
 
     for file in `find $DIRNAME -name \*.[ch]`
     do
-        if [[ $file == *"third_party"* ]]
+        if [[ $file == *"third_party"*  || $file == *"CMock"* ]]
         then
             continue
         fi
