@@ -96,9 +96,11 @@ add_subdirectory( platform )
 add_subdirectory( demos )
 
 # Add build configuration for all integration tests.
-file(GLOB_RECURSE test_modules "integration-test/*CMakeLists.txt")
-foreach(module IN LISTS test_modules)
-    get_filename_component(DIR_PATH "${module}" DIRECTORY)
-    add_subdirectory(${DIR_PATH})
-endforeach()
+if(${BUILD_TESTS})
+    file(GLOB_RECURSE test_modules "integration-test/*CMakeLists.txt")
+    foreach(module IN LISTS test_modules)
+        get_filename_component(DIR_PATH "${module}" DIRECTORY)
+        add_subdirectory(${DIR_PATH})
+    endforeach()
+endif()
 
