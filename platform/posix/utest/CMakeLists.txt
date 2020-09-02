@@ -51,13 +51,6 @@ create_mock_list(${mock_name}
                 "${mock_define_list}"
         )
 
-create_mock_list(${mock_name}
-                "${mock_list}"
-                "${ROOT_DIR}/tools/cmock/project.yml"
-                "${mock_include_list}"
-                "${mock_define_list}"
-        )
-
 create_real_library(${real_name}
                     "${real_source_files}"
                     "${real_include_directories}"
@@ -95,14 +88,14 @@ create_real_library(${real_name}
                     "${mock_name}"
 )
 
-list(APPEND utest_link_list
-            lib${real_name}.a
-            -l${mock_name}
-        )
+set(utest_link_list
+        lib${real_name}.a
+        -l${mock_name}
+   )
 
-list(APPEND utest_dep_list
-            ${real_name}
-        )
+set(utest_dep_list
+        ${real_name}
+   )
 
 set(utest_name "clock_utest")
 set(utest_source "clock_utest.c")

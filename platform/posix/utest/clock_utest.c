@@ -103,7 +103,7 @@ void test_Clock_GetTimeMs_Returns_Expected_Time_No_Overflow( void )
     timeSpec.tv_nsec = GET_TIME_NS;
 
     clock_gettime_ExpectAnyArgsAndReturn( 0 );
-    clock_gettime_ReturnThruPtr_tp( &timeSpec );
+    clock_gettime_ReturnThruPtr_time_point( &timeSpec );
     actualTimeMs = Clock_GetTimeMs();
 
     expectedTimeMs = ( timeSpec.tv_sec * MILLISECONDS_PER_SECOND )
@@ -129,7 +129,7 @@ void test_Clock_GetTimeMs_Returns_Expected_Time_Guaranteed_Overflow( void )
     timeSpec.tv_nsec = LONG_MAX;
 
     clock_gettime_ExpectAnyArgsAndReturn( 0 );
-    clock_gettime_ReturnThruPtr_tp( &timeSpec );
+    clock_gettime_ReturnThruPtr_time_point( &timeSpec );
     actualTimeMs = Clock_GetTimeMs();
 
     expectedTimeMs = ( timeSpec.tv_sec * MILLISECONDS_PER_SECOND )

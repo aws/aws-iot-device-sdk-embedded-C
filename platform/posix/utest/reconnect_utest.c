@@ -67,6 +67,7 @@ static void verifyReconnectParamsAfterReset( void )
  */
 void test_Transport_ReconnectParamsReset_Sets_Jitter_Correctly( void )
 {
+    clock_gettime_ExpectAnyArgsAndReturn( 0 );
     rand_ExpectAndReturn( RAND_RET_VAL );
     Transport_ReconnectParamsReset( &reconnectParams );
     verifyReconnectParamsAfterReset();
@@ -84,6 +85,7 @@ void test_Transport_ReconnectBackoffAndSleep_Succeeds( void )
     uint32_t expectedNextJitterMax = INITIAL_RECONNECT_BACKOFF_SECONDS;
     uint32_t expectedAttemptsDone = 0;
 
+    clock_gettime_ExpectAnyArgsAndReturn( 0 );
     rand_ExpectAndReturn( RAND_RET_VAL );
     Transport_ReconnectParamsReset( &reconnectParams );
     verifyReconnectParamsAfterReset();
@@ -117,6 +119,7 @@ void test_Transport_ReconnectBackoffAndSleep_Succeeds( void )
 
     /* The next call to the function under test should now return that all
      * attempts are now exhausted. */
+    clock_gettime_ExpectAnyArgsAndReturn( 0 );
     rand_ExpectAndReturn( RAND_RET_VAL );
     retriesArePending = Transport_ReconnectBackoffAndSleep( &reconnectParams );
     TEST_ASSERT_FALSE( retriesArePending );
