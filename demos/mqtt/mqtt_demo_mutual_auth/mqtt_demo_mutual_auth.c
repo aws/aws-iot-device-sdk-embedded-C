@@ -258,12 +258,13 @@
 
 
 #ifdef CLIENT_USERNAME
-    /**
-     * @brief Append the username with the metrics string if #CLIENT_USERNAME is defined.
-     *
-     * This is to support both metrics reporting and username/password based client
-     * authentication by AWS IoT.
-     */
+
+/**
+ * @brief Append the username with the metrics string if #CLIENT_USERNAME is defined.
+ *
+ * This is to support both metrics reporting and username/password based client
+ * authentication by AWS IoT.
+ */
     #define CLIENT_USERNAME_WITH_METRICS    CLIENT_USERNAME METRICS_STRING
 #endif
 

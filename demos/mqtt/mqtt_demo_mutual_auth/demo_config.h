@@ -37,10 +37,10 @@
 
 /* Logging configuration for the Demo. */
 #ifndef LIBRARY_LOG_NAME
-    #define LIBRARY_LOG_NAME        "DEMO"
+    #define LIBRARY_LOG_NAME     "DEMO"
 #endif
 #ifndef LIBRARY_LOG_LEVEL
-    #define LIBRARY_LOG_LEVEL       LOG_INFO
+    #define LIBRARY_LOG_LEVEL    LOG_INFO
 #endif
 
 #include "logging_stack.h"
@@ -65,7 +65,7 @@
  * @note Port 443 requires use of the ALPN TLS extension with the ALPN protocol
  * name. When using port 8883, ALPN is not required.
  */
-#define AWS_MQTT_PORT               ( 8883 )
+#define AWS_MQTT_PORT    ( 8883 )
 
 /**
  * @brief Path of the file containing the server's root CA certificate.
@@ -83,7 +83,7 @@
  * ROOT_CA_CERT_PATH to the absolute path if this demo is executed from elsewhere.
  */
 #ifndef ROOT_CA_CERT_PATH
-    #define ROOT_CA_CERT_PATH       "certificates/AmazonRootCA1.crt"
+    #define ROOT_CA_CERT_PATH    "certificates/AmazonRootCA1.crt"
 #endif
 
 /**
@@ -150,34 +150,34 @@
  * No two clients may use the same client identifier simultaneously.
  */
 #ifndef CLIENT_IDENTIFIER
-    #define CLIENT_IDENTIFIER       "testclient"
+    #define CLIENT_IDENTIFIER    "testclient"
 #endif
 
 /**
  * @brief Size of the network buffer for MQTT packets.
  */
-#define NETWORK_BUFFER_SIZE         ( 1024U )
+#define NETWORK_BUFFER_SIZE              ( 1024U )
 
 /**
  * @brief The name of the operating system or SDK that the application is
  * running a part of.
  */
-#define SDK_NAME                    "aws-iot-device-sdk-embedded-C"
+#define SDK_NAME                         "aws-iot-device-sdk-embedded-C"
 
 /**
  * @brief The version of the operating system or SDK that the application is
  * running a part of.
  */
-#define SDK_VERSION                 "4.0.2"
+#define SDK_VERSION                      "4.0.2"
 
 /**
  * @brief The name of the hardware platform the application is running on.
  */
-#define HARDWARE_PLATFORM_NAME      "Posix"
+#define HARDWARE_PLATFORM_NAME           "Posix"
 
 /**
  * @brief The name of the MQTT library and its version following an "@" symbol.
  */
-#define MQTT_LIBRARY_NAME_AND_VERSION   "core-mqtt@1.0.0"
+#define MQTT_LIBRARY_NAME_AND_VERSION    "core-mqtt@1.0.0"
 
 #endif /* ifndef DEMO_CONFIG_H_ */
