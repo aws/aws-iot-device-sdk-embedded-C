@@ -1,7 +1,7 @@
 # Project information.
 cmake_minimum_required( VERSION 3.13.0 )
 project( AwsIotDeviceSdkEmbeddedC
-         VERSION 4.0.2
+         VERSION 202009.00
          LANGUAGES C )
 
 # Allow the project to be organized into folders.
@@ -72,10 +72,10 @@ if(${BUILD_TESTS})
     
     # Create a list for each unit test target.
     set(utest_targets 
-        http_utest
-        http_send_utest json_utest
+        http_utest http_send_utest 
+        json_utest openssl_utest
         sockets_utest plaintext_utest
-        openssl_utest reconnect_utest)
+        clock_utest reconnect_utest)
 
     # Add a target for running coverage on tests.
     add_custom_target(coverage

@@ -55,8 +55,8 @@ uint32_t Clock_GetTimeMs( void )
              + ( timeSpec.tv_nsec / NANOSECONDS_PER_MILLISECOND );
 
     /* Libraries need only the lower 32 bits of the time in milliseconds, since
-     * this function is used only for a calculating the time difference.
-     * Also, the possible overflows of this time value is handled in the
+     * this function is used only for calculating the time difference.
+     * Also, the possible overflows of this time value are handled by the
      * libraries. */
     return ( uint32_t ) timeMs;
 }
