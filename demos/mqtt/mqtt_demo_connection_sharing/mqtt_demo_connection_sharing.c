@@ -50,8 +50,9 @@
 /* Include Demo Config as the first non-system header. */
 #include "demo_config.h"
 
-/* MQTT API header. */
-#include "mqtt.h"
+/* MQTT API headers. */
+#include "core_mqtt.h"
+#include "core_mqtt_state.h"
 
 /* OpenSSL sockets transport implementation. */
 #include "openssl_posix.h"

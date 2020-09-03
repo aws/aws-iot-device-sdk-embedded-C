@@ -26,7 +26,7 @@
 #include "demo_config.h"
 
 /* MQTT API header. */
-#include "mqtt.h"
+#include "core_mqtt.h"
 
 /**
  * @brief Establish a MQTT connection.
