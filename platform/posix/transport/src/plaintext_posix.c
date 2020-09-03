@@ -76,6 +76,7 @@ int32_t Plaintext_Recv( const NetworkContext_t * pNetworkContext,
 
     assert( pNetworkContext != NULL );
     assert( pBuffer != NULL );
+    assert( bytesToRecv > 0 );
 
     FD_ZERO( &readfds );
     FD_SET( pNetworkContext->socketDescriptor, &readfds );
@@ -102,7 +103,7 @@ int32_t Plaintext_Recv( const NetworkContext_t * pNetworkContext,
     selectStatus = select( pNetworkContext->socketDescriptor + 1,
                            &readfds,
                            NULL,
-                           &readfds,
+                           NULL,
                            &selectTimeout );
 
     if( selectStatus > 0 )
@@ -152,6 +153,7 @@ int32_t Plaintext_Send( const NetworkContext_t * pNetworkContext,
 
     assert( pNetworkContext != NULL );
     assert( pBuffer != NULL );
+    assert( bytesToSend > 0 );
 
     FD_ZERO( &writefds );
     FD_SET( pNetworkContext->socketDescriptor, &writefds );
@@ -178,7 +180,7 @@ int32_t Plaintext_Send( const NetworkContext_t * pNetworkContext,
     selectStatus = select( pNetworkContext->socketDescriptor + 1,
                            NULL,
                            &writefds,
-                           &writefds,
+                           NULL,
                            &selectTimeout );
 
     if( selectStatus > 0 )
