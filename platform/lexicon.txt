@@ -71,6 +71,7 @@ mysocketsend
 mytcpsocketcontext
 mytlscontext
 nano
+nanosleep
 networkcontext
 nextjittermax
 noninfringement
