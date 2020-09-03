@@ -1,7 +1,7 @@
 # Sample apps for the AWS IoT Device SDK for Embedded C
 
 All samples are written in C unless otherwise mentioned. The these sample apps are included in the SDK and described below.
- * [`subscribe_publish_sample`](0#subscribe-publish-sample) - a simple pub/sub MQTT example
+ * [`subscribe_publish_sample`](#subscribe-publish-sample) - a simple pub/sub MQTT example
  * [`subscribe_publish_cpp_sample`](#subscribe-publish-cpp-sample) - a simple pub/sub MQTT example written in C++
  * [`subscribe_publish_library_sample`](#subscribe-publish-library-sample) - a simple pub/sub MQTT example which builds the SDK as a separate library
 
