@@ -399,8 +399,8 @@ static void updateSubscribeStatus( MQTTPacketInfo_t * pPacketInfo )
 
     MQTTStatus_t mqttStatus = MQTT_GetSubAckStatusCodes( pPacketInfo, &pPayload, &pSize );
 
-    /* MQTT_GetSubAckStatusCodes always returns success if called with packet info from the event
-     * callback and non-NULL parameters. */
+    /* MQTT_GetSubAckStatusCodes always returns success if called with packet info
+     * from the event callback and non-NULL parameters. */
     assert( mqttStatus == MQTTSuccess );
 
     ( void ) mqttStatus;
@@ -428,8 +428,7 @@ static int handleResubscribe( MQTTContext_t * pMqttContext )
         /* Send SUBSCRIBE packet.
          * Note: reusing the value specified in globalSubscribePacketIdentifier is acceptable here
          * because this function is entered only after the receipt of a SUBACK, at which point
-         * its associated packet id is free to use.
-         */
+         * its associated packet id is free to use. */
         mqttStatus = MQTT_Subscribe( pMqttContext,
                                      pSubscriptionList,
                                      sizeof( pSubscriptionList ) / sizeof( MQTTSubscribeInfo_t ),
