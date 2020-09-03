@@ -40,4 +40,10 @@ void harness()
     __CPROVER_assume( __CPROVER_r_ok( buf, max ) );
 
     ret = skipString( buf, &start, max );
+
+    if( ret == true )
+    {
+        __CPROVER_assert( start <= max,
+                          "the buffer start index does not exceed the buffer length." );
+    }
 }

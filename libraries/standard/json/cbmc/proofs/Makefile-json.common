@@ -8,8 +8,8 @@ INCLUDES += -I$(PROOFDIR) -I$(CBMC_ROOT)/include
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
 ifneq (,$(wildcard glue.c))
-PROOF_SOURCES += $(PROOFDIR)/glue.c
-PROOF_SOURCES += $(CBMC_ROOT)/sources/skipGeneric.c
+    PROOF_SOURCES += $(PROOFDIR)/glue.c
+    PROOF_SOURCES += $(CBMC_ROOT)/sources/skipGeneric.c
 endif
 
 PROJECT_SOURCES += $(PROOFDIR)/json.c

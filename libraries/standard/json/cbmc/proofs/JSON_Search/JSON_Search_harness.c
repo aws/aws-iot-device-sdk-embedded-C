@@ -61,4 +61,11 @@ void harness()
                        separator,
                        ( nondet_bool() ? &outValue : NULL ),
                        ( nondet_bool() ? &outValueLength : NULL ) );
+
+    if( ret == JSONSuccess )
+    {
+        __CPROVER_assert( ( outValue >= buf ) &&
+                          ( ( outValue + outValueLength ) <= ( buf + max ) ),
+                          "The output value is a sequence of characters within buf." );
+    }
 }
