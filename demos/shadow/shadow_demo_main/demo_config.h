@@ -125,21 +125,31 @@
 #define NETWORK_BUFFER_SIZE       ( 1024U )
 
 /**
- * @brief The name of the operating system or SDK that the application is
- * running a part of.
+ * @brief The name of the operating system that the application is running on.
+ * The current value is given as an example. Please update for your specific
+ * operating system.
  */
 #define OS_NAME                   "Ubuntu"
 
 /**
- * @brief The version of the operating system or SDK that the application is
- * running a part of.
+ * @brief The version of the operating system that the application is running 
+ * on. The current value is given as an example. Please update for your specific
+ * operating system version.
  */
 #define OS_VERSION                "18.04 LTS"
 
 /**
- * @brief The name of the hardware platform the application is running on.
+ * @brief The name of the hardware platform the application is running on. The
+ * current value is given as an example. Please update for your specific 
+ * hardware platform.
  */
 #define HARDWARE_PLATFORM_NAME    "PC"
+
+/**
+ * @brief The name of the MQTT library used and its version, following an "@"
+ * symbol.
+ */
+#define MQTT_LIB                  "core-mqtt@1.0.0"
 
 /**
  * @brief Predefined thing name.
@@ -152,11 +162,5 @@
  * @brief The length of #THING_NAME.
  */
 #define THING_NAME_LENGTH         ( ( uint16_t ) ( sizeof( THING_NAME ) - 1 ) )
-
-/**
- * @brief The name of the MQTT library used and its version, following an "@"
- * symbol.
- */
-#define MQTT_LIB                  "core-mqtt@1.0.0"
 
 #endif /* ifndef DEMO_CONFIG_H_ */
