@@ -35,15 +35,15 @@
  * @brief The transport interface implementation
  *
  * The transport interface is a set of APIs that must be implemented using an
- * external TCP/IP stack and/or a TLS layer. The transport interface is
- * implemented in @ref transport_interface.h. This interface allows the
- * application layer protocol library to send and receive data over the transport
- * layer. This interface does not handle connection and disconnection to the
- * server of interest. The connection to the server of interest must be made
- * before the library is used with @ref TransportInterface_t. The application is
- * also responsible for disconnection from the server. This interface does not
- * handle socket timeouts or any setup of TLS; these things must be done before
- * using the library's functions that need to send and receive data.
+ * external transport layer protocol. The transport interface is implemented in
+ * @ref transport_interface.h. This interface allows the application layer
+ * protocol library to send and receive data over the transport layer. This
+ * interface does not handle connection and disconnection to the server of
+ * interest. The connection to the server of interest must be made before the
+ * library is used with @ref TransportInterface_t. The application is also
+ * responsible for disconnection from the server. This interface does not handle
+ * socket timeouts or any setup of TLS; these things must be done before using
+ * the library's functions that need to send and receive data.
  * <br>
  *
  * The functions that must be implemented are:<br>
@@ -79,10 +79,9 @@
  * -# Implementing @ref TransportRecv_t<br><br>
  * @snippet this define_transportrecv
  * <br>
- * This callback lets the application know that the library is ready to receive
- * data over the network. Connection with the server of interest should have
- * been made before invoking any library routines that receive data over the
- * network.
+ * The library expects this callback to populate a buffer with bytes from the
+ * network. Connection with the server of interest should have been made before
+ * invoking any library routines that receive data from the network.
  * The @ref TransportRecv_t is typically implemented by calling directly the
  * TLS layer function to receive data. If one is transferring over plaintext TCP,
  * without TLS, then a call is made directly to the TCP layer function to receive
@@ -113,10 +112,9 @@
  * -# Implementing @ref TransportSend_t<br><br>
  * @snippet this define_transportsend
  * <br>
- * This callback lets the application know that the library is ready to send
- * data over the network. Connection with the server of interest should have
- * been made before invoking any library routines that send data over the
- * network.
+ * The library expects this callback to send the bytes in the given buffer over
+ * the network. Connection with the server of interest should have been made
+ * before invoking any library routines that send data over the network.
  * The @ref TransportSend_t is typically implemented by calling directly the
  * TLS layer function to send data. If one is transferring over plaintext TCP,
  * without TLS, then a call is made directly to the TCP layer function to send
@@ -149,7 +147,7 @@
  * @transportstruct
  * @typedef NetworkContext_t
  * @brief The NetworkContext is an incomplete type. An implementation of this
- * interface must define struct NetworkContext for their system's requirements.
+ * interface must define struct NetworkContext for the system requirements.
  * This context is passed into the network interface functions.
  */
 /* @[define_networkcontext] */
