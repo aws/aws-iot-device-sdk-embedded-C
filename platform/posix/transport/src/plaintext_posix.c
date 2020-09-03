@@ -28,8 +28,14 @@
 #include <errno.h>
 #include <sys/socket.h>
 #include <poll.h>
+#include <sys/select.h>
 
 #include "plaintext_posix.h"
+
+/**
+ * @brief Number of nanoseconds in one microsecond.
+ */
+#define ONE_NS_TO_US    ( 1000 )
 
 /*-----------------------------------------------------------*/
 
@@ -70,28 +76,53 @@ int32_t Plaintext_Recv( const NetworkContext_t * pNetworkContext,
                         void * pBuffer,
                         size_t bytesToRecv )
 {
-    int32_t bytesReceived = -1, pollStatus = 0;
-    struct pollfd fileDescriptor;
-    nfds_t nfds = 1U;
+    int32_t bytesReceived = -1, selectStatus = -1, getTimeoutStatus = -1;
+    struct timeval transportTimeout;
+    socklen_t transportTimeoutLen;
+    struct timespec selectTimeout;
+    fd_set readfds;
 
     assert( pNetworkContext != NULL );
     assert( pBuffer != NULL );
 
-    fileDescriptor.fd = pNetworkContext->socketDescriptor;
-    fileDescriptor.events = POLLIN | POLLPRI | POLLHUP;
-    fileDescriptor.revents = 0;
+    FD_ZERO( &readfds );
+    FD_SET( pNetworkContext->socketDescriptor, &readfds );
 
-    /* Poll the socket for read availability. */
-    pollStatus = poll( &fileDescriptor, nfds, 0 );
+    getTimeoutStatus = getsockopt( pNetworkContext->socketDescriptor,
+                                   SOL_SOCKET,
+                                   SO_RCVTIMEO,
+                                   &transportTimeout,
+                                   &transportTimeoutLen );
 
-    if( pollStatus > 0 )
+    if( getTimeoutStatus < 0 )
+    {
+        /* Make #pselect return immediately if getting the timeout failed. */
+        selectTimeout.tv_sec = 0;
+        selectTimeout.tv_nsec = 0;
+    }
+    else
+    {
+        /* Set the #pselect timeout from the transport timeout. */
+        selectTimeout.tv_sec = transportTimeout.tv_sec;
+        selectTimeout.tv_nsec = transportTimeout.tv_usec * ONE_NS_TO_US;
+    }
+
+    /* Check if there is data to read from the socket. */
+    selectStatus = pselect( ( nfds_t ) ( pNetworkContext->socketDescriptor + 1 ),
+                            &readfds,
+                            NULL,
+                            &readfds,
+                            &selectTimeout,
+                            NULL );
+
+    if( selectStatus > 0 )
     {
         bytesReceived = ( int32_t ) recv( pNetworkContext->socketDescriptor,
                                           pBuffer,
                                           bytesToRecv,
                                           0 );
     }
-    else if( pollStatus < 0 )
+    else if( selectStatus < 0 )
     {
         /* An error occurred while polling. */
         bytesReceived = -1;
@@ -102,7 +133,7 @@ int32_t Plaintext_Recv( const NetworkContext_t * pNetworkContext,
         bytesReceived = 0;
     }
 
-    if( ( pollStatus > 0 ) && ( bytesReceived == 0 ) )
+    if( ( selectStatus > 0 ) && ( bytesReceived == 0 ) )
     {
         /* Peer has closed the connection. Treat as an error. */
         bytesReceived = -1;
@@ -124,28 +155,53 @@ int32_t Plaintext_Send( const NetworkContext_t * pNetworkContext,
                         const void * pBuffer,
                         size_t bytesToSend )
 {
-    int32_t bytesSent = -1, pollStatus = 0;
-    struct pollfd fileDescriptor;
-    nfds_t nfds = 1U;
+    int32_t bytesSent = -1, selectStatus = -1, getTimeoutStatus = -1;
+    struct timeval transportTimeout;
+    socklen_t transportTimeoutLen;
+    struct timespec selectTimeout;
+    fd_set writefds;
 
     assert( pNetworkContext != NULL );
     assert( pBuffer != NULL );
 
-    fileDescriptor.fd = pNetworkContext->socketDescriptor;
-    fileDescriptor.events = POLLOUT | POLLHUP;
-    fileDescriptor.revents = 0;
+    FD_ZERO( &writefds );
+    FD_SET( pNetworkContext->socketDescriptor, &writefds );
 
-    /* Poll the socket for write availability. */
-    pollStatus = poll( &fileDescriptor, nfds, 0 );
+    getTimeoutStatus = getsockopt( pNetworkContext->socketDescriptor,
+                                   SOL_SOCKET,
+                                   SO_SNDTIMEO,
+                                   &transportTimeout,
+                                   &transportTimeoutLen );
 
-    if( pollStatus > 0 )
+    if( getTimeoutStatus < 0 )
+    {
+        /* Make #pselect return immediately if getting the timeout failed. */
+        selectTimeout.tv_sec = 0;
+        selectTimeout.tv_nsec = 0;
+    }
+    else
+    {
+        /* Set the timeout from the socket. */
+        selectTimeout.tv_sec = transportTimeout.tv_sec;
+        selectTimeout.tv_nsec = transportTimeout.tv_usec * ONE_NS_TO_US;
+    }
+
+    /* Check if data can be written to the socket. */
+    selectStatus = pselect( ( nfds_t ) ( pNetworkContext->socketDescriptor + 1 ),
+                            NULL,
+                            &writefds,
+                            &writefds,
+                            &selectTimeout,
+                            NULL );
+
+    if( selectStatus > 0 )
     {
         bytesSent = ( int32_t ) send( pNetworkContext->socketDescriptor,
                                       pBuffer,
                                       bytesToSend,
                                       0 );
     }
-    else if( pollStatus < 0 )
+    else if( selectStatus < 0 )
     {
         /* An error occurred while polling. */
         bytesSent = -1;
@@ -156,7 +212,7 @@ int32_t Plaintext_Send( const NetworkContext_t * pNetworkContext,
         bytesSent = 0;
     }
 
-    if( ( pollStatus > 0 ) && ( bytesSent == 0 ) )
+    if( ( selectStatus > 0 ) && ( bytesSent == 0 ) )
     {
         /* Peer has closed the connection. Treat as an error. */
         bytesSent = -1;
