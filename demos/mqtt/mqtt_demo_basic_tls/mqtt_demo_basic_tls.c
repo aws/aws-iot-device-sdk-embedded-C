@@ -45,8 +45,8 @@
 #include "demo_config.h"
 
 /* MQTT API headers. */
-#include "mqtt.h"
-#include "mqtt_state.h"
+#include "core_mqtt.h"
+#include "core_mqtt_state.h"
 
 /* OpenSSL sockets transport implementation. */
 #include "openssl_posix.h"

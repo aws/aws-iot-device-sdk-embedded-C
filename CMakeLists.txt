@@ -72,9 +72,8 @@ if(${BUILD_TESTS})
     
     # Create a list for each unit test target.
     set(utest_targets 
-        http_utest mqtt_utest 
-        mqtt_lightweight_utest mqtt_state_utest 
-        http_send_utest json_utest
+        http_utest http_send_utest 
+        json_utest openssl_utest
         sockets_utest plaintext_utest
         openssl_utest retry_utils_utest)
 
@@ -95,3 +94,11 @@ add_subdirectory( platform )
 
 # Build the demos.
 add_subdirectory( demos )
+
+# Add build configuration for all integration tests.
+file(GLOB_RECURSE test_modules "integration-test/*CMakeLists.txt")
+foreach(module IN LISTS test_modules)
+    get_filename_component(DIR_PATH "${module}" DIRECTORY)
+    add_subdirectory(${DIR_PATH})
+endforeach()
+

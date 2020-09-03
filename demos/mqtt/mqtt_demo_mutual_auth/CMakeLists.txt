@@ -2,7 +2,7 @@ include(CheckSymbolExists)
 set( DEMO_NAME "mqtt_demo_mutual_auth" )
 
 # Include MQTT library's source and header path variables.
-include( ${CMAKE_SOURCE_DIR}/libraries/standard/mqtt/mqttFilePaths.cmake )
+include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreMQTT/mqttFilePaths.cmake )
 
 # Demo target.
 add_executable(${DEMO_NAME})
@@ -35,16 +35,12 @@ target_include_directories(
         ${LOGGING_INCLUDE_DIRS}
 )
 
+# Set demo configuration for Root CA cert and MQTT client identifier,
+# if passed as CMake variables.
 if(ROOT_CA_CERT_PATH)
     target_compile_definitions(
         ${DEMO_NAME} PRIVATE
             ROOT_CA_CERT_PATH="${ROOT_CA_CERT_PATH}"
-    )
-endif()
-if(BROKER_ENDPOINT)
-    target_compile_definitions(
-        ${DEMO_NAME} PRIVATE
-            BROKER_ENDPOINT="${BROKER_ENDPOINT}"
     )
 endif()
 if(CLIENT_IDENTIFIER)

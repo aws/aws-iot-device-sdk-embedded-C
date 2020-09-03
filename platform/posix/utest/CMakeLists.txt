@@ -74,3 +74,34 @@ create_test(${utest_name}
             "${utest_dep_list}"
             "${test_include_directories}"
         )
+
+# Create the target for unit testing the clock
+set(real_name "clock_real")
+
+set(real_source_files
+        ${PLATFORM_DIR}/posix/clock_posix.c
+   )
+
+create_real_library(${real_name}
+                    "${real_source_files}"
+                    "${real_include_directories}"
+                    "${mock_name}"
+)
+
+set(utest_link_list
+        lib${real_name}.a
+        -l${mock_name}
+   )
+
+set(utest_dep_list
+        ${real_name}
+   )
+
+set(utest_name "clock_utest")
+set(utest_source "clock_utest.c")
+create_test(${utest_name}
+            ${utest_source}
+            "${utest_link_list}"
+            "${utest_dep_list}"
+            "${test_include_directories}"
+        )
