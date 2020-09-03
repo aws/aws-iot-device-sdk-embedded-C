@@ -2564,8 +2564,3 @@ GENERATE_LEGEND        = YES
 # This tag requires that the tag HAVE_DOT is set to YES.
 
 DOT_CLEANUP            = YES
-
-# Aliases
-
-ALIASES += transportcallback="@ingroup mqtt_callback_types"
-ALIASES += transportstruct="@ingroup mqtt_struct_types"
