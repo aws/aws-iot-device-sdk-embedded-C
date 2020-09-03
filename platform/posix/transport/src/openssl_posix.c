@@ -689,11 +689,6 @@ int32_t Openssl_Recv( const NetworkContext_t * pNetworkContext,
                 /* There is no data to receive at this time. */
                 bytesReceived = 0;
             }
-            else
-            {
-                LogError( ( "Failed to receive data over network: SSL_read failed: "
-                            "ErrorStatus=%s.", ERR_reason_error_string( sslError ) ) );
-            }
         }
     }
     else
