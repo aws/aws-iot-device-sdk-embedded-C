@@ -23,7 +23,6 @@
 #include <string.h>
 
 /* POSIX socket includes. */
-#include <stdlib.h>
 #include <assert.h>
 #include <errno.h>
 #include <sys/socket.h>
