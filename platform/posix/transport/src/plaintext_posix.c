@@ -20,10 +20,10 @@
  */
 
 /* Standard includes. */
+#include <assert.h>
 #include <string.h>
 
 /* POSIX socket includes. */
-#include <assert.h>
 #include <errno.h>
 #include <sys/socket.h>
 #include <sys/select.h>
