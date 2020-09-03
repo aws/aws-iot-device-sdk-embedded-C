@@ -60,6 +60,7 @@ mfln
 misra
 mqtt
 nano
+nanosleep
 networkcontext
 nextjittermax
 noninfringement
