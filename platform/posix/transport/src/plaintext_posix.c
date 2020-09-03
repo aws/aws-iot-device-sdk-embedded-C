@@ -70,7 +70,7 @@ int32_t Plaintext_Recv( const NetworkContext_t * pNetworkContext,
                         void * pBuffer,
                         size_t bytesToRecv )
 {
-    int32_t bytesReceived = 0, pollStatus = 0;
+    int32_t bytesReceived = -1, pollStatus = 0;
     struct pollfd fileDescriptor;
     nfds_t nfds = 1U;
 
@@ -99,11 +99,21 @@ int32_t Plaintext_Recv( const NetworkContext_t * pNetworkContext,
     else
     {
         /* No data to receive at this time. */
+        bytesReceived = 0;
     }
 
-    if( bytesReceived < 0 )
+    if( ( pollStatus > 0 ) && ( bytesReceived == 0 ) )
+    {
+        /* Peer has closed the connection. Treat as an error. */
+        bytesReceived = -1;
+    }
+    else if( bytesReceived < 0 )
     {
         logTransportError( errno );
+    }
+    else
+    {
+        /* Empty else MISRA 15.7 */
     }
 
     return bytesReceived;
@@ -114,7 +124,7 @@ int32_t Plaintext_Send( const NetworkContext_t * pNetworkContext,
                         const void * pBuffer,
                         size_t bytesToSend )
 {
-    int32_t bytesSent = 0, pollStatus = 0;
+    int32_t bytesSent = -1, pollStatus = 0;
     struct pollfd fileDescriptor;
     nfds_t nfds = 1U;
 
@@ -143,11 +153,21 @@ int32_t Plaintext_Send( const NetworkContext_t * pNetworkContext,
     else
     {
         /* Not able to send data at this time. */
+        bytesSent = 0;
     }
 
-    if( bytesSent < 0 )
+    if( ( pollStatus > 0 ) && ( bytesSent == 0 ) )
+    {
+        /* Peer has closed the connection. Treat as an error. */
+        bytesSent = -1;
+    }
+    else if( bytesSent < 0 )
     {
         logTransportError( errno );
+    }
+    else
+    {
+        /* Empty else MISRA 15.7 */
     }
 
     return bytesSent;
