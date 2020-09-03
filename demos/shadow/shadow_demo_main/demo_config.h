@@ -132,7 +132,7 @@
 #define OS_NAME                   "Ubuntu"
 
 /**
- * @brief The version of the operating system that the application is running 
+ * @brief The version of the operating system that the application is running
  * on. The current value is given as an example. Please update for your specific
  * operating system version.
  */
@@ -140,7 +140,7 @@
 
 /**
  * @brief The name of the hardware platform the application is running on. The
- * current value is given as an example. Please update for your specific 
+ * current value is given as an example. Please update for your specific
  * hardware platform.
  */
 #define HARDWARE_PLATFORM_NAME    "PC"
