@@ -39,6 +39,7 @@ endif
 eventcallback
 filterindex
 globalsubscribestatus
+globalsubscribepacketidentifier 
 hashmap
 hasn
 html

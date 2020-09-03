@@ -657,19 +657,19 @@ static void handleIncomingPublish( MQTTPublishInfo_t * pPublishInfo,
 
 static void updateSubscribeStatus( MQTTPacketInfo_t * pPacketInfo )
 {
-    uint8_t subscriptionStatus = 0;
-
-    assert( pPacketInfo != NULL );
-    assert( pPacketInfo->pRemainingData != NULL );
-
     uint8_t * pPayload = NULL;
     size_t pSize = 0;
 
-    mqttStatus = MQTT_GetSubAckStatusCodes( pPacketInfo, &pPayload, &pSize );
+    MQTTStatus_t mqttStatus = MQTT_GetSubAckStatusCodes( pPacketInfo, &pPayload, &pSize );
+
+    /* MQTT_GetSubAckStatusCodes always returns success if called with packet info from the event
+     * callback and non-NULL parameters. */
+    assert( mqttStatus == MQTTSuccess );
+
+    ( void ) mqttStatus;
 
     /* Demo only subscribes to one topic, so only one status code is returned. */
-    subscriptionStatus = pPayload[ 0 ];
-    globalSubscribeStatus = subscriptionStatus;
+    globalSubscribeStatus = pPayload[ 0 ];
 }
 
 /*-----------------------------------------------------------*/
@@ -688,7 +688,11 @@ static int handleResubscribe( MQTTContext_t * pMqttContext )
 
     do
     {
-        /* Send SUBSCRIBE packet. */
+        /* Send SUBSCRIBE packet.
+         * Note: reusing the value specified in globalSubscribePacketIdentifier is acceptable here
+         * because this function is entered only after the receipt of a SUBACK, at which point
+         * its associated packet id is free to use.
+         */
         mqttStatus = MQTT_Subscribe( pMqttContext,
                                      pSubscriptionList,
                                      sizeof( pSubscriptionList ) / sizeof( MQTTSubscribeInfo_t ),
@@ -769,7 +773,7 @@ static void eventCallback( MQTTContext_t * pMqttContext,
                 /* Decode SUBACK and update globalSubscribeStatus accordingly.  */
                 updateSubscribeStatus( pPacketInfo );
 
-                if( ( globalSubscribeStatus != MQTTSubAckFailure ) )
+                if( globalSubscribeStatus != MQTTSubAckFailure )
                 {
                     LogInfo( ( "Subscribed to the topic %.*s. with maximum QoS %u.\n\n",
                                MQTT_EXAMPLE_TOPIC_LENGTH,
