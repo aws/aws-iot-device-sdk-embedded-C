@@ -27,15 +27,9 @@
 #include <assert.h>
 #include <errno.h>
 #include <sys/socket.h>
-#include <poll.h>
 #include <sys/select.h>
 
 #include "plaintext_posix.h"
-
-/**
- * @brief Number of nanoseconds in one microsecond.
- */
-#define ONE_NS_TO_US    ( 1000 )
 
 /*-----------------------------------------------------------*/
 
@@ -77,9 +71,8 @@ int32_t Plaintext_Recv( const NetworkContext_t * pNetworkContext,
                         size_t bytesToRecv )
 {
     int32_t bytesReceived = -1, selectStatus = -1, getTimeoutStatus = -1;
-    struct timeval transportTimeout;
+    struct timeval transportTimeout, selectTimeout;
     socklen_t transportTimeoutLen;
-    struct timespec selectTimeout;
     fd_set readfds;
 
     assert( pNetworkContext != NULL );
@@ -96,24 +89,22 @@ int32_t Plaintext_Recv( const NetworkContext_t * pNetworkContext,
 
     if( getTimeoutStatus < 0 )
     {
-        /* Make #pselect return immediately if getting the timeout failed. */
+        /* Make #select return immediately if getting the timeout failed. */
         selectTimeout.tv_sec = 0;
-        selectTimeout.tv_nsec = 0;
+        selectTimeout.tv_usec = 0;
     }
     else
     {
-        /* Set the #pselect timeout from the transport timeout. */
         selectTimeout.tv_sec = transportTimeout.tv_sec;
-        selectTimeout.tv_nsec = transportTimeout.tv_usec * ONE_NS_TO_US;
+        selectTimeout.tv_usec = transportTimeout.tv_usec;
     }
 
     /* Check if there is data to read from the socket. */
-    selectStatus = pselect( ( nfds_t ) ( pNetworkContext->socketDescriptor + 1 ),
-                            &readfds,
-                            NULL,
-                            &readfds,
-                            &selectTimeout,
-                            NULL );
+    selectStatus = select( pNetworkContext->socketDescriptor + 1,
+                           &readfds,
+                           NULL,
+                           &readfds,
+                           &selectTimeout );
 
     if( selectStatus > 0 )
     {
@@ -156,9 +147,8 @@ int32_t Plaintext_Send( const NetworkContext_t * pNetworkContext,
                         size_t bytesToSend )
 {
     int32_t bytesSent = -1, selectStatus = -1, getTimeoutStatus = -1;
-    struct timeval transportTimeout;
+    struct timeval transportTimeout, selectTimeout;
     socklen_t transportTimeoutLen;
-    struct timespec selectTimeout;
     fd_set writefds;
 
     assert( pNetworkContext != NULL );
@@ -175,24 +165,22 @@ int32_t Plaintext_Send( const NetworkContext_t * pNetworkContext,
 
     if( getTimeoutStatus < 0 )
     {
-        /* Make #pselect return immediately if getting the timeout failed. */
+        /* Make #select return immediately if getting the timeout failed. */
         selectTimeout.tv_sec = 0;
-        selectTimeout.tv_nsec = 0;
+        selectTimeout.tv_usec = 0;
     }
     else
     {
-        /* Set the timeout from the socket. */
         selectTimeout.tv_sec = transportTimeout.tv_sec;
-        selectTimeout.tv_nsec = transportTimeout.tv_usec * ONE_NS_TO_US;
+        selectTimeout.tv_usec = transportTimeout.tv_usec;
     }
 
     /* Check if data can be written to the socket. */
-    selectStatus = pselect( ( nfds_t ) ( pNetworkContext->socketDescriptor + 1 ),
-                            NULL,
-                            &writefds,
-                            &writefds,
-                            &selectTimeout,
-                            NULL );
+    selectStatus = select( pNetworkContext->socketDescriptor + 1,
+                           NULL,
+                           &writefds,
+                           &writefds,
+                           &selectTimeout );
 
     if( selectStatus > 0 )
     {

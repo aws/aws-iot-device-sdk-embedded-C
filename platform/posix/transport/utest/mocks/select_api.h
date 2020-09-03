@@ -20,18 +20,20 @@
  */
 
 /**
- * @file poll_api.h
- * @brief This file is used to generate mocks for functions used from <poll.h>.
- * Mocking poll.h itself causes several errors from parsing its macros.
+ * @file select_api.h
+ * @brief This file is used to generate mocks for functions used from <sys/select.h>.
+ * Mocking select.h itself causes several errors from parsing its macros.
  */
 
-#ifndef POLL_API_H_
-#define POLL_API_H_
+#ifndef SELECT_API_H_
+#define SELECT_API_H_
 
-#include <poll.h>
+#include <sys/select.h>
 
-extern int poll( struct pollfd * fds,
-                 nfds_t nfds,
-                 int timeout );
+extern int select( int nfds,
+                   fd_set * readfds,
+                   fd_set * writefds,
+                   fd_set * exceptfds,
+                   struct timeval * timeout );
 
-#endif /* ifndef POLL_API_H_ */
+#endif /* ifndef SELECT_API_H_ */

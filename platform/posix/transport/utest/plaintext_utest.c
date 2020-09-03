@@ -10,7 +10,7 @@
 
 #include "mock_sockets_posix.h"
 #include "mock_stdio_api.h"
-#include "mock_poll_api.h"
+#include "mock_select_api.h"
 #include "mock_socket.h"
 
 /* The send and receive timeout to set for the socket. */
@@ -114,7 +114,8 @@ void test_Plaintext_Recv_All_Bytes_Received_Successfully( void )
 {
     int32_t bytesReceived;
 
-    poll_ExpectAnyArgsAndReturn( 1 );
+    getsockopt_ExpectAnyArgsAndReturn( 0 );
+    select_ExpectAnyArgsAndReturn( 1 );
     recv_ExpectAnyArgsAndReturn( BYTES_TO_RECV );
     bytesReceived = Plaintext_Recv( &networkContext,
                                     plaintextBuffer,
@@ -130,7 +131,8 @@ void test_Plaintext_Recv_Zero_Bytes_Received( void )
 {
     int32_t bytesReceived;
 
-    poll_ExpectAnyArgsAndReturn( 1 );
+    getsockopt_ExpectAnyArgsAndReturn( -1 );
+    select_ExpectAnyArgsAndReturn( 1 );
     recv_ExpectAnyArgsAndReturn( 0 );
     bytesReceived = Plaintext_Recv( &networkContext,
                                     plaintextBuffer,
@@ -139,14 +141,15 @@ void test_Plaintext_Recv_Zero_Bytes_Received( void )
 }
 
 /**
- * @brief Test that #Plaintext_Recv returns 0 bytes when poll has not received
+ * @brief Test that #Plaintext_Recv returns 0 bytes when select has not received
  * any signals.
  */
 void test_Plaintext_Recv_Socket_No_Events( void )
 {
     int32_t bytesReceived;
 
-    poll_ExpectAnyArgsAndReturn( 0 );
+    getsockopt_ExpectAnyArgsAndReturn( 0 );
+    select_ExpectAnyArgsAndReturn( 0 );
     bytesReceived = Plaintext_Recv( &networkContext,
                                     plaintextBuffer,
                                     BYTES_TO_RECV );
@@ -154,13 +157,15 @@ void test_Plaintext_Recv_Socket_No_Events( void )
 }
 
 /**
- * @brief Test that #Plaintext_Recv returns an error when polling the socket fails.
+ * @brief Test that #Plaintext_Recv returns an error when calling #select on the
+ * socket fails.
  */
 void test_Plaintext_Recv_Poll_Error( void )
 {
     int32_t bytesReceived;
 
-    poll_ExpectAnyArgsAndReturn( -1 );
+    getsockopt_ExpectAnyArgsAndReturn( 0 );
+    select_ExpectAnyArgsAndReturn( -1 );
     bytesReceived = Plaintext_Recv( &networkContext,
                                     plaintextBuffer,
                                     BYTES_TO_RECV );
@@ -178,7 +183,8 @@ void test_Plaintext_Recv_Network_Error( void )
 
     for( i = 0; i < sizeof( errorNumbers ); i++ )
     {
-        poll_ExpectAnyArgsAndReturn( 1 );
+        getsockopt_ExpectAnyArgsAndReturn( 0 );
+        select_ExpectAnyArgsAndReturn( 1 );
         recv_ExpectAnyArgsAndReturn( SEND_RECV_ERROR );
         errno = errorNumbers[ i ];
         bytesReceived = Plaintext_Recv( &networkContext,
@@ -197,7 +203,8 @@ void test_Plaintext_Send_All_Bytes_Sent_Successfully( void )
 {
     int32_t bytesSent;
 
-    poll_ExpectAnyArgsAndReturn( 1 );
+    getsockopt_ExpectAnyArgsAndReturn( 0 );
+    select_ExpectAnyArgsAndReturn( 1 );
     send_ExpectAnyArgsAndReturn( BYTES_TO_SEND );
     bytesSent = Plaintext_Send( &networkContext,
                                 plaintextBuffer,
@@ -216,7 +223,8 @@ void test_Plaintext_Send_Network_Error( void )
 
     for( i = 0; i < sizeof( errorNumbers ); i++ )
     {
-        poll_ExpectAnyArgsAndReturn( 1 );
+        getsockopt_ExpectAnyArgsAndReturn( 0 );
+        select_ExpectAnyArgsAndReturn( 1 );
         send_ExpectAnyArgsAndReturn( SEND_RECV_ERROR );
         errno = errorNumbers[ i ];
         bytesSent = Plaintext_Send( &networkContext,
@@ -235,7 +243,8 @@ void test_Plaintext_Send_Zero_Bytes_Received( void )
 {
     int32_t bytesSent;
 
-    poll_ExpectAnyArgsAndReturn( 1 );
+    getsockopt_ExpectAnyArgsAndReturn( -1 );
+    select_ExpectAnyArgsAndReturn( 1 );
     send_ExpectAnyArgsAndReturn( 0 );
     bytesSent = Plaintext_Send( &networkContext,
                                 plaintextBuffer,
@@ -244,14 +253,15 @@ void test_Plaintext_Send_Zero_Bytes_Received( void )
 }
 
 /**
- * @brief Test that #Plaintext_Send returns 0 bytes when poll has not received
+ * @brief Test that #Plaintext_Send returns 0 bytes when select has not received
  * any signals.
  */
 void test_Plaintext_Send_Socket_No_Events( void )
 {
     int32_t bytesSent;
 
-    poll_ExpectAnyArgsAndReturn( 0 );
+    getsockopt_ExpectAnyArgsAndReturn( 0 );
+    select_ExpectAnyArgsAndReturn( 0 );
     bytesSent = Plaintext_Send( &networkContext,
                                 plaintextBuffer,
                                 BYTES_TO_SEND );
@@ -259,13 +269,15 @@ void test_Plaintext_Send_Socket_No_Events( void )
 }
 
 /**
- * @brief Test that #Plaintext_Send returns an error when polling the socket fails.
+ * @brief Test that #Plaintext_Send returns an error when calling #select on the
+ * socket fails.
  */
 void test_Plaintext_Send_Poll_Error( void )
 {
     int32_t bytesSent;
 
-    poll_ExpectAnyArgsAndReturn( -1 );
+    getsockopt_ExpectAnyArgsAndReturn( 0 );
+    select_ExpectAnyArgsAndReturn( -1 );
     bytesSent = Plaintext_Send( &networkContext,
                                 plaintextBuffer,
                                 BYTES_TO_SEND );
