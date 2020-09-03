@@ -668,10 +668,6 @@ int32_t Openssl_Recv( const NetworkContext_t * pNetworkContext,
     int32_t bytesReceived = 0;
     int32_t sslError = 0;
 
-    assert( pNetworkContext != NULL );
-    assert( pBuffer != NULL );
-    assert( bytesToRecv > 0 );
-
     if( pNetworkContext == NULL )
     {
         LogError( ( "Parameter check failed: pNetworkContext is NULL." ) );
@@ -716,10 +712,6 @@ int32_t Openssl_Send( const NetworkContext_t * pNetworkContext,
 {
     int32_t bytesSent = 0;
     int32_t sslError = 0;
-
-    assert( pNetworkContext != NULL );
-    assert( pBuffer != NULL );
-    assert( bytesToSend > 0 );
 
     /* Unused parameter when logs are disabled. */
     ( void ) sslError;
