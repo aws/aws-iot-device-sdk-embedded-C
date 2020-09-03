@@ -6,17 +6,17 @@
 #include "unity.h"
 
 /* Include paths for public enums, structures, and macros. */
-#include "transport_reconnect.h"
+#include "retry_utils.h"
 
 #include "mock_time_api.h"
 #include "mock_math_api.h"
 
 /* Return value of mocked #rand. */
-#define RAND_RET_VAL            ( MAX_JITTER_VALUE_SECONDS + ( MAX_JITTER_VALUE_SECONDS / ( MAX_RECONNECT_ATTEMPTS ) ) )
+#define RAND_RET_VAL            ( MAX_JITTER_VALUE_SECONDS + ( MAX_JITTER_VALUE_SECONDS / ( MAX_RETRY_ATTEMPTS ) ) )
 #define EXPECTED_NEXT_JITTER    ( RAND_RET_VAL % MAX_JITTER_VALUE_SECONDS )
 /* Parameters to track the next max jitter or number of attempts done. */
-static TransportReconnectParams_t reconnectParams;
-/* Return value of #Transport_ReconnectBackoffAndSleep. */
+static RetryUtilsParams_t retryParams;
+/* Return value of #RetryUtils_BackoffAndSleep. */
 static bool retriesArePending;
 
 /* ============================   UNITY FIXTURES ============================ */
@@ -46,131 +46,130 @@ int suiteTearDown( int numFailures )
 /* ========================================================================== */
 
 /**
- * @brief A helper method to make assertions on the #TransportReconnectParams_t
- * object upon calling #Transport_ReconnectParamsReset.
+ * @brief A helper method to make assertions on the #RetryUtilsParams_t
+ * object upon calling #RetryUtils_ParamsReset.
  */
-static void verifyReconnectParamsAfterReset( void )
+static void verifyRetryParamsAfterReset( void )
 {
-    TEST_ASSERT_EQUAL( 0, reconnectParams.attemptsDone );
-    TEST_ASSERT_EQUAL( INITIAL_RECONNECT_BACKOFF_SECONDS + EXPECTED_NEXT_JITTER,
-                       reconnectParams.nextJitterMax );
-    TEST_ASSERT_GREATER_OR_EQUAL_UINT32( INITIAL_RECONNECT_BACKOFF_SECONDS,
-                                         reconnectParams.nextJitterMax );
-    TEST_ASSERT_LESS_THAN_UINT32( ( INITIAL_RECONNECT_BACKOFF_SECONDS +
+    TEST_ASSERT_EQUAL( 0, retryParams.attemptsDone );
+    TEST_ASSERT_EQUAL( INITIAL_RETRY_BACKOFF_SECONDS + EXPECTED_NEXT_JITTER,
+                       retryParams.nextJitterMax );
+    TEST_ASSERT_GREATER_OR_EQUAL_UINT32( INITIAL_RETRY_BACKOFF_SECONDS,
+                                         retryParams.nextJitterMax );
+    TEST_ASSERT_LESS_THAN_UINT32( ( INITIAL_RETRY_BACKOFF_SECONDS +
                                     MAX_JITTER_VALUE_SECONDS ),
-                                  reconnectParams.nextJitterMax );
+                                  retryParams.nextJitterMax );
 }
 
 /**
- * @brief Test that #Transport_ReconnectParamsReset initializes the #nextJitterMax
+ * @brief Test that #RetryUtils_ParamsReset initializes the #nextJitterMax
  * to be equal to some configurable backoff plus jitter.
  */
-void test_Transport_ReconnectParamsReset_Sets_Jitter_Correctly( void )
+void test_RetryUtils_ParamsReset_Sets_Jitter_Correctly( void )
 {
     clock_gettime_ExpectAnyArgsAndReturn( 0 );
     rand_ExpectAndReturn( RAND_RET_VAL );
-    Transport_ReconnectParamsReset( &reconnectParams );
-    verifyReconnectParamsAfterReset();
+    RetryUtils_ParamsReset( &retryParams );
+    verifyRetryParamsAfterReset();
 }
 
 /**
- * @brief Test that #Transport_ReconnectBackoffAndSleep is able to double the
+ * @brief Test that #RetryUtils_BackoffAndSleep is able to double the
  * max value of the next jitter and return false when all attempts are exhausted.
  *
- * @note #Transport_ReconnectParamsReset is expected to be called before
- * #Transport_ReconnectBackoffAndSleep.
+ * @note #RetryUtils_ParamsReset is expected to be called before
+ * #RetryUtils_BackoffAndSleep.
  */
-void test_Transport_ReconnectBackoffAndSleep_Succeeds( void )
+void test_RetryUtils_BackoffAndSleep_Succeeds( void )
 {
-    uint32_t expectedNextJitterMax = INITIAL_RECONNECT_BACKOFF_SECONDS;
+    uint32_t expectedNextJitterMax = INITIAL_RETRY_BACKOFF_SECONDS;
     uint32_t expectedAttemptsDone = 0;
 
     clock_gettime_ExpectAnyArgsAndReturn( 0 );
     rand_ExpectAndReturn( RAND_RET_VAL );
-    Transport_ReconnectParamsReset( &reconnectParams );
-    verifyReconnectParamsAfterReset();
+    RetryUtils_ParamsReset( &retryParams );
+    verifyRetryParamsAfterReset();
 
-    expectedNextJitterMax = reconnectParams.nextJitterMax;
+    expectedNextJitterMax = retryParams.nextJitterMax;
 
-    while( reconnectParams.attemptsDone < MAX_RECONNECT_ATTEMPTS )
+    while( retryParams.attemptsDone < MAX_RETRY_ATTEMPTS )
     {
         /* Simulate another iteration of the function under test. */
         rand_ExpectAndReturn( RAND_RET_VAL );
-        sleep_ExpectAndReturn( RAND_RET_VAL % reconnectParams.nextJitterMax, 0 );
-        retriesArePending = Transport_ReconnectBackoffAndSleep( &reconnectParams );
+        sleep_ExpectAndReturn( RAND_RET_VAL % retryParams.nextJitterMax, 0 );
+        retriesArePending = RetryUtils_BackoffAndSleep( &retryParams );
 
         /* Updated the expected values of the parameters we expect. */
         expectedAttemptsDone++;
 
-        if( reconnectParams.nextJitterMax < ( MAX_RECONNECT_BACKOFF_SECONDS / 2U ) )
+        if( retryParams.nextJitterMax < ( MAX_RETRY_BACKOFF_SECONDS / 2U ) )
         {
             expectedNextJitterMax += expectedNextJitterMax;
         }
         else
         {
-            expectedNextJitterMax = MAX_RECONNECT_BACKOFF_SECONDS;
+            expectedNextJitterMax = MAX_RETRY_BACKOFF_SECONDS;
         }
 
         /* Verify our assertions. */
         TEST_ASSERT_TRUE( retriesArePending );
-        TEST_ASSERT_EQUAL( expectedNextJitterMax, reconnectParams.nextJitterMax );
-        TEST_ASSERT_EQUAL( expectedAttemptsDone, reconnectParams.attemptsDone );
+        TEST_ASSERT_EQUAL( expectedNextJitterMax, retryParams.nextJitterMax );
+        TEST_ASSERT_EQUAL( expectedAttemptsDone, retryParams.attemptsDone );
     }
 
     /* The next call to the function under test should now return that all
      * attempts are now exhausted. */
     clock_gettime_ExpectAnyArgsAndReturn( 0 );
     rand_ExpectAndReturn( RAND_RET_VAL );
-    retriesArePending = Transport_ReconnectBackoffAndSleep( &reconnectParams );
+    retriesArePending = RetryUtils_BackoffAndSleep( &retryParams );
     TEST_ASSERT_FALSE( retriesArePending );
 
-    /* #Transport_ReconnectParamsReset is expected to be called once all attempts
+    /* #RetryUtils_ParamsReset is expected to be called once all attempts
      * are exhausted. */
-    verifyReconnectParamsAfterReset();
+    verifyRetryParamsAfterReset();
 }
 
 /**
  * @brief Test that the value of the next max jitter has a lower bound that will
  * then be capped at some max threshold.
  */
-void test_Transport_ReconnectBackoffAndSleep_Lower_Bound_Jitter_To_Cap( void )
+void test_RetryUtils_BackoffAndSleep_Lower_Bound_Jitter_To_Cap( void )
 {
     /* Initialize to 0 attempts, so the max value of next jitter will increase. */
-    reconnectParams.attemptsDone = 0U;
-    reconnectParams.nextJitterMax = ( MAX_RECONNECT_BACKOFF_SECONDS / 2U ) + 1;
+    retryParams.attemptsDone = 0U;
+    retryParams.nextJitterMax = ( MAX_RETRY_BACKOFF_SECONDS / 2U ) + 1;
 
     /* The next max jitter doubles on every retry unless it is greater than or
      * equal to half of the max threshold. In this case, the next jitter is
-     * set to the smallest value for which its next value will not double
-     * after reconnect. */
+     * set to the retry. */
     rand_ExpectAndReturn( RAND_RET_VAL );
-    sleep_ExpectAndReturn( RAND_RET_VAL % reconnectParams.nextJitterMax, 0 );
-    retriesArePending = Transport_ReconnectBackoffAndSleep( &reconnectParams );
+    sleep_ExpectAndReturn( RAND_RET_VAL % retryParams.nextJitterMax, 0 );
+    retriesArePending = RetryUtils_BackoffAndSleep( &retryParams );
     TEST_ASSERT_TRUE( retriesArePending );
-    TEST_ASSERT_EQUAL( reconnectParams.nextJitterMax,
-                       MAX_RECONNECT_BACKOFF_SECONDS );
-    TEST_ASSERT_EQUAL( 1U, reconnectParams.attemptsDone );
+    TEST_ASSERT_EQUAL( retryParams.nextJitterMax,
+                       MAX_RETRY_BACKOFF_SECONDS );
+    TEST_ASSERT_EQUAL( 1U, retryParams.attemptsDone );
 }
 
 /**
  * @brief Test that the value of the next max jitter has an upper bound that will
  * then be capped at some max threshold.
  */
-void test_Transport_ReconnectBackoffAndSleep_Upper_Bound_Jitter_To_Cap( void )
+void test_RetryUtils_BackoffAndSleep_Upper_Bound_Jitter_To_Cap( void )
 {
     /* Initialize to 0 attempts, so the max value of next jitter will increase. */
-    reconnectParams.attemptsDone = 0U;
-    reconnectParams.nextJitterMax = MAX_RECONNECT_BACKOFF_SECONDS - 1U;
+    retryParams.attemptsDone = 0U;
+    retryParams.nextJitterMax = MAX_RETRY_BACKOFF_SECONDS - 1U;
 
     /* The next max jitter doubles on every retry unless it is greater than or
      * equal to half of the max threshold. In this case, the next jitter is
      * set to the largest value for which its next value will change but not
-     * double after reconnect. */
+     * double after retrying. */
     rand_ExpectAndReturn( RAND_RET_VAL );
-    sleep_ExpectAndReturn( RAND_RET_VAL % reconnectParams.nextJitterMax, 0 );
-    retriesArePending = Transport_ReconnectBackoffAndSleep( &reconnectParams );
+    sleep_ExpectAndReturn( RAND_RET_VAL % retryParams.nextJitterMax, 0 );
+    retriesArePending = RetryUtils_BackoffAndSleep( &retryParams );
     TEST_ASSERT_TRUE( retriesArePending );
-    TEST_ASSERT_EQUAL( reconnectParams.nextJitterMax,
-                       MAX_RECONNECT_BACKOFF_SECONDS );
-    TEST_ASSERT_EQUAL( 1U, reconnectParams.attemptsDone );
+    TEST_ASSERT_EQUAL( retryParams.nextJitterMax,
+                       MAX_RETRY_BACKOFF_SECONDS );
+    TEST_ASSERT_EQUAL( 1U, retryParams.attemptsDone );
 }
