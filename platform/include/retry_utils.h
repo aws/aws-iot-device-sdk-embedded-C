@@ -25,8 +25,8 @@
  * and constants.
  */
 
-#ifndef RETRY_UTILS__H_
-#define RETRY_UTILS__H_
+#ifndef RETRY_UTILS_H_
+#define RETRY_UTILS_H_
 
 /* Standard include. */
 #include <stdint.h>

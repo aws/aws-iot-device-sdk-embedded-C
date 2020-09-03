@@ -15,7 +15,7 @@ add_library( retry_utils_posix
 
 target_include_directories( retry_utils_posix 
                               PUBLIC 
-                                ${COMMON_RETRY_INCLUDE_PUBLIC_DIRS}
+                                ${RETRY_INCLUDE_PUBLIC_DIRS}
                                 ${LOGGING_INCLUDE_DIRS} )
 
 if(BUILD_TESTS)
