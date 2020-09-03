@@ -109,6 +109,15 @@ do
         then
             continue
         fi
+        # Disable spell check for submoduled libraries.
+        if [[ $file == *"coreMQTT"* ]]
+        then
+            continue
+        fi
+        if [[ $file == *"coreHTTP"* ]]
+        then
+            continue
+        fi
         # Disable errexit here, extract-comments can return non-zero
         set +e
         #

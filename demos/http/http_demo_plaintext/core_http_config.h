@@ -19,39 +19,34 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-/**
- * @file httpParserOnHeaderFieldCallback_harness.c
- * @brief Implements the proof harness for httpParserOnHeaderFieldCallback function.
+#ifndef CORE_HTTP_CONFIG_H_
+#define CORE_HTTP_CONFIG_H_
+
+/**************************************************/
+/******* DO NOT CHANGE the following order ********/
+/**************************************************/
+
+/* Include logging header files and define logging macros in the following order:
+ * 1. Include the header file "logging_levels.h".
+ * 2. Define the LIBRARY_LOG_NAME and LIBRARY_LOG_LEVEL macros depending on
+ * the logging configuration for HTTP.
+ * 3. Include the header file "logging_stack.h", if logging is enabled for HTTP.
  */
 
-#include "http_cbmc_state.h"
-#include "http_parser.h"
-#include "callback_stubs.h"
+#include "logging_levels.h"
+
+/* Logging configuration for the HTTP library. */
+#ifndef LIBRARY_LOG_NAME
+    #define LIBRARY_LOG_NAME    "HTTP"
+#endif
+
+#ifndef LIBRARY_LOG_LEVEL
+    #define LIBRARY_LOG_LEVEL    LOG_INFO
+#endif
+
+#include "logging_stack.h"
 
 
-void harness()
-{
-    http_parser * pHttpParser;
-    HTTPParsingContext_t * pParsingContext;
-    HTTPResponse_t * pResponse;
-    HTTPClient_ResponseHeaderParsingCallback_t headerParserCallback;
-    size_t length, locOffset;
-    char * pLoc;
+/************ End of logging configuration ****************/
 
-    pHttpParser = allocateHttpSendParser( NULL );
-
-    pParsingContext = ( HTTPParsingContext_t * ) ( pHttpParser->data );
-    headerParserCallback.onHeaderCallback = onHeaderCallbackStub;
-
-    pResponse = pParsingContext->pResponse;
-    pResponse->pHeaderParsingCallback = &headerParserCallback;
-
-    __CPROVER_assume( length <= pResponse->bufferLen );
-    __CPROVER_assume( locOffset < length );
-    pLoc = pResponse->pBuffer + locOffset;
-
-    /* This assumption suppresses an overflow error when incrementing pResponse->headerCount. */
-    __CPROVER_assume( pResponse->headerCount < SIZE_MAX );
-
-    __CPROVER_file_local_http_client_c_httpParserOnHeaderFieldCallback( pHttpParser, pLoc, length );
-}
+#endif /* ifndef CORE_HTTP_CONFIG_H_ */
