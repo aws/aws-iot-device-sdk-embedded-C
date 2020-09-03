@@ -28,7 +28,7 @@
 #include "demo_config.h"
 
 /* HTTP API header. */
-#include "http_client.h"
+#include "core_http_client.h"
 
 /* OpenSSL transport header. */
 #include "openssl_posix.h"
