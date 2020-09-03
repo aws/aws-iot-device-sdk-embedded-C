@@ -420,7 +420,7 @@ static int handleResubscribe( MQTTContext_t * pMqttContext )
 
     assert( pMqttContext != NULL );
 
-    /* Initialize retry attempts and interval */
+    /* Initialize retry attempts and interval. */
     Transport_ReconnectParamsReset( &retryParams );
 
     do

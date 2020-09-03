@@ -878,7 +878,7 @@ int main( int argc,
 
             /**************************** Subscribe, Re-subscribe, and Keep-Alive ******************************/
 
-            /* Initialize retry attempts and interval */
+            /* Initialize retry attempts and interval. */
             Transport_ReconnectParamsReset( &reconnectParams );
 
             do
