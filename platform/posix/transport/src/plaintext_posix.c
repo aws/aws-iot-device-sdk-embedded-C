@@ -44,7 +44,7 @@ static void logTransportError( int32_t errorNumber );
 
 static void logTransportError( int32_t errorNumber )
 {
-    LogError( ( "A transport error occured: %s.", strerror( errorNumber ) ) );
+    LogError( ( "A transport error occurred: %s.", strerror( errorNumber ) ) );
 }
 /*-----------------------------------------------------------*/
 
@@ -93,7 +93,7 @@ int32_t Plaintext_Recv( const NetworkContext_t * pNetworkContext,
     }
     else if( pollStatus < 0 )
     {
-        /* An error occured while polling. */
+        /* An error occurred while polling. */
         bytesReceived = -1;
     }
     else
@@ -147,7 +147,7 @@ int32_t Plaintext_Send( const NetworkContext_t * pNetworkContext,
     }
     else if( pollStatus < 0 )
     {
-        /* An error occured while polling. */
+        /* An error occurred while polling. */
         bytesSent = -1;
     }
     else
