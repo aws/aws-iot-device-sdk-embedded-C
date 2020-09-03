@@ -47,7 +47,7 @@
 #include <unistd.h>
 
 /* MQTT LightWeight API header. */
-#include "mqtt_lightweight.h"
+#include "core_mqtt_lightweight.h"
 
 /* Plaintext transport implementation. */
 #include "plaintext_posix.h"
@@ -830,9 +830,14 @@ static void mqttProcessIncomingPacket( NetworkContext_t * pNetworkContext,
     /* Current implementation expects an incoming Publish and three different
      * responses ( SUBACK, PINGRESP and UNSUBACK ). */
 
-    /* Receive the remaining bytes. */
-    status = Plaintext_Recv( pNetworkContext, ( void * ) pFixedBuffer->pBuffer, incomingPacket.remainingLength );
-    assert( status == ( int ) incomingPacket.remainingLength );
+    /* Transport read is required only if remaining length is greater than 0.
+     * Remaining length for PINGRESP will be 0. */
+    if( incomingPacket.remainingLength > 0 )
+    {
+        /* Receive the remaining bytes. */
+        status = Plaintext_Recv( pNetworkContext, ( void * ) pFixedBuffer->pBuffer, incomingPacket.remainingLength );
+        assert( status == ( int ) incomingPacket.remainingLength );
+    }
 
     incomingPacket.pRemainingData = pFixedBuffer->pBuffer;
 

@@ -7,3 +7,6 @@
 [submodule "tools/aws-templates-for-cbmc-proofs"]
 	path = tools/aws-templates-for-cbmc-proofs
 	url = https://github.com/awslabs/aws-templates-for-cbmc-proofs.git
+[submodule "libraries/standard/coreMQTT"]
+	path = libraries/standard/coreMQTT
+	url = https://github.com/FreeRTOS/coreMQTT.git

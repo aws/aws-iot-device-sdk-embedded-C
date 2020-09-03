@@ -268,6 +268,7 @@ static OpensslStatus_t failFunctionFrom_Openssl_Connect( FunctionNames_t functio
             }
             else
             {
+                X509_free_ExpectAnyArgs();
                 fclose_ExpectAnyArgsAndReturn( 0 );
             }
         }
