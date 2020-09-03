@@ -19,10 +19,15 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/* Standard includes. */
+#include <string.h>
+
 /* POSIX socket includes. */
+#include <stdlib.h>
 #include <assert.h>
 #include <errno.h>
 #include <sys/socket.h>
+#include <poll.h>
 
 #include "plaintext_posix.h"
 
@@ -39,56 +44,7 @@ static void logTransportError( int32_t errorNumber );
 
 static void logTransportError( int32_t errorNumber )
 {
-    switch( errorNumber )
-    {
-        case EBADF:
-            LogError( ( "The socket argument is not a valid file descriptor." ) );
-            break;
-
-        case ECONNRESET:
-            LogError( ( "A connection was forcibly closed by a peer." ) );
-            break;
-
-        case EDESTADDRREQ:
-            LogError( ( "The socket is not connection-mode and no peer address is set." ) );
-            break;
-
-        case EINTR:
-            LogError( ( "A signal interrupted send/recv." ) );
-            break;
-
-        case EINVAL:
-            LogError( ( "The MSG_OOB flag is set and no out-of-band data is available." ) );
-            break;
-
-        case ENOTCONN:
-            LogError( ( "A send/receive is attempted on a connection-mode socket that is not connected." ) );
-            break;
-
-        case ENOTSOCK:
-            LogError( ( "The socket argument does not refer to a socket." ) );
-            break;
-
-        case EOPNOTSUPP:
-            LogError( ( "The specified flags are not supported for this socket type or protocol." ) );
-            break;
-
-        case ETIMEDOUT:
-            LogError( ( "The connection timed out during connection establishment, or due to a transmission timeout on active connection." ) );
-            break;
-
-        case EMSGSIZE:
-            LogError( ( "The message is too large to be sent all at once, as the socket requires." ) );
-            break;
-
-        case EPIPE:
-            LogError( ( "The socket is shut down for writing, or the socket is connection-mode and is no longer connected. In the latter case, and if the socket is of type SOCK_STREAM or SOCK_SEQPACKET and the MSG_NOSIGNAL flag is not set, the SIGPIPE signal is generated to the calling thread." ) );
-            break;
-
-        default:
-            LogError( ( "Unexpected error code: errno=%d.", errorNumber ) );
-            break;
-    }
+    LogError( ( "A transport error occured: %s.", strerror( errorNumber ) ) );
 }
 /*-----------------------------------------------------------*/
 
@@ -114,31 +70,40 @@ int32_t Plaintext_Recv( const NetworkContext_t * pNetworkContext,
                         void * pBuffer,
                         size_t bytesToRecv )
 {
-    int32_t bytesReceived = 0;
+    int32_t bytesReceived = 0, pollStatus = 0;
+    struct pollfd fileDescriptor;
+    nfds_t nfds = 1U;
 
     assert( pNetworkContext != NULL );
     assert( pBuffer != NULL );
 
-    do
+    fileDescriptor.fd = pNetworkContext->socketDescriptor;
+    fileDescriptor.events = POLLIN | POLLPRI | POLLHUP;
+    fileDescriptor.revents = 0;
+
+    /* Poll the socket for read availability. */
+    pollStatus = poll( &fileDescriptor, nfds, 0 );
+
+    if( pollStatus > 0 )
     {
         bytesReceived = ( int32_t ) recv( pNetworkContext->socketDescriptor,
                                           pBuffer,
                                           bytesToRecv,
                                           0 );
-    } while( bytesReceived == -1 && errno == EAGAIN );
-
-    if( bytesReceived == 0 )
-    {
-        /* Server closed the connection, treat it as an error. */
-        bytesReceived = -1;
     }
-    else if( bytesReceived < 0 )
+    else if( pollStatus < 0 )
     {
-        logTransportError( errno );
+        /* An error occured while polling. */
+        bytesReceived = -1;
     }
     else
     {
-        /* Empty else. */
+        /* No data to receive at this time. */
+    }
+
+    if( bytesReceived < 0 )
+    {
+        logTransportError( errno );
     }
 
     return bytesReceived;
@@ -149,18 +114,36 @@ int32_t Plaintext_Send( const NetworkContext_t * pNetworkContext,
                         const void * pBuffer,
                         size_t bytesToSend )
 {
-    int32_t bytesSent = 0;
+    int32_t bytesSent = 0, pollStatus = 0;
+    struct pollfd fileDescriptor;
+    nfds_t nfds = 1U;
 
     assert( pNetworkContext != NULL );
     assert( pBuffer != NULL );
 
-    do
+    fileDescriptor.fd = pNetworkContext->socketDescriptor;
+    fileDescriptor.events = POLLOUT | POLLHUP;
+    fileDescriptor.revents = 0;
+
+    /* Poll the socket for write availability. */
+    pollStatus = poll( &fileDescriptor, nfds, 0 );
+
+    if( pollStatus > 0 )
     {
         bytesSent = ( int32_t ) send( pNetworkContext->socketDescriptor,
                                       pBuffer,
                                       bytesToSend,
                                       0 );
-    } while( bytesSent == -1 && errno == EAGAIN );
+    }
+    else if( pollStatus < 0 )
+    {
+        /* An error occured while polling. */
+        bytesSent = -1;
+    }
+    else
+    {
+        /* Not able to send data at this time. */
+    }
 
     if( bytesSent < 0 )
     {
