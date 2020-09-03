@@ -19,20 +19,34 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-/**
- * @file httpParserOnMessageCompleteCallback_harness.c
- * @brief Implements the proof harness for httpParserOnMessageCompleteCallback function.
+#ifndef CORE_HTTP_CONFIG_H_
+#define CORE_HTTP_CONFIG_H_
+
+/**************************************************/
+/******* DO NOT CHANGE the following order ********/
+/**************************************************/
+
+/* Logging config definition and header files inclusion are required in the following order:
+ * 1. Include the header file "logging_levels.h".
+ * 2. Define the LIBRARY_LOG_NAME and LIBRARY_LOG_LEVEL macros depending on
+ * the logging configuration for HTTP.
+ * 3. Include the header file "logging_stack.h", if logging is enabled for HTTP.
  */
 
-#include "http_cbmc_state.h"
-#include "http_parser.h"
+#include "logging_levels.h"
+
+/* Logging configuration for the HTTP library. */
+#ifndef LIBRARY_LOG_NAME
+    #define LIBRARY_LOG_NAME    "HTTP"
+#endif
+
+#ifndef LIBRARY_LOG_LEVEL
+    #define LIBRARY_LOG_LEVEL    LOG_INFO
+#endif
+
+#include "logging_stack.h"
 
 
-void harness()
-{
-    http_parser * pHttpParser;
+/************ End of logging configuration ****************/
 
-    pHttpParser = allocateHttpSendParser( NULL );
-
-    __CPROVER_file_local_http_client_c_httpParserOnMessageCompleteCallback( pHttpParser );
-}
+#endif /* ifndef CORE_HTTP_CONFIG_H_ */

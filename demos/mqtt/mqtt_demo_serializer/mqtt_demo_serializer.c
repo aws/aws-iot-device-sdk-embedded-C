@@ -19,10 +19,12 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-/*
- * Demo for showing use of the MQTT light weight serializer / deserializer
- * API to build simple MQTT client.
- * The Light weight serializer API lets user to serialize and
+/**
+ * @brief Demo that shows use of the MQTT serializer / deserializer API
+ * to build an ultra-light weight MQTT client. This shows that a lighter weight
+ * MQTT client can be developed without using the higher-level
+ * MQTT API of core_mqtt.h, but just the serializer / deserializer API.
+ * The core_mqtt_serializer.h API lets user to serialize and
  * deserialize MQTT messages into a user provided buffer.
  * This API allows use of a statically allocated buffer.
  *
@@ -46,8 +48,8 @@
 #include <time.h>
 #include <unistd.h>
 
-/* MQTT LightWeight API header. */
-#include "core_mqtt_lightweight.h"
+/* MQTT Serializer Serializer API header. */
+#include "core_mqtt_serializer.h"
 
 /* Plaintext transport implementation. */
 #include "plaintext_posix.h"
