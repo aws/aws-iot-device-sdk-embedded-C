@@ -1,14 +1,13 @@
 # Sample apps for the AWS IoT Device SDK for Embedded C
 
 All samples are written in C unless otherwise mentioned. The these sample apps are included in the SDK and described below.
- * [`subscribe_publish_sample`](#subscribe-publish-sample) - a simple pub/sub MQTT example
- * [`subscribe_publish_cpp_sample`](#subscribe-publish-cpp-sample) - a simple pub/sub MQTT example written in C++
- * [`subscribe_publish_library_sample`](#subscribe-publish-library-sample) - a simple pub/sub MQTT example which builds the SDK as a separate library
+ * [`subscribe_publish_sample`](#subscribe-publish-sample) - demonstrates how to publish and subscribe to MQTT messages.
+ * [`subscribe_publish_library_sample`](#subscribe-publish-library-sample) - demonstrates how to create a library that provides support to publish and subscribe to MQTT messages.
 
  These sample apps are also provided in this SDK.
- * [`shadow_sample`](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/master/samples/linux/shadow_sample) - a simple device shadow example using a connected window example
- * [`shadow_sample_console_echo`](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/master/samples/linux/shadow_sample_console_echo) - a sample to work with the AWS IoT Console interactive guide
- * [`jobs_sample`](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/master/samples/linux/jobs_sample) - Establishes a connection to the AWS IoT MQTT Platform and performs several operations to demonstrate the basic capabilities of the AWS IoT Jobs platform.
+ * [`shadow_sample`](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/master/samples/linux/shadow_sample) - demonstrates how to use a simple device shadow in a connected window example.
+ * [`shadow_sample_console_echo`](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/master/samples/linux/shadow_sample_console_echo) - demonstrates how to work with the AWS IoT Console interactive guide.
+ * [`jobs_sample`](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/master/samples/linux/jobs_sample) - demonstrates how to connect to the AWS IoT MQTT platform and perform several operations that use the basic capabilities of the AWS IoT Jobs platform.
 
 ## Overview
 This folder contains several samples that demonstrate various SDK functions. The Readme file also includes a walk-through of the subscribe publish sample to explain how the SDK is used. The samples are currently provided with Makefiles for building them on linux. For each sample:
@@ -40,9 +39,6 @@ This is a simple pub/sub MQTT example. It connects a single MQTT client to the s
  * The sample sends out messages equal to the value set in publish count unless infinite publishing flag is set
 
 For further information on each API please read the API documentation.
-
-## Subscribe Publish Cpp Sample
-This is the same sample as above but it is built using a C++ compiler. It demonstrates how the SDK can be used in a C++ program.
 
 ## Subscribe Publish Library Sample
 This is also the same code as the Subscribe Publish sample. In this case, the SDK is built as a separate library and then used in the sample program.
