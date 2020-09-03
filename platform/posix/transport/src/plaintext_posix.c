@@ -70,7 +70,7 @@ int32_t Plaintext_Recv( const NetworkContext_t * pNetworkContext,
                         size_t bytesToRecv )
 {
     int32_t bytesReceived = -1, selectStatus = -1, getTimeoutStatus = -1;
-    struct timeval transportTimeout, selectTimeout;
+    struct timeval transportTimeout;
     socklen_t transportTimeoutLen;
     fd_set readfds;
 
@@ -78,33 +78,28 @@ int32_t Plaintext_Recv( const NetworkContext_t * pNetworkContext,
     assert( pBuffer != NULL );
     assert( bytesToRecv > 0 );
 
-    FD_ZERO( &readfds );
-    FD_SET( pNetworkContext->socketDescriptor, &readfds );
-
+    transportTimeoutLen = ( socklen_t ) sizeof( transportTimeout );
     getTimeoutStatus = getsockopt( pNetworkContext->socketDescriptor,
                                    SOL_SOCKET,
                                    SO_RCVTIMEO,
                                    &transportTimeout,
                                    &transportTimeoutLen );
 
+    /* Make #select return immediately if getting the timeout failed. */
     if( getTimeoutStatus < 0 )
     {
-        /* Make #select return immediately if getting the timeout failed. */
-        selectTimeout.tv_sec = 0;
-        selectTimeout.tv_usec = 0;
-    }
-    else
-    {
-        selectTimeout.tv_sec = transportTimeout.tv_sec;
-        selectTimeout.tv_usec = transportTimeout.tv_usec;
+        transportTimeout.tv_sec = 0;
+        transportTimeout.tv_usec = 0;
     }
 
+    FD_ZERO( &readfds );
+    FD_SET( pNetworkContext->socketDescriptor, &readfds );
     /* Check if there is data to read from the socket. */
     selectStatus = select( pNetworkContext->socketDescriptor + 1,
                            &readfds,
                            NULL,
-                           &readfds,
-                           &selectTimeout );
+                           NULL,
+                           &transportTimeout );
 
     if( selectStatus > 0 )
     {
@@ -120,7 +115,7 @@ int32_t Plaintext_Recv( const NetworkContext_t * pNetworkContext,
     }
     else
     {
-        /* No data to receive at this time. */
+        /* Timed out waiting for data to be received. */
         bytesReceived = 0;
     }
 
@@ -147,7 +142,7 @@ int32_t Plaintext_Send( const NetworkContext_t * pNetworkContext,
                         size_t bytesToSend )
 {
     int32_t bytesSent = -1, selectStatus = -1, getTimeoutStatus = -1;
-    struct timeval transportTimeout, selectTimeout;
+    struct timeval transportTimeout;
     socklen_t transportTimeoutLen;
     fd_set writefds;
 
@@ -155,33 +150,28 @@ int32_t Plaintext_Send( const NetworkContext_t * pNetworkContext,
     assert( pBuffer != NULL );
     assert( bytesToSend > 0 );
 
-    FD_ZERO( &writefds );
-    FD_SET( pNetworkContext->socketDescriptor, &writefds );
-
+    transportTimeoutLen = ( socklen_t ) sizeof( transportTimeout );
     getTimeoutStatus = getsockopt( pNetworkContext->socketDescriptor,
                                    SOL_SOCKET,
                                    SO_SNDTIMEO,
                                    &transportTimeout,
                                    &transportTimeoutLen );
 
+    /* Make #select return immediately if getting the timeout failed. */
     if( getTimeoutStatus < 0 )
     {
-        /* Make #select return immediately if getting the timeout failed. */
-        selectTimeout.tv_sec = 0;
-        selectTimeout.tv_usec = 0;
-    }
-    else
-    {
-        selectTimeout.tv_sec = transportTimeout.tv_sec;
-        selectTimeout.tv_usec = transportTimeout.tv_usec;
+        transportTimeout.tv_sec = 0;
+        transportTimeout.tv_usec = 0;
     }
 
+    FD_ZERO( &writefds );
+    FD_SET( pNetworkContext->socketDescriptor, &writefds );
     /* Check if data can be written to the socket. */
     selectStatus = select( pNetworkContext->socketDescriptor + 1,
                            NULL,
                            &writefds,
-                           &writefds,
-                           &selectTimeout );
+                           NULL,
+                           &transportTimeout );
 
     if( selectStatus > 0 )
     {
@@ -197,7 +187,7 @@ int32_t Plaintext_Send( const NetworkContext_t * pNetworkContext,
     }
     else
     {
-        /* Not able to send data at this time. */
+        /* Timed out waiting for data to be sent. */
         bytesSent = 0;
     }
 
