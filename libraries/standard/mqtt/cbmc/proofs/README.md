@@ -1,1 +1,0 @@
-../../../../../tools/aws-templates-for-cbmc-proofs/template-for-repository/proofs/README.md
