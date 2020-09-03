@@ -38,8 +38,8 @@ dup
 endif
 eventcallback
 filterindex
+globalsubscribepacketidentifier
 globalsubscribestatus
-globalsubscribepacketidentifier 
 hashmap
 hasn
 html
