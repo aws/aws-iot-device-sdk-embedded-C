@@ -103,7 +103,7 @@ int32_t Plaintext_Recv( const NetworkContext_t * pNetworkContext,
     selectStatus = select( pNetworkContext->socketDescriptor + 1,
                            &readfds,
                            NULL,
-                           NULL,
+                           &readfds,
                            &selectTimeout );
 
     if( selectStatus > 0 )
@@ -180,7 +180,7 @@ int32_t Plaintext_Send( const NetworkContext_t * pNetworkContext,
     selectStatus = select( pNetworkContext->socketDescriptor + 1,
                            NULL,
                            &writefds,
-                           NULL,
+                           &writefds,
                            &selectTimeout );
 
     if( selectStatus > 0 )
