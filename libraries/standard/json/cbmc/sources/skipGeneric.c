@@ -33,6 +33,8 @@ static bool_ skipGeneric( const char * buf,
 {
     bool_ ret = false;
 
+    __CPROVER_assert( start != NULL, "start index address is not NULL" );
+
     if( nondet_bool() && ( min <= max ) && ( *start <= max ) )
     {
         size_t x;

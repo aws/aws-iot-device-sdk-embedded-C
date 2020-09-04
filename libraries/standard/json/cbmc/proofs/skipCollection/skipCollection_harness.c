@@ -33,7 +33,10 @@ void harness()
     size_t start, max;
     JSONStatus_t ret;
 
+    /* max is the buffer length which must be nonzero for non-API functions. */
     __CPROVER_assume( max > 0 );
+
+    /* max is the buffer length which must not exceed unwindings. */
     __CPROVER_assume( max < CBMC_MAX_BUFSIZE );
 
     buf = malloc( max );
@@ -41,9 +44,13 @@ void harness()
 
     ret = skipCollection( buf, &start, max );
 
+    __CPROVER_assert( ( ret == JSONPartial ) || ( ret == JSONSuccess ) ||
+                      ( ret == JSONIllegalDocument ) || ( ret == JSONMaxDepthExceeded ),
+                      "The return value is a subset of JSONStatus_t." );
+
     if( ret == JSONSuccess )
     {
         __CPROVER_assert( start <= max,
-                          "the buffer start index does not exceed the buffer length." );
+                          "The buffer start index does not exceed the buffer length." );
     }
 }

@@ -38,6 +38,7 @@ void harness()
     size_t outValueLength;
     JSONStatus_t ret;
 
+    /* max is the buffer length which must not exceed unwindings. */
     __CPROVER_assume( max < CBMC_MAX_BUFSIZE );
 
     if( nondet_bool() )
@@ -46,6 +47,7 @@ void harness()
         __CPROVER_assume( __CPROVER_r_ok( buf, max ) );
     }
 
+    /* queryKeyLength is the buffer length of the query which must not exceed unwindings. */
     __CPROVER_assume( queryKeyLength < CBMC_MAX_BUFSIZE );
 
     if( nondet_bool() )
@@ -61,6 +63,12 @@ void harness()
                        separator,
                        ( nondet_bool() ? &outValue : NULL ),
                        ( nondet_bool() ? &outValueLength : NULL ) );
+
+    __CPROVER_assert( ( ret == JSONPartial ) || ( ret == JSONSuccess ) ||
+                      ( ret == JSONIllegalDocument ) || ( ret == JSONMaxDepthExceeded ) ||
+                      ( ret == JSONNullParameter ) || ( ret == JSONBadParameter ) ||
+                      ( ret == JSONNotFound ),
+                      "The return value is a JSONStatus_t." );
 
     if( ret == JSONSuccess )
     {

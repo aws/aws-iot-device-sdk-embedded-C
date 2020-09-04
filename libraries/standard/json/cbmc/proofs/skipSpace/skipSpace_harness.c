@@ -33,13 +33,22 @@ void skipSpace( const char * buf,
 void harness()
 {
     char * buf;
-    size_t start, max;
+    size_t start, save = start, max;
 
+    /* max is the buffer length which must be nonzero for non-API functions. */
     __CPROVER_assume( max > 0 );
+
+    /* max is the buffer length which must not exceed unwindings. */
     __CPROVER_assume( max < CBMC_MAX_BUFSIZE );
 
     buf = malloc( max );
     __CPROVER_assume( __CPROVER_r_ok( buf, max ) );
 
     skipSpace( buf, &start, max );
+
+    if( save != start )
+    {
+        __CPROVER_assert( start <= max,
+                          "The buffer start index does not exceed the buffer length." );
+    }
 }

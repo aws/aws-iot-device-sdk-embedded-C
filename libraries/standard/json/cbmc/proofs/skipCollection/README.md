@@ -3,6 +3,14 @@ skipCollection proof
 
 This directory contains a memory safety proof for skipCollection.
 
+This function requires non-NULL arguments and a buffer with length > 0.
+The proof runs in 5 minutes on a t3.medium.  It provides complete coverage of:
+* skipAnyScalar()
+* skipArrayScalars()
+* skipCollection()
+* skipObjectScalars()
+* skipScalars()
+
 For this proof, the following functions are replaced with mocks.
 These functions have separate proofs.
 * skipAnyLiteral()

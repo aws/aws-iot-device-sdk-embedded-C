@@ -31,6 +31,7 @@ typedef enum
 
 #define isdigit_( x )    ( ( x >= '0' ) && ( x <= '9' ) )
 #define isspace_( x )    ( ( x == ' ' ) || ( x == '\t' ) || ( x == '\n' ) || ( x == '\r' ) )
+#define iscntrl_( x )    ( ( x >= '\0' ) && ( x < ' ' ) )
 
 /**
  * @brief Advance buffer index beyond whitespace.
@@ -69,7 +70,7 @@ static void skipSpace( const char * buf,
 static size_t countHighBits( uint8_t c )
 {
     uint8_t n = c;
-    size_t i = 0U;
+    size_t i = 0;
 
     while( ( n & 0x80U ) != 0U )
     {
@@ -307,12 +308,13 @@ static bool_ skipHexEscape( const char * buf,
 {
     bool_ ret = false;
     size_t i, end;
-    uint16_t value = 0U;
+    uint16_t value = 0;
 
     assert( ( buf != NULL ) && ( start != NULL ) && ( max > 0U ) );
 
     i = *start;
-    end = i + 6U;
+    #define HEX_ESCAPE_LENGTH  ( 6U )  /* e.g., \u1234 */
+    end = i + HEX_ESCAPE_LENGTH;
 
     if( ( end < max ) && ( buf[ i ] == '\\' ) && ( buf[ i + 1U ] == 'u' ) )
     {
@@ -380,11 +382,11 @@ static bool_ skipEscape( const char * buf,
     bool_ ret = false;
     size_t i;
 
-    assert( ( buf != NULL ) && ( start != NULL ) && ( max > 0 ) );
+    assert( ( buf != NULL ) && ( start != NULL ) && ( max > 0U ) );
 
     i = *start;
 
-    if( ( i < ( max - 1 ) ) && ( buf[ i ] == '\\' ) )
+    if( ( i < ( max - 1U ) ) && ( buf[ i ] == '\\' ) )
     {
         char c = buf[ i + 1U ];
 
@@ -412,7 +414,7 @@ static bool_ skipEscape( const char * buf,
             default:
 
                 /* a control character: (NUL,SPACE) */
-                if( ( c > '\0' ) && ( c < ' ' ) )
+                if( iscntrl_( c ) )
                 {
                     i += 2U;
                     ret = true;
@@ -472,7 +474,7 @@ static bool_ skipString( const char * buf,
                 }
             }
             /* An unescaped control character is not allowed. */
-            else if( ( buf[ i ] >= 0 ) && ( buf[ i ] < 0x20 ) )
+            else if( iscntrl_( buf[ i ] ) )
             {
                 break;
             }
@@ -513,7 +515,7 @@ static bool_ strnEq( const char * a,
 
     assert( ( a != NULL ) && ( b != NULL ) );
 
-    for( i = 0U; i < n; i++ )
+    for( i = 0; i < n; i++ )
     {
         if( a[ i ] != b[ i ] )
         {
@@ -1018,7 +1020,7 @@ JSONStatus_t JSON_Validate( const char * buf,
                             size_t max )
 {
     JSONStatus_t ret;
-    size_t i = 0U;
+    size_t i = 0;
 
     if( buf == NULL )
     {
@@ -1166,7 +1168,7 @@ static JSONStatus_t search( char * buf,
                             size_t * outValueLength )
 {
     JSONStatus_t ret = JSONPartial;
-    size_t i = 0U, key, keyLength, value, valueLength;
+    size_t i = 0, key, keyLength, value, valueLength;
 
     assert( ( buf != NULL ) && ( queryKey != NULL ) );
     assert( ( outValue != NULL ) && ( outValueLength != NULL ) );
@@ -1247,7 +1249,7 @@ JSONStatus_t JSON_Search( char * buf,
                           size_t * outValueLength )
 {
     JSONStatus_t ret = JSONPartial;
-    size_t i = 0U, start = 0U, keyLength = 0U;
+    size_t i = 0, start = 0, keyLength = 0;
     char * p = buf;
     size_t tmp = max;
 

@@ -33,6 +33,7 @@ void harness()
     size_t max;
     JSONStatus_t ret;
 
+    /* max is the buffer length which must not exceed unwindings. */
     __CPROVER_assume( max < CBMC_MAX_BUFSIZE );
 
     if( nondet_bool() )
@@ -42,4 +43,10 @@ void harness()
     }
 
     ret = JSON_Validate( buf, max );
+
+    __CPROVER_assert( ( ret == JSONPartial ) || ( ret == JSONSuccess ) ||
+                      ( ret == JSONIllegalDocument ) || ( ret == JSONMaxDepthExceeded ) ||
+                      ( ret == JSONNullParameter ) || ( ret == JSONBadParameter ),
+                      "The return value is a subset of JSONStatus_t." );
+
 }
