@@ -143,7 +143,7 @@ void test_Plaintext_Recv_Zero_Bytes_Received( void )
 /**
  * @brief Test that #Plaintext_Recv returns 0 bytes when the socket has no activity.
  */
-void test_Plaintext_Recv_Socket_No_Events( void )
+void test_Plaintext_Recv_Socket_Timeout( void )
 {
     int32_t bytesReceived;
 
@@ -254,7 +254,7 @@ void test_Plaintext_Send_Zero_Bytes_Received( void )
 /**
  * @brief Test that #Plaintext_Send returns 0 bytes when the socket has no activity.
  */
-void test_Plaintext_Send_Socket_No_Events( void )
+void test_Plaintext_Send_Socket_Timeout( void )
 {
     int32_t bytesSent;
 
