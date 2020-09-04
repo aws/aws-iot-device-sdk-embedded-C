@@ -78,6 +78,7 @@ int32_t Plaintext_Recv( const NetworkContext_t * pNetworkContext,
     assert( pBuffer != NULL );
     assert( bytesToRecv > 0 );
 
+    /* Get receive timeout from the socket to use as the timeout for #select. */
     recvTimeoutLen = ( socklen_t ) sizeof( recvTimeout );
     getTimeoutStatus = getsockopt( pNetworkContext->socketDescriptor,
                                    SOL_SOCKET,
@@ -151,6 +152,7 @@ int32_t Plaintext_Send( const NetworkContext_t * pNetworkContext,
     assert( pBuffer != NULL );
     assert( bytesToSend > 0 );
 
+    /* Get send timeout from the socket to use as the timeout for #select. */
     sendTimeoutLen = ( socklen_t ) sizeof( sendTimeout );
     getTimeoutStatus = getsockopt( pNetworkContext->socketDescriptor,
                                    SOL_SOCKET,
