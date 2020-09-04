@@ -287,7 +287,7 @@ static uint16_t unsubscribePacketIdentifier;
  * @brief Status of latest Subscribe ACK;
  * it is updated every time a Subscribe ACK is processed.
  */
-static bool globalSubscribeStatus = false;
+static bool globalSubAckStatus = false;
 
 /*-----------------------------------------------------------*/
 
@@ -611,7 +611,7 @@ static void mqttUnsubscribeFromTopic( NetworkContext_t * pNetworkContext,
     /* Send Unsubscribe request to the broker. */
     status = Plaintext_Send( pNetworkContext, ( void * ) pFixedBuffer->pBuffer, packetSize );
     assert( status == ( int ) packetSize );
-    globalSubscribeStatus = false;
+    globalSubAckStatus = false;
 }
 /*-----------------------------------------------------------*/
 
@@ -677,7 +677,7 @@ static void mqttProcessResponse( MQTTPacketInfo_t * pIncomingPacket,
     {
         case MQTT_PACKET_TYPE_SUBACK:
 
-            if( globalSubscribeStatus == true )
+            if( globalSubAckStatus == true )
             {
                 LogInfo( ( "Subscribed to the topic %s.\r\n", MQTT_EXAMPLE_TOPIC ) );
             }
@@ -807,7 +807,7 @@ static void mqttProcessIncomingPacket( NetworkContext_t * pNetworkContext,
 
         if( incomingPacket.type == MQTT_PACKET_TYPE_SUBACK )
         {
-            globalSubscribeStatus = ( result == MQTTSuccess );
+            globalSubAckStatus = ( result == MQTTSuccess );
             assert( result == MQTTSuccess || result == MQTTServerRefused );
         }
         else
@@ -912,9 +912,13 @@ int main( int argc,
                  * processing function everywhere to highlight this fact. */
                 mqttProcessIncomingPacket( &networkContext, &fixedBuffer );
 
-                if( globalSubscribeStatus == false )
+                /* Check status of suback sent from broker. If server rejected the subscription
+                 * request, attempt resubscription to the topic filter. */
+                if( globalSubAckStatus == false )
                 {
-                    /* Send PINGREQ to the broker */
+                    /* Send PINGREQ to the broker. A PINGREQ is sent to avoid hitting keep-alive
+                     * time-out period during backoff and sleep execution, before the next
+                     * subscription attempt. */
                     LogInfo( ( "Sending PINGREQ to the broker\n " ) );
                     mqttKeepAlive( &networkContext, &fixedBuffer );
 
@@ -932,9 +936,9 @@ int main( int argc,
                 {
                     LogError( ( "Subscription to topic failed, all attempts exhausted." ) );
                 }
-            } while ( ( globalSubscribeStatus == false ) && ( retriesArePending == true ) );
+            } while ( ( globalSubAckStatus == false ) && ( retriesArePending == true ) );
 
-            assert( globalSubscribeStatus == true );
+            assert( globalSubAckStatus == true );
 
             /********************* Publish and Keep Alive Loop. ********************/
             /* Publish messages with QOS0, send and process Keep alive messages. */

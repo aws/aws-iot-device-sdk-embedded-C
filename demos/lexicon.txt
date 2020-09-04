@@ -38,8 +38,8 @@ dup
 endif
 eventcallback
 filterindex
+globalsubackstatus
 globalsubscribepacketidentifier
-globalsubscribestatus
 hashmap
 hasn
 html
@@ -149,7 +149,7 @@ transporttimeout
 uint
 unsub
 unsuback
-updatesubscribestatus
+updatesubackstatus
 uri
 ve
 www
