@@ -40,7 +40,7 @@
     #define LIBRARY_LOG_NAME     "Sockets"
 #endif
 #ifndef LIBRARY_LOG_LEVEL
-    #define LIBRARY_LOG_LEVEL    LOG_DEBUG
+    #define LIBRARY_LOG_LEVEL    LOG_ERROR
 #endif
 
 #include "logging_stack.h"
@@ -86,7 +86,7 @@ typedef struct ServerInfo
  * @return #SOCKETS_SUCCESS if successful;
  * #SOCKETS_INVALID_PARAMETER, #SOCKETS_DNS_FAILURE, #SOCKETS_CONNECT_FAILURE on error.
  */
-SocketStatus_t Sockets_Connect( int * pTcpSocket,
+SocketStatus_t Sockets_Connect( int32_t * pTcpSocket,
                                 const ServerInfo_t * pServerInfo,
                                 uint32_t sendTimeoutMs,
                                 uint32_t recvTimeoutMs );
@@ -98,6 +98,6 @@ SocketStatus_t Sockets_Connect( int * pTcpSocket,
  *
  * @return #SOCKETS_SUCCESS if successful; #SOCKETS_INVALID_PARAMETER on error.
  */
-SocketStatus_t Sockets_Disconnect( int tcpSocket );
+SocketStatus_t Sockets_Disconnect( int32_t tcpSocket );
 
 #endif /* ifndef SOCKETS_POSIX_H_ */

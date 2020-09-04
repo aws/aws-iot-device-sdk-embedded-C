@@ -10,8 +10,5 @@ set( SHADOW_SOURCES
      ${MODULES_DIR}/aws/shadow/src/shadow.c )
 
 # SHADOW library Public Include directories.
-# Temporary adding utest into PUBLIC_DIRS to make shadow_config.h visible
-# Will remove it after shadow demo is merged
 set( SHADOW_INCLUDE_PUBLIC_DIRS
-     ${MODULES_DIR}/aws/shadow/include
-     ${MODULES_DIR}/aws/shadow/utest )
+     ${MODULES_DIR}/aws/shadow/include )

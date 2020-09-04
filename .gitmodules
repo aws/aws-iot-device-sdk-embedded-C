@@ -1,9 +1,12 @@
-[submodule "libraries/standard/http/third_party/http_parser"]
-	path = libraries/standard/http/third_party/http_parser
-	url = https://github.com/nodejs/http-parser.git
 [submodule "libraries/3rdparty/CMock"]
 	path = libraries/3rdparty/CMock
 	url = https://github.com/ThrowTheSwitch/CMock
 [submodule "tools/aws-templates-for-cbmc-proofs"]
 	path = tools/aws-templates-for-cbmc-proofs
 	url = https://github.com/awslabs/aws-templates-for-cbmc-proofs.git
+[submodule "libraries/standard/coreMQTT"]
+	path = libraries/standard/coreMQTT
+	url = https://github.com/FreeRTOS/coreMQTT.git
+[submodule "libraries/standard/coreHTTP"]
+	path = libraries/standard/coreHTTP
+	url = https://github.com/FreeRTOS/coreHTTP.git

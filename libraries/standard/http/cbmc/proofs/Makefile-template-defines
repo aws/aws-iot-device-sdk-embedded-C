@@ -1,1 +1,0 @@
-SRCDIR ?= $(abspath $(PROOF_ROOT)/../../../../..)

@@ -1,4 +1,8 @@
 set( DEMO_NAME "mqtt_demo_plaintext" )
+
+# Include MQTT library's source and header path variables.
+include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreMQTT/mqttFilePaths.cmake )
+
 # Demo target.
 add_executable(${DEMO_NAME})
 
@@ -6,18 +10,13 @@ target_sources(
     ${DEMO_NAME}
     PRIVATE
         "${DEMO_NAME}.c"
-)
-
-target_include_directories(
-    mqtt
-    PUBLIC
-        ${CMAKE_CURRENT_LIST_DIR}
+        ${MQTT_SOURCES}
+        ${MQTT_SERIALIZER_SOURCES}
 )
 
 target_link_libraries(
     ${DEMO_NAME}
     PRIVATE
-        mqtt
         clock_posix
         plaintext_posix
         transport_reconnect_posix   
@@ -26,6 +25,9 @@ target_link_libraries(
 target_include_directories(
     ${DEMO_NAME}
     PUBLIC
+        ${MQTT_INCLUDE_PUBLIC_DIRS}
+        ${MQTT_INCLUDE_PRIVATE_DIRS}
+        ${CMAKE_CURRENT_LIST_DIR}
         ${LOGGING_INCLUDE_DIRS}
 )
 

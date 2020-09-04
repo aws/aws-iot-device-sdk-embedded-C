@@ -55,11 +55,11 @@
  * @brief Log the absolute path given a relative or absolute path.
  *
  * @param[in] path Relative or absolute path.
- * @param[in] fileLabel NULL-terminated string describing the file label to log.
+ * @param[in] fileType NULL-terminated string describing the file type to log.
  */
 #if ( LIBRARY_LOG_LEVEL == LOG_DEBUG )
     static void logPath( const char * path,
-                         const char * fileLabel );
+                         const char * fileType );
 #endif /* #if ( LIBRARY_LOG_LEVEL == LOG_DEBUG ) */
 
 /**
@@ -74,8 +74,8 @@
  *
  * @return 1 on success; -1, 0 on failure;
  */
-static int setRootCa( SSL_CTX * pSslContext,
-                      const char * pRootCaPath );
+static int32_t setRootCa( const SSL_CTX * pSslContext,
+                          const char * pRootCaPath );
 
 /**
  * @brief Set X509 certificate as client certificate for the server to authenticate.
@@ -85,8 +85,8 @@ static int setRootCa( SSL_CTX * pSslContext,
  *
  * @return 1 on success; 0 failure;
  */
-static int setClientCertificate( SSL_CTX * pSslContext,
-                                 const char * pClientCertPath );
+static int32_t setClientCertificate( SSL_CTX * pSslContext,
+                                     const char * pClientCertPath );
 
 /**
  * @brief Set private key for the client's certificate.
@@ -96,8 +96,8 @@ static int setClientCertificate( SSL_CTX * pSslContext,
  *
  * @return 1 on success; 0 on failure;
  */
-static int setPrivateKey( SSL_CTX * pSslContext,
-                          const char * pPrivateKeyPath );
+static int32_t setPrivateKey( SSL_CTX * pSslContext,
+                              const char * pPrivateKeyPath );
 
 /**
  * @brief Passes TLS credentials to the OpenSSL library.
@@ -111,8 +111,8 @@ static int setPrivateKey( SSL_CTX * pSslContext,
  *
  * @return 1 on success; -1, 0 on failure;
  */
-static int setCredentials( SSL_CTX * pSslContext,
-                           const OpensslCredentials_t * pOpensslCredentials );
+static int32_t setCredentials( SSL_CTX * pSslContext,
+                               const OpensslCredentials_t * pOpensslCredentials );
 
 /**
  * @brief Set optional configurations for the TLS connection.
@@ -125,6 +125,16 @@ static int setCredentials( SSL_CTX * pSslContext,
 static void setOptionalConfigurations( SSL * pSsl,
                                        const OpensslCredentials_t * pOpensslCredentials );
 
+/**
+ * @brief Converts the sockets wrapper status to openssl status.
+ *
+ * @param[in] socketStatus Sockets wrapper status.
+ *
+ * @return #OPENSSL_SUCCESS, #OPENSSL_INVALID_PARAMETER, #OPENSSL_DNS_FAILURE,
+ * and #OPENSSL_CONNECT_FAILURE.
+ */
+static OpensslStatus_t convertToOpensslStatus( SocketStatus_t socketStatus );
+
 /*-----------------------------------------------------------*/
 
 #if ( LIBRARY_LOG_LEVEL == LOG_DEBUG )
@@ -135,6 +145,9 @@ static void setOptionalConfigurations( SSL * pSsl,
 
         assert( path != NULL );
         assert( fileType != NULL );
+
+        /* Unused parameter when logs are disabled. */
+        ( void ) fileType;
 
         /* Log the absolute directory based on first character of path. */
         if( ( path[ 0 ] == '/' ) || ( path[ 0 ] == '\\' ) )
@@ -153,18 +166,47 @@ static void setOptionalConfigurations( SSL * pSsl,
         }
 
         /* Free cwd because getcwd calls malloc. */
-        if( cwd != NULL )
-        {
-            free( cwd );
-        }
+        free( cwd );
     }
 #endif /* #if ( LIBRARY_LOG_LEVEL == LOG_DEBUG ) */
 /*-----------------------------------------------------------*/
 
-static int setRootCa( SSL_CTX * pSslContext,
-                      const char * pRootCaPath )
+static OpensslStatus_t convertToOpensslStatus( SocketStatus_t socketStatus )
 {
-    int sslStatus = 1;
+    OpensslStatus_t opensslStatus = OPENSSL_INVALID_PARAMETER;
+
+    switch( socketStatus )
+    {
+        case SOCKETS_SUCCESS:
+            opensslStatus = OPENSSL_SUCCESS;
+            break;
+
+        case SOCKETS_INVALID_PARAMETER:
+            opensslStatus = OPENSSL_INVALID_PARAMETER;
+            break;
+
+        case SOCKETS_DNS_FAILURE:
+            opensslStatus = OPENSSL_DNS_FAILURE;
+            break;
+
+        case SOCKETS_CONNECT_FAILURE:
+            opensslStatus = OPENSSL_CONNECT_FAILURE;
+            break;
+
+        default:
+            LogError( ( "Unexpected status received from socket wrapper: Socket status = %u",
+                        socketStatus ) );
+            break;
+    }
+
+    return opensslStatus;
+}
+/*-----------------------------------------------------------*/
+
+static int32_t setRootCa( const SSL_CTX * pSslContext,
+                          const char * pRootCaPath )
+{
+    int32_t sslStatus = 1;
     FILE * pRootCaFile = NULL;
     X509 * pRootCa = NULL;
 
@@ -175,6 +217,12 @@ static int setRootCa( SSL_CTX * pSslContext,
         logPath( pRootCaPath, ROOT_CA_LABEL );
     #endif
 
+    /* MISRA Rule 21.6 flags the following line for using the standard
+     * library input/output function `fopen()`. This rule is suppressed because
+     * openssl function #PEM_read_X509 takes an argument of type `FILE *` for
+     * reading the root ca PEM file and `fopen()` needs to be used to get the
+     * file pointer.  */
+    /* coverity[misra_c_2012_rule_21_6_violation] */
     pRootCaFile = fopen( pRootCaPath, "r" );
 
     if( pRootCaFile == NULL )
@@ -210,9 +258,22 @@ static int setRootCa( SSL_CTX * pSslContext,
         }
     }
 
+    /* Free the X509 object used to set the root CA. */
+    if( pRootCa != NULL )
+    {
+        X509_free( pRootCa );
+    }
+
     /* Close the file if it was successfully opened. */
     if( pRootCaFile != NULL )
     {
+        /* MISRA Rule 21.6 flags the following line for using the standard
+         * library input/output function `fclose()`. This rule is suppressed
+         * because openssl function #PEM_read_X509 takes an argument of type
+         * `FILE *` for reading the root ca PEM file and `fopen()` is used to
+         * get the file pointer. The file opened with `fopen()` needs to be
+         * closed by calling `fclose()`.*/
+        /* coverity[misra_c_2012_rule_21_6_violation] */
         if( fclose( pRootCaFile ) != 0 )
         {
             LogWarn( ( "fclose failed to close file %s",
@@ -230,10 +291,10 @@ static int setRootCa( SSL_CTX * pSslContext,
 }
 /*-----------------------------------------------------------*/
 
-static int setClientCertificate( SSL_CTX * pSslContext,
-                                 const char * pClientCertPath )
+static int32_t setClientCertificate( SSL_CTX * pSslContext,
+                                     const char * pClientCertPath )
 {
-    int sslStatus = -1;
+    int32_t sslStatus = -1;
 
     assert( pSslContext != NULL );
     assert( pClientCertPath != NULL );
@@ -261,10 +322,10 @@ static int setClientCertificate( SSL_CTX * pSslContext,
 }
 /*-----------------------------------------------------------*/
 
-static int setPrivateKey( SSL_CTX * pSslContext,
-                          const char * pPrivateKeyPath )
+static int32_t setPrivateKey( SSL_CTX * pSslContext,
+                              const char * pPrivateKeyPath )
 {
-    int sslStatus = -1;
+    int32_t sslStatus = -1;
 
     assert( pSslContext != NULL );
     assert( pPrivateKeyPath != NULL );
@@ -293,10 +354,10 @@ static int setPrivateKey( SSL_CTX * pSslContext,
 }
 /*-----------------------------------------------------------*/
 
-static int setCredentials( SSL_CTX * pSslContext,
-                           const OpensslCredentials_t * pOpensslCredentials )
+static int32_t setCredentials( SSL_CTX * pSslContext,
+                               const OpensslCredentials_t * pOpensslCredentials )
 {
-    int sslStatus = 0;
+    int32_t sslStatus = 0;
 
     assert( pSslContext != NULL );
     assert( pOpensslCredentials != NULL );
@@ -328,19 +389,20 @@ static int setCredentials( SSL_CTX * pSslContext,
 static void setOptionalConfigurations( SSL * pSsl,
                                        const OpensslCredentials_t * pOpensslCredentials )
 {
-    int sslStatus = -1;
+    int32_t sslStatus = -1;
+    int16_t readBufferLength = 0;
 
     assert( pSsl != NULL );
     assert( pOpensslCredentials != NULL );
 
     /* Set TLS ALPN if requested. */
     if( ( pOpensslCredentials->pAlpnProtos != NULL ) &&
-        ( pOpensslCredentials->alpnProtosLen > 0 ) )
+        ( pOpensslCredentials->alpnProtosLen > 0U ) )
     {
         LogDebug( ( "Setting ALPN protos." ) );
         sslStatus = SSL_set_alpn_protos( pSsl,
-                                         ( unsigned char * ) pOpensslCredentials->pAlpnProtos,
-                                         ( unsigned int ) pOpensslCredentials->alpnProtosLen );
+                                         ( const uint8_t * ) pOpensslCredentials->pAlpnProtos,
+                                         ( uint32_t ) pOpensslCredentials->alpnProtosLen );
 
         if( sslStatus != 0 )
         {
@@ -350,27 +412,35 @@ static void setOptionalConfigurations( SSL * pSsl,
     }
 
     /* Set TLS MFLN if requested. */
-    if( pOpensslCredentials->maxFragmentLength > 0 )
+    if( pOpensslCredentials->maxFragmentLength > 0U )
     {
-        LogDebug( ( "Setting max send fragment length %lu.",
-                    ( unsigned long ) pOpensslCredentials->maxFragmentLength ) );
+        LogDebug( ( "Setting max send fragment length %u.",
+                    pOpensslCredentials->maxFragmentLength ) );
 
         /* Set the maximum send fragment length. */
-        sslStatus = SSL_set_max_send_fragment( pSsl,
-                                               ( long ) pOpensslCredentials->maxFragmentLength );
+
+        /* MISRA Directive 4.6 flags the following line for using basic
+         * numerical type long. This directive is suppressed because openssl
+         * function #SSL_set_max_send_fragment expects a length argument
+         * type of long. */
+        /* coverity[misra_c_2012_directive_4_6_violation] */
+        sslStatus = ( int32_t ) SSL_set_max_send_fragment( pSsl,
+                                                           ( long ) pOpensslCredentials->maxFragmentLength );
 
         if( sslStatus != 1 )
         {
-            LogError( ( "Failed to set max send fragment length %lu.",
-                        ( unsigned long ) pOpensslCredentials->maxFragmentLength ) );
+            LogError( ( "Failed to set max send fragment length %u.",
+                        pOpensslCredentials->maxFragmentLength ) );
         }
         else
         {
+            readBufferLength = ( int16_t ) pOpensslCredentials->maxFragmentLength +
+                               SSL3_RT_MAX_ENCRYPTED_OVERHEAD;
+
             /* Change the size of the read buffer to match the
              * maximum fragment length + some extra bytes for overhead. */
             SSL_set_default_read_buffer_len( pSsl,
-                                             pOpensslCredentials->maxFragmentLength +
-                                             SSL3_RT_MAX_ENCRYPTED_OVERHEAD );
+                                             ( size_t ) readBufferLength );
         }
     }
 
@@ -380,8 +450,13 @@ static void setOptionalConfigurations( SSL * pSsl,
         LogDebug( ( "Setting server name %s for SNI.",
                     pOpensslCredentials->sniHostName ) );
 
-        sslStatus = SSL_set_tlsext_host_name( pSsl,
-                                              pOpensslCredentials->sniHostName );
+        /* MISRA Rule 11.8 flags the following line for removing the const
+         * qualifier from the pointed to type. This rule is suppressed because
+         * openssl implementation of #SSL_set_tlsext_host_name internally casts
+         * the pointer to a string literal to a `void *` pointer. */
+        /* coverity[misra_c_2012_rule_11_8_violation] */
+        sslStatus = ( int32_t ) SSL_set_tlsext_host_name( pSsl,
+                                                          pOpensslCredentials->sniHostName );
 
         if( sslStatus != 1 )
         {
@@ -400,10 +475,10 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
 {
     SocketStatus_t socketStatus = SOCKETS_SUCCESS;
     OpensslStatus_t returnStatus = OPENSSL_SUCCESS;
-    long verifyPeerCertStatus = X509_V_OK;
-    int sslStatus = 0;
+    int32_t sslStatus = 0;
     uint8_t sslObjectCreated = 0;
     SSL_CTX * pSslContext = NULL;
+    int32_t verifyPeerCertStatus = X509_V_OK;
 
     /* Validate parameters. */
     if( pNetworkContext == NULL )
@@ -429,22 +504,8 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
                                         sendTimeoutMs,
                                         recvTimeoutMs );
 
-        if( socketStatus == SOCKETS_INVALID_PARAMETER )
-        {
-            returnStatus = OPENSSL_INVALID_PARAMETER;
-        }
-        else if( socketStatus == SOCKETS_DNS_FAILURE )
-        {
-            returnStatus = OPENSSL_DNS_FAILURE;
-        }
-        else if( socketStatus == SOCKETS_CONNECT_FAILURE )
-        {
-            returnStatus = OPENSSL_CONNECT_FAILURE;
-        }
-        else
-        {
-            /* Empty else. */
-        }
+        /* Convert socket wrapper status to openssl status. */
+        returnStatus = convertToOpensslStatus( socketStatus );
     }
 
     /* Create SSL context. */
@@ -464,7 +525,12 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
     {
         /* Set auto retry mode for the blocking calls to SSL_read and SSL_write.
          * The mask returned by SSL_CTX_set_mode does not need to be checked. */
-        ( void ) SSL_CTX_set_mode( pSslContext, SSL_MODE_AUTO_RETRY );
+
+        /* MISRA Directive 4.6 flags the following line for using basic
+        * numerical type long. This directive is suppressed because openssl
+        * function #SSL_CTX_set_mode takes an argument of type long. */
+        /* coverity[misra_c_2012_directive_4_6_violation] */
+        ( void ) SSL_CTX_set_mode( pSslContext, ( long ) SSL_MODE_AUTO_RETRY );
 
         sslStatus = setCredentials( pSslContext,
                                     pOpensslCredentials );
@@ -524,7 +590,7 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
     /* Verify X509 certificate from peer. */
     if( returnStatus == OPENSSL_SUCCESS )
     {
-        verifyPeerCertStatus = SSL_get_verify_result( pNetworkContext->pSsl );
+        verifyPeerCertStatus = ( int32_t ) SSL_get_verify_result( pNetworkContext->pSsl );
 
         if( verifyPeerCertStatus != X509_V_OK )
         {
@@ -561,50 +627,46 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
 }
 /*-----------------------------------------------------------*/
 
-OpensslStatus_t Openssl_Disconnect( NetworkContext_t * pNetworkContext )
+OpensslStatus_t Openssl_Disconnect( const NetworkContext_t * pNetworkContext )
 {
-    OpensslStatus_t returnStatus = OPENSSL_SUCCESS;
-    SocketStatus_t socketStatus = SOCKETS_SUCCESS;
+    SocketStatus_t socketStatus = SOCKETS_INVALID_PARAMETER;
 
     if( pNetworkContext == NULL )
     {
+        /* No need to update the status here. The socket status
+         * SOCKETS_INVALID_PARAMETER will be converted to openssl
+         * status OPENSSL_INVALID_PARAMETER before returning from this
+         * function. */
         LogError( ( "Parameter check failed: pNetworkContext is NULL." ) );
-        returnStatus = OPENSSL_INVALID_PARAMETER;
-    }
-    else if( pNetworkContext->pSsl != NULL )
-    {
-        /* SSL shutdown should be called twice: once to send "close notify" and
-         * once more to receive the peer's "close notify". */
-        if( SSL_shutdown( pNetworkContext->pSsl ) == 0 )
-        {
-            ( void ) SSL_shutdown( pNetworkContext->pSsl );
-        }
-
-        SSL_free( pNetworkContext->pSsl );
     }
     else
     {
-        /* Empty else. */
+        if( pNetworkContext->pSsl != NULL )
+        {
+            /* SSL shutdown should be called twice: once to send "close notify" and
+             * once more to receive the peer's "close notify". */
+            if( SSL_shutdown( pNetworkContext->pSsl ) == 0 )
+            {
+                ( void ) SSL_shutdown( pNetworkContext->pSsl );
+            }
+
+            SSL_free( pNetworkContext->pSsl );
+        }
+
+        /* Tear down the socket connection, pNetworkContext != NULL here. */
+        socketStatus = Sockets_Disconnect( pNetworkContext->socketDescriptor );
     }
 
-    /* Tear down the socket connection. */
-    socketStatus = Sockets_Disconnect( pNetworkContext->socketDescriptor );
-
-    if( socketStatus == SOCKETS_INVALID_PARAMETER )
-    {
-        returnStatus = OPENSSL_INVALID_PARAMETER;
-    }
-
-    return returnStatus;
+    return convertToOpensslStatus( socketStatus );
 }
 /*-----------------------------------------------------------*/
 
-int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
+int32_t Openssl_Recv( const NetworkContext_t * pNetworkContext,
                       void * pBuffer,
                       size_t bytesToRecv )
 {
     int32_t bytesReceived = 0;
-    int sslError = 0;
+    int32_t sslError = 0;
 
     if( pNetworkContext == NULL )
     {
@@ -615,7 +677,7 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
         /* SSL read of data. */
         bytesReceived = ( int32_t ) SSL_read( pNetworkContext->pSsl,
                                               pBuffer,
-                                              bytesToRecv );
+                                              ( int32_t ) bytesToRecv );
 
         /* Handle error return status if transport read did not succeed. */
         if( bytesReceived <= 0 )
@@ -644,12 +706,15 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
 }
 /*-----------------------------------------------------------*/
 
-int32_t Openssl_Send( NetworkContext_t * pNetworkContext,
+int32_t Openssl_Send( const NetworkContext_t * pNetworkContext,
                       const void * pBuffer,
                       size_t bytesToSend )
 {
     int32_t bytesSent = 0;
     int32_t sslError = 0;
+
+    /* Unused parameter when logs are disabled. */
+    ( void ) sslError;
 
     if( pNetworkContext == NULL )
     {
@@ -660,7 +725,7 @@ int32_t Openssl_Send( NetworkContext_t * pNetworkContext,
         /* SSL write of data. */
         bytesSent = ( int32_t ) SSL_write( pNetworkContext->pSsl,
                                            pBuffer,
-                                           bytesToSend );
+                                           ( int32_t ) bytesToSend );
 
         if( bytesSent <= 0 )
         {

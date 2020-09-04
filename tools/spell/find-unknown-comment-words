@@ -105,7 +105,16 @@ do
 
     for file in `find $DIRNAME -name \*.[ch]`
     do
-        if [[ $file == *"third_party"* ]]
+        if [[ $file == *"third_party"*  || $file == *"CMock"* ]]
+        then
+            continue
+        fi
+        # Disable spell check for submoduled libraries.
+        if [[ $file == *"coreMQTT"* ]]
+        then
+            continue
+        fi
+        if [[ $file == *"coreHTTP"* ]]
         then
             continue
         fi
