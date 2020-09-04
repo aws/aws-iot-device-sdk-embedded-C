@@ -33,82 +33,82 @@
 /**
  * @brief The string representing "/shadow/update/accepted".
  */
-#define SHADOW_OP_UPDATE_ACCEPTED               SHADOW_OP_UPDATE SHADOW_SUFFIX_ACCEPTED
+#define SHADOW_OP_UPDATE_ACCEPTED            SHADOW_OP_UPDATE SHADOW_SUFFIX_ACCEPTED
 
 /**
  * @brief The string representing "/shadow/update/rejected".
  */
-#define SHADOW_OP_UPDATE_REJECTED               SHADOW_OP_UPDATE SHADOW_SUFFIX_REJECTED
+#define SHADOW_OP_UPDATE_REJECTED            SHADOW_OP_UPDATE SHADOW_SUFFIX_REJECTED
 
 /**
  * @brief The string representing "/shadow/update/delta".
  */
-#define SHADOW_OP_UPDATE_DELTA                  SHADOW_OP_UPDATE SHADOW_SUFFIX_DELTA
+#define SHADOW_OP_UPDATE_DELTA               SHADOW_OP_UPDATE SHADOW_SUFFIX_DELTA
 
 /**
  * @brief The string representing "/shadow/update/document".
  */
-#define SHADOW_OP_UPDATE_DOCUMENTS              SHADOW_OP_UPDATE SHADOW_SUFFIX_DOCUMENTS
+#define SHADOW_OP_UPDATE_DOCUMENTS           SHADOW_OP_UPDATE SHADOW_SUFFIX_DOCUMENTS
 
 /**
  * @brief The string representing "/shadow/delete/accepted".
  */
-#define SHADOW_OP_DELETE_ACCEPTED               SHADOW_OP_DELETE SHADOW_SUFFIX_ACCEPTED
+#define SHADOW_OP_DELETE_ACCEPTED            SHADOW_OP_DELETE SHADOW_SUFFIX_ACCEPTED
 
 /**
  * @brief The string representing "/shadow/delete/accepted".
  */
-#define SHADOW_OP_DELETE_REJECTED               SHADOW_OP_DELETE SHADOW_SUFFIX_REJECTED
+#define SHADOW_OP_DELETE_REJECTED            SHADOW_OP_DELETE SHADOW_SUFFIX_REJECTED
 
 /**
  * @brief The string representing "/shadow/get/accepted".
  */
-#define SHADOW_OP_GET_ACCEPTED                  SHADOW_OP_GET SHADOW_SUFFIX_ACCEPTED
+#define SHADOW_OP_GET_ACCEPTED               SHADOW_OP_GET SHADOW_SUFFIX_ACCEPTED
 
 /**
  * @brief The string representing "/shadow/get/accepted".
  */
-#define SHADOW_OP_GET_REJECTED                  SHADOW_OP_GET SHADOW_SUFFIX_REJECTED
+#define SHADOW_OP_GET_REJECTED               SHADOW_OP_GET SHADOW_SUFFIX_REJECTED
 
 /**
  * @brief The length of "/shadow/update/accepted".
  */
-#define SHADOW_OP_UPDATE_ACCEPTED_LENGTH               ( SHADOW_OP_UPDATE_LENGTH + SHADOW_SUFFIX_ACCEPTED_LENGTH )
+#define SHADOW_OP_UPDATE_ACCEPTED_LENGTH     ( SHADOW_OP_UPDATE_LENGTH + SHADOW_SUFFIX_ACCEPTED_LENGTH )
 
 /**
  * @brief The length of "/shadow/update/rejected".
  */
-#define SHADOW_OP_UPDATE_REJECTED_LENGTH               ( SHADOW_OP_UPDATE_LENGTH + SHADOW_SUFFIX_REJECTED_LENGTH )
+#define SHADOW_OP_UPDATE_REJECTED_LENGTH     ( SHADOW_OP_UPDATE_LENGTH + SHADOW_SUFFIX_REJECTED_LENGTH )
 
 /**
  * @brief The length of "/shadow/update/document".
  */
-#define SHADOW_OP_UPDATE_DOCUMENTS_LENGTH              ( SHADOW_OP_UPDATE_LENGTH + SHADOW_SUFFIX_DOCUMENTS_LENGTH )
+#define SHADOW_OP_UPDATE_DOCUMENTS_LENGTH    ( SHADOW_OP_UPDATE_LENGTH + SHADOW_SUFFIX_DOCUMENTS_LENGTH )
 
 /**
  * @brief The length of "/shadow/update/rejected".
  */
-#define SHADOW_OP_UPDATE_DELTA_LENGTH                  ( SHADOW_OP_UPDATE_LENGTH + SHADOW_SUFFIX_DELTA_LENGTH )
+#define SHADOW_OP_UPDATE_DELTA_LENGTH        ( SHADOW_OP_UPDATE_LENGTH + SHADOW_SUFFIX_DELTA_LENGTH )
 
 /**
  * @brief The length of "/shadow/get/accepted".
  */
-#define SHADOW_OP_GET_ACCEPTED_LENGTH                  ( SHADOW_OP_GET_LENGTH + SHADOW_SUFFIX_ACCEPTED_LENGTH )
+#define SHADOW_OP_GET_ACCEPTED_LENGTH        ( SHADOW_OP_GET_LENGTH + SHADOW_SUFFIX_ACCEPTED_LENGTH )
 
 /**
  * @brief The length of "/shadow/get/rejected".
  */
-#define SHADOW_OP_GET_REJECTED_LENGTH                  ( SHADOW_OP_GET_LENGTH + SHADOW_SUFFIX_REJECTED_LENGTH )
+#define SHADOW_OP_GET_REJECTED_LENGTH        ( SHADOW_OP_GET_LENGTH + SHADOW_SUFFIX_REJECTED_LENGTH )
 
 /**
  * @brief The length of "/shadow/get/accepted".
  */
-#define SHADOW_OP_DELETE_ACCEPTED_LENGTH               ( SHADOW_OP_DELETE_LENGTH + SHADOW_SUFFIX_ACCEPTED_LENGTH )
+#define SHADOW_OP_DELETE_ACCEPTED_LENGTH     ( SHADOW_OP_DELETE_LENGTH + SHADOW_SUFFIX_ACCEPTED_LENGTH )
 
 /**
  * @brief The length of "/shadow/delete/rejected".
  */
-#define SHADOW_OP_DELETE_REJECTED_LENGTH               ( SHADOW_OP_DELETE_LENGTH + SHADOW_SUFFIX_REJECTED_LENGTH )
+#define SHADOW_OP_DELETE_REJECTED_LENGTH     ( SHADOW_OP_DELETE_LENGTH + SHADOW_SUFFIX_REJECTED_LENGTH )
 
 /**
  * @brief Determine if the string contains the substring.
@@ -125,6 +125,7 @@ static ShadowStatus_t containsSubString( const char * pString,
                                          uint16_t stringLength,
                                          const char * pSubString,
                                          uint16_t subStringLength );
+
 /**
  * @brief Check if the Thing Name is valid.
  *
@@ -136,8 +137,8 @@ static ShadowStatus_t containsSubString( const char * pString,
  *         return SHADOW_THINGNAME_PARSE_FAILED if it is not.
  */
 static ShadowStatus_t validateThingName( const char * pString,
-                                        uint16_t stringLength,
-                                        uint16_t * pThingNameLength );
+                                         uint16_t stringLength,
+                                         uint16_t * pThingNameLength );
 
 /**
  * @brief Extract the Shadow message type from a string.
@@ -185,8 +186,8 @@ static ShadowStatus_t containsSubString( const char * pString,
     if( stringLength >= subStringLength )
     {
         /* We are only checking up to subStringLength characters in the original
-         * string. The string may be longer and contain additional characters. */
-        if( strncmp( pString, pSubString, ( size_t  ) subStringLength ) == 0 )
+        * string. The string may be longer and contain additional characters. */
+        if( strncmp( pString, pSubString, ( size_t ) subStringLength ) == 0 )
         {
             returnStatus = SHADOW_SUCCESS;
         }
@@ -197,8 +198,8 @@ static ShadowStatus_t containsSubString( const char * pString,
 /*-----------------------------------------------------------*/
 
 static ShadowStatus_t validateThingName( const char * pString,
-                                        uint16_t stringLength,
-                                        uint16_t * pThingNameLength )
+                                         uint16_t stringLength,
+                                         uint16_t * pThingNameLength )
 {
     uint16_t index = 0U;
     ShadowStatus_t returnStatus = SHADOW_THINGNAME_PARSE_FAILED;
@@ -220,7 +221,7 @@ static ShadowStatus_t validateThingName( const char * pString,
      */
     if( index > 0U )
     {
-        * pThingNameLength = index;
+        *pThingNameLength = index;
         returnStatus = SHADOW_SUCCESS;
     }
 
@@ -264,7 +265,7 @@ static ShadowStatus_t extractShadowMessageType( const char * pString,
     /* Lookup table for Shadow message types. */
     static const ShadowMessageType_t pMessageTypes[ ShadowMessageTypeMaxNum ] =
     {
-        ShadowMessageTypeGetAccepted ,
+        ShadowMessageTypeGetAccepted,
         ShadowMessageTypeGetRejected,
         ShadowMessageTypeDeleteAccepted,
         ShadowMessageTypeDeleteRejected,
@@ -274,7 +275,7 @@ static ShadowStatus_t extractShadowMessageType( const char * pString,
         ShadowMessageTypeUpdateDelta
     };
 
-    for( ; index < ( uint32_t ) ( sizeof( pMessageStrings ) / sizeof( pMessageStrings[0] ) ); index++ )
+    for( ; index < ( uint32_t ) ( sizeof( pMessageStrings ) / sizeof( pMessageStrings[ 0 ] ) ); index++ )
     {
         returnStatus = containsSubString( pString,
                                           stringLength,
@@ -291,7 +292,7 @@ static ShadowStatus_t extractShadowMessageType( const char * pString,
             }
             else
             {
-                * pMessageType = pMessageTypes[ index ];
+                *pMessageType = pMessageTypes[ index ];
                 break;
             }
         }
@@ -304,7 +305,7 @@ static ShadowStatus_t extractShadowMessageType( const char * pString,
 
 static const char * getShadowOperationString( ShadowTopicStringType_t topicType )
 {
-    const char *shadowOperationString = NULL;
+    const char * shadowOperationString = NULL;
 
     switch( topicType )
     {
@@ -416,7 +417,6 @@ static uint16_t getShadowOperationLength( ShadowTopicStringType_t topicType )
         default:
             LogError( ( "Unexpected  topicType: %u", topicType ) );
             break;
-
     }
 
     return shadowOperationLength;
@@ -462,10 +462,11 @@ ShadowStatus_t Shadow_MatchTopic( const char * pTopic,
     if( shadowStatus == SHADOW_SUCCESS )
     {
         /* First match the prefix. */
-        shadowStatus = containsSubString( & ( pTopic[ consumedTopicLength ] ),
+        shadowStatus = containsSubString( &( pTopic[ consumedTopicLength ] ),
                                           topicLength - consumedTopicLength,
                                           SHADOW_PREFIX,
                                           SHADOW_PREFIX_LENGTH );
+
         if( shadowStatus == SHADOW_SUCCESS )
         {
             consumedTopicLength += SHADOW_PREFIX_LENGTH;
@@ -486,15 +487,16 @@ ShadowStatus_t Shadow_MatchTopic( const char * pTopic,
     if( shadowStatus == SHADOW_SUCCESS )
     {
         /* Extract thing name. */
-        shadowStatus = validateThingName( & ( pTopic[ consumedTopicLength ] ),
-                                         topicLength - consumedTopicLength,
-                                         pThingNameLength );
+        shadowStatus = validateThingName( &( pTopic[ consumedTopicLength ] ),
+                                          topicLength - consumedTopicLength,
+                                          pThingNameLength );
+
         if( shadowStatus == SHADOW_SUCCESS )
         {
             /* Update the out parameter if we successfully extracted the thing name. */
-            * pThingName = & ( pTopic[ consumedTopicLength ] );
+            *pThingName = &( pTopic[ consumedTopicLength ] );
 
-            consumedTopicLength += * pThingNameLength;
+            consumedTopicLength += *pThingNameLength;
 
             /* If no more topic string is left to parse, fail. */
             if( consumedTopicLength >= topicLength )
@@ -512,9 +514,10 @@ ShadowStatus_t Shadow_MatchTopic( const char * pTopic,
     if( shadowStatus == SHADOW_SUCCESS )
     {
         /* Extract shadow message type. */
-        shadowStatus = extractShadowMessageType( & ( pTopic[ consumedTopicLength ] ),
+        shadowStatus = extractShadowMessageType( &( pTopic[ consumedTopicLength ] ),
                                                  topicLength - consumedTopicLength,
                                                  pMessageType );
+
         if( shadowStatus != SHADOW_SUCCESS )
         {
             LogDebug( ( "Not related to Shadow, failed to match shadow message type in pTopic %s", pTopic ) );
@@ -552,14 +555,14 @@ ShadowStatus_t Shadow_GetTopicString( ShadowTopicStringType_t topicType,
     }
     else
     {
-        generatedTopicStringLength = SHADOW_PREFIX_LENGTH +           /* Prefix ("$aws/things/"). */
+        generatedTopicStringLength = SHADOW_PREFIX_LENGTH +                 /* Prefix ("$aws/things/"). */
                                      thingNameLength +                      /* Thing name. */
                                      getShadowOperationLength( topicType ); /* Shadow operation. */
 
         if( bufferSize < generatedTopicStringLength )
         {
             shadowStatus = SHADOW_BUFFER_TOO_SMALL;
-            LogError( ( "Input bufferSize too small, bufferSize %d, required ", bufferSize, generatedTopicStringLength) );
+            LogError( ( "Input bufferSize too small, bufferSize %d, required ", bufferSize, generatedTopicStringLength ) );
         }
         else
         {
@@ -570,7 +573,7 @@ ShadowStatus_t Shadow_GetTopicString( ShadowTopicStringType_t topicType,
             offset = ( uint16_t ) ( offset + SHADOW_PREFIX_LENGTH );
 
             /* Copy the Thing Name into the topic buffer. */
-            ( void ) memcpy( ( void * ) & ( pTopicBuffer[ offset ] ),
+            ( void ) memcpy( ( void * ) &( pTopicBuffer[ offset ] ),
                              ( const void * ) pThingName,
                              ( size_t ) thingNameLength );
             offset = ( uint16_t ) ( offset + thingNameLength );
@@ -578,12 +581,12 @@ ShadowStatus_t Shadow_GetTopicString( ShadowTopicStringType_t topicType,
             pOperationString = getShadowOperationString( topicType );
             operationStringLength = getShadowOperationLength( topicType );
             /* Copy the Shadow operation string into the topic buffer. */
-            ( void ) memcpy( ( void * ) & ( pTopicBuffer[ offset ] ),
+            ( void ) memcpy( ( void * ) &( pTopicBuffer[ offset ] ),
                              ( const void * ) pOperationString,
                              ( size_t ) operationStringLength );
 
             /* Return the generated topic string length to the caller. */
-            * pOutLength = generatedTopicStringLength;
+            *pOutLength = generatedTopicStringLength;
         }
     }
 

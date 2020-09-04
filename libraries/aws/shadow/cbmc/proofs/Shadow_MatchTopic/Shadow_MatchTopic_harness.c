@@ -34,14 +34,14 @@
 void harness()
 {
     ShadowMessageType_t * pMessageType;
-    const char * pTopicName; 
+    const char * pTopicName;
     uint16_t topicNameLength;
     const char ** pThingName;
     uint16_t * pThingNameLength;
 
     __CPROVER_assume( topicNameLength < TOPIC_STRING_LENGTH_MAX );
-    pMessageType = mallocCanFail( sizeof( ShadowMessageType_t ) );
-    pThingName = mallocCanFail( sizeof( char * ) );
+    pMessageType = mallocCanFail( sizeof( * pMessageType ) );
+    pThingName = mallocCanFail( sizeof( * pThingName ) );
     pTopicName = mallocCanFail( topicNameLength );
     pThingNameLength = mallocCanFail( sizeof( uint16_t ) );
     __CPROVER_havoc_object( pTopicName );

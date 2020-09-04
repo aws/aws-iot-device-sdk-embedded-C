@@ -37,13 +37,13 @@ void harness()
     uint8_t topicType;
 
     topicBuffer = mallocCanFail( bufferSize );
-    pOutLength = mallocCanFail( sizeof( uint16_t ) );
+    pOutLength = mallocCanFail( sizeof( * pOutLength ) );
     pThingName = mallocCanFail( thingNameLength );
 
     Shadow_GetTopicString( topicType,
                            pThingName,
                            thingNameLength,
-                           & ( topicBuffer[ 0 ] ),
+                           &( topicBuffer[ 0 ] ),
                            bufferSize,
                            pOutLength );
 }

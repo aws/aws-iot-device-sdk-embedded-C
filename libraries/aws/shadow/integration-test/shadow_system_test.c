@@ -21,7 +21,7 @@
 
 /**
  * @file shadow_system_test.c
- * @brief Integration tests for the SHADOW library via MQTT Library 
+ * @brief Integration tests for the SHADOW library via MQTT Library
  * when communicating with AWS IoT from a POSIX platform.
  */
 
@@ -130,12 +130,12 @@
 /**
  * @brief The Shadow document used for update topic desired tests.
  */
-#define TEST_SHADOW_DESIRED            "{\"state\": {\"desired\": {\"key\": true}}, \"clientToken\":\"shadowSystemTest\"}"
+#define TEST_SHADOW_DESIRED                 "{\"state\": {\"desired\": {\"key\": true}}, \"clientToken\":\"shadowSystemTest\"}"
 
 /**
  * @brief The length of #TEST_SHADOW_DESIRED.
  */
-#define TEST_SHADOW_DESIRED_LENGTH     ( sizeof( TEST_SHADOW_DESIRED ) - 1 )
+#define TEST_SHADOW_DESIRED_LENGTH          ( sizeof( TEST_SHADOW_DESIRED ) - 1 )
 
 /*-----------------------------------------------------------*/
 
@@ -374,51 +374,51 @@ static void eventCallback( MQTTContext_t * pContext,
         /* Let the Device Shadow library tell us whether this is a device shadow message. */
         if( SHADOW_SUCCESS == Shadow_MatchTopic( pDeserializedInfo->pPublishInfo->pTopicName,
                                                  pDeserializedInfo->pPublishInfo->topicNameLength,
-                                                 & messageType,
-                                                 & pThingName,
-                                                 & thingNameLength ) )
+                                                 &messageType,
+                                                 &pThingName,
+                                                 &thingNameLength ) )
         {
             /* Upon successful return, the messageType has been filled in. */
-            if( messageType == ShadowMessageTypeUpdateDelta ) 
+            if( messageType == ShadowMessageTypeUpdateDelta )
             {
                 receivedUpdateDeltaResult = true;
-                LogInfo(( "/update/delta payload:%s.\n\n", ( const char * ) pDeserializedInfo->pPublishInfo->pPayload ));
+                LogInfo( ( "/update/delta payload:%s.\n\n", ( const char * ) pDeserializedInfo->pPublishInfo->pPayload ) );
                 /* validate the each field in json payload if meet our expectation. */
-            } 
-            else if ( ( messageType == ShadowMessageTypeUpdateDocuments ) )
+            }
+            else if( ( messageType == ShadowMessageTypeUpdateDocuments ) )
             {
                 receivedUpdateDocumentsResult = true;
-                LogInfo(( "/update/documents json payload:%s.\n\n", ( const char * ) pDeserializedInfo->pPublishInfo->pPayload ));
+                LogInfo( ( "/update/documents json payload:%s.\n\n", ( const char * ) pDeserializedInfo->pPublishInfo->pPayload ) );
             }
-            else if ( ( messageType == ShadowMessageTypeUpdateAccepted ) )
+            else if( ( messageType == ShadowMessageTypeUpdateAccepted ) )
             {
                 receivedUpdateAcceptedResult = true;
-                LogInfo(( "/update/accepted json payload:%s.\n\n", ( const char * ) pDeserializedInfo->pPublishInfo->pPayload ));
+                LogInfo( ( "/update/accepted json payload:%s.\n\n", ( const char * ) pDeserializedInfo->pPublishInfo->pPayload ) );
             }
-            else if ( ( messageType == ShadowMessageTypeUpdateRejected ) )
+            else if( ( messageType == ShadowMessageTypeUpdateRejected ) )
             {
                 receivedUpdateRejectedResult = true;
-                LogInfo(( "/update/rejected json payload:%s.\n\n", ( const char * ) pDeserializedInfo->pPublishInfo->pPayload ));
+                LogInfo( ( "/update/rejected json payload:%s.\n\n", ( const char * ) pDeserializedInfo->pPublishInfo->pPayload ) );
             }
-            else if ( ( messageType == ShadowMessageTypeGetAccepted ) )
+            else if( ( messageType == ShadowMessageTypeGetAccepted ) )
             {
                 receivedGetAcceptedResult = true;
-                LogInfo(( "/get/accepted json payload:%s.\n\n", ( const char * ) pDeserializedInfo->pPublishInfo->pPayload ));
+                LogInfo( ( "/get/accepted json payload:%s.\n\n", ( const char * ) pDeserializedInfo->pPublishInfo->pPayload ) );
             }
-            else if ( ( messageType == ShadowMessageTypeGetRejected ) )
+            else if( ( messageType == ShadowMessageTypeGetRejected ) )
             {
                 receivedGetRejectedResult = true;
-                LogInfo(( "/get/rejected json payload:%s.\n\n", ( const char * ) pDeserializedInfo->pPublishInfo->pPayload ));
+                LogInfo( ( "/get/rejected json payload:%s.\n\n", ( const char * ) pDeserializedInfo->pPublishInfo->pPayload ) );
             }
-            else if ( ( messageType == ShadowMessageTypeDeleteAccepted ) )
+            else if( ( messageType == ShadowMessageTypeDeleteAccepted ) )
             {
                 receivedDeleteAcceptedResult = true;
-                LogInfo(( "/delete/accepted json payload:%s.\n\n", ( const char * ) pDeserializedInfo->pPublishInfo->pPayload ));
+                LogInfo( ( "/delete/accepted json payload:%s.\n\n", ( const char * ) pDeserializedInfo->pPublishInfo->pPayload ) );
             }
-            else if ( ( messageType == ShadowMessageTypeDeleteRejected ) )
+            else if( ( messageType == ShadowMessageTypeDeleteRejected ) )
             {
                 receivedDeleteRejectedResult = true;
-                LogInfo(( "/delete/rejected json payload:%s.\n\n", ( const char * ) pDeserializedInfo->pPublishInfo->pPayload ));
+                LogInfo( ( "/delete/rejected json payload:%s.\n\n", ( const char * ) pDeserializedInfo->pPublishInfo->pPayload ) );
             }
             else
             {
@@ -516,9 +516,9 @@ static void eventCallback( MQTTContext_t * pContext,
 }
 
 static MQTTStatus_t subscribeToTopic( MQTTContext_t * pContext,
-                                            const char * pTopic,
-                                            uint16_t topicLength,
-                                            MQTTQoS_t qos )
+                                      const char * pTopic,
+                                      uint16_t topicLength,
+                                      MQTTQoS_t qos )
 {
     MQTTStatus_t mqttStatus = MQTTSuccess;
     MQTTSubscribeInfo_t pSubscriptionList[ 1 ];
@@ -528,7 +528,7 @@ static MQTTStatus_t subscribeToTopic( MQTTContext_t * pContext,
     assert( topicLength != 0 );
 
     /* Start with everything at 0. */
-    ( void ) memset( ( void * ) pSubscriptionList, 0x00, sizeof( pSubscriptionList ) );    
+    ( void ) memset( ( void * ) pSubscriptionList, 0x00, sizeof( pSubscriptionList ) );
 
     /* topic /update/accepted and uses qos. */
     pSubscriptionList[ 0 ].qos = qos;
@@ -543,12 +543,13 @@ static MQTTStatus_t subscribeToTopic( MQTTContext_t * pContext,
                                  pSubscriptionList,
                                  sizeof( pSubscriptionList ) / sizeof( MQTTSubscribeInfo_t ),
                                  globalSubscribePacketIdentifier );
-    if ( mqttStatus == MQTTSuccess )
+
+    if( mqttStatus == MQTTSuccess )
     {
-        mqttStatus =  MQTT_ProcessLoop( pContext, MQTT_PROCESS_LOOP_TIMEOUT_MS ) ;        
+        mqttStatus = MQTT_ProcessLoop( pContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
     }
 
-    if ( mqttStatus == MQTTSuccess )
+    if( mqttStatus == MQTTSuccess )
     {
         TEST_ASSERT_TRUE( receivedSubAck );
 
@@ -571,7 +572,7 @@ static MQTTStatus_t unsubscribeFromTopic( MQTTContext_t * pContext,
     assert( topicLength != 0 );
 
     /* Start with everything at 0. */
-    ( void ) memset( ( void * ) pSubscriptionList, 0x00, sizeof( pSubscriptionList ) );    
+    ( void ) memset( ( void * ) pSubscriptionList, 0x00, sizeof( pSubscriptionList ) );
 
     /* topic /update/accepted and uses qos. */
     pSubscriptionList[ 0 ].qos = qos;
@@ -586,13 +587,13 @@ static MQTTStatus_t unsubscribeFromTopic( MQTTContext_t * pContext,
                                    pSubscriptionList,
                                    sizeof( pSubscriptionList ) / sizeof( MQTTSubscribeInfo_t ),
                                    globalUnsubscribePacketIdentifier );
-    
-    if ( mqttStatus == MQTTSuccess )
+
+    if( mqttStatus == MQTTSuccess )
     {
-        mqttStatus = MQTT_ProcessLoop( pContext, MQTT_PROCESS_LOOP_TIMEOUT_MS ) ;
+        mqttStatus = MQTT_ProcessLoop( pContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
     }
 
-    if ( mqttStatus == MQTTSuccess )
+    if( mqttStatus == MQTTSuccess )
     {
         TEST_ASSERT_TRUE( receivedUnsubAck );
         return mqttStatus;
@@ -600,9 +601,9 @@ static MQTTStatus_t unsubscribeFromTopic( MQTTContext_t * pContext,
 }
 
 static MQTTStatus_t publishToTopic( MQTTContext_t * pContext,
-                                          const char * pTopic,
-                                          const char * pPayload,
-                                          MQTTQoS_t qos )
+                                    const char * pTopic,
+                                    const char * pPayload,
+                                    MQTTQoS_t qos )
 {
     MQTTStatus_t mqttStatus = MQTTSuccess;
     MQTTPublishInfo_t publishInfo;
@@ -627,19 +628,18 @@ static MQTTStatus_t publishToTopic( MQTTContext_t * pContext,
                                &publishInfo,
                                globalPublishPacketIdentifier );
 
-    if ( mqttStatus == MQTTSuccess )
+    if( mqttStatus == MQTTSuccess )
     {
-        mqttStatus =  MQTT_ProcessLoop( pContext, MQTT_PROCESS_LOOP_TIMEOUT_MS ) ;
+        mqttStatus = MQTT_ProcessLoop( pContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
     }
 
-    if ( mqttStatus == MQTTSuccess )
+    if( mqttStatus == MQTTSuccess )
     {
         /* We do not expect a PUBACK from the broker for the QoS 0 PUBLISH. */
         TEST_ASSERT_FALSE( receivedPubAck );
 
         return mqttStatus;
     }
-    
 }
 
 /* ============================   UNITY FIXTURES ============================ */
@@ -663,7 +663,7 @@ void setUp( void )
     receivedDeleteRejectedResult = false;
     receivedGetAcceptedResult = false;
     receivedGetRejectedResult = false;
-    
+
     memset( &incomingInfo, 0u, sizeof( MQTTPublishInfo_t ) );
     memset( &opensslCredentials, 0u, sizeof( OpensslCredentials_t ) );
     opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
@@ -671,7 +671,7 @@ void setUp( void )
     opensslCredentials.pPrivateKeyPath = CLIENT_PRIVATE_KEY_PATH;
     serverInfo.pHostName = AWS_IOT_ENDPOINT;
     serverInfo.hostNameLength = AWS_IOT_ENDPOINT_LENGTH;
-    serverInfo.port = AWS_MQTT_PORT;    
+    serverInfo.port = AWS_MQTT_PORT;
 
     /* Establish a TCP connection with the server endpoint, then
      * establish TLS session on top of TCP connection. */
@@ -684,7 +684,7 @@ void setUp( void )
     TEST_ASSERT_NOT_NULL( networkContext.pSsl );
 
     /* Establish MQTT session on top of the TCP+TLS connection. */
-    establishMqttSession( &context, &networkContext, true, &persistentSession );    
+    establishMqttSession( &context, &networkContext, true, &persistentSession );
 }
 
 /* Called after each test method. */
@@ -712,14 +712,14 @@ void tearDown( void )
 
 /**
  * @brief Subscribes the shadow topics: /update/delta, /update/documents,
- * /update/accepted, /delete/accepted, /get/acceepted, then publish the 
- * regarding payloads to verify if receiving the notification from the 
+ * /update/accepted, /delete/accepted, /get/acceepted, then publish the
+ * regarding payloads to verify if receiving the notification from the
  * subscribed topics.
  */
 void test_Shadow_System( void )
 {
     /* A buffer containing the update document. It has static duration to prevent
-    * it from being placed on the call stack. */
+     * it from being placed on the call stack. */
     static char updateDocument[ 1 ] = { 0 };
 
     /* Subscribe to shadow topic /delete/accepted with Qos 0. */
@@ -727,7 +727,7 @@ void test_Shadow_System( void )
                                                       SHADOW_TOPIC_STRING_DELETE_ACCEPTED( THING_NAME ),
                                                       SHADOW_TOPIC_LENGTH_DELETE_ACCEPTED( THING_NAME_LENGTH ),
                                                       MQTTQoS0 ) );
-    
+
     /* Subscribe to shadow topic /delete/rejected with Qos 0. */
     TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic( &context,
                                                       SHADOW_TOPIC_STRING_DELETE_REJECTED( THING_NAME ),
@@ -770,8 +770,8 @@ void test_Shadow_System( void )
                                                       SHADOW_TOPIC_LENGTH_UPDATE_DOCUMENTS( THING_NAME_LENGTH ),
                                                       MQTTQoS0 ) );
 
-    /* First of all, try to delete any Shadow document in the cloud. 
-     * This could trigger the /delete/accepted or /delete/rejected 
+    /* First of all, try to delete any Shadow document in the cloud.
+     * This could trigger the /delete/accepted or /delete/rejected
      * based on the thing status on the cloud.
      */
     TEST_ASSERT_EQUAL( MQTTSuccess, publishToTopic( &context,
@@ -782,8 +782,8 @@ void test_Shadow_System( void )
     /* Check the flag for /delete/accepted or /delete/rejected. */
     TEST_ASSERT_TRUE( ( receivedDeleteAcceptedResult || receivedDeleteRejectedResult ) );
 
-    /* Publish to the shadow topic /update with reported payload, 
-    *  that we subscribed to, with Qos 0. */
+    /* Publish to the shadow topic /update with reported payload,
+     *  that we subscribed to, with Qos 0. */
     TEST_ASSERT_EQUAL( MQTTSuccess, publishToTopic( &context,
                                                     SHADOW_TOPIC_STRING_UPDATE( THING_NAME ),
                                                     TEST_SHADOW_DESIRED,
@@ -812,7 +812,4 @@ void test_Shadow_System( void )
                                                           SHADOW_TOPIC_STRING_UPDATE_DELTA( THING_NAME ),
                                                           SHADOW_TOPIC_LENGTH_UPDATE_DELTA( THING_NAME_LENGTH ),
                                                           MQTTQoS0 ) );
-
-    
-    
 }
