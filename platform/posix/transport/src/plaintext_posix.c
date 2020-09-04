@@ -70,26 +70,26 @@ int32_t Plaintext_Recv( const NetworkContext_t * pNetworkContext,
                         size_t bytesToRecv )
 {
     int32_t bytesReceived = -1, selectStatus = -1, getTimeoutStatus = -1;
-    struct timeval transportTimeout;
-    socklen_t transportTimeoutLen;
+    struct timeval recvTimeout;
+    socklen_t recvTimeoutLen;
     fd_set readfds;
 
     assert( pNetworkContext != NULL );
     assert( pBuffer != NULL );
     assert( bytesToRecv > 0 );
 
-    transportTimeoutLen = ( socklen_t ) sizeof( transportTimeout );
+    recvTimeoutLen = ( socklen_t ) sizeof( recvTimeout );
     getTimeoutStatus = getsockopt( pNetworkContext->socketDescriptor,
                                    SOL_SOCKET,
                                    SO_RCVTIMEO,
-                                   &transportTimeout,
-                                   &transportTimeoutLen );
+                                   &recvTimeout,
+                                   &recvTimeoutLen );
 
     /* Make #select return immediately if getting the timeout failed. */
     if( getTimeoutStatus < 0 )
     {
-        transportTimeout.tv_sec = 0;
-        transportTimeout.tv_usec = 0;
+        recvTimeout.tv_sec = 0;
+        recvTimeout.tv_usec = 0;
     }
 
     FD_ZERO( &readfds );
@@ -99,10 +99,11 @@ int32_t Plaintext_Recv( const NetworkContext_t * pNetworkContext,
                            &readfds,
                            NULL,
                            NULL,
-                           &transportTimeout );
+                           &recvTimeout );
 
     if( selectStatus > 0 )
     {
+        /* The socket is available for receiving data. */
         bytesReceived = ( int32_t ) recv( pNetworkContext->socketDescriptor,
                                           pBuffer,
                                           bytesToRecv,
@@ -142,26 +143,26 @@ int32_t Plaintext_Send( const NetworkContext_t * pNetworkContext,
                         size_t bytesToSend )
 {
     int32_t bytesSent = -1, selectStatus = -1, getTimeoutStatus = -1;
-    struct timeval transportTimeout;
-    socklen_t transportTimeoutLen;
+    struct timeval sendTimeout;
+    socklen_t sendTimeoutLen;
     fd_set writefds;
 
     assert( pNetworkContext != NULL );
     assert( pBuffer != NULL );
     assert( bytesToSend > 0 );
 
-    transportTimeoutLen = ( socklen_t ) sizeof( transportTimeout );
+    sendTimeoutLen = ( socklen_t ) sizeof( sendTimeout );
     getTimeoutStatus = getsockopt( pNetworkContext->socketDescriptor,
                                    SOL_SOCKET,
                                    SO_SNDTIMEO,
-                                   &transportTimeout,
-                                   &transportTimeoutLen );
+                                   &sendTimeout,
+                                   &sendTimeoutLen );
 
     /* Make #select return immediately if getting the timeout failed. */
     if( getTimeoutStatus < 0 )
     {
-        transportTimeout.tv_sec = 0;
-        transportTimeout.tv_usec = 0;
+        sendTimeout.tv_sec = 0;
+        sendTimeout.tv_usec = 0;
     }
 
     FD_ZERO( &writefds );
@@ -171,10 +172,11 @@ int32_t Plaintext_Send( const NetworkContext_t * pNetworkContext,
                            NULL,
                            &writefds,
                            NULL,
-                           &transportTimeout );
+                           &sendTimeout );
 
     if( selectStatus > 0 )
     {
+        /* The socket is available for sending data. */
         bytesSent = ( int32_t ) send( pNetworkContext->socketDescriptor,
                                       pBuffer,
                                       bytesToSend,
