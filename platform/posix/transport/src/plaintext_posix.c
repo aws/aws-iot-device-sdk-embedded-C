@@ -43,6 +43,9 @@ static void logTransportError( int32_t errorNumber );
 
 static void logTransportError( int32_t errorNumber )
 {
+    /* Remove unused parameter warning. */
+    ( void ) errorNumber;
+
     LogError( ( "A transport error occurred: %s.", strerror( errorNumber ) ) );
 }
 /*-----------------------------------------------------------*/
