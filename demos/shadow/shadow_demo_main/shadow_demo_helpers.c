@@ -21,7 +21,7 @@
 
 /**
  * @file shadow_demo_helpers.c
- * 
+ *
  * @brief This file provides helper functions used by shadow demo application to
  * do MQTT operation based on mutually authenticated TLS connection.
  *
@@ -149,7 +149,7 @@
 /**
  * @brief The MQTT metrics string expected by AWS IoT.
  */
-#define METRICS_STRING                      "?SDK=" SDK_NAME "&Version=" SDK_VERSION "&Platform=" HARDWARE_PLATFORM_NAME
+#define METRICS_STRING                      "?SDK=" OS_NAME "&Version=" OS_VERSION "&Platform=" HARDWARE_PLATFORM_NAME "&MQTTLib=" MQTT_LIB
 
 /**
  * @brief The length of the MQTT metrics string expected by AWS IoT.
@@ -440,14 +440,14 @@ void HandleOtherIncomingPacket( MQTTPacketInfo_t * pPacketInfo,
         case MQTT_PACKET_TYPE_PINGRESP:
 
             /* Nothing to be done from application as library handles
-                * PINGRESP. */
+             * PINGRESP. */
             LogWarn( ( "PINGRESP should not be handled by the application "
-                        "callback when using MQTT_ProcessLoop.\n\n" ) );
+                       "callback when using MQTT_ProcessLoop.\n\n" ) );
             break;
 
         case MQTT_PACKET_TYPE_PUBACK:
             LogInfo( ( "PUBACK received for packet id %u.\n\n",
-                        packetIdentifier ) );
+                       packetIdentifier ) );
             /* Cleanup publish packet when a PUBACK is received. */
             cleanupOutgoingPublishWithPacketID( packetIdentifier );
             break;
@@ -527,19 +527,19 @@ int EstablishMqttSession( MQTTEventCallback_t eventCallback )
 
     returnStatus = connectToServerWithBackoffRetries( pNetworkContext );
 
-    if ( returnStatus != EXIT_SUCCESS )
+    if( returnStatus != EXIT_SUCCESS )
     {
         /* Log error to indicate connection failure after all
-        * reconnect attempts are over. */
+         * reconnect attempts are over. */
         LogError( ( "Failed to connect to MQTT broker %.*s.",
-                AWS_IOT_ENDPOINT_LENGTH,
-                AWS_IOT_ENDPOINT ) );
+                    AWS_IOT_ENDPOINT_LENGTH,
+                    AWS_IOT_ENDPOINT ) );
     }
     else
     {
         /* Fill in TransportInterface send and receive function pointers.
-        * For this demo, TCP sockets are used to send and receive data
-        * from network. Network context is SSL context for OpenSSL.*/
+         * For this demo, TCP sockets are used to send and receive data
+         * from network. Network context is SSL context for OpenSSL.*/
         transport.pNetworkContext = pNetworkContext;
         transport.send = Openssl_Send;
         transport.recv = Openssl_Recv;
@@ -550,10 +550,10 @@ int EstablishMqttSession( MQTTEventCallback_t eventCallback )
 
         /* Initialize MQTT library. */
         mqttStatus = MQTT_Init( pMqttContext,
-                            &transport,
-                            Clock_GetTimeMs,
-                            eventCallback,
-                            &networkBuffer );
+                                &transport,
+                                Clock_GetTimeMs,
+                                eventCallback,
+                                &networkBuffer );
 
         if( mqttStatus != MQTTSuccess )
         {
@@ -565,23 +565,23 @@ int EstablishMqttSession( MQTTEventCallback_t eventCallback )
             /* Establish MQTT session by sending a CONNECT packet. */
 
             /* If #createCleanSession is true, start with a clean session
-            * i.e. direct the MQTT broker to discard any previous session data.
-            * If #createCleanSession is false, directs the broker to attempt to
-            * reestablish a session which was already present. */
+             * i.e. direct the MQTT broker to discard any previous session data.
+             * If #createCleanSession is false, directs the broker to attempt to
+             * reestablish a session which was already present. */
             connectInfo.cleanSession = createCleanSession;
 
             /* The client identifier is used to uniquely identify this MQTT client to
-            * the MQTT broker. In a production device the identifier can be something
-            * unique, such as a device serial number. */
+             * the MQTT broker. In a production device the identifier can be something
+             * unique, such as a device serial number. */
             connectInfo.pClientIdentifier = CLIENT_IDENTIFIER;
             connectInfo.clientIdentifierLength = CLIENT_IDENTIFIER_LENGTH;
 
             /* The maximum time interval in seconds which is allowed to elapse
-            * between two Control Packets.
-            * It is the responsibility of the Client to ensure that the interval between
-            * Control Packets being sent does not exceed the this Keep Alive value. In the
-            * absence of sending any other Control Packets, the Client MUST send a
-            * PINGREQ Packet. */
+             * between two Control Packets.
+             * It is the responsibility of the Client to ensure that the interval between
+             * Control Packets being sent does not exceed the this Keep Alive value. In the
+             * absence of sending any other Control Packets, the Client MUST send a
+             * PINGREQ Packet. */
             connectInfo.keepAliveSeconds = MQTT_KEEP_ALIVE_INTERVAL_SECONDS;
 
             /* Username and password for authentication. Not used in this demo. */
@@ -611,20 +611,20 @@ int EstablishMqttSession( MQTTEventCallback_t eventCallback )
         if( returnStatus == EXIT_SUCCESS )
         {
             /* Keep a flag for indicating if MQTT session is established. This
-            * flag will mark that an MQTT DISCONNECT has to be sent at the end
-            * of the demo even if there are intermediate failures. */
+             * flag will mark that an MQTT DISCONNECT has to be sent at the end
+             * of the demo even if there are intermediate failures. */
             mqttSessionEstablished = true;
         }
 
         if( returnStatus == EXIT_SUCCESS )
         {
             /* Check if session is present and if there are any outgoing publishes
-            * that need to resend. This is only valid if the broker is
-            * re-establishing a session which was already present. */
+             * that need to resend. This is only valid if the broker is
+             * re-establishing a session which was already present. */
             if( sessionPresent == true )
             {
                 LogInfo( ( "An MQTT session with broker is re-established. "
-                        "Resending unacked publishes." ) );
+                           "Resending unacked publishes." ) );
 
                 /* Handle all the resend of publish messages. */
                 returnStatus = handlePublishResend( &mqttContext );
@@ -632,14 +632,15 @@ int EstablishMqttSession( MQTTEventCallback_t eventCallback )
             else
             {
                 LogInfo( ( "A clean MQTT connection is established."
-                        " Cleaning up all the stored outgoing publishes.\n\n" ) );
+                           " Cleaning up all the stored outgoing publishes.\n\n" ) );
 
                 /* Clean up the outgoing publishes waiting for ack as this new
-                * connection doesn't re-establish an existing session. */
+                 * connection doesn't re-establish an existing session. */
                 cleanupOutgoingPublishes();
             }
         }
     }
+
     return returnStatus;
 }
 
@@ -655,7 +656,7 @@ int32_t DisconnectMqttSession( void )
     assert( pMqttContext != NULL );
     assert( pNetworkContext != NULL );
 
-    if ( mqttSessionEstablished == true )
+    if( mqttSessionEstablished == true )
     {
         /* Send DISCONNECT. */
         mqttStatus = MQTT_Disconnect( pMqttContext );
@@ -715,7 +716,7 @@ int32_t SubscribeToTopic( const char * pTopicFilter,
     {
         LogInfo( ( "SUBSCRIBE topic %.*s to broker.\n\n",
                    topicFilterLength,
-                   pTopicFilter) );
+                   pTopicFilter ) );
 
         /* Process incoming packet from the broker. Acknowledgment for subscription
          * ( SUBACK ) will be received here. However after sending the subscribe, the
@@ -778,7 +779,7 @@ int32_t UnsubscribeFromTopic( const char * pTopicFilter,
     {
         LogInfo( ( "UNSUBSCRIBE sent topic %.*s to broker.\n\n",
                    topicFilterLength,
-                   pTopicFilter) );
+                   pTopicFilter ) );
 
         /* Process incoming packet from the broker. Acknowledgment for subscription
          * ( SUBACK ) will be received here. However after sending the subscribe, the

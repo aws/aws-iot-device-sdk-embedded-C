@@ -1,7 +1,7 @@
 # Project information.
 cmake_minimum_required( VERSION 3.13.0 )
 project( AwsIotDeviceSdkEmbeddedC
-         VERSION 4.0.2
+         VERSION 202009.00
          LANGUAGES C )
 
 # Allow the project to be organized into folders.
@@ -71,8 +71,7 @@ if(${BUILD_TESTS})
     include(${ROOT_DIR}/tools/cmock/cmock_dependencies.cmake)
     
     # Create a list for each unit test target.
-    set(utest_targets 
-        http_utest http_send_utest 
+    set(utest_targets
         json_utest openssl_utest
         sockets_utest plaintext_utest
         openssl_utest retry_utils_utest)
