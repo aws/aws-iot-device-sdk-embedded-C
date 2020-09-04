@@ -71,8 +71,7 @@ if(${BUILD_TESTS})
     include(${ROOT_DIR}/tools/cmock/cmock_dependencies.cmake)
     
     # Create a list for each unit test target.
-    set(utest_targets 
-        http_utest http_send_utest 
+    set(utest_targets
         json_utest openssl_utest
         sockets_utest plaintext_utest
         clock_utest reconnect_utest)
