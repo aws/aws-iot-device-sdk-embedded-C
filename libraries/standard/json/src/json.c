@@ -1283,12 +1283,6 @@ JSONStatus_t JSON_Search( char * buf,
                 break;
             }
 
-            if( keyLength >= tmp )
-            {
-                ret = JSONNotFound;
-                break;
-            }
-
             i++;
 
             ret = search( p, tmp, &queryKey[ start ], keyLength, &p, &tmp );
