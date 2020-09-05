@@ -21,32 +21,23 @@
 
 #include "skipGeneric.h"
 
-/**
- * See skipGeneric.h for docs
- *
- * Advance buffer index beyond some minimum value.
+/*
+ * This function is a replacement for the function of the same name from json.c.
+ * Please see json.c for documentation.
  */
-static bool_ skipGeneric( const char * buf,
-                          size_t * start,
-                          size_t max,
-                          size_t min )
+
+bool_ skipAnyScalar( const char * buf,
+                     size_t * start,
+                     size_t max )
 {
-    bool_ ret = false;
+    /* min argument is 1 for a single character scalar like 0,
+     * or 2 for an empty double-quoted string, i.e., "". */
+    size_t min = 1;
 
-    __CPROVER_assert( start != NULL, "start index address is not NULL" );
-
-    if( nondet_bool() && ( min <= max ) && ( *start <= max ) )
+    if( ( *start < max ) && ( buf[ *start ] == '"' ) )
     {
-        size_t x;
-        __CPROVER_assume( x >= min );
-        __CPROVER_assume( x <= max );
-
-        if( ( *start + x ) <= max )
-        {
-            *start = *start + x;
-            ret = true;
-        }
+        min = 2;
     }
 
-    return ret;
+    return skipGeneric( buf, start, max, min );
 }

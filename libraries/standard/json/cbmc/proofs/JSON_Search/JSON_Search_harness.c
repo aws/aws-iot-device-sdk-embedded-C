@@ -25,7 +25,7 @@
  */
 
 #include <stdlib.h>
-#include "json.h"
+#include "json_annex.h"
 
 void harness()
 {
@@ -44,16 +44,14 @@ void harness()
     if( nondet_bool() )
     {
         buf = malloc( max );
-        __CPROVER_assume( __CPROVER_r_ok( buf, max ) );
     }
 
     /* queryKeyLength is the buffer length of the query which must not exceed unwindings. */
-    __CPROVER_assume( queryKeyLength < CBMC_MAX_BUFSIZE );
+    __CPROVER_assume( queryKeyLength < CBMC_MAX_QUERYKEYLENGTH );
 
     if( nondet_bool() )
     {
         queryKey = malloc( queryKeyLength );
-        __CPROVER_assume( __CPROVER_r_ok( queryKey, queryKeyLength ) );
     }
 
     ret = JSON_Search( buf,
@@ -64,11 +62,7 @@ void harness()
                        ( nondet_bool() ? &outValue : NULL ),
                        ( nondet_bool() ? &outValueLength : NULL ) );
 
-    __CPROVER_assert( ( ret == JSONPartial ) || ( ret == JSONSuccess ) ||
-                      ( ret == JSONIllegalDocument ) || ( ret == JSONMaxDepthExceeded ) ||
-                      ( ret == JSONNullParameter ) || ( ret == JSONBadParameter ) ||
-                      ( ret == JSONNotFound ),
-                      "The return value is a JSONStatus_t." );
+    __CPROVER_assert( jsonSearchEnum( ret ), "The return value is a JSONStatus_t." );
 
     if( ret == JSONSuccess )
     {

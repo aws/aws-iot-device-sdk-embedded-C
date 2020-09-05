@@ -25,7 +25,7 @@
  */
 
 #include <stdlib.h>
-#include "glue.h"
+#include "json_annex.h"
 
 void harness()
 {
@@ -39,14 +39,12 @@ void harness()
     /* max is the buffer length which must not exceed unwindings. */
     __CPROVER_assume( max < CBMC_MAX_BUFSIZE );
 
+    /* buf must not be NULL */
     buf = malloc( max );
-    __CPROVER_assume( __CPROVER_r_ok( buf, max ) );
 
     ret = skipCollection( buf, &start, max );
 
-    __CPROVER_assert( ( ret == JSONPartial ) || ( ret == JSONSuccess ) ||
-                      ( ret == JSONIllegalDocument ) || ( ret == JSONMaxDepthExceeded ),
-                      "The return value is a subset of JSONStatus_t." );
+    __CPROVER_assert( skipCollectionEnum( ret ), "The return value is a subset of JSONStatus_t." );
 
     if( ret == JSONSuccess )
     {

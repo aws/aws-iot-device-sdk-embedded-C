@@ -19,39 +19,40 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef GLUE_H_
-#define GLUE_H_
-
-#include "json.h"
 #include "skipGeneric.h"
 
-/*
- * These functions are replacements for the functions of the same name from json.c.
- * Please see json.c and json.h for documentation.
+/**
+ * See skipGeneric.h for docs
+ *
+ * Advance buffer index beyond some minimum value.
  */
+static bool_ skipGeneric( const char * buf,
+                          size_t * start,
+                          size_t max,
+                          size_t min )
+{
+    bool_ ret = false;
 
-bool_ skipAnyLiteral( const char * buf,
-                      size_t * start,
-                      size_t max );
+    assert( ( buf != NULL ) && ( start != NULL ) );
+    assert( ( min > 0 ) && ( max > 0 ) );
 
-bool_ skipNumber( const char * buf,
-                  size_t * start,
-                  size_t max );
+    if( *start < max )
+    {
+        assert( __CPROVER_r_ok( ( buf + *start ), ( max - *start ) ) );
 
-JSONStatus_t skipCollection( const char * buf,
-                             size_t * start,
-                             size_t max );
+        if( nondet_bool() && ( min <= max ) )
+        {
+            size_t x;
+            __CPROVER_assume( x >= min );
+            __CPROVER_assume( x <= max );
 
-void skipSpace( const char * buf,
-                size_t * start,
-                size_t max );
+            if( ( *start + x ) <= max )
+            {
+                *start = *start + x;
+                ret = true;
+            }
+        }
+    }
 
-bool_ skipSpaceAndComma( const char * buf,
-                         size_t * start,
-                         size_t max );
-
-bool_ skipString( const char * buf,
-                  size_t * start,
-                  size_t max );
-
-#endif /* ifndef GLUE_H_ */
+    return ret;
+}

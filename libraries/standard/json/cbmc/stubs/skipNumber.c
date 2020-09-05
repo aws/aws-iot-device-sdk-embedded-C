@@ -19,26 +19,17 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef GLUE_H_
-#define GLUE_H_
-
 #include "skipGeneric.h"
 
 /*
- * These functions are replacements for the functions of the same name from json.c.
- * Please see json.c and json.h for documentation.
+ * This function is a replacement for the function of the same name from json.c.
+ * Please see json.c for documentation.
  */
 
-bool_ skipEscape( const char * buf,
+bool_ skipNumber( const char * buf,
                   size_t * start,
-                  size_t max );
-
-bool_ skipUTF8( const char * buf,
-                size_t * start,
-                size_t max );
-
-bool_ skipString( const char * buf,
-                  size_t * start,
-                  size_t max );
-
-#endif /* ifndef GLUE_H_ */
+                  size_t max )
+{
+    /* min argument is 1 for a single digit, e.g., 0. */
+    return skipGeneric( buf, start, max, 1 );
+}

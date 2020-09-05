@@ -25,15 +25,12 @@
  */
 
 #include <stdlib.h>
-
-void skipSpace( const char * buf,
-                size_t * start,
-                size_t max );
+#include "json_annex.h"
 
 void harness()
 {
     char * buf;
-    size_t start, save = start, max;
+    size_t start, saveStart = start, max;
 
     /* max is the buffer length which must be nonzero for non-API functions. */
     __CPROVER_assume( max > 0 );
@@ -41,12 +38,12 @@ void harness()
     /* max is the buffer length which must not exceed unwindings. */
     __CPROVER_assume( max < CBMC_MAX_BUFSIZE );
 
+    /* buf must not be NULL */
     buf = malloc( max );
-    __CPROVER_assume( __CPROVER_r_ok( buf, max ) );
 
     skipSpace( buf, &start, max );
 
-    if( save != start )
+    if( saveStart != start )
     {
         __CPROVER_assert( start <= max,
                           "The buffer start index does not exceed the buffer length." );

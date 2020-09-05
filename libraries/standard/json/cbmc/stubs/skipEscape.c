@@ -19,49 +19,18 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "glue.h"
+#include "skipGeneric.h"
 
 /*
- * These functions are replacements for the functions of the same name from json.c.
- * Please see json.c and json.h for documentation.
+ * This function is a replacement for the function of the same name from json.c.
+ * Please see json.c for documentation.
  */
 
-bool_ skipAnyLiteral( const char * buf,
-                      size_t * start,
-                      size_t max )
-{
-    /* min argument is 4 for the shortest literal, e.g., true or null. */
-    return skipGeneric( buf, start, max, 4 );
-}
-
-bool_ skipNumber( const char * buf,
+bool_ skipEscape( const char * buf,
                   size_t * start,
                   size_t max )
 {
-    /* min argument is 1 for a single digit, e.g., 0. */
-    return skipGeneric( buf, start, max, 1 );
-}
-
-void skipSpace( const char * buf,
-                size_t * start,
-                size_t max )
-{
-    /* min argument is 1 for a single space. */
-    skipGeneric( buf, start, max, 1 );
-}
-
-bool_ skipSpaceAndComma( const char * buf,
-                         size_t * start,
-                         size_t max )
-{
-    /* min argument is 1 for a single space or comma. */
-    return skipGeneric( buf, start, max, 1 );
-}
-
-bool_ skipString( const char * buf,
-                  size_t * start,
-                  size_t max )
-{
-    /* min argument is 2 for an empty double-quoted string, i.e., "". */
+    /* min argument is 2, since the smallest proper
+    * escape sequence is 2 characters, e.g., \n. */
     return skipGeneric( buf, start, max, 2 );
 }

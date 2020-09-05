@@ -23,11 +23,7 @@
 #define SKIPGENERIC_H_
 
 #include <stddef.h>
-
-typedef enum
-{
-    true = 1, false = 0
-} bool_;
+#include "json_annex.h"
 
 /**
  * @brief Advance buffer index beyond some minimum value.

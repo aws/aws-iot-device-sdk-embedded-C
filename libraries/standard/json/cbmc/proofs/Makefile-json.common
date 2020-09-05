@@ -4,15 +4,14 @@
 HARNESS_ENTRY=harness
 
 DEFINES += -DCBMC_MAX_BUFSIZE=$(CBMC_MAX_BUFSIZE)
-INCLUDES += -I$(PROOFDIR) -I$(CBMC_ROOT)/include
+DEFINES += -DCBMC_MAX_QUERYKEYLENGTH=$(CBMC_MAX_BUFSIZE)
+INCLUDES += -I$(CBMC_ROOT)/include
 
 PROOF_SOURCES += $(PROOFDIR)/$(HARNESS_FILE).c
-ifneq (,$(wildcard glue.c))
-    PROOF_SOURCES += $(PROOFDIR)/glue.c
-    PROOF_SOURCES += $(CBMC_ROOT)/sources/skipGeneric.c
-endif
 
 PROJECT_SOURCES += $(PROOFDIR)/json.c
+
+CHECKFLAGS += --pointer-primitive-check
 
 include ../Makefile.common
 

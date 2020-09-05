@@ -19,26 +19,19 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "glue.h"
+#include "skipGeneric.h"
 
 /*
- * These functions are replacements for the functions of the same name from json.c.
- * Please see json.c and json.h for documentation.
+ * This function is a replacement for the function of the same name from json.c.
+ * Please see json.c for documentation.
  */
 
-bool_ skipEscape( const char * buf,
-                  size_t * start,
-                  size_t max )
+bool_ skipSpaceAndComma( const char * buf,
+                         size_t * start,
+                         size_t max )
 {
-    /* min argument is 2, since the smallest proper
-    * escape sequence is 2 characters, e.g., \n. */
-    return skipGeneric( buf, start, max, 2 );
-}
-
-bool_ skipUTF8( const char * buf,
-                size_t * start,
-                size_t max )
-{
-    /* min argument is 1 for a single ASCII character. */
+    /* The original function will match 0 or more spaces, followed by a comma,
+     * followed by 0 or more spaces. The spaces are still skipped if there is no comma.
+     * min argument is 1 for a single space or comma. */
     return skipGeneric( buf, start, max, 1 );
 }

@@ -30,8 +30,9 @@ typedef enum
 } bool_;
 
 #define isdigit_( x )    ( ( x >= '0' ) && ( x <= '9' ) )
-#define isspace_( x )    ( ( x == ' ' ) || ( x == '\t' ) || ( x == '\n' ) || ( x == '\r' ) )
 #define iscntrl_( x )    ( ( x >= '\0' ) && ( x < ' ' ) )
+/* NB. This is whitespace as defined by the JSON standard (ECMA-404). */
+#define isspace_( x )    ( ( x == ' ' ) || ( x == '\t' ) || ( x == '\n' ) || ( x == '\r' ) )
 
 /**
  * @brief Advance buffer index beyond whitespace.
@@ -602,11 +603,11 @@ static bool_ skipDigits( const char * buf,
                          size_t max )
 {
     bool_ ret = false;
-    size_t i, save;
+    size_t i, saveStart;
 
     assert( ( buf != NULL ) && ( start != NULL ) && ( max > 0U ) );
 
-    save = *start;
+    saveStart = *start;
 
     for( i = *start; i < max; i++ )
     {
@@ -616,7 +617,7 @@ static bool_ skipDigits( const char * buf,
         }
     }
 
-    if( i > save )
+    if( i > saveStart )
     {
         ret = true;
         *start = i;

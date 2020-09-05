@@ -19,30 +19,21 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-/**
- * @file JSON_Validate_harness.c
- * @brief Implements the proof harness for the JSON_Validate function.
+#include "skipGeneric.h"
+
+/*
+ * This function is a replacement for the function of the same name from json.c.
+ * Please see json.c for documentation.
  */
 
-#include <stdlib.h>
-#include "json_annex.h"
-
-void harness()
+JSONStatus_t skipCollection( const char * buf,
+                             size_t * start,
+                             size_t max )
 {
-    char * buf = NULL;
-    size_t max;
     JSONStatus_t ret;
 
-    /* max is the buffer length which must not exceed unwindings. */
-    __CPROVER_assume( max < CBMC_MAX_BUFSIZE );
+    __CPROVER_assume( skipCollectionFailEnum( ret ) );
 
-    if( nondet_bool() )
-    {
-        buf = malloc( max );
-    }
-
-    ret = JSON_Validate( buf, max );
-
-    __CPROVER_assert( jsonValidateEnum( ret ), "The return value is a subset of JSONStatus_t." );
-
+    /* min argument is 2 for an empty collection, i.e., {} or []. */
+    return ( skipGeneric( buf, start, max, 2 ) == true ) ? JSONSuccess : ret;
 }

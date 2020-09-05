@@ -25,7 +25,7 @@
  */
 
 #include <stdlib.h>
-#include "glue.h"
+#include "json_annex.h"
 
 void harness()
 {
@@ -39,8 +39,8 @@ void harness()
     /* max is the buffer length which must not exceed unwindings. */
     __CPROVER_assume( max < CBMC_MAX_BUFSIZE );
 
+    /* buf must not be NULL */
     buf = malloc( max );
-    __CPROVER_assume( __CPROVER_r_ok( buf, max ) );
 
     ret = skipString( buf, &start, max );
 
