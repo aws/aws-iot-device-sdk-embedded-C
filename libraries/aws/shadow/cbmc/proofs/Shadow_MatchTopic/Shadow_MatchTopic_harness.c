@@ -43,8 +43,7 @@ void harness()
     pMessageType = mallocCanFail( sizeof( * pMessageType ) );
     pThingName = mallocCanFail( sizeof( * pThingName ) );
     pTopicName = mallocCanFail( topicNameLength );
-    pThingNameLength = mallocCanFail( sizeof( uint16_t ) );
-    __CPROVER_havoc_object( pTopicName );
+    pThingNameLength = mallocCanFail( sizeof( * pThingNameLength ) );
 
     Shadow_MatchTopic( pTopicName,
                        topicNameLength,
