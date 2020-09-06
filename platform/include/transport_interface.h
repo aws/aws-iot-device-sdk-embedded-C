@@ -32,18 +32,15 @@
 
 /**
  * @page transport_interface Transport Interface
- * @brief The transport interface implementation
+ * @brief The transport interface definition.
  *
  * The transport interface is a set of APIs that must be implemented using an
- * external transport layer protocol. The transport interface is implemented in
- * @ref transport_interface.h. This interface allows the application layer
- * protocol library to send and receive data over the transport layer. This
+ * external transport layer protocol. The transport interface is defined in
+ * @ref transport_interface.h. This interface allows protocols like MQTT and 
+ * HTTP to send and receive data over the transport layer. This
  * interface does not handle connection and disconnection to the server of
- * interest. The connection to the server of interest must be made before the
- * library is used with @ref TransportInterface_t. The application is also
- * responsible for disconnection from the server. This interface does not handle
- * socket timeouts or any setup of TLS; these things must be done before using
- * the library's functions that need to send and receive data.
+ * interest. The connection, disconnection, and other transport settings like
+ * timeout and TLS setup must be handled in the user application.
  * <br>
  *
  * The functions that must be implemented are:<br>
@@ -62,11 +59,11 @@
  * @snippet this define_networkcontext
  * <br>
  * @ref NetworkContext_t is the incomplete type <b>struct NetworkContext</b>.
- * The implemented struct NetworkContext should contain all of the information
+ * The implemented struct NetworkContext must contain all of the information
  * that is needed to receive and send data with the @ref TransportRecv_t
  * and the @ref TransportSend_t implementations.<br>
- * struct NetworkContext is typically implemented with the TCP socket context
- * and a TLS context.<br><br>
+ * In the case of TLS over TCP, struct NetworkContext is typically implemented
+ * with the CP socket context and a TLS context.<br><br>
  * <b>Example code:</b>
  * @code{c}
  * struct NetworkContext
@@ -79,14 +76,13 @@
  * -# Implementing @ref TransportRecv_t<br><br>
  * @snippet this define_transportrecv
  * <br>
- * The library expects this callback to populate a buffer with bytes from the
- * network. Connection with the server of interest should have been made before
- * invoking any library routines that receive data from the network.
- * The @ref TransportRecv_t is typically implemented by calling directly the
- * TLS layer function to receive data. If one is transferring over plaintext TCP,
- * without TLS, then a call is made directly to the TCP layer function to receive
- * data. @ref TransportRecv_t may be invoked multiple times by the library if
- * fewer bytes than were requested to receive are returned.
+ * This function is expected to populate a buffer with bytes received from the
+ * transport and return the number of bytes placed in the buffer.
+ * In the case of TLS over TCP, @ref TransportRecv_t is typically implemented by
+ * calling the TLS layer function to receive data. In case of plaintext TCP
+ * without TLS, it is typically implemented by calling the TCP layer receive
+ * function. @ref TransportRecv_t may be invoked multiple times by the protocol
+ * library if fewer bytes than were requested to receive are returned.
  * <br><br>
  * <b>Example code:</b>
  * @code{c}
@@ -95,10 +91,10 @@
  *                                      size_t bytesToRecv )
  * {
  *     int32_t bytesReceived = 0;
- *     bytesReceived = mySocketRecv( pNetworkContext->tcpSocketContext,
- *                                   pBuffer,
- *                                   bytesToRecv,
- *                                   MY_SOCKET_TIMEOUT );
+ *     bytesReceived = TLSRecv( pNetworkContext->tcpSocketContext,
+ *                              pBuffer,
+ *                              bytesToRecv,
+ *                              MY_SOCKET_TIMEOUT );
  *     if( bytesReceived < 0 )
  *     {
  *         // Handle socket error.
@@ -112,14 +108,13 @@
  * -# Implementing @ref TransportSend_t<br><br>
  * @snippet this define_transportsend
  * <br>
- * The library expects this callback to send the bytes in the given buffer over
- * the network. Connection with the server of interest should have been made
- * before invoking any library routines that send data over the network.
- * The @ref TransportSend_t is typically implemented by calling directly the
- * TLS layer function to send data. If one is transferring over plaintext TCP,
- * without TLS, then a call is made directly to the TCP layer function to send
- * data. @ref TransportSend_t may be invoked multiple times by the library if
- * fewer bytes than were requested to send are returned.
+ * This function is expected to send the bytes in the given buffer over the
+ * transport and return the number of bytes sent.
+ * In the case of TLS over TCP, @ref TransportSend_t is typically implemented by
+ * calling the TLS layer function to send data. In case of plaintext TCP
+ * without TLS, it is typically implemented by calling the TCP layer send
+ * function. @ref TransportSend_t may be invoked multiple times by the protocol
+ * library if fewer bytes than were requested to send are returned.
  * <br><br>
  * <b>Example code:</b>
  * @code{c}
@@ -128,10 +123,10 @@
  *                                      size_t bytesToSend )
  * {
  *     int32_t bytesSent = 0;
- *     bytesSent = mySocketSend( pNetworkContext->tcpSocketContext,
- *                               pBuffer,
- *                               bytesToSend,
- *                               MY_SOCKET_TIMEOUT );
+ *     bytesSent = TLSSend( pNetworkContext->tcpSocketContext,
+ *                          pBuffer,
+ *                          bytesToSend,
+ *                          MY_SOCKET_TIMEOUT );
  *     if( bytesSent < 0 )
  *     {
  *         // Handle socket error.
