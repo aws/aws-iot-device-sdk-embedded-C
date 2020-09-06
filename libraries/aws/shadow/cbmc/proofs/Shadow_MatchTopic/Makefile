@@ -22,12 +22,12 @@
 HARNESS_ENTRY=harness
 HARNESS_FILE=Shadow_MatchTopic_harness
 
-# The topic length is bounded to reduce the proof run time. This length binds
+# The topic length is bounded to reduce the proof run time. This length bounds
 # the time to look for the thing name in the topic string. The minimum length
 # of the topic string is the length of the SHADOW_PREFIX ("$aws/things/")
 # plus the maximum Shadow Message Type length ("/shadow/update/documents").
 # Memory safety on the buffer holding the topic string can be proven within
-# a reasonable bound. It adds no value to the proof to input largest possible 
+# a reasonable bound. It adds no value to the proof to input the largest possible
 # topic string accepted by AWS (64KB).
 TOPIC_STRING_LENGTH_MAX=50
 
@@ -39,7 +39,7 @@ UNWINDSET += strncmp.0:25
 
 UNWINDSET += __CPROVER_file_local_shadow_c_validateThingName.0:$(TOPIC_STRING_LENGTH_MAX)
 
-# The number of message type is 8.
+# The number of message types is 8.
 UNWINDSET += __CPROVER_file_local_shadow_c_extractShadowMessageType.0:9
 
 
