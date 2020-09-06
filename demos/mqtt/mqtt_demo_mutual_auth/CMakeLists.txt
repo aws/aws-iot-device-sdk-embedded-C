@@ -15,7 +15,7 @@ target_sources(
     PRIVATE
         "${DEMO_NAME}.c"
         ${MQTT_SOURCES}
-        ${LIGHTWEIGHT_MQTT_SOURCES}
+        ${MQTT_SERIALIZER_SOURCES}
 )
 
 target_link_libraries(

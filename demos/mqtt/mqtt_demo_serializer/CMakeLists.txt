@@ -1,4 +1,4 @@
-set( DEMO_NAME "mqtt_demo_lightweight" )
+set( DEMO_NAME "mqtt_demo_serializer" )
 
 # Include MQTT library's source and header path variables.
 include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreMQTT/mqttFilePaths.cmake )
@@ -10,7 +10,7 @@ target_sources(
     ${DEMO_NAME}
     PRIVATE
         "${DEMO_NAME}.c"
-        ${LIGHTWEIGHT_MQTT_SOURCES}
+        ${MQTT_SERIALIZER_SOURCES}
 )
 
 target_link_libraries(
