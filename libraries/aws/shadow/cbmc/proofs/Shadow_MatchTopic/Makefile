@@ -22,9 +22,14 @@
 HARNESS_ENTRY=harness
 HARNESS_FILE=Shadow_MatchTopic_harness
 
-# The topic length is bounded for thing name because its maximum length is 64KB which
-# is too long.
-TOPIC_STRING_LENGTH_MAX=256
+# The topic length is bounded to reduce the proof run time. This length binds
+# the time to look for the thing name in the topic string. The minimum length
+# of the topic string is the length of the SHADOW_PREFIX ("$aws/things/")
+# plus the maximum Shadow Message Type length ("/shadow/update/documents").
+# Memory safety on the buffer holding the topic string can be proven within
+# a reasonable bound. It adds no value to the proof to input largest possible 
+# topic string accepted by AWS (64KB).
+TOPIC_STRING_LENGTH_MAX=50
 
 DEFINES += -DTOPIC_STRING_LENGTH_MAX=$(TOPIC_STRING_LENGTH_MAX)
 INCLUDES +=

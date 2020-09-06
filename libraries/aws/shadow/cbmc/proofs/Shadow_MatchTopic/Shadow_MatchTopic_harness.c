@@ -27,22 +27,20 @@
 #include "shadow.h"
 #include "shadow_cbmc_state.h"
 
-#ifndef TOPIC_STRING_LENGTH_MAX
-    #define TOPIC_STRING_LENGTH_MAX    256U
-#endif
-
 void harness()
 {
-    ShadowMessageType_t * pMessageType;
     const char * pTopicName;
     uint16_t topicNameLength;
+    ShadowMessageType_t * pMessageType;
     const char ** pThingName;
     uint16_t * pThingNameLength;
 
     __CPROVER_assume( topicNameLength < TOPIC_STRING_LENGTH_MAX );
-    pMessageType = mallocCanFail( sizeof( * pMessageType ) );
-    pThingName = mallocCanFail( sizeof( * pThingName ) );
     pTopicName = mallocCanFail( topicNameLength );
+
+    pMessageType = mallocCanFail( sizeof( * pMessageType ) );
+
+    pThingName = mallocCanFail( sizeof( * pThingName ) );
     pThingNameLength = mallocCanFail( sizeof( * pThingNameLength ) );
 
     Shadow_MatchTopic( pTopicName,
