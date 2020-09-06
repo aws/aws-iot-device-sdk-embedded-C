@@ -39,8 +39,8 @@
  * @ref transport_interface.h. This interface allows protocols like MQTT and 
  * HTTP to send and receive data over the transport layer. This
  * interface does not handle connection and disconnection to the server of
- * interest. The connection, disconnection, and other transport settings like
- * timeout and TLS setup must be handled in the user application.
+ * interest. The connection, disconnection, and other transport settings, like
+ * timeout and TLS setup, must be handled in the user application.
  * <br>
  *
  * The functions that must be implemented are:<br>
@@ -63,7 +63,7 @@
  * that is needed to receive and send data with the @ref TransportRecv_t
  * and the @ref TransportSend_t implementations.<br>
  * In the case of TLS over TCP, struct NetworkContext is typically implemented
- * with the CP socket context and a TLS context.<br><br>
+ * with the TCP socket context and a TLS context.<br><br>
  * <b>Example code:</b>
  * @code{c}
  * struct NetworkContext
@@ -76,13 +76,13 @@
  * -# Implementing @ref TransportRecv_t<br><br>
  * @snippet this define_transportrecv
  * <br>
- * This function is expected to populate a buffer with bytes received from the
- * transport and return the number of bytes placed in the buffer.
+ * This function is expected to populate a buffer, with bytes received from the
+ * transport, and return the number of bytes placed in the buffer.
  * In the case of TLS over TCP, @ref TransportRecv_t is typically implemented by
  * calling the TLS layer function to receive data. In case of plaintext TCP
  * without TLS, it is typically implemented by calling the TCP layer receive
  * function. @ref TransportRecv_t may be invoked multiple times by the protocol
- * library if fewer bytes than were requested to receive are returned.
+ * library, if fewer bytes than were requested to receive are returned.
  * <br><br>
  * <b>Example code:</b>
  * @code{c}
@@ -108,13 +108,13 @@
  * -# Implementing @ref TransportSend_t<br><br>
  * @snippet this define_transportsend
  * <br>
- * This function is expected to send the bytes in the given buffer over the
- * transport and return the number of bytes sent.
+ * This function is expected to send the bytes, in the given buffer over the
+ * transport, and return the number of bytes sent.
  * In the case of TLS over TCP, @ref TransportSend_t is typically implemented by
  * calling the TLS layer function to send data. In case of plaintext TCP
  * without TLS, it is typically implemented by calling the TCP layer send
  * function. @ref TransportSend_t may be invoked multiple times by the protocol
- * library if fewer bytes than were requested to send are returned.
+ * library, if fewer bytes than were requested to send are returned.
  * <br><br>
  * <b>Example code:</b>
  * @code{c}

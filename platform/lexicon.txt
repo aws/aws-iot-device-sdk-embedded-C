@@ -47,6 +47,7 @@ getaddrinfo
 getcwd
 hostnamelength
 html
+http
 https
 ifndef
 implemenation
@@ -66,8 +67,6 @@ misra
 mqtt
 mynetworkrecvimplementation
 mynetworksendimplementation
-mysocketrecv
-mysocketsend
 mytcpsocketcontext
 mytlscontext
 nano
@@ -127,6 +126,8 @@ tcp
 tcpsocket
 timespec
 tls
+tlsrecv
+tlssend
 transportinterface
 tcpsocketcontext
 tlscontext
