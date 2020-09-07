@@ -63,6 +63,7 @@ milli
 mosquitto
 mqtt
 mqttkeepalivetimeout
+mqttsubackfailure
 nameindex
 noninfringement
 numoftopicfilters

@@ -922,10 +922,14 @@ int main( int argc,
                     LogInfo( ( "Sending PINGREQ to the broker\n " ) );
                     mqttKeepAlive( &networkContext, &fixedBuffer );
 
+                    /* Reset the last control packet sent timestamp, after sending control packet
+                     * PINGREQ. This timestamp will be used to determine if it is necessary to
+                     * send another PINGREQ packet. */
                     returnStatus = clock_gettime( CLOCK_MONOTONIC, &currentTimeStamp );
                     assert( returnStatus == 0 );
                     lastControlPacketSentTimeStamp = currentTimeStamp.tv_sec;
 
+                    /* Process incoming PINGRESP from the broker */
                     mqttProcessIncomingPacket( &networkContext, &fixedBuffer );
 
                     LogWarn( ( "Server rejected subscription request. Retrying subscribe with backoff and jitter." ) );
