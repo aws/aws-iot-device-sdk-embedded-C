@@ -91,7 +91,7 @@
  *                                      size_t bytesToRecv )
  * {
  *     int32_t bytesReceived = 0;
- *     bytesReceived = TLSRecv( pNetworkContext->tcpSocketContext,
+ *     bytesReceived = TLSRecv( pNetworkContext->tlsContext,
  *                              pBuffer,
  *                              bytesToRecv,
  *                              MY_SOCKET_TIMEOUT );
@@ -123,7 +123,7 @@
  *                                      size_t bytesToSend )
  * {
  *     int32_t bytesSent = 0;
- *     bytesSent = TLSSend( pNetworkContext->tcpSocketContext,
+ *     bytesSent = TLSSend( pNetworkContext->tlsContext,
  *                          pBuffer,
  *                          bytesToSend,
  *                          MY_SOCKET_TIMEOUT );
