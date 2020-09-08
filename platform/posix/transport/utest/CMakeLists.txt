@@ -1,4 +1,4 @@
-include("../transportFilePaths.cmake")
+include(${PLATFORM_DIR}/posix/posixFilePaths.cmake)
 project ("transport unit test")
 cmake_minimum_required (VERSION 3.13)
 
