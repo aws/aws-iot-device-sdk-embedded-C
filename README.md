@@ -1,6 +1,6 @@
 # AWS IoT Device SDK for Embedded C
 
-This tag [3.1.0](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v3.1.0) contains the v3 version of AWS IoT Device SDK for Embedded C. No new features will be added to this tag, but only bug fixes will be made and minimally tested.
+This tag [3.1.0](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v3.1.0) contains the v3 version of AWS IoT Device SDK for Embedded C. No new features will be added to this tag; instead, only bug fixes will be made and minimally tested.
 
 
 ## Overview
