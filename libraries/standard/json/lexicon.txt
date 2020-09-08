@@ -1,4 +1,5 @@
 abc
+api
 ascii
 bf
 buf
@@ -9,8 +10,10 @@ dbff
 dc
 df
 dfff
+ecma
 ef
 endif
+enums
 fb
 fc
 fd
@@ -32,6 +35,7 @@ keylength
 min
 misra
 multibyte
+nb
 noninfringement
 nul
 outvalue
@@ -56,6 +60,7 @@ sublicense
 uint
 unescaped
 unicode
+unwindings
 utf
 valuelength
 xxxxxx

@@ -29,6 +29,8 @@ typedef enum
     true = 1, false = 0
 } bool_;
 
+#define boolEnum( x ) ( ( x == true ) || ( x == false ) )
+
 /* parameter check fail values for JSON API functions */
 #define parameterEnum( x )  ( ( x == JSONNullParameter ) || ( x == JSONBadParameter ) )
 

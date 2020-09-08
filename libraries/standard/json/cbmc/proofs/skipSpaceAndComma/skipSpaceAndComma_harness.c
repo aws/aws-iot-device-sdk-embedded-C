@@ -44,7 +44,7 @@ void harness()
 
     ret = skipSpaceAndComma( buf, &start, max );
 
-    __CPROVER_assert( ( ret == true ) || ( ret == false ), "A bool_ value is returned.");
+    __CPROVER_assert( boolEnum( ret ), "A bool_ value is returned.");
 
     if( ret == true )
     {

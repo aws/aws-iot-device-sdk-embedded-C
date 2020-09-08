@@ -3,7 +3,7 @@ JSON_Search proof
 
 This directory contains a memory safety proof for JSON_Search.
 
-The proof runs in 6 minutes on a t3.medium.  It provides complete coverage of:
+The proof runs in 15 minutes on a t3.medium.  It provides complete coverage of:
 * JSON_Search()
 * nextKeyValuePair()
 * search()

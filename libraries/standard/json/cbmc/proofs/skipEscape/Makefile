@@ -3,6 +3,8 @@
 
 HARNESS_FILE=skipEscape_harness
 
+# This value was experimentally chosen to provide 100% coverage
+# without tripping unwinding assertions and without exhausting memory.
 CBMC_MAX_BUFSIZE=14
 
 UNWINDSET += skipEscape.0:$(CBMC_MAX_BUFSIZE)

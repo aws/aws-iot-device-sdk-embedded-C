@@ -3,6 +3,8 @@
 
 HARNESS_FILE=skipCollection_harness
 
+# This value was experimentally chosen to provide 100% coverage
+# without tripping unwinding assertions and without exhausting memory.
 CBMC_MAX_BUFSIZE=8
 
 DEFINES += -DJSON_MAX_DEPTH='( $(CBMC_MAX_BUFSIZE) - 2 )'
