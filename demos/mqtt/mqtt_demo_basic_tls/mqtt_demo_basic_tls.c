@@ -51,7 +51,7 @@
 /* OpenSSL sockets transport implementation. */
 #include "openssl_posix.h"
 
-/* Reconnect parameters. */
+/* Retry parameters. */
 #include "retry_utils.h"
 
 /* Clock for timer. */
@@ -210,9 +210,22 @@ static uint16_t globalUnsubscribePacketIdentifier = 0U;
 static PublishPackets_t outgoingPublishPackets[ MAX_OUTGOING_PUBLISHES ] = { 0 };
 
 /**
+ * @brief Array to keep subscription topics.
+ * Used to re-subscribe to topics that failed initial subscription attempts.
+ */
+static MQTTSubscribeInfo_t pGlobalSubscriptionList[ 1 ];
+
+/**
  * @brief The network buffer must remain valid for the lifetime of the MQTT context.
  */
 static uint8_t buffer[ NETWORK_BUFFER_SIZE ];
+
+/**
+ * @brief Status of latest Subscribe ACK;
+ * it is updated every time the callback function processes a Subscribe ACK
+ * and accounts for subscription to a single topic.
+ */
+static MQTTSubAckStatus_t globalSubAckStatus = MQTTSubAckFailure;
 
 /*-----------------------------------------------------------*/
 
@@ -379,6 +392,23 @@ static void cleanupOutgoingPublishWithPacketID( uint16_t packetId );
  * @param[in] pMqttContext MQTT context pointer.
  */
 static int handlePublishResend( MQTTContext_t * pMqttContext );
+
+/**
+ * @brief Function to update variable globalSubAckStatus with status
+ * information from Subscribe ACK. Called by eventCallback after processing
+ * incoming subscribe echo.
+ *
+ * @param[in] Server response to the subscription request.
+ */
+static void updateSubAckStatus( MQTTPacketInfo_t * pPacketInfo );
+
+/**
+ * @brief Function to handle resubscription of topics on Subscribe
+ * ACK failure. Uses an exponential backoff strategy with jitter.
+ *
+ * @param[in] pMqttContext MQTT context pointer.
+ */
+static int handleResubscribe( MQTTContext_t * pMqttContext );
 
 /*-----------------------------------------------------------*/
 
@@ -625,6 +655,94 @@ static void handleIncomingPublish( MQTTPublishInfo_t * pPublishInfo,
 
 /*-----------------------------------------------------------*/
 
+static void updateSubAckStatus( MQTTPacketInfo_t * pPacketInfo )
+{
+    uint8_t * pPayload = NULL;
+    size_t pSize = 0;
+
+    MQTTStatus_t mqttStatus = MQTT_GetSubAckStatusCodes( pPacketInfo, &pPayload, &pSize );
+
+    /* MQTT_GetSubAckStatusCodes always returns success if called with packet info
+     * from the event callback and non-NULL parameters. */
+    assert( mqttStatus == MQTTSuccess );
+
+    /* Suppress unused variable warning when asserts are disabled in build. */
+    ( void ) mqttStatus;
+
+    /* Demo only subscribes to one topic, so only one status code is returned. */
+    globalSubAckStatus = pPayload[ 0 ];
+}
+
+/*-----------------------------------------------------------*/
+
+static int handleResubscribe( MQTTContext_t * pMqttContext )
+{
+    int returnStatus = EXIT_SUCCESS;
+    MQTTStatus_t mqttStatus = MQTTSuccess;
+    bool retriesArePending = true;
+    RetryUtilsParams_t retryParams;
+
+    assert( pMqttContext != NULL );
+
+    /* Initialize retry attempts and interval. */
+    RetryUtils_ParamsReset( &retryParams );
+
+    do
+    {
+        /* Send SUBSCRIBE packet.
+         * Note: reusing the value specified in globalSubscribePacketIdentifier is acceptable here
+         * because this function is entered only after the receipt of a SUBACK, at which point
+         * its associated packet id is free to use. */
+        mqttStatus = MQTT_Subscribe( pMqttContext,
+                                     pGlobalSubscriptionList,
+                                     sizeof( pGlobalSubscriptionList ) / sizeof( MQTTSubscribeInfo_t ),
+                                     globalSubscribePacketIdentifier );
+
+        if( mqttStatus != MQTTSuccess )
+        {
+            LogError( ( "Failed to send SUBSCRIBE packet to broker with error = %s.",
+                        MQTT_Status_strerror( mqttStatus ) ) );
+            returnStatus = EXIT_FAILURE;
+            break;
+        }
+
+        LogInfo( ( "SUBSCRIBE sent for topic %.*s to broker.\n\n",
+                   MQTT_EXAMPLE_TOPIC_LENGTH,
+                   MQTT_EXAMPLE_TOPIC ) );
+
+        /* Process incoming packet. */
+        mqttStatus = MQTT_ProcessLoop( pMqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
+
+        if( mqttStatus != MQTTSuccess )
+        {
+            LogError( ( "MQTT_ProcessLoop returned with status = %s.",
+                        MQTT_Status_strerror( mqttStatus ) ) );
+            returnStatus = EXIT_FAILURE;
+            break;
+        }
+
+        /* Check if recent subscription request has been rejected. globalSubAckStatus is updated
+         * in eventCallback to reflect the status of the SUBACK sent by the broker. It represents
+         * either the QoS level granted by the server upon subscription, or acknowledgement of
+         * server rejection of the subscription request. */
+        if( globalSubAckStatus == MQTTSubAckFailure )
+        {
+            LogWarn( ( "Server rejected subscription request. Retrying subscribe with backoff and jitter." ) );
+            retriesArePending = RetryUtils_BackoffAndSleep( &retryParams );
+        }
+
+        if( retriesArePending == false )
+        {
+            LogError( ( "Subscription to topic failed, all attempts exhausted." ) );
+            returnStatus = EXIT_FAILURE;
+        }
+    } while ( ( globalSubAckStatus == MQTTSubAckFailure ) && ( retriesArePending == true ) );
+
+    return returnStatus;
+}
+
+/*-----------------------------------------------------------*/
+
 static void eventCallback( MQTTContext_t * pMqttContext,
                            MQTTPacketInfo_t * pPacketInfo,
                            MQTTDeserializedInfo_t * pDeserializedInfo )
@@ -655,9 +773,24 @@ static void eventCallback( MQTTContext_t * pMqttContext,
         switch( pPacketInfo->type )
         {
             case MQTT_PACKET_TYPE_SUBACK:
-                LogInfo( ( "Subscribed to the topic %.*s.\n\n",
-                           MQTT_EXAMPLE_TOPIC_LENGTH,
-                           MQTT_EXAMPLE_TOPIC ) );
+
+                /* A SUBACK from the broker, containing the server response to our subscription request, has been received.
+                 * It contains the status code indicating server approval/rejection for the subscription to the single topic
+                 * requested. The SUBACK will be parsed to obtain the status code, and this status code will be stored in global
+                 * variable globalSubAckStatus. */
+                updateSubAckStatus( pPacketInfo );
+
+                /* Check status of the subscription request. If globalSubAckStatus does not indicate
+                 * server refusal of the request (MQTTSubAckFailure), it contains the QoS level granted
+                 * by the server, indicating a successful subscription attempt. */
+                if( globalSubAckStatus != MQTTSubAckFailure )
+                {
+                    LogInfo( ( "Subscribed to the topic %.*s. with maximum QoS %u.\n\n",
+                               MQTT_EXAMPLE_TOPIC_LENGTH,
+                               MQTT_EXAMPLE_TOPIC,
+                               globalSubAckStatus ) );
+                }
+
                 /* Make sure ACK packet identifier matches with Request packet identifier. */
                 assert( globalSubscribePacketIdentifier == packetIdentifier );
                 break;
@@ -792,25 +925,24 @@ static int subscribeToTopic( MQTTContext_t * pMqttContext )
 {
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus;
-    MQTTSubscribeInfo_t pSubscriptionList[ 1 ];
 
     assert( pMqttContext != NULL );
 
     /* Start with everything at 0. */
-    ( void ) memset( ( void * ) pSubscriptionList, 0x00, sizeof( pSubscriptionList ) );
+    ( void ) memset( ( void * ) pGlobalSubscriptionList, 0x00, sizeof( pGlobalSubscriptionList ) );
 
     /* This example subscribes to only one topic and uses QOS2. */
-    pSubscriptionList[ 0 ].qos = MQTTQoS2;
-    pSubscriptionList[ 0 ].pTopicFilter = MQTT_EXAMPLE_TOPIC;
-    pSubscriptionList[ 0 ].topicFilterLength = MQTT_EXAMPLE_TOPIC_LENGTH;
+    pGlobalSubscriptionList[ 0 ].qos = MQTTQoS2;
+    pGlobalSubscriptionList[ 0 ].pTopicFilter = MQTT_EXAMPLE_TOPIC;
+    pGlobalSubscriptionList[ 0 ].topicFilterLength = MQTT_EXAMPLE_TOPIC_LENGTH;
 
     /* Generate packet identifier for the SUBSCRIBE packet. */
     globalSubscribePacketIdentifier = MQTT_GetPacketId( pMqttContext );
 
     /* Send SUBSCRIBE packet. */
     mqttStatus = MQTT_Subscribe( pMqttContext,
-                                 pSubscriptionList,
-                                 sizeof( pSubscriptionList ) / sizeof( MQTTSubscribeInfo_t ),
+                                 pGlobalSubscriptionList,
+                                 sizeof( pGlobalSubscriptionList ) / sizeof( MQTTSubscribeInfo_t ),
                                  globalSubscribePacketIdentifier );
 
     if( mqttStatus != MQTTSuccess )
@@ -835,26 +967,25 @@ static int unsubscribeFromTopic( MQTTContext_t * pMqttContext )
 {
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus;
-    MQTTSubscribeInfo_t pSubscriptionList[ 1 ];
 
     assert( pMqttContext != NULL );
 
     /* Start with everything at 0. */
-    ( void ) memset( ( void * ) pSubscriptionList, 0x00, sizeof( pSubscriptionList ) );
+    ( void ) memset( ( void * ) pGlobalSubscriptionList, 0x00, sizeof( pGlobalSubscriptionList ) );
 
     /* This example subscribes to and unsubscribes from only one topic
      * and uses QOS2. */
-    pSubscriptionList[ 0 ].qos = MQTTQoS2;
-    pSubscriptionList[ 0 ].pTopicFilter = MQTT_EXAMPLE_TOPIC;
-    pSubscriptionList[ 0 ].topicFilterLength = MQTT_EXAMPLE_TOPIC_LENGTH;
+    pGlobalSubscriptionList[ 0 ].qos = MQTTQoS2;
+    pGlobalSubscriptionList[ 0 ].pTopicFilter = MQTT_EXAMPLE_TOPIC;
+    pGlobalSubscriptionList[ 0 ].topicFilterLength = MQTT_EXAMPLE_TOPIC_LENGTH;
 
     /* Generate packet identifier for the UNSUBSCRIBE packet. */
     globalUnsubscribePacketIdentifier = MQTT_GetPacketId( pMqttContext );
 
     /* Send UNSUBSCRIBE packet. */
     mqttStatus = MQTT_Unsubscribe( pMqttContext,
-                                   pSubscriptionList,
-                                   sizeof( pSubscriptionList ) / sizeof( MQTTSubscribeInfo_t ),
+                                   pGlobalSubscriptionList,
+                                   sizeof( pGlobalSubscriptionList ) / sizeof( MQTTSubscribeInfo_t ),
                                    globalUnsubscribePacketIdentifier );
 
     if( mqttStatus != MQTTSuccess )
@@ -1064,6 +1195,19 @@ static int subscribePublishLoop( MQTTContext_t * pMqttContext,
         }
     }
 
+    /* Check if recent subscription request has been rejected. globalSubAckStatus is updated
+     * in eventCallback to reflect the status of the SUBACK sent by the broker. */
+    if( ( returnStatus == EXIT_SUCCESS ) && ( globalSubAckStatus == MQTTSubAckFailure ) )
+    {
+        /* If server rejected the subscription request, attempt to resubscribe to topic.
+         * Attempts are made according to the exponential backoff retry strategy
+         * implemented in retryUtils. */
+        LogInfo( ( "Server rejected initial subscription request. Attempting to re-subscribe to topic %.*s.",
+                   MQTT_EXAMPLE_TOPIC_LENGTH,
+                   MQTT_EXAMPLE_TOPIC ) );
+        returnStatus = handleResubscribe( pMqttContext );
+    }
+
     if( returnStatus == EXIT_SUCCESS )
     {
         /* Publish messages with QOS2, receive incoming messages and
@@ -1142,6 +1286,9 @@ static int subscribePublishLoop( MQTTContext_t * pMqttContext,
             returnStatus = disconnectMqttSession( pMqttContext );
         }
     }
+
+    /* Reset global SUBACK status variable after completion of subscription request cycle. */
+    globalSubAckStatus = MQTTSubAckFailure;
 
     return returnStatus;
 }

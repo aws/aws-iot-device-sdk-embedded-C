@@ -38,6 +38,8 @@ dup
 endif
 eventcallback
 filterindex
+globalsubackstatus
+globalsubscribepacketidentifier
 hashmap
 hasn
 html
@@ -61,6 +63,8 @@ milli
 mosquitto
 mqtt
 mqttkeepalivetimeout
+mqttprocessincomingpacket
+mqttsubackfailure
 nameindex
 noninfringement
 numoftopicfilters
@@ -117,6 +121,9 @@ qos
 readme
 resending
 resp
+resubscribe
+resubscription
+retryutils
 rom
 sdk
 shadowstatus
@@ -145,6 +152,7 @@ transporttimeout
 uint
 unsub
 unsuback
+updatesubackstatus
 uri
 ve
 www

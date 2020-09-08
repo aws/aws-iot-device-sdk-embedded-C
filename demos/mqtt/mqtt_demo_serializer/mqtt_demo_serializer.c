@@ -54,7 +54,7 @@
 /* Plaintext transport implementation. */
 #include "plaintext_posix.h"
 
-/* Reconnect parameters. */
+/* Retry parameters. */
 #include "retry_utils.h"
 
 /* Check that the broker endpoint is defined. */
@@ -282,6 +282,12 @@ static uint16_t subscribePacketIdentifier;
  * request.
  */
 static uint16_t unsubscribePacketIdentifier;
+
+/**
+ * @brief Status of latest Subscribe ACK;
+ * it is updated every time a Subscribe ACK is processed.
+ */
+static bool globalSubAckStatus = false;
 
 /*-----------------------------------------------------------*/
 
@@ -669,7 +675,18 @@ static void mqttProcessResponse( MQTTPacketInfo_t * pIncomingPacket,
     switch( pIncomingPacket->type & 0xf0 )
     {
         case MQTT_PACKET_TYPE_SUBACK:
-            LogInfo( ( "Subscribed to the topic %s.\r\n", MQTT_EXAMPLE_TOPIC ) );
+
+            /* Check if recent subscription request has been accepted. globalSubAckStatus is updated
+             * in mqttProcessIncomingPacket to reflect the status of the SUBACK sent by the broker. */
+            if( globalSubAckStatus == true )
+            {
+                LogInfo( ( "Subscribed to the topic %s.\r\n", MQTT_EXAMPLE_TOPIC ) );
+            }
+            else
+            {
+                LogInfo( ( "Server refused subscription request for the topic %s.\r\n", MQTT_EXAMPLE_TOPIC ) );
+            }
+
             /* Make sure ACK packet identifier matches with Request packet identifier. */
             assert( subscribePacketIdentifier == packetId );
             break;
@@ -788,7 +805,16 @@ static void mqttProcessIncomingPacket( NetworkContext_t * pNetworkContext,
          * packet. Since CONNACK is already processed, session present parameter is
          * to NULL */
         result = MQTT_DeserializeAck( &incomingPacket, &packetId, &sessionPresent );
-        assert( result == MQTTSuccess );
+
+        if( incomingPacket.type == MQTT_PACKET_TYPE_SUBACK )
+        {
+            globalSubAckStatus = ( result == MQTTSuccess );
+            assert( result == MQTTSuccess || result == MQTTServerRefused );
+        }
+        else
+        {
+            assert( result == MQTTSuccess );
+        }
 
         /* Process the response. */
         mqttProcessResponse( &incomingPacket, packetId );
@@ -823,6 +849,8 @@ int main( int argc,
     bool controlPacketSent = false;
     bool publishPacketSent = false;
     NetworkContext_t networkContext = { 0 };
+    bool retriesArePending = true;
+    RetryUtilsParams_t retryParams;
 
     ( void ) argc;
     ( void ) argv;
@@ -851,34 +879,71 @@ int main( int argc,
             returnStatus = createMQTTConnectionWithBroker( &networkContext, &fixedBuffer );
             assert( returnStatus == EXIT_SUCCESS );
 
-            /**************************** Subscribe. ******************************/
+            /**************************** Subscribe, Re-subscribe, and Keep-Alive ******************************/
 
-            /* The client is now connected to the broker. Subscribe to the topic
-             * as specified in MQTT_EXAMPLE_TOPIC at the top of this file by sending a
-             * subscribe packet then waiting for a subscribe acknowledgment (SUBACK).
-             * This client will then publish to the same topic it subscribed to, so it
-             * will expect all the messages it sends to the broker to be sent back to it
-             * from the broker. This demo uses QOS0 in subscribe, therefore, the Publish
-             * messages received from the broker will have QOS0. */
-            /* Subscribe and SUBACK */
-            LogInfo( ( "Attempt to subscribe to the MQTT topic %s\r\n", MQTT_EXAMPLE_TOPIC ) );
-            mqttSubscribeToTopic( &networkContext, &fixedBuffer );
+            /* Initialize retry attempts and interval. */
+            RetryUtils_ParamsReset( &retryParams );
 
-            /* Since subscribe is a control packet, record the last control packet sent
-             * timestamp. This timestamp will be used to determine if it is necessary to
-             * send a PINGREQ packet. */
-            returnStatus = clock_gettime( CLOCK_MONOTONIC, &currentTimeStamp );
-            assert( returnStatus == 0 );
-            lastControlPacketSentTimeStamp = currentTimeStamp.tv_sec;
+            do
+            {
+                /* The client is now connected to the broker. Subscribe to the topic
+                 * as specified in MQTT_EXAMPLE_TOPIC at the top of this file by sending a
+                 * subscribe packet then waiting for a subscribe acknowledgment (SUBACK).
+                 * This client will then publish to the same topic it subscribed to, so it
+                 * will expect all the messages it sends to the broker to be sent back to it
+                 * from the broker. This demo uses QOS0 in subscribe, therefore, the Publish
+                 * messages received from the broker will have QOS0. */
+                /* Subscribe and SUBACK */
+                LogInfo( ( "Attempt to subscribe to the MQTT topic %s\r\n", MQTT_EXAMPLE_TOPIC ) );
+                mqttSubscribeToTopic( &networkContext, &fixedBuffer );
 
-            /* Process incoming packet from the broker. After sending the subscribe, the
-             * client may receive a publish before it receives a subscribe ack. Therefore,
-             * call generic incoming packet processing function. Since this demo is
-             * subscribing to the topic to which no one is publishing, probability of
-             * receiving Publish message before subscribe ack is zero; but application
-             * must be ready to receive any packet.  This demo uses the generic packet
-             * processing function everywhere to highlight this fact. */
-            mqttProcessIncomingPacket( &networkContext, &fixedBuffer );
+                /* Since subscribe is a control packet, record the last control packet sent
+                 * timestamp. This timestamp will be used to determine if it is necessary to
+                 * send a PINGREQ packet. */
+                returnStatus = clock_gettime( CLOCK_MONOTONIC, &currentTimeStamp );
+                assert( returnStatus == 0 );
+                lastControlPacketSentTimeStamp = currentTimeStamp.tv_sec;
+
+                /* Process incoming packet from the broker. After sending the subscribe, the
+                 * client may receive a publish before it receives a subscribe ack. Therefore,
+                 * call generic incoming packet processing function. Since this demo is
+                 * subscribing to the topic to which no one is publishing, probability of
+                 * receiving Publish message before subscribe ack is zero; but application
+                 * must be ready to receive any packet.  This demo uses the generic packet
+                 * processing function everywhere to highlight this fact. */
+                mqttProcessIncomingPacket( &networkContext, &fixedBuffer );
+
+                /* Check status of suback sent from broker. If server rejected the subscription
+                 * request, attempt resubscription to the topic filter. */
+                if( globalSubAckStatus == false )
+                {
+                    /* Send PINGREQ to the broker. A PINGREQ is sent to avoid hitting keep-alive
+                     * time-out period during backoff and sleep execution, before the next
+                     * subscription attempt. */
+                    LogInfo( ( "Sending PINGREQ to the broker\n " ) );
+                    mqttKeepAlive( &networkContext, &fixedBuffer );
+
+                    /* Reset the last control packet sent timestamp, after sending control packet
+                     * PINGREQ. This timestamp will be used to determine if it is necessary to
+                     * send another PINGREQ packet. */
+                    returnStatus = clock_gettime( CLOCK_MONOTONIC, &currentTimeStamp );
+                    assert( returnStatus == 0 );
+                    lastControlPacketSentTimeStamp = currentTimeStamp.tv_sec;
+
+                    /* Process incoming PINGRESP from the broker */
+                    mqttProcessIncomingPacket( &networkContext, &fixedBuffer );
+
+                    LogWarn( ( "Server rejected subscription request. Retrying subscribe with backoff and jitter." ) );
+                    retriesArePending = RetryUtils_BackoffAndSleep( &retryParams );
+                }
+
+                if( retriesArePending == false )
+                {
+                    LogError( ( "Subscription to topic failed, all attempts exhausted." ) );
+                }
+            } while ( ( globalSubAckStatus == false ) && ( retriesArePending == true ) );
+
+            assert( globalSubAckStatus == true );
 
             /********************* Publish and Keep Alive Loop. ********************/
             /* Publish messages with QOS0, send and process Keep alive messages. */
@@ -944,6 +1009,9 @@ int main( int argc,
             mqttUnsubscribeFromTopic( &networkContext, &fixedBuffer );
             /* Process Incoming unsubscribe ack from the broker. */
             mqttProcessIncomingPacket( &networkContext, &fixedBuffer );
+
+            /* Reset global SUBACK status variable after completion of subscription request cycle. */
+            globalSubAckStatus = false;
 
             /* Send an MQTT Disconnect packet over the already connected TCP socket.
              * There is no corresponding response for the disconnect packet. After sending
