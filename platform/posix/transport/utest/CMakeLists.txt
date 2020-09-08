@@ -19,6 +19,7 @@ list(APPEND mock_list
             ${CMAKE_CURRENT_LIST_DIR}/mocks/unistd_api.h
             ${CMAKE_CURRENT_LIST_DIR}/mocks/openssl_api.h
             ${CMAKE_CURRENT_LIST_DIR}/mocks/stdio_api.h
+            ${CMAKE_CURRENT_LIST_DIR}/mocks/select_api.h
             ${PLATFORM_DIR}/posix/transport/include/sockets_posix.h
         )
 # list the directories your mocks need
