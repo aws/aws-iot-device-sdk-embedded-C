@@ -19,9 +19,14 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/* Standard includes. */
+#include <assert.h>
+#include <string.h>
+
 /* POSIX socket includes. */
 #include <errno.h>
 #include <sys/socket.h>
+#include <sys/select.h>
 
 #include "plaintext_posix.h"
 
@@ -38,56 +43,10 @@ static void logTransportError( int32_t errorNumber );
 
 static void logTransportError( int32_t errorNumber )
 {
-    switch( errorNumber )
-    {
-        case EBADF:
-            LogError( ( "The socket argument is not a valid file descriptor." ) );
-            break;
+    /* Remove unused parameter warning. */
+    ( void ) errorNumber;
 
-        case ECONNRESET:
-            LogError( ( "A connection was forcibly closed by a peer." ) );
-            break;
-
-        case EDESTADDRREQ:
-            LogError( ( "The socket is not connection-mode and no peer address is set." ) );
-            break;
-
-        case EINTR:
-            LogError( ( "A signal interrupted send/recv." ) );
-            break;
-
-        case EINVAL:
-            LogError( ( "The MSG_OOB flag is set and no out-of-band data is available." ) );
-            break;
-
-        case ENOTCONN:
-            LogError( ( "A send/receive is attempted on a connection-mode socket that is not connected." ) );
-            break;
-
-        case ENOTSOCK:
-            LogError( ( "The socket argument does not refer to a socket." ) );
-            break;
-
-        case EOPNOTSUPP:
-            LogError( ( "The specified flags are not supported for this socket type or protocol." ) );
-            break;
-
-        case ETIMEDOUT:
-            LogError( ( "The connection timed out during connection establishment, or due to a transmission timeout on active connection." ) );
-            break;
-
-        case EMSGSIZE:
-            LogError( ( "The message is too large to be sent all at once, as the socket requires." ) );
-            break;
-
-        case EPIPE:
-            LogError( ( "The socket is shut down for writing, or the socket is connection-mode and is no longer connected. In the latter case, and if the socket is of type SOCK_STREAM or SOCK_SEQPACKET and the MSG_NOSIGNAL flag is not set, the SIGPIPE signal is generated to the calling thread." ) );
-            break;
-
-        default:
-            LogError( ( "Unexpected error code: errno=%d.", errorNumber ) );
-            break;
-    }
+    LogError( ( "A transport error occurred: %s.", strerror( errorNumber ) ) );
 }
 /*-----------------------------------------------------------*/
 
@@ -113,30 +72,70 @@ int32_t Plaintext_Recv( const NetworkContext_t * pNetworkContext,
                         void * pBuffer,
                         size_t bytesToRecv )
 {
-    int32_t bytesReceived = 0;
+    int32_t bytesReceived = -1, selectStatus = -1, getTimeoutStatus = -1;
+    struct timeval recvTimeout;
+    socklen_t recvTimeoutLen;
+    fd_set readfds;
 
-    bytesReceived = ( int32_t ) recv( pNetworkContext->socketDescriptor, pBuffer, bytesToRecv, 0 );
+    assert( pNetworkContext != NULL );
+    assert( pBuffer != NULL );
+    assert( bytesToRecv > 0 );
 
-    if( bytesReceived == 0 )
+    /* Get receive timeout from the socket to use as the timeout for #select. */
+    recvTimeoutLen = ( socklen_t ) sizeof( recvTimeout );
+    getTimeoutStatus = getsockopt( pNetworkContext->socketDescriptor,
+                                   SOL_SOCKET,
+                                   SO_RCVTIMEO,
+                                   &recvTimeout,
+                                   &recvTimeoutLen );
+
+    /* Make #select return immediately if getting the timeout failed. */
+    if( getTimeoutStatus < 0 )
     {
-        /* Server closed the connection, treat it as an error. */
+        recvTimeout.tv_sec = 0;
+        recvTimeout.tv_usec = 0;
+    }
+
+    FD_ZERO( &readfds );
+    FD_SET( pNetworkContext->socketDescriptor, &readfds );
+    /* Check if there is data to read from the socket. */
+    selectStatus = select( pNetworkContext->socketDescriptor + 1,
+                           &readfds,
+                           NULL,
+                           NULL,
+                           &recvTimeout );
+
+    if( selectStatus > 0 )
+    {
+        /* The socket is available for receiving data. */
+        bytesReceived = ( int32_t ) recv( pNetworkContext->socketDescriptor,
+                                          pBuffer,
+                                          bytesToRecv,
+                                          0 );
+    }
+    else if( selectStatus < 0 )
+    {
+        /* An error occurred while polling. */
+        bytesReceived = -1;
+    }
+    else
+    {
+        /* Timed out waiting for data to be received. */
+        bytesReceived = 0;
+    }
+
+    if( ( selectStatus > 0 ) && ( bytesReceived == 0 ) )
+    {
+        /* Peer has closed the connection. Treat as an error. */
         bytesReceived = -1;
     }
     else if( bytesReceived < 0 )
     {
         logTransportError( errno );
-
-        /* Check if it was time out. Note that for most POSIX implementations,
-         * EAGAIN and EWOULDBLOCK have the same value. */
-        if( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) )
-        {
-            /* Set return value to 0 to indicate nothing to receive. */
-            bytesReceived = 0;
-        }
     }
     else
     {
-        /* Empty else. */
+        /* Empty else MISRA 15.7 */
     }
 
     return bytesReceived;
@@ -147,21 +146,70 @@ int32_t Plaintext_Send( const NetworkContext_t * pNetworkContext,
                         const void * pBuffer,
                         size_t bytesToSend )
 {
-    int32_t bytesSent = 0;
+    int32_t bytesSent = -1, selectStatus = -1, getTimeoutStatus = -1;
+    struct timeval sendTimeout;
+    socklen_t sendTimeoutLen;
+    fd_set writefds;
 
-    bytesSent = ( int32_t ) send( pNetworkContext->socketDescriptor, pBuffer, bytesToSend, 0 );
+    assert( pNetworkContext != NULL );
+    assert( pBuffer != NULL );
+    assert( bytesToSend > 0 );
 
-    if( bytesSent < 0 )
+    /* Get send timeout from the socket to use as the timeout for #select. */
+    sendTimeoutLen = ( socklen_t ) sizeof( sendTimeout );
+    getTimeoutStatus = getsockopt( pNetworkContext->socketDescriptor,
+                                   SOL_SOCKET,
+                                   SO_SNDTIMEO,
+                                   &sendTimeout,
+                                   &sendTimeoutLen );
+
+    /* Make #select return immediately if getting the timeout failed. */
+    if( getTimeoutStatus < 0 )
+    {
+        sendTimeout.tv_sec = 0;
+        sendTimeout.tv_usec = 0;
+    }
+
+    FD_ZERO( &writefds );
+    FD_SET( pNetworkContext->socketDescriptor, &writefds );
+    /* Check if data can be written to the socket. */
+    selectStatus = select( pNetworkContext->socketDescriptor + 1,
+                           NULL,
+                           &writefds,
+                           NULL,
+                           &sendTimeout );
+
+    if( selectStatus > 0 )
+    {
+        /* The socket is available for sending data. */
+        bytesSent = ( int32_t ) send( pNetworkContext->socketDescriptor,
+                                      pBuffer,
+                                      bytesToSend,
+                                      0 );
+    }
+    else if( selectStatus < 0 )
+    {
+        /* An error occurred while polling. */
+        bytesSent = -1;
+    }
+    else
+    {
+        /* Timed out waiting for data to be sent. */
+        bytesSent = 0;
+    }
+
+    if( ( selectStatus > 0 ) && ( bytesSent == 0 ) )
+    {
+        /* Peer has closed the connection. Treat as an error. */
+        bytesSent = -1;
+    }
+    else if( bytesSent < 0 )
     {
         logTransportError( errno );
-
-        /* Check if it was time out. Note that for most POSIX implementations,
-         * EAGAIN and EWOULDBLOCK have the same value. */
-        if( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) )
-        {
-            /* Set return value to 0 to indicate that send had timed out. */
-            bytesSent = 0;
-        }
+    }
+    else
+    {
+        /* Empty else MISRA 15.7 */
     }
 
     return bytesSent;
