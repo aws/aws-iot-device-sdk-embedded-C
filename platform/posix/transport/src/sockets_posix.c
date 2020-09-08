@@ -281,49 +281,7 @@ static SocketStatus_t retrieveError( int32_t errorNumber )
 {
     SocketStatus_t returnStatus = SOCKETS_API_ERROR;
 
-    switch( errorNumber )
-    {
-        case EBADF:
-            LogError( ( "The socket argument is not a valid file descriptor." ) );
-            break;
-
-        case EDOM:
-            LogError( ( "The send and receive timeout values are too big to fit "
-                        "into the timeout fields in the socket structure." ) );
-            break;
-
-        case EINVAL:
-            LogError( ( "The specified option is invalid at the specified "
-                        "socket level or the socket has been shut down." ) );
-            break;
-
-        case EISCONN:
-            LogError( ( "The socket is already connected, and a specified option "
-                        "cannot be set while the socket is connected." ) );
-            break;
-
-        case ENOPROTOOPT:
-            LogError( ( "The option is not supported by the protocol." ) );
-            break;
-
-        case ENOTSOCK:
-            LogError( ( "The socket argument does not refer to a socket." ) );
-            break;
-
-        case ENOMEM:
-            LogError( ( "There was insufficient memory available for the "
-                        "operation to complete." ) );
-            break;
-
-        case ENOBUFS:
-            LogError( ( "Insufficient resources are available in the system to "
-                        "complete the call." ) );
-            break;
-
-        default:
-            LogError( ( "Unexpected error code. Error number = %d", errorNumber ) );
-            break;
-    }
+    LogError( ( "A transport error occured: %s.", strerror( errorNumber ) ) );
 
     if( ( errorNumber == ENOMEM ) || ( errorNumber == ENOBUFS ) )
     {
