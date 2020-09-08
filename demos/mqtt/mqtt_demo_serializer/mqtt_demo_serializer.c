@@ -54,7 +54,7 @@
 /* Plaintext transport implementation. */
 #include "plaintext_posix.h"
 
-/* Reconnect parameters. */
+/* Retry parameters. */
 #include "retry_utils.h"
 
 /* Check that the broker endpoint is defined. */
@@ -850,7 +850,7 @@ int main( int argc,
     bool publishPacketSent = false;
     NetworkContext_t networkContext = { 0 };
     bool retriesArePending = true;
-    TransportReconnectParams_t reconnectParams;
+    RetryUtilsParams_t retryParams;
 
     ( void ) argc;
     ( void ) argv;
@@ -882,7 +882,7 @@ int main( int argc,
             /**************************** Subscribe, Re-subscribe, and Keep-Alive ******************************/
 
             /* Initialize retry attempts and interval. */
-            Transport_ReconnectParamsReset( &reconnectParams );
+            RetryUtils_ParamsReset( &retryParams );
 
             do
             {
@@ -934,7 +934,7 @@ int main( int argc,
                     mqttProcessIncomingPacket( &networkContext, &fixedBuffer );
 
                     LogWarn( ( "Server rejected subscription request. Retrying subscribe with backoff and jitter." ) );
-                    retriesArePending = Transport_ReconnectBackoffAndSleep( &reconnectParams );
+                    retriesArePending = RetryUtils_BackoffAndSleep( &retryParams );
                 }
 
                 if( retriesArePending == false )

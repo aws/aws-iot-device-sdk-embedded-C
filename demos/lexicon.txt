@@ -123,6 +123,7 @@ resending
 resp
 resubscribe
 resubscription
+retryutils
 rom
 sdk
 shadowstatus

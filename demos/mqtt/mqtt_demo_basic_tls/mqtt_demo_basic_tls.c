@@ -51,7 +51,7 @@
 /* OpenSSL sockets transport implementation. */
 #include "openssl_posix.h"
 
-/* Reconnect parameters. */
+/* Retry parameters. */
 #include "retry_utils.h"
 
 /* Clock for timer. */
@@ -680,12 +680,12 @@ static int handleResubscribe( MQTTContext_t * pMqttContext )
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus = MQTTSuccess;
     bool retriesArePending = true;
-    TransportReconnectParams_t retryParams;
+    RetryUtilsParams_t retryParams;
 
     assert( pMqttContext != NULL );
 
     /* Initialize retry attempts and interval. */
-    Transport_ReconnectParamsReset( &retryParams );
+    RetryUtils_ParamsReset( &retryParams );
 
     do
     {
@@ -728,7 +728,7 @@ static int handleResubscribe( MQTTContext_t * pMqttContext )
         if( globalSubAckStatus == MQTTSubAckFailure )
         {
             LogWarn( ( "Server rejected subscription request. Retrying subscribe with backoff and jitter." ) );
-            retriesArePending = Transport_ReconnectBackoffAndSleep( &retryParams );
+            retriesArePending = RetryUtils_BackoffAndSleep( &retryParams );
         }
 
         if( retriesArePending == false )
@@ -1201,7 +1201,7 @@ static int subscribePublishLoop( MQTTContext_t * pMqttContext,
     {
         /* If server rejected the subscription request, attempt to resubscribe to topic.
          * Attempts are made according to the exponential backoff retry strategy
-         * implemented in transport_reconnect. */
+         * implemented in retryUtils. */
         LogInfo( ( "Server rejected initial subscription request. Attempting to re-subscribe to topic %.*s.",
                    MQTT_EXAMPLE_TOPIC_LENGTH,
                    MQTT_EXAMPLE_TOPIC ) );
