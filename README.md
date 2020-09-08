@@ -1,25 +1,7 @@
 # AWS IoT Device SDK for Embedded C
 
-**We have released version 4.0.0 beta 1 of this SDK on the [v4_beta](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v4_beta) branch and encourage everyone to give it a try.**
+This tag [3.1.0](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v3.1.0) contains the v3 version of AWS IoT Device SDK for Embedded C. No new features will be added to this tag; instead, only bug fixes will be made and minimally tested.
 
-Version 4 is a new design, and therefore **NOT** backwards compatible with version 3.0.1. We will continue to fix bugs in v3.0.1 even after v4.0.0 is released, but we may not add new features to v3.0.1.
-
-Please be aware that v4 beta may have bugs and performance issues. Additionally, there are currently missing features compared to v3.0.1. See the [README](https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/v4_beta/README.md/) on the v4_beta branch for more information.
-
-## Branches
-
-### Master branch
-The [master](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/master) branch will now contain bug fixes/features that have been minimally tested to ensure nothing major is broken. The current version on the master branch is v3.0.1. Eventually, we will move v4.0.0 to the master branch and move v3.0.1 to a legacy branch.
-
-### Release branch
-The [release](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/release) branch will contain new releases for the SDK that have been tested thoroughly on all supported platforms. Please ensure that you are tracking the release branch for all production work. The current version on the release branch is v3.0.1. Eventually, we will move v4.0.0 to the release branch and move v3.0.1 to a legacy branch.
-
-### v4_beta branch
-The [v4_beta](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v4_beta) branch will contain new features and a new design that inherits from both the AWS IoT Device SDK Embedded C and the libraries provided with Amazon FreeRTOS. This is version 4.0.0 of the SDK. Please be aware that v4 beta may have bugs and performance issues. Eventually, we will move v4.0.0 to the master/release branches and delete v4 beta branch.
-
-### Development branch
-
-The [development](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/development) currently hosts development of the next iteration of the AWS IoT Embedded C SDK version 4. It is currently a work in progress and should not be used to create any products.  We will update this README when that status changes.
 
 ## Overview
 
