@@ -96,7 +96,19 @@ int32_t Plaintext_Recv( const NetworkContext_t * pNetworkContext,
         recvTimeout.tv_usec = 0;
     }
 
+    /* MISRA Directive 4.6 flags the following line for a violation of using a
+     * basic type "int" rather than a type that includes size and signedness information.
+     * We suppress the violation as the flagged type, "fd_set", is a POSIX
+     * system-specific type, and is used for the call to "select()". */
+    /* coverity[misra_c_2012_directive_4_6_violation] */
     FD_ZERO( &readfds );
+
+    /* MISRA Directive 4.6 flags the following line for a violation of using a
+     * basic type "int" rather than a type that includes size and signedness information.
+     * We suppress the violation as the flagged type, "fd_set", is a POSIX
+     * system-specific type, and is used for the call to "select()". */
+    /* coverity[misra_c_2012_directive_4_6_violation] */
+    /* coverity[misra_c_2012_rule_10_1_violation] */
     FD_SET( pNetworkContext->socketDescriptor, &readfds );
     /* Check if there is data to read from the socket. */
     selectStatus = select( pNetworkContext->socketDescriptor + 1,
@@ -170,7 +182,19 @@ int32_t Plaintext_Send( const NetworkContext_t * pNetworkContext,
         sendTimeout.tv_usec = 0;
     }
 
+    /* MISRA Directive 4.6 flags the following line for a violation of using a
+     * basic type "int" rather than a type that includes size and signedness information.
+     * We suppress the violation as the flagged type, "fd_set", is a POSIX
+     * system-specific type, and is used for the call to "select()". */
+    /* coverity[misra_c_2012_directive_4_6_violation] */
     FD_ZERO( &writefds );
+
+    /* MISRA Directive 4.6 flags the following line for a violation of using a
+     * basic type "int" rather than a type that includes size and signedness information.
+     * We suppress the violation as the flagged type, "fd_set", is a POSIX
+     * system-specific type, and is used for the call to "select()". */
+    /* coverity[misra_c_2012_directive_4_6_violation] */
+    /* coverity[misra_c_2012_rule_10_1_violation] */
     FD_SET( pNetworkContext->socketDescriptor, &writefds );
     /* Check if data can be written to the socket. */
     selectStatus = select( pNetworkContext->socketDescriptor + 1,
