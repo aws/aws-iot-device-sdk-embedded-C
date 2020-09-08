@@ -611,7 +611,6 @@ static void mqttUnsubscribeFromTopic( NetworkContext_t * pNetworkContext,
     /* Send Unsubscribe request to the broker. */
     status = Plaintext_Send( pNetworkContext, ( void * ) pFixedBuffer->pBuffer, packetSize );
     assert( status == ( int ) packetSize );
-    globalSubAckStatus = false;
 }
 /*-----------------------------------------------------------*/
 
@@ -677,6 +676,8 @@ static void mqttProcessResponse( MQTTPacketInfo_t * pIncomingPacket,
     {
         case MQTT_PACKET_TYPE_SUBACK:
 
+            /* Check if recent subscription request has been accepted. globalSubAckStatus is updated
+             * in mqttProcessIncomingPacket to reflect the status of the SUBACK sent by the broker. */
             if( globalSubAckStatus == true )
             {
                 LogInfo( ( "Subscribed to the topic %s.\r\n", MQTT_EXAMPLE_TOPIC ) );
@@ -1008,6 +1009,9 @@ int main( int argc,
             mqttUnsubscribeFromTopic( &networkContext, &fixedBuffer );
             /* Process Incoming unsubscribe ack from the broker. */
             mqttProcessIncomingPacket( &networkContext, &fixedBuffer );
+
+            /* Reset global SUBACK status variable after completion of subscription request cycle. */
+            globalSubAckStatus = false;
 
             /* Send an MQTT Disconnect packet over the already connected TCP socket.
              * There is no corresponding response for the disconnect packet. After sending

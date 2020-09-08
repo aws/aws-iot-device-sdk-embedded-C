@@ -795,7 +795,7 @@ static void updateSubAckStatus( MQTTPacketInfo_t * pPacketInfo )
      * from the event callback and non-NULL parameters. */
     assert( mqttStatus == MQTTSuccess );
 
-    /* Suppress unused variable warning when logging is disabled. */
+    /* Suppress unused variable warning when asserts are disabled in build. */
     ( void ) mqttStatus;
 
     /* Demo only subscribes to one topic, so only one status code is returned. */
@@ -1333,6 +1333,8 @@ static int subscribePublishLoop( MQTTContext_t * pMqttContext,
         }
     }
 
+    /* Check if recent subscription request has been rejected. globalSubAckStatus is updated
+     * in eventCallback to reflect the status of the SUBACK sent by the broker. */
     if( ( returnStatus == EXIT_SUCCESS ) && ( globalSubAckStatus == MQTTSubAckFailure ) )
     {
         /* If server rejected the subscription request, attempt to resubscribe to topic.
