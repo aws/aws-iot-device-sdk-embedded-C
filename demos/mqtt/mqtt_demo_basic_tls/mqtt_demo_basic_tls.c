@@ -52,7 +52,7 @@
 #include "openssl_posix.h"
 
 /* Reconnect parameters. */
-#include "transport_reconnect.h"
+#include "retry_utils.h"
 
 /* Clock for timer. */
 #include "clock.h"
@@ -417,7 +417,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     int returnStatus = EXIT_SUCCESS;
     bool retriesArePending = true;
     OpensslStatus_t opensslStatus = OPENSSL_SUCCESS;
-    TransportReconnectParams_t reconnectParams;
+    RetryUtilsParams_t reconnectParams;
     ServerInfo_t serverInfo;
     OpensslCredentials_t opensslCredentials;
 
@@ -431,7 +431,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
 
     /* Initialize reconnect attempts and interval */
-    Transport_ReconnectParamsReset( &reconnectParams );
+    RetryUtils_ParamsReset( &reconnectParams );
 
     /* Attempt to connect to MQTT broker. If connection fails, retry after
      * a timeout. Timeout value will exponentially increase till maximum
@@ -455,7 +455,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
         if( opensslStatus != OPENSSL_SUCCESS )
         {
             LogWarn( ( "Connection to the broker failed. Retrying connection with backoff and jitter." ) );
-            retriesArePending = Transport_ReconnectBackoffAndSleep( &reconnectParams );
+            retriesArePending = RetryUtils_BackoffAndSleep( &reconnectParams );
         }
 
         if( retriesArePending == false )
