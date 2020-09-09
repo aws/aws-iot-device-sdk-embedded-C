@@ -2,8 +2,8 @@
 
 **[Link to API documentation](https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/main/index.html)**
 
-[![Build Status](https://travis-ci.org/aws/aws-iot-device-sdk-embedded-C.svg?branch=v4_beta)](https://travis-ci.org/aws/aws-iot-device-sdk-embedded-C)
-[![codecov](https://codecov.io/gh/aws/aws-iot-device-sdk-embedded-C/branch/v4_beta/graph/badge.svg)](https://codecov.io/gh/aws/aws-iot-device-sdk-embedded-C)
+[![Build Status](https://travis-ci.org/aws/aws-iot-device-sdk-embedded-C.svg?branch=v4_beta_deprecated)](https://travis-ci.org/aws/aws-iot-device-sdk-embedded-C)
+[![codecov](https://codecov.io/gh/aws/aws-iot-device-sdk-embedded-C/branch/v4_beta_deprecated/graph/badge.svg)](https://codecov.io/gh/aws/aws-iot-device-sdk-embedded-C)
 
 The AWS IoT Device SDK for C is a collection of C99 source files that allow applications to securely connect to the AWS IoT platform. It includes an MQTT 3.1.1 client, as well as libraries specific to AWS IoT, such as Thing Shadows. It is distributed in source form and may be built into firmware along with application code.
 
@@ -63,9 +63,9 @@ It is required to setup an AWS account and access the AWS IoT Console for runnin
 3. *Optional:* Set the following `#define` in [iot_config.h](demos/iot_config.h). You may skip this step and instead pass these configuration settings as command line options when running the demos.
     - Set `IOT_DEMO_IDENTIFIER` to a MQTT client identifier that you want to use for the MQTT connection to AWS IoT Core. The corresponding command line option for this constant is `-i`.
     - Set `IOT_DEMO_SERVER` to your custom endpoint. This is found on the *Settings* page of the AWS IoT Console and has a format of `ABCDEFG1234567.iot.us-east-2.amazonaws.com`. The corresponding command line option for this constant is `-h`.
-    - Set `IOT_DEMO_ROOT_CA` to the path of the root CA certificate downloaded when setting up device certificate (or Provisioning Claim for Fleet Provisioning) in [AWS IoT Account Setup](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v4_beta#aws-iot-account-setup). The corresponding command line option for this constant is `-r`.
-    - Set `IOT_DEMO_CLIENT_CERT` to the path of the client certificate downloaded when setting up device certificate (or Provisioning Claim for Fleet Provisioning) in [AWS IoT Account Setup](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v4_beta#aws-iot-account-setup). The corresponding command line option for this constant is `-c`.
-    - Set `IOT_DEMO_PRIVATE_KEY` to the path of the private downloaded when setting up device certificate (or Provisioning Claim for Fleet Provisioning) in [AWS IoT Account Setup](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v4_beta#aws-iot-account-setup). The corresponding command line option for this constant is `-k`.
+    - Set `IOT_DEMO_ROOT_CA` to the path of the root CA certificate downloaded when setting up device certificate (or Provisioning Claim for Fleet Provisioning) in [AWS IoT Account Setup](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v4_beta_deprecated#aws-iot-account-setup). The corresponding command line option for this constant is `-r`.
+    - Set `IOT_DEMO_CLIENT_CERT` to the path of the client certificate downloaded when setting up device certificate (or Provisioning Claim for Fleet Provisioning) in [AWS IoT Account Setup](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v4_beta_deprecated#aws-iot-account-setup). The corresponding command line option for this constant is `-c`.
+    - Set `IOT_DEMO_PRIVATE_KEY` to the path of the private downloaded when setting up device certificate (or Provisioning Claim for Fleet Provisioning) in [AWS IoT Account Setup](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v4_beta_deprecated#aws-iot-account-setup). The corresponding command line option for this constant is `-k`.
     - Set `IOT_DEMO_USER_NAME` to the username string, if any, required to authenticate to your MQTT broker. The corresponding command line option for this constant is `-m`.
     - Set `IOT_DEMO_PASSWORD` to the password string, if any, required to authenticate to your MQTT broker. The corresponding command line option for this constant is `-w`.
 4. Make a build directory in the SDK's root directory and `cd` into it.
