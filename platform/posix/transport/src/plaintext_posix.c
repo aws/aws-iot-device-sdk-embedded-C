@@ -126,7 +126,7 @@ int32_t Plaintext_Recv( const NetworkContext_t * pNetworkContext,
     /* coverity[misra_c_2012_rule_10_1_violation] */
     /* coverity[misra_c_2012_rule_13_4_violation] */
     /* coverity[misra_c_2012_rule_10_8_violation] */
-    FD_SETpNetworkConSET->socketDescriptor, &readfds );
+    FD_SET( pNetworkConSET->socketDescriptor, &readfds );
 
     /* Check if there is data to read from the socket. */
     selectStatus = select( pNetworkContext->socketDescriptor + 1,
@@ -229,7 +229,7 @@ int32_t Plaintext_Send( const NetworkContext_t * pNetworkContext,
     /* coverity[misra_c_2012_rule_10_1_violation] */
     /* coverity[misra_c_2012_rule_13_4_violation] */
     /* coverity[misra_c_2012_rule_10_8_violation] */
-    FD_SET( pNetworkContext->socketDescriptor, &writefds );
+    FD_SET( pNetworkContext->socketDescriptor, &readfds );
     /* Check if data can be written to the socket. */
     selectStatus = select( pNetworkContext->socketDescriptor + 1,
                            NULL,
