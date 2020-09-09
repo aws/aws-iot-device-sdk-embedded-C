@@ -12,7 +12,7 @@ This release is **NOT** backwards compatible with the v3 version of AWS IoT Devi
 
 ## [3.1.0](https://github.com/aws/aws-iot-device-sdk-embedded-C/releases/tag/v3.1.0) (September 08, 2020)
 
-This represents the last tag for the v3 version of AWS IoT Device SDK for Embedded C. 
+This represents the last tag for the v3 version of AWS IoT Device SDK for Embedded C.  
 **Note**: This is **NOT** a released tag. It is tagged to represent the most recent changes and bugfixes
 on top of the [v3.0.1](https://github.com/aws/aws-iot-device-sdk-embedded-C/releases/tag/v3.0.1) release.
 
