@@ -1,7 +1,7 @@
-# Only run on the v4_beta branch for now.
+# Only run on the v4_beta_deprecated branch.
 branches:
   only:
-  - v4_beta
+  - v4_beta_deprecated
 
 # Build on Ubuntu 16.04 by default.
 os: linux
