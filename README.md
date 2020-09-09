@@ -14,13 +14,13 @@ The [v4_beta_deprecated](https://github.com/aws/aws-iot-device-sdk-embedded-C/tr
 
 ## Releases
 
-All the released versions of the AWS IoT Embedded C SDK libraries are available as git tags. For example the latest v3 SDK version is available at [tag 3.1.0](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v3.1.0).
+All of the released versions of the AWS IoT Embedded C SDK libraries are available as git tags. For example, the latest v3 SDK version is available at [tag 3.1.0](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v3.1.0).
 
 ## Building and Running Demos
 
   
 
-The libraries in this SDK are not dependent on any Operating Systems. However, the demos for the libraries in this SDK are built and tested on Linux platform. This SDK builds with [CMake](https://cmake.org/), a cross-platform build tool.
+The libraries in this SDK are not dependent on any operating systems. However, the demos for the libraries in this SDK are built and tested on a Linux platform. This SDK builds with [CMake](https://cmake.org/), a cross-platform build tool.
 
 
 
