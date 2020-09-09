@@ -170,3 +170,15 @@ docker run -p 80:80 kennethreitz/httpbin
 5. Set `SERVER_HOST` in `demos/http/http_demo_basic_tls/demo_config.h` to the https link provided by ngrok.
 
 6. You must also download the Root CA certificate provided by ngrok and set `ROOT_CA_CERT_PATH` in `demo_config.h` to the file path of the downloaded certificate.
+
+## Generating Documentation
+
+The Doxygen references were created using Doxygen version 1.8.20. To generate the
+Doxygen pages, please run the following commands:
+
+```shell
+cd libraries/standard/coreMQTT
+doxygen docs/doxygen/config.doxyfile
+cd ../../..
+doxygen docs/doxygen/config.doxyfile
+```
