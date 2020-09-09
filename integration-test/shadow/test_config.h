@@ -152,15 +152,3 @@ Latest commit 0428d12 22 hours ago
 #endif
 
 #endif /* ifndef TEST_CONFIG_H_ */
-© 2020 GitHub, Inc.
-Terms
-Privacy
-Security
-Status
-Help
-Contact GitHub
-Pricing
-API
-Training
-Blog
-About
