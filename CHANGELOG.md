@@ -2,11 +2,14 @@
 
 ## 202009.00 (September 14, 2020)
 
+- Introduces re-designed MQTT client library, JSON parser library and the AWS IoT Shadow client library.
+- The AWS IoT Jobs service client library is not part of this release. It will be part of a future release.
 - The MQTT, JSON and AWS IoT Shadow service client libraries have been moved to the following individual repositories:
    - [FreeRTOS/coreMQTT](https://github.com/FreeRTOS/coreMQTT) for MQTT client library
    - [FreeRTOS/coreJSON](https://github.com/FreeRTOS/JSON) for JSON parser library
    - [aws/device-shadow-for-aws-iot-embedded-sdk](https://github.com/aws/device-shadow-for-aws-iot-embedded-sdk) for AWS IoT Shadow service client library.
 - The above library folders in `libraries/` folder has been replaced with submodule to the individual repositories.
+- 
 
 ## [3.0.1](https://github.com/aws/aws-iot-device-sdk-embedded-C/releases/tag/v3.0.1) (May 10, 2018)
 
