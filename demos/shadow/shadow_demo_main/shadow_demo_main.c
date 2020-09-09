@@ -59,7 +59,7 @@
 #include "shadow.h"
 
 /* JSON API header. */
-#include "json.h"
+#include "core_json.h"
 
 /* Clock for timer. */
 #include "clock.h"
