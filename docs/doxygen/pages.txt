@@ -1,0 +1,4 @@
+/**
+@mainpage Overview
+@brief The AWS IoT Device SDK for Embedded C provides demonstration code and integration tests for a collection of libraries.
+*/
