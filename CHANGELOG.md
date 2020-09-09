@@ -1,15 +1,29 @@
-# Change Log for AWS IoT Embedded C SDK
+# Change Log for AWS IoT Device SDK for Embedded C
 
 ## 202009.00 (September 2020)
 
+This release is **NOT** backwards compatible with the v3 version of AWS IoT Device SDK for Embedded C.
+
 - This release introduces re-factored MQTT client library, JSON parser library and the AWS IoT Shadow client library.
-- The AWS IoT Jobs service client library is not part of this release. It will be part of a future release.
 - This release uses submodule references to the following new individual repositories for the MQTT, JSON and AWS IoT Shadow service client libraries under `libraries` folder:
    - [FreeRTOS/coreMQTT](https://github.com/FreeRTOS/coreMQTT) for MQTT client library
    - [FreeRTOS/coreJSON](https://github.com/FreeRTOS/JSON) for JSON parser library
    - [aws/device-shadow-for-aws-iot-embedded-sdk](https://github.com/aws/device-shadow-for-aws-iot-embedded-sdk) for AWS IoT Shadow service client library.
-- This release is **NOT** backwards compatible with the v3.x release series. To refer to the most recent fixes on top of the [v3.0.1](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v3.0.1) SDK, the commit [6f88ba7](https://github.com/aws/aws-iot-device-sdk-embedded-C/commit/6f88ba7e5471b550f9b9c0fb9bed7ef6e1230caf) has been tagged as [v3.1.0](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v3.1.0) SDK. The commit was part of the `master` branch following
-the commit tree of the [v3.0.1](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v3.0.1) release.
+
+## [3.1.0](https://github.com/aws/aws-iot-device-sdk-embedded-C/releases/tag/v3.1.0) (September 08, 2020)
+
+This represents the last tag for the v3 version of AWS IoT Device SDK for Embedded C. 
+**Note**: This is **NOT** a released tag. It is tagged to represent the most recent changes and bugfixes
+on top of the [v3.0.1](https://github.com/aws/aws-iot-device-sdk-embedded-C/releases/tag/v3.0.1) release.
+
+Bugfixes:
+- [#205](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/205) Fix IAR compiler error about missing function prototypes.
+- [#241](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/241) Fix command-line argument processing in Shadow demo.
+- [#244](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/244) Fix parsing of metadata object in delta callback.
+- [#854](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/854) Fix doxygen errors in v3 MQTT documentation.
+- [#895](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/895) Fix issues reported by clang static analysis.
+- [#1006](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1006) Fix application hang when network is lost during QoS0 publish loop.
+- [#1070](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1070) Fix typo in job's status strings.
 
 ## [3.0.1](https://github.com/aws/aws-iot-device-sdk-embedded-C/releases/tag/v3.0.1) (May 10, 2018)
 
