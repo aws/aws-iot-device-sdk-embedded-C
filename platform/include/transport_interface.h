@@ -34,9 +34,11 @@
  * @page transport_interface Transport Interface
  * @brief The transport interface definition.
  *
+ * @section transport_interface_overview Transport Interface Overview
+ *
  * The transport interface is a set of APIs that must be implemented using an
  * external transport layer protocol. The transport interface is defined in
- * @ref transport_interface.h. This interface allows protocols like MQTT and 
+ * @ref transport_interface.h. This interface allows protocols like MQTT and
  * HTTP to send and receive data over the transport layer. This
  * interface does not handle connection and disconnection to the server of
  * interest. The connection, disconnection, and other transport settings, like
@@ -53,9 +55,11 @@
  * @snippet this define_transportinterface
  * <br>
  *
+ * @section transport_interface_implementation Implementing the Transport Interface
+ *
  * The following steps give guidance on implementing the transport interface:
  *
- * -# Implementing the @ref NetworkContext_t<br><br>
+ * -# Implementing @ref NetworkContext_t<br><br>
  * @snippet this define_networkcontext
  * <br>
  * @ref NetworkContext_t is the incomplete type <b>struct NetworkContext</b>.
