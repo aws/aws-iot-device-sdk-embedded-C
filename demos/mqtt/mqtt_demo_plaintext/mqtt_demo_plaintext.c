@@ -308,7 +308,7 @@ static int handleResubscribe( MQTTContext_t * pMqttContext );
 static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext )
 {
     int returnStatus = EXIT_SUCCESS;
-    bool retriesArePending = true;
+    RetryUtilsStatus_t retriesArePending = RetryUtilsSuccess;
     SocketStatus_t socketStatus = SOCKETS_SUCCESS;
     RetryUtilsParams_t reconnectParams;
     ServerInfo_t serverInfo;
@@ -345,12 +345,12 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
             retriesArePending = RetryUtils_BackoffAndSleep( &reconnectParams );
         }
 
-        if( retriesArePending == false )
+        if( retriesArePending == RetryUtilsRetriesExhausted )
         {
             LogError( ( "Connection to the broker failed, all attempts exhausted." ) );
             returnStatus = EXIT_FAILURE;
         }
-    } while( ( socketStatus != SOCKETS_SUCCESS ) && ( retriesArePending == true ) );
+    } while( ( socketStatus != SOCKETS_SUCCESS ) && ( retriesArePending == RetryUtilsSuccess ) );
 
     return returnStatus;
 }
@@ -416,7 +416,7 @@ static int handleResubscribe( MQTTContext_t * pMqttContext )
 {
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus = MQTTSuccess;
-    bool retriesArePending = true;
+    RetryUtilsStatus_t retriesArePending = RetryUtilsSuccess;
     RetryUtilsParams_t retryParams;
 
     assert( pMqttContext != NULL );
@@ -468,12 +468,12 @@ static int handleResubscribe( MQTTContext_t * pMqttContext )
             retriesArePending = RetryUtils_BackoffAndSleep( &retryParams );
         }
 
-        if( retriesArePending == false )
+        if( retriesArePending == RetryUtilsRetriesExhausted )
         {
             LogError( ( "Subscription to topic failed, all attempts exhausted." ) );
             returnStatus = EXIT_FAILURE;
         }
-    } while ( ( globalSubAckStatus == MQTTSubAckFailure ) && ( retriesArePending == true ) );
+    } while ( ( globalSubAckStatus == MQTTSubAckFailure ) && ( retriesArePending == RetryUtilsSuccess ) );
 
     return returnStatus;
 }

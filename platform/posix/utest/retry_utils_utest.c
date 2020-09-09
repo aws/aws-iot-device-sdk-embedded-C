@@ -17,7 +17,7 @@
 /* Parameters to track the next max jitter or number of attempts done. */
 static RetryUtilsParams_t retryParams;
 /* Return value of #RetryUtils_BackoffAndSleep. */
-static bool retriesArePending;
+static RetryUtilsStatus_t retriesArePending;
 
 /* ============================   UNITY FIXTURES ============================ */
 
@@ -112,7 +112,7 @@ void test_RetryUtils_BackoffAndSleep_Succeeds( void )
         }
 
         /* Verify our assertions. */
-        TEST_ASSERT_TRUE( retriesArePending );
+        TEST_ASSERT_EQUAL( RetryUtilsSuccess, retriesArePending );
         TEST_ASSERT_EQUAL( expectedNextJitterMax, retryParams.nextJitterMax );
         TEST_ASSERT_EQUAL( expectedAttemptsDone, retryParams.attemptsDone );
     }
@@ -122,7 +122,7 @@ void test_RetryUtils_BackoffAndSleep_Succeeds( void )
     clock_gettime_ExpectAnyArgsAndReturn( 0 );
     rand_ExpectAndReturn( RAND_RET_VAL );
     retriesArePending = RetryUtils_BackoffAndSleep( &retryParams );
-    TEST_ASSERT_FALSE( retriesArePending );
+    TEST_ASSERT_EQUAL( RetryUtilsRetriesExhausted, retriesArePending );
 
     /* #RetryUtils_ParamsReset is expected to be called once all attempts
      * are exhausted. */
@@ -145,7 +145,7 @@ void test_RetryUtils_BackoffAndSleep_Lower_Bound_Jitter_To_Cap( void )
     rand_ExpectAndReturn( RAND_RET_VAL );
     sleep_ExpectAndReturn( RAND_RET_VAL % retryParams.nextJitterMax, 0 );
     retriesArePending = RetryUtils_BackoffAndSleep( &retryParams );
-    TEST_ASSERT_TRUE( retriesArePending );
+    TEST_ASSERT_EQUAL( RetryUtilsSuccess, retriesArePending );
     TEST_ASSERT_EQUAL( retryParams.nextJitterMax,
                        MAX_RETRY_BACKOFF_SECONDS );
     TEST_ASSERT_EQUAL( 1U, retryParams.attemptsDone );
@@ -168,7 +168,7 @@ void test_RetryUtils_BackoffAndSleep_Upper_Bound_Jitter_To_Cap( void )
     rand_ExpectAndReturn( RAND_RET_VAL );
     sleep_ExpectAndReturn( RAND_RET_VAL % retryParams.nextJitterMax, 0 );
     retriesArePending = RetryUtils_BackoffAndSleep( &retryParams );
-    TEST_ASSERT_TRUE( retriesArePending );
+    TEST_ASSERT_EQUAL( RetryUtilsSuccess, retriesArePending );
     TEST_ASSERT_EQUAL( retryParams.nextJitterMax,
                        MAX_RETRY_BACKOFF_SECONDS );
     TEST_ASSERT_EQUAL( 1U, retryParams.attemptsDone );
