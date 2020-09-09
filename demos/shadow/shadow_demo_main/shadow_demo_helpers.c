@@ -280,7 +280,7 @@ static int handlePublishResend( MQTTContext_t * pMqttContext );
 static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext )
 {
     int returnStatus = EXIT_SUCCESS;
-    RetryUtilsStatus_t retriesArePending = RetryUtilsSuccess;
+    RetryUtilsStatus_t retryUtilsStatus = RetryUtilsSuccess;
     OpensslStatus_t opensslStatus = OPENSSL_SUCCESS;
     RetryUtilsParams_t reconnectParams;
     ServerInfo_t serverInfo;
@@ -333,15 +333,15 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
         if( opensslStatus != OPENSSL_SUCCESS )
         {
             LogWarn( ( "Connection to the broker failed. Retrying connection with backoff and jitter." ) );
-            retriesArePending = RetryUtils_BackoffAndSleep( &reconnectParams );
+            retryUtilsStatus = RetryUtils_BackoffAndSleep( &reconnectParams );
         }
 
-        if( retriesArePending == RetryUtilsRetriesExhausted )
+        if( retryUtilsStatus == RetryUtilsRetriesExhausted )
         {
             LogError( ( "Connection to the broker failed, all attempts exhausted." ) );
             returnStatus = EXIT_FAILURE;
         }
-    } while( ( opensslStatus != OPENSSL_SUCCESS ) && ( retriesArePending == RetryUtilsSuccess ) );
+    } while( ( opensslStatus != OPENSSL_SUCCESS ) && ( retryUtilsStatus == RetryUtilsSuccess ) );
 
     return returnStatus;
 }

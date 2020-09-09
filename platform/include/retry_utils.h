@@ -58,7 +58,7 @@
  */
 typedef enum RetryUtilsStatus
 {
-    RetryUtilsSuccess,          /**< @brief The function returned successfully after sleeping. */
+    RetryUtilsSuccess = 0,      /**< @brief The function returned successfully after sleeping. */
     RetryUtilsRetriesExhausted  /**< @brief The function exhausted all retry attempts. */
 } RetryUtilsStatus_t;
 
