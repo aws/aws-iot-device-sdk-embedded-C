@@ -81,7 +81,7 @@ typedef struct RetryUtilsParams
 
 
 /**
- * @brief Reset retry timeout value and number of attempts.
+ * @brief Resets the retry timeout value and number of attempts.
  * This function must be called by the application before a new retry attempt.
  *
  * @param[in, out] pRetryParams Structure containing attempts done and timeout
@@ -96,7 +96,7 @@ void RetryUtils_ParamsReset( RetryUtilsParams_t * pRetryParams );
  *
  * @param[in, out] pRetryParams Structure containing retry parameters.
  *
- * @return True after successful sleep, false when all attempts are exhausted.
+ * @return True after a successful sleep, false when all attempts are exhausted.
  */
 bool RetryUtils_BackoffAndSleep( RetryUtilsParams_t * pRetryParams );
 
