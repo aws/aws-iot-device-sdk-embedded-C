@@ -104,7 +104,7 @@ int32_t Plaintext_Recv( const NetworkContext_t * pNetworkContext,
     /* MISRA Rule 14.4 flags the following line for using condition expression "0"
      * as a boolean type. We suppress the violation as the "FD_ZERO" is a POSIX
      * specific macro utility whose implementation is supplied by the system.
-     * The "FD_ZERO" macro is called as specified by the POSIX specific here:
+     * The "FD_ZERO" macro is called as specified by the POSIX manual here:
      * https://pubs.opengroup.org/onlinepubs/009695399/basedefs/sys/select.h.html */
     /* coverity[misra_c_2012_directive_4_6_violation] */
     /* coverity[misra_c_2012_rule_14_4_violation] */
@@ -116,17 +116,17 @@ int32_t Plaintext_Recv( const NetworkContext_t * pNetworkContext,
      * system-specific type, and is used for the call to "select()". */
     /* coverity[misra_c_2012_directive_4_6_violation] */
 
-    /* MISRA Directive 4.6, Rule 10.1 and Rules 13.4 flag the following line for
-     * implementation of the "FD_SET" POSIX macro. We suppress these violations
-     * as the "FD_ZERO" is a POSIX specific macro utility whose implementation
+    /* MISRA Rule 10.1, Rule 10.8 and Rule 13.4 flag the following line for
+     * implementation of the "FD_SET()" POSIX macro. We suppress these violations
+     * "FD_SET" is a POSIX specific macro utility whose implementation
      * is supplied by the system.
-     * The "FD_ZERO" macro is used as specified by the POSIX specific here:
+     * The "FD_SET" macro is used as specified by the POSIX manual here:
      * https://pubs.opengroup.org/onlinepubs/009695399/basedefs/sys/select.h.html */
     /* coverity[misra_c_2012_directive_4_6_violation] */
     /* coverity[misra_c_2012_rule_10_1_violation] */
     /* coverity[misra_c_2012_rule_13_4_violation] */
     /* coverity[misra_c_2012_rule_10_8_violation] */
-    FD_SET( pNetworkContext->socketDescriptor, &readfds );
+    FD_SETpNetworkConSET->socketDescriptor, &readfds );
 
     /* Check if there is data to read from the socket. */
     selectStatus = select( pNetworkContext->socketDescriptor + 1,
@@ -204,6 +204,12 @@ int32_t Plaintext_Send( const NetworkContext_t * pNetworkContext,
      * basic type "int" rather than a type that includes size and signedness information.
      * We suppress the violation as the flagged type, "fd_set", is a POSIX
      * system-specific type, and is used for the call to "select()". */
+
+    /* MISRA Rule 14.4 flags the following line for using condition expression "0"
+     * as a boolean type. We suppress the violation as the "FD_ZERO" is a POSIX
+     * specific macro utility whose implementation is supplied by the system.
+     * The "FD_ZERO" macro is called as specified by the POSIX manual here:
+     * https://pubs.opengroup.org/onlinepubs/009695399/basedefs/sys/select.h.html */
     /* coverity[misra_c_2012_directive_4_6_violation] */
     /* coverity[misra_c_2012_rule_14_4_violation] */
     FD_ZERO( &writefds );
@@ -213,11 +219,11 @@ int32_t Plaintext_Send( const NetworkContext_t * pNetworkContext,
      * We suppress the violation as the flagged type, "fd_set", is a POSIX
      * system-specific type, and is used for the call to "select()". */
 
-    /* MISRA Directive 4.6, Rule 10.1 and Rules 13.4 flag the following line for
-     * implementation of the "FD_SET" POSIX macro. We suppress these violations
-     * as the "FD_ZERO" is a POSIX specific macro utility whose implementation
+    /* MISRA Rule 10.1, Rule 10.8 and Rule 13.4 flag the following line for
+     * implementation of the "FD_SET()" POSIX macro. We suppress these violations
+     * as "FD_SET" is a POSIX specific macro utility whose implementation
      * is supplied by the system.
-     * The "FD_ZERO" macro is used as specified by the POSIX specific here:
+     * The "FD_ZERO" macro is used as specified by the POSIX manual here:
      * https://pubs.opengroup.org/onlinepubs/009695399/basedefs/sys/select.h.html */
     /* coverity[misra_c_2012_directive_4_6_violation] */
     /* coverity[misra_c_2012_rule_10_1_violation] */
