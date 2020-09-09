@@ -1,21 +1,28 @@
 
-# AWS IoT Device SDK C v4.0.2
+# AWS IoT Device SDK C 202009.00
 
-  
 
-## Development branch
+## Branches
 
-This branch currently hosts development of AWS IoT Embedded C SDK version 4 beta 2. It is currently a work in progress and should not be used to create any products at the moment. We will update this README when that status changes.
 
-  
+### master branch
+The [master](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/master) branch hosts the continuous development of the AWS IoT Embedded C SDK libraries. Please be aware that the libraries in master branch may have bugs and performance issues. Consider using the released versions of the AWS IoT Embedded C SDK for production ready software.
+
+### v4_beta_deprecated branch
+The [v4_beta_deprecated](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v4_beta_deprecated) branch contains a beta version of the AWS IoT Embedded C SDK libraries, which is now deprecated. The libraries in this branch will not be released. However, critical bugs will be fixed and tested. No new features will be added to this branch.
+
+
+## Releases
+
+All of the released versions of the AWS IoT Embedded C SDK libraries are available as git tags. For example, the latest v3 SDK version is available at [tag 3.1.0](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v3.1.0).
 
 ## Building and Running Demos
 
   
 
-This SDK builds with [CMake](https://cmake.org/), a cross-platform build tool.
+The libraries in this SDK are not dependent on any operating systems. However, the demos for the libraries in this SDK are built and tested on a Linux platform. This SDK builds with [CMake](https://cmake.org/), a cross-platform build tool.
 
-  
+
 
 ### Prerequisites
 
@@ -163,3 +170,15 @@ docker run -p 80:80 kennethreitz/httpbin
 5. Set `SERVER_HOST` in `demos/http/http_demo_basic_tls/demo_config.h` to the https link provided by ngrok.
 
 6. You must also download the Root CA certificate provided by ngrok and set `ROOT_CA_CERT_PATH` in `demo_config.h` to the file path of the downloaded certificate.
+
+## Generating Documentation
+
+The Doxygen references were created using Doxygen version 1.8.20. To generate the
+Doxygen pages, please run the following commands:
+
+```shell
+cd libraries/standard/coreMQTT
+doxygen docs/doxygen/config.doxyfile
+cd ../../..
+doxygen docs/doxygen/config.doxyfile
+```

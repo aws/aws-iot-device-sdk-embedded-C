@@ -1,5 +1,5 @@
 # Ignore documentation output.
-**/doc/**/output/*
+**/docs/**/output/*
 
 # Ignore CMake build directory.
 build/

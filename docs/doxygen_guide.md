@@ -98,24 +98,24 @@ so that Doxygen can copy the function signature to custom function pages.
     /* @[declare_mylibrary_myfunction] */
     ```
 
-1. Please copy the all of the template pages to your library's doc/doxygen folder.
-For our CI to detect files correctly, please keep the folder name as *doc/doxygen*
+1. Please copy the all of the template pages to your library's docs/doxygen folder.
+For our CI to detect files correctly, please keep the folder name as *docs/doxygen*
 and all of the files names the same.
 
     ```console
-    cp -R <csdk_root>/doc/doxygen_templates <library_root>/doc/doxygen
+    cp -R <csdk_root>/docs/doxygen_templates <library_root>/docs/doxygen
     ```
 
-1. Search for "FIXME"s in <library_root>/doc/doxygen/config.doxygen and update with
+1. Search for "FIXME"s in <library_root>/docs/doxygen/config.doxygen and update with
 your library information.
 
-1. Search for "FIXME"s in <library_root>/doc/doxygen/pages.txt and update with your
+1. Search for "FIXME"s in <library_root>/docs/doxygen/pages.txt and update with your
 library's information.
 
 1. Generate Doxygen with the current working directory as the root of your library's repo:
 
     ```console
-    doxygen doc/doxygen/config.doxygen
+    doxygen docs/doxygen/config.doxygen
     ```
 
     Fix all warnings.
