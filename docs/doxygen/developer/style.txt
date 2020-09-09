@@ -14,7 +14,7 @@ The coding style aims to produce code that is readable and easy to debug. An exa
 - All new libraries (being developed in the development branch) should only use [ANSI C](https://en.wikipedia.org/wiki/ANSI_C#C89) features and standard library functions. (All libraries in the v4_beta branch used the C99 standard, so any changes to the branch can continue using C99).
 - Libraries should log extensively.
 - Code should be well-commented.
-- Only `/*` and @c *`/` should be used to start and end comments.
+- Only <code>`/`*</code> and <code>*`/`</code> should be used to start and end comments.
 - All comments end with a period.
 - Use of `goto` is discouraged.
 - Only spaces should be used for indenting. A single indent is 4 spaces. No tab characters should be used.
@@ -91,7 +91,10 @@ See @ref guide_developer_styleguide_naming for how to name the functions, variab
 
 typedef int32_t type_t;
 
-typedef struct structType /* Structs are named along with the typedef. */
+/**
+   @brief Structs are named along with the typedef. 
+*/
+typedef struct structType 
 {
     int32_t member;
 
@@ -217,7 +220,7 @@ Names of constants and enum values should contain only uppercase letters and und
 @formattable{files}
 @formattableentry{<b>library</b>`_`<b>description</b>`.extension`,General library file,`core_mqtt_serializer.c`}
 @formattableentry{<b>library</b>`_internal.h`,Internal library header,`mqtt_internal.h`}
-@formattableentry{<b>library</b>`_`<b>demo</b>`_`</b>`description.c`,Library demo source,`mqtt_demo_plaintext.c`}
+@formattableentry{<b>library</b>`_`<b>demo</b>`_description.c`,Library demo source,`mqtt_demo_plaintext.c`}
 @formattableentry{<b>library</b>`_description_`<b>utest</b>`.c`<br><b>library</b>`_description_`<b>system_test</b>`.c`,Library test source,`core_mqtt_utest.c`<br>`mqtt_system_utest.c`}
 
 File names contain only lowercase letters and underscores. All file names should be named according to their purpose. For example:
@@ -233,7 +236,7 @@ Library file names should use one or two words to describe the functions impleme
 Declarations of internal functions, structures, macros, etc. of a library should be placed in a header file with an `_internal` suffix. The `_internal` header file should go in the `source/include/private` directory. For example:
 - `mqtt_internal.h`: Declares the MQTT library's internal functions, structures, macros, etc.
 
-File names for demos should begin with `library_demo_`. Unit tests must start with `library_` and end with `_utest`. System tests must start with `library_` and end with `_system_test`. The names should then specify the library being demoed or or tested; for example, the files names of the MQTT library's demos start with `mqtt_demo_`. Additionally, test file names should describe what tests are implemented in the file, such as `mqtt_demo_mutual_auth.c` for a file containing a demo that mutually authenticates over TLS with an MQTT broker.
+File names for demos should begin with `library_demo_`. Unit tests must start with `library_` and end with `_utest`. System tests must start with `library_` and end with `_system_test`. The names should then specify the library being demoed or or tested. For example, the files names of the MQTT library's demos start with `mqtt_demo_`. Additionally, test file names should describe what tests are implemented in the file, such as `mqtt_demo_mutual_auth.c` for a file containing a demo that mutually authenticates over TLS with an MQTT broker.
 
 @subsection guide_developer_styleguide_naming_functions Functions (and function-like macros)
 @brief Naming convention of functions and function-like macros.
@@ -243,7 +246,7 @@ File names for demos should begin with `library_demo_`. Unit tests must start wi
 @formattableentry{<b>description</b>,`static` function (never uses `Aws` prefix),`sendPublish`<br>`eventCallback`}
 @formattableentry{`test_`<b>Library</b>`_`<b>accessedFunction_Descrption</b>,Test access function,`test_MQTT_ProcessLoop_Timer_Overflow`}
 
-Externally visible (i.e. not `static`) functions are [UpperCamelCased](https://en.wikipedia.org/wiki/Camel_case). Function names should then specify their library name; followed by an underscore; followed by a brief description of what the function does. For example:
+Externally visible (i.e. not `static`) functions are [UpperCamelCased](https://en.wikipedia.org/wiki/Camel_case). Function names should then specify their library name, followed by an underscore, followed by a brief description of what the function does. For example:
 - `MQTT_Publish`: This function is part of the public MQTT API. It <i>Publishes</i> an MQTT message.
 
 Functions not visible outside their source file (i.e. `static` functions) have names that are [lowerCamelCased](https://en.wikipedia.org/wiki/Camel_case). These function names do not contain the library name or `Aws`. For example:
