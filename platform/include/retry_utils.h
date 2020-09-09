@@ -35,31 +35,47 @@
 #if defined( __cplusplus ) || ( ( defined( __STDC_VERSION__ ) ) && ( __STDC_VERSION__ >= 199901L ) )
     #include <stdbool.h>
 #elif !defined( bool )
-    #define bool     signed char
-    #define false    0
-    #define true     1
+    #define bool     signed char    /**< Boolean definition for C90. */
+    #define false    0              /**< Boolean false. */
+    #define true     1              /**< Boolean true. */
 #endif
 
-/* @brief Max number of retry attempts, set this value to 0 if the client
- * must retry forever */
+/**
+ * @brief Max number of retry attempts, set this value to 0 if the client
+ * must retry forever 
+ */
 #define MAX_RETRY_ATTEMPTS               4U
 
-/* @brief Initial fixed backoff value in seconds between two successive
- * retries. A random jitter value is added to every backoff value  */
+/**
+ * @brief Initial fixed backoff value in seconds between two successive
+ * retries. A random jitter value is added to every backoff value
+ */
 #define INITIAL_RETRY_BACKOFF_SECONDS    1U
-/* @brief Max backoff value in seconds */
+
+/**
+ * @brief Max backoff value in seconds
+ */
 #define MAX_RETRY_BACKOFF_SECONDS        128U
-/* @brief Max jitter value in seconds */
+
+/**
+ * @brief Max jitter value in seconds
+ */
 #define MAX_JITTER_VALUE_SECONDS         5U
 
-/* @brief Represents parameters required for retry logic. */
+/**
+ * @brief Represents parameters required for retry logic.
+ */
 typedef struct RetryUtilsParams
 {
-    /* @brief The cumulative count of backoff delay cycles completed
-     * for retries. */
+    /**
+     * @brief The cumulative count of backoff delay cycles completed
+     * for retries. 
+     */
     uint32_t attemptsDone;
 
-    /** @brief The max jitter value for backoff time in retry attempt. */
+    /** 
+     * @brief The max jitter value for backoff time in retry attempt. 
+     */
     uint32_t nextJitterMax;
 } RetryUtilsParams_t;
 
