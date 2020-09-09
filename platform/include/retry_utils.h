@@ -42,7 +42,7 @@
 
 /**
  * @brief Max number of retry attempts, set this value to 0 if the client
- * must retry forever 
+ * must retry forever
  */
 #define MAX_RETRY_ATTEMPTS               4U
 
@@ -69,12 +69,12 @@ typedef struct RetryUtilsParams
 {
     /**
      * @brief The cumulative count of backoff delay cycles completed
-     * for retries. 
+     * for retries.
      */
     uint32_t attemptsDone;
 
-    /** 
-     * @brief The max jitter value for backoff time in retry attempt. 
+    /**
+     * @brief The max jitter value for backoff time in retry attempt.
      */
     uint32_t nextJitterMax;
 } RetryUtilsParams_t;
