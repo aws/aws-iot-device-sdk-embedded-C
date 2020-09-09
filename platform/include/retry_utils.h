@@ -41,24 +41,24 @@
 #endif
 
 /**
- * @brief Max number of retry attempts, set this value to 0 if the client
- * must retry forever
+ * @brief Max number of retry attempts. Set this value to 0 if the client must
+ * retry forever.
  */
 #define MAX_RETRY_ATTEMPTS               4U
 
 /**
  * @brief Initial fixed backoff value in seconds between two successive
- * retries. A random jitter value is added to every backoff value
+ * retries. A random jitter value is added to every backoff value.
  */
 #define INITIAL_RETRY_BACKOFF_SECONDS    1U
 
 /**
- * @brief Max backoff value in seconds
+ * @brief Max backoff value in seconds.
  */
 #define MAX_RETRY_BACKOFF_SECONDS        128U
 
 /**
- * @brief Max jitter value in seconds
+ * @brief Max jitter value in seconds.
  */
 #define MAX_JITTER_VALUE_SECONDS         5U
 
@@ -84,7 +84,7 @@ typedef struct RetryUtilsParams
  * @brief Reset retry timeout value and number of attempts.
  * This function must be called by the application before a new retry attempt.
  *
- * @param[in, out] pRetryParams structure containing attempts done and timeout
+ * @param[in, out] pRetryParams Structure containing attempts done and timeout
  * value.
  */
 void RetryUtils_ParamsReset( RetryUtilsParams_t * pRetryParams );
@@ -94,9 +94,9 @@ void RetryUtils_ParamsReset( RetryUtilsParams_t * pRetryParams );
  * must use this function between retry failures to add exponential delay.
  * This function will block the calling task for the current timeout value.
  *
- * @param[in, out] pRetryParams structure containing retry parameters.
+ * @param[in, out] pRetryParams Structure containing retry parameters.
  *
- * @return true after successful sleep, false when all attempts are exhausted.
+ * @return True after successful sleep, false when all attempts are exhausted.
  */
 bool RetryUtils_BackoffAndSleep( RetryUtilsParams_t * pRetryParams );
 
