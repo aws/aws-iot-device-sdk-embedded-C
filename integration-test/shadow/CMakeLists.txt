@@ -69,16 +69,16 @@ create_test(${stest_name}
         )
 
 # Set preprocessor defines for test if configured in build.
-if(AWS_IOT_ENDPOINT)
+if(BROKER_ENDPOINT)
     target_compile_definitions(
         ${stest_name} PRIVATE
-            AWS_IOT_ENDPOINT="${AWS_IOT_ENDPOINT}"
+            AWS_IOT_ENDPOINT="${BROKER_ENDPOINT}"
     )
 endif()
 if(ROOT_CA_CERT_PATH)
     target_compile_definitions(
         ${stest_name} PRIVATE
-            SERVER_ROOT_CA_CERT_PATH="${ROOT_CA_CERT_PATH}"
+            ROOT_CA_CERT_PATH="${ROOT_CA_CERT_PATH}"
     )
 endif()
 if(CLIENT_CERT_PATH)
