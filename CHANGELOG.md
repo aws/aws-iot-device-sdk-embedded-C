@@ -1,6 +1,6 @@
 # Change Log for AWS IoT Embedded C SDK
 
-## 202009.00 (September 14, 2020)
+## 202009.00 (September 2020)
 
 - This release introduces re-factored MQTT client library, JSON parser library and the AWS IoT Shadow client library.
 - The AWS IoT Jobs service client library is not part of this release. It will be part of a future release.
