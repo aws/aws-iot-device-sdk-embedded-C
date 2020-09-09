@@ -34,7 +34,7 @@
 /* bool is defined in only C99+. */
 #if defined( __cplusplus ) || ( ( defined( __STDC_VERSION__ ) ) && ( __STDC_VERSION__ >= 199901L ) )
     #include <stdbool.h>
-#elif !defined( bool )
+#elif !defined( bool ) && !defined( false ) && !defined( true )
     #define bool     signed char    /**< Boolean definition for C90. */
     #define false    0              /**< Boolean false. */
     #define true     1              /**< Boolean true. */
