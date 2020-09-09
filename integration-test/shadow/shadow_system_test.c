@@ -38,7 +38,7 @@
 #include "shadow.h"
 
 /* Include paths for public enums, structures, and macros. */
-#include "mqtt.h"
+#include "core_mqtt.h"
 
 /* Include OpenSSL implementation of transport interface. */
 #include "openssl_posix.h"
