@@ -229,7 +229,7 @@ int32_t Plaintext_Send( const NetworkContext_t * pNetworkContext,
     /* coverity[misra_c_2012_rule_10_1_violation] */
     /* coverity[misra_c_2012_rule_13_4_violation] */
     /* coverity[misra_c_2012_rule_10_8_violation] */
-    FD_SET( pNetworkContext->socketDescriptor, &readfds );
+    FD_SET( pNetworkContext->socketDescriptor, &writefds );
     /* Check if data can be written to the socket. */
     selectStatus = select( pNetworkContext->socketDescriptor + 1,
                            NULL,
