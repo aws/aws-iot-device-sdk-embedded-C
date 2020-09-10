@@ -124,7 +124,7 @@ static void prvStopRequestTimer( void );
 
 /* Data request timer callback. */
 
-static void prvRequestTimer_Callback( TimerHandle_t T );
+static void prvRequestTimer_Callback( void * pvParam  );
 
 /* Start the self test timer if in self-test mode. */
 
@@ -136,7 +136,7 @@ static void prvStopSelfTestTimer( void );
 
 /* Self-test timer callback, reset the device if this timer expires. */
 
-static void prvSelfTestTimer_Callback( TimerHandle_t T );
+static void prvSelfTestTimer_Callback( void * pvParam );
 
 /* Called when the OTA agent receives a file data block message. */
 
@@ -374,34 +374,17 @@ static BaseType_t prvStartSelfTestTimer( void )
 {
     DEFINE_OTA_METHOD_NAME( "prvStartSelfTestTimer" );
     static const char pcTimerName[] = "OTA_SelfTest";
-    BaseType_t xTimerStarted = pdFALSE;
-    static StaticTimer_t xTimerBuffer;
+    int32_t xTimerStarted = 0;
 
     if( prvInSelftest() == true )
     {
-        if( xOTA_Agent.pvSelfTestTimer == NULL )
-        {
-            xOTA_Agent.pvSelfTestTimer = xTimerCreateStatic( pcTimerName,
-                                                             pdMS_TO_TICKS( otaconfigSELF_TEST_RESPONSE_WAIT_MS ),
-                                                             pdFALSE, NULL, prvSelfTestTimer_Callback,
-                                                             &xTimerBuffer );
-
-            if( xOTA_Agent.pvSelfTestTimer != NULL )
-            {
-                xTimerStarted = xTimerStart( xOTA_Agent.pvSelfTestTimer, portMAX_DELAY );
-            }
-            else
-            {
-                /* Static timers are guaranteed to be created unless we pass in a NULL buffer. */
-            }
-        }
-        else
-        {
-            xTimerStarted = xTimerReset( xOTA_Agent.pvSelfTestTimer, portMAX_DELAY );
-        }
+		xTimerStarted = xOTA_Agent.pOTAOSCtx->timer.start( xOTA_Agent.pOTAOSCtx->timer.PTimerCtx[0],
+			                                           pcTimerName, 
+			                                           otaconfigSELF_TEST_RESPONSE_WAIT_MS , 
+			                                           prvSelfTestTimer_Callback);
 
         /* Common check for whether the timer was started or not. It should be impossible to not start. */
-        if( xTimerStarted == pdTRUE )
+        if( xTimerStarted == 0 )
         {
             OTA_LOG_L1( "[%s] Starting %s timer.\r\n", OTA_METHOD_NAME, pcTimerName );
         }
@@ -416,10 +399,9 @@ static BaseType_t prvStartSelfTestTimer( void )
 
 /* When the self test response timer expires, reset the device since we're likely broken. */
 
-static void prvSelfTestTimer_Callback( TimerHandle_t T )
+static void prvSelfTestTimer_Callback( void * pvParam )
 {
     DEFINE_OTA_METHOD_NAME( "prvSelfTestTimer_Callback" );
-    ( void ) T;
 
     OTA_LOG_L1( "[%s] Self test failed to complete within %ums\r\n", OTA_METHOD_NAME, otaconfigSELF_TEST_RESPONSE_WAIT_MS );
     ( void ) xOTA_Agent.xPALCallbacks.xResetDevice( xOTA_Agent.ulServerFileID );
@@ -431,11 +413,7 @@ static void prvStopSelfTestTimer( void )
 {
     DEFINE_OTA_METHOD_NAME( "prvStopSelfTestTimer" );
 
-    if( xOTA_Agent.pvSelfTestTimer != NULL )
-    {
-        ( void ) xTimerStop( xOTA_Agent.pvSelfTestTimer, portMAX_DELAY );
-        OTA_LOG_L1( "[%s] Stopping the self test timer.\r\n", OTA_METHOD_NAME );
-    }
+    xOTA_Agent.pOTAOSCtx->timer.stop(xOTA_Agent.pOTAOSCtx->timer.PTimerCtx[0]);
 }
 
 /*
