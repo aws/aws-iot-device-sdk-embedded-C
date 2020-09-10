@@ -11,13 +11,15 @@ import re
 DOXYGEN_TEMPLATES_PATH = "docs/doxygen_templates"
 DOXYGEN_STYLE_FILES = ["style.css", "layout.xml"]
 DOXYGEN_CONFIG_FILE = "config.doxyfile"
-DOXYGEN_ALLOWED_CUSTOM_CONFIGS = ["ALIASES",
-                                  "FIXME",
-                                  "IMAGE_PATH",
-                                  "PREDEFINED",
-                                  "INCLUDE_PATH",
-                                  "EXPAND_AS_DEFINED",
-                                  "EXCLUDE_SYMBOLS"]
+DOXYGEN_ALLOWED_CUSTOM_CONFIGS = [
+    "ALIASES",
+    "FIXME",
+    "IMAGE_PATH",
+    "PREDEFINED",
+    "INCLUDE_PATH",
+    "EXPAND_AS_DEFINED",
+    "EXCLUDE_SYMBOLS",
+]
 TRANSPORT_INTERFACE_PATH = "platform/include/transport_interface.h"
 
 
@@ -121,7 +123,7 @@ def check_doxygen_config_match(results, abs_lib_path, lib_dir):
     template_configs = set(
         filter(
             lambda config: all(custom_config not in config for custom_config in DOXYGEN_ALLOWED_CUSTOM_CONFIGS),
-            map(lambda config: config.replace(" ", ""), template_configs)
+            map(lambda config: config.replace(" ", ""), template_configs),
         )
     )
     lib_configs = set(map(lambda config: config.replace(" ", ""), lib_configs))
@@ -133,8 +135,7 @@ def check_doxygen_config_match(results, abs_lib_path, lib_dir):
         target_doxygen_result["status"] = "PASS"
     else:
         target_doxygen_result["status"] = "FAIL"
-        target_doxygen_result["details"] = \
-            f"The Doxygen configurations are mismatched: {mismatched_configs}."
+        target_doxygen_result["details"] = f"The Doxygen configurations are mismatched: {mismatched_configs}."
 
 
 def check_doxygen_style_match(results, abs_lib_path, lib_dir):
@@ -152,14 +153,13 @@ def check_doxygen_style_match(results, abs_lib_path, lib_dir):
             same = filecmp.cmp(template_file_path, lib_doxy_file_path)
             if same == False:
                 target_doxygen_result["status"] = "FAIL"
-                target_doxygen_result["details"] = \
-                    f"Template file {template_file} is different."
+                target_doxygen_result["details"] = f"Template file {template_file} is different."
             else:
                 target_doxygen_result["status"] = "PASS"
         else:
             target_doxygen_result["status"] = "FAIL"
-            target_doxygen_result["details"] = \
-                f"Template file {template_file} is missing."
+            target_doxygen_result["details"] = f"Template file {template_file} is missing."
+
 
 def check_transport_interface_match(results, abs_lib_path, lib_dir):
     """
@@ -173,10 +173,10 @@ def check_transport_interface_match(results, abs_lib_path, lib_dir):
     same = filecmp.cmp(TRANSPORT_INTERFACE_PATH, lib_transport_interface_path)
     if same == False:
         target_transport_result["status"] = "FAIL"
-        target_transport_result["details"] = \
-            f"transport_interface.h is different."
+        target_transport_result["details"] = f"transport_interface.h is different."
     else:
         target_transport_result["status"] = "PASS"
+
 
 def get_abs_lib_paths(root):
     """
@@ -188,13 +188,9 @@ def get_abs_lib_paths(root):
     abs_lib_paths = []
 
     lib_dirs = os.listdir(standard_libs_path)
-    abs_lib_paths += list(
-        map(lambda lib_dir: os.path.join(standard_libs_path, lib_dir), lib_dirs)
-    )
+    abs_lib_paths += list(map(lambda lib_dir: os.path.join(standard_libs_path, lib_dir), lib_dirs))
     lib_dirs = os.listdir(aws_libs_path)
-    abs_lib_paths += list(
-        map(lambda lib_dir: os.path.join(aws_libs_path, lib_dir), lib_dirs)
-    )
+    abs_lib_paths += list(map(lambda lib_dir: os.path.join(aws_libs_path, lib_dir), lib_dirs))
     return abs_lib_paths
 
 
