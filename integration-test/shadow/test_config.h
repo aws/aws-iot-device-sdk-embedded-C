@@ -82,8 +82,9 @@
  * @note This certificate should be PEM-encoded.
  * @note This path is relative from the demo binary created. Update
  * ROOT_CA_CERT_PATH to the absolute path if this demo is executed from elsewhere.
+ * 
+ * #define ROOT_CA_CERT_PATH    "...insert here..."
  */
-#define ROOT_CA_CERT_PATH    "certificates/AmazonRootCA1.crt"
 
 /**
  * @brief Path of the file containing the client certificate.

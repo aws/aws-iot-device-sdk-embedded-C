@@ -7,8 +7,8 @@
 
 # SHADOW library source files.
 set( SHADOW_SOURCES
-     ${MODULES_DIR}/aws/shadow/src/shadow.c )
+     "${CMAKE_CURRENT_LIST_DIR}/source/shadow.c" )
 
 # SHADOW library Public Include directories.
 set( SHADOW_INCLUDE_PUBLIC_DIRS
-     ${MODULES_DIR}/aws/shadow/include )
+     "${CMAKE_CURRENT_LIST_DIR}/source/include" )
