@@ -420,9 +420,8 @@ static void prvStopSelfTestTimer( void )
  * When the OTA request timer expires, signal the OTA task to request the file.
  */
 
-static void prvRequestTimer_Callback( TimerHandle_t T )
+static void prvRequestTimer_Callback( void * pvParam )
 {
-    ( void ) T;
     OTA_EventMsg_t xEventMsg = { 0 };
 
     /*
@@ -441,27 +440,14 @@ static void prvStartRequestTimer( uint32_t xPeriodMS )
     DEFINE_OTA_METHOD_NAME( "prvStartRequestTimer" );
     static const char pcTimerName[] = "OTA_FileRequest";
 
-    BaseType_t xTimerStarted = pdFALSE;
+    int32_t xTimerStarted;
 
-    if( xOTA_Agent.xRequestTimer == NULL )
-    {
-        xOTA_Agent.xRequestTimer = xTimerCreate( pcTimerName,
-                                                 pdMS_TO_TICKS( xPeriodMS ),
-                                                 pdFALSE,
-                                                 NULL,
-                                                 prvRequestTimer_Callback );
+	xTimerStarted = xOTA_Agent.pOTAOSCtx->timer.start(xOTA_Agent.pOTAOSCtx->timer.PTimerCtx[1],
+		pcTimerName,
+		xPeriodMS,
+		prvRequestTimer_Callback);
 
-        if( xOTA_Agent.xRequestTimer != NULL )
-        {
-            xTimerStarted = xTimerStart( xOTA_Agent.xRequestTimer, 0 );
-        }
-    }
-    else
-    {
-        xTimerStarted = xTimerReset( xOTA_Agent.xRequestTimer, portMAX_DELAY );
-    }
-
-    if( xTimerStarted == pdTRUE )
+    if( xTimerStarted == 0 )
     {
         OTA_LOG_L2( "[%s] Starting %s timer.\r\n", OTA_METHOD_NAME, pcTimerName );
     }
@@ -477,11 +463,7 @@ static void prvStopRequestTimer( void )
 {
     DEFINE_OTA_METHOD_NAME( "prvStopRequestTimer" );
 
-    if( xOTA_Agent.xRequestTimer != NULL )
-    {
-        ( void ) xTimerStop( xOTA_Agent.xRequestTimer, 0 );
-        OTA_LOG_L1( "[%s] Stopping request timer.\r\n", OTA_METHOD_NAME );
-    }
+    xOTA_Agent.pOTAOSCtx->timer.stop( xOTA_Agent.pOTAOSCtx->timer.PTimerCtx[1] );
 }
 
 static OTA_Err_t prvUpdateJobStatusFromImageState( OTA_ImageState_t eState,
