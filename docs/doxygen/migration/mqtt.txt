@@ -9,11 +9,11 @@ The features of the MQTT libraries in v3 and 202009.00 are defined by the common
 @section migration_mqtt_removed Removed features
 @brief The following features were present in v3, but removed in 202009.00:
 - <u>Auto-reconnect</u> <br>
-  Version 3 has an auto-reconnect feature triggered through a call to `aws_iot_mqtt_yield`. In version 4, `aws_iot_mqtt_yield` has been removed, as well as the auto-reconnect feature. <br>
-  <b>Workaround:</b> When a version 4 API call does not return @ref MQTTSuccess, the application should re-establish
+  Version 3 has an auto-reconnect feature triggered through a call to `aws_iot_mqtt_yield`. In version 202009.00, `aws_iot_mqtt_yield` has been removed, as well as the auto-reconnect feature. <br>
+  <b>Workaround:</b> When a version 202009.00 API call does not return @ref MQTTSuccess, the application should re-establish
   the underlying transport connection and then call @ref MQTT_Connect. The application should employ an exponential backoff strategy when re-establishing connections.
 - <u>Thread support</u> <br>
-  Version 3 has an `_ENABLE_THREAD_SUPPORT_` macro for multi-threading use cases. Version 4 has been redesigned to use only a single execution thread, and is
+  Version 3 has an `_ENABLE_THREAD_SUPPORT_` macro for multi-threading use cases. Version 202009.00 has been redesigned to use only a single execution thread, and is
   not thread-safe.
 
 @section migration_mqtt_datatypes Data Types
@@ -22,7 +22,7 @@ The features of the MQTT libraries in v3 and 202009.00 are defined by the common
 <table>
     <tr>
         <th>Version 3</th>
-        <th>Version 4</th>
+        <th>Version 202009.00</th>
         <th>Notes</th>
     </tr>
     <tr>
@@ -70,7 +70,7 @@ The features of the MQTT libraries in v3 and 202009.00 are defined by the common
 <table>
     <tr>
         <th>Version 3</th>
-        <th>Version 4</th>
+        <th>Version 202009.00</th>
         <th>Notes</th>
     </tr>
     <tr>
