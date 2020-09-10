@@ -8,6 +8,9 @@ However, the demos for the libraries in this SDK are built and tested on a
 Linux platform. This SDK builds with [CMake](https://cmake.org/), a cross-platform build tool.
 </p>
 
+@section build_prerequisites Prerequisites
+@brief Prerequisites needed to run the demos.
+
 @pre
 - CMake 3.13.0 or later and a C90 compiler.
 
