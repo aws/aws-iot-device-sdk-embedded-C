@@ -1,6 +1,6 @@
 /**
 @page demos_main Demos
-@brief Description of demos used to illustrate various functionalities of MQTT libraries. They demonstrate the use of MQTT APIs to establish an MQTT session, subscribe to a topic, publish to a topic, receive incoming publishes, unsubscribe from a topic and disconnect the MQTT session.
+@brief Description of demos used to illustrate various functionalities of MQTT libraries. They demonstrate the use of MQTT APIs to establish an MQTT session, subscribe to a topic filter, publish to a topic, receive incoming publishes, unsubscribe from a topic and disconnect the MQTT session.
 
 The following demos are provided:
 - @subpage mqtt_demo_basic_tls <br>
@@ -11,4 +11,6 @@ The following demos are provided:
   @copybrief mqtt_demo_plaintext
 - @subpage mqtt_demo_serializer <br>
   @copybrief mqtt_demo_serializer
+- @subpage mqtt_demo_subscription_manager <br>
+  @copybrief mqtt_demo_subscription_manager
 */

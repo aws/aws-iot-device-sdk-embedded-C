@@ -946,7 +946,8 @@ EXAMPLE_RECURSIVE      = NO
 IMAGE_PATH             = ./docs/doxygen/demos/images/basic_tls.png \
                          ./docs/doxygen/demos/images/mutual_auth.png \
                          ./docs/doxygen/demos/images/plaintext.png \
-                         ./docs/doxygen/demos/images/serializer.png
+                         ./docs/doxygen/demos/images/serializer.png \
+                         ./docs/doxygen/demos/images/subscription_manager.png
 
 # The INPUT_FILTER tag can be used to specify a program that doxygen should
 # invoke to filter for each input file. Doxygen will invoke the filter program
