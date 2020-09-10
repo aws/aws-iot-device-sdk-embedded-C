@@ -2892,6 +2892,7 @@ bool OTA_SignalEvent( const OTA_EventMsg_t * const pxEventMsg )
  * successfully.
  */
 OTA_State_t OTA_AgentInit( void * pvConnectionContext,
+                           void * pOtaOSCtx,
                            const uint8_t * pucThingName,
                            pxOTACompleteCallback_t xFunc,
                            TickType_t xTicksToWait )
@@ -2906,7 +2907,7 @@ OTA_State_t OTA_AgentInit( void * pvConnectionContext,
         /* Set the OTA complete callback. */
         xPALCallbacks.xCompleteCallback = xFunc;
 
-        xState = OTA_AgentInit_internal( pvConnectionContext, pucThingName, &xPALCallbacks, xTicksToWait );
+        xState = OTA_AgentInit_internal( pvConnectionContext, pOtaOSCtx, pucThingName, &xPALCallbacks, xTicksToWait );
     }
     /* If OTA agent is already running, just update the CompleteCallback and reset the statistics. */
     else
@@ -2924,6 +2925,7 @@ OTA_State_t OTA_AgentInit( void * pvConnectionContext,
 }
 
 OTA_State_t OTA_AgentInit_internal( void * pvConnectionContext,
+                                    void * pOtaOSCtx,
                                     const uint8_t * pucThingName,
                                     const OTA_PAL_Callbacks_t * pxCallbacks,
                                     TickType_t xTicksToWait )
@@ -2975,7 +2977,7 @@ OTA_State_t OTA_AgentInit_internal( void * pvConnectionContext,
             ( void ) memcpy( xOTA_Agent.pcThingName, pucThingName, ulStrLen + 1UL ); /* Include zero terminator when saving the Thing name. */
         }
 
-        xReturn = prvStartOTAAgentTask( pvConnectionContext, xTicksToWait );
+        xReturn = prvStartOTAAgentTask( pvConnectionContext, pOtaOSCtx, xTicksToWait );
     }
 
     if( xOTA_Agent.eState == eOTA_AgentState_Ready )

@@ -36,10 +36,6 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-/* Includes required by the FreeRTOS timers structure. */
-#include "FreeRTOS.h"
-#include "timers.h"
-
 /* Evaluates to the length of a constant string defined like 'static const char str[]= "xyz"; */
 #define CONST_STRLEN( s )    ( ( ( uint32_t ) sizeof( s ) ) - 1UL )
 
@@ -581,6 +577,7 @@ typedef struct
  * eOTA_AgentState_Ready. Otherwise, it will be one of the other OTA_State_t enum values.
  */
 OTA_State_t OTA_AgentInit( void * pvConnectionContext,
+                           void * pOtaOSCtx,
                            const uint8_t * pucThingName,
                            pxOTACompleteCallback_t xFunc,
                            TickType_t xTicksToWait );
@@ -605,6 +602,7 @@ OTA_State_t OTA_AgentInit( void * pvConnectionContext,
  * eOTA_AgentState_Ready. Otherwise, it will be one of the other OTA_State_t enum values.
  */
 OTA_State_t OTA_AgentInit_internal( void * pvConnectionContext,
+                                    void * pOtaOSCtx,
                                     const uint8_t * pucThingName,
                                     const OTA_PAL_Callbacks_t * pxCallbacks,
                                     TickType_t xTicksToWait );
