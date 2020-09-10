@@ -153,7 +153,7 @@
 #define TEST_CLIENT_IDENTIFIER_LWT_LENGTH       ( sizeof( TEST_CLIENT_IDENTIFIER_LWT ) - 1u )
 
 /**
- * @brief Size of largest random number in client identifier.
+ * @brief The largest random number to use in client identifier.
  * @note Random number is added to MQTT client identifier to avoid collisions in
  * client connections with broker.
  */
@@ -163,7 +163,7 @@
  * @brief Maximum number of random number digits in Client Identifier.
  * @note The value is derived from the #MAX_RAND_NUM_IN_FOR_CLIENT_ID.
  */
-#define MAX_RAND_NUMBER_DIGITS_FOR_CLIENT_ID    ( 4u )
+#define MAX_RAND_NUMBER_DIGITS_FOR_CLIENT_ID    ( 3u )
 
 /**
  * @brief Transport timeout in milliseconds for transport send and receive.
@@ -389,9 +389,11 @@ static void establishMqttSession( MQTTContext_t * pContext,
     /* The network buffer must remain valid for the lifetime of the MQTT context. */
     static uint8_t buffer[ NETWORK_BUFFER_SIZE ];
 
-    /* Buffer for storing client ID with random integer. */
+    /* Buffer for storing client ID with random integer.
+     * Note: Size value is chosen to accommodate both LWT and non-LWT client ID
+     * strings along with NULL character.*/
     char clientIdBuffer[ TEST_CLIENT_IDENTIFIER_LWT_LENGTH +
-                         MAX_RAND_NUMBER_DIGITS_FOR_CLIENT_ID ] = { 0 };
+                         MAX_RAND_NUMBER_DIGITS_FOR_CLIENT_ID + 1u ] = { 0 };
 
     /* Setup the transport interface object for the library. */
     transport.pNetworkContext = pNetworkContext;
@@ -772,7 +774,7 @@ void setUp()
     serverInfo.port = BROKER_PORT;
 
     /* Generate a random number to use in the client identifier. */
-    clientIdRandNumber = ( rand() % MAX_RAND_NUMBER_IN_FOR_CLIENT_ID );
+    clientIdRandNumber = ( rand() % ( MAX_RAND_NUMBER_IN_FOR_CLIENT_ID + 1u ) );
 
     /* Establish a TCP connection with the server endpoint, then
      * establish TLS session on top of TCP connection. */
