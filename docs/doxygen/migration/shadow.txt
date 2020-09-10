@@ -1,0 +1,62 @@
+/**
+@page shadow_migration Shadow
+@brief How to migrate an Shadow application from v3 to 202009.00.
+
+The Device Shadow library has been redesigned in the Long Term Support (LTS) release.  The new design has the following differences than the Version 3 of the AWS IoT Device SDK for Embedded C.
+
+- The new Device Shadow library is completely decoupled from an underlying MQTT library.  The Version 3 library depended on the same version of MQTT library in the AWS IoT Device SDK for Embedded C. <br>
+- The new library does not have any code for handling JSON files.  The Version 3 library contained code for assembling simple JSON files in the format expected by the Device Shadow service. <br>
+- The new library only provides simple convenience macros and functions for handling MQTT topic strings defined by AWS IoT Device Shadow service.  It does not contain any functionality of a MQTT stack.  The Version 3 library, on the other hand, provided a complete set of API for interacting with the service by using a MQTT stack underneath. <br>
+
+An application can continue using the Version 3 Device Shadow library if it also chooses to keep using the same version of MQTT library of the AWS IoT Device SDK for Embedded C.
+Regardless an application uses the Version 3 MQTT library or any MQTT library of its choice, the application can use the new Device Shadow library by following the call sequence diagram in the [Design document](@ref shadow_design).
+
+See the <a href="https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/master/demos/shadow/shadow_demo_main">Device Shadow demo application</a> for sample code.
+
+@section migration_shadow_removed Removed features
+@brief The following features were present in v3, but removed in 202009.00:
+- <u>MQTT regarding functions</u> <br>
+  Version 3 has a series of functions which are on top of the MQTT. Considering to make Shadow as an independent library, those MQTT regarding functions won't be used anymore.
+- <u>JSON regarding functions</u> <br>
+  Version 3 has a series of functions which are on top of the JSON. Considering to make Shadow as an independent library, those JSON regarding functions won't be used anymore.
+- <u>callback function</u> <br>
+  Version 3 has a series of callback functions to receive the state changes on the regarding shadow topics. In version 4, this series of callback functions has been removed. <br>
+  <b>New Design:</b> In version 4, `Shadow_MatchTopic` will be used to determine whether it is related to a device shadow; if it is, return information about the type of device shadow message.
+- <u>Thread support</u> <br>
+  Version 3 has an `_ENABLE_THREAD_SUPPORT_` macro for multi-threading use cases. Version 4 has been redesigned to use only a single execution thread, and is
+  not thread-safe.
+
+@section migration_shadow_datatypes Data Types
+@brief The following table lists equivalent data types in v3 and 202009.00.
+
+<table>
+    <tr>
+        <th>Version 3</th>
+        <th>Version 4</th>
+        <th>Notes</th>
+    </tr>
+    <tr>
+        <td>None</td>
+        <td>None</td>
+        <td>None</td>
+    </tr>
+</table>
+
+@section migration_shadow_functions Functions
+@brief The following table lists equivalent API functions in v3 and 202009.00. These functions are the API functions declared in:
+- In v3: <a href="https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/0da87f06f1501fad7b03b5d89a1322cc8a8848b4/include/aws_iot_shadow_interface.h">aws_iot_shadow_interface.h</a>
+- In 202009.00: [Shadow functions](@ref shadow_functions)
+
+<table>
+    <tr>
+        <th>Version 3</th>
+        <th>Version 4</th>
+        <th>Notes</th>
+    </tr>
+    <tr>
+        <td>None</td>
+        <td>None</td>
+        <td>None</td>
+    </tr>
+</table>
+*/
