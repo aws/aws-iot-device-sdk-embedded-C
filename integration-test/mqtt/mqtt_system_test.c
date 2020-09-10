@@ -440,7 +440,7 @@ static void establishMqttSession( MQTTContext_t * pContext,
         connectInfo.pClientIdentifier = clientIdBuffer;
     }
 
-    LogDebug( ( "Created client ID with random number for MQTT connection: ClientID={%.*s}", connectInfo.clientIdentifierLength,
+    LogDebug( ( "Created randomized client ID for MQTT connection: ClientID={%.*s}", connectInfo.clientIdentifierLength,
                 connectInfo.pClientIdentifier ) );
 
     /* The interval at which an MQTT PINGREQ needs to be sent out to broker. */
