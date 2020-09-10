@@ -30,8 +30,8 @@ The libraries in this SDK are not dependent on any operating systems. However, t
 
 - A supported operating system. The ports provided with this repo are expected to work with all recent versions of the following operating systems, although we cannot guarantee the behavior on all systems.
     - Linux system with POSIX sockets and timer APIs. (CI tests on Ubuntu 18.04).
-	    - On Linux systems, installation of OpenSSL development libraries and header files, *version 1.1.0 or later*, are required. The OpenSSL development libraries are usually called something like `libssl-dev` or `openssl-devel` when installed through a package manager.
-
+        - On Linux systems, installation of OpenSSL development libraries and header files, *version 1.1.0 or later*, are required. The OpenSSL development libraries are usually called something like `libssl-dev` or `openssl-devel` when installed through a package manager.
+        - Although not a part of the C90 standard, `stdint.h` is required for fixed-width integer types (e.g int32_t).
 
 ### AWS IoT Account Setup
 
@@ -49,7 +49,7 @@ It is required to setup an AWS account and access the AWS IoT Console for runnin
 
 ### Configuring the MQTT mutual auth demo
 
-- You can pass the following configuration settings as command line options in order to run the mutual auth demos:
+- You can pass the following configuration settings as command line options in order to run the mutual auth demo:
 ```bash
 cmake .. -DAWS_IOT_ENDPOINT="aws-iot-endpoint" -DROOT_CA_CERT_PATH="root-ca-path" -DCLIENT_CERT_PATH="certificate-path" -DCLIENT_PRIVATE_KEY_PATH="private-key-path" 
 ```
