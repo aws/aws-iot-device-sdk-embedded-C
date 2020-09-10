@@ -2,13 +2,13 @@
 
 ## 202009.00 (September 2020)
 
-This release is **NOT** backwards compatible with the v3 version of AWS IoT Device SDK for Embedded C.
-
-- This release introduces re-factored MQTT client library, JSON parser library and the AWS IoT Shadow client library.
+- This release introduces re-factored MQTT client library, JSON parser library and AWS IoT Shadow client library.
 - This release uses submodule references to the following new individual repositories for the MQTT, JSON and AWS IoT Shadow service client libraries under `libraries` folder:
    - [FreeRTOS/coreMQTT](https://github.com/FreeRTOS/coreMQTT) for MQTT client library
    - [FreeRTOS/coreJSON](https://github.com/FreeRTOS/JSON) for JSON parser library
    - [aws/device-shadow-for-aws-iot-embedded-sdk](https://github.com/aws/device-shadow-for-aws-iot-embedded-sdk) for AWS IoT Shadow service client library.
+
+**Note**: This release is **NOT** backwards compatible with the v3 version of AWS IoT Device SDK for Embedded C.
 
 ## [3.1.0](https://github.com/aws/aws-iot-device-sdk-embedded-C/releases/tag/v3.1.0) (September 08, 2020)
 
