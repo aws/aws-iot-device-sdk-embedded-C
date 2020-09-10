@@ -144,33 +144,6 @@ docker run -it -p 8883:8883 -v $(pwd):/mosquitto/config/ --name mosquitto-basic-
 
 6. Set `ROOT_CA_CERT_PATH` to the absolute path of the CA certificate created in step 3. for the local Mosquitto server.
 
-
-#### Installing httpbin to run HTTP demos locally
-
-1. Run httpbin through port 80:
-
-```shell
-
-docker pull kennethreitz/httpbin
-
-docker run -p 80:80 kennethreitz/httpbin
-
-```
-
-2.  `SERVER_HOST` defined in `demos/http/http_demo_plaintext/demo_config.h` can now be set to `localhost`.
-
-3. To run `http_demo_basic_tls`, [download ngrok](https://ngrok.com/download) in order to create an HTTPS tunnel to the httpbin server currently hosted on port 80:
-
-```shell
-./ngrok http 80 # May have to use ./ngrok.exe depending on OS or filename of the executable
-```
-
-4.  `ngrok` will provide an https link that can be substituted in `demos/http/http_demo_basic_tls/demo_config.h` and has a format of `https://ABCDEFG12345.ngrok.io`.
-
-5. Set `SERVER_HOST` in `demos/http/http_demo_basic_tls/demo_config.h` to the https link provided by ngrok.
-
-6. You must also download the Root CA certificate provided by ngrok and set `ROOT_CA_CERT_PATH` in `demo_config.h` to the file path of the downloaded certificate.
-
 ## Generating Documentation
 
 The Doxygen references were created using Doxygen version 1.8.20. To generate the
