@@ -6,7 +6,7 @@ add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/subscription-manager )
 # Include MQTT library's source and header path variables.
 include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreMQTT/mqttFilePaths.cmake )
 
-set( DEMO_NAME "mqtt_demo_connection_sharing" )
+set( DEMO_NAME "mqtt_demo_subscription_manager" )
 
 # Demo target.
 add_executable(${DEMO_NAME})

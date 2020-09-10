@@ -34,7 +34,7 @@
  */
 
 /**
- * @file mqtt_demo_connection_sharing.c
+ * @file mqtt_demo_subscription_manager.c
  * @brief MQTT Demo application that showcases multiplexing of the same MQTT connection
  * across multiple topic subscriptions using a subscription manager.
  */
