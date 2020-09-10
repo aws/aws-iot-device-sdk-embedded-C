@@ -7,3 +7,6 @@
 [submodule "libraries/standard/coreMQTT"]
 	path = libraries/standard/coreMQTT
 	url = https://github.com/FreeRTOS/coreMQTT.git
+[submodule "libraries/standard/coreJSON"]
+	path = libraries/standard/coreJSON
+	url = https://github.com/FreeRTOS/coreJSON.git
