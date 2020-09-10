@@ -12,7 +12,7 @@ The coding style aims to produce code that is readable and easy to debug. An exa
 @subsection guide_developer_styleguide_codingstyle_generalguidelines General guidelines
 @brief General guidelines for library style.
 - All libraries should only use [ANSI C](https://en.wikipedia.org/wiki/ANSI_C#C89) features and standard library functions.
-- Libraries should log extensively except in the case of pure functions.
+- Libraries should log extensively, but exceptions are made for pure functions.
 - Code should be well-commented.
 - Only <code>`/`*</code> and <code>*`/`</code> should be used to start and end comments.
 - All comments end with a period.
@@ -198,27 +198,25 @@ The naming convention aims to differentiate this SDK's files, variables, and fun
 - The first characters of all <i>publicly visible</i> names should identify the name as part of this SDK. <br>
   <b>Example:</b> For general-purpose libraries (such as MQTT), names start with <library-name>_ (i.e. MQTT_ for the MQTT API).
 - Words in names should be ordered with the most general word first and the most specific word last. <br>
-  <b>Example:</b> `core_mqtt_serializer.c` identifies a file as part of the general MQTT library. `MQTT_Connect` identifies a function as part of the <i>Internal</i> component of the general MQTT library.
+  <b>Example:</b> `core_mqtt_serializer.c` identifies a file as part of the general MQTT library. `MQTT_Connect` identifies a public-facing function of the general MQTT library.
 - Names should avoid using abbreviations.
 
 @subsection guide_developer_styleguide_naming_definedconstantsandenumvalues Defined constants and enum values
 @brief Naming convention for constants set using preprocessor @c #`define` and enum values.
 
 @formattable{defined constants and enum values}
-@formattableentry{<b>LIBRARYDescription</b>,Defined constants and enum values in application-facing library header files,`MQTTSuccess` (core_mqtt.h)}
+@formattableentry{<b>LibraryDescription</b>,Defined constants and enum values in application-facing library header files,`MQTTSuccess` (core_mqtt_lightweight.h)}
 @formattableentry{<b>LIBRARY_DESCRIPTION</b>,Defined constants and enum values in demos and tests,`MQTT_EXAMPLE_TOPIC`}
 @formattableentry{<b>DESCRIPTION</b>,Internal constants and enum values<br>No `AWS_` prefix for internal names in AWS-specific libraries,`ROOT_CA_CERT_PATH`}
-
-Names of constants and enum values should contain only uppercase letters and underscores.
 
 @subsection guide_developer_styleguide_naming_files Files
 @brief Naming convention for files.
 
 @formattable{files}
 @formattableentry{<b>library</b>`_`<b>description</b>`.extension`,General library file,`core_mqtt_serializer.c`}
-@formattableentry{<b>library</b>`_internal.h`,Internal library header,`mqtt_internal.h`}
+@formattableentry{<b>library</b>`_internal.h`,Internal library header,`core_mqtt_internal.h`}
 @formattableentry{<b>library</b>`_`<b>demo</b>`_description.c`,Library demo source,`mqtt_demo_plaintext.c`}
-@formattableentry{<b>library</b>`_description_`<b>utest</b>`.c`<br><b>library</b>`_description_`<b>system_test</b>`.c`,Library test source,`core_mqtt_utest.c`<br>`mqtt_system_utest.c`}
+@formattableentry{<b>library</b>`_description_`<b>utest</b>`.c`<br><b>library</b>`_description_`<b>system_test</b>`.c`,Library test source,`core_mqtt_utest.c`<br>`mqtt_system_test.c`}
 
 File names contain only lowercase letters and underscores. All file names should be named according to their purpose. For example:
 - `core_mqtt_state.c`: A file in the MQTT library that handles state of MQTT PUBLISH packet deliveries.
@@ -230,20 +228,27 @@ Library file names should use one or two words to describe the functions impleme
 - `clock_posix.c`: Implements the platform clock component for POSIX systems.
 
 Declarations of internal functions, structures, macros, etc. of a library should be placed in a header file with an `_internal` suffix. The `_internal` header file should go in the `source/include/private` directory. For example:
-- `mqtt_internal.h`: Declares the MQTT library's internal functions, structures, macros, etc.
+- `core_mqtt_internal.h`: Declares the MQTT library's internal functions, structures, macros, etc.
 
-File names for demos should begin with `library_demo_`. Unit tests must start with `library_` and end with `_utest`. System tests must start with `library_` and end with `_system_test`. The names should then specify the library being demoed or or tested. For example, the files names of the MQTT library's demos start with `mqtt_demo_`. Additionally, test file names should describe what tests are implemented in the file, such as `mqtt_demo_mutual_auth.c` for a file containing a demo that mutually authenticates over TLS with an MQTT broker.
+<p>File names for demos should begin with `library_demo_`. 
+Unit tests must start with `library_` and end with `_utest`. 
+System tests must start with `library_` and end with `_system_test`. 
+The names should then specify the library being demoed or tested. 
+For example, the files names of the MQTT library's demos start with `mqtt_demo_`. 
+Additionally, test file names should describe what tests are implemented in the file, 
+such as `mqtt_demo_mutual_auth.c` for a file containing a demo that mutually 
+authenticates over TLS with an MQTT broker.</p>
 
 @subsection guide_developer_styleguide_naming_functions Functions (and function-like macros)
 @brief Naming convention of functions and function-like macros.
 
 @formattable{functions}
-@formattableentry{<b>Library</b>`_`<b>Description</b><br>`AwsIot`<b>Library</b>`_`<b>Description</b>,Externally-visible library function,`MQTT_Publish`<br>`AwsIotShadow_Update`}
+@formattableentry{<b>Library</b>`_`<b>Description</b>,Externally-visible library function,`MQTT_Publish`}
 @formattableentry{<b>description</b>,`static` function (never uses `Aws` prefix),`sendPublish`<br>`eventCallback`}
 @formattableentry{`test_`<b>Library</b>`_`<b>accessedFunction_Descrption</b>,Test access function,`test_MQTT_ProcessLoop_Timer_Overflow`}
 
 Externally visible (i.e. not `static`) functions are [UpperCamelCased](https://en.wikipedia.org/wiki/Camel_case). Function names should then specify their library name, followed by an underscore, followed by a brief description of what the function does. For example:
-- `MQTT_Publish`: This function is part of the public MQTT API. It <i>Publishes</i> an MQTT message.
+- `MQTT_SerializePublish`: This function is part of the public MQTT API. It serializes an MQTT PUBLISH packet into a buffer.
 
 Functions not visible outside their source file (i.e. `static` functions) have names that are [lowerCamelCased](https://en.wikipedia.org/wiki/Camel_case). These function names do not contain the library name or `Aws`. For example:
 - `receiveSingleIteration`: A `static` function in `core_mqtt.c`.
@@ -254,8 +259,6 @@ Functions not visible outside their source file (i.e. `static` functions) have n
 @formattable{types}
 @formattableentry{`Library`<b>Description</b>`_t`,General types in application-facing library header files,`MQTTStatus_t` (core_mqtt.h)}
 @formattableentry{`Library`<b>Function</b>`Info_t`,Application-facing parameter structure,`MQTTPublishInfo_t`<br>(Parameter structure to `MQTT_Publish`)}
-@formattableentry{<b>libraryDescription</b>`_t`,Type in an `internal` header,`mqttOperation_t`<br>`shadowOperation_t`}
-@formattableentry{<b>description</b>`_t`,Internal type in source file,`topicMatchParams_t`}
 
 Types intended for use in applications are [UpperCamelCased](https://en.wikipedia.org/wiki/Camel_case). The names end with `_t`. Parameter structures should indicate their associated function: for example, `MQTTPublishInfo_t` is passed as a parameter to `MQTT_Publish`.
 
@@ -274,7 +277,7 @@ typedef struct libraryInternalStruct
 } libraryInternalStruct_t;
 @endcode
 
-A `struct` may <b>NOT</b> contain `union` members.
+A `struct` may contain `union` members, but its usage must be documented as it violates MISRA rule 19.2.
 
 @subsection guide_developer_styleguide_naming_variables Variables
 @brief Naming conventions of variables.
@@ -282,7 +285,6 @@ A `struct` may <b>NOT</b> contain `union` members.
 @formattable{variables}
 @formattableentry{<b>variableDescription</b>,General local variable,`startTime`}
 @formattableentry{`p`<b>VariableDescription</b>,Local variable pointers and arrays (including strings),`pSubscriptionList`}
-@formattableentry{`_`<b>variableDescription</b>,General global variable,`lastSubscribePacketIdentifier`}}
 
 Local variable names are [lowerCamelCased](https://en.wikipedia.org/wiki/Camel_case) and consist only of a description of the variable. Names like `i` or `j` are acceptable for loop counters, but all other variables should have a descriptive name.
 
