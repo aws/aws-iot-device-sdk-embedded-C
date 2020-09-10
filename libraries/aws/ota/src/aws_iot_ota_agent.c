@@ -1311,15 +1311,16 @@ void prvOTAEventBufferFree( OTA_EventData_t * const pxBuffer )
 {
     DEFINE_OTA_METHOD_NAME( "prvOTAEventBufferFree" );
 
-    if( sem_wait( &xOTA_Agent.otaBufferSem ) == pdPASS )
-    {
+    /*ToDo*/
+    //if( sem_wait( &xOTA_Agent.otaBufferSem ) == pdPASS )
+    //{
         pxBuffer->bBufferUsed = false;
-        ( void ) sem_post(&xOTA_Agent.otaBufferSem);
-    }
-    else
-    {
-        OTA_LOG_L1( "Error: Could not take semaphore for freeing message buffer.\r\n" );
-    }
+    //    ( void ) sem_post(&xOTA_Agent.otaBufferSem);
+   // }
+   //else
+   //{
+   //     OTA_LOG_L1( "Error: Could not take semaphore for freeing message buffer.\r\n" );
+   // }
 }
 
 OTA_EventData_t * prvOTAEventBufferGet( void )
@@ -1330,8 +1331,9 @@ OTA_EventData_t * prvOTAEventBufferGet( void )
     OTA_EventData_t * pxOTAFreeMsg = NULL;
 
     /* Wait at most 1 task switch for a buffer so as not to block the callback. */
-    if(sem_wait( &xOTA_Agent.otaBufferSem, 1 ) == pdPASS )
-    {
+    /*ToDo*/
+    //if(sem_wait( &xOTA_Agent.otaBufferSem, 1 ) == pdPASS )
+    //{
         for( ulIndex = 0; ulIndex < otaconfigMAX_NUM_OTA_DATA_BUFFERS; ulIndex++ )
         {
             if( xEventBuffer[ ulIndex ].bBufferUsed == false )
@@ -1342,12 +1344,12 @@ OTA_EventData_t * prvOTAEventBufferGet( void )
             }
         }
 
-        ( void )sem_post( &xOTA_Agent.otaBufferSem );
-    }
-    else
-    {
-        OTA_LOG_L1( "Error: Could not take semaphore for getting message buffer.\r\n" );
-    }
+    //     ( void )sem_post( &xOTA_Agent.otaBufferSem );
+    // }
+    //else
+    //{
+    //    OTA_LOG_L1( "Error: Could not take semaphore for getting message buffer.\r\n" );
+    //}
 
     return pxOTAFreeMsg;
 }
@@ -2811,8 +2813,8 @@ static BaseType_t prvStartOTAAgentTask( void * pvConnectionContext,
     /*
      * Create the queue used to pass event messages to the OTA task.
      */
-    ret = sem_init( &xOTA_Agent.otaBufferSem, 0, 1 );
-    assert(ret != -1 );
+    //ret = sem_init( &xOTA_Agent.otaBufferSem, 0, 1 );
+    //assert(ret != -1 );
 
     /*
      * Initialize all file paths to NULL.
