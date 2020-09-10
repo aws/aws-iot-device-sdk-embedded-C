@@ -23,9 +23,6 @@
  * http://www.FreeRTOS.org
  */
 
-/* The config header is always included first. */
-#include "iot_config.h"
-
 /* Standard library includes. */
 #include <stddef.h>
 #include <string.h>
@@ -46,14 +43,15 @@
 /* JSON job document parser includes. */
 #include "jsmn.h"
 
-/* Mbed tls base64 includes. */
-#include "mbedtls/base64.h"
-
 /* Application version includes. */
 #include "aws_application_version.h"
 
 /* OTA interface includes. */
 #include "aws_iot_ota_interface.h"
+
+/* OTA interface includes. */
+#include "aws_iot_ota_interface.h"
+#include "ota_os_interface.h"
 
 /* OTA event handler definiton. */
 
