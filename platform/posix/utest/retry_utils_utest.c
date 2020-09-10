@@ -17,7 +17,7 @@
 /* Parameters to track the next max jitter or number of attempts done. */
 static RetryUtilsParams_t retryParams;
 /* Return value of #RetryUtils_BackoffAndSleep. */
-static bool retriesArePending;
+static RetryUtilsStatus_t retryUtilsStatus;
 
 /* ============================   UNITY FIXTURES ============================ */
 
@@ -29,7 +29,7 @@ void setUp()
 /* Called after each test method. */
 void tearDown()
 {
-    retriesArePending = false;
+    retryUtilsStatus = false;
 }
 
 /* Called at the beginning of the whole suite. */
@@ -97,7 +97,7 @@ void test_RetryUtils_BackoffAndSleep_Succeeds( void )
         /* Simulate another iteration of the function under test. */
         rand_ExpectAndReturn( RAND_RET_VAL );
         sleep_ExpectAndReturn( RAND_RET_VAL % retryParams.nextJitterMax, 0 );
-        retriesArePending = RetryUtils_BackoffAndSleep( &retryParams );
+        retryUtilsStatus = RetryUtils_BackoffAndSleep( &retryParams );
 
         /* Updated the expected values of the parameters we expect. */
         expectedAttemptsDone++;
@@ -112,7 +112,7 @@ void test_RetryUtils_BackoffAndSleep_Succeeds( void )
         }
 
         /* Verify our assertions. */
-        TEST_ASSERT_TRUE( retriesArePending );
+        TEST_ASSERT_EQUAL( RetryUtilsSuccess, retryUtilsStatus );
         TEST_ASSERT_EQUAL( expectedNextJitterMax, retryParams.nextJitterMax );
         TEST_ASSERT_EQUAL( expectedAttemptsDone, retryParams.attemptsDone );
     }
@@ -121,8 +121,8 @@ void test_RetryUtils_BackoffAndSleep_Succeeds( void )
      * attempts are now exhausted. */
     clock_gettime_ExpectAnyArgsAndReturn( 0 );
     rand_ExpectAndReturn( RAND_RET_VAL );
-    retriesArePending = RetryUtils_BackoffAndSleep( &retryParams );
-    TEST_ASSERT_FALSE( retriesArePending );
+    retryUtilsStatus = RetryUtils_BackoffAndSleep( &retryParams );
+    TEST_ASSERT_EQUAL( RetryUtilsRetriesExhausted, retryUtilsStatus );
 
     /* #RetryUtils_ParamsReset is expected to be called once all attempts
      * are exhausted. */
@@ -144,8 +144,8 @@ void test_RetryUtils_BackoffAndSleep_Lower_Bound_Jitter_To_Cap( void )
      * set to the retry. */
     rand_ExpectAndReturn( RAND_RET_VAL );
     sleep_ExpectAndReturn( RAND_RET_VAL % retryParams.nextJitterMax, 0 );
-    retriesArePending = RetryUtils_BackoffAndSleep( &retryParams );
-    TEST_ASSERT_TRUE( retriesArePending );
+    retryUtilsStatus = RetryUtils_BackoffAndSleep( &retryParams );
+    TEST_ASSERT_EQUAL( RetryUtilsSuccess, retryUtilsStatus );
     TEST_ASSERT_EQUAL( retryParams.nextJitterMax,
                        MAX_RETRY_BACKOFF_SECONDS );
     TEST_ASSERT_EQUAL( 1U, retryParams.attemptsDone );
@@ -167,8 +167,8 @@ void test_RetryUtils_BackoffAndSleep_Upper_Bound_Jitter_To_Cap( void )
      * double after retrying. */
     rand_ExpectAndReturn( RAND_RET_VAL );
     sleep_ExpectAndReturn( RAND_RET_VAL % retryParams.nextJitterMax, 0 );
-    retriesArePending = RetryUtils_BackoffAndSleep( &retryParams );
-    TEST_ASSERT_TRUE( retriesArePending );
+    retryUtilsStatus = RetryUtils_BackoffAndSleep( &retryParams );
+    TEST_ASSERT_EQUAL( RetryUtilsSuccess, retryUtilsStatus );
     TEST_ASSERT_EQUAL( retryParams.nextJitterMax,
                        MAX_RETRY_BACKOFF_SECONDS );
     TEST_ASSERT_EQUAL( 1U, retryParams.attemptsDone );
