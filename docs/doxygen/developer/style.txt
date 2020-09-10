@@ -11,8 +11,8 @@ The coding style aims to produce code that is readable and easy to debug. An exa
 
 @subsection guide_developer_styleguide_codingstyle_generalguidelines General guidelines
 @brief General guidelines for library style.
-- All new libraries (being developed in the development branch) should only use [ANSI C](https://en.wikipedia.org/wiki/ANSI_C#C89) features and standard library functions. (All libraries in the v4_beta branch used the C99 standard, so any changes to the branch can continue using C99).
-- Libraries should log extensively.
+- All libraries should only use [ANSI C](https://en.wikipedia.org/wiki/ANSI_C#C89) features and standard library functions.
+- Libraries should log extensively except in the case of pure functions.
 - Code should be well-commented.
 - Only <code>`/`*</code> and <code>*`/`</code> should be used to start and end comments.
 - All comments end with a period.
@@ -20,7 +20,7 @@ The coding style aims to produce code that is readable and easy to debug. An exa
 - Only spaces should be used for indenting. A single indent is 4 spaces. No tab characters should be used.
 - A parenthesis is usually followed by a space (see @ref guide_developer_styleguide_codingstyle_example).
 - Lines of code should be less than 80 characters long, although longer lines are permitted.
-- Local variables should be declared at the top of a block in the narrowest scope possible, at the programmer's discretion.
+- Local variables should be declared at the top of a block in the narrowest scope possible. Reducing complexity could be a valid case for breaking this rule, so this should be done at the programmer's discretion.
 - All global variables should be declared at the top of a file.
 - Variables are always initialized.
 - A separator is placed between different sections of a file. The current separator is:
@@ -34,9 +34,10 @@ The coding style aims to produce code that is readable and easy to debug. An exa
 
 @subsection guide_developer_styleguide_codingstyle_typeguidelines Type guidelines
 @brief Guidelines for variable types.
-- Only fixed-width integer types should be used. Exceptions for `bool` and types required by third-party APIs.
+- Although not a part of the C89 standard, only fixed-width integer types should be used. Exceptions for `bool` and types required by third-party APIs.
 - The default integer in the libraries should be 32 bits wide, i.e. `int32_t` or `uint32_t`.
-- Sizes and lengths should be represented with `size_t`, and Boolean variables with `bool`.
+- Sizes and lengths should be represented with `size_t`.
+- Libraries may define `bool` macros for use with C89 compilers.
 
 @subsection guide_developer_styleguide_codingstyle_example Example File
 @brief An example file that follows the coding style rules.
@@ -102,13 +103,9 @@ typedef struct structType
      * and justification. Unions are used here to reduce the size of this struct. */
     union /* Anonymous structs/unions are permitted only inside of other structs. */
     {
-        int32_t a;
+        char a;
         int32_t b;
     };
-
-   /* Although variable length arrays (a C99 feature) violate MISRA rule 18.7,
-    * they are permitted provided documentation is supplied in comments. */
-   int32_t variableLengthMember[];
 } structType_t;
 
 /*-----------------------------------------------------------*/
@@ -130,7 +127,7 @@ extern int32_t Library_ExternalFunction( void * pArgument );
 
 /* Global variables are always initialized. */
 static int globalVariable = 0;
-static int globalArray[ _LIBRARY_CONSTANT ] = { 0 };
+static int globalArray[ LIBRARY_CONSTANT ] = { 0 };
 
 /*-----------------------------------------------------------*/
 
@@ -224,13 +221,12 @@ Names of constants and enum values should contain only uppercase letters and und
 @formattableentry{<b>library</b>`_description_`<b>utest</b>`.c`<br><b>library</b>`_description_`<b>system_test</b>`.c`,Library test source,`core_mqtt_utest.c`<br>`mqtt_system_utest.c`}
 
 File names contain only lowercase letters and underscores. All file names should be named according to their purpose. For example:
-- `mqtt_api.c`: A file in the MQTT library that implements the MQTT API functions.
-- `demo_mqtt.c`: A file in the Demos for the MQTT library.
+- `core_mqtt_state.c`: A file in the MQTT library that handles state of MQTT PUBLISH packet deliveries.
 - `mqtt_demo_plaintext.c`: A file in the demos for the MQTT library that communicates over a plaintext channel.
 - `core_mqtt_utest.c`: A file in the Tests for the MQTT library. Since the tests currently only run on POSIX systems, test file names do not use the `_posix` suffix.
 
 Library file names should use one or two words to describe the functions implemented in that file. For example:
-- `mqtt_serialize.c`: Implements the MQTT library's packet serialization and deserialization functions.
+- `core_mqtt_serializer.c`: Implements the MQTT library's packet serialization and deserialization functions.
 - `clock_posix.c`: Implements the platform clock component for POSIX systems.
 
 Declarations of internal functions, structures, macros, etc. of a library should be placed in a header file with an `_internal` suffix. The `_internal` header file should go in the `source/include/private` directory. For example:
@@ -265,7 +261,7 @@ Types intended for use in applications are [UpperCamelCased](https://en.wikipedi
 
 Types intended for internal library use defined in a header file are [lowerCamelCased](https://en.wikipedia.org/wiki/Camel_case). The names must start with the library name and end with `_t`. Internal types defined in a library source file must end with `_t` and not include the library name.
 
-`struct` typedefs should always be named along with the `typedef`. The struct name should be identical to the `typedef` name, but without the `_t` at the end. For example:
+`struct` typedefs should always be named along with the `typedef`. The struct name should be identical to the `typedef` name, but without the `_t` suffix. For example:
 @code{c}
 typedef struct LibraryStruct
 {
@@ -290,7 +286,7 @@ A `struct` may <b>NOT</b> contain `union` members.
 
 Local variable names are [lowerCamelCased](https://en.wikipedia.org/wiki/Camel_case) and consist only of a description of the variable. Names like `i` or `j` are acceptable for loop counters, but all other variables should have a descriptive name.
 
-Global variable names always start with a `_`. Global variables that are `static` consist of only the description in [lowerCamelCase](https://en.wikipedia.org/wiki/Camel_case). Global variables that are not static consist of the library name <b>and</b> the description in [UpperCamelCase](https://en.wikipedia.org/wiki/Camel_case).
+Global variables that are `static` consist of only the description in [lowerCamelCase](https://en.wikipedia.org/wiki/Camel_case). Global variables that are not static consist of the library name <b>and</b> the description in [UpperCamelCase](https://en.wikipedia.org/wiki/Camel_case).
 
 All pointers, arrays, and strings (both global and local) start with `p`.
 */
