@@ -295,6 +295,15 @@ static MQTTPublishInfo_t incomingInfo;
 static uint8_t disconnectOnPacketType = MQTT_PACKET_TYPE_INVALID;
 
 /**
+ * @brief Random number for the client identifier of the MQTT connection(s) in
+ * the test.
+ *
+ * Random number is used to avoid client identifier collisions in connecting
+ * to broker.
+ */
+static int clientIdRandNumber;
+
+/**
  * @brief Sends an MQTT CONNECT packet over the already connected TCP socket.
  *
  * @param[in] pContext MQTT context pointer.
@@ -410,24 +419,26 @@ static void establishMqttSession( MQTTContext_t * pContext,
 
     if( useLWTClientIdentifier )
     {
-        int randNum = ( rand() % MAX_RAND_NUMBER_IN_FOR_CLIENT_ID );
-
         /* Populate client identifier for connection with LWT topic with random number. */
         connectInfo.clientIdentifierLength =
-            snprintf( clientIdBuffer, sizeof( clientIdBuffer ), "%d%s", randNum, TEST_CLIENT_IDENTIFIER_LWT );
+            snprintf( clientIdBuffer, sizeof( clientIdBuffer ),
+                      "%d%s",
+                      clientIdRandNumber,
+                      TEST_CLIENT_IDENTIFIER_LWT );
         connectInfo.pClientIdentifier = clientIdBuffer;
     }
     else
     {
-        int randNum = ( rand() % MAX_RAND_NUMBER_IN_FOR_CLIENT_ID );
-
         /* Populate client identifier with random number. */
         connectInfo.clientIdentifierLength =
-            snprintf( clientIdBuffer, sizeof( clientIdBuffer ), "%d%s", randNum, TEST_CLIENT_IDENTIFIER );
+            snprintf( clientIdBuffer,
+                      sizeof( clientIdBuffer ),
+                      "%d%s", clientIdRandNumber,
+                      TEST_CLIENT_IDENTIFIER );
         connectInfo.pClientIdentifier = clientIdBuffer;
     }
 
-    LogDebug( ( "Generated client ID with random number for MQTT connection: ClientID={%.*s}", connectInfo.clientIdentifierLength,
+    LogDebug( ( "Created client ID with random number for MQTT connection: ClientID={%.*s}", connectInfo.clientIdentifierLength,
                 connectInfo.pClientIdentifier ) );
 
     /* The interval at which an MQTT PINGREQ needs to be sent out to broker. */
@@ -759,6 +770,9 @@ void setUp()
     serverInfo.pHostName = BROKER_ENDPOINT;
     serverInfo.hostNameLength = BROKER_ENDPOINT_LENGTH;
     serverInfo.port = BROKER_PORT;
+
+    /* Generate a random number to use in the client identifier. */
+    clientIdRandNumber = ( rand() % MAX_RAND_NUMBER_IN_FOR_CLIENT_ID );
 
     /* Establish a TCP connection with the server endpoint, then
      * establish TLS session on top of TCP connection. */
