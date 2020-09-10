@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <assert.h>
 
 /* OTA agent includes. */
 #include "aws_iot_ota_agent.h"
@@ -510,7 +511,7 @@ static OTA_Err_t prvSetImageStateWithReason( OTA_ImageState_t eState,
 {
     OTA_Err_t xErr = kOTA_Err_Uninitialized;
 
-    configASSERT( ( eState > eOTA_ImageState_Unknown ) && ( eState <= eOTA_LastImageState ) );
+    assert( ( eState > eOTA_ImageState_Unknown ) && ( eState <= eOTA_LastImageState ) );
 
     /* Call the platform specific code to set the image state. */
     xErr = xOTA_Agent.xPALCallbacks.xSetPlatformImageState( xOTA_Agent.ulServerFileID, eState );
@@ -645,7 +646,7 @@ static OTA_JobParseErr_t prvDefaultCustomJobCallback( const char * pcJSON,
 
 static void prvSetPALCallbacks( const OTA_PAL_Callbacks_t * pxCallbacks )
 {
-    configASSERT( pxCallbacks != NULL );
+    assert( pxCallbacks != NULL );
 
     if( pxCallbacks->xAbort != NULL )
     {
@@ -1875,7 +1876,7 @@ static DocParseErr_t prvParseJSONbyModel( const char * pcJSON,
         OTA_LOG_L1( "[%s] Error (%d) parsing JSON document.\r\n", OTA_METHOD_NAME, ( int32_t ) eErr );
     }
 
-    configASSERT( eErr != eDocParseErr_Unknown );
+    assert( eErr != eDocParseErr_Unknown );
     return eErr;
 }
 
@@ -2216,7 +2217,7 @@ static OTA_FileContext_t * prvParseJobDoc( const char * pcJSON,
         }
     }
 
-    configASSERT( eErr != eOTA_JobParseErr_Unknown );
+    assert( eErr != eOTA_JobParseErr_Unknown );
 
     if( eErr != eOTA_JobParseErr_None )
     {
@@ -2652,7 +2653,7 @@ static void prvHandleUnexpectedEvents( OTA_EventMsg_t * pxEventMsg )
 {
     DEFINE_OTA_METHOD_NAME( "prvHandleUnexpectedEvents" );
 
-    configASSERT( pxEventMsg );
+    assert( pxEventMsg );
 
     OTA_LOG_L1( "[%s] Unexpected Event. Current State [%s] Received Event  [%s] \n",
                 OTA_METHOD_NAME,
@@ -2805,13 +2806,13 @@ static BaseType_t prvStartOTAAgentTask( void * pvConnectionContext,
      * Create the queue used to pass event messages to the OTA task.
      */
     xOTA_Agent.xOTA_EventQueue = xQueueCreateStatic( ( UBaseType_t ) OTA_NUM_MSG_Q_ENTRIES, ( UBaseType_t ) sizeof( OTA_EventMsg_t ), ( uint8_t * ) xQueueData, &xStaticQueue );
-    configASSERT( xOTA_Agent.xOTA_EventQueue != NULL );
+    assert( xOTA_Agent.xOTA_EventQueue != NULL );
 
     /*
      * Create the queue used to pass event messages to the OTA task.
      */
     ret = sem_init( &xOTA_Agent.otaBufferSem, 0, 1 );
-    configASSERT(ret != -1 );
+    assert(ret != -1 );
 
     /*
      * Initialize all file paths to NULL.
