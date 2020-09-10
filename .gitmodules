@@ -10,3 +10,6 @@
 [submodule "libraries/standard/coreHTTP"]
 	path = libraries/standard/coreHTTP
 	url = https://github.com/FreeRTOS/coreHTTP.git
+[submodule "libraries/standard/coreJSON"]
+	path = libraries/standard/coreJSON
+	url = https://github.com/FreeRTOS/coreJSON.git
