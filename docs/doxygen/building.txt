@@ -130,20 +130,5 @@ docker run -it -p 8883:8883 -v $(pwd):/mosquitto/config/ --name mosquitto-basic-
 
 <li>Set `ROOT_CA_CERT_PATH` to the absolute path of the CA certificate created in step 3. for the local Mosquitto server.</li>
 </ol>
-@section generating_doxygen Generating Documentation
-@brief Generating documentation with Doxygen
-
-The Doxygen references were created using Doxygen version 1.8.20. To generate the
-Doxygen pages, please run the following commands:
-
-@code{sh}
-cd libraries/standard/coreMQTT
-
-doxygen docs/doxygen/config.doxyfile
-
-cd ../../..
-
-doxygen docs/doxygen/config.doxyfile
-@endcode
 
 */
