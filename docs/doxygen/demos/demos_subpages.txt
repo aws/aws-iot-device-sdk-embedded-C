@@ -6,7 +6,7 @@ This demo demonstrates the subscribe-publish workflow of MQTT. After subscribing
 
 Messages in this demo are sent at QoS 2, which guarantees exactly one delivery according to the MQTT spec. See the demo workflow below:
 
-@image html basic_tls.png "Basic TLS Demo Workflow" width=90%
+@image html basic_tls.png width=90%
 */
 
 /**
@@ -17,7 +17,7 @@ This demo demonstrates the subscribe-publish workflow of MQTT. After subscribing
 
 Messages in this demo are sent at QoS 1, which guarantees at least one delivery according to the MQTT spec. See the demo workflow below:
 
-@image html mutual_auth.png "Mutual Authentication Demo Workflow" width=90%
+@image html mutual_auth.png width=90%
 */
 
 /**
@@ -28,7 +28,7 @@ This demo demonstrates the subscribe-publish workflow of MQTT. After subscribing
 
 Messages in this demo are sent at QoS 0, which guarantees at most one delivery according to the MQTT spec. See the demo workflow below:
 
-@image html plaintext.png "Plaintext Demo Workflow" width=90%
+@image html plaintext.png width=90%
 */
 
 /**
@@ -39,5 +39,5 @@ This demo demonstrates the subscribe-publish workflow of MQTT. After subscribing
 
 Messages in this demo are sent at QoS 0, which guarantees at most one delivery according to the MQTT spec. See the demo workflow below:
 
-@image html serializer.png "Serializer Demo Workflow" width=90%
+@image html serializer.png width=90%
 */
