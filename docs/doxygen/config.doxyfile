@@ -845,6 +845,7 @@ WARN_LOGFILE           =
 # Note: If this tag is empty the current directory is searched.
 
 INPUT                  = ./docs/doxygen \
+                         ./docs/doxygen/demos \
                          ./platform/include
 
 # This tag can be used to specify the character encoding of the source files
@@ -942,7 +943,10 @@ EXAMPLE_RECURSIVE      = NO
 # that contain images that are to be included in the documentation (see the
 # \image command).
 
-IMAGE_PATH             =
+IMAGE_PATH             = ./docs/doxygen/demos/images/basic_tls.png \
+                         ./docs/doxygen/demos/images/mutual_auth.png \
+                         ./docs/doxygen/demos/images/plaintext.png \
+                         ./docs/doxygen/demos/images/serializer.png
 
 # The INPUT_FILTER tag can be used to specify a program that doxygen should
 # invoke to filter for each input file. Doxygen will invoke the filter program
