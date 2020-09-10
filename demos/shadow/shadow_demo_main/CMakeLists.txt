@@ -5,6 +5,12 @@ set( DEMO_NAME "shadow_demo_main" )
 # Include MQTT library's source and header path variables.
 include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreMQTT/mqttFilePaths.cmake )
 
+# Include Shadow library's source and header path variables.
+include( ${CMAKE_SOURCE_DIR}/libraries/aws/shadow/shadowFilePaths.cmake )
+
+# Include JSON library's source and header path variables.
+include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreJSON/jsonFilePaths.cmake )
+
 # Demo target.
 add_executable(${DEMO_NAME})
 
@@ -18,22 +24,16 @@ target_sources(
         "shadow_demo_helpers.c"
         ${MQTT_SOURCES}
         ${MQTT_SERIALIZER_SOURCES}
+        ${SHADOW_SOURCES}
+        ${JSON_SOURCES}
 )
 
 target_link_libraries(
     ${DEMO_NAME}
     PRIVATE
-        shadow
-        json
         clock_posix
         openssl_posix
         retry_utils_posix
-)
-
-target_include_directories(
-    shadow
-    PUBLIC
-        ${CMAKE_CURRENT_LIST_DIR}
 )
 
 target_include_directories(
@@ -42,6 +42,9 @@ target_include_directories(
         ${LOGGING_INCLUDE_DIRS}
         ${MQTT_INCLUDE_PUBLIC_DIRS}
         ${MQTT_INCLUDE_PRIVATE_DIRS}
+        ${SHADOW_INCLUDE_PUBLIC_DIRS}
+        ${CMAKE_CURRENT_LIST_DIR}
+        ${JSON_INCLUDE_PUBLIC_DIRS}
 )
 
 if(ROOT_CA_CERT_PATH)

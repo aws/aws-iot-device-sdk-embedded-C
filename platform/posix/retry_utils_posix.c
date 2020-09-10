@@ -34,9 +34,9 @@
 
 /*-----------------------------------------------------------*/
 
-bool RetryUtils_BackoffAndSleep( RetryUtilsParams_t * pRetryParams )
+RetryUtilsStatus_t RetryUtils_BackoffAndSleep( RetryUtilsParams_t * pRetryParams )
 {
-    bool status = false;
+    RetryUtilsStatus_t status = RetryUtilsRetriesExhausted;
     int backOffDelay = 0;
 
     /* If MAX_RETRY_ATTEMPTS is set to 0, try forever. */
@@ -63,14 +63,14 @@ bool RetryUtils_BackoffAndSleep( RetryUtilsParams_t * pRetryParams )
             pRetryParams->nextJitterMax = MAX_RETRY_BACKOFF_SECONDS;
         }
 
-        status = true;
+        status = RetryUtilsSuccess;
     }
     else
     {
         /* When max retry attempts are exhausted, let application know by returning
          * false. Application may choose to restart the retry process after calling
          * RetryUtils_ParamsReset(). */
-        status = false;
+        status = RetryUtilsRetriesExhausted;
         RetryUtils_ParamsReset( pRetryParams );
     }
 
