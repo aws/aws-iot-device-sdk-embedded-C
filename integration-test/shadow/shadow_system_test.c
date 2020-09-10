@@ -717,7 +717,7 @@ void tearDown( void )
 
 /**
  * @brief Subscribes the shadow topics: /update/delta, /update/documents,
- * /update/accepted, /delete/accepted, /get/acceepted, then publish the
+ * /update/accepted, /delete/accepted, /get/accepted, then publish the
  * regarding payloads to verify if receiving the notification from the
  * subscribed topics.
  */
