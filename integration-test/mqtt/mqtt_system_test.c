@@ -780,7 +780,7 @@ void setUp()
     /* Get current time to seed pseudo random number generator. */
     ( void ) clock_gettime( CLOCK_REALTIME, &tp );
 
-    /* Seed pseudo random number generator with nano seconds. */
+    /* Seed pseudo random number generator with nanoseconds. */
     srand( tp.tv_nsec );
 
     /* Generate a random number to use in the client identifier. */
