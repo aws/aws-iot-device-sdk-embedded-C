@@ -4,7 +4,7 @@ cmake_minimum_required (VERSION 3.13)
 # Include MQTT library's source and header path variables.
 include("${CMAKE_SOURCE_DIR}/libraries/standard/coreMQTT/mqttFilePaths.cmake")
 
-include("${CMAKE_SOURCE_DIR}/libraries/aws/shadow/shadowFilePaths.cmake")
+include("${CMAKE_SOURCE_DIR}/libraries/aws/device-shadow-for-aws-iot-embedded-sdk/shadowFilePaths.cmake")
 
 # ====================  Define your project name (edit) ========================
 set(project_name "shadow_system")
