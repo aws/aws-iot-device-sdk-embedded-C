@@ -109,10 +109,11 @@ docker pull eclipse-mosquitto:latest
 # Generate CA key and certificate. Provide the Subject field information as appropriate.
 openssl req -x509 -nodes -sha256 -days 365 -newkey rsa:2048 -keyout ca.key -out ca.crt
 ```
-```shell
-# Generate server key and certificate and sign with the CA cert.
-openssl req -nodes -sha256 -new -keyout server.key -out server.csr
 
+```shell
+# Generate server key and certificate.
+openssl req -nodes -sha256 -new -keyout server.key -out server.csr
+# Sign with the CA cert.
 openssl x509 -req -sha256 -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -days 365
 
 ```
