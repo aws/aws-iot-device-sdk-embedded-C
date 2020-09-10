@@ -25,10 +25,12 @@
  * from a POSIX platform.
  */
 
+/* Standard header includes. */
 #include <string.h>
 #include <stdbool.h>
 #include <assert.h>
 #include <stdlib.h>
+#include <time.h>
 
 /* Include config file before other non-system includes. */
 #include "test_config.h"
@@ -752,6 +754,8 @@ static void resumePersistentSession()
 /* Called before each test method. */
 void setUp()
 {
+    struct timespec tp;
+
     /* Reset file-scoped global variables. */
     receivedSubAck = false;
     receivedUnsubAck = false;
@@ -772,6 +776,12 @@ void setUp()
     serverInfo.pHostName = BROKER_ENDPOINT;
     serverInfo.hostNameLength = BROKER_ENDPOINT_LENGTH;
     serverInfo.port = BROKER_PORT;
+
+    /* Get current time to seed pseudo random number generator. */
+    ( void ) clock_gettime( CLOCK_REALTIME, &tp );
+
+    /* Seed pseudo random number generator with nano seconds. */
+    srand( tp.tv_nsec );
 
     /* Generate a random number to use in the client identifier. */
     clientIdRandNumber = ( rand() % ( MAX_RAND_NUMBER_IN_FOR_CLIENT_ID + 1u ) );
