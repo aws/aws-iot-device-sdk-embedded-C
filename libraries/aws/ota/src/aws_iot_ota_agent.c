@@ -280,14 +280,10 @@ static OTA_AgentContext_t xOTA_Agent =
     .pcOTA_Singleton_ActiveJobName = NULL,
     .pcClientTokenFromJob          = NULL,
     .ulTimestampFromJob            = 0,
-    .pvSelfTestTimer               = NULL,
-    .xRequestTimer                 = NULL,
-    .xOTA_EventQueue               = NULL,
     .eImageState                   = eOTA_ImageState_Unknown,
     .xPALCallbacks                 = OTA_JOB_CALLBACK_DEFAULT_INITIALIZER,
     .ulNumOfBlocksToReceive        = 1,
     .xStatistics                   = { 0 },
-    .otaBufferSem                  = { 0 },
     .ulRequestMomentum             = 0
 };
 
