@@ -38,7 +38,7 @@
 #include "shadow.h"
 
 /* Include paths for public enums, structures, and macros. */
-#include "mqtt.h"
+#include "core_mqtt.h"
 
 /* Include OpenSSL implementation of transport interface. */
 #include "openssl_posix.h"
@@ -51,19 +51,23 @@
  * Throw compilation error if the below configs are not defined.
  */
 #ifndef AWS_IOT_ENDPOINT
-    #error "Please define AWS IoT MQTT broker endpoint(AWS_IOT_ENDPOINT) in test_config.h."
+    #error "AWS_IOT_ENDPOINT should be defined for the Shadow integration tests."
 #endif
+
 #ifndef ROOT_CA_CERT_PATH
-    #error "Please define path to Root CA certificate of the MQTT broker(ROOT_CA_CERT_PATH) in test_config.h."
+    #error "ROOT_CA_CERT_PATH should be defined for the Shadow integration tests."
 #endif
+
 #ifndef CLIENT_CERT_PATH
-    #error "Please define path to client certificate(CLIENT_CERT_PATH) in test_config.h."
+    #error "CLIENT_CERT_PATH should be defined for the Shadow integration tests."
 #endif
+
 #ifndef CLIENT_PRIVATE_KEY_PATH
-    #error "Please define path to client private key(CLIENT_PRIVATE_KEY_PATH) in test_config.h."
+    #error "CLIENT_PRIVATE_KEY_PATH should be defined for the Shadow integration tests."
 #endif
+
 #ifndef CLIENT_IDENTIFIER
-    #error "Please define a unique CLIENT_IDENTIFIER."
+    #error "CLIENT_IDENTIFIER should be defined for the Shadow integration tests."
 #endif
 
 /**
@@ -353,8 +357,9 @@ static void eventCallback( MQTTContext_t * pContext,
     ShadowMessageType_t messageType = ShadowMessageTypeMaxNum;
     const char * pThingName = NULL;
     uint16_t thingNameLength = 0U;
-    MQTTStatus_t mqttStatus = MQTTSuccess;
     uint16_t packetIdentifier;
+
+    ( void ) pContext;
 
     assert( pDeserializedInfo != NULL );
     assert( pContext != NULL );
@@ -552,11 +557,10 @@ static MQTTStatus_t subscribeToTopic( MQTTContext_t * pContext,
     if( mqttStatus == MQTTSuccess )
     {
         TEST_ASSERT_TRUE( receivedSubAck );
-
         receivedSubAck = false;
-
-        return mqttStatus;
     }
+
+    return mqttStatus;
 }
 
 static MQTTStatus_t unsubscribeFromTopic( MQTTContext_t * pContext,
@@ -596,8 +600,9 @@ static MQTTStatus_t unsubscribeFromTopic( MQTTContext_t * pContext,
     if( mqttStatus == MQTTSuccess )
     {
         TEST_ASSERT_TRUE( receivedUnsubAck );
-        return mqttStatus;
     }
+
+    return mqttStatus;
 }
 
 static MQTTStatus_t publishToTopic( MQTTContext_t * pContext,
@@ -637,9 +642,9 @@ static MQTTStatus_t publishToTopic( MQTTContext_t * pContext,
     {
         /* We do not expect a PUBACK from the broker for the QoS 0 PUBLISH. */
         TEST_ASSERT_FALSE( receivedPubAck );
-
-        return mqttStatus;
     }
+
+    return mqttStatus;
 }
 
 /* ============================   UNITY FIXTURES ============================ */
@@ -712,7 +717,7 @@ void tearDown( void )
 
 /**
  * @brief Subscribes the shadow topics: /update/delta, /update/documents,
- * /update/accepted, /delete/accepted, /get/acceepted, then publish the
+ * /update/accepted, /delete/accepted, /get/accepted, then publish the
  * regarding payloads to verify if receiving the notification from the
  * subscribed topics.
  */

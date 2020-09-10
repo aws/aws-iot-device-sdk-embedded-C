@@ -31,15 +31,6 @@
 /* Standard include. */
 #include <stdint.h>
 
-/* bool is defined in only C99+. */
-#if defined( __cplusplus ) || ( ( defined( __STDC_VERSION__ ) ) && ( __STDC_VERSION__ >= 199901L ) )
-    #include <stdbool.h>
-#elif !defined( bool ) && !defined( false ) && !defined( true )
-    #define bool     signed char    /**< Boolean definition for C90. */
-    #define false    0              /**< Boolean false. */
-    #define true     1              /**< Boolean true. */
-#endif
-
 /**
  * @brief Max number of retry attempts. Set this value to 0 if the client must
  * retry forever.
@@ -61,6 +52,15 @@
  * @brief Max jitter value in seconds.
  */
 #define MAX_JITTER_VALUE_SECONDS         5U
+
+/**
+ * @brief Status for @ref RetryUtils_BackoffAndSleep.
+ */
+typedef enum RetryUtilsStatus
+{
+    RetryUtilsSuccess = 0,      /**< @brief The function returned successfully after sleeping. */
+    RetryUtilsRetriesExhausted  /**< @brief The function exhausted all retry attempts. */
+} RetryUtilsStatus_t;
 
 /**
  * @brief Represents parameters required for retry logic.
@@ -96,8 +96,9 @@ void RetryUtils_ParamsReset( RetryUtilsParams_t * pRetryParams );
  *
  * @param[in, out] pRetryParams Structure containing retry parameters.
  *
- * @return True after a successful sleep, false when all attempts are exhausted.
+ * @return #RetryUtilsSuccess after a successful sleep, #RetryUtilsRetriesExhausted
+ * when all attempts are exhausted.
  */
-bool RetryUtils_BackoffAndSleep( RetryUtilsParams_t * pRetryParams );
+RetryUtilsStatus_t RetryUtils_BackoffAndSleep( RetryUtilsParams_t * pRetryParams );
 
 #endif /* ifndef RETRY_UTILS_H_ */
