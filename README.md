@@ -29,10 +29,9 @@ The libraries in this SDK are not dependent on any operating systems. However, t
 - CMake 3.13.0 or later and a C90 compiler.
 
 - A supported operating system. The ports provided with this repo are expected to work with all recent versions of the following operating systems, although we cannot guarantee the behavior on all systems.
-
-- On Linux systems, installation of OpenSSL development libraries and header files, *version 1.1.0 or later*, are required. The OpenSSL development libraries are usually called something like `libssl-dev` or `openssl-devel` when installed through a package manager.
-
-  
+    - Linux system with POSIX sockets and timer APIs. (CI tests on Ubuntu 18.04).
+        - On Linux systems, installation of OpenSSL development libraries and header files, *version 1.1.0 or later*, are required. The OpenSSL development libraries are usually called something like `libssl-dev` or `openssl-devel` when installed through a package manager.
+        - Although not a part of the C90 standard, `stdint.h` is required for fixed-width integer types (e.g int32_t).
 
 ### AWS IoT Account Setup
 
@@ -48,14 +47,14 @@ It is required to setup an AWS account and access the AWS IoT Console for runnin
 
   
 
-### Configuring the mutual auth demos
+### Configuring the MQTT mutual auth demo
 
-- You can pass the following configuration settings as command line options in order to run the mutual auth demos: 
+- You can pass the following configuration settings as command line options in order to run the mutual auth demo:
 ```bash
 cmake .. -DAWS_IOT_ENDPOINT="aws-iot-endpoint" -DROOT_CA_CERT_PATH="root-ca-path" -DCLIENT_CERT_PATH="certificate-path" -DCLIENT_PRIVATE_KEY_PATH="private-key-path" 
 ```
 
-- In order to set these configurations manually, edit `demo_config.h` in `demos/mqtt/mqtt_demo_mutual_auth/` and `demos/http/http_demo_mutual_auth/` to `#define` the following:
+- In order to set these configurations manually, edit `demo_config.h` in `demos/mqtt/mqtt_demo_mutual_auth/` to `#define` the following:
 
 	- Set `AWS_IOT_ENDPOINT` to your custom endpoint. This is found on the *Settings* page of the AWS IoT Console and has a format of `ABCDEFG1234567.iot.us-east-2.amazonaws.com`.
 
@@ -65,7 +64,7 @@ cmake .. -DAWS_IOT_ENDPOINT="aws-iot-endpoint" -DROOT_CA_CERT_PATH="root-ca-path
 
 	- Set `CLIENT_PRIVATE_KEY_PATH` to the path of the private key downloaded when setting up the device certificate (or Provisioning Claim for Fleet Provisioning) in [AWS IoT Account Setup](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v4_beta#aws-iot-account-setup).
 
-  
+
 
 ### Build Steps
 
@@ -106,16 +105,15 @@ docker pull eclipse-mosquitto:latest
 
 3. For TLS communication with Mosquitto broker, server and CA credentials need to be created. Use OpenSSL commands to generate the credentials for the Mosquitto server.
 
-Generate CA key and certificate. Provide the Subject field information as appropriate.
 ```shell
+# Generate CA key and certificate. Provide the Subject field information as appropriate.
 openssl req -x509 -nodes -sha256 -days 365 -newkey rsa:2048 -keyout ca.key -out ca.crt
 ```
 
-Generate server key and certificate and sign with the CA cert.
 ```shell
-
+# Generate server key and certificate.
 openssl req -nodes -sha256 -new -keyout server.key -out server.csr
-
+# Sign with the CA cert.
 openssl x509 -req -sha256 -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -days 365
 
 ```
