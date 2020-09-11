@@ -138,6 +138,9 @@ tlsrecv
 tlssend
 transportcallback
 transportinterface
+transportpage
+transportsectionimplementation
+transportsectionoverview
 transportstruct
 unistd
 www

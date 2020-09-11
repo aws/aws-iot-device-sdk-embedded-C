@@ -6,7 +6,7 @@ set( DEMO_NAME "shadow_demo_main" )
 include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreMQTT/mqttFilePaths.cmake )
 
 # Include Shadow library's source and header path variables.
-include( ${CMAKE_SOURCE_DIR}/libraries/aws/shadow/shadowFilePaths.cmake )
+include( ${CMAKE_SOURCE_DIR}/libraries/aws/device-shadow-for-aws-iot-embedded-sdk/shadowFilePaths.cmake )
 
 # Include JSON library's source and header path variables.
 include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreJSON/jsonFilePaths.cmake )
