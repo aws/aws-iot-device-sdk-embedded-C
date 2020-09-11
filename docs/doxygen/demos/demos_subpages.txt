@@ -1,8 +1,8 @@
 /**
 @page mqtt_demo_basic_tls Basic TLS Demo
-@brief Uses an OpenSSL-based transport interface implementation to establish a TLS connection with server authentication, and demonstrates QoS 2 implementation.
+@brief Demo of a MQTT application that establishes a TLS connection with server-only authentication, and uses QoS 2 level of communication with broker.
 
-This demo demonstrates the subscribe-publish workflow of MQTT at QoS 2 level. After subscribing to a single topic filter, it publishes to the same topic and waits for receipt of that message back from the server at QoS 2 level. This cycle of publishing to the broker and receiving the same message back from the broker is repeated indefinitely.
+This demo uses an OpenSSL-based transport interface implementation to establish a server-authenticated TLS connection, and demonstrates the subscribe-publish workflow of MQTT at QoS 2 level. After subscribing to a single topic filter, it publishes to the same topic and waits for receipt of that message back from the server at QoS 2 level. This cycle of publishing to the broker and receiving the same message back from the broker is repeated indefinitely.
 
 Messages in this demo are sent at QoS 2, which guarantees exactly one delivery according to the MQTT spec. See the demo workflow below:
 
@@ -11,9 +11,9 @@ Messages in this demo are sent at QoS 2, which guarantees exactly one delivery a
 
 /**
 @page mqtt_demo_mutual_auth Mutual Authentication Demo
-@brief Uses an OpenSSL--based transport interface implementation to establish a TLS connection with server and client authentication, and demonstrates QoS 1 implementation.
+@brief Demo of a MQTT application that establishes a TLS connection with both server and client authentication, and uses QoS 1 level of communication with broker.
 
-This demo demonstrates the subscribe-publish workflow of MQTT at QoS 1 level. After subscribing to a single topic filter, it publishes to the same topic and waits for receipt of that message back from the server at QoS 1 level. This cycle of publishing to the broker and receiving the same message back from the broker is repeated indefinitely.
+This demo uses an OpenSSL-based transport interface implementation to establish a server and client-authenticated TLS connection, and demonstrates the subscribe-publish workflow of MQTT at QoS 1 level. After subscribing to a single topic filter, it publishes to the same topic and waits for receipt of that message back from the server at QoS 1 level. This cycle of publishing to the broker and receiving the same message back from the broker is repeated indefinitely.
 
 Messages in this demo are sent at QoS 1, which guarantees at least one delivery according to the MQTT spec. See the demo workflow below:
 
@@ -22,9 +22,9 @@ Messages in this demo are sent at QoS 1, which guarantees at least one delivery 
 
 /**
 @page mqtt_demo_plaintext Plaintext Demo
-@brief Uses a POSIX socket based transport interface implementation to establish a TCP connection, and demonstrates QoS 0 implementation.
+@brief Demo of a MQTT application that establishes a plaintext (no encryption) TCP connection with the server, and uses QoS 0 level of communication with broker.
 
-This demo demonstrates the subscribe-publish workflow of MQTT at Qos 0 level. After subscribing to a single topic filter, it publishes to the same topic and waits for receipt of that message to be returned from the server at QoS 0 level. This cycle of publishing to the broker and receiving the same message back from the broker is repeated indefinitely.
+This demo uses a POSIX socket-based transport interface implementation to establish a TCP connection, and demonstrates the subscribe-publish workflow of MQTT at Qos 0 level. After subscribing to a single topic filter, it publishes to the same topic and waits for receipt of that message to be returned from the server at QoS 0 level. This cycle of publishing to the broker and receiving the same message back from the broker is repeated indefinitely.
 
 Messages in this demo are sent at QoS 0, which guarantees at most one delivery according to the MQTT spec. See the demo workflow below:
 
@@ -33,9 +33,9 @@ Messages in this demo are sent at QoS 0, which guarantees at most one delivery a
 
 /**
 @page mqtt_demo_serializer Serializer Demo
-@brief Uses a POSIX socket based transport interface implementation to establish a TCP connection, and demonstrates QoS 0 implementation using only the MQTT serializer API.
+@brief Demo of a MQTT application using only the MQTT serializer API to communicate at QoS 0 level with broker over a plaintext (no encryption) TCP connection.
 
-This demo demonstrates the subscribe-publish workflow of MQTT at QoS 0 level. After subscribing to a single topic filter, it publishes to the same topic and waits for receipt of that message to be returned from the server at QoS 0 level. It demonstrates use of the serializer API as a lightweight alternative to the standard MQTT API. This cycle of publishing to the broker and receiving the same message back from the broker is repeated indefinitely.
+This demo uses POSIX sockets to establish a TCP connection, and demonstrates the subscribe-publish workflow of MQTT at QoS 0 level. After subscribing to a single topic filter, it publishes to the same topic and waits for receipt of that message to be returned from the server at QoS 0 level. It demonstrates use of the serializer API as a lightweight alternative to the standard MQTT API. This cycle of publishing to the broker and receiving the same message back from the broker is repeated indefinitely.
 
 Messages in this demo are sent at QoS 0, which guarantees at most one delivery according to the MQTT spec. See the demo workflow below:
 
@@ -44,9 +44,9 @@ Messages in this demo are sent at QoS 0, which guarantees at most one delivery a
 
 /**
 @page mqtt_demo_subscription_manager Susbcription Manager Demo
-@brief Uses an OpenSSL-based transport interface implementation to establish a TLS connection, and demonstrates QoS 1 implementation using a subscription manager to manage multiple subscriptions, register callbacks, and handle wildcard topics.
+@brief Demo of a MQTT application that subscribes to multiple topic filters using a subscription manager to manage multiple subscriptions, register different callbacks for each subscription, and handle wildcard topics. It establishes a TLS connection with server-only authentication, and communicates at QoS 1 level with the broker.
 
-This demo demonstrates the subscribe-publish workflow of MQTT at QoS 1 level, using a subscription manager. After subscribing to a topic filter, it publishes to the same topic and waits for receipt of that message to be returned from the server at QoS 1 level. It repeats this process for 3 different topic filters, including one wildcard filter. This cycle of publishing to the broker and receiving the same message back from the broker is repeated indefinitely.
+This demo uses an OpenSSL-based transport interface implementation to establish a server-authenticated TLS connection, and demonstrates the subscribe-publish workflow of MQTT at QoS 1 level, using a subscription manager. Before subscribing to a topic filter, the application registers the filter's unique callback with the subscription manager. After subscription, it publishes to the same topic and waits for receipt of that message to be returned from the server at QoS 1 level. Once received, the subscription manager will invoke the callback registered for the topic filter that matches the topic of the incoming PUBLISH. This subscribe-publish process is repeated for 3 different topic filters, including one wildcard filter. This cycle of publishing to the broker and receiving the same message back from the broker is repeated indefinitely.
 
 Messages in this demo are sent at QoS 1, which guarantees at least one delivery according to the MQTT spec. See the demo workflow below:
 
