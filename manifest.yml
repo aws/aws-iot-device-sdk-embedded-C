@@ -1,0 +1,26 @@
+name : "AWS_IoT_Device_SDK_for_Embedded_C"        # Required project name. Maximum of 50 characters. No spaces allowed (replace with "_").
+version: "202009.00"                              # Required project version. Can support calendar or semantic versioning. Maximum of 20 characters.
+description: |-                                   # Required project description. Maximum of 255 character.
+  "The AWS IoT Device SDK for Embedded C is a collection of C source files 
+  that can be used in embedded applications to securely connect to the 
+  AWS IoT platform and interact with AWS IoT services on AWS Cloud. \n
+  \n
+  See dependencies for included libraries."         
+dependencies:                                       # Optional. An array of all dependencies.
+  - name: "coreMQTT"                                # Required. Maximum of 50 characters. No spaces allowed (replace with "_").
+    version: "1.0.0"                                # Required project version. Can support calendar or semantic versioning. Maximum of 20 characters.
+    repository:                                     # Required if artifact does not exist in FreeRTOS Interactive registry.
+      type: "git"                                   # Required. Only git is supported. Potential future support for zip, svn, or hg.
+      url: "https://github.com/FreeRTOS/coreMQTT"   # Required. Maximum of 255 characters.
+  - name: "coreJSON"                                # Required. Maximum of 50 characters. No spaces allowed (replace with "_").
+    version: "1.0.0"                                # Required project version. Can support calendar or semantic versioning. Maximum of 20 characters.
+    repository:                                     # Required if artifact does not exist in FreeRTOS Interactive registry.
+      type: "git"                                   # Required. Only git is supported. Potential future support for zip, svn, or hg.
+      url: "https://github.com/FreeRTOS/coreJSON"   # Required. Maximum of 255 characters.    
+  - name: "Device-Shadow-for-AWS-IoT-embedded-sdk"  # Required. Maximum of 50 characters. No spaces allowed (replace with "_").
+    version: "1.0.0"                                # Required project version. Can support calendar or semantic versioning. Maximum of 20 characters.
+    repository:                                     # Required if artifact does not exist in FreeRTOS Interactive registry.
+      type: "git"                                   # Required. Only git is supported. Potential future support for zip, svn, or hg.
+      url: "https://github.com/aws/Device-Shadow-for-AWS-IoT-embedded-sdk"  # Required. Maximum of 255 characters.
+
+license: "MIT"                                      # Required. SPDX license ID of the library.
