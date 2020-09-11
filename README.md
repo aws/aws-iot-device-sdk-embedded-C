@@ -3,7 +3,7 @@
 
 **[Link to API documentation]**    (LINK REQUIRED)
 
-We have released version 202009.00 of the AWS IoT SDK for Embedded-C (C-SDK). This release contains refactored libraries, and is a new design from the C-SDK v3.x. This release includes refactored MQTT and AWS IoT Device Shadow libraries for memory usage and modularity, and includes dependent libraries via GitHub submoduling. These libraries have gone through code quality checks including for [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html), [MISRA coding standard](https://www.misra.org.uk/MISRAHome/MISRAC2012/tabid/196/Default.aspx), [Coverity statical analysis](https://scan.coverity.com/), and [AWS CBMC automated reasoning tool](https://www.youtube.com/watch?v=YwQHAPRhQkI&feature=youtu.be&t=1721) to ensure memory safety, thread safety and functional correctness proof.   
+We have released version 202009.00 of the AWS IoT SDK for Embedded-C (C-SDK). This release contains refactored libraries, and is a new design from the C-SDK v3.x. This release includes refactored MQTT and AWS IoT Device Shadow libraries for optimized memory usage and modularity, and includes dependent libraries via GitHub submoduling. These libraries have gone through code quality checks including for [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html), [MISRA coding standard](https://www.misra.org.uk/MISRAHome/MISRAC2012/tabid/196/Default.aspx), [Coverity statical analysis](https://scan.coverity.com/), and [AWS CBMC automated reasoning tool](https://www.youtube.com/watch?v=YwQHAPRhQkI&feature=youtu.be&t=1721) to ensure memory safety, thread safety and functional correctness proof.   
   
 If you are upgrading from v3.x of the C-SDK to the 202009.00 release, please follow the update guide (LINK REQUIRED). If you are using the C-SDK v4_beta_deprecated branch, note that we will continue to fix bugs but will not add new features to it. See the C-SDK v4_beta branch [README](https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/v4_beta_deprecated/README.md) for additional details. 
 
@@ -13,13 +13,13 @@ The AWS IoT Device SDK for Embedded C (C-SDK) is a collection of C source files 
 
 ## Features
 
-The Device SDK simplifies access to the Pub/Sub functionality of the AWS IoT broker via MQTT and provide APIs to interact with Device Shadow. The SDK has been tested to work with the AWS IoT Core to ensure best interoperability of a device with the AWS IoT platform. C-SDK contains the following libraries:
+The Device SDK simplifies access to the Pub/Sub functionality of the AWS IoT broker and an open source MQTT broker (Mosquitto) via MQTT and provide APIs to interact with Device Shadow. The SDK has been tested to work with the AWS IoT Core to ensure best interoperability of a device with the AWS IoT platform. C-SDK contains the following libraries:
 
 ### MQTT 
 The Device SDK provides functionality to create and maintain a mutually authenticated TLS connection over which it runs MQTT. This connection is used for any further publish operations and allow for subscribing to MQTT topics which will call a configurable callback function when these topics are received.  The [coreMQTT](https://github.com/FreeRTOS/coreMQTT) Client library has been refactored for memory optimization and implements the complete [MQTT 3.1.1](http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/mqtt-v3.1.1.html) standard.  It has no dependencies on any additional libraries other than the standard C library and a customer-implemented network transport interface.  The refactored design embraces different use-cases, ranging from resource-constrained platforms using only QoS 0 MQTT PUBLISH messages to resource-rich platforms using QoS 2 MQTT PUBLISH over TLS connections.  
 
 ### AWS IoT Device Shadow
-The [AWS IoT Device Shadow](https://github.com/aws/device-shadow-for-aws-iot-embedded-sdk) enables you to store and retrieve the current state (the “shadow”) of every registered device. The device’s shadow is a persistent, virtual representation of your device that you can interact with in your applications even if the device is offline. The device state captured as its “shadow” is itself a [JSON](https://www.json.org/) document. You can send commands over MQTT or HTTP to query the latest known device state, or to change the state. Each device’s shadow is uniquely identified by the name of the corresponding “thing”, a representation of a specific device or logical entity on the AWS Cloud. See [Managing Devices with AWS IoT](https://docs.aws.amazon.com/iot/latest/developerguide/iot-thing-management.html) for more information. More details about shadows can be found in [AWS IoT documentation](https://docs.aws.amazon.com/iot/latest/developerguide/iot-device-shadows.html). 
+The [AWS IoT Device Shadow](https://github.com/aws/device-shadow-for-aws-iot-embedded-sdk) enables you to store and retrieve the current state (the “shadow”) of every registered device. The device’s shadow is a persistent, virtual representation of your device that you can interact with in your applications even if the device is offline. The device state captured as its “shadow” is itself a [JSON](https://www.json.org/) document. You can send commands over MQTT or HTTP to retrieve the latest known device state, or to change the state. Each device’s shadow is uniquely identified by the name of the corresponding “thing”, a representation of a specific device or logical entity on the AWS Cloud. See [Managing Devices with AWS IoT](https://docs.aws.amazon.com/iot/latest/developerguide/iot-thing-management.html) for more information. More details about shadows can be found in [AWS IoT documentation](https://docs.aws.amazon.com/iot/latest/developerguide/iot-device-shadows.html). 
 
 ## Metrics
 
@@ -33,17 +33,19 @@ The format of the username string with metrics is:
 ```
 where
 
-* **Actual_Username** is the actual username used for authentication (if username and password are used for authentication).
+* **Actual_Username** is the actual username used for authentication (if a username/password is used for authentication).
 * **OS_Name** is the Operating System the application is running on.
 * **OS_Version** is the version number of the Operating System.
 * **Hardware_Platform** is the Hardware Platform the application is running on.
 * **MQTT_Library_name** is the MQTT Client library being used.
 * **MQTT_Library_version** is the version of the MQTT Client library being used.
 
+
+
 ## Branches
 
 ### master branch
-The [master](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/master) branch hosts the continuous development of the AWS IoT Embedded C SDK libraries. Please be aware that the libraries in master branch may have bugs and performance issues. Consider using the released versions of the AWS IoT Embedded C SDK for production ready software.
+The [master](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/master) branch hosts the continuous development of the AWS IoT Embedded C SDK libraries. Please be aware that the development at the tip of the master branch is continuously in progress and may have bugs. Consider using the tagged releases of the AWS IoT Embedded C SDK for production ready software.
 
 ### v4_beta_deprecated branch
 The [v4_beta_deprecated](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v4_beta_deprecated) branch contains a beta version of the AWS IoT Embedded C SDK libraries, which is now deprecated. The libraries in this branch will not be released. However, critical bugs will be fixed and tested. No new features will be added to this branch.
@@ -55,7 +57,7 @@ All of the released versions of the AWS IoT Embedded C SDK libraries are availab
 
 ## Versioning
 
-C-SDK releases will now follow a date based versioning scheme with the format YYYYMM.NN, where: 
+C-SDK releases will now follow a date based versioning scheme with the format YYYYMM.NN_major, where: 
 
 * Y represents the year.
 * M represents the month.
