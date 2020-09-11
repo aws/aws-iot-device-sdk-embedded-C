@@ -1503,7 +1503,7 @@ int main( int argc,
      * Note: The random number generator is used for adding randomness
      * to the client ID strings to avoid client identifier collision
      * when connecting to the MQTT broker. */
-    srand( tp.tv_nsec );
+    srand( time( NULL ) );
 
     if( returnStatus == EXIT_SUCCESS )
     {
