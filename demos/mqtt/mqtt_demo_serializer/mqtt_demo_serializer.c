@@ -422,17 +422,17 @@ static int createMQTTConnectionWithBroker( NetworkContext_t * pNetworkContext,
      * The client identifier is used to uniquely identify this MQTT client to
      * the MQTT broker. In a production device the identifier can be something
      * unique, such as a device serial number. */
-    connectInfo.clientIdentifierLength =
+    mqttConnectInfo.clientIdentifierLength =
         snprintf( clientIdBuffer, sizeof( clientIdBuffer ),
                   "%d%s",
                   randomNumForClientId,
                   CLIENT_IDENTIFIER );
-    connectInfo.pClientIdentifier = clientIdBuffer;
+    mqttConnectInfo.pClientIdentifier = clientIdBuffer;
 
     LogDebug( ( "Created randomized client ID for MQTT connection: "
                 "ClientID={%.*s}",
-                connectInfo.clientIdentifierLength,
-                connectInfo.pClientIdentifier ) );
+                mqttConnectInfo.clientIdentifierLength,
+                mqttConnectInfo.pClientIdentifier ) );
 
     /* Set MQTT keep-alive period. It is the responsibility of the application to ensure
      * that the interval between Control Packets being sent does not exceed the Keep Alive value.
