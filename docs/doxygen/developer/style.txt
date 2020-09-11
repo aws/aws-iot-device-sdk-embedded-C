@@ -56,7 +56,7 @@ See @ref guide_developer_styleguide_naming for how to name the functions, variab
 #include <stddef.h>
 #include <string.h>
 
-/* bool is defined in only C99+. */
+/* This file defines `bool` for compatibility with C89 compilers. */
 #if defined( __cplusplus ) || ( defined( __STDC_VERSION__ ) && ( __STDC_VERSION__ >= 199901L ) )
     #include <stdbool.h>
 #elif !defined( bool ) && !defined( false ) && !defined( true )
@@ -212,7 +212,7 @@ The naming convention aims to differentiate this SDK's files, variables, and fun
 @subsection guide_developer_styleguide_naming_definedconstantsandenumvalues Defined constants and enum values
 @brief Naming convention for constants set using preprocessor `#define` and enum values.
 
-@formattable{defined constants and enum values}
+@formattable{defined constant and enum value}
 @formattableentry{<b>LibraryDescription</b>,Defined constants and enum values in application-facing library header files,`MQTTSuccess` (core_mqtt_lightweight.h)}
 @formattableentry{<b>LIBRARY_DESCRIPTION</b>,Defined constants and enum values in demos and tests,`MQTT_EXAMPLE_TOPIC`}
 @formattableentry{<b>DESCRIPTION</b>,Internal constants and enum values<br>No `AWS_` prefix for internal names in AWS-specific libraries,`ROOT_CA_CERT_PATH`}
@@ -220,7 +220,7 @@ The naming convention aims to differentiate this SDK's files, variables, and fun
 @subsection guide_developer_styleguide_naming_files Files
 @brief Naming convention for files.
 
-@formattable{files}
+@formattable{file}
 @formattableentry{<b>library</b>`_`<b>description</b>`.extension`,General library file,`core_mqtt_serializer.c`}
 @formattableentry{<b>library</b>`_internal.h`,Internal library header,`core_mqtt_internal.h`}
 @formattableentry{<b>library</b>`_demo_`<b>description</b>`.c`,Library demo source,`mqtt_demo_plaintext.c`}
@@ -250,7 +250,7 @@ authenticates over TLS with an MQTT broker.</p>
 @subsection guide_developer_styleguide_naming_functions Functions (and function-like macros)
 @brief Naming convention of functions and function-like macros.
 
-@formattable{functions}
+@formattable{function}
 @formattableentry{<b>Library</b>`_`<b>Description</b>,Externally-visible library function,`MQTT_Publish`}
 @formattableentry{<b>description</b>,`static` function (never uses `Aws` prefix),`sendPublish`<br>`eventCallback`}
 @formattableentry{`test_`<b>Library</b>`_`<b>accessedFunction_Description</b>,Test access function,`test_MQTT_ProcessLoop_Timer_Overflow`}
@@ -264,7 +264,7 @@ Functions not visible outside their source file (i.e. `static` functions) have n
 @subsection guide_developer_styleguide_naming_types Types
 @brief Naming conventions of library `typedef` types.
 
-@formattable{types}
+@formattable{type}
 @formattableentry{<b>LibraryDescription</b>`_t`,General types in application-facing library header files,`MQTTStatus_t` (core_mqtt.h)}
 
 Types intended for use in applications are [UpperCamelCased](https://en.wikipedia.org/wiki/Camel_case). The names end with `_t`. Parameter structures should indicate their associated function: for example, `MQTTPublishInfo_t` is passed as a parameter to `MQTT_Publish`.
@@ -289,7 +289,7 @@ A `struct` may contain `union` members, but its usage must be documented as it v
 @subsection guide_developer_styleguide_naming_variables Variables
 @brief Naming conventions of variables.
 
-@formattable{variables}
+@formattable{variable}
 @formattableentry{<b>variableDescription</b>,General local variable,`startTime`}
 @formattableentry{`p`<b>VariableDescription</b>,Variable pointers and arrays (including strings),`pSubscriptionList`}
 
