@@ -13,9 +13,9 @@ The AWS IoT Device SDK for Embedded C (C-SDK) is a collection of C source files 
 
 ## Features
 
-C-SDK simplifies access to the Pub/Sub functionality of the AWS IoT broker via MQTT and provide APIs to interact with Device Shadow. The SDK has been tested to work with the AWS IoT Core to ensure best interoperability of a device with the AWS IoT platform. C-SDK contains the following libraries:
+The Device SDK simplifies access to the Pub/Sub functionality of the AWS IoT broker via MQTT and provide APIs to interact with Device Shadow. The SDK has been tested to work with the AWS IoT Core to ensure best interoperability of a device with the AWS IoT platform. C-SDK contains the following libraries:
 
-### coreMQTT
+### MQTT 
 Device SDK provides functionality to create and maintain a mutually authenticated TLS connection over which it runs MQTT. This connection is used for any further publish operations and allow for subscribing to MQTT topics which will call a configurable callback function when these topics are received.  The [coreMQTT](https://github.com/FreeRTOS/coreMQTT) Client library has been refactored for memory optimization and implements the complete MQTT 3.1.1 standard.  It has no dependencies on any additional libraries other than the standard C library and a user-implemented network transport interface.  The coreMQTT library implements the complete specification of the [MQTT 3.1.1](http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/mqtt-v3.1.1.html) protocol standard. The refactored design embraces different use-cases, ranging from resource-constrained platforms using only QoS 0 MQTT PUBLISH messages to resource-rich platforms using QoS 2 MQTT PUBLISH over TLS connections.  
 
 ### AWS IoT Device Shadow
@@ -92,9 +92,6 @@ It is required to setup an AWS account and access the AWS IoT Console for runnin
 
 -  [Sign-in to the AWS IoT Console](https://docs.aws.amazon.com/iot/latest/developerguide/iot-console-signin.html) after setting up the AWS account.
 
-
-
-  
 
 ### Configuring the mutual auth demos
 
