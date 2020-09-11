@@ -588,7 +588,6 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
     char clientIdBuffer[ CLIENT_IDENTIFIER_LENGTH + 1u ];
     int randomNumForClientId = 0;
 
-
     assert( pMqttContext != NULL );
     assert( pNetworkContext != NULL );
 

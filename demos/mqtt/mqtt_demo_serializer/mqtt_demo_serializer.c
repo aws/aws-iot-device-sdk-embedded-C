@@ -36,9 +36,6 @@
  *
  */
 
-/* Include demo_config.h first for logging and other configuration */
-#include "demo_config.h"
-
 /* Standard includes. */
 #include <assert.h>
 #include <stdlib.h>
@@ -47,6 +44,9 @@
 /* POSIX includes. */
 #include <time.h>
 #include <unistd.h>
+
+/* Include demo_config.h first for logging and other configuration */
+#include "demo_config.h"
 
 /* MQTT Serializer Serializer API header. */
 #include "core_mqtt_serializer.h"
@@ -68,9 +68,28 @@
 #endif
 
 /**
+ * @brief The largest random number to use in client identifier.
+ *
+ * @note Random number is added to MQTT client identifier to avoid client
+ * identifier collisions while connecting to MQTT broker.
+ */
+#define MAX_RAND_NUMBER_FOR_CLIENT_ID           ( 999u )
+
+/**
+ * @brief Maximum number of random number digits in Client Identifier.
+ * @note The value is derived from the #MAX_RAND_NUM_IN_FOR_CLIENT_ID.
+ */
+#define MAX_RAND_NUMBER_DIGITS_FOR_CLIENT_ID    ( 3u )
+
+/**
+ * @brief Length of randomized client identifier used for MQTT connection.
+ */
+#define CLIENT_IDENTIFIER_LENGTH                ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) + MAX_RAND_NUMBER_DIGITS_FOR_CLIENT_ID - 1 ) )
+
+/**
  * @brief Length of MQTT server host name.
  */
-#define BROKER_ENDPOINT_LENGTH       ( ( uint16_t ) ( sizeof( BROKER_ENDPOINT ) - 1 ) )
+#define BROKER_ENDPOINT_LENGTH                  ( ( uint16_t ) ( sizeof( BROKER_ENDPOINT ) - 1 ) )
 
 /**
  * @brief The topic to subscribe and publish to in the example.
@@ -78,12 +97,12 @@
  * The topic name starts with the client identifier to ensure that each demo
  * interacts with a unique topic name.
  */
-#define MQTT_EXAMPLE_TOPIC           CLIENT_IDENTIFIER "/example/topic"
+#define MQTT_EXAMPLE_TOPIC                      CLIENT_IDENTIFIER "/example/topic"
 
 /**
  * @brief Length of client MQTT topic.
  */
-#define MQTT_EXAMPLE_TOPIC_LENGTH    ( ( uint16_t ) ( sizeof( MQTT_EXAMPLE_TOPIC ) - 1 ) )
+#define MQTT_EXAMPLE_TOPIC_LENGTH               ( ( uint16_t ) ( sizeof( MQTT_EXAMPLE_TOPIC ) - 1 ) )
 
 /**
  * @brief Size of the network buffer for MQTT packets.
@@ -374,6 +393,11 @@ static int createMQTTConnectionWithBroker( NetworkContext_t * pNetworkContext,
     bool sessionPresent = false;
     uint8_t receiveAttempts = 0;
 
+    /* Buffer for storing client ID with random number.
+     * Note: The "+ 1U" is for the NULL character.*/
+    char clientIdBuffer[ CLIENT_IDENTIFIER_LENGTH + 1u ];
+    int randomNumForClientId = 0;
+
     /***
      * For readability, error handling in this function is restricted to the use of
      * asserts().
@@ -389,11 +413,26 @@ static int createMQTTConnectionWithBroker( NetworkContext_t * pNetworkContext,
      * gets disconnected. */
     mqttConnectInfo.cleanSession = true;
 
-    /* The client identifier is used to uniquely identify this MQTT client to
+    /* Generate a random number to prefix to the client ID string.
+     * Note: The randomization of the client ID is used to avoid
+     * client identifier collisions when connecting to the MQTT broker. */
+    randomNumForClientId = ( rand() % ( MAX_RAND_NUMBER_FOR_CLIENT_ID + 1u ) );
+
+    /* Create the client ID string with the random number.
+     * The client identifier is used to uniquely identify this MQTT client to
      * the MQTT broker. In a production device the identifier can be something
      * unique, such as a device serial number. */
-    mqttConnectInfo.pClientIdentifier = CLIENT_IDENTIFIER;
-    mqttConnectInfo.clientIdentifierLength = ( uint16_t ) strlen( CLIENT_IDENTIFIER );
+    connectInfo.clientIdentifierLength =
+        snprintf( clientIdBuffer, sizeof( clientIdBuffer ),
+                  "%d%s",
+                  randomNumForClientId,
+                  CLIENT_IDENTIFIER );
+    connectInfo.pClientIdentifier = clientIdBuffer;
+
+    LogDebug( ( "Created randomized client ID for MQTT connection: "
+                "ClientID={%.*s}",
+                connectInfo.clientIdentifierLength,
+                connectInfo.pClientIdentifier ) );
 
     /* Set MQTT keep-alive period. It is the responsibility of the application to ensure
      * that the interval between Control Packets being sent does not exceed the Keep Alive value.
@@ -851,9 +890,19 @@ int main( int argc,
     NetworkContext_t networkContext = { 0 };
     RetryUtilsStatus_t retryUtilsStatus = RetryUtilsSuccess;
     RetryUtilsParams_t retryParams;
+    struct timespec tp;
 
     ( void ) argc;
     ( void ) argv;
+
+    /* Get current time to seed pseudo random number generator.
+     * Note: The random number generator is used for adding randomness
+     * to the client ID strings to avoid client identifier collision
+     * when connecting to the MQTT broker. */
+    ( void ) clock_gettime( CLOCK_REALTIME, &tp );
+
+    /* Seed pseudo random number generator with nanoseconds. */
+    srand( tp.tv_nsec );
 
     /***
      * Set Fixed size buffer structure that is required by API to serialize
@@ -941,7 +990,7 @@ int main( int argc,
                 {
                     LogError( ( "Subscription to topic failed, all attempts exhausted." ) );
                 }
-            } while ( ( globalSubAckStatus == false ) && ( retryUtilsStatus == RetryUtilsSuccess ) );
+            } while( ( globalSubAckStatus == false ) && ( retryUtilsStatus == RetryUtilsSuccess ) );
 
             assert( globalSubAckStatus == true );
 
