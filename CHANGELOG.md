@@ -12,6 +12,8 @@ These libraries have gone through code quality checks including for [GNU Complex
    - [FreeRTOS/coreJSON](https://github.com/FreeRTOS/JSON) for JSON parser library
    - [aws/device-shadow-for-aws-iot-embedded-sdk](https://github.com/aws/device-shadow-for-aws-iot-embedded-sdk) for AWS IoT Shadow service client library.
 
+- With this release, we are introducing a [date-based versioning scheme](LINK TO README EXPLAINING VERSIONING ONCE UPDATED).
+
 **Note**: This release is **NOT** backwards compatible with the v3 version of AWS IoT Device SDK for Embedded C.
 
 ## [3.1.0](https://github.com/aws/aws-iot-device-sdk-embedded-C/releases/tag/v3.1.0) (September 08, 2020)
