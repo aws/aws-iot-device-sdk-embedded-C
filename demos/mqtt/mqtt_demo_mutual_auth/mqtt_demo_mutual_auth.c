@@ -53,6 +53,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 /* POSIX includes. */
 #include <unistd.h>
@@ -137,12 +138,27 @@
 /**
  * @brief Length of MQTT server host name.
  */
-#define AWS_IOT_ENDPOINT_LENGTH             ( ( uint16_t ) ( sizeof( AWS_IOT_ENDPOINT ) - 1 ) )
+#define AWS_IOT_ENDPOINT_LENGTH                 ( ( uint16_t ) ( sizeof( AWS_IOT_ENDPOINT ) - 1 ) )
 
 /**
- * @brief Length of client identifier.
+ * @brief The largest random number to use in client identifier.
+ *
+ * @note Random number is added to MQTT client identifier to avoid client
+ * identifier collisions while connecting to MQTT broker.
  */
-#define CLIENT_IDENTIFIER_LENGTH            ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) )
+#define MAX_RAND_NUMBER_FOR_CLIENT_ID           ( 999u )
+
+/**
+ * @brief Maximum number of random number digits in Client Identifier.
+ * @note The value is derived from the #MAX_RAND_NUM_IN_FOR_CLIENT_ID.
+ */
+#define MAX_RAND_NUMBER_DIGITS_FOR_CLIENT_ID    ( 3u )
+
+/**
+ * @brief Length of randomized client identifier used for MQTT connection.
+ */
+#define CLIENT_IDENTIFIER_LENGTH                ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) + MAX_RAND_NUMBER_DIGITS_FOR_CLIENT_ID - 1 ) )
+
 
 /**
  * @brief ALPN (Application-Layer Protocol Negotiation) protocol name for AWS IoT MQTT.
@@ -865,7 +881,7 @@ static int handleResubscribe( MQTTContext_t * pMqttContext )
             LogError( ( "Subscription to topic failed, all attempts exhausted." ) );
             returnStatus = EXIT_FAILURE;
         }
-    } while ( ( globalSubAckStatus == MQTTSubAckFailure ) && ( retryUtilsStatus == RetryUtilsSuccess ) );
+    } while( ( globalSubAckStatus == MQTTSubAckFailure ) && ( retryUtilsStatus == RetryUtilsSuccess ) );
 
     return returnStatus;
 }
@@ -965,6 +981,11 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
     MQTTStatus_t mqttStatus;
     MQTTConnectInfo_t connectInfo = { 0 };
 
+    /* Buffer for storing client ID with random number.
+     * Note: The "+ 1U" is for the NULL character.*/
+    char clientIdBuffer[ CLIENT_IDENTIFIER_LENGTH + 1u ];
+    int randomNumForClientId = 0;
+
     assert( pMqttContext != NULL );
     assert( pSessionPresent != NULL );
 
@@ -976,11 +997,26 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
      * reestablish a session which was already present. */
     connectInfo.cleanSession = createCleanSession;
 
-    /* The client identifier is used to uniquely identify this MQTT client to
+    /* Generate a random number to prefix to the client ID string.
+     * Note: The randomization of the client ID is used to avoid
+     * client identifier collisions when connecting to the MQTT broker. */
+    randomNumForClientId = ( rand() % ( MAX_RAND_NUMBER_FOR_CLIENT_ID + 1u ) );
+
+    /* Create the client ID string with the random number.
+     * The client identifier is used to uniquely identify this MQTT client to
      * the MQTT broker. In a production device the identifier can be something
      * unique, such as a device serial number. */
-    connectInfo.pClientIdentifier = CLIENT_IDENTIFIER;
-    connectInfo.clientIdentifierLength = CLIENT_IDENTIFIER_LENGTH;
+    connectInfo.clientIdentifierLength =
+        snprintf( clientIdBuffer, sizeof( clientIdBuffer ),
+                  "%d%s",
+                  randomNumForClientId,
+                  CLIENT_IDENTIFIER );
+    connectInfo.pClientIdentifier = clientIdBuffer;
+
+    LogDebug( ( "Created randomized client ID for MQTT connection: "
+                "ClientID={%.*s}",
+                connectInfo.clientIdentifierLength,
+                connectInfo.pClientIdentifier ) );
 
     /* The maximum time interval in seconds which is allowed to elapse
      * between two Control Packets.
@@ -1454,6 +1490,7 @@ int main( int argc,
     MQTTContext_t mqttContext = { 0 };
     NetworkContext_t networkContext = { 0 };
     bool clientSessionPresent = false;
+    struct timespec tp;
 
     ( void ) argc;
     ( void ) argv;
@@ -1461,6 +1498,15 @@ int main( int argc,
     /* Initialize MQTT library. Initialization of the MQTT library needs to be
      * done only once in this demo. */
     returnStatus = initializeMqtt( &mqttContext, &networkContext );
+
+    /* Get current time to seed pseudo random number generator.
+     * Note: The random number generator is used for adding randomness
+     * to the client ID strings to avoid client identifier collision
+     * when connecting to the MQTT broker. */
+    ( void ) clock_gettime( CLOCK_REALTIME, &tp );
+
+    /* Seed pseudo random number generator with nanoseconds. */
+    srand( tp.tv_nsec );
 
     if( returnStatus == EXIT_SUCCESS )
     {
