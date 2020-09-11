@@ -3,7 +3,7 @@
 
 **[Link to API documentation]**    (LINK REQUIRED)
 
-We have released version 202009.00 of the AWS IoT SDK for Embedded-C (C-SDK). This release contains refactored libraries, and is a new design from the C-SDK v3.x. This release includes refactored MQTT and AWS IoT Device Shadow libraries for memory usage and modularity, and includes dependent libraries via GitHub submoduling. These libraries have gone through code quality checks including for [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html), [MISRA coding standard](https://freertos.org/FreeRTOS-Coding-Standard-and-Style-Guide.html#CodingStandard), [Coverity statical analysis](https://scan.coverity.com/), and [AWS CBMC automated reasoning tool](https://www.youtube.com/watch?v=YwQHAPRhQkI&feature=youtu.be&t=1721) to ensure memory safety, thread safety and functional correctness proof.   
+We have released version 202009.00 of the AWS IoT SDK for Embedded-C (C-SDK). This release contains refactored libraries, and is a new design from the C-SDK v3.x. This release includes refactored MQTT and AWS IoT Device Shadow libraries for memory usage and modularity, and includes dependent libraries via GitHub submoduling. These libraries have gone through code quality checks including for [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html), [MISRA coding standard](https://www.misra.org.uk/MISRAHome/MISRAC2012/tabid/196/Default.aspx), [Coverity statical analysis](https://scan.coverity.com/), and [AWS CBMC automated reasoning tool](https://www.youtube.com/watch?v=YwQHAPRhQkI&feature=youtu.be&t=1721) to ensure memory safety, thread safety and functional correctness proof.   
   
 If you are upgrading from v3.x of the C-SDK to the 202009.00 release, please follow the update guide (LINK REQUIRED). If you are using the C-SDK v4_beta_deprecated branch, note that we will continue to fix bugs but will not add new features to it. See the C-SDK v4_beta branch [README](https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/v4_beta_deprecated/README.md) for additional details. 
 
@@ -71,16 +71,18 @@ git submodule update --init --recursive
 ## Building and Running Demos
 
   
-The libraries in this SDK are not dependent on any operating systems. However, the demos for the libraries in this SDK are built and tested on a Linux platform. This SDK builds with [CMake](https://cmake.org/), a cross-platform build tool.
+The libraries in this SDK are not dependent on any operating system. However, the demos for the libraries in this SDK are built and tested on a Linux platform. This SDK builds with [CMake](https://cmake.org/), a cross-platform build tool.
 
 
 ### Prerequisites
 
-- CMake 3.13.0 or later and a C90 compiler.
+- CMake 3.13.0 or later 
+
+- C90 compiler
 
 - A supported operating system. The ports provided with this repo are expected to work with all recent versions of the following operating systems, although we cannot guarantee the behavior on all systems.
 
-- On Linux systems, installation of OpenSSL development libraries and header files, *version 1.1.0 or later*, are required. The OpenSSL development libraries are usually called something like `libssl-dev` or `openssl-devel` when installed through a package manager.
+- On Linux, installation of OpenSSL development libraries and header files, *version 1.1.0 or later*, are required. The OpenSSL development libraries are usually called something like `libssl-dev` or `openssl-devel` when installed through a package manager.
 
   
 
@@ -90,7 +92,7 @@ It is required to setup an AWS account and access the AWS IoT Console for runnin
 
 -  [Setup an AWS account](https://docs.aws.amazon.com/iot/latest/developerguide/iot-console-signin.html).
 
--  [Sign-in to the AWS IoT Console](https://docs.aws.amazon.com/iot/latest/developerguide/iot-console-signin.html) after setting up the AWS account.
+-  [Sign-in to the AWS IoT Console](https://aws.amazon.com/console/) after setting up the AWS account.
 
 
 ### Configuring the mutual auth demos
