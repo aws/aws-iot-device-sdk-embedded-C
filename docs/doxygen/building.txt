@@ -1,0 +1,134 @@
+/**
+@page building Building and Running Demos
+@brief Instructions for building and running demos.
+
+<p>
+The libraries in this SDK are not dependent on any operating systems. 
+However, the demos for the libraries in this SDK are built and tested on a 
+Linux platform. This SDK builds with [CMake](https://cmake.org/), a cross-platform build tool.
+</p>
+
+@section build_prerequisites Prerequisites
+@brief Prerequisites needed to run the demos.
+
+@pre
+- CMake 3.13.0 or later and a C90 compiler.
+
+@pre
+- A supported operating system. The ports provided with this repo are expected to work with all recent versions of the following operating systems, although we cannot guarantee the behavior on all systems.
+    - Linux system with POSIX sockets and timer APIs. (CI tests on Ubuntu 18.04).<br>
+        - On Linux systems, installation of OpenSSL development libraries and header files, <i>version 1.1.0</i> or later, are required. The OpenSSL development libraries are usually called something like `libssl-dev` or `openssl-devel` when installed through a package manager.
+        - Although not a part of the C90 standard, stdint.h is required for fixed-width integer types (e.g int32_t).
+
+@section aws_iot_setup AWS IoT Account Setup
+@brief Setting up AWS IoT to run demos.
+
+It is required to setup an AWS account and access the AWS IoT Console for running demos and tests. Follow the links to:
+-  [Setup an AWS account](https://docs.aws.amazon.com/iot/latest/developerguide/iot-console-signin.html).
+-  [Sign-in to the AWS IoT Console](https://docs.aws.amazon.com/iot/latest/developerguide/iot-console-signin.html) after setting up the AWS account.
+
+*Note: If using the Provisioning library, a fleet provisioning template, a provisioning claim, IoT policies and IAM policies need to be setup for the AWS account. Complete the steps to setup your device and AWS IoT account outlined [here](https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html#use-claim).*
+
+@section configuring_mutual_auth_demo Configuring the Mutual Auth Demo
+@brief Passing configuration settings to run the mutual auth demo.
+
+- You can pass the following configuration settings as command line options in order to run the mutual auth demos: 
+@code{sh}
+cmake .. -DAWS_IOT_ENDPOINT="aws-iot-endpoint" -DROOT_CA_CERT_PATH="root-ca-path" -DCLIENT_CERT_PATH="certificate-path" -DCLIENT_PRIVATE_KEY_PATH="private-key-path" 
+@endcode
+
+- In order to set these configurations manually, edit `demo_config.h` in `demos/mqtt/mqtt_demo_mutual_auth/` to `#define` the following:
+
+	- Set `AWS_IOT_ENDPOINT` to your custom endpoint. This is found on the *Settings* page of the AWS IoT Console and has a format of `ABCDEFG1234567.iot.us-east-2.amazonaws.com`.
+
+	- Set `ROOT_CA_CERT_PATH` to the path of the root CA certificate downloaded when setting up the device certificate (or Provisioning Claim for Fleet Provisioning) in [AWS IoT Account Setup](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v4_beta#aws-iot-account-setup).
+
+	- Set `CLIENT_CERT_PATH` to the path of the client certificate downloaded when setting up the device certificate (or Provisioning Claim for Fleet Provisioning) in [AWS IoT Account Setup](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v4_beta#aws-iot-account-setup).
+
+	- Set `CLIENT_PRIVATE_KEY_PATH` to the path of the private key downloaded when setting up the device certificate (or Provisioning Claim for Fleet Provisioning) in [AWS IoT Account Setup](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v4_beta#aws-iot-account-setup).
+
+@section building_demo_commmandline Build Steps
+@brief How to build the demo applications on the command-line.
+
+- While in the root directory of AWS IoT Device SDK C, create a build directory, then change to that build directory.
+@code{sh}
+mkdir build && cd build
+@endcode
+
+- Run cmake while inside build directory.
+@code{sh}
+cmake ..
+@endcode
+
+- Run this command to build the demos.
+@code{sh}
+make
+@endcode
+
+<p>All demo executables can now be found in the `build/bin` directory and 
+should be run while inside that directory.</p>
+
+@subsection docker_containers_for_demos Installing Docker Containers for Demos
+@brief Alternative option of using Docker containers for running demos locally.
+
+Install Docker:
+
+@code{sh}
+curl -fsSL https://get.docker.com -o get-docker.sh
+
+sh get-docker.sh
+@endcode
+
+#### Installing Mosquitto Broker to run MQTT demos locally
+
+The following instructions have been tested on an Ubuntu 18.04 environment with Docker and OpenSSL installed.
+<ol>
+<li>Download the official Docker image for Mosquitto.</li>
+
+@code{sh}
+docker pull eclipse-mosquitto:latest
+@endcode
+
+<li>`BROKER_ENDPOINT` defined in `demos/mqtt/mqtt_demo_basic_tls/demo_config.h` can now be set to `localhost`.</li>
+
+<li>For TLS communication with Mosquitto broker, server and CA credentials need to be created. Use OpenSSL commands to generate the credentials for the Mosquitto server.</li>
+
+- Generate CA key and certificate. Provide the Subject field information as appropriate.
+@code{sh}
+openssl req -x509 -nodes -sha256 -days 365 -newkey rsa:2048 -keyout ca.key -out ca.crt
+@endcode
+
+- Generate server key and certificate and sign with the CA cert.
+@code{sh}
+
+openssl req -nodes -sha256 -new -keyout server.key -out server.csr
+
+openssl x509 -req -sha256 -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -days 365
+@endcode
+
+<li>Create a mosquitto.conf file to use port 8883 (for TLS communication) and providing path to the generated credentials.</li>
+
+@code
+port 8883
+
+cafile /mosquitto/config/ca.crt
+certfile /mosquitto/config/server.crt
+keyfile /mosquitto/config/server.key
+
+# Use this option for TLS mutual authentication (where client will provide CA signed certificate)
+#require_certificate true
+tls_version tlsv1.2
+#use_identity_as_username true
+
+@endcode
+
+<li>Run the docker container from the local directory containing the generated credential and mosquitto.conf files.</li>
+
+@code{sh}
+docker run -it -p 8883:8883 -v $(pwd):/mosquitto/config/ --name mosquitto-basic-tls eclipse-mosquitto:latest
+@endcode
+
+<li>Set `ROOT_CA_CERT_PATH` to the absolute path of the CA certificate created in step 3. for the local Mosquitto server.</li>
+</ol>
+
+*/

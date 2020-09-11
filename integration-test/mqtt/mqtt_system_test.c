@@ -25,9 +25,12 @@
  * from a POSIX platform.
  */
 
+/* Standard header includes. */
 #include <string.h>
 #include <stdbool.h>
 #include <assert.h>
+#include <stdlib.h>
+#include <time.h>
 
 /* Include config file before other non-system includes. */
 #include "test_config.h"
@@ -63,109 +66,123 @@
 /**
  * @brief Length of MQTT server host name.
  */
-#define BROKER_ENDPOINT_LENGTH               ( ( uint16_t ) ( sizeof( BROKER_ENDPOINT ) - 1 ) )
+#define BROKER_ENDPOINT_LENGTH                  ( ( uint16_t ) ( sizeof( BROKER_ENDPOINT ) - 1 ) )
 
 /**
  * @brief A valid starting packet ID per MQTT spec. Start from 1.
  */
-#define MQTT_FIRST_VALID_PACKET_ID           ( 1 )
+#define MQTT_FIRST_VALID_PACKET_ID              ( 1 )
 
 /**
  * @brief A PINGREQ packet is always 2 bytes in size, defined by MQTT 3.1.1 spec.
  */
-#define MQTT_PACKET_PINGREQ_SIZE             ( 2U )
+#define MQTT_PACKET_PINGREQ_SIZE                ( 2U )
 
 /**
  * @brief A packet type not handled by MQTT_ProcessLoop.
  */
-#define MQTT_PACKET_TYPE_INVALID             ( 0U )
+#define MQTT_PACKET_TYPE_INVALID                ( 0U )
 
 /**
  * @brief Number of milliseconds in a second.
  */
-#define MQTT_ONE_SECOND_TO_MS                ( 1000U )
+#define MQTT_ONE_SECOND_TO_MS                   ( 1000U )
 
 /**
  * @brief Length of the MQTT network buffer.
  */
-#define MQTT_TEST_BUFFER_LENGTH              ( 128 )
+#define MQTT_TEST_BUFFER_LENGTH                 ( 128 )
 
 /**
  * @brief Sample length of remaining serialized data.
  */
-#define MQTT_SAMPLE_REMAINING_LENGTH         ( 64 )
+#define MQTT_SAMPLE_REMAINING_LENGTH            ( 64 )
 
 /**
  * @brief Subtract this value from max value of global entry time
  * for the timer overflow test.
  */
-#define MQTT_OVERFLOW_OFFSET                 ( 3 )
+#define MQTT_OVERFLOW_OFFSET                    ( 3 )
 
 /**
  * @brief Sample topic filter to subscribe to.
  */
-#define TEST_MQTT_TOPIC                      "/iot/integration/test"
+#define TEST_MQTT_TOPIC                         "/iot/integration/test"
 
 /**
  * @brief Sample topic filter 2 to use in tests.
  */
-#define TEST_MQTT_TOPIC_2                    "/iot/integration/test2"
+#define TEST_MQTT_TOPIC_2                       "/iot/integration/test2"
 
 /**
  * @brief Length of sample topic filter.
  */
-#define TEST_MQTT_TOPIC_LENGTH               ( sizeof( TEST_MQTT_TOPIC ) - 1 )
+#define TEST_MQTT_TOPIC_LENGTH                  ( sizeof( TEST_MQTT_TOPIC ) - 1 )
 
 /**
  * @brief Sample topic filter to subscribe to.
  */
-#define TEST_MQTT_LWT_TOPIC                  "/iot/integration/test/lwt"
+#define TEST_MQTT_LWT_TOPIC                     "/iot/integration/test/lwt"
 
 /**
  * @brief Length of sample topic filter.
  */
-#define TEST_MQTT_LWT_TOPIC_LENGTH           ( sizeof( TEST_MQTT_LWT_TOPIC ) - 1 )
+#define TEST_MQTT_LWT_TOPIC_LENGTH              ( sizeof( TEST_MQTT_LWT_TOPIC ) - 1 )
 
 /**
  * @brief Size of the network buffer for MQTT packets.
  */
-#define NETWORK_BUFFER_SIZE                  ( 1024U )
+#define NETWORK_BUFFER_SIZE                     ( 1024U )
 
 /**
  * @brief Client identifier for MQTT session in the tests.
  */
-#define TEST_CLIENT_IDENTIFIER               "MQTT-Test"
+#define TEST_CLIENT_IDENTIFIER                  "MQTT-Test"
 
 /**
  * @brief Length of the client identifier.
  */
-#define TEST_CLIENT_IDENTIFIER_LENGTH        ( sizeof( TEST_CLIENT_IDENTIFIER ) - 1u )
+#define TEST_CLIENT_IDENTIFIER_LENGTH           ( sizeof( TEST_CLIENT_IDENTIFIER ) - 1u )
 
 /**
  * @brief Client identifier for use in LWT tests.
  */
-#define TEST_CLIENT_IDENTIFIER_LWT           "MQTT-Test-LWT"
+#define TEST_CLIENT_IDENTIFIER_LWT              "MQTT-Test-LWT"
 
 /**
  * @brief Length of LWT client identifier.
  */
-#define TEST_CLIENT_IDENTIFIER_LWT_LENGTH    ( sizeof( TEST_CLIENT_IDENTIFIER_LWT ) - 1u )
+#define TEST_CLIENT_IDENTIFIER_LWT_LENGTH       ( sizeof( TEST_CLIENT_IDENTIFIER_LWT ) - 1u )
+
+/**
+ * @brief The largest random number to use in client identifier.
+ *
+ * @note Random number is added to MQTT client identifier to avoid client
+ * identifier collisions while connecting to MQTT broker.
+ */
+#define MAX_RAND_NUMBER_FOR_CLIENT_ID           ( 999u )
+
+/**
+ * @brief Maximum number of random number digits in Client Identifier.
+ * @note The value is derived from the #MAX_RAND_NUM_IN_FOR_CLIENT_ID.
+ */
+#define MAX_RAND_NUMBER_DIGITS_FOR_CLIENT_ID    ( 3u )
 
 /**
  * @brief Transport timeout in milliseconds for transport send and receive.
  */
-#define TRANSPORT_SEND_RECV_TIMEOUT_MS       ( 200U )
+#define TRANSPORT_SEND_RECV_TIMEOUT_MS          ( 200U )
 
 /**
  * @brief Timeout for receiving CONNACK packet in milli seconds.
  */
-#define CONNACK_RECV_TIMEOUT_MS              ( 1000U )
+#define CONNACK_RECV_TIMEOUT_MS                 ( 1000U )
 
 /**
  * @brief Time interval in seconds at which an MQTT PINGREQ need to be sent to
  * broker.
  */
-#define MQTT_KEEP_ALIVE_INTERVAL_SECONDS     ( 5U )
+#define MQTT_KEEP_ALIVE_INTERVAL_SECONDS        ( 5U )
 
 /**
  * @brief Timeout for MQTT_ProcessLoop() function in milliseconds.
@@ -173,12 +190,12 @@
  * PUBLISH message and ack responses for QoS 1 and QoS 2 communications
  * with the broker.
  */
-#define MQTT_PROCESS_LOOP_TIMEOUT_MS         ( 700U )
+#define MQTT_PROCESS_LOOP_TIMEOUT_MS            ( 700U )
 
 /**
  * @brief The MQTT message published in this example.
  */
-#define MQTT_EXAMPLE_MESSAGE                 "Hello World!"
+#define MQTT_EXAMPLE_MESSAGE                    "Hello World!"
 
 /**
  * @brief Packet Identifier generated when Subscribe request was sent to the broker;
@@ -281,6 +298,15 @@ static MQTTPublishInfo_t incomingInfo;
 static uint8_t disconnectOnPacketType = MQTT_PACKET_TYPE_INVALID;
 
 /**
+ * @brief Random number for the client identifier of the MQTT connection(s) in
+ * the test.
+ *
+ * Random number is used to avoid client identifier collisions while connecting
+ * to MQTT broker.
+ */
+static int clientIdRandNumber;
+
+/**
  * @brief Sends an MQTT CONNECT packet over the already connected TCP socket.
  *
  * @param[in] pContext MQTT context pointer.
@@ -366,6 +392,12 @@ static void establishMqttSession( MQTTContext_t * pContext,
     /* The network buffer must remain valid for the lifetime of the MQTT context. */
     static uint8_t buffer[ NETWORK_BUFFER_SIZE ];
 
+    /* Buffer for storing client ID with random integer.
+     * Note: Size value is chosen to accommodate both LWT and non-LWT client ID
+     * strings along with NULL character.*/
+    char clientIdBuffer[ TEST_CLIENT_IDENTIFIER_LWT_LENGTH +
+                         MAX_RAND_NUMBER_DIGITS_FOR_CLIENT_ID + 1u ] = { 0 };
+
     /* Setup the transport interface object for the library. */
     transport.pNetworkContext = pNetworkContext;
     transport.send = Openssl_Send;
@@ -392,14 +424,27 @@ static void establishMqttSession( MQTTContext_t * pContext,
 
     if( useLWTClientIdentifier )
     {
-        connectInfo.pClientIdentifier = TEST_CLIENT_IDENTIFIER_LWT;
-        connectInfo.clientIdentifierLength = TEST_CLIENT_IDENTIFIER_LWT_LENGTH;
+        /* Populate client identifier for connection with LWT topic with random number. */
+        connectInfo.clientIdentifierLength =
+            snprintf( clientIdBuffer, sizeof( clientIdBuffer ),
+                      "%d%s",
+                      clientIdRandNumber,
+                      TEST_CLIENT_IDENTIFIER_LWT );
+        connectInfo.pClientIdentifier = clientIdBuffer;
     }
     else
     {
-        connectInfo.pClientIdentifier = TEST_CLIENT_IDENTIFIER;
-        connectInfo.clientIdentifierLength = TEST_CLIENT_IDENTIFIER_LENGTH;
+        /* Populate client identifier with random number. */
+        connectInfo.clientIdentifierLength =
+            snprintf( clientIdBuffer,
+                      sizeof( clientIdBuffer ),
+                      "%d%s", clientIdRandNumber,
+                      TEST_CLIENT_IDENTIFIER );
+        connectInfo.pClientIdentifier = clientIdBuffer;
     }
+
+    LogDebug( ( "Created randomized client ID for MQTT connection: ClientID={%.*s}", connectInfo.clientIdentifierLength,
+                connectInfo.pClientIdentifier ) );
 
     /* The interval at which an MQTT PINGREQ needs to be sent out to broker. */
     connectInfo.keepAliveSeconds = MQTT_KEEP_ALIVE_INTERVAL_SECONDS;
@@ -710,6 +755,8 @@ static void resumePersistentSession()
 /* Called before each test method. */
 void setUp()
 {
+    struct timespec tp;
+
     /* Reset file-scoped global variables. */
     receivedSubAck = false;
     receivedUnsubAck = false;
@@ -730,6 +777,15 @@ void setUp()
     serverInfo.pHostName = BROKER_ENDPOINT;
     serverInfo.hostNameLength = BROKER_ENDPOINT_LENGTH;
     serverInfo.port = BROKER_PORT;
+
+    /* Get current time to seed pseudo random number generator. */
+    ( void ) clock_gettime( CLOCK_REALTIME, &tp );
+
+    /* Seed pseudo random number generator with nanoseconds. */
+    srand( tp.tv_nsec );
+
+    /* Generate a random number to use in the client identifier. */
+    clientIdRandNumber = ( rand() % ( MAX_RAND_NUMBER_FOR_CLIENT_ID + 1u ) );
 
     /* Establish a TCP connection with the server endpoint, then
      * establish TLS session on top of TCP connection. */
