@@ -32,8 +32,11 @@ The libraries in this SDK are not dependent on any operating systems. However, t
     - Linux system with POSIX sockets and timer APIs. (CI tests on Ubuntu 18.04).
         - On Linux systems, installation of OpenSSL development libraries and header files, *version 1.1.0 or later*, are required. The OpenSSL development libraries are usually called something like `libssl-dev` or `openssl-devel` when installed through a package manager.
         - Although not a part of the C90 standard, `stdint.h` is required for fixed-width integer types (e.g int32_t).
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> Update the release-candidate README (#1220)
 
 ### AWS IoT Account Setup
 
