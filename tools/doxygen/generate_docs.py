@@ -74,7 +74,7 @@ def main():
 
     # Zip up if desired.
     if doZip:
-        print(f"Zipping up to {abs_sdk_root}/doxygen.zip...")
+        print(f"Zipping up to {abs_sdk_root}{os.path.sep}doxygen.zip...")
         doxy_zip = zipfile.ZipFile("doxygen.zip", mode="w")
         try:
             for abs_doxy_path in abs_doxy_paths:
