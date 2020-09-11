@@ -119,14 +119,17 @@ def check_doxygen_config_match(results, abs_lib_path, lib_dir):
     template_configs = regex.findall(template_config_file.read())
     lib_configs = regex.findall(lib_config_file.read())
 
-    # Trim all of the white spaces and get rid of configurations with FIXMEs.
+    # Trim all of the white spaces, get rid of configs with no settings, and get
+    # rid of configurations with FIXMEs.
     template_configs = set(
         filter(
             lambda config: all(custom_config not in config for custom_config in DOXYGEN_ALLOWED_CUSTOM_CONFIGS),
-            map(lambda config: config.replace(" ", ""), template_configs),
+            filter(lambda config: config[-1] != "=", map(lambda config: config.replace(" ", ""), template_configs)),
         )
     )
-    lib_configs = set(map(lambda config: config.replace(" ", ""), lib_configs))
+    lib_configs = set(
+        filter(lambda config: config[-1] != "=", map(lambda config: config.replace(" ", ""), lib_configs))
+    )
 
     # Get all of the mismatched configs in the library.
     mismatched_configs = template_configs.difference(lib_configs)
