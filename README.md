@@ -16,7 +16,7 @@ The AWS IoT Device SDK for Embedded C (C-SDK) is a collection of C source files 
 The Device SDK simplifies access to the Pub/Sub functionality of the AWS IoT broker and an open source MQTT broker (Mosquitto) via MQTT and provide APIs to interact with Device Shadow. The SDK has been tested to work with the AWS IoT Core to ensure best interoperability of a device with the AWS IoT platform. C-SDK contains the following libraries:
 
 ### MQTT 
-The Device SDK provides functionality to create and maintain a mutually authenticated TLS connection over which it runs MQTT. This connection is used for any further publish operations and allow for subscribing to MQTT topics which will call a configurable callback function when these topics are received.  The [coreMQTT](https://github.com/FreeRTOS/coreMQTT) Client library has been refactored for memory optimization and implements the complete [MQTT 3.1.1](http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/mqtt-v3.1.1.html) standard.  It has no dependencies on any additional libraries other than the standard C library and a customer-implemented network transport interface.  The refactored design embraces different use-cases, ranging from resource-constrained platforms using only QoS 0 MQTT PUBLISH messages to resource-rich platforms using QoS 2 MQTT PUBLISH over TLS connections.  
+The Device SDK provides the ability to establish an MQTT connection with a broker over a customer-implemented transport layer, which can either be a secure channel like a TLS session (mutually authenticated or server-only authentication) or a non-secure channel like a plaintext TCP connection. This MQTT connection can be used for performing publish operations to MQTT topics, and subscribing to MQTT topics. The SDK provides a mechanism to register customer-defined callbacks for receiving incoming PUBLISH, acknowledgement and keep-alive response events from the broker.  The [coreMQTT](https://github.com/FreeRTOS/coreMQTT) Client library has been refactored for memory optimization and implements the complete [MQTT 3.1.1](http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/mqtt-v3.1.1.html) standard.  It has no dependencies on any additional libraries other than the standard C library, a customer-implemented network transport interface, and *optionally* a customer-implemented platform time function .  The refactored design embraces different use-cases, ranging from resource-constrained platforms using only QoS 0 MQTT PUBLISH messages to resource-rich platforms using QoS 2 MQTT PUBLISH over TLS connections.  
 
 ### AWS IoT Device Shadow
 The [AWS IoT Device Shadow](https://github.com/aws/device-shadow-for-aws-iot-embedded-sdk) enables you to store and retrieve the current state (the “shadow”) of every registered device. The device’s shadow is a persistent, virtual representation of your device that you can interact with in your applications even if the device is offline. The device state captured as its “shadow” is itself a [JSON](https://www.json.org/) document. You can send commands over MQTT or HTTP to retrieve the latest known device state, or to change the state. Each device’s shadow is uniquely identified by the name of the corresponding “thing”, a representation of a specific device or logical entity on the AWS Cloud. See [Managing Devices with AWS IoT](https://docs.aws.amazon.com/iot/latest/developerguide/iot-thing-management.html) for more information. More details about shadows can be found in [AWS IoT documentation](https://docs.aws.amazon.com/iot/latest/developerguide/iot-device-shadows.html). 
@@ -53,7 +53,7 @@ The [v4_beta_deprecated](https://github.com/aws/aws-iot-device-sdk-embedded-C/tr
 
 ## Releases
 
-All of the released versions of the AWS IoT Embedded C SDK libraries are available as git tags. For example, the latest v3 SDK version is available at [tag 3.1.0](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v3.1.0).
+All of the released versions of the AWS IoT Embedded C SDK libraries are available as git tags. For example, the latest v3 SDK version is available at [tag 3.1.0](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v3.1.0).  
 
 ## Versioning
 
@@ -69,7 +69,8 @@ For example, a second release in June 2021 would be 202106.01. Although the SDK 
 ## Cloning
 This repo uses [Git Submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules) to bring in dependent components.
 
-Note: If you download the ZIP file provided by GitHub UI, you will not get the contents of the submodules. (The ZIP file is also not a valid git repository)
+Note: If you download the ZIP file provided by GitHub UI, you will not get the contents of the submodules. (The ZIP file is also not a valid git repository)  If you download from the [Tags](https://github.com/aws/aws-iot-device-sdk-embedded-C/tags) or [Releases](https://github.com/aws/aws-iot-device-sdk-embedded-C/releases), you will get the entire repository (including the submodules)
+
 
 To clone using HTTPS:
 ```
@@ -84,8 +85,6 @@ If you have downloaded the repo without using the `--recurse-submodules` argumen
 ```
 git submodule update --init --recursive
 ```
-
-
 
 
 ## Building and Running Demos
