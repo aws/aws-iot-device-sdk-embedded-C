@@ -32,7 +32,6 @@ def get_lib_paths(root):
     Get all of the paths, relative to the root, to the libraries under the
     standard and aws library folders.
     """
-
     libs_classifications = ["standard", "aws"]
     abs_lib_paths = []
 
