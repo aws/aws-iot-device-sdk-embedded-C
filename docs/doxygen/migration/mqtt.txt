@@ -2,19 +2,19 @@
 @page mqtt_migration MQTT
 @brief How to migrate an MQTT application from v3 to 202009.00.
 
-The MQTT library has been redesigned in 202009.00 as a solely single-threaded library. New features such as persistent session support and QoS 2 publish delivery have also been added.
+The MQTT library has been refactored in 202009.00 to use only a single thread, and therefore no longer has any thread synchronization dependencies. New features such as persistent session support and QoS 2 publish delivery have also been added.
 
 The features of the MQTT libraries in v3 and 202009.00 are defined by the common MQTT 3.1.1 spec; therefore, the two versions are similar.
 
 @section migration_mqtt_removed Removed features
 @brief The following features were present in v3, but removed in 202009.00:
 - <u>Auto-reconnect</u> <br>
-  Version 3 has an auto-reconnect feature triggered through a call to `aws_iot_mqtt_yield`. In version 202009.00, `aws_iot_mqtt_yield` has been removed, as well as the auto-reconnect feature. <br>
+  Version 3 has an auto-reconnect feature triggered through a call to `aws_iot_mqtt_yield`. In version 202009.00, the auto-reconnect feature has been removed. <br>
   <b>Workaround:</b> When a version 202009.00 API call does not return @ref MQTTSuccess, the application should re-establish
-  the underlying transport connection and then call @ref MQTT_Connect. The application should employ an exponential backoff strategy when re-establishing connections.
+  the underlying transport connection and then call @ref MQTT_Connect. We recommend that the application employ an exponential backoff strategy when re-establishing connections as explained in
+  the [AWS blog for Exponential Back off and Jitter](https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/).
 - <u>Thread support</u> <br>
-  Version 3 has an `_ENABLE_THREAD_SUPPORT_` macro for multi-threading use cases. Version 202009.00 has been redesigned to use only a single execution thread, and is
-  not thread-safe.
+  Version 3 has an `_ENABLE_THREAD_SUPPORT_` macro for multi-threading use cases. Version 202009.00 does not spawn any threads and therefore, the macro `_ENABLE_THREAD_SUPPORT_` has been removed.
 
 @section migration_mqtt_datatypes Data Types
 @brief The following table lists equivalent data types in v3 and 202009.00.
@@ -48,7 +48,7 @@ The features of the MQTT libraries in v3 and 202009.00 are defined by the common
     <tr>
         <td>IoT_Client_Connect_Params</td>
         <td>@ref MQTTConnectInfo_t</td>
-        <td>Parameter of an MQTT connect. </td>
+        <td>Parameters of an MQTT connect. </td>
     </tr>
     <tr>
         <td>IoT_Client_Init_Params</td>
@@ -81,7 +81,7 @@ The features of the MQTT libraries in v3 and 202009.00 are defined by the common
     <tr>
         <td>aws_iot_mqtt_free</td>
         <td><i>None</i></td>
-        <td>202009.00 has nothing to free, as it does not use synchronization primitives for thread safety, nor does it rely on dynamic memory.</td>
+        <td>202009.00 does not allocate any memory and therefore, has nothing to free.</td>
     </tr>
     <tr>
         <td>aws_iot_mqtt_connect</td>
