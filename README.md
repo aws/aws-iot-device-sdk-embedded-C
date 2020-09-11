@@ -174,7 +174,7 @@ docker run -p 80:80 kennethreitz/httpbin
 ## Generating Documentation
 
 The Doxygen references were created using Doxygen version 1.8.20. To generate the
-Doxygen pages, please use the provided Python script in [docs/doxygen/generate_docs.py](docs/doxygen/generate_docs.py):
+Doxygen pages, please use the provided Python script, [docs/doxygen/generate_docs.py](docs/doxygen/generate_docs.py):
 
 ```shell
 cd <CSDK_ROOT>
