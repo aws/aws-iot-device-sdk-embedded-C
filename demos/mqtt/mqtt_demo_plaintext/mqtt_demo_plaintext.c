@@ -35,6 +35,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 /* POSIX includes. */
 #include <unistd.h>
@@ -77,19 +78,33 @@
 #endif
 
 /**
- * @brief Length of client identifier.
+ * @brief The largest random number to use in client identifier.
+ *
+ * @note Random number is added to MQTT client identifier to avoid client
+ * identifier collisions while connecting to MQTT broker.
  */
-#define CLIENT_IDENTIFIER_LENGTH            ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) )
+#define MAX_RAND_NUMBER_FOR_CLIENT_ID           ( 999u )
+
+/**
+ * @brief Maximum number of random number digits in Client Identifier.
+ * @note The value is derived from the #MAX_RAND_NUM_IN_FOR_CLIENT_ID.
+ */
+#define MAX_RAND_NUMBER_DIGITS_FOR_CLIENT_ID    ( 3u )
+
+/**
+ * @brief Length of randomized client identifier used for MQTT connection.
+ */
+#define CLIENT_IDENTIFIER_LENGTH                ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) + MAX_RAND_NUMBER_DIGITS_FOR_CLIENT_ID - 1 ) )
 
 /**
  * @brief Length of MQTT server host name.
  */
-#define BROKER_ENDPOINT_LENGTH              ( ( uint16_t ) ( sizeof( BROKER_ENDPOINT ) - 1 ) )
+#define BROKER_ENDPOINT_LENGTH                  ( ( uint16_t ) ( sizeof( BROKER_ENDPOINT ) - 1 ) )
 
 /**
  * @brief Timeout for receiving CONNACK packet in milli seconds.
  */
-#define CONNACK_RECV_TIMEOUT_MS             ( 1000U )
+#define CONNACK_RECV_TIMEOUT_MS                 ( 1000U )
 
 /**
  * @brief The topic to subscribe and publish to in the example.
@@ -97,27 +112,27 @@
  * The topic name starts with the client identifier to ensure that each demo
  * interacts with a unique topic name.
  */
-#define MQTT_EXAMPLE_TOPIC                  CLIENT_IDENTIFIER "/example/topic"
+#define MQTT_EXAMPLE_TOPIC                      CLIENT_IDENTIFIER "/example/topic"
 
 /**
  * @brief Length of client MQTT topic.
  */
-#define MQTT_EXAMPLE_TOPIC_LENGTH           ( ( uint16_t ) ( sizeof( MQTT_EXAMPLE_TOPIC ) - 1 ) )
+#define MQTT_EXAMPLE_TOPIC_LENGTH               ( ( uint16_t ) ( sizeof( MQTT_EXAMPLE_TOPIC ) - 1 ) )
 
 /**
  * @brief The MQTT message published in this example.
  */
-#define MQTT_EXAMPLE_MESSAGE                "Hello World!"
+#define MQTT_EXAMPLE_MESSAGE                    "Hello World!"
 
 /**
  * @brief The length of the MQTT message published in this example.
  */
-#define MQTT_EXAMPLE_MESSAGE_LENGTH         ( ( uint16_t ) ( sizeof( MQTT_EXAMPLE_MESSAGE ) - 1 ) )
+#define MQTT_EXAMPLE_MESSAGE_LENGTH             ( ( uint16_t ) ( sizeof( MQTT_EXAMPLE_MESSAGE ) - 1 ) )
 
 /**
  * @brief Timeout for MQTT_ProcessLoop function in milliseconds.
  */
-#define MQTT_PROCESS_LOOP_TIMEOUT_MS        ( 500U )
+#define MQTT_PROCESS_LOOP_TIMEOUT_MS            ( 500U )
 
 /**
  * @brief The maximum time interval in seconds which is allowed to elapse
@@ -128,27 +143,27 @@
  *  absence of sending any other Control Packets, the Client MUST send a
  *  PINGREQ Packet.
  */
-#define MQTT_KEEP_ALIVE_INTERVAL_SECONDS    ( 60U )
+#define MQTT_KEEP_ALIVE_INTERVAL_SECONDS        ( 60U )
 
 /**
  * @brief Delay between MQTT publishes in seconds.
  */
-#define DELAY_BETWEEN_PUBLISHES_SECONDS     ( 1U )
+#define DELAY_BETWEEN_PUBLISHES_SECONDS         ( 1U )
 
 /**
  * @brief Number of PUBLISH messages sent per iteration.
  */
-#define MQTT_PUBLISH_COUNT_PER_LOOP         ( 5U )
+#define MQTT_PUBLISH_COUNT_PER_LOOP             ( 5U )
 
 /**
  * @brief Delay in seconds between two iterations of subscribePublishLoop().
  */
-#define MQTT_SUBPUB_LOOP_DELAY_SECONDS      ( 5U )
+#define MQTT_SUBPUB_LOOP_DELAY_SECONDS          ( 5U )
 
 /**
  * @brief Transport timeout in milliseconds for transport send and receive.
  */
-#define TRANSPORT_SEND_RECV_TIMEOUT_MS      ( 20 )
+#define TRANSPORT_SEND_RECV_TIMEOUT_MS          ( 20 )
 
 /*-----------------------------------------------------------*/
 
@@ -473,7 +488,7 @@ static int handleResubscribe( MQTTContext_t * pMqttContext )
             LogError( ( "Subscription to topic failed, all attempts exhausted." ) );
             returnStatus = EXIT_FAILURE;
         }
-    } while ( ( globalSubAckStatus == MQTTSubAckFailure ) && ( retryUtilsStatus == RetryUtilsSuccess ) );
+    } while( ( globalSubAckStatus == MQTTSubAckFailure ) && ( retryUtilsStatus == RetryUtilsSuccess ) );
 
     return returnStatus;
 }
@@ -568,6 +583,12 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
     MQTTFixedBuffer_t networkBuffer;
     TransportInterface_t transport;
 
+    /* Buffer for storing client ID with random number.
+     * Note: The "+ 1U" is for the NULL character.*/
+    char clientIdBuffer[ CLIENT_IDENTIFIER_LENGTH + 1u ];
+    int randomNumForClientId = 0;
+
+
     assert( pMqttContext != NULL );
     assert( pNetworkContext != NULL );
 
@@ -604,11 +625,26 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
          * gets disconnected. */
         connectInfo.cleanSession = true;
 
-        /* The client identifier is used to uniquely identify this MQTT client to
+        /* Generate a random number to prefix to the client ID string.
+         * Note: The randomization of the client ID is used to avoid
+         * client identifier collisions when connecting to the MQTT broker. */
+        randomNumForClientId = ( rand() % ( MAX_RAND_NUMBER_FOR_CLIENT_ID + 1u ) );
+
+        /* Create the client ID string with the random number.
+         * The client identifier is used to uniquely identify this MQTT client to
          * the MQTT broker. In a production device the identifier can be something
          * unique, such as a device serial number. */
-        connectInfo.pClientIdentifier = CLIENT_IDENTIFIER;
-        connectInfo.clientIdentifierLength = CLIENT_IDENTIFIER_LENGTH;
+        connectInfo.clientIdentifierLength =
+            snprintf( clientIdBuffer, sizeof( clientIdBuffer ),
+                      "%d%s",
+                      randomNumForClientId,
+                      CLIENT_IDENTIFIER );
+        connectInfo.pClientIdentifier = clientIdBuffer;
+
+        LogDebug( ( "Created randomized client ID for MQTT connection: "
+                    "ClientID={%.*s}",
+                    connectInfo.clientIdentifierLength,
+                    connectInfo.pClientIdentifier ) );
 
         /* The maximum time interval in seconds which is allowed to elapse
          * between two Control Packets.
@@ -963,9 +999,19 @@ int main( int argc,
 {
     int returnStatus = EXIT_SUCCESS;
     NetworkContext_t networkContext = { 0 };
+    struct timespec tp;
 
     ( void ) argc;
     ( void ) argv;
+
+    /* Get current time to seed pseudo random number generator.
+     * Note: The random number generator is used for adding randomness
+     * to the client ID strings to avoid client identifier collision
+     * when connecting to the MQTT broker. */
+    ( void ) clock_gettime( CLOCK_REALTIME, &tp );
+
+    /* Seed pseudo random number generator with nanoseconds. */
+    srand( tp.tv_nsec );
 
     for( ; ; )
     {
