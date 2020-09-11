@@ -156,8 +156,9 @@
 
 /**
  * @brief The largest random number to use in client identifier.
- * @note Random number is added to MQTT client identifier to avoid collisions in
- * client connections with broker.
+ *
+ * @note Random number is added to MQTT client identifier to avoid client
+ * identifier collisions while connecting to MQTT broker.
  */
 #define MAX_RAND_NUMBER_FOR_CLIENT_ID           ( 999u )
 
@@ -300,8 +301,8 @@ static uint8_t disconnectOnPacketType = MQTT_PACKET_TYPE_INVALID;
  * @brief Random number for the client identifier of the MQTT connection(s) in
  * the test.
  *
- * Random number is used to avoid client identifier collisions in connecting
- * to broker.
+ * Random number is used to avoid client identifier collisions while connecting
+ * to MQTT broker.
  */
 static int clientIdRandNumber;
 
