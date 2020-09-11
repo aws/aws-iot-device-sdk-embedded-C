@@ -29,17 +29,17 @@ def run_cmd(cmd):
 
 def get_lib_paths(root):
     """
-    Get all of the paths, relative to the root, of to the libraries under the
+    Get all of the paths, relative to the root, to the libraries under the
     standard and aws library folders.
     """
-    standard_libs_path = os.path.join(root, "libraries", "standard")
-    aws_libs_path = os.path.join(root, "libraries", "aws")
+
+    libs_classifications = ["standard", "aws"]
     abs_lib_paths = []
 
-    lib_dirs = os.listdir(standard_libs_path)
-    abs_lib_paths += list(map(lambda lib_dir: os.path.join(standard_libs_path, lib_dir), lib_dirs))
-    lib_dirs = os.listdir(aws_libs_path)
-    abs_lib_paths += list(map(lambda lib_dir: os.path.join(aws_libs_path, lib_dir), lib_dirs))
+    for lib in libs_classifications:
+        libs_path = os.path.join(root, "libraries", lib)
+        lib_dirs = os.listdir(libs_path)
+        abs_lib_paths += list(map(lambda lib_dir: os.path.join(libs_path, lib_dir), lib_dirs))
     return abs_lib_paths
 
 
@@ -74,6 +74,7 @@ def main():
 
     # Zip up if desired.
     if doZip:
+        print(f"Zipping up to {abs_sdk_root}/doxygen.zip...")
         doxy_zip = zipfile.ZipFile("doxygen.zip", mode="w")
         try:
             for abs_doxy_path in abs_doxy_paths:
