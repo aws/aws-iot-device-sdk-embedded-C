@@ -1353,7 +1353,6 @@ int main( int argc,
     MQTTContext_t mqttContext = { 0 };
     NetworkContext_t networkContext = { 0 };
     bool clientSessionPresent = false;
-    struct timespec tp;
 
     ( void ) argc;
     ( void ) argv;
@@ -1362,13 +1361,10 @@ int main( int argc,
      * done only once in this demo. */
     returnStatus = initializeMqtt( &mqttContext, &networkContext );
 
-    /* Get current time to seed pseudo random number generator.
+    /* Seed pseudo random number generator with current time.
      * Note: The random number generator is used for adding randomness
      * to the client ID strings to avoid client identifier collision
      * when connecting to the MQTT broker. */
-    ( void ) clock_gettime( CLOCK_REALTIME, &tp );
-
-    /* Seed pseudo random number generator with nanoseconds. */
     srand( tp.tv_nsec );
 
     if( returnStatus == EXIT_SUCCESS )

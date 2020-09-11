@@ -890,18 +890,14 @@ int main( int argc,
     NetworkContext_t networkContext = { 0 };
     RetryUtilsStatus_t retryUtilsStatus = RetryUtilsSuccess;
     RetryUtilsParams_t retryParams;
-    struct timespec tp;
 
     ( void ) argc;
     ( void ) argv;
 
-    /* Get current time to seed pseudo random number generator.
+    /* Seed pseudo random number generator with current time.
      * Note: The random number generator is used for adding randomness
      * to the client ID strings to avoid client identifier collision
      * when connecting to the MQTT broker. */
-    ( void ) clock_gettime( CLOCK_REALTIME, &tp );
-
-    /* Seed pseudo random number generator with nanoseconds. */
     srand( tp.tv_nsec );
 
     /***

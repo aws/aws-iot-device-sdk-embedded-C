@@ -1307,18 +1307,14 @@ int main( int argc,
 {
     int returnStatus = EXIT_SUCCESS;
     NetworkContext_t networkContext;
-    struct timespec tp;
 
     ( void ) argc;
     ( void ) argv;
 
-    /* Get current time to seed pseudo random number generator.
+    /* Seed pseudo random number generator with current time.
      * Note: The random number generator is used for adding randomness
      * to the client ID strings to avoid client identifier collision
      * when connecting to the MQTT broker. */
-    ( void ) clock_gettime( CLOCK_REALTIME, &tp );
-
-    /* Seed pseudo random number generator with nanoseconds. */
     srand( tp.tv_nsec );
 
     for( ; ; )
