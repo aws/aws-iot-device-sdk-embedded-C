@@ -1,9 +1,15 @@
-# AWS IoT Device SDK C v4.0.0
+# AWS IoT Device SDK C v4_beta_deprecated
 
-**[Link to API documentation](https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/main/index.html)**
+**[Link to API documentation](NEW LINK REQUIRED)**
 
 [![Build Status](https://travis-ci.org/aws/aws-iot-device-sdk-embedded-C.svg?branch=v4_beta_deprecated)](https://travis-ci.org/aws/aws-iot-device-sdk-embedded-C)
 [![codecov](https://codecov.io/gh/aws/aws-iot-device-sdk-embedded-C/branch/v4_beta_deprecated/graph/badge.svg)](https://codecov.io/gh/aws/aws-iot-device-sdk-embedded-C)
+
+The CSDK v4_beta_deprecated branch contains a beta version of the AWS IoT Embedded C SDK libraries, which has now been deprecated. The libraries in this branch will not be released in its current form, and they will all be refactored for memory usage and go through code quality checks code quality checks including for [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html), [MISRA coding standard](https://www.misra.org.uk/MISRAHome/MISRAC2012/tabid/196/Default.aspx), [Coverity statical analysis](https://scan.coverity.com/), and [AWS CBMC automated reasoning tool](https://www.youtube.com/watch?v=YwQHAPRhQkI&feature=youtu.be&t=1721) to ensure memory safety, thread safety and functional correctness proof. 
+
+No new features will be added, but this branch will continue to be maintained for bug fixes and security patches.  
+
+## Overview
 
 The AWS IoT Device SDK for C is a collection of C99 source files that allow applications to securely connect to the AWS IoT platform. It includes an MQTT 3.1.1 client, as well as libraries specific to AWS IoT, such as Thing Shadows. It is distributed in source form and may be built into firmware along with application code.
 
