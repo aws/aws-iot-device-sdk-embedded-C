@@ -31,10 +31,10 @@
 #include <stddef.h>
 
 /**
- * @page transport_interface Transport Interface
+ * @transportpage
  * @brief The transport interface definition.
  *
- * @section transport_interface_overview Transport Interface Overview
+ * @transportsectionoverview
  *
  * The transport interface is a set of APIs that must be implemented using an
  * external transport layer protocol. The transport interface is defined in
@@ -55,7 +55,7 @@
  * @snippet this define_transportinterface
  * <br>
  *
- * @section transport_interface_implementation Implementing the Transport Interface
+ * @transportsectionimplementation
  *
  * The following steps give guidance on implementing the transport interface:
  *
