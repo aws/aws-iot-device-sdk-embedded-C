@@ -159,7 +159,7 @@
  * @note Random number is added to MQTT client identifier to avoid collisions in
  * client connections with broker.
  */
-#define MAX_RAND_NUMBER_IN_FOR_CLIENT_ID        ( 999u )
+#define MAX_RAND_NUMBER_FOR_CLIENT_ID           ( 999u )
 
 /**
  * @brief Maximum number of random number digits in Client Identifier.
@@ -784,7 +784,7 @@ void setUp()
     srand( tp.tv_nsec );
 
     /* Generate a random number to use in the client identifier. */
-    clientIdRandNumber = ( rand() % ( MAX_RAND_NUMBER_IN_FOR_CLIENT_ID + 1u ) );
+    clientIdRandNumber = ( rand() % ( MAX_RAND_NUMBER_FOR_CLIENT_ID + 1u ) );
 
     /* Establish a TCP connection with the server endpoint, then
      * establish TLS session on top of TCP connection. */
