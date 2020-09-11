@@ -173,11 +173,13 @@ docker run -p 80:80 kennethreitz/httpbin
 ## Generating Documentation
 
 The Doxygen references were created using Doxygen version 1.8.20. To generate the
-Doxygen pages, please run the following commands:
+Doxygen pages, use the provided Python script, [tools/doxygen/generate_docs.py](tools/doxygen/generate_docs.py).
+Please ensure that each of the library submodules under **libraries/standard/** and **libraries/aws** are cloned before using
+this script.
 
 ```shell
-cd libraries/standard/coreMQTT
-doxygen docs/doxygen/config.doxyfile
-cd ../../..
-doxygen docs/doxygen/config.doxyfile
+cd <CSDK_ROOT>
+python3 docs/doxygen/generate_docs.py --root .
 ```
+
+The generated documentation landing page is located at **docs/doxygen/output/html/index.html**.
