@@ -1,0 +1,15 @@
+/**
+@page shadow_migration Shadow
+@brief How to migrate a Shadow application from v3 to 202009.00.
+
+The Device Shadow library has been redesigned in this release.  The new design has the following differences as compared to the Device Shadow library in v3 of the AWS IoT Device SDK for Embedded C.
+
+- The new Device Shadow library is completely decoupled from the underlying MQTT Client library. The v3 Device Shadow library, on the other hand, depended on the MQTT Client library present in the v3 of AWS IoT Device SDK for Embedded C. <br>
+- The new Device Shadow library does not have any code for constructing JSON files. The v3 Device Shadow library, on the other hand, contained code for constructing JSON files in the format expected by the AWS IoT Device Shadow Service. <br>
+- The new Device Shadow library provides simple convenience macros and functions for handling MQTT topic strings as defined by AWS IoT Device Shadow Service. The v3 Device Shadow library, on the other hand, provided a complete set of APIs for interacting with the AWS IoT Device Shadow Service by using a MQTT Client library.<br>
+
+The application can use the new Device Shadow library with their choice of MQTT Client library by following the call sequence diagram in the [Design document](@ref shadow_design).
+
+See the <a href="https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/master/demos/shadow/shadow_demo_main">Device Shadow demo application</a> for sample code.
+
+*/

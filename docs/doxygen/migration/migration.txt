@@ -1,0 +1,7 @@
+/**
+@page migration_guide Migration Guide
+@brief Migration guide for v3 library to the 202009.00 release.
+
+- @subpage shadow_migration <br>
+  @copybrief shadow_migration
+*/

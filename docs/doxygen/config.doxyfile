@@ -845,6 +845,7 @@ WARN_LOGFILE           =
 # Note: If this tag is empty the current directory is searched.
 
 INPUT                  = ./docs/doxygen \
+                         ./docs/doxygen/migration \
                          ./platform/include
 
 # This tag can be used to specify the character encoding of the source files
@@ -2226,7 +2227,8 @@ SKIP_FUNCTION_MACROS   = YES
 # the path). If a tag file is not located in the directory in which doxygen is
 # run, you must also specify the path to the tagfile here.
 
-TAGFILES               = libraries/standard/coreMQTT/docs/doxygen/output/mqtt.tag=../../../../libraries/standard/coreMQTT/docs/doxygen/output/html
+TAGFILES               = libraries/standard/coreMQTT/docs/doxygen/output/mqtt.tag=../../../../libraries/standard/coreMQTT/docs/doxygen/output/html \
+                                   "libraries/aws/device-shadow-for-aws-iot-embedded-sdk/docs/doxygen/output/shadow.tag=../../../../libraries/aws/device-shadow-for-aws-iot-embedded-sdk/docs/doxygen/output/html"
 
 # When a file name is specified after GENERATE_TAGFILE, doxygen will create a
 # tag file that is based on the input files it reads. See section "Linking to
