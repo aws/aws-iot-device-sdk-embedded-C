@@ -8,8 +8,6 @@ The Device Shadow library has been redesigned in this release.  The new design h
 - The new library does not have any code for handling JSON files. The v3 library contained code for assembling simple JSON files in the format expected by the Device Shadow service. <br>
 - The new library only provides simple convenience macros and functions for handling MQTT topic strings defined by AWS IoT Device Shadow service.  It does not contain any functionality of a MQTT stack. The v3 library, on the other hand, provided a complete set of APIs for interacting with the service by using a MQTT stack underneath.<br>
 
-An application may use the v3 MQTT library, version 202009.00 MQTT library, or any other MQTT library with the new Device Shadow library. To use the new Device Shadow library with any MQTT library, please see the call sequence diagram in [Design document](@ref shadow_design).
-
 Regardless of the choice of the MQTT library, the application can use the new Device Shadow library by following the call sequence diagram in the [Design document](@ref shadow_design).
 
 See the <a href="https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/master/demos/shadow/shadow_demo_main">Device Shadow demo application</a> for sample code.
