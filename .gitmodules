@@ -10,3 +10,6 @@
 [submodule "libraries/standard/coreJSON"]
 	path = libraries/standard/coreJSON
 	url = https://github.com/FreeRTOS/coreJSON.git
+[submodule "libraries/aws/device-shadow-for-aws-iot-embedded-sdk"]
+	path = libraries/aws/device-shadow-for-aws-iot-embedded-sdk
+	url = https://github.com/aws/device-shadow-for-aws-iot-embedded-sdk.git
