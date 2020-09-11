@@ -21,6 +21,24 @@ The Device SDK provides functionality to create and maintain a mutually authenti
 ### AWS IoT Device Shadow
 The [AWS IoT Device Shadow](https://github.com/aws/device-shadow-for-aws-iot-embedded-sdk) enables you to store and retrieve the current state (the “shadow”) of every registered device. The device’s shadow is a persistent, virtual representation of your device that you can interact with in your applications even if the device is offline. The device state captured as its “shadow” is itself a [JSON](https://www.json.org/) document. You can send commands over MQTT or HTTP to query the latest known device state, or to change the state. Each device’s shadow is uniquely identified by the name of the corresponding “thing”, a representation of a specific device or logical entity on the AWS Cloud. See [Managing Devices with AWS IoT](https://docs.aws.amazon.com/iot/latest/developerguide/iot-thing-management.html) for more information. More details about shadows can be found in [AWS IoT documentation](https://docs.aws.amazon.com/iot/latest/developerguide/iot-device-shadows.html). 
 
+## Metrics
+
+Within the MQTT Demo, Users have the ability to report Operating System, Hardware Platform and MQTT Client information to AWS IoT by sending a specially formatted string in the username field of the MQTT CONNECT packet.  
+
+### Format
+
+The format of the username string with metrics is:
+```
+<Actual_Username>?SDK=<OS_Name>&Version=<OS_Version>&Platform=<Hardware_Platform>&MQTTLib=<MQTT_Library_name>@<MQTT_Library_version>
+```
+where
+
+* **Actual_Username** is the actual username used for authentication (if username and password are used for authentication).
+* **OS_Name** is the Operating System the application is running on.
+* **OS_Version** is the version number of the Operating System.
+* **Hardware_Platform** is the Hardware Platform the application is running on.
+* **MQTT_Library_name** is the MQTT Client library being used.
+* **MQTT_Library_version** is the version of the MQTT Client library being used.
 
 ## Branches
 
