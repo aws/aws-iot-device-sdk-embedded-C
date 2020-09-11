@@ -45,6 +45,15 @@ The coding style aims to produce code that is readable and easy to debug. An exa
 See @ref guide_developer_styleguide_naming for how to name the functions, variables, and macros.
 
 @code{c}
+/*
+ * License header pasted here.
+ */
+
+/**
+ * @file example_file.c
+ * @brief An example of how source files are typically written in this SDK.
+ */
+
 /* Included headers are at the top of the file. The config file include is always first. */
 #include "config.h"
 
@@ -84,12 +93,14 @@ See @ref guide_developer_styleguide_naming for how to name the functions, variab
 
 /* When possible, parentheses () should be placed around constant values and a type
  * should be specified. */
-#define LIBRARY_CONSTANT ( ( int32_t ) 10 )
+#define LIBRARY_CONSTANT    ( ( int32_t ) 10 )
 
-#define LIBRARY_FUNCTION_MACRO( argument ) \ /* Line continuators are right-aligned. */
-    {                                      \ /* Function-like macros are surrounded by curly braces {}. */
-        macro_body( ( argument ) );        \ /* Parentheses surround macro arguments for MISRA 20.7 */
-    }
+#define LIBRARY_FUNCTION_MACRO( argument )    \ /* Line continuators are right-aligned. */
+{
+    \                                           /* Function-like macros are surrounded by curly braces {}. */
+    macro_body( ( argument ) );
+    \                                           /* Parentheses surround macro arguments for MISRA 20.7 */
+}
 
 /*-----------------------------------------------------------*/
 
@@ -101,9 +112,9 @@ See @ref guide_developer_styleguide_naming for how to name the functions, variab
 typedef int32_t type_t;
 
 /**
-   @brief Structs are named along with the typedef. 
-*/
-typedef struct structType 
+ * @brief Structs are named along with the typedef.
+ */
+typedef struct structType
 {
     int32_t member;
 
@@ -111,7 +122,7 @@ typedef struct structType
      * and justification. Unions are used here to reduce the size of this struct. */
     union /* Anonymous structs/unions are permitted only inside of other structs. */
     {
-        int8_t a[4];
+        int8_t a[ 4 ];
         int32_t b;
     };
 } structType_t;
@@ -147,7 +158,7 @@ static bool libraryStaticFunction( void * pArgument,
     int32_t * pLocalPointer = ( int32_t * ) pArgument;
     bool status = true;
 
-     /* All functions make generous use of the logging library. */
+    /* All functions make generous use of the logging library. */
     LogInfo( "Performing calculation..." );
 
     if( ( pArgument == NULL ) || ( argumentLength == 0 ) ) /* Note the parentheses and spacing in if statements */
