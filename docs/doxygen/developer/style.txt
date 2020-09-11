@@ -20,7 +20,7 @@ The coding style aims to produce code that is readable and easy to debug. An exa
 - Only spaces should be used for indenting. A single indent is 4 spaces. No tab characters should be used.
 - A parenthesis is usually followed by a space (see @ref guide_developer_styleguide_codingstyle_example).
 - Lines of code should be less than 80 characters long, although longer lines are permitted.
-- Local variables should be declared at the top of a block in the narrowest scope possible. Reducing complexity could be a valid case for breaking this rule, so this should be done at the programmer's discretion.
+- Local variables should be declared at the top of a block in the narrowest scope possible. Reducing complexity could be a valid case for breaking this guideline, so this should be done at the programmer's discretion.
 - All global variables should be declared at the top of a file.
 - Variables are always initialized.
 - A separator is placed between different sections of a file. The current separator is:
@@ -34,12 +34,12 @@ The coding style aims to produce code that is readable and easy to debug. An exa
 
 @subsection guide_developer_styleguide_codingstyle_typeguidelines Type guidelines
 @brief Guidelines for variable types.
-- Although not a part of the C89 standard, only fixed-width integer types should be used. Exceptions for `bool` and types required by third-party APIs.
+- Although not a part of the C89 standard, only fixed-width integer types should be used. Exceptions are for `bool` and types required by third-party APIs.
 - The default integer in the libraries should be 32 bits wide, i.e. `int32_t` or `uint32_t`.
 - Sizes and lengths should be represented with `size_t`.
 - Libraries may define `bool` macros for use with C89 compilers.
 
-@subsection guide_developer_styleguide_codingstyle_example Example File
+@section guide_developer_styleguide_codingstyle_example Example File
 @brief An example file that follows the coding style rules.
 
 See @ref guide_developer_styleguide_naming for how to name the functions, variables, and macros.
@@ -53,9 +53,17 @@ See @ref guide_developer_styleguide_naming for how to name the functions, variab
 
 /* Standard includes. */
 #include <assert.h>
-#include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
+
+/* bool is defined in only C99+. */
+#if defined( __cplusplus ) || ( defined( __STDC_VERSION__ ) && ( __STDC_VERSION__ >= 199901L ) )
+    #include <stdbool.h>
+#elif !defined( bool ) && !defined( false ) && !defined( true )
+    #define bool     int8_t
+    #define false    ( int8_t ) 0
+    #define true     ( int8_t ) 1
+#endif
 
 /* Library internal headers are included next. They use quotes "" around the file name. */
 
@@ -103,7 +111,7 @@ typedef struct structType
      * and justification. Unions are used here to reduce the size of this struct. */
     union /* Anonymous structs/unions are permitted only inside of other structs. */
     {
-        char a;
+        int8_t a[4];
         int32_t b;
     };
 } structType_t;
@@ -127,7 +135,7 @@ extern int32_t Library_ExternalFunction( void * pArgument );
 
 /* Global variables are always initialized. */
 static int globalVariable = 0;
-static int globalArray[ LIBRARY_CONSTANT ] = { 0 };
+static int pGlobalArray[ LIBRARY_CONSTANT ] = { 0 };
 
 /*-----------------------------------------------------------*/
 
@@ -136,10 +144,6 @@ static int globalArray[ LIBRARY_CONSTANT ] = { 0 };
 static bool libraryStaticFunction( void * pArgument,
                                    size_t argumentLength )
 {
-    /* All local variables are declared at the top of the function. Variables are
-     * always initialized. */
-    size_t i = 0;
-    int32_t localVariable = 0;
     int32_t * pLocalPointer = ( int32_t * ) pArgument;
     bool status = true;
 
@@ -155,6 +159,10 @@ static bool libraryStaticFunction( void * pArgument,
     }
     else /* Note an else clause is used instead of goto for error handling */
     {
+        /* Local variables should be declared at the top of a block in the narrowest scope possible. */
+        int32_t localVariable = 0;
+        size_t i;
+
         for( i = 0; i < argumentLength; i++ ) /* Note the spacing in the for loop. */
         {
             localVariable += Library_ExternalFunction( pArgument );
@@ -202,7 +210,7 @@ The naming convention aims to differentiate this SDK's files, variables, and fun
 - Names should avoid using abbreviations.
 
 @subsection guide_developer_styleguide_naming_definedconstantsandenumvalues Defined constants and enum values
-@brief Naming convention for constants set using preprocessor @c #`define` and enum values.
+@brief Naming convention for constants set using preprocessor `#define` and enum values.
 
 @formattable{defined constants and enum values}
 @formattableentry{<b>LibraryDescription</b>,Defined constants and enum values in application-facing library header files,`MQTTSuccess` (core_mqtt_lightweight.h)}
@@ -215,8 +223,8 @@ The naming convention aims to differentiate this SDK's files, variables, and fun
 @formattable{files}
 @formattableentry{<b>library</b>`_`<b>description</b>`.extension`,General library file,`core_mqtt_serializer.c`}
 @formattableentry{<b>library</b>`_internal.h`,Internal library header,`core_mqtt_internal.h`}
-@formattableentry{<b>library</b>`_`<b>demo</b>`_description.c`,Library demo source,`mqtt_demo_plaintext.c`}
-@formattableentry{<b>library</b>`_description_`<b>utest</b>`.c`<br><b>library</b>`_description_`<b>system_test</b>`.c`,Library test source,`core_mqtt_utest.c`<br>`mqtt_system_test.c`}
+@formattableentry{<b>library</b>`_demo_`<b>description</b>`.c`,Library demo source,`mqtt_demo_plaintext.c`}
+@formattableentry{<b>library_description</b>`_utest.c`<br><b>library_description</b>`_system_test.c`,Library test source,`core_mqtt_utest.c`<br>`mqtt_system_test.c`}
 
 File names contain only lowercase letters and underscores. All file names should be named according to their purpose. For example:
 - `core_mqtt_state.c`: A file in the MQTT library that handles state of MQTT PUBLISH packet deliveries.
@@ -245,7 +253,7 @@ authenticates over TLS with an MQTT broker.</p>
 @formattable{functions}
 @formattableentry{<b>Library</b>`_`<b>Description</b>,Externally-visible library function,`MQTT_Publish`}
 @formattableentry{<b>description</b>,`static` function (never uses `Aws` prefix),`sendPublish`<br>`eventCallback`}
-@formattableentry{`test_`<b>Library</b>`_`<b>accessedFunction_Descrption</b>,Test access function,`test_MQTT_ProcessLoop_Timer_Overflow`}
+@formattableentry{`test_`<b>Library</b>`_`<b>accessedFunction_Description</b>,Test access function,`test_MQTT_ProcessLoop_Timer_Overflow`}
 
 Externally visible (i.e. not `static`) functions are [UpperCamelCased](https://en.wikipedia.org/wiki/Camel_case). Function names should then specify their library name, followed by an underscore, followed by a brief description of what the function does. For example:
 - `MQTT_SerializePublish`: This function is part of the public MQTT API. It serializes an MQTT PUBLISH packet into a buffer.
@@ -257,8 +265,7 @@ Functions not visible outside their source file (i.e. `static` functions) have n
 @brief Naming conventions of library `typedef` types.
 
 @formattable{types}
-@formattableentry{`Library`<b>Description</b>`_t`,General types in application-facing library header files,`MQTTStatus_t` (core_mqtt.h)}
-@formattableentry{`Library`<b>Function</b>`Info_t`,Application-facing parameter structure,`MQTTPublishInfo_t`<br>(Parameter structure to `MQTT_Publish`)}
+@formattableentry{<b>LibraryDescription</b>`_t`,General types in application-facing library header files,`MQTTStatus_t` (core_mqtt.h)}
 
 Types intended for use in applications are [UpperCamelCased](https://en.wikipedia.org/wiki/Camel_case). The names end with `_t`. Parameter structures should indicate their associated function: for example, `MQTTPublishInfo_t` is passed as a parameter to `MQTT_Publish`.
 
@@ -284,7 +291,7 @@ A `struct` may contain `union` members, but its usage must be documented as it v
 
 @formattable{variables}
 @formattableentry{<b>variableDescription</b>,General local variable,`startTime`}
-@formattableentry{`p`<b>VariableDescription</b>,Local variable pointers and arrays (including strings),`pSubscriptionList`}
+@formattableentry{`p`<b>VariableDescription</b>,Variable pointers and arrays (including strings),`pSubscriptionList`}
 
 Local variable names are [lowerCamelCased](https://en.wikipedia.org/wiki/Camel_case) and consist only of a description of the variable. Names like `i` or `j` are acceptable for loop counters, but all other variables should have a descriptive name.
 

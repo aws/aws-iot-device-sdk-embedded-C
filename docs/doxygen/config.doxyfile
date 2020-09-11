@@ -271,7 +271,7 @@ TAB_SIZE               = 4
 
 ALIASES                =
 # Aliases for tables on the Style Guide page.
-ALIASES += formattable{1}="This table contains the formats for the names of the most common SDK \1. It is not intended to be comprehensive. <b>Bold</b> text indicates a variable but required part of the \1 name. <i>Italic</i> text indicates a variable but optional part of the \1 name.^^^^| Format | Applies to | Example |^^| ------ | ---------- | ------- |"
+ALIASES += formattable{1}="This table contains the formats for the names of the most common SDK \1. It is not intended to be comprehensive. <b>Bold</b> text indicates a variable but required part of the \1' name.^^^^| Format | Applies to | Example |^^| ------ | ---------- | ------- |"
 ALIASES += formattableentry{3}="| \1 | \2 | \3 |"
 
 # Set the OPTIMIZE_OUTPUT_FOR_C tag to YES if your project consists of C sources
