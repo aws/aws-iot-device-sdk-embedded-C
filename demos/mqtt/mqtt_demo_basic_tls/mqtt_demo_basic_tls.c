@@ -104,10 +104,10 @@
 #define BROKER_ENDPOINT_LENGTH                  ( ( uint16_t ) ( sizeof( BROKER_ENDPOINT ) - 1 ) )
 
 /**
- * @brief Maximum length of randomized client identifier that is used for MQTT
- * connection in the demo.
+ * @brief Size of a buffer to store the randomized client identifier that is
+ * used for MQTT connection in the demo.
  */
-#define MAX_CLIENT_IDENTIFIER_LENGTH            ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) + MAX_RAND_NUMBER_DIGITS_FOR_CLIENT_ID - 1 ) )
+#define CLIENT_IDENTIFIER_BUFFER_SIZE           ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) + MAX_RAND_NUMBER_DIGITS_FOR_CLIENT_ID ) )
 
 /**
  * @brief Timeout for receiving CONNACK packet in milli seconds.
@@ -869,9 +869,8 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
     MQTTStatus_t mqttStatus;
     MQTTConnectInfo_t connectInfo;
 
-    /* Buffer for storing client ID with random number.
-     * Note: The "+ 1U" is for the NULL character.*/
-    char clientIdBuffer[ MAX_CLIENT_IDENTIFIER_LENGTH + 1u ];
+    /* Buffer for storing client ID with random number. */
+    char clientIdBuffer[ MAX_CLIENT_IDENTIFIER_LENGTH ];
     int randomNumForClientId = 0;
 
     /* Establish MQTT session by sending a CONNECT packet. */
