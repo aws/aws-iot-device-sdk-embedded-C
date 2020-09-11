@@ -3,9 +3,6 @@
 
 **[Link to API documentation]**    (LINK REQUIRED)
 
-[![Build Status](https://travis-ci.org/aws/aws-iot-device-sdk-embedded-C.svg?branch=v4_beta_deprecated)](https://travis-ci.org/aws/aws-iot-device-sdk-embedded-C)
-[![codecov](https://codecov.io/gh/aws/aws-iot-device-sdk-embedded-C/branch/v4_beta_deprecated/graph/badge.svg)](https://codecov.io/gh/aws/aws-iot-device-sdk-embedded-C)
-
 We have released version 202009.00 of the AWS IoT SDK for Embedded-C (C-SDK). This release contains refactored libraries, and is a new design from the C-SDK v3.2. This release includes refactored MQTT and AWS IoT Device Shadow libraries for memory usage and modularity, and includes dependent libraries added via GitHub submoduling. These libraries have gone through code quality checks including for [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html), [MISRA coding standard](https://freertos.org/FreeRTOS-Coding-Standard-and-Style-Guide.html#CodingStandard), [Coverity statical analysis](https://scan.coverity.com/), and [AWS CBMC automated reasoning tool](https://www.youtube.com/watch?v=YwQHAPRhQkI&feature=youtu.be&t=1721) to ensure memory safety, thread safety and functional correctness proof.   
   
 If you are upgrading from v3.x of the C-SDK to the 202009.00 release, please follow the update guide (LINK REQUIRED). If you are using the C-SDK v4_beta_deprecated branch, note that we will continue to fix bugs but will not add new features to it. See the C-SDK v4_beta branch [README](https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/v4_beta_deprecated/README.md) for additional details. 
