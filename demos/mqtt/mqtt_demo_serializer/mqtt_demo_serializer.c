@@ -85,7 +85,7 @@
  * @brief Size of a buffer to store the randomized client identifier that is
  * used for MQTT connection in the demo.
  */
-#define CLIENT_IDENTIFIER_BUFFER_SIZE           ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) + MAX_RAND_NUMBER_DIGITS_FOR_CLIENT_ID
+#define CLIENT_IDENTIFIER_BUFFER_SIZE           ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) + MAX_RAND_NUMBER_DIGITS_FOR_CLIENT_ID ) )
 
 /**
  * @brief Length of MQTT server host name.

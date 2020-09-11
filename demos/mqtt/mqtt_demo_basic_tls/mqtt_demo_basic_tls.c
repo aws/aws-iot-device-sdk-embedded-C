@@ -870,7 +870,7 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
     MQTTConnectInfo_t connectInfo;
 
     /* Buffer for storing client ID with random number. */
-    char clientIdBuffer[ MAX_CLIENT_IDENTIFIER_LENGTH ];
+    char clientIdBuffer[ CLIENT_IDENTIFIER_BUFFER_SIZE ];
     int randomNumForClientId = 0;
 
     /* Establish MQTT session by sending a CONNECT packet. */
