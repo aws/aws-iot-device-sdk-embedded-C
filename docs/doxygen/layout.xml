@@ -31,8 +31,8 @@
       <tab type="exceptionindex" visible="no" title=""/>
       <tab type="exceptionhierarchy" visible="yes" title="" intro=""/>
     </tab>
-    <tab type="files" visible="no" title="">
-      <tab type="filelist" visible="yes" title="Files" intro="The following files are associated with this library."/>
+    <tab type="files" visible="no" title="Utilities">
+      <tab type="filelist" visible="yes" title="Utility Files" intro="Platform utility headers associated with this SDK."/>
       <tab type="globals" visible="no" title="" intro=""/>
     </tab>
     <tab type="examples" visible="yes" title="" intro=""/>
