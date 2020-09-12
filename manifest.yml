@@ -11,11 +11,11 @@ dependencies:
     version: "1.0.0"
       type: "git"
       url: "https://github.com/FreeRTOS/coreMQTT"
-  - name: "coreHTTP"
-    version: "1.0.0"
+  - name: "coreJSON" 
+    version: "1.0.0" 
     repository:
       type: "git"
-      url: "https://github.com/FreeRTOS/coreHTTP"
+      url: "https://github.com/FreeRTOS/coreJSON"
   - name: "Device-Shadow-for-AWS-IoT-embedded-sdk" 
     version: "1.0.0"                                
     repository:                                     
