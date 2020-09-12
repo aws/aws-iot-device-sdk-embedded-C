@@ -97,7 +97,7 @@
  * With level #LOG_ERROR only messages at this level will print.
  */
 #ifdef DOXYGEN
-    #define LIBRARY_LOG_LEVEL
+    #define LIBRARY_LOG_LEVEL   LOG_DEBUG
 #endif
 
 #endif /* ifndef LOGGING_LEVELS_H_ */
