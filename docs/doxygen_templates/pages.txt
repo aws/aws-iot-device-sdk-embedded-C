@@ -1,5 +1,6 @@
 /**
 @mainpage Overview
+@anchor [<FIXME: library name>]
 @brief [<FIXME: library description>]
 
 [<FIXME: Some useful overview text>]
