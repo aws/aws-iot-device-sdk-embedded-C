@@ -1,14 +1,14 @@
 @startuml
 
 start
-: Initialize retry paramters;
+: **RetryUtils_ParamsReset()**;
 repeat
-	: Server connection attempt;
+	: Server communication attempt;
 	if (Success) then (no)
-    	: Back off and Sleep;
+    	: **RetryUtils_BackoffAndSleep()**;
     else (yes)
     endif
-repeat while (Server connection failed &&\nRetries not exhausted) is (yes)
+repeat while (Server communication failed &&\nRetries not exhausted) is (yes)
 -> no;
 stop
 
