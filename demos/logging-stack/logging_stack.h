@@ -36,15 +36,19 @@
 #include <stdint.h>
 #include <string.h>
 
-/* Macro to extract only the file name from file path to use for metadata in
- * log messages. */
+/**
+ * @brief Macro to extract only the file name from file path to use for metadata in
+ * log messages.
+ */
 #define FILENAME               ( strrchr( __FILE__, '/' ) ? strrchr( __FILE__, '/' ) + 1 : __FILE__ )
 
 /* Metadata information to prepend to every log message. */
-#define LOG_METADATA_FORMAT    "[%s:%d] "
-#define LOG_METADATA_ARGS      FILENAME, __LINE__
+#define LOG_METADATA_FORMAT    "[%s:%d] "         /**< @brief Format of metadata logging prefix. */
+#define LOG_METADATA_ARGS      FILENAME, __LINE__ /**< @brief Arguments into the metadata logging prefix format. */
 
-/* Common macro for all logging interface macros. */
+/**
+ * Common macro for all logging interface macros.
+ */
 #if !defined( DISABLE_LOGGING )
     #define SdkLog( string )    printf string
 #else
@@ -57,7 +61,8 @@
     ( LIBRARY_LOG_LEVEL != LOG_ERROR ) &&  \
     ( LIBRARY_LOG_LEVEL != LOG_WARN ) &&   \
     ( LIBRARY_LOG_LEVEL != LOG_INFO ) &&   \
-    ( LIBRARY_LOG_LEVEL != LOG_DEBUG ) )
+    ( LIBRARY_LOG_LEVEL != LOG_DEBUG )     \
+    )
     #error "Please define LIBRARY_LOG_LEVEL as either LOG_NONE, LOG_ERROR, LOG_WARN, LOG_INFO, or LOG_DEBUG."
 #elif !defined( LIBRARY_LOG_NAME )
     #error "Please define LIBRARY_LOG_NAME for the library."

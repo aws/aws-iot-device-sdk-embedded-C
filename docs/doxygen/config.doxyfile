@@ -956,7 +956,8 @@ IMAGE_PATH             = ./docs/doxygen/demos/images/basic_tls.png \
                          ./docs/doxygen/demos/images/mutual_auth.png \
                          ./docs/doxygen/demos/images/plaintext.png \
                          ./docs/doxygen/demos/images/serializer.png \
-                         ./docs/doxygen/demos/images/subscription_manager.png
+                         ./docs/doxygen/demos/images/subscription_manager.png \
+                         ./docs/doxygen/logging/logging_architecture.png
 
 # The INPUT_FILTER tag can be used to specify a program that doxygen should
 # invoke to filter for each input file. Doxygen will invoke the filter program
@@ -2201,7 +2202,7 @@ INCLUDE_FILE_PATTERNS  =
 # recursively expanded use the := operator instead of the = operator.
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
-PREDEFINED             =
+PREDEFINED             = "DOXYGEN=1"
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The
