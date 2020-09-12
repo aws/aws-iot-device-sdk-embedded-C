@@ -33,12 +33,12 @@
 
 /**
  * @page retryutils_page Retry Utilities
- * @brief An abstraction of utilites for retrying with exponential back off with
+ * @brief An abstraction of utilites for retrying with exponential back off and
  * jitter
  * 
  * @section retryutils_overview Overview
  * The retry utilites are a set of APIs aiding in retrying with exponential 
- * backoff with jitter. Exponential backoff with jitter is strongly reccommended 
+ * backoff and jitter. Exponential backoff with jitter is strongly reccommended 
  * for retrying failed actions over the network with servers. Please see 
  * https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/ for 
  * more information about the benefits with AWS.
@@ -75,7 +75,7 @@
  * This function initializes @ref RetryUtilsParams_t. It is expected to set
  * @ref RetryUtilsParams_t.attemptsDone to zero. It is also expected to set 
  * @ref RetryUtilsParams_t.nextJitterMax to @ref INITIAL_RETRY_BACKOFF_SECONDS 
- * plus some random amount of seconds, some jitter. This jitter is a random number 
+ * plus some random amount of seconds, jitter. This jitter is a random number 
  * between 0 and @ref MAX_JITTER_VALUE_SECONDS. This function must be called before 
  * entering the exponential backoff with jitter loop using 
  * @ref RetryUtils_BackoffAndSleep.<br><br>
