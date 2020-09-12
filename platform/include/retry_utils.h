@@ -32,6 +32,56 @@
 #include <stdint.h>
 
 /**
+ * @page retryutils_page Retry Utilities
+ * @brief An abstraction of utilites for retrying with exponential back off and 
+ * jitter
+ * 
+ * @section retryutils_overview Overview
+ * The retry utilites are a set of APIs aiding in retrying with exponential 
+ * backoff and added jitter. These utilities are implemented using your system's
+ * clock and threading interface. These utilites are defined in 
+ * @ref retry_utils.h Exponential backoff with added jitter is strongly 
+ * reccommended for retrying failed actions over the network with servers. 
+ * Please see 
+ * https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/ for 
+ * more information about the benefits with AWS.
+ * 
+ * Exponential backoff and added jitter is typically used when retrying a failed
+ * connection to the server. In an environment with poor connectivity, a client
+ * can get disconnected at any time. A backoff strategy helps the client to
+ * conserve battery by not attempting reconnections over and over when it is
+ * unlikely to succeed.
+ *
+ * Before retrying the action to the server there is quiet period. In this quiet
+ * period, the task that is retrying must sleep for some random amount of time
+ * between a base and maximum number of seconds. The base seconds is defined in
+ * this API as INITIAL_RETRY_BACKOFF_SECONDS.
+ * 
+ * @code
+ * sleep = random( INITIAL_RETRY_BACKOFF_SECONDS, maximum_seconds )
+ * @endcode
+ * 
+ * The *maximum_seconds* starts at the INITIAL_RETRY_BACKOFF_SECONDS with some
+ * added jitter. The jitter added is some random number between 0 and
+ * MAX_JITTER_VALUE_SECONDS. The *maximum_seconds* doubles with each retry until
+ * MAX_RETRY_BACKOFF_SECONDS is reached.
+ * 
+ * The quiet period is repeated 
+ * 
+ *
+ * The functions that must be implemented are:<br>
+ * - @ref RetryUtils_ParamsReset
+ * - @ref RetryUtils_BackoffAndSleep
+ * 
+ * @section retryutils_paramsreset_implementation Implementing RetryUtils_ParamsReset
+ * 
+ * 
+ * 
+ * @section retryutils_backoffandsleep_implementation Implementing RetryUtils_BackoffAndSleep
+
+ */
+
+/**
  * @brief Max number of retry attempts. Set this value to 0 if the client must
  * retry forever.
  */

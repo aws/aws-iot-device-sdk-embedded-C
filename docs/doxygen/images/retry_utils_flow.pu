@@ -1,0 +1,15 @@
+@startuml
+
+start
+: Initialize retry paramters;
+repeat
+	: Server connection attempt;
+	if (Success) then (no)
+    	: Back off and Sleep;
+    else (yes)
+    endif
+repeat while (Server connection failed &&\nRetries not exhausted) is (yes)
+-> no;
+stop
+
+@enduml
