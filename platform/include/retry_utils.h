@@ -33,12 +33,12 @@
 
 /**
  * @page retryutils_page Retry Utilities
- * @brief An abstraction of utilites for retrying with exponential back off and
+ * @brief An abstraction of utilities for retrying with exponential back off and
  * jitter
  * 
  * @section retryutils_overview Overview
- * The retry utilites are a set of APIs aiding in retrying with exponential 
- * backoff and jitter. Exponential backoff with jitter is strongly reccommended 
+ * The retry utilities are a set of APIs aiding in retrying with exponential 
+ * backoff and jitter. Exponential backoff with jitter is strongly recommended 
  * for retrying failed actions over the network with servers. Please see 
  * https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/ for 
  * more information about the benefits with AWS.

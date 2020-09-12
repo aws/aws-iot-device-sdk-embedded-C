@@ -154,5 +154,6 @@ unsub
 unsuback
 updatesubackstatus
 uri
+utils
 ve
 www
