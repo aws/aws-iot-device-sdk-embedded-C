@@ -32,7 +32,7 @@
       <tab type="exceptionhierarchy" visible="yes" title="" intro=""/>
     </tab>
     <tab type="files" visible="no" title="Utilities">
-      <tab type="filelist" visible="yes" title="Utility Files" intro="Platform utility headers associated with this SDK."/>
+      <tab type="filelist" visible="yes" title="Utility Files" intro="Platform utility source files associated with this SDK."/>
       <tab type="globals" visible="no" title="" intro=""/>
     </tab>
     <tab type="examples" visible="yes" title="" intro=""/>

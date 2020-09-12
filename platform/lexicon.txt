@@ -4,6 +4,7 @@ alpn
 alpnprotoslen
 api
 apis
+attemptsdone
 aws
 backoff
 basedefs
@@ -57,6 +58,7 @@ int
 iot
 ip
 ip
+linux
 logpath
 longjmp
 malloc
@@ -64,6 +66,7 @@ maxattempts
 maxfragmentlength
 messagelevel
 mfln
+min
 misra
 mqtt
 mynetworkrecvimplementation
@@ -91,6 +94,7 @@ plaintext
 platfrom
 plisthead
 pnetworkcontext
+png
 popensslcredentials
 posix
 pprivatekeypath
@@ -142,4 +146,5 @@ transportsectionimplementation
 transportsectionoverview
 transportstruct
 unistd
+utils
 www
