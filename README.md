@@ -1,6 +1,6 @@
 # AWS IoT Device SDK C v4_beta_deprecated
 
-**[Link to API documentation](NEW LINK REQUIRED)**
+**[Link to API documentation](https://docs.aws.amazon.com/freertos/latest/lib-ref/embedded-csdk/v4.0_beta_deprecated/lib-ref/index.html)**
 
 [![Build Status](https://travis-ci.org/aws/aws-iot-device-sdk-embedded-C.svg?branch=v4_beta_deprecated)](https://travis-ci.org/aws/aws-iot-device-sdk-embedded-C)
 [![codecov](https://codecov.io/gh/aws/aws-iot-device-sdk-embedded-C/branch/v4_beta_deprecated/graph/badge.svg)](https://codecov.io/gh/aws/aws-iot-device-sdk-embedded-C)
