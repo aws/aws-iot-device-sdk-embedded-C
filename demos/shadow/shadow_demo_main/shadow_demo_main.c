@@ -1,4 +1,5 @@
 /*
+ * AWS IoT Device SDK for Embedded C V202009.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -21,7 +22,7 @@
 
 /**
  * @file shadow_demo_main.c
- * 
+ *
  * @brief Demo for showing how to use the Device Shadow library's API. This version
  * of Device Shadow API provide macros and helper functions for assembling MQTT topics
  * strings, and for determining whether an incoming MQTT message is related to the
@@ -106,7 +107,7 @@
  * 3. The actual length we will use in case 1. is 1 ( for the state of powerOn ).
  * 4. The actual length we will use in case 2. is 6 ( for the clientToken length ).
  * 5. Thus the additional size 3 = 4 + 5 - 1 - 6 + 1 (termination character).
- * 
+ *
  * In your own application, you could calculate the size of the json doc in this way.
  */
 #define SHADOW_DESIRED_JSON_LENGTH    ( sizeof( SHADOW_DESIRED_JSON ) - 3 )
@@ -142,7 +143,7 @@
  * @brief The expected size of #SHADOW_REPORTED_JSON.
  *
  * Because all the format specifiers in #SHADOW_REPORTED_JSON include a length,
- * its full size is known at compile-time by pre-calculation. Users could refer to 
+ * its full size is known at compile-time by pre-calculation. Users could refer to
  * the way how to calculate the actual length in #SHADOW_DESIRED_JSON_LENGTH.
  */
 #define SHADOW_REPORTED_JSON_LENGTH    ( sizeof( SHADOW_REPORTED_JSON ) - 3 )
@@ -219,7 +220,7 @@ static void updateDeltaHandler( MQTTPublishInfo_t * pPublishInfo )
     assert( pPublishInfo->pPayload != NULL );
 
     LogInfo( ( "/update/delta json payload:%s.\n\n", ( const char * ) pPublishInfo->pPayload ) );
-    
+
     /* The payload will look similar to this:
      * {
      *      "version": 12,
@@ -240,27 +241,27 @@ static void updateDeltaHandler( MQTTPublishInfo_t * pPublishInfo )
     result = JSON_Validate( pPublishInfo->pPayload,
                             pPublishInfo->payloadLength );
 
-    if ( result == JSONSuccess )
+    if( result == JSONSuccess )
     {
         /* Then we start to get the version value by JSON keyword "version". */
         result = JSON_Search( ( char * ) pPublishInfo->pPayload,
                               pPublishInfo->payloadLength,
                               "version",
-                              sizeof("version") - 1,
+                              sizeof( "version" ) - 1,
                               '.',
-                              & outValue,
-                              ( size_t * ) & outValueLength );
+                              &outValue,
+                              ( size_t * ) &outValueLength );
     }
     else
     {
         LogError( ( "The json document is invalid!!\n\n" ) );
     }
 
-    if ( result == JSONSuccess )
+    if( result == JSONSuccess )
     {
         LogInfo( ( "version: %.*s\n\n",
-                    outValueLength,
-                    outValue ) );
+                   outValueLength,
+                   outValue ) );
 
         /* Convert the extracted value to an unsigned integer value. */
         version = ( uint32_t ) strtoul( outValue, NULL, 10 );
@@ -270,43 +271,43 @@ static void updateDeltaHandler( MQTTPublishInfo_t * pPublishInfo )
         LogError( ( "No version in json document!!\n\n" ) );
     }
 
-    LogInfo( ( "version:%d, currentVersion:%d \r\n", version,  currentVersion ) );
+    LogInfo( ( "version:%d, currentVersion:%d \r\n", version, currentVersion ) );
 
     /* When the version is much newer than the on we retained, that means the powerOn
      * state is valid for us. */
-    if ( version > currentVersion )
+    if( version > currentVersion )
     {
         /* Set to received version as the current version. */
         currentVersion = version;
 
         /* Get powerOn state from json documents. */
         result = JSON_Search( ( char * ) pPublishInfo->pPayload,
-                                pPublishInfo->payloadLength,
-                                "state.powerOn",
-                                sizeof("state.powerOn") - 1,
-                                '.',
-                                & outValue,
-                                ( size_t * ) & outValueLength );
+                              pPublishInfo->payloadLength,
+                              "state.powerOn",
+                              sizeof( "state.powerOn" ) - 1,
+                              '.',
+                              &outValue,
+                              ( size_t * ) &outValueLength );
     }
     else
     {
         /* In this demo, we discard the incoming message
          * if the version number is not newer than the latest
          * that we've received before. Your application may use a
-         * different approach. 
+         * different approach.
          */
         LogWarn( ( "The received version is smaller than current one!!\n\n" ) );
     }
 
-    if ( result == JSONSuccess )
+    if( result == JSONSuccess )
     {
         /* Convert the powerOn state value to an unsigned integer value. */
         newState = ( uint32_t ) strtoul( outValue, NULL, 10 );
 
         LogInfo( ( "The new power on state newState:%d, currentPowerOnState:%d \r\n",
-                    newState,  currentPowerOnState ) );
+                   newState, currentPowerOnState ) );
 
-        if ( newState != currentPowerOnState )
+        if( newState != currentPowerOnState )
         {
             /* The received powerOn state is different from the one we retained before, so we switch them
              * and set the flag. */
@@ -366,44 +367,44 @@ static void updateAcceptedHandler( MQTTPublishInfo_t * pPublishInfo )
     result = JSON_Validate( pPublishInfo->pPayload,
                             pPublishInfo->payloadLength );
 
-    if ( result == JSONSuccess )
+    if( result == JSONSuccess )
     {
         /* Get clientToken from json documents. */
         result = JSON_Search( ( char * ) pPublishInfo->pPayload,
                               pPublishInfo->payloadLength,
                               "clientToken",
-                              sizeof("clientToken") - 1,
+                              sizeof( "clientToken" ) - 1,
                               '.',
-                              & outValue,
-                              ( size_t * ) & outValueLength );
+                              &outValue,
+                              ( size_t * ) &outValueLength );
     }
     else
     {
         LogError( ( "Invalid json documents !!\n\n" ) );
     }
 
-    if ( result == JSONSuccess )
+    if( result == JSONSuccess )
     {
         LogInfo( ( "clientToken: %.*s\n\n", outValueLength,
-                                            outValue ) );
+                   outValue ) );
 
         /* Convert the code to an unsigned integer value. */
         receivedToken = ( uint32_t ) strtoul( outValue, NULL, 10 );
 
-        LogInfo( ( "receivedToken:%d, clientToken:%u \r\n", receivedToken,  clientToken) );
+        LogInfo( ( "receivedToken:%d, clientToken:%u \r\n", receivedToken, clientToken ) );
 
         /* If the clientToken in this update/accepted message matches the one we
          * published before, it means the device shadow has accepted our latest
          * reported state. We are done. */
-        if ( receivedToken == clientToken )
+        if( receivedToken == clientToken )
         {
             LogInfo( ( "Received response from the device shadow. Previously published "
-                        "update with clientToken=%u has been accepted. \n\n", clientToken) );
+                       "update with clientToken=%u has been accepted. \n\n", clientToken ) );
         }
         else
         {
             LogWarn( ( "The received clientToken=%u is not identical with the one=%u we sent "
-                        , receivedToken, clientToken) );
+                       , receivedToken, clientToken ) );
         }
     }
     else
@@ -413,6 +414,7 @@ static void updateAcceptedHandler( MQTTPublishInfo_t * pPublishInfo )
 }
 
 /*-----------------------------------------------------------*/
+
 /* This is the callback function invoked by the MQTT stack when it receives
  * incoming messages. This function demonstrates how to use the Shadow_MatchTopic
  * function to determine whether the incoming message is a device shadow message
@@ -446,9 +448,9 @@ static void eventCallback( MQTTContext_t * pMqttContext,
         /* Let the Device Shadow library tell us whether this is a device shadow message. */
         if( SHADOW_SUCCESS == Shadow_MatchTopic( pDeserializedInfo->pPublishInfo->pTopicName,
                                                  pDeserializedInfo->pPublishInfo->topicNameLength,
-                                                 & messageType,
-                                                 & pThingName,
-                                                 & thingNameLength ) )
+                                                 &messageType,
+                                                 &pThingName,
+                                                 &thingNameLength ) )
         {
             /* Upon successful return, the messageType has been filled in. */
             if( messageType == ShadowMessageTypeUpdateDelta )
@@ -456,16 +458,16 @@ static void eventCallback( MQTTContext_t * pMqttContext,
                 /* Handler function to process payload. */
                 updateDeltaHandler( pDeserializedInfo->pPublishInfo );
             }
-            else if ( messageType == ShadowMessageTypeUpdateAccepted )
+            else if( messageType == ShadowMessageTypeUpdateAccepted )
             {
                 /* Handler function to process payload. */
                 updateAcceptedHandler( pDeserializedInfo->pPublishInfo );
             }
-            else if ( messageType == ShadowMessageTypeUpdateDocuments )
+            else if( messageType == ShadowMessageTypeUpdateDocuments )
             {
                 LogInfo( ( "/update/documents json payload:%s.\n\n", ( const char * ) pDeserializedInfo->pPublishInfo->pPayload ) );
             }
-            else if ( messageType == ShadowMessageTypeUpdateRejected )
+            else if( messageType == ShadowMessageTypeUpdateRejected )
             {
                 LogInfo( ( "/update/rejected json payload:%s.\n\n", ( const char * ) pDeserializedInfo->pPublishInfo->pPayload ) );
             }
@@ -486,6 +488,7 @@ static void eventCallback( MQTTContext_t * pMqttContext,
 }
 
 /*-----------------------------------------------------------*/
+
 /**
  * @brief Entry point of shadow demo.
  *
@@ -509,8 +512,9 @@ int main( int argc,
           char ** argv )
 {
     int returnStatus = EXIT_SUCCESS;
+
     /* A buffer containing the update document. It has static duration to prevent
-    * it from being placed on the call stack. */
+     * it from being placed on the call stack. */
     static char updateDocument[ SHADOW_REPORTED_JSON_LENGTH + 1 ] = { 0 };
 
     ( void ) argc;
@@ -550,6 +554,7 @@ int main( int argc,
             returnStatus = SubscribeToTopic( SHADOW_TOPIC_STRING_UPDATE_REJECTED( THING_NAME ),
                                              SHADOW_TOPIC_LENGTH_UPDATE_REJECTED( THING_NAME_LENGTH ) );
         }
+
         /* This demo uses a constant #THING_NAME known at compile time therefore we can use macros to
          * assemble shadow topic strings.
          * If the thing name is known at run time, then we could use the API #Shadow_GetTopicString to
@@ -602,7 +607,6 @@ int main( int argc,
                                            ( SHADOW_DESIRED_JSON_LENGTH + 1 ) );
         }
 
-
         if( returnStatus == EXIT_SUCCESS )
         {
             /* Note that PublishToTopic already called MQTT_ProcessLoop,
@@ -611,15 +615,16 @@ int main( int argc,
              * Check if the state change flag has been modified or not. If it's modified,
              * then we publish reported state to update topic.
              */
-            if ( stateChanged == true )
+            if( stateChanged == true )
             {
                 /* Report the latest power state back to device shadow. */
                 LogInfo( ( "Report to the state change: %d\n\n", currentPowerOnState ) );
                 ( void ) memset( updateDocument,
                                  0x00,
                                  sizeof( updateDocument ) );
+
                 /* Keep the client token in global variable used to compare if
-                   the same token in /update/accepted. */
+                 * the same token in /update/accepted. */
                 clientToken = ( Clock_GetTimeMs() % 1000000 );
 
                 snprintf( updateDocument,
@@ -628,18 +633,18 @@ int main( int argc,
                           ( int ) currentPowerOnState,
                           ( long unsigned ) clientToken );
 
-                returnStatus= PublishToTopic( SHADOW_TOPIC_STRING_UPDATE( THING_NAME ),
-                                              SHADOW_TOPIC_LENGTH_UPDATE( THING_NAME_LENGTH ),
-                                              updateDocument,
-                                              ( SHADOW_DESIRED_JSON_LENGTH + 1 ) );
+                returnStatus = PublishToTopic( SHADOW_TOPIC_STRING_UPDATE( THING_NAME ),
+                                               SHADOW_TOPIC_LENGTH_UPDATE( THING_NAME_LENGTH ),
+                                               updateDocument,
+                                               ( SHADOW_DESIRED_JSON_LENGTH + 1 ) );
             }
             else
             {
-                LogInfo( ( "No change from /update/delta, unsubscribe all shadow topics and disconnect from MQTT.\r\n") );
+                LogInfo( ( "No change from /update/delta, unsubscribe all shadow topics and disconnect from MQTT.\r\n" ) );
             }
         }
 
-        LogInfo( ( "Start to unsubscribe shadow topics and disconnect from MQTT. \r\n") );
+        LogInfo( ( "Start to unsubscribe shadow topics and disconnect from MQTT. \r\n" ) );
         UnsubscribeFromTopic( SHADOW_TOPIC_STRING_UPDATE_DELTA( THING_NAME ),
                               SHADOW_TOPIC_LENGTH_UPDATE_DELTA( THING_NAME_LENGTH ) );
 
