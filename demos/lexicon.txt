@@ -19,6 +19,7 @@ clienthello
 clienttoken
 cmake
 com
+cond
 config
 configs
 connack
@@ -36,6 +37,7 @@ developerguide
 doesn
 doxygen
 dup
+endcond
 endif
 eventcallback
 filterindex

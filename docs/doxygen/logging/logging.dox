@@ -9,7 +9,7 @@ The C-SDK libraries utilize one of the following 4 logging macro interfaces, eac
 - `LogInfo` for **Info** level
 - `LogDebug` for **Debug** level
 
-**Note: By default, each library contains empty definitions for the above logging macros, thereby generating no code for logging calls.**
+@note By default, each library contains empty definitions for the above logging macros, thereby generating no code for logging calls.
 
 To enable logging within the libraries, the customer application should implement these macros through the library-specific config file (for example, the `core_mqtt_config.h` file for MQTT library).
 The implementation of these macros can be provided as a mapping to the customer's platform-specific logging framework.
