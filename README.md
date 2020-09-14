@@ -1,5 +1,5 @@
 
-# AWS IoT Device SDK C 202009.00
+# AWS IoT Device SDK
 
 **[Link to API documentation]**    (LINK REQUIRED)
 
