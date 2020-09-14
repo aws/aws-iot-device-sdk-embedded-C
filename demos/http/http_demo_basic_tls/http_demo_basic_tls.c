@@ -426,7 +426,7 @@ int main( int argc,
             transportInterface.pNetworkContext = &networkContext;
         }
 
-        /*********************** Send HTTPS request. ************************/
+        /********************** Send HTTPS requests. ************************/
 
         for( i = 0; i < NUMBER_HTTP_PATHS; i++ )
         {
