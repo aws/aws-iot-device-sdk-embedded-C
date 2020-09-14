@@ -400,7 +400,7 @@ int main( int argc,
         {
             LogInfo( ( "Performing TLS handshake on top of the TCP connection." ) );
 
-            /* Attempt to connect to the MQTT broker. If connection fails, retry after
+            /* Attempt to connect to the HTTP server. If connection fails, retry after
              * a timeout. Timeout value will be exponentially increased till the maximum
              * attempts are reached or maximum timeout value is reached. The function
              * returns EXIT_FAILURE if the TCP connection cannot be established to
