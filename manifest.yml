@@ -21,9 +21,4 @@ dependencies:
     repository:                                     
       type: "git"                                  
       url: "https://github.com/aws/Device-Shadow-for-AWS-IoT-embedded-sdk"
-  - name: "CMock"                                
-    version: "2.5.2"                             
-    repository:
-      type: "git"                
-      url:  "https://github.com/ThrowTheSwitch/CMock"
 license: "MIT"
