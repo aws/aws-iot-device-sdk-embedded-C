@@ -48,7 +48,7 @@ where
 The [master](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/master) branch hosts the continuous development of the AWS IoT Embedded C SDK libraries. Please be aware that the development at the tip of the master branch is continuously in progress and may have bugs. Consider using the tagged releases of the AWS IoT Embedded C SDK for production ready software.
 
 ### v4_beta_deprecated branch
-The [v4_beta_deprecated](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v4_beta_deprecated) branch contains a beta version of the AWS IoT Embedded C SDK libraries, which is now deprecated. The libraries in this branch will not be released. However, critical bugs will be fixed and tested. No new features will be added to this branch.
+The [v4_beta_deprecated](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v4_beta_deprecated) branch contains a beta version of the AWS IoT Embedded C SDK libraries, which is now deprecated. This branch was earlier named as *v4_beta*, and was renamed to *v4_beta_deprecated*. The libraries in this branch will not be released. However, critical bugs will be fixed and tested. No new features will be added to this branch.
 
 
 ## Releases
@@ -100,10 +100,11 @@ The libraries in this SDK are not dependent on any operating system. However, th
 - C90 compiler
 
 - A supported operating system. The ports provided with this repo are expected to work with all recent versions of the following operating systems, although we cannot guarantee the behavior on all systems.
+    - Linux system with POSIX sockets and timer APIs. (CI tests on Ubuntu 18.04).
+        - On Linux systems, installation of OpenSSL development libraries and header files, *version 1.1.0 or later*, are required. The OpenSSL development libraries are usually called something like `libssl-dev` or `openssl-devel` when installed through a package manager.
+        - Although not a part of the C90 standard, `stdint.h` is required for fixed-width integer types (e.g int32_t).
 
-- On Linux, installation of OpenSSL development libraries and header files, *version 1.1.0 or later*, are required. The OpenSSL development libraries are usually called something like `libssl-dev` or `openssl-devel` when installed through a package manager.
 
-  
 
 ### AWS IoT Account Setup
 
@@ -112,6 +113,12 @@ It is required to setup an AWS account and access the AWS IoT Console for runnin
 -  [Setup an AWS account](https://docs.aws.amazon.com/iot/latest/developerguide/iot-console-signin.html).
 
 -  [Sign-in to the AWS IoT Console](https://aws.amazon.com/console/) after setting up the AWS account.
+
+
+
+*Note: If using the Provisioning library, a fleet provisioning template, a provisioning claim, IoT policies and IAM policies need to be setup for the AWS account. Complete the steps to setup your device and AWS IoT account outlined [here](https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html#use-claim).*
+
+
 
 
 ### Configuring the mutual auth demos
@@ -131,7 +138,7 @@ cmake .. -DAWS_IOT_ENDPOINT="aws-iot-endpoint" -DROOT_CA_CERT_PATH="root-ca-path
 
 	- Set `CLIENT_PRIVATE_KEY_PATH` to the path of the private key downloaded when setting up the device certificate (or Provisioning Claim for Fleet Provisioning) in [AWS IoT Account Setup](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v4_beta#aws-iot-account-setup).
 
-  
+
 
 ### Build Steps
 
@@ -171,17 +178,15 @@ docker pull eclipse-mosquitto:latest
 2.  `BROKER_ENDPOINT` defined in `demos/mqtt/mqtt_demo_basic_tls/demo_config.h` can now be set to `localhost`.
 
 3. For TLS communication with Mosquitto broker, server and CA credentials need to be created. Use OpenSSL commands to generate the credentials for the Mosquitto server.
-
-Generate CA key and certificate. Provide the Subject field information as appropriate.
 ```shell
+# Generate CA key and certificate. Provide the Subject field information as appropriate.
 openssl req -x509 -nodes -sha256 -days 365 -newkey rsa:2048 -keyout ca.key -out ca.crt
 ```
 
-Generate server key and certificate and sign with the CA cert.
 ```shell
-
+# Generate server key and certificate.
 openssl req -nodes -sha256 -new -keyout server.key -out server.csr
-
+# Sign with the CA cert.
 openssl x509 -req -sha256 -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -days 365
 
 ```
@@ -240,15 +245,17 @@ docker run -p 80:80 kennethreitz/httpbin
 ## Generating Documentation
 
 The Doxygen references were created using Doxygen version 1.8.20. To generate the
-Doxygen pages, please run the following commands:
+Doxygen pages, use the provided Python script, [tools/doxygen/generate_docs.py](tools/doxygen/generate_docs.py).
+Please ensure that each of the library submodules under **libraries/standard/** and **libraries/aws** are cloned before using
+this script.
 
 ```shell
-cd libraries/standard/coreMQTT
-doxygen docs/doxygen/config.doxyfile
-cd ../../..
-doxygen docs/doxygen/config.doxyfile
+cd <CSDK_ROOT>
+python3 docs/doxygen/generate_docs.py --root .
 ```
 
 ## License
 
 This library is licensed under the [MIT License](LICENSE).
+=======
+
