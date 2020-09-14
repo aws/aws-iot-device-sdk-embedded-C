@@ -1,4 +1,5 @@
 /*
+ * AWS IoT Device SDK C V202009.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -66,7 +67,7 @@
  * @note Port 443 requires use of the ALPN TLS extension with the ALPN protocol
  * name. When using port 8883, ALPN is not required.
  */
-#define AWS_MQTT_PORT        ( 8883 )
+#define AWS_MQTT_PORT    ( 8883 )
 
 /**
  * @brief Path of the file containing the server's root CA certificate.
@@ -82,7 +83,7 @@
  * @note This certificate should be PEM-encoded.
  * @note This path is relative from the demo binary created. Update
  * ROOT_CA_CERT_PATH to the absolute path if this demo is executed from elsewhere.
- * 
+ *
  * #define ROOT_CA_CERT_PATH    "...insert here..."
  */
 
