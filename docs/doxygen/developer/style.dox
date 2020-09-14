@@ -1,0 +1,312 @@
+/**
+@page guide_developer_styleguide Style Guide
+@brief Guide for the coding style used in this SDK.
+
+The goal of this style guide is to encourage a readable and consistent coding style across the entire SDK.
+
+@section guide_developer_styleguide_codingstyle Coding Style
+@brief The coding style used in this SDK.
+
+The coding style aims to produce code that is readable and easy to debug. An example is provided in @ref guide_developer_styleguide_codingstyle_example.
+
+@subsection guide_developer_styleguide_codingstyle_generalguidelines General guidelines
+@brief General guidelines for library style.
+- All libraries should only use [ANSI C](https://en.wikipedia.org/wiki/ANSI_C#C89) features and standard library functions.
+- Libraries should log extensively, but exceptions are made for pure functions.
+- Code should be well-commented.
+- Only <code>`/`*</code> and <code>*`/`</code> should be used to start and end comments.
+- All comments end with a period.
+- Use of `goto` is discouraged.
+- Only spaces should be used for indenting. A single indent is 4 spaces. No tab characters should be used.
+- A parenthesis is usually followed by a space (see @ref guide_developer_styleguide_codingstyle_example).
+- Lines of code should be less than 80 characters long, although longer lines are permitted.
+- Local variables should be declared at the top of a block in the narrowest scope possible. Reducing complexity could be a valid case for breaking this guideline, so this should be done at the programmer's discretion.
+- All global variables should be declared at the top of a file.
+- Variables are always initialized.
+- A separator is placed between different sections of a file. The current separator is:
+@code{c}
+/*-----------------------------------------------------------*/
+@endcode
+- All files must include the config file at the top of the file <b>before any other includes</b>.
+- `static` functions must have a declaration at the top of the file and be implemented before any application-facing functions.
+- The [GNU complexity](https://www.gnu.org/software/complexity/manual/complexity.html) of every function should be less than 9.
+- Deviations from [MISRA C:2012](https://en.wikipedia.org/wiki/MISRA_C) coding guidelines should be documented as comments in the code.
+
+@subsection guide_developer_styleguide_codingstyle_typeguidelines Type guidelines
+@brief Guidelines for variable types.
+- Although not a part of the C89 standard, only fixed-width integer types should be used. Exceptions are for `bool` and types required by third-party APIs.
+- The default integer in the libraries should be 32 bits wide, i.e. `int32_t` or `uint32_t`.
+- Sizes and lengths should be represented with `size_t`.
+- Libraries may define `bool` macros for use with C89 compilers.
+
+@section guide_developer_styleguide_codingstyle_example Example File
+@brief An example file that follows the coding style rules.
+
+See @ref guide_developer_styleguide_naming for how to name the functions, variables, and macros.
+
+@code{c}
+/*
+ * License header pasted here.
+ */
+
+/**
+ * @file example_file.c
+ * @brief An example of how source files are typically written in this SDK.
+ */
+
+/* Included headers are at the top of the file. The config file include is always first. */
+#include "config.h"
+
+/* Standard includes are immediately after the config file. They are sorted alphabetically.
+ * They use angle brackets <> around the file name. */
+
+/* Standard includes. */
+#include <assert.h>
+#include <stddef.h>
+#include <string.h>
+
+/* This file defines `bool` for compatibility with C89 compilers. */
+#if defined( __cplusplus ) || ( defined( __STDC_VERSION__ ) && ( __STDC_VERSION__ >= 199901L ) )
+    #include <stdbool.h>
+#elif !defined( bool ) && !defined( false ) && !defined( true )
+    #define bool     int8_t
+    #define false    ( int8_t ) 0
+    #define true     ( int8_t ) 1
+#endif
+
+/* Library internal headers are included next. They use quotes "" around the file name. */
+
+/* Library internal include. */
+#include "private/library_internal.h"
+
+/* Error handling include (include only when needed). */
+#include "private/error.h"
+
+/* Library application-facing headers are included last. They use quotes "" around the file name. */
+
+/* Library include. */
+#include "library.h"
+
+/*-----------------------------------------------------------*/
+
+/* Defined constants follow the included headers. */
+
+/* When possible, parentheses () should be placed around constant values and a type
+ * should be specified. */
+#define LIBRARY_CONSTANT    ( ( int32_t ) 10 )
+
+#define LIBRARY_FUNCTION_MACRO( argument )    \ /* Line continuators are right-aligned. */
+{
+    \                                           /* Function-like macros are surrounded by curly braces {}. */
+    macro_body( ( argument ) );
+    \                                           /* Parentheses surround macro arguments for MISRA 20.7 */
+}
+
+/*-----------------------------------------------------------*/
+
+/* Library typedefs follow the defined constants. */
+
+/* Forward declarations are used only when necessary. They are placed before all
+ * other typedefs. */
+
+typedef int32_t type_t;
+
+/**
+ * @brief Structs are named along with the typedef.
+ */
+typedef struct structType
+{
+    int32_t member;
+
+    /* As usage of unions violates MISRA rule 19.2, we must document our usage
+     * and justification. Unions are used here to reduce the size of this struct. */
+    union /* Anonymous structs/unions are permitted only inside of other structs. */
+    {
+        int8_t a[ 4 ];
+        int32_t b;
+    };
+} structType_t;
+
+/*-----------------------------------------------------------*/
+
+/* Declarations of static and extern functions follow the typedefs. */
+
+static bool libraryStaticFunction( void * pArgument,
+                                   size_t argumentLength );
+
+/* External function declarations should be used sparingly (using an internal
+ * header file to declare functions is preferred). */
+extern int32_t Library_ExternalFunction( void * pArgument );
+
+/*-----------------------------------------------------------*/
+
+/* Declarations of global variables follow the static and extern function
+ * declarations. Global variables are permitted, but should be avoided when
+ * possible. */
+
+/* Global variables are always initialized. */
+static int globalVariable = 0;
+static int pGlobalArray[ LIBRARY_CONSTANT ] = { 0 };
+
+/*-----------------------------------------------------------*/
+
+/* Implementations of static functions follow the global variable declarations. */
+
+static bool libraryStaticFunction( void * pArgument,
+                                   size_t argumentLength )
+{
+    int32_t * pLocalPointer = ( int32_t * ) pArgument;
+    bool status = true;
+
+    /* All functions make generous use of the logging library. */
+    LogInfo( "Performing calculation..." );
+
+    if( ( pArgument == NULL ) || ( argumentLength == 0 ) ) /* Note the parentheses and spacing in if statements */
+    {
+        LogError( "Bad parameters." );
+
+        /* Local variable instead of a goto for error handling. */
+        status = false;
+    }
+    else /* Note an else clause is used instead of goto for error handling */
+    {
+        /* Local variables should be declared at the top of a block in the narrowest scope possible. */
+        int32_t localVariable = 0;
+        size_t i;
+
+        for( i = 0; i < argumentLength; i++ ) /* Note the spacing in the for loop. */
+        {
+            localVariable += Library_ExternalFunction( pArgument );
+
+            LogDebug( "Current value is %d.", ( int ) localVariable );
+        }
+
+        if( localVariable < 0 )
+        {
+            LogWarn( "Failed to calculate positive value." );
+        }
+
+        LogInfo( "Calculation done." );
+    }
+
+    return status;
+}
+
+
+/* A separator is placed between all function implementations. */
+/*-----------------------------------------------------------*/
+
+/* Implementations of application-facing functions are at the bottom of the file. */
+
+bool Library_ApplicationFunction( void ) /* Functions with no arguments have void in their argument list. */
+{
+    LIBRARY_FUNCTION_MACRO( globalArray );
+
+    return true;
+}
+
+/* Separator and newline at end of file */
+/*-----------------------------------------------------------*/
+
+@endcode
+
+@section guide_developer_styleguide_naming Naming
+@brief Naming convention used in this SDK.
+
+The naming convention aims to differentiate this SDK's files, variables, and functions to avoid name collisions. In general:
+- The first characters of all <i>publicly visible</i> names should identify the name as part of this SDK. <br>
+  <b>Example:</b> For general-purpose libraries (such as MQTT), names start with <library-name>_ (i.e. MQTT_ for the MQTT API).
+- Words in names should be ordered with the most general word first and the most specific word last. <br>
+  <b>Example:</b> `core_mqtt_serializer.c` identifies a file as part of the general MQTT library. `MQTT_Connect` identifies a public-facing function of the general MQTT library.
+- Names should avoid using abbreviations.
+
+@subsection guide_developer_styleguide_naming_definedconstantsandenumvalues Defined constants and enum values
+@brief Naming convention for constants set using preprocessor `#define` and enum values.
+
+@formattable{defined constant and enum value}
+@formattableentry{<b>LibraryDescription</b>,Defined constants and enum values in application-facing library header files,`MQTTSuccess` (core_mqtt_lightweight.h)}
+@formattableentry{<b>LIBRARY_DESCRIPTION</b>,Defined constants and enum values in demos and tests,`MQTT_EXAMPLE_TOPIC`}
+@formattableentry{<b>DESCRIPTION</b>,Internal constants and enum values<br>No `AWS_` prefix for internal names in AWS-specific libraries,`ROOT_CA_CERT_PATH`}
+
+@subsection guide_developer_styleguide_naming_files Files
+@brief Naming convention for files.
+
+@formattable{file}
+@formattableentry{<b>library</b>`_`<b>description</b>`.extension`,General library file,`core_mqtt_serializer.c`}
+@formattableentry{<b>library</b>`_internal.h`,Internal library header,`core_mqtt_internal.h`}
+@formattableentry{<b>library</b>`_demo_`<b>description</b>`.c`,Library demo source,`mqtt_demo_plaintext.c`}
+@formattableentry{<b>library_description</b>`_utest.c`<br><b>library_description</b>`_system_test.c`,Library test source,`core_mqtt_utest.c`<br>`mqtt_system_test.c`}
+
+File names contain only lowercase letters and underscores. All file names should be named according to their purpose. For example:
+- `core_mqtt_state.c`: A file in the MQTT library that handles state of MQTT PUBLISH packet deliveries.
+- `mqtt_demo_plaintext.c`: A file in the demos for the MQTT library that communicates over a plaintext channel.
+- `core_mqtt_utest.c`: A file in the Tests for the MQTT library. Since the tests currently only run on POSIX systems, test file names do not use the `_posix` suffix.
+
+Library file names should use one or two words to describe the functions implemented in that file. For example:
+- `core_mqtt_serializer.c`: Implements the MQTT library's packet serialization and deserialization functions.
+- `clock_posix.c`: Implements the platform clock component for POSIX systems.
+
+Declarations of internal functions, structures, macros, etc. of a library should be placed in a header file with an `_internal` suffix. The `_internal` header file should go in the `source/include/private` directory. For example:
+- `core_mqtt_internal.h`: Declares the MQTT library's internal functions, structures, macros, etc.
+
+<p>File names for demos should begin with `library_demo_`. 
+Unit tests must start with `library_` and end with `_utest`. 
+System tests must start with `library_` and end with `_system_test`. 
+The names should then specify the library being demoed or tested. 
+For example, the files names of the MQTT library's demos start with `mqtt_demo_`. 
+Additionally, test file names should describe what tests are implemented in the file, 
+such as `mqtt_demo_mutual_auth.c` for a file containing a demo that mutually 
+authenticates over TLS with an MQTT broker.</p>
+
+@subsection guide_developer_styleguide_naming_functions Functions (and function-like macros)
+@brief Naming convention of functions and function-like macros.
+
+@formattable{function}
+@formattableentry{<b>Library</b>`_`<b>Description</b>,Externally-visible library function,`MQTT_Publish`}
+@formattableentry{<b>description</b>,`static` function (never uses `Aws` prefix),`sendPublish`<br>`eventCallback`}
+@formattableentry{`test_`<b>Library</b>`_`<b>accessedFunction_Description</b>,Test access function,`test_MQTT_ProcessLoop_Timer_Overflow`}
+
+Externally visible (i.e. not `static`) functions are [UpperCamelCased](https://en.wikipedia.org/wiki/Camel_case). Function names should then specify their library name, followed by an underscore, followed by a brief description of what the function does. For example:
+- `MQTT_SerializePublish`: This function is part of the public MQTT API. It serializes an MQTT PUBLISH packet into a buffer.
+
+Functions not visible outside their source file (i.e. `static` functions) have names that are [lowerCamelCased](https://en.wikipedia.org/wiki/Camel_case). These function names do not contain the library name or `Aws`. For example:
+- `receiveSingleIteration`: A `static` function in `core_mqtt.c`.
+
+@subsection guide_developer_styleguide_naming_types Types
+@brief Naming conventions of library `typedef` types.
+
+@formattable{type}
+@formattableentry{<b>LibraryDescription</b>`_t`,General types in application-facing library header files,`MQTTStatus_t` (core_mqtt.h)}
+
+Types intended for use in applications are [UpperCamelCased](https://en.wikipedia.org/wiki/Camel_case). The names end with `_t`. Parameter structures should indicate their associated function: for example, `MQTTPublishInfo_t` is passed as a parameter to `MQTT_Publish`.
+
+Types intended for internal library use defined in a header file are [lowerCamelCased](https://en.wikipedia.org/wiki/Camel_case). The names must start with the library name and end with `_t`. Internal types defined in a library source file must end with `_t` and not include the library name.
+
+`struct` typedefs should always be named along with the `typedef`. The struct name should be identical to the `typedef` name, but without the `_t` suffix. For example:
+@code{c}
+typedef struct LibraryStruct
+{
+    int32_t member;
+} LibraryStruct_t;
+
+typedef struct libraryInternalStruct
+{
+    int32_t member;
+} libraryInternalStruct_t;
+@endcode
+
+A `struct` may contain `union` members, but its usage must be documented as it violates MISRA rule 19.2.
+
+@subsection guide_developer_styleguide_naming_variables Variables
+@brief Naming conventions of variables.
+
+@formattable{variable}
+@formattableentry{<b>variableDescription</b>,General local variable,`startTime`}
+@formattableentry{`p`<b>VariableDescription</b>,Variable pointers and arrays (including strings),`pSubscriptionList`}
+
+Local variable names are [lowerCamelCased](https://en.wikipedia.org/wiki/Camel_case) and consist only of a description of the variable. Names like `i` or `j` are acceptable for loop counters, but all other variables should have a descriptive name.
+
+Global variables that are `static` consist of only the description in [lowerCamelCase](https://en.wikipedia.org/wiki/Camel_case). Global variables that are not static consist of the library name <b>and</b> the description in [UpperCamelCase](https://en.wikipedia.org/wiki/Camel_case).
+
+All pointers, arrays, and strings (both global and local) start with `p`.
+*/

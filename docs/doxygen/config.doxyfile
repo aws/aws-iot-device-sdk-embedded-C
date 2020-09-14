@@ -270,6 +270,9 @@ TAB_SIZE               = 4
 # a double escape (\\{ and \\})
 
 ALIASES                =
+# Aliases for tables on the Style Guide page.
+ALIASES += formattable{1}="This table contains the formats for the names of the most common SDK \1s. It is not intended to be comprehensive. <b>Bold</b> text indicates a variable but required part of the \1's name.^^^^| Format | Applies to | Example |^^| ------ | ---------- | ------- |"
+ALIASES += formattableentry{3}="| \1 | \2 | \3 |"
 
 # Set the OPTIMIZE_OUTPUT_FOR_C tag to YES if your project consists of C sources
 # only. Doxygen will then generate output that is more tailored for C. For
@@ -845,6 +848,9 @@ WARN_LOGFILE           =
 # Note: If this tag is empty the current directory is searched.
 
 INPUT                  = ./docs/doxygen \
+                         ./docs/doxygen/demos \
+                         ./docs/doxygen/migration \
+                         ./docs/doxygen/developer \
                          ./platform/include
 
 # This tag can be used to specify the character encoding of the source files
@@ -874,7 +880,8 @@ INPUT_ENCODING         = UTF-8
 
 FILE_PATTERNS          = *.c \
                          *.h \
-                         *.txt
+                         *.txt \
+                         *.dox
 
 # The RECURSIVE tag can be used to specify whether or not subdirectories should
 # be searched for input files as well.
@@ -943,7 +950,11 @@ EXAMPLE_RECURSIVE      = NO
 # that contain images that are to be included in the documentation (see the
 # \image command).
 
-IMAGE_PATH             =
+IMAGE_PATH             = ./docs/doxygen/demos/images/basic_tls.png \
+                         ./docs/doxygen/demos/images/mutual_auth.png \
+                         ./docs/doxygen/demos/images/plaintext.png \
+                         ./docs/doxygen/demos/images/serializer.png \
+                         ./docs/doxygen/demos/images/subscription_manager.png
 
 # The INPUT_FILTER tag can be used to specify a program that doxygen should
 # invoke to filter for each input file. Doxygen will invoke the filter program
@@ -2226,7 +2237,9 @@ SKIP_FUNCTION_MACROS   = YES
 # the path). If a tag file is not located in the directory in which doxygen is
 # run, you must also specify the path to the tagfile here.
 
-TAGFILES               = libraries/standard/coreMQTT/docs/doxygen/output/mqtt.tag=../../../../libraries/standard/coreMQTT/docs/doxygen/output/html
+TAGFILES               = libraries/standard/coreMQTT/docs/doxygen/output/mqtt.tag=../../../../libraries/standard/coreMQTT/docs/doxygen/output/html \
+                         libraries/standard/coreJSON/docs/doxygen/output/json.tag=../../../../libraries/standard/coreJSON/docs/doxygen/output/html \
+                         libraries/aws/device-shadow-for-aws-iot-embedded-sdk/docs/doxygen/output/shadow.tag=../../../../libraries/aws/device-shadow-for-aws-iot-embedded-sdk/docs/doxygen/output/html
 
 # When a file name is specified after GENERATE_TAGFILE, doxygen will create a
 # tag file that is based on the input files it reads. See section "Linking to

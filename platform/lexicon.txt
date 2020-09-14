@@ -70,7 +70,6 @@ mynetworkrecvimplementation
 mynetworksendimplementation
 mytcpsocketcontext
 mytlscontext
-nano
 nanosleep
 networkcontext
 nextjittermax
