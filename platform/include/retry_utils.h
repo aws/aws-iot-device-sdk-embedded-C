@@ -127,20 +127,20 @@
  *     RetryUtilsStatus_t status = RetryUtilsRetriesExhausted;
  *     // The quiet period delay in seconds.
  *     int backOffDelay = 0;
- * 
+ *
  *     // If MAX_RETRY_ATTEMPTS is set to 0, try forever.
  *     if( ( pRetryParams->attemptsDone < MAX_RETRY_ATTEMPTS ) ||
  *         ( 0 == MAX_RETRY_ATTEMPTS ) )
  *     {
  *         // Choose a random value for back-off time between 0 and the max jitter value.
  *         backOffDelay = rand() % pRetryParams->nextJitterMax;
- * 
+ *
  *         //  Wait for backoff time to expire for the next retry.
  *         ( void ) myThreadSleepFunction( backOffDelay ); // FIXME: Replace with your system's thread sleep function.
- * 
+ *
  *         // Increment backoff counts.
  *         pRetryParams->attemptsDone++;
- * 
+ *
  *         // Double the max jitter value for the next retry attempt, only
  *         // if the new value will be less than the max backoff time value.
  *         if( pRetryParams->nextJitterMax < ( MAX_RETRY_BACKOFF_SECONDS / 2U ) )
@@ -151,7 +151,7 @@
  *         {
  *             pRetryParams->nextJitterMax = MAX_RETRY_BACKOFF_SECONDS;
  *         }
- * 
+ *
  *         status = RetryUtilsSuccess;
  *     }
  *     else
@@ -162,7 +162,7 @@
  *         status = RetryUtilsRetriesExhausted;
  *         RetryUtils_ParamsReset( pRetryParams );
  *     }
- * 
+ *
  *     return status;
  * }
  * @endcode
