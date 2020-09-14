@@ -80,7 +80,9 @@
  *
  * No two clients may use the same client identifier simultaneously.
  */
-#define CLIENT_IDENTIFIER                    "testclient1"
+#ifndef CLIENT_IDENTIFIER
+    #define CLIENT_IDENTIFIER    "testclient1"
+#endif
 
 /**
  * @brief The max size of the registry in the subscription manager.
