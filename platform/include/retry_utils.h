@@ -34,57 +34,58 @@
 /**
  * @page retryutils_page Retry Utilities
  * @brief An abstraction of utilities for retrying with exponential back off and
- * jitter
- * 
+ * jitter.
+ *
  * @section retryutils_overview Overview
- * The retry utilities are a set of APIs aiding in retrying with exponential 
- * backoff and jitter. Exponential backoff with jitter is strongly recommended 
- * for retrying failed actions over the network with servers. Please see 
- * https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/ for 
+ * The retry utilities are a set of APIs that aid in retrying with exponential
+ * backoff and jitter. Exponential backoff with jitter is strongly recommended
+ * for retrying failed actions over the network with servers. Please see
+ * https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/ for
  * more information about the benefits with AWS.
- * 
+ *
  * Exponential backoff with jitter is typically used when retrying a failed
  * connection to the server. In an environment with poor connectivity, a client
  * can get disconnected at any time. A backoff strategy helps the client to
- * conserve battery by not attempting reconnections over and over when it is
+ * conserve battery by not repeatedly attempting reconnections when it is
  * unlikely to succeed.
- * 
+ *
  * Before retrying the failed communication to the server there is a quiet period.
- * In this quiet period, the task that is retrying must sleep for some random 
- * amount of time between 0 and a base and a maximum number of seconds. The base is
- * doubled with each retry attempt until the maximum is reached.<br>
- * 
+ * In this quiet period, the task that is retrying must sleep for some random
+ * amount of seconds between 0 and the lesser of a base value and a predefined
+ * maximum. The base is doubled with each retry attempt until the maximum is
+ * reached.<br>
+ *
  * > sleep_seconds = random_between( 0, min( 2<sup>attempts_count</sup> * base_seconds, maximum_seconds ) )
- * 
+ *
  * @section retryutils_implementation Implementing Retry Utils
- * 
+ *
  * The functions that must be implemented are:<br>
  * - @ref RetryUtils_ParamsReset
  * - @ref RetryUtils_BackoffAndSleep
- * 
+ *
  * The functions are used as shown in the diagram below. This is the exponential
  * backoff with jitter loop:
- * 
- * @image html retry_utils_flow.png
- * 
+ *
+ * @image html retry_utils_flow.png width=25%
+ *
  * The following steps give guidance on implementing the Retry Utils:
- * 
+ *
  * -# Implementing @ref RetryUtils_ParamsReset
  * @snippet this define_retryutils_paramsreset
  *<br>
  * This function initializes @ref RetryUtilsParams_t. It is expected to set
- * @ref RetryUtilsParams_t.attemptsDone to zero. It is also expected to set 
- * @ref RetryUtilsParams_t.nextJitterMax to @ref INITIAL_RETRY_BACKOFF_SECONDS 
- * plus some random amount of seconds, jitter. This jitter is a random number 
- * between 0 and @ref MAX_JITTER_VALUE_SECONDS. This function must be called before 
- * entering the exponential backoff with jitter loop using 
+ * @ref RetryUtilsParams_t.attemptsDone to zero. It is also expected to set
+ * @ref RetryUtilsParams_t.nextJitterMax to @ref INITIAL_RETRY_BACKOFF_SECONDS
+ * plus some random amount of seconds, jitter. This jitter is a random number
+ * between 0 and @ref MAX_JITTER_VALUE_SECONDS. This function must be called
+ * before entering the exponential backoff with jitter loop using
  * @ref RetryUtils_BackoffAndSleep.<br><br>
- * 
+ *
  * -# Implementing @ref RetryUtils_BackoffAndSleep
  * @snippet this define_retryutils_backoffandsleep
  * <br>
  * When this function is invoked, the calling task is expected to sleep a random
- * number of seconds between 0 and @ref RetryUtilsParams_t.nextJitterMax. After 
+ * number of seconds between 0 and @ref RetryUtilsParams_t.nextJitterMax. After
  * sleeping this function must double @ref RetryUtilsParams_t.nextJitterMax, but
  * not exceeding @ref MAX_RETRY_BACKOFF_SECONDS. When @ref MAX_RETRY_ATTEMPTS are
  * reached this function should return @ref RetryUtilsRetriesExhausted, unless
@@ -92,8 +93,8 @@
  * When @ref RetryUtilsRetriesExhausted is returned the calling application can
  * stop trying with a failure, or it can call @ref RetryUtils_ParamsReset again
  * and restart the exponential back off with jitter loop.
- * 
- * An example implementation of the Retry Utils for a Linux platform can be found
+ *
+ * An example implementation of the Retry Utils for a POSIX platform can be found
  * in file @ref retry_utils_posix.c.
  */
 
@@ -124,8 +125,8 @@
  */
 typedef enum RetryUtilsStatus
 {
-    RetryUtilsSuccess = 0,      /**< @brief The function returned successfully after sleeping. */
-    RetryUtilsRetriesExhausted  /**< @brief The function exhausted all retry attempts. */
+    RetryUtilsSuccess = 0,     /**< @brief The function returned successfully after sleeping. */
+    RetryUtilsRetriesExhausted /**< @brief The function exhausted all retry attempts. */
 } RetryUtilsStatus_t;
 
 /**

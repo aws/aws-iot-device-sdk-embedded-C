@@ -1,5 +1,8 @@
 @startuml
 
+skinparam dpi 300
+skinparam ArrowFontSize 18
+
 start
 : **RetryUtils_ParamsReset()**;
 repeat

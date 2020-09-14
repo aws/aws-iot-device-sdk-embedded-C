@@ -28,7 +28,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <time.h>
-#include <math.h>
 
 #include "retry_utils.h"
 
