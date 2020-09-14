@@ -955,7 +955,8 @@ IMAGE_PATH             = ./docs/doxygen/images/mqtt_basic_tls.png \
                          ./docs/doxygen/images/mqtt_plaintext.png \
                          ./docs/doxygen/images/mqtt_serializer.png \
                          ./docs/doxygen/images/mqtt_subscription_manager.png \
-                         ./docs/doxygen/images/retry_utils_flow.png
+                         ./docs/doxygen/images/retry_utils_flow.png \
+                         ./docs/doxygen/demos/images/shadow_main.png
 
 # The INPUT_FILTER tag can be used to specify a program that doxygen should
 # invoke to filter for each input file. Doxygen will invoke the filter program

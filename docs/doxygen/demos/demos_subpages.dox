@@ -50,5 +50,21 @@ This demo uses an OpenSSL-based transport interface implementation to establish 
 
 Messages in this demo are sent at QoS 1, which guarantees at least one delivery according to the MQTT spec. See the demo workflow below:
 
-@image html mqtt_subscription_manager.png width=100%
+@image html subscription_manager.png width=100%
+*/
+
+/**
+@page shadow_demo_main Shadow Demo
+@brief Demo application that uses the Device Shadow library, MQTT library and JSON library to interact with the AWS IoT Device Shadow service.
+
+This demo assumes there is a powerOn state in the device shadow. It does the following operations:
+
+- Establish a MQTT connection. ( step 1. )
+- Assemble strings for the MQTT topics of device shadow, by using macros defined by the Device Shadow library. ( step 6. )
+- Subscribe to those MQTT topics. ( step 8. )
+- Publish a desired state of powerOn. That will cause a delta message to be sent to device. ( step 13 ~ step 14. )
+- Handle incoming MQTT messages in eventCallback, determine whether the message is related to the device shadow by using a function defined by the Device Shadow library (Shadow_MatchTopic). If the message is a device shadow delta message, set a flag for the main function to know, then the main function will publish a second message to update the reported state of powerOn. ( step 15 ~ step 26. )
+- Handle incoming message again in eventCallback. If the message is from update/accepted, verify that it has the same clientToken as previously published in the update message. ( step 27 ~ step 33. )
+
+@image html shadow_main.png width=100%
 */
