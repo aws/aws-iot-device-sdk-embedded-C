@@ -68,7 +68,9 @@
  *
  * @image html retry_utils_flow.png width=25%
  *
- * The following steps give guidance on implementing the Retry Utils:
+ * The following steps give guidance on implementing the Retry Utils. An example
+ * implementation of the Retry Utils for a POSIX platform can be found in file
+ * @ref retry_utils_posix.c.
  *
  * -# Implementing @ref RetryUtils_ParamsReset
  * @snippet this define_retryutils_paramsreset
@@ -80,6 +82,30 @@
  * between 0 and @ref MAX_JITTER_VALUE_SECONDS. This function must be called
  * before entering the exponential backoff with jitter loop using
  * @ref RetryUtils_BackoffAndSleep.<br><br>
+ * Please follow the example below to implement your own @ref RetryUtils_ParamsReset.
+ * The lines with FIXME comments should be updated.:
+ * @code{c}
+ * void RetryUtils_ParamsReset( RetryUtilsParams_t * pRetryParams )
+ * {
+ *     uint32_t jitter = 0;
+ *     myTimeType_t myTime; // FIXME: Replace with your system's time type.
+ *
+ *     // Reset attempts done to zero so that the next retry cycle can start.
+ *     pRetryParams->attemptsDone = 0;
+ *
+ *     // Get current time to seed pseudo random number generator.
+ *     ( void ) myTimeFunction( &myTime ); // FIXME: Replace with your system's time function.
+ *
+ *     // Seed pseudo random number generator with nanoseconds.
+ *     srand( myTime.timeInSeconds ); // FIXME: Replace with your system's time seed.
+ *
+ *     // Calculate jitter value using picking a random number.
+ *     jitter = ( rand() % MAX_JITTER_VALUE_SECONDS );
+ *
+ *     // Reset the backoff value to the initial time out value plus jitter.
+ *     pRetryParams->nextJitterMax = INITIAL_RETRY_BACKOFF_SECONDS + jitter;
+ * }
+ * @endcode<br>
  *
  * -# Implementing @ref RetryUtils_BackoffAndSleep
  * @snippet this define_retryutils_backoffandsleep
@@ -92,10 +118,54 @@
  * @ref MAX_RETRY_ATTEMPTS is set to zero.
  * When @ref RetryUtilsRetriesExhausted is returned the calling application can
  * stop trying with a failure, or it can call @ref RetryUtils_ParamsReset again
- * and restart the exponential back off with jitter loop.
- *
- * An example implementation of the Retry Utils for a POSIX platform can be found
- * in file @ref retry_utils_posix.c.
+ * and restart the exponential back off with jitter loop.<br><br>
+ * Please follow the example below to implement your own @ref RetryUtils_BackoffAndSleep.
+ * The lines with FIXME comments should be updated.:
+ * @code{c}
+ * RetryUtilsStatus_t RetryUtils_BackoffAndSleep( RetryUtilsParams_t * pRetryParams )
+ * {
+ *     RetryUtilsStatus_t status = RetryUtilsRetriesExhausted;
+ *     // The quiet period delay in seconds.
+ *     int backOffDelay = 0;
+ * 
+ *     // If MAX_RETRY_ATTEMPTS is set to 0, try forever.
+ *     if( ( pRetryParams->attemptsDone < MAX_RETRY_ATTEMPTS ) ||
+ *         ( 0 == MAX_RETRY_ATTEMPTS ) )
+ *     {
+ *         // Choose a random value for back-off time between 0 and the max jitter value.
+ *         backOffDelay = rand() % pRetryParams->nextJitterMax;
+ * 
+ *         //  Wait for backoff time to expire for the next retry.
+ *         ( void ) myThreadSleepFunction( backOffDelay ); // FIXME: Replace with your system's thread sleep function.
+ * 
+ *         // Increment backoff counts.
+ *         pRetryParams->attemptsDone++;
+ * 
+ *         // Double the max jitter value for the next retry attempt, only
+ *         // if the new value will be less than the max backoff time value.
+ *         if( pRetryParams->nextJitterMax < ( MAX_RETRY_BACKOFF_SECONDS / 2U ) )
+ *         {
+ *             pRetryParams->nextJitterMax += pRetryParams->nextJitterMax;
+ *         }
+ *         else
+ *         {
+ *             pRetryParams->nextJitterMax = MAX_RETRY_BACKOFF_SECONDS;
+ *         }
+ * 
+ *         status = RetryUtilsSuccess;
+ *     }
+ *     else
+ *     {
+ *         // When max retry attempts are exhausted, let application know by returning
+ *         // false. Application may choose to restart the retry process after calling
+ *         // RetryUtils_ParamsReset().
+ *         status = RetryUtilsRetriesExhausted;
+ *         RetryUtils_ParamsReset( pRetryParams );
+ *     }
+ * 
+ *     return status;
+ * }
+ * @endcode
  */
 
 /**
