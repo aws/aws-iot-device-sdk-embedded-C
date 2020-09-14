@@ -1,4 +1,5 @@
 /*
+ * AWS IoT Device SDK for Embedded C V202009.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -58,8 +59,8 @@
  */
 typedef enum RetryUtilsStatus
 {
-    RetryUtilsSuccess = 0,      /**< @brief The function returned successfully after sleeping. */
-    RetryUtilsRetriesExhausted  /**< @brief The function exhausted all retry attempts. */
+    RetryUtilsSuccess = 0,     /**< @brief The function returned successfully after sleeping. */
+    RetryUtilsRetriesExhausted /**< @brief The function exhausted all retry attempts. */
 } RetryUtilsStatus_t;
 
 /**
