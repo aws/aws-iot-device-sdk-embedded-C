@@ -251,11 +251,11 @@ this script.
 
 ```shell
 cd <CSDK_ROOT>
-python3 docs/doxygen/generate_docs.py --root .
+python3 tools/doxygen/generate_docs.py --root .
 ```
 
 ## License
 
 This library is licensed under the [MIT License](LICENSE).
-=======
+
 
