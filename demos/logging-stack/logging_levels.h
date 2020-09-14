@@ -88,16 +88,17 @@
  * <library>_config.h file or the demo_config.h file. */
 
 /**
- * @brief The level of the the logging stack messages.
+ * @brief The logging level verbosity configuration of log messages from library.
  *
- * The logging stack levels are #LOG_DEBUG, #LOG_INFO, #LOG_WARN, and #LOG_ERROR.
- * With level #LOG_DEBUG all log messages will print.
- * With level #LOG_INFO all log messages, except level #LOG_DEBUG, will print.
- * With level #LOG_WARN only messages this level and #LOG_ERROR level will print.
- * With level #LOG_ERROR only messages at this level will print.
+ * The logging verbosity levels are one of #LOG_DEBUG, #LOG_INFO, #LOG_WARN,
+ * and #LOG_ERROR.
+ * - With level #LOG_DEBUG, all log messages will print.
+ * - With level #LOG_INFO, all log messages, except level #LOG_DEBUG, will print.
+ * - With level #LOG_WARN, only messages this level and #LOG_ERROR level will print.
+ * - With level #LOG_ERROR, only messages at this level will print.
  */
 #ifdef DOXYGEN
-    #define LIBRARY_LOG_LEVEL   LOG_DEBUG
+    #define LIBRARY_LOG_LEVEL    LOG_DEBUG
 #endif
 
 #endif /* ifndef LOGGING_LEVELS_H_ */
