@@ -66,9 +66,9 @@ RetryUtilsStatus_t RetryUtils_BackoffAndSleep( RetryUtilsParams_t * pRetryParams
     }
     else
     {
-        /* When max retry attempts are exhausted, let application know by returning
-         * false. Application may choose to restart the retry process after calling
-         * RetryUtils_ParamsReset(). */
+        /* When max retry attempts are exhausted, let application know by
+         * returning RetryUtilsRetriesExhausted. Application may choose to
+         * restart the retry process after calling RetryUtils_ParamsReset(). */
         status = RetryUtilsRetriesExhausted;
         RetryUtils_ParamsReset( pRetryParams );
     }

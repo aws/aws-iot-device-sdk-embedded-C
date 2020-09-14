@@ -46,7 +46,7 @@
  * Exponential backoff with jitter is typically used when retrying a failed
  * connection to the server. In an environment with poor connectivity, a client
  * can get disconnected at any time. A backoff strategy helps the client to
- * conserve battery by not repeatedly attempting reconnections when it is
+ * conserve battery by not repeatedly attempting reconnections when they are
  * unlikely to succeed.
  *
  * Before retrying the failed communication to the server there is a quiet period.
@@ -88,16 +88,14 @@
  * void RetryUtils_ParamsReset( RetryUtilsParams_t * pRetryParams )
  * {
  *     uint32_t jitter = 0;
- *     myTimeType_t myTime; // FIXME: Replace with your system's time type.
  *
  *     // Reset attempts done to zero so that the next retry cycle can start.
  *     pRetryParams->attemptsDone = 0;
  *
- *     // Get current time to seed pseudo random number generator.
- *     ( void ) myTimeFunction( &myTime ); // FIXME: Replace with your system's time function.
- *
- *     // Seed pseudo random number generator with nanoseconds.
- *     srand( myTime.timeInSeconds ); // FIXME: Replace with your system's time seed.
+ *     // Seed pseudo random number generator with the current time. FIXME: Your
+ *     // system may have another method to retrieve the current time to seed the
+ *     // pseudo random number generator.
+ *     srand( time( NULL ) );
  *
  *     // Calculate jitter value using picking a random number.
  *     jitter = ( rand() % MAX_JITTER_VALUE_SECONDS );
@@ -156,9 +154,9 @@
  *     }
  *     else
  *     {
- *         // When max retry attempts are exhausted, let application know by returning
- *         // false. Application may choose to restart the retry process after calling
- *         // RetryUtils_ParamsReset().
+ *         // When max retry attempts are exhausted, let application know by
+ *         // returning RetryUtilsRetriesExhausted. Application may choose to
+ *         // restart the retry process after calling RetryUtils_ParamsReset().
  *         status = RetryUtilsRetriesExhausted;
  *         RetryUtils_ParamsReset( pRetryParams );
  *     }
