@@ -880,7 +880,6 @@ INPUT_ENCODING         = UTF-8
 
 FILE_PATTERNS          = *.c \
                          *.h \
-                         *.txt \
                          *.dox
 
 # The RECURSIVE tag can be used to specify whether or not subdirectories should
