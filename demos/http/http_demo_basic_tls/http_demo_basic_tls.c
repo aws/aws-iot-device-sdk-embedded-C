@@ -97,54 +97,59 @@
 /**
  * @brief The length of the HTTP server host name.
  */
-#define SERVER_HOST_LENGTH         ( sizeof( SERVER_HOST ) - 1 )
-
-/**
- * @brief The length of the HTTP GET method.
- */
-#define HTTP_METHOD_GET_LENGTH     ( sizeof( HTTP_METHOD_GET ) - 1 )
-
-/**
- * @brief The length of the HTTP HEAD method.
- */
-#define HTTP_METHOD_HEAD_LENGTH    ( sizeof( HTTP_METHOD_HEAD ) - 1 )
-
-/**
- * @brief The length of the HTTP PUT method.
- */
-#define HTTP_METHOD_PUT_LENGTH     ( sizeof( HTTP_METHOD_PUT ) - 1 )
-
-/**
- * @brief The length of the HTTP POST method.
- */
-#define HTTP_METHOD_POST_LENGTH    ( sizeof( HTTP_METHOD_POST ) - 1 )
+#define SERVER_HOST_LENGTH     ( sizeof( SERVER_HOST ) - 1 )
 
 /**
  * @brief The length of the HTTP GET path.
  */
-#define GET_PATH_LENGTH            ( sizeof( GET_PATH ) - 1 )
+#define GET_PATH_LENGTH        ( sizeof( GET_PATH ) - 1 )
 
 /**
  * @brief The length of the HTTP HEAD path.
  */
-#define HEAD_PATH_LENGTH           ( sizeof( HEAD_PATH ) - 1 )
+#define HEAD_PATH_LENGTH       ( sizeof( HEAD_PATH ) - 1 )
 
 /**
  * @brief The length of the HTTP PUT path.
  */
-#define PUT_PATH_LENGTH            ( sizeof( PUT_PATH ) - 1 )
+#define PUT_PATH_LENGTH        ( sizeof( PUT_PATH ) - 1 )
 
 /**
  * @brief The length of the HTTP POST path.
  */
-#define POST_PATH_LENGTH           ( sizeof( POST_PATH ) - 1 )
+#define POST_PATH_LENGTH       ( sizeof( POST_PATH ) - 1 )
 
 /**
  * @brief Length of the request body.
  */
-#define REQUEST_BODY_LENGTH        ( sizeof( REQUEST_BODY ) - 1 )
+#define REQUEST_BODY_LENGTH    ( sizeof( REQUEST_BODY ) - 1 )
 
-static char * httpMethodPaths[] = { GET_PATH, HEAD_PATH, PUT_PATH, POST_PATH };
+/**
+ * @brief Number of HTTP paths to request.
+ */
+#define NUMBER_HTTP_PATHS      ( 4 )
+
+/**
+ * @brief An array of HTTP paths to request.
+ */
+static char * httpMethodPaths[] =
+{
+    GET_PATH,
+    HEAD_PATH,
+    PUT_PATH,
+    POST_PATH
+};
+
+/**
+ * @brief The respective method for the HTTP paths listed in #httpMethodPaths.
+ */
+static char * httpMethods[] =
+{
+    HTTP_METHOD_GET,
+    HTTP_METHOD_HEAD,
+    HTTP_METHOD_PUT,
+    HTTP_METHOD_POST
+};
 
 /**
  * @brief A buffer used in the demo for storing HTTP request headers and
@@ -177,17 +182,13 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
  *
  * @param[in] pTransportInterface The transport interface for making network calls.
  * @param[in] pMethod The HTTP request method.
- * @param[in] methodLen The length of the HTTP request method.
  * @param[in] pPath The Request-URI to the objects of interest.
- * @param[in] pathLen The length of the Request-URI.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
 static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
                             const char * pMethod,
-                            size_t methodLen,
-                            const char * pPath,
-                            size_t pathLen );
+                            const char * pPath );
 
 /*-----------------------------------------------------------*/
 
@@ -224,10 +225,10 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     do
     {
         /* Establish a TLS session with the HTTP server. This example connects
-         * to the HTTP server as specified in AWS_IOT_ENDPOINT and AWS_MQTT_PORT
+         * to the HTTP server as specified in SERVER_HOST and SERVER_PORT
          * at the demo config header. */
         LogInfo( ( "Establishing a TLS session to %.*s:%d.",
-                   SERVER_HOST_LENGTH,
+                   ( int32_t ) SERVER_HOST_LENGTH,
                    SERVER_HOST,
                    SERVER_PORT ) );
         opensslStatus = Openssl_Connect( pNetworkContext,
@@ -257,9 +258,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
 
 static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
                             const char * pMethod,
-                            size_t methodLen,
-                            const char * pPath,
-                            size_t pathLen )
+                            const char * pPath )
 {
     /* Return value of this method. */
     int returnStatus = EXIT_SUCCESS;
@@ -276,7 +275,7 @@ static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
     HTTPStatus_t httpStatus = HTTP_SUCCESS;
 
     assert( pMethod != NULL );
-    assert( methodLen > 0 );
+    assert( pPath != NULL );
 
     /* Initialize all HTTP Client library API structs to 0. */
     ( void ) memset( &requestInfo, 0, sizeof( requestInfo ) );
@@ -287,9 +286,9 @@ static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
     requestInfo.pHost = SERVER_HOST;
     requestInfo.hostLen = SERVER_HOST_LENGTH;
     requestInfo.method = pMethod;
-    requestInfo.methodLen = methodLen;
+    requestInfo.methodLen = strlen( pMethod );
     requestInfo.pPath = pPath;
-    requestInfo.pathLen = pathLen;
+    requestInfo.pathLen = strlen( pPath );
 
     /* Set "Connection" HTTP header to "keep-alive" so that multiple requests
      * can be sent over the same established TCP connection. */
@@ -310,9 +309,9 @@ static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
         response.bufferLen = USER_BUFFER_LENGTH;
 
         LogInfo( ( "Sending HTTP %.*s request to %.*s%.*s...",
-                   ( int32_t ) methodLen, pMethod,
+                   ( int32_t ) requestInfo.methodLen, requestInfo.method,
                    ( int32_t ) SERVER_HOST_LENGTH, SERVER_HOST,
-                   ( int32_t ) pathLen, pPath ) );
+                   ( int32_t ) requestInfo.pathLen, requestInfo.pPath ) );
         LogDebug( ( "Request Headers:\n%.*s\n"
                     "Request Body:\n%.*s\n",
                     ( int32_t ) requestHeaders.headersLen,
@@ -340,7 +339,7 @@ static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
                    "Response Status:\n%u\n"
                    "Response Body:\n%.*s\n",
                    ( int32_t ) SERVER_HOST_LENGTH, SERVER_HOST,
-                   ( int32_t ) pathLen, pPath,
+                   ( int32_t ) requestInfo.pathLen, requestInfo.pPath,
                    ( int32_t ) response.headersLen, response.pHeaders,
                    response.statusCode,
                    ( int32_t ) response.bodyLen, response.pBody ) );
@@ -348,9 +347,9 @@ static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
     else
     {
         LogError( ( "Failed to send HTTP %.*s request to %.*s%.*s: Error=%s.",
-                    ( int32_t ) methodLen, pMethod,
+                    ( int32_t ) requestInfo.methodLen, requestInfo.method,
                     ( int32_t ) SERVER_HOST_LENGTH, SERVER_HOST,
-                    ( int32_t ) pathLen, pPath,
+                    ( int32_t ) requestInfo.pathLen, requestInfo.pPath,
                     HTTPClient_strerror( httpStatus ) ) );
     }
 
@@ -392,6 +391,8 @@ int main( int argc,
 
     for( ; ; )
     {
+        int i;
+
         /**************************** Connect. ******************************/
 
         /* Establish TLS connection on top of TCP connection using OpenSSL. */
@@ -411,7 +412,7 @@ int main( int argc,
                 /* Log error to indicate connection failure after all
                  * reconnect attempts are over. */
                 LogError( ( "Failed to connect to HTTP server %.*s.",
-                            SERVER_HOST_LENGTH,
+                            ( int32_t ) SERVER_HOST_LENGTH,
                             SERVER_HOST ) );
             }
         }
@@ -427,44 +428,18 @@ int main( int argc,
 
         /*********************** Send HTTPS request. ************************/
 
-        /* Send GET Request. */
-        if( returnStatus == EXIT_SUCCESS )
+        for( i = 0; i < NUMBER_HTTP_PATHS; i++ )
         {
-            returnStatus = sendHttpRequest( &transportInterface,
-                                            HTTP_METHOD_GET,
-                                            HTTP_METHOD_GET_LENGTH,
-                                            GET_PATH,
-                                            GET_PATH_LENGTH );
-        }
-
-        /* Send HEAD Request. */
-        if( returnStatus == EXIT_SUCCESS )
-        {
-            returnStatus = sendHttpRequest( &transportInterface,
-                                            HTTP_METHOD_HEAD,
-                                            HTTP_METHOD_HEAD_LENGTH,
-                                            HEAD_PATH,
-                                            HEAD_PATH_LENGTH );
-        }
-
-        /* Send PUT Request. */
-        if( returnStatus == EXIT_SUCCESS )
-        {
-            returnStatus = sendHttpRequest( &transportInterface,
-                                            HTTP_METHOD_PUT,
-                                            HTTP_METHOD_PUT_LENGTH,
-                                            PUT_PATH,
-                                            PUT_PATH_LENGTH );
-        }
-
-        /* Send POST Request. */
-        if( returnStatus == EXIT_SUCCESS )
-        {
-            returnStatus = sendHttpRequest( &transportInterface,
-                                            HTTP_METHOD_POST,
-                                            HTTP_METHOD_POST_LENGTH,
-                                            POST_PATH,
-                                            POST_PATH_LENGTH );
+            if( returnStatus == EXIT_SUCCESS )
+            {
+                returnStatus = sendHttpRequest( &transportInterface,
+                                                httpMethods[ i ],
+                                                httpMethodPaths[ i ] );
+            }
+            else
+            {
+                break;
+            }
         }
 
         if( returnStatus == EXIT_SUCCESS )
