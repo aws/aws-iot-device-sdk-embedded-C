@@ -92,13 +92,14 @@
  *
  * The logging verbosity levels are one of #LOG_DEBUG, #LOG_INFO, #LOG_WARN,
  * and #LOG_ERROR.
+ * - With level #LOG_NONE, logging will be disabled.
  * - With level #LOG_DEBUG, all log messages will print.
  * - With level #LOG_INFO, all log messages, except level #LOG_DEBUG, will print.
  * - With level #LOG_WARN, only messages this level and #LOG_ERROR level will print.
  * - With level #LOG_ERROR, only messages at this level will print.
  */
 #ifdef DOXYGEN
-    #define LIBRARY_LOG_LEVEL    LOG_DEBUG
+    #define LIBRARY_LOG_LEVEL    LOG_ERROR
 #endif
 
 #endif /* ifndef LOGGING_LEVELS_H_ */
