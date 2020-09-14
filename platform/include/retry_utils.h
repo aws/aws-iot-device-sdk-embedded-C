@@ -83,7 +83,7 @@
  * before entering the exponential backoff with jitter loop using
  * @ref RetryUtils_BackoffAndSleep.<br><br>
  * Please follow the example below to implement your own @ref RetryUtils_ParamsReset.
- * The lines with FIXME comments should be updated.:
+ * The lines with FIXME comments should be updated.
  * @code{c}
  * void RetryUtils_ParamsReset( RetryUtilsParams_t * pRetryParams )
  * {
@@ -120,7 +120,7 @@
  * stop trying with a failure, or it can call @ref RetryUtils_ParamsReset again
  * and restart the exponential back off with jitter loop.<br><br>
  * Please follow the example below to implement your own @ref RetryUtils_BackoffAndSleep.
- * The lines with FIXME comments should be updated.:
+ * The lines with FIXME comments should be updated.
  * @code{c}
  * RetryUtilsStatus_t RetryUtils_BackoffAndSleep( RetryUtilsParams_t * pRetryParams )
  * {
