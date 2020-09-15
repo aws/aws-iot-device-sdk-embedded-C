@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile>
+  <diagram id="RtVtmuMCn8x6dfmUY6Zj" name="Page-1">
+    <mxGraphModel dx="711" dy="480" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" background="#ffffff" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="sUFx8JH5wjcUTBxO-0sZ-3" value="" style="whiteSpace=wrap;html=1;aspect=fixed;dashed=1;fillColor=#ccffcc;" vertex="1" parent="1">
+          <mxGeometry x="282" y="54" width="260" height="260" as="geometry"/>
+        </mxCell>
+        <mxCell id="Qv8yW66smxY7wVJMuOSR-28" style="edgeStyle=orthogonalEdgeStyle;curved=1;orthogonalLoop=1;jettySize=auto;html=1;startArrow=none;startFill=0;endArrow=blockThin;endFill=1;fontSize=11;" parent="1" source="Qv8yW66smxY7wVJMuOSR-16" target="Qv8yW66smxY7wVJMuOSR-19" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="Qv8yW66smxY7wVJMuOSR-16" value="Library-specific custom config" style="ellipse;whiteSpace=wrap;html=1;fontSize=11;fillColor=#b0e3e6;strokeColor=#0e8088;" parent="1" vertex="1">
+          <mxGeometry x="301" y="117" width="103" height="54" as="geometry"/>
+        </mxCell>
+        <mxCell id="sUFx8JH5wjcUTBxO-0sZ-8" style="edgeStyle=orthogonalEdgeStyle;curved=1;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="Qv8yW66smxY7wVJMuOSR-17" target="Qv8yW66smxY7wVJMuOSR-16">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="198" y="144"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Qv8yW66smxY7wVJMuOSR-17" value="C-SDK Library" style="ellipse;whiteSpace=wrap;html=1;fontSize=11;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+          <mxGeometry x="155" y="202" width="103" height="54" as="geometry"/>
+        </mxCell>
+        <mxCell id="Qv8yW66smxY7wVJMuOSR-19" value="Platform-specific Logging Stack " style="ellipse;whiteSpace=wrap;html=1;fontSize=11;fillColor=#fad9d5;strokeColor=#ae4132;" parent="1" vertex="1">
+          <mxGeometry x="426" y="200" width="104" height="54" as="geometry"/>
+        </mxCell>
+        <mxCell id="sUFx8JH5wjcUTBxO-0sZ-4" value="User Application" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="354" y="66" width="120" height="20" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
