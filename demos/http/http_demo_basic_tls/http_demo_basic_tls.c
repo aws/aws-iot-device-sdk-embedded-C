@@ -227,7 +227,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     {
         /* Establish a TLS session with the HTTP server. This example connects
          * to the HTTP server as specified in SERVER_HOST and SERVER_PORT
-         * at the demo config header. */
+         * in demo_config.h. */
         LogInfo( ( "Establishing a TLS session to %.*s:%d.",
                    ( int32_t ) SERVER_HOST_LENGTH,
                    SERVER_HOST,
