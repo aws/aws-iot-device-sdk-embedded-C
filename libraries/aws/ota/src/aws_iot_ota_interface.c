@@ -37,11 +37,11 @@
 /* OTA transport inteface includes. */
 
 #if ( configENABLED_DATA_PROTOCOLS & OTA_DATA_OVER_MQTT ) || ( configENABLED_CONTROL_PROTOCOL & OTA_CONTROL_OVER_MQTT )
-    #include "mqtt/aws_iot_ota_mqtt.h"
+    #include "aws_iot_ota_mqtt.h"
 #endif
 
 #if ( configENABLED_DATA_PROTOCOLS & OTA_DATA_OVER_HTTP )
-    #include "http/aws_iot_ota_http.h"
+    #include "aws_iot_ota_http.h"
 #endif
 
 /* Check if primary protocol is enabled in aws_iot_ota_agent_config.h. */
