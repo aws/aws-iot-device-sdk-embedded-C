@@ -67,7 +67,7 @@
  * The functions are used as shown in the diagram below. This is the exponential
  * backoff with jitter loop:
  *
- * @image html retry_utils_flow.png width=25%
+ * @image html retry_utils_flow.png width=60%
  *
  * The following steps give guidance on implementing the Retry Utils. An example
  * implementation of the Retry Utils for a POSIX platform can be found in file
