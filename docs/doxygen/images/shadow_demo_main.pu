@@ -1,0 +1,88 @@
+@startuml
+skinparam classFontSize 8
+skinparam classFontName Helvetica
+autonumber
+
+box "Application" #LightGreen
+    participant "Application" as application
+    participant "Callback" as callback
+end box
+
+box "Libraries" #LightBlue
+    participant "JSON" as json
+
+    participant "Shadow" as shadow
+
+    participant "MQTT" as mqtt
+
+end box
+
+box "AWS IoT Broker" #Yellow
+    participant "AWS IoT Broker" as broker
+end box
+
+activate application
+application -> mqtt : EstablishMqttSession with callback function ( EstablishMqttSession )
+
+
+activate mqtt
+mqtt -> broker : Establish TLS session with server & client credential
+mqtt -> mqtt : Initialization with the callback
+mqtt -> broker: Establish MQTT Connection
+mqtt -> application : Return from MQTT library
+deactivate mqtt
+
+application -> shadow : Get the following shadow topics:\n$aws/things/testShadow/shadow/update/delta SHADOW_TOPIC_STRING_UPDATE_DELTA( "testShadow" )\n$aws/things/testShadow/shadow/update/accepted SHADOW_TOPIC_STRING_UPDATE_ACCEPTED( "testShadow" )\n$aws/things/testShadow/shadow/update/rejected SHADOW_TOPIC_STRING_UPDATE_REJECTED( "testShadow" )
+
+activate shadow
+shadow -> application : Return assembled shadow topics
+deactivate shadow
+
+application -> mqtt : MQTT_Subscribe subscribes to those shadow topics ( SubscribeToTopic )
+
+activate mqtt
+mqtt -> broker: Subscribe to the shadow topic to the broker
+mqtt -> application : Return Success
+deactivate mqtt
+
+application -> shadow : Get the $aws/things/testShadow/shadow/update by\nSHADOW_TOPIC_STRING_UPDATE( "testShadow" )
+activate shadow
+shadow -> application : Return the assembled shadow topic
+deactivate shadow
+
+application -> mqtt : Publish powerOn:1 in the message on the topic $aws/things/testShadow/shadow/update ( PublishToTopic )
+
+activate mqtt
+mqtt -> broker : Publish message on the shadow topic to the broker
+mqtt <- broker : Incoming message
+mqtt -> callback : Call Callback
+activate callback
+callback -> shadow : Parse the topic ( Shadow_MatchTopic )
+activate shadow
+shadow -> callback : Return the parsed result ( ShadowMessageType_t )
+deactivate shadow
+callback -> json : Parse powerOn/value from shadow topic payload ( JSON_Search )
+activate json
+json -> callback : Return parsed powerOn/value
+deactivate json
+callback -> mqtt : Return from the callback
+deactivate callback
+mqtt -> application : Return from MQTT library
+deactivate mqtt
+
+application -> mqtt : Unsubscribe thosed subscribed topics ( UnsubscribeFromTopic )
+activate mqtt
+mqtt -> broker : Unsubscribe to those subscribed topics
+mqtt -> application : Return from MQTT library
+deactivate mqtt
+
+application -> mqtt : Disconnect from connection ( DisconnectMqttSession )
+activate mqtt
+mqtt -> broker : MQTT disconnect from the broker
+mqtt -> broker : TLS disconnect from the broker
+mqtt -> application : Return from MQTT library
+deactivate mqtt
+
+deactivate application
+
+@enduml

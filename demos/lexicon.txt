@@ -19,6 +19,7 @@ clienthello
 clienttoken
 cmake
 com
+cond
 config
 configs
 connack
@@ -34,7 +35,9 @@ deserializer
 deserializing
 developerguide
 doesn
+doxygen
 dup
+endcond
 endif
 eventcallback
 filterindex
@@ -55,10 +58,14 @@ iot
 json
 lastcontrolpacketsent
 latestversion
+logdebug
+logerror
+loginfo
+logwarn
 md
+messagetype
 metadata
 methodlen
-messagetype
 milli
 mosquitto
 mqtt
@@ -70,8 +77,8 @@ noninfringement
 numoftopicfilters
 openssl
 org
-outlength
 outgoingpublishpackets
+outlength
 packetid
 packetidentifier
 packetidtoresend
@@ -103,6 +110,7 @@ ppayload
 ppubinfo
 ppublishinfo
 pre
+printf
 processloop
 psessionpresent
 ptopic
@@ -143,8 +151,8 @@ thingname
 thingnamelength
 tls
 topicbuffer
-topiclength
 topicfilterlength
+topiclength
 topiclength
 topicnamelength
 transportinterface
