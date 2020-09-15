@@ -55,7 +55,7 @@ Messages in this demo are sent at QoS 1, which guarantees at least one delivery 
 
 /**
 @page shadow_demo_main Shadow Demo
-@brief Demo application that uses the Device Shadow library, MQTT Client library
+@brief Demo application that uses the AWS IoT Device Shadow library, MQTT Client library,
 and JSON library to interact with the AWS IoT Device Shadow service.
 
 The device is assumed to have the powerOn state, which can be 1 or 0 depending on
