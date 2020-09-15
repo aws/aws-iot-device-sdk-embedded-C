@@ -1,0 +1,44 @@
+/**
+@page logging Logging Infrastructure
+@brief This page contains an overview of the logging infrastructure used by the C-SDK Libraries.
+
+<p>
+The C-SDK libraries utilize one of the following 4 logging macro interfaces, each with a different verbosity level:
+- `LogError` for **Error** level
+- `LogWarn` for **Warning** level
+- `LogInfo` for **Info** level
+- `LogDebug` for **Debug** level
+
+@note By default, each library contains empty definitions for the above logging macros, thereby generating no code for logging calls.
+
+To enable logging within the libraries, your application should implement these macros through the library-specific config file (for example, the `core_mqtt_config.h` file for MQTT library).
+The implementation of these macros can be provided as a mapping to the your platform-specific logging framework.
+</p>
+
+@section design Design Architecture
+@brief The logging infrastructure architecture follows a dependency inversion design principle of allowing your application to inject an implementation of logging interface macros through the library-specific config file (like `core_mqtt_config.h`).
+
+@image html logging_architecture.png width=40%
+
+@section reference_implementation Reference Implementation
+@brief For reference example of a POSIX-specific logging implementation, refer to the [demos/logging-stack](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/master/demos/logging-stack) folder from the root directory of the C-SDK repository.
+
+The @ref logging_stack.h file contains the definition of all the logging interface macros (`LogError`, `LogWarn`, `LogInfo`, `LogDebug`) that eventually map to the standard C function, `printf`.
+
+The file contains the following features:
+- Ability to define **logging verbosity level** for a library through the #LIBRARY_LOG_LEVEL macro. (All the logging levels are defined in @ref logging_levels.h). This allows logging macros to be conditionally enabled depending on the configured logging level. For example, for the `LOG_INFO` verbosity configuration, only the `LogError`, `LogWarn`, `LogInfo` macros are enabled but the `LogDebug` macro is disabled.
+- With the above ability, the compiler does not generate code for library logging calls to disabled logging macros. For example, a `LOG_ERROR` verbosity configuration does not generate code for logging calls for the `LogWarn`, `LogInfo`, or `LogDebug` macros, ONLY for `LogError` macro.  
+- Ability to set the **library name** as metadata in library logs through the #LIBRARY_LOG_NAME macro.
+- Ability to add **metadata** as a prefix in log messages through the #LOG_METADATA_ARGS and #LOG_METADATA_FORMAT macros. By default, it adds the metadata of the format:`[<Logging-Level>] [<Library-Name>] [<File-Name>:<Line-Number>]`. Here is an example snippet of log messages from the [MQTT Basic TLS demo](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/master/demos/mqtt/mqtt_demo_basic_tls):
+@code{sh}
+[INFO] [MQTT] [core_mqtt.c:854] Packet received. ReceivedBytes=2.
+[INFO] [MQTT] [core_mqtt_serializer.c:969] CONNACK session present bit not set.
+[INFO] [MQTT] [core_mqtt_serializer.c:911] Connection accepted.
+[INFO] [MQTT] [core_mqtt.c:1525] Received MQTT CONNACK successfully from broker.
+[INFO] [MQTT] [core_mqtt.c:1791] MQTT connection established with the broker.
+@endcode
+
+For an example of how the demo projects utilize the logging stack, refer to any `core_mqtt_config.h` file in the [MQTT demos folder](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/master/demos/mqtt) of the C-SDK repository.
+
+*/
+
