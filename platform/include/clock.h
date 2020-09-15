@@ -22,7 +22,7 @@
 
 /**
  * @file clock.h
- * @brief Time-related functions used by libraries in this SDK.
+ * @brief Time-related functions used by demos in this SDK.
  */
 
 #ifndef CLOCK_H_
