@@ -1143,7 +1143,7 @@ void test_MQTT_Restore_Session_Resend_PubRel( void )
  * incoming QoS 2 PUBLISH operation that was incomplete in a previous connection
  * of the same session.
  */
-void test_MQTT_Restore_Session_Complete_Duplicate_Incoming_PubRel( void )
+void test_MQTT_Restore_Session_Incoming_Duplicate_PubRel( void )
 {
     /* Start a persistent session with the broker. */
     startPersistentSession();
