@@ -165,6 +165,18 @@ bool OTA_CBOR_Decode_GetStreamResponseMessage( const uint8_t * pucMessageBuffer,
     {
         xCborResult = cbor_value_calculate_string_length( &xCborValue,
                                                           pxPayloadSize );
+
+
+    }
+
+  if( CborNoError == xCborResult )
+    {
+        *ppucPayload = malloc( *pxPayloadSize );
+
+        if( NULL == *ppucPayload )
+        {
+            xCborResult = CborErrorOutOfMemory;
+        }
     }
 
     if( CborNoError == xCborResult )
