@@ -4,8 +4,10 @@ alpn
 alpnprotoslen
 api
 apis
+attemptsdone
 aws
 backoff
+backoffdelay
 basedefs
 bool
 br
@@ -39,6 +41,7 @@ filelabel
 filepath
 filepaths
 filetype
+fixme
 fopen
 functionname
 functionpage
@@ -57,6 +60,7 @@ int
 iot
 ip
 ip
+linux
 logpath
 longjmp
 malloc
@@ -64,11 +68,15 @@ maxattempts
 maxfragmentlength
 messagelevel
 mfln
+min
 misra
 mqtt
 mynetworkrecvimplementation
 mynetworksendimplementation
 mytcpsocketcontext
+mytime
+mytimefunction
+mythreadsleepfunction
 mytlscontext
 nanosleep
 networkcontext
@@ -91,6 +99,7 @@ plaintext
 platfrom
 plisthead
 pnetworkcontext
+png
 popensslcredentials
 posix
 pprivatekeypath
@@ -120,6 +129,7 @@ snihostname
 sockaddr
 sockets_invalid_parameter
 socketstatus
+srand
 src
 ssl
 stddef
@@ -130,6 +140,7 @@ sys
 tcp
 tcpsocket
 tcpsocketcontext
+timeinseconds
 timespec
 tls
 tlscontext
@@ -142,4 +153,5 @@ transportsectionimplementation
 transportsectionoverview
 transportstruct
 unistd
+utils
 www

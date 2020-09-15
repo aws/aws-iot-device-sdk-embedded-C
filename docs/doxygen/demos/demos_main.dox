@@ -13,4 +13,6 @@ The following demos are provided:
   @copybrief mqtt_demo_serializer
 - @subpage mqtt_demo_subscription_manager <br>
   @copybrief mqtt_demo_subscription_manager
+- @subpage shadow_demo_main <br>
+  @copybrief shadow_demo_main
 */

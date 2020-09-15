@@ -1,6 +1,7 @@
 
 # AWS IoT Device SDK for Embedded C
 
+
 **[API documentation](https://docs.aws.amazon.com/freertos/latest/lib-ref/embedded-csdk/202009.00/lib-ref/index.html)**    
 
 We have released version 202009.00 of the AWS IoT Device SDK for Embedded-C (C-SDK). This release includes refactored MQTT, JSON Parser, and AWS IoT Device Shadow libraries for optimized memory usage and modularity, and includes dependent libraries via GitHub submoduling. These libraries have gone through code quality checks including for [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html) and [MISRA coding standard](https://www.misra.org.uk/MISRAHome/MISRAC2012/tabid/196/Default.aspx).  They have also undergone both static analysis from [Coverity statical analysis](https://scan.coverity.com/) and validation of memory safety and functional correctness proof through the [AWS CBMC automated reasoning tool](https://www.youtube.com/watch?v=YwQHAPRhQkI&feature=youtu.be&t=1721).  
@@ -50,13 +51,13 @@ where
 ### master branch
 The [master](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/master) branch hosts the continuous development of the AWS IoT Embedded C SDK libraries. Please be aware that the development at the tip of the master branch is continuously in progress and may have bugs. Consider using the tagged releases of the AWS IoT Embedded C SDK for production ready software.
 
-### v4_beta_deprecated branch
+### v4_beta_deprecated branch (Formerly named v4_beta)
 The [v4_beta_deprecated](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v4_beta_deprecated) branch contains a beta version of the AWS IoT Embedded C SDK libraries, which is now deprecated. This branch was earlier named as *v4_beta*, and was renamed to *v4_beta_deprecated*. The libraries in this branch will not be released. However, critical bugs will be fixed and tested. No new features will be added to this branch.
 
 
 ## Releases
 
-All of the released versions of the AWS IoT Embedded C SDK libraries are available as git tags. For example, the latest v3 SDK version is available at [tag 3.1.0](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v3.1.0).
+All of the released versions of the AWS IoT Embedded C SDK libraries are available as git tags. For example, the last release of the v3 SDK version is available at [tag 3.0.1](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v3.0.1).
 
 ## Versioning
 

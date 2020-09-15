@@ -1,4 +1,5 @@
 /*
+ * AWS IoT Device SDK for Embedded C V202009.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -28,7 +29,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <time.h>
-#include <math.h>
 
 #include "retry_utils.h"
 
@@ -67,9 +67,9 @@ RetryUtilsStatus_t RetryUtils_BackoffAndSleep( RetryUtilsParams_t * pRetryParams
     }
     else
     {
-        /* When max retry attempts are exhausted, let application know by returning
-         * false. Application may choose to restart the retry process after calling
-         * RetryUtils_ParamsReset(). */
+        /* When max retry attempts are exhausted, let application know by
+         * returning RetryUtilsRetriesExhausted. Application may choose to
+         * restart the retry process after calling RetryUtils_ParamsReset(). */
         status = RetryUtilsRetriesExhausted;
         RetryUtils_ParamsReset( pRetryParams );
     }
