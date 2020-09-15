@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mxfile host="drawio.corp.amazon.com" modified="2020-09-14T22:49:47.153Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.102 Safari/537.36" etag="avCQ_2B0-InQZ87I0e2h" version="12.4.8">
+<mxfile host="drawio.corp.amazon.com" modified="2020-09-15T17:50:08.338Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.102 Safari/537.36" etag="LRZKoKOlugC5H1s1oU7A" version="12.4.8">
   <diagram id="RtVtmuMCn8x6dfmUY6Zj" name="Page-1">
     <mxGraphModel dx="711" dy="480" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" background="#ffffff" math="0" shadow="0">
       <root>
@@ -27,7 +27,7 @@
         <mxCell id="Qv8yW66smxY7wVJMuOSR-19" value="Platform-specific Logging Stack " style="ellipse;whiteSpace=wrap;html=1;fontSize=11;fillColor=#fad9d5;strokeColor=#ae4132;" parent="1" vertex="1">
           <mxGeometry x="426" y="200" width="104" height="54" as="geometry"/>
         </mxCell>
-        <mxCell id="sUFx8JH5wjcUTBxO-0sZ-4" value="Customer Application" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+        <mxCell id="sUFx8JH5wjcUTBxO-0sZ-4" value="User Application" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
           <mxGeometry x="354" y="66" width="120" height="20" as="geometry"/>
         </mxCell>
       </root>
