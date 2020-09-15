@@ -260,6 +260,8 @@ cd <CSDK_ROOT>
 python3 tools/doxygen/generate_docs.py --root .
 ```
 
+The generated documentation landing page is located at **docs/doxygen/output/html/index.html**
+
 ## License
 
 The C-SDK libraries are licensed under the [MIT License](LICENSE).
