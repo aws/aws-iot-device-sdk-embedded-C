@@ -852,9 +852,9 @@ INPUT                  = ./docs/doxygen \
                          ./docs/doxygen/migration \
                          ./docs/doxygen/developer \
                          ./platform/include \
-                         ./platform/posix
+                         ./platform/posix \
                          ./docs/doxygen/logging \
-                         ./demos/logging-stack
+                         ./demos/logging-stack \
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
