@@ -3,9 +3,9 @@
 
 **[API documentation](https://docs.aws.amazon.com/freertos/latest/lib-ref/embedded-csdk/202009.00/lib-ref/index.html)**    
 
-We have released version 202009.00 of the AWS IoT Device SDK for Embedded-C (C-SDK). This release includes refactored MQTT, JSON Parser, and AWS IoT Device Shadow libraries for optimized memory usage and modularity, and includes dependent libraries via GitHub submoduling. These libraries have gone through code quality checks including for [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html), [MISRA coding standard](https://www.misra.org.uk/MISRAHome/MISRAC2012/tabid/196/Default.aspx), [Coverity statical analysis](https://scan.coverity.com/), and [AWS CBMC automated reasoning tool](https://www.youtube.com/watch?v=YwQHAPRhQkI&feature=youtu.be&t=1721) to validate memory safety and functional correctness proof.   
-  
-If you are upgrading from v3.x of the C-SDK to the 202009.00 release, please follow the update guide (LINK REQUIRED). If you are using the C-SDK v4_beta_deprecated branch, note that we will continue to maintain this branch for critical bug fixes and security patches but will not add new features to it. See the C-SDK v4_beta_deprecated branch [README](https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/v4_beta_deprecated/README.md) for additional details. 
+We have released version 202009.00 of the AWS IoT Device SDK for Embedded-C (C-SDK). This release includes refactored MQTT, JSON Parser, and AWS IoT Device Shadow libraries for optimized memory usage and modularity, and includes dependent libraries via GitHub submoduling. These libraries have gone through code quality checks including for [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html) and [MISRA coding standard](https://www.misra.org.uk/MISRAHome/MISRAC2012/tabid/196/Default.aspx).  They have also undergone both static analysis from [Coverity statical analysis](https://scan.coverity.com/) and validation of memory safety and functional correctness proof through the [AWS CBMC automated reasoning tool](https://www.youtube.com/watch?v=YwQHAPRhQkI&feature=youtu.be&t=1721).  
+
+If you are upgrading from v3.x of the C-SDK to the 202009.00 release, please follow the [migration guide](https://docs.aws.amazon.com/freertos/latest/lib-ref/embedded-csdk/202009.00/lib-ref/index.html). If you are using the C-SDK v4_beta_deprecated branch, note that we will continue to maintain this branch for critical bug fixes and security patches but will not add new features to it. See the C-SDK v4_beta_deprecated branch [README](https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/v4_beta_deprecated/README.md) for additional details. 
 
 ## Overview
 
@@ -26,7 +26,7 @@ The coreJSON library is a JSON parser that strictly enforces the [ECMA-404 JSON 
 
 ## Metrics
 
-Within the MQTT Demo, Users have the ability to report Operating System, Hardware Platform and MQTT Client information to AWS IoT by sending a specially formatted string in the username field of the MQTT CONNECT packet.  
+Within the MQTT Demo, users have the ability to report operating System, hardware platform and MQTT Client information to AWS IoT by sending a specially formatted string in the username field of the MQTT CONNECT packet.  
 
 ### Format
 
@@ -102,10 +102,12 @@ The libraries in this SDK are not dependent on any operating system. However, th
 
 - C90 compiler
 
+- Although not a part of the C90 standard, `stdint.h` is required for fixed-width integer types (e.g int32_t).
+
 - A supported operating system. The ports provided with this repo are expected to work with all recent versions of the following operating systems, although we cannot guarantee the behavior on all systems.
     - Linux system with POSIX sockets and timer APIs. (CI tests on Ubuntu 18.04).
         - On Linux systems, installation of OpenSSL development libraries and header files, *version 1.1.0 or later*, are required. The OpenSSL development libraries are usually called something like `libssl-dev` or `openssl-devel` when installed through a package manager.
-        - Although not a part of the C90 standard, `stdint.h` is required for fixed-width integer types (e.g int32_t).
+        
 
 
 
@@ -259,6 +261,6 @@ python3 tools/doxygen/generate_docs.py --root .
 
 ## License
 
-This library is licensed under the [MIT License](LICENSE).
+The C-SDK libraries are licensed under the [MIT License](LICENSE).
 
 
