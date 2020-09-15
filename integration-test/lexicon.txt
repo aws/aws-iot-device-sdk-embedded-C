@@ -55,6 +55,7 @@ pubrel
 qos
 resending
 rom
+sdk
 setretainflag
 suback
 sublicense
