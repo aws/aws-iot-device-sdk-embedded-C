@@ -851,7 +851,8 @@ INPUT                  = ./docs/doxygen \
                          ./docs/doxygen/demos \
                          ./docs/doxygen/migration \
                          ./docs/doxygen/developer \
-                         ./platform/include
+                         ./platform/include \
+                         ./platform/posix
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
@@ -949,11 +950,12 @@ EXAMPLE_RECURSIVE      = NO
 # that contain images that are to be included in the documentation (see the
 # \image command).
 
-IMAGE_PATH             = ./docs/doxygen/demos/images/basic_tls.png \
-                         ./docs/doxygen/demos/images/mutual_auth.png \
-                         ./docs/doxygen/demos/images/plaintext.png \
-                         ./docs/doxygen/demos/images/serializer.png \
-                         ./docs/doxygen/demos/images/subscription_manager.png
+IMAGE_PATH             = ./docs/doxygen/images/mqtt_basic_tls.png \
+                         ./docs/doxygen/images/mqtt_mutual_auth.png \
+                         ./docs/doxygen/images/mqtt_plaintext.png \
+                         ./docs/doxygen/images/mqtt_serializer.png \
+                         ./docs/doxygen/images/mqtt_subscription_manager.png \
+                         ./docs/doxygen/images/retry_utils_flow.png
 
 # The INPUT_FILTER tag can be used to specify a program that doxygen should
 # invoke to filter for each input file. Doxygen will invoke the filter program
