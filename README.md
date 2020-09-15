@@ -7,7 +7,7 @@
 
 The CSDK v4_beta_deprecated branch contains a beta version of the AWS IoT Embedded C SDK libraries, which has now been deprecated. The libraries in this branch will not be released in its current form, and they are being refactored for resource constrained devices and will go through code quality checks including for [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html), [MISRA coding standard](https://www.misra.org.uk/MISRAHome/MISRAC2012/tabid/196/Default.aspx), [Coverity statical analysis](https://scan.coverity.com/), and [AWS CBMC automated reasoning tool](https://www.youtube.com/watch?v=YwQHAPRhQkI&feature=youtu.be&t=1721) to validate memory safety and functional correctness proof. Once the libraries have met the code quality checks, they will be released into the master branch.  
 
-No new features will be added, but this branch will continue to be maintained for critical bug fixes and security patches.  
+No new features will be added, but this branch will continue to be maintained for critical bug fixes and security patches. If you want to migrate to the use the refactored libraries, please view the [ReadMe](https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/master/README.md) on master branch.   
 
 ## Overview
 
