@@ -7,9 +7,12 @@
 [submodule "libraries/standard/coreMQTT"]
 	path = libraries/standard/coreMQTT
 	url = https://github.com/FreeRTOS/coreMQTT.git
+	branch = v1.0.0
 [submodule "libraries/standard/coreJSON"]
 	path = libraries/standard/coreJSON
 	url = https://github.com/FreeRTOS/coreJSON.git
+	branch = v1.0.0
 [submodule "libraries/aws/device-shadow-for-aws-iot-embedded-sdk"]
 	path = libraries/aws/device-shadow-for-aws-iot-embedded-sdk
 	url = https://github.com/aws/device-shadow-for-aws-iot-embedded-sdk.git
+	branch = v1.0.0
