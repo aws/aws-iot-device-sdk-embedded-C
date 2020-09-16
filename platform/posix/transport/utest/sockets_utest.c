@@ -314,7 +314,7 @@ void test_Sockets_Connect_Fail_setsockopt( void )
         ENOPROTOOPT, ENOTSOCK, ENOMEM, ENOBUFS
     };
 
-    for( i = 0; i < sizeof( allErrorCases ); i++ )
+    for( i = 0; i < ( sizeof( allErrorCases ) / sizeof( int32_t ) ); i++ )
     {
         expectSocketsConnectCalls( NUM_ADDR_INFO );
         errno = allErrorCases[ i ];
