@@ -12,7 +12,7 @@ These libraries have gone through code quality checks including verification tha
    - [FreeRTOS/coreJSON](https://github.com/FreeRTOS/JSON) for JSON parser library
    - [aws/device-shadow-for-aws-iot-embedded-sdk](https://github.com/aws/device-shadow-for-aws-iot-embedded-sdk) for AWS IoT Shadow service client library.
 
-- With this release, we are introducing a [date-based versioning scheme](LINK TO README EXPLAINING VERSIONING ONCE UPDATED).
+- With this release, we are introducing a [date-based versioning scheme](README.md#versioning).
 
 **Note**: This release is **NOT** backwards compatible with the v3 version of AWS IoT Device SDK for Embedded C.
 
