@@ -5,7 +5,7 @@
 ### Major Changes
 
 - This release introduces the re-factored **MQTT** client library, **JSON** parser library and **AWS IoT Shadow** client library.  
-These libraries have gone through code quality checks including verification that no function has a [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html) score greater than 8, and checks against deviations from the mandatory rules in the [MISRA coding standard](https://www.misra.org.uk/MISRAHome/MISRAC2012/tabid/196/Default.aspx). These libraries have also undergone both static code analysis from [Coverity statical analysis](https://scan.coverity.com/) and validation of memory safety and functional correctness proof through the [CBMC automated reasoning tool]((https://www.youtube.com/watch?v=YwQHAPRhQkI&feature=youtu.be&t=1721)).  
+These libraries have gone through code quality checks including verification that no function has a [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html) score greater than 8, and checks against deviations from the mandatory rules in the [MISRA coding standard](https://www.misra.org.uk/MISRAHome/MISRAC2012/tabid/196/Default.aspx). These libraries have also undergone both static code analysis from [Coverity statical analysis](https://scan.coverity.com/) and validation of memory safety and functional correctness proof through the [CBMC automated reasoning tool]((https://www.youtube.com/watch?v=YwQHAPRhQkI&feature=youtu.be&t=1721)).
 
 - This release uses submodule references to the following new individual repositories for the MQTT, JSON and AWS IoT Shadow service client libraries under `libraries` folder:
    - [FreeRTOS/coreMQTT](https://github.com/FreeRTOS/coreMQTT) for MQTT client library
