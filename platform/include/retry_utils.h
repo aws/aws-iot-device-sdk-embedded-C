@@ -50,11 +50,11 @@
  * conserve battery by not repeatedly attempting reconnections when they are
  * unlikely to succeed.
  *
- * Before retrying the failed communication to the server there is a quiet period.
- * In this quiet period, the task that is retrying must sleep for some random
- * amount of seconds between 0 and the lesser of a base value and a predefined
- * maximum. The base is doubled with each retry attempt until the maximum is
- * reached.<br>
+ * Before retrying the failed communication to the server, there is a delay period.
+ * In this delay period, the task that is retrying must sleep for some random amount
+ * of seconds between 0 and the lesser of the backoff window (related to the retry attempt)
+ * and a predefined maximum delay value. The backoff window is doubled with each retry
+ * attempt until the maximum delay value is reached.<br>
  *
  * > sleep_seconds = random_between( 0, min( 2<sup>attempts_count</sup> * base_seconds, maximum_seconds ) )
  *
@@ -67,7 +67,7 @@
  * The functions are used as shown in the diagram below. This is the exponential
  * backoff with jitter loop:
  *
- * @image html retry_utils_flow.png width=25%
+ * @image html retry_utils_flow.png width=60%
  *
  * The following steps give guidance on implementing the Retry Utils. An example
  * implementation of the Retry Utils for a POSIX platform can be found in file
@@ -113,10 +113,10 @@
  * number of seconds between 0 and @ref RetryUtilsParams_t.nextJitterMax. After
  * sleeping this function must double @ref RetryUtilsParams_t.nextJitterMax, but
  * not exceeding @ref MAX_RETRY_BACKOFF_SECONDS. When @ref MAX_RETRY_ATTEMPTS are
- * reached this function should return @ref RetryUtilsRetriesExhausted, unless
+ * reached, this function should return @ref RetryUtilsRetriesExhausted, unless
  * @ref MAX_RETRY_ATTEMPTS is set to zero.
- * When @ref RetryUtilsRetriesExhausted is returned the calling application can
- * stop trying with a failure, or it can call @ref RetryUtils_ParamsReset again
+ * When @ref RetryUtilsRetriesExhausted is returned, the calling application can
+ * stop trying with a failure, or it can call @ref RetryUtils_ParamsReset again,
  * and restart the exponential back off with jitter loop.<br><br>
  * Please follow the example below to implement your own @ref RetryUtils_BackoffAndSleep.
  * The lines with FIXME comments should be updated.
