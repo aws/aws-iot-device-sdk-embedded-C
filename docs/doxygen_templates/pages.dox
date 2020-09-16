@@ -94,7 +94,7 @@ Configuration settings are C pre-processor constants. They can be set with a \#d
 
 /**
 @defgroup [<FIXME: Lowercase library name>]_struct_types Parameter Structures
-@brief Structures passed as parameters to [<[FIXME: Library name>] library functions](@ref [<FIXME: Lowercase library name>]_functions)
+@brief Structures passed as parameters to [[<FIXME: Library name>] library functions](@ref [<FIXME: Lowercase library name>]_functions)
 
 These structures are passed as parameters to library functions. Documentation for these structures will state the functions associated with each parameter structure and the purpose of each member.
 */
