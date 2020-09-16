@@ -44,15 +44,16 @@
 #include "jsmn.h"
 
 /* Mbed tls base64 includes. */
-#include "base64.h"
-
-/* Application version includes. */
-#include "aws_application_version.h"
+#include "mbedtls/base64.h"
 
 /* OTA interface includes. */
 #include "aws_iot_ota_interface.h"
 #include "ota_os_posix.h"
 #include "ota_os_interface.h"
+
+/* Include firmware version struct definition. */
+#include "iot_appversion32.h"
+extern const AppVersion32_t xAppFirmwareVersion;
 
 /* ToDo: Cleanup BaseType_t. */
 #define BaseType_t uint32_t
@@ -1432,7 +1433,7 @@ static DocParseErr_t prvParseJSONbyModel( const char * pcJSON,
 
     const JSON_DocParam_t * pxModelParam = NULL;
     jsmn_parser xParser;
-    jsmntok_t * pxTokens = NULL;
+    jsmntok_t *pxTokens = NULL;
     const jsmntok_t * pxValTok = NULL;
     int32_t jsmn_result = 0;
     uint32_t ulNumTokens = 0, ulTokenLen = 0;
@@ -2670,7 +2671,7 @@ static void prvOTAAgentTask( void * pvUnused )
 
 static BaseType_t prvStartOTAAgentTask( void * pvConnectionContext,
                                         void *  pOTAOSCtx,
-                                        TickType_t xTicksToWait )
+                                        uint32_t xTicksToWait )
 {
     BaseType_t xReturn = 0;
     uint32_t ulIndex = 0;
@@ -2710,7 +2711,7 @@ static BaseType_t prvStartOTAAgentTask( void * pvConnectionContext,
     {
         xEventBuffer[ ulIndex ].bBufferUsed = false;
     }
- 
+
     /*
      * Create the OTA Agent thread.
      */
@@ -2745,7 +2746,7 @@ bool OTA_SignalEvent( const OTA_EventMsg_t * const pxEventMsg )
      */
     {
         xErr = xOTA_Agent.pOTAOSCtx->event.send( xOTA_Agent.pOTAOSCtx->event.pEventCtx,
-                                                 pxEventMsg, 
+                                                 pxEventMsg,
                                                  0) ;
     }
 
@@ -2775,7 +2776,7 @@ OTA_State_t OTA_AgentInit( void * pvConnectionContext,
                            void * pOtaOSCtx,
                            const uint8_t * pucThingName,
                            pxOTACompleteCallback_t xFunc,
-                           TickType_t xTicksToWait )
+                           uint32_t xTicksToWait )
 {
     OTA_State_t xState;
 
@@ -2810,7 +2811,7 @@ OTA_State_t OTA_AgentInit_internal( void * pvConnectionContext,
                                     void * pOtaOSCtx,
                                     const uint8_t * pucThingName,
                                     const OTA_PAL_Callbacks_t * pxCallbacks,
-                                    TickType_t xTicksToWait )
+                                    uint32_t xTicksToWait )
 {
     DEFINE_OTA_METHOD_NAME( "OTA_AgentInit_internal" );
 
@@ -2891,7 +2892,7 @@ OTA_State_t OTA_AgentInit_internal( void * pvConnectionContext,
 /*
  * Public API to shutdown the OTA Agent.
  */
-OTA_State_t OTA_AgentShutdown( TickType_t xTicksToWait )
+OTA_State_t OTA_AgentShutdown( uint32_t xTicksToWait )
 {
     DEFINE_OTA_METHOD_NAME( "OTA_AgentShutdown" );
 

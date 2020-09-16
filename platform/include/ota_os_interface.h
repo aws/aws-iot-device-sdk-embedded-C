@@ -86,7 +86,7 @@ typedef int32_t ( * ota_SendEvent_t )( OtaEventContext_t* pContext,
  * @return               OTA_OS_ERR_OK if success , other error code on failure.
  */
 typedef int32_t ( * ota_ReceiveEvent_t )( OtaEventContext_t* pContext,
-	                                      void** pEventMsg,
+	                                      void* pEventMsg,
 	                                      uint32_t timeout);
 
 /**
@@ -105,7 +105,7 @@ typedef void ( * ota_DeinitEvent_t )( OtaEventContext_t* pContext );
  /**
   * @brief Create timer.
   *
-  * This function creates a timer with the timeout passed as parameter as well as 
+  * This function creates a timer with the timeout passed as parameter as well as
   * registers the callback.
   *
   * @param[pTimerName]           Timer name string.

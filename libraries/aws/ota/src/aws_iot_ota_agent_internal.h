@@ -32,6 +32,9 @@
 #ifndef _AWS_IOT_OTA_AGENT_INTERNAL_H_
 #define _AWS_IOT_OTA_AGENT_INTERNAL_H_
 
+#define JSMN_STATIC
+#define JSMN_PARENT_LINKS
+
 #include "aws_ota_agent_config.h"
 #include "jsmn.h"
 

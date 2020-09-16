@@ -27,6 +27,7 @@
 /* Standard includes. */
 #include <assert.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 /* Include Demo Config as the first non-system header. */
 #include "demo_config.h"
@@ -49,12 +50,12 @@
 #include "aws_ota_agent_config.h"
 #include "aws_iot_ota_agent_internal.h"
 
-/* Include firmware version struct definition. */
-#include "aws_application_version.h"
-
 /* OTA Library Interface includes. */
 #include "ota_os_posix.h"
 #include "ota_os_interface.h"
+
+/* Include firmware version struct definition. */
+#include "iot_appversion32.h"
 
 /* Evaluates to the length of a constant string defined like 'static const char str[]= "xyz"; */
 #define CONST_STRLEN( s )    ( ( ( uint32_t ) sizeof( s ) ) - 1UL )
@@ -143,6 +144,16 @@ static MQTTContext_t MqttContext;
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Struct for firmware version.
+ */
+const AppVersion32_t xAppFirmwareVersion =
+{
+    .u.x.ucMajor = APP_VERSION_MAJOR,
+    .u.x.ucMinor = APP_VERSION_MINOR,
+    .u.x.usBuild = APP_VERSION_BUILD,
+};
+
+/**
  * @brief Handle of the MQTT connection used in this demo.
  */
 static MQTTContext_t * pMqttContext = NULL;
@@ -163,7 +174,7 @@ int32_t SubscribeToTopic( const char * pTopicFilter,
 
 static const char pcOTA_JobsGetNext_TopicTemplate[] = "$aws/things/%s/jobs/$next/get";
 
-static MQTTStatus_t prvPublishMessage( 
+static MQTTStatus_t prvPublishMessage(
                                          const char * const pacTopic,
                                          uint16_t usTopicLen,
                                          const char * pcMsg,
@@ -586,15 +597,15 @@ void startOTAUpdateDemo( MQTTContext_t * pMqttContext )
                                         pcOTA_JobsGetNextAccepted_TopicTemplate,
                                         ( const uint8_t * ) CLIENT_IDENTIFIER );
 
-    
+
     SubscribeToTopic(pcJobTopic, usTopicLen,MQTTQoS1 );
-    
+
     SubscriptionManager_RegisterCallback( pcJobTopic,
                                           usTopicLen,
                                           otaMessageCallback );
 
-    
-    
+
+
     usTopicLen = ( uint16_t ) snprintf( pcJobTopic2,
                                         sizeof( pcJobTopic2 ),
                                         pcOTA_JobsNotifyNext_TopicTemplate,
@@ -606,7 +617,7 @@ void startOTAUpdateDemo( MQTTContext_t * pMqttContext )
                                         usTopicLen,
                                         otaMessageCallback );
 
-    
+
 
 
     /* Initialize the OTA Agent , if it is resuming the OTA statistics will be cleared for new
@@ -617,7 +628,7 @@ void startOTAUpdateDemo( MQTTContext_t * pMqttContext )
                    App_OTACompleteCallback,
                    ( uint32_t ) ~0 );
 
-       sleep( 2);         
+       sleep( 2);
 
       prvRequestJob ();
 
@@ -655,7 +666,7 @@ int main( int argc,
 {
     int returnStatus = EXIT_SUCCESS;
     NetworkContext_t networkContext;
-    
+
     bool mqttSessionPresent = false;
 
     ( void ) argc;
@@ -804,7 +815,7 @@ static void  prvRequestJob( )
                                         pcOTA_JobsGetNext_TopicTemplate,
                                         ( const uint8_t * ) ( CLIENT_IDENTIFIER ) );
 
-                                        
+
 
    SubscriptionManager_RegisterCallback( pcJobTopic,
                                          usTopicLen,
@@ -815,8 +826,6 @@ static void  prvRequestJob( )
         prvPublishMessage( pcJobTopic, usTopicLen, pcMsg, ulMsgLen, MQTTQoS1 );
 
     }
-
-    return kOTA_Err_None;
 }
 
 static const char pcOTA_StreamData_TopicTemplate[] = "$aws/things/%s/streams/%s/data/cbor";
@@ -846,7 +855,7 @@ OTA_Err_t prvInitFileTransfer_Mqtt( OTA_AgentContext_t * pxAgentCtx )
    return 0;
 }
 
-#define OTA_CLIENT_TOKEN               "rdy"   
+#define OTA_CLIENT_TOKEN               "rdy"
 
 OTA_Err_t prvRequestFileBlock_Mqtt( OTA_AgentContext_t * pxAgentCtx )
 {
@@ -965,4 +974,3 @@ static MQTTStatus_t prvPublishMessage( const char * const pacTopic,
 
     return mqttStatus;
 }
-

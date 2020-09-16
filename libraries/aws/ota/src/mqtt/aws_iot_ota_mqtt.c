@@ -40,7 +40,9 @@
 #include "aws_iot_ota_agent_internal.h"
 #include "aws_iot_ota_cbor.h"
 
-#include "aws_application_version.h"
+/* Include firmware version struct definition. */
+#include "iot_appversion32.h"
+extern  const AppVersion32_t xAppFirmwareVersion;
 
 /* General constants. */
 #define OTA_SUBSCRIBE_WAIT_MS          30000UL

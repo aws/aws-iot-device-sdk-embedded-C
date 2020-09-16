@@ -62,7 +62,7 @@ int32_t ota_InitEvent( OtaEventContext_t* pContext )
     attr.mq_curmsgs = 0;
 
     /* Open the OTA event queue .*/
-    if ( ( otaEventQueue = mq_open ( OTA_QUEUE_NAME, O_CREAT | O_RDWR, QUEUE_PERMISSIONS, &attr ) ) == -1 ) 
+    if ( ( otaEventQueue = mq_open ( OTA_QUEUE_NAME, O_CREAT | O_RDWR, QUEUE_PERMISSIONS, &attr ) ) == -1 )
     {
         LogInfo( (  "OTA Event Queue created." ) );
 
@@ -82,7 +82,7 @@ int32_t ota_SendEvent( OtaEventContext_t* pContext,
     (void) timeout;
 
     /* Send the event to OTA event queue.*/
-    if ( mq_send ( otaEventQueue, pEventMsg, MAX_MSG_SIZE, 0 ) == -1) 
+    if ( mq_send ( otaEventQueue, pEventMsg, MAX_MSG_SIZE, 0 ) == -1)
     {
         LogInfo( (  "OTA Event Sent." ) );
         exit (1);
@@ -107,7 +107,7 @@ int32_t ota_ReceiveEvent( OtaEventContext_t* pContext,
     /* Delay a bit.*/
     sleep(1);
 
-        if ( mq_receive ( otaEventQueue, &buff, sizeof(buff), NULL) == -1 )  
+        if ( mq_receive ( otaEventQueue, buff, sizeof(buff), NULL) == -1 )
         {
             LogInfo( (  "OTA Event receive fatal error." ) );
             exit (1);

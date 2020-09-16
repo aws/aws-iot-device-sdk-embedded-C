@@ -28,6 +28,7 @@
  * @brief CBOR encode/decode routines for AWS IoT Over-the-Air updates.
  */
 
+#include <stdlib.h>
 #include "cbor.h"
 #include "aws_iot_ota_cbor.h"
 #include "aws_iot_ota_cbor_internal.h"

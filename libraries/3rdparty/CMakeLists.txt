@@ -56,3 +56,14 @@ target_include_directories(tinycbor
     SYSTEM INTERFACE
     "${3RDPARTY_DIR}/tinycbor/src"
 )
+
+# Base64 from mbedtls
+add_library(mbedtls INTERFACE)
+target_sources(mbedtls
+    INTERFACE
+    "${3RDPARTY_DIR}/mbedtls/library/base64.c"
+)
+target_include_directories(tinycbor
+    SYSTEM INTERFACE
+    "${3RDPARTY_DIR}/mbedtls/include"
+)

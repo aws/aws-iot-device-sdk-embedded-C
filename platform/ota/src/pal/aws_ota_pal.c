@@ -19,13 +19,14 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
- 
+
 
 
 /* OTA PAL implementation for Windows platform. */
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
 #include "aws_iot_ota_pal.h"
 #include "aws_iot_ota_agent_internal.h"
 #include "aws_ota_codesigner_certificate.h"
@@ -60,7 +61,7 @@ static EVP_PKEY * Openssl_GetPkeyFromCertificate(const uint8_t * const pCertFile
 	rc = BIO_read_filename(pBio, pCertFilePath);
 	if (rc != 1)
 	{
-		LogDebug(" TEMP solution: No cert file, get the signer cert from a pre-defined variable\n");
+		LogDebug((" TEMP solution: No cert file, get the signer cert from a pre-defined variable\n"));
 
 		/* Get the signer cert from a predefined PEM string */
 		BIO_free_all(pBio);
@@ -72,23 +73,23 @@ static EVP_PKEY * Openssl_GetPkeyFromCertificate(const uint8_t * const pCertFile
 	{
 		if ((pCert = PEM_read_bio_X509(pBio, NULL, NULL, NULL)))
 		{
-			LogDebug("Getting the pkey from the X509 cert.\n");
+			LogDebug(("Getting the pkey from the X509 cert.\n"));
 
 			/* Extract the public key */
 			pPkey = X509_get_pubkey(pCert);
 			if (pPkey == NULL)
 			{
-				LogError("Error getting the pkey from signer cert.\n");
+				LogError(("Error getting the pkey from signer cert.\n"));
 			}
 		}
 		else
 		{
-			LogError("Error loading cert from either file or predefined string.\n");
+			LogError(("Error loading cert from either file or predefined string.\n"));
 		}
 	}
 	else
 	{
-		LogError(" Failed to read signer cert.\n");
+		LogError((" Failed to read signer cert.\n"));
 	}
 
 	BIO_free_all(pBio);
@@ -99,7 +100,7 @@ static EVP_PKEY * Openssl_GetPkeyFromCertificate(const uint8_t * const pCertFile
 }
 /*-----------------------------------------------------------*/
 
-static inline BaseType_t prvContextValidate( OTA_FileContext_t * C )
+static inline bool prvContextValidate( OTA_FileContext_t * C )
 {
     return( ( C != NULL ) &&
             ( C->pxFile != NULL ) ); /*lint !e9034 Comparison is correct for file pointer type. */
@@ -213,7 +214,7 @@ int16_t prvPAL_WriteBlock( OTA_FileContext_t * const C,
 
     int32_t lResult = 0;
 
-    if( prvContextValidate( C ) == pdTRUE )
+    if( prvContextValidate( C ) )
     {
         lResult = fseek( C->pxFile, ulOffset, SEEK_SET ); /*lint !e586 !e713 !e9034
                                                             * C standard library call is being used for portability. */
@@ -259,7 +260,7 @@ OTA_Err_t prvPAL_CloseFile( OTA_FileContext_t * const C )
     OTA_Err_t eResult = kOTA_Err_None;
     int32_t lWindowsError = 0;
 
-    if( prvContextValidate( C ) == pdTRUE )
+    if( prvContextValidate( C ) )
     {
         if( C->pxSignature != NULL )
         {
@@ -314,7 +315,7 @@ OTA_Err_t prvPAL_CloseFile( OTA_FileContext_t * const C )
 
 /********************************************/
 /* OPENSSL version
-/* Verify the signature of the specified file. 
+/* Verify the signature of the specified file.
 /*********************************************/
 
 static OTA_Err_t prvPAL_CheckFileSignature( OTA_FileContext_t * const C )
@@ -326,7 +327,7 @@ static OTA_Err_t prvPAL_CheckFileSignature( OTA_FileContext_t * const C )
     EVP_MD_CTX * pSigContext = NULL;
     int rc = 0;
 
-    if( prvContextValidate( C ) == pdTRUE )
+    if( prvContextValidate( C ) )
     {
         /* Extract the signer cert from the file */
         pPkey = Openssl_GetPkeyFromCertificate( ( const uint8_t * const ) C->pucCertFilepath );
@@ -335,11 +336,11 @@ static OTA_Err_t prvPAL_CheckFileSignature( OTA_FileContext_t * const C )
         pSigContext = EVP_MD_CTX_new();
 
         if ( (pPkey != NULL) && (pSigContext != NULL ) )
-        {   
+        {
             /* Verify an ECDSA-SHA256 signature. */
 			if (1 == EVP_DigestVerifyInit(pSigContext, NULL, EVP_sha256(), NULL, pPkey))
 			{
-				LogDebug("[CheckFileSignature] Started signature verification, file: %s\r\n", (const char *)C->pucCertFilepath);
+				LogDebug(("[CheckFileSignature] Started signature verification, file: %s\r\n", (const char *)C->pucCertFilepath));
 
 
 				pBuf = malloc(OTA_PAL_WIN_BUF_SIZE);  /* can use OPENSSL_malloc() here too */
@@ -362,7 +363,7 @@ static OTA_Err_t prvPAL_CheckFileSignature( OTA_FileContext_t * const C )
 							C->pxSignature->ucData,
 							C->pxSignature->usSize)) /*lint !e732 !e9034 Allow comparison in this context. */
 						{
-							LogError("File signature check failed at FINAL\n");
+							LogError(("File signature check failed at FINAL\n"));
 							eResult = kOTA_Err_SignatureCheckFailed;
 						}
 
@@ -377,26 +378,26 @@ static OTA_Err_t prvPAL_CheckFileSignature( OTA_FileContext_t * const C )
 				}
 				else
 				{
-					LogError("Failed to allocate buffer memory.\n");
+					LogError(("Failed to allocate buffer memory.\n"));
 					eResult = kOTA_Err_OutOfMemory;
 				}
 			}
-            else 
+            else
             {
-                LogError( "File signature check failed at INIT.\n" );
+                LogError(( "File signature check failed at INIT.\n" ));
                 eResult = kOTA_Err_SignatureCheckFailed;
             }
         }
         else
 		{
-            if( pSigContext == NULL )   
+            if( pSigContext == NULL )
 			{
-                LogError( "File signature check failed at NEW sig context.\n" );
+                LogError(( "File signature check failed at NEW sig context.\n" ));
                 eResult = kOTA_Err_SignatureCheckFailed;
             }
             else
             {
-                LogError( "File signature check failed at EXTRACT pkey from signer cert\n" );
+                LogError(( "File signature check failed at EXTRACT pkey from signer cert\n" ));
                 eResult = kOTA_Err_BadSignerCert;
             }
         }
@@ -408,7 +409,7 @@ static OTA_Err_t prvPAL_CheckFileSignature( OTA_FileContext_t * const C )
     else
     {
         /* FIXME: Invalid error code for a NULL file context. */
-        LogError( "Invalid OTA file context.\r\n" );
+        LogError(( "Invalid OTA file context.\r\n" ));
         /* Invalid OTA context or file pointer. */
         eResult = kOTA_Err_NullFilePtr;
     }

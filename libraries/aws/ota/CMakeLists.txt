@@ -13,12 +13,12 @@ add_library(ota
 )
 
 target_include_directories(ota
-    PUBLIC "${inc_dir}"
-    PRIVATE "${src_dir}"
+    PUBLIC "${inc_dir}" "${src_dir}"
 )
 
 target_link_libraries(ota
-    PRIVATE ota_mqtt ota_pal jsmn
+    PUBLIC ota_os
+    PRIVATE ota_mqtt ota_pal jsmn mbedtls
 )
 
 # Link to this INTERFACE target to enable the MQTT backend.
@@ -41,5 +41,3 @@ target_sources(ota_http
     "${src_dir}/http/aws_iot_ota_http.h"
 )
 target_link_libraries(ota_http INTERFACE http)
-
-# TODO, add ota_pal target for Linux

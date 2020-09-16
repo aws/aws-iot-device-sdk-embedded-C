@@ -34,6 +34,7 @@
 /* Standard includes. */
 /* For FILE type in OTA_FileContext_t.*/
 #include <stdio.h>
+#include <stdint.h>
 #include <stdbool.h>
 
 /* Evaluates to the length of a constant string defined like 'static const char str[]= "xyz"; */
@@ -46,7 +47,7 @@ extern const char cOTA_JSON_FileSignatureKey[ OTA_FILE_SIG_KEY_STR_MAX_LENGTH ];
 /**
  * @brief Special OTA Agent printing definition.
  */
-#define OTA_DEBUG_LOG_LEVEL    1
+// #define OTA_DEBUG_LOG_LEVEL    1
 #if OTA_DEBUG_LOG_LEVEL >= 1
     #define DEFINE_OTA_METHOD_NAME( name )      \
     static const char OTA_METHOD_NAME[] = name; \
@@ -394,14 +395,14 @@ typedef struct
  * Information about an OTA Update file that is to be streamed. This structure is filled in from a
  * job notification MQTT message. Currently only one file context can be streamed at time.
  */
-typedef struct OTA_FileContext
+struct OTA_FileContext
 {
     uint8_t * pucFilePath; /*!< Local file pathname. */
     union
     {
         int32_t lFileHandle;    /*!< Device internal file pointer or handle.
                                  * File type is handle after file is open for write. */
-        #if WIN32
+        #if defined(WIN32) || defined(__linux__)
             FILE * pxFile;      /*!< File type is stdio FILE structure after file is open for write. */
         #endif
         uint8_t * pucFile;      /*!< File type is RAM/Flash image pointer after file is open for write. */
@@ -420,7 +421,7 @@ typedef struct OTA_FileContext
     uint32_t ulUpdaterVersion;  /*!< Used by OTA self-test detection, the version of FW that did the update. */
     bool bIsInSelfTest;         /*!< True if the job is in self test mode. */
     uint8_t * pucProtocols;     /*!< Authorization scheme. */
-} OTA_FileContext_t;
+};
 
 /**
  * @ingroup ota_datatypes_structs
@@ -580,7 +581,7 @@ OTA_State_t OTA_AgentInit( void * pvConnectionContext,
                            void * pOtaOSCtx,
                            const uint8_t * pucThingName,
                            pxOTACompleteCallback_t xFunc,
-                           TickType_t xTicksToWait );
+                           uint32_t xTicksToWait );
 
 /**
  * @brief Internal OTA Agent initialization function.
@@ -605,7 +606,7 @@ OTA_State_t OTA_AgentInit_internal( void * pvConnectionContext,
                                     void * pOtaOSCtx,
                                     const uint8_t * pucThingName,
                                     const OTA_PAL_Callbacks_t * pxCallbacks,
-                                    TickType_t xTicksToWait );
+                                    uint32_t xTicksToWait );
 
 /**
  * @brief Signal to the OTA Agent to shut down.
@@ -620,7 +621,7 @@ OTA_State_t OTA_AgentInit_internal( void * pvConnectionContext,
  * @return One of the OTA agent states from the OTA_State_t enum.
  * A normal shutdown will return eOTA_AgentState_NotReady. Otherwise, refer to the OTA_State_t enum for details.
  */
-OTA_State_t OTA_AgentShutdown( TickType_t xTicksToWait );
+OTA_State_t OTA_AgentShutdown( uint32_t xTicksToWait );
 
 /**
  * @brief Get the current state of the OTA agent.

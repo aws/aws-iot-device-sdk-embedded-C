@@ -7,16 +7,16 @@ target_sources(
     PRIVATE
         "aws_iot_ota_update_demo.c"
 )
-
 target_link_libraries(
     ${DEMO_NAME}
     PRIVATE
-        # ota
+        ota
         mqtt
         clock_posix
         openssl_posix
         transport_reconnect_posix
         mqtt_subscription_manager
+        jsmn
 )
 
 target_include_directories(
