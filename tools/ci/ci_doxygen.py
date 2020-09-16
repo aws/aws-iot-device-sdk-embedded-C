@@ -173,10 +173,25 @@ def check_transport_interface_match(results, abs_lib_path, lib_dir):
     target_transport_result = target_result.setdefault("Transport interface match", {})
 
     lib_transport_interface_path = os.path.join(abs_lib_path, "source", "portable", "transport_interface.h")
-    same = filecmp.cmp(TRANSPORT_INTERFACE_PATH, lib_transport_interface_path)
+    # All lines except the second where the library/SDK name and version are will
+    # need to match.
+    line_count = 0
+    lib_file = open(lib_transport_interface_path, 'r')
+    lib_lines = lib_file.readlines()
+    csdk_file = open(TRANSPORT_INTERFACE_PATH, 'r')
+    csdk_lines = csdk_file.readlines()
+    same = True
+    for line in lib_lines:
+        line_count = line_count + 1
+        if line_count == 2:
+            continue
+        if line != csdk_lines[line_count - 1]:
+            same = False
+            break
+                
     if same == False:
         target_transport_result["status"] = "FAIL"
-        target_transport_result["details"] = f"transport_interface.h is different."
+        target_transport_result["details"] = f"transport_interface.h is different. Different at line {line_count}: {lib_lines[line_count]}"
     else:
         target_transport_result["status"] = "PASS"
 
