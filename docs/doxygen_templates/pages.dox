@@ -49,15 +49,12 @@
 Configuration settings are C pre-processor constants. They can be set with a \#define in the config file ([<FIXME: Lowercase library name>]_config.h) or by using a compiler option such as -D in gcc.
 
 @section [<FIXME: Library compile time configuration macro>]
-<br>
 @copydoc [<FIXME: Library compile time configuration macro>]
 
 @section [<FIXME: Library compile time configuration macro>]
-<br>
 @copydoc [<FIXME: Library compile time configuration macro>]
 
 @section [<FIXME: Library compile time configuration macro>]
-<br>
 @copydoc [<FIXME: Library compile time configuration macro>]
 */
 
