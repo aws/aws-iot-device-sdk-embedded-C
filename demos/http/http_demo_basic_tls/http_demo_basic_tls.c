@@ -37,7 +37,7 @@
 /* OpenSSL transport header. */
 #include "openssl_posix.h"
 
-/* Retry parameters. */
+/* Retry utilities. */
 #include "retry_utils.h"
 
 /* Check that hostname of the server is defined. */
@@ -99,26 +99,6 @@
  * @brief The length of the HTTP server host name.
  */
 #define SERVER_HOST_LENGTH     ( sizeof( SERVER_HOST ) - 1 )
-
-/**
- * @brief The length of the HTTP GET path.
- */
-#define GET_PATH_LENGTH        ( sizeof( GET_PATH ) - 1 )
-
-/**
- * @brief The length of the HTTP HEAD path.
- */
-#define HEAD_PATH_LENGTH       ( sizeof( HEAD_PATH ) - 1 )
-
-/**
- * @brief The length of the HTTP PUT path.
- */
-#define PUT_PATH_LENGTH        ( sizeof( PUT_PATH ) - 1 )
-
-/**
- * @brief The length of the HTTP POST path.
- */
-#define POST_PATH_LENGTH       ( sizeof( POST_PATH ) - 1 )
 
 /**
  * @brief Length of the request body.

@@ -37,7 +37,7 @@
 /* OpenSSL transport header. */
 #include "openssl_posix.h"
 
-/* Retry parameters. */
+/* Retry utilities. */
 #include "retry_utils.h"
 
 /* Check that AWS IoT Core endpoint is defined. */
