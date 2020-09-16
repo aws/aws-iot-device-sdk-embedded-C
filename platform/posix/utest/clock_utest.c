@@ -1,4 +1,5 @@
 /*
+ * AWS IoT Device SDK for Embedded C V202009.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -53,6 +54,9 @@ int nanosleep_validate_args( const struct timespec * requested_time,
                              struct timespec * remaining,
                              int numCalls )
 {
+    /* Suppress unused parameter warning. */
+    ( void ) numCalls;
+
     TEST_ASSERT_NOT_NULL( requested_time );
     TEST_ASSERT_NULL( remaining );
     TEST_ASSERT_EQUAL( ( time_t ) SLEEP_TIME_MS / ( time_t ) MILLISECONDS_PER_SECOND,
@@ -144,7 +148,6 @@ void test_Clock_GetTimeMs_Returns_Expected_Time_Guaranteed_Overflow( void )
  */
 void test_Clock_SleepMs_Passes_Expected_Values_To_nanosleep()
 {
-    struct timespec timeSpec;
     uint32_t sleepTimeMs = SLEEP_TIME_MS;
 
     nanosleep_Stub( nanosleep_validate_args );

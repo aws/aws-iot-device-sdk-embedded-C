@@ -53,12 +53,6 @@ if(ROOT_CA_CERT_PATH)
             ROOT_CA_CERT_PATH="${ROOT_CA_CERT_PATH}"
     )
 endif()
-if(BROKER_ENDPOINT)
-    target_compile_definitions(
-        ${DEMO_NAME} PRIVATE
-            BROKER_ENDPOINT="${BROKER_ENDPOINT}"
-    )
-endif()
 if(CLIENT_IDENTIFIER)
     target_compile_definitions(
         ${DEMO_NAME} PRIVATE
