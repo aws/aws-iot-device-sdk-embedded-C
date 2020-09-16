@@ -21,6 +21,7 @@ Deviations from the MISRA standard are listed below:
 ### Flagged by Coverity
 | Deviation | Category | Justification |
 | :-: | :-: | :-: |
+| Rule 5.6 | Required | The header file `transport_interface.h` is present in each library repository that depends on the transport interface so as to independently compile the build targets. Coverity flags the type duplication caused by multiple copies of header files in this repository as violations, when all the targets are analyzed together. However, this violation will not be flagged if each build target is analyzed one at a time.  |
 | Rule 5.7 | Required | The network context struct is defined by each transport implementation; however, only one transport implementation is needed by an application at a time. If the transport implementations are analyzed one at a time by Coverity, this violation will not be flagged. |
 | Rule 8.7 | Advisory | API functions are not used by the library outside of the files they are defined; however, they must be externally visible in order to be used by an application. |
 
