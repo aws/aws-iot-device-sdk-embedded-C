@@ -15,3 +15,6 @@
 	path = libraries/3rdparty/tinycbor
 	url = https://github.com/intel/tinycbor
 	branch = v0.5.3
+[submodule "libraries/3rdparty/mbedtls"]
+	path = libraries/3rdparty/mbedtls
+	url = https://github.com/ARMmbed/mbedtls.git
