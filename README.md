@@ -73,7 +73,7 @@ For example, a second release in June 2021 would be 202106.01. Although the SDK 
 ## Cloning
 This repo uses [Git Submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules) to bring in dependent components.
 
-Note: If you download the ZIP file provided by GitHub UI, you will not get the contents of the submodules (The ZIP file is also not a valid git repository).  If you download from the [Tags](https://github.com/aws/aws-iot-device-sdk-embedded-C/tags) or [Releases](https://github.com/aws/aws-iot-device-sdk-embedded-C/releases), you will get the entire repository (including the submodules)
+Note: If you download the ZIP file provided by GitHub UI, you will not get the contents of the submodules (The ZIP file is also not a valid git repository).  If you download from the [202009.00 Release Page](https://github.com/aws/aws-iot-device-sdk-embedded-C/releases/tag/202009.00) page, you will get the entire repository (including the submodules) in the ZIP file, aws-iot-device-sdk-embedded-c-202009.00.zip.  
 
 
 To clone using HTTPS:
