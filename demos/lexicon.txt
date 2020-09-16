@@ -49,6 +49,7 @@ html
 http
 httpbin
 httpclient
+httpmethodpaths
 https
 ifdef
 ifndef
@@ -139,6 +140,7 @@ sizeof
 sni
 ssl
 statechanged
+struct
 structs
 suback
 sublicense
