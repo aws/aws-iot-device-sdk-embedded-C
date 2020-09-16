@@ -73,7 +73,7 @@ For example, a second release in June 2021 would be 202106.01. Although the SDK 
 ## Cloning
 This repo uses [Git Submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules) to bring in dependent components.
 
-Note: If you download the ZIP file provided by GitHub UI, you will not get the contents of the submodules. (The ZIP file is also not a valid git repository)  If you download from the [Tags](https://github.com/aws/aws-iot-device-sdk-embedded-C/tags) or [Releases](https://github.com/aws/aws-iot-device-sdk-embedded-C/releases), you will get the entire repository (including the submodules)
+Note: If you download the ZIP file provided by GitHub UI, you will not get the contents of the submodules (The ZIP file is also not a valid git repository).  If you download from the [Tags](https://github.com/aws/aws-iot-device-sdk-embedded-C/tags) or [Releases](https://github.com/aws/aws-iot-device-sdk-embedded-C/releases), you will get the entire repository (including the submodules)
 
 
 To clone using HTTPS:
@@ -265,5 +265,4 @@ The generated documentation landing page is located at **docs/doxygen/output/htm
 ## License
 
 The C-SDK libraries are licensed under the [MIT License](LICENSE).
-
 
