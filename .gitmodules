@@ -18,3 +18,6 @@
 [submodule "libraries/3rdparty/mbedtls"]
 	path = libraries/3rdparty/mbedtls
 	url = https://github.com/ARMmbed/mbedtls.git
+[submodule "libraries/aws/ota"]
+	path = libraries/aws/ota
+	url = git@github.com:aws/OTA-for-AWS-IoT-embedded-SDK.git
