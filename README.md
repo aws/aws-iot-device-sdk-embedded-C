@@ -5,9 +5,9 @@
 [![Build Status](https://travis-ci.org/aws/aws-iot-device-sdk-embedded-C.svg?branch=v4_beta_deprecated)](https://travis-ci.org/aws/aws-iot-device-sdk-embedded-C)
 [![codecov](https://codecov.io/gh/aws/aws-iot-device-sdk-embedded-C/branch/v4_beta_deprecated/graph/badge.svg)](https://codecov.io/gh/aws/aws-iot-device-sdk-embedded-C)
 
-The CSDK v4_beta_deprecated branch contains a beta version of the AWS IoT Embedded C SDK libraries, which has now been deprecated. The libraries in this branch will not be released in its current form, and they are being refactored for resource constrained devices. The refactored libraries will go through code quality checks including verification that no function has a [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html) score over 8, and checks against deviations from the mandatory rules in the [MISRA coding standard](https://www.misra.org.uk/MISRAHome/MISRAC2012/tabid/196/Default.aspx).  They libraries will also undergone both static code analysis from [Coverity static analysis](https://scan.coverity.com/), and validation of memory safety and functional correctness proof through the [CBMC automated reasoning tool](https://www.youtube.com/watch?v=YwQHAPRhQkI&feature=youtu.be&t=1721).  Once the refactored libraries meet the code quality checks, they are released into the master branch.  
+The CSDK v4_beta_deprecated branch contains a beta version of the AWS IoT Embedded C SDK libraries, which has now been deprecated. No new features will be added, but this branch will continue to be maintained for critical bug fixes and security patches.
 
-No new features will be added, but this branch will continue to be maintained for critical bug fixes and security patches. If you want to migrate to the use the refactored libraries, please view the [ReadMe](https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/master/README.md) on master branch.   
+The libraries in this branch will not be released in its current form, and they are being refactored for resource constrained devices on the [master](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/master) branch. If you want to migrate to the use the refactored libraries, please view the [ReadMe](https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/master/README.md) on master branch.   
 
 ## Overview
 
