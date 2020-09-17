@@ -1,13 +1,17 @@
-# AWS IoT Device SDK C v4.0.0
+# AWS IoT Device SDK C v4_beta_deprecated
 
-**[Link to API documentation](https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/main/index.html)**
+**[Link to API documentation](https://docs.aws.amazon.com/freertos/latest/lib-ref/embedded-csdk/v4.0_beta_deprecated/lib-ref/index.html)**
 
 [![Build Status](https://travis-ci.org/aws/aws-iot-device-sdk-embedded-C.svg?branch=v4_beta_deprecated)](https://travis-ci.org/aws/aws-iot-device-sdk-embedded-C)
 [![codecov](https://codecov.io/gh/aws/aws-iot-device-sdk-embedded-C/branch/v4_beta_deprecated/graph/badge.svg)](https://codecov.io/gh/aws/aws-iot-device-sdk-embedded-C)
 
-The AWS IoT Device SDK for C is a collection of C99 source files that allow applications to securely connect to the AWS IoT platform. It includes an MQTT 3.1.1 client, as well as libraries specific to AWS IoT, such as Thing Shadows. It is distributed in source form and may be built into firmware along with application code.
+The CSDK v4_beta_deprecated branch contains a beta version of the AWS IoT Embedded C SDK libraries, which has now been deprecated. No new features will be added, but this branch will continue to be maintained for critical bug fixes and security patches.
 
-This library supersedes both the AWS IoT Device SDK Embedded C and the libraries provided with FreeRTOS.
+The libraries in this branch will not be released in their current form, and they have been refactored for resource constrained devices on the [master](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/master) branch. If you want to migrate to the use the refactored libraries, please view the [ReadMe](https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/master/README.md) on master branch.   
+
+## Overview
+
+The AWS IoT Device SDK for C is a collection of C99 source files that allow applications to securely connect to the AWS IoT platform. It includes an MQTT 3.1.1 client, as well as libraries specific to AWS IoT, such as Thing Shadows. It is distributed in source form and may be built into firmware along with application code.
 
 ## Features
 
