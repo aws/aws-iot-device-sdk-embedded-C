@@ -8,14 +8,13 @@
 @section [<FIXME: Lowercase library name>]_memory_requirements Memory Requirements
 @brief Memory requirements of the [<FIXME: Library name>] library.
 
-The configurations for memory estimation are defined <a href="https://github.com/FreeRTOS/FreeRTOS/tree/lts-development/tools/memory_estimator" target="_blank" rel="noopener noreferrer">here</a>.
-
 <table>
     <tr>
-        <td colspan="3"><b>Code Size of [<FIXME: Library name and version>](example generated with GCC for ARM Cortex-M)</b></td>
+        <td colspan="4"><center><b>Code size of [<FIXME: Library name>] library files (sizes generated with [GCC for ARM Cortex-M toolchain 20191025](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads/9-2019-q4-major))</b></center></td>
     </tr>
     <tr>
         <td><b>File</b></td>
+        <td><b>No Optimization (asserts enabled)</b></td>
         <td><b>With -O1 Optimisation</b></td>
         <td><b>With -Os Optimisation</b></td>
     </tr>
@@ -23,9 +22,11 @@ The configurations for memory estimation are defined <a href="https://github.com
         <td>[<FIXME: library source, add more rows for more source>]</td>
         <td>[<FIXME: Code size>]</td>
         <td>[<FIXME: Code size>]</td>
+        <td>[<FIXME: Code size>]</td>
     </tr>
     <tr>
         <td><b>Total estimates</b></td>
+        <td>[<FIXME: Total code size>]</td>
         <td>[<FIXME: Total code size>]</td>
         <td>[<FIXME: Total code size>]</td>
     </tr>
@@ -48,15 +49,12 @@ The configurations for memory estimation are defined <a href="https://github.com
 Configuration settings are C pre-processor constants. They can be set with a \#define in the config file ([<FIXME: Lowercase library name>]_config.h) or by using a compiler option such as -D in gcc.
 
 @section [<FIXME: Library compile time configuration macro>]
-<br>
 @copydoc [<FIXME: Library compile time configuration macro>]
 
 @section [<FIXME: Library compile time configuration macro>]
-<br>
 @copydoc [<FIXME: Library compile time configuration macro>]
 
 @section [<FIXME: Library compile time configuration macro>]
-<br>
 @copydoc [<FIXME: Library compile time configuration macro>]
 */
 
@@ -93,7 +91,7 @@ Configuration settings are C pre-processor constants. They can be set with a \#d
 
 /**
 @defgroup [<FIXME: Lowercase library name>]_struct_types Parameter Structures
-@brief Structures passed as parameters to [<[FIXME: Library name>] library functions](@ref [<FIXME: Lowercase library name>]_functions)
+@brief Structures passed as parameters to [[<FIXME: Library name>] library functions](@ref [<FIXME: Lowercase library name>]_functions)
 
 These structures are passed as parameters to library functions. Documentation for these structures will state the functions associated with each parameter structure and the purpose of each member.
 */
