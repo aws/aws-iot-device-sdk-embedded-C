@@ -5,6 +5,8 @@
 The following demos are provided:
 - @subpage mqtt_demo <br>
   @brief coreMQTT
+- @subpage http_demo <br>
+  @brief coreHTTP
 - @subpage shadow_demo <br>
   @brief AWS IoT Device Shadow
 */

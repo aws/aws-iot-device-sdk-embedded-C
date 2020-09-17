@@ -1,0 +1,15 @@
+
+/**
+@page http_demo coreHTTP
+@brief Demos that demonstrate usage of the coreHTTP library.
+
+@section http_demo_plaintext HTTP Plaintext Demo
+@brief Demo of an MQTT application that establishes a plaintext (no encryption) TCP connection with the server, and uses QoS 0 level of communication with broker.
+
+This demo uses a POSIX socket-based transport interface implementation to establish a TCP connection, and demonstrates the subscribe-publish workflow of MQTT at Qos 0 level. After subscribing to a single topic filter, it publishes to the same topic and waits for receipt of that message to be returned from the server at QoS 0 level. This cycle of publishing to the broker and receiving the same message back from the broker is repeated indefinitely.
+
+Messages in this demo are sent at QoS 0, which guarantees at most one delivery according to the MQTT spec. See the demo workflow below:
+
+@image html mqtt_plaintext.png width=100%
+
+*/
