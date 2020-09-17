@@ -128,7 +128,7 @@ Bugfixes/Improvements:
 
 New features:
 
-  - Added unit tests, further details can be found in the testing readme
+  - Added unit tests, further details can be found in the testing [readme](https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/v2.1.0/tests/README.md/)
   - Added sample to demonstrate building the SDK as library
   - Added sample to demonstrate building the SDK in C++
 
