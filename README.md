@@ -4,24 +4,24 @@
 
 **[API documentation of 202009.00 release](https://docs.aws.amazon.com/freertos/latest/lib-ref/embedded-csdk/202009.00/lib-ref/index.html)**    
 
-We have released version 202009.00 of the AWS IoT Device SDK for Embedded-C (C-SDK). This release includes refactored MQTT, JSON Parser, and AWS IoT Device Shadow libraries for optimized memory usage and modularity. These libraries are included in the SDK via [Git submoduling](https://git-scm.com/book/en/v2/Git-Tools-Submodules). These libraries have gone through code quality checks including verification that no function has a [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html) score over 8, and checks against deviations from mandatory rules in the [MISRA coding standard](https://www.misra.org.uk/MISRAHome/MISRAC2012/tabid/196/Default.aspx). Deviations from the MISRA C:2012 guidelines are documented under [MISRA Deviations](MISRA.md). These libraries have also undergone both static code analysis from [Coverity static analysis](https://scan.coverity.com/), and validation of memory safety and proof of functional correctness through the [CBMC automated reasoning tool](https://www.cprover.org/cbmc/).  
+We have released version 202009.00 of the AWS IoT Device SDK for Embedded-C (C-SDK). This release includes refactored MQTT, JSON Parser, and AWS IoT Device Shadow libraries for optimized memory usage and modularity. These libraries are included in the SDK via [Git submoduling](https://git-scm.com/book/en/v2/Git-Tools-Submodules). These libraries have gone through code quality checks including verification that no function has a [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html) score over 8, and checks against deviations from mandatory rules in the [MISRA coding standard](https://www.misra.org.uk/MISRAHome/MISRAC2012/tabid/196/Default.aspx). Deviations from the MISRA C:2012 guidelines are documented under [MISRA Deviations](MISRA.md). These libraries have also undergone both static code analysis from [Coverity static analysis](https://scan.coverity.com/), and validation of memory safety and data structure invariance through the [CBMC automated reasoning tool](https://www.cprover.org/cbmc/).  
 
 If you are upgrading from v3.x API of the C-SDK to the 202009.00 release, please follow the [migration guide](https://docs.aws.amazon.com/freertos/latest/lib-ref/embedded-csdk/202009.00/lib-ref/docs/doxygen/output/html/migration_guide.html).  
 If you are using the C-SDK v4_beta_deprecated branch, note that we will continue to maintain this branch for critical bug fixes and security patches but will not add new features to it. See the C-SDK v4_beta_deprecated branch [README](https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/v4_beta_deprecated/README.md) for additional details. 
 
 ## Overview
 
-The AWS IoT Device SDK for Embedded C (C-SDK) is a collection of C source files under the [MIT open source license](LICENSE) that can be used in embedded applications to securely connect IoT devices to [AWS IoT Core](http://docs.aws.amazon.com/iot/latest/developerguide/what-is-aws-iot.html). It contains an MQTT client, HTTP client, JSON Parser, and AWS IoT Device Shadow client libraries. It is distributed in source form and intended to be built into customer firmware along with application code, other libraries and RTOS. 
+The AWS IoT Device SDK for Embedded C (C-SDK) is a collection of C source files under the [MIT open source license](LICENSE) that can be used in embedded applications to securely connect IoT devices to [AWS IoT Core](http://docs.aws.amazon.com/iot/latest/developerguide/what-is-aws-iot.html). It contains an MQTT client, HTTP client, JSON Parser, and AWS IoT Device Shadow client libraries. It is distributed in source form, and is intended to be built into customer firmware along with application code, other libraries and RTOS (Real-Time Operating System). 
 
 ## Features
 
-The C-SDK simplifies access to the Pub/Sub functionality of the AWS IoT broker via MQTT and provides APIs to interact with Device Shadow. The SDK has been tested to work with the AWS IoT Core and an open source MQTT broker to ensure best interoperability of a device with the AWS IoT platform. The C-SDK contains the following libraries:
+The C-SDK simplifies access AWS IoT Services. The SDK has been tested to work with the AWS IoT Core and an open source MQTT broker to ensure high quality interoperability of a device with the AWS IoT platform. The C-SDK contains the following libraries:
 
 ### MQTT 
 The C-SDK provides the ability to establish an MQTT connection with a broker over a customer-implemented transport layer, which can either be a secure channel like a TLS session (mutually authenticated or server-only authentication) or a non-secure channel like a plaintext TCP connection. This MQTT connection can be used for performing publish operations to MQTT topics and subscribing to MQTT topics. The SDK provides a mechanism to register customer-defined callbacks for receiving incoming PUBLISH, acknowledgement and keep-alive response events from the broker.  The [coreMQTT](https://github.com/FreeRTOS/coreMQTT) library has been refactored for memory optimization and is fully compliant with the [MQTT 3.1.1](http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/mqtt-v3.1.1.html) standard.  It has no dependencies on any additional libraries other than the standard C library, a customer-implemented network transport interface, and *optionally* a customer-implemented platform time function.  The refactored design embraces different use-cases, ranging from resource-constrained platforms using only QoS 0 MQTT PUBLISH messages to resource-rich platforms using QoS 2 MQTT PUBLISH over TLS connections.  
 
 ### HTTP
-The C-SDK provides the ability to establish an HTTP connection with a server over a customer-implemented transport layer, which can either be a secure channel like a TLS session (mutually authenticated or server-only authentication) or a non-secure channel like a plaintext TCP connection. The HTTP connection can be used to make REST API requests that include "GET" (include range requests), "PUT", "POST" and "HEAD" requests. The SDK provides a mechanism to register a customer-defined callback for receiving parsed header fields in an HTTP response. The [coreHTTP](https://github.com/FreeRTOS/coreHTTP) library has been refactored for memory optimization, and is a client implementation of a subset of the [HTTP/1.1](https://tools.ietf.org/html/rfc2616) standard.
+The C-SDK provides the ability to establish an HTTP connection with a server over a customer-implemented transport layer, which can either be a secure channel like a TLS session (mutually authenticated or server-only authentication) or a non-secure channel like a plaintext TCP connection. The HTTP connection can be used to make "GET" (include range requests), "PUT", "POST" and "HEAD" requests. The SDK provides a mechanism to register a customer-defined callback for receiving parsed header fields in an HTTP response. The [coreHTTP](https://github.com/FreeRTOS/coreHTTP) library has been refactored for memory optimization, and is a client implementation of a subset of the [HTTP/1.1](https://tools.ietf.org/html/rfc2616) standard.
 
 ### AWS IoT Device Shadow
 [AWS IoT Device Shadow](https://github.com/aws/device-shadow-for-aws-iot-embedded-sdk) enables you to store and retrieve the current state (the “shadow”) of every registered device. The device’s shadow is a persistent, virtual representation of your device that you can interact with from AWS IoT Core even if the device is offline. The device state captured as its “shadow” is itself a [JSON](https://www.json.org/) document. The device can send commands over MQTT or HTTP to update its latest state. Each device’s shadow is uniquely identified by the name of the corresponding “thing”, a representation of a specific device or logical entity on the AWS Cloud. See [Managing Devices with AWS IoT](https://docs.aws.amazon.com/iot/latest/developerguide/iot-thing-management.html) for more information. More details about shadows can be found in [AWS IoT documentation](https://docs.aws.amazon.com/iot/latest/developerguide/iot-device-shadows.html). 
@@ -54,15 +54,15 @@ where
 ## Branches
 
 ### master branch
-The [master](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/master) branch hosts the continuous development of the AWS IoT Embedded C SDK libraries. Please be aware that the development at the tip of the master branch is continuously in progress and may have bugs. Consider using the tagged releases of the AWS IoT Embedded C SDK for production ready software.
+The [master](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/master) branch hosts the continuous development of the AWS IoT Embedded C SDK (C-SDK) libraries. Please be aware that the development at the tip of the master branch is continuously in progress, and may have bugs. Consider using the [tagged releases](https://github.com/aws/aws-iot-device-sdk-embedded-C/releases) of the C-SDK for production ready software.
 
 ### v4_beta_deprecated branch (Formerly named v4_beta)
-The [v4_beta_deprecated](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v4_beta_deprecated) branch contains a beta version of the AWS IoT Embedded C SDK libraries, which is now deprecated. This branch was earlier named as *v4_beta*, and was renamed to *v4_beta_deprecated*. The libraries in this branch will not be released. However, critical bugs will be fixed and tested. No new features will be added to this branch.
+The [v4_beta_deprecated](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v4_beta_deprecated) branch contains a beta version of the C-SDK libraries, which is now deprecated. This branch was earlier named as *v4_beta*, and was renamed to *v4_beta_deprecated*. The libraries in this branch will not be released. However, critical bugs will be fixed and tested. No new features will be added to this branch.
 
 
 ## Releases
 
-All of the released versions of the AWS IoT Embedded C SDK libraries are available as git tags. For example, the last release of the v3 SDK version is available at [tag 3.0.1](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v3.0.1).
+All of the released versions of the C-SDK libraries are available as git tags. For example, the last release of the v3 SDK version is available at [tag 3.0.1](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v3.0.1).
 
 ## Versioning
 
@@ -76,18 +76,18 @@ C-SDK releases will now follow a date based versioning scheme with the format YY
 For example, a second release in June 2021 would be 202106.01. Although the SDK releases have moved to date-based versioning, each library within the SDK will still retain semantic versioning. In semantic versioning, the version number itself (X.Y.Z) indicates whether the release is a major, minor, or point release. You can use the semantic version of a library to assess the scope and impact of a new release on your application. 
 
 ## Cloning
-This repo uses [Git Submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules) to bring in dependent components.
+This repository uses [Git Submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules) to bring in the C-SDK libraries (eg, MQTT ) and third-party dependencies (eg, mbedtls for POSIX platform transport layer ).
 
 Note: If you download the ZIP file provided by GitHub UI, you will not get the contents of the submodules (The ZIP file is also not a valid git repository).  If you download from the [202009.00 Release Page](https://github.com/aws/aws-iot-device-sdk-embedded-C/releases/tag/202009.00) page, you will get the entire repository (including the submodules) in the ZIP file, aws-iot-device-sdk-embedded-c-202009.00.zip.  
 
 
 To clone using HTTPS:
 ```
-git clone https://github.com/aws/aws-iot-device-sdk-embedded-C.git --recurse-submodules
+git clone --recurse-submodules https://github.com/aws/aws-iot-device-sdk-embedded-C.git
 ```
 Using SSH:
 ```
-git clone git@github.com:aws/aws-iot-device-sdk-embedded-C.git --recurse-submodules
+git clone --recurse-submodules git@github.com:aws/aws-iot-device-sdk-embedded-C.git
 ```
 
 If you have downloaded the repo without using the `--recurse-submodules` argument, you need to run:
@@ -99,32 +99,32 @@ git submodule update --init --recursive
 ## Building and Running Demos
 
   
-The libraries in this SDK are not dependent on any operating system. However, the demos for the libraries in this SDK are built and tested on a Linux platform. This SDK builds with [CMake](https://cmake.org/), a cross-platform build tool.
+The libraries in this SDK are not dependent on any operating system. However, the demos for the libraries in this SDK are built and tested on a Linux platform. The demos builds with [CMake](https://cmake.org/), a cross-platform build tool.
 
 
 ### Prerequisites
 
-- CMake 3.13.0 or later 
+- CMake 3.13.0 or later for utilizing the build system of the repository.
 
 - C90 compiler
 
-- Although not a part of the C90 standard, `stdint.h` is required for fixed-width integer types (e.g int32_t).
+- Although not a part of the ISO C90 standard, `stdint.h` is required for fixed-width integer types that include `uint8_t`, `uint16_t` and `uint32_t`.
 
 - A supported operating system. The ports provided with this repo are expected to work with all recent versions of the following operating systems, although we cannot guarantee the behavior on all systems.
     - Linux system with POSIX sockets and timer APIs. (CI tests on Ubuntu 18.04).
         - On Linux systems, installation of OpenSSL development libraries and header files, *version 1.1.0 or later*, are required. The OpenSSL development libraries are usually called something like `libssl-dev` or `openssl-devel` when installed through a package manager.
         
 
-
-
 ### AWS IoT Account Setup
 
-It is required to setup an AWS account and access the AWS IoT Console for running demos and tests. Follow the links to:
+You need to setup an AWS account and access the AWS IoT console for running the AWS IoT Device Shadow library demo and tests. 
+Also, the AWS account can be used for running the MQTT mutual auth demo can be run against AWS IoT broker.
+
+Follow the links to:
 
 -  [Setup an AWS account](https://portal.aws.amazon.com/billing/signup#/start).
 
 -  [Sign-in to the AWS IoT Console](https://aws.amazon.com/console/) after setting up the AWS account.
-
 
 
 ### Configuring the mutual auth demos
