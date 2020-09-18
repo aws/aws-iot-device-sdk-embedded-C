@@ -15,7 +15,9 @@ The AWS IoT Device SDK for Embedded C (C-SDK) is a collection of C source files 
 
 ## Features
 
-The C-SDK simplifies access AWS IoT Services. The SDK has been tested to work with the AWS IoT Core and an open source MQTT broker to ensure high quality interoperability of a device with the AWS IoT platform. The C-SDK contains the following libraries:
+The C-SDK simplifies access AWS IoT Services. The SDK has been tested to work with AWS IoT Core and an open source MQTT broker to ensure high quality interoperability of a device with the AWS IoT platform. 
+The AWS IoT Device Shadow library is flexible to work any MQTT library implementation. The MQTT library in the C-SDK is offered as one choice without being tightly coupled with the rest of the SDK.
+The C-SDK contains the following libraries:
 
 ### MQTT 
 The C-SDK provides the ability to establish an MQTT connection with a broker over a customer-implemented transport layer, which can either be a secure channel like a TLS session (mutually authenticated or server-only authentication) or a non-secure channel like a plaintext TCP connection. This MQTT connection can be used for performing publish operations to MQTT topics and subscribing to MQTT topics. The SDK provides a mechanism to register customer-defined callbacks for receiving incoming PUBLISH, acknowledgement and keep-alive response events from the broker.  The [coreMQTT](https://github.com/FreeRTOS/coreMQTT) library has been refactored for memory optimization and is fully compliant with the [MQTT 3.1.1](http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/mqtt-v3.1.1.html) standard.  It has no dependencies on any additional libraries other than the standard C library, a customer-implemented network transport interface, and *optionally* a customer-implemented platform time function.  The refactored design embraces different use-cases, ranging from resource-constrained platforms using only QoS 0 MQTT PUBLISH messages to resource-rich platforms using QoS 2 MQTT PUBLISH over TLS connections.  
@@ -108,10 +110,10 @@ The libraries in this SDK are not dependent on any operating system. However, th
 
 - C90 compiler
 
-- Although not a part of the ISO C90 standard, `stdint.h` is required for fixed-width integer types that include `uint8_t`, `uint16_t` and `uint32_t`.
+- Although not a part of the ISO C90 standard, `stdint.h` is required for fixed-width integer types that include `uint8_t`, `int8_t`, `uint16_t`, `uint32_t` and `int32_t`, and constant macros like `UINT16_MAX`.
 
 - A supported operating system. The ports provided with this repo are expected to work with all recent versions of the following operating systems, although we cannot guarantee the behavior on all systems.
-    - Linux system with POSIX sockets and timer APIs. (CI tests on Ubuntu 18.04).
+    - Linux system with POSIX sockets and timer APIs. (We have tested on Ubuntu 18.04).
         - On Linux systems, installation of OpenSSL development libraries and header files, *version 1.1.0 or later*, are required. The OpenSSL development libraries are usually called something like `libssl-dev` or `openssl-devel` when installed through a package manager.
         
 
