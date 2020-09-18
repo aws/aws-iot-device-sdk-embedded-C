@@ -169,7 +169,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
 
     /* ALPN is required when communicating to AWS IoT Core over port 443 through HTTP. */
-    if( AWS_MQTT_PORT == 443 )
+    if( AWS_HTTP_PORT == 443 )
     {
         opensslCredentials.pAlpnProtos = IOT_CORE_ALPN_PROTOCOL_NAME;
         opensslCredentials.alpnProtosLen = strlen( IOT_CORE_ALPN_PROTOCOL_NAME );
