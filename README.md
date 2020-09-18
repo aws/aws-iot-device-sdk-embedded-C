@@ -16,7 +16,7 @@ The AWS IoT Device SDK for Embedded C (C-SDK) is a collection of C source files 
 ## Features
 
 The C-SDK simplifies access to AWS IoT Services. The SDK has been tested to work with AWS IoT Core and an open source MQTT broker to ensure high quality interoperability. 
-The AWS IoT Device Shadow library is flexible to work any MQTT client and JSON parser library implementations. The MQTT client and JSON parser libraries in the C-SDK are offered as one choice without being tightly coupled with the rest of the SDK.
+The AWS IoT Device Shadow library is flexible to work with any MQTT client and JSON parser. The MQTT client and JSON parser libraries in the C-SDK are offered as choices without being tightly coupled with the rest of the SDK.
 The C-SDK contains the following libraries:
 
 ### MQTT 
