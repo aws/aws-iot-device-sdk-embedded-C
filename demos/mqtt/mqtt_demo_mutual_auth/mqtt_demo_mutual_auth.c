@@ -999,9 +999,9 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
      * username/password based client authentication.
      *
      * The username field is populated with voluntary metrics to AWS IoT.
-     * The metrics collected by AWS IoT are the current operating system or
-     * SDK and its version. These metrics help AWS IoT improve security and
-     * provide better technical support.
+     * The metrics collected by AWS IoT are the current operating system, the
+     * operating system's version, and the current hardware platform. These
+     * metrics help AWS IoT improve security and provide better technical support.
      *
      * If client authentication is based on username/password in AWS IoT,
      * the metrics string is appended to the username to support both client
