@@ -59,14 +59,14 @@
 /**
  * @brief The number of words allocated to the stack for the OTA agent.
  */
-#define otaconfigSTACK_SIZE                     6000U
+#define otaconfigSTACK_SIZE                     10000U
 
 /**
  * @brief Log base 2 of the size of the file data block message (excluding the header).
  *
  * 10 bits yields a data block size of 1KB.
  */
-#define otaconfigLOG2_FILE_BLOCK_SIZE           12UL
+#define otaconfigLOG2_FILE_BLOCK_SIZE           14UL
 
 /**
  * @brief Milliseconds to wait for the self test phase to succeed before we force reset.
@@ -107,7 +107,7 @@
  *  Please note that this must be set larger than zero.
  *
  */
-#define otaconfigMAX_NUM_BLOCKS_REQUEST        8U
+#define otaconfigMAX_NUM_BLOCKS_REQUEST        1U
 
 /**
  * @brief The maximum number of requests allowed to send without a response before we abort.
@@ -124,7 +124,7 @@
  * This configurations parameter sets the maximum number of static data buffers used by
  * the OTA agent for job and file data blocks received.
  */
-#define otaconfigMAX_NUM_OTA_DATA_BUFFERS       2U
+#define otaconfigMAX_NUM_OTA_DATA_BUFFERS       1U
 
 /**
  * @brief Allow update to same or lower version.
