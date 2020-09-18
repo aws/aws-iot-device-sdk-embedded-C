@@ -46,8 +46,8 @@
 #endif
 
 /* Check that TLS port used for AWS IoT Core is defined. */
-#ifndef AWS_IOT_PORT
-    #error "Please define a AWS_IOT_PORT."
+#ifndef AWS_HTTP_PORT
+    #error "Please define a AWS_HTTP_PORT."
 #endif
 
 /* Check that a path for HTTP Method POST is defined. */
@@ -71,9 +71,16 @@
 #endif
 
 /**
+ * @brief ALPN protocol name to be sent as part of the ClientHello message.
+ *
+ * @note When using ALPN, port 443 must be used to connect to AWS IoT Core.
+ */
+#define IOT_CORE_ALPN_PROTOCOL_NAME    "\x0ex-amzn-http-ca"
+
+/**
  * @brief Delay in seconds between each iteration of the demo.
  */
-#define DEMO_LOOP_DELAY_SECONDS    ( 5U )
+#define DEMO_LOOP_DELAY_SECONDS        ( 5U )
 
 /* Check that transport timeout for transport send and receive is defined. */
 #ifndef TRANSPORT_SEND_RECV_TIMEOUT_MS
@@ -160,13 +167,18 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     opensslCredentials.pClientCertPath = CLIENT_CERT_PATH;
     opensslCredentials.pPrivateKeyPath = CLIENT_PRIVATE_KEY_PATH;
     opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
-    opensslCredentials.pAlpnProtos = IOT_CORE_ALPN_PROTOCOL_NAME;
-    opensslCredentials.alpnProtosLen = strlen( IOT_CORE_ALPN_PROTOCOL_NAME );
+
+    /* ALPN is required when communicating to AWS IoT Core over port 443 through HTTP. */
+    if( AWS_MQTT_PORT == 443 )
+    {
+        opensslCredentials.pAlpnProtos = IOT_CORE_ALPN_PROTOCOL_NAME;
+        opensslCredentials.alpnProtosLen = strlen( IOT_CORE_ALPN_PROTOCOL_NAME );
+    }
 
     /* Initialize server information. */
     serverInfo.pHostName = AWS_IOT_ENDPOINT;
     serverInfo.hostNameLength = AWS_IOT_ENDPOINT_LENGTH;
-    serverInfo.port = AWS_IOT_PORT;
+    serverInfo.port = AWS_HTTP_PORT;
 
     /* Initialize reconnect attempts and interval */
     RetryUtils_ParamsReset( &reconnectParams );
@@ -178,12 +190,12 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     do
     {
         /* Establish a TLS session with the HTTP server. This example connects
-         * to the HTTP server as specified in AWS_IOT_ENDPOINT and AWS_IOT_PORT
+         * to the HTTP server as specified in AWS_IOT_ENDPOINT and AWS_HTTP_PORT
          * in demo_config.h. */
         LogInfo( ( "Establishing a TLS session to %.*s:%d.",
                    ( int32_t ) AWS_IOT_ENDPOINT_LENGTH,
                    AWS_IOT_ENDPOINT,
-                   AWS_IOT_PORT ) );
+                   AWS_HTTP_PORT ) );
         opensslStatus = Openssl_Connect( pNetworkContext,
                                          &serverInfo,
                                          &opensslCredentials,
