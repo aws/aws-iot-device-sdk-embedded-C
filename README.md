@@ -1,5 +1,5 @@
 
-# AWS IoT Device SDK C
+# AWS IoT Device SDK for Embedded-C
 
 
 ## Branches
@@ -18,7 +18,7 @@ All of the released versions of the AWS IoT Embedded C SDK libraries are availab
 
 ## Building and Running Demos
 
-  
+
 
 The libraries in this SDK are not dependent on any operating systems. However, the demos for the libraries in this SDK are built and tested on a Linux platform. This SDK builds with [CMake](https://cmake.org/), a cross-platform build tool.
 
@@ -51,9 +51,9 @@ It is required to setup an AWS account and access the AWS IoT Console for runnin
 
 ### Configuring the mutual auth demos
 
-- You can pass the following configuration settings as command line options in order to run the mutual auth demos: 
+- You can pass the following configuration settings as command line options in order to run the mutual auth demos:
 ```bash
-cmake .. -DAWS_IOT_ENDPOINT="aws-iot-endpoint" -DROOT_CA_CERT_PATH="root-ca-path" -DCLIENT_CERT_PATH="certificate-path" -DCLIENT_PRIVATE_KEY_PATH="private-key-path" 
+cmake .. -DAWS_IOT_ENDPOINT="aws-iot-endpoint" -DROOT_CA_CERT_PATH="root-ca-path" -DCLIENT_CERT_PATH="certificate-path" -DCLIENT_PRIVATE_KEY_PATH="private-key-path"
 ```
 
 - In order to set these configurations manually, edit `demo_config.h` in `demos/mqtt/mqtt_demo_mutual_auth/` and `demos/http/http_demo_mutual_auth/` to `#define` the following:
