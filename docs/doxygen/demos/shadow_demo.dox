@@ -1,7 +1,7 @@
 
 /**
 @page shadow_demo AWS IoT Device Shadow
-@brief Demo that demonstrates usage of the AWS IoT Device Shadow library.
+@brief This demo demonstrates usage of the AWS IoT Device Shadow library.
 
 @section shadow_demo_main AWS IoT Device Shadow Demo
 @brief Demo application that uses the AWS IoT Device Shadow library, MQTT Client library,

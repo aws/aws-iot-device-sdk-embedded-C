@@ -1,0 +1,62 @@
+@startuml
+skinparam classFontSize 8
+skinparam classFontName Helvetica
+autonumber
+
+box "Application" #LightGreen
+    participant "Application" as application
+end box
+
+box "Libraries" #LightBlue
+    participant "HTTP Client" as http
+end box
+
+box "HTTP Server" #Yellow
+    participant "HTTP Server" as server
+end box
+
+activate application
+loop until session established or all attempts exhausted
+application -> server : Establish TCP session
+server -> application : Session established
+end
+
+application -> application: Set request info parameters
+application -> http: Initialize request headers (HTTPClient_InitializeRequestHeaders)
+activate http
+http -> application : Write request headers to user-provided buffer
+deactivate http
+
+application -> http: Send HTTP GET request (HTTPClient_Send)
+activate http
+http -> server: Send payload of request through transport interface
+http -> application : Write response to user-provided buffer
+application -> application: Log response from contents of buffer
+deactivate http
+
+application -> http: Send HTTP HEAD request (HTTPClient_Send)
+activate http
+http -> server: Send payload of request through transport interface
+http -> application : Write response to user-provided buffer
+application -> application: Log response from contents of buffer
+deactivate http
+
+application -> http: Send HTTP PUT request (HTTPClient_Send)
+activate http
+http -> server: Send payload of request through transport interface
+http -> application : Write response to user-provided buffer
+application -> application: Log response from contents of buffer
+deactivate http
+
+application -> http: Send HTTP POST request (HTTPClient_Send)
+activate http
+http -> server: Send payload of request through transport interface
+http -> application : Write response to user-provided buffer
+application -> application: Log response from contents of buffer
+deactivate http
+
+application -> server: End TCP session and disconnect from server
+
+deactivate application
+
+@enduml

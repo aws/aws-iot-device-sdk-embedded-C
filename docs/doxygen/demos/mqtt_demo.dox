@@ -1,6 +1,6 @@
 /**
 @page mqtt_demo coreMQTT
-@brief Demos that demonstrate usage of the coreMQTT library.
+@brief These demos demonstrate usage of the coreMQTT library.
 
 @section mqtt_demo_basic_tls MQTT Basic TLS Demo
 @brief Demo of an MQTT application that establishes a TLS connection with server-only authentication, and uses QoS 2 level of communication with broker.
