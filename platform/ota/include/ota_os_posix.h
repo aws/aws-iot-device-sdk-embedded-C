@@ -31,7 +31,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <stdbool.h>
 
  /* OTA library interface includes. */
 #include "ota_os_interface.h"
