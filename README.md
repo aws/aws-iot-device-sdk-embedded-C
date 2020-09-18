@@ -15,7 +15,7 @@ The AWS IoT Device SDK for Embedded C (C-SDK) is a collection of C source files 
 
 ## Features
 
-The C-SDK simplifies access to AWS IoT Services. The SDK has been tested to work with AWS IoT Core and an open source MQTT broker to ensure high quality interoperability of a device with the AWS IoT platform. 
+The C-SDK simplifies access to AWS IoT Services. The SDK has been tested to work with AWS IoT Core and an open source MQTT broker to ensure high quality interoperability. 
 The AWS IoT Device Shadow library is flexible to work any MQTT client and JSON parser library implementations. The MQTT client and JSON parser libraries in the C-SDK are offered as one choice without being tightly coupled with the rest of the SDK.
 The C-SDK contains the following libraries:
 
@@ -32,7 +32,7 @@ The C-SDK provides the ability to establish an HTTP connection with a server ove
 The [coreJSON](https://github.com/FreeRTOS/coreJSON) library is a JSON parser that strictly enforces the [ECMA-404 JSON standard](https://www.json.org/json-en.html). It provides a function to validate a JSON document, and a function to search for a key and return its value. A search can descend into nested structures using a compound query key. A JSON document validation also checks for illegal UTF8 encodings and illegal Unicode escape sequences.
 
 
-## Collection of Metrics
+## AWS Collection of Metrics
 
 AWS collects usage metrics indicating the operating system, hardware platform and MQTT client information of use to AWS IoT from the MQTT mutual auth demo by sending a specially formatted string in the username field of the MQTT CONNECT packet. These metrics help AWS IoT improve security and provide better technical support. Providing these metrics is optional for users, and can be disabled by updating the `OS_NAME`, `OS_VERSION`, `HARDWARE_PLATFORM_NAME` and `MQTT_LIB` configuration macros in the `demos/mqtt/mqtt_demo_mutual_auth/demo_config.h` file of the MQTT mutual auth demo.
 
