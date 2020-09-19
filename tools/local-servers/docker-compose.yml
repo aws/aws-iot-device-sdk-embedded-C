@@ -1,0 +1,18 @@
+version: '2'
+
+services:
+    httpbin:
+      image: kennethreitz/httpbin
+      ports:
+       - 80:80
+    httpbin-ssl:
+      image: fsouza/docker-ssl-proxy
+      volumes:
+        - ../../demos/certificates:/etc/nginx/certs
+      environment:
+        DOMAIN: localhost
+        TARGET_HOST: httpbin
+      links:
+        - httpbin
+      ports:
+        - 443:443
