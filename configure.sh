@@ -29,7 +29,7 @@ if !([ -x "$(command -v openssl)" ] && [[ $(openssl version) = OpenSSL\ 1.1* ]])
     echo "OpenSSL not found."
     # First, try installing through apt-get.
     which apt-get
-    if [[ $? -eq 0 ]]; then
+    if [[ $? -ne 0 ]]; then
         echo "Attempting to install OpenSSL through apt-get..."
         sudo apt-get update -y
         sudo apt-get install openssl libssl-dev -y
@@ -39,7 +39,8 @@ fi
 # not support installation of OpenSSL 1.1.x out of the box.
 if !([ -x "$(command -v openssl)" ] && [[ $(openssl version) = OpenSSL\ 1.1* ]]); then
     # Installing Homebrew on Linux will add it here: /home/linuxbrew/.linuxbrew
-    # However, that directory will not be added to $PATH.
+    # However, that directory will not be added to $PATH, so we need make the `brew`
+    # command available for this bash script.
     if [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
         test -d ~/.linuxbrew && eval $(~/.linuxbrew/bin/brew shellenv)
         test -d /home/linuxbrew/.linuxbrew && eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)
@@ -55,11 +56,13 @@ if !([ -x "$(command -v openssl)" ] && [[ $(openssl version) = OpenSSL\ 1.1* ]])
         if ([ -x "$(command -v yum)" ]); then
             sudo yum -y groupinstall 'Development Tools'
             sudo yum -y install curl file git
-            sudo yum -y install libxcrypt-compat # needed by Fedora 30 and up
+            # Needed by Fedora 30 and up.
+            sudo yum -y install libxcrypt-compat
         fi
         # Install Homebrew.
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
         if [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+            # Make the `brew` command available for this bash script.
             test -d ~/.linuxbrew && eval $(~/.linuxbrew/bin/brew shellenv)
             test -d /home/linuxbrew/.linuxbrew && eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)
         fi
@@ -71,13 +74,14 @@ if !([ -x "$(command -v openssl)" ] && [[ $(openssl version) = OpenSSL\ 1.1* ]])
         echo "Installing OpenSSL..."
         brew update
         brew install openssl@1.1
+        openssl_root_dir=$(brew --prefix openssl@1.1)
     fi
 fi
 
 # Treat a missing OpenSSL package at this point as a fatal error.
 if !([ -x "$(command -v openssl)" ] && [[ $(openssl version) = OpenSSL\ 1.1* ]]); then
     # >&2 prints to stderr.
-    >&2 echo "Fatal: OpenSSL installation failed. Please try installing manually."
+    >&2 echo "Fatal: OpenSSL installation failed. Please try installing manually, then run this script again."
     >&2 echo "See https://wiki.openssl.org/index.php/Compilation_and_Installation for details."
     exit 1
 fi
@@ -123,7 +127,7 @@ if [ "$install_servers" = true ]; then
     docker -v
     if [[ $? -ne 0 ]]; then
         # >&2 prints to stderr.
-        >&2 echo "Fatal: Docker failed to install. Please try installing Docker manually."
+        >&2 echo "Fatal: Docker failed to install. Please try installing manually, then run this script again."
         exit 1
     else
         cd tools/local-servers
@@ -156,7 +160,7 @@ if [ "$configure_mutual_auth" = true ] ; then
     found_begin=false
     while read line
     do
-        # Ignore empty lines and white space.
+        # Ignore initial empty lines and white space before a beginning marker is inserted.
         if [[ $line = "" ]]; then
             continue
         else
@@ -188,7 +192,7 @@ if [ "$configure_mutual_auth" = true ] ; then
     found_begin=false
     while read line
     do
-        # Ignore empty lines and white space.
+        # Ignore initial empty lines and white space before a beginning marker is inserted.
         if [[ $line = "" ]]; then
             continue
         else
@@ -226,14 +230,21 @@ if [ "$configure_mutual_auth" = true ]; then
                              -DCLIENT_CERT_PATH=$SCRIPT_DIR/demos/certificates/$client_cert_filename \
                              -DCLIENT_PRIVATE_KEY_PATH=$SCRIPT_DIR/demos/certificates/$client_key_filename"
 fi
+# Set the root directory for a Homebrew installation of OpenSSL.
+# This is necessary for Macs and non-Debian systems.
+if !([ -z "$openssl_root_dir" ]); then
+    echo "Setting OPENSSL_ROOT_DIR system variable to path: $openssl_root_dir"
+    export OPENSSL_ROOT_DIR=$openssl_root_dir
+fi
 
-# Run CMake based on the configuration settings
+# Run CMake based on the configuration settings.
 cmake -S $SCRIPT_DIR \
 # Shell parameter expansion is used for passing optional configuration parameters as CMake flags.
 # If the variable to the left of :- is unset, the expression on the right is used.
 # Otherwise, the value of the variable to the left is substituted.
 ${tls_cmake_flags:- -DBROKER_ENDPOINT="$broker_endpoint" -DSERVER_HOST="$http_server"} \
 ${mutual_auth_cmake_flags:-} \
+${openssl_root_dir_flag:-} \
 -B $SCRIPT_DIR/build
 
 exit 0
