@@ -27,43 +27,67 @@ prompt_user () {
 # Note: OpenSSL 1.1.0 or above is a requirement for running any TLS demos.
 if !([ -x "$(command -v openssl)" ] && [[ $(openssl version) = OpenSSL\ 1.1* ]]); then
     echo "OpenSSL not found."
-    if [ "$(uname)" == "Darwin" ]; then
-        # Install Homebrew if not installed.
-        # The advantage of Homebrew is compatibility with both Linux and Mac.
-        if !([ -x "$(command -v brew)" ]); then
-            echo "Installing Homebrew for OpenSSL installation..."
-            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+    # First, try installing through apt-get.
+    which apt-get
+    if [[ $? -eq 0 ]]; then
+        echo "Attempting to install OpenSSL through apt-get..."
+        sudo apt-get update -y
+        sudo apt-get install openssl libssl-dev -y
+    fi
+fi
+# Ideally, yum would also be used for non-Debian Linux systems; however, yum does
+# not support installation of OpenSSL 1.1.x out of the box.
+if !([ -x "$(command -v openssl)" ] && [[ $(openssl version) = OpenSSL\ 1.1* ]]); then
+    # Installing Homebrew on Linux will add it here: /home/linuxbrew/.linuxbrew
+    # However, that directory will not be added to $PATH.
+    if [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+        test -d ~/.linuxbrew && eval $(~/.linuxbrew/bin/brew shellenv)
+        test -d /home/linuxbrew/.linuxbrew && eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)
+    fi
+    # The advantage of Homebrew is compatibility with several Linux and Mac distros.
+    # Try installing Homebrew if not installed.
+    if !([ -x "$(command -v brew)" ]); then
+        echo "Installing Homebrew for OpenSSL installation..."
+        # Install Homebrew dependencies.
+        if ([ -x "$(command -v apt-get)" ]); then
+            sudo apt-get install build-essential curl file git -y
         fi
-        if !([ -x "$(command -v brew)" ]); then
-            echo "Homebrew installation failed."
-            exit 1
-        else
-            echo "Installing OpenSSL..."
-            brew update
-            brew install openssl@1.1
+        if ([ -x "$(command -v yum)" ]); then
+            sudo yum -y groupinstall 'Development Tools'
+            sudo yum -y install curl file git
+            sudo yum -y install libxcrypt-compat # needed by Fedora 30 and up
         fi
-    elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
-        echo "Installing OpenSSL..."
-        sudo apt-get install libssl-dev openssl -y
+        # Install Homebrew.
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+        if [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+            test -d ~/.linuxbrew && eval $(~/.linuxbrew/bin/brew shellenv)
+            test -d /home/linuxbrew/.linuxbrew && eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)
+        fi
+    fi
+    if !([ -x "$(command -v brew)" ]); then
+        echo "Homebrew installation failed."
+        exit 1
     else
-        echo "$(uname) is not a supported platform."
+        echo "Installing OpenSSL..."
+        brew update
+        brew install openssl@1.1
     fi
 fi
 
-# Check if OpenSSL installation failed.
+# Treat a missing OpenSSL package at this point as a fatal error.
 if !([ -x "$(command -v openssl)" ] && [[ $(openssl version) = OpenSSL\ 1.1* ]]); then
     # >&2 prints to stderr.
-    >&2 echo "Error: OpenSSL installation failed. Please try to install it manually."
+    >&2 echo "Fatal: OpenSSL installation failed. Please try installing manually."
     >&2 echo "See https://wiki.openssl.org/index.php/Compilation_and_Installation for details."
     exit 1
 fi
 
-prompt_user "Would you like to install servers to run the MQTT and HTTP demos? [Y/n]" 0
+prompt_user "Install locally hosted servers to run the MQTT and HTTP demos? [Y/n]" 0
 install_servers=$answer
 
 if [ "$install_servers" = true ]; then
-    # Install Docker if docker-compose does not exist as a command.
-    if ! [ -x "$(command -v docker-compose)" ]; then
+    # Install Docker if docker does not exist as a command.
+    if ! [ -x "$(command -v docker)" ]; then
         if ! [ grep -q Microsoft /proc/version ]; then
             # This will only work in non-WSL distros.
             echo "Docker not found. Installing Docker..."
@@ -72,7 +96,7 @@ if [ "$install_servers" = true ]; then
         else
             # Docker cannot be installed straight to a WSL distro.
             # Instead, it must be installed on the Windows host machine.
-            >&2 echo "Error: The command 'docker-compose' could not be found in this WSL distro."
+            >&2 echo "Fatal: The command 'docker-compose' could not be found in this WSL distro."
             >&2 echo "Please use WSL 2, then activate the WSL integration in Docker Desktop settings."
             >&2 echo "See https://docs.docker.com/docker-for-windows/wsl/ for details."
             exit 1
@@ -95,13 +119,16 @@ if [ "$install_servers" = true ]; then
     # Servers can now use certificates to make a TLS connection.
     echo "Server certificates have been generated."
 
-    # Start the servers, making sure we have docker installed. :)
-    if [ -x "$(command -v docker-compose)" ]; then
-        # >&2 prints to stderr
-        >&2 echo "Error: Docker failed to install. Please try installing Docker manually."
+    # Start the servers, making sure we have docker installed.
+    docker -v
+    if [[ $? -ne 0 ]]; then
+        # >&2 prints to stderr.
+        >&2 echo "Fatal: Docker failed to install. Please try installing Docker manually."
         exit 1
     else
-        cd tools/local-servers && docker-compose stop && docker-compose up -d
+        cd tools/local-servers
+        sudo docker-compose stop
+        sudo docker-compose up -d
     fi
 else
     # Ask for hostname to use for MQTT and HTTP.
@@ -152,6 +179,7 @@ if [ "$configure_mutual_auth" = true ] ; then
         fi
     done
     echo "Writing certificate to file: $SCRIPT_DIR/demos/certificates/$client_cert_filename"
+    # The -e allows us to write escape characters.
     echo -e $client_cert_contents > $SCRIPT_DIR/demos/certificates/$client_cert_filename
 
     # Because a key is multiline, parse until the end marker is reached.
@@ -188,14 +216,14 @@ fi
 
 # Pass any options that the user has chosen to configure as CMake flags.
 if [ "$install_servers" = true ]; then
-    tls_cmake_flags="-DROOT_CA_CERT_PATH=$SCRIPT_DIR/demos/certificates/ca.crt 
-                     -DBROKER_ENDPOINT=localhost 
+    tls_cmake_flags="-DROOT_CA_CERT_PATH=$SCRIPT_DIR/demos/certificates/ca.crt \
+                     -DBROKER_ENDPOINT=localhost \
                      -DSERVER_HOST=localhost"
 fi
 if [ "$configure_mutual_auth" = true ]; then
-    mutual_auth_cmake_flags="-DAWS_IOT_ENDPOINT=$aws_iot_endpoint
-                             -DAMAZON_CA_CERT_PATH=$SCRIPT_DIR/demos/certificates/AmazonRootCA1.crt
-                             -DCLIENT_CERT_PATH=$SCRIPT_DIR/demos/certificates/$client_cert_filename
+    mutual_auth_cmake_flags="-DAWS_IOT_ENDPOINT=$aws_iot_endpoint \
+                             -DAMAZON_CA_CERT_PATH=$SCRIPT_DIR/demos/certificates/AmazonRootCA1.crt \
+                             -DCLIENT_CERT_PATH=$SCRIPT_DIR/demos/certificates/$client_cert_filename \
                              -DCLIENT_PRIVATE_KEY_PATH=$SCRIPT_DIR/demos/certificates/$client_key_filename"
 fi
 
