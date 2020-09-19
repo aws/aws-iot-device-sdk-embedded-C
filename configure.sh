@@ -29,10 +29,10 @@ if !([ -x "$(command -v openssl)" ] && [[ $openssl_version = OpenSSL\ 1.1* ]]); 
     sudo apt-get install libssl-dev
 fi
 
-prompt_user "Would you like to install servers to run the MQTT and HTTP demos? [y/n]" 0
+prompt_user "Would you like to install servers to run the MQTT and HTTP demos? [Y/n]" 0
 install_servers=$answer
 
-if [ "$install_servers" = true ] ; then
+if [ "$install_servers" = true ]; then
     # Install Docker if docker-compose does not exist as a command.
     if ! [ -x "$(command -v docker-compose)" ]; then
         if ! [ grep -q Microsoft /proc/version ]; then
@@ -72,13 +72,13 @@ if [ "$install_servers" = true ] ; then
 else
     # Ask for hostname to use for MQTT and HTTP.
     prompt_user "What is the hostname of the MQTT broker?" 1
-    echo $answer
+    broker_endpoint=$answer
     prompt_user "What is the hostname of the HTTP server?" 1
-    echo $answer
+    http_server=$answer
 fi
 
 # Ask for configuration settings of the mutual auth demos.
-prompt_user "Would you like to configure the mutual auth demos with your AWS IoT Core credentials? [y/n]" 0
+prompt_user "Would you like to configure the mutual auth demos with your AWS IoT Core credentials? [Y/n]" 0
 configure_mutual_auth=$answer
 
 client_cert_filename="aws_iot_client.crt"
@@ -154,11 +154,26 @@ if [ "$configure_mutual_auth" = true ] ; then
     echo -e $client_key_contents > $SCRIPT_DIR/demos/certificates/$client_key_filename
 fi
 
-cmake -S $SCRIPT_DIR -B $SCRIPT_DIR/build \
--DAWS_IOT_ENDPOINT="$aws_iot_endpoint" \
--DROOT_CA_CERT_PATH="$SCRIPT_DIR/demos/certificates/ca.crt" \
--DAMAZON_CA_CERT_PATH="$SCRIPT_DIR/demos/certificates/AmazonRootCA1.crt" \
--DCLIENT_CERT_PATH="$SCRIPT_DIR/demos/certificates/$client_cert_filename" \
--DCLIENT_PRIVATE_KEY_PATH="$SCRIPT_DIR/demos/certificates/$client_key_filename"
+# Pass any options that the user has chosen to configure as CMake flags.
+if [ "$install_servers" = true ]; then
+    tls_cmake_flags="-DROOT_CA_CERT_PATH=$SCRIPT_DIR/demos/certificates/ca.crt 
+                     -DBROKER_ENDPOINT=localhost 
+                     -DSERVER_HOST=localhost"
+fi
+if [ "$configure_mutual_auth" = true ]; then
+    mutual_auth_cmake_flags="-DAWS_IOT_ENDPOINT=$aws_iot_endpoint
+                             -DAMAZON_CA_CERT_PATH=$SCRIPT_DIR/demos/certificates/AmazonRootCA1.crt
+                             -DCLIENT_CERT_PATH=$SCRIPT_DIR/demos/certificates/$client_cert_filename
+                             -DCLIENT_PRIVATE_KEY_PATH=$SCRIPT_DIR/demos/certificates/$client_key_filename"
+fi
+
+# Run CMake based on the configuration settings
+cmake -S $SCRIPT_DIR \
+# Shell parameter expansion is used for passing optional configuration parameters as CMake flags.
+# If the variable to the left of :- is unset, the expression on the right is used.
+# Otherwise, the value of the variable to the left is substituted.
+${tls_cmake_flags:- -DBROKER_ENDPOINT="$broker_endpoint" -DSERVER_HOST="$http_server"} \
+${mutual_auth_cmake_flags:-} \
+-B $SCRIPT_DIR/build
 
 exit 0
