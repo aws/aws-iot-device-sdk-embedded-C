@@ -24,6 +24,7 @@ prompt_user () {
 # a configuration.yml file will exist from which to load configurations.
 
 # Install OpenSSL if it is not installed or the version is less than 1.1.x.
+# Note: OpenSSL 1.1.0 or above is a requirement for running any TLS demos.
 openssl_version=$(openssl version)
 if !([ -x "$(command -v openssl)" ] && [[ $openssl_version = OpenSSL\ 1.1* ]]); then
     sudo apt-get install libssl-dev
@@ -43,9 +44,10 @@ if [ "$install_servers" = true ]; then
         else
             # Docker cannot be installed straight to a WSL distro.
             # Instead, it must be installed on the Windows host machine.
-            echo "The command 'docker-compose' could not be found in this WSL distro."
-            echo "Please use WSL 2, then activate the WSL integration in Docker Desktop settings."
-            echo "See https://docs.docker.com/docker-for-windows/wsl/ for details."
+            # >&2 prints to stderr
+            >&2 echo "Error: The command 'docker-compose' could not be found in this WSL distro."
+            >&2 echo "Please use WSL 2, then activate the WSL integration in Docker Desktop settings."
+            >&2 echo "See https://docs.docker.com/docker-for-windows/wsl/ for details."
             # Servers need docker-compose to be installed.
             exit 1
         fi
@@ -67,8 +69,14 @@ if [ "$install_servers" = true ]; then
     # Servers can now use certificates to make a TLS connection.
     echo "Server certificates have been generated."
 
-    # Start the servers. :)
-    cd tools/local-servers && docker-compose stop && docker-compose up -d
+    # Start the servers, making sure we have docker installed. :)
+    if [ -x "$(command -v docker-compose)" ]; then
+        # >&2 prints to stderr
+        >&2 echo "Error: Docker failed to install. Please try installing Docker manually."
+        exit 1
+    else
+        cd tools/local-servers && docker-compose stop && docker-compose up -d
+    fi
 else
     # Ask for hostname to use for MQTT and HTTP.
     prompt_user "What is the hostname of the MQTT broker?" 1
