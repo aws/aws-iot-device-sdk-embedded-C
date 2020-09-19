@@ -3,7 +3,7 @@
 # Get the directory where this bash script is located.
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-# Ask for user input and write the input to a variable named `answer`.
+# Ask for user input and write the result to a variable named `answer`.
 answer=true
 prompt_user () {
     read -p "$1 " yn
@@ -11,7 +11,7 @@ prompt_user () {
         # Return the answer as is.
         answer=$yn
     else
-        # Treat as a yes or no prompt and return true or false.
+        # Treat as a yes or no prompt and return true or false respectively.
         case $yn in
             [Yy]* ) answer=true;;
             [Nn]* ) answer=false;;
@@ -25,9 +25,37 @@ prompt_user () {
 
 # Install OpenSSL if it is not installed or the version is less than 1.1.x.
 # Note: OpenSSL 1.1.0 or above is a requirement for running any TLS demos.
-openssl_version=$(openssl version)
-if !([ -x "$(command -v openssl)" ] && [[ $openssl_version = OpenSSL\ 1.1* ]]); then
-    sudo apt-get install libssl-dev
+if !([ -x "$(command -v openssl)" ] && [[ $(openssl version) = OpenSSL\ 1.1* ]]); then
+    echo "OpenSSL not found."
+    if [ "$(uname)" == "Darwin" ]; then
+        # Install Homebrew if not installed.
+        # The advantage of Homebrew is compatibility with both Linux and Mac.
+        if !([ -x "$(command -v brew)" ]); then
+            echo "Installing Homebrew for OpenSSL installation..."
+            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+        fi
+        if !([ -x "$(command -v brew)" ]); then
+            echo "Homebrew installation failed."
+            exit 1
+        else
+            echo "Installing OpenSSL..."
+            brew update
+            brew install openssl@1.1
+        fi
+    elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+        echo "Installing OpenSSL..."
+        sudo apt-get install libssl-dev openssl -y
+    else
+        echo "$(uname) is not a supported platform."
+    fi
+fi
+
+# Check if OpenSSL installation failed.
+if !([ -x "$(command -v openssl)" ] && [[ $(openssl version) = OpenSSL\ 1.1* ]]); then
+    # >&2 prints to stderr.
+    >&2 echo "Error: OpenSSL installation failed. Please try to install it manually."
+    >&2 echo "See https://wiki.openssl.org/index.php/Compilation_and_Installation for details."
+    exit 1
 fi
 
 prompt_user "Would you like to install servers to run the MQTT and HTTP demos? [Y/n]" 0
@@ -44,11 +72,9 @@ if [ "$install_servers" = true ]; then
         else
             # Docker cannot be installed straight to a WSL distro.
             # Instead, it must be installed on the Windows host machine.
-            # >&2 prints to stderr
             >&2 echo "Error: The command 'docker-compose' could not be found in this WSL distro."
             >&2 echo "Please use WSL 2, then activate the WSL integration in Docker Desktop settings."
             >&2 echo "See https://docs.docker.com/docker-for-windows/wsl/ for details."
-            # Servers need docker-compose to be installed.
             exit 1
         fi
     fi
@@ -120,9 +146,8 @@ if [ "$configure_mutual_auth" = true ] ; then
                 client_cert_contents=""
                 continue
             fi
-        fi
         # Look for the end marker.
-        if [[ $line = *-----END\ CERTIFICATE-----* ]]; then
+        elif [[ $line = *-----END\ CERTIFICATE-----* ]]; then
             break
         fi
     done
@@ -152,9 +177,8 @@ if [ "$configure_mutual_auth" = true ] ; then
                 client_key_contents=""
                 continue
             fi
-        fi
         # Look for the end marker.
-        if [[ $line = *-----END\ RSA\ PRIVATE\ KEY-----* ]]; then
+        elif [[ $line = *-----END\ RSA\ PRIVATE\ KEY-----* ]]; then
             break
         fi
     done
