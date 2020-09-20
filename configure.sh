@@ -20,33 +20,9 @@ prompt_user () {
     fi
 }
 
-# If this script has been run before,
-# a configuration.yml file will exist from which to load configurations.
-
-# Install OpenSSL if it is not installed or the version is less than 1.1.x.
-# Note: OpenSSL 1.1.0 or above is a requirement for running any TLS demos.
-if !([ -x "$(command -v openssl)" ] && [[ $(openssl version) = OpenSSL\ 1.1* ]]); then
-    echo "OpenSSL not found."
-    # First, try installing through apt-get.
-    which apt-get
-    if [[ $? -eq 0 ]]; then
-        echo "Attempting to install OpenSSL through apt-get..."
-        sudo apt-get update -y
-        sudo apt-get install openssl libssl-dev -y
-    fi
-fi
-# Ideally, yum would also be used for non-Debian Linux systems; however, yum does
-# not support installation of OpenSSL 1.1.x out of the box.
-if !([ -x "$(command -v openssl)" ] && [[ $(openssl version) = OpenSSL\ 1.1* ]]); then
-    # Installing Homebrew on Linux will add it here: /home/linuxbrew/.linuxbrew
-    # However, that directory will not be added to $PATH, so we need make the `brew`
-    # command available for this bash script.
-    if [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
-        test -d ~/.linuxbrew && eval $(~/.linuxbrew/bin/brew shellenv)
-        test -d /home/linuxbrew/.linuxbrew && eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)
-    fi
-    # The advantage of Homebrew is compatibility with several Linux and Mac distros.
-    # Try installing Homebrew if not installed.
+# Install Homebrew if not installed.
+# Homebrew is compatible with Mac and several Linux distros.
+install_brew () {
     if !([ -x "$(command -v brew)" ]); then
         echo "Installing Homebrew for OpenSSL installation..."
         # Install Homebrew dependencies.
@@ -67,16 +43,83 @@ if !([ -x "$(command -v openssl)" ] && [[ $(openssl version) = OpenSSL\ 1.1* ]])
             test -d /home/linuxbrew/.linuxbrew && eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)
         fi
     fi
+}
+
+# If this script has been run before,
+# a configuration.yml file will exist from which to load configurations.
+echo "This script has been run before."
+prompt_user "Would you like to use the same configurations from last time? [Y/n]" 0
+
+# Check if OpenSSL was already installed through Homebrew.
+# Note: Not needed for Mac as `brew` is automatically added to its $PATH.
+if [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+    test -d ~/.linuxbrew && eval $(~/.linuxbrew/bin/brew shellenv)
+    test -d /home/linuxbrew/.linuxbrew && eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)
+fi
+
+# Install OpenSSL if it is not installed or the version is less than 1.1.x.
+# Note: OpenSSL 1.1.0 or above is a requirement for running any TLS demos.
+if !([ -x "$(command -v openssl)" ] && [[ $(openssl version) = OpenSSL\ 1.1* ]]); then
+    echo "OpenSSL not found."
+    # Try installing through apt-get.
+    if ([ -x "$(command -v apt-get)" ]); then
+        echo "Attempting to install OpenSSL through apt-get..."
+        sudo apt-get update -y
+        sudo apt-get install --only-upgrade openssl libssl-dev -y
+        sudo apt-get install openssl libssl-dev -y
+    fi
+    # Unfortunately, yum does not have packages for installing OpenSSL 1.1.x.
+fi
+
+if !([ -x "$(command -v cmake)" ] && [[ $(cmake -version) = cmake\ version\ 3* ]]); then
+    echo "CMake not found."
+    # Try installing through apt-get.
+    if ([ -x "$(command -v apt-get)" ]); then
+        echo "Attempting to install CMake through apt-get..."
+        sudo apt-get update -y
+        sudo apt-get install --only-upgrade cmake -y
+        sudo apt-get install cmake -y
+    fi
+    # Try installing through yum.
+    if ([ -x "$(command -v yum)" ]); then
+        echo "Attempting to install CMake through yum..."
+        sudo yum -y install cmake
+        sudo yum -y update cmake
+    fi
+fi
+
+if !([ -x "$(command -v openssl)" ] && [[ $(openssl version) = OpenSSL\ 1.1* ]]); then
+    install_brew
     if !([ -x "$(command -v brew)" ]); then
         echo "Homebrew installation failed."
         exit 1
     else
-        echo "Installing OpenSSL..."
-        brew update
+        echo "Attempting to install OpenSSL through Homebrew..."
         brew install openssl@1.1
         openssl_root_dir=$(brew --prefix openssl@1.1)
     fi
 fi
+
+if !([ -x "$(command -v cmake)" ] && [[ $(cmake -version) = cmake\ version\ 3* ]]); then
+    install_brew
+    if !([ -x "$(command -v brew)" ]); then
+        echo "Homebrew installation failed."
+        exit 1
+    else
+        echo "Attempting to install CMake through Homebrew..."
+        brew install cmake
+    fi
+fi
+
+# This array will contain configurations to save into a yaml file later on.
+configs=("wtf $wtf")
+
+# Iterate the loop to read and print each array element
+for value in "${configs[@]}"
+do
+    set -- $value
+    echo $1 and $2
+done
 
 # Treat a missing OpenSSL package at this point as a fatal error.
 if !([ -x "$(command -v openssl)" ] && [[ $(openssl version) = OpenSSL\ 1.1* ]]); then
@@ -86,26 +129,18 @@ if !([ -x "$(command -v openssl)" ] && [[ $(openssl version) = OpenSSL\ 1.1* ]])
     exit 1
 fi
 
-prompt_user "Install locally hosted servers to run the MQTT and HTTP demos? [Y/n]" 0
+mkdir -p $SCRIPT_DIR/temp
+prompt_user "Run locally hosted servers for the MQTT and HTTP Client Demos? [Y/n]" 0
 install_servers=$answer
 
 if [ "$install_servers" = true ]; then
-    # Install Docker if docker does not exist as a command.
+    # Install Docker if `docker` does not exist as a command.
     docker -v
     if [[ $? -ne 0 ]]; then
-        if ! [ grep -q Microsoft /proc/version ]; then
-            # This will only work in non-WSL distros.
-            echo "Docker not found. Installing Docker..."
-            curl -fsSL https://get.docker.com -o get-docker.sh
-            sh get-docker.sh
-        else
-            # Docker cannot be installed straight to a WSL distro.
-            # Instead, it must be installed on the Windows host machine.
-            >&2 echo "Fatal: The command 'docker-compose' could not be found in this WSL distro."
-            >&2 echo "Please use WSL 2, then activate the WSL integration in Docker Desktop settings."
-            >&2 echo "See https://docs.docker.com/docker-for-windows/wsl/ for details."
-            exit 1
-        fi
+        echo "Docker not found. Installing Docker..."
+        curl -fsSL https://get.docker.com -o $SCRIPT_DIR/temp/get-docker.sh
+        sh $SCRIPT_DIR/temp/get-docker.sh
+        rm $SCRIPT_DIR/temp/get-docker.sh
     fi
 
     # Generate certificates and keys for the TLS demos.
@@ -136,7 +171,7 @@ if [ "$install_servers" = true ]; then
         sudo docker-compose up -d
     fi
 else
-    # Ask for hostname to use for MQTT and HTTP.
+    # Ask for hostname to use for MQTT and HTTP only if servers haven't been configured to run.
     prompt_user "What is the hostname of the MQTT broker?" 1
     broker_endpoint=$answer
     prompt_user "What is the hostname of the HTTP server?" 1
@@ -185,6 +220,7 @@ if [ "$configure_mutual_auth" = true ] ; then
             break
         fi
     done
+    echo "Valid certificate pasted."
     echo "Writing certificate to file: $SCRIPT_DIR/demos/certificates/$client_cert_filename"
     # The -e allows us to write escape characters.
     echo -e $client_cert_contents > $SCRIPT_DIR/demos/certificates/$client_cert_filename
@@ -217,15 +253,19 @@ if [ "$configure_mutual_auth" = true ] ; then
             break
         fi
     done
-    echo "Writing certificate to file: $SCRIPT_DIR/demos/certificates/$client_key_filename"
+    # This clears the screen so as to remove the pasted certificate from the terminal.
+    printf "\033c"
+    echo "Valid private key pasted."
+    echo "Writing private key to file: $SCRIPT_DIR/demos/certificates/$client_key_filename"
     echo -e $client_key_contents > $SCRIPT_DIR/demos/certificates/$client_key_filename
+    echo "AWS IoT Core Credentials have been set."
 fi
 
 # Pass any options that the user has chosen to configure as CMake flags.
 if [ "$install_servers" = true ]; then
-    tls_cmake_flags="-DROOT_CA_CERT_PATH=$SCRIPT_DIR/demos/certificates/ca.crt \
-                     -DBROKER_ENDPOINT=localhost \ 
-                     -DSERVER_HOST=localhost"
+    hostname_cmake_flags="-DROOT_CA_CERT_PATH=$SCRIPT_DIR/demos/certificates/ca.crt \
+                          -DBROKER_ENDPOINT=localhost \ 
+                          -DSERVER_HOST=localhost"
 fi
 if [ "$configure_mutual_auth" = true ]; then
     mutual_auth_cmake_flags="-DAWS_IOT_ENDPOINT=$aws_iot_endpoint \
@@ -249,9 +289,11 @@ fi
 # Otherwise, the value of the variable to the left is substituted.
 # Note: sudo permissions needed for the file(COPY ...) command.
 sudo cmake -S $SCRIPT_DIR -B $SCRIPT_DIR/build \
-${tls_cmake_flags:- -DBROKER_ENDPOINT="$broker_endpoint" -DSERVER_HOST="$http_server"} \
+${hostname_cmake_flags:- -DBROKER_ENDPOINT="$broker_endpoint" -DSERVER_HOST="$http_server"} \
 ${mutual_auth_cmake_flags:-} \
 ${openssl_cmake_flags:-} \
 ;
+
+rm -rf $SCRIPT_DIR/temp
 
 exit 0
