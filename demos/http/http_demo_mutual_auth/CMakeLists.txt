@@ -33,12 +33,18 @@ target_include_directories(
         ${LOGGING_INCLUDE_DIRS}
 )
 
-if(ROOT_CA_CERT_PATH)
+if(AMAZON_CA_CERT_PATH)
+    target_compile_definitions(
+        ${DEMO_NAME} PRIVATE
+            ROOT_CA_CERT_PATH="${AMAZON_CA_CERT_PATH}"
+    )
+elseif(ROOT_CA_CERT_PATH)
     target_compile_definitions(
         ${DEMO_NAME} PRIVATE
             ROOT_CA_CERT_PATH="${ROOT_CA_CERT_PATH}"
     )
 endif()
+
 if(AWS_HTTPS_PORT)
     target_compile_definitions(
         ${DEMO_NAME} PRIVATE

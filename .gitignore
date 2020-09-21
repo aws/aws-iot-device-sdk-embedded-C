@@ -11,3 +11,6 @@ build/
 *.gcda
 *.gcno
 *.gcov
+
+# Ignore config file.
+config.yml

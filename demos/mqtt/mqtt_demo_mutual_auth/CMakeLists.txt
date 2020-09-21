@@ -33,7 +33,12 @@ target_include_directories(
 
 # Set demo configuration for Root CA cert and MQTT client identifier,
 # if passed as CMake variables.
-if(ROOT_CA_CERT_PATH)
+if(AMAZON_CA_CERT_PATH)
+    target_compile_definitions(
+        ${DEMO_NAME} PRIVATE
+            ROOT_CA_CERT_PATH="${AMAZON_CA_CERT_PATH}"
+    )
+elseif(ROOT_CA_CERT_PATH)
     target_compile_definitions(
         ${DEMO_NAME} PRIVATE
             ROOT_CA_CERT_PATH="${ROOT_CA_CERT_PATH}"

@@ -259,7 +259,6 @@ fi
 install_dependencies
 
 if [[ $load_existing_configs = false ]] || [ -z "$run_servers" ]; then
-    mkdir -p $SCRIPT_DIR/temp
     prompt_user "Run locally hosted servers for the MQTT and HTTP Client Demos? [Y/n]" 0
     run_servers=$answer
 
@@ -271,9 +270,11 @@ if [ "$run_servers" = true ]; then
     docker -v
     if [[ $? -ne 0 ]]; then
         echo "Docker not found. Installing Docker..."
+        mkdir -p $SCRIPT_DIR/temp
         curl -fsSL https://get.docker.com -o $SCRIPT_DIR/temp/get-docker.sh
         sh $SCRIPT_DIR/temp/get-docker.sh
         rm $SCRIPT_DIR/temp/get-docker.sh
+        rmdir $SCRIPT_DIR/temp
     fi
 
     # Generate certificates and keys for the TLS demos.
@@ -333,6 +334,7 @@ fi
 # Ask for configuration settings of the mutual auth demos.
 echo "AWS IoT Core is a managed cloud service that lets connected devices easily and securely interact with cloud applications and other devices."
 echo "See https://aws.amazon.com/iot-core/ for details."
+configure_mutual_auth=true
 if [[ $load_existing_configs = false ]] || [ -z "$aws_iot_endpoint" ] || \
                                            [ -z "$client_cert_path" ] || \
                                            [ -z "$client_key_path" ]; then
@@ -383,7 +385,7 @@ fi
 # Pass any options that the user has chosen to configure as CMake flags.
 if [ "$run_servers" = true ]; then
     hostname_cmake_flags="-DROOT_CA_CERT_PATH=$SCRIPT_DIR/demos/certificates/ca.crt \
-                          -DBROKER_ENDPOINT=localhost \ 
+                          -DBROKER_ENDPOINT=localhost \
                           -DSERVER_HOST=localhost"
 fi
 if [ "$configure_mutual_auth" = true ]; then
@@ -407,11 +409,12 @@ fi
 # If the variable to the left of :- is unset, the expression on the right is used.
 # Otherwise, the value of the variable to the left is substituted.
 # Note: sudo permissions needed for the file(COPY ...) command.
-sudo cmake -S$SCRIPT_DIR -B$SCRIPT_DIR/build \
-${hostname_cmake_flags:- -DBROKER_ENDPOINT="$broker_endpoint" -DSERVER_HOST="$http_server" -DROOT_CA_CERT_PATH="$root_ca_cert_path"} \
-${mutual_auth_cmake_flags:-} \
+sudo cmake -S $SCRIPT_DIR -B $SCRIPT_DIR/build \
 ${openssl_cmake_flags:-} \
-;
+${hostname_cmake_flags:- -DBROKER_ENDPOINT=$broker_endpoint \
+                         -DSERVER_HOST=$http_server \
+                         -DROOT_CA_CERT_PATH=$root_ca_cert_path} \
+${mutual_auth_cmake_flags:-};
 
 # Automatically build demos if the --build parameter was passed.
 if !([[ $BUILD = false ]]); then
@@ -419,8 +422,5 @@ if !([[ $BUILD = false ]]); then
     echo "Demo executables built."
     echo "They can be found in $SCRIPT_DIR/build/bin."
 fi
-
-# Cleanup.
-rm -rf $SCRIPT_DIR/temp
 
 exit 0
