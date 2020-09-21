@@ -191,7 +191,7 @@ openssl req -x509 -nodes -sha256 -days 365 -newkey rsa:2048 -keyout ca.key -out 
 
 ```shell
 # Generate server key and certificate. 
-# Provide the Subject field information as appropriate for Server certificate. Make sure the Common Name (CN) field # is different # from  the Root CA certificate. 
+# Provide the Subject field information as appropriate for Server certificate. Make sure the Common Name (CN) field is different from the root CA certificate. 
 openssl req -nodes -sha256 -new -keyout server.key -out server.csr
 # Sign with the CA cert.
 openssl x509 -req -sha256 -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -days 365
