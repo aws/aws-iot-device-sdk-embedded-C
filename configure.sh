@@ -3,6 +3,35 @@
 # Get the directory where this bash script is located.
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
+# Default command line options.
+BUILD=false
+CONFIGFILE="$SCRIPT_DIR/config.yml"
+
+# Parse command line options such as --option value.
+POSITIONAL=()
+while [[ $# -gt 0 ]]
+do
+    key="$1"
+    case $key in
+        -b|--build)
+        BUILD="$2"
+        shift
+        shift
+        ;;
+        -c|--configfile)
+        CONFIGFILE="$2"
+        shift
+        shift
+        ;;
+        *)
+        # Save it in an array for later.
+        POSITIONAL+=("$1")
+        shift
+        ;;
+    esac
+done
+set -- "${POSITIONAL[@]}" # restore positional parameters
+
 # Ask for user input and write the result to a variable named `answer`.
 answer=true
 prompt_user () {
@@ -46,15 +75,48 @@ install_brew () {
 }
 
 # If this script has been run before,
-# a configuration.yml file will exist from which to load configurations.
-echo "This script has been run before."
-prompt_user "Would you like to use the same configurations from last time? [Y/n]" 0
+# a config.yml file will exist from which to load configurations.
+# Note: This can only parse yml files that have each line as KEY: VALUE.
+load_existing_configs=false
+if [[ -f $CONFIGFILE ]]; then
+    echo "Found a config file in $CONFIGFILE. This script has been probably been run before.".
+    prompt_user "Would you like to use the same configurations from this file? [Y/n]" 0
+    load_existing_configs=$answer
+    # Load the configurations into their respective variables.
+    idx=0
+    key=""
+    value=""
+    if [ $load_existing_configs = true ]; then
+        while IFS=':' read -ra keyval; do
+            for i in "${keyval[@]}"; do
+                # Trim trailing and leading whitespace.
+                i=$(echo $i | awk '{$1=$1};1')
+                echo $i
+                if (( $idx % 2 )); then
+                    value="$i"
+                    echo "$key: $value"
+                    # Set $key into a bash variable with its value being $value.
+                    eval "$key"="$value"
+                else
+                    key="$i"
+                fi
+                ((idx++))
+            done
+        done < "$CONFIGFILE"
+    fi
+else
+    touch $CONFIGFILE
+fi
 
 # Check if OpenSSL was already installed through Homebrew.
 # Note: Not needed for Mac as `brew` is automatically added to its $PATH.
 if [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
     test -d ~/.linuxbrew && eval $(~/.linuxbrew/bin/brew shellenv)
     test -d /home/linuxbrew/.linuxbrew && eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)
+    brew list openssl@1.1 > /dev/null
+    if [[ $? -eq 0 ]]; then
+        openssl_root_dir=$(brew --prefix openssl@1.1)
+    fi
 fi
 
 # Install OpenSSL if it is not installed or the version is less than 1.1.x.
@@ -69,6 +131,45 @@ if !([ -x "$(command -v openssl)" ] && [[ $(openssl version) = OpenSSL\ 1.1* ]])
         sudo apt-get install openssl libssl-dev -y
     fi
     # Unfortunately, yum does not have packages for installing OpenSSL 1.1.x.
+fi
+
+if !([ -x "$(command -v cmake)" ] && [[ $(cmake -version) = cmake\ version\ 3* ]]); then
+    install_brew
+    if !([ -x "$(command -v brew)" ]); then
+        echo "Homebrew installation failed."
+        exit 1
+    else
+        echo "Attempting to install CMake through Homebrew..."
+        brew install cmake
+    fi
+fi
+
+# Treat a missing CMake package at this point as a fatal error.
+if !([ -x "$(command -v cmake)" ] && [[ $(cmake -version) = cmake\ version\ 3* ]]); then
+    # >&2 prints to stderr.
+    >&2 echo "Fatal: CMake installation failed. Please try installing it manually, then run this script again."
+    >&2 echo "See https://cmake.org/install/ for details."
+    exit 1
+fi
+
+if !([ -x "$(command -v openssl)" ] && [[ $(openssl version) = OpenSSL\ 1.1* ]]); then
+    install_brew
+    if !([ -x "$(command -v brew)" ]); then
+        echo "Homebrew installation failed."
+        exit 1
+    else
+        echo "Attempting to install OpenSSL through Homebrew..."
+        brew install openssl@1.1
+        openssl_root_dir=$(brew --prefix openssl@1.1)
+    fi
+fi
+
+# Treat a missing OpenSSL package at this point as a fatal error.
+if !([ -x "$(command -v openssl)" ] && [[ $(openssl version) = OpenSSL\ 1.1* ]]); then
+    # >&2 prints to stderr.
+    >&2 echo "Fatal: OpenSSL installation failed. Please try installing it manually, then run this script again."
+    >&2 echo "See https://wiki.openssl.org/index.php/Compilation_and_Installation for details."
+    exit 1
 fi
 
 if !([ -x "$(command -v cmake)" ] && [[ $(cmake -version) = cmake\ version\ 3* ]]); then
@@ -88,31 +189,8 @@ if !([ -x "$(command -v cmake)" ] && [[ $(cmake -version) = cmake\ version\ 3* ]
     fi
 fi
 
-if !([ -x "$(command -v openssl)" ] && [[ $(openssl version) = OpenSSL\ 1.1* ]]); then
-    install_brew
-    if !([ -x "$(command -v brew)" ]); then
-        echo "Homebrew installation failed."
-        exit 1
-    else
-        echo "Attempting to install OpenSSL through Homebrew..."
-        brew install openssl@1.1
-        openssl_root_dir=$(brew --prefix openssl@1.1)
-    fi
-fi
-
-if !([ -x "$(command -v cmake)" ] && [[ $(cmake -version) = cmake\ version\ 3* ]]); then
-    install_brew
-    if !([ -x "$(command -v brew)" ]); then
-        echo "Homebrew installation failed."
-        exit 1
-    else
-        echo "Attempting to install CMake through Homebrew..."
-        brew install cmake
-    fi
-fi
-
 # This array will contain configurations to save into a yaml file later on.
-configs=("wtf $wtf")
+configs=()
 
 # Iterate the loop to read and print each array element
 for value in "${configs[@]}"
@@ -121,19 +199,11 @@ do
     echo $1 and $2
 done
 
-# Treat a missing OpenSSL package at this point as a fatal error.
-if !([ -x "$(command -v openssl)" ] && [[ $(openssl version) = OpenSSL\ 1.1* ]]); then
-    # >&2 prints to stderr.
-    >&2 echo "Fatal: OpenSSL installation failed. Please try installing manually, then run this script again."
-    >&2 echo "See https://wiki.openssl.org/index.php/Compilation_and_Installation for details."
-    exit 1
-fi
-
 mkdir -p $SCRIPT_DIR/temp
 prompt_user "Run locally hosted servers for the MQTT and HTTP Client Demos? [Y/n]" 0
-install_servers=$answer
+run_servers=$answer
 
-if [ "$install_servers" = true ]; then
+if [ "$run_servers" = true ]; then
     # Install Docker if `docker` does not exist as a command.
     docker -v
     if [[ $? -ne 0 ]]; then
@@ -184,85 +254,99 @@ echo "See https://aws.amazon.com/iot-core/ for details."
 prompt_user "Would you like to configure the mutual auth demos with your AWS IoT Core credentials? [Y/n]" 0
 configure_mutual_auth=$answer
 
-client_cert_filename="aws_iot_client.crt"
-client_key_filename="aws_iot_client.key"
-
 if [ "$configure_mutual_auth" = true ] ; then
-    # Ask for the AWS IoT Endpoint.
-    prompt_user "Paste your AWS IoT Endpoint:" 1
-    aws_iot_endpoint=$answer
+    client_cert_filename="aws_iot_client.crt"
+    client_key_filename="aws_iot_client.key"
 
-    # Because a certificate is multiline, parse until the end marker is reached.
-    echo "Paste your AWS IoT Client Certificate:"
-    client_cert_contents=""
-    found_begin=false
-    while read line
-    do
-        # Ignore initial empty lines and white space before a beginning marker is inserted.
-        if [[ $line = "" ]]; then
-            continue
-        else
-            client_cert_contents+="${line}\r\n"
-        fi
-        # Look for the beginning marker.
-        if [[ $found_begin = false ]]; then
-            if [[ $client_cert_contents = -----BEGIN\ CERTIFICATE-----* ]]; then
-                found_begin=true
-            else
-                echo "Invalid certificate given. Certificates must start with:"
-                echo "-----BEGIN CERTIFICATE-----"
-                echo "Please try pasting your AWS IoT Client Certificate again: "
-                client_cert_contents=""
-                continue
-            fi
-        # Look for the end marker.
-        elif [[ $line = *-----END\ CERTIFICATE-----* ]]; then
-            break
-        fi
-    done
-    echo "Valid certificate pasted."
-    echo "Writing certificate to file: $SCRIPT_DIR/demos/certificates/$client_cert_filename"
-    # The -e allows us to write escape characters.
-    echo -e $client_cert_contents > $SCRIPT_DIR/demos/certificates/$client_cert_filename
+    if [[ $load_existing_configs = false ]] && [ -z "$aws_iot_endpoint" ]; then
+        # Ask for the AWS IoT Endpoint.
+        prompt_user "Paste your AWS IoT Endpoint:" 1
+        aws_iot_endpoint=$answer
 
-    # Because a key is multiline, parse until the end marker is reached.
-    echo "Paste your AWS IoT Private Key:"
-    client_key_contents=""
-    found_begin=false
-    while read line
-    do
-        # Ignore initial empty lines and white space before a beginning marker is inserted.
-        if [[ $line = "" ]]; then
-            continue
-        else
-            client_key_contents+="${line}\r\n"
-        fi
-        # Look for the beginning marker.
-        if [[ $found_begin = false ]]; then
-            if [[ $client_key_contents = -----BEGIN\ RSA\ PRIVATE\ KEY-----* ]]; then
-                found_begin=true
-            else
-                echo "Invalid private key given. Private keys must start with:"
-                echo "-----BEGIN RSA PRIVATE KEY-----"
-                echo "Please try pasting your AWS IoT Private Key again: "
-                client_key_contents=""
+        echo "aws_iot_endpoint: $aws_iot_endpoint" >> "$CONFIGFILE"
+    fi
+
+    if [[ $load_existing_configs = false ]] && [ -z "$client_cert_path" ]; then
+        # Because a certificate is multiline, parse until the end marker is reached.
+        echo "Paste your AWS IoT Client Certificate:"
+        client_cert_contents=""
+        found_begin=false
+        while read line
+        do
+            # Ignore initial empty lines and white space before a beginning marker is inserted.
+            if [[ $line = "" ]]; then
                 continue
+            else
+                client_cert_contents+="${line}\r\n"
             fi
-        # Look for the end marker.
-        elif [[ $line = *-----END\ RSA\ PRIVATE\ KEY-----* ]]; then
-            break
-        fi
-    done
-    # This clears the screen so as to remove the pasted certificate from the terminal.
-    printf "\033c"
-    echo "Valid private key pasted."
-    echo "Writing private key to file: $SCRIPT_DIR/demos/certificates/$client_key_filename"
-    echo -e $client_key_contents > $SCRIPT_DIR/demos/certificates/$client_key_filename
-    echo "AWS IoT Core Credentials have been set."
+            # Look for the beginning marker.
+            if [[ $found_begin = false ]]; then
+                if [[ $client_cert_contents = -----BEGIN\ CERTIFICATE-----* ]]; then
+                    found_begin=true
+                else
+                    echo "Invalid certificate given. Certificates must start with:"
+                    echo "-----BEGIN CERTIFICATE-----"
+                    echo "Please try pasting your AWS IoT Client Certificate again: "
+                    client_cert_contents=""
+                    continue
+                fi
+            # Look for the end marker.
+            elif [[ $line = *-----END\ CERTIFICATE-----* ]]; then
+                break
+            fi
+        done
+        client_cert_path="$SCRIPT_DIR/demos/certificates/$client_cert_filename"
+        echo "Writing certificate to file: $client_cert_path"
+        # The -e allows us to write escape characters.
+        echo -e $client_cert_contents > $client_cert_path
+
+        echo "client_cert_path: $client_cert_path" >> "$CONFIGFILE"
+    fi
+
+    if [[ $load_existing_configs = false ]] && [ -z "$client_key_path" ]; then
+        # Because a key is multiline, parse until the end marker is reached.
+        echo "Paste your AWS IoT Private Key:"
+        client_key_contents=""
+        found_begin=false
+        while read line
+        do
+            # Ignore initial empty lines and white space before a beginning marker is inserted.
+            if [[ $line = "" ]]; then
+                continue
+            else
+                client_key_contents+="${line}\r\n"
+            fi
+            # Look for the beginning marker.
+            if [[ $found_begin = false ]]; then
+                if [[ $client_key_contents = -----BEGIN\ RSA\ PRIVATE\ KEY-----* ]]; then
+                    found_begin=true
+                else
+                    echo "Invalid private key given. Private keys must start with:"
+                    echo "-----BEGIN RSA PRIVATE KEY-----"
+                    echo "Please try pasting your AWS IoT Private Key again: "
+                    client_key_contents=""
+                    continue
+                fi
+            # Look for the end marker.
+            elif [[ $line = *-----END\ RSA\ PRIVATE\ KEY-----* ]]; then
+                break
+            fi
+        done
+        # This clears the screen so as to remove the pasted certificate from the terminal.
+        printf "\033c"
+
+        client_key_path="$SCRIPT_DIR/demos/certificates/$client_key_filename"
+        echo "Writing private key to file: $client_key_path"
+        echo -e $client_key_contents > $client_key_path
+
+        echo "client_key_path: $client_key_path" >> "$CONFIGFILE"
+    fi
+
+    echo "AWS IoT Core credentials have been set."
 fi
 
 # Pass any options that the user has chosen to configure as CMake flags.
-if [ "$install_servers" = true ]; then
+if [ "$run_servers" = true ]; then
     hostname_cmake_flags="-DROOT_CA_CERT_PATH=$SCRIPT_DIR/demos/certificates/ca.crt \
                           -DBROKER_ENDPOINT=localhost \ 
                           -DSERVER_HOST=localhost"
@@ -270,8 +354,8 @@ fi
 if [ "$configure_mutual_auth" = true ]; then
     mutual_auth_cmake_flags="-DAWS_IOT_ENDPOINT=$aws_iot_endpoint \
                              -DAMAZON_CA_CERT_PATH=$SCRIPT_DIR/demos/certificates/AmazonRootCA1.crt \
-                             -DCLIENT_CERT_PATH=$SCRIPT_DIR/demos/certificates/$client_cert_filename \
-                             -DCLIENT_PRIVATE_KEY_PATH=$SCRIPT_DIR/demos/certificates/$client_key_filename"
+                             -DCLIENT_CERT_PATH=$client_cert_path \
+                             -DCLIENT_PRIVATE_KEY_PATH=$client_key_path"
 fi
 # Set the root directory for a Homebrew installation of OpenSSL.
 # This is necessary for Mac and non-Debian systems.
@@ -294,6 +378,14 @@ ${mutual_auth_cmake_flags:-} \
 ${openssl_cmake_flags:-} \
 ;
 
+# Automatically build demos if the --build parameter was passed.
+if !([[ $BUILD = false ]]); then
+    make -j4 -C $SCRIPT_DIR/build
+    echo "Demo executables built."
+    echo "They can be found in $SCRIPT_DIR/build/bin."
+fi
+
+# Cleanup.
 rm -rf $SCRIPT_DIR/temp
 
 exit 0
