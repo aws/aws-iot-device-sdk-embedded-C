@@ -30,7 +30,8 @@ do
         ;;
     esac
 done
-set -- "${POSITIONAL[@]}" # restore positional parameters
+# Restore positional parameters.
+set -- "${POSITIONAL[@]}"
 
 # Ask for user input and write the result to a variable named `answer`.
 prompt_user () {
