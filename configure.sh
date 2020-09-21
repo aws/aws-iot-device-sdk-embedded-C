@@ -407,7 +407,7 @@ fi
 # If the variable to the left of :- is unset, the expression on the right is used.
 # Otherwise, the value of the variable to the left is substituted.
 # Note: sudo permissions needed for the file(COPY ...) command.
-sudo cmake .. -B$SCRIPT_DIR/build \
+sudo cmake -S$SCRIPT_DIR -B$SCRIPT_DIR/build \
 ${hostname_cmake_flags:- -DBROKER_ENDPOINT="$broker_endpoint" -DSERVER_HOST="$http_server" -DROOT_CA_CERT_PATH="$root_ca_cert_path"} \
 ${mutual_auth_cmake_flags:-} \
 ${openssl_cmake_flags:-} \
