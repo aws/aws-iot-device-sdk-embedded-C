@@ -182,14 +182,17 @@ docker pull eclipse-mosquitto:latest
 ```
 2.  `BROKER_ENDPOINT` defined in `demos/mqtt/mqtt_demo_basic_tls/demo_config.h` can now be set to `localhost`.
 
-3. For TLS communication with Mosquitto broker, server and CA credentials need to be created. Use OpenSSL commands to generate the credentials for the Mosquitto server.
+3. For TLS communication with Mosquitto broker, server and CA credentials need to be created. Use OpenSSL commands to generate the credentials for the Mosquitto server.  
+**Note:** Make sure to use different Subject details between the Root CA and server certificates; otherwise, SSL handshake fails with exactly same Subject details in both the certificates.
 ```shell
-# Generate CA key and certificate. Provide the Subject field information as appropriate.
+# Generate CA key and certificate. Provide the Subject field information as appropriate for CA certificate.
 openssl req -x509 -nodes -sha256 -days 365 -newkey rsa:2048 -keyout ca.key -out ca.crt
 ```
 
 ```shell
-# Generate server key and certificate.
+# Generate server key and certificate. 
+# Provide the Subject field information as appropriate for Server certificate. Make sure details are different from 
+# the Root CA certificate. 
 openssl req -nodes -sha256 -new -keyout server.key -out server.csr
 # Sign with the CA cert.
 openssl x509 -req -sha256 -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -days 365
