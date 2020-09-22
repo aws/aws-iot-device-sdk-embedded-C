@@ -340,6 +340,9 @@ if [ "$run_servers" = true ]; then
         exit 1
     fi
     cd $SCRIPT_DIR/tools/local-servers
+    # Start the Docker service.
+    sudo systemctl start docker >/dev/null 2>/dev/null
+    sudo service docker start >/dev/null 2>/dev/null
     sudo docker-compose stop
     if [[ $? -ne 0 ]]; then
         # >&2 prints to stderr.
@@ -456,8 +459,7 @@ fi
 # Shell parameter expansion is used for passing optional configuration parameters as CMake flags.
 # If the variable to the left of :- is unset, the expression on the right is used.
 # Otherwise, the value of the variable to the left is substituted.
-# Note: sudo permissions needed for the file(COPY ...) command.
-sudo cmake -S $SCRIPT_DIR -B $SCRIPT_DIR/build \
+cmake -S $SCRIPT_DIR -B $SCRIPT_DIR/build \
 ${openssl_cmake_flags:-} \
 ${hostname_cmake_flags:- -DBROKER_ENDPOINT=$broker_endpoint \
                          -DSERVER_HOST=$http_server \
