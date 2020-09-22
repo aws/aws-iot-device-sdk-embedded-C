@@ -165,7 +165,7 @@ parse_key () {
 }
 
 # Install any dependencies or packages required for C SDK.
-# These include OpenSSL and CMake.
+# These include OpenSSL, CMake, Make, and gcc.
 install_dependencies () {
     # Check if OpenSSL was already installed through Homebrew.
     # Note: Not needed for Mac as `brew` is automatically added to its $PATH.
@@ -194,18 +194,74 @@ install_dependencies () {
             sudo yum -y update cmake
         fi
     fi
-
     if !([ -x "$(command -v cmake)" ] && [[ $(cmake -version) = cmake\ version\ 3* ]]); then
         install_brew
         echo "Attempting to install CMake through Homebrew..."
         brew install cmake
     fi
-
     # Treat a missing CMake package at this point as a fatal error.
     if !([ -x "$(command -v cmake)" ] && [[ $(cmake -version) = cmake\ version\ 3* ]]); then
         # >&2 prints to stderr.
         >&2 echo "Fatal: CMake installation failed. Please try installing it manually, then run this script again."
         >&2 echo "See https://cmake.org/install/ for details."
+        exit 1
+    fi
+
+    if !([ -x "$(command -v make)" ]); then
+        echo "Make not found."
+        # Try installing through apt-get.
+        if ([ -x "$(command -v apt-get)" ]); then
+            echo "Attempting to install Make through apt-get..."
+            sudo apt-get update -y
+            sudo apt-get install --only-upgrade make -y
+            sudo apt-get install make -y
+        fi
+        # Try installing through yum.
+        if ([ -x "$(command -v yum)" ]); then
+            echo "Attempting to install Make through yum..."
+            sudo yum -y install make
+            sudo yum -y update make
+        fi
+    fi
+    if !([ -x "$(command -v make)" ]); then
+        install_brew
+        echo "Attempting to install Make through Homebrew..."
+        brew install make
+    fi
+    # Treat a missing Make package at this point as a fatal error.
+    if !([ -x "$(command -v make)" ]); then
+        # >&2 prints to stderr.
+        >&2 echo "Fatal: Make installation failed. Please try installing it manually, then run this script again."
+        >&2 echo "See https://www.gnu.org/software/make/ for details."
+        exit 1
+    fi
+
+    if !([ -x "$(command -v gcc)" ]); then
+        echo "gcc not found."
+        # Try installing through apt-get.
+        if ([ -x "$(command -v apt-get)" ]); then
+            echo "Attempting to install gcc through apt-get..."
+            sudo apt-get update -y
+            sudo apt-get install --only-upgrade gcc -y
+            sudo apt-get install gcc -y
+        fi
+        # Try installing through yum.
+        if ([ -x "$(command -v yum)" ]); then
+            echo "Attempting to install gcc through yum..."
+            sudo yum -y install gcc
+            sudo yum -y update gcc
+        fi
+    fi
+    if !([ -x "$(command -v gcc)" ]); then
+        install_brew
+        echo "Attempting to install gcc through Homebrew..."
+        brew install gcc
+    fi
+    # Treat a missing Make package at this point as a fatal error.
+    if !([ -x "$(command -v gcc)" ]); then
+        # >&2 prints to stderr.
+        >&2 echo "Fatal: gcc installation failed. Please try installing it manually, then run this script again."
+        >&2 echo "See https://gcc.gnu.org/install/ for details."
         exit 1
     fi
 
@@ -222,14 +278,12 @@ install_dependencies () {
         fi
         # Unfortunately, yum does not have packages for installing OpenSSL 1.1.x.
     fi
-
     if !([ -x "$(command -v openssl)" ] && [[ $(openssl version) = OpenSSL\ 1.1* ]]); then
         install_brew
         echo "Attempting to install OpenSSL through Homebrew..."
         brew install openssl@1.1
         openssl_root_dir=$(brew --prefix openssl@1.1)
     fi
-
     # Treat a missing OpenSSL package at this point as a fatal error.
     if !([ -x "$(command -v openssl)" ] && [[ $(openssl version) = OpenSSL\ 1.1* ]]); then
         # >&2 prints to stderr.
