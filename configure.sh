@@ -255,10 +255,11 @@ install_dependencies () {
     if !([ -x "$(command -v gcc)" ]); then
         install_brew
         echo "Attempting to install gcc through Homebrew..."
-        brew install gcc
+        brew install gcc@8
+        brew_gcc_installed=true
     fi
-    # Treat a missing Make package at this point as a fatal error.
-    if !([ -x "$(command -v gcc)" ]); then
+    # Treat a missing gcc package at this point as a fatal error.
+    if !([ -x "$(command -v gcc)" ]) || !([ -x "$(command -v gcc-8)" ]); then
         # >&2 prints to stderr.
         >&2 echo "Fatal: gcc installation failed. Please try installing it manually, then run this script again."
         >&2 echo "See https://gcc.gnu.org/install/ for details."
@@ -508,12 +509,16 @@ if !([ -z "$openssl_root_dir" ]); then
                          -DOPENSSL_LIBRARIES=$openssl_root_dir/lib \
                          -DOPENSSL_INCLUDE_DIR=$openssl_root_dir/include"
 fi
+if !([ -z "$brew_gcc_installed" ]); then
+    brew_gcc_cmake_flags="-DCMAKE_C_COMPILER=gcc-8"
+fi
 
 # Run CMake based on the configuration settings.
 # Shell parameter expansion is used for passing optional configuration parameters as CMake flags.
 # If the variable to the left of :- is unset, the expression on the right is used.
 # Otherwise, the value of the variable to the left is substituted.
 cmake -S $SCRIPT_DIR -B $SCRIPT_DIR/build \
+${brew_gcc_cmake_flags:- -DCMAKE_C_COMPILER=gcc} \
 ${openssl_cmake_flags:-} \
 ${hostname_cmake_flags:- -DBROKER_ENDPOINT=$broker_endpoint \
                          -DSERVER_HOST=$http_server \
