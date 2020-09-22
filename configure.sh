@@ -252,6 +252,11 @@ if [[ -f $CONFIGFILE ]]; then
                 ((idx++))
             done
         done < "$CONFIGFILE"
+    else
+        if [[ "$CONFIGFILE" = "$SCRIPT_DIR/config.yml" ]]; then
+            # Delete the original saved config file to make way for a new one.
+            rm "$SCRIPT_DIR/config.yml"
+        fi
     fi
 else
     touch $CONFIGFILE
@@ -267,6 +272,16 @@ if [[ $load_existing_configs = false ]] || [ -z "$run_servers" ]; then
 fi
 
 if [ "$run_servers" = true ]; then
+    # Install Docker if `docker` does not exist as a command.
+    docker -v
+    if [[ $? -ne 0 ]]; then
+        echo "Docker not found. Installing Docker..."
+        mkdir -p $SCRIPT_DIR/temp
+        curl -fsSL https://get.docker.com -o $SCRIPT_DIR/temp/get-docker.sh
+        sh $SCRIPT_DIR/temp/get-docker.sh
+        rm $SCRIPT_DIR/temp/get-docker.sh
+        rmdir $SCRIPT_DIR/temp
+    fi
     # Install Docker Compose if `docker-compose` does not exist as a command.
     if !([ -x "$(command -v docker-compose)" ]); then
         echo "Docker Compose not found. Installing Docker Compose..."
@@ -290,15 +305,31 @@ if [ "$run_servers" = true ]; then
     # Servers can now use certificates to make a TLS connection.
     echo "Server certificates have been generated."
 
-    # Start the servers, making sure we have docker installed.
+    # Make sure docker is installed.
+    docker -v
+    if [[ $? -ne 0 ]]; then
+        # >&2 prints to stderr.
+        >&2 echo "Fatal: Docker failed to install. Please try installing manually, then run this script again."
+        exit 1
+    fi
+    # Start the servers, making sure docker-compose is installed.
     if !([ -x "$(command -v docker-compose)" ]); then
         # >&2 prints to stderr.
         >&2 echo "Fatal: Docker Compose failed to install. Please try installing manually, then run this script again."
         exit 1
-    else
-        cd $SCRIPT_DIR/tools/local-servers
-        docker-compose stop
-        docker-compose up -d
+    fi
+    cd $SCRIPT_DIR/tools/local-servers
+    docker-compose stop
+    if [[ $? -ne 0 ]]; then
+        # >&2 prints to stderr.
+        >&2 echo "Fatal: Docker failed to stop servers."
+        exit 1
+    fi
+    docker-compose up -d
+    if [[ $? -ne 0 ]]; then
+        # >&2 prints to stderr.
+        >&2 echo "Fatal: Docker failed to start servers."
+        exit 1
     fi
 else
     # Ask for hostname to use for MQTT and HTTP only if servers haven't been configured to run.
