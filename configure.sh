@@ -515,12 +515,8 @@ if !([ -z "$brew_gcc_installed" ]); then
     brew_gcc_cmake_flags="-DCMAKE_C_COMPILER=gcc-8"
 fi
 
-# Download submodules.
-git submodule update --init
-
 # Allow cmake to download a file into this directory.
-chmod 777 $SCRIPT_DIR/demos/certificates
-
+sudo chmod 777 $SCRIPT_DIR/demos/certificates
 # Run CMake based on the configuration settings.
 # Shell parameter expansion is used for passing optional configuration parameters as CMake flags.
 # If the variable to the left of :- is unset, the expression on the right is used.
