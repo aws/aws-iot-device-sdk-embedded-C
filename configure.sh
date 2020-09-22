@@ -259,7 +259,7 @@ install_dependencies () {
         brew_gcc_installed=true
     fi
     # Treat a missing gcc package at this point as a fatal error.
-    if !([ -x "$(command -v gcc)" ]) || !([ -x "$(command -v gcc-8)" ]); then
+    if !([ -x "$(command -v gcc)" ]) && !([ -x "$(command -v gcc-8)" ]); then
         # >&2 prints to stderr.
         >&2 echo "Fatal: gcc installation failed. Please try installing it manually, then run this script again."
         >&2 echo "See https://gcc.gnu.org/install/ for details."
