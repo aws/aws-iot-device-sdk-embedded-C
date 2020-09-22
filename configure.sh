@@ -33,6 +33,29 @@ done
 # Restore positional parameters.
 set -- "${POSITIONAL[@]}"
 
+# Load configuration settings from a yaml file into their respective variables.
+# Note: This can only parse yml files that have each line as KEY: VALUE.
+read_config () {
+    idx=0
+    key=""
+    value=""
+    while IFS=':' read -ra keyval; do
+        for i in "${keyval[@]}"; do
+            # Trim trailing and leading whitespace.
+            i=$(echo $i | awk '{$1=$1};1')
+            if (( $idx % 2 )); then
+                value="$i"
+                echo "Setting $key to $value."
+                # Set $key into a bash variable with its value being $value.
+                eval "$key"="$value"
+            else
+                key="$i"
+            fi
+            ((idx++))
+        done
+    done < "$CONFIGFILE"
+}
+
 # Ask for user input and write the result to $answer.
 prompt_user () {
     read -p "$1 " yn
@@ -53,7 +76,7 @@ prompt_user () {
 # Homebrew is compatible with Mac and several Linux distros.
 install_brew () {
     if !([ -x "$(command -v brew)" ]); then
-        echo "Installing Homebrew for OpenSSL installation..."
+        echo "Installing Homebrew..."
         # Install Homebrew dependencies.
         if ([ -x "$(command -v apt-get)" ]); then
             sudo apt-get install build-essential curl file git -y
@@ -71,6 +94,11 @@ install_brew () {
             test -d ~/.linuxbrew && eval $(~/.linuxbrew/bin/brew shellenv)
             test -d /home/linuxbrew/.linuxbrew && eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)
         fi
+    fi
+    # Check if the installation succeeded.
+    if !([ -x "$(command -v brew)" ]); then
+        echo "Homebrew installation failed."
+        exit 1
     fi
 }
 
@@ -169,13 +197,8 @@ install_dependencies () {
 
     if !([ -x "$(command -v cmake)" ] && [[ $(cmake -version) = cmake\ version\ 3* ]]); then
         install_brew
-        if !([ -x "$(command -v brew)" ]); then
-            echo "Homebrew installation failed."
-            exit 1
-        else
-            echo "Attempting to install CMake through Homebrew..."
-            brew install cmake
-        fi
+        echo "Attempting to install CMake through Homebrew..."
+        brew install cmake
     fi
 
     # Treat a missing CMake package at this point as a fatal error.
@@ -202,14 +225,9 @@ install_dependencies () {
 
     if !([ -x "$(command -v openssl)" ] && [[ $(openssl version) = OpenSSL\ 1.1* ]]); then
         install_brew
-        if !([ -x "$(command -v brew)" ]); then
-            echo "Homebrew installation failed."
-            exit 1
-        else
-            echo "Attempting to install OpenSSL through Homebrew..."
-            brew install openssl@1.1
-            openssl_root_dir=$(brew --prefix openssl@1.1)
-        fi
+        echo "Attempting to install OpenSSL through Homebrew..."
+        brew install openssl@1.1
+        openssl_root_dir=$(brew --prefix openssl@1.1)
     fi
 
     # Treat a missing OpenSSL package at this point as a fatal error.
@@ -221,9 +239,45 @@ install_dependencies () {
     fi
 }
 
+# Install Docker and Docker Compose
+# Docker is needed to run servers on localhost that the demos can communicate with.
+install_docker () {
+    # Install Docker if `docker` does not exist as a command.
+    docker -v
+    if [[ $? -ne 0 ]]; then
+        echo "Docker not found. Installing Docker..."
+        mkdir -p $SCRIPT_DIR/temp
+        curl -fsSL https://get.docker.com -o $SCRIPT_DIR/temp/get-docker.sh
+        sh $SCRIPT_DIR/temp/get-docker.sh
+        rm $SCRIPT_DIR/temp/get-docker.sh
+        rmdir $SCRIPT_DIR/temp
+    fi
+    # Sometimes, above will fail like in RHEL-8.2.0, so install through Homebrew.
+    docker -v
+    if [[ $? -ne 0 ]]; then
+        install_brew
+        echo "Attempting to install Docker through Homebrew..."
+        brew install docker
+    fi
+
+    # Install Docker Compose if `docker-compose` does not exist as a command.
+    if !([ -x "$(command -v docker-compose)" ]); then
+        echo "Docker Compose not found. Installing Docker Compose..."
+        sudo curl -L "https://github.com/docker/compose/releases/download/1.27.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        sudo chmod +x /usr/local/bin/docker-compose
+        # Create a symlink to add it to the $PATH.
+        sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+    fi
+    # Attempt to install through Homebrew if above fails to install Docker Compose.
+    if !([ -x "$(command -v docker-compose)" ]); then
+        install_brew
+        echo "Attempting to install Docker Compose through Homebrew..."
+        brew install docker-compose
+    fi
+}
+
 # If this script has been run before,
 # a config.yml file will exist from which to load configurations.
-# Note: This can only parse yml files that have each line as KEY: VALUE.
 load_existing_configs=false
 if [[ -f $CONFIGFILE ]]; then
     echo "Found a config file in $CONFIGFILE."
@@ -232,31 +286,13 @@ if [[ -f $CONFIGFILE ]]; then
     fi
     prompt_user "Would you like to use configurations from this file? [Y/n]" 0
     load_existing_configs=$answer
-    # Load the configurations into their respective variables.
-    idx=0
-    key=""
-    value=""
+    
     if [ $load_existing_configs = true ]; then
-        while IFS=':' read -ra keyval; do
-            for i in "${keyval[@]}"; do
-                # Trim trailing and leading whitespace.
-                i=$(echo $i | awk '{$1=$1};1')
-                if (( $idx % 2 )); then
-                    value="$i"
-                    echo "Setting $key to $value."
-                    # Set $key into a bash variable with its value being $value.
-                    eval "$key"="$value"
-                else
-                    key="$i"
-                fi
-                ((idx++))
-            done
-        done < "$CONFIGFILE"
+        read_config
     else
-        if [[ "$CONFIGFILE" = "$SCRIPT_DIR/config.yml" ]]; then
-            # Delete the original saved config file to make way for a new one.
-            rm "$SCRIPT_DIR/config.yml"
-        fi
+        # Rename the original config file to make way for a new one.
+        mv "$SCRIPT_DIR/config.yml" "$SCRIPT_DIR/config.yml.old"
+        touch $CONFIGFILE
     fi
 else
     touch $CONFIGFILE
@@ -272,22 +308,7 @@ if [[ $load_existing_configs = false ]] || [ -z "$run_servers" ]; then
 fi
 
 if [ "$run_servers" = true ]; then
-    # Install Docker if `docker` does not exist as a command.
-    docker -v
-    if [[ $? -ne 0 ]]; then
-        echo "Docker not found. Installing Docker..."
-        mkdir -p $SCRIPT_DIR/temp
-        curl -fsSL https://get.docker.com -o $SCRIPT_DIR/temp/get-docker.sh
-        sh $SCRIPT_DIR/temp/get-docker.sh
-        rm $SCRIPT_DIR/temp/get-docker.sh
-        rmdir $SCRIPT_DIR/temp
-    fi
-    # Install Docker Compose if `docker-compose` does not exist as a command.
-    if !([ -x "$(command -v docker-compose)" ]); then
-        echo "Docker Compose not found. Installing Docker Compose..."
-        sudo curl -L "https://github.com/docker/compose/releases/download/1.27.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-        sudo chmod +x /usr/local/bin/docker-compose
-    fi
+    install_docker
 
     # Generate certificates and keys for the TLS demos.
     echo "Generating server certificates with OpenSSL..."
@@ -319,13 +340,13 @@ if [ "$run_servers" = true ]; then
         exit 1
     fi
     cd $SCRIPT_DIR/tools/local-servers
-    docker-compose stop
+    sudo docker-compose stop
     if [[ $? -ne 0 ]]; then
         # >&2 prints to stderr.
         >&2 echo "Fatal: Docker failed to stop servers."
         exit 1
     fi
-    docker-compose up -d
+    sudo docker-compose up -d
     if [[ $? -ne 0 ]]; then
         # >&2 prints to stderr.
         >&2 echo "Fatal: Docker failed to start servers."
@@ -448,6 +469,8 @@ if !([[ $BUILD = false ]]); then
     make -j4 -C $SCRIPT_DIR/build
     echo "Demo executables built."
     echo "They can be found in $SCRIPT_DIR/build/bin."
+else
+    echo "Use \`make -j4 -C $SCRIPT_DIR/build\` to build the demos."
 fi
 
 exit 0
