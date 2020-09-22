@@ -375,8 +375,8 @@ if [ "$run_servers" = true ]; then
     # Generate server key and certificate.
     openssl req -nodes -sha256 -new \
     -keyout $SCRIPT_DIR/demos/certificates/key.pem -out $SCRIPT_DIR/demos/certificates/server.csr \
-    chmod 644 $SCRIPT_DIR/demos/certificates/key.pem
     -subj "/C=SV/ST=SV/L=SV/O=SV/CN=localhost" # The subject field is mocked.
+    chmod 644 $SCRIPT_DIR/demos/certificates/key.pem
     # Sign with the CA cert.
     openssl x509 -req -sha256 -in $SCRIPT_DIR/demos/certificates/server.csr -CA $SCRIPT_DIR/demos/certificates/ca.crt \
     -CAkey $SCRIPT_DIR/demos/certificates/ca.key -CAcreateserial -out $SCRIPT_DIR/demos/certificates/cert.pem -days 365
@@ -516,7 +516,7 @@ if !([ -z "$brew_gcc_installed" ]); then
 fi
 
 # Download submodules.
-git submodule update --init --recursive
+git submodule update --init
 
 # Run CMake based on the configuration settings.
 # Shell parameter expansion is used for passing optional configuration parameters as CMake flags.
