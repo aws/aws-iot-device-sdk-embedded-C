@@ -268,7 +268,7 @@ fi
 
 if [ "$run_servers" = true ]; then
     # Install Docker Compose if `docker-compose` does not exist as a command.
-    if !([ -x "$(command -v docker-compose)" ]; then
+    if !([ -x "$(command -v docker-compose)" ]); then
         echo "Docker Compose not found. Installing Docker Compose..."
         sudo curl -L "https://github.com/docker/compose/releases/download/1.27.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
         sudo chmod +x /usr/local/bin/docker-compose
@@ -291,7 +291,7 @@ if [ "$run_servers" = true ]; then
     echo "Server certificates have been generated."
 
     # Start the servers, making sure we have docker installed.
-    if !([ -x "$(command -v docker-compose)" ]; then
+    if !([ -x "$(command -v docker-compose)" ]); then
         # >&2 prints to stderr.
         >&2 echo "Fatal: Docker Compose failed to install. Please try installing manually, then run this script again."
         exit 1
