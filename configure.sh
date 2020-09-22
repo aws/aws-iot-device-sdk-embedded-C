@@ -33,7 +33,7 @@ done
 # Restore positional parameters.
 set -- "${POSITIONAL[@]}"
 
-# Ask for user input and write the result to a variable named `answer`.
+# Ask for user input and write the result to $answer.
 prompt_user () {
     read -p "$1 " yn
     if [[ "$2" -eq 1 ]]; then
@@ -267,8 +267,8 @@ if [[ $load_existing_configs = false ]] || [ -z "$run_servers" ]; then
 fi
 
 if [ "$run_servers" = true ]; then
-    # Install Docker if `docker` does not exist as a command.
-    docker -v
+    # Install Docker Compose if `docker-compose` does not exist as a command.
+    docker-compose -v
     if [[ $? -ne 0 ]]; then
         echo "Docker Compose not found. Installing Docker Compose..."
         sudo curl -L "https://github.com/docker/compose/releases/download/1.27.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
@@ -292,10 +292,10 @@ if [ "$run_servers" = true ]; then
     echo "Server certificates have been generated."
 
     # Start the servers, making sure we have docker installed.
-    docker -v
+    docker-compose -v
     if [[ $? -ne 0 ]]; then
         # >&2 prints to stderr.
-        >&2 echo "Fatal: Docker failed to install. Please try installing manually, then run this script again."
+        >&2 echo "Fatal: Docker Compose failed to install. Please try installing manually, then run this script again."
         exit 1
     else
         cd $SCRIPT_DIR/tools/local-servers
