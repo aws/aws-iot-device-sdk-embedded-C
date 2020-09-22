@@ -144,7 +144,7 @@ install_dependencies () {
     if [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
         test -d ~/.linuxbrew && eval $(~/.linuxbrew/bin/brew shellenv)
         test -d /home/linuxbrew/.linuxbrew && eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)
-        brew list openssl@1.1 > /dev/null
+        [ -x "$(command -v brew)" ] && brew list openssl@1.1 > /dev/null
         if [[ $? -eq 0 ]]; then
             openssl_root_dir=$(brew --prefix openssl@1.1)
         fi
@@ -268,8 +268,7 @@ fi
 
 if [ "$run_servers" = true ]; then
     # Install Docker Compose if `docker-compose` does not exist as a command.
-    docker-compose -v
-    if [[ $? -ne 0 ]]; then
+    if !([ -x "$(command -v docker-compose)" ]; then
         echo "Docker Compose not found. Installing Docker Compose..."
         sudo curl -L "https://github.com/docker/compose/releases/download/1.27.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
         sudo chmod +x /usr/local/bin/docker-compose
@@ -292,15 +291,14 @@ if [ "$run_servers" = true ]; then
     echo "Server certificates have been generated."
 
     # Start the servers, making sure we have docker installed.
-    docker-compose -v
-    if [[ $? -ne 0 ]]; then
+    if !([ -x "$(command -v docker-compose)" ]; then
         # >&2 prints to stderr.
         >&2 echo "Fatal: Docker Compose failed to install. Please try installing manually, then run this script again."
         exit 1
     else
         cd $SCRIPT_DIR/tools/local-servers
-        sudo docker-compose stop
-        sudo docker-compose up -d
+        docker-compose stop
+        docker-compose up -d
     fi
 else
     # Ask for hostname to use for MQTT and HTTP only if servers haven't been configured to run.
