@@ -151,17 +151,6 @@ install_dependencies () {
     fi
 
     if !([ -x "$(command -v cmake)" ] && [[ $(cmake -version) = cmake\ version\ 3* ]]); then
-        install_brew
-        if !([ -x "$(command -v brew)" ]); then
-            echo "Homebrew installation failed."
-            exit 1
-        else
-            echo "Attempting to install CMake through Homebrew..."
-            brew install cmake
-        fi
-    fi
-
-    if !([ -x "$(command -v cmake)" ] && [[ $(cmake -version) = cmake\ version\ 3* ]]); then
         echo "CMake not found."
         # Try installing through apt-get.
         if ([ -x "$(command -v apt-get)" ]); then
@@ -175,6 +164,17 @@ install_dependencies () {
             echo "Attempting to install CMake through yum..."
             sudo yum -y install cmake
             sudo yum -y update cmake
+        fi
+    fi
+
+    if !([ -x "$(command -v cmake)" ] && [[ $(cmake -version) = cmake\ version\ 3* ]]); then
+        install_brew
+        if !([ -x "$(command -v brew)" ]); then
+            echo "Homebrew installation failed."
+            exit 1
+        else
+            echo "Attempting to install CMake through Homebrew..."
+            brew install cmake
         fi
     fi
 
@@ -270,12 +270,9 @@ if [ "$run_servers" = true ]; then
     # Install Docker if `docker` does not exist as a command.
     docker -v
     if [[ $? -ne 0 ]]; then
-        echo "Docker not found. Installing Docker..."
-        mkdir -p $SCRIPT_DIR/temp
-        curl -fsSL https://get.docker.com -o $SCRIPT_DIR/temp/get-docker.sh
-        sh $SCRIPT_DIR/temp/get-docker.sh
-        rm $SCRIPT_DIR/temp/get-docker.sh
-        rmdir $SCRIPT_DIR/temp
+        echo "Docker Compose not found. Installing Docker Compose..."
+        sudo curl -L "https://github.com/docker/compose/releases/download/1.27.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        sudo chmod +x /usr/local/bin/docker-compose
     fi
 
     # Generate certificates and keys for the TLS demos.
