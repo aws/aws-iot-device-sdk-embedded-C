@@ -518,6 +518,9 @@ fi
 # Download submodules.
 git submodule update --init
 
+# Allow cmake to download a file into this directory.
+chmod 777 $SCRIPT_DIR/demos/certificates
+
 # Run CMake based on the configuration settings.
 # Shell parameter expansion is used for passing optional configuration parameters as CMake flags.
 # If the variable to the left of :- is unset, the expression on the right is used.
