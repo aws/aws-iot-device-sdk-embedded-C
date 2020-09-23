@@ -297,37 +297,50 @@ install_dependencies () {
 # Install Docker and Docker Compose
 # Docker is needed to run servers on localhost that the demos can communicate with.
 install_docker () {
+    
     # Install Docker if `docker` does not exist as a command.
-    docker -v
+    docker -v >/dev/null 2>/dev/null
     if [[ $? -ne 0 ]]; then
-        echo "Docker not found. Installing Docker..."
-        mkdir -p $SCRIPT_DIR/temp
-        curl -fsSL https://get.docker.com -o $SCRIPT_DIR/temp/get-docker.sh
-        sh $SCRIPT_DIR/temp/get-docker.sh
-        rm $SCRIPT_DIR/temp/get-docker.sh
-        rmdir $SCRIPT_DIR/temp
+        if [ grep -q Microsoft /proc/version ]; then
+            # Docker cannot be installed straight to a WSL distro.
+            # Instead, it must be installed on the Windows host machine.
+            >&2 echo "Fatal: The command 'docker' could not be found in this WSL distro."
+            >&2 echo "Please use WSL 2, then activate the WSL integration in Docker Desktop settings."
+            >&2 echo "See https://docs.docker.com/docker-for-windows/wsl/ for details."
+            exit 1
+        else
+            echo "Docker not found. Installing Docker..."
+            mkdir -p $SCRIPT_DIR/temp
+            curl -fsSL https://get.docker.com -o $SCRIPT_DIR/temp/get-docker.sh
+            sh $SCRIPT_DIR/temp/get-docker.sh
+            rm $SCRIPT_DIR/temp/get-docker.sh
+            rmdir $SCRIPT_DIR/temp
+        fi
     fi
     # Sometimes, above will fail like in RHEL-8.2.0, so install through Homebrew.
-    docker -v
+    docker -v >/dev/null 2>/dev/null
     if [[ $? -ne 0 ]]; then
         install_brew
         echo "Attempting to install Docker through Homebrew..."
         brew install docker
     fi
 
-    # Install Docker Compose if `docker-compose` does not exist as a command.
-    if !([ -x "$(command -v docker-compose)" ]); then
-        echo "Docker Compose not found. Installing Docker Compose..."
-        sudo curl -L "https://github.com/docker/compose/releases/download/1.27.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-        sudo chmod +x /usr/local/bin/docker-compose
-        # Create a symlink to add it to the $PATH.
-        sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
-    fi
-    # Attempt to install through Homebrew if above fails to install Docker Compose.
-    if !([ -x "$(command -v docker-compose)" ]); then
-        install_brew
-        echo "Attempting to install Docker Compose through Homebrew..."
-        brew install docker-compose
+    docker -v >/dev/null 2>/dev/null
+    if [[ $? -ne 0 ]]; then
+        # Install Docker Compose if `docker-compose` does not exist as a command.
+        if !([ -x "$(command -v docker-compose)" ]); then
+            echo "Docker Compose not found. Installing Docker Compose..."
+            sudo curl -L "https://github.com/docker/compose/releases/download/1.27.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+            sudo chmod +x /usr/local/bin/docker-compose
+            # Create a symlink to add it to the $PATH.
+            sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+        fi
+        # Attempt to install through Homebrew if above fails to install Docker Compose.
+        if !([ -x "$(command -v docker-compose)" ]); then
+            install_brew
+            echo "Attempting to install Docker Compose through Homebrew..."
+            brew install docker-compose
+        fi
     fi
 }
 
@@ -384,7 +397,7 @@ if [ "$run_servers" = true ]; then
     echo "Server certificates have been generated."
 
     # Make sure docker is installed.
-    docker -v
+    docker -v >/dev/null 2>/dev/null
     if [[ $? -ne 0 ]]; then
         # >&2 prints to stderr.
         >&2 echo "Fatal: Docker failed to install. Please try installing manually, then run this script again."
@@ -394,6 +407,7 @@ if [ "$run_servers" = true ]; then
     if !([ -x "$(command -v docker-compose)" ]); then
         # >&2 prints to stderr.
         >&2 echo "Fatal: Docker Compose failed to install. Please try installing manually, then run this script again."
+        >&2 echo "See https://docs.docker.com/get-docker/ for details."
         exit 1
     fi
     cd $SCRIPT_DIR/tools/local-servers
@@ -403,13 +417,14 @@ if [ "$run_servers" = true ]; then
     sudo docker-compose stop
     if [[ $? -ne 0 ]]; then
         # >&2 prints to stderr.
-        >&2 echo "Fatal: Docker failed to stop servers."
+        >&2 echo "Fatal: Docker failed to stop servers. Please check if the docker service is running."
+        >&2 echo "See https://docs.docker.com/get-docker/ for details."
         exit 1
     fi
     sudo docker-compose up -d
     if [[ $? -ne 0 ]]; then
         # >&2 prints to stderr.
-        >&2 echo "Fatal: Docker failed to start servers."
+        >&2 echo "Fatal: Docker failed to start servers. Please check if the docker service is running."
         exit 1
     fi
 else
@@ -521,12 +536,11 @@ sudo chmod 777 $SCRIPT_DIR/demos/certificates
 # Shell parameter expansion is used for passing optional configuration parameters as CMake flags.
 # If the variable to the left of :- is unset, the expression on the right is used.
 # Otherwise, the value of the variable to the left is substituted.
+cd $SCRIPT_DIR
 cmake -S $SCRIPT_DIR -B $SCRIPT_DIR/build \
 ${brew_gcc_cmake_flags:- -DCMAKE_C_COMPILER=gcc} \
 ${openssl_cmake_flags:-} \
-${hostname_cmake_flags:- -DBROKER_ENDPOINT=$broker_endpoint \
-                         -DSERVER_HOST=$http_server \
-                         -DROOT_CA_CERT_PATH=$root_ca_cert_path} \
+${hostname_cmake_flags:- -DBROKER_ENDPOINT=$broker_endpoint -DSERVER_HOST=$http_server -DROOT_CA_CERT_PATH=$root_ca_cert_path} \
 ${mutual_auth_cmake_flags:-};
 
 # Automatically build demos if the --build parameter was passed.
