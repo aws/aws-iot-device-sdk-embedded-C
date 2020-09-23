@@ -3,8 +3,10 @@ acks
 alpn
 amazonrootca
 amazontrust
+amzn
 api
 aws
+backoff
 bytestorecv
 ca
 cert
@@ -22,6 +24,7 @@ dup
 endif
 enums
 html
+http
 https
 ifndef
 inc
@@ -43,11 +46,14 @@ pdeserializedinfo
 pem
 pingreq
 pingresp
+pmethod
 pnetworkcontext
 posix
 ppacketinfo
+ppath
 processloop
 psessionpresent
+ptransportinterface
 puback
 pubcomp
 pubrec
@@ -57,6 +63,7 @@ resending
 rom
 sdk
 setretainflag
+struct
 suback
 sublicense
 tcp
@@ -64,4 +71,5 @@ tls
 transportsend
 un
 unsuback
+uri
 www
