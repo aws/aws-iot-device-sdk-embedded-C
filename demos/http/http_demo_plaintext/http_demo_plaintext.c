@@ -201,7 +201,7 @@ static int32_t sendHttpRequest( const TransportInterface_t * pTransportInterface
 
 static int32_t connectToServer( NetworkContext_t * pNetworkContext )
 {
-    int32_t returnStatus = EXIT_SUCCESS;
+    int32_t returnStatus = EXIT_FAILURE;
     /* Status returned by plaintext sockets transport implementation. */
     SocketStatus_t socketStatus;
     /* Information about the server to send the HTTP requests. */
