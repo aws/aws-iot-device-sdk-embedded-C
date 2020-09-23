@@ -53,10 +53,16 @@
 /**
  * @brief HTTP server host name.
  *
- * @note This demo uses httpbin.org: A simple HTTP Request & Response Service.
+ * @note This demo uses httpbin: A simple HTTP Request & Response Service.
+ *
+ * An httpbin server can be setup locally for running this demo against
+ * it. Please refer to the instructions in the README to do so.
+ *
+ * Alternatively, this can be set to httpbin.org, but the reliability of this
+ * web server is not guaranteed.
  */
 #ifndef SERVER_HOST
-    #define SERVER_HOST    "httpbin.org"
+    #define SERVER_HOST    "localhost"
 #endif
 
 /**
@@ -64,7 +70,9 @@
  *
  * In general, port 443 is for TLS HTTP connections.
  */
-#define SERVER_PORT    443
+#ifndef HTTPS_PORT
+    #define HTTPS_PORT    443
+#endif
 
 /**
  * @brief Path of the file containing the server's root CA certificate for TLS authentication.

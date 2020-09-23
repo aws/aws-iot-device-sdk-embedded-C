@@ -37,3 +37,9 @@ if(SERVER_HOST)
             SERVER_HOST="${SERVER_HOST}"
     )
 endif()
+if(HTTP_PORT)
+    target_compile_definitions(
+        ${DEMO_NAME} PRIVATE
+            HTTP_PORT=${HTTP_PORT}
+    )
+endif()

@@ -46,8 +46,8 @@
 #endif
 
 /* Check that TLS port used for AWS IoT Core is defined. */
-#ifndef AWS_HTTP_PORT
-    #error "Please define a AWS_HTTP_PORT."
+#ifndef AWS_HTTPS_PORT
+    #error "Please define a AWS_HTTPS_PORT."
 #endif
 
 /* Check that a path for HTTP Method POST is defined. */
@@ -183,7 +183,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
 
     /* ALPN is required when communicating to AWS IoT Core over port 443 through HTTP. */
-    if( AWS_HTTP_PORT == 443 )
+    if( AWS_HTTPS_PORT == 443 )
     {
         opensslCredentials.pAlpnProtos = IOT_CORE_ALPN_PROTOCOL_NAME;
         opensslCredentials.alpnProtosLen = strlen( IOT_CORE_ALPN_PROTOCOL_NAME );
@@ -192,7 +192,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     /* Initialize server information. */
     serverInfo.pHostName = AWS_IOT_ENDPOINT;
     serverInfo.hostNameLength = AWS_IOT_ENDPOINT_LENGTH;
-    serverInfo.port = AWS_HTTP_PORT;
+    serverInfo.port = AWS_HTTPS_PORT;
 
     /* Initialize reconnect attempts and interval */
     RetryUtils_ParamsReset( &reconnectParams );
@@ -204,12 +204,12 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     do
     {
         /* Establish a TLS session with the HTTP server. This example connects
-         * to the HTTP server as specified in AWS_IOT_ENDPOINT and AWS_HTTP_PORT
+         * to the HTTP server as specified in AWS_IOT_ENDPOINT and AWS_HTTPS_PORT
          * in demo_config.h. */
         LogInfo( ( "Establishing a TLS session to %.*s:%d.",
                    ( int32_t ) AWS_IOT_ENDPOINT_LENGTH,
                    AWS_IOT_ENDPOINT,
-                   AWS_HTTP_PORT ) );
+                   AWS_HTTPS_PORT ) );
         opensslStatus = Openssl_Connect( pNetworkContext,
                                          &serverInfo,
                                          &opensslCredentials,

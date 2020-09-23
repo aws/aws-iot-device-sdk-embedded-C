@@ -42,3 +42,10 @@ if(ROOT_CA_CERT_PATH)
             ROOT_CA_CERT_PATH="${ROOT_CA_CERT_PATH}"
     )
 endif()
+
+if(AWS_HTTPS_PORT)
+    target_compile_definitions(
+        ${DEMO_NAME} PRIVATE
+            AWS_HTTPS_PORT=${AWS_HTTPS_PORT}
+    )
+endif()

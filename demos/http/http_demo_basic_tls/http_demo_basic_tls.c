@@ -46,8 +46,8 @@
 #endif
 
 /* Check that TLS port of the server is defined. */
-#ifndef SERVER_PORT
-    #error "Please define a SERVER_PORT."
+#ifndef HTTPS_PORT
+    #error "Please define a HTTPS_PORT."
 #endif
 
 /* Check that a path for Root CA Certificate is defined. */
@@ -234,7 +234,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     /* Initialize server information. */
     serverInfo.pHostName = SERVER_HOST;
     serverInfo.hostNameLength = SERVER_HOST_LENGTH;
-    serverInfo.port = SERVER_PORT;
+    serverInfo.port = HTTPS_PORT;
 
     /* Initialize reconnect attempts and interval */
     RetryUtils_ParamsReset( &reconnectParams );
@@ -246,12 +246,12 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     do
     {
         /* Establish a TLS session with the HTTP server. This example connects
-         * to the HTTP server as specified in SERVER_HOST and SERVER_PORT
+         * to the HTTP server as specified in SERVER_HOST and HTTPS_PORT
          * in demo_config.h. */
         LogInfo( ( "Establishing a TLS session to %.*s:%d.",
                    ( int32_t ) SERVER_HOST_LENGTH,
                    SERVER_HOST,
-                   SERVER_PORT ) );
+                   HTTPS_PORT ) );
         opensslStatus = Openssl_Connect( pNetworkContext,
                                          &serverInfo,
                                          &opensslCredentials,
@@ -430,7 +430,7 @@ int main( int argc,
 
     for( ; ; )
     {
-        int i;
+        int i = 0;
 
         /**************************** Connect. ******************************/
 

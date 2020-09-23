@@ -46,8 +46,8 @@
 #endif
 
 /* Check that port of the server is defined. */
-#ifndef SERVER_PORT
-    #error "Please define a SERVER_PORT."
+#ifndef HTTP_PORT
+    #error "Please define a HTTP_PORT."
 #endif
 
 /* Check that a path for HTTP Method GET is defined. */
@@ -218,7 +218,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     /* Initialize server information. */
     serverInfo.pHostName = SERVER_HOST;
     serverInfo.hostNameLength = SERVER_HOST_LENGTH;
-    serverInfo.port = SERVER_PORT;
+    serverInfo.port = HTTP_PORT;
 
     /* Initialize reconnect attempts and interval */
     RetryUtils_ParamsReset( &reconnectParams );
@@ -230,12 +230,12 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     do
     {
         /* Establish a TCP connection with the HTTP server. This example connects
-         * to the HTTP server as specified in SERVER_HOST and SERVER_PORT
+         * to the HTTP server as specified in SERVER_HOST and HTTP_PORT
          * in demo_config.h. */
         LogInfo( ( "Establishing a TCP connection with %.*s:%d.",
                    ( int32_t ) SERVER_HOST_LENGTH,
                    SERVER_HOST,
-                   SERVER_PORT ) );
+                   HTTP_PORT ) );
         socketStatus = Plaintext_Connect( pNetworkContext,
                                           &serverInfo,
                                           TRANSPORT_SEND_RECV_TIMEOUT_MS,
@@ -412,7 +412,7 @@ int main( int argc,
 
     for( ; ; )
     {
-        int i;
+        int i = 0;
 
         /**************************** Connect. ******************************/
 
