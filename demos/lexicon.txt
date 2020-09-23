@@ -23,6 +23,7 @@ cond
 config
 configs
 connack
+connectfunction
 const
 constantspage
 copybrief
