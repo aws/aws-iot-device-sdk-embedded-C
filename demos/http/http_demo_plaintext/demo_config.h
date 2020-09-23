@@ -55,9 +55,6 @@
  *
  * An httpbin server can be setup locally for running this demo against
  * it. Please refer to the instructions in the README to do so.
- *
- * Alternatively, this can be set to httpbin.org, but the reliability of this
- * web server is not guaranteed.
  */
 #ifndef SERVER_HOST
     #define SERVER_HOST    "localhost"

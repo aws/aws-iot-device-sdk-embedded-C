@@ -31,14 +31,14 @@
 /* Include Demo Config as the first non-system header. */
 #include "demo_config.h"
 
+/* Common HTTP demo utilities. */
+#include "http_demo_utils.h"
+
 /* HTTP API header. */
 #include "core_http_client.h"
 
 /* Plaintext sockets transport header. */
 #include "plaintext_posix.h"
-
-/* Retry utilities. */
-#include "retry_utils.h"
 
 /* Check that hostname of the server is defined. */
 #ifndef SERVER_HOST
@@ -173,15 +173,11 @@ static uint8_t userBuffer[ USER_BUFFER_LENGTH ];
 /**
  * @brief Connect to HTTP server with reconnection retries.
  *
- * If connection fails, retry is attempted after a timeout.
- * Timeout value will exponentially increase until maximum
- * timeout value is reached or the number of attempts are exhausted.
- *
  * @param[out] pNetworkContext The output parameter to return the created network context.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on successful connection.
  */
-static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext );
+static int32_t connectToServer( NetworkContext_t * pNetworkContext );
 
 /**
  * @brief Send an HTTP request based on a specified method and path, then
@@ -195,21 +191,17 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
-static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
-                            const char * pMethod,
-                            size_t methodLen,
-                            const char * pPath,
-                            size_t pathLen );
+static int32_t sendHttpRequest( const TransportInterface_t * pTransportInterface,
+                                const char * pMethod,
+                                size_t methodLen,
+                                const char * pPath,
+                                size_t pathLen );
 
 /*-----------------------------------------------------------*/
 
-static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext )
+static int32_t connectToServer( NetworkContext_t * pNetworkContext )
 {
-    int returnStatus = EXIT_SUCCESS;
-    /* Status returned by the retry utilities. */
-    RetryUtilsStatus_t retryUtilsStatus = RetryUtilsSuccess;
-    /* Struct containing the next backoff time. */
-    RetryUtilsParams_t reconnectParams;
+    int32_t returnStatus = EXIT_SUCCESS;
     /* Status returned by plaintext sockets transport implementation. */
     SocketStatus_t socketStatus;
     /* Information about the server to send the HTTP requests. */
@@ -220,54 +212,40 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     serverInfo.hostNameLength = SERVER_HOST_LENGTH;
     serverInfo.port = HTTP_PORT;
 
-    /* Initialize reconnect attempts and interval */
-    RetryUtils_ParamsReset( &reconnectParams );
+    /* Establish a TCP connection with the HTTP server. This example connects
+     * to the HTTP server as specified in SERVER_HOST and HTTP_PORT
+     * in demo_config.h. */
+    LogInfo( ( "Establishing a TCP connection with %.*s:%d.",
+               ( int32_t ) SERVER_HOST_LENGTH,
+               SERVER_HOST,
+               HTTP_PORT ) );
+    socketStatus = Plaintext_Connect( pNetworkContext,
+                                      &serverInfo,
+                                      TRANSPORT_SEND_RECV_TIMEOUT_MS,
+                                      TRANSPORT_SEND_RECV_TIMEOUT_MS );
 
-    /* Attempt to connect to HTTP server. If connection fails, retry after
-     * a timeout. Timeout value will exponentially increase until maximum
-     * attempts are reached.
-     */
-    do
+    if( socketStatus == SOCKETS_SUCCESS )
     {
-        /* Establish a TCP connection with the HTTP server. This example connects
-         * to the HTTP server as specified in SERVER_HOST and HTTP_PORT
-         * in demo_config.h. */
-        LogInfo( ( "Establishing a TCP connection with %.*s:%d.",
-                   ( int32_t ) SERVER_HOST_LENGTH,
-                   SERVER_HOST,
-                   HTTP_PORT ) );
-        socketStatus = Plaintext_Connect( pNetworkContext,
-                                          &serverInfo,
-                                          TRANSPORT_SEND_RECV_TIMEOUT_MS,
-                                          TRANSPORT_SEND_RECV_TIMEOUT_MS );
-
-        if( socketStatus != SOCKETS_SUCCESS )
-        {
-            LogWarn( ( "Connection to the HTTP server failed. "
-                       "Retrying connection with backoff and jitter." ) );
-            retryUtilsStatus = RetryUtils_BackoffAndSleep( &reconnectParams );
-        }
-
-        if( retryUtilsStatus == RetryUtilsRetriesExhausted )
-        {
-            LogError( ( "Connection to the server failed, all attempts exhausted." ) );
-            returnStatus = EXIT_FAILURE;
-        }
-    } while( ( socketStatus != SOCKETS_SUCCESS ) && ( retryUtilsStatus == RetryUtilsSuccess ) );
+        returnStatus = EXIT_SUCCESS;
+    }
+    else
+    {
+        returnStatus = EXIT_FAILURE;
+    }
 
     return returnStatus;
 }
 
 /*-----------------------------------------------------------*/
 
-static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
-                            const char * pMethod,
-                            size_t methodLen,
-                            const char * pPath,
-                            size_t pathLen )
+static int32_t sendHttpRequest( const TransportInterface_t * pTransportInterface,
+                                const char * pMethod,
+                                size_t methodLen,
+                                const char * pPath,
+                                size_t pathLen )
 {
     /* Return value of this method. */
-    int returnStatus = EXIT_SUCCESS;
+    int32_t returnStatus = EXIT_SUCCESS;
 
     /* Configurations of the initial request headers that are passed to
      * #HTTPClient_InitializeRequestHeaders. */
@@ -385,7 +363,7 @@ int main( int argc,
           char ** argv )
 {
     /* Return value of main. */
-    int returnStatus = EXIT_SUCCESS;
+    int32_t returnStatus = EXIT_SUCCESS;
     /* The transport layer interface used by the HTTP Client library. */
     TransportInterface_t transportInterface;
     /* The network context for the transport layer interface. */
@@ -424,7 +402,8 @@ int main( int argc,
              * attempts are reached or maximum timeout value is reached. The function
              * returns EXIT_FAILURE if the TCP connection cannot be established to
              * broker after configured number of attempts. */
-            returnStatus = connectToServerWithBackoffRetries( &networkContext );
+            returnStatus = connectToServerWithBackoffRetries( connectToServer,
+                                                              &networkContext );
 
             if( returnStatus == EXIT_FAILURE )
             {
