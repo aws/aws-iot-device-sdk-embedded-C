@@ -141,7 +141,7 @@
 #define NUMBER_HTTP_PATHS          ( 4 )
 
 /**
- * @brief A pair containing a path string of the URL and its length.
+ * @brief A pair containing a path string of the URI and its length.
  */
 typedef struct httpPathStrings
 {
