@@ -103,6 +103,16 @@
 #define AWS_IOT_ENDPOINT_LENGTH    ( sizeof( AWS_IOT_ENDPOINT ) - 1 )
 
 /**
+ * @brief The length of the HTTP POST method.
+ */
+#define HTTP_METHOD_POST_LENGTH    ( sizeof( HTTP_METHOD_POST ) - 1 )
+
+/**
+ * @brief The length of the HTTP POST path.
+ */
+#define POST_PATH_LENGTH           ( sizeof( POST_PATH ) - 1 )
+
+/**
  * @brief Length of the request body.
  */
 #define REQUEST_BODY_LENGTH        ( sizeof( REQUEST_BODY ) - 1 )
@@ -138,13 +148,17 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
  *
  * @param[in] pTransportInterface The transport interface for making network calls.
  * @param[in] pMethod The HTTP request method.
+ * @param[in] methodLen The length of the HTTP request method.
  * @param[in] pPath The Request-URI to the objects of interest.
+ * @param[in] pathLen The length of the Request-URI.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
 static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
                             const char * pMethod,
-                            const char * pPath );
+                            size_t methodLen,
+                            const char * pPath,
+                            size_t pathLen );
 
 /*-----------------------------------------------------------*/
 
@@ -223,7 +237,9 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
 
 static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
                             const char * pMethod,
-                            const char * pPath )
+                            size_t methodLen,
+                            const char * pPath,
+                            size_t pathLen )
 {
     /* Return value of this method. */
     int returnStatus = EXIT_SUCCESS;
@@ -251,9 +267,9 @@ static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
     requestInfo.pHost = AWS_IOT_ENDPOINT;
     requestInfo.hostLen = AWS_IOT_ENDPOINT_LENGTH;
     requestInfo.method = pMethod;
-    requestInfo.methodLen = strlen( pMethod );
+    requestInfo.methodLen = methodLen;
     requestInfo.pPath = pPath;
-    requestInfo.pathLen = strlen( pPath );
+    requestInfo.pathLen = pathLen;
 
     /* Set "Connection" HTTP header to "keep-alive" so that multiple requests
      * can be sent over the same established TCP connection. */
@@ -395,7 +411,9 @@ int main( int argc,
         {
             returnStatus = sendHttpRequest( &transportInterface,
                                             HTTP_METHOD_POST,
-                                            POST_PATH );
+                                            HTTP_METHOD_POST_LENGTH,
+                                            POST_PATH,
+                                            POST_PATH_LENGTH );
         }
 
         if( returnStatus == EXIT_SUCCESS )

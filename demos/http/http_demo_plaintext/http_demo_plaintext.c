@@ -88,39 +88,75 @@
 /**
  * @brief The length of the HTTP server host name.
  */
-#define SERVER_HOST_LENGTH     ( sizeof( SERVER_HOST ) - 1 )
+#define SERVER_HOST_LENGTH         ( sizeof( SERVER_HOST ) - 1 )
+
+/**
+ * @brief The length of the HTTP GET method.
+ */
+#define HTTP_METHOD_GET_LENGTH     ( sizeof( HTTP_METHOD_GET ) - 1 )
+
+/**
+ * @brief The length of the HTTP HEAD method.
+ */
+#define HTTP_METHOD_HEAD_LENGTH    ( sizeof( HTTP_METHOD_HEAD ) - 1 )
+
+/**
+ * @brief The length of the HTTP PUT method.
+ */
+#define HTTP_METHOD_PUT_LENGTH     ( sizeof( HTTP_METHOD_PUT ) - 1 )
+
+/**
+ * @brief The length of the HTTP POST method.
+ */
+#define HTTP_METHOD_POST_LENGTH    ( sizeof( HTTP_METHOD_POST ) - 1 )
+
+/**
+ * @brief The length of the HTTP GET path.
+ */
+#define GET_PATH_LENGTH            ( sizeof( GET_PATH ) - 1 )
+
+/**
+ * @brief The length of the HTTP HEAD path.
+ */
+#define HEAD_PATH_LENGTH           ( sizeof( HEAD_PATH ) - 1 )
+
+/**
+ * @brief The length of the HTTP PUT path.
+ */
+#define PUT_PATH_LENGTH            ( sizeof( PUT_PATH ) - 1 )
+
+/**
+ * @brief The length of the HTTP POST path.
+ */
+#define POST_PATH_LENGTH           ( sizeof( POST_PATH ) - 1 )
 
 /**
  * @brief Length of the request body.
  */
-#define REQUEST_BODY_LENGTH    ( sizeof( REQUEST_BODY ) - 1 )
+#define REQUEST_BODY_LENGTH        ( sizeof( REQUEST_BODY ) - 1 )
 
 /**
  * @brief Number of HTTP paths to request.
  */
-#define NUMBER_HTTP_PATHS      ( 4 )
+#define NUMBER_HTTP_PATHS          ( 4 )
 
 /**
- * @brief An array of HTTP paths to request.
+ * @brief A pair containing a path string of the URL and its length.
  */
-static char * httpMethodPaths[] =
+typedef struct httpPathStrings
 {
-    GET_PATH,
-    HEAD_PATH,
-    PUT_PATH,
-    POST_PATH
-};
+    const char * httpPath;
+    size_t httpPathLength;
+} httpPathStrings_t;
 
 /**
- * @brief The respective method for the HTTP paths listed in #httpMethodPaths.
+ * @brief A pair containing an HTTP method string and its length.
  */
-static char * httpMethods[] =
+typedef struct httpMethodStrings
 {
-    HTTP_METHOD_GET,
-    HTTP_METHOD_HEAD,
-    HTTP_METHOD_PUT,
-    HTTP_METHOD_POST
-};
+    const char * httpMethod;
+    size_t httpMethodLength;
+} httpMethodStrings_t;
 
 /**
  * @brief A buffer used in the demo for storing HTTP request headers and
@@ -153,13 +189,17 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
  *
  * @param[in] pTransportInterface The transport interface for making network calls.
  * @param[in] pMethod The HTTP request method.
+ * @param[in] methodLen The length of the HTTP request method.
  * @param[in] pPath The Request-URI to the objects of interest.
+ * @param[in] pathLen The length of the Request-URI.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
 static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
                             const char * pMethod,
-                            const char * pPath );
+                            size_t methodLen,
+                            const char * pPath,
+                            size_t pathLen );
 
 /*-----------------------------------------------------------*/
 
@@ -222,7 +262,9 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
 
 static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
                             const char * pMethod,
-                            const char * pPath )
+                            size_t methodLen,
+                            const char * pPath,
+                            size_t pathLen )
 {
     /* Return value of this method. */
     int returnStatus = EXIT_SUCCESS;
@@ -250,9 +292,9 @@ static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
     requestInfo.pHost = SERVER_HOST;
     requestInfo.hostLen = SERVER_HOST_LENGTH;
     requestInfo.method = pMethod;
-    requestInfo.methodLen = strlen( pMethod );
+    requestInfo.methodLen = methodLen;
     requestInfo.pPath = pPath;
-    requestInfo.pathLen = strlen( pPath );
+    requestInfo.pathLen = pathLen;
 
     /* Set "Connection" HTTP header to "keep-alive" so that multiple requests
      * can be sent over the same established TCP connection. */
@@ -348,6 +390,22 @@ int main( int argc,
     TransportInterface_t transportInterface;
     /* The network context for the transport layer interface. */
     NetworkContext_t networkContext;
+    /* An array of HTTP paths to request. */
+    const httpPathStrings_t httpMethodPaths[] =
+    {
+        { GET_PATH,  GET_PATH_LENGTH  },
+        { HEAD_PATH, HEAD_PATH_LENGTH },
+        { PUT_PATH,  PUT_PATH_LENGTH  },
+        { POST_PATH, POST_PATH_LENGTH }
+    };
+    /* The respective method for the HTTP paths listed in #httpMethodPaths. */
+    const httpMethodStrings_t httpMethods[] =
+    {
+        { HTTP_METHOD_GET,  HTTP_METHOD_GET_LENGTH  },
+        { HTTP_METHOD_HEAD, HTTP_METHOD_HEAD_LENGTH },
+        { HTTP_METHOD_PUT,  HTTP_METHOD_PUT_LENGTH  },
+        { HTTP_METHOD_POST, HTTP_METHOD_POST_LENGTH }
+    };
 
     ( void ) argc;
     ( void ) argv;
@@ -394,8 +452,10 @@ int main( int argc,
             if( returnStatus == EXIT_SUCCESS )
             {
                 returnStatus = sendHttpRequest( &transportInterface,
-                                                httpMethods[ i ],
-                                                httpMethodPaths[ i ] );
+                                                httpMethods[ i ].httpMethod,
+                                                httpMethods[ i ].httpMethodLength,
+                                                httpMethodPaths[ i ].httpPath,
+                                                httpMethodPaths[ i ].httpPathLength );
             }
             else
             {
