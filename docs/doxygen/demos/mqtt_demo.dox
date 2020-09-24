@@ -12,7 +12,7 @@ Messages in this demo are sent at QoS 2, which guarantees exactly one delivery a
 @image html mqtt_basic_tls.png width=100%
 
 
-@section mqtt_demo_mutual_auth MQTT Mutual Authentication Demo
+@section mqtt_demo_mutual_auth MQTT Mutual Auth Demo
 @brief Demo of an MQTT application that establishes a TLS connection with both server and client authentication, and uses QoS 1 level of communication with broker.
 
 This demo uses an OpenSSL-based transport interface implementation to establish a server and client-authenticated TLS connection, and demonstrates the subscribe-publish workflow of MQTT at QoS 1 level. After subscribing to a single topic filter, it publishes to the same topic and waits for receipt of that message back from the server at QoS 1 level. This cycle of publishing to the broker and receiving the same message back from the broker is repeated indefinitely.
