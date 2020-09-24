@@ -35,14 +35,14 @@
 /* OpenSSL sockets transport implementation. */
 #include "openssl_posix.h"
 
-/* Reconnect parameters. */
-#include "transport_reconnect.h"
+/* Retry parameters. */
+#include "retry_utils.h"
 
 /* Clock for timer. */
 #include "clock.h"
 
 /* MQTT include. */
-#include "mqtt.h"
+#include "core_mqtt.h"
 #include "mqtt_subscription_manager.h"
 
 /* OTA include. */
@@ -315,9 +315,9 @@ static void otaDataCallback( MQTTContext_t * pContext, MQTTPublishInfo_t * pPubl
 static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext )
 {
     int returnStatus = EXIT_SUCCESS;
-    bool retriesArePending = true;
+    RetryUtilsStatus_t retryUtilsStatus = RetryUtilsSuccess;
     OpensslStatus_t opensslStatus = OPENSSL_SUCCESS;
-    TransportReconnectParams_t reconnectParams;
+    RetryUtilsParams_t reconnectParams;
     ServerInfo_t serverInfo;
     OpensslCredentials_t opensslCredentials;
 
@@ -366,7 +366,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     }
 
     /* Initialize reconnect attempts and interval */
-    Transport_ReconnectParamsReset( &reconnectParams );
+    RetryUtils_ParamsReset( &reconnectParams );
 
     /* Attempt to connect to MQTT broker. If connection fails, retry after
      * a timeout. Timeout value will exponentially increase until maximum
@@ -378,10 +378,9 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
          * to the MQTT broker as specified in AWS_IOT_ENDPOINT and AWS_MQTT_PORT
          * at the demo config header. */
         LogInfo( ( "Establishing a TLS session to %.*s:%d.",
-                    AWS_IOT_ENDPOINT_LENGTH,
-                    AWS_IOT_ENDPOINT,
-                    AWS_MQTT_PORT ) );
-
+                   AWS_IOT_ENDPOINT_LENGTH,
+                   AWS_IOT_ENDPOINT,
+                   AWS_MQTT_PORT ) );
         opensslStatus = Openssl_Connect( pNetworkContext,
                                          &serverInfo,
                                          &opensslCredentials,
@@ -391,15 +390,15 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
         if( opensslStatus != OPENSSL_SUCCESS )
         {
             LogWarn( ( "Connection to the broker failed. Retrying connection with backoff and jitter." ) );
-            retriesArePending = Transport_ReconnectBackoffAndSleep( &reconnectParams );
+            retryUtilsStatus = RetryUtils_BackoffAndSleep( &reconnectParams );
         }
 
-        if( retriesArePending == false )
+        if( retryUtilsStatus == RetryUtilsRetriesExhausted )
         {
             LogError( ( "Connection to the broker failed, all attempts exhausted." ) );
             returnStatus = EXIT_FAILURE;
         }
-    } while( ( opensslStatus != OPENSSL_SUCCESS ) && ( retriesArePending == true ) );
+    } while( ( opensslStatus != OPENSSL_SUCCESS ) && ( retryUtilsStatus == RetryUtilsSuccess ) );
 
     return returnStatus;
 }
