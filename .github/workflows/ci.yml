@@ -8,6 +8,28 @@ on:
   workflow_dispatch:
 
 jobs:
+  demo-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone This Repo
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Build
+        run: |
+          sudo apt-get install -y lcov
+          cmake -S . -B build/ \
+          -G "Unix Makefiles" \
+          -DBUILD_TESTS=1 \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Werror' \
+          -DAWS_IOT_ENDPOINT="aws-iot-endpoint" \
+          -DBROKER_ENDPOINT="broker-endpoint" \
+          -DCLIENT_CERT_PATH="cert/path" \
+          -DROOT_CA_CERT_PATH="cert/path" \
+          -DCLIENT_PRIVATE_KEY_PATH="key/path"
+          make -C build/ help | grep demo | tr -d '. ' | xargs make -C build/
+          make -C build/ help | grep system | tr -d '. ' | xargs make -C build/
   unittest:
     runs-on: ubuntu-latest
     steps:
@@ -23,7 +45,7 @@ jobs:
           -DBUILD_TESTS=1 \
           -DCMAKE_BUILD_TYPE=Debug \
           -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Werror -DNDEBUG'
-          make -C build/ help | grep utest | tr -d '. ' | xargs make -C build/  
+          make -C build/ help | grep utest | tr -d '. ' | xargs make -C build/
       - name: Test
         run: |
           cd build/
