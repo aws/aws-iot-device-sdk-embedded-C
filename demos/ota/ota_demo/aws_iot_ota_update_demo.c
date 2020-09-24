@@ -270,7 +270,7 @@ static void otaMessageCallback( MQTTContext_t * pContext, MQTTPublishInfo_t * pP
         }
         else
         {
-            OTA_LOG_L1( "Error: No OTA data buffers available.\r\n", OTA_DATA_BLOCK_SIZE );
+            OTA_LOG_L1( "Error: No OTA data buffers available.\r\n" );
         }
 
 }
@@ -308,7 +308,7 @@ static void otaDataCallback( MQTTContext_t * pContext, MQTTPublishInfo_t * pPubl
         }
         else
         {
-            OTA_LOG_L1( "Error: No OTA data buffers available.\r\n", OTA_DATA_BLOCK_SIZE );
+            OTA_LOG_L1( "Error: No OTA data buffers available.\r\n" );
         }
 }
 
@@ -968,7 +968,7 @@ static MQTTStatus_t prvPublishMessage( const char * const pacTopic,
     }
     else
     {
-        OTA_LOG_L1( "[%s] Failed to send PUBLISH packet to broker with error = %u.", mqttStatus );
+        OTA_LOG_L1( "Failed to send PUBLISH packet to broker with error = %u.", mqttStatus );
     }
 
     return mqttStatus;
