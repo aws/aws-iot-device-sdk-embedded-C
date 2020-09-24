@@ -87,7 +87,7 @@ jobs:
       - name: Check Spelling
         run: |
           PATH=$PATH:$PWD/tools/spell
-          for lexfile in `find platform/ -name lexicon.txt`
+          for lexfile in `find platform/ demos/ integration-test/ -name lexicon.txt`
           do dir=${lexfile%/lexicon.txt}
             echo $dir
             find-unknown-comment-words --directory $dir
