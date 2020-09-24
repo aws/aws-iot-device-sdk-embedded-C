@@ -1,4 +1,5 @@
 /*
+ * AWS IoT Device SDK for Embedded C V202009.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -57,7 +58,7 @@
  */
 struct NetworkContext
 {
-    int socketDescriptor;
+    int32_t socketDescriptor;
 };
 
 /**
@@ -99,7 +100,7 @@ SocketStatus_t Plaintext_Disconnect( const NetworkContext_t * pNetworkContext );
  *
  * @return Number of bytes received if successful; negative value on error.
  */
-int32_t Plaintext_Recv( NetworkContext_t * pNetworkContext,
+int32_t Plaintext_Recv( const NetworkContext_t * pNetworkContext,
                         void * pBuffer,
                         size_t bytesToRecv );
 
@@ -115,7 +116,7 @@ int32_t Plaintext_Recv( NetworkContext_t * pNetworkContext,
  *
  * @return Number of bytes sent if successful; negative value on error.
  */
-int32_t Plaintext_Send( NetworkContext_t * pNetworkContext,
+int32_t Plaintext_Send( const NetworkContext_t * pNetworkContext,
                         const void * pBuffer,
                         size_t bytesToSend );
 

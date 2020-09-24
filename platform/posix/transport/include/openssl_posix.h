@@ -1,4 +1,5 @@
 /*
+ * AWS IoT Device SDK for Embedded C V202009.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -41,7 +42,7 @@
     #define LIBRARY_LOG_NAME     "Transport_OpenSSL_Sockets"
 #endif
 #ifndef LIBRARY_LOG_LEVEL
-    #define LIBRARY_LOG_LEVEL    LOG_DEBUG
+    #define LIBRARY_LOG_LEVEL    LOG_ERROR
 #endif
 
 #include "logging_stack.h"
@@ -66,7 +67,7 @@
  */
 struct NetworkContext
 {
-    int socketDescriptor;
+    int32_t socketDescriptor;
     SSL * pSsl;
 };
 
@@ -102,7 +103,7 @@ typedef struct OpensslCredentials
     /**
      * @brief Length of the ALPN protocols array.
      */
-    size_t alpnProtosLen;
+    uint32_t alpnProtosLen;
 
     /**
      * @brief Set a host name to enable SNI. Set to NULL to disable SNI.
@@ -120,7 +121,7 @@ typedef struct OpensslCredentials
      * @note By setting this to 0, OpenSSL uses the default value,
      * which is 16384 (SSL3_RT_MAX_PLAIN_LENGTH).
      */
-    size_t maxFragmentLength;
+    uint16_t maxFragmentLength;
 
     /**
      * @brief Filepaths to certificates and private key that are used when
@@ -162,7 +163,7 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
  *
  * @return #OPENSSL_SUCCESS on success; #OPENSSL_INVALID_PARAMETER on failure.
  */
-OpensslStatus_t Openssl_Disconnect( NetworkContext_t * pNetworkContext );
+OpensslStatus_t Openssl_Disconnect( const NetworkContext_t * pNetworkContext );
 
 /**
  * @brief Receives data over an established TLS session using the OpenSSL API.
@@ -176,7 +177,7 @@ OpensslStatus_t Openssl_Disconnect( NetworkContext_t * pNetworkContext );
  *
  * @return Number of bytes received if successful; negative value on error.
  */
-int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
+int32_t Openssl_Recv( const NetworkContext_t * pNetworkContext,
                       void * pBuffer,
                       size_t bytesToRecv );
 
@@ -192,7 +193,7 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
  *
  * @return Number of bytes sent if successful; negative value on error.
  */
-int32_t Openssl_Send( NetworkContext_t * pNetworkContext,
+int32_t Openssl_Send( const NetworkContext_t * pNetworkContext,
                       const void * pBuffer,
                       size_t bytesToSend );
 

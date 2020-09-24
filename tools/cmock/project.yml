@@ -21,15 +21,14 @@
   :includes:        # This will add these includes to each mock.
     - <stdbool.h>
     - <stdint.h>
-    - <fcntl.h>
-  :treat_externs: :exclude  # Now the extern-ed functions will be mocked.
+  :treat_externs: :include  # Now the extern-ed functions will be mocked.
   :weak: __attribute__((weak))
   :verbosity: 3
   :attributes:
     - PRIVILEGED_FUNCTION
-    - 'int fcntl(int s, int cmd, ...);'
   :strippables:
     - PRIVILEGED_FUNCTION
     - portDONT_DISCARD
-    - '(?:fcntl\s*\(+.*?\)+)' # this function is causing some trouble with code coverage as the annotations are calling the mocked one, so we won't mock it
-  :treat_externs: :include
+    # These keywords are found in many POSIX APIs but is stripped as it cannot be parsed by CMock.
+    - __restrict
+    - \s__THROW

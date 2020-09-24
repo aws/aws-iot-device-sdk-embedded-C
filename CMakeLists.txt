@@ -1,7 +1,7 @@
 # Project information.
 cmake_minimum_required( VERSION 3.13.0 )
 project( AwsIotDeviceSdkEmbeddedC
-         VERSION 4.0.2
+         VERSION 202009.00
          LANGUAGES C )
 
 # Allow the project to be organized into folders.
@@ -65,6 +65,26 @@ if(DEFINED ENV{PWD})
     endif()
 endif()
 
+# Build the tests if flag enabled.
+if(${BUILD_TESTS})
+    enable_testing()
+    include(${ROOT_DIR}/tools/cmock/cmock_dependencies.cmake)
+    
+    # Create a list for each unit test target.
+    set(utest_targets
+        openssl_utest sockets_utest
+        plaintext_utest clock_utest
+        retry_utils_utest)
+
+    # Add a target for running coverage on tests.
+    add_custom_target(coverage
+        COMMAND ${CMAKE_COMMAND} -DROOT_DIR=${ROOT_DIR}
+        -P ${CMAKE_SOURCE_DIR}/tools/cmock/coverage.cmake
+        DEPENDS cmock unity ${utest_targets}
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    )
+endif()
+
 # Add libraries.
 add_subdirectory( libraries )
 
@@ -74,4 +94,12 @@ add_subdirectory( platform )
 # Build the demos.
 add_subdirectory( demos )
 
+# Add build configuration for all integration tests.
+if(${BUILD_TESTS})
+    file(GLOB_RECURSE test_modules "integration-test/*CMakeLists.txt")
+    foreach(module IN LISTS test_modules)
+        get_filename_component(DIR_PATH "${module}" DIRECTORY)
+        add_subdirectory(${DIR_PATH})
+    endforeach()
+endif()
 

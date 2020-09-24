@@ -1,4 +1,5 @@
 /*
+ * AWS IoT Device SDK for Embedded C V202009.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -24,14 +25,23 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* POSIX includes. */
+#include <unistd.h>
+
 /* Include Demo Config as the first non-system header. */
 #include "demo_config.h"
 
+/* Common HTTP demo utilities. */
+#include "http_demo_utils.h"
+
 /* HTTP API header. */
-#include "http_client.h"
+#include "core_http_client.h"
 
 /* OpenSSL transport header. */
 #include "openssl_posix.h"
+
+/* Retry utilities. */
+#include "retry_utils.h"
 
 /* Check that hostname of the server is defined. */
 #ifndef SERVER_HOST
@@ -39,8 +49,8 @@
 #endif
 
 /* Check that TLS port of the server is defined. */
-#ifndef SERVER_PORT
-    #error "Please define a SERVER_PORT."
+#ifndef HTTPS_PORT
+    #error "Please define a HTTPS_PORT."
 #endif
 
 /* Check that a path for Root CA Certificate is defined. */
@@ -67,6 +77,11 @@
 #ifndef POST_PATH
     #error "Please define a POST_PATH."
 #endif
+
+/**
+ * @brief Delay in seconds between each iteration of the demo.
+ */
+#define DEMO_LOOP_DELAY_SECONDS    ( 5U )
 
 /* Check that transport timeout for transport send and receive is defined. */
 #ifndef TRANSPORT_SEND_RECV_TIMEOUT_MS
@@ -134,6 +149,29 @@
 #define REQUEST_BODY_LENGTH        ( sizeof( REQUEST_BODY ) - 1 )
 
 /**
+ * @brief Number of HTTP paths to request.
+ */
+#define NUMBER_HTTP_PATHS          ( 4 )
+
+/**
+ * @brief A pair containing a path string of the URI and its length.
+ */
+typedef struct httpPathStrings
+{
+    const char * httpPath;
+    size_t httpPathLength;
+} httpPathStrings_t;
+
+/**
+ * @brief A pair containing an HTTP method string and its length.
+ */
+typedef struct httpMethodStrings
+{
+    const char * httpMethod;
+    size_t httpMethodLength;
+} httpMethodStrings_t;
+
+/**
  * @brief A buffer used in the demo for storing HTTP request headers and
  * HTTP response headers and body.
  *
@@ -144,6 +182,15 @@
 static uint8_t userBuffer[ USER_BUFFER_LENGTH ];
 
 /*-----------------------------------------------------------*/
+
+/**
+ * @brief Connect to HTTP server with reconnection retries.
+ *
+ * @param[out] pNetworkContext The output parameter to return the created network context.
+ *
+ * @return EXIT_FAILURE on failure; EXIT_SUCCESS on successful connection.
+ */
+static int32_t connectToServer( NetworkContext_t * pNetworkContext );
 
 /**
  * @brief Send an HTTP request based on a specified method and path, then
@@ -157,22 +204,68 @@ static uint8_t userBuffer[ USER_BUFFER_LENGTH ];
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
-static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
-                            const char * pMethod,
-                            size_t methodLen,
-                            const char * pPath,
-                            size_t pathLen );
+static int32_t sendHttpRequest( const TransportInterface_t * pTransportInterface,
+                                const char * pMethod,
+                                size_t methodLen,
+                                const char * pPath,
+                                size_t pathLen );
 
 /*-----------------------------------------------------------*/
 
-static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
-                            const char * pMethod,
-                            size_t methodLen,
-                            const char * pPath,
-                            size_t pathLen )
+static int32_t connectToServer( NetworkContext_t * pNetworkContext )
+{
+    int32_t returnStatus = EXIT_FAILURE;
+    /* Status returned by OpenSSL transport implementation. */
+    OpensslStatus_t opensslStatus;
+    /* Credentials to establish the TLS connection. */
+    OpensslCredentials_t opensslCredentials;
+    /* Information about the server to send the HTTP requests. */
+    ServerInfo_t serverInfo;
+
+    /* Initialize TLS credentials. */
+    ( void ) memset( &opensslCredentials, 0, sizeof( opensslCredentials ) );
+    opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
+
+    /* Initialize server information. */
+    serverInfo.pHostName = SERVER_HOST;
+    serverInfo.hostNameLength = SERVER_HOST_LENGTH;
+    serverInfo.port = HTTPS_PORT;
+
+    /* Establish a TLS session with the HTTP server. This example connects
+     * to the HTTP server as specified in SERVER_HOST and HTTPS_PORT
+     * in demo_config.h. */
+    LogInfo( ( "Establishing a TLS session to %.*s:%d.",
+               ( int32_t ) SERVER_HOST_LENGTH,
+               SERVER_HOST,
+               HTTPS_PORT ) );
+    opensslStatus = Openssl_Connect( pNetworkContext,
+                                     &serverInfo,
+                                     &opensslCredentials,
+                                     TRANSPORT_SEND_RECV_TIMEOUT_MS,
+                                     TRANSPORT_SEND_RECV_TIMEOUT_MS );
+
+    if( opensslStatus == OPENSSL_SUCCESS )
+    {
+        returnStatus = EXIT_SUCCESS;
+    }
+    else
+    {
+        returnStatus = EXIT_FAILURE;
+    }
+
+    return returnStatus;
+}
+
+/*-----------------------------------------------------------*/
+
+static int32_t sendHttpRequest( const TransportInterface_t * pTransportInterface,
+                                const char * pMethod,
+                                size_t methodLen,
+                                const char * pPath,
+                                size_t pathLen )
 {
     /* Return value of this method. */
-    int returnStatus = EXIT_SUCCESS;
+    int32_t returnStatus = EXIT_SUCCESS;
 
     /* Configurations of the initial request headers that are passed to
      * #HTTPClient_InitializeRequestHeaders. */
@@ -186,7 +279,7 @@ static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
     HTTPStatus_t httpStatus = HTTP_SUCCESS;
 
     assert( pMethod != NULL );
-    assert( methodLen > 0 );
+    assert( pPath != NULL );
 
     /* Initialize all HTTP Client library API structs to 0. */
     ( void ) memset( &requestInfo, 0, sizeof( requestInfo ) );
@@ -220,9 +313,9 @@ static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
         response.bufferLen = USER_BUFFER_LENGTH;
 
         LogInfo( ( "Sending HTTP %.*s request to %.*s%.*s...",
-                   ( int32_t ) methodLen, pMethod,
+                   ( int32_t ) requestInfo.methodLen, requestInfo.method,
                    ( int32_t ) SERVER_HOST_LENGTH, SERVER_HOST,
-                   ( int32_t ) pathLen, pPath ) );
+                   ( int32_t ) requestInfo.pathLen, requestInfo.pPath ) );
         LogDebug( ( "Request Headers:\n%.*s\n"
                     "Request Body:\n%.*s\n",
                     ( int32_t ) requestHeaders.headersLen,
@@ -250,7 +343,7 @@ static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
                    "Response Status:\n%u\n"
                    "Response Body:\n%.*s\n",
                    ( int32_t ) SERVER_HOST_LENGTH, SERVER_HOST,
-                   ( int32_t ) pathLen, pPath,
+                   ( int32_t ) requestInfo.pathLen, requestInfo.pPath,
                    ( int32_t ) response.headersLen, response.pHeaders,
                    response.statusCode,
                    ( int32_t ) response.bodyLen, response.pBody ) );
@@ -258,9 +351,9 @@ static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
     else
     {
         LogError( ( "Failed to send HTTP %.*s request to %.*s%.*s: Error=%s.",
-                    ( int32_t ) methodLen, pMethod,
+                    ( int32_t ) requestInfo.methodLen, requestInfo.method,
                     ( int32_t ) SERVER_HOST_LENGTH, SERVER_HOST,
-                    ( int32_t ) pathLen, pPath,
+                    ( int32_t ) requestInfo.pathLen, requestInfo.pPath,
                     HTTPClient_strerror( httpStatus ) ) );
     }
 
@@ -291,108 +384,100 @@ int main( int argc,
           char ** argv )
 {
     /* Return value of main. */
-    int returnStatus = EXIT_SUCCESS;
+    int32_t returnStatus = EXIT_SUCCESS;
     /* The transport layer interface used by the HTTP Client library. */
     TransportInterface_t transportInterface;
     /* The network context for the transport layer interface. */
     NetworkContext_t networkContext;
-    /* Credentials to establish the TLS connection. */
-    OpensslCredentials_t opensslCredentials;
-    /* Status returned by OpenSSL transport implementation. */
-    OpensslStatus_t opensslStatus;
-    /* Information about the server to send the HTTP requests. */
-    ServerInfo_t serverInfo;
+    /* An array of HTTP paths to request. */
+    const httpPathStrings_t httpMethodPaths[] =
+    {
+        { GET_PATH,  GET_PATH_LENGTH  },
+        { HEAD_PATH, HEAD_PATH_LENGTH },
+        { PUT_PATH,  PUT_PATH_LENGTH  },
+        { POST_PATH, POST_PATH_LENGTH }
+    };
+    /* The respective method for the HTTP paths listed in #httpMethodPaths. */
+    const httpMethodStrings_t httpMethods[] =
+    {
+        { HTTP_METHOD_GET,  HTTP_METHOD_GET_LENGTH  },
+        { HTTP_METHOD_HEAD, HTTP_METHOD_HEAD_LENGTH },
+        { HTTP_METHOD_PUT,  HTTP_METHOD_PUT_LENGTH  },
+        { HTTP_METHOD_POST, HTTP_METHOD_POST_LENGTH }
+    };
 
     ( void ) argc;
     ( void ) argv;
 
-    /* Initialize TLS credentials. */
-    ( void ) memset( &opensslCredentials, 0, sizeof( opensslCredentials ) );
-    opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
-
-    /* Initialize server information. */
-    serverInfo.pHostName = SERVER_HOST;
-    serverInfo.hostNameLength = SERVER_HOST_LENGTH;
-    serverInfo.port = SERVER_PORT;
-
-    /**************************** Connect. ******************************/
-
-    /* Establish TLS connection on top of TCP connection using OpenSSL. */
-    if( returnStatus == EXIT_SUCCESS )
+    for( ; ; )
     {
-        LogInfo( ( "Performing TLS handshake on top of the TCP connection." ) );
+        int i = 0;
 
-        opensslStatus = Openssl_Connect( &networkContext,
-                                         &serverInfo,
-                                         &opensslCredentials,
-                                         TRANSPORT_SEND_RECV_TIMEOUT_MS,
-                                         TRANSPORT_SEND_RECV_TIMEOUT_MS );
+        /**************************** Connect. ******************************/
 
-        if( opensslStatus != OPENSSL_SUCCESS )
+        /* Establish TLS connection on top of TCP connection using OpenSSL. */
+        if( returnStatus == EXIT_SUCCESS )
         {
-            returnStatus = EXIT_FAILURE;
+            LogInfo( ( "Performing TLS handshake on top of the TCP connection." ) );
+
+            /* Attempt to connect to the HTTP server. If connection fails, retry after
+             * a timeout. Timeout value will be exponentially increased till the maximum
+             * attempts are reached or maximum timeout value is reached. The function
+             * returns EXIT_FAILURE if the TCP connection cannot be established to
+             * broker after configured number of attempts. */
+            returnStatus = connectToServerWithBackoffRetries( connectToServer,
+                                                              &networkContext );
+
+            if( returnStatus == EXIT_FAILURE )
+            {
+                /* Log error to indicate connection failure after all
+                 * reconnect attempts are over. */
+                LogError( ( "Failed to connect to HTTP server %.*s.",
+                            ( int32_t ) SERVER_HOST_LENGTH,
+                            SERVER_HOST ) );
+            }
         }
-    }
 
-    /* Define the transport interface. */
-    if( returnStatus == EXIT_SUCCESS )
-    {
-        ( void ) memset( &transportInterface, 0, sizeof( transportInterface ) );
-        transportInterface.recv = Openssl_Recv;
-        transportInterface.send = Openssl_Send;
-        transportInterface.pNetworkContext = &networkContext;
-    }
+        /* Define the transport interface. */
+        if( returnStatus == EXIT_SUCCESS )
+        {
+            ( void ) memset( &transportInterface, 0, sizeof( transportInterface ) );
+            transportInterface.recv = Openssl_Recv;
+            transportInterface.send = Openssl_Send;
+            transportInterface.pNetworkContext = &networkContext;
+        }
 
-    /*********************** Send HTTPS request. ************************/
+        /********************** Send HTTPS requests. ************************/
 
-    /* Send GET Request. */
-    if( returnStatus == EXIT_SUCCESS )
-    {
-        returnStatus = sendHttpRequest( &transportInterface,
-                                        HTTP_METHOD_GET,
-                                        HTTP_METHOD_GET_LENGTH,
-                                        GET_PATH,
-                                        GET_PATH_LENGTH );
-    }
+        for( i = 0; i < NUMBER_HTTP_PATHS; i++ )
+        {
+            if( returnStatus == EXIT_SUCCESS )
+            {
+                returnStatus = sendHttpRequest( &transportInterface,
+                                                httpMethods[ i ].httpMethod,
+                                                httpMethods[ i ].httpMethodLength,
+                                                httpMethodPaths[ i ].httpPath,
+                                                httpMethodPaths[ i ].httpPathLength );
+            }
+            else
+            {
+                break;
+            }
+        }
 
-    /* Send HEAD Request. */
-    if( returnStatus == EXIT_SUCCESS )
-    {
-        returnStatus = sendHttpRequest( &transportInterface,
-                                        HTTP_METHOD_HEAD,
-                                        HTTP_METHOD_HEAD_LENGTH,
-                                        HEAD_PATH,
-                                        HEAD_PATH_LENGTH );
-    }
+        if( returnStatus == EXIT_SUCCESS )
+        {
+            /* Log message indicating an iteration completed successfully. */
+            LogInfo( ( "Demo completed successfully." ) );
+        }
 
-    /* Send PUT Request. */
-    if( returnStatus == EXIT_SUCCESS )
-    {
-        returnStatus = sendHttpRequest( &transportInterface,
-                                        HTTP_METHOD_PUT,
-                                        HTTP_METHOD_PUT_LENGTH,
-                                        PUT_PATH,
-                                        PUT_PATH_LENGTH );
-    }
+        /************************** Disconnect. *****************************/
 
-    /* Send POST Request. */
-    if( returnStatus == EXIT_SUCCESS )
-    {
-        returnStatus = sendHttpRequest( &transportInterface,
-                                        HTTP_METHOD_POST,
-                                        HTTP_METHOD_POST_LENGTH,
-                                        POST_PATH,
-                                        POST_PATH_LENGTH );
-    }
+        /* End TLS session, then close TCP connection. */
+        ( void ) Openssl_Disconnect( &networkContext );
 
-    /************************** Disconnect. *****************************/
-
-    /* Close TLS session. */
-    opensslStatus = Openssl_Disconnect( &networkContext );
-
-    if( opensslStatus != OPENSSL_SUCCESS )
-    {
-        returnStatus = EXIT_FAILURE;
+        LogInfo( ( "Short delay before starting the next iteration....\n" ) );
+        sleep( DEMO_LOOP_DELAY_SECONDS );
     }
 
     return returnStatus;

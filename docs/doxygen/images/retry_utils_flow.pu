@@ -1,0 +1,20 @@
+@startuml
+
+skinparam dpi 300
+skinparam ArrowFontSize 18
+
+start
+: **RetryUtils_ParamsReset()**;
+note: Initializes parameters
+repeat
+	: Attempt communication with Server;
+	if (Success) then (no)
+    	: **RetryUtils_BackoffAndSleep()**;
+		note: Performs backoff calculation and delay
+    else (yes)
+    endif
+repeat while (Server communication failed &&\nRetries not exhausted) is (yes)
+-> no;
+stop
+
+@enduml

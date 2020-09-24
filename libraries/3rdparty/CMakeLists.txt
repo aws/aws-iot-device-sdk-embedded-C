@@ -1,5 +1,4 @@
-if( ${BUILD_TESTS} )
-    # Build Configuration for CMock and Unity libraries.
+if(${BUILD_TESTS})
     add_library(cmock STATIC
         "${ROOT_DIR}/libraries/3rdparty/CMock/src/cmock.c"
     )

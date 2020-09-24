@@ -1,0 +1,83 @@
+/**
+@page mqtt_demo_basic_tls MQTT Basic TLS Demo
+@brief Demo of an MQTT application that establishes a TLS connection with server-only authentication, and uses QoS 2 level of communication with broker.
+
+This demo uses an OpenSSL-based transport interface implementation to establish a server-authenticated TLS connection, and demonstrates the subscribe-publish workflow of MQTT at QoS 2 level. After subscribing to a single topic filter, it publishes to the same topic and waits for receipt of that message back from the server at QoS 2 level. This cycle of publishing to the broker and receiving the same message back from the broker is repeated indefinitely.
+
+Messages in this demo are sent at QoS 2, which guarantees exactly one delivery according to the MQTT spec. See the demo workflow below:
+
+@image html mqtt_basic_tls.png width=100%
+*/
+
+/**
+@page mqtt_demo_mutual_auth MQTT Mutual Authentication Demo
+@brief Demo of an MQTT application that establishes a TLS connection with both server and client authentication, and uses QoS 1 level of communication with broker.
+
+This demo uses an OpenSSL-based transport interface implementation to establish a server and client-authenticated TLS connection, and demonstrates the subscribe-publish workflow of MQTT at QoS 1 level. After subscribing to a single topic filter, it publishes to the same topic and waits for receipt of that message back from the server at QoS 1 level. This cycle of publishing to the broker and receiving the same message back from the broker is repeated indefinitely.
+
+Messages in this demo are sent at QoS 1, which guarantees at least one delivery according to the MQTT spec. See the demo workflow below:
+
+@image html mqtt_mutual_auth.png width=100%
+*/
+
+/**
+@page mqtt_demo_plaintext MQTT Plaintext Demo
+@brief Demo of an MQTT application that establishes a plaintext (no encryption) TCP connection with the server, and uses QoS 0 level of communication with broker.
+
+This demo uses a POSIX socket-based transport interface implementation to establish a TCP connection, and demonstrates the subscribe-publish workflow of MQTT at Qos 0 level. After subscribing to a single topic filter, it publishes to the same topic and waits for receipt of that message to be returned from the server at QoS 0 level. This cycle of publishing to the broker and receiving the same message back from the broker is repeated indefinitely.
+
+Messages in this demo are sent at QoS 0, which guarantees at most one delivery according to the MQTT spec. See the demo workflow below:
+
+@image html mqtt_plaintext.png width=100%
+*/
+
+/**
+@page mqtt_demo_serializer MQTT Serializer Demo
+@brief Demo of an MQTT application using only the MQTT serializer API to communicate at QoS 0 level with broker over a plaintext (no encryption) TCP connection.
+
+This demo uses POSIX sockets to establish a TCP connection, and demonstrates the subscribe-publish workflow of MQTT at QoS 0 level. After subscribing to a single topic filter, it publishes to the same topic and waits for receipt of that message to be returned from the server at QoS 0 level. It demonstrates use of the serializer API as a lightweight alternative to the standard MQTT API. This cycle of publishing to the broker and receiving the same message back from the broker is repeated indefinitely.
+
+Messages in this demo are sent at QoS 0, which guarantees at most one delivery according to the MQTT spec. See the demo workflow below:
+
+@image html mqtt_serializer.png width=100%
+*/
+
+/**
+@page mqtt_demo_subscription_manager MQTT Subscription Manager Demo
+@brief Demo of an MQTT application that subscribes to multiple topic filters using a subscription manager to manage multiple subscriptions, register different callbacks for each subscription, and handle wildcard topics. It establishes a TLS connection with server-only authentication, and communicates at QoS 1 level with the broker.
+
+This demo uses an OpenSSL-based transport interface implementation to establish a server-authenticated TLS connection, and demonstrates the subscribe-publish workflow of MQTT at QoS 1 level, using a subscription manager. Before subscribing to a topic filter, the application registers the filter's unique callback with the subscription manager. After subscription, it publishes to the same topic and waits for receipt of that message to be returned from the server at QoS 1 level. Once received, the subscription manager will invoke the callback registered for the topic filter that matches the topic of the incoming PUBLISH. This subscribe-publish process is repeated for 3 different topic filters, including one wildcard filter. This cycle of publishing to the broker and receiving the same message back from the broker is repeated indefinitely.
+
+Messages in this demo are sent at QoS 1, which guarantees at least one delivery according to the MQTT spec. See the demo workflow below:
+
+@image html mqtt_subscription_manager.png width=100%
+*/
+
+/**
+@page shadow_demo_main AWS IoT Device Shadow Demo
+@brief Demo application that uses the AWS IoT Device Shadow library, MQTT Client library,
+and JSON library to interact with the AWS IoT Device Shadow service.
+
+The device is assumed to have the powerOn state, which can be 1 or 0 depending on
+whether or not the device is powered on. This state is maintained in the device's
+shadow. The demo does the following operations:
+
+- Establish a MQTT connection. ( step 1. )
+- Assemble MQTT topic strings for device shadow operations using macros defined
+  by the Device Shadow library. ( step 6. )
+- Subscribe to the MQTT topics for shadow update operations. ( step 8. )
+- Publish a desired powerOn state. This causes a device shadow update delta
+  message to be sent to the device. ( step 13 ~ step 14. )
+- Handle the incoming MQTT message in the MQTT event callback and determine
+  whether the message is related to the device shadow using @ref Shadow_MatchTopic.
+  If the message is a device shadow update delta message, set a flag for the 
+  main function to know. The main function will then publish a second message to 
+  update the reported powerOn state. ( step 15 ~ step 26. )
+- Handle the incoming MQTT message again in the MQTT event callback and
+  determine whether the message is related to the device shadow. If the message
+  is a device shadow update accepted message, verify that it is for the update
+  operation initiated previously by ensuring that it contains the same
+  clientToken as sent in the update operation. ( step 27 ~ step 33. )
+
+@image html shadow_demo_main.png width=100%
+*/

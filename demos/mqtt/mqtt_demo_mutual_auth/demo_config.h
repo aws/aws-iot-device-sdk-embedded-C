@@ -1,4 +1,5 @@
 /*
+ * AWS IoT Device SDK for Embedded C V202009.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -65,7 +66,9 @@
  * @note Port 443 requires use of the ALPN TLS extension with the ALPN protocol
  * name. When using port 8883, ALPN is not required.
  */
-#define AWS_MQTT_PORT    ( 8883 )
+#ifndef AWS_MQTT_PORT
+    #define AWS_MQTT_PORT    ( 8883 )
+#endif
 
 /**
  * @brief Path of the file containing the server's root CA certificate.
@@ -150,7 +153,7 @@
  * No two clients may use the same client identifier simultaneously.
  */
 #ifndef CLIENT_IDENTIFIER
-    #define CLIENT_IDENTIFIER         "testclient"
+    #define CLIENT_IDENTIFIER    "testclient"
 #endif
 
 /**
@@ -159,21 +162,30 @@
 #define NETWORK_BUFFER_SIZE       ( 1024U )
 
 /**
- * @brief The name of the operating system or SDK that the application is
- * running a part of.
+ * @brief The name of the operating system that the application is running on.
+ * The current value is given as an example. Please update for your specific
+ * operating system.
  */
-#define SDK_NAME                  "aws-iot-device-sdk-embedded-C"
+#define OS_NAME                   "Ubuntu"
 
 /**
- * @brief The version of the operating system or SDK that the application is
- * running a part of.
+ * @brief The version of the operating system that the application is running
+ * on. The current value is given as an example. Please update for your specific
+ * operating system version.
  */
-#define SDK_VERSION               "4.0.0"
+#define OS_VERSION                "18.04 LTS"
 
 /**
- * @brief The name of the hardware platform the application is running on.
+ * @brief The name of the hardware platform the application is running on. The
+ * current value is given as an example. Please update for your specific
+ * hardware platform.
  */
-#define HARDWARE_PLATFORM_NAME    "Posix"
+#define HARDWARE_PLATFORM_NAME    "PC"
 
+/**
+ * @brief The name of the MQTT library used and its version, following an "@"
+ * symbol.
+ */
+#define MQTT_LIB                  "core-mqtt@1.0.0"
 
 #endif /* ifndef DEMO_CONFIG_H_ */

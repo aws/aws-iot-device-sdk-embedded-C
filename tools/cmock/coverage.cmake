@@ -64,6 +64,7 @@ execute_process(
         )
 execute_process(
             COMMAND genhtml --rc lcov_branch_coverage=1
+                            --prefix ${ROOT_DIR}
                             --branch-coverage
                             --output-directory ${CMAKE_BINARY_DIR}/coverage
                                 ${CMAKE_BINARY_DIR}/coverage.info
