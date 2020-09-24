@@ -64,6 +64,7 @@ rom
 sdk
 setretainflag
 struct
+structs
 suback
 sublicense
 tcp
