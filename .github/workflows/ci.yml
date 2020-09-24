@@ -8,16 +8,15 @@ on:
   workflow_dispatch:
 
 jobs:
-  demo-build:
+  build-check:
     runs-on: ubuntu-latest
     steps:
       - name: Clone This Repo
         uses: actions/checkout@v2
         with:
           submodules: recursive
-      - name: Build
+      - name: CMake
         run: |
-          sudo apt-get install -y lcov
           cmake -S . -B build/ \
           -G "Unix Makefiles" \
           -DBUILD_TESTS=1 \
@@ -28,8 +27,10 @@ jobs:
           -DCLIENT_CERT_PATH="cert/path" \
           -DROOT_CA_CERT_PATH="cert/path" \
           -DCLIENT_PRIVATE_KEY_PATH="key/path"
-          make -C build/ help | grep demo | tr -d '. ' | xargs make -C build/
-          make -C build/ help | grep system | tr -d '. ' | xargs make -C build/
+      - name: Build Demos
+        run: make -C build/ help | grep demo | tr -d '. ' | xargs make -C build/
+      - name: Build System Tests
+        run: make -C build/ help | grep system | tr -d '. ' | xargs make -C build/
   unittest:
     runs-on: ubuntu-latest
     steps:
