@@ -1,4 +1,3 @@
-
 /**
 @page http_demo coreHTTP
 @brief These demos demonstrate usage of the coreHTTP library.
@@ -8,7 +7,7 @@
 
 <p>
 A POSIX socket-based transport interface implementation is used to establish a
-plaintext connection over port 80 to an HTTP server. However, if a connection 
+plaintext connection over port 80 to an HTTP server. If a connection 
 failure occurs, then the connection establishment is retried for @ref MAX_RETRY_ATTEMPTS.
 Once a connection is established, HTTP requests are sent for the following HTTP methods:
 `GET`, `HEAD`, `PUT`, and `POST`. The respective responses from each of these 
@@ -27,7 +26,7 @@ sends HTTP requests, then logs their responses.
 <p>
 An OpenSSL-based transport interface implementation is used to establish an encrypted
 TLS connection over port 443 to an HTTP server. Only the server's certificate
-is verified using its respective root CA certificate. However, if a connection
+is verified using its respective root CA certificate. If a connection
 failure occurs, then the connection establishment is retried for @ref MAX_RETRY_ATTEMPTS.
 Once a connection is established, HTTP requests are sent for the following HTTP methods:
 `GET`, `HEAD`, `PUT`, and `POST`. The respective responses from each of these
