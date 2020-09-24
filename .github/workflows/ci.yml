@@ -65,7 +65,7 @@ jobs:
         uses: ChicagoFlutter/lcov-cop@v1.0.2
         with:
           path: "build/coverage.info"
-          min_coverage: 99
+          min_coverage: 100
           exclude: "**/*test*"
   complexity:
     runs-on: ubuntu-latest
