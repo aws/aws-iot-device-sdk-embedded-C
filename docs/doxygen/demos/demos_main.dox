@@ -1,12 +1,9 @@
 /**
 @page demos_main Demos
-@brief Description of demos used to illustrate various functionalities of MQTT libraries. They demonstrate the use of MQTT APIs to establish an MQTT session, subscribe to a topic filter, publish to a topic, receive incoming publishes, unsubscribe from a topic and disconnect the MQTT session.
+@brief These demos demonstrate usage of the AWS IoT Device SDK C Libraries.
 
-The following demos are provided:
-- @subpage mqtt_demo <br>
-  @brief coreMQTT
-- @subpage http_demo <br>
-  @brief coreHTTP
-- @subpage shadow_demo <br>
-  @brief AWS IoT Device Shadow
+Demos for the following libraries are provided:
+- @subpage mqtt_demo
+- @subpage http_demo
+- @subpage shadow_demo
 */
