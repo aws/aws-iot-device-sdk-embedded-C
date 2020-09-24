@@ -3,7 +3,6 @@ set( DEMO_NAME "ota_demo" )
 # Include required library's source and header path variables.
 include( ${CMAKE_SOURCE_DIR}/libraries/aws/ota/otaFilePaths.cmake )
 include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreMQTT/mqttFilePaths.cmake )
-include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreJSON/jsonFilePaths.cmake )
 
 # Demo target.
 add_executable(${DEMO_NAME})
@@ -17,7 +16,6 @@ target_sources(
         ${OTA_THIRD_PARTY_SOURCES}
         ${MQTT_SOURCES}
         ${MQTT_SERIALIZER_SOURCES}
-        ${JSON_SOURCES}
 )
 target_link_libraries(
     ${DEMO_NAME}
@@ -30,7 +28,6 @@ target_link_libraries(
         mqtt_subscription_manager
         # TODO, to be removed
         jsmn
-        tinycbor
         mbedtls
 )
 
@@ -43,7 +40,6 @@ target_include_directories(
         ${OTA_INCLUDE_PRIVATE_DIRS}
         ${OTA_INCLUDE_THIRD_PARTY_DIRS}
         ${MQTT_INCLUDE_PUBLIC_DIRS}
-        ${JSON_INCLUDE_PUBLIC_DIRS}
 )
 
 if(ROOT_CA_CERT_PATH)
