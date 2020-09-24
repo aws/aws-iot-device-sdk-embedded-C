@@ -1,29 +1,44 @@
 # Include filepaths for source and include.
-include(${PLATFORM_DIR}/posix/posixFilePaths.cmake)
+include( ${PLATFORM_DIR}/posix/posixFilePaths.cmake )
+
+# The transport_interface.h in coreMQTT is the single source of truth,
+# so make sure the submodule is cloned.
+if( NOT EXISTS ${MODULES_DIR}/standard/coreMQTT/source )
+    # Attempt to clone coreMQTT.
+    if( ${BUILD_CLONE_SUBMODULES} )
+        clone_mqtt()
+    else()
+        message( FATAL_ERROR "The required submodule coreMQTT does not exist. Either clone it manually, or set BUILD_CLONE_SUBMODULES to 1 to automatically clone it during build." )
+    endif()
+endif()
+
+set( TRANSPORT_INTERFACE_INCLUDE_DIR
+     ${MODULES_DIR}/standard/coreMQTT/source/portable )
 
 # Create target for sockets utility.
 add_library( sockets_posix
                 ${SOCKETS_SOURCES} )
 
-target_include_directories( sockets_posix 
-                              PUBLIC 
+target_include_directories( sockets_posix
+                            PUBLIC
                                 ${COMMON_TRANSPORT_INCLUDE_PUBLIC_DIRS}
-                                ${LOGGING_INCLUDE_DIRS} )
+                                ${LOGGING_INCLUDE_DIRS}
+                                ${TRANSPORT_INTERFACE_INCLUDE_DIR} )
 
 # Create target for plaintext transport.
 add_library( plaintext_posix
-                ${PLAINTEXT_TRANSPORT_SOURCES} )
+             ${PLAINTEXT_TRANSPORT_SOURCES} )
 
-target_link_libraries( plaintext_posix 
-                         PUBLIC 
+target_link_libraries( plaintext_posix
+                       PUBLIC 
                            sockets_posix )
 
 # Create target for POSIX implementation of OpenSSL.
 add_library( openssl_posix
                 ${OPENSSL_TRANSPORT_SOURCES} )
 
-set(OPENSSL_USE_STATIC_LIBS TRUE)
-find_package(OpenSSL REQUIRED)
+set( OPENSSL_USE_STATIC_LIBS TRUE )
+find_package( OpenSSL REQUIRED )
 
 # Verify the minimum OpenSSL version required
 if( OPENSSL_VERSION MATCHES "0.9$" OR OPENSSL_VERSION MATCHES "1.0$"  )
@@ -31,21 +46,21 @@ if( OPENSSL_VERSION MATCHES "0.9$" OR OPENSSL_VERSION MATCHES "1.0$"  )
 endif()
 
 set( CMAKE_THREAD_PREFER_PTHREAD ON )
-find_package(Threads REQUIRED)
+find_package( Threads REQUIRED )
 
-target_link_libraries( openssl_posix 
-                         PUBLIC 
-                           sockets_posix
-                         PRIVATE
-                           OpenSSL::Crypto
-                           OpenSSL::SSL
-                           # SSL uses Threads and on some platforms require 
-                           # explicit linking.
-                           Threads::Threads
-                           # SSL uses Dynamic Loading and on some platforms 
-                           # requires explicit linking.
-                           ${CMAKE_DL_LIBS} )
+target_link_libraries( openssl_posix
+                       PUBLIC 
+                          sockets_posix
+                       PRIVATE
+                          OpenSSL::Crypto
+                          OpenSSL::SSL
+                          # SSL uses Threads and on some platforms require 
+                          # explicit linking.
+                          Threads::Threads
+                          # SSL uses Dynamic Loading and on some platforms 
+                          # requires explicit linking.
+                          ${CMAKE_DL_LIBS} )
 
-if(BUILD_TESTS)
-  add_subdirectory(utest)
+if( BUILD_TESTS )
+  add_subdirectory( utest )
 endif()
