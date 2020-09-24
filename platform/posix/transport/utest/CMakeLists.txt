@@ -2,7 +2,7 @@ include(${PLATFORM_DIR}/posix/posixFilePaths.cmake)
 project ("transport unit test")
 cmake_minimum_required (VERSION 3.13)
 
-# CMock does not have a built-in C parser. 
+# CMock does not have a built-in C parser.
 # https://github.com/ThrowTheSwitch/CMock/issues/71
 # Therefore, header files need to be preprocessed before mocks are generated.
 

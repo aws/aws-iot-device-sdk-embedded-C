@@ -19,7 +19,7 @@ target_link_libraries(
     ${DEMO_NAME}
     PRIVATE
         plaintext_posix
-        retry_utils_posix  
+        retry_utils_posix
 )
 
 target_include_directories(

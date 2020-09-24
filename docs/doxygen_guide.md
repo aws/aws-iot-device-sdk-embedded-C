@@ -2,9 +2,9 @@
 1. All supporting files were created with Doxygen version 1.8.20. Please download
 from https://sourceforge.net/projects/doxygen/files/.
 
-1. Your library API should have each function, data type, and constant documented 
-according to the Doxygen format using **@brief** and **@param**. Doxygen will output 
-warnings if you are missing this. Please see the MQTT library for example documentation.  
+1. Your library API should have each function, data type, and constant documented
+according to the Doxygen format using **@brief** and **@param**. Doxygen will output
+warnings if you are missing this. Please see the MQTT library for example documentation.
     An example function:
     ```C
     /**
@@ -14,7 +14,7 @@ warnings if you are missing this. Please see the MQTT library for example docume
      * @param[out] output An output parameter.
      *
      * @return List of values returned.
-     * 
+     *
      * <b>Example</b>
      * @code{c}
      * status = MyFunction(input, output);
@@ -27,7 +27,7 @@ warnings if you are missing this. Please see the MQTT library for example docume
 
 1. Your library must have a **@file** command and **@brief** description in each
 file for Doxygen to know to parse the file as part of the library. Please see the
-MQTT library for examples.  
+MQTT library for examples.
     An example from mqtt.h:
     ```C
     /**
@@ -37,8 +37,8 @@ MQTT library for examples.
     ```
 
 1. Please associate each data type and constant in your library's public API to
-a group so that it will appear in the custom Doxygen pages.  
-    For each comment block add the following commands to associate your data types and constants:  
+a group so that it will appear in the custom Doxygen pages.
+    For each comment block add the following commands to associate your data types and constants:
 
     | Data Type | Command |
     | ---       | ---     |
@@ -46,7 +46,7 @@ a group so that it will appear in the custom Doxygen pages.
     | function pointer | **@ingroup** <library_name>_callback_types |
     | enum | **@ingroup** <library_name>_enum_types |
     | struct | **@ingroup** <library_name>_struct_types |
-    
+
 
     Some examples of grouped data types and constants in mqtt.h:
     ```C
