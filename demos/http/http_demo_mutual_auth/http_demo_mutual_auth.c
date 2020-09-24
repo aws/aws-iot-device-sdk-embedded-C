@@ -25,11 +25,17 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* POSIX includes. */
+#include <unistd.h>
+
+/* Include Demo Config as the first non-system header. */
+#include "demo_config.h"
+
+/* Common HTTP demo utilities. */
+#include "http_demo_utils.h"
+
 /* HTTP API header. */
 #include "core_http_client.h"
-
-/* Demo Config header. */
-#include "demo_config.h"
 
 /* OpenSSL transport header. */
 #include "openssl_posix.h"
@@ -40,8 +46,8 @@
 #endif
 
 /* Check that TLS port used for AWS IoT Core is defined. */
-#ifndef AWS_IOT_PORT
-    #error "Please define a AWS_IOT_PORT."
+#ifndef AWS_HTTPS_PORT
+    #error "Please define a AWS_HTTPS_PORT."
 #endif
 
 /* Check that a path for HTTP Method POST is defined. */
@@ -49,25 +55,32 @@
     #error "Please define a POST_PATH."
 #endif
 
-/* Check that a path for Root CA Certificate is defined. */
+/* Check that a path for Root CA certificate is defined. */
 #ifndef ROOT_CA_CERT_PATH
     #error "Please define a ROOT_CA_CERT_PATH."
 #endif
 
-/* Check that a path for Client Certificate is defined. */
+/* Check that a path for the client certificate is defined. */
 #ifndef CLIENT_CERT_PATH
     #error "Please define a CLIENT_CERT_PATH."
 #endif
 
-/* Check that a path for Client's Private Key is defined. */
+/* Check that a path for the client's private key is defined. */
 #ifndef CLIENT_PRIVATE_KEY_PATH
     #error "Please define a CLIENT_PRIVATE_KEY_PATH."
 #endif
 
-/* Check that a request body to send for the POST request is defined. */
-#ifndef REQUEST_BODY
-    #error "Please define a REQUEST_BODY."
-#endif
+/**
+ * @brief ALPN protocol name to be sent as part of the ClientHello message.
+ *
+ * @note When using ALPN, port 443 must be used to connect to AWS IoT Core.
+ */
+#define IOT_CORE_ALPN_PROTOCOL_NAME    "\x0ex-amzn-http-ca"
+
+/**
+ * @brief Delay in seconds between each iteration of the demo.
+ */
+#define DEMO_LOOP_DELAY_SECONDS        ( 5U )
 
 /* Check that transport timeout for transport send and receive is defined. */
 #ifndef TRANSPORT_SEND_RECV_TIMEOUT_MS
@@ -79,30 +92,30 @@
     #define USER_BUFFER_LENGTH    ( 2048 )
 #endif
 
-/**
- * @brief The length of the HTTP server host name.
- */
-#define AWS_IOT_ENDPOINT_LENGTH               ( sizeof( AWS_IOT_ENDPOINT ) - 1 )
+/* Check that a request body to send for the POST request is defined. */
+#ifndef REQUEST_BODY
+    #error "Please define a REQUEST_BODY."
+#endif
 
 /**
- * @brief The length of the ALPN protocol name.
+ * @brief The length of the AWS IoT Endpoint.
  */
-#define IOT_CORE_ALPN_PROTOCOL_NAME_LENGTH    ( sizeof( IOT_CORE_ALPN_PROTOCOL_NAME ) - 1 )
+#define AWS_IOT_ENDPOINT_LENGTH    ( sizeof( AWS_IOT_ENDPOINT ) - 1 )
 
 /**
  * @brief The length of the HTTP POST method.
  */
-#define HTTP_METHOD_POST_LENGTH               ( sizeof( HTTP_METHOD_POST ) - 1 )
+#define HTTP_METHOD_POST_LENGTH    ( sizeof( HTTP_METHOD_POST ) - 1 )
 
 /**
  * @brief The length of the HTTP POST path.
  */
-#define POST_PATH_LENGTH                      ( sizeof( POST_PATH ) - 1 )
+#define POST_PATH_LENGTH           ( sizeof( POST_PATH ) - 1 )
 
 /**
  * @brief Length of the request body.
  */
-#define REQUEST_BODY_LENGTH                   ( sizeof( REQUEST_BODY ) - 1 )
+#define REQUEST_BODY_LENGTH        ( sizeof( REQUEST_BODY ) - 1 )
 
 /**
  * @brief A buffer used in the demo for storing HTTP request headers and
@@ -117,6 +130,15 @@ static uint8_t userBuffer[ USER_BUFFER_LENGTH ];
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Connect to HTTP server with reconnection retries.
+ *
+ * @param[out] pNetworkContext The output parameter to return the created network context.
+ *
+ * @return EXIT_FAILURE on failure; EXIT_SUCCESS on successful connection.
+ */
+static int32_t connectToServer( NetworkContext_t * pNetworkContext );
+
+/**
  * @brief Send an HTTP request based on a specified method and path, then
  * print the response received from the server.
  *
@@ -128,22 +150,77 @@ static uint8_t userBuffer[ USER_BUFFER_LENGTH ];
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
-static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
-                            const char * pMethod,
-                            size_t methodLen,
-                            const char * pPath,
-                            size_t pathLen );
+static int32_t sendHttpRequest( const TransportInterface_t * pTransportInterface,
+                                const char * pMethod,
+                                size_t methodLen,
+                                const char * pPath,
+                                size_t pathLen );
 
 /*-----------------------------------------------------------*/
 
-static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
-                            const char * pMethod,
-                            size_t methodLen,
-                            const char * pPath,
-                            size_t pathLen )
+static int32_t connectToServer( NetworkContext_t * pNetworkContext )
+{
+    int32_t returnStatus = EXIT_FAILURE;
+    /* Status returned by OpenSSL transport implementation. */
+    OpensslStatus_t opensslStatus;
+    /* Credentials to establish the TLS connection. */
+    OpensslCredentials_t opensslCredentials;
+    /* Information about the server to send the HTTP requests. */
+    ServerInfo_t serverInfo;
+
+    /* Initialize TLS credentials. */
+    ( void ) memset( &opensslCredentials, 0, sizeof( opensslCredentials ) );
+    opensslCredentials.pClientCertPath = CLIENT_CERT_PATH;
+    opensslCredentials.pPrivateKeyPath = CLIENT_PRIVATE_KEY_PATH;
+    opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
+
+    /* ALPN is required when communicating to AWS IoT Core over port 443 through HTTP. */
+    if( AWS_HTTPS_PORT == 443 )
+    {
+        opensslCredentials.pAlpnProtos = IOT_CORE_ALPN_PROTOCOL_NAME;
+        opensslCredentials.alpnProtosLen = strlen( IOT_CORE_ALPN_PROTOCOL_NAME );
+    }
+
+    /* Initialize server information. */
+    serverInfo.pHostName = AWS_IOT_ENDPOINT;
+    serverInfo.hostNameLength = AWS_IOT_ENDPOINT_LENGTH;
+    serverInfo.port = AWS_HTTPS_PORT;
+
+    /* Establish a TLS session with the HTTP server. This example connects
+     * to the HTTP server as specified in AWS_IOT_ENDPOINT and AWS_HTTPS_PORT
+     * in demo_config.h. */
+    LogInfo( ( "Establishing a TLS session to %.*s:%d.",
+               ( int32_t ) AWS_IOT_ENDPOINT_LENGTH,
+               AWS_IOT_ENDPOINT,
+               AWS_HTTPS_PORT ) );
+    opensslStatus = Openssl_Connect( pNetworkContext,
+                                     &serverInfo,
+                                     &opensslCredentials,
+                                     TRANSPORT_SEND_RECV_TIMEOUT_MS,
+                                     TRANSPORT_SEND_RECV_TIMEOUT_MS );
+
+    if( opensslStatus == OPENSSL_SUCCESS )
+    {
+        returnStatus = EXIT_SUCCESS;
+    }
+    else
+    {
+        returnStatus = EXIT_FAILURE;
+    }
+
+    return returnStatus;
+}
+
+/*-----------------------------------------------------------*/
+
+static int32_t sendHttpRequest( const TransportInterface_t * pTransportInterface,
+                                const char * pMethod,
+                                size_t methodLen,
+                                const char * pPath,
+                                size_t pathLen )
 {
     /* Return value of this method. */
-    int returnStatus = EXIT_SUCCESS;
+    int32_t returnStatus = EXIT_SUCCESS;
 
     /* Configurations of the initial request headers that are passed to
      * #HTTPClient_InitializeRequestHeaders. */
@@ -157,7 +234,7 @@ static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
     HTTPStatus_t httpStatus = HTTP_SUCCESS;
 
     assert( pMethod != NULL );
-    assert( methodLen > 0 );
+    assert( pPath != NULL );
 
     /* Initialize all HTTP Client library API structs to 0. */
     ( void ) memset( &requestInfo, 0, sizeof( requestInfo ) );
@@ -191,9 +268,9 @@ static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
         response.bufferLen = USER_BUFFER_LENGTH;
 
         LogInfo( ( "Sending HTTP %.*s request to %.*s%.*s...",
-                   ( int32_t ) methodLen, pMethod,
+                   ( int32_t ) requestInfo.methodLen, requestInfo.method,
                    ( int32_t ) AWS_IOT_ENDPOINT_LENGTH, AWS_IOT_ENDPOINT,
-                   ( int32_t ) pathLen, pPath ) );
+                   ( int32_t ) requestInfo.pathLen, requestInfo.pPath ) );
         LogDebug( ( "Request Headers:\n%.*s\n"
                     "Request Body:\n%.*s\n",
                     ( int32_t ) requestHeaders.headersLen,
@@ -221,7 +298,7 @@ static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
                    "Response Status:\n%u\n"
                    "Response Body:\n%.*s\n",
                    ( int32_t ) AWS_IOT_ENDPOINT_LENGTH, AWS_IOT_ENDPOINT,
-                   ( int32_t ) pathLen, pPath,
+                   ( int32_t ) requestInfo.pathLen, requestInfo.pPath,
                    ( int32_t ) response.headersLen, response.pHeaders,
                    response.statusCode,
                    ( int32_t ) response.bodyLen, response.pBody ) );
@@ -229,9 +306,9 @@ static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
     else
     {
         LogError( ( "Failed to send HTTP %.*s request to %.*s%.*s: Error=%s.",
-                    ( int32_t ) methodLen, pMethod,
+                    ( int32_t ) requestInfo.methodLen, requestInfo.method,
                     ( int32_t ) AWS_IOT_ENDPOINT_LENGTH, AWS_IOT_ENDPOINT,
-                    ( int32_t ) pathLen, pPath,
+                    ( int32_t ) requestInfo.pathLen, requestInfo.pPath,
                     HTTPClient_strerror( httpStatus ) ) );
     }
 
@@ -262,81 +339,75 @@ int main( int argc,
           char ** argv )
 {
     /* Return value of main. */
-    int returnStatus = EXIT_SUCCESS;
+    int32_t returnStatus = EXIT_SUCCESS;
     /* The transport layer interface used by the HTTP Client library. */
     TransportInterface_t transportInterface;
     /* The network context for the transport layer interface. */
     NetworkContext_t networkContext;
-    /* Credentials to establish the TLS connection. */
-    OpensslCredentials_t opensslCredentials;
-    /* Status returned by OpenSSL transport implementation. */
-    OpensslStatus_t opensslStatus;
-    /* Information about the server to send the HTTP request. */
-    ServerInfo_t serverInfo;
 
     ( void ) argc;
     ( void ) argv;
 
-    /* Initialize TLS credentials. */
-    ( void ) memset( &opensslCredentials, 0, sizeof( opensslCredentials ) );
-    opensslCredentials.pClientCertPath = CLIENT_CERT_PATH;
-    opensslCredentials.pPrivateKeyPath = CLIENT_PRIVATE_KEY_PATH;
-    opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
-    opensslCredentials.pAlpnProtos = IOT_CORE_ALPN_PROTOCOL_NAME;
-    opensslCredentials.alpnProtosLen = IOT_CORE_ALPN_PROTOCOL_NAME_LENGTH;
-
-    /* Initialize server information. */
-    serverInfo.pHostName = AWS_IOT_ENDPOINT;
-    serverInfo.hostNameLength = AWS_IOT_ENDPOINT_LENGTH;
-    serverInfo.port = AWS_IOT_PORT;
-
-    /**************************** Connect. ******************************/
-
-    /* Establish TLS connection on top of TCP connection using OpenSSL. */
-    if( returnStatus == EXIT_SUCCESS )
+    for( ; ; )
     {
-        LogInfo( ( "Performing TLS handshake on top of the TCP connection." ) );
+        /**************************** Connect. ******************************/
 
-        opensslStatus = Openssl_Connect( &networkContext,
-                                         &serverInfo,
-                                         &opensslCredentials,
-                                         TRANSPORT_SEND_RECV_TIMEOUT_MS,
-                                         TRANSPORT_SEND_RECV_TIMEOUT_MS );
-
-        if( opensslStatus != OPENSSL_SUCCESS )
+        /* Establish TLS connection on top of TCP connection using OpenSSL. */
+        if( returnStatus == EXIT_SUCCESS )
         {
-            returnStatus = EXIT_FAILURE;
+            LogInfo( ( "Performing TLS handshake on top of the TCP connection." ) );
+
+            /* Attempt to connect to the HTTP server. If connection fails, retry after
+             * a timeout. Timeout value will be exponentially increased till the maximum
+             * attempts are reached or maximum timeout value is reached. The function
+             * returns EXIT_FAILURE if the TCP connection cannot be established to
+             * broker after configured number of attempts. */
+            returnStatus = connectToServerWithBackoffRetries( connectToServer,
+                                                              &networkContext );
+
+            if( returnStatus == EXIT_FAILURE )
+            {
+                /* Log error to indicate connection failure after all
+                 * reconnect attempts are over. */
+                LogError( ( "Failed to connect to HTTP server %.*s.",
+                            ( int32_t ) AWS_IOT_ENDPOINT_LENGTH,
+                            AWS_IOT_ENDPOINT ) );
+            }
         }
-    }
 
-    /* Define the transport interface. */
-    if( returnStatus == EXIT_SUCCESS )
-    {
-        ( void ) memset( &transportInterface, 0, sizeof( transportInterface ) );
-        transportInterface.recv = Openssl_Recv;
-        transportInterface.send = Openssl_Send;
-        transportInterface.pNetworkContext = &networkContext;
-    }
+        /* Define the transport interface. */
+        if( returnStatus == EXIT_SUCCESS )
+        {
+            ( void ) memset( &transportInterface, 0, sizeof( transportInterface ) );
+            transportInterface.recv = Openssl_Recv;
+            transportInterface.send = Openssl_Send;
+            transportInterface.pNetworkContext = &networkContext;
+        }
 
-    /*********************** Send HTTPS request. ************************/
+        /*********************** Send HTTPS request. ************************/
 
-    if( returnStatus == EXIT_SUCCESS )
-    {
-        returnStatus = sendHttpRequest( &transportInterface,
-                                        HTTP_METHOD_POST,
-                                        HTTP_METHOD_POST_LENGTH,
-                                        POST_PATH,
-                                        POST_PATH_LENGTH );
-    }
+        if( returnStatus == EXIT_SUCCESS )
+        {
+            returnStatus = sendHttpRequest( &transportInterface,
+                                            HTTP_METHOD_POST,
+                                            HTTP_METHOD_POST_LENGTH,
+                                            POST_PATH,
+                                            POST_PATH_LENGTH );
+        }
 
-    /************************** Disconnect. *****************************/
+        if( returnStatus == EXIT_SUCCESS )
+        {
+            /* Log message indicating an iteration completed successfully. */
+            LogInfo( ( "Demo completed successfully." ) );
+        }
 
-    /* Close TLS session. */
-    opensslStatus = Openssl_Disconnect( &networkContext );
+        /************************** Disconnect. *****************************/
 
-    if( opensslStatus != OPENSSL_SUCCESS )
-    {
-        returnStatus = EXIT_FAILURE;
+        /* End TLS session, then close TCP connection. */
+        ( void ) Openssl_Disconnect( &networkContext );
+
+        LogInfo( ( "Short delay before starting the next iteration....\n" ) );
+        sleep( DEMO_LOOP_DELAY_SECONDS );
     }
 
     return returnStatus;
