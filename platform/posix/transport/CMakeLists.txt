@@ -1,5 +1,5 @@
 # Include filepaths for source and include.
-include(${PLATFORM_DIR}/posix/posixFilePaths.cmake)
+include( ${PLATFORM_DIR}/posix/posixFilePaths.cmake )
 
 # The transport_interface.h in coreMQTT is the single source of truth,
 # so make sure the submodule is cloned.
