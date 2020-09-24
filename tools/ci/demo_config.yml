@@ -1,0 +1,44 @@
+# Note: Edit this file for local testing, Contact CI for testing in CI Infra
+
+# _default section consists of config common to all targets
+_default:
+  name: demos
+  build_flags:
+    # Provide list of flags required for configuring build using cmake
+    - "-DCMAKE_BUILD_TYPE=Release"
+  c_flags:
+    # Provide list of c_flags common to all target
+    - -Wall
+    - -Wextra
+    #- -Werror
+  allow:
+    # Provide list of allowed targets [Accepts regex]
+    - "_demo_"
+  output_loc: "bin"
+
+
+#<target_name>:
+  #c_flags:
+    # Provide list of c_flags specific to target
+    #- <flag1>
+    #- <flag2>
+    #- <flag3>
+    
+mqtt_demo_mutual_auth:
+  c_flags:
+    - -DAWS_IOT_ENDPOINT='aws-iot-endpoint'
+    - -DCLIENT_CERT_PATH="certificate-path"
+    - -DCLIENT_PRIVATE_KEY_PATH="private-key-path" 
+
+http_demo_mutual_auth:
+  c_flags:
+    - -DAWS_IOT_ENDPOINT="aws-iot-endpoint"
+    - -DCLIENT_CERT_PATH="certificate-path"
+    - -DCLIENT_PRIVATE_KEY_PATH="private-key-path"
+
+shadow_demo_main:
+  c_flags:
+    - -DAWS_IOT_ENDPOINT='aws-iot-endpoint'
+    - -DCLIENT_CERT_PATH="certificate-path"
+    - -DCLIENT_PRIVATE_KEY_PATH="private-key-path"
+

@@ -1,0 +1,27 @@
+# Note: Edit this file for local testing, Contact CI for testing in CI Infra
+
+# _default section consists of config common to all targets
+_default:
+  name: unittest
+  build_flags:
+    # Provide list of flags required for configuring build using cmake
+    - "-DBUILD_TESTS=1"
+    - "-DCMAKE_BUILD_TYPE=Release"
+  c_flags:
+    # Provide list of c_flags common to all target
+    - -Wall
+    - -Wextra
+    #- -Werror
+  allow:
+    # Provide list of allowed targets [Accepts regex]
+    - ".*utest.*"
+  output_loc: "bin/tests"
+  codecov_token: ""
+
+
+#<target_name>:
+  #c_flags:
+    # Provide list of c_flags specific to target
+    #- <flag1>
+    #- <flag2>
+    #- <flag3>
