@@ -56,7 +56,7 @@
  * @note Your AWS IoT Core endpoint can be found in the AWS IoT console under
  * Settings/Custom Endpoint, or using the describe-endpoint API.
  *
- * #define AWS_IOT_ENDPOINT                 "your-aws-iot-core-endpoint"
+ * #define AWS_IOT_ENDPOINT                 "...insert here..."
  */
 
 /**
@@ -67,7 +67,9 @@
  * @note Port 443 requires use of the ALPN TLS extension with the ALPN protocol
  * name being x-amzn-http-ca. When using port 8443, ALPN is not required.
  */
-#define AWS_IOT_PORT    443
+#ifndef AWS_HTTPS_PORT
+    #define AWS_HTTPS_PORT    443
+#endif
 
 /**
  * @brief Path of the file containing Amazon's root CA certificate for TLS
@@ -84,20 +86,13 @@
 #endif
 
 /**
- * @brief ALPN protocol name to be sent as part of the ClientHello message.
- *
- * @note When using ALPN, port 443 must be used to connect to AWS IoT Core.
- */
-#define IOT_CORE_ALPN_PROTOCOL_NAME    "\x0ex-amzn-http-ca"
-
-/**
  * @brief Path of the file containing the client's certificate for TLS
  * authentication to AWS IoT Core.
  *
  * @note This certificate should be PEM-encoded and must have an associated
  * policy from AWS IoT core for the demo to function correctly.
  *
- * #define CLIENT_CERT_PATH                  "certificates/client.crt"
+ * #define CLIENT_CERT_PATH                  "...insert here..."
  */
 
 /**
@@ -107,7 +102,7 @@
  * @note This key should be PEM-encoded and must have an associated
  * policy from AWS IoT core for the demo to function correctly.
  *
- * #define CLIENT_PRIVATE_KEY_PATH           "certificates/client.key"
+ * #define CLIENT_PRIVATE_KEY_PATH           "...insert here..."
  */
 
 /**

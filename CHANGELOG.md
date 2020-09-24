@@ -9,7 +9,7 @@ These libraries have gone through code quality checks including verification tha
 
 - This release uses submodule references to the following new individual repositories for the MQTT, JSON and AWS IoT Shadow service client libraries under `libraries` folder:
    - [FreeRTOS/coreMQTT](https://github.com/FreeRTOS/coreMQTT) for MQTT client library
-   - [FreeRTOS/coreJSON](https://github.com/FreeRTOS/JSON) for JSON parser library
+   - [FreeRTOS/coreJSON](https://github.com/FreeRTOS/coreJSON) for JSON parser library
    - [aws/device-shadow-for-aws-iot-embedded-sdk](https://github.com/aws/device-shadow-for-aws-iot-embedded-sdk) for AWS IoT Shadow service client library.
 
 - With this release, we are introducing a [date-based versioning scheme](README.md#versioning).
@@ -128,7 +128,7 @@ Bugfixes/Improvements:
 
 New features:
 
-  - Added unit tests, further details can be found in the testing readme [here](https://github.com/aws/aws-iot-device-sdk-embedded-c/blob/master/tests/README.md/)
+  - Added unit tests, further details can be found in the testing [readme](https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/v2.1.0/tests/README.md/)
   - Added sample to demonstrate building the SDK as library
   - Added sample to demonstrate building the SDK in C++
 
