@@ -1,0 +1,28 @@
+name: CI Checks
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  formatting:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Uncrustify
+        run: sudo apt-get install uncrustify
+      - name: Check Formatting With Uncrustify
+        run: find . -iname "*.[hc]" -exec uncrustify --check -c tools/uncrustify.cfg {} +
+      - name: Check For Trailing Whitespace
+        run: |
+          set +e
+          grep --exclude="README.md" -rnI -e "[[:blank:]]$" .
+          if [ "$?" = "0" ]; then
+            echo "Files have trailing whitespace."
+            exit 1
+          else
+            exit 0
+          fi
