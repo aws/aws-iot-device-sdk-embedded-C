@@ -7,10 +7,10 @@
 
 <p>
 A POSIX socket-based transport interface implementation is used to establish a
-plaintext connection over port 80 to an HTTP server. If a connection 
+plaintext connection over port 80 to an HTTP server. If a connection
 failure occurs, then the connection establishment is retried for @ref MAX_RETRY_ATTEMPTS.
 Once a connection is established, HTTP requests are sent for the following HTTP methods:
-`GET`, `HEAD`, `PUT`, and `POST`. The respective responses from each of these 
+`GET`, `HEAD`, `PUT`, and `POST`. The respective responses from each of these
 requests are logged.
 </p>
 
@@ -52,7 +52,7 @@ for @ref MAX_RETRY_ATTEMPTS.
 
 <p>
 After the TLS session is established, a single HTTP POST request is sent that
-publishes a message to a topic named `topic` in AWS IoT Core with `qos=1`. 
+publishes a message to a topic named `topic` in AWS IoT Core with `qos=1`.
 This means that any subscribers to this topic are guaranteed to receive this
 message at least once.
 </p>

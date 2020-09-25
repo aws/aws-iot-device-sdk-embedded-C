@@ -249,13 +249,13 @@ Library file names should use one or two words to describe the functions impleme
 Declarations of internal functions, structures, macros, etc. of a library should be placed in a header file with an `_internal` suffix. The `_internal` header file should go in the `source/include/private` directory. For example:
 - `core_mqtt_internal.h`: Declares the MQTT library's internal functions, structures, macros, etc.
 
-<p>File names for demos should begin with `library_demo_`. 
-Unit tests must start with `library_` and end with `_utest`. 
-System tests must start with `library_` and end with `_system_test`. 
-The names should then specify the library being demoed or tested. 
-For example, the files names of the MQTT library's demos start with `mqtt_demo_`. 
-Additionally, test file names should describe what tests are implemented in the file, 
-such as `mqtt_demo_mutual_auth.c` for a file containing a demo that mutually 
+<p>File names for demos should begin with `library_demo_`.
+Unit tests must start with `library_` and end with `_utest`.
+System tests must start with `library_` and end with `_system_test`.
+The names should then specify the library being demoed or tested.
+For example, the files names of the MQTT library's demos start with `mqtt_demo_`.
+Additionally, test file names should describe what tests are implemented in the file,
+such as `mqtt_demo_mutual_auth.c` for a file containing a demo that mutually
 authenticates over TLS with an MQTT broker.</p>
 
 @subsection guide_developer_styleguide_naming_functions Functions (and function-like macros)

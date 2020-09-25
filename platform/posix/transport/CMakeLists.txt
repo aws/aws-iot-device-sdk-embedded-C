@@ -30,7 +30,7 @@ add_library( plaintext_posix
              ${PLAINTEXT_TRANSPORT_SOURCES} )
 
 target_link_libraries( plaintext_posix
-                       PUBLIC 
+                       PUBLIC
                            sockets_posix )
 
 # Create target for POSIX implementation of OpenSSL.
@@ -49,15 +49,15 @@ set( CMAKE_THREAD_PREFER_PTHREAD ON )
 find_package( Threads REQUIRED )
 
 target_link_libraries( openssl_posix
-                       PUBLIC 
+                       PUBLIC
                           sockets_posix
                        PRIVATE
                           OpenSSL::Crypto
                           OpenSSL::SSL
-                          # SSL uses Threads and on some platforms require 
+                          # SSL uses Threads and on some platforms require
                           # explicit linking.
                           Threads::Threads
-                          # SSL uses Dynamic Loading and on some platforms 
+                          # SSL uses Dynamic Loading and on some platforms
                           # requires explicit linking.
                           ${CMAKE_DL_LIBS} )
 

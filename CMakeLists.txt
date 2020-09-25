@@ -34,12 +34,12 @@ option( BUILD_CLONE_SUBMODULES
         "Set this to ON to automatically clone any required Git submodules. When OFF, submodules must be manually cloned."
         ON )
 option( DOWNLOAD_CERTS
-        "Set this to ON to automatically download certificates needed to run the demo. When OFF, certificates must be manually downloaded." 
+        "Set this to ON to automatically download certificates needed to run the demo. When OFF, certificates must be manually downloaded."
         ON )
 
 # Unity test framework does not export the correct symbols for DLLs.
 set( ALLOW_SHARED_LIBRARIES ON )
-    
+
 include( CMakeDependentOption )
 CMAKE_DEPENDENT_OPTION( BUILD_SHARED_LIBS
                         "Set this to ON to build all libraries as shared libraries. When OFF, libraries build as static libraries."
@@ -69,7 +69,7 @@ endif()
 if(${BUILD_TESTS})
     enable_testing()
     include(${ROOT_DIR}/tools/cmock/cmock_dependencies.cmake)
-    
+
     # Create a list for each unit test target.
     set(utest_targets
         openssl_utest sockets_utest

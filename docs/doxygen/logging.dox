@@ -27,7 +27,7 @@ The @ref logging_stack.h file contains the definition of all the logging interfa
 
 The file contains the following features:
 - Ability to define **logging verbosity level** for a library through the #LIBRARY_LOG_LEVEL macro. (All the logging levels are defined in @ref logging_levels.h). This allows logging macros to be conditionally enabled depending on the configured logging level. For example, for the `LOG_INFO` verbosity configuration, only the `LogError`, `LogWarn`, `LogInfo` macros are enabled but the `LogDebug` macro is disabled.
-- With the above ability, the compiler does not generate code for library logging calls to disabled logging macros. For example, a `LOG_ERROR` verbosity configuration does not generate code for logging calls for the `LogWarn`, `LogInfo`, or `LogDebug` macros, ONLY for `LogError` macro.  
+- With the above ability, the compiler does not generate code for library logging calls to disabled logging macros. For example, a `LOG_ERROR` verbosity configuration does not generate code for logging calls for the `LogWarn`, `LogInfo`, or `LogDebug` macros, ONLY for `LogError` macro.
 - Ability to set the **library name** as metadata in library logs through the #LIBRARY_LOG_NAME macro.
 - Ability to add **metadata** as a prefix in log messages through the #LOG_METADATA_ARGS and #LOG_METADATA_FORMAT macros. By default, it adds the metadata of the format:`[<Logging-Level>] [<Library-Name>] [<File-Name>:<Line-Number>]`. Here is an example snippet of log messages from the [MQTT Basic TLS demo](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/master/demos/mqtt/mqtt_demo_basic_tls):
 @code{sh}
