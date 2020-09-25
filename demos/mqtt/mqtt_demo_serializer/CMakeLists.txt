@@ -4,11 +4,8 @@ set( DEMO_NAME "mqtt_demo_serializer" )
 include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreMQTT/mqttFilePaths.cmake )
 
 # Demo target.
-add_executable(${DEMO_NAME})
-
-target_sources(
+add_executable(
     ${DEMO_NAME}
-    PRIVATE
         "${DEMO_NAME}.c"
         ${MQTT_SERIALIZER_SOURCES}
 )

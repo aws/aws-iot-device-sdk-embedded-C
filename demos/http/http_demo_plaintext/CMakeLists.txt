@@ -4,11 +4,8 @@ set( DEMO_NAME "http_demo_plaintext" )
 include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreHTTP/httpFilePaths.cmake )
 
 # Demo target.
-add_executable(${DEMO_NAME})
-
-target_sources(
+add_executable(
     ${DEMO_NAME}
-    PRIVATE
         "${DEMO_NAME}.c"
         "../common/src/http_demo_utils.c"
         ${HTTP_SOURCES}

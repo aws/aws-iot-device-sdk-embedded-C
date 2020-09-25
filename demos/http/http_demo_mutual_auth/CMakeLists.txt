@@ -6,19 +6,16 @@ set( DEMO_NAME "http_demo_mutual_auth" )
 include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreHTTP/httpFilePaths.cmake )
 
 # Demo target.
-add_executable(${DEMO_NAME})
-
-# Add to default target if all required macros needed to run this demo are defined
-check_aws_credentials(${DEMO_NAME})
-
-target_sources(
+add_executable(
     ${DEMO_NAME}
-    PRIVATE
         "${DEMO_NAME}.c"
         "../common/src/http_demo_utils.c"
         ${HTTP_SOURCES}
         ${HTTP_THIRD_PARTY_SOURCES}
 )
+
+# Add to default target if all required macros needed to run this demo are defined
+check_aws_credentials(${DEMO_NAME})
 
 target_link_libraries(
     ${DEMO_NAME}
