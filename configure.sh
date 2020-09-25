@@ -172,7 +172,7 @@ install_dependencies () {
     if [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
         test -d ~/.linuxbrew && eval $(~/.linuxbrew/bin/brew shellenv)
         test -d /home/linuxbrew/.linuxbrew && eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)
-        [ -x "$(command -v brew)" ] && brew list openssl@1.1 > /dev/null
+        [ -x "$(command -v brew)" ] && brew list openssl@1.1 >/dev/null 2>/dev/null
         if [[ $? -eq 0 ]]; then
             openssl_root_dir=$(brew --prefix openssl@1.1)
         fi
@@ -297,11 +297,10 @@ install_dependencies () {
 # Install Docker and Docker Compose
 # Docker is needed to run servers on localhost that the demos can communicate with.
 install_docker () {
-    
     # Install Docker if `docker` does not exist as a command.
     docker -v >/dev/null 2>/dev/null
     if [[ $? -ne 0 ]]; then
-        if [ grep -q Microsoft /proc/version ]; then
+        if grep -q icrosoft /proc/version; then
             # Docker cannot be installed straight to a WSL distro.
             # Instead, it must be installed on the Windows host machine.
             >&2 echo "Fatal: The command 'docker' could not be found in this WSL distro."
@@ -325,7 +324,7 @@ install_docker () {
         brew install docker
     fi
 
-    docker -v >/dev/null 2>/dev/null
+    docker-compose -v >/dev/null 2>/dev/null
     if [[ $? -ne 0 ]]; then
         # Install Docker Compose if `docker-compose` does not exist as a command.
         if !([ -x "$(command -v docker-compose)" ]); then
