@@ -132,6 +132,7 @@ jobs:
           do
             cd $LIB
             echo $PWD
+            if [ ! -d docs/doxygen/ ]; then exit 0; fi
             doxygen docs/doxygen/config.doxyfile
             cd $ROOT
           done
