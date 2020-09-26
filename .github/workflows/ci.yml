@@ -127,11 +127,9 @@ jobs:
       - name: Run Doxygen on all library submodules
         run: |
           ROOT=$PWD
-          LIBS=$(find libraries/aws libraries/standard -maxdepth 1 -mindepth 1)
-          for LIB in $LIBS
+          for lib in $(find libraries/aws libraries/standard -maxdepth 1 -mindepth 1)
           do
-            cd $LIB
-            echo $PWD
+            cd $lib
             if [ ! -d docs/doxygen/ ]; then exit 0; fi
             doxygen docs/doxygen/config.doxyfile
             cd $ROOT
