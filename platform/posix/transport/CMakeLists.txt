@@ -52,8 +52,7 @@ target_link_libraries( openssl_posix
                        PUBLIC
                           sockets_posix
                        PRIVATE
-                          OpenSSL::Crypto
-                          OpenSSL::SSL
+                          ${OPENSSL_LIBRARIES}
                           # SSL uses Threads and on some platforms require
                           # explicit linking.
                           Threads::Threads
