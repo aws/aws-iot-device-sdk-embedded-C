@@ -104,7 +104,7 @@ The libraries in this SDK are not dependent on any operating system. However, th
 
 ### Prerequisites
 
-- CMake 3.13.0 or later for utilizing the build system of the repository.
+- CMake 3.2.0 or later for utilizing the build system of the repository.
 
 - C90 compiler
 
