@@ -22,9 +22,7 @@ list(APPEND real_include_directories
             .
             ${SHADOW_INCLUDE_PUBLIC_DIRS}
             ${MQTT_INCLUDE_PUBLIC_DIRS}
-            ${MQTT_INCLUDE_PRIVATE_DIRS}
             ${LOGGING_INCLUDE_DIRS}
-            ${MQTT_INCLUDE_PRIVATE_DIRS}
             ${CMAKE_CURRENT_LIST_DIR}
         )
 
@@ -35,7 +33,6 @@ list(APPEND test_include_directories
             .
             ${SHADOW_INCLUDE_PUBLIC_DIRS}
             ${MQTT_INCLUDE_PUBLIC_DIRS}
-            ${MQTT_INCLUDE_PRIVATE_DIRS}
             ${LOGGING_INCLUDE_DIRS}
         )
 
