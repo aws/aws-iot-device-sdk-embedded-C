@@ -36,7 +36,9 @@
 /* Include config file before other non-system includes. */
 #include "test_config.h"
 
+/* Unity testing framework includes. */
 #include "unity.h"
+
 /* Include paths for public enums, structures, and macros. */
 #include "core_http_client.h"
 
@@ -55,13 +57,13 @@
     #error "ROOT_CA_CERT_PATH should be defined for the HTTP integration tests."
 #endif
 
-#ifndef CLIENT_CERT_PATH
-    #error "CLIENT_CERT_PATH should be defined for the HTTP integration tests."
-#endif
+/* #ifndef CLIENT_CERT_PATH */
+/*     #error "CLIENT_CERT_PATH should be defined for the HTTP integration tests." */
+/* #endif */
 
-#ifndef CLIENT_PRIVATE_KEY_PATH
-    #error "CLIENT_PRIVATE_KEY_PATH should be defined for the HTTP integration tests."
-#endif
+/* #ifndef CLIENT_PRIVATE_KEY_PATH */
+/*     #error "CLIENT_PRIVATE_KEY_PATH should be defined for the HTTP integration tests." */
+/* #endif */
 
 #ifndef IOT_CORE_ALPN_PROTOCOL_NAME
     #define IOT_CORE_ALPN_PROTOCOL_NAME           ( NULL )
@@ -91,7 +93,9 @@
  */
 static NetworkContext_t networkContext;
 
-/* The transport layer interface used by the HTTP Client library. */
+/**
+ * @brief The transport layer interface used by the HTTP Client library.
+ */
 static TransportInterface_t transportInterface;
 
 /**
@@ -150,10 +154,10 @@ static void connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContex
     /* Reset or initialize file-scoped global variables. */
     ( void ) memset( &opensslCredentials, 0, sizeof( opensslCredentials ) );
     opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
-    opensslCredentials.pClientCertPath = CLIENT_CERT_PATH;
-    opensslCredentials.pPrivateKeyPath = CLIENT_PRIVATE_KEY_PATH;
-    opensslCredentials.pAlpnProtos = IOT_CORE_ALPN_PROTOCOL_NAME;
-    opensslCredentials.alpnProtosLen = IOT_CORE_ALPN_PROTOCOL_NAME_LENGTH;
+    /* opensslCredentials.pClientCertPath = CLIENT_CERT_PATH; */
+    /* opensslCredentials.pPrivateKeyPath = CLIENT_PRIVATE_KEY_PATH; */
+    /* opensslCredentials.pAlpnProtos = IOT_CORE_ALPN_PROTOCOL_NAME; */
+    /* opensslCredentials.alpnProtosLen = IOT_CORE_ALPN_PROTOCOL_NAME_LENGTH; */
 
     serverInfo.pHostName = SERVER_HOST;
     serverInfo.hostNameLength = SERVER_HOST_LENGTH;
@@ -193,9 +197,9 @@ static void connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContex
 
 /*-----------------------------------------------------------*/
 
-static void sendHttpRequest( const TransportInterface_t * pTransportInterface,
-                             const char * pMethod,
-                             const char * pPath )
+static void sendHttpRequestWithBackoffRetries( const TransportInterface_t * pTransportInterface,
+                                               const char * pMethod,
+                                               const char * pPath )
 {
     /* Configurations of the initial request headers that are passed to
      * #HTTPClient_InitializeRequestHeaders. */
@@ -204,6 +208,12 @@ static void sendHttpRequest( const TransportInterface_t * pTransportInterface,
     HTTPResponse_t response;
     /* Represents header data that will be sent in an HTTP request. */
     HTTPRequestHeaders_t requestHeaders;
+    /* Status returned by the retry utilities. */
+    RetryUtilsStatus_t retryUtilsStatus = RetryUtilsSuccess;
+    /* Struct containing the next backoff time. */
+    RetryUtilsParams_t reconnectParams;
+    /* Status returned by methods in HTTP Client Library API. */
+    HTTPStatus_t httpStatus;
 
     assert( pMethod != NULL );
     assert( pPath != NULL );
@@ -229,8 +239,9 @@ static void sendHttpRequest( const TransportInterface_t * pTransportInterface,
     requestHeaders.pBuffer = userBuffer;
     requestHeaders.bufferLen = USER_BUFFER_LENGTH;
 
-    TEST_ASSERT_EQUAL( HTTP_SUCCESS, HTTPClient_InitializeRequestHeaders( &requestHeaders,
-                                                                          &requestInfo ) );
+    httpStatus = HTTPClient_InitializeRequestHeaders( &requestHeaders,
+                                                      &requestInfo );
+    TEST_ASSERT_EQUAL( HTTP_SUCCESS, httpStatus );
     TEST_ASSERT_NOT_EQUAL( 0, requestHeaders.headersLen );
 
     /* Initialize the response object. The same buffer used for storing
@@ -248,13 +259,35 @@ static void sendHttpRequest( const TransportInterface_t * pTransportInterface,
                 ( char * ) requestHeaders.pBuffer,
                 ( int32_t ) REQUEST_BODY_LENGTH, REQUEST_BODY ) );
 
-    /* Send the request and receive the response. */
-    TEST_ASSERT_EQUAL( HTTP_SUCCESS, HTTPClient_Send( pTransportInterface,
-                                                      &requestHeaders,
-                                                      ( uint8_t * ) REQUEST_BODY,
-                                                      REQUEST_BODY_LENGTH,
-                                                      &response,
-                                                      0 ) );
+    /* Initialize retry attempts and interval */
+    RetryUtils_ParamsReset( &reconnectParams );
+
+    /* Attempt to send request to HTTP server. If request fails, retry after
+     * a timeout. Timeout value will exponentially increase until maximum
+     * attempts are reached.
+     */
+    do
+    {
+        /* Send the request and receive the response. */
+        httpStatus = HTTPClient_Send( pTransportInterface,
+                                      &requestHeaders,
+                                      ( uint8_t * ) REQUEST_BODY,
+                                      REQUEST_BODY_LENGTH,
+                                      &response,
+                                      0 );
+
+        if( httpStatus != HTTP_SUCCESS )
+        {
+            retryUtilsStatus = RetryUtils_BackoffAndSleep( &reconnectParams );
+        }
+
+        if( retryUtilsStatus == RetryUtilsRetriesExhausted )
+        {
+            LogDebug( ( "Requests to the server failed, all attempts exhausted." ) );
+        }
+    } while( ( httpStatus != HTTP_SUCCESS ) && ( retryUtilsStatus == RetryUtilsSuccess ) );
+
+    TEST_ASSERT_EQUAL( HTTP_SUCCESS, httpStatus );
 
     LogDebug( ( "Received HTTP response from %.*s%.*s...\n"
                 "Response Headers:\n%.*s\n"
@@ -314,9 +347,9 @@ void tearDown()
  */
 void test_HTTP_GET_Request( void )
 {
-    sendHttpRequest( &transportInterface,
-                     HTTP_METHOD_GET,
-                     GET_PATH );
+    sendHttpRequestWithBackoffRetries( &transportInterface,
+                                       HTTP_METHOD_GET,
+                                       GET_PATH );
 }
 
 /**
@@ -324,9 +357,9 @@ void test_HTTP_GET_Request( void )
  */
 void test_HTTP_HEAD_Request( void )
 {
-    sendHttpRequest( &transportInterface,
-                     HTTP_METHOD_HEAD,
-                     HEAD_PATH );
+    sendHttpRequestWithBackoffRetries( &transportInterface,
+                                       HTTP_METHOD_HEAD,
+                                       HEAD_PATH );
 }
 
 /**
@@ -334,9 +367,9 @@ void test_HTTP_HEAD_Request( void )
  */
 void test_HTTP_POST_Request( void )
 {
-    sendHttpRequest( &transportInterface,
-                     HTTP_METHOD_POST,
-                     POST_PATH );
+    sendHttpRequestWithBackoffRetries( &transportInterface,
+                                       HTTP_METHOD_POST,
+                                       POST_PATH );
 }
 
 /**
@@ -344,7 +377,7 @@ void test_HTTP_POST_Request( void )
  */
 void test_HTTP_PUT_Request( void )
 {
-    sendHttpRequest( &transportInterface,
-                     HTTP_METHOD_PUT,
-                     PUT_PATH );
+    sendHttpRequestWithBackoffRetries( &transportInterface,
+                                       HTTP_METHOD_PUT,
+                                       PUT_PATH );
 }

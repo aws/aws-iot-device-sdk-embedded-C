@@ -11,7 +11,9 @@ set(project_name "http_system")
 
 # list the files you would like to test here
 list(APPEND real_source_files
+            .
             ${HTTP_SOURCES}
+            ${HTTP_THIRD_PARTY_SOURCES}
         )
 # list the directories the module under test includes
 list(APPEND real_include_directories
