@@ -170,6 +170,23 @@ static MQTTContext_t MqttContext;
 
 /*-----------------------------------------------------------*/
 
+/*
+ * Publish a message to the specified client/topic at the given QOS.
+ */
+ static MQTTStatus_t publish( const char * const pacTopic,
+                              uint16_t usTopicLen,
+                              const char * pcMsg,
+                              uint32_t ulMsgSize,
+                              uint8_t ucQoS );
+
+
+static int32_t subscribe( const char * pTopicFilter,
+                   uint16_t topicFilterLength,
+                   uint8_t ucQoS,
+                   void * pvCallback );
+
+/*-----------------------------------------------------------*/
+
 /**
  * @brief The OTA agent has completed the update job or it is in
  * self test mode. If it was accepted, we want to activate the new image.
@@ -198,10 +215,7 @@ static void App_OTACompleteCallback( OtaJobEvent_t eEvent )
         LogInfo( ( "Received OtaJobEventActivate callback from OTA Agent." ) );
 
         /* OTA job is completed. so delete the network connection. */
-        if( pMqttContext != NULL )
-        {
-            MQTT_Disconnect( pMqttContext );
-        }
+        MQTT_Disconnect( &MqttContext );
 
         /* Activate the new firmware image. */
         OTA_ActivateNewImage();
@@ -235,6 +249,84 @@ static void App_OTACompleteCallback( OtaJobEvent_t eEvent )
             LogError( ( " Error! Failed to set image state as accepted." ) );
         }
     }
+}
+
+/*-----------------------------------------------------------*/
+
+static void jobCallback( MQTTContext_t * pContext, MQTTPublishInfo_t * pPublishInfo )
+{
+   // static char buff[1024];
+    assert( pPublishInfo != NULL );
+    assert( pContext != NULL );
+
+    OtaEventData_t * pxData;
+    OtaEventMsg_t xEventMsg = { 0 };
+
+    /* Suppress unused parameter warning when asserts are disabled in build. */
+    ( void ) pContext;
+
+
+    // TODO, notify OTA agent about the incoming message.
+
+    LogInfo( ( "Received ota message callback.\n\n" ) );
+
+    pxData = otaEventBufferGet();
+
+
+        if( pxData != NULL )
+        {
+            memcpy( pxData->data, pPublishInfo->pPayload, pPublishInfo->payloadLength );
+            pxData->dataLength = pPublishInfo->payloadLength ;
+            xEventMsg.eventId = OtaAgentEventReceivedJobDocument;
+            xEventMsg.pEventData = pxData;
+
+            /* Send job document received event. */
+            OTA_SignalEvent( &xEventMsg );
+        }
+        else
+        {
+            OTA_LOG_L1( "Error: No OTA data buffers available.\r\n" );
+        }
+
+}
+
+/*-----------------------------------------------------------*/
+
+static void dataCallback( MQTTContext_t * pContext, MQTTPublishInfo_t * pPublishInfo )
+{
+      // static char buff[1024];
+    assert( pPublishInfo != NULL );
+    assert( pContext != NULL );
+
+    OtaEventData_t * pxData;
+    OtaEventMsg_t xEventMsg = { 0 };
+
+    /* Suppress unused parameter warning when asserts are disabled in build. */
+    ( void ) pContext;
+
+   // memcpy( buff, pPublishInfo->pPayload, pPublishInfo->payloadLength );
+
+    // TODO, notify OTA agent about the incoming message.
+
+    LogInfo( ( "Received ota message callback.\n\n" ) );
+
+    pxData = otaEventBufferGet();
+
+
+        if( pxData != NULL )
+        {
+            memcpy( pxData->data, pPublishInfo->pPayload, pPublishInfo->payloadLength );
+            pxData->dataLength = pPublishInfo->payloadLength ;
+            xEventMsg.eventId = OtaAgentEventReceivedFileBlock;
+            xEventMsg.pEventData = pxData;
+
+            /* Send job document received event. */
+            OTA_SignalEvent( &xEventMsg );
+        }
+        else
+        {
+            OTA_LOG_L1( "Error: No OTA data buffers available.\r\n" );
+        }
 }
 
 /*-----------------------------------------------------------*/
@@ -293,80 +385,6 @@ static void mqttEventCallback( MQTTContext_t * pMqttContext,
 }
 
 /*-----------------------------------------------------------*/
-
-static void otaMessageCallback( MQTTContext_t * pContext, MQTTPublishInfo_t * pPublishInfo )
-{
-   // static char buff[1024];
-    assert( pPublishInfo != NULL );
-    assert( pContext != NULL );
-
-    OtaEventData_t * pxData;
-    OtaEventMsg_t xEventMsg = { 0 };
-
-    /* Suppress unused parameter warning when asserts are disabled in build. */
-    ( void ) pContext;
-
-
-    // TODO, notify OTA agent about the incoming message.
-
-    LogInfo( ( "Received ota message callback.\n\n" ) );
-
-    pxData = otaEventBufferGet();
-
-
-        if( pxData != NULL )
-        {
-            memcpy( pxData->data, pPublishInfo->pPayload, pPublishInfo->payloadLength );
-            pxData->dataLength = pPublishInfo->payloadLength ;
-            xEventMsg.eventId = OtaAgentEventReceivedJobDocument;
-            xEventMsg.pEventData = pxData;
-
-            /* Send job document received event. */
-            OTA_SignalEvent( &xEventMsg );
-        }
-        else
-        {
-            OTA_LOG_L1( "Error: No OTA data buffers available.\r\n" );
-        }
-
-}
-
-static void otaDataCallback( MQTTContext_t * pContext, MQTTPublishInfo_t * pPublishInfo )
-{
-      // static char buff[1024];
-    assert( pPublishInfo != NULL );
-    assert( pContext != NULL );
-
-    OtaEventData_t * pxData;
-    OtaEventMsg_t xEventMsg = { 0 };
-
-    /* Suppress unused parameter warning when asserts are disabled in build. */
-    ( void ) pContext;
-
-   // memcpy( buff, pPublishInfo->pPayload, pPublishInfo->payloadLength );
-
-    // TODO, notify OTA agent about the incoming message.
-
-    LogInfo( ( "Received ota message callback.\n\n" ) );
-
-    pxData = otaEventBufferGet();
-
-
-        if( pxData != NULL )
-        {
-            memcpy( pxData->data, pPublishInfo->pPayload, pPublishInfo->payloadLength );
-            pxData->dataLength = pPublishInfo->payloadLength ;
-            xEventMsg.eventId = OtaAgentEventReceivedFileBlock;
-            xEventMsg.pEventData = pxData;
-
-            /* Send job document received event. */
-            OTA_SignalEvent( &xEventMsg );
-        }
-        else
-        {
-            OTA_LOG_L1( "Error: No OTA data buffers available.\r\n" );
-        }
-}
 
 static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext )
 {
@@ -668,16 +686,16 @@ void startOTADemo( MQTTContext_t * pMqttContext )
 
     /* Initialize OTA library OS Interface. */
 	OtaOSInterface_t OtaOSInterface;
-    OtaOSInterface.event.init = initEvent;
-	OtaOSInterface.event.send = sendEvent;
-	OtaOSInterface.event.recv = receiveEvent;
-	OtaOSInterface.event.deinit = deinitEvent;
+    OtaOSInterface.event.init = ota_InitEvent;
+	OtaOSInterface.event.send = ota_SendEvent;
+	OtaOSInterface.event.recv = ota_ReceiveEvent;
+	OtaOSInterface.event.deinit = ota_DeinitEvent;
 
     /* Intialize the OTA library MQTT Interface.*/
     OtaMqttInterface_t OtaMqttInterface;
     OtaMqttInterface.subscribe = subscribe;
     OtaMqttInterface.publish = publish;
-    OtaMqttInterface.unsubscribe = unsubscribe;
+    //OtaMqttInterface.unsubscribe = unsubscribe;
     OtaMqttInterface.jobCallback =  jobCallback;
     OtaMqttInterface.dataCallback=  dataCallback;
 
@@ -696,11 +714,11 @@ void startOTADemo( MQTTContext_t * pMqttContext )
     sleep( OTA_DEMO_TASK_DELAY_SECONDS );
 
     /* Create the OTA Agent thread with default attributes.*/  
-	pthread_create( &threadHandle, NULL, OTAAgentThread, NULL );
+	pthread_create( &threadHandle, NULL, otaAgentTask, NULL );
 
     /* Wait forever for OTA traffic but allow other tasks to run and output statistics only once
      * per second. */
-    while( ( ( eState = OTA_GetAgentState() ) != eOTA_AgentState_Stopped ) )
+    while( ( ( eState = OTA_GetAgentState() ) != OtaAgentStateStopped ) )
     {
         LogInfo( ( " Received: %u   Queued: %u   Processed: %u   Dropped: %u",
                    OTA_GetPacketsReceived(),
@@ -736,9 +754,9 @@ int main( int argc,
     bool mqttSessionPresent = false;
 
     LogInfo( ( "OTA over MQTT demo version %u.%u.%u",
-               xAppFirmwareVersion.u.x.ucMajor,
-               xAppFirmwareVersion.u.x.ucMinor,
-               xAppFirmwareVersion.u.x.usBuild ) );
+               appFirmwareVersion.u.x.ucMajor,
+               appFirmwareVersion.u.x.ucMinor,
+               appFirmwareVersion.u.x.usBuild ) );
 
     for( ; ; )
     {
