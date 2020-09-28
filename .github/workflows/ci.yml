@@ -130,7 +130,10 @@ jobs:
           for lib in $(find libraries/aws libraries/standard -maxdepth 1 -mindepth 1)
           do
             cd $lib
-            if [ ! -d docs/doxygen/ ]; then exit 0; fi
+            if [ ! -d docs/doxygen/ ]; then
+              echo "$lib has no Doxygen documentation."
+              exit 0
+            fi
             doxygen docs/doxygen/config.doxyfile
             cd $ROOT
           done
