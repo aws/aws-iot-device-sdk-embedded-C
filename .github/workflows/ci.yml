@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-check:
+  build-demo:
     runs-on: ubuntu-latest
     steps:
       - name: Clone This Repo
@@ -31,7 +31,7 @@ jobs:
           -DCLIENT_PRIVATE_KEY_PATH="key/path"
       - name: Build Demos
         run: make -C build/ help | grep demo | tr -d '. ' | xargs make -C build/
-  tests:
+  system-unit-test:
     runs-on: ubuntu-latest
     steps:
       - name: Clone This Repo
