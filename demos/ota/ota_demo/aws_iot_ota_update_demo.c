@@ -45,20 +45,16 @@
 #include "core_mqtt.h"
 #include "mqtt_subscription_manager.h"
 
-/* OTA include. */
+/* OTA Library include. */
 #include "aws_iot_ota_agent.h"
-#include "aws_ota_agent_config.h"
 #include "aws_iot_ota_agent_internal.h"
+#include "aws_ota_agent_config.h"
 
-/* OTA Library Interface includes. */
+/* OTA Library Interface include. */
 #include "ota_os_posix.h"
-#include "ota_os_interface.h"
 
 /* Include firmware version struct definition. */
 #include "iot_appversion32.h"
-
-/* Evaluates to the length of a constant string defined like 'static const char str[]= "xyz"; */
-#define CONST_STRLEN( s )    ( ( ( uint32_t ) sizeof( s ) ) - 1UL )
 
 /**
  * @brief ALPN (Application-Layer Protocol Negotiation) protocol name for AWS IoT MQTT.
@@ -75,9 +71,8 @@
  */
 #define AWS_IOT_MQTT_ALPN_LENGTH            ( ( uint16_t ) ( sizeof( AWS_IOT_MQTT_ALPN ) - 1 ) )
 
-static MQTTContext_t MqttContext;
 /**
- * These configuration settings are required to run the mutual auth demo.
+ * These configuration settings are required to run the OTA demo which uses mutual authentication.
  * Throw compilation error if the below configs are not defined.
  */
 #ifndef AWS_IOT_ENDPOINT
@@ -133,7 +128,11 @@ static MQTTContext_t MqttContext;
  * The largest message size is data size from the AWS IoT streaming service, 2000 is reserved for
  * extra headers.
  */
-#define NETWORK_BUFFER_SIZE    ( ( 1U << otaconfigLOG2_FILE_BLOCK_SIZE ) + 2000 )
+#define OTA_PRESIGNED_URL_MAX_SIZE   ( 1500U )
+#define OTA_MQTT_HEADER_MAX_SIZE     ( 30U )
+#define NETWORK_BUFFER_SIZE          ( ( 1U << otaconfigLOG2_FILE_BLOCK_SIZE ) + \
+                                       OTA_PRESIGNED_URL_MAX_SIZE + \
+                                       OTA_MQTT_HEADER_MAX_SIZE )
 
 /**
  * @brief The delay used in the main OTA Demo task loop to periodically output the OTA
@@ -154,12 +153,7 @@ const AppVersion32_t appFirmwareVersion =
 };
 
 /**
- * @brief Handle of the MQTT connection used in this demo.
- */
-static MQTTContext_t * pMqttContext = NULL;
-
-/**
- * @brief Buffer to receive the MQTT message.
+ * @brief The network buffer must remain valid when OTA library task is running.
  */
 static uint8_t buffer[ NETWORK_BUFFER_SIZE ];
 
@@ -167,19 +161,6 @@ static uint8_t buffer[ NETWORK_BUFFER_SIZE ];
  * @brief Keep a flag for indicating if the MQTT connection is alive.
  */
 static bool mqttSessionEstablished = false;
-
-int32_t SubscribeToTopic( const char * pTopicFilter,
-                          uint16_t topicFilterLength,
-                            MQTTQoS_t eQOS );
-
-static const char pcOTA_JobsGetNext_TopicTemplate[] = "$aws/things/%s/jobs/$next/get";
-
-static MQTTStatus_t prvPublishMessage(
-                                         const char * const pacTopic,
-                                         uint16_t usTopicLen,
-                                         const char * pcMsg,
-                                         uint32_t messageSize,
-                                         MQTTQoS_t eQOS );
 
 /*-----------------------------------------------------------*/
 
@@ -560,163 +541,9 @@ static void App_OTACompleteCallback( OtaJobEvent_t eEvent )
 static void  requestJob( );
 /*-----------------------------------------------------------*/
 
-void startOTAUpdateDemo( MQTTContext_t * pMqttContext )
-{
-    OtaState_t eState;
-    MQTTStatus_t mqttStatus = MQTTBadParameter;
-    SubscriptionManagerStatus_t mqttManagerStatus = 0u;
-    uint32_t mqttProcessTimeMs = 0U;
-    const char * pTopicFilter = "ota";
 
-
-     uint16_t usTopicLen = 0;
-     static char pcJobTopic[ 256 ];
-     static char pcJobTopic2[ 256 ];
-     static const char pcOTA_JobsGetNextAccepted_TopicTemplate[] = "$aws/things/%s/jobs/$next/get/accepted";
-     static const char pcOTA_JobsNotifyNext_TopicTemplate[] = "$aws/things/%s/jobs/notify-next";
-     MQTTSubscribeInfo_t subscriptionInfo;
-    size_t subscriptionCount = 1;
-
-    /* OTA OS context. */
-	OtaEventContext_t EventCtx ;
-
-	/* Initialize OTA OS interface. */
-	OtaOsInterface_t OtaOSInterface;
-
-    OtaOSInterface.event.init = ota_InitEvent;
-	OtaOSInterface.event.send = ota_SendEvent;
-	OtaOSInterface.event.recv = ota_ReceiveEvent;
-	OtaOSInterface.event.deinit = ota_DeinitEvent;
-	OtaOSInterface.event.pEventCtx = &EventCtx;
-
-    //subscribe to the OTA topics
-    /* Build the first topic. */
-    usTopicLen = ( uint16_t ) snprintf( pcJobTopic,
-                                        sizeof( pcJobTopic ),
-                                        pcOTA_JobsGetNextAccepted_TopicTemplate,
-                                        ( const uint8_t * ) CLIENT_IDENTIFIER );
-
-
-    SubscribeToTopic(pcJobTopic, usTopicLen,MQTTQoS1 );
-
-    SubscriptionManager_RegisterCallback( pcJobTopic,
-                                          usTopicLen,
-                                          otaMessageCallback );
-
-
-
-    usTopicLen = ( uint16_t ) snprintf( pcJobTopic2,
-                                        sizeof( pcJobTopic2 ),
-                                        pcOTA_JobsNotifyNext_TopicTemplate,
-                                        ( const uint8_t * ) ( CLIENT_IDENTIFIER ) );
-
-    SubscribeToTopic(pcJobTopic2, usTopicLen,  MQTTQoS1);
-
-  SubscriptionManager_RegisterCallback( pcJobTopic2,
-                                        usTopicLen,
-                                        otaMessageCallback );
-
-
-
-
-    /* Initialize the OTA Agent , if it is resuming the OTA statistics will be cleared for new
-     * connection.*/
-    OTA_AgentInit( ( void * ) ( pMqttContext ),
-                    &OtaOSInterface,
-                   ( const uint8_t * ) ( CLIENT_IDENTIFIER ),
-                   App_OTACompleteCallback,
-                   ( uint32_t ) ~0 );
-
-       sleep( 2);
-
-      requestJob ();
-
-    /* Wait forever for OTA traffic but allow other tasks to run and output statistics only once
-     * per second. */
-    while( ( ( eState = OTA_GetAgentState() ) != OtaAgentStateStopped ) )
-    {
-
-        LogInfo( ( " Received: %u   Queued: %u   Processed: %u   Dropped: %u",
-                   //OTA_GetAgentState(),
-                   OTA_GetPacketsReceived(),
-                   OTA_GetPacketsQueued(),
-                   OTA_GetPacketsProcessed(),
-                   OTA_GetPacketsDropped() ) );
-
-        sleep( OTA_DEMO_TASK_DELAY_SECONDS );
-    }
-
-}
 
 /*-----------------------------------------------------------*/
-
-/**
- * @brief Entry point of demo.
- *
- * This example initializes the OTA agent to enable OTA updates via the
- * MQTT broker. It simply connects to the MQTT broker with the users
- * credentials and spins in an indefinite loop to allow MQTT messages to be
- * forwarded to the OTA agent for possible processing. The OTA agent does all
- * of the real work; checking to see if the message topic is one destined for
- * the OTA agent. If not, it is simply ignored.
- */
-int main( int argc,
-          char ** argv )
-{
-    int returnStatus = EXIT_SUCCESS;
-    NetworkContext_t networkContext;
-
-    bool mqttSessionPresent = false;
-
-    ( void ) argc;
-    ( void ) argv;
-
-    LogInfo( ( "OTA demo version %u.%u.%u",
-               appFirmwareVersion.u.x.ucMajor,
-               appFirmwareVersion.u.x.ucMinor,
-               appFirmwareVersion.u.x.usBuild ) );
-
-    for( ; ; )
-    {
-        /* Attempt to connect to the MQTT broker. If connection fails, retry after
-         * a timeout. Timeout value will be exponentially increased till the maximum
-         * attempts are reached or maximum timeout value is reached. The function
-         * returns EXIT_FAILURE if the TCP connection cannot be established to
-         * broker after configured number of attempts. */
-        returnStatus = connectToServerWithBackoffRetries( &networkContext );
-
-        if( returnStatus == EXIT_FAILURE )
-        {
-            /* Log error to indicate connection failure after all
-             * reconnect attempts are over. */
-            LogError( ( "Failed to connect to MQTT broker %.*s.",
-                        AWS_IOT_ENDPOINT_LENGTH,
-                        AWS_IOT_ENDPOINT ) );
-        }
-        else
-        {
-            /* Sends an MQTT Connect packet to establish a clean connection over the
-             * established TLS session, then waits for connection acknowledgment
-             * (CONNACK) packet. */
-            if( EXIT_SUCCESS == establishMqttSession( &MqttContext,
-                                                      &networkContext,
-                                                      true, /* clean session */
-                                                      &mqttSessionPresent ) )
-            {
-                mqttSessionEstablished = true;
-            }
-
-        }
-
-        if( mqttSessionEstablished )
-        {
-            /* If TLS session is established, start the OTA agent. */
-            startOTAUpdateDemo( &MqttContext );
-        }
-    }
-
-    return returnStatus;
-}
 
 
 int32_t SubscribeToTopic( const char * pTopicFilter,
@@ -972,4 +799,160 @@ static MQTTStatus_t prvPublishMessage( const char * const pacTopic,
     }
 
     return mqttStatus;
+}
+
+void startOTAUpdateDemo( MQTTContext_t * pMqttContext )
+{
+    OtaState_t eState;
+    MQTTStatus_t mqttStatus = MQTTBadParameter;
+    SubscriptionManagerStatus_t mqttManagerStatus = 0u;
+    uint32_t mqttProcessTimeMs = 0U;
+    const char * pTopicFilter = "ota";
+
+
+     uint16_t usTopicLen = 0;
+     static char pcJobTopic[ 256 ];
+     static char pcJobTopic2[ 256 ];
+     static const char pcOTA_JobsGetNextAccepted_TopicTemplate[] = "$aws/things/%s/jobs/$next/get/accepted";
+     static const char pcOTA_JobsNotifyNext_TopicTemplate[] = "$aws/things/%s/jobs/notify-next";
+     MQTTSubscribeInfo_t subscriptionInfo;
+    size_t subscriptionCount = 1;
+
+    /* OTA OS context. */
+	OtaEventContext_t EventCtx ;
+
+	/* Initialize OTA OS interface. */
+	OtaOsInterface_t OtaOSInterface;
+
+    OtaOSInterface.event.init = ota_InitEvent;
+	OtaOSInterface.event.send = ota_SendEvent;
+	OtaOSInterface.event.recv = ota_ReceiveEvent;
+	OtaOSInterface.event.deinit = ota_DeinitEvent;
+	OtaOSInterface.event.pEventCtx = &EventCtx;
+
+    //subscribe to the OTA topics
+    /* Build the first topic. */
+    usTopicLen = ( uint16_t ) snprintf( pcJobTopic,
+                                        sizeof( pcJobTopic ),
+                                        pcOTA_JobsGetNextAccepted_TopicTemplate,
+                                        ( const uint8_t * ) CLIENT_IDENTIFIER );
+
+
+    SubscribeToTopic(pcJobTopic, usTopicLen,MQTTQoS1 );
+
+    SubscriptionManager_RegisterCallback( pcJobTopic,
+                                          usTopicLen,
+                                          otaMessageCallback );
+
+
+
+    usTopicLen = ( uint16_t ) snprintf( pcJobTopic2,
+                                        sizeof( pcJobTopic2 ),
+                                        pcOTA_JobsNotifyNext_TopicTemplate,
+                                        ( const uint8_t * ) ( CLIENT_IDENTIFIER ) );
+
+    SubscribeToTopic(pcJobTopic2, usTopicLen,  MQTTQoS1);
+
+  SubscriptionManager_RegisterCallback( pcJobTopic2,
+                                        usTopicLen,
+                                        otaMessageCallback );
+
+
+
+
+    /* Initialize the OTA Agent , if it is resuming the OTA statistics will be cleared for new
+     * connection.*/
+    OTA_AgentInit( ( void * ) ( pMqttContext ),
+                    &OtaOSInterface,
+                   ( const uint8_t * ) ( CLIENT_IDENTIFIER ),
+                   App_OTACompleteCallback,
+                   ( uint32_t ) ~0 );
+
+       sleep( 2);
+
+      requestJob ();
+
+    /* Wait forever for OTA traffic but allow other tasks to run and output statistics only once
+     * per second. */
+    while( ( ( eState = OTA_GetAgentState() ) != OtaAgentStateStopped ) )
+    {
+
+        LogInfo( ( " Received: %u   Queued: %u   Processed: %u   Dropped: %u",
+                   //OTA_GetAgentState(),
+                   OTA_GetPacketsReceived(),
+                   OTA_GetPacketsQueued(),
+                   OTA_GetPacketsProcessed(),
+                   OTA_GetPacketsDropped() ) );
+
+        sleep( OTA_DEMO_TASK_DELAY_SECONDS );
+    }
+
+}
+
+/**
+ * @brief Entry point of demo.
+ *
+ * This example initializes the OTA agent to enable OTA updates via the
+ * MQTT broker. It simply connects to the MQTT broker with the users
+ * credentials and spins in an indefinite loop to allow MQTT messages to be
+ * forwarded to the OTA agent for possible processing. The OTA agent does all
+ * of the real work; checking to see if the message topic is one destined for
+ * the OTA agent. If not, it is simply ignored.
+ */
+int main( int argc,
+          char ** argv )
+{
+    int returnStatus = EXIT_SUCCESS;
+    NetworkContext_t networkContext;
+
+    bool mqttSessionPresent = false;
+
+    ( void ) argc;
+    ( void ) argv;
+
+    LogInfo( ( "OTA demo version %u.%u.%u",
+               appFirmwareVersion.u.x.ucMajor,
+               appFirmwareVersion.u.x.ucMinor,
+               appFirmwareVersion.u.x.usBuild ) );
+
+    for( ; ; )
+    {
+        /* Attempt to connect to the MQTT broker. If connection fails, retry after
+         * a timeout. Timeout value will be exponentially increased till the maximum
+         * attempts are reached or maximum timeout value is reached. The function
+         * returns EXIT_FAILURE if the TCP connection cannot be established to
+         * broker after configured number of attempts. */
+        returnStatus = connectToServerWithBackoffRetries( &networkContext );
+
+        if( returnStatus == EXIT_FAILURE )
+        {
+            /* Log error to indicate connection failure after all
+             * reconnect attempts are over. */
+            LogError( ( "Failed to connect to MQTT broker %.*s.",
+                        AWS_IOT_ENDPOINT_LENGTH,
+                        AWS_IOT_ENDPOINT ) );
+        }
+        else
+        {
+            /* Sends an MQTT Connect packet to establish a clean connection over the
+             * established TLS session, then waits for connection acknowledgment
+             * (CONNACK) packet. */
+            if( EXIT_SUCCESS == establishMqttSession( &MqttContext,
+                                                      &networkContext,
+                                                      true, /* clean session */
+                                                      &mqttSessionPresent ) )
+            {
+                mqttSessionEstablished = true;
+            }
+
+        }
+
+        if( mqttSessionEstablished )
+        {
+            /* If TLS session is established, start the OTA agent. */
+            startOTAUpdateDemo( &MqttContext );
+        }
+    }
+
+    return returnStatus;
 }
