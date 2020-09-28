@@ -1,5 +1,5 @@
 # Taken from amazon-freertos repository
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.2.0)
 set(BINARY_DIR ${CMAKE_BINARY_DIR})
 # reset coverage counters
 execute_process(
