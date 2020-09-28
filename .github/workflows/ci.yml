@@ -40,7 +40,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           submodules: recursive
-      - name: Build
+      - name: Build Unit Tests
         run: |
           sudo apt-get install -y lcov
           cmake -S . -B build/ \
