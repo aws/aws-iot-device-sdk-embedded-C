@@ -27,8 +27,6 @@ target_include_directories(
     PUBLIC
         "../common/include"
         ${HTTP_INCLUDE_PUBLIC_DIRS}
-        ${HTTP_INCLUDE_THIRD_PARTY_DIRS}
-        ${HTTP_INCLUDE_PRIVATE_DIRS}
         ${CMAKE_CURRENT_LIST_DIR}
         ${LOGGING_INCLUDE_DIRS}
 )

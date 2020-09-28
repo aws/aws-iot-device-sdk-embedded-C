@@ -30,7 +30,6 @@ target_include_directories(
     ${DEMO_NAME}
     PUBLIC
         ${MQTT_INCLUDE_PUBLIC_DIRS}
-        ${MQTT_INCLUDE_PRIVATE_DIRS}
         ${CMAKE_CURRENT_LIST_DIR}
         ${LOGGING_INCLUDE_DIRS}
 )
