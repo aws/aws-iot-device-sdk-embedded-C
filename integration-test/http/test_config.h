@@ -55,6 +55,7 @@
  *
  * #define SERVER_HOST               "...insert here..."
  */
+#define SERVER_HOST               "httpbin.org"
 
 /**
  * @brief HTTP server port number.
@@ -68,6 +69,7 @@
  *
  * #define ROOT_CA_CERT_PATH    "...insert here..."
  */
+#define ROOT_CA_CERT_PATH    "certificates/AmazonRootCA1.crt"
 
 /**
  * @brief Path of the file containing the client's certificate for TLS
