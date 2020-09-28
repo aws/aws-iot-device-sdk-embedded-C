@@ -52,6 +52,7 @@
 
 /* OTA Library Interface include. */
 #include "ota_os_posix.h"
+#include "ota_mqtt_interface.h"
 
 /* Include firmware version struct definition. */
 #include "iot_appversion32.h"
@@ -161,6 +162,11 @@ static uint8_t buffer[ NETWORK_BUFFER_SIZE ];
  * @brief Keep a flag for indicating if the MQTT connection is alive.
  */
 static bool mqttSessionEstablished = false;
+
+/**
+ * @brief MQTT connection context used in this demo.
+ */
+static MQTTContext_t MqttContext;
 
 /*-----------------------------------------------------------*/
 
@@ -801,84 +807,58 @@ static MQTTStatus_t prvPublishMessage( const char * const pacTopic,
     return mqttStatus;
 }
 
+/*-----------------------------------------------------------*/
+
 void startOTAUpdateDemo( MQTTContext_t * pMqttContext )
 {
-    OtaState_t eState;
-    MQTTStatus_t mqttStatus = MQTTBadParameter;
+    int ret = 0;
+
+    /* MQTT susbsrciption manager parameters.*/
     SubscriptionManagerStatus_t mqttManagerStatus = 0u;
-    uint32_t mqttProcessTimeMs = 0U;
-    const char * pTopicFilter = "ota";
-
-
-     uint16_t usTopicLen = 0;
-     static char pcJobTopic[ 256 ];
-     static char pcJobTopic2[ 256 ];
-     static const char pcOTA_JobsGetNextAccepted_TopicTemplate[] = "$aws/things/%s/jobs/$next/get/accepted";
-     static const char pcOTA_JobsNotifyNext_TopicTemplate[] = "$aws/things/%s/jobs/notify-next";
-     MQTTSubscribeInfo_t subscriptionInfo;
+    MQTTSubscribeInfo_t subscriptionInfo;
+    uint16_t usTopicLen = 0;
     size_t subscriptionCount = 1;
 
-    /* OTA OS context. */
-	OtaEventContext_t EventCtx ;
+    /* OTA Agent state.*/
+    OtaState_t eState = OtaAgentStateStopped;
 
-	/* Initialize OTA OS interface. */
-	OtaOsInterface_t OtaOSInterface;
+    /* Initialize OTA library OS Interface. */
+	OtaOSInterface_t OtaOSInterface;
+    OtaOSInterface.event.init = initEvent;
+	OtaOSInterface.event.send = sendEvent;
+	OtaOSInterface.event.recv = receiveEvent;
+	OtaOSInterface.event.deinit = deinitEvent;
 
-    OtaOSInterface.event.init = ota_InitEvent;
-	OtaOSInterface.event.send = ota_SendEvent;
-	OtaOSInterface.event.recv = ota_ReceiveEvent;
-	OtaOSInterface.event.deinit = ota_DeinitEvent;
-	OtaOSInterface.event.pEventCtx = &EventCtx;
+    /* Intialize the OTA library MQTT Interface.*/
+    OtaMqttInterface_t OtaMqttInterface;
+    OtaMqttInterface.subscribe = subscribe;
+    OtaMqttInterface.publish = publish;
+    OtaMqttInterface.unsubscribe = unsubscribe;
+    OtaMqttInterface.jobCallback =  jobCallback;
+    OtaMqttInterface.dataCallback=  dataCallback;
 
-    //subscribe to the OTA topics
-    /* Build the first topic. */
-    usTopicLen = ( uint16_t ) snprintf( pcJobTopic,
-                                        sizeof( pcJobTopic ),
-                                        pcOTA_JobsGetNextAccepted_TopicTemplate,
-                                        ( const uint8_t * ) CLIENT_IDENTIFIER );
-
-
-    SubscribeToTopic(pcJobTopic, usTopicLen,MQTTQoS1 );
-
-    SubscriptionManager_RegisterCallback( pcJobTopic,
-                                          usTopicLen,
-                                          otaMessageCallback );
-
-
-
-    usTopicLen = ( uint16_t ) snprintf( pcJobTopic2,
-                                        sizeof( pcJobTopic2 ),
-                                        pcOTA_JobsNotifyNext_TopicTemplate,
-                                        ( const uint8_t * ) ( CLIENT_IDENTIFIER ) );
-
-    SubscribeToTopic(pcJobTopic2, usTopicLen,  MQTTQoS1);
-
-  SubscriptionManager_RegisterCallback( pcJobTopic2,
-                                        usTopicLen,
-                                        otaMessageCallback );
-
-
-
+    /* OTA Agent thread handle. */
+    pthread_t threadHandle;
 
     /* Initialize the OTA Agent , if it is resuming the OTA statistics will be cleared for new
      * connection.*/
     OTA_AgentInit( ( void * ) ( pMqttContext ),
                     &OtaOSInterface,
-                   ( const uint8_t * ) ( CLIENT_IDENTIFIER ),
-                   App_OTACompleteCallback,
-                   ( uint32_t ) ~0 );
+                    &OtaMqttInterface,
+                    ( const uint8_t * ) ( CLIENT_IDENTIFIER ),
+                    App_OTACompleteCallback,
+                    ( uint32_t ) ~0 );
 
-       sleep( 2);
+    sleep( OTA_DEMO_TASK_DELAY_SECONDS );
 
-      requestJob ();
+    /* Create the OTA Agent thread with default attributes.*/  
+	pthread_create( &threadHandle, NULL, OTAAgentThread, NULL );
 
     /* Wait forever for OTA traffic but allow other tasks to run and output statistics only once
      * per second. */
-    while( ( ( eState = OTA_GetAgentState() ) != OtaAgentStateStopped ) )
+    while( ( ( eState = OTA_GetAgentState() ) != eOTA_AgentState_Stopped ) )
     {
-
         LogInfo( ( " Received: %u   Queued: %u   Processed: %u   Dropped: %u",
-                   //OTA_GetAgentState(),
                    OTA_GetPacketsReceived(),
                    OTA_GetPacketsQueued(),
                    OTA_GetPacketsProcessed(),
@@ -888,6 +868,8 @@ void startOTAUpdateDemo( MQTTContext_t * pMqttContext )
     }
 
 }
+
+/*-----------------------------------------------------------*/
 
 /**
  * @brief Entry point of demo.
@@ -902,18 +884,17 @@ void startOTAUpdateDemo( MQTTContext_t * pMqttContext )
 int main( int argc,
           char ** argv )
 {
-    int returnStatus = EXIT_SUCCESS;
-    NetworkContext_t networkContext;
-
-    bool mqttSessionPresent = false;
-
     ( void ) argc;
     ( void ) argv;
 
-    LogInfo( ( "OTA demo version %u.%u.%u",
-               appFirmwareVersion.u.x.ucMajor,
-               appFirmwareVersion.u.x.ucMinor,
-               appFirmwareVersion.u.x.usBuild ) );
+    int returnStatus = EXIT_SUCCESS;
+    NetworkContext_t networkContext;
+    bool mqttSessionPresent = false;
+
+    LogInfo( ( "OTA over MQTT demo version %u.%u.%u",
+               xAppFirmwareVersion.u.x.ucMajor,
+               xAppFirmwareVersion.u.x.ucMinor,
+               xAppFirmwareVersion.u.x.usBuild ) );
 
     for( ; ; )
     {
