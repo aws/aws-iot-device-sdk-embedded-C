@@ -34,7 +34,7 @@ jobs:
         run: make -C build/ help | grep demo | tr -d '. ' | xargs make -C build/
       - name: Build System Tests
         run: make -C build/ help | grep system | tr -d '. ' | xargs make -C build/
-  system-unit-test:
+  unittest:
     runs-on: ubuntu-latest
     steps:
       - name: Clone This Repo
