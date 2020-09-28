@@ -170,6 +170,75 @@ static MQTTContext_t MqttContext;
 
 /*-----------------------------------------------------------*/
 
+/**
+ * @brief The OTA agent has completed the update job or it is in
+ * self test mode. If it was accepted, we want to activate the new image.
+ * This typically means we should reset the device to run the new firmware.
+ * If now is not a good time to reset the device, it may be activated later
+ * by your user code. If the update was rejected, just return without doing
+ * anything and we'll wait for another job. If it reported that we should
+ * start test mode, normally we would perform some kind of system checks to
+ * make sure our new firmware does the basic things we think it should do
+ * but we'll just go ahead and set the image as accepted for demo purposes.
+ * The accept function varies depending on your platform. Refer to the OTA
+ * PAL implementation for your platform in aws_ota_pal.c to see what it
+ * does for you.
+ *
+ * @param[in] eEvent Specify if this demo is running with the AWS IoT
+ * MQTT server. Set this to `false` if using another MQTT server.
+ * @return None.
+ */
+static void App_OTACompleteCallback( OtaJobEvent_t eEvent )
+{
+    OtaErr_t xErr = OTA_ERR_UNINITIALIZED;
+
+    /* OTA job is completed. so delete the MQTT and network connection. */
+    if( eEvent == OtaJobEventActivate )
+    {
+        LogInfo( ( "Received OtaJobEventActivate callback from OTA Agent." ) );
+
+        /* OTA job is completed. so delete the network connection. */
+        if( pMqttContext != NULL )
+        {
+            MQTT_Disconnect( pMqttContext );
+        }
+
+        /* Activate the new firmware image. */
+        OTA_ActivateNewImage();
+
+        /* We should never get here as new image activation must reset the device.*/
+        LogError( ( "New image activation failed." ) );
+
+        for( ; ; )
+        {
+        }
+    }
+    else if( eEvent == OtaJobEventFail )
+    {
+        LogInfo( ( "Received OtaJobEventFail callback from OTA Agent." ) );
+
+        /* Nothing special to do. The OTA agent handles it. */
+    }
+    else if( eEvent == OtaJobEventStartTest )
+    {
+        /* This demo just accepts the image since it was a good OTA update and networking
+         * and services are all working (or we wouldn't have made it this far). If this
+         * were some custom device that wants to test other things before calling it OK,
+         * this would be the place to kick off those tests before calling OTA_SetImageState()
+         * with the final result of either accepted or rejected. */
+
+        LogInfo( ( "Received OtaJobEventStartTest callback from OTA Agent." ) );
+        xErr = OTA_SetImageState( OtaImageStateAccepted );
+
+        if( xErr != OTA_ERR_NONE )
+        {
+            LogError( ( " Error! Failed to set image state as accepted." ) );
+        }
+    }
+}
+
+/*-----------------------------------------------------------*/
+
 static void mqttEventCallback( MQTTContext_t * pMqttContext,
                                MQTTPacketInfo_t * pPacketInfo,
                                MQTTDeserializedInfo_t * pDeserializedInfo )
@@ -478,90 +547,15 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
 
 /*-----------------------------------------------------------*/
 
-/**
- * @brief The OTA agent has completed the update job or it is in
- * self test mode. If it was accepted, we want to activate the new image.
- * This typically means we should reset the device to run the new firmware.
- * If now is not a good time to reset the device, it may be activated later
- * by your user code. If the update was rejected, just return without doing
- * anything and we'll wait for another job. If it reported that we should
- * start test mode, normally we would perform some kind of system checks to
- * make sure our new firmware does the basic things we think it should do
- * but we'll just go ahead and set the image as accepted for demo purposes.
- * The accept function varies depending on your platform. Refer to the OTA
- * PAL implementation for your platform in aws_ota_pal.c to see what it
- * does for you.
- *
- * @param[in] eEvent Specify if this demo is running with the AWS IoT
- * MQTT server. Set this to `false` if using another MQTT server.
- * @return None.
- */
-static void App_OTACompleteCallback( OtaJobEvent_t eEvent )
-{
-    OtaErr_t xErr = OTA_ERR_UNINITIALIZED;
-
-    /* OTA job is completed. so delete the MQTT and network connection. */
-    if( eEvent == OtaJobEventActivate )
-    {
-        LogInfo( ( "Received OtaJobEventActivate callback from OTA Agent." ) );
-
-        /* OTA job is completed. so delete the network connection. */
-        if( pMqttContext != NULL )
-        {
-            MQTT_Disconnect( pMqttContext );
-        }
-
-        /* Activate the new firmware image. */
-        OTA_ActivateNewImage();
-
-        /* We should never get here as new image activation must reset the device.*/
-        LogError( ( "New image activation failed." ) );
-
-        for( ; ; )
-        {
-        }
-    }
-    else if( eEvent == OtaJobEventFail )
-    {
-        LogInfo( ( "Received OtaJobEventFail callback from OTA Agent." ) );
-
-        /* Nothing special to do. The OTA agent handles it. */
-    }
-    else if( eEvent == OtaJobEventStartTest )
-    {
-        /* This demo just accepts the image since it was a good OTA update and networking
-         * and services are all working (or we wouldn't have made it this far). If this
-         * were some custom device that wants to test other things before calling it OK,
-         * this would be the place to kick off those tests before calling OTA_SetImageState()
-         * with the final result of either accepted or rejected. */
-
-        LogInfo( ( "Received OtaJobEventStartTest callback from OTA Agent." ) );
-        xErr = OTA_SetImageState( OtaImageStateAccepted );
-
-        if( xErr != OTA_ERR_NONE )
-        {
-            LogError( ( " Error! Failed to set image state as accepted." ) );
-        }
-    }
-}
-static void  requestJob( );
-/*-----------------------------------------------------------*/
-
-
-
-/*-----------------------------------------------------------*/
-
-
-int32_t SubscribeToTopic( const char * pTopicFilter,
-                          uint16_t topicFilterLength,
-                           MQTTQoS_t eQOS )
+static int32_t subscribe( const char * pTopicFilter,
+                   uint16_t topicFilterLength,
+                   uint8_t ucQoS,
+                   void * pvCallback )
 {
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus;
     MQTTContext_t * pMqttContext = &MqttContext;
     MQTTSubscribeInfo_t pSubscriptionList[ 1 ];
-
-
 
     assert( pMqttContext != NULL );
     assert( pTopicFilter != NULL );
@@ -571,12 +565,9 @@ int32_t SubscribeToTopic( const char * pTopicFilter,
     ( void ) memset( ( void * ) pSubscriptionList, 0x00, sizeof( pSubscriptionList ) );
 
     /* This example subscribes to only one topic and uses QOS1. */
-    pSubscriptionList[ 0 ].qos = eQOS;
+    pSubscriptionList[ 0 ].qos = ucQoS;
     pSubscriptionList[ 0 ].pTopicFilter = pTopicFilter;
     pSubscriptionList[ 0 ].topicFilterLength = topicFilterLength;
-
-    /* Generate packet identifier for the SUBSCRIBE packet. */
-   // globalSubscribePacketIdentifier = MQTT_GetPacketId( pMqttContext );
 
     /* Send SUBSCRIBE packet. */
     mqttStatus = MQTT_Subscribe( pMqttContext,
@@ -596,8 +587,6 @@ int32_t SubscribeToTopic( const char * pTopicFilter,
                    topicFilterLength,
                    pTopicFilter) );
 
-                  // sleep (3 );
-
         /* Process incoming packet from the broker. Acknowledgment for subscription
          * ( SUBACK ) will be received here. However after sending the subscribe, the
          * client may receive a publish before it receives a subscribe ack. Since this
@@ -615,165 +604,20 @@ int32_t SubscribeToTopic( const char * pTopicFilter,
         }
     }
 
+    /* Register callback to suncription manager. */
+    SubscriptionManager_RegisterCallback( pTopicFilter, topicFilterLength, pvCallback );
+
     return returnStatus;
-}
-
-static void  requestJob( )
-{
-    static char pcJobTopic[ 256 ];
-    static uint32_t ulReqCounter = 0;
-    MQTTStatus_t eResult;
-    uint32_t ulMsgLen;
-    uint16_t usTopicLen;
-    OtaErr_t xError = OTA_ERR_PUBLISH_FAILED;
-    static const char pcOTA_GetNextJob_MsgTemplate[] = "{\"clientToken\":\"%u:%s\"}";
-
-    /* The following buffer is big enough to hold a dynamically constructed $next/get job message.
-     * It contains a client token that is used to track how many requests have been made. */
-    char pcMsg[ CONST_STRLEN( pcOTA_GetNextJob_MsgTemplate ) + 10U  + otaconfigMAX_THINGNAME_LEN ];
-
-    /* Subscribe to the OTA job notification topic. */
-
-    /*lint -e586 Intentionally using snprintf. */
-    ulMsgLen = ( uint32_t ) snprintf( pcMsg,
-                                      sizeof( pcMsg ),
-                                      pcOTA_GetNextJob_MsgTemplate,
-                                      ulReqCounter,
-                                      ( const uint8_t * ) ( CLIENT_IDENTIFIER ));
-
-    ulReqCounter++;
-    usTopicLen = ( uint16_t ) snprintf( pcJobTopic,
-                                        sizeof( pcJobTopic ),
-                                        pcOTA_JobsGetNext_TopicTemplate,
-                                        ( const uint8_t * ) ( CLIENT_IDENTIFIER ) );
-
-
-
-   SubscriptionManager_RegisterCallback( pcJobTopic,
-                                         usTopicLen,
-                                         otaMessageCallback );
-
-    if( ( usTopicLen > 0U ) && ( usTopicLen < sizeof( pcJobTopic ) ) )
-    {
-        prvPublishMessage( pcJobTopic, usTopicLen, pcMsg, ulMsgLen, MQTTQoS1 );
-
-    }
-}
-
-static const char pcOTA_StreamData_TopicTemplate[] = "$aws/things/%s/streams/%s/data/cbor";
-static const char pcOTA_GetStream_TopicTemplate[] = "$aws/things/%s/streams/%s/get/cbor";
-
-OtaErr_t initFileTransfer_Mqtt( OtaAgentContext_t * pxAgentCtx )
-{
-    const OtaFileContext_t * pFileContext = &( pxAgentCtx->pOtaFiles[ pxAgentCtx->fileIndex ] );
-    static char pcOTA_RxStreamTopic[ 256 ];
-    uint16_t usTopicLen = 0;
-
-    usTopicLen = ( uint16_t ) snprintf( pcOTA_RxStreamTopic,
-                                        sizeof( pcOTA_RxStreamTopic ),
-                                        pcOTA_StreamData_TopicTemplate,
-                                        ( const uint8_t * ) ( CLIENT_IDENTIFIER ) ,
-                                        ( const char * ) pFileContext->pStreamName );
-
-
-    SubscribeToTopic( pcOTA_RxStreamTopic,usTopicLen , MQTTQoS0);
-
-        SubscriptionManager_RegisterCallback( pcOTA_RxStreamTopic,
-                                          usTopicLen,
-                                          otaDataCallback );
-
-                                          return 0;
-
-   return 0;
-}
-
-#define OTA_CLIENT_TOKEN               "rdy"
-
-OtaErr_t requestFileBlock_Mqtt( OtaAgentContext_t * pxAgentCtx )
-{
-    DEFINE_OTA_METHOD_NAME( "requestFileBlock_Mqtt" );
-
-    size_t xMsgSizeFromStream;
-    uint32_t ulNumBlocks, ulBitmapLen;
-    uint32_t ulMsgSizeToPublish = 0;
-    uint32_t ulTopicLen = 0;
-    MQTTStatus_t mqttStatus = MQTTBadParameter;
-    OtaErr_t xErr = OTA_ERR_UNINITIALIZED;
-    char pcMsg[ OTA_REQUEST_MSG_MAX_SIZE ];
-    char pcTopicBuffer[ 256 ];
-
-    /*
-     * Get the current file context.
-     */
-    OtaFileContext_t * C = &( pxAgentCtx->pOtaFiles[ pxAgentCtx->fileIndex ] );
-
-    /* Reset number of blocks requested. */
-    pxAgentCtx->numOfBlocksToReceive = otaconfigMAX_NUM_BLOCKS_REQUEST;
-
-    if( C != NULL )
-    {
-        ulNumBlocks = ( C->fileSize + ( OTA_FILE_BLOCK_SIZE - 1U ) ) >> otaconfigLOG2_FILE_BLOCK_SIZE;
-        ulBitmapLen = ( ulNumBlocks + ( BITS_PER_BYTE - 1U ) ) >> LOG2_BITS_PER_BYTE;
-
-        if( OTA_CBOR_Encode_GetStreamRequestMessage(
-                ( uint8_t * ) pcMsg,
-                sizeof( pcMsg ),
-                &xMsgSizeFromStream,
-                OTA_CLIENT_TOKEN,
-                ( int32_t ) C->serverFileID,
-                ( int32_t ) ( OTA_FILE_BLOCK_SIZE & 0x7fffffffUL ), /* Mask to keep lint happy. It's still a constant. */
-                0,
-                C->pRxBlockBitmap,
-                ulBitmapLen,
-                otaconfigMAX_NUM_BLOCKS_REQUEST ) )
-        {
-            xErr = OTA_ERR_NONE;
-        }
-        else
-        {
-            OTA_LOG_L1( "[%s] CBOR encode failed.\r\n", OTA_METHOD_NAME );
-            xErr = OTA_ERR_FAILED_TO_ENCODE_CBOR;
-        }
-    }
-
-    if( xErr == OTA_ERR_NONE )
-    {
-        ulMsgSizeToPublish = ( uint32_t ) xMsgSizeFromStream;
-
-        /* Try to build the dynamic data REQUEST topic to publish to. */
-        ulTopicLen = ( uint32_t ) snprintf( pcTopicBuffer, /*lint -e586 Intentionally using snprintf. */
-                                            sizeof( pcTopicBuffer ),
-                                            pcOTA_GetStream_TopicTemplate,
-                                            pxAgentCtx->pThingName,
-                                            ( const char * ) C->pStreamName );
-
-        if( ( ulTopicLen > 0U ) && ( ulTopicLen < sizeof( pcTopicBuffer ) ) )
-        {
-            xErr = OTA_ERR_NONE;
-        }
-        else
-        {
-            /* 0 should never happen since we supply the format strings. It must be overflow. */
-            OTA_LOG_L1( "[%s] Failed to build stream topic!\r\n", OTA_METHOD_NAME );
-            xErr = OTA_ERR_TOPIC_TOO_LARGE;
-        }
-    }
-
-       /* Publish the mesage. */
-       prvPublishMessage( pcTopicBuffer, ulTopicLen, pcMsg, ulMsgSizeToPublish, MQTTQoS0 );
-
-
-    return xErr;
 }
 
 /*
  * Publish a message to the specified client/topic at the given QOS.
  */
-static MQTTStatus_t prvPublishMessage( const char * const pacTopic,
-                                       uint16_t usTopicLen,
-                                       const char * pcMsg,
-                                       uint32_t messageSize,
-                                       MQTTQoS_t eQOS )
+ static MQTTStatus_t publish( const char * const pacTopic,
+                              uint16_t usTopicLen,
+                              const char * pcMsg,
+                              uint32_t ulMsgSize,
+                              uint8_t ucQoS )
 {
     MQTTStatus_t mqttStatus = MQTTBadParameter;
     MQTTPublishInfo_t publishInfo;
@@ -781,9 +625,9 @@ static MQTTStatus_t prvPublishMessage( const char * const pacTopic,
 
     publishInfo.pTopicName = pacTopic;
     publishInfo.topicNameLength = usTopicLen;
-    publishInfo.qos = eQOS;
+    publishInfo.qos = ucQoS;
     publishInfo.pPayload = pcMsg;
-    publishInfo.payloadLength = messageSize;
+    publishInfo.payloadLength = ulMsgSize;
 
     mqttStatus = MQTT_Publish( pMqttContext,
                                &publishInfo,
@@ -796,12 +640,12 @@ static MQTTStatus_t prvPublishMessage( const char * const pacTopic,
 
         if( mqttStatus != MQTTSuccess )
         {
-            OTA_LOG_L1( " Publish ack wait failed.\n\r" );
+            LogInfo( ( " Publish ack wait failed.\n\r" ) );
         }
     }
     else
     {
-        OTA_LOG_L1( "Failed to send PUBLISH packet to broker with error = %u.", mqttStatus );
+        LogError( ( "Failed to send PUBLISH packet to broker with error = %u.", mqttStatus ) );
     }
 
     return mqttStatus;
@@ -809,7 +653,7 @@ static MQTTStatus_t prvPublishMessage( const char * const pacTopic,
 
 /*-----------------------------------------------------------*/
 
-void startOTAUpdateDemo( MQTTContext_t * pMqttContext )
+void startOTADemo( MQTTContext_t * pMqttContext )
 {
     int ret = 0;
 
@@ -931,7 +775,7 @@ int main( int argc,
         if( mqttSessionEstablished )
         {
             /* If TLS session is established, start the OTA agent. */
-            startOTAUpdateDemo( &MqttContext );
+            startOTADemo( &MqttContext );
         }
     }
 
