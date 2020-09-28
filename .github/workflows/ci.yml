@@ -56,10 +56,7 @@ jobs:
         run: |
           sudo apt-get install -y lcov
           make -C build/ help | grep utest | tr -d '. ' | xargs make -C build/
-      - name: Build System Tests
-        run: |
-          make -C build/ help | grep system | tr -d '. ' | xargs make -C build/
-      - name: Test
+      - name: Run ctest
         run: |
           cd build/
           ctest -E system --output-on-failure
@@ -79,6 +76,9 @@ jobs:
           path: "build/coverage.info"
           min_coverage: 100
           exclude: "**/*test*"
+      - name: Build System Tests
+        run: |
+          make -C build/ help | grep system | tr -d '. ' | xargs make -C build/
   complexity:
     runs-on: ubuntu-latest
     steps:
