@@ -1,4 +1,5 @@
 project ("posix unit test")
+cmake_minimum_required (VERSION 3.14)
 
 # ====================  Define your project name (edit) ========================
 set(project_name "posix")

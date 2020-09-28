@@ -1,6 +1,6 @@
 include(${PLATFORM_DIR}/posix/posixFilePaths.cmake)
 project ("transport unit test")
-cmake_minimum_required (VERSION 3.13)
+cmake_minimum_required (VERSION 3.14)
 
 # CMock does not have a built-in C parser.
 # https://github.com/ThrowTheSwitch/CMock/issues/71
