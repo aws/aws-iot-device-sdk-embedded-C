@@ -114,3 +114,30 @@ jobs:
           else
             exit 0
           fi
+  doxygen:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Install Doxygen
+        run: |
+          wget -qO- "http://doxygen.nl/files/doxygen-1.8.20.linux.bin.tar.gz" | sudo tar --strip-components=1 -xz -C /usr/local
+          sudo apt-get install -y libclang-9-dev
+      - name: Run Doxygen on all library submodules
+        run: |
+          ROOT=$PWD
+          for lib in $(find libraries/aws libraries/standard -maxdepth 1 -mindepth 1)
+          do
+            cd $lib
+            if [ ! -d docs/doxygen/ ]; then
+              echo "$lib has no Doxygen documentation."
+              exit 0
+            fi
+            doxygen docs/doxygen/config.doxyfile
+            cd $ROOT
+          done
+      - name: Run Doxygen on CSDK and verify stdout is empty
+        run: |
+          doxygen docs/doxygen/config.doxyfile 2>&1 | tee doxyoutput.txt
+          if [[ "$(wc -c < doxyoutput.txt | bc)" = "0" ]]; then exit 0; else exit 1; fi
