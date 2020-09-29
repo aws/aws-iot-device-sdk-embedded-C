@@ -28,7 +28,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include "aws_iot_ota_pal.h"
-#include "aws_iot_ota_agent_internal.h"
+#include "aws_iot_ota_agent_private.h"
 #include "aws_ota_codesigner_certificate.h"
 
 #include <openssl/evp.h>

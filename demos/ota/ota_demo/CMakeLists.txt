@@ -7,11 +7,15 @@ include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreMQTT/mqttFilePaths.cmake )
 # Demo target.
 add_executable(${DEMO_NAME})
 
+# librt is required to use OTA OS POSIX port.
+find_library(LIB_RT rt REQUIRED)
+
 target_sources(
     ${DEMO_NAME}
     PRIVATE
         "aws_iot_ota_update_demo.c"
         ${OTA_SOURCES}
+        ${OTA_OS_POSIX_SOURCES}
         ${OTA_MQTT_SOURCES}
         ${OTA_THIRD_PARTY_SOURCES}
         ${MQTT_SOURCES}
@@ -20,7 +24,7 @@ target_sources(
 target_link_libraries(
     ${DEMO_NAME}
     PRIVATE
-        ota_os
+        ${LIB_RT}
         ota_pal
         clock_posix
         openssl_posix
@@ -38,6 +42,7 @@ target_include_directories(
         "${LOGGING_INCLUDE_DIRS}"
         ${OTA_INCLUDE_PUBLIC_DIRS}
         ${OTA_INCLUDE_PRIVATE_DIRS}
+        ${OTA_INCLUDE_OS_POSIX_DIRS}
         ${OTA_INCLUDE_THIRD_PARTY_DIRS}
         ${MQTT_INCLUDE_PUBLIC_DIRS}
 )

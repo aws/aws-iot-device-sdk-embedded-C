@@ -47,8 +47,8 @@
 
 /* OTA Library include. */
 #include "aws_iot_ota_agent.h"
-#include "aws_iot_ota_agent_internal.h"
 #include "aws_ota_agent_config.h"
+#include "aws_iot_ota_agent_private.h"
 
 /* OTA Library Interface include. */
 #include "ota_os_posix.h"
@@ -713,7 +713,7 @@ void startOTADemo( MQTTContext_t * pMqttContext )
 
     sleep( OTA_DEMO_TASK_DELAY_SECONDS );
 
-    /* Create the OTA Agent thread with default attributes.*/  
+    /* Create the OTA Agent thread with default attributes.*/
 	pthread_create( &threadHandle, NULL, otaAgentTask, NULL );
 
     /* Wait forever for OTA traffic but allow other tasks to run and output statistics only once
