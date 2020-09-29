@@ -52,24 +52,21 @@
 
 /**
  * @brief HTTP server host name.
- *
- * #define SERVER_HOST               "...insert here..."
  */
-#define SERVER_HOST               "httpbin.org"
+#define SERVER_HOST          "httpbin.org"
 
 /**
  * @brief HTTP server port number.
  *
  * In general, port 443 is for TLS HTTP connections.
  */
-#define SERVER_PORT    443
+#define HTTPS_PORT          443
 
 /**
  * @brief Path of the file containing the server's root CA certificate for TLS authentication.
  *
  * #define ROOT_CA_CERT_PATH    "...insert here..."
  */
-#define ROOT_CA_CERT_PATH    "certificates/AmazonRootCA1.crt"
 
 /**
  * @brief Path of the file containing the client's certificate for TLS
@@ -98,6 +95,7 @@
  *
  * #define IOT_CORE_ALPN_PROTOCOL_NAME       "\x0ex-amzn-http-ca"
  */
+#define IOT_CORE_ALPN_PROTOCOL_NAME       "\x0ex-amzn-http-ca"
 
 /**
  * @brief Paths for different HTTP methods for specified host.

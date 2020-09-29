@@ -1,8 +1,12 @@
 project ("http system test")
-cmake_minimum_required (VERSION 3.13)
+cmake_minimum_required (VERSION 3.2.0)
+
+# Use C99 to avoid "-pedantic" errors in http_parser.
+set( CMAKE_C_STANDARD 99 )
+set( CMAKE_C_STANDARD_REQUIRED ON )
 
 # Include HTTP library's source and header path variables.
-include("${CMAKE_SOURCE_DIR}/libraries/standard/coreHTTP/httpFilePaths.cmake")
+include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreHTTP/httpFilePaths.cmake )
 
 # ====================  Define your project name (edit) ========================
 set(project_name "http_system")
@@ -11,15 +15,12 @@ set(project_name "http_system")
 
 # list the files you would like to test here
 list(APPEND real_source_files
-            .
             ${HTTP_SOURCES}
-            ${HTTP_THIRD_PARTY_SOURCES}
         )
 # list the directories the module under test includes
 list(APPEND real_include_directories
             .
             ${HTTP_INCLUDE_PUBLIC_DIRS}
-            ${HTTP_INCLUDE_PRIVATE_DIRS}
             ${LOGGING_INCLUDE_DIRS}
         )
 
@@ -29,7 +30,6 @@ list(APPEND real_include_directories
 list(APPEND test_include_directories
             .
             ${HTTP_INCLUDE_PUBLIC_DIRS}
-            ${HTTP_INCLUDE_PRIVATE_DIRS}
             ${LOGGING_INCLUDE_DIRS}
         )
 
@@ -73,7 +73,13 @@ endif()
 if(ROOT_CA_CERT_PATH)
     target_compile_definitions(
         ${stest_name} PRIVATE
-            SERVER_ROOT_CA_CERT_PATH="${ROOT_CA_CERT_PATH}"
+            ROOT_CA_CERT_PATH="${ROOT_CA_CERT_PATH}"
+    )
+endif()
+if(HTTPS_PORT)
+    target_compile_definitions(
+        ${stest_name} PRIVATE
+            HTTPS_PORT=${HTTPS_PORT}
     )
 endif()
 if(CLIENT_CERT_PATH)

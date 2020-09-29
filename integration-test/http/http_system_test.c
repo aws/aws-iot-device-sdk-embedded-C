@@ -136,9 +136,9 @@ static void connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContex
  * @param[in] pMethod The HTTP request method.
  * @param[in] pPath The Request-URI to the objects of interest.
  */
-static void sendHttpRequest( const TransportInterface_t * pTransportInterface,
-                             const char * pMethod,
-                             const char * pPath );
+static void sendHttpRequestWithBackoffRetries( const TransportInterface_t * pTransportInterface,
+                                               const char * pMethod,
+                                               const char * pPath );
 
 /*-----------------------------------------------------------*/
 
@@ -154,14 +154,14 @@ static void connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContex
     /* Reset or initialize file-scoped global variables. */
     ( void ) memset( &opensslCredentials, 0, sizeof( opensslCredentials ) );
     opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
-    /* opensslCredentials.pClientCertPath = CLIENT_CERT_PATH; */
-    /* opensslCredentials.pPrivateKeyPath = CLIENT_PRIVATE_KEY_PATH; */
-    /* opensslCredentials.pAlpnProtos = IOT_CORE_ALPN_PROTOCOL_NAME; */
-    /* opensslCredentials.alpnProtosLen = IOT_CORE_ALPN_PROTOCOL_NAME_LENGTH; */
+    opensslCredentials.pClientCertPath = CLIENT_CERT_PATH;
+    opensslCredentials.pPrivateKeyPath = CLIENT_PRIVATE_KEY_PATH;
+    opensslCredentials.pAlpnProtos = IOT_CORE_ALPN_PROTOCOL_NAME;
+    opensslCredentials.alpnProtosLen = IOT_CORE_ALPN_PROTOCOL_NAME_LENGTH;
 
     serverInfo.pHostName = SERVER_HOST;
     serverInfo.hostNameLength = SERVER_HOST_LENGTH;
-    serverInfo.port = SERVER_PORT;
+    serverInfo.port = HTTPS_PORT;
 
     /* Initialize reconnect attempts and interval */
     RetryUtils_ParamsReset( &reconnectParams );
