@@ -5,18 +5,15 @@ set( DEMO_NAME "mqtt_demo_mutual_auth" )
 include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreMQTT/mqttFilePaths.cmake )
 
 # Demo target.
-add_executable(${DEMO_NAME})
-
-# Add to default target if all required macros needed to run this demo are defined
-check_aws_credentials(${DEMO_NAME})
-
-target_sources(
+add_executable(
     ${DEMO_NAME}
-    PRIVATE
         "${DEMO_NAME}.c"
         ${MQTT_SOURCES}
         ${MQTT_SERIALIZER_SOURCES}
 )
+
+# Add to default target if all required macros needed to run this demo are defined
+check_aws_credentials(${DEMO_NAME})
 
 target_link_libraries(
     ${DEMO_NAME}

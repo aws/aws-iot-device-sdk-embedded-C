@@ -1,5 +1,5 @@
 # Taken from amazon-freertos repository
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.2.0)
 set(BINARY_DIR ${CMAKE_BINARY_DIR})
 # reset coverage counters
 execute_process(
@@ -26,7 +26,7 @@ file(WRITE ${REPORT_FILE} "")
 foreach(testname ${files})
     get_filename_component(test
                            ${testname}
-                           NAME_WLE
+                           NAME_WE
             )
     message("Running ${testname}")
     execute_process(COMMAND ${testname} OUTPUT_FILE ${CMAKE_BINARY_DIR}/${test}_out.txt)
