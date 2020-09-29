@@ -15,9 +15,12 @@ jobs:
         uses: actions/checkout@v2
         with:
           submodules: recursive
-      - name: CMake
+      - name: Download CMake 3.2.0
         run: |
-          cmake -S . -B build/ \
+          curl https://cmake.org/files/v3.2/cmake-3.2.0-Linux-x86_64.tar.gz -o cmake.tar.gz
+          tar -xf cmake.tar.gz
+          mkdir build
+          cmake-3.2.0-Linux-x86_64/bin/cmake . -Bbuild/ \
           -G "Unix Makefiles" \
           -DBUILD_TESTS=1 \
           -DCMAKE_BUILD_TYPE=Release \
@@ -38,16 +41,22 @@ jobs:
         uses: actions/checkout@v2
         with:
           submodules: recursive
-      - name: Build
+      - name: Download CMake 3.2.0
         run: |
-          sudo apt-get install -y lcov
-          cmake -S . -B build/ \
+          curl https://cmake.org/files/v3.2/cmake-3.2.0-Linux-x86_64.tar.gz -o cmake.tar.gz
+          tar -xf cmake.tar.gz
+          mkdir build
+          cmake-3.2.0-Linux-x86_64/bin/cmake . -Bbuild/ \
           -G "Unix Makefiles" \
           -DBUILD_TESTS=1 \
           -DCMAKE_BUILD_TYPE=Debug \
           -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Werror -DNDEBUG'
           make -C build/ help | grep utest | tr -d '. ' | xargs make -C build/
-      - name: Test
+      - name: Build Unit Tests
+        run: |
+          sudo apt-get install -y lcov
+          make -C build/ help | grep utest | tr -d '. ' | xargs make -C build/
+      - name: Run ctest
         run: |
           cd build/
           ctest -E system --output-on-failure

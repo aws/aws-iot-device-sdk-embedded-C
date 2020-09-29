@@ -12,7 +12,7 @@ Linux platform. This SDK builds with [CMake](https://cmake.org/), a cross-platfo
 @brief Prerequisites needed to run the demos.
 
 @pre
-- CMake 3.13.0 or later and a C90 compiler.
+- CMake 3.2.0 or later and a C90 compiler.
 
 @pre
 - A supported operating system. The ports provided with this repo are expected to work with all recent versions of the following operating systems, although we cannot guarantee the behavior on all systems.
