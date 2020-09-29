@@ -97,7 +97,6 @@
  *
  * #define CLIENT_CERT_PATH    "...insert here..."
  */
-#define CLIENT_CERT_PATH           "/home/tgsong/workspace/tmp/certs/a69efeb126-certificate.pem.crt"
 
 /**
  * @brief Path of the file containing the client's private key.
@@ -110,7 +109,6 @@
  *
  * #define CLIENT_PRIVATE_KEY_PATH    "...insert here..."
  */
-#define CLIENT_PRIVATE_KEY_PATH    "/home/tgsong/workspace/tmp/certs/a69efeb126-private.pem.key"
 
 /**
  * @brief MQTT client identifier.
