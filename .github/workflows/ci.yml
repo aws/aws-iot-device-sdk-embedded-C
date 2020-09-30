@@ -141,9 +141,9 @@ jobs:
             cd $lib
             if [ ! -d docs/doxygen/ ]; then
               echo "$lib has no Doxygen documentation."
-              exit 0
+            else
+              doxygen docs/doxygen/config.doxyfile
             fi
-            doxygen docs/doxygen/config.doxyfile
             cd $ROOT
           done
       - name: Run Doxygen on CSDK and verify stdout is empty
