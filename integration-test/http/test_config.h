@@ -53,14 +53,14 @@
 /**
  * @brief HTTP server host name.
  */
-#define SERVER_HOST          "httpbin.org"
+#define SERVER_HOST    "httpbin.org"
 
 /**
  * @brief HTTP server port number.
  *
  * In general, port 443 is for TLS HTTP connections.
  */
-#define HTTPS_PORT          443
+#define HTTPS_PORT     443
 
 /**
  * @brief Path of the file containing the server's root CA certificate for TLS authentication.
