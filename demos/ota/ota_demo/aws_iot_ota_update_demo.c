@@ -173,17 +173,17 @@ static MQTTContext_t MqttContext;
 /*
  * Publish a message to the specified client/topic at the given QOS.
  */
- static MQTTStatus_t publish( const char * const pacTopic,
-                              uint16_t usTopicLen,
-                              const char * pcMsg,
-                              uint32_t ulMsgSize,
-                              uint8_t ucQoS );
+ static OtaErr_t publish( const char * const pacTopic,
+                          uint16_t usTopicLen,
+                          const char * pcMsg,
+                          uint32_t ulMsgSize,
+                          uint8_t ucQoS );
 
 
-static int32_t subscribe( const char * pTopicFilter,
-                   uint16_t topicFilterLength,
-                   uint8_t ucQoS,
-                   void * pvCallback );
+static OtaErr_t subscribe( const char * pTopicFilter,
+                           uint16_t topicFilterLength,
+                           uint8_t ucQoS,
+                           void * pvCallback );
 
 /*-----------------------------------------------------------*/
 
@@ -565,10 +565,10 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
 
 /*-----------------------------------------------------------*/
 
-static int32_t subscribe( const char * pTopicFilter,
-                   uint16_t topicFilterLength,
-                   uint8_t ucQoS,
-                   void * pvCallback )
+static OtaErr_t subscribe( const char * pTopicFilter,
+                           uint16_t topicFilterLength,
+                           uint8_t ucQoS,
+                           void * pvCallback )
 {
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus;
@@ -631,12 +631,14 @@ static int32_t subscribe( const char * pTopicFilter,
 /*
  * Publish a message to the specified client/topic at the given QOS.
  */
- static MQTTStatus_t publish( const char * const pacTopic,
-                              uint16_t usTopicLen,
-                              const char * pcMsg,
-                              uint32_t ulMsgSize,
-                              uint8_t ucQoS )
+ static OtaErr_t publish( const char * const pacTopic,
+                          uint16_t usTopicLen,
+                          const char * pcMsg,
+                          uint32_t ulMsgSize,
+                          uint8_t ucQoS )
 {
+    OtaErr_t otaErrRet = OTA_ERR_UNINITIALIZED;
+
     MQTTStatus_t mqttStatus = MQTTBadParameter;
     MQTTPublishInfo_t publishInfo;
     MQTTContext_t * pMqttContext = &MqttContext;
@@ -658,15 +660,26 @@ static int32_t subscribe( const char * pTopicFilter,
 
         if( mqttStatus != MQTTSuccess )
         {
-            LogInfo( ( " Publish ack wait failed.\n\r" ) );
+            LogError( ( " Publish ack wait failed with error = %u.", mqttStatus ) );
+
+            otaErrRet = OTA_ERR_PUBLISH_FAILED;
         }
+        else
+        {
+            LogInfo( ( " Publish success.\n\r" ) );
+
+            otaErrRet = OTA_ERR_NONE;
+        }
+
     }
     else
     {
         LogError( ( "Failed to send PUBLISH packet to broker with error = %u.", mqttStatus ) );
+
+        otaErrRet = OTA_ERR_PUBLISH_FAILED;
     }
 
-    return mqttStatus;
+    return otaErrRet;
 }
 
 /*-----------------------------------------------------------*/
