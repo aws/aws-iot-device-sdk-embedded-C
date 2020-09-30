@@ -138,12 +138,13 @@ jobs:
           ROOT=$PWD
           for lib in $(find libraries/aws libraries/standard -maxdepth 1 -mindepth 1)
           do
-            cd $ROOT/$lib
+            cd $lib
             if [ ! -d docs/doxygen/ ]; then
               echo "$lib has no Doxygen documentation."
             else
               doxygen docs/doxygen/config.doxyfile
             fi
+            cd $ROOT
           done
       - name: Run Doxygen on CSDK and verify stdout is empty
         run: |
