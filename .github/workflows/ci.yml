@@ -138,7 +138,7 @@ jobs:
           ROOT=$PWD
           for lib in $(find libraries/aws libraries/standard -maxdepth 1 -mindepth 1)
           do
-            cd $lib
+            cd $ROOT/$lib
             if [ ! -d docs/doxygen/ ]; then
               echo "$lib has no Doxygen documentation."
             else
