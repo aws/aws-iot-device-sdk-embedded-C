@@ -32,7 +32,7 @@
 #include <stdint.h>
 
 /**
- * @brief_bug The timer query function.
+ * @brief The timer query function.
  *
  * This function returns the elapsed time.
  *
