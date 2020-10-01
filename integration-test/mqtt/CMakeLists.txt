@@ -69,7 +69,7 @@ endif()
 if(ROOT_CA_CERT_PATH)
     target_compile_definitions(
         ${stest_name} PRIVATE
-            SERVER_ROOT_CA_CERT_PATH="${ROOT_CA_CERT_PATH}"
+            ROOT_CA_CERT_PATH="${ROOT_CA_CERT_PATH}"
     )
 endif()
 if(CLIENT_CERT_PATH)

@@ -78,7 +78,7 @@
  *
  * This certificate should be PEM-encoded.
  *
- * * #define SERVER_ROOT_CA_CERT_PATH    "...insert here..."
+ * * #define ROOT_CA_CERT_PATH    "...insert here..."
  */
 
 #endif /* ifndef TEST_CONFIG_H_ */

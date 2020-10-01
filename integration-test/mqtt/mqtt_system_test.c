@@ -52,8 +52,8 @@
     #error "BROKER_ENDPOINT should be defined for the MQTT integration tests."
 #endif
 
-#ifndef SERVER_ROOT_CA_CERT_PATH
-    #error "SERVER_ROOT_CA_CERT_PATH should be defined for the MQTT integration tests."
+#ifndef ROOT_CA_CERT_PATH
+    #error "ROOT_CA_CERT_PATH should be defined for the MQTT integration tests."
 #endif
 
 #ifndef CLIENT_CERT_PATH
@@ -768,7 +768,7 @@ void setUp()
     packetTypeForDisconnection = MQTT_PACKET_TYPE_INVALID;
     memset( &incomingInfo, 0u, sizeof( MQTTPublishInfo_t ) );
     memset( &opensslCredentials, 0u, sizeof( OpensslCredentials_t ) );
-    opensslCredentials.pRootCaPath = SERVER_ROOT_CA_CERT_PATH;
+    opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
     opensslCredentials.pClientCertPath = CLIENT_CERT_PATH;
     opensslCredentials.pPrivateKeyPath = CLIENT_PRIVATE_KEY_PATH;
 
