@@ -53,49 +53,27 @@
 /**
  * @brief HTTP server host name.
  */
-#define SERVER_HOST    "httpbin.org"
+#ifndef SERVER_HOST
+    #define SERVER_HOST    "localhost"
+#endif
 
 /**
  * @brief HTTP server port number.
  *
- * In general, port 443 is for TLS HTTP connections.
+ * In general, port 443 is used for TLS HTTP connections.
  */
-#define HTTPS_PORT     443
+#ifndef HTTPS_PORT
+    #define HTTPS_PORT    443
+#endif
 
 /**
  * @brief Path of the file containing the server's root CA certificate for TLS authentication.
  *
- * #define ROOT_CA_CERT_PATH    "...insert here..."
+ * @note This certificate should be PEM-encoded.
  */
-
-/**
- * @brief Path of the file containing the client's certificate for TLS
- * authentication to AWS IoT Core.
- *
- * @note This certificate should be PEM-encoded and must have an associated
- * policy from AWS IoT core for the demo to function correctly.
- *
- * #define CLIENT_CERT_PATH                  "...insert here..."
- */
-
-/**
- * @brief Path of the file containing the client's private key for
- * TLS client authentication.
- *
- * @note This key should be PEM-encoded and must have an associated
- * policy from AWS IoT core for the demo to function correctly.
- *
- * #define CLIENT_PRIVATE_KEY_PATH           "...insert here..."
- */
-
-/**
- * @brief ALPN protocol name to be sent as part of the message sent to AWS IoT Core.
- *
- * @note Only define when using AWS IoT Core. When using ALPN, port 443 must be used.
- *
- * #define IOT_CORE_ALPN_PROTOCOL_NAME       "\x0ex-amzn-http-ca"
- */
-#define IOT_CORE_ALPN_PROTOCOL_NAME       "\x0ex-amzn-http-ca"
+#ifndef ROOT_CA_CERT_PATH
+    #define ROOT_CA_CERT_PATH    "certificates/AmazonRootCA1.crt"
+#endif
 
 /**
  * @brief Paths for different HTTP methods for specified host.

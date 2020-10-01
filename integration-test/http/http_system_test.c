@@ -53,23 +53,13 @@
     #error "SERVER_HOST should be defined for the HTTP integration tests."
 #endif
 
-#ifndef ROOT_CA_CERT_PATH
-    #error "ROOT_CA_CERT_PATH should be defined for the HTTP integration tests."
+/* Check that TLS port of the server is defined. */
+#ifndef HTTPS_PORT
+    #error "HTTPS_PORT should be defined for the HTTP integration tests."
 #endif
 
-/* #ifndef CLIENT_CERT_PATH */
-/*     #error "CLIENT_CERT_PATH should be defined for the HTTP integration tests." */
-/* #endif */
-
-/* #ifndef CLIENT_PRIVATE_KEY_PATH */
-/*     #error "CLIENT_PRIVATE_KEY_PATH should be defined for the HTTP integration tests." */
-/* #endif */
-
-#ifndef IOT_CORE_ALPN_PROTOCOL_NAME
-    #define IOT_CORE_ALPN_PROTOCOL_NAME           ( NULL )
-    #define IOT_CORE_ALPN_PROTOCOL_NAME_LENGTH    ( 0 )
-#else
-    #define IOT_CORE_ALPN_PROTOCOL_NAME_LENGTH    ( sizeof( IOT_CORE_ALPN_PROTOCOL_NAME ) - 1 )
+#ifndef ROOT_CA_CERT_PATH
+    #error "ROOT_CA_CERT_PATH should be defined for the HTTP integration tests."
 #endif
 
 /* Check that size of the user buffer is defined. */
@@ -154,10 +144,6 @@ static void connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContex
     /* Reset or initialize file-scoped global variables. */
     ( void ) memset( &opensslCredentials, 0, sizeof( opensslCredentials ) );
     opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
-    opensslCredentials.pClientCertPath = CLIENT_CERT_PATH;
-    opensslCredentials.pPrivateKeyPath = CLIENT_PRIVATE_KEY_PATH;
-    opensslCredentials.pAlpnProtos = IOT_CORE_ALPN_PROTOCOL_NAME;
-    opensslCredentials.alpnProtosLen = IOT_CORE_ALPN_PROTOCOL_NAME_LENGTH;
 
     serverInfo.pHostName = SERVER_HOST;
     serverInfo.hostNameLength = SERVER_HOST_LENGTH;
