@@ -60,6 +60,7 @@ pubrec
 pubrel
 qos
 resending
+retrycount
 rom
 sdk
 setretainflag
