@@ -78,6 +78,11 @@
 #define REQUEST_BODY_LENGTH    ( sizeof( REQUEST_BODY ) - 1 )
 
 /**
+ * @brief The maximum number of retries to attempt on network error.
+ */
+#define MAX_RETRY_COUNT        ( 3 )
+
+/**
  * @brief Represents the OpenSSL context used for TLS session with the broker
  * for tests.
  */
@@ -125,10 +130,12 @@ static void connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContex
  * @param[in] pTransportInterface The transport interface for making network calls.
  * @param[in] pMethod The HTTP request method.
  * @param[in] pPath The Request-URI to the objects of interest.
+ * @param[in] retryCount The number of retry attempts made.
  */
-static void sendHttpRequestWithBackoffRetries( const TransportInterface_t * pTransportInterface,
-                                               const char * pMethod,
-                                               const char * pPath );
+static void sendHttpRequest( const TransportInterface_t * pTransportInterface,
+                             const char * pMethod,
+                             const char * pPath,
+                             int32_t retryCount );
 
 /*-----------------------------------------------------------*/
 
@@ -183,9 +190,10 @@ static void connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContex
 
 /*-----------------------------------------------------------*/
 
-static void sendHttpRequestWithBackoffRetries( const TransportInterface_t * pTransportInterface,
-                                               const char * pMethod,
-                                               const char * pPath )
+static void sendHttpRequest( const TransportInterface_t * pTransportInterface,
+                             const char * pMethod,
+                             const char * pPath,
+                             int32_t retryCount )
 {
     /* Configurations of the initial request headers that are passed to
      * #HTTPClient_InitializeRequestHeaders. */
@@ -194,10 +202,6 @@ static void sendHttpRequestWithBackoffRetries( const TransportInterface_t * pTra
     HTTPResponse_t response;
     /* Represents header data that will be sent in an HTTP request. */
     HTTPRequestHeaders_t requestHeaders;
-    /* Status returned by the retry utilities. */
-    RetryUtilsStatus_t retryUtilsStatus = RetryUtilsSuccess;
-    /* Struct containing the next backoff time. */
-    RetryUtilsParams_t reconnectParams;
     /* Status returned by methods in HTTP Client Library API. */
     HTTPStatus_t httpStatus;
 
@@ -245,62 +249,54 @@ static void sendHttpRequestWithBackoffRetries( const TransportInterface_t * pTra
                 ( char * ) requestHeaders.pBuffer,
                 ( int32_t ) REQUEST_BODY_LENGTH, REQUEST_BODY ) );
 
-    /* Initialize retry attempts and interval */
-    RetryUtils_ParamsReset( &reconnectParams );
+    /* Send request to HTTP server. */
+    httpStatus = HTTPClient_Send( pTransportInterface,
+                                  &requestHeaders,
+                                  ( uint8_t * ) REQUEST_BODY,
+                                  REQUEST_BODY_LENGTH,
+                                  &response,
+                                  0 );
 
-    /* Attempt to send request to HTTP server. If request fails, retry after
-     * a timeout. Timeout value will exponentially increase until maximum
-     * attempts are reached.
-     */
-    do
+    /* If a network error is found, retry sending request for a count of MAX_RETRY_COUNT.
+     *  Proceed when MAX_RETRY_COUNT has been hit, or when a successful request is sent,
+     *  whichever comes first. */
+    if( ( httpStatus == HTTP_NETWORK_ERROR ) && ( retryCount < MAX_RETRY_COUNT ) )
     {
-        /* Send the request and receive the response. */
-        httpStatus = HTTPClient_Send( pTransportInterface,
-                                      &requestHeaders,
-                                      ( uint8_t * ) REQUEST_BODY,
-                                      REQUEST_BODY_LENGTH,
-                                      &response,
-                                      0 );
+        LogDebug( ( "A network error has occured, retrying request." ) );
+        resetTest();
+        sendHttpRequest( pTransportInterface, pMethod, pPath, ++retryCount );
+    }
+    else
+    {
+        TEST_ASSERT_EQUAL( HTTP_SUCCESS, httpStatus );
 
-        if( httpStatus != HTTP_SUCCESS )
+        LogDebug( ( "Received HTTP response from %.*s%.*s...\n"
+                    "Response Headers:\n%.*s\n"
+                    "Response Status:\n%u\n"
+                    "Response Body:\n%.*s\n",
+                    ( int32_t ) SERVER_HOST_LENGTH, SERVER_HOST,
+                    ( int32_t ) requestInfo.pathLen, requestInfo.pPath,
+                    ( int32_t ) response.headersLen, response.pHeaders,
+                    response.statusCode,
+                    ( int32_t ) response.bodyLen, response.pBody ) );
+
+        /* Close connection if a "Connection: close" header is found */
+        if( response.respFlags == HTTP_RESPONSE_CONNECTION_CLOSE_FLAG )
         {
-            retryUtilsStatus = RetryUtils_BackoffAndSleep( &reconnectParams );
+            ( void ) Openssl_Disconnect( &networkContext );
         }
 
-        if( retryUtilsStatus == RetryUtilsRetriesExhausted )
+        /* Verify that content length is greater than 0 for GET requests. */
+        if( strcmp( pMethod, HTTP_METHOD_GET ) )
         {
-            LogDebug( ( "Requests to the server failed, all attempts exhausted." ) );
+            TEST_ASSERT_GREATER_THAN( 0, response.contentLength );
         }
-    } while( ( httpStatus != HTTP_SUCCESS ) && ( retryUtilsStatus == RetryUtilsSuccess ) );
 
-    TEST_ASSERT_EQUAL( HTTP_SUCCESS, httpStatus );
-
-    LogDebug( ( "Received HTTP response from %.*s%.*s...\n"
-                "Response Headers:\n%.*s\n"
-                "Response Status:\n%u\n"
-                "Response Body:\n%.*s\n",
-                ( int32_t ) SERVER_HOST_LENGTH, SERVER_HOST,
-                ( int32_t ) requestInfo.pathLen, requestInfo.pPath,
-                ( int32_t ) response.headersLen, response.pHeaders,
-                response.statusCode,
-                ( int32_t ) response.bodyLen, response.pBody ) );
-
-    /* Close connection if a "Connection: close" header is found */
-    if( response.respFlags == HTTP_RESPONSE_CONNECTION_CLOSE_FLAG )
-    {
-        ( void ) Openssl_Disconnect( &networkContext );
-    }
-
-    /* Verify that content length is greater than 0 for GET requests. */
-    if( strcmp( pMethod, HTTP_METHOD_GET ) )
-    {
-        TEST_ASSERT_GREATER_THAN( 0, response.contentLength );
-    }
-
-    /* Verify response body is present */
-    if( strcmp( pMethod, HTTP_METHOD_HEAD ) )
-    {
-        TEST_ASSERT_GREATER_THAN( 0, response.bodyLen );
+        /* Verify response body is present */
+        if( strcmp( pMethod, HTTP_METHOD_HEAD ) )
+        {
+            TEST_ASSERT_GREATER_THAN( 0, response.bodyLen );
+        }
     }
 }
 
@@ -333,9 +329,10 @@ void tearDown()
  */
 void test_HTTP_GET_Request( void )
 {
-    sendHttpRequestWithBackoffRetries( &transportInterface,
-                                       HTTP_METHOD_GET,
-                                       GET_PATH );
+    sendHttpRequest( &transportInterface,
+                     HTTP_METHOD_GET,
+                     GET_PATH,
+                     0 );
 }
 
 /**
@@ -343,9 +340,10 @@ void test_HTTP_GET_Request( void )
  */
 void test_HTTP_HEAD_Request( void )
 {
-    sendHttpRequestWithBackoffRetries( &transportInterface,
-                                       HTTP_METHOD_HEAD,
-                                       HEAD_PATH );
+    sendHttpRequest( &transportInterface,
+                     HTTP_METHOD_HEAD,
+                     HEAD_PATH,
+                     0 );
 }
 
 /**
@@ -353,9 +351,10 @@ void test_HTTP_HEAD_Request( void )
  */
 void test_HTTP_POST_Request( void )
 {
-    sendHttpRequestWithBackoffRetries( &transportInterface,
-                                       HTTP_METHOD_POST,
-                                       POST_PATH );
+    sendHttpRequest( &transportInterface,
+                     HTTP_METHOD_POST,
+                     POST_PATH,
+                     0 );
 }
 
 /**
@@ -363,7 +362,8 @@ void test_HTTP_POST_Request( void )
  */
 void test_HTTP_PUT_Request( void )
 {
-    sendHttpRequestWithBackoffRetries( &transportInterface,
-                                       HTTP_METHOD_PUT,
-                                       PUT_PATH );
+    sendHttpRequest( &transportInterface,
+                     HTTP_METHOD_PUT,
+                     PUT_PATH,
+                     0 );
 }
