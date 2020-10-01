@@ -688,6 +688,8 @@ void startOTADemo( MQTTContext_t * pMqttContext )
 {
     int ret = 0;
 
+    OtaEventMsg_t eventMsg = { 0 };
+
     /* MQTT susbsrciption manager parameters.*/
     SubscriptionManagerStatus_t mqttManagerStatus = 0u;
     MQTTSubscribeInfo_t subscriptionInfo;
@@ -698,14 +700,14 @@ void startOTADemo( MQTTContext_t * pMqttContext )
     OtaState_t eState = OtaAgentStateStopped;
 
     /* Initialize OTA library OS Interface. */
-	OtaOSInterface_t OtaOSInterface;
+	static OtaOSInterface_t OtaOSInterface;
     OtaOSInterface.event.init = ota_InitEvent;
 	OtaOSInterface.event.send = ota_SendEvent;
 	OtaOSInterface.event.recv = ota_ReceiveEvent;
 	OtaOSInterface.event.deinit = ota_DeinitEvent;
 
     /* Intialize the OTA library MQTT Interface.*/
-    OtaMqttInterface_t OtaMqttInterface;
+    static OtaMqttInterface_t OtaMqttInterface;
     OtaMqttInterface.subscribe = subscribe;
     OtaMqttInterface.publish = publish;
     //OtaMqttInterface.unsubscribe = unsubscribe;
@@ -728,6 +730,9 @@ void startOTADemo( MQTTContext_t * pMqttContext )
 
     /* Create the OTA Agent thread with default attributes.*/
 	pthread_create( &threadHandle, NULL, otaAgentTask, NULL );
+
+    eventMsg.eventId = OtaAgentEventStart;
+    OTA_SignalEvent( &eventMsg );
 
     /* Wait forever for OTA traffic but allow other tasks to run and output statistics only once
      * per second. */
