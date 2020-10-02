@@ -35,6 +35,7 @@ void harness()
     _mqttPacket_t puback;
 
     puback.pRemainingData = malloc( sizeof( uint8_t ) * puback.remainingLength );
+    __CPROVER_assume( puback.pRemainingData != NULL );
 
     _IotMqtt_DeserializePuback( &puback );
 }
