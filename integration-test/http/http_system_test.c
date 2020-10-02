@@ -280,12 +280,6 @@ static void sendHttpRequest( const TransportInterface_t * pTransportInterface,
                     response.statusCode,
                     ( int32_t ) response.bodyLen, response.pBody ) );
 
-        /* Close connection if a "Connection: close" header is found */
-        if( response.respFlags == HTTP_RESPONSE_CONNECTION_CLOSE_FLAG )
-        {
-            ( void ) Openssl_Disconnect( &networkContext );
-        }
-
         /* Verify that content length is greater than 0 for GET requests. */
         if( strcmp( pMethod, HTTP_METHOD_GET ) )
         {
