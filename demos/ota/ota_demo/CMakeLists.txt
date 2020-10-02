@@ -17,7 +17,6 @@ target_sources(
         ${OTA_SOURCES}
         ${OTA_OS_POSIX_SOURCES}
         ${OTA_MQTT_SOURCES}
-        ${OTA_THIRD_PARTY_SOURCES}
         ${MQTT_SOURCES}
         ${MQTT_SERIALIZER_SOURCES}
 )
@@ -30,9 +29,6 @@ target_link_libraries(
         openssl_posix
         retry_utils_posix
         mqtt_subscription_manager
-        # TODO, to be removed
-        jsmn
-        mbedtls
 )
 
 target_include_directories(
@@ -43,7 +39,6 @@ target_include_directories(
         ${OTA_INCLUDE_PUBLIC_DIRS}
         ${OTA_INCLUDE_PRIVATE_DIRS}
         ${OTA_INCLUDE_OS_POSIX_DIRS}
-        ${OTA_INCLUDE_THIRD_PARTY_DIRS}
         ${MQTT_INCLUDE_PUBLIC_DIRS}
 )
 

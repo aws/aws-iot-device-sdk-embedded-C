@@ -16,13 +16,6 @@
 [submodule "libraries/aws/device-shadow-for-aws-iot-embedded-sdk"]
 	path = libraries/aws/device-shadow-for-aws-iot-embedded-sdk
 	url = https://github.com/aws/device-shadow-for-aws-iot-embedded-sdk.git
-[submodule "jsmn"]
-	path = libraries/3rdparty/jsmn
-	url = https://github.com/zserge/jsmn.git
-	branch = v1.1.0
-[submodule "libraries/3rdparty/mbedtls"]
-	path = libraries/3rdparty/mbedtls
-	url = https://github.com/ARMmbed/mbedtls.git
 [submodule "libraries/aws/ota"]
 	path = libraries/aws/ota
 	url = git@github.com:aws/OTA-for-AWS-IoT-embedded-SDK.git

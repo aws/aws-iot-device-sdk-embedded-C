@@ -27,25 +27,3 @@ if(${BUILD_TESTS})
 
     target_link_libraries(cmock unity)
 endif()
-
-# jsmn
-add_library(jsmn INTERFACE IMPORTED GLOBAL)
-target_sources(jsmn
-    INTERFACE
-    "${3RDPARTY_DIR}/jsmn/jsmn.h"
-)
-target_include_directories(jsmn
-    SYSTEM INTERFACE
-    "${3RDPARTY_DIR}/jsmn"
-)
-
-# Base64 from mbedtls
-add_library(mbedtls INTERFACE)
-target_sources(mbedtls
-    INTERFACE
-    "${3RDPARTY_DIR}/mbedtls/library/base64.c"
-)
-target_include_directories(mbedtls
-    SYSTEM INTERFACE
-    "${3RDPARTY_DIR}/mbedtls/include"
-)
