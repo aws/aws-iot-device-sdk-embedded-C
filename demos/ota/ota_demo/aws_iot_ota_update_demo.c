@@ -124,6 +124,11 @@
 #define MQTT_KEEP_ALIVE_INTERVAL_SECONDS    ( 60U )
 
 /**
+ * @brief Timeout for MQTT_ProcessLoop function in milliseconds.
+ */
+#define MQTT_PROCESS_LOOP_TIMEOUT_MS        ( 500U )
+
+/**
  * @brief Size of the network buffer to receive the MQTT message.
  *
  * The largest message size is data size from the AWS IoT streaming service, 2000 is reserved for
@@ -184,6 +189,10 @@ static OtaErr_t subscribe( const char * pTopicFilter,
                            uint16_t topicFilterLength,
                            uint8_t ucQoS,
                            void * pvCallback );
+
+static OtaErr_t unsubscribe( const char * pTopicFilter,
+                             uint16_t topicFilterLength,
+                             uint8_t ucQoS );
 
 /*-----------------------------------------------------------*/
 
@@ -656,7 +665,7 @@ static OtaErr_t subscribe( const char * pTopicFilter,
     if( mqttStatus == MQTTSuccess )
     {
         /* Wait for the publish to complete. */
-        mqttStatus = MQTT_ProcessLoop( pMqttContext, 1000 );
+        mqttStatus = MQTT_ProcessLoop( pMqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
 
         if( mqttStatus != MQTTSuccess )
         {
@@ -681,6 +690,54 @@ static OtaErr_t subscribe( const char * pTopicFilter,
 
     return otaErrRet;
 }
+
+static OtaErr_t unsubscribe( const char * pTopicFilter,
+                             uint16_t topicFilterLength,
+                             uint8_t ucQoS )
+{
+    int returnStatus = EXIT_SUCCESS;
+    MQTTStatus_t mqttStatus;
+
+    MQTTSubscribeInfo_t pSubscriptionList[ 1 ];
+    MQTTContext_t * pMqttContext = &MqttContext;
+
+    /* Start with everything at 0. */
+    ( void ) memset( ( void * ) pSubscriptionList, 0x00, sizeof( pSubscriptionList ) );
+
+    /* This example subscribes to and unsubscribes from only one topic
+     * and uses QOS1. */
+    pSubscriptionList[ 0 ].qos = ucQoS;
+    pSubscriptionList[ 0 ].pTopicFilter = pTopicFilter;
+    pSubscriptionList[ 0 ].topicFilterLength = topicFilterLength;
+
+    /* Send UNSUBSCRIBE packet. */
+    mqttStatus = MQTT_Unsubscribe( pMqttContext,
+                                   pSubscriptionList,
+                                   sizeof( pSubscriptionList ) / sizeof( MQTTSubscribeInfo_t ),
+                                    MQTT_GetPacketId( pMqttContext ) );
+
+    if( mqttStatus != MQTTSuccess )
+    {
+        LogError( ( "Failed to send UNSUBSCRIBE packet to broker with error = %s.",
+                    MQTT_Status_strerror( mqttStatus ) ) );
+        returnStatus = EXIT_FAILURE;
+    }
+    else
+    {
+        /* Process Incoming UNSUBACK packet from the broker. */
+        mqttStatus = MQTT_ProcessLoop( pMqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
+
+        if( mqttStatus != MQTTSuccess )
+        {
+            returnStatus = EXIT_FAILURE;
+            LogError( ( "MQTT_ProcessLoop returned with status = %s.",
+                        MQTT_Status_strerror( mqttStatus ) ) );
+        }
+    }
+
+    return returnStatus;
+}
+
 
 /*-----------------------------------------------------------*/
 
@@ -710,7 +767,7 @@ void startOTADemo( MQTTContext_t * pMqttContext )
     static OtaMqttInterface_t OtaMqttInterface;
     OtaMqttInterface.subscribe = subscribe;
     OtaMqttInterface.publish = publish;
-    //OtaMqttInterface.unsubscribe = unsubscribe;
+    OtaMqttInterface.unsubscribe = unsubscribe;
     OtaMqttInterface.jobCallback =  jobCallback;
     OtaMqttInterface.dataCallback=  dataCallback;
 
