@@ -130,7 +130,6 @@ static void connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContex
  * @param[in] pTransportInterface The transport interface for making network calls.
  * @param[in] pMethod The HTTP request method.
  * @param[in] pPath The Request-URI to the objects of interest.
- * @param[in] retryCount The number of retry attempts made.
  */
 static void sendHttpRequest( const TransportInterface_t * pTransportInterface,
                              const char * pMethod,
@@ -193,6 +192,11 @@ static void sendHttpRequest( const TransportInterface_t * pTransportInterface,
                              const char * pMethod,
                              const char * pPath )
 {
+    /* Status returned by methods in HTTP Client Library API. */
+    HTTPStatus_t httpStatus = HTTP_NETWORK_ERROR;
+    /* Tracks number of retry requests made to the HTTP server. */
+    uint8_t retryCount = 0;
+
     /* Configurations of the initial request headers that are passed to
      * #HTTPClient_InitializeRequestHeaders. */
     HTTPRequestInfo_t requestInfo;
@@ -200,9 +204,6 @@ static void sendHttpRequest( const TransportInterface_t * pTransportInterface,
     HTTPResponse_t response;
     /* Represents header data that will be sent in an HTTP request. */
     HTTPRequestHeaders_t requestHeaders;
-    /* Status returned by methods in HTTP Client Library API. */
-    HTTPStatus_t httpStatus = HTTP_NETWORK_ERROR;
-    uint8_t retryCount = 0;
 
     assert( pMethod != NULL );
     assert( pPath != NULL );
@@ -269,7 +270,7 @@ static void sendHttpRequest( const TransportInterface_t * pTransportInterface,
         }
 
         retryCount++;
-    } while ( ( httpStatus == HTTP_NETWORK_ERROR ) && ( retryCount < MAX_RETRY_COUNT ) );
+    } while( ( httpStatus == HTTP_NETWORK_ERROR ) && ( retryCount < MAX_RETRY_COUNT ) );
 
     TEST_ASSERT_EQUAL( HTTP_SUCCESS, httpStatus );
 
