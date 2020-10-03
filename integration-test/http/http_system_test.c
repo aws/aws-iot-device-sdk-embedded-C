@@ -134,8 +134,7 @@ static void connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContex
  */
 static void sendHttpRequest( const TransportInterface_t * pTransportInterface,
                              const char * pMethod,
-                             const char * pPath,
-                             int32_t retryCount );
+                             const char * pPath );
 
 /*-----------------------------------------------------------*/
 
@@ -192,8 +191,7 @@ static void connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContex
 
 static void sendHttpRequest( const TransportInterface_t * pTransportInterface,
                              const char * pMethod,
-                             const char * pPath,
-                             int32_t retryCount )
+                             const char * pPath )
 {
     /* Configurations of the initial request headers that are passed to
      * #HTTPClient_InitializeRequestHeaders. */
@@ -203,7 +201,8 @@ static void sendHttpRequest( const TransportInterface_t * pTransportInterface,
     /* Represents header data that will be sent in an HTTP request. */
     HTTPRequestHeaders_t requestHeaders;
     /* Status returned by methods in HTTP Client Library API. */
-    HTTPStatus_t httpStatus;
+    HTTPStatus_t httpStatus = HTTP_NETWORK_ERROR;
+    uint8_t retryCount = 0;
 
     assert( pMethod != NULL );
     assert( pPath != NULL );
@@ -229,11 +228,6 @@ static void sendHttpRequest( const TransportInterface_t * pTransportInterface,
     requestHeaders.pBuffer = userBuffer;
     requestHeaders.bufferLen = USER_BUFFER_LENGTH;
 
-    httpStatus = HTTPClient_InitializeRequestHeaders( &requestHeaders,
-                                                      &requestInfo );
-    TEST_ASSERT_EQUAL( HTTP_SUCCESS, httpStatus );
-    TEST_ASSERT_NOT_EQUAL( 0, requestHeaders.headersLen );
-
     /* Initialize the response object. The same buffer used for storing
      * request headers is reused here. */
     response.pBuffer = userBuffer;
@@ -243,54 +237,62 @@ static void sendHttpRequest( const TransportInterface_t * pTransportInterface,
                 ( int32_t ) requestInfo.methodLen, requestInfo.method,
                 ( int32_t ) SERVER_HOST_LENGTH, SERVER_HOST,
                 ( int32_t ) requestInfo.pathLen, requestInfo.pPath ) );
-    LogDebug( ( "Request Headers:\n%.*s\n"
-                "Request Body:\n%.*s\n",
-                ( int32_t ) requestHeaders.headersLen,
-                ( char * ) requestHeaders.pBuffer,
-                ( int32_t ) REQUEST_BODY_LENGTH, REQUEST_BODY ) );
 
-    /* Send request to HTTP server. */
-    httpStatus = HTTPClient_Send( pTransportInterface,
-                                  &requestHeaders,
-                                  ( uint8_t * ) REQUEST_BODY,
-                                  REQUEST_BODY_LENGTH,
-                                  &response,
-                                  0 );
-
-    /* If a network error is found, retry sending request for a count of MAX_RETRY_COUNT.
-     *  Proceed when MAX_RETRY_COUNT has been hit, or when a successful request is sent,
-     *  whichever comes first. */
-    if( ( httpStatus == HTTP_NETWORK_ERROR ) && ( retryCount < MAX_RETRY_COUNT ) )
+    /* Send request to HTTP server. If a network error is found, retry request for a
+     * count of MAX_RETRY_COUNT. */
+    do
     {
-        LogDebug( ( "A network error has occured, retrying request." ) );
-        resetTest();
-        sendHttpRequest( pTransportInterface, pMethod, pPath, ++retryCount );
-    }
-    else
-    {
+        /* Since the request and response headers share a buffer, request headers should
+         * be re-initialized after a failed request. */
+        httpStatus = HTTPClient_InitializeRequestHeaders( &requestHeaders,
+                                                          &requestInfo );
         TEST_ASSERT_EQUAL( HTTP_SUCCESS, httpStatus );
+        TEST_ASSERT_NOT_EQUAL( 0, requestHeaders.headersLen );
 
-        LogDebug( ( "Received HTTP response from %.*s%.*s...\n"
-                    "Response Headers:\n%.*s\n"
-                    "Response Status:\n%u\n"
-                    "Response Body:\n%.*s\n",
-                    ( int32_t ) SERVER_HOST_LENGTH, SERVER_HOST,
-                    ( int32_t ) requestInfo.pathLen, requestInfo.pPath,
-                    ( int32_t ) response.headersLen, response.pHeaders,
-                    response.statusCode,
-                    ( int32_t ) response.bodyLen, response.pBody ) );
+        LogDebug( ( "Request Headers:\n%.*s\n"
+                    "Request Body:\n%.*s\n",
+                    ( int32_t ) requestHeaders.headersLen,
+                    ( char * ) requestHeaders.pBuffer,
+                    ( int32_t ) REQUEST_BODY_LENGTH, REQUEST_BODY ) );
 
-        /* Verify that content length is greater than 0 for GET requests. */
-        if( strcmp( pMethod, HTTP_METHOD_GET ) )
+        httpStatus = HTTPClient_Send( pTransportInterface,
+                                      &requestHeaders,
+                                      ( uint8_t * ) REQUEST_BODY,
+                                      REQUEST_BODY_LENGTH,
+                                      &response,
+                                      0 );
+
+        if( httpStatus == HTTP_NETWORK_ERROR )
         {
-            TEST_ASSERT_GREATER_THAN( 0, response.contentLength );
+            LogDebug( ( "A network error has occured, retrying request." ) );
+            resetTest();
         }
 
-        /* Verify response body is present */
-        if( strcmp( pMethod, HTTP_METHOD_HEAD ) )
-        {
-            TEST_ASSERT_GREATER_THAN( 0, response.bodyLen );
-        }
+        retryCount++;
+    } while ( ( httpStatus == HTTP_NETWORK_ERROR ) && ( retryCount < MAX_RETRY_COUNT ) );
+
+    TEST_ASSERT_EQUAL( HTTP_SUCCESS, httpStatus );
+
+    LogDebug( ( "Received HTTP response from %.*s%.*s...\n"
+                "Response Headers:\n%.*s\n"
+                "Response Status:\n%u\n"
+                "Response Body:\n%.*s\n",
+                ( int32_t ) SERVER_HOST_LENGTH, SERVER_HOST,
+                ( int32_t ) requestInfo.pathLen, requestInfo.pPath,
+                ( int32_t ) response.headersLen, response.pHeaders,
+                response.statusCode,
+                ( int32_t ) response.bodyLen, response.pBody ) );
+
+    /* Verify that content length is greater than 0 for GET requests. */
+    if( strcmp( pMethod, HTTP_METHOD_GET ) )
+    {
+        TEST_ASSERT_GREATER_THAN( 0, response.contentLength );
+    }
+
+    /* Verify response body is present */
+    if( strcmp( pMethod, HTTP_METHOD_HEAD ) )
+    {
+        TEST_ASSERT_GREATER_THAN( 0, response.bodyLen );
     }
 }
 
@@ -325,8 +327,7 @@ void test_HTTP_GET_Request( void )
 {
     sendHttpRequest( &transportInterface,
                      HTTP_METHOD_GET,
-                     GET_PATH,
-                     0 );
+                     GET_PATH );
 }
 
 /**
@@ -336,8 +337,7 @@ void test_HTTP_HEAD_Request( void )
 {
     sendHttpRequest( &transportInterface,
                      HTTP_METHOD_HEAD,
-                     HEAD_PATH,
-                     0 );
+                     HEAD_PATH );
 }
 
 /**
@@ -347,8 +347,7 @@ void test_HTTP_POST_Request( void )
 {
     sendHttpRequest( &transportInterface,
                      HTTP_METHOD_POST,
-                     POST_PATH,
-                     0 );
+                     POST_PATH );
 }
 
 /**
@@ -358,6 +357,5 @@ void test_HTTP_PUT_Request( void )
 {
     sendHttpRequest( &transportInterface,
                      HTTP_METHOD_PUT,
-                     PUT_PATH,
-                     0 );
+                     PUT_PATH );
 }
