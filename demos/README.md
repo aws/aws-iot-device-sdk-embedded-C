@@ -83,9 +83,11 @@ This API allows use of a statically allocated buffer.
 
 ### **mqtt_demo_subscription_manager**
 
-Demo for showing the use of MQTT APIs to establish an MQTT session,
-subscribe to a topic, publish to a topic, receive incoming publishes,
-unsubscribe from a topic and disconnect the MQTT session.
+Demo of an MQTT application that subscribes to multiple topic filters using a
+subscription manager to manage multiple subscriptions, register different
+callbacks for each subscription, and handle wildcard topics. It establishes
+a TLS connection with server-only authentication, and communicates at
+QoS 1 level with the broker.
 
 ## Device shadow examples
 
