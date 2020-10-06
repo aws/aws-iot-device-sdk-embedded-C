@@ -177,7 +177,7 @@ static void connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContex
 
         if( retryUtilsStatus == RetryUtilsRetriesExhausted )
         {
-            LogDebug( ( "Connection to the server failed, all attempts exhausted." ) );
+            LogError( ( "Connection to the server failed, all attempts exhausted." ) );
         }
     } while( ( opensslStatus != OPENSSL_SUCCESS ) && ( retryUtilsStatus == RetryUtilsSuccess ) );
 
