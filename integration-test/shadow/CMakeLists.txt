@@ -1,5 +1,5 @@
 project ("shadow system test")
-cmake_minimum_required (VERSION 3.13)
+cmake_minimum_required (VERSION 3.2.0)
 
 # Include MQTT library's source and header path variables.
 include("${CMAKE_SOURCE_DIR}/libraries/standard/coreMQTT/mqttFilePaths.cmake")
@@ -22,9 +22,7 @@ list(APPEND real_include_directories
             .
             ${SHADOW_INCLUDE_PUBLIC_DIRS}
             ${MQTT_INCLUDE_PUBLIC_DIRS}
-            ${MQTT_INCLUDE_PRIVATE_DIRS}
             ${LOGGING_INCLUDE_DIRS}
-            ${MQTT_INCLUDE_PRIVATE_DIRS}
             ${CMAKE_CURRENT_LIST_DIR}
         )
 
@@ -35,7 +33,6 @@ list(APPEND test_include_directories
             .
             ${SHADOW_INCLUDE_PUBLIC_DIRS}
             ${MQTT_INCLUDE_PUBLIC_DIRS}
-            ${MQTT_INCLUDE_PRIVATE_DIRS}
             ${LOGGING_INCLUDE_DIRS}
         )
 

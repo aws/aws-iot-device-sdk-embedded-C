@@ -1,0 +1,64 @@
+/**
+@page http_demo coreHTTP
+@brief These demos demonstrate usage of the coreHTTP library.
+
+@section http_demo_plaintext HTTP Plaintext Demo
+@brief A demo of the coreHTTP library that establishes a plaintext TCP connection with a server, sends HTTP requests, then logs their responses.
+
+<p>
+A POSIX socket-based transport interface implementation is used to establish a
+plaintext connection over port 80 to an HTTP server. If a connection
+failure occurs, then the connection establishment is retried for @ref MAX_RETRY_ATTEMPTS.
+Once a connection is established, HTTP requests are sent for the following HTTP methods:
+`GET`, `HEAD`, `PUT`, and `POST`. The respective responses from each of these
+requests are logged.
+</p>
+
+<div class="caption" style="text-align:center">
+HTTP Plaintext Demo Workflow — Note that these steps are repeated indefinitely
+</div>
+@image html http_demo_plaintext.png width=100%
+
+@section http_demo_basic_tls HTTP Basic TLS Demo
+@brief A demo of the coreHTTP library that establishes a TLS connection with server-only authentication,
+sends HTTP requests, then logs their responses.
+
+<p>
+An OpenSSL-based transport interface implementation is used to establish an encrypted
+TLS connection over port 443 to an HTTP server. Only the server's certificate
+is verified using its respective root CA certificate. If a connection
+failure occurs, then the connection establishment is retried for @ref MAX_RETRY_ATTEMPTS.
+Once a connection is established, HTTP requests are sent for the following HTTP methods:
+`GET`, `HEAD`, `PUT`, and `POST`. The respective responses from each of these
+requests are logged.
+</p>
+
+<div class="caption" style="text-align:center">
+HTTP Basic TLS Demo Workflow — Note that these steps are repeated indefinitely
+</div>
+@image html http_demo_basic_tls.png width=100%
+
+@section http_demo_mutual_auth HTTP Mutual Auth Demo
+@brief A demo of the coreHTTP library that establishes a TLS connection with both server and client authentication,
+sends HTTP requests, then logs their responses.
+
+<p>
+An OpenSSL-based transport interface implementation is used to establish an encrypted
+TLS connection, with both server and client authentication, over port 443 to AWS IoT Core.
+Because port 443 is used, the ALPN protocol name must be set to `x-amzn-http-ca`.
+If a connection failure occurs, then the connection establishment is retried
+for @ref MAX_RETRY_ATTEMPTS.
+</p>
+
+<p>
+After the TLS session is established, a single HTTP POST request is sent that
+publishes a message to a topic named `topic` in AWS IoT Core with `qos=1`.
+This means that any subscribers to this topic are guaranteed to receive this
+message at least once.
+</p>
+
+<div class="caption" style="text-align:center">
+HTTP Mutual Auth Demo Workflow — Note that these steps are repeated indefinitely
+</div>
+@image html http_demo_mutual_auth.png width=100%
+*/

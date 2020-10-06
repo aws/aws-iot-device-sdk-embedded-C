@@ -31,13 +31,16 @@
 /* Include Demo Config as the first non-system header. */
 #include "demo_config.h"
 
+/* Common HTTP demo utilities. */
+#include "http_demo_utils.h"
+
 /* HTTP API header. */
 #include "core_http_client.h"
 
 /* OpenSSL transport header. */
 #include "openssl_posix.h"
 
-/* Retry parameters. */
+/* Retry utilities. */
 #include "retry_utils.h"
 
 /* Check that hostname of the server is defined. */
@@ -46,8 +49,8 @@
 #endif
 
 /* Check that TLS port of the server is defined. */
-#ifndef SERVER_PORT
-    #error "Please define a SERVER_PORT."
+#ifndef HTTPS_PORT
+    #error "Please define a HTTPS_PORT."
 #endif
 
 /* Check that a path for Root CA Certificate is defined. */
@@ -98,59 +101,75 @@
 /**
  * @brief The length of the HTTP server host name.
  */
-#define SERVER_HOST_LENGTH     ( sizeof( SERVER_HOST ) - 1 )
+#define SERVER_HOST_LENGTH         ( sizeof( SERVER_HOST ) - 1 )
+
+/**
+ * @brief The length of the HTTP GET method.
+ */
+#define HTTP_METHOD_GET_LENGTH     ( sizeof( HTTP_METHOD_GET ) - 1 )
+
+/**
+ * @brief The length of the HTTP HEAD method.
+ */
+#define HTTP_METHOD_HEAD_LENGTH    ( sizeof( HTTP_METHOD_HEAD ) - 1 )
+
+/**
+ * @brief The length of the HTTP PUT method.
+ */
+#define HTTP_METHOD_PUT_LENGTH     ( sizeof( HTTP_METHOD_PUT ) - 1 )
+
+/**
+ * @brief The length of the HTTP POST method.
+ */
+#define HTTP_METHOD_POST_LENGTH    ( sizeof( HTTP_METHOD_POST ) - 1 )
 
 /**
  * @brief The length of the HTTP GET path.
  */
-#define GET_PATH_LENGTH        ( sizeof( GET_PATH ) - 1 )
+#define GET_PATH_LENGTH            ( sizeof( GET_PATH ) - 1 )
 
 /**
  * @brief The length of the HTTP HEAD path.
  */
-#define HEAD_PATH_LENGTH       ( sizeof( HEAD_PATH ) - 1 )
+#define HEAD_PATH_LENGTH           ( sizeof( HEAD_PATH ) - 1 )
 
 /**
  * @brief The length of the HTTP PUT path.
  */
-#define PUT_PATH_LENGTH        ( sizeof( PUT_PATH ) - 1 )
+#define PUT_PATH_LENGTH            ( sizeof( PUT_PATH ) - 1 )
 
 /**
  * @brief The length of the HTTP POST path.
  */
-#define POST_PATH_LENGTH       ( sizeof( POST_PATH ) - 1 )
+#define POST_PATH_LENGTH           ( sizeof( POST_PATH ) - 1 )
 
 /**
  * @brief Length of the request body.
  */
-#define REQUEST_BODY_LENGTH    ( sizeof( REQUEST_BODY ) - 1 )
+#define REQUEST_BODY_LENGTH        ( sizeof( REQUEST_BODY ) - 1 )
 
 /**
  * @brief Number of HTTP paths to request.
  */
-#define NUMBER_HTTP_PATHS      ( 4 )
+#define NUMBER_HTTP_PATHS          ( 4 )
 
 /**
- * @brief An array of HTTP paths to request.
+ * @brief A pair containing a path string of the URI and its length.
  */
-static char * httpMethodPaths[] =
+typedef struct httpPathStrings
 {
-    GET_PATH,
-    HEAD_PATH,
-    PUT_PATH,
-    POST_PATH
-};
+    const char * httpPath;
+    size_t httpPathLength;
+} httpPathStrings_t;
 
 /**
- * @brief The respective method for the HTTP paths listed in #httpMethodPaths.
+ * @brief A pair containing an HTTP method string and its length.
  */
-static char * httpMethods[] =
+typedef struct httpMethodStrings
 {
-    HTTP_METHOD_GET,
-    HTTP_METHOD_HEAD,
-    HTTP_METHOD_PUT,
-    HTTP_METHOD_POST
-};
+    const char * httpMethod;
+    size_t httpMethodLength;
+} httpMethodStrings_t;
 
 /**
  * @brief A buffer used in the demo for storing HTTP request headers and
@@ -167,15 +186,11 @@ static uint8_t userBuffer[ USER_BUFFER_LENGTH ];
 /**
  * @brief Connect to HTTP server with reconnection retries.
  *
- * If connection fails, retry is attempted after a timeout.
- * Timeout value will exponentially increase until maximum
- * timeout value is reached or the number of attempts are exhausted.
- *
  * @param[out] pNetworkContext The output parameter to return the created network context.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on successful connection.
  */
-static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext );
+static int32_t connectToServer( NetworkContext_t * pNetworkContext );
 
 /**
  * @brief Send an HTTP request based on a specified method and path, then
@@ -183,23 +198,23 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
  *
  * @param[in] pTransportInterface The transport interface for making network calls.
  * @param[in] pMethod The HTTP request method.
+ * @param[in] methodLen The length of the HTTP request method.
  * @param[in] pPath The Request-URI to the objects of interest.
+ * @param[in] pathLen The length of the Request-URI.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
-static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
-                            const char * pMethod,
-                            const char * pPath );
+static int32_t sendHttpRequest( const TransportInterface_t * pTransportInterface,
+                                const char * pMethod,
+                                size_t methodLen,
+                                const char * pPath,
+                                size_t pathLen );
 
 /*-----------------------------------------------------------*/
 
-static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext )
+static int32_t connectToServer( NetworkContext_t * pNetworkContext )
 {
-    int returnStatus = EXIT_SUCCESS;
-    /* Status returned by the retry utilities. */
-    RetryUtilsStatus_t retryUtilsStatus = RetryUtilsSuccess;
-    /* Struct containing the next backoff time. */
-    RetryUtilsParams_t reconnectParams;
+    int32_t returnStatus = EXIT_FAILURE;
     /* Status returned by OpenSSL transport implementation. */
     OpensslStatus_t opensslStatus;
     /* Credentials to establish the TLS connection. */
@@ -214,55 +229,43 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     /* Initialize server information. */
     serverInfo.pHostName = SERVER_HOST;
     serverInfo.hostNameLength = SERVER_HOST_LENGTH;
-    serverInfo.port = SERVER_PORT;
+    serverInfo.port = HTTPS_PORT;
 
-    /* Initialize reconnect attempts and interval */
-    RetryUtils_ParamsReset( &reconnectParams );
+    /* Establish a TLS session with the HTTP server. This example connects
+     * to the HTTP server as specified in SERVER_HOST and HTTPS_PORT
+     * in demo_config.h. */
+    LogInfo( ( "Establishing a TLS session to %.*s:%d.",
+               ( int32_t ) SERVER_HOST_LENGTH,
+               SERVER_HOST,
+               HTTPS_PORT ) );
+    opensslStatus = Openssl_Connect( pNetworkContext,
+                                     &serverInfo,
+                                     &opensslCredentials,
+                                     TRANSPORT_SEND_RECV_TIMEOUT_MS,
+                                     TRANSPORT_SEND_RECV_TIMEOUT_MS );
 
-    /* Attempt to connect to HTTP server. If connection fails, retry after
-     * a timeout. Timeout value will exponentially increase until maximum
-     * attempts are reached.
-     */
-    do
+    if( opensslStatus == OPENSSL_SUCCESS )
     {
-        /* Establish a TLS session with the HTTP server. This example connects
-         * to the HTTP server as specified in SERVER_HOST and SERVER_PORT
-         * in demo_config.h. */
-        LogInfo( ( "Establishing a TLS session to %.*s:%d.",
-                   ( int32_t ) SERVER_HOST_LENGTH,
-                   SERVER_HOST,
-                   SERVER_PORT ) );
-        opensslStatus = Openssl_Connect( pNetworkContext,
-                                         &serverInfo,
-                                         &opensslCredentials,
-                                         TRANSPORT_SEND_RECV_TIMEOUT_MS,
-                                         TRANSPORT_SEND_RECV_TIMEOUT_MS );
-
-        if( opensslStatus != OPENSSL_SUCCESS )
-        {
-            LogWarn( ( "Connection to the HTTP server failed. "
-                       "Retrying connection with backoff and jitter." ) );
-            retryUtilsStatus = RetryUtils_BackoffAndSleep( &reconnectParams );
-        }
-
-        if( retryUtilsStatus == RetryUtilsRetriesExhausted )
-        {
-            LogError( ( "Connection to the server failed, all attempts exhausted." ) );
-            returnStatus = EXIT_FAILURE;
-        }
-    } while( ( opensslStatus != OPENSSL_SUCCESS ) && ( retryUtilsStatus == RetryUtilsSuccess ) );
+        returnStatus = EXIT_SUCCESS;
+    }
+    else
+    {
+        returnStatus = EXIT_FAILURE;
+    }
 
     return returnStatus;
 }
 
 /*-----------------------------------------------------------*/
 
-static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
-                            const char * pMethod,
-                            const char * pPath )
+static int32_t sendHttpRequest( const TransportInterface_t * pTransportInterface,
+                                const char * pMethod,
+                                size_t methodLen,
+                                const char * pPath,
+                                size_t pathLen )
 {
     /* Return value of this method. */
-    int returnStatus = EXIT_SUCCESS;
+    int32_t returnStatus = EXIT_SUCCESS;
 
     /* Configurations of the initial request headers that are passed to
      * #HTTPClient_InitializeRequestHeaders. */
@@ -287,9 +290,9 @@ static int sendHttpRequest( const TransportInterface_t * pTransportInterface,
     requestInfo.pHost = SERVER_HOST;
     requestInfo.hostLen = SERVER_HOST_LENGTH;
     requestInfo.method = pMethod;
-    requestInfo.methodLen = strlen( pMethod );
+    requestInfo.methodLen = methodLen;
     requestInfo.pPath = pPath;
-    requestInfo.pathLen = strlen( pPath );
+    requestInfo.pathLen = pathLen;
 
     /* Set "Connection" HTTP header to "keep-alive" so that multiple requests
      * can be sent over the same established TCP connection. */
@@ -381,18 +384,34 @@ int main( int argc,
           char ** argv )
 {
     /* Return value of main. */
-    int returnStatus = EXIT_SUCCESS;
+    int32_t returnStatus = EXIT_SUCCESS;
     /* The transport layer interface used by the HTTP Client library. */
     TransportInterface_t transportInterface;
     /* The network context for the transport layer interface. */
     NetworkContext_t networkContext;
+    /* An array of HTTP paths to request. */
+    const httpPathStrings_t httpMethodPaths[] =
+    {
+        { GET_PATH,  GET_PATH_LENGTH  },
+        { HEAD_PATH, HEAD_PATH_LENGTH },
+        { PUT_PATH,  PUT_PATH_LENGTH  },
+        { POST_PATH, POST_PATH_LENGTH }
+    };
+    /* The respective method for the HTTP paths listed in #httpMethodPaths. */
+    const httpMethodStrings_t httpMethods[] =
+    {
+        { HTTP_METHOD_GET,  HTTP_METHOD_GET_LENGTH  },
+        { HTTP_METHOD_HEAD, HTTP_METHOD_HEAD_LENGTH },
+        { HTTP_METHOD_PUT,  HTTP_METHOD_PUT_LENGTH  },
+        { HTTP_METHOD_POST, HTTP_METHOD_POST_LENGTH }
+    };
 
     ( void ) argc;
     ( void ) argv;
 
     for( ; ; )
     {
-        int i;
+        int i = 0;
 
         /**************************** Connect. ******************************/
 
@@ -406,7 +425,8 @@ int main( int argc,
              * attempts are reached or maximum timeout value is reached. The function
              * returns EXIT_FAILURE if the TCP connection cannot be established to
              * broker after configured number of attempts. */
-            returnStatus = connectToServerWithBackoffRetries( &networkContext );
+            returnStatus = connectToServerWithBackoffRetries( connectToServer,
+                                                              &networkContext );
 
             if( returnStatus == EXIT_FAILURE )
             {
@@ -434,8 +454,10 @@ int main( int argc,
             if( returnStatus == EXIT_SUCCESS )
             {
                 returnStatus = sendHttpRequest( &transportInterface,
-                                                httpMethods[ i ],
-                                                httpMethodPaths[ i ] );
+                                                httpMethods[ i ].httpMethod,
+                                                httpMethods[ i ].httpMethodLength,
+                                                httpMethodPaths[ i ].httpPath,
+                                                httpMethodPaths[ i ].httpPathLength );
             }
             else
             {

@@ -1,0 +1,152 @@
+name: CI Checks
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  build-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone This Repo
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Download CMake 3.2.0
+        run: |
+          curl https://cmake.org/files/v3.2/cmake-3.2.0-Linux-x86_64.tar.gz -o cmake.tar.gz
+          tar -xf cmake.tar.gz
+          mkdir build
+          cmake-3.2.0-Linux-x86_64/bin/cmake . -Bbuild/ \
+          -G "Unix Makefiles" \
+          -DBUILD_TESTS=1 \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Werror' \
+          -DAWS_IOT_ENDPOINT="aws-iot-endpoint" \
+          -DBROKER_ENDPOINT="broker-endpoint" \
+          -DCLIENT_CERT_PATH="cert/path" \
+          -DROOT_CA_CERT_PATH="cert/path" \
+          -DCLIENT_PRIVATE_KEY_PATH="key/path"
+      - name: Build Demos
+        run: make -C build/ help | grep demo | tr -d '. ' | xargs make -C build/
+      - name: Build System Tests
+        run: make -C build/ help | grep system | tr -d '. ' | xargs make -C build/
+  unittest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone This Repo
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Download CMake 3.2.0
+        run: |
+          curl https://cmake.org/files/v3.2/cmake-3.2.0-Linux-x86_64.tar.gz -o cmake.tar.gz
+          tar -xf cmake.tar.gz
+          mkdir build
+          cmake-3.2.0-Linux-x86_64/bin/cmake . -Bbuild/ \
+          -G "Unix Makefiles" \
+          -DBUILD_TESTS=1 \
+          -DCMAKE_BUILD_TYPE=Debug \
+          -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Werror -DNDEBUG'
+          make -C build/ help | grep utest | tr -d '. ' | xargs make -C build/
+      - name: Build Unit Tests
+        run: |
+          sudo apt-get install -y lcov
+          make -C build/ help | grep utest | tr -d '. ' | xargs make -C build/
+      - name: Run ctest
+        run: |
+          cd build/
+          ctest -E system --output-on-failure
+          cd ..
+      - name: Run Coverage
+        run: |
+          make -C build/ coverage
+          lcov --rc lcov_branch_coverage=1 --remove build/coverage.info '*test*' --output-file build/coverage.info
+          lcov --rc lcov_branch_coverage=1 --remove build/coverage.info '*CMakeCCompilerId*' --output-file build/coverage.info
+          lcov --rc lcov_branch_coverage=1 --remove build/coverage.info '*mocks*' --output-file build/coverage.info
+          lcov --rc lcov_branch_coverage=1 --remove build/coverage.info '*3rdparty*' --output-file build/coverage.info
+          lcov --rc lcov_branch_coverage=1 --remove build/coverage.info '*netdb*' --output-file build/coverage.info
+          lcov --list build/coverage.info
+      - name: Check Coverage
+        uses: ChicagoFlutter/lcov-cop@v1.0.2
+        with:
+          path: "build/coverage.info"
+          min_coverage: 100
+          exclude: "**/*test*"
+  complexity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup
+        run: sudo apt-get install complexity
+      - name: Check Complexity
+        run: |
+          find platform/ \( -iname '*.c' ! -wholename '*test*' \) |\
+          xargs complexity --scores --threshold=0 --horrid-threshold=8
+  spell-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install spell
+        run: |
+          sudo apt-get install -y spell util-linux
+      - name: Check Spelling
+        run: |
+          PATH=$PATH:$PWD/tools/spell
+          for lexfile in `find platform/ demos/ integration-test/ -name lexicon.txt`
+          do dir=${lexfile%/lexicon.txt}
+            echo $dir
+            find-unknown-comment-words --directory $dir
+            if [ $? -ne "0" ]
+            then
+              exit 1
+            fi
+          done
+  formatting:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Uncrustify
+        run: sudo apt-get install uncrustify
+      - name: Check Formatting With Uncrustify
+        run: find . -iname "*.[hc]" -exec uncrustify --check -c tools/uncrustify.cfg {} +
+      - name: Check For Trailing Whitespace
+        run: |
+          set +e
+          grep --exclude="README.md" -rnI -e "[[:blank:]]$" .
+          if [ "$?" = "0" ]; then
+            echo "Files have trailing whitespace."
+            exit 1
+          else
+            exit 0
+          fi
+  doxygen:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Install Doxygen
+        run: |
+          wget -qO- "http://doxygen.nl/files/doxygen-1.8.20.linux.bin.tar.gz" | sudo tar --strip-components=1 -xz -C /usr/local
+          sudo apt-get install -y libclang-9-dev
+      - name: Run Doxygen on all library submodules
+        run: |
+          ROOT=$PWD
+          for lib in $(find libraries/aws libraries/standard -maxdepth 1 -mindepth 1)
+          do
+            cd $lib
+            if [ ! -d docs/doxygen/ ]; then
+              echo "$lib has no Doxygen documentation."
+            else
+              doxygen docs/doxygen/config.doxyfile
+            fi
+            cd $ROOT
+          done
+      - name: Run Doxygen on CSDK and verify stdout is empty
+        run: |
+          doxygen docs/doxygen/config.doxyfile 2>&1 | tee doxyoutput.txt
+          if [[ "$(wc -c < doxyoutput.txt | bc)" = "0" ]]; then exit 0; else exit 1; fi

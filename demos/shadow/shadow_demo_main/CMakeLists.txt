@@ -12,14 +12,8 @@ include( ${CMAKE_SOURCE_DIR}/libraries/aws/device-shadow-for-aws-iot-embedded-sd
 include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreJSON/jsonFilePaths.cmake )
 
 # Demo target.
-add_executable(${DEMO_NAME})
-
-# Add to default target if all required macros needed to run this demo are defined
-check_aws_credentials(${DEMO_NAME})
-
-target_sources(
+add_executable(
     ${DEMO_NAME}
-    PRIVATE
         "${DEMO_NAME}.c"
         "shadow_demo_helpers.c"
         ${MQTT_SOURCES}
@@ -27,6 +21,9 @@ target_sources(
         ${SHADOW_SOURCES}
         ${JSON_SOURCES}
 )
+
+# Add to default target if all required macros needed to run this demo are defined
+check_aws_credentials(${DEMO_NAME})
 
 target_link_libraries(
     ${DEMO_NAME}
@@ -41,7 +38,6 @@ target_include_directories(
     PUBLIC
         ${LOGGING_INCLUDE_DIRS}
         ${MQTT_INCLUDE_PUBLIC_DIRS}
-        ${MQTT_INCLUDE_PRIVATE_DIRS}
         ${SHADOW_INCLUDE_PUBLIC_DIRS}
         ${CMAKE_CURRENT_LIST_DIR}
         ${JSON_INCLUDE_PUBLIC_DIRS}

@@ -3,8 +3,8 @@
 @brief Instructions for building and running demos.
 
 <p>
-The libraries in this SDK are not dependent on any operating systems. 
-However, the demos for the libraries in this SDK are built and tested on a 
+The libraries in this SDK are not dependent on any operating systems.
+However, the demos for the libraries in this SDK are built and tested on a
 Linux platform. This SDK builds with [CMake](https://cmake.org/), a cross-platform build tool.
 </p>
 
@@ -12,7 +12,7 @@ Linux platform. This SDK builds with [CMake](https://cmake.org/), a cross-platfo
 @brief Prerequisites needed to run the demos.
 
 @pre
-- CMake 3.13.0 or later and a C90 compiler.
+- CMake 3.2.0 or later and a C90 compiler.
 
 @pre
 - A supported operating system. The ports provided with this repo are expected to work with all recent versions of the following operating systems, although we cannot guarantee the behavior on all systems.
@@ -32,9 +32,9 @@ It is required to setup an AWS account and access the AWS IoT Console for runnin
 @section configuring_mutual_auth_demo Configuring the Mutual Auth Demo
 @brief Passing configuration settings to run the mutual auth demo.
 
-- You can pass the following configuration settings as command line options in order to run the mutual auth demos: 
+- You can pass the following configuration settings as command line options in order to run the mutual auth demos:
 @code{sh}
-cmake .. -DAWS_IOT_ENDPOINT="aws-iot-endpoint" -DROOT_CA_CERT_PATH="root-ca-path" -DCLIENT_CERT_PATH="certificate-path" -DCLIENT_PRIVATE_KEY_PATH="private-key-path" 
+cmake .. -DAWS_IOT_ENDPOINT="aws-iot-endpoint" -DROOT_CA_CERT_PATH="root-ca-path" -DCLIENT_CERT_PATH="certificate-path" -DCLIENT_PRIVATE_KEY_PATH="private-key-path"
 @endcode
 
 - In order to set these configurations manually, edit `demo_config.h` in `demos/mqtt/mqtt_demo_mutual_auth/` to `#define` the following:
@@ -65,7 +65,7 @@ cmake ..
 make
 @endcode
 
-<p>All demo executables can now be found in the `build/bin` directory and 
+<p>All demo executables can now be found in the `build/bin` directory and
 should be run while inside that directory.</p>
 
 @subsection docker_containers_for_demos Installing Docker Containers for Demos

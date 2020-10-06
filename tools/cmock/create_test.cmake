@@ -17,6 +17,9 @@ function(create_test test_name
                     ${test_name}_runner.c
                   DEPENDS ${test_src}
         )
+    link_directories(${CMAKE_CURRENT_BINARY_DIR}
+                     ${CMAKE_CURRENT_BINARY_DIR}/lib
+        )
     add_executable(${test_name} ${test_src} ${test_name}_runner.c)
     set_target_properties(${test_name} PROPERTIES
             COMPILE_FLAG "-O0 -ggdb"
@@ -31,10 +34,6 @@ function(create_test test_name
                                ${include_list}
         )
 
-    target_link_directories(${test_name} PUBLIC
-                            ${CMAKE_CURRENT_BINARY_DIR}
-        )
-
     # link all libraries sent through parameters
     foreach(link IN LISTS link_list)
         target_link_libraries(${test_name} ${link})
@@ -46,9 +45,6 @@ function(create_test test_name
         target_link_libraries(${test_name} ${dependency})
     endforeach()
     target_link_libraries(${test_name} -lgcov unity)
-    target_link_directories(${test_name}  PUBLIC
-                            ${CMAKE_CURRENT_BINARY_DIR}/lib
-            )
     add_test(NAME ${test_name}
              COMMAND ${CMAKE_BINARY_DIR}/bin/tests/${test_name}
              WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
@@ -104,7 +100,7 @@ function(create_mock_list mock_name
                 )
         get_filename_component(mock_file_name
                                ${mock_file}
-                               NAME_WLE
+                               NAME_WE
                 )
         get_filename_component(mock_file_dir
                                ${mock_file}
