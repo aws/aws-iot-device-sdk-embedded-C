@@ -36,6 +36,8 @@ void harness()
 
     publishInfo.pTopicName = malloc( publishInfo.topicNameLength );
     publishInfo.pPayload = malloc( publishInfo.payloadLength );
+    __CPROVER_assume( publishInfo.pTopicName != NULL );
+    __CPROVER_assume( publishInfo.pPayload != NULL );
 
     _mqttOperation_t operation;
     operation.u.publish.publishInfo = publishInfo;
@@ -43,7 +45,7 @@ void harness()
     _mqttPacket_t publish;
     publish.pRemainingData = malloc( sizeof( uint8_t ) * publish.remainingLength );
     publish.u.pIncomingPublish = &operation;
-
+    __CPROVER_assume( publish.pRemainingData != NULL );
 
     _IotMqtt_DeserializePublish( &publish );
 }

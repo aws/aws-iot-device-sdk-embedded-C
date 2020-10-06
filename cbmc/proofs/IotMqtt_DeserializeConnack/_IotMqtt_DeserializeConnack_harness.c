@@ -35,6 +35,7 @@ void harness()
     _mqttPacket_t connack;
 
     connack.pRemainingData = malloc( sizeof( uint8_t ) * connack.remainingLength );
+    __CPROVER_assume( connack.pRemainingData != NULL );
 
     _IotMqtt_DeserializeConnack( &connack );
 }

@@ -40,6 +40,7 @@ void harness()
     __CPROVER_assume( suback.remainingLength <= BUFFER_SIZE );
     suback.pRemainingData = malloc( sizeof( uint8_t )
                                     * suback.remainingLength );
+    __CPROVER_assume( suback.pRemainingData != NULL );
 
     /* Create packet connection */
     IotMqttConnection_t pConn = allocate_IotMqttConnection( NULL );

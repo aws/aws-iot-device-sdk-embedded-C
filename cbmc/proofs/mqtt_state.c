@@ -36,7 +36,10 @@ void * malloc_can_fail( size_t size )
 
 void * allocate_opaque_type()
 {
-    return malloc( 1 ); /* consider using malloc(0) */
+    void * ptr = malloc( 1 );
+
+    __CPROVER_assume( ptr != NULL );
+    return ptr;
 }
 
 /****************************************************************

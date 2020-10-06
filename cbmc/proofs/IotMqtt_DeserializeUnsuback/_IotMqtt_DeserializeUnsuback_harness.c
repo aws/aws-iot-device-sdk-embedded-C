@@ -35,6 +35,7 @@ void harness()
     _mqttPacket_t unsuback;
 
     unsuback.pRemainingData = malloc( sizeof( uint8_t ) * unsuback.remainingLength );
+    __CPROVER_assume( unsuback.pRemainingData != NULL );
 
     _IotMqtt_DeserializeUnsuback( &unsuback );
 }
