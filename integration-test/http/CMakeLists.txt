@@ -1,23 +1,22 @@
-project ("mqtt system test")
+project ("http system test")
 cmake_minimum_required (VERSION 3.2.0)
 
-# Include MQTT library's source and header path variables.
-include("${CMAKE_SOURCE_DIR}/libraries/standard/coreMQTT/mqttFilePaths.cmake")
+# Include HTTP library's source and header path variables.
+include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreHTTP/httpFilePaths.cmake )
 
 # ====================  Define your project name (edit) ========================
-set(project_name "mqtt_system")
+set(project_name "http_system")
 
 # ================= Create the library under test here (edit) ==================
 
 # list the files you would like to test here
 list(APPEND real_source_files
-            ${MQTT_SOURCES}
-            ${MQTT_SERIALIZER_SOURCES}
+            ${HTTP_SOURCES}
         )
 # list the directories the module under test includes
 list(APPEND real_include_directories
             .
-            ${MQTT_INCLUDE_PUBLIC_DIRS}
+            ${HTTP_INCLUDE_PUBLIC_DIRS}
             ${LOGGING_INCLUDE_DIRS}
         )
 
@@ -26,19 +25,33 @@ list(APPEND real_include_directories
 # list the directories your test needs to include
 list(APPEND test_include_directories
             .
-            ${MQTT_INCLUDE_PUBLIC_DIRS}
+            ${HTTP_INCLUDE_PUBLIC_DIRS}
             ${LOGGING_INCLUDE_DIRS}
         )
 
-# =============================  (end edit)  ===================================
+# =====================  Create Library Target (end edit)  =====================
+
 set(real_name "${project_name}_real")
 
-create_real_library(${real_name}
-                    "${real_source_files}"
-                    "${real_include_directories}"
-                    # Empty mock name as create_real_library needs the 4th argument.
-                    ""
+#[[the following three functions exist in the "create_real_library" method of the cmock
+create_test tool, but are localized here to allow for the removal of the "-Wpedantic" flag,
+which raises build errors in http_parser due to differing language standards]]
+add_library(${real_name} STATIC
+        ${real_source_files}
+    )
+target_include_directories(${real_name} PUBLIC
+        ${real_include_directories}
+    )
+set_target_properties(${real_name} PROPERTIES
+            COMPILE_FLAGS "-Wextra \
+                -fprofile-arcs -ftest-coverage -fprofile-generate \
+                -Wno-unused-but-set-variable"
+            LINK_FLAGS "-fprofile-arcs -ftest-coverage \
+                -fprofile-generate "
+            ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib
         )
+
+# =============  Create Test Target & Assign Build-Configured Defines  ==========
 
 list(APPEND stest_link_list
             lib${real_name}.a
@@ -48,6 +61,7 @@ list(APPEND stest_dep_list
             ${real_name}
             clock_posix
             openssl_posix
+            retry_utils_posix
         )
 
 set(stest_name "${project_name}_test")
@@ -60,10 +74,10 @@ create_test(${stest_name}
         )
 
 # Set preprocessor defines for test if configured in build.
-if(BROKER_ENDPOINT)
+if(SERVER_HOST)
     target_compile_definitions(
         ${stest_name} PRIVATE
-            BROKER_ENDPOINT="${BROKER_ENDPOINT}"
+            SERVER_HOST="${SERVER_HOST}"
     )
 endif()
 if(ROOT_CA_CERT_PATH)
@@ -72,15 +86,9 @@ if(ROOT_CA_CERT_PATH)
             ROOT_CA_CERT_PATH="${ROOT_CA_CERT_PATH}"
     )
 endif()
-if(CLIENT_CERT_PATH)
+if(HTTPS_PORT)
     target_compile_definitions(
         ${stest_name} PRIVATE
-        CLIENT_CERT_PATH="${CLIENT_CERT_PATH}"
-    )
-endif()
-if(CLIENT_PRIVATE_KEY_PATH)
-    target_compile_definitions(
-        ${stest_name} PRIVATE
-        CLIENT_PRIVATE_KEY_PATH="${CLIENT_PRIVATE_KEY_PATH}"
+            HTTPS_PORT=${HTTPS_PORT}
     )
 endif()

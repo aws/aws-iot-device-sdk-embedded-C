@@ -20,65 +20,33 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef TEST_CONFIG_H_
-#define TEST_CONFIG_H_
+#ifndef CORE_HTTP_CONFIG_H_
+#define CORE_HTTP_CONFIG_H_
 
 /**************************************************/
 /******* DO NOT CHANGE the following order ********/
 /**************************************************/
 
-/* Include logging header files and define logging macros in the following order:
+/* Logging config definition and header files inclusion are required in the following order:
  * 1. Include the header file "logging_levels.h".
  * 2. Define the LIBRARY_LOG_NAME and LIBRARY_LOG_LEVEL macros depending on
- * the logging configuration for DEMO.
- * 3. Include the header file "logging_stack.h", if logging is enabled for DEMO.
+ * the logging configuration for HTTP.
+ * 3. Include the header file "logging_stack.h", if logging is enabled for HTTP.
  */
 
 #include "logging_levels.h"
 
-/* Logging configuration for the Demo. */
+/* Logging configuration for the HTTP library. */
 #ifndef LIBRARY_LOG_NAME
-    #define LIBRARY_LOG_NAME    "TEST"
+    #define LIBRARY_LOG_NAME    "HTTP"
 #endif
 
 #ifndef LIBRARY_LOG_LEVEL
     #define LIBRARY_LOG_LEVEL    LOG_INFO
 #endif
+
 #include "logging_stack.h"
 
 /************ End of logging configuration ****************/
 
-/**
- * @brief MQTT server host name.
- *
- * #define BROKER_ENDPOINT               "...insert here..."
- */
-
-/**
- * @brief MQTT server port number.
- *
- * In general, port 8883 is for secured MQTT connections.
- */
-#define BROKER_PORT    ( 8883 )
-
-/**
- * @brief Path of the file containing the client certificate.
- *
- * #define CLIENT_CERT_PATH    "...insert here..."
- */
-
-/**
- * @brief Path of the file containing the client's private key.
- *
- * #define CLIENT_PRIVATE_KEY_PATH    "...insert here..."
- */
-
-/**
- * @brief Path of the file containing the server's root CA certificate.
- *
- * This certificate should be PEM-encoded.
- *
- * * #define ROOT_CA_CERT_PATH    "...insert here..."
- */
-
-#endif /* ifndef TEST_CONFIG_H_ */
+#endif /* ifndef CORE_HTTP_CONFIG_H_ */
