@@ -657,6 +657,12 @@ int main( int argc,
         DisconnectMqttSession();
     }
 
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        /* Log message indicating the demo completed successfully. */
+        LogInfo( ( "Demo completed successfully." ) );
+    }
+
     return returnStatus;
 }
 
