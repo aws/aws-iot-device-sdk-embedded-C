@@ -18,4 +18,4 @@
 	url = https://github.com/aws/device-shadow-for-aws-iot-embedded-sdk.git
 [submodule "libraries/aws/ota"]
 	path = libraries/aws/ota
-	url = git@github.com:aws/OTA-for-AWS-IoT-embedded-SDK.git
+	url = git@github.com:aws/ota-for-aws-iot-embedded-sdk.git
