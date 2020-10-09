@@ -696,6 +696,7 @@ static bool subscribe( handle_t * h,
                               api,
                               NULL );
     assert( jobs_ret == JobsSuccess );
+    ( void ) jobs_ret;
 
     /* set to default value */
     h->subscribeQOS = -1;
@@ -747,6 +748,7 @@ static bool sendUpdate( handle_t * h,
                             jobidLength,
                             NULL );
     assert( jobs_ret == JobsSuccess );
+    ( void ) jobs_ret;
 
     m_ret = mosquitto_publish( h->m,
                                NULL,
@@ -856,6 +858,7 @@ void on_message( struct mosquitto * m,
                            &jobid,
                            &jobidLength );
     assert( ret != JobsBadParameter );
+    ( void ) ret;
 
     switch( api )
     {
@@ -937,6 +940,7 @@ static bool sendStartNext( handle_t * h )
                                h->nameLength,
                                NULL );
     assert( jobs_ret == JobsSuccess );
+    ( void ) jobs_ret;
 
     m_ret = mosquitto_publish( h->m, NULL, topic, 0, NULL, MQTT_QOS, false );
 
