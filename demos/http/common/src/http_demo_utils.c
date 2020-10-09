@@ -31,6 +31,9 @@
 /* Retry utilities. */
 #include "retry_utils.h"
 
+/* Third party parser utilities. */
+#include "http_parser.h"
+
 int32_t connectToServerWithBackoffRetries( TransportConnect_t connectFunction,
                                            NetworkContext_t * pNetworkContext )
 {
@@ -63,6 +66,112 @@ int32_t connectToServerWithBackoffRetries( TransportConnect_t connectFunction,
     if( returnStatus == EXIT_FAILURE )
     {
         LogError( ( "Connection to the server failed, all attempts exhausted." ) );
+    }
+
+    return returnStatus;
+}
+
+/*-----------------------------------------------------------*/
+
+HTTPStatus_t getUrlPath( const char * pUrl,
+                         size_t urlLen,
+                         const char ** pPath,
+                         size_t * pPathLen )
+{
+    /* http-parser status. Initialized to 0 to signify success. */
+    int parserStatus = 0;
+    struct http_parser_url urlParser;
+    HTTPStatus_t returnStatus = HTTP_SUCCESS;
+
+    /* Sets all members in urlParser to 0. */
+    http_parser_url_init( &urlParser );
+
+    if( ( pUrl == NULL ) || ( pPath == NULL ) || ( pPathLen == NULL ) )
+    {
+        LogError( ( "NULL parameter passed to getUrlPath()." ) );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+
+    if( returnStatus == HTTP_SUCCESS )
+    {
+        parserStatus = http_parser_parse_url( pUrl, urlLen, 0, &urlParser );
+
+        if( parserStatus != 0 )
+        {
+            LogError( ( "Error parsing the input URL %.*s. Error code: %d.",
+                        ( int32_t ) urlLen,
+                        pUrl,
+                        parserStatus ) );
+            returnStatus = HTTP_PARSER_INTERNAL_ERROR;
+        }
+    }
+
+    if( returnStatus == HTTP_SUCCESS )
+    {
+        *pPathLen = ( size_t ) ( urlParser.field_data[ UF_PATH ].len );
+
+        if( *pPathLen == 0 )
+        {
+            returnStatus = HTTP_NO_RESPONSE;
+            *pPath = NULL;
+        }
+        else
+        {
+            *pPath = &pUrl[ urlParser.field_data[ UF_PATH ].off ];
+        }
+    }
+
+    return returnStatus;
+}
+
+/*-----------------------------------------------------------*/
+
+HTTPStatus_t getUrlAddress( const char * pUrl,
+                            size_t urlLen,
+                            const char ** pAddress,
+                            size_t * pAddressLen )
+{
+    /* http-parser status. Initialized to 0 to signify success. */
+    int parserStatus = 0;
+    struct http_parser_url urlParser;
+    HTTPStatus_t returnStatus = HTTP_SUCCESS;
+
+    /* Sets all members in urlParser to 0. */
+    http_parser_url_init( &urlParser );
+
+    if( ( pUrl == NULL ) || ( pAddress == NULL ) || ( pAddressLen == NULL ) )
+    {
+        LogError( ( "NULL parameter passed to getUrlAddress()." ) );
+        returnStatus = HTTP_INVALID_PARAMETER;
+    }
+
+    if( returnStatus == HTTP_SUCCESS )
+    {
+        parserStatus = http_parser_parse_url( pUrl, urlLen, 0, &urlParser );
+
+        if( parserStatus != 0 )
+        {
+            LogError( ( "Error parsing the input URL %.*s. Error code: %d.",
+                        ( int32_t ) urlLen,
+                        pUrl,
+                        parserStatus ) );
+            returnStatus = HTTP_PARSER_INTERNAL_ERROR;
+        }
+    }
+
+    if( returnStatus == HTTP_SUCCESS )
+    {
+        *pAddressLen = ( size_t ) ( urlParser.field_data[ UF_HOST ].len );
+
+        if( *pAddressLen == 0 )
+        {
+            returnStatus = HTTP_NO_RESPONSE;
+            *pAddress = NULL;
+        }
+        else
+        {
+            *pAddress = &pUrl[ urlParser.field_data[ UF_HOST ].off ];
+        }
     }
 
     return returnStatus;
