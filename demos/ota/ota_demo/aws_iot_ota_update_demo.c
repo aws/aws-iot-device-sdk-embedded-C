@@ -153,9 +153,9 @@
  */
 const AppVersion32_t appFirmwareVersion =
 {
-    .u.x.ucMajor = APP_VERSION_MAJOR,
-    .u.x.ucMinor = APP_VERSION_MINOR,
-    .u.x.usBuild = APP_VERSION_BUILD,
+    .u.x.major = APP_VERSION_MAJOR,
+    .u.x.minor = APP_VERSION_MINOR,
+    .u.x.build = APP_VERSION_BUILD,
 };
 
 /**
@@ -171,7 +171,7 @@ static bool mqttSessionEstablished = false;
 /**
  * @brief MQTT connection context used in this demo.
  */
-static MQTTContext_t MqttContext;
+static MQTTContext_t globalMqttContext;
 
 /*-----------------------------------------------------------*/
 
@@ -179,20 +179,20 @@ static MQTTContext_t MqttContext;
  * Publish a message to the specified client/topic at the given QOS.
  */
  static OtaErr_t publish( const char * const pacTopic,
-                          uint16_t usTopicLen,
-                          const char * pcMsg,
-                          uint32_t ulMsgSize,
-                          uint8_t ucQoS );
+                          uint16_t topicLen,
+                          const char * pMsg,
+                          uint32_t msgSize,
+                          uint8_t qos );
 
 
 static OtaErr_t subscribe( const char * pTopicFilter,
                            uint16_t topicFilterLength,
-                           uint8_t ucQoS,
-                           void * pvCallback );
+                           uint8_t qos,
+                           void * pCallback );
 
 static OtaErr_t unsubscribe( const char * pTopicFilter,
                              uint16_t topicFilterLength,
-                             uint8_t ucQoS );
+                             uint8_t qos );
 
 /*-----------------------------------------------------------*/
 
@@ -210,21 +210,21 @@ static OtaErr_t unsubscribe( const char * pTopicFilter,
  * PAL implementation for your platform in aws_ota_pal.c to see what it
  * does for you.
  *
- * @param[in] eEvent Specify if this demo is running with the AWS IoT
+ * @param[in] event Specify if this demo is running with the AWS IoT
  * MQTT server. Set this to `false` if using another MQTT server.
  * @return None.
  */
-static void App_OTACompleteCallback( OtaJobEvent_t eEvent )
+static void App_OTACompleteCallback( OtaJobEvent_t event )
 {
-    OtaErr_t xErr = OTA_ERR_UNINITIALIZED;
+    OtaErr_t err = OTA_ERR_UNINITIALIZED;
 
     /* OTA job is completed. so delete the MQTT and network connection. */
-    if( eEvent == OtaJobEventActivate )
+    if( event == OtaJobEventActivate )
     {
         LogInfo( ( "Received OtaJobEventActivate callback from OTA Agent." ) );
 
         /* OTA job is completed. so delete the network connection. */
-        MQTT_Disconnect( &MqttContext );
+        MQTT_Disconnect( &globalMqttContext );
 
         /* Activate the new firmware image. */
         OTA_ActivateNewImage();
@@ -236,13 +236,13 @@ static void App_OTACompleteCallback( OtaJobEvent_t eEvent )
         {
         }
     }
-    else if( eEvent == OtaJobEventFail )
+    else if( event == OtaJobEventFail )
     {
         LogInfo( ( "Received OtaJobEventFail callback from OTA Agent." ) );
 
         /* Nothing special to do. The OTA agent handles it. */
     }
-    else if( eEvent == OtaJobEventStartTest )
+    else if( event == OtaJobEventStartTest )
     {
         /* This demo just accepts the image since it was a good OTA update and networking
          * and services are all working (or we wouldn't have made it this far). If this
@@ -251,9 +251,9 @@ static void App_OTACompleteCallback( OtaJobEvent_t eEvent )
          * with the final result of either accepted or rejected. */
 
         LogInfo( ( "Received OtaJobEventStartTest callback from OTA Agent." ) );
-        xErr = OTA_SetImageState( OtaImageStateAccepted );
+        err = OTA_SetImageState( OtaImageStateAccepted );
 
-        if( xErr != OTA_ERR_NONE )
+        if( err != OTA_ERR_NONE )
         {
             LogError( ( " Error! Failed to set image state as accepted." ) );
         }
@@ -268,8 +268,8 @@ static void jobCallback( MQTTContext_t * pContext, MQTTPublishInfo_t * pPublishI
     assert( pPublishInfo != NULL );
     assert( pContext != NULL );
 
-    OtaEventData_t * pxData;
-    OtaEventMsg_t xEventMsg = { 0 };
+    OtaEventData_t * pData;
+    OtaEventMsg_t eventMsg = { 0 };
 
     /* Suppress unused parameter warning when asserts are disabled in build. */
     ( void ) pContext;
@@ -279,18 +279,18 @@ static void jobCallback( MQTTContext_t * pContext, MQTTPublishInfo_t * pPublishI
 
     LogInfo( ( "Received ota message callback.\n\n" ) );
 
-    pxData = otaEventBufferGet();
+    pData = otaEventBufferGet();
 
 
-        if( pxData != NULL )
+        if( pData != NULL )
         {
-            memcpy( pxData->data, pPublishInfo->pPayload, pPublishInfo->payloadLength );
-            pxData->dataLength = pPublishInfo->payloadLength ;
-            xEventMsg.eventId = OtaAgentEventReceivedJobDocument;
-            xEventMsg.pEventData = pxData;
+            memcpy( pData->data, pPublishInfo->pPayload, pPublishInfo->payloadLength );
+            pData->dataLength = pPublishInfo->payloadLength ;
+            eventMsg.eventId = OtaAgentEventReceivedJobDocument;
+            eventMsg.pEventData = pData;
 
             /* Send job document received event. */
-            OTA_SignalEvent( &xEventMsg );
+            OTA_SignalEvent( &eventMsg );
         }
         else
         {
@@ -307,8 +307,8 @@ static void dataCallback( MQTTContext_t * pContext, MQTTPublishInfo_t * pPublish
     assert( pPublishInfo != NULL );
     assert( pContext != NULL );
 
-    OtaEventData_t * pxData;
-    OtaEventMsg_t xEventMsg = { 0 };
+    OtaEventData_t * pData;
+    OtaEventMsg_t eventMsg = { 0 };
 
     /* Suppress unused parameter warning when asserts are disabled in build. */
     ( void ) pContext;
@@ -319,18 +319,18 @@ static void dataCallback( MQTTContext_t * pContext, MQTTPublishInfo_t * pPublish
 
     LogInfo( ( "Received ota message callback.\n\n" ) );
 
-    pxData = otaEventBufferGet();
+    pData = otaEventBufferGet();
 
 
-        if( pxData != NULL )
+        if( pData != NULL )
         {
-            memcpy( pxData->data, pPublishInfo->pPayload, pPublishInfo->payloadLength );
-            pxData->dataLength = pPublishInfo->payloadLength ;
-            xEventMsg.eventId = OtaAgentEventReceivedFileBlock;
-            xEventMsg.pEventData = pxData;
+            memcpy( pData->data, pPublishInfo->pPayload, pPublishInfo->payloadLength );
+            pData->dataLength = pPublishInfo->payloadLength ;
+            eventMsg.eventId = OtaAgentEventReceivedFileBlock;
+            eventMsg.pEventData = pData;
 
             /* Send job document received event. */
-            OTA_SignalEvent( &xEventMsg );
+            OTA_SignalEvent( &eventMsg );
         }
         else
         {
@@ -576,12 +576,12 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
 
 static OtaErr_t subscribe( const char * pTopicFilter,
                            uint16_t topicFilterLength,
-                           uint8_t ucQoS,
-                           void * pvCallback )
+                           uint8_t qos,
+                           void * pCallback )
 {
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus;
-    MQTTContext_t * pMqttContext = &MqttContext;
+    MQTTContext_t * pMqttContext = &globalMqttContext;
     MQTTSubscribeInfo_t pSubscriptionList[ 1 ];
 
     assert( pMqttContext != NULL );
@@ -592,7 +592,7 @@ static OtaErr_t subscribe( const char * pTopicFilter,
     ( void ) memset( ( void * ) pSubscriptionList, 0x00, sizeof( pSubscriptionList ) );
 
     /* This example subscribes to only one topic and uses QOS1. */
-    pSubscriptionList[ 0 ].qos = ucQoS;
+    pSubscriptionList[ 0 ].qos = qos;
     pSubscriptionList[ 0 ].pTopicFilter = pTopicFilter;
     pSubscriptionList[ 0 ].topicFilterLength = topicFilterLength;
 
@@ -632,7 +632,7 @@ static OtaErr_t subscribe( const char * pTopicFilter,
     }
 
     /* Register callback to suncription manager. */
-    SubscriptionManager_RegisterCallback( pTopicFilter, topicFilterLength, pvCallback );
+    SubscriptionManager_RegisterCallback( pTopicFilter, topicFilterLength, pCallback );
 
     return returnStatus;
 }
@@ -641,22 +641,22 @@ static OtaErr_t subscribe( const char * pTopicFilter,
  * Publish a message to the specified client/topic at the given QOS.
  */
  static OtaErr_t publish( const char * const pacTopic,
-                          uint16_t usTopicLen,
-                          const char * pcMsg,
-                          uint32_t ulMsgSize,
-                          uint8_t ucQoS )
+                          uint16_t topicLen,
+                          const char * pMsg,
+                          uint32_t msgSize,
+                          uint8_t qos )
 {
     OtaErr_t otaErrRet = OTA_ERR_UNINITIALIZED;
 
     MQTTStatus_t mqttStatus = MQTTBadParameter;
     MQTTPublishInfo_t publishInfo;
-    MQTTContext_t * pMqttContext = &MqttContext;
+    MQTTContext_t * pMqttContext = &globalMqttContext;
 
     publishInfo.pTopicName = pacTopic;
-    publishInfo.topicNameLength = usTopicLen;
-    publishInfo.qos = ucQoS;
-    publishInfo.pPayload = pcMsg;
-    publishInfo.payloadLength = ulMsgSize;
+    publishInfo.topicNameLength = topicLen;
+    publishInfo.qos = qos;
+    publishInfo.pPayload = pMsg;
+    publishInfo.payloadLength = msgSize;
 
     mqttStatus = MQTT_Publish( pMqttContext,
                                &publishInfo,
@@ -693,20 +693,20 @@ static OtaErr_t subscribe( const char * pTopicFilter,
 
 static OtaErr_t unsubscribe( const char * pTopicFilter,
                              uint16_t topicFilterLength,
-                             uint8_t ucQoS )
+                             uint8_t qos )
 {
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus;
 
     MQTTSubscribeInfo_t pSubscriptionList[ 1 ];
-    MQTTContext_t * pMqttContext = &MqttContext;
+    MQTTContext_t * pMqttContext = &globalMqttContext;
 
     /* Start with everything at 0. */
     ( void ) memset( ( void * ) pSubscriptionList, 0x00, sizeof( pSubscriptionList ) );
 
     /* This example subscribes to and unsubscribes from only one topic
      * and uses QOS1. */
-    pSubscriptionList[ 0 ].qos = ucQoS;
+    pSubscriptionList[ 0 ].qos = qos;
     pSubscriptionList[ 0 ].pTopicFilter = pTopicFilter;
     pSubscriptionList[ 0 ].topicFilterLength = topicFilterLength;
 
@@ -750,26 +750,26 @@ void startOTADemo( MQTTContext_t * pMqttContext )
     /* MQTT susbsrciption manager parameters.*/
     SubscriptionManagerStatus_t mqttManagerStatus = 0u;
     MQTTSubscribeInfo_t subscriptionInfo;
-    uint16_t usTopicLen = 0;
+    uint16_t topicLen = 0;
     size_t subscriptionCount = 1;
 
     /* OTA Agent state.*/
-    OtaState_t eState = OtaAgentStateStopped;
+    OtaState_t state = OtaAgentStateStopped;
 
     /* Initialize OTA library OS Interface. */
-	static OtaOSInterface_t OtaOSInterface;
-    OtaOSInterface.event.init = ota_InitEvent;
-	OtaOSInterface.event.send = ota_SendEvent;
-	OtaOSInterface.event.recv = ota_ReceiveEvent;
-	OtaOSInterface.event.deinit = ota_DeinitEvent;
+	static OtaOSInterface_t otaOSInterface;
+    otaOSInterface.event.init = ota_InitEvent;
+	otaOSInterface.event.send = ota_SendEvent;
+	otaOSInterface.event.recv = ota_ReceiveEvent;
+	otaOSInterface.event.deinit = ota_DeinitEvent;
 
     /* Intialize the OTA library MQTT Interface.*/
-    static OtaMqttInterface_t OtaMqttInterface;
-    OtaMqttInterface.subscribe = subscribe;
-    OtaMqttInterface.publish = publish;
-    OtaMqttInterface.unsubscribe = unsubscribe;
-    OtaMqttInterface.jobCallback =  jobCallback;
-    OtaMqttInterface.dataCallback=  dataCallback;
+    static OtaMqttInterface_t otaMqttInterface;
+    otaMqttInterface.subscribe = subscribe;
+    otaMqttInterface.publish = publish;
+    otaMqttInterface.unsubscribe = unsubscribe;
+    otaMqttInterface.jobCallback = jobCallback;
+    otaMqttInterface.dataCallback= dataCallback;
 
     /* OTA Agent thread handle. */
     pthread_t threadHandle;
@@ -777,8 +777,8 @@ void startOTADemo( MQTTContext_t * pMqttContext )
     /* Initialize the OTA Agent , if it is resuming the OTA statistics will be cleared for new
      * connection.*/
     OTA_AgentInit( ( void * ) ( pMqttContext ),
-                    &OtaOSInterface,
-                    &OtaMqttInterface,
+                    &otaOSInterface,
+                    &otaMqttInterface,
                     ( const uint8_t * ) ( CLIENT_IDENTIFIER ),
                     App_OTACompleteCallback,
                     ( uint32_t ) ~0 );
@@ -793,7 +793,7 @@ void startOTADemo( MQTTContext_t * pMqttContext )
 
     /* Wait forever for OTA traffic but allow other tasks to run and output statistics only once
      * per second. */
-    while( ( ( eState = OTA_GetAgentState() ) != OtaAgentStateStopped ) )
+    while( ( ( state = OTA_GetAgentState() ) != OtaAgentStateStopped ) )
     {
         LogInfo( ( " Received: %u   Queued: %u   Processed: %u   Dropped: %u",
                    OTA_GetPacketsReceived(),
@@ -829,9 +829,9 @@ int main( int argc,
     bool mqttSessionPresent = false;
 
     LogInfo( ( "OTA over MQTT demo version %u.%u.%u",
-               appFirmwareVersion.u.x.ucMajor,
-               appFirmwareVersion.u.x.ucMinor,
-               appFirmwareVersion.u.x.usBuild ) );
+               appFirmwareVersion.u.x.major,
+               appFirmwareVersion.u.x.minor,
+               appFirmwareVersion.u.x.build ) );
 
     for( ; ; )
     {
@@ -855,7 +855,7 @@ int main( int argc,
             /* Sends an MQTT Connect packet to establish a clean connection over the
              * established TLS session, then waits for connection acknowledgment
              * (CONNACK) packet. */
-            if( EXIT_SUCCESS == establishMqttSession( &MqttContext,
+            if( EXIT_SUCCESS == establishMqttSession( &globalMqttContext,
                                                       &networkContext,
                                                       true, /* clean session */
                                                       &mqttSessionPresent ) )
@@ -868,7 +868,7 @@ int main( int argc,
         if( mqttSessionEstablished )
         {
             /* If TLS session is established, start the OTA agent. */
-            startOTADemo( &MqttContext );
+            startOTADemo( &globalMqttContext );
         }
     }
 
