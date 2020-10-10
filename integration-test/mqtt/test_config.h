@@ -81,4 +81,10 @@
  * * #define ROOT_CA_CERT_PATH    "...insert here..."
  */
 
+/**
+ * @brief The unique client Identifier that will be used by the tests.
+ *
+ * #define CLIENT_IDENTIFIER    "...insert here..."
+ */
+
 #endif /* ifndef TEST_CONFIG_H_ */

@@ -66,6 +66,12 @@ if(BROKER_ENDPOINT)
             BROKER_ENDPOINT="${BROKER_ENDPOINT}"
     )
 endif()
+if(BROKER_ENDPOINT)
+    target_compile_definitions(
+        ${stest_name} PRIVATE
+            CLIENT_IDENTIFIER="${CLIENT_IDENTIFIER}"
+    )
+endif()
 if(ROOT_CA_CERT_PATH)
     target_compile_definitions(
         ${stest_name} PRIVATE
