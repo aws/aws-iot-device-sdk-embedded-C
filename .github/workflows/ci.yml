@@ -29,7 +29,8 @@ jobs:
           -DBROKER_ENDPOINT="broker-endpoint" \
           -DCLIENT_CERT_PATH="cert/path" \
           -DROOT_CA_CERT_PATH="cert/path" \
-          -DCLIENT_PRIVATE_KEY_PATH="key/path"
+          -DCLIENT_PRIVATE_KEY_PATH="key/path" \
+          -DCLIENT_IDENTIFIER="ci-identifier"
       - name: Build Demos
         run: make -C build/ help | grep demo | tr -d '. ' | xargs make -C build/
       - name: Build System Tests

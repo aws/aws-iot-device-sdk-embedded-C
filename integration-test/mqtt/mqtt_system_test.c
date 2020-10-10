@@ -47,7 +47,8 @@
 /* Include clock for timer. */
 #include "clock.h"
 
-/* Ensure that config macros, required for TLS connection, have been defined. */
+/* Ensure that config macros, required for the mutually authenticated MQTT connection,
+ * have been defined. */
 #ifndef BROKER_ENDPOINT
     #error "BROKER_ENDPOINT should be defined for the MQTT integration tests."
 #endif
@@ -62,6 +63,10 @@
 
 #ifndef CLIENT_PRIVATE_KEY_PATH
     #error "CLIENT_PRIVATE_KEY_PATH should be defined for the MQTT integration tests."
+#endif
+
+#ifndef CLIENT_IDENTIFIER
+    #error "CLIENT_IDENTIFIER should be defined for the MQTT integration tests."
 #endif
 
 /**
@@ -108,12 +113,12 @@
 /**
  * @brief Sample topic filter to subscribe to.
  */
-#define TEST_MQTT_TOPIC                         "/iot/integration/test"
+#define TEST_MQTT_TOPIC                         CLIENT_IDENTIFIER "/iot/integration/test"
 
 /**
  * @brief Sample topic filter 2 to use in tests.
  */
-#define TEST_MQTT_TOPIC_2                       "/iot/integration/test2"
+#define TEST_MQTT_TOPIC_2                       CLIENT_IDENTIFIER "/iot/integration/test2"
 
 /**
  * @brief Length of sample topic filter.
@@ -123,7 +128,7 @@
 /**
  * @brief Sample topic filter to subscribe to.
  */
-#define TEST_MQTT_LWT_TOPIC                     "/iot/integration/test/lwt"
+#define TEST_MQTT_LWT_TOPIC                     CLIENT_IDENTIFIER "/iot/integration/test/lwt"
 
 /**
  * @brief Length of sample topic filter.
@@ -138,7 +143,7 @@
 /**
  * @brief Client identifier for MQTT session in the tests.
  */
-#define TEST_CLIENT_IDENTIFIER                  "MQTT-Test"
+#define TEST_CLIENT_IDENTIFIER                  CLIENT_IDENTIFIER
 
 /**
  * @brief Length of the client identifier.
@@ -148,7 +153,7 @@
 /**
  * @brief Client identifier for use in LWT tests.
  */
-#define TEST_CLIENT_IDENTIFIER_LWT              "MQTT-Test-LWT"
+#define TEST_CLIENT_IDENTIFIER_LWT              CLIENT_IDENTIFIER "-LWT"
 
 /**
  * @brief Length of LWT client identifier.
