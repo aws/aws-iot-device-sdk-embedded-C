@@ -54,8 +54,8 @@ dup
 endcond
 endif
 eventcallback
-filterindex
 filesize
+filterindex
 globalsubackstatus
 globalsubscribepacketidentifier
 hashmap
@@ -67,6 +67,7 @@ httpbin
 httpclient
 httpmethodpaths
 https
+httpthread
 ifdef
 ifndef
 inc
@@ -99,6 +100,7 @@ numoftopicfilters
 openssl
 optionalquery
 org
+os
 outgoingpublishpackets
 outlength
 packetid
@@ -117,6 +119,7 @@ pem
 pfilesize
 pfixedbuffer
 phost
+pid
 pincomingpacket
 pindex
 pingreq
@@ -137,6 +140,7 @@ ppayload
 ppubinfo
 ppublishinfo
 pre
+prequest
 presigned
 printf
 processloop
@@ -158,10 +162,17 @@ py
 qos
 rc
 readme
+requestcount
+requestinfo
+requestqueue
+requesturilen
 resending
 resp
+responseitem
+responsequeue
 resubscribe
 resubscription
+retrievehttpresponse
 retryutils
 rom
 sdk
@@ -204,12 +215,12 @@ unsub
 unsuback
 updatejobexecution
 updatesubackstatus
-userguide
 uri
 url
 urllen
 urlparser
 urls
+userguide
 ve
 www
 xz
