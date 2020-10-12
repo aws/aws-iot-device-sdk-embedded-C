@@ -289,6 +289,8 @@ OtaErr_t prvPAL_CloseFile( OtaFileContext_t * const C )
         if( eResult == OTA_ERR_NONE )
         {
             OTA_LOG_L1( "[%s] %s signature verification passed.\r\n", OTA_METHOD_NAME, OTA_JsonFileSignatureKey );
+
+            prvPAL_SetPlatformImageState( OtaImageStateTesting );
         }
         else
         {
