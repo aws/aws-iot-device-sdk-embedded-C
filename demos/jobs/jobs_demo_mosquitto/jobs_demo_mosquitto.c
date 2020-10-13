@@ -21,9 +21,11 @@
  */
 
 /*
- * This demonstration downloads files from URLs received via AWS IoT Jobs.
- * Details are available in the usage function below.  Note: This demo
- * focuses on use of the jobs library; a thorough explanation of libmosquitto
+ * This demonstration downloads files from URLs present in job documents received 
+ * from the AWS IoT Jobs service. It shows the use of the jobs library with the Mosquitto
+ * client MQTT library for communicating with AWS IoT Jobs service.
+ * More details are available in the usage function in this file.  
+ * Note: This demo focuses on use of the jobs library; a thorough explanation of libmosquitto
  * is beyond the scope of the demo.
  */
 
