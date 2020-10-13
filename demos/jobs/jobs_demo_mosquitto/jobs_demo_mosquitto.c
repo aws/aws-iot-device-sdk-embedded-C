@@ -418,23 +418,23 @@ void initHandle( handle_t * p )
 
     handle_t h = { 0 };
 
-#ifdef AWS_IOT_ENDPOINT
-    h.host = AWS_IOT_ENDPOINT;
-#endif
+    #ifdef AWS_IOT_ENDPOINT
+        h.host = AWS_IOT_ENDPOINT;
+    #endif
 
-#ifdef CLIENT_CERT_PATH
-    h.certfile = CLIENT_CERT_PATH;
-#endif
+    #ifdef CLIENT_CERT_PATH
+        h.certfile = CLIENT_CERT_PATH;
+    #endif
 
-#ifdef CLIENT_PRIVATE_KEY_PATH
-    h.keyfile = CLIENT_PRIVATE_KEY_PATH;
-#endif
+    #ifdef CLIENT_PRIVATE_KEY_PATH
+        h.keyfile = CLIENT_PRIVATE_KEY_PATH;
+    #endif
 
-#ifdef ROOT_CA_CERT_PATH
-    h.cafile = ROOT_CA_CERT_PATH;
-#else
-    h.capath = DEFAULT_CA_DIRECTORY;
-#endif
+    #ifdef ROOT_CA_CERT_PATH
+        h.cafile = ROOT_CA_CERT_PATH;
+    #else
+        h.capath = DEFAULT_CA_DIRECTORY;
+    #endif
 
     h.port = DEFAULT_MQTT_PORT;
 
