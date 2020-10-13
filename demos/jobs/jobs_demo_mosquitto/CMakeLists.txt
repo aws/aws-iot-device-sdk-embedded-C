@@ -1,5 +1,6 @@
 set( DEMO_NAME "jobs_demo_mosquitto" )
 
+# The callbacks for libmosquitto have parameters that are not used.
 set_source_files_properties( "${DEMO_NAME}.c" PROPERTIES COMPILE_FLAGS "-Wno-unused-parameter" )
 
 # Include library source and header path variables.

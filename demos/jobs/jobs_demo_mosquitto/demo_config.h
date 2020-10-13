@@ -30,45 +30,45 @@
 #define MQTT_KEEP_ALIVE         ( 120U )
 
 /**
- * @brief require acknowledgements of MQTT publish operations
+ * @brief Require acknowledgements of MQTT publish operations.
  */
 #define MQTT_QOS                ( 1 )
 
 /**
- * @brief give up after this many calls to mqtt_loop without progress,
- * used only for connect and subscribe
+ * @brief Give up after this many calls to mqtt_loop without progress,
+ * used only for connect and subscribe.
  */
 #define MAX_LOOPS               ( 50U )
 
 /**
- * @brief maximum duration in milliseconds of one mqtt_loop,
- * used only for connect and subscribe
+ * @brief Maximum duration in milliseconds of one mqtt_loop,
+ * used only for connect and subscribe.
  */
 #define MQTT_SHORT_WAIT_TIME    ( 500U )
 
 /**
- * @brief maximum duration in milliseconds of one mqtt_loop,
- * used after subscribe
+ * @brief Maximum duration in milliseconds of one mqtt_loop,
+ * used after subscribe.
  */
 #define MQTT_WAIT_TIME          ( 10U * 1000U )
 
 /**
- * @brief how often in seconds to ask for a new job
+ * @brief How often in seconds to ask for a new job.
  */
 #define PROMPT_INTERVAL         ( 120U )
 
 /**
- * @brief how often in seconds to send updates for a running job
+ * @brief How often in seconds to send updates for a running job.
  */
 #define UPDATE_INTERVAL         ( 10U )
 
 /**
- * @brief parent directory to contain download directories and files
+ * @brief Parent directory to contain download directories and files.
  */
 #define DESTINATION_PREFIX      "/tmp"
 
 /**
- * @brief how to invoke the download program, i.e., curl
+ * @brief How to invoke the download program, i.e., curl.
  *
  * As written, this curl command limits the download rate
  * to 10 KB per second.  The slow rate provides an opportunity

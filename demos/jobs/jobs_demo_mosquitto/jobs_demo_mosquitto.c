@@ -21,29 +21,33 @@
  */
 
 /*
- * This demonstration downloads files from URLs present in job documents received 
- * from the AWS IoT Jobs service. It shows the use of the jobs library with the Mosquitto
- * client MQTT library for communicating with AWS IoT Jobs service.
- * More details are available in the usage function in this file.  
- * Note: This demo focuses on use of the jobs library; a thorough explanation of libmosquitto
- * is beyond the scope of the demo.
+ * This demonstration downloads files from URLs present in job documents
+ * received from the AWS IoT Jobs service. It shows the use of the jobs
+ * library with the Mosquitto client MQTT library for communicating with the
+ * AWS IoT Jobs service.  More details are available in the usage function
+ * in this file.  Note: This demo focuses on use of the jobs library;
+ * a thorough explanation of libmosquitto is beyond the scope of the demo.
  */
 
+/* C standard includes. */
 #include <assert.h>
-#include <err.h>
 #include <errno.h>
-#include <getopt.h>
-#include <signal.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+
+/* POSIX includes. */
+#include <signal.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <time.h>
 #include <unistd.h>
+
+#include <err.h>
+#include <getopt.h>
 
 #include <mosquitto.h>
 #if ( LIBMOSQUITTO_VERSION_NUMBER < 1004010 )
@@ -57,21 +61,21 @@
 /*-----------------------------------------------------------*/
 
 /**
- * @brief MQTT server port number
+ * @brief MQTT server port number.
  *
  * AWS IoT Core uses this port for MQTT over TLS.
  */
 #define DEFAULT_MQTT_PORT       ( 8883 )
 
 /**
- * @brief Certificate Authority Directory
+ * @brief Certificate Authority Directory.
  *
  * Debian and Ubuntu use this directory for CA certificates.
  */
 #define DEFAULT_CA_DIRECTORY    "/etc/ssl/certs"
 
 /**
- * @brief ALPN (Application-Layer Protocol Negotiation) name for AWS IoT MQTT
+ * @brief ALPN (Application-Layer Protocol Negotiation) name for AWS IoT MQTT.
  */
 #define ALPN_NAME               "x-amzn-mqtt-ca"
 
@@ -79,7 +83,7 @@
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Describe program usage on stderr
+ * @brief Describe program usage on stderr.
  *
  * @param[in] programName the value of argv[0]
  */
@@ -93,7 +97,7 @@ static void usage( const char * programName )
              "  --document '{\"url\":\"https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.8.5.tar.xz\"}'\n"
              "\nTo execute the job, on the target device run the downloader with the target's credentials, e.g.,\n"
              "$ %s -n device1 -h abcdefg123.iot.us-east-1.amazonaws.com \\\n"
-             "  --cert bbaf123456-certificate.pem.crt --key bbaf123456-private.pem.key\n"
+             "  --certfile bbaf123456-certificate.pem.crt --keyfile bbaf123456-private.pem.key\n"
              "\nTo exit the program, type Control-C, or send a SIGTERM signal.\n",
              programName );
     fprintf( stderr,
@@ -121,26 +125,27 @@ static void usage( const char * programName )
              );
     fprintf( stderr,
              "\nusage: %s "
-             "-n name -h host [-p port] {--cafile file | --capath dir} --cert file --key file\n"
+             "[-o] -n name -h host [-p port] {--cafile file | --capath dir} --certfile file --keyfile file\n"
              "\n"
+             "-o : run once, exit after the first job is finished.\n"
              "-n : thing name\n"
              "-h : mqtt host to connect to.\n"
              "-p : network port to connect to. Defaults to %d.\n",
              programName, DEFAULT_MQTT_PORT );
     fprintf( stderr,
-             "--cafile : path to a file containing trusted CA certificates to enable encrypted\n"
-             "           certificate based communication.\n"
-             "--capath : path to a directory containing trusted CA certificates to enable encrypted\n"
-             "           communication.  Defaults to %s.\n"
-             "--cert : client certificate for authentication.\n"
-             "--key : client private key for authentication.\n\n",
+             "--cafile   : path to a file containing trusted CA certificates to enable encrypted\n"
+             "             certificate based communication.\n"
+             "--capath   : path to a directory containing trusted CA certificates to enable encrypted\n"
+             "             communication.  Defaults to %s.\n"
+             "--certfile : client certificate for authentication in PEM format.\n"
+             "--keyfile  : client private key for authentication in PEM format.\n\n",
              DEFAULT_CA_DIRECTORY );
 }
 
 /*-----------------------------------------------------------*/
 
 /**
- * @brief the several states of execution
+ * @brief The several states of execution.
  */
 typedef enum
 {
@@ -151,7 +156,7 @@ typedef enum
 } runStatus_t;
 
 /**
- * @brief all runtime parameters and state
+ * @brief All runtime parameters and state.
  */
 typedef struct
 {
@@ -163,8 +168,10 @@ typedef struct
     uint16_t port;
     char * cafile;
     char * capath;
-    char * cert;
-    char * key;
+    char * certfile;
+    char * keyfile;
+    /* flags */
+    bool runOnce;
     /* callback-populated values */
     int connectError;
     int subscribeQOS;
@@ -185,14 +192,14 @@ typedef struct
 /*-----------------------------------------------------------*/
 
 /**
- * @brief populate a handle with default values
+ * @brief Populate a handle with default values.
  *
  * @param[in] p runtime state handle
  */
 void initHandle( handle_t * p );
 
 /**
- * @brief validate the values within a handle
+ * @brief Validate the values within a handle.
  *
  * @param[in] h runtime state handle
  *
@@ -202,7 +209,7 @@ void initHandle( handle_t * p );
 static bool requiredArgs( handle_t * h );
 
 /**
- * @brief populate a handle from command line arguments
+ * @brief Populate a handle from command line arguments.
  *
  * @param[in] h runtime state handle
  * @param[in] argc count of arguments
@@ -216,7 +223,7 @@ static bool parseArgs( handle_t * h,
                        char * argv[] );
 
 /**
- * @brief libmosquitto callback for connection result
+ * @brief The libmosquitto callback for connection result.
  *
  * @param[in] m unused
  * @param[in] p runtime state handle
@@ -227,7 +234,7 @@ static void on_connect( struct mosquitto * m,
                         int rc );
 
 /**
- * @brief connect to AWS IoT Core MQTT broker
+ * @brief Connect to AWS IoT Core MQTT broker.
  *
  * @param[in] h runtime state handle
  *
@@ -237,14 +244,14 @@ static void on_connect( struct mosquitto * m,
 static bool connect( handle_t * h );
 
 /**
- * @brief disconnect from AWS IoT Core MQTT broker
+ * @brief Disconnect from AWS IoT Core MQTT broker.
  *
  * @param[in] h runtime state handle
  */
 static void closeConnection( handle_t * h );
 
 /**
- * @brief libmosquitto callback for subscription result
+ * @brief The libmosquitto callback for subscription result.
  *
  * @param[in] m unused
  * @param[in] p runtime state handle
@@ -259,7 +266,7 @@ static void on_subscribe( struct mosquitto * m,
                           const int * granted_qos );
 
 /**
- * @brief subscribe to a Jobs topic
+ * @brief Subscribe to a Jobs topic.
  *
  * @param[in] h runtime state handle
  * @param[in] api the desired Jobs topic
@@ -271,7 +278,7 @@ static bool subscribe( handle_t * h,
                        JobsTopic_t api );
 
 /**
- * @brief publish a status update for a job ID to the Jobs service
+ * @brief Publish a status update for a job ID to the Jobs service.
  *
  * @param[in] h runtime state handle
  * @param[in] jobid the job ID
@@ -289,7 +296,7 @@ static bool sendUpdate( handle_t * h,
                         char * report );
 
 /**
- * @brief Read job ID and URL from a JSON job document
+ * @brief Read job ID and URL from a JSON job document.
  *
  * @param[in] h runtime state handle
  * @param[in] message an MQTT publish message
@@ -301,7 +308,7 @@ static bool parseJob( handle_t * h,
                       const struct mosquitto_message * message );
 
 /**
- * @brief libmosquitto callback for a received publish message
+ * @brief The libmosquitto callback for a received publish message.
  *
  * @param[in] m unused
  * @param[in] p runtime state handle
@@ -315,7 +322,7 @@ void on_message( struct mosquitto * m,
                  const struct mosquitto_message * message );
 
 /**
- * @brief publish a request to the Jobs service to start a job
+ * @brief Publish a request to the Jobs service to start a job.
  *
  * @param[in] h runtime state handle
  *
@@ -327,7 +334,7 @@ void on_message( struct mosquitto * m,
 static bool sendStartNext( handle_t * h );
 
 /**
- * @brief reports status of the download process
+ * @brief Reports status of the download process.
  *
  * @param[in] h runtime state handle
  *
@@ -336,7 +343,7 @@ static bool sendStartNext( handle_t * h );
 static bool update( handle_t * h );
 
 /**
- * @brief launch a download process
+ * @brief Launch a download process.
  *
  * @param[in] h runtime state handle
  *
@@ -346,14 +353,14 @@ static bool update( handle_t * h );
 static bool download( handle_t * h );
 
 /**
- * @brief kill a download process
+ * @brief Kill a download process.
  *
  * @param[in] h runtime state handle
  */
 static void cancelDownload( handle_t * h );
 
 /**
- * @brief libmosquitto callback for log messages
+ * @brief The libmosquitto callback for log messages.
  *
  * @param[in] m unused
  * @param[in] p unused
@@ -366,14 +373,14 @@ static void on_log( struct mosquitto * m,
                     const char * log );
 
 /**
- * @brief generic signal handler
+ * @brief Generic signal handler.
  *
  * @param[in] signal the caught signal value
  */
 static void catch( int signal );
 
 /**
- * @brief setup signal handling and libmosquitto
+ * @brief Setup signal handling and libmosquitto.
  *
  * @param[in] h runtime state handle
  *
@@ -383,7 +390,7 @@ static void catch( int signal );
 static bool setup( handle_t * h );
 
 /**
- * @brief disconnect and clean up
+ * @brief Disconnect and clean up.
  *
  * @param[in] x unused
  * @param[in] p runtime state handle
@@ -392,12 +399,12 @@ static void teardown( int x,
                       void * p );
 
 /**
- * @brief log an informational message
+ * @brief Log an informational message.
  */
 #define info    warnx
 
 /**
- * @brief format a JSON status message
+ * @brief Format a JSON status message.
  *
  * @param[in] x one of "IN_PROGRESS", "SUCCEEDED", or "FAILED"
  */
@@ -410,8 +417,29 @@ void initHandle( handle_t * p )
     assert( p != NULL );
 
     handle_t h = { 0 };
-    h.port = DEFAULT_MQTT_PORT;
+
+#ifdef AWS_IOT_ENDPOINT
+    h.host = AWS_IOT_ENDPOINT;
+#endif
+
+#ifdef CLIENT_CERT_PATH
+    h.certfile = CLIENT_CERT_PATH;
+#endif
+
+#ifdef CLIENT_PRIVATE_KEY_PATH
+    h.keyfile = CLIENT_PRIVATE_KEY_PATH;
+#endif
+
+#ifdef ROOT_CA_CERT_PATH
+    h.cafile = ROOT_CA_CERT_PATH;
+#else
     h.capath = DEFAULT_CA_DIRECTORY;
+#endif
+
+    h.port = DEFAULT_MQTT_PORT;
+
+    h.runOnce = false;
+
     /* initialize to -1, set by on_connect() to 0 or greater */
     h.connectError = -1;
     /* initialize to -1, set by on_subscribe() to 0 or greater */
@@ -438,8 +466,8 @@ static bool requiredArgs( handle_t * h )
 
     checkString( name );
     checkString( host );
-    checkString( cert );
-    checkString( key );
+    checkString( certfile );
+    checkString( keyfile );
 
     if( h->nameLength > JOBS_THINGNAME_MAX_LENGTH )
     {
@@ -456,8 +484,8 @@ static bool requiredArgs( handle_t * h )
         h->x = NULL;                        \
     }
 
-    checkPath( cert );
-    checkPath( key );
+    checkPath( certfile );
+    checkPath( keyfile );
     checkPath( cafile );
 
     checkPath( capath );
@@ -494,18 +522,19 @@ static bool parseArgs( handle_t * h,
         long x;
         static struct option long_options[] =
         {
-            { "name",   required_argument, NULL, 'n' },
-            { "host",   required_argument, NULL, 'h' },
-            { "port",   required_argument, NULL, 'p' },
-            { "cafile", required_argument, NULL, 'f' },
-            { "capath", required_argument, NULL, 'd' },
-            { "cert",   required_argument, NULL, 'c' },
-            { "key",    required_argument, NULL, 'k' },
-            { "help",   no_argument,       NULL, '?' },
-            { NULL,     0,                 NULL, 0   }
+            { "once",     no_argument,       NULL, 'o' },
+            { "name",     required_argument, NULL, 'n' },
+            { "host",     required_argument, NULL, 'h' },
+            { "port",     required_argument, NULL, 'p' },
+            { "cafile",   required_argument, NULL, 'f' },
+            { "capath",   required_argument, NULL, 'd' },
+            { "certfile", required_argument, NULL, 'c' },
+            { "keyfile",  required_argument, NULL, 'k' },
+            { "help",     no_argument,       NULL, '?' },
+            { NULL,       0,                 NULL, 0   }
         };
 
-        c = getopt_long( argc, argv, "n:h:p:f:d:c:k:?",
+        c = getopt_long( argc, argv, "on:h:p:f:d:c:k:?",
                          long_options, &option_index );
 
         if( c == -1 )
@@ -515,6 +544,10 @@ static bool parseArgs( handle_t * h,
 
         switch( c )
         {
+            case 'o':
+                h->runOnce = true;
+                break;
+
             case 'n':
                 h->name = optarg;
                 h->nameLength = strlen( optarg );
@@ -549,15 +582,16 @@ static bool parseArgs( handle_t * h,
                 break;
 
             case 'c':
-                h->cert = optarg;
+                h->certfile = optarg;
                 break;
 
             case 'k':
-                h->key = optarg;
+                h->keyfile = optarg;
                 break;
 
             case '?':
             default:
+                ret = false;
                 usage( argv[ 0 ] );
         }
     }
@@ -612,7 +646,7 @@ static bool connect( handle_t * h )
 
     if( ret == MOSQ_ERR_SUCCESS )
     {
-        ret = mosquitto_tls_set( h->m, h->cafile, h->capath, h->cert, h->key, NULL );
+        ret = mosquitto_tls_set( h->m, h->cafile, h->capath, h->certfile, h->keyfile, NULL );
     }
 
     if( ret == MOSQ_ERR_SUCCESS )
@@ -1259,6 +1293,11 @@ int main( int argc,
             free( h->jobid );
             h->jobid = NULL;
             h->jobidLength = 0;
+
+            if( h->runOnce == true )
+            {
+                break;
+            }
         }
     }
 
