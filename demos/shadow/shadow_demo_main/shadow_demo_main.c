@@ -167,6 +167,12 @@ static bool stateChanged = false;
  */
 static uint32_t clientToken = 0U;
 
+/**
+ * @brief Indicator that an error occurred during the MQTT event callback. If an
+ * error occurred during the MQTT event callback, then the demo has failed.
+ */
+static bool eventCallbackError = false;
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -219,7 +225,7 @@ static void updateDeltaHandler( MQTTPublishInfo_t * pPublishInfo )
     assert( pPublishInfo != NULL );
     assert( pPublishInfo->pPayload != NULL );
 
-    LogInfo( ( "/update/delta json payload:%s.\n\n", ( const char * ) pPublishInfo->pPayload ) );
+    LogInfo( ( "/update/delta json payload:%s.", ( const char * ) pPublishInfo->pPayload ) );
 
     /* The payload will look similar to this:
      * {
@@ -254,12 +260,13 @@ static void updateDeltaHandler( MQTTPublishInfo_t * pPublishInfo )
     }
     else
     {
-        LogError( ( "The json document is invalid!!\n\n" ) );
+        LogError( ( "The json document is invalid!!" ) );
+        eventCallbackError = true;
     }
 
     if( result == JSONSuccess )
     {
-        LogInfo( ( "version: %.*s\n\n",
+        LogInfo( ( "version: %.*s",
                    outValueLength,
                    outValue ) );
 
@@ -268,7 +275,8 @@ static void updateDeltaHandler( MQTTPublishInfo_t * pPublishInfo )
     }
     else
     {
-        LogError( ( "No version in json document!!\n\n" ) );
+        LogError( ( "No version in json document!!" ) );
+        eventCallbackError = true;
     }
 
     LogInfo( ( "version:%d, currentVersion:%d \r\n", version, currentVersion ) );
@@ -296,7 +304,7 @@ static void updateDeltaHandler( MQTTPublishInfo_t * pPublishInfo )
          * that we've received before. Your application may use a
          * different approach.
          */
-        LogWarn( ( "The received version is smaller than current one!!\n\n" ) );
+        LogWarn( ( "The received version is smaller than current one!!" ) );
     }
 
     if( result == JSONSuccess )
@@ -322,7 +330,8 @@ static void updateDeltaHandler( MQTTPublishInfo_t * pPublishInfo )
     }
     else
     {
-        LogError( ( "No powerOn in json document!!\n\n" ) );
+        LogError( ( "No powerOn in json document!!" ) );
+        eventCallbackError = true;
     }
 }
 
@@ -338,7 +347,7 @@ static void updateAcceptedHandler( MQTTPublishInfo_t * pPublishInfo )
     assert( pPublishInfo != NULL );
     assert( pPublishInfo->pPayload != NULL );
 
-    LogInfo( ( "/update/accepted json payload:%s.\n\n", ( const char * ) pPublishInfo->pPayload ) );
+    LogInfo( ( "/update/accepted json payload:%s.", ( const char * ) pPublishInfo->pPayload ) );
 
     /* Handle the reported state with state change in /update/accepted topic.
      * Thus we will retrieve the client token from the json document to see if
@@ -380,12 +389,13 @@ static void updateAcceptedHandler( MQTTPublishInfo_t * pPublishInfo )
     }
     else
     {
-        LogError( ( "Invalid json documents !!\n\n" ) );
+        LogError( ( "Invalid json documents !!" ) );
+        eventCallbackError = true;
     }
 
     if( result == JSONSuccess )
     {
-        LogInfo( ( "clientToken: %.*s\n\n", outValueLength,
+        LogInfo( ( "clientToken: %.*s", outValueLength,
                    outValue ) );
 
         /* Convert the code to an unsigned integer value. */
@@ -399,7 +409,7 @@ static void updateAcceptedHandler( MQTTPublishInfo_t * pPublishInfo )
         if( receivedToken == clientToken )
         {
             LogInfo( ( "Received response from the device shadow. Previously published "
-                       "update with clientToken=%u has been accepted. \n\n", clientToken ) );
+                       "update with clientToken=%u has been accepted. ", clientToken ) );
         }
         else
         {
@@ -409,7 +419,8 @@ static void updateAcceptedHandler( MQTTPublishInfo_t * pPublishInfo )
     }
     else
     {
-        LogError( ( "No clientToken in json document!!\n\n" ) );
+        LogError( ( "No clientToken in json document!!" ) );
+        eventCallbackError = true;
     }
 }
 
@@ -443,7 +454,7 @@ static void eventCallback( MQTTContext_t * pMqttContext,
     if( ( pPacketInfo->type & 0xF0U ) == MQTT_PACKET_TYPE_PUBLISH )
     {
         assert( pDeserializedInfo->pPublishInfo != NULL );
-        LogInfo( ( "pPublishInfo->pTopicName:%s.\n\n", pDeserializedInfo->pPublishInfo->pTopicName ) );
+        LogInfo( ( "pPublishInfo->pTopicName:%s.", pDeserializedInfo->pPublishInfo->pTopicName ) );
 
         /* Let the Device Shadow library tell us whether this is a device shadow message. */
         if( SHADOW_SUCCESS == Shadow_MatchTopic( pDeserializedInfo->pPublishInfo->pTopicName,
@@ -465,20 +476,21 @@ static void eventCallback( MQTTContext_t * pMqttContext,
             }
             else if( messageType == ShadowMessageTypeUpdateDocuments )
             {
-                LogInfo( ( "/update/documents json payload:%s.\n\n", ( const char * ) pDeserializedInfo->pPublishInfo->pPayload ) );
+                LogInfo( ( "/update/documents json payload:%s.", ( const char * ) pDeserializedInfo->pPublishInfo->pPayload ) );
             }
             else if( messageType == ShadowMessageTypeUpdateRejected )
             {
-                LogInfo( ( "/update/rejected json payload:%s.\n\n", ( const char * ) pDeserializedInfo->pPublishInfo->pPayload ) );
+                LogInfo( ( "/update/rejected json payload:%s.", ( const char * ) pDeserializedInfo->pPublishInfo->pPayload ) );
             }
             else
             {
-                LogInfo( ( "Other message type:%d !!\n\n", messageType ) );
+                LogInfo( ( "Other message type:%d !!", messageType ) );
             }
         }
         else
         {
-            LogError( ( "Shadow_MatchTopic parse failed:%s !!\n\n", ( const char * ) pDeserializedInfo->pPublishInfo->pTopicName ) );
+            LogError( ( "Shadow_MatchTopic parse failed:%s !!", ( const char * ) pDeserializedInfo->pPublishInfo->pTopicName ) );
+            eventCallbackError = true;
         }
     }
     else
@@ -589,7 +601,7 @@ int main( int argc,
         if( returnStatus == EXIT_SUCCESS )
         {
             /* desired power on state . */
-            LogInfo( ( "Send desired power state with 1.\n\n" ) );
+            LogInfo( ( "Send desired power state with 1." ) );
 
             ( void ) memset( updateDocument,
                              0x00,
@@ -618,7 +630,7 @@ int main( int argc,
             if( stateChanged == true )
             {
                 /* Report the latest power state back to device shadow. */
-                LogInfo( ( "Report to the state change: %d\n\n", currentPowerOnState ) );
+                LogInfo( ( "Report to the state change: %d", currentPowerOnState ) );
                 ( void ) memset( updateDocument,
                                  0x00,
                                  sizeof( updateDocument ) );
@@ -644,17 +656,35 @@ int main( int argc,
             }
         }
 
-        LogInfo( ( "Start to unsubscribe shadow topics and disconnect from MQTT. \r\n" ) );
-        UnsubscribeFromTopic( SHADOW_TOPIC_STRING_UPDATE_DELTA( THING_NAME ),
-                              SHADOW_TOPIC_LENGTH_UPDATE_DELTA( THING_NAME_LENGTH ) );
+        if( returnStatus == EXIT_SUCCESS )
+        {
+            LogInfo( ( "Start to unsubscribe shadow topics and disconnect from MQTT. \r\n" ) );
+            returnStatus = UnsubscribeFromTopic( SHADOW_TOPIC_STRING_UPDATE_DELTA( THING_NAME ),
+                                                 SHADOW_TOPIC_LENGTH_UPDATE_DELTA( THING_NAME_LENGTH ) );
+        }
 
-        UnsubscribeFromTopic( SHADOW_TOPIC_STRING_UPDATE_ACCEPTED( THING_NAME ),
-                              SHADOW_TOPIC_LENGTH_UPDATE_ACCEPTED( THING_NAME_LENGTH ) );
+        if( returnStatus == EXIT_SUCCESS )
+        {
+            returnStatus = UnsubscribeFromTopic( SHADOW_TOPIC_STRING_UPDATE_ACCEPTED( THING_NAME ),
+                                                 SHADOW_TOPIC_LENGTH_UPDATE_ACCEPTED( THING_NAME_LENGTH ) );
+        }
 
-        UnsubscribeFromTopic( SHADOW_TOPIC_STRING_UPDATE_REJECTED( THING_NAME ),
-                              SHADOW_TOPIC_LENGTH_UPDATE_REJECTED( THING_NAME_LENGTH ) );
+        if( returnStatus == EXIT_SUCCESS )
+        {
+            returnStatus = UnsubscribeFromTopic( SHADOW_TOPIC_STRING_UPDATE_REJECTED( THING_NAME ),
+                                                 SHADOW_TOPIC_LENGTH_UPDATE_REJECTED( THING_NAME_LENGTH ) );
+        }
 
-        DisconnectMqttSession();
+        /* The MQTT session is always disconnected, even there were prior failures. */
+        returnStatus = DisconnectMqttSession();
+    }
+
+    /* This demo performs only Device Shadow operations. If matching the Shadow
+     * MQTT topic fails or there are failure in parsing the received JSON document,
+     * then this demo was not successful. */
+    if( eventCallbackError == true )
+    {
+        returnStatus == EXIT_SUCCESS;
     }
 
     if( returnStatus == EXIT_SUCCESS )
