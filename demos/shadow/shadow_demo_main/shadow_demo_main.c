@@ -680,7 +680,7 @@ int main( int argc,
     }
 
     /* This demo performs only Device Shadow operations. If matching the Shadow
-     * MQTT topic fails or there are failure in parsing the received JSON document,
+     * topic fails or there are failures in parsing the received JSON document,
      * then this demo was not successful. */
     if( eventCallbackError == true )
     {
