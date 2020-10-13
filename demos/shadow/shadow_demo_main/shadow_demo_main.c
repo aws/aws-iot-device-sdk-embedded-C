@@ -684,7 +684,7 @@ int main( int argc,
      * then this demo was not successful. */
     if( eventCallbackError == true )
     {
-        returnStatus == EXIT_FAILURE;
+        returnStatus = EXIT_FAILURE;
     }
 
     if( returnStatus == EXIT_SUCCESS )
