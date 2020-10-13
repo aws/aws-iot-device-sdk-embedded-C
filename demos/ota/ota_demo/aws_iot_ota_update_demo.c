@@ -797,12 +797,15 @@ void startOTADemo( MQTTContext_t * pMqttContext )
      * per second. */
     while( ( ( state = OTA_GetAgentState() ) != OtaAgentStateStopped ) )
     {
+    	 
+        sleep( OTA_DEMO_TASK_DELAY_SECONDS );
+
         LogInfo( ( " Received: %u   Queued: %u   Processed: %u   Dropped: %u",
                    OTA_GetPacketsReceived(),
                    OTA_GetPacketsQueued(),
                    OTA_GetPacketsProcessed(),
                    OTA_GetPacketsDropped() ) );
-
+                   
        if(state == OtaAgentStateWaitingForJob )
        {
             mqttStatus = MQTT_ProcessLoop( pMqttContext, 1000 );
@@ -813,11 +816,7 @@ void startOTADemo( MQTTContext_t * pMqttContext )
                         mqttStatus ) );
             }
        }
-       else
-       {
-           sleep( OTA_DEMO_TASK_DELAY_SECONDS );
-       }
-       
+     
     }
 
 }
