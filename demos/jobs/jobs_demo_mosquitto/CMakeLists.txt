@@ -15,8 +15,6 @@ add_executable(
         ${JSON_SOURCES}
 )
 
-check_aws_credentials(${DEMO_NAME})
-
 target_link_libraries(
     ${DEMO_NAME}
     PRIVATE
@@ -28,4 +26,13 @@ target_include_directories(
     PUBLIC
         ${JOBS_INCLUDE_PUBLIC_DIRS}
         ${JSON_INCLUDE_PUBLIC_DIRS}
+)
+
+# Propagate values to compiler flags, even if they are not defined.
+target_compile_definitions(
+    ${DEMO_NAME} PRIVATE
+        ROOT_CA_CERT_PATH="${ROOT_CA_CERT_PATH}"
+        AWS_IOT_ENDPOINT="${AWS_IOT_ENDPOINT}"
+        CLIENT_CERT_PATH="${CLIENT_CERT_PATH}"
+        CLIENT_PRIVATE_KEY_PATH="${CLIENT_PRIVATE_KEY_PATH}"
 )

@@ -475,13 +475,12 @@ static bool requiredArgs( handle_t * h )
         warnx( "name length must not exceed %d", JOBS_THINGNAME_MAX_LENGTH );
     }
 
-#define checkPath( x )                      \
-    if( ( h->x != NULL ) &&                 \
-        ( stat( h->x, &s ) == -1 ) )        \
-    {                                       \
-        ret = false;                        \
-        warn( "cannot access '%s'", h->x ); \
-        h->x = NULL;                        \
+#define checkPath( x )                                                            \
+    if( ( h->x != NULL ) && ( h->x[ 0 ] != '\0' ) && ( stat( h->x, &s ) == -1 ) ) \
+    {                                                                             \
+        ret = false;                                                              \
+        warn( "cannot access '%s'", h->x );                                       \
+        h->x = NULL;                                                              \
     }
 
     checkPath( certfile );
@@ -491,7 +490,7 @@ static bool requiredArgs( handle_t * h )
     checkPath( capath );
 
     /* use value in struct stat s from last check */
-    if( ( h->capath != NULL ) && ( !S_ISDIR( s.st_mode ) ) )
+    if( ( h->capath != NULL ) && ( h->capath[ 0 ] != '\0' ) && ( !S_ISDIR( s.st_mode ) ) )
     {
         ret = false;
         warnx( "not a directory: %s", h->capath );
