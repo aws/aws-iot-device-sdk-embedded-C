@@ -15,6 +15,8 @@ add_executable(
         ${JSON_SOURCES}
 )
 
+check_aws_credentials(${DEMO_NAME})
+
 target_link_libraries(
     ${DEMO_NAME}
     PRIVATE

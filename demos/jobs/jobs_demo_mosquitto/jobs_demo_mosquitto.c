@@ -95,7 +95,7 @@ static void usage( const char * programName )
              "\nCreating a job may be done with the AWS console, or the aws cli, e.g.,\n"
              "$ aws iot create-job --job-id t12 --targets arn:aws:iot:us-east-1:1234567890:thing/device1 \\\n"
              "  --document '{\"url\":\"https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.8.5.tar.xz\"}'\n"
-             "\nTo execute the job, on the target device run the downloader with the target's credentials, e.g.,\n"
+             "\nTo execute the job, on the target device run the demo program with the device's credentials, e.g.,\n"
              "$ %s -n device1 -h abcdefg123.iot.us-east-1.amazonaws.com \\\n"
              "  --certfile bbaf123456-certificate.pem.crt --keyfile bbaf123456-private.pem.key\n"
              "\nTo exit the program, type Control-C, or send a SIGTERM signal.\n",
