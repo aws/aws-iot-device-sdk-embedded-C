@@ -32,7 +32,10 @@ jobs:
           -DCLIENT_PRIVATE_KEY_PATH="key/path" \
           -DCLIENT_IDENTIFIER="ci-identifier"
       - name: Build Demos
-        run: make -C build/ help | grep demo | tr -d '. ' | xargs make -C build/
+        run: |
+          sudo apt-get install -y libmosquitto-dev
+          make -C build/ help | grep demo | tr -d '. ' | xargs make -C build/
+          make -C demos/jobs/jobs_demo_mosquitto
       - name: Build System Tests
         run: make -C build/ help | grep system | tr -d '. ' | xargs make -C build/
   unittest:
