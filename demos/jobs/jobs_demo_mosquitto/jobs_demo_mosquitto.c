@@ -934,13 +934,6 @@ void on_message( struct mosquitto * m,
             {
                 jobid[ jobidLength ] = '\0';
                 warnx( "update failure for unknown job id: %s", jobid );
-
-                if( ( message->payload != NULL ) && ( message->payloadlen > 0 ) )
-                {
-                    char * buffer = message->payload;
-                    buffer[ message->payloadlen ] = '\0';
-                    warnx( "payload: %s", buffer );
-                }
             }
 
             break;
