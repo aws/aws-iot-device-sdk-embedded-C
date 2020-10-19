@@ -1,4 +1,4 @@
-set( DEMO_NAME "ota_demo" )
+set( DEMO_NAME "ota_demo_mqtt" )
 
 # Include required library's source and header path variables.
 include( ${CMAKE_SOURCE_DIR}/libraries/aws/ota/otaFilePaths.cmake )
@@ -34,7 +34,7 @@ target_link_libraries(
 target_include_directories(
     ${DEMO_NAME}
     PUBLIC
-        "${CMAKE_CURRENT_LIST_DIR}/.."
+        "${CMAKE_CURRENT_LIST_DIR}"
         "${LOGGING_INCLUDE_DIRS}"
         ${OTA_INCLUDE_PUBLIC_DIRS}
         ${OTA_INCLUDE_PRIVATE_DIRS}
