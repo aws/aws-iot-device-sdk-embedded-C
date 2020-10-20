@@ -96,7 +96,8 @@
 #define IOT_CORE_ALPN_PROTOCOL_NAME               "\x0ex-amzn-http-ca"
 
 /**
- * @brief Length of ALPN protocol name to be sent as part of the ClientHello message.
+ * @brief Length of ALPN protocol name to be sent as part of the ClientHello
+ * message.
  */
 #define IOT_CORE_ALPN_PROTOCOL_NAME_LENGTH        ( sizeof( IOT_CORE_ALPN_PROTOCOL_NAME ) - 1 )
 
@@ -131,8 +132,8 @@
 #define HTTP_METHOD_PUT_LENGTH                    ( sizeof( HTTP_METHOD_PUT ) - 1 )
 
 /**
- * @brief A buffer used in the demo for storing HTTP request headers and
- * HTTP response headers and body.
+ * @brief A buffer used in the demo for storing HTTP request headers and HTTP
+ * response headers and body.
  *
  * @note This demo shows how the same buffer can be re-used for storing the HTTP
  * response after the HTTP request is sent out. However, the user can also
@@ -159,8 +160,8 @@ static HTTPResponse_t response;
 /**
  * @brief The host address string extracted from the pre-signed URL.
  *
- * @note S3_PRESIGNED_PUT_URL_LENGTH is set as the array length here
- * as the length of the host name string cannot exceed this value.
+ * @note S3_PRESIGNED_PUT_URL_LENGTH is set as the array length here as the
+ * length of the host name string cannot exceed this value.
  */
 static char serverHost[ S3_PRESIGNED_PUT_URL_LENGTH ];
 
@@ -179,18 +180,21 @@ static const char * pPath;
 /**
  * @brief Connect to HTTP server with reconnection retries.
  *
- * @param[out] pNetworkContext The output parameter to return the created network context.
+ * @param[out] pNetworkContext The output parameter to return the created
+ * network context.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on successful connection.
  */
 static int32_t connectToServer( NetworkContext_t * pNetworkContext );
 
 /**
- * @brief Retrieve and verify the size of the S3 object that is specified in pPath.
+ * @brief Retrieve and verify the size of the S3 object that is specified in
+ * pPath.
  *
  * @param[out] pFileSize The size of the S3 object.
- * @param[in] pTransportInterface The transport interface for making network calls.
- * @param[in] pPath The NULL-terminated Request-URI to the object of interest.
+ * @param[in] pTransportInterface The transport interface for making network
+ * calls.
+ * @param[in] pPath The Request-URI to the objects of interest.
  */
 static HTTPStatus_t verifyS3ObjectFileSize( size_t * pFileSize,
                                             const TransportInterface_t * pTransportInterface,
@@ -200,8 +204,9 @@ static HTTPStatus_t verifyS3ObjectFileSize( size_t * pFileSize,
  * @brief Send an HTTP PUT request based on a specified path to upload a file,
  * then print the response received from the server.
  *
- * @param[in] pTransportInterface The transport interface for making network calls.
- * @param[in] pPath The NULL-terminated Request-URI to the object of interest.
+ * @param[in] pTransportInterface The transport interface for making network
+ * calls.
+ * @param[in] pPath The Request-URI to the objects of interest.
  */
 static HTTPStatus_t uploadS3ObjectFile( const TransportInterface_t * pTransportInterface,
                                         const char * pPath );
@@ -227,14 +232,15 @@ static int32_t connectToServer( NetworkContext_t * pNetworkContext )
     ( void ) memset( &opensslCredentials, 0, sizeof( opensslCredentials ) );
     opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
 
-    /* ALPN is required when communicating to AWS IoT Core over port 443 through HTTP. */
+    /* ALPN is required when communicating to AWS IoT Core over port 443 through
+     * HTTP. */
     if( HTTPS_PORT == 443 )
     {
         opensslCredentials.pAlpnProtos = IOT_CORE_ALPN_PROTOCOL_NAME;
         opensslCredentials.alpnProtosLen = IOT_CORE_ALPN_PROTOCOL_NAME_LENGTH;
     }
 
-    /* Retrieve the address location and length from the S3_PRESIGNED_PUT_URL. */
+    /* Retrieve the address location and length from S3_PRESIGNED_PUT_URL. */
     httpStatus = getUrlAddress( S3_PRESIGNED_PUT_URL,
                                 S3_PRESIGNED_PUT_URL_LENGTH,
                                 &pAddress,
@@ -244,7 +250,8 @@ static int32_t connectToServer( NetworkContext_t * pNetworkContext )
 
     if( returnStatus == EXIT_SUCCESS )
     {
-        /* serverHost should consist only of the host address located in S3_PRESIGNED_PUT_URL. */
+        /* serverHost should consist only of the host address located in
+         * S3_PRESIGNED_PUT_URL. */
         memcpy( serverHost, pAddress, serverHostLength );
         serverHost[ serverHostLength ] = '\0';
 
@@ -253,9 +260,9 @@ static int32_t connectToServer( NetworkContext_t * pNetworkContext )
         serverInfo.hostNameLength = serverHostLength;
         serverInfo.port = HTTPS_PORT;
 
-        /* Establish a TLS session with the HTTP server. This example connects to the
-         * S3 HTTP server, specified in S3_PRESIGNED_PUT_URL, using HTTPS_PORT.
-         * These macros are defined in demo_config.h. */
+        /* Establish a TLS session with the HTTP server. This example connects
+         * to the HTTP server as specified in SERVER_HOST and HTTPS_PORT in
+         * demo_config.h. */
         LogInfo( ( "Establishing a TLS session with %s:%d.",
                    serverHost,
                    HTTPS_PORT ) );
@@ -303,8 +310,8 @@ static HTTPStatus_t verifyS3ObjectFileSize( size_t * pFileSize,
     requestHeaders.pBuffer = userBuffer;
     requestHeaders.bufferLen = USER_BUFFER_LENGTH;
 
-    /* Initialize the response object. The same buffer used for storing
-     * request headers is reused here. */
+    /* Initialize the response object. The same buffer used for storing request
+     * headers is reused here. */
     response.pBuffer = userBuffer;
     response.bufferLen = USER_BUFFER_LENGTH;
 
@@ -316,9 +323,9 @@ static HTTPStatus_t verifyS3ObjectFileSize( size_t * pFileSize,
     if( httpStatus == HTTP_SUCCESS )
     {
         /* Add the header to get bytes=0-0. S3 will respond with a Content-Range
-         * header that contains the size of the file in it. This header will look
-         * like: "Content-Range: bytes 0-0/FILESIZE". The body will have a single
-         * byte that we are ignoring. */
+         * header that contains the size of the file in it. This header will
+         * look like: "Content-Range: bytes 0-0/FILESIZE". The body will have a
+         * single byte that we are ignoring. */
         httpStatus = HTTPClient_AddRangeHeader( &requestHeaders, 0, 0 );
     }
 
@@ -436,8 +443,8 @@ static HTTPStatus_t uploadS3ObjectFile( const TransportInterface_t * pTransportI
     requestHeaders.pBuffer = userBuffer;
     requestHeaders.bufferLen = USER_BUFFER_LENGTH;
 
-    /* Initialize the response object. The same buffer used for storing
-     * request headers is reused here. */
+    /* Initialize the response object. The same buffer used for storing request
+     * headers is reused here. */
     response.pBuffer = userBuffer;
     response.bufferLen = USER_BUFFER_LENGTH;
 
@@ -497,10 +504,10 @@ static HTTPStatus_t uploadS3ObjectFile( const TransportInterface_t * pTransportI
  * This example, using a pre-signed URL, resolves a S3 domain, establishes a TCP
  * connection, validates the server's certificate using the root CA certificate
  * defined in the config header, and then finally performs a TLS handshake with
- * the HTTP server so that all communication is encrypted. After which, the
- * HTTP Client library API is used to upload a file to a S3 bucket by sending a
- * PUT request, and verify the file was uploaded using a GET request. If any
- * request fails, an error code is returned.
+ * the HTTP server so that all communication is encrypted. After which, the HTTP
+ * Client library API is used to upload a file to a S3 bucket by sending a PUT
+ * request, and verify the file was uploaded using a GET request. If any request
+ * fails, an error code is returned.
  *
  * @note This example is single-threaded and uses statically allocated memory.
  *
@@ -533,11 +540,12 @@ int main( int argc,
     {
         LogInfo( ( "HTTPS Client Synchronous S3 upload demo using pre-signed PUT URL:\n%s", S3_PRESIGNED_PUT_URL ) );
 
-        /**************************** Parse Signed URL. ******************************/
+        /************************* Parse Signed URL. *************************/
         if( returnStatus == EXIT_SUCCESS )
         {
-            /* Retrieve the path location from S3_PRESIGNED_PUT_URL. This function returns the length of the path
-             * without the query into pathLen. */
+            /* Retrieve the path location from S3_PRESIGNED_PUT_URL. This
+             * function returns the length of the path without the query into
+             * pathLen. */
             httpStatus = getUrlPath( S3_PRESIGNED_PUT_URL,
                                      S3_PRESIGNED_PUT_URL_LENGTH,
                                      &pPath,
@@ -551,18 +559,19 @@ int main( int argc,
         /* Establish TLS connection on top of TCP connection using OpenSSL. */
         if( returnStatus == EXIT_SUCCESS )
         {
-            /* Attempt to connect to the HTTP server. If connection fails, retry after
-             * a timeout. The timeout value will be exponentially increased till the maximum
-             * attempts are reached or maximum timeout value is reached. The function
-             * returns EXIT_FAILURE if the TCP connection cannot be established to
-             * broker after the configured number of attempts. */
+            /* Attempt to connect to the HTTP server. If connection fails, retry
+             * after a timeout. Timeout value will be exponentially increased
+             * till the maximum attempts are reached or maximum timeout value is
+             * reached. The function returns EXIT_FAILURE if the TCP connection
+             * cannot be established to broker after configured number of
+             * attempts. */
             returnStatus = connectToServerWithBackoffRetries( connectToServer,
                                                               &networkContext );
 
             if( returnStatus == EXIT_FAILURE )
             {
-                /* Log an error to indicate connection failure after all
-                 * reconnect attempts are over. */
+                /* Log error to indicate connection failure after all reconnect
+                 * attempts are over. */
                 LogError( ( "Failed to connect to HTTP server %s.",
                             serverHost ) );
             }
@@ -591,8 +600,9 @@ int main( int argc,
 
         if( returnStatus == EXIT_SUCCESS )
         {
-            /* Retrieve the path location from S3_PRESIGNED_GET_URL. This function returns the length of the path
-             * without the query into pathLen. */
+            /* Retrieve the path location from S3_PRESIGNED_GET_URL. This
+             * function returns the length of the path without the query into
+             * pathLen. */
             httpStatus = getUrlPath( S3_PRESIGNED_GET_URL,
                                      S3_PRESIGNED_GET_URL_LENGTH,
                                      &pPath,
