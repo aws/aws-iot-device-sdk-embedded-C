@@ -190,7 +190,7 @@ static int32_t connectToServer( NetworkContext_t * pNetworkContext );
  *
  * @param[out] pFileSize The size of the S3 object.
  * @param[in] pTransportInterface The transport interface for making network calls.
- * @param[in] pPath The Request-URI to the objects of interest.
+ * @param[in] pPath The NULL-terminated Request-URI to the object of interest.
  */
 static HTTPStatus_t verifyS3ObjectFileSize( size_t * pFileSize,
                                             const TransportInterface_t * pTransportInterface,
@@ -201,7 +201,7 @@ static HTTPStatus_t verifyS3ObjectFileSize( size_t * pFileSize,
  * then print the response received from the server.
  *
  * @param[in] pTransportInterface The transport interface for making network calls.
- * @param[in] pPath The Request-URI to the objects of interest.
+ * @param[in] pPath The NULL-terminated Request-URI to the object of interest.
  */
 static HTTPStatus_t uploadS3ObjectFile( const TransportInterface_t * pTransportInterface,
                                         const char * pPath );
@@ -413,6 +413,8 @@ static HTTPStatus_t verifyS3ObjectFileSize( size_t * pFileSize,
     return httpStatus;
 }
 
+/*-----------------------------------------------------------*/
+
 static HTTPStatus_t uploadS3ObjectFile( const TransportInterface_t * pTransportInterface,
                                         const char * pPath )
 {
@@ -546,16 +548,16 @@ int main( int argc,
         if( returnStatus == EXIT_SUCCESS )
         {
             /* Attempt to connect to the HTTP server. If connection fails, retry after
-             * a timeout. Timeout value will be exponentially increased till the maximum
+             * a timeout. The timeout value will be exponentially increased till the maximum
              * attempts are reached or maximum timeout value is reached. The function
              * returns EXIT_FAILURE if the TCP connection cannot be established to
-             * broker after configured number of attempts. */
+             * broker after the configured number of attempts. */
             returnStatus = connectToServerWithBackoffRetries( connectToServer,
                                                               &networkContext );
 
             if( returnStatus == EXIT_FAILURE )
             {
-                /* Log error to indicate connection failure after all
+                /* Log an error to indicate connection failure after all
                  * reconnect attempts are over. */
                 LogError( ( "Failed to connect to HTTP server %s.",
                             serverHost ) );
