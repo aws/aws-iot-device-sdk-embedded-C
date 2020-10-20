@@ -13,9 +13,11 @@ auth
 aws
 backoff
 baltimore
+baltimorecybertrustroot
 br
 buffersize
 ca
+cacerts
 cdn
 cert
 certs

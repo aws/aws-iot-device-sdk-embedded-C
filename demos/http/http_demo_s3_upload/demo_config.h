@@ -63,11 +63,15 @@
 /**
  * @brief Path of the file containing the server's root CA certificate for TLS authentication.
  *
- * @note S3 uses the Baltimore Cybertrust root CA certificate. To download this certificate, see
- * https://baltimore-cybertrust-root.chain-demos.digicert.com/info/index.html
+ * Amazon's root CA certificate is automatically downloaded to the certificates
+ * directory from @ref https://cacerts.digicert.com/BaltimoreCyberTrustRoot.crt.pem
+ * using the CMake build system.
  *
- * #define ROOT_CA_CERT_PATH               "...insert here..."
+ * @note This certificate should be PEM-encoded.
  */
+#ifndef ROOT_CA_CERT_PATH
+    #define ROOT_CA_CERT_PATH    "certificates/BaltimoreCyberTrustRoot.crt"
+#endif
 
 
 /**
@@ -77,9 +81,11 @@
  * https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
  *
  * Run this script and paste the output value IOT_DEMO_HTTPS_PRESIGNED_GET_URL into
- * S3_PRESIGNED_URL below.
+ * S3_PRESIGNED_GET_URL below.
  */
-#define S3_PRESIGNED_GET_URL    ""
+#ifndef S3_PRESIGNED_GET_URL
+    #define S3_PRESIGNED_GET_URL    ""
+#endif
 
 
 /**
@@ -89,10 +95,11 @@
  * https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
  *
  * Run this script and paste the output value IOT_DEMO_HTTPS_PRESIGNED_PUT_URL into
- * S3_PRESIGNED_URL below.
+ * S3_PRESIGNED_PUT_URL below.
  */
-#define S3_PRESIGNED_PUT_URL    ""
-
+#ifndef S3_PRESIGNED_PUT_URL
+    #define S3_PRESIGNED_PUT_URL    ""
+#endif
 
 /**
  * @brief Transport timeout in milliseconds for transport send and receive.

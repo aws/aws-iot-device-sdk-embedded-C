@@ -1,4 +1,5 @@
 /*
+ * AWS IoT Device SDK for Embedded C V202009.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -62,6 +63,30 @@
     #error "Please define a S3_PRESIGNED_GET_URL."
 #endif
 
+/* Check that transport timeout for transport send and receive is defined. */
+#ifndef TRANSPORT_SEND_RECV_TIMEOUT_MS
+    #define TRANSPORT_SEND_RECV_TIMEOUT_MS    ( 1000 )
+#endif
+
+/* Check that size of the user buffer is defined. */
+#ifndef USER_BUFFER_LENGTH
+    #define USER_BUFFER_LENGTH    ( 2048 )
+#endif
+
+/* Pointer to the data to upload.*/
+#ifndef DEMO_HTTP_UPLOAD_DATA
+    #define DEMO_HTTP_UPLOAD_DATA    "Hello World!"
+#endif
+
+/**
+ * @brief Length of the pre-signed PUT URL defined in demo_config.h.
+ */
+#define S3_PRESIGNED_PUT_URL_LENGTH               ( sizeof( S3_PRESIGNED_PUT_URL ) - 1 )
+
+/**
+ * @brief Length of the pre-signed GET URL defined in demo_config.h.
+ */
+#define S3_PRESIGNED_GET_URL_LENGTH               ( sizeof( S3_PRESIGNED_GET_URL ) - 1 )
 
 /**
  * @brief ALPN protocol name to be sent as part of the ClientHello message.
@@ -69,6 +94,11 @@
  * @note When using ALPN, port 443 must be used to connect to AWS IoT Core.
  */
 #define IOT_CORE_ALPN_PROTOCOL_NAME               "\x0ex-amzn-http-ca"
+
+/**
+ * @brief Length of ALPN protocol name to be sent as part of the ClientHello message.
+ */
+#define IOT_CORE_ALPN_PROTOCOL_NAME_LENGTH        ( sizeof( IOT_CORE_ALPN_PROTOCOL_NAME ) - 1 )
 
 /**
  * @brief Field name of the HTTP Range header to read from server response.
@@ -85,25 +115,20 @@
  */
 #define DEMO_LOOP_DELAY_SECONDS                   ( 5U )
 
-/* Check that transport timeout for transport send and receive is defined. */
-#ifndef TRANSPORT_SEND_RECV_TIMEOUT_MS
-    #define TRANSPORT_SEND_RECV_TIMEOUT_MS    ( 1000 )
-#endif
+/**
+ * @brief The length of the data in bytes to upload.
+ */
+#define DEMO_HTTP_UPLOAD_DATA_LENGTH              ( sizeof( DEMO_HTTP_UPLOAD_DATA ) - 1 )
 
-/* Check that size of the user buffer is defined. */
-#ifndef USER_BUFFER_LENGTH
-    #define USER_BUFFER_LENGTH    ( 2048 )
-#endif
+/**
+ * @brief The length of the HTTP GET method.
+ */
+#define HTTP_METHOD_GET_LENGTH                    ( sizeof( HTTP_METHOD_GET ) - 1 )
 
-/* Pointer to the data to upload.*/
-#ifndef DEMO_HTTP_UPLOAD_DATA
-    #define DEMO_HTTP_UPLOAD_DATA    "Hello World!"
-#endif
-
-/* The size of the data in bytes to upload. */
-#ifndef DEMO_HTTP_UPLOAD_DATA_SIZE
-    #define DEMO_HTTP_UPLOAD_DATA_SIZE    ( sizeof( DEMO_HTTP_UPLOAD_DATA ) - 1 )
-#endif
+/**
+ * @brief The length of the HTTP PUT method.
+ */
+#define HTTP_METHOD_PUT_LENGTH                    ( sizeof( HTTP_METHOD_PUT ) - 1 )
 
 /**
  * @brief A buffer used in the demo for storing HTTP request headers and
@@ -131,9 +156,23 @@ static HTTPRequestInfo_t requestInfo;
  */
 static HTTPResponse_t response;
 
-/* The host address string extracted from the pre-signed URL. */
-static char serverHost;
+/**
+ * @brief The host address string extracted from the pre-signed URL.
+ *
+ * @note S3_PRESIGNED_PUT_URL_LENGTH is set as the array length here
+ * as the length of the host name string cannot exceed this value.
+ */
+static char serverHost[ S3_PRESIGNED_PUT_URL_LENGTH ];
 
+/**
+ * @brief The length of the host address found in the pre-signed URL.
+ */
+static size_t serverHostLength;
+
+/**
+ * @brief The location of the path within the pre-signed URL.
+ */
+static const char * pPath;
 
 /*-----------------------------------------------------------*/
 
@@ -147,35 +186,25 @@ static char serverHost;
 static int32_t connectToServer( NetworkContext_t * pNetworkContext );
 
 /**
- * @brief Retrieve the size of the S3 object that is specified in pPath.
+ * @brief Retrieve and verify the size of the S3 object that is specified in pPath.
  *
- * @param[out] pFileSize - The size of the S3 object.
+ * @param[out] pFileSize The size of the S3 object.
  * @param[in] pTransportInterface The transport interface for making network calls.
- * @param[in] pHost The host name of the server.
- * @param[in] pMethod The HTTP request method.
  * @param[in] pPath The Request-URI to the objects of interest.
  */
-static HTTPStatus_t getS3ObjectFileSize( size_t * pFileSize,
-                                         const TransportInterface_t * pTransportInterface,
-                                         const char * pHost,
-                                         const char * pMethod,
-                                         const char * pPath );
+static HTTPStatus_t verifyS3ObjectFileSize( size_t * pFileSize,
+                                            const TransportInterface_t * pTransportInterface,
+                                            const char * pPath );
 
 /**
- * @brief Send an HTTP request based on a specified method and path, then
- * print the response received from the server.
+ * @brief Send an HTTP PUT request based on a specified path to upload a file,
+ * then print the response received from the server.
  *
  * @param[in] pTransportInterface The transport interface for making network calls.
- * @param[in] pHost The host name of the server.
- * @param[in] pMethod The HTTP request method.
  * @param[in] pPath The Request-URI to the objects of interest.
- *
- * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
-static int uploadS3ObjectFile( const TransportInterface_t * pTransportInterface,
-                               const char * pHost,
-                               const char * pMethod,
-                               const char * pPath );
+static HTTPStatus_t uploadS3ObjectFile( const TransportInterface_t * pTransportInterface,
+                                        const char * pPath );
 
 /*-----------------------------------------------------------*/
 
@@ -186,8 +215,6 @@ static int32_t connectToServer( NetworkContext_t * pNetworkContext )
 
     /* The location of the host address within the pre-signed URL. */
     const char * pAddress = NULL;
-    /* The length of the host address found in the pre-signed URL. */
-    size_t serverHostLength = 0;
 
     /* Status returned by OpenSSL transport implementation. */
     OpensslStatus_t opensslStatus;
@@ -204,51 +231,42 @@ static int32_t connectToServer( NetworkContext_t * pNetworkContext )
     if( HTTPS_PORT == 443 )
     {
         opensslCredentials.pAlpnProtos = IOT_CORE_ALPN_PROTOCOL_NAME;
-        opensslCredentials.alpnProtosLen = strlen( IOT_CORE_ALPN_PROTOCOL_NAME );
+        opensslCredentials.alpnProtosLen = IOT_CORE_ALPN_PROTOCOL_NAME_LENGTH;
     }
 
     /* Retrieve the address location and length from the S3_PRESIGNED_PUT_URL. */
     httpStatus = getUrlAddress( S3_PRESIGNED_PUT_URL,
-                                strlen( S3_PRESIGNED_PUT_URL ),
+                                S3_PRESIGNED_PUT_URL_LENGTH,
                                 &pAddress,
                                 &serverHostLength );
 
-    if( httpStatus != HTTP_SUCCESS )
+    returnStatus = ( httpStatus == HTTP_SUCCESS ) ? EXIT_SUCCESS : EXIT_FAILURE;
+
+    if( returnStatus == EXIT_SUCCESS )
     {
-        LogError( ( "An error occurred in getUrlAddress() on URL %s\r\n. Error code %d",
-                    S3_PRESIGNED_PUT_URL,
-                    httpStatus ) );
-        returnStatus = EXIT_FAILURE;
-    }
+        /* serverHost should consist only of the host address located in S3_PRESIGNED_PUT_URL. */
+        memcpy( serverHost, pAddress, serverHostLength );
+        serverHost[ serverHostLength ] = '\0';
 
-    /* serverHost should consist only of the host address located in S3_PRESIGNED_PUT_URL. */
-    memcpy( &serverHost, pAddress, serverHostLength );
+        /* Initialize server information. */
+        serverInfo.pHostName = serverHost;
+        serverInfo.hostNameLength = serverHostLength;
+        serverInfo.port = HTTPS_PORT;
 
-    /* Initialize server information. */
-    serverInfo.pHostName = &serverHost;
-    serverInfo.hostNameLength = serverHostLength;
-    serverInfo.port = HTTPS_PORT;
+        /* Establish a TLS session with the HTTP server. This example connects
+         * to the HTTP server as specified in SERVER_HOST and HTTPS_PORT
+         * in demo_config.h. */
+        LogInfo( ( "Establishing a TLS session with %s:%d.",
+                   serverHost,
+                   HTTPS_PORT ) );
 
-    /* Establish a TLS session with the HTTP server. This example connects
-     * to the HTTP server as specified in SERVER_HOST and HTTPS_PORT
-     * in demo_config.h. */
-    LogInfo( ( "Establishing a TLS session with %s:%d.",
-               &serverHost,
-               HTTPS_PORT ) );
+        opensslStatus = Openssl_Connect( pNetworkContext,
+                                         &serverInfo,
+                                         &opensslCredentials,
+                                         TRANSPORT_SEND_RECV_TIMEOUT_MS,
+                                         TRANSPORT_SEND_RECV_TIMEOUT_MS );
 
-    opensslStatus = Openssl_Connect( pNetworkContext,
-                                     &serverInfo,
-                                     &opensslCredentials,
-                                     TRANSPORT_SEND_RECV_TIMEOUT_MS,
-                                     TRANSPORT_SEND_RECV_TIMEOUT_MS );
-
-    if( opensslStatus == OPENSSL_SUCCESS )
-    {
-        returnStatus = EXIT_SUCCESS;
-    }
-    else
-    {
-        returnStatus = EXIT_FAILURE;
+        returnStatus = ( opensslStatus == OPENSSL_SUCCESS ) ? EXIT_SUCCESS : EXIT_FAILURE;
     }
 
     return returnStatus;
@@ -256,11 +274,9 @@ static int32_t connectToServer( NetworkContext_t * pNetworkContext )
 
 /*-----------------------------------------------------------*/
 
-static HTTPStatus_t getS3ObjectFileSize( size_t * pFileSize,
-                                         const TransportInterface_t * pTransportInterface,
-                                         const char * pHost,
-                                         const char * pMethod,
-                                         const char * pPath )
+static HTTPStatus_t verifyS3ObjectFileSize( size_t * pFileSize,
+                                            const TransportInterface_t * pTransportInterface,
+                                            const char * pPath )
 {
     HTTPStatus_t httpStatus = HTTP_SUCCESS;
 
@@ -272,10 +288,10 @@ static HTTPStatus_t getS3ObjectFileSize( size_t * pFileSize,
     size_t contentRangeValStrLength = 0;
 
     /* Initialize the request object. */
-    requestInfo.pHost = pHost;
-    requestInfo.hostLen = strlen( pHost );
-    requestInfo.method = pMethod;
-    requestInfo.methodLen = strlen( pMethod );
+    requestInfo.pHost = serverHost;
+    requestInfo.hostLen = serverHostLength;
+    requestInfo.method = HTTP_METHOD_GET;
+    requestInfo.methodLen = HTTP_METHOD_GET_LENGTH;
     requestInfo.pPath = pPath;
     requestInfo.pathLen = strlen( pPath );
 
@@ -320,7 +336,7 @@ static HTTPStatus_t getS3ObjectFileSize( size_t * pFileSize,
     if( httpStatus == HTTP_SUCCESS )
     {
         LogInfo( ( "Received HTTP response from %s%s...",
-                   pHost, pPath ) );
+                   serverHost, pPath ) );
         LogInfo( ( "Response Headers:\n%.*s",
                    ( int32_t ) response.headersLen,
                    response.pHeaders ) );
@@ -338,8 +354,8 @@ static HTTPStatus_t getS3ObjectFileSize( size_t * pFileSize,
     }
     else
     {
-        LogError( ( "Failed to send HTTP %s request to %s%s: Error=%s.",
-                    pMethod, pHost, pPath, HTTPClient_strerror( httpStatus ) ) );
+        LogError( ( "Failed to send HTTP GET request to %s%s: Error=%s.",
+                    serverHost, pPath, HTTPClient_strerror( httpStatus ) ) );
     }
 
     if( httpStatus == HTTP_SUCCESS )
@@ -358,7 +374,7 @@ static HTTPStatus_t getS3ObjectFileSize( size_t * pFileSize,
 
         if( ( *pFileSize == 0 ) || ( *pFileSize == UINT32_MAX ) )
         {
-            LogError( ( "Error using strtoul to get the file size from %s: fileSize=%d",
+            LogError( ( "Error using strtoul to get the file size from %s: fileSize=%d.",
                         pFileSizeStr, ( int32_t ) *pFileSize ) );
             httpStatus = HTTP_INVALID_PARAMETER;
         }
@@ -371,22 +387,42 @@ static HTTPStatus_t getS3ObjectFileSize( size_t * pFileSize,
                     HTTPClient_strerror( httpStatus ) ) );
     }
 
+    if( httpStatus == HTTP_SUCCESS )
+    {
+        if( *pFileSize != DEMO_HTTP_UPLOAD_DATA_LENGTH )
+        {
+            LogError( ( "Failed to upload the data to S3. The file size found is %d, but it should be %d.",
+                        ( int32_t ) *pFileSize,
+                        ( int32_t ) DEMO_HTTP_UPLOAD_DATA_LENGTH ) );
+        }
+        else
+        {
+            LogInfo( ( "Successfuly verified that the size of the file found on S3 matches the file size uploaded "
+                       "(Uploaded: %d bytes, Found: %d bytes).",
+                       ( int32_t ) DEMO_HTTP_UPLOAD_DATA_LENGTH,
+                       ( int32_t ) *pFileSize ) );
+        }
+    }
+    else
+    {
+        LogError( ( "An error occurred in getting the file size from %s. Error=%s.",
+                    serverHost,
+                    HTTPClient_strerror( httpStatus ) ) );
+    }
+
     return httpStatus;
 }
 
-static int uploadS3ObjectFile( const TransportInterface_t * pTransportInterface,
-                               const char * pHost,
-                               const char * pMethod,
-                               const char * pPath )
+static HTTPStatus_t uploadS3ObjectFile( const TransportInterface_t * pTransportInterface,
+                                        const char * pPath )
 {
-    int returnStatus = EXIT_SUCCESS;
     HTTPStatus_t httpStatus = HTTP_SUCCESS;
 
     /* Initialize the request object. */
-    requestInfo.pHost = pHost;
-    requestInfo.hostLen = strlen( pHost );
-    requestInfo.method = pMethod;
-    requestInfo.methodLen = strlen( pMethod );
+    requestInfo.pHost = serverHost;
+    requestInfo.hostLen = serverHostLength;
+    requestInfo.method = HTTP_METHOD_PUT;
+    requestInfo.methodLen = HTTP_METHOD_PUT_LENGTH;
     requestInfo.pPath = pPath;
     requestInfo.pathLen = strlen( pPath );
 
@@ -418,7 +454,7 @@ static int uploadS3ObjectFile( const TransportInterface_t * pTransportInterface,
         httpStatus = HTTPClient_Send( pTransportInterface,
                                       &requestHeaders,
                                       ( const uint8_t * ) DEMO_HTTP_UPLOAD_DATA,
-                                      DEMO_HTTP_UPLOAD_DATA_SIZE,
+                                      DEMO_HTTP_UPLOAD_DATA_LENGTH,
                                       &response,
                                       0 );
     }
@@ -431,7 +467,7 @@ static int uploadS3ObjectFile( const TransportInterface_t * pTransportInterface,
     if( httpStatus == HTTP_SUCCESS )
     {
         LogInfo( ( "Received HTTP response from %s%s...",
-                   pHost, pPath ) );
+                   serverHost, pPath ) );
         LogInfo( ( "Response Headers:\n%.*s",
                    ( int32_t ) response.headersLen,
                    response.pHeaders ) );
@@ -443,16 +479,12 @@ static int uploadS3ObjectFile( const TransportInterface_t * pTransportInterface,
     }
     else
     {
-        LogError( ( "Failed to send HTTP %s request to %s%s: Error=%s.",
-                    pMethod, pHost, pPath, HTTPClient_strerror( httpStatus ) ) );
+        LogError( ( "An error occurred in uploading the file."
+                    "Failed to send HTTP PUT request to %s%s: Error=%s.",
+                    serverHost, pPath, HTTPClient_strerror( httpStatus ) ) );
     }
 
-    if( httpStatus != HTTP_SUCCESS )
-    {
-        returnStatus = EXIT_FAILURE;
-    }
-
-    return returnStatus;
+    return httpStatus;
 }
 
 /*-----------------------------------------------------------*/
@@ -478,14 +510,10 @@ int main( int argc,
     int32_t returnStatus = EXIT_SUCCESS;
     /* HTTPS Client library return status. */
     HTTPStatus_t httpStatus = HTTP_SUCCESS;
-
-    /* The location of the path within the pre-signed URL. */
-    const char * pPath = NULL;
     /* The length of the path within the pre-signed URL. */
     size_t pathLen = 0;
     /* The size of the file uploaded to S3. */
     size_t fileSize = 0;
-
 
     /* The transport layer interface used by the HTTP Client library. */
     TransportInterface_t transportInterface;
@@ -505,17 +533,11 @@ int main( int argc,
             /* Retrieve the path location from S3_PRESIGNED_PUT_URL. This function returns the length of the path
              * without the query into pathLen. */
             httpStatus = getUrlPath( S3_PRESIGNED_PUT_URL,
-                                     strlen( S3_PRESIGNED_PUT_URL ),
+                                     S3_PRESIGNED_PUT_URL_LENGTH,
                                      &pPath,
                                      &pathLen );
 
-            if( httpStatus != HTTP_SUCCESS )
-            {
-                LogError( ( "An error occurred in getUrlPath() on URL %s. Error code: %d",
-                            S3_PRESIGNED_PUT_URL,
-                            httpStatus ) );
-                returnStatus = EXIT_FAILURE;
-            }
+            returnStatus = ( httpStatus == HTTP_SUCCESS ) ? EXIT_SUCCESS : EXIT_FAILURE;
         }
 
         /**************************** Connect. ******************************/
@@ -536,7 +558,7 @@ int main( int argc,
                 /* Log error to indicate connection failure after all
                  * reconnect attempts are over. */
                 LogError( ( "Failed to connect to HTTP server %s.",
-                            &serverHost ) );
+                            serverHost ) );
             }
         }
 
@@ -553,10 +575,10 @@ int main( int argc,
 
         if( returnStatus == EXIT_SUCCESS )
         {
-            returnStatus = uploadS3ObjectFile( &transportInterface,
-                                               &serverHost,
-                                               HTTP_METHOD_PUT,
-                                               pPath );
+            httpStatus = uploadS3ObjectFile( &transportInterface,
+                                             pPath );
+
+            returnStatus = ( httpStatus == HTTP_SUCCESS ) ? EXIT_SUCCESS : EXIT_FAILURE;
         }
 
         /******************* Verify S3 Object File Upload. ********************/
@@ -566,51 +588,27 @@ int main( int argc,
             /* Retrieve the path location from S3_PRESIGNED_GET_URL. This function returns the length of the path
              * without the query into pathLen. */
             httpStatus = getUrlPath( S3_PRESIGNED_GET_URL,
-                                     strlen( S3_PRESIGNED_GET_URL ),
+                                     S3_PRESIGNED_GET_URL_LENGTH,
                                      &pPath,
                                      &pathLen );
 
-            if( httpStatus != HTTP_SUCCESS )
-            {
-                LogError( ( "An error occurred in getUrlPath() on URL %s. Error code: %d",
-                            S3_PRESIGNED_GET_URL,
-                            httpStatus ) );
-                returnStatus = EXIT_FAILURE;
-            }
+            returnStatus = ( httpStatus == HTTP_SUCCESS ) ? EXIT_SUCCESS : EXIT_FAILURE;
         }
 
         if( returnStatus == EXIT_SUCCESS )
         {
             /* Verify the file exists by retrieving the file size. */
-            httpStatus = getS3ObjectFileSize( &fileSize,
-                                              &transportInterface,
-                                              &serverHost,
-                                              HTTP_METHOD_GET,
-                                              pPath );
+            httpStatus = verifyS3ObjectFileSize( &fileSize,
+                                                 &transportInterface,
+                                                 pPath );
 
-            if( httpStatus != HTTP_SUCCESS )
-            {
-                LogError( ( "An error occurred in getting the file size from %s. Error code: %d",
-                            &serverHost,
-                            httpStatus ) );
-                returnStatus = EXIT_FAILURE;
-            }
+            returnStatus = ( httpStatus == HTTP_SUCCESS ) ? EXIT_SUCCESS : EXIT_FAILURE;
         }
 
         if( returnStatus == EXIT_SUCCESS )
         {
-            if( fileSize != DEMO_HTTP_UPLOAD_DATA_SIZE )
-            {
-                LogError( ( "Failed to upload the data to S3. The file size found is %d, but it should be %d.",
-                            ( int32_t ) fileSize,
-                            ( int32_t ) DEMO_HTTP_UPLOAD_DATA_SIZE ) );
-                returnStatus = EXIT_FAILURE;
-            }
-
-            LogInfo( ( "Successfuly verified that the size of the file found on S3 matches the file size uploaded "
-                       "(Uploaded: %d bytes, Found: %d bytes).",
-                       ( int32_t ) DEMO_HTTP_UPLOAD_DATA_SIZE,
-                       ( int32_t ) fileSize ) );
+            /* Log message indicating an iteration completed successfully. */
+            LogInfo( ( "Demo completed successfully." ) );
         }
 
         /************************** Disconnect. *****************************/
