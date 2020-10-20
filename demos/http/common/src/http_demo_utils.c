@@ -123,7 +123,7 @@ HTTPStatus_t getUrlPath( const char * pUrl,
 
     if( httpStatus != HTTP_SUCCESS )
     {
-        LogError( ( "An error occurred in getUrlPath() on URL %s. Error code: %d",
+        LogError( ( "Error parsing the path from URL %s. Error code: %d",
                     pUrl,
                     httpStatus ) );
     }
@@ -183,7 +183,7 @@ HTTPStatus_t getUrlAddress( const char * pUrl,
 
     if( httpStatus != HTTP_SUCCESS )
     {
-        LogError( ( "An error occurred in getUrlAddress() on URL %s\r\n. Error code %d",
+        LogError( ( "Error parsing the address from URL %s. Error code %d",
                     pUrl,
                     httpStatus ) );
     }

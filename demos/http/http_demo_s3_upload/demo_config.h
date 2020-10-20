@@ -80,8 +80,7 @@
  * @note This script requires AWS CLI to be configured. For instructions, see
  * https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
  *
- * Run this script and paste the output value IOT_DEMO_HTTPS_PRESIGNED_GET_URL into
- * S3_PRESIGNED_GET_URL below.
+ * Run this script and paste the output value into S3_PRESIGNED_GET_URL below.
  */
 #ifndef S3_PRESIGNED_GET_URL
     #define S3_PRESIGNED_GET_URL    ""
@@ -94,8 +93,7 @@
  * @note This script requires AWS CLI to be configured. For instructions, see
  * https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
  *
- * Run this script and paste the output value IOT_DEMO_HTTPS_PRESIGNED_PUT_URL into
- * S3_PRESIGNED_PUT_URL below.
+ * Run this script and paste the S3_PRESIGNED_PUT_URL below.
  */
 #ifndef S3_PRESIGNED_PUT_URL
     #define S3_PRESIGNED_PUT_URL    ""

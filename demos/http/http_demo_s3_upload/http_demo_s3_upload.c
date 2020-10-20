@@ -253,9 +253,9 @@ static int32_t connectToServer( NetworkContext_t * pNetworkContext )
         serverInfo.hostNameLength = serverHostLength;
         serverInfo.port = HTTPS_PORT;
 
-        /* Establish a TLS session with the HTTP server. This example connects
-         * to the HTTP server as specified in SERVER_HOST and HTTPS_PORT
-         * in demo_config.h. */
+        /* Establish a TLS session with the HTTP server. This example connects to the
+         * S3 HTTP server, specified in S3_PRESIGNED_PUT_URL, using HTTPS_PORT.
+         * These macros are defined in demo_config.h. */
         LogInfo( ( "Establishing a TLS session with %s:%d.",
                    serverHost,
                    HTTPS_PORT ) );
@@ -512,7 +512,11 @@ int main( int argc,
     int32_t returnStatus = EXIT_SUCCESS;
     /* HTTPS Client library return status. */
     HTTPStatus_t httpStatus = HTTP_SUCCESS;
-    /* The length of the path within the pre-signed URL. */
+    /* The length of the path within the pre-signed URL. This variable is defined
+     * in order to store the length returned from parsing the URL, but it is
+     * unused. The path used for the requests in this demo needs all the query
+     * information following the location of the object, to the end of the S3 presigned
+     * URL. */
     size_t pathLen = 0;
     /* The size of the file uploaded to S3. */
     size_t fileSize = 0;
@@ -609,13 +613,13 @@ int main( int argc,
 
         if( returnStatus == EXIT_SUCCESS )
         {
-            /* Log message indicating an iteration completed successfully. */
+            /* Log a message indicating an iteration completed successfully. */
             LogInfo( ( "Demo completed successfully." ) );
         }
 
         /************************** Disconnect. *****************************/
 
-        /* End TLS session, then close TCP connection. */
+        /* End the TLS session, then close the TCP connection. */
         ( void ) Openssl_Disconnect( &networkContext );
 
         LogInfo( ( "Short delay before starting the next iteration....\n" ) );
