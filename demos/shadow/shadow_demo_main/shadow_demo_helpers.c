@@ -411,7 +411,7 @@ static void cleanupOutgoingPublishWithPacketID( uint16_t packetId )
         if( outgoingPublishPackets[ index ].packetId == packetId )
         {
             cleanupOutgoingPublishAt( index );
-            LogInfo( ( "Cleaned up outgoing publish packet with packet id %u.\n\n",
+            LogInfo( ( "Cleaned up outgoing publish packet with packet id %u.",
                        packetId ) );
             break;
         }
@@ -427,13 +427,13 @@ void HandleOtherIncomingPacket( MQTTPacketInfo_t * pPacketInfo,
     switch( pPacketInfo->type )
     {
         case MQTT_PACKET_TYPE_SUBACK:
-            LogInfo( ( "MQTT_PACKET_TYPE_SUBACK.\n\n" ) );
+            LogInfo( ( "MQTT_PACKET_TYPE_SUBACK." ) );
             /* Make sure ACK packet identifier matches with Request packet identifier. */
             assert( globalSubscribePacketIdentifier == packetIdentifier );
             break;
 
         case MQTT_PACKET_TYPE_UNSUBACK:
-            LogInfo( ( "MQTT_PACKET_TYPE_UNSUBACK.\n\n" ) );
+            LogInfo( ( "MQTT_PACKET_TYPE_UNSUBACK." ) );
             /* Make sure ACK packet identifier matches with Request packet identifier. */
             assert( globalUnsubscribePacketIdentifier == packetIdentifier );
             break;
@@ -443,11 +443,11 @@ void HandleOtherIncomingPacket( MQTTPacketInfo_t * pPacketInfo,
             /* Nothing to be done from application as library handles
              * PINGRESP. */
             LogWarn( ( "PINGRESP should not be handled by the application "
-                       "callback when using MQTT_ProcessLoop.\n\n" ) );
+                       "callback when using MQTT_ProcessLoop." ) );
             break;
 
         case MQTT_PACKET_TYPE_PUBACK:
-            LogInfo( ( "PUBACK received for packet id %u.\n\n",
+            LogInfo( ( "PUBACK received for packet id %u.",
                        packetIdentifier ) );
             /* Cleanup publish packet when a PUBACK is received. */
             cleanupOutgoingPublishWithPacketID( packetIdentifier );
@@ -455,7 +455,7 @@ void HandleOtherIncomingPacket( MQTTPacketInfo_t * pPacketInfo,
 
         /* Any other packet type is invalid. */
         default:
-            LogError( ( "Unknown packet type received:(%02x).\n\n",
+            LogError( ( "Unknown packet type received:(%02x).",
                         pPacketInfo->type ) );
     }
 }
@@ -496,7 +496,7 @@ static int handlePublishResend( MQTTContext_t * pMqttContext )
             }
             else
             {
-                LogInfo( ( "Sent duplicate PUBLISH successfully for packet id %u.\n\n",
+                LogInfo( ( "Sent duplicate PUBLISH successfully for packet id %u.",
                            outgoingPublishPackets[ index ].packetId ) );
             }
         }
@@ -605,7 +605,7 @@ int EstablishMqttSession( MQTTEventCallback_t eventCallback )
             }
             else
             {
-                LogInfo( ( "MQTT connection successfully established with broker.\n\n" ) );
+                LogInfo( ( "MQTT connection successfully established with broker." ) );
             }
         }
 
@@ -633,7 +633,7 @@ int EstablishMqttSession( MQTTEventCallback_t eventCallback )
             else
             {
                 LogInfo( ( "A clean MQTT connection is established."
-                           " Cleaning up all the stored outgoing publishes.\n\n" ) );
+                           " Cleaning up all the stored outgoing publishes." ) );
 
                 /* Clean up the outgoing publishes waiting for ack as this new
                  * connection doesn't re-establish an existing session. */
@@ -715,7 +715,7 @@ int32_t SubscribeToTopic( const char * pTopicFilter,
     }
     else
     {
-        LogInfo( ( "SUBSCRIBE topic %.*s to broker.\n\n",
+        LogInfo( ( "SUBSCRIBE topic %.*s to broker.",
                    topicFilterLength,
                    pTopicFilter ) );
 
@@ -778,7 +778,7 @@ int32_t UnsubscribeFromTopic( const char * pTopicFilter,
     }
     else
     {
-        LogInfo( ( "UNSUBSCRIBE sent topic %.*s to broker.\n\n",
+        LogInfo( ( "UNSUBSCRIBE sent topic %.*s to broker.",
                    topicFilterLength,
                    pTopicFilter ) );
 
@@ -826,11 +826,11 @@ int32_t PublishToTopic( const char * pTopicFilter,
 
     if( returnStatus == EXIT_FAILURE )
     {
-        LogError( ( "Unable to find a free spot for outgoing PUBLISH message.\n\n" ) );
+        LogError( ( "Unable to find a free spot for outgoing PUBLISH message." ) );
     }
     else
     {
-        LogInfo( ( "the published payload:%s \r\n ", pPayload ) );
+        LogInfo( ( "Published payload: %s", pPayload ) );
         /* This example publishes to only one topic and uses QOS1. */
         outgoingPublishPackets[ publishIndex ].pubInfo.qos = MQTTQoS1;
         outgoingPublishPackets[ publishIndex ].pubInfo.pTopicName = pTopicFilter;
@@ -855,7 +855,7 @@ int32_t PublishToTopic( const char * pTopicFilter,
         }
         else
         {
-            LogInfo( ( "PUBLISH sent for topic %.*s to broker with packet ID %u.\n\n",
+            LogInfo( ( "PUBLISH sent for topic %.*s to broker with packet ID %u.",
                        topicFilterLength,
                        pTopicFilter,
                        outgoingPublishPackets[ publishIndex ].packetId ) );
