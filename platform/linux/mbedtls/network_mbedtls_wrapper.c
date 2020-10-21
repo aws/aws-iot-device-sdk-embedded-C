@@ -213,6 +213,19 @@ IoT_Error_t iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
 		}
 	}
 
+    /* Set Maximum Fragment Length if enabled. */
+#ifdef MBEDTLS_SSL_MAX_FRAGMENT_LENGTH
+	/* Enable the max fragment extension. 4096 bytes is currently the largest fragment size permitted.
+	 * See RFC 8449 https://tools.ietf.org/html/rfc8449 for more information.
+	 *
+	 * Smaller values can be found in "mbedtls/include/ssl.h".
+	 */
+	if((ret = mbedtls_ssl_conf_max_frag_len(&(tlsDataParams->conf), MBEDTLS_SSL_MAX_FRAG_LEN_4096)) != 0) {
+		IOT_ERROR(" failed\n  ! mbedtls_ssl_conf_max_frag_len returned -0x%x\n\n", -ret);
+		return SSL_CONNECTION_ERROR;
+	}
+#endif
+
 	/* Assign the resulting configuration to the SSL context. */
 	if((ret = mbedtls_ssl_setup(&(tlsDataParams->ssl), &(tlsDataParams->conf))) != 0) {
 		IOT_ERROR(" failed\n  ! mbedtls_ssl_setup returned -0x%x\n\n", -ret);
