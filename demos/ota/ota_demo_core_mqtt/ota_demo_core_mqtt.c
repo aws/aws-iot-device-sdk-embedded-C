@@ -803,22 +803,20 @@ void startOTADemo( MQTTContext_t * pMqttContext )
                    OTA_GetPacketsProcessed(),
                    OTA_GetPacketsDropped() ) );
 
-        sleep( OTA_DEMO_TASK_DELAY_SECONDS );
+        if(state == OtaAgentStateWaitingForJob )
+        {
+                mqttStatus = MQTT_ProcessLoop( pMqttContext, 1000 );
 
-    //    if(state == OtaAgentStateWaitingForJob )
-    //    {
-    //         mqttStatus = MQTT_ProcessLoop( pMqttContext, 1000 );
-
-    //         if( mqttStatus != MQTTSuccess )
-    //         {
-    //             LogError( ( "MQTT_ProcessLoop returned with status = %u.",
-    //                     mqttStatus ) );
-    //         }
-    //    }
-    //    else
-    //    {
-    //        sleep( OTA_DEMO_TASK_DELAY_SECONDS );
-    //    }
+                if( mqttStatus != MQTTSuccess )
+                {
+                    LogError( ( "MQTT_ProcessLoop returned with status = %u.",
+                            mqttStatus ) );
+                }
+        }
+        else
+        {
+            sleep( OTA_DEMO_TASK_DELAY_SECONDS );
+        }
        
     }
 
