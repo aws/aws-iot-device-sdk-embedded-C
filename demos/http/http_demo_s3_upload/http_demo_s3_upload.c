@@ -22,6 +22,7 @@
 
 /* Standard includes. */
 #include <assert.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -195,10 +196,13 @@ static int32_t connectToServer( NetworkContext_t * pNetworkContext );
  * @param[in] pTransportInterface The transport interface for making network
  * calls.
  * @param[in] pPath The Request-URI to the objects of interest.
+ *
+ * @return The status of the file size acquisition and verification using a GET
+ * request to the server: true on success, false on failure.
  */
-static HTTPStatus_t verifyS3ObjectFileSize( size_t * pFileSize,
-                                            const TransportInterface_t * pTransportInterface,
-                                            const char * pPath );
+static bool verifyS3ObjectFileSize( size_t * pFileSize,
+                                    const TransportInterface_t * pTransportInterface,
+                                    const char * pPath );
 
 /**
  * @brief Send an HTTP PUT request based on a specified path to upload a file,
@@ -207,9 +211,12 @@ static HTTPStatus_t verifyS3ObjectFileSize( size_t * pFileSize,
  * @param[in] pTransportInterface The transport interface for making network
  * calls.
  * @param[in] pPath The Request-URI to the objects of interest.
+ *
+ * @return The status of the file upload using a PUT request to the server: true
+ * on success, false on failure.
  */
-static HTTPStatus_t uploadS3ObjectFile( const TransportInterface_t * pTransportInterface,
-                                        const char * pPath );
+static bool uploadS3ObjectFile( const TransportInterface_t * pTransportInterface,
+                                const char * pPath );
 
 /*-----------------------------------------------------------*/
 
@@ -281,10 +288,11 @@ static int32_t connectToServer( NetworkContext_t * pNetworkContext )
 
 /*-----------------------------------------------------------*/
 
-static HTTPStatus_t verifyS3ObjectFileSize( size_t * pFileSize,
-                                            const TransportInterface_t * pTransportInterface,
-                                            const char * pPath )
+static bool verifyS3ObjectFileSize( size_t * pFileSize,
+                                    const TransportInterface_t * pTransportInterface,
+                                    const char * pPath )
 {
+    bool returnStatus = false;
     HTTPStatus_t httpStatus = HTTP_SUCCESS;
 
     /* The location of the file size in contentRangeValStr. */
@@ -342,16 +350,28 @@ static HTTPStatus_t verifyS3ObjectFileSize( size_t * pFileSize,
 
     if( httpStatus == HTTP_SUCCESS )
     {
-        LogInfo( ( "Received HTTP response from %s%s...",
-                   serverHost, pPath ) );
-        LogInfo( ( "Response Headers:\n%.*s",
-                   ( int32_t ) response.headersLen,
-                   response.pHeaders ) );
-        LogInfo( ( "Response Status:\n%u",
+        LogDebug( ( "Received HTTP response from %s%s...",
+                    serverHost, pPath ) );
+        LogDebug( ( "Response Headers:\n%.*s",
+                    ( int32_t ) response.headersLen,
+                    response.pHeaders ) );
+        LogDebug( ( "Response Body:\n%.*s\n",
+                    ( int32_t ) response.bodyLen,
+                    response.pBody ) );
+
+        returnStatus = ( response.statusCode == 206 ) ? true : false;
+    }
+    else
+    {
+        LogError( ( "Failed to send HTTP GET request to %s%s: Error=%s.",
+                    serverHost, pPath, HTTPClient_strerror( httpStatus ) ) );
+    }
+
+    if( returnStatus == true )
+    {
+        LogInfo( ( "Received successful response from server "
+                   "(Status Code: %u).",
                    response.statusCode ) );
-        LogInfo( ( "Response Body:\n%.*s\n",
-                   ( int32_t ) response.bodyLen,
-                   response.pBody ) );
 
         httpStatus = HTTPClient_ReadHeader( &response,
                                             ( char * ) HTTP_CONTENT_RANGE_HEADER_FIELD,
@@ -361,11 +381,12 @@ static HTTPStatus_t verifyS3ObjectFileSize( size_t * pFileSize,
     }
     else
     {
-        LogError( ( "Failed to send HTTP GET request to %s%s: Error=%s.",
-                    serverHost, pPath, HTTPClient_strerror( httpStatus ) ) );
+        LogError( ( "Received an invalid response from the server "
+                    "(Status Code: %u).",
+                    response.statusCode ) );
     }
 
-    if( httpStatus == HTTP_SUCCESS )
+    if( ( returnStatus == true ) && ( httpStatus == HTTP_SUCCESS ) )
     {
         /* Parse the Content-Range header value to get the file size. */
         pFileSizeStr = strstr( contentRangeValStr, "/" );
@@ -394,7 +415,7 @@ static HTTPStatus_t verifyS3ObjectFileSize( size_t * pFileSize,
                     HTTPClient_strerror( httpStatus ) ) );
     }
 
-    if( httpStatus == HTTP_SUCCESS )
+    if( ( returnStatus == true ) && ( httpStatus == HTTP_SUCCESS ) )
     {
         if( *pFileSize != DEMO_HTTP_UPLOAD_DATA_LENGTH )
         {
@@ -417,14 +438,15 @@ static HTTPStatus_t verifyS3ObjectFileSize( size_t * pFileSize,
                     HTTPClient_strerror( httpStatus ) ) );
     }
 
-    return httpStatus;
+    return( returnStatus == true && httpStatus == HTTP_SUCCESS );
 }
 
 /*-----------------------------------------------------------*/
 
-static HTTPStatus_t uploadS3ObjectFile( const TransportInterface_t * pTransportInterface,
-                                        const char * pPath )
+static bool uploadS3ObjectFile( const TransportInterface_t * pTransportInterface,
+                                const char * pPath )
 {
+    bool returnStatus = false;
     HTTPStatus_t httpStatus = HTTP_SUCCESS;
 
     /* Initialize the request object. */
@@ -457,9 +479,9 @@ static HTTPStatus_t uploadS3ObjectFile( const TransportInterface_t * pTransportI
     if( httpStatus == HTTP_SUCCESS )
     {
         LogInfo( ( "Uploading file..." ) );
-        LogInfo( ( "Request Headers:\n%.*s",
-                   ( int32_t ) requestHeaders.headersLen,
-                   ( char * ) requestHeaders.pBuffer ) );
+        LogDebug( ( "Request Headers:\n%.*s",
+                    ( int32_t ) requestHeaders.headersLen,
+                    ( char * ) requestHeaders.pBuffer ) );
         httpStatus = HTTPClient_Send( pTransportInterface,
                                       &requestHeaders,
                                       ( const uint8_t * ) DEMO_HTTP_UPLOAD_DATA,
@@ -475,16 +497,16 @@ static HTTPStatus_t uploadS3ObjectFile( const TransportInterface_t * pTransportI
 
     if( httpStatus == HTTP_SUCCESS )
     {
-        LogInfo( ( "Received HTTP response from %s%s...",
-                   serverHost, pPath ) );
-        LogInfo( ( "Response Headers:\n%.*s",
-                   ( int32_t ) response.headersLen,
-                   response.pHeaders ) );
-        LogInfo( ( "Response Status:\n%u",
-                   response.statusCode ) );
-        LogInfo( ( "Response Body:\n%.*s\n",
-                   ( int32_t ) response.bodyLen,
-                   response.pBody ) );
+        LogDebug( ( "Received HTTP response from %s%s...",
+                    serverHost, pPath ) );
+        LogDebug( ( "Response Headers:\n%.*s",
+                    ( int32_t ) response.headersLen,
+                    response.pHeaders ) );
+        LogDebug( ( "Response Body:\n%.*s\n",
+                    ( int32_t ) response.bodyLen,
+                    response.pBody ) );
+
+        returnStatus = ( response.statusCode == 200 ) ? true : false;
     }
     else
     {
@@ -493,7 +515,20 @@ static HTTPStatus_t uploadS3ObjectFile( const TransportInterface_t * pTransportI
                     serverHost, pPath, HTTPClient_strerror( httpStatus ) ) );
     }
 
-    return httpStatus;
+    if( returnStatus == true )
+    {
+        LogInfo( ( "Received successful response from server "
+                   "(Status Code: %u).",
+                   response.statusCode ) );
+    }
+    else
+    {
+        LogError( ( "Received an invalid response from the server "
+                    "(Status Code: %u).",
+                    response.statusCode ) );
+    }
+
+    return returnStatus;
 }
 
 /*-----------------------------------------------------------*/
@@ -517,13 +552,16 @@ int main( int argc,
 {
     /* Return value of main. */
     int32_t returnStatus = EXIT_SUCCESS;
+    /* Return value of private functions. */
+    bool ret = false;
     /* HTTPS Client library return status. */
     HTTPStatus_t httpStatus = HTTP_SUCCESS;
-    /* The length of the path within the pre-signed URL. This variable is defined
-     * in order to store the length returned from parsing the URL, but it is
-     * unused. The path used for the requests in this demo needs all the query
-     * information following the location of the object, to the end of the S3 presigned
-     * URL. */
+
+    /* The length of the path within the pre-signed URL. This variable is
+     * defined in order to store the length returned from parsing the URL, but
+     * it is unused. The path used for the requests in this demo needs all the
+     * query information following the location of the object, to the end of the
+     * S3 presigned URL. */
     size_t pathLen = 0;
     /* The size of the file uploaded to S3. */
     size_t fileSize = 0;
@@ -538,21 +576,8 @@ int main( int argc,
 
     for( ; ; )
     {
-        LogInfo( ( "HTTPS Client Synchronous S3 upload demo using pre-signed PUT URL:\n%s", S3_PRESIGNED_PUT_URL ) );
-
-        /************************* Parse Signed URL. *************************/
-        if( returnStatus == EXIT_SUCCESS )
-        {
-            /* Retrieve the path location from S3_PRESIGNED_PUT_URL. This
-             * function returns the length of the path without the query into
-             * pathLen. */
-            httpStatus = getUrlPath( S3_PRESIGNED_PUT_URL,
-                                     S3_PRESIGNED_PUT_URL_LENGTH,
-                                     &pPath,
-                                     &pathLen );
-
-            returnStatus = ( httpStatus == HTTP_SUCCESS ) ? EXIT_SUCCESS : EXIT_FAILURE;
-        }
+        LogInfo( ( "HTTP Client Synchronous S3 upload demo using pre-signed PUT URL:\n%s",
+                   S3_PRESIGNED_PUT_URL ) );
 
         /**************************** Connect. ******************************/
 
@@ -560,11 +585,11 @@ int main( int argc,
         if( returnStatus == EXIT_SUCCESS )
         {
             /* Attempt to connect to the HTTP server. If connection fails, retry
-             * after a timeout. Timeout value will be exponentially increased
-             * till the maximum attempts are reached or maximum timeout value is
-             * reached. The function returns EXIT_FAILURE if the TCP connection
-             * cannot be established to broker after configured number of
-             * attempts. */
+             * after a timeout. The timeout value will be exponentially
+             * increased until either the maximum number of attempts or the
+             * maximum timeout value is reached. The function returns
+             * EXIT_FAILURE if the TCP connection cannot be established to the
+             * broker after the configured number of attempts. */
             returnStatus = connectToServerWithBackoffRetries( connectToServer,
                                                               &networkContext );
 
@@ -590,10 +615,22 @@ int main( int argc,
 
         if( returnStatus == EXIT_SUCCESS )
         {
-            httpStatus = uploadS3ObjectFile( &transportInterface,
-                                             pPath );
+            /* Retrieve the path location from S3_PRESIGNED_PUT_URL. This
+             * function returns the length of the path without the query into
+             * pathLen, which is left unused in this demo. */
+            httpStatus = getUrlPath( S3_PRESIGNED_PUT_URL,
+                                     S3_PRESIGNED_PUT_URL_LENGTH,
+                                     &pPath,
+                                     &pathLen );
 
             returnStatus = ( httpStatus == HTTP_SUCCESS ) ? EXIT_SUCCESS : EXIT_FAILURE;
+        }
+
+        if( returnStatus == EXIT_SUCCESS )
+        {
+            ret = uploadS3ObjectFile( &transportInterface,
+                                      pPath );
+            returnStatus = ( ret == true ) ? EXIT_SUCCESS : EXIT_FAILURE;
         }
 
         /******************* Verify S3 Object File Upload. ********************/
@@ -614,11 +651,10 @@ int main( int argc,
         if( returnStatus == EXIT_SUCCESS )
         {
             /* Verify the file exists by retrieving the file size. */
-            httpStatus = verifyS3ObjectFileSize( &fileSize,
-                                                 &transportInterface,
-                                                 pPath );
-
-            returnStatus = ( httpStatus == HTTP_SUCCESS ) ? EXIT_SUCCESS : EXIT_FAILURE;
+            ret = verifyS3ObjectFileSize( &fileSize,
+                                          &transportInterface,
+                                          pPath );
+            returnStatus = ( ret == true ) ? EXIT_SUCCESS : EXIT_FAILURE;
         }
 
         if( returnStatus == EXIT_SUCCESS )
