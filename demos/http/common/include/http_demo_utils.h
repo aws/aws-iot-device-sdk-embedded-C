@@ -61,20 +61,22 @@ int32_t connectToServerWithBackoffRetries( TransportConnect_t connectFunction,
  *
  * The URL MUST start with "http://" or "https://" to find the path.
  *
- * For example, if the URL is:
- * pUrl = "https://www.somewebsite.com/path/to/item.txt?optionalquery=stuff"
+ * For example, if pUrl is:
+ * "https://www.somewebsite.com/path/to/item.txt?optionalquery=stuff"
  *
+ * Then pPath and pPathLen will be the following:
  * *pPath = "/path/to/item.txt?optionalquery=stuff"
  * *pPathLen = 17
  *
- * @param[in] pUrl - URL string to parse.
- * @param[in] urlLen - The length of the URL string input.
- * @param[out] pPath - pointer within input url that the path starts at.
- * @param[out] pPathLen - Length of the path.
+ * @param[in] pUrl URL string to parse.
+ * @param[in] urlLen The length of the URL string input.
+ * @param[out] pPath pointer within input url that the path starts at.
+ * @param[out] pPathLen Length of the path.
  *
- * - #HTTP_SUCCESS if the path was successfully parsed.
- * - #HTTP_PARSER_INTERNAL_ERROR if there was an error parsing the URL.
- * - #HTTP_NO_RESPONSE if the path was not found.
+ * @return The status of the parsing attempt:
+ * HTTP_SUCCESS if the path was successfully parsed,
+ * HTTP_PARSER_INTERNAL_ERROR if there was an error parsing the URL,
+ * or HTTP_NO_RESPONSE if the path was not found.
  */
 HTTPStatus_t getUrlPath( const char * pUrl,
                          size_t urlLen,
@@ -89,21 +91,22 @@ HTTPStatus_t getUrlPath( const char * pUrl,
  *
  * The URL MUST start with "http://" or "https://" to find the address.
  *
- * For example, if the URL is:
- * pUrl = "https://www.somewebsite.com/path/to/item.txt?optionalquery=stuff"
+ * For example, if pUrl is:
+ * "https://www.somewebsite.com/path/to/item.txt?optionalquery=stuff"
  *
+ * Then pAddress and pAddressLen will be the following:
  * *pAddress = "www.somewebsite.com/path/to/item.txt?optionalquery=stuff"
  * *pAddressLen = 19
  *
- * @param[in] pUrl - URL string to parse.
- * @param[in] urlLen - The length of the URL string input.
- * @param[out] pAddress - pointer within input url that the address starts at.
- * @param[out] pAddressLen - Length of the address.
+ * @param[in] pUrl URL string to parse.
+ * @param[in] urlLen The length of the URL string input.
+ * @param[out] pAddress pointer within input url that the address starts at.
+ * @param[out] pAddressLen Length of the address.
  *
- * @return One of the following:
- * - #HTTP_SUCCESS if the path was successfully parsed.
- * - #HTTP_PARSER_INTERNAL_ERROR if there was an error parsing the URL.
- * - #HTTP_NO_RESPONSE if the address was not found.
+ * @return The status of the parsing attempt:
+ * HTTP_SUCCESS if the path was successfully parsed,
+ * HTTP_PARSER_INTERNAL_ERROR if there was an error parsing the URL,
+ * or HTTP_NO_RESPONSE if the path was not found.
  */
 HTTPStatus_t getUrlAddress( const char * pUrl,
                             size_t urlLen,
