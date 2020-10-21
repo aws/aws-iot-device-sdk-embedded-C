@@ -359,7 +359,7 @@ static void eventCallback( MQTTContext_t * pContext,
  *
  * @return -1 to represent failure.
  */
-static int32_t failedRecv( const NetworkContext_t * pNetworkContext,
+static int32_t failedRecv( NetworkContext_t * pNetworkContext,
                            void * pBuffer,
                            size_t bytesToRecv );
 
@@ -698,7 +698,7 @@ static MQTTStatus_t publishToTopic( MQTTContext_t * pContext,
                          packetId );
 }
 
-static int32_t failedRecv( const NetworkContext_t * pNetworkContext,
+static int32_t failedRecv( NetworkContext_t * pNetworkContext,
                            void * pBuffer,
                            size_t bytesToRecv )
 {
