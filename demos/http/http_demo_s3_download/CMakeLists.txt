@@ -36,12 +36,14 @@ if(ROOT_CA_CERT_PATH)
             ROOT_CA_CERT_PATH="${ROOT_CA_CERT_PATH}"
     )
 endif()
+
 if(HTTPS_PORT)
     target_compile_definitions(
         ${DEMO_NAME} PRIVATE
             HTTPS_PORT=${HTTPS_PORT}
     )
 endif()
+
 if(S3_PRESIGNED_GET_URL)
     target_compile_definitions(
         ${DEMO_NAME} PRIVATE

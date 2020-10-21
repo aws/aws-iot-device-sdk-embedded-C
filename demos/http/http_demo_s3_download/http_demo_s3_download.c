@@ -471,11 +471,8 @@ static bool downloadS3ObjectFile( const TransportInterface_t * pTransportInterfa
      * this reaches the fileSize we stop downloading. */
     while( ( returnStatus == true ) && ( httpStatus == HTTP_SUCCESS ) && ( curByte < fileSize ) )
     {
-        if( httpStatus == HTTP_SUCCESS )
-        {
-            httpStatus = HTTPClient_InitializeRequestHeaders( &requestHeaders,
-                                                              &requestInfo );
-        }
+        httpStatus = HTTPClient_InitializeRequestHeaders( &requestHeaders,
+                                                          &requestInfo );
 
         if( httpStatus == HTTP_SUCCESS )
         {
@@ -561,9 +558,9 @@ static bool downloadS3ObjectFile( const TransportInterface_t * pTransportInterfa
  * TCP connection, validates the server's certificate using the root CA
  * certificate defined in the config header, then finally performs a TLS
  * handshake with the HTTP server so that all communication is encrypted. After
- * which, the HTTP Client library API is used to download the S3 file by sending
- * multiple GET requests, filling up the response buffer each time until all
- * parts are downloaded. If any request fails, an error code is returned.
+ * which, the HTTP Client library API is used to download the S3 file (by
+ * sending multiple GET requests, filling up the response buffer each time until
+ * all parts are downloaded). If any request fails, an error code is returned.
  *
  * @note This example is single-threaded and uses statically allocated memory.
  *
@@ -614,8 +611,8 @@ int main( int argc,
 
             if( returnStatus == EXIT_FAILURE )
             {
-                /* Log error to indicate connection failure after all reconnect
-                 * attempts are over. */
+                /* Log an error to indicate connection failure after all
+                 * reconnect attempts are over. */
                 LogError( ( "Failed to connect to HTTP server %s.",
                             serverHost ) );
             }
