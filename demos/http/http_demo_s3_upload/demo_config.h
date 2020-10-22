@@ -82,6 +82,8 @@
  * https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
  *
  * Run this script and paste the output S3_PRESIGNED_GET_URL below.
+ *
+ * #define S3_PRESIGNED_GET_URL         "...insert here..."
  */
 #ifndef S3_PRESIGNED_GET_URL
     #define S3_PRESIGNED_GET_URL    ""
@@ -95,6 +97,8 @@
  * https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
  *
  * Run this script and paste the output S3_PRESIGNED_PUT_URL below.
+ *
+ * #define S3_PRESIGNED_PUT_URL         "...insert here..."
  */
 #ifndef S3_PRESIGNED_PUT_URL
     #define S3_PRESIGNED_PUT_URL    ""

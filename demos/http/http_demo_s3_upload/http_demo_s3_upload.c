@@ -192,16 +192,15 @@ static int32_t connectToServer( NetworkContext_t * pNetworkContext );
  * @brief Retrieve and verify the size of the S3 object that is specified in
  * pPath.
  *
- * @param[out] pFileSize The size of the S3 object.
  * @param[in] pTransportInterface The transport interface for making network
  * calls.
- * @param[in] pPath The Request-URI to the objects of interest.
+ * @param[in] pPath The Request-URI to the objects of interest. This string
+ * should be null-terminated.
  *
  * @return The status of the file size acquisition and verification using a GET
  * request to the server: true on success, false on failure.
  */
-static bool verifyS3ObjectFileSize( size_t * pFileSize,
-                                    const TransportInterface_t * pTransportInterface,
+static bool verifyS3ObjectFileSize( const TransportInterface_t * pTransportInterface,
                                     const char * pPath );
 
 /**
@@ -210,7 +209,8 @@ static bool verifyS3ObjectFileSize( size_t * pFileSize,
  *
  * @param[in] pTransportInterface The transport interface for making network
  * calls.
- * @param[in] pPath The Request-URI to the objects of interest.
+ * @param[in] pPath The Request-URI to the objects of interest. This string
+ * should be null-terminated.
  *
  * @return The status of the file upload using a PUT request to the server: true
  * on success, false on failure.
@@ -288,139 +288,26 @@ static int32_t connectToServer( NetworkContext_t * pNetworkContext )
 
 /*-----------------------------------------------------------*/
 
-static bool verifyS3ObjectFileSize( size_t * pFileSize,
-                                    const TransportInterface_t * pTransportInterface,
+static bool verifyS3ObjectFileSize( const TransportInterface_t * pTransportInterface,
                                     const char * pPath )
 {
     bool returnStatus = false;
-    HTTPStatus_t httpStatus = HTTP_SUCCESS;
+    /* The size of the file uploaded to S3. */
+    size_t fileSize = 0;
 
-    /* The location of the file size in contentRangeValStr. */
-    char * pFileSizeStr = NULL;
-
-    /* String to store the Content-Range header value. */
-    char * contentRangeValStr = NULL;
-    size_t contentRangeValStrLength = 0;
-
-    /* Initialize the request object. */
-    requestInfo.pHost = serverHost;
-    requestInfo.hostLen = serverHostLength;
-    requestInfo.method = HTTP_METHOD_GET;
-    requestInfo.methodLen = HTTP_METHOD_GET_LENGTH;
-    requestInfo.pPath = pPath;
-    requestInfo.pathLen = strlen( pPath );
-
-    /* Set "Connection" HTTP header to "keep-alive" so that multiple requests
-     * can be sent over the same established TCP connection. */
-    requestInfo.reqFlags = HTTP_REQUEST_KEEP_ALIVE_FLAG;
-
-    /* Set the buffer used for storing request headers. */
-    requestHeaders.pBuffer = userBuffer;
-    requestHeaders.bufferLen = USER_BUFFER_LENGTH;
-
-    /* Initialize the response object. The same buffer used for storing request
-     * headers is reused here. */
-    response.pBuffer = userBuffer;
-    response.bufferLen = USER_BUFFER_LENGTH;
-
-    LogInfo( ( "Getting file object size from host..." ) );
-
-    httpStatus = HTTPClient_InitializeRequestHeaders( &requestHeaders,
-                                                      &requestInfo );
-
-    if( httpStatus == HTTP_SUCCESS )
-    {
-        /* Add the header to get bytes=0-0. S3 will respond with a Content-Range
-         * header that contains the size of the file in it. This header will
-         * look like: "Content-Range: bytes 0-0/FILESIZE". The body will have a
-         * single byte that we are ignoring. */
-        httpStatus = HTTPClient_AddRangeHeader( &requestHeaders, 0, 0 );
-    }
-
-    if( httpStatus == HTTP_SUCCESS )
-    {
-        /* Send the request and receive the response. */
-        httpStatus = HTTPClient_Send( pTransportInterface,
-                                      &requestHeaders,
-                                      NULL,
-                                      0,
-                                      &response,
-                                      0 );
-    }
-
-    if( httpStatus == HTTP_SUCCESS )
-    {
-        LogDebug( ( "Received HTTP response from %s%s...",
-                    serverHost, pPath ) );
-        LogDebug( ( "Response Headers:\n%.*s",
-                    ( int32_t ) response.headersLen,
-                    response.pHeaders ) );
-        LogDebug( ( "Response Body:\n%.*s\n",
-                    ( int32_t ) response.bodyLen,
-                    response.pBody ) );
-
-        returnStatus = ( response.statusCode == 206 ) ? true : false;
-    }
-    else
-    {
-        LogError( ( "Failed to send HTTP GET request to %s%s: Error=%s.",
-                    serverHost, pPath, HTTPClient_strerror( httpStatus ) ) );
-    }
+    /* Retrieve the file size. */
+    returnStatus = getS3ObjectFileSize( &fileSize,
+                                        pTransportInterface,
+                                        serverHost,
+                                        serverHostLength,
+                                        pPath );
 
     if( returnStatus == true )
     {
-        LogInfo( ( "Received successful response from server "
-                   "(Status Code: %u).",
-                   response.statusCode ) );
-
-        httpStatus = HTTPClient_ReadHeader( &response,
-                                            ( char * ) HTTP_CONTENT_RANGE_HEADER_FIELD,
-                                            ( size_t ) HTTP_CONTENT_RANGE_HEADER_FIELD_LENGTH,
-                                            ( const char ** ) &contentRangeValStr,
-                                            &contentRangeValStrLength );
-    }
-    else
-    {
-        LogError( ( "Received an invalid response from the server "
-                    "(Status Code: %u).",
-                    response.statusCode ) );
-    }
-
-    if( ( returnStatus == true ) && ( httpStatus == HTTP_SUCCESS ) )
-    {
-        /* Parse the Content-Range header value to get the file size. */
-        pFileSizeStr = strstr( contentRangeValStr, "/" );
-
-        if( pFileSizeStr == NULL )
-        {
-            LogError( ( "'/' not present in Content-Range header value: %s.",
-                        contentRangeValStr ) );
-        }
-
-        pFileSizeStr += sizeof( char );
-        *pFileSize = ( size_t ) strtoul( pFileSizeStr, NULL, 10 );
-
-        if( ( *pFileSize == 0 ) || ( *pFileSize == UINT32_MAX ) )
-        {
-            LogError( ( "Error using strtoul to get the file size from %s: fileSize=%d.",
-                        pFileSizeStr, ( int32_t ) *pFileSize ) );
-            httpStatus = HTTP_INVALID_PARAMETER;
-        }
-
-        LogInfo( ( "The file is %d bytes long.", ( int32_t ) *pFileSize ) );
-    }
-    else
-    {
-        LogError( ( "Failed to read Content-Range header from HTTP response: Error=%s.",
-                    HTTPClient_strerror( httpStatus ) ) );
-    }
-
-    if( ( returnStatus == true ) && ( httpStatus == HTTP_SUCCESS ) )
-    {
-        if( *pFileSize != DEMO_HTTP_UPLOAD_DATA_LENGTH )
+        if( fileSize != DEMO_HTTP_UPLOAD_DATA_LENGTH )
         {
             LogError( ( "Failed to upload the data to S3. The file size found is %d, but it should be %d.",
-                        ( int32_t ) *pFileSize,
+                        ( int32_t ) fileSize,
                         ( int32_t ) DEMO_HTTP_UPLOAD_DATA_LENGTH ) );
         }
         else
@@ -428,17 +315,11 @@ static bool verifyS3ObjectFileSize( size_t * pFileSize,
             LogInfo( ( "Successfuly verified that the size of the file found on S3 matches the file size uploaded "
                        "(Uploaded: %d bytes, Found: %d bytes).",
                        ( int32_t ) DEMO_HTTP_UPLOAD_DATA_LENGTH,
-                       ( int32_t ) *pFileSize ) );
+                       ( int32_t ) fileSize ) );
         }
     }
-    else
-    {
-        LogError( ( "An error occurred in getting the file size from %s. Error=%s.",
-                    serverHost,
-                    HTTPClient_strerror( httpStatus ) ) );
-    }
 
-    return( returnStatus == true && httpStatus == HTTP_SUCCESS );
+    return returnStatus;
 }
 
 /*-----------------------------------------------------------*/
@@ -448,6 +329,13 @@ static bool uploadS3ObjectFile( const TransportInterface_t * pTransportInterface
 {
     bool returnStatus = false;
     HTTPStatus_t httpStatus = HTTP_SUCCESS;
+
+    assert( pPath != NULL );
+
+    /* Initialize all HTTP Client library API structs to 0. */
+    ( void ) memset( &requestHeaders, 0, sizeof( requestHeaders ) );
+    ( void ) memset( &requestInfo, 0, sizeof( requestInfo ) );
+    ( void ) memset( &response, 0, sizeof( response ) );
 
     /* Initialize the request object. */
     requestInfo.pHost = serverHost;
@@ -528,7 +416,7 @@ static bool uploadS3ObjectFile( const TransportInterface_t * pTransportInterface
                     response.statusCode ) );
     }
 
-    return returnStatus;
+    return( ( returnStatus == true ) && ( httpStatus == HTTP_SUCCESS ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -563,8 +451,6 @@ int main( int argc,
      * query information following the location of the object, to the end of the
      * S3 presigned URL. */
     size_t pathLen = 0;
-    /* The size of the file uploaded to S3. */
-    size_t fileSize = 0;
 
     /* The transport layer interface used by the HTTP Client library. */
     TransportInterface_t transportInterface;
@@ -651,8 +537,7 @@ int main( int argc,
         if( returnStatus == EXIT_SUCCESS )
         {
             /* Verify the file exists by retrieving the file size. */
-            ret = verifyS3ObjectFileSize( &fileSize,
-                                          &transportInterface,
+            ret = verifyS3ObjectFileSize( &transportInterface,
                                           pPath );
             returnStatus = ( ret == true ) ? EXIT_SUCCESS : EXIT_FAILURE;
         }
