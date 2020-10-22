@@ -85,6 +85,9 @@
  *
  * #define S3_PRESIGNED_GET_URL         "...insert here..."
  */
+#ifndef S3_PRESIGNED_GET_URL
+    #define S3_PRESIGNED_GET_URL    ""
+#endif
 
 /**
  * @brief Transport timeout in milliseconds for transport send and receive.
