@@ -76,57 +76,40 @@
 /**
  * @brief Length of the pre-signed GET URL defined in demo_config.h.
  */
-#define S3_PRESIGNED_GET_URL_LENGTH               ( sizeof( S3_PRESIGNED_GET_URL ) - 1 )
+#define S3_PRESIGNED_GET_URL_LENGTH           ( sizeof( S3_PRESIGNED_GET_URL ) - 1 )
 
 /**
  * @brief ALPN protocol name to be sent as part of the ClientHello message.
  *
  * @note When using ALPN, port 443 must be used to connect to AWS IoT Core.
  */
-#define IOT_CORE_ALPN_PROTOCOL_NAME               "\x0ex-amzn-http-ca"
+#define IOT_CORE_ALPN_PROTOCOL_NAME           "\x0ex-amzn-http-ca"
 
 /**
  * @brief Length of ALPN protocol name to be sent as part of the ClientHello
  * message.
  */
-#define IOT_CORE_ALPN_PROTOCOL_NAME_LENGTH        ( sizeof( IOT_CORE_ALPN_PROTOCOL_NAME ) - 1 )
-
-/**
- * @brief Field name of the HTTP Range header to read from server response.
- */
-#define HTTP_CONTENT_RANGE_HEADER_FIELD           "Content-Range"
-
-/**
- * @brief Length of the HTTP Range header field.
- */
-#define HTTP_CONTENT_RANGE_HEADER_FIELD_LENGTH    ( sizeof( HTTP_CONTENT_RANGE_HEADER_FIELD ) - 1 )
+#define IOT_CORE_ALPN_PROTOCOL_NAME_LENGTH    ( sizeof( IOT_CORE_ALPN_PROTOCOL_NAME ) - 1 )
 
 /**
  * @brief Delay in seconds between each iteration of the demo.
  */
-#define DEMO_LOOP_DELAY_SECONDS                   ( 5U )
+#define DEMO_LOOP_DELAY_SECONDS               ( 5U )
 
 /**
  * @brief The length of the HTTP GET method.
  */
-#define HTTP_METHOD_GET_LENGTH                    ( sizeof( HTTP_METHOD_GET ) - 1 )
+#define HTTP_METHOD_GET_LENGTH                ( sizeof( HTTP_METHOD_GET ) - 1 )
 
 /**
  * @brief A buffer used in the demo for storing HTTP request headers and HTTP
  * response headers and body.
  *
  * @note This demo shows how the same buffer can be re-used for storing the HTTP
- * response after the HTTP request is sent out. Here, a separate buffer is used
- * to download the file from the server. However, the user can decide how to use
- * buffers to store HTTP requests and responses.
+ * response after the HTTP request is sent out. However, the user can decide how
+ * to use buffers to store HTTP requests and responses.
  */
 static uint8_t userBuffer[ USER_BUFFER_LENGTH ];
-
-/**
- * @brief A buffer used in the demo for downloading the file from the server in
- * chunks.
- */
-static uint8_t fileDownloadBuffer[ FILE_BUFFER_LENGTH ];
 
 /**
  * @brief Represents header data that will be sent in an HTTP request.
@@ -173,22 +156,6 @@ static const char * pPath;
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on successful connection.
  */
 static int32_t connectToServer( NetworkContext_t * pNetworkContext );
-
-/**
- * @brief Retrieve the size of the S3 object that is specified in pPath.
- *
- * @param[out] pFileSize The size of the S3 object.
- * @param[in] pTransportInterface The transport interface for making network
- * calls.
- * @param[in] pPath The Request-URI to the objects of interest. This string
- * should be null-terminated.
- *
- * @return The status of the file size acquisition using a GET request to the
- * server: true on success, false on failure.
- */
-static bool getS3ObjectFileSize( size_t * pFileSize,
-                                 const TransportInterface_t * pTransportInterface,
-                                 const char * pPath );
 
 /**
  * @brief Send multiple HTTP GET requests, based on a specified path, to
@@ -275,19 +242,27 @@ static int32_t connectToServer( NetworkContext_t * pNetworkContext )
 
 /*-----------------------------------------------------------*/
 
-static bool getS3ObjectFileSize( size_t * pFileSize,
-                                 const TransportInterface_t * pTransportInterface,
-                                 const char * pPath )
+static bool downloadS3ObjectFile( const TransportInterface_t * pTransportInterface,
+                                  const char * pPath )
 {
     bool returnStatus = false;
     HTTPStatus_t httpStatus = HTTP_SUCCESS;
 
-    /* The location of the file size in contentRangeValStr. */
-    char * pFileSizeStr = NULL;
+    /* The size of the file we are trying to download in S3. */
+    size_t fileSize = 0;
 
-    /* String to store the Content-Range header value. */
-    char * contentRangeValStr = NULL;
-    size_t contentRangeValStrLength = 0;
+    /* The number of bytes we want to request with in each range of the file
+     * bytes. */
+    size_t numReqBytes = 0;
+    /* curByte indicates which starting byte we want to download next. */
+    size_t curByte = 0;
+
+    assert( pPath != NULL );
+
+    /* Initialize all HTTP Client library API structs to 0. */
+    ( void ) memset( &requestHeaders, 0, sizeof( requestHeaders ) );
+    ( void ) memset( &requestInfo, 0, sizeof( requestInfo ) );
+    ( void ) memset( &response, 0, sizeof( response ) );
 
     /* Initialize the request object. */
     requestInfo.pHost = serverHost;
@@ -311,150 +286,11 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
     response.pBuffer = userBuffer;
     response.bufferLen = USER_BUFFER_LENGTH;
 
-    LogInfo( ( "Getting file object size from host..." ) );
-
-    httpStatus = HTTPClient_InitializeRequestHeaders( &requestHeaders,
-                                                      &requestInfo );
-
-    if( httpStatus == HTTP_SUCCESS )
-    {
-        /* Add the header to get bytes=0-0. S3 will respond with a Content-Range
-         * header that contains the size of the file in it. This header will
-         * look like: "Content-Range: bytes 0-0/FILESIZE". The body will have a
-         * single byte that we are ignoring. */
-        httpStatus = HTTPClient_AddRangeHeader( &requestHeaders, 0, 0 );
-    }
-
-    if( httpStatus == HTTP_SUCCESS )
-    {
-        /* Send the request and receive the response. */
-        httpStatus = HTTPClient_Send( pTransportInterface,
-                                      &requestHeaders,
-                                      NULL,
-                                      0,
-                                      &response,
-                                      0 );
-    }
-
-    if( httpStatus == HTTP_SUCCESS )
-    {
-        LogDebug( ( "Received HTTP response from %s%s...",
-                    serverHost, pPath ) );
-        LogDebug( ( "Response Headers:\n%.*s",
-                    ( int32_t ) response.headersLen,
-                    response.pHeaders ) );
-        LogDebug( ( "Response Body:\n%.*s\n",
-                    ( int32_t ) response.bodyLen,
-                    response.pBody ) );
-
-        returnStatus = ( response.statusCode == 206 ) ? true : false;
-    }
-    else
-    {
-        LogError( ( "Failed to send HTTP GET request to %s%s: Error=%s.",
-                    serverHost, pPath, HTTPClient_strerror( httpStatus ) ) );
-    }
-
-    if( returnStatus == true )
-    {
-        LogInfo( ( "Received successful response from server "
-                   "(Status Code: %u).",
-                   response.statusCode ) );
-
-        httpStatus = HTTPClient_ReadHeader( &response,
-                                            ( char * ) HTTP_CONTENT_RANGE_HEADER_FIELD,
-                                            ( size_t ) HTTP_CONTENT_RANGE_HEADER_FIELD_LENGTH,
-                                            ( const char ** ) &contentRangeValStr,
-                                            &contentRangeValStrLength );
-    }
-    else
-    {
-        LogError( ( "Received an invalid response from the server "
-                    "(Status Code: %u).",
-                    response.statusCode ) );
-    }
-
-    if( ( returnStatus == true ) && ( httpStatus == HTTP_SUCCESS ) )
-    {
-        /* Parse the Content-Range header value to get the file size. */
-        pFileSizeStr = strstr( contentRangeValStr, "/" );
-
-        if( pFileSizeStr == NULL )
-        {
-            LogError( ( "'/' not present in Content-Range header value: %s.",
-                        contentRangeValStr ) );
-        }
-
-        pFileSizeStr += sizeof( char );
-        *pFileSize = ( size_t ) strtoul( pFileSizeStr, NULL, 10 );
-
-        if( ( *pFileSize == 0 ) || ( *pFileSize == UINT32_MAX ) )
-        {
-            LogError( ( "Error using strtoul to get the file size from %s: fileSize=%d.",
-                        pFileSizeStr, ( int32_t ) *pFileSize ) );
-            httpStatus = HTTP_INVALID_PARAMETER;
-        }
-
-        LogInfo( ( "The file is %d bytes long.", ( int32_t ) *pFileSize ) );
-    }
-    else
-    {
-        LogError( ( "Failed to read Content-Range header from HTTP response: Error=%s.",
-                    HTTPClient_strerror( httpStatus ) ) );
-    }
-
-    if( ( returnStatus == false ) || ( httpStatus != HTTP_SUCCESS ) )
-    {
-        LogError( ( "An error occurred in getting the file size from %s. Error=%s.",
-                    serverHost,
-                    HTTPClient_strerror( httpStatus ) ) );
-    }
-
-    return( ( returnStatus == true ) && ( httpStatus == HTTP_SUCCESS ) );
-}
-
-/*-----------------------------------------------------------*/
-
-static bool downloadS3ObjectFile( const TransportInterface_t * pTransportInterface,
-                                  const char * pPath )
-{
-    bool returnStatus = false;
-    HTTPStatus_t httpStatus = HTTP_SUCCESS;
-
-    /* The size of the file we are trying to download in S3. */
-    size_t fileSize = 0;
-
-    /* The number of bytes we want to request with in each range of the file
-     * bytes. */
-    size_t numReqBytes = 0;
-    /* curByte indicates which starting byte we want to download next. */
-    size_t curByte = 0;
-
-    /* Initialize the request object. */
-    requestInfo.pHost = serverHost;
-    requestInfo.hostLen = serverHostLength;
-    requestInfo.method = HTTP_METHOD_GET;
-    requestInfo.methodLen = HTTP_METHOD_GET_LENGTH;
-    requestInfo.pPath = pPath;
-    requestInfo.pathLen = strlen( pPath );
-
-    /* Set "Connection" HTTP header to "keep-alive" so that multiple requests
-     * can be sent over the same established TCP connection. This is done in
-     * order to download the file in parts. */
-    requestInfo.reqFlags = HTTP_REQUEST_KEEP_ALIVE_FLAG;
-
-    /* Set the buffer used for storing request headers. */
-    requestHeaders.pBuffer = userBuffer;
-    requestHeaders.bufferLen = USER_BUFFER_LENGTH;
-
-    /* Initialize the response object. The same buffer used for storing request
-     * headers is reused here. */
-    response.pBuffer = fileDownloadBuffer;
-    response.bufferLen = FILE_BUFFER_LENGTH;
-
     /* Verify the file exists by retrieving the file size. */
     returnStatus = getS3ObjectFileSize( &fileSize,
                                         pTransportInterface,
+                                        serverHost,
+                                        serverHostLength,
                                         pPath );
 
     if( fileSize < FILE_BUFFER_LENGTH )
@@ -533,7 +369,7 @@ static bool downloadS3ObjectFile( const TransportInterface_t * pTransportInterfa
         }
         else
         {
-            LogError( ( "An error occured in downloading the file."
+            LogError( ( "An error occured in downloading the file. "
                         "Failed to send HTTP GET request to %s%s: Error=%s.",
                         serverHost, pPath, HTTPClient_strerror( httpStatus ) ) );
         }
@@ -546,7 +382,7 @@ static bool downloadS3ObjectFile( const TransportInterface_t * pTransportInterfa
         }
     }
 
-    return returnStatus;
+    return( ( returnStatus == true ) && ( httpStatus == HTTP_SUCCESS ) );
 }
 
 /*-----------------------------------------------------------*/
