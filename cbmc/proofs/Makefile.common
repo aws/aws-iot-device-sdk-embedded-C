@@ -119,6 +119,8 @@ CBMCFLAGS += \
 	--undefined-shift-check \
 	--unsigned-overflow-check \
 	--unwinding-assertions \
+	--malloc-fail-null \
+	--malloc-may-fail
 
 goto: $(ENTRY).goto
 
