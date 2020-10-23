@@ -85,9 +85,6 @@
  *
  * #define S3_PRESIGNED_GET_URL         "...insert here..."
  */
-#ifndef S3_PRESIGNED_GET_URL
-    #define S3_PRESIGNED_GET_URL    ""
-#endif
 
 /**
  * @brief Transport timeout in milliseconds for transport send and receive.
@@ -96,12 +93,19 @@
 
 /**
  * @brief The length in bytes of the user buffer.
+ *
+ * @note A portion of the user buffer will be used to store the response header,
+ * so the length of the response body returned on any given range request will
+ * be less than USER_BUFFER_LENGTH.
  */
 #define USER_BUFFER_LENGTH                ( 4096 )
 
 /**
- * @brief The length in bytes of the file download buffer.
+ * @brief The size of the range header to request.
+ *
+ * @note This should account for the response headers that will also be stored
+ * in the user buffer.
  */
-#define FILE_BUFFER_LENGTH                ( 2048 )
+#define RANGE_HEADER_LENGTH               ( 2048 )
 
 #endif /* ifndef DEMO_CONFIG_H_ */
