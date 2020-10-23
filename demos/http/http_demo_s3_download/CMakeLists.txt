@@ -47,6 +47,6 @@ endif()
 if(S3_PRESIGNED_GET_URL)
     target_compile_definitions(
         ${DEMO_NAME} PRIVATE
-            S3_PRESIGNED_GET_URL=${S3_PRESIGNED_GET_URL}
+            S3_PRESIGNED_GET_URL="${S3_PRESIGNED_GET_URL}"
     )
 endif()
