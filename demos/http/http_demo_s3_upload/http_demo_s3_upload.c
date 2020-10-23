@@ -90,19 +90,6 @@
 #define S3_PRESIGNED_GET_URL_LENGTH               ( sizeof( S3_PRESIGNED_GET_URL ) - 1 )
 
 /**
- * @brief ALPN protocol name to be sent as part of the ClientHello message.
- *
- * @note When using ALPN, port 443 must be used to connect to AWS IoT Core.
- */
-#define IOT_CORE_ALPN_PROTOCOL_NAME               "\x0ex-amzn-http-ca"
-
-/**
- * @brief Length of ALPN protocol name to be sent as part of the ClientHello
- * message.
- */
-#define IOT_CORE_ALPN_PROTOCOL_NAME_LENGTH        ( sizeof( IOT_CORE_ALPN_PROTOCOL_NAME ) - 1 )
-
-/**
  * @brief Field name of the HTTP Range header to read from server response.
  */
 #define HTTP_CONTENT_RANGE_HEADER_FIELD           "Content-Range"
@@ -238,14 +225,6 @@ static int32_t connectToServer( NetworkContext_t * pNetworkContext )
     /* Initialize TLS credentials. */
     ( void ) memset( &opensslCredentials, 0, sizeof( opensslCredentials ) );
     opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
-
-    /* ALPN is required when communicating to AWS IoT Core over port 443 through
-     * HTTP. */
-    if( HTTPS_PORT == 443 )
-    {
-        opensslCredentials.pAlpnProtos = IOT_CORE_ALPN_PROTOCOL_NAME;
-        opensslCredentials.alpnProtosLen = IOT_CORE_ALPN_PROTOCOL_NAME_LENGTH;
-    }
 
     /* Retrieve the address location and length from S3_PRESIGNED_PUT_URL. */
     httpStatus = getUrlAddress( S3_PRESIGNED_PUT_URL,
