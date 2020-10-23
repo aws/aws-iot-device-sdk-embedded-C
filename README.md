@@ -66,12 +66,12 @@ All of the released versions of the C-SDK libraries are available as git tags. F
 
 ## Versioning
 
-C-SDK releases will now follow a date based versioning scheme with the format YYYYMM.NN_major, where:
+C-SDK releases will now follow a date based versioning scheme with the format YYYYMM.NN, where:
 
 * Y represents the year.
 * M represents the month.
 * N represents the release order within the designated month (00 being the first release).
-* A "major" denotation indicates the addition of new features or significant updates to multiple libraries.
+
 
 For example, a second release in June 2021 would be 202106.01. Although the SDK releases have moved to date-based versioning, each library within the SDK will still retain semantic versioning. In semantic versioning, the version number itself (X.Y.Z) indicates whether the release is a major, minor, or point release. You can use the semantic version of a library to assess the scope and impact of a new release on your application.
 
