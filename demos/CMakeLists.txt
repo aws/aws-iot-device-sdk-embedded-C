@@ -43,6 +43,13 @@ if(DOWNLOAD_CERTS)
         COMMAND curl --url https://www.amazontrust.com/repository/AmazonRootCA1.pem
         -o ${CMAKE_CURRENT_LIST_DIR}/certificates/AmazonRootCA1.crt
     )
+    # Download the Baltimore Cybertrust Root CA certificate.
+    message( "Downloading the Baltimore Cybertrust Root CA certificate..." )
+    file(MAKE_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/certificates)
+    execute_process(
+        COMMAND curl --url https://cacerts.digicert.com/BaltimoreCyberTrustRoot.crt.pem
+        -o ${CMAKE_CURRENT_LIST_DIR}/certificates/BaltimoreCyberTrustRoot.crt
+    )
 endif()
 
 # Copy the certificates and client keys to the build directory.
