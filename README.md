@@ -66,7 +66,7 @@ All of the released versions of the C-SDK libraries are available as git tags. F
 
 ## Versioning
 
-C-SDK releases will now follow a date based versioning scheme with the format YYYYMM.NN_major, where:
+C-SDK releases will now follow a date based versioning scheme with the format YYYYMM.NN, where:
 
 * Y represents the year.
 * M represents the month.
