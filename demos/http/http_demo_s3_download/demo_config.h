@@ -102,12 +102,12 @@
 #define USER_BUFFER_LENGTH                ( 4096 )
 
 /**
- * @brief The size of the range header to request.
+ * @brief The size of the range of the file to download, with each request.
  *
  * @note This should account for the response headers that will also be stored
  * in the user buffer. We don't expect S3 to send more than 1024 bytes of
  * headers.
  */
-#define RANGE_HEADER_LENGTH               ( 2048 )
+#define RANGE_REQUEST_LENGTH              ( 2048 )
 
 #endif /* ifndef DEMO_CONFIG_H_ */

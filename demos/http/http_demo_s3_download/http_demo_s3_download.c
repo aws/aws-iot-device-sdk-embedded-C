@@ -272,13 +272,13 @@ static bool downloadS3ObjectFile( const TransportInterface_t * pTransportInterfa
                                         serverHostLength,
                                         pPath );
 
-    if( fileSize < RANGE_HEADER_LENGTH )
+    if( fileSize < RANGE_REQUEST_LENGTH )
     {
         numReqBytes = fileSize;
     }
     else
     {
-        numReqBytes = RANGE_HEADER_LENGTH;
+        numReqBytes = RANGE_REQUEST_LENGTH;
     }
 
     /* Here we iterate sending byte range requests until the full file has been
