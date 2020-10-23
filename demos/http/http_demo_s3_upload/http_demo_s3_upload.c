@@ -194,8 +194,8 @@ static int32_t connectToServer( NetworkContext_t * pNetworkContext );
  *
  * @param[in] pTransportInterface The transport interface for making network
  * calls.
- * @param[in] pPath The Request-URI to the objects of interest. This string
- * should be null-terminated.
+ * @param[in] pPath The Request-URI to the objects of interest. This string must
+ * be null-terminated.
  *
  * @return The status of the file size acquisition and verification using a GET
  * request to the server: true on success, false on failure.
@@ -209,8 +209,8 @@ static bool verifyS3ObjectFileSize( const TransportInterface_t * pTransportInter
  *
  * @param[in] pTransportInterface The transport interface for making network
  * calls.
- * @param[in] pPath The Request-URI to the objects of interest. This string
- * should be null-terminated.
+ * @param[in] pPath The Request-URI to the objects of interest. This string must
+ * be null-terminated.
  *
  * @return The status of the file upload using a PUT request to the server: true
  * on success, false on failure.
