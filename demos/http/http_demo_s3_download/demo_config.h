@@ -96,7 +96,8 @@
  *
  * @note A portion of the user buffer will be used to store the response header,
  * so the length of the response body returned on any given range request will
- * be less than USER_BUFFER_LENGTH.
+ * be less than USER_BUFFER_LENGTH. We don't expect S3 to send more than 1024
+ * bytes of headers.
  */
 #define USER_BUFFER_LENGTH                ( 4096 )
 
@@ -104,7 +105,8 @@
  * @brief The size of the range header to request.
  *
  * @note This should account for the response headers that will also be stored
- * in the user buffer.
+ * in the user buffer. We don't expect S3 to send more than 1024 bytes of
+ * headers.
  */
 #define RANGE_HEADER_LENGTH               ( 2048 )
 
