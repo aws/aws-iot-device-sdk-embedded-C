@@ -6,4 +6,5 @@
 
 # Note that this SDK will not negotiate the TLS Maximum Fragment Length even if
 # it is enabled in mbedTLS' configuration. Therefore, you should ensure content
-# buffers used by mbedTLS are at least 16384 bytes in length.
+# buffers used by mbedTLS are at least 16384 bytes in length to use the largest
+# maximum record length supported by TLS.
