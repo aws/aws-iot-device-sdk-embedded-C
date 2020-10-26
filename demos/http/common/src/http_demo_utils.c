@@ -126,7 +126,7 @@ HTTPStatus_t getUrlPath( const char * pUrl,
 
         if( *pPathLen == 0 )
         {
-            httpStatus = HTTP_NO_RESPONSE;
+            httpStatus = HTTPNoResponse;
             *pPath = NULL;
         }
         else
@@ -186,7 +186,7 @@ HTTPStatus_t getUrlAddress( const char * pUrl,
 
         if( *pAddressLen == 0 )
         {
-            httpStatus = HTTP_NO_RESPONSE;
+            httpStatus = HTTPNoResponse;
             *pAddress = NULL;
         }
         else
