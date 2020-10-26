@@ -293,7 +293,7 @@ static int connectToServer( NetworkContext_t * pNetworkContext )
     ServerInfo_t serverInfo = { 0 };
 
     /* The host address string extracted from S3_PRESIGNED_GET_URL. */
-    char serverHost[ sizeof( S3_PRESIGNED_GET_URL ) ];
+    char serverHost[ sizeof( S3_PRESIGNED_GET_URL ) ] = { 0 };
 
     /* Initialize TLS credentials. */
     opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
@@ -956,6 +956,13 @@ int main( int argc,
 
             queueSettings.mq_msgsize = sizeof( ResponseItem_t );
 
+            if( requestQueue == -1 )
+            {
+                LogError( ( "Failed to open request queue with error %s.",
+                            strerror( errno ) ) );
+                returnStatus = EXIT_FAILURE;
+            }
+
             responseQueue = mq_open( RESPONSE_QUEUE,
 
                                      /* These options create a queue if it does
@@ -966,13 +973,6 @@ int main( int argc,
                                      O_CREAT | O_NONBLOCK | O_RDONLY,
                                      QUEUE_PERMISSIONS,
                                      &queueSettings );
-
-            if( requestQueue == -1 )
-            {
-                LogError( ( "Failed to open request queue with error %s.",
-                            strerror( errno ) ) );
-                returnStatus = EXIT_FAILURE;
-            }
 
             if( responseQueue == -1 )
             {
