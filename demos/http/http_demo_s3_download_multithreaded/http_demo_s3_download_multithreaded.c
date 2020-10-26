@@ -954,14 +954,14 @@ int main( int argc,
                                     QUEUE_PERMISSIONS,
                                     &queueSettings );
 
-            queueSettings.mq_msgsize = sizeof( ResponseItem_t );
-
             if( requestQueue == -1 )
             {
                 LogError( ( "Failed to open request queue with error %s.",
                             strerror( errno ) ) );
                 returnStatus = EXIT_FAILURE;
             }
+
+            queueSettings.mq_msgsize = sizeof( ResponseItem_t );
 
             responseQueue = mq_open( RESPONSE_QUEUE,
 
