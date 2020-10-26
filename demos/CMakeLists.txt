@@ -38,20 +38,21 @@ endfunction()
 # This function will add a demo target to the list of default targets
 # if pre-signed GET and PUT URLs are defined.
 function(check_presigned_urls demo_name)
+    if(S3_PRESIGNED_GET_URL AND S3_PRESIGNED_PUT_URL)
+        target_compile_definitions(
+            ${demo_name} PRIVATE
+                S3_PRESIGNED_GET_URL="${S3_PRESIGNED_GET_URL}"
+                S3_PRESIGNED_PUT_URL="${S3_PRESIGNED_PUT_URL}"
+        )
+        set(CMAKE_REQUIRED_DEFINITIONS -DS3_PRESIGNED_GET_URL -DS3_PRESIGNED_PUT_URL)
+    endif()
+
     if(S3_PRESIGNED_GET_URL)
         target_compile_definitions(
             ${demo_name} PRIVATE
                 S3_PRESIGNED_GET_URL="${S3_PRESIGNED_GET_URL}"
         )
         set(CMAKE_REQUIRED_DEFINITIONS -DS3_PRESIGNED_GET_URL)
-    endif()
-
-    if(S3_PRESIGNED_PUT_URL)
-        target_compile_definitions(
-            ${demo_name} PRIVATE
-                S3_PRESIGNED_PUT_URL="${S3_PRESIGNED_PUT_URL}"
-        )
-        set(CMAKE_REQUIRED_DEFINITIONS -DS3_PRESIGNED_GET_URL -DS3_PRESIGNED_PUT_URL)
     endif()
 
     set(FILES_TO_CHECK "demo_config.h")
@@ -61,8 +62,13 @@ function(check_presigned_urls demo_name)
     check_symbol_exists(S3_PRESIGNED_GET_URL ${FILES_TO_CHECK} HAVE_S3_PRESIGNED_GET_URL)
     check_symbol_exists(S3_PRESIGNED_PUT_URL ${FILES_TO_CHECK} HAVE_S3_PRESIGNED_PUT_URL)
 
+    if("${demo_name}" STREQUAL "http_demo_s3_upload" AND NOT(HAVE_S3_PRESIGNED_GET_URL AND HAVE_S3_PRESIGNED_PUT_URL))
+        message("sTo run ${demo_name}, define S3_PRESIGNED_GET_URL and S3_PRESIGNED_PUT_URL in ${demo_name}/demo_config.h.")
+        set_target_properties(${demo_name} PROPERTIES EXCLUDE_FROM_ALL true)
+    endif()
+
     if(NOT(HAVE_S3_PRESIGNED_GET_URL))
-        message("To run ${demo_name}, define S3_PRESIGNED_GET_URL (and S3_PRESIGNED_PUT_URL if applicable) in ${demo_name}/demo_config.h.")
+        message("To run ${demo_name}, define S3_PRESIGNED_GET_URL in ${demo_name}/demo_config.h.")
         set_target_properties(${demo_name} PROPERTIES EXCLUDE_FROM_ALL true)
     endif()
 endfunction()
