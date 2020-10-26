@@ -247,7 +247,7 @@ static bool downloadS3ObjectFile( const TransportInterface_t * pTransportInterfa
     /* Initialize the request object. */
     requestInfo.pHost = serverHost;
     requestInfo.hostLen = serverHostLength;
-    requestInfo.method = HTTP_METHOD_GET;
+    requestInfo.pMethod = HTTP_METHOD_GET;
     requestInfo.methodLen = HTTP_METHOD_GET_LENGTH;
     requestInfo.pPath = pPath;
     requestInfo.pathLen = strlen( pPath );

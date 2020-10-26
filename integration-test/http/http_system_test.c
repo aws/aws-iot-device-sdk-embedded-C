@@ -216,7 +216,7 @@ static void sendHttpRequest( const TransportInterface_t * pTransportInterface,
     /* Initialize the request object. */
     requestInfo.pHost = SERVER_HOST;
     requestInfo.hostLen = SERVER_HOST_LENGTH;
-    requestInfo.method = pMethod;
+    requestInfo.pMethod = pMethod;
     requestInfo.methodLen = strlen( pMethod );
     requestInfo.pPath = pPath;
     requestInfo.pathLen = strlen( pPath );
@@ -235,7 +235,7 @@ static void sendHttpRequest( const TransportInterface_t * pTransportInterface,
     response.bufferLen = USER_BUFFER_LENGTH;
 
     LogDebug( ( "Sending HTTP %.*s request to %.*s%.*s...",
-                ( int32_t ) requestInfo.methodLen, requestInfo.method,
+                ( int32_t ) requestInfo.methodLen, requestInfo.pMethod,
                 ( int32_t ) SERVER_HOST_LENGTH, SERVER_HOST,
                 ( int32_t ) requestInfo.pathLen, requestInfo.pPath ) );
 

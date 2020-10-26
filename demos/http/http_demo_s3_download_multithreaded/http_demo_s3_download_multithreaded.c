@@ -353,7 +353,7 @@ static bool downloadS3ObjectFile( const char * pHost,
     /* Initialize the request object. */
     requestInfo.pHost = pHost;
     requestInfo.hostLen = hostLen;
-    requestInfo.method = HTTP_METHOD_GET;
+    requestInfo.pMethod = HTTP_METHOD_GET;
     requestInfo.methodLen = HTTP_METHOD_GET_LENGTH;
     requestInfo.pPath = pRequest;
     requestInfo.pathLen = requestUriLen;

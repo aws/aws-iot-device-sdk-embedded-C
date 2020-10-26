@@ -319,7 +319,7 @@ static bool uploadS3ObjectFile( const TransportInterface_t * pTransportInterface
     /* Initialize the request object. */
     requestInfo.pHost = serverHost;
     requestInfo.hostLen = serverHostLength;
-    requestInfo.method = HTTP_METHOD_PUT;
+    requestInfo.pMethod = HTTP_METHOD_PUT;
     requestInfo.methodLen = HTTP_METHOD_PUT_LENGTH;
     requestInfo.pPath = pPath;
     requestInfo.pathLen = strlen( pPath );

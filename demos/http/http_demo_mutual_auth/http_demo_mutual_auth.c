@@ -244,7 +244,7 @@ static int32_t sendHttpRequest( const TransportInterface_t * pTransportInterface
     /* Initialize the request object. */
     requestInfo.pHost = AWS_IOT_ENDPOINT;
     requestInfo.hostLen = AWS_IOT_ENDPOINT_LENGTH;
-    requestInfo.method = pMethod;
+    requestInfo.pMethod = pMethod;
     requestInfo.methodLen = methodLen;
     requestInfo.pPath = pPath;
     requestInfo.pathLen = pathLen;
@@ -268,7 +268,7 @@ static int32_t sendHttpRequest( const TransportInterface_t * pTransportInterface
         response.bufferLen = USER_BUFFER_LENGTH;
 
         LogInfo( ( "Sending HTTP %.*s request to %.*s%.*s...",
-                   ( int32_t ) requestInfo.methodLen, requestInfo.method,
+                   ( int32_t ) requestInfo.methodLen, requestInfo.pMethod,
                    ( int32_t ) AWS_IOT_ENDPOINT_LENGTH, AWS_IOT_ENDPOINT,
                    ( int32_t ) requestInfo.pathLen, requestInfo.pPath ) );
         LogDebug( ( "Request Headers:\n%.*s\n"
@@ -306,7 +306,7 @@ static int32_t sendHttpRequest( const TransportInterface_t * pTransportInterface
     else
     {
         LogError( ( "Failed to send HTTP %.*s request to %.*s%.*s: Error=%s.",
-                    ( int32_t ) requestInfo.methodLen, requestInfo.method,
+                    ( int32_t ) requestInfo.methodLen, requestInfo.pMethod,
                     ( int32_t ) AWS_IOT_ENDPOINT_LENGTH, AWS_IOT_ENDPOINT,
                     ( int32_t ) requestInfo.pathLen, requestInfo.pPath,
                     HTTPClient_strerror( httpStatus ) ) );

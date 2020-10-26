@@ -238,7 +238,7 @@ bool getS3ObjectFileSize( size_t * pFileSize,
     /* Initialize the request object. */
     requestInfo.pHost = pHost;
     requestInfo.hostLen = hostLen;
-    requestInfo.method = HTTP_METHOD_GET;
+    requestInfo.pMethod = HTTP_METHOD_GET;
     requestInfo.methodLen = sizeof( HTTP_METHOD_GET ) - 1;
     requestInfo.pPath = pPath;
     requestInfo.pathLen = strlen( pPath );
