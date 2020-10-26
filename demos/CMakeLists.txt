@@ -63,7 +63,7 @@ function(check_presigned_urls demo_name)
     check_symbol_exists(S3_PRESIGNED_PUT_URL ${FILES_TO_CHECK} HAVE_S3_PRESIGNED_PUT_URL)
 
     if("${demo_name}" STREQUAL "http_demo_s3_upload" AND NOT(HAVE_S3_PRESIGNED_GET_URL AND HAVE_S3_PRESIGNED_PUT_URL))
-        message("sTo run ${demo_name}, define S3_PRESIGNED_GET_URL and S3_PRESIGNED_PUT_URL in ${demo_name}/demo_config.h.")
+        message("To run ${demo_name}, define S3_PRESIGNED_GET_URL and S3_PRESIGNED_PUT_URL in ${demo_name}/demo_config.h.")
         set_target_properties(${demo_name} PROPERTIES EXCLUDE_FROM_ALL true)
     endif()
 
