@@ -95,7 +95,7 @@ HTTPStatus_t getUrlPath( const char * pUrl,
     /* http-parser status. Initialized to 1 to signify failure. */
     int parserStatus = 1;
     struct http_parser_url urlParser;
-    HTTPStatus_t httpStatus = HTTP_SUCCESS;
+    HTTPStatus_t httpStatus = HTTPSuccess;
 
     /* Sets all members in urlParser to 0. */
     http_parser_url_init( &urlParser );
@@ -106,7 +106,7 @@ HTTPStatus_t getUrlPath( const char * pUrl,
         httpStatus = HTTP_INVALID_PARAMETER;
     }
 
-    if( httpStatus == HTTP_SUCCESS )
+    if( httpStatus == HTTPSuccess )
     {
         parserStatus = http_parser_parse_url( pUrl, urlLen, 0, &urlParser );
 
@@ -120,7 +120,7 @@ HTTPStatus_t getUrlPath( const char * pUrl,
         }
     }
 
-    if( httpStatus == HTTP_SUCCESS )
+    if( httpStatus == HTTPSuccess )
     {
         *pPathLen = ( size_t ) ( urlParser.field_data[ UF_PATH ].len );
 
@@ -135,7 +135,7 @@ HTTPStatus_t getUrlPath( const char * pUrl,
         }
     }
 
-    if( httpStatus != HTTP_SUCCESS )
+    if( httpStatus != HTTPSuccess )
     {
         LogError( ( "Error parsing the path from URL %s. Error code: %d",
                     pUrl,
@@ -155,7 +155,7 @@ HTTPStatus_t getUrlAddress( const char * pUrl,
     /* http-parser status. Initialized to 1 to signify failure. */
     int parserStatus = 1;
     struct http_parser_url urlParser;
-    HTTPStatus_t httpStatus = HTTP_SUCCESS;
+    HTTPStatus_t httpStatus = HTTPSuccess;
 
     /* Sets all members in urlParser to 0. */
     http_parser_url_init( &urlParser );
@@ -166,7 +166,7 @@ HTTPStatus_t getUrlAddress( const char * pUrl,
         httpStatus = HTTP_INVALID_PARAMETER;
     }
 
-    if( httpStatus == HTTP_SUCCESS )
+    if( httpStatus == HTTPSuccess )
     {
         parserStatus = http_parser_parse_url( pUrl, urlLen, 0, &urlParser );
 
@@ -180,7 +180,7 @@ HTTPStatus_t getUrlAddress( const char * pUrl,
         }
     }
 
-    if( httpStatus == HTTP_SUCCESS )
+    if( httpStatus == HTTPSuccess )
     {
         *pAddressLen = ( size_t ) ( urlParser.field_data[ UF_HOST ].len );
 
@@ -195,7 +195,7 @@ HTTPStatus_t getUrlAddress( const char * pUrl,
         }
     }
 
-    if( httpStatus != HTTP_SUCCESS )
+    if( httpStatus != HTTPSuccess )
     {
         LogError( ( "Error parsing the address from URL %s. Error code %d",
                     pUrl,
@@ -214,7 +214,7 @@ bool getS3ObjectFileSize( size_t * pFileSize,
                           const char * pPath )
 {
     bool returnStatus = false;
-    HTTPStatus_t httpStatus = HTTP_SUCCESS;
+    HTTPStatus_t httpStatus = HTTPSuccess;
     HTTPRequestHeaders_t requestHeaders;
     HTTPRequestInfo_t requestInfo;
     HTTPResponse_t response;
@@ -262,7 +262,7 @@ bool getS3ObjectFileSize( size_t * pFileSize,
     httpStatus = HTTPClient_InitializeRequestHeaders( &requestHeaders,
                                                       &requestInfo );
 
-    if( httpStatus == HTTP_SUCCESS )
+    if( httpStatus == HTTPSuccess )
     {
         /* Add the header to get bytes=0-0. S3 will respond with a Content-Range
          * header that contains the size of the file in it. This header will
@@ -271,7 +271,7 @@ bool getS3ObjectFileSize( size_t * pFileSize,
         httpStatus = HTTPClient_AddRangeHeader( &requestHeaders, 0, 0 );
     }
 
-    if( httpStatus == HTTP_SUCCESS )
+    if( httpStatus == HTTPSuccess )
     {
         /* Send the request and receive the response. */
         httpStatus = HTTPClient_Send( pTransportInterface,
@@ -282,7 +282,7 @@ bool getS3ObjectFileSize( size_t * pFileSize,
                                       0 );
     }
 
-    if( httpStatus == HTTP_SUCCESS )
+    if( httpStatus == HTTPSuccess )
     {
         LogDebug( ( "Received HTTP response from %s%s...",
                     pHost, pPath ) );
@@ -320,7 +320,7 @@ bool getS3ObjectFileSize( size_t * pFileSize,
                     response.statusCode ) );
     }
 
-    if( ( returnStatus == true ) && ( httpStatus == HTTP_SUCCESS ) )
+    if( ( returnStatus == true ) && ( httpStatus == HTTPSuccess ) )
     {
         /* Parse the Content-Range header value to get the file size. */
         pFileSizeStr = strstr( contentRangeValStr, "/" );
@@ -349,12 +349,12 @@ bool getS3ObjectFileSize( size_t * pFileSize,
                     HTTPClient_strerror( httpStatus ) ) );
     }
 
-    if( ( returnStatus == false ) || ( httpStatus != HTTP_SUCCESS ) )
+    if( ( returnStatus == false ) || ( httpStatus != HTTPSuccess ) )
     {
         LogError( ( "An error occurred in getting the file size from %s. Error=%s.",
                     pHost,
                     HTTPClient_strerror( httpStatus ) ) );
     }
 
-    return( ( returnStatus == true ) && ( httpStatus == HTTP_SUCCESS ) );
+    return( ( returnStatus == true ) && ( httpStatus == HTTPSuccess ) );
 }

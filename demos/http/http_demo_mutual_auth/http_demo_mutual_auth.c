@@ -231,7 +231,7 @@ static int32_t sendHttpRequest( const TransportInterface_t * pTransportInterface
     HTTPRequestHeaders_t requestHeaders;
 
     /* Return value of all methods from the HTTP Client library API. */
-    HTTPStatus_t httpStatus = HTTP_SUCCESS;
+    HTTPStatus_t httpStatus = HTTPSuccess;
 
     assert( pMethod != NULL );
     assert( pPath != NULL );
@@ -260,7 +260,7 @@ static int32_t sendHttpRequest( const TransportInterface_t * pTransportInterface
     httpStatus = HTTPClient_InitializeRequestHeaders( &requestHeaders,
                                                       &requestInfo );
 
-    if( httpStatus == HTTP_SUCCESS )
+    if( httpStatus == HTTPSuccess )
     {
         /* Initialize the response object. The same buffer used for storing
          * request headers is reused here. */
@@ -291,7 +291,7 @@ static int32_t sendHttpRequest( const TransportInterface_t * pTransportInterface
                     HTTPClient_strerror( httpStatus ) ) );
     }
 
-    if( httpStatus == HTTP_SUCCESS )
+    if( httpStatus == HTTPSuccess )
     {
         LogInfo( ( "Received HTTP response from %.*s%.*s...\n"
                    "Response Headers:\n%.*s\n"
@@ -312,7 +312,7 @@ static int32_t sendHttpRequest( const TransportInterface_t * pTransportInterface
                     HTTPClient_strerror( httpStatus ) ) );
     }
 
-    if( httpStatus != HTTP_SUCCESS )
+    if( httpStatus != HTTPSuccess )
     {
         returnStatus = EXIT_FAILURE;
     }

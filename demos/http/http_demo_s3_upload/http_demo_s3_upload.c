@@ -210,7 +210,7 @@ static bool uploadS3ObjectFile( const TransportInterface_t * pTransportInterface
 static int32_t connectToServer( NetworkContext_t * pNetworkContext )
 {
     int32_t returnStatus = EXIT_FAILURE;
-    HTTPStatus_t httpStatus = HTTP_SUCCESS;
+    HTTPStatus_t httpStatus = HTTPSuccess;
 
     /* The location of the host address within the pre-signed URL. */
     const char * pAddress = NULL;
@@ -232,7 +232,7 @@ static int32_t connectToServer( NetworkContext_t * pNetworkContext )
                                 &pAddress,
                                 &serverHostLength );
 
-    returnStatus = ( httpStatus == HTTP_SUCCESS ) ? EXIT_SUCCESS : EXIT_FAILURE;
+    returnStatus = ( httpStatus == HTTPSuccess ) ? EXIT_SUCCESS : EXIT_FAILURE;
 
     if( returnStatus == EXIT_SUCCESS )
     {
@@ -307,7 +307,7 @@ static bool uploadS3ObjectFile( const TransportInterface_t * pTransportInterface
                                 const char * pPath )
 {
     bool returnStatus = false;
-    HTTPStatus_t httpStatus = HTTP_SUCCESS;
+    HTTPStatus_t httpStatus = HTTPSuccess;
 
     assert( pPath != NULL );
 
@@ -337,13 +337,13 @@ static bool uploadS3ObjectFile( const TransportInterface_t * pTransportInterface
     response.pBuffer = userBuffer;
     response.bufferLen = USER_BUFFER_LENGTH;
 
-    if( httpStatus == HTTP_SUCCESS )
+    if( httpStatus == HTTPSuccess )
     {
         httpStatus = HTTPClient_InitializeRequestHeaders( &requestHeaders,
                                                           &requestInfo );
     }
 
-    if( httpStatus == HTTP_SUCCESS )
+    if( httpStatus == HTTPSuccess )
     {
         LogInfo( ( "Uploading file..." ) );
         LogDebug( ( "Request Headers:\n%.*s",
@@ -362,7 +362,7 @@ static bool uploadS3ObjectFile( const TransportInterface_t * pTransportInterface
                     HTTPClient_strerror( httpStatus ) ) );
     }
 
-    if( httpStatus == HTTP_SUCCESS )
+    if( httpStatus == HTTPSuccess )
     {
         LogDebug( ( "Received HTTP response from %s%s...",
                     serverHost, pPath ) );
@@ -395,7 +395,7 @@ static bool uploadS3ObjectFile( const TransportInterface_t * pTransportInterface
                     response.statusCode ) );
     }
 
-    return( ( returnStatus == true ) && ( httpStatus == HTTP_SUCCESS ) );
+    return( ( returnStatus == true ) && ( httpStatus == HTTPSuccess ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -422,7 +422,7 @@ int main( int argc,
     /* Return value of private functions. */
     bool ret = false;
     /* HTTPS Client library return status. */
-    HTTPStatus_t httpStatus = HTTP_SUCCESS;
+    HTTPStatus_t httpStatus = HTTPSuccess;
 
     /* The length of the path within the pre-signed URL. This variable is
      * defined in order to store the length returned from parsing the URL, but
@@ -488,7 +488,7 @@ int main( int argc,
                                      &pPath,
                                      &pathLen );
 
-            returnStatus = ( httpStatus == HTTP_SUCCESS ) ? EXIT_SUCCESS : EXIT_FAILURE;
+            returnStatus = ( httpStatus == HTTPSuccess ) ? EXIT_SUCCESS : EXIT_FAILURE;
         }
 
         if( returnStatus == EXIT_SUCCESS )
@@ -510,7 +510,7 @@ int main( int argc,
                                      &pPath,
                                      &pathLen );
 
-            returnStatus = ( httpStatus == HTTP_SUCCESS ) ? EXIT_SUCCESS : EXIT_FAILURE;
+            returnStatus = ( httpStatus == HTTPSuccess ) ? EXIT_SUCCESS : EXIT_FAILURE;
         }
 
         if( returnStatus == EXIT_SUCCESS )

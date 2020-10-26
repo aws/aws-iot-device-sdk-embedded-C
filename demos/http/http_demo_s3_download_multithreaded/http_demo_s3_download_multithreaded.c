@@ -456,7 +456,7 @@ static QueueOpStatus_t requestS3ObjectRange( const HTTPRequestInfo_t * requestIn
                                              const size_t end )
 {
     QueueOpStatus_t returnStatus = QUEUE_OP_SUCCESS;
-    HTTPStatus_t httpStatus = HTTP_SUCCESS;
+    HTTPStatus_t httpStatus = HTTPSuccess;
 
     /* Return value of mq_send. */
     int mqerror = 0;
@@ -471,7 +471,7 @@ static QueueOpStatus_t requestS3ObjectRange( const HTTPRequestInfo_t * requestIn
     httpStatus = HTTPClient_InitializeRequestHeaders( &( requestItem.requestHeaders ),
                                                       requestInfo );
 
-    if( httpStatus != HTTP_SUCCESS )
+    if( httpStatus != HTTPSuccess )
     {
         LogError( ( "Failed to initialize HTTP request headers: Error=%s.",
                     HTTPClient_strerror( httpStatus ) ) );
@@ -484,7 +484,7 @@ static QueueOpStatus_t requestS3ObjectRange( const HTTPRequestInfo_t * requestIn
                                                 start,
                                                 end );
 
-        if( httpStatus != HTTP_SUCCESS )
+        if( httpStatus != HTTPSuccess )
         {
             LogError( ( "Failed to add Range header to request headers: Error=%s.",
                         HTTPClient_strerror( httpStatus ) ) );
@@ -576,7 +576,7 @@ static bool getS3ObjectFileSizeMulti( const HTTPRequestInfo_t * requestInfo,
                                       size_t * pFileSize )
 {
     bool returnStatus = true;
-    HTTPStatus_t httpStatus = HTTP_SUCCESS;
+    HTTPStatus_t httpStatus = HTTPSuccess;
     QueueOpStatus_t queueOpStatus = QUEUE_OP_SUCCESS;
 
     /* Request data sent over queue. */
@@ -631,7 +631,7 @@ static bool getS3ObjectFileSizeMulti( const HTTPRequestInfo_t * requestInfo,
                                             ( const char ** ) &contentRangeValStr,
                                             &contentRangeValStrLength );
 
-        if( httpStatus != HTTP_SUCCESS )
+        if( httpStatus != HTTPSuccess )
         {
             LogError( ( "Failed to read Content-Range header from HTTP response: Error=%s.",
                         HTTPClient_strerror( httpStatus ) ) );
@@ -702,7 +702,7 @@ static pid_t startHTTPThread( const TransportInterface_t * pTransportInterface )
 
         for( ; ; )
         {
-            HTTPStatus_t httpStatus = HTTP_SUCCESS;
+            HTTPStatus_t httpStatus = HTTPSuccess;
 
             /* Return value of mq_receive. */
             int mqread = 0;
@@ -739,7 +739,7 @@ static pid_t startHTTPThread( const TransportInterface_t * pTransportInterface )
                                           &responseItem.response,
                                           0 );
 
-            if( httpStatus != HTTP_SUCCESS )
+            if( httpStatus != HTTPSuccess )
             {
                 LogError( ( "Failed to send HTTP request: Error=%s.",
                             HTTPClient_strerror( httpStatus ) ) );
@@ -841,7 +841,7 @@ int main( int argc,
     for( ; ; )
     {
         /* HTTPS Client library return status. */
-        HTTPStatus_t httpStatus = HTTP_SUCCESS;
+        HTTPStatus_t httpStatus = HTTPSuccess;
 
         /* The location of the path within the pre-signed URL. */
         const char * pPath = NULL;
@@ -889,7 +889,7 @@ int main( int argc,
              * the end of the S3 presigned URL. */
             requestUriLen = strlen( pPath );
 
-            if( httpStatus != HTTP_SUCCESS )
+            if( httpStatus != HTTPSuccess )
             {
                 returnStatus = EXIT_FAILURE;
             }
@@ -903,7 +903,7 @@ int main( int argc,
                                         &pHost,
                                         &hostLen );
 
-            if( httpStatus != HTTP_SUCCESS )
+            if( httpStatus != HTTPSuccess )
             {
                 returnStatus = EXIT_FAILURE;
             }

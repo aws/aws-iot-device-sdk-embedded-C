@@ -247,7 +247,7 @@ static void sendHttpRequest( const TransportInterface_t * pTransportInterface,
          * be re-initialized after a failed request. */
         httpStatus = HTTPClient_InitializeRequestHeaders( &requestHeaders,
                                                           &requestInfo );
-        TEST_ASSERT_EQUAL( HTTP_SUCCESS, httpStatus );
+        TEST_ASSERT_EQUAL( HTTPSuccess, httpStatus );
         TEST_ASSERT_NOT_EQUAL( 0, requestHeaders.headersLen );
 
         LogDebug( ( "Request Headers:\n%.*s\n"
@@ -272,7 +272,7 @@ static void sendHttpRequest( const TransportInterface_t * pTransportInterface,
         retryCount++;
     } while( ( httpStatus == HTTP_NETWORK_ERROR ) && ( retryCount < MAX_RETRY_COUNT ) );
 
-    TEST_ASSERT_EQUAL( HTTP_SUCCESS, httpStatus );
+    TEST_ASSERT_EQUAL( HTTPSuccess, httpStatus );
 
     LogDebug( ( "Received HTTP response from %.*s%.*s...\n"
                 "Response Headers:\n%.*s\n"
