@@ -1,4 +1,4 @@
-set( DEMO_NAME "ota_demo" )
+set( DEMO_NAME "ota_demo_core_http" )
 
 # Include required library's source and header path variables.
 include( ${CMAKE_SOURCE_DIR}/libraries/aws/ota/otaFilePaths.cmake )
@@ -13,7 +13,7 @@ find_library(LIB_RT rt REQUIRED)
 target_sources(
     ${DEMO_NAME}
     PRIVATE
-        "aws_iot_ota_update_demo.c"
+        "ota_demo_core_http.c"
         ${OTA_SOURCES}
         ${OTA_OS_POSIX_SOURCES}
         ${OTA_MQTT_SOURCES}
@@ -34,7 +34,7 @@ target_link_libraries(
 target_include_directories(
     ${DEMO_NAME}
     PUBLIC
-        "${CMAKE_CURRENT_LIST_DIR}/.."
+        "${CMAKE_CURRENT_LIST_DIR}"
         "${LOGGING_INCLUDE_DIRS}"
         ${OTA_INCLUDE_PUBLIC_DIRS}
         ${OTA_INCLUDE_PRIVATE_DIRS}

@@ -40,7 +40,7 @@
     #define LIBRARY_LOG_NAME     "DEMO"
 #endif
 #ifndef LIBRARY_LOG_LEVEL
-    #define LIBRARY_LOG_LEVEL    LOG_INFO
+    #define LIBRARY_LOG_LEVEL    LOG_DEBUG
 #endif
 
 #include "logging_stack.h"
@@ -55,7 +55,7 @@
  *
  * #define AWS_IOT_ENDPOINT               "...insert here..."
  */
-#define AWS_IOT_ENDPOINT           "a7107zoe0sreq-ats.iot.us-west-2.amazonaws.com"
+#define AWS_IOT_ENDPOINT           ""
 
 /**
  * @brief AWS IoT MQTT broker port number.
@@ -97,7 +97,6 @@
  *
  * #define CLIENT_CERT_PATH    "...insert here..."
  */
-
 /**
  * @brief Path of the file containing the client's private key.
  *
@@ -109,7 +108,6 @@
  *
  * #define CLIENT_PRIVATE_KEY_PATH    "...insert here..."
  */
-
 /**
  * @brief MQTT client identifier.
  *

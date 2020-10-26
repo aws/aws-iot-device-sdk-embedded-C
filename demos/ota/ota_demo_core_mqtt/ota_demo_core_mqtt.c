@@ -264,13 +264,20 @@ static void App_OTACompleteCallback( OtaJobEvent_t event )
 
 static void jobCallback( MQTTContext_t * pContext, MQTTPublishInfo_t * pPublishInfo )
 {
+   // static char buff[1024];
     assert( pPublishInfo != NULL );
     assert( pContext != NULL );
 
     OtaEventData_t * pData;
     OtaEventMsg_t eventMsg = { 0 };
 
-    LogInfo( ( "Received job message callback, size %d.\n\n", pPublishInfo->payloadLength ) );
+    /* Suppress unused parameter warning when asserts are disabled in build. */
+    ( void ) pContext;
+
+
+    // TODO, notify OTA agent about the incoming message.
+
+    LogInfo( ( "Received ota message callback.\n\n" ) );
 
     pData = otaEventBufferGet();
 
@@ -296,15 +303,24 @@ static void jobCallback( MQTTContext_t * pContext, MQTTPublishInfo_t * pPublishI
 
 static void dataCallback( MQTTContext_t * pContext, MQTTPublishInfo_t * pPublishInfo )
 {
+      // static char buff[1024];
     assert( pPublishInfo != NULL );
     assert( pContext != NULL );
 
     OtaEventData_t * pData;
     OtaEventMsg_t eventMsg = { 0 };
 
-    LogInfo( ( "Received data message callback, size %d.\n\n", pPublishInfo->payloadLength ) );
+    /* Suppress unused parameter warning when asserts are disabled in build. */
+    ( void ) pContext;
+
+   // memcpy( buff, pPublishInfo->pPayload, pPublishInfo->payloadLength );
+
+    // TODO, notify OTA agent about the incoming message.
+
+    LogInfo( ( "Received ota message callback.\n\n" ) );
 
     pData = otaEventBufferGet();
+
 
         if( pData != NULL )
         {
@@ -728,7 +744,9 @@ static OtaErr_t unsubscribe( const char * pTopicFilter,
 void startOTADemo( MQTTContext_t * pMqttContext )
 {
     int ret = 0;
+
     MQTTStatus_t mqttStatus;
+
     OtaEventMsg_t eventMsg = { 0 };
 
     /* MQTT susbsrciption manager parameters.*/
@@ -739,9 +757,6 @@ void startOTADemo( MQTTContext_t * pMqttContext )
 
     /* OTA Agent state.*/
     OtaState_t state = OtaAgentStateStopped;
-
-    /* OTA Agent thread handle. */
-    pthread_t threadHandle;
 
     /* Initialize OTA library OS Interface. */
 	static OtaOSInterface_t otaOSInterface;
@@ -757,6 +772,9 @@ void startOTADemo( MQTTContext_t * pMqttContext )
     otaMqttInterface.unsubscribe = unsubscribe;
     otaMqttInterface.jobCallback = jobCallback;
     otaMqttInterface.dataCallback= dataCallback;
+
+    /* OTA Agent thread handle. */
+    pthread_t threadHandle;
 
     /* Initialize the OTA Agent , if it is resuming the OTA statistics will be cleared for new
      * connection.*/
@@ -779,26 +797,27 @@ void startOTADemo( MQTTContext_t * pMqttContext )
      * per second. */
     while( ( ( state = OTA_GetAgentState() ) != OtaAgentStateStopped ) )
     {
-    	 
-        sleep( OTA_DEMO_TASK_DELAY_SECONDS );
-
         LogInfo( ( " Received: %u   Queued: %u   Processed: %u   Dropped: %u",
                    OTA_GetPacketsReceived(),
                    OTA_GetPacketsQueued(),
                    OTA_GetPacketsProcessed(),
                    OTA_GetPacketsDropped() ) );
-                   
-       if(state == OtaAgentStateWaitingForJob )
-       {
-            mqttStatus = MQTT_ProcessLoop( pMqttContext, 1000 );
 
-            if( mqttStatus != MQTTSuccess )
-            {
-                LogError( ( "MQTT_ProcessLoop returned with status = %u.",
-                        mqttStatus ) );
-            }
-       }
-     
+        if(state == OtaAgentStateWaitingForJob )
+        {
+                mqttStatus = MQTT_ProcessLoop( pMqttContext, 1000 );
+
+                if( mqttStatus != MQTTSuccess )
+                {
+                    LogError( ( "MQTT_ProcessLoop returned with status = %u.",
+                            mqttStatus ) );
+                }
+        }
+        else
+        {
+            sleep( OTA_DEMO_TASK_DELAY_SECONDS );
+        }
+       
     }
 
 }
