@@ -12,6 +12,9 @@ add_executable(
         ${HTTP_THIRD_PARTY_SOURCES}
 )
 
+# Add to default target if all required macros needed to run this demo are defined
+check_presigned_urls(${DEMO_NAME})
+
 target_link_libraries(
     ${DEMO_NAME}
     PRIVATE
@@ -36,21 +39,10 @@ if(ROOT_CA_CERT_PATH)
             ROOT_CA_CERT_PATH="${ROOT_CA_CERT_PATH}"
     )
 endif()
+
 if(HTTPS_PORT)
     target_compile_definitions(
         ${DEMO_NAME} PRIVATE
             HTTPS_PORT=${HTTPS_PORT}
-    )
-endif()
-if(S3_PRESIGNED_GET_URL)
-    target_compile_definitions(
-        ${DEMO_NAME} PRIVATE
-            S3_PRESIGNED_GET_URL="${S3_PRESIGNED_GET_URL}"
-    )
-endif()
-if(S3_PRESIGNED_PUT_URL)
-    target_compile_definitions(
-        ${DEMO_NAME} PRIVATE
-            S3_PRESIGNED_PUT_URL="${S3_PRESIGNED_PUT_URL}"
     )
 endif()
