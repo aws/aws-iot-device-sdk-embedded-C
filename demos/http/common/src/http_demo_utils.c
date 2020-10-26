@@ -103,7 +103,7 @@ HTTPStatus_t getUrlPath( const char * pUrl,
     if( ( pUrl == NULL ) || ( pPath == NULL ) || ( pPathLen == NULL ) )
     {
         LogError( ( "NULL parameter passed to getUrlPath()." ) );
-        httpStatus = HTTP_INVALID_PARAMETER;
+        httpStatus = HTTPInvalidParameter;
     }
 
     if( httpStatus == HTTPSuccess )
@@ -163,7 +163,7 @@ HTTPStatus_t getUrlAddress( const char * pUrl,
     if( ( pUrl == NULL ) || ( pAddress == NULL ) || ( pAddressLen == NULL ) )
     {
         LogError( ( "NULL parameter passed to getUrlAddress()." ) );
-        httpStatus = HTTP_INVALID_PARAMETER;
+        httpStatus = HTTPInvalidParameter;
     }
 
     if( httpStatus == HTTPSuccess )
@@ -338,7 +338,7 @@ bool getS3ObjectFileSize( size_t * pFileSize,
         {
             LogError( ( "Error using strtoul to get the file size from %s: fileSize=%d.",
                         pFileSizeStr, ( int32_t ) *pFileSize ) );
-            httpStatus = HTTP_INVALID_PARAMETER;
+            httpStatus = HTTPInvalidParameter;
         }
 
         LogInfo( ( "The file is %d bytes long.", ( int32_t ) *pFileSize ) );
