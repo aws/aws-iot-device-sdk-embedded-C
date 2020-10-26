@@ -76,7 +76,7 @@ int32_t connectToServerWithBackoffRetries( TransportConnect_t connectFunction,
  *
  * @return The status of the parsing attempt:
  * HTTPSuccess if the path was successfully parsed,
- * HTTP_PARSER_INTERNAL_ERROR if there was an error parsing the URL,
+ * HTTPParserInternalError if there was an error parsing the URL,
  * or HTTPNoResponse if the path was not found.
  */
 HTTPStatus_t getUrlPath( const char * pUrl,
@@ -106,7 +106,7 @@ HTTPStatus_t getUrlPath( const char * pUrl,
  *
  * @return The status of the parsing attempt:
  * HTTPSuccess if the path was successfully parsed,
- * HTTP_PARSER_INTERNAL_ERROR if there was an error parsing the URL,
+ * HTTPParserInternalError if there was an error parsing the URL,
  * or HTTPNoResponse if the path was not found.
  */
 HTTPStatus_t getUrlAddress( const char * pUrl,

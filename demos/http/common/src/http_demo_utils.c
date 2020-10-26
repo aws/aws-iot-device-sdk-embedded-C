@@ -116,7 +116,7 @@ HTTPStatus_t getUrlPath( const char * pUrl,
                         ( int32_t ) urlLen,
                         pUrl,
                         parserStatus ) );
-            httpStatus = HTTP_PARSER_INTERNAL_ERROR;
+            httpStatus = HTTPParserInternalError;
         }
     }
 
@@ -176,7 +176,7 @@ HTTPStatus_t getUrlAddress( const char * pUrl,
                         ( int32_t ) urlLen,
                         pUrl,
                         parserStatus ) );
-            httpStatus = HTTP_PARSER_INTERNAL_ERROR;
+            httpStatus = HTTPParserInternalError;
         }
     }
 
