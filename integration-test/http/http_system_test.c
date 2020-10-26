@@ -193,7 +193,7 @@ static void sendHttpRequest( const TransportInterface_t * pTransportInterface,
                              const char * pPath )
 {
     /* Status returned by methods in HTTP Client Library API. */
-    HTTPStatus_t httpStatus = HTTP_NETWORK_ERROR;
+    HTTPStatus_t httpStatus = HTTPNetworkError;
     /* Tracks number of retry requests made to the HTTP server. */
     uint8_t retryCount = 0;
 
@@ -263,14 +263,14 @@ static void sendHttpRequest( const TransportInterface_t * pTransportInterface,
                                       &response,
                                       0 );
 
-        if( httpStatus == HTTP_NETWORK_ERROR )
+        if( httpStatus == HTTPNetworkError )
         {
             LogDebug( ( "A network error has occured, retrying request." ) );
             resetTest();
         }
 
         retryCount++;
-    } while( ( httpStatus == HTTP_NETWORK_ERROR ) && ( retryCount < MAX_RETRY_COUNT ) );
+    } while( ( httpStatus == HTTPNetworkError ) && ( retryCount < MAX_RETRY_COUNT ) );
 
     TEST_ASSERT_EQUAL( HTTPSuccess, httpStatus );
 
