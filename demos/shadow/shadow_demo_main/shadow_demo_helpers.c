@@ -145,7 +145,7 @@
 /**
  * @brief Transport timeout in milliseconds for transport send and receive.
  */
-#define TRANSPORT_SEND_RECV_TIMEOUT_MS      ( 100 )
+#define TRANSPORT_SEND_RECV_TIMEOUT_MS      ( 500 )
 
 /**
  * @brief The MQTT metrics string expected by AWS IoT.
