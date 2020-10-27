@@ -69,11 +69,11 @@ the sizes of the local and uploaded files are equivalent.
 
 <p>
 An OpenSSL-based transport interface implementation is used to establish an
-encrypted TLS connection over port 443 to an HTTP server. The host address is
-extracted from the pre-signed PUT URL using the third-party http-parser library.
-Only the server's certificate is verified using its respective root CA
-certificate. If a connection failure occurs, then the connection establishment
-is retried for @ref MAX_RETRY_ATTEMPTS.
+encrypted TLS connection over port 443 to S3. The host address is extracted from
+the pre-signed PUT URL using the third-party http-parser library. Only the
+server's certificate is verified using its respective root CA certificate. If a
+connection failure occurs, then the connection establishment is retried for @ref
+MAX_RETRY_ATTEMPTS.
 </p>
 
 <p>
@@ -98,11 +98,11 @@ requests.
 
 <p>
 An OpenSSL-based transport interface implementation is used to establish an
-encrypted TLS connection over port 443 to an HTTP server. The host address is
-extracted from the pre-signed GET URL using the third-party http-parser library.
-Only the server's certificate is verified using its respective root CA
-certificate. If a connection failure occurs, then the connection establishment
-is retried for @ref MAX_RETRY_ATTEMPTS.
+encrypted TLS connection over port 443 to S3. The host address is extracted from
+the pre-signed GET URL using the third-party http-parser library. Only the
+server's certificate is verified using its respective root CA certificate. If a
+connection failure occurs, then the connection establishment is retried for @ref
+MAX_RETRY_ATTEMPTS.
 </p>
 
 <p>
