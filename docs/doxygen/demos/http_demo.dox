@@ -118,4 +118,35 @@ length) on each iteration.
 HTTP S3 Download Demo Workflow
 </div>
 @image html http_demo_s3_download.png width=100%
+
+@section http_demo_s3_download_multithreaded HTTP Multithreaded S3 Download Demo
+@brief A demo of the coreHTTP library that establishes a TLS connection with
+S3, and downloads a file in parts using range requests and a pre-signed URL.
+
+<p>
+An OpenSSL-based transport interface implementation is used to establish an
+encrypted TLS connection over port 443 to S3. The host address is extracted
+from the pre-signed GET UTL using the third-party http-parser library. Only the
+server's certificate is verified using its respective root CA certificate. If a
+connection failure occurs, then the connection establishment is retried for
+@ref MAX_RETRY_ATTEMPTS.
+</p>
+
+<p>
+Once a connection is established, an HTTP thread is
+started which makes HTTP requests over the TLS connection. The main thread
+loops between enqueing range requests for the S3 file on the request queue and
+dequeing repsonses from the response queue as they are ready. The responses
+from each of the requests are logged. The loop continues until the entire file
+has been requested and reveived. The HTTP thread services requests from the
+request queue and writes the responses to the response queue.
+</p>
+
+
+<div class="caption" style="text-align:center">
+HTTP Multithreaded S3 Download Workflow — Note that this diagram shows an
+example where the file is downloaded in three ranges. As it is multithreaded,
+these steps may not occur in the same order.
+</div>
+@image html http_demo_s3_download_multithreaded.png width=100%
 */
