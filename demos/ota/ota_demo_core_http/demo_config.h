@@ -40,7 +40,7 @@
     #define LIBRARY_LOG_NAME     "DEMO"
 #endif
 #ifndef LIBRARY_LOG_LEVEL
-    #define LIBRARY_LOG_LEVEL    LOG_DEBUG
+    #define LIBRARY_LOG_LEVEL    LOG_INFO
 #endif
 
 #include "logging_stack.h"
@@ -55,7 +55,6 @@
  *
  * #define AWS_IOT_ENDPOINT               "...insert here..."
  */
-#define AWS_IOT_ENDPOINT           ""
 
 /**
  * @brief AWS IoT MQTT broker port number.
@@ -66,6 +65,19 @@
  * name. When using port 8883, ALPN is not required.
  */
 #define AWS_MQTT_PORT    ( 8883 )
+
+/**
+ * @brief AWS IoT Core server port number for HTTPS connections.
+ *
+ * For this demo, an X.509 certificate is used to verify the client.
+ *
+ * @note Port 443 requires use of the ALPN TLS extension with the ALPN protocol
+ * name being x-amzn-http-ca. When using port 8443, ALPN is not required.
+ */
+#ifndef AWS_HTTPS_PORT
+    #define AWS_HTTPS_PORT    443
+#endif
+
 
 /**
  * @brief Path of the file containing the server's root CA certificate.
@@ -97,6 +109,8 @@
  *
  * #define CLIENT_CERT_PATH    "...insert here..."
  */
+
+
 /**
  * @brief Path of the file containing the client's private key.
  *
@@ -108,13 +122,15 @@
  *
  * #define CLIENT_PRIVATE_KEY_PATH    "...insert here..."
  */
+
+
 /**
  * @brief MQTT client identifier.
  *
  * No two clients may use the same client identifier simultaneously.
  */
 #ifndef CLIENT_IDENTIFIER
-    #define CLIENT_IDENTIFIER         "testclient"
+    #define CLIENT_IDENTIFIER         "Enter client identifier here"
 #endif
 
 /**
@@ -124,5 +140,32 @@
 #define APP_VERSION_MAJOR    0
 #define APP_VERSION_MINOR    9
 #define APP_VERSION_BUILD    2
+
+/**
+ * @brief The name of the operating system that the application is running on.
+ * The current value is given as an example. Please update for your specific
+ * operating system.
+ */
+#define OS_NAME                   "Ubuntu"
+
+/**
+ * @brief The version of the operating system that the application is running
+ * on. The current value is given as an example. Please update for your specific
+ * operating system version.
+ */
+#define OS_VERSION                "18.04 LTS"
+
+/**
+ * @brief The name of the hardware platform the application is running on. The
+ * current value is given as an example. Please update for your specific
+ * hardware platform.
+ */
+#define HARDWARE_PLATFORM_NAME    "PC"
+
+/**
+ * @brief The name of the MQTT library used and its version, following an "@"
+ * symbol.
+ */
+#define MQTT_LIB                  "otalib@1.0.0"
 
 #endif /* ifndef DEMO_CONFIG_H */
