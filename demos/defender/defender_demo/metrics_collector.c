@@ -174,7 +174,7 @@ static MetricsCollectorStatus_t getOpenPorts( const char * pProcFile,
 MetricsCollectorStatus_t GetNetworkStats( NetworkStats_t * pOutNetworkStats )
 {
     MetricsCollectorStatus_t status = MetricsCollectorSuccess;
-    FILE * fileHandle;
+    FILE * fileHandle = NULL;
     uint32_t lineNumber = 0, filledVariables;
     uint32_t bytesReceived, bytesSent, packetsReceived, packetsSent;
     char lineBuffer[ MAX_LINE_LENGTH ];

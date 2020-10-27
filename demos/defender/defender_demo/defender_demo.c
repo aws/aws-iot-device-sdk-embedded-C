@@ -150,13 +150,13 @@ static int unsubscribeFromDefenderTopics( void );
 static int publishDeviceMetricsReport( uint32_t reportLength );
 
 /**
- * @brief Validate the reponse received from the AWS IoT Device Defender Service.
+ * @brief Validate the response received from the AWS IoT Device Defender Service.
  *
  * This functions checks that a valid JSON is received and the value of reportId
  * is same as was sent in the published report.
  *
- * @param[in] defenderResponse The defender reponse to validate.
- * @param[in] defenderResponseLength Length of the defender reponse.
+ * @param[in] defenderResponse The defender response to validate.
+ * @param[in] defenderResponseLength Length of the defender response.
  *
  * @return EXIT_SUCCESS if the response is valid;
  * EXIT_FAILURE otherwise.
@@ -186,7 +186,7 @@ static int validateDefenderResponse( const char * defenderResponse,
 
     if( jsonResult == JSONSuccess )
     {
-        /* Search the reportId key in the reponse. */
+        /* Search the reportId key in the response. */
         jsonResult = JSON_Search( ( char * ) defenderResponse,
                                   defenderResponseLength,
                                   "reportId",

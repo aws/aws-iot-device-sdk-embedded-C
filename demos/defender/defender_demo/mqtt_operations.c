@@ -223,7 +223,7 @@ static NetworkContext_t networkContext = { 0 };
 static bool mqttSessionEstablished = false;
 
 /**
- * @brief Callabck registered when calling EstablishMqttSession to get incoming
+ * @brief Callback registered when calling EstablishMqttSession to get incoming
  * publish messages.
  */
 static MQTTPublishCallback_t appPublishCallback = NULL;
