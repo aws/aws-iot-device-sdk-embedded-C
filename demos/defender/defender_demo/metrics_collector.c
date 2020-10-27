@@ -76,7 +76,7 @@ static MetricsCollectorStatus_t getOpenPorts( const char * pProcFile,
                                               uint32_t * pOutNumOpenPorts )
 {
     MetricsCollectorStatus_t status = MetricsCollectorSuccess;
-    FILE * fileHandle;
+    FILE * fileHandle = NULL;
     uint32_t lineNumber = 0, filledVariables;
     uint32_t connectionStatus, localPort, numOpenPorts = 0;
     char lineBuffer[ MAX_LINE_LENGTH ];
@@ -277,7 +277,7 @@ MetricsCollectorStatus_t GetEstablishedConnections( Connection_t * pOutConnectio
                                                     uint32_t * pOutNumEstablishedConnections )
 {
     MetricsCollectorStatus_t status = MetricsCollectorSuccess;
-    FILE * fileHandle;
+    FILE * fileHandle = NULL;
     uint32_t lineNumber = 0, filledVariables, connectionStatus;
     uint32_t localIp, localPort, remoteIp, remotePort, numEstablishedConnections = 0;
     Connection_t * pEstablishedConnection;
