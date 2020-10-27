@@ -214,24 +214,58 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
                                  bool createCleanSession,
                                  bool * pSessionPresent );
 
-/*
- * Publish a message to the specified client/topic at the given QOS.
+/**
+ * @brief Publish a message to the specified client/topic at the given QOS.
+ *
+ * @param[in] pMqttContext MQTT context pointer.
+ * @param[in] createCleanSession Creates a new MQTT session if true.
+ * If false, tries to establish the existing session if there was session
+ * already present in broker.
+ * @param[out] pSessionPresent Session was already present in the broker or not.
+ * Session present response is obtained from the CONNACK from broker.
+ *
+ * @return EXIT_SUCCESS if an MQTT session is established;
+ * EXIT_FAILURE otherwise.
  */
- static OtaErr_t publish( const char * const pacTopic,
-                          uint16_t topicLen,
-                          const char * pMsg,
-                          uint32_t msgSize,
-                          uint8_t qos );
+ static OtaErr_t mqttPublish( const char * const pacTopic,
+                              uint16_t topicLen,
+                              const char * pMsg,
+                              uint32_t msgSize,
+                              uint8_t qos );
 
-
-static OtaErr_t subscribe( const char * pTopicFilter,
-                           uint16_t topicFilterLength,
-                           uint8_t qos,
-                           void * pCallback );
-
-static OtaErr_t unsubscribe( const char * pTopicFilter,
-                             uint16_t topicFilterLength,
-                             uint8_t qos );
+/**
+ * @brief Sends an MQTT CONNECT packet over the already connected TCP socket.
+ *
+ * @param[in] pMqttContext MQTT context pointer.
+ * @param[in] createCleanSession Creates a new MQTT session if true.
+ * If false, tries to establish the existing session if there was session
+ * already present in broker.
+ * @param[out] pSessionPresent Session was already present in the broker or not.
+ * Session present response is obtained from the CONNACK from broker.
+ *
+ * @return EXIT_SUCCESS if an MQTT session is established;
+ * EXIT_FAILURE otherwise.
+ */
+static OtaErr_t mqttSubscribe( const char * pTopicFilter,
+                               uint16_t topicFilterLength,
+                               uint8_t qos,
+                               void * pCallback );
+/**
+ * @brief Sends an MQTT CONNECT packet over the already connected TCP socket.
+ *
+ * @param[in] pMqttContext MQTT context pointer.
+ * @param[in] createCleanSession Creates a new MQTT session if true.
+ * If false, tries to establish the existing session if there was session
+ * already present in broker.
+ * @param[out] pSessionPresent Session was already present in the broker or not.
+ * Session present response is obtained from the CONNACK from broker.
+ *
+ * @return EXIT_SUCCESS if an MQTT session is established;
+ * EXIT_FAILURE otherwise.
+ */
+static OtaErr_t mqttUnsubscribe( const char * pTopicFilter,
+                                 uint16_t topicFilterLength,
+                                 uint8_t qos );
 
 /*-----------------------------------------------------------*/
 
@@ -253,7 +287,7 @@ static OtaErr_t unsubscribe( const char * pTopicFilter,
  * MQTT server. Set this to `false` if using another MQTT server.
  * @return None.
  */
-static void App_OTACompleteCallback( OtaJobEvent_t event )
+static void otaAppCallback( OtaJobEvent_t event )
 {
     OtaErr_t err = OTA_ERR_UNINITIALIZED;
 
@@ -301,7 +335,7 @@ static void App_OTACompleteCallback( OtaJobEvent_t event )
 
 /*-----------------------------------------------------------*/
 
-static void jobCallback( MQTTContext_t * pContext, MQTTPublishInfo_t * pPublishInfo )
+static void mqttJobCallback( MQTTContext_t * pContext, MQTTPublishInfo_t * pPublishInfo )
 {
     assert( pPublishInfo != NULL );
     assert( pContext != NULL );
@@ -333,7 +367,7 @@ static void jobCallback( MQTTContext_t * pContext, MQTTPublishInfo_t * pPublishI
 
 /*-----------------------------------------------------------*/
 
-static void dataCallback( MQTTContext_t * pContext, MQTTPublishInfo_t * pPublishInfo )
+static void mqttDataCallback( MQTTContext_t * pContext, MQTTPublishInfo_t * pPublishInfo )
 {
     assert( pPublishInfo != NULL );
     assert( pContext != NULL );
@@ -511,10 +545,10 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
 
 /*-----------------------------------------------------------*/
 
-static OtaErr_t subscribe( const char * pTopicFilter,
-                           uint16_t topicFilterLength,
-                           uint8_t qos,
-                           void * pCallback )
+static OtaErr_t mqttSubscribe( const char * pTopicFilter,
+                               uint16_t topicFilterLength,
+                               uint8_t qos,
+                               void * pCallback )
 {
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus;
@@ -576,11 +610,11 @@ static OtaErr_t subscribe( const char * pTopicFilter,
 /*
  * Publish a message to the specified client/topic at the given QOS.
  */
- static OtaErr_t publish( const char * const pacTopic,
-                          uint16_t topicLen,
-                          const char * pMsg,
-                          uint32_t msgSize,
-                          uint8_t qos )
+ static OtaErr_t mqttPublish( const char * const pacTopic,
+                              uint16_t topicLen,
+                              const char * pMsg,
+                              uint32_t msgSize,
+                              uint8_t qos )
 {
     OtaErr_t otaErrRet = OTA_ERR_UNINITIALIZED;
 
@@ -627,9 +661,9 @@ static OtaErr_t subscribe( const char * pTopicFilter,
     return otaErrRet;
 }
 
-static OtaErr_t unsubscribe( const char * pTopicFilter,
-                             uint16_t topicFilterLength,
-                             uint8_t qos )
+static OtaErr_t mqttUnsubscribe( const char * pTopicFilter,
+                                 uint16_t topicFilterLength,
+                                 uint8_t qos )
 {
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus;
@@ -649,7 +683,7 @@ static OtaErr_t unsubscribe( const char * pTopicFilter,
     mqttStatus = MQTT_Unsubscribe( &mqttContext,
                                    pSubscriptionList,
                                    sizeof( pSubscriptionList ) / sizeof( MQTTSubscribeInfo_t ),
-                                    MQTT_GetPacketId( &mqttContext ) );
+                                   MQTT_GetPacketId( &mqttContext ) );
 
     if( mqttStatus != MQTTSuccess )
     {
@@ -671,90 +705,6 @@ static OtaErr_t unsubscribe( const char * pTopicFilter,
     }
 
     return returnStatus;
-}
-
-/*-----------------------------------------------------------*/
-
-void startOTADemo( MQTTContext_t * pMqttContext )
-{
-    int ret = 0;
-    MQTTStatus_t mqttStatus;
-    OtaEventMsg_t eventMsg = { 0 };
-
-    /* MQTT susbsrciption manager parameters.*/
-    SubscriptionManagerStatus_t mqttManagerStatus = 0u;
-    MQTTSubscribeInfo_t subscriptionInfo;
-    uint16_t topicLen = 0;
-    size_t subscriptionCount = 1;
-
-    /* OTA Agent state.*/
-    OtaState_t state = OtaAgentStateStopped;
-
-    /* OTA Agent thread handle. */
-    pthread_t threadHandle;
-
-    /* Initialize OTA library OS Interface. */
-	static OtaOSInterface_t otaOSInterface;
-    otaOSInterface.event.init = ota_InitEvent;
-	otaOSInterface.event.send = ota_SendEvent;
-	otaOSInterface.event.recv = ota_ReceiveEvent;
-	otaOSInterface.event.deinit = ota_DeinitEvent;
-
-    /* Intialize the OTA library MQTT Interface.*/
-    static OtaMqttInterface_t otaMqttInterface;
-    otaMqttInterface.subscribe = subscribe;
-    otaMqttInterface.publish = publish;
-    otaMqttInterface.unsubscribe = unsubscribe;
-    otaMqttInterface.jobCallback = jobCallback;
-    otaMqttInterface.dataCallback= dataCallback;
-
-    /* Initialize the OTA Agent , if it is resuming the OTA statistics will be cleared for new
-     * connection.*/
-    OTA_AgentInit( ( void * ) ( pMqttContext ),
-                    &otaOSInterface,
-                    &otaMqttInterface,
-                    ( const uint8_t * ) ( CLIENT_IDENTIFIER ),
-                    App_OTACompleteCallback,
-                    ( uint32_t ) ~0 );
-
-    sleep( OTA_DEMO_TASK_DELAY_SECONDS );
-
-    /* Create the OTA Agent thread with default attributes.*/
-	pthread_create( &threadHandle, NULL, otaAgentTask, NULL );
-
-    eventMsg.eventId = OtaAgentEventStart;
-    OTA_SignalEvent( &eventMsg );
-
-    /* Wait forever for OTA traffic but allow other tasks to run and output statistics only once
-     * per second. */
-    while( ( ( state = OTA_GetAgentState() ) != OtaAgentStateStopped ) )
-    {
-    	 
-        sleep( OTA_DEMO_TASK_DELAY_SECONDS );
-
-        LogInfo( ( " Received: %u   Queued: %u   Processed: %u   Dropped: %u",
-                   OTA_GetPacketsReceived(),
-                   OTA_GetPacketsQueued(),
-                   OTA_GetPacketsProcessed(),
-                   OTA_GetPacketsDropped() ) );
-
-        if(state == OtaAgentStateWaitingForJob )
-        {
-                mqttStatus = MQTT_ProcessLoop( pMqttContext, 1000 );
-
-                if( mqttStatus != MQTTSuccess )
-                {
-                    LogError( ( "MQTT_ProcessLoop returned with status = %u.",
-                            mqttStatus ) );
-                }
-        }
-        else
-        {
-            sleep( OTA_DEMO_TASK_DELAY_SECONDS );
-        }
-       
-    }
-
 }
 
 /*-----------------------------------------------------------*/
@@ -877,6 +827,95 @@ static int initializeMqtt( MQTTContext_t * pMqttContext,
     }
 
     return returnStatus;
+}
+
+/*-----------------------------------------------------------*/
+
+void startOTADemo( MQTTContext_t * pMqttContext )
+{
+    int ret = 0;
+    MQTTStatus_t mqttStatus;
+    OtaEventMsg_t eventMsg = { 0 };
+
+    /* MQTT susbsrciption manager parameters.*/
+    SubscriptionManagerStatus_t mqttManagerStatus = 0u;
+    MQTTSubscribeInfo_t subscriptionInfo;
+    uint16_t topicLen = 0;
+    size_t subscriptionCount = 1;
+
+    /* OTA Agent state.*/
+    OtaState_t state = OtaAgentStateStopped;
+
+    /* OTA Agent thread handle. */
+    pthread_t threadHandle;
+
+    /* Initialize OTA library OS Interface. */
+	static OtaOSInterface_t otaOSInterface;
+    otaOSInterface.event.init = ota_InitEvent;
+	otaOSInterface.event.send = ota_SendEvent;
+	otaOSInterface.event.recv = ota_ReceiveEvent;
+	otaOSInterface.event.deinit = ota_DeinitEvent;
+
+    /* Intialize the OTA library MQTT Interface.*/
+    static OtaMqttInterface_t otaMqttInterface;
+    otaMqttInterface.subscribe = mqttSubscribe;
+    otaMqttInterface.publish = mqttPublish;
+    otaMqttInterface.unsubscribe = mqttUnsubscribe;
+    otaMqttInterface.jobCallback = mqttJobCallback;
+    otaMqttInterface.dataCallback= mqttDataCallback;
+
+    /* Intialize the OTA library HTTP Interface.*/
+    static OtaHttpInterface_t otaHttpInterface;
+    otaHttpInterface.init = httpInit;
+    otaHttpInterface.request = httpRequest;
+    otaHttpInterface.deinit = httpDeinit;
+
+    /* Initialize the OTA Agent , if it is resuming the OTA statistics will be cleared for new
+     * connection.*/
+    OTA_AgentInit( &otaOSInterface,
+                   &otaMqttInterface,
+                   &otaHttpInterface,
+                   ( const uint8_t * ) ( CLIENT_IDENTIFIER ),
+                   otaAppCallback );
+
+    sleep( OTA_DEMO_TASK_DELAY_SECONDS );
+
+    /* Create the OTA Agent thread with default attributes.*/
+	pthread_create( &threadHandle, NULL, otaAgentTask, NULL );
+
+    eventMsg.eventId = OtaAgentEventStart;
+    OTA_SignalEvent( &eventMsg );
+
+    /* Wait forever for OTA traffic but allow other tasks to run and output statistics only once
+     * per second. */
+    while( ( ( state = OTA_GetAgentState() ) != OtaAgentStateStopped ) )
+    {
+    	 
+        sleep( OTA_DEMO_TASK_DELAY_SECONDS );
+
+        LogInfo( ( " Received: %u   Queued: %u   Processed: %u   Dropped: %u",
+                   OTA_GetPacketsReceived(),
+                   OTA_GetPacketsQueued(),
+                   OTA_GetPacketsProcessed(),
+                   OTA_GetPacketsDropped() ) );
+
+        if(state == OtaAgentStateWaitingForJob )
+        {
+                mqttStatus = MQTT_ProcessLoop( pMqttContext, 1000 );
+
+                if( mqttStatus != MQTTSuccess )
+                {
+                    LogError( ( "MQTT_ProcessLoop returned with status = %u.",
+                            mqttStatus ) );
+                }
+        }
+        else
+        {
+            sleep( OTA_DEMO_TASK_DELAY_SECONDS );
+        }
+       
+    }
+
 }
 
 /*-----------------------------------------------------------*/
