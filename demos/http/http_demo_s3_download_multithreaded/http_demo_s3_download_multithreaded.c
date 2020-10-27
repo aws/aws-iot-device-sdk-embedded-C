@@ -260,10 +260,10 @@ static QueueOpStatus_t retrieveHTTPResponse( mqd_t responseQueue,
  *
  * @return false on failure; true on success.
  */
-static bool getS3ObjectFileSizeMulti( const HTTPRequestInfo_t * requestInfo,
-                                      mqd_t requestQueue,
-                                      mqd_t responseQueue,
-                                      size_t * pFileSize );
+static bool getS3ObjectFileSize( const HTTPRequestInfo_t * requestInfo,
+                                 mqd_t requestQueue,
+                                 mqd_t responseQueue,
+                                 size_t * pFileSize );
 
 /**
  * @brief Services HTTP requests from the request queue and writes the
@@ -369,10 +369,10 @@ static bool downloadS3ObjectFile( const char * pHost,
     requestInfo.reqFlags = HTTP_REQUEST_KEEP_ALIVE_FLAG;
 
     /* Get the length of the S3 file. */
-    returnStatus = getS3ObjectFileSizeMulti( &requestInfo,
-                                             requestQueue,
-                                             responseQueue,
-                                             &fileSize );
+    returnStatus = getS3ObjectFileSize( &requestInfo,
+                                        requestQueue,
+                                        responseQueue,
+                                        &fileSize );
 
     if( returnStatus == true )
     {
@@ -575,10 +575,10 @@ static QueueOpStatus_t retrieveHTTPResponse( mqd_t responseQueue,
 
 /*-----------------------------------------------------------*/
 
-static bool getS3ObjectFileSizeMulti( const HTTPRequestInfo_t * requestInfo,
-                                      mqd_t requestQueue,
-                                      mqd_t responseQueue,
-                                      size_t * pFileSize )
+static bool getS3ObjectFileSize( const HTTPRequestInfo_t * requestInfo,
+                                 mqd_t requestQueue,
+                                 mqd_t responseQueue,
+                                 size_t * pFileSize )
 {
     bool returnStatus = true;
     HTTPStatus_t httpStatus = HTTPSuccess;
