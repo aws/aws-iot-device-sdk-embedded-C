@@ -46,6 +46,11 @@
  */
 #define HTTP_CONTENT_RANGE_HEADER_FIELD_LENGTH    ( sizeof( HTTP_CONTENT_RANGE_HEADER_FIELD ) - 1 )
 
+/**
+ * @brief HTTP status code returned for partial conent.
+ */
+#define HTTP_STATUS_CODE_PARTIAL_CONTENT          206
+
 /*-----------------------------------------------------------*/
 
 int32_t connectToServerWithBackoffRetries( TransportConnect_t connectFunction,
@@ -293,7 +298,7 @@ bool getS3ObjectFileSize( size_t * pFileSize,
                     ( int32_t ) response.bodyLen,
                     response.pBody ) );
 
-        returnStatus = ( response.statusCode == 206 ) ? true : false;
+        returnStatus = ( response.statusCode == HTTP_STATUS_CODE_PARTIAL_CONTENT ) ? true : false;
     }
     else
     {

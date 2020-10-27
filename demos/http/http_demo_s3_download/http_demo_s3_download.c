@@ -77,17 +77,22 @@
 /**
  * @brief Length of the pre-signed GET URL defined in demo_config.h.
  */
-#define S3_PRESIGNED_GET_URL_LENGTH    ( sizeof( S3_PRESIGNED_GET_URL ) - 1 )
+#define S3_PRESIGNED_GET_URL_LENGTH         ( sizeof( S3_PRESIGNED_GET_URL ) - 1 )
 
 /**
  * @brief Delay in seconds between each iteration of the demo.
  */
-#define DEMO_LOOP_DELAY_SECONDS        ( 5U )
+#define DEMO_LOOP_DELAY_SECONDS             ( 5U )
 
 /**
  * @brief The length of the HTTP GET method.
  */
-#define HTTP_METHOD_GET_LENGTH         ( sizeof( HTTP_METHOD_GET ) - 1 )
+#define HTTP_METHOD_GET_LENGTH              ( sizeof( HTTP_METHOD_GET ) - 1 )
+
+/**
+ * @brief HTTP status code returned for partial content.
+ */
+#define HTTP_STATUS_CODE_PARTIAL_CONTENT    206
 
 /**
  * @brief A buffer used in the demo for storing HTTP request headers and HTTP
@@ -345,7 +350,7 @@ static bool downloadS3ObjectFile( const TransportInterface_t * pTransportInterfa
                 numReqBytes = fileSize - curByte;
             }
 
-            returnStatus = ( response.statusCode == 206 ) ? true : false;
+            returnStatus = ( response.statusCode == HTTP_STATUS_CODE_PARTIAL_CONTENT ) ? true : false;
         }
         else
         {

@@ -126,6 +126,11 @@
 #define HTTP_CONTENT_RANGE_HEADER_FIELD_LENGTH    ( sizeof( HTTP_CONTENT_RANGE_HEADER_FIELD ) - 1 )
 
 /**
+ * @brief HTTP status code returned for partial content.
+ */
+#define HTTP_STATUS_CODE_PARTIAL_CONTENT          206
+
+/**
  * @brief The location of the host address within string S3_PRESIGNED_GET_URL.
  */
 static const char * pHost = NULL;
@@ -431,7 +436,7 @@ static bool downloadS3ObjectFile( const char * pHost,
                     LogInfo( ( "Response Body:\n%.*s\n", ( int32_t ) responseItem.response.bodyLen,
                                responseItem.response.pBody ) );
 
-                    if( responseItem.response.statusCode != 206 )
+                    if( responseItem.response.statusCode != HTTP_STATUS_CODE_PARTIAL_CONTENT )
                     {
                         LogError( ( "Recieved repsonse with unexpected status code: %d", responseItem.response.statusCode ) );
                         returnStatus = false;
@@ -616,7 +621,7 @@ static bool getS3ObjectFileSizeMulti( const HTTPRequestInfo_t * requestInfo,
         {
             returnStatus = false;
         }
-        else if( responseItem.response.statusCode != 206 )
+        else if( responseItem.response.statusCode != HTTP_STATUS_CODE_PARTIAL_CONTENT )
         {
             LogError( ( "Recieved repsonse with unexpected status code: %d", responseItem.response.statusCode ) );
             returnStatus = false;
