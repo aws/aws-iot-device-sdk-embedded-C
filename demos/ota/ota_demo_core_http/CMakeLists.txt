@@ -3,6 +3,7 @@ set( DEMO_NAME "ota_demo_core_http" )
 # Include required library's source and header path variables.
 include( ${CMAKE_SOURCE_DIR}/libraries/aws/ota/otaFilePaths.cmake )
 include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreMQTT/mqttFilePaths.cmake )
+include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreHTTP/httpFilePaths.cmake )
 
 # Demo target.
 add_executable(${DEMO_NAME})
@@ -18,6 +19,8 @@ target_sources(
         ${OTA_OS_POSIX_SOURCES}
         ${OTA_MQTT_SOURCES}
         ${MQTT_SOURCES}
+        ${OTA_HTTP_SOURCES}
+        ${HTTP_SOURCES}
         ${MQTT_SERIALIZER_SOURCES}
 )
 target_link_libraries(

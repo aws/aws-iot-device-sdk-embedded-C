@@ -38,6 +38,9 @@
 /* Retry parameters. */
 #include "retry_utils.h"
 
+/* Common HTTP demo utilities. */
+#include "http_demo_utils.h"
+
 /* Clock for timer. */
 #include "clock.h"
 
@@ -53,6 +56,10 @@
 /* OTA Library Interface include. */
 #include "ota_os_posix.h"
 #include "ota_mqtt_interface.h"
+#include "ota_http_interface.h"
+
+/* HTTP API header. */
+#include "core_http_client.h"
 
 /* Include firmware version struct definition. */
 #include "iot_appversion32.h"
@@ -146,6 +153,16 @@
  */
 #define OTA_DEMO_TASK_DELAY_SECONDS         ( 1U )
 
+/**
+ * @brief The MQTT metrics string expected by AWS IoT.
+ */
+#define METRICS_STRING                      "?SDK=" OS_NAME "&Version=" OS_VERSION "&Platform=" HARDWARE_PLATFORM_NAME "&MQTTLib=" MQTT_LIB
+
+/**
+ * @brief The length of the MQTT metrics string expected by AWS IoT.
+ */
+#define METRICS_STRING_LENGTH               ( ( uint16_t ) ( sizeof( METRICS_STRING ) - 1 ) )
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -171,28 +188,122 @@ static bool mqttSessionEstablished = false;
 /**
  * @brief MQTT connection context used in this demo.
  */
-static MQTTContext_t globalMqttContext;
+static MQTTContext_t mqttContext;
+
+static NetworkContext_t networkContextHttp;
+
+/* HTTP URL information. */
+httpUrlInfo_t UrlInfo;
+
+/**
+ * @brief The host address string extracted from the pre-signed URL.
+ *
+ * @note S3_PRESIGNED_GET_URL_LENGTH is set as the array length here as the
+ * length of the host name string cannot exceed this value.
+ */
+static char serverHost[ 256 ];
+
+    /* Check that size of the user buffer is defined. */
+#ifndef USER_BUFFER_LENGTH
+    #define USER_BUFFER_LENGTH    ( 20000)
+#endif
+
+/**
+ * @brief A buffer used in the demo for storing HTTP request headers and
+ * HTTP response headers and body.
+ *
+ * @note This demo shows how the same buffer can be re-used for storing the HTTP
+ * response after the HTTP request is sent out. However, the user can also
+ * decide to use separate buffers for storing the HTTP request and response.
+ */
+static uint8_t userBuffer[ USER_BUFFER_LENGTH ];
+
+/* The transport layer interface used by the HTTP Client library. */
+TransportInterface_t transportInterfaceHttp;
 
 /*-----------------------------------------------------------*/
 
-/*
- * Publish a message to the specified client/topic at the given QOS.
+/**
+ * @brief The application callback function for getting the incoming publish
+ * and incoming acks reported from MQTT library.
+ *
+ * @param[in] pMqttContext MQTT context pointer.
+ * @param[in] pPacketInfo Packet Info pointer for the incoming packet.
+ * @param[in] pDeserializedInfo Deserialized information from the incoming packet.
  */
- static OtaErr_t publish( const char * const pacTopic,
-                          uint16_t topicLen,
-                          const char * pMsg,
-                          uint32_t msgSize,
-                          uint8_t qos );
+static void eventCallback( MQTTContext_t * pMqttContext,
+                           MQTTPacketInfo_t * pPacketInfo,
+                           MQTTDeserializedInfo_t * pDeserializedInfo );
 
+/**
+ * @brief Sends an MQTT CONNECT packet over the already connected TCP socket.
+ *
+ * @param[in] pMqttContext MQTT context pointer.
+ * @param[in] createCleanSession Creates a new MQTT session if true.
+ * If false, tries to establish the existing session if there was session
+ * already present in broker.
+ * @param[out] pSessionPresent Session was already present in the broker or not.
+ * Session present response is obtained from the CONNACK from broker.
+ *
+ * @return EXIT_SUCCESS if an MQTT session is established;
+ * EXIT_FAILURE otherwise.
+ */
+static int establishMqttSession( MQTTContext_t * pMqttContext,
+                                 bool createCleanSession,
+                                 bool * pSessionPresent );
 
-static OtaErr_t subscribe( const char * pTopicFilter,
-                           uint16_t topicFilterLength,
-                           uint8_t qos,
-                           void * pCallback );
+/**
+ * @brief Publish a message to the specified client/topic at the given QOS.
+ *
+ * @param[in] pMqttContext MQTT context pointer.
+ * @param[in] createCleanSession Creates a new MQTT session if true.
+ * If false, tries to establish the existing session if there was session
+ * already present in broker.
+ * @param[out] pSessionPresent Session was already present in the broker or not.
+ * Session present response is obtained from the CONNACK from broker.
+ *
+ * @return EXIT_SUCCESS if an MQTT session is established;
+ * EXIT_FAILURE otherwise.
+ */
+ static OtaErr_t mqttPublish( const char * const pacTopic,
+                              uint16_t topicLen,
+                              const char * pMsg,
+                              uint32_t msgSize,
+                              uint8_t qos );
 
-static OtaErr_t unsubscribe( const char * pTopicFilter,
-                             uint16_t topicFilterLength,
-                             uint8_t qos );
+/**
+ * @brief Sends an MQTT CONNECT packet over the already connected TCP socket.
+ *
+ * @param[in] pMqttContext MQTT context pointer.
+ * @param[in] createCleanSession Creates a new MQTT session if true.
+ * If false, tries to establish the existing session if there was session
+ * already present in broker.
+ * @param[out] pSessionPresent Session was already present in the broker or not.
+ * Session present response is obtained from the CONNACK from broker.
+ *
+ * @return EXIT_SUCCESS if an MQTT session is established;
+ * EXIT_FAILURE otherwise.
+ */
+static OtaErr_t mqttSubscribe( const char * pTopicFilter,
+                               uint16_t topicFilterLength,
+                               uint8_t qos,
+                               void * pCallback );
+/**
+ * @brief Sends an MQTT CONNECT packet over the already connected TCP socket.
+ *
+ * @param[in] pMqttContext MQTT context pointer.
+ * @param[in] createCleanSession Creates a new MQTT session if true.
+ * If false, tries to establish the existing session if there was session
+ * already present in broker.
+ * @param[out] pSessionPresent Session was already present in the broker or not.
+ * Session present response is obtained from the CONNACK from broker.
+ *
+ * @return EXIT_SUCCESS if an MQTT session is established;
+ * EXIT_FAILURE otherwise.
+ */
+static OtaErr_t mqttUnsubscribe( const char * pTopicFilter,
+                                 uint16_t topicFilterLength,
+                                 uint8_t qos );
 
 /*-----------------------------------------------------------*/
 
@@ -214,7 +325,7 @@ static OtaErr_t unsubscribe( const char * pTopicFilter,
  * MQTT server. Set this to `false` if using another MQTT server.
  * @return None.
  */
-static void App_OTACompleteCallback( OtaJobEvent_t event )
+static void otaAppCallback( OtaJobEvent_t event )
 {
     OtaErr_t err = OTA_ERR_UNINITIALIZED;
 
@@ -224,7 +335,7 @@ static void App_OTACompleteCallback( OtaJobEvent_t event )
         LogInfo( ( "Received OtaJobEventActivate callback from OTA Agent." ) );
 
         /* OTA job is completed. so delete the network connection. */
-        MQTT_Disconnect( &globalMqttContext );
+        MQTT_Disconnect( &mqttContext );
 
         /* Activate the new firmware image. */
         OTA_ActivateNewImage();
@@ -262,7 +373,7 @@ static void App_OTACompleteCallback( OtaJobEvent_t event )
 
 /*-----------------------------------------------------------*/
 
-static void jobCallback( MQTTContext_t * pContext, MQTTPublishInfo_t * pPublishInfo )
+static void mqttJobCallback( MQTTContext_t * pContext, MQTTPublishInfo_t * pPublishInfo )
 {
     assert( pPublishInfo != NULL );
     assert( pContext != NULL );
@@ -294,7 +405,7 @@ static void jobCallback( MQTTContext_t * pContext, MQTTPublishInfo_t * pPublishI
 
 /*-----------------------------------------------------------*/
 
-static void dataCallback( MQTTContext_t * pContext, MQTTPublishInfo_t * pPublishInfo )
+static void mqttDataCallback( MQTTContext_t * pContext, MQTTPublishInfo_t * pPublishInfo )
 {
     assert( pPublishInfo != NULL );
     assert( pContext != NULL );
@@ -472,103 +583,16 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
 
 /*-----------------------------------------------------------*/
 
-static int establishMqttSession( MQTTContext_t * pMqttContext,
-                                 NetworkContext_t * pNetworkContext,
-                                 bool createCleanSession,
-                                 bool * pSessionPresent )
+static OtaErr_t mqttSubscribe( const char * pTopicFilter,
+                               uint16_t topicFilterLength,
+                               uint8_t qos,
+                               void * pCallback )
 {
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus;
-    MQTTConnectInfo_t connectInfo;
-    MQTTFixedBuffer_t networkBuffer;
-    TransportInterface_t transport;
 
-    assert( pMqttContext != NULL );
-    assert( pNetworkContext != NULL );
-
-    /* Fill in TransportInterface send and receive function pointers.
-     * For this demo, TCP sockets are used to send and receive data
-     * from network. Network context is SSL context for OpenSSL.*/
-    transport.pNetworkContext = pNetworkContext;
-    transport.send = Openssl_Send;
-    transport.recv = Openssl_Recv;
-
-    /* Fill the values for network buffer. */
-    networkBuffer.pBuffer = buffer;
-    networkBuffer.size = NETWORK_BUFFER_SIZE;
-
-    /* Initialize MQTT library. */
-    mqttStatus = MQTT_Init( pMqttContext,
-                            &transport,
-                            Clock_GetTimeMs,
-                            mqttEventCallback,
-                            &networkBuffer );
-
-    if( mqttStatus != MQTTSuccess )
-    {
-        returnStatus = EXIT_FAILURE;
-        LogError( ( "MQTT init failed with status %s.", MQTT_Status_strerror( mqttStatus ) ) );
-    }
-    else
-    {
-        /* Establish MQTT session by sending a CONNECT packet. */
-
-        /* If #createCleanSession is true, start with a clean session
-         * i.e. direct the MQTT broker to discard any previous session data.
-         * If #createCleanSession is false, directs the broker to attempt to
-         * reestablish a session which was already present. */
-        connectInfo.cleanSession = createCleanSession;
-
-        /* The client identifier is used to uniquely identify this MQTT client to
-         * the MQTT broker. In a production device the identifier can be something
-         * unique, such as a device serial number. */
-        connectInfo.pClientIdentifier = CLIENT_IDENTIFIER;
-        connectInfo.clientIdentifierLength = CLIENT_IDENTIFIER_LENGTH;
-
-        /* The maximum time interval in seconds which is allowed to elapse
-         * between two Control Packets.
-         * It is the responsibility of the Client to ensure that the interval between
-         * Control Packets being sent does not exceed the this Keep Alive value. In the
-         * absence of sending any other Control Packets, the Client MUST send a
-         * PINGREQ Packet. */
-        connectInfo.keepAliveSeconds = MQTT_KEEP_ALIVE_INTERVAL_SECONDS;
-
-        /* Username and password for authentication. Not used in this demo. */
-        connectInfo.pUserName = NULL;
-        connectInfo.userNameLength = 0U;
-        connectInfo.pPassword = NULL;
-        connectInfo.passwordLength = 0U;
-
-        /* Send MQTT CONNECT packet to broker. */
-        mqttStatus = MQTT_Connect( pMqttContext, &connectInfo, NULL, CONNACK_RECV_TIMEOUT_MS, pSessionPresent );
-
-        if( mqttStatus != MQTTSuccess )
-        {
-            returnStatus = EXIT_FAILURE;
-            LogError( ( "Connection with MQTT broker failed with status %u.", mqttStatus ) );
-        }
-        else
-        {
-            LogInfo( ( "MQTT connection successfully established with broker.\n\n" ) );
-        }
-    }
-
-    return returnStatus;
-}
-
-/*-----------------------------------------------------------*/
-
-static OtaErr_t subscribe( const char * pTopicFilter,
-                           uint16_t topicFilterLength,
-                           uint8_t qos,
-                           void * pCallback )
-{
-    int returnStatus = EXIT_SUCCESS;
-    MQTTStatus_t mqttStatus;
-    MQTTContext_t * pMqttContext = &globalMqttContext;
     MQTTSubscribeInfo_t pSubscriptionList[ 1 ];
 
-    assert( pMqttContext != NULL );
     assert( pTopicFilter != NULL );
     assert( topicFilterLength > 0 );
 
@@ -581,10 +605,10 @@ static OtaErr_t subscribe( const char * pTopicFilter,
     pSubscriptionList[ 0 ].topicFilterLength = topicFilterLength;
 
     /* Send SUBSCRIBE packet. */
-    mqttStatus = MQTT_Subscribe( pMqttContext,
+    mqttStatus = MQTT_Subscribe( &mqttContext,
                                  pSubscriptionList,
                                  sizeof( pSubscriptionList ) / sizeof( MQTTSubscribeInfo_t ),
-                                 MQTT_GetPacketId( pMqttContext ) );
+                                 MQTT_GetPacketId( &mqttContext ) );
 
     if( mqttStatus != MQTTSuccess )
     {
@@ -605,7 +629,7 @@ static OtaErr_t subscribe( const char * pTopicFilter,
          * of receiving publish message before subscribe ack is zero; but application
          * must be ready to receive any packet. This demo uses MQTT_ProcessLoop to
          * receive packet from network. */
-        mqttStatus = MQTT_ProcessLoop( pMqttContext, 1000 );
+        mqttStatus = MQTT_ProcessLoop( &mqttContext, 1000 );
 
         if( mqttStatus != MQTTSuccess )
         {
@@ -624,17 +648,17 @@ static OtaErr_t subscribe( const char * pTopicFilter,
 /*
  * Publish a message to the specified client/topic at the given QOS.
  */
- static OtaErr_t publish( const char * const pacTopic,
-                          uint16_t topicLen,
-                          const char * pMsg,
-                          uint32_t msgSize,
-                          uint8_t qos )
+ static OtaErr_t mqttPublish( const char * const pacTopic,
+                              uint16_t topicLen,
+                              const char * pMsg,
+                              uint32_t msgSize,
+                              uint8_t qos )
 {
     OtaErr_t otaErrRet = OTA_ERR_UNINITIALIZED;
 
     MQTTStatus_t mqttStatus = MQTTBadParameter;
     MQTTPublishInfo_t publishInfo;
-    MQTTContext_t * pMqttContext = &globalMqttContext;
+    MQTTContext_t * pMqttContext = &mqttContext;
 
     publishInfo.pTopicName = pacTopic;
     publishInfo.topicNameLength = topicLen;
@@ -675,15 +699,14 @@ static OtaErr_t subscribe( const char * pTopicFilter,
     return otaErrRet;
 }
 
-static OtaErr_t unsubscribe( const char * pTopicFilter,
-                             uint16_t topicFilterLength,
-                             uint8_t qos )
+static OtaErr_t mqttUnsubscribe( const char * pTopicFilter,
+                                 uint16_t topicFilterLength,
+                                 uint8_t qos )
 {
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus;
 
     MQTTSubscribeInfo_t pSubscriptionList[ 1 ];
-    MQTTContext_t * pMqttContext = &globalMqttContext;
 
     /* Start with everything at 0. */
     ( void ) memset( ( void * ) pSubscriptionList, 0x00, sizeof( pSubscriptionList ) );
@@ -695,10 +718,10 @@ static OtaErr_t unsubscribe( const char * pTopicFilter,
     pSubscriptionList[ 0 ].topicFilterLength = topicFilterLength;
 
     /* Send UNSUBSCRIBE packet. */
-    mqttStatus = MQTT_Unsubscribe( pMqttContext,
+    mqttStatus = MQTT_Unsubscribe( &mqttContext,
                                    pSubscriptionList,
                                    sizeof( pSubscriptionList ) / sizeof( MQTTSubscribeInfo_t ),
-                                    MQTT_GetPacketId( pMqttContext ) );
+                                   MQTT_GetPacketId( &mqttContext ) );
 
     if( mqttStatus != MQTTSuccess )
     {
@@ -709,7 +732,7 @@ static OtaErr_t unsubscribe( const char * pTopicFilter,
     else
     {
         /* Process Incoming UNSUBACK packet from the broker. */
-        mqttStatus = MQTT_ProcessLoop( pMqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
+        mqttStatus = MQTT_ProcessLoop( &mqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
 
         if( mqttStatus != MQTTSuccess )
         {
@@ -720,6 +743,326 @@ static OtaErr_t unsubscribe( const char * pTopicFilter,
     }
 
     return returnStatus;
+}
+
+/*-----------------------------------------------------------*/
+
+static int establishMqttSession( MQTTContext_t * pMqttContext,
+                                 bool createCleanSession,
+                                 bool * pSessionPresent )
+{
+    int returnStatus = EXIT_SUCCESS;
+    MQTTStatus_t mqttStatus;
+    MQTTConnectInfo_t connectInfo = { 0 };
+
+    assert( pMqttContext != NULL );
+    assert( pSessionPresent != NULL );
+
+    /* Establish MQTT session by sending a CONNECT packet. */
+
+    /* If #createCleanSession is true, start with a clean session
+     * i.e. direct the MQTT broker to discard any previous session data.
+     * If #createCleanSession is false, directs the broker to attempt to
+     * reestablish a session which was already present. */
+    connectInfo.cleanSession = createCleanSession;
+
+    /* The client identifier is used to uniquely identify this MQTT client to
+     * the MQTT broker. In a production device the identifier can be something
+     * unique, such as a device serial number. */
+    connectInfo.pClientIdentifier = CLIENT_IDENTIFIER;
+    connectInfo.clientIdentifierLength = CLIENT_IDENTIFIER_LENGTH;
+
+    /* The maximum time interval in seconds which is allowed to elapse
+     * between two Control Packets.
+     * It is the responsibility of the Client to ensure that the interval between
+     * Control Packets being sent does not exceed the this Keep Alive value. In the
+     * absence of sending any other Control Packets, the Client MUST send a
+     * PINGREQ Packet. */
+    connectInfo.keepAliveSeconds = MQTT_KEEP_ALIVE_INTERVAL_SECONDS;
+
+    /* Use the username and password for authentication, if they are defined.
+     * Refer to the AWS IoT documentation below for details regarding client
+     * authentication with a username and password.
+     * https://docs.aws.amazon.com/iot/latest/developerguide/enhanced-custom-authentication.html
+     * An authorizer setup needs to be done, as mentioned in the above link, to use
+     * username/password based client authentication.
+     *
+     * The username field is populated with voluntary metrics to AWS IoT.
+     * The metrics collected by AWS IoT are the operating system, the operating
+     * system's version, the hardware platform, and the MQTT Client library
+     * information. These metrics help AWS IoT improve security and provide
+     * better technical support.
+     *
+     * If client authentication is based on username/password in AWS IoT,
+     * the metrics string is appended to the username to support both client
+     * authentication and metrics collection. */
+    #ifdef CLIENT_USERNAME
+        connectInfo.pUserName = CLIENT_USERNAME_WITH_METRICS;
+        connectInfo.userNameLength = strlen( CLIENT_USERNAME_WITH_METRICS );
+        connectInfo.pPassword = CLIENT_PASSWORD;
+        connectInfo.passwordLength = strlen( CLIENT_PASSWORD );
+    #else
+        connectInfo.pUserName = METRICS_STRING;
+        connectInfo.userNameLength = METRICS_STRING_LENGTH;
+        /* Password for authentication is not used. */
+        connectInfo.pPassword = NULL;
+        connectInfo.passwordLength = 0U;
+    #endif /* ifdef CLIENT_USERNAME */
+
+    /* Send MQTT CONNECT packet to broker. */
+    mqttStatus = MQTT_Connect( pMqttContext, &connectInfo, NULL, CONNACK_RECV_TIMEOUT_MS, pSessionPresent );
+
+    if( mqttStatus != MQTTSuccess )
+    {
+        returnStatus = EXIT_FAILURE;
+        LogError( ( "Connection with MQTT broker failed with status %s.",
+                    MQTT_Status_strerror( mqttStatus ) ) );
+    }
+    else
+    {
+        LogInfo( ( "MQTT connection successfully established with broker.\n\n" ) );
+    }
+
+    return returnStatus;
+}
+
+
+/*-----------------------------------------------------------*/
+
+static int initializeMqtt( MQTTContext_t * pMqttContext,
+                           NetworkContext_t * pNetworkContext )
+{
+    int returnStatus = EXIT_SUCCESS;
+    MQTTStatus_t mqttStatus;
+    MQTTFixedBuffer_t networkBuffer;
+    TransportInterface_t transport;
+
+    assert( pMqttContext != NULL );
+    assert( pNetworkContext != NULL );
+
+    /* Fill in TransportInterface send and receive function pointers.
+     * For this demo, TCP sockets are used to send and receive data
+     * from network. Network context is SSL context for OpenSSL.*/
+    transport.pNetworkContext = pNetworkContext;
+    transport.send = Openssl_Send;
+    transport.recv = Openssl_Recv;
+
+    /* Fill the values for network buffer. */
+    networkBuffer.pBuffer = buffer;
+    networkBuffer.size = NETWORK_BUFFER_SIZE;
+
+    /* Initialize MQTT library. */
+    mqttStatus = MQTT_Init( pMqttContext,
+                            &transport,
+                            Clock_GetTimeMs,
+                            mqttEventCallback,
+                            &networkBuffer );
+
+    if( mqttStatus != MQTTSuccess )
+    {
+        returnStatus = EXIT_FAILURE;
+        LogError( ( "MQTT init failed: Status = %s.", MQTT_Status_strerror( mqttStatus ) ) );
+    }
+
+    return returnStatus;
+}
+
+static int32_t connectToServer( NetworkContext_t * pNetworkContext , char * pUrl )
+{
+    int32_t returnStatus = EXIT_FAILURE;
+    HTTPStatus_t httpStatus = HTTPSuccess;
+
+    /* The location of the host address within the pre-signed URL. */
+    const char * pAddress = NULL;
+
+    /* Status returned by OpenSSL transport implementation. */
+    OpensslStatus_t opensslStatus;
+    /* Credentials to establish the TLS connection. */
+    OpensslCredentials_t opensslCredentials;
+    /* Information about the server to send the HTTP requests. */
+    ServerInfo_t serverInfo;
+
+    /* Initialize TLS credentials. */
+    ( void ) memset( &opensslCredentials, 0, sizeof( opensslCredentials ) );
+    opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
+
+    /* Retrieve the address location and length from S3_PRESIGNED_GET_URL. */
+    IotHttpsClient_GetUrlAddress( pUrl,
+                                  strlen( pUrl ),
+                                  UrlInfo.pAddress,
+                                  UrlInfo.addressLength );
+
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        /* serverHost should consist only of the host address located in
+         * S3_PRESIGNED_GET_URL. */
+        memcpy( serverHost, UrlInfo.pAddress, UrlInfo.addressLength  );
+        serverHost[  UrlInfo.addressLength  ] = '\0';
+
+        /* Initialize server information. */
+        serverInfo.pHostName = serverHost;
+        serverInfo.hostNameLength =  UrlInfo.addressLength ;
+        serverInfo.port = AWS_HTTPS_PORT;
+
+        /* Establish a TLS session with the HTTP server. This example connects
+         * to the HTTP server as specified in SERVER_HOST and HTTPS_PORT in
+         * demo_config.h. */
+        LogInfo( ( "Establishing a TLS session with %s:%d.",
+                   serverHost,
+                   AWS_HTTPS_PORT ) );
+
+        opensslStatus = Openssl_Connect( pNetworkContext,
+                                         &serverInfo,
+                                         &opensslCredentials,
+                                         TRANSPORT_SEND_RECV_TIMEOUT_MS,
+                                         TRANSPORT_SEND_RECV_TIMEOUT_MS );
+
+        returnStatus = ( opensslStatus == OPENSSL_SUCCESS ) ? EXIT_SUCCESS : EXIT_FAILURE;
+    }
+
+    return returnStatus;
+}
+
+static OtaErr_t httpInit( const char *  pUrl )
+{
+    /* OTA lib return error code. */
+    OtaErr_t ret = OTA_ERR_UNINITIALIZED;
+
+    /* Return value from libs. */
+    int32_t returnStatus = EXIT_SUCCESS;
+
+    /* Establish HTTPs connection */
+    LogInfo( ( "Performing TLS handshake on top of the TCP connection." ) );
+
+    /* Attempt to connect to the HTTPs server. If connection fails, retry after
+     * a timeout. Timeout value will be exponentially increased till the maximum
+     * attempts are reached or maximum timeout value is reached. The function
+     * returns EXIT_FAILURE if the TCP connection cannot be established to
+     * broker after configured number of attempts. */
+    returnStatus = connectToServer( &networkContextHttp , pUrl );
+
+    if( returnStatus == EXIT_SUCCESS )
+    {
+            /* Define the transport interface. */
+            ( void ) memset( &transportInterfaceHttp, 0, sizeof( transportInterfaceHttp ) );
+            transportInterfaceHttp.recv = Openssl_Recv;
+            transportInterfaceHttp.send = Openssl_Send;
+            transportInterfaceHttp.pNetworkContext = &networkContextHttp;
+            
+            ret = OTA_ERR_NONE;
+    }
+    else
+    {
+
+        /* Log an error to indicate connection failure after all
+         * reconnect attempts are over. */
+        LogError( ( "Failed to connect to HTTP server %s.",
+                     serverHost ) );
+
+        ret =  OTA_ERR_HTTP_INIT_FAILED;
+
+    }
+    
+    return ret;
+
+}
+
+static OtaErr_t httpRequest( uint32_t rangeStart, uint32_t rangeEnd )
+{
+    /* Return value of this method. */
+    int32_t returnStatus = EXIT_SUCCESS;
+
+    static uint8_t url[34];
+
+    OtaEventData_t * pData;
+    OtaEventMsg_t eventMsg = { 0 };
+
+    /* Configurations of the initial request headers that are passed to
+     * #HTTPClient_InitializeRequestHeaders. */
+    HTTPRequestInfo_t requestInfo;
+    /* Represents a response returned from an HTTP server. */
+    HTTPResponse_t response;
+    /* Represents header data that will be sent in an HTTP request. */
+    HTTPRequestHeaders_t requestHeaders;
+
+    /* Return value of all methods from the HTTP Client library API. */
+    HTTPStatus_t httpStatus = HTTPSuccess;
+
+    /* Initialize all HTTP Client library API structs to 0. */
+    ( void ) memset( &requestInfo, 0, sizeof( requestInfo ) );
+    ( void ) memset( &response, 0, sizeof( response ) );
+    ( void ) memset( &requestHeaders, 0, sizeof( requestHeaders ) );
+
+    memcpy(url,UrlInfo.pAddress ,UrlInfo.addressLength);
+
+    /* Initialize the request object. */
+    requestInfo.pHost = serverHost;
+    requestInfo.hostLen = UrlInfo.addressLength;
+    requestInfo.pMethod = HTTP_METHOD_GET;
+    requestInfo.methodLen = sizeof( HTTP_METHOD_GET ) - 1;
+    requestInfo.pPath = UrlInfo.pPath;
+    requestInfo.pathLen = UrlInfo.pathLength;
+
+    /* Set "Connection" HTTP header to "keep-alive" so that multiple requests
+     * can be sent over the same established TCP connection. */
+    requestInfo.reqFlags = HTTP_REQUEST_KEEP_ALIVE_FLAG;
+
+    /* Set the buffer used for storing request headers. */
+    requestHeaders.pBuffer = userBuffer;
+    requestHeaders.bufferLen = USER_BUFFER_LENGTH;
+
+    httpStatus = HTTPClient_InitializeRequestHeaders( &requestHeaders,
+                                                      &requestInfo );
+
+    HTTPClient_AddRangeHeader( &requestHeaders, rangeStart, rangeEnd);
+
+    if( httpStatus == HTTPSuccess )
+    {
+        /* Initialize the response object. The same buffer used for storing
+         * request headers is reused here. */
+        response.pBuffer = userBuffer;
+        response.bufferLen = USER_BUFFER_LENGTH;
+
+        /* Send the request and receive the response. */
+        httpStatus = HTTPClient_Send( &transportInterfaceHttp,
+                                      &requestHeaders,
+                                      NULL,
+                                      0,
+                                      &response,
+                                      0 );
+    }
+    else
+    {
+        LogError( ( "Failed to initialize HTTP request headers: Error=%s.",
+                    HTTPClient_strerror( httpStatus ) ) );
+    }
+
+    if( httpStatus != HTTPSuccess )
+    {
+        returnStatus = EXIT_FAILURE;
+    }
+    else
+    {
+
+       /* Get the data from response buffer. */
+        memcpy( pData->data, response.pBody, response.bodyLen );
+        pData->dataLength = response.bodyLen  ;
+
+        /* Send job document received event. */
+        eventMsg.eventId = OtaAgentEventReceivedFileBlock;
+        eventMsg.pEventData = pData;
+        OTA_SignalEvent( &eventMsg );
+
+    }
+    
+    return returnStatus;
+    
+}
+
+
+static OtaErr_t httpDeinit( char * pUrl )
+{
+
 }
 
 
@@ -752,20 +1095,25 @@ void startOTADemo( MQTTContext_t * pMqttContext )
 
     /* Intialize the OTA library MQTT Interface.*/
     static OtaMqttInterface_t otaMqttInterface;
-    otaMqttInterface.subscribe = subscribe;
-    otaMqttInterface.publish = publish;
-    otaMqttInterface.unsubscribe = unsubscribe;
-    otaMqttInterface.jobCallback = jobCallback;
-    otaMqttInterface.dataCallback= dataCallback;
+    otaMqttInterface.subscribe = mqttSubscribe;
+    otaMqttInterface.publish = mqttPublish;
+    otaMqttInterface.unsubscribe = mqttUnsubscribe;
+    otaMqttInterface.jobCallback = mqttJobCallback;
+    otaMqttInterface.dataCallback= mqttDataCallback;
+
+    /* Intialize the OTA library HTTP Interface.*/
+    static OtaHttpInterface_t otaHttpInterface;
+    otaHttpInterface.init = httpInit;
+    otaHttpInterface.request = httpRequest;
+    otaHttpInterface.deinit = httpDeinit;
 
     /* Initialize the OTA Agent , if it is resuming the OTA statistics will be cleared for new
      * connection.*/
-    OTA_AgentInit( ( void * ) ( pMqttContext ),
-                    &otaOSInterface,
-                    &otaMqttInterface,
-                    ( const uint8_t * ) ( CLIENT_IDENTIFIER ),
-                    App_OTACompleteCallback,
-                    ( uint32_t ) ~0 );
+    OTA_AgentInit( &otaOSInterface,
+                   &otaMqttInterface,
+                   &otaHttpInterface,
+                   ( const uint8_t * ) ( CLIENT_IDENTIFIER ),
+                   otaAppCallback );
 
     sleep( OTA_DEMO_TASK_DELAY_SECONDS );
 
@@ -827,49 +1175,55 @@ int main( int argc,
 
     int returnStatus = EXIT_SUCCESS;
     NetworkContext_t networkContext;
-    bool mqttSessionPresent = false;
+    bool clientSessionPresent = false;
 
     LogInfo( ( "OTA over MQTT demo version %u.%u.%u",
                appFirmwareVersion.u.x.major,
                appFirmwareVersion.u.x.minor,
                appFirmwareVersion.u.x.build ) );
 
-    for( ; ; )
-    {
-        /* Attempt to connect to the MQTT broker. If connection fails, retry after
-         * a timeout. Timeout value will be exponentially increased till the maximum
-         * attempts are reached or maximum timeout value is reached. The function
-         * returns EXIT_FAILURE if the TCP connection cannot be established to
-         * broker after configured number of attempts. */
-        returnStatus = connectToServerWithBackoffRetries( &networkContext );
+    /* Initialize MQTT library. Initialization of the MQTT library needs to be
+     * done only once in this demo. */
+    returnStatus = initializeMqtt( &mqttContext, &networkContext );
 
-        if( returnStatus == EXIT_FAILURE )
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        for( ; ; )
         {
-            /* Log error to indicate connection failure after all
-             * reconnect attempts are over. */
-            LogError( ( "Failed to connect to MQTT broker %.*s.",
-                        AWS_IOT_ENDPOINT_LENGTH,
-                        AWS_IOT_ENDPOINT ) );
-        }
-        else
-        {
-            /* Sends an MQTT Connect packet to establish a clean connection over the
-             * established TLS session, then waits for connection acknowledgment
-             * (CONNACK) packet. */
-            if( EXIT_SUCCESS == establishMqttSession( &globalMqttContext,
-                                                      &networkContext,
-                                                      true, /* clean session */
-                                                      &mqttSessionPresent ) )
+            /* Attempt to connect to the MQTT broker. If connection fails, retry after
+            * a timeout. Timeout value will be exponentially increased till the maximum
+            * attempts are reached or maximum timeout value is reached. The function
+            * returns EXIT_FAILURE if the TCP connection cannot be established to
+            * broker after configured number of attempts. */
+            returnStatus = connectToServerWithBackoffRetries( &networkContext );
+
+            if( returnStatus == EXIT_FAILURE )
             {
-                mqttSessionEstablished = true;
+                /* Log error to indicate connection failure after all
+                * reconnect attempts are over. */
+                LogError( ( "Failed to connect to MQTT broker %.*s.",
+                            AWS_IOT_ENDPOINT_LENGTH,
+                            AWS_IOT_ENDPOINT ) );
+            }
+            else
+            {
+                /* Sends an MQTT Connect packet to establish a clean connection over the
+                * established TLS session, then waits for connection acknowledgment
+                * (CONNACK) packet. */
+                if( EXIT_SUCCESS == establishMqttSession( &mqttContext,
+                                                          true, /* clean session */
+                                                          &clientSessionPresent ) )
+                {
+                    mqttSessionEstablished = true;
+                }
+
             }
 
-        }
-
-        if( mqttSessionEstablished )
-        {
-            /* If TLS session is established, start the OTA agent. */
-            startOTADemo( &globalMqttContext );
+            if( mqttSessionEstablished )
+            {
+                /* If TLS session is established, start the OTA agent. */
+                startOTADemo( &mqttContext );
+            }
         }
     }
 
