@@ -146,6 +146,16 @@
  */
 #define OTA_DEMO_TASK_DELAY_SECONDS         ( 1U )
 
+/**
+ * @brief The MQTT metrics string expected by AWS IoT.
+ */
+#define METRICS_STRING                      "?SDK=" OS_NAME "&Version=" OS_VERSION "&Platform=" HARDWARE_PLATFORM_NAME "&MQTTLib=" MQTT_LIB
+
+/**
+ * @brief The length of the MQTT metrics string expected by AWS IoT.
+ */
+#define METRICS_STRING_LENGTH               ( ( uint16_t ) ( sizeof( METRICS_STRING ) - 1 ) )
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -171,9 +181,21 @@ static bool mqttSessionEstablished = false;
 /**
  * @brief MQTT connection context used in this demo.
  */
-static MQTTContext_t globalMqttContext;
+static MQTTContext_t mqttContext;
 
 /*-----------------------------------------------------------*/
+
+/**
+ * @brief The application callback function for getting the incoming publish
+ * and incoming acks reported from MQTT library.
+ *
+ * @param[in] pMqttContext MQTT context pointer.
+ * @param[in] pPacketInfo Packet Info pointer for the incoming packet.
+ * @param[in] pDeserializedInfo Deserialized information from the incoming packet.
+ */
+static void eventCallback( MQTTContext_t * pMqttContext,
+                           MQTTPacketInfo_t * pPacketInfo,
+                           MQTTDeserializedInfo_t * pDeserializedInfo );
 
 /*
  * Publish a message to the specified client/topic at the given QOS.
@@ -472,92 +494,6 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
 
 /*-----------------------------------------------------------*/
 
-static int establishMqttSession( MQTTContext_t * pMqttContext,
-                                 NetworkContext_t * pNetworkContext,
-                                 bool createCleanSession,
-                                 bool * pSessionPresent )
-{
-    int returnStatus = EXIT_SUCCESS;
-    MQTTStatus_t mqttStatus;
-    MQTTConnectInfo_t connectInfo;
-    MQTTFixedBuffer_t networkBuffer;
-    TransportInterface_t transport;
-
-    assert( pMqttContext != NULL );
-    assert( pNetworkContext != NULL );
-
-    /* Fill in TransportInterface send and receive function pointers.
-     * For this demo, TCP sockets are used to send and receive data
-     * from network. Network context is SSL context for OpenSSL.*/
-    transport.pNetworkContext = pNetworkContext;
-    transport.send = Openssl_Send;
-    transport.recv = Openssl_Recv;
-
-    /* Fill the values for network buffer. */
-    networkBuffer.pBuffer = buffer;
-    networkBuffer.size = NETWORK_BUFFER_SIZE;
-
-    /* Initialize MQTT library. */
-    mqttStatus = MQTT_Init( pMqttContext,
-                            &transport,
-                            Clock_GetTimeMs,
-                            mqttEventCallback,
-                            &networkBuffer );
-
-    if( mqttStatus != MQTTSuccess )
-    {
-        returnStatus = EXIT_FAILURE;
-        LogError( ( "MQTT init failed with status %s.", MQTT_Status_strerror( mqttStatus ) ) );
-    }
-    else
-    {
-        /* Establish MQTT session by sending a CONNECT packet. */
-
-        /* If #createCleanSession is true, start with a clean session
-         * i.e. direct the MQTT broker to discard any previous session data.
-         * If #createCleanSession is false, directs the broker to attempt to
-         * reestablish a session which was already present. */
-        connectInfo.cleanSession = createCleanSession;
-
-        /* The client identifier is used to uniquely identify this MQTT client to
-         * the MQTT broker. In a production device the identifier can be something
-         * unique, such as a device serial number. */
-        connectInfo.pClientIdentifier = CLIENT_IDENTIFIER;
-        connectInfo.clientIdentifierLength = CLIENT_IDENTIFIER_LENGTH;
-
-        /* The maximum time interval in seconds which is allowed to elapse
-         * between two Control Packets.
-         * It is the responsibility of the Client to ensure that the interval between
-         * Control Packets being sent does not exceed the this Keep Alive value. In the
-         * absence of sending any other Control Packets, the Client MUST send a
-         * PINGREQ Packet. */
-        connectInfo.keepAliveSeconds = MQTT_KEEP_ALIVE_INTERVAL_SECONDS;
-
-        /* Username and password for authentication. Not used in this demo. */
-        connectInfo.pUserName = NULL;
-        connectInfo.userNameLength = 0U;
-        connectInfo.pPassword = NULL;
-        connectInfo.passwordLength = 0U;
-
-        /* Send MQTT CONNECT packet to broker. */
-        mqttStatus = MQTT_Connect( pMqttContext, &connectInfo, NULL, CONNACK_RECV_TIMEOUT_MS, pSessionPresent );
-
-        if( mqttStatus != MQTTSuccess )
-        {
-            returnStatus = EXIT_FAILURE;
-            LogError( ( "Connection with MQTT broker failed with status %u.", mqttStatus ) );
-        }
-        else
-        {
-            LogInfo( ( "MQTT connection successfully established with broker.\n\n" ) );
-        }
-    }
-
-    return returnStatus;
-}
-
-/*-----------------------------------------------------------*/
-
 static OtaErr_t subscribe( const char * pTopicFilter,
                            uint16_t topicFilterLength,
                            uint8_t qos,
@@ -809,6 +745,128 @@ void startOTADemo( MQTTContext_t * pMqttContext )
 
 /*-----------------------------------------------------------*/
 
+static int establishMqttSession( MQTTContext_t * pMqttContext,
+                                 bool createCleanSession,
+                                 bool * pSessionPresent )
+{
+    int returnStatus = EXIT_SUCCESS;
+    MQTTStatus_t mqttStatus;
+    MQTTConnectInfo_t connectInfo = { 0 };
+
+    assert( pMqttContext != NULL );
+    assert( pSessionPresent != NULL );
+
+    /* Establish MQTT session by sending a CONNECT packet. */
+
+    /* If #createCleanSession is true, start with a clean session
+     * i.e. direct the MQTT broker to discard any previous session data.
+     * If #createCleanSession is false, directs the broker to attempt to
+     * reestablish a session which was already present. */
+    connectInfo.cleanSession = createCleanSession;
+
+    /* The client identifier is used to uniquely identify this MQTT client to
+     * the MQTT broker. In a production device the identifier can be something
+     * unique, such as a device serial number. */
+    connectInfo.pClientIdentifier = CLIENT_IDENTIFIER;
+    connectInfo.clientIdentifierLength = CLIENT_IDENTIFIER_LENGTH;
+
+    /* The maximum time interval in seconds which is allowed to elapse
+     * between two Control Packets.
+     * It is the responsibility of the Client to ensure that the interval between
+     * Control Packets being sent does not exceed the this Keep Alive value. In the
+     * absence of sending any other Control Packets, the Client MUST send a
+     * PINGREQ Packet. */
+    connectInfo.keepAliveSeconds = MQTT_KEEP_ALIVE_INTERVAL_SECONDS;
+
+    /* Use the username and password for authentication, if they are defined.
+     * Refer to the AWS IoT documentation below for details regarding client
+     * authentication with a username and password.
+     * https://docs.aws.amazon.com/iot/latest/developerguide/enhanced-custom-authentication.html
+     * An authorizer setup needs to be done, as mentioned in the above link, to use
+     * username/password based client authentication.
+     *
+     * The username field is populated with voluntary metrics to AWS IoT.
+     * The metrics collected by AWS IoT are the operating system, the operating
+     * system's version, the hardware platform, and the MQTT Client library
+     * information. These metrics help AWS IoT improve security and provide
+     * better technical support.
+     *
+     * If client authentication is based on username/password in AWS IoT,
+     * the metrics string is appended to the username to support both client
+     * authentication and metrics collection. */
+    #ifdef CLIENT_USERNAME
+        connectInfo.pUserName = CLIENT_USERNAME_WITH_METRICS;
+        connectInfo.userNameLength = strlen( CLIENT_USERNAME_WITH_METRICS );
+        connectInfo.pPassword = CLIENT_PASSWORD;
+        connectInfo.passwordLength = strlen( CLIENT_PASSWORD );
+    #else
+        connectInfo.pUserName = METRICS_STRING;
+        connectInfo.userNameLength = METRICS_STRING_LENGTH;
+        /* Password for authentication is not used. */
+        connectInfo.pPassword = NULL;
+        connectInfo.passwordLength = 0U;
+    #endif /* ifdef CLIENT_USERNAME */
+
+    /* Send MQTT CONNECT packet to broker. */
+    mqttStatus = MQTT_Connect( pMqttContext, &connectInfo, NULL, CONNACK_RECV_TIMEOUT_MS, pSessionPresent );
+
+    if( mqttStatus != MQTTSuccess )
+    {
+        returnStatus = EXIT_FAILURE;
+        LogError( ( "Connection with MQTT broker failed with status %s.",
+                    MQTT_Status_strerror( mqttStatus ) ) );
+    }
+    else
+    {
+        LogInfo( ( "MQTT connection successfully established with broker.\n\n" ) );
+    }
+
+    return returnStatus;
+}
+
+
+/*-----------------------------------------------------------*/
+
+static int initializeMqtt( MQTTContext_t * pMqttContext,
+                           NetworkContext_t * pNetworkContext )
+{
+    int returnStatus = EXIT_SUCCESS;
+    MQTTStatus_t mqttStatus;
+    MQTTFixedBuffer_t networkBuffer;
+    TransportInterface_t transport;
+
+    assert( pMqttContext != NULL );
+    assert( pNetworkContext != NULL );
+
+    /* Fill in TransportInterface send and receive function pointers.
+     * For this demo, TCP sockets are used to send and receive data
+     * from network. Network context is SSL context for OpenSSL.*/
+    transport.pNetworkContext = pNetworkContext;
+    transport.send = Openssl_Send;
+    transport.recv = Openssl_Recv;
+
+    /* Fill the values for network buffer. */
+    networkBuffer.pBuffer = buffer;
+    networkBuffer.size = NETWORK_BUFFER_SIZE;
+
+    /* Initialize MQTT library. */
+    mqttStatus = MQTT_Init( pMqttContext,
+                            &transport,
+                            Clock_GetTimeMs,
+                            mqttEventCallback,
+                            &networkBuffer );
+
+    if( mqttStatus != MQTTSuccess )
+    {
+        returnStatus = EXIT_FAILURE;
+        LogError( ( "MQTT init failed: Status = %s.", MQTT_Status_strerror( mqttStatus ) ) );
+    }
+
+    return returnStatus;
+}
+
+/*-----------------------------------------------------------*/
+
 /**
  * @brief Entry point of demo.
  *
@@ -827,49 +885,56 @@ int main( int argc,
 
     int returnStatus = EXIT_SUCCESS;
     NetworkContext_t networkContext;
-    bool mqttSessionPresent = false;
+    bool clientSessionPresent = false;
 
     LogInfo( ( "OTA over MQTT demo version %u.%u.%u",
                appFirmwareVersion.u.x.major,
                appFirmwareVersion.u.x.minor,
                appFirmwareVersion.u.x.build ) );
 
-    for( ; ; )
-    {
-        /* Attempt to connect to the MQTT broker. If connection fails, retry after
-         * a timeout. Timeout value will be exponentially increased till the maximum
-         * attempts are reached or maximum timeout value is reached. The function
-         * returns EXIT_FAILURE if the TCP connection cannot be established to
-         * broker after configured number of attempts. */
-        returnStatus = connectToServerWithBackoffRetries( &networkContext );
+    /* Initialize MQTT library. Initialization of the MQTT library needs to be
+     * done only once in this demo. */
+    returnStatus = initializeMqtt( &mqttContext, &networkContext );
 
-        if( returnStatus == EXIT_FAILURE )
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        for( ; ; )
         {
-            /* Log error to indicate connection failure after all
-             * reconnect attempts are over. */
-            LogError( ( "Failed to connect to MQTT broker %.*s.",
-                        AWS_IOT_ENDPOINT_LENGTH,
-                        AWS_IOT_ENDPOINT ) );
-        }
-        else
-        {
-            /* Sends an MQTT Connect packet to establish a clean connection over the
-             * established TLS session, then waits for connection acknowledgment
-             * (CONNACK) packet. */
-            if( EXIT_SUCCESS == establishMqttSession( &globalMqttContext,
-                                                      &networkContext,
-                                                      true, /* clean session */
-                                                      &mqttSessionPresent ) )
+            /* Attempt to connect to the MQTT broker. If connection fails, retry after
+            * a timeout. Timeout value will be exponentially increased till the maximum
+            * attempts are reached or maximum timeout value is reached. The function
+            * returns EXIT_FAILURE if the TCP connection cannot be established to
+            * broker after configured number of attempts. */
+            returnStatus = connectToServerWithBackoffRetries( &networkContext );
+
+            if( returnStatus == EXIT_FAILURE )
             {
-                mqttSessionEstablished = true;
+                /* Log error to indicate connection failure after all
+                * reconnect attempts are over. */
+                LogError( ( "Failed to connect to MQTT broker %.*s.",
+                            AWS_IOT_ENDPOINT_LENGTH,
+                            AWS_IOT_ENDPOINT ) );
+            }
+            else
+            {
+                /* Sends an MQTT Connect packet to establish a clean connection over the
+                * established TLS session, then waits for connection acknowledgment
+                * (CONNACK) packet. */
+                if( EXIT_SUCCESS == establishMqttSession( &mqttContext,
+                                                          &networkContext,
+                                                          true, /* clean session */
+                                                          &clientSessionPresent ) )
+                {
+                    mqttSessionEstablished = true;
+                }
+
             }
 
-        }
-
-        if( mqttSessionEstablished )
-        {
-            /* If TLS session is established, start the OTA agent. */
-            startOTADemo( &globalMqttContext );
+            if( mqttSessionEstablished )
+            {
+                /* If TLS session is established, start the OTA agent. */
+                startOTADemo( &mqttContext );
+            }
         }
     }
 
