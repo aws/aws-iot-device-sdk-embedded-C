@@ -197,6 +197,23 @@ static void eventCallback( MQTTContext_t * pMqttContext,
                            MQTTPacketInfo_t * pPacketInfo,
                            MQTTDeserializedInfo_t * pDeserializedInfo );
 
+/**
+ * @brief Sends an MQTT CONNECT packet over the already connected TCP socket.
+ *
+ * @param[in] pMqttContext MQTT context pointer.
+ * @param[in] createCleanSession Creates a new MQTT session if true.
+ * If false, tries to establish the existing session if there was session
+ * already present in broker.
+ * @param[out] pSessionPresent Session was already present in the broker or not.
+ * Session present response is obtained from the CONNACK from broker.
+ *
+ * @return EXIT_SUCCESS if an MQTT session is established;
+ * EXIT_FAILURE otherwise.
+ */
+static int establishMqttSession( MQTTContext_t * pMqttContext,
+                                 bool createCleanSession,
+                                 bool * pSessionPresent );
+
 /*
  * Publish a message to the specified client/topic at the given QOS.
  */
@@ -246,7 +263,7 @@ static void App_OTACompleteCallback( OtaJobEvent_t event )
         LogInfo( ( "Received OtaJobEventActivate callback from OTA Agent." ) );
 
         /* OTA job is completed. so delete the network connection. */
-        MQTT_Disconnect( &globalMqttContext );
+        MQTT_Disconnect( &mqttContext );
 
         /* Activate the new firmware image. */
         OTA_ActivateNewImage();
@@ -501,10 +518,9 @@ static OtaErr_t subscribe( const char * pTopicFilter,
 {
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus;
-    MQTTContext_t * pMqttContext = &globalMqttContext;
+
     MQTTSubscribeInfo_t pSubscriptionList[ 1 ];
 
-    assert( pMqttContext != NULL );
     assert( pTopicFilter != NULL );
     assert( topicFilterLength > 0 );
 
@@ -517,10 +533,10 @@ static OtaErr_t subscribe( const char * pTopicFilter,
     pSubscriptionList[ 0 ].topicFilterLength = topicFilterLength;
 
     /* Send SUBSCRIBE packet. */
-    mqttStatus = MQTT_Subscribe( pMqttContext,
+    mqttStatus = MQTT_Subscribe( &mqttContext,
                                  pSubscriptionList,
                                  sizeof( pSubscriptionList ) / sizeof( MQTTSubscribeInfo_t ),
-                                 MQTT_GetPacketId( pMqttContext ) );
+                                 MQTT_GetPacketId( &mqttContext ) );
 
     if( mqttStatus != MQTTSuccess )
     {
@@ -541,7 +557,7 @@ static OtaErr_t subscribe( const char * pTopicFilter,
          * of receiving publish message before subscribe ack is zero; but application
          * must be ready to receive any packet. This demo uses MQTT_ProcessLoop to
          * receive packet from network. */
-        mqttStatus = MQTT_ProcessLoop( pMqttContext, 1000 );
+        mqttStatus = MQTT_ProcessLoop( &mqttContext, 1000 );
 
         if( mqttStatus != MQTTSuccess )
         {
@@ -570,7 +586,7 @@ static OtaErr_t subscribe( const char * pTopicFilter,
 
     MQTTStatus_t mqttStatus = MQTTBadParameter;
     MQTTPublishInfo_t publishInfo;
-    MQTTContext_t * pMqttContext = &globalMqttContext;
+    MQTTContext_t * pMqttContext = &mqttContext;
 
     publishInfo.pTopicName = pacTopic;
     publishInfo.topicNameLength = topicLen;
@@ -619,7 +635,6 @@ static OtaErr_t unsubscribe( const char * pTopicFilter,
     MQTTStatus_t mqttStatus;
 
     MQTTSubscribeInfo_t pSubscriptionList[ 1 ];
-    MQTTContext_t * pMqttContext = &globalMqttContext;
 
     /* Start with everything at 0. */
     ( void ) memset( ( void * ) pSubscriptionList, 0x00, sizeof( pSubscriptionList ) );
@@ -631,10 +646,10 @@ static OtaErr_t unsubscribe( const char * pTopicFilter,
     pSubscriptionList[ 0 ].topicFilterLength = topicFilterLength;
 
     /* Send UNSUBSCRIBE packet. */
-    mqttStatus = MQTT_Unsubscribe( pMqttContext,
+    mqttStatus = MQTT_Unsubscribe( &mqttContext,
                                    pSubscriptionList,
                                    sizeof( pSubscriptionList ) / sizeof( MQTTSubscribeInfo_t ),
-                                    MQTT_GetPacketId( pMqttContext ) );
+                                    MQTT_GetPacketId( &mqttContext ) );
 
     if( mqttStatus != MQTTSuccess )
     {
@@ -645,7 +660,7 @@ static OtaErr_t unsubscribe( const char * pTopicFilter,
     else
     {
         /* Process Incoming UNSUBACK packet from the broker. */
-        mqttStatus = MQTT_ProcessLoop( pMqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
+        mqttStatus = MQTT_ProcessLoop( &mqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
 
         if( mqttStatus != MQTTSuccess )
         {
@@ -657,7 +672,6 @@ static OtaErr_t unsubscribe( const char * pTopicFilter,
 
     return returnStatus;
 }
-
 
 /*-----------------------------------------------------------*/
 
@@ -921,7 +935,6 @@ int main( int argc,
                 * established TLS session, then waits for connection acknowledgment
                 * (CONNACK) packet. */
                 if( EXIT_SUCCESS == establishMqttSession( &mqttContext,
-                                                          &networkContext,
                                                           true, /* clean session */
                                                           &clientSessionPresent ) )
                 {
