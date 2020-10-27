@@ -15,6 +15,7 @@ target_sources(
     ${DEMO_NAME}
     PRIVATE
         "ota_demo_core_http.c"
+        "http_demo_utils.c"
         ${OTA_SOURCES}
         ${OTA_OS_POSIX_SOURCES}
         ${OTA_MQTT_SOURCES}
@@ -43,6 +44,7 @@ target_include_directories(
         ${OTA_INCLUDE_PRIVATE_DIRS}
         ${OTA_INCLUDE_OS_POSIX_DIRS}
         ${MQTT_INCLUDE_PUBLIC_DIRS}
+        ${HTTP_INCLUDE_PUBLIC_DIRS}
 )
 
 if(ROOT_CA_CERT_PATH)

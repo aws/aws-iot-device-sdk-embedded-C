@@ -887,10 +887,10 @@ static int32_t connectToServer( NetworkContext_t * pNetworkContext , char * pUrl
     opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
 
     /* Retrieve the address location and length from S3_PRESIGNED_GET_URL. */
-    IotHttpsClient_GetUrlAddress( pUrl,
-                                  strlen( pUrl ),
-                                  UrlInfo.pAddress,
-                                  UrlInfo.addressLength );
+    getUrlAddress( pUrl,
+                   strlen( pUrl ),
+                   UrlInfo.pAddress,
+                   UrlInfo.addressLength );
 
     if( returnStatus == EXIT_SUCCESS )
     {
@@ -972,6 +972,9 @@ static OtaErr_t httpRequest( uint32_t rangeStart, uint32_t rangeEnd )
     /* Return value of this method. */
     int32_t returnStatus = EXIT_SUCCESS;
 
+    /* OTA lib return error code. */
+    OtaErr_t ret = OTA_ERR_UNINITIALIZED;
+
     static uint8_t url[34];
 
     OtaEventData_t * pData;
@@ -1040,6 +1043,8 @@ static OtaErr_t httpRequest( uint32_t rangeStart, uint32_t rangeEnd )
     if( httpStatus != HTTPSuccess )
     {
         returnStatus = EXIT_FAILURE;
+
+        ret = OTA_ERR_HTTP_REQUEST_FAILED;
     }
     else
     {
@@ -1053,18 +1058,34 @@ static OtaErr_t httpRequest( uint32_t rangeStart, uint32_t rangeEnd )
         eventMsg.pEventData = pData;
         OTA_SignalEvent( &eventMsg );
 
+        ret = OTA_ERR_NONE;
+
     }
     
     return returnStatus;
     
 }
 
-
 static OtaErr_t httpDeinit( char * pUrl )
 {
+    int32_t returnStatus = EXIT_SUCCESS;
 
+    OtaErr_t ret = OTA_ERR_UNINITIALIZED;
+
+    /* Disconnect.*/
+    returnStatus = Openssl_Disconnect( &networkContextHttp );
+
+    if( returnStatus == OPENSSL_SUCCESS )
+    {
+        ret = OTA_ERR_NONE;
+    }
+    else
+    {
+       ret = OTA_ERR_HTTP_REQUEST_FAILED;
+    }
+    
+    return ret;
 }
-
 
 /*-----------------------------------------------------------*/
 

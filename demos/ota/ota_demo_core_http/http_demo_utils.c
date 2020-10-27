@@ -51,7 +51,7 @@ void getUrlPath( const char * pUrl,
 
         if( parserStatus != 0 )
         {
-            OTA_LOG_L1( "Error parsing the input URL %.*s. Error code: %d.", urlLen, pUrl, parserStatus );
+            printf( "Error parsing the input URL %.*s. Error code: %d.", urlLen, pUrl, parserStatus );
         }
         else
         {
@@ -89,7 +89,7 @@ void  getUrlAddress( const char * pUrl,
 
         if( parserStatus != 0 )
         {
-            OTA_LOG_L1( "Error parsing the input URL %.*s. Error code: %d.", urlLen, pUrl, parserStatus );
+            printf( "Error parsing the input URL %.*s. Error code: %d.", urlLen, pUrl, parserStatus );
         }
     else{
 
