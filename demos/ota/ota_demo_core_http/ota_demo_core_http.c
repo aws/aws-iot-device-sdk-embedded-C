@@ -38,9 +38,6 @@
 /* Retry parameters. */
 #include "retry_utils.h"
 
-/* HTTP API header. */
-#include "core_http_client.h"
-
 /* Common HTTP demo utilities. */
 #include "http_demo_utils.h"
 
@@ -59,6 +56,10 @@
 /* OTA Library Interface include. */
 #include "ota_os_posix.h"
 #include "ota_mqtt_interface.h"
+#include "ota_http_interface.h"
+
+/* HTTP API header. */
+#include "core_http_client.h"
 
 /* Include firmware version struct definition. */
 #include "iot_appversion32.h"
@@ -189,7 +190,7 @@ static bool mqttSessionEstablished = false;
  */
 static MQTTContext_t mqttContext;
 
-static NetworkContext_t networkContext;
+static NetworkContext_t networkContextHttp;
 
 /* HTTP URL information. */
 httpUrlInfo_t UrlInfo;
@@ -200,7 +201,25 @@ httpUrlInfo_t UrlInfo;
  * @note S3_PRESIGNED_GET_URL_LENGTH is set as the array length here as the
  * length of the host name string cannot exceed this value.
  */
-static char serverHost[ 2048 ];
+static char serverHost[ 256 ];
+
+    /* Check that size of the user buffer is defined. */
+#ifndef USER_BUFFER_LENGTH
+    #define USER_BUFFER_LENGTH    ( 20000)
+#endif
+
+/**
+ * @brief A buffer used in the demo for storing HTTP request headers and
+ * HTTP response headers and body.
+ *
+ * @note This demo shows how the same buffer can be re-used for storing the HTTP
+ * response after the HTTP request is sent out. However, the user can also
+ * decide to use separate buffers for storing the HTTP request and response.
+ */
+static uint8_t userBuffer[ USER_BUFFER_LENGTH ];
+
+/* The transport layer interface used by the HTTP Client library. */
+TransportInterface_t transportInterfaceHttp;
 
 /*-----------------------------------------------------------*/
 
@@ -904,30 +923,148 @@ static int32_t connectToServer( NetworkContext_t * pNetworkContext , char * pUrl
     return returnStatus;
 }
 
-static OtaErr_t httpInit( char * pUrl )
+static OtaErr_t httpInit( const char *  pUrl )
 {
-    /* Return value of main. */
+    /* OTA lib return error code. */
+    OtaErr_t ret = OTA_ERR_UNINITIALIZED;
+
+    /* Return value from libs. */
     int32_t returnStatus = EXIT_SUCCESS;
 
     /* Establish HTTPs connection */
     LogInfo( ( "Performing TLS handshake on top of the TCP connection." ) );
 
-    /* Attempt to connect to the HTTP server. If connection fails, retry after
+    /* Attempt to connect to the HTTPs server. If connection fails, retry after
      * a timeout. Timeout value will be exponentially increased till the maximum
      * attempts are reached or maximum timeout value is reached. The function
      * returns EXIT_FAILURE if the TCP connection cannot be established to
      * broker after configured number of attempts. */
-    connectToServer( &networkContextHttp , pUrl );
+    returnStatus = connectToServer( &networkContextHttp , pUrl );
 
-    if( returnStatus == EXIT_FAILURE )
+    if( returnStatus == EXIT_SUCCESS )
     {
+            /* Define the transport interface. */
+            ( void ) memset( &transportInterfaceHttp, 0, sizeof( transportInterfaceHttp ) );
+            transportInterfaceHttp.recv = Openssl_Recv;
+            transportInterfaceHttp.send = Openssl_Send;
+            transportInterfaceHttp.pNetworkContext = &networkContextHttp;
+            
+            ret = OTA_ERR_NONE;
+    }
+    else
+    {
+
         /* Log an error to indicate connection failure after all
          * reconnect attempts are over. */
         LogError( ( "Failed to connect to HTTP server %s.",
                      serverHost ) );
+
+        ret =  OTA_ERR_HTTP_INIT_FAILED;
+
     }
+    
+    return ret;
 
 }
+
+static OtaErr_t httpRequest( uint32_t rangeStart, uint32_t rangeEnd )
+{
+    /* Return value of this method. */
+    int32_t returnStatus = EXIT_SUCCESS;
+
+    static uint8_t url[34];
+
+    OtaEventData_t * pData;
+    OtaEventMsg_t eventMsg = { 0 };
+
+    /* Configurations of the initial request headers that are passed to
+     * #HTTPClient_InitializeRequestHeaders. */
+    HTTPRequestInfo_t requestInfo;
+    /* Represents a response returned from an HTTP server. */
+    HTTPResponse_t response;
+    /* Represents header data that will be sent in an HTTP request. */
+    HTTPRequestHeaders_t requestHeaders;
+
+    /* Return value of all methods from the HTTP Client library API. */
+    HTTPStatus_t httpStatus = HTTPSuccess;
+
+    /* Initialize all HTTP Client library API structs to 0. */
+    ( void ) memset( &requestInfo, 0, sizeof( requestInfo ) );
+    ( void ) memset( &response, 0, sizeof( response ) );
+    ( void ) memset( &requestHeaders, 0, sizeof( requestHeaders ) );
+
+    memcpy(url,UrlInfo.pAddress ,UrlInfo.addressLength);
+
+    /* Initialize the request object. */
+    requestInfo.pHost = serverHost;
+    requestInfo.hostLen = UrlInfo.addressLength;
+    requestInfo.pMethod = HTTP_METHOD_GET;
+    requestInfo.methodLen = sizeof( HTTP_METHOD_GET ) - 1;
+    requestInfo.pPath = UrlInfo.pPath;
+    requestInfo.pathLen = UrlInfo.pathLength;
+
+    /* Set "Connection" HTTP header to "keep-alive" so that multiple requests
+     * can be sent over the same established TCP connection. */
+    requestInfo.reqFlags = HTTP_REQUEST_KEEP_ALIVE_FLAG;
+
+    /* Set the buffer used for storing request headers. */
+    requestHeaders.pBuffer = userBuffer;
+    requestHeaders.bufferLen = USER_BUFFER_LENGTH;
+
+    httpStatus = HTTPClient_InitializeRequestHeaders( &requestHeaders,
+                                                      &requestInfo );
+
+    HTTPClient_AddRangeHeader( &requestHeaders, rangeStart, rangeEnd);
+
+    if( httpStatus == HTTPSuccess )
+    {
+        /* Initialize the response object. The same buffer used for storing
+         * request headers is reused here. */
+        response.pBuffer = userBuffer;
+        response.bufferLen = USER_BUFFER_LENGTH;
+
+        /* Send the request and receive the response. */
+        httpStatus = HTTPClient_Send( &transportInterfaceHttp,
+                                      &requestHeaders,
+                                      NULL,
+                                      0,
+                                      &response,
+                                      0 );
+    }
+    else
+    {
+        LogError( ( "Failed to initialize HTTP request headers: Error=%s.",
+                    HTTPClient_strerror( httpStatus ) ) );
+    }
+
+    if( httpStatus != HTTPSuccess )
+    {
+        returnStatus = EXIT_FAILURE;
+    }
+    else
+    {
+
+       /* Get the data from response buffer. */
+        memcpy( pData->data, response.pBody, response.bodyLen );
+        pData->dataLength = response.bodyLen  ;
+
+        /* Send job document received event. */
+        eventMsg.eventId = OtaAgentEventReceivedFileBlock;
+        eventMsg.pEventData = pData;
+        OTA_SignalEvent( &eventMsg );
+
+    }
+    
+    return returnStatus;
+    
+}
+
+
+static OtaErr_t httpDeinit( char * pUrl )
+{
+
+}
+
 
 /*-----------------------------------------------------------*/
 
