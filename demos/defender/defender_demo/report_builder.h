@@ -23,7 +23,7 @@
 #ifndef REPORT_BUILDER_H_
 #define REPORT_BUILDER_H_
 
-/* Metrics collector include. */
+/* Metrics collector. */
 #include "metrics_collector.h"
 
 /**
@@ -59,6 +59,7 @@ typedef struct ReportMetrics
  * @param[in] pMetrics Metrics to write in the generated report.
  * @param[in] majorReportVersion Major version of the report.
  * @param[in] minorReportVersion Minor version of the report.
+ * @param[in] reportId Value to be used as the reportId in the generated report.
  * @param[out] pOutReprotLength The length of the generated report.
  *
  * @return #ReportBuilderSuccess if the report is successfully generated;
@@ -70,6 +71,7 @@ ReportBuilderStatus_t GenerateJsonReport( char * pBuffer,
                                           const ReportMetrics_t * pMetrics,
                                           uint32_t majorReportVersion,
                                           uint32_t minorReportVersion,
+                                          uint32_t reportId,
                                           uint32_t * pOutReprotLength );
 
-#endif /* REPORT_BUILDER_H_ */
+#endif /* ifndef REPORT_BUILDER_H_ */

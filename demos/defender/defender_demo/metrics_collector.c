@@ -29,6 +29,9 @@
 /* POSIX includes. */
 #include <arpa/inet.h>
 
+/* Demo config. */
+#include "demo_config.h"
+
 /* Interface include. */
 #include "metrics_collector.h"
 
@@ -61,13 +64,13 @@
  * MetricsCollectorParsingFailed if the function fails to parses the data read
  * from pProcFile.
  */
-static MetricsCollectorStatus_t GetOpenPorts( const char * pProcFile,
+static MetricsCollectorStatus_t getOpenPorts( const char * pProcFile,
                                               uint16_t * pOutPortsArray,
                                               uint32_t portsArrayLength,
                                               uint32_t * pOutNumOpenPorts );
 /*-----------------------------------------------------------*/
 
-static MetricsCollectorStatus_t GetOpenPorts( const char * pProcFile,
+static MetricsCollectorStatus_t getOpenPorts( const char * pProcFile,
                                               uint16_t * pOutPortsArray,
                                               uint32_t portsArrayLength,
                                               uint32_t * pOutNumOpenPorts )
@@ -82,6 +85,12 @@ static MetricsCollectorStatus_t GetOpenPorts( const char * pProcFile,
         ( ( pOutPortsArray != NULL ) && ( portsArrayLength == 0 ) ) ||
         ( pOutNumOpenPorts == NULL ) )
     {
+        LogError( ( "Invalid parameters. pProcFile: %p, pOutPortsArray: %p,"
+                    " portsArrayLength: %u, pOutNumOpenPorts: %p.",
+                    pProcFile,
+                    pOutPortsArray,
+                    portsArrayLength,
+                    pOutNumOpenPorts ) );
         status = MetricsCollectorBadParameter;
     }
 
@@ -91,6 +100,7 @@ static MetricsCollectorStatus_t GetOpenPorts( const char * pProcFile,
 
         if( fileHandle == NULL )
         {
+            LogError( ( "Failed to open %s.", pProcFile ) );
             status = MetricsCollectorFileOpenFailed;
         }
     }
@@ -100,6 +110,11 @@ static MetricsCollectorStatus_t GetOpenPorts( const char * pProcFile,
         while( fgets( &( lineBuffer[ 0 ] ), MAX_LINE_LENGTH, fileHandle ) != NULL )
         {
             lineNumber++;
+
+            LogDebug( ( "File: %s, Line: %u, Content: %s.",
+                        pProcFile,
+                        lineNumber,
+                        &( lineBuffer[ 0 ] ) ) );
 
             /* Skip the first line as it is a header. */
             if( lineNumber <= 1 )
@@ -116,6 +131,7 @@ static MetricsCollectorStatus_t GetOpenPorts( const char * pProcFile,
             /* sscanf should fill all the 2 variables successfully. */
             if( filledVariables != 2 )
             {
+                LogError( ( "Failed to parse %s.", &( lineBuffer[ 0 ] ) ) );
                 status = MetricsCollectorParsingFailed;
                 break;
             }
@@ -165,6 +181,7 @@ MetricsCollectorStatus_t GetNetworkStats( NetworkStats_t * pOutNetworkStats )
 
     if( pOutNetworkStats == NULL )
     {
+        LogError( ( "Invalid parameter. pOutNetworkStats: %p.", pOutNetworkStats ) );
         status = MetricsCollectorBadParameter;
     }
 
@@ -174,6 +191,7 @@ MetricsCollectorStatus_t GetNetworkStats( NetworkStats_t * pOutNetworkStats )
 
         if( fileHandle == NULL )
         {
+            LogError( ( "Failed to open /proc/net/dev." ) );
             status = MetricsCollectorFileOpenFailed;
         }
     }
@@ -186,6 +204,10 @@ MetricsCollectorStatus_t GetNetworkStats( NetworkStats_t * pOutNetworkStats )
         while( fgets( &( lineBuffer[ 0 ] ), MAX_LINE_LENGTH, fileHandle ) != NULL )
         {
             lineNumber++;
+
+            LogDebug( ( "File: /proc/net/dev, Line: %u, Content: %s.",
+                        lineNumber,
+                        &( lineBuffer[ 0 ] ) ) );
 
             /* Skip first two lines as those are headers. */
             if( lineNumber <= 2 )
@@ -205,6 +227,7 @@ MetricsCollectorStatus_t GetNetworkStats( NetworkStats_t * pOutNetworkStats )
             /* sscanf should fill all the 4 variables successfully. */
             if( filledVariables != 4 )
             {
+                LogError( ( "Failed to parse %s.", &( lineBuffer[ 0 ] ) ) );
                 status = MetricsCollectorParsingFailed;
                 break;
             }
@@ -227,22 +250,22 @@ MetricsCollectorStatus_t GetNetworkStats( NetworkStats_t * pOutNetworkStats )
 }
 /*-----------------------------------------------------------*/
 
-MetricsCollectorStatus_t GetTcpOpenPorts( uint16_t * pOutTcpPortsArray,
+MetricsCollectorStatus_t GetOpenTcpPorts( uint16_t * pOutTcpPortsArray,
                                           uint32_t tcpPortsArrayLength,
                                           uint32_t * pOutNumTcpOpenPorts )
 {
-    return GetOpenPorts( "/proc/net/tcp",
+    return getOpenPorts( "/proc/net/tcp",
                          pOutTcpPortsArray,
                          tcpPortsArrayLength,
                          pOutNumTcpOpenPorts );
 }
 /*-----------------------------------------------------------*/
 
-MetricsCollectorStatus_t GetUdpOpenPorts( uint16_t * pOutUdpPortsArray,
+MetricsCollectorStatus_t GetOpenUdpPorts( uint16_t * pOutUdpPortsArray,
                                           uint32_t udpPortsArrayLength,
                                           uint32_t * pOutNumUdpOpenPorts )
 {
-    return GetOpenPorts( "/proc/net/udp",
+    return getOpenPorts( "/proc/net/udp",
                          pOutUdpPortsArray,
                          udpPortsArrayLength,
                          pOutNumUdpOpenPorts );
@@ -263,6 +286,11 @@ MetricsCollectorStatus_t GetEstablishedConnections( Connection_t * pOutConnectio
     if( ( ( pOutConnectionsArray != NULL ) && ( connectionsArrayLength == 0 ) ) ||
         ( pOutNumEstablishedConnections == NULL ) )
     {
+        LogError( ( "Invalid parameters. pOutConnectionsArray: %p,"
+                    " connectionsArrayLength: %u, pOutNumEstablishedConnections: %p.",
+                    pOutConnectionsArray,
+                    connectionsArrayLength,
+                    pOutNumEstablishedConnections ) );
         status = MetricsCollectorBadParameter;
     }
 
@@ -272,6 +300,7 @@ MetricsCollectorStatus_t GetEstablishedConnections( Connection_t * pOutConnectio
 
         if( fileHandle == NULL )
         {
+            LogError( ( "Failed to open /proc/net/tcp." ) );
             status = MetricsCollectorFileOpenFailed;
         }
     }
@@ -281,6 +310,10 @@ MetricsCollectorStatus_t GetEstablishedConnections( Connection_t * pOutConnectio
         while( fgets( &( lineBuffer[ 0 ] ), MAX_LINE_LENGTH, fileHandle ) != NULL )
         {
             lineNumber++;
+
+            LogDebug( ( "File: /proc/net/tcp, Line: %u, Content: %s.",
+                        lineNumber,
+                        &( lineBuffer[ 0 ] ) ) );
 
             /* Skip the first line as it is a header. */
             if( lineNumber <= 1 )
@@ -300,6 +333,7 @@ MetricsCollectorStatus_t GetEstablishedConnections( Connection_t * pOutConnectio
             /* sscanf should fill all the 5 variables successfully. */
             if( filledVariables != 5 )
             {
+                LogError( ( "Failed to parse %s.", &( lineBuffer[ 0 ] ) ) );
                 status = MetricsCollectorParsingFailed;
                 break;
             }

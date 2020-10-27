@@ -24,6 +24,9 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Demo config. */
+#include "demo_config.h"
+
 /* Interface include. */
 #include "report_builder.h"
 
@@ -32,8 +35,8 @@
 #define JSON_ARRAY_CLOSE_MARKER        ']'
 #define JSON_ARRAY_OBJECT_SEPARATOR    ','
 
-/* Helper macto to check if snprintf was succesful. */
-#define SNPRINTF_SUCCESS( retVal, bufLen )    ( ( retVal > 0 ) && ( retVal < bufLen ) )
+/* Helper macro to check if snprintf was successful. */
+#define SNPRINTF_SUCCESS( retVal, bufLen )    ( ( retVal > 0 ) && ( ( uint32_t ) retVal < bufLen ) )
 
 /* Formats used to generate the JSON report. */
 #define JSON_PORT_OBJECT_FORMAT \
@@ -88,7 +91,7 @@
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Write ports array to the given buffer in the format exptected by the
+ * @brief Write ports array to the given buffer in the format expected by the
  * AWS IoT Device Defender Service.
  *
  * This function write array of the following format:
@@ -110,7 +113,7 @@
  * @return #ReportBuilderSuccess if the array is successfully written;
  * #ReportBuilderBufferTooSmall if the buffer cannot hold the full array.
  */
-static ReportBuilderStatus_t WritePortsArray( char * pBuffer,
+static ReportBuilderStatus_t writePortsArray( char * pBuffer,
                                               uint32_t bufferLength,
                                               const uint16_t * pOpenPortsArray,
                                               uint32_t openPortsArrayLength,
@@ -118,7 +121,7 @@ static ReportBuilderStatus_t WritePortsArray( char * pBuffer,
 
 /**
  * @brief Write established connections array to the given buffer in the format
- * exptected by the AWS IoT Device Defender Service.
+ * expected by the AWS IoT Device Defender Service.
  *
  * This function write array of the following format:
  * [
@@ -141,14 +144,14 @@ static ReportBuilderStatus_t WritePortsArray( char * pBuffer,
  * @return #ReportBuilderSuccess if the array is successfully written;
  * #ReportBuilderBufferTooSmall if the buffer cannot hold the full array.
  */
-static ReportBuilderStatus_t WriteConnectionsArray( char * pBuffer,
+static ReportBuilderStatus_t writeConnectionsArray( char * pBuffer,
                                                     uint32_t bufferLength,
                                                     const Connection_t * pConnectionsArray,
                                                     uint32_t connectionsArrayLength,
                                                     uint32_t * pOutCharsWritten );
 /*-----------------------------------------------------------*/
 
-static ReportBuilderStatus_t WritePortsArray( char * pBuffer,
+static ReportBuilderStatus_t writePortsArray( char * pBuffer,
                                               uint32_t bufferLength,
                                               const uint16_t * pOpenPortsArray,
                                               uint32_t openPortsArrayLength,
@@ -222,7 +225,7 @@ static ReportBuilderStatus_t WritePortsArray( char * pBuffer,
 }
 /*-----------------------------------------------------------*/
 
-static ReportBuilderStatus_t WriteConnectionsArray( char * pBuffer,
+static ReportBuilderStatus_t writeConnectionsArray( char * pBuffer,
                                                     uint32_t bufferLength,
                                                     const Connection_t * pConnectionsArray,
                                                     uint32_t connectionsArrayLength,
@@ -308,19 +311,25 @@ ReportBuilderStatus_t GenerateJsonReport( char * pBuffer,
                                           const ReportMetrics_t * pMetrics,
                                           uint32_t majorReportVersion,
                                           uint32_t minorReportVersion,
+                                          uint32_t reportId,
                                           uint32_t * pOutReprotLength )
 {
     char * pCurrentWritePos = pBuffer;
     uint32_t remainingBufferLength = bufferLength, bufferWritten;
     ReportBuilderStatus_t status = ReportBuilderSuccess;
     int charactersWritten;
-    static uint32_t reportID = 0;
 
     if( ( pBuffer == NULL ) ||
         ( bufferLength == 0 ) ||
         ( pMetrics == NULL ) ||
         ( pOutReprotLength == NULL ) )
     {
+        LogError( ( "Invalid parameters. pBuffer: %p, bufferLength: %u"
+                    " pMetrics: %p, pOutReprotLength: %p.",
+                    pBuffer,
+                    bufferLength,
+                    pMetrics,
+                    pOutReprotLength ) );
         status = ReportBuilderBadParameter;
     }
 
@@ -330,12 +339,13 @@ ReportBuilderStatus_t GenerateJsonReport( char * pBuffer,
         charactersWritten = snprintf( pCurrentWritePos,
                                       remainingBufferLength,
                                       JSON_REPORT_FORMAT_PART1,
-                                      reportID,
+                                      reportId,
                                       majorReportVersion,
                                       minorReportVersion );
 
         if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
         {
+            LogError( ( "Failed to write part 1." ) );
             status = ReportBuilderBufferTooSmall;
         }
         else
@@ -348,7 +358,7 @@ ReportBuilderStatus_t GenerateJsonReport( char * pBuffer,
     /* Write TCP ports array. */
     if( status == ReportBuilderSuccess )
     {
-        status = WritePortsArray( pCurrentWritePos,
+        status = writePortsArray( pCurrentWritePos,
                                   remainingBufferLength,
                                   pMetrics->pOpenTcpPortsArray,
                                   pMetrics->openTcpPortsArrayLength,
@@ -358,6 +368,10 @@ ReportBuilderStatus_t GenerateJsonReport( char * pBuffer,
         {
             pCurrentWritePos += bufferWritten;
             remainingBufferLength -= bufferWritten;
+        }
+        else
+        {
+            LogError( ( "Failed to write TCP ports array." ) );
         }
     }
 
@@ -371,6 +385,7 @@ ReportBuilderStatus_t GenerateJsonReport( char * pBuffer,
 
         if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
         {
+            LogError( ( "Failed to write part 2." ) );
             status = ReportBuilderBufferTooSmall;
         }
         else
@@ -383,7 +398,7 @@ ReportBuilderStatus_t GenerateJsonReport( char * pBuffer,
     /* Write UDP ports array. */
     if( status == ReportBuilderSuccess )
     {
-        status = WritePortsArray( pCurrentWritePos,
+        status = writePortsArray( pCurrentWritePos,
                                   remainingBufferLength,
                                   pMetrics->pOpenUdpPortsArray,
                                   pMetrics->openUdpPortsArrayLength,
@@ -393,6 +408,10 @@ ReportBuilderStatus_t GenerateJsonReport( char * pBuffer,
         {
             pCurrentWritePos += bufferWritten;
             remainingBufferLength -= bufferWritten;
+        }
+        else
+        {
+            LogError( ( "Failed to write UDP ports array." ) );
         }
     }
 
@@ -410,6 +429,7 @@ ReportBuilderStatus_t GenerateJsonReport( char * pBuffer,
 
         if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
         {
+            LogError( ( "Failed to write part 3." ) );
             status = ReportBuilderBufferTooSmall;
         }
         else
@@ -422,7 +442,7 @@ ReportBuilderStatus_t GenerateJsonReport( char * pBuffer,
     /* Write connections array. */
     if( status == ReportBuilderSuccess )
     {
-        status = WriteConnectionsArray( pCurrentWritePos,
+        status = writeConnectionsArray( pCurrentWritePos,
                                         remainingBufferLength,
                                         pMetrics->pEstablishedConnectionsArray,
                                         pMetrics->establishedConnectionsArrayLength,
@@ -432,6 +452,10 @@ ReportBuilderStatus_t GenerateJsonReport( char * pBuffer,
         {
             pCurrentWritePos += bufferWritten;
             remainingBufferLength -= bufferWritten;
+        }
+        else
+        {
+            LogError( ( "Failed to write established connections array." ) );
         }
     }
 
@@ -445,6 +469,7 @@ ReportBuilderStatus_t GenerateJsonReport( char * pBuffer,
 
         if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
         {
+            LogError( ( "Failed to write part 4." ) );
             status = ReportBuilderBufferTooSmall;
         }
         else

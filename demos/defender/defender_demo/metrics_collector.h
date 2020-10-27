@@ -92,7 +92,7 @@ MetricsCollectorStatus_t GetNetworkStats( NetworkStats_t * pOutNetworkStats );
  * MetricsCollectorParsingFailed if the function fails to parses the data read
  * from "/proc/net/tcp".
  */
-MetricsCollectorStatus_t GetTcpOpenPorts( uint16_t * pOutTcpPortsArray,
+MetricsCollectorStatus_t GetOpenTcpPorts( uint16_t * pOutTcpPortsArray,
                                           uint32_t tcpPortsArrayLength,
                                           uint32_t * pOutNumTcpOpenPorts );
 
@@ -114,7 +114,7 @@ MetricsCollectorStatus_t GetTcpOpenPorts( uint16_t * pOutTcpPortsArray,
  * MetricsCollectorParsingFailed if the function fails to parses the data read
  * from "/proc/net/udp".
  */
-MetricsCollectorStatus_t GetUdpOpenPorts( uint16_t * pOutUdpPortsArray,
+MetricsCollectorStatus_t GetOpenUdpPorts( uint16_t * pOutUdpPortsArray,
                                           uint32_t udpPortsArrayLength,
                                           uint32_t * pOutNumUdpOpenPorts );
 
@@ -141,4 +141,4 @@ MetricsCollectorStatus_t GetEstablishedConnections( Connection_t * pOutConnectio
                                                     uint32_t connectionsArrayLength,
                                                     uint32_t * pOutNumEstablishedConnections );
 
-#endif /* METRICS_COLLECTOR_H_ */
+#endif /* ifndef METRICS_COLLECTOR_H_ */
