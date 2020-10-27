@@ -4,11 +4,8 @@ set( DEMO_NAME "http_demo_basic_tls" )
 include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreHTTP/httpFilePaths.cmake )
 
 # Demo target.
-add_executable(${DEMO_NAME})
-
-target_sources(
+add_executable(
     ${DEMO_NAME}
-    PRIVATE
         "${DEMO_NAME}.c"
         "../common/src/http_demo_utils.c"
         ${HTTP_SOURCES}
@@ -27,8 +24,6 @@ target_include_directories(
     PUBLIC
         "../common/include"
         ${HTTP_INCLUDE_PUBLIC_DIRS}
-        ${HTTP_INCLUDE_THIRD_PARTY_DIRS}
-        ${HTTP_INCLUDE_PRIVATE_DIRS}
         ${CMAKE_CURRENT_LIST_DIR}
         ${LOGGING_INCLUDE_DIRS}
 )

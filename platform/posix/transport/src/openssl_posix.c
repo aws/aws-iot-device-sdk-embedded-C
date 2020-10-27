@@ -662,7 +662,7 @@ OpensslStatus_t Openssl_Disconnect( const NetworkContext_t * pNetworkContext )
 }
 /*-----------------------------------------------------------*/
 
-int32_t Openssl_Recv( const NetworkContext_t * pNetworkContext,
+int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
                       void * pBuffer,
                       size_t bytesToRecv )
 {
@@ -707,7 +707,7 @@ int32_t Openssl_Recv( const NetworkContext_t * pNetworkContext,
 }
 /*-----------------------------------------------------------*/
 
-int32_t Openssl_Send( const NetworkContext_t * pNetworkContext,
+int32_t Openssl_Send( NetworkContext_t * pNetworkContext,
                       const void * pBuffer,
                       size_t bytesToSend )
 {

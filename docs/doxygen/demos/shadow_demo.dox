@@ -1,0 +1,32 @@
+
+/**
+@page shadow_demo AWS IoT Device Shadow
+@brief This demo demonstrates usage of the AWS IoT Device Shadow library.
+
+@section shadow_demo_main AWS IoT Device Shadow Demo
+@brief Demo application that uses the AWS IoT Device Shadow library, MQTT Client library,
+and JSON library to interact with the AWS IoT Device Shadow service.
+
+The device is assumed to have the powerOn state, which can be 1 or 0 depending on
+whether or not the device is powered on. This state is maintained in the device's
+shadow. The demo does the following operations:
+
+- Establish a MQTT connection. ( step 1. )
+- Assemble MQTT topic strings for device shadow operations using macros defined
+  by the Device Shadow library. ( step 6. )
+- Subscribe to the MQTT topics for shadow update operations. ( step 8. )
+- Publish a desired powerOn state. This causes a device shadow update delta
+  message to be sent to the device. ( step 13 ~ step 14. )
+- Handle the incoming MQTT message in the MQTT event callback and determine
+  whether the message is related to the device shadow using @ref Shadow_MatchTopic.
+  If the message is a device shadow update delta message, set a flag for the
+  main function to know. The main function will then publish a second message to
+  update the reported powerOn state. ( step 15 ~ step 26. )
+- Handle the incoming MQTT message again in the MQTT event callback and
+  determine whether the message is related to the device shadow. If the message
+  is a device shadow update accepted message, verify that it is for the update
+  operation initiated previously by ensuring that it contains the same
+  clientToken as sent in the update operation. ( step 27 ~ step 33. )
+
+@image html shadow_demo_main.png width=100%
+*/

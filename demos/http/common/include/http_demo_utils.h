@@ -22,9 +22,13 @@
 
 /* Standard includes. */
 #include <stdlib.h>
+#include <stdbool.h>
 
 /* Transport interface include. */
 #include "transport_interface.h"
+
+/* HTTP API header. */
+#include "core_http_client.h"
 
 /**
  * @brief Function pointer for establishing connection to a server.
@@ -49,3 +53,84 @@ typedef int32_t ( * TransportConnect_t )( NetworkContext_t * pNetworkContext );
  */
 int32_t connectToServerWithBackoffRetries( TransportConnect_t connectFunction,
                                            NetworkContext_t * pNetworkContext );
+
+/**
+ * @brief Retrieve the path from the input URL.
+ *
+ * This function retrieves the location and length of the path from within the
+ * input the URL. The query is not included in the length returned.
+ *
+ * The URL MUST start with "http://" or "https://" to find the path.
+ *
+ * For example, if pUrl is:
+ * "https://www.somewebsite.com/path/to/item.txt?optionalquery=stuff"
+ *
+ * Then pPath and pPathLen will be the following:
+ * *pPath = "/path/to/item.txt?optionalquery=stuff"
+ * *pPathLen = 17
+ *
+ * @param[in] pUrl URL string to parse.
+ * @param[in] urlLen The length of the URL string input.
+ * @param[out] pPath pointer within input url that the path starts at.
+ * @param[out] pPathLen Length of the path.
+ *
+ * @return The status of the parsing attempt:
+ * HTTP_SUCCESS if the path was successfully parsed,
+ * HTTP_PARSER_INTERNAL_ERROR if there was an error parsing the URL,
+ * or HTTP_NO_RESPONSE if the path was not found.
+ */
+HTTPStatus_t getUrlPath( const char * pUrl,
+                         size_t urlLen,
+                         const char ** pPath,
+                         size_t * pPathLen );
+
+/**
+ * @brief Retrieve the Address from the input URL.
+ *
+ * This function retrieves the location and length of the address from within
+ * the input URL. The path and query are not included in the length returned.
+ *
+ * The URL MUST start with "http://" or "https://" to find the address.
+ *
+ * For example, if pUrl is:
+ * "https://www.somewebsite.com/path/to/item.txt?optionalquery=stuff"
+ *
+ * Then pAddress and pAddressLen will be the following:
+ * *pAddress = "www.somewebsite.com/path/to/item.txt?optionalquery=stuff"
+ * *pAddressLen = 19
+ *
+ * @param[in] pUrl URL string to parse.
+ * @param[in] urlLen The length of the URL string input.
+ * @param[out] pAddress pointer within input url that the address starts at.
+ * @param[out] pAddressLen Length of the address.
+ *
+ * @return The status of the parsing attempt:
+ * HTTP_SUCCESS if the path was successfully parsed,
+ * HTTP_PARSER_INTERNAL_ERROR if there was an error parsing the URL,
+ * or HTTP_NO_RESPONSE if the path was not found.
+ */
+HTTPStatus_t getUrlAddress( const char * pUrl,
+                            size_t urlLen,
+                            const char ** pAddress,
+                            size_t * pAddressLen );
+
+/**
+ * @brief Retrieve the size of the S3 object that is specified in pPath.
+ *
+ * @param[out] pFileSize The size of the S3 object.
+ * @param[in] pTransportInterface The transport interface for making network
+ * calls.
+ * @param[in] pHost The server host address. This string should be
+ * null-terminated.
+ * @param[in] hostLen The length of the server host address.
+ * @param[in] pPath The Request-URI to the objects of interest. This string
+ * should be null-terminated.
+ *
+ * @return The status of the file size acquisition using a GET request to the
+ * server: true on success, false on failure.
+ */
+bool getS3ObjectFileSize( size_t * pFileSize,
+                          const TransportInterface_t * pTransportInterface,
+                          const char * pHost,
+                          size_t hostLen,
+                          const char * pPath );

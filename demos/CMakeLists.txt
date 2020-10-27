@@ -28,9 +28,49 @@ function(check_aws_credentials demo_name)
     check_symbol_exists(AWS_IOT_ENDPOINT ${FILES_TO_CHECK} HAVE_AWS_ENDPOINT)
     check_symbol_exists(CLIENT_CERT_PATH ${FILES_TO_CHECK} HAVE_CLIENT_CERT)
     check_symbol_exists(CLIENT_PRIVATE_KEY_PATH ${FILES_TO_CHECK} HAVE_PRIVATE_KEY)
-    
+
     if(NOT(HAVE_AWS_ENDPOINT AND HAVE_CLIENT_CERT AND HAVE_PRIVATE_KEY))
         message("To run ${demo_name}, define AWS_IOT_ENDPOINT, CLIENT_CERT_PATH, CLIENT_PRIVATE_KEY_PATH in ${demo_name}/demo_config.h.")
+        set_target_properties(${demo_name} PROPERTIES EXCLUDE_FROM_ALL true)
+    endif()
+endfunction()
+
+# This function will add a demo target to the list of default targets
+# if pre-signed GET and PUT URLs are defined.
+function(check_presigned_urls demo_name)
+    if(S3_PRESIGNED_GET_URL AND S3_PRESIGNED_PUT_URL)
+        target_compile_definitions(
+            ${demo_name} PRIVATE
+                S3_PRESIGNED_GET_URL="${S3_PRESIGNED_GET_URL}"
+                S3_PRESIGNED_PUT_URL="${S3_PRESIGNED_PUT_URL}"
+        )
+        set(CMAKE_REQUIRED_DEFINITIONS -DS3_PRESIGNED_GET_URL -DS3_PRESIGNED_PUT_URL)
+    endif()
+
+    if(S3_PRESIGNED_GET_URL)
+        target_compile_definitions(
+            ${demo_name} PRIVATE
+                S3_PRESIGNED_GET_URL="${S3_PRESIGNED_GET_URL}"
+        )
+        set(CMAKE_REQUIRED_DEFINITIONS -DS3_PRESIGNED_GET_URL)
+    endif()
+
+    set(UPLOAD_DEMOS "http_demo_s3_upload")
+    set(DOWNLOAD_DEMOS "http_demo_s3_download" "http_demo_s3_download_multithreaded")
+    set(FILES_TO_CHECK "demo_config.h")
+    list(APPEND CMAKE_REQUIRED_INCLUDES "${CMAKE_CURRENT_LIST_DIR};${LOGGING_INCLUDE_DIRS}")
+    unset(HAVE_S3_PRESIGNED_GET_URL CACHE)
+    unset(HAVE_S3_PRESIGNED_PUT_URL CACHE)
+    check_symbol_exists(S3_PRESIGNED_GET_URL ${FILES_TO_CHECK} HAVE_S3_PRESIGNED_GET_URL)
+    check_symbol_exists(S3_PRESIGNED_PUT_URL ${FILES_TO_CHECK} HAVE_S3_PRESIGNED_PUT_URL)
+
+    if(";${UPLOAD_DEMOS};" MATCHES ";${demo_name};" AND NOT(HAVE_S3_PRESIGNED_GET_URL AND HAVE_S3_PRESIGNED_PUT_URL))
+        message("To run ${demo_name}, define S3_PRESIGNED_GET_URL and S3_PRESIGNED_PUT_URL in ${demo_name}/demo_config.h.")
+        set_target_properties(${demo_name} PROPERTIES EXCLUDE_FROM_ALL true)
+    endif()
+
+    if( ";${DOWNLOAD_DEMOS};" MATCHES ";${demo_name};" AND NOT(HAVE_S3_PRESIGNED_GET_URL))
+        message("To run ${demo_name}, define S3_PRESIGNED_GET_URL in ${demo_name}/demo_config.h.")
         set_target_properties(${demo_name} PROPERTIES EXCLUDE_FROM_ALL true)
     endif()
 endfunction()
@@ -42,6 +82,13 @@ if(DOWNLOAD_CERTS)
     execute_process(
         COMMAND curl --url https://www.amazontrust.com/repository/AmazonRootCA1.pem
         -o ${CMAKE_CURRENT_LIST_DIR}/certificates/AmazonRootCA1.crt
+    )
+    # Download the Baltimore Cybertrust Root CA certificate.
+    message( "Downloading the Baltimore Cybertrust Root CA certificate..." )
+    file(MAKE_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/certificates)
+    execute_process(
+        COMMAND curl --url https://cacerts.digicert.com/BaltimoreCyberTrustRoot.crt.pem
+        -o ${CMAKE_CURRENT_LIST_DIR}/certificates/BaltimoreCyberTrustRoot.crt
     )
 endif()
 

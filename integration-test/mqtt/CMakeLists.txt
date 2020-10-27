@@ -1,5 +1,5 @@
 project ("mqtt system test")
-cmake_minimum_required (VERSION 3.13)
+cmake_minimum_required (VERSION 3.2.0)
 
 # Include MQTT library's source and header path variables.
 include("${CMAKE_SOURCE_DIR}/libraries/standard/coreMQTT/mqttFilePaths.cmake")
@@ -18,7 +18,6 @@ list(APPEND real_source_files
 list(APPEND real_include_directories
             .
             ${MQTT_INCLUDE_PUBLIC_DIRS}
-            ${MQTT_INCLUDE_PRIVATE_DIRS}
             ${LOGGING_INCLUDE_DIRS}
         )
 
@@ -28,7 +27,6 @@ list(APPEND real_include_directories
 list(APPEND test_include_directories
             .
             ${MQTT_INCLUDE_PUBLIC_DIRS}
-            ${MQTT_INCLUDE_PRIVATE_DIRS}
             ${LOGGING_INCLUDE_DIRS}
         )
 
@@ -68,10 +66,16 @@ if(BROKER_ENDPOINT)
             BROKER_ENDPOINT="${BROKER_ENDPOINT}"
     )
 endif()
+if(BROKER_ENDPOINT)
+    target_compile_definitions(
+        ${stest_name} PRIVATE
+            CLIENT_IDENTIFIER="${CLIENT_IDENTIFIER}"
+    )
+endif()
 if(ROOT_CA_CERT_PATH)
     target_compile_definitions(
         ${stest_name} PRIVATE
-            SERVER_ROOT_CA_CERT_PATH="${ROOT_CA_CERT_PATH}"
+            ROOT_CA_CERT_PATH="${ROOT_CA_CERT_PATH}"
     )
 endif()
 if(CLIENT_CERT_PATH)

@@ -4,11 +4,8 @@ set( DEMO_NAME "mqtt_demo_basic_tls" )
 include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreMQTT/mqttFilePaths.cmake )
 
 # Demo target.
-add_executable(${DEMO_NAME})
-
-target_sources(
+add_executable(
     ${DEMO_NAME}
-    PRIVATE
         "${DEMO_NAME}.c"
         ${MQTT_SOURCES}
         ${MQTT_SERIALIZER_SOURCES}
@@ -26,7 +23,6 @@ target_include_directories(
     ${DEMO_NAME}
     PUBLIC
         ${MQTT_INCLUDE_PUBLIC_DIRS}
-        ${MQTT_INCLUDE_PRIVATE_DIRS}
         ${CMAKE_CURRENT_LIST_DIR}
         ${LOGGING_INCLUDE_DIRS}
 )
