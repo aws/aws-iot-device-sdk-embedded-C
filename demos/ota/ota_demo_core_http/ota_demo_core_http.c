@@ -38,6 +38,12 @@
 /* Retry parameters. */
 #include "retry_utils.h"
 
+/* HTTP API header. */
+#include "core_http_client.h"
+
+/* Common HTTP demo utilities. */
+#include "http_demo_utils.h"
+
 /* Clock for timer. */
 #include "clock.h"
 
@@ -182,6 +188,19 @@ static bool mqttSessionEstablished = false;
  * @brief MQTT connection context used in this demo.
  */
 static MQTTContext_t mqttContext;
+
+static NetworkContext_t networkContext;
+
+/* HTTP URL information. */
+httpUrlInfo_t UrlInfo;
+
+/**
+ * @brief The host address string extracted from the pre-signed URL.
+ *
+ * @note S3_PRESIGNED_GET_URL_LENGTH is set as the array length here as the
+ * length of the host name string cannot exceed this value.
+ */
+static char serverHost[ 2048 ];
 
 /*-----------------------------------------------------------*/
 
@@ -827,6 +846,87 @@ static int initializeMqtt( MQTTContext_t * pMqttContext,
     }
 
     return returnStatus;
+}
+
+static int32_t connectToServer( NetworkContext_t * pNetworkContext , char * pUrl )
+{
+    int32_t returnStatus = EXIT_FAILURE;
+    HTTPStatus_t httpStatus = HTTPSuccess;
+
+    /* The location of the host address within the pre-signed URL. */
+    const char * pAddress = NULL;
+
+    /* Status returned by OpenSSL transport implementation. */
+    OpensslStatus_t opensslStatus;
+    /* Credentials to establish the TLS connection. */
+    OpensslCredentials_t opensslCredentials;
+    /* Information about the server to send the HTTP requests. */
+    ServerInfo_t serverInfo;
+
+    /* Initialize TLS credentials. */
+    ( void ) memset( &opensslCredentials, 0, sizeof( opensslCredentials ) );
+    opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
+
+    /* Retrieve the address location and length from S3_PRESIGNED_GET_URL. */
+    IotHttpsClient_GetUrlAddress( pUrl,
+                                  strlen( pUrl ),
+                                  UrlInfo.pAddress,
+                                  UrlInfo.addressLength );
+
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        /* serverHost should consist only of the host address located in
+         * S3_PRESIGNED_GET_URL. */
+        memcpy( serverHost, UrlInfo.pAddress, UrlInfo.addressLength  );
+        serverHost[  UrlInfo.addressLength  ] = '\0';
+
+        /* Initialize server information. */
+        serverInfo.pHostName = serverHost;
+        serverInfo.hostNameLength =  UrlInfo.addressLength ;
+        serverInfo.port = AWS_HTTPS_PORT;
+
+        /* Establish a TLS session with the HTTP server. This example connects
+         * to the HTTP server as specified in SERVER_HOST and HTTPS_PORT in
+         * demo_config.h. */
+        LogInfo( ( "Establishing a TLS session with %s:%d.",
+                   serverHost,
+                   AWS_HTTPS_PORT ) );
+
+        opensslStatus = Openssl_Connect( pNetworkContext,
+                                         &serverInfo,
+                                         &opensslCredentials,
+                                         TRANSPORT_SEND_RECV_TIMEOUT_MS,
+                                         TRANSPORT_SEND_RECV_TIMEOUT_MS );
+
+        returnStatus = ( opensslStatus == OPENSSL_SUCCESS ) ? EXIT_SUCCESS : EXIT_FAILURE;
+    }
+
+    return returnStatus;
+}
+
+static OtaErr_t httpInit( char * pUrl )
+{
+    /* Return value of main. */
+    int32_t returnStatus = EXIT_SUCCESS;
+
+    /* Establish HTTPs connection */
+    LogInfo( ( "Performing TLS handshake on top of the TCP connection." ) );
+
+    /* Attempt to connect to the HTTP server. If connection fails, retry after
+     * a timeout. Timeout value will be exponentially increased till the maximum
+     * attempts are reached or maximum timeout value is reached. The function
+     * returns EXIT_FAILURE if the TCP connection cannot be established to
+     * broker after configured number of attempts. */
+    connectToServer( &networkContextHttp , pUrl );
+
+    if( returnStatus == EXIT_FAILURE )
+    {
+        /* Log an error to indicate connection failure after all
+         * reconnect attempts are over. */
+        LogError( ( "Failed to connect to HTTP server %s.",
+                     serverHost ) );
+    }
+
 }
 
 /*-----------------------------------------------------------*/

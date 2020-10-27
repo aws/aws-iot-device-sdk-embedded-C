@@ -24,35 +24,14 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-/* Transport interface include. */
-#include "transport_interface.h"
-
-/* HTTP API header. */
-#include "core_http_client.h"
-
-/**
- * @brief Function pointer for establishing connection to a server.
- *
- * @param[out] pNetworkContext Implementation-defined network context.
- *
- * @return EXIT_FAILURE on failure; EXIT_SUCCESS on successful connection.
- */
-typedef int32_t ( * TransportConnect_t )( NetworkContext_t * pNetworkContext );
-
-/**
- * @brief Connect to a server with reconnection retries.
- *
- * If connection fails, retry is attempted after a timeout.
- * Timeout value will exponentially increase until maximum
- * timeout value is reached or the number of attempts are exhausted.
- *
- * @param[in] connectFunction Function pointer for establishing connection to a server.
- * @param[out] pNetworkContext Implementation-defined network context.
- *
- * @return EXIT_FAILURE on failure; EXIT_SUCCESS on successful connection.
- */
-int32_t connectToServerWithBackoffRetries( TransportConnect_t connectFunction,
-                                           NetworkContext_t * pNetworkContext );
+/* Struct for HTTP download information. */
+typedef struct _httpUrlInfo
+{
+    const char * pPath;    /* Resource path to the firmware in HTTP URL. */
+    size_t pathLength;     /* Length of the resource path. */
+    const char * pAddress; /* Address to the server in HTTP URL. */
+    size_t addressLength;  /* Length of the address. */
+} httpUrlInfo_t;
 
 /**
  * @brief Retrieve the path from the input URL.
@@ -79,10 +58,10 @@ int32_t connectToServerWithBackoffRetries( TransportConnect_t connectFunction,
  * HTTP_PARSER_INTERNAL_ERROR if there was an error parsing the URL,
  * or HTTP_NO_RESPONSE if the path was not found.
  */
-HTTPStatus_t getUrlPath( const char * pUrl,
-                         size_t urlLen,
-                         const char ** pPath,
-                         size_t * pPathLen );
+void getUrlPath( const char * pUrl,
+                 size_t urlLen,
+                 const char ** pPath,
+                 size_t * pPathLen );
 
 /**
  * @brief Retrieve the Address from the input URL.
@@ -109,28 +88,7 @@ HTTPStatus_t getUrlPath( const char * pUrl,
  * HTTP_PARSER_INTERNAL_ERROR if there was an error parsing the URL,
  * or HTTP_NO_RESPONSE if the path was not found.
  */
-HTTPStatus_t getUrlAddress( const char * pUrl,
-                            size_t urlLen,
-                            const char ** pAddress,
-                            size_t * pAddressLen );
-
-/**
- * @brief Retrieve the size of the S3 object that is specified in pPath.
- *
- * @param[out] pFileSize The size of the S3 object.
- * @param[in] pTransportInterface The transport interface for making network
- * calls.
- * @param[in] pHost The server host address. This string should be
- * null-terminated.
- * @param[in] hostLen The length of the server host address.
- * @param[in] pPath The Request-URI to the objects of interest. This string
- * should be null-terminated.
- *
- * @return The status of the file size acquisition using a GET request to the
- * server: true on success, false on failure.
- */
-bool getS3ObjectFileSize( size_t * pFileSize,
-                          const TransportInterface_t * pTransportInterface,
-                          const char * pHost,
-                          size_t hostLen,
-                          const char * pPath );
+void  getUrlAddress( const char * pUrl,
+                     size_t urlLen,
+                     const char ** pAddress,
+                     size_t * pAddressLen );
