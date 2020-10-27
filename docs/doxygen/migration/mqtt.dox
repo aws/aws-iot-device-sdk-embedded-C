@@ -1,6 +1,6 @@
 /**
 @page mqtt_migration MQTT
-@brief How to migrate an MQTT application from v3 to 202009.00 and beyond.
+@brief How to migrate an MQTT application from v3 to 202009.00 subsequent releases.
 
 The MQTT library has been refactored in 202009.00 and subsequent releases, to use only a single thread, and therefore no longer has any thread synchronization dependencies. New features such as persistent session support and QoS 2 publish delivery have also been added.
 
