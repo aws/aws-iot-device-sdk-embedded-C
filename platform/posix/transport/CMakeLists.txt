@@ -13,7 +13,7 @@ if( NOT EXISTS ${MODULES_DIR}/standard/coreMQTT/source )
 endif()
 
 set( TRANSPORT_INTERFACE_INCLUDE_DIR
-     ${MODULES_DIR}/standard/coreMQTT/source/portable )
+     ${MODULES_DIR}/standard/coreMQTT/source/interface )
 
 # Create target for sockets utility.
 add_library( sockets_posix
