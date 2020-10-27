@@ -1,6 +1,6 @@
 /**
 @page migration_guide Migration Guide
-@brief Migration guide for v3 library to the 202009.00 release.
+@brief Migration guide for v3 libraries to the 202009.00 release and beyond.
 
 - @subpage mqtt_migration <br>
   @copybrief mqtt_migration

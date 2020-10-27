@@ -1,28 +1,28 @@
 /**
 @page mqtt_migration MQTT
-@brief How to migrate an MQTT application from v3 to 202009.00.
+@brief How to migrate an MQTT application from v3 to 202009.00 and beyond.
 
-The MQTT library has been refactored in 202009.00 to use only a single thread, and therefore no longer has any thread synchronization dependencies. New features such as persistent session support and QoS 2 publish delivery have also been added.
+The MQTT library has been refactored in 202009.00 and subsequent releases, to use only a single thread, and therefore no longer has any thread synchronization dependencies. New features such as persistent session support and QoS 2 publish delivery have also been added.
 
-The features of the MQTT libraries in v3 and 202009.00 are defined by the common MQTT 3.1.1 spec; therefore, the two versions are similar.
+The features of the MQTT libraries in v3 and 202009.00 and subsequent releases are defined by the common MQTT 3.1.1 spec; therefore, the two versions are similar.
 
 @section migration_mqtt_removed Removed features
-@brief The following features were present in v3, but removed in 202009.00:
+@brief The following features were present in v3, but removed in 202009.00 and subsequent releases:
 - <u>Auto-reconnect</u> <br>
-  Version 3 has an auto-reconnect feature triggered through a call to `aws_iot_mqtt_yield`. In version 202009.00, the auto-reconnect feature has been removed. <br>
-  <b>Workaround:</b> When a version 202009.00 API call does not return @ref MQTTSuccess, the application should re-establish
+  Version 3 has an auto-reconnect feature triggered through a call to `aws_iot_mqtt_yield`. In version 202009.00 and subsequent releases, the auto-reconnect feature has been removed. <br>
+  <b>Workaround:</b> When a version 202009.00 and subsequent releases API call does not return @ref MQTTSuccess, the application should re-establish
   the underlying transport connection and then call @ref MQTT_Connect. We recommend that the application employ an exponential backoff strategy when re-establishing connections as explained in
   the [AWS blog for Exponential Back off and Jitter](https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/).
 - <u>Thread support</u> <br>
-  Version 3 has an `_ENABLE_THREAD_SUPPORT_` macro for multi-threading use cases. Version 202009.00 does not spawn any threads and therefore, the macro `_ENABLE_THREAD_SUPPORT_` has been removed.
+  Version 3 has an `_ENABLE_THREAD_SUPPORT_` macro for multi-threading use cases. Version 202009.00 and subsequent releases does not spawn any threads and therefore, the macro `_ENABLE_THREAD_SUPPORT_` has been removed.
 
 @section migration_mqtt_datatypes Data Types
-@brief The following table lists equivalent data types in v3 and 202009.00.
+@brief The following table lists equivalent data types in v3 and 202009.00 and subsequent releases.
 
 <table>
     <tr>
         <th>Version 3</th>
-        <th>Version 202009.00</th>
+        <th>Version 202009.00 and subsequent releases</th>
         <th>Notes</th>
     </tr>
     <tr>
@@ -53,7 +53,7 @@ The features of the MQTT libraries in v3 and 202009.00 are defined by the common
     <tr>
         <td>IoT_Client_Init_Params</td>
         <td><i>None</i></td>
-        <td>The members of this struct in v3 handled setup of the network connection.<br>This is handled outside of the MQTT library in 202009.00.</td>
+        <td>The members of this struct in v3 handled setup of the network connection.<br>This is handled outside of the MQTT library in 202009.00 and subsequent releases.</td>
     </tr>
     <tr>
         <td>pApplicationHandler_t</td>
@@ -63,14 +63,14 @@ The features of the MQTT libraries in v3 and 202009.00 are defined by the common
 </table>
 
 @section migration_mqtt_functions Functions
-@brief The following table lists equivalent API functions in v3 and 202009.00. These functions are the API functions declared in:
+@brief The following table lists equivalent API functions in v3 and 202009.00 and subsequent releases. These functions are the API functions declared in:
 - In v3: <a href="https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/0da87f06f1501fad7b03b5d89a1322cc8a8848b4/include/aws_iot_mqtt_client_interface.h">aws_iot_mqtt_client_interface.h</a>
-- In 202009.00: [MQTT functions](@ref mqtt_functions)
+- In 202009.00 and subsequent releases: [MQTT functions](@ref mqtt_functions)
 
 <table>
     <tr>
         <th>Version 3</th>
-        <th>Version 202009.00</th>
+        <th>Version 202009.00 and subsequent releases</th>
         <th>Notes</th>
     </tr>
     <tr>
@@ -81,7 +81,7 @@ The features of the MQTT libraries in v3 and 202009.00 are defined by the common
     <tr>
         <td>aws_iot_mqtt_free</td>
         <td><i>None</i></td>
-        <td>202009.00 does not allocate any memory and therefore, has nothing to free.</td>
+        <td>202009.00 and subsequent releases does not allocate any memory and therefore, has nothing to free.</td>
     </tr>
     <tr>
         <td>aws_iot_mqtt_connect</td>
