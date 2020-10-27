@@ -193,7 +193,7 @@ static void sendHttpRequest( const TransportInterface_t * pTransportInterface,
                              const char * pPath )
 {
     /* Status returned by methods in HTTP Client Library API. */
-    HTTPStatus_t httpStatus = HTTP_NETWORK_ERROR;
+    HTTPStatus_t httpStatus = HTTPNetworkError;
     /* Tracks number of retry requests made to the HTTP server. */
     uint8_t retryCount = 0;
 
@@ -216,7 +216,7 @@ static void sendHttpRequest( const TransportInterface_t * pTransportInterface,
     /* Initialize the request object. */
     requestInfo.pHost = SERVER_HOST;
     requestInfo.hostLen = SERVER_HOST_LENGTH;
-    requestInfo.method = pMethod;
+    requestInfo.pMethod = pMethod;
     requestInfo.methodLen = strlen( pMethod );
     requestInfo.pPath = pPath;
     requestInfo.pathLen = strlen( pPath );
@@ -235,7 +235,7 @@ static void sendHttpRequest( const TransportInterface_t * pTransportInterface,
     response.bufferLen = USER_BUFFER_LENGTH;
 
     LogDebug( ( "Sending HTTP %.*s request to %.*s%.*s...",
-                ( int32_t ) requestInfo.methodLen, requestInfo.method,
+                ( int32_t ) requestInfo.methodLen, requestInfo.pMethod,
                 ( int32_t ) SERVER_HOST_LENGTH, SERVER_HOST,
                 ( int32_t ) requestInfo.pathLen, requestInfo.pPath ) );
 
@@ -247,7 +247,7 @@ static void sendHttpRequest( const TransportInterface_t * pTransportInterface,
          * be re-initialized after a failed request. */
         httpStatus = HTTPClient_InitializeRequestHeaders( &requestHeaders,
                                                           &requestInfo );
-        TEST_ASSERT_EQUAL( HTTP_SUCCESS, httpStatus );
+        TEST_ASSERT_EQUAL( HTTPSuccess, httpStatus );
         TEST_ASSERT_NOT_EQUAL( 0, requestHeaders.headersLen );
 
         LogDebug( ( "Request Headers:\n%.*s\n"
@@ -263,16 +263,16 @@ static void sendHttpRequest( const TransportInterface_t * pTransportInterface,
                                       &response,
                                       0 );
 
-        if( httpStatus == HTTP_NETWORK_ERROR )
+        if( httpStatus == HTTPNetworkError )
         {
             LogDebug( ( "A network error has occured, retrying request." ) );
             resetTest();
         }
 
         retryCount++;
-    } while( ( httpStatus == HTTP_NETWORK_ERROR ) && ( retryCount < MAX_RETRY_COUNT ) );
+    } while( ( httpStatus == HTTPNetworkError ) && ( retryCount < MAX_RETRY_COUNT ) );
 
-    TEST_ASSERT_EQUAL( HTTP_SUCCESS, httpStatus );
+    TEST_ASSERT_EQUAL( HTTPSuccess, httpStatus );
 
     LogDebug( ( "Received HTTP response from %.*s%.*s...\n"
                 "Response Headers:\n%.*s\n"
