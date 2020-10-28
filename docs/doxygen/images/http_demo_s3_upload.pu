@@ -46,8 +46,8 @@ application -> http: Send HTTP PUT request (HTTPClient_Send)\n to upload file to
 activate http
 http -> server: Send payload of request through transport interface
 http -> application : Write response to user-provided buffer
-application -> application: Log response from contents of buffer
 deactivate http
+application -> application: Log response from contents of buffer
 
 application -> parser : Parse configured pre-signed GET URL to extract\n URL path
 activate parser
@@ -58,8 +58,8 @@ application -> http: Send HTTP GET request (HTTPClient_Send)
 activate http
 http -> server: Send payload of request through transport interface
 http -> application : Write response to user-provided buffer
-application -> application: Parse content-range header from response\n to obtain file size
 deactivate http
+application -> application: Parse content-range header from response\n to obtain file size
 
 application -> application : Verify that the file size obtained from S3 is\n equivalent to the file size uploaded
 

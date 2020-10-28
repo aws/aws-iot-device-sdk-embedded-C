@@ -46,8 +46,8 @@ application -> http : Send HTTP GET request (HTTPClient_Send)
 activate http
 http -> server: Send payload of request through transport interface
 http -> application : Write response to user-provided buffer
-application -> application: Parse content-range header from response\n to obtain file size
 deactivate http
+application -> application: Parse content-range header from response\n to obtain file size
 
 loop until entire file is downloaded
 application -> http: Initialize request headers\n (HTTPClient_InitializeRequestHeaders)
@@ -62,8 +62,8 @@ application -> http : Send HTTP GET request (HTTPClient_Send)\n to download requ
 activate http
 http -> server: Send payload of request through transport interface
 http -> application : Write response to user-provided buffer
-application -> application: Log response from contents of buffer
 deactivate http
+application -> application: Log response from contents of buffer
 end
 
 application -> server: End TLS session and disconnect from server
