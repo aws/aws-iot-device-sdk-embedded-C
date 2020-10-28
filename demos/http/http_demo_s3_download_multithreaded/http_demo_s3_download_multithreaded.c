@@ -623,7 +623,7 @@ static bool getS3ObjectFileSize( const HTTPRequestInfo_t * requestInfo,
         }
         else if( responseItem.response.statusCode != HTTP_STATUS_CODE_PARTIAL_CONTENT )
         {
-            LogError( ( "Recieved repsonse with unexpected status code: %d", responseItem.response.statusCode ) );
+            LogError( ( "Received response with unexpected status code: %d.", responseItem.response.statusCode ) );
             returnStatus = false;
         }
     }
@@ -660,7 +660,7 @@ static bool getS3ObjectFileSize( const HTTPRequestInfo_t * requestInfo,
 
         if( ( *pFileSize == 0 ) || ( *pFileSize == UINT32_MAX ) )
         {
-            LogError( ( "Error using strtoul to get the file size from %s: fileSize=%d",
+            LogError( ( "Error using strtoul to get the file size from %s: fileSize=%d.",
                         pFileSizeStr, ( int32_t ) *pFileSize ) );
             returnStatus = false;
         }

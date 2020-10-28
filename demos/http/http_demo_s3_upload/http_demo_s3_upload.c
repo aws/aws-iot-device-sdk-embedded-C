@@ -335,7 +335,7 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
                                  size_t hostLen,
                                  const char * pPath )
 {
-    bool returnStatus = false;
+    bool returnStatus = true;
     HTTPStatus_t httpStatus = HTTPSuccess;
     HTTPRequestHeaders_t requestHeaders;
     HTTPRequestInfo_t requestInfo;
@@ -384,16 +384,30 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
     httpStatus = HTTPClient_InitializeRequestHeaders( &requestHeaders,
                                                       &requestInfo );
 
-    if( httpStatus == HTTPSuccess )
+    if( httpStatus != HTTPSuccess )
+    {
+        LogError( ( "Failed to initialize HTTP request headers: Error=%s.",
+                    HTTPClient_strerror( httpStatus ) ) );
+        returnStatus = false;
+    }
+
+    if( returnStatus == true )
     {
         /* Add the header to get bytes=0-0. S3 will respond with a Content-Range
          * header that contains the size of the file in it. This header will
          * look like: "Content-Range: bytes 0-0/FILESIZE". The body will have a
          * single byte that we are ignoring. */
         httpStatus = HTTPClient_AddRangeHeader( &requestHeaders, 0, 0 );
+
+        if( httpStatus != HTTPSuccess )
+        {
+            LogError( ( "Failed to add Range header to request headers: Error=%s.",
+                        HTTPClient_strerror( httpStatus ) ) );
+            returnStatus = false;
+        }
     }
 
-    if( httpStatus == HTTPSuccess )
+    if( returnStatus == true )
     {
         /* Send the request and receive the response. */
         httpStatus = HTTPClient_Send( pTransportInterface,
@@ -402,9 +416,16 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
                                       0,
                                       &response,
                                       0 );
+
+        if( httpStatus != HTTPSuccess )
+        {
+            LogError( ( "Failed to send HTTP GET request to %s%s: Error=%s.",
+                        pHost, pPath, HTTPClient_strerror( httpStatus ) ) );
+            returnStatus = false;
+        }
     }
 
-    if( httpStatus == HTTPSuccess )
+    if( returnStatus == true )
     {
         LogDebug( ( "Received HTTP response from %s%s...",
                     pHost, pPath ) );
@@ -415,12 +436,13 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
                     ( int32_t ) response.bodyLen,
                     response.pBody ) );
 
-        returnStatus = ( response.statusCode == HTTP_STATUS_CODE_PARTIAL_CONTENT ) ? true : false;
-    }
-    else
-    {
-        LogError( ( "Failed to send HTTP GET request to %s%s: Error=%s.",
-                    pHost, pPath, HTTPClient_strerror( httpStatus ) ) );
+        if( response.statusCode != HTTP_STATUS_CODE_PARTIAL_CONTENT )
+        {
+            LogError( ( "Received an invalid response from the server "
+                        "(Status Code: %u).",
+                        response.statusCode ) );
+            returnStatus = false;
+        }
     }
 
     if( returnStatus == true )
@@ -434,15 +456,16 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
                                             ( size_t ) HTTP_CONTENT_RANGE_HEADER_FIELD_LENGTH,
                                             ( const char ** ) &contentRangeValStr,
                                             &contentRangeValStrLength );
-    }
-    else
-    {
-        LogError( ( "Received an invalid response from the server "
-                    "(Status Code: %u).",
-                    response.statusCode ) );
+
+        if( httpStatus != HTTPSuccess )
+        {
+            LogError( ( "Failed to read Content-Range header from HTTP response: Error=%s.",
+                        HTTPClient_strerror( httpStatus ) ) );
+            returnStatus = false;
+        }
     }
 
-    if( ( returnStatus == true ) && ( httpStatus == HTTPSuccess ) )
+    if( returnStatus == true )
     {
         /* Parse the Content-Range header value to get the file size. */
         pFileSizeStr = strstr( contentRangeValStr, "/" );
@@ -460,25 +483,13 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
         {
             LogError( ( "Error using strtoul to get the file size from %s: fileSize=%d.",
                         pFileSizeStr, ( int32_t ) *pFileSize ) );
-            httpStatus = HTTPInvalidParameter;
+            returnStatus = false;
         }
 
         LogInfo( ( "The file is %d bytes long.", ( int32_t ) *pFileSize ) );
     }
-    else
-    {
-        LogError( ( "Failed to read Content-Range header from HTTP response: Error=%s.",
-                    HTTPClient_strerror( httpStatus ) ) );
-    }
 
-    if( ( returnStatus == false ) || ( httpStatus != HTTPSuccess ) )
-    {
-        LogError( ( "An error occurred in getting the file size from %s. Error=%s.",
-                    pHost,
-                    HTTPClient_strerror( httpStatus ) ) );
-    }
-
-    return( ( returnStatus == true ) && ( httpStatus == HTTPSuccess ) );
+    return returnStatus;
 }
 
 /*-----------------------------------------------------------*/
