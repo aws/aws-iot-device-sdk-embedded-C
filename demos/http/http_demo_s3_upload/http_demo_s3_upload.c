@@ -465,17 +465,21 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
         }
     }
 
+    /* Parse the Content-Range header value to get the file size. */
     if( returnStatus == true )
     {
-        /* Parse the Content-Range header value to get the file size. */
         pFileSizeStr = strstr( contentRangeValStr, "/" );
 
         if( pFileSizeStr == NULL )
         {
             LogError( ( "'/' not present in Content-Range header value: %s.",
                         contentRangeValStr ) );
+            returnStatus = false;
         }
+    }
 
+    if( returnStatus == true )
+    {
         pFileSizeStr += sizeof( char );
         *pFileSize = ( size_t ) strtoul( pFileSizeStr, NULL, 10 );
 
@@ -485,7 +489,10 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
                         pFileSizeStr, ( int32_t ) *pFileSize ) );
             returnStatus = false;
         }
+    }
 
+    if( returnStatus == true )
+    {
         LogInfo( ( "The file is %d bytes long.", ( int32_t ) *pFileSize ) );
     }
 
