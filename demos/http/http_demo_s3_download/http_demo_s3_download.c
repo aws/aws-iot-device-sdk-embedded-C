@@ -406,79 +406,73 @@ int main( int argc,
     ( void ) argc;
     ( void ) argv;
 
-    for( ; ; )
+    LogInfo( ( "HTTP Client Synchronous S3 download demo using pre-signed URL:\n%s",
+               S3_PRESIGNED_GET_URL ) );
+
+    /**************************** Connect. ******************************/
+
+    /* Establish TLS connection on top of TCP connection using OpenSSL. */
+    if( returnStatus == EXIT_SUCCESS )
     {
-        LogInfo( ( "HTTP Client Synchronous S3 download demo using pre-signed URL:\n%s",
-                   S3_PRESIGNED_GET_URL ) );
+        /* Attempt to connect to the HTTP server. If connection fails, retry
+         * after a timeout. The timeout value will be exponentially
+         * increased until either the maximum number of attempts or the
+         * maximum timeout value is reached. The function returns
+         * EXIT_FAILURE if the TCP connection cannot be established to the
+         * broker after the configured number of attempts. */
+        returnStatus = connectToServerWithBackoffRetries( connectToServer,
+                                                          &networkContext );
 
-        /**************************** Connect. ******************************/
-
-        /* Establish TLS connection on top of TCP connection using OpenSSL. */
-        if( returnStatus == EXIT_SUCCESS )
+        if( returnStatus == EXIT_FAILURE )
         {
-            /* Attempt to connect to the HTTP server. If connection fails, retry
-             * after a timeout. The timeout value will be exponentially
-             * increased until either the maximum number of attempts or the
-             * maximum timeout value is reached. The function returns
-             * EXIT_FAILURE if the TCP connection cannot be established to the
-             * broker after the configured number of attempts. */
-            returnStatus = connectToServerWithBackoffRetries( connectToServer,
-                                                              &networkContext );
-
-            if( returnStatus == EXIT_FAILURE )
-            {
-                /* Log an error to indicate connection failure after all
-                 * reconnect attempts are over. */
-                LogError( ( "Failed to connect to HTTP server %s.",
-                            serverHost ) );
-            }
+            /* Log an error to indicate connection failure after all
+             * reconnect attempts are over. */
+            LogError( ( "Failed to connect to HTTP server %s.",
+                        serverHost ) );
         }
-
-        /* Define the transport interface. */
-        if( returnStatus == EXIT_SUCCESS )
-        {
-            ( void ) memset( &transportInterface, 0, sizeof( transportInterface ) );
-            transportInterface.recv = Openssl_Recv;
-            transportInterface.send = Openssl_Send;
-            transportInterface.pNetworkContext = &networkContext;
-        }
-
-        /******************** Download S3 Object File. **********************/
-
-        if( returnStatus == EXIT_SUCCESS )
-        {
-            /* Retrieve the path location from S3_PRESIGNED_GET_URL. This
-             * function returns the length of the path without the query into
-             * pathLen, which is left unused in this demo. */
-            httpStatus = getUrlPath( S3_PRESIGNED_GET_URL,
-                                     S3_PRESIGNED_GET_URL_LENGTH,
-                                     &pPath,
-                                     &pathLen );
-
-            returnStatus = ( httpStatus == HTTPSuccess ) ? EXIT_SUCCESS : EXIT_FAILURE;
-        }
-
-        if( returnStatus == EXIT_SUCCESS )
-        {
-            ret = downloadS3ObjectFile( &transportInterface,
-                                        pPath );
-            returnStatus = ( ret == true ) ? EXIT_SUCCESS : EXIT_FAILURE;
-        }
-
-        if( returnStatus == EXIT_SUCCESS )
-        {
-            /* Log a message indicating an iteration completed successfully. */
-            LogInfo( ( "Demo completed successfully." ) );
-        }
-
-        /************************** Disconnect. *****************************/
-
-        /* End the TLS session, then close the TCP connection. */
-        ( void ) Openssl_Disconnect( &networkContext );
-
-        LogInfo( ( "Short delay before starting the next iteration....\n" ) );
-        sleep( DEMO_LOOP_DELAY_SECONDS );
     }
+
+    /* Define the transport interface. */
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        ( void ) memset( &transportInterface, 0, sizeof( transportInterface ) );
+        transportInterface.recv = Openssl_Recv;
+        transportInterface.send = Openssl_Send;
+        transportInterface.pNetworkContext = &networkContext;
+    }
+
+    /******************** Download S3 Object File. **********************/
+
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        /* Retrieve the path location from S3_PRESIGNED_GET_URL. This
+         * function returns the length of the path without the query into
+         * pathLen, which is left unused in this demo. */
+        httpStatus = getUrlPath( S3_PRESIGNED_GET_URL,
+                                 S3_PRESIGNED_GET_URL_LENGTH,
+                                 &pPath,
+                                 &pathLen );
+
+        returnStatus = ( httpStatus == HTTPSuccess ) ? EXIT_SUCCESS : EXIT_FAILURE;
+    }
+
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        ret = downloadS3ObjectFile( &transportInterface,
+                                    pPath );
+        returnStatus = ( ret == true ) ? EXIT_SUCCESS : EXIT_FAILURE;
+    }
+
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        /* Log a message indicating an iteration completed successfully. */
+        LogInfo( ( "Demo completed successfully." ) );
+    }
+
+    /************************** Disconnect. *****************************/
+
+    /* End the TLS session, then close the TCP connection. */
+    ( void ) Openssl_Disconnect( &networkContext );
 
     return returnStatus;
 }
