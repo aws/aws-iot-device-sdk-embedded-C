@@ -234,7 +234,6 @@ startnextpendingjobexecution
 stat
 statechanged
 stderr
-stirng
 struct
 structs
 suback

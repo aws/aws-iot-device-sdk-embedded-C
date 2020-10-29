@@ -137,10 +137,10 @@
  * @brief The maximum time interval in seconds which is allowed to elapse
  *  between two Control Packets.
  *
- *  It is the responsibility of the Client to ensure that the interval between
- *  Control Packets being sent does not exceed the this Keep Alive value. In the
- *  absence of sending any other Control Packets, the Client MUST send a
- *  PINGREQ Packet.
+ *  It is the responsibility of the client to ensure that the interval between
+ *  control packets being sent does not exceed the this keep-alive value. In the
+ *  absence of sending any other control packets, the client MUST send a
+ *  PINGREQ packet.
  */
 #define MQTT_KEEP_ALIVE_INTERVAL_SECONDS    ( 60U )
 
@@ -445,19 +445,20 @@ static void mqttCallback( MQTTContext_t * pMqttContext,
     assert( pPacketInfo != NULL );
     assert( pDeserializedInfo != NULL );
 
-    /* Suppress unused parameter warning when asserts are disabled in build. */
+    /* Suppress the unused parameter warning when asserts are disabled in
+     * build. */
     ( void ) pMqttContext;
 
     packetIdentifier = pDeserializedInfo->packetIdentifier;
 
-    /* Handle incoming publish. The lower 4 bits of the publish packet
+    /* Handle an incoming publish. The lower 4 bits of the publish packet
      * type is used for the dup, QoS, and retain flags. Hence masking
      * out the lower bits to check if the packet is publish. */
     if( ( pPacketInfo->type & 0xF0U ) == MQTT_PACKET_TYPE_PUBLISH )
     {
         assert( pDeserializedInfo->pPublishInfo != NULL );
 
-        /* Invoke application callback for incoming publishes. */
+        /* Invoke the application callback for incoming publishes. */
         if( appPublishCallback != NULL )
         {
             appPublishCallback( pDeserializedInfo->pPublishInfo, packetIdentifier );
@@ -471,7 +472,7 @@ static void mqttCallback( MQTTContext_t * pMqttContext,
             case MQTT_PACKET_TYPE_SUBACK:
                 LogDebug( ( "MQTT Packet type SUBACK received." ) );
 
-                /* Make sure ACK packet identifier matches with Request
+                /* Make sure the ACK packet identifier matches with the request
                  * packet identifier. */
                 assert( globalSubscribePacketIdentifier == packetIdentifier );
                 break;
@@ -479,7 +480,7 @@ static void mqttCallback( MQTTContext_t * pMqttContext,
             case MQTT_PACKET_TYPE_UNSUBACK:
                 LogDebug( ( "MQTT Packet type UNSUBACK received." ) );
 
-                /* Make sure ACK packet identifier matches with Request
+                /* Make sure the ACK packet identifier matches with the request
                  * packet identifier. */
                 assert( globalUnsubscribePacketIdentifier == packetIdentifier );
                 break;
@@ -496,7 +497,7 @@ static void mqttCallback( MQTTContext_t * pMqttContext,
                 LogDebug( ( "PUBACK received for packet id %u.",
                             packetIdentifier ) );
 
-                /* Cleanup publish packet from the #outgoingPublishPackets
+                /* Cleanup the publish packet from the #outgoingPublishPackets
                  * array when a PUBACK is received. */
                 cleanupOutgoingPublishWithPacketID( packetIdentifier );
                 break;
@@ -577,7 +578,7 @@ int EstablishMqttSession( MQTTPublishCallback_t publishCallback )
 
     if( returnStatus != EXIT_SUCCESS )
     {
-        /* Log error to indicate connection failure after all
+        /* Log an error to indicate connection failure after all
          * reconnect attempts are over. */
         LogError( ( "Failed to connect to MQTT broker %.*s.",
                     AWS_IOT_ENDPOINT_LENGTH,
@@ -587,7 +588,7 @@ int EstablishMqttSession( MQTTPublishCallback_t publishCallback )
     {
         /* Fill in TransportInterface send and receive function pointers.
          * For this demo, TCP sockets are used to send and receive data
-         * from network. Network context is SSL context for OpenSSL.*/
+         * from the network. pNetworkContext is an SSL context for OpenSSL.*/
         transport.pNetworkContext = pNetworkContext;
         transport.send = Openssl_Send;
         transport.recv = Openssl_Recv;
@@ -599,7 +600,7 @@ int EstablishMqttSession( MQTTPublishCallback_t publishCallback )
         /* Remember the publish callback supplied. */
         appPublishCallback = publishCallback;
 
-        /* Initialize MQTT library. */
+        /* Initialize the MQTT library. */
         mqttStatus = MQTT_Init( pMqttContext,
                                 &transport,
                                 Clock_GetTimeMs,
@@ -613,11 +614,11 @@ int EstablishMqttSession( MQTTPublishCallback_t publishCallback )
         }
         else
         {
-            /* Establish MQTT session by sending a CONNECT packet. */
+            /* Establish an MQTT session by sending a CONNECT packet. */
 
             /* If #createCleanSession is true, start with a clean session
              * i.e. direct the MQTT broker to discard any previous session data.
-             * If #createCleanSession is false, directs the broker to attempt to
+             * If #createCleanSession is false, direct the broker to attempt to
              * reestablish a session which was already present. */
             connectInfo.cleanSession = createCleanSession;
 
@@ -629,10 +630,10 @@ int EstablishMqttSession( MQTTPublishCallback_t publishCallback )
 
             /* The maximum time interval in seconds which is allowed to elapse
              * between two Control Packets.
-             * It is the responsibility of the Client to ensure that the interval between
-             * Control Packets being sent does not exceed the this Keep Alive value. In the
-             * absence of sending any other Control Packets, the Client MUST send a
-             * PINGREQ Packet. */
+             * It is the responsibility of the client to ensure that the interval between
+             * control packets being sent does not exceed the this keep-alive value. In the
+             * absence of sending any other control packets, the client MUST send a
+             * PINGREQ packet. */
             connectInfo.keepAliveSeconds = MQTT_KEEP_ALIVE_INTERVAL_SECONDS;
 
             /* Username and password for authentication. Not used in this demo. */
@@ -641,7 +642,7 @@ int EstablishMqttSession( MQTTPublishCallback_t publishCallback )
             connectInfo.pPassword = NULL;
             connectInfo.passwordLength = 0U;
 
-            /* Send MQTT CONNECT packet to broker. */
+            /* Send an MQTT CONNECT packet to the broker. */
             mqttStatus = MQTT_Connect( pMqttContext,
                                        &connectInfo,
                                        NULL,
@@ -669,9 +670,10 @@ int EstablishMqttSession( MQTTPublishCallback_t publishCallback )
 
         if( returnStatus == EXIT_SUCCESS )
         {
-            /* Check if session is present and if there are any outgoing publishes
-             * that need to resend. This is only valid if the broker is
-             * re-establishing a session which was already present. */
+            /* Check if a session is present and if there are any outgoing
+             * publishes that need to be resent. Resending unacknowledged
+             * publishes is needed only if the broker is re-establishing a
+             * session that was already present. */
             if( sessionPresent == true )
             {
                 LogDebug( ( "An MQTT session with broker is re-established. "

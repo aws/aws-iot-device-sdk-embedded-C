@@ -78,10 +78,10 @@ MetricsCollectorStatus_t GetNetworkStats( NetworkStats_t * pOutNetworkStats );
  * @brief Get a list of the open TCP ports.
  *
  * This function finds the open TCP ports by reading "/proc/net/tcp". It can be
- * called with pOutTcpPortsArray NULL to get the number of the open TCP ports.
+ * called with @p pOutTcpPortsArray NULL to get the number of the open TCP ports.
  *
- * @param[in] pOutTcpPortsArray The array to write the open TCP ports into. Can
- * be NULL, if only number of open ports is needed.
+ * @param[in] pOutTcpPortsArray The array to write the open TCP ports into. This
+ * can be NULL, if only the number of open ports is needed.
  * @param[in] tcpPortsArrayLength Length of the pOutTcpPortsArray, if it is not
  * NULL.
  * @param[out] pOutNumTcpOpenPorts Number of the open TCP ports.
@@ -119,14 +119,15 @@ MetricsCollectorStatus_t GetOpenUdpPorts( uint16_t * pOutUdpPortsArray,
                                           uint32_t * pOutNumUdpOpenPorts );
 
 /**
- * @brief Get a list of established connection.
+ * @brief Get a list of established connections.
  *
  * This function finds the established connections by reading "/proc/net/tcp".
- * It cab be called with pOutConnectionsArray NULL to get the number established
- * connections.
+ * It can be called with @p pOutConnectionsArray NULL to get the number of
+ * established connections.
  *
  * @param[in] pOutConnectionsArray The array to write the established connections
- * into. Can be NULL, if only number of established connections is needed.
+ * into. This can be NULL, if only the number of established connections is
+ * needed.
  * @param[in] connectionsArrayLength Length of the pOutConnectionsArray, if it
  * is not NULL.
  * @param[out] pOutNumEstablishedConnections Number of the established connections.

@@ -94,7 +94,7 @@
  * @brief Write ports array to the given buffer in the format expected by the
  * AWS IoT Device Defender Service.
  *
- * This function write array of the following format:
+ * This function writes an array of the following format:
  * [
  *    {
  *        "port":44207
