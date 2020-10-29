@@ -47,6 +47,68 @@ cmake .. -DAWS_IOT_ENDPOINT="aws-iot-endpoint" -DROOT_CA_CERT_PATH="root-ca-path
 
 	- Set `CLIENT_PRIVATE_KEY_PATH` to the path of the private key downloaded when setting up the device certificate (or Provisioning Claim for Fleet Provisioning) in [AWS IoT Account Setup](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v4_beta#aws-iot-account-setup).
 
+@section configuring_s3_demos Configuring the HTTP S3 Demos
+@brief Generating pre-signed URLs and passing configuration settings to run the S3 upload, download, and multi-threaded download demos.
+
+The S3 upload, download, and multi-threaded download demos require user-generated pre-signed URLs to be configured. A python script `presigned_url_gen.py` (located in `demos/http/common/src/`) is provided to easily generate pre-signed PUT and GET URLs.
+
+## Using the Pre-signed URL Generator
+
+### Dependencies
+	- Python 3+
+	- boto3
+	- argparse
+
+### Pre-requisites
+<ol>
+<li>Install the dependencies.</li>
+@code{sh}
+pip install boto3 argparse
+@endcode
+
+<li>You will need an AWS Account with S3 access before beginning. You must install and configure the AWS CLI in order to use this script.</li>
+@code{sh}
+aws configure
+@endcode
+	- For information on AWS S3, please see: https://docs.aws.amazon.com/AmazonS3/latest/dev/Welcome.html
+	- For AWS CLI installation information, please see: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html
+	- For AWS CLI configuration information, please see: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
+</ol>
+
+### Usage
+<ol>
+<li>Run presigned_url_gen.py with your S3 **bucket-name**, S3 **object-key**, and optionally, your S3 bucket's **region-name** (if not specified, the region configured in AWS CLI will be used).</li>
+@code{sh}
+python presigned_urls_gen.py --bucket <YOUR BUCKET NAME> --key <YOUR OBJECT KEY> --region <YOUR BUCKET'S REGION NAME>
+@endcode
+
+An example expected output:
+@code{sh}
+#define S3_PRESIGNED_GET_URL    https://aws-s3-endpoint/object-key.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ABABABABABABABABABAB%2F20201027%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20201027T194726Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=SomeHash12345UrlABcdEFgfIjK"
+
+#define S3_PRESIGNED_PUT_URL    https://aws-s3-endpoint/object-key.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ABABABABABABABABABAB%2F20201027%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20201027T194726Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=SomeHash12345UrlLMnmOPqrStUvW"
+@endcode
+
+<li>Copy and paste the output into **demo_config.h** for macro **S3_PRESIGNED_GET_URL** and **S3_PRESIGNED_PUT_URL**.</li>
+@code{sh}
+#define S3_PRESIGNED_GET_URL    https://aws-s3-endpoint/object-key.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ABABABABABABABABABAB%2F20201027%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20201027T194726Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=SomeHash12345UrlABcdEFgfIjK"
+
+#define S3_PRESIGNED_PUT_URL    https://aws-s3-endpoint/object-key.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ABABABABABABABABABAB%2F20201027%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20201027T194726Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=SomeHash12345UrlLMnmOPqrStUvW"
+@endcode
+
+You may also pass any or all of the following configuration settings as command line options in order to run the demos:
+@code{sh}
+cmake .. -DS3_PRESIGNED_GET_URL="your-get-url" -DS3_PRESIGNED_PUT_URL="your-put-url"
+@endcode
+
+Note: A pre-signed GET URL is required for all HTTP S3 demos. For upload demos, in addition to the GET URL, a pre-signed PUT URL is also required.
+</ol>
+
+### Parameter Info
+	- `--bucket` : The name of the target S3 bucket used in the demos.
+	- `--key` : The name of the existing object you wish to download (GET), or the name of the object you wish to upload (PUT).
+	- `--region` : The name of the region in which your S3 bucket was created. If this is not passed in, the region configured in AWS CLI (or us-east-1, if not configured) will be used.
+
 @section building_demo_commmandline Build Steps
 @brief How to build the demo applications on the command-line.
 
