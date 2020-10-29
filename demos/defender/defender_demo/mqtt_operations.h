@@ -41,18 +41,18 @@ typedef void (* MQTTPublishCallback_t )( MQTTPublishInfo_t * pPublishInfo,
  * @param[in] publishCallback The callback function to receive incoming
  * publishes from the MQTT broker.
  *
- * @return EXIT_SUCCESS if an MQTT session is established;
- * EXIT_FAILURE otherwise.
+ * @return true if an MQTT session is established;
+ * false otherwise.
  */
-int EstablishMqttSession( MQTTPublishCallback_t publishCallback );
+bool EstablishMqttSession( MQTTPublishCallback_t publishCallback );
 
 /**
  * @brief Disconnect the MQTT connection.
  *
- * @return EXIT_SUCCESS if the MQTT session was successfully disconnected;
- * EXIT_FAILURE otherwise.
+ * @return true if the MQTT session was successfully disconnected;
+ * false otherwise.
  */
-int DisconnectMqttSession( void );
+bool DisconnectMqttSession( void );
 
 /**
  * @brief Subscribe to a MQTT topic filter.
@@ -60,11 +60,11 @@ int DisconnectMqttSession( void );
  * @param[in] pTopicFilter The topic filter to subscribe to.
  * @param[in] topicFilterLength Length of the topic buffer.
  *
- * @return EXIT_SUCCESS if subscribe operation was successful;
- * EXIT_FAILURE otherwise.
+ * @return true if subscribe operation was successful;
+ * false otherwise.
  */
-int SubscribeToTopic( const char * pTopicFilter,
-                      uint16_t topicFilterLength );
+bool SubscribeToTopic( const char * pTopicFilter,
+                       uint16_t topicFilterLength );
 
 /**
  * @brief Unsubscribe from a MQTT topic filter.
@@ -72,11 +72,11 @@ int SubscribeToTopic( const char * pTopicFilter,
  * @param[in] pTopicFilter The topic filter to unsubscribe from.
  * @param[in] topicFilterLength Length of the topic buffer.
  *
- * @return EXIT_SUCCESS if unsubscribe operation was successful;
- * EXIT_FAILURE otherwise.
+ * @return true if unsubscribe operation was successful;
+ * false otherwise.
  */
-int UnsubscribeFromTopic( const char * pTopicFilter,
-                          uint16_t topicFilterLength );
+bool UnsubscribeFromTopic( const char * pTopicFilter,
+                           uint16_t topicFilterLength );
 
 /**
  * @brief Publish a message to a MQTT topic.
@@ -86,20 +86,20 @@ int UnsubscribeFromTopic( const char * pTopicFilter,
  * @param[in] pMessage The message to publish.
  * @param[in] messageLength Length of the message.
  *
- * @return EXIT_SUCCESS if PUBLISH was successfully sent;
- * EXIT_FAILURE otherwise.
+ * @return true if PUBLISH was successfully sent;
+ * false otherwise.
  */
-int PublishToTopic( const char * pTopic,
-                    uint16_t topicLength,
-                    const char * pMessage,
-                    size_t messageLength );
+bool PublishToTopic( const char * pTopic,
+                     uint16_t topicLength,
+                     const char * pMessage,
+                     size_t messageLength );
 
 /**
  * @brief Invoke the core MQTT library's process loop function.
  *
- * @return EXIT_SUCCESS if process loop was successful;
- * EXIT_FAILURE otherwise.
+ * @return true if process loop was successful;
+ * false otherwise.
  */
-int ProcessLoop( void );
+bool ProcessLoop( void );
 
 #endif /* ifndef MQTT_OPERATIONS_H_ */

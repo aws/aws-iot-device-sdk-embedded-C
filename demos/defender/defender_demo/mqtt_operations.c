@@ -238,9 +238,9 @@ static MQTTPublishCallback_t appPublishCallback = NULL;
  *
  * @param[out] pNetworkContext The created network context.
  *
- * @return EXIT_FAILURE on failure; EXIT_SUCCESS on successful connection.
+ * @return false on failure; true on successful connection.
  */
-static int connectToBrokerWithBackoffRetries( NetworkContext_t * pNetworkContext );
+static bool connectToBrokerWithBackoffRetries( NetworkContext_t * pNetworkContext );
 
 /**
  * @brief Get the free index in the #outgoingPublishPackets array at which an
@@ -248,10 +248,10 @@ static int connectToBrokerWithBackoffRetries( NetworkContext_t * pNetworkContext
  *
  * @param[out] pIndex The index at which an outgoing publish can be stored.
  *
- * @return EXIT_FAILURE if no more publishes can be stored;
- * EXIT_SUCCESS if an index to store the next outgoing publish is obtained.
+ * @return false if no more publishes can be stored;
+ * true if an index to store the next outgoing publish is obtained.
  */
-static int getNextFreeIndexForOutgoingPublishes( uint8_t * pIndex );
+static bool getNextFreeIndexForOutgoingPublishes( uint8_t * pIndex );
 
 /**
  * @brief Clean up the outgoing publish at given index from the
@@ -292,13 +292,16 @@ static void mqttCallback( MQTTContext_t * pMqttContext,
  * maintained locally.
  *
  * @param[in] pMqttContext The MQTT context pointer.
+ *
+ * @return true if all the unacknowledged QoS1 publishes are re-sent successfully;
+ * false otherwise.
  */
-static int handlePublishResend( MQTTContext_t * pMqttContext );
+static bool handlePublishResend( MQTTContext_t * pMqttContext );
 /*-----------------------------------------------------------*/
 
-static int connectToBrokerWithBackoffRetries( NetworkContext_t * pNetworkContext )
+static bool connectToBrokerWithBackoffRetries( NetworkContext_t * pNetworkContext )
 {
-    int returnStatus = EXIT_SUCCESS;
+    bool returnStatus = true;
     RetryUtilsStatus_t retryUtilsStatus = RetryUtilsSuccess;
     OpensslStatus_t opensslStatus = OPENSSL_SUCCESS;
     RetryUtilsParams_t reconnectParams;
@@ -357,7 +360,7 @@ static int connectToBrokerWithBackoffRetries( NetworkContext_t * pNetworkContext
         if( retryUtilsStatus == RetryUtilsRetriesExhausted )
         {
             LogError( ( "Connection to the broker failed, all attempts exhausted." ) );
-            returnStatus = EXIT_FAILURE;
+            returnStatus = false;
         }
     } while( ( opensslStatus != OPENSSL_SUCCESS ) && ( retryUtilsStatus == RetryUtilsSuccess ) );
 
@@ -365,9 +368,9 @@ static int connectToBrokerWithBackoffRetries( NetworkContext_t * pNetworkContext
 }
 /*-----------------------------------------------------------*/
 
-static int getNextFreeIndexForOutgoingPublishes( uint8_t * pIndex )
+static bool getNextFreeIndexForOutgoingPublishes( uint8_t * pIndex )
 {
-    int returnStatus = EXIT_FAILURE;
+    bool returnStatus = false;
     uint8_t index = 0;
 
     assert( outgoingPublishPackets != NULL );
@@ -379,7 +382,7 @@ static int getNextFreeIndexForOutgoingPublishes( uint8_t * pIndex )
          * has a free slot. */
         if( outgoingPublishPackets[ index ].packetId == MQTT_PACKET_ID_INVALID )
         {
-            returnStatus = EXIT_SUCCESS;
+            returnStatus = true;
             break;
         }
     }
@@ -511,9 +514,9 @@ static void mqttCallback( MQTTContext_t * pMqttContext,
 }
 /*-----------------------------------------------------------*/
 
-static int handlePublishResend( MQTTContext_t * pMqttContext )
+static bool handlePublishResend( MQTTContext_t * pMqttContext )
 {
-    int returnStatus = EXIT_SUCCESS;
+    bool returnStatus = true;
     MQTTStatus_t mqttStatus = MQTTSuccess;
     uint8_t index = 0U;
 
@@ -540,7 +543,7 @@ static int handlePublishResend( MQTTContext_t * pMqttContext )
                             " failed with status %u.",
                             outgoingPublishPackets[ index ].packetId,
                             mqttStatus ) );
-                returnStatus = EXIT_FAILURE;
+                returnStatus = false;
                 break;
             }
             else
@@ -555,9 +558,9 @@ static int handlePublishResend( MQTTContext_t * pMqttContext )
 }
 /*-----------------------------------------------------------*/
 
-int EstablishMqttSession( MQTTPublishCallback_t publishCallback )
+bool EstablishMqttSession( MQTTPublishCallback_t publishCallback )
 {
-    int returnStatus = EXIT_SUCCESS;
+    bool returnStatus = true;
     MQTTStatus_t mqttStatus;
     MQTTConnectInfo_t connectInfo;
     MQTTFixedBuffer_t networkBuffer;
@@ -576,7 +579,7 @@ int EstablishMqttSession( MQTTPublishCallback_t publishCallback )
 
     returnStatus = connectToBrokerWithBackoffRetries( pNetworkContext );
 
-    if( returnStatus != EXIT_SUCCESS )
+    if( returnStatus != true )
     {
         /* Log an error to indicate connection failure after all
          * reconnect attempts are over. */
@@ -609,7 +612,7 @@ int EstablishMqttSession( MQTTPublishCallback_t publishCallback )
 
         if( mqttStatus != MQTTSuccess )
         {
-            returnStatus = EXIT_FAILURE;
+            returnStatus = false;
             LogError( ( "MQTT init failed with status %u.", mqttStatus ) );
         }
         else
@@ -651,7 +654,7 @@ int EstablishMqttSession( MQTTPublishCallback_t publishCallback )
 
             if( mqttStatus != MQTTSuccess )
             {
-                returnStatus = EXIT_FAILURE;
+                returnStatus = false;
                 LogError( ( "Connection with MQTT broker failed with status %u.", mqttStatus ) );
             }
             else
@@ -660,7 +663,7 @@ int EstablishMqttSession( MQTTPublishCallback_t publishCallback )
             }
         }
 
-        if( returnStatus == EXIT_SUCCESS )
+        if( returnStatus == true )
         {
             /* Keep a flag for indicating if MQTT session is established. This
              * flag will mark that an MQTT DISCONNECT has to be sent at the end
@@ -668,7 +671,7 @@ int EstablishMqttSession( MQTTPublishCallback_t publishCallback )
             mqttSessionEstablished = true;
         }
 
-        if( returnStatus == EXIT_SUCCESS )
+        if( returnStatus == true )
         {
             /* Check if a session is present and if there are any outgoing
              * publishes that need to be resent. Resending unacknowledged
@@ -698,10 +701,10 @@ int EstablishMqttSession( MQTTPublishCallback_t publishCallback )
 }
 /*-----------------------------------------------------------*/
 
-int DisconnectMqttSession( void )
+bool DisconnectMqttSession( void )
 {
     MQTTStatus_t mqttStatus = MQTTSuccess;
-    int returnStatus = EXIT_SUCCESS;
+    bool returnStatus = true;
     MQTTContext_t * pMqttContext = &mqttContext;
     NetworkContext_t * pNetworkContext = &networkContext;
 
@@ -717,7 +720,7 @@ int DisconnectMqttSession( void )
         {
             LogError( ( "Sending MQTT DISCONNECT failed with status=%u.",
                         mqttStatus ) );
-            returnStatus = EXIT_FAILURE;
+            returnStatus = false;
         }
     }
 
@@ -728,10 +731,10 @@ int DisconnectMqttSession( void )
 }
 /*-----------------------------------------------------------*/
 
-int SubscribeToTopic( const char * pTopicFilter,
-                      uint16_t topicFilterLength )
+bool SubscribeToTopic( const char * pTopicFilter,
+                       uint16_t topicFilterLength )
 {
-    int returnStatus = EXIT_SUCCESS;
+    bool returnStatus = true;
     MQTTStatus_t mqttStatus;
     MQTTContext_t * pMqttContext = &mqttContext;
     MQTTSubscribeInfo_t pSubscriptionList[ 1 ];
@@ -761,7 +764,7 @@ int SubscribeToTopic( const char * pTopicFilter,
     {
         LogError( ( "Failed to send SUBSCRIBE packet to broker with error = %u.",
                     mqttStatus ) );
-        returnStatus = EXIT_FAILURE;
+        returnStatus = false;
     }
     else
     {
@@ -780,7 +783,7 @@ int SubscribeToTopic( const char * pTopicFilter,
 
         if( mqttStatus != MQTTSuccess )
         {
-            returnStatus = EXIT_FAILURE;
+            returnStatus = false;
             LogError( ( "MQTT_ProcessLoop returned with status = %u.",
                         mqttStatus ) );
         }
@@ -790,10 +793,10 @@ int SubscribeToTopic( const char * pTopicFilter,
 }
 /*-----------------------------------------------------------*/
 
-int UnsubscribeFromTopic( const char * pTopicFilter,
-                          uint16_t topicFilterLength )
+bool UnsubscribeFromTopic( const char * pTopicFilter,
+                           uint16_t topicFilterLength )
 {
-    int returnStatus = EXIT_SUCCESS;
+    bool returnStatus = true;
     MQTTStatus_t mqttStatus;
     MQTTContext_t * pMqttContext = &mqttContext;
     MQTTSubscribeInfo_t pSubscriptionList[ 1 ];
@@ -823,7 +826,7 @@ int UnsubscribeFromTopic( const char * pTopicFilter,
     {
         LogError( ( "Failed to send UNSUBSCRIBE packet to broker with error = %u.",
                     mqttStatus ) );
-        returnStatus = EXIT_FAILURE;
+        returnStatus = false;
     }
     else
     {
@@ -838,7 +841,7 @@ int UnsubscribeFromTopic( const char * pTopicFilter,
 
         if( mqttStatus != MQTTSuccess )
         {
-            returnStatus = EXIT_FAILURE;
+            returnStatus = false;
             LogError( ( "MQTT_ProcessLoop returned with status = %u.",
                         mqttStatus ) );
         }
@@ -848,12 +851,12 @@ int UnsubscribeFromTopic( const char * pTopicFilter,
 }
 /*-----------------------------------------------------------*/
 
-int PublishToTopic( const char * pTopicFilter,
-                    uint16_t topicFilterLength,
-                    const char * pPayload,
-                    size_t payloadLength )
+bool PublishToTopic( const char * pTopicFilter,
+                     uint16_t topicFilterLength,
+                     const char * pPayload,
+                     size_t payloadLength )
 {
-    int returnStatus = EXIT_SUCCESS;
+    bool returnStatus = true;
     MQTTStatus_t mqttStatus = MQTTSuccess;
     uint8_t publishIndex = MAX_OUTGOING_PUBLISHES;
     MQTTContext_t * pMqttContext = &mqttContext;
@@ -868,7 +871,7 @@ int PublishToTopic( const char * pTopicFilter,
      * receiving a PUBACK. */
     returnStatus = getNextFreeIndexForOutgoingPublishes( &publishIndex );
 
-    if( returnStatus == EXIT_FAILURE )
+    if( returnStatus == false )
     {
         LogError( ( "Unable to find a free spot for outgoing PUBLISH message." ) );
     }
@@ -898,7 +901,7 @@ int PublishToTopic( const char * pTopicFilter,
             LogError( ( "Failed to send PUBLISH packet to broker with error = %u.",
                         mqttStatus ) );
             cleanupOutgoingPublishAt( publishIndex );
-            returnStatus = EXIT_FAILURE;
+            returnStatus = false;
         }
         else
         {
@@ -913,9 +916,9 @@ int PublishToTopic( const char * pTopicFilter,
 }
 /*-----------------------------------------------------------*/
 
-int ProcessLoop( void )
+bool ProcessLoop( void )
 {
-    int returnStatus = EXIT_SUCCESS;
+    bool returnStatus = true;
     MQTTStatus_t mqttStatus = MQTTSuccess;
 
     mqttStatus = MQTT_ProcessLoop( &mqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
@@ -924,7 +927,7 @@ int ProcessLoop( void )
     {
         LogWarn( ( "MQTT_ProcessLoop returned with status = %u.",
                    mqttStatus ) );
-        returnStatus = EXIT_FAILURE;
+        returnStatus = false;
     }
     else
     {

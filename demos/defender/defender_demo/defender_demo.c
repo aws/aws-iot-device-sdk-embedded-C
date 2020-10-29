@@ -108,46 +108,46 @@ static void publishCallback( MQTTPublishInfo_t * pPublishInfo,
 /**
  * @brief Collect all the metrics to be sent in the device defender report.
  *
- * @return EXIT_SUCCESS if all the metrics are successfully collected;
- * EXIT_FAILURE otherwise.
+ * @return true if all the metrics are successfully collected;
+ * false otherwise.
  */
-static int collectDeviceMetrics( void );
+static bool collectDeviceMetrics( void );
 
 /**
  * @brief Generate the device defender report.
  *
  * @param[out] pOutReportLength Length of the device defender report.
  *
- * @return EXIT_SUCCESS if the report is generated successfully;
- * EXIT_FAILURE otherwise.
+ * @return true if the report is generated successfully;
+ * false otherwise.
  */
-static int generateDeviceMetricsReport( uint32_t * pOutReportLength );
+static bool generateDeviceMetricsReport( uint32_t * pOutReportLength );
 
 /**
  * @brief Subscribe to the device defender topics.
  *
- * @return EXIT_SUCCESS if the subscribe is successful;
- * EXIT_FAILURE otherwise.
+ * @return true if the subscribe is successful;
+ * false otherwise.
  */
-static int subscribeToDefenderTopics( void );
+static bool subscribeToDefenderTopics( void );
 
 /**
  * @brief Unsubscribe from the device defender topics.
  *
- * @return EXIT_SUCCESS if the unsubscribe is successful;
- * EXIT_FAILURE otherwise.
+ * @return true if the unsubscribe is successful;
+ * false otherwise.
  */
-static int unsubscribeFromDefenderTopics( void );
+static bool unsubscribeFromDefenderTopics( void );
 
 /**
  * @brief Publish the generated device defender report.
  *
  * @param[in] reportLength Length of the device defender report.
  *
- * @return EXIT_SUCCESS if the report is published successfully;
- * EXIT_FAILURE otherwise.
+ * @return true if the report is published successfully;
+ * false otherwise.
  */
-static int publishDeviceMetricsReport( uint32_t reportLength );
+static bool publishDeviceMetricsReport( uint32_t reportLength );
 
 /**
  * @brief Validate the response received from the AWS IoT Device Defender Service.
@@ -158,17 +158,17 @@ static int publishDeviceMetricsReport( uint32_t reportLength );
  * @param[in] defenderResponse The defender response to validate.
  * @param[in] defenderResponseLength Length of the defender response.
  *
- * @return EXIT_SUCCESS if the response is valid;
- * EXIT_FAILURE otherwise.
+ * @return true if the response is valid;
+ * false otherwise.
  */
-static int validateDefenderResponse( const char * defenderResponse,
-                                     uint32_t defenderResponseLength );
+static bool validateDefenderResponse( const char * defenderResponse,
+                                      uint32_t defenderResponseLength );
 /*-----------------------------------------------------------*/
 
-static int validateDefenderResponse( const char * defenderResponse,
-                                     uint32_t defenderResponseLength )
+static bool validateDefenderResponse( const char * defenderResponse,
+                                      uint32_t defenderResponseLength )
 {
-    int status = EXIT_FAILURE;
+    bool status = false;
     JSONStatus_t jsonResult = JSONSuccess;
     char * reportIdString;
     size_t reportIdStringLength;
@@ -214,7 +214,7 @@ static int validateDefenderResponse( const char * defenderResponse,
         {
             LogInfo( ( "A valid reponse with reportId %u received from the "
                        "AWS IoT Device Defender Service.", reportId ) );
-            status = EXIT_SUCCESS;
+            status = true;
         }
         else
         {
@@ -237,7 +237,7 @@ static void publishCallback( MQTTPublishInfo_t * pPublishInfo,
 {
     DefenderStatus_t status;
     DefenderTopic_t api;
-    int validationResult;
+    bool validationResult;
 
     /* Silence compiler warnings about unused variables. */
     ( void ) packetIdentifier;
@@ -256,7 +256,7 @@ static void publishCallback( MQTTPublishInfo_t * pPublishInfo,
             validationResult = validateDefenderResponse( pPublishInfo->pPayload,
                                                          pPublishInfo->payloadLength );
 
-            if( validationResult == EXIT_SUCCESS )
+            if( validationResult == true )
             {
                 LogInfo( ( "The defender report was accepted by the service. Response: %.*s.",
                            ( int ) pPublishInfo->payloadLength,
@@ -270,7 +270,7 @@ static void publishCallback( MQTTPublishInfo_t * pPublishInfo,
             validationResult = validateDefenderResponse( pPublishInfo->pPayload,
                                                          pPublishInfo->payloadLength );
 
-            if( validationResult == EXIT_SUCCESS )
+            if( validationResult == true )
             {
                 LogError( ( "The defender report was rejected by the service. Response: %.*s.",
                             ( int ) pPublishInfo->payloadLength,
@@ -294,9 +294,9 @@ static void publishCallback( MQTTPublishInfo_t * pPublishInfo,
 }
 /*-----------------------------------------------------------*/
 
-static int collectDeviceMetrics( void )
+static bool collectDeviceMetrics( void )
 {
-    int status = EXIT_SUCCESS;
+    bool status = true;
     MetricsCollectorStatus_t metricsCollectorStatus;
     uint32_t numOpenTcpPorts, numOpenUdpPorts, numEstablishedConnections;
 
@@ -307,11 +307,11 @@ static int collectDeviceMetrics( void )
     {
         LogError( ( "GetNetworkStats failed. Status: %d.",
                     metricsCollectorStatus ) );
-        status = EXIT_FAILURE;
+        status = false;
     }
 
     /* Collect a list of open TCP ports. */
-    if( status == EXIT_SUCCESS )
+    if( status == true )
     {
         metricsCollectorStatus = GetOpenTcpPorts( &( openTcpPorts[ 0 ] ),
                                                   OPEN_TCP_PORTS_ARRAY_SIZE,
@@ -321,12 +321,12 @@ static int collectDeviceMetrics( void )
         {
             LogError( ( "GetOpenTcpPorts failed. Status: %d.",
                         metricsCollectorStatus ) );
-            status = EXIT_FAILURE;
+            status = false;
         }
     }
 
     /* Collect a list of open UDP ports. */
-    if( status == EXIT_SUCCESS )
+    if( status == true )
     {
         metricsCollectorStatus = GetOpenUdpPorts( &( openUdpPorts[ 0 ] ),
                                                   OPEN_UDP_PORTS_ARRAY_SIZE,
@@ -336,12 +336,12 @@ static int collectDeviceMetrics( void )
         {
             LogError( ( "GetOpenUdpPorts failed. Status: %d.",
                         metricsCollectorStatus ) );
-            status = EXIT_FAILURE;
+            status = false;
         }
     }
 
     /* Collect a list of established connections. */
-    if( status == EXIT_SUCCESS )
+    if( status == true )
     {
         metricsCollectorStatus = GetEstablishedConnections( &( establishedConnections[ 0 ] ),
                                                             ESTABLISHED_CONNECTIONS_ARRAY_SIZE,
@@ -351,12 +351,12 @@ static int collectDeviceMetrics( void )
         {
             LogError( ( "GetEstablishedConnections failed. Status: %d.",
                         metricsCollectorStatus ) );
-            status = EXIT_FAILURE;
+            status = false;
         }
     }
 
     /* Populate device metrics. */
-    if( status == EXIT_SUCCESS )
+    if( status == true )
     {
         deviceMetrics.pNetworkStats = &( networkStats );
         deviceMetrics.pOpenTcpPortsArray = &( openTcpPorts[ 0 ] );
@@ -371,9 +371,9 @@ static int collectDeviceMetrics( void )
 }
 /*-----------------------------------------------------------*/
 
-static int generateDeviceMetricsReport( uint32_t * pOutReportLength )
+static bool generateDeviceMetricsReport( uint32_t * pOutReportLength )
 {
-    int status = EXIT_SUCCESS;
+    bool status = true;
     ReportBuilderStatus_t reportBuilderStatus;
 
     /* Generate the metrics report in the format expected by the AWS IoT Device
@@ -390,7 +390,7 @@ static int generateDeviceMetricsReport( uint32_t * pOutReportLength )
     {
         LogError( ( "GenerateJsonReport failed. Status: %d.",
                     reportBuilderStatus ) );
-        status = EXIT_FAILURE;
+        status = false;
     }
     else
     {
@@ -403,14 +403,14 @@ static int generateDeviceMetricsReport( uint32_t * pOutReportLength )
 }
 /*-----------------------------------------------------------*/
 
-static int subscribeToDefenderTopics( void )
+static bool subscribeToDefenderTopics( void )
 {
-    int status = EXIT_SUCCESS;
+    bool status = true;
 
     status = SubscribeToTopic( DEFENDER_API_JSON_ACCEPTED( THING_NAME ),
                                DEFENDER_API_LENGTH_JSON_ACCEPTED( THING_NAME_LENGTH ) );
 
-    if( status == EXIT_SUCCESS )
+    if( status == true )
     {
         status = SubscribeToTopic( DEFENDER_API_JSON_REJECTED( THING_NAME ),
                                    DEFENDER_API_LENGTH_JSON_REJECTED( THING_NAME_LENGTH ) );
@@ -420,14 +420,14 @@ static int subscribeToDefenderTopics( void )
 }
 /*-----------------------------------------------------------*/
 
-static int unsubscribeFromDefenderTopics( void )
+static bool unsubscribeFromDefenderTopics( void )
 {
-    int status = EXIT_SUCCESS;
+    bool status = true;
 
     status = UnsubscribeFromTopic( DEFENDER_API_JSON_ACCEPTED( THING_NAME ),
                                    DEFENDER_API_LENGTH_JSON_ACCEPTED( THING_NAME_LENGTH ) );
 
-    if( status == EXIT_SUCCESS )
+    if( status == true )
     {
         status = UnsubscribeFromTopic( DEFENDER_API_JSON_REJECTED( THING_NAME ),
                                        DEFENDER_API_LENGTH_JSON_REJECTED( THING_NAME_LENGTH ) );
@@ -437,7 +437,7 @@ static int unsubscribeFromDefenderTopics( void )
 }
 /*-----------------------------------------------------------*/
 
-static int publishDeviceMetricsReport( uint32_t reportLength )
+static bool publishDeviceMetricsReport( uint32_t reportLength )
 {
     return PublishToTopic( DEFENDER_API_JSON_PUBLISH( THING_NAME ),
                            DEFENDER_API_LENGTH_JSON_PUBLISH( THING_NAME_LENGTH ),
@@ -449,7 +449,8 @@ static int publishDeviceMetricsReport( uint32_t reportLength )
 int main( int argc,
           char ** argv )
 {
-    int status = EXIT_SUCCESS;
+    bool status = true;
+    int exitStatus = EXIT_FAILURE;
     uint32_t reportLength = 0, i, mqttSessionEstablished = 0;
 
     /* Silence compiler warnings about unused variables. */
@@ -465,7 +466,7 @@ int main( int argc,
     LogInfo( ( "Establishing MQTT session..." ) );
     status = EstablishMqttSession( publishCallback );
 
-    if( status != EXIT_SUCCESS )
+    if( status != true )
     {
         LogError( ( "Failed to establish MQTT session." ) );
     }
@@ -474,51 +475,51 @@ int main( int argc,
         mqttSessionEstablished = 1;
     }
 
-    if( status == EXIT_SUCCESS )
+    if( status == true )
     {
         LogInfo( ( "Subscribing to defender topics..." ) );
         status = subscribeToDefenderTopics();
 
-        if( status != EXIT_SUCCESS )
+        if( status != true )
         {
             LogError( ( "Failed to subscribe to defender topics." ) );
         }
     }
 
-    if( status == EXIT_SUCCESS )
+    if( status == true )
     {
         LogInfo( ( "Collecting device metrics..." ) );
         status = collectDeviceMetrics();
 
-        if( status != EXIT_SUCCESS )
+        if( status != true )
         {
             LogError( ( "Failed to collect device metrics." ) );
         }
     }
 
-    if( status == EXIT_SUCCESS )
+    if( status == true )
     {
         LogInfo( ( "Generating device defender report..." ) );
         status = generateDeviceMetricsReport( &( reportLength ) );
 
-        if( status != EXIT_SUCCESS )
+        if( status != true )
         {
             LogError( ( "Failed to generate device defender report." ) );
         }
     }
 
-    if( status == EXIT_SUCCESS )
+    if( status == true )
     {
         LogInfo( ( "Publishing device defender report..." ) );
         status = publishDeviceMetricsReport( reportLength );
 
-        if( status != EXIT_SUCCESS )
+        if( status != true )
         {
             LogError( ( "Failed to publish device defender report." ) );
         }
     }
 
-    if( status == EXIT_SUCCESS )
+    if( status == true )
     {
         for( i = 0; i < 5; i++ )
         {
@@ -538,7 +539,7 @@ int main( int argc,
     if( reportStatus == ReportStatusNotReceived )
     {
         LogError( ( "Failed to receive response from AWS IoT Device Defender Service." ) );
-        status = EXIT_FAILURE;
+        status = false;
     }
 
     /* Unsubscribe and disconnect if MQTT session was established. Per the MQTT
@@ -550,7 +551,7 @@ int main( int argc,
         LogInfo( ( "Unsubscribing from defender topics..." ) );
         status = unsubscribeFromDefenderTopics();
 
-        if( status != EXIT_SUCCESS )
+        if( status != true )
         {
             LogError( ( "Failed to unsubscribe from defender topics." ) );
         }
@@ -559,8 +560,9 @@ int main( int argc,
         ( void ) DisconnectMqttSession();
     }
 
-    if( ( status == EXIT_SUCCESS ) && ( reportStatus == ReportStatusAccepted ) )
+    if( ( status == true ) && ( reportStatus == ReportStatusAccepted ) )
     {
+        exitStatus = EXIT_SUCCESS;
         LogInfo( ( "Demo completed successfully." ) );
     }
     else
@@ -568,6 +570,6 @@ int main( int argc,
         LogError( ( "Demo failed." ) );
     }
 
-    return status;
+    return exitStatus;
 }
 /*-----------------------------------------------------------*/
