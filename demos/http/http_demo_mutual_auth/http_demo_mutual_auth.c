@@ -348,67 +348,61 @@ int main( int argc,
     ( void ) argc;
     ( void ) argv;
 
-    for( ; ; )
+    /**************************** Connect. ******************************/
+
+    /* Establish TLS connection on top of TCP connection using OpenSSL. */
+    if( returnStatus == EXIT_SUCCESS )
     {
-        /**************************** Connect. ******************************/
+        LogInfo( ( "Performing TLS handshake on top of the TCP connection." ) );
 
-        /* Establish TLS connection on top of TCP connection using OpenSSL. */
-        if( returnStatus == EXIT_SUCCESS )
+        /* Attempt to connect to the HTTP server. If connection fails, retry after
+         * a timeout. Timeout value will be exponentially increased till the maximum
+         * attempts are reached or maximum timeout value is reached. The function
+         * returns EXIT_FAILURE if the TCP connection cannot be established to
+         * broker after configured number of attempts. */
+        returnStatus = connectToServerWithBackoffRetries( connectToServer,
+                                                          &networkContext );
+
+        if( returnStatus == EXIT_FAILURE )
         {
-            LogInfo( ( "Performing TLS handshake on top of the TCP connection." ) );
-
-            /* Attempt to connect to the HTTP server. If connection fails, retry after
-             * a timeout. Timeout value will be exponentially increased till the maximum
-             * attempts are reached or maximum timeout value is reached. The function
-             * returns EXIT_FAILURE if the TCP connection cannot be established to
-             * broker after configured number of attempts. */
-            returnStatus = connectToServerWithBackoffRetries( connectToServer,
-                                                              &networkContext );
-
-            if( returnStatus == EXIT_FAILURE )
-            {
-                /* Log error to indicate connection failure after all
-                 * reconnect attempts are over. */
-                LogError( ( "Failed to connect to HTTP server %.*s.",
-                            ( int32_t ) AWS_IOT_ENDPOINT_LENGTH,
-                            AWS_IOT_ENDPOINT ) );
-            }
+            /* Log error to indicate connection failure after all
+             * reconnect attempts are over. */
+            LogError( ( "Failed to connect to HTTP server %.*s.",
+                        ( int32_t ) AWS_IOT_ENDPOINT_LENGTH,
+                        AWS_IOT_ENDPOINT ) );
         }
-
-        /* Define the transport interface. */
-        if( returnStatus == EXIT_SUCCESS )
-        {
-            ( void ) memset( &transportInterface, 0, sizeof( transportInterface ) );
-            transportInterface.recv = Openssl_Recv;
-            transportInterface.send = Openssl_Send;
-            transportInterface.pNetworkContext = &networkContext;
-        }
-
-        /*********************** Send HTTPS request. ************************/
-
-        if( returnStatus == EXIT_SUCCESS )
-        {
-            returnStatus = sendHttpRequest( &transportInterface,
-                                            HTTP_METHOD_POST,
-                                            HTTP_METHOD_POST_LENGTH,
-                                            POST_PATH,
-                                            POST_PATH_LENGTH );
-        }
-
-        if( returnStatus == EXIT_SUCCESS )
-        {
-            /* Log message indicating an iteration completed successfully. */
-            LogInfo( ( "Demo completed successfully." ) );
-        }
-
-        /************************** Disconnect. *****************************/
-
-        /* End TLS session, then close TCP connection. */
-        ( void ) Openssl_Disconnect( &networkContext );
-
-        LogInfo( ( "Short delay before starting the next iteration....\n" ) );
-        sleep( DEMO_LOOP_DELAY_SECONDS );
     }
+
+    /* Define the transport interface. */
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        ( void ) memset( &transportInterface, 0, sizeof( transportInterface ) );
+        transportInterface.recv = Openssl_Recv;
+        transportInterface.send = Openssl_Send;
+        transportInterface.pNetworkContext = &networkContext;
+    }
+
+    /*********************** Send HTTPS request. ************************/
+
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        returnStatus = sendHttpRequest( &transportInterface,
+                                        HTTP_METHOD_POST,
+                                        HTTP_METHOD_POST_LENGTH,
+                                        POST_PATH,
+                                        POST_PATH_LENGTH );
+    }
+
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        /* Log message indicating an iteration completed successfully. */
+        LogInfo( ( "Demo completed successfully." ) );
+    }
+
+    /************************** Disconnect. *****************************/
+
+    /* End TLS session, then close TCP connection. */
+    ( void ) Openssl_Disconnect( &networkContext );
 
     return returnStatus;
 }
