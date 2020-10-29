@@ -85,11 +85,6 @@
 #endif
 
 /**
- * @brief Delay in seconds between each iteration of the demo.
- */
-#define DEMO_LOOP_DELAY_SECONDS                   ( 5U )
-
-/**
  * @brief The name of the HTTP thread's input queue. Must begin with a slash and
  * be a valid pathname.
  */
