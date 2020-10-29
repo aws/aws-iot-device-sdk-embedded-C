@@ -70,18 +70,28 @@ jobs:
       - name: Run Coverage
         run: |
           make -C build/ coverage
-          lcov --rc lcov_branch_coverage=1 --remove build/coverage.info '*test*' --output-file build/coverage.info
-          lcov --rc lcov_branch_coverage=1 --remove build/coverage.info '*CMakeCCompilerId*' --output-file build/coverage.info
-          lcov --rc lcov_branch_coverage=1 --remove build/coverage.info '*mocks*' --output-file build/coverage.info
-          lcov --rc lcov_branch_coverage=1 --remove build/coverage.info '*3rdparty*' --output-file build/coverage.info
-          lcov --rc lcov_branch_coverage=1 --remove build/coverage.info '*netdb*' --output-file build/coverage.info
-          lcov --list build/coverage.info
+          declare -a EXCLUDE=("\*test\*" "\*CMakeCCompilerId\*" "\*mocks\*" "\*3rdparty\*" "*netdb*")
+          echo ${EXCLUDE[@]} | xargs lcov --rc lcov_branch_coverage=1 -r build/coverage.info -o build/coverage.info
+          lcov --rc lcov_branch_coverage=1 --list build/coverage.info
       - name: Check Coverage
-        uses: ChicagoFlutter/lcov-cop@v1.0.2
-        with:
-          path: "build/coverage.info"
-          min_coverage: 100
-          exclude: "**/*test*"
+        env:
+          MIN_COVERAGE: 100
+        run: |
+          LINE_COVERAGE=$(lcov --list build/coverage.info | tail -n 1 | cut -d '|' -f 2 | sed -n "s/\([^%]*\)%.*/\1/p")
+          BRANCH_COVERAGE=$(lcov --rc lcov_branch_coverage=1 --list build/coverage.info | tail -n 1 | cut -d '|' -f 4 | sed -n "s/\([^%]*\)%.*/\1/p")
+          RESULT=0
+          echo "Required line and branch coverages: $MIN_COVERAGE"
+          echo "Line coverage:   $LINE_COVERAGE"
+          if [[ $(echo "$LINE_COVERAGE < $MIN_COVERAGE" | bc) -ne 0 ]]; then
+            echo "Line Coverage is too low."
+            RESULT=1
+          fi
+          echo "Branch coverage: $BRANCH_COVERAGE"
+          if [[ $(echo "$BRANCH_COVERAGE < $MIN_COVERAGE" | bc) -ne 0 ]]; then
+            echo "Branch Coverage is too low."
+            RESULT=1
+          fi
+          exit $RESULT
   complexity:
     runs-on: ubuntu-latest
     steps:
