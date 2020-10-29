@@ -201,7 +201,7 @@ static bool verifyS3ObjectFileSize( const TransportInterface_t * pTransportInter
  * @param[out] pFileSize The size of the S3 object.
  * @param[in] pTransportInterface The transport interface for making network
  * calls.
- * @param[in] pHost The server host address. This string should be
+ * @param[in] pHost The server host address. This string must be
  * null-terminated.
  * @param[in] hostLen The length of the server host address.
  * @param[in] pPath The Request-URI to the objects of interest. This string
