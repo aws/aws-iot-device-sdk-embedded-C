@@ -77,11 +77,6 @@
  */
 #define IOT_CORE_ALPN_PROTOCOL_NAME    "\x0ex-amzn-http-ca"
 
-/**
- * @brief Delay in seconds between each iteration of the demo.
- */
-#define DEMO_LOOP_DELAY_SECONDS        ( 5U )
-
 /* Check that transport timeout for transport send and receive is defined. */
 #ifndef TRANSPORT_SEND_RECV_TIMEOUT_MS
     #define TRANSPORT_SEND_RECV_TIMEOUT_MS    ( 1000 )
