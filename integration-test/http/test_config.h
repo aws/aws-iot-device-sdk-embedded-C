@@ -76,7 +76,7 @@
 #endif
 
 /**
- * @brief The total length of chunked HTTP response body to test receiving.
+ * @brief The total length, of the chunked HTTP response body, to test receiving.
  * This length is inserted as a string into the request path, so avoid putting
  * parenthesis around it.
  */

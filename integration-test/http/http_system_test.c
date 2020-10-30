@@ -173,7 +173,7 @@ static void sendHttpRequest( const TransportInterface_t * pTransportInterface,
                              const char * pPath );
 
 /**
- * @brief A stub for recieving test network data. This always returns success.
+ * @brief A stub for receiving test network data. This always returns success.
  *
  * @param[in] pNetworkContext Implementation-defined network context.
  * @param[in] pBuffer Buffer to receive the data into.
