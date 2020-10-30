@@ -46,3 +46,8 @@ if( CLIENT_IDENTIFIER )
     target_compile_definitions( ${DEMO_NAME} PRIVATE
                                 CLIENT_IDENTIFIER="${CLIENT_IDENTIFIER}" )
 endif()
+
+if( THING_NAME )
+    target_compile_definitions( ${DEMO_NAME} PRIVATE
+                                THING_NAME="${THING_NAME}" )
+endif()
