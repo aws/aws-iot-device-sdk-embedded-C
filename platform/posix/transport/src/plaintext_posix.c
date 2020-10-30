@@ -74,7 +74,7 @@ SocketStatus_t Plaintext_Disconnect( const NetworkContext_t * pNetworkContext )
 /* MISRA Rule 18.3 flags the following line for not using the
  * const qualifier on `pNetworkContext`. Indeed, the object pointed
  * by it is not modified by POSIX sockets or OpenSSL, but other
- * implementations of `TransportRecv_t` and `TransportSend_t` may do so. */
+ * implementations of `TransportRecv_t` may do so. */
 int32_t Plaintext_Recv( NetworkContext_t * pNetworkContext,
                         void * pBuffer,
                         size_t bytesToRecv )
@@ -184,7 +184,7 @@ int32_t Plaintext_Recv( NetworkContext_t * pNetworkContext,
 /* MISRA Rule 18.3 flags the following line for not using the
  * const qualifier on `pNetworkContext`. Indeed, the object pointed
  * by it is not modified by POSIX sockets or OpenSSL, but other
- * implementations of `TransportRecv_t` and `TransportSend_t` may do so. */
+ * implementations of `TransportSend_t` may do so. */
 int32_t Plaintext_Send( NetworkContext_t * pNetworkContext,
                         const void * pBuffer,
                         size_t bytesToSend )
