@@ -513,7 +513,7 @@ static void eventCallback( MQTTContext_t * pMqttContext,
  * - SHADOW_TOPIC_STRING_UPDATE_REJECTED for "$aws/things/thingName/shadow/update/rejected"
  *
  * It also uses these macros for topics to publish to:
- * - SHADOW_TOPIC_STIRNG_DELETE for "$aws/things/thingName/shadow/delete"
+ * - SHADOW_TOPIC_STRING_DELETE for "$aws/things/thingName/shadow/delete"
  * - SHADOW_TOPIC_STRING_UPDATE for "$aws/things/thingName/shadow/update"
  *
  * The helper functions this demo uses for MQTT operations have internal

@@ -31,6 +31,7 @@ jobs:
           -DROOT_CA_CERT_PATH="cert/path" \
           -DCLIENT_PRIVATE_KEY_PATH="key/path" \
           -DCLIENT_IDENTIFIER="ci-identifier" \
+          -DTHING_NAME="thing-name" \
           -DS3_PRESIGNED_GET_URL="get-url" \
           -DS3_PRESIGNED_PUT_URL="put-url"
       - name: Build Demos
