@@ -78,7 +78,10 @@ httpmethodpaths
 httprequestheaders
 httprequestinfo
 httpresponse
+httpnoresponse
+httpparserinternalerror
 https
+httpsuccess
 httpthread
 ifdef
 ifndef
