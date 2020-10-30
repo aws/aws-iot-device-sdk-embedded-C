@@ -61,4 +61,61 @@ message at least once.
 HTTP Mutual Auth Demo Workflow — Note that these steps are repeated indefinitely
 </div>
 @image html http_demo_mutual_auth.png width=100%
+
+@section http_demo_s3_upload HTTP S3 Upload Demo
+@brief A demo of the coreHTTP library that utilizes user-defined pre-signed PUT
+and GET URLs to upload a file to the designated S3 object and then verify that
+the sizes of the local and uploaded files are equivalent.
+
+<p>
+An OpenSSL-based transport interface implementation is used to establish an
+encrypted TLS connection over port 443 to S3. The host address is extracted from
+the pre-signed PUT URL using the third-party http-parser library. Only the
+server's certificate is verified using its respective root CA certificate. If a
+connection failure occurs, then the connection establishment is retried for @ref
+MAX_RETRY_ATTEMPTS.
+</p>
+
+<p>
+Once a connection is established, the PUT URL is parsed again to obtain its path
+string, after which an HTTP PUT request is sent to upload a file to the S3
+object. Following the upload, the GET URL is also parsed for its path string,
+and an HTTP GET request is sent to obtain and parse the content-range header
+returned from the server, containing the size of the uploaded file. This size is
+compared against the size of the local file uploaded by the client, to verify
+their equivalence.
+</p>
+
+<div class="caption" style="text-align:center">
+HTTP S3 Upload Demo Workflow
+</div>
+@image html http_demo_s3_upload.png width=100%
+
+@section http_demo_s3_download HTTP S3 Download Demo
+@brief A demo of the coreHTTP library that utilizes a user-defined pre-signed
+GET URL to download a file in chunks from the designated S3 object, using range
+requests.
+
+<p>
+An OpenSSL-based transport interface implementation is used to establish an
+encrypted TLS connection over port 443 to S3. The host address is extracted from
+the pre-signed GET URL using the third-party http-parser library. Only the
+server's certificate is verified using its respective root CA certificate. If a
+connection failure occurs, then the connection establishment is retried for @ref
+MAX_RETRY_ATTEMPTS.
+</p>
+
+<p>
+Once a connection is established, the GET URL is parsed again to obtain its path
+string, after which an HTTP GET request is sent to obtain and parse the
+content-range header returned from the server, containing the size of the
+uploaded file. Then, using range headers, the application loops until the entire
+file is downloaded, requesting a range of bytes (determined by the user buffer
+length) on each iteration.
+</p>
+
+<div class="caption" style="text-align:center">
+HTTP S3 Download Demo Workflow
+</div>
+@image html http_demo_s3_download.png width=100%
 */
