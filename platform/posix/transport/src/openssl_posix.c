@@ -665,6 +665,7 @@ OpensslStatus_t Openssl_Disconnect( const NetworkContext_t * pNetworkContext )
 /* MISRA Rule 18.3 flags the following line for not using the const qualifier
  * on `pNetworkContext`. Indeed, the object pointed by it is not modified
  * by OpenSSL, but other implementations of `TransportRecv_t` may do so. */
+/* coverity[misra_c_2012_rule_8_7_violation] */
 /* coverity[misra_c_2012_rule_8_13_violation] */
 int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
                       void * pBuffer,
@@ -714,6 +715,7 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
 /* MISRA Rule 18.3 flags the following line for not using the const qualifier
  * on `pNetworkContext`. Indeed, the object pointed by it is not modified
  * by OpenSSL, but other implementations of `TransportSend_t` may do so. */
+/* coverity[misra_c_2012_rule_8_7_violation] */
 /* coverity[misra_c_2012_rule_8_13_violation] */
 int32_t Openssl_Send( NetworkContext_t * pNetworkContext,
                       const void * pBuffer,
