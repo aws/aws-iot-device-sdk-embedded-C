@@ -83,6 +83,27 @@
 #define MAX_RETRY_COUNT        ( 3 )
 
 /**
+ * @brief The path used for testing receiving a transfer encoding chunked
+ * response.
+ */
+#define STR_HELPER( x )    # x
+#define TO_STR( x )        STR_HELPER( x )
+#define GET_CHUNKED_PATH    "/stream-bytes/" TO_STR( CHUNKED_BODY_LENGTH )
+
+/**
+ * @brief A test response for http-parser that ends header lines with linefeeds
+ * only.
+ */
+#define HTTP_TEST_RESPONSE_LINE_FEEDS_ONLY \
+    "HTTP/1.1 200 OK\n"                    \
+    "Content-Length: 27\n"                 \
+    "\n"                                   \
+    "HTTP/0.0 0\n"                         \
+    "test-header0: ab"
+#define HTTP_TEST_RESPONSE_LINE_FEEDS_ONLY_BODY_LENGTH       27
+#define HTTP_TEST_RESPONSE_LINE_FEEDS_ONLY_HEADERS_LENGTH    18
+
+/**
  * @brief Represents the OpenSSL context used for TLS session with the broker
  * for tests.
  */
@@ -104,10 +125,26 @@ static ServerInfo_t serverInfo;
 static OpensslCredentials_t opensslCredentials;
 
 /**
- * @brief Shared buffer used in the tests for storing HTTP request headers and
+ * @brief A shared buffer used in the tests for storing HTTP request headers and
  * HTTP response headers and body.
  */
 static uint8_t userBuffer[ USER_BUFFER_LENGTH ];
+
+/**
+ * @brief A HTTPResponse_t to share among the tests. This is used to verify
+ * custom expected output.
+ */
+static HTTPResponse_t response;
+
+/**
+ * @brief Network data that is returned in the transportRecvStub.
+ */
+static uint8_t * pNetworkData = NULL;
+
+/**
+ * @brief The length of the network data to return in the transportRecvStub.
+ */
+static size_t networkDataLen = 0U;
 
 /*-----------------------------------------------------------*/
 
@@ -134,6 +171,33 @@ static void connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContex
 static void sendHttpRequest( const TransportInterface_t * pTransportInterface,
                              const char * pMethod,
                              const char * pPath );
+
+/**
+ * @brief A stub for receiving test network data. This always returns success.
+ *
+ * @param[in] pNetworkContext Implementation-defined network context.
+ * @param[in] pBuffer Buffer to receive the data into.
+ * @param[in] bytesToRecv Number of bytes requested from the network.
+ *
+ * @return The number of bytes received. This will be the minimum of
+ * networkDataLen or bytesToRead.
+ */
+static int32_t transportRecvStub( NetworkContext_t * pNetworkContext,
+                                  void * pBuffer,
+                                  size_t bytesToRead );
+
+/**
+ * @brief A stub for sending data over the network. This always returns success.
+ *
+ * @param[in] pNetworkContext Implementation-defined network context.
+ * @param[in] pBuffer Buffer containing the bytes to send over the network stack.
+ * @param[in] bytesToSend Number of bytes to send over the network.
+ *
+ * @return This function always returns bytesToWrite.
+ */
+static int32_t transportSendStub( NetworkContext_t * pNetworkContext,
+                                  const void * pBuffer,
+                                  size_t bytesToWrite );
 
 /*-----------------------------------------------------------*/
 
@@ -200,8 +264,6 @@ static void sendHttpRequest( const TransportInterface_t * pTransportInterface,
     /* Configurations of the initial request headers that are passed to
      * #HTTPClient_InitializeRequestHeaders. */
     HTTPRequestInfo_t requestInfo;
-    /* Represents a response returned from an HTTP server. */
-    HTTPResponse_t response;
     /* Represents header data that will be sent in an HTTP request. */
     HTTPRequestHeaders_t requestHeaders;
 
@@ -297,11 +359,46 @@ static void sendHttpRequest( const TransportInterface_t * pTransportInterface,
     }
 }
 
+/*-----------------------------------------------------------*/
+
+static int32_t transportRecvStub( NetworkContext_t * pNetworkContext,
+                                  void * pBuffer,
+                                  size_t bytesToRead )
+{
+    size_t bytesToCopy = ( bytesToRead < networkDataLen ) ? bytesToRead : networkDataLen;
+
+    ( void ) pNetworkContext;
+
+    memcpy( pBuffer, pNetworkData, bytesToCopy );
+    pNetworkData += bytesToCopy;
+    networkDataLen -= bytesToCopy;
+    return bytesToCopy;
+}
+
+/*-----------------------------------------------------------*/
+
+static int32_t transportSendStub( NetworkContext_t * pNetworkContext,
+                                  const void * pBuffer,
+                                  size_t bytesToWrite )
+{
+    ( void ) pNetworkContext;
+    ( void ) pBuffer;
+    return bytesToWrite;
+}
+
+
 /* ============================   UNITY FIXTURES ============================ */
 
 /* Called before each test method. */
 void setUp()
 {
+    /* Clear the global response before each test. */
+    memset( &response, 0, sizeof( HTTPResponse_t ) );
+
+    /* Apply defaults and reset the transport receive data globals. */
+    pNetworkData = NULL;
+    networkDataLen = 0U;
+
     /* Establish TLS session with HTTP server on top of a newly-created TCP connection. */
     connectToServerWithBackoffRetries( &networkContext );
 
@@ -359,4 +456,58 @@ void test_HTTP_PUT_Request( void )
     sendHttpRequest( &transportInterface,
                      HTTP_METHOD_PUT,
                      PUT_PATH );
+}
+
+/**
+ * @brief Receive a Transfer-Encoding chunked response.
+ */
+void test_HTTP_Chunked_Response( void )
+{
+    sendHttpRequest( &transportInterface,
+                     HTTP_METHOD_GET,
+                     GET_CHUNKED_PATH );
+
+    /* Verify the response is of the length configured, which means the
+     * chunk header was overwritten. */
+    TEST_ASSERT_EQUAL( CHUNKED_BODY_LENGTH, response.bodyLen );
+}
+
+/**
+ * @brief Test how http-parser responds with a response of line-feeds only and
+ * no carriage returns.
+ */
+void test_HTTP_LineFeedOnly_Response( void )
+{
+    HTTPRequestHeaders_t requestHeaders = { 0 };
+    HTTPStatus_t status = HTTPSuccess;
+    TransportInterface_t transport = { 0 };
+    const char * dummyRequestHeaders = "GET something.txt HTTP/1.1\r\n"
+                                       "Host: integration-test\r\n\r\r\n";
+
+    requestHeaders.pBuffer = userBuffer;
+    requestHeaders.bufferLen = USER_BUFFER_LENGTH;
+    response.pBuffer = userBuffer;
+    response.bufferLen = USER_BUFFER_LENGTH;
+
+    transport.send = transportSendStub;
+    transport.recv = transportRecvStub;
+
+    /* Setup the data to receive on the network. */
+    pNetworkData = ( uint8_t * ) HTTP_TEST_RESPONSE_LINE_FEEDS_ONLY;
+    networkDataLen = sizeof( HTTP_TEST_RESPONSE_LINE_FEEDS_ONLY ) - 1U;
+
+    /* Setup the request headers to the predefined headers. */
+    requestHeaders.headersLen = strlen( dummyRequestHeaders );
+    memcpy( requestHeaders.pBuffer, dummyRequestHeaders, requestHeaders.headersLen );
+
+    status = HTTPClient_Send( &transport,
+                              &requestHeaders,
+                              NULL,
+                              0,
+                              &response,
+                              HTTP_SEND_DISABLE_CONTENT_LENGTH_FLAG );
+
+    TEST_ASSERT_EQUAL( HTTPSuccess, status );
+    TEST_ASSERT_EQUAL( HTTP_TEST_RESPONSE_LINE_FEEDS_ONLY_BODY_LENGTH, response.bodyLen );
+    TEST_ASSERT_EQUAL( HTTP_TEST_RESPONSE_LINE_FEEDS_ONLY_HEADERS_LENGTH, response.headersLen );
 }

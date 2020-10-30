@@ -76,6 +76,13 @@
 #endif
 
 /**
+ * @brief The total length, of the chunked HTTP response body, to test receiving.
+ * This length is inserted as a string into the request path, so avoid putting
+ * parenthesis around it.
+ */
+#define CHUNKED_BODY_LENGTH               128
+
+/**
  * @brief Paths for different HTTP methods for specified host.
  */
 #define GET_PATH                          "/get"
