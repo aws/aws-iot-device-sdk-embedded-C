@@ -85,11 +85,6 @@
 #endif
 
 /**
- * @brief Delay in seconds between each iteration of the demo.
- */
-#define DEMO_LOOP_DELAY_SECONDS                   ( 5U )
-
-/**
  * @brief The name of the HTTP thread's input queue. Must begin with a slash and
  * be a valid pathname.
  */
@@ -124,6 +119,11 @@
  * @brief Length of the HTTP Range header field.
  */
 #define HTTP_CONTENT_RANGE_HEADER_FIELD_LENGTH    ( sizeof( HTTP_CONTENT_RANGE_HEADER_FIELD ) - 1 )
+
+/**
+ * @brief HTTP status code returned for partial content.
+ */
+#define HTTP_STATUS_CODE_PARTIAL_CONTENT          206
 
 /**
  * @brief The location of the host address within string S3_PRESIGNED_GET_URL.
@@ -255,10 +255,10 @@ static QueueOpStatus_t retrieveHTTPResponse( mqd_t responseQueue,
  *
  * @return false on failure; true on success.
  */
-static bool getS3ObjectFileSizeMulti( const HTTPRequestInfo_t * requestInfo,
-                                      mqd_t requestQueue,
-                                      mqd_t responseQueue,
-                                      size_t * pFileSize );
+static bool getS3ObjectFileSize( const HTTPRequestInfo_t * requestInfo,
+                                 mqd_t requestQueue,
+                                 mqd_t responseQueue,
+                                 size_t * pFileSize );
 
 /**
  * @brief Services HTTP requests from the request queue and writes the
@@ -364,10 +364,10 @@ static bool downloadS3ObjectFile( const char * pHost,
     requestInfo.reqFlags = HTTP_REQUEST_KEEP_ALIVE_FLAG;
 
     /* Get the length of the S3 file. */
-    returnStatus = getS3ObjectFileSizeMulti( &requestInfo,
-                                             requestQueue,
-                                             responseQueue,
-                                             &fileSize );
+    returnStatus = getS3ObjectFileSize( &requestInfo,
+                                        requestQueue,
+                                        responseQueue,
+                                        &fileSize );
 
     if( returnStatus == true )
     {
@@ -431,7 +431,7 @@ static bool downloadS3ObjectFile( const char * pHost,
                     LogInfo( ( "Response Body:\n%.*s\n", ( int32_t ) responseItem.response.bodyLen,
                                responseItem.response.pBody ) );
 
-                    if( responseItem.response.statusCode != 206 )
+                    if( responseItem.response.statusCode != HTTP_STATUS_CODE_PARTIAL_CONTENT )
                     {
                         LogError( ( "Recieved repsonse with unexpected status code: %d", responseItem.response.statusCode ) );
                         returnStatus = false;
@@ -570,10 +570,10 @@ static QueueOpStatus_t retrieveHTTPResponse( mqd_t responseQueue,
 
 /*-----------------------------------------------------------*/
 
-static bool getS3ObjectFileSizeMulti( const HTTPRequestInfo_t * requestInfo,
-                                      mqd_t requestQueue,
-                                      mqd_t responseQueue,
-                                      size_t * pFileSize )
+static bool getS3ObjectFileSize( const HTTPRequestInfo_t * requestInfo,
+                                 mqd_t requestQueue,
+                                 mqd_t responseQueue,
+                                 size_t * pFileSize )
 {
     bool returnStatus = true;
     HTTPStatus_t httpStatus = HTTPSuccess;
@@ -616,9 +616,9 @@ static bool getS3ObjectFileSizeMulti( const HTTPRequestInfo_t * requestInfo,
         {
             returnStatus = false;
         }
-        else if( responseItem.response.statusCode != 206 )
+        else if( responseItem.response.statusCode != HTTP_STATUS_CODE_PARTIAL_CONTENT )
         {
-            LogError( ( "Recieved repsonse with unexpected status code: %d", responseItem.response.statusCode ) );
+            LogError( ( "Received response with unexpected status code: %d.", responseItem.response.statusCode ) );
             returnStatus = false;
         }
     }
@@ -639,27 +639,34 @@ static bool getS3ObjectFileSizeMulti( const HTTPRequestInfo_t * requestInfo,
         }
     }
 
+    /* Parse the Content-Range header value to get the file size. */
     if( returnStatus == true )
     {
-        /* Parse the Content-Range header value to get the file size. */
         pFileSizeStr = strstr( contentRangeValStr, "/" );
 
         if( pFileSizeStr == NULL )
         {
             LogError( ( "'/' not present in Content-Range header value: %s.",
                         contentRangeValStr ) );
+            returnStatus = false;
         }
+    }
 
+    if( returnStatus == true )
+    {
         pFileSizeStr += sizeof( char );
         *pFileSize = ( size_t ) strtoul( pFileSizeStr, NULL, 10 );
 
         if( ( *pFileSize == 0 ) || ( *pFileSize == UINT32_MAX ) )
         {
-            LogError( ( "Error using strtoul to get the file size from %s: fileSize=%d",
+            LogError( ( "Error using strtoul to get the file size from %s: fileSize=%d.",
                         pFileSizeStr, ( int32_t ) *pFileSize ) );
             returnStatus = false;
         }
+    }
 
+    if( returnStatus == true )
+    {
         LogInfo( ( "The file is %d bytes long.", ( int32_t ) *pFileSize ) );
     }
 
@@ -835,200 +842,194 @@ int main( int argc,
     /* Status to the host OS indicating a successful demo or not. */
     int32_t returnStatus = EXIT_SUCCESS;
 
+    /* HTTPS Client library return status. */
+    HTTPStatus_t httpStatus = HTTPSuccess;
+
+    /* The location of the path within the pre-signed URL. */
+    const char * pPath = NULL;
+
+    /* The length of the path within the pre-signed URL. This variable is
+     * defined in order to store the length returned from parsing the URL,
+     * but it is unused. The path used for the requests in this demo needs
+     * all the query information following the location of the object, to
+     * the end of the S3 presigned URL. */
+    size_t pathLen = 0;
+    /* The length of the Request-URI within string S3_PRESIGNED_GET_URL */
+    size_t requestUriLen = 0;
+
+    /* The transport layer interface used by the HTTP Client library. */
+    TransportInterface_t transportInterface = { 0 };
+    /* The network context for the transport layer interface. */
+    NetworkContext_t networkContext = { 0 };
+
+    /* Queue for HTTP requests. Requests are written by the main thread,
+     * and serviced by the HTTP thread. */
+    mqd_t requestQueue = -1;
+
+    /* Queue for HTTP responses. Responses are written by the HTTP thread,
+     * and read by the main thread. */
+    mqd_t responseQueue = -1;
+
+    /* PID of HTTP thread. */
+    pid_t httpThread = -1;
+
     ( void ) argc;
     ( void ) argv;
 
-    for( ; ; )
+    LogInfo( ( "HTTP Client multi-threaded S3 download demo using pre-signed URL:\n%s", S3_PRESIGNED_GET_URL ) );
+
+    /**************************** Parse Signed URL. ******************************/
+    if( returnStatus == EXIT_SUCCESS )
     {
-        /* HTTPS Client library return status. */
-        HTTPStatus_t httpStatus = HTTPSuccess;
+        /* Retrieve the path location from S3_PRESIGNED_GET_URL. This
+         * function returns the length of the path without the query into
+         * pathLen. */
+        httpStatus = getUrlPath( S3_PRESIGNED_GET_URL,
+                                 S3_PRESIGNED_GET_URL_LENGTH,
+                                 &pPath,
+                                 &pathLen );
 
-        /* The location of the path within the pre-signed URL. */
-        const char * pPath = NULL;
-
-        /* The length of the path within the pre-signed URL. This variable is
-         * defined in order to store the length returned from parsing the URL,
-         * but it is unused. The path used for the requests in this demo needs
+        /* The path used for the requests in this demo needs
          * all the query information following the location of the object, to
          * the end of the S3 presigned URL. */
-        size_t pathLen = 0;
-        /* The length of the Request-URI within string S3_PRESIGNED_GET_URL */
-        size_t requestUriLen = 0;
+        requestUriLen = strlen( pPath );
 
-        /* The transport layer interface used by the HTTP Client library. */
-        TransportInterface_t transportInterface = { 0 };
-        /* The network context for the transport layer interface. */
-        NetworkContext_t networkContext = { 0 };
-
-        /* Queue for HTTP requests. Requests are written by the main thread,
-         * and serviced by the HTTP thread. */
-        mqd_t requestQueue = -1;
-
-        /* Queue for HTTP responses. Responses are written by the HTTP thread,
-         * and read by the main thread. */
-        mqd_t responseQueue = -1;
-
-        /* PID of HTTP thread. */
-        pid_t httpThread = -1;
-
-        LogInfo( ( "HTTP Client multi-threaded S3 download demo using pre-signed URL:\n%s", S3_PRESIGNED_GET_URL ) );
-
-        /**************************** Parse Signed URL. ******************************/
-        if( returnStatus == EXIT_SUCCESS )
+        if( httpStatus != HTTPSuccess )
         {
-            /* Retrieve the path location from S3_PRESIGNED_GET_URL. This
-             * function returns the length of the path without the query into
-             * pathLen. */
-            httpStatus = getUrlPath( S3_PRESIGNED_GET_URL,
-                                     S3_PRESIGNED_GET_URL_LENGTH,
-                                     &pPath,
-                                     &pathLen );
-
-            /* The path used for the requests in this demo needs
-             * all the query information following the location of the object, to
-             * the end of the S3 presigned URL. */
-            requestUriLen = strlen( pPath );
-
-            if( httpStatus != HTTPSuccess )
-            {
-                returnStatus = EXIT_FAILURE;
-            }
+            returnStatus = EXIT_FAILURE;
         }
-
-        if( returnStatus == EXIT_SUCCESS )
-        {
-            /* Retrieve the address location and length from the S3_PRESIGNED_GET_URL. */
-            httpStatus = getUrlAddress( S3_PRESIGNED_GET_URL,
-                                        S3_PRESIGNED_GET_URL_LENGTH,
-                                        &pHost,
-                                        &hostLen );
-
-            if( httpStatus != HTTPSuccess )
-            {
-                returnStatus = EXIT_FAILURE;
-            }
-        }
-
-        /**************************** Connect. ******************************/
-
-        /* Establish a TLS connection on top of TCP connection using OpenSSL. */
-        if( returnStatus == EXIT_SUCCESS )
-        {
-            /* Attempt to connect to the HTTP server. If connection fails, retry
-             * after a timeout. The timeout value will be exponentially
-             * increased till the maximum attempts are reached or maximum
-             * timeout value is reached. The function returns EXIT_FAILURE if
-             * the TCP connection cannot be established to broker after
-             * the configured number of attempts. */
-            returnStatus = connectToServerWithBackoffRetries( connectToServer,
-                                                              &networkContext );
-        }
-
-        /* Define the transport interface. */
-        if( returnStatus == EXIT_SUCCESS )
-        {
-            transportInterface.recv = Openssl_Recv;
-            transportInterface.send = Openssl_Send;
-            transportInterface.pNetworkContext = &networkContext;
-        }
-
-        /******************** Start queues and HTTP task. *******************/
-
-        /* Start request and response queues. */
-        if( returnStatus == EXIT_SUCCESS )
-        {
-            /* Settings for constructing queues. */
-            struct mq_attr queueSettings;
-
-            queueSettings.mq_maxmsg = QUEUE_SIZE;
-            queueSettings.mq_msgsize = sizeof( RequestItem_t );
-
-            requestQueue = mq_open( REQUEST_QUEUE,
-
-                                    /* These options create a queue if it does
-                                     * not already exist, and then opens it in
-                                     * non-blocking mode. It is opened as
-                                     * write-only as the main thread only writes
-                                     * HTTP requests to it. */
-                                    O_CREAT | O_NONBLOCK | O_WRONLY,
-                                    QUEUE_PERMISSIONS,
-                                    &queueSettings );
-
-            if( requestQueue == -1 )
-            {
-                LogError( ( "Failed to open request queue with error %s.",
-                            strerror( errno ) ) );
-                returnStatus = EXIT_FAILURE;
-            }
-
-            queueSettings.mq_msgsize = sizeof( ResponseItem_t );
-
-            responseQueue = mq_open( RESPONSE_QUEUE,
-
-                                     /* These options create a queue if it does
-                                      * not already exist, and then opens it in
-                                      * non-blocking mode. It is opened as
-                                      * read-only as the main thread only reads
-                                      * HTTP responses from it. */
-                                     O_CREAT | O_NONBLOCK | O_RDONLY,
-                                     QUEUE_PERMISSIONS,
-                                     &queueSettings );
-
-            if( responseQueue == -1 )
-            {
-                LogError( ( "Failed to open response queue with error %s.",
-                            strerror( errno ) ) );
-                returnStatus = EXIT_FAILURE;
-            }
-        }
-
-        /* Start the HTTP task which services requests in requestQueue. */
-
-        if( returnStatus == EXIT_SUCCESS )
-        {
-            httpThread = startHTTPThread( &transportInterface );
-
-            if( httpThread == -1 )
-            {
-                returnStatus = EXIT_SUCCESS;
-            }
-        }
-
-        /******************** Download S3 Object File. **********************/
-
-        if( returnStatus == EXIT_SUCCESS )
-        {
-            bool result = false;
-            result = downloadS3ObjectFile( pHost,
-                                           hostLen,
-                                           pPath,
-                                           requestUriLen,
-                                           requestQueue,
-                                           responseQueue );
-
-            if( result == false )
-            {
-                returnStatus = EXIT_FAILURE;
-            }
-            else
-            {
-                /* Log a message indicating an iteration completed successfully. */
-                LogInfo( ( "Demo completed successfully." ) );
-            }
-        }
-
-        /************************** Disconnect. *****************************/
-
-        /* End TLS session, then close TCP connection. */
-        ( void ) Openssl_Disconnect( &networkContext );
-
-        /******************** Clean up queues and HTTP task. ****************/
-
-        tearDown( httpThread, requestQueue, responseQueue );
-
-        LogInfo( ( "Short delay before starting the next iteration....\n" ) );
-        sleep( DEMO_LOOP_DELAY_SECONDS );
     }
+
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        /* Retrieve the address location and length from the S3_PRESIGNED_GET_URL. */
+        httpStatus = getUrlAddress( S3_PRESIGNED_GET_URL,
+                                    S3_PRESIGNED_GET_URL_LENGTH,
+                                    &pHost,
+                                    &hostLen );
+
+        if( httpStatus != HTTPSuccess )
+        {
+            returnStatus = EXIT_FAILURE;
+        }
+    }
+
+    /**************************** Connect. ******************************/
+
+    /* Establish a TLS connection on top of TCP connection using OpenSSL. */
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        /* Attempt to connect to the HTTP server. If connection fails, retry
+         * after a timeout. The timeout value will be exponentially
+         * increased till the maximum attempts are reached or maximum
+         * timeout value is reached. The function returns EXIT_FAILURE if
+         * the TCP connection cannot be established to broker after
+         * the configured number of attempts. */
+        returnStatus = connectToServerWithBackoffRetries( connectToServer,
+                                                          &networkContext );
+    }
+
+    /* Define the transport interface. */
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        transportInterface.recv = Openssl_Recv;
+        transportInterface.send = Openssl_Send;
+        transportInterface.pNetworkContext = &networkContext;
+    }
+
+    /******************** Start queues and HTTP task. *******************/
+
+    /* Start request and response queues. */
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        /* Settings for constructing queues. */
+        struct mq_attr queueSettings;
+
+        queueSettings.mq_maxmsg = QUEUE_SIZE;
+        queueSettings.mq_msgsize = sizeof( RequestItem_t );
+
+        requestQueue = mq_open( REQUEST_QUEUE,
+
+                                /* These options create a queue if it does
+                                 * not already exist, and then opens it in
+                                 * non-blocking mode. It is opened as
+                                 * write-only as the main thread only writes
+                                 * HTTP requests to it. */
+                                O_CREAT | O_NONBLOCK | O_WRONLY,
+                                QUEUE_PERMISSIONS,
+                                &queueSettings );
+
+        if( requestQueue == -1 )
+        {
+            LogError( ( "Failed to open request queue with error %s.",
+                        strerror( errno ) ) );
+            returnStatus = EXIT_FAILURE;
+        }
+
+        queueSettings.mq_msgsize = sizeof( ResponseItem_t );
+
+        responseQueue = mq_open( RESPONSE_QUEUE,
+
+                                 /* These options create a queue if it does
+                                  * not already exist, and then opens it in
+                                  * non-blocking mode. It is opened as
+                                  * read-only as the main thread only reads
+                                  * HTTP responses from it. */
+                                 O_CREAT | O_NONBLOCK | O_RDONLY,
+                                 QUEUE_PERMISSIONS,
+                                 &queueSettings );
+
+        if( responseQueue == -1 )
+        {
+            LogError( ( "Failed to open response queue with error %s.",
+                        strerror( errno ) ) );
+            returnStatus = EXIT_FAILURE;
+        }
+    }
+
+    /* Start the HTTP task which services requests in requestQueue. */
+
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        httpThread = startHTTPThread( &transportInterface );
+
+        if( httpThread == -1 )
+        {
+            returnStatus = EXIT_SUCCESS;
+        }
+    }
+
+    /******************** Download S3 Object File. **********************/
+
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        bool result = false;
+        result = downloadS3ObjectFile( pHost,
+                                       hostLen,
+                                       pPath,
+                                       requestUriLen,
+                                       requestQueue,
+                                       responseQueue );
+
+        if( result == false )
+        {
+            returnStatus = EXIT_FAILURE;
+        }
+        else
+        {
+            /* Log a message indicating an iteration completed successfully. */
+            LogInfo( ( "Demo completed successfully." ) );
+        }
+    }
+
+    /************************** Disconnect. *****************************/
+
+    /* End TLS session, then close TCP connection. */
+    ( void ) Openssl_Disconnect( &networkContext );
+
+    /******************** Clean up queues and HTTP task. ****************/
+
+    tearDown( httpThread, requestQueue, responseQueue );
 
     return returnStatus;
 }
