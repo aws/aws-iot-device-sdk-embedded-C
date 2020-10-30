@@ -95,6 +95,13 @@ If you have downloaded the repo without using the `--recurse-submodules` argumen
 git submodule update --init --recursive
 ```
 
+## Porting C-SDK libraries
+All libraries depend the ISO C90 standard library and additionally, on `stdint.h` library for fixed-width integers including  `uint8_t`, `int8_t`, `uint16_t`, `uint32_t` and `int32_t`, and constant macros like `UINT16_MAX`. If your platform does not support the `stdint.h` library, definition of the mentioned fixed-width integer types will be required for porting any C-SDK library to your platform.
+
+The following libraries have additional requirements for porting. Please refer to the library-specific guides for porting the libraries to your platform:
+* [MQTT client library Porting Guide](https://docs.aws.amazon.com/freertos/latest/lib-ref/embedded-csdk/202009.00/lib-ref/libraries/standard/coreMQTT/docs/doxygen/output/html/mqtt_porting.html)
+* [AWS IoT Device Shadow library Porting Guide](https://docs.aws.amazon.com/freertos/latest/lib-ref/embedded-csdk/202009.00/lib-ref/libraries/aws/device-shadow-for-aws-iot-embedded-sdk/docs/doxygen/output/html/shadow_porting.html)
+* [AWS IoT Device Defender library Porting Guide](https://github.com/aws/device-defender-for-aws-iot-embedded-sdk/blob/master/docs/doxygen/porting.dox)
 
 ## Building and Running Demos
 
