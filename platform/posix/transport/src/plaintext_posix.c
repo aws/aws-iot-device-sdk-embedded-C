@@ -111,8 +111,6 @@ int32_t Plaintext_Recv( NetworkContext_t * pNetworkContext,
      * specific macro utility whose implementation is supplied by the system.
      * The "FD_ZERO" macro is called as specified by the POSIX manual here:
      * https://pubs.opengroup.org/onlinepubs/009695399/basedefs/sys/select.h.html */
-    /* coverity[misra_c_2012_directive_4_6_violation] */
-    /* coverity[misra_c_2012_rule_14_4_violation] */
     FD_ZERO( &readfds );
 
     /* MISRA Directive 4.6 flags the following line for a violation of using a
