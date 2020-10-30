@@ -28,12 +28,12 @@ Deviations from the MISRA standard are listed below:
 ### Suppressed with Coverity Comments
 | Deviation | Category | Justification |
 | :-: | :-: | :-: |
-| Directive 4.6 | Advisory | Basic numerical types are used in platform implementations, since the POSIX platform functions and openssl functions used in the platform implementations take arguments of these types. |
-| Rule 8.13 | Advisory | The object pointed by `pNetworkContext` is not modified by POSIX sockets or OpenSSL, but other transport interfaces may do so. |
+| Directive 4.6 | Advisory | Basic numerical types are used in platform implementations, since the POSIX platform functions and OpenSSL functions used in the platform implementations take arguments of these types. |
+| Rule 8.13 | Advisory | The object pointed by `pNetworkContext` is not modified by POSIX sockets or OpenSSL, but other implementations of `TransportRecv_t` and `TransportSend_t` may do so. |
 | Rule 10.1 | Required | A POSIX-specific macro utility `FD_SET` is flagged for this violation. This macro utility, whose implementation is supplied by the system, is used in the transport implementation. |
 | Rule 10.8 | Required | A POSIX-specific macro utility `FD_SET` is flagged for this violation. This macro utility, whose implementation is supplied by the system, is used in the transport implementation. |
 | Rule 11.3 | Required | The transport implementation casts an object pointer to a pointer of a different object type. This cast is supported in POSIX, and is used to obtain IP addresses from address records. |
-| Rule 11.8 | Required | An openssl API `SSL_set_tlsext_host_name`, which is used in the TLS transport implementation, internally casts a string literal to a `void *` pointer. |
+| Rule 11.8 | Required | An OpenSSL API `SSL_set_tlsext_host_name`, which is used in the TLS transport implementation, internally casts a string literal to a `void *` pointer. |
 | Rule 13.4 | Required | A POSIX-specific macro utility `FD_SET` is flagged for this violation. This macro utility, whose implementation is supplied by the system, is used in the transport implementation. |
 | Rule 14.4 | Required | A POSIX-specific macro utility `FD_ZERO` is flagged for this violation. This macro utility, whose implementation is supplied by the system, is used in the transport implementation. |
-| Rule 21.6 | Required | The Standard Library input/output functions for opening and closing files are used by the openssl transport implementation, since the openssl API `PEM_read_X509` to read PEM files takes `FILE *` as an argument. |
+| Rule 21.6 | Required | The Standard Library input/output functions for opening and closing files are used by the OpenSSL transport implementation, since the OpenSSL API `PEM_read_X509` to read PEM files takes `FILE *` as an argument. |
