@@ -95,7 +95,7 @@ If you have downloaded the repo without using the `--recurse-submodules` argumen
 git submodule update --init --recursive
 ```
 
-## Porting C-SDK libraries
+## Porting C-SDK Libraries
 All libraries depend the ISO C90 standard library and additionally, on `stdint.h` library for fixed-width integers including  `uint8_t`, `int8_t`, `uint16_t`, `uint32_t` and `int32_t`, and constant macros like `UINT16_MAX`. If your platform does not support the `stdint.h` library, definition of the mentioned fixed-width integer types will be required for porting any C-SDK library to your platform.
 
 The following libraries have additional requirements for porting. Please refer to the library-specific guides for porting the libraries to your platform:
