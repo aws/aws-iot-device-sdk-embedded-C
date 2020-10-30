@@ -8,7 +8,7 @@ MQTT Client library, and JSON library to interact with the AWS IoT Device
 Defender service.
 
 The demo reports the following metrics to the AWS IoT Device Defender Service:
-- Network statistics [Packets and Bytes sent and received]
+- Network statistics [Packets (Ethernet Frames) and Bytes sent and received over wire]
 - List of open TCP ports
 - List of open UDP ports
 - List of established connections
