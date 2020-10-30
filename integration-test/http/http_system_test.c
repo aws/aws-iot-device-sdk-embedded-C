@@ -395,6 +395,10 @@ void setUp()
     /* Clear the global response before each test. */
     memset( &response, 0, sizeof( HTTPResponse_t ) );
 
+    /* Apply defaults and reset the transport receive data globals. */
+    pNetworkData = NULL;
+    networkDataLen = 0U;
+
     /* Establish TLS session with HTTP server on top of a newly-created TCP connection. */
     connectToServerWithBackoffRetries( &networkContext );
 
@@ -474,7 +478,6 @@ void test_HTTP_Chunked_Response( void )
  */
 void test_HTTP_LineFeedOnly_Response( void )
 {
-    HTTPResponse_t response = { 0 };
     HTTPRequestHeaders_t requestHeaders = { 0 };
     HTTPStatus_t status = HTTPSuccess;
     TransportInterface_t transport = { 0 };
