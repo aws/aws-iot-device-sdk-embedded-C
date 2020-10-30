@@ -45,6 +45,19 @@
 #include "defender.h"
 
 /**
+ * THING_NAME is required. Throw compilation error if it is not defined.
+ */
+#ifndef THING_NAME
+    #error "Please define THING_NAME to the thing name registered with AWS IoT Core in demo_config.h."
+#endif
+
+/**
+ * @brief Number of seconds to wait for the response from AWS IoT Device
+ * Defender service.
+ */
+#define DEFENDER_RESPONSE_WAIT_SECONDS    ( 2 )
+
+/**
  * @brief Status values of the device defender report.
  */
 typedef enum
@@ -296,7 +309,7 @@ static void publishCallback( MQTTPublishInfo_t * pPublishInfo,
 
 static bool collectDeviceMetrics( void )
 {
-    bool status = true;
+    bool status = false;
     MetricsCollectorStatus_t metricsCollectorStatus;
     uint32_t numOpenTcpPorts, numOpenUdpPorts, numEstablishedConnections;
 
@@ -307,11 +320,10 @@ static bool collectDeviceMetrics( void )
     {
         LogError( ( "GetNetworkStats failed. Status: %d.",
                     metricsCollectorStatus ) );
-        status = false;
     }
 
     /* Collect a list of open TCP ports. */
-    if( status == true )
+    if( metricsCollectorStatus == MetricsCollectorSuccess )
     {
         metricsCollectorStatus = GetOpenTcpPorts( &( openTcpPorts[ 0 ] ),
                                                   OPEN_TCP_PORTS_ARRAY_SIZE,
@@ -321,12 +333,11 @@ static bool collectDeviceMetrics( void )
         {
             LogError( ( "GetOpenTcpPorts failed. Status: %d.",
                         metricsCollectorStatus ) );
-            status = false;
         }
     }
 
     /* Collect a list of open UDP ports. */
-    if( status == true )
+    if( metricsCollectorStatus == MetricsCollectorSuccess )
     {
         metricsCollectorStatus = GetOpenUdpPorts( &( openUdpPorts[ 0 ] ),
                                                   OPEN_UDP_PORTS_ARRAY_SIZE,
@@ -336,12 +347,11 @@ static bool collectDeviceMetrics( void )
         {
             LogError( ( "GetOpenUdpPorts failed. Status: %d.",
                         metricsCollectorStatus ) );
-            status = false;
         }
     }
 
     /* Collect a list of established connections. */
-    if( status == true )
+    if( metricsCollectorStatus == MetricsCollectorSuccess )
     {
         metricsCollectorStatus = GetEstablishedConnections( &( establishedConnections[ 0 ] ),
                                                             ESTABLISHED_CONNECTIONS_ARRAY_SIZE,
@@ -351,13 +361,13 @@ static bool collectDeviceMetrics( void )
         {
             LogError( ( "GetEstablishedConnections failed. Status: %d.",
                         metricsCollectorStatus ) );
-            status = false;
         }
     }
 
     /* Populate device metrics. */
-    if( status == true )
+    if( metricsCollectorStatus == MetricsCollectorSuccess )
     {
+        status = true;
         deviceMetrics.pNetworkStats = &( networkStats );
         deviceMetrics.pOpenTcpPortsArray = &( openTcpPorts[ 0 ] );
         deviceMetrics.openTcpPortsArrayLength = numOpenTcpPorts;
@@ -373,7 +383,7 @@ static bool collectDeviceMetrics( void )
 
 static bool generateDeviceMetricsReport( uint32_t * pOutReportLength )
 {
-    bool status = true;
+    bool status = false;
     ReportBuilderStatus_t reportBuilderStatus;
 
     /* Generate the metrics report in the format expected by the AWS IoT Device
@@ -390,13 +400,13 @@ static bool generateDeviceMetricsReport( uint32_t * pOutReportLength )
     {
         LogError( ( "GenerateJsonReport failed. Status: %d.",
                     reportBuilderStatus ) );
-        status = false;
     }
     else
     {
         LogDebug( ( "Generated Report: %.*s.",
                     *pOutReportLength,
                     &( deviceMetricsJsonReport[ 0 ] ) ) );
+        status = true;
     }
 
     return status;
@@ -405,7 +415,7 @@ static bool generateDeviceMetricsReport( uint32_t * pOutReportLength )
 
 static bool subscribeToDefenderTopics( void )
 {
-    bool status = true;
+    bool status = false;
 
     status = SubscribeToTopic( DEFENDER_API_JSON_ACCEPTED( THING_NAME ),
                                DEFENDER_API_LENGTH_JSON_ACCEPTED( THING_NAME_LENGTH ) );
@@ -422,7 +432,7 @@ static bool subscribeToDefenderTopics( void )
 
 static bool unsubscribeFromDefenderTopics( void )
 {
-    bool status = true;
+    bool status = false;
 
     status = UnsubscribeFromTopic( DEFENDER_API_JSON_ACCEPTED( THING_NAME ),
                                    DEFENDER_API_LENGTH_JSON_ACCEPTED( THING_NAME_LENGTH ) );
@@ -449,7 +459,7 @@ static bool publishDeviceMetricsReport( uint32_t reportLength )
 int main( int argc,
           char ** argv )
 {
-    bool status = true;
+    bool status = false;
     int exitStatus = EXIT_FAILURE;
     uint32_t reportLength = 0, i, mqttSessionEstablished = 0;
 
@@ -521,7 +531,7 @@ int main( int argc,
 
     if( status == true )
     {
-        for( i = 0; i < 5; i++ )
+        for( i = 0; i < DEFENDER_RESPONSE_WAIT_SECONDS; i++ )
         {
             ( void ) ProcessLoop();
 
@@ -544,7 +554,7 @@ int main( int argc,
 
     /* Unsubscribe and disconnect if MQTT session was established. Per the MQTT
      * protocol spec, it is okay to send UNSUBSCRIBE even if no corresponding
-     * subscription exist on the broker. Therefore, it is okay to attempt
+     * subscription exists on the broker. Therefore, it is okay to attempt
      * unsubscribe even if one more subscribe failed earlier. */
     if( mqttSessionEstablished == 1 )
     {

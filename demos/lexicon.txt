@@ -18,6 +18,8 @@ baltimore
 baltimorecybertrustroot
 bufferlength
 buffersize
+bytesreceived
+bytessent
 ca
 cacerts
 cdn
@@ -127,6 +129,8 @@ outgoingpublishpackets
 outlength
 packetid
 packetidentifier
+packetsreceived
+packetssent
 paddress
 paddresslen
 param
