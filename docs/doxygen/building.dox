@@ -90,7 +90,7 @@ An example expected output:
 @endcode
 
 <li>Copy and paste the output into **demo_config.h** for macro **S3_PRESIGNED_GET_URL** and **S3_PRESIGNED_PUT_URL**.</li>
-@code{sh}
+@code{c}
 #define S3_PRESIGNED_GET_URL    https://aws-s3-endpoint/object-key.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ABABABABABABABABABAB%2F20201027%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20201027T194726Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=SomeHash12345UrlABcdEFgfIjK"
 
 #define S3_PRESIGNED_PUT_URL    https://aws-s3-endpoint/object-key.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ABABABABABABABABABAB%2F20201027%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20201027T194726Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=SomeHash12345UrlLMnmOPqrStUvW"
