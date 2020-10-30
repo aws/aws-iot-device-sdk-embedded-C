@@ -5,10 +5,10 @@
 @section defender_demo_main AWS IoT Device Defender Demo
 @brief This demo application uses the AWS IoT Device Defender Client library,
 MQTT Client library, and JSON library to interact with the AWS IoT Device
-Defender Service.
+Defender service.
 
 The demo reports the following metrics to the AWS IoT Device Defender Service:
-- Network Stats [Packets and Bytes sent and received]
+- Network statistics [Packets and Bytes sent and received]
 - List of open TCP ports
 - List of open UDP ports
 - List of established connections
@@ -16,9 +16,9 @@ The demo reports the following metrics to the AWS IoT Device Defender Service:
 The demo gets the above metrics by reading `/proc/net/dev`, `/proc/net/tcp` and,
 `/proc/net/udp`. It then constructs a JSON report in the format as expected by
 the AWS IoT Device Defender service. The constructed JSON report is then
-published on the device defender topic reserved for publishing JSON reports. The
-demo then waits for a report accepted response and ensures that the response
-contains the same report Id as was sent in the request.
+published on the device defender MQTT topic reserved for publishing JSON
+reports. The demo then waits for a report accepted response, and ensures that
+the response contains the same report Id as was sent in the request.
 
 <div class="caption" style="text-align:center">
 AWS IoT Device Defender Demo Workflow
