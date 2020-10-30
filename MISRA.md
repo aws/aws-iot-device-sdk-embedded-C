@@ -29,6 +29,7 @@ Deviations from the MISRA standard are listed below:
 | Deviation | Category | Justification |
 | :-: | :-: | :-: |
 | Directive 4.6 | Advisory | Basic numerical types are used in platform implementations, since the POSIX platform functions and openssl functions used in the platform implementations take arguments of these types. |
+| Rule 8.13 | Advisory | The object pointed by `pNetworkContext` is not modified by POSIX sockets or OpenSSL, but other transport interfaces may do so. |
 | Rule 10.1 | Required | A POSIX-specific macro utility `FD_SET` is flagged for this violation. This macro utility, whose implementation is supplied by the system, is used in the transport implementation. |
 | Rule 10.8 | Required | A POSIX-specific macro utility `FD_SET` is flagged for this violation. This macro utility, whose implementation is supplied by the system, is used in the transport implementation. |
 | Rule 11.3 | Required | The transport implementation casts an object pointer to a pointer of a different object type. This cast is supported in POSIX, and is used to obtain IP addresses from address records. |
