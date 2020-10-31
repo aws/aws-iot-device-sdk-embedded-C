@@ -4,8 +4,8 @@
 
 @section defender_demo_main AWS IoT Device Defender Demo
 @brief This demo application uses the AWS IoT Device Defender Client library,
-MQTT Client library, and JSON library to interact with the AWS IoT Device
-Defender service.
+MQTT Client library, and JSON library to interact with the [AWS IoT Device
+Defender service](https://aws.amazon.com/iot-device-defender/).
 
 The demo reports the following metrics to the AWS IoT Device Defender Service:
 - Network statistics [Packets (Ethernet Frames) and Bytes sent and received over wire]
