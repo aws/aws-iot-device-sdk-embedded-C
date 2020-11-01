@@ -55,6 +55,14 @@ function(check_presigned_urls demo_name)
         set(CMAKE_REQUIRED_DEFINITIONS -DS3_PRESIGNED_GET_URL)
     endif()
 
+    if(S3_PRESIGNED_GET_URL)
+        target_compile_definitions(
+            ${demo_name} PRIVATE
+                S3_PRESIGNED_PUT_URL="${S3_PRESIGNED_PUT_URL}"
+        )
+        set(CMAKE_REQUIRED_DEFINITIONS -DS3_PRESIGNED_PUT_URL)
+    endif()
+
     set(UPLOAD_DEMOS "http_demo_s3_upload")
     set(DOWNLOAD_DEMOS "http_demo_s3_download" "http_demo_s3_download_multithreaded")
     set(FILES_TO_CHECK "demo_config.h")
