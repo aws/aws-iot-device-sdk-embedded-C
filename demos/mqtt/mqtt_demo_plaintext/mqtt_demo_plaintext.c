@@ -149,7 +149,7 @@
 /**
  * @brief Transport timeout in milliseconds for transport send and receive.
  */
-#define TRANSPORT_SEND_RECV_TIMEOUT_MS      ( 20 )
+#define TRANSPORT_SEND_RECV_TIMEOUT_MS      ( 500 )
 
 /*-----------------------------------------------------------*/
 

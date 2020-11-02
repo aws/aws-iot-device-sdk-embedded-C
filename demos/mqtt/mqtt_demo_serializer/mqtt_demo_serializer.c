@@ -106,7 +106,7 @@
 /**
  * @brief Socket layer transportTimeout in milliseconds.
  */
-#define TRANSPORT_SEND_RECV_TIMEOUT_MS       ( 200U )
+#define TRANSPORT_SEND_RECV_TIMEOUT_MS       ( 500U )
 
 /**
  * @brief Number of time network receive will be attempted
