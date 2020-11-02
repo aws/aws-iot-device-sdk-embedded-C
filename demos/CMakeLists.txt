@@ -51,7 +51,7 @@ function(check_presigned_urls demo_name)
             ${demo_name} PRIVATE
                 S3_PRESIGNED_PUT_URL="${S3_PRESIGNED_PUT_URL}"
         )
-        list(APPEND CMAKE_REQUIRED_DEFINITIONS -DS3_PRESIGNED_GET_URL)
+        list(APPEND CMAKE_REQUIRED_DEFINITIONS -DS3_PRESIGNED_PUT_URL)
     endif()
 
     set(UPLOAD_DEMOS "http_demo_s3_upload")
