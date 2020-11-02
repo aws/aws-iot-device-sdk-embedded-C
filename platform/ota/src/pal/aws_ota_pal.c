@@ -27,8 +27,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
-#include "aws_iot_ota_pal.h"
-#include "aws_iot_ota_agent_private.h"
+#include "ota_platform_interface.h"
+#include "ota_private.h"
 #include "aws_ota_codesigner_certificate.h"
 
 #include <openssl/evp.h>
@@ -130,26 +130,26 @@ OtaErr_t prvPAL_CreateFileForRx( OtaFileContext_t * const C )
             if ( C->pFile != NULL )
             {
                 eResult = OTA_ERR_NONE;
-                OTA_LOG_L1( "[%s] Receive file created.\r\n", OTA_METHOD_NAME );
+                LogInfo( ( "[%s] Receive file created.\r\n", OTA_METHOD_NAME ) );
             }
             else
             {
                 eResult = ( OTA_ERR_RX_FILE_CREATE_FAILED | ( errno & OTA_PAL_ERR_MASK ) ); /*lint !e40 !e737 !e9027 !e9029
                                                                                            * Errno is being used in accordance with host API documentation.
                                                                                            * Bitmasking is being used to preserve host API error with library status code. */
-                OTA_LOG_L1( "[%s] ERROR - Failed to start operation: already active!\r\n", OTA_METHOD_NAME );
+                LogError( ( "[%s] ERROR - Failed to start operation: already active!\r\n", OTA_METHOD_NAME ) );
             }
         }
         else
         {
             eResult = OTA_ERR_RX_FILE_CREATE_FAILED;
-            OTA_LOG_L1( "[%s] ERROR - Invalid context provided.\r\n", OTA_METHOD_NAME );
+            LogError( ( "[%s] ERROR - Invalid context provided.\r\n", OTA_METHOD_NAME ) );
         }
     }
     else
     {
         eResult = OTA_ERR_RX_FILE_CREATE_FAILED;
-        OTA_LOG_L1( "[%s] ERROR - Invalid context provided.\r\n", OTA_METHOD_NAME );
+        LogError( ( "[%s] ERROR - Invalid context provided.\r\n", OTA_METHOD_NAME ) );
     }
 
     return eResult; /*lint !e480 !e481 Exiting function without calling fclose.
@@ -178,12 +178,12 @@ OtaErr_t prvPAL_Abort( OtaFileContext_t * const C )
 
             if( 0 == lFileCloseResult )
             {
-                OTA_LOG_L1( "[%s] OK\r\n", OTA_METHOD_NAME );
+                LogInfo( ( "[%s] OK\r\n", OTA_METHOD_NAME ) );
                 eResult = OTA_ERR_NONE;
             }
             else /* Failed to close file. */
             {
-                OTA_LOG_L1( "[%s] ERROR - Closing file failed.\r\n", OTA_METHOD_NAME );
+                LogError( ( "[%s] ERROR - Closing file failed.\r\n", OTA_METHOD_NAME ) );
                 eResult = ( OTA_ERR_FILE_ABORT | ( errno & OTA_PAL_ERR_MASK ) ); /*lint !e40 !e737 !e9027 !e9029
                                                                                   * Errno is being used in accordance with host API documentation.
                                                                                   * Bitmasking is being used to preserve host API error with library status code. */
@@ -197,7 +197,7 @@ OtaErr_t prvPAL_Abort( OtaFileContext_t * const C )
     }
     else /* Context was not valid. */
     {
-        OTA_LOG_L1( "[%s] ERROR - Invalid context.\r\n", OTA_METHOD_NAME );
+        LogError( ( "[%s] ERROR - Invalid context.\r\n", OTA_METHOD_NAME ) );
         eResult = OTA_ERR_FILE_ABORT;
     }
 
@@ -226,7 +226,7 @@ int16_t prvPAL_WriteBlock( OtaFileContext_t * const C,
 
             if( lResult < 0 )
             {
-                OTA_LOG_L1( "[%s] ERROR - fwrite failed\r\n", OTA_METHOD_NAME );
+                LogError( ( "[%s] ERROR - fwrite failed\r\n", OTA_METHOD_NAME ) );
                 /* Mask to return a negative value. */
                 lResult = OTA_PAL_INT16_NEGATIVE_MASK | errno; /*lint !e40 !e9027
                                                                 * Errno is being used in accordance with host API documentation.
@@ -235,7 +235,7 @@ int16_t prvPAL_WriteBlock( OtaFileContext_t * const C,
         }
         else
         {
-            OTA_LOG_L1( "[%s] ERROR - fseek failed\r\n", OTA_METHOD_NAME );
+            LogError( ( "[%s] ERROR - fseek failed\r\n", OTA_METHOD_NAME ) );
             /* Mask to return a negative value. */
             lResult = OTA_PAL_INT16_NEGATIVE_MASK | errno; /*lint !e40 !e9027
                                                             * Errno is being used in accordance with host API documentation.
@@ -244,7 +244,7 @@ int16_t prvPAL_WriteBlock( OtaFileContext_t * const C,
     }
     else /* Invalid context or file pointer provided. */
     {
-        OTA_LOG_L1( "[%s] ERROR - Invalid context.\r\n", OTA_METHOD_NAME );
+        LogError( ( "[%s] ERROR - Invalid context.\r\n", OTA_METHOD_NAME ) );
         lResult = -1; /*TODO: Need a negative error code from the PAL here. */
     }
 
@@ -269,7 +269,7 @@ OtaErr_t prvPAL_CloseFile( OtaFileContext_t * const C )
         }
         else
         {
-            OTA_LOG_L1( "[%s] ERROR - NULL OTA Signature structure.\r\n", OTA_METHOD_NAME );
+            LogError( ( "[%s] ERROR - NULL OTA Signature structure.\r\n", OTA_METHOD_NAME ) );
             eResult = OTA_ERR_SIGNATURE_CHECK_FAILED;
         }
 
@@ -280,7 +280,7 @@ OtaErr_t prvPAL_CloseFile( OtaFileContext_t * const C )
 
         if( lWindowsError != 0 )
         {
-            OTA_LOG_L1( "[%s] ERROR - Failed to close OTA update file.\r\n", OTA_METHOD_NAME );
+            LogError( ( "[%s] ERROR - Failed to close OTA update file.\r\n", OTA_METHOD_NAME ) );
             eResult = ( OTA_ERR_FILE_CLOSE | ( errno & OTA_PAL_ERR_MASK ) ); /*lint !e40 !e737 !e9027 !e9029
                                                                               * Errno is being used in accordance with host API documentation.
                                                                               * Bitmasking is being used to preserve host API error with library status code. */
@@ -288,14 +288,14 @@ OtaErr_t prvPAL_CloseFile( OtaFileContext_t * const C )
 
         if( eResult == OTA_ERR_NONE )
         {
-            OTA_LOG_L1( "[%s] %s signature verification passed.\r\n", OTA_METHOD_NAME, OTA_JsonFileSignatureKey );
+            LogInfo( ( "[%s] %s signature verification passed.\r\n", OTA_METHOD_NAME, OTA_JsonFileSignatureKey ) );
 
             prvPAL_SetPlatformImageState( OtaImageStateTesting );
         }
         else
         {
-            OTA_LOG_L1( "[%s] ERROR - Failed to pass %s signature verification: %d.\r\n", OTA_METHOD_NAME,
-                        OTA_JsonFileSignatureKey, eResult );
+            LogError( (  "[%s] ERROR - Failed to pass %s signature verification: %d.\r\n", OTA_METHOD_NAME,
+                        OTA_JsonFileSignatureKey, eResult ) );
 
 			/* If we fail to verify the file signature that means the image is not valid. We need to set the image state to aborted. */
 			prvPAL_SetPlatformImageState( OtaImageStateAborted );
@@ -305,7 +305,7 @@ OtaErr_t prvPAL_CloseFile( OtaFileContext_t * const C )
     else /* Invalid OTA Context. */
     {
         /* FIXME: Invalid error code for a null file context and file handle. */
-        OTA_LOG_L1( "[%s] ERROR - Invalid context.\r\n", OTA_METHOD_NAME );
+        LogError( ( "[%s] ERROR - Invalid context.\r\n", OTA_METHOD_NAME ) );
         eResult = OTA_ERR_FILE_CLOSE;
     }
 
@@ -461,8 +461,8 @@ OtaErr_t prvPAL_SetPlatformImageState( OtaImageState_t eState )
             if( 1 != fwrite( &eState, sizeof( OtaImageState_t ), 1, pstPlatformImageState ) ) /*lint !e586 !e9029
                                                                                                 * C standard library call is being used for portability. */
             {
-                OTA_LOG_L1( "[%s] ERROR - Unable to write to image state file.\r\n", OTA_METHOD_NAME );
-                eResult = ( OTA_ERR_BAD_IMAGE_STATE | ( errno & OTA_PAL_ERR_MASK ) ); /*lint !e40 !e737 !e9027 !e9029
+                LogError( ( "[%s] ERROR - Unable to write to image state file.\r\n", OTA_METHOD_NAME );
+                eResult = ( OTA_ERR_BAD_IMAGE_STATE | ( errno & OTA_PAL_ERR_MASK ) ) ); /*lint !e40 !e737 !e9027 !e9029
                                                                                       * Errno is being used in accordance with host API documentation.
                                                                                       * Bitmasking is being used to preserve host API error with library status code. */
             }
@@ -470,7 +470,7 @@ OtaErr_t prvPAL_SetPlatformImageState( OtaImageState_t eState )
             /* Close PlatformImageState.txt. */
             if( 0 != fclose( pstPlatformImageState ) ) /*lint !e586 Allow call in this context. */
             {
-                OTA_LOG_L1( "[%s] ERROR - Unable to close image state file.\r\n", OTA_METHOD_NAME );
+                LogError( ( "[%s] ERROR - Unable to close image state file.\r\n", OTA_METHOD_NAME ) );
                 eResult = ( OTA_ERR_BAD_IMAGE_STATE | ( errno & OTA_PAL_ERR_MASK ) ); /*lint !e40 !e737 !e9027 !e9029
                                                                                       * Errno is being used in accordance with host API documentation.
                                                                                       * Bitmasking is being used to preserve host API error with library status code. */
@@ -478,7 +478,7 @@ OtaErr_t prvPAL_SetPlatformImageState( OtaImageState_t eState )
         }
         else
         {
-            OTA_LOG_L1( "[%s] ERROR - Unable to open image state file.\r\n", OTA_METHOD_NAME );
+            LogError( ( "[%s] ERROR - Unable to open image state file.\r\n", OTA_METHOD_NAME ) );
             eResult = ( OTA_ERR_BAD_IMAGE_STATE | ( errno & OTA_PAL_ERR_MASK ) ); /*lint !e40 !e737 !e9027 !e9029
                                                                                   * Errno is being used in accordance with host API documentation.
                                                                                   * Bitmasking is being used to preserve host API error with library status code. */
@@ -486,7 +486,7 @@ OtaErr_t prvPAL_SetPlatformImageState( OtaImageState_t eState )
     } /*lint !e481 Allow fopen and fclose calls in this context. */
     else /* Image state invalid. */
     {
-        OTA_LOG_L1( "[%s] ERROR - Invalid image state provided.\r\n", OTA_METHOD_NAME );
+        LogError( ( "[%s] ERROR - Invalid image state provided.\r\n", OTA_METHOD_NAME ) );
         eResult = OTA_ERR_BAD_IMAGE_STATE;
     }
 
@@ -523,7 +523,7 @@ OtaPalImageState_t prvPAL_GetPlatformImageState( void )
                                                                                            * C standard library call is being used for portability. */
         {
             /* If an error occured reading the file, mark the state as aborted. */
-            OTA_LOG_L1( "[%s] ERROR - Unable to read image state file.\r\n", OTA_METHOD_NAME );
+            LogError( ( "[%s] ERROR - Unable to read image state file.\r\n", OTA_METHOD_NAME ) );
 			ePalState = ( OtaPalImageStateInvalid | (errno & OTA_PAL_ERR_MASK) );
         }
 		else
@@ -548,7 +548,7 @@ OtaPalImageState_t prvPAL_GetPlatformImageState( void )
         if( 0 != fclose( pstPlatformImageState ) ) /*lint !e586
                                                     * C standard library call is being used for portability. */
         {
-            OTA_LOG_L1( "[%s] ERROR - Unable to close image state file.\r\n", OTA_METHOD_NAME );
+            LogError( ( "[%s] ERROR - Unable to close image state file.\r\n", OTA_METHOD_NAME ) );
 			ePalState = ( OtaPalImageStateInvalid | ( errno & OTA_PAL_ERR_MASK ) );
         }
     }
