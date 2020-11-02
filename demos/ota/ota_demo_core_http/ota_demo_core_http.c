@@ -49,9 +49,9 @@
 #include "mqtt_subscription_manager.h"
 
 /* OTA Library include. */
-#include "aws_iot_ota_agent.h"
-#include "aws_ota_agent_config.h"
-#include "aws_iot_ota_agent_private.h"
+#include "ota.h"
+#include "ota_config.h"
+#include "ota_private.h"
 
 /* OTA Library Interface include. */
 #include "ota_os_posix.h"
@@ -62,7 +62,7 @@
 #include "core_http_client.h"
 
 /* Include firmware version struct definition. */
-#include "iot_appversion32.h"
+#include "ota_appversion32.h"
 
 /**
  * @brief ALPN (Application-Layer Protocol Negotiation) protocol name for AWS IoT MQTT.
@@ -398,7 +398,7 @@ static void mqttJobCallback( MQTTContext_t * pContext, MQTTPublishInfo_t * pPubl
         }
         else
         {
-            OTA_LOG_L1( "Error: No OTA data buffers available.\r\n" );
+            LogError( ( "Error: No OTA data buffers available.\r\n" ) );
         }
 
 }
@@ -429,7 +429,7 @@ static void mqttDataCallback( MQTTContext_t * pContext, MQTTPublishInfo_t * pPub
         }
         else
         {
-            OTA_LOG_L1( "Error: No OTA data buffers available.\r\n" );
+            LogError( ( "Error: No OTA data buffers available.\r\n" ) );
         }
 }
 
@@ -1066,7 +1066,7 @@ static OtaErr_t httpRequest( uint32_t rangeStart, uint32_t rangeEnd )
     
 }
 
-static OtaErr_t httpDeinit( char * pUrl )
+static OtaErr_t httpDeinit( void )
 {
     int32_t returnStatus = EXIT_SUCCESS;
 
