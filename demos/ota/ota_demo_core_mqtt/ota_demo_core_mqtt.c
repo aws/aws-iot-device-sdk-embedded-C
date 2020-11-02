@@ -46,16 +46,16 @@
 #include "mqtt_subscription_manager.h"
 
 /* OTA Library include. */
-#include "aws_iot_ota_agent.h"
-#include "aws_ota_agent_config.h"
-#include "aws_iot_ota_agent_private.h"
+#include "ota.h"
+#include "ota_config.h"
+#include "ota_private.h"
 
 /* OTA Library Interface include. */
 #include "ota_os_posix.h"
 #include "ota_mqtt_interface.h"
 
 /* Include firmware version struct definition. */
-#include "iot_appversion32.h"
+#include "ota_appversion32.h"
 
 /**
  * @brief ALPN (Application-Layer Protocol Negotiation) protocol name for AWS IoT MQTT.
