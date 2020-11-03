@@ -44,8 +44,8 @@ typedef struct NetworkStats
 {
     uint32_t bytesReceived;   /**< Number of bytes received. */
     uint32_t bytesSent;       /**< Number of bytes sent. */
-    uint32_t packetsReceived; /**< Number of TCP packets received. */
-    uint32_t packetsSent;     /**< Number of TCP packets sent. */
+    uint32_t packetsReceived; /**< Number of packets (ethernet frames) received. */
+    uint32_t packetsSent;     /**< Number of packets (ethernet frames) sent. */
 } NetworkStats_t;
 
 /**
