@@ -1,3 +1,6 @@
+# Add build configuration for all 3rd party modules.
+add_subdirectory(${3RDPARTY_DIR})
+
 # Macro utility to clone a library and source-related submodules.
 macro( clone_library working_dir )
         find_package( Git REQUIRED )
@@ -5,13 +8,15 @@ macro( clone_library working_dir )
                          COMMAND ${GIT_EXECUTABLE} submodule update --init ${submodule_dir}
                          WORKING_DIRECTORY ${ROOT_DIR}
                          RESULT_VARIABLE LIB_CLONE_RESULT )
+        if( NOT ${LIB_CLONE_RESULT} STREQUAL "0" )
+            message( FATAL_ERROR "Failed to clone submodule ${submodule_dir}." )
+        endif()
         # Sources may have submodules like from the depedency directory
         execute_process( COMMAND ${GIT_EXECUTABLE} submodule update --init -- source
                          WORKING_DIRECTORY ${submodule_dir}
                          RESULT_VARIABLE LIB_CLONE_RESULT )
-
         if( NOT ${LIB_CLONE_RESULT} STREQUAL "0" )
-                message( FATAL_ERROR "Failed to clone submodule ${submodule_dir}." )
+            message( FATAL_ERROR "Failed to submodules from sources." )
         endif()
 endmacro()
 
