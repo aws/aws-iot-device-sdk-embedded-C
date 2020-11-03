@@ -254,7 +254,6 @@ static void updateDeltaHandler( MQTTPublishInfo_t * pPublishInfo )
                               pPublishInfo->payloadLength,
                               "version",
                               sizeof( "version" ) - 1,
-                              '.',
                               &outValue,
                               ( size_t * ) &outValueLength );
     }
@@ -293,7 +292,6 @@ static void updateDeltaHandler( MQTTPublishInfo_t * pPublishInfo )
                               pPublishInfo->payloadLength,
                               "state.powerOn",
                               sizeof( "state.powerOn" ) - 1,
-                              '.',
                               &outValue,
                               ( size_t * ) &outValueLength );
     }
@@ -383,7 +381,6 @@ static void updateAcceptedHandler( MQTTPublishInfo_t * pPublishInfo )
                               pPublishInfo->payloadLength,
                               "clientToken",
                               sizeof( "clientToken" ) - 1,
-                              '.',
                               &outValue,
                               ( size_t * ) &outValueLength );
     }

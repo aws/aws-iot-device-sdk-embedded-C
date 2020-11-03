@@ -204,7 +204,6 @@ static bool validateDefenderResponse( const char * defenderResponse,
                                   defenderResponseLength,
                                   "reportId",
                                   sizeof( "reportId" ) - 1,
-                                  '.',
                                   &( reportIdString ),
                                   &( reportIdStringLength ) );
 
