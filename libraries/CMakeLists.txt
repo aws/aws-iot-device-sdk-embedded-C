@@ -5,7 +5,7 @@ add_subdirectory(${3RDPARTY_DIR})
 macro( clone_library submodule_dir )
         find_package( Git REQUIRED )
         execute_process( COMMAND rm -rf ${submodule_dir}
-                         COMMAND ${GIT_EXECUTABLE} submodule update --init ${submodule_dir}
+                         COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive ${submodule_dir}
                          WORKING_DIRECTORY ${ROOT_DIR}
                          RESULT_VARIABLE LIB_CLONE_RESULT )
 
@@ -16,7 +16,6 @@ endmacro()
 
 set(SUBMODULE_DIRS
       ${MODULES_DIR}/standard/coreHTTP
-      ${MODULES_DIR}/standard/coreHTTP/source/dependency/3rdparty/http_parser
       ${MODULES_DIR}/standard/coreJSON
       ${MODULES_DIR}/standard/coreMQTT
       ${MODULES_DIR}/aws/device-defender-for-aws-iot-embedded-sdk
