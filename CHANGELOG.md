@@ -4,13 +4,13 @@
 
 ### Major Changes
 
-- This release introduces the re-factored **HTTP** client library, **AWS IoT Device Defender** service client library, and **AWS IoT Jobs** service library.
+- This release introduces the re-factored **HTTP** client library, **AWS IoT Device Defender** client library, and **AWS IoT Jobs** client library.
 These libraries have gone through code quality checks including verification that no function has a [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html) score greater than 8, and checks against deviations from the mandatory rules in the [MISRA coding standard](https://www.misra.org.uk/MISRAHome/MISRAC2012/tabid/196/Default.aspx). These libraries have also undergone both static code analysis from [Coverity statical analysis](https://scan.coverity.com/) and validation of memory safety through the [CBMC automated reasoning tool](https://www.youtube.com/watch?v=YwQHAPRhQkI&feature=youtu.be&t=1721).
 
-- This release uses submodule references to the following new individual repositories for the HTTP, AWS IoT Defender service client, and AWS IoT Jobs service libraries under the `libraries` folder:
+- This release uses submodule references to the following new individual repositories for the HTTP, AWS IoT Device Defender client, and AWS IoT Jobs client libraries under the `libraries` folder:
    - [FreeRTOS/coreHTTP](https://github.com/FreeRTOS/coreHTTP) for the HTTP client library
-   - [aws/device-defender-for-aws-iot-embedded-sdk](https://github.com/aws/device-defender-for-aws-iot-embedded-sdk) for the AWS IoT Device Defender service client library.
-   - [aws/jobs-for-aws-iot-embedded-sdk](https://github.com/aws/jobs-for-aws-iot-embedded-sdk) for the AWS IoT Jobs service library.
+   - [aws/device-defender-for-aws-iot-embedded-sdk](https://github.com/aws/device-defender-for-aws-iot-embedded-sdk) for the AWS IoT Device Defender client library.
+   - [aws/jobs-for-aws-iot-embedded-sdk](https://github.com/aws/jobs-for-aws-iot-embedded-sdk) for the AWS IoT Jobs client library.
 
 ## 202009.00 (September 2020)
 
@@ -19,10 +19,10 @@ These libraries have gone through code quality checks including verification tha
 - This release introduces the re-factored **MQTT** client library, **JSON** parser library, and **AWS IoT Device Shadow** client library.
 These libraries have gone through code quality checks including verification that no function has a [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html) score greater than 8, and checks against deviations from the mandatory rules in the [MISRA coding standard](https://www.misra.org.uk/MISRAHome/MISRAC2012/tabid/196/Default.aspx). These libraries have also undergone both static code analysis from [Coverity statical analysis](https://scan.coverity.com/) and validation of memory safety through the [CBMC automated reasoning tool](https://www.youtube.com/watch?v=YwQHAPRhQkI&feature=youtu.be&t=1721).
 
-- This release uses submodule references to the following new individual repositories for the MQTT, JSON, and AWS IoT Shadow service client libraries under the `libraries` folder:
+- This release uses submodule references to the following new individual repositories for the MQTT, JSON, and AWS IoT Device Shadow client libraries under the `libraries` folder:
    - [FreeRTOS/coreMQTT](https://github.com/FreeRTOS/coreMQTT) for the MQTT client library
    - [FreeRTOS/coreJSON](https://github.com/FreeRTOS/coreJSON) for the JSON parser library
-   - [aws/device-shadow-for-aws-iot-embedded-sdk](https://github.com/aws/device-shadow-for-aws-iot-embedded-sdk) for the AWS IoT Device Shadow service client library.
+   - [aws/device-shadow-for-aws-iot-embedded-sdk](https://github.com/aws/device-shadow-for-aws-iot-embedded-sdk) for the AWS IoT Device Shadow client library.
 
 - With this release, we are introducing a [date-based versioning scheme](README.md#versioning).
 
