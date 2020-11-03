@@ -1,5 +1,5 @@
 /**
-@page defender_demo AWS IoT Device Defender Demo
+@page defender_demo AWS IoT Device Defender
 @brief This demo demonstrates usage of the AWS IoT Device Defender Client library.
 
 @section defender_demo_main AWS IoT Device Defender Demo
