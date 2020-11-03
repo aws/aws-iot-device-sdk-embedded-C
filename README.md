@@ -143,13 +143,15 @@ Details available [here](https://github.com/aws/aws-iot-device-sdk-embedded-C/tr
 
 ## Porting Guide for 202009.00 and newer releases
 
+All libraries depend the on ISO C90 standard library and additionally on the `stdint.h` library for fixed-width integers, including `uint8_t`, `int8_t`, `uint16_t`, `uint32_t` and `int32_t`, and constant macros like `UINT16_MAX`. If your platform does not support the `stdint.h` library, definitions of the mentioned fixed-width integer types will be required for porting any C-SDK library to your platform.
+
 ### Porting coreMQTT
 
 Guide for porting coreMQTT library to your platform is available [here](https://docs.aws.amazon.com/embedded-csdk/202011.00/lib-ref/libraries/standard/coreMQTT/docs/doxygen/output/html/mqtt_porting.html).
 
 ### Porting coreHTTP
 
-Guide for porting coreHTTP library is available [here](https://docs.aws.amazon.com/embedded-csdk/202011.00/lib-ref/libraries/standard/coreHTTP/docs/doxygen/output/html/html_porting.html).
+Guide for porting coreHTTP library is available [here](https://docs.aws.amazon.com/embedded-csdk/202011.00/lib-ref/libraries/standard/coreHTTP/docs/doxygen/output/html/http_porting.html).
 
 ### Porting AWS IoT Device Shadow
 
