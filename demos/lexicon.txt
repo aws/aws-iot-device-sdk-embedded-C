@@ -60,6 +60,7 @@ dup
 endcond
 endif
 establishmqttsession
+ethernet
 eventcallback
 filesize
 gen
