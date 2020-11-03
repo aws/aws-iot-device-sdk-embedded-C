@@ -6,7 +6,7 @@ include( ${PLATFORM_DIR}/posix/posixFilePaths.cmake )
 if( NOT EXISTS ${submodule_dir}/.git )
     # Attempt to clone submodule.
     if( ${BUILD_CLONE_SUBMODULES} )
-        clone_library( "${MODULES_DIR}/standard/coreMQTT" 1 )
+        clone_library( ${MODULES_DIR}/standard/coreMQTT 1 )
     else()
         message( FATAL_ERROR "A required submodule does not exist. Either clone it manually, or set BUILD_CLONE_SUBMODULES to 1 to automatically clone it during build." )
     endif()
