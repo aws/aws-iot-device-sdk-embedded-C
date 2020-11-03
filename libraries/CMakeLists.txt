@@ -1,6 +1,3 @@
-# Add build configuration for all 3rd party modules.
-add_subdirectory(${3RDPARTY_DIR})
-
 # Macro utility to clone a library and source-related submodules.
 macro( clone_library submodule_dir clone_source )
     find_package( Git REQUIRED )
@@ -40,3 +37,6 @@ set( LIBRARY_SUBMODULES
 foreach(submodule_dir IN ITEMS ${LIBRARY_SUBMODULES})
     clone_library( ${submodule_dir} 1 )  
 endforeach()
+
+# Add build configuration for all 3rd party modules.
+add_subdirectory(${3RDPARTY_DIR})
