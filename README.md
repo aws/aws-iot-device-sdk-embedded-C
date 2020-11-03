@@ -64,7 +64,7 @@ See memory requirements for the latest release [here](https://docs.aws.amazon.co
 
 The C-SDK provides the ability to establish an HTTP connection with a server over a customer-implemented transport layer, which can either be a secure channel like a TLS session (mutually authenticated or server-only authentication) or a non-secure channel like a plaintext TCP connection. The HTTP connection can be used to make "GET" (include range requests), "PUT", "POST" and "HEAD" requests. The SDK provides a mechanism to register a customer-defined callback for receiving parsed header fields in an HTTP response. The [coreHTTP](https://github.com/FreeRTOS/coreHTTP) library has been refactored for memory optimization, and is a client implementation of a subset of the [HTTP/1.1](https://tools.ietf.org/html/rfc2616) standard.
 
-See memory requirements for the latest release here [here](https://docs.aws.amazon.com/embedded-csdk/202011.00/lib-ref/libraries/standard/coreHTTP/docs/doxygen/output/html/index.html#http_memory_requirements).
+See memory requirements for the latest release [here](https://docs.aws.amazon.com/embedded-csdk/202011.00/lib-ref/libraries/standard/coreHTTP/docs/doxygen/output/html/index.html#http_memory_requirements).
 
 ### coreJSON
 
@@ -85,7 +85,7 @@ See memory requirements for the latest release [here](https://docs.aws.amazon.co
 
 AWS IoT Jobs is a service that notifies one or more connected devices of a pending “Job”. A Job can be used to manage your fleet of devices, update firmware and security certificates on your devices, or perform administrative tasks such as restarting devices and performing diagnostics.  For documentation of the service, please see the [AWS Iot Developer Guide](https://docs.aws.amazon.com/iot/latest/developerguide/iot-jobs.html). Interactions with the Jobs service use MQTT, a lightweight publish-subscribe protocol. This library provides a convenience API to compose and recognize the MQTT topic strings used by the Jobs service.
 
-See memory requirements for the latest release here [here](https://docs.aws.amazon.com/embedded-csdk/202011.00/lib-ref/libraries/aws/jobs-for-aws-iot-embedded-sdk/docs/doxygen/output/html/index.html#jobs_memory_requirements).
+See memory requirements for the latest release [here](https://docs.aws.amazon.com/embedded-csdk/202011.00/lib-ref/libraries/aws/jobs-for-aws-iot-embedded-sdk/docs/doxygen/output/html/index.html#jobs_memory_requirements).
 
 
 ### AWS IoT Device Defender Client
@@ -159,7 +159,7 @@ Guide for porting AWS IoT Device Shadow library is available [here](https://docs
 
 ### Porting AWS IoT Device Defender
 
-Guide for porting AWS IoT Device Defender library is available here [here](https://docs.aws.amazon.com/embedded-csdk/202011.00/lib-ref/libraries/aws/device-defender-for-aws-iot-embedded-sdk/docs/doxygen/output/html/defender_porting.html).
+Guide for porting AWS IoT Device Defender library is available [here](https://docs.aws.amazon.com/embedded-csdk/202011.00/lib-ref/libraries/aws/device-defender-for-aws-iot-embedded-sdk/docs/doxygen/output/html/defender_porting.html).
 
 ## Migration guide from v3.1.2 to 202009.00 and newer releases
 
@@ -173,7 +173,7 @@ Migration guide for Shadow library is available [here](https://docs.aws.amazon.c
 
 ### Jobs Migration
 
-Migration guide for Jobs library is available here [here](https://docs.aws.amazon.com/embedded-csdk/202011.00/lib-ref/docs/doxygen/output/html/jobs_migration.html).
+Migration guide for Jobs library is available [here](https://docs.aws.amazon.com/embedded-csdk/202011.00/lib-ref/docs/doxygen/output/html/jobs_migration.html).
 
 ## Branches
 
