@@ -49,7 +49,7 @@ Given a shell script wrapper, named download, that contains the necessary argume
 the jobs demo, the following line in /etc/crontab would start the jobs demo unless it is already running.
 The following line tries every 3 minutes, with an additional random delay of up to 2 minutes.
 
-`*``/3 * * * *  root  exec 9> /tmp/lock && flock -n 9 && sleep $((RANDOM % 120)) && download`
+> `*``/3 * * * *  root  exec 9> /tmp/lock && flock -n 9 && sleep $((RANDOM % 120)) && download`
 
 The demo program accepts several arguments:
 
