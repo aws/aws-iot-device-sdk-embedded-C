@@ -161,6 +161,24 @@ typedef struct ResponseItem
     uint8_t responseBuffer[ USER_BUFFER_LENGTH ];
 } ResponseItem_t;
 
+/* @brief Struct used for sending requests to the HTTP thread.
+ *
+ * This is used by both the main and HTTP threads, though since we create the
+ * HTTP thread without a shared memory space, each will have its own copy. We
+ * have this as a global so that it will be located at the same address in the
+ * main and HTTP threads so that way pointers remain valid when copied over.
+ */
+static RequestItem_t requestItem = { 0 };
+
+/* @brief Struct used for receiving responses from the HTTP thread.
+ *
+ * This is used by both the main and HTTP threads, though since we create the
+ * HTTP thread without a shared memory space, each will have its own copy. We
+ * have this as a global so that it will be located at the same address in the
+ * main and HTTP threads so that way pointers remain valid when copied over.
+ */
+static ResponseItem_t responseItem = { 0 };
+
 /**
  * @brief The return status for requestS3ObjectRange() and retrieveHTTPResponse().
  */
@@ -339,9 +357,6 @@ static bool downloadS3ObjectFile( const char * pHost,
     /* Configurations of the initial request headers. */
     HTTPRequestInfo_t requestInfo = { 0 };
 
-    /* Response data sent over queue. */
-    ResponseItem_t responseItem = { 0 };
-
     /* The length of the file at S3_PRESIGNED_GET_URL. */
     size_t fileSize = 0;
 
@@ -461,9 +476,6 @@ static QueueOpStatus_t requestS3ObjectRange( const HTTPRequestInfo_t * requestIn
     /* Return value of mq_send. */
     int mqerror = 0;
 
-    /* Request data sent over queue. */
-    RequestItem_t requestItem = { 0 };
-
     /* Set the buffer used for storing request headers. */
     requestItem.requestHeaders.pBuffer = requestItem.headersBuffer;
     requestItem.requestHeaders.bufferLen = USER_BUFFER_LENGTH;
@@ -539,7 +551,6 @@ static QueueOpStatus_t retrieveHTTPResponse( mqd_t responseQueue,
     /* Read response from queue. */
     mqread = mq_receive( responseQueue, ( char * ) responseItem,
                          sizeof( ResponseItem_t ), NULL );
-    responseItem->response.pBuffer = responseItem->responseBuffer;
 
     if( mqread == -1 )
     {
@@ -578,9 +589,6 @@ static bool getS3ObjectFileSize( const HTTPRequestInfo_t * requestInfo,
     bool returnStatus = true;
     HTTPStatus_t httpStatus = HTTPSuccess;
     QueueOpStatus_t queueOpStatus = QUEUE_OP_SUCCESS;
-
-    /* Request data sent over queue. */
-    ResponseItem_t responseItem = { 0 };
 
     /* The location of the file size in contentRangeValStr. */
     char * pFileSizeStr = NULL;
@@ -695,10 +703,6 @@ static pid_t startHTTPThread( const TransportInterface_t * pTransportInterface )
         mqd_t requestQueue = -1;
         mqd_t responseQueue = -1;
 
-        /* Structs for sending or receiving data over queues. */
-        RequestItem_t requestItem = { 0 };
-        ResponseItem_t responseItem = { 0 };
-
         /* Open queues for read/write. */
         requestQueue = mq_open( REQUEST_QUEUE, O_RDONLY );
         responseQueue = mq_open( RESPONSE_QUEUE, O_WRONLY );
@@ -721,7 +725,6 @@ static pid_t startHTTPThread( const TransportInterface_t * pTransportInterface )
                                  ( char * ) &requestItem,
                                  sizeof( RequestItem_t ),
                                  NULL );
-            requestItem.requestHeaders.pBuffer = requestItem.headersBuffer;
 
             if( mqread == -1 )
             {
