@@ -3,12 +3,12 @@ include( ${PLATFORM_DIR}/posix/posixFilePaths.cmake )
 
 # The transport_interface.h in coreMQTT is the single source of truth,
 # so make sure the submodule is cloned.
-if( NOT EXISTS ${MODULES_DIR}/standard/coreMQTT/source )
-    # Attempt to clone coreMQTT.
+if( NOT EXISTS ${submodule_dir}/.git )
+    # Attempt to clone submodule.
     if( ${BUILD_CLONE_SUBMODULES} )
-        clone_library( ${MODULES_DIR}/standard/coreMQTT )
+        clone_library( "${MODULES_DIR}/standard/coreMQTT" )
     else()
-        message( FATAL_ERROR "The required submodule coreMQTT does not exist. Either clone it manually, or set BUILD_CLONE_SUBMODULES to 1 to automatically clone it during build." )
+        message( FATAL_ERROR "A required submodule does not exist. Either clone it manually, or set BUILD_CLONE_SUBMODULES to 1 to automatically clone it during build." )
     endif()
 endif()
 
