@@ -6,5 +6,6 @@ Demos for the following libraries are provided:
 - @subpage mqtt_demo
 - @subpage http_demo
 - @subpage shadow_demo
+- @subpage jobs_demo
 - @subpage defender_demo
 */
