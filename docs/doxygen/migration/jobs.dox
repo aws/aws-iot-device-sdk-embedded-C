@@ -1,6 +1,6 @@
 /**
 @page jobs_migration AWS IoT Jobs
-@brief How to migrate an application using AWS IoT Jobs from v3 to 202009.00.
+@brief How to migrate an application using AWS IoT Jobs from v3 to 202009.00 and subsequent releases.
 
 The AWS IoT Jobs client library has been refactored for this release.
 The refactored library has the following differences as compared to the jobs client library in v3 of the AWS IoT Device SDK for Embedded C:
