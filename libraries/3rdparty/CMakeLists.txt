@@ -1,4 +1,13 @@
 if(${BUILD_TESTS})
+    if( NOT EXISTS ${3RDPARTY_DIR}/CMock/.git )
+        # Attempt to clone submodule.
+        if( ${BUILD_CLONE_SUBMODULES} )
+            clone_library( ${submodule_dir} 0 )
+        else()
+            message( FATAL_ERROR "A required submodule does not exist. Either clone it manually, or set BUILD_CLONE_SUBMODULES to 1 to automatically clone it during build." )
+        endif()
+    endif()
+
     add_library(cmock STATIC
         "${ROOT_DIR}/libraries/3rdparty/CMock/src/cmock.c"
     )
