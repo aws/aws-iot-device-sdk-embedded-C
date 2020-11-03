@@ -35,7 +35,7 @@ set( LIBRARY_SUBMODULES
        ${MODULES_DIR}/aws/jobs-for-aws-iot-embedded-sdk )
 
 foreach(submodule_dir IN ITEMS ${LIBRARY_SUBMODULES})
-    clone_library( ${submodule_dir} 1 )  
+    clone_library( ${submodule_dir} 1 )
 endforeach()
 
 # Add build configuration for all 3rd party modules.
