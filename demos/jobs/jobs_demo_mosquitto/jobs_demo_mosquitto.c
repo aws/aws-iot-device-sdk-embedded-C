@@ -828,7 +828,6 @@ static bool parseJob( handle_t * h,
                                 message->payloadlen,
                                 "execution.jobId",
                                 ( sizeof( "execution.jobId" ) - 1 ),
-                                '.',
                                 &jobid,
                                 &jobidLength );
     }
@@ -839,7 +838,6 @@ static bool parseJob( handle_t * h,
                                 message->payloadlen,
                                 "execution.jobDocument.url",
                                 ( sizeof( "execution.jobDocument.url" ) - 1 ),
-                                '.',
                                 &url,
                                 &urlLength );
     }

@@ -7,4 +7,5 @@ Demos for the following libraries are provided:
 - @subpage http_demo
 - @subpage shadow_demo
 - @subpage jobs_demo
+- @subpage defender_demo
 */

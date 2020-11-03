@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C V202009.00
+ * AWS IoT Device SDK for Embedded C V202011.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -254,7 +254,6 @@ static void updateDeltaHandler( MQTTPublishInfo_t * pPublishInfo )
                               pPublishInfo->payloadLength,
                               "version",
                               sizeof( "version" ) - 1,
-                              '.',
                               &outValue,
                               ( size_t * ) &outValueLength );
     }
@@ -293,7 +292,6 @@ static void updateDeltaHandler( MQTTPublishInfo_t * pPublishInfo )
                               pPublishInfo->payloadLength,
                               "state.powerOn",
                               sizeof( "state.powerOn" ) - 1,
-                              '.',
                               &outValue,
                               ( size_t * ) &outValueLength );
     }
@@ -383,7 +381,6 @@ static void updateAcceptedHandler( MQTTPublishInfo_t * pPublishInfo )
                               pPublishInfo->payloadLength,
                               "clientToken",
                               sizeof( "clientToken" ) - 1,
-                              '.',
                               &outValue,
                               ( size_t * ) &outValueLength );
     }
@@ -513,7 +510,7 @@ static void eventCallback( MQTTContext_t * pMqttContext,
  * - SHADOW_TOPIC_STRING_UPDATE_REJECTED for "$aws/things/thingName/shadow/update/rejected"
  *
  * It also uses these macros for topics to publish to:
- * - SHADOW_TOPIC_STIRNG_DELETE for "$aws/things/thingName/shadow/delete"
+ * - SHADOW_TOPIC_STRING_DELETE for "$aws/things/thingName/shadow/delete"
  * - SHADOW_TOPIC_STRING_UPDATE for "$aws/things/thingName/shadow/update"
  *
  * The helper functions this demo uses for MQTT operations have internal

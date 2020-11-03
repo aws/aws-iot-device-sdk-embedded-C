@@ -1,0 +1,70 @@
+@startuml
+skinparam dpi 300
+skinparam classFontSize 8
+skinparam classFontName Helvetica
+autonumber
+
+box "Application" #LightGreen
+    participant "Application" as application
+end box
+
+box "Third-party \n Library" #LightPink
+    participant "http-parser" as parser
+end box
+
+box "Libraries" #LightBlue
+    participant "HTTP Client" as http
+end box
+
+box "HTTP Server" #Yellow
+    participant "HTTP Server" as server
+end box
+
+activate application
+
+application -> parser : Parse configured pre-signed PUT URL to extract\n host address
+activate parser
+parser -> application : Return server host address
+deactivate parser
+
+loop until session established or all attempts exhausted
+application -> server : Establish TLS session\n (client verifies server's certificate)
+server -> application : Session established (no client authentication)
+end
+
+application -> parser : Parse configured pre-signed PUT URL to extract\n URL path
+activate parser
+parser -> application : Return path string with request-URI
+deactivate parser
+
+application -> application: Set request info parameters
+application -> http: Initialize request headers\n (HTTPClient_InitializeRequestHeaders)
+activate http
+http -> application : Write request headers to user-provided buffer
+deactivate http
+
+application -> http: Send HTTP PUT request (HTTPClient_Send)\n to upload file to S3 object
+activate http
+http -> server: Send payload of request through transport interface
+http -> application : Write response to user-provided buffer
+deactivate http
+application -> application: Log response from contents of buffer
+
+application -> parser : Parse configured pre-signed GET URL to extract\n URL path
+activate parser
+parser -> application : Return path string with request-URI
+deactivate parser
+
+application -> http: Send HTTP GET request (HTTPClient_Send)
+activate http
+http -> server: Send payload of request through transport interface
+http -> application : Write response to user-provided buffer
+deactivate http
+application -> application: Parse content-range header from response\n to obtain file size
+
+application -> application : Verify that the file size obtained from S3 is\n equivalent to the file size uploaded
+
+application -> server: End TLS session and disconnect from server
+
+deactivate application
+@enduml

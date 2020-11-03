@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C V202009.00
+ * AWS IoT Device SDK for Embedded C V202011.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -113,24 +113,3 @@ HTTPStatus_t getUrlAddress( const char * pUrl,
                             size_t urlLen,
                             const char ** pAddress,
                             size_t * pAddressLen );
-
-/**
- * @brief Retrieve the size of the S3 object that is specified in pPath.
- *
- * @param[out] pFileSize The size of the S3 object.
- * @param[in] pTransportInterface The transport interface for making network
- * calls.
- * @param[in] pHost The server host address. This string should be
- * null-terminated.
- * @param[in] hostLen The length of the server host address.
- * @param[in] pPath The Request-URI to the objects of interest. This string
- * should be null-terminated.
- *
- * @return The status of the file size acquisition using a GET request to the
- * server: true on success, false on failure.
- */
-bool getS3ObjectFileSize( size_t * pFileSize,
-                          const TransportInterface_t * pTransportInterface,
-                          const char * pHost,
-                          size_t hostLen,
-                          const char * pPath );

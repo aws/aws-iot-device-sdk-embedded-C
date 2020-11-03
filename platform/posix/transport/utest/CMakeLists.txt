@@ -37,7 +37,7 @@ list(APPEND mock_list
 list(APPEND mock_include_list
             ${LOGGING_INCLUDE_DIRS}
             ${PLATFORM_DIR}/include
-            ${MODULES_DIR}/standard/coreMQTT/source/portable
+            ${MODULES_DIR}/standard/coreMQTT/source/interface
         )
 #list the definitions of your mocks to control what to be included
 list(APPEND mock_define_list
@@ -55,7 +55,7 @@ list(APPEND real_include_directories
             .
             ${COMMON_TRANSPORT_INCLUDE_PUBLIC_DIRS}
             ${LOGGING_INCLUDE_DIRS}
-            ${MODULES_DIR}/standard/coreMQTT/source/portable
+            ${MODULES_DIR}/standard/coreMQTT/source/interface
         )
 
 # =====================  Create UnitTest Code here (edit)  =====================
