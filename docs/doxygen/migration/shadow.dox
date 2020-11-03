@@ -1,6 +1,6 @@
 /**
-@page shadow_migration Shadow
-@brief How to migrate a Shadow application from v3 to 202009.00 and subsequent releases.
+@page shadow_migration AWS IoT Device Shadow
+@brief How to migrate a AWS IoT Device Shadow application from v3 to 202009.00 and subsequent releases.
 
 The Device Shadow library has been redesigned in this release.  The new design has the following differences as compared to the Device Shadow library in v3 of the AWS IoT Device SDK for Embedded C.
 
