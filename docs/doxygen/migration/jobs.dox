@@ -16,7 +16,7 @@ JSON parsing, for example, is built in to the API implementation.
 Note: The AWS IoT Device SDK for Embedded C now offers the coreMQTT library and the coreJSON library as supported alternatives.
 
 To migrate an existing application
-- change the setup code to establish a connection to AWS IoT core
+- change the setup code to establish a connection with AWS IoT core
 - add a subscription step to the setup code
     - use Jobs_GetTopic() to populate a buffer with the desired subscription topic
     - use the MQTT client library to subscribe to the topic

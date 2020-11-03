@@ -39,15 +39,15 @@ Output should look like the following:
     sending first update
 
 If the output does not show a successful connection, check in the AWS console
-that the client certificate is associated with the target thing and is activated.
+that the client certificate is attached to the Thing resource (associated with the device) and is activated.
 Also check that the Amazon Root CA certificates are in your system's trust store.
 Note, you can provide a CA certificate file directly as a command-line argument.
 
 This demonstration exits on most error conditions.  One way to retry while avoiding
 throttling due to excessive reconnects is to periodically relaunch from cron(8).
-Given a shell script wrapper with the necessary arguments called download, the following
-line in /etc/crontab would start the downloader unless it is already running.
-This tries every 3 minutes, with an additional random delay up to 2 minutes.
+Given a shell script wrapper, named download, that contains the necessary arguments to invoke 
+the jobs demo, the following line in /etc/crontab would start the jobs demo unless it is already running.
+The following line tries every 3 minutes, with an additional random delay of up to 2 minutes.
 
 `*``/3 * * * *  root  exec 9> /tmp/lock && flock -n 9 && sleep $((RANDOM % 120)) && download`
 
