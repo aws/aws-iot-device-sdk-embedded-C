@@ -136,7 +136,7 @@ For example, a second release in June 2021 would be 202106.01. Although the SDK 
 
 All of the released versions of the C-SDK libraries are available as git tags. For example, the last release of the v3 SDK version is available at [tag 3.1.2](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v3.1.2).
 
-### 202011.00
+### 202011.00 \[Coming Soon\]
 
 
 ### 202009.00
