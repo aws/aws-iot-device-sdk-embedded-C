@@ -136,8 +136,11 @@ For example, a second release in June 2021 would be 202106.01. Although the SDK 
 
 All of the released versions of the C-SDK libraries are available as git tags. For example, the last release of the v3 SDK version is available at [tag 3.1.2](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v3.1.2).
 
-### 202011.00 \[Coming Soon\]
+### 202011.00
 
+[API documentation of 202011.00 release](https://docs.aws.amazon.com/embedded-csdk/202011.00/lib-ref/index.html)
+
+This release includes new HTTP client, AWS IoT Defender, and AWS IoT Jobs libraries. Additionally, there is an update to the coreJSON API. We continue to maintain our code quality criteria.
 
 ### 202009.00
 
