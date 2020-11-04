@@ -372,9 +372,9 @@ To run `http_demo_basic_tls`, [download ngrok](https://ngrok.com/download) in or
 
 `ngrok` will provide an https link that can be substituted in `demos/http/http_demo_basic_tls/demo_config.h` and has a format of `https://ABCDEFG12345.ngrok.io`.
 
-Set `SERVER_HOST` in `demos/http/http_demo_basic_tls/demo_config.h` to the https link provided by ngrok, without `https://` preceeding it.
+Set `SERVER_HOST` in `demos/http/http_demo_basic_tls/demo_config.h` to the https link provided by ngrok, without `https://` preceding it.
 
-You must also download the Root CA certificate provided by the ngrok https link and set `ROOT_CA_CERT_PATH` in `demo_config.h` to the file path of the downloaded certificate.
+You must also download the Root CA certificate provided by the ngrok https link and set `ROOT_CA_CERT_PATH` in `demos/http/http_demo_basic_tls/demo_config.h` to the file path of the downloaded certificate.
 
 ## Generating Documentation
 
