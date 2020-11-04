@@ -1,6 +1,4 @@
 if(${BUILD_TESTS})
-    clone_library( ${3RDPARTY_DIR}/CMock 0 )
-
     add_library(cmock STATIC
         "${ROOT_DIR}/libraries/3rdparty/CMock/src/cmock.c"
     )
