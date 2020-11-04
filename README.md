@@ -251,10 +251,28 @@ cmake .. -DAWS_IOT_ENDPOINT="aws-iot-endpoint" -DROOT_CA_CERT_PATH="root-ca-path
 ```
 
 In order to set these configurations manually, edit `demo_config.h` in `demos/mqtt/mqtt_demo_mutual_auth/` and `demos/http/http_demo_mutual_auth/` to `#define` the following:
+
 * Set `AWS_IOT_ENDPOINT` to your custom endpoint. This is found on the *Settings* page of the AWS IoT Console and has a format of `ABCDEFG1234567.iot.us-east-2.amazonaws.com`.
 * Set `ROOT_CA_CERT_PATH` to the path of the root CA certificate downloaded when setting up the device certificate in [AWS IoT Account Setup](#aws-iot-account-setup).
 * Set `CLIENT_CERT_PATH` to the path of the client certificate downloaded when setting up the device certificate in [AWS IoT Account Setup](#aws-iot-account-setup).
 * Set `CLIENT_PRIVATE_KEY_PATH` to the path of the private key downloaded when setting up the device certificate in [AWS IoT Account Setup](#aws-iot-account-setup).
+
+#### Configuring the S3 demos
+
+You can pass the following configuration settings as command line options in order to run the S3 demos:
+
+```sh
+cmake .. -DS3_PRESIGNED_GET_URL="s3-get-url"  -DS3_PRESIGNED_PUT_URL="s3-put-url"
+```
+
+`S3_PRESIGNED_PUT_URL` is only needed for the S3 upload demo.
+
+In order to set these configurations manually, edit `demo_config.h` in `demos/http/http_demo_s3_download`, `demos/http/http_demo_s3_download_multithreaded`, and `demos/http/http_demo_s3_upload` to `#define` the following:
+
+* Set `S3_PRESIGNED_GET_URL` to a S3 presigned URL with GET access.
+* Set `S3_PRESIGNED_PUT_URL` to a S3 presigned URL with PUT access.
+
+You can generate the presigned urls using [demos/http/common/src/presigned_urls_gen.py](https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/master/demos/http/common/src/presigned_urls_gen.py). More info can be found [here](https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/dbbb1c14612d1378d7a6fa9218d822c603baaa40/demos/http/common/src/README.md).
 
 #### Build Steps
 
