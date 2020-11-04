@@ -1,5 +1,5 @@
 /*
- * FreeRTOS V1.4.7
+ * AWS IoT Device SDK for Embedded C V202009.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -18,18 +18,15 @@
  * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- * http://aws.amazon.com/freertos
- * http://www.FreeRTOS.org
  */
 
 /**
- * @file aws_ota_agent_config.h
+ * @file ota_config.h
  * @brief OTA user configurable settings.
  */
 
-#ifndef _AWS_OTA_AGENT_CONFIG_H_
-#define _AWS_OTA_AGENT_CONFIG_H_
+#ifndef OTA_CONFIG_H_
+#define OTA_CONFIG_H_
 
 /**************************************************/
 /******* DO NOT CHANGE the following order ********/
@@ -44,9 +41,9 @@
 /* Include header that defines log levels. */
 #include "logging_levels.h"
 
-/* Configure name and log level for the MQTT library. */
+/* Configure name and log level for the OTA library. */
 #ifndef LIBRARY_LOG_NAME
-    #define LIBRARY_LOG_NAME     "MQTT"
+    #define LIBRARY_LOG_NAME     "OTA"
 #endif
 #ifndef LIBRARY_LOG_LEVEL
     #define LIBRARY_LOG_LEVEL    LOG_INFO
@@ -55,11 +52,6 @@
 #include "logging_stack.h"
 
 /************ End of logging configuration ****************/
-
-/**
- * @brief The number of words allocated to the stack for the OTA agent.
- */
-#define otaconfigSTACK_SIZE                     10000U
 
 /**
  * @brief Log base 2 of the size of the file data block message (excluding the header).
@@ -80,11 +72,6 @@
  * the request message after being idle for this amount of time.
  */
 #define otaconfigFILE_REQUEST_WAIT_MS           10000U
-
-/**
- * @brief The OTA agent task priority. Normally it runs at a low priority.
- */
-#define otaconfigAGENT_PRIORITY                 tskIDLE_PRIORITY + 5U
 
 /**
  * @brief The maximum allowed length of the thing name used by the OTA agent.
@@ -158,7 +145,7 @@
  * Enable data over HTTP - ( OTA_DATA_OVER_HTTP)
  * Enable data over both MQTT & HTTP ( OTA_DATA_OVER_MQTT | OTA_DATA_OVER_HTTP )
  */
-#define configENABLED_DATA_PROTOCOLS         ( OTA_DATA_OVER_MQTT )
+#define configENABLED_DATA_PROTOCOLS         ( OTA_DATA_OVER_HTTP )
 
  /**
   * @brief The preferred protocol selected for OTA data operations.
@@ -170,6 +157,6 @@
   * Note - use OTA_DATA_OVER_HTTP for HTTP as primary data protocol.
   */
 
-#define configOTA_PRIMARY_DATA_PROTOCOL     ( OTA_DATA_OVER_MQTT )
+#define configOTA_PRIMARY_DATA_PROTOCOL     ( OTA_DATA_OVER_HTTP )
 
-#endif /* _AWS_OTA_AGENT_CONFIG_H_ */
+#endif /* OTA_CONFIG_H_ */
