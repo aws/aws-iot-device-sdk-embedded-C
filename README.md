@@ -45,13 +45,13 @@
 
 ## Overview
 
-The AWS IoT Device SDK for Embedded C (C-SDK) is a collection of C source files under the [MIT open source license](https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/master/LICENSE) that can be used in embedded applications to securely connect IoT devices to [AWS IoT Core](http://docs.aws.amazon.com/iot/latest/developerguide/what-is-aws-iot.html). It contains MQTT client, HTTP client, JSON Parser, AWS IoT Device Shadow, AWS IoT Jobs, and AWS IoT Device Defender libraries. This SDK is distributed in source form, and can be built into customer firmware along with application code, other libraries and an operating system (OS) of your choice. These libraries are only dependent on standard C libraries, so they can be ported to various OS's - from embedded Real Time Operating Systems (RTOS) to Linux/Mac/Windows. You can find sample usage of C-SDK libraries on POSIX systems using OpenSSL (e.g. [Linux demos](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/master/demos) in this repository), and on [FreeRTOS](https://github.com/FreeRTOS/FreeRTOS/) using mbedTLS (e.g. [FreeRTOS demos](https://github.com/FreeRTOS/FreeRTOS/tree/master/FreeRTOS-Plus/Demo) in [FreeRTOS](https://github.com/FreeRTOS/FreeRTOS/) repository).
+The AWS IoT Device SDK for Embedded C (C-SDK) is a collection of C source files under the [MIT open source license](LICENSE) that can be used in embedded applications to securely connect IoT devices to [AWS IoT Core](http://docs.aws.amazon.com/iot/latest/developerguide/what-is-aws-iot.html). It contains MQTT client, HTTP client, JSON Parser, AWS IoT Device Shadow, AWS IoT Jobs, and AWS IoT Device Defender libraries. This SDK is distributed in source form, and can be built into customer firmware along with application code, other libraries and an operating system (OS) of your choice. These libraries are only dependent on standard C libraries, so they can be ported to various OS's - from embedded Real Time Operating Systems (RTOS) to Linux/Mac/Windows. You can find sample usage of C-SDK libraries on POSIX systems using OpenSSL (e.g. [Linux demos](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/master/demos) in this repository), and on [FreeRTOS](https://github.com/FreeRTOS/FreeRTOS/) using mbedTLS (e.g. [FreeRTOS demos](https://github.com/FreeRTOS/FreeRTOS/tree/master/FreeRTOS-Plus/Demo) in [FreeRTOS](https://github.com/FreeRTOS/FreeRTOS/) repository).
 
 For the latest release of C-SDK, please see the section for [Releases](#releases).
 
 ### License
 
-The C-SDK libraries are licensed under the [MIT open source license](https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/master/LICENSE).
+The C-SDK libraries are licensed under the [MIT open source license](LICENSE).
 
 ### Features
 
@@ -147,7 +147,7 @@ This release includes refactored HTTP client, AWS IoT Device Defender, and AWS I
 
 [API documentation of 202009.00 release](https://docs.aws.amazon.com/freertos/latest/lib-ref/embedded-csdk/202009.00/lib-ref/index.html)
 
-This release includes refactored MQTT, JSON Parser, and AWS IoT Device Shadow libraries for optimized memory usage and modularity. These libraries are included in the SDK via [Git submoduling](https://git-scm.com/book/en/v2/Git-Tools-Submodules). These libraries have gone through code quality checks including verification that no function has a [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html) score over 8, and checks against deviations from mandatory rules in the [MISRA coding standard](https://www.misra.org.uk/MISRAHome/MISRAC2012/tabid/196/Default.aspx). Deviations from the MISRA C:2012 guidelines are documented under [MISRA Deviations](https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/master/MISRA.md). These libraries have also undergone both static code analysis from [Coverity static analysis](https://scan.coverity.com/), and validation of memory safety and data structure invariance through the [CBMC automated reasoning tool](https://www.cprover.org/cbmc/).
+This release includes refactored MQTT, JSON Parser, and AWS IoT Device Shadow libraries for optimized memory usage and modularity. These libraries are included in the SDK via [Git submoduling](https://git-scm.com/book/en/v2/Git-Tools-Submodules). These libraries have gone through code quality checks including verification that no function has a [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html) score over 8, and checks against deviations from mandatory rules in the [MISRA coding standard](https://www.misra.org.uk/MISRAHome/MISRAC2012/tabid/196/Default.aspx). Deviations from the MISRA C:2012 guidelines are documented under [MISRA Deviations](MISRA.md). These libraries have also undergone both static code analysis from [Coverity static analysis](https://scan.coverity.com/), and validation of memory safety and data structure invariance through the [CBMC automated reasoning tool](https://www.cprover.org/cbmc/).
 
 If you are upgrading from v3.x API of the C-SDK to the 202009.00 release, please refer to [Migration guide from v3.1.2 to 202009.00 and newer releases](#migration-guide-from-v312-to-20200900-and-newer-releases). If you are using the C-SDK v4_beta_deprecated branch, note that we will continue to maintain this branch for critical bug fixes and security patches but will not add new features to it. See the C-SDK v4_beta_deprecated branch [README](https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/v4_beta_deprecated/README.md) for additional details.
 
@@ -273,7 +273,7 @@ In order to set these configurations manually, edit `demo_config.h` in `demos/ht
 * Set `S3_PRESIGNED_GET_URL` to a S3 presigned URL with GET access.
 * Set `S3_PRESIGNED_PUT_URL` to a S3 presigned URL with PUT access.
 
-You can generate the presigned urls using [demos/http/common/src/presigned_urls_gen.py](https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/master/demos/http/common/src/presigned_urls_gen.py). More info can be found [here](https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/master/demos/http/common/src/README.md).
+You can generate the presigned urls using [demos/http/common/src/presigned_urls_gen.py](demos/http/common/src/presigned_urls_gen.py). More info can be found [here](demos/http/common/src/README.md).
 
 #### Build Steps
 
@@ -303,13 +303,13 @@ The following instructions have been tested on an Ubuntu 18.04 environment with 
     docker pull eclipse-mosquitto:latest
     ```
 
-    `BROKER_ENDPOINT` defined in `demos/mqtt/mqtt_demo_basic_tls/demo_config.h` can now be set to `localhost`.
-
 1. If a Mosquitto broker with TLS communication needs to be run, ignore this step and proceed to the next step. A Mosquitto broker with plain text communication can be run by executing the command below.
 
     ```
     docker run -it -p 1883:1883 --name mosquitto-plain-text eclipse-mosquitto:latest
     ```
+
+1. Set `BROKER_ENDPOINT` defined in `demos/mqtt/mqtt_demo_plaintext/demo_config.h` to `localhost`.
 
     Ignore the remaining steps unless a Mosquitto broker with TLS communication also needs to be run.
 
@@ -324,7 +324,7 @@ The following instructions have been tested on an Ubuntu 18.04 environment with 
 
     ```sh
     # Generate server key and certificate.# Provide the Subject field information as appropriate for Server certificate. Make sure the Common Name (CN) field is different from the root CA certificate.
-    openssl req -nodes -sha256 -new -keyout server.key -out server.csr# Sign with the CA cert.
+    openssl req -nodes -sha256 -new -keyout server.key -out server.csr # Sign with the CA cert.
     openssl x509 -req -sha256 -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -days 365
     ```
 
@@ -349,7 +349,9 @@ The following instructions have been tested on an Ubuntu 18.04 environment with 
     docker run -it -p 8883:8883 -v $(pwd):/mosquitto/config/ --name mosquitto-basic-tls eclipse-mosquitto:latest
     ```
 
-1. Set `ROOT_CA_CERT_PATH` to the absolute path of the CA certificate created in step 3. for the local Mosquitto server.
+1. Update `demos/mqtt/mqtt_demo_basic_tls/demo_config.h` to the following:  
+   Set `BROKER_ENDPOINT` to `localhost`.  
+   Set `ROOT_CA_CERT_PATH` to the absolute path of the CA certificate created in step 4. for the local Mosquitto server.
 
 ##### Installing httpbin to run HTTP demos locally
 
@@ -361,6 +363,7 @@ docker run -p 80:80 kennethreitz/httpbin
 ```
 
 `SERVER_HOST` defined in `demos/http/http_demo_plaintext/demo_config.h` can now be set to `localhost`.
+
 To run `http_demo_basic_tls`, [download ngrok](https://ngrok.com/download) in order to create an HTTPS tunnel to the httpbin server currently hosted on port 80:
 
 ```sh
@@ -368,15 +371,18 @@ To run `http_demo_basic_tls`, [download ngrok](https://ngrok.com/download) in or
 ```
 
 `ngrok` will provide an https link that can be substituted in `demos/http/http_demo_basic_tls/demo_config.h` and has a format of `https://ABCDEFG12345.ngrok.io`.
-Set `SERVER_HOST` in `demos/http/http_demo_basic_tls/demo_config.h` to the https link provided by ngrok.
-You must also download the Root CA certificate provided by ngrok and set `ROOT_CA_CERT_PATH` in `demo_config.h` to the file path of the downloaded certificate.
+
+Set `SERVER_HOST` in `demos/http/http_demo_basic_tls/demo_config.h` to the https link provided by ngrok, without `https://` preceding it.
+
+You must also download the Root CA certificate provided by the ngrok https link and set `ROOT_CA_CERT_PATH` in `demos/http/http_demo_basic_tls/demo_config.h` to the file path of the downloaded certificate.
 
 ## Generating Documentation
 
-The Doxygen references were created using Doxygen version 1.8.20. To generate the Doxygen pages, use the provided Python script, [tools/doxygen/generate_docs.py](https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/master/tools/doxygen/generate_docs.py). Please ensure that each of the library submodules under libraries/standard/ and libraries/aws are cloned before using this script.
+The Doxygen references were created using Doxygen version 1.8.20. To generate the Doxygen pages, use the provided Python script at [tools/doxygen/generate_docs.py](tools/doxygen/generate_docs.py). Please ensure that each of the library submodules under libraries/standard/ and libraries/aws are cloned before using this script.
 
 ```sh
 cd <CSDK_ROOT>
+git submodule update --init --recursive --checkout
 python3 tools/doxygen/generate_docs.py --root .
 ```
 
