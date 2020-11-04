@@ -39,7 +39,7 @@ add_library( openssl_posix
 
 # For static library builds, link against static library of OpenSSL
 # for openssl_posix target.
-if(BUILD_SHARED_LIBS)
+if(NOT BUILD_SHARED_LIBS)
     set( OPENSSL_USE_STATIC_LIBS TRUE )
 endif()
 find_package( OpenSSL REQUIRED )
