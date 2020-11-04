@@ -349,7 +349,7 @@ The following instructions have been tested on an Ubuntu 18.04 environment with 
     docker run -it -p 8883:8883 -v $(pwd):/mosquitto/config/ --name mosquitto-basic-tls eclipse-mosquitto:latest
     ```
 
-1. Update `demos/mqtt/mqtt_demo_basic_tls/demo_config.h` to following:
+1. Update `demos/mqtt/mqtt_demo_basic_tls/demo_config.h` to the following:  
    Set `BROKER_ENDPOINT` to `localhost`.  
    Set `ROOT_CA_CERT_PATH` to the absolute path of the CA certificate created in step 4. for the local Mosquitto server.
 
@@ -363,6 +363,7 @@ docker run -p 80:80 kennethreitz/httpbin
 ```
 
 `SERVER_HOST` defined in `demos/http/http_demo_plaintext/demo_config.h` can now be set to `localhost`.
+
 To run `http_demo_basic_tls`, [download ngrok](https://ngrok.com/download) in order to create an HTTPS tunnel to the httpbin server currently hosted on port 80:
 
 ```sh
@@ -370,7 +371,9 @@ To run `http_demo_basic_tls`, [download ngrok](https://ngrok.com/download) in or
 ```
 
 `ngrok` will provide an https link that can be substituted in `demos/http/http_demo_basic_tls/demo_config.h` and has a format of `https://ABCDEFG12345.ngrok.io`.
+
 Set `SERVER_HOST` in `demos/http/http_demo_basic_tls/demo_config.h` to the https link provided by ngrok, without `https://` preceeding it.
+
 You must also download the Root CA certificate provided by the ngrok https link and set `ROOT_CA_CERT_PATH` in `demo_config.h` to the file path of the downloaded certificate.
 
 ## Generating Documentation
