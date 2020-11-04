@@ -273,7 +273,7 @@ In order to set these configurations manually, edit `demo_config.h` in `demos/ht
 * Set `S3_PRESIGNED_GET_URL` to a S3 presigned URL with GET access.
 * Set `S3_PRESIGNED_PUT_URL` to a S3 presigned URL with PUT access.
 
-You can generate the presigned urls using [demos/http/common/src/presigned_urls_gen.py](demos/common/src/presigned_urls_gen.py). More info can be found [here](demos/common/src/README.md).
+You can generate the presigned urls using [demos/http/common/src/presigned_urls_gen.py](demos/common/src/presigned_urls_gen.py). More info can be found [here](demos/http/common/src/README.md).
 
 #### Build Steps
 
