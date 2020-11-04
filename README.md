@@ -141,7 +141,7 @@ All of the released versions of the C-SDK libraries are available as git tags. F
 
 [API documentation of 202011.00 release](https://docs.aws.amazon.com/embedded-csdk/202011.00/lib-ref/index.html)
 
-This release includes new HTTP client, AWS IoT Device Defender, and AWS IoT Jobs libraries. Additionally, there is an update to the coreJSON API. We continue to maintain our code quality criteria.
+This release includes refactored HTTP client, AWS IoT Device Defender, and AWS IoT Jobs libraries. Additionally, there is a major update to the coreJSON API. All libraries continue to undergo code quality checks (e.g. MISRA-C compliance), Coverity static analysis, and validation of memory safety with the C Bounded Model Checker (CBMC) automated reasoning tool.
 
 ### 202009.00
 
