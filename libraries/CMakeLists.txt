@@ -12,7 +12,9 @@ macro( clone_path path )
     endif()
 endmacro()
 
-clone_path( ${MODULES_DIR} )
+if( EXISTS ${ROOT_DIR}/.git )
+    clone_path( ${MODULES_DIR} )
+endif()
 
 # Add build configuration for all 3rd party modules.
 add_subdirectory(${3RDPARTY_DIR})
