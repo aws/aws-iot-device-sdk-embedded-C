@@ -36,6 +36,7 @@
         * [Prerequisites](#prerequisites)
         * [AWS IoT Account Setup](#aws-iot-account-setup)
         * [Configuring the mutual auth demos](#configuring-the-mutual-auth-demos)
+        * [Configuring the S3 demos](#configuring-the-s3-demos)
         * [Build Steps](#build-steps)
         * [Alternative option of Docker containers for running demos locally](#alternative-option-of-docker-containers-for-running-demos-locally)
             * [Installing Mosquitto to run MQTT demos locally](#installing-mosquitto-to-run-mqtt-demos-locally)
