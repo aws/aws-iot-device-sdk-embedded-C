@@ -279,15 +279,19 @@ sh get-docker.sh
 The following instructions have been tested on an Ubuntu 18.04 environment with Docker and OpenSSL installed.
 
 1. Download the official Docker image for Mosquitto.
+
     ```sh
     docker pull eclipse-mosquitto:latest
     ```
+
     `BROKER_ENDPOINT` defined in `demos/mqtt/mqtt_demo_basic_tls/demo_config.h` can now be set to `localhost`.
 
 1. If a Mosquitto broker with TLS communication needs to be run, ignore this step and proceed to the next step. Mosquitto broker with plain text communication can be run by executing the command below.
+
     ```
     docker run -it -p 1883:1883 --name mosquitto-plain-text eclipse-mosquitto:latest
     ```
+
 1. For TLS communication with Mosquitto broker, server and CA credentials need to be created. Use OpenSSL commands to generate the credentials for the Mosquitto server.
 
     Note: Make sure to use different Common Name (CN) detail between the CA and server certificates; otherwise, SSL handshake fails with exactly same Common Name (CN) detail in both the certificates.
