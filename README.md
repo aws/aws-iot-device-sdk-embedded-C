@@ -378,10 +378,11 @@ You must also download the Root CA certificate provided by the ngrok https link 
 
 ## Generating Documentation
 
-The Doxygen references were created using Doxygen version 1.8.20. To generate the Doxygen pages, use the provided Python script in [tools/doxygen/generate_docs.py](tools/doxygen/generate_docs.py). Please ensure that each of the library submodules under libraries/standard/ and libraries/aws are cloned before using this script.
+The Doxygen references were created using Doxygen version 1.8.20. To generate the Doxygen pages, use the provided Python script at [tools/doxygen/generate_docs.py](tools/doxygen/generate_docs.py). Please ensure that each of the library submodules under libraries/standard/ and libraries/aws are cloned before using this script.
 
 ```sh
 cd <CSDK_ROOT>
+git submodule update --init --recursive --checkout
 python3 tools/doxygen/generate_docs.py --root .
 ```
 
