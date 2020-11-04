@@ -272,7 +272,7 @@ In order to set these configurations manually, edit `demo_config.h` in `demos/ht
 * Set `S3_PRESIGNED_GET_URL` to a S3 presigned URL with GET access.
 * Set `S3_PRESIGNED_PUT_URL` to a S3 presigned URL with PUT access.
 
-You can generate the presigned urls using [demos/http/common/src/presigned_urls_gen.py](https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/master/demos/http/common/src/presigned_urls_gen.py). More info can be found [here](https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/dbbb1c14612d1378d7a6fa9218d822c603baaa40/demos/http/common/src/README.md).
+You can generate the presigned urls using [demos/http/common/src/presigned_urls_gen.py](https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/master/demos/http/common/src/presigned_urls_gen.py). More info can be found [here](https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/master/demos/http/common/src/README.md).
 
 #### Build Steps
 
