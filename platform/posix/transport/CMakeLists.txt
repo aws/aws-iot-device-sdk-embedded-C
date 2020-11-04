@@ -37,7 +37,11 @@ target_link_libraries( plaintext_posix
 add_library( openssl_posix
                 ${OPENSSL_TRANSPORT_SOURCES} )
 
-set( OPENSSL_USE_STATIC_LIBS TRUE )
+# For static library builds, link against static library of OpenSSL
+# for openssl_posix target.
+if(BUILD_SHARED_LIBS)
+    set( OPENSSL_USE_STATIC_LIBS TRUE )
+endif()
 find_package( OpenSSL REQUIRED )
 
 # Verify the minimum OpenSSL version required
