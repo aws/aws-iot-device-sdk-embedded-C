@@ -65,21 +65,6 @@
 #include "ota_appversion32.h"
 
 /**
- * @brief ALPN (Application-Layer Protocol Negotiation) protocol name for AWS IoT MQTT.
- *
- * This will be used if the AWS_MQTT_PORT is configured as 443 for AWS IoT MQTT broker.
- * Please see more details about the ALPN protocol for AWS IoT MQTT endpoint
- * in the link below.
- * https://aws.amazon.com/blogs/iot/mqtt-with-tls-client-authentication-on-port-443-why-it-is-useful-and-how-it-works/
- */
-#define AWS_IOT_MQTT_ALPN                   "\x0ex-amzn-mqtt-ca"
-
-/**
- * @brief Length of ALPN protocol name.
- */
-#define AWS_IOT_MQTT_ALPN_LENGTH            ( ( uint16_t ) ( sizeof( AWS_IOT_MQTT_ALPN ) - 1 ) )
-
-/**
  * These configuration settings are required to run the OTA demo which uses mutual authentication.
  * Throw compilation error if the below configs are not defined.
  */
@@ -98,6 +83,21 @@
 #ifndef CLIENT_PRIVATE_KEY_PATH
     #error "Please define path to client private key(CLIENT_PRIVATE_KEY_PATH) in demo_config.h."
 #endif
+
+/**
+ * @brief ALPN (Application-Layer Protocol Negotiation) protocol name for AWS IoT MQTT.
+ *
+ * This will be used if the AWS_MQTT_PORT is configured as 443 for AWS IoT MQTT broker.
+ * Please see more details about the ALPN protocol for AWS IoT MQTT endpoint
+ * in the link below.
+ * https://aws.amazon.com/blogs/iot/mqtt-with-tls-client-authentication-on-port-443-why-it-is-useful-and-how-it-works/
+ */
+#define AWS_IOT_MQTT_ALPN                   "\x0ex-amzn-mqtt-ca"
+
+/**
+ * @brief Length of ALPN protocol name.
+ */
+#define AWS_IOT_MQTT_ALPN_LENGTH            ( ( uint16_t ) ( sizeof( AWS_IOT_MQTT_ALPN ) - 1 ) )
 
 /**
  * @brief Length of MQTT server host name.
@@ -141,11 +141,9 @@
  * The largest message size is data size from the AWS IoT streaming service, 2000 is reserved for
  * extra headers.
  */
-#define OTA_PRESIGNED_URL_MAX_SIZE   ( 1500U )
-#define OTA_MQTT_HEADER_MAX_SIZE     ( 30U )
-#define NETWORK_BUFFER_SIZE          ( ( 1U << otaconfigLOG2_FILE_BLOCK_SIZE ) + \
-                                       OTA_PRESIGNED_URL_MAX_SIZE + \
-                                       OTA_MQTT_HEADER_MAX_SIZE )
+#define OTA_PRESIGNED_URL_MAX_SIZE          ( 2048U )
+#define OTA_MQTT_HEADER_MAX_SIZE            ( 30U )
+#define NETWORK_BUFFER_SIZE                 ( OTA_PRESIGNED_URL_MAX_SIZE )
 
 /**
  * @brief The delay used in the main OTA Demo task loop to periodically output the OTA
@@ -154,14 +152,32 @@
 #define OTA_DEMO_TASK_DELAY_SECONDS         ( 1U )
 
 /**
+ * @brief The maximum size of the file paths used in the demo.
+ */
+#define OTA_MAX_FILE_PATH_SIZE              ( 260 )
+
+/**
+ * @brief The maximum size of the stream name required for downloading update file
+ * from streaming service.
+ */
+#define OTA_MAX_STREAM_NAME_SIZE            ( 128 )
+
+/**
+ * @brief The maximum size of the file bitmap where each bit represents a block
+ * status.
+ */
+#define OTA_MAX_BLOCK_BITMAP_SIZE           ( 256 )
+
+
+/**
  * @brief The MQTT metrics string expected by AWS IoT.
  */
-#define METRICS_STRING                      "?SDK=" OS_NAME "&Version=" OS_VERSION "&Platform=" HARDWARE_PLATFORM_NAME "&MQTTLib=" MQTT_LIB
+#define METRICS_STRING           "?SDK=" OS_NAME "&Version=" OS_VERSION "&Platform=" HARDWARE_PLATFORM_NAME "&MQTTLib=" MQTT_LIB
 
 /**
  * @brief The length of the MQTT metrics string expected by AWS IoT.
  */
-#define METRICS_STRING_LENGTH               ( ( uint16_t ) ( sizeof( METRICS_STRING ) - 1 ) )
+#define METRICS_STRING_LENGTH    ( ( uint16_t ) ( sizeof( METRICS_STRING ) - 1 ) )
 
 /*-----------------------------------------------------------*/
 
@@ -178,7 +194,7 @@ const AppVersion32_t appFirmwareVersion =
 /**
  * @brief The network buffer must remain valid when OTA library task is running.
  */
-static uint8_t buffer[ NETWORK_BUFFER_SIZE ];
+static uint8_t buffer[ OTA_NETWORK_BUFFER_SIZE ];
 
 /**
  * @brief Keep a flag for indicating if the MQTT connection is alive.
@@ -190,6 +206,9 @@ static bool mqttSessionEstablished = false;
  */
 static MQTTContext_t mqttContext;
 
+/**
+ * @brief Network context used for HTTP connection.
+ */
 static NetworkContext_t networkContextHttp;
 
 /* HTTP URL information. */
@@ -203,9 +222,9 @@ httpUrlInfo_t UrlInfo;
  */
 static char serverHost[ 256 ];
 
-    /* Check that size of the user buffer is defined. */
+/* Check that size of the user buffer is defined. */
 #ifndef USER_BUFFER_LENGTH
-    #define USER_BUFFER_LENGTH    ( 20000)
+    #define USER_BUFFER_LENGTH    ( 2048 )
 #endif
 
 /**
@@ -220,6 +239,52 @@ static uint8_t userBuffer[ USER_BUFFER_LENGTH ];
 
 /* The transport layer interface used by the HTTP Client library. */
 TransportInterface_t transportInterfaceHttp;
+
+/**
+ * @brief Update File path buffer.
+ */
+uint8_t updateFilePath[ OTA_MAX_FILE_PATH_SIZE ];
+
+/**
+ * @brief Certificate File path buffer.
+ */
+uint8_t certFilePath[ OTA_MAX_FILE_PATH_SIZE ];
+
+/**
+ * @brief Stream name buffer.
+ */
+uint8_t streamName[ OTA_MAX_STREAM_NAME_SIZE ];
+
+/**
+ * @brief Decode memory.
+ */
+uint8_t url[ OTA_PRESIGNED_URL_MAX_SIZE ];
+
+/**
+ * @brief Bitmap memory.
+ */
+uint8_t bitmap[ OTA_MAX_BLOCK_BITMAP_SIZE ];
+
+/**
+ * @brief Event buffer.
+ */
+static OtaEventData_t eventBuffer;
+
+/**
+ * @brief The buffer passed to the OTA Agent from application while initializing.
+ */
+static OtaAppBuffer_t otaBuffer =
+{
+    .pUpdateFilePath    = updateFilePath,
+    .updateFilePathsize = OTA_MAX_FILE_PATH_SIZE,
+    .pCertFilePath      = certFilePath,
+    .certFilePathSize   = OTA_MAX_FILE_PATH_SIZE,
+    .url                = url,
+    .urlSize            = OTA_PRESIGNED_URL_MAX_SIZE,
+    .pFileBitmap        = bitmap,
+    .fileBitmapSize     = OTA_MAX_BLOCK_BITMAP_SIZE
+};
+
 
 /*-----------------------------------------------------------*/
 
@@ -252,54 +317,25 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
                                  bool createCleanSession,
                                  bool * pSessionPresent );
 
-/**
- * @brief Publish a message to the specified client/topic at the given QOS.
- *
- * @param[in] pMqttContext MQTT context pointer.
- * @param[in] createCleanSession Creates a new MQTT session if true.
- * If false, tries to establish the existing session if there was session
- * already present in broker.
- * @param[out] pSessionPresent Session was already present in the broker or not.
- * Session present response is obtained from the CONNACK from broker.
- *
- * @return EXIT_SUCCESS if an MQTT session is established;
- * EXIT_FAILURE otherwise.
+/*
+ * Publish a message to the specified client/topic at the given QOS.
  */
- static OtaErr_t mqttPublish( const char * const pacTopic,
-                              uint16_t topicLen,
-                              const char * pMsg,
-                              uint32_t msgSize,
-                              uint8_t qos );
+static OtaErr_t mqttPublish( const char * const pacTopic,
+                             uint16_t topicLen,
+                             const char * pMsg,
+                             uint32_t msgSize,
+                             uint8_t qos );
 
-/**
- * @brief Sends an MQTT CONNECT packet over the already connected TCP socket.
- *
- * @param[in] pMqttContext MQTT context pointer.
- * @param[in] createCleanSession Creates a new MQTT session if true.
- * If false, tries to establish the existing session if there was session
- * already present in broker.
- * @param[out] pSessionPresent Session was already present in the broker or not.
- * Session present response is obtained from the CONNACK from broker.
- *
- * @return EXIT_SUCCESS if an MQTT session is established;
- * EXIT_FAILURE otherwise.
+/*
+ * Subscribe to the topics.
  */
 static OtaErr_t mqttSubscribe( const char * pTopicFilter,
                                uint16_t topicFilterLength,
                                uint8_t qos,
                                void * pCallback );
-/**
- * @brief Sends an MQTT CONNECT packet over the already connected TCP socket.
- *
- * @param[in] pMqttContext MQTT context pointer.
- * @param[in] createCleanSession Creates a new MQTT session if true.
- * If false, tries to establish the existing session if there was session
- * already present in broker.
- * @param[out] pSessionPresent Session was already present in the broker or not.
- * Session present response is obtained from the CONNACK from broker.
- *
- * @return EXIT_SUCCESS if an MQTT session is established;
- * EXIT_FAILURE otherwise.
+
+/*
+ * Unsubscribe from the topics.
  */
 static OtaErr_t mqttUnsubscribe( const char * pTopicFilter,
                                  uint16_t topicFilterLength,
@@ -373,7 +409,8 @@ static void otaAppCallback( OtaJobEvent_t event )
 
 /*-----------------------------------------------------------*/
 
-static void mqttJobCallback( MQTTContext_t * pContext, MQTTPublishInfo_t * pPublishInfo )
+static void mqttJobCallback( MQTTContext_t * pContext,
+                             MQTTPublishInfo_t * pPublishInfo )
 {
     assert( pPublishInfo != NULL );
     assert( pContext != NULL );
@@ -383,29 +420,28 @@ static void mqttJobCallback( MQTTContext_t * pContext, MQTTPublishInfo_t * pPubl
 
     LogInfo( ( "Received job message callback, size %d.\n\n", pPublishInfo->payloadLength ) );
 
-    pData = otaEventBufferGet();
+    pData = &eventBuffer;
 
+    if( pData != NULL )
+    {
+        memcpy( pData->data, pPublishInfo->pPayload, pPublishInfo->payloadLength );
+        pData->dataLength = pPublishInfo->payloadLength;
+        eventMsg.eventId = OtaAgentEventReceivedJobDocument;
+        eventMsg.pEventData = pData;
 
-        if( pData != NULL )
-        {
-            memcpy( pData->data, pPublishInfo->pPayload, pPublishInfo->payloadLength );
-            pData->dataLength = pPublishInfo->payloadLength ;
-            eventMsg.eventId = OtaAgentEventReceivedJobDocument;
-            eventMsg.pEventData = pData;
-
-            /* Send job document received event. */
-            OTA_SignalEvent( &eventMsg );
-        }
-        else
-        {
-            LogError( ( "Error: No OTA data buffers available.\r\n" ) );
-        }
-
+        /* Send job document received event. */
+        OTA_SignalEvent( &eventMsg );
+    }
+    else
+    {
+        LogError( ( "Error: No OTA data buffers available.\r\n" ) );
+    }
 }
 
 /*-----------------------------------------------------------*/
 
-static void mqttDataCallback( MQTTContext_t * pContext, MQTTPublishInfo_t * pPublishInfo )
+static void mqttDataCallback( MQTTContext_t * pContext,
+                              MQTTPublishInfo_t * pPublishInfo )
 {
     assert( pPublishInfo != NULL );
     assert( pContext != NULL );
@@ -415,22 +451,22 @@ static void mqttDataCallback( MQTTContext_t * pContext, MQTTPublishInfo_t * pPub
 
     LogInfo( ( "Received data message callback, size %d.\n\n", pPublishInfo->payloadLength ) );
 
-    pData = otaEventBufferGet();
+    pData = &eventBuffer;
 
-        if( pData != NULL )
-        {
-            memcpy( pData->data, pPublishInfo->pPayload, pPublishInfo->payloadLength );
-            pData->dataLength = pPublishInfo->payloadLength ;
-            eventMsg.eventId = OtaAgentEventReceivedFileBlock;
-            eventMsg.pEventData = pData;
+    if( pData != NULL )
+    {
+        memcpy( pData->data, pPublishInfo->pPayload, pPublishInfo->payloadLength );
+        pData->dataLength = pPublishInfo->payloadLength;
+        eventMsg.eventId = OtaAgentEventReceivedFileBlock;
+        eventMsg.pEventData = pData;
 
-            /* Send job document received event. */
-            OTA_SignalEvent( &eventMsg );
-        }
-        else
-        {
-            LogError( ( "Error: No OTA data buffers available.\r\n" ) );
-        }
+        /* Send job document received event. */
+        OTA_SignalEvent( &eventMsg );
+    }
+    else
+    {
+        LogError( ( "Error: No OTA data buffers available.\r\n" ) );
+    }
 }
 
 /*-----------------------------------------------------------*/
@@ -442,7 +478,7 @@ static void mqttEventCallback( MQTTContext_t * pMqttContext,
     assert( pMqttContext != NULL );
     assert( pPacketInfo != NULL );
     assert( pDeserializedInfo != NULL );
-   // assert( pDeserializedInfo->packetIdentifier != MQTT_PACKET_ID_INVALID );
+    /* assert( pDeserializedInfo->packetIdentifier != MQTT_PACKET_ID_INVALID ); */
 
     /* Handle incoming publish. The lower 4 bits of the publish packet
      * type is used for the dup, QoS, and retain flags. Hence masking
@@ -460,15 +496,16 @@ static void mqttEventCallback( MQTTContext_t * pMqttContext,
         {
             case MQTT_PACKET_TYPE_SUBACK:
                 LogInfo( ( "Received SUBACK.\n\n" ) );
-                // TODO, handle suback for OTA.
+                /* TODO, handle suback for OTA. */
                 break;
 
             case MQTT_PACKET_TYPE_UNSUBACK:
                 LogInfo( ( "Received UNSUBACK.\n\n" ) );
-                // TODO, handle ubsuback for OTA.
+                /* TODO, handle ubsuback for OTA. */
                 break;
 
             case MQTT_PACKET_TYPE_PINGRESP:
+
                 /* Nothing to be done from application as library handles
                  * PINGRESP. */
                 LogWarn( ( "PINGRESP should not be handled by the application "
@@ -620,7 +657,7 @@ static OtaErr_t mqttSubscribe( const char * pTopicFilter,
     {
         LogInfo( ( "SUBSCRIBE topic %.*s to broker.\n\n",
                    topicFilterLength,
-                   pTopicFilter) );
+                   pTopicFilter ) );
 
         /* Process incoming packet from the broker. Acknowledgment for subscription
          * ( SUBACK ) will be received here. However after sending the subscribe, the
@@ -648,11 +685,11 @@ static OtaErr_t mqttSubscribe( const char * pTopicFilter,
 /*
  * Publish a message to the specified client/topic at the given QOS.
  */
- static OtaErr_t mqttPublish( const char * const pacTopic,
-                              uint16_t topicLen,
-                              const char * pMsg,
-                              uint32_t msgSize,
-                              uint8_t qos )
+static OtaErr_t mqttPublish( const char * const pacTopic,
+                             uint16_t topicLen,
+                             const char * pMsg,
+                             uint32_t msgSize,
+                             uint8_t qos )
 {
     OtaErr_t otaErrRet = OTA_ERR_UNINITIALIZED;
 
@@ -687,7 +724,6 @@ static OtaErr_t mqttSubscribe( const char * pTopicFilter,
 
             otaErrRet = OTA_ERR_NONE;
         }
-
     }
     else
     {
@@ -867,7 +903,8 @@ static int initializeMqtt( MQTTContext_t * pMqttContext,
     return returnStatus;
 }
 
-static int32_t connectToServer( NetworkContext_t * pNetworkContext , char * pUrl )
+static int32_t connectToServer( NetworkContext_t * pNetworkContext,
+                                char * pUrl )
 {
     int32_t returnStatus = EXIT_FAILURE;
     HTTPStatus_t httpStatus = HTTPSuccess;
@@ -884,24 +921,24 @@ static int32_t connectToServer( NetworkContext_t * pNetworkContext , char * pUrl
 
     /* Initialize TLS credentials. */
     ( void ) memset( &opensslCredentials, 0, sizeof( opensslCredentials ) );
-    opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
+    opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH_HTTP;
 
     /* Retrieve the address location and length from S3_PRESIGNED_GET_URL. */
     getUrlAddress( pUrl,
                    strlen( pUrl ),
-                   UrlInfo.pAddress,
-                   UrlInfo.addressLength );
+                   &UrlInfo.pAddress,
+                   &UrlInfo.addressLength );
 
-    if( returnStatus == EXIT_SUCCESS )
+    if( 1 /* returnStatus == EXIT_SUCCESS */ )
     {
         /* serverHost should consist only of the host address located in
          * S3_PRESIGNED_GET_URL. */
-        memcpy( serverHost, UrlInfo.pAddress, UrlInfo.addressLength  );
-        serverHost[  UrlInfo.addressLength  ] = '\0';
+        memcpy( serverHost, UrlInfo.pAddress, UrlInfo.addressLength );
+        serverHost[ UrlInfo.addressLength ] = '\0';
 
         /* Initialize server information. */
         serverInfo.pHostName = serverHost;
-        serverInfo.hostNameLength =  UrlInfo.addressLength ;
+        serverInfo.hostNameLength = UrlInfo.addressLength;
         serverInfo.port = AWS_HTTPS_PORT;
 
         /* Establish a TLS session with the HTTP server. This example connects
@@ -923,7 +960,7 @@ static int32_t connectToServer( NetworkContext_t * pNetworkContext , char * pUrl
     return returnStatus;
 }
 
-static OtaErr_t httpInit( const char *  pUrl )
+static OtaErr_t httpInit( const char * pUrl )
 {
     /* OTA lib return error code. */
     OtaErr_t ret = OTA_ERR_UNINITIALIZED;
@@ -939,35 +976,36 @@ static OtaErr_t httpInit( const char *  pUrl )
      * attempts are reached or maximum timeout value is reached. The function
      * returns EXIT_FAILURE if the TCP connection cannot be established to
      * broker after configured number of attempts. */
-    returnStatus = connectToServer( &networkContextHttp , pUrl );
+    returnStatus = connectToServer( &networkContextHttp, pUrl );
 
     if( returnStatus == EXIT_SUCCESS )
     {
-            /* Define the transport interface. */
-            ( void ) memset( &transportInterfaceHttp, 0, sizeof( transportInterfaceHttp ) );
-            transportInterfaceHttp.recv = Openssl_Recv;
-            transportInterfaceHttp.send = Openssl_Send;
-            transportInterfaceHttp.pNetworkContext = &networkContextHttp;
-            
-            ret = OTA_ERR_NONE;
+        /* Define the transport interface. */
+        ( void ) memset( &transportInterfaceHttp, 0, sizeof( transportInterfaceHttp ) );
+        transportInterfaceHttp.recv = Openssl_Recv;
+        transportInterfaceHttp.send = Openssl_Send;
+        transportInterfaceHttp.pNetworkContext = &networkContextHttp;
+
+        getUrlPath( pUrl, strlen( pUrl ), &UrlInfo.pPath,
+                    &UrlInfo.pathLength );
+
+        ret = OTA_ERR_NONE;
     }
     else
     {
-
         /* Log an error to indicate connection failure after all
          * reconnect attempts are over. */
         LogError( ( "Failed to connect to HTTP server %s.",
-                     serverHost ) );
+                    serverHost ) );
 
-        ret =  OTA_ERR_HTTP_INIT_FAILED;
-
+        ret = OTA_ERR_HTTP_INIT_FAILED;
     }
-    
-    return ret;
 
+    return ret;
 }
 
-static OtaErr_t httpRequest( uint32_t rangeStart, uint32_t rangeEnd )
+static OtaErr_t httpRequest( uint32_t rangeStart,
+                             uint32_t rangeEnd )
 {
     /* Return value of this method. */
     int32_t returnStatus = EXIT_SUCCESS;
@@ -975,7 +1013,7 @@ static OtaErr_t httpRequest( uint32_t rangeStart, uint32_t rangeEnd )
     /* OTA lib return error code. */
     OtaErr_t ret = OTA_ERR_UNINITIALIZED;
 
-    static uint8_t url[34];
+    static uint8_t url[ 34 ];
 
     OtaEventData_t * pData;
     OtaEventMsg_t eventMsg = { 0 };
@@ -996,8 +1034,6 @@ static OtaErr_t httpRequest( uint32_t rangeStart, uint32_t rangeEnd )
     ( void ) memset( &response, 0, sizeof( response ) );
     ( void ) memset( &requestHeaders, 0, sizeof( requestHeaders ) );
 
-    memcpy(url,UrlInfo.pAddress ,UrlInfo.addressLength);
-
     /* Initialize the request object. */
     requestInfo.pHost = serverHost;
     requestInfo.hostLen = UrlInfo.addressLength;
@@ -1005,6 +1041,8 @@ static OtaErr_t httpRequest( uint32_t rangeStart, uint32_t rangeEnd )
     requestInfo.methodLen = sizeof( HTTP_METHOD_GET ) - 1;
     requestInfo.pPath = UrlInfo.pPath;
     requestInfo.pathLen = UrlInfo.pathLength;
+
+
 
     /* Set "Connection" HTTP header to "keep-alive" so that multiple requests
      * can be sent over the same established TCP connection. */
@@ -1017,7 +1055,7 @@ static OtaErr_t httpRequest( uint32_t rangeStart, uint32_t rangeEnd )
     httpStatus = HTTPClient_InitializeRequestHeaders( &requestHeaders,
                                                       &requestInfo );
 
-    HTTPClient_AddRangeHeader( &requestHeaders, rangeStart, rangeEnd);
+    HTTPClient_AddRangeHeader( &requestHeaders, rangeStart, rangeEnd );
 
     if( httpStatus == HTTPSuccess )
     {
@@ -1048,10 +1086,11 @@ static OtaErr_t httpRequest( uint32_t rangeStart, uint32_t rangeEnd )
     }
     else
     {
+        pData = otaEventBufferGet();
 
-       /* Get the data from response buffer. */
+        /* Get the data from response buffer. */
         memcpy( pData->data, response.pBody, response.bodyLen );
-        pData->dataLength = response.bodyLen  ;
+        pData->dataLength = response.bodyLen;
 
         /* Send job document received event. */
         eventMsg.eventId = OtaAgentEventReceivedFileBlock;
@@ -1059,11 +1098,9 @@ static OtaErr_t httpRequest( uint32_t rangeStart, uint32_t rangeEnd )
         OTA_SignalEvent( &eventMsg );
 
         ret = OTA_ERR_NONE;
-
     }
-    
+
     return returnStatus;
-    
 }
 
 static OtaErr_t httpDeinit( void )
@@ -1081,66 +1118,80 @@ static OtaErr_t httpDeinit( void )
     }
     else
     {
-       ret = OTA_ERR_HTTP_REQUEST_FAILED;
+        ret = OTA_ERR_HTTP_REQUEST_FAILED;
     }
-    
+
     return ret;
+}
+
+static void setOtaInterface( OtaInterfaces_t * pOtaInterfaces )
+{
+    /* Initialize OTA library OS Interface. */
+    pOtaInterfaces->os.event.init = Posix_OtaInitEvent;
+    pOtaInterfaces->os.event.send = Posix_OtaSendEvent;
+    pOtaInterfaces->os.event.recv = Posix_OtaReceiveEvent;
+    pOtaInterfaces->os.event.deinit = Posix_OtaDeinitEvent;
+
+    /* Intialize the OTA library MQTT Interface.*/
+    pOtaInterfaces->mqtt.subscribe = mqttSubscribe;
+    pOtaInterfaces->mqtt.publish = mqttPublish;
+    pOtaInterfaces->mqtt.unsubscribe = mqttUnsubscribe;
+    pOtaInterfaces->mqtt.jobCallback = mqttJobCallback;
+    pOtaInterfaces->mqtt.dataCallback = mqttDataCallback;
+
+    /* Intialize the OTA library HTTP Interface.*/
+    pOtaInterfaces->http.init = httpInit;
+    pOtaInterfaces->http.request = httpRequest;
+    pOtaInterfaces->http.deinit = httpDeinit;
+
+    /* Intialize the OTA library PAL Interface.*/
+    pOtaInterfaces->pal.getPlatformImageState = prvPAL_GetPlatformImageState;
+    pOtaInterfaces->pal.setPlatformImageState = prvPAL_SetPlatformImageState;
+    pOtaInterfaces->pal.writeBlock = prvPAL_WriteBlock;
+    pOtaInterfaces->pal.activateNewImage = prvPAL_ActivateNewImage;
+    pOtaInterfaces->pal.closeFile = prvPAL_CloseFile;
+    pOtaInterfaces->pal.resetDevice = prvPAL_ResetDevice;
+    pOtaInterfaces->pal.abortUpdate = prvPAL_Abort;
 }
 
 /*-----------------------------------------------------------*/
 
 void startOTADemo( MQTTContext_t * pMqttContext )
 {
-    int ret = 0;
-    MQTTStatus_t mqttStatus;
+    /* Status indicating a successful demo or not. */
+    int32_t returnStatus = EXIT_SUCCESS;
+
+    /* coreMQTT library return status. */
+    MQTTStatus_t mqttStatus = MQTTSuccess;
+
+    /* OTA Agent state returned from calling OTA_GetAgentState.*/
+    OtaState_t state = OtaAgentStateStopped; /*ToDo OtaState_t add agent? */
+
+    /* OTA Aevent message used for sending event to OTA Agent.*/
     OtaEventMsg_t eventMsg = { 0 };
 
-    /* MQTT susbsrciption manager parameters.*/
-    SubscriptionManagerStatus_t mqttManagerStatus = 0u;
-    MQTTSubscribeInfo_t subscriptionInfo;
-    uint16_t topicLen = 0;
-    size_t subscriptionCount = 1;
-
-    /* OTA Agent state.*/
-    OtaState_t state = OtaAgentStateStopped;
-
-    /* OTA Agent thread handle. */
+    /* OTA Agent thread handle.*/
     pthread_t threadHandle;
 
-    /* Initialize OTA library OS Interface. */
-	static OtaOSInterface_t otaOSInterface;
-    otaOSInterface.event.init = ota_InitEvent;
-	otaOSInterface.event.send = ota_SendEvent;
-	otaOSInterface.event.recv = ota_ReceiveEvent;
-	otaOSInterface.event.deinit = ota_DeinitEvent;
+    /* OTA interface context required for library interface functions.*/
+    OtaInterfaces_t otaInterfaces;
 
-    /* Intialize the OTA library MQTT Interface.*/
-    static OtaMqttInterface_t otaMqttInterface;
-    otaMqttInterface.subscribe = mqttSubscribe;
-    otaMqttInterface.publish = mqttPublish;
-    otaMqttInterface.unsubscribe = mqttUnsubscribe;
-    otaMqttInterface.jobCallback = mqttJobCallback;
-    otaMqttInterface.dataCallback= mqttDataCallback;
-
-    /* Intialize the OTA library HTTP Interface.*/
-    static OtaHttpInterface_t otaHttpInterface;
-    otaHttpInterface.init = httpInit;
-    otaHttpInterface.request = httpRequest;
-    otaHttpInterface.deinit = httpDeinit;
+    /* Set OTA Library interfaces.*/
+    setOtaInterface( &otaInterfaces );
 
     /* Initialize the OTA Agent , if it is resuming the OTA statistics will be cleared for new
      * connection.*/
-    OTA_AgentInit( &otaOSInterface,
-                   &otaMqttInterface,
-                   &otaHttpInterface,
+    OTA_AgentInit( &otaBuffer,
+                   &otaInterfaces,
                    ( const uint8_t * ) ( CLIENT_IDENTIFIER ),
                    otaAppCallback );
 
     sleep( OTA_DEMO_TASK_DELAY_SECONDS );
 
     /* Create the OTA Agent thread with default attributes.*/
-	pthread_create( &threadHandle, NULL, otaAgentTask, NULL );
+    pthread_create( &threadHandle, NULL, otaAgentTask, NULL );
 
+    /* Send start event to OTA Agent.*/
     eventMsg.eventId = OtaAgentEventStart;
     OTA_SignalEvent( &eventMsg );
 
@@ -1148,7 +1199,6 @@ void startOTADemo( MQTTContext_t * pMqttContext )
      * per second. */
     while( ( ( state = OTA_GetAgentState() ) != OtaAgentStateStopped ) )
     {
-    	 
         sleep( OTA_DEMO_TASK_DELAY_SECONDS );
 
         LogInfo( ( " Received: %u   Queued: %u   Processed: %u   Dropped: %u",
@@ -1157,23 +1207,21 @@ void startOTADemo( MQTTContext_t * pMqttContext )
                    OTA_GetPacketsProcessed(),
                    OTA_GetPacketsDropped() ) );
 
-        if(state == OtaAgentStateWaitingForJob )
+        if( state == OtaAgentStateWaitingForJob )
         {
-                mqttStatus = MQTT_ProcessLoop( pMqttContext, 1000 );
+            mqttStatus = MQTT_ProcessLoop( pMqttContext, 1000 );
 
-                if( mqttStatus != MQTTSuccess )
-                {
-                    LogError( ( "MQTT_ProcessLoop returned with status = %u.",
+            if( mqttStatus != MQTTSuccess )
+            {
+                LogError( ( "MQTT_ProcessLoop returned with status = %u.",
                             mqttStatus ) );
-                }
+            }
         }
         else
         {
             sleep( OTA_DEMO_TASK_DELAY_SECONDS );
         }
-       
     }
-
 }
 
 /*-----------------------------------------------------------*/
@@ -1181,12 +1229,14 @@ void startOTADemo( MQTTContext_t * pMqttContext )
 /**
  * @brief Entry point of demo.
  *
- * This example initializes the OTA agent to enable OTA updates via the
- * MQTT broker. It simply connects to the MQTT broker with the users
- * credentials and spins in an indefinite loop to allow MQTT messages to be
- * forwarded to the OTA agent for possible processing. The OTA agent does all
- * of the real work; checking to see if the message topic is one destined for
- * the OTA agent. If not, it is simply ignored.
+ * The example shown below uses OTA Library APIs to receive and update the
+ * firmare Over-the-Air.
+ *
+ * The example uses MQTT connection for communicting with AWS IoT OTA service
+ * using QoS 1. The update file is downloaded over HTTP using the S3 pre-signed
+ * url received over the MQTT connection.
+ *
+ * ToDo : Improve this comment and code.
  */
 int main( int argc,
           char ** argv )
@@ -1194,11 +1244,16 @@ int main( int argc,
     ( void ) argc;
     ( void ) argv;
 
-    int returnStatus = EXIT_SUCCESS;
-    NetworkContext_t networkContext;
+    /* Return error status. */
+    int32_t returnStatus = EXIT_SUCCESS;
+
+    /* Network context required for network interface functions.*/
+    NetworkContext_t networkContext = { 0 };
+
+    /* Flag to indicate that an MQTT client session is saved.*/
     bool clientSessionPresent = false;
 
-    LogInfo( ( "OTA over MQTT demo version %u.%u.%u",
+    LogInfo( ( "OTA over HTTP demo, Application version %u.%u.%u",
                appFirmwareVersion.u.x.major,
                appFirmwareVersion.u.x.minor,
                appFirmwareVersion.u.x.build ) );
@@ -1212,16 +1267,16 @@ int main( int argc,
         for( ; ; )
         {
             /* Attempt to connect to the MQTT broker. If connection fails, retry after
-            * a timeout. Timeout value will be exponentially increased till the maximum
-            * attempts are reached or maximum timeout value is reached. The function
-            * returns EXIT_FAILURE if the TCP connection cannot be established to
-            * broker after configured number of attempts. */
+             * a timeout. Timeout value will be exponentially increased till the maximum
+             * attempts are reached or maximum timeout value is reached. The function
+             * returns EXIT_FAILURE if the TCP connection cannot be established to
+             * broker after configured number of attempts. */
             returnStatus = connectToServerWithBackoffRetries( &networkContext );
 
             if( returnStatus == EXIT_FAILURE )
             {
                 /* Log error to indicate connection failure after all
-                * reconnect attempts are over. */
+                 * reconnect attempts are over. */
                 LogError( ( "Failed to connect to MQTT broker %.*s.",
                             AWS_IOT_ENDPOINT_LENGTH,
                             AWS_IOT_ENDPOINT ) );
@@ -1229,15 +1284,14 @@ int main( int argc,
             else
             {
                 /* Sends an MQTT Connect packet to establish a clean connection over the
-                * established TLS session, then waits for connection acknowledgment
-                * (CONNACK) packet. */
+                 * established TLS session, then waits for connection acknowledgment
+                 * (CONNACK) packet. */
                 if( EXIT_SUCCESS == establishMqttSession( &mqttContext,
                                                           true, /* clean session */
                                                           &clientSessionPresent ) )
                 {
                     mqttSessionEstablished = true;
                 }
-
             }
 
             if( mqttSessionEstablished )
