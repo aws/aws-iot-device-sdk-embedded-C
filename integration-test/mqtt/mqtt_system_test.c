@@ -826,7 +826,7 @@ void tearDown()
     /* Terminate TLS session and TCP connection. */
     ( void ) Openssl_Disconnect( &networkContext );
 
-    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    TEST_ASSERT_EQUAL( MQTTSuccess, status );
 }
 
 /* ========================== Test Cases ============================ */
