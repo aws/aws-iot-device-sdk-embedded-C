@@ -710,7 +710,7 @@ void tearDown( void )
     }
 
     /* Terminate MQTT connection. */
-    status = MQTT_Disconnect( &context ) );
+    status = MQTT_Disconnect( &context );
 
     /* Terminate TLS session and TCP connection. */
     ( void ) Openssl_Disconnect( &networkContext );
