@@ -826,6 +826,8 @@ void tearDown()
     /* Terminate TLS session and TCP connection. */
     ( void ) Openssl_Disconnect( &networkContext );
 
+    /* Make any assertions at the end that may prevent #Openssl_Disconnect from
+     * being called and ultimately cause a memory leak. */
     TEST_ASSERT_EQUAL( MQTTSuccess, status );
 }
 
