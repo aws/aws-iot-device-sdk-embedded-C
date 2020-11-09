@@ -696,6 +696,9 @@ void setUp( void )
 /* Called after each test method. */
 void tearDown( void )
 {
+    MQTTStatus_t mqttStatus;
+    OpensslStatus_t opensslStatus;
+
     /* Free memory, if allocated during test case execution. */
     if( incomingInfo.pTopicName != NULL )
     {
@@ -708,10 +711,15 @@ void tearDown( void )
     }
 
     /* Terminate MQTT connection. */
-    TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_Disconnect( &context ) );
+    mqttStatus = MQTT_Disconnect( &context );
 
     /* Terminate TLS session and TCP connection. */
-    ( void ) Openssl_Disconnect( &networkContext );
+    opensslStatus = Openssl_Disconnect( &networkContext );
+
+    /* Make any assertions at the end so that all memory is deallocated before
+     * the end of this function. */
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    TEST_ASSERT_EQUAL( OPENSSL_SUCCESS, opensslStatus );
 }
 
 /* ========================== Test Cases ============================ */
