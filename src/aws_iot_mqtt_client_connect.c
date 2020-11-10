@@ -105,7 +105,7 @@ static IoT_Error_t _aws_iot_mqtt_serialize_connect(unsigned char *pTxBuf, size_t
 	uint32_t len;
 	IoT_Error_t rc;
 	MQTTHeader header = {0};
-	uint8_t flags = {0};
+	uint8_t flags = 0u;
 
 	FUNC_ENTRY;
 
@@ -208,7 +208,7 @@ static IoT_Error_t _aws_iot_mqtt_deserialize_connack(unsigned char *pSessionPres
 	unsigned char connack_rc_char;
 	uint32_t decodedLen, readBytesLen;
 	IoT_Error_t rc;
-	uint8_t flags = {0};
+	uint8_t flags = 0u;
 	MQTTHeader header = {0};
 
 	FUNC_ENTRY;
