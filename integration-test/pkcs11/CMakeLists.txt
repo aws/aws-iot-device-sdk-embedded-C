@@ -12,11 +12,10 @@ set(project_name "pkcs11_system")
 # list the files you would like to test here
 set(real_source_files "${PKCS_SOURCES}")
 set(corePKCS11_location "${CMAKE_SOURCE_DIR}/libraries/standard/corePKCS11")
-set(3RDPARTY_LOCATION "${CMAKE_SOURCE_DIR}/libraries/3rdparty")
 set(test_config "test-config")
 
-file(GLOB MBEDTLS_FILES CONFIGURE_DEPENDS "${3RDPARTY_LOCATION}/mbedtls/library/*.c")
-file(GLOB MBEDTLS_FILES_INCLUDES CONFIGURE_DEPENDS "${3RDPARTY_LOCATION}/mbedtls/include/mbedtls/*.h")
+file(GLOB MBEDTLS_FILES CONFIGURE_DEPENDS "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls/library/*.c")
+file(GLOB MBEDTLS_FILES_INCLUDES CONFIGURE_DEPENDS "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls/include/mbedtls/*.h")
 file(GLOB test_config_sources CONFIGURE_DEPENDS "${test_config}/*.h")
 list(APPEND real_source_files
             ${MBEDTLS_FILES}
@@ -31,8 +30,8 @@ list(APPEND real_include_directories
             ${test_config}
             ${PKCS_INCLUDE_PUBLIC_DIRS}
             ${LOGGING_INCLUDE_DIRS}
-            "${3RDPARTY_LOCATION}/pkcs11"
-            "${3RDPARTY_LOCATION}/mbedtls/include"
+            "${CORE_PKCS11_3RDPARTY_LOCATION}/pkcs11"
+            "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls/include"
             "${corePKCS11_location}/3rdparty/mbedtls_utils"
         )
 
@@ -43,8 +42,8 @@ list(APPEND test_include_directories
             .
             ${PKCS_INCLUDE_PUBLIC_DIRS}
             ${LOGGING_INCLUDE_DIRS}
-            "${3RDPARTY_LOCATION}/pkcs11"
-            "${3RDPARTY_LOCATION}/mbedtls/include"
+            "${CORE_PKCS11_3RDPARTY_LOCATION}/pkcs11"
+            "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls/include"
         )
 
 # =============================  (end edit)  ===================================

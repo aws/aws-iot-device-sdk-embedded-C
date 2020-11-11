@@ -8,7 +8,7 @@ set(CORE_PKCS11_3RDPARTY_LOCATION "${COREPKCS11_LOCATION}/3rdparty")
 # Include PKCS #11 library's source and header path variables.
 include( ${COREPKCS11_LOCATION}/pkcsFilePaths.cmake )
 
-file(GLOB MBEDTLS_FILES CONFIGURE_DEPENDS "${3RDPARTY_LOCATION}/mbedtls/library/*.c")
+file(GLOB MBEDTLS_FILES CONFIGURE_DEPENDS "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls/library/*.c")
 set_source_files_properties(
     ${MBEDTLS_FILES}
     PROPERTIES COMPILE_FLAGS
@@ -44,9 +44,9 @@ target_include_directories(
         ${PKCS_INCLUDE_PUBLIC_DIRS}
         ${CMAKE_CURRENT_LIST_DIR}
         ${LOGGING_INCLUDE_DIRS}
-        "${3RDPARTY_LOCATION}/pkcs11"
+        "${CORE_PKCS11_3RDPARTY_LOCATION}/pkcs11"
     PRIVATE
-        "${3RDPARTY_LOCATION}/mbedtls/include"
+        "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls/include"
         "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils"
 )
 

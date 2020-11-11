@@ -22,9 +22,3 @@
 [submodule "libraries/standard/corePKCS11"]
 	path = libraries/standard/corePKCS11
 	url = https://github.com/FreeRTOS/corePKCS11.git
-[submodule "libraries/3rdparty/mbedtls"]
-	path = libraries/3rdparty/mbedtls
-	url = https://github.com/ARMmbed/mbedtls.git
-[submodule "libraries/3rdparty/pkcs11"]
-	path = libraries/3rdparty/pkcs11
-	url = https://github.com/amazon-freertos/pkcs11.git
