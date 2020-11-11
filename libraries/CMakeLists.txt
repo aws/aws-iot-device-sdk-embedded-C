@@ -30,7 +30,7 @@ endmacro()
 # Clone the submodules only if this is a Git repo.
 if( EXISTS ${ROOT_DIR}/.git )
     clone_path( ${MODULES_DIR} )
-    update_path( ${MODULES_DIR}/corePKCS11 )
+    update_path( ${MODULES_DIR}/standard/corePKCS11 )
 endif()
 
 # Add build configuration for all 3rd party modules.
