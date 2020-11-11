@@ -12,6 +12,7 @@ set(project_name "pkcs11_system")
 # list the files you would like to test here
 set(real_source_files "${PKCS_SOURCES}")
 set(corePKCS11_location "${CMAKE_SOURCE_DIR}/libraries/standard/corePKCS11")
+set(CORE_PKCS11_3RDPARTY_LOCATION "${COREPKCS11_LOCATION}/3rdparty")
 set(test_config "test-config")
 
 file(GLOB MBEDTLS_FILES CONFIGURE_DEPENDS "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls/library/*.c")
