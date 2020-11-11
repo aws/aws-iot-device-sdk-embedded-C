@@ -290,7 +290,7 @@ OtaErr_t prvPAL_CloseFile( OtaFileContext_t * const C )
         {
             LogInfo( ( "[%s] %s signature verification passed.\r\n", OTA_METHOD_NAME, OTA_JsonFileSignatureKey ) );
 
-            prvPAL_SetPlatformImageState( OtaImageStateTesting );
+            prvPAL_SetPlatformImageState( C, OtaImageStateTesting );
         }
         else
         {
@@ -298,7 +298,7 @@ OtaErr_t prvPAL_CloseFile( OtaFileContext_t * const C )
                         OTA_JsonFileSignatureKey, eResult ) );
 
 			/* If we fail to verify the file signature that means the image is not valid. We need to set the image state to aborted. */
-			prvPAL_SetPlatformImageState( OtaImageStateAborted );
+			prvPAL_SetPlatformImageState( C, OtaImageStateAborted );
 
         }
     }
@@ -429,19 +429,39 @@ static OtaErr_t prvPAL_CheckFileSignature( OtaFileContext_t * const C )
 
 /*-----------------------------------------------------------*/
 
-OtaErr_t prvPAL_ResetDevice( void )
+OtaErr_t prvPAL_ResetDevice( OtaFileContext_t * const C )
 {
+    OtaErr_t eResult = OTA_ERR_NONE;
+    
+    if( !prvContextValidate( C ) )
+    {
+        /* FIXME: Invalid error code for a NULL file context. */
+        LogError(( "Invalid OTA file context.\r\n" ));
+        /* Invalid OTA context or file pointer. */
+        eResult = OTA_ERR_NULL_FILE_PTR;
+    }
+
     /* Return no error.  Windows implementation does not reset device. */
-    return OTA_ERR_NONE;
+    return eResult;
 }
 
 /*-----------------------------------------------------------*/
 
-OtaErr_t prvPAL_ActivateNewImage( void )
+OtaErr_t prvPAL_ActivateNewImage( OtaFileContext_t * const C )
 {
+    OtaErr_t eResult = OTA_ERR_NONE;
+
+    if( !prvContextValidate( C ) )
+    {
+        /* FIXME: Invalid error code for a NULL file context. */
+        LogError(( "Invalid OTA file context.\r\n" ));
+        /* Invalid OTA context or file pointer. */
+        eResult = OTA_ERR_NULL_FILE_PTR;
+    }
+    
     /* Return no error. Windows implementation simply does nothing on activate.
      * To run the new firmware image, double click the newly downloaded exe */
-    return OTA_ERR_NONE;
+    return eResult;
 }
 
 
@@ -450,14 +470,21 @@ OtaErr_t prvPAL_ActivateNewImage( void )
  * On Windows, the state of the OTA image is stored in PlaformImageState.txt.
  */
 
-OtaErr_t prvPAL_SetPlatformImageState( OtaImageState_t eState )
+OtaErr_t prvPAL_SetPlatformImageState( OtaFileContext_t * const C, OtaImageState_t eState )
 {
     DEFINE_OTA_METHOD_NAME( "prvPAL_SetPlatformImageState" );
 
     OtaErr_t eResult = OTA_ERR_NONE;
     FILE * pstPlatformImageState;
 
-    if( eState != OtaImageStateUnknown && eState <= OtaLastImageState )
+    if( !prvContextValidate( C ) )
+    {
+        /* FIXME: Invalid error code for a NULL file context. */
+        LogError(( "Invalid OTA file context.\r\n" ));
+        /* Invalid OTA context or file pointer. */
+        eResult = OTA_ERR_NULL_FILE_PTR;
+    }
+    else if( eState != OtaImageStateUnknown && eState <= OtaLastImageState )
     {
         pstPlatformImageState = fopen( "PlatformImageState.txt", "w+b" ); /*lint !e586
                                                                            * C standard library call is being used for portability. */
@@ -512,7 +539,7 @@ OtaErr_t prvPAL_SetPlatformImageState( OtaImageState_t eState )
  * causing it to rollback to the previous code. On Windows, this is not
  * fully simulated as there is no easy way to reset the simulated device.
  */
-OtaPalImageState_t prvPAL_GetPlatformImageState( void )
+OtaPalImageState_t prvPAL_GetPlatformImageState( OtaFileContext_t * const C )
 {
     /* FIXME: This function should return OtaPalImageState_t, but it doesn't. */
     DEFINE_OTA_METHOD_NAME( "prvPAL_GetPlatformImageState" );
@@ -521,48 +548,59 @@ OtaPalImageState_t prvPAL_GetPlatformImageState( void )
 	OtaImageState_t eSavedAgentState = OtaImageStateUnknown;
 	OtaPalImageState_t ePalState = OtaPalImageStateUnknown;
 
-    pstPlatformImageState = fopen( "PlatformImageState.txt", "r+b" ); /*lint !e586
-                                                                       * C standard library call is being used for portability. */
-
-    if( pstPlatformImageState != NULL )
+    if( !prvContextValidate( C ) )
     {
-        if( 1 != fread( &eSavedAgentState, sizeof( OtaImageState_t ), 1, pstPlatformImageState ) ) /*lint !e586 !e9029
-                                                                                           * C standard library call is being used for portability. */
-        {
-            /* If an error occured reading the file, mark the state as aborted. */
-            LogError( ( "[%s] ERROR - Unable to read image state file.\r\n", OTA_METHOD_NAME ) );
-			ePalState = ( OtaPalImageStateInvalid | (errno & OTA_PAL_ERR_MASK) );
-        }
-		else
-		{
-			switch (eSavedAgentState)
-			{
-				case OtaImageStateTesting:
-					ePalState = OtaPalImageStatePendingCommit;
-					break;
-				case OtaImageStateAccepted:
-					ePalState = OtaPalImageStateValid;
-					break;
-				case OtaImageStateRejected:
-				case OtaImageStateAborted:
-				default:
-					ePalState = OtaPalImageStateInvalid;
-					break;
-			}
-		}
-
-
-        if( 0 != fclose( pstPlatformImageState ) ) /*lint !e586
-                                                    * C standard library call is being used for portability. */
-        {
-            LogError( ( "[%s] ERROR - Unable to close image state file.\r\n", OTA_METHOD_NAME ) );
-			ePalState = ( OtaPalImageStateInvalid | ( errno & OTA_PAL_ERR_MASK ) );
-        }
+        /* FIXME: Invalid error code for a NULL file context. */
+        LogError(( "Invalid OTA file context.\r\n" ));
+        /* Invalid OTA context or file pointer. */
+        ePalState = OtaPalImageStateUnknown;
     }
-    else
+    else 
     {
-        /* If no image state file exists, assume a factory image. */
-		ePalState = OtaPalImageStateValid; /*lint !e64 Allow assignment. */
+
+        pstPlatformImageState = fopen( "PlatformImageState.txt", "r+b" ); /*lint !e586
+                                                                        * C standard library call is being used for portability. */
+
+        if( pstPlatformImageState != NULL )
+        {
+            if( 1 != fread( &eSavedAgentState, sizeof( OtaImageState_t ), 1, pstPlatformImageState ) ) /*lint !e586 !e9029
+                                                                                            * C standard library call is being used for portability. */
+            {
+                /* If an error occured reading the file, mark the state as aborted. */
+                LogError( ( "[%s] ERROR - Unable to read image state file.\r\n", OTA_METHOD_NAME ) );
+                ePalState = ( OtaPalImageStateInvalid | (errno & OTA_PAL_ERR_MASK) );
+            }
+            else
+            {
+                switch (eSavedAgentState)
+                {
+                    case OtaImageStateTesting:
+                        ePalState = OtaPalImageStatePendingCommit;
+                        break;
+                    case OtaImageStateAccepted:
+                        ePalState = OtaPalImageStateValid;
+                        break;
+                    case OtaImageStateRejected:
+                    case OtaImageStateAborted:
+                    default:
+                        ePalState = OtaPalImageStateInvalid;
+                        break;
+                }
+            }
+
+
+            if( 0 != fclose( pstPlatformImageState ) ) /*lint !e586
+                                                        * C standard library call is being used for portability. */
+            {
+                LogError( ( "[%s] ERROR - Unable to close image state file.\r\n", OTA_METHOD_NAME ) );
+                ePalState = ( OtaPalImageStateInvalid | ( errno & OTA_PAL_ERR_MASK ) );
+            }
+        }
+        else
+        {
+            /* If no image state file exists, assume a factory image. */
+            ePalState = OtaPalImageStateValid; /*lint !e64 Allow assignment. */
+        }
     }
 
     return ePalState; /*lint !e64 !e480 !e481 I/O calls and return type are used per design. */
