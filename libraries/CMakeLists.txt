@@ -17,7 +17,7 @@ macro( update_path path )
     find_package( Git REQUIRED )
     # Attempt to clone submodules.
     if( ${BUILD_CLONE_SUBMODULES} )
-        execute_process( COMMAND ${GIT_EXECUTABLE} submodule update --recursive --checkout -- ${path}
+        execute_process( COMMAND ${GIT_EXECUTABLE} submodule update --recursive --checkout ${path}
                          WORKING_DIRECTORY ${ROOT_DIR}
                          RESULT_VARIABLE LIB_CLONE_RESULT )
         if( NOT ${LIB_CLONE_RESULT} STREQUAL "0" )
