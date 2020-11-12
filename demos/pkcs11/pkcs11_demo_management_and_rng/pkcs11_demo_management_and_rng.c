@@ -48,7 +48,7 @@
  * manage the internal state machine of the PKCS #11 implementation. These
  * functions are all defined in
  * http://docs.oasis-open.org/pkcs11/pkcs11-base/v2.40/os/pkcs11-base-v2.40-os.html
- * please consult the standard for more information regarding these functions.
+ * Please consult the standard for more information regarding these functions.
  *
  * The standard has grouped the functions presented in this demo as:
  * General Purpose Functions
@@ -119,7 +119,7 @@ void vPKCS11ManagementAndRNGDemo( void )
     assert( pxFunctionList->C_CloseSession != NULL );
     assert( pxFunctionList->C_Finalize != NULL );
 
-    LogInfo( ( "Cryptoki Major Version: %u Minor Version %u",
+    LogInfo( ( "Cryptoki Major Version: %u Minor Version: %u",
                pxFunctionList->version.major,
                pxFunctionList->version.minor ) );
 
@@ -217,7 +217,7 @@ void vPKCS11ManagementAndRNGDemo( void )
     xResult = pxFunctionList->C_Finalize( NULL );
     assert( xResult == CKR_OK );
 
-    LogInfo( ( "Finished PKCS #11 Management and Random Number Generation" \
+    LogInfo( ( "Finished PKCS #11 Management and Random Number Generation" 
                " Demo." ) );
 
     /* Avoid compiler warnings if asserts are disabled. */

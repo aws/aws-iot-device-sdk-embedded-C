@@ -15,11 +15,11 @@ set_source_files_properties(
 )
 
 list(APPEND PKCS_SOURCES
-            "${MBEDTLS_FILES}"
-            "${COREPKCS11_LOCATION}/source/portable/posix/core_pkcs11_pal.c"
-            "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils/mbedtls_utils.c"
-            "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils/mbedtls_error.c"
-            )
+    "${MBEDTLS_FILES}"
+    "${COREPKCS11_LOCATION}/source/portable/posix/core_pkcs11_pal.c"
+    "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils/mbedtls_utils.c"
+    "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils/mbedtls_error.c"
+)
 
 # Demo target.
 add_executable(
@@ -38,13 +38,12 @@ target_compile_definitions(
 target_include_directories(
     ${DEMO_NAME}
     PUBLIC
-        "../common/include"
+        "${DEMOS_DIR}/pcks11/common/include"
         ${PKCS_INCLUDE_PUBLIC_DIRS}
         ${CMAKE_CURRENT_LIST_DIR}
         ${LOGGING_INCLUDE_DIRS}
-        "${CORE_PKCS11_3RDPARTY_LOCATION}/pkcs11"
-        "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls/include"
+        ${CORE_PKCS11_3RDPARTY_LOCATION}/pkcs11
+        ${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls/include
     PRIVATE
-        "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils"
+        ${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils
 )
-

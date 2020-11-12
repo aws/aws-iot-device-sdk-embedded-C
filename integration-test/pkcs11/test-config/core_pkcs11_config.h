@@ -1,5 +1,5 @@
 /*
- * FreeRTOS V1.1.4
+ * AWS IoT Device SDK for Embedded C
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -24,7 +24,7 @@
  */
 
 /**
- * @file aws_pkcs11_config.h
+ * @file core_pkcs11_config.h
  * @brief PCKS#11 config options.
  */
 

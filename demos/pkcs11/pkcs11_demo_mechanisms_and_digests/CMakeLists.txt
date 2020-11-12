@@ -1,8 +1,7 @@
 set( DEMO_NAME "pkcs11_demo_mechanisms_and_digests" )
 
-# Set path to corePKCS11 and it's third party libraries.
+# Set path to corePKCS11 and its third party libraries.
 set(COREPKCS11_LOCATION "${CMAKE_SOURCE_DIR}/libraries/standard/corePKCS11")
-set(3RDPARTY_LOCATION "${CMAKE_SOURCE_DIR}/libraries/3rdparty")
 set(CORE_PKCS11_3RDPARTY_LOCATION "${COREPKCS11_LOCATION}/3rdparty")
 
 # Include PKCS #11 library's source and header path variables.
@@ -17,7 +16,7 @@ set_source_files_properties(
 
 list(APPEND PKCS_SOURCES
             "${MBEDTLS_FILES}"
-            "../common/src/demo_helpers.c"
+            "${DEMOS_DIR}/pkcs11/common/src/demo_helpers.c"
             "${COREPKCS11_LOCATION}/source/portable/posix/core_pkcs11_pal.c"
             "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils/mbedtls_utils.c"
             "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils/mbedtls_error.c"
@@ -40,7 +39,7 @@ target_compile_definitions(
 target_include_directories(
     ${DEMO_NAME}
     PUBLIC
-        "../common/include"
+        "${DEMOS_DIR}/pkcs11/common/include"
         ${PKCS_INCLUDE_PUBLIC_DIRS}
         ${CMAKE_CURRENT_LIST_DIR}
         ${LOGGING_INCLUDE_DIRS}
@@ -49,4 +48,3 @@ target_include_directories(
         "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls/include"
         "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils"
 )
-

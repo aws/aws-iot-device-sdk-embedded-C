@@ -17,7 +17,7 @@ set_source_files_properties(
 
 list(APPEND PKCS_SOURCES
             "${MBEDTLS_FILES}"
-            "../common/src/demo_helpers.c"
+            "${DEMOS_DIR}/pkcs11/common/src/demo_helpers.c"
             "${COREPKCS11_LOCATION}/source/portable/posix/core_pkcs11_pal.c"
             "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils/mbedtls_utils.c"
             "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils/mbedtls_error.c"
@@ -39,7 +39,7 @@ target_compile_definitions(
 target_include_directories(
     ${DEMO_NAME}
     PUBLIC
-        "../common/include"
+        "${DEMOS_DIR}/pkcs11/common/include"
         ${PKCS_INCLUDE_PUBLIC_DIRS}
         ${CMAKE_CURRENT_LIST_DIR}
         ${LOGGING_INCLUDE_DIRS}
@@ -48,4 +48,3 @@ target_include_directories(
     PRIVATE
         "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils"
 )
-
