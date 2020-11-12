@@ -30,7 +30,7 @@
 
 /* Logging configuration for the PKCS #11 library. */
 #ifndef LIBRARY_LOG_NAME
-    #define LIBRARY_LOG_NAME    "PKCS11_DEMO"
+    #define LIBRARY_LOG_NAME    "PKCS11_RNG_DEMO"
 #endif
 
 #ifndef LIBRARY_LOG_LEVEL

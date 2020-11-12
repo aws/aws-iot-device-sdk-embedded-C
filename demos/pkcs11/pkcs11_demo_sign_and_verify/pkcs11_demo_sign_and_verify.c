@@ -32,7 +32,7 @@
 #include "logging_levels.h"
 
 #ifndef LIBRARY_LOG_NAME
-    #define LIBRARY_LOG_NAME    "PKCS11_DEMO"
+    #define LIBRARY_LOG_NAME    "PKCS11_SIGN_VERIFY_DEMO"
 #endif
 
 #ifndef LIBRARY_LOG_LEVEL
@@ -54,7 +54,7 @@
  * create and interact with digital signatures.
  * The functions described are all defined in
  * http://docs.oasis-open.org/pkcs11/pkcs11-base/v2.40/os/pkcs11-base-v2.40-os.html
- * please consult the standard for more information regarding these functions.
+ * Please consult the standard for more information regarding these functions.
  *
  * The standard has grouped the functions presented in this demo as:
  * Object Management Functions

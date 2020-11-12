@@ -30,7 +30,7 @@
 
 /* Logging configuration for the PKCS #11 Demo. */
 #ifndef LIBRARY_LOG_NAME
-    #define LIBRARY_LOG_NAME    "PKCS11_DEMO"
+    #define LIBRARY_LOG_NAME    "PKCS11_MECH_AND_DIGEST_DEMO"
 #endif
 
 #ifndef LIBRARY_LOG_LEVEL
