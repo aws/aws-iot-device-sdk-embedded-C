@@ -63,8 +63,8 @@
  *                               A valid slot will be set by vStart.
  *
  */
-void vStart( CK_SESSION_HANDLE * pxSession,
-             CK_SLOT_ID ** ppxSlotId );
+void start( CK_SESSION_HANDLE * sssion,
+             CK_SLOT_ID ** slotId );
 /*-----------------------------------------------------------*/
 
 /* @brief This function contains standard tear down code for PKCS #11. See the
@@ -74,8 +74,8 @@ void vStart( CK_SESSION_HANDLE * pxSession,
  * @param[in] xSession           PKCS #11 session handle to uninitialized.
  * @param[in] ppxSlotId          PKCS #11 slot to close.
  */
-void vEnd( CK_SESSION_HANDLE xSession,
-           CK_SLOT_ID * pxSlotId );
+void end( CK_SESSION_HANDLE session,
+           CK_SLOT_ID * slotId );
 /*-----------------------------------------------------------*/
 
 /*
@@ -88,9 +88,9 @@ void vEnd( CK_SESSION_HANDLE xSession,
  * @param[in] ulDataLength          Lenghth of pucData
  *
  */
-void vWriteHexBytesToConsole( char * pcDescription,
-                              CK_BYTE * pucData,
-                              CK_ULONG ulDataLength );
+void writeHexBytesToConsole( char * description,
+                              CK_BYTE * data,
+                              CK_ULONG dataLength );
 /*-----------------------------------------------------------*/
 
 /*
@@ -98,10 +98,10 @@ void vWriteHexBytesToConsole( char * pcDescription,
  * of an EC public key into a buffer. It's explanation is not within the
  * scope of the demos and is sparsely commented.
  */
-CK_RV vExportPublicKey( CK_SESSION_HANDLE xSession,
-                        CK_OBJECT_HANDLE xPublicKeyHandle,
-                        CK_BYTE ** ppucDerPublicKey,
-                        CK_ULONG * pulDerPublicKeyLength );
+CK_RV exportPublicKey( CK_SESSION_HANDLE session,
+                        CK_OBJECT_HANDLE publicKeyHandle,
+                        CK_BYTE ** derPublicKey,
+                        CK_ULONG * derPublicKeyLength );
 /*-----------------------------------------------------------*/
 
 #endif /* _DEMO_HELPER_FUNCTIONS_ */

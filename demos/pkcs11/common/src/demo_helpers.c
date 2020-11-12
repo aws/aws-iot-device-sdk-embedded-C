@@ -32,7 +32,6 @@
 #include <assert.h>
 
 /* PKCS #11 includes. */
-#include "core_pkcs11_config.h"
 #include "core_pkcs11.h"
 #include "pkcs11.h"
 
@@ -50,221 +49,221 @@
 #define BYTES_TO_DISPLAY_PER_ROW    16
 /*-----------------------------------------------------------*/
 
-void vStart( CK_SESSION_HANDLE * pxSession,
-             CK_SLOT_ID ** ppxSlotId )
+void start( CK_SESSION_HANDLE * session,
+             CK_SLOT_ID ** slotId )
 {
-    CK_RV xResult = CKR_OK;
+    CK_RV result = CKR_OK;
 
-    CK_FUNCTION_LIST_PTR pxFunctionList = NULL;
-    CK_C_INITIALIZE_ARGS xInitArgs = { 0 };
-    CK_SESSION_HANDLE hSession = CK_INVALID_HANDLE;
-    CK_ULONG xSlotCount = 0;
-    CK_SLOT_ID * pxSlotId = NULL;
+    CK_FUNCTION_LIST_PTR functionList = NULL;
+    CK_C_INITIALIZE_ARGS initArgs = { 0 };
+    CK_SESSION_HANDLE session = CK_INVALID_HANDLE;
+    CK_ULONG slotCount = 0;
+    CK_SLOT_ID * innerSlotId = NULL;
 
-    xResult = C_GetFunctionList( &pxFunctionList );
-    assert( xResult == CKR_OK );
-    assert( pxFunctionList != NULL );
-    assert( pxFunctionList->C_Initialize != NULL );
-    assert( pxFunctionList->C_GetSlotList != NULL );
-    assert( pxFunctionList->C_OpenSession != NULL );
-    assert( pxFunctionList->C_Login != NULL );
-    assert( pxFunctionList->C_GenerateRandom != NULL );
-    assert( pxFunctionList->C_CloseSession != NULL );
-    assert( pxFunctionList->C_Finalize != NULL );
+    result = C_GetFunctionList( &functionList );
+    assert( result == CKR_OK );
+    assert( functionList != NULL );
+    assert( functionList->C_Initialize != NULL );
+    assert( functionList->C_GetSlotList != NULL );
+    assert( functionList->C_OpenSession != NULL );
+    assert( functionList->C_Login != NULL );
+    assert( functionList->C_GenerateRandom != NULL );
+    assert( functionList->C_CloseSession != NULL );
+    assert( functionList->C_Finalize != NULL );
 
-    xResult = pxFunctionList->C_Initialize( &xInitArgs );
-    assert( xResult == CKR_OK );
+    result = functionList->C_Initialize( &initArgs );
+    assert( result == CKR_OK );
 
-    xResult = pxFunctionList->C_GetSlotList( CK_TRUE,
+    result = functionList->C_GetSlotList( CK_TRUE,
                                              NULL,
-                                             &xSlotCount );
-    assert( xResult == CKR_OK );
+                                             &slotCount );
+    assert( result == CKR_OK );
 
-    pxSlotId = PKCS11_MALLOC( sizeof( CK_SLOT_ID ) * ( xSlotCount ) );
-    assert( pxSlotId != NULL );
+    innerSlotId = PKCS11_MALLOC( sizeof( CK_SLOT_ID ) * ( slotCount ) );
+    assert( innerSlotId != NULL );
 
-    xResult = pxFunctionList->C_GetSlotList( CK_TRUE,
-                                             pxSlotId,
-                                             &xSlotCount );
-    assert( xResult == CKR_OK );
+    result = functionList->C_GetSlotList( CK_TRUE,
+                                             innerSlotId,
+                                             &slotCount );
+    assert( result == CKR_OK );
 
-    xResult = pxFunctionList->C_OpenSession( pxSlotId[ 0 ],
+    result = functionList->C_OpenSession( innerSlotId[ 0 ],
                                              CKF_SERIAL_SESSION | CKF_RW_SESSION,
                                              NULL, /* Application defined pointer. */
                                              NULL, /* Callback function. */
-                                             &hSession );
-    assert( xResult == CKR_OK );
+                                             &session );
+    assert( result == CKR_OK );
 
 
-    xResult = pxFunctionList->C_Login( hSession,
+    result = functionList->C_Login( session,
                                        CKU_USER,
-                                       ( CK_UTF8CHAR_PTR ) configPKCS11_DEFAULT_USER_PIN,
-                                       sizeof( configPKCS11_DEFAULT_USER_PIN ) - 1UL );
-    assert( xResult == CKR_OK );
+                                       ( CK_UTF8CHAR_PTR ) "0000",
+                                       sizeof( "0000" ) - 1UL );
+    assert( result == CKR_OK );
 
-    *ppxSlotId = pxSlotId;
-    *pxSession = hSession;
+    *slotId = innerSlotId;
+    *psession = session;
 
     /* To avoid warnings if asserts are disabled. */
-    ( void ) xResult;
+    ( void ) result;
 }
 /*-----------------------------------------------------------*/
 
-void vEnd( CK_SESSION_HANDLE xSession,
-           CK_SLOT_ID * pxSlotId )
+void end( CK_SESSION_HANDLE session,
+           CK_SLOT_ID * slotId )
 {
-    C_CloseSession( xSession );
+    C_CloseSession( session );
     C_Finalize( NULL );
-    PKCS11_FREE( pxSlotId );
+    PKCS11_FREE( slotId );
 }
 /*-----------------------------------------------------------*/
 
-void vWriteHexBytesToConsole( char * pcDescription,
-                              CK_BYTE * pucData,
-                              CK_ULONG ulDataLength )
+void writeHexBytesToConsole( char * description,
+                              CK_BYTE * data,
+                              CK_ULONG dataLength )
 {
     /* This function is simply a helper function to print the raw hex values
      * of an EC public key. It's explanation is not within the scope of the demos
      * and is sparsely commented. */
-    char pcByteRow[ 1 + ( BYTES_TO_DISPLAY_PER_ROW * 2 ) + ( BYTES_TO_DISPLAY_PER_ROW / 2 ) ];
-    char * pcNextChar = pcByteRow;
-    uint32_t ulIndex = 0;
-    uint8_t ucByteValue = 0;
+    char byteRow[ 1 + ( BYTES_TO_DISPLAY_PER_ROW * 2 ) + ( BYTES_TO_DISPLAY_PER_ROW / 2 ) ];
+    char * nextChar = byteRow;
+    uint32_t index = 0;
+    uint8_t byteValue = 0;
 
-    ( void ) pcDescription;
+    ( void ) description;
 
     /* Write help text to the console. */
-    LogInfo( ( "%s, %lu bytes:", pcDescription, ulDataLength ) );
+    LogInfo( ( "%s, %lu bytes:", description, dataLength ) );
 
     /* Iterate over the bytes of the encoded public key. */
-    for( ulIndex = 0; ulIndex < ulDataLength; ulIndex++ )
+    for( index = 0; index < dataLength; index++ )
     {
         /* Convert one byte to ASCII hex. */
-        ucByteValue = *( pucData + ulIndex );
-        snprintf( pcNextChar,
-                  sizeof( pcByteRow ) - ( pcNextChar - pcByteRow ),
+        byteValue = *( data + index );
+        snprintf( nextChar,
+                  sizeof( byteRow ) - ( nextChar - byteRow ),
                   "%02x",
-                  ucByteValue );
-        pcNextChar += 2;
+                  byteValue );
+        nextChar += 2;
 
         /* Check for the end of a two-byte display word. */
-        if( 0 == ( ( ulIndex + 1 ) % sizeof( uint16_t ) ) )
+        if( 0 == ( ( index + 1 ) % sizeof( uint16_t ) ) )
         {
-            *pcNextChar = ' ';
-            pcNextChar++;
+            *nextChar = ' ';
+            nextChar++;
         }
 
         /* Check for the end of a row. */
-        if( 0 == ( ( ulIndex + 1 ) % BYTES_TO_DISPLAY_PER_ROW ) )
+        if( 0 == ( ( index + 1 ) % BYTES_TO_DISPLAY_PER_ROW ) )
         {
-            *pcNextChar = '\0';
-            LogInfo( ( "%s", pcByteRow ) );
-            pcNextChar = pcByteRow;
+            *nextChar = '\0';
+            LogInfo( ( "%s", byteRow ) );
+            nextChar = byteRow;
         }
     }
 
     /* Check for a partial line to print. */
-    if( pcNextChar > pcByteRow )
+    if( nextChar > byteRow )
     {
-        *pcNextChar = '\0';
-        LogInfo( ( "%s", pcByteRow ) );
+        *nextChar = '\0';
+        LogInfo( ( "%s", byteRow ) );
     }
 }
 /*-----------------------------------------------------------*/
 
-CK_RV vExportPublicKey( CK_SESSION_HANDLE xSession,
-                        CK_OBJECT_HANDLE xPublicKeyHandle,
-                        CK_BYTE ** ppucDerPublicKey,
-                        CK_ULONG * pulDerPublicKeyLength )
+CK_RV exportPublicKey( CK_SESSION_HANDLE session,
+                        CK_OBJECT_HANDLE publicKeyHandle,
+                        CK_BYTE ** derPublicKey,
+                        CK_ULONG * derPublicKeyLength )
 {
     /* This function is simply a helper function to export the raw hex values
      * of an EC public key into a buffer. It's explanation is not within the
      * scope of the demos and is sparsely commented. */
-    CK_RV xResult;
-    CK_FUNCTION_LIST_PTR pxFunctionList;
-    CK_KEY_TYPE xKeyType = 0;
-    CK_ATTRIBUTE xTemplate = { 0 };
-    uint8_t pucEcP256AsnAndOid[] =
+    CK_RV result;
+    CK_FUNCTION_LIST_PTR functionList;
+    CK_KEY_TYPE keyType = 0;
+    CK_ATTRIBUTE template = { 0 };
+    uint8_t ecP256AsnOid[] =
     {
         0x30, 0x59, 0x30, 0x13, 0x06, 0x07, 0x2a, 0x86,
         0x48, 0xce, 0x3d, 0x02, 0x01, 0x06, 0x08, 0x2a,
         0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07, 0x03,
         0x42, 0x00
     };
-    uint8_t pucUnusedKeyTag[] = { 0x04, 0x41 };
+    uint8_t unusedKeyTag[] = { 0x04, 0x41 };
 
     /* This variable is used only for its size. This gets rid of compiler warnings. */
-    ( void ) pucUnusedKeyTag;
+    ( void ) unusedKeyTag;
 
-    xResult = C_GetFunctionList( &pxFunctionList );
+    result = C_GetFunctionList( &functionList );
 
     /* Query the key type. */
-    if( CKR_OK == xResult )
+    if( CKR_OK == result )
     {
-        xTemplate.type = CKA_KEY_TYPE;
-        xTemplate.pValue = &xKeyType;
-        xTemplate.ulValueLen = sizeof( xKeyType );
-        xResult = pxFunctionList->C_GetAttributeValue( xSession,
-                                                       xPublicKeyHandle,
-                                                       &xTemplate,
+        template.type = CKA_KEY_TYPE;
+        template.pValue = &keyType;
+        template.ulValueLen = sizeof( keyType );
+        result = functionList->C_GetAttributeValue( session,
+                                                       publicKeyHandle,
+                                                       &template,
                                                        1 );
     }
 
     /* Scope to ECDSA keys only, since there's currently no use case for
      * onboard keygen and certificate enrollment for RSA. */
-    if( ( CKR_OK == xResult ) && ( CKK_ECDSA == xKeyType ) )
+    if( ( CKR_OK == result ) && ( CKK_ECDSA == keyType ) )
     {
         /* Query the size of the public key. */
-        xTemplate.type = CKA_EC_POINT;
-        xTemplate.pValue = NULL;
-        xTemplate.ulValueLen = 0;
-        xResult = pxFunctionList->C_GetAttributeValue( xSession,
-                                                       xPublicKeyHandle,
-                                                       &xTemplate,
+        template.type = CKA_EC_POINT;
+        template.pValue = NULL;
+        template.ulValueLen = 0;
+        result = functionList->C_GetAttributeValue( session,
+                                                       publicKeyHandle,
+                                                       &template,
                                                        1 );
 
         /* Allocate a buffer large enough for the full, encoded public key. */
-        if( CKR_OK == xResult )
+        if( CKR_OK == result )
         {
             /* Add space for the full DER header. */
-            xTemplate.ulValueLen += sizeof( pucEcP256AsnAndOid ) - sizeof( pucUnusedKeyTag );
-            *pulDerPublicKeyLength = xTemplate.ulValueLen;
+            template.ulValueLen += sizeof( ecP256AsnOid ) - sizeof( unusedKeyTag );
+            *derPublicKeyLength = template.ulValueLen;
 
             /* Get a heap buffer. */
-            *ppucDerPublicKey = PKCS11_MALLOC( xTemplate.ulValueLen );
+            *derPublicKey = PKCS11_MALLOC( template.ulValueLen );
 
             /* Check for resource exhaustion. */
-            if( NULL == *ppucDerPublicKey )
+            if( NULL == *derPublicKey )
             {
-                xResult = CKR_HOST_MEMORY;
+                result = CKR_HOST_MEMORY;
             }
         }
 
         /* Export the public key. */
-        if( CKR_OK == xResult )
+        if( CKR_OK == result )
         {
-            xTemplate.pValue = *ppucDerPublicKey + sizeof( pucEcP256AsnAndOid ) - sizeof( pucUnusedKeyTag );
-            xTemplate.ulValueLen -= ( sizeof( pucEcP256AsnAndOid ) - sizeof( pucUnusedKeyTag ) );
-            xResult = pxFunctionList->C_GetAttributeValue( xSession,
-                                                           xPublicKeyHandle,
-                                                           &xTemplate,
+            template.pValue = *derPublicKey + sizeof( ecP256AsnOid ) - sizeof( unusedKeyTag );
+            template.ulValueLen -= ( sizeof( ecP256AsnOid ) - sizeof( unusedKeyTag ) );
+            result = functionList->C_GetAttributeValue( session,
+                                                           publicKeyHandle,
+                                                           &template,
                                                            1 );
         }
 
         /* Prepend the full DER header. */
-        if( CKR_OK == xResult )
+        if( CKR_OK == result )
         {
-            memcpy( *ppucDerPublicKey, pucEcP256AsnAndOid, sizeof( pucEcP256AsnAndOid ) );
+            memcpy( *derPublicKey, ecP256AsnOid, sizeof( ecP256AsnOid ) );
         }
     }
 
     /* Free memory if there was an error after allocation. */
-    if( ( NULL != *ppucDerPublicKey ) && ( CKR_OK != xResult ) )
+    if( ( NULL != *derPublicKey ) && ( CKR_OK != result ) )
     {
-        PKCS11_FREE( *ppucDerPublicKey );
-        *ppucDerPublicKey = NULL;
+        PKCS11_FREE( *derPublicKey );
+        *derPublicKey = NULL;
     }
 
-    return xResult;
+    return result;
 }
 /*-----------------------------------------------------------*/
