@@ -26,7 +26,6 @@
 /* Standard include. */
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
 
 /* Logging stack includes. */
 #include "logging_levels.h"
@@ -60,7 +59,7 @@
  * Object Management Functions
  * Signing and MACing Functions
  */
-void PKCS11SignVerifyDemo( void )
+CK_RV PKCS11SignVerifyDemo( void )
 {
     /* This demo will use the generated private and public key from the
      * "objects.c" demo and use them to sign and verify the integrity of a
@@ -108,15 +107,6 @@ void PKCS11SignVerifyDemo( void )
 
     /* Ensure the Cryptoki library has the necessary functions implemented. */
     result = C_GetFunctionList( &functionList );
-    assert( result == CKR_OK );
-    assert( functionList->C_SignInit != NULL );
-    assert( functionList->C_Sign != NULL );
-    assert( functionList->C_FindObjectsInit != NULL );
-    assert( functionList->C_FindObjects != NULL );
-    assert( functionList->C_FindObjectsFinal != NULL );
-    assert( functionList->C_Login != NULL );
-    assert( functionList->C_InitToken != NULL );
-    assert( functionList->C_GetTokenInfo != NULL );
 
     /* Instead of using the start helper, we will  use the "core_pkcs11.h"
      * functions that help wrap around some common PKCS #11 use cases.
@@ -125,9 +115,10 @@ void PKCS11SignVerifyDemo( void )
      * Initialize the PKCS #11 module if it is not already.
      * Initialize a PKCS #11 session.
      */
-    result = xInitializePkcs11Session( &session );
-    assert( result == CKR_OK );
-    assert( session != CK_INVALID_HANDLE );
+    if( result == CKR_OK )
+    {
+        result = xInitializePkcs11Session( &session );
+    }
 
     /* This function will:
      * Initialize the PKCS #11 module if it is not already.
@@ -137,18 +128,20 @@ void PKCS11SignVerifyDemo( void )
      * first slot in the slot list. If it desired to use a different slot, it
      * is necessary to modify the implementation of this function to use a
      * different slot. */
-    result = xInitializePkcs11Token();
-    assert( result == CKR_OK );
+    if( result == CKR_OK )
+    {
+        result = xInitializePkcs11Token();
+    }
 
     /* This function will:
      * Query the Cryptoki library for the total number of slots. Malloc an array
      * of slots. Then the slotId and slotCount variables will be updated to
      * point to the slot array, and the total slot count.
      */
-    result = xGetSlotList( &slotId, &slotCount );
-    assert( result == CKR_OK );
-    assert( slotCount != 0 );
-    assert( slotId != NULL );
+    if( result == CKR_OK )
+    {
+        result = xGetSlotList( &slotId, &slotCount );
+    }
 
     /***************************** Find Objects *****************************/
 
@@ -161,60 +154,65 @@ void PKCS11SignVerifyDemo( void )
      * This will acquire the object handle for the private key created in the
      * "objects.c" demo.
      */
-    result = xFindObjectWithLabelAndClass( session,
-                                            pkcs11demoPRIVATE_KEY_LABEL,
-                                            CKO_PRIVATE_KEY,
-                                            &privateKeyHandle );
-    assert( result == CKR_OK );
-    assert( privateKeyHandle != CK_INVALID_HANDLE );
+    if( result == CKR_OK )
+    {
+        result = xFindObjectWithLabelAndClass( session,
+                                                pkcs11demoPRIVATE_KEY_LABEL,
+                                                CKO_PRIVATE_KEY,
+                                                &privateKeyHandle );
+    }
 
     /* Acquire the object handle for the public key created in the "objects.c"
      * demo. */
-    result = xFindObjectWithLabelAndClass( session,
-                                            pkcs11demoPUBLIC_KEY_LABEL,
-                                            CKO_PRIVATE_KEY,
-                                            &publicKeyHandle );
-    assert( result == CKR_OK );
-    assert( publicKeyHandle != CK_INVALID_HANDLE );
+    if( result == CKR_OK )
+    {
+        result = xFindObjectWithLabelAndClass( session,
+                                                pkcs11demoPUBLIC_KEY_LABEL,
+                                                CKO_PRIVATE_KEY,
+                                                &publicKeyHandle );
+    }
 
     /***************************** Buffer Digest *****************************/
     xDigestMechanism.mechanism = CKM_SHA256;
 
     /* Initializes the digest operation and sets what mechanism will be used
      * for the digest. */
-    result = functionList->C_DigestInit( session,
-                                            &xDigestMechanism );
-    assert( CKR_OK == result );
+    if( result == CKR_OK )
+    {
+        result = functionList->C_DigestInit( session,
+                                                &xDigestMechanism );
+    }
 
     /* Pass a pointer to the buffer of bytes to be hashed, and it's size. */
-    result = functionList->C_DigestUpdate( session,
-                                              knownMessage,
-                                              /* Strip NULL Terminator. */
-                                              sizeof( knownMessage ) - 1 );
-    assert( CKR_OK == result );
+    if( result == CKR_OK )
+    {
+        result = functionList->C_DigestUpdate( session,
+                                                  knownMessage,
+                                                  /* Strip NULL Terminator. */
+                                                  sizeof( knownMessage ) - 1 );
+    }
 
     /* Retrieve the digest buffer length. When passing in a NULL pointer as the
      * second argument, instead of a point to a buffer, this will signal the
      * Cryptoki library to fill the third parameter with the required amount of
      * bytes to store the resulting digest.
      */
-    result = functionList->C_DigestFinal( session,
-                                             NULL,
-                                             &digestLength );
-    assert( CKR_OK == result );
-
-    /* Since the length of a SHA-256 digest is known, we made an assumption and
-     * allocated the buffer originally with the known length. Assert to make sure
-     * we queried the length we expected. */
-    assert( pkcs11SHA256_DIGEST_LENGTH == digestLength );
+    if( result == CKR_OK )
+    {
+        result = functionList->C_DigestFinal( session,
+                                                 NULL,
+                                                 &digestLength );
+    }
 
     /* Now that digestLength contains the required byte length, retrieve the
      * digest buffer.
      */
-    result = functionList->C_DigestFinal( session,
-                                             digestResult,
-                                             &digestLength );
-    assert( CKR_OK == result );
+    if( result == CKR_OK )
+    {
+        result = functionList->C_DigestFinal( session,
+                                                 digestResult,
+                                                 &digestLength );
+    }
 
     /********************************* Sign **********************************/
 
@@ -224,22 +222,24 @@ void PKCS11SignVerifyDemo( void )
     /* Initializes the sign operation and sets what mechanism will be used
      * for signing the message digest. Specify what object handle to use for this
      * operation, in this case the private key object handle. */
-    result = functionList->C_SignInit( session,
-                                          &mechanism,
-                                          privateKeyHandle );
-    assert( result == CKR_OK );
+    if( result == CKR_OK )
+    {
+        result = functionList->C_SignInit( session,
+                                              &mechanism,
+                                              privateKeyHandle );
+    }
 
     /* Sign the message digest that was created with the C_Digest series of
      * functions. A signature will be created using the private key specified in
      * C_SignInit and put in the byte buffer signature. */
-    result = functionList->C_Sign( session,
-                                      digestResult,
-                                      pkcs11SHA256_DIGEST_LENGTH,
-                                      signature,
-                                      &signatureLength );
-    assert( result == CKR_OK );
-    assert( signatureLength == pkcs11ECDSA_P256_SIGNATURE_LENGTH );
-
+    if( result == CKR_OK )
+    {
+        result = functionList->C_Sign( session,
+                                          digestResult,
+                                          pkcs11SHA256_DIGEST_LENGTH,
+                                          signature,
+                                          &signatureLength );
+    }
 
     /********************************* Verify **********************************/
 
@@ -250,10 +250,12 @@ void PKCS11SignVerifyDemo( void )
      * to use (CKM_ECDSA, the same as the sign operation) and then specifying
      * which public key handle to use.
      */
-    result = functionList->C_VerifyInit( session,
-                                            &mechanism,
-                                            publicKeyHandle );
-    assert( result == CKR_OK );
+    if( result == CKR_OK )
+    {
+        result = functionList->C_VerifyInit( session,
+                                                &mechanism,
+                                                publicKeyHandle );
+    }
 
     /* Given the signature and it's length, the Cryptoki will use the public key
      * to verify that the signature was created by the corresponding private key.
@@ -265,21 +267,24 @@ void PKCS11SignVerifyDemo( void )
      * Note that we are not using the actual message, but the digest that we
      * created earlier of the message, for the verification.
      */
-    result = functionList->C_Verify( session,
-                                        digestResult,
-                                        pkcs11SHA256_DIGEST_LENGTH,
-                                        signature,
-                                        signatureLength );
-
     if( result == CKR_OK )
     {
-        LogInfo( ( "The signature of the digest was verified with the" \
-                   " public key and can be trusted." ) );
-    }
-    else
-    {
-        LogInfo( ( "Unable to verify the signature with the given public" \
-                   " key, the message cannot be trusted." ) );
+        result = functionList->C_Verify( session,
+                                            digestResult,
+                                            pkcs11SHA256_DIGEST_LENGTH,
+                                            signature,
+                                            signatureLength );
+    
+        if( result == CKR_OK )
+        {
+            LogInfo( ( "The signature of the digest was verified with the" \
+                       " public key and can be trusted." ) );
+        }
+        else
+        {
+            LogInfo( ( "Unable to verify the signature with the given public" \
+                       " key, the message cannot be trusted." ) );
+        }
     }
 
     /* Export public key as hex bytes and print the hex representation of the
@@ -317,14 +322,17 @@ void PKCS11SignVerifyDemo( void )
      * and make it necessary to redo these steps!
      *
      */
-    LogInfo( ( "Verifying with public key." ) );
-    exportPublicKey( session,
-                      publicKeyHandle,
-                      &derPublicKey,
-                      &derPublicKeyLength );
-    writeHexBytesToConsole( "Public Key in Hex Format",
-                             derPublicKey,
-                             derPublicKeyLength );
+    if( result == CKR_OK )
+    {
+        LogInfo( ( "Verifying with public key." ) );
+        exportPublicKey( session,
+                          publicKeyHandle,
+                          &derPublicKey,
+                          &derPublicKeyLength );
+        writeHexBytesToConsole( "Public Key in Hex Format",
+                                 derPublicKey,
+                                 derPublicKeyLength );
+    }
 
     /* This utility function converts the PKCS #11 signature into an ASN.1
      * encoded binary der signature. This is necessary so we can export the
@@ -334,54 +342,55 @@ void PKCS11SignVerifyDemo( void )
      * See https://en.wikipedia.org/wiki/ASN.1 for more information about the
      * ASN.1 encoding format.
      */
-    PKI_pkcs11SignatureTombedTLSSignature( signature, ( size_t * ) &signatureLength );
-
-
-    /* The following loop will output the signature in hex.
-     *
-     * In order to get the signature exported in binary form copy the output
-     * of the loop, and paste it to an empty text file.
-     *
-     * Then we will need to convert the text file to binary using the xxd tool.
-     *
-     * The following commands outline this process.
-     * Write buffer to signature.txt
-     * xxd will take a text file that contains hex data and output a binary of
-     * the hex in the file. See "$ man xxd" for more information about xxd.
-     *
-     * Copy the below command into the terminal.
-     * "$ xxd -r -ps signature.txt signature.bin"
-     *
-     * Next, we need to copy the original message that the Cryptoki library
-     * signed, the following shell command will create the message without any
-     * newlines, so the messages are similar.
-     *
-     * The contents of the echo command can be replaced with whatever data was
-     * in the known message, but the example uses "Hello world" to make it easier
-     * for copy and pasting.
-     *
-     * "$ echo -n "Hello world" > msg.txt"
-     *
-     * Now we will use OpenSSL to verify that the signature we created can be
-     * trusted by another device using the public key we created and then
-     * extracted earlier.
-     *
-     * "$ openssl dgst -sha256 -verify public_key.pem -signature signature.bin msg.txt"
-     * This command should output "Verified OK" and we then know we can trust
-     * the sender of the message!
-     */
-    formatPtr = &signatureFormatBuffer[ 0 ];
-
-    for( index = 0; index < digestLength; index++ )
+    if( result == CKR_OK )
     {
-        formatPtr += sprintf( ( char * ) formatPtr, "%x", signature[ index ] );
+        PKI_pkcs11SignatureTombedTLSSignature( signature, ( size_t * ) &signatureLength );
+
+        /* The following loop will output the signature in hex.
+         *
+         * In order to get the signature exported in binary form copy the output
+         * of the loop, and paste it to an empty text file.
+         *
+         * Then we will need to convert the text file to binary using the xxd tool.
+         *
+         * The following commands outline this process.
+         * Write buffer to signature.txt
+         * xxd will take a text file that contains hex data and output a binary of
+         * the hex in the file. See "$ man xxd" for more information about xxd.
+         *
+         * Copy the below command into the terminal.
+         * "$ xxd -r -ps signature.txt signature.bin"
+         *
+         * Next, we need to copy the original message that the Cryptoki library
+         * signed, the following shell command will create the message without any
+         * newlines, so the messages are similar.
+         *
+         * The contents of the echo command can be replaced with whatever data was
+         * in the known message, but the example uses "Hello world" to make it easier
+         * for copy and pasting.
+         *
+         * "$ echo -n "Hello world" > msg.txt"
+         *
+         * Now we will use OpenSSL to verify that the signature we created can be
+         * trusted by another device using the public key we created and then
+         * extracted earlier.
+         *
+         * "$ openssl dgst -sha256 -verify public_key.pem -signature signature.bin msg.txt"
+         * This command should output "Verified OK" and we then know we can trust
+         * the sender of the message!
+         */
+        formatPtr = &signatureFormatBuffer[ 0 ];
+
+        for( index = 0; index < digestLength; index++ )
+        {
+            formatPtr += sprintf( ( char * ) formatPtr, "%x", signature[ index ] );
+        }
+
+        LogInfo( ( "Created signature: %s", signatureFormatBuffer ) );
+        LogInfo( ( "Finished PKCS #11 Sign and Verify Demo." ) );
     }
 
-    LogInfo( ( "Created signature: %s", signatureFormatBuffer ) );
-    LogInfo( ( "Finished PKCS #11 Sign and Verify Demo." ) );
-
-    /* Avoid compiler warnings if asserts are disabled. */
-    ( void ) result;
+    return result;
 }
 
 /**
@@ -391,6 +400,5 @@ void PKCS11SignVerifyDemo( void )
  */
 int main( void )
 {
-    PKCS11SignVerifyDemo();
-    return 0;
+    return PKCS11SignVerifyDemo();
 }

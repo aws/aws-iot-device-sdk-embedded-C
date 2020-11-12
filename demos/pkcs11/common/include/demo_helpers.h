@@ -63,7 +63,7 @@
  *                               A valid slot will be set by start.
  *
  */
-void start( CK_SESSION_HANDLE * sssion,
+CK_RV start( CK_SESSION_HANDLE * sssion,
              CK_SLOT_ID ** slotId );
 /*-----------------------------------------------------------*/
 

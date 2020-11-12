@@ -26,7 +26,6 @@
 /* Standard includes. */
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
 
 /* Logging configuration for the PKCS #11 Demo. */
 #ifndef LIBRARY_LOG_NAME
@@ -59,7 +58,7 @@
  * Message digesting functions.
  *
  */
-void PKCS11MechanismsAndDigestDemo( void )
+CK_RV PKCS11MechanismsAndDigestDemo( void )
 {
     /*
      * This demo builds upon the demo found in "management_and_rng.c". It borrows
@@ -114,112 +113,104 @@ void PKCS11MechanismsAndDigestDemo( void )
 
     start( &session, &slotId );
     result = C_GetFunctionList( &functionList );
-    assert( CKR_OK == result );
-    assert( functionList->C_GetMechanismInfo != NULL );
-    assert( functionList->C_DigestInit != NULL );
-    assert( functionList->C_DigestUpdate != NULL );
-    assert( functionList->C_DigestFinal != NULL );
 
     /*************************** RSA Capabilities ***************************/
-    result = functionList->C_GetMechanismInfo( slotId[ 0 ],
-                                                  CKM_RSA_PKCS,
-                                                  &MechanismInfo );
-    assert( CKR_OK == result );
-
-    /* Check to see if the slot supports signing. This capability is important
-     * because we want to use the Cryptoki API to sign messages, without directly
-     * accessing the private key. This concept will be explained further in the
-     * "sign_verify.c" demo, but for now we will just check that the slot has the
-     * capabilities we need. See https://en.wikipedia.org/wiki/Public-key_cryptography
-     * for more information regarding private keys and public keys.
-     */
-    if( 0 != ( CKF_SIGN & MechanismInfo.flags ) )
+    if( result == CKR_OK )
     {
-        LogInfo( ( "This Cryptoki library supports signing messages with RSA" \
-                   " private keys." ) );
-    }
-    else
-    {
-        LogInfo( ( "This Cryptoki library does not support signing messages" \
-                   " with RSA private keys." ) );
-    }
+        result = functionList->C_GetMechanismInfo( slotId[ 0 ],
+                                                      CKM_RSA_PKCS,
+                                                      &MechanismInfo );
 
-    /* This Cryptoki library assumes that RSA private keys are 2048 bit . */
-    assert( MechanismInfo.ulMaxKeySize >= pkcs11RSA_2048_MODULUS_BITS );
-    assert( MechanismInfo.ulMinKeySize <= pkcs11RSA_2048_MODULUS_BITS );
+        /* Check to see if the slot supports signing. This capability is important
+         * because we want to use the Cryptoki API to sign messages, without directly
+         * accessing the private key. This concept will be explained further in the
+         * "sign_verify.c" demo, but for now we will just check that the slot has the
+         * capabilities we need. See https://en.wikipedia.org/wiki/Public-key_cryptography
+         * for more information regarding private keys and public keys.
+         */
+        if( 0 != ( CKF_SIGN & MechanismInfo.flags ) )
+        {
+            LogInfo( ( "This Cryptoki library supports signing messages with RSA" \
+                       " private keys." ) );
+        }
+        else
+        {
+            LogInfo( ( "This Cryptoki library does not support signing messages" \
+                       " with RSA private keys." ) );
+        }
+    }
 
     /* Check for pre-padded signature verification support, this feature will
      * be used in the "sign_verify.c" demo.
      */
-    result = functionList->C_GetMechanismInfo( slotId[ 0 ],
-                                                  CKM_RSA_X_509,
-                                                  &MechanismInfo );
-
-    /* If this fails, the slot is not able to verify the signature using
-     * a RSA public key. Please see https://en.wikipedia.org/wiki/Public_key_infrastructure
-     * for more information regarding PKI (Public Key Infrastructure).
-     */
-    if( 0 != ( CKF_VERIFY & MechanismInfo.flags ) )
+    if( result == CKR_OK )
     {
-        LogInfo( ( "This Cryptoki library supports verifying messages with RSA" \
-                   " public keys." ) );
-    }
-    else
-    {
-        LogInfo( ( "This Cryptoki library does not support verifying messages" \
-                   " with RSA public keys." ) );
-    }
+        result = functionList->C_GetMechanismInfo( slotId[ 0 ],
+                                                      CKM_RSA_X_509,
+                                                      &MechanismInfo );
 
-    /* This Cryptoki library assumes that RSA public keys are 2048 bit . */
-    assert( MechanismInfo.ulMaxKeySize >= pkcs11RSA_2048_MODULUS_BITS );
-    assert( MechanismInfo.ulMinKeySize <= pkcs11RSA_2048_MODULUS_BITS );
+        /* If this fails, the slot is not able to verify the signature using
+         * a RSA public key. Please see https://en.wikipedia.org/wiki/Public_key_infrastructure
+         * for more information regarding PKI (Public Key Infrastructure).
+         */
+        if( 0 != ( CKF_VERIFY & MechanismInfo.flags ) )
+        {
+            LogInfo( ( "This Cryptoki library supports verifying messages with RSA" \
+                       " public keys." ) );
+        }
+        else
+        {
+            LogInfo( ( "This Cryptoki library does not support verifying messages" \
+                       " with RSA public keys." ) );
+        }
+    }
 
     /*************************** ECDSA Capabilities ***************************/
-    result = functionList->C_GetMechanismInfo( slotId[ 0 ],
-                                                  CKM_ECDSA,
-                                                  &MechanismInfo );
-    assert( CKR_OK == result );
+    if( result == CKR_OK )
+    {
+        result = functionList->C_GetMechanismInfo( slotId[ 0 ],
+                                                      CKM_ECDSA,
+                                                      &MechanismInfo );
 
-    if( 0 != ( CKF_SIGN & MechanismInfo.flags ) )
-    {
-        LogInfo( ( "This Cryptoki library supports signing messages with" \
-                   " ECDSA private keys." ) );
-    }
-    else
-    {
-        LogInfo( ( "This Cryptoki library does not support signing messages" \
-                   " with ECDSA private keys." ) );
-    }
+        if( 0 != ( CKF_SIGN & MechanismInfo.flags ) )
+        {
+            LogInfo( ( "This Cryptoki library supports signing messages with" \
+                       " ECDSA private keys." ) );
+        }
+        else
+        {
+            LogInfo( ( "This Cryptoki library does not support signing messages" \
+                       " with ECDSA private keys." ) );
+        }
 
-    if( 0 != ( CKF_VERIFY & MechanismInfo.flags ) )
-    {
-        LogInfo( ( "This Cryptoki library supports verifying messages with" \
-                   " ECDSA public keys." ) );
+        if( 0 != ( CKF_VERIFY & MechanismInfo.flags ) )
+        {
+            LogInfo( ( "This Cryptoki library supports verifying messages with" \
+                       " ECDSA public keys." ) );
+        }
+        else
+        {
+            LogInfo( ( "This Cryptoki library does not support verifying" \
+                       " messages with ECDSA public keys." ) );
+        }
     }
-    else
-    {
-        LogInfo( ( "This Cryptoki library does not support verifying" \
-                   " messages with ECDSA public keys." ) );
-    }
-
-    assert( MechanismInfo.ulMaxKeySize >= pkcs11ECDSA_P256_KEY_BITS );
-    assert( MechanismInfo.ulMinKeySize <= pkcs11ECDSA_P256_KEY_BITS );
 
     /************************** Digest Capabilities **************************/
-    result = functionList->C_GetMechanismInfo( slotId[ 0 ],
-                                                  CKM_SHA256,
-                                                  &MechanismInfo );
-    assert( CKR_OK == result );
-
-    if( 0 != ( CKF_DIGEST & MechanismInfo.flags ) )
+    if( result == CKR_OK )
     {
-        LogInfo( ( "The Cryptoki library supports the " \
-                   "SHA-256 algorithm." ) );
-    }
-    else
-    {
-        LogInfo( ( "The Cryptoki library doesn't support the " \
-                   "SHA-256 algorithm." ) );
+        result = functionList->C_GetMechanismInfo( slotId[ 0 ],
+                                                      CKM_SHA256,
+                                                      &MechanismInfo );
+        if( 0 != ( CKF_DIGEST & MechanismInfo.flags ) )
+        {
+            LogInfo( ( "The Cryptoki library supports the " \
+                       "SHA-256 algorithm." ) );
+        }
+        else
+        {
+            LogInfo( ( "The Cryptoki library doesn't support the " \
+                       "SHA-256 algorithm." ) );
+        }
     }
 
     /***************************** Buffer Digest *****************************/
@@ -228,47 +219,54 @@ void PKCS11MechanismsAndDigestDemo( void )
 
     /* Initializes the digest operation and sets what mechanism will be used
      * for the digest. */
-    result = functionList->C_DigestInit( session,
-                                            &xDigestMechanism );
-    assert( CKR_OK == result );
-
+    if( result == CKR_OK )
+    {
+        result = functionList->C_DigestInit( session,
+                                                &xDigestMechanism );
+    }
 
     /* Pass a pointer to the buffer of bytes to be hashed, and it's size. */
-    result = functionList->C_DigestUpdate( session,
-                                              knownMessage,
-                                              /* Strip NULL Terminator. */
-                                              sizeof( knownMessage ) - 1 );
-    assert( CKR_OK == result );
+    if( result == CKR_OK )
+    {
+        result = functionList->C_DigestUpdate( session,
+                                                  knownMessage,
+                                                  /* Strip NULL Terminator. */
+                                                  sizeof( knownMessage ) - 1 );
+    }
 
     /* Retrieve the digest buffer. Since the mechanism is a SHA-256 algorithm,
      * the size will always be 32 bytes. If the size cannot be known ahead of time,
      * a NULL value to the second parameter pDigest, will set the third parameter,
      * pulDigestLen to the number of required bytes. */
-    result = functionList->C_DigestFinal( session,
-                                             digestResult,
-                                             &digestLength );
-    assert( CKR_OK == result );
-
-    /* This will now print out the digest of the known message. You can compare
-     * the hash generated by the Cryptoki library in a UNIX shell by using the
-     * command '$ echo -n "{knownMessage}" | shasum -a 256'
-     * this command should generate the same hash. */
-    LogInfo( ( "Known message: %s", ( char * ) knownMessage ) );
-
-    formatPtr = &hashFormatBuffer[ 0 ];
-
-    for( index = 0; index < digestLength; index++ )
+    if( result == CKR_OK )
     {
-        formatPtr += sprintf( ( char * ) formatPtr, "%x", digestResult[ index ] );
+        result = functionList->C_DigestFinal( session,
+                                                 digestResult,
+                                                 &digestLength );
     }
 
-    LogInfo( ( "Hash of known message using SHA256: %s.", hashFormatBuffer ) );
-    LogInfo( ( "Finished PKCS #11 Mechanisms and Digest Demo." ) );
+    if( result == CKR_OK )
+    {
+        /* This will now print out the digest of the known message. You can compare
+         * the hash generated by the Cryptoki library in a UNIX shell by using the
+         * command '$ echo -n "{knownMessage}" | shasum -a 256'
+         * this command should generate the same hash. */
+        LogInfo( ( "Known message: %s", ( char * ) knownMessage ) );
 
-    /* Avoid compiler warnings if asserts are disabled. */
-    ( void ) result;
+        formatPtr = &hashFormatBuffer[ 0 ];
+
+        for( index = 0; index < digestLength; index++ )
+        {
+            formatPtr += sprintf( ( char * ) formatPtr, "%x", digestResult[ index ] );
+        }
+
+        LogInfo( ( "Hash of known message using SHA256: %s.", hashFormatBuffer ) );
+        LogInfo( ( "Finished PKCS #11 Mechanisms and Digest Demo." ) );
+
+    }
 
     end( session, slotId );
+    return result;
 }
 
 /**
@@ -278,6 +276,5 @@ void PKCS11MechanismsAndDigestDemo( void )
  */
 int main( void )
 {
-    PKCS11MechanismsAndDigestDemo();
-    return 0;
+    return PKCS11MechanismsAndDigestDemo();
 }

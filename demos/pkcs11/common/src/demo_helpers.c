@@ -29,7 +29,6 @@
  */
 /* Standard includes. */
 #include <stdio.h>
-#include <assert.h>
 #include <string.h>
 
 /* Log includes. */
@@ -62,7 +61,7 @@
 #define BYTES_TO_DISPLAY_PER_ROW    16
 /*-----------------------------------------------------------*/
 
-void start( CK_SESSION_HANDLE * session,
+CK_RV start( CK_SESSION_HANDLE * session,
              CK_SLOT_ID ** slotId )
 {
     CK_RV result = CKR_OK;
@@ -74,51 +73,53 @@ void start( CK_SESSION_HANDLE * session,
     CK_SLOT_ID * innerSlotId = NULL;
 
     result = C_GetFunctionList( &functionList );
-    assert( result == CKR_OK );
-    assert( functionList != NULL );
-    assert( functionList->C_Initialize != NULL );
-    assert( functionList->C_GetSlotList != NULL );
-    assert( functionList->C_OpenSession != NULL );
-    assert( functionList->C_Login != NULL );
-    assert( functionList->C_GenerateRandom != NULL );
-    assert( functionList->C_CloseSession != NULL );
-    assert( functionList->C_Finalize != NULL );
 
-    result = functionList->C_Initialize( &initArgs );
-    assert( result == CKR_OK );
+    if( result ==CKR_OK )
+    {
+        result = functionList->C_Initialize( &initArgs );
+    }
 
-    result = functionList->C_GetSlotList( CK_TRUE,
+    if( result ==CKR_OK )
+    {
+        result = functionList->C_GetSlotList( CK_TRUE,
                                              NULL,
                                              &slotCount );
-    assert( result == CKR_OK );
+    }
 
     innerSlotId = malloc( sizeof( CK_SLOT_ID ) * ( slotCount ) );
-    assert( innerSlotId != NULL );
+    if( innerSlotId == NULL )
+    {
+        result = CKR_HOST_MEMORY;
+    }
 
-    result = functionList->C_GetSlotList( CK_TRUE,
+    if( result ==CKR_OK )
+    {
+        result = functionList->C_GetSlotList( CK_TRUE,
                                              innerSlotId,
                                              &slotCount );
-    assert( result == CKR_OK );
-
-    result = functionList->C_OpenSession( innerSlotId[ 0 ],
+    }
+    
+    if( result == CKR_OK )
+    {
+        result = functionList->C_OpenSession( innerSlotId[ 0 ],
                                              CKF_SERIAL_SESSION | CKF_RW_SESSION,
                                              NULL, /* Application defined pointer. */
                                              NULL, /* Callback function. */
                                              &tempSession );
-    assert( result == CKR_OK );
+    }
 
-
-    result = functionList->C_Login( tempSession,
+    if( result == CKR_OK )
+    {
+        result = functionList->C_Login( tempSession,
                                        CKU_USER,
                                        ( CK_UTF8CHAR_PTR ) "0000",
                                        sizeof( "0000" ) - 1UL );
-    assert( result == CKR_OK );
+    }
 
     *slotId = innerSlotId;
     *session = tempSession;
 
-    /* To avoid warnings if asserts are disabled. */
-    ( void ) result;
+    return result;
 }
 /*-----------------------------------------------------------*/
 

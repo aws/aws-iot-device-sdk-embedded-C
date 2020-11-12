@@ -26,7 +26,6 @@
 /* Standard includes. */
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
 
 /* Logging configuration for the PKCS #11 library. */
 #ifndef LIBRARY_LOG_NAME
@@ -56,7 +55,7 @@
  * Session Management Functions
  * Random Number Generation Functions
  */
-void PKCS11ManagementAndRNGDemo( void )
+CK_RV PKCS11ManagementAndRNGDemo( void )
 {
     /* We will use the terminology as defined in the standard, Cryptoki is in
      * reference to the Cryptographic Token Interface defined in the PKCS #11
@@ -109,24 +108,17 @@ void PKCS11ManagementAndRNGDemo( void )
      * the Cryptoki library supports. We use asserts to ensure that all the
      * functionality needed in this demo is available. */
     result = C_GetFunctionList( &functionList );
-    assert( result == CKR_OK );
-    assert( functionList != NULL );
-    assert( functionList->C_Initialize != NULL );
-    assert( functionList->C_GetSlotList != NULL );
-    assert( functionList->C_OpenSession != NULL );
-    assert( functionList->C_Login != NULL );
-    assert( functionList->C_GenerateRandom != NULL );
-    assert( functionList->C_CloseSession != NULL );
-    assert( functionList->C_Finalize != NULL );
-
-    LogInfo( ( "Cryptoki Major Version: %u Minor Version: %u",
+    
+    if( result == CKR_OK )
+    {
+        LogInfo( ( "Cryptoki Major Version: %u Minor Version: %u",
                functionList->version.major,
                functionList->version.minor ) );
 
-    /* C_Initialize will initialize the Cryptoki library and the hardware it
-     * abstracts. */
-    result = functionList->C_Initialize( &initArgs );
-    assert( result == CKR_OK );
+        /* C_Initialize will initialize the Cryptoki library and the hardware it
+         * abstracts. */
+        result = functionList->C_Initialize( &initArgs );
+    }
 
     /* C_GetSlotList will retrieve an array of CK_SLOT_IDs.
      * This Cryptoki library does not implement slots, but it is important to
@@ -135,23 +127,33 @@ void PKCS11ManagementAndRNGDemo( void )
      * By setting the first argument "tokenPresent" to true, we only retrieve
      * slots that have a token. If the second argument "pSlotList" is NULL, the
      * third argument "pulCount" will be modified to contain the total slots. */
-    result = functionList->C_GetSlotList( CK_TRUE,
-                                             NULL,
-                                             &slotCount );
-    assert( result == CKR_OK );
+    if( result == CKR_OK )
+    {
+        result = functionList->C_GetSlotList( CK_TRUE,
+                                                 NULL,
+                                                 &slotCount );
+    }
 
     /* Since C_GetSlotList does not allocate the memory itself for getting a list
      * of CK_SLOT_ID, we allocate one for it to populate with the list of
      * slot ids. */
-    slotId = malloc( sizeof( CK_SLOT_ID ) * ( slotCount ) );
-    assert( slotId != NULL );
+    if( result == CKR_OK )
+    {
+        slotId = malloc( sizeof( CK_SLOT_ID ) * ( slotCount ) );
+        if( slotId == NULL )
+        {
+            result = CKR_HOST_MEMORY;
+        }
+    }
 
     /* Now since pSlotList is not NULL, C_GetSlotList will populate it with the
      * available slots. */
-    result = functionList->C_GetSlotList( CK_TRUE,
+    if( result == CKR_OK )
+    {
+        result = functionList->C_GetSlotList( CK_TRUE,
                                              slotId,
                                              &slotCount );
-    assert( result == CKR_OK );
+    }
 
     /* Since this Cryptoki library does not actually implement the concept of slots,
      * but we will use the first available slot, so the demo code conforms to
@@ -163,12 +165,14 @@ void PKCS11ManagementAndRNGDemo( void )
      *
      * For legacy reasons, Cryptoki demands that the CKF_SERIAL_SESSION bit
      * is always set. */
-    result = functionList->C_OpenSession( slotId[ 0 ],
+    if( result == CKR_OK )
+    {
+        result = functionList->C_OpenSession( slotId[ 0 ],
                                              CKF_SERIAL_SESSION | CKF_RW_SESSION,
                                              NULL, /* Application defined pointer. */
                                              NULL, /* Callback function. */
                                              &session );
-    assert( result == CKR_OK );
+    }
 
 
     /* C_Login is called to log the user in to the token. The login status is
@@ -180,32 +184,39 @@ void PKCS11ManagementAndRNGDemo( void )
      * This Cryptoki library does not implement C_Login, and only defines the function
      * for compatibility reasons.
      */
-    result = functionList->C_Login( session,
+    if( result == CKR_OK )
+    {
+        result = functionList->C_Login( session,
                                        CKU_USER,
                                        ( CK_UTF8CHAR_PTR ) "0000",
                                        sizeof( "0000" ) - 1UL );
-    assert( result == CKR_OK );
+    }
 
     /* C_GenerateRandom generates random or pseudo random data. As arguments it
      * takes the application session, and a pointer to a byte buffer, as well as
      * the length of the byte buffer. Then it will fill this buffer with random
      * bytes. */
-    result = functionList->C_GenerateRandom( session,
+    
+    if( result == CKR_OK )
+    {
+        result = functionList->C_GenerateRandom( session,
                                                 randomData,
                                                 sizeof( randomData ) );
-    assert( result == CKR_OK );
-
-    for( index = 0; index < sizeof( randomData ); index++ )
-    {
-        LogInfo( ( "Generated random number: %x", randomData[ index ] ) );
+        for( index = 0; index < sizeof( randomData ); index++ )
+        {
+            LogInfo( ( "Generated random number: %x", randomData[ index ] ) );
+        }
     }
+
 
     /* C_CloseSession closes the session that was established between the
      * application and the token. This will clean up the resources that maintained
      * the link between the application and the token. If the application wishes
      * to use the token again, it will need to open a new session. */
-    result = functionList->C_CloseSession( session );
-    assert( result == CKR_OK );
+    if( result == CKR_OK )
+    {
+        result = functionList->C_CloseSession( session );
+    }
 
     /* C_Finalize signals to the Cryptoki library that the application is done
      * using it. It should always be the last call to the Cryptoki library.
@@ -214,16 +225,16 @@ void PKCS11ManagementAndRNGDemo( void )
      *
      * Calling this function in a multi threaded environment can lead to undefined
      * behavior if other threads are accessing the Cryptoki library. */
-    result = functionList->C_Finalize( NULL );
-    assert( result == CKR_OK );
+    if( result == CKR_OK )
+    {
+        result = functionList->C_Finalize( NULL );
+    }
 
     LogInfo( ( "Finished PKCS #11 Management and Random Number Generation" 
                " Demo." ) );
 
-    /* Avoid compiler warnings if asserts are disabled. */
-    ( void ) result;
-
     free( slotId );
+    return result;
 }
 
 /**
@@ -233,6 +244,5 @@ void PKCS11ManagementAndRNGDemo( void )
  */
 int main( void )
 {
-    PKCS11ManagementAndRNGDemo();
-    return 0;
+    return PKCS11ManagementAndRNGDemo();
 }
