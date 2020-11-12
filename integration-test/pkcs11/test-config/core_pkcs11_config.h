@@ -29,8 +29,8 @@
  */
 
 
-#ifndef _AWS_PKCS11_CONFIG_H_
-#define _AWS_PKCS11_CONFIG_H_
+#ifndef CORE_PKCS11_CONFIG_H_
+#define CORE_PKCS11_CONFIG_H_
 
 /**************************************************/
 /******* DO NOT CHANGE the following order ********/
