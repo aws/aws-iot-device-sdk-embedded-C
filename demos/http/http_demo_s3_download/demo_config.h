@@ -110,8 +110,4 @@
  */
 #define RANGE_REQUEST_LENGTH              ( 2048 )
 
-#define S3_PRESIGNED_GET_URL    "https://sarem-public.s3.amazonaws.com/gettysberg.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIJ6R5GYH52KZ3LBA%2F20201112%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20201112T225234Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=2858d525f021f6abe9d595269b97153bcaada2ecc6f026a624ffd60bd42a3ed0"
-
-#define S3_PRESIGNED_PUT_URL    "https://sarem-public.s3.amazonaws.com/gettysberg.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIJ6R5GYH52KZ3LBA%2F20201112%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20201112T225234Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=58a9ba9bcfb675ee7784a51fef3279d34335e10072a1bf0b78699faa9f7823ef"
-
 #endif /* ifndef DEMO_CONFIG_H_ */
