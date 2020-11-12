@@ -58,9 +58,9 @@
  * of cryptoki.
  *
  * @param[in] pxSession          Pointer to an uninitialized PKCS #11 session handle.
- *                               This will be initialized by vStart.
+ *                               This will be initialized by start.
  * @param[in] ppxSlotId          Pointer to a CK_SLOT_ID pointer.
- *                               A valid slot will be set by vStart.
+ *                               A valid slot will be set by start.
  *
  */
 void start( CK_SESSION_HANDLE * sssion,

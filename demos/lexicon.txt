@@ -547,7 +547,6 @@ util
 utils
 ve
 verifyinit
-vstart
 weierstrass
 wikipedia
 www

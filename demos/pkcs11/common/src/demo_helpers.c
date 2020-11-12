@@ -30,6 +30,19 @@
 /* Standard includes. */
 #include <stdio.h>
 #include <assert.h>
+#include <string.h>
+
+/* Log includes. */
+#include "logging_levels.h"
+#ifndef LIBRARY_LOG_NAME
+    #define LIBRARY_LOG_NAME    "PKCS11_DEMO_HELPERS"
+#endif
+
+#ifndef LIBRARY_LOG_LEVEL
+    #define LIBRARY_LOG_LEVEL    LOG_INFO
+#endif
+
+#include "logging_stack.h"
 
 /* PKCS #11 includes. */
 #include "core_pkcs11.h"
@@ -56,7 +69,7 @@ void start( CK_SESSION_HANDLE * session,
 
     CK_FUNCTION_LIST_PTR functionList = NULL;
     CK_C_INITIALIZE_ARGS initArgs = { 0 };
-    CK_SESSION_HANDLE session = CK_INVALID_HANDLE;
+    CK_SESSION_HANDLE tempSession = CK_INVALID_HANDLE;
     CK_ULONG slotCount = 0;
     CK_SLOT_ID * innerSlotId = NULL;
 
@@ -79,7 +92,7 @@ void start( CK_SESSION_HANDLE * session,
                                              &slotCount );
     assert( result == CKR_OK );
 
-    innerSlotId = PKCS11_MALLOC( sizeof( CK_SLOT_ID ) * ( slotCount ) );
+    innerSlotId = malloc( sizeof( CK_SLOT_ID ) * ( slotCount ) );
     assert( innerSlotId != NULL );
 
     result = functionList->C_GetSlotList( CK_TRUE,
@@ -91,18 +104,18 @@ void start( CK_SESSION_HANDLE * session,
                                              CKF_SERIAL_SESSION | CKF_RW_SESSION,
                                              NULL, /* Application defined pointer. */
                                              NULL, /* Callback function. */
-                                             &session );
+                                             &tempSession );
     assert( result == CKR_OK );
 
 
-    result = functionList->C_Login( session,
+    result = functionList->C_Login( tempSession,
                                        CKU_USER,
                                        ( CK_UTF8CHAR_PTR ) "0000",
                                        sizeof( "0000" ) - 1UL );
     assert( result == CKR_OK );
 
     *slotId = innerSlotId;
-    *psession = session;
+    *session = tempSession;
 
     /* To avoid warnings if asserts are disabled. */
     ( void ) result;
@@ -114,7 +127,7 @@ void end( CK_SESSION_HANDLE session,
 {
     C_CloseSession( session );
     C_Finalize( NULL );
-    PKCS11_FREE( slotId );
+    free( slotId );
 }
 /*-----------------------------------------------------------*/
 
@@ -230,7 +243,7 @@ CK_RV exportPublicKey( CK_SESSION_HANDLE session,
             *derPublicKeyLength = template.ulValueLen;
 
             /* Get a heap buffer. */
-            *derPublicKey = PKCS11_MALLOC( template.ulValueLen );
+            *derPublicKey = malloc( template.ulValueLen );
 
             /* Check for resource exhaustion. */
             if( NULL == *derPublicKey )
@@ -260,7 +273,7 @@ CK_RV exportPublicKey( CK_SESSION_HANDLE session,
     /* Free memory if there was an error after allocation. */
     if( ( NULL != *derPublicKey ) && ( CKR_OK != result ) )
     {
-        PKCS11_FREE( *derPublicKey );
+        free( *derPublicKey );
         *derPublicKey = NULL;
     }
 

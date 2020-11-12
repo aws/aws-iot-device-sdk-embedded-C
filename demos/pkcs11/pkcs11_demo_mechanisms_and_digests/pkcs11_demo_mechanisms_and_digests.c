@@ -59,7 +59,7 @@
  * Message digesting functions.
  *
  */
-void vPKCS11MechanismsAndDigestDemo( void )
+void PKCS11MechanismsAndDigestDemo( void )
 {
     /*
      * This demo builds upon the demo found in "management_and_rng.c". It borrows
@@ -68,13 +68,13 @@ void vPKCS11MechanismsAndDigestDemo( void )
      */
     LogInfo( ( "Starting PKCS #11 Mechanisms and Digest Demo." ) );
 
-    CK_SESSION_HANDLE hSession = CK_INVALID_HANDLE;
-    CK_SLOT_ID * pxSlotId = 0;
-    CK_FUNCTION_LIST_PTR pxFunctionList = NULL;
-    CK_ULONG ulIndex = 0;
-    CK_RV xResult = CKR_OK;
-    CK_BYTE xHashFormatBuffer[ pkcs11SHA256_DIGEST_LENGTH * 2 ] = { 0 };
-    CK_BYTE_PTR pcFormatPtr = NULL;
+    CK_SESSION_HANDLE session = CK_INVALID_HANDLE;
+    CK_SLOT_ID * slotId = 0;
+    CK_FUNCTION_LIST_PTR functionList = NULL;
+    CK_ULONG index = 0;
+    CK_RV result = CKR_OK;
+    CK_BYTE hashFormatBuffer[ pkcs11SHA256_DIGEST_LENGTH * 2 ] = { 0 };
+    CK_BYTE_PTR formatPtr = NULL;
 
     /* The PKCS #11 standard defines a mechanism to be a "A process for
      * implementing a cryptographic operation." For example the SHA-256 algorithm
@@ -107,24 +107,24 @@ void vPKCS11MechanismsAndDigestDemo( void )
      * Please see this page for further explanation of the SHA-256 hash.
      * https://en.wikipedia.org/wiki/SHA-2
      */
-    CK_BYTE xDigestResult[ pkcs11SHA256_DIGEST_LENGTH ] = { 0 };
-    CK_ULONG ulDigestLength = pkcs11SHA256_DIGEST_LENGTH;
+    CK_BYTE digestResult[ pkcs11SHA256_DIGEST_LENGTH ] = { 0 };
+    CK_ULONG digestLength = pkcs11SHA256_DIGEST_LENGTH;
 
-    CK_BYTE pxKnownMessage[] = "Hello world!";
+    CK_BYTE knownMessage[] = "Hello world!";
 
-    vStart( &hSession, &pxSlotId );
-    xResult = C_GetFunctionList( &pxFunctionList );
-    assert( CKR_OK == xResult );
-    assert( pxFunctionList->C_GetMechanismInfo != NULL );
-    assert( pxFunctionList->C_DigestInit != NULL );
-    assert( pxFunctionList->C_DigestUpdate != NULL );
-    assert( pxFunctionList->C_DigestFinal != NULL );
+    start( &session, &slotId );
+    result = C_GetFunctionList( &functionList );
+    assert( CKR_OK == result );
+    assert( functionList->C_GetMechanismInfo != NULL );
+    assert( functionList->C_DigestInit != NULL );
+    assert( functionList->C_DigestUpdate != NULL );
+    assert( functionList->C_DigestFinal != NULL );
 
     /*************************** RSA Capabilities ***************************/
-    xResult = pxFunctionList->C_GetMechanismInfo( pxSlotId[ 0 ],
+    result = functionList->C_GetMechanismInfo( slotId[ 0 ],
                                                   CKM_RSA_PKCS,
                                                   &MechanismInfo );
-    assert( CKR_OK == xResult );
+    assert( CKR_OK == result );
 
     /* Check to see if the slot supports signing. This capability is important
      * because we want to use the Cryptoki API to sign messages, without directly
@@ -151,7 +151,7 @@ void vPKCS11MechanismsAndDigestDemo( void )
     /* Check for pre-padded signature verification support, this feature will
      * be used in the "sign_verify.c" demo.
      */
-    xResult = pxFunctionList->C_GetMechanismInfo( pxSlotId[ 0 ],
+    result = functionList->C_GetMechanismInfo( slotId[ 0 ],
                                                   CKM_RSA_X_509,
                                                   &MechanismInfo );
 
@@ -175,10 +175,10 @@ void vPKCS11MechanismsAndDigestDemo( void )
     assert( MechanismInfo.ulMinKeySize <= pkcs11RSA_2048_MODULUS_BITS );
 
     /*************************** ECDSA Capabilities ***************************/
-    xResult = pxFunctionList->C_GetMechanismInfo( pxSlotId[ 0 ],
+    result = functionList->C_GetMechanismInfo( slotId[ 0 ],
                                                   CKM_ECDSA,
                                                   &MechanismInfo );
-    assert( CKR_OK == xResult );
+    assert( CKR_OK == result );
 
     if( 0 != ( CKF_SIGN & MechanismInfo.flags ) )
     {
@@ -206,10 +206,10 @@ void vPKCS11MechanismsAndDigestDemo( void )
     assert( MechanismInfo.ulMinKeySize <= pkcs11ECDSA_P256_KEY_BITS );
 
     /************************** Digest Capabilities **************************/
-    xResult = pxFunctionList->C_GetMechanismInfo( pxSlotId[ 0 ],
+    result = functionList->C_GetMechanismInfo( slotId[ 0 ],
                                                   CKM_SHA256,
                                                   &MechanismInfo );
-    assert( CKR_OK == xResult );
+    assert( CKR_OK == result );
 
     if( 0 != ( CKF_DIGEST & MechanismInfo.flags ) )
     {
@@ -228,47 +228,47 @@ void vPKCS11MechanismsAndDigestDemo( void )
 
     /* Initializes the digest operation and sets what mechanism will be used
      * for the digest. */
-    xResult = pxFunctionList->C_DigestInit( hSession,
+    result = functionList->C_DigestInit( session,
                                             &xDigestMechanism );
-    assert( CKR_OK == xResult );
+    assert( CKR_OK == result );
 
 
     /* Pass a pointer to the buffer of bytes to be hashed, and it's size. */
-    xResult = pxFunctionList->C_DigestUpdate( hSession,
-                                              pxKnownMessage,
+    result = functionList->C_DigestUpdate( session,
+                                              knownMessage,
                                               /* Strip NULL Terminator. */
-                                              sizeof( pxKnownMessage ) - 1 );
-    assert( CKR_OK == xResult );
+                                              sizeof( knownMessage ) - 1 );
+    assert( CKR_OK == result );
 
     /* Retrieve the digest buffer. Since the mechanism is a SHA-256 algorithm,
      * the size will always be 32 bytes. If the size cannot be known ahead of time,
      * a NULL value to the second parameter pDigest, will set the third parameter,
      * pulDigestLen to the number of required bytes. */
-    xResult = pxFunctionList->C_DigestFinal( hSession,
-                                             xDigestResult,
-                                             &ulDigestLength );
-    assert( CKR_OK == xResult );
+    result = functionList->C_DigestFinal( session,
+                                             digestResult,
+                                             &digestLength );
+    assert( CKR_OK == result );
 
     /* This will now print out the digest of the known message. You can compare
      * the hash generated by the Cryptoki library in a UNIX shell by using the
-     * command '$ echo -n "{pxKnownMessage}" | shasum -a 256'
+     * command '$ echo -n "{knownMessage}" | shasum -a 256'
      * this command should generate the same hash. */
-    LogInfo( ( "Known message: %s", ( char * ) pxKnownMessage ) );
+    LogInfo( ( "Known message: %s", ( char * ) knownMessage ) );
 
-    pcFormatPtr = &xHashFormatBuffer[ 0 ];
+    formatPtr = &hashFormatBuffer[ 0 ];
 
-    for( ulIndex = 0; ulIndex < ulDigestLength; ulIndex++ )
+    for( index = 0; index < digestLength; index++ )
     {
-        pcFormatPtr += sprintf( ( char * ) pcFormatPtr, "%x", xDigestResult[ ulIndex ] );
+        formatPtr += sprintf( ( char * ) formatPtr, "%x", digestResult[ index ] );
     }
 
-    LogInfo( ( "Hash of known message using SHA256: %s.", xHashFormatBuffer ) );
+    LogInfo( ( "Hash of known message using SHA256: %s.", hashFormatBuffer ) );
     LogInfo( ( "Finished PKCS #11 Mechanisms and Digest Demo." ) );
 
     /* Avoid compiler warnings if asserts are disabled. */
-    ( void ) xResult;
+    ( void ) result;
 
-    vEnd( hSession, pxSlotId );
+    end( session, slotId );
 }
 
 /**
@@ -278,6 +278,6 @@ void vPKCS11MechanismsAndDigestDemo( void )
  */
 int main( void )
 {
-    vPKCS11MechanismsAndDigestDemo();
+    PKCS11MechanismsAndDigestDemo();
     return 0;
 }
