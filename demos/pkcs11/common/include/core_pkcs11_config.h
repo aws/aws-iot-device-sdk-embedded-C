@@ -53,6 +53,9 @@
 #endif
 
 #include "logging_stack.h"
+
+/************ End of logging configuration ****************/
+
 #include <stdlib.h>
 
 /**
