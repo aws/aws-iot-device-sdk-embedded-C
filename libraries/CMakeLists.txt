@@ -2,9 +2,6 @@
 macro( clone_path path )
     find_package( Git REQUIRED )
     # Attempt to clone submodules.
-    message("${ARGV0}")
-    message("${ARGV1}")
-    message("${ARGV2}")
     if( ${BUILD_CLONE_SUBMODULES} )
         execute_process( COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive ${ARGV1} -- ${path}
                          WORKING_DIRECTORY ${ROOT_DIR}
