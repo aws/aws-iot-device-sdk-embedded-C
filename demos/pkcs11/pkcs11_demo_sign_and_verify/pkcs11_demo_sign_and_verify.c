@@ -181,6 +181,7 @@ CK_RV PKCS11SignVerifyDemo( void )
                     " sign_and_verify demo from a folder containing those files"
                     ", so it can access the key and certificate in the file"
                     " system." ) );
+        result = CKR_OBJECT_HANDLE_INVALID;
     }
 
     /***************************** Buffer Digest *****************************/
@@ -227,14 +228,14 @@ CK_RV PKCS11SignVerifyDemo( void )
 
     /********************************* Sign **********************************/
 
-    LogInfo( ( "Signing known message: %s",
-               ( char * ) knownMessage ) );
-
     /* Initializes the sign operation and sets what mechanism will be used
      * for signing the message digest. Specify what object handle to use for this
      * operation, in this case the private key object handle. */
     if( result == CKR_OK )
     {
+        LogInfo( ( "Signing known message: %s",
+                   ( char * ) knownMessage ) );
+
         result = functionList->C_SignInit( session,
                                            &mechanism,
                                            privateKeyHandle );
