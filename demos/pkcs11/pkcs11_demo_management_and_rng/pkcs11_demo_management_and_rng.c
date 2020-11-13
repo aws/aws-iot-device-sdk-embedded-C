@@ -108,12 +108,12 @@ CK_RV PKCS11ManagementAndRNGDemo( void )
      * the Cryptoki library supports. We use asserts to ensure that all the
      * functionality needed in this demo is available. */
     result = C_GetFunctionList( &functionList );
-    
+
     if( result == CKR_OK )
     {
         LogInfo( ( "Cryptoki Major Version: %u Minor Version: %u",
-               functionList->version.major,
-               functionList->version.minor ) );
+                   functionList->version.major,
+                   functionList->version.minor ) );
 
         /* C_Initialize will initialize the Cryptoki library and the hardware it
          * abstracts. */
@@ -130,8 +130,8 @@ CK_RV PKCS11ManagementAndRNGDemo( void )
     if( result == CKR_OK )
     {
         result = functionList->C_GetSlotList( CK_TRUE,
-                                                 NULL,
-                                                 &slotCount );
+                                              NULL,
+                                              &slotCount );
     }
 
     /* Since C_GetSlotList does not allocate the memory itself for getting a list
@@ -140,6 +140,7 @@ CK_RV PKCS11ManagementAndRNGDemo( void )
     if( result == CKR_OK )
     {
         slotId = malloc( sizeof( CK_SLOT_ID ) * ( slotCount ) );
+
         if( slotId == NULL )
         {
             result = CKR_HOST_MEMORY;
@@ -151,8 +152,8 @@ CK_RV PKCS11ManagementAndRNGDemo( void )
     if( result == CKR_OK )
     {
         result = functionList->C_GetSlotList( CK_TRUE,
-                                             slotId,
-                                             &slotCount );
+                                              slotId,
+                                              &slotCount );
     }
 
     /* Since this Cryptoki library does not actually implement the concept of slots,
@@ -168,12 +169,11 @@ CK_RV PKCS11ManagementAndRNGDemo( void )
     if( result == CKR_OK )
     {
         result = functionList->C_OpenSession( slotId[ 0 ],
-                                             CKF_SERIAL_SESSION | CKF_RW_SESSION,
-                                             NULL, /* Application defined pointer. */
-                                             NULL, /* Callback function. */
-                                             &session );
+                                              CKF_SERIAL_SESSION | CKF_RW_SESSION,
+                                              NULL, /* Application defined pointer. */
+                                              NULL, /* Callback function. */
+                                              &session );
     }
-
 
     /* C_Login is called to log the user in to the token. The login status is
      * shared between sessions, so logging in once is sufficient for all the sessions
@@ -187,27 +187,27 @@ CK_RV PKCS11ManagementAndRNGDemo( void )
     if( result == CKR_OK )
     {
         result = functionList->C_Login( session,
-                                       CKU_USER,
-                                       ( CK_UTF8CHAR_PTR ) "0000",
-                                       sizeof( "0000" ) - 1UL );
+                                        CKU_USER,
+                                        ( CK_UTF8CHAR_PTR ) "0000",
+                                        sizeof( "0000" ) - 1UL );
     }
 
     /* C_GenerateRandom generates random or pseudo random data. As arguments it
      * takes the application session, and a pointer to a byte buffer, as well as
      * the length of the byte buffer. Then it will fill this buffer with random
      * bytes. */
-    
+
     if( result == CKR_OK )
     {
         result = functionList->C_GenerateRandom( session,
-                                                randomData,
-                                                sizeof( randomData ) );
+                                                 randomData,
+                                                 sizeof( randomData ) );
+
         for( index = 0; index < sizeof( randomData ); index++ )
         {
             LogInfo( ( "Generated random number: %x", randomData[ index ] ) );
         }
     }
-
 
     /* C_CloseSession closes the session that was established between the
      * application and the token. This will clean up the resources that maintained
@@ -230,7 +230,7 @@ CK_RV PKCS11ManagementAndRNGDemo( void )
         result = functionList->C_Finalize( NULL );
     }
 
-    LogInfo( ( "Finished PKCS #11 Management and Random Number Generation" 
+    LogInfo( ( "Finished PKCS #11 Management and Random Number Generation"
                " Demo." ) );
 
     free( slotId );

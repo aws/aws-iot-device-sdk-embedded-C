@@ -132,6 +132,7 @@ static CK_RV objectGeneration( void );
 CK_RV PKCS11ObjectDemo( void )
 {
     CK_RV result = CKR_OK;
+
     LogInfo( ( "Starting PKCS #11 Objects Demo." ) );
 
     /* PKCS #11 defines objects as "An item that is stored on a token. May be
@@ -143,6 +144,7 @@ CK_RV PKCS11ObjectDemo( void )
     {
         result = objectGeneration();
     }
+
     LogInfo( ( "Finished PKCS #11 Objects Demo." ) );
 
     return result;
@@ -240,14 +242,13 @@ static CK_RV objectImporting( void )
         result = CKR_HOST_MEMORY;
     }
 
-
     if( result == CKR_OK )
     {
         derLen = certificateTemplate.xValue.ulValueLen;
         ( void ) convert_pem_to_der( certificateTemplate.xValue.pValue,
-                                                certificateTemplate.xValue.ulValueLen,
-                                                derObject,
-                                                &derLen );
+                                     certificateTemplate.xValue.ulValueLen,
+                                     derObject,
+                                     &derLen );
     }
 
     /* Set the template pointers to refer to the DER converted objects. */
@@ -278,10 +279,9 @@ static CK_RV objectImporting( void )
     if( result == CKR_OK )
     {
         result = functionList->C_CreateObject( session,
-                                                  ( CK_ATTRIBUTE_PTR ) &certificateTemplate,
-                                                  sizeof( certificateTemplate ) / sizeof( CK_ATTRIBUTE ),
-                                                  &certHandle );
-
+                                               ( CK_ATTRIBUTE_PTR ) &certificateTemplate,
+                                               sizeof( certificateTemplate ) / sizeof( CK_ATTRIBUTE ),
+                                               &certHandle );
     }
 
     LogInfo( ( "FreeRTOS_P11_Certificate.dat has been created in the current "
@@ -355,9 +355,9 @@ static CK_RV objectGeneration( void )
      */
     CK_ATTRIBUTE publicKeyTemplate[] =
     {
-        { CKA_KEY_TYPE,  &keyType,         sizeof( keyType )              },
-        { CKA_VERIFY,    &true,            sizeof( true )                 },
-        { CKA_EC_PARAMS, ecParams,         sizeof( ecParams )             },
+        { CKA_KEY_TYPE,  &keyType,       sizeof( keyType )            },
+        { CKA_VERIFY,    &true,          sizeof( true )               },
+        { CKA_EC_PARAMS, ecParams,       sizeof( ecParams )           },
         { CKA_LABEL,     publicKeyLabel, sizeof( publicKeyLabel ) - 1 }
     };
 
@@ -370,10 +370,10 @@ static CK_RV objectGeneration( void )
      */
     CK_ATTRIBUTE privateKeyTemplate[] =
     {
-        { CKA_KEY_TYPE, &keyType,          sizeof( keyType )               },
-        { CKA_TOKEN,    &true,             sizeof( true )                  },
-        { CKA_PRIVATE,  &true,             sizeof( true )                  },
-        { CKA_SIGN,     &true,             sizeof( true )                  },
+        { CKA_KEY_TYPE, &keyType,        sizeof( keyType )             },
+        { CKA_TOKEN,    &true,           sizeof( true )                },
+        { CKA_PRIVATE,  &true,           sizeof( true )                },
+        { CKA_SIGN,     &true,           sizeof( true )                },
         { CKA_LABEL,    privateKeyLabel, sizeof( privateKeyLabel ) - 1 }
     };
 
@@ -396,14 +396,15 @@ static CK_RV objectGeneration( void )
     if( result == CKR_OK )
     {
         result = functionList->C_GenerateKeyPair( session,
-                                                     &mechanism,
-                                                     publicKeyTemplate,
-                                                     sizeof( publicKeyTemplate ) / sizeof( CK_ATTRIBUTE ),
-                                                     privateKeyTemplate,
-                                                     sizeof( privateKeyTemplate ) / sizeof( CK_ATTRIBUTE ),
-                                                     &publicKeyHandle,
-                                                     &privateKeyHandle );
+                                                  &mechanism,
+                                                  publicKeyTemplate,
+                                                  sizeof( publicKeyTemplate ) / sizeof( CK_ATTRIBUTE ),
+                                                  privateKeyTemplate,
+                                                  sizeof( privateKeyTemplate ) / sizeof( CK_ATTRIBUTE ),
+                                                  &publicKeyHandle,
+                                                  &privateKeyHandle );
     }
+
     LogInfo( ( "FreeRTOS_P11_Key.dat has been created in the "
                "current directory" ) );
     LogInfo( ( "Extracting public key bytes..." ) );
@@ -411,12 +412,12 @@ static CK_RV objectGeneration( void )
     /* Export public key as hex bytes and print the hex representation of the
      * public key. */
     exportPublicKey( session,
-                      publicKeyHandle,
-                      &derPublicKey,
-                      &derPublicKeyLength );
+                     publicKeyHandle,
+                     &derPublicKey,
+                     &derPublicKeyLength );
     writeHexBytesToConsole( "Public Key in Hex Format",
-                             derPublicKey,
-                             derPublicKeyLength );
+                            derPublicKey,
+                            derPublicKeyLength );
     LogInfo( ( "---------Finished Generating Objects---------" ) );
     end( session, slotId );
 

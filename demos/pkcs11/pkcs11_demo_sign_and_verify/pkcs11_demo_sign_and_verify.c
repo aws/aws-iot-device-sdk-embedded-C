@@ -157,9 +157,9 @@ CK_RV PKCS11SignVerifyDemo( void )
     if( result == CKR_OK )
     {
         result = xFindObjectWithLabelAndClass( session,
-                                                pkcs11demoPRIVATE_KEY_LABEL,
-                                                CKO_PRIVATE_KEY,
-                                                &privateKeyHandle );
+                                               pkcs11demoPRIVATE_KEY_LABEL,
+                                               CKO_PRIVATE_KEY,
+                                               &privateKeyHandle );
     }
 
     /* Acquire the object handle for the public key created in the "objects.c"
@@ -167,9 +167,9 @@ CK_RV PKCS11SignVerifyDemo( void )
     if( result == CKR_OK )
     {
         result = xFindObjectWithLabelAndClass( session,
-                                                pkcs11demoPUBLIC_KEY_LABEL,
-                                                CKO_PRIVATE_KEY,
-                                                &publicKeyHandle );
+                                               pkcs11demoPUBLIC_KEY_LABEL,
+                                               CKO_PRIVATE_KEY,
+                                               &publicKeyHandle );
     }
 
     /***************************** Buffer Digest *****************************/
@@ -180,16 +180,16 @@ CK_RV PKCS11SignVerifyDemo( void )
     if( result == CKR_OK )
     {
         result = functionList->C_DigestInit( session,
-                                                &xDigestMechanism );
+                                             &xDigestMechanism );
     }
 
     /* Pass a pointer to the buffer of bytes to be hashed, and it's size. */
     if( result == CKR_OK )
     {
         result = functionList->C_DigestUpdate( session,
-                                                  knownMessage,
-                                                  /* Strip NULL Terminator. */
-                                                  sizeof( knownMessage ) - 1 );
+                                               knownMessage,
+                                               /* Strip NULL Terminator. */
+                                               sizeof( knownMessage ) - 1 );
     }
 
     /* Retrieve the digest buffer length. When passing in a NULL pointer as the
@@ -200,8 +200,8 @@ CK_RV PKCS11SignVerifyDemo( void )
     if( result == CKR_OK )
     {
         result = functionList->C_DigestFinal( session,
-                                                 NULL,
-                                                 &digestLength );
+                                              NULL,
+                                              &digestLength );
     }
 
     /* Now that digestLength contains the required byte length, retrieve the
@@ -210,8 +210,8 @@ CK_RV PKCS11SignVerifyDemo( void )
     if( result == CKR_OK )
     {
         result = functionList->C_DigestFinal( session,
-                                                 digestResult,
-                                                 &digestLength );
+                                              digestResult,
+                                              &digestLength );
     }
 
     /********************************* Sign **********************************/
@@ -225,8 +225,8 @@ CK_RV PKCS11SignVerifyDemo( void )
     if( result == CKR_OK )
     {
         result = functionList->C_SignInit( session,
-                                              &mechanism,
-                                              privateKeyHandle );
+                                           &mechanism,
+                                           privateKeyHandle );
     }
 
     /* Sign the message digest that was created with the C_Digest series of
@@ -235,10 +235,10 @@ CK_RV PKCS11SignVerifyDemo( void )
     if( result == CKR_OK )
     {
         result = functionList->C_Sign( session,
-                                          digestResult,
-                                          pkcs11SHA256_DIGEST_LENGTH,
-                                          signature,
-                                          &signatureLength );
+                                       digestResult,
+                                       pkcs11SHA256_DIGEST_LENGTH,
+                                       signature,
+                                       &signatureLength );
     }
 
     /********************************* Verify **********************************/
@@ -253,8 +253,8 @@ CK_RV PKCS11SignVerifyDemo( void )
     if( result == CKR_OK )
     {
         result = functionList->C_VerifyInit( session,
-                                                &mechanism,
-                                                publicKeyHandle );
+                                             &mechanism,
+                                             publicKeyHandle );
     }
 
     /* Given the signature and it's length, the Cryptoki will use the public key
@@ -270,11 +270,11 @@ CK_RV PKCS11SignVerifyDemo( void )
     if( result == CKR_OK )
     {
         result = functionList->C_Verify( session,
-                                            digestResult,
-                                            pkcs11SHA256_DIGEST_LENGTH,
-                                            signature,
-                                            signatureLength );
-    
+                                         digestResult,
+                                         pkcs11SHA256_DIGEST_LENGTH,
+                                         signature,
+                                         signatureLength );
+
         if( result == CKR_OK )
         {
             LogInfo( ( "The signature of the digest was verified with the"
@@ -326,12 +326,12 @@ CK_RV PKCS11SignVerifyDemo( void )
     {
         LogInfo( ( "Verifying with public key." ) );
         exportPublicKey( session,
-                          publicKeyHandle,
-                          &derPublicKey,
-                          &derPublicKeyLength );
+                         publicKeyHandle,
+                         &derPublicKey,
+                         &derPublicKeyLength );
         writeHexBytesToConsole( "Public Key in Hex Format",
-                                 derPublicKey,
-                                 derPublicKeyLength );
+                                derPublicKey,
+                                derPublicKeyLength );
     }
 
     /* This utility function converts the PKCS #11 signature into an ASN.1

@@ -879,63 +879,6 @@ static void provisionCredentialsWithKeyImport( CK_OBJECT_HANDLE_PTR privateKeyHa
     TEST_ASSERT_NOT_EQUAL_MESSAGE( 0, *pcertificateHandle, "Invalid object handle returned for EC certificate." );
 }
 
-static void provisionCredentialsWithGenerateKeyPair( CK_OBJECT_HANDLE_PTR privateKeyHandlePtr,
-                                                     CK_OBJECT_HANDLE_PTR pcertificateHandle,
-                                                     CK_OBJECT_HANDLE_PTR publicKeyHandlePtr )
-{
-    CK_RV result;
-    CK_ATTRIBUTE template;
-    CK_KEY_TYPE keyType = 0;
-    CK_BBOOL provisionKeyNeeded = CK_FALSE;
-
-    /* Check if there is an EC private key in there already. */
-    result = xFindObjectWithLabelAndClass( globalSession, pkcs11testLABEL_DEVICE_PRIVATE_KEY_FOR_TLS, CKO_PRIVATE_KEY, privateKeyHandlePtr );
-    TEST_ASSERT_EQUAL_MESSAGE( CKR_OK, result, "Failed to find private key." );
-    result = xFindObjectWithLabelAndClass( globalSession, pkcs11testLABEL_DEVICE_PUBLIC_KEY_FOR_TLS, CKO_PUBLIC_KEY, publicKeyHandlePtr );
-    TEST_ASSERT_EQUAL_MESSAGE( CKR_OK, result, "Failed to find public key." );
-
-    if( *privateKeyHandlePtr != CK_INVALID_HANDLE )
-    {
-        template.type = CKA_KEY_TYPE;
-        template.pValue = &keyType;
-        template.ulValueLen = sizeof( CK_KEY_TYPE );
-        result = globalFunctionList->C_GetAttributeValue( globalSession, *privateKeyHandlePtr, &template, 1 );
-        TEST_ASSERT_EQUAL_MESSAGE( CKR_OK, result, "Failed to find private key's type." );
-
-        if( keyType != CKK_EC )
-        {
-            provisionKeyNeeded = CK_TRUE;
-        }
-    }
-
-    if( *privateKeyHandlePtr == CK_INVALID_HANDLE )
-    {
-        provisionKeyNeeded = CK_TRUE;
-    }
-
-    if( provisionKeyNeeded == CK_TRUE )
-    {
-        result = generateKeyPairEC( globalSession, ( uint8_t * ) pkcs11testLABEL_DEVICE_PRIVATE_KEY_FOR_TLS, ( uint8_t * ) pkcs11testLABEL_DEVICE_PUBLIC_KEY_FOR_TLS, privateKeyHandlePtr, publicKeyHandlePtr );
-        TEST_ASSERT_EQUAL_MESSAGE( CKR_OK, result, "Failed to generate key pair." );
-        TEST_ASSERT_NOT_EQUAL_MESSAGE( CK_INVALID_HANDLE, *privateKeyHandlePtr, "Invalid object handle returned for EC private key." );
-        TEST_ASSERT_NOT_EQUAL_MESSAGE( CK_INVALID_HANDLE, *publicKeyHandlePtr, "Invalid object handle returned for EC public key." );
-    }
-
-    result = xFindObjectWithLabelAndClass( globalSession, pkcs11testLABEL_DEVICE_CERTIFICATE_FOR_TLS, CKO_CERTIFICATE, pcertificateHandle );
-
-    /* NOTE: This certificate is for object storage and retrieval purposes only, and does not correspond to the key pair generated. */
-    if( *pcertificateHandle == CK_INVALID_HANDLE )
-    {
-        result = provisionCertificate( globalSession,
-                                       ( uint8_t * ) validECDSACertificate,
-                                       sizeof( validECDSACertificate ),
-                                       ( uint8_t * ) pkcs11testLABEL_DEVICE_CERTIFICATE_FOR_TLS,
-                                       pcertificateHandle );
-        TEST_ASSERT_EQUAL_MESSAGE( CKR_OK, result, "Failed to create EC certificate." );
-        TEST_ASSERT_NOT_EQUAL_MESSAGE( 0, *privateKeyHandlePtr, "Invalid object handle returned for EC certificate." );
-    }
-}
-
 void test_DestoryObject_EC( void )
 {
     CK_RV result;

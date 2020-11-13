@@ -74,46 +74,47 @@ CK_RV start( CK_SESSION_HANDLE * session,
 
     result = C_GetFunctionList( &functionList );
 
-    if( result ==CKR_OK )
+    if( result == CKR_OK )
     {
         result = functionList->C_Initialize( &initArgs );
     }
 
-    if( result ==CKR_OK )
+    if( result == CKR_OK )
     {
         result = functionList->C_GetSlotList( CK_TRUE,
-                                             NULL,
-                                             &slotCount );
+                                              NULL,
+                                              &slotCount );
     }
 
     innerSlotId = malloc( sizeof( CK_SLOT_ID ) * ( slotCount ) );
+
     if( innerSlotId == NULL )
     {
         result = CKR_HOST_MEMORY;
     }
 
-    if( result ==CKR_OK )
+    if( result == CKR_OK )
     {
         result = functionList->C_GetSlotList( CK_TRUE,
-                                             innerSlotId,
-                                             &slotCount );
+                                              innerSlotId,
+                                              &slotCount );
     }
-    
+
     if( result == CKR_OK )
     {
         result = functionList->C_OpenSession( innerSlotId[ 0 ],
-                                             CKF_SERIAL_SESSION | CKF_RW_SESSION,
-                                             NULL, /* Application defined pointer. */
-                                             NULL, /* Callback function. */
-                                             &tempSession );
+                                              CKF_SERIAL_SESSION | CKF_RW_SESSION,
+                                              NULL, /* Application defined pointer. */
+                                              NULL, /* Callback function. */
+                                              &tempSession );
     }
 
     if( result == CKR_OK )
     {
         result = functionList->C_Login( tempSession,
-                                       CKU_USER,
-                                       ( CK_UTF8CHAR_PTR ) "0000",
-                                       sizeof( "0000" ) - 1UL );
+                                        CKU_USER,
+                                        ( CK_UTF8CHAR_PTR ) "0000",
+                                        sizeof( "0000" ) - 1UL );
     }
 
     *slotId = innerSlotId;
@@ -124,7 +125,7 @@ CK_RV start( CK_SESSION_HANDLE * session,
 /*-----------------------------------------------------------*/
 
 void end( CK_SESSION_HANDLE session,
-           CK_SLOT_ID * slotId )
+          CK_SLOT_ID * slotId )
 {
     C_CloseSession( session );
     C_Finalize( NULL );
@@ -133,8 +134,8 @@ void end( CK_SESSION_HANDLE session,
 /*-----------------------------------------------------------*/
 
 void writeHexBytesToConsole( char * description,
-                              CK_BYTE * data,
-                              CK_ULONG dataLength )
+                             CK_BYTE * data,
+                             CK_ULONG dataLength )
 {
     /* This function is simply a helper function to print the raw hex values
      * of an EC public key. It's explanation is not within the scope of the demos
@@ -186,9 +187,9 @@ void writeHexBytesToConsole( char * description,
 /*-----------------------------------------------------------*/
 
 CK_RV exportPublicKey( CK_SESSION_HANDLE session,
-                        CK_OBJECT_HANDLE publicKeyHandle,
-                        CK_BYTE ** derPublicKey,
-                        CK_ULONG * derPublicKeyLength )
+                       CK_OBJECT_HANDLE publicKeyHandle,
+                       CK_BYTE ** derPublicKey,
+                       CK_ULONG * derPublicKeyLength )
 {
     /* This function is simply a helper function to export the raw hex values
      * of an EC public key into a buffer. It's explanation is not within the
@@ -218,9 +219,9 @@ CK_RV exportPublicKey( CK_SESSION_HANDLE session,
         template.pValue = &keyType;
         template.ulValueLen = sizeof( keyType );
         result = functionList->C_GetAttributeValue( session,
-                                                       publicKeyHandle,
-                                                       &template,
-                                                       1 );
+                                                    publicKeyHandle,
+                                                    &template,
+                                                    1 );
     }
 
     /* Scope to ECDSA keys only, since there's currently no use case for
@@ -232,9 +233,9 @@ CK_RV exportPublicKey( CK_SESSION_HANDLE session,
         template.pValue = NULL;
         template.ulValueLen = 0;
         result = functionList->C_GetAttributeValue( session,
-                                                       publicKeyHandle,
-                                                       &template,
-                                                       1 );
+                                                    publicKeyHandle,
+                                                    &template,
+                                                    1 );
 
         /* Allocate a buffer large enough for the full, encoded public key. */
         if( CKR_OK == result )
@@ -259,9 +260,9 @@ CK_RV exportPublicKey( CK_SESSION_HANDLE session,
             template.pValue = *derPublicKey + sizeof( ecP256AsnOid ) - sizeof( unusedKeyTag );
             template.ulValueLen -= ( sizeof( ecP256AsnOid ) - sizeof( unusedKeyTag ) );
             result = functionList->C_GetAttributeValue( session,
-                                                           publicKeyHandle,
-                                                           &template,
-                                                           1 );
+                                                        publicKeyHandle,
+                                                        &template,
+                                                        1 );
         }
 
         /* Prepend the full DER header. */

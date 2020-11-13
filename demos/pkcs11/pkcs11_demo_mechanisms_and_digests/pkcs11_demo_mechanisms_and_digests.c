@@ -118,8 +118,8 @@ CK_RV PKCS11MechanismsAndDigestDemo( void )
     if( result == CKR_OK )
     {
         result = functionList->C_GetMechanismInfo( slotId[ 0 ],
-                                                      CKM_RSA_PKCS,
-                                                      &MechanismInfo );
+                                                   CKM_RSA_PKCS,
+                                                   &MechanismInfo );
 
         /* Check to see if the slot supports signing. This capability is important
          * because we want to use the Cryptoki API to sign messages, without directly
@@ -146,8 +146,8 @@ CK_RV PKCS11MechanismsAndDigestDemo( void )
     if( result == CKR_OK )
     {
         result = functionList->C_GetMechanismInfo( slotId[ 0 ],
-                                                      CKM_RSA_X_509,
-                                                      &MechanismInfo );
+                                                   CKM_RSA_X_509,
+                                                   &MechanismInfo );
 
         /* If this fails, the slot is not able to verify the signature using
          * a RSA public key. Please see https://en.wikipedia.org/wiki/Public_key_infrastructure
@@ -169,8 +169,8 @@ CK_RV PKCS11MechanismsAndDigestDemo( void )
     if( result == CKR_OK )
     {
         result = functionList->C_GetMechanismInfo( slotId[ 0 ],
-                                                      CKM_ECDSA,
-                                                      &MechanismInfo );
+                                                   CKM_ECDSA,
+                                                   &MechanismInfo );
 
         if( 0 != ( CKF_SIGN & MechanismInfo.flags ) )
         {
@@ -199,8 +199,9 @@ CK_RV PKCS11MechanismsAndDigestDemo( void )
     if( result == CKR_OK )
     {
         result = functionList->C_GetMechanismInfo( slotId[ 0 ],
-                                                      CKM_SHA256,
-                                                      &MechanismInfo );
+                                                   CKM_SHA256,
+                                                   &MechanismInfo );
+
         if( 0 != ( CKF_DIGEST & MechanismInfo.flags ) )
         {
             LogInfo( ( "The Cryptoki library supports the "
@@ -222,16 +223,16 @@ CK_RV PKCS11MechanismsAndDigestDemo( void )
     if( result == CKR_OK )
     {
         result = functionList->C_DigestInit( session,
-                                                &xDigestMechanism );
+                                             &xDigestMechanism );
     }
 
     /* Pass a pointer to the buffer of bytes to be hashed, and it's size. */
     if( result == CKR_OK )
     {
         result = functionList->C_DigestUpdate( session,
-                                                  knownMessage,
-                                                  /* Strip NULL Terminator. */
-                                                  sizeof( knownMessage ) - 1 );
+                                               knownMessage,
+                                               /* Strip NULL Terminator. */
+                                               sizeof( knownMessage ) - 1 );
     }
 
     /* Retrieve the digest buffer. Since the mechanism is a SHA-256 algorithm,
@@ -241,8 +242,8 @@ CK_RV PKCS11MechanismsAndDigestDemo( void )
     if( result == CKR_OK )
     {
         result = functionList->C_DigestFinal( session,
-                                                 digestResult,
-                                                 &digestLength );
+                                              digestResult,
+                                              &digestLength );
     }
 
     if( result == CKR_OK )
@@ -262,7 +263,6 @@ CK_RV PKCS11MechanismsAndDigestDemo( void )
 
         LogInfo( ( "Hash of known message using SHA256: %s.", hashFormatBuffer ) );
         LogInfo( ( "Finished PKCS #11 Mechanisms and Digest Demo." ) );
-
     }
 
     end( session, slotId );

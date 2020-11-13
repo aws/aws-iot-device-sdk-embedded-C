@@ -75,7 +75,7 @@ CK_RV start( CK_SESSION_HANDLE * sssion,
  * @param[in] ppxSlotId          PKCS #11 slot to close.
  */
 void end( CK_SESSION_HANDLE session,
-           CK_SLOT_ID * slotId );
+          CK_SLOT_ID * slotId );
 /*-----------------------------------------------------------*/
 
 /*
@@ -89,8 +89,8 @@ void end( CK_SESSION_HANDLE session,
  *
  */
 void writeHexBytesToConsole( char * description,
-                              CK_BYTE * data,
-                              CK_ULONG dataLength );
+                             CK_BYTE * data,
+                             CK_ULONG dataLength );
 /*-----------------------------------------------------------*/
 
 /*
@@ -99,9 +99,9 @@ void writeHexBytesToConsole( char * description,
  * scope of the demos and is sparsely commented.
  */
 CK_RV exportPublicKey( CK_SESSION_HANDLE session,
-                        CK_OBJECT_HANDLE publicKeyHandle,
-                        CK_BYTE ** derPublicKey,
-                        CK_ULONG * derPublicKeyLength );
+                       CK_OBJECT_HANDLE publicKeyHandle,
+                       CK_BYTE ** derPublicKey,
+                       CK_ULONG * derPublicKeyLength );
 /*-----------------------------------------------------------*/
 
 #endif /* _DEMO_HELPER_FUNCTIONS_ */
