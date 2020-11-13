@@ -97,53 +97,53 @@ CK_BYTE ecdsaHashedMessage[ pkcs11SHA256_DIGEST_LENGTH ] = { 0xab };
 
 /* Import the specified ECDSA private key into storage. */
 static CK_RV provisionPrivateECKey( CK_SESSION_HANDLE session,
-                                       uint8_t * label,
-                                       CK_OBJECT_HANDLE_PTR objectHandle,
-                                       mbedtls_pk_context * mbedPkContext );
+                                    uint8_t * label,
+                                    CK_OBJECT_HANDLE_PTR objectHandle,
+                                    mbedtls_pk_context * mbedPkContext );
 
 /* Import the specified RSA private key into storage. */
 static CK_RV provisionPrivateRSAKey( CK_SESSION_HANDLE session,
-                                        uint8_t * label,
-                                        CK_OBJECT_HANDLE_PTR objectHandle,
-                                        mbedtls_pk_context * mbedPkContext );
+                                     uint8_t * label,
+                                     CK_OBJECT_HANDLE_PTR objectHandle,
+                                     mbedtls_pk_context * mbedPkContext );
 
 /* Import the specified private key into storage. */
 static CK_RV provisionPrivateKey( CK_SESSION_HANDLE session,
-                                   uint8_t * privateKey,
-                                   size_t privateKeyLength,
-                                   uint8_t * label,
-                                   CK_OBJECT_HANDLE_PTR objectHandle );
+                                  uint8_t * privateKey,
+                                  size_t privateKeyLength,
+                                  uint8_t * label,
+                                  CK_OBJECT_HANDLE_PTR objectHandle );
 
 /* Import the specified public key into storage. */
 static CK_RV provisionPublicKey( CK_SESSION_HANDLE session,
-                                  uint8_t * keyPtr,
-                                  size_t keyLength,
-                                  CK_KEY_TYPE publicKeyType,
-                                  uint8_t * publicKeyLabel,
-                                  CK_OBJECT_HANDLE_PTR publicKeyHandlePtr );
+                                 uint8_t * keyPtr,
+                                 size_t keyLength,
+                                 CK_KEY_TYPE publicKeyType,
+                                 uint8_t * publicKeyLabel,
+                                 CK_OBJECT_HANDLE_PTR publicKeyHandlePtr );
 
 static CK_RV generateKeyPairEC( CK_SESSION_HANDLE session,
-                                          uint8_t * privateKeyLabel,
-                                          uint8_t * publicKeyLabel,
-                                          CK_OBJECT_HANDLE_PTR privateKeyHandlePtr,
-                                          CK_OBJECT_HANDLE_PTR publicKeyHandlePtr );
+                                uint8_t * privateKeyLabel,
+                                uint8_t * publicKeyLabel,
+                                CK_OBJECT_HANDLE_PTR privateKeyHandlePtr,
+                                CK_OBJECT_HANDLE_PTR publicKeyHandlePtr );
 
 /*-----------------------------------------------------------*/
 
 /* Import the specified X.509 client certificate into storage. */
 static CK_RV provisionCertificate( CK_SESSION_HANDLE session,
-                                    uint8_t * certificate,
-                                    size_t certificateLength,
-                                    uint8_t * label,
-                                    CK_OBJECT_HANDLE_PTR objectHandle );
+                                   uint8_t * certificate,
+                                   size_t certificateLength,
+                                   uint8_t * label,
+                                   CK_OBJECT_HANDLE_PTR objectHandle );
 
 /*-----------------------------------------------------------*/
 
 /* Delete the specified crypto object from storage. */
 static CK_RV destroyProvidedObjects( CK_SESSION_HANDLE session,
-                                      CK_BYTE_PTR * pkcsLabelsPtr,
-                                      CK_OBJECT_CLASS * class,
-                                      CK_ULONG count );
+                                     CK_BYTE_PTR * pkcsLabelsPtr,
+                                     CK_OBJECT_CLASS * class,
+                                     CK_ULONG count );
 /*-----------------------------------------------------------*/
 
 /* ============================   UNITY FIXTURES ============================ */
@@ -217,9 +217,9 @@ static CK_RV destroyTestCredentials( void )
     };
 
     destroyResult = destroyProvidedObjects( globalSession,
-                                              pkcsLabels,
-                                              class,
-                                              sizeof( class ) / sizeof( CK_OBJECT_CLASS ) );
+                                            pkcsLabels,
+                                            class,
+                                            sizeof( class ) / sizeof( CK_OBJECT_CLASS ) );
     TEST_ASSERT_EQUAL_MESSAGE( CKR_OK, result, "Failed to destroy credentials." );
 
     for( labelCount = 0;
@@ -227,9 +227,9 @@ static CK_RV destroyTestCredentials( void )
          labelCount++ )
     {
         result = xFindObjectWithLabelAndClass( globalSession,
-                                                ( char * ) pkcsLabels[ labelCount ],
-                                                class[ labelCount ],
-                                                &object );
+                                               ( char * ) pkcsLabels[ labelCount ],
+                                               class[ labelCount ],
+                                               &object );
         TEST_ASSERT_EQUAL_MESSAGE( CKR_OK, result, "Found an object after deleting it.\r\n" );
         TEST_ASSERT_EQUAL_MESSAGE( CK_INVALID_HANDLE, object, "Object found after it was destroyed.\r\n" );
     }
@@ -239,42 +239,42 @@ static CK_RV destroyTestCredentials( void )
 
 /* Assumes that device is already provisioned at time of calling. */
 static void findObjectTest( CK_OBJECT_HANDLE_PTR privateKeyHandlePtr,
-                               CK_OBJECT_HANDLE_PTR pcertificateHandle,
-                               CK_OBJECT_HANDLE_PTR publicKeyHandlePtr )
+                            CK_OBJECT_HANDLE_PTR pcertificateHandle,
+                            CK_OBJECT_HANDLE_PTR publicKeyHandlePtr )
 {
     CK_RV result;
     CK_OBJECT_HANDLE testObjectHandle = CK_INVALID_HANDLE;
 
     /* Happy Path - Find a previously created object. */
     result = xFindObjectWithLabelAndClass( globalSession,
-                                            pkcs11testLABEL_DEVICE_PRIVATE_KEY_FOR_TLS,
-                                            CKO_PRIVATE_KEY,
-                                            privateKeyHandlePtr );
+                                           pkcs11testLABEL_DEVICE_PRIVATE_KEY_FOR_TLS,
+                                           CKO_PRIVATE_KEY,
+                                           privateKeyHandlePtr );
     TEST_ASSERT_EQUAL_MESSAGE( CKR_OK, result, "Failed to find private key after closing and reopening a session." );
     TEST_ASSERT_NOT_EQUAL_MESSAGE( CK_INVALID_HANDLE, *privateKeyHandlePtr, "Invalid object handle found for  private key." );
 
     /* TODO: Add the code sign key and root ca. */
     result = xFindObjectWithLabelAndClass( globalSession,
-                                            pkcs11testLABEL_DEVICE_PUBLIC_KEY_FOR_TLS,
-                                            CKO_PUBLIC_KEY,
-                                            publicKeyHandlePtr );
+                                           pkcs11testLABEL_DEVICE_PUBLIC_KEY_FOR_TLS,
+                                           CKO_PUBLIC_KEY,
+                                           publicKeyHandlePtr );
     TEST_ASSERT_EQUAL_MESSAGE( CKR_OK, result, "Failed to find public key after closing and reopening a session." );
     TEST_ASSERT_NOT_EQUAL_MESSAGE( CK_INVALID_HANDLE, *publicKeyHandlePtr, "Invalid object handle found for public key key." );
 
 
     result = xFindObjectWithLabelAndClass( globalSession,
-                                            pkcs11testLABEL_DEVICE_CERTIFICATE_FOR_TLS,
-                                            CKO_CERTIFICATE,
-                                            pcertificateHandle );
+                                           pkcs11testLABEL_DEVICE_CERTIFICATE_FOR_TLS,
+                                           CKO_CERTIFICATE,
+                                           pcertificateHandle );
 
     TEST_ASSERT_EQUAL_MESSAGE( CKR_OK, result, "Failed to find certificate after closing and reopening a session." );
     TEST_ASSERT_NOT_EQUAL_MESSAGE( CK_INVALID_HANDLE, *pcertificateHandle, "Invalid object handle found for certificate." );
 
     /* Try to find an object that has never been created. */
     result = xFindObjectWithLabelAndClass( globalSession,
-                                            ( char * ) "This label doesn't exist",
-                                            CKO_PUBLIC_KEY,
-                                            &testObjectHandle );
+                                           ( char * ) "This label doesn't exist",
+                                           CKO_PUBLIC_KEY,
+                                           &testObjectHandle );
     TEST_ASSERT_EQUAL_MESSAGE( CKR_OK, result, "Incorrect error code finding object that doesn't exist" );
     TEST_ASSERT_EQUAL_MESSAGE( CK_INVALID_HANDLE, testObjectHandle, "Incorrect error code finding object that doesn't exist" );
 }
@@ -388,7 +388,7 @@ void test_OpenSession_CloseSession( void )
     if( TEST_PROTECT() )
     {
         result = xGetSlotList( &slotIdPtr,
-                                &slotCount );
+                               &slotCount );
         TEST_ASSERT_EQUAL_MESSAGE( CKR_OK, result, "Failed to get slot list" );
 
         slotId = slotIdPtr[ pkcs11testSLOT_NUMBER ];
@@ -396,10 +396,10 @@ void test_OpenSession_CloseSession( void )
         TEST_ASSERT_GREATER_THAN( 0, slotCount );
 
         result = globalFunctionList->C_OpenSession( slotId,
-                                                       CKF_SERIAL_SESSION, /* This flag is mandatory for PKCS #11 legacy reasons. */
-                                                       NULL,               /* Application defined pointer. */
-                                                       NULL,               /* Callback function. */
-                                                       &session );
+                                                    CKF_SERIAL_SESSION,    /* This flag is mandatory for PKCS #11 legacy reasons. */
+                                                    NULL,                  /* Application defined pointer. */
+                                                    NULL,                  /* Callback function. */
+                                                    &session );
         TEST_ASSERT_EQUAL_MESSAGE( CKR_OK, result, "Failed to open session" );
         sessionOpen = CK_TRUE;
     }
@@ -417,10 +417,10 @@ void test_OpenSession_CloseSession( void )
 
     /* Try to open a session without having initialized the module. */
     result = globalFunctionList->C_OpenSession( slotId,
-                                                   CKF_SERIAL_SESSION, /* This flag is mandatory for PKCS #11 legacy reasons. */
-                                                   NULL,               /* Application defined pointer. */
-                                                   NULL,               /* Callback function. */
-                                                   &session );
+                                                CKF_SERIAL_SESSION,    /* This flag is mandatory for PKCS #11 legacy reasons. */
+                                                NULL,                  /* Application defined pointer. */
+                                                NULL,                  /* Callback function. */
+                                                &session );
     TEST_ASSERT_EQUAL_MESSAGE( CKR_CRYPTOKI_NOT_INITIALIZED, result, "Negative Test: Opened a session before initializing module." );
 }
 
@@ -654,26 +654,26 @@ static const char validRSACertificate[] =
     "-----END CERTIFICATE-----\n";
 
 static void provisionRsaTestCredentials( CK_OBJECT_HANDLE_PTR privateKeyHandlePtr,
-                                     CK_OBJECT_HANDLE_PTR pcertificateHandle )
+                                         CK_OBJECT_HANDLE_PTR pcertificateHandle )
 {
     CK_RV result;
 
     /* Create a private key. */
     result = provisionPrivateKey( globalSession,
-                                    ( uint8_t * ) validRSAPrivateKey,
-                                    sizeof( validRSAPrivateKey ),
-                                    ( uint8_t * ) pkcs11testLABEL_DEVICE_PRIVATE_KEY_FOR_TLS,
-                                    privateKeyHandlePtr );
+                                  ( uint8_t * ) validRSAPrivateKey,
+                                  sizeof( validRSAPrivateKey ),
+                                  ( uint8_t * ) pkcs11testLABEL_DEVICE_PRIVATE_KEY_FOR_TLS,
+                                  privateKeyHandlePtr );
 
     TEST_ASSERT_EQUAL_MESSAGE( CKR_OK, result, "Failed to create RSA private key." );
     TEST_ASSERT_NOT_EQUAL_MESSAGE( CK_INVALID_HANDLE, *privateKeyHandlePtr, "Invalid object handle returned for RSA private key." );
 
     /* Create a certificate. */
     result = provisionCertificate( globalSession,
-                                     ( uint8_t * ) validRSACertificate,
-                                     sizeof( validRSACertificate ),
-                                     ( uint8_t * ) pkcs11testLABEL_DEVICE_CERTIFICATE_FOR_TLS,
-                                     pcertificateHandle );
+                                   ( uint8_t * ) validRSACertificate,
+                                   sizeof( validRSACertificate ),
+                                   ( uint8_t * ) pkcs11testLABEL_DEVICE_CERTIFICATE_FOR_TLS,
+                                   pcertificateHandle );
 
     TEST_ASSERT_EQUAL_MESSAGE( CKR_OK, result, "Failed to create RSA certificate." );
     TEST_ASSERT_NOT_EQUAL_MESSAGE( CK_INVALID_HANDLE, *pcertificateHandle, "Invalid object handle returned for RSA certificate." );
@@ -787,10 +787,10 @@ void test_Sign_RSA( void )
     if( TEST_PROTECT() )
     {
         mbedTLSResult = mbedtls_pk_parse_key( ( mbedtls_pk_context * ) &mbedPkContext,
-                                               ( const unsigned char * ) validRSAPrivateKey,
-                                               sizeof( validRSAPrivateKey ),
-                                               NULL,
-                                               0 );
+                                              ( const unsigned char * ) validRSAPrivateKey,
+                                              sizeof( validRSAPrivateKey ),
+                                              NULL,
+                                              0 );
 
         mbedTLSResult = mbedtls_rsa_pkcs1_verify( mbedPkContext.pk_ctx, NULL, NULL, MBEDTLS_RSA_PUBLIC, MBEDTLS_MD_SHA256, 32, hashedMessage, signature );
         TEST_ASSERT_EQUAL_MESSAGE( 0, mbedTLSResult, "mbedTLS failed to parse valid RSA key (verification)" );
@@ -844,8 +844,8 @@ static const char validECDSACertificate[] =
     "-----END CERTIFICATE-----";
 
 static void provisionCredentialsWithKeyImport( CK_OBJECT_HANDLE_PTR privateKeyHandlePtr,
-                                           CK_OBJECT_HANDLE_PTR pcertificateHandle,
-                                           CK_OBJECT_HANDLE_PTR publicKeyHandlePtr )
+                                               CK_OBJECT_HANDLE_PTR pcertificateHandle,
+                                               CK_OBJECT_HANDLE_PTR publicKeyHandlePtr )
 {
     CK_RV result;
 
@@ -854,34 +854,34 @@ static void provisionCredentialsWithKeyImport( CK_OBJECT_HANDLE_PTR privateKeyHa
     TEST_ASSERT_EQUAL_MESSAGE( CKR_OK, result, "Failed to destroy credentials in test setup." );
 
     result = provisionPublicKey( globalSession,
-                                   ( uint8_t * ) validECDSAPublicKey,
-                                   sizeof( validECDSAPublicKey ),
-                                   CKK_EC,
-                                   ( uint8_t * ) pkcs11testLABEL_DEVICE_PUBLIC_KEY_FOR_TLS,
-                                   publicKeyHandlePtr );
+                                 ( uint8_t * ) validECDSAPublicKey,
+                                 sizeof( validECDSAPublicKey ),
+                                 CKK_EC,
+                                 ( uint8_t * ) pkcs11testLABEL_DEVICE_PUBLIC_KEY_FOR_TLS,
+                                 publicKeyHandlePtr );
     TEST_ASSERT_EQUAL_MESSAGE( CKR_OK, result, "Failed to create EC public key." );
     TEST_ASSERT_NOT_EQUAL_MESSAGE( 0, *publicKeyHandlePtr, "Invalid object handle returned for EC public key." );
 
     result = provisionPrivateKey( globalSession,
-                                    ( uint8_t * ) validECDSAPrivateKey,
-                                    sizeof( validECDSAPrivateKey ),
-                                    ( uint8_t * ) pkcs11testLABEL_DEVICE_PRIVATE_KEY_FOR_TLS,
-                                    privateKeyHandlePtr );
+                                  ( uint8_t * ) validECDSAPrivateKey,
+                                  sizeof( validECDSAPrivateKey ),
+                                  ( uint8_t * ) pkcs11testLABEL_DEVICE_PRIVATE_KEY_FOR_TLS,
+                                  privateKeyHandlePtr );
     TEST_ASSERT_EQUAL_MESSAGE( CKR_OK, result, "Failed to create EC private key." );
     TEST_ASSERT_NOT_EQUAL_MESSAGE( 0, *privateKeyHandlePtr, "Invalid object handle returned for EC private key." );
 
     result = provisionCertificate( globalSession,
-                                     ( uint8_t * ) validECDSACertificate,
-                                     sizeof( validECDSACertificate ),
-                                     ( uint8_t * ) pkcs11testLABEL_DEVICE_CERTIFICATE_FOR_TLS,
-                                     pcertificateHandle );
+                                   ( uint8_t * ) validECDSACertificate,
+                                   sizeof( validECDSACertificate ),
+                                   ( uint8_t * ) pkcs11testLABEL_DEVICE_CERTIFICATE_FOR_TLS,
+                                   pcertificateHandle );
     TEST_ASSERT_EQUAL_MESSAGE( CKR_OK, result, "Failed to create EC certificate." );
     TEST_ASSERT_NOT_EQUAL_MESSAGE( 0, *pcertificateHandle, "Invalid object handle returned for EC certificate." );
 }
 
 static void provisionCredentialsWithGenerateKeyPair( CK_OBJECT_HANDLE_PTR privateKeyHandlePtr,
-                                                 CK_OBJECT_HANDLE_PTR pcertificateHandle,
-                                                 CK_OBJECT_HANDLE_PTR publicKeyHandlePtr )
+                                                     CK_OBJECT_HANDLE_PTR pcertificateHandle,
+                                                     CK_OBJECT_HANDLE_PTR publicKeyHandlePtr )
 {
     CK_RV result;
     CK_ATTRIBUTE template;
@@ -927,10 +927,10 @@ static void provisionCredentialsWithGenerateKeyPair( CK_OBJECT_HANDLE_PTR privat
     if( *pcertificateHandle == CK_INVALID_HANDLE )
     {
         result = provisionCertificate( globalSession,
-                                         ( uint8_t * ) validECDSACertificate,
-                                         sizeof( validECDSACertificate ),
-                                         ( uint8_t * ) pkcs11testLABEL_DEVICE_CERTIFICATE_FOR_TLS,
-                                         pcertificateHandle );
+                                       ( uint8_t * ) validECDSACertificate,
+                                       sizeof( validECDSACertificate ),
+                                       ( uint8_t * ) pkcs11testLABEL_DEVICE_CERTIFICATE_FOR_TLS,
+                                       pcertificateHandle );
         TEST_ASSERT_EQUAL_MESSAGE( CKR_OK, result, "Failed to create EC certificate." );
         TEST_ASSERT_NOT_EQUAL_MESSAGE( 0, *privateKeyHandlePtr, "Invalid object handle returned for EC certificate." );
     }
@@ -938,8 +938,8 @@ static void provisionCredentialsWithGenerateKeyPair( CK_OBJECT_HANDLE_PTR privat
 
 
 static void provisionEcTestCredentials( CK_OBJECT_HANDLE_PTR privateKeyHandlePtr,
-                                    CK_OBJECT_HANDLE_PTR pcertificateHandle,
-                                    CK_OBJECT_HANDLE_PTR publicKeyHandlePtr )
+                                        CK_OBJECT_HANDLE_PTR pcertificateHandle,
+                                        CK_OBJECT_HANDLE_PTR publicKeyHandlePtr )
 {
     #if ( pkcs11testIMPORT_PRIVATE_KEY_SUPPORT != 0 )
         provisionCredentialsWithKeyImport( privateKeyHandlePtr, pcertificateHandle, publicKeyHandlePtr );
@@ -975,32 +975,32 @@ void test_CreateObject_EC( void )
     destroyTestCredentials();
 
     provisionCredentialsWithKeyImport( &privateKeyHandle,
-                                          &certificateHandle,
-                                          &publicKeyHandle );
+                                       &certificateHandle,
+                                       &publicKeyHandle );
 
     #if ( pkcs11configJITP_CODEVERIFY_ROOT_CERT_SUPPORTED == 1 )
         result = provisionCertificate( globalSession,
-                                         ( uint8_t * ) tlsATS1_ROOT_CERTIFICATE_PEM,
-                                         tlsATS1_ROOT_CERTIFICATE_LENGTH,
-                                         pkcs11configLABEL_ROOT_CERTIFICATE,
-                                         &rootCertificateHandle );
+                                       ( uint8_t * ) tlsATS1_ROOT_CERTIFICATE_PEM,
+                                       tlsATS1_ROOT_CERTIFICATE_LENGTH,
+                                       pkcs11configLABEL_ROOT_CERTIFICATE,
+                                       &rootCertificateHandle );
         TEST_ASSERT_EQUAL_MESSAGE( CKR_OK, result, "Failed to create root EC certificate." );
         TEST_ASSERT_NOT_EQUAL_MESSAGE( CK_INVALID_HANDLE, rootCertificateHandle, "Invalid object handle returned for EC root certificate." );
 
         result = provisionCertificate( globalSession,
-                                         ( uint8_t * ) tlsATS1_ROOT_CERTIFICATE_PEM,
-                                         tlsATS1_ROOT_CERTIFICATE_LENGTH,
-                                         pkcs11configLABEL_JITP_CERTIFICATE,
-                                         &JITPCertificateHandle );
+                                       ( uint8_t * ) tlsATS1_ROOT_CERTIFICATE_PEM,
+                                       tlsATS1_ROOT_CERTIFICATE_LENGTH,
+                                       pkcs11configLABEL_JITP_CERTIFICATE,
+                                       &JITPCertificateHandle );
         TEST_ASSERT_EQUAL_MESSAGE( CKR_OK, result, "Failed to create JITP EC certificate." );
         TEST_ASSERT_NOT_EQUAL_MESSAGE( CK_INVALID_HANDLE, JITPCertificateHandle, "Invalid object handle returned for EC JITP certificate." );
 
         result = provisionPublicKey( globalSession,
-                                       ( uint8_t * ) validECDSAPublicKey,
-                                       sizeof( validECDSAPrivateKey ),
-                                       CKK_EC,
-                                       pkcs11configLABEL_CODE_VERIFICATION_KEY,
-                                       &codeSignPublicKeyHandle );
+                                     ( uint8_t * ) validECDSAPublicKey,
+                                     sizeof( validECDSAPrivateKey ),
+                                     CKK_EC,
+                                     pkcs11configLABEL_CODE_VERIFICATION_KEY,
+                                     &codeSignPublicKeyHandle );
         TEST_ASSERT_EQUAL_MESSAGE( CKR_OK, result, "Failed to create EC code sign public key." );
         TEST_ASSERT_NOT_EQUAL_MESSAGE( CK_INVALID_HANDLE, codeSignPublicKeyHandle, "Invalid object handle returned for EC code sign public key." );
     #endif /* if ( pkcs11configJITP_CODEVERIFY_ROOT_CERT_SUPPORTED == 1 ) */
@@ -1062,7 +1062,7 @@ void test_Sign_EC( void )
 
     /* Might want to make the ECP group configurable in the future. */
     mbedTLSResult = mbedtls_ecp_group_load( &keyPair->grp,
-                                             MBEDTLS_ECP_DP_SECP256R1 );
+                                            MBEDTLS_ECP_DP_SECP256R1 );
     TEST_ASSERT_EQUAL_MESSAGE( 0, mbedTLSResult, "Failed to load EC group." );
 
     /* Initialize the context. */
@@ -1084,9 +1084,9 @@ void test_Sign_EC( void )
     /* Strip the ANS.1 Encoding of type and length. Otherwise mbed TLS won't be
      * able to parse the binary EC point. */
     mbedTLSResult = mbedtls_ecp_point_read_binary( &keyPair->grp,
-                                                    &keyPair->Q,
-                                                    ( uint8_t * ) ( pubKeyQuery.pValue ) + 2,
-                                                    pubKeyQuery.ulValueLen - 2 );
+                                                   &keyPair->Q,
+                                                   ( uint8_t * ) ( pubKeyQuery.pValue ) + 2,
+                                                   pubKeyQuery.ulValueLen - 2 );
     TEST_ASSERT_EQUAL_MESSAGE( 0, mbedTLSResult, "mbedTLS failed to read binary point." );
 
     if( TEST_PROTECT() )
@@ -1157,10 +1157,10 @@ void test_Verify_EC( void )
         /* Initialize the private key. */
         mbedtls_pk_init( &pkCtx );
         mbedResult = mbedtls_pk_parse_key( &pkCtx,
-                                            ( const unsigned char * ) validECDSAPrivateKey,
-                                            sizeof( validECDSAPrivateKey ),
-                                            NULL,
-                                            0 );
+                                           ( const unsigned char * ) validECDSAPrivateKey,
+                                           sizeof( validECDSAPrivateKey ),
+                                           NULL,
+                                           0 );
         TEST_ASSERT_EQUAL_MESSAGE( 0, mbedResult, "Failed to parse valid ECDSA key." );
         /* Initialize the RNG. */
         mbedtls_entropy_init( &entropyCtx );
@@ -1177,7 +1177,7 @@ void test_Verify_EC( void )
 
         /* Reconstruct the signature in PKCS #11 format. */
         mbedResult = PKI_mbedTLSSignatureToPkcs11Signature( signaturePKCS,
-                                                             signature );
+                                                            signature );
         TEST_ASSERT_EQUAL_MESSAGE( 0, mbedResult, "Null buffers." );
 
         /* Verify with PKCS #11. */
@@ -1235,9 +1235,9 @@ void test_GetAttributeValue_EC( void )
     int conversion;
 
     conversion = convert_pem_to_der( ( const unsigned char * ) validECDSACertificate,
-                                            sizeof( validECDSACertificate ),
-                                            certificateValueExpected,
-                                            &length );
+                                     sizeof( validECDSACertificate ),
+                                     certificateValueExpected,
+                                     &length );
 
     if( conversion != 0 )
     {
@@ -1403,10 +1403,10 @@ void test_GenerateKeyPair_EC( void )
     CK_BYTE ecParams[ sizeof( ecp256r1Oid ) ] = { 0 };
 
     result = generateKeyPairEC( globalSession,
-                                           ( uint8_t * ) pkcs11testLABEL_DEVICE_PRIVATE_KEY_FOR_TLS,
-                                           ( uint8_t * ) pkcs11testLABEL_DEVICE_PUBLIC_KEY_FOR_TLS,
-                                           &privateKeyHandle,
-                                           &publicKeyHandle );
+                                ( uint8_t * ) pkcs11testLABEL_DEVICE_PRIVATE_KEY_FOR_TLS,
+                                ( uint8_t * ) pkcs11testLABEL_DEVICE_PUBLIC_KEY_FOR_TLS,
+                                &privateKeyHandle,
+                                &publicKeyHandle );
 
     TEST_ASSERT_EQUAL_MESSAGE( CKR_OK, result, "Generating EC key pair failed." );
     TEST_ASSERT_NOT_EQUAL_MESSAGE( CK_INVALID_HANDLE, privateKeyHandle, "Invalid private key handle generated by GenerateKeyPair" );
@@ -1414,10 +1414,10 @@ void test_GenerateKeyPair_EC( void )
 
     /* We will try to provision the certificate as well, as it is needed for the tests that are not responsible for creating objects. */
     result = provisionCertificate( globalSession,
-                                     ( uint8_t * ) validECDSACertificate,
-                                     sizeof( validECDSACertificate ),
-                                     ( uint8_t * ) pkcs11testLABEL_DEVICE_CERTIFICATE_FOR_TLS,
-                                     &certificateHandle );
+                                   ( uint8_t * ) validECDSACertificate,
+                                   sizeof( validECDSACertificate ),
+                                   ( uint8_t * ) pkcs11testLABEL_DEVICE_CERTIFICATE_FOR_TLS,
+                                   &certificateHandle );
 
     TEST_ASSERT_EQUAL_MESSAGE( CKR_OK, result, "Failed to create EC certificate." );
     TEST_ASSERT_NOT_EQUAL_MESSAGE( CK_INVALID_HANDLE, certificateHandle, "Invalid object handle returned for EC certificate." );
@@ -1484,9 +1484,9 @@ void test_GenerateKeyPair_EC( void )
 
 /* Import the specified ECDSA private key into storage. */
 static CK_RV provisionPrivateECKey( CK_SESSION_HANDLE session,
-                                       uint8_t * label,
-                                       CK_OBJECT_HANDLE_PTR objectHandle,
-                                       mbedtls_pk_context * mbedPkContext )
+                                    uint8_t * label,
+                                    CK_OBJECT_HANDLE_PTR objectHandle,
+                                    mbedtls_pk_context * mbedPkContext )
 {
     CK_RV result = CKR_OK;
     CK_FUNCTION_LIST_PTR functionList = NULL;
@@ -1534,13 +1534,13 @@ static CK_RV provisionPrivateECKey( CK_SESSION_HANDLE session,
     {
         CK_ATTRIBUTE privateKeyTemplate[] =
         {
-            { CKA_CLASS,     NULL /* &privateKeyClass*/, sizeof( CK_OBJECT_CLASS )                        },
-            { CKA_KEY_TYPE,  NULL /* &privateKeyType*/,  sizeof( CK_KEY_TYPE )                            },
-            { CKA_LABEL,     label,                    ( CK_ULONG ) strlen( ( const char * ) label ) },
-            { CKA_TOKEN,     NULL /* &trueObject*/,            sizeof( CK_BBOOL )                               },
-            { CKA_SIGN,      NULL /* &trueObject*/,            sizeof( CK_BBOOL )                               },
-            { CKA_EC_PARAMS, NULL /* ecParamsPtr*/,        EC_PARAMS_LENGTH                                 },
-            { CKA_VALUE,     NULL /* DPtr*/,               EC_D_LENGTH                                      }
+            { CKA_CLASS,     NULL /* &privateKeyClass*/, sizeof( CK_OBJECT_CLASS )                     },
+            { CKA_KEY_TYPE,  NULL /* &privateKeyType*/,  sizeof( CK_KEY_TYPE )                         },
+            { CKA_LABEL,     label,                      ( CK_ULONG ) strlen( ( const char * ) label ) },
+            { CKA_TOKEN,     NULL /* &trueObject*/,      sizeof( CK_BBOOL )                            },
+            { CKA_SIGN,      NULL /* &trueObject*/,      sizeof( CK_BBOOL )                            },
+            { CKA_EC_PARAMS, NULL /* ecParamsPtr*/,      EC_PARAMS_LENGTH                              },
+            { CKA_VALUE,     NULL /* DPtr*/,             EC_D_LENGTH                                   }
         };
 
         /* Aggregate initializers must not use the address of an automatic variable. */
@@ -1553,9 +1553,9 @@ static CK_RV provisionPrivateECKey( CK_SESSION_HANDLE session,
         privateKeyTemplate[ 6 ].pValue = DPtr;
 
         result = functionList->C_CreateObject( session,
-                                                  ( CK_ATTRIBUTE_PTR ) &privateKeyTemplate,
-                                                  sizeof( privateKeyTemplate ) / sizeof( CK_ATTRIBUTE ),
-                                                  objectHandle );
+                                               ( CK_ATTRIBUTE_PTR ) &privateKeyTemplate,
+                                               sizeof( privateKeyTemplate ) / sizeof( CK_ATTRIBUTE ),
+                                               objectHandle );
     }
 
     if( DPtr != NULL )
@@ -1570,9 +1570,9 @@ static CK_RV provisionPrivateECKey( CK_SESSION_HANDLE session,
 
 /* Import the specified RSA private key into storage. */
 static CK_RV provisionPrivateRSAKey( CK_SESSION_HANDLE session,
-                                        uint8_t * label,
-                                        CK_OBJECT_HANDLE_PTR objectHandle,
-                                        mbedtls_pk_context * mbedPkContext )
+                                     uint8_t * label,
+                                     CK_OBJECT_HANDLE_PTR objectHandle,
+                                     mbedtls_pk_context * mbedPkContext )
 {
     CK_RV result = CKR_OK;
     CK_FUNCTION_LIST_PTR functionList = NULL;
@@ -1597,11 +1597,11 @@ static CK_RV provisionPrivateRSAKey( CK_SESSION_HANDLE session,
         memset( rsaParams, 0, sizeof( RsaParams_t ) );
 
         mbedResult = mbedtls_rsa_export_raw( rsaContext,
-                                              rsaParams->modulus, MODULUS_LENGTH + 1,
-                                              rsaParams->prime1, PRIME_1_LENGTH + 1,
-                                              rsaParams->prime2, PRIME_2_LENGTH + 1,
-                                              rsaParams->d, D_LENGTH + 1,
-                                              rsaParams->e, E_LENGTH + 1 );
+                                             rsaParams->modulus, MODULUS_LENGTH + 1,
+                                             rsaParams->prime1, PRIME_1_LENGTH + 1,
+                                             rsaParams->prime2, PRIME_2_LENGTH + 1,
+                                             rsaParams->d, D_LENGTH + 1,
+                                             rsaParams->e, E_LENGTH + 1 );
 
         if( mbedResult != 0 )
         {
@@ -1629,19 +1629,19 @@ static CK_RV provisionPrivateRSAKey( CK_SESSION_HANDLE session,
 
         CK_ATTRIBUTE privateKeyTemplate[] =
         {
-            { CKA_CLASS,            NULL /* &privateKeyClass */, sizeof( CK_OBJECT_CLASS )                        },
-            { CKA_KEY_TYPE,         NULL /* &privateKeyType */,  sizeof( CK_KEY_TYPE )                            },
-            { CKA_LABEL,            label,                     ( CK_ULONG ) strlen( ( const char * ) label ) },
-            { CKA_TOKEN,            NULL /* &trueObject */,            sizeof( CK_BBOOL )                               },
-            { CKA_SIGN,             NULL /* &trueObject */,            sizeof( CK_BBOOL )                               },
-            { CKA_MODULUS,          rsaParams->modulus + 1,     MODULUS_LENGTH                                   },
-            { CKA_PRIVATE_EXPONENT, rsaParams->d + 1,           D_LENGTH                                         },
-            { CKA_PUBLIC_EXPONENT,  rsaParams->e + 1,           E_LENGTH                                         },
-            { CKA_PRIME_1,          rsaParams->prime1 + 1,      PRIME_1_LENGTH                                   },
-            { CKA_PRIME_2,          rsaParams->prime2 + 1,      PRIME_2_LENGTH                                   },
-            { CKA_EXPONENT_1,       rsaParams->exponent1 + 1,   EXPONENT_1_LENGTH                                },
-            { CKA_EXPONENT_2,       rsaParams->exponent2 + 1,   EXPONENT_2_LENGTH                                },
-            { CKA_COEFFICIENT,      rsaParams->coefficient + 1, COEFFICIENT_LENGTH                               }
+            { CKA_CLASS,            NULL /* &privateKeyClass */, sizeof( CK_OBJECT_CLASS )                     },
+            { CKA_KEY_TYPE,         NULL /* &privateKeyType */,  sizeof( CK_KEY_TYPE )                         },
+            { CKA_LABEL,            label,                       ( CK_ULONG ) strlen( ( const char * ) label ) },
+            { CKA_TOKEN,            NULL /* &trueObject */,      sizeof( CK_BBOOL )                            },
+            { CKA_SIGN,             NULL /* &trueObject */,      sizeof( CK_BBOOL )                            },
+            { CKA_MODULUS,          rsaParams->modulus + 1,      MODULUS_LENGTH                                },
+            { CKA_PRIVATE_EXPONENT, rsaParams->d + 1,            D_LENGTH                                      },
+            { CKA_PUBLIC_EXPONENT,  rsaParams->e + 1,            E_LENGTH                                      },
+            { CKA_PRIME_1,          rsaParams->prime1 + 1,       PRIME_1_LENGTH                                },
+            { CKA_PRIME_2,          rsaParams->prime2 + 1,       PRIME_2_LENGTH                                },
+            { CKA_EXPONENT_1,       rsaParams->exponent1 + 1,    EXPONENT_1_LENGTH                             },
+            { CKA_EXPONENT_2,       rsaParams->exponent2 + 1,    EXPONENT_2_LENGTH                             },
+            { CKA_COEFFICIENT,      rsaParams->coefficient + 1,  COEFFICIENT_LENGTH                            }
         };
 
         /* Aggregate initializers must not use the address of an automatic variable. */
@@ -1652,9 +1652,9 @@ static CK_RV provisionPrivateRSAKey( CK_SESSION_HANDLE session,
         privateKeyTemplate[ 4 ].pValue = &trueObject;
 
         result = functionList->C_CreateObject( session,
-                                                  ( CK_ATTRIBUTE_PTR ) &privateKeyTemplate,
-                                                  sizeof( privateKeyTemplate ) / sizeof( CK_ATTRIBUTE ),
-                                                  objectHandle );
+                                               ( CK_ATTRIBUTE_PTR ) &privateKeyTemplate,
+                                               sizeof( privateKeyTemplate ) / sizeof( CK_ATTRIBUTE ),
+                                               objectHandle );
     }
 
     if( NULL != rsaParams )
@@ -1669,10 +1669,10 @@ static CK_RV provisionPrivateRSAKey( CK_SESSION_HANDLE session,
 
 /* Import the specified private key into storage. */
 static CK_RV provisionPrivateKey( CK_SESSION_HANDLE session,
-                            uint8_t * privateKey,
-                            size_t privateKeyLength,
-                            uint8_t * label,
-                            CK_OBJECT_HANDLE_PTR objectHandle )
+                                  uint8_t * privateKey,
+                                  size_t privateKeyLength,
+                                  uint8_t * label,
+                                  CK_OBJECT_HANDLE_PTR objectHandle )
 {
     CK_RV result = CKR_OK;
     mbedtls_pk_type_t mbedKeyType = MBEDTLS_PK_NONE;
@@ -1696,16 +1696,16 @@ static CK_RV provisionPrivateKey( CK_SESSION_HANDLE session,
         if( mbedKeyType == MBEDTLS_PK_RSA )
         {
             result = provisionPrivateRSAKey( session,
-                                                 label,
-                                                 objectHandle,
-                                                 &mbedPkContext );
+                                             label,
+                                             objectHandle,
+                                             &mbedPkContext );
         }
         else if( ( mbedKeyType == MBEDTLS_PK_ECDSA ) || ( mbedKeyType == MBEDTLS_PK_ECKEY ) || ( mbedKeyType == MBEDTLS_PK_ECKEY_DH ) )
         {
             result = provisionPrivateECKey( session,
-                                                label,
-                                                objectHandle,
-                                                &mbedPkContext );
+                                            label,
+                                            objectHandle,
+                                            &mbedPkContext );
         }
         else
         {
@@ -1723,11 +1723,11 @@ static CK_RV provisionPrivateKey( CK_SESSION_HANDLE session,
 
 /* Import the specified public key into storage. */
 static CK_RV provisionPublicKey( CK_SESSION_HANDLE session,
-                           uint8_t * keyPtr,
-                           size_t keyLength,
-                           CK_KEY_TYPE publicKeyType,
-                           uint8_t * publicKeyLabel,
-                           CK_OBJECT_HANDLE_PTR publicKeyHandlePtr )
+                                 uint8_t * keyPtr,
+                                 size_t keyLength,
+                                 CK_KEY_TYPE publicKeyType,
+                                 uint8_t * publicKeyLabel,
+                                 CK_OBJECT_HANDLE_PTR publicKeyHandlePtr )
 {
     CK_RV result;
     CK_BBOOL trueObject = CK_TRUE;
@@ -1762,20 +1762,20 @@ static CK_RV provisionPublicKey( CK_SESSION_HANDLE session,
         CK_BYTE modulus[ MODULUS_LENGTH + 1 ] = { 0 };
 
         mbedResult = mbedtls_rsa_export_raw( ( mbedtls_rsa_context * ) mbedPkContext.pk_ctx,
-                                              ( unsigned char * ) &modulus, MODULUS_LENGTH + 1,
-                                              NULL, 0,
-                                              NULL, 0,
-                                              NULL, 0,
-                                              NULL, 0 );
+                                             ( unsigned char * ) &modulus, MODULUS_LENGTH + 1,
+                                             NULL, 0,
+                                             NULL, 0,
+                                             NULL, 0,
+                                             NULL, 0 );
         CK_ATTRIBUTE publicKeyTemplate[] =
         {
-            { CKA_CLASS,           NULL /* &class */,         sizeof( CK_OBJECT_CLASS )                    },
-            { CKA_KEY_TYPE,        NULL /* &publicKeyType */, sizeof( CK_KEY_TYPE )                        },
-            { CKA_TOKEN,           NULL /* &trueObject */,          sizeof( trueObject )                              },
-            { CKA_MODULUS,         NULL /* &modulus + 1 */,   MODULUS_LENGTH                               },       /* Extra byte allocated at beginning for 0 padding. */
-            { CKA_VERIFY,          NULL /* &trueObject */,          sizeof( trueObject )                              },
-            { CKA_PUBLIC_EXPONENT, NULL /* publicExponent */, sizeof( publicExponent )                    },
-            { CKA_LABEL,           publicKeyLabel,          strlen( ( const char * ) publicKeyLabel ) }
+            { CKA_CLASS,           NULL /* &class */,         sizeof( CK_OBJECT_CLASS )                 },
+            { CKA_KEY_TYPE,        NULL /* &publicKeyType */, sizeof( CK_KEY_TYPE )                     },
+            { CKA_TOKEN,           NULL /* &trueObject */,    sizeof( trueObject )                      },
+            { CKA_MODULUS,         NULL /* &modulus + 1 */,   MODULUS_LENGTH                            },          /* Extra byte allocated at beginning for 0 padding. */
+            { CKA_VERIFY,          NULL /* &trueObject */,    sizeof( trueObject )                      },
+            { CKA_PUBLIC_EXPONENT, NULL /* publicExponent */, sizeof( publicExponent )                  },
+            { CKA_LABEL,           publicKeyLabel,            strlen( ( const char * ) publicKeyLabel ) }
         };
 
         /* Aggregate initializers must not use the address of an automatic variable. */
@@ -1788,9 +1788,9 @@ static CK_RV provisionPublicKey( CK_SESSION_HANDLE session,
         publicKeyTemplate[ 5 ].pValue = publicExponent;
 
         result = functionList->C_CreateObject( session,
-                                                  ( CK_ATTRIBUTE_PTR ) publicKeyTemplate,
-                                                  sizeof( publicKeyTemplate ) / sizeof( CK_ATTRIBUTE ),
-                                                  publicKeyHandlePtr );
+                                               ( CK_ATTRIBUTE_PTR ) publicKeyTemplate,
+                                               sizeof( publicKeyTemplate ) / sizeof( CK_ATTRIBUTE ),
+                                               publicKeyHandlePtr );
     }
     else if( ( result == CKR_OK ) && ( publicKeyType == CKK_EC ) )
     {
@@ -1802,23 +1802,23 @@ static CK_RV provisionPublicKey( CK_SESSION_HANDLE session,
 
         /* DER encoded EC point. Leave 2 bytes for the tag and length. */
         mbedResult = mbedtls_ecp_point_write_binary( &ecdsaContextPtr->grp,
-                                                      &ecdsaContextPtr->Q,
-                                                      MBEDTLS_ECP_PF_UNCOMPRESSED,
-                                                      &length,
-                                                      ecPoint + 2,
-                                                      sizeof( ecPoint ) - 2 );
+                                                     &ecdsaContextPtr->Q,
+                                                     MBEDTLS_ECP_PF_UNCOMPRESSED,
+                                                     &length,
+                                                     ecPoint + 2,
+                                                     sizeof( ecPoint ) - 2 );
         ecPoint[ 0 ] = 0x04; /* Octet string. */
         ecPoint[ 1 ] = ( CK_BYTE ) length;
 
         CK_ATTRIBUTE publicKeyTemplate[] =
         {
-            { CKA_CLASS,     NULL /* &class */,         sizeof( class )                             },
-            { CKA_KEY_TYPE,  NULL /* &publicKeyType */, sizeof( publicKeyType )                     },
-            { CKA_TOKEN,     NULL /* &trueObject */,          sizeof( trueObject )                              },
-            { CKA_VERIFY,    NULL /* &trueObject */,          sizeof( trueObject )                              },
-            { CKA_EC_PARAMS, NULL /* ecParams */,       sizeof( ecParams )                          },
-            { CKA_EC_POINT,  NULL /* ecPoint */,        length + 2                                  },
-            { CKA_LABEL,     publicKeyLabel,          strlen( ( const char * ) publicKeyLabel ) }
+            { CKA_CLASS,     NULL /* &class */,         sizeof( class )                           },
+            { CKA_KEY_TYPE,  NULL /* &publicKeyType */, sizeof( publicKeyType )                   },
+            { CKA_TOKEN,     NULL /* &trueObject */,    sizeof( trueObject )                      },
+            { CKA_VERIFY,    NULL /* &trueObject */,    sizeof( trueObject )                      },
+            { CKA_EC_PARAMS, NULL /* ecParams */,       sizeof( ecParams )                        },
+            { CKA_EC_POINT,  NULL /* ecPoint */,        length + 2                                },
+            { CKA_LABEL,     publicKeyLabel,            strlen( ( const char * ) publicKeyLabel ) }
         };
 
         /* Aggregate initializers must not use the address of an automatic variable. */
@@ -1831,9 +1831,9 @@ static CK_RV provisionPublicKey( CK_SESSION_HANDLE session,
         publicKeyTemplate[ 5 ].pValue = ecPoint;
 
         result = functionList->C_CreateObject( session,
-                                                  ( CK_ATTRIBUTE_PTR ) publicKeyTemplate,
-                                                  sizeof( publicKeyTemplate ) / sizeof( CK_ATTRIBUTE ),
-                                                  publicKeyHandlePtr );
+                                               ( CK_ATTRIBUTE_PTR ) publicKeyTemplate,
+                                               sizeof( publicKeyTemplate ) / sizeof( CK_ATTRIBUTE ),
+                                               publicKeyHandlePtr );
     }
     else
     {
@@ -1850,10 +1850,10 @@ static CK_RV provisionPublicKey( CK_SESSION_HANDLE session,
 
 /* Generate a new ECDSA key pair using curve P256. */
 static CK_RV generateKeyPairEC( CK_SESSION_HANDLE session,
-                                   uint8_t * privateKeyLabel,
-                                   uint8_t * publicKeyLabel,
-                                   CK_OBJECT_HANDLE_PTR privateKeyHandlePtr,
-                                   CK_OBJECT_HANDLE_PTR publicKeyHandlePtr )
+                                uint8_t * privateKeyLabel,
+                                uint8_t * publicKeyLabel,
+                                CK_OBJECT_HANDLE_PTR privateKeyHandlePtr,
+                                CK_OBJECT_HANDLE_PTR publicKeyHandlePtr )
 {
     CK_RV result;
     CK_MECHANISM mechanism =
@@ -1867,10 +1867,10 @@ static CK_RV generateKeyPairEC( CK_SESSION_HANDLE session,
     CK_BBOOL trueObject = CK_TRUE;
     CK_ATTRIBUTE publicKeyTemplate[] =
     {
-        { CKA_KEY_TYPE,  NULL /* &keyType */, sizeof( keyType )                           },
-        { CKA_VERIFY,    NULL /* &trueObject */,    sizeof( trueObject )                              },
-        { CKA_EC_PARAMS, NULL /* ecParams */, sizeof( ecParams )                          },
-        { CKA_LABEL,     publicKeyLabel,    strlen( ( const char * ) publicKeyLabel ) }
+        { CKA_KEY_TYPE,  NULL /* &keyType */,    sizeof( keyType )                         },
+        { CKA_VERIFY,    NULL /* &trueObject */, sizeof( trueObject )                      },
+        { CKA_EC_PARAMS, NULL /* ecParams */,    sizeof( ecParams )                        },
+        { CKA_LABEL,     publicKeyLabel,         strlen( ( const char * ) publicKeyLabel ) }
     };
 
     /* Aggregate initializers must not use the address of an automatic variable. */
@@ -1881,11 +1881,11 @@ static CK_RV generateKeyPairEC( CK_SESSION_HANDLE session,
 
     CK_ATTRIBUTE privateKeyTemplate[] =
     {
-        { CKA_KEY_TYPE, NULL /* &keyType */, sizeof( keyType )                            },
-        { CKA_TOKEN,    NULL /* &trueObject */,    sizeof( trueObject )                               },
-        { CKA_PRIVATE,  NULL /* &trueObject */,    sizeof( trueObject )                               },
-        { CKA_SIGN,     NULL /* &trueObject */,    sizeof( trueObject )                               },
-        { CKA_LABEL,    privateKeyLabel,   strlen( ( const char * ) privateKeyLabel ) }
+        { CKA_KEY_TYPE, NULL /* &keyType */,    sizeof( keyType )                          },
+        { CKA_TOKEN,    NULL /* &trueObject */, sizeof( trueObject )                       },
+        { CKA_PRIVATE,  NULL /* &trueObject */, sizeof( trueObject )                       },
+        { CKA_SIGN,     NULL /* &trueObject */, sizeof( trueObject )                       },
+        { CKA_LABEL,    privateKeyLabel,        strlen( ( const char * ) privateKeyLabel ) }
     };
 
     /* Aggregate initializers must not use the address of an automatic variable. */
@@ -1898,12 +1898,12 @@ static CK_RV generateKeyPairEC( CK_SESSION_HANDLE session,
     result = C_GetFunctionList( &functionList );
 
     result = functionList->C_GenerateKeyPair( session,
-                                                 &mechanism,
-                                                 publicKeyTemplate,
-                                                 sizeof( publicKeyTemplate ) / sizeof( CK_ATTRIBUTE ),
-                                                 privateKeyTemplate, sizeof( privateKeyTemplate ) / sizeof( CK_ATTRIBUTE ),
-                                                 publicKeyHandlePtr,
-                                                 privateKeyHandlePtr );
+                                              &mechanism,
+                                              publicKeyTemplate,
+                                              sizeof( publicKeyTemplate ) / sizeof( CK_ATTRIBUTE ),
+                                              privateKeyTemplate, sizeof( privateKeyTemplate ) / sizeof( CK_ATTRIBUTE ),
+                                              publicKeyHandlePtr,
+                                              privateKeyHandlePtr );
 
     return result;
 }
@@ -1912,10 +1912,10 @@ static CK_RV generateKeyPairEC( CK_SESSION_HANDLE session,
 
 /* Import the specified X.509 client certificate into storage. */
 static CK_RV provisionCertificate( CK_SESSION_HANDLE session,
-                             uint8_t * certificate,
-                             size_t certificateLength,
-                             uint8_t * label,
-                             CK_OBJECT_HANDLE_PTR objectHandle )
+                                   uint8_t * certificate,
+                                   size_t certificateLength,
+                                   uint8_t * label,
+                                   CK_OBJECT_HANDLE_PTR objectHandle )
 {
     PKCS11_CertificateTemplate_t certificateTemplate;
     CK_OBJECT_CLASS certificateClass = CKO_CERTIFICATE;
@@ -1972,9 +1972,9 @@ static CK_RV provisionCertificate( CK_SESSION_HANDLE session,
         if( derObject != NULL )
         {
             conversion = convert_pem_to_der( certificateTemplate.xValue.pValue,
-                                                    certificateTemplate.xValue.ulValueLen,
-                                                    derObject,
-                                                    &derLen );
+                                             certificateTemplate.xValue.ulValueLen,
+                                             derObject,
+                                             &derLen );
 
             if( 0 != conversion )
             {
@@ -1998,9 +1998,9 @@ static CK_RV provisionCertificate( CK_SESSION_HANDLE session,
     if( result == CKR_OK )
     {
         destroyProvidedObjects( session,
-                                 &label,
-                                 &certificateClass,
-                                 1 );
+                                &label,
+                                &certificateClass,
+                                1 );
     }
 
     /* Create an object using the encoded client certificate. */
@@ -2009,9 +2009,9 @@ static CK_RV provisionCertificate( CK_SESSION_HANDLE session,
         LogError( ( "Write certificate...\r\n" ) );
 
         result = functionList->C_CreateObject( session,
-                                                  ( CK_ATTRIBUTE_PTR ) &certificateTemplate,
-                                                  sizeof( certificateTemplate ) / sizeof( CK_ATTRIBUTE ),
-                                                  objectHandle );
+                                               ( CK_ATTRIBUTE_PTR ) &certificateTemplate,
+                                               sizeof( certificateTemplate ) / sizeof( CK_ATTRIBUTE ),
+                                               objectHandle );
     }
 
     if( derObject != NULL )
@@ -2026,9 +2026,9 @@ static CK_RV provisionCertificate( CK_SESSION_HANDLE session,
 
 /* Delete the specified crypto object from storage. */
 static CK_RV destroyProvidedObjects( CK_SESSION_HANDLE session,
-                               CK_BYTE_PTR * pkcsLabelsPtr,
-                               CK_OBJECT_CLASS * class,
-                               CK_ULONG count )
+                                     CK_BYTE_PTR * pkcsLabelsPtr,
+                                     CK_OBJECT_CLASS * class,
+                                     CK_ULONG count )
 {
     CK_RV result;
     CK_FUNCTION_LIST_PTR functionList;
@@ -2043,9 +2043,9 @@ static CK_RV destroyProvidedObjects( CK_SESSION_HANDLE session,
         labelPtr = pkcsLabelsPtr[ index ];
 
         result = xFindObjectWithLabelAndClass( session,
-                                                ( char * ) labelPtr,
-                                                class[ index ],
-                                                &objectHandle );
+                                               ( char * ) labelPtr,
+                                               class[ index ],
+                                               &objectHandle );
 
         while( ( result == CKR_OK ) && ( objectHandle != CK_INVALID_HANDLE ) )
         {
@@ -2058,9 +2058,9 @@ static CK_RV destroyProvidedObjects( CK_SESSION_HANDLE session,
             if( result == CKR_OK )
             {
                 result = xFindObjectWithLabelAndClass( session,
-                                                        ( char * ) labelPtr,
-                                                        class[ index ],
-                                                        &objectHandle );
+                                                       ( char * ) labelPtr,
+                                                       class[ index ],
+                                                       &objectHandle );
             }
             else
             {

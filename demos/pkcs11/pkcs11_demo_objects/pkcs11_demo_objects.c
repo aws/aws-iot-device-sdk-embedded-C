@@ -144,6 +144,8 @@ CK_RV PKCS11ObjectDemo( void )
         result = objectGeneration();
     }
     LogInfo( ( "Finished PKCS #11 Objects Demo." ) );
+
+    return result;
 }
 
 static CK_RV objectImporting( void )
@@ -157,7 +159,6 @@ static CK_RV objectImporting( void )
     CK_SLOT_ID * slotId = 0;
     CK_FUNCTION_LIST_PTR functionList = NULL;
     uint8_t * derObject = NULL;
-    int32_t conversionReturn = 0;
     size_t derLen = 0;
     CK_BBOOL tokenStorage = CK_TRUE;
     CK_OBJECT_HANDLE certHandle = CK_INVALID_HANDLE;
@@ -243,7 +244,7 @@ static CK_RV objectImporting( void )
     if( result == CKR_OK )
     {
         derLen = certificateTemplate.xValue.ulValueLen;
-        conversionReturn = convert_pem_to_der( certificateTemplate.xValue.pValue,
+        ( void ) convert_pem_to_der( certificateTemplate.xValue.pValue,
                                                 certificateTemplate.xValue.ulValueLen,
                                                 derObject,
                                                 &derLen );

@@ -57,6 +57,7 @@ ccs
 cdn
 cer
 cert
+certhandle
 certificatetemplate
 certs
 cfb
@@ -130,6 +131,7 @@ dh
 dhe
 dhm
 diffie
+digestlength
 digicert
 doesn
 doxygen
@@ -235,6 +237,7 @@ karthikeyan
 ke
 keygen
 keyusage
+knownmessage
 kw
 kwp
 lastcontrolpacketsent
@@ -302,6 +305,8 @@ noninfringement
 numoftopicfilters
 nv
 oaep
+objectgeneration
+objectimporting
 objectrange
 ofb
 oid
@@ -478,6 +483,8 @@ shasum
 sig
 signinit
 sizeof
+slotcount
+slotid
 smartcard
 sni
 snprintf
