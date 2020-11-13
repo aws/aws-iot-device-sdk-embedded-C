@@ -284,7 +284,7 @@ static CK_RV objectImporting( void )
 
     }
 
-    LogInfo( ( "FreeRTOS_P11_Certificate.dat has been created in the current " \
+    LogInfo( ( "FreeRTOS_P11_Certificate.dat has been created in the current "
                " directory" ) );
 
     free( derObject );
@@ -404,7 +404,7 @@ static CK_RV objectGeneration( void )
                                                      &publicKeyHandle,
                                                      &privateKeyHandle );
     }
-    LogInfo( ( "FreeRTOS_P11_Key.dat has been created in the " \
+    LogInfo( ( "FreeRTOS_P11_Key.dat has been created in the "
                "current directory" ) );
     LogInfo( ( "Extracting public key bytes..." ) );
 

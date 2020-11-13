@@ -61,7 +61,7 @@ CK_RV PKCS11ManagementAndRNGDemo( void )
      * reference to the Cryptographic Token Interface defined in the PKCS #11
      * standard. An implementation of Cryptoki is referred to as a
      * "Cryptoki library". */
-    LogInfo( ( "Starting PKCS #11 Management and Random Number Generation" \
+    LogInfo( ( "Starting PKCS #11 Management and Random Number Generation"
                " Demo." ) );
 
     /* CK_RV is the return type for a Cryptoki function. Generally the underlying

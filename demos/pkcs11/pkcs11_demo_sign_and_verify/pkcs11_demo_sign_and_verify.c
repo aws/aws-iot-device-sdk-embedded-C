@@ -277,12 +277,12 @@ CK_RV PKCS11SignVerifyDemo( void )
     
         if( result == CKR_OK )
         {
-            LogInfo( ( "The signature of the digest was verified with the" \
+            LogInfo( ( "The signature of the digest was verified with the"
                        " public key and can be trusted." ) );
         }
         else
         {
-            LogInfo( ( "Unable to verify the signature with the given public" \
+            LogInfo( ( "Unable to verify the signature with the given public"
                        " key, the message cannot be trusted." ) );
         }
     }

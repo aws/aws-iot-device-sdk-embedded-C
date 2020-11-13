@@ -130,12 +130,12 @@ CK_RV PKCS11MechanismsAndDigestDemo( void )
          */
         if( 0 != ( CKF_SIGN & MechanismInfo.flags ) )
         {
-            LogInfo( ( "This Cryptoki library supports signing messages with RSA" \
+            LogInfo( ( "This Cryptoki library supports signing messages with RSA"
                        " private keys." ) );
         }
         else
         {
-            LogInfo( ( "This Cryptoki library does not support signing messages" \
+            LogInfo( ( "This Cryptoki library does not support signing messages"
                        " with RSA private keys." ) );
         }
     }
@@ -155,12 +155,12 @@ CK_RV PKCS11MechanismsAndDigestDemo( void )
          */
         if( 0 != ( CKF_VERIFY & MechanismInfo.flags ) )
         {
-            LogInfo( ( "This Cryptoki library supports verifying messages with RSA" \
+            LogInfo( ( "This Cryptoki library supports verifying messages with RSA"
                        " public keys." ) );
         }
         else
         {
-            LogInfo( ( "This Cryptoki library does not support verifying messages" \
+            LogInfo( ( "This Cryptoki library does not support verifying messages"
                        " with RSA public keys." ) );
         }
     }
@@ -174,23 +174,23 @@ CK_RV PKCS11MechanismsAndDigestDemo( void )
 
         if( 0 != ( CKF_SIGN & MechanismInfo.flags ) )
         {
-            LogInfo( ( "This Cryptoki library supports signing messages with" \
+            LogInfo( ( "This Cryptoki library supports signing messages with"
                        " ECDSA private keys." ) );
         }
         else
         {
-            LogInfo( ( "This Cryptoki library does not support signing messages" \
+            LogInfo( ( "This Cryptoki library does not support signing messages"
                        " with ECDSA private keys." ) );
         }
 
         if( 0 != ( CKF_VERIFY & MechanismInfo.flags ) )
         {
-            LogInfo( ( "This Cryptoki library supports verifying messages with" \
+            LogInfo( ( "This Cryptoki library supports verifying messages with"
                        " ECDSA public keys." ) );
         }
         else
         {
-            LogInfo( ( "This Cryptoki library does not support verifying" \
+            LogInfo( ( "This Cryptoki library does not support verifying"
                        " messages with ECDSA public keys." ) );
         }
     }
@@ -203,12 +203,12 @@ CK_RV PKCS11MechanismsAndDigestDemo( void )
                                                       &MechanismInfo );
         if( 0 != ( CKF_DIGEST & MechanismInfo.flags ) )
         {
-            LogInfo( ( "The Cryptoki library supports the " \
+            LogInfo( ( "The Cryptoki library supports the "
                        "SHA-256 algorithm." ) );
         }
         else
         {
-            LogInfo( ( "The Cryptoki library doesn't support the " \
+            LogInfo( ( "The Cryptoki library doesn't support the "
                        "SHA-256 algorithm." ) );
         }
     }
