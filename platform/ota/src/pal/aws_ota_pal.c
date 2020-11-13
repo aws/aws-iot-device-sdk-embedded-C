@@ -40,7 +40,7 @@
 #define OTA_PAL_INT16_NEGATIVE_MASK    ( 1 << 15 )
 
 /* Size of buffer used in file operations on this platform (linux). */
-#define OTA_PAL_LINUX_BUF_SIZE ( ( size_t ) 4096UL )
+#define OTA_PAL_LINUX_BUF_SIZE         ( ( size_t ) 4096UL )
 
 
 /* Specify the OTA signature algorithm we support on this platform. */
@@ -56,68 +56,72 @@ static uint8_t * prvPAL_ReadAndAssumeCertificate( const uint8_t * const pucCertN
  * memory becomes the property of the caller who is responsible for freeing it.
  */
 
-static EVP_PKEY * Openssl_GetPkeyFromCertificate(const uint8_t * const pCertFilePath)
+static EVP_PKEY * Openssl_GetPkeyFromCertificate( const uint8_t * const pCertFilePath )
 {
-	BIO * pBio = NULL;
-	X509 * pCert = NULL;
-	EVP_PKEY *pPkey = NULL;
-	int rc = 0;
+    BIO * pBio = NULL;
+    X509 * pCert = NULL;
+    EVP_PKEY * pPkey = NULL;
+    int rc = 0;
 
-	/* Read the cert file */
-	pBio = BIO_new(BIO_s_file());
+    /* Read the cert file */
+    pBio = BIO_new( BIO_s_file() );
+
     if( pBio != NULL )
     {
-        rc = BIO_read_filename(pBio, pCertFilePath);
-        if (rc != 1)
+        rc = BIO_read_filename( pBio, pCertFilePath );
+
+        if( rc != 1 )
         {
-            LogDebug((" TEMP solution: No cert file, get the signer cert from a pre-defined variable\n"));
+            LogDebug( ( " TEMP solution: No cert file, get the signer cert from a pre-defined variable\n" ) );
 
             /* Get the signer cert from a predefined PEM string */
-            BIO_free_all(pBio);
-            pBio = BIO_new(BIO_s_mem());
+            BIO_free_all( pBio );
+            pBio = BIO_new( BIO_s_mem() );
+
             if( pBio != NULL )
             {
-                BIO_puts(pBio, signingcredentialSIGNING_CERTIFICATE_PEM);
+                BIO_puts( pBio, signingcredentialSIGNING_CERTIFICATE_PEM );
             }
             else
             {
-                LogInfo(("[Openssl_GetPkeyFromCertificate] Failed to read cert from a PEM string."));
+                LogInfo( ( "[Openssl_GetPkeyFromCertificate] Failed to read cert from a PEM string." ) );
             }
         }
         else
         {
-            LogInfo(("[Openssl_GetPkeyFromCertificate] Failed to read cert from a file."));
+            LogInfo( ( "[Openssl_GetPkeyFromCertificate] Failed to read cert from a file." ) );
         }
     }
 
-    if (pBio != NULL)
+    if( pBio != NULL )
     {
-        if ((pCert = PEM_read_bio_X509(pBio, NULL, NULL, NULL)))
+        if( ( pCert = PEM_read_bio_X509( pBio, NULL, NULL, NULL ) ) )
         {
-            LogDebug(("[Openssl_GetPkeyFromCertificate] Getting the pkey from the X509 cert."));
+            LogDebug( ( "[Openssl_GetPkeyFromCertificate] Getting the pkey from the X509 cert." ) );
 
             /* Extract the public key */
-            pPkey = X509_get_pubkey(pCert);
-            if (pPkey == NULL)
+            pPkey = X509_get_pubkey( pCert );
+
+            if( pPkey == NULL )
             {
-                LogError(("[Openssl_GetPkeyFromCertificate] Error getting the pkey from signer cert."));
+                LogError( ( "[Openssl_GetPkeyFromCertificate] Error getting the pkey from signer cert." ) );
             }
         }
         else
         {
-            LogError(("[Openssl_GetPkeyFromCertificate] Error loading cert from either file or predefined string."));
+            LogError( ( "[Openssl_GetPkeyFromCertificate] Error loading cert from either file or predefined string." ) );
         }
     }
     else
     {
-        LogError(("[Openssl_GetPkeyFromCertificate] Failed to read signer cert."));
+        LogError( ( "[Openssl_GetPkeyFromCertificate] Failed to read signer cert." ) );
     }
 
-    BIO_free_all(pBio);
-    X509_free(pCert);
+    BIO_free_all( pBio );
+    X509_free( pCert );
 
-	/* pPkey should be freed by the caller */
-	return pPkey;
+    /* pPkey should be freed by the caller */
+    return pPkey;
 }
 /*-----------------------------------------------------------*/
 
@@ -136,12 +140,12 @@ OtaErr_t prvPAL_CreateFileForRx( OtaFileContext_t * const C )
 
     if( C != NULL )
     {
-        if ( C->pFilePath != NULL )
+        if( C->pFilePath != NULL )
         {
-            C->pFile = fopen( ( const char * )C->pFilePath, "w+b" ); /*lint !e586
-                                                                           * C standard library call is being used for portability. */
+            C->pFile = fopen( ( const char * ) C->pFilePath, "w+b" ); /*lint !e586
+                                                                       * C standard library call is being used for portability. */
 
-            if ( C->pFile != NULL )
+            if( C->pFile != NULL )
             {
                 result = OTA_ERR_NONE;
                 LogInfo( ( "[prvPAL_CreateFileForRx] Receive file created." ) );
@@ -149,8 +153,8 @@ OtaErr_t prvPAL_CreateFileForRx( OtaFileContext_t * const C )
             else
             {
                 result = ( OTA_ERR_RX_FILE_CREATE_FAILED | ( errno & OTA_PAL_ERR_MASK ) ); /*lint !e40 !e737 !e9027 !e9029
-                                                                                           * Errno is being used in accordance with host API documentation.
-                                                                                           * Bitmasking is being used to preserve host API error with library status code. */
+                                                                                            * Errno is being used in accordance with host API documentation.
+                                                                                            * Bitmasking is being used to preserve host API error with library status code. */
                 LogError( ( "[prvPAL_CreateFileForRx] ERROR - Failed to start operation: already active!" ) );
             }
         }
@@ -167,7 +171,7 @@ OtaErr_t prvPAL_CreateFileForRx( OtaFileContext_t * const C )
     }
 
     return result; /*lint !e480 !e481 Exiting function without calling fclose.
-                     * Context file handle state is managed by this API. */
+                    * Context file handle state is managed by this API. */
 }
 
 
@@ -185,7 +189,7 @@ OtaErr_t prvPAL_Abort( OtaFileContext_t * const C )
         if( NULL != C->pFile )
         {
             lFileClosresult = fclose( C->pFile ); /*lint !e482 !e586
-                                                      * Context file handle state is managed by this API. */
+                                                   * Context file handle state is managed by this API. */
             C->pFile = NULL;
 
             if( 0 == lFileClosresult )
@@ -197,8 +201,8 @@ OtaErr_t prvPAL_Abort( OtaFileContext_t * const C )
             {
                 LogError( ( "[prvPAL_Abort] ERROR - Closing file failed." ) );
                 result = ( OTA_ERR_FILE_ABORT | ( errno & OTA_PAL_ERR_MASK ) ); /*lint !e40 !e737 !e9027 !e9029
-                                                                                  * Errno is being used in accordance with host API documentation.
-                                                                                  * Bitmasking is being used to preserve host API error with library status code. */
+                                                                                 * Errno is being used in accordance with host API documentation.
+                                                                                 * Bitmasking is being used to preserve host API error with library status code. */
             }
         }
         else
@@ -227,20 +231,20 @@ int16_t prvPAL_WriteBlock( OtaFileContext_t * const C,
     if( prvContextValidate( C ) )
     {
         filerc = fseek( C->pFile, ulOffset, SEEK_SET ); /*lint !e586 !e713 !e9034
-                                                            * C standard library call is being used for portability. */
+                                                         * C standard library call is being used for portability. */
 
         if( 0 == filerc )
         {
             filerc = fwrite( pacData, 1, ulBlockSize, C->pFile ); /*lint !e586 !e713 !e9034
-                                                                      * C standard library call is being used for portability. */
+                                                                   * C standard library call is being used for portability. */
 
             if( filerc < 0 )
             {
                 LogError( ( "[prvPAL_WriteBlock] ERROR - fwrite failed." ) );
                 /* Mask to return a negative value. */
                 filerc = OTA_PAL_INT16_NEGATIVE_MASK | errno; /*lint !e40 !e9027
-                                                                * Errno is being used in accordance with host API documentation.
-                                                                * Bitmasking is being used to preserve host API error with library status code. */
+                                                               * Errno is being used in accordance with host API documentation.
+                                                               * Bitmasking is being used to preserve host API error with library status code. */
             }
         }
         else
@@ -248,8 +252,8 @@ int16_t prvPAL_WriteBlock( OtaFileContext_t * const C,
             LogError( ( "[prvPAL_WriteBlock] ERROR - fseek failed." ) );
             /* Mask to return a negative value. */
             filerc = OTA_PAL_INT16_NEGATIVE_MASK | errno; /*lint !e40 !e9027
-                                                            * Errno is being used in accordance with host API documentation.
-                                                            * Bitmasking is being used to preserve host API error with library status code. */
+                                                           * Errno is being used in accordance with host API documentation.
+                                                           * Bitmasking is being used to preserve host API error with library status code. */
         }
     }
     else /* Invalid context or file pointer provided. */
@@ -283,15 +287,15 @@ OtaErr_t prvPAL_CloseFile( OtaFileContext_t * const C )
 
         /* Close the file. */
         filerc = fclose( C->pFile ); /*lint !e482 !e586
-                                               * C standard library call is being used for portability. */
+                                      * C standard library call is being used for portability. */
         C->pFile = NULL;
 
         if( filerc != 0 )
         {
             LogError( ( "[prvPAL_CloseFile] ERROR - Failed to close OTA update file." ) );
             result = ( OTA_ERR_FILE_CLOSE | ( errno & OTA_PAL_ERR_MASK ) ); /*lint !e40 !e737 !e9027 !e9029
-                                                                              * Errno is being used in accordance with host API documentation.
-                                                                              * Bitmasking is being used to preserve host API error with library status code. */
+                                                                             * Errno is being used in accordance with host API documentation.
+                                                                             * Bitmasking is being used to preserve host API error with library status code. */
         }
 
         if( result == OTA_ERR_NONE )
@@ -302,12 +306,11 @@ OtaErr_t prvPAL_CloseFile( OtaFileContext_t * const C )
         }
         else
         {
-            LogError( (  "[prvPAL_CloseFile] ERROR - Failed to pass %s signature verification: %d.",
+            LogError( ( "[prvPAL_CloseFile] ERROR - Failed to pass %s signature verification: %d.",
                         OTA_JsonFileSignatureKey, result ) );
 
-			/* If we fail to verify the file signature that means the image is not valid. We need to set the image state to aborted. */
-			prvPAL_SetPlatformImageState( C, OtaImageStateAborted );
-
+            /* If we fail to verify the file signature that means the image is not valid. We need to set the image state to aborted. */
+            prvPAL_SetPlatformImageState( C, OtaImageStateAborted );
         }
     }
     else /* Invalid OTA Context. */
@@ -321,59 +324,61 @@ OtaErr_t prvPAL_CloseFile( OtaFileContext_t * const C )
 }
 
 
-static OtaErr_t Openssl_DigestVerify(EVP_MD_CTX * pSigContext, EVP_PKEY * pPkey, FILE *pFile, Sig256_t * pSignature)
+static OtaErr_t Openssl_DigestVerify( EVP_MD_CTX * pSigContext,
+                                      EVP_PKEY * pPkey,
+                                      FILE * pFile,
+                                      Sig256_t * pSignature )
 {
     OtaErr_t result = OTA_ERR_NONE;
     uint32_t bytesRead;
     uint8_t * pBuf;
 
     /* Verify an ECDSA-SHA256 signature. */
-    if ((pSigContext != NULL) &&
-        (pPkey != NULL) &&
-        (pFile != NULL) &&
-        (1 == EVP_DigestVerifyInit(pSigContext, NULL, EVP_sha256(), NULL, pPkey)))
+    if( ( pSigContext != NULL ) &&
+        ( pPkey != NULL ) &&
+        ( pFile != NULL ) &&
+        ( 1 == EVP_DigestVerifyInit( pSigContext, NULL, EVP_sha256(), NULL, pPkey ) ) )
     {
-        LogDebug("[Openssl_DigestVerify] Started signature verification.");
+        LogDebug( "[Openssl_DigestVerify] Started signature verification." );
 
 
-        pBuf = malloc(OTA_PAL_LINUX_BUF_SIZE);  /* can use OPENSSL_malloc() here too */
+        pBuf = malloc( OTA_PAL_LINUX_BUF_SIZE ); /* can use OPENSSL_malloc() here too */
 
-        if (pBuf != NULL)
+        if( pBuf != NULL )
         {
             /* Rewind the received file to the beginning. */
-            if (fseek(pFile, 0L, SEEK_SET) == 0) /*lint !e586
-                                                            * C standard library call is being used for portability. */
+            if( fseek( pFile, 0L, SEEK_SET ) == 0 ) /*lint !e586
+                                                     * C standard library call is being used for portability. */
             {
                 do
                 {
-                    bytesRead = fread(pBuf, 1, OTA_PAL_LINUX_BUF_SIZE, pFile); /*lint !e586
-                                                                                        * C standard library call is being used for portability. */
-                                                                                        /* Include the file chunk in the signature validation. Zero size is OK. */
-                    EVP_DigestVerifyUpdate(pSigContext, pBuf, bytesRead);
-                } while (bytesRead > 0UL);
+                    bytesRead = fread( pBuf, 1, OTA_PAL_LINUX_BUF_SIZE, pFile ); /*lint !e586
+                                                                                  * C standard library call is being used for portability. */
+                    /* Include the file chunk in the signature validation. Zero size is OK. */
+                    EVP_DigestVerifyUpdate( pSigContext, pBuf, bytesRead );
+                } while( bytesRead > 0UL );
 
-                if (1 != EVP_DigestVerifyFinal(pSigContext,
-                    pSignature->data,
-                    pSignature->size)) /*lint !e732 !e9034 Allow comparison in this context. */
+                if( 1 != EVP_DigestVerifyFinal( pSigContext,
+                                                pSignature->data,
+                                                pSignature->size ) ) /*lint !e732 !e9034 Allow comparison in this context. */
                 {
-                    LogError(("[Openssl_DigestVerify] File signature check failed at FINAL\n"));
+                    LogError( ( "[Openssl_DigestVerify] File signature check failed at FINAL\n" ) );
                     result = OTA_ERR_SIGNATURE_CHECK_FAILED;
                 }
-
             }
-            
+
             /* Free the temporary file page buffer. This can use OPENSSL_free()*/
-            free(pBuf);
+            free( pBuf );
         }
         else
         {
-            LogError(("[Openssl_DigestVerify] Failed to allocate buffer memory.\n"));
+            LogError( ( "[Openssl_DigestVerify] Failed to allocate buffer memory.\n" ) );
             result = OTA_ERR_OUT_OF_MEMORY;
         }
     }
     else
     {
-        LogError(( "[Openssl_DigestVerify] File signature check failed at INIT.\n" ));
+        LogError( ( "[Openssl_DigestVerify] File signature check failed at INIT.\n" ) );
         result = OTA_ERR_SIGNATURE_CHECK_FAILED;
     }
 
@@ -381,9 +386,10 @@ static OtaErr_t Openssl_DigestVerify(EVP_MD_CTX * pSigContext, EVP_PKEY * pPkey,
 }
 
 /********************************************/
+
 /* OPENSSL version
-/* Verify the signature of the specified file.
-/*********************************************/
+ * /* Verify the signature of the specified file.
+ * /*********************************************/
 
 static OtaErr_t prvPAL_CheckFileSignature( OtaFileContext_t * const C )
 {
@@ -400,33 +406,33 @@ static OtaErr_t prvPAL_CheckFileSignature( OtaFileContext_t * const C )
         /* Create a new signature context for verification purpose */
         pSigContext = EVP_MD_CTX_new();
 
-        if ( (pPkey != NULL) && (pSigContext != NULL ) )
+        if( ( pPkey != NULL ) && ( pSigContext != NULL ) )
         {
             /* Verify an ECDSA-SHA256 signature. */
-			result = Openssl_DigestVerify(pSigContext, pPkey, C->pFile, C->pSignature);
+            result = Openssl_DigestVerify( pSigContext, pPkey, C->pFile, C->pSignature );
         }
         else
-		{
+        {
             if( pSigContext == NULL )
-			{
-                LogError(( "[prvPAL_CheckFileSignature] File signature check failed at NEW sig context.\n" ));
+            {
+                LogError( ( "[prvPAL_CheckFileSignature] File signature check failed at NEW sig context.\n" ) );
                 result = OTA_ERR_SIGNATURE_CHECK_FAILED;
             }
             else
             {
-                LogError(( "[prvPAL_CheckFileSignature] File signature check failed at EXTRACT pkey from signer cert\n" ));
+                LogError( ( "[prvPAL_CheckFileSignature] File signature check failed at EXTRACT pkey from signer cert\n" ) );
                 result = OTA_ERR_BAD_SIGNER_CERT;
             }
         }
 
         /* Free up objects */
-        EVP_MD_CTX_free(pSigContext);
-        EVP_PKEY_free(pPkey);
+        EVP_MD_CTX_free( pSigContext );
+        EVP_PKEY_free( pPkey );
     }
     else
     {
         /* FIXME: Invalid error code for a NULL file context. */
-        LogError(( "[prvPAL_CheckFileSignature] Invalid OTA file context.\r\n" ));
+        LogError( ( "[prvPAL_CheckFileSignature] Invalid OTA file context.\r\n" ) );
         /* Invalid OTA context or file pointer. */
         result = OTA_ERR_NULL_FILE_PTR;
     }
@@ -440,11 +446,11 @@ static OtaErr_t prvPAL_CheckFileSignature( OtaFileContext_t * const C )
 OtaErr_t prvPAL_ResetDevice( OtaFileContext_t * const C )
 {
     OtaErr_t result = OTA_ERR_NONE;
-    
+
     if( !prvContextValidate( C ) )
     {
         /* FIXME: Invalid error code for a NULL file context. */
-        LogError(( "Invalid OTA file context.\r\n" ));
+        LogError( ( "Invalid OTA file context.\r\n" ) );
         /* Invalid OTA context or file pointer. */
         result = OTA_ERR_NULL_FILE_PTR;
     }
@@ -462,13 +468,13 @@ OtaErr_t prvPAL_ActivateNewImage( OtaFileContext_t * const C )
     if( !prvContextValidate( C ) )
     {
         /* FIXME: Invalid error code for a NULL file context. */
-        LogError(( "Invalid OTA file context.\r\n" ));
+        LogError( ( "Invalid OTA file context.\r\n" ) );
         /* Invalid OTA context or file pointer. */
         result = OTA_ERR_NULL_FILE_PTR;
     }
-    
+
     /* Return no error. linux implementation simply does nothing on activate.
-     * To run the new firmware image, double click the newly downloaded exe */
+    * To run the new firmware image, double click the newly downloaded exe */
     return result;
 }
 
@@ -478,7 +484,8 @@ OtaErr_t prvPAL_ActivateNewImage( OtaFileContext_t * const C )
  * On linux, the state of the OTA image is stored in PlaformImageState.txt.
  */
 
-OtaErr_t prvPAL_SetPlatformImageState( OtaFileContext_t * const C, OtaImageState_t eState )
+OtaErr_t prvPAL_SetPlatformImageState( OtaFileContext_t * const C,
+                                       OtaImageState_t eState )
 {
     OtaErr_t result = OTA_ERR_NONE;
     FILE * pPlatformImageState = NULL;
@@ -486,25 +493,25 @@ OtaErr_t prvPAL_SetPlatformImageState( OtaFileContext_t * const C, OtaImageState
     if( !prvContextValidate( C ) )
     {
         /* FIXME: Invalid error code for a NULL file context. */
-        LogError(( "[prvPAL_SetPlatformImageState] Invalid OTA file context.\r\n" ));
+        LogError( ( "[prvPAL_SetPlatformImageState] Invalid OTA file context.\r\n" ) );
         /* Invalid OTA context or file pointer. */
         result = OTA_ERR_NULL_FILE_PTR;
     }
-    else if( eState != OtaImageStateUnknown && eState <= OtaLastImageState )
+    else if( ( eState != OtaImageStateUnknown ) && ( eState <= OtaLastImageState ) )
     {
         pPlatformImageState = fopen( "PlatformImageState.txt", "w+b" ); /*lint !e586
-                                                                           * C standard library call is being used for portability. */
+                                                                         * C standard library call is being used for portability. */
 
         if( pPlatformImageState != NULL )
         {
             /* Write the image state to PlatformImageState.txt. */
             if( 1 != fwrite( &eState, sizeof( OtaImageState_t ), 1, pPlatformImageState ) ) /*lint !e586 !e9029
-                                                                                                * C standard library call is being used for portability. */
+                                                                                             * C standard library call is being used for portability. */
             {
                 LogError( ( "[prvPAL_SetPlatformImageState] ERROR - Unable to write to image state file." );
-                result = ( OTA_ERR_BAD_IMAGE_STATE | ( errno & OTA_PAL_ERR_MASK ) ) ); /*lint !e40 !e737 !e9027 !e9029
-                                                                                      * Errno is being used in accordance with host API documentation.
-                                                                                      * Bitmasking is being used to preserve host API error with library status code. */
+                          result = ( OTA_ERR_BAD_IMAGE_STATE | ( errno & OTA_PAL_ERR_MASK ) ) ); /*lint !e40 !e737 !e9027 !e9029
+                                                                                                  * Errno is being used in accordance with host API documentation.
+                                                                                                  * Bitmasking is being used to preserve host API error with library status code. */
             }
 
             /* Close PlatformImageState.txt. */
@@ -548,38 +555,37 @@ OtaErr_t prvPAL_SetPlatformImageState( OtaFileContext_t * const C, OtaImageState
 OtaPalImageState_t prvPAL_GetPlatformImageState( OtaFileContext_t * const C )
 {
     FILE * pPlatformImageState;
-	OtaImageState_t eSavedAgentState = OtaImageStateUnknown;
-	OtaPalImageState_t ePalState = OtaPalImageStateUnknown;
+    OtaImageState_t eSavedAgentState = OtaImageStateUnknown;
+    OtaPalImageState_t ePalState = OtaPalImageStateUnknown;
 
     if( !prvContextValidate( C ) )
     {
         /* FIXME: Invalid error code for a NULL file context. */
-        LogError(( "[prvPAL_GetPlatformImageState] Invalid OTA file context.\r\n" ));
+        LogError( ( "[prvPAL_GetPlatformImageState] Invalid OTA file context.\r\n" ) );
         /* Invalid OTA context or file pointer. */
         ePalState = OtaPalImageStateUnknown;
     }
-    else 
+    else
     {
-
         pPlatformImageState = fopen( "PlatformImageState.txt", "r+b" ); /*lint !e586
-                                                                        * C standard library call is being used for portability. */
+                                                                         * C standard library call is being used for portability. */
 
         if( pPlatformImageState != NULL )
         {
             if( 1 != fread( &eSavedAgentState, sizeof( OtaImageState_t ), 1, pPlatformImageState ) ) /*lint !e586 !e9029
-                                                                                            * C standard library call is being used for portability. */
+                                                                                                      * C standard library call is being used for portability. */
             {
                 /* If an error occured reading the file, mark the state as aborted. */
                 LogError( ( "[prvPAL_GetPlatformImageState] ERROR - Unable to read image state file." ) );
-                ePalState = ( OtaPalImageStateInvalid | (errno & OTA_PAL_ERR_MASK) );
+                ePalState = ( OtaPalImageStateInvalid | ( errno & OTA_PAL_ERR_MASK ) );
             }
             else
             {
-                if( eSavedAgentState == OtaImageStateTesting)
+                if( eSavedAgentState == OtaImageStateTesting )
                 {
                     ePalState = OtaPalImageStatePendingCommit;
-                }   
-                else if ( eSavedAgentState == OtaImageStateAccepted)
+                }
+                else if( eSavedAgentState == OtaImageStateAccepted )
                 {
                     ePalState = OtaPalImageStateValid;
                 }
@@ -589,9 +595,8 @@ OtaPalImageState_t prvPAL_GetPlatformImageState( OtaFileContext_t * const C )
                 }
             }
 
-
             if( 0 != fclose( pPlatformImageState ) ) /*lint !e586
-                                                        * C standard library call is being used for portability. */
+                                                      * C standard library call is being used for portability. */
             {
                 LogError( ( "[prvPAL_GetPlatformImageState] ERROR - Unable to close image state file." ) );
                 ePalState = ( OtaPalImageStateInvalid | ( errno & OTA_PAL_ERR_MASK ) );
@@ -611,5 +616,5 @@ OtaPalImageState_t prvPAL_GetPlatformImageState( OtaFileContext_t * const C )
 
 /* Provide access to private members for testing. */
 #ifdef AMAZON_FREERTOS_ENABLE_UNIT_TESTS
-#include "aws_ota_pal_test_access_define.h"
+    #include "aws_ota_pal_test_access_define.h"
 #endif
