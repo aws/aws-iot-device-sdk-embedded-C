@@ -396,9 +396,9 @@ void test_OpenSession_CloseSession( void )
         TEST_ASSERT_GREATER_THAN( 0, slotCount );
 
         result = globalFunctionList->C_OpenSession( slotId,
-                                                    CKF_SERIAL_SESSION,    /* This flag is mandatory for PKCS #11 legacy reasons. */
-                                                    NULL,                  /* Application defined pointer. */
-                                                    NULL,                  /* Callback function. */
+                                                    CKF_SERIAL_SESSION, /* This flag is mandatory for PKCS #11 legacy reasons. */
+                                                    NULL,               /* Application defined pointer. */
+                                                    NULL,               /* Callback function. */
                                                     &session );
         TEST_ASSERT_EQUAL_MESSAGE( CKR_OK, result, "Failed to open session" );
         sessionOpen = CK_TRUE;
@@ -417,9 +417,9 @@ void test_OpenSession_CloseSession( void )
 
     /* Try to open a session without having initialized the module. */
     result = globalFunctionList->C_OpenSession( slotId,
-                                                CKF_SERIAL_SESSION,    /* This flag is mandatory for PKCS #11 legacy reasons. */
-                                                NULL,                  /* Application defined pointer. */
-                                                NULL,                  /* Callback function. */
+                                                CKF_SERIAL_SESSION, /* This flag is mandatory for PKCS #11 legacy reasons. */
+                                                NULL,               /* Application defined pointer. */
+                                                NULL,               /* Callback function. */
                                                 &session );
     TEST_ASSERT_EQUAL_MESSAGE( CKR_CRYPTOKI_NOT_INITIALIZED, result, "Negative Test: Opened a session before initializing module." );
 }
@@ -934,18 +934,6 @@ static void provisionCredentialsWithGenerateKeyPair( CK_OBJECT_HANDLE_PTR privat
         TEST_ASSERT_EQUAL_MESSAGE( CKR_OK, result, "Failed to create EC certificate." );
         TEST_ASSERT_NOT_EQUAL_MESSAGE( 0, *privateKeyHandlePtr, "Invalid object handle returned for EC certificate." );
     }
-}
-
-
-static void provisionEcTestCredentials( CK_OBJECT_HANDLE_PTR privateKeyHandlePtr,
-                                        CK_OBJECT_HANDLE_PTR pcertificateHandle,
-                                        CK_OBJECT_HANDLE_PTR publicKeyHandlePtr )
-{
-    #if ( pkcs11testIMPORT_PRIVATE_KEY_SUPPORT != 0 )
-        provisionCredentialsWithKeyImport( privateKeyHandlePtr, pcertificateHandle, publicKeyHandlePtr );
-    #else
-        provisionCredentialsWithGenerateKeyPair( privateKeyHandlePtr, pcertificateHandle, publicKeyHandlePtr );
-    #endif
 }
 
 void test_DestoryObject_EC( void )

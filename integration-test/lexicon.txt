@@ -101,10 +101,12 @@ didn
 diffie
 digestfinal
 digestinit
+digestmechanism
 digestupdate
 dmxndvgl
 doesn
 dp
+dptr
 drbg
 dsa
 dtls
@@ -118,6 +120,9 @@ ecdhe
 ecdsa
 ecjpake
 ecp
+ecparams
+ecparamsptr
+ecpoint
 ede
 eg
 enc
@@ -131,6 +136,7 @@ fopen
 fprintf
 freertos
 fs
+functionlist
 ga
 galois
 gcc
@@ -187,6 +193,7 @@ juotokgxdkuyrmpuudv
 karthikeyan
 ke
 keypair
+keytype
 keyusage
 kw
 kwp
@@ -278,6 +285,8 @@ ppath
 pre
 prf
 printf
+privatekeyclass
+privatekeytype
 processloop
 proto
 psessionpresent
@@ -287,6 +296,8 @@ pthread
 ptransportinterface
 puback
 pubcomp
+publicexponent
+publickeytype
 pubrec
 pubrel
 pxd
@@ -320,6 +331,7 @@ sfgsn
 sha
 sig
 sizeof
+slotidptr
 smartcard
 sni
 snprintf
@@ -347,6 +359,7 @@ toolchain
 transportrecvstub
 transportsend
 transportsendstub
+trueobject
 ucsecp
 udbl
 udp
