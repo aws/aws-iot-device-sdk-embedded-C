@@ -515,10 +515,10 @@ OtaErr_t prvPAL_SetPlatformImageState( OtaFileContext_t * const C,
             if( 1 != fwrite( &eState, sizeof( OtaImageState_t ), 1, pPlatformImageState ) ) /*lint !e586 !e9029
                                                                                              * C standard library call is being used for portability. */
             {
-                LogError( ( "Unable to write to image state file." );
-                          result = ( OTA_ERR_BAD_IMAGE_STATE | ( errno & OTA_PAL_ERR_MASK ) ) ); /*lint !e40 !e737 !e9027 !e9029
-                                                                                                  * Errno is being used in accordance with host API documentation.
-                                                                                                  * Bitmasking is being used to preserve host API error with library status code. */
+                LogError( ( "Unable to write to image state file." ) );
+                result = ( OTA_ERR_BAD_IMAGE_STATE | ( errno & OTA_PAL_ERR_MASK ) ); /*lint !e40 !e737 !e9027 !e9029
+                                                                                        * Errno is being used in accordance with host API documentation.
+                                                                                        * Bitmasking is being used to preserve host API error with library status code. */
             }
 
             /* Close PlatformImageState.txt. */
