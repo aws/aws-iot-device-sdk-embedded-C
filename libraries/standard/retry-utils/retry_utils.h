@@ -22,8 +22,11 @@
 
 /**
  * @file retry_utils.h
- * @brief Declaration of the exponential backoff retry logic utility functions
- * and constants.
+ * @brief Declaration of the exponential backoff with jitter retry utility functions
+ * and constants. This represents the "Full Jitter" backoff strategy explained in the
+ * following document.
+ * https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/
+ *
  */
 
 #ifndef RETRY_UTILS_H_
@@ -168,77 +171,111 @@
  */
 
 /**
- * @brief Max number of retry attempts. Set this value to 0 if the client must
- * retry forever.
+ * @brief Constant to represent unlimited number of retry attempts.
  */
-#define MAX_RETRY_ATTEMPTS               4U
+#define RETRY_FOREVER    0
 
 /**
- * @brief Initial fixed backoff value in seconds between two successive
- * retries. A random jitter value is added to every backoff value.
+ * @brief Interface for a random number generator.
+ * The user should supply the platform-specific random number number to the
+ * library through the @ref RetryUtils_InitializeParams API function.
+ *
+ * @note It is recommended that a true random number generator is supplied
+ * to the library. The random number generator should be seeded with an entropy
+ * source in the system.
+ *
+ * @return The random number if successful; otherwise -1 to indicate failure.
  */
-#define INITIAL_RETRY_BACKOFF_SECONDS    1U
+typedef int32_t ( * RetryUtils_RNG_t )();
 
 /**
- * @brief Max backoff value in seconds.
- */
-#define MAX_RETRY_BACKOFF_SECONDS        128U
-
-/**
- * @brief Max jitter value in seconds.
- */
-#define MAX_JITTER_VALUE_SECONDS         5U
-
-/**
- * @brief Status for @ref RetryUtils_BackoffAndSleep.
+ * @brief Status for @ref RetryUtils_GetNextBackOff.
  */
 typedef enum RetryUtilsStatus
 {
-    RetryUtilsSuccess = 0,     /**< @brief The function returned successfully after sleeping. */
+    RetryUtilsSuccess = 0,     /**< @brief The function successfully calculated the next back-off value. */
+    RetryUtilsRngFailure = 1,  /**< @brief The function encountered failure in generating random number. */
     RetryUtilsRetriesExhausted /**< @brief The function exhausted all retry attempts. */
 } RetryUtilsStatus_t;
 
+
 /**
- * @brief Represents parameters required for retry logic.
+ * @brief Represents parameters required for calculating the back-off delay for the
+ * next retry attempt.
  */
-typedef struct RetryUtilsParams
+typedef struct RetryUtilsContext
 {
     /**
-     * @brief The cumulative count of backoff delay cycles completed
-     * for retries.
+     * @brief The maximum backoff delay (in milliseconds) between consecutive retry attempts.
+     */
+    uint16_t maxBackOffDelay;
+
+    /**
+     * @brief The total number of retry attempts completed.
+     * This value is incremented on every call to #RetryUtils_GetNextBackOff API.
      */
     uint32_t attemptsDone;
 
     /**
-     * @brief The max jitter value for backoff time in retry attempt.
+     * @brief The maximum backoff value (in milliseconds) for the next retry attempt.
      */
-    uint32_t nextJitterMax;
-} RetryUtilsParams_t;
+    uint16_t nextJitterMax;
 
+    /**
+     * @brief The maximum number of retry attempts.
+     */
+    uint32_t maxRetryAttempts;
+
+    /**
+     * @brief The random number generator function used for calculating the
+     * backoff value for the next retry attempt.
+     */
+    RetryUtils_RNG_t pRng;
+} RetryUtilsContext_t;
 
 /**
- * @brief Resets the retry timeout value and number of attempts.
- * This function must be called by the application before a new retry attempt.
+ * @brief Initializes the context for using retry utils. The parameters
+ * are required for calculating the next retry backoff delay.
+ * This function must be called by the application before the first new retry attempt.
  *
- * @param[in, out] pRetryParams Structure containing attempts done and timeout
- * value.
+ * @param[out] pRetryParams The context to initialize with parameters required
+ * for the next backoff delay calculation function.
+ * @param[in] maxBackOff The maximum backoff delay (in milliseconds) between
+ * consecutive retry attempts.
+ * @param[in] backOffBase The base value (in milliseconds) of backoff delay to
+ * use in the exponential backoff and jitter model.
+ * @param[in] maxAttempts The maximum number of retry attempts. Set the value to
+ * #RETRY_FOREVER to retry for ever.
+ * @param[in] pRng The platform-specific function to use for random number generation.
+ * The random number generator should be seeded before calling this function.
  */
-/* @[define_retryutils_paramsreset] */
-void RetryUtils_ParamsReset( RetryUtilsParams_t * pRetryParams );
-/* @[define_retryutils_paramsreset] */
+/* @[define_retryutils_initializeparams] */
+void RetryUtils_InitializeParams( RetryUtilsContext_t * pContext,
+                                  uint16_t backOffBase,
+                                  uint16_t maxBackOff,
+                                  uint32_t maxAttempts,
+                                  RetryUtils_RNG_t pRng );
+/* @[define_retryutils_initializeparams] */
 
 /**
- * @brief Simple platform specific exponential backoff function. The application
- * must use this function between retry failures to add exponential delay.
- * This function will block the calling task for the current timeout value.
+ * @brief Simple exponential backoff and jitter function that provides the
+ * delay value for the next retry attempt.
+ * After a failure of an operation that needs to be retried, the application
+ * should use this function to obtain the backoff delay value for the next retry,
+ * and then wait for the backoff value before retrying the operation.
  *
- * @param[in, out] pRetryParams Structure containing retry parameters.
+ * @param[in, out] pRetryContext Structure containing parameters for the next backoff
+ * value calculation.
+ * @param[out] pNextBackOff This will be populated with the backoff value (in milliseconds)
+ * for the next retry attempt. The value does not exceed the maximum backoff delay
+ * configured in the context.
  *
- * @return #RetryUtilsSuccess after a successful sleep, #RetryUtilsRetriesExhausted
- * when all attempts are exhausted.
+ * @return #RetryUtilsSuccess after a successful sleep, #RetryUtilsRngFailure for a failure
+ * in random number generation, #RetryUtilsRetriesExhausted when all attempts are exhausted.
  */
-/* @[define_retryutils_backoffandsleep] */
-RetryUtilsStatus_t RetryUtils_BackoffAndSleep( RetryUtilsParams_t * pRetryParams );
-/* @[define_retryutils_backoffandsleep] */
+/* @[define_retryutils_getnextbackoff] */
+RetryUtilsStatus_t RetryUtils_GetNextBackOff( RetryUtilsContext_t * pRetryContext,
+                                              uint32_t * pNextBackOff );
+/* @[define_retryutils_getnextbackoff] */
 
 #endif /* ifndef RETRY_UTILS_H_ */

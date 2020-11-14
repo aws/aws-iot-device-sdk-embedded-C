@@ -21,8 +21,9 @@
  */
 
 /**
- * @file retry_utils_posix.c
- * @brief Utility implementation of backoff logic, used for attempting retries of failed processes.
+ * @file retry_utils.c
+ * @brief Implementation of the retry utils API for the "Full Jitter" exponential backoff
+ * with jitter strategy.
  */
 
 /* Standard includes. */
@@ -30,37 +31,51 @@
 #include <stdlib.h>
 #include <time.h>
 
+/* Include API header. */
 #include "retry_utils.h"
 
 /*-----------------------------------------------------------*/
 
-RetryUtilsStatus_t RetryUtils_BackoffAndSleep( RetryUtilsParams_t * pRetryParams )
+RetryUtilsStatus_t RetryUtils_GetNextBackOff( RetryUtilsContext_t * pRetryContext,
+                                              uint32_t * pNextBackOff )
 {
-    RetryUtilsStatus_t status = RetryUtilsRetriesExhausted;
-    int backOffDelay = 0;
+    RetryUtilsStatus_t status = RetryUtilsSuccess;
+    int32_t randomVal = 0;
 
     /* If MAX_RETRY_ATTEMPTS is set to 0, try forever. */
-    if( ( pRetryParams->attemptsDone < MAX_RETRY_ATTEMPTS ) ||
-        ( 0 == MAX_RETRY_ATTEMPTS ) )
+    if( ( pRetryContext->attemptsDone < pRetryContext->maxRetryAttempts ) ||
+        ( pRetryContext->maxRetryAttempts == RETRY_FOREVER ) )
     {
-        /* Choose a random value for back-off time between 0 and the max jitter value. */
-        backOffDelay = rand() % pRetryParams->nextJitterMax;
+        /* Generate a random number. */
+        randomVal = pRetryContext->pRng();
 
-        /*  Wait for backoff time to expire for the next retry. */
-        ( void ) sleep( backOffDelay );
-
-        /* Increment backoff counts. */
-        pRetryParams->attemptsDone++;
-
-        /* Double the max jitter value for the next retry attempt, only
-         * if the new value will be less than the max backoff time value. */
-        if( pRetryParams->nextJitterMax < ( MAX_RETRY_BACKOFF_SECONDS / 2U ) )
+        if( randomVal == -1 )
         {
-            pRetryParams->nextJitterMax += pRetryParams->nextJitterMax;
+            status = RetryUtilsRngFailure;
         }
         else
         {
-            pRetryParams->nextJitterMax = MAX_RETRY_BACKOFF_SECONDS;
+            assert( randomVal > 0 );
+
+            /* The next backoff value is a random value between 0 and the maximum jitter value
+             * for the retry attempt. */
+
+            /* Choose a random value for back-off time between 0 and the max jitter value. */
+            *pNextBackOff = ( uint16_t ) ( randomVal % pRetryContext->nextJitterMax );
+
+            /* Increment the retry attempt. */
+            pRetryContext->attemptsDone++;
+        }
+
+        /* Double the max jitter value for the next retry attempt, only
+         * if the new value will be less than the max backoff time value. */
+        if( pRetryContext->nextJitterMax < ( pRetryContext->maxBackOffDelay / 2U ) )
+        {
+            pRetryContext->nextJitterMax += pRetryContext->nextJitterMax;
+        }
+        else
+        {
+            pRetryContext->nextJitterMax = pRetryContext->maxBackOffDelay;
         }
 
         status = RetryUtilsSuccess;
@@ -71,7 +86,6 @@ RetryUtilsStatus_t RetryUtils_BackoffAndSleep( RetryUtilsParams_t * pRetryParams
          * returning RetryUtilsRetriesExhausted. Application may choose to
          * restart the retry process after calling RetryUtils_ParamsReset(). */
         status = RetryUtilsRetriesExhausted;
-        RetryUtils_ParamsReset( pRetryParams );
     }
 
     return status;
@@ -79,25 +93,23 @@ RetryUtilsStatus_t RetryUtils_BackoffAndSleep( RetryUtilsParams_t * pRetryParams
 
 /*-----------------------------------------------------------*/
 
-void RetryUtils_ParamsReset( RetryUtilsParams_t * pRetryParams )
+void RetryUtils_InitializeParams( RetryUtilsContext_t * pContext,
+                                  uint16_t backOffBase,
+                                  uint16_t maxBackOff,
+                                  uint32_t maxAttempts,
+                                  RetryUtils_RNG_t pRng )
 {
-    uint32_t jitter = 0;
-    struct timespec tp;
+    assert( pContext != NULL );
 
-    /* Reset attempts done to zero so that the next retry cycle can start. */
-    pRetryParams->attemptsDone = 0;
+    /* Initialize the context with parameters used in calculating the backoff
+     * value for the next retry attempt. */
+    pContext->nextJitterMax = backOffBase;
+    pContext->maxBackOffDelay = maxBackOff;
+    pContext->maxRetryAttempts = maxAttempts;
+    pContext->pRng = pRng;
 
-    /* Get current time to seed pseudo random number generator. */
-    ( void ) clock_gettime( CLOCK_REALTIME, &tp );
-
-    /* Seed pseudo random number generator with nanoseconds. */
-    srand( tp.tv_nsec );
-
-    /* Calculate jitter value using picking a random number. */
-    jitter = ( rand() % MAX_JITTER_VALUE_SECONDS );
-
-    /* Reset the backoff value to the initial time out value plus jitter. */
-    pRetryParams->nextJitterMax = INITIAL_RETRY_BACKOFF_SECONDS + jitter;
+    /* The total number of retry attempts is zero at initialization. */
+    pContext->attemptsDone = 0;
 }
 
 /*-----------------------------------------------------------*/
