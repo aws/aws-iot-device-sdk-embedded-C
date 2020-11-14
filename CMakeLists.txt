@@ -74,7 +74,7 @@ if(${BUILD_TESTS})
     set(utest_targets
         openssl_utest sockets_utest
         plaintext_utest clock_utest
-        retry_utils_utest)
+        retry_utils_utest ota_pal_linux_test)
 
     # Add a target for running coverage on tests.
     add_custom_target(coverage

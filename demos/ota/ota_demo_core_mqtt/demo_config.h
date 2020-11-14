@@ -94,9 +94,9 @@
  * https://docs.aws.amazon.com/iot/latest/developerguide/client-authentication.html
  *
  * @note This certificate should be PEM-encoded.
- *
- * #define CLIENT_CERT_PATH    "...insert here..."
  */
+#define CLIENT_CERT_PATH    "...insert here..."
+ 
 /**
  * @brief Path of the file containing the client's private key.
  *
@@ -105,16 +105,17 @@
  * https://docs.aws.amazon.com/iot/latest/developerguide/client-authentication.html
  *
  * @note This private key should be PEM-encoded.
- *
- * #define CLIENT_PRIVATE_KEY_PATH    "...insert here..."
  */
+#define CLIENT_PRIVATE_KEY_PATH    "...insert here..."
+ 
+
 /**
  * @brief MQTT client identifier.
  *
  * No two clients may use the same client identifier simultaneously.
  */
 #ifndef CLIENT_IDENTIFIER
-    #define CLIENT_IDENTIFIER         "testclient"
+#define CLIENT_IDENTIFIER         "testclient"
 #endif
 
 /**

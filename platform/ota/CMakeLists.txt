@@ -6,3 +6,7 @@ target_sources(ota_pal
 target_link_libraries( ota_pal
     INTERFACE OpenSSL::Crypto
 )
+
+if(BUILD_TESTS)
+  add_subdirectory(utest)
+endif()
