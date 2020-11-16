@@ -8,12 +8,11 @@ set(project_name "posix")
 
 # list the files to mock here
 list(APPEND mock_list
-            ${CMAKE_CURRENT_LIST_DIR}/mocks/time_api.h
-            ${CMAKE_CURRENT_LIST_DIR}/mocks/math_api.h
+            ""
         )
 # list the directories your mocks need
 list(APPEND mock_include_list
-            ${PLATFORM_DIR}/include
+            ""
         )
 #list the definitions of your mocks to control what to be included
 list(APPEND mock_define_list
@@ -41,40 +40,6 @@ list(APPEND test_include_directories
         )
 
 # =============================  (end edit)  ===================================
-
-set(mock_name "retry_utils_mock")
-set(real_name "retry_utils_real")
-
-create_mock_list(${mock_name}
-                "${mock_list}"
-                "${ROOT_DIR}/tools/cmock/project.yml"
-                "${mock_include_list}"
-                "${mock_define_list}"
-        )
-
-create_real_library(${real_name}
-                    "${real_source_files}"
-                    "${real_include_directories}"
-                    "${mock_name}"
-        )
-
-list(APPEND utest_link_list
-            lib${real_name}.a
-            -l${mock_name}
-        )
-
-list(APPEND utest_dep_list
-            ${real_name}
-        )
-
-set(utest_name "retry_utils_utest")
-set(utest_source "retry_utils_utest.c")
-create_test(${utest_name}
-            ${utest_source}
-            "${utest_link_list}"
-            "${utest_dep_list}"
-            "${test_include_directories}"
-        )
 
 # Create the target for unit testing the clock
 set(real_name "clock_real")
