@@ -74,7 +74,7 @@
  *
  * The following steps give guidance on implementing the Retry Utils. An example
  * implementation of the Retry Utils for a POSIX platform can be found in file
- * @ref retry_utils_posix.c.
+ * @ref retry_utils.c.
  *
  * -# Implementing @ref RetryUtils_ParamsReset
  * @snippet this define_retryutils_paramsreset
@@ -275,7 +275,7 @@ void RetryUtils_InitializeParams( RetryUtilsContext_t * pContext,
  */
 /* @[define_retryutils_getnextbackoff] */
 RetryUtilsStatus_t RetryUtils_GetNextBackOff( RetryUtilsContext_t * pRetryContext,
-                                              uint32_t * pNextBackOff );
+                                              uint16_t * pNextBackOff );
 /* @[define_retryutils_getnextbackoff] */
 
 #endif /* ifndef RETRY_UTILS_H_ */

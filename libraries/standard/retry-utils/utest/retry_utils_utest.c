@@ -30,18 +30,33 @@
 /* Retry utils library include */
 #include "retry_utils.h"
 
-
 /* Return value of mockRngThatSucceeds. */
 static int32_t randomValToReturn;
 
-#define TEST_BACKOFF_BASE_VALUE    1000
-#define TEST_BACKOFF_MAX_VALUE     10000
-#define TEST_MAX_ATTEMPTS          5
+#define TEST_BACKOFF_BASE_VALUE    ( 1000 )
+#define TEST_BACKOFF_MAX_VALUE     ( 10000 )
+#define TEST_MAX_ATTEMPTS          ( 5 )
 /* Parameters to track the next max jitter or number of attempts done. */
 static RetryUtilsContext_t retryParams;
 /* Return value of #RetryUtils_GetNextBackOff. */
 static RetryUtilsStatus_t retryUtilsStatus;
 static uint16_t nextBackOff;
+
+/**
+ * @brief A mock random number generator that always returns failure.
+ */
+static int32_t mockRngThatFails()
+{
+    return -1;
+}
+
+/**
+ * @brief A mock random number generator that always returns success.
+ */
+static int32_t mockRngThatSucceeds()
+{
+    return randomValToReturn;
+}
 
 /* ============================   UNITY FIXTURES ============================ */
 
@@ -78,41 +93,25 @@ int suiteTearDown( int numFailures )
 /* ========================================================================== */
 
 /**
- * @brief A mock random number generator that always returns failure.
- */
-static int32_t mockRngThatFails()
-{
-    return -1;
-}
-
-/**
- * @brief A mock random number generator that always returns success.
- */
-static int32_t mockRngThatSucceeds()
-{
-    return randomValToReturn;
-}
-
-/**
  * @brief Helper method to make assertions on data of the context object.
  */
-static void verifyContextData( RetryContext_t * pContext,
+static void verifyContextData( RetryUtilsContext_t * pContext,
                                uint32_t expectedAttemptsDone,
                                uint16_t expectedNextJitterMax,
                                uint16_t expectedMaxBackOff,
                                uint32_t expectedMaxAttempts,
-                               RetryUtils_RNG pExpectedRng )
+                               RetryUtils_RNG_t pExpectedRng )
 {
     TEST_ASSERT_EQUAL( expectedNextJitterMax, pContext->nextJitterMax );
-    TEST_ASSERT_EQUAL( 0, pContext->attemptsDone );
+    TEST_ASSERT_EQUAL( expectedAttemptsDone, pContext->attemptsDone );
     TEST_ASSERT_EQUAL( expectedMaxAttempts, pContext->maxRetryAttempts );
     TEST_ASSERT_EQUAL( expectedMaxBackOff, pContext->maxBackOffDelay );
     TEST_ASSERT_EQUAL_PTR( pExpectedRng, pContext->pRng );
 }
 
 /**
- * @brief Test that #RetryUtils_ParamsReset initializes the #nextJitterMax
- * to be equal to some configurable backoff plus jitter.
+ * @brief Test that #RetryUtils_InitializeParams initializes the context
+ * data as expected.
  */
 void test_RetryUtils_InitializeParams_Sets_Jitter_Correctly( void )
 {
@@ -123,12 +122,16 @@ void test_RetryUtils_InitializeParams_Sets_Jitter_Correctly( void )
                                  mockRngThatSucceeds );
     verifyContextData( &retryParams,
                        0,
-                       TEST_BACKOFF_BASE_VALUE
+                       TEST_BACKOFF_BASE_VALUE,
                        TEST_BACKOFF_MAX_VALUE,
                        TEST_MAX_ATTEMPTS,
                        mockRngThatSucceeds );
 }
 
+/**
+ * @brief Test that #RetryUtils_GetNextBackOff returns the expected failure
+ * and does not update the context data when the random number generator fails.
+ */
 void test_RetryUtils_GetNextBackOff_Rng_Failure( void )
 {
     /* Initialize context with random number generator that fails. */
@@ -146,10 +149,10 @@ void test_RetryUtils_GetNextBackOff_Rng_Failure( void )
      * RetryUtils_GetNextBackOff failed. */
     verifyContextData( &retryParams,
                        0,
-                       TEST_BACKOFF_BASE_VALUE
+                       TEST_BACKOFF_BASE_VALUE,
                        TEST_BACKOFF_MAX_VALUE,
                        TEST_MAX_ATTEMPTS,
-                       mockRngThatSucceeds );
+                       mockRngThatFails );
 }
 
 /**
@@ -162,23 +165,20 @@ void test_RetryUtils_GetNextBackOff_Rng_Failure( void )
  */
 void test_RetryUtils_GetNextBackOff_Success_RandVal_Less_Than_Jitter_Max( void )
 {
+    int iter = 1;
     uint16_t expectedAttemptsDone = 0;
     uint16_t expectedNextJitterMax = TEST_BACKOFF_BASE_VALUE;
+    uint16_t expectedNextBackOff = 0;
 
-    for( int iter = 1; iter < 2; iter++ )
+    for( ; iter < 2; iter++ )
     {
-        TEST_ASSERT_LESS_THAN( TEST_MAX_BACKOFF_VALUE, expectedNextJitterMax );
-
-        randomValToReturn = expectedNextJitterMax / 2;
+        /* Set the random value to be generated as a value lower than
+         * the jitter max value for the next retry attempt. */
+        randomValToReturn = retryParams.nextJitterMax / 2;
 
         /* As the random value is less than the max jitter value, the expected
-         * next backoff value should remain the same as the jitter max. */
-        uint16_t expectedNextBackOff = expectedNextJitterMax;
-
-        /* Call the RetryUtils_GetNextBackOff API a couple times. */
-        TEST_ASSERT_EQUAL( RetryUtilsSuccess,
-                           RetryUtils_GetNextBackOff( &retryParams, &nextBackOff ) );
-        TEST_ASSERT_EQUAL( expectedNextBackOff, *nextBackOff );
+         * next backoff value should remain the same as the random value. */
+        expectedNextBackOff = randomValToReturn;
 
         /* The jitter max value should double with the above call for use in next call. */
         expectedNextJitterMax *= 2;
@@ -186,10 +186,17 @@ void test_RetryUtils_GetNextBackOff_Success_RandVal_Less_Than_Jitter_Max( void )
         /* The number of attempts should be updated by the above API call. */
         expectedAttemptsDone++;
 
+        TEST_ASSERT_LESS_THAN( TEST_BACKOFF_MAX_VALUE, expectedNextJitterMax );
+
+        /* Call the RetryUtils_GetNextBackOff API a couple times. */
+        TEST_ASSERT_EQUAL( RetryUtilsSuccess,
+                           RetryUtils_GetNextBackOff( &retryParams, &nextBackOff ) );
+        TEST_ASSERT_EQUAL( expectedNextBackOff, nextBackOff );
+
         /* Verify that the context data for expected data after the API call. */
         verifyContextData( &retryParams,
                            expectedAttemptsDone,
-                           expectedNextJitterMax
+                           expectedNextJitterMax,
                            TEST_BACKOFF_MAX_VALUE,
                            TEST_MAX_ATTEMPTS,
                            mockRngThatSucceeds );
@@ -206,35 +213,37 @@ void test_RetryUtils_GetNextBackOff_Success_RandVal_Less_Than_Jitter_Max( void )
  */
 void test_RetryUtils_GetNextBackOff_Success_RandVal_More_Than_Jitter_Max( void )
 {
+    int iter = 1;
     uint16_t expectedAttemptsDone = 0;
     uint16_t expectedNextJitterMax = TEST_BACKOFF_BASE_VALUE;
 
-    for( int iter = 1; iter < 2; iter++ )
+    for( ; iter < 2; iter++ )
     {
-        TEST_ASSERT_LESS_THAN( TEST_MAX_BACKOFF_VALUE, expectedNextJitterMax );
-
-        randomValToReturn = expectedNextJitterMax + 1;
-
-        /* As the random value is greater than the jitter max value, the expected
-         * next backoff value should be truncated to a value within the jitter window
-         * for the retry attempt. */
-        uint16_t expectedNextBackOff = ( randomValToReturn % expectedNextJitterMax );
-
-        /* Call the RetryUtils_GetNextBackOff API a couple times. */
-        TEST_ASSERT_EQUAL( RetryUtilsSuccess,
-                           RetryUtils_GetNextBackOff( &retryParams, &nextBackOff ) );
-        TEST_ASSERT_EQUAL( expectedNextBackOff, *nextBackOff );
+        /* Set the random value to be generated as a value greater than
+         * the jitter max value for the next retry attempt. */
+        randomValToReturn = retryParams.nextJitterMax + 1;
 
         /* The jitter max value should double with the above call for use in next call. */
         expectedNextJitterMax *= 2;
+        TEST_ASSERT_LESS_THAN( TEST_BACKOFF_MAX_VALUE, expectedNextJitterMax );
 
         /* The number of attempts should be updated by the above API call. */
         expectedAttemptsDone++;
 
+        /* As the random value is greater than the jitter max value, the expected
+         * next backoff value should be truncated to a value within the jitter window
+         * for the retry attempt. */
+        uint16_t expectedNextBackOff = ( randomValToReturn % ( retryParams.nextJitterMax + 1U ) );
+
+        /* Call the RetryUtils_GetNextBackOff API a couple times. */
+        TEST_ASSERT_EQUAL( RetryUtilsSuccess,
+                           RetryUtils_GetNextBackOff( &retryParams, &nextBackOff ) );
+        TEST_ASSERT_EQUAL( expectedNextBackOff, nextBackOff );
+
         /* Verify that the context data for expected data after the API call. */
         verifyContextData( &retryParams,
                            expectedAttemptsDone,
-                           expectedNextJitterMax
+                           expectedNextJitterMax,
                            TEST_BACKOFF_MAX_VALUE,
                            TEST_MAX_ATTEMPTS,
                            mockRngThatSucceeds );
@@ -255,13 +264,13 @@ void test_retryUtils_GetNextBackOff_Attempts_Exhausted()
     TEST_ASSERT_EQUAL( RetryUtilsRetriesExhausted,
                        RetryUtils_GetNextBackOff( &retryParams, &nextBackOff ) );
     /* Make sure that the value of the output parameter has not changed. */
-    TEST_ASSERT_EQUAL( 0, *nextBackOff );
+    TEST_ASSERT_EQUAL( 0, nextBackOff );
 
     /* Make sure that the context data has not changed as the call to
      * RetryUtils_GetNextBackOff failed. */
     verifyContextData( &retryParams,
-                       0,
-                       TEST_BACKOFF_BASE_VALUE
+                       TEST_MAX_ATTEMPTS /* Number of attempts shouldn't change */,
+                       TEST_BACKOFF_BASE_VALUE,
                        TEST_BACKOFF_MAX_VALUE,
                        TEST_MAX_ATTEMPTS,
                        mockRngThatSucceeds );
@@ -276,25 +285,25 @@ void test_RetryUtils_GetNextBackOff_Returns_Cap_BackOff( void )
     /* Initialize to 0 attempts, so the max value of next jitter will increase. */
     retryParams.attemptsDone = 0U;
 
-    /* Set the returned random value to the maximum backoff value to expect
-     * that the maximum backoff value is the returned next backoff.*/
-    randomValToReturn = TEST_BACKOFF_MAX_VALUE;
-
     /* Update the next jitter value to greater than half the maximum backoff so
-     * that the GetNextBackOff API updates the next jitter value to the configured
-     * maximum backoff value. */
+     * that the RetryUtils_GetNextBackOff API updates the next jitter value to
+     * the configured maximum backoff value. */
     retryParams.nextJitterMax = ( TEST_BACKOFF_MAX_VALUE / 2U ) + 1;
 
-    uint16_t expectedBackOffVal = ( randomValToReturn % retryParams.nextJitterMax );
+    /* Set the random value to be generated equal to the current jitter max value.
+     * Thus, the RetryUtils_GetNextBackOff API should return the random value as
+     * the next back-off value. */
+    randomValToReturn = retryParams.nextJitterMax;
+    uint16_t expectedBackOffVal = randomValToReturn;
 
     /* Call the RetryUtils_GetNextBackOff API. */
     TEST_ASSERT_EQUAL( RetryUtilsSuccess,
                        RetryUtils_GetNextBackOff( &retryParams, &nextBackOff ) );
     /* Make sure that the expected value is returned for the next backoff. */
-    TEST_ASSERT_EQUAL( expectedBackOffVal, *nextBackOff );
+    TEST_ASSERT_EQUAL( expectedBackOffVal, nextBackOff );
 
-    /* Verify that the next jitter max value has been set to the cap value in the
-     * context by the API. */
+    /* Verify that the next jitter max value has been set to the cap back-off value
+     * configured in the context. */
     verifyContextData( &retryParams,
                        1,
                        TEST_BACKOFF_MAX_VALUE /* New jitter max */,
@@ -302,12 +311,18 @@ void test_RetryUtils_GetNextBackOff_Returns_Cap_BackOff( void )
                        TEST_MAX_ATTEMPTS,
                        mockRngThatSucceeds );
 
+
+    /* Now, set the random value to be generated as the maximum back-off value to
+     * expect that the next back-off value returned by the API is the maximum
+     * back-off value.*/
+    randomValToReturn = TEST_BACKOFF_MAX_VALUE;
+
     /* Call RetryUtils_GetNextBackOff API again to verify that it now returns the
      * cap value as the next back-off value. */
     TEST_ASSERT_EQUAL( RetryUtilsSuccess,
                        RetryUtils_GetNextBackOff( &retryParams, &nextBackOff ) );
     /* Make sure that the capped backoff value is returned as the next backoff value . */
-    TEST_ASSERT_EQUAL( TEST_BACKOFF_MAX_VALUE, *nextBackOff );
+    TEST_ASSERT_EQUAL( TEST_BACKOFF_MAX_VALUE, nextBackOff );
 
     /* Verify that the context data for expected data after the API call. */
     verifyContextData( &retryParams,
@@ -341,7 +356,7 @@ void test_RetryUtils_GetNextBackOff_Returns_Rand_Val( void )
     TEST_ASSERT_EQUAL( RetryUtilsSuccess,
                        RetryUtils_GetNextBackOff( &retryParams, &nextBackOff ) );
     /* Make sure that zero is returned as the next backoff value . */
-    TEST_ASSERT_EQUAL( 0, *nextBackOff );
+    TEST_ASSERT_EQUAL( 0, nextBackOff );
 
     /* Verify that the context data for expected data after the API call. */
     verifyContextData( &retryParams,

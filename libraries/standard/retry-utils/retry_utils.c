@@ -27,9 +27,8 @@
  */
 
 /* Standard includes. */
-#include <unistd.h>
 #include <stdlib.h>
-#include <time.h>
+#include <assert.h>
 
 /* Include API header. */
 #include "retry_utils.h"
@@ -37,7 +36,7 @@
 /*-----------------------------------------------------------*/
 
 RetryUtilsStatus_t RetryUtils_GetNextBackOff( RetryUtilsContext_t * pRetryContext,
-                                              uint32_t * pNextBackOff )
+                                              uint16_t * pNextBackOff )
 {
     RetryUtilsStatus_t status = RetryUtilsSuccess;
     int32_t randomVal = 0;
@@ -55,30 +54,28 @@ RetryUtilsStatus_t RetryUtils_GetNextBackOff( RetryUtilsContext_t * pRetryContex
         }
         else
         {
-            assert( randomVal > 0 );
+            /*assert( randomVal > 0 ); */
 
             /* The next backoff value is a random value between 0 and the maximum jitter value
              * for the retry attempt. */
 
             /* Choose a random value for back-off time between 0 and the max jitter value. */
-            *pNextBackOff = ( uint16_t ) ( randomVal % pRetryContext->nextJitterMax );
+            *pNextBackOff = ( uint16_t ) ( randomVal % ( pRetryContext->nextJitterMax + 1U ) );
 
             /* Increment the retry attempt. */
             pRetryContext->attemptsDone++;
-        }
 
-        /* Double the max jitter value for the next retry attempt, only
-         * if the new value will be less than the max backoff time value. */
-        if( pRetryContext->nextJitterMax < ( pRetryContext->maxBackOffDelay / 2U ) )
-        {
-            pRetryContext->nextJitterMax += pRetryContext->nextJitterMax;
+            /* Double the max jitter value for the next retry attempt, only
+             * if the new value will be less than the max backoff time value. */
+            if( pRetryContext->nextJitterMax < ( pRetryContext->maxBackOffDelay / 2U ) )
+            {
+                pRetryContext->nextJitterMax += pRetryContext->nextJitterMax;
+            }
+            else
+            {
+                pRetryContext->nextJitterMax = pRetryContext->maxBackOffDelay;
+            }
         }
-        else
-        {
-            pRetryContext->nextJitterMax = pRetryContext->maxBackOffDelay;
-        }
-
-        status = RetryUtilsSuccess;
     }
     else
     {
@@ -99,7 +96,7 @@ void RetryUtils_InitializeParams( RetryUtilsContext_t * pContext,
                                   uint32_t maxAttempts,
                                   RetryUtils_RNG_t pRng )
 {
-    assert( pContext != NULL );
+    /*assert( pContext != NULL ); */
 
     /* Initialize the context with parameters used in calculating the backoff
      * value for the next retry attempt. */
