@@ -138,8 +138,10 @@ void tearDown( void )
 
     if( OTA_ERR_NONE != result )
     {
-        LogError( ( "Error aborting xOtaFile with code: %d", result ) );
+        LogError( ( "Error aborting otaFile with code: %d", result ) );
     }
+
+    unlink( "PlatformImageState.txt" );
 }
 
 /* ========================================================================== */
@@ -518,6 +520,28 @@ void test_OTAPAL_CloseFile_NonexistingCodeSignerCertificate( void )
 }
 
 /**
+ * @brief Test that prvPAL_ResetDevice will return correct result code.
+ */
+void test_OTAPAL_ResetDevice_NullFileContext( void )
+{
+    OtaErr_t result = OTA_ERR_UNINITIALIZED;
+    
+    result = prvPAL_ResetDevice( NULL );
+    TEST_ASSERT_EQUAL(OTA_ERR_NULL_FILE_PTR, result );
+}
+
+/**
+ * @brief Test that prvPAL_WriteBlock will return correct result code.
+ */
+void test_OTAPAL_ActivateNewImage_NullFileContext( void )
+{
+    OtaErr_t result = OTA_ERR_UNINITIALIZED;
+    
+    result = prvPAL_ActivateNewImage( NULL );
+    TEST_ASSERT_EQUAL(OTA_ERR_NULL_FILE_PTR, result );
+}
+
+/**
  * @brief Set the platform state to self-test and verify success.
  */
 void test_OTAPAL_SetPlatformImageState_SelfTestImageState( void)
@@ -525,6 +549,7 @@ void test_OTAPAL_SetPlatformImageState_SelfTestImageState( void)
     OtaErr_t result;
 
     OtaImageState_t eImageState = OtaImageStateUnknown;
+    OtaPalImageState_t palImageState = OtaPalImageStateUnknown;
 
     /* Create a local file again using the PAL. */
     otaFile.pFilePath = ( uint8_t * ) otatestpalFIRMWARE_FILE;
@@ -553,9 +578,9 @@ void test_OTAPAL_SetPlatformImageState_SelfTestImageState( void)
         /* [**]All platforms need a reboot of a successfully close image in order to return
          * eOTA_PAL_ImageState_PendingCommit from prvPAL_GetPlatformImageState(). So this cannot be tested.
          */
-
-        /*ePalImageState = prvPAL_GetPlatformImageState();
-         * TEST_ASSERT_EQUAL_INT( eOTA_PAL_ImageState_PendingCommit, ePalImageState ); */
+        /* For Linux platform, this can be read directly from the image state file */
+        palImageState = prvPAL_GetPlatformImageState( &otaFile );
+        TEST_ASSERT_EQUAL_INT( OtaPalImageStatePendingCommit, palImageState );
     }
 }
 
@@ -566,6 +591,7 @@ void test_OTAPAL_SetPlatformImageState_InvalidImageState( void )
 {
     OtaErr_t result;
     OtaImageState_t eImageState = OtaImageStateUnknown;
+    OtaPalImageState_t palImageState = OtaPalImageStateUnknown;
 
     /* Create a local file again using the PAL. */
     otaFile.pFilePath = ( uint8_t * ) otatestpalFIRMWARE_FILE;
@@ -588,6 +614,11 @@ void test_OTAPAL_SetPlatformImageState_InvalidImageState( void )
         eImageState = ( OtaImageState_t ) ( OtaLastImageState + 1 );
         result = prvPAL_SetPlatformImageState( &otaFile, eImageState );
         TEST_ASSERT_EQUAL( OTA_ERR_BAD_IMAGE_STATE, ( result & OTA_MAIN_ERR_MASK ) );
+
+        /* Read the platform image state to verify */
+        /* Nothing wrote to the image state file. Ota Pal Image state remain valid */
+        palImageState = prvPAL_GetPlatformImageState( &otaFile );
+        TEST_ASSERT_EQUAL_INT( OtaPalImageStateValid, palImageState );
     }
 }
 
@@ -598,6 +629,7 @@ void test_OTAPAL_SetPlatformImageState_UnknownImageState( void )
 {
     OtaErr_t result;
     OtaImageState_t eImageState = OtaImageStateUnknown;
+    OtaPalImageState_t palImageState = OtaPalImageStateUnknown;
 
     /* Create a local file again using the PAL. */
     otaFile.pFilePath = ( uint8_t * ) otatestpalFIRMWARE_FILE;
@@ -620,6 +652,11 @@ void test_OTAPAL_SetPlatformImageState_UnknownImageState( void )
         eImageState = OtaImageStateUnknown;
         result = prvPAL_SetPlatformImageState( &otaFile, eImageState );
         TEST_ASSERT_EQUAL( OTA_ERR_BAD_IMAGE_STATE, ( result & OTA_MAIN_ERR_MASK ) );
+
+        /* Read the platform image state to verify */
+        /* Nothing wrote to the image state file. Ota Pal Image state remain valid */
+        palImageState = prvPAL_GetPlatformImageState( &otaFile );
+        TEST_ASSERT_EQUAL_INT( OtaPalImageStateValid, palImageState );
     }
 }
 
@@ -632,6 +669,7 @@ void test_OTAPAL_SetPlatformImageState_RejectImageState( void )
 {
     OtaErr_t result;
     OtaImageState_t eImageState = OtaImageStateUnknown;
+    OtaPalImageState_t palImageState = OtaPalImageStateUnknown;
 
     /* Create a local file again using the PAL. */
     otaFile.pFilePath = ( uint8_t * ) otatestpalFIRMWARE_FILE;
@@ -653,6 +691,10 @@ void test_OTAPAL_SetPlatformImageState_RejectImageState( void )
         eImageState = OtaImageStateRejected;
         result = prvPAL_SetPlatformImageState( &otaFile, eImageState );
         TEST_ASSERT_EQUAL_INT( OTA_ERR_NONE, ( result & OTA_MAIN_ERR_MASK ) );
+
+        /* Read the platform image state to verify */
+        palImageState = prvPAL_GetPlatformImageState( &otaFile );
+        TEST_ASSERT_EQUAL_INT( OtaPalImageStateInvalid, palImageState );
     }
 }
 
@@ -664,6 +706,7 @@ void test_OTAPAL_SetPlatformImageState_AbortImageState( void )
 {
     OtaErr_t result;
     OtaImageState_t eImageState = OtaImageStateUnknown;
+    OtaPalImageState_t palImageState = OtaPalImageStateUnknown;
 
     /* Create a local file again using the PAL. */
     otaFile.pFilePath = ( uint8_t * ) otatestpalFIRMWARE_FILE;
@@ -685,6 +728,10 @@ void test_OTAPAL_SetPlatformImageState_AbortImageState( void )
         eImageState = OtaImageStateAborted;
         result = prvPAL_SetPlatformImageState( &otaFile, eImageState );
         TEST_ASSERT_EQUAL_INT( OTA_ERR_NONE, ( result & OTA_MAIN_ERR_MASK ) );
+
+        /* Read the platform image state to verify */
+        palImageState = prvPAL_GetPlatformImageState( &otaFile );
+        TEST_ASSERT_EQUAL_INT( OtaPalImageStateInvalid, palImageState );
     }
 }
 
