@@ -25,8 +25,9 @@
  *
  * @brief Demo for showing how to use the Device Shadow library's API. This version
  * of Device Shadow API provide macros and helper functions for assembling MQTT topics
- * strings, and for determining whether an incoming MQTT message is related to the
- * device shadow. The Device Shadow library does not depend on a MQTT library,
+ * strings, and for determining whether an incoming MQTT message is related to a
+ * device shadow. The shadow can be either the Classic shadow or a named shadow. Change
+ * #SHADOW_NAME to select the shadow. The Device Shadow library does not depend on a MQTT library,
  * therefore the code for MQTT connections are placed in another file (shadow_demo_helpers.c)
  * to make it easy to read the code using Device Shadow library.
  *
@@ -68,6 +69,18 @@
 /* shadow demo helpers header. */
 #include "shadow_demo_helpers.h"
 
+
+/**
+ * @brief Predefined shadow name.
+ *
+ * Defaults to un-named "Classic" shadow. Change to a custom string to use a named shadow.
+ */
+#define SHADOW_NAME           SHADOW_NAME_CLASSIC
+
+/**
+ * @brief The length of #SHADOW_NAME.
+ */
+#define SHADOW_NAME_LENGTH    ( ( uint16_t ) ( sizeof( SHADOW_NAME ) - 1 ) )
 
 /**
  * @brief Format string representing a Shadow document with a "desired" state.
@@ -435,6 +448,8 @@ static void eventCallback( MQTTContext_t * pMqttContext,
     ShadowMessageType_t messageType = ShadowMessageTypeMaxNum;
     const char * pThingName = NULL;
     uint16_t thingNameLength = 0U;
+    const char * pShadowName = NULL;
+    uint16_t shadowNameLength = 0U;
     uint16_t packetIdentifier;
 
     ( void ) pMqttContext;
@@ -458,7 +473,9 @@ static void eventCallback( MQTTContext_t * pMqttContext,
                                                  pDeserializedInfo->pPublishInfo->topicNameLength,
                                                  &messageType,
                                                  &pThingName,
-                                                 &thingNameLength ) )
+                                                 &thingNameLength,
+                                                 &pShadowName,
+                                                 &shadowNameLength ) )
         {
             /* Upon successful return, the messageType has been filled in. */
             if( messageType == ShadowMessageTypeUpdateDelta )
@@ -505,13 +522,13 @@ static void eventCallback( MQTTContext_t * pMqttContext,
  * Device Shadow library to assemble strings for the MQTT topics defined
  * by AWS IoT Device Shadow. It uses these macros for topics to subscribe
  * to:
- * - SHADOW_TOPIC_STRING_UPDATE_DELTA for "$aws/things/thingName/shadow/update/delta"
- * - SHADOW_TOPIC_STRING_UPDATE_ACCEPTED for "$aws/things/thingName/shadow/update/accepted"
- * - SHADOW_TOPIC_STRING_UPDATE_REJECTED for "$aws/things/thingName/shadow/update/rejected"
+ * - SHADOW_TOPIC_STRING_UPDATE_DELTA for "$aws/things/thingName/shadow[/name/shadowname/]/update/delta"
+ * - SHADOW_TOPIC_STRING_UPDATE_ACCEPTED for "$aws/things/thingName/shadow[/name/shadowname/]/update/accepted"
+ * - SHADOW_TOPIC_STRING_UPDATE_REJECTED for "$aws/things/thingName/shadow[/name/shadowname/]/update/rejected"
  *
  * It also uses these macros for topics to publish to:
- * - SHADOW_TOPIC_STRING_DELETE for "$aws/things/thingName/shadow/delete"
- * - SHADOW_TOPIC_STRING_UPDATE for "$aws/things/thingName/shadow/update"
+ * - SHADOW_TOPIC_STRING_DELETE for "$aws/things/thingName/shadow[/name/shadowname/]/delete"
+ * - SHADOW_TOPIC_STRING_UPDATE for "$aws/things/thingName/shadow[/name/shadowname/]/update"
  *
  * The helper functions this demo uses for MQTT operations have internal
  * loops to process incoming messages. Those are not the focus of this demo
@@ -539,8 +556,8 @@ int main( int argc,
     else
     {
         /* First of all, try to delete any Shadow document in the cloud. */
-        returnStatus = PublishToTopic( SHADOW_TOPIC_STRING_DELETE( THING_NAME ),
-                                       SHADOW_TOPIC_LENGTH_DELETE( THING_NAME_LENGTH ),
+        returnStatus = PublishToTopic( SHADOW_TOPIC_STRING_DELETE( THING_NAME, SHADOW_NAME ),
+                                       SHADOW_TOPIC_LENGTH_DELETE( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ),
                                        updateDocument,
                                        0U );
 
@@ -548,26 +565,26 @@ int main( int argc,
          * to subscribe shadow topics. */
         if( returnStatus == EXIT_SUCCESS )
         {
-            returnStatus = SubscribeToTopic( SHADOW_TOPIC_STRING_UPDATE_DELTA( THING_NAME ),
-                                             SHADOW_TOPIC_LENGTH_UPDATE_DELTA( THING_NAME_LENGTH ) );
+            returnStatus = SubscribeToTopic( SHADOW_TOPIC_STRING_UPDATE_DELTA( THING_NAME, SHADOW_NAME ),
+                                             SHADOW_TOPIC_LENGTH_UPDATE_DELTA( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ) );
         }
 
         if( returnStatus == EXIT_SUCCESS )
         {
-            returnStatus = SubscribeToTopic( SHADOW_TOPIC_STRING_UPDATE_ACCEPTED( THING_NAME ),
-                                             SHADOW_TOPIC_LENGTH_UPDATE_ACCEPTED( THING_NAME_LENGTH ) );
+            returnStatus = SubscribeToTopic( SHADOW_TOPIC_STRING_UPDATE_ACCEPTED( THING_NAME, SHADOW_NAME ),
+                                             SHADOW_TOPIC_LENGTH_UPDATE_ACCEPTED( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ) );
         }
 
         if( returnStatus == EXIT_SUCCESS )
         {
-            returnStatus = SubscribeToTopic( SHADOW_TOPIC_STRING_UPDATE_REJECTED( THING_NAME ),
-                                             SHADOW_TOPIC_LENGTH_UPDATE_REJECTED( THING_NAME_LENGTH ) );
+            returnStatus = SubscribeToTopic( SHADOW_TOPIC_STRING_UPDATE_REJECTED( THING_NAME, SHADOW_NAME ),
+                                             SHADOW_TOPIC_LENGTH_UPDATE_REJECTED( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ) );
         }
 
-        /* This demo uses a constant #THING_NAME known at compile time therefore we can use macros to
-         * assemble shadow topic strings.
-         * If the thing name is known at run time, then we could use the API #Shadow_GetTopicString to
-         * assemble shadow topic strings, here is the example for /update/delta:
+        /* This demo uses a constant #THING_NAME and #SHADOW_NAME known at compile time therefore
+         * we can use macros to assemble shadow topic strings.
+         * If the thing name or shadow name is only known at run time, then we could use the API
+         * #Shadow_GetTopicString to assemble shadow topic strings, here is the example for /update/delta:
          *
          * For /update/delta:
          *
@@ -579,10 +596,14 @@ int main( int argc,
          * uint16_t outLength = 0;
          * const char * thingName = "TestThingName";
          * uint16_t thingNameLength  = ( sizeof( thingName ) - 1U );
+         * const char * shadowName = "TestShadowName";
+         * uint16_t shadowNameLength  = ( sizeof( shadowName ) - 1U );
          *
          * shadowStatus = Shadow_GetTopicString( SHADOW_TOPIC_STRING_TYPE_UPDATE_DELTA,
          *                                       thingName,
          *                                       thingNameLength,
+         *                                       shadowName,
+         *                                       shadowNameLength,
          *                                       & ( topicBuffer[ 0 ] ),
          *                                       bufferSize,
          *                                       & outLength );
@@ -610,8 +631,8 @@ int main( int argc,
                       ( int ) 1,
                       ( long unsigned ) ( Clock_GetTimeMs() % 1000000 ) );
 
-            returnStatus = PublishToTopic( SHADOW_TOPIC_STRING_UPDATE( THING_NAME ),
-                                           SHADOW_TOPIC_LENGTH_UPDATE( THING_NAME_LENGTH ),
+            returnStatus = PublishToTopic( SHADOW_TOPIC_STRING_UPDATE( THING_NAME, SHADOW_NAME ),
+                                           SHADOW_TOPIC_LENGTH_UPDATE( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ),
                                            updateDocument,
                                            ( SHADOW_DESIRED_JSON_LENGTH + 1 ) );
         }
@@ -642,8 +663,8 @@ int main( int argc,
                           ( int ) currentPowerOnState,
                           ( long unsigned ) clientToken );
 
-                returnStatus = PublishToTopic( SHADOW_TOPIC_STRING_UPDATE( THING_NAME ),
-                                               SHADOW_TOPIC_LENGTH_UPDATE( THING_NAME_LENGTH ),
+                returnStatus = PublishToTopic( SHADOW_TOPIC_STRING_UPDATE( THING_NAME, SHADOW_NAME ),
+                                               SHADOW_TOPIC_LENGTH_UPDATE( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ),
                                                updateDocument,
                                                ( SHADOW_DESIRED_JSON_LENGTH + 1 ) );
             }
@@ -656,20 +677,20 @@ int main( int argc,
         if( returnStatus == EXIT_SUCCESS )
         {
             LogInfo( ( "Start to unsubscribe shadow topics and disconnect from MQTT. \r\n" ) );
-            returnStatus = UnsubscribeFromTopic( SHADOW_TOPIC_STRING_UPDATE_DELTA( THING_NAME ),
-                                                 SHADOW_TOPIC_LENGTH_UPDATE_DELTA( THING_NAME_LENGTH ) );
+            returnStatus = UnsubscribeFromTopic( SHADOW_TOPIC_STRING_UPDATE_DELTA( THING_NAME, SHADOW_NAME ),
+                                                 SHADOW_TOPIC_LENGTH_UPDATE_DELTA( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ) );
         }
 
         if( returnStatus == EXIT_SUCCESS )
         {
-            returnStatus = UnsubscribeFromTopic( SHADOW_TOPIC_STRING_UPDATE_ACCEPTED( THING_NAME ),
-                                                 SHADOW_TOPIC_LENGTH_UPDATE_ACCEPTED( THING_NAME_LENGTH ) );
+            returnStatus = UnsubscribeFromTopic( SHADOW_TOPIC_STRING_UPDATE_ACCEPTED( THING_NAME, SHADOW_NAME ),
+                                                 SHADOW_TOPIC_LENGTH_UPDATE_ACCEPTED( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ) );
         }
 
         if( returnStatus == EXIT_SUCCESS )
         {
-            returnStatus = UnsubscribeFromTopic( SHADOW_TOPIC_STRING_UPDATE_REJECTED( THING_NAME ),
-                                                 SHADOW_TOPIC_LENGTH_UPDATE_REJECTED( THING_NAME_LENGTH ) );
+            returnStatus = UnsubscribeFromTopic( SHADOW_TOPIC_STRING_UPDATE_REJECTED( THING_NAME, SHADOW_NAME ),
+                                                 SHADOW_TOPIC_LENGTH_UPDATE_REJECTED( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ) );
         }
 
         /* The MQTT session is always disconnected, even there were prior failures. */

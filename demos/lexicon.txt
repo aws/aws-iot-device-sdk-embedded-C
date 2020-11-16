@@ -230,6 +230,8 @@ rom
 sdk
 sendupdate
 serverhost
+shadowname
+shadownamelength
 shadowstatus
 sizeof
 sni
@@ -252,6 +254,7 @@ tcp
 tcpportsarraylength
 tcpsocket
 teardown
+testshadowname
 testthingname
 thingname
 thingnamelength
@@ -266,6 +269,7 @@ ubuntu
 udp
 udpportsarraylength
 uint
+un
 unsub
 unsuback
 updatejobexecution

@@ -118,7 +118,7 @@
  * PUBLISH message and ack responses for QoS 1 and QoS 2 communications
  * with the broker.
  */
-#define MQTT_PROCESS_LOOP_TIMEOUT_MS        ( 700U )
+#define MQTT_PROCESS_LOOP_TIMEOUT_MS        ( 1000U )
 
 /**
  * @brief The exampled predefine thing name.
@@ -358,6 +358,8 @@ static void eventCallback( MQTTContext_t * pContext,
     ShadowMessageType_t messageType = ShadowMessageTypeMaxNum;
     const char * pThingName = NULL;
     uint16_t thingNameLength = 0U;
+    const char * pShadowName = NULL;
+    uint16_t shadowNameLength = 0U;
     uint16_t packetIdentifier;
 
     ( void ) pContext;
@@ -382,7 +384,9 @@ static void eventCallback( MQTTContext_t * pContext,
                                                  pDeserializedInfo->pPublishInfo->topicNameLength,
                                                  &messageType,
                                                  &pThingName,
-                                                 &thingNameLength ) )
+                                                 &thingNameLength,
+                                                 &pShadowName,
+                                                 &shadowNameLength ) )
         {
             /* Upon successful return, the messageType has been filled in. */
             if( messageType == ShadowMessageTypeUpdateDelta )
@@ -648,6 +652,110 @@ static MQTTStatus_t publishToTopic( MQTTContext_t * pContext,
     return mqttStatus;
 }
 
+/**
+ * @brief Subscribes the shadow topics: /update/delta, /update/documents,
+ * /update/accepted, /delete/accepted, /get/accepted, then publish the
+ * regarding payloads to verify if receiving the notification from the
+ * subscribed topics.
+ */
+#define TEST_SEQUENCE() \
+    {                   \
+        /* A buffer containing the update document. It has static duration to prevent \
+         * it from being placed on the call stack. */                                                                                    \
+        static char updateDocument[ 1 ] = { 0 };                                                                                         \
+                                                                                                                                         \
+        /* Subscribe to shadow topic /delete/accepted with Qos 0. */                                                                     \
+        TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic( &context,                                                                      \
+                                                          SHADOW_TOPIC_STRING_DELETE_ACCEPTED( THING_NAME, SHADOW_NAME ),                \
+                                                          SHADOW_TOPIC_LENGTH_DELETE_ACCEPTED( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ),  \
+                                                          MQTTQoS0 ) );                                                                  \
+                                                                                                                                         \
+        /* Subscribe to shadow topic /delete/rejected with Qos 0. */                                                                     \
+        TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic( &context,                                                                      \
+                                                          SHADOW_TOPIC_STRING_DELETE_REJECTED( THING_NAME, SHADOW_NAME ),                \
+                                                          SHADOW_TOPIC_LENGTH_DELETE_REJECTED( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ),  \
+                                                          MQTTQoS0 ) );                                                                  \
+                                                                                                                                         \
+        /* Subscribe to shadow topic /get/accepted with Qos 0. */                                                                        \
+        TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic( &context,                                                                      \
+                                                          SHADOW_TOPIC_STRING_GET_ACCEPTED( THING_NAME, SHADOW_NAME ),                   \
+                                                          SHADOW_TOPIC_LENGTH_GET_ACCEPTED( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ),     \
+                                                          MQTTQoS0 ) );                                                                  \
+                                                                                                                                         \
+        /* Subscribe to shadow topic /get/rejected with Qos 0. */                                                                        \
+        TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic( &context,                                                                      \
+                                                          SHADOW_TOPIC_STRING_GET_REJECTED( THING_NAME, SHADOW_NAME ),                   \
+                                                          SHADOW_TOPIC_LENGTH_GET_REJECTED( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ),     \
+                                                          MQTTQoS0 ) );                                                                  \
+                                                                                                                                         \
+        /* Subscribe to shadow topic /update/accepted with Qos 0. */                                                                     \
+        TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic( &context,                                                                      \
+                                                          SHADOW_TOPIC_STRING_UPDATE_ACCEPTED( THING_NAME, SHADOW_NAME ),                \
+                                                          SHADOW_TOPIC_LENGTH_UPDATE_ACCEPTED( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ),  \
+                                                          MQTTQoS0 ) );                                                                  \
+                                                                                                                                         \
+        /* Subscribe to shadow topic /update/rejected with Qos 0. */                                                                     \
+        TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic( &context,                                                                      \
+                                                          SHADOW_TOPIC_STRING_UPDATE_REJECTED( THING_NAME, SHADOW_NAME ),                \
+                                                          SHADOW_TOPIC_LENGTH_UPDATE_REJECTED( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ),  \
+                                                          MQTTQoS0 ) );                                                                  \
+                                                                                                                                         \
+        /* Subscribe to shadow topic /update/delta with Qos 0. */                                                                        \
+        TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic( &context,                                                                      \
+                                                          SHADOW_TOPIC_STRING_UPDATE_DELTA( THING_NAME, SHADOW_NAME ),                   \
+                                                          SHADOW_TOPIC_LENGTH_UPDATE_DELTA( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ),     \
+                                                          MQTTQoS0 ) );                                                                  \
+                                                                                                                                         \
+        /* Subscribe to shadow topic /update/documents with Qos 0. */                                                                    \
+        TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic( &context,                                                                      \
+                                                          SHADOW_TOPIC_STRING_UPDATE_DOCUMENTS( THING_NAME, SHADOW_NAME ),               \
+                                                          SHADOW_TOPIC_LENGTH_UPDATE_DOCUMENTS( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ), \
+                                                          MQTTQoS0 ) );                                                                  \
+                                                                                                                                         \
+        /* First of all, try to delete any Shadow document in the cloud. \
+         * This could trigger the /delete/accepted or /delete/rejected \
+         * based on the thing status on the cloud. \
+         */                                                                                                    \
+        TEST_ASSERT_EQUAL( MQTTSuccess, publishToTopic( &context,                                              \
+                                                        SHADOW_TOPIC_STRING_DELETE( THING_NAME, SHADOW_NAME ), \
+                                                        updateDocument,                                        \
+                                                        MQTTQoS0 ) );                                          \
+                                                                                                               \
+        /* Check the flag for /delete/accepted or /delete/rejected. */                                         \
+        TEST_ASSERT_TRUE( ( receivedDeleteAcceptedResult || receivedDeleteRejectedResult ) );                  \
+                                                                                                               \
+        /* Publish to the shadow topic /update with reported payload, \
+         *  that we subscribed to, with Qos 0. */                                                                                        \
+        TEST_ASSERT_EQUAL( MQTTSuccess, publishToTopic( &context,                                                                        \
+                                                        SHADOW_TOPIC_STRING_UPDATE( THING_NAME, SHADOW_NAME ),                           \
+                                                        TEST_SHADOW_DESIRED,                                                             \
+                                                        MQTTQoS0 ) );                                                                    \
+                                                                                                                                         \
+        /* Check the flag for /update/documents*/                                                                                        \
+        TEST_ASSERT_TRUE( receivedUpdateDocumentsResult );                                                                               \
+                                                                                                                                         \
+        /* Check the flag for /update/delta. */                                                                                          \
+        TEST_ASSERT_TRUE( receivedUpdateDeltaResult );                                                                                   \
+                                                                                                                                         \
+        /* Check the flag for /update/accepted and /update/rejected. */                                                                  \
+        TEST_ASSERT_TRUE( ( receivedUpdateAcceptedResult || receivedUpdateRejectedResult ) );                                            \
+                                                                                                                                         \
+        /* Finally, sending null payload on topic /get to trigger /get/accepted. */                                                      \
+        TEST_ASSERT_EQUAL( MQTTSuccess, publishToTopic( &context,                                                                        \
+                                                        SHADOW_TOPIC_STRING_GET( THING_NAME, SHADOW_NAME ),                              \
+                                                        updateDocument,                                                                  \
+                                                        MQTTQoS0 ) );                                                                    \
+                                                                                                                                         \
+        /* Check the flag for /get/accepted and /get/rejected. */                                                                        \
+        TEST_ASSERT_TRUE( ( receivedGetAcceptedResult || receivedGetRejectedResult ) );                                                  \
+                                                                                                                                         \
+        /* Un-subscribe from a topic with Qos 0. */                                                                                      \
+        TEST_ASSERT_EQUAL( MQTTSuccess, unsubscribeFromTopic( &context,                                                                  \
+                                                              SHADOW_TOPIC_STRING_UPDATE_DELTA( THING_NAME, SHADOW_NAME ),               \
+                                                              SHADOW_TOPIC_LENGTH_UPDATE_DELTA( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ), \
+                                                              MQTTQoS0 ) );                                                              \
+    };
+
 /* ============================   UNITY FIXTURES ============================ */
 
 /* Called before each test method. */
@@ -725,105 +833,31 @@ void tearDown( void )
 /* ========================== Test Cases ============================ */
 
 /**
- * @brief Subscribes the shadow topics: /update/delta, /update/documents,
+ * @brief Subscribes the classic shadow topics: /update/delta, /update/documents,
  * /update/accepted, /delete/accepted, /get/accepted, then publish the
  * regarding payloads to verify if receiving the notification from the
  * subscribed topics.
  */
-void test_Shadow_System( void )
+void test_Shadow_System_Classic( void )
 {
-    /* A buffer containing the update document. It has static duration to prevent
-     * it from being placed on the call stack. */
-    static char updateDocument[ 1 ] = { 0 };
+#define SHADOW_NAME           SHADOW_NAME_CLASSIC
+#define SHADOW_NAME_LENGTH    ( ( uint16_t ) ( sizeof( SHADOW_NAME ) - 1 ) )
 
-    /* Subscribe to shadow topic /delete/accepted with Qos 0. */
-    TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic( &context,
-                                                      SHADOW_TOPIC_STRING_DELETE_ACCEPTED( THING_NAME ),
-                                                      SHADOW_TOPIC_LENGTH_DELETE_ACCEPTED( THING_NAME_LENGTH ),
-                                                      MQTTQoS0 ) );
+    TEST_SEQUENCE();
+}
 
-    /* Subscribe to shadow topic /delete/rejected with Qos 0. */
-    TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic( &context,
-                                                      SHADOW_TOPIC_STRING_DELETE_REJECTED( THING_NAME ),
-                                                      SHADOW_TOPIC_LENGTH_DELETE_REJECTED( THING_NAME_LENGTH ),
-                                                      MQTTQoS0 ) );
+/**
+ * @brief Subscribes the named shadow topics: /update/delta, /update/documents,
+ * /update/accepted, /delete/accepted, /get/accepted, then publish the
+ * regarding payloads to verify if receiving the notification from the
+ * subscribed topics.
+ */
+void test_Shadow_System_Named( void )
+{
+#undef SHADOW_NAME
+#undef SHADOW_NAME_LENGTH
+#define SHADOW_NAME           "testShadowName"
+#define SHADOW_NAME_LENGTH    ( ( uint16_t ) ( sizeof( SHADOW_NAME ) - 1 ) )
 
-    /* Subscribe to shadow topic /get/accepted with Qos 0. */
-    TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic( &context,
-                                                      SHADOW_TOPIC_STRING_GET_ACCEPTED( THING_NAME ),
-                                                      SHADOW_TOPIC_LENGTH_GET_ACCEPTED( THING_NAME_LENGTH ),
-                                                      MQTTQoS0 ) );
-
-    /* Subscribe to shadow topic /get/rejected with Qos 0. */
-    TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic( &context,
-                                                      SHADOW_TOPIC_STRING_GET_REJECTED( THING_NAME ),
-                                                      SHADOW_TOPIC_LENGTH_GET_REJECTED( THING_NAME_LENGTH ),
-                                                      MQTTQoS0 ) );
-
-    /* Subscribe to shadow topic /update/accepted with Qos 0. */
-    TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic( &context,
-                                                      SHADOW_TOPIC_STRING_UPDATE_ACCEPTED( THING_NAME ),
-                                                      SHADOW_TOPIC_LENGTH_UPDATE_ACCEPTED( THING_NAME_LENGTH ),
-                                                      MQTTQoS0 ) );
-
-    /* Subscribe to shadow topic /update/rejected with Qos 0. */
-    TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic( &context,
-                                                      SHADOW_TOPIC_STRING_UPDATE_REJECTED( THING_NAME ),
-                                                      SHADOW_TOPIC_LENGTH_UPDATE_REJECTED( THING_NAME_LENGTH ),
-                                                      MQTTQoS0 ) );
-
-    /* Subscribe to shadow topic /update/delta with Qos 0. */
-    TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic( &context,
-                                                      SHADOW_TOPIC_STRING_UPDATE_DELTA( THING_NAME ),
-                                                      SHADOW_TOPIC_LENGTH_UPDATE_DELTA( THING_NAME_LENGTH ),
-                                                      MQTTQoS0 ) );
-
-    /* Subscribe to shadow topic /update/documents with Qos 0. */
-    TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic( &context,
-                                                      SHADOW_TOPIC_STRING_UPDATE_DOCUMENTS( THING_NAME ),
-                                                      SHADOW_TOPIC_LENGTH_UPDATE_DOCUMENTS( THING_NAME_LENGTH ),
-                                                      MQTTQoS0 ) );
-
-    /* First of all, try to delete any Shadow document in the cloud.
-     * This could trigger the /delete/accepted or /delete/rejected
-     * based on the thing status on the cloud.
-     */
-    TEST_ASSERT_EQUAL( MQTTSuccess, publishToTopic( &context,
-                                                    SHADOW_TOPIC_STRING_DELETE( THING_NAME ),
-                                                    updateDocument,
-                                                    MQTTQoS0 ) );
-
-    /* Check the flag for /delete/accepted or /delete/rejected. */
-    TEST_ASSERT_TRUE( ( receivedDeleteAcceptedResult || receivedDeleteRejectedResult ) );
-
-    /* Publish to the shadow topic /update with reported payload,
-     *  that we subscribed to, with Qos 0. */
-    TEST_ASSERT_EQUAL( MQTTSuccess, publishToTopic( &context,
-                                                    SHADOW_TOPIC_STRING_UPDATE( THING_NAME ),
-                                                    TEST_SHADOW_DESIRED,
-                                                    MQTTQoS0 ) );
-
-    /* Check the flag for /update/documents*/
-    TEST_ASSERT_TRUE( receivedUpdateDocumentsResult );
-
-    /* Check the flag for /update/delta. */
-    TEST_ASSERT_TRUE( receivedUpdateDeltaResult );
-
-    /* Check the flag for /update/accepted and /update/rejected. */
-    TEST_ASSERT_TRUE( ( receivedUpdateAcceptedResult || receivedUpdateRejectedResult ) );
-
-    /* Finally, sending null payload on topic /get to trigger /get/accepted. */
-    TEST_ASSERT_EQUAL( MQTTSuccess, publishToTopic( &context,
-                                                    SHADOW_TOPIC_STRING_GET( THING_NAME ),
-                                                    updateDocument,
-                                                    MQTTQoS0 ) );
-
-    /* Check the flag for /get/accepted and /get/rejected. */
-    TEST_ASSERT_TRUE( ( receivedGetAcceptedResult || receivedGetRejectedResult ) );
-
-    /* Un-subscribe from a topic with Qos 0. */
-    TEST_ASSERT_EQUAL( MQTTSuccess, unsubscribeFromTopic( &context,
-                                                          SHADOW_TOPIC_STRING_UPDATE_DELTA( THING_NAME ),
-                                                          SHADOW_TOPIC_LENGTH_UPDATE_DELTA( THING_NAME_LENGTH ),
-                                                          MQTTQoS0 ) );
+    TEST_SEQUENCE();
 }
