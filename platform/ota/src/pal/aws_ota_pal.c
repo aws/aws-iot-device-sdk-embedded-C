@@ -565,7 +565,8 @@ OtaPalImageState_t prvPAL_GetPlatformImageState( OtaFileContext_t * const C )
     OtaImageState_t eSavedAgentState = OtaImageStateUnknown;
     OtaPalImageState_t ePalState = OtaPalImageStateUnknown;
 
-
+    if( C != NULL )
+    {
         pPlatformImageState = fopen( "PlatformImageState.txt", "r+b" ); /*lint !e586
                                                                          * C standard library call is being used for portability. */
 
@@ -606,7 +607,12 @@ OtaPalImageState_t prvPAL_GetPlatformImageState( OtaFileContext_t * const C )
             /* If no image state file exists, assume a factory image. */
             ePalState = OtaPalImageStateValid; /*lint !e64 Allow assignment. */
         }
-        
+    }
+    else
+    {
+        LogError( ( "File context is NULL." ) );
+    }
+
     return ePalState; /*lint !e64 !e480 !e481 I/O calls and return type are used per design. */
 }
 
