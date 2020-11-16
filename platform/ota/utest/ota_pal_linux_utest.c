@@ -115,10 +115,10 @@ static OtaFileContext_t otaFile;
  */
 #define otatestpalCERTIFICATE_FILE    "../../../platform/ota/utest/test_files/ecdsa-sha256-signer.crt.pem"
 
- /**
+/**
  * @brief Some devices have a hard-coded name for the firmware image to boot.
  */
-#define otatestpalFIRMWARE_FILE  "dummy.bin"
+#define otatestpalFIRMWARE_FILE       "dummy.bin"
 
 
 /* ============================   UNITY FIXTURES ============================ */
@@ -152,8 +152,8 @@ void tearDown( void )
 void test_OTAPAL_Abort_NullFileContext( void )
 {
     OtaErr_t result = OTA_ERR_UNINITIALIZED;
-    
-    result = prvPAL_Abort(NULL);
+
+    result = prvPAL_Abort( NULL );
 
     TEST_ASSERT_EQUAL( OTA_ERR_FILE_ABORT, result );
 }
@@ -175,18 +175,18 @@ void test_OTAPAL_Abort_NullFileHandle( void )
 /**
  * @brief Test that prvPAL_Abort will return correct result code.
  */
-// void test_OTAPAL_Abort_InvalidFileHandle( void )
-// {
-//     OtaErr_t result = OTA_ERR_UNINITIALIZED;
+/* void test_OTAPAL_Abort_InvalidFileHandle( void ) */
+/* { */
+/*     OtaErr_t result = OTA_ERR_UNINITIALIZED; */
 
-//     otaFile.pFilePath = ( uint8_t *) otatestpalFIRMWARE_FILE;
-//     result = prvPAL_CreateFileForRx( &otaFile) ;
-//     TEST_ASSERT_EQUAL( OTA_ERR_NONE, result );
+/*     otaFile.pFilePath = ( uint8_t *) otatestpalFIRMWARE_FILE; */
+/*     result = prvPAL_CreateFileForRx( &otaFile) ; */
+/*     TEST_ASSERT_EQUAL( OTA_ERR_NONE, result ); */
 
-//     otaFile.pFile += 8;
-//     result = prvPAL_Abort( &otaFile );
-//     TEST_ASSERT_EQUAL( OTA_ERR_FILE_ABORT, ( result & OTA_MAIN_ERR_MASK));
-// }
+/*     otaFile.pFile += 8; */
+/*     result = prvPAL_Abort( &otaFile ); */
+/*     TEST_ASSERT_EQUAL( OTA_ERR_FILE_ABORT, ( result & OTA_MAIN_ERR_MASK)); */
+/* } */
 
 /**
  * @brief Test that prvPAL_Abort will return correct result code.
@@ -195,8 +195,8 @@ void test_OTAPAL_Abort_ValidFileHandle( void )
 {
     OtaErr_t result = OTA_ERR_UNINITIALIZED;
 
-    otaFile.pFilePath = ( uint8_t *) otatestpalFIRMWARE_FILE;
-    result = prvPAL_CreateFileForRx( &otaFile) ;
+    otaFile.pFilePath = ( uint8_t * ) otatestpalFIRMWARE_FILE;
+    result = prvPAL_CreateFileForRx( &otaFile );
     TEST_ASSERT_EQUAL( OTA_ERR_NONE, result );
 
     result = prvPAL_Abort( &otaFile );
@@ -210,9 +210,9 @@ void test_OTAPAL_Abort_NonExistentFile( void )
 {
     OtaErr_t result = OTA_ERR_UNINITIALIZED;
 
-    otaFile.pFilePath = ( uint8_t *) ( "nonexistingfile.bin" );
-    result = prvPAL_Abort( &otaFile) ;
-    TEST_ASSERT_EQUAL( OTA_ERR_NONE, ( result & OTA_MAIN_ERR_MASK) );
+    otaFile.pFilePath = ( uint8_t * ) ( "nonexistingfile.bin" );
+    result = prvPAL_Abort( &otaFile );
+    TEST_ASSERT_EQUAL( OTA_ERR_NONE, ( result & OTA_MAIN_ERR_MASK ) );
 }
 
 /**
@@ -248,17 +248,17 @@ void test_OTAPAL_CreateFileForRx_FailedToCreateFile( void )
     OtaErr_t result = OTA_ERR_UNINITIALIZED;
 
     FILE * existingFile = fopen( otatestpalFIRMWARE_FILE, "r" );
+
     chmod( otatestpalFIRMWARE_FILE, S_IRUSR );
-    otaFile.pFilePath = ( uint8_t *) otatestpalFIRMWARE_FILE;
+    otaFile.pFilePath = ( uint8_t * ) otatestpalFIRMWARE_FILE;
 
     /* Create a file that exists with w+b mode */
     result = prvPAL_CreateFileForRx( &otaFile );
-    TEST_ASSERT_EQUAL( OTA_ERR_RX_FILE_CREATE_FAILED, ( result & OTA_MAIN_ERR_MASK) );
+    TEST_ASSERT_EQUAL( OTA_ERR_RX_FILE_CREATE_FAILED, ( result & OTA_MAIN_ERR_MASK ) );
 
     chmod( otatestpalFIRMWARE_FILE, S_IRWXU );
     result = prvPAL_CreateFileForRx( &otaFile );
-    TEST_ASSERT_EQUAL( OTA_ERR_NONE, ( result & OTA_MAIN_ERR_MASK) );
-    
+    TEST_ASSERT_EQUAL( OTA_ERR_NONE, ( result & OTA_MAIN_ERR_MASK ) );
 }
 
 /**
@@ -268,8 +268,8 @@ void test_OTAPAL_CreateFileForRx_ValidFileHandle( void )
 {
     OtaErr_t result = OTA_ERR_UNINITIALIZED;
 
-    otaFile.pFilePath = ( uint8_t *) otatestpalFIRMWARE_FILE;
-    result = prvPAL_CreateFileForRx( &otaFile) ;
+    otaFile.pFilePath = ( uint8_t * ) otatestpalFIRMWARE_FILE;
+    result = prvPAL_CreateFileForRx( &otaFile );
     TEST_ASSERT_EQUAL( OTA_ERR_NONE, result );
 }
 
@@ -283,7 +283,7 @@ void test_OTAPAL_WriteBlock_NullFileContext( void )
     uint8_t data = 0xAA;
 
     result = prvPAL_WriteBlock( NULL, 0, &data, 1 );
-    TEST_ASSERT_EQUAL(OTA_ERR_NONE, result+1 );
+    TEST_ASSERT_EQUAL( OTA_ERR_NONE, result + 1 );
 }
 
 
@@ -344,7 +344,6 @@ void test_OTAPAL_WriteBlock_WriteManyBlocks( void )
  */
 void test_OTAPAL_WriteBlock_FseekError( void )
 {
-    
 }
 
 /**
@@ -352,7 +351,6 @@ void test_OTAPAL_WriteBlock_FseekError( void )
  */
 void test_OTAPAL_WriteBlock_FwriteError( void )
 {
-    
 }
 
 void test_OTAPAL_CloseFile_ValidSignature( void )
@@ -497,9 +495,9 @@ void test_OTAPAL_CloseFile_NonexistingCodeSignerCertificate( void )
     {
         /* Write data to the file. */
         result = prvPAL_WriteBlock( &otaFile,
-                                        0,
-                                        dummyData,
-                                        sizeof( dummyData ) );
+                                    0,
+                                    dummyData,
+                                    sizeof( dummyData ) );
         TEST_ASSERT_EQUAL( sizeof( dummyData ), result );
 
         /* Check the signature (not expected to be valid in this case). */
@@ -525,9 +523,9 @@ void test_OTAPAL_CloseFile_NonexistingCodeSignerCertificate( void )
 void test_OTAPAL_ResetDevice_NullFileContext( void )
 {
     OtaErr_t result = OTA_ERR_UNINITIALIZED;
-    
+
     result = prvPAL_ResetDevice( NULL );
-    TEST_ASSERT_EQUAL(OTA_ERR_NULL_FILE_PTR, result );
+    TEST_ASSERT_EQUAL( OTA_ERR_NULL_FILE_PTR, result );
 }
 
 /**
@@ -536,15 +534,15 @@ void test_OTAPAL_ResetDevice_NullFileContext( void )
 void test_OTAPAL_ActivateNewImage_NullFileContext( void )
 {
     OtaErr_t result = OTA_ERR_UNINITIALIZED;
-    
+
     result = prvPAL_ActivateNewImage( NULL );
-    TEST_ASSERT_EQUAL(OTA_ERR_NULL_FILE_PTR, result );
+    TEST_ASSERT_EQUAL( OTA_ERR_NULL_FILE_PTR, result );
 }
 
 /**
  * @brief Set the platform state to self-test and verify success.
  */
-void test_OTAPAL_SetPlatformImageState_SelfTestImageState( void)
+void test_OTAPAL_SetPlatformImageState_SelfTestImageState( void )
 {
     OtaErr_t result;
 
@@ -563,9 +561,9 @@ void test_OTAPAL_SetPlatformImageState_SelfTestImageState( void)
     {
         /* Write data to the file. */
         result = prvPAL_WriteBlock( &otaFile,
-                                        0,
-                                        dummyData,
-                                        sizeof( dummyData ) );
+                                    0,
+                                    dummyData,
+                                    sizeof( dummyData ) );
         TEST_ASSERT_EQUAL( sizeof( dummyData ), result );
 
         /* Set the image state. */
@@ -643,9 +641,9 @@ void test_OTAPAL_SetPlatformImageState_UnknownImageState( void )
     {
         /* Write data to the file. */
         result = prvPAL_WriteBlock( &otaFile,
-                                        0,
-                                        dummyData,
-                                        sizeof( dummyData ) );
+                                    0,
+                                    dummyData,
+                                    sizeof( dummyData ) );
         TEST_ASSERT_EQUAL( sizeof( dummyData ), result );
 
         /* Try to set an invalid image state. */
@@ -683,9 +681,9 @@ void test_OTAPAL_SetPlatformImageState_RejectImageState( void )
     {
         /* Write data to the file. */
         result = prvPAL_WriteBlock( &otaFile,
-                                        0,
-                                        dummyData,
-                                        sizeof( dummyData ) );
+                                    0,
+                                    dummyData,
+                                    sizeof( dummyData ) );
         TEST_ASSERT_EQUAL( sizeof( dummyData ), result );
 
         eImageState = OtaImageStateRejected;
@@ -720,9 +718,9 @@ void test_OTAPAL_SetPlatformImageState_AbortImageState( void )
     {
         /* Write data to the file. */
         result = prvPAL_WriteBlock( &otaFile,
-                                        0,
-                                        dummyData,
-                                        sizeof( dummyData ) );
+                                    0,
+                                    dummyData,
+                                    sizeof( dummyData ) );
         TEST_ASSERT_EQUAL( sizeof( dummyData ), result );
 
         eImageState = OtaImageStateAborted;
@@ -743,8 +741,7 @@ void test_OTAPAL_GetPlatformImageState_InvalidImageStateFromFileCloseFailure( vo
 {
     OtaErr_t result;
     Sig256_t sig = { 0 };
-    OtaPalImageState_t ePalImageState = OtaPalImageStateUnknown
-;
+    OtaPalImageState_t ePalImageState = OtaPalImageStateUnknown;
 
     /* TEST: Invalid image returned from prvPAL_GetPlatformImageState(). Using a failure to close. */
     /* Create a local file again using the PAL. */
@@ -759,9 +756,9 @@ void test_OTAPAL_GetPlatformImageState_InvalidImageStateFromFileCloseFailure( vo
     {
         /* Write data to the file. */
         result = prvPAL_WriteBlock( &otaFile,
-                                        0,
-                                        dummyData,
-                                        sizeof( dummyData ) );
+                                    0,
+                                    dummyData,
+                                    sizeof( dummyData ) );
         TEST_ASSERT_EQUAL( sizeof( dummyData ), result );
 
         /* Check the signature. */
@@ -780,8 +777,8 @@ void test_OTAPAL_GetPlatformImageState_InvalidImageStateFromFileCloseFailure( vo
         }
 
         /* The file failed to close, so it is invalid or in an unknown state. */
-        ePalImageState = prvPAL_GetPlatformImageState(&otaFile);
-        TEST_ASSERT( ( OtaPalImageStateInvalid == ePalImageState ) || 
+        ePalImageState = prvPAL_GetPlatformImageState( &otaFile );
+        TEST_ASSERT( ( OtaPalImageStateInvalid == ePalImageState ) ||
                      ( OtaPalImageStateUnknown == ePalImageState ) );
     }
 }
