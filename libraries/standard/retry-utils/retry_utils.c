@@ -22,7 +22,7 @@
 
 /**
  * @file retry_utils.c
- * @brief Implementation of the retry utils API for the "Full Jitter" exponential backoff
+ * @brief Implementation of the retry utils API for a "Full Jitter" exponential backoff
  * with jitter strategy.
  */
 
@@ -48,14 +48,12 @@ RetryUtilsStatus_t RetryUtils_GetNextBackOff( RetryUtilsContext_t * pRetryContex
         /* Generate a random number. */
         randomVal = pRetryContext->pRng();
 
-        if( randomVal == -1 )
+        if( randomVal < 0 )
         {
             status = RetryUtilsRngFailure;
         }
         else
         {
-            /*assert( randomVal > 0 ); */
-
             /* The next backoff value is a random value between 0 and the maximum jitter value
              * for the retry attempt. */
 
@@ -96,7 +94,7 @@ void RetryUtils_InitializeParams( RetryUtilsContext_t * pContext,
                                   uint32_t maxAttempts,
                                   RetryUtils_RNG_t pRng )
 {
-    /*assert( pContext != NULL ); */
+    assert( pContext != NULL );
 
     /* Initialize the context with parameters used in calculating the backoff
      * value for the next retry attempt. */

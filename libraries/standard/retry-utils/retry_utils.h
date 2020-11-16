@@ -22,8 +22,9 @@
 
 /**
  * @file retry_utils.h
- * @brief Declaration of the exponential backoff with jitter retry utility functions
- * and constants. This represents the "Full Jitter" backoff strategy explained in the
+ * @brief Declaration of retry utility functions and constants for exponential backoff with
+ * jitter strategy of retry attempts.
+ * This library represents the "Full Jitter" backoff strategy explained in the
  * following document.
  * https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/
  *
@@ -60,114 +61,6 @@
  * attempt until the maximum delay value is reached.<br>
  *
  * > sleep_seconds = random_between( 0, min( 2<sup>attempts_count</sup> * base_seconds, maximum_seconds ) )
- *
- * @section retryutils_implementation Implementing Retry Utils
- *
- * The functions that must be implemented are:<br>
- * - @ref RetryUtils_ParamsReset
- * - @ref RetryUtils_BackoffAndSleep
- *
- * The functions are used as shown in the diagram below. This is the exponential
- * backoff with jitter loop:
- *
- * @image html retry_utils_flow.png width=60%
- *
- * The following steps give guidance on implementing the Retry Utils. An example
- * implementation of the Retry Utils for a POSIX platform can be found in file
- * @ref retry_utils.c.
- *
- * -# Implementing @ref RetryUtils_ParamsReset
- * @snippet this define_retryutils_paramsreset
- *<br>
- * This function initializes @ref RetryUtilsParams_t. It is expected to set
- * @ref RetryUtilsParams_t.attemptsDone to zero. It is also expected to set
- * @ref RetryUtilsParams_t.nextJitterMax to @ref INITIAL_RETRY_BACKOFF_SECONDS
- * plus some random amount of seconds, jitter. This jitter is a random number
- * between 0 and @ref MAX_JITTER_VALUE_SECONDS. This function must be called
- * before entering the exponential backoff with jitter loop using
- * @ref RetryUtils_BackoffAndSleep.<br><br>
- * Please follow the example below to implement your own @ref RetryUtils_ParamsReset.
- * The lines with FIXME comments should be updated.
- * @code{c}
- * void RetryUtils_ParamsReset( RetryUtilsParams_t * pRetryParams )
- * {
- *     uint32_t jitter = 0;
- *
- *     // Reset attempts done to zero so that the next retry cycle can start.
- *     pRetryParams->attemptsDone = 0;
- *
- *     // Seed pseudo random number generator with the current time. FIXME: Your
- *     // system may have another method to retrieve the current time to seed the
- *     // pseudo random number generator.
- *     srand( time( NULL ) );
- *
- *     // Calculate jitter value using picking a random number.
- *     jitter = ( rand() % MAX_JITTER_VALUE_SECONDS );
- *
- *     // Reset the backoff value to the initial time out value plus jitter.
- *     pRetryParams->nextJitterMax = INITIAL_RETRY_BACKOFF_SECONDS + jitter;
- * }
- * @endcode<br>
- *
- * -# Implementing @ref RetryUtils_BackoffAndSleep
- * @snippet this define_retryutils_backoffandsleep
- * <br>
- * When this function is invoked, the calling task is expected to sleep a random
- * number of seconds between 0 and @ref RetryUtilsParams_t.nextJitterMax. After
- * sleeping this function must double @ref RetryUtilsParams_t.nextJitterMax, but
- * not exceeding @ref MAX_RETRY_BACKOFF_SECONDS. When @ref MAX_RETRY_ATTEMPTS are
- * reached, this function should return @ref RetryUtilsRetriesExhausted, unless
- * @ref MAX_RETRY_ATTEMPTS is set to zero.
- * When @ref RetryUtilsRetriesExhausted is returned, the calling application can
- * stop trying with a failure, or it can call @ref RetryUtils_ParamsReset again,
- * and restart the exponential back off with jitter loop.<br><br>
- * Please follow the example below to implement your own @ref RetryUtils_BackoffAndSleep.
- * The lines with FIXME comments should be updated.
- * @code{c}
- * RetryUtilsStatus_t RetryUtils_BackoffAndSleep( RetryUtilsParams_t * pRetryParams )
- * {
- *     RetryUtilsStatus_t status = RetryUtilsRetriesExhausted;
- *     // The quiet period delay in seconds.
- *     int backOffDelay = 0;
- *
- *     // If MAX_RETRY_ATTEMPTS is set to 0, try forever.
- *     if( ( pRetryParams->attemptsDone < MAX_RETRY_ATTEMPTS ) ||
- *         ( 0 == MAX_RETRY_ATTEMPTS ) )
- *     {
- *         // Choose a random value for back-off time between 0 and the max jitter value.
- *         backOffDelay = rand() % pRetryParams->nextJitterMax;
- *
- *         //  Wait for backoff time to expire for the next retry.
- *         ( void ) myThreadSleepFunction( backOffDelay ); // FIXME: Replace with your system's thread sleep function.
- *
- *         // Increment backoff counts.
- *         pRetryParams->attemptsDone++;
- *
- *         // Double the max jitter value for the next retry attempt, only
- *         // if the new value will be less than the max backoff time value.
- *         if( pRetryParams->nextJitterMax < ( MAX_RETRY_BACKOFF_SECONDS / 2U ) )
- *         {
- *             pRetryParams->nextJitterMax += pRetryParams->nextJitterMax;
- *         }
- *         else
- *         {
- *             pRetryParams->nextJitterMax = MAX_RETRY_BACKOFF_SECONDS;
- *         }
- *
- *         status = RetryUtilsSuccess;
- *     }
- *     else
- *     {
- *         // When max retry attempts are exhausted, let application know by
- *         // returning RetryUtilsRetriesExhausted. Application may choose to
- *         // restart the retry process after calling RetryUtils_ParamsReset().
- *         status = RetryUtilsRetriesExhausted;
- *         RetryUtils_ParamsReset( pRetryParams );
- *     }
- *
- *     return status;
- * }
- * @endcode
  */
 
 /**
@@ -184,7 +77,8 @@
  * to the library. The random number generator should be seeded with an entropy
  * source in the system.
  *
- * @return The random number if successful; otherwise -1 to indicate failure.
+ * @return The random number if successful; otherwise a negative value to indicate
+ * failure.
  */
 typedef int32_t ( * RetryUtils_RNG_t )();
 
@@ -197,7 +91,6 @@ typedef enum RetryUtilsStatus
     RetryUtilsRngFailure = 1,  /**< @brief The function encountered failure in generating random number. */
     RetryUtilsRetriesExhausted /**< @brief The function exhausted all retry attempts. */
 } RetryUtilsStatus_t;
-
 
 /**
  * @brief Represents parameters required for calculating the back-off delay for the

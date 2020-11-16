@@ -30,7 +30,7 @@
 /* Retry utils library include */
 #include "retry_utils.h"
 
-/* Return value of mockRngThatSucceeds. */
+/* Return value of mockRng. */
 static int32_t randomValToReturn;
 
 #define TEST_BACKOFF_BASE_VALUE    ( 1000 )
@@ -43,17 +43,9 @@ static RetryUtilsStatus_t retryUtilsStatus;
 static uint16_t nextBackOff;
 
 /**
- * @brief A mock random number generator that always returns failure.
+ * @brief A mock random number generator.
  */
-static int32_t mockRngThatFails()
-{
-    return -1;
-}
-
-/**
- * @brief A mock random number generator that always returns success.
- */
-static int32_t mockRngThatSucceeds()
+static int32_t mockRng()
 {
     return randomValToReturn;
 }
@@ -68,7 +60,7 @@ void setUp()
                                  TEST_BACKOFF_BASE_VALUE,
                                  TEST_BACKOFF_MAX_VALUE,
                                  TEST_MAX_ATTEMPTS,
-                                 mockRngThatSucceeds );
+                                 mockRng );
 }
 
 /* Called after each test method. */
@@ -119,13 +111,13 @@ void test_RetryUtils_InitializeParams_Sets_Jitter_Correctly( void )
                                  TEST_BACKOFF_BASE_VALUE,
                                  TEST_BACKOFF_MAX_VALUE,
                                  TEST_MAX_ATTEMPTS,
-                                 mockRngThatSucceeds );
+                                 mockRng );
     verifyContextData( &retryParams,
                        0,
                        TEST_BACKOFF_BASE_VALUE,
                        TEST_BACKOFF_MAX_VALUE,
                        TEST_MAX_ATTEMPTS,
-                       mockRngThatSucceeds );
+                       mockRng );
 }
 
 /**
@@ -134,25 +126,37 @@ void test_RetryUtils_InitializeParams_Sets_Jitter_Correctly( void )
  */
 void test_RetryUtils_GetNextBackOff_Rng_Failure( void )
 {
+    int32_t testNegativeVal[] = { -1, -10 };
+    uint iter = 0;
+
     /* Initialize context with random number generator that fails. */
     RetryUtils_InitializeParams( &retryParams,
                                  TEST_BACKOFF_BASE_VALUE,
                                  TEST_BACKOFF_MAX_VALUE,
                                  TEST_MAX_ATTEMPTS,
-                                 mockRngThatFails );
+                                 mockRng );
 
-    /* Make sure that the API function returns RNG failure.*/
-    TEST_ASSERT_EQUAL( RetryUtilsRngFailure,
-                       RetryUtils_GetNextBackOff( &retryParams, &nextBackOff ) );
+    /* Test the #RetryUtils_GetNextBackOff API with the 2 negative values
+     * from the mock random number generator. */
 
-    /* Make sure that the context data has not changed as the call to
-     * RetryUtils_GetNextBackOff failed. */
-    verifyContextData( &retryParams,
-                       0,
-                       TEST_BACKOFF_BASE_VALUE,
-                       TEST_BACKOFF_MAX_VALUE,
-                       TEST_MAX_ATTEMPTS,
-                       mockRngThatFails );
+    for( ; iter < sizeof( testNegativeVal ) / sizeof( int32_t ); iter++ )
+    {
+        /* Set the random value generated to be negative. */
+        randomValToReturn = testNegativeVal[ iter ];
+
+        /* Make sure that the API function returns RNG failure.*/
+        TEST_ASSERT_EQUAL( RetryUtilsRngFailure,
+                           RetryUtils_GetNextBackOff( &retryParams, &nextBackOff ) );
+
+        /* Make sure that the context data has not changed as the call to
+         * RetryUtils_GetNextBackOff failed. */
+        verifyContextData( &retryParams,
+                           0,
+                           TEST_BACKOFF_BASE_VALUE,
+                           TEST_BACKOFF_MAX_VALUE,
+                           TEST_MAX_ATTEMPTS,
+                           mockRng );
+    }
 }
 
 /**
@@ -199,7 +203,7 @@ void test_RetryUtils_GetNextBackOff_Success_RandVal_Less_Than_Jitter_Max( void )
                            expectedNextJitterMax,
                            TEST_BACKOFF_MAX_VALUE,
                            TEST_MAX_ATTEMPTS,
-                           mockRngThatSucceeds );
+                           mockRng );
     }
 }
 
@@ -246,7 +250,7 @@ void test_RetryUtils_GetNextBackOff_Success_RandVal_More_Than_Jitter_Max( void )
                            expectedNextJitterMax,
                            TEST_BACKOFF_MAX_VALUE,
                            TEST_MAX_ATTEMPTS,
-                           mockRngThatSucceeds );
+                           mockRng );
     }
 }
 
@@ -273,7 +277,7 @@ void test_retryUtils_GetNextBackOff_Attempts_Exhausted()
                        TEST_BACKOFF_BASE_VALUE,
                        TEST_BACKOFF_MAX_VALUE,
                        TEST_MAX_ATTEMPTS,
-                       mockRngThatSucceeds );
+                       mockRng );
 }
 
 /**
@@ -309,7 +313,7 @@ void test_RetryUtils_GetNextBackOff_Returns_Cap_BackOff( void )
                        TEST_BACKOFF_MAX_VALUE /* New jitter max */,
                        TEST_BACKOFF_MAX_VALUE,
                        TEST_MAX_ATTEMPTS,
-                       mockRngThatSucceeds );
+                       mockRng );
 
 
     /* Now, set the random value to be generated as the maximum back-off value to
@@ -330,7 +334,7 @@ void test_RetryUtils_GetNextBackOff_Returns_Cap_BackOff( void )
                        TEST_BACKOFF_MAX_VALUE /* jitter max remains unchanged */,
                        TEST_BACKOFF_MAX_VALUE,
                        TEST_MAX_ATTEMPTS,
-                       mockRngThatSucceeds );
+                       mockRng );
 }
 
 /**
@@ -364,5 +368,5 @@ void test_RetryUtils_GetNextBackOff_Returns_Rand_Val( void )
                        TEST_BACKOFF_MAX_VALUE - 2U /* next jitter max value */,
                        TEST_BACKOFF_MAX_VALUE,
                        TEST_MAX_ATTEMPTS,
-                       mockRngThatSucceeds );
+                       mockRng );
 }
