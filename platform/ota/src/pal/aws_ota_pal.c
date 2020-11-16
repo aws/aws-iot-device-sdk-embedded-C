@@ -565,15 +565,7 @@ OtaPalImageState_t prvPAL_GetPlatformImageState( OtaFileContext_t * const C )
     OtaImageState_t eSavedAgentState = OtaImageStateUnknown;
     OtaPalImageState_t ePalState = OtaPalImageStateUnknown;
 
-    if( !prvContextValidate( C ) )
-    {
-        /* FIXME: Invalid error code for a NULL file context. */
-        LogError( ( "Parameter check failed: Invalid OTA file context." ) );
-        /* Invalid OTA context or file pointer. */
-        ePalState = OtaPalImageStateUnknown;
-    }
-    else
-    {
+
         pPlatformImageState = fopen( "PlatformImageState.txt", "r+b" ); /*lint !e586
                                                                          * C standard library call is being used for portability. */
 
@@ -614,8 +606,7 @@ OtaPalImageState_t prvPAL_GetPlatformImageState( OtaFileContext_t * const C )
             /* If no image state file exists, assume a factory image. */
             ePalState = OtaPalImageStateValid; /*lint !e64 Allow assignment. */
         }
-    }
-
+        
     return ePalState; /*lint !e64 !e480 !e481 I/O calls and return type are used per design. */
 }
 
