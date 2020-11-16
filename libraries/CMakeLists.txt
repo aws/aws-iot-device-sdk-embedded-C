@@ -19,3 +19,6 @@ endif()
 
 # Add build configuration for all 3rd party modules.
 add_subdirectory(${3RDPARTY_DIR})
+if(BUILD_TESTS)
+    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/standard/retry-utils/utest)
+endif()
