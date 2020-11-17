@@ -228,7 +228,7 @@ int16_t prvPAL_WriteBlock( OtaFileContext_t * const C,
 {
     int32_t filerc = 0;
 
-    if( prvContextValidate( C ) )
+    if( C != NULL )
     {
         filerc = fseek( C->pFile, ulOffset, SEEK_SET ); /*lint !e586 !e713 !e9034
                                                          * C standard library call is being used for portability. */
@@ -274,7 +274,7 @@ OtaErr_t prvPAL_CloseFile( OtaFileContext_t * const C )
     OtaErr_t result = OTA_ERR_NONE;
     int32_t filerc = 0;
 
-    if( prvContextValidate( C ) )
+    if( C != NULL )
     {
         if( C->pSignature != NULL )
         {
@@ -343,7 +343,7 @@ static OtaErr_t Openssl_DigestVerify( EVP_MD_CTX * pSigContext,
         ( pFile != NULL ) &&
         ( 1 == EVP_DigestVerifyInit( pSigContext, NULL, EVP_sha256(), NULL, pPkey ) ) )
     {
-        LogDebug( "Started signature verification." );
+        LogDebug( ( "Started signature verification." ) );
 
 
         pBuf = malloc( OTA_PAL_LINUX_BUF_SIZE ); /* can use OPENSSL_malloc() here too */
@@ -402,7 +402,7 @@ static OtaErr_t prvPAL_CheckFileSignature( OtaFileContext_t * const C )
     EVP_MD_CTX * pSigContext = NULL;
     int rc = 0;
 
-    if( prvContextValidate( C ) )
+    if( C != NULL )
     {
         /* Extract the signer cert from the file */
         pPkey = Openssl_GetPkeyFromCertificate( ( const uint8_t * const ) C->pCertFilepath );
@@ -445,21 +445,11 @@ static OtaErr_t prvPAL_CheckFileSignature( OtaFileContext_t * const C )
     return result;
 }
 
-
 /*-----------------------------------------------------------*/
 
 OtaErr_t prvPAL_ResetDevice( OtaFileContext_t * const C )
 {
     OtaErr_t result = OTA_ERR_NONE;
-
-    if( !prvContextValidate( C ) )
-    {
-        /* FIXME: Invalid error code for a NULL file context. */
-        LogError( ( "Failed to reset device: Parameter check failed: "
-                    "Invalid OTA file context." ) );
-        /* Invalid OTA context or file pointer. */
-        result = OTA_ERR_NULL_FILE_PTR;
-    }
 
     /* Return no error.  linux implementation does not reset device. */
     return result;
@@ -471,20 +461,10 @@ OtaErr_t prvPAL_ActivateNewImage( OtaFileContext_t * const C )
 {
     OtaErr_t result = OTA_ERR_NONE;
 
-    if( !prvContextValidate( C ) )
-    {
-        /* FIXME: Invalid error code for a NULL file context. */
-        LogError( ( "Failed to activate new image: Parameter check failed: "
-                    "Invalid OTA file context." ) );
-        /* Invalid OTA context or file pointer. */
-        result = OTA_ERR_NULL_FILE_PTR;
-    }
-
     /* Return no error. linux implementation simply does nothing on activate.
     * To run the new firmware image, double click the newly downloaded exe */
     return result;
 }
-
 
 /*
  * Set the final state of the last transferred (final) OTA file (or bundle).
@@ -497,14 +477,7 @@ OtaErr_t prvPAL_SetPlatformImageState( OtaFileContext_t * const C,
     OtaErr_t result = OTA_ERR_NONE;
     FILE * pPlatformImageState = NULL;
 
-    if( !prvContextValidate( C ) )
-    {
-        /* FIXME: Invalid error code for a NULL file context. */
-        LogError( ( "Parameter check failed: Invalid OTA file context." ) );
-        /* Invalid OTA context or file pointer. */
-        result = OTA_ERR_NULL_FILE_PTR;
-    }
-    else if( ( eState != OtaImageStateUnknown ) && ( eState <= OtaLastImageState ) )
+    if( ( eState != OtaImageStateUnknown ) && ( eState <= OtaLastImageState ) )
     {
         pPlatformImageState = fopen( "PlatformImageState.txt", "w+b" ); /*lint !e586
                                                                          * C standard library call is being used for portability. */
@@ -565,8 +538,7 @@ OtaPalImageState_t prvPAL_GetPlatformImageState( OtaFileContext_t * const C )
     OtaImageState_t eSavedAgentState = OtaImageStateUnknown;
     OtaPalImageState_t ePalState = OtaPalImageStateUnknown;
 
-    if( C != NULL )
-    {
+
         pPlatformImageState = fopen( "PlatformImageState.txt", "r+b" ); /*lint !e586
                                                                          * C standard library call is being used for portability. */
 
@@ -607,12 +579,7 @@ OtaPalImageState_t prvPAL_GetPlatformImageState( OtaFileContext_t * const C )
             /* If no image state file exists, assume a factory image. */
             ePalState = OtaPalImageStateValid; /*lint !e64 Allow assignment. */
         }
-    }
-    else
-    {
-        LogError( ( "File context is NULL." ) );
-    }
-
+        
     return ePalState; /*lint !e64 !e480 !e481 I/O calls and return type are used per design. */
 }
 
