@@ -133,7 +133,7 @@ void test_RetryUtils_GetNextBackOff_Rng_Failure( void )
     RetryUtils_InitializeParams( &retryParams,
                                  TEST_BACKOFF_BASE_VALUE,
                                  TEST_BACKOFF_MAX_VALUE,
-                                 TEST_MAX_ATTEMPTS,
+                                 RETRY_UTILS_RETRY_FOREVER,
                                  mockRng );
 
     /* Test the #RetryUtils_GetNextBackOff API with the 2 negative values
@@ -154,7 +154,7 @@ void test_RetryUtils_GetNextBackOff_Rng_Failure( void )
                            0,
                            TEST_BACKOFF_BASE_VALUE,
                            TEST_BACKOFF_MAX_VALUE,
-                           TEST_MAX_ATTEMPTS,
+                           RETRY_UTILS_RETRY_FOREVER,
                            mockRng );
     }
 }

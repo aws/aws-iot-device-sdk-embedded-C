@@ -66,7 +66,7 @@
 /**
  * @brief Constant to represent unlimited number of retry attempts.
  */
-#define RETRY_FOREVER    0
+#define RETRY_UTILS_RETRY_FOREVER    0
 
 /**
  * @brief Interface for a random number generator.
