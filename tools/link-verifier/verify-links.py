@@ -7,11 +7,10 @@ import argparse
 import re
 import subprocess
 import requests
+import shutil
 from bs4 import BeautifulSoup
 from termcolor import cprint
 from multiprocessing import Pool
-from functools import partial
-import shutil
 
 MARKDOWN_SEARCH_TERM = r'\.md$'
 # Regex to find a URL
@@ -151,11 +150,15 @@ def parse_file(html_file):
     """Parse href tags from an HTML file"""
     return HtmlFile(html_file)
 
+def html_name_from_markdown(filename):
+    md_pattern = re.compile('.md', re.IGNORECASE)
+    return md_pattern.sub('.html', filename)
+
 def create_html(markdown_file):
     """Use pandoc to convert a markdown file to an HTML file"""
-    html_file = markdown_file.lower().replace('.md', '.html')
+    html_file = html_name_from_markdown(markdown_file)
     # Convert from Github-flavored Markdown to HTML
-    cmd = f'pandoc -f gfm -o {html_file} {markdown_file}'
+    cmd = f'pandoc -f markdown_github -o {html_file} {markdown_file}'
     # Use pandoc to generate HTML from Markdown
     process = subprocess.run(
         cmd,
@@ -226,6 +229,7 @@ def fetch_issues(repo, issue_type, limit):
 
 def consolidate_repo_list(repo_list):
     """Combines each list of repos into a single main list"""
+
     global use_cache
     global main_repo_list
     for repo, stats in repo_list.items():
@@ -264,7 +268,6 @@ def main():
                'Optional dependencies: pandoc (to support testing Markdown files), gh (To speed up checking GitHub links)'
     )
     parser.add_argument("-F", "--files", action="store", dest="files", nargs='+', help="Markdown files to fix")
-    parser.add_argument("directory", action="store", nargs='?', help="Directory containing Markdown files. Does not recurse")
     parser.add_argument("-L", "--links", action="store", dest="links", nargs='+', help="List of links to test")
     parser.add_argument("-n", "--num-processes", action="store", type=int, default=4, help="Number of processes to run in parallel")
     parser.add_argument("-k", "--keep", action="store_true", default=False, help="Keep temporary files instead of deleting")
@@ -274,56 +277,43 @@ def main():
     html_file_list = []
     broken_links = []
     if args.files is None and args.links is None:
-        parser.error('Either files or links must be provided')
+        parser.error('Either files or links must be provided.')
 
     if args.files is not None:
-        # Search for markdown files in file list. Note: We could skip this, but only if we can guarantee only markdown files are passed in.
+        # Search for markdown files in file list. Note: We could skip this if we can guarantee only markdown files are passed in.
         file_list = [f for f in args.files if re.search(MARKDOWN_SEARCH_TERM, f, re.IGNORECASE)]
-    elif args.directory is not None:
-        # We don't recurse into subdirectories here since there may be third party submodules.
-        file_list = [os.path.join(args.directory, f) for f in os.listdir(args.directory) if re.search(MARKDOWN_SEARCH_TERM, f, re.IGNORECASE)]
-        # I commented out the below code so that we don't recurse into the submodules.
 
-        # for root_path, directories, files in os.walk(args.directory):
-        #     for filename in files:
-        #         # We only want Markdown files.
-        #         full_name = os.path.join(root_path, filename)
-        #         if re.search(MARKDOWN_SEARCH_TERM, filename, re.IGNORECASE):
-        #             file_list.append(full_name)
-    else:
-        parser.error('Either directory or files must be provided.')
+        if args.verbose:
+            print(file_list)
 
-    if args.verbose:
-        print(file_list)
+        try:
+            file_map = {}
+            for f in file_list:
+                process = create_html(f)
+                if process.returncode != 0:
+                    cprint(process.stdout, 'red')
+                    print('Did you install pandoc?')
+                    sys.exit(process.returncode)
+                html_file_list.append(html_name_from_markdown(f))
+                # Create a map so that we know what file this was generated from.
+                file_map[html_name_from_markdown(f)] = f
 
-    try:
-        file_map = {}
-        for f in file_list:
-            process = create_html(f)
-            if process.returncode != 0:
-                cprint(process.stdout, 'red')
-                print('Did you install pandoc?')
-                sys.exit(process.returncode)
-            html_file_list.append(f.lower().replace('.md', '.html'))
-            # Create a map so that we know what file this was generated from.
-            file_map[f.lower().replace('.md', '.html')] = f
-
-        # Parse files in parallel.
-        pool = Pool(args.num_processes)
-        file_objects = pool.map(parse_file, html_file_list)
-        pool.close()
-        pool.join()
-        for file_obj in file_objects:
-            consolidate_repo_list(file_obj.linked_repos)
-        # Test links in series so we don't send too many HTTP requests in a short interval.
-        for file_obj in file_objects:
-            file_obj.identify_broken_links(file_map, args.verbose)
-            broken_links += file_obj.broken_links
-    # Remove the temporary files we created, especially if there was an exception.
-    finally:
-        for f in html_file_list:
-            if not args.keep:
-                os.remove(f)
+            # Parse files in parallel.
+            pool = Pool(args.num_processes)
+            file_objects = pool.map(parse_file, html_file_list)
+            pool.close()
+            pool.join()
+            for file_obj in file_objects:
+                consolidate_repo_list(file_obj.linked_repos)
+            # Test links in series so we don't send too many HTTP requests in a short interval.
+            for file_obj in file_objects:
+                file_obj.identify_broken_links(file_map, args.verbose)
+                broken_links += file_obj.broken_links
+        # Remove the temporary files we created, especially if there was an exception.
+        finally:
+            for f in html_file_list:
+                if not args.keep:
+                    os.remove(f)
 
     if args.links is not None:
         for link in args.links:
@@ -335,7 +325,7 @@ def main():
                 else:
                     if args.verbose:
                         cprint(f'{status_code}\t{link}', 'green')
-            # Something may go wrong since anything could be passed on the command line. 
+            # Something may go wrong since anything could be passed on the command line.
             except Exception as e:
                 print(e)
                 broken_links.append(link)
