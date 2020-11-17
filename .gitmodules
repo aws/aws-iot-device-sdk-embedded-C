@@ -19,3 +19,6 @@
 [submodule "libraries/aws/device-defender-for-aws-iot-embedded-sdk"]
 	path = libraries/aws/device-defender-for-aws-iot-embedded-sdk
 	url = https://github.com/aws/device-defender-for-aws-iot-embedded-sdk.git
+[submodule "libraries/standard/corePKCS11"]
+	path = libraries/standard/corePKCS11
+	url = https://github.com/FreeRTOS/corePKCS11.git
