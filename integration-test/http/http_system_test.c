@@ -33,6 +33,9 @@
 #include <stdlib.h>
 #include <time.h>
 
+/* POSIX include. */
+#include <unistd.h>
+
 /* Include config file before other non-system includes. */
 #include "test_config.h"
 
