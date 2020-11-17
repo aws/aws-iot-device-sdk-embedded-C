@@ -79,7 +79,7 @@ RetryUtilsStatus_t RetryUtils_GetNextBackOff( RetryUtilsContext_t * pRetryContex
     {
         /* When max retry attempts are exhausted, let application know by
          * returning RetryUtilsRetriesExhausted. Application may choose to
-         * restart the retry process after calling RetryUtils_ParamsReset(). */
+         * restart the retry process after calling RetryUtils_InitializeParams(). */
         status = RetryUtilsRetriesExhausted;
     }
 

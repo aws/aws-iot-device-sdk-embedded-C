@@ -8,11 +8,11 @@ set(project_name "posix")
 
 # list the files to mock here
 list(APPEND mock_list
-            ""
+            ${CMAKE_CURRENT_LIST_DIR}/mocks/time_api.h
         )
 # list the directories your mocks need
 list(APPEND mock_include_list
-            ""
+            ${PLATFORM_DIR}/include
         )
 #list the definitions of your mocks to control what to be included
 list(APPEND mock_define_list
@@ -43,6 +43,14 @@ list(APPEND test_include_directories
 
 # Create the target for unit testing the clock
 set(real_name "clock_real")
+set(mock_name "clock_mock")
+
+create_mock_list(${mock_name}
+                "${mock_list}"
+                "${ROOT_DIR}/tools/cmock/project.yml"
+                "${mock_include_list}"
+                "${mock_define_list}"
+        )
 
 set(real_source_files
         ${PLATFORM_DIR}/posix/clock_posix.c

@@ -1,3 +1,6 @@
+# Include file path configuration for retry utils library.
+include(../retryUtilsFilePaths.cmake)
+
 project ("retry utils unit test")
 cmake_minimum_required (VERSION 3.2.0)
 
@@ -13,29 +16,29 @@ list(APPEND mock_list
 
 # list the directories your mocks need
 list(APPEND mock_include_list
-            ""
+                ""
         )
 #list the definitions of your mocks to control what to be included
 list(APPEND mock_define_list
-            ""
+                ""
         )
 
 # ================= Create the library under test here (edit) ==================
 
 # list the files you would like to test here
 list(APPEND real_source_files
-                ${MODULES_DIR}/standard/retry-utils/retry_utils.c
+                ${RETRY_UTILS_SOURCES}
         )
 # list the directories the module under test includes
 list(APPEND real_include_directories
-                ${MODULES_DIR}/standard/retry-utils
+                ${RETRY_UTILS_INCLUDE_PUBLIC_DIRS}
         )
 
 # =====================  Create UnitTest Code here (edit)  =====================
 
 # list the directories your test needs to include
 list(APPEND test_include_directories
-                ${MODULES_DIR}/standard/retry-utils
+                ${RETRY_UTILS_INCLUDE_PUBLIC_DIRS}
         )
 
 # =============================  (end edit)  ===================================
