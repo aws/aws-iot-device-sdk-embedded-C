@@ -346,7 +346,7 @@ static bool connectToBrokerWithBackoffRetries( NetworkContext_t * pNetworkContex
     RetryUtilsContext_t reconnectParams;
     ServerInfo_t serverInfo;
     OpensslCredentials_t opensslCredentials;
-    uint16_t nextRetryBackOff = 0;
+    uint16_t nextRetryBackOff = 0U;
     struct timespec tp;
 
     /* Initialize information to connect to the MQTT broker. */

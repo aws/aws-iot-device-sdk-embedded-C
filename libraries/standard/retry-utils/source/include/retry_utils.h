@@ -138,7 +138,7 @@ typedef struct RetryUtilsContext
  * @param[in] backOffBase The base value (in milliseconds) of backoff delay to
  * use in the exponential backoff and jitter model.
  * @param[in] maxAttempts The maximum number of retry attempts. Set the value to
- * #RETRY_FOREVER to retry for ever.
+ * #RETRY_UTILS_RETRY_FOREVER to retry for ever.
  * @param[in] pRng The platform-specific function to use for random number generation.
  * The random number generator should be seeded before calling this function.
  */
@@ -155,7 +155,7 @@ void RetryUtils_InitializeParams( RetryUtilsContext_t * pContext,
  * delay value for the next retry attempt.
  * After a failure of an operation that needs to be retried, the application
  * should use this function to obtain the backoff delay value for the next retry,
- * and then wait for the backoff value before retrying the operation.
+ * and then wait for the backoff time period before retrying the operation.
  *
  * @param[in, out] pRetryContext Structure containing parameters for the next backoff
  * value calculation.
