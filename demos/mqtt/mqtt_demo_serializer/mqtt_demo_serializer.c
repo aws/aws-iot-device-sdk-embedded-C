@@ -355,7 +355,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     SocketStatus_t socketStatus = SOCKETS_SUCCESS;
     RetryUtilsContext_t reconnectParams;
     ServerInfo_t serverInfo;
-    uint16_t nextRetryBackOff = 0;
+    uint16_t nextRetryBackOff = 0U;
     struct timespec tp;
 
     /* Initialize information to connect to the MQTT broker. */
@@ -398,7 +398,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
 
         if( socketStatus != SOCKETS_SUCCESS )
         {
-            /* Get back-off value for the next connection retry. */
+            /* Get back-off value (in milliseconds)for the next connection retry. */
             retryUtilsStatus = RetryUtils_GetNextBackOff( &reconnectParams, &nextRetryBackOff );
             assert( retryUtilsStatus != RetryUtilsRngFailure );
 
@@ -910,7 +910,7 @@ int main( int argc,
     NetworkContext_t networkContext = { 0 };
     RetryUtilsStatus_t retryUtilsStatus = RetryUtilsSuccess;
     RetryUtilsContext_t retryParams;
-    uint16_t nextRetryBackOff = 0;
+    uint16_t nextRetryBackOff = 0U;
 
     ( void ) argc;
     ( void ) argv;
@@ -997,7 +997,7 @@ int main( int argc,
                     /* Process incoming PINGRESP from the broker */
                     mqttProcessIncomingPacket( &networkContext, &fixedBuffer );
 
-                    /* Get back-off value for the next re-subscribe attempt. */
+                    /* Get back-off value (in milliseconds)for the next re-subscribe attempt. */
                     retryUtilsStatus = RetryUtils_GetNextBackOff( &retryParams, &nextRetryBackOff );
                     assert( retryUtilsStatus != RetryUtilsRngFailure );
 

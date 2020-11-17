@@ -327,7 +327,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     RetryUtilsContext_t reconnectParams;
     ServerInfo_t serverInfo;
     OpensslCredentials_t opensslCredentials;
-    uint16_t nextRetryBackOff = 0;
+    uint16_t nextRetryBackOff = 0U;
     struct timespec tp;
 
     /* Initialize information to connect to the MQTT broker. */
@@ -388,7 +388,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
 
         if( opensslStatus != OPENSSL_SUCCESS )
         {
-            /* Get back-off value for the next connection retry. */
+            /* Get back-off value (in milliseconds)for the next connection retry. */
             retryUtilsStatus = RetryUtils_GetNextBackOff( &reconnectParams, &nextRetryBackOff );
             assert( retryUtilsStatus != RetryUtilsRngFailure );
 

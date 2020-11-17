@@ -251,7 +251,7 @@ static void connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContex
     RetryUtilsContext_t reconnectParams;
     /* Status returned by OpenSSL transport implementation. */
     OpensslStatus_t opensslStatus;
-    uint16_t nextRetryBackOff = 0;
+    uint16_t nextRetryBackOff = 0U;
     struct timespec tp;
 
     /* Reset or initialize file-scoped global variables. */
@@ -292,7 +292,7 @@ static void connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContex
 
         if( opensslStatus != OPENSSL_SUCCESS )
         {
-            /* Get back-off value for the next connection retry. */
+            /* Get back-off value (in milliseconds)for the next connection retry. */
             retryUtilsStatus = RetryUtils_GetNextBackOff( &reconnectParams, &nextRetryBackOff );
             assert( retryUtilsStatus != RetryUtilsRngFailure );
 

@@ -635,7 +635,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
 
         if( opensslStatus != OPENSSL_SUCCESS )
         {
-            /* Get back-off value for the next connection retry. */
+            /* Get back-off value (in milliseconds)for the next connection retry. */
             retryUtilsStatus = RetryUtils_GetNextBackOff( &reconnectParams, &nextRetryBackOff );
             assert( retryUtilsStatus != RetryUtilsRngFailure );
 
@@ -913,7 +913,7 @@ static int handleResubscribe( MQTTContext_t * pMqttContext )
          * server rejection of the subscription request. */
         if( globalSubAckStatus == MQTTSubAckFailure )
         {
-            /* Get back-off value for the next re-subscribe attempt. */
+            /* Get back-off value (in milliseconds)for the next re-subscribe attempt. */
             retryUtilsStatus = RetryUtils_GetNextBackOff( &retryParams, &nextRetryBackOff );
             assert( retryUtilsStatus != RetryUtilsRngFailure );
 

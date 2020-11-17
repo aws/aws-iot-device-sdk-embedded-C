@@ -352,7 +352,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     SocketStatus_t socketStatus = SOCKETS_SUCCESS;
     RetryUtilsContext_t reconnectParams;
     ServerInfo_t serverInfo;
-    uint16_t nextRetryBackOff = 0;
+    uint16_t nextRetryBackOff = 0U;
 
     /* Initialize information to connect to the MQTT broker. */
     serverInfo.pHostName = BROKER_ENDPOINT;
@@ -386,7 +386,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
 
         if( socketStatus != SOCKETS_SUCCESS )
         {
-            /* Get back-off value for the next connection retry. */
+            /* Get back-off value (in milliseconds)for the next connection retry. */
             retryUtilsStatus = RetryUtils_GetNextBackOff( &reconnectParams, &nextRetryBackOff );
             assert( retryUtilsStatus != RetryUtilsRngFailure );
 
@@ -469,7 +469,7 @@ static int handleResubscribe( MQTTContext_t * pMqttContext )
     MQTTStatus_t mqttStatus = MQTTSuccess;
     RetryUtilsStatus_t retryUtilsStatus = RetryUtilsSuccess;
     RetryUtilsContext_t retryParams;
-    uint16_t nextRetryBackOff = 0;
+    uint16_t nextRetryBackOff = 0U;
 
     assert( pMqttContext != NULL );
 
@@ -520,7 +520,7 @@ static int handleResubscribe( MQTTContext_t * pMqttContext )
          * server rejection of the subscription request. */
         if( globalSubAckStatus == MQTTSubAckFailure )
         {
-            /* Get back-off value for the next re-subscribe attempt. */
+            /* Get back-off value (in milliseconds)for the next re-subscribe attempt. */
             retryUtilsStatus = RetryUtils_GetNextBackOff( &retryParams, &nextRetryBackOff );
             assert( retryUtilsStatus != RetryUtilsRngFailure );
 
