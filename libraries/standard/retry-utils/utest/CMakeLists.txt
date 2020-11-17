@@ -10,7 +10,7 @@ set(project_name "retry_utils")
 # =====================  Create your mock here  (edit)  ========================
 
 # list the files to mock here
-list(APPEND mock_list 
+list(APPEND mock_list
                 ""
         )
 

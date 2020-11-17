@@ -70,17 +70,38 @@
 /**
  * @brief Length of HTTP server host name.
  */
-#define SERVER_HOST_LENGTH     ( ( uint16_t ) ( sizeof( SERVER_HOST ) - 1 ) )
+#define SERVER_HOST_LENGTH                       ( ( uint16_t ) ( sizeof( SERVER_HOST ) - 1 ) )
 
 /**
  * @brief Length of the request body.
  */
-#define REQUEST_BODY_LENGTH    ( sizeof( REQUEST_BODY ) - 1 )
+#define REQUEST_BODY_LENGTH                      ( sizeof( REQUEST_BODY ) - 1 )
+
+/**
+ * @brief The maximum number of retries for connecting to server.
+ */
+#define CONNECTION_RETRY_MAX_ATTEMPTS            ( 5U )
+
+/**
+ * @brief The maximum back-off delay (in milliseconds) for retrying connection to server.
+ */
+#define CONNECTION_RETRY_MAX_BACKOFF_DELAY_MS    ( 5000U )
+
+/**
+ * @brief The base back-off delay (in milliseconds) to use for connection retry attempts.
+ */
+#define CONNECTION_RETRY_BACKOFF_BASE_MS         ( 500U )
+
+/**
+ * @brief Number of milliseconds in a second.
+ */
+#define NUM_MILLISECONDS_IN_SECOND               ( 1000U )
+
 
 /**
  * @brief The maximum number of retries to attempt on network error.
  */
-#define MAX_RETRY_COUNT        ( 3 )
+#define HTTP_REQUEST_MAX_RETRY_COUNT    ( 3 )
 
 /**
  * @brief The path used for testing receiving a transfer encoding chunked
@@ -149,6 +170,17 @@ static size_t networkDataLen = 0U;
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief The random number generator to use for exponential backoff with
+ * jitter retry logic.
+ * This function is an implementation the #RetryUtils_RNG_t interface type
+ * of the retry utils library API.
+ *
+ * @return The generated random number. This function ALWAYS succeeds
+ * in generating a random number.
+ */
+static int32_t generateRandomNumber();
+
+/**
  * @brief Connect to HTTP server with reconnection retries.
  *
  * If connection fails, retry is attempted after a timeout.
@@ -201,14 +233,23 @@ static int32_t transportSendStub( NetworkContext_t * pNetworkContext,
 
 /*-----------------------------------------------------------*/
 
+static int32_t generateRandomNumber()
+{
+    return( rand() % ( INT32_MAX ) );
+}
+
+/*-----------------------------------------------------------*/
+
 static void connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext )
 {
     /* Status returned by the retry utilities. */
     RetryUtilsStatus_t retryUtilsStatus = RetryUtilsSuccess;
     /* Struct containing the next backoff time. */
-    RetryUtilsParams_t reconnectParams;
+    RetryUtilsContext_t reconnectParams;
     /* Status returned by OpenSSL transport implementation. */
     OpensslStatus_t opensslStatus;
+    uint16_t nextRetryBackOff = 0;
+    struct timespec tp;
 
     /* Reset or initialize file-scoped global variables. */
     ( void ) memset( &opensslCredentials, 0, sizeof( opensslCredentials ) );
@@ -218,8 +259,20 @@ static void connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContex
     serverInfo.hostNameLength = SERVER_HOST_LENGTH;
     serverInfo.port = HTTPS_PORT;
 
+    /* Seed pseudo random number generator (provided by ISO C standard library) for
+     * use by retry utils library when retrying failed connection attempts to broker. */
+
+    /* Get current time to seed pseudo random number generator. */
+    ( void ) clock_gettime( CLOCK_REALTIME, &tp );
+    /* Seed pseudo random number generator with nanoseconds. */
+    srand( tp.tv_nsec );
+
     /* Initialize reconnect attempts and interval */
-    RetryUtils_ParamsReset( &reconnectParams );
+    RetryUtils_InitializeParams( &reconnectParams,
+                                 CONNECTION_RETRY_BACKOFF_BASE_MS,
+                                 CONNECTION_RETRY_MAX_BACKOFF_DELAY_MS,
+                                 CONNECTION_RETRY_MAX_ATTEMPTS,
+                                 generateRandomNumber );
 
     /* Attempt to connect to HTTP server. If connection fails, retry after
      * a timeout. Timeout value will exponentially increase until maximum
@@ -236,12 +289,19 @@ static void connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContex
 
         if( opensslStatus != OPENSSL_SUCCESS )
         {
-            retryUtilsStatus = RetryUtils_BackoffAndSleep( &reconnectParams );
-        }
+            /* Get back-off value for the next connection retry. */
+            retryUtilsStatus = RetryUtils_GetNextBackOff( &reconnectParams, &nextRetryBackOff );
+            assert( retryUtilsStatus != RetryUtilsRngFailure );
 
-        if( retryUtilsStatus == RetryUtilsRetriesExhausted )
-        {
-            LogError( ( "Connection to the server failed, all attempts exhausted." ) );
+            if( retryUtilsStatus == RetryUtilsSuccess )
+            {
+                LogWarn( ( "Connection to the HTTP server failed. Retrying connection after backoff." ) );
+                ( void ) sleep( nextRetryBackOff / NUM_MILLISECONDS_IN_SECOND );
+            }
+            else
+            {
+                LogError( ( "Connection to the HTTP server failed, all attempts exhausted." ) );
+            }
         }
     } while( ( opensslStatus != OPENSSL_SUCCESS ) && ( retryUtilsStatus == RetryUtilsSuccess ) );
 
@@ -302,7 +362,7 @@ static void sendHttpRequest( const TransportInterface_t * pTransportInterface,
                 ( int32_t ) requestInfo.pathLen, requestInfo.pPath ) );
 
     /* Send request to HTTP server. If a network error is found, retry request for a
-     * count of MAX_RETRY_COUNT. */
+     * count of HTTP_REQUEST_MAX_RETRY_COUNT. */
     do
     {
         /* Since the request and response headers share a buffer, request headers should
@@ -332,7 +392,7 @@ static void sendHttpRequest( const TransportInterface_t * pTransportInterface,
         }
 
         retryCount++;
-    } while( ( httpStatus == HTTPNetworkError ) && ( retryCount < MAX_RETRY_COUNT ) );
+    } while( ( httpStatus == HTTPNetworkError ) && ( retryCount < HTTP_REQUEST_MAX_RETRY_COUNT ) );
 
     TEST_ASSERT_EQUAL( HTTPSuccess, httpStatus );
 
