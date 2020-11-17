@@ -36,6 +36,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 /* Shadow includes */
 #include "shadow_demo_helpers.h"
@@ -87,12 +88,12 @@
 /**
  * @brief Length of MQTT server host name.
  */
-#define AWS_IOT_ENDPOINT_LENGTH             ( ( uint16_t ) ( sizeof( AWS_IOT_ENDPOINT ) - 1 ) )
+#define AWS_IOT_ENDPOINT_LENGTH      ( ( uint16_t ) ( sizeof( AWS_IOT_ENDPOINT ) - 1 ) )
 
 /**
  * @brief Length of client identifier.
  */
-#define CLIENT_IDENTIFIER_LENGTH            ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) )
+#define CLIENT_IDENTIFIER_LENGTH     ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) )
 
 /**
  * @brief ALPN protocol name for AWS IoT MQTT.
@@ -102,17 +103,39 @@
  * in the link below.
  * https://aws.amazon.com/blogs/iot/mqtt-with-tls-client-authentication-on-port-443-why-it-is-useful-and-how-it-works/
  */
-#define ALPN_PROTOCOL_NAME                  "\x0ex-amzn-mqtt-ca"
+#define ALPN_PROTOCOL_NAME           "\x0ex-amzn-mqtt-ca"
 
 /**
  * @brief Length of ALPN protocol name.
  */
-#define ALPN_PROTOCOL_NAME_LENGTH           ( ( uint16_t ) ( sizeof( ALPN_PROTOCOL_NAME ) - 1 ) )
+#define ALPN_PROTOCOL_NAME_LENGTH    ( ( uint16_t ) ( sizeof( ALPN_PROTOCOL_NAME ) - 1 ) )
+
+
+/**
+ * @brief The maximum number of retries for connecting to server.
+ */
+#define CONNECTION_RETRY_MAX_ATTEMPTS            ( 5U )
+
+/**
+ * @brief The maximum back-off delay (in milliseconds) for retrying connection to server.
+ */
+#define CONNECTION_RETRY_MAX_BACKOFF_DELAY_MS    ( 5000U )
+
+/**
+ * @brief The base back-off delay (in milliseconds) to use for connection retry attempts.
+ */
+#define CONNECTION_RETRY_BACKOFF_BASE_MS         ( 500U )
+
+/**
+ * @brief Number of milliseconds in a second.
+ */
+#define NUM_MILLISECONDS_IN_SECOND               ( 1000U )
 
 /**
  * @brief Timeout for receiving CONNACK packet in milli seconds.
  */
-#define CONNACK_RECV_TIMEOUT_MS             ( 1000U )
+#define CONNACK_RECV_TIMEOUT_MS                  ( 1000U )
+
 
 /**
  * @brief Maximum number of outgoing publishes maintained in the application
@@ -221,6 +244,17 @@ static bool mqttSessionEstablished = false;
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief The random number generator to use for exponential backoff with
+ * jitter retry logic.
+ * This function is an implementation the #RetryUtils_RNG_t interface type
+ * of the retry utils library API.
+ *
+ * @return The generated random number. This function ALWAYS succeeds
+ * in generating a random number.
+ */
+static int32_t generateRandomNumber();
+
+/**
  * @brief Connect to MQTT broker with reconnection retries.
  *
  * If connection fails, retry is attempted after a timeout.
@@ -278,14 +312,23 @@ static int handlePublishResend( MQTTContext_t * pMqttContext );
 
 /*-----------------------------------------------------------*/
 
+static int32_t generateRandomNumber()
+{
+    return( rand() % ( INT32_MAX ) );
+}
+
+/*-----------------------------------------------------------*/
+
 static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext )
 {
     int returnStatus = EXIT_SUCCESS;
     RetryUtilsStatus_t retryUtilsStatus = RetryUtilsSuccess;
     OpensslStatus_t opensslStatus = OPENSSL_SUCCESS;
-    RetryUtilsParams_t reconnectParams;
+    RetryUtilsContext_t reconnectParams;
     ServerInfo_t serverInfo;
     OpensslCredentials_t opensslCredentials;
+    uint16_t nextRetryBackOff = 0;
+    struct timespec tp;
 
     /* Initialize information to connect to the MQTT broker. */
     serverInfo.pHostName = AWS_IOT_ENDPOINT;
@@ -309,8 +352,20 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
         opensslCredentials.alpnProtosLen = ALPN_PROTOCOL_NAME_LENGTH;
     }
 
+    /* Seed pseudo random number generator (provided by ISO C standard library) for
+     * use by retry utils library when retrying failed connection attempts to broker. */
+
+    /* Get current time to seed pseudo random number generator. */
+    ( void ) clock_gettime( CLOCK_REALTIME, &tp );
+    /* Seed pseudo random number generator with nanoseconds. */
+    srand( tp.tv_nsec );
+
     /* Initialize reconnect attempts and interval */
-    RetryUtils_ParamsReset( &reconnectParams );
+    RetryUtils_InitializeParams( &reconnectParams,
+                                 CONNECTION_RETRY_BACKOFF_BASE_MS,
+                                 CONNECTION_RETRY_MAX_BACKOFF_DELAY_MS,
+                                 CONNECTION_RETRY_MAX_ATTEMPTS,
+                                 generateRandomNumber );
 
     /* Attempt to connect to MQTT broker. If connection fails, retry after
      * a timeout. Timeout value will exponentially increase until maximum
@@ -333,14 +388,20 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
 
         if( opensslStatus != OPENSSL_SUCCESS )
         {
-            LogWarn( ( "Connection to the broker failed. Retrying connection with backoff and jitter." ) );
-            retryUtilsStatus = RetryUtils_BackoffAndSleep( &reconnectParams );
-        }
+            /* Get back-off value for the next connection retry. */
+            retryUtilsStatus = RetryUtils_GetNextBackOff( &reconnectParams, &nextRetryBackOff );
+            assert( retryUtilsStatus != RetryUtilsRngFailure );
 
-        if( retryUtilsStatus == RetryUtilsRetriesExhausted )
-        {
-            LogError( ( "Connection to the broker failed, all attempts exhausted." ) );
-            returnStatus = EXIT_FAILURE;
+            if( retryUtilsStatus == RetryUtilsRetriesExhausted )
+            {
+                LogError( ( "Connection to the broker failed, all attempts exhausted." ) );
+            }
+            else if( retryUtilsStatus == RetryUtilsSuccess )
+            {
+                LogWarn( ( "Connection to the broker failed. Retrying connection after backoff." ) );
+                ( void ) sleep( nextRetryBackOff / NUM_MILLISECONDS_IN_SECOND );
+                returnStatus = EXIT_FAILURE;
+            }
         }
     } while( ( opensslStatus != OPENSSL_SUCCESS ) && ( retryUtilsStatus == RetryUtilsSuccess ) );
 

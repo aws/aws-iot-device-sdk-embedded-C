@@ -15,7 +15,7 @@ target_link_libraries(
     PRIVATE
         clock_posix
         plaintext_posix
-        retry_utils_posix
+        retry_utils
 )
 
 target_include_directories(

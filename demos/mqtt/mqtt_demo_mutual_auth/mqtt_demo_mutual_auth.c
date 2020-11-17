@@ -54,6 +54,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 /* POSIX includes. */
 #include <unistd.h>
@@ -138,12 +139,12 @@
 /**
  * @brief Length of MQTT server host name.
  */
-#define AWS_IOT_ENDPOINT_LENGTH             ( ( uint16_t ) ( sizeof( AWS_IOT_ENDPOINT ) - 1 ) )
+#define AWS_IOT_ENDPOINT_LENGTH         ( ( uint16_t ) ( sizeof( AWS_IOT_ENDPOINT ) - 1 ) )
 
 /**
  * @brief Length of client identifier.
  */
-#define CLIENT_IDENTIFIER_LENGTH            ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) )
+#define CLIENT_IDENTIFIER_LENGTH        ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) )
 
 /**
  * @brief ALPN (Application-Layer Protocol Negotiation) protocol name for AWS IoT MQTT.
@@ -153,28 +154,50 @@
  * in the link below.
  * https://aws.amazon.com/blogs/iot/mqtt-with-tls-client-authentication-on-port-443-why-it-is-useful-and-how-it-works/
  */
-#define AWS_IOT_MQTT_ALPN                   "\x0ex-amzn-mqtt-ca"
+#define AWS_IOT_MQTT_ALPN               "\x0ex-amzn-mqtt-ca"
 
 /**
  * @brief Length of ALPN protocol name.
  */
-#define AWS_IOT_MQTT_ALPN_LENGTH            ( ( uint16_t ) ( sizeof( AWS_IOT_MQTT_ALPN ) - 1 ) )
+#define AWS_IOT_MQTT_ALPN_LENGTH        ( ( uint16_t ) ( sizeof( AWS_IOT_MQTT_ALPN ) - 1 ) )
 
 /**
  * @brief This is the ALPN (Application-Layer Protocol Negotiation) string
  * required by AWS IoT for password-based authentication using TCP port 443.
  */
-#define AWS_IOT_PASSWORD_ALPN               "\x04mqtt"
+#define AWS_IOT_PASSWORD_ALPN           "\x04mqtt"
 
 /**
  * @brief Length of password ALPN.
  */
-#define AWS_IOT_PASSWORD_ALPN_LENGTH        ( ( uint16_t ) ( sizeof( AWS_IOT_PASSWORD_ALPN ) - 1 ) )
+#define AWS_IOT_PASSWORD_ALPN_LENGTH    ( ( uint16_t ) ( sizeof( AWS_IOT_PASSWORD_ALPN ) - 1 ) )
+
+
+/**
+ * @brief The maximum number of retries for connecting to server.
+ */
+#define CONNECTION_RETRY_MAX_ATTEMPTS            ( 5U )
+
+/**
+ * @brief The maximum back-off delay (in milliseconds) for retrying connection to server.
+ */
+#define CONNECTION_RETRY_MAX_BACKOFF_DELAY_MS    ( 5000U )
+
+/**
+ * @brief The base back-off delay (in milliseconds) to use for connection retry attempts.
+ */
+#define CONNECTION_RETRY_BACKOFF_BASE_MS         ( 500U )
+
+/**
+ * @brief Number of milliseconds in a second.
+ */
+#define NUM_MILLISECONDS_IN_SECOND               ( 1000U )
 
 /**
  * @brief Timeout for receiving CONNACK packet in milli seconds.
  */
-#define CONNACK_RECV_TIMEOUT_MS             ( 1000U )
+#define CONNACK_RECV_TIMEOUT_MS                  ( 1000U )
+
 
 /**
  * @brief The topic to subscribe and publish to in the example.
@@ -329,6 +352,17 @@ static uint8_t buffer[ NETWORK_BUFFER_SIZE ];
 static MQTTSubAckStatus_t globalSubAckStatus = MQTTSubAckFailure;
 
 /*-----------------------------------------------------------*/
+
+/**
+ * @brief The random number generator to use for exponential backoff with
+ * jitter retry logic.
+ * This function is an implementation the #RetryUtils_RNG_t interface type
+ * of the retry utils library API.
+ *
+ * @return The generated random number. This function ALWAYS succeeds
+ * in generating a random number.
+ */
+static int32_t generateRandomNumber();
 
 /**
  * @brief Connect to MQTT broker with reconnection retries.
@@ -513,14 +547,21 @@ static int handleResubscribe( MQTTContext_t * pMqttContext );
 
 /*-----------------------------------------------------------*/
 
+static int32_t generateRandomNumber()
+{
+    return( rand() % ( INT32_MAX ) );
+}
+
+/*-----------------------------------------------------------*/
 static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext )
 {
     int returnStatus = EXIT_SUCCESS;
     RetryUtilsStatus_t retryUtilsStatus = RetryUtilsSuccess;
     OpensslStatus_t opensslStatus = OPENSSL_SUCCESS;
-    RetryUtilsParams_t reconnectParams;
+    RetryUtilsContext_t reconnectParams;
     ServerInfo_t serverInfo;
     OpensslCredentials_t opensslCredentials;
+    uint16_t nextRetryBackOff;
 
     /* Initialize information to connect to the MQTT broker. */
     serverInfo.pHostName = AWS_IOT_ENDPOINT;
@@ -567,7 +608,11 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     }
 
     /* Initialize reconnect attempts and interval */
-    RetryUtils_ParamsReset( &reconnectParams );
+    RetryUtils_InitializeParams( &reconnectParams,
+                                 CONNECTION_RETRY_BACKOFF_BASE_MS,
+                                 CONNECTION_RETRY_MAX_BACKOFF_DELAY_MS,
+                                 CONNECTION_RETRY_MAX_ATTEMPTS,
+                                 generateRandomNumber );
 
     /* Attempt to connect to MQTT broker. If connection fails, retry after
      * a timeout. Timeout value will exponentially increase until maximum
@@ -590,14 +635,20 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
 
         if( opensslStatus != OPENSSL_SUCCESS )
         {
-            LogWarn( ( "Connection to the broker failed. Retrying connection with backoff and jitter." ) );
-            retryUtilsStatus = RetryUtils_BackoffAndSleep( &reconnectParams );
-        }
+            /* Get back-off value for the next connection retry. */
+            retryUtilsStatus = RetryUtils_GetNextBackOff( &reconnectParams, &nextRetryBackOff );
+            assert( retryUtilsStatus != RetryUtilsRngFailure );
 
-        if( retryUtilsStatus == RetryUtilsRetriesExhausted )
-        {
-            LogError( ( "Connection to the broker failed, all attempts exhausted." ) );
-            returnStatus = EXIT_FAILURE;
+            if( retryUtilsStatus == RetryUtilsRetriesExhausted )
+            {
+                LogError( ( "Connection to the broker failed, all attempts exhausted." ) );
+            }
+            else if( retryUtilsStatus == RetryUtilsSuccess )
+            {
+                LogWarn( ( "Connection to the broker failed. Retrying connection after backoff." ) );
+                ( void ) sleep( nextRetryBackOff / NUM_MILLISECONDS_IN_SECOND );
+                returnStatus = EXIT_FAILURE;
+            }
         }
     } while( ( opensslStatus != OPENSSL_SUCCESS ) && ( retryUtilsStatus == RetryUtilsSuccess ) );
 
@@ -810,12 +861,17 @@ static int handleResubscribe( MQTTContext_t * pMqttContext )
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus = MQTTSuccess;
     RetryUtilsStatus_t retryUtilsStatus = RetryUtilsSuccess;
-    RetryUtilsParams_t retryParams;
+    RetryUtilsContext_t retryParams;
+    uint16_t nextRetryBackOff = 0U;
 
     assert( pMqttContext != NULL );
 
     /* Initialize retry attempts and interval. */
-    RetryUtils_ParamsReset( &retryParams );
+    RetryUtils_InitializeParams( &retryParams,
+                                 CONNECTION_RETRY_BACKOFF_BASE_MS,
+                                 CONNECTION_RETRY_MAX_BACKOFF_DELAY_MS,
+                                 CONNECTION_RETRY_MAX_ATTEMPTS,
+                                 generateRandomNumber );
 
     do
     {
@@ -857,14 +913,20 @@ static int handleResubscribe( MQTTContext_t * pMqttContext )
          * server rejection of the subscription request. */
         if( globalSubAckStatus == MQTTSubAckFailure )
         {
-            LogWarn( ( "Server rejected subscription request. Retrying subscribe with backoff and jitter." ) );
-            retryUtilsStatus = RetryUtils_BackoffAndSleep( &retryParams );
-        }
+            /* Get back-off value for the next re-subscribe attempt. */
+            retryUtilsStatus = RetryUtils_GetNextBackOff( &retryParams, &nextRetryBackOff );
+            assert( retryUtilsStatus != RetryUtilsRngFailure );
 
-        if( retryUtilsStatus == RetryUtilsRetriesExhausted )
-        {
-            LogError( ( "Subscription to topic failed, all attempts exhausted." ) );
-            returnStatus = EXIT_FAILURE;
+            if( retryUtilsStatus == RetryUtilsRetriesExhausted )
+            {
+                LogError( ( "Subscription to topic failed, all attempts exhausted." ) );
+            }
+            else if( retryUtilsStatus == RetryUtilsSuccess )
+            {
+                LogWarn( ( "Server rejected subscription request. Retrying connection after backoff." ) );
+                ( void ) sleep( nextRetryBackOff / NUM_MILLISECONDS_IN_SECOND );
+                returnStatus = EXIT_FAILURE;
+            }
         }
     } while( ( globalSubAckStatus == MQTTSubAckFailure ) && ( retryUtilsStatus == RetryUtilsSuccess ) );
 
@@ -1456,9 +1518,18 @@ int main( int argc,
     MQTTContext_t mqttContext = { 0 };
     NetworkContext_t networkContext = { 0 };
     bool clientSessionPresent = false;
+    struct timespec tp;
 
     ( void ) argc;
     ( void ) argv;
+
+    /* Seed pseudo random number generator (provided by ISO C standard library) for
+     * use by retry utils library when retrying failed network operations. */
+
+    /* Get current time to seed pseudo random number generator. */
+    ( void ) clock_gettime( CLOCK_REALTIME, &tp );
+    /* Seed pseudo random number generator with nanoseconds. */
+    srand( tp.tv_nsec );
 
     /* Initialize MQTT library. Initialization of the MQTT library needs to be
      * done only once in this demo. */

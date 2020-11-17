@@ -28,7 +28,7 @@ check_aws_credentials( ${DEMO_NAME} )
 target_link_libraries( ${DEMO_NAME} PRIVATE
                        clock_posix
                        openssl_posix
-                       retry_utils_posix )
+                       retry_utils )
 
 target_include_directories( ${DEMO_NAME} PUBLIC
                             ${LOGGING_INCLUDE_DIRS}

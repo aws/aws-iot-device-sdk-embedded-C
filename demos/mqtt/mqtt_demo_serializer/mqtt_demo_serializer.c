@@ -44,9 +44,9 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 /* POSIX includes. */
-#include <time.h>
 #include <unistd.h>
 
 /* MQTT Serializer Serializer API header. */
@@ -71,7 +71,27 @@
 /**
  * @brief Length of MQTT server host name.
  */
-#define BROKER_ENDPOINT_LENGTH       ( ( uint16_t ) ( sizeof( BROKER_ENDPOINT ) - 1 ) )
+#define BROKER_ENDPOINT_LENGTH                   ( ( uint16_t ) ( sizeof( BROKER_ENDPOINT ) - 1 ) )
+
+/**
+ * @brief The maximum number of retries for connecting to server.
+ */
+#define CONNECTION_RETRY_MAX_ATTEMPTS            ( 5U )
+
+/**
+ * @brief The maximum back-off delay (in milliseconds) for retrying connection to server.
+ */
+#define CONNECTION_RETRY_MAX_BACKOFF_DELAY_MS    ( 5000U )
+
+/**
+ * @brief The base back-off delay (in milliseconds) to use for connection retry attempts.
+ */
+#define CONNECTION_RETRY_BACKOFF_BASE_MS         ( 500U )
+
+/**
+ * @brief Number of milliseconds in a second.
+ */
+#define NUM_MILLISECONDS_IN_SECOND               ( 1000U )
 
 /**
  * @brief The topic to subscribe and publish to in the example.
@@ -79,12 +99,12 @@
  * The topic name starts with the client identifier to ensure that each demo
  * interacts with a unique topic name.
  */
-#define MQTT_EXAMPLE_TOPIC           CLIENT_IDENTIFIER "/example/topic"
+#define MQTT_EXAMPLE_TOPIC                       CLIENT_IDENTIFIER "/example/topic"
 
 /**
  * @brief Length of client MQTT topic.
  */
-#define MQTT_EXAMPLE_TOPIC_LENGTH    ( ( uint16_t ) ( sizeof( MQTT_EXAMPLE_TOPIC ) - 1 ) )
+#define MQTT_EXAMPLE_TOPIC_LENGTH                ( ( uint16_t ) ( sizeof( MQTT_EXAMPLE_TOPIC ) - 1 ) )
 
 /**
  * @brief Size of the network buffer for MQTT packets.
@@ -120,6 +140,17 @@
 #define MQTT_DEMO_ITERATION_DELAY_SECONDS    ( 5U )
 
 /*-----------------------------------------------------------*/
+
+/**
+ * @brief The random number generator to use for exponential backoff with
+ * jitter retry logic.
+ * This function is an implementation the #RetryUtils_RNG_t interface type
+ * of the retry utils library API.
+ *
+ * @return The generated random number. This function ALWAYS succeeds
+ * in generating a random number.
+ */
+static int32_t generateRandomNumber();
 
 /**
  * @brief Connect to MQTT broker with reconnection retries.
@@ -310,21 +341,42 @@ static uint16_t getNextPacketIdentifier( void )
 
 /*-----------------------------------------------------------*/
 
+
+static int32_t generateRandomNumber()
+{
+    return( rand() % ( INT32_MAX ) );
+}
+
+/*-----------------------------------------------------------*/
 static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext )
 {
     int returnStatus = EXIT_SUCCESS;
     RetryUtilsStatus_t retryUtilsStatus = RetryUtilsSuccess;
     SocketStatus_t socketStatus = SOCKETS_SUCCESS;
-    RetryUtilsParams_t reconnectParams;
+    RetryUtilsContext_t reconnectParams;
     ServerInfo_t serverInfo;
+    uint16_t nextRetryBackOff = 0;
+    struct timespec tp;
 
     /* Initialize information to connect to the MQTT broker. */
     serverInfo.pHostName = BROKER_ENDPOINT;
     serverInfo.hostNameLength = BROKER_ENDPOINT_LENGTH;
     serverInfo.port = BROKER_PORT;
 
+    /* Seed pseudo random number generator (provided by ISO C standard library) for
+     * use by retry utils library when retrying failed connection attempts to broker. */
+
+    /* Get current time to seed pseudo random number generator. */
+    ( void ) clock_gettime( CLOCK_REALTIME, &tp );
+    /* Seed pseudo random number generator with nanoseconds. */
+    srand( tp.tv_nsec );
+
     /* Initialize reconnect attempts and interval */
-    RetryUtils_ParamsReset( &reconnectParams );
+    RetryUtils_InitializeParams( &reconnectParams,
+                                 CONNECTION_RETRY_BACKOFF_BASE_MS,
+                                 CONNECTION_RETRY_MAX_BACKOFF_DELAY_MS,
+                                 CONNECTION_RETRY_MAX_ATTEMPTS,
+                                 generateRandomNumber );
 
     /* Attempt to connect to MQTT broker. If connection fails, retry after
      * a timeout. Timeout value will exponentially increase till maximum
@@ -346,14 +398,20 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
 
         if( socketStatus != SOCKETS_SUCCESS )
         {
-            LogWarn( ( "Connection to the broker failed. Retrying connection with backoff and jitter." ) );
-            retryUtilsStatus = RetryUtils_BackoffAndSleep( &reconnectParams );
-        }
+            /* Get back-off value for the next connection retry. */
+            retryUtilsStatus = RetryUtils_GetNextBackOff( &reconnectParams, &nextRetryBackOff );
+            assert( retryUtilsStatus != RetryUtilsRngFailure );
 
-        if( retryUtilsStatus == RetryUtilsRetriesExhausted )
-        {
-            LogError( ( "Connection to the broker failed, all attempts exhausted." ) );
-            returnStatus = EXIT_FAILURE;
+            if( retryUtilsStatus == RetryUtilsRetriesExhausted )
+            {
+                LogError( ( "Connection to the broker failed, all attempts exhausted." ) );
+            }
+            else if( retryUtilsStatus == RetryUtilsSuccess )
+            {
+                LogWarn( ( "Connection to the broker failed. Retrying connection after backoff." ) );
+                ( void ) sleep( nextRetryBackOff / NUM_MILLISECONDS_IN_SECOND );
+                returnStatus = EXIT_FAILURE;
+            }
         }
     } while( ( socketStatus != SOCKETS_SUCCESS ) && ( retryUtilsStatus == RetryUtilsSuccess ) );
 
@@ -851,7 +909,8 @@ int main( int argc,
     bool publishPacketSent = false;
     NetworkContext_t networkContext = { 0 };
     RetryUtilsStatus_t retryUtilsStatus = RetryUtilsSuccess;
-    RetryUtilsParams_t retryParams;
+    RetryUtilsContext_t retryParams;
+    uint16_t nextRetryBackOff = 0;
 
     ( void ) argc;
     ( void ) argv;
@@ -883,7 +942,11 @@ int main( int argc,
             /**************************** Subscribe, Re-subscribe, and Keep-Alive ******************************/
 
             /* Initialize retry attempts and interval. */
-            RetryUtils_ParamsReset( &retryParams );
+            RetryUtils_InitializeParams( &retryParams,
+                                         CONNECTION_RETRY_BACKOFF_BASE_MS,
+                                         CONNECTION_RETRY_MAX_BACKOFF_DELAY_MS,
+                                         CONNECTION_RETRY_MAX_ATTEMPTS,
+                                         generateRandomNumber );
 
             do
             {
@@ -934,13 +997,19 @@ int main( int argc,
                     /* Process incoming PINGRESP from the broker */
                     mqttProcessIncomingPacket( &networkContext, &fixedBuffer );
 
-                    LogWarn( ( "Server rejected subscription request. Retrying subscribe with backoff and jitter." ) );
-                    retryUtilsStatus = RetryUtils_BackoffAndSleep( &retryParams );
-                }
+                    /* Get back-off value for the next re-subscribe attempt. */
+                    retryUtilsStatus = RetryUtils_GetNextBackOff( &retryParams, &nextRetryBackOff );
+                    assert( retryUtilsStatus != RetryUtilsRngFailure );
 
-                if( retryUtilsStatus == RetryUtilsRetriesExhausted )
-                {
-                    LogError( ( "Subscription to topic failed, all attempts exhausted." ) );
+                    if( retryUtilsStatus == RetryUtilsRetriesExhausted )
+                    {
+                        LogError( ( "Subscription to topic failed, all attempts exhausted." ) );
+                    }
+                    else if( retryUtilsStatus == RetryUtilsSuccess )
+                    {
+                        LogWarn( ( "Server rejected subscription request. Retrying connection after backoff." ) );
+                        ( void ) sleep( nextRetryBackOff / NUM_MILLISECONDS_IN_SECOND );
+                    }
                 }
             } while( ( globalSubAckStatus == false ) && ( retryUtilsStatus == RetryUtilsSuccess ) );
 
