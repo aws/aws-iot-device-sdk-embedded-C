@@ -41,7 +41,7 @@ RetryUtilsStatus_t RetryUtils_GetNextBackOff( RetryUtilsContext_t * pRetryContex
     RetryUtilsStatus_t status = RetryUtilsSuccess;
     int32_t randomVal = 0;
 
-    /* If MAX_RETRY_ATTEMPTS is set to 0, try forever. */
+    /* If RETRY_UTILS_RETRY_FOREVER is set to 0, try forever. */
     if( ( pRetryContext->attemptsDone < pRetryContext->maxRetryAttempts ) ||
         ( pRetryContext->maxRetryAttempts == RETRY_UTILS_RETRY_FOREVER ) )
     {

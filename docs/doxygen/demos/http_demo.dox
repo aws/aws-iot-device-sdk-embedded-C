@@ -8,7 +8,7 @@
 <p>
 A POSIX socket-based transport interface implementation is used to establish a
 plaintext connection over port 80 to an HTTP server. If a connection
-failure occurs, then the connection establishment is retried for @ref CONNECTION_RETRY_MAX_ATTEMPTS.
+failure occurs, then the connection establishment is retried with exponential and jitter backoff.
 Once a connection is established, HTTP requests are sent for the following HTTP methods:
 `GET`, `HEAD`, `PUT`, and `POST`. The respective responses from each of these
 requests are logged.
@@ -27,7 +27,7 @@ sends HTTP requests, then logs their responses.
 An OpenSSL-based transport interface implementation is used to establish an encrypted
 TLS connection over port 443 to an HTTP server. Only the server's certificate
 is verified using its respective root CA certificate. If a connection
-failure occurs, then the connection establishment is retried for @ref CONNECTION_RETRY_MAX_ATTEMPTS.
+failure occurs, then the connection establishment is retried with exponential and jitter backoff.
 Once a connection is established, HTTP requests are sent for the following HTTP methods:
 `GET`, `HEAD`, `PUT`, and `POST`. The respective responses from each of these
 requests are logged.
@@ -47,7 +47,7 @@ An OpenSSL-based transport interface implementation is used to establish an encr
 TLS connection, with both server and client authentication, over port 443 to AWS IoT Core.
 Because port 443 is used, the ALPN protocol name must be set to `x-amzn-http-ca`.
 If a connection failure occurs, then the connection establishment is retried
-for @ref CONNECTION_RETRY_MAX_ATTEMPTS.
+with exponential and jitter backoff.
 </p>
 
 <p>
@@ -72,8 +72,8 @@ An OpenSSL-based transport interface implementation is used to establish an
 encrypted TLS connection over port 443 to S3. The host address is extracted from
 the pre-signed PUT URL using the third-party http-parser library. Only the
 server's certificate is verified using its respective root CA certificate. If a
-connection failure occurs, then the connection establishment is retried for @ref
-CONNECTION_RETRY_MAX_ATTEMPTS.
+connection failure occurs, then the connection establishment is retried for limited
+attempts with exponential and jitter backoff.
 </p>
 
 <p>
@@ -101,8 +101,8 @@ An OpenSSL-based transport interface implementation is used to establish an
 encrypted TLS connection over port 443 to S3. The host address is extracted from
 the pre-signed GET URL using the third-party http-parser library. Only the
 server's certificate is verified using its respective root CA certificate. If a
-connection failure occurs, then the connection establishment is retried for @ref
-CONNECTION_RETRY_MAX_ATTEMPTS.
+connection failure occurs, then the connection establishment is retried for limited
+attempts with exponential and jitter backoff.
 </p>
 
 <p>
@@ -128,8 +128,7 @@ An OpenSSL-based transport interface implementation is used to establish an
 encrypted TLS connection over port 443 to S3. The host address is extracted
 from the pre-signed GET UTL using the third-party http-parser library. Only the
 server's certificate is verified using its respective root CA certificate. If a
-connection failure occurs, then the connection establishment is retried for
-@ref CONNECTION_RETRY_MAX_ATTEMPTS.
+connection failure occurs, then the connection establishment is retried with exponential and jitter backoff.
 </p>
 
 <p>
