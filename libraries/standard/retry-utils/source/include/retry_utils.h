@@ -56,11 +56,11 @@
  *
  * Before retrying the failed communication to the server, there is a delay period.
  * In this delay period, the task that is retrying must sleep for some random amount
- * of seconds between 0 and the lesser of the backoff window (related to the retry attempt)
+ * of milliseconds between 0 and the lesser of the backoff window (related to the retry attempt)
  * and a predefined maximum delay value. The backoff window is doubled with each retry
  * attempt until the maximum delay value is reached.<br>
  *
- * > sleep_seconds = random_between( 0, min( 2<sup>attempts_count</sup> * base_seconds, maximum_seconds ) )
+ * > sleep_ms = random_between( 0, min( 2<sup>attempts_count</sup> * base_ms, maximum_ms ) )
  */
 
 /**

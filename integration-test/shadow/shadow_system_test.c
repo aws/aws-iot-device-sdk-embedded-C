@@ -74,59 +74,37 @@
 /**
  * @brief Length of MQTT server host name.
  */
-#define AWS_IOT_ENDPOINT_LENGTH           ( ( uint16_t ) ( sizeof( AWS_IOT_ENDPOINT ) - 1 ) )
+#define AWS_IOT_ENDPOINT_LENGTH             ( ( uint16_t ) ( sizeof( AWS_IOT_ENDPOINT ) - 1 ) )
 
 /**
  * @brief Length of client identifier.
  */
-#define CLIENT_IDENTIFIER_LENGTH          ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) )
+#define CLIENT_IDENTIFIER_LENGTH            ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) )
 
 /**
  * @brief Size of the network buffer for MQTT packets.
  */
-#define NETWORK_BUFFER_SIZE               ( 1024U )
+#define NETWORK_BUFFER_SIZE                 ( 1024U )
 
 /**
  * @brief Client identifier for MQTT session in the tests.
  */
-#define TEST_CLIENT_IDENTIFIER            "SHADOW-SYSTEM-Test"
+#define TEST_CLIENT_IDENTIFIER              "SHADOW-SYSTEM-Test"
 
 /**
  * @brief Length of the client identifier.
  */
-#define TEST_CLIENT_IDENTIFIER_LENGTH     ( sizeof( TEST_CLIENT_IDENTIFIER ) - 1u )
+#define TEST_CLIENT_IDENTIFIER_LENGTH       ( sizeof( TEST_CLIENT_IDENTIFIER ) - 1u )
 
 /**
  * @brief Transport timeout in milliseconds for transport send and receive.
  */
-#define TRANSPORT_SEND_RECV_TIMEOUT_MS    ( 2000U )
-
-
-/**
- * @brief The maximum number of retries for connecting to server.
- */
-#define CONNECTION_RETRY_MAX_ATTEMPTS            ( 5U )
-
-/**
- * @brief The maximum back-off delay (in milliseconds) for retrying connection to server.
- */
-#define CONNECTION_RETRY_MAX_BACKOFF_DELAY_MS    ( 5000U )
-
-/**
- * @brief The base back-off delay (in milliseconds) to use for connection retry attempts.
- */
-#define CONNECTION_RETRY_BACKOFF_BASE_MS         ( 500U )
-
-/**
- * @brief Number of milliseconds in a second.
- */
-#define NUM_MILLISECONDS_IN_SECOND               ( 1000U )
+#define TRANSPORT_SEND_RECV_TIMEOUT_MS      ( 2000U )
 
 /**
  * @brief Timeout for receiving CONNACK packet in milli seconds.
  */
-#define CONNACK_RECV_TIMEOUT_MS                  ( 1000U )
-
+#define CONNACK_RECV_TIMEOUT_MS             ( 1000U )
 
 /**
  * @brief Time interval in seconds at which an MQTT PINGREQ need to be sent to
