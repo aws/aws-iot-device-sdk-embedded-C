@@ -6,7 +6,7 @@
 @brief Demo of using the PKCS #11 interface to generate a random number.
 
 
-This demo will introduce the basics of PKCS #11. It will step you through the data types as well as giving
+This demo will introduce the basics of PKCS #11. It will step you through the data types as well as give
 an overview of the functions used to manage the PKCS #11 library's state.
 
 Finally, it will demonstrate how to fill a buffer with random bytes using PKCS #11.
@@ -38,4 +38,3 @@ This demo will use the key pair created in the @ref pkcs11_demo_object to sign a
 show how the public key can be used to verify that the signature originated from the private key that created it.
 @image html pkcs11_sign_verify.png width=100%
 */
-
