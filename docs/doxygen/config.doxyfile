@@ -2236,6 +2236,7 @@ SKIP_FUNCTION_MACROS   = YES
 
 TAGFILES               = libraries/standard/coreMQTT/docs/doxygen/output/mqtt.tag=../../../../libraries/standard/coreMQTT/docs/doxygen/output/html \
                          libraries/standard/coreJSON/docs/doxygen/output/json.tag=../../../../libraries/standard/coreJSON/docs/doxygen/output/html \
+                         libraries/standard/corePKCS11/docs/doxygen/output/core_pkcs11.tag=../../../../libraries/standard/corePKCS11/docs/doxygen/output/html \
                          libraries/aws/device-shadow-for-aws-iot-embedded-sdk/docs/doxygen/output/shadow.tag=../../../../libraries/aws/device-shadow-for-aws-iot-embedded-sdk/docs/doxygen/output/html \
                          libraries/standard/coreHTTP/docs/doxygen/output/http.tag=../../../../libraries/standard/coreHTTP/docs/doxygen/output\html \
                          libraries/aws/device-defender-for-aws-iot-embedded-sdk/docs/doxygen/output/defender.tag=../../../../libraries/aws/device-defender-for-aws-iot-embedded-sdk/docs/doxygen/output/html \
