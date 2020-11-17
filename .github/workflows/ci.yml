@@ -249,7 +249,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           FILES=($(find . -type f -name '*.md' | grep -E -i -v 'cbmc|cmock|third|3rdparty' | tr '\n' ' '))
-          python3 tools/link-verifier/verify-links.py -F ${FILES[@]} -v
+          LINKS=($(grep -e 'https\?://' . -RIa --include='*.c' --include='*.h' --include='*.dox' \
+                --exclude-dir=.git --exclude-dir=cbmc --exclude-dir=CMock --exclude-dir=third-party --exclude-dir=3rdparty | \
+                grep -IoE '\b(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]*[-A-Za-z0-9+&@#/%=~_|]' | sort | uniq | tr '\n' ' '))
+          python3 tools/link-verifier/verify-links.py -F ${FILES[@]} -L ${LINKS[@]} -v
           if [ $? -ne "0" ]
           then
             exit 1

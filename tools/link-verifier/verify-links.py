@@ -325,12 +325,11 @@ def main():
                 else:
                     if args.verbose:
                         cprint(f'{status_code}\t{link}', 'green')
-            # Something may go wrong since anything could be passed on the command line.
+            # Many things could go wrong since anything could be passed on the command line.
             except Exception as e:
                 print(e)
                 broken_links.append(link)
                 cprint(f'{link}', 'red')
-                break
 
     # Return code > 0 to return error. This may return success if there are 256 broken links ¯\_(ツ)_/¯
     num_broken = len(broken_links)
