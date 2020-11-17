@@ -11,6 +11,7 @@ import shutil
 from bs4 import BeautifulSoup
 from termcolor import cprint
 from multiprocessing import Pool
+import traceback
 
 MARKDOWN_SEARCH_TERM = r'\.md$'
 # Regex to find a URL
@@ -193,11 +194,15 @@ def test_url(url):
     except ValueError as e:
         pass
     if status != 'Good':
-        r = requests.get(url)
+        r = requests.head(url, allow_redirects=True)
+        # Some sites may return 404 for head but not get, e.g.
+        # https://tls.mbed.org/kb/development/thread-safety-and-multi-threading
+        if r.status_code >= 400:
+            r = requests.get(url)
         # It's likely we will run into GitHub's rate-limiting if there are many links.
         if r.status_code == 429:
             time.sleep(int(r.headers['Retry-After']))
-            r = requests.get(url)
+            r = requests.head(url, allow_redirects=True)
         if r.status_code >= 400:
             is_broken = True
         status = r.status_code
@@ -249,14 +254,14 @@ def consolidate_repo_list(repo_list):
                 try:
                     fetch_issues(repo, 'pr', 1500)
                 except Exception as e:
-                    print(e)
+                    traceback.print_exc()
                     use_cache = False
                 main_repo_list[repo]['pr_cached'] = True
             if main_repo_list[repo]['num_issues'] > GITHUB_FETCH_THRESHOLD and main_repo_list[repo]['issue_cached'] == False:
                 try:
                     fetch_issues(repo, 'issue', 1000)
                 except Exception as e:
-                    print(e)
+                    traceback.print_exc()
                     use_cache = False
                 main_repo_list[repo]['issue_cached'] = True
 
@@ -327,9 +332,9 @@ def main():
                         cprint(f'{status_code}\t{link}', 'green')
             # Many things could go wrong since anything could be passed on the command line.
             except Exception as e:
-                print(e)
+                traceback.print_exc()
                 broken_links.append(link)
-                cprint(f'{link}', 'red')
+                cprint(f'Error\t{link}', 'red')
 
     # Return code > 0 to return error. This may return success if there are 256 broken links ¯\_(ツ)_/¯
     num_broken = len(broken_links)
