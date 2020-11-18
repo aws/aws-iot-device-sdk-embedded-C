@@ -1,6 +1,7 @@
 @startuml
 skinparam classFontSize 8
 skinparam classFontName Helvetica
+skinparam dpi 300
 autonumber
 
 participant "Application" as app
