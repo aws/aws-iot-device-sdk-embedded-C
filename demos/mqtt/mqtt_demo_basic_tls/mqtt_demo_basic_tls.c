@@ -498,19 +498,19 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
 
         if( opensslStatus != OPENSSL_SUCCESS )
         {
-            /* Get back-off value (in milliseconds)for the next connection retry. */
+            /* Get back-off value (in milliseconds) for the next connection retry. */
             retryUtilsStatus = RetryUtils_GetNextBackOff( &reconnectParams, &nextRetryBackOff );
             assert( retryUtilsStatus != RetryUtilsRngFailure );
 
             if( retryUtilsStatus == RetryUtilsRetriesExhausted )
             {
                 LogError( ( "Connection to the broker failed, all attempts exhausted." ) );
+                returnStatus = EXIT_FAILURE;
             }
             else if( retryUtilsStatus == RetryUtilsSuccess )
             {
                 LogWarn( ( "Connection to the broker failed. Retrying connection after backoff." ) );
                 ( void ) sleep( nextRetryBackOff / NUM_MILLISECONDS_IN_SECOND );
-                returnStatus = EXIT_FAILURE;
             }
         }
     } while( ( opensslStatus != OPENSSL_SUCCESS ) && ( retryUtilsStatus == RetryUtilsSuccess ) );
@@ -782,19 +782,19 @@ static int handleResubscribe( MQTTContext_t * pMqttContext )
          * server rejection of the subscription request. */
         if( globalSubAckStatus == MQTTSubAckFailure )
         {
-            /* Get back-off value (in milliseconds)for the next re-subscribe attempt. */
+            /* Get back-off value (in milliseconds) for the next re-subscribe attempt. */
             retryUtilsStatus = RetryUtils_GetNextBackOff( &retryParams, &nextRetryBackOff );
             assert( retryUtilsStatus != RetryUtilsRngFailure );
 
             if( retryUtilsStatus == RetryUtilsRetriesExhausted )
             {
                 LogError( ( "Server rejected subscription request, all attempts exhausted." ) );
+                returnStatus = EXIT_FAILURE;
             }
             else if( retryUtilsStatus == RetryUtilsSuccess )
             {
                 LogWarn( ( "Server rejected subscription request. Retrying connection after backoff." ) );
                 ( void ) sleep( nextRetryBackOff / NUM_MILLISECONDS_IN_SECOND );
-                returnStatus = EXIT_FAILURE;
             }
         }
     } while( ( globalSubAckStatus == MQTTSubAckFailure ) && ( retryUtilsStatus == RetryUtilsSuccess ) );
