@@ -9,6 +9,7 @@
 	url = https://github.com/FreeRTOS/coreHTTP.git
 [submodule "libraries/standard/coreJSON"]
 	path = libraries/standard/coreJSON
+	branch = main
 	url = https://github.com/FreeRTOS/coreJSON.git
 [submodule "libraries/aws/device-shadow-for-aws-iot-embedded-sdk"]
 	path = libraries/aws/device-shadow-for-aws-iot-embedded-sdk
