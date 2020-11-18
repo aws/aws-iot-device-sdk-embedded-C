@@ -121,7 +121,7 @@ int32_t connectToServerWithBackoffRetries( TransportConnect_t connectFunction,
 
         if( returnStatus != EXIT_SUCCESS )
         {
-            /* Get back-off value (in milliseconds)for the next connection retry. */
+            /* Get back-off value (in milliseconds) for the next connection retry. */
             retryUtilsStatus = RetryUtils_GetNextBackOff( &reconnectParams, &nextRetryBackOff );
             assert( retryUtilsStatus != RetryUtilsRngFailure );
 

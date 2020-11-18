@@ -411,7 +411,7 @@ static bool connectToBrokerWithBackoffRetries( NetworkContext_t * pNetworkContex
         }
         else
         {
-            /* Get back-off value (in milliseconds)for the next connection retry. */
+            /* Get back-off value (in milliseconds) for the next connection retry. */
             retryUtilsStatus = RetryUtils_GetNextBackOff( &reconnectParams, &nextRetryBackOff );
             assert( retryUtilsStatus != RetryUtilsRngFailure );
 

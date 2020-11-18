@@ -388,19 +388,19 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
 
         if( opensslStatus != OPENSSL_SUCCESS )
         {
-            /* Get back-off value (in milliseconds)for the next connection retry. */
+            /* Get back-off value (in milliseconds) for the next connection retry. */
             retryUtilsStatus = RetryUtils_GetNextBackOff( &reconnectParams, &nextRetryBackOff );
             assert( retryUtilsStatus != RetryUtilsRngFailure );
 
             if( retryUtilsStatus == RetryUtilsRetriesExhausted )
             {
                 LogError( ( "Connection to the broker failed, all attempts exhausted." ) );
+                returnStatus = EXIT_FAILURE;
             }
             else if( retryUtilsStatus == RetryUtilsSuccess )
             {
                 LogWarn( ( "Connection to the broker failed. Retrying connection after backoff." ) );
                 ( void ) sleep( nextRetryBackOff / NUM_MILLISECONDS_IN_SECOND );
-                returnStatus = EXIT_FAILURE;
             }
         }
     } while( ( opensslStatus != OPENSSL_SUCCESS ) && ( retryUtilsStatus == RetryUtilsSuccess ) );
