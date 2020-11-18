@@ -57,6 +57,7 @@
 #include "ota_os_posix.h"
 #include "ota_mqtt_interface.h"
 #include "ota_http_interface.h"
+#include "ota_platform_interface.h"
 
 /* HTTP API header. */
 #include "core_http_client.h"
@@ -163,13 +164,6 @@
 #define OTA_MAX_STREAM_NAME_SIZE            ( 128 )
 
 /**
- * @brief The maximum size of the file bitmap where each bit represents a block
- * status.
- */
-#define OTA_MAX_BLOCK_BITMAP_SIZE           ( 256 )
-
-
-/**
  * @brief The MQTT metrics string expected by AWS IoT.
  */
 #define METRICS_STRING           "?SDK=" OS_NAME "&Version=" OS_VERSION "&Platform=" HARDWARE_PLATFORM_NAME "&MQTTLib=" MQTT_LIB
@@ -194,7 +188,7 @@ const AppVersion32_t appFirmwareVersion =
 /**
  * @brief The network buffer must remain valid when OTA library task is running.
  */
-static uint8_t buffer[ OTA_NETWORK_BUFFER_SIZE ];
+static uint8_t buffer[ NETWORK_BUFFER_SIZE ];
 
 /**
  * @brief Keep a flag for indicating if the MQTT connection is alive.
@@ -224,7 +218,7 @@ static char serverHost[ 256 ];
 
 /* Check that size of the user buffer is defined. */
 #ifndef USER_BUFFER_LENGTH
-    #define USER_BUFFER_LENGTH    ( 2048 )
+    #define USER_BUFFER_LENGTH    ( 20480 )
 #endif
 
 /**
@@ -275,16 +269,13 @@ static OtaEventData_t eventBuffer;
  */
 static OtaAppBuffer_t otaBuffer =
 {
-    .pUpdateFilePath    = updateFilePath,
+    .pUpdateFilePath = updateFilePath,
     .updateFilePathsize = OTA_MAX_FILE_PATH_SIZE,
-    .pCertFilePath      = certFilePath,
-    .certFilePathSize   = OTA_MAX_FILE_PATH_SIZE,
-    .url                = url,
-    .urlSize            = OTA_PRESIGNED_URL_MAX_SIZE,
-    .pFileBitmap        = bitmap,
-    .fileBitmapSize     = OTA_MAX_BLOCK_BITMAP_SIZE
+    .pCertFilePath = certFilePath,
+    .certFilePathSize =  OTA_MAX_FILE_PATH_SIZE,
+    .pStreamName = streamName,
+    .streamNameSize = OTA_MAX_STREAM_NAME_SIZE,
 };
-
 
 /*-----------------------------------------------------------*/
 
@@ -371,7 +362,7 @@ static void otaAppCallback( OtaJobEvent_t event )
         LogInfo( ( "Received OtaJobEventActivate callback from OTA Agent." ) );
 
         /* OTA job is completed. so delete the network connection. */
-        MQTT_Disconnect( &mqttContext );
+        //MQTT_Disconnect( &mqttContext );
 
         /* Activate the new firmware image. */
         OTA_ActivateNewImage();
@@ -420,6 +411,8 @@ static void mqttJobCallback( MQTTContext_t * pContext,
 
     LogInfo( ( "Received job message callback, size %d.\n\n", pPublishInfo->payloadLength ) );
 
+    memset( eventBuffer.data,0, OTA_DATA_BLOCK_SIZE );
+
     pData = &eventBuffer;
 
     if( pData != NULL )
@@ -427,37 +420,6 @@ static void mqttJobCallback( MQTTContext_t * pContext,
         memcpy( pData->data, pPublishInfo->pPayload, pPublishInfo->payloadLength );
         pData->dataLength = pPublishInfo->payloadLength;
         eventMsg.eventId = OtaAgentEventReceivedJobDocument;
-        eventMsg.pEventData = pData;
-
-        /* Send job document received event. */
-        OTA_SignalEvent( &eventMsg );
-    }
-    else
-    {
-        LogError( ( "Error: No OTA data buffers available.\r\n" ) );
-    }
-}
-
-/*-----------------------------------------------------------*/
-
-static void mqttDataCallback( MQTTContext_t * pContext,
-                              MQTTPublishInfo_t * pPublishInfo )
-{
-    assert( pPublishInfo != NULL );
-    assert( pContext != NULL );
-
-    OtaEventData_t * pData;
-    OtaEventMsg_t eventMsg = { 0 };
-
-    LogInfo( ( "Received data message callback, size %d.\n\n", pPublishInfo->payloadLength ) );
-
-    pData = &eventBuffer;
-
-    if( pData != NULL )
-    {
-        memcpy( pData->data, pPublishInfo->pPayload, pPublishInfo->payloadLength );
-        pData->dataLength = pPublishInfo->payloadLength;
-        eventMsg.eventId = OtaAgentEventReceivedFileBlock;
         eventMsg.pEventData = pData;
 
         /* Send job document received event. */
@@ -625,11 +587,14 @@ static OtaErr_t mqttSubscribe( const char * pTopicFilter,
                                uint8_t qos,
                                void * pCallback )
 {
+    OtaErr_t otaRet = OTA_ERR_NONE;
+
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus;
-
+    MQTTContext_t * pMqttContext = &mqttContext;
     MQTTSubscribeInfo_t pSubscriptionList[ 1 ];
 
+    assert( pMqttContext != NULL );
     assert( pTopicFilter != NULL );
     assert( topicFilterLength > 0 );
 
@@ -642,56 +607,43 @@ static OtaErr_t mqttSubscribe( const char * pTopicFilter,
     pSubscriptionList[ 0 ].topicFilterLength = topicFilterLength;
 
     /* Send SUBSCRIBE packet. */
-    mqttStatus = MQTT_Subscribe( &mqttContext,
+    mqttStatus = MQTT_Subscribe( pMqttContext,
                                  pSubscriptionList,
                                  sizeof( pSubscriptionList ) / sizeof( MQTTSubscribeInfo_t ),
-                                 MQTT_GetPacketId( &mqttContext ) );
+                                 MQTT_GetPacketId( pMqttContext ) );
 
     if( mqttStatus != MQTTSuccess )
     {
         LogError( ( "Failed to send SUBSCRIBE packet to broker with error = %u.",
                     mqttStatus ) );
-        returnStatus = EXIT_FAILURE;
+
+        otaRet = OTA_ERR_SUBSCRIBE_FAILED;
     }
     else
     {
         LogInfo( ( "SUBSCRIBE topic %.*s to broker.\n\n",
                    topicFilterLength,
-                   pTopicFilter ) );
+                   pTopicFilter) );
 
-        /* Process incoming packet from the broker. Acknowledgment for subscription
-         * ( SUBACK ) will be received here. However after sending the subscribe, the
-         * client may receive a publish before it receives a subscribe ack. Since this
-         * demo is subscribing to the topic to which no one is publishing, probability
-         * of receiving publish message before subscribe ack is zero; but application
-         * must be ready to receive any packet. This demo uses MQTT_ProcessLoop to
-         * receive packet from network. */
-        mqttStatus = MQTT_ProcessLoop( &mqttContext, 1000 );
-
-        if( mqttStatus != MQTTSuccess )
-        {
-            returnStatus = EXIT_FAILURE;
-            LogError( ( "MQTT_ProcessLoop returned with status = %u.",
-                        mqttStatus ) );
-        }
+        otaRet = OTA_ERR_NONE;
     }
 
     /* Register callback to suncription manager. */
     SubscriptionManager_RegisterCallback( pTopicFilter, topicFilterLength, pCallback );
 
-    return returnStatus;
+    return otaRet;
 }
 
 /*
  * Publish a message to the specified client/topic at the given QOS.
  */
-static OtaErr_t mqttPublish( const char * const pacTopic,
-                             uint16_t topicLen,
-                             const char * pMsg,
-                             uint32_t msgSize,
-                             uint8_t qos )
+ static OtaErr_t mqttPublish( const char * const pacTopic,
+                              uint16_t topicLen,
+                              const char * pMsg,
+                              uint32_t msgSize,
+                              uint8_t qos )
 {
-    OtaErr_t otaErrRet = OTA_ERR_UNINITIALIZED;
+    OtaErr_t otaRet = OTA_ERR_UNINITIALIZED;
 
     MQTTStatus_t mqttStatus = MQTTBadParameter;
     MQTTPublishInfo_t publishInfo;
@@ -707,42 +659,33 @@ static OtaErr_t mqttPublish( const char * const pacTopic,
                                &publishInfo,
                                MQTT_GetPacketId( pMqttContext ) );
 
-    if( mqttStatus == MQTTSuccess )
-    {
-        /* Wait for the publish to complete. */
-        mqttStatus = MQTT_ProcessLoop( pMqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
-
-        if( mqttStatus != MQTTSuccess )
-        {
-            LogError( ( " Publish ack wait failed with error = %u.", mqttStatus ) );
-
-            otaErrRet = OTA_ERR_PUBLISH_FAILED;
-        }
-        else
-        {
-            LogInfo( ( " Publish success.\n\r" ) );
-
-            otaErrRet = OTA_ERR_NONE;
-        }
-    }
-    else
+    if( mqttStatus != MQTTSuccess )
     {
         LogError( ( "Failed to send PUBLISH packet to broker with error = %u.", mqttStatus ) );
 
-        otaErrRet = OTA_ERR_PUBLISH_FAILED;
+        otaRet = OTA_ERR_PUBLISH_FAILED;
+    }
+    else
+    {
+        LogInfo( ( "Sent PUBLISH packet to broker %.*s to broker.\n\n",
+                   topicLen,
+                   pacTopic) );
+
+        otaRet = OTA_ERR_NONE;
     }
 
-    return otaErrRet;
+    return otaRet;
 }
 
 static OtaErr_t mqttUnsubscribe( const char * pTopicFilter,
                                  uint16_t topicFilterLength,
                                  uint8_t qos )
 {
-    int returnStatus = EXIT_SUCCESS;
+    OtaErr_t otaRet = OTA_ERR_NONE;
     MQTTStatus_t mqttStatus;
 
     MQTTSubscribeInfo_t pSubscriptionList[ 1 ];
+    MQTTContext_t * pMqttContext = &mqttContext;
 
     /* Start with everything at 0. */
     ( void ) memset( ( void * ) pSubscriptionList, 0x00, sizeof( pSubscriptionList ) );
@@ -754,31 +697,28 @@ static OtaErr_t mqttUnsubscribe( const char * pTopicFilter,
     pSubscriptionList[ 0 ].topicFilterLength = topicFilterLength;
 
     /* Send UNSUBSCRIBE packet. */
-    mqttStatus = MQTT_Unsubscribe( &mqttContext,
+    mqttStatus = MQTT_Unsubscribe( pMqttContext,
                                    pSubscriptionList,
                                    sizeof( pSubscriptionList ) / sizeof( MQTTSubscribeInfo_t ),
-                                   MQTT_GetPacketId( &mqttContext ) );
+                                   MQTT_GetPacketId( pMqttContext ) );
 
     if( mqttStatus != MQTTSuccess )
     {
-        LogError( ( "Failed to send UNSUBSCRIBE packet to broker with error = %s.",
-                    MQTT_Status_strerror( mqttStatus ) ) );
-        returnStatus = EXIT_FAILURE;
+        LogError( ( "Failed to send SUBSCRIBE packet to broker with error = %u.",
+                    mqttStatus ) );
+
+        otaRet = OTA_ERR_UNSUBSCRIBE_FAILED;
     }
     else
     {
-        /* Process Incoming UNSUBACK packet from the broker. */
-        mqttStatus = MQTT_ProcessLoop( &mqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
+        LogInfo( ( "SUBSCRIBE topic %.*s to broker.\n\n",
+                   topicFilterLength,
+                   pTopicFilter) );
 
-        if( mqttStatus != MQTTSuccess )
-        {
-            returnStatus = EXIT_FAILURE;
-            LogError( ( "MQTT_ProcessLoop returned with status = %s.",
-                        MQTT_Status_strerror( mqttStatus ) ) );
-        }
+        otaRet = OTA_ERR_NONE;
     }
 
-    return returnStatus;
+    return otaRet; 
 }
 
 /*-----------------------------------------------------------*/
@@ -924,10 +864,13 @@ static int32_t connectToServer( NetworkContext_t * pNetworkContext,
     opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH_HTTP;
 
     /* Retrieve the address location and length from S3_PRESIGNED_GET_URL. */
-    getUrlAddress( pUrl,
-                   strlen( pUrl ),
-                   &UrlInfo.pAddress,
-                   &UrlInfo.addressLength );
+    if( pUrl != NULL )
+    {
+        getUrlAddress( pUrl,
+                       strlen( pUrl ),
+                       &UrlInfo.pAddress,
+                       &UrlInfo.addressLength );
+    }
 
     if( 1 /* returnStatus == EXIT_SUCCESS */ )
     {
@@ -1013,8 +956,6 @@ static OtaErr_t httpRequest( uint32_t rangeStart,
     /* OTA lib return error code. */
     OtaErr_t ret = OTA_ERR_UNINITIALIZED;
 
-    static uint8_t url[ 34 ];
-
     OtaEventData_t * pData;
     OtaEventMsg_t eventMsg = { 0 };
 
@@ -1040,9 +981,7 @@ static OtaErr_t httpRequest( uint32_t rangeStart,
     requestInfo.pMethod = HTTP_METHOD_GET;
     requestInfo.methodLen = sizeof( HTTP_METHOD_GET ) - 1;
     requestInfo.pPath = UrlInfo.pPath;
-    requestInfo.pathLen = UrlInfo.pathLength;
-
-
+    requestInfo.pathLen = strlen( UrlInfo.pPath );
 
     /* Set "Connection" HTTP header to "keep-alive" so that multiple requests
      * can be sent over the same established TCP connection. */
@@ -1078,16 +1017,26 @@ static OtaErr_t httpRequest( uint32_t rangeStart,
                     HTTPClient_strerror( httpStatus ) ) );
     }
 
+     pData = &eventBuffer;
+
     if( httpStatus != HTTPSuccess )
     {
-        returnStatus = EXIT_FAILURE;
+        if( httpStatus == HTTPNoResponse )
+        {
+            /* reconnect to server. */
+            connectToServer( &networkContextHttp, NULL );
 
-        ret = OTA_ERR_HTTP_REQUEST_FAILED;
+            ret = OTA_ERR_NONE;
+
+        }
+        else
+        {
+            ret = OTA_ERR_HTTP_REQUEST_FAILED;
+        }
+        
     }
     else
     {
-        pData = otaEventBufferGet();
-
         /* Get the data from response buffer. */
         memcpy( pData->data, response.pBody, response.bodyLen );
         pData->dataLength = response.bodyLen;
@@ -1128,16 +1077,20 @@ static void setOtaInterface( OtaInterfaces_t * pOtaInterfaces )
 {
     /* Initialize OTA library OS Interface. */
     pOtaInterfaces->os.event.init = Posix_OtaInitEvent;
-    pOtaInterfaces->os.event.send = Posix_OtaSendEvent;
-    pOtaInterfaces->os.event.recv = Posix_OtaReceiveEvent;
-    pOtaInterfaces->os.event.deinit = Posix_OtaDeinitEvent;
+	pOtaInterfaces->os.event.send = Posix_OtaSendEvent;
+	pOtaInterfaces->os.event.recv = Posix_OtaReceiveEvent;
+	pOtaInterfaces->os.event.deinit = Posix_OtaDeinitEvent;
+    pOtaInterfaces->os.timer.start = Posix_OtaStartTimer;
+    pOtaInterfaces->os.timer.stop = Posix_OtaStopTimer;
+    pOtaInterfaces->os.timer.delete = Posix_OtaDeleteTimer;
+    pOtaInterfaces->os.mem.malloc = STDC_Malloc;
+    pOtaInterfaces->os.mem.free = STDC_Free;
 
     /* Intialize the OTA library MQTT Interface.*/
     pOtaInterfaces->mqtt.subscribe = mqttSubscribe;
     pOtaInterfaces->mqtt.publish = mqttPublish;
     pOtaInterfaces->mqtt.unsubscribe = mqttUnsubscribe;
     pOtaInterfaces->mqtt.jobCallback = mqttJobCallback;
-    pOtaInterfaces->mqtt.dataCallback = mqttDataCallback;
 
     /* Intialize the OTA library HTTP Interface.*/
     pOtaInterfaces->http.init = httpInit;
@@ -1186,8 +1139,6 @@ void startOTADemo( MQTTContext_t * pMqttContext )
                    ( const uint8_t * ) ( CLIENT_IDENTIFIER ),
                    otaAppCallback );
 
-    sleep( OTA_DEMO_TASK_DELAY_SECONDS );
-
     /* Create the OTA Agent thread with default attributes.*/
     pthread_create( &threadHandle, NULL, otaAgentTask, NULL );
 
@@ -1199,28 +1150,14 @@ void startOTADemo( MQTTContext_t * pMqttContext )
      * per second. */
     while( ( ( state = OTA_GetAgentState() ) != OtaAgentStateStopped ) )
     {
-        sleep( OTA_DEMO_TASK_DELAY_SECONDS );
+        mqttStatus = MQTT_ProcessLoop( pMqttContext, 1000 );
 
-        LogInfo( ( " Received: %u   Queued: %u   Processed: %u   Dropped: %u",
-                   OTA_GetPacketsReceived(),
-                   OTA_GetPacketsQueued(),
-                   OTA_GetPacketsProcessed(),
-                   OTA_GetPacketsDropped() ) );
-
-        if( state == OtaAgentStateWaitingForJob )
+        if( mqttStatus != MQTTSuccess )
         {
-            mqttStatus = MQTT_ProcessLoop( pMqttContext, 1000 );
+            LogError( ( "MQTT_ProcessLoop returned with status = %u.",
+                         mqttStatus ) );
+        }
 
-            if( mqttStatus != MQTTSuccess )
-            {
-                LogError( ( "MQTT_ProcessLoop returned with status = %u.",
-                            mqttStatus ) );
-            }
-        }
-        else
-        {
-            sleep( OTA_DEMO_TASK_DELAY_SECONDS );
-        }
     }
 }
 
