@@ -3,9 +3,11 @@
 	url = https://github.com/ThrowTheSwitch/CMock
 [submodule "libraries/standard/coreMQTT"]
 	path = libraries/standard/coreMQTT
+	branch = main
 	url = https://github.com/FreeRTOS/coreMQTT.git
 [submodule "libraries/standard/coreHTTP"]
 	path = libraries/standard/coreHTTP
+	branch = main
 	url = https://github.com/FreeRTOS/coreHTTP.git
 [submodule "libraries/standard/coreJSON"]
 	path = libraries/standard/coreJSON
@@ -13,12 +15,14 @@
 	url = https://github.com/FreeRTOS/coreJSON.git
 [submodule "libraries/aws/device-shadow-for-aws-iot-embedded-sdk"]
 	path = libraries/aws/device-shadow-for-aws-iot-embedded-sdk
+	branch = main
 	url = https://github.com/aws/device-shadow-for-aws-iot-embedded-sdk.git
 [submodule "libraries/aws/jobs-for-aws-iot-embedded-sdk"]
 	path = libraries/aws/jobs-for-aws-iot-embedded-sdk
 	url = https://github.com/aws/jobs-for-aws-iot-embedded-sdk.git
 [submodule "libraries/aws/device-defender-for-aws-iot-embedded-sdk"]
 	path = libraries/aws/device-defender-for-aws-iot-embedded-sdk
+        branch = main
 	url = https://github.com/aws/device-defender-for-aws-iot-embedded-sdk.git
 [submodule "libraries/standard/corePKCS11"]
 	path = libraries/standard/corePKCS11
