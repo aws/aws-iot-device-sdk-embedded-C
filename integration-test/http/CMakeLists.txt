@@ -61,7 +61,7 @@ list(APPEND stest_dep_list
             ${real_name}
             clock_posix
             openssl_posix
-            retry_utils_posix
+            retry_utils
         )
 
 set(stest_name "${project_name}_test")

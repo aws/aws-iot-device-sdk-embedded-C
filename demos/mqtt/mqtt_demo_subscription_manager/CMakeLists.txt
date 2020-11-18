@@ -25,7 +25,7 @@ target_link_libraries(
         mqtt_subscription_manager
         clock_posix
         openssl_posix
-        retry_utils_posix
+        retry_utils
 )
 
 target_include_directories(

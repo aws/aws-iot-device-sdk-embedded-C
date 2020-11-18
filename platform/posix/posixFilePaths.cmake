@@ -21,11 +21,3 @@ set( OPENSSL_TRANSPORT_SOURCES
 set( COMMON_TRANSPORT_INCLUDE_PUBLIC_DIRS
      ${CMAKE_CURRENT_LIST_DIR}/transport/include
      ${PLATFORM_DIR}/include )
-
-# Retry utility source files.
-set( RETRY_SOURCES
-     ${CMAKE_CURRENT_LIST_DIR}/retry_utils_posix.c )
-
-# Retry Public Include directories.
-set( RETRY_INCLUDE_PUBLIC_DIRS
-     ${PLATFORM_DIR}/include )

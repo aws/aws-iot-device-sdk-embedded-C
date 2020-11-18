@@ -19,7 +19,7 @@ target_link_libraries(
     ${DEMO_NAME}
     PRIVATE
         openssl_posix
-        retry_utils_posix
+        retry_utils
 )
 
 target_include_directories(
