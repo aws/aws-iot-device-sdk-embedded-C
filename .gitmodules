@@ -20,6 +20,7 @@
 [submodule "libraries/aws/jobs-for-aws-iot-embedded-sdk"]
 	path = libraries/aws/jobs-for-aws-iot-embedded-sdk
 	url = https://github.com/aws/jobs-for-aws-iot-embedded-sdk.git
+	branch = main
 [submodule "libraries/aws/device-defender-for-aws-iot-embedded-sdk"]
 	path = libraries/aws/device-defender-for-aws-iot-embedded-sdk
         branch = main
