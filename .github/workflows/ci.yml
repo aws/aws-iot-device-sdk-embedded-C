@@ -159,7 +159,7 @@ jobs:
       - name: Install Doxygen
         run: |
           wget -qO- "http://doxygen.nl/files/doxygen-1.8.20.linux.bin.tar.gz" | sudo tar --strip-components=1 -xz -C /usr/local
-          sudo apt-get install -y libclang-9-dev
+          sudo apt-get install -y libclang-9-dev graphviz
       - name: Run Doxygen on all library submodules
         run: |
           ROOT=$PWD
