@@ -23,9 +23,9 @@
 	url = https://github.com/aws/jobs-for-aws-iot-embedded-sdk.git
 [submodule "libraries/aws/device-defender-for-aws-iot-embedded-sdk"]
 	path = libraries/aws/device-defender-for-aws-iot-embedded-sdk
-        branch = main
+	branch = main
 	url = https://github.com/aws/device-defender-for-aws-iot-embedded-sdk.git
 [submodule "libraries/standard/corePKCS11"]
 	path = libraries/standard/corePKCS11
-        branch = main
+	branch = main
 	url = https://github.com/FreeRTOS/corePKCS11.git
