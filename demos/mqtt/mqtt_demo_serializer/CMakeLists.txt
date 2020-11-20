@@ -11,6 +11,7 @@ add_executable(
     ${DEMO_NAME}
         "${DEMO_NAME}.c"
         ${MQTT_SERIALIZER_SOURCES}
+        ${BACKOFF_ALGORITHM_SOURCES}
 )
 
 target_link_libraries(
