@@ -88,7 +88,7 @@ void getUrlPath( const char * pUrl,
  * HTTP_PARSER_INTERNAL_ERROR if there was an error parsing the URL,
  * or HTTP_NO_RESPONSE if the path was not found.
  */
-void  getUrlAddress( const char * pUrl,
-                     size_t urlLen,
-                     const char ** pAddress,
-                     size_t * pAddressLen );
+void getUrlAddress( const char * pUrl,
+                    size_t urlLen,
+                    const char ** pAddress,
+                    size_t * pAddressLen );

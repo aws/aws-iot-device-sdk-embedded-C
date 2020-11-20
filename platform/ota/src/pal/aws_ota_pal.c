@@ -539,47 +539,47 @@ OtaPalImageState_t prvPAL_GetPlatformImageState( OtaFileContext_t * const C )
     OtaPalImageState_t ePalState = OtaPalImageStateUnknown;
 
 
-        pPlatformImageState = fopen( "PlatformImageState.txt", "r+b" ); /*lint !e586
-                                                                         * C standard library call is being used for portability. */
+    pPlatformImageState = fopen( "PlatformImageState.txt", "r+b" ); /*lint !e586
+                                                                     * C standard library call is being used for portability. */
 
-        if( pPlatformImageState != NULL )
+    if( pPlatformImageState != NULL )
+    {
+        if( 1 != fread( &eSavedAgentState, sizeof( OtaImageState_t ), 1, pPlatformImageState ) ) /*lint !e586 !e9029
+                                                                                                  * C standard library call is being used for portability. */
         {
-            if( 1 != fread( &eSavedAgentState, sizeof( OtaImageState_t ), 1, pPlatformImageState ) ) /*lint !e586 !e9029
-                                                                                                      * C standard library call is being used for portability. */
-            {
-                /* If an error occured reading the file, mark the state as aborted. */
-                LogError( ( "Failed to read image state file." ) );
-                ePalState = ( OtaPalImageStateInvalid | ( errno & OTA_PAL_ERR_MASK ) );
-            }
-            else
-            {
-                if( eSavedAgentState == OtaImageStateTesting )
-                {
-                    ePalState = OtaPalImageStatePendingCommit;
-                }
-                else if( eSavedAgentState == OtaImageStateAccepted )
-                {
-                    ePalState = OtaPalImageStateValid;
-                }
-                else
-                {
-                    ePalState = OtaPalImageStateInvalid;
-                }
-            }
-
-            if( 0 != fclose( pPlatformImageState ) ) /*lint !e586
-                                                      * C standard library call is being used for portability. */
-            {
-                LogError( ( "Failed to close image state file." ) );
-                ePalState = ( OtaPalImageStateInvalid | ( errno & OTA_PAL_ERR_MASK ) );
-            }
+            /* If an error occurred reading the file, mark the state as aborted. */
+            LogError( ( "Failed to read image state file." ) );
+            ePalState = ( OtaPalImageStateInvalid | ( errno & OTA_PAL_ERR_MASK ) );
         }
         else
         {
-            /* If no image state file exists, assume a factory image. */
-            ePalState = OtaPalImageStateValid; /*lint !e64 Allow assignment. */
+            if( eSavedAgentState == OtaImageStateTesting )
+            {
+                ePalState = OtaPalImageStatePendingCommit;
+            }
+            else if( eSavedAgentState == OtaImageStateAccepted )
+            {
+                ePalState = OtaPalImageStateValid;
+            }
+            else
+            {
+                ePalState = OtaPalImageStateInvalid;
+            }
         }
-        
+
+        if( 0 != fclose( pPlatformImageState ) ) /*lint !e586
+                                                  * C standard library call is being used for portability. */
+        {
+            LogError( ( "Failed to close image state file." ) );
+            ePalState = ( OtaPalImageStateInvalid | ( errno & OTA_PAL_ERR_MASK ) );
+        }
+    }
+    else
+    {
+        /* If no image state file exists, assume a factory image. */
+        ePalState = OtaPalImageStateValid; /*lint !e64 Allow assignment. */
+    }
+
     return ePalState; /*lint !e64 !e480 !e481 I/O calls and return type are used per design. */
 }
 

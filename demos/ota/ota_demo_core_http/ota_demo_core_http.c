@@ -166,12 +166,12 @@
 /**
  * @brief The MQTT metrics string expected by AWS IoT.
  */
-#define METRICS_STRING           "?SDK=" OS_NAME "&Version=" OS_VERSION "&Platform=" HARDWARE_PLATFORM_NAME "&MQTTLib=" MQTT_LIB
+#define METRICS_STRING                      "?SDK=" OS_NAME "&Version=" OS_VERSION "&Platform=" HARDWARE_PLATFORM_NAME "&MQTTLib=" MQTT_LIB
 
 /**
  * @brief The length of the MQTT metrics string expected by AWS IoT.
  */
-#define METRICS_STRING_LENGTH    ( ( uint16_t ) ( sizeof( METRICS_STRING ) - 1 ) )
+#define METRICS_STRING_LENGTH               ( ( uint16_t ) ( sizeof( METRICS_STRING ) - 1 ) )
 
 /*-----------------------------------------------------------*/
 
@@ -269,12 +269,12 @@ static OtaEventData_t eventBuffer;
  */
 static OtaAppBuffer_t otaBuffer =
 {
-    .pUpdateFilePath = updateFilePath,
+    .pUpdateFilePath    = updateFilePath,
     .updateFilePathsize = OTA_MAX_FILE_PATH_SIZE,
-    .pCertFilePath = certFilePath,
-    .certFilePathSize =  OTA_MAX_FILE_PATH_SIZE,
-    .pStreamName = streamName,
-    .streamNameSize = OTA_MAX_STREAM_NAME_SIZE,
+    .pCertFilePath      = certFilePath,
+    .certFilePathSize   = OTA_MAX_FILE_PATH_SIZE,
+    .pStreamName        = streamName,
+    .streamNameSize     = OTA_MAX_STREAM_NAME_SIZE,
 };
 
 /*-----------------------------------------------------------*/
@@ -340,10 +340,10 @@ static OtaErr_t mqttUnsubscribe( const char * pTopicFilter,
  * This typically means we should reset the device to run the new firmware.
  * If now is not a good time to reset the device, it may be activated later
  * by your user code. If the update was rejected, just return without doing
- * anything and we'll wait for another job. If it reported that we should
+ * anything and we will wait for another job. If it reported that we should
  * start test mode, normally we would perform some kind of system checks to
  * make sure our new firmware does the basic things we think it should do
- * but we'll just go ahead and set the image as accepted for demo purposes.
+ * but we will just go ahead and set the image as accepted for demo purposes.
  * The accept function varies depending on your platform. Refer to the OTA
  * PAL implementation for your platform in aws_ota_pal.c to see what it
  * does for you.
@@ -362,7 +362,7 @@ static void otaAppCallback( OtaJobEvent_t event )
         LogInfo( ( "Received OtaJobEventActivate callback from OTA Agent." ) );
 
         /* OTA job is completed. so delete the network connection. */
-        //MQTT_Disconnect( &mqttContext );
+        /*MQTT_Disconnect( &mqttContext ); */
 
         /* Activate the new firmware image. */
         OTA_ActivateNewImage();
@@ -383,7 +383,7 @@ static void otaAppCallback( OtaJobEvent_t event )
     else if( event == OtaJobEventStartTest )
     {
         /* This demo just accepts the image since it was a good OTA update and networking
-         * and services are all working (or we wouldn't have made it this far). If this
+         * and services are all working (or we would not have made it this far). If this
          * were some custom device that wants to test other things before calling it OK,
          * this would be the place to kick off those tests before calling OTA_SetImageState()
          * with the final result of either accepted or rejected. */
@@ -411,7 +411,7 @@ static void mqttJobCallback( MQTTContext_t * pContext,
 
     LogInfo( ( "Received job message callback, size %d.\n\n", pPublishInfo->payloadLength ) );
 
-    memset( eventBuffer.data,0, OTA_DATA_BLOCK_SIZE );
+    memset( eventBuffer.data, 0, OTA_DATA_BLOCK_SIZE );
 
     pData = &eventBuffer;
 
@@ -463,7 +463,7 @@ static void mqttEventCallback( MQTTContext_t * pMqttContext,
 
             case MQTT_PACKET_TYPE_UNSUBACK:
                 LogInfo( ( "Received UNSUBACK.\n\n" ) );
-                /* TODO, handle ubsuback for OTA. */
+                /* TODO, handle unsuback for OTA. */
                 break;
 
             case MQTT_PACKET_TYPE_PINGRESP:
@@ -623,12 +623,12 @@ static OtaErr_t mqttSubscribe( const char * pTopicFilter,
     {
         LogInfo( ( "SUBSCRIBE topic %.*s to broker.\n\n",
                    topicFilterLength,
-                   pTopicFilter) );
+                   pTopicFilter ) );
 
         otaRet = OTA_ERR_NONE;
     }
 
-    /* Register callback to suncription manager. */
+    /* Register callback to subscription manager. */
     SubscriptionManager_RegisterCallback( pTopicFilter, topicFilterLength, pCallback );
 
     return otaRet;
@@ -637,11 +637,11 @@ static OtaErr_t mqttSubscribe( const char * pTopicFilter,
 /*
  * Publish a message to the specified client/topic at the given QOS.
  */
- static OtaErr_t mqttPublish( const char * const pacTopic,
-                              uint16_t topicLen,
-                              const char * pMsg,
-                              uint32_t msgSize,
-                              uint8_t qos )
+static OtaErr_t mqttPublish( const char * const pacTopic,
+                             uint16_t topicLen,
+                             const char * pMsg,
+                             uint32_t msgSize,
+                             uint8_t qos )
 {
     OtaErr_t otaRet = OTA_ERR_UNINITIALIZED;
 
@@ -669,7 +669,7 @@ static OtaErr_t mqttSubscribe( const char * pTopicFilter,
     {
         LogInfo( ( "Sent PUBLISH packet to broker %.*s to broker.\n\n",
                    topicLen,
-                   pacTopic) );
+                   pacTopic ) );
 
         otaRet = OTA_ERR_NONE;
     }
@@ -713,12 +713,12 @@ static OtaErr_t mqttUnsubscribe( const char * pTopicFilter,
     {
         LogInfo( ( "SUBSCRIBE topic %.*s to broker.\n\n",
                    topicFilterLength,
-                   pTopicFilter) );
+                   pTopicFilter ) );
 
         otaRet = OTA_ERR_NONE;
     }
 
-    return otaRet; 
+    return otaRet;
 }
 
 /*-----------------------------------------------------------*/
@@ -908,7 +908,7 @@ static OtaErr_t httpInit( const char * pUrl )
     /* OTA lib return error code. */
     OtaErr_t ret = OTA_ERR_UNINITIALIZED;
 
-    /* Return value from libs. */
+    /* Return value from libraries. */
     int32_t returnStatus = EXIT_SUCCESS;
 
     /* Establish HTTPs connection */
@@ -1017,7 +1017,7 @@ static OtaErr_t httpRequest( uint32_t rangeStart,
                     HTTPClient_strerror( httpStatus ) ) );
     }
 
-     pData = &eventBuffer;
+    pData = &eventBuffer;
 
     if( httpStatus != HTTPSuccess )
     {
@@ -1027,13 +1027,11 @@ static OtaErr_t httpRequest( uint32_t rangeStart,
             connectToServer( &networkContextHttp, NULL );
 
             ret = OTA_ERR_NONE;
-
         }
         else
         {
             ret = OTA_ERR_HTTP_REQUEST_FAILED;
         }
-        
     }
     else
     {
@@ -1077,27 +1075,27 @@ static void setOtaInterface( OtaInterfaces_t * pOtaInterfaces )
 {
     /* Initialize OTA library OS Interface. */
     pOtaInterfaces->os.event.init = Posix_OtaInitEvent;
-	pOtaInterfaces->os.event.send = Posix_OtaSendEvent;
-	pOtaInterfaces->os.event.recv = Posix_OtaReceiveEvent;
-	pOtaInterfaces->os.event.deinit = Posix_OtaDeinitEvent;
+    pOtaInterfaces->os.event.send = Posix_OtaSendEvent;
+    pOtaInterfaces->os.event.recv = Posix_OtaReceiveEvent;
+    pOtaInterfaces->os.event.deinit = Posix_OtaDeinitEvent;
     pOtaInterfaces->os.timer.start = Posix_OtaStartTimer;
     pOtaInterfaces->os.timer.stop = Posix_OtaStopTimer;
     pOtaInterfaces->os.timer.delete = Posix_OtaDeleteTimer;
     pOtaInterfaces->os.mem.malloc = STDC_Malloc;
     pOtaInterfaces->os.mem.free = STDC_Free;
 
-    /* Intialize the OTA library MQTT Interface.*/
+    /* Initialize the OTA library MQTT Interface.*/
     pOtaInterfaces->mqtt.subscribe = mqttSubscribe;
     pOtaInterfaces->mqtt.publish = mqttPublish;
     pOtaInterfaces->mqtt.unsubscribe = mqttUnsubscribe;
     pOtaInterfaces->mqtt.jobCallback = mqttJobCallback;
 
-    /* Intialize the OTA library HTTP Interface.*/
+    /* Initialize the OTA library HTTP Interface.*/
     pOtaInterfaces->http.init = httpInit;
     pOtaInterfaces->http.request = httpRequest;
     pOtaInterfaces->http.deinit = httpDeinit;
 
-    /* Intialize the OTA library PAL Interface.*/
+    /* Initialize the OTA library PAL Interface.*/
     pOtaInterfaces->pal.getPlatformImageState = prvPAL_GetPlatformImageState;
     pOtaInterfaces->pal.setPlatformImageState = prvPAL_SetPlatformImageState;
     pOtaInterfaces->pal.writeBlock = prvPAL_WriteBlock;
@@ -1120,7 +1118,7 @@ void startOTADemo( MQTTContext_t * pMqttContext )
     /* OTA Agent state returned from calling OTA_GetAgentState.*/
     OtaState_t state = OtaAgentStateStopped; /*ToDo OtaState_t add agent? */
 
-    /* OTA Aevent message used for sending event to OTA Agent.*/
+    /* OTA event message used for sending event to OTA Agent.*/
     OtaEventMsg_t eventMsg = { 0 };
 
     /* OTA Agent thread handle.*/
@@ -1155,9 +1153,8 @@ void startOTADemo( MQTTContext_t * pMqttContext )
         if( mqttStatus != MQTTSuccess )
         {
             LogError( ( "MQTT_ProcessLoop returned with status = %u.",
-                         mqttStatus ) );
+                        mqttStatus ) );
         }
-
     }
 }
 
@@ -1167,9 +1164,9 @@ void startOTADemo( MQTTContext_t * pMqttContext )
  * @brief Entry point of demo.
  *
  * The example shown below uses OTA Library APIs to receive and update the
- * firmare Over-the-Air.
+ * firmware Over-the-Air.
  *
- * The example uses MQTT connection for communicting with AWS IoT OTA service
+ * The example uses MQTT connection for communicating with AWS IoT OTA service
  * using QoS 1. The update file is downloaded over HTTP using the S3 pre-signed
  * url received over the MQTT connection.
  *

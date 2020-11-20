@@ -4,7 +4,7 @@ target_sources(ota_pal
     "${CMAKE_CURRENT_SOURCE_DIR}/src/pal/aws_ota_pal.c"
 )
 target_link_libraries( ota_pal
-    INTERFACE OpenSSL::Crypto
+    INTERFACE ${OPENSSL_CRYPTO_LIBRARY}
 )
 
 if(BUILD_TESTS)

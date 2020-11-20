@@ -5,21 +5,19 @@ include( ${CMAKE_SOURCE_DIR}/libraries/aws/ota/otaFilePaths.cmake )
 include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreMQTT/mqttFilePaths.cmake )
 
 # Demo target.
-add_executable(${DEMO_NAME})
-
-# librt is required to use OTA OS POSIX port.
-find_library(LIB_RT rt REQUIRED)
-
-target_sources(
+add_executable(
     ${DEMO_NAME}
-    PRIVATE
         "ota_demo_core_mqtt.c"
         ${OTA_SOURCES}
         ${OTA_OS_POSIX_SOURCES}
         ${OTA_MQTT_SOURCES}
         ${MQTT_SOURCES}
-        ${MQTT_SERIALIZER_SOURCES}
-)
+        ${MQTT_SERIALIZER_SOURCES})
+
+# librt is required to use OTA OS POSIX port.
+find_library(LIB_RT rt REQUIRED)
+find_package(OpenSSL REQUIRED)
+
 target_link_libraries(
     ${DEMO_NAME}
     PRIVATE

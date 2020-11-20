@@ -104,10 +104,10 @@ static OtaFileContext_t otaFile;
 
 /**
  * @brief Path to cert for OTA PAL test. Used to verify signature.
- * If applicable, the device must be pre-provisioned with this certificate. Please see
+ * If applicable, the device must be pre provisioned with this certificate. Please see
  * test/common/ota/test_files for the set of certificates.
  *
- * In the Windows Simultor this is the path to the certificate on your machine. The path currently
+ * In the Windows Simulator this is the path to the certificate on your machine. The path currently
  * here is relative to the FreeRTOS root. If you are debugging locally, Visual Studio may have
  * your path set as the project directory. In that case this can be changed to:
  *
