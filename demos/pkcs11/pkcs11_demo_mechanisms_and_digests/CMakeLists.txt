@@ -39,7 +39,7 @@ target_compile_definitions(
 target_include_directories(
     ${DEMO_NAME}
     PUBLIC
-        "${DEMOS_DIR}/pkcs11/common/include"
+        "${DEMOS_DIR}/pkcs${DEMOS_DIR}/http/common/include"
         ${PKCS_INCLUDE_PUBLIC_DIRS}
         ${CMAKE_CURRENT_LIST_DIR}
         ${LOGGING_INCLUDE_DIRS}

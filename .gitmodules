@@ -29,3 +29,6 @@
 	path = libraries/standard/corePKCS11
 	branch = main
 	url = https://github.com/FreeRTOS/corePKCS11.git
+[submodule "libraries/standard/backoffAlgorithm"]
+	path = libraries/standard/backoffAlgorithm
+	url = git@github.com:FreeRTOS/backoffAlgorithm.git
