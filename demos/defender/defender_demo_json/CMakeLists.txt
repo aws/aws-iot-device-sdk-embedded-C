@@ -22,6 +22,7 @@ add_executable( ${DEMO_NAME}
                 "report_builder.c"
                 ${MQTT_SOURCES}
                 ${MQTT_SERIALIZER_SOURCES}
+                ${BACKOFF_ALGORITHM_SOURCES}
                 ${JSON_SOURCES}
                 ${DEFENDER_SOURCES} )
 
