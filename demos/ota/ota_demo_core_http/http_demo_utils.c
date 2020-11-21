@@ -1,4 +1,3 @@
-
 /*
  * AWS IoT Device SDK for Embedded C V202009.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
@@ -47,16 +46,14 @@ void getUrlPath( const char * pUrl,
     http_parser_url_init( &urlParser );
 
 
-        parserStatus = http_parser_parse_url( pUrl, urlLen, 0, &urlParser );
+    parserStatus = http_parser_parse_url( pUrl, urlLen, 0, &urlParser );
 
-        if( parserStatus != 0 )
-        {
-            printf( "Error parsing the input URL %.*s. Error code: %d.", urlLen, pUrl, parserStatus );
-        }
-        else
-        {
-
-
+    if( parserStatus != 0 )
+    {
+        printf( "Error parsing the input URL %.*s. Error code: %d.", urlLen, pUrl, parserStatus );
+    }
+    else
+    {
         *pPathLen = ( size_t ) ( urlParser.field_data[ UF_PATH ].len );
 
         if( *pPathLen == 0 )
@@ -68,15 +65,14 @@ void getUrlPath( const char * pUrl,
             *pPath = &pUrl[ urlParser.field_data[ UF_PATH ].off ];
         }
     }
-
 }
 
 /*-----------------------------------------------------------*/
 
-void  getUrlAddress( const char * pUrl,
-                     size_t urlLen,
-                     const char ** pAddress,
-                     size_t * pAddressLen )
+void getUrlAddress( const char * pUrl,
+                    size_t urlLen,
+                    const char ** pAddress,
+                    size_t * pAddressLen )
 {
     /* http-parser status. Initialized to 0 to signify success. */
     int parserStatus = 0;
@@ -85,14 +81,14 @@ void  getUrlAddress( const char * pUrl,
     /* Sets all members in urlParser to 0. */
     http_parser_url_init( &urlParser );
 
-        parserStatus = http_parser_parse_url( pUrl, urlLen, 0, &urlParser );
+    parserStatus = http_parser_parse_url( pUrl, urlLen, 0, &urlParser );
 
-        if( parserStatus != 0 )
-        {
-            printf( "Error parsing the input URL %.*s. Error code: %d.", urlLen, pUrl, parserStatus );
-        }
-    else{
-
+    if( parserStatus != 0 )
+    {
+        printf( "Error parsing the input URL %.*s. Error code: %d.", urlLen, pUrl, parserStatus );
+    }
+    else
+    {
         *pAddressLen = ( size_t ) ( urlParser.field_data[ UF_HOST ].len );
 
         if( *pAddressLen == 0 )

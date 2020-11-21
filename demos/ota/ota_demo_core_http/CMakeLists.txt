@@ -6,15 +6,9 @@ include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreMQTT/mqttFilePaths.cmake )
 include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreHTTP/httpFilePaths.cmake )
 
 # Demo target.
-add_executable(${DEMO_NAME})
-
-# librt is required to use OTA OS POSIX port.
-find_library(LIB_RT rt REQUIRED)
-
-target_sources(
+add_executable(
     ${DEMO_NAME}
-    PRIVATE
-        "ota_demo_core_http.c"
+        "${DEMO_NAME}.c"
         "http_demo_utils.c"
         ${OTA_SOURCES}
         ${OTA_OS_POSIX_SOURCES}
@@ -23,7 +17,12 @@ target_sources(
         ${OTA_HTTP_SOURCES}
         ${HTTP_SOURCES}
         ${MQTT_SERIALIZER_SOURCES}
-)
+    )
+
+# librt is required to use OTA OS POSIX port.
+find_library(LIB_RT rt REQUIRED)
+find_package(OpenSSL REQUIRED)
+
 target_link_libraries(
     ${DEMO_NAME}
     PRIVATE

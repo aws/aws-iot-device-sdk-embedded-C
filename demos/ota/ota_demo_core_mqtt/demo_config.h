@@ -55,7 +55,7 @@
  *
  * #define AWS_IOT_ENDPOINT               "...insert here..."
  */
-#define AWS_IOT_ENDPOINT           ""
+#define AWS_IOT_ENDPOINT    ""
 
 /**
  * @brief AWS IoT MQTT broker port number.
@@ -65,7 +65,7 @@
  * @note Port 443 requires use of the ALPN TLS extension with the ALPN protocol
  * name. When using port 8883, ALPN is not required.
  */
-#define AWS_MQTT_PORT    ( 8883 )
+#define AWS_MQTT_PORT       ( 8883 )
 
 /**
  * @brief Path of the file containing the server's root CA certificate.
@@ -95,8 +95,8 @@
  *
  * @note This certificate should be PEM-encoded.
  */
-#define CLIENT_CERT_PATH    "...insert here..."
- 
+#define CLIENT_CERT_PATH           "...insert here..."
+
 /**
  * @brief Path of the file containing the client's private key.
  *
@@ -107,7 +107,7 @@
  * @note This private key should be PEM-encoded.
  */
 #define CLIENT_PRIVATE_KEY_PATH    "...insert here..."
- 
+
 
 /**
  * @brief MQTT client identifier.
@@ -115,7 +115,7 @@
  * No two clients may use the same client identifier simultaneously.
  */
 #ifndef CLIENT_IDENTIFIER
-#define CLIENT_IDENTIFIER         "testclient"
+    #define CLIENT_IDENTIFIER    "testclient"
 #endif
 
 /**

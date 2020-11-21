@@ -130,16 +130,16 @@
  * No two clients may use the same client identifier simultaneously.
  */
 #ifndef CLIENT_IDENTIFIER
-    #define CLIENT_IDENTIFIER         "Enter client identifier here"
+    #define CLIENT_IDENTIFIER    "Enter client identifier here"
 #endif
 
 /**
  * @brief Configure application version.
  */
 
-#define APP_VERSION_MAJOR    0
-#define APP_VERSION_MINOR    9
-#define APP_VERSION_BUILD    2
+#define APP_VERSION_MAJOR         0
+#define APP_VERSION_MINOR         9
+#define APP_VERSION_BUILD         2
 
 /**
  * @brief The name of the operating system that the application is running on.
