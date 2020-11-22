@@ -315,6 +315,7 @@ static int connectToServer( NetworkContext_t * pNetworkContext )
 
     /* Initialize TLS credentials. */
     opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
+    opensslCredentials.sniHostName = serverHost;
 
     /* serverHost should consist only of the host address located in S3_PRESIGNED_GET_URL. */
     memcpy( serverHost, pHost, hostLen );

@@ -246,6 +246,7 @@ static int32_t connectToServer( NetworkContext_t * pNetworkContext )
     /* Initialize TLS credentials. */
     ( void ) memset( &opensslCredentials, 0, sizeof( opensslCredentials ) );
     opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
+    opensslCredentials.sniHostName = S3_PRESIGNED_PUT_URL;
 
     /* Retrieve the address location and length from S3_PRESIGNED_PUT_URL. */
     httpStatus = getUrlAddress( S3_PRESIGNED_PUT_URL,
