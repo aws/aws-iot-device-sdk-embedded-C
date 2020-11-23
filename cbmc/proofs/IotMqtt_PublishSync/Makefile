@@ -20,12 +20,12 @@ OBJS += $(MQTT)/cbmc/stubs/IotSemaphore.goto
 OBJS += $(MQTT)/cbmc/stubs/IotTaskPool_CreateJob.goto
 OBJS += $(MQTT)/cbmc/stubs/IotTaskPool_ScheduleDeferred.goto
 OBJS += $(MQTT)/cbmc/stubs/IotTaskPool_TryCancel.goto
-OBJS += $(MQTT)/libraries/standard/mqtt/src/iot_mqtt_api.goto
+OBJS += $(MQTT)/libraris/standard/mqtt/src/iot_mqtt_api.goto
 OBJS += $(MQTT)/libraries/standard/mqtt/src/iot_mqtt_helper.goto
 OBJS += $(MQTT)/libraries/standard/mqtt/src/iot_mqtt_operation.goto
-OBJS += $(MQTT)/libraries/standard/mqtt/src/iot_mqtt_serialize.goto
-OBJS += $(MQTT)/libraries/standard/mqtt/src/iot_mqtt_subscription.goto
-OBJS += $(MQTT)/libraries/standard/mqtt/src/iot_mqtt_validate.goto
+OBJS += $(MQTT)/libraris/standard/mqtt/src/iot_mqtt_serialize.goto
+OBJS += $(MQTT)/libraris/standard/mqtt/src/iot_mqtt_subscription.goto
+OBJS += $(MQTT)/libraris/standard/mqtt/src/iot_mqtt_validate.goto
 
 # One more than actual number of subscriptions
 SUBSCRIPTION_COUNT_MAX=4
