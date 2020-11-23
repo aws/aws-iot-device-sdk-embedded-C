@@ -204,9 +204,9 @@ static int32_t connectToServer( NetworkContext_t * pNetworkContext )
     /* Status returned by OpenSSL transport implementation. */
     OpensslStatus_t opensslStatus;
     /* Credentials to establish the TLS connection. */
-    OpensslCredentials_t opensslCredentials = {0};
+    OpensslCredentials_t opensslCredentials = { 0 };
     /* Information about the server to send the HTTP requests. */
-    ServerInfo_t serverInfo = {0};
+    ServerInfo_t serverInfo = { 0 };
 
     /* Retrieve the address location and length from S3_PRESIGNED_GET_URL. */
     httpStatus = getUrlAddress( S3_PRESIGNED_GET_URL,
@@ -677,4 +677,5 @@ int main( int argc,
     ( void ) Openssl_Disconnect( &networkContext );
 
     return returnStatus;
+}
 }
