@@ -678,4 +678,3 @@ int main( int argc,
 
     return returnStatus;
 }
-}
