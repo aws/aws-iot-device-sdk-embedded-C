@@ -204,21 +204,15 @@ static int32_t connectToServer( NetworkContext_t * pNetworkContext )
     /* Status returned by OpenSSL transport implementation. */
     OpensslStatus_t opensslStatus;
     /* Credentials to establish the TLS connection. */
-    OpensslCredentials_t opensslCredentials;
+    OpensslCredentials_t opensslCredentials = {0};
     /* Information about the server to send the HTTP requests. */
-    ServerInfo_t serverInfo;
-
-    /* Initialize TLS credentials. */
-    ( void ) memset( &opensslCredentials, 0, sizeof( opensslCredentials ) );
-    opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
-    opensslCredentials.sniHostName = S3_PRESIGNED_GET_URL;
+    ServerInfo_t serverInfo = {0};
 
     /* Retrieve the address location and length from S3_PRESIGNED_GET_URL. */
     httpStatus = getUrlAddress( S3_PRESIGNED_GET_URL,
                                 S3_PRESIGNED_GET_URL_LENGTH,
                                 &pAddress,
                                 &serverHostLength );
-
     returnStatus = ( httpStatus == HTTPSuccess ) ? EXIT_SUCCESS : EXIT_FAILURE;
 
     if( returnStatus == EXIT_SUCCESS )
@@ -227,6 +221,10 @@ static int32_t connectToServer( NetworkContext_t * pNetworkContext )
          * S3_PRESIGNED_GET_URL. */
         memcpy( serverHost, pAddress, serverHostLength );
         serverHost[ serverHostLength ] = '\0';
+
+        /* Initialize TLS credentials. */
+        opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
+        opensslCredentials.sniHostName = serverHost;
 
         /* Initialize server information. */
         serverInfo.pHostName = serverHost;
