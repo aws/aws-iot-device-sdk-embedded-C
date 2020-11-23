@@ -309,7 +309,7 @@ static void otaAppCallback( OtaJobEvent_t event )
     else if( event == OtaJobEventStartTest )
     {
         /* This demo just accepts the image since it was a good OTA update and networking
-         * and services are all working (or we wouldn't have made it this far). If this
+         * and services are all working (or we would not have made it this far). If this
          * were some custom device that wants to test other things before calling it OK,
          * this would be the place to kick off those tests before calling OTA_SetImageState()
          * with the final result of either accepted or rejected. */
@@ -666,7 +666,7 @@ static OtaErr_t mqttSubscribe( const char * pTopicFilter,
         otaRet = OTA_ERR_NONE;
     }
 
-    /* Register callback to suncription manager. */
+    /* Register callback to subscription manager. */
     SubscriptionManager_RegisterCallback( pTopicFilter, topicFilterLength, pCallback );
 
     return otaRet;
@@ -774,14 +774,14 @@ static void setOtaInterfaces( OtaInterfaces_t * pOtaInterfaces )
     pOtaInterfaces->os.mem.malloc = STDC_Malloc;
     pOtaInterfaces->os.mem.free = STDC_Free;
 
-    /* Intialize the OTA library MQTT Interface.*/
+    /* Initialize the OTA library MQTT Interface.*/
     pOtaInterfaces->mqtt.subscribe = mqttSubscribe;
     pOtaInterfaces->mqtt.publish = mqttPublish;
     pOtaInterfaces->mqtt.unsubscribe = mqttUnsubscribe;
     pOtaInterfaces->mqtt.jobCallback = mqttJobCallback;
     pOtaInterfaces->mqtt.dataCallback = mqttDataCallback;
 
-    /* Intialize the OTA library PAL Interface.*/
+    /* Initialize the OTA library PAL Interface.*/
     pOtaInterfaces->pal.getPlatformImageState = prvPAL_GetPlatformImageState;
     pOtaInterfaces->pal.setPlatformImageState = prvPAL_SetPlatformImageState;
     pOtaInterfaces->pal.writeBlock = prvPAL_WriteBlock;
@@ -807,7 +807,7 @@ static int startOTADemo( MQTTContext_t * pMqttContext )
     /* OTA Agent state returned from calling OTA_GetAgentState.*/
     OtaState_t state = OtaAgentStateStopped;
 
-    /* OTA Aevent message used for sending event to OTA Agent.*/
+    /* OTA event message used for sending event to OTA Agent.*/
     OtaEventMsg_t eventMsg = { 0 };
 
     /* OTA Agent thread handle.*/
