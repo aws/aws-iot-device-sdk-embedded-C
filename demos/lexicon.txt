@@ -92,6 +92,7 @@ connectfunction
 connectionsarraylength
 const
 contentrangevalstr
+coremqtt
 corepkcs
 correclty
 cpu
