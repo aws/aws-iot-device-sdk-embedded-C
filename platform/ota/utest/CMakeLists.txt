@@ -1,5 +1,5 @@
 project( "ota_pal unit test" )
-cmake_minimum_required( VERSION 3.2 .0 )
+cmake_minimum_required( VERSION 3.2.0 )
 
 #== ==================  Define your project name (edit) ========================
 set( project_name "ota_pal" )
@@ -29,8 +29,8 @@ list( APPEND real_source_files
 #list the directories the module under test includes
 list( APPEND real_include_directories
       "${MODULES_DIR}/aws/ota/source/include"
-      $ { OPENSSL_INCLUDE_DIR }
-          $ { CMAKE_CURRENT_LIST_DIR }
+      ${OPENSSL_INCLUDE_DIR}
+      ${CMAKE_CURRENT_LIST_DIR}
       )
 
 #== ===================  Create UnitTest Code here (edit)  =====================
@@ -38,9 +38,9 @@ list( APPEND real_include_directories
 #list the directories your test needs to include
 list ( APPEND test_include_directories
        "."
-       $ { CMAKE_CURRENT_LIST_DIR }
-       $ { MODULES_DIR }
-       / aws / ota / source / include
+       ${CMAKE_CURRENT_LIST_DIR}
+       ${MODULES_DIR}
+       /aws/ota/source/include
        )
 
 #== ===========================  (end edit)  ===================================
@@ -48,26 +48,25 @@ set ( mock_name "" )
 set ( real_name "ota_pal_real" )
 
 
-create_real_library ( $ { real_name }
+create_real_library ( ${real_name}
                       "${real_source_files}"
                       "${real_include_directories}"
                       "${mock_name}"
                       )
 
-list ( APPEND utest_link_list
-       lib$ { real_name }
-       .a
-       $ { OPENSSL_LIBRARIES }
-       )
+list(APPEND utest_link_list
+      lib${real_name}.a
+      ${OPENSSL_LIBRARIES}
+      )
 
 list ( APPEND utest_dep_list
-       $ { real_name }
-       )
+       ${real_name}
+      )
 
 set ( utest_name "ota_pal_linux_utest" )
 set ( utest_source "ota_pal_linux_utest.c" )
-create_test ( $ { utest_name }
-              $ { utest_source }
+create_test ( ${utest_name}
+              ${utest_source}
               "${utest_link_list}"
               "${utest_dep_list}"
               "${test_include_directories}"
