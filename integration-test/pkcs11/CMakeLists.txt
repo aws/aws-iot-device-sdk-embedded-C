@@ -12,7 +12,7 @@ set(project_name "pkcs11_system")
 # list the files you would like to test here
 set(real_source_files "${PKCS_SOURCES}")
 set(corePKCS11_location "${CMAKE_SOURCE_DIR}/libraries/standard/corePKCS11")
-set(CORE_PKCS11_3RDPARTY_LOCATION "${corePKCS11_location}/3rdparty")
+set(CORE_PKCS11_3RDPARTY_LOCATION "${corePKCS11_location}/source/dependency/3rdparty")
 set(test_config "test-config")
 
 file(GLOB MBEDTLS_FILES CONFIGURE_DEPENDS "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls/library/*.c")
@@ -22,7 +22,8 @@ list(APPEND real_source_files
             ${MBEDTLS_FILES}
             ${test_config_sources}
             "${corePKCS11_location}/source/portable/posix/core_pkcs11_pal.c"
-            "${corePKCS11_location}/3rdparty/mbedtls_utils/mbedtls_utils.c"
+            "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils/mbedtls_utils.c"
+            "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils/mbedtls_error.c"
             )
 
 # list the directories the module under test includes
@@ -33,7 +34,7 @@ list(APPEND real_include_directories
             ${LOGGING_INCLUDE_DIRS}
             "${CORE_PKCS11_3RDPARTY_LOCATION}/pkcs11"
             "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls/include"
-            "${corePKCS11_location}/3rdparty/mbedtls_utils"
+            "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils"
         )
 
 # =====================  Create UnitTest Code here (edit)  =====================
@@ -86,7 +87,13 @@ set_source_files_properties(
 )
 
 set_source_files_properties(
-    "${corePKCS11_location}/3rdparty/mbedtls_utils/mbedtls_utils.c"
+    "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils/mbedtls_utils.c"
+    PROPERTIES COMPILE_FLAGS
+    "-Wno-pedantic -Wno-error"
+)
+
+set_source_files_properties(
+    "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils/mbedtls_error.c"
     PROPERTIES COMPILE_FLAGS
     "-Wno-pedantic -Wno-error"
 )

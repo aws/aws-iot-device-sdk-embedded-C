@@ -2,7 +2,7 @@ set( DEMO_NAME "pkcs11_demo_management_and_rng" )
 
 # Set path to corePKCS11 and it's third party libraries.
 set(COREPKCS11_LOCATION "${CMAKE_SOURCE_DIR}/libraries/standard/corePKCS11")
-set(CORE_PKCS11_3RDPARTY_LOCATION "${COREPKCS11_LOCATION}/3rdparty")
+set(CORE_PKCS11_3RDPARTY_LOCATION "${COREPKCS11_LOCATION}/source/dependency/3rdparty")
 
 # Include PKCS #11 library's source and header path variables.
 include( ${COREPKCS11_LOCATION}/pkcsFilePaths.cmake )
