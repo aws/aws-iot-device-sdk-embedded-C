@@ -538,6 +538,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     /* Initialize credentials for establishing TLS session. */
     memset( &opensslCredentials, 0, sizeof( OpensslCredentials_t ) );
     opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
+    opensslCredentials.sniHostName = BROKER_ENDPOINT;
 
     /* Seed pseudo random number generator (provided by ISO C standard library) for
      * use by retry utils library when retrying failed connection attempts to broker. */

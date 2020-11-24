@@ -469,6 +469,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     /* Initialize credentials for establishing TLS session. */
     memset( &opensslCredentials, 0, sizeof( OpensslCredentials_t ) );
     opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
+    opensslCredentials.sniHostName = BROKER_ENDPOINT;
 
     /* Initialize reconnect attempts and interval */
     RetryUtils_InitializeParams( &reconnectParams,

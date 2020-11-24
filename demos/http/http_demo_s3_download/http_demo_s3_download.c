@@ -204,20 +204,15 @@ static int32_t connectToServer( NetworkContext_t * pNetworkContext )
     /* Status returned by OpenSSL transport implementation. */
     OpensslStatus_t opensslStatus;
     /* Credentials to establish the TLS connection. */
-    OpensslCredentials_t opensslCredentials;
+    OpensslCredentials_t opensslCredentials = { 0 };
     /* Information about the server to send the HTTP requests. */
-    ServerInfo_t serverInfo;
-
-    /* Initialize TLS credentials. */
-    ( void ) memset( &opensslCredentials, 0, sizeof( opensslCredentials ) );
-    opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
+    ServerInfo_t serverInfo = { 0 };
 
     /* Retrieve the address location and length from S3_PRESIGNED_GET_URL. */
     httpStatus = getUrlAddress( S3_PRESIGNED_GET_URL,
                                 S3_PRESIGNED_GET_URL_LENGTH,
                                 &pAddress,
                                 &serverHostLength );
-
     returnStatus = ( httpStatus == HTTPSuccess ) ? EXIT_SUCCESS : EXIT_FAILURE;
 
     if( returnStatus == EXIT_SUCCESS )
@@ -227,13 +222,17 @@ static int32_t connectToServer( NetworkContext_t * pNetworkContext )
         memcpy( serverHost, pAddress, serverHostLength );
         serverHost[ serverHostLength ] = '\0';
 
+        /* Initialize TLS credentials. */
+        opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
+        opensslCredentials.sniHostName = serverHost;
+
         /* Initialize server information. */
         serverInfo.pHostName = serverHost;
         serverInfo.hostNameLength = serverHostLength;
         serverInfo.port = HTTPS_PORT;
 
         /* Establish a TLS session with the HTTP server. This example connects
-         * to the HTTP server as specified in SERVER_HOST and HTTPS_PORT in
+         * to the HTTP server as specified in S3_PRESIGNED_GET_URL and HTTPS_PORT in
          * demo_config.h. */
         LogInfo( ( "Establishing a TLS session with %s:%d.",
                    serverHost,

@@ -359,6 +359,7 @@ static bool connectToBrokerWithBackoffRetries( NetworkContext_t * pNetworkContex
     opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
     opensslCredentials.pClientCertPath = CLIENT_CERT_PATH;
     opensslCredentials.pPrivateKeyPath = CLIENT_PRIVATE_KEY_PATH;
+    opensslCredentials.sniHostName = AWS_IOT_ENDPOINT;
 
     if( AWS_MQTT_PORT == 443 )
     {
