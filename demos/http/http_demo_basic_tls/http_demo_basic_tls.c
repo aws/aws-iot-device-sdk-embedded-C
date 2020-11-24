@@ -40,8 +40,8 @@
 /* OpenSSL transport header. */
 #include "openssl_posix.h"
 
-/* Retry utilities. */
-#include "retry_utils.h"
+/*Include backoff algorithm header for retry logic.*/
+#include "backoff_algorithm.h"
 
 /* Check that hostname of the server is defined. */
 #ifndef SERVER_HOST

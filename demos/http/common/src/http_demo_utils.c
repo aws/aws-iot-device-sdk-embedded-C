@@ -34,8 +34,8 @@
 /* Demo utils header. */
 #include "http_demo_utils.h"
 
-/* Retry utilities. */
-#include "retry_utils.h"
+/*Include backoff algorithm header for retry logic.*/
+#include "backoff_algorithm.h"
 
 /* Third party parser utilities. */
 #include "http_parser.h"
@@ -67,7 +67,7 @@
 /**
  * @brief The random number generator to use for exponential backoff with
  * jitter retry logic.
- * This function is an implementation the #RetryUtils_RNG_t interface type
+ * This function is an implementation the #BackoffAlgorithm_RNG_t interface type
  * of the retry utils library API.
  *
  * @return The generated random number. This function ALWAYS succeeds
@@ -89,9 +89,9 @@ int32_t connectToServerWithBackoffRetries( TransportConnect_t connectFunction,
 {
     int32_t returnStatus = EXIT_FAILURE;
     /* Status returned by the retry utilities. */
-    RetryUtilsStatus_t retryUtilsStatus = RetryUtilsSuccess;
+    BackoffAlgorithmStatus_t backoffAlgStatus = BackoffAlgorithmSuccess;
     /* Struct containing the next backoff time. */
-    RetryUtilsContext_t reconnectParams;
+    BackoffAlgorithmContext_t reconnectParams;
     uint16_t nextRetryBackOff = 0U;
     struct timespec tp;
 
@@ -106,11 +106,11 @@ int32_t connectToServerWithBackoffRetries( TransportConnect_t connectFunction,
     srand( tp.tv_nsec );
 
     /* Initialize reconnect attempts and interval */
-    RetryUtils_InitializeParams( &reconnectParams,
-                                 CONNECTION_RETRY_BACKOFF_BASE_MS,
-                                 CONNECTION_RETRY_MAX_BACKOFF_DELAY_MS,
-                                 CONNECTION_RETRY_MAX_ATTEMPTS,
-                                 generateRandomNumber );
+    BackoffAlgorithm_InitializeParams( &reconnectParams,
+                                       CONNECTION_RETRY_BACKOFF_BASE_MS,
+                                       CONNECTION_RETRY_MAX_BACKOFF_DELAY_MS,
+                                       CONNECTION_RETRY_MAX_ATTEMPTS,
+                                       generateRandomNumber );
 
     /* Attempt to connect to HTTP server. If connection fails, retry after
      * a timeout. Timeout value will exponentially increase until maximum
@@ -122,10 +122,10 @@ int32_t connectToServerWithBackoffRetries( TransportConnect_t connectFunction,
         if( returnStatus != EXIT_SUCCESS )
         {
             /* Get back-off value (in milliseconds) for the next connection retry. */
-            retryUtilsStatus = RetryUtils_GetNextBackOff( &reconnectParams, &nextRetryBackOff );
-            assert( retryUtilsStatus != RetryUtilsRngFailure );
+            backoffAlgStatus = BackoffAlgorithm_GetNextBackoff( &reconnectParams, &nextRetryBackOff );
+            assert( backoffAlgStatus != BackoffAlgorithmRngFailure );
 
-            if( retryUtilsStatus == RetryUtilsSuccess )
+            if( backoffAlgStatus == BackoffAlgorithmSuccess )
             {
                 LogWarn( ( "Connection to the HTTP server failed. Retrying connection after backoff." ) );
                 ( void ) sleep( nextRetryBackOff / NUM_MILLISECONDS_IN_SECOND );
@@ -135,7 +135,7 @@ int32_t connectToServerWithBackoffRetries( TransportConnect_t connectFunction,
                 LogError( ( "Connection to the HTTP server failed, all attempts exhausted." ) );
             }
         }
-    } while( ( returnStatus == EXIT_FAILURE ) && ( retryUtilsStatus == RetryUtilsSuccess ) );
+    } while( ( returnStatus == EXIT_FAILURE ) && ( backoffAlgStatus == BackoffAlgorithmSuccess ) );
 
     if( returnStatus == EXIT_FAILURE )
     {

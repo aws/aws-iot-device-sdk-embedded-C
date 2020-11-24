@@ -115,8 +115,6 @@ reconnectparam
 recv
 recvtimeout
 recvtimeoutms
-retryutilsretriesexhausted
-retryutilssuccess
 retvalue
 sdk
 sendtimeout
