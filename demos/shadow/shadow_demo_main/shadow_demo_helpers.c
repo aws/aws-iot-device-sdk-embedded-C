@@ -353,8 +353,9 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
         opensslCredentials.alpnProtosLen = ALPN_PROTOCOL_NAME_LENGTH;
     }
 
-    /* Seed pseudo random number generator (provided by ISO C standard library) for
-     * use by retry utils library when retrying failed connection attempts to broker. */
+    /* Seed pseudo random number generator used in the demo for
+     * backoff period calculation when retrying failed network operations
+     * with broker. */
 
     /* Get current time to seed pseudo random number generator. */
     ( void ) clock_gettime( CLOCK_REALTIME, &tp );
