@@ -175,11 +175,8 @@ static size_t networkDataLen = 0U;
 /**
  * @brief The random number generator to use for exponential backoff with
  * jitter retry logic.
- * This function is an implementation the #BackoffAlgorithm_RNG_t interface type
- * of the retry utils library API.
  *
- * @return The generated random number. This function ALWAYS succeeds
- * in generating a random number.
+ * @return The generated random number.
  */
 static uint32_t generateRandomNumber();
 
