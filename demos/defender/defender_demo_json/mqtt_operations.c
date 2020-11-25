@@ -259,7 +259,7 @@ static MQTTPublishCallback_t appPublishCallback = NULL;
  * @return The generated random number. This function ALWAYS succeeds
  * in generating a random number.
  */
-static int32_t generateRandomNumber();
+static uint32_t generateRandomNumber();
 
 /**
  * @brief Connect to the MQTT broker with reconnection retries.
@@ -331,9 +331,9 @@ static void mqttCallback( MQTTContext_t * pMqttContext,
 static bool handlePublishResend( MQTTContext_t * pMqttContext );
 /*-----------------------------------------------------------*/
 
-static int32_t generateRandomNumber()
+static uint32_t generateRandomNumber()
 {
-    return( rand() % ( INT32_MAX ) );
+    return( rand() & UINT32_MAX );
 }
 
 /*-----------------------------------------------------------*/
@@ -384,8 +384,7 @@ static bool connectToBrokerWithBackoffRetries( NetworkContext_t * pNetworkContex
     BackoffAlgorithm_InitializeParams( &reconnectParams,
                                        CONNECTION_RETRY_BACKOFF_BASE_MS,
                                        CONNECTION_RETRY_MAX_BACKOFF_DELAY_MS,
-                                       CONNECTION_RETRY_MAX_ATTEMPTS,
-                                       generateRandomNumber );
+                                       CONNECTION_RETRY_MAX_ATTEMPTS );
 
     /* Attempt to connect to MQTT broker. If connection fails, retry after
      * a timeout. Timeout value will exponentially increase until maximum
@@ -412,9 +411,8 @@ static bool connectToBrokerWithBackoffRetries( NetworkContext_t * pNetworkContex
         }
         else
         {
-            /* Get back-off value (in milliseconds) for the next connection retry. */
-            backoffAlgStatus = BackoffAlgorithm_GetNextBackoff( &reconnectParams, &nextRetryBackOff );
-            assert( backoffAlgStatus != BackoffAlgorithmRngFailure );
+            /* Generate a random number and get back-off value (in milliseconds) for the next connection retry. */
+            backoffAlgStatus = BackoffAlgorithm_GetNextBackoff( &reconnectParams, generateRandomNumber(), &nextRetryBackOff );
 
             if( backoffAlgStatus == BackoffAlgorithmRetriesExhausted )
             {

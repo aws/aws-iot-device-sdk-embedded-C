@@ -73,13 +73,13 @@
  * @return The generated random number. This function ALWAYS succeeds
  * in generating a random number.
  */
-static int32_t generateRandomNumber();
+static uint32_t generateRandomNumber();
 
 /*-----------------------------------------------------------*/
 
-static int32_t generateRandomNumber()
+static uint32_t generateRandomNumber()
 {
-    return( rand() % ( INT32_MAX ) );
+    return( rand() & UINT32_MAX );
 }
 
 /*-----------------------------------------------------------*/
@@ -109,8 +109,7 @@ int32_t connectToServerWithBackoffRetries( TransportConnect_t connectFunction,
     BackoffAlgorithm_InitializeParams( &reconnectParams,
                                        CONNECTION_RETRY_BACKOFF_BASE_MS,
                                        CONNECTION_RETRY_MAX_BACKOFF_DELAY_MS,
-                                       CONNECTION_RETRY_MAX_ATTEMPTS,
-                                       generateRandomNumber );
+                                       CONNECTION_RETRY_MAX_ATTEMPTS );
 
     /* Attempt to connect to HTTP server. If connection fails, retry after
      * a timeout. Timeout value will exponentially increase until maximum
@@ -121,9 +120,8 @@ int32_t connectToServerWithBackoffRetries( TransportConnect_t connectFunction,
 
         if( returnStatus != EXIT_SUCCESS )
         {
-            /* Get back-off value (in milliseconds) for the next connection retry. */
-            backoffAlgStatus = BackoffAlgorithm_GetNextBackoff( &reconnectParams, &nextRetryBackOff );
-            assert( backoffAlgStatus != BackoffAlgorithmRngFailure );
+            /* Generate a random number and get back-off value (in milliseconds) for the next connection retry. */
+            backoffAlgStatus = BackoffAlgorithm_GetNextBackoff( &reconnectParams, generateRandomNumber(), &nextRetryBackOff );
 
             if( backoffAlgStatus == BackoffAlgorithmSuccess )
             {

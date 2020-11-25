@@ -362,7 +362,7 @@ static MQTTSubAckStatus_t globalSubAckStatus = MQTTSubAckFailure;
  * @return The generated random number. This function ALWAYS succeeds
  * in generating a random number.
  */
-static int32_t generateRandomNumber();
+static uint32_t generateRandomNumber();
 
 /**
  * @brief Connect to MQTT broker with reconnection retries.
@@ -547,9 +547,9 @@ static int handleResubscribe( MQTTContext_t * pMqttContext );
 
 /*-----------------------------------------------------------*/
 
-static int32_t generateRandomNumber()
+static uint32_t generateRandomNumber()
 {
-    return( rand() % ( INT32_MAX ) );
+    return( rand() & UINT32_MAX );
 }
 
 /*-----------------------------------------------------------*/
@@ -611,8 +611,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     BackoffAlgorithm_InitializeParams( &reconnectParams,
                                        CONNECTION_RETRY_BACKOFF_BASE_MS,
                                        CONNECTION_RETRY_MAX_BACKOFF_DELAY_MS,
-                                       CONNECTION_RETRY_MAX_ATTEMPTS,
-                                       generateRandomNumber );
+                                       CONNECTION_RETRY_MAX_ATTEMPTS );
 
     /* Attempt to connect to MQTT broker. If connection fails, retry after
      * a timeout. Timeout value will exponentially increase until maximum
@@ -635,9 +634,8 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
 
         if( opensslStatus != OPENSSL_SUCCESS )
         {
-            /* Get back-off value (in milliseconds) for the next connection retry. */
-            backoffAlgStatus = BackoffAlgorithm_GetNextBackoff( &reconnectParams, &nextRetryBackOff );
-            assert( backoffAlgStatus != BackoffAlgorithmRngFailure );
+            /* Generate a random number and get back-off value (in milliseconds) for the next connection retry. */
+            backoffAlgStatus = BackoffAlgorithm_GetNextBackoff( &reconnectParams, generateRandomNumber(), &nextRetryBackOff );
 
             if( backoffAlgStatus == BackoffAlgorithmRetriesExhausted )
             {
@@ -870,8 +868,7 @@ static int handleResubscribe( MQTTContext_t * pMqttContext )
     BackoffAlgorithm_InitializeParams( &retryParams,
                                        CONNECTION_RETRY_BACKOFF_BASE_MS,
                                        CONNECTION_RETRY_MAX_BACKOFF_DELAY_MS,
-                                       CONNECTION_RETRY_MAX_ATTEMPTS,
-                                       generateRandomNumber );
+                                       CONNECTION_RETRY_MAX_ATTEMPTS );
 
     do
     {
@@ -913,9 +910,8 @@ static int handleResubscribe( MQTTContext_t * pMqttContext )
          * server rejection of the subscription request. */
         if( globalSubAckStatus == MQTTSubAckFailure )
         {
-            /* Get back-off value (in milliseconds) for the next re-subscribe attempt. */
-            backoffAlgStatus = BackoffAlgorithm_GetNextBackoff( &retryParams, &nextRetryBackOff );
-            assert( backoffAlgStatus != BackoffAlgorithmRngFailure );
+            /* Generate a random number and get back-off value (in milliseconds) for the next re-subscribe attempt. */
+            backoffAlgStatus = BackoffAlgorithm_GetNextBackoff( &retryParams, generateRandomNumber(), &nextRetryBackOff );
 
             if( backoffAlgStatus == BackoffAlgorithmRetriesExhausted )
             {
