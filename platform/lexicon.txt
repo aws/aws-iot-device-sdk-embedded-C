@@ -108,12 +108,12 @@ org
 ota
 otafile
 otapalimagestatevalid
-pacdata
 paddrinfo
 palpnprotos
 param
 pbuf
 pbuffer
+pcdata
 pclientcertpath
 pem
 pfile
@@ -197,5 +197,6 @@ unistd
 utils
 v1
 vtaskdelay
+writesize
 www
 ylbc+lyscwcslb2tecubja==\n
