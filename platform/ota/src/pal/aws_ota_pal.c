@@ -282,7 +282,6 @@ OtaErr_t prvPAL_CloseFile( OtaFileContext_t * const C )
 {
     OtaErr_t result = OTA_ERR_NONE;
     int32_t filerc = 0;
-    OtaErr_t image_state_result = OTA_ERR_NONE;
 
     if( C != NULL )
     {
@@ -316,7 +315,7 @@ OtaErr_t prvPAL_CloseFile( OtaFileContext_t * const C )
         {
             LogInfo( ( "%s signature verification passed.", OTA_JsonFileSignatureKey ) );
 
-            image_state_result = prvPAL_SetPlatformImageState( C, OtaImageStateTesting );
+            ( void ) prvPAL_SetPlatformImageState( C, OtaImageStateTesting );
         }
         else
         {
@@ -324,7 +323,7 @@ OtaErr_t prvPAL_CloseFile( OtaFileContext_t * const C )
                         OTA_JsonFileSignatureKey, result ) );
 
             /* If we fail to verify the file signature that means the image is not valid. We need to set the image state to aborted. */
-            image_state_result = prvPAL_SetPlatformImageState( C, OtaImageStateAborted );
+            ( void ) prvPAL_SetPlatformImageState( C, OtaImageStateAborted );
         }
     }
     else /* Invalid OTA Context. */
