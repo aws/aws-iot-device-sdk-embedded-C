@@ -251,7 +251,7 @@ int16_t prvPAL_WriteBlock( OtaFileContext_t * const C,
                 LogError( ( "Failed to write block to file: "
                             "fwrite returned error: "
                             "errno=%d", errno ) );
-                
+
                 filerc = errno; /*lint !e40 !e9027
                                  * Errno is being used in accordance with host API documentation. */
             }
