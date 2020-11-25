@@ -175,22 +175,6 @@ void test_OTAPAL_Abort_NullFileHandle( void )
 /**
  * @brief Test that prvPAL_Abort will return correct result code.
  */
-/* void test_OTAPAL_Abort_InvalidFileHandle( void ) */
-/* { */
-/*     OtaErr_t result = OTA_ERR_UNINITIALIZED; */
-
-/*     otaFile.pFilePath = ( uint8_t *) otatestpalFIRMWARE_FILE; */
-/*     result = prvPAL_CreateFileForRx( &otaFile) ; */
-/*     TEST_ASSERT_EQUAL( OTA_ERR_NONE, result ); */
-
-/*     otaFile.pFile += 8; */
-/*     result = prvPAL_Abort( &otaFile ); */
-/*     TEST_ASSERT_EQUAL( OTA_ERR_FILE_ABORT, ( result & OTA_MAIN_ERR_MASK)); */
-/* } */
-
-/**
- * @brief Test that prvPAL_Abort will return correct result code.
- */
 void test_OTAPAL_Abort_ValidFileHandle( void )
 {
     OtaErr_t result = OTA_ERR_UNINITIALIZED;
@@ -524,8 +508,9 @@ void test_OTAPAL_ResetDevice_NullFileContext( void )
 {
     OtaErr_t result = OTA_ERR_UNINITIALIZED;
 
+    /* Currently there is nothing done inside the function. It's a placeholder. */
     result = prvPAL_ResetDevice( NULL );
-    TEST_ASSERT_EQUAL( OTA_ERR_NULL_FILE_PTR, result );
+    TEST_ASSERT_EQUAL( OTA_ERR_NONE, result );
 }
 
 /**
@@ -536,7 +521,7 @@ void test_OTAPAL_ActivateNewImage_NullFileContext( void )
     OtaErr_t result = OTA_ERR_UNINITIALIZED;
 
     result = prvPAL_ActivateNewImage( NULL );
-    TEST_ASSERT_EQUAL( OTA_ERR_NULL_FILE_PTR, result );
+    TEST_ASSERT_EQUAL( OTA_ERR_NONE, result );
 }
 
 /**
