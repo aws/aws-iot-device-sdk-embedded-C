@@ -252,8 +252,8 @@ int16_t prvPAL_WriteBlock( OtaFileContext_t * const C,
                             "fwrite returned error: "
                             "errno=%d", errno ) );
 
-                filerc = errno; /*lint !e40 !e9027
-                                 * Errno is being used in accordance with host API documentation. */
+                filerc = -1; /*lint !e40 !e9027
+                              * Errno is being used in accordance with host API documentation. */
             }
             else
             {
@@ -262,9 +262,9 @@ int16_t prvPAL_WriteBlock( OtaFileContext_t * const C,
         }
         else
         {
-            LogError( ( "fseek failed." ) );
-            filerc = errno; /*lint !e40 !e9027
-                             * Errno is being used in accordance with host API documentation.*/
+            LogError( ( "fseek failed. fseek returned errno = %d", errno ) );
+            filerc = -1; /*lint !e40 !e9027
+                          * Errno is being used in accordance with host API documentation.*/
         }
     }
     else /* Invalid context or file pointer provided. */
