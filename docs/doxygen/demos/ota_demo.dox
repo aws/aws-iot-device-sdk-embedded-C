@@ -1,0 +1,39 @@
+/**
+@page ota_demo AWS IoT OTA
+@brief This demo demonstrates usage of the AWS IoT Over-The-Air library.
+
+@section ota_demo_core_mqtt OTA over MQTT Demo
+@brief A demo of OTA library to perform a firmware update using coreMQTT for data operations.
+
+<p>
+A POSIX socket-based transport interface implementation is used to establish a
+plaintext connection over port 80 to an HTTP server. If a connection
+failure occurs, then the connection establishment is retried with exponential and jitter backoff.
+Once a connection is established, HTTP requests are sent for the following HTTP methods:
+`GET`, `HEAD`, `PUT`, and `POST`. The respective responses from each of these
+requests are logged.
+</p>
+
+<div class="caption" style="text-align:center">
+OTA over coreMQTT Demo Workflow :
+</div>
+@image html http_demo_plaintext.png width=100%
+
+@section ota_demo_core_http OTA over HTTP Demo
+@brief A demo of OTA library to perform a firmware update using coreHTTP for data operations.
+
+<p>
+A POSIX socket-based transport interface implementation is used to establish a
+plaintext connection over port 80 to an HTTP server. If a connection
+failure occurs, then the connection establishment is retried with exponential and jitter backoff.
+Once a connection is established, HTTP requests are sent for the following HTTP methods:
+`GET`, `HEAD`, `PUT`, and `POST`. The respective responses from each of these
+requests are logged.
+</p>
+
+<div class="caption" style="text-align:center">
+OTA over coreHTTP Demo Workflow :
+</div>
+@image html http_demo_plaintext.png width=100%
+
+*/
