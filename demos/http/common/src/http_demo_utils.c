@@ -67,19 +67,16 @@
 /**
  * @brief The random number generator to use for exponential backoff with
  * jitter retry logic.
- * This function is an implementation the #BackoffAlgorithm_RNG_t interface type
- * of the retry utils library API.
  *
- * @return The generated random number. This function ALWAYS succeeds
- * in generating a random number.
+ * @return The generated random number.
  */
-static int32_t generateRandomNumber();
+static uint32_t generateRandomNumber();
 
 /*-----------------------------------------------------------*/
 
-static int32_t generateRandomNumber()
+static uint32_t generateRandomNumber()
 {
-    return( rand() % ( INT32_MAX ) );
+    return( rand() );
 }
 
 /*-----------------------------------------------------------*/
@@ -97,8 +94,9 @@ int32_t connectToServerWithBackoffRetries( TransportConnect_t connectFunction,
 
     assert( connectFunction != NULL );
 
-    /* Seed pseudo random number generator (provided by ISO C standard library) for
-     * use by retry utils library when retrying failed connection attempts to broker. */
+    /* Seed pseudo random number generator used in the demo for
+     * backoff period calculation when retrying failed network operations
+     * with broker. */
 
     /* Get current time to seed pseudo random number generator. */
     ( void ) clock_gettime( CLOCK_REALTIME, &tp );
@@ -109,8 +107,7 @@ int32_t connectToServerWithBackoffRetries( TransportConnect_t connectFunction,
     BackoffAlgorithm_InitializeParams( &reconnectParams,
                                        CONNECTION_RETRY_BACKOFF_BASE_MS,
                                        CONNECTION_RETRY_MAX_BACKOFF_DELAY_MS,
-                                       CONNECTION_RETRY_MAX_ATTEMPTS,
-                                       generateRandomNumber );
+                                       CONNECTION_RETRY_MAX_ATTEMPTS );
 
     /* Attempt to connect to HTTP server. If connection fails, retry after
      * a timeout. Timeout value will exponentially increase until maximum
@@ -121,9 +118,8 @@ int32_t connectToServerWithBackoffRetries( TransportConnect_t connectFunction,
 
         if( returnStatus != EXIT_SUCCESS )
         {
-            /* Get back-off value (in milliseconds) for the next connection retry. */
-            backoffAlgStatus = BackoffAlgorithm_GetNextBackoff( &reconnectParams, &nextRetryBackOff );
-            assert( backoffAlgStatus != BackoffAlgorithmRngFailure );
+            /* Generate a random number and get back-off value (in milliseconds) for the next connection retry. */
+            backoffAlgStatus = BackoffAlgorithm_GetNextBackoff( &reconnectParams, generateRandomNumber(), &nextRetryBackOff );
 
             if( backoffAlgStatus == BackoffAlgorithmSuccess )
             {
