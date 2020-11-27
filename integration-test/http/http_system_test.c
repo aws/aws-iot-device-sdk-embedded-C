@@ -235,7 +235,7 @@ static int32_t transportSendStub( NetworkContext_t * pNetworkContext,
 
 static uint32_t generateRandomNumber()
 {
-    return( rand() & UINT32_MAX );
+    return( rand() );
 }
 
 /*-----------------------------------------------------------*/

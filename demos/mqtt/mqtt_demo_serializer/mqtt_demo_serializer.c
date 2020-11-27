@@ -340,7 +340,7 @@ static uint16_t getNextPacketIdentifier( void )
 
 static uint32_t generateRandomNumber()
 {
-    return( rand() & UINT32_MAX );
+    return( rand() );
 }
 
 /*-----------------------------------------------------------*/

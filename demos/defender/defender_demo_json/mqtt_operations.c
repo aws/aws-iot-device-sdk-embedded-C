@@ -330,7 +330,7 @@ static bool handlePublishResend( MQTTContext_t * pMqttContext );
 
 static uint32_t generateRandomNumber()
 {
-    return( rand() & UINT32_MAX );
+    return( rand() );
 }
 
 /*-----------------------------------------------------------*/
