@@ -567,7 +567,7 @@ int main( int argc,
      * // This example assumes that the device has a unique serial number which is
      * // registered as the thing name with AWS IoT Core.
      * const char * pThingName = GetDeviceSerialNumber();
-     * uint16_t thingNameLength = ( uint16_t )strlen( pThingname );
+     * uint16_t thingNameLength = ( uint16_t ) strlen( pThingname );
      * char topicBuffer[ TOPIC_BUFFER_LENGTH ] = { 0 };
      * uint16_t topicLength = 0;
      * DefenderStatus_t status = DefenderSuccess;
@@ -594,7 +594,7 @@ int main( int argc,
 
     /* We then need to collect the metrics that will be sent to the AWS IoT
      * Device Defender service. This demo uses the functions declared in
-     * in metrics_collector.h to collect network metrics. For this demo, the
+     * metrics_collector.h to collect network metrics. For this demo, the
      * implementation of these functions are in metrics_collector.c and
      * collects metrics using tcp_netstat utility for FreeRTOS+TCP. */
     if( status == true )
