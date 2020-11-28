@@ -92,6 +92,7 @@ connectfunction
 connectionsarraylength
 const
 contentrangevalstr
+coremqtt
 corepkcs
 correclty
 cpu
@@ -114,8 +115,10 @@ dat
 debian
 dec
 def
+defenderjsonreportaccepted
 defenderresponse
 defenderresponselength
+defendersuccess
 der
 des
 deserialize
@@ -177,6 +180,7 @@ generatekeypair
 generaterandom
 genkey
 genprime
+getdeviceserialnumber
 getfunctionlist
 getslotlist
 getsubackstatuscodes
@@ -225,8 +229,8 @@ intel
 interoperate
 io
 iot
-iso
 ipv
+iso
 jac
 jacobi
 jitp
@@ -414,6 +418,7 @@ psessionpresent
 psk
 pslotlist
 pss
+pthingname
 pthread
 ptopic
 ptopicfilter
@@ -507,12 +512,14 @@ std
 stderr
 stdlib
 strerror
+strlen
 struct
 structs
 suback
 sublicense
 subscribepublishloop
 subscribeqos
+subscribetodefendertopics
 tcp
 tcpportsarraylength
 tcpsocket
