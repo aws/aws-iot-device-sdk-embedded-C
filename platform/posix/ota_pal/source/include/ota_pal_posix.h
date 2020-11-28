@@ -30,10 +30,10 @@
 
 /**
  * @brief Code signing certificate
- * 
+ *
  * The certificate is used for OTA image signing.  If a platform does not support a file
  * system the signing certificate can be pasted here for testing purpose.
- * 
+ *
  * PEM-encoded code signer certificate
  *
  * Must include the PEM header and footer:
@@ -122,13 +122,13 @@ OtaErr_t otaPal_CloseFile( OtaFileContext_t * const C );
  * function is called.
  * The file pointer/handle C->pFile, is checked for NULL by the OTA agent before this
  * function is called.
- * pacData is checked for NULL by the OTA agent before this function is called.
+ * pcData is checked for NULL by the OTA agent before this function is called.
  * ulBlockSize is validated for range by the OTA agent before this function is called.
  * ulBlockIndex is validated by the OTA agent before this function is called.
  *
  * @param[in] C OTA file context information.
  * @param[in] ulOffset Byte offset to write to from the beginning of the file.
- * @param[in] pacData Pointer to the byte array of data to write.
+ * @param[in] pcData Pointer to the byte array of data to write.
  * @param[in] ulBlockSize The number of bytes to write.
  *
  * @return The number of bytes written on a success, or a negative error code from the platform abstraction layer.

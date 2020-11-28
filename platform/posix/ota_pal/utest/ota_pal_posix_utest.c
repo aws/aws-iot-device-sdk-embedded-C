@@ -108,7 +108,7 @@ static OtaFileContext_t otaFile;
  * platform/posix/ota_pal/utest/test_files for the set of certificates.
  *
  * In the Linux simulator this is the path to the certificate on your machine. The path currently
- * here is relative to the CSDK root. 
+ * here is relative to the CSDK root.
  *
  * #define otatestpalCERTIFICATE_FILE  "..\\..\\..\\..\\..\\libraries\\freertos_plus\\aws\\ota\\test\\test_files\\ecdsa-sha256-signer.crt.pem"
  */

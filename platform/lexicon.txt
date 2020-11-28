@@ -12,6 +12,7 @@ basedefs
 bitmasking
 bool
 bootable
+bootloader
 br
 buf
 bytesread
@@ -28,6 +29,7 @@ const
 couldn
 coverity
 crt
+csdk
 cwd
 didn
 dns
@@ -47,6 +49,7 @@ exe
 expectedstatus
 fclose
 fd
+filehandle
 filelabel
 filepath
 filepaths
@@ -107,6 +110,12 @@ openssl_invalid_parameter
 org
 ota
 otafile
+otaimagestateaborted
+otaimagestateaccepted
+otaimagestaterejected
+otaimagestateinvalid
+otaimagestatependingcommit
+otaimagestateunknown
 otapalimagestatevalid
 paddrinfo
 palpnprotos
@@ -114,6 +123,7 @@ param
 pbuf
 pbuffer
 pcdata
+pcertfilepath
 pclientcertpath
 pem
 pfile
@@ -191,9 +201,11 @@ transportsectionimplementation
 transportsectionoverview
 transportstruct
 txt
+ulblockindex
 ulblocksize
 uloffset
 unistd
+utest
 utils
 v1
 vtaskdelay
