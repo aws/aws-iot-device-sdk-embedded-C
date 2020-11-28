@@ -116,6 +116,9 @@ otaimagestaterejected
 otaimagestateinvalid
 otaimagestatependingcommit
 otaimagestateunknown
+otapalimagestateinvalid
+otapalimagestatependingcommit
+otapalimagestateunknown
 otapalimagestatevalid
 paddrinfo
 palpnprotos
