@@ -27,9 +27,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
-#include "ota_platform_interface.h"
+
+#include "ota.h"
+#include "ota_pal_posix.h"
 #include "ota_private.h"
-#include "aws_ota_codesigner_certificate.h"
 
 #include <openssl/evp.h>
 #include <openssl/bio.h>
@@ -44,7 +45,7 @@
 /* Specify the OTA signature algorithm we support on this platform. */
 const char OTA_JsonFileSignatureKey[ OTA_FILE_SIG_KEY_STR_MAX_LENGTH ] = "sig-sha256-ecdsa";
 
-static OtaErr_t prvPAL_CheckFileSignature( OtaFileContext_t * const C );
+static OtaErr_t otaPal_CheckFileSignature( OtaFileContext_t * const C );
 
 
 
@@ -133,7 +134,7 @@ static EVP_PKEY * Openssl_GetPkeyFromCertificate( uint8_t * pCertFilePath )
 
 /* Attempt to create a new receive file for the file chunks as they come in. */
 
-OtaErr_t prvPAL_CreateFileForRx( OtaFileContext_t * const C )
+OtaErr_t otaPal_CreateFileForRx( OtaFileContext_t * const C )
 {
     OtaErr_t result = OTA_ERR_UNINITIALIZED; /* For MISRA mandatory. */
 
@@ -178,7 +179,7 @@ OtaErr_t prvPAL_CreateFileForRx( OtaFileContext_t * const C )
 
 /* Abort receiving the specified OTA update by closing the file. */
 
-OtaErr_t prvPAL_Abort( OtaFileContext_t * const C )
+OtaErr_t otaPal_Abort( OtaFileContext_t * const C )
 {
     /* Set default return status to uninitialized. */
     OtaErr_t result = OTA_ERR_UNINITIALIZED;
@@ -224,7 +225,7 @@ OtaErr_t prvPAL_Abort( OtaFileContext_t * const C )
 }
 
 /* Write a block of data to the specified file. */
-int16_t prvPAL_WriteBlock( OtaFileContext_t * const C,
+int16_t otaPal_WriteBlock( OtaFileContext_t * const C,
                            uint32_t ulOffset,
                            uint8_t * const pcData,
                            uint32_t ulBlockSize )
@@ -278,7 +279,7 @@ int16_t prvPAL_WriteBlock( OtaFileContext_t * const C,
 
 /* Close the specified file. This shall authenticate the file if it is marked as secure. */
 
-OtaErr_t prvPAL_CloseFile( OtaFileContext_t * const C )
+OtaErr_t otaPal_CloseFile( OtaFileContext_t * const C )
 {
     OtaErr_t result = OTA_ERR_NONE;
     int32_t filerc = 0;
@@ -288,7 +289,7 @@ OtaErr_t prvPAL_CloseFile( OtaFileContext_t * const C )
         if( C->pSignature != NULL )
         {
             /* Verify the file signature, close the file and return the signature verification result. */
-            result = prvPAL_CheckFileSignature( C );
+            result = otaPal_CheckFileSignature( C );
         }
         else
         {
@@ -315,7 +316,7 @@ OtaErr_t prvPAL_CloseFile( OtaFileContext_t * const C )
         {
             LogInfo( ( "%s signature verification passed.", OTA_JsonFileSignatureKey ) );
 
-            ( void ) prvPAL_SetPlatformImageState( C, OtaImageStateTesting );
+            ( void ) otaPal_SetPlatformImageState( C, OtaImageStateTesting );
         }
         else
         {
@@ -323,7 +324,7 @@ OtaErr_t prvPAL_CloseFile( OtaFileContext_t * const C )
                         OTA_JsonFileSignatureKey, result ) );
 
             /* If we fail to verify the file signature that means the image is not valid. We need to set the image state to aborted. */
-            ( void ) prvPAL_SetPlatformImageState( C, OtaImageStateAborted );
+            ( void ) otaPal_SetPlatformImageState( C, OtaImageStateAborted );
         }
     }
     else /* Invalid OTA Context. */
@@ -409,7 +410,7 @@ static OtaErr_t Openssl_DigestVerify( EVP_MD_CTX * pSigContext,
  * /* Verify the signature of the specified file.
  * /*********************************************/
 
-static OtaErr_t prvPAL_CheckFileSignature( OtaFileContext_t * const C )
+static OtaErr_t otaPal_CheckFileSignature( OtaFileContext_t * const C )
 {
     OtaErr_t result = OTA_ERR_NONE;
     EVP_PKEY * pPkey = NULL;
@@ -460,7 +461,7 @@ static OtaErr_t prvPAL_CheckFileSignature( OtaFileContext_t * const C )
 
 /*-----------------------------------------------------------*/
 
-OtaErr_t prvPAL_ResetDevice( OtaFileContext_t * const C )
+OtaErr_t otaPal_ResetDevice( OtaFileContext_t * const C )
 {
     OtaErr_t result = OTA_ERR_NONE;
 
@@ -470,7 +471,7 @@ OtaErr_t prvPAL_ResetDevice( OtaFileContext_t * const C )
 
 /*-----------------------------------------------------------*/
 
-OtaErr_t prvPAL_ActivateNewImage( OtaFileContext_t * const C )
+OtaErr_t otaPal_ActivateNewImage( OtaFileContext_t * const C )
 {
     OtaErr_t result = OTA_ERR_NONE;
 
@@ -484,7 +485,7 @@ OtaErr_t prvPAL_ActivateNewImage( OtaFileContext_t * const C )
  * On linux, the state of the OTA image is stored in PlaformImageState.txt.
  */
 
-OtaErr_t prvPAL_SetPlatformImageState( OtaFileContext_t * const C,
+OtaErr_t otaPal_SetPlatformImageState( OtaFileContext_t * const C,
                                        OtaImageState_t eState )
 {
     OtaErr_t result = OTA_ERR_NONE;
@@ -551,7 +552,7 @@ OtaErr_t prvPAL_SetPlatformImageState( OtaFileContext_t * const C,
  * causing it to rollback to the previous code. On linux, this is not
  * fully simulated as there is no easy way to reset the simulated device.
  */
-OtaPalImageState_t prvPAL_GetPlatformImageState( OtaFileContext_t * const C )
+OtaPalImageState_t otaPal_GetPlatformImageState( OtaFileContext_t * const C )
 {
     FILE * pPlatformImageState;
     OtaImageState_t eSavedAgentState = OtaImageStateUnknown;
@@ -608,8 +609,3 @@ OtaPalImageState_t prvPAL_GetPlatformImageState( OtaFileContext_t * const C )
 }
 
 /*-----------------------------------------------------------*/
-
-/* Provide access to private members for testing. */
-#ifdef AMAZON_FREERTOS_ENABLE_UNIT_TESTS
-    #include "aws_ota_pal_test_access_define.h"
-#endif

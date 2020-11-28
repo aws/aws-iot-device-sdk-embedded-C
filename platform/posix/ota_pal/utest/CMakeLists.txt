@@ -23,12 +23,13 @@ list( APPEND mock_define_list
 
 #list the files you would like to test here
 list( APPEND real_source_files
-      "${PLATFORM_DIR}/ota/src/pal/aws_ota_pal.c"
+      "${PLATFORM_DIR}/posix/ota_pal/source/ota_pal_posix.c"
       )
 
 #list the directories the module under test includes
 list( APPEND real_include_directories
       "${MODULES_DIR}/aws/ota/source/include"
+      "${PLATFORM_DIR}/posix/ota_pal/source/include"
       ${OPENSSL_INCLUDE_DIR}
       ${CMAKE_CURRENT_LIST_DIR}
       )
@@ -39,8 +40,7 @@ list( APPEND real_include_directories
 list ( APPEND test_include_directories
        "."
        ${CMAKE_CURRENT_LIST_DIR}
-       ${MODULES_DIR}
-       /aws/ota/source/include
+       ${MODULES_DIR}/aws/ota/source/include
        )
 
 #== ===========================  (end edit)  ===================================
@@ -63,8 +63,8 @@ list ( APPEND utest_dep_list
        ${real_name}
       )
 
-set ( utest_name "ota_pal_linux_utest" )
-set ( utest_source "ota_pal_linux_utest.c" )
+set ( utest_name "ota_pal_posix_utest" )
+set ( utest_source "ota_pal_posix_utest.c" )
 create_test ( ${utest_name}
               ${utest_source}
               "${utest_link_list}"

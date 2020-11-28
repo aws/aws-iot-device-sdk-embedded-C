@@ -1096,13 +1096,13 @@ static void setOtaInterface( OtaInterfaces_t * pOtaInterfaces )
     pOtaInterfaces->http.deinit = httpDeinit;
 
     /* Initialize the OTA library PAL Interface.*/
-    pOtaInterfaces->pal.getPlatformImageState = prvPAL_GetPlatformImageState;
-    pOtaInterfaces->pal.setPlatformImageState = prvPAL_SetPlatformImageState;
-    pOtaInterfaces->pal.writeBlock = prvPAL_WriteBlock;
-    pOtaInterfaces->pal.activateNewImage = prvPAL_ActivateNewImage;
-    pOtaInterfaces->pal.closeFile = prvPAL_CloseFile;
-    pOtaInterfaces->pal.resetDevice = prvPAL_ResetDevice;
-    pOtaInterfaces->pal.abortUpdate = prvPAL_Abort;
+    pOtaInterfaces->pal.getPlatformImageState = otaPal_GetPlatformImageState;
+    pOtaInterfaces->pal.setPlatformImageState = otaPal_SetPlatformImageState;
+    pOtaInterfaces->pal.writeBlock = otaPal_WriteBlock;
+    pOtaInterfaces->pal.activateNewImage = otaPal_ActivateNewImage;
+    pOtaInterfaces->pal.closeFile = otaPal_CloseFile;
+    pOtaInterfaces->pal.resetDevice = otaPal_ResetDevice;
+    pOtaInterfaces->pal.abortUpdate = otaPal_Abort;
 }
 
 /*-----------------------------------------------------------*/
