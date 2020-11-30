@@ -79,7 +79,7 @@ SocketStatus_t Plaintext_Connect( NetworkContext_t * pNetworkContext,
         returnStatus = Sockets_Connect( &pPlaintextParams->socketDescriptor,
                                         pServerInfo,
                                         sendTimeoutMs,
-                                        recvTimeoutMs )
+                                        recvTimeoutMs );
     }
 
     return returnStatus;
