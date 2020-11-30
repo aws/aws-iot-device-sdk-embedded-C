@@ -681,6 +681,10 @@ void test_Openssl_Disconnect_NULL_Network_Context( void )
 
     returnStatus = Openssl_Disconnect( NULL );
     TEST_ASSERT_EQUAL( OPENSSL_INVALID_PARAMETER, returnStatus );
+
+    networkContext.pParams = NULL;
+    returnStatus = Openssl_Disconnect( &networkContext );
+    TEST_ASSERT_EQUAL( OPENSSL_INVALID_PARAMETER, returnStatus );
 }
 
 /**
@@ -691,7 +695,7 @@ void test_Openssl_Disconnect_Succeeds( void )
     OpensslStatus_t returnStatus;
 
     /* First, SSL object is NULL. */
-    memset( &networkContext, 0, sizeof( NetworkContext_t ) );
+    opensslParams.pSsl = NULL;
     Sockets_Disconnect_ExpectAnyArgsAndReturn( SOCKETS_SUCCESS );
     returnStatus = Openssl_Disconnect( &networkContext );
     TEST_ASSERT_EQUAL( OPENSSL_SUCCESS, returnStatus );
