@@ -125,7 +125,6 @@ deserialize
 deserialized
 deserializer
 deserializing
-desired
 dev
 developerguide
 devicepublickeyasciihex
