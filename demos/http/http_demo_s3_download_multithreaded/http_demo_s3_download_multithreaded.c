@@ -865,6 +865,7 @@ int main( int argc,
     TransportInterface_t transportInterface = { 0 };
     /* The network context for the transport layer interface. */
     NetworkContext_t networkContext = { 0 };
+    OpensslParams_t opensslParams = { 0 };
 
     /* Queue for HTTP requests. Requests are written by the main thread,
      * and serviced by the HTTP thread. */
@@ -879,6 +880,9 @@ int main( int argc,
 
     ( void ) argc;
     ( void ) argv;
+
+    /* Set the pParams member of the network context with desired transport. */
+    networkContext.pParams = &opensslParams;
 
     LogInfo( ( "HTTP Client multi-threaded S3 download demo using pre-signed URL:\n%s", S3_PRESIGNED_GET_URL ) );
 

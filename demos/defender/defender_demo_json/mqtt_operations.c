@@ -239,6 +239,11 @@ static MQTTContext_t mqttContext = { 0 };
 static NetworkContext_t networkContext = { 0 };
 
 /**
+ * @brief The parameters for Openssl operation.
+ */
+static OpensslParams_t opensslParams = { 0 };
+
+/**
  * @brief The flag to indicate that the mqtt session is established.
  */
 static bool mqttSessionEstablished = false;
@@ -345,6 +350,9 @@ static bool connectToBrokerWithBackoffRetries( NetworkContext_t * pNetworkContex
     OpensslCredentials_t opensslCredentials;
     uint16_t nextRetryBackOff = 0U;
     struct timespec tp;
+
+    /* Set the pParams member of the network context with desired transport. */
+    pNetworkContext->pParams = &opensslParams;
 
     /* Initialize information to connect to the MQTT broker. */
     serverInfo.pHostName = AWS_IOT_ENDPOINT;

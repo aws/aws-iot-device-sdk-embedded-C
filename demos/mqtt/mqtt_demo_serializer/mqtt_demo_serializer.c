@@ -903,12 +903,16 @@ int main( int argc,
     bool controlPacketSent = false;
     bool publishPacketSent = false;
     NetworkContext_t networkContext = { 0 };
+    OpensslParams_t opensslParams = { 0 };
     BackoffAlgorithmStatus_t backoffAlgStatus = BackoffAlgorithmSuccess;
     BackoffAlgorithmContext_t retryParams;
     uint16_t nextRetryBackOff = 0U;
 
     ( void ) argc;
     ( void ) argv;
+
+    /* Set the pParams member of the network context with desired transport. */
+    networkContext.pParams = &opensslParams;
 
     /***
      * Set Fixed size buffer structure that is required by API to serialize

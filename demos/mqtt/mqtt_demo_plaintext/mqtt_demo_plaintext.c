@@ -1018,10 +1018,14 @@ int main( int argc,
 {
     int returnStatus = EXIT_SUCCESS;
     NetworkContext_t networkContext = { 0 };
+    PlaintextParams_t plaintextParams = { 0 };
     struct timespec tp;
 
     ( void ) argc;
     ( void ) argv;
+
+    /* Set the pParams member of the network context with desired transport. */
+    networkContext.pParams = &plaintextParams;
 
     /* Seed pseudo random number generator used in the demo for
      * backoff period calculation when retrying failed network operations

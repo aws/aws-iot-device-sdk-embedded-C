@@ -1328,9 +1328,13 @@ int main( int argc,
 {
     int returnStatus = EXIT_SUCCESS;
     NetworkContext_t networkContext;
+    OpensslParams_t opensslParams;
 
     ( void ) argc;
     ( void ) argv;
+
+    /* Set the pParams member of the network context with desired transport. */
+    networkContext.pParams = &opensslParams;
 
     for( ; ; )
     {

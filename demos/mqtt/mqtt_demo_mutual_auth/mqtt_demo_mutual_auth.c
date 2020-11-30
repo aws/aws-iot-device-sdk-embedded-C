@@ -1510,11 +1510,15 @@ int main( int argc,
     int returnStatus = EXIT_SUCCESS;
     MQTTContext_t mqttContext = { 0 };
     NetworkContext_t networkContext = { 0 };
+    OpensslParams_t opensslParams = { 0 };
     bool clientSessionPresent = false;
     struct timespec tp;
 
     ( void ) argc;
     ( void ) argv;
+
+    /* Set the pParams member of the network context with desired transport. */
+    networkContext.pParams = &opensslParams;
 
     /* Seed pseudo random number generator (provided by ISO C standard library) for
      * use by retry utils library when retrying failed network operations. */

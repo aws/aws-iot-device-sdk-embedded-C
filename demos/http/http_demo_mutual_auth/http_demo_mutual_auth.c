@@ -340,9 +340,13 @@ int main( int argc,
     TransportInterface_t transportInterface;
     /* The network context for the transport layer interface. */
     NetworkContext_t networkContext;
+    OpensslParams_t opensslParams;
 
     ( void ) argc;
     ( void ) argv;
+
+    /* Set the pParams member of the network context with desired transport. */
+    networkContext.pParams = &opensslParams;
 
     /**************************** Connect. ******************************/
 
