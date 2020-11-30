@@ -30,7 +30,6 @@
 
 #include "ota.h"
 #include "ota_pal_posix.h"
-#include "ota_private.h"
 
 #include <openssl/evp.h>
 #include <openssl/bio.h>

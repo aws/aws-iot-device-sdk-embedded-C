@@ -48,12 +48,8 @@
 /* OTA Library include. */
 #include "ota.h"
 #include "ota_config.h"
-#include "ota_private.h"
-
-/* OTA Library Interface include. */
 #include "ota_os_posix.h"
-#include "ota_mqtt_interface.h"
-#include "ota_platform_interface.h"
+#include "ota_pal_posix.h"
 
 /* Include firmware version struct definition. */
 #include "ota_appversion32.h"
@@ -785,13 +781,14 @@ static void setOtaInterfaces( OtaInterfaces_t * pOtaInterfaces )
     pOtaInterfaces->mqtt.dataCallback = mqttDataCallback;
 
     /* Initialize the OTA library PAL Interface.*/
-    pOtaInterfaces->pal.getPlatformImageState = otaPal_GetPlatformImageState;
-    pOtaInterfaces->pal.setPlatformImageState = otaPal_SetPlatformImageState;
-    pOtaInterfaces->pal.writeBlock = otaPal_WriteBlock;
-    pOtaInterfaces->pal.activateNewImage = otaPal_ActivateNewImage;
+    pOtaInterfaces->pal.abort = otaPal_Abort;
+    pOtaInterfaces->pal.createFile = otaPal_CreateFileForRx;
     pOtaInterfaces->pal.closeFile = otaPal_CloseFile;
-    pOtaInterfaces->pal.resetDevice = otaPal_ResetDevice;
-    pOtaInterfaces->pal.abortUpdate = otaPal_Abort;
+    pOtaInterfaces->pal.writeBlock = otaPal_WriteBlock;
+    pOtaInterfaces->pal.activate = otaPal_ActivateNewImage;
+    pOtaInterfaces->pal.reset = otaPal_ResetDevice;
+    pOtaInterfaces->pal.setPlatformImageState = otaPal_SetPlatformImageState;
+    pOtaInterfaces->pal.getPlatformImageState = otaPal_GetPlatformImageState;
 }
 
 /*-----------------------------------------------------------*/
