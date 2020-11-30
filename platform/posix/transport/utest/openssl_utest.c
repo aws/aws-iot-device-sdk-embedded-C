@@ -110,7 +110,7 @@ void setUp()
     serverInfo.hostNameLength = strlen( HOSTNAME );
     serverInfo.port = PORT;
 
-    opensslParams.pParams = &opensslParams;
+    networkContext.pParams = &opensslParams;
 
     memset( &opensslCredentials, 0, sizeof( OpensslCredentials_t ) );
     opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;

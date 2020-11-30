@@ -201,6 +201,14 @@ typedef struct PublishPackets
 
 /*-----------------------------------------------------------*/
 
+/* Each compilation unit must define the NetworkContext struct. */
+struct NetworkContext
+{
+    OpensslParams_t * pParams;
+};
+
+/*-----------------------------------------------------------*/
+
 /**
  * @brief Packet Identifier generated when Subscribe request was sent to the broker;
  * it is used to match received Subscribe ACK to the transmitted subscribe.
@@ -245,14 +253,6 @@ static OpensslParams_t opensslParams = { 0 };
  * @brief The flag to indicate the mqtt session changed.
  */
 static bool mqttSessionEstablished = false;
-
-/*-----------------------------------------------------------*/
-
-/* Each compilation unit must define the NetworkContext struct. */
-struct NetworkContext
-{
-    OpensslParams_t * pParams;
-};
 
 /*-----------------------------------------------------------*/
 

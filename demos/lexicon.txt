@@ -125,6 +125,7 @@ deserialize
 deserialized
 deserializer
 deserializing
+desired
 dev
 developerguide
 devicepublickeyasciihex
@@ -304,6 +305,7 @@ mutex
 mutexes
 mxz
 necesarily
+networkcontext
 ni
 nist
 noninfringement
@@ -395,6 +397,7 @@ pouttcpportsarray
 poutudpportsarray
 poweron
 ppacketinfo
+pparams
 ppath
 ppathlen
 ppayload
@@ -533,6 +536,7 @@ toolchain
 topicbuffer
 topicfilterlength
 topiclength
+transport
 transportinterface
 transporttimeout
 txt
