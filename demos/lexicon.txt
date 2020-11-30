@@ -536,7 +536,6 @@ toolchain
 topicbuffer
 topicfilterlength
 topiclength
-transport
 transportinterface
 transporttimeout
 txt
