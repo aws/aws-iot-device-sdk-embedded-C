@@ -101,6 +101,7 @@ plisthead
 pnetworkcontext
 png
 popensslcredentials
+popensslparams
 posix
 pprivatekeypath
 pretryparams
