@@ -144,6 +144,17 @@ static void setOptionalConfigurations( SSL * pSsl,
  */
 static OpensslStatus_t convertToOpensslStatus( SocketStatus_t socketStatus );
 
+/**
+ * @brief Establish TLS session by performing handshake with the server.
+ *
+ * @param[in] pOpensslParams Parameters to perform the TLS handshake.
+ * @param[in] pOpensslCredentials TLS credentials containing configurations.
+ *
+ * @return #OPENSSL_SUCCESS, #OPENSSL_API_ERROR, and #OPENSSL_HANDSHAKE_FAILED.
+ */
+static OpensslStatus_t tlsHandshake( OpensslParams_t * pOpensslParams,
+                                     const OpensslCredentials_t * pOpensslCredentials );
+
 /*-----------------------------------------------------------*/
 
 #if ( LIBRARY_LOG_LEVEL == LOG_DEBUG )
@@ -211,6 +222,54 @@ static OpensslStatus_t convertToOpensslStatus( SocketStatus_t socketStatus )
     return opensslStatus;
 }
 /*-----------------------------------------------------------*/
+
+static OpensslStatus_t tlsHandshake( OpensslParams_t * pOpensslParams,
+                                     const OpensslCredentials_t * pOpensslCredentials )
+{
+    OpensslStatus_t returnStatus = OPENSSL_SUCCESS;
+    int32_t sslStatus = -1, verifyPeerCertStatus = X509_V_OK;
+
+    /* Enable SSL peer verification. */
+    SSL_set_verify( pOpensslParams->pSsl, SSL_VERIFY_PEER, NULL );
+
+    /* Setup the socket to use for communication. */
+    sslStatus = SSL_set_fd( pOpensslParams->pSsl, pOpensslParams->socketDescriptor );
+
+    if( sslStatus != 1 )
+    {
+        LogError( ( "SSL_set_fd failed to set the socket fd to SSL context." ) );
+        returnStatus = OPENSSL_API_ERROR;
+    }
+
+    /* Perform the TLS handshake. */
+    if( returnStatus == OPENSSL_SUCCESS )
+    {
+        setOptionalConfigurations( pOpensslParams->pSsl, pOpensslCredentials );
+
+        sslStatus = SSL_connect( pOpensslParams->pSsl );
+
+        if( sslStatus != 1 )
+        {
+            LogError( ( "SSL_connect failed to perform TLS handshake." ) );
+            returnStatus = OPENSSL_HANDSHAKE_FAILED;
+        }
+    }
+
+    /* Verify X509 certificate from peer. */
+    if( returnStatus == OPENSSL_SUCCESS )
+    {
+        verifyPeerCertStatus = ( int32_t ) SSL_get_verify_result( pOpensslParams->pSsl );
+
+        if( verifyPeerCertStatus != X509_V_OK )
+        {
+            LogError( ( "SSL_get_verify_result failed to verify X509 "
+                        "certificate from peer." ) );
+            returnStatus = OPENSSL_HANDSHAKE_FAILED;
+        }
+    }
+
+    return returnStatus;
+}
 
 static int32_t setRootCa( const SSL_CTX * pSslContext,
                           const char * pRootCaPath )
@@ -488,7 +547,6 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
     int32_t sslStatus = 0;
     uint8_t sslObjectCreated = 0;
     SSL_CTX * pSslContext = NULL;
-    int32_t verifyPeerCertStatus = X509_V_OK;
 
     /* Validate parameters. */
     if( ( pNetworkContext == NULL ) || ( pNetworkContext->pParams == NULL ) )
@@ -572,43 +630,8 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
     /* Setup the socket to use for communication. */
     if( returnStatus == OPENSSL_SUCCESS )
     {
-        /* Enable SSL peer verification. */
-        SSL_set_verify( pOpensslParams->pSsl, SSL_VERIFY_PEER, NULL );
-
-        sslStatus = SSL_set_fd( pOpensslParams->pSsl, pOpensslParams->socketDescriptor );
-
-        if( sslStatus != 1 )
-        {
-            LogError( ( "SSL_set_fd failed to set the socket fd to SSL context." ) );
-            returnStatus = OPENSSL_API_ERROR;
-        }
-    }
-
-    /* Perform the TLS handshake. */
-    if( returnStatus == OPENSSL_SUCCESS )
-    {
-        setOptionalConfigurations( pOpensslParams->pSsl, pOpensslCredentials );
-
-        sslStatus = SSL_connect( pOpensslParams->pSsl );
-
-        if( sslStatus != 1 )
-        {
-            LogError( ( "SSL_connect failed to perform TLS handshake." ) );
-            returnStatus = OPENSSL_HANDSHAKE_FAILED;
-        }
-    }
-
-    /* Verify X509 certificate from peer. */
-    if( returnStatus == OPENSSL_SUCCESS )
-    {
-        verifyPeerCertStatus = ( int32_t ) SSL_get_verify_result( pOpensslParams->pSsl );
-
-        if( verifyPeerCertStatus != X509_V_OK )
-        {
-            LogError( ( "SSL_get_verify_result failed to verify X509 "
-                        "certificate from peer." ) );
-            returnStatus = OPENSSL_HANDSHAKE_FAILED;
-        }
+        returnStatus = tlsHandshake( pOpensslParams,
+                                     pOpensslCredentials );
     }
 
     /* Free the SSL context. */

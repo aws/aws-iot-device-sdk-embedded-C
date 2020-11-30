@@ -248,6 +248,14 @@ static bool mqttSessionEstablished = false;
 
 /*-----------------------------------------------------------*/
 
+/* Each compilation unit must define the NetworkContext struct. */
+struct NetworkContext
+{
+    OpensslParams_t * pParams;
+};
+
+/*-----------------------------------------------------------*/
+
 /**
  * @brief The random number generator to use for exponential backoff with
  * jitter retry logic.

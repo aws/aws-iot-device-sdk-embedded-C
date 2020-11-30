@@ -230,6 +230,11 @@ static uint16_t globalPublishPacketIdentifier = 0U;
 static NetworkContext_t networkContext;
 
 /**
+ * @brief Parameters for the Openssl Context.
+ */
+static OpensslParams_t opensslParams;
+
+/**
  * @brief Represents the hostname and port of the broker.
  */
 static ServerInfo_t serverInfo;
@@ -311,6 +316,12 @@ static uint8_t packetTypeForDisconnection = MQTT_PACKET_TYPE_INVALID;
  * to MQTT broker.
  */
 static int clientIdRandNumber;
+
+/* Each compilation unit must define the NetworkContext struct. */
+struct NetworkContext
+{
+    OpensslParams_t * pParams;
+};
 
 /**
  * @brief Sends an MQTT CONNECT packet over the already connected TCP socket.
@@ -773,10 +784,13 @@ void setUp()
     packetTypeForDisconnection = MQTT_PACKET_TYPE_INVALID;
     memset( &incomingInfo, 0u, sizeof( MQTTPublishInfo_t ) );
     memset( &opensslCredentials, 0u, sizeof( OpensslCredentials_t ) );
+    memset( &opensslParams, 0u, sizeof( OpensslParams_t ) );
     opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
     opensslCredentials.pClientCertPath = CLIENT_CERT_PATH;
     opensslCredentials.pPrivateKeyPath = CLIENT_PRIVATE_KEY_PATH;
     opensslCredentials.sniHostName = BROKER_ENDPOINT;
+
+    networkContext.pParams = &opensslParams;
 
     serverInfo.pHostName = BROKER_ENDPOINT;
     serverInfo.hostNameLength = BROKER_ENDPOINT_LENGTH;
@@ -1030,8 +1044,11 @@ void test_MQTT_Subscribe_Publish_With_Qos_2( void )
 void test_MQTT_Connect_LWT( void )
 {
     NetworkContext_t secondNetworkContext = { 0 };
+    OpensslParams_t secondOpensslParams = { 0 };
     bool sessionPresent;
     MQTTContext_t secondContext;
+
+    secondNetworkContext.pParams = &secondOpensslParams;
 
     /* Establish a second TCP connection with the server endpoint, then
      * a TLS session. The server info and credentials can be reused. */

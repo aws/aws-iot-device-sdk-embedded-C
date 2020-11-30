@@ -145,6 +145,14 @@ static const char * pPath;
 
 /*-----------------------------------------------------------*/
 
+/* Each compilation unit must define the NetworkContext struct. */
+struct NetworkContext
+{
+    OpensslParams_t * pParams;
+};
+
+/*-----------------------------------------------------------*/
+
 /**
  * @brief Connect to HTTP server with reconnection retries.
  *

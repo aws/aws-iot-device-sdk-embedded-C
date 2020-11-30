@@ -170,6 +170,14 @@ static uint8_t userBuffer[ USER_BUFFER_LENGTH ];
 
 /*-----------------------------------------------------------*/
 
+/* Each compilation unit must define the NetworkContext struct. */
+struct NetworkContext
+{
+    PlaintextParams_t * pParams;
+};
+
+/*-----------------------------------------------------------*/
+
 /**
  * @brief Connect to HTTP server with reconnection retries.
  *

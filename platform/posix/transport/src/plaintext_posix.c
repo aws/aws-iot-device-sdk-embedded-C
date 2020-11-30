@@ -88,6 +88,7 @@ SocketStatus_t Plaintext_Connect( NetworkContext_t * pNetworkContext,
 
 SocketStatus_t Plaintext_Disconnect( const NetworkContext_t * pNetworkContext )
 {
+    SocketStatus_t returnStatus = SOCKETS_SUCCESS;
     PlaintextParams_t * pPlaintextParams = NULL;
 
     /* Validate parameters. */

@@ -197,6 +197,12 @@ typedef struct PublishPackets
      */
     MQTTPublishInfo_t pubInfo;
 } PublishPackets_t;
+
+/* Each compilation unit must define the NetworkContext struct. */
+struct NetworkContext
+{
+    OpensslParams_t * pParams;
+};
 /*-----------------------------------------------------------*/
 
 /**

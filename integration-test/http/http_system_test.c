@@ -134,6 +134,11 @@
 static NetworkContext_t networkContext;
 
 /**
+ * @brief Parameters for the Openssl Context.
+ */
+static OpensslParams_t opensslParams;
+
+/**
  * @brief The transport layer interface used by the HTTP Client library.
  */
 static TransportInterface_t transportInterface;
@@ -169,6 +174,14 @@ static uint8_t * pNetworkData = NULL;
  * @brief The length of the network data to return in the transportRecvStub.
  */
 static size_t networkDataLen = 0U;
+
+/*-----------------------------------------------------------*/
+
+/* Each compilation unit must define the NetworkContext struct. */
+struct NetworkContext
+{
+    OpensslParams_t * pParams;
+};
 
 /*-----------------------------------------------------------*/
 
@@ -259,6 +272,8 @@ static void connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContex
     serverInfo.pHostName = SERVER_HOST;
     serverInfo.hostNameLength = SERVER_HOST_LENGTH;
     serverInfo.port = HTTPS_PORT;
+
+    pNetworkContext->pParams = &opensslParams;
 
     /* Seed pseudo random number generator used in the demo for
      * backoff period calculation when retrying failed network operations
