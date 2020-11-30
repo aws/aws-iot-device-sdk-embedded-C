@@ -64,10 +64,12 @@
 
 /*-----------------------------------------------------------*/
 
-/* Each compilation unit must define the NetworkContext struct. */
+/* Each compilation unit must define the NetworkContext struct.
+ * Because these utilities are shared by both plaintext and TLS demos,
+ * we must define pParams as void *. */
 struct NetworkContext
 {
-    OpensslParams_t * pParams;
+    void * pParams;
 };
 
 /*-----------------------------------------------------------*/

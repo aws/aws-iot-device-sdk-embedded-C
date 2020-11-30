@@ -55,8 +55,9 @@
 /* The error returned from #send or #recv. */
 #define SEND_RECV_ERROR      -1
 
-static ServerInfo_t serverInfo;
-static NetworkContext_t networkContext;
+static ServerInfo_t serverInfo = { 0 };
+static NetworkContext_t networkContext = { 0 };
+static PlaintextParams_t plaintextParams = { 0 };
 static uint8_t plaintextBuffer[ BUFFER_LEN ] = { 0 };
 
 /* Possible transport status codes referencing the ones from #errno.h. The last
@@ -69,6 +70,12 @@ static uint8_t errorNumbers[] =
     EAGAIN,    EWOULDBLOCK, UNKNOWN_ERRNO
 };
 
+/* Each compilation unit must define the NetworkContext struct. */
+struct NetworkContext
+{
+    PlaintextParams_t * pParams;
+};
+
 /* ============================   UNITY FIXTURES ============================ */
 
 /* Called before each test method. */
@@ -77,6 +84,8 @@ void setUp()
     serverInfo.pHostName = HOSTNAME;
     serverInfo.hostNameLength = strlen( HOSTNAME );
     serverInfo.port = PORT;
+
+    networkContext.pParams = &plaintextParams;
 }
 
 /* Called after each test method. */
@@ -115,6 +124,22 @@ void test_Plaintext_Connect_Forwards_From_Sockets_Connect( void )
 }
 
 /**
+ * @brief Test that a NULL network context returns an error.
+ */
+void test_Plaintext_Connect_Invalid_Params( void )
+{
+    SocketStatus_t socketStatus = SOCKETS_SUCCESS;
+    NetworkContext_t networkContext = { 0 };
+
+    socketStatus = Plaintext_Connect( NULL );
+    TEST_ASSERT_EQUAL( SOCKETS_INVALID_PARAMETER, socketStatus );
+
+    networkContext.pParams = NULL;
+    socketStatus = Plaintext_Connect( &networkContext );
+    TEST_ASSERT_EQUAL( SOCKETS_INVALID_PARAMETER, socketStatus );
+}
+
+/**
  * @brief Test that #Plaintext_Disconnect forwards the status from #Sockets_Disconnect.
  *
  * @note #Plaintext_Disconnect is just a wrapper function to #Sockets_Disconnect.
@@ -126,6 +151,22 @@ void test_Plaintext_Disconnect_Forwards_From_Sockets_Disconnect( void )
     Sockets_Disconnect_ExpectAnyArgsAndReturn( SOCKETS_SUCCESS );
     socketStatus = Plaintext_Disconnect( &networkContext );
     TEST_ASSERT_EQUAL( SOCKETS_SUCCESS, socketStatus );
+}
+
+/**
+ * @brief Test that a NULL network context returns an error.
+ */
+void test_Plaintext_Disconnect_Invalid_Params( void )
+{
+    SocketStatus_t socketStatus = SOCKETS_SUCCESS;
+    NetworkContext_t networkContext = { 0 };
+
+    socketStatus = Plaintext_Disconnect( NULL );
+    TEST_ASSERT_EQUAL( SOCKETS_INVALID_PARAMETER, socketStatus );
+
+    networkContext.pParams = NULL;
+    socketStatus = Plaintext_Disconnect( &networkContext );
+    TEST_ASSERT_EQUAL( SOCKETS_INVALID_PARAMETER, socketStatus );
 }
 
 /**
