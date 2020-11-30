@@ -730,6 +730,11 @@ void test_Openssl_Send_Invalid_Params( void )
     bytesSent = Openssl_Send( NULL, opensslBuffer, BYTES_TO_SEND );
     TEST_ASSERT_EQUAL( 0, bytesSent );
 
+    networkContext.pParams = NULL;
+    bytesSent = Openssl_Send( &networkContext, opensslBuffer, BYTES_TO_SEND );
+    TEST_ASSERT_EQUAL( 0, bytesSent );
+    networkContext.pParams = &opensslParams;
+
     /* SSL object must not be NULL. Otherwise, no bytes are sent. */
     opensslParams.pSsl = NULL;
     bytesSent = Openssl_Send( &networkContext, opensslBuffer, BYTES_TO_SEND );
@@ -779,6 +784,11 @@ void test_Openssl_Recv_Invalid_Params( void )
 
     bytesReceived = Openssl_Recv( NULL, opensslBuffer, BYTES_TO_RECV );
     TEST_ASSERT_EQUAL( 0, bytesReceived );
+
+    networkContext.pParams = NULL;
+    bytesReceived = Openssl_Recv( &networkContext, opensslBuffer, BYTES_TO_RECV );
+    TEST_ASSERT_EQUAL( 0, bytesReceived );
+    networkContext.pParams = &opensslParams;
 
     /* SSL object must not be NULL. Otherwise, no bytes are sent. */
     opensslParams.pSsl = NULL;

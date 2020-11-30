@@ -1257,7 +1257,6 @@ void test_MQTT_Resend_Unacked_Publish_QoS1( void )
     /* Verify that the library has stored the PUBLISH as an incomplete operation. */
     TEST_ASSERT_NOT_EQUAL( MQTT_PACKET_ID_INVALID, context.outgoingPublishRecords[ 0 ].packetId );
 
-
     /* Reset the transport receive function in the context. */
     context.transportInterface.recv = Openssl_Recv;
 
