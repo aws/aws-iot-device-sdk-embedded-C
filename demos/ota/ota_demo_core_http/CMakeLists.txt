@@ -4,6 +4,7 @@ set( DEMO_NAME "ota_demo_core_http" )
 include( ${CMAKE_SOURCE_DIR}/libraries/aws/ota/otaFilePaths.cmake )
 include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreMQTT/mqttFilePaths.cmake )
 include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreHTTP/httpFilePaths.cmake )
+include( ${CMAKE_SOURCE_DIR}/libraries/standard/backoffAlgorithm/backoffAlgorithmFilePaths.cmake )
 
 # Demo target.
 add_executable(
@@ -17,6 +18,7 @@ add_executable(
         ${OTA_HTTP_SOURCES}
         ${HTTP_SOURCES}
         ${MQTT_SERIALIZER_SOURCES}
+        ${BACKOFF_ALGORITHM_SOURCES}
     )
 
 # librt is required to use OTA OS POSIX port.
@@ -27,10 +29,10 @@ target_link_libraries(
     ${DEMO_NAME}
     PRIVATE
         ${LIB_RT}
+        pthread
         ota_pal
         clock_posix
         openssl_posix
-        retry_utils_posix
         mqtt_subscription_manager
 )
 
@@ -44,6 +46,7 @@ target_include_directories(
         ${OTA_INCLUDE_OS_POSIX_DIRS}
         ${MQTT_INCLUDE_PUBLIC_DIRS}
         ${HTTP_INCLUDE_PUBLIC_DIRS}
+        ${BACKOFF_ALGORITHM_INCLUDE_PUBLIC_DIRS}
 )
 
 if(ROOT_CA_CERT_PATH)

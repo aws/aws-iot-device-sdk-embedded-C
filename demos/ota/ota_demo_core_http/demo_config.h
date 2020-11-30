@@ -99,6 +99,20 @@
 #endif
 
 /**
+ * @brief Path of the file containing the server's root CA certificate for TLS
+ * authentication.
+ *
+ * The Baltimore Cybertrust Root CA Certificate is automatically downloaded to
+ * the certificates directory using the CMake build system, from @ref
+ * https://cacerts.digicert.com/BaltimoreCyberTrustRoot.crt.pem.
+ *
+ * @note This certificate should be PEM-encoded.
+ */
+#ifndef ROOT_CA_CERT_PATH_HTTP
+    #define ROOT_CA_CERT_PATH_HTTP    "certificates/BaltimoreCyberTrustRoot.crt"
+#endif
+
+/**
  * @brief Path of the file containing the client certificate.
  *
  * Refer to the AWS documentation below for details regarding client

@@ -35,8 +35,8 @@
 /* OpenSSL sockets transport implementation. */
 #include "openssl_posix.h"
 
-/* Retry parameters. */
-#include "retry_utils.h"
+/* Backoff algorithm header for retry logic.*/
+#include "backoff_algorithm.h"
 
 /* Clock for timer. */
 #include "clock.h"
@@ -98,6 +98,26 @@
  * @brief Length of client identifier.
  */
 #define CLIENT_IDENTIFIER_LENGTH            ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) )
+
+/**
+ * @brief The maximum number of retries for connecting to server.
+ */
+#define CONNECTION_RETRY_MAX_ATTEMPTS            ( 5U )
+
+/**
+ * @brief The maximum back-off delay (in milliseconds) for retrying connection to server.
+ */
+#define CONNECTION_RETRY_MAX_BACKOFF_DELAY_MS    ( 5000U )
+
+/**
+ * @brief The base back-off delay (in milliseconds) to use for connection retry attempts.
+ */
+#define CONNECTION_RETRY_BACKOFF_BASE_MS         ( 500U )
+
+/**
+ * @brief Number of milliseconds in a second.
+ */
+#define NUM_MILLISECONDS_IN_SECOND               ( 1000U )
 
 /**
  * @brief Transport timeout in milliseconds for transport send and receive.
@@ -440,14 +460,21 @@ static void mqttEventCallback( MQTTContext_t * pMqttContext,
 
 /*-----------------------------------------------------------*/
 
+static uint32_t generateRandomNumber()
+{
+    return( rand() );
+}
+
+/*-----------------------------------------------------------*/
 static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext )
 {
     int returnStatus = EXIT_SUCCESS;
-    RetryUtilsStatus_t retryUtilsStatus = RetryUtilsSuccess;
+    BackoffAlgorithmStatus_t backoffAlgStatus = BackoffAlgorithmSuccess;
     OpensslStatus_t opensslStatus = OPENSSL_SUCCESS;
-    RetryUtilsParams_t reconnectParams;
+    BackoffAlgorithmContext_t reconnectParams;
     ServerInfo_t serverInfo;
     OpensslCredentials_t opensslCredentials;
+    uint16_t nextRetryBackOff;
 
     /* Initialize information to connect to the MQTT broker. */
     serverInfo.pHostName = AWS_IOT_ENDPOINT;
@@ -494,7 +521,10 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     }
 
     /* Initialize reconnect attempts and interval */
-    RetryUtils_ParamsReset( &reconnectParams );
+    BackoffAlgorithm_InitializeParams( &reconnectParams,
+                                       CONNECTION_RETRY_BACKOFF_BASE_MS,
+                                       CONNECTION_RETRY_MAX_BACKOFF_DELAY_MS,
+                                       CONNECTION_RETRY_MAX_ATTEMPTS );
 
     /* Attempt to connect to MQTT broker. If connection fails, retry after
      * a timeout. Timeout value will exponentially increase until maximum
@@ -517,16 +547,21 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
 
         if( opensslStatus != OPENSSL_SUCCESS )
         {
-            LogWarn( ( "Connection to the broker failed. Retrying connection with backoff and jitter." ) );
-            retryUtilsStatus = RetryUtils_BackoffAndSleep( &reconnectParams );
-        }
+            /* Generate a random number and get back-off value (in milliseconds) for the next connection retry. */
+            backoffAlgStatus = BackoffAlgorithm_GetNextBackoff( &reconnectParams, generateRandomNumber(), &nextRetryBackOff );
 
-        if( retryUtilsStatus == RetryUtilsRetriesExhausted )
-        {
-            LogError( ( "Connection to the broker failed, all attempts exhausted." ) );
-            returnStatus = EXIT_FAILURE;
+            if( backoffAlgStatus == BackoffAlgorithmRetriesExhausted )
+            {
+                LogError( ( "Connection to the broker failed, all attempts exhausted." ) );
+                returnStatus = EXIT_FAILURE;
+            }
+            else if( backoffAlgStatus == BackoffAlgorithmSuccess )
+            {
+                LogWarn( ( "Connection to the broker failed. Retrying connection after backoff." ) );
+                ( void ) sleep( nextRetryBackOff / NUM_MILLISECONDS_IN_SECOND );
+            }
         }
-    } while( ( opensslStatus != OPENSSL_SUCCESS ) && ( retryUtilsStatus == RetryUtilsSuccess ) );
+    } while( ( opensslStatus != OPENSSL_SUCCESS ) && ( backoffAlgStatus == BackoffAlgorithmSuccess ) );
 
     return returnStatus;
 }

@@ -35,8 +35,8 @@
 /* OpenSSL sockets transport implementation. */
 #include "openssl_posix.h"
 
-/* Retry parameters. */
-#include "retry_utils.h"
+/* Backoff algorithm header for retry logic.*/
+#include "backoff_algorithm.h"
 
 /* Common HTTP demo utilities. */
 #include "http_demo_utils.h"
@@ -51,13 +51,8 @@
 /* OTA Library include. */
 #include "ota.h"
 #include "ota_config.h"
-#include "ota_private.h"
-
-/* OTA Library Interface include. */
 #include "ota_os_posix.h"
-#include "ota_mqtt_interface.h"
-#include "ota_http_interface.h"
-#include "ota_platform_interface.h"
+#include "ota_pal_posix.h"
 
 /* HTTP API header. */
 #include "core_http_client.h"
@@ -93,32 +88,52 @@
  * in the link below.
  * https://aws.amazon.com/blogs/iot/mqtt-with-tls-client-authentication-on-port-443-why-it-is-useful-and-how-it-works/
  */
-#define AWS_IOT_MQTT_ALPN                   "\x0ex-amzn-mqtt-ca"
+#define AWS_IOT_MQTT_ALPN                        "\x0ex-amzn-mqtt-ca"
 
 /**
  * @brief Length of ALPN protocol name.
  */
-#define AWS_IOT_MQTT_ALPN_LENGTH            ( ( uint16_t ) ( sizeof( AWS_IOT_MQTT_ALPN ) - 1 ) )
+#define AWS_IOT_MQTT_ALPN_LENGTH                 ( ( uint16_t ) ( sizeof( AWS_IOT_MQTT_ALPN ) - 1 ) )
 
 /**
  * @brief Length of MQTT server host name.
  */
-#define AWS_IOT_ENDPOINT_LENGTH             ( ( uint16_t ) ( sizeof( AWS_IOT_ENDPOINT ) - 1 ) )
+#define AWS_IOT_ENDPOINT_LENGTH                  ( ( uint16_t ) ( sizeof( AWS_IOT_ENDPOINT ) - 1 ) )
 
 /**
  * @brief Length of client identifier.
  */
-#define CLIENT_IDENTIFIER_LENGTH            ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) )
+#define CLIENT_IDENTIFIER_LENGTH                 ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) )
+
+/**
+ * @brief The maximum number of retries for connecting to server.
+ */
+#define CONNECTION_RETRY_MAX_ATTEMPTS            ( 5U )
+
+/**
+ * @brief The maximum back-off delay (in milliseconds) for retrying connection to server.
+ */
+#define CONNECTION_RETRY_MAX_BACKOFF_DELAY_MS    ( 5000U )
+
+/**
+ * @brief The base back-off delay (in milliseconds) to use for connection retry attempts.
+ */
+#define CONNECTION_RETRY_BACKOFF_BASE_MS         ( 500U )
+
+/**
+ * @brief Number of milliseconds in a second.
+ */
+#define NUM_MILLISECONDS_IN_SECOND               ( 1000U )
 
 /**
  * @brief Transport timeout in milliseconds for transport send and receive.
  */
-#define TRANSPORT_SEND_RECV_TIMEOUT_MS      ( 200 )
+#define TRANSPORT_SEND_RECV_TIMEOUT_MS           ( 200 )
 
 /**
  * @brief Timeout for receiving CONNACK packet in milli seconds.
  */
-#define CONNACK_RECV_TIMEOUT_MS             ( 2000U )
+#define CONNACK_RECV_TIMEOUT_MS                  ( 2000U )
 
 /**
  * @brief The maximum time interval in seconds which is allowed to elapse
@@ -129,12 +144,12 @@
  * absence of sending any other Control Packets, the Client MUST send a
  * PINGREQ Packet.
  */
-#define MQTT_KEEP_ALIVE_INTERVAL_SECONDS    ( 60U )
+#define MQTT_KEEP_ALIVE_INTERVAL_SECONDS         ( 60U )
 
 /**
  * @brief Timeout for MQTT_ProcessLoop function in milliseconds.
  */
-#define MQTT_PROCESS_LOOP_TIMEOUT_MS        ( 500U )
+#define MQTT_PROCESS_LOOP_TIMEOUT_MS             ( 500U )
 
 /**
  * @brief Size of the network buffer to receive the MQTT message.
@@ -142,36 +157,36 @@
  * The largest message size is data size from the AWS IoT streaming service, 2000 is reserved for
  * extra headers.
  */
-#define OTA_PRESIGNED_URL_MAX_SIZE          ( 2048U )
-#define OTA_MQTT_HEADER_MAX_SIZE            ( 30U )
-#define NETWORK_BUFFER_SIZE                 ( OTA_PRESIGNED_URL_MAX_SIZE )
+#define OTA_PRESIGNED_URL_MAX_SIZE               ( 2048U )
+#define OTA_MQTT_HEADER_MAX_SIZE                 ( 30U )
+#define NETWORK_BUFFER_SIZE                      ( OTA_PRESIGNED_URL_MAX_SIZE )
 
 /**
  * @brief The delay used in the main OTA Demo task loop to periodically output the OTA
  * statistics like number of packets received, dropped, processed and queued per connection.
  */
-#define OTA_DEMO_TASK_DELAY_SECONDS         ( 1U )
+#define OTA_DEMO_TASK_DELAY_SECONDS              ( 1U )
 
 /**
  * @brief The maximum size of the file paths used in the demo.
  */
-#define OTA_MAX_FILE_PATH_SIZE              ( 260 )
+#define OTA_MAX_FILE_PATH_SIZE                   ( 260 )
 
 /**
  * @brief The maximum size of the stream name required for downloading update file
  * from streaming service.
  */
-#define OTA_MAX_STREAM_NAME_SIZE            ( 128 )
+#define OTA_MAX_STREAM_NAME_SIZE                 ( 128 )
 
 /**
  * @brief The MQTT metrics string expected by AWS IoT.
  */
-#define METRICS_STRING                      "?SDK=" OS_NAME "&Version=" OS_VERSION "&Platform=" HARDWARE_PLATFORM_NAME "&MQTTLib=" MQTT_LIB
+#define METRICS_STRING                           "?SDK=" OS_NAME "&Version=" OS_VERSION "&Platform=" HARDWARE_PLATFORM_NAME "&MQTTLib=" MQTT_LIB
 
 /**
  * @brief The length of the MQTT metrics string expected by AWS IoT.
  */
-#define METRICS_STRING_LENGTH               ( ( uint16_t ) ( sizeof( METRICS_STRING ) - 1 ) )
+#define METRICS_STRING_LENGTH                    ( ( uint16_t ) ( sizeof( METRICS_STRING ) - 1 ) )
 
 /*-----------------------------------------------------------*/
 
@@ -489,14 +504,21 @@ static void mqttEventCallback( MQTTContext_t * pMqttContext,
 
 /*-----------------------------------------------------------*/
 
+static uint32_t generateRandomNumber()
+{
+    return( rand() );
+}
+
+/*-----------------------------------------------------------*/
 static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext )
 {
     int returnStatus = EXIT_SUCCESS;
-    RetryUtilsStatus_t retryUtilsStatus = RetryUtilsSuccess;
+    BackoffAlgorithmStatus_t backoffAlgStatus = BackoffAlgorithmSuccess;
     OpensslStatus_t opensslStatus = OPENSSL_SUCCESS;
-    RetryUtilsParams_t reconnectParams;
+    BackoffAlgorithmContext_t reconnectParams;
     ServerInfo_t serverInfo;
     OpensslCredentials_t opensslCredentials;
+    uint16_t nextRetryBackOff;
 
     /* Initialize information to connect to the MQTT broker. */
     serverInfo.pHostName = AWS_IOT_ENDPOINT;
@@ -543,7 +565,10 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     }
 
     /* Initialize reconnect attempts and interval */
-    RetryUtils_ParamsReset( &reconnectParams );
+    BackoffAlgorithm_InitializeParams( &reconnectParams,
+                                       CONNECTION_RETRY_BACKOFF_BASE_MS,
+                                       CONNECTION_RETRY_MAX_BACKOFF_DELAY_MS,
+                                       CONNECTION_RETRY_MAX_ATTEMPTS );
 
     /* Attempt to connect to MQTT broker. If connection fails, retry after
      * a timeout. Timeout value will exponentially increase until maximum
@@ -566,16 +591,21 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
 
         if( opensslStatus != OPENSSL_SUCCESS )
         {
-            LogWarn( ( "Connection to the broker failed. Retrying connection with backoff and jitter." ) );
-            retryUtilsStatus = RetryUtils_BackoffAndSleep( &reconnectParams );
-        }
+            /* Generate a random number and get back-off value (in milliseconds) for the next connection retry. */
+            backoffAlgStatus = BackoffAlgorithm_GetNextBackoff( &reconnectParams, generateRandomNumber(), &nextRetryBackOff );
 
-        if( retryUtilsStatus == RetryUtilsRetriesExhausted )
-        {
-            LogError( ( "Connection to the broker failed, all attempts exhausted." ) );
-            returnStatus = EXIT_FAILURE;
+            if( backoffAlgStatus == BackoffAlgorithmRetriesExhausted )
+            {
+                LogError( ( "Connection to the broker failed, all attempts exhausted." ) );
+                returnStatus = EXIT_FAILURE;
+            }
+            else if( backoffAlgStatus == BackoffAlgorithmSuccess )
+            {
+                LogWarn( ( "Connection to the broker failed. Retrying connection after backoff." ) );
+                ( void ) sleep( nextRetryBackOff / NUM_MILLISECONDS_IN_SECOND );
+            }
         }
-    } while( ( opensslStatus != OPENSSL_SUCCESS ) && ( retryUtilsStatus == RetryUtilsSuccess ) );
+    } while( ( opensslStatus != OPENSSL_SUCCESS ) && ( backoffAlgStatus == BackoffAlgorithmSuccess ) );
 
     return returnStatus;
 }
@@ -1096,13 +1126,14 @@ static void setOtaInterface( OtaInterfaces_t * pOtaInterfaces )
     pOtaInterfaces->http.deinit = httpDeinit;
 
     /* Initialize the OTA library PAL Interface.*/
-    pOtaInterfaces->pal.getPlatformImageState = otaPal_GetPlatformImageState;
-    pOtaInterfaces->pal.setPlatformImageState = otaPal_SetPlatformImageState;
-    pOtaInterfaces->pal.writeBlock = otaPal_WriteBlock;
-    pOtaInterfaces->pal.activateNewImage = otaPal_ActivateNewImage;
+    pOtaInterfaces->pal.abort = otaPal_Abort;
+    pOtaInterfaces->pal.createFile = otaPal_CreateFileForRx;
     pOtaInterfaces->pal.closeFile = otaPal_CloseFile;
-    pOtaInterfaces->pal.resetDevice = otaPal_ResetDevice;
-    pOtaInterfaces->pal.abortUpdate = otaPal_Abort;
+    pOtaInterfaces->pal.writeBlock = otaPal_WriteBlock;
+    pOtaInterfaces->pal.activate = otaPal_ActivateNewImage;
+    pOtaInterfaces->pal.reset = otaPal_ResetDevice;
+    pOtaInterfaces->pal.setPlatformImageState = otaPal_SetPlatformImageState;
+    pOtaInterfaces->pal.getPlatformImageState = otaPal_GetPlatformImageState;
 }
 
 /*-----------------------------------------------------------*/
