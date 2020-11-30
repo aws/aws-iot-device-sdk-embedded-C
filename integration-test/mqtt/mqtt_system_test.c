@@ -1057,8 +1057,8 @@ void test_MQTT_Connect_LWT( void )
                                                          &opensslCredentials,
                                                          TRANSPORT_SEND_RECV_TIMEOUT_MS,
                                                          TRANSPORT_SEND_RECV_TIMEOUT_MS ) );
-    TEST_ASSERT_NOT_EQUAL( -1, secondNetworkContext.socketDescriptor );
-    TEST_ASSERT_NOT_NULL( secondNetworkContext.pSsl );
+    TEST_ASSERT_NOT_EQUAL( -1, secondOpensslParams.socketDescriptor );
+    TEST_ASSERT_NOT_NULL( secondOpensslParams.pSsl );
 
     /* Establish MQTT session on top of the TCP+TLS connection. */
     useLWTClientIdentifier = true;

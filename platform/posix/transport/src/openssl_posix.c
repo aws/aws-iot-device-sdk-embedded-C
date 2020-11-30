@@ -706,7 +706,7 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
                       size_t bytesToRecv )
 {
     OpensslParams_t * pOpensslParams = NULL;
-    int32_t bytesReceived = -1;
+    int32_t bytesReceived = 0;
     int32_t sslError = 0;
 
     if( ( pNetworkContext == NULL ) || ( pNetworkContext->pParams == NULL ) )
@@ -756,7 +756,7 @@ int32_t Openssl_Send( NetworkContext_t * pNetworkContext,
                       size_t bytesToSend )
 {
     OpensslParams_t * pOpensslParams = NULL;
-    int32_t bytesSent = -1;
+    int32_t bytesSent = 0;
     int32_t sslError = 0;
 
     /* Unused parameter when logs are disabled. */

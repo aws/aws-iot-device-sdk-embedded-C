@@ -697,6 +697,7 @@ void test_Openssl_Disconnect_Succeeds( void )
     TEST_ASSERT_EQUAL( OPENSSL_SUCCESS, returnStatus );
 
     /* Now, set SSL object for coverage. */
+    networkContext.pParams = &opensslParams;
     opensslParams.pSsl = &ssl;
     SSL_shutdown_ExpectAnyArgsAndReturn( 0 );
     SSL_shutdown_ExpectAnyArgsAndReturn( 0 );
