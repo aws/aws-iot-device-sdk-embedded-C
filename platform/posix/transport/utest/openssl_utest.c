@@ -59,6 +59,12 @@
 /* The size of the buffer passed to #Openssl_Send and #Openssl_Recv. */
 #define BUFFER_LEN              4
 
+/* Each compilation unit must define the NetworkContext struct. */
+struct NetworkContext
+{
+    OpensslParams_t * pParams;
+};
+
 /* Objects used by the OpenSSL transport implementation. */
 static ServerInfo_t serverInfo = { 0 };
 static OpensslCredentials_t opensslCredentials = { 0 };
@@ -94,12 +100,6 @@ typedef enum FunctionNames
     SSL_connect_fn,
     SSL_get_verify_result_fn
 } FunctionNames_t;
-
-/* Each compilation unit must define the NetworkContext struct. */
-struct NetworkContext
-{
-    OpensslParams_t * pParams;
-};
 
 /* ============================   UNITY FIXTURES ============================ */
 

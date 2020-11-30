@@ -55,6 +55,12 @@
 /* The error returned from #send or #recv. */
 #define SEND_RECV_ERROR      -1
 
+/* Each compilation unit must define the NetworkContext struct. */
+struct NetworkContext
+{
+    PlaintextParams_t * pParams;
+};
+
 static ServerInfo_t serverInfo = { 0 };
 static NetworkContext_t networkContext = { 0 };
 static PlaintextParams_t plaintextParams = { 0 };
@@ -68,12 +74,6 @@ static uint8_t errorNumbers[] =
     EINVAL,    ENOTCONN,    ENOTSOCK,     EOPNOTSUPP,
     ETIMEDOUT, EMSGSIZE,    EPIPE,
     EAGAIN,    EWOULDBLOCK, UNKNOWN_ERRNO
-};
-
-/* Each compilation unit must define the NetworkContext struct. */
-struct NetworkContext
-{
-    PlaintextParams_t * pParams;
 };
 
 /* ============================   UNITY FIXTURES ============================ */
@@ -131,11 +131,17 @@ void test_Plaintext_Connect_Invalid_Params( void )
     SocketStatus_t socketStatus = SOCKETS_SUCCESS;
     NetworkContext_t networkContext = { 0 };
 
-    socketStatus = Plaintext_Connect( NULL );
+    socketStatus = Plaintext_Connect( NULL,
+                                      &serverInfo,
+                                      SEND_RECV_TIMEOUT,
+                                      SEND_RECV_TIMEOUT );
     TEST_ASSERT_EQUAL( SOCKETS_INVALID_PARAMETER, socketStatus );
 
     networkContext.pParams = NULL;
-    socketStatus = Plaintext_Connect( &networkContext );
+    socketStatus = Plaintext_Connect( &networkContext,
+                                      &serverInfo,
+                                      SEND_RECV_TIMEOUT,
+                                      SEND_RECV_TIMEOUT );
     TEST_ASSERT_EQUAL( SOCKETS_INVALID_PARAMETER, socketStatus );
 }
 
