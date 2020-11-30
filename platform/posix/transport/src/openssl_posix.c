@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C V202009.00
+ * AWS IoT Device SDK for Embedded C V202011.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -662,6 +662,9 @@ OpensslStatus_t Openssl_Disconnect( const NetworkContext_t * pNetworkContext )
 }
 /*-----------------------------------------------------------*/
 
+/* MISRA Rule 8.13 flags the following line for not using the const qualifier
+ * on `pNetworkContext`. Indeed, the object pointed by it is not modified
+ * by OpenSSL, but other implementations of `TransportRecv_t` may do so. */
 int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
                       void * pBuffer,
                       size_t bytesToRecv )
@@ -707,6 +710,9 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
 }
 /*-----------------------------------------------------------*/
 
+/* MISRA Rule 8.13 flags the following line for not using the const qualifier
+ * on `pNetworkContext`. Indeed, the object pointed by it is not modified
+ * by OpenSSL, but other implementations of `TransportSend_t` may do so. */
 int32_t Openssl_Send( NetworkContext_t * pNetworkContext,
                       const void * pBuffer,
                       size_t bytesToSend )

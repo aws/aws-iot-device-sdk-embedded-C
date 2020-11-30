@@ -159,8 +159,6 @@ reconnectparam
 recv
 recvtimeout
 recvtimeoutms
-retryutilsretriesexhausted
-retryutilssuccess
 retvalue
 rfcxh
 rsa

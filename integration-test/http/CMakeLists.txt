@@ -4,6 +4,9 @@ cmake_minimum_required (VERSION 3.2.0)
 # Include HTTP library's source and header path variables.
 include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreHTTP/httpFilePaths.cmake )
 
+# Include backoffAlgorithm library file path configuration.
+include( ${CMAKE_SOURCE_DIR}/libraries/standard/backoffAlgorithm/backoffAlgorithmFilePaths.cmake )
+
 # ====================  Define your project name (edit) ========================
 set(project_name "http_system")
 
@@ -12,11 +15,13 @@ set(project_name "http_system")
 # list the files you would like to test here
 list(APPEND real_source_files
             ${HTTP_SOURCES}
+            ${BACKOFF_ALGORITHM_SOURCES}
         )
 # list the directories the module under test includes
 list(APPEND real_include_directories
             .
             ${HTTP_INCLUDE_PUBLIC_DIRS}
+            ${BACKOFF_ALGORITHM_INCLUDE_PUBLIC_DIRS}
             ${LOGGING_INCLUDE_DIRS}
         )
 
@@ -26,6 +31,7 @@ list(APPEND real_include_directories
 list(APPEND test_include_directories
             .
             ${HTTP_INCLUDE_PUBLIC_DIRS}
+            ${BACKOFF_ALGORITHM_INCLUDE_PUBLIC_DIRS}
             ${LOGGING_INCLUDE_DIRS}
         )
 
@@ -61,7 +67,6 @@ list(APPEND stest_dep_list
             ${real_name}
             clock_posix
             openssl_posix
-            retry_utils_posix
         )
 
 set(stest_name "${project_name}_test")

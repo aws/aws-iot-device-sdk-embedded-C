@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C V202009.00
+ * AWS IoT Device SDK for Embedded C V202011.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -76,11 +76,6 @@
  * @note When using ALPN, port 443 must be used to connect to AWS IoT Core.
  */
 #define IOT_CORE_ALPN_PROTOCOL_NAME    "\x0ex-amzn-http-ca"
-
-/**
- * @brief Delay in seconds between each iteration of the demo.
- */
-#define DEMO_LOOP_DELAY_SECONDS        ( 5U )
 
 /* Check that transport timeout for transport send and receive is defined. */
 #ifndef TRANSPORT_SEND_RECV_TIMEOUT_MS
@@ -173,6 +168,7 @@ static int32_t connectToServer( NetworkContext_t * pNetworkContext )
     opensslCredentials.pClientCertPath = CLIENT_CERT_PATH;
     opensslCredentials.pPrivateKeyPath = CLIENT_PRIVATE_KEY_PATH;
     opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
+    opensslCredentials.sniHostName = AWS_IOT_ENDPOINT;
 
     /* ALPN is required when communicating to AWS IoT Core over port 443 through HTTP. */
     if( AWS_HTTPS_PORT == 443 )
@@ -231,7 +227,7 @@ static int32_t sendHttpRequest( const TransportInterface_t * pTransportInterface
     HTTPRequestHeaders_t requestHeaders;
 
     /* Return value of all methods from the HTTP Client library API. */
-    HTTPStatus_t httpStatus = HTTP_SUCCESS;
+    HTTPStatus_t httpStatus = HTTPSuccess;
 
     assert( pMethod != NULL );
     assert( pPath != NULL );
@@ -244,7 +240,7 @@ static int32_t sendHttpRequest( const TransportInterface_t * pTransportInterface
     /* Initialize the request object. */
     requestInfo.pHost = AWS_IOT_ENDPOINT;
     requestInfo.hostLen = AWS_IOT_ENDPOINT_LENGTH;
-    requestInfo.method = pMethod;
+    requestInfo.pMethod = pMethod;
     requestInfo.methodLen = methodLen;
     requestInfo.pPath = pPath;
     requestInfo.pathLen = pathLen;
@@ -260,7 +256,7 @@ static int32_t sendHttpRequest( const TransportInterface_t * pTransportInterface
     httpStatus = HTTPClient_InitializeRequestHeaders( &requestHeaders,
                                                       &requestInfo );
 
-    if( httpStatus == HTTP_SUCCESS )
+    if( httpStatus == HTTPSuccess )
     {
         /* Initialize the response object. The same buffer used for storing
          * request headers is reused here. */
@@ -268,7 +264,7 @@ static int32_t sendHttpRequest( const TransportInterface_t * pTransportInterface
         response.bufferLen = USER_BUFFER_LENGTH;
 
         LogInfo( ( "Sending HTTP %.*s request to %.*s%.*s...",
-                   ( int32_t ) requestInfo.methodLen, requestInfo.method,
+                   ( int32_t ) requestInfo.methodLen, requestInfo.pMethod,
                    ( int32_t ) AWS_IOT_ENDPOINT_LENGTH, AWS_IOT_ENDPOINT,
                    ( int32_t ) requestInfo.pathLen, requestInfo.pPath ) );
         LogDebug( ( "Request Headers:\n%.*s\n"
@@ -291,7 +287,7 @@ static int32_t sendHttpRequest( const TransportInterface_t * pTransportInterface
                     HTTPClient_strerror( httpStatus ) ) );
     }
 
-    if( httpStatus == HTTP_SUCCESS )
+    if( httpStatus == HTTPSuccess )
     {
         LogInfo( ( "Received HTTP response from %.*s%.*s...\n"
                    "Response Headers:\n%.*s\n"
@@ -306,13 +302,13 @@ static int32_t sendHttpRequest( const TransportInterface_t * pTransportInterface
     else
     {
         LogError( ( "Failed to send HTTP %.*s request to %.*s%.*s: Error=%s.",
-                    ( int32_t ) requestInfo.methodLen, requestInfo.method,
+                    ( int32_t ) requestInfo.methodLen, requestInfo.pMethod,
                     ( int32_t ) AWS_IOT_ENDPOINT_LENGTH, AWS_IOT_ENDPOINT,
                     ( int32_t ) requestInfo.pathLen, requestInfo.pPath,
                     HTTPClient_strerror( httpStatus ) ) );
     }
 
-    if( httpStatus != HTTP_SUCCESS )
+    if( httpStatus != HTTPSuccess )
     {
         returnStatus = EXIT_FAILURE;
     }
@@ -348,67 +344,61 @@ int main( int argc,
     ( void ) argc;
     ( void ) argv;
 
-    for( ; ; )
+    /**************************** Connect. ******************************/
+
+    /* Establish TLS connection on top of TCP connection using OpenSSL. */
+    if( returnStatus == EXIT_SUCCESS )
     {
-        /**************************** Connect. ******************************/
+        LogInfo( ( "Performing TLS handshake on top of the TCP connection." ) );
 
-        /* Establish TLS connection on top of TCP connection using OpenSSL. */
-        if( returnStatus == EXIT_SUCCESS )
+        /* Attempt to connect to the HTTP server. If connection fails, retry after
+         * a timeout. Timeout value will be exponentially increased till the maximum
+         * attempts are reached or maximum timeout value is reached. The function
+         * returns EXIT_FAILURE if the TCP connection cannot be established to
+         * broker after configured number of attempts. */
+        returnStatus = connectToServerWithBackoffRetries( connectToServer,
+                                                          &networkContext );
+
+        if( returnStatus == EXIT_FAILURE )
         {
-            LogInfo( ( "Performing TLS handshake on top of the TCP connection." ) );
-
-            /* Attempt to connect to the HTTP server. If connection fails, retry after
-             * a timeout. Timeout value will be exponentially increased till the maximum
-             * attempts are reached or maximum timeout value is reached. The function
-             * returns EXIT_FAILURE if the TCP connection cannot be established to
-             * broker after configured number of attempts. */
-            returnStatus = connectToServerWithBackoffRetries( connectToServer,
-                                                              &networkContext );
-
-            if( returnStatus == EXIT_FAILURE )
-            {
-                /* Log error to indicate connection failure after all
-                 * reconnect attempts are over. */
-                LogError( ( "Failed to connect to HTTP server %.*s.",
-                            ( int32_t ) AWS_IOT_ENDPOINT_LENGTH,
-                            AWS_IOT_ENDPOINT ) );
-            }
+            /* Log error to indicate connection failure after all
+             * reconnect attempts are over. */
+            LogError( ( "Failed to connect to HTTP server %.*s.",
+                        ( int32_t ) AWS_IOT_ENDPOINT_LENGTH,
+                        AWS_IOT_ENDPOINT ) );
         }
-
-        /* Define the transport interface. */
-        if( returnStatus == EXIT_SUCCESS )
-        {
-            ( void ) memset( &transportInterface, 0, sizeof( transportInterface ) );
-            transportInterface.recv = Openssl_Recv;
-            transportInterface.send = Openssl_Send;
-            transportInterface.pNetworkContext = &networkContext;
-        }
-
-        /*********************** Send HTTPS request. ************************/
-
-        if( returnStatus == EXIT_SUCCESS )
-        {
-            returnStatus = sendHttpRequest( &transportInterface,
-                                            HTTP_METHOD_POST,
-                                            HTTP_METHOD_POST_LENGTH,
-                                            POST_PATH,
-                                            POST_PATH_LENGTH );
-        }
-
-        if( returnStatus == EXIT_SUCCESS )
-        {
-            /* Log message indicating an iteration completed successfully. */
-            LogInfo( ( "Demo completed successfully." ) );
-        }
-
-        /************************** Disconnect. *****************************/
-
-        /* End TLS session, then close TCP connection. */
-        ( void ) Openssl_Disconnect( &networkContext );
-
-        LogInfo( ( "Short delay before starting the next iteration....\n" ) );
-        sleep( DEMO_LOOP_DELAY_SECONDS );
     }
+
+    /* Define the transport interface. */
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        ( void ) memset( &transportInterface, 0, sizeof( transportInterface ) );
+        transportInterface.recv = Openssl_Recv;
+        transportInterface.send = Openssl_Send;
+        transportInterface.pNetworkContext = &networkContext;
+    }
+
+    /*********************** Send HTTPS request. ************************/
+
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        returnStatus = sendHttpRequest( &transportInterface,
+                                        HTTP_METHOD_POST,
+                                        HTTP_METHOD_POST_LENGTH,
+                                        POST_PATH,
+                                        POST_PATH_LENGTH );
+    }
+
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        /* Log message indicating an iteration completed successfully. */
+        LogInfo( ( "Demo completed successfully." ) );
+    }
+
+    /************************** Disconnect. *****************************/
+
+    /* End TLS session, then close TCP connection. */
+    ( void ) Openssl_Disconnect( &networkContext );
 
     return returnStatus;
 }

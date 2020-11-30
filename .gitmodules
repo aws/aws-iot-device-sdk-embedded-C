@@ -1,24 +1,39 @@
 [submodule "libraries/3rdparty/CMock"]
 	path = libraries/3rdparty/CMock
 	url = https://github.com/ThrowTheSwitch/CMock
-[submodule "tools/aws-templates-for-cbmc-proofs"]
-	path = tools/aws-templates-for-cbmc-proofs
-	url = https://github.com/awslabs/aws-templates-for-cbmc-proofs.git
 [submodule "libraries/standard/coreMQTT"]
 	path = libraries/standard/coreMQTT
+	branch = main
 	url = https://github.com/FreeRTOS/coreMQTT.git
 [submodule "libraries/standard/coreHTTP"]
 	path = libraries/standard/coreHTTP
+	branch = main
 	url = https://github.com/FreeRTOS/coreHTTP.git
 [submodule "libraries/standard/coreJSON"]
 	path = libraries/standard/coreJSON
+	branch = main
 	url = https://github.com/FreeRTOS/coreJSON.git
 [submodule "libraries/aws/device-shadow-for-aws-iot-embedded-sdk"]
 	path = libraries/aws/device-shadow-for-aws-iot-embedded-sdk
+	branch = main
 	url = https://github.com/aws/device-shadow-for-aws-iot-embedded-sdk.git
 [submodule "libraries/aws/jobs-for-aws-iot-embedded-sdk"]
 	path = libraries/aws/jobs-for-aws-iot-embedded-sdk
+	branch = main
 	url = https://github.com/aws/jobs-for-aws-iot-embedded-sdk.git
+[submodule "libraries/aws/device-defender-for-aws-iot-embedded-sdk"]
+	path = libraries/aws/device-defender-for-aws-iot-embedded-sdk
+	branch = main
+	url = https://github.com/aws/device-defender-for-aws-iot-embedded-sdk.git
+[submodule "libraries/standard/corePKCS11"]
+	path = libraries/standard/corePKCS11
+	branch = main
+	url = https://github.com/FreeRTOS/corePKCS11.git
+[submodule "libraries/standard/backoffAlgorithm"]
+	path = libraries/standard/backoffAlgorithm
+	branch = main
+	url = https://github.com/FreeRTOS/backoffAlgorithm.git
 [submodule "libraries/aws/ota"]
 	path = libraries/aws/ota
+	branch = main
 	url = https://github.com/aws/ota-for-aws-iot-embedded-sdk.git

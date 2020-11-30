@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C V202009.00
+ * AWS IoT Device SDK for Embedded C V202011.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -675,6 +675,7 @@ void setUp( void )
     opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
     opensslCredentials.pClientCertPath = CLIENT_CERT_PATH;
     opensslCredentials.pPrivateKeyPath = CLIENT_PRIVATE_KEY_PATH;
+    opensslCredentials.sniHostName = AWS_IOT_ENDPOINT;
     serverInfo.pHostName = AWS_IOT_ENDPOINT;
     serverInfo.hostNameLength = AWS_IOT_ENDPOINT_LENGTH;
     serverInfo.port = AWS_MQTT_PORT;
@@ -696,6 +697,9 @@ void setUp( void )
 /* Called after each test method. */
 void tearDown( void )
 {
+    MQTTStatus_t mqttStatus;
+    OpensslStatus_t opensslStatus;
+
     /* Free memory, if allocated during test case execution. */
     if( incomingInfo.pTopicName != NULL )
     {
@@ -708,10 +712,15 @@ void tearDown( void )
     }
 
     /* Terminate MQTT connection. */
-    TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_Disconnect( &context ) );
+    mqttStatus = MQTT_Disconnect( &context );
 
     /* Terminate TLS session and TCP connection. */
-    ( void ) Openssl_Disconnect( &networkContext );
+    opensslStatus = Openssl_Disconnect( &networkContext );
+
+    /* Make any assertions at the end so that all memory is deallocated before
+     * the end of this function. */
+    TEST_ASSERT_EQUAL( MQTTSuccess, mqttStatus );
+    TEST_ASSERT_EQUAL( OPENSSL_SUCCESS, opensslStatus );
 }
 
 /* ========================== Test Cases ============================ */

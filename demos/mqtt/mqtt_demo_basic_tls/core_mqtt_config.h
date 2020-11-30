@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C V202009.00
+ * AWS IoT Device SDK for Embedded C V202011.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -74,6 +74,6 @@
  * If a ping response is not received before this timeout, then
  * #MQTT_ProcessLoop will return #MQTTKeepAliveTimeout.
  */
-#define MQTT_PINGRESP_TIMEOUT_MS      ( 500U )
+#define MQTT_PINGRESP_TIMEOUT_MS      ( 5000U )
 
 #endif /* ifndef CORE_MQTT_CONFIG_H_ */

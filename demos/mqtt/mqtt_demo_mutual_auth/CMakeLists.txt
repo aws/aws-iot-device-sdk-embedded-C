@@ -4,12 +4,16 @@ set( DEMO_NAME "mqtt_demo_mutual_auth" )
 # Include MQTT library's source and header path variables.
 include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreMQTT/mqttFilePaths.cmake )
 
+# Include backoffAlgorithm library file path configuration.
+include( ${CMAKE_SOURCE_DIR}/libraries/standard/backoffAlgorithm/backoffAlgorithmFilePaths.cmake )
+
 # Demo target.
 add_executable(
     ${DEMO_NAME}
         "${DEMO_NAME}.c"
         ${MQTT_SOURCES}
         ${MQTT_SERIALIZER_SOURCES}
+        ${BACKOFF_ALGORITHM_SOURCES}
 )
 
 # Add to default target if all required macros needed to run this demo are defined
@@ -20,13 +24,13 @@ target_link_libraries(
     PRIVATE
         clock_posix
         openssl_posix
-        retry_utils_posix
 )
 
 target_include_directories(
     ${DEMO_NAME}
     PUBLIC
         ${MQTT_INCLUDE_PUBLIC_DIRS}
+        ${BACKOFF_ALGORITHM_INCLUDE_PUBLIC_DIRS}
         ${CMAKE_CURRENT_LIST_DIR}
         ${LOGGING_INCLUDE_DIRS}
 )

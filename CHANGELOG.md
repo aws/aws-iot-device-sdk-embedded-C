@@ -1,16 +1,28 @@
-# Change Log for AWS IoT Device SDK for Embedded C
+# Changelog for AWS IoT Device SDK for Embedded C
+
+## 202011.00 (November 2020)
+
+### Major Changes
+
+- This release introduces the re-factored **HTTP** client library, **AWS IoT Device Defender** client library, and **AWS IoT Jobs** client library.
+These libraries have gone through code quality checks including verification that no function has a [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html) score greater than 8, and checks against deviations from the mandatory rules in the [MISRA coding standard](https://www.misra.org.uk/MISRAHome/MISRAC2012/tabid/196/Default.aspx). These libraries have also undergone both static code analysis from [Coverity statical analysis](https://scan.coverity.com/) and validation of memory safety through the [CBMC automated reasoning tool](http://www.cs.cmu.edu/~modelcheck/cbmc/).
+
+- This release uses submodule references to the following new individual repositories for the HTTP, AWS IoT Device Defender client, and AWS IoT Jobs client libraries under the `libraries` folder:
+   - [FreeRTOS/coreHTTP](https://github.com/FreeRTOS/coreHTTP) for the HTTP client library
+   - [aws/device-defender-for-aws-iot-embedded-sdk](https://github.com/aws/device-defender-for-aws-iot-embedded-sdk) for the AWS IoT Device Defender client library.
+   - [aws/jobs-for-aws-iot-embedded-sdk](https://github.com/aws/jobs-for-aws-iot-embedded-sdk) for the AWS IoT Jobs client library.
 
 ## 202009.00 (September 2020)
 
 ### Major Changes
 
-- This release introduces the re-factored **MQTT** client library, **JSON** parser library and **AWS IoT Shadow** client library.
-These libraries have gone through code quality checks including verification that no function has a [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html) score greater than 8, and checks against deviations from the mandatory rules in the [MISRA coding standard](https://www.misra.org.uk/MISRAHome/MISRAC2012/tabid/196/Default.aspx). These libraries have also undergone both static code analysis from [Coverity statical analysis](https://scan.coverity.com/) and validation of memory safety and functional correctness proof through the [CBMC automated reasoning tool](https://www.youtube.com/watch?v=YwQHAPRhQkI&feature=youtu.be&t=1721).
+- This release introduces the re-factored **MQTT** client library, **JSON** parser library, and **AWS IoT Device Shadow** client library.
+These libraries have gone through code quality checks including verification that no function has a [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html) score greater than 8, and checks against deviations from the mandatory rules in the [MISRA coding standard](https://www.misra.org.uk/MISRAHome/MISRAC2012/tabid/196/Default.aspx). These libraries have also undergone both static code analysis from [Coverity statical analysis](https://scan.coverity.com/) and validation of memory safety through the [CBMC automated reasoning tool](http://www.cs.cmu.edu/~modelcheck/cbmc/).
 
-- This release uses submodule references to the following new individual repositories for the MQTT, JSON and AWS IoT Shadow service client libraries under `libraries` folder:
-   - [FreeRTOS/coreMQTT](https://github.com/FreeRTOS/coreMQTT) for MQTT client library
-   - [FreeRTOS/coreJSON](https://github.com/FreeRTOS/coreJSON) for JSON parser library
-   - [aws/device-shadow-for-aws-iot-embedded-sdk](https://github.com/aws/device-shadow-for-aws-iot-embedded-sdk) for AWS IoT Shadow service client library.
+- This release uses submodule references to the following new individual repositories for the MQTT, JSON, and AWS IoT Device Shadow client libraries under the `libraries` folder:
+   - [FreeRTOS/coreMQTT](https://github.com/FreeRTOS/coreMQTT) for the MQTT client library
+   - [FreeRTOS/coreJSON](https://github.com/FreeRTOS/coreJSON) for the JSON parser library
+   - [aws/device-shadow-for-aws-iot-embedded-sdk](https://github.com/aws/device-shadow-for-aws-iot-embedded-sdk) for the AWS IoT Device Shadow client library.
 
 - With this release, we are introducing a [date-based versioning scheme](README.md#versioning).
 

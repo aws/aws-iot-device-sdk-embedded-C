@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C V202009.00
+ * AWS IoT Device SDK for Embedded C V202011.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -256,7 +256,7 @@ static int32_t sendHttpRequest( const TransportInterface_t * pTransportInterface
     HTTPRequestHeaders_t requestHeaders;
 
     /* Return value of all methods from the HTTP Client library API. */
-    HTTPStatus_t httpStatus = HTTP_SUCCESS;
+    HTTPStatus_t httpStatus = HTTPSuccess;
 
     assert( pMethod != NULL );
     assert( pPath != NULL );
@@ -269,7 +269,7 @@ static int32_t sendHttpRequest( const TransportInterface_t * pTransportInterface
     /* Initialize the request object. */
     requestInfo.pHost = SERVER_HOST;
     requestInfo.hostLen = SERVER_HOST_LENGTH;
-    requestInfo.method = pMethod;
+    requestInfo.pMethod = pMethod;
     requestInfo.methodLen = methodLen;
     requestInfo.pPath = pPath;
     requestInfo.pathLen = pathLen;
@@ -285,7 +285,7 @@ static int32_t sendHttpRequest( const TransportInterface_t * pTransportInterface
     httpStatus = HTTPClient_InitializeRequestHeaders( &requestHeaders,
                                                       &requestInfo );
 
-    if( httpStatus == HTTP_SUCCESS )
+    if( httpStatus == HTTPSuccess )
     {
         /* Initialize the response object. The same buffer used for storing
          * request headers is reused here. */
@@ -293,7 +293,7 @@ static int32_t sendHttpRequest( const TransportInterface_t * pTransportInterface
         response.bufferLen = USER_BUFFER_LENGTH;
 
         LogInfo( ( "Sending HTTP %.*s request to %.*s%.*s...",
-                   ( int32_t ) requestInfo.methodLen, requestInfo.method,
+                   ( int32_t ) requestInfo.methodLen, requestInfo.pMethod,
                    ( int32_t ) SERVER_HOST_LENGTH, SERVER_HOST,
                    ( int32_t ) requestInfo.pathLen, requestInfo.pPath ) );
         LogDebug( ( "Request Headers:\n%.*s\n"
@@ -316,7 +316,7 @@ static int32_t sendHttpRequest( const TransportInterface_t * pTransportInterface
                     HTTPClient_strerror( httpStatus ) ) );
     }
 
-    if( httpStatus == HTTP_SUCCESS )
+    if( httpStatus == HTTPSuccess )
     {
         LogInfo( ( "Received HTTP response from %.*s%.*s...\n"
                    "Response Headers:\n%.*s\n"
@@ -331,13 +331,13 @@ static int32_t sendHttpRequest( const TransportInterface_t * pTransportInterface
     else
     {
         LogError( ( "Failed to send HTTP %.*s request to %.*s%.*s: Error=%s.",
-                    ( int32_t ) requestInfo.methodLen, requestInfo.method,
+                    ( int32_t ) requestInfo.methodLen, requestInfo.pMethod,
                     ( int32_t ) SERVER_HOST_LENGTH, SERVER_HOST,
                     ( int32_t ) requestInfo.pathLen, requestInfo.pPath,
                     HTTPClient_strerror( httpStatus ) ) );
     }
 
-    if( httpStatus != HTTP_SUCCESS )
+    if( httpStatus != HTTPSuccess )
     {
         returnStatus = EXIT_FAILURE;
     }

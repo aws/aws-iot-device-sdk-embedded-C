@@ -1,19 +1,8 @@
 # Include filepaths for source and include.
 include( ${PLATFORM_DIR}/posix/posixFilePaths.cmake )
 
-# The transport_interface.h in coreMQTT is the single source of truth,
-# so make sure the submodule is cloned.
-if( NOT EXISTS ${MODULES_DIR}/standard/coreMQTT/source )
-    # Attempt to clone coreMQTT.
-    if( ${BUILD_CLONE_SUBMODULES} )
-        clone_mqtt()
-    else()
-        message( FATAL_ERROR "The required submodule coreMQTT does not exist. Either clone it manually, or set BUILD_CLONE_SUBMODULES to 1 to automatically clone it during build." )
-    endif()
-endif()
-
 set( TRANSPORT_INTERFACE_INCLUDE_DIR
-     ${MODULES_DIR}/standard/coreMQTT/source/portable )
+     ${MODULES_DIR}/standard/coreMQTT/source/interface )
 
 # Create target for sockets utility.
 add_library( sockets_posix
@@ -37,7 +26,11 @@ target_link_libraries( plaintext_posix
 add_library( openssl_posix
                 ${OPENSSL_TRANSPORT_SOURCES} )
 
-set( OPENSSL_USE_STATIC_LIBS TRUE )
+# For static library builds, link against static library of OpenSSL
+# for openssl_posix target.
+if(NOT BUILD_SHARED_LIBS)
+    set( OPENSSL_USE_STATIC_LIBS TRUE )
+endif()
 find_package( OpenSSL REQUIRED )
 
 # Verify the minimum OpenSSL version required

@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C V202009.00
+ * AWS IoT Device SDK for Embedded C V202011.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -22,14 +22,20 @@
 
 /* Standard includes. */
 #include <assert.h>
+#include <time.h>
+#include <stdlib.h>
+
+/* POSIX includes. */
+#include <unistd.h>
 
 /* Include Demo Config as the first non-system header. */
 #include "demo_config.h"
 
+/* Demo utils header. */
 #include "http_demo_utils.h"
 
-/* Retry utilities. */
-#include "retry_utils.h"
+/*Include backoff algorithm header for retry logic.*/
+#include "backoff_algorithm.h"
 
 /* Third party parser utilities. */
 #include "http_parser.h"
@@ -37,14 +43,41 @@
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Field name of the HTTP Range header to read from server response.
+ * @brief The maximum number of retries for connecting to server.
  */
-#define HTTP_CONTENT_RANGE_HEADER_FIELD           "Content-Range"
+#define CONNECTION_RETRY_MAX_ATTEMPTS            ( 5U )
 
 /**
- * @brief Length of the HTTP Range header field.
+ * @brief The maximum back-off delay (in milliseconds) for retrying connection to server.
  */
-#define HTTP_CONTENT_RANGE_HEADER_FIELD_LENGTH    ( sizeof( HTTP_CONTENT_RANGE_HEADER_FIELD ) - 1 )
+#define CONNECTION_RETRY_MAX_BACKOFF_DELAY_MS    ( 5000U )
+
+/**
+ * @brief The base back-off delay (in milliseconds) to use for connection retry attempts.
+ */
+#define CONNECTION_RETRY_BACKOFF_BASE_MS         ( 500U )
+
+/**
+ * @brief Number of milliseconds in a second.
+ */
+#define NUM_MILLISECONDS_IN_SECOND               ( 1000U )
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief The random number generator to use for exponential backoff with
+ * jitter retry logic.
+ *
+ * @return The generated random number.
+ */
+static uint32_t generateRandomNumber();
+
+/*-----------------------------------------------------------*/
+
+static uint32_t generateRandomNumber()
+{
+    return( rand() );
+}
 
 /*-----------------------------------------------------------*/
 
@@ -53,14 +86,28 @@ int32_t connectToServerWithBackoffRetries( TransportConnect_t connectFunction,
 {
     int32_t returnStatus = EXIT_FAILURE;
     /* Status returned by the retry utilities. */
-    RetryUtilsStatus_t retryUtilsStatus = RetryUtilsSuccess;
+    BackoffAlgorithmStatus_t backoffAlgStatus = BackoffAlgorithmSuccess;
     /* Struct containing the next backoff time. */
-    RetryUtilsParams_t reconnectParams;
+    BackoffAlgorithmContext_t reconnectParams;
+    uint16_t nextRetryBackOff = 0U;
+    struct timespec tp;
 
     assert( connectFunction != NULL );
 
+    /* Seed pseudo random number generator used in the demo for
+     * backoff period calculation when retrying failed network operations
+     * with broker. */
+
+    /* Get current time to seed pseudo random number generator. */
+    ( void ) clock_gettime( CLOCK_REALTIME, &tp );
+    /* Seed pseudo random number generator with nanoseconds. */
+    srand( tp.tv_nsec );
+
     /* Initialize reconnect attempts and interval */
-    RetryUtils_ParamsReset( &reconnectParams );
+    BackoffAlgorithm_InitializeParams( &reconnectParams,
+                                       CONNECTION_RETRY_BACKOFF_BASE_MS,
+                                       CONNECTION_RETRY_MAX_BACKOFF_DELAY_MS,
+                                       CONNECTION_RETRY_MAX_ATTEMPTS );
 
     /* Attempt to connect to HTTP server. If connection fails, retry after
      * a timeout. Timeout value will exponentially increase until maximum
@@ -71,11 +118,20 @@ int32_t connectToServerWithBackoffRetries( TransportConnect_t connectFunction,
 
         if( returnStatus != EXIT_SUCCESS )
         {
-            LogWarn( ( "Connection to the HTTP server failed. "
-                       "Retrying connection with backoff and jitter." ) );
-            retryUtilsStatus = RetryUtils_BackoffAndSleep( &reconnectParams );
+            /* Generate a random number and get back-off value (in milliseconds) for the next connection retry. */
+            backoffAlgStatus = BackoffAlgorithm_GetNextBackoff( &reconnectParams, generateRandomNumber(), &nextRetryBackOff );
+
+            if( backoffAlgStatus == BackoffAlgorithmSuccess )
+            {
+                LogWarn( ( "Connection to the HTTP server failed. Retrying connection after backoff." ) );
+                ( void ) sleep( nextRetryBackOff / NUM_MILLISECONDS_IN_SECOND );
+            }
+            else
+            {
+                LogError( ( "Connection to the HTTP server failed, all attempts exhausted." ) );
+            }
         }
-    } while( ( returnStatus == EXIT_FAILURE ) && ( retryUtilsStatus == RetryUtilsSuccess ) );
+    } while( ( returnStatus == EXIT_FAILURE ) && ( backoffAlgStatus == BackoffAlgorithmSuccess ) );
 
     if( returnStatus == EXIT_FAILURE )
     {
@@ -95,7 +151,7 @@ HTTPStatus_t getUrlPath( const char * pUrl,
     /* http-parser status. Initialized to 1 to signify failure. */
     int parserStatus = 1;
     struct http_parser_url urlParser;
-    HTTPStatus_t httpStatus = HTTP_SUCCESS;
+    HTTPStatus_t httpStatus = HTTPSuccess;
 
     /* Sets all members in urlParser to 0. */
     http_parser_url_init( &urlParser );
@@ -103,10 +159,10 @@ HTTPStatus_t getUrlPath( const char * pUrl,
     if( ( pUrl == NULL ) || ( pPath == NULL ) || ( pPathLen == NULL ) )
     {
         LogError( ( "NULL parameter passed to getUrlPath()." ) );
-        httpStatus = HTTP_INVALID_PARAMETER;
+        httpStatus = HTTPInvalidParameter;
     }
 
-    if( httpStatus == HTTP_SUCCESS )
+    if( httpStatus == HTTPSuccess )
     {
         parserStatus = http_parser_parse_url( pUrl, urlLen, 0, &urlParser );
 
@@ -116,17 +172,17 @@ HTTPStatus_t getUrlPath( const char * pUrl,
                         ( int32_t ) urlLen,
                         pUrl,
                         parserStatus ) );
-            httpStatus = HTTP_PARSER_INTERNAL_ERROR;
+            httpStatus = HTTPParserInternalError;
         }
     }
 
-    if( httpStatus == HTTP_SUCCESS )
+    if( httpStatus == HTTPSuccess )
     {
         *pPathLen = ( size_t ) ( urlParser.field_data[ UF_PATH ].len );
 
         if( *pPathLen == 0 )
         {
-            httpStatus = HTTP_NO_RESPONSE;
+            httpStatus = HTTPNoResponse;
             *pPath = NULL;
         }
         else
@@ -135,7 +191,7 @@ HTTPStatus_t getUrlPath( const char * pUrl,
         }
     }
 
-    if( httpStatus != HTTP_SUCCESS )
+    if( httpStatus != HTTPSuccess )
     {
         LogError( ( "Error parsing the path from URL %s. Error code: %d",
                     pUrl,
@@ -155,7 +211,7 @@ HTTPStatus_t getUrlAddress( const char * pUrl,
     /* http-parser status. Initialized to 1 to signify failure. */
     int parserStatus = 1;
     struct http_parser_url urlParser;
-    HTTPStatus_t httpStatus = HTTP_SUCCESS;
+    HTTPStatus_t httpStatus = HTTPSuccess;
 
     /* Sets all members in urlParser to 0. */
     http_parser_url_init( &urlParser );
@@ -163,10 +219,10 @@ HTTPStatus_t getUrlAddress( const char * pUrl,
     if( ( pUrl == NULL ) || ( pAddress == NULL ) || ( pAddressLen == NULL ) )
     {
         LogError( ( "NULL parameter passed to getUrlAddress()." ) );
-        httpStatus = HTTP_INVALID_PARAMETER;
+        httpStatus = HTTPInvalidParameter;
     }
 
-    if( httpStatus == HTTP_SUCCESS )
+    if( httpStatus == HTTPSuccess )
     {
         parserStatus = http_parser_parse_url( pUrl, urlLen, 0, &urlParser );
 
@@ -176,17 +232,17 @@ HTTPStatus_t getUrlAddress( const char * pUrl,
                         ( int32_t ) urlLen,
                         pUrl,
                         parserStatus ) );
-            httpStatus = HTTP_PARSER_INTERNAL_ERROR;
+            httpStatus = HTTPParserInternalError;
         }
     }
 
-    if( httpStatus == HTTP_SUCCESS )
+    if( httpStatus == HTTPSuccess )
     {
         *pAddressLen = ( size_t ) ( urlParser.field_data[ UF_HOST ].len );
 
         if( *pAddressLen == 0 )
         {
-            httpStatus = HTTP_NO_RESPONSE;
+            httpStatus = HTTPNoResponse;
             *pAddress = NULL;
         }
         else
@@ -195,7 +251,7 @@ HTTPStatus_t getUrlAddress( const char * pUrl,
         }
     }
 
-    if( httpStatus != HTTP_SUCCESS )
+    if( httpStatus != HTTPSuccess )
     {
         LogError( ( "Error parsing the address from URL %s. Error code %d",
                     pUrl,
@@ -203,158 +259,4 @@ HTTPStatus_t getUrlAddress( const char * pUrl,
     }
 
     return httpStatus;
-}
-
-/*-----------------------------------------------------------*/
-
-bool getS3ObjectFileSize( size_t * pFileSize,
-                          const TransportInterface_t * pTransportInterface,
-                          const char * pHost,
-                          size_t hostLen,
-                          const char * pPath )
-{
-    bool returnStatus = false;
-    HTTPStatus_t httpStatus = HTTP_SUCCESS;
-    HTTPRequestHeaders_t requestHeaders;
-    HTTPRequestInfo_t requestInfo;
-    HTTPResponse_t response;
-    uint8_t userBuffer[ USER_BUFFER_LENGTH ];
-
-    /* The location of the file size in contentRangeValStr. */
-    char * pFileSizeStr = NULL;
-
-    /* String to store the Content-Range header value. */
-    char * contentRangeValStr = NULL;
-    size_t contentRangeValStrLength = 0;
-
-    assert( pHost != NULL );
-    assert( pPath != NULL );
-
-    /* Initialize all HTTP Client library API structs to 0. */
-    ( void ) memset( &requestHeaders, 0, sizeof( requestHeaders ) );
-    ( void ) memset( &requestInfo, 0, sizeof( requestInfo ) );
-    ( void ) memset( &response, 0, sizeof( response ) );
-
-    /* Initialize the request object. */
-    requestInfo.pHost = pHost;
-    requestInfo.hostLen = hostLen;
-    requestInfo.method = HTTP_METHOD_GET;
-    requestInfo.methodLen = sizeof( HTTP_METHOD_GET ) - 1;
-    requestInfo.pPath = pPath;
-    requestInfo.pathLen = strlen( pPath );
-
-    /* Set "Connection" HTTP header to "keep-alive" so that multiple requests
-     * can be sent over the same established TCP connection. This is done in
-     * order to download the file in parts. */
-    requestInfo.reqFlags = HTTP_REQUEST_KEEP_ALIVE_FLAG;
-
-    /* Set the buffer used for storing request headers. */
-    requestHeaders.pBuffer = userBuffer;
-    requestHeaders.bufferLen = USER_BUFFER_LENGTH;
-
-    /* Initialize the response object. The same buffer used for storing request
-     * headers is reused here. */
-    response.pBuffer = userBuffer;
-    response.bufferLen = USER_BUFFER_LENGTH;
-
-    LogInfo( ( "Getting file object size from host..." ) );
-
-    httpStatus = HTTPClient_InitializeRequestHeaders( &requestHeaders,
-                                                      &requestInfo );
-
-    if( httpStatus == HTTP_SUCCESS )
-    {
-        /* Add the header to get bytes=0-0. S3 will respond with a Content-Range
-         * header that contains the size of the file in it. This header will
-         * look like: "Content-Range: bytes 0-0/FILESIZE". The body will have a
-         * single byte that we are ignoring. */
-        httpStatus = HTTPClient_AddRangeHeader( &requestHeaders, 0, 0 );
-    }
-
-    if( httpStatus == HTTP_SUCCESS )
-    {
-        /* Send the request and receive the response. */
-        httpStatus = HTTPClient_Send( pTransportInterface,
-                                      &requestHeaders,
-                                      NULL,
-                                      0,
-                                      &response,
-                                      0 );
-    }
-
-    if( httpStatus == HTTP_SUCCESS )
-    {
-        LogDebug( ( "Received HTTP response from %s%s...",
-                    pHost, pPath ) );
-        LogDebug( ( "Response Headers:\n%.*s",
-                    ( int32_t ) response.headersLen,
-                    response.pHeaders ) );
-        LogDebug( ( "Response Body:\n%.*s\n",
-                    ( int32_t ) response.bodyLen,
-                    response.pBody ) );
-
-        returnStatus = ( response.statusCode == 206 ) ? true : false;
-    }
-    else
-    {
-        LogError( ( "Failed to send HTTP GET request to %s%s: Error=%s.",
-                    pHost, pPath, HTTPClient_strerror( httpStatus ) ) );
-    }
-
-    if( returnStatus == true )
-    {
-        LogInfo( ( "Received successful response from server "
-                   "(Status Code: %u).",
-                   response.statusCode ) );
-
-        httpStatus = HTTPClient_ReadHeader( &response,
-                                            ( char * ) HTTP_CONTENT_RANGE_HEADER_FIELD,
-                                            ( size_t ) HTTP_CONTENT_RANGE_HEADER_FIELD_LENGTH,
-                                            ( const char ** ) &contentRangeValStr,
-                                            &contentRangeValStrLength );
-    }
-    else
-    {
-        LogError( ( "Received an invalid response from the server "
-                    "(Status Code: %u).",
-                    response.statusCode ) );
-    }
-
-    if( ( returnStatus == true ) && ( httpStatus == HTTP_SUCCESS ) )
-    {
-        /* Parse the Content-Range header value to get the file size. */
-        pFileSizeStr = strstr( contentRangeValStr, "/" );
-
-        if( pFileSizeStr == NULL )
-        {
-            LogError( ( "'/' not present in Content-Range header value: %s.",
-                        contentRangeValStr ) );
-        }
-
-        pFileSizeStr += sizeof( char );
-        *pFileSize = ( size_t ) strtoul( pFileSizeStr, NULL, 10 );
-
-        if( ( *pFileSize == 0 ) || ( *pFileSize == UINT32_MAX ) )
-        {
-            LogError( ( "Error using strtoul to get the file size from %s: fileSize=%d.",
-                        pFileSizeStr, ( int32_t ) *pFileSize ) );
-            httpStatus = HTTP_INVALID_PARAMETER;
-        }
-
-        LogInfo( ( "The file is %d bytes long.", ( int32_t ) *pFileSize ) );
-    }
-    else
-    {
-        LogError( ( "Failed to read Content-Range header from HTTP response: Error=%s.",
-                    HTTPClient_strerror( httpStatus ) ) );
-    }
-
-    if( ( returnStatus == false ) || ( httpStatus != HTTP_SUCCESS ) )
-    {
-        LogError( ( "An error occurred in getting the file size from %s. Error=%s.",
-                    pHost,
-                    HTTPClient_strerror( httpStatus ) ) );
-    }
-
-    return( ( returnStatus == true ) && ( httpStatus == HTTP_SUCCESS ) );
 }
