@@ -321,8 +321,8 @@ static void connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContex
     } while( ( opensslStatus != OPENSSL_SUCCESS ) && ( backoffAlgStatus == BackoffAlgorithmSuccess ) );
 
     TEST_ASSERT_EQUAL( OPENSSL_SUCCESS, opensslStatus );
-    TEST_ASSERT_NOT_EQUAL( -1, networkContext.socketDescriptor );
-    TEST_ASSERT_NOT_NULL( networkContext.pSsl );
+    TEST_ASSERT_NOT_EQUAL( -1, opensslParams.socketDescriptor );
+    TEST_ASSERT_NOT_NULL( opensslParams.pSsl );
 }
 
 /*-----------------------------------------------------------*/

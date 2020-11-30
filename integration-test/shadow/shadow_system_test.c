@@ -701,8 +701,8 @@ void setUp( void )
                                                          &opensslCredentials,
                                                          TRANSPORT_SEND_RECV_TIMEOUT_MS,
                                                          TRANSPORT_SEND_RECV_TIMEOUT_MS ) );
-    TEST_ASSERT_NOT_EQUAL( -1, networkContext.socketDescriptor );
-    TEST_ASSERT_NOT_NULL( networkContext.pSsl );
+    TEST_ASSERT_NOT_EQUAL( -1, opensslParams.socketDescriptor );
+    TEST_ASSERT_NOT_NULL( opensslParams.pSsl );
 
     /* Establish MQTT session on top of the TCP+TLS connection. */
     establishMqttSession( &context, &networkContext, true, &persistentSession );
