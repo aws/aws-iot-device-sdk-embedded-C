@@ -22,7 +22,7 @@ box "AWS IoT Broker" #Yellow
     participant "AWS IoT Broker" as aws
 end box
 
-note over demo, mqtt #FFAAAA: This diagram shows the workflow of success path for a single "download" job received from AWS IoT Jobs service.
+note over demo, mqtt #FFAAAA: <b>Note</b>: This diagram shows the demo workflow of the success path execution of a single "download" job received from AWS IoT Jobs service.
 
 activate demo
 demo -> demo: Parse CLI arguments for configuring demo.
