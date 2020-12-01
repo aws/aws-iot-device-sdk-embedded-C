@@ -16,11 +16,13 @@ box "Libraries" #LightBlue
 	participant "Mosquitto MQTT Library" as mqtt
 	participant "Jobs Library" as jobs
     participant "JSON Library" as json
-end box 
+end box
 
 box "AWS IoT Broker" #Yellow
     participant "AWS IoT Broker" as aws
 end box
+
+note over demo, mqtt #FFAAAA: This diagram shows the workflow of success path for a single "download" job received from AWS IoT Jobs service.
 
 activate demo
 demo -> demo: Parse CLI arguments for configuring demo.
@@ -28,7 +30,7 @@ note right of demo: Required arguments include \n<b>TLS connection information</
 
 demo->mqtt: Register callbacks for <b>Connect</b>, <b>Subscribe</b> and <b>incoming PUBLISH</b> operations
 
-demo->mqtt: Connect to AWS IoT 
+demo->mqtt: Connect to AWS IoT
 mqtt->aws: Establish MQTT over TLS connection
 aws->mqtt: MQTT Session Established
 mqtt->connect_cb: Notify about MQTT connection
@@ -44,7 +46,7 @@ mqtt-> aws: Send SUBSCRIBE request for topic
 aws->mqtt: Send SUBACK response
 mqtt->subscribe_cb: Notify about subscription completion
 subscribe_cb->demo: Set flag to indicate subscription to topic
-end 
+end
 
 == Start Next Pending Job ==
 note right of demo: Next job is queried and started by calling \n <b>StartNextPendingJobExecution</b> API of AWS IoT Jobs service.
@@ -75,7 +77,7 @@ message_cb->demo: Update state of demo to notify about parsed job
 demo->download: Start downloader
 activate download
 download->download: Create directory for the download
-download->download: Download URL (in job) to directory\nby using "curl" command 
+download->download: Download URL (in job) to directory\nby using "curl" command
 note right of download: Download operation in progress...
 
 loop Part of Demo loop
@@ -90,4 +92,5 @@ aws->mqtt: Send PUBACK response
 deactivate download
 end
 note right of download: Download operation completed
+note right of demo: <b>Note</b>: The <b>demo loop</b> can continue receiving\nand executing more download jobs.\nIt is a cylical state machine to receive a job,\nexecute the download and send periodic updates of download job,\nand be ready for the next job.
 @enduml
