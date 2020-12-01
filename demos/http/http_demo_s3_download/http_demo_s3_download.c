@@ -101,16 +101,19 @@
 
 /**
  * @brief The maximum number of times to run the loop in this demo.
+ *
+ * @note The demo loop is attempted to re-run only if it fails in an iteration.
+ * Once the demo loop succeeds in an iteration, the demo exits successfully.
  */
-#ifndef HTTP_MAX_DEMO_COUNT
-    #define HTTP_MAX_DEMO_COUNT    ( 3 )
+#ifndef HTTP_MAX_DEMO_LOOP_COUNT
+    #define HTTP_MAX_DEMO_LOOP_COUNT    ( 3 )
 #endif
 
 /**
  * @brief Time in seconds to wait between retries of the demo loop if
  * demo loop fails.
  */
-#define DELAY_BETWEEN_DEMO_ITERATIONS_S    ( 5 )
+#define DELAY_BETWEEN_DEMO_RETRY_ITERATIONS_S    ( 5 )
 
 /**
  * @brief A buffer used in the demo for storing HTTP request headers and HTTP
@@ -693,16 +696,16 @@ int main( int argc,
         {
             LogInfo( ( "Demo iteration %d is successful.", demoRunCount ) );
         }
-        /* Attempt to retry a failed iteration of demo for up to #HTTP_MAX_DEMO_COUNT times. */
-        else if( demoRunCount < HTTP_MAX_DEMO_COUNT )
+        /* Attempt to retry a failed iteration of demo for up to #HTTP_MAX_DEMO_LOOP_COUNT times. */
+        else if( demoRunCount < HTTP_MAX_DEMO_LOOP_COUNT )
         {
             LogWarn( ( "Demo iteration %d failed. Retrying...", demoRunCount ) );
-            sleep( DELAY_BETWEEN_DEMO_ITERATIONS_S );
+            sleep( DELAY_BETWEEN_DEMO_RETRY_ITERATIONS_S );
         }
-        /* Failed all #HTTP_MAX_DEMO_COUNT demo iterations. */
+        /* Failed all #HTTP_MAX_DEMO_LOOP_COUNT demo iterations. */
         else
         {
-            LogError( ( "All %d demo iterations failed.", HTTP_MAX_DEMO_COUNT ) );
+            LogError( ( "All %d demo iterations failed.", HTTP_MAX_DEMO_LOOP_COUNT ) );
             break;
         }
     } while( returnStatus != EXIT_SUCCESS );

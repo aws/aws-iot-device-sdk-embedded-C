@@ -150,20 +150,23 @@
 
 /**
  * @brief The maximum number of times to run the loop in this demo.
+ *
+ * @note The demo loop is attempted to re-run only if it fails in an iteration.
+ * Once the demo loop succeeds in an iteration, the demo exits successfully.
  */
-#ifndef SHADOW_MAX_DEMO_COUNT
-    #define SHADOW_MAX_DEMO_COUNT    ( 3 )
+#ifndef SHADOW_MAX_DEMO_LOOP_COUNT
+    #define SHADOW_MAX_DEMO_LOOP_COUNT    ( 3 )
 #endif
 
 /**
  * @brief Time in seconds to wait between retries of the demo loop if
  * demo loop fails.
  */
-#define DELAY_BETWEEN_DEMO_ITERATIONS_S                 ( 5 )
+#define DELAY_BETWEEN_DEMO_RETRY_ITERATIONS_S           ( 5 )
 
 /**
  * @brief JSON key for response code that indicates the type of error in
- * the error document received on topic `delete/rejected`.
+ * the error document received on topic `/delete/rejected`.
  */
 #define SHADOW_DELETE_REJECTED_ERROR_CODE_KEY           "code"
 
@@ -209,8 +212,8 @@ static bool deleteResponseReceived = false;
  * The Shadow delete status will be updated by the incoming publishes on the
  * MQTT topics for delete acknowledgement from AWS IoT message broker
  * (accepted/rejected). Shadow document is considered to be deleted if an
- * incoming publish is received on `delete/accepted` topic or an incoming
- * publish is received on `delete/rejected` topic with error code 404. Code 404
+ * incoming publish is received on `/delete/accepted` topic or an incoming
+ * publish is received on `/delete/rejected` topic with error code 404. Code 404
  * indicates that the Shadow document does not exist for the Thing yet.
  */
 static bool shadowDeleted = false;
@@ -678,13 +681,13 @@ int main( int argc,
             shadowDeleted = false;
 
             /* First of all, try to delete any Shadow document in the cloud.
-             * Try to subscribe to `delete/accepted` and `delete/rejected` topics. */
+             * Try to subscribe to `/delete/accepted` and `/delete/rejected` topics. */
             returnStatus = SubscribeToTopic( SHADOW_TOPIC_STRING_DELETE_ACCEPTED( THING_NAME ),
                                              SHADOW_TOPIC_LENGTH_DELETE_ACCEPTED( THING_NAME_LENGTH ) );
 
             if( returnStatus == EXIT_SUCCESS )
             {
-                /* Try to subscribe to `delete/rejected` topic. */
+                /* Try to subscribe to `/delete/rejected` topic. */
                 returnStatus = SubscribeToTopic( SHADOW_TOPIC_STRING_DELETE_REJECTED( THING_NAME ),
                                                  SHADOW_TOPIC_LENGTH_DELETE_REJECTED( THING_NAME_LENGTH ) );
             }
@@ -699,7 +702,7 @@ int main( int argc,
                                                0U );
             }
 
-            /* Unsubscribe from the `delete/accepted` and 'delete/rejected` topics.*/
+            /* Unsubscribe from the `/delete/accepted` and 'delete/rejected` topics.*/
             if( returnStatus == EXIT_SUCCESS )
             {
                 returnStatus = UnsubscribeFromTopic( SHADOW_TOPIC_STRING_DELETE_ACCEPTED( THING_NAME ),
@@ -712,7 +715,7 @@ int main( int argc,
                                                      SHADOW_TOPIC_LENGTH_DELETE_REJECTED( THING_NAME_LENGTH ) );
             }
 
-            /* Check if an incoming publish on `delete/accepted` or `delete/rejected`
+            /* Check if an incoming publish on `/delete/accepted` or `/delete/rejected`
              * topics. If a response is not received, mark the demo execution as a failure.*/
             if( ( returnStatus == EXIT_SUCCESS ) && ( deleteResponseReceived != true ) )
             {
@@ -866,16 +869,16 @@ int main( int argc,
         {
             LogInfo( ( "Demo iteration %d is successful.", demoRunCount ) );
         }
-        /* Attempt to retry a failed iteration of demo for up to #SHADOW_MAX_DEMO_COUNT times. */
-        else if( demoRunCount < SHADOW_MAX_DEMO_COUNT )
+        /* Attempt to retry a failed iteration of demo for up to #SHADOW_MAX_DEMO_LOOP_COUNT times. */
+        else if( demoRunCount < SHADOW_MAX_DEMO_LOOP_COUNT )
         {
             LogWarn( ( "Demo iteration %d failed. Retrying...", demoRunCount ) );
-            sleep( DELAY_BETWEEN_DEMO_ITERATIONS_S );
+            sleep( DELAY_BETWEEN_DEMO_RETRY_ITERATIONS_S );
         }
-        /* Failed all #SHADOW_MAX_DEMO_COUNT demo iterations. */
+        /* Failed all #SHADOW_MAX_DEMO_LOOP_COUNT demo iterations. */
         else
         {
-            LogError( ( "All %d demo iterations failed.", SHADOW_MAX_DEMO_COUNT ) );
+            LogError( ( "All %d demo iterations failed.", SHADOW_MAX_DEMO_LOOP_COUNT ) );
             break;
         }
     } while( returnStatus != EXIT_SUCCESS );

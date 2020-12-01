@@ -90,16 +90,19 @@
 
 /**
  * @brief The maximum number of times to run the loop in this demo.
+ *
+ * @note The demo loop is attempted to re-run only if it fails in an iteration.
+ * Once the demo loop succeeds in an iteration, the demo exits successfully.
  */
-#ifndef DEFENDER_MAX_DEMO_COUNT
-    #define DEFENDER_MAX_DEMO_COUNT    ( 3 )
+#ifndef DEFENDER_MAX_DEMO_LOOP_COUNT
+    #define DEFENDER_MAX_DEMO_LOOP_COUNT    ( 3 )
 #endif
 
 /**
  * @brief Time in seconds to wait between retries of the demo loop if
  * demo loop fails.
  */
-#define DELAY_BETWEEN_DEMO_ITERATIONS_S    ( 5 )
+#define DELAY_BETWEEN_DEMO_RETRY_ITERATIONS_S    ( 5 )
 
 /**
  * @brief Status values of the device defender report.
@@ -728,16 +731,16 @@ int main( int argc,
         {
             LogInfo( ( "Demo iteration %d is successful.", demoRunCount ) );
         }
-        /* Attempt to retry a failed iteration of demo for up to #DEFENDER_MAX_DEMO_COUNT times. */
-        else if( demoRunCount < DEFENDER_MAX_DEMO_COUNT )
+        /* Attempt to retry a failed iteration of demo for up to #DEFENDER_MAX_DEMO_LOOP_COUNT times. */
+        else if( demoRunCount < DEFENDER_MAX_DEMO_LOOP_COUNT )
         {
             LogWarn( ( "Demo iteration %d failed. Retrying...", demoRunCount ) );
-            sleep( DELAY_BETWEEN_DEMO_ITERATIONS_S );
+            sleep( DELAY_BETWEEN_DEMO_RETRY_ITERATIONS_S );
         }
-        /* Failed all #DEFENDER_MAX_DEMO_COUNT demo iterations. */
+        /* Failed all #DEFENDER_MAX_DEMO_LOOP_COUNT demo iterations. */
         else
         {
-            LogError( ( "All %d demo iterations failed.", DEFENDER_MAX_DEMO_COUNT ) );
+            LogError( ( "All %d demo iterations failed.", DEFENDER_MAX_DEMO_LOOP_COUNT ) );
             break;
         }
     } while( exitStatus != EXIT_SUCCESS );
