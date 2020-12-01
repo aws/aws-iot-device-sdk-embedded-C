@@ -1,5 +1,5 @@
 @startuml
-skinparam dpi 200
+skinparam dpi 100
 skinparam classFontSize 8
 skinparam classFontName Helvetica
 autonumber
@@ -52,8 +52,8 @@ demo->jobs: Generate PUBLISH topic with <b>Jobs_StartNext</b> API
 jobs->demo: Topic generated
 demo->mqtt: Publish to <b>StartNextPendingJobExecution</b> API
 mqtt->aws: PUBLISH to <b>StartNextPendingJobExecution</b> API with QoS 1
-mqtt->aws: Send PUBACK
-aws->demo: PUBLISH completed
+aws->mqtt: PUBACK response
+mqtt->demo: PUBLISH completed
 
 == Receive Next Pending Job from AWS IoT ==
 note left of aws: If there is a pending job in queue,\nAWS IoT Jobs service will respond\nby publishing to "accepted" topic of \n<b>StartNextPendingJobExecution</b> API
@@ -63,11 +63,12 @@ message_cb->jobs: Determine incoming topic by calling <b>Jobs_MatchTopic</b> API
 jobs->message_cb: Return topic type as <b>JobsStartNextSuccess</b>
 
 == Parse Job document from JSON payload ==
-message_cb->json: Validate incoming JSON payload \nwith <b>JSON_Validate</b>
+message_cb->json: Validate incoming JSON payload with <b>JSON_Validate</b>
 json->message_cb: Return success
-message_cb->json: Parse Job ID from document\nby calling <b>JSON_Search</b>
+message_cb->json: Parse Job ID from document by calling <b>JSON_Search</b>
 json->message_cb: Return parsed Job ID
-message_cb->json: Parse URL from job document\nby calling <b>JSON_Search</b>
+message_cb->json: Parse URL from job document by calling <b>JSON_Search</b>
+json->message_cb: Return parsed URL
 message_cb->demo: Update state of demo to notify about parsed job
 
 == Execute Download Job ==
@@ -77,7 +78,7 @@ download->download: Create directory for the download
 download->download: Download URL (in job) to directory\nby using "curl" command 
 note right of download: Download operation in progress...
 
-loop Demo loop
+loop Part of Demo loop
 == Send Job Status Update to AWS IoT ==
 demo->demo: Check if download process has completed.
 note right of demo: Send one of the following statuses to AWS IoT Jobs service:\n 1. "IN_PROGRESS" if download is on-going\n2. "SUCCEEDED" if download has completed\n3."FAILED" if download job failed
