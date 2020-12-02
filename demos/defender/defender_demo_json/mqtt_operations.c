@@ -1006,12 +1006,12 @@ bool PublishToTopic( const char * pTopicFilter,
 }
 /*-----------------------------------------------------------*/
 
-bool ProcessLoop( void )
+bool ProcessLoop( uint32_t timeoutMs )
 {
     bool returnStatus = false;
     MQTTStatus_t mqttStatus = MQTTSuccess;
 
-    mqttStatus = MQTT_ProcessLoop( &mqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
+    mqttStatus = MQTT_ProcessLoop( &mqttContext, timeoutMs );
 
     if( mqttStatus != MQTTSuccess )
     {
