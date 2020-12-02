@@ -55,7 +55,6 @@
  *
  * #define AWS_IOT_ENDPOINT               "...insert here..."
  */
-#define AWS_IOT_ENDPOINT           "a3e1obletr43ue-ats.iot.us-west-2.amazonaws.com"
 
 /**
  * @brief AWS IoT MQTT broker port number.
@@ -98,10 +97,6 @@
     #define ROOT_CA_CERT_PATH    "certificates/AmazonRootCA1.crt"
 #endif
 
-#ifndef ROOT_CA_CERT_PATH_HTTP
-    #define ROOT_CA_CERT_PATH_HTTP    "certificates/BaltimoreCyberTrustRoot.crt"
-#endif
-
 /**
  * @brief Path of the file containing the client certificate.
  *
@@ -113,7 +108,6 @@
  *
  * #define CLIENT_CERT_PATH    "...insert here..."
  */
-#define CLIENT_CERT_PATH           "/home/risc/work/iot/things/otalinux/cert.crt"
 
 /**
  * @brief Path of the file containing the client's private key.
@@ -126,7 +120,6 @@
  *
  * #define CLIENT_PRIVATE_KEY_PATH    "...insert here..."
  */
-#define CLIENT_PRIVATE_KEY_PATH    "/home/risc/work/iot/things/otalinux/pri.key"
 
 /**
  * @brief MQTT client identifier.
@@ -134,16 +127,16 @@
  * No two clients may use the same client identifier simultaneously.
  */
 #ifndef CLIENT_IDENTIFIER
-    #define CLIENT_IDENTIFIER         "praz-thing-8-18-20"
+    #define CLIENT_IDENTIFIER    "...insert here..."
 #endif
 
 /**
  * @brief Configure application version.
  */
 
-#define APP_VERSION_MAJOR    0
-#define APP_VERSION_MINOR    9
-#define APP_VERSION_BUILD    3
+#define APP_VERSION_MAJOR         0
+#define APP_VERSION_MINOR         9
+#define APP_VERSION_BUILD         2
 
 /**
  * @brief The name of the operating system that the application is running on.
@@ -167,7 +160,7 @@
 #define HARDWARE_PLATFORM_NAME    "PC"
 
 /**
- * @brief The name of the MQTT library used and its version, following an "@"
+ * @brief The name of the library used and its version, following an "@"
  * symbol.
  */
 #define MQTT_LIB                  "otalib@1.0.0"

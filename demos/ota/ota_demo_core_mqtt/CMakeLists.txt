@@ -16,8 +16,7 @@ target_sources(
     ${DEMO_NAME}
     PRIVATE
         "ota_demo_core_mqtt.c"
-        "mqtt_subscription_manager.c"
-        "ota_pal_posix.c"
+        "${DEMOS_DIR}/ota/common/src/mqtt_subscription_manager.c"
         ${OTA_SOURCES}
         ${OTA_OS_POSIX_SOURCES}
         ${OTA_MQTT_SOURCES}
@@ -29,7 +28,7 @@ target_link_libraries(
     ${DEMO_NAME}
     PRIVATE
         ${LIB_RT}
-        ${OPENSSL_CRYPTO_LIBRARY}
+        ota_pal
         pthread
         clock_posix
         openssl_posix
@@ -38,6 +37,7 @@ target_link_libraries(
 target_include_directories(
     ${DEMO_NAME}
     PUBLIC
+        "${DEMOS_DIR}/ota/common/include"
         "${CMAKE_CURRENT_LIST_DIR}"
         "${LOGGING_INCLUDE_DIRS}"
         ${BACKOFF_ALGORITHM_INCLUDE_PUBLIC_DIRS}
