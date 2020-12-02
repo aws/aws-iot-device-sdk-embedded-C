@@ -328,7 +328,7 @@ static void deleteRejectedHandler( MQTTPublishInfo_t * pPublishInfo )
     LogInfo( ( "Error code:%ld.", errorCode ) );
 
     /* Mark Shadow delete operation as a success if error code is 404. */
-    if( errorCode == 404 )
+    if( errorCode == 404UL )
     {
         shadowDeleted = true;
     }
@@ -719,7 +719,24 @@ int main( int argc,
              * topics. If a response is not received, mark the demo execution as a failure.*/
             if( ( returnStatus == EXIT_SUCCESS ) && ( deleteResponseReceived != true ) )
             {
+                LogError( ( "Failed to receive a response for Shadow delete." ) );
                 returnStatus = EXIT_FAILURE;
+            }
+
+            /* Check if Shadow document delete was successful. A delete can be
+             * successful in cases listed below.
+             *  1. If an incoming publish is received on `/delete/accepted` topic.
+             *  2. If an incoming publish is received on `/delete/rejected` topic
+             *     with an error code 404. This indicates that a delete was
+             *     attempted when a Shadow document is not available for the
+             *     Thing. */
+            if( returnStatus == EXIT_SUCCESS )
+            {
+                if( shadowDeleted == false )
+                {
+                    LogError( ( "Shadow delete operation failed." ) );
+                    returnStatus = EXIT_FAILURE;
+                }
             }
 
             /* Successfully connect to MQTT broker, the next step is
