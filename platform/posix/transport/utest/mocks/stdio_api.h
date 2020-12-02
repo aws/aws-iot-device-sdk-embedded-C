@@ -25,6 +25,12 @@
 
 #include <stdio.h>
 
+#if defined(__FILE_defined)
+    #define STDIO_FILE_TYPE __FILE
+#else
+    #define STDIO_FILE_TYPE _IO_FILE
+#endif
+
 /**
  * @file stdio_api.h
  * @brief This file is used to generate mocks for functions used from <stdio.h>.
@@ -32,10 +38,10 @@
  */
 
 /* Open a file and create a new stream for it. */
-extern _IO_FILE * fopen( const char * __filename,
+extern STDIO_FILE_TYPE * fopen( const char * __filename,
                          const char * __modes );
 
 /* Close STREAM. */
-extern int fclose( _IO_FILE * __stream );
+extern int fclose( STDIO_FILE_TYPE * __stream );
 
 #endif /* ifndef STDIO_API_H_ */
