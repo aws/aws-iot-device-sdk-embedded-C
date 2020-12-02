@@ -243,7 +243,7 @@ static bool mqttSessionEstablished = false;
 static OpensslParams_t opensslParams;
 
 /**
- * @brief Semaphore for syncronizing buffer operations.
+ * @brief Semaphore for synchronizing buffer operations.
  */
 static sem_t bufferSemaphore;
 
@@ -337,7 +337,7 @@ static int disconnectMqttSession( MQTTContext_t * pMqttContext );
  *
  * @param[in] pMsg Message to publish.
  *
- * @param[in] sgSize Message size.
+ * @param[in] msgSize Message size.
  *
  * @param[in] qos Quality of Service
  *
@@ -951,7 +951,7 @@ static OtaErr_t mqttSubscribe( const char * pTopicFilter,
     /* Start with everything at 0. */
     ( void ) memset( ( void * ) pSubscriptionList, 0x00, sizeof( pSubscriptionList ) );
 
-    /* Set the QoS , topc and topic length. */
+    /* Set the QoS , topic and topic length. */
     pSubscriptionList[ 0 ].qos = qos;
     pSubscriptionList[ 0 ].pTopicFilter = pTopicFilter;
     pSubscriptionList[ 0 ].topicFilterLength = topicFilterLength;
@@ -996,7 +996,7 @@ static OtaErr_t mqttPublish( const char * const pacTopic,
     MQTTPublishInfo_t publishInfo;
     MQTTContext_t * pMqttContext = &mqttContext;
 
-    /* Set the required publish paramters. */
+    /* Set the required publish parameters. */
     publishInfo.pTopicName = pacTopic;
     publishInfo.topicNameLength = topicLen;
     publishInfo.qos = qos;
@@ -1038,7 +1038,7 @@ static OtaErr_t mqttUnsubscribe( const char * pTopicFilter,
     /* Start with everything at 0. */
     ( void ) memset( ( void * ) pSubscriptionList, 0x00, sizeof( pSubscriptionList ) );
 
-    /* Set the QoS , topc and topic length. */
+    /* Set the QoS , topic and topic length. */
     pSubscriptionList[ 0 ].qos = qos;
     pSubscriptionList[ 0 ].pTopicFilter = pTopicFilter;
     pSubscriptionList[ 0 ].topicFilterLength = topicFilterLength;

@@ -338,6 +338,7 @@ packetid
 packetidentifier
 packetsreceived
 packetssent
+pactopic
 paddress
 paddresslen
 pake
@@ -376,12 +377,14 @@ pleace
 pmessage
 pmethod
 pmetrics
+pmsg
 pmqttcontext
 pnetworkcontext
 poly
 popenportsarray
 portsarraylength
 posix
+potainterfaces
 poutcharswritten
 poutconnectionsarray
 poutnetworkstats
@@ -534,7 +537,9 @@ tls
 tokenpresent
 toolchain
 topicbuffer
+topicfilter
 topicfilterlength
+topiclen
 topiclength
 transportinterface
 transporttimeout
