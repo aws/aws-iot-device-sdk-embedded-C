@@ -331,17 +331,17 @@ static int disconnectMqttSession( MQTTContext_t * pMqttContext );
  *
  * This function publishes a message to a given topic & QoS.
  *
- * @param[in]             pacTopic Mqtt topic filter.
+ * @param[in] pacTopic Mqtt topic filter.
  *
- * @param[in]           topicLen Length of the topic filter.
+ * @param[in] topicLen Length of the topic filter.
  *
- * @param[in]                pMsg Message to publish.
+ * @param[in] pMsg Message to publish.
  *
- * @param[in]            msgSize Message size.
+ * @param[in] sgSize Message size.
  *
- * @param[in]                qos Quality of Service
+ * @param[in] qos Quality of Service
  *
- * @return                      OTA_OS_ERR_OK if success , other error code on failure.
+ * @return OTA_OS_ERR_OK if success , other error code on failure.
  */
 static OtaErr_t mqttPublish( const char * const pacTopic,
                              uint16_t topicLen,
@@ -356,15 +356,15 @@ static OtaErr_t mqttPublish( const char * const pacTopic,
  * received as parameter. This function also registers a callback for the
  * topicfilter.
  *
- * @param[in]         pTopicFilter Mqtt topic filter.
+ * @param[in] pTopicFilter Mqtt topic filter.
  *
- * @param[in]    topicFilterLength Length of the topic filter.
+ * @param[in] topicFilterLength Length of the topic filter.
  *
- * @param[in]                qos Quality of Service
+ * @param[in] qos Quality of Service
  *
- * @param[in]           callback Callback to be registered.
+ * @param[in] callback Callback to be registered.
  *
- * @return                      OTA_OS_ERR_OK if success , other error code on failure.
+ * @return OTA_OS_ERR_OK if success , other error code on failure.
  */
 static OtaErr_t mqttSubscribe( const char * pTopicFilter,
                                uint16_t topicFilterLength,
@@ -377,13 +377,13 @@ static OtaErr_t mqttSubscribe( const char * pTopicFilter,
  * This function unsubscribes to the Mqtt topics with the Quality of service
  * received as parameter.
  *
- * @param[in]         pTopicFilter Mqtt topic filter.
+ * @param[in] pTopicFilter Mqtt topic filter.
  *
- * @param[in]    topicFilterLength Length of the topic filter.
+ * @param[in] topicFilterLength Length of the topic filter.
  *
- * @param[qos]                qos Quality of Service
+ * @param[qos] qos Quality of Service
  *
- * @return                      OTA_OS_ERR_OK if success , other error code on failure.
+ * @return  OTA_OS_ERR_OK if success , other error code on failure.
  */
 static OtaErr_t mqttUnsubscribe( const char * pTopicFilter,
                                  uint16_t topicFilterLength,
