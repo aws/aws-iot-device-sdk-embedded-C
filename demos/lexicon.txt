@@ -467,6 +467,7 @@ resubscribe
 resubscription
 retrievehttpresponse
 retryutils
+returnstatus
 rfc
 ripemd
 rng
