@@ -32,6 +32,7 @@ target_link_libraries(
     ${DEMO_NAME}
     PRIVATE
         ${LIB_RT}
+        ota_pal
         pthread
         clock_posix
         openssl_posix
