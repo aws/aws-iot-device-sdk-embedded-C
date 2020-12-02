@@ -141,6 +141,14 @@
 
 /*-----------------------------------------------------------*/
 
+/* Each compilation unit must define the NetworkContext struct. */
+struct NetworkContext
+{
+    PlaintextParams_t * pParams;
+};
+
+/*-----------------------------------------------------------*/
+
 /**
  * @brief The random number generator to use for exponential backoff with
  * jitter retry logic.
@@ -903,12 +911,16 @@ int main( int argc,
     bool controlPacketSent = false;
     bool publishPacketSent = false;
     NetworkContext_t networkContext = { 0 };
+    PlaintextParams_t plaintextParams = { 0 };
     BackoffAlgorithmStatus_t backoffAlgStatus = BackoffAlgorithmSuccess;
     BackoffAlgorithmContext_t retryParams;
     uint16_t nextRetryBackOff = 0U;
 
     ( void ) argc;
     ( void ) argv;
+
+    /* Set the pParams member of the network context with desired transport. */
+    networkContext.pParams = &plaintextParams;
 
     /***
      * Set Fixed size buffer structure that is required by API to serialize
