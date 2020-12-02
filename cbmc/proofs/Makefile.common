@@ -103,14 +103,16 @@ CBMC_MAX_OBJECT_SIZE = "(SIZE_MAX>>(CBMC_OBJECT_BITS+1))"
 ################################################################
 # Run cbmc and build html report
 
-CBMCFLAGS += \
-	$(UNWINDING) \
-	--object-bits $(CBMC_OBJECT_BITS) \
+CBMCFLAGS += $(UNWINDING)
+CBMCFLAGS += --flush
+
+CHECKFLAGS += \
 	--bounds-check \
 	--conversion-check \
 	--div-by-zero-check \
 	--float-overflow-check \
-	--flush \
+	--malloc-fail-null \
+	--malloc-may-fail \
 	--nan-check \
 	--pointer-check \
 	--pointer-overflow-check \
@@ -118,33 +120,34 @@ CBMCFLAGS += \
 	--signed-overflow-check \
 	--undefined-shift-check \
 	--unsigned-overflow-check \
-	--unwinding-assertions \
+
+COVERFLAGS = \
 	--malloc-fail-null \
-	--malloc-may-fail
+	--malloc-may-fail \
 
 goto: $(ENTRY).goto
 
 cbmc.txt: $(ENTRY).goto
-	- cbmc $(CBMCFLAGS) --trace $< >$@ 2>&1
+	- cbmc $(CBMCFLAGS) $(CHECKFLAGS) $(SOLVER) --unwinding-assertions --trace $< >$@ 2>&1
 
 cbmc.xml: $(ENTRY).goto
-	- cbmc $(CBMCFLAGS) --trace --xml-ui $< >$@ 2>&1
+	- cbmc $(CBMCFLAGS) $(CHECKFLAGS) $(SOLVER) --unwinding-assertions --trace --xml-ui $< >$@ 2>&1
 
 cbmc.json: $(ENTRY).goto
-	- cbmc $(CBMCFLAGS) --trace --json-ui $< >$@ 2>&1
+	- cbmc $(CBMCFLAGS) $(CHECKFLAGS) $(SOLVER) --unwinding-assertions --trace --json-ui $< >$@ 2>&1
 
 property.xml: $(ENTRY).goto
-	cbmc $(CBMCFLAGS) --show-properties --xml-ui $< >$@ 2>&1
+	cbmc $(CBMCFLAGS) $(CHECKFLAGS) --unwinding-assertions --show-properties --xml-ui $< >$@ 2>&1
 
 property.json: $(ENTRY).goto
-	cbmc $(CBMCFLAGS) --show-properties --json-ui $< >$@ 2>&1
+	cbmc $(CBMCFLAGS) $(CHECKFLAGS) --unwinding-assertions --show-properties --json-ui $< >$@ 2>&1
 
 coverage.xml: $(ENTRY).goto
-	cbmc $(filter-out --unwinding-assertions,$(CBMCFLAGS)) \
+	cbmc $(CBMCFLAGS) $(COVERFLAGS) \
 		--cover location --xml-ui $< >$@ 2>&1
 
 coverage.json: $(ENTRY).goto
-	cbmc $(filter-out --unwinding-assertions,$(CBMCFLAGS)) \
+	cbmc $(CBMCFLAGS) $(COVERFLAGS) \
 		--cover location --json-ui $< >$@ 2>&1
 
 cbmc: cbmc.txt
@@ -163,6 +166,13 @@ report: cbmc.txt property.xml coverage.xml
 	--result cbmc.txt \
 	--property property.xml \
 	--block coverage.xml
+
+# This rule depends only on cbmc.txt and has no dependents, so it will
+# not block the report from being generated if it fails. This rule is
+# intended to fail if and only if the CBMC safety check that emits
+# cbmc.txt yielded a proof failure.
+check-cbmc-result: cbmc.txt
+	grep -e "^VERIFICATION SUCCESSFUL" $^
 
 clean:
 	$(RM) $(OBJS) $(ENTRY).goto
@@ -195,7 +205,7 @@ cbmc-batch.yaml:
 	@echo "Building $@"
 	@$(RM) $@
 	@echo 'build_memory: $(PROOFMEM)' > $@
-	@echo 'cbmcflags: $(strip $(call yaml_encode_options,$(CBMCFLAGS)))' >> $@
+	@echo 'cbmcflags: $(strip $(call yaml_encode_options,$(CBMCFLAGS) $(CHECKFLAGS) --unwinding-assertions))' >> $@
 	@echo 'coverage_memory: $(PROOFMEM)' >> $@
 	@echo "expected: SUCCESSFUL" >> $@
 	@echo "goto: $(ENTRY).goto" >> $@
@@ -232,3 +242,7 @@ veryclean2: veryclean
 	$(RM) viewer-*.json
 
 .PHONY: report2 clean2 veryclean2
+
+ifneq ($(strip $(EXTERNAL_SAT_SOLVER)),)
+   SOLVER ?= --external-sat-solver $(EXTERNAL_SAT_SOLVER)
+endif
