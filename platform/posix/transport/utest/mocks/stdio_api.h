@@ -25,10 +25,10 @@
 
 #include <stdio.h>
 
-#if defined(__FILE_defined)
-    #define STDIO_FILE_TYPE __FILE
+#if defined( __FILE_defined )
+    #define _STDIO_FILE_TYPE    __FILE
 #else
-    #define STDIO_FILE_TYPE _IO_FILE
+    #define _STDIO_FILE_TYPE    _IO_FILE
 #endif
 
 /**
@@ -38,10 +38,10 @@
  */
 
 /* Open a file and create a new stream for it. */
-extern STDIO_FILE_TYPE * fopen( const char * __filename,
-                         const char * __modes );
+extern _STDIO_FILE_TYPE * fopen( const char * __filename,
+                                 const char * __modes );
 
 /* Close STREAM. */
-extern int fclose( STDIO_FILE_TYPE * __stream );
+extern int fclose( _STDIO_FILE_TYPE * __stream );
 
 #endif /* ifndef STDIO_API_H_ */
