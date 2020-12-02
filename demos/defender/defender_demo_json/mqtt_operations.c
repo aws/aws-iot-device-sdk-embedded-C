@@ -617,9 +617,9 @@ static bool handlePublishResend( MQTTContext_t * pMqttContext )
             if( mqttStatus != MQTTSuccess )
             {
                 LogError( ( "Sending duplicate PUBLISH for packet id %u "
-                            " failed with status %u.",
+                            " failed with status %s.",
                             outgoingPublishPackets[ index ].packetId,
-                            mqttStatus ) );
+                            MQTT_Status_strerror( mqttStatus ) ) );
                 break;
             }
             else
