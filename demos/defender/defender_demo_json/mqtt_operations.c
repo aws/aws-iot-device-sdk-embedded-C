@@ -695,7 +695,8 @@ bool EstablishMqttSession( MQTTPublishCallback_t publishCallback )
         if( mqttStatus != MQTTSuccess )
         {
             returnStatus = false;
-            LogError( ( "MQTT init failed with status %u.", mqttStatus ) );
+            LogError( ( "MQTT init failed with status %s.",
+                   MQTT_Status_strerror( mqttStatus ) ) );
         }
         else
         {
@@ -737,7 +738,8 @@ bool EstablishMqttSession( MQTTPublishCallback_t publishCallback )
             if( mqttStatus != MQTTSuccess )
             {
                 returnStatus = false;
-                LogError( ( "Connection with MQTT broker failed with status %u.", mqttStatus ) );
+                LogError( ( "Connection with MQTT broker failed with status %s.",
+                   MQTT_Status_strerror( mqttStatus ) ) );
             }
             else
             {
@@ -848,8 +850,8 @@ bool SubscribeToTopic( const char * pTopicFilter,
 
     if( mqttStatus != MQTTSuccess )
     {
-        LogError( ( "Failed to send SUBSCRIBE packet to broker with error = %u.",
-                    mqttStatus ) );
+        LogError( ( "Failed to send SUBSCRIBE packet to broker with error = %s.",
+                   MQTT_Status_strerror( mqttStatus ) ) );
     }
     else
     {
@@ -868,8 +870,8 @@ bool SubscribeToTopic( const char * pTopicFilter,
 
         if( mqttStatus != MQTTSuccess )
         {
-            LogError( ( "MQTT_ProcessLoop returned with status = %u.",
-                        mqttStatus ) );
+            LogError( ( "MQTT_ProcessLoop returned with status = %s.",
+                   MQTT_Status_strerror( mqttStatus ) ) );
         }
         else
         {
@@ -912,8 +914,8 @@ bool UnsubscribeFromTopic( const char * pTopicFilter,
 
     if( mqttStatus != MQTTSuccess )
     {
-        LogError( ( "Failed to send UNSUBSCRIBE packet to broker with error = %u.",
-                    mqttStatus ) );
+        LogError( ( "Failed to send UNSUBSCRIBE packet to broker with error = %s.",
+                   MQTT_Status_strerror( mqttStatus ) ) );
     }
     else
     {
@@ -928,8 +930,8 @@ bool UnsubscribeFromTopic( const char * pTopicFilter,
 
         if( mqttStatus != MQTTSuccess )
         {
-            LogError( ( "MQTT_ProcessLoop returned with status = %u.",
-                        mqttStatus ) );
+            LogError( ( "MQTT_ProcessLoop returned with status = %s.",
+                   MQTT_Status_strerror( mqttStatus ) ) );
         }
         else
         {
@@ -988,8 +990,8 @@ bool PublishToTopic( const char * pTopicFilter,
 
         if( mqttStatus != MQTTSuccess )
         {
-            LogError( ( "Failed to send PUBLISH packet to broker with error = %u.",
-                        mqttStatus ) );
+            LogError( ( "Failed to send PUBLISH packet to broker with error = %s.",
+                   MQTT_Status_strerror( mqttStatus ) ) );
             cleanupOutgoingPublishAt( publishIndex );
             returnStatus = false;
         }
@@ -1015,8 +1017,8 @@ bool ProcessLoop( uint32_t timeoutMs )
 
     if( mqttStatus != MQTTSuccess )
     {
-        LogWarn( ( "MQTT_ProcessLoop returned with status = %u.",
-                   mqttStatus ) );
+        LogError( ( "MQTT_ProcessLoop returned with status = %s.",
+                   MQTT_Status_strerror( mqttStatus ) ) );
     }
     else
     {
