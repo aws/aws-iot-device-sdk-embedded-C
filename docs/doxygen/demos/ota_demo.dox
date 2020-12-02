@@ -6,34 +6,37 @@
 @brief A demo of OTA library to perform a firmware update using coreMQTT for data operations.
 
 <p>
-A POSIX socket-based transport interface implementation is used to establish a
-plaintext connection over port 80 to an HTTP server. If a connection
-failure occurs, then the connection establishment is retried with exponential and jitter backoff.
-Once a connection is established, HTTP requests are sent for the following HTTP methods:
-`GET`, `HEAD`, `PUT`, and `POST`. The respective responses from each of these
-requests are logged.
+This example demonstrates the use of OTA library to perform a device firmware update. The Linux application acts as an OTA client and AWS Services are used to 
+send an update to the client. The demo used coreMQTT library to establish a connection to AWS Services by `Subscribing` to MQTT topics to receive a job.
+After a user schedules a job, the client begins the download using coreMQTT to request, ingest and store the data blocks, with the help to tinyCBOR to encode the data stream.
+Once the image is downloaded, the file key signature, version and image is verified to is reset and display a successful update. Workflow for the demo is as follows:
+- User builds initial application with version 0.9.2.
+- Running the application, establishes a connection to AWS Services and awaits a job.
+- User increases the application version to 0.9.3, and rebuilds the executable.
+- User schedules an OTA Update Job with the newer executable.
+- OTA client receives the job document and verifies all the parameters.
+- The new firmware is downloaded using coreMQTT and tinyCBOR. This is then verified by the OTA client.
+- User runs the downloaded executable to show a successful update.
+
 </p>
 
 <div class="caption" style="text-align:center">
 OTA over coreMQTT Demo Workflow :
 </div>
-@image html http_demo_plaintext.png width=100%
+@image html ota_demo_core_mqtt.png width=100%
 
 @section ota_demo_core_http OTA over HTTP Demo
 @brief A demo of OTA library to perform a firmware update using coreHTTP for data operations.
 
 <p>
-A POSIX socket-based transport interface implementation is used to establish a
-plaintext connection over port 80 to an HTTP server. If a connection
-failure occurs, then the connection establishment is retried with exponential and jitter backoff.
-Once a connection is established, HTTP requests are sent for the following HTTP methods:
-`GET`, `HEAD`, `PUT`, and `POST`. The respective responses from each of these
-requests are logged.
+This example is a modification of the above demo to securely send a firmware image to the device by using coreHTTP for data plane operations. 
+While it still uses MQTT for control operations like pending job notifications and updating job status, this demo uses HTTPS instead of 
+MQTT to download the file. After the file is downloaded, it verifies the signature of the file and updates the firmware.
 </p>
 
 <div class="caption" style="text-align:center">
 OTA over coreHTTP Demo Workflow :
 </div>
-@image html http_demo_plaintext.png width=100%
+@image html ota_demo_core_http.png width=100%
 
 */
