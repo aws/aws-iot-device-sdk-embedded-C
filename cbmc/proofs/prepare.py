@@ -100,9 +100,12 @@ def command_line_arguments():
 
 def apply_patches():
     patch_dir = pathlib.Path(__file__).resolve().parent.parent / "patches"
+    touch_file = os.path.join(patch_dir, "patched")
     if not patch_dir.is_dir():
         logging.error("Patches directory at '%s' is not a directory", patch_dir)
         sys.exit(1)
+    if os.path.isfile(touch_file):
+        sys.exit()
 
     proj_dir = pathlib.Path(__file__).resolve().parent.parent.parent
     if not proj_dir.is_dir():
@@ -132,6 +135,9 @@ def apply_patches():
             logging.error("Failed to apply patch '%s'", fyle.name)
             sys.exit(1)
 
+    with open(touch_file, "w") as touch:
+        touch.write("Files patched.")
+
 
 def build():
     try:
@@ -141,7 +147,7 @@ def build():
             An error occurred during cbmc-batch generation.
             The error message is: {}
             """.format(str(error))))
-        exit(1)
+        sys.exit(1)
 
 ################################################################
 

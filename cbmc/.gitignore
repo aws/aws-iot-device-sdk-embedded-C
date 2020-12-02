@@ -5,3 +5,4 @@ __pycache__
 .ninja_log
 build.ninja
 *.yaml
+.litani_cache_dir
