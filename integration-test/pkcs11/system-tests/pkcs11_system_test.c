@@ -716,19 +716,19 @@ void test_GetAttributeValue_RSA( void )
     CK_BYTE certificateValue[ CERTIFICATE_VALUE_LENGTH ];
     CK_BYTE keyComponent[ ( pkcs11RSA_2048_MODULUS_BITS / 8 ) + 1 ] = { 0 };
 
-    result = xFindObjectWithLabelAndClass( globalSession, 
-            pkcs11testLABEL_DEVICE_PRIVATE_KEY_FOR_TLS, 
-            strlen( pkcs11testLABEL_DEVICE_PRIVATE_KEY_FOR_TLS ), 
-            CKO_PRIVATE_KEY, 
-            &privateKeyHandle );
+    result = xFindObjectWithLabelAndClass( globalSession,
+                                           pkcs11testLABEL_DEVICE_PRIVATE_KEY_FOR_TLS,
+                                           strlen( pkcs11testLABEL_DEVICE_PRIVATE_KEY_FOR_TLS ),
+                                           CKO_PRIVATE_KEY,
+                                           &privateKeyHandle );
     TEST_ASSERT_EQUAL_MESSAGE( CKR_OK, result, "Failed to find RSA private key." );
     TEST_ASSERT_NOT_EQUAL_MESSAGE( CK_INVALID_HANDLE, privateKeyHandle, "Invalid object handle found for RSA private key." );
 
-    result = xFindObjectWithLabelAndClass( globalSession, 
-            pkcs11testLABEL_DEVICE_CERTIFICATE_FOR_TLS, 
-            strlen( pkcs11testLABEL_DEVICE_CERTIFICATE_FOR_TLS ), 
-            CKO_CERTIFICATE, 
-            &certificateHandle );
+    result = xFindObjectWithLabelAndClass( globalSession,
+                                           pkcs11testLABEL_DEVICE_CERTIFICATE_FOR_TLS,
+                                           strlen( pkcs11testLABEL_DEVICE_CERTIFICATE_FOR_TLS ),
+                                           CKO_CERTIFICATE,
+                                           &certificateHandle );
     TEST_ASSERT_EQUAL_MESSAGE( CKR_OK, result, "Failed to find RSA certificate." );
     TEST_ASSERT_NOT_EQUAL_MESSAGE( CK_INVALID_HANDLE, certificateHandle, "Invalid object handle found for RSA certificate." );
 
