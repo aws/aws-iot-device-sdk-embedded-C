@@ -383,9 +383,9 @@ static int disconnectMqttSession( MQTTContext_t * pMqttContext );
  *
  * @param[in] qos Quality of Service
  *
- * @return OTA_OS_ERR_OK if success , other error code on failure.
+ * @return OtaMqttSuccess if success , other error code on failure.
  */
-static OtaErr_t mqttPublish( const char * const pacTopic,
+static OtaMqttStatus_t mqttPublish( const char * const pacTopic,
                              uint16_t topicLen,
                              const char * pMsg,
                              uint32_t msgSize,
@@ -406,9 +406,9 @@ static OtaErr_t mqttPublish( const char * const pacTopic,
  *
  * @param[in] callback Callback to be registered.
  *
- * @return OTA_OS_ERR_OK if success , other error code on failure.
+ * @return OtaMqttSuccess if success , other error code on failure.
  */
-static OtaErr_t mqttSubscribe( const char * pTopicFilter,
+static OtaMqttStatus_t mqttSubscribe( const char * pTopicFilter,
                                uint16_t topicFilterLength,
                                uint8_t qos,
                                OtaMqttCallback_t callback );
@@ -425,9 +425,9 @@ static OtaErr_t mqttSubscribe( const char * pTopicFilter,
  *
  * @param[qos] qos Quality of Service
  *
- * @return  OTA_OS_ERR_OK if success , other error code on failure.
+ * @return  OtaMqttSuccess if success , other error code on failure.
  */
-static OtaErr_t mqttUnsubscribe( const char * pTopicFilter,
+static OtaMqttStatus_t mqttUnsubscribe( const char * pTopicFilter,
                                  uint16_t topicFilterLength,
                                  uint8_t qos );
 
@@ -514,7 +514,7 @@ OtaEventData_t * otaEventBufferGet( void )
 static void otaAppCallback( OtaJobEvent_t event,
                             void * pData )
 {
-    OtaErr_t err = OTA_ERR_UNINITIALIZED;
+    OtaErr_t err = OtaErrUninitialized;
 
     /* OTA job is completed. so delete the MQTT and network connection. */
     if( event == OtaJobEventActivate )
@@ -554,7 +554,7 @@ static void otaAppCallback( OtaJobEvent_t event,
         LogInfo( ( "Received OtaJobEventStartTest callback from OTA Agent." ) );
         err = OTA_SetImageState( OtaImageStateAccepted );
 
-        if( err != OTA_ERR_NONE )
+        if( err != OtaErrNone )
         {
             LogError( ( " Error! Failed to set image state as accepted." ) );
         }
@@ -1032,10 +1032,10 @@ static int32_t connectToS3Server( NetworkContext_t * pNetworkContext,
     return returnStatus;
 }
 
-static OtaErr_t httpInit( const char * pUrl )
+static OtaHttpStatus_t httpInit( const char * pUrl )
 {
     /* OTA lib return error code. */
-    OtaErr_t ret = OTA_ERR_UNINITIALIZED;
+    OtaHttpStatus_t ret = OtaHttpSuccess;
 
     /* Return value from libraries. */
     int32_t returnStatus = EXIT_SUCCESS;
@@ -1060,8 +1060,6 @@ static OtaErr_t httpInit( const char * pUrl )
 
         getUrlPath( pUrl, strlen( pUrl ), &UrlInfo.pPath,
                     &UrlInfo.pathLength );
-
-        ret = OTA_ERR_NONE;
     }
     else
     {
@@ -1070,20 +1068,20 @@ static OtaErr_t httpInit( const char * pUrl )
         LogError( ( "Failed to connect to HTTP server %s.",
                     serverHost ) );
 
-        ret = OTA_ERR_HTTP_INIT_FAILED;
+        ret = OtaHttpInitFailed;
     }
 
     return ret;
 }
 
-static OtaErr_t httpRequest( uint32_t rangeStart,
+static OtaHttpStatus_t httpRequest( uint32_t rangeStart,
                              uint32_t rangeEnd )
 {
     /* Return value of this method. */
     int32_t returnStatus = EXIT_SUCCESS;
 
     /* OTA lib return error code. */
-    OtaErr_t ret = OTA_ERR_UNINITIALIZED;
+    OtaHttpStatus_t ret = OtaHttpSuccess;
 
     OtaEventData_t * pData;
     OtaEventMsg_t eventMsg = { 0 };
@@ -1154,12 +1152,10 @@ static OtaErr_t httpRequest( uint32_t rangeStart,
         {
             /* reconnect to server. */
             connectToServer( &networkContextHttp, NULL );
-
-            ret = OTA_ERR_NONE;
         }
         else
         {
-            ret = OTA_ERR_HTTP_REQUEST_FAILED;
+            ret = OtaHttpRequestFailed;
         }
     }
     else
@@ -1172,29 +1168,23 @@ static OtaErr_t httpRequest( uint32_t rangeStart,
         eventMsg.eventId = OtaAgentEventReceivedFileBlock;
         eventMsg.pEventData = pData;
         OTA_SignalEvent( &eventMsg );
-
-        ret = OTA_ERR_NONE;
     }
 
     return returnStatus;
 }
 
-static OtaErr_t httpDeinit( void )
+static OtaHttpStatus_t httpDeinit( void )
 {
     int32_t returnStatus = EXIT_SUCCESS;
 
-    OtaErr_t ret = OTA_ERR_UNINITIALIZED;
+    OtaHttpStatus_t ret = OtaHttpSuccess;
 
     /* Disconnect.*/
     returnStatus = Openssl_Disconnect( &networkContextHttp );
 
-    if( returnStatus == OPENSSL_SUCCESS )
+    if( returnStatus != OPENSSL_SUCCESS )
     {
-        ret = OTA_ERR_NONE;
-    }
-    else
-    {
-        ret = OTA_ERR_HTTP_REQUEST_FAILED;
+        ret = OtaHttpRequestFailed;
     }
 
     return ret;
@@ -1202,12 +1192,12 @@ static OtaErr_t httpDeinit( void )
 
 /*-----------------------------------------------------------*/
 
-static OtaErr_t mqttSubscribe( const char * pTopicFilter,
+static OtaMqttStatus_t mqttSubscribe( const char * pTopicFilter,
                                uint16_t topicFilterLength,
                                uint8_t qos,
                                OtaMqttCallback_t callback )
 {
-    OtaErr_t otaRet = OTA_ERR_NONE;
+    OtaMqttStatus_t otaRet = OtaMqttSuccess;
 
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus;
@@ -1237,15 +1227,13 @@ static OtaErr_t mqttSubscribe( const char * pTopicFilter,
         LogError( ( "Failed to send SUBSCRIBE packet to broker with error = %u.",
                     mqttStatus ) );
 
-        otaRet = OTA_ERR_SUBSCRIBE_FAILED;
+        otaRet = OtaMqttSubscribeFailed;
     }
     else
     {
         LogInfo( ( "SUBSCRIBE topic %.*s to broker.\n\n",
                    topicFilterLength,
                    pTopicFilter ) );
-
-        otaRet = OTA_ERR_NONE;
     }
 
     /* Register callback to subscription manager. */
@@ -1254,13 +1242,13 @@ static OtaErr_t mqttSubscribe( const char * pTopicFilter,
     return otaRet;
 }
 
-static OtaErr_t mqttPublish( const char * const pacTopic,
+static OtaMqttStatus_t mqttPublish( const char * const pacTopic,
                              uint16_t topicLen,
                              const char * pMsg,
                              uint32_t msgSize,
                              uint8_t qos )
 {
-    OtaErr_t otaRet = OTA_ERR_UNINITIALIZED;
+    OtaMqttStatus_t otaRet = OtaMqttSuccess;
 
     MQTTStatus_t mqttStatus = MQTTBadParameter;
     MQTTPublishInfo_t publishInfo;
@@ -1281,25 +1269,23 @@ static OtaErr_t mqttPublish( const char * const pacTopic,
     {
         LogError( ( "Failed to send PUBLISH packet to broker with error = %u.", mqttStatus ) );
 
-        otaRet = OTA_ERR_PUBLISH_FAILED;
+        otaRet = OtaMqttPublishFailed;
     }
     else
     {
         LogInfo( ( "Sent PUBLISH packet to broker %.*s to broker.\n\n",
                    topicLen,
                    pacTopic ) );
-
-        otaRet = OTA_ERR_NONE;
     }
 
     return otaRet;
 }
 
-static OtaErr_t mqttUnsubscribe( const char * pTopicFilter,
+static OtaMqttStatus_t mqttUnsubscribe( const char * pTopicFilter,
                                  uint16_t topicFilterLength,
                                  uint8_t qos )
 {
-    OtaErr_t otaRet = OTA_ERR_NONE;
+    OtaMqttStatus_t otaRet = OtaMqttSuccess;
     MQTTStatus_t mqttStatus;
 
     MQTTSubscribeInfo_t pSubscriptionList[ 1 ];
@@ -1324,15 +1310,13 @@ static OtaErr_t mqttUnsubscribe( const char * pTopicFilter,
         LogError( ( "Failed to send SUBSCRIBE packet to broker with error = %u.",
                     mqttStatus ) );
 
-        otaRet = OTA_ERR_UNSUBSCRIBE_FAILED;
+        otaRet = OtaMqttUnsubscribeFailed;
     }
     else
     {
         LogInfo( ( "SUBSCRIBE topic %.*s to broker.\n\n",
                    topicFilterLength,
                    pTopicFilter ) );
-
-        otaRet = OTA_ERR_NONE;
     }
 
     return otaRet;
@@ -1360,6 +1344,11 @@ static void setOtaInterfaces( OtaInterfaces_t * pOtaInterfaces )
     pOtaInterfaces->mqtt.jobCallback = mqttJobCallback;
     pOtaInterfaces->mqtt.dataCallback = mqttDataCallback;
 
+    /* Initialize the OTA library HTTP Interface.*/
+    pOtaInterfaces->http.init = httpInit;
+    pOtaInterfaces->http.request = httpRequest;
+    pOtaInterfaces->http.deinit = httpDeinit;
+
     /* Initialize the OTA library PAL Interface.*/
     pOtaInterfaces->pal.getPlatformImageState = otaPal_GetPlatformImageState;
     pOtaInterfaces->pal.setPlatformImageState = otaPal_SetPlatformImageState;
@@ -1382,9 +1371,9 @@ static int startOTADemo( void )
     MQTTStatus_t mqttStatus = MQTTSuccess;
 
     /* OTA library return status. */
-    OtaErr_t otaRet = OTA_ERR_NONE;
+    OtaErr_t otaRet = OtaErrNone;
 
-    /* OTA Agent state returned from calling OTA_GetAgentState.*/
+    /* OTA Agent state returned from calling OTA_GetState.*/
     OtaState_t state = OtaAgentStateStopped;
 
     /* OTA event message used for sending event to OTA Agent.*/
@@ -1409,7 +1398,7 @@ static int startOTADemo( void )
         if( ( otaRet = OTA_Init( &otaBuffer,
                                  &otaInterfaces,
                                  ( const uint8_t * ) ( CLIENT_IDENTIFIER ),
-                                 otaAppCallback ) ) != OTA_ERR_NONE )
+                                 otaAppCallback ) ) != OtaErrNone )
         {
             LogError( ( "Failed to initialize OTA Agent, exiting = %u.",
                         otaRet ) );
@@ -1494,7 +1483,7 @@ static int startOTADemo( void )
                     /* Suspend OTA operations. */
                     otaRet = OTA_Suspend();
 
-                    if( otaRet != OTA_ERR_NONE )
+                    if( otaRet != OtaErrNone )
                     {
                         LogError( ( "OTA failed to suspend. "
                                     "StatusCode=%d.", otaRet ) );
