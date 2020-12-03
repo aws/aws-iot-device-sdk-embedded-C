@@ -44,14 +44,10 @@
 /* Specify the OTA signature algorithm we support on this platform. */
 const char OTA_JsonFileSignatureKey[ OTA_FILE_SIG_KEY_STR_MAX_LENGTH ] = "sig-sha256-ecdsa";
 
-static OtaErr_t otaPal_CheckFileSignature( OtaFileContext_t * const C );
-
-
+static OtaPalStatus_t otaPal_CheckFileSignature( OtaFileContext_t * const C );
 
 /* Read the specified signer certificate from the filesystem into a local buffer. The allocated
- * memory becomes the property of the caller who is responsible for freeing it.
- */
-
+ * memory becomes the property of the caller who is responsible for freeing it. */
 static EVP_PKEY * Openssl_GetPkeyFromCertificate( uint8_t * pCertFilePath )
 {
     BIO * pBio = NULL;
@@ -132,10 +128,9 @@ static EVP_PKEY * Openssl_GetPkeyFromCertificate( uint8_t * pCertFilePath )
 
 
 /* Attempt to create a new receive file for the file chunks as they come in. */
-
-OtaErr_t otaPal_CreateFileForRx( OtaFileContext_t * const C )
+OtaPalStatus_t otaPal_CreateFileForRx( OtaFileContext_t * const C )
 {
-    OtaErr_t result = OTA_ERR_UNINITIALIZED; /* For MISRA mandatory. */
+    OtaPalStatus_t result = OTA_PAL_COMBINE_ERR( OtaPalUninitialized, 0 );
 
     if( C != NULL )
     {
@@ -148,40 +143,38 @@ OtaErr_t otaPal_CreateFileForRx( OtaFileContext_t * const C )
 
             if( C->pFile != NULL )
             {
-                result = OTA_ERR_NONE;
+                result = OTA_PAL_COMBINE_ERR( OtaPalSuccess, 0 );
                 LogInfo( ( "Receive file created." ) );
             }
             else
             {
-                result = ( OTA_ERR_RX_FILE_CREATE_FAILED | ( ( uint32_t ) errno & ( uint32_t ) OTA_PAL_ERR_MASK ) ); /*lint !e40 !e737 !e9027 !e9029
-                                                                                                                      * Errno is being used in accordance with host API documentation.
-                                                                                                                      * Bitmasking is being used to preserve host API error with library status code. */
+                result = OTA_PAL_COMBINE_ERR( OtaPalRxFileCreateFailed, errno );
                 LogError( ( "Failed to start operation: Operation already started." ) );
             }
         }
         else
         {
-            result = OTA_ERR_RX_FILE_CREATE_FAILED;
+            result = OTA_PAL_COMBINE_ERR( OtaPalRxFileCreateFailed, 0 );
             LogError( ( "Invalid file path provided." ) );
         }
     }
     else
     {
-        result = OTA_ERR_RX_FILE_CREATE_FAILED;
+        result = OTA_PAL_COMBINE_ERR( OtaPalRxFileCreateFailed, 0 );
         LogError( ( "Invalid context provided." ) );
     }
 
-    return result; /*lint !e480 !e481 Exiting function without calling fclose.
-                    * Context file handle state is managed by this API. */
+    /* Exiting function without calling fclose. Context file handle state is managed by this API. */
+    return result;
 }
 
 
 /* Abort receiving the specified OTA update by closing the file. */
-
-OtaErr_t otaPal_Abort( OtaFileContext_t * const C )
+OtaPalStatus_t otaPal_Abort( OtaFileContext_t * const C )
 {
     /* Set default return status to uninitialized. */
-    OtaErr_t result = OTA_ERR_UNINITIALIZED;
+    OtaPalMainStatus_t mainErr = OtaPalUninitialized;
+    OtaPalSubStatus_t subErr = 0;
     int32_t lFileClosresult;
 
     if( NULL != C )
@@ -198,29 +191,28 @@ OtaErr_t otaPal_Abort( OtaFileContext_t * const C )
             if( 0 == lFileClosresult )
             {
                 LogInfo( ( "Closed file." ) );
-                result = OTA_ERR_NONE;
+                mainErr = OtaPalSuccess;
             }
             else /* Failed to close file. */
             {
                 LogError( ( "Failed to close file." ) );
-                result = ( OTA_ERR_FILE_ABORT | ( ( uint32_t ) errno & ( uint32_t ) OTA_PAL_ERR_MASK ) ); /*lint !e40 !e737 !e9027 !e9029
-                                                                                                           * Errno is being used in accordance with host API documentation.
-                                                                                                           * Bitmasking is being used to preserve host API error with library status code. */
+                mainErr = OtaPalFileAbort;
+                subErr = errno;
             }
         }
         else
         {
             /* Nothing to do. No open file associated with this context. */
-            result = OTA_ERR_NONE;
+            mainErr = OtaPalSuccess;
         }
     }
     else /* Context was not valid. */
     {
         LogError( ( "Parameter check failed: Input is NULL." ) );
-        result = OTA_ERR_FILE_ABORT;
+        mainErr = OtaPalFileAbort;
     }
 
-    return result;
+    return OTA_PAL_COMBINE_ERR( mainErr, subErr );
 }
 
 /* Write a block of data to the specified file. */
@@ -277,11 +269,12 @@ int16_t otaPal_WriteBlock( OtaFileContext_t * const C,
 }
 
 /* Close the specified file. This shall authenticate the file if it is marked as secure. */
-
-OtaErr_t otaPal_CloseFile( OtaFileContext_t * const C )
+OtaPalStatus_t otaPal_CloseFile( OtaFileContext_t * const C )
 {
-    OtaErr_t result = OTA_ERR_NONE;
     int32_t filerc = 0;
+    OtaPalMainStatus_t mainErr = OtaPalSuccess;
+    OtaPalSubStatus_t subErr = 0;
+    OtaPalStatus_t result;
 
     if( C != NULL )
     {
@@ -289,11 +282,13 @@ OtaErr_t otaPal_CloseFile( OtaFileContext_t * const C )
         {
             /* Verify the file signature, close the file and return the signature verification result. */
             result = otaPal_CheckFileSignature( C );
+            mainErr = OTA_PAL_MAIN_ERR( result );
+            subErr = OTA_PAL_SUB_ERR( result );
         }
         else
         {
             LogError( ( "Parameter check failed: OTA signature structure is NULL." ) );
-            result = OTA_ERR_SIGNATURE_CHECK_FAILED;
+            mainErr = OtaPalSignatureCheckFailed;
         }
 
         /* Close the file. */
@@ -306,12 +301,11 @@ OtaErr_t otaPal_CloseFile( OtaFileContext_t * const C )
         if( filerc != 0 )
         {
             LogError( ( "Failed to close OTA update file." ) );
-            result = ( OTA_ERR_FILE_CLOSE | ( ( uint32_t ) errno & ( uint32_t ) OTA_PAL_ERR_MASK ) ); /*lint !e40 !e737 !e9027 !e9029
-                                                                                                       * Errno is being used in accordance with host API documentation.
-                                                                                                       * Bitmasking is being used to preserve host API error with library status code. */
+            mainErr = OtaPalFileClose;
+            subErr = errno;
         }
 
-        if( result == OTA_ERR_NONE )
+        if( mainErr == OtaPalSuccess )
         {
             LogInfo( ( "%s signature verification passed.", OTA_JsonFileSignatureKey ) );
 
@@ -320,7 +314,7 @@ OtaErr_t otaPal_CloseFile( OtaFileContext_t * const C )
         else
         {
             LogError( ( "Failed to pass %s signature verification: %d.",
-                        OTA_JsonFileSignatureKey, result ) );
+                        OTA_JsonFileSignatureKey, OTA_PAL_COMBINE_ERR( mainErr, subErr ) ) );
 
             /* If we fail to verify the file signature that means the image is not valid. We need to set the image state to aborted. */
             ( void ) otaPal_SetPlatformImageState( C, OtaImageStateAborted );
@@ -332,19 +326,19 @@ OtaErr_t otaPal_CloseFile( OtaFileContext_t * const C )
         LogError( ( "Failed to close file: "
                     "Parameter check failed: "
                     "Invalid context." ) );
-        result = OTA_ERR_FILE_CLOSE;
+        mainErr = OtaPalFileClose;
     }
 
-    return result;
+    return OTA_PAL_COMBINE_ERR( mainErr, subErr );
 }
 
-
-static OtaErr_t Openssl_DigestVerify( EVP_MD_CTX * pSigContext,
-                                      EVP_PKEY * pPkey,
-                                      FILE * pFile,
-                                      Sig256_t * pSignature )
+/* Verify the signautre of the input content with OpenSSL. */
+static OtaPalMainStatus_t Openssl_DigestVerify( EVP_MD_CTX * pSigContext,
+                                                EVP_PKEY * pPkey,
+                                                FILE * pFile,
+                                                Sig256_t * pSignature )
 {
-    OtaErr_t result = OTA_ERR_NONE;
+    OtaPalMainStatus_t mainErr = OtaPalSuccess;
     size_t bytesRead;
     uint8_t * pBuf;
 
@@ -381,7 +375,7 @@ static OtaErr_t Openssl_DigestVerify( EVP_MD_CTX * pSigContext,
                                                 pSignature->size ) ) /*lint !e732 !e9034 Allow comparison in this context. */
                 {
                     LogError( ( "File signature check failed at FINAL" ) );
-                    result = OTA_ERR_SIGNATURE_CHECK_FAILED;
+                    mainErr = OtaPalSignatureCheckFailed;
                 }
             }
 
@@ -391,23 +385,22 @@ static OtaErr_t Openssl_DigestVerify( EVP_MD_CTX * pSigContext,
         else
         {
             LogError( ( "Failed to allocate buffer memory." ) );
-            result = OTA_ERR_OUT_OF_MEMORY;
+            mainErr = OtaPalOutOfMemory;
         }
     }
     else
     {
         LogError( ( "File signature check failed at INIT." ) );
-        result = OTA_ERR_SIGNATURE_CHECK_FAILED;
+        mainErr = OtaPalSignatureCheckFailed;
     }
 
-    return result;
+    return mainErr;
 }
 
 /* Verify the signature of the specified file using OpenSSL. */
-
-static OtaErr_t otaPal_CheckFileSignature( OtaFileContext_t * const C )
+static OtaPalStatus_t otaPal_CheckFileSignature( OtaFileContext_t * const C )
 {
-    OtaErr_t result = OTA_ERR_NONE;
+    OtaPalMainStatus_t mainErr = OtaPalSuccess;
     EVP_PKEY * pPkey = NULL;
     EVP_MD_CTX * pSigContext = NULL;
 
@@ -422,19 +415,19 @@ static OtaErr_t otaPal_CheckFileSignature( OtaFileContext_t * const C )
         if( ( pPkey != NULL ) && ( pSigContext != NULL ) )
         {
             /* Verify an ECDSA-SHA256 signature. */
-            result = Openssl_DigestVerify( pSigContext, pPkey, C->pFile, C->pSignature );
+            mainErr = Openssl_DigestVerify( pSigContext, pPkey, C->pFile, C->pSignature );
         }
         else
         {
             if( pSigContext == NULL )
             {
                 LogError( ( "File signature check failed at NEW sig context." ) );
-                result = OTA_ERR_SIGNATURE_CHECK_FAILED;
+                mainErr = OtaPalSignatureCheckFailed;
             }
             else
             {
                 LogError( ( "File signature check failed at EXTRACT pkey from signer certificate." ) );
-                result = OTA_ERR_BAD_SIGNER_CERT;
+                mainErr = OtaPalBadSignerCert;
             }
         }
 
@@ -448,42 +441,40 @@ static OtaErr_t otaPal_CheckFileSignature( OtaFileContext_t * const C )
         LogError( ( "Failed to check file signature: Paramater check failed: "
                     " Invalid OTA file context." ) );
         /* Invalid OTA context or file pointer. */
-        result = OTA_ERR_NULL_FILE_PTR;
+        mainErr = OtaPalNullFileContext;
     }
 
-    return result;
+    return OTA_PAL_COMBINE_ERR( mainErr, 0 );
 }
 
 /*-----------------------------------------------------------*/
 
-OtaErr_t otaPal_ResetDevice( OtaFileContext_t * const C )
+OtaPalStatus_t otaPal_ResetDevice( OtaFileContext_t * const C )
 {
     ( void ) C;
 
     /* Return no error.  linux implementation does not reset device. */
-    return OTA_ERR_NONE;
+    return OTA_PAL_COMBINE_ERR( OtaPalSuccess, 0 );
 }
 
 /*-----------------------------------------------------------*/
 
-OtaErr_t otaPal_ActivateNewImage( OtaFileContext_t * const C )
+OtaPalStatus_t otaPal_ActivateNewImage( OtaFileContext_t * const C )
 {
     ( void ) C;
 
     /* Return no error. linux implementation simply does nothing on activate.
     * To run the new firmware image, double click the newly downloaded exe */
-    return OTA_ERR_NONE;
+    return OTA_PAL_COMBINE_ERR( OtaPalSuccess, 0 );
 }
 
-/*
- * Set the final state of the last transferred (final) OTA file (or bundle).
- * On linux, the state of the OTA image is stored in PlaformImageState.txt.
- */
-
-OtaErr_t otaPal_SetPlatformImageState( OtaFileContext_t * const C,
-                                       OtaImageState_t eState )
+/* Set the final state of the last transferred (final) OTA file (or bundle).
+ * On linux, the state of the OTA image is stored in PlaformImageState.txt. */
+OtaPalStatus_t otaPal_SetPlatformImageState( OtaFileContext_t * const C,
+                                             OtaImageState_t eState )
 {
-    OtaErr_t result = OTA_ERR_NONE;
+    OtaPalMainStatus_t mainErr = OtaPalSuccess;
+    OtaPalSubStatus_t subErr = 0;
     FILE * pPlatformImageState = NULL;
 
     ( void ) C;
@@ -504,9 +495,8 @@ OtaErr_t otaPal_SetPlatformImageState( OtaFileContext_t * const C,
                                                                                                * C standard library call is being used for portability. */
             {
                 LogError( ( "Unable to write to image state file." ) );
-                result = ( OTA_ERR_BAD_IMAGE_STATE | ( ( uint32_t ) errno & ( uint32_t ) OTA_PAL_ERR_MASK ) ); /*lint !e40 !e737 !e9027 !e9029
-                                                                                                                * Errno is being used in accordance with host API documentation.
-                                                                                                                * Bitmasking is being used to preserve host API error with library status code. */
+                mainErr = OtaPalBadImageState;
+                subErr = errno;
             }
 
             /* Close PlatformImageState.txt. */
@@ -515,26 +505,25 @@ OtaErr_t otaPal_SetPlatformImageState( OtaFileContext_t * const C,
             if( 0 != fclose( pPlatformImageState ) ) /*lint !e586 Allow call in this context. */
             {
                 LogError( ( "Unable to close image state file." ) );
-                result = ( OTA_ERR_BAD_IMAGE_STATE | ( ( uint32_t ) errno & ( uint32_t ) OTA_PAL_ERR_MASK ) ); /*lint !e40 !e737 !e9027 !e9029
-                                                                                                                * Errno is being used in accordance with host API documentation.
-                                                                                                                * Bitmasking is being used to preserve host API error with library status code. */
+                mainErr = OtaPalBadImageState;
+                subErr = errno;
             }
         }
         else
         {
             LogError( ( "Unable to open image state file." ) );
-            result = ( OTA_ERR_BAD_IMAGE_STATE | ( ( uint32_t ) errno & ( uint32_t ) OTA_PAL_ERR_MASK ) ); /*lint !e40 !e737 !e9027 !e9029
-                                                                                                            * Errno is being used in accordance with host API documentation.
-                                                                                                            * Bitmasking is being used to preserve host API error with library status code. */
+            mainErr = OtaPalBadImageState;
+            subErr = errno;
         }
-    } /*lint !e481 Allow fopen and fclose calls in this context. */
+    }    /*lint !e481 Allow fopen and fclose calls in this context. */
     else /* Image state invalid. */
     {
         LogError( ( "Invalid image state provided." ) );
-        result = OTA_ERR_BAD_IMAGE_STATE;
+        mainErr = OtaPalBadImageState;
     }
 
-    return result; /*lint !e480 !e481 Allow calls to fopen and fclose in this context. */
+    /* Allow calls to fopen and fclose in this context. */
+    return OTA_PAL_COMBINE_ERR( mainErr, subErr );
 }
 
 /* Get the state of the currently running image.
