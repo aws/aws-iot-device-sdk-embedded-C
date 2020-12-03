@@ -141,6 +141,7 @@ OtaPalStatus_t otaPal_CreateFileForRx( OtaFileContext_t * const C )
         {
             int res = snprintf( realFilePath, OTA_FILE_PATH_LENGTH_MAX, "%s/%s", getenv( "PWD" ), C->pFilePath );
             assert( res >= 0 );
+            ( void ) res; /* Suppress the unused variable warning when assert is off. */
 
             /* Linux port using standard library */
             /* coverity[misra_c_2012_rule_21_6_violation] */
@@ -491,6 +492,7 @@ OtaPalStatus_t otaPal_SetPlatformImageState( OtaFileContext_t * const C,
     {
         int res = snprintf( imageStateFile, OTA_FILE_PATH_LENGTH_MAX, "%s/%s", getenv( "PWD" ), "PlatformImageState.txt" );
         assert( res >= 0 );
+        ( void ) res; /* Suppress the unused variable warning when assert is off. */
 
         /* Linux port using standard library */
         /* coverity[misra_c_2012_rule_21_6_violation] */
@@ -559,6 +561,7 @@ OtaPalImageState_t otaPal_GetPlatformImageState( OtaFileContext_t * const C )
     int res = snprintf( imageStateFile, OTA_FILE_PATH_LENGTH_MAX, "%s/%s", getenv( "PWD" ), "PlatformImageState.txt" );
 
     assert( res >= 0 );
+    ( void ) res; /* Suppress the unused variable warning when assert is off. */
 
     ( void ) C;
 
