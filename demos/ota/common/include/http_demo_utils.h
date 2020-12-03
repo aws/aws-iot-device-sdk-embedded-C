@@ -86,4 +86,4 @@ HTTPStatus_t getUrlAddress( const char * pUrl,
                             const char ** pAddress,
                             size_t * pAddressLen );
 
-#endif
+#endif /* ifndef _HTTP_UTILS_H_ */

@@ -193,12 +193,12 @@
 /**
  * @brief The MQTT metrics string expected by AWS IoT.
  */
-#define METRICS_STRING                           "?SDK=" OS_NAME "&Version=" OS_VERSION "&Platform=" HARDWARE_PLATFORM_NAME "&OTALib=" OTA_LIB
+#define METRICS_STRING           "?SDK=" OS_NAME "&Version=" OS_VERSION "&Platform=" HARDWARE_PLATFORM_NAME "&OTALib=" OTA_LIB
 
 /**
  * @brief The length of the MQTT metrics string expected by AWS IoT.
  */
-#define METRICS_STRING_LENGTH                    ( ( uint16_t ) ( sizeof( METRICS_STRING ) - 1 ) )
+#define METRICS_STRING_LENGTH    ( ( uint16_t ) ( sizeof( METRICS_STRING ) - 1 ) )
 
 
 #ifdef CLIENT_USERNAME
@@ -294,7 +294,7 @@ static char serverHost[ 256 ];
 static size_t serverHostLength;
 
 /**
- * @brief Semaphore for syncronizing buffer operations.
+ * @brief Semaphore for synchronizing buffer operations.
  */
 static sem_t bufferSemaphore;
 
@@ -389,23 +389,23 @@ static int disconnectMqttSession( MQTTContext_t * pMqttContext );
  *
  * This function publishes a message to a given topic & QoS.
  *
- * @param[in] pacTopic Mqtt topic filter.
+ * @param[in] pTopic Mqtt topic filter.
  *
  * @param[in] topicLen Length of the topic filter.
  *
  * @param[in] pMsg Message to publish.
  *
- * @param[in] sgSize Message size.
+ * @param[in] msgSize Message size.
  *
  * @param[in] qos Quality of Service
  *
  * @return OtaMqttSuccess if success , other error code on failure.
  */
-static OtaMqttStatus_t mqttPublish( const char * const pacTopic,
-                             uint16_t topicLen,
-                             const char * pMsg,
-                             uint32_t msgSize,
-                             uint8_t qos );
+static OtaMqttStatus_t mqttPublish( const char * const pTopic,
+                                    uint16_t topicLen,
+                                    const char * pMsg,
+                                    uint32_t msgSize,
+                                    uint8_t qos );
 
 /**
  * @brief Subscribe to the Mqtt topics.
@@ -425,9 +425,9 @@ static OtaMqttStatus_t mqttPublish( const char * const pacTopic,
  * @return OtaMqttSuccess if success , other error code on failure.
  */
 static OtaMqttStatus_t mqttSubscribe( const char * pTopicFilter,
-                               uint16_t topicFilterLength,
-                               uint8_t qos,
-                               OtaMqttCallback_t callback );
+                                      uint16_t topicFilterLength,
+                                      uint8_t qos,
+                                      OtaMqttCallback_t callback );
 
 /**
  * @brief Unsubscribe to the Mqtt topics.
@@ -444,8 +444,8 @@ static OtaMqttStatus_t mqttSubscribe( const char * pTopicFilter,
  * @return  OtaMqttSuccess if success , other error code on failure.
  */
 static OtaMqttStatus_t mqttUnsubscribe( const char * pTopicFilter,
-                                 uint16_t topicFilterLength,
-                                 uint8_t qos );
+                                        uint16_t topicFilterLength,
+                                        uint8_t qos );
 
 
 /**
@@ -989,7 +989,7 @@ static void disconnect( void )
 }
 
 static int32_t connectToS3Server( NetworkContext_t * pNetworkContext,
-                                const char * pUrl )
+                                  const char * pUrl )
 {
     int32_t returnStatus = EXIT_FAILURE;
     HTTPStatus_t httpStatus = HTTPSuccess;
@@ -1011,11 +1011,11 @@ static int32_t connectToS3Server( NetworkContext_t * pNetworkContext,
     /* Retrieve the address location and length from S3_PRESIGNED_GET_URL. */
     if( pUrl != NULL )
     {
-    /* Retrieve the address location and length from S3_PRESIGNED_GET_URL. */
-    httpStatus = getUrlAddress( pUrl,
-                                strlen(pUrl),
-                                &pAddress,
-                                &serverHostLength );
+        /* Retrieve the address location and length from S3_PRESIGNED_GET_URL. */
+        httpStatus = getUrlAddress( pUrl,
+                                    strlen( pUrl ),
+                                    &pAddress,
+                                    &serverHostLength );
     }
 
     if( 1 /* returnStatus == EXIT_SUCCESS */ )
@@ -1088,7 +1088,7 @@ static OtaHttpStatus_t httpInit( const char * pUrl )
          * function returns the length of the path without the query into
          * pathLen, which is left unused in this demo. */
         httpStatus = getUrlPath( pUrl,
-                                 strlen(pUrl),
+                                 strlen( pUrl ),
                                  &pPath,
                                  &pathLen );
 
@@ -1108,7 +1108,7 @@ static OtaHttpStatus_t httpInit( const char * pUrl )
 }
 
 static OtaHttpStatus_t httpRequest( uint32_t rangeStart,
-                             uint32_t rangeEnd )
+                                    uint32_t rangeEnd )
 {
     /* Return value of this method. */
     int32_t returnStatus = EXIT_SUCCESS;
@@ -1226,9 +1226,9 @@ static OtaHttpStatus_t httpDeinit( void )
 /*-----------------------------------------------------------*/
 
 static OtaMqttStatus_t mqttSubscribe( const char * pTopicFilter,
-                               uint16_t topicFilterLength,
-                               uint8_t qos,
-                               OtaMqttCallback_t callback )
+                                      uint16_t topicFilterLength,
+                                      uint8_t qos,
+                                      OtaMqttCallback_t callback )
 {
     OtaMqttStatus_t otaRet = OtaMqttSuccess;
 
@@ -1244,7 +1244,7 @@ static OtaMqttStatus_t mqttSubscribe( const char * pTopicFilter,
     /* Start with everything at 0. */
     ( void ) memset( ( void * ) pSubscriptionList, 0x00, sizeof( pSubscriptionList ) );
 
-    /* Set the QoS , topc and topic length. */
+    /* Set the QoS , topic and topic length. */
     pSubscriptionList[ 0 ].qos = qos;
     pSubscriptionList[ 0 ].pTopicFilter = pTopicFilter;
     pSubscriptionList[ 0 ].topicFilterLength = topicFilterLength;
@@ -1275,11 +1275,11 @@ static OtaMqttStatus_t mqttSubscribe( const char * pTopicFilter,
     return otaRet;
 }
 
-static OtaMqttStatus_t mqttPublish( const char * const pacTopic,
-                             uint16_t topicLen,
-                             const char * pMsg,
-                             uint32_t msgSize,
-                             uint8_t qos )
+static OtaMqttStatus_t mqttPublish( const char * const pTopic,
+                                    uint16_t topicLen,
+                                    const char * pMsg,
+                                    uint32_t msgSize,
+                                    uint8_t qos )
 {
     OtaMqttStatus_t otaRet = OtaMqttSuccess;
 
@@ -1287,8 +1287,8 @@ static OtaMqttStatus_t mqttPublish( const char * const pacTopic,
     MQTTPublishInfo_t publishInfo;
     MQTTContext_t * pMqttContext = &mqttContext;
 
-    /* Set the required publish paramters. */
-    publishInfo.pTopicName = pacTopic;
+    /* Set the required publish parameters. */
+    publishInfo.pTopicName = pTopic;
     publishInfo.topicNameLength = topicLen;
     publishInfo.qos = qos;
     publishInfo.pPayload = pMsg;
@@ -1308,15 +1308,15 @@ static OtaMqttStatus_t mqttPublish( const char * const pacTopic,
     {
         LogInfo( ( "Sent PUBLISH packet to broker %.*s to broker.\n\n",
                    topicLen,
-                   pacTopic ) );
+                   pTopic ) );
     }
 
     return otaRet;
 }
 
 static OtaMqttStatus_t mqttUnsubscribe( const char * pTopicFilter,
-                                 uint16_t topicFilterLength,
-                                 uint8_t qos )
+                                        uint16_t topicFilterLength,
+                                        uint8_t qos )
 {
     OtaMqttStatus_t otaRet = OtaMqttSuccess;
     MQTTStatus_t mqttStatus;
@@ -1327,7 +1327,7 @@ static OtaMqttStatus_t mqttUnsubscribe( const char * pTopicFilter,
     /* Start with everything at 0. */
     ( void ) memset( ( void * ) pSubscriptionList, 0x00, sizeof( pSubscriptionList ) );
 
-    /* Set the QoS , topc and topic length. */
+    /* Set the QoS , topic and topic length. */
     pSubscriptionList[ 0 ].qos = qos;
     pSubscriptionList[ 0 ].pTopicFilter = pTopicFilter;
     pSubscriptionList[ 0 ].topicFilterLength = topicFilterLength;
@@ -1558,7 +1558,7 @@ int main( int argc,
     /* Return error status. */
     int returnStatus = EXIT_SUCCESS;
 
-      LogInfo( ( "OTA over HTTP demo, Application version %u.%u.%u",
+    LogInfo( ( "OTA over HTTP demo, Application version %u.%u.%u",
                appFirmwareVersion.u.x.major,
                appFirmwareVersion.u.x.minor,
                appFirmwareVersion.u.x.build ) );

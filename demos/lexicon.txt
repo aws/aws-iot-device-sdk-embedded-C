@@ -298,6 +298,7 @@ mqttkeepalivetimeout
 mqttprocessincomingpacket
 mqttsubackfailure
 msg
+msgsize
 msys
 mul
 mutex
@@ -330,6 +331,7 @@ optionalquery
 org
 os
 ota
+otamqttsuccess
 outform
 outgoingpublishpackets
 outlength
@@ -377,11 +379,13 @@ pmessage
 pmethod
 pmetrics
 pmqttcontext
+pmsg
 pnetworkcontext
 poly
 popenportsarray
 portsarraylength
 posix
+potainterfaces
 poutcharswritten
 poutconnectionsarray
 poutnetworkstats
@@ -534,7 +538,9 @@ tls
 tokenpresent
 toolchain
 topicbuffer
+topicfilter
 topicfilterlength
+topiclen
 topiclength
 transportinterface
 transporttimeout
