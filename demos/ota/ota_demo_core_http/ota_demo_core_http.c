@@ -96,32 +96,32 @@
  * in the link below.
  * https://aws.amazon.com/blogs/iot/mqtt-with-tls-client-authentication-on-port-443-why-it-is-useful-and-how-it-works/
  */
-#define AWS_IOT_MQTT_ALPN                   "\x0ex-amzn-mqtt-ca"
+#define AWS_IOT_MQTT_ALPN                        "\x0ex-amzn-mqtt-ca"
 
 /**
  * @brief Length of ALPN protocol name.
  */
-#define AWS_IOT_MQTT_ALPN_LENGTH            ( ( uint16_t ) ( sizeof( AWS_IOT_MQTT_ALPN ) - 1 ) )
+#define AWS_IOT_MQTT_ALPN_LENGTH                 ( ( uint16_t ) ( sizeof( AWS_IOT_MQTT_ALPN ) - 1 ) )
 
 /**
  * @brief Length of MQTT server host name.
  */
-#define AWS_IOT_ENDPOINT_LENGTH             ( ( uint16_t ) ( sizeof( AWS_IOT_ENDPOINT ) - 1 ) )
+#define AWS_IOT_ENDPOINT_LENGTH                  ( ( uint16_t ) ( sizeof( AWS_IOT_ENDPOINT ) - 1 ) )
 
 /**
  * @brief Length of client identifier.
  */
-#define CLIENT_IDENTIFIER_LENGTH            ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) )
+#define CLIENT_IDENTIFIER_LENGTH                 ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) )
 
 /**
  * @brief Transport timeout in milliseconds for transport send and receive.
  */
-#define TRANSPORT_SEND_RECV_TIMEOUT_MS      ( 500 )
+#define TRANSPORT_SEND_RECV_TIMEOUT_MS           ( 500 )
 
 /**
  * @brief Timeout for receiving CONNACK packet in milli seconds.
  */
-#define CONNACK_RECV_TIMEOUT_MS             ( 2000U )
+#define CONNACK_RECV_TIMEOUT_MS                  ( 2000U )
 
 /**
  * @brief The maximum time interval in seconds which is allowed to elapse
@@ -132,12 +132,12 @@
  * absence of sending any other Control Packets, the Client MUST send a
  * PINGREQ Packet.
  */
-#define MQTT_KEEP_ALIVE_INTERVAL_SECONDS    ( 60U )
+#define MQTT_KEEP_ALIVE_INTERVAL_SECONDS         ( 60U )
 
 /**
  * @brief Timeout for MQTT_ProcessLoop function in milliseconds.
  */
-#define MQTT_PROCESS_LOOP_TIMEOUT_MS        ( 500U )
+#define MQTT_PROCESS_LOOP_TIMEOUT_MS             ( 500U )
 
 /**
  * @brief The delay used in the main OTA Demo task loop to periodically output the OTA
@@ -174,12 +174,12 @@
 /**
  * @brief Maximum size of the url.
  */
-#define OTA_MAX_URL_SIZE ( 2048U )
+#define OTA_MAX_URL_SIZE                         ( 2048U )
 
 /**
  * @brief Maximum size of the auth scheme.
  */
-#define OTA_MAX_AUTH_SCHEME_SIZE ( 2048U )
+#define OTA_MAX_AUTH_SCHEME_SIZE                 ( 2048U )
 
 /**
  * @brief Size of the network buffer to receive the MQTT message.
@@ -188,12 +188,12 @@
  * otaconfigFILE_BLOCK_SIZE + extra for headers.
  */
 
-#define OTA_NETWORK_BUFFER_SIZE                  ( otaconfigFILE_BLOCK_SIZE + OTA_MAX_URL_SIZE + 128 )
+#define OTA_NETWORK_BUFFER_SIZE          ( otaconfigFILE_BLOCK_SIZE + OTA_MAX_URL_SIZE + 128 )
 
 /**
  * @brief The maximum number of retries for connecting to server.
  */
-#define CONNECTION_RETRY_MAX_ATTEMPTS            ( 5U )
+#define CONNECTION_RETRY_MAX_ATTEMPTS    ( 5U )
 
 /* Check that size of the user buffer is defined. */
 #ifndef USER_BUFFER_LENGTH
@@ -1214,7 +1214,7 @@ static OtaHttpStatus_t httpRequest( uint32_t rangeStart,
         if( httpStatus == HTTPNoResponse )
         {
             /* reconnect to server. */
-            connectToS3Server( &networkContextHttp , NULL );
+            connectToS3Server( &networkContextHttp, NULL );
         }
         else
         {
