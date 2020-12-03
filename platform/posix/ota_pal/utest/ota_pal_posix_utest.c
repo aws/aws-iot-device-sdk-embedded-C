@@ -39,9 +39,12 @@
 /* For accessing OTA private functions. */
 #include "ota_private.h"
 #include "ota_pal_posix.h"
+#include "mock_stdio_api.h"
 
 /* Unit test config. */
 #include "ota_utest_config.h"
+/* errno error macro. errno.h can't be included in this file due to mocking. */
+#define ENOENT 0x02
 
 /* For the otaPal_WriteBlock_WriteManyBlocks test this is the number of blocks of
  * dummyData to write to the non-volatile memory. */
@@ -159,13 +162,27 @@ void test_OTAPAL_Abort_NullFileHandle( void )
 void test_OTAPAL_Abort_ValidFileHandle( void )
 {
     OtaPalMainStatus_t result;
+    FILE placeholder_file;
+    otaFile.pFilePath = ( uint8_t * ) "placeholder_path";
+    otaFile.pFile = &placeholder_file;
 
-    otaFile.pFilePath = ( uint8_t * ) OTA_PAL_UTEST_FIRMWARE_FILE;
-    result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
-    TEST_ASSERT_EQUAL( OtaPalSuccess, result );
+    fclose_ExpectAnyArgsAndReturn( 0 );
 
     result = OTA_PAL_MAIN_ERR( otaPal_Abort( &otaFile ) );
     TEST_ASSERT_EQUAL( OtaPalSuccess, result );
+}
+
+void test_OTAPAL_Abort_FileCloseFail( void )
+{
+    OtaPalMainStatus_t result;
+
+    otaFile.pFilePath = ( uint8_t * ) otatestpalFIRMWARE_FILE;
+    otaFile.pFile = (FILE *) "placeholder";
+
+    fclose_ExpectAnyArgsAndReturn( EOF );
+
+    result = otaPal_Abort( &otaFile );
+    TEST_ASSERT_EQUAL( OTA_PAL_COMBINE_ERR( OtaPalFileClose , ENOENT ), result );
 }
 
 /**
@@ -211,17 +228,16 @@ void test_OTAPAL_CreateFileForRx_NullFilePath( void )
 void test_OTAPAL_CreateFileForRx_FailedToCreateFile( void )
 {
     OtaPalMainStatus_t result;
+    FILE placeholder_file;
 
-    chmod( OTA_PAL_UTEST_FIRMWARE_FILE, S_IRUSR );
-    otaFile.pFilePath = ( uint8_t * ) OTA_PAL_UTEST_FIRMWARE_FILE;
+    otaFile.pFilePath = ( uint8_t * ) "placeholder_path";
+    otaFile.pFile = &placeholder_file;
+
+    fopen_ExpectAnyArgsAndReturn( NULL );
 
     /* Create a file that exists with w+b mode */
     result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
     TEST_ASSERT_EQUAL( OtaPalRxFileCreateFailed, result );
-
-    chmod( OTA_PAL_UTEST_FIRMWARE_FILE, S_IRWXU );
-    result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
-    TEST_ASSERT_EQUAL( OtaPalSuccess, result );
 }
 
 /**
@@ -230,8 +246,10 @@ void test_OTAPAL_CreateFileForRx_FailedToCreateFile( void )
 void test_OTAPAL_CreateFileForRx_ValidFileHandle( void )
 {
     OtaPalMainStatus_t result;
+    FILE placeholder_file;
+    otaFile.pFilePath = ( uint8_t * ) "placeholder_path";
 
-    otaFile.pFilePath = ( uint8_t * ) OTA_PAL_UTEST_FIRMWARE_FILE;
+    fopen_ExpectAnyArgsAndReturn( &placeholder_file );
     result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
     TEST_ASSERT_EQUAL( OtaPalSuccess, result );
 }
@@ -242,63 +260,49 @@ void test_OTAPAL_CreateFileForRx_ValidFileHandle( void )
  */
 void test_OTAPAL_WriteBlock_NullFileContext( void )
 {
-    int16_t bytes_written = 0;
+    int16_t result = 0;
     uint8_t data = 0xAA;
+    uint32_t blockSize = 1;
 
-    bytes_written = otaPal_WriteBlock( NULL, 0, &data, 1 );
-    TEST_ASSERT_EQUAL( OtaPalSuccess, bytes_written + 1 );
+    result = otaPal_WriteBlock( NULL, 0, &data, blockSize );
+    TEST_ASSERT_EQUAL( -1 , result );
 }
-
 
 /**
  * @brief Test that otaPal_WriteBlock will return correct result code.
  */
 void test_OTAPAL_WriteBlock_WriteSingleByte( void )
 {
-    OtaPalMainStatus_t result;
     int16_t numBytesWritten;
     uint8_t data = 0xAA;
+    uint32_t blockSize = 1;
 
     /* TEST: Write a byte of data. */
-    otaFile.pFilePath = ( uint8_t * ) OTA_PAL_UTEST_FIRMWARE_FILE;
-    result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
-    TEST_ASSERT_EQUAL( OtaPalSuccess, result );
-
-    if( TEST_PROTECT() )
-    {
-        numBytesWritten = otaPal_WriteBlock( &otaFile, 0, &data, 1 );
-        TEST_ASSERT_EQUAL_INT( 1, numBytesWritten );
-    }
+    otaFile.pFilePath = ( uint8_t * ) otatestpalFIRMWARE_FILE;
+    fseek_alias_ExpectAnyArgsAndReturn(0);
+    fwrite_alias_ExpectAnyArgsAndReturn(blockSize);
+    numBytesWritten = otaPal_WriteBlock( &otaFile, 0, &data, blockSize );
+    TEST_ASSERT_EQUAL_INT( blockSize, numBytesWritten );
 }
 
 /**
  * @brief Test that otaPal_WriteBlock will return correct result code.
  */
-void test_OTAPAL_WriteBlock_WriteManyBlocks( void )
+void test_OTAPAL_WriteBlock_WriteMultipleBytes( void )
 {
     OtaPalMainStatus_t result;
     int16_t numBytesWritten;
+    int index = 0;
+    uint8_t pData[] = {0xAA, 0xBB, 0xCC, 0xDD, 0xEE};
+    uint32_t blockSize = sizeof( pData[0] );
 
-    otaFile.pFilePath = ( uint8_t * ) OTA_PAL_UTEST_FIRMWARE_FILE;
-    otaFile.fileSize = sizeof( dummyData ) * testotapalNUM_WRITE_BLOCKS;
-    /* TEST: Write many bytes of data. */
-
-    otaFile.pFilePath = ( uint8_t * ) OTA_PAL_UTEST_FIRMWARE_FILE;
-    result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
-    TEST_ASSERT_EQUAL( OtaPalSuccess, result );
-
-    if( TEST_PROTECT() )
+    /* TEST: Write multiple bytes of data. */
+    for( index = 0; index < testotapalNUM_WRITE_BLOCKS; index++ )
     {
-        int index = 0;
-
-        for( index = 0; index < testotapalNUM_WRITE_BLOCKS; index++ )
-        {
-            numBytesWritten = otaPal_WriteBlock( &otaFile, index * sizeof( dummyData ), dummyData, sizeof( dummyData ) );
-            TEST_ASSERT_EQUAL_INT( sizeof( dummyData ), numBytesWritten );
-        }
-
-        /* Sufficient delay for flash write to complete. */
-        /* vTaskDelay( pdMS_TO_TICKS( testotapalWRITE_BLOCKS_DELAY_MS ) ); */
+        fseek_alias_ExpectAnyArgsAndReturn(0);
+        fwrite_alias_ExpectAnyArgsAndReturn( blockSize );
+        numBytesWritten = otaPal_WriteBlock( &otaFile, index * blockSize, pData, blockSize );
+        TEST_ASSERT_EQUAL_INT( blockSize, numBytesWritten );
     }
 }
 
@@ -307,6 +311,16 @@ void test_OTAPAL_WriteBlock_WriteManyBlocks( void )
  */
 void test_OTAPAL_WriteBlock_FseekError( void )
 {
+    int16_t numBytesWritten;
+    uint8_t data = 0xAA;
+    uint32_t blockSize = 1;
+    const int16_t fseek_error_num = 1; /* fseek returns a non-zero number on error. */
+    OtaFileContext_t validFileContext;
+
+    /* TEST: Write a byte of data. */
+    fseek_alias_ExpectAnyArgsAndReturn(fseek_error_num);
+    numBytesWritten = otaPal_WriteBlock( &validFileContext, 0, &data, blockSize );
+    TEST_ASSERT_EQUAL_INT( -1 , numBytesWritten );
 }
 
 /**
@@ -314,6 +328,20 @@ void test_OTAPAL_WriteBlock_FseekError( void )
  */
 void test_OTAPAL_WriteBlock_FwriteError( void )
 {
+    int16_t numBytesWritten;
+    uint8_t data = 0xAA;
+    uint32_t blockSize = 1;
+    OtaFileContext_t validFileContext;
+    const int32_t fseekSuccessReturn = 0; /* fseek returns a zero on success. */
+    const size_t fwriteErrorReturn = 0; /* fwrite returns a number less than the requested number of bytes to write on error. */
+    const int16_t writeblockErrorReturn = -1;
+
+    fseek_alias_ExpectAnyArgsAndReturn(fseekSuccessReturn);
+    fwrite_alias_ExpectAnyArgsAndReturn(fwriteErrorReturn);
+
+    /* fwrite returns a number less than the amount requested to write on error. */
+    numBytesWritten = otaPal_WriteBlock( &validFileContext, 0, &data, blockSize );
+    TEST_ASSERT_EQUAL_INT( writeblockErrorReturn , numBytesWritten );
 }
 
 void test_OTAPAL_CloseFile_ValidSignature( void )
