@@ -67,7 +67,7 @@
 #define EC_D_LENGTH                 32
 
 /* See core_pkcs11_mbedtls.c for length explanation. */
-#define pkcs11EC_POINT_LENGTH                 ( ( 32UL * 2UL ) + 1UL + 1UL + 1UL )
+#define pkcs11EC_POINT_LENGTH       ( ( 32UL * 2UL ) + 1UL + 1UL + 1UL )
 
 typedef struct RsaParams_t
 {
