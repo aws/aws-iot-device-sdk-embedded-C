@@ -66,6 +66,8 @@
 #define EC_PARAMS_LENGTH            10
 #define EC_D_LENGTH                 32
 
+/* See core_pkcs11_mbedtls.c for length explanation. */
+#define pkcs11EC_POINT_LENGTH                 ( ( 32UL * 2UL ) + 1UL + 1UL + 1UL )
 
 typedef struct RsaParams_t
 {
@@ -1336,7 +1338,7 @@ void test_GenerateKeyPair_EC( void )
     CK_OBJECT_HANDLE publicKeyHandle = CK_INVALID_HANDLE;
     CK_OBJECT_HANDLE certificateHandle = CK_INVALID_HANDLE;
 
-    CK_BYTE ecPoint[ 67 ] = { 0 };
+    CK_BYTE ecPoint[ pkcs11EC_POINT_LENGTH ] = { 0 };
     CK_BYTE privateKeyBuffer[ 32 ] = { 0 };
     CK_KEY_TYPE keyType;
     CK_ATTRIBUTE template;
@@ -1740,7 +1742,7 @@ static CK_RV provisionPublicKey( CK_SESSION_HANDLE session,
     {
         CK_BYTE ecParams[] = pkcs11DER_ENCODED_OID_P256;
         size_t length;
-        CK_BYTE ecPoint[ 67 ] = { 0 };
+        CK_BYTE ecPoint[ pkcs11EC_POINT_LENGTH ] = { 0 };
 
         mbedtls_ecdsa_context * ecdsaContextPtr = ( mbedtls_ecdsa_context * ) mbedPkContext.pk_ctx;
 
