@@ -44,6 +44,11 @@
 static const char signingcredentialSIGNING_CERTIFICATE_PEM[] = "Paste code signing certificate here.";
 
 /**
+ * @brief Maximum file path length on Linux
+ */
+#define OTA_FILE_PATH_LENGTH_MAX    512
+
+/**
  * @brief Abort an OTA transfer.
  *
  * Aborts access to an existing open file represented by the OTA file context pFileContext. This is

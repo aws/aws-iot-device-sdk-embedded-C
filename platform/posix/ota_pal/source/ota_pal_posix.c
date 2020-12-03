@@ -27,6 +27,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <assert.h>
+#include <libgen.h>
 
 #include "ota.h"
 #include "ota_pal_posix.h"
@@ -131,14 +133,18 @@ static EVP_PKEY * Openssl_GetPkeyFromCertificate( uint8_t * pCertFilePath )
 OtaPalStatus_t otaPal_CreateFileForRx( OtaFileContext_t * const C )
 {
     OtaPalStatus_t result = OTA_PAL_COMBINE_ERR( OtaPalUninitialized, 0 );
+    char realFilePath[ OTA_FILE_PATH_LENGTH_MAX ];
 
     if( C != NULL )
     {
         if( C->pFilePath != NULL )
         {
+            int res = snprintf( realFilePath, OTA_FILE_PATH_LENGTH_MAX, "%s/%s", getenv( "PWD" ), C->pFilePath );
+            assert( res >= 0 );
+
             /* Linux port using standard library */
             /* coverity[misra_c_2012_rule_21_6_violation] */
-            C->pFile = fopen( ( const char * ) C->pFilePath, "w+b" ); /*lint !e586
+            C->pFile = fopen( ( const char * ) realFilePath, "w+b" ); /*lint !e586
                                                                        * C standard library call is being used for portability. */
 
             if( C->pFile != NULL )
@@ -149,7 +155,7 @@ OtaPalStatus_t otaPal_CreateFileForRx( OtaFileContext_t * const C )
             else
             {
                 result = OTA_PAL_COMBINE_ERR( OtaPalRxFileCreateFailed, errno );
-                LogError( ( "Failed to start operation: Operation already started." ) );
+                LogError( ( "Failed to start operation: Operation already started. failed to open -- %s Path ", C->pFilePath ) );
             }
         }
         else
@@ -476,15 +482,20 @@ OtaPalStatus_t otaPal_SetPlatformImageState( OtaFileContext_t * const C,
     OtaPalMainStatus_t mainErr = OtaPalSuccess;
     OtaPalSubStatus_t subErr = 0;
     FILE * pPlatformImageState = NULL;
+    char imageStateFile[ OTA_FILE_PATH_LENGTH_MAX ];
+
 
     ( void ) C;
 
     if( ( eState != OtaImageStateUnknown ) && ( eState <= OtaLastImageState ) )
     {
+        int res = snprintf( imageStateFile, OTA_FILE_PATH_LENGTH_MAX, "%s/%s", getenv( "PWD" ), "PlatformImageState.txt" );
+        assert( res >= 0 );
+
         /* Linux port using standard library */
         /* coverity[misra_c_2012_rule_21_6_violation] */
-        pPlatformImageState = fopen( "PlatformImageState.txt", "w+b" ); /*lint !e586
-                                                                         * C standard library call is being used for portability. */
+        pPlatformImageState = fopen( imageStateFile, "w+b" ); /*lint !e586
+                                                               * C standard library call is being used for portability. */
 
         if( pPlatformImageState != NULL )
         {
@@ -494,7 +505,7 @@ OtaPalStatus_t otaPal_SetPlatformImageState( OtaFileContext_t * const C,
             if( 1UL != fwrite( &eState, sizeof( OtaImageState_t ), 1, pPlatformImageState ) ) /*lint !e586 !e9029
                                                                                                * C standard library call is being used for portability. */
             {
-                LogError( ( "Unable to write to image state file." ) );
+                LogError( ( "Unable to write to image state file. error-- %d", errno ) );
                 mainErr = OtaPalBadImageState;
                 subErr = errno;
             }
@@ -511,7 +522,7 @@ OtaPalStatus_t otaPal_SetPlatformImageState( OtaFileContext_t * const C,
         }
         else
         {
-            LogError( ( "Unable to open image state file." ) );
+            LogError( ( "Unable to open image state file. error -- %d", errno ) );
             mainErr = OtaPalBadImageState;
             subErr = errno;
         }
@@ -543,13 +554,18 @@ OtaPalImageState_t otaPal_GetPlatformImageState( OtaFileContext_t * const C )
     FILE * pPlatformImageState;
     OtaImageState_t eSavedAgentState = OtaImageStateUnknown;
     OtaPalImageState_t ePalState = OtaPalImageStateUnknown;
+    char imageStateFile[ OTA_FILE_PATH_LENGTH_MAX ];
+
+    int res = snprintf( imageStateFile, OTA_FILE_PATH_LENGTH_MAX, "%s/%s", getenv( "PWD" ), "PlatformImageState.txt" );
+
+    assert( res >= 0 );
 
     ( void ) C;
 
     /* Linux port using standard library */
     /* coverity[misra_c_2012_rule_21_6_violation] */
-    pPlatformImageState = fopen( "PlatformImageState.txt", "r+b" ); /*lint !e586
-                                                                     * C standard library call is being used for portability. */
+    pPlatformImageState = fopen( imageStateFile, "r+b" ); /*lint !e586
+                                                           * C standard library call is being used for portability. */
 
     if( pPlatformImageState != NULL )
     {
