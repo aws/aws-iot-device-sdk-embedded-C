@@ -127,7 +127,7 @@
  * No two clients may use the same client identifier simultaneously.
  */
 #ifndef CLIENT_IDENTIFIER
-    #define CLIENT_IDENTIFIER    "...insert here..."
+    #define CLIENT_IDENTIFIER    "testclient"
 #endif
 
 /**
