@@ -140,15 +140,6 @@
 #define MQTT_PROCESS_LOOP_TIMEOUT_MS        ( 500U )
 
 /**
- * @brief Size of the network buffer to receive the MQTT message.
- *
- * The largest message size is data size from the AWS IoT streaming service,
- * otaconfigFILE_BLOCK_SIZE + extra for headers.
- */
-
-#define OTA_NETWORK_BUFFER_SIZE                  ( otaconfigFILE_BLOCK_SIZE + 128 )
-
-/**
  * @brief The delay used in the main OTA Demo task loop to periodically output the OTA
  * statistics like number of packets received, dropped, processed and queued per connection.
  */
@@ -179,6 +170,25 @@
  * @brief Number of milliseconds in a second.
  */
 #define NUM_MILLISECONDS_IN_SECOND               ( 1000U )
+
+/**
+ * @brief Maximum size of the url.
+ */
+#define OTA_MAX_URL_SIZE ( 2048U )
+
+/**
+ * @brief Maximum size of the auth scheme.
+ */
+#define OTA_MAX_AUTH_SCHEME_SIZE ( 2048U )
+
+/**
+ * @brief Size of the network buffer to receive the MQTT message.
+ *
+ * The largest message size is data size from the AWS IoT streaming service,
+ * otaconfigFILE_BLOCK_SIZE + extra for headers.
+ */
+
+#define OTA_NETWORK_BUFFER_SIZE                  ( otaconfigFILE_BLOCK_SIZE + OTA_MAX_URL_SIZE + 128 )
 
 /**
  * @brief The maximum number of retries for connecting to server.
@@ -281,6 +291,11 @@ static bool mqttSessionEstablished = false;
 static OpensslParams_t opensslParams;
 
 /**
+ * @brief Structure for openssl parameters.
+ */
+static OpensslParams_t opensslParamsHttp;
+
+/**
  * @brief The host address string extracted from the pre-signed URL.
  *
  * @note S3_PRESIGNED_GET_URL_LENGTH is set as the array length here as the
@@ -334,6 +349,16 @@ uint8_t decodeMem[ otaconfigFILE_BLOCK_SIZE ];
 uint8_t bitmap[ OTA_MAX_BLOCK_BITMAP_SIZE ];
 
 /**
+ * @brief Certificate File path buffer.
+ */
+uint8_t updateUrl[ OTA_MAX_URL_SIZE ];
+
+/**
+ * @brief Auth scheme buffer.
+ */
+uint8_t authScheme[ OTA_MAX_URL_SIZE ];
+
+/**
  * @brief Event buffer.
  */
 static OtaEventData_t eventBuffer[ otaconfigMAX_NUM_OTA_DATA_BUFFERS ];
@@ -347,12 +372,14 @@ static OtaAppBuffer_t otaBuffer =
     .updateFilePathsize = OTA_MAX_FILE_PATH_SIZE,
     .pCertFilePath      = certFilePath,
     .certFilePathSize   = OTA_MAX_FILE_PATH_SIZE,
-    .pStreamName        = streamName,
-    .streamNameSize     = OTA_MAX_STREAM_NAME_SIZE,
     .pDecodeMemory      = decodeMem,
     .decodeMemorySize   = otaconfigFILE_BLOCK_SIZE,
     .pFileBitmap        = bitmap,
-    .fileBitmapSize     = OTA_MAX_BLOCK_BITMAP_SIZE
+    .fileBitmapSize     = OTA_MAX_BLOCK_BITMAP_SIZE,
+    .pUrl               = updateUrl,
+    .urlSize            = OTA_MAX_URL_SIZE,
+    .pAuthScheme        = authScheme,
+    .authSchemeSize     = OTA_MAX_AUTH_SCHEME_SIZE
 };
 
 /*-----------------------------------------------------------*/
@@ -991,7 +1018,7 @@ static void disconnect( void )
 static int32_t connectToS3Server( NetworkContext_t * pNetworkContext,
                                   const char * pUrl )
 {
-    int32_t returnStatus = EXIT_FAILURE;
+    int32_t returnStatus = EXIT_SUCCESS;
     HTTPStatus_t httpStatus = HTTPSuccess;
 
     /* The location of the host address within the pre-signed URL. */
@@ -1016,14 +1043,14 @@ static int32_t connectToS3Server( NetworkContext_t * pNetworkContext,
                                     strlen( pUrl ),
                                     &pAddress,
                                     &serverHostLength );
-    }
 
-    if( 1 /* returnStatus == EXIT_SUCCESS */ )
-    {
         /* serverHost should consist only of the host address. */
         memcpy( serverHost, pAddress, serverHostLength );
         serverHost[ serverHostLength ] = '\0';
+    }
 
+    if( returnStatus != EXIT_FAILURE )
+    {
         /* Initialize server information. */
         serverInfo.pHostName = serverHost;
         serverInfo.hostNameLength = serverHostLength;
@@ -1065,6 +1092,9 @@ static OtaHttpStatus_t httpInit( const char * pUrl )
      * query information following the location of the object, to the end of the
      * S3 presigned URL. */
     size_t pathLen = 0;
+
+    /* Set the pParams member of the network context with desired transport. */
+    networkContextHttp.pParams = &opensslParamsHttp;
 
     /* Establish HTTPs connection */
     LogInfo( ( "Performing TLS handshake on top of the TCP connection." ) );
@@ -1184,7 +1214,7 @@ static OtaHttpStatus_t httpRequest( uint32_t rangeStart,
         if( httpStatus == HTTPNoResponse )
         {
             /* reconnect to server. */
-            connectToServerWithBackoffRetries( &networkContextHttp );
+            connectToS3Server( &networkContextHttp , NULL );
         }
         else
         {
