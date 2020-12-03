@@ -73,7 +73,7 @@ if(${BUILD_TESTS})
     # Create a list for each unit test target.
     set(utest_targets
         openssl_utest sockets_utest
-        plaintext_utest clock_utest ota_pal_posix_utest)
+        plaintext_utest clock_utest)
 
     # Add a target for running coverage on tests.
     add_custom_target(coverage

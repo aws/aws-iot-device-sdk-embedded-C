@@ -10,4 +10,4 @@ find_library(LIB_RT rt REQUIRED)
 add_subdirectory( ${PLATFORM_DIR}/posix )
 
 # Add ota porting targets
-add_subdirectory( ${PLATFORM_DIR}/posix/ota_pal )
+# add_subdirectory( ${PLATFORM_DIR}/posix/ota_pal )
