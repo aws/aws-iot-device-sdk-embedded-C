@@ -8,11 +8,12 @@ set( project_name "ota_pal" )
 
 #list the files to mock here
 list( APPEND mock_list
-      ""
+      ${CMAKE_CURRENT_LIST_DIR}/mocks/stdio_api.h
       )
 #list the directories your mocks need
 list( APPEND mock_include_list
-      ""
+      ${LOGGING_INCLUDE_DIRS}
+      ${PLATFORM_DIR}/include
       )
 #list the definitions of your mocks to control what to be included
 list( APPEND mock_define_list
@@ -41,12 +42,20 @@ list ( APPEND test_include_directories
        ${CMAKE_CURRENT_BINARY_DIR}/include
        ${CMAKE_CURRENT_LIST_DIR}
        ${MODULES_DIR}/aws/ota/source/include
+       /usr/include/x86_64-linux-gnu/sys
+       mocks
        )
 
 #== ===========================  (end edit)  ===================================
-set ( mock_name "" )
+set ( mock_name "stdio_mock" )
 set ( real_name "ota_pal_real" )
 
+create_mock_list(${mock_name}
+                "${mock_list}"
+                "${ROOT_DIR}/tools/cmock/ota.yml"
+                "${mock_include_list}"
+                "${mock_define_list}"
+        )
 
 create_real_library ( ${real_name}
                       "${real_source_files}"
