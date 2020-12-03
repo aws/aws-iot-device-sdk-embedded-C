@@ -243,10 +243,6 @@ static NetworkContext_t networkContext;
  */
 static NetworkContext_t networkContextHttp;
 
-/**
- * @brief HTTP URL information.
- */
-httpUrlInfo_t UrlInfo;
 
 /**
  * @brief The host address string extracted from the pre-signed URL.
@@ -285,6 +281,19 @@ static bool mqttSessionEstablished = false;
 static OpensslParams_t opensslParams;
 
 /**
+ * @brief The host address string extracted from the pre-signed URL.
+ *
+ * @note S3_PRESIGNED_GET_URL_LENGTH is set as the array length here as the
+ * length of the host name string cannot exceed this value.
+ */
+static char serverHost[ 256 ];
+
+/**
+ * @brief The length of the host address found in the pre-signed URL.
+ */
+static size_t serverHostLength;
+
+/**
  * @brief Semaphore for syncronizing buffer operations.
  */
 static sem_t bufferSemaphore;
@@ -293,6 +302,11 @@ static sem_t bufferSemaphore;
  * @brief The network buffer must remain valid when OTA library task is running.
  */
 static uint8_t otaNetworkBuffer[ OTA_NETWORK_BUFFER_SIZE ];
+
+/**
+ * @brief The location of the path within the pre-signed URL.
+ */
+static const char * pPath;
 
 /**
  * @brief Update File path buffer.
@@ -342,6 +356,8 @@ static OtaAppBuffer_t otaBuffer =
 };
 
 /*-----------------------------------------------------------*/
+
+static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext );
 
 /**
  * @brief Sends an MQTT CONNECT packet over the already connected TCP socket.
@@ -973,7 +989,7 @@ static void disconnect( void )
 }
 
 static int32_t connectToS3Server( NetworkContext_t * pNetworkContext,
-                                char * pUrl )
+                                const char * pUrl )
 {
     int32_t returnStatus = EXIT_FAILURE;
     HTTPStatus_t httpStatus = HTTPSuccess;
@@ -995,22 +1011,22 @@ static int32_t connectToS3Server( NetworkContext_t * pNetworkContext,
     /* Retrieve the address location and length from S3_PRESIGNED_GET_URL. */
     if( pUrl != NULL )
     {
-        getUrlAddress( pUrl,
-                       strlen( pUrl ),
-                       &UrlInfo.pAddress,
-                       &UrlInfo.addressLength );
+    /* Retrieve the address location and length from S3_PRESIGNED_GET_URL. */
+    httpStatus = getUrlAddress( pUrl,
+                                strlen(pUrl),
+                                &pAddress,
+                                &serverHostLength );
     }
 
     if( 1 /* returnStatus == EXIT_SUCCESS */ )
     {
-        /* serverHost should consist only of the host address located in
-         * S3_PRESIGNED_GET_URL. */
-        memcpy( serverHost, UrlInfo.pAddress, UrlInfo.addressLength );
-        serverHost[ UrlInfo.addressLength ] = '\0';
+        /* serverHost should consist only of the host address. */
+        memcpy( serverHost, pAddress, serverHostLength );
+        serverHost[ serverHostLength ] = '\0';
 
         /* Initialize server information. */
         serverInfo.pHostName = serverHost;
-        serverInfo.hostNameLength = UrlInfo.addressLength;
+        serverInfo.hostNameLength = serverHostLength;
         serverInfo.port = AWS_HTTPS_PORT;
 
         /* Establish a TLS session with the HTTP server. This example connects
@@ -1037,8 +1053,18 @@ static OtaHttpStatus_t httpInit( const char * pUrl )
     /* OTA lib return error code. */
     OtaHttpStatus_t ret = OtaHttpSuccess;
 
+    /* HTTPS Client library return status. */
+    HTTPStatus_t httpStatus = HTTPSuccess;
+
     /* Return value from libraries. */
     int32_t returnStatus = EXIT_SUCCESS;
+
+    /* The length of the path within the pre-signed URL. This variable is
+     * defined in order to store the length returned from parsing the URL, but
+     * it is unused. The path used for the requests in this demo needs all the
+     * query information following the location of the object, to the end of the
+     * S3 presigned URL. */
+    size_t pathLen = 0;
 
     /* Establish HTTPs connection */
     LogInfo( ( "Performing TLS handshake on top of the TCP connection." ) );
@@ -1058,8 +1084,15 @@ static OtaHttpStatus_t httpInit( const char * pUrl )
         transportInterfaceHttp.send = Openssl_Send;
         transportInterfaceHttp.pNetworkContext = &networkContextHttp;
 
-        getUrlPath( pUrl, strlen( pUrl ), &UrlInfo.pPath,
-                    &UrlInfo.pathLength );
+        /* Retrieve the path location from url. This
+         * function returns the length of the path without the query into
+         * pathLen, which is left unused in this demo. */
+        httpStatus = getUrlPath( pUrl,
+                                 strlen(pUrl),
+                                 &pPath,
+                                 &pathLen );
+
+        ret = ( httpStatus == HTTPSuccess ) ? OtaHttpSuccess : OtaHttpInitFailed;
     }
     else
     {
@@ -1104,11 +1137,11 @@ static OtaHttpStatus_t httpRequest( uint32_t rangeStart,
 
     /* Initialize the request object. */
     requestInfo.pHost = serverHost;
-    requestInfo.hostLen = UrlInfo.addressLength;
+    requestInfo.hostLen = serverHostLength;
     requestInfo.pMethod = HTTP_METHOD_GET;
     requestInfo.methodLen = sizeof( HTTP_METHOD_GET ) - 1;
-    requestInfo.pPath = UrlInfo.pPath;
-    requestInfo.pathLen = strlen( UrlInfo.pPath );
+    requestInfo.pPath = pPath;
+    requestInfo.pathLen = strlen( pPath );
 
     /* Set "Connection" HTTP header to "keep-alive" so that multiple requests
      * can be sent over the same established TCP connection. */

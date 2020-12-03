@@ -20,39 +20,11 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-/* Standard includes. */
-#include <stdlib.h>
-#include <stdbool.h>
-
-/* Transport interface include. */
-#include "transport_interface.h"
+#ifndef _HTTP_UTILS_H_
+#define _HTTP_UTILS_H_
 
 /* HTTP API header. */
 #include "core_http_client.h"
-
-/**
- * @brief Function pointer for establishing connection to a server.
- *
- * @param[out] pNetworkContext Implementation-defined network context.
- *
- * @return EXIT_FAILURE on failure; EXIT_SUCCESS on successful connection.
- */
-typedef int32_t ( * TransportConnect_t )( NetworkContext_t * pNetworkContext );
-
-/**
- * @brief Connect to a server with reconnection retries.
- *
- * If connection fails, retry is attempted after a timeout.
- * Timeout value will exponentially increase until maximum
- * timeout value is reached or the number of attempts are exhausted.
- *
- * @param[in] connectFunction Function pointer for establishing connection to a server.
- * @param[out] pNetworkContext Implementation-defined network context.
- *
- * @return EXIT_FAILURE on failure; EXIT_SUCCESS on successful connection.
- */
-int32_t connectToServerWithBackoffRetries( TransportConnect_t connectFunction,
-                                           NetworkContext_t * pNetworkContext );
 
 /**
  * @brief Retrieve the path from the input URL.
@@ -113,3 +85,5 @@ HTTPStatus_t getUrlAddress( const char * pUrl,
                             size_t urlLen,
                             const char ** pAddress,
                             size_t * pAddressLen );
+
+#endif

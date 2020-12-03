@@ -20,44 +20,11 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-/* Standard includes. */
-#include <assert.h>
-#include <time.h>
-#include <stdlib.h>
-
-/* POSIX includes. */
-#include <unistd.h>
-
-/* Include Demo Config as the first non-system header. */
-#include "demo_config.h"
-
 /* Demo utils header. */
 #include "http_demo_utils.h"
 
 /* Third party parser utilities. */
 #include "http_parser.h"
-
-/*-----------------------------------------------------------*/
-
-/**
- * @brief The maximum number of retries for connecting to server.
- */
-#define CONNECTION_RETRY_MAX_ATTEMPTS            ( 5U )
-
-/**
- * @brief The maximum back-off delay (in milliseconds) for retrying connection to server.
- */
-#define CONNECTION_RETRY_MAX_BACKOFF_DELAY_MS    ( 5000U )
-
-/**
- * @brief The base back-off delay (in milliseconds) to use for connection retry attempts.
- */
-#define CONNECTION_RETRY_BACKOFF_BASE_MS         ( 500U )
-
-/**
- * @brief Number of milliseconds in a second.
- */
-#define NUM_MILLISECONDS_IN_SECOND               ( 1000U )
 
 /*-----------------------------------------------------------*/
 
