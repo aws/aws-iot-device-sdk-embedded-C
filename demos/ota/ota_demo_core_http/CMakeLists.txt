@@ -17,8 +17,8 @@ target_sources(
     ${DEMO_NAME}
     PRIVATE
         "ota_demo_core_http.c"
-        "ota_pal_posix.c"
         "${DEMOS_DIR}/ota/common/src/mqtt_subscription_manager.c"
+        "${DEMOS_DIR}/ota/common/src/http_demo_utils.c"
         ${OTA_SOURCES}
         ${OTA_OS_POSIX_SOURCES}
         ${OTA_MQTT_SOURCES}

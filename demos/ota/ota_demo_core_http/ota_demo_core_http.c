@@ -1184,7 +1184,7 @@ static OtaHttpStatus_t httpRequest( uint32_t rangeStart,
         if( httpStatus == HTTPNoResponse )
         {
             /* reconnect to server. */
-            connectToServer( &networkContextHttp, NULL );
+            connectToServerWithBackoffRetries( &networkContextHttp );
         }
         else
         {
