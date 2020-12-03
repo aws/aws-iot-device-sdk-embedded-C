@@ -38,7 +38,7 @@ list( APPEND real_include_directories
 
 #list the directories your test needs to include
 list ( APPEND test_include_directories
-       "."
+       ${CMAKE_CURRENT_BINARY_DIR}/include
        ${CMAKE_CURRENT_LIST_DIR}
        ${MODULES_DIR}/aws/ota/source/include
        )
@@ -71,3 +71,8 @@ create_test ( ${utest_name}
               "${utest_dep_list}"
               "${test_include_directories}"
               )
+
+# Unit tests configuration
+set(OTA_PAL_UTEST_CERT_FILE "${CMAKE_CURRENT_LIST_DIR}/test_files/ecdsa-sha256-signer.crt.pem")
+set(OTA_PAL_UTEST_FIRMWARE_FILE "${CMAKE_BINARY_DIR}/bin/tests/dummy.bin")
+configure_file(ota_utest_config.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/ota_utest_config.h)

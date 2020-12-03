@@ -40,6 +40,8 @@
 #include "ota_private.h"
 #include "ota_pal_posix.h"
 
+/* Unit test config. */
+#include "ota_utest_config.h"
 
 /* For the otaPal_WriteBlock_WriteManyBlocks test this is the number of blocks of
  * dummyData to write to the non-volatile memory. */
@@ -104,24 +106,6 @@ static uint8_t dummyData[] =
  * before every test. */
 static OtaFileContext_t otaFile;
 
-/**
- * @brief Path to cert for OTA PAL test. Used to verify signature.
- * If applicable, the device must be pre provisioned with this certificate. Please see
- * platform/posix/ota_pal/utest/test_files for the set of certificates.
- *
- * In the Linux simulator this is the path to the certificate on your machine. The path currently
- * here is relative to the CSDK root.
- *
- * #define otatestpalCERTIFICATE_FILE  "..\\..\\..\\..\\..\\libraries\\freertos_plus\\aws\\ota\\test\\test_files\\ecdsa-sha256-signer.crt.pem"
- */
-#define otatestpalCERTIFICATE_FILE    "../../../platform/posix/ota_pal/utest/test_files/ecdsa-sha256-signer.crt.pem"
-
-/**
- * @brief Some devices have a hard-coded name for the firmware image to boot.
- */
-#define otatestpalFIRMWARE_FILE       "dummy.bin"
-
-
 /* ============================   UNITY FIXTURES ============================ */
 
 void setUp( void )
@@ -176,7 +160,7 @@ void test_OTAPAL_Abort_ValidFileHandle( void )
 {
     OtaPalMainStatus_t result;
 
-    otaFile.pFilePath = ( uint8_t * ) otatestpalFIRMWARE_FILE;
+    otaFile.pFilePath = ( uint8_t * ) OTA_PAL_UTEST_FIRMWARE_FILE;
     result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
     TEST_ASSERT_EQUAL( OtaPalSuccess, result );
 
@@ -228,16 +212,14 @@ void test_OTAPAL_CreateFileForRx_FailedToCreateFile( void )
 {
     OtaPalMainStatus_t result;
 
-    fopen( otatestpalFIRMWARE_FILE, "r" );
-
-    chmod( otatestpalFIRMWARE_FILE, S_IRUSR );
-    otaFile.pFilePath = ( uint8_t * ) otatestpalFIRMWARE_FILE;
+    chmod( OTA_PAL_UTEST_FIRMWARE_FILE, S_IRUSR );
+    otaFile.pFilePath = ( uint8_t * ) OTA_PAL_UTEST_FIRMWARE_FILE;
 
     /* Create a file that exists with w+b mode */
     result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
     TEST_ASSERT_EQUAL( OtaPalRxFileCreateFailed, result );
 
-    chmod( otatestpalFIRMWARE_FILE, S_IRWXU );
+    chmod( OTA_PAL_UTEST_FIRMWARE_FILE, S_IRWXU );
     result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
     TEST_ASSERT_EQUAL( OtaPalSuccess, result );
 }
@@ -249,7 +231,7 @@ void test_OTAPAL_CreateFileForRx_ValidFileHandle( void )
 {
     OtaPalMainStatus_t result;
 
-    otaFile.pFilePath = ( uint8_t * ) otatestpalFIRMWARE_FILE;
+    otaFile.pFilePath = ( uint8_t * ) OTA_PAL_UTEST_FIRMWARE_FILE;
     result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
     TEST_ASSERT_EQUAL( OtaPalSuccess, result );
 }
@@ -278,7 +260,7 @@ void test_OTAPAL_WriteBlock_WriteSingleByte( void )
     uint8_t data = 0xAA;
 
     /* TEST: Write a byte of data. */
-    otaFile.pFilePath = ( uint8_t * ) otatestpalFIRMWARE_FILE;
+    otaFile.pFilePath = ( uint8_t * ) OTA_PAL_UTEST_FIRMWARE_FILE;
     result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
     TEST_ASSERT_EQUAL( OtaPalSuccess, result );
 
@@ -297,11 +279,11 @@ void test_OTAPAL_WriteBlock_WriteManyBlocks( void )
     OtaPalMainStatus_t result;
     int16_t numBytesWritten;
 
-    otaFile.pFilePath = ( uint8_t * ) otatestpalFIRMWARE_FILE;
+    otaFile.pFilePath = ( uint8_t * ) OTA_PAL_UTEST_FIRMWARE_FILE;
     otaFile.fileSize = sizeof( dummyData ) * testotapalNUM_WRITE_BLOCKS;
     /* TEST: Write many bytes of data. */
 
-    otaFile.pFilePath = ( uint8_t * ) otatestpalFIRMWARE_FILE;
+    otaFile.pFilePath = ( uint8_t * ) OTA_PAL_UTEST_FIRMWARE_FILE;
     result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
     TEST_ASSERT_EQUAL( OtaPalSuccess, result );
 
@@ -360,7 +342,7 @@ void test_OTAPAL_CloseFile_ValidSignature( void )
         otaFile.pSignature = &sig;
         otaFile.pSignature->size = ucValidSignatureLength;
         memcpy( otaFile.pSignature->data, ucValidSignature, ucValidSignatureLength );
-        otaFile.pCertFilepath = ( uint8_t * ) otatestpalCERTIFICATE_FILE;
+        otaFile.pCertFilepath = ( uint8_t * ) OTA_PAL_UTEST_CERT_FILE;
 
         result = OTA_PAL_MAIN_ERR( otaPal_CloseFile( &otaFile ) );
         TEST_ASSERT_EQUAL_INT( OtaPalSuccess, result );
@@ -380,7 +362,7 @@ void test_OTAPAL_CloseFile_InvalidSignatureBlockWritten( void )
     Sig256_t sig = { 0 };
 
     /* Create a local file using the PAL. */
-    otaFile.pFilePath = ( uint8_t * ) otatestpalFIRMWARE_FILE;
+    otaFile.pFilePath = ( uint8_t * ) OTA_PAL_UTEST_FIRMWARE_FILE;
     otaFile.fileSize = sizeof( dummyData );
 
     result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
@@ -400,7 +382,7 @@ void test_OTAPAL_CloseFile_InvalidSignatureBlockWritten( void )
         otaFile.pSignature = &sig;
         otaFile.pSignature->size = ucInvalidSignatureLength;
         memcpy( otaFile.pSignature->data, ucInvalidSignature, ucInvalidSignatureLength );
-        otaFile.pCertFilepath = ( uint8_t * ) otatestpalCERTIFICATE_FILE;
+        otaFile.pCertFilepath = ( uint8_t * ) OTA_PAL_UTEST_CERT_FILE;
 
         /* Try to close the file. */
         result = OTA_PAL_MAIN_ERR( otaPal_CloseFile( &otaFile ) );
@@ -425,7 +407,7 @@ void test_OTAPAL_CloseFile_InvalidSignatureNoBlockWritten( void )
     Sig256_t sig = { 0 };
 
     /* Create a local file using the PAL. */
-    otaFile.pFilePath = ( uint8_t * ) otatestpalFIRMWARE_FILE;
+    otaFile.pFilePath = ( uint8_t * ) OTA_PAL_UTEST_FIRMWARE_FILE;
     result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
     TEST_ASSERT_EQUAL( OtaPalSuccess, result );
 
@@ -433,7 +415,7 @@ void test_OTAPAL_CloseFile_InvalidSignatureNoBlockWritten( void )
     otaFile.pSignature = &sig;
     otaFile.pSignature->size = ucInvalidSignatureLength;
     memcpy( otaFile.pSignature->data, ucInvalidSignature, ucInvalidSignatureLength );
-    otaFile.pCertFilepath = ( uint8_t * ) otatestpalCERTIFICATE_FILE;
+    otaFile.pCertFilepath = ( uint8_t * ) OTA_PAL_UTEST_CERT_FILE;
 
     /* We still want to close the file if the test fails somewhere here. */
     if( TEST_PROTECT() )
@@ -468,7 +450,7 @@ void test_OTAPAL_CloseFile_NonexistingCodeSignerCertificate( void )
     memset( &otaFile, 0, sizeof( otaFile ) );
 
     /* Create a local file using the PAL. */
-    otaFile.pFilePath = ( uint8_t * ) otatestpalFIRMWARE_FILE;
+    otaFile.pFilePath = ( uint8_t * ) OTA_PAL_UTEST_FIRMWARE_FILE;
     otaFile.fileSize = sizeof( dummyData );
 
     result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
@@ -536,7 +518,7 @@ void test_OTAPAL_SetPlatformImageState_SelfTestImageState( void )
     OtaPalImageState_t palImageState = OtaPalImageStateUnknown;
 
     /* Create a local file again using the PAL. */
-    otaFile.pFilePath = ( uint8_t * ) otatestpalFIRMWARE_FILE;
+    otaFile.pFilePath = ( uint8_t * ) OTA_PAL_UTEST_FIRMWARE_FILE;
     otaFile.fileSize = sizeof( dummyData );
 
     result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
@@ -579,7 +561,7 @@ void test_OTAPAL_SetPlatformImageState_InvalidImageState( void )
     OtaPalImageState_t palImageState = OtaPalImageStateUnknown;
 
     /* Create a local file again using the PAL. */
-    otaFile.pFilePath = ( uint8_t * ) otatestpalFIRMWARE_FILE;
+    otaFile.pFilePath = ( uint8_t * ) OTA_PAL_UTEST_FIRMWARE_FILE;
     otaFile.fileSize = sizeof( dummyData );
 
     result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
@@ -618,7 +600,7 @@ void test_OTAPAL_SetPlatformImageState_UnknownImageState( void )
     OtaPalImageState_t palImageState = OtaPalImageStateUnknown;
 
     /* Create a local file again using the PAL. */
-    otaFile.pFilePath = ( uint8_t * ) otatestpalFIRMWARE_FILE;
+    otaFile.pFilePath = ( uint8_t * ) OTA_PAL_UTEST_FIRMWARE_FILE;
     otaFile.fileSize = sizeof( dummyData );
 
     result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
@@ -659,7 +641,7 @@ void test_OTAPAL_SetPlatformImageState_RejectImageState( void )
     OtaPalImageState_t palImageState = OtaPalImageStateUnknown;
 
     /* Create a local file again using the PAL. */
-    otaFile.pFilePath = ( uint8_t * ) otatestpalFIRMWARE_FILE;
+    otaFile.pFilePath = ( uint8_t * ) OTA_PAL_UTEST_FIRMWARE_FILE;
     otaFile.fileSize = sizeof( dummyData );
 
     result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
@@ -697,7 +679,7 @@ void test_OTAPAL_SetPlatformImageState_AbortImageState( void )
     OtaPalImageState_t palImageState = OtaPalImageStateUnknown;
 
     /* Create a local file again using the PAL. */
-    otaFile.pFilePath = ( uint8_t * ) otatestpalFIRMWARE_FILE;
+    otaFile.pFilePath = ( uint8_t * ) OTA_PAL_UTEST_FIRMWARE_FILE;
     otaFile.fileSize = sizeof( dummyData );
 
     result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
@@ -736,7 +718,7 @@ void test_OTAPAL_GetPlatformImageState_InvalidImageStateFromFileCloseFailure( vo
 
     /* TEST: Invalid image returned from otaPal_GetPlatformImageState(). Using a failure to close. */
     /* Create a local file again using the PAL. */
-    otaFile.pFilePath = ( uint8_t * ) otatestpalFIRMWARE_FILE;
+    otaFile.pFilePath = ( uint8_t * ) OTA_PAL_UTEST_FIRMWARE_FILE;
     otaFile.fileSize = sizeof( dummyData );
 
     result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
@@ -756,7 +738,7 @@ void test_OTAPAL_GetPlatformImageState_InvalidImageStateFromFileCloseFailure( vo
         otaFile.pSignature = &sig;
         otaFile.pSignature->size = ucInvalidSignatureLength;
         memcpy( otaFile.pSignature->data, ucInvalidSignature, ucInvalidSignatureLength );
-        otaFile.pCertFilepath = ( uint8_t * ) otatestpalCERTIFICATE_FILE;
+        otaFile.pCertFilepath = ( uint8_t * ) OTA_PAL_UTEST_CERT_FILE;
 
         result = OTA_PAL_MAIN_ERR( otaPal_CloseFile( &otaFile ) );
 

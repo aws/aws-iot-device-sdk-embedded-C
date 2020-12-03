@@ -26,6 +26,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <errno.h>
 #include <assert.h>
 #include <libgen.h>
@@ -139,9 +140,16 @@ OtaPalStatus_t otaPal_CreateFileForRx( OtaFileContext_t * const C )
     {
         if( C->pFilePath != NULL )
         {
-            int res = snprintf( realFilePath, OTA_FILE_PATH_LENGTH_MAX, "%s/%s", getenv( "PWD" ), C->pFilePath );
-            assert( res >= 0 );
-            ( void ) res; /* Suppress the unused variable warning when assert is off. */
+            if( C->pFilePath[ 0 ] != '/' )
+            {
+                int res = snprintf( realFilePath, OTA_FILE_PATH_LENGTH_MAX, "%s/%s", getenv( "PWD" ), C->pFilePath );
+                assert( res >= 0 );
+                ( void ) res; /* Suppress the unused variable warning when assert is off. */
+            }
+            else
+            {
+                strncpy( realFilePath, ( const char * ) C->pFilePath, strlen( ( const char * ) C->pFilePath ) + 1 );
+            }
 
             /* Linux port using standard library */
             /* coverity[misra_c_2012_rule_21_6_violation] */
