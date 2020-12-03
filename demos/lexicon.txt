@@ -298,6 +298,7 @@ mqttkeepalivetimeout
 mqttprocessincomingpacket
 mqttsubackfailure
 msg
+msgsize
 msys
 mul
 mutex

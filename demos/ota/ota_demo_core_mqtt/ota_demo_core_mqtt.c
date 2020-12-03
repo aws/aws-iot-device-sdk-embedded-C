@@ -389,7 +389,6 @@ static OtaErr_t mqttUnsubscribe( const char * pTopicFilter,
                                  uint16_t topicFilterLength,
                                  uint8_t qos );
 
-
 /**
  * @brief Start OTA demo.
  *
@@ -406,6 +405,58 @@ static int startOTADemo( void );
  */
 static void setOtaInterfaces( OtaInterfaces_t * pOtaInterfaces );
 
+/**
+ * @brief Disconnect from the MQTT broker.
+ * 
+ */
+static void disconnect( void );
+
+/**
+ * @brief Attempt to connect to the MQTT broker.
+ * 
+ * @return int EXIT_SUCCESS if a connection is established.
+ */
+static int establishConnection( void );
+
+/**
+ * @brief Initialize MQTT by setting up transport interface and network.
+ * 
+ * @param[in] pMqttContext Structure representing MQTT connection.
+ * @param[in] pNetworkContext Network context to connect on.
+ * @return int EXIT_SUCCESS if MQTT component is initialized
+ */
+static int initializeMqtt( MQTTContext_t * pMqttContext,
+                           NetworkContext_t * pNetworkContext );
+
+/**
+ * @brief Retry logic to establish a connection to the server.
+ * 
+ * If the connection fails, keep retrying with exponentially increasing
+ * timeout value, until max retries, max timeout or successful connect.
+ * 
+ * @param[in] pNetworkContext Network context to connect on.
+ * @return int EXIT_FAILURE if connection failed after retries.
+ */
+static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext );
+
+/**
+ * @brief Random number to be used as a back-off value for retrying connection.
+ * 
+ * @return int32_t A random integer.
+ */
+static int32_t generateRandomNumber();
+
+/* Callbacks used to handle different events. */
+
+static void otaAppCallback( OtaJobEvent_t event, 
+                            void * pData );
+static void mqttJobCallback( MQTTContext_t * pContext,
+                             MQTTPublishInfo_t * pPublishInfo );
+static void mqttDataCallback( MQTTContext_t * pContext,
+                              MQTTPublishInfo_t * pPublishInfo );
+static void mqttEventCallback( MQTTContext_t * pMqttContext,
+                               MQTTPacketInfo_t * pPacketInfo,
+                               MQTTDeserializedInfo_t * pDeserializedInfo );
 /*-----------------------------------------------------------*/
 
 void otaEventBufferFree( OtaEventData_t * const pxBuffer )
@@ -422,6 +473,8 @@ void otaEventBufferFree( OtaEventData_t * const pxBuffer )
                     strerror( errno ) ) );
     }
 }
+
+/*-----------------------------------------------------------*/
 
 OtaEventData_t * otaEventBufferGet( void )
 {
@@ -451,6 +504,8 @@ OtaEventData_t * otaEventBufferGet( void )
 
     return pFreeBuffer;
 }
+
+/*-----------------------------------------------------------*/
 
 /**
  * @brief The OTA agent has completed the update job or it is in
@@ -691,6 +746,7 @@ static int initializeMqtt( MQTTContext_t * pMqttContext,
 }
 
 /*-----------------------------------------------------------*/
+
 static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext )
 {
     int returnStatus = EXIT_SUCCESS;
@@ -791,6 +847,8 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     return returnStatus;
 }
 
+/*-----------------------------------------------------------*/
+
 static int establishMqttSession( MQTTContext_t * pMqttContext )
 {
     int returnStatus = EXIT_SUCCESS;
@@ -869,6 +927,8 @@ static int establishMqttSession( MQTTContext_t * pMqttContext )
     return returnStatus;
 }
 
+/*-----------------------------------------------------------*/
+
 static int establishConnection( void )
 {
     int returnStatus = EXIT_FAILURE;
@@ -919,6 +979,9 @@ static int establishConnection( void )
 
     return returnStatus;
 }
+
+/*-----------------------------------------------------------*/
+
 static void disconnect( void )
 {
     /* Disconnect from broker. */
@@ -984,6 +1047,8 @@ static OtaErr_t mqttSubscribe( const char * pTopicFilter,
     return otaRet;
 }
 
+/*-----------------------------------------------------------*/
+
 static OtaErr_t mqttPublish( const char * const pacTopic,
                              uint16_t topicLen,
                              const char * pMsg,
@@ -1024,6 +1089,8 @@ static OtaErr_t mqttPublish( const char * const pacTopic,
 
     return otaRet;
 }
+
+/*-----------------------------------------------------------*/
 
 static OtaErr_t mqttUnsubscribe( const char * pTopicFilter,
                                  uint16_t topicFilterLength,
