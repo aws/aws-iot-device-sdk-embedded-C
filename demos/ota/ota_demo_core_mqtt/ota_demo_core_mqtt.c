@@ -344,10 +344,10 @@ static int disconnectMqttSession( MQTTContext_t * pMqttContext );
  * @return OtaMqttSuccess if success , other error code on failure.
  */
 static OtaMqttStatus_t mqttPublish( const char * const pacTopic,
-                             uint16_t topicLen,
-                             const char * pMsg,
-                             uint32_t msgSize,
-                             uint8_t qos );
+                                    uint16_t topicLen,
+                                    const char * pMsg,
+                                    uint32_t msgSize,
+                                    uint8_t qos );
 
 /**
  * @brief Subscribe to the Mqtt topics.
@@ -364,12 +364,12 @@ static OtaMqttStatus_t mqttPublish( const char * const pacTopic,
  *
  * @param[in] callback Callback to be registered.
  *
- * @return OTA_OS_ERR_OK if success , other error code on failure.
+ * @return OtaMqttSuccess if success , other error code on failure.
  */
 static OtaMqttStatus_t mqttSubscribe( const char * pTopicFilter,
-                               uint16_t topicFilterLength,
-                               uint8_t qos,
-                               OtaMqttCallback_t callback );
+                                      uint16_t topicFilterLength,
+                                      uint8_t qos,
+                                      OtaMqttCallback_t callback );
 
 /**
  * @brief Unsubscribe to the Mqtt topics.
@@ -383,11 +383,11 @@ static OtaMqttStatus_t mqttSubscribe( const char * pTopicFilter,
  *
  * @param[qos] qos Quality of Service
  *
- * @return  OTA_OS_ERR_OK if success , other error code on failure.
+ * @return  OtaMqttSuccess if success , other error code on failure.
  */
 static OtaMqttStatus_t mqttUnsubscribe( const char * pTopicFilter,
-                                 uint16_t topicFilterLength,
-                                 uint8_t qos );
+                                        uint16_t topicFilterLength,
+                                        uint8_t qos );
 
 /**
  * @brief Start OTA demo.
@@ -407,20 +407,20 @@ static void setOtaInterfaces( OtaInterfaces_t * pOtaInterfaces );
 
 /**
  * @brief Disconnect from the MQTT broker.
- * 
+ *
  */
 static void disconnect( void );
 
 /**
  * @brief Attempt to connect to the MQTT broker.
- * 
+ *
  * @return int EXIT_SUCCESS if a connection is established.
  */
 static int establishConnection( void );
 
 /**
  * @brief Initialize MQTT by setting up transport interface and network.
- * 
+ *
  * @param[in] pMqttContext Structure representing MQTT connection.
  * @param[in] pNetworkContext Network context to connect on.
  * @return int EXIT_SUCCESS if MQTT component is initialized
@@ -430,10 +430,10 @@ static int initializeMqtt( MQTTContext_t * pMqttContext,
 
 /**
  * @brief Retry logic to establish a connection to the server.
- * 
+ *
  * If the connection fails, keep retrying with exponentially increasing
  * timeout value, until max retries, max timeout or successful connect.
- * 
+ *
  * @param[in] pNetworkContext Network context to connect on.
  * @return int EXIT_FAILURE if connection failed after retries.
  */
@@ -441,14 +441,14 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
 
 /**
  * @brief Random number to be used as a back-off value for retrying connection.
- * 
+ *
  * @return int32_t A random integer.
  */
 static int32_t generateRandomNumber();
 
 /* Callbacks used to handle different events. */
 
-static void otaAppCallback( OtaJobEvent_t event, 
+static void otaAppCallback( OtaJobEvent_t event,
                             void * pData );
 static void mqttJobCallback( MQTTContext_t * pContext,
                              MQTTPublishInfo_t * pPublishInfo );
@@ -996,9 +996,9 @@ static void disconnect( void )
 /*-----------------------------------------------------------*/
 
 static OtaMqttStatus_t mqttSubscribe( const char * pTopicFilter,
-                               uint16_t topicFilterLength,
-                               uint8_t qos,
-                               OtaMqttCallback_t callback )
+                                      uint16_t topicFilterLength,
+                                      uint8_t qos,
+                                      OtaMqttCallback_t callback )
 {
     OtaMqttStatus_t otaRet = OtaMqttSuccess;
 
@@ -1048,10 +1048,10 @@ static OtaMqttStatus_t mqttSubscribe( const char * pTopicFilter,
 /*-----------------------------------------------------------*/
 
 static OtaMqttStatus_t mqttPublish( const char * const pacTopic,
-                             uint16_t topicLen,
-                             const char * pMsg,
-                             uint32_t msgSize,
-                             uint8_t qos )
+                                    uint16_t topicLen,
+                                    const char * pMsg,
+                                    uint32_t msgSize,
+                                    uint8_t qos )
 {
     OtaMqttStatus_t otaRet = OtaMqttSuccess;
 
@@ -1089,8 +1089,8 @@ static OtaMqttStatus_t mqttPublish( const char * const pacTopic,
 /*-----------------------------------------------------------*/
 
 static OtaMqttStatus_t mqttUnsubscribe( const char * pTopicFilter,
-                                 uint16_t topicFilterLength,
-                                 uint8_t qos )
+                                        uint16_t topicFilterLength,
+                                        uint8_t qos )
 {
     OtaMqttStatus_t otaRet = OtaMqttSuccess;
     MQTTStatus_t mqttStatus;
