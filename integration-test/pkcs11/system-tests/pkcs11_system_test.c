@@ -251,7 +251,7 @@ static void findObjectTest( CK_OBJECT_HANDLE_PTR privateKeyHandlePtr,
     /* Happy Path - Find a previously created object. */
     result = xFindObjectWithLabelAndClass( globalSession,
                                            pkcs11testLABEL_DEVICE_PRIVATE_KEY_FOR_TLS,
-                                           strlen( pkcs11testLABEL_DEVICE_PRIVATE_KEY_FOR_TLS ),
+                                           sizeof( pkcs11testLABEL_DEVICE_PRIVATE_KEY_FOR_TLS ),
                                            CKO_PRIVATE_KEY,
                                            privateKeyHandlePtr );
     TEST_ASSERT_EQUAL_MESSAGE( CKR_OK, result, "Failed to find private key after closing and reopening a session." );
@@ -260,7 +260,7 @@ static void findObjectTest( CK_OBJECT_HANDLE_PTR privateKeyHandlePtr,
     /* TODO: Add the code sign key and root ca. */
     result = xFindObjectWithLabelAndClass( globalSession,
                                            pkcs11testLABEL_DEVICE_PUBLIC_KEY_FOR_TLS,
-                                           strlen( pkcs11testLABEL_DEVICE_PUBLIC_KEY_FOR_TLS ),
+                                           sizeof( pkcs11testLABEL_DEVICE_PUBLIC_KEY_FOR_TLS ),
                                            CKO_PUBLIC_KEY,
                                            publicKeyHandlePtr );
     TEST_ASSERT_EQUAL_MESSAGE( CKR_OK, result, "Failed to find public key after closing and reopening a session." );
@@ -269,7 +269,7 @@ static void findObjectTest( CK_OBJECT_HANDLE_PTR privateKeyHandlePtr,
 
     result = xFindObjectWithLabelAndClass( globalSession,
                                            pkcs11testLABEL_DEVICE_CERTIFICATE_FOR_TLS,
-                                           strlen( pkcs11testLABEL_DEVICE_CERTIFICATE_FOR_TLS ),
+                                           sizeof( pkcs11testLABEL_DEVICE_CERTIFICATE_FOR_TLS ),
                                            CKO_CERTIFICATE,
                                            pcertificateHandle );
 
@@ -279,7 +279,7 @@ static void findObjectTest( CK_OBJECT_HANDLE_PTR privateKeyHandlePtr,
     /* Try to find an object that has never been created. */
     result = xFindObjectWithLabelAndClass( globalSession,
                                            ( char * ) "This label doesn't exist",
-                                           strlen( ( char * ) "This label doesn't exist" ),
+                                           sizeof( "This label doesn't exist" ),
                                            CKO_PUBLIC_KEY,
                                            &testObjectHandle );
     TEST_ASSERT_EQUAL_MESSAGE( CKR_OK, result, "Incorrect error code finding object that doesn't exist" );
@@ -720,7 +720,7 @@ void test_GetAttributeValue_RSA( void )
 
     result = xFindObjectWithLabelAndClass( globalSession,
                                            pkcs11testLABEL_DEVICE_PRIVATE_KEY_FOR_TLS,
-                                           strlen( pkcs11testLABEL_DEVICE_PRIVATE_KEY_FOR_TLS ),
+                                           sizeof( pkcs11testLABEL_DEVICE_PRIVATE_KEY_FOR_TLS ),
                                            CKO_PRIVATE_KEY,
                                            &privateKeyHandle );
     TEST_ASSERT_EQUAL_MESSAGE( CKR_OK, result, "Failed to find RSA private key." );
@@ -728,7 +728,7 @@ void test_GetAttributeValue_RSA( void )
 
     result = xFindObjectWithLabelAndClass( globalSession,
                                            pkcs11testLABEL_DEVICE_CERTIFICATE_FOR_TLS,
-                                           strlen( pkcs11testLABEL_DEVICE_CERTIFICATE_FOR_TLS ),
+                                           sizeof( pkcs11testLABEL_DEVICE_CERTIFICATE_FOR_TLS ),
                                            CKO_CERTIFICATE,
                                            &certificateHandle );
     TEST_ASSERT_EQUAL_MESSAGE( CKR_OK, result, "Failed to find RSA certificate." );
