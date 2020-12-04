@@ -33,7 +33,7 @@
 	path = libraries/standard/backoffAlgorithm
 	branch = main
 	url = https://github.com/FreeRTOS/backoffAlgorithm.git
-[submodule "libraries/aws/ota"]
-	path = libraries/aws/ota
+[submodule "libraries/aws/ota-for-aws-iot-embedded-sdk"]
+	path = libraries/aws/ota-for-aws-iot-embedded-sdk
 	branch = main
 	url = https://github.com/aws/ota-for-aws-iot-embedded-sdk.git
