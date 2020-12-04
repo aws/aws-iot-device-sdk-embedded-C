@@ -37,6 +37,9 @@
 /*Include backoff algorithm header for retry logic.*/
 #include "backoff_algorithm.h"
 
+/*Include clock header for millisecond sleep function. */
+#include "clock.h"
+
 /* Third party parser utilities. */
 #include "http_parser.h"
 
@@ -56,11 +59,6 @@
  * @brief The base back-off delay (in milliseconds) to use for connection retry attempts.
  */
 #define CONNECTION_RETRY_BACKOFF_BASE_MS         ( 500U )
-
-/**
- * @brief Number of milliseconds in a second.
- */
-#define NUM_MILLISECONDS_IN_SECOND               ( 1000U )
 
 /*-----------------------------------------------------------*/
 
@@ -133,8 +131,10 @@ int32_t connectToServerWithBackoffRetries( TransportConnect_t connectFunction,
 
             if( backoffAlgStatus == BackoffAlgorithmSuccess )
             {
-                LogWarn( ( "Connection to the HTTP server failed. Retrying connection after backoff." ) );
-                ( void ) sleep( nextRetryBackOff / NUM_MILLISECONDS_IN_SECOND );
+                LogWarn( ( "Connection to the HTTP server failed. Retrying "
+                           "connection after %hu ms backoff.",
+                           ( unsigned short ) nextRetryBackOff ) );
+                Clock_SleepMs( nextRetryBackOff );
             }
             else
             {

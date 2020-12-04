@@ -58,6 +58,9 @@
 /*Include backoff algorithm header for retry logic.*/
 #include "backoff_algorithm.h"
 
+/*Include clock header for millisecond sleep function. */
+#include "clock.h"
+
 /* Check that the broker endpoint is defined. */
 #ifndef BROKER_ENDPOINT
     #error "Please define an MQTT broker endpoint, BROKER_ENDPOINT, in demo_config.h."
@@ -87,11 +90,6 @@
  * @brief The base back-off delay (in milliseconds) to use for connection retry attempts.
  */
 #define CONNECTION_RETRY_BACKOFF_BASE_MS         ( 500U )
-
-/**
- * @brief Number of milliseconds in a second.
- */
-#define NUM_MILLISECONDS_IN_SECOND               ( 1000U )
 
 /**
  * @brief The topic to subscribe and publish to in the example.
@@ -412,8 +410,10 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
             }
             else if( backoffAlgStatus == BackoffAlgorithmSuccess )
             {
-                LogWarn( ( "Connection to the broker failed. Retrying connection after backoff." ) );
-                ( void ) sleep( nextRetryBackOff / NUM_MILLISECONDS_IN_SECOND );
+                LogWarn( ( "Connection to the broker failed. Retrying connection "
+                           "after %hu ms backoff.",
+                           ( unsigned short ) nextRetryBackOff ) );
+                Clock_SleepMs( nextRetryBackOff );
             }
         }
     } while( ( socketStatus != SOCKETS_SUCCESS ) && ( backoffAlgStatus == BackoffAlgorithmSuccess ) );
@@ -1012,8 +1012,10 @@ int main( int argc,
                     }
                     else if( backoffAlgStatus == BackoffAlgorithmSuccess )
                     {
-                        LogWarn( ( "Server rejected subscription request. Retrying connection after backoff." ) );
-                        ( void ) sleep( nextRetryBackOff / NUM_MILLISECONDS_IN_SECOND );
+                        LogWarn( ( "Server rejected subscription request. "
+                                   "Retrying connection after %hu ms backoff.",
+                                   ( unsigned short ) nextRetryBackOff ) );
+                        Clock_SleepMs( nextRetryBackOff );
                     }
                 }
             } while( ( globalSubAckStatus == false ) && ( backoffAlgStatus == BackoffAlgorithmSuccess ) );
