@@ -248,7 +248,6 @@ static OtaPalStatus_t otaPal_CheckFileSignature( OtaFileContext_t * const C )
     }
     else
     {
-        /* FIXME: Invalid error code for a NULL file context. */
         LogError( ( "Failed to check file signature: Paramater check failed: "
                     " Invalid OTA file context." ) );
         /* Invalid OTA context or file pointer. */
