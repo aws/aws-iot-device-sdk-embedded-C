@@ -19,6 +19,7 @@ add_executable(
 target_link_libraries(
     ${DEMO_NAME}
     PRIVATE
+        clock_posix
         openssl_posix
 )
 
