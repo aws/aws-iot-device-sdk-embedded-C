@@ -1,5 +1,5 @@
 /*
- * OTA PAL for Linux V2.0.0
+ * OTA PAL for POSIX V2.0.0
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -22,7 +22,7 @@
 
 
 
-/* OTA PAL implementation for linux platform. */
+/* OTA PAL implementation for POSIX platform. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -40,9 +40,9 @@
 #include <openssl/pem.h>
 
 /**
- * @brief Size of buffer used in file operations on this platform (linux).
+ * @brief Size of buffer used in file operations on this platform (POSIX).
  */
-#define OTA_PAL_LINUX_BUF_SIZE    ( ( size_t ) 4096U )
+#define OTA_PAL_POSIX_BUF_SIZE    ( ( size_t ) 4096U )
 
 /**
  * @brief Specify the OTA signature algorithm we support on this platform.
@@ -164,20 +164,20 @@ static OtaPalMainStatus_t Openssl_DigestVerify( EVP_MD_CTX * pSigContext,
     {
         LogDebug( ( "Started signature verification." ) );
 
-        pBuf = OPENSSL_malloc( OTA_PAL_LINUX_BUF_SIZE );
+        pBuf = OPENSSL_malloc( OTA_PAL_POSIX_BUF_SIZE );
 
         if( pBuf != NULL )
         {
             /* Rewind the received file to the beginning. */
-            /* Linux port using standard library */
+            /* POSIX port using standard library */
             /* coverity[misra_c_2012_rule_21_6_violation] */
             if( fseek( pFile, 0L, SEEK_SET ) == 0 )
             {
                 do
                 {
-                    /* Linux port using standard library */
+                    /* POSIX port using standard library */
                     /* coverity[misra_c_2012_rule_21_6_violation] */
-                    bytesRead = fread( pBuf, 1U, OTA_PAL_LINUX_BUF_SIZE, pFile );
+                    bytesRead = fread( pBuf, 1U, OTA_PAL_POSIX_BUF_SIZE, pFile );
                     /* Include the file chunk in the signature validation. Zero size is OK. */
                     ( void ) EVP_DigestVerifyUpdate( pSigContext, pBuf, bytesRead );
                 } while( bytesRead > 0UL );
@@ -271,7 +271,7 @@ OtaPalStatus_t otaPal_Abort( OtaFileContext_t * const C )
         /* Close the OTA update file if it's open. */
         if( NULL != C->pFile )
         {
-            /* Linux port using standard library */
+            /* POSIX port using standard library */
             /* coverity[misra_c_2012_rule_21_6_violation] */
             lFileClosresult = fclose( C->pFile );
             C->pFile = NULL;
@@ -323,7 +323,7 @@ OtaPalStatus_t otaPal_CreateFileForRx( OtaFileContext_t * const C )
                 strncpy( realFilePath, ( const char * ) C->pFilePath, strlen( ( const char * ) C->pFilePath ) + 1 );
             }
 
-            /* Linux port using standard library */
+            /* POSIX port using standard library */
             /* coverity[misra_c_2012_rule_21_6_violation] */
             C->pFile = fopen( ( const char * ) realFilePath, "w+b" );
 
@@ -377,7 +377,7 @@ OtaPalStatus_t otaPal_CloseFile( OtaFileContext_t * const C )
         }
 
         /* Close the file. */
-        /* Linux port using standard library */
+        /* POSIX port using standard library */
         /* coverity[misra_c_2012_rule_21_6_violation] */
         filerc = fclose( C->pFile );
         C->pFile = NULL;
@@ -426,13 +426,13 @@ int16_t otaPal_WriteBlock( OtaFileContext_t * const C,
 
     if( C != NULL )
     {
-        /* Linux port using standard library */
+        /* POSIX port using standard library */
         /* coverity[misra_c_2012_rule_21_6_violation] */
         filerc = fseek( C->pFile, ( int64_t ) ulOffset, SEEK_SET );
 
         if( 0 == filerc )
         {
-            /* Linux port using standard library */
+            /* POSIX port using standard library */
             /* coverity[misra_c_2012_rule_21_6_violation] */
             writeSize = fwrite( pcData, 1, ulBlockSize, C->pFile );
 
@@ -464,7 +464,7 @@ int16_t otaPal_WriteBlock( OtaFileContext_t * const C,
     return ( int16_t ) filerc;
 }
 
-/* Return no error. linux implementation simply does nothing on activate.
+/* Return no error. POSIX implementation simply does nothing on activate.
 * To run the new firmware image, double click the newly downloaded exe */
 OtaPalStatus_t otaPal_ActivateNewImage( OtaFileContext_t * const C )
 {
@@ -474,7 +474,7 @@ OtaPalStatus_t otaPal_ActivateNewImage( OtaFileContext_t * const C )
 }
 
 /* Set the final state of the last transferred (final) OTA file (or bundle).
- * On linux, the state of the OTA image is stored in PlaformImageState.txt. */
+ * On POSIX, the state of the OTA image is stored in PlaformImageState.txt. */
 OtaPalStatus_t otaPal_SetPlatformImageState( OtaFileContext_t * const C,
                                              OtaImageState_t eState )
 {
@@ -492,14 +492,14 @@ OtaPalStatus_t otaPal_SetPlatformImageState( OtaFileContext_t * const C,
         assert( res >= 0 );
         ( void ) res; /* Suppress the unused variable warning when assert is off. */
 
-        /* Linux port using standard library */
+        /* POSIX port using standard library */
         /* coverity[misra_c_2012_rule_21_6_violation] */
         pPlatformImageState = fopen( imageStateFile, "w+b" );
 
         if( pPlatformImageState != NULL )
         {
             /* Write the image state to PlatformImageState.txt. */
-            /* Linux port using standard library */
+            /* POSIX port using standard library */
             /* coverity[misra_c_2012_rule_21_6_violation] */
             if( 1UL != fwrite( &eState, sizeof( OtaImageState_t ), 1, pPlatformImageState ) )
             {
@@ -509,7 +509,7 @@ OtaPalStatus_t otaPal_SetPlatformImageState( OtaFileContext_t * const C,
             }
 
             /* Close PlatformImageState.txt. */
-            /* Linux port using standard library */
+            /* POSIX port using standard library */
             /* coverity[misra_c_2012_rule_21_6_violation] */
             if( 0 != fclose( pPlatformImageState ) )
             {
@@ -539,20 +539,20 @@ OtaPalStatus_t otaPal_ResetDevice( OtaFileContext_t * const C )
 {
     ( void ) C;
 
-    /* Return no error.  linux implementation does not reset device. */
+    /* Return no error.  POSIX implementation does not reset device. */
     return OTA_PAL_COMBINE_ERR( OtaPalSuccess, 0 );
 }
 
 /* Get the state of the currently running image.
  *
- * On linux, this is simulated by looking for and reading the state from
+ * On POSIX, this is simulated by looking for and reading the state from
  * the PlatformImageState.txt file in the current working directory.
  *
  * We read this at OTA_Init time so we can tell if the MCU image is in self
  * test mode. If it is, we expect a successful connection to the OTA services
  * within a reasonable amount of time. If we don't satisfy that requirement,
  * we assume there is something wrong with the firmware and reset the device,
- * causing it to rollback to the previous code. On linux, this is not
+ * causing it to rollback to the previous code. On POSIX, this is not
  * fully simulated as there is no easy way to reset the simulated device.
  */
 OtaPalImageState_t otaPal_GetPlatformImageState( OtaFileContext_t * const C )
@@ -569,13 +569,13 @@ OtaPalImageState_t otaPal_GetPlatformImageState( OtaFileContext_t * const C )
 
     ( void ) C;
 
-    /* Linux port using standard library */
+    /* POSIX port using standard library */
     /* coverity[misra_c_2012_rule_21_6_violation] */
     pPlatformImageState = fopen( imageStateFile, "r+b" );
 
     if( pPlatformImageState != NULL )
     {
-        /* Linux port using standard library */
+        /* POSIX port using standard library */
         /* coverity[misra_c_2012_rule_21_6_violation] */
         if( 1U != fread( &eSavedAgentState, sizeof( OtaImageState_t ), 1, pPlatformImageState ) )
         {
@@ -599,7 +599,7 @@ OtaPalImageState_t otaPal_GetPlatformImageState( OtaFileContext_t * const C )
             }
         }
 
-        /* Linux port using standard library */
+        /* POSIX port using standard library */
         /* coverity[misra_c_2012_rule_21_6_violation] */
         if( 0 != fclose( pPlatformImageState ) )
         {
