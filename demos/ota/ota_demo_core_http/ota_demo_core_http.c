@@ -20,7 +20,7 @@
  */
 
 /**
- * @file ota_demo_core_mqtt.c
+ * @file ota_demo_core_http.c
  * @brief OTA update example using coreMQTT.
  */
 
@@ -244,7 +244,7 @@ struct NetworkContext
 };
 
 /**
- * @brief Network connection context used in this demo.
+ * @brief Network connection context used in this demo for MQTT connection.
  */
 static NetworkContext_t networkContext;
 

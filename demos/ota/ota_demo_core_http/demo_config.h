@@ -37,7 +37,7 @@
 
 /* Logging configuration for the Demo. */
 #ifndef LIBRARY_LOG_NAME
-    #define LIBRARY_LOG_NAME     "DEMO"
+    #define LIBRARY_LOG_NAME     "OTA_DEMO_HTTP"
 #endif
 #ifndef LIBRARY_LOG_LEVEL
     #define LIBRARY_LOG_LEVEL    LOG_INFO
@@ -55,7 +55,6 @@
  *
  * #define AWS_IOT_ENDPOINT               "...insert here..."
  */
-#define AWS_IOT_ENDPOINT    "a3e1obletr43ue-ats.iot.us-west-2.amazonaws.com"
 
 /**
  * @brief AWS IoT MQTT broker port number.
@@ -114,7 +113,6 @@
  *
  * #define CLIENT_CERT_PATH    "...insert here..."
  */
-#define CLIENT_CERT_PATH           "/home/risc/work/iot/things/otalinux/cert.crt"
 
 /**
  * @brief Path of the file containing the client's private key.
@@ -127,15 +125,14 @@
  *
  * #define CLIENT_PRIVATE_KEY_PATH    "...insert here..."
  */
-#define CLIENT_PRIVATE_KEY_PATH    "/home/risc/work/iot/things/otalinux/pri.key"
 
 /**
  * @brief MQTT client identifier.
  *
  * No two clients may use the same client identifier simultaneously.
  */
-#ifndef CLIENT_IDENTIFIER
-    #define CLIENT_IDENTIFIER    "praz-thing-8-18-20"
+#ifndef MQTT_CLIENT_IDENTIFIER
+    #define MQTT_CLIENT_IDENTIFIER    "testClient"
 #endif
 
 /**
