@@ -9,6 +9,7 @@ set( project_name "ota_pal" )
 #list the files to mock here
 list( APPEND mock_list
       ${CMAKE_CURRENT_LIST_DIR}/mocks/stdio_api.h
+      ${CMAKE_CURRENT_LIST_DIR}/mocks/openssl_api.h
       )
 #list the directories your mocks need
 list( APPEND mock_include_list
@@ -47,7 +48,7 @@ list ( APPEND test_include_directories
        )
 
 #== ===========================  (end edit)  ===================================
-set ( mock_name "stdio_mock" )
+set ( mock_name "ota_pal_mocks" )
 set ( real_name "ota_pal_real" )
 
 create_mock_list(${mock_name}

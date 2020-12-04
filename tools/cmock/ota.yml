@@ -33,3 +33,11 @@
     # These keywords are found in many POSIX APIs but is stripped as it cannot be parsed by CMock.
     - __restrict
     - \s__THROW
+    # These functions in socket.h cannot be parsed correctly by CMock, so we won't mock them.
+    - (.*)sendmsg((.|\n|\r)+?\;)
+    - (.*)sendmmsg((.|\n|\r)+?\;)
+    - (.*)recvmsg((.|\n|\r)+?\;)
+    - (.*)recvmmsg((.|\n|\r)+?\;)
+    # These functions in netdb.h cannot be parsed correctly by CMock, so we won't mock them.
+    - (.*)getaddrinfo_a((.|\n|\r)+?\;)
+    - (.*)gai_((.|\n|\r)+?\;)

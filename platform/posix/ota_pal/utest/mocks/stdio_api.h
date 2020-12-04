@@ -44,6 +44,10 @@ extern _STDIO_FILE_TYPE * fopen( const char * __filename,
 /* Close STREAM. */
 extern int fclose( _STDIO_FILE_TYPE * __stream );
 
+extern int snprintf ( char * s, size_t n, const char * format, ... );
+
+extern size_t fread( void * ptr, size_t size, size_t count, FILE * stream );
+
 /* The "fseek" function needs to be mocked to test the OTA PAL. This function
    can't be directly mocked because it's required by the coverage tools. To get
    around this, the "fseek" function is defined as "fseek_alias" in the test
