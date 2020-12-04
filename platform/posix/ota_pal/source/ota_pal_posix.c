@@ -347,7 +347,7 @@ OtaPalStatus_t otaPal_CloseFile( OtaFileContext_t * const C )
     return OTA_PAL_COMBINE_ERR( mainErr, subErr );
 }
 
-/* Verify the signautre of the input content with OpenSSL. */
+/* Verify the signature of the input content with OpenSSL. */
 static OtaPalMainStatus_t Openssl_DigestVerify( EVP_MD_CTX * pSigContext,
                                                 EVP_PKEY * pPkey,
                                                 FILE * pFile,
