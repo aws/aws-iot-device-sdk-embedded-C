@@ -442,16 +442,57 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
  *
  * @return uint32_t The generated random number.
  */
-static int32_t generateRandomNumber();
+static uint32_t generateRandomNumber();
 
 /* Callbacks used to handle different events. */
 
+/**
+ * @brief The OTA agent has completed the update job or it is in
+ * self test mode. If it was accepted, we want to activate the new image.
+ * This typically means we should reset the device to run the new firmware.
+ * If now is not a good time to reset the device, it may be activated later
+ * by your user code. If the update was rejected, just return without doing
+ * anything and we'll wait for another job. If it reported that we should
+ * start test mode, normally we would perform some kind of system checks to
+ * make sure our new firmware does the basic things we think it should do
+ * but we'll just go ahead and set the image as accepted for demo purposes.
+ * The accept function varies depending on your platform. Refer to the OTA
+ * PAL implementation for your platform in aws_ota_pal.c to see what it
+ * does for you.
+ *
+ * @param[in] event Event from OTA lib of type OtaJobEvent_t.
+ * @return None.
+ */
 static void otaAppCallback( OtaJobEvent_t event,
                             void * pData );
+
+/**
+ * @brief Callback that notifies the OTA library when a job document is received.
+ * 
+ * @param[in] pContext MQTT context which stores the connection.
+ * @param[in] pPublishInfo MQTT packet information which stores details of the
+ * job document.
+ */
 static void mqttJobCallback( MQTTContext_t * pContext,
                              MQTTPublishInfo_t * pPublishInfo );
+
+/**
+ * @brief Callback that notifies the OTA library when a data block is received.
+ * 
+ * @param[in] pContext MQTT context which stores the connection.
+ * @param[in] pPublishInfo MQTT packet that stores the information of the file block.
+ */
 static void mqttDataCallback( MQTTContext_t * pContext,
                               MQTTPublishInfo_t * pPublishInfo );
+
+/**
+ * @brief callback to use with the MQTT context to notify incoming packet events.
+ * 
+ * @param[in] pMqttContext MQTT context which stores the connection.
+ * @param[in] pPacketInfo Parameters of the incoming packet.
+ * @param[in] pDeserializedInfo Deserialized packet information to be dispatched by
+ * the subscription manager to event callbacks.
+ */
 static void mqttEventCallback( MQTTContext_t * pMqttContext,
                                MQTTPacketInfo_t * pPacketInfo,
                                MQTTDeserializedInfo_t * pDeserializedInfo );
@@ -505,23 +546,6 @@ OtaEventData_t * otaEventBufferGet( void )
 
 /*-----------------------------------------------------------*/
 
-/**
- * @brief The OTA agent has completed the update job or it is in
- * self test mode. If it was accepted, we want to activate the new image.
- * This typically means we should reset the device to run the new firmware.
- * If now is not a good time to reset the device, it may be activated later
- * by your user code. If the update was rejected, just return without doing
- * anything and we'll wait for another job. If it reported that we should
- * start test mode, normally we would perform some kind of system checks to
- * make sure our new firmware does the basic things we think it should do
- * but we'll just go ahead and set the image as accepted for demo purposes.
- * The accept function varies depending on your platform. Refer to the OTA
- * PAL implementation for your platform in aws_ota_pal.c to see what it
- * does for you.
- *
- * @param[in] event Event from OTA lib of type OtaJobEvent_t.
- * @return None.
- */
 static void otaAppCallback( OtaJobEvent_t event,
                             void * pData )
 {
@@ -558,9 +582,9 @@ static void otaAppCallback( OtaJobEvent_t event,
     {
         /* This demo just accepts the image since it was a good OTA update and networking
          * and services are all working (or we would not have made it this far). If this
-         * were some custom device that wants to test other things before calling it OK,
-         * this would be the place to kick off those tests before calling OTA_SetImageState()
-         * with the final result of either accepted or rejected. */
+         * were some custom device that wants to test other things before validating new 
+         * image, this would be the place to kick off those tests before calling 
+         * OTA_SetImageState() with the final result of either accepted or rejected. */
 
         LogInfo( ( "Received OtaJobEventStartTest callback from OTA Agent." ) );
         err = OTA_SetImageState( OtaImageStateAccepted );
@@ -718,7 +742,9 @@ static int initializeMqtt( MQTTContext_t * pMqttContext,
 
     /* Fill in TransportInterface send and receive function pointers.
      * For this demo, TCP sockets are used to send and receive data
-     * from network. Network context is SSL context for OpenSSL.*/
+     * from network.  TLS over TCP channel is used as the transport 
+     * layer for the MQTT connection. Network context is SSL context 
+     * for OpenSSL.*/
     transport.pNetworkContext = pNetworkContext;
     transport.send = Openssl_Send;
     transport.recv = Openssl_Recv;
@@ -999,6 +1025,7 @@ static OtaMqttStatus_t mqttSubscribe( const char * pTopicFilter,
                                       OtaMqttCallback_t callback )
 {
     OtaMqttStatus_t otaRet = OtaMqttSuccess;
+    SubscriptionManagerStatus_t subscriptionStatus = SUBSCRIPTION_MANAGER_SUCCESS;
 
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus;
@@ -1038,8 +1065,13 @@ static OtaMqttStatus_t mqttSubscribe( const char * pTopicFilter,
     }
 
     /* Register callback to subscription manager. */
-    SubscriptionManager_RegisterCallback( pTopicFilter, topicFilterLength, callback );
-
+    subscriptionStatus = SubscriptionManager_RegisterCallback( pTopicFilter, topicFilterLength, callback );
+    
+    if(subscriptionStatus != SUBSCRIPTION_MANAGER_SUCCESS)
+    {
+        LogWarn( ( "Failed to register a callback to subscription manager with error = %d.",
+                    subscriptionStatus ) )
+    }
     return otaRet;
 }
 
