@@ -311,7 +311,7 @@ OtaPalStatus_t otaPal_Abort( OtaFileContext_t * const C )
     /* Set default return status to uninitialized. */
     OtaPalMainStatus_t mainErr = OtaPalUninitialized;
     OtaPalSubStatus_t subErr = 0;
-    int32_t lFileClosresult;
+    int32_t lFileCloseResult;
 
     if( NULL != C )
     {
@@ -320,10 +320,10 @@ OtaPalStatus_t otaPal_Abort( OtaFileContext_t * const C )
         {
             /* POSIX port using standard library */
             /* coverity[misra_c_2012_rule_21_6_violation] */
-            lFileClosresult = fclose( C->pFile );
+            lFileCloseResult = fclose( C->pFile );
             C->pFile = NULL;
 
-            if( 0 == lFileClosresult )
+            if( 0 == lFileCloseResult )
             {
                 LogInfo( ( "Closed file." ) );
                 mainErr = OtaPalSuccess;

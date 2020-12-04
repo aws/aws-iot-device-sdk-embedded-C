@@ -263,9 +263,7 @@ kwp
 lastcontrolpacketsent
 latestversion
 len
-lenghth
 leurent
-lfileclosresult
 libc
 libmosquitto
 libpkcs
