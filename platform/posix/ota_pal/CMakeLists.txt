@@ -5,10 +5,10 @@ target_sources(ota_pal
 )
 
 target_include_directories( ota_pal
-                            INTERFACE
-                                ${CMAKE_CURRENT_LIST_DIR}/source/include
-                                ${LOGGING_INCLUDE_DIRS}
-                          )
+    INTERFACE
+        ${CMAKE_CURRENT_LIST_DIR}/source/include
+        ${LOGGING_INCLUDE_DIRS}
+)
 
 target_link_libraries( ota_pal
     INTERFACE ${OPENSSL_CRYPTO_LIBRARY}

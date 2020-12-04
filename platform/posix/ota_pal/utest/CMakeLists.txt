@@ -28,7 +28,7 @@ list( APPEND real_source_files
 
 #list the directories the module under test includes
 list( APPEND real_include_directories
-      "${MODULES_DIR}/aws/ota/source/include"
+      "${MODULES_DIR}/aws/ota-for-aws-iot-embedded-sdk/source/include"
       "${PLATFORM_DIR}/posix/ota_pal/source/include"
       ${OPENSSL_INCLUDE_DIR}
       ${CMAKE_CURRENT_LIST_DIR}
@@ -40,7 +40,7 @@ list( APPEND real_include_directories
 list ( APPEND test_include_directories
        ${CMAKE_CURRENT_BINARY_DIR}/include
        ${CMAKE_CURRENT_LIST_DIR}
-       ${MODULES_DIR}/aws/ota/source/include
+       ${MODULES_DIR}/aws/ota-for-aws-iot-embedded-sdk/source/include
        )
 
 #== ===========================  (end edit)  ===================================
