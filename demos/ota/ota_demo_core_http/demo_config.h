@@ -64,7 +64,7 @@
  * @note Port 443 requires use of the ALPN TLS extension with the ALPN protocol
  * name. When using port 8883, ALPN is not required.
  */
-#define AWS_MQTT_PORT       ( 8883 )
+#define AWS_MQTT_PORT    ( 8883 )
 
 /**
  * @brief AWS IoT Core server port number for HTTPS connections.
@@ -98,6 +98,16 @@
     #define ROOT_CA_CERT_PATH    "certificates/AmazonRootCA1.crt"
 #endif
 
+/**
+ * @brief Path of the file containing the server's root CA certificate for TLS
+ * authentication.
+ *
+ * The Baltimore Cybertrust Root CA Certificate is automatically downloaded to
+ * the certificates directory using the CMake build system, from @ref
+ * https://cacerts.digicert.com/BaltimoreCyberTrustRoot.crt.pem.
+ *
+ * @note This certificate should be PEM-encoded.
+ */
 #ifndef ROOT_CA_CERT_PATH_HTTP
     #define ROOT_CA_CERT_PATH_HTTP    "certificates/BaltimoreCyberTrustRoot.crt"
 #endif

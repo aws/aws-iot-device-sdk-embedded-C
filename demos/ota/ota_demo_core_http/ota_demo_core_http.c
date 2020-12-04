@@ -78,6 +78,9 @@
 #ifndef ROOT_CA_CERT_PATH
     #error "Please define path to Root CA certificate of the MQTT broker(ROOT_CA_CERT_PATH) in demo_config.h."
 #endif
+#ifndef ROOT_CA_CERT_PATH_HTTP
+    #error "Please define path to Root CA certificate of the HTTPS server(ROOT_CA_CERT_PATH_HTTP) in demo_config.h."
+#endif
 #ifndef CLIENT_IDENTIFIER
     #error "Please define a unique client identifier, CLIENT_IDENTIFIER, in demo_config.h."
 #endif
@@ -144,6 +147,12 @@
  * statistics like number of packets received, dropped, processed and queued per connection.
  */
 #define OTA_EXAMPLE_TASK_DELAY_MS                ( 1000U )
+
+/**
+ * @brief The timeout for waiting for the agent to get suspended after closing the
+ * connection.
+ */
+#define OTA_SUSPEND_TIMEOUT_MS                   ( 5000 )
 
 /**
  * @brief The maximum size of the file paths used in the demo.
@@ -246,7 +255,7 @@ struct NetworkContext
 /**
  * @brief Network connection context used in this demo for MQTT connection.
  */
-static NetworkContext_t networkContext;
+static NetworkContext_t networkContextMqtt;
 
 /**
  * @brief Network connection context used for HTTP connection.
@@ -286,14 +295,14 @@ static MQTTContext_t mqttContext;
 static bool mqttSessionEstablished = false;
 
 /**
- * @brief Structure for openssl parameters.
+ * @brief Structure for openssl parameters for TLS session used by MQTT connection.
  */
-static OpensslParams_t opensslParams;
+static OpensslParams_t opensslParamsForMqtt;
 
 /**
- * @brief Structure for openssl parameters.
+ * @brief Structure for openssl parameters for TLS session used by HTTP connection.
  */
-static OpensslParams_t opensslParamsHttp;
+static OpensslParams_t opensslParamsForHttp;
 
 /**
  * @brief The host address string extracted from the pre-signed URL.
@@ -959,14 +968,14 @@ static int establishConnection( void )
     int returnStatus = EXIT_FAILURE;
 
     /* Set the pParams member of the network context with desired transport. */
-    networkContext.pParams = &opensslParams;
+    networkContextMqtt.pParams = &opensslParamsForMqtt;
 
     /* Attempt to connect to the MQTT broker. If connection fails, retry after
      * a timeout. Timeout value will be exponentially increased till the maximum
      * attempts are reached or maximum timeout value is reached. The function
      * returns EXIT_FAILURE if the TCP connection cannot be established to
      * broker after configured number of attempts. */
-    returnStatus = connectToServerWithBackoffRetries( &networkContext );
+    returnStatus = connectToServerWithBackoffRetries( &networkContextMqtt );
 
     if( returnStatus != EXIT_SUCCESS )
     {
@@ -1012,7 +1021,7 @@ static void disconnect( void )
     MQTT_Disconnect( &mqttContext );
 
     /* End TLS session, then close TCP connection. */
-    ( void ) Openssl_Disconnect( &networkContext );
+    ( void ) Openssl_Disconnect( &networkContextMqtt );
 }
 
 static int32_t connectToS3Server( NetworkContext_t * pNetworkContext,
@@ -1094,7 +1103,7 @@ static OtaHttpStatus_t httpInit( const char * pUrl )
     size_t pathLen = 0;
 
     /* Set the pParams member of the network context with desired transport. */
-    networkContextHttp.pParams = &opensslParamsHttp;
+    networkContextHttp.pParams = &opensslParamsForHttp;
 
     /* Establish HTTPs connection */
     LogInfo( ( "Performing TLS handshake on top of the TCP connection." ) );
@@ -1451,6 +1460,9 @@ static int startOTADemo( void )
     /* OTA interface context required for library interface functions.*/
     OtaInterfaces_t otaInterfaces;
 
+    /* Maximum time to wait for the OTA agent to get suspended. */
+    int16_t suspendTimeout;
+
     /* Set OTA Library interfaces.*/
     setOtaInterfaces( &otaInterfaces );
 
@@ -1553,10 +1565,13 @@ static int startOTADemo( void )
                     }
                     else
                     {
-                        while( ( state = OTA_GetState() ) != OtaAgentStateSuspended )
+                        suspendTimeout = OTA_SUSPEND_TIMEOUT_MS;
+
+                        while( ( ( state = OTA_GetState() ) != OtaAgentStateSuspended ) && ( suspendTimeout > 0U ) )
                         {
                             /* Wait for OTA Library state to suspend */
                             sleep( OTA_EXAMPLE_TASK_DELAY_MS );
+                            suspendTimeout -= OTA_EXAMPLE_TASK_DELAY_MS;
                         }
                     }
                 }
@@ -1588,7 +1603,7 @@ int main( int argc,
     /* Return error status. */
     int returnStatus = EXIT_SUCCESS;
 
-    /* Semaphore initilization flag. */
+    /* Semaphore initialization flag. */
     bool bufferSemInitialized = false;
 
     LogInfo( ( "OTA over HTTP demo, Application version %u.%u.%u",
@@ -1610,7 +1625,7 @@ int main( int argc,
     {
         /* Initialize MQTT library. Initialization of the MQTT library needs to be
          * done only once in this demo. */
-        returnStatus = initializeMqtt( &mqttContext, &networkContext );
+        returnStatus = initializeMqtt( &mqttContext, &networkContextMqtt );
     }
 
     if( returnStatus == EXIT_SUCCESS )
