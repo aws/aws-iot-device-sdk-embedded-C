@@ -1357,6 +1357,9 @@ int main( int argc,
     /* Return error status. */
     int returnStatus = EXIT_SUCCESS;
 
+    /* Semaphore initilization flag. */
+    bool bufferSemInitialized = false;
+
     /* Initialize semaphore for buffer operations. */
     if( sem_init( &bufferSemaphore, 0, 1 ) != 0 )
     {
@@ -1366,6 +1369,11 @@ int main( int argc,
 
         returnStatus = EXIT_FAILURE;
     }
+    else
+    {
+        bufferSemInitialized = true;
+    }
+    
 
     if( returnStatus == EXIT_SUCCESS )
     {
@@ -1378,6 +1386,19 @@ int main( int argc,
     {
         /* Start OTA demo. */
         returnStatus = startOTADemo();
+    }
+
+    if( bufferSemInitialized == true )
+    {
+        /* Cleanup semaphore created for buffer operations. */
+        if( sem_destroy( &bufferSemaphore ) != 0 )
+        {
+            LogError( ( "Failed to destroy buffer semaphore"
+                        ",errno=%s",
+                        strerror( errno ) ) );
+
+            returnStatus = EXIT_FAILURE;
+        }
     }
 
     return returnStatus;
