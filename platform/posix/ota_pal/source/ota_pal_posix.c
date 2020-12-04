@@ -147,14 +147,14 @@ static EVP_PKEY * Openssl_GetPkeyFromCertificate( uint8_t * pCertFilePath )
 }
 
 
-static OtaPalMainStatus_t Openssl_DigestVerify( EVP_MD_CTX * pSigContext,
-                                                EVP_PKEY * pPkey,
-                                                FILE * pFile,
-                                                Sig256_t * pSignature )
+static OtaPalMainStatus_t Openssl_DigestVerifyStart( EVP_MD_CTX * pSigContext,
+                                                     EVP_PKEY * pPkey,
+                                                     FILE * pFile,
+                                                     uint8_t ** pBuf )
 {
     OtaPalMainStatus_t mainErr = OtaPalSignatureCheckFailed;
-    size_t bytesRead;
-    uint8_t * pBuf;
+
+    assert( pBuf != NULL );
 
     /* Verify an ECDSA-SHA256 signature. */
     if( ( pSigContext != NULL ) &&
@@ -164,60 +164,94 @@ static OtaPalMainStatus_t Openssl_DigestVerify( EVP_MD_CTX * pSigContext,
     {
         LogDebug( ( "Started signature verification." ) );
 
-        pBuf = OPENSSL_malloc( OTA_PAL_POSIX_BUF_SIZE );
+        *pBuf = OPENSSL_malloc( OTA_PAL_POSIX_BUF_SIZE );
 
-        if( pBuf != NULL )
-        {
-            /* Rewind the received file to the beginning. */
-            /* POSIX port using standard library */
-            /* coverity[misra_c_2012_rule_21_6_violation] */
-            if( fseek( pFile, 0L, SEEK_SET ) == 0 )
-            {
-                do
-                {
-                    /* POSIX port using standard library */
-                    /* coverity[misra_c_2012_rule_21_6_violation] */
-                    bytesRead = fread( pBuf, 1U, OTA_PAL_POSIX_BUF_SIZE, pFile );
-
-                    /* feof returns non-zero if end of file is reached, otherwise it returns 0. When
-                     * bytesRead is not equal to OTA_PAL_POSIX_BUF_SIZE, we should be reading last
-                     * chunk and reach to end of file. */
-                    if( ( bytesRead < OTA_PAL_POSIX_BUF_SIZE ) && ( 0 == feof( pFile ) ) )
-                    {
-                        break;
-                    }
-
-                    /* Include the file chunk in the signature validation. Zero size is OK. */
-                    if( 1 != EVP_DigestVerifyUpdate( pSigContext, pBuf, bytesRead ) )
-                    {
-                        break;
-                    }
-                } while( bytesRead > 0UL );
-
-                if( ( 0 != feof( pFile ) ) && ( 1 == EVP_DigestVerifyFinal( pSigContext,
-                                                                            pSignature->data,
-                                                                            pSignature->size ) ) )
-                {
-                    mainErr = OtaPalSuccess;
-                }
-                else
-                {
-                    LogError( ( "File signature check failed at FINAL" ) );
-                }
-            }
-
-            /* Free the temporary file page buffer. */
-            OPENSSL_free( pBuf );
-        }
-        else
+        if( *pBuf == NULL )
         {
             LogError( ( "Failed to allocate buffer memory." ) );
             mainErr = OtaPalOutOfMemory;
+        }
+        else
+        {
+            mainErr = OtaPalSuccess;
         }
     }
     else
     {
         LogError( ( "File signature check failed at INIT." ) );
+    }
+
+    return mainErr;
+}
+
+static bool Openssl_DigestVerifyUpdate( EVP_MD_CTX * pSigContext,
+                                        FILE * pFile,
+                                        uint8_t * pBuf )
+{
+    size_t bytesRead;
+
+    do
+    {
+        /* POSIX port using standard library */
+        /* coverity[misra_c_2012_rule_21_6_violation] */
+        bytesRead = fread( pBuf, 1U, OTA_PAL_POSIX_BUF_SIZE, pFile );
+
+        /* feof returns non-zero if end of file is reached, otherwise it returns 0. When
+         * bytesRead is not equal to OTA_PAL_POSIX_BUF_SIZE, we should be reading last
+         * chunk and reach to end of file. */
+        if( ( bytesRead < OTA_PAL_POSIX_BUF_SIZE ) && ( 0 == feof( pFile ) ) )
+        {
+            break;
+        }
+
+        /* Include the file chunk in the signature validation. Zero size is OK. */
+        if( 1 != EVP_DigestVerifyUpdate( pSigContext, pBuf, bytesRead ) )
+        {
+            break;
+        }
+    } while( bytesRead > 0UL );
+
+    return feof( pFile ) != 0;
+}
+
+static OtaPalMainStatus_t Openssl_DigestVerify( EVP_MD_CTX * pSigContext,
+                                                EVP_PKEY * pPkey,
+                                                FILE * pFile,
+                                                Sig256_t * pSignature )
+{
+    OtaPalMainStatus_t mainErr = OtaPalSignatureCheckFailed;
+    OtaPalMainStatus_t startErr;
+    uint8_t * pBuf;
+
+    startErr = Openssl_DigestVerifyStart( pSigContext, pPkey, pFile, &pBuf );
+
+    if( OtaPalSuccess == startErr )
+    {
+        /* Rewind the received file to the beginning. */
+        /* POSIX port using standard library */
+        /* coverity[misra_c_2012_rule_21_6_violation] */
+        if( fseek( pFile, 0L, SEEK_SET ) == 0 )
+        {
+            bool eof = Openssl_DigestVerifyUpdate( pSigContext, pFile, pBuf );
+
+            if( ( eof == true ) && ( 1 == EVP_DigestVerifyFinal( pSigContext,
+                                                                 pSignature->data,
+                                                                 pSignature->size ) ) )
+            {
+                mainErr = OtaPalSuccess;
+            }
+            else
+            {
+                LogError( ( "File signature check failed at FINAL" ) );
+            }
+        }
+
+        /* Free the temporary file page buffer. */
+        OPENSSL_free( pBuf );
+    }
+    else
+    {
+        mainErr = startErr;
     }
 
     return mainErr;
