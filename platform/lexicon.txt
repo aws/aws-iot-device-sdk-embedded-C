@@ -213,7 +213,6 @@ v1
 vtaskdelay
 writesize
 www
-ylbc+lyscwcslb2tecubja==\n
 blocksize
 config
 otapalsuccess
