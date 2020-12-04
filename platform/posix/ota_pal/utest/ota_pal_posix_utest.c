@@ -32,7 +32,6 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include <unistd.h>
 #include <sys/stat.h>
 #include "unity.h"
 
@@ -176,7 +175,7 @@ void test_OTAPAL_Abort_FileCloseFail( void )
 {
     OtaPalMainStatus_t result;
 
-    otaFile.pFilePath = ( uint8_t * ) otatestpalFIRMWARE_FILE;
+    otaFile.pFilePath = ( uint8_t * ) OTA_PAL_UTEST_FIRMWARE_FILE;
     otaFile.pFile = (FILE *) "placeholder";
 
     fclose_ExpectAnyArgsAndReturn( EOF );
@@ -278,7 +277,7 @@ void test_OTAPAL_WriteBlock_WriteSingleByte( void )
     uint32_t blockSize = 1;
 
     /* TEST: Write a byte of data. */
-    otaFile.pFilePath = ( uint8_t * ) otatestpalFIRMWARE_FILE;
+    otaFile.pFilePath = ( uint8_t * ) OTA_PAL_UTEST_FIRMWARE_FILE;
     fseek_alias_ExpectAnyArgsAndReturn(0);
     fwrite_alias_ExpectAnyArgsAndReturn(blockSize);
     numBytesWritten = otaPal_WriteBlock( &otaFile, 0, &data, blockSize );
