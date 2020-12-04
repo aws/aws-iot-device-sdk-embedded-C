@@ -458,7 +458,7 @@ int16_t otaPal_WriteBlock( OtaFileContext_t * const C,
     else /* Invalid context or file pointer provided. */
     {
         LogError( ( "Invalid context." ) );
-        filerc = -1; /*TODO: Need a negative error code from the PAL here. */
+        filerc = -1;
     }
 
     return ( int16_t ) filerc;
