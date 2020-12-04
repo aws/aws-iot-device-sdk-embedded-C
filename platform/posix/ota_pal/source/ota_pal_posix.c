@@ -87,7 +87,7 @@ static EVP_PKEY * Openssl_GetPkeyFromCertificate( uint8_t * pCertFilePath )
 
         if( rc != 1 )
         {
-            LogDebug( ( " TEMP solution: No cert file, get the signer cert from a pre-defined variable\n" ) );
+            LogDebug( ( " No cert file, reading signer cert from header file\n" ) );
 
             /* Get the signer cert from a predefined PEM string */
             BIO_free_all( pBio );
@@ -113,7 +113,7 @@ static EVP_PKEY * Openssl_GetPkeyFromCertificate( uint8_t * pCertFilePath )
         }
     }
 
-    if( pBio != NULL )
+    if( ( pBio != NULL ) && ( rc > 0 ) )
     {
         pCert = PEM_read_bio_X509( pBio, NULL, NULL, NULL );
 
@@ -152,7 +152,7 @@ static OtaPalMainStatus_t Openssl_DigestVerify( EVP_MD_CTX * pSigContext,
                                                 FILE * pFile,
                                                 Sig256_t * pSignature )
 {
-    OtaPalMainStatus_t mainErr = OtaPalSuccess;
+    OtaPalMainStatus_t mainErr = OtaPalSignatureCheckFailed;
     size_t bytesRead;
     uint8_t * pBuf;
 
@@ -178,16 +178,31 @@ static OtaPalMainStatus_t Openssl_DigestVerify( EVP_MD_CTX * pSigContext,
                     /* POSIX port using standard library */
                     /* coverity[misra_c_2012_rule_21_6_violation] */
                     bytesRead = fread( pBuf, 1U, OTA_PAL_POSIX_BUF_SIZE, pFile );
+
+                    /* feof returns non-zero if end of file is reached, otherwise it returns 0. When
+                     * bytesRead is not equal to OTA_PAL_POSIX_BUF_SIZE, we should be reading last
+                     * chunk and reach to end of file. */
+                    if( ( bytesRead < OTA_PAL_POSIX_BUF_SIZE ) && ( 0 == feof( pFile ) ) )
+                    {
+                        break;
+                    }
+
                     /* Include the file chunk in the signature validation. Zero size is OK. */
-                    ( void ) EVP_DigestVerifyUpdate( pSigContext, pBuf, bytesRead );
+                    if( 1 != EVP_DigestVerifyUpdate( pSigContext, pBuf, bytesRead ) )
+                    {
+                        break;
+                    }
                 } while( bytesRead > 0UL );
 
-                if( 1 != EVP_DigestVerifyFinal( pSigContext,
-                                                pSignature->data,
-                                                pSignature->size ) )
+                if( ( 0 != feof( pFile ) ) && ( 1 == EVP_DigestVerifyFinal( pSigContext,
+                                                                            pSignature->data,
+                                                                            pSignature->size ) ) )
+                {
+                    mainErr = OtaPalSuccess;
+                }
+                else
                 {
                     LogError( ( "File signature check failed at FINAL" ) );
-                    mainErr = OtaPalSignatureCheckFailed;
                 }
             }
 
@@ -203,7 +218,6 @@ static OtaPalMainStatus_t Openssl_DigestVerify( EVP_MD_CTX * pSigContext,
     else
     {
         LogError( ( "File signature check failed at INIT." ) );
-        mainErr = OtaPalSignatureCheckFailed;
     }
 
     return mainErr;
@@ -211,7 +225,7 @@ static OtaPalMainStatus_t Openssl_DigestVerify( EVP_MD_CTX * pSigContext,
 
 static OtaPalStatus_t otaPal_CheckFileSignature( OtaFileContext_t * const C )
 {
-    OtaPalMainStatus_t mainErr = OtaPalSuccess;
+    OtaPalMainStatus_t mainErr = OtaPalSignatureCheckFailed;
     EVP_PKEY * pPkey = NULL;
     EVP_MD_CTX * pSigContext = NULL;
 
@@ -233,7 +247,6 @@ static OtaPalStatus_t otaPal_CheckFileSignature( OtaFileContext_t * const C )
             if( pSigContext == NULL )
             {
                 LogError( ( "File signature check failed at NEW sig context." ) );
-                mainErr = OtaPalSignatureCheckFailed;
             }
             else
             {
@@ -406,7 +419,6 @@ OtaPalStatus_t otaPal_CloseFile( OtaFileContext_t * const C )
     }
     else /* Invalid OTA Context. */
     {
-        /* FIXME: Invalid error code for a null file context and file handle. */
         LogError( ( "Failed to close file: "
                     "Parameter check failed: "
                     "Invalid context." ) );
@@ -464,8 +476,7 @@ int16_t otaPal_WriteBlock( OtaFileContext_t * const C,
     return ( int16_t ) filerc;
 }
 
-/* Return no error. POSIX implementation simply does nothing on activate.
-* To run the new firmware image, double click the newly downloaded exe */
+/* Return no error. POSIX implementation simply does nothing on activate. */
 OtaPalStatus_t otaPal_ActivateNewImage( OtaFileContext_t * const C )
 {
     ( void ) C;
@@ -478,7 +489,7 @@ OtaPalStatus_t otaPal_ActivateNewImage( OtaFileContext_t * const C )
 OtaPalStatus_t otaPal_SetPlatformImageState( OtaFileContext_t * const C,
                                              OtaImageState_t eState )
 {
-    OtaPalMainStatus_t mainErr = OtaPalSuccess;
+    OtaPalMainStatus_t mainErr = OtaPalBadImageState;
     OtaPalSubStatus_t subErr = 0;
     FILE * pPlatformImageState = NULL;
     char imageStateFile[ OTA_FILE_PATH_LENGTH_MAX ];
@@ -501,34 +512,36 @@ OtaPalStatus_t otaPal_SetPlatformImageState( OtaFileContext_t * const C,
             /* Write the image state to PlatformImageState.txt. */
             /* POSIX port using standard library */
             /* coverity[misra_c_2012_rule_21_6_violation] */
-            if( 1UL != fwrite( &eState, sizeof( OtaImageState_t ), 1, pPlatformImageState ) )
+            if( 1UL == fwrite( &eState, sizeof( OtaImageState_t ), 1, pPlatformImageState ) )
+            {
+                /* Close PlatformImageState.txt. */
+                /* POSIX port using standard library */
+                /* coverity[misra_c_2012_rule_21_6_violation] */
+                if( 0 == fclose( pPlatformImageState ) )
+                {
+                    mainErr = OtaPalSuccess;
+                }
+                else
+                {
+                    LogError( ( "Unable to close image state file." ) );
+                    subErr = errno;
+                }
+            }
+            else
             {
                 LogError( ( "Unable to write to image state file. error-- %d", errno ) );
-                mainErr = OtaPalBadImageState;
-                subErr = errno;
-            }
-
-            /* Close PlatformImageState.txt. */
-            /* POSIX port using standard library */
-            /* coverity[misra_c_2012_rule_21_6_violation] */
-            if( 0 != fclose( pPlatformImageState ) )
-            {
-                LogError( ( "Unable to close image state file." ) );
-                mainErr = OtaPalBadImageState;
                 subErr = errno;
             }
         }
         else
         {
             LogError( ( "Unable to open image state file. error -- %d", errno ) );
-            mainErr = OtaPalBadImageState;
             subErr = errno;
         }
     }
     else /* Image state invalid. */
     {
         LogError( ( "Invalid image state provided." ) );
-        mainErr = OtaPalBadImageState;
     }
 
     /* Allow calls to fopen and fclose in this context. */
