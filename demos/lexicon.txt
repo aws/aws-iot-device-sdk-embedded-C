@@ -394,7 +394,7 @@ pkcs
 pki
 pkparse
 pkwrite
-plaformimagestate
+platformimagestate
 plaintext
 pleace
 pmessage

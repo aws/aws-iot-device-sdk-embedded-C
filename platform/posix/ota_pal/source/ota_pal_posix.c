@@ -519,7 +519,7 @@ OtaPalStatus_t otaPal_ActivateNewImage( OtaFileContext_t * const C )
 }
 
 /* Set the final state of the last transferred (final) OTA file (or bundle).
- * On POSIX, the state of the OTA image is stored in PlaformImageState.txt. */
+ * On POSIX, the state of the OTA image is stored in PlatformImageState.txt. */
 OtaPalStatus_t otaPal_SetPlatformImageState( OtaFileContext_t * const C,
                                              OtaImageState_t eState )
 {

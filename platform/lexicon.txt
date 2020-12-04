@@ -133,7 +133,7 @@ pfile
 pfilepath
 pformat
 phostname
-plaformimagestate
+platformimagestate
 plaintext
 platfrom
 platformimagestate
