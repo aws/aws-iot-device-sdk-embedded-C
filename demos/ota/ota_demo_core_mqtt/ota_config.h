@@ -65,7 +65,7 @@
  * @brief Size of the file data block message (excluding the header).
  *
  */
-#define otaconfigFILE_BLOCK_SIZE               (1UL << otaconfigLOG2_FILE_BLOCK_SIZE  )
+#define otaconfigFILE_BLOCK_SIZE               ( 1UL << otaconfigLOG2_FILE_BLOCK_SIZE )
 
 /**
  * @brief Milliseconds to wait for the self test phase to succeed before we force reset.

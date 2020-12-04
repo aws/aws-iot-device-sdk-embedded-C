@@ -149,10 +149,10 @@
 #define OTA_EXAMPLE_TASK_DELAY_MS                ( 1000U )
 
 /**
- * @brief The timeout for waiting for the agent to get suspended after closing the 
+ * @brief The timeout for waiting for the agent to get suspended after closing the
  * connection.
  */
-#define OTA_SUSPEND_TIMEOUT_MS               ( 5000 )
+#define OTA_SUSPEND_TIMEOUT_MS                   ( 5000 )
 
 /**
  * @brief The maximum size of the file paths used in the demo.
@@ -397,13 +397,13 @@ static OtaMqttStatus_t mqttUnsubscribe( const char * pTopicFilter,
 
 /**
  * @brief Start OTA demo.
- * 
- * The OTA task is created with initializing the OTA agent and 
+ *
+ * The OTA task is created with initializing the OTA agent and
  * setting the required interfaces. The demo loop then starts,
  * establishing an MQTT connection with the broker and waiting
  * for an update. After a successful update the OTA agent requests
  * a manual reset to the downloaded executable.
- * 
+ *
  * @return EXIT_SUCCESS or EXIT_FAILURE.
  */
 static int startOTADemo( void );
@@ -479,9 +479,9 @@ static void otaAppCallback( OtaJobEvent_t event,
                             void * pData );
 
 /**
- * @brief Callback registered with the OTA library that notifies the OTA agent 
+ * @brief Callback registered with the OTA library that notifies the OTA agent
  * of an incoming PUBLISH containing a job document.
- * 
+ *
  * @param[in] pContext MQTT context which stores the connection.
  * @param[in] pPublishInfo MQTT packet information which stores details of the
  * job document.
@@ -491,7 +491,7 @@ static void mqttJobCallback( MQTTContext_t * pContext,
 
 /**
  * @brief Callback that notifies the OTA library when a data block is received.
- * 
+ *
  * @param[in] pContext MQTT context which stores the connection.
  * @param[in] pPublishInfo MQTT packet that stores the information of the file block.
  */
@@ -500,7 +500,7 @@ static void mqttDataCallback( MQTTContext_t * pContext,
 
 /**
  * @brief callback to use with the MQTT context to notify incoming packet events.
- * 
+ *
  * @param[in] pMqttContext MQTT context which stores the connection.
  * @param[in] pPacketInfo Parameters of the incoming packet.
  * @param[in] pDeserializedInfo Deserialized packet information to be dispatched by
@@ -595,8 +595,8 @@ static void otaAppCallback( OtaJobEvent_t event,
     {
         /* This demo just accepts the image since it was a good OTA update and networking
          * and services are all working (or we would not have made it this far). If this
-         * were some custom device that wants to test other things before validating new 
-         * image, this would be the place to kick off those tests before calling 
+         * were some custom device that wants to test other things before validating new
+         * image, this would be the place to kick off those tests before calling
          * OTA_SetImageState() with the final result of either accepted or rejected. */
 
         LogInfo( ( "Received OtaJobEventStartTest callback from OTA Agent." ) );
@@ -755,8 +755,8 @@ static int initializeMqtt( MQTTContext_t * pMqttContext,
 
     /* Fill in TransportInterface send and receive function pointers.
      * For this demo, TCP sockets are used to send and receive data
-     * from network.  TLS over TCP channel is used as the transport 
-     * layer for the MQTT connection. Network context is SSL context 
+     * from network.  TLS over TCP channel is used as the transport
+     * layer for the MQTT connection. Network context is SSL context
      * for OpenSSL.*/
     transport.pNetworkContext = pNetworkContext;
     transport.send = Openssl_Send;
@@ -1079,12 +1079,13 @@ static OtaMqttStatus_t mqttSubscribe( const char * pTopicFilter,
 
     /* Register callback to subscription manager. */
     subscriptionStatus = SubscriptionManager_RegisterCallback( pTopicFilter, topicFilterLength, callback );
-    
-    if(subscriptionStatus != SUBSCRIPTION_MANAGER_SUCCESS)
+
+    if( subscriptionStatus != SUBSCRIPTION_MANAGER_SUCCESS )
     {
         LogWarn( ( "Failed to register a callback to subscription manager with error = %d.",
-                    subscriptionStatus ) )
+                   subscriptionStatus ) )
     }
+
     return otaRet;
 }
 
@@ -1339,7 +1340,8 @@ static int startOTADemo( void )
                     else
                     {
                         suspendTimeout = OTA_SUSPEND_TIMEOUT_MS;
-                        while(( ( state = OTA_GetState() ) != OtaAgentStateSuspended ) && (suspendTimeout > 0U))
+
+                        while( ( ( state = OTA_GetState() ) != OtaAgentStateSuspended ) && ( suspendTimeout > 0U ) )
                         {
                             /* Wait for OTA Library state to suspend */
                             sleep( OTA_EXAMPLE_TASK_DELAY_MS );
@@ -1375,7 +1377,7 @@ int main( int argc,
     /* Return error status. */
     int returnStatus = EXIT_SUCCESS;
 
-    /* Semaphore initilization flag. */
+    /* Semaphore initialization flag. */
     bool bufferSemInitialized = false;
 
     /* Initialize semaphore for buffer operations. */
@@ -1391,7 +1393,6 @@ int main( int argc,
     {
         bufferSemInitialized = true;
     }
-    
 
     if( returnStatus == EXIT_SUCCESS )
     {

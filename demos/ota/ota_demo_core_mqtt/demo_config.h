@@ -152,6 +152,6 @@
  * @brief The name of the library used and its version, following an "@"
  * symbol.
  */
-#define OTA_LIB                  "otalib@1.0.0"
+#define OTA_LIB                   "otalib@1.0.0"
 
 #endif /* ifndef DEMO_CONFIG_H */
