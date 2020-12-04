@@ -39,18 +39,37 @@
 #include <openssl/x509.h>
 #include <openssl/pem.h>
 
-
-/* Size of buffer used in file operations on this platform (linux). */
+/**
+ * @brief Size of buffer used in file operations on this platform (linux).
+ */
 #define OTA_PAL_LINUX_BUF_SIZE    ( ( size_t ) 4096U )
 
-
-/* Specify the OTA signature algorithm we support on this platform. */
+/**
+ * @brief Specify the OTA signature algorithm we support on this platform.
+ */
 const char OTA_JsonFileSignatureKey[ OTA_FILE_SIG_KEY_STR_MAX_LENGTH ] = "sig-sha256-ecdsa";
 
+/**
+ * @brief Read the specified signer certificate from the filesystem into a local buffer. The allocated
+ * memory becomes the property of the caller who is responsible for freeing it.
+ */
+static EVP_PKEY * Openssl_GetPkeyFromCertificate( uint8_t * pCertFilePath );
+
+/**
+ * @brief Verify the signature of the input content with OpenSSL.
+ */
+static OtaPalMainStatus_t Openssl_DigestVerify( EVP_MD_CTX * pSigContext,
+                                                EVP_PKEY * pPkey,
+                                                FILE * pFile,
+                                                Sig256_t * pSignature );
+
+/**
+ * @brief Verify the signature of the specified file using OpenSSL.
+ */
 static OtaPalStatus_t otaPal_CheckFileSignature( OtaFileContext_t * const C );
 
-/* Read the specified signer certificate from the filesystem into a local buffer. The allocated
- * memory becomes the property of the caller who is responsible for freeing it. */
+/*-----------------------------------------------------------*/
+
 static EVP_PKEY * Openssl_GetPkeyFromCertificate( uint8_t * pCertFilePath )
 {
     BIO * pBio = NULL;
@@ -127,227 +146,8 @@ static EVP_PKEY * Openssl_GetPkeyFromCertificate( uint8_t * pCertFilePath )
     /* pPkey should be freed by the caller */
     return pPkey;
 }
-/*-----------------------------------------------------------*/
 
 
-/* Attempt to create a new receive file for the file chunks as they come in. */
-OtaPalStatus_t otaPal_CreateFileForRx( OtaFileContext_t * const C )
-{
-    OtaPalStatus_t result = OTA_PAL_COMBINE_ERR( OtaPalUninitialized, 0 );
-    char realFilePath[ OTA_FILE_PATH_LENGTH_MAX ];
-
-    if( C != NULL )
-    {
-        if( C->pFilePath != NULL )
-        {
-            if( C->pFilePath[ 0 ] != '/' )
-            {
-                int res = snprintf( realFilePath, OTA_FILE_PATH_LENGTH_MAX, "%s/%s", getenv( "PWD" ), C->pFilePath );
-                assert( res >= 0 );
-                ( void ) res; /* Suppress the unused variable warning when assert is off. */
-            }
-            else
-            {
-                strncpy( realFilePath, ( const char * ) C->pFilePath, strlen( ( const char * ) C->pFilePath ) + 1 );
-            }
-
-            /* Linux port using standard library */
-            /* coverity[misra_c_2012_rule_21_6_violation] */
-            C->pFile = fopen( ( const char * ) realFilePath, "w+b" ); /*lint !e586
-                                                                       * C standard library call is being used for portability. */
-
-            if( C->pFile != NULL )
-            {
-                result = OTA_PAL_COMBINE_ERR( OtaPalSuccess, 0 );
-                LogInfo( ( "Receive file created." ) );
-            }
-            else
-            {
-                result = OTA_PAL_COMBINE_ERR( OtaPalRxFileCreateFailed, errno );
-                LogError( ( "Failed to start operation: Operation already started. failed to open -- %s Path ", C->pFilePath ) );
-            }
-        }
-        else
-        {
-            result = OTA_PAL_COMBINE_ERR( OtaPalRxFileCreateFailed, 0 );
-            LogError( ( "Invalid file path provided." ) );
-        }
-    }
-    else
-    {
-        result = OTA_PAL_COMBINE_ERR( OtaPalRxFileCreateFailed, 0 );
-        LogError( ( "Invalid context provided." ) );
-    }
-
-    /* Exiting function without calling fclose. Context file handle state is managed by this API. */
-    return result;
-}
-
-
-/* Abort receiving the specified OTA update by closing the file. */
-OtaPalStatus_t otaPal_Abort( OtaFileContext_t * const C )
-{
-    /* Set default return status to uninitialized. */
-    OtaPalMainStatus_t mainErr = OtaPalUninitialized;
-    OtaPalSubStatus_t subErr = 0;
-    int32_t lFileClosresult;
-
-    if( NULL != C )
-    {
-        /* Close the OTA update file if it's open. */
-        if( NULL != C->pFile )
-        {
-            /* Linux port using standard library */
-            /* coverity[misra_c_2012_rule_21_6_violation] */
-            lFileClosresult = fclose( C->pFile ); /*lint !e482 !e586
-                                                   * Context file handle state is managed by this API. */
-            C->pFile = NULL;
-
-            if( 0 == lFileClosresult )
-            {
-                LogInfo( ( "Closed file." ) );
-                mainErr = OtaPalSuccess;
-            }
-            else /* Failed to close file. */
-            {
-                LogError( ( "Failed to close file." ) );
-                mainErr = OtaPalFileAbort;
-                subErr = errno;
-            }
-        }
-        else
-        {
-            /* Nothing to do. No open file associated with this context. */
-            mainErr = OtaPalSuccess;
-        }
-    }
-    else /* Context was not valid. */
-    {
-        LogError( ( "Parameter check failed: Input is NULL." ) );
-        mainErr = OtaPalFileAbort;
-    }
-
-    return OTA_PAL_COMBINE_ERR( mainErr, subErr );
-}
-
-/* Write a block of data to the specified file. */
-int16_t otaPal_WriteBlock( OtaFileContext_t * const C,
-                           uint32_t ulOffset,
-                           uint8_t * const pcData,
-                           uint32_t ulBlockSize )
-{
-    int32_t filerc = 0;
-    size_t writeSize = 0;
-
-    if( C != NULL )
-    {
-        /* Linux port using standard library */
-        /* coverity[misra_c_2012_rule_21_6_violation] */
-        filerc = fseek( C->pFile, ( int64_t ) ulOffset, SEEK_SET ); /*lint !e586 !e713 !e9034
-                                                                     * C standard library call is being used for portability. */
-
-        if( 0 == filerc )
-        {
-            /* Linux port using standard library */
-            /* coverity[misra_c_2012_rule_21_6_violation] */
-            writeSize = fwrite( pcData, 1, ulBlockSize, C->pFile ); /*lint !e586 !e713 !e9034
-                                                                     * C standard library call is being used for portability. */
-
-            if( writeSize != ulBlockSize )
-            {
-                LogError( ( "Failed to write block to file: "
-                            "fwrite returned error: "
-                            "errno=%d", errno ) );
-
-                filerc = -1; /*lint !e40 !e9027
-                              * Errno is being used in accordance with host API documentation. */
-            }
-            else
-            {
-                filerc = ( int32_t ) writeSize;
-            }
-        }
-        else
-        {
-            LogError( ( "fseek failed. fseek returned errno = %d", errno ) );
-            filerc = -1; /*lint !e40 !e9027
-                          * Errno is being used in accordance with host API documentation.*/
-        }
-    }
-    else /* Invalid context or file pointer provided. */
-    {
-        LogError( ( "Invalid context." ) );
-        filerc = -1; /*TODO: Need a negative error code from the PAL here. */
-    }
-
-    return ( int16_t ) filerc;
-}
-
-/* Close the specified file. This shall authenticate the file if it is marked as secure. */
-OtaPalStatus_t otaPal_CloseFile( OtaFileContext_t * const C )
-{
-    int32_t filerc = 0;
-    OtaPalMainStatus_t mainErr = OtaPalSuccess;
-    OtaPalSubStatus_t subErr = 0;
-    OtaPalStatus_t result;
-
-    if( C != NULL )
-    {
-        if( C->pSignature != NULL )
-        {
-            /* Verify the file signature, close the file and return the signature verification result. */
-            result = otaPal_CheckFileSignature( C );
-            mainErr = OTA_PAL_MAIN_ERR( result );
-            subErr = OTA_PAL_SUB_ERR( result );
-        }
-        else
-        {
-            LogError( ( "Parameter check failed: OTA signature structure is NULL." ) );
-            mainErr = OtaPalSignatureCheckFailed;
-        }
-
-        /* Close the file. */
-        /* Linux port using standard library */
-        /* coverity[misra_c_2012_rule_21_6_violation] */
-        filerc = fclose( C->pFile ); /*lint !e482 !e586
-                                      * C standard library call is being used for portability. */
-        C->pFile = NULL;
-
-        if( filerc != 0 )
-        {
-            LogError( ( "Failed to close OTA update file." ) );
-            mainErr = OtaPalFileClose;
-            subErr = errno;
-        }
-
-        if( mainErr == OtaPalSuccess )
-        {
-            LogInfo( ( "%s signature verification passed.", OTA_JsonFileSignatureKey ) );
-
-            ( void ) otaPal_SetPlatformImageState( C, OtaImageStateTesting );
-        }
-        else
-        {
-            LogError( ( "Failed to pass %s signature verification: %d.",
-                        OTA_JsonFileSignatureKey, OTA_PAL_COMBINE_ERR( mainErr, subErr ) ) );
-
-            /* If we fail to verify the file signature that means the image is not valid. We need to set the image state to aborted. */
-            ( void ) otaPal_SetPlatformImageState( C, OtaImageStateAborted );
-        }
-    }
-    else /* Invalid OTA Context. */
-    {
-        /* FIXME: Invalid error code for a null file context and file handle. */
-        LogError( ( "Failed to close file: "
-                    "Parameter check failed: "
-                    "Invalid context." ) );
-        mainErr = OtaPalFileClose;
-    }
-
-    return OTA_PAL_COMBINE_ERR( mainErr, subErr );
-}
-
-/* Verify the signature of the input content with OpenSSL. */
 static OtaPalMainStatus_t Openssl_DigestVerify( EVP_MD_CTX * pSigContext,
                                                 EVP_PKEY * pPkey,
                                                 FILE * pFile,
@@ -412,7 +212,6 @@ static OtaPalMainStatus_t Openssl_DigestVerify( EVP_MD_CTX * pSigContext,
     return mainErr;
 }
 
-/* Verify the signature of the specified file using OpenSSL. */
 static OtaPalStatus_t otaPal_CheckFileSignature( OtaFileContext_t * const C )
 {
     OtaPalMainStatus_t mainErr = OtaPalSuccess;
@@ -464,22 +263,224 @@ static OtaPalStatus_t otaPal_CheckFileSignature( OtaFileContext_t * const C )
 
 /*-----------------------------------------------------------*/
 
-OtaPalStatus_t otaPal_ResetDevice( OtaFileContext_t * const C )
+OtaPalStatus_t otaPal_Abort( OtaFileContext_t * const C )
 {
-    ( void ) C;
+    /* Set default return status to uninitialized. */
+    OtaPalMainStatus_t mainErr = OtaPalUninitialized;
+    OtaPalSubStatus_t subErr = 0;
+    int32_t lFileClosresult;
 
-    /* Return no error.  linux implementation does not reset device. */
-    return OTA_PAL_COMBINE_ERR( OtaPalSuccess, 0 );
+    if( NULL != C )
+    {
+        /* Close the OTA update file if it's open. */
+        if( NULL != C->pFile )
+        {
+            /* Linux port using standard library */
+            /* coverity[misra_c_2012_rule_21_6_violation] */
+            lFileClosresult = fclose( C->pFile ); /*lint !e482 !e586
+                                                   * Context file handle state is managed by this API. */
+            C->pFile = NULL;
+
+            if( 0 == lFileClosresult )
+            {
+                LogInfo( ( "Closed file." ) );
+                mainErr = OtaPalSuccess;
+            }
+            else /* Failed to close file. */
+            {
+                LogError( ( "Failed to close file." ) );
+                mainErr = OtaPalFileAbort;
+                subErr = errno;
+            }
+        }
+        else
+        {
+            /* Nothing to do. No open file associated with this context. */
+            mainErr = OtaPalSuccess;
+        }
+    }
+    else /* Context was not valid. */
+    {
+        LogError( ( "Parameter check failed: Input is NULL." ) );
+        mainErr = OtaPalFileAbort;
+    }
+
+    return OTA_PAL_COMBINE_ERR( mainErr, subErr );
 }
 
-/*-----------------------------------------------------------*/
+OtaPalStatus_t otaPal_CreateFileForRx( OtaFileContext_t * const C )
+{
+    OtaPalStatus_t result = OTA_PAL_COMBINE_ERR( OtaPalUninitialized, 0 );
+    char realFilePath[ OTA_FILE_PATH_LENGTH_MAX ];
 
+    if( C != NULL )
+    {
+        if( C->pFilePath != NULL )
+        {
+            if( C->pFilePath[ 0 ] != '/' )
+            {
+                int res = snprintf( realFilePath, OTA_FILE_PATH_LENGTH_MAX, "%s/%s", getenv( "PWD" ), C->pFilePath );
+                assert( res >= 0 );
+                ( void ) res; /* Suppress the unused variable warning when assert is off. */
+            }
+            else
+            {
+                strncpy( realFilePath, ( const char * ) C->pFilePath, strlen( ( const char * ) C->pFilePath ) + 1 );
+            }
+
+            /* Linux port using standard library */
+            /* coverity[misra_c_2012_rule_21_6_violation] */
+            C->pFile = fopen( ( const char * ) realFilePath, "w+b" ); /*lint !e586
+                                                                       * C standard library call is being used for portability. */
+
+            if( C->pFile != NULL )
+            {
+                result = OTA_PAL_COMBINE_ERR( OtaPalSuccess, 0 );
+                LogInfo( ( "Receive file created." ) );
+            }
+            else
+            {
+                result = OTA_PAL_COMBINE_ERR( OtaPalRxFileCreateFailed, errno );
+                LogError( ( "Failed to start operation: Operation already started. failed to open -- %s Path ", C->pFilePath ) );
+            }
+        }
+        else
+        {
+            result = OTA_PAL_COMBINE_ERR( OtaPalRxFileCreateFailed, 0 );
+            LogError( ( "Invalid file path provided." ) );
+        }
+    }
+    else
+    {
+        result = OTA_PAL_COMBINE_ERR( OtaPalRxFileCreateFailed, 0 );
+        LogError( ( "Invalid context provided." ) );
+    }
+
+    /* Exiting function without calling fclose. Context file handle state is managed by this API. */
+    return result;
+}
+
+OtaPalStatus_t otaPal_CloseFile( OtaFileContext_t * const C )
+{
+    int32_t filerc = 0;
+    OtaPalMainStatus_t mainErr = OtaPalSuccess;
+    OtaPalSubStatus_t subErr = 0;
+    OtaPalStatus_t result;
+
+    if( C != NULL )
+    {
+        if( C->pSignature != NULL )
+        {
+            /* Verify the file signature, close the file and return the signature verification result. */
+            result = otaPal_CheckFileSignature( C );
+            mainErr = OTA_PAL_MAIN_ERR( result );
+            subErr = OTA_PAL_SUB_ERR( result );
+        }
+        else
+        {
+            LogError( ( "Parameter check failed: OTA signature structure is NULL." ) );
+            mainErr = OtaPalSignatureCheckFailed;
+        }
+
+        /* Close the file. */
+        /* Linux port using standard library */
+        /* coverity[misra_c_2012_rule_21_6_violation] */
+        filerc = fclose( C->pFile ); /*lint !e482 !e586
+                                      * C standard library call is being used for portability. */
+        C->pFile = NULL;
+
+        if( filerc != 0 )
+        {
+            LogError( ( "Failed to close OTA update file." ) );
+            mainErr = OtaPalFileClose;
+            subErr = errno;
+        }
+
+        if( mainErr == OtaPalSuccess )
+        {
+            LogInfo( ( "%s signature verification passed.", OTA_JsonFileSignatureKey ) );
+
+            ( void ) otaPal_SetPlatformImageState( C, OtaImageStateTesting );
+        }
+        else
+        {
+            LogError( ( "Failed to pass %s signature verification: %d.",
+                        OTA_JsonFileSignatureKey, OTA_PAL_COMBINE_ERR( mainErr, subErr ) ) );
+
+            /* If we fail to verify the file signature that means the image is not valid. We need to set the image state to aborted. */
+            ( void ) otaPal_SetPlatformImageState( C, OtaImageStateAborted );
+        }
+    }
+    else /* Invalid OTA Context. */
+    {
+        /* FIXME: Invalid error code for a null file context and file handle. */
+        LogError( ( "Failed to close file: "
+                    "Parameter check failed: "
+                    "Invalid context." ) );
+        mainErr = OtaPalFileClose;
+    }
+
+    return OTA_PAL_COMBINE_ERR( mainErr, subErr );
+}
+
+int16_t otaPal_WriteBlock( OtaFileContext_t * const C,
+                           uint32_t ulOffset,
+                           uint8_t * const pcData,
+                           uint32_t ulBlockSize )
+{
+    int32_t filerc = 0;
+    size_t writeSize = 0;
+
+    if( C != NULL )
+    {
+        /* Linux port using standard library */
+        /* coverity[misra_c_2012_rule_21_6_violation] */
+        filerc = fseek( C->pFile, ( int64_t ) ulOffset, SEEK_SET ); /*lint !e586 !e713 !e9034
+                                                                     * C standard library call is being used for portability. */
+
+        if( 0 == filerc )
+        {
+            /* Linux port using standard library */
+            /* coverity[misra_c_2012_rule_21_6_violation] */
+            writeSize = fwrite( pcData, 1, ulBlockSize, C->pFile ); /*lint !e586 !e713 !e9034
+                                                                     * C standard library call is being used for portability. */
+
+            if( writeSize != ulBlockSize )
+            {
+                LogError( ( "Failed to write block to file: "
+                            "fwrite returned error: "
+                            "errno=%d", errno ) );
+
+                filerc = -1; /*lint !e40 !e9027
+                              * Errno is being used in accordance with host API documentation. */
+            }
+            else
+            {
+                filerc = ( int32_t ) writeSize;
+            }
+        }
+        else
+        {
+            LogError( ( "fseek failed. fseek returned errno = %d", errno ) );
+            filerc = -1; /*lint !e40 !e9027
+                          * Errno is being used in accordance with host API documentation.*/
+        }
+    }
+    else /* Invalid context or file pointer provided. */
+    {
+        LogError( ( "Invalid context." ) );
+        filerc = -1; /*TODO: Need a negative error code from the PAL here. */
+    }
+
+    return ( int16_t ) filerc;
+}
+
+/* Return no error. linux implementation simply does nothing on activate.
+* To run the new firmware image, double click the newly downloaded exe */
 OtaPalStatus_t otaPal_ActivateNewImage( OtaFileContext_t * const C )
 {
     ( void ) C;
 
-    /* Return no error. linux implementation simply does nothing on activate.
-    * To run the new firmware image, double click the newly downloaded exe */
     return OTA_PAL_COMBINE_ERR( OtaPalSuccess, 0 );
 }
 
@@ -545,6 +546,14 @@ OtaPalStatus_t otaPal_SetPlatformImageState( OtaFileContext_t * const C,
 
     /* Allow calls to fopen and fclose in this context. */
     return OTA_PAL_COMBINE_ERR( mainErr, subErr );
+}
+
+OtaPalStatus_t otaPal_ResetDevice( OtaFileContext_t * const C )
+{
+    ( void ) C;
+
+    /* Return no error.  linux implementation does not reset device. */
+    return OTA_PAL_COMBINE_ERR( OtaPalSuccess, 0 );
 }
 
 /* Get the state of the currently running image.
