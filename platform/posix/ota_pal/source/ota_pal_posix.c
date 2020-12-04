@@ -82,7 +82,6 @@ static EVP_PKEY * Openssl_GetPkeyFromCertificate( uint8_t * pCertFilePath )
 
     if( pBio != NULL )
     {
-        /* The operand "1" is not exposed and controllable here */
         /* coverity[misra_c_2012_rule_10_1_violation] */
         rc = BIO_read_filename( pBio, pCertFilePath );
 
@@ -172,22 +171,20 @@ static OtaPalMainStatus_t Openssl_DigestVerify( EVP_MD_CTX * pSigContext,
             /* Rewind the received file to the beginning. */
             /* Linux port using standard library */
             /* coverity[misra_c_2012_rule_21_6_violation] */
-            if( fseek( pFile, 0L, SEEK_SET ) == 0 ) /*lint !e586
-                                                     * C standard library call is being used for portability. */
+            if( fseek( pFile, 0L, SEEK_SET ) == 0 )
             {
                 do
                 {
                     /* Linux port using standard library */
                     /* coverity[misra_c_2012_rule_21_6_violation] */
-                    bytesRead = fread( pBuf, 1U, OTA_PAL_LINUX_BUF_SIZE, pFile ); /*lint !e586
-                                                                                   * C standard library call is being used for portability. */
+                    bytesRead = fread( pBuf, 1U, OTA_PAL_LINUX_BUF_SIZE, pFile );
                     /* Include the file chunk in the signature validation. Zero size is OK. */
                     ( void ) EVP_DigestVerifyUpdate( pSigContext, pBuf, bytesRead );
                 } while( bytesRead > 0UL );
 
                 if( 1 != EVP_DigestVerifyFinal( pSigContext,
                                                 pSignature->data,
-                                                pSignature->size ) ) /*lint !e732 !e9034 Allow comparison in this context. */
+                                                pSignature->size ) )
                 {
                     LogError( ( "File signature check failed at FINAL" ) );
                     mainErr = OtaPalSignatureCheckFailed;
@@ -277,8 +274,7 @@ OtaPalStatus_t otaPal_Abort( OtaFileContext_t * const C )
         {
             /* Linux port using standard library */
             /* coverity[misra_c_2012_rule_21_6_violation] */
-            lFileClosresult = fclose( C->pFile ); /*lint !e482 !e586
-                                                   * Context file handle state is managed by this API. */
+            lFileClosresult = fclose( C->pFile );
             C->pFile = NULL;
 
             if( 0 == lFileClosresult )
@@ -330,8 +326,7 @@ OtaPalStatus_t otaPal_CreateFileForRx( OtaFileContext_t * const C )
 
             /* Linux port using standard library */
             /* coverity[misra_c_2012_rule_21_6_violation] */
-            C->pFile = fopen( ( const char * ) realFilePath, "w+b" ); /*lint !e586
-                                                                       * C standard library call is being used for portability. */
+            C->pFile = fopen( ( const char * ) realFilePath, "w+b" );
 
             if( C->pFile != NULL )
             {
@@ -385,8 +380,7 @@ OtaPalStatus_t otaPal_CloseFile( OtaFileContext_t * const C )
         /* Close the file. */
         /* Linux port using standard library */
         /* coverity[misra_c_2012_rule_21_6_violation] */
-        filerc = fclose( C->pFile ); /*lint !e482 !e586
-                                      * C standard library call is being used for portability. */
+        filerc = fclose( C->pFile );
         C->pFile = NULL;
 
         if( filerc != 0 )
@@ -435,15 +429,13 @@ int16_t otaPal_WriteBlock( OtaFileContext_t * const C,
     {
         /* Linux port using standard library */
         /* coverity[misra_c_2012_rule_21_6_violation] */
-        filerc = fseek( C->pFile, ( int64_t ) ulOffset, SEEK_SET ); /*lint !e586 !e713 !e9034
-                                                                     * C standard library call is being used for portability. */
+        filerc = fseek( C->pFile, ( int64_t ) ulOffset, SEEK_SET );
 
         if( 0 == filerc )
         {
             /* Linux port using standard library */
             /* coverity[misra_c_2012_rule_21_6_violation] */
-            writeSize = fwrite( pcData, 1, ulBlockSize, C->pFile ); /*lint !e586 !e713 !e9034
-                                                                     * C standard library call is being used for portability. */
+            writeSize = fwrite( pcData, 1, ulBlockSize, C->pFile );
 
             if( writeSize != ulBlockSize )
             {
@@ -451,8 +443,7 @@ int16_t otaPal_WriteBlock( OtaFileContext_t * const C,
                             "fwrite returned error: "
                             "errno=%d", errno ) );
 
-                filerc = -1; /*lint !e40 !e9027
-                              * Errno is being used in accordance with host API documentation. */
+                filerc = -1;
             }
             else
             {
@@ -462,8 +453,7 @@ int16_t otaPal_WriteBlock( OtaFileContext_t * const C,
         else
         {
             LogError( ( "fseek failed. fseek returned errno = %d", errno ) );
-            filerc = -1; /*lint !e40 !e9027
-                          * Errno is being used in accordance with host API documentation.*/
+            filerc = -1;
         }
     }
     else /* Invalid context or file pointer provided. */
@@ -505,16 +495,14 @@ OtaPalStatus_t otaPal_SetPlatformImageState( OtaFileContext_t * const C,
 
         /* Linux port using standard library */
         /* coverity[misra_c_2012_rule_21_6_violation] */
-        pPlatformImageState = fopen( imageStateFile, "w+b" ); /*lint !e586
-                                                               * C standard library call is being used for portability. */
+        pPlatformImageState = fopen( imageStateFile, "w+b" );
 
         if( pPlatformImageState != NULL )
         {
             /* Write the image state to PlatformImageState.txt. */
             /* Linux port using standard library */
             /* coverity[misra_c_2012_rule_21_6_violation] */
-            if( 1UL != fwrite( &eState, sizeof( OtaImageState_t ), 1, pPlatformImageState ) ) /*lint !e586 !e9029
-                                                                                               * C standard library call is being used for portability. */
+            if( 1UL != fwrite( &eState, sizeof( OtaImageState_t ), 1, pPlatformImageState ) )
             {
                 LogError( ( "Unable to write to image state file. error-- %d", errno ) );
                 mainErr = OtaPalBadImageState;
@@ -524,7 +512,7 @@ OtaPalStatus_t otaPal_SetPlatformImageState( OtaFileContext_t * const C,
             /* Close PlatformImageState.txt. */
             /* Linux port using standard library */
             /* coverity[misra_c_2012_rule_21_6_violation] */
-            if( 0 != fclose( pPlatformImageState ) ) /*lint !e586 Allow call in this context. */
+            if( 0 != fclose( pPlatformImageState ) )
             {
                 LogError( ( "Unable to close image state file." ) );
                 mainErr = OtaPalBadImageState;
@@ -537,7 +525,7 @@ OtaPalStatus_t otaPal_SetPlatformImageState( OtaFileContext_t * const C,
             mainErr = OtaPalBadImageState;
             subErr = errno;
         }
-    }    /*lint !e481 Allow fopen and fclose calls in this context. */
+    }
     else /* Image state invalid. */
     {
         LogError( ( "Invalid image state provided." ) );
@@ -584,15 +572,13 @@ OtaPalImageState_t otaPal_GetPlatformImageState( OtaFileContext_t * const C )
 
     /* Linux port using standard library */
     /* coverity[misra_c_2012_rule_21_6_violation] */
-    pPlatformImageState = fopen( imageStateFile, "r+b" ); /*lint !e586
-                                                           * C standard library call is being used for portability. */
+    pPlatformImageState = fopen( imageStateFile, "r+b" );
 
     if( pPlatformImageState != NULL )
     {
         /* Linux port using standard library */
         /* coverity[misra_c_2012_rule_21_6_violation] */
-        if( 1U != fread( &eSavedAgentState, sizeof( OtaImageState_t ), 1, pPlatformImageState ) ) /*lint !e586 !e9029
-                                                                                                   * C standard library call is being used for portability. */
+        if( 1U != fread( &eSavedAgentState, sizeof( OtaImageState_t ), 1, pPlatformImageState ) )
         {
             /* If an error occurred reading the file, mark the state as aborted. */
             LogError( ( "Failed to read image state file." ) );
@@ -616,8 +602,7 @@ OtaPalImageState_t otaPal_GetPlatformImageState( OtaFileContext_t * const C )
 
         /* Linux port using standard library */
         /* coverity[misra_c_2012_rule_21_6_violation] */
-        if( 0 != fclose( pPlatformImageState ) ) /*lint !e586
-                                                  * C standard library call is being used for portability. */
+        if( 0 != fclose( pPlatformImageState ) )
         {
             LogError( ( "Failed to close image state file." ) );
             ePalState = OtaPalImageStateInvalid;
@@ -629,7 +614,7 @@ OtaPalImageState_t otaPal_GetPlatformImageState( OtaFileContext_t * const C )
         ePalState = OtaPalImageStateValid; /*lint !e64 Allow assignment. */
     }
 
-    return ePalState; /*lint !e64 !e480 !e481 I/O calls and return type are used per design. */
+    return ePalState;
 }
 
 /*-----------------------------------------------------------*/
