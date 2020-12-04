@@ -37,4 +37,9 @@ dependencies:
     repository:
       type: "git"
       url: "https://github.com/aws/Jobs-for-AWS-IoT-embedded-sdk"
+  - name: "backoffAlgorithm"
+    version: "v1.0.0"
+    repository:
+      type: "git"
+      url: "https://github.com/FreeRTOS/backoffAlgorithm"
 license: "MIT"

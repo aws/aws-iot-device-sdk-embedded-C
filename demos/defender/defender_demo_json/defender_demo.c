@@ -672,16 +672,13 @@ int main( int argc,
         {
             for( i = 0; i < DEFENDER_RESPONSE_WAIT_SECONDS; i++ )
             {
-                ( void ) ProcessLoop();
+                ( void ) ProcessLoop( 1000 );
 
                 /* reportStatus is updated in the publishCallback. */
                 if( reportStatus != ReportStatusNotReceived )
                 {
                     break;
                 }
-
-                /* Wait for sometime between consecutive executions of ProcessLoop. */
-                sleep( 1 );
             }
         }
 

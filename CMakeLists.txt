@@ -101,4 +101,3 @@ if(${BUILD_TESTS})
         add_subdirectory(${DIR_PATH})
     endforeach()
 endif()
-

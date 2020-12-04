@@ -85,7 +85,7 @@ void end( CK_SESSION_HANDLE session,
  *
  * @param[in] pcDescription         Description message
  * @param[in] pucData               Hex contents to print (Public key)
- * @param[in] ulDataLength          Lenghth of pucData
+ * @param[in] ulDataLength          Length of pucData
  *
  */
 void writeHexBytesToConsole( char * description,
