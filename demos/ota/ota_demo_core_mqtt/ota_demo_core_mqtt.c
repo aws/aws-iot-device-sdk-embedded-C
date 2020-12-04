@@ -149,6 +149,12 @@
 #define OTA_EXAMPLE_TASK_DELAY_MS                ( 1000U )
 
 /**
+ * @brief The timeout for waiting for the agent to get suspended after closing the 
+ * connection.
+ */
+#define OTA_SUSPEND_TIMEOUT_MS               ( 5000 )
+
+/**
  * @brief The maximum size of the file paths used in the demo.
  */
 #define OTA_MAX_FILE_PATH_SIZE                   ( 260 )
@@ -391,7 +397,13 @@ static OtaMqttStatus_t mqttUnsubscribe( const char * pTopicFilter,
 
 /**
  * @brief Start OTA demo.
- *
+ * 
+ * The OTA task is created with initializing the OTA agent and 
+ * setting the required interfaces. The demo loop then starts,
+ * establishing an MQTT connection with the broker and waiting
+ * for an update. After a successful update the OTA agent requests
+ * a manual reset to the downloaded executable.
+ * 
  * @return EXIT_SUCCESS or EXIT_FAILURE.
  */
 static int startOTADemo( void );
@@ -467,7 +479,8 @@ static void otaAppCallback( OtaJobEvent_t event,
                             void * pData );
 
 /**
- * @brief Callback that notifies the OTA library when a job document is received.
+ * @brief Callback registered with the OTA library that notifies the OTA agent 
+ * of an incoming PUBLISH containing a job document.
  * 
  * @param[in] pContext MQTT context which stores the connection.
  * @param[in] pPublishInfo MQTT packet information which stores details of the
@@ -1220,6 +1233,9 @@ static int startOTADemo( void )
     /* OTA interface context required for library interface functions.*/
     OtaInterfaces_t otaInterfaces;
 
+    /* Maximum time to wait for the OTA agent to get suspended. */
+    int16_t suspendTimeout;
+
     /* Set OTA Library interfaces.*/
     setOtaInterfaces( &otaInterfaces );
 
@@ -1322,10 +1338,12 @@ static int startOTADemo( void )
                     }
                     else
                     {
-                        while( ( state = OTA_GetState() ) != OtaAgentStateSuspended )
+                        suspendTimeout = OTA_SUSPEND_TIMEOUT_MS;
+                        while(( ( state = OTA_GetState() ) != OtaAgentStateSuspended ) && (suspendTimeout > 0U))
                         {
                             /* Wait for OTA Library state to suspend */
                             sleep( OTA_EXAMPLE_TASK_DELAY_MS );
+                            suspendTimeout -= OTA_EXAMPLE_TASK_DELAY_MS;
                         }
                     }
                 }
