@@ -249,6 +249,11 @@ static bool mqttSessionEstablished = false;
 static OpensslParams_t opensslParams;
 
 /**
+ * @brief Mutex for synchronizing coreMQTT API calls.
+ */
+static pthread_mutex_t mqttMutex;
+
+/**
  * @brief Semaphore for synchronizing buffer operations.
  */
 static sem_t bufferSemaphore;
@@ -569,9 +574,20 @@ static void otaAppCallback( OtaJobEvent_t event,
     {
         LogInfo( ( "Received OtaJobEventActivate callback from OTA Agent." ) );
 
-        /* OTA job is completed. so delete the network connection. */
-        MQTT_Disconnect( &mqttContext );
+        if( pthread_mutex_lock( &mqttMutex ) != 0 )
+        {
+            /* OTA job is completed. so delete the network connection. */
+            MQTT_Disconnect( &mqttContext );
 
+            pthread_mutex_unlock( &mqttMutex );
+        }
+        else
+        {
+            LogError( ( "Failed to acquire mutex to execute MQTT_Disconnect"
+                    ",errno=%s",
+                    strerror( errno ) ) );
+        }
+        
         /* Clear the mqtt session flag. */
         mqttSessionEstablished = false;
 
@@ -889,7 +905,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
 static int establishMqttSession( MQTTContext_t * pMqttContext )
 {
     int returnStatus = EXIT_SUCCESS;
-    MQTTStatus_t mqttStatus;
+    MQTTStatus_t mqttStatus = MQTTBadParameter;
     MQTTConnectInfo_t connectInfo = { 0 };
 
     bool sessionPresent = false;
@@ -947,9 +963,20 @@ static int establishMqttSession( MQTTContext_t * pMqttContext )
         connectInfo.passwordLength = 0U;
     #endif /* ifdef CLIENT_USERNAME */
 
-    /* Send MQTT CONNECT packet to broker. */
-    mqttStatus = MQTT_Connect( pMqttContext, &connectInfo, NULL, CONNACK_RECV_TIMEOUT_MS, &sessionPresent );
+    if( pthread_mutex_lock( &mqttMutex ) == 0 )
+    {
+        /* Send MQTT CONNECT packet to broker. */
+        mqttStatus = MQTT_Connect( pMqttContext, &connectInfo, NULL, CONNACK_RECV_TIMEOUT_MS, &sessionPresent );
 
+        pthread_mutex_unlock( &mqttMutex );
+    }
+    else
+    {
+        LogError( ( "Failed to acquire mutex for executing MQTT_Connect"
+                    ",errno=%s",
+                    strerror( errno ) ) );
+    }
+    
     if( mqttStatus != MQTTSuccess )
     {
         returnStatus = EXIT_FAILURE;
@@ -1057,11 +1084,23 @@ static OtaMqttStatus_t mqttSubscribe( const char * pTopicFilter,
     pSubscriptionList[ 0 ].pTopicFilter = pTopicFilter;
     pSubscriptionList[ 0 ].topicFilterLength = topicFilterLength;
 
-    /* Send SUBSCRIBE packet. */
-    mqttStatus = MQTT_Subscribe( pMqttContext,
-                                 pSubscriptionList,
-                                 sizeof( pSubscriptionList ) / sizeof( MQTTSubscribeInfo_t ),
-                                 MQTT_GetPacketId( pMqttContext ) );
+    if( pthread_mutex_lock( &mqttMutex ) == 0 )
+    {
+        /* Send SUBSCRIBE packet. */
+        mqttStatus = MQTT_Subscribe( pMqttContext,
+                                    pSubscriptionList,
+                                    sizeof( pSubscriptionList ) / sizeof( MQTTSubscribeInfo_t ),
+                                     MQTT_GetPacketId( pMqttContext ) );
+        
+        pthread_mutex_unlock( &mqttMutex );
+    }
+    else
+    {
+        LogError( ( "Failed to acquire mqtt mutex for executing MQTT_Subscribe"
+                    ",errno=%s",
+                    strerror( errno ) ) );
+    }
+    
 
     if( mqttStatus != MQTTSuccess )
     {
@@ -1079,11 +1118,11 @@ static OtaMqttStatus_t mqttSubscribe( const char * pTopicFilter,
 
     /* Register callback to subscription manager. */
     subscriptionStatus = SubscriptionManager_RegisterCallback( pTopicFilter, topicFilterLength, callback );
-
-    if( subscriptionStatus != SUBSCRIPTION_MANAGER_SUCCESS )
+    
+    if(subscriptionStatus != SUBSCRIPTION_MANAGER_SUCCESS)
     {
         LogWarn( ( "Failed to register a callback to subscription manager with error = %d.",
-                   subscriptionStatus ) )
+                    subscriptionStatus ) );
     }
 
     return otaRet;
@@ -1110,9 +1149,20 @@ static OtaMqttStatus_t mqttPublish( const char * const pacTopic,
     publishInfo.pPayload = pMsg;
     publishInfo.payloadLength = msgSize;
 
-    mqttStatus = MQTT_Publish( pMqttContext,
-                               &publishInfo,
-                               MQTT_GetPacketId( pMqttContext ) );
+    if( pthread_mutex_lock( &mqttMutex ) == 0 )
+    {
+        mqttStatus = MQTT_Publish( pMqttContext,
+                                   &publishInfo,
+                                   MQTT_GetPacketId( pMqttContext ) );
+
+        pthread_mutex_unlock( &mqttMutex );
+    }
+    else
+    {
+        LogError( ( "Failed to acquire mqtt mutex for executing MQTT_Publish"
+                    ",errno=%s",
+                    strerror( errno ) ) );
+    }
 
     if( mqttStatus != MQTTSuccess )
     {
@@ -1137,7 +1187,7 @@ static OtaMqttStatus_t mqttUnsubscribe( const char * pTopicFilter,
                                         uint8_t qos )
 {
     OtaMqttStatus_t otaRet = OtaMqttSuccess;
-    MQTTStatus_t mqttStatus;
+    MQTTStatus_t mqttStatus = MQTTBadParameter;
 
     MQTTSubscribeInfo_t pSubscriptionList[ 1 ];
     MQTTContext_t * pMqttContext = &mqttContext;
@@ -1150,11 +1200,23 @@ static OtaMqttStatus_t mqttUnsubscribe( const char * pTopicFilter,
     pSubscriptionList[ 0 ].pTopicFilter = pTopicFilter;
     pSubscriptionList[ 0 ].topicFilterLength = topicFilterLength;
 
-    /* Send UNSUBSCRIBE packet. */
-    mqttStatus = MQTT_Unsubscribe( pMqttContext,
+    if( pthread_mutex_lock( &mqttMutex ) == 0 )
+    {
+        /* Send UNSUBSCRIBE packet. */
+        mqttStatus = MQTT_Unsubscribe( pMqttContext,
                                    pSubscriptionList,
                                    sizeof( pSubscriptionList ) / sizeof( MQTTSubscribeInfo_t ),
                                    MQTT_GetPacketId( pMqttContext ) );
+
+        pthread_mutex_unlock( &mqttMutex );
+    }
+    else
+    {
+        LogError( ( "Failed to acquire mutex for executing MQTT_Unsubscribe"
+                    ",errno=%s",
+                    strerror( errno ) ) );
+    }
+    
 
     if( mqttStatus != MQTTSuccess )
     {
@@ -1214,7 +1276,7 @@ static int startOTADemo( void )
     int returnStatus = EXIT_SUCCESS;
 
     /* coreMQTT library return status. */
-    MQTTStatus_t mqttStatus = MQTTSuccess;
+    MQTTStatus_t mqttStatus = MQTTBadParameter;
 
     /* OTA library return status. */
     OtaErr_t otaRet = OtaErrNone;
@@ -1304,14 +1366,26 @@ static int startOTADemo( void )
 
             if( mqttSessionEstablished == true )
             {
-                /* Loop to receive packet from transport interface. */
-                mqttStatus = MQTT_ProcessLoop( &mqttContext, OTA_EXAMPLE_TASK_DELAY_MS );
+                /* Acquire the mqtt mutex lock. */
+                if( pthread_mutex_lock( &mqttMutex ) == 0 )
+                {
+                    /* Loop to receive packet from transport interface. */
+                    mqttStatus = MQTT_ProcessLoop( &mqttContext, 0 );
 
-                /* Get OTA statistics for currently executing job. */
-                OTA_GetStatistics( &otaStatistics );
+                    pthread_mutex_unlock( &mqttMutex );
+                }
+                else
+                {
+                    LogError( ( "Failed to acquire mutex to execute process loop"
+                    ",errno=%s",
+                    strerror( errno ) ) );
+                }
 
                 if( mqttStatus == MQTTSuccess )
                 {
+                    /* Get OTA statistics for currently executing job. */
+                    OTA_GetStatistics( &otaStatistics );
+
                     LogInfo( ( " Received: %u   Queued: %u   Processed: %u   Dropped: %u",
                                otaStatistics.otaPacketsReceived,
                                otaStatistics.otaPacketsQueued,
@@ -1321,7 +1395,7 @@ static int startOTADemo( void )
                 else
                 {
                     LogError( ( "MQTT_ProcessLoop returned with status = %s.",
-                                MQTT_Strerror( mqttStatus ) ) );
+                                MQTT_Status_strerror( mqttStatus ) ) );
 
                     /* Disconnect from broker and close connection. */
                     disconnect();
@@ -1379,6 +1453,7 @@ int main( int argc,
 
     /* Semaphore initialization flag. */
     bool bufferSemInitialized = false;
+    bool mqttMutexInitialized = false;
 
     /* Initialize semaphore for buffer operations. */
     if( sem_init( &bufferSemaphore, 0, 1 ) != 0 )
@@ -1394,6 +1469,20 @@ int main( int argc,
         bufferSemInitialized = true;
     }
 
+    /* Initialize mutex for coreMQTT APIs. */
+    if( pthread_mutex_init( &mqttMutex, NULL ) != 0 )
+    {
+        LogError( ( "Failed to initialize mutex for mqtt apis"
+                    ",errno=%s",
+                    strerror( errno ) ) );
+
+        returnStatus = EXIT_FAILURE;
+    }
+    else
+    {
+        mqttMutexInitialized = true;
+    }
+    
     if( returnStatus == EXIT_SUCCESS )
     {
         /* Initialize MQTT library. Initialization of the MQTT library needs to be
@@ -1413,6 +1502,19 @@ int main( int argc,
         if( sem_destroy( &bufferSemaphore ) != 0 )
         {
             LogError( ( "Failed to destroy buffer semaphore"
+                        ",errno=%s",
+                        strerror( errno ) ) );
+
+            returnStatus = EXIT_FAILURE;
+        }
+    }
+
+    if( mqttMutexInitialized == true )
+    {
+        /* Cleanup semaphore created for buffer operations. */
+        if( pthread_mutex_destroy( &mqttMutex ) != 0 )
+        {
+            LogError( ( "Failed to destroy mutex for mqtt apis"
                         ",errno=%s",
                         strerror( errno ) ) );
 
