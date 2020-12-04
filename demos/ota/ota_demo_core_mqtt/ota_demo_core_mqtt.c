@@ -641,7 +641,7 @@ static void mqttDataCallback( MQTTContext_t * pContext,
     }
     else
     {
-        LogError( ( "Error: No OTA data buffers available.\r\n" ) );
+        LogError( ( "No OTA data buffers available.\r\n" ) );
     }
 }
 
