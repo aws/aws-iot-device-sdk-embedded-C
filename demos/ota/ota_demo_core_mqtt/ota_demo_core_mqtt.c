@@ -584,10 +584,10 @@ static void otaAppCallback( OtaJobEvent_t event,
         else
         {
             LogError( ( "Failed to acquire mutex to execute MQTT_Disconnect"
-                    ",errno=%s",
-                    strerror( errno ) ) );
+                        ",errno=%s",
+                        strerror( errno ) ) );
         }
-        
+
         /* Clear the mqtt session flag. */
         mqttSessionEstablished = false;
 
@@ -976,7 +976,7 @@ static int establishMqttSession( MQTTContext_t * pMqttContext )
                     ",errno=%s",
                     strerror( errno ) ) );
     }
-    
+
     if( mqttStatus != MQTTSuccess )
     {
         returnStatus = EXIT_FAILURE;
@@ -1088,10 +1088,10 @@ static OtaMqttStatus_t mqttSubscribe( const char * pTopicFilter,
     {
         /* Send SUBSCRIBE packet. */
         mqttStatus = MQTT_Subscribe( pMqttContext,
-                                    pSubscriptionList,
-                                    sizeof( pSubscriptionList ) / sizeof( MQTTSubscribeInfo_t ),
+                                     pSubscriptionList,
+                                     sizeof( pSubscriptionList ) / sizeof( MQTTSubscribeInfo_t ),
                                      MQTT_GetPacketId( pMqttContext ) );
-        
+
         pthread_mutex_unlock( &mqttMutex );
     }
     else
@@ -1100,7 +1100,6 @@ static OtaMqttStatus_t mqttSubscribe( const char * pTopicFilter,
                     ",errno=%s",
                     strerror( errno ) ) );
     }
-    
 
     if( mqttStatus != MQTTSuccess )
     {
@@ -1118,11 +1117,11 @@ static OtaMqttStatus_t mqttSubscribe( const char * pTopicFilter,
 
     /* Register callback to subscription manager. */
     subscriptionStatus = SubscriptionManager_RegisterCallback( pTopicFilter, topicFilterLength, callback );
-    
-    if(subscriptionStatus != SUBSCRIPTION_MANAGER_SUCCESS)
+
+    if( subscriptionStatus != SUBSCRIPTION_MANAGER_SUCCESS )
     {
         LogWarn( ( "Failed to register a callback to subscription manager with error = %d.",
-                    subscriptionStatus ) );
+                   subscriptionStatus ) );
     }
 
     return otaRet;
@@ -1204,9 +1203,9 @@ static OtaMqttStatus_t mqttUnsubscribe( const char * pTopicFilter,
     {
         /* Send UNSUBSCRIBE packet. */
         mqttStatus = MQTT_Unsubscribe( pMqttContext,
-                                   pSubscriptionList,
-                                   sizeof( pSubscriptionList ) / sizeof( MQTTSubscribeInfo_t ),
-                                   MQTT_GetPacketId( pMqttContext ) );
+                                       pSubscriptionList,
+                                       sizeof( pSubscriptionList ) / sizeof( MQTTSubscribeInfo_t ),
+                                       MQTT_GetPacketId( pMqttContext ) );
 
         pthread_mutex_unlock( &mqttMutex );
     }
@@ -1216,7 +1215,6 @@ static OtaMqttStatus_t mqttUnsubscribe( const char * pTopicFilter,
                     ",errno=%s",
                     strerror( errno ) ) );
     }
-    
 
     if( mqttStatus != MQTTSuccess )
     {
@@ -1377,8 +1375,8 @@ static int startOTADemo( void )
                 else
                 {
                     LogError( ( "Failed to acquire mutex to execute process loop"
-                    ",errno=%s",
-                    strerror( errno ) ) );
+                                ",errno=%s",
+                                strerror( errno ) ) );
                 }
 
                 if( mqttStatus == MQTTSuccess )
@@ -1482,7 +1480,7 @@ int main( int argc,
     {
         mqttMutexInitialized = true;
     }
-    
+
     if( returnStatus == EXIT_SUCCESS )
     {
         /* Initialize MQTT library. Initialization of the MQTT library needs to be
