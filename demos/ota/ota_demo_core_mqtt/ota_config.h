@@ -60,7 +60,6 @@
  */
 #define otaconfigLOG2_FILE_BLOCK_SIZE    10UL
 
-/************ End of logging configuration ****************/
 
 /**
  * @brief Size of the file data block message (excluding the header).
@@ -100,7 +99,7 @@
  *  For example if block size is set as 1 KB then the maximum number of data blocks that we can
  *  request is 128/1 = 128 blocks. Configure this parameter to this maximum limit or lower based on
  *  how many data blocks response is expected for each data requests.
- *  Please note that this must be set larger than zero.
+ *  @note This must be set larger than zero.
  *
  */
 #define otaconfigMAX_NUM_BLOCKS_REQUEST        1U

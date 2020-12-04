@@ -350,7 +350,7 @@ static OtaMqttStatus_t mqttPublish( const char * const pacTopic,
                                     uint8_t qos );
 
 /**
- * @brief Subscribe to the Mqtt topics.
+ * @brief Subscribe to the MQTT topic filter, and registers the handler for the topic filter with the subscription manager.
  *
  * This function subscribes to the Mqtt topics with the Quality of service
  * received as parameter. This function also registers a callback for the
@@ -362,7 +362,7 @@ static OtaMqttStatus_t mqttPublish( const char * const pacTopic,
  *
  * @param[in] qos Quality of Service
  *
- * @param[in] callback Callback to be registered.
+ * @param[in] callback Callback to be registered for handling an incoming PUBLISH message on the topic.
  *
  * @return OtaMqttSuccess if success , other error code on failure.
  */
@@ -392,7 +392,7 @@ static OtaMqttStatus_t mqttUnsubscribe( const char * pTopicFilter,
 /**
  * @brief Start OTA demo.
  *
- * @return   EXIT_SUCCESS or EXIT_FAILURE.
+ * @return EXIT_SUCCESS or EXIT_FAILURE.
  */
 static int startOTADemo( void );
 
@@ -400,8 +400,6 @@ static int startOTADemo( void );
  * @brief Set OTA interfaces.
  *
  * @param[in]  pOtaInterfaces pointer to OTA interface structure.
- *
- * @return   None.
  */
 static void setOtaInterfaces( OtaInterfaces_t * pOtaInterfaces );
 
@@ -442,7 +440,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
 /**
  * @brief Random number to be used as a back-off value for retrying connection.
  *
- * @return int32_t A random integer.
+ * @return uint32_t The generated random number.
  */
 static int32_t generateRandomNumber();
 
@@ -610,7 +608,7 @@ static void mqttJobCallback( MQTTContext_t * pContext,
     }
     else
     {
-        LogError( ( "Error: No OTA data buffers available.\r\n" ) );
+        LogError( ( "No OTA data buffers available.\r\n" ) );
     }
 }
 
@@ -1273,8 +1271,8 @@ static int startOTADemo( void )
                 }
                 else
                 {
-                    LogError( ( "MQTT_ProcessLoop returned with status = %u.",
-                                mqttStatus ) );
+                    LogError( ( "MQTT_ProcessLoop returned with status = %s.",
+                                MQTT_Strerror( mqttStatus ) ) );
 
                     /* Disconnect from broker and close connection. */
                     disconnect();
