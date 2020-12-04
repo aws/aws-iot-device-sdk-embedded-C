@@ -569,7 +569,7 @@ static void otaAppCallback( OtaJobEvent_t event,
 
         if( err != OtaErrNone )
         {
-            LogError( ( " Error! Failed to set image state as accepted." ) );
+            LogError( ( " Failed to set image state as accepted." ) );
         }
     }
     else if( event == OtaJobEventProcessed )
