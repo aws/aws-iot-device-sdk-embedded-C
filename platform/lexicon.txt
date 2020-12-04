@@ -55,6 +55,7 @@ filepath
 filepaths
 filerc
 filetype
+feof
 fopen
 fread
 freertos
