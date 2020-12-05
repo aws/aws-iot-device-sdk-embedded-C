@@ -538,47 +538,162 @@ void test_OTAPAL_ActivateNewImage_NullFileContext( void )
 }
 
 /**
- * @brief Set the platform state to self-test and verify success.
+ * @brief Verify that otaPal_SetPlatformImageState correctly handles
+ *        attempts to set invalid image states.
  */
-void test_OTAPAL_SetPlatformImageState_SelfTestImageState( void )
+void test_OTAPAL_SetPlatformImageState_InvalidStates( void )
 {
-    OtaPalMainStatus_t result;
-    int16_t bytes_written = 0;
+    OtaPalStatus_t result;
+    OtaFileContext_t otaFileContext;
+    OtaImageState_t stateToSet;
 
-    OtaImageState_t eImageState = OtaImageStateUnknown;
-    OtaPalImageState_t palImageState = OtaPalImageStateUnknown;
+    stateToSet = OtaImageStateUnknown;
+    result = otaPal_SetPlatformImageState( &otaFileContext, stateToSet );
+    TEST_ASSERT_EQUAL( OtaPalBadImageState, OTA_PAL_MAIN_ERR( result ) );
 
-    /* Create a local file again using the PAL. */
-    otaFile.pFilePath = ( uint8_t * ) OTA_PAL_UTEST_FIRMWARE_FILE;
-    otaFile.fileSize = sizeof( dummyData );
+    stateToSet = OtaLastImageState + 1;
+    result = otaPal_SetPlatformImageState( &otaFileContext, stateToSet );
+    TEST_ASSERT_EQUAL( OtaPalBadImageState, OTA_PAL_MAIN_ERR( result ) );
+}
 
-    result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
-    TEST_ASSERT_EQUAL( OtaPalSuccess, result );
+/**
+ * @brief Test otaPal_SetPlatformImageState correctly handles setting valid
+ * image states.
+ */
+void test_OTAPAL_SetPlatformImageState_HappyPath( void )
+{
+    OtaPalStatus_t result;
+    OtaFileContext_t otaFileContext;
+    OtaImageState_t validState = OtaImageStateTesting;
+    FILE dummyFile;
 
-    /* We still want to close the file if the test fails. */
-    if( TEST_PROTECT() )
-    {
-        /* Write data to the file. */
-        bytes_written = otaPal_WriteBlock( &otaFile,
-                                           0,
-                                           dummyData,
-                                           sizeof( dummyData ) );
-        TEST_ASSERT_EQUAL( sizeof( dummyData ), bytes_written );
+    /* On success, snprintf returns a positive number that is less than the amount of data requested. */
+    const int snprintf_success_val = 0;
+    /* On success, fopen returns a FILE address that is not null. */
+    FILE * const fopen_success_val = &dummyFile;
+    /* otaPal_SetPlatformImageState calls write to write a single byte. On success, fwrite will return 1. */
+    const size_t fwrite_success_val = 1U;
+    /* On success, fclose returns a zero. */
+    const int fclose_success_val = 0;
 
-        /* Set the image state. */
-        eImageState = OtaImageStateTesting;
-        result = OTA_PAL_MAIN_ERR( otaPal_SetPlatformImageState( &otaFile, eImageState ) );
-        TEST_ASSERT_EQUAL_INT( OtaPalSuccess, result );
+    snprintf_IgnoreAndReturn( snprintf_success_val );
+    fopen_IgnoreAndReturn( fopen_success_val );
+    fwrite_alias_IgnoreAndReturn( fwrite_success_val );
+    fclose_IgnoreAndReturn( fclose_success_val );
 
-        /* Verify that image state was saved correctly. */
+    result = otaPal_SetPlatformImageState( &otaFileContext, validState );
+    TEST_ASSERT_EQUAL( OtaPalSuccess, OTA_PAL_MAIN_ERR( result ) );
+}
 
-        /* [**]All platforms need a reboot of a successfully close image in order to return
-         * eOTA_PAL_ImageState_PendingCommit from otaPal_GetPlatformImageState(). So this cannot be tested.
-         */
-        /* For Linux platform, this can be read directly from the image state file */
-        palImageState = otaPal_GetPlatformImageState( &otaFile );
-        TEST_ASSERT_EQUAL_INT( OtaPalImageStatePendingCommit, palImageState );
-    }
+typedef enum
+{
+    none = 0,
+    BIO_s_file_fn,
+    BIO_new_fn,
+    BIO_s_mem_X509_fn,
+    BIO_puts_fn,
+    BIO_free_all_fn,
+    BIO_ctrl_fn,
+    PEM_read_bio_X509_fn,
+    X509_get_pubkey_fn,
+    X509_free_fn,
+    EVP_MD_CTX_new_fn,
+    EVP_DigestVerifyInit_fn,
+    EVP_DigestVerifyFinal_fn,
+    EVP_MD_CTX_free_fn,
+    EVP_PKEY_free_fn,
+    CRYPTO_free_fn,
+    fopen_fn,
+    snprintf_fn,
+    fread_fn,
+    fseek_alias_fn,
+    fwrite_alias_fn
+} FunctionNames_t;
+
+
+
+/**
+ * @brief Helper function specify a single point of failure for
+ * otaPal_SetPlatformImageState. This needs to be updated each time a mocked
+ * function is added or removed to otaPal_SetPlatformImageState. */
+static void OTA_PAL_FailSingleFuncCall( FunctionNames_t funcToFail, OtaImageState_t* pFreadStateToSet )
+{
+    static FILE dummyFile;
+
+    /* On success, snprintf returns a positive number that is less than the amount of data requested. */
+    const int snprintf_success = 0;
+    const int snprintf_failure = -1;
+    int snprintf_return;
+    /* On success, fopen returns a FILE address that is not null. */
+    FILE * const fopen_success = &dummyFile;
+    FILE * const fopen_failure = NULL;
+    FILE * fopen_return;
+    /* otaPal_SetPlatformImageState calls write to write a single byte. On success, fwrite will return 1. */
+    /* fwrite returns a 0 when reaching the EOF or error. */
+    const size_t fwrite_success = 1U;
+    const size_t fwrite_failure = 0;
+    size_t fwrite_return;
+    /* On success, fclose returns a zero. */
+    /* On failure, fclose returns EOF. */
+    const int fclose_success = 0;
+    const int fclose_failure = EOF;
+    int fclose_return;
+    /* In otaPal_GetPlatformImageState, fread is always called with a 1 for the
+       size parameter. So, any number other than 1 is an error. */
+    const size_t fread_failure = 0;
+    const size_t fread_success = 1;
+    size_t fread_return;
+    /* fseek returns a zero on success and a non-zero number on failure. */
+    const int32_t fseek_success = 0; 
+    const int32_t fseek_failure = -1;
+    int32_t fseek_return; 
+
+
+    /* Set the return value for each of the callable functions. */
+    fopen_return = ( funcToFail == fopen_fn ) ? fopen_failure : fopen_success;
+    fopen_IgnoreAndReturn( fopen_return );
+
+    snprintf_return = ( funcToFail == snprintf_fn ) ? snprintf_failure : snprintf_success;
+    snprintf_IgnoreAndReturn( snprintf_return );
+
+    fread_return = ( funcToFail == fread_fn ) ? fread_failure: fread_success;
+    fread_IgnoreAndReturn( fread_return );
+    fread_ReturnThruPtr_ptr( pFreadStateToSet );
+
+    fseek_return = ( funcToFail == fseek_alias_fn ) ? fseek_failure : fseek_success;
+    fseek_alias_IgnoreAndReturn( fseek_return );
+
+    fwrite_return = ( funcToFail == fwrite_alias_fn ) ? fwrite_failure : fwrite_success;
+    fwrite_alias_IgnoreAndReturn( fwrite_return );
+}
+
+/**
+ * @brief Test otaPal_SetPlatformImageState correctly handles setting valid
+ * image states.
+ */
+void test_OTAPAL_SetPlatformImageState_snprintf_fail( void )
+{
+    OtaPalStatus_t result;
+    OtaFileContext_t otaFileContext;
+    OtaImageState_t validState = OtaImageStateTesting;
+    FILE dummyFile;
+
+    /* On success, snprintf returns a positive number that is less than the amount of data requested. */
+    const int snprintf_success_val = 0;
+    /* On success, fopen returns a FILE address that is not null. */
+    FILE * const fopen_success_val = &dummyFile;
+    /* otaPal_SetPlatformImageState calls write to write a single byte. On success, fwrite will return 1. */
+    const size_t fwrite_success_val = 1U;
+    /* On success, fclose returns a zero. */
+    const int fclose_success_val = 0;
+
+    snprintf_IgnoreAndReturn( snprintf_success_val );
+    fopen_IgnoreAndReturn( fopen_success_val );
+    fwrite_alias_IgnoreAndReturn( fwrite_success_val );
+    fclose_IgnoreAndReturn( fclose_success_val );
+
+    result = otaPal_SetPlatformImageState( &otaFileContext, validState );
+    TEST_ASSERT_EQUAL( OtaPalSuccess, OTA_PAL_MAIN_ERR( result ) );
 }
 
 /**
