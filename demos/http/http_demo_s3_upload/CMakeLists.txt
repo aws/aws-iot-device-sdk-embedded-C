@@ -22,6 +22,7 @@ check_presigned_urls(${DEMO_NAME})
 target_link_libraries(
     ${DEMO_NAME}
     PRIVATE
+        clock_posix
         openssl_posix
 )
 

@@ -12,7 +12,7 @@ add_library( ${LIBRARY_NAME}
 target_include_directories(
     ${LIBRARY_NAME}
     PUBLIC
+        ${CMAKE_CURRENT_LIST_DIR}
         ${LOGGING_INCLUDE_DIRS}
         ${MQTT_INCLUDE_PUBLIC_DIRS}
 )
-

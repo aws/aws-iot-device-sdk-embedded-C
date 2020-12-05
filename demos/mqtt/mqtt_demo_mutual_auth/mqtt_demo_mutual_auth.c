@@ -189,11 +189,6 @@
 #define CONNECTION_RETRY_BACKOFF_BASE_MS         ( 500U )
 
 /**
- * @brief Number of milliseconds in a second.
- */
-#define NUM_MILLISECONDS_IN_SECOND               ( 1000U )
-
-/**
  * @brief Timeout for receiving CONNACK packet in milli seconds.
  */
 #define CONNACK_RECV_TIMEOUT_MS                  ( 1000U )
@@ -649,8 +644,10 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
             }
             else if( backoffAlgStatus == BackoffAlgorithmSuccess )
             {
-                LogWarn( ( "Connection to the broker failed. Retrying connection after backoff." ) );
-                ( void ) sleep( nextRetryBackOff / NUM_MILLISECONDS_IN_SECOND );
+                LogWarn( ( "Connection to the broker failed. Retrying connection "
+                           "after %hu ms backoff.",
+                           ( unsigned short ) nextRetryBackOff ) );
+                Clock_SleepMs( nextRetryBackOff );
             }
         }
     } while( ( opensslStatus != OPENSSL_SUCCESS ) && ( backoffAlgStatus == BackoffAlgorithmSuccess ) );
@@ -925,8 +922,10 @@ static int handleResubscribe( MQTTContext_t * pMqttContext )
             }
             else if( backoffAlgStatus == BackoffAlgorithmSuccess )
             {
-                LogWarn( ( "Server rejected subscription request. Retrying connection after backoff." ) );
-                ( void ) sleep( nextRetryBackOff / NUM_MILLISECONDS_IN_SECOND );
+                LogWarn( ( "Server rejected subscription request. Retrying "
+                           "connection after %hu ms backoff.",
+                           ( unsigned short ) nextRetryBackOff ) );
+                Clock_SleepMs( nextRetryBackOff );
             }
         }
     } while( ( globalSubAckStatus == MQTTSubAckFailure ) && ( backoffAlgStatus == BackoffAlgorithmSuccess ) );
