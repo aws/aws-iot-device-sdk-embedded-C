@@ -39,6 +39,7 @@
 #include "ota_private.h"
 #include "ota_pal_posix.h"
 #include "mock_stdio_api.h"
+#include "mock_openssl_api.h"
 
 /* Unit test config. */
 #include "ota_utest_config.h"
@@ -52,39 +53,6 @@
 /* For the otaPal_WriteBlock_WriteManyBlocks test this the delay time in ms following
  * the block write loop. */
 #define testotapalWRITE_BLOCKS_DELAY_MS    5000
-
-/**
- * @brief Invalid signature for OTA PAL testing.
- */
-static const uint8_t ucInvalidSignature[] =
-{
-    0x30, 0x44, 0x02, 0x20, 0x75, 0xde, 0xa8, 0x1f, 0xca, 0xec, 0xff, 0x16,
-    0xbb, 0x38, 0x4b, 0xe3, 0x14, 0xe7, 0xfb, 0x68, 0xf5, 0x3e, 0x86, 0xa2,
-    0x71, 0xba, 0x9e, 0x5e, 0x50, 0xbf, 0xb2, 0x7a, 0x9e, 0x00, 0xc6, 0x4d,
-    0x02, 0x20, 0x19, 0x72, 0x42, 0x85, 0x2a, 0xac, 0xdf, 0x5a, 0x5e, 0xfa,
-    0xad, 0x49, 0x17, 0x5b, 0xce, 0x5b, 0x65, 0x75, 0x08, 0x47, 0x3e, 0x55,
-    0xf9, 0x0e, 0xdf, 0x9e, 0x8c, 0xdc, 0x95, 0xdf, 0x63, 0xd2
-};
-static const int ucInvalidSignatureLength = 70;
-
-/**
- * @brief Valid signature matching the test block in the OTA PAL tests.
- */
-static const uint8_t ucValidSignature[] =
-{
-    0x30, 0x44, 0x02, 0x20, 0x15, 0x6a, 0x68, 0x98, 0xf0, 0x4e, 0x1e, 0x12,
-    0x4c, 0xc4, 0xf1, 0x05, 0x22, 0x36, 0xfd, 0xb4, 0xe5, 0x5d, 0x83, 0x08,
-    0x2a, 0xf3, 0xa6, 0x7d, 0x32, 0x6b, 0xff, 0x85, 0x27, 0x14, 0x9b, 0xbf,
-    0x02, 0x20, 0x26, 0x7d, 0x5f, 0x4d, 0x12, 0xab, 0xec, 0x17, 0xd8, 0x45,
-    0xc6, 0x3d, 0x8e, 0xd8, 0x8d, 0x3f, 0x28, 0x26, 0xfd, 0xce, 0x32, 0x34,
-    0x17, 0x05, 0x47, 0xb2, 0xf6, 0x84, 0xd5, 0x68, 0x3e, 0x36
-};
-static const int ucValidSignatureLength = 70;
-
-/**
- * @brief The type of signature method this file defines for the valid signature.
- */
-#define otatestSIG_METHOD    otatestSIG_SHA256_ECDSA
 
 /*
  * @brief: This dummy data is prepended by a SHA1 hash generated from the rsa-sha1-signer
@@ -300,7 +268,7 @@ void test_OTAPAL_WriteBlock_WriteMultipleBytes( void )
     uint32_t blockSize = sizeof( pData[0] );
 
     /* TEST: Write multiple bytes of data. */
-    for( index = 0; index < testotapalNUM_WRITE_BLOCKS; index++ )
+    for( index = 0; index < ( sizeof(pData) / sizeof(pData[0]) ); index++ )
     {
         fseek_alias_ExpectAnyArgsAndReturn(0);
         fwrite_alias_ExpectAnyArgsAndReturn( blockSize );
@@ -345,173 +313,6 @@ void test_OTAPAL_WriteBlock_FwriteError( void )
     /* fwrite returns a number less than the amount requested to write on error. */
     numBytesWritten = otaPal_WriteBlock( &validFileContext, 0, &data, blockSize );
     TEST_ASSERT_EQUAL_INT( writeblockErrorReturn , numBytesWritten );
-}
-
-void test_OTAPAL_CloseFile_ValidSignature( void )
-{
-    OtaPalMainStatus_t result;
-    int16_t bytes_written = 0;
-    Sig256_t sig = { 0 };
-
-    /* We use a dummy file name here because closing the system designated bootable
-     * image with content that is not runnable may cause issues. */
-    otaFile.pFilePath = ( uint8_t * ) ( "test_happy_path_image.bin" );
-    otaFile.fileSize = sizeof( dummyData );
-    result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
-    TEST_ASSERT_EQUAL( OtaPalSuccess, result );
-
-    /* We still want to close the file if the test fails somewhere here. */
-    if( TEST_PROTECT() )
-    {
-        /* Write data to the file. */
-        bytes_written = otaPal_WriteBlock( &otaFile,
-                                           0,
-                                           dummyData,
-                                           sizeof( dummyData ) );
-        TEST_ASSERT_EQUAL( sizeof( dummyData ), bytes_written );
-
-        otaFile.pSignature = &sig;
-        otaFile.pSignature->size = ucValidSignatureLength;
-        memcpy( otaFile.pSignature->data, ucValidSignature, ucValidSignatureLength );
-        otaFile.pCertFilepath = ( uint8_t * ) OTA_PAL_UTEST_CERT_FILE;
-
-        result = OTA_PAL_MAIN_ERR( otaPal_CloseFile( &otaFile ) );
-        TEST_ASSERT_EQUAL_INT( OtaPalSuccess, result );
-    }
-}
-
-
-/**
- * @brief Call otaPal_CloseFile with an invalid signature in the file context.
- * The close is called after we have a written a block of dummy data to the file.
- * Verify the correct OTA Agent level error code is returned from otaPal_CloseFile.
- */
-void test_OTAPAL_CloseFile_InvalidSignatureBlockWritten( void )
-{
-    OtaPalMainStatus_t result;
-    int16_t bytes_written = 0;
-    Sig256_t sig = { 0 };
-
-    /* Create a local file using the PAL. */
-    otaFile.pFilePath = ( uint8_t * ) OTA_PAL_UTEST_FIRMWARE_FILE;
-    otaFile.fileSize = sizeof( dummyData );
-
-    result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
-    TEST_ASSERT_EQUAL( OtaPalSuccess, result );
-
-    /* We still want to close the file if the test fails somewhere here. */
-    if( TEST_PROTECT() )
-    {
-        /* Write data to the file. */
-        bytes_written = otaPal_WriteBlock( &otaFile,
-                                           0,
-                                           dummyData,
-                                           sizeof( dummyData ) );
-        TEST_ASSERT_EQUAL( sizeof( dummyData ), bytes_written );
-
-        /* Fill out an incorrect signature. */
-        otaFile.pSignature = &sig;
-        otaFile.pSignature->size = ucInvalidSignatureLength;
-        memcpy( otaFile.pSignature->data, ucInvalidSignature, ucInvalidSignatureLength );
-        otaFile.pCertFilepath = ( uint8_t * ) OTA_PAL_UTEST_CERT_FILE;
-
-        /* Try to close the file. */
-        result = OTA_PAL_MAIN_ERR( otaPal_CloseFile( &otaFile ) );
-
-        if( ( OtaPalBadSignerCert != result ) &&
-            ( OtaPalSignatureCheckFailed != result ) &&
-            ( OtaPalFileClose != result ) )
-        {
-            TEST_ASSERT_TRUE( 0 );
-        }
-    }
-}
-
-/**
- * @brief Call otaPal_CloseFile with an invalid signature in the file context.
- * The close is called when no blocks have been written to the file.
- * Verify the correct OTA Agent level error code is returned from otaPal_CloseFile.
- */
-void test_OTAPAL_CloseFile_InvalidSignatureNoBlockWritten( void )
-{
-    OtaPalMainStatus_t result;
-    Sig256_t sig = { 0 };
-
-    /* Create a local file using the PAL. */
-    otaFile.pFilePath = ( uint8_t * ) OTA_PAL_UTEST_FIRMWARE_FILE;
-    result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
-    TEST_ASSERT_EQUAL( OtaPalSuccess, result );
-
-    /* Fill out an incorrect signature. */
-    otaFile.pSignature = &sig;
-    otaFile.pSignature->size = ucInvalidSignatureLength;
-    memcpy( otaFile.pSignature->data, ucInvalidSignature, ucInvalidSignatureLength );
-    otaFile.pCertFilepath = ( uint8_t * ) OTA_PAL_UTEST_CERT_FILE;
-
-    /* We still want to close the file if the test fails somewhere here. */
-    if( TEST_PROTECT() )
-    {
-        /* Try to close the file. */
-        result = OTA_PAL_MAIN_ERR( otaPal_CloseFile( &otaFile ) );
-
-        if( ( OtaPalBadSignerCert != result ) &&
-            ( OtaPalSignatureCheckFailed != result ) &&
-            ( OtaPalFileClose != result ) )
-        {
-            TEST_ASSERT_TRUE( 0 );
-        }
-    }
-}
-
-/**
- * @brief Call otaPal_CloseFile with a signature verification certificate path does
- * not exist in the system. Verify the correct OTA Agent level error code is returned
- * from otaPal_CloseFile.
- *
- * @note This test is only valid if your device uses a file system in your non-volatile memory.
- * Some devices may revert to using aws_codesigner_certificate.h if a file is not found, but
- * that option is not being enforced.
- */
-void test_OTAPAL_CloseFile_NonexistingCodeSignerCertificate( void )
-{
-    OtaPalMainStatus_t result;
-    int16_t bytes_written = 0;
-    Sig256_t sig = { 0 };
-
-    memset( &otaFile, 0, sizeof( otaFile ) );
-
-    /* Create a local file using the PAL. */
-    otaFile.pFilePath = ( uint8_t * ) OTA_PAL_UTEST_FIRMWARE_FILE;
-    otaFile.fileSize = sizeof( dummyData );
-
-    result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
-    TEST_ASSERT_EQUAL( OtaPalSuccess, result );
-
-    /* We still want to close the file if the test fails somewhere here. */
-    if( TEST_PROTECT() )
-    {
-        /* Write data to the file. */
-        bytes_written = otaPal_WriteBlock( &otaFile,
-                                           0,
-                                           dummyData,
-                                           sizeof( dummyData ) );
-        TEST_ASSERT_EQUAL( sizeof( dummyData ), bytes_written );
-
-        /* Check the signature (not expected to be valid in this case). */
-        otaFile.pSignature = &sig;
-        otaFile.pSignature->size = ucValidSignatureLength;
-        memcpy( otaFile.pSignature->data, ucValidSignature, ucValidSignatureLength );
-        otaFile.pCertFilepath = ( uint8_t * ) ( "nonexistingfile.crt" );
-
-        result = OTA_PAL_MAIN_ERR( otaPal_CloseFile( &otaFile ) );
-
-        if( ( OtaPalBadSignerCert != result ) &&
-            ( OtaPalSignatureCheckFailed != result ) &&
-            ( OtaPalFileClose != result ) )
-        {
-            TEST_ASSERT_TRUE( 0 );
-        }
-    }
 }
 
 /**
@@ -561,7 +362,103 @@ typedef enum
     fread_fn,
     fseek_alias_fn,
     fwrite_alias_fn
-} FunctionNames_t;
+} MockFunctionNames_t;
+
+static void OTA_PAL_FailSingleMock_openssl_BIO( MockFunctionNames_t funcToFail )
+{
+    /*
+     * Define success and failure return values for OpenSSL BIO.h mocks.
+     */
+    static BIO_METHOD dummyBioMethod;
+    static BIO dummyBIO;
+    /* BIO_s_file_fn: Has no documented failure returns. It always returns a
+     * valid "BIO_METHOD *". */
+    BIO_METHOD* BIO_s_file_return;
+    /* BIO_new_fn: Returns a newly created BIO or NULL if the call fails. */
+    BIO* BIO_new_success = &dummyBIO;
+    BIO* BIO_new_failure = NULL;
+    BIO* BIO_new_return;
+    /* BIO_s_mem_X509_fn: Has no documented failure returns. It always returns
+     * a valid "BIO_METHOD *". */
+    BIO_METHOD* BIO_s_mem_x509_return;
+    /* BIO_puts_fn: Returns either the amount of data successfully written
+     * (if the return value is positive) or that no data was succesfully
+     * written if the result is 0 or -1. */
+    int BIO_puts_success = 1;
+    int BIO_puts_failure = 0;
+    int BIO_puts_return;
+    /* BIO_free_all_fn: Does not return anything. */
+    /* BIO_ctrl_fn: Called indirectly via BIO_read_filename. BIO_read_filename
+     * returns 1 for success or 0 for failure. */
+    long BIO_ctrl_fn_success = 1;
+    long BIO_ctrl_fn_failure = 0;
+    long BIO_ctrl_fn_return;
+
+    /*
+     * Set the return value for the mock ( if any ) thatmatches the input. Set
+     * the rest of the mock functions to return the success value when called.
+     */
+    BIO_s_file_return = &dummyBioMethod;
+    BIO_s_file_IgnoreAndReturn(BIO_s_file_return);
+
+    BIO_new_return = ( funcToFail == BIO_new_fn ) ? BIO_new_failure : BIO_new_success;
+    BIO_new_IgnoreAndReturn( BIO_new_return );
+
+    BIO_s_mem_x509_return = &dummyBioMethod;
+    BIO_s_mem_IgnoreAndReturn( BIO_s_mem_x509_return );
+
+    BIO_puts_return = ( funcToFail == BIO_puts_fn ) ? BIO_puts_failure : BIO_puts_success;
+    BIO_puts_IgnoreAndReturn( BIO_puts_return );
+
+    BIO_free_all_Ignore();
+
+    BIO_ctrl_fn_return = ( funcToFail == BIO_ctrl_fn_return ) ? BIO_ctrl_fn_failure : BIO_ctrl_fn_success;
+    BIO_ctrl_IgnoreAndReturn( BIO_ctrl_fn_return );
+}
+
+static void OTA_PAL_FailSingleMock_openssl_X509( MockFunctionNames_t funcToFail )
+{
+    /*
+     * Define success and failure return values for OpenSSL X509.h mocks.
+     */
+    static X509 dummyX509;
+    static EVP_PKEY dummyEVP_PKEY;
+    /* PEM_read_bio_X509_fn: Returns a valid "X509 *" on success and NULL on error. */
+    X509* PEM_read_bio_X509_success = &dummyX509;
+    X509* PEM_read_bio_X509_failure = NULL;
+    X509* PEM_read_bio_X509_result;
+    /* X509_get_pubkey_fn: Returns EVP_PKEY* on success and NULL on error. */
+    EVP_PKEY* X509_get_pubkey_success = &dummyEVP_PKEY;
+    EVP_PKEY* X509_get_pubkey_failure = NULL;
+    EVP_PKEY* X509_get_pubkey_result;
+    /* X509_free_fn: Doesn't return anything. */
+
+    /*
+     * Set the return value for the mock ( if any ) thatmatches the input. Set
+     * the rest of the mock functions to return the success value when called.
+     */
+    PEM_read_bio_X509_result = ( funcToFail == PEM_read_bio_X509_fn ) ? PEM_read_bio_X509_failure : PEM_read_bio_X509_success;
+    PEM_read_bio_X509_IgnoreAndReturn( PEM_read_bio_X509_result);
+
+    X509_get_pubkey_result = ( funcToFail ) ? X509_get_pubkey_failure : X509_get_pubkey_success;
+    X509_get_pubkey_IgnoreAndReturn( X509_get_pubkey_result );
+
+    X509_free_Ignore();
+}
+
+static void OTA_PAL_FailSingleMock_openssl_EVP( MockFunctionNames_t funcToFail )
+{
+    //EVP_MD_CTX_new_fn: Has no documented failure returns. Allocates and returns a valid digest context.
+    //EVP_DigestVerifyInit_fn: Return 1 for success and 0 for failure.
+    //EVP_DigestVerifyFinal_fn: Return 1 for success; any other value indicates a failure.
+    //EVP_MD_CTX_free_fn: No return
+    //EVP_PKEY_free_fn: No return
+}
+
+static void OTA_PAL_FailSingleMock_openssl_crypto( MockFunctionNames_t funcToFail )
+{
+    //CRYPTO_free_fn: No return value
+}
 
 /**
  * @brief Helper function specify a single point of failure for
@@ -569,7 +466,7 @@ typedef enum
  * function is added or removed to otaPal_SetPlatformImageState. 
  * 
  * Remark: This function assumes specific values for the success and failure of the functions. */
-static void OTA_PAL_FailSingleMock( FunctionNames_t funcToFail, OtaImageState_t* pFreadStateToSet )
+static void OTA_PAL_FailSingleMock( MockFunctionNames_t funcToFail, OtaImageState_t* pFreadStateToSet )
 {
     static FILE dummyFile;
 
@@ -831,4 +728,15 @@ void test_OTAPAL_GetPlatformImageState_ValidStates( void )
     /* Call otaPal_GetPlatformImageState and check the result. */
     ePalImageState = otaPal_GetPlatformImageState( &otaFileContext );
     TEST_ASSERT_EQUAL( OtaPalImageStateInvalid, ePalImageState );
+}
+
+void test_OTAPAL_CloseFile_HappyPath( void )
+{
+    OtaPalStatus_t result;
+    OtaFileContext_t otaFileContext;
+    Sig256_t dummySig;
+
+    otaFileContext.pSignature = &dummySig;
+    result = otaPal_CloseFile( &otaFileContext );
+    TEST_ASSERT_EQUAL( OtaPalSuccess, OTA_PAL_MAIN_ERR( result ) );
 }
