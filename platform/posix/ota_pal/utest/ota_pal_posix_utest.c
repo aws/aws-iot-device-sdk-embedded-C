@@ -556,6 +556,7 @@ typedef enum
     EVP_PKEY_free_fn,
     CRYPTO_free_fn,
     fopen_fn,
+    fclose_fn,
     snprintf_fn,
     fread_fn,
     fseek_alias_fn,
@@ -617,6 +618,9 @@ static void OTA_PAL_FailSingleMock( FunctionNames_t funcToFail, OtaImageState_t*
 
     fwrite_return = ( funcToFail == fwrite_alias_fn ) ? fwrite_failure : fwrite_success;
     fwrite_alias_IgnoreAndReturn( fwrite_return );
+
+    fclose_return = ( funcToFail == fclose_fn ) ? fclose_failure : fclose_success;
+    fclose_IgnoreAndReturn( fclose_return );
 }
 
 /**
@@ -654,8 +658,7 @@ void test_OTAPAL_SetPlatformImageState_HappyPath( void )
 }
 
 /**
- * @brief Test otaPal_SetPlatformImageState correctly handles setting valid
- * image states.
+ * @brief Test otaPal_SetPlatformImageState correctly handles snprintf failing.
  */
 void test_OTAPAL_SetPlatformImageState_snprintf_fail( void )
 {
@@ -664,6 +667,48 @@ void test_OTAPAL_SetPlatformImageState_snprintf_fail( void )
     OtaImageState_t validState = OtaImageStateTesting;
 
     OTA_PAL_FailSingleMock( snprintf_fn, NULL );
+    result = otaPal_SetPlatformImageState( &otaFileContext, validState );
+    TEST_ASSERT_EQUAL( OtaPalSuccess, OTA_PAL_MAIN_ERR( result ) );
+}
+
+/**
+ * @brief Test otaPal_SetPlatformImageState correctly handles fopen failing.
+ */
+void test_OTAPAL_SetPlatformImageState_fopen_fail( void )
+{
+    OtaPalStatus_t result;
+    OtaFileContext_t otaFileContext;
+    OtaImageState_t validState = OtaImageStateTesting;
+
+    OTA_PAL_FailSingleMock( fopen_fn, NULL );
+    result = otaPal_SetPlatformImageState( &otaFileContext, validState );
+    TEST_ASSERT_EQUAL( OtaPalSuccess, OTA_PAL_MAIN_ERR( result ) );
+}
+
+/**
+ * @brief Test otaPal_SetPlatformImageState correctly handles fwrite failing.
+ */
+void test_OTAPAL_SetPlatformImageState_fwrite_fail( void )
+{
+    OtaPalStatus_t result;
+    OtaFileContext_t otaFileContext;
+    OtaImageState_t validState = OtaImageStateTesting;
+
+    OTA_PAL_FailSingleMock( fwrite_alias_fn, NULL );
+    result = otaPal_SetPlatformImageState( &otaFileContext, validState );
+    TEST_ASSERT_EQUAL( OtaPalSuccess, OTA_PAL_MAIN_ERR( result ) );
+}
+
+/**
+ * @brief Test otaPal_SetPlatformImageState correctly handles fclose failing.
+ */
+void test_OTAPAL_SetPlatformImageState_fclose_fail( void )
+{
+    OtaPalStatus_t result;
+    OtaFileContext_t otaFileContext;
+    OtaImageState_t validState = OtaImageStateTesting;
+
+    OTA_PAL_FailSingleMock( fclose_fn, NULL );
     result = otaPal_SetPlatformImageState( &otaFileContext, validState );
     TEST_ASSERT_EQUAL( OtaPalSuccess, OTA_PAL_MAIN_ERR( result ) );
 }
