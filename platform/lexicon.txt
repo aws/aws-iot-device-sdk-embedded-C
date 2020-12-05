@@ -142,6 +142,7 @@ plisthead
 pnetworkcontext
 png
 popensslcredentials
+popensslparams
 posix
 ppkey
 pplatformimagestate

@@ -322,6 +322,7 @@ mutex
 mutexes
 mxz
 necesarily
+networkcontext
 ni
 nist
 noninfringement
@@ -422,6 +423,7 @@ pouttcpportsarray
 poutudpportsarray
 poweron
 ppacketinfo
+pparams
 ppath
 ppathlen
 ppayload

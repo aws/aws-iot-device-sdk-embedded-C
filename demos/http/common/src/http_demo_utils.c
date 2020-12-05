@@ -64,6 +64,16 @@
 
 /*-----------------------------------------------------------*/
 
+/* Each compilation unit must define the NetworkContext struct.
+ * Because these utilities are shared by both plaintext and TLS demos,
+ * we must define pParams as void *. */
+struct NetworkContext
+{
+    void * pParams;
+};
+
+/*-----------------------------------------------------------*/
+
 /**
  * @brief The random number generator to use for exponential backoff with
  * jitter retry logic.
