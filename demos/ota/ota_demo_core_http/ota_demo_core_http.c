@@ -21,7 +21,7 @@
 
 /**
  * @file ota_demo_core_http.c
- * @brief OTA update example using coreMQTT.
+ * @brief OTA update example using coreMQTT and coreHTTP.
  */
 
 /* Standard includes. */
@@ -398,6 +398,15 @@ static OtaAppBuffer_t otaBuffer =
 
 /*-----------------------------------------------------------*/
 
+/**
+ * @brief Retry logic to establish a connection to the server.
+ *
+ * If the connection fails, keep retrying with exponentially increasing
+ * timeout value, until max retries, max timeout or successful connect.
+ *
+ * @param[in] pNetworkContext Network context to connect on.
+ * @return int EXIT_FAILURE if connection failed after retries.
+ */
 static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext );
 
 /**
@@ -478,6 +487,56 @@ static OtaMqttStatus_t mqttUnsubscribe( const char * pTopicFilter,
                                         uint16_t topicFilterLength,
                                         uint8_t qos );
 
+/**
+ * @brief Initialize OTA Http interface.
+ *
+ * @param[in] pUrl Pointer to the pre-signed url for downloading update file.
+ * @return OtaHttpStatus_t OtaHttpSuccess if success ,
+ *                         OtaHttpInitFailed on failure.
+ */
+static OtaHttpStatus_t httpInit( char * pUrl );
+
+/**
+ * @brief Request file block over HTTP.
+ *
+ * @param[in] rangeStart  Starting index of the file data
+ * @param[in] rangeEnd    Last index of the file data
+ * @return OtaHttpStatus_t OtaHttpSuccess if success ,
+ *                         other errors on failure.
+ */
+static OtaHttpStatus_t httpRequest( uint32_t rangeStart,
+                                    uint32_t rangeEnd );
+
+/**
+ * @brief Deinitialize and cleanup of the HTTP connection.
+ *
+ * @return OtaHttpStatus_t  OtaHttpSuccess if success ,
+ *                          OtaHttpRequestFailed on failure.
+ */
+static OtaHttpStatus_t httpDeinit( void );
+
+/**
+ * @brief Initialize MQTT by setting up transport interface and network.
+ *
+ * @param[in] pMqttContext Structure representing MQTT connection.
+ * @param[in] pNetworkContext Network context to connect on.
+ * @return int EXIT_SUCCESS if MQTT component is initialized
+ */
+static int initializeMqtt( MQTTContext_t * pMqttContext,
+                           NetworkContext_t * pNetworkContext );
+
+/**
+ * @brief Attempt to connect to the MQTT broker.
+ *
+ * @return int EXIT_SUCCESS if a connection is established.
+ */
+static int establishConnection( void );
+
+/**
+ * @brief Disconnect from the MQTT broker.
+ *
+ */
+static void disconnect( void );
 
 /**
  * @brief Thread to call the OTA agent task.
@@ -502,6 +561,67 @@ static int startOTADemo( void );
  * @return   None.
  */
 static void setOtaInterfaces( OtaInterfaces_t * pOtaInterfaces );
+
+/**
+ * @brief Random number to be used as a back-off value for retrying connection.
+ *
+ * @return uint32_t The generated random number.
+ */
+static uint32_t generateRandomNumber();
+
+/* Callbacks used to handle different events. */
+
+/**
+ * @brief The OTA agent has completed the update job or it is in
+ * self test mode. If it was accepted, we want to activate the new image.
+ * This typically means we should reset the device to run the new firmware.
+ * If now is not a good time to reset the device, it may be activated later
+ * by your user code. If the update was rejected, just return without doing
+ * anything and we'll wait for another job. If it reported that we should
+ * start test mode, normally we would perform some kind of system checks to
+ * make sure our new firmware does the basic things we think it should do
+ * but we'll just go ahead and set the image as accepted for demo purposes.
+ * The accept function varies depending on your platform. Refer to the OTA
+ * PAL implementation for your platform in aws_ota_pal.c to see what it
+ * does for you.
+ *
+ * @param[in] event Event from OTA lib of type OtaJobEvent_t.
+ * @return None.
+ */
+static void otaAppCallback( OtaJobEvent_t event,
+                            const void * pData );
+
+/**
+ * @brief Callback registered with the OTA library that notifies the OTA agent
+ * of an incoming PUBLISH containing a job document.
+ *
+ * @param[in] pContext MQTT context which stores the connection.
+ * @param[in] pPublishInfo MQTT packet information which stores details of the
+ * job document.
+ */
+static void mqttJobCallback( MQTTContext_t * pContext,
+                             MQTTPublishInfo_t * pPublishInfo );
+
+/**
+ * @brief Callback that notifies the OTA library when a data block is received.
+ *
+ * @param[in] pContext MQTT context which stores the connection.
+ * @param[in] pPublishInfo MQTT packet that stores the information of the file block.
+ */
+static void mqttDataCallback( MQTTContext_t * pContext,
+                              MQTTPublishInfo_t * pPublishInfo );
+
+/**
+ * @brief callback to use with the MQTT context to notify incoming packet events.
+ *
+ * @param[in] pMqttContext MQTT context which stores the connection.
+ * @param[in] pPacketInfo Parameters of the incoming packet.
+ * @param[in] pDeserializedInfo Deserialized packet information to be dispatched by
+ * the subscription manager to event callbacks.
+ */
+static void mqttEventCallback( MQTTContext_t * pMqttContext,
+                               MQTTPacketInfo_t * pPacketInfo,
+                               MQTTDeserializedInfo_t * pDeserializedInfo );
 
 /*-----------------------------------------------------------*/
 
@@ -549,23 +669,8 @@ OtaEventData_t * otaEventBufferGet( void )
     return pFreeBuffer;
 }
 
-/**
- * @brief The OTA agent has completed the update job or it is in
- * self test mode. If it was accepted, we want to activate the new image.
- * This typically means we should reset the device to run the new firmware.
- * If now is not a good time to reset the device, it may be activated later
- * by your user code. If the update was rejected, just return without doing
- * anything and we'll wait for another job. If it reported that we should
- * start test mode, normally we would perform some kind of system checks to
- * make sure our new firmware does the basic things we think it should do
- * but we'll just go ahead and set the image as accepted for demo purposes.
- * The accept function varies depending on your platform. Refer to the OTA
- * PAL implementation for your platform in aws_ota_pal.c to see what it
- * does for you.
- *
- * @param[in] event Event from OTA lib of type OtaJobEvent_t.
- * @return None.
- */
+/*-----------------------------------------------------------*/
+
 static void otaAppCallback( OtaJobEvent_t event,
                             const void * pData )
 {
@@ -755,7 +860,7 @@ static void mqttEventCallback( MQTTContext_t * pMqttContext,
 
 /*-----------------------------------------------------------*/
 
-static int32_t generateRandomNumber()
+static uint32_t generateRandomNumber()
 {
     return( rand() );
 }
@@ -1082,6 +1187,13 @@ static int32_t connectToS3Server( NetworkContext_t * pNetworkContext,
                                     &pAddress,
                                     &serverHostLength );
 
+        if( httpStatus != HTTPSuccess )
+        {
+            LogError( ( "URL %s parsing failed. Error code: %d",
+                        pUrl,
+                        httpStatus ) );
+        }
+
         /* serverHost should consist only of the host address. */
         memcpy( serverHost, pAddress, serverHostLength );
         serverHost[ serverHostLength ] = '\0';
@@ -1112,6 +1224,8 @@ static int32_t connectToS3Server( NetworkContext_t * pNetworkContext,
 
     return returnStatus;
 }
+
+/*-----------------------------------------------------------*/
 
 static OtaHttpStatus_t httpInit( char * pUrl )
 {
@@ -1178,9 +1292,6 @@ static OtaHttpStatus_t httpInit( char * pUrl )
 static OtaHttpStatus_t httpRequest( uint32_t rangeStart,
                                     uint32_t rangeEnd )
 {
-    /* Return value of this method. */
-    int32_t returnStatus = EXIT_SUCCESS;
-
     /* OTA lib return error code. */
     OtaHttpStatus_t ret = OtaHttpSuccess;
 
@@ -1271,7 +1382,7 @@ static OtaHttpStatus_t httpRequest( uint32_t rangeStart,
         OTA_SignalEvent( &eventMsg );
     }
 
-    return returnStatus;
+    return ret;
 }
 
 static OtaHttpStatus_t httpDeinit( void )
@@ -1301,7 +1412,6 @@ static OtaMqttStatus_t mqttSubscribe( const char * pTopicFilter,
     OtaMqttStatus_t otaRet = OtaMqttSuccess;
     SubscriptionManagerStatus_t subscriptionStatus = SUBSCRIPTION_MANAGER_SUCCESS;
 
-    int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus;
     MQTTContext_t * pMqttContext = &mqttContext;
     MQTTSubscribeInfo_t pSubscriptionList[ 1 ];
@@ -1508,6 +1618,7 @@ static void * otaThread( void * pParam )
     /* Calling OTA agent task. */
     otaAgentTask( pParam );
     LogInfo( ( "OTA Agent stopped." ) );
+    return NULL;
 }
 
 /*-----------------------------------------------------------*/
@@ -1656,7 +1767,7 @@ static int startOTADemo( void )
                     {
                         suspendTimeout = OTA_SUSPEND_TIMEOUT_MS;
 
-                        while( ( ( state = OTA_GetState() ) != OtaAgentStateSuspended ) && ( suspendTimeout > 0U ) )
+                        while( ( ( state = OTA_GetState() ) != OtaAgentStateSuspended ) && ( suspendTimeout > 0 ) )
                         {
                             /* Wait for OTA Library state to suspend */
                             Clock_SleepMs( OTA_EXAMPLE_TASK_DELAY_MS );
