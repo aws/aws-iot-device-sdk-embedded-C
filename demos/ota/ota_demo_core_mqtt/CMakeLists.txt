@@ -20,6 +20,9 @@ add_executable(
         ${BACKOFF_ALGORITHM_SOURCES}
 )
 
+# Add to default target if all required macros needed to run this demo are defined
+check_aws_credentials(${DEMO_NAME})
+
 # librt is required to use OTA OS POSIX port.
 find_library(LIB_RT rt REQUIRED)
 
@@ -52,10 +55,10 @@ if(ROOT_CA_CERT_PATH)
             ROOT_CA_CERT_PATH="${ROOT_CA_CERT_PATH}"
     )
 endif()
-if(BROKER_ENDPOINT)
+if(AWS_IOT_ENDPOINT)
     target_compile_definitions(
         ${DEMO_NAME} PRIVATE
-            BROKER_ENDPOINT="${BROKER_ENDPOINT}"
+            AWS_IOT_ENDPOINT="${AWS_IOT_ENDPOINT}"
     )
 endif()
 if(CLIENT_IDENTIFIER)
