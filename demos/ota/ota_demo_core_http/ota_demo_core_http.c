@@ -81,8 +81,8 @@
 #ifndef ROOT_CA_CERT_PATH_HTTP
     #error "Please define path to Root CA certificate of the HTTPS server(ROOT_CA_CERT_PATH_HTTP) in demo_config.h."
 #endif
-#ifndef MQTT_CLIENT_IDENTIFIER
-    #error "Please define a unique client identifier, MQTT_CLIENT_IDENTIFIER, in demo_config.h."
+#ifndef CLIENT_IDENTIFIER
+    #error "Please define a unique client identifier, CLIENT_IDENTIFIER, in demo_config.h."
 #endif
 #ifndef CLIENT_CERT_PATH
     #error "Please define path to client certificate(CLIENT_CERT_PATH) in demo_config.h."
@@ -114,7 +114,7 @@
 /**
  * @brief Length of client identifier.
  */
-#define MQTT_CLIENT_IDENTIFIER_LENGTH            ( ( uint16_t ) ( sizeof( MQTT_CLIENT_IDENTIFIER ) - 1 ) )
+#define CLIENT_IDENTIFIER_LENGTH                 ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) )
 
 /**
  * @brief Transport timeout in milliseconds for transport send and receive.
@@ -1060,8 +1060,8 @@ static int establishMqttSession( MQTTContext_t * pMqttContext )
     /* The client identifier is used to uniquely identify this MQTT client to
      * the MQTT broker. In a production device the identifier can be something
      * unique, such as a device serial number. */
-    connectInfo.pClientIdentifier = MQTT_CLIENT_IDENTIFIER;
-    connectInfo.clientIdentifierLength = MQTT_CLIENT_IDENTIFIER_LENGTH;
+    connectInfo.pClientIdentifier = CLIENT_IDENTIFIER;
+    connectInfo.clientIdentifierLength = CLIENT_IDENTIFIER_LENGTH;
 
     /* The maximum time interval in seconds which is allowed to elapse
      * between two Control Packets.
@@ -1492,7 +1492,7 @@ static OtaMessageType_t getOtaMessageType( const char * pTopicFilter,
         {
             /* Check thing name.*/
             if( strncmp( &pTopicFilter[ stringIndex - fieldLength ],
-                         MQTT_CLIENT_IDENTIFIER,
+                         CLIENT_IDENTIFIER,
                          ( size_t ) ( fieldLength ) ) == 0 )
             {
                 stringIndex++;
@@ -1807,7 +1807,7 @@ static int startOTADemo( void )
     {
         if( ( otaRet = OTA_Init( &otaBuffer,
                                  &otaInterfaces,
-                                 ( const uint8_t * ) ( MQTT_CLIENT_IDENTIFIER ),
+                                 ( const uint8_t * ) ( CLIENT_IDENTIFIER ),
                                  otaAppCallback ) ) != OtaErrNone )
         {
             LogError( ( "Failed to initialize OTA Agent, exiting = %u.",

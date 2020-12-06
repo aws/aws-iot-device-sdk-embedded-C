@@ -142,7 +142,7 @@
  * No two clients may use the same client identifier simultaneously.
  */
 #ifndef MQTT_CLIENT_IDENTIFIER
-    #define MQTT_CLIENT_IDENTIFIER    "testClient"
+    #define MQTT_CLIENT_IDENTIFIER    "testclient"
 #endif
 
 /**
