@@ -99,6 +99,7 @@ connectionsarraylength
 const
 contentrangevalstr
 copybrief
+corehttp
 coremqtt
 corepkcs
 correclty
@@ -126,6 +127,7 @@ defenderjsonreportaccepted
 defenderresponse
 defenderresponselength
 defendersuccess
+deinitialize
 der
 des
 deserialize
@@ -347,6 +349,9 @@ optionalquery
 org
 os
 ota
+otahttpinitfailed
+otahttprequestfailed
+otahttpsuccess
 otamqttsuccess
 otaagentstatestopped
 otafile
@@ -425,6 +430,7 @@ pouttcpportsarray
 poutudpportsarray
 poweron
 ppacketinfo
+pparam
 pparams
 ppath
 ppathlen
@@ -476,6 +482,8 @@ pxsession
 pxslotid
 py
 qos
+rangeend
+rangestart
 rc
 rdparty
 readme
