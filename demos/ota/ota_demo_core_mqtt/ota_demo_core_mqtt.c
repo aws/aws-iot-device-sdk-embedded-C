@@ -1220,11 +1220,12 @@ static OtaMqttStatus_t mqttSubscribe( const char * pTopicFilter,
     assert( pTopicFilter != NULL );
     assert( topicFilterLength > 0 );
 
+    ( void ) qos;
+
     /* Start with everything at 0. */
     ( void ) memset( ( void * ) pSubscriptionList, 0x00, sizeof( pSubscriptionList ) );
 
-    /* Set the QoS , topic and topic length. */
-    pSubscriptionList[ 0 ].qos = qos;
+    /* Set the topic and topic length. */
     pSubscriptionList[ 0 ].pTopicFilter = pTopicFilter;
     pSubscriptionList[ 0 ].topicFilterLength = topicFilterLength;
 
@@ -1341,11 +1342,12 @@ static OtaMqttStatus_t mqttUnsubscribe( const char * pTopicFilter,
     MQTTSubscribeInfo_t pSubscriptionList[ 1 ];
     MQTTContext_t * pMqttContext = &mqttContext;
 
+    ( void ) qos;
+
     /* Start with everything at 0. */
     ( void ) memset( ( void * ) pSubscriptionList, 0x00, sizeof( pSubscriptionList ) );
 
-    /* Set the QoS , topic and topic length. */
-    pSubscriptionList[ 0 ].qos = qos;
+    /* Set the topic and topic length. */
     pSubscriptionList[ 0 ].pTopicFilter = pTopicFilter;
     pSubscriptionList[ 0 ].topicFilterLength = topicFilterLength;
 
@@ -1506,8 +1508,6 @@ static int startOTADemo( void )
 
                 if( returnStatus == EXIT_SUCCESS )
                 {
-                    mqttSessionEstablished = true;
-
                     /* Check if OTA process was suspended and resume if required. */
                     if( state == OtaAgentStateSuspended )
                     {

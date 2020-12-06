@@ -46,7 +46,7 @@
     #define LIBRARY_LOG_NAME     "OTA"
 #endif
 #ifndef LIBRARY_LOG_LEVEL
-    #define LIBRARY_LOG_LEVEL    LOG_DEBUG
+    #define LIBRARY_LOG_LEVEL    LOG_INFO
 #endif
 
 #include "logging_stack.h"
