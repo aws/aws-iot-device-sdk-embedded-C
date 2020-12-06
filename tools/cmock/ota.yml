@@ -33,6 +33,8 @@
     # These keywords are found in many POSIX APIs but is stripped as it cannot be parsed by CMock.
     - __restrict
     - \s__THROW
+    - __owur
+    - __attribute__((__warn_unused_result__))
     # These functions in socket.h cannot be parsed correctly by CMock, so we won't mock them.
     - (.*)sendmsg((.|\n|\r)+?\;)
     - (.*)sendmmsg((.|\n|\r)+?\;)

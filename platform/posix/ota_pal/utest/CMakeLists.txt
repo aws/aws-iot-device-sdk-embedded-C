@@ -66,7 +66,6 @@ create_real_library ( ${real_name}
 
 list(APPEND utest_link_list
       lib${real_name}.a
-      ${OPENSSL_LIBRARIES}
       )
 
 list ( APPEND utest_dep_list
