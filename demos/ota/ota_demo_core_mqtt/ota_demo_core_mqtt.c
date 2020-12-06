@@ -573,7 +573,7 @@ static void otaAppCallback( OtaJobEvent_t event,
     {
         LogInfo( ( "Received OtaJobEventActivate callback from OTA Agent." ) );
 
-        if( pthread_mutex_lock( &mqttMutex ) != 0 )
+        if( pthread_mutex_lock( &mqttMutex ) == 0 )
         {
             /* OTA job is completed. so delete the network connection. */
             MQTT_Disconnect( &mqttContext );
