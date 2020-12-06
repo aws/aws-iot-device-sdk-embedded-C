@@ -210,22 +210,22 @@
 /**
  * @brief The common prefix for all OTA topics.
  */
-#define OTA_TOPIC_PREFIX      "$aws/things/"
+#define OTA_TOPIC_PREFIX           "$aws/things/"
 
 /**
  * @brief The string used for jobs topics.
  */
-#define OTA_TOPIC_JOBS      "jobs"
+#define OTA_TOPIC_JOBS             "jobs"
 
 /**
  * @brief The string used for streaming service topics.
  */
-#define OTA_TOPIC_STREAM     "streams"
+#define OTA_TOPIC_STREAM           "streams"
 
 /**
  * @brief The length of #OTA_TOPIC_PREFIX
  */
-#define OTA_TOPIC_PREFIX_LENGTH     ( ( uint16_t ) ( sizeof( OTA_TOPIC_PREFIX ) - 1U ) )
+#define OTA_TOPIC_PREFIX_LENGTH    ( ( uint16_t ) ( sizeof( OTA_TOPIC_PREFIX ) - 1U ) )
 
 /*-----------------------------------------------------------*/
 
@@ -286,7 +286,7 @@ typedef enum OtaMessageType
     OtaMessageTypeJob = 0,
     OtaMessageTypeStream,
     OtaNumOfMessageType
-}OtaMessageType_t;
+} OtaMessageType_t;
 
 /**
  * @brief The network buffer must remain valid when OTA library task is running.
@@ -1106,7 +1106,7 @@ static void disconnect( void )
 
 /*-----------------------------------------------------------*/
 
-static OtaMessageType_t getOtaMessageType( const char * pTopicFilter, 
+static OtaMessageType_t getOtaMessageType( const char * pTopicFilter,
                                            uint16_t topicFilterLength )
 {
     int retStatus = EXIT_FAILURE;
@@ -1121,7 +1121,7 @@ static OtaMessageType_t getOtaMessageType( const char * pTopicFilter,
         OTA_TOPIC_STREAM
     };
 
-   /* Check topic prefix is valid.*/
+    /* Check topic prefix is valid.*/
     if( strncmp( pTopicFilter, OTA_TOPIC_PREFIX, ( size_t ) OTA_TOPIC_PREFIX_LENGTH ) == 0 )
     {
         stringIndex = OTA_TOPIC_PREFIX_LENGTH;
@@ -1150,8 +1150,8 @@ static OtaMessageType_t getOtaMessageType( const char * pTopicFilter,
         if( fieldLength > 0 )
         {
             /* Check thing name.*/
-            if( strncmp( &pTopicFilter[stringIndex - fieldLength], 
-                         CLIENT_IDENTIFIER, 
+            if( strncmp( &pTopicFilter[ stringIndex - fieldLength ],
+                         CLIENT_IDENTIFIER,
                          ( size_t ) ( fieldLength ) ) == 0 )
             {
                 stringIndex++;
@@ -1177,28 +1177,25 @@ static OtaMessageType_t getOtaMessageType( const char * pTopicFilter,
             {
                 fieldLength++;
             }
-            
         }
 
         if( fieldLength > 0 )
         {
-
             for( i = 0; i < OtaNumOfMessageType; i++ )
             {
                 /* check thing name.*/
-                if( strncmp( &pTopicFilter[stringIndex - fieldLength], 
-                             pOtaMessageStrings[ i ], 
+                if( strncmp( &pTopicFilter[ stringIndex - fieldLength ],
+                             pOtaMessageStrings[ i ],
                              ( size_t ) ( fieldLength ) ) == 0 )
                 {
                     break;
                 }
             }
 
-            if( i < OtaNumOfMessageType ) 
+            if( i < OtaNumOfMessageType )
             {
-                 retMesageType = i;
+                retMesageType = i;
             }
-                
         }
     }
 
@@ -1267,9 +1264,9 @@ static OtaMqttStatus_t mqttSubscribe( const char * pTopicFilter,
     assert( ( otaMessageType >= 0 ) && ( otaMessageType < OtaNumOfMessageType ) );
 
     /* Register callback to subscription manager. */
-    subscriptionStatus = SubscriptionManager_RegisterCallback( pTopicFilter, 
-                                                               topicFilterLength, 
-                                                               otaMessageCallback[otaMessageType] );
+    subscriptionStatus = SubscriptionManager_RegisterCallback( pTopicFilter,
+                                                               topicFilterLength,
+                                                               otaMessageCallback[ otaMessageType ] );
 
     if( subscriptionStatus != SUBSCRIPTION_MANAGER_SUCCESS )
     {
@@ -1424,6 +1421,7 @@ static void * otaThread( void * pParam )
     /* Calling OTA agent task. */
     otaAgentTask( pParam );
     LogInfo( ( "OTA Agent stopped." ) );
+    return NULL;
 }
 /*-----------------------------------------------------------*/
 static int startOTADemo( void )
@@ -1567,12 +1565,7 @@ static int startOTADemo( void )
                     /* Suspend OTA operations. */
                     otaRet = OTA_Suspend();
 
-                    if( otaRet != OtaErrNone )
-                    {
-                        LogError( ( "OTA failed to suspend. "
-                                    "StatusCode=%d.", otaRet ) );
-                    }
-                    else
+                    if( otaRet == OtaErrNone )
                     {
                         suspendTimeout = OTA_SUSPEND_TIMEOUT_MS;
 
@@ -1582,6 +1575,11 @@ static int startOTADemo( void )
                             Clock_SleepMs( OTA_EXAMPLE_TASK_DELAY_MS );
                             suspendTimeout -= OTA_EXAMPLE_TASK_DELAY_MS;
                         }
+                    }
+                    else
+                    {
+                        LogError( ( "OTA failed to suspend. "
+                                    "StatusCode=%d.", otaRet ) );
                     }
                 }
             }

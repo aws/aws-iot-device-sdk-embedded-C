@@ -166,6 +166,7 @@ en
 enc
 endcond
 endif
+enum
 epalstate
 esavedagentstate
 establishmqttsession
@@ -426,6 +427,7 @@ pouttcpportsarray
 poutudpportsarray
 poweron
 ppacketinfo
+pparam
 pparams
 ppath
 ppathlen
