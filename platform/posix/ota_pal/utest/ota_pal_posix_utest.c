@@ -343,7 +343,7 @@ typedef enum
     none_fn = 0,
     BIO_s_file_fn,
     BIO_new_fn,
-    BIO_s_mem_X509_fn,
+    BIO_s_mem_fn,
     BIO_puts_fn,
     BIO_free_all_fn,
     BIO_ctrl_fn,
@@ -378,9 +378,9 @@ static void OTA_PAL_FailSingleMock_openssl_BIO( MockFunctionNames_t funcToFail )
     BIO* BIO_new_success = &dummyBIO;
     BIO* BIO_new_failure = NULL;
     BIO* BIO_new_return;
-    /* BIO_s_mem_X509_fn: Has no documented failure returns. It always returns
+    /* BIO_s_mem_fn: Has no documented failure returns. It always returns
      * a valid "BIO_METHOD *". */
-    BIO_METHOD* BIO_s_mem_x509_return;
+    BIO_METHOD* BIO_s_mem_return;
     /* BIO_puts_fn: Returns either the amount of data successfully written
      * (if the return value is positive) or that no data was succesfully
      * written if the result is 0 or -1. */
@@ -404,8 +404,8 @@ static void OTA_PAL_FailSingleMock_openssl_BIO( MockFunctionNames_t funcToFail )
     BIO_new_return = ( funcToFail == BIO_new_fn ) ? BIO_new_failure : BIO_new_success;
     BIO_new_IgnoreAndReturn( BIO_new_return );
 
-    BIO_s_mem_x509_return = &dummyBioMethod;
-    BIO_s_mem_IgnoreAndReturn( BIO_s_mem_x509_return );
+    BIO_s_mem_return = &dummyBioMethod;
+    BIO_s_mem_IgnoreAndReturn( BIO_s_mem_return );
 
     BIO_puts_return = ( funcToFail == BIO_puts_fn ) ? BIO_puts_failure : BIO_puts_success;
     BIO_puts_IgnoreAndReturn( BIO_puts_return );
