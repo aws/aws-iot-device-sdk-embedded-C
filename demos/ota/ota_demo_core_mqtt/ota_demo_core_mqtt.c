@@ -1350,8 +1350,7 @@ static int startOTADemo( void )
 
     if( returnStatus == EXIT_SUCCESS )
     {
-        /* Wait till OTA library is stopped, output statistics for currently running
-         * OTA job */
+        /* Until OTA library is stopped, log statistics for currently running OTA job. */
         while( ( ( state = OTA_GetState() ) != OtaAgentStateStopped ) )
         {
             if( mqttSessionEstablished != true )
