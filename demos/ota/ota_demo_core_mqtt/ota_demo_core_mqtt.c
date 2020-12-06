@@ -1088,7 +1088,7 @@ static void disconnect( void )
 
     if( pthread_mutex_lock( &mqttMutex ) == 0 )
     {
-        /* OTA job is completed. so delete the network connection. */
+        /* Disconnect MQTT session. */
         MQTT_Disconnect( &mqttContext );
 
         pthread_mutex_unlock( &mqttMutex );
