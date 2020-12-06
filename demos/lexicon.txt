@@ -168,6 +168,7 @@ en
 enc
 endcond
 endif
+enum
 epalstate
 esavedagentstate
 establishmqttsession

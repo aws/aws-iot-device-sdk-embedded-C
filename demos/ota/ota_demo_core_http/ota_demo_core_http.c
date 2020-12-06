@@ -902,7 +902,7 @@ static int initializeMqtt( MQTTContext_t * pMqttContext,
                            NetworkContext_t * pNetworkContext )
 {
     int returnStatus = EXIT_SUCCESS;
-    MQTTStatus_t mqttStatus;
+    MQTTStatus_t mqttStatus = MQTTBadParameter;
     MQTTFixedBuffer_t networkBuffer;
     TransportInterface_t transport;
 
@@ -1042,7 +1042,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
 static int establishMqttSession( MQTTContext_t * pMqttContext )
 {
     int returnStatus = EXIT_SUCCESS;
-    MQTTStatus_t mqttStatus;
+    MQTTStatus_t mqttStatus = MQTTBadParameter;
     MQTTConnectInfo_t connectInfo = { 0 };
 
     bool sessionPresent = false;
@@ -1555,7 +1555,7 @@ static OtaMqttStatus_t mqttSubscribe( const char * pTopicFilter,
     SubscriptionManagerStatus_t subscriptionStatus = SUBSCRIPTION_MANAGER_SUCCESS;
     OtaMessageType_t otaMessageType;
 
-    MQTTStatus_t mqttStatus;
+    MQTTStatus_t mqttStatus = MQTTBadParameter;
     MQTTContext_t * pMqttContext = &mqttContext;
     MQTTSubscribeInfo_t pSubscriptionList[ 1 ];
 
