@@ -1156,7 +1156,7 @@ static OtaMqttStatus_t mqttPublish( const char * const pacTopic,
     {
         mqttStatus = MQTT_Publish( pMqttContext,
                                    &publishInfo,
-                                   MQTT_GetPacketId( pMqttContext ) );
+                                   ( qos ) ? MQTT_GetPacketId( pMqttContext ) : 0U );
 
         pthread_mutex_unlock( &mqttMutex );
     }
