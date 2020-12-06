@@ -1399,7 +1399,7 @@ static OtaHttpStatus_t httpRequest( uint32_t rangeStart,
                     HTTPClient_strerror( httpStatus ) ) );
     }
 
-    pData = &eventBuffer;
+    pData = &eventBuffer[ 0 ];
 
     if( httpStatus != HTTPSuccess )
     {
