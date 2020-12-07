@@ -606,9 +606,6 @@ static void otaAppCallback( OtaJobEvent_t event,
         /* Disconnect from broker and close connection. */
         disconnect();
 
-        /* Clear the mqtt session flag. */
-        mqttSessionEstablished = false;
-
         /* Activate the new firmware image. */
         OTA_ActivateNewImage();
 
@@ -1081,6 +1078,9 @@ static void disconnect( void )
         MQTT_Disconnect( &mqttContext );
 
         pthread_mutex_unlock( &mqttMutex );
+
+        /* Clear the mqtt session flag. */
+        mqttSessionEstablished = false;
     }
     else
     {
@@ -1547,9 +1547,6 @@ static int startOTADemo( void )
 
                     /* Disconnect from broker and close connection. */
                     disconnect();
-
-                    /* Set connection flag to false. */
-                    mqttSessionEstablished = false;
 
                     /* Suspend OTA operations. */
                     otaRet = OTA_Suspend();
