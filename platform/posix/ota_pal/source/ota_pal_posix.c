@@ -357,10 +357,11 @@ static OtaPalMainStatus_t Openssl_DigestVerify( EVP_MD_CTX * pSigContext,
     size_t bytesRead;
     uint8_t * pBuf;
 
+    /* Both of these are known to not be NULL. */
+    assert( ( pSigContext != NULL ) && ( pPkey != NULL ) );
+
     /* Verify an ECDSA-SHA256 signature. */
-    if( ( pSigContext != NULL ) &&
-        ( pPkey != NULL ) &&
-        ( pFile != NULL ) &&
+    if( ( pFile != NULL ) &&
         ( 1 == EVP_DigestVerifyInit( pSigContext, NULL, EVP_sha256(), NULL, pPkey ) ) )
     {
         LogDebug( ( "Started signature verification." ) );
@@ -419,37 +420,30 @@ static OtaPalStatus_t otaPal_CheckFileSignature( OtaFileContext_t * const C )
     EVP_PKEY * pPkey = NULL;
     EVP_MD_CTX * pSigContext = NULL;
 
-    if( C != NULL )
+    /* This is a static helper function, called in one place, with the caller
+       always checking that the file context is not NULL before calling. */
+    assert( C != NULL );
+
+    /* Extract the signer cert from the file */
+    pPkey = Openssl_GetPkeyFromCertificate( C->pCertFilepath );
+
+    /* Create a new signature context for verification purpose */
+    pSigContext = EVP_MD_CTX_new();
+
+    if( pPkey != NULL )
     {
-        /* Extract the signer cert from the file */
-        pPkey = Openssl_GetPkeyFromCertificate( C->pCertFilepath );
-
-        /* Create a new signature context for verification purpose */
-        pSigContext = EVP_MD_CTX_new();
-
-        if( pPkey != NULL )
-        {
-            /* Verify an ECDSA-SHA256 signature. */
-            mainErr = Openssl_DigestVerify( pSigContext, pPkey, C->pFile, C->pSignature );
-        }
-        else
-        {
-            LogError( ( "File signature check failed at EXTRACT pkey from signer certificate." ) );
-            mainErr = OtaPalBadSignerCert;
-        }
-
-        /* Free up objects */
-        EVP_MD_CTX_free( pSigContext );
-        EVP_PKEY_free( pPkey );
+        /* Verify an ECDSA-SHA256 signature. */
+        mainErr = Openssl_DigestVerify( pSigContext, pPkey, C->pFile, C->pSignature );
     }
     else
     {
-        /* FIXME: Invalid error code for a NULL file context. */
-        LogError( ( "Failed to check file signature: Paramater check failed: "
-                    " Invalid OTA file context." ) );
-        /* Invalid OTA context or file pointer. */
-        mainErr = OtaPalNullFileContext;
+        LogError( ( "File signature check failed at EXTRACT pkey from signer certificate." ) );
+        mainErr = OtaPalBadSignerCert;
     }
+
+    /* Free up objects */
+    EVP_MD_CTX_free( pSigContext );
+    EVP_PKEY_free( pPkey );
 
     return OTA_PAL_COMBINE_ERR( mainErr, 0 );
 }

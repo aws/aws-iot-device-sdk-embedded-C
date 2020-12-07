@@ -221,6 +221,28 @@ void test_OTAPAL_CreateFileForRx_ValidFileHandle( void )
     TEST_ASSERT_EQUAL( OtaPalSuccess, result );
 }
 
+/**
+ * @brief Test that otaPal_CreateFileForRx will handle the two types of
+ * potential paths.
+ */
+void test_OTAPAL_CreateFileForRx_PathTypes( void )
+{
+    OtaPalMainStatus_t result;
+    FILE placeholder_file;
+
+    /* Test for a leading forward slash in the path. */
+    otaFile.pFilePath = ( uint8_t * ) "/placeholder_path";
+    fopen_ExpectAnyArgsAndReturn( &placeholder_file );
+    result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
+    TEST_ASSERT_EQUAL( OtaPalSuccess, result );
+
+    /* Test for no leading forward slash in the path. */
+    otaFile.pFilePath = ( uint8_t * ) "placeholder_path";
+    fopen_ExpectAnyArgsAndReturn( &placeholder_file );
+    result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
+    TEST_ASSERT_EQUAL( OtaPalSuccess, result );
+}
+
 
 /**
  * @brief Test that otaPal_WriteBlock will return correct result code.
@@ -411,7 +433,7 @@ static void OTA_PAL_FailSingleMock_openssl_BIO( MockFunctionNames_t funcToFail )
 
     BIO_free_all_alias_Ignore();
 
-    BIO_read_filename_fn_return = ( funcToFail == BIO_read_filename_fn_return ) ? BIO_read_filename_fn_failure : BIO_read_filename_fn_success;
+    BIO_read_filename_fn_return = ( funcToFail == BIO_read_filename_fn ) ? BIO_read_filename_fn_failure : BIO_read_filename_fn_success;
     BIO_ctrl_IgnoreAndReturn( BIO_read_filename_fn_return );
 }
 
@@ -495,6 +517,7 @@ static void OTA_PAL_FailSingleMock_openssl_crypto( MockFunctionNames_t funcToFai
     void* OPENSSL_malloc_return;
 
     OPENSSL_malloc_return = ( funcToFail == OPENSSL_malloc_fn ) ? OPENSSL_malloc_failure : OPENSSL_malloc_success;
+    CRYPTO_malloc_StopIgnore();
     CRYPTO_malloc_IgnoreAndReturn( OPENSSL_malloc_return );
     /* CRYPTO_free_fn: Has no return value. */
     CRYPTO_free_Ignore();
@@ -768,10 +791,15 @@ void test_OTAPAL_GetPlatformImageState_ValidStates( void )
 
 static void OTA_PAL_FailSingleMock_Except_fread(MockFunctionNames_t funcToFail, OtaImageState_t *pFreadStateToSet)
 {
+    const size_t fread_failure = 0;
     /* When fread is being called in this case, it is looping until there is
     no more data. Setting fread to fail prevents us from getting stuck in
     the loops. */
-    OTA_PAL_FailSingleMock_stdio(fread_fn, pFreadStateToSet );
+    OTA_PAL_FailSingleMock_stdio(funcToFail, pFreadStateToSet );
+
+    fread_IgnoreAndReturn( fread_failure );
+    fread_ReturnThruPtr_ptr( pFreadStateToSet );
+
     OTA_PAL_FailSingleMock_openssl_BIO( funcToFail );
     OTA_PAL_FailSingleMock_openssl_X509( funcToFail );
     OTA_PAL_FailSingleMock_openssl_crypto( funcToFail );
@@ -786,20 +814,25 @@ void test_OTAPAL_CloseFile_NullInput( void )
     OtaImageState_t expectedImageState = OtaImageStateTesting;
     FILE dummyFile;
 
+    OTA_PAL_FailSingleMock_Except_fread( fread_fn, &expectedImageState );
 
     /* NULL file context. */
-    OTA_PAL_FailSingleMock_Except_fread( fread_fn, &expectedImageState );
     result = otaPal_CloseFile( NULL );
     TEST_ASSERT_EQUAL( OtaPalFileClose, OTA_PAL_MAIN_ERR( result ) );
 
+    /* NULL signature input. */
     otaFileContext.pSignature = NULL;
     otaFileContext.pFile = &dummyFile;
-    /* NULL signature input. */
-    OTA_PAL_FailSingleMock_Except_fread( fread_fn, &expectedImageState );
     result = otaPal_CloseFile( &otaFileContext );
     TEST_ASSERT_EQUAL( OtaPalSignatureCheckFailed, OTA_PAL_MAIN_ERR( result ) );
 
     /* NULL file input */
+    otaFileContext.pSignature = &dummySig;
+    otaFileContext.pFile = NULL;
+    /* NULL signature input. */
+    OTA_PAL_FailSingleMock_Except_fread( fread_fn, &expectedImageState );
+    result = otaPal_CloseFile( &otaFileContext );
+    TEST_ASSERT_EQUAL( OtaPalSignatureCheckFailed, OTA_PAL_MAIN_ERR( result ) );
 }
 
 void test_OTAPAL_CloseFile_HappyPath( void )
@@ -831,18 +864,7 @@ void test_OTAPAL_CloseFile_OpenSSL_failures( void )
     otaFileContext.pSignature = &dummySig;
     otaFileContext.pFile = &dummyFile;
 
-    /* Test OpenSSL/bio.h functions failing. */
-    OTA_PAL_FailSingleMock_Except_fread( BIO_new_fn , &expectedImageState);
-    result = otaPal_CloseFile( &otaFileContext );
-    TEST_ASSERT_EQUAL( OtaPalBadSignerCert, OTA_PAL_MAIN_ERR( result ) );
-
-    otaFileContext.pFile = &dummyFile;
     OTA_PAL_FailSingleMock_Except_fread( BIO_puts_fn , &expectedImageState);
-    result = otaPal_CloseFile( &otaFileContext );
-    TEST_ASSERT_EQUAL( OtaPalSuccess, OTA_PAL_MAIN_ERR( result ) );
-
-    otaFileContext.pFile = &dummyFile;
-    OTA_PAL_FailSingleMock_Except_fread( BIO_read_filename_fn , &expectedImageState);
     result = otaPal_CloseFile( &otaFileContext );
     TEST_ASSERT_EQUAL( OtaPalSuccess, OTA_PAL_MAIN_ERR( result ) );
 
@@ -850,15 +872,133 @@ void test_OTAPAL_CloseFile_OpenSSL_failures( void )
     otaFileContext.pFile = &dummyFile;
     OTA_PAL_FailSingleMock_Except_fread( PEM_read_bio_X509_fn , &expectedImageState);
     result = otaPal_CloseFile( &otaFileContext );
-    TEST_ASSERT_EQUAL( OtaPalSuccess, OTA_PAL_MAIN_ERR( result ) );
+    TEST_ASSERT_EQUAL( OtaPalBadSignerCert, OTA_PAL_MAIN_ERR( result ) );
 
     otaFileContext.pFile = &dummyFile;
     OTA_PAL_FailSingleMock_Except_fread( X509_get_pubkey_fn , &expectedImageState);
     result = otaPal_CloseFile( &otaFileContext );
+    TEST_ASSERT_EQUAL( OtaPalSuccess, OTA_PAL_MAIN_ERR( result ) );
+
+    /* Test fclose failing. */
+    otaFileContext.pFile = &dummyFile;
+    OTA_PAL_FailSingleMock_Except_fread( fclose_fn , &expectedImageState);
+    /* Just want the first fclose to fail. */
+    fclose_StopIgnore();
+    fclose_ExpectAnyArgsAndReturn( EOF );
+    fclose_IgnoreAndReturn( 0 );
+    result = otaPal_CloseFile( &otaFileContext );
+    TEST_ASSERT_EQUAL( OtaPalFileClose, OTA_PAL_MAIN_ERR( result ) );
+
+    /* Test OPENSSL_malloc failing. */
+    otaFileContext.pFile = &dummyFile;
+    OTA_PAL_FailSingleMock_Except_fread( OPENSSL_malloc_fn , &expectedImageState);
+    result = otaPal_CloseFile( &otaFileContext );
+    TEST_ASSERT_EQUAL( OtaPalOutOfMemory, OTA_PAL_MAIN_ERR( result ) );
+
+
+}
+
+void test_OTAPAL_CloseFile_EVP_DigestVerifyFinal_fail( void )
+{
+    OtaPalStatus_t result;
+    OtaFileContext_t otaFileContext;
+    Sig256_t dummySig;
+    OtaImageState_t expectedImageState = OtaImageStateTesting;
+    FILE dummyFile;
+
+    /* Test fseek failing. */
+    otaFileContext.pSignature = &dummySig;
+    otaFileContext.pFile = &dummyFile;
+
+    OTA_PAL_FailSingleMock_Except_fread( EVP_DigestVerifyFinal_fn , &expectedImageState);
+    result = otaPal_CloseFile( &otaFileContext );
+    TEST_ASSERT_EQUAL( OtaPalSignatureCheckFailed, OTA_PAL_MAIN_ERR( result ) );
+}
+
+void test_OTAPAL_CloseFile_fseek_fail( void )
+{
+    OtaPalStatus_t result;
+    OtaFileContext_t otaFileContext;
+    Sig256_t dummySig;
+    OtaImageState_t expectedImageState = OtaImageStateTesting;
+    FILE dummyFile;
+
+    /* Test fseek failing. */
+    otaFileContext.pSignature = &dummySig;
+    otaFileContext.pFile = &dummyFile;
+
+    OTA_PAL_FailSingleMock_Except_fread( fseek_alias_fn , &expectedImageState);
+    result = otaPal_CloseFile( &otaFileContext );
+    TEST_ASSERT_EQUAL( OtaPalSuccess, OTA_PAL_MAIN_ERR( result ) );
+}
+
+void test_OTAPAL_CloseFile_fread_fail( void )
+{
+    OtaPalStatus_t result;
+    OtaFileContext_t otaFileContext;
+    Sig256_t dummySig;
+    OtaImageState_t expectedImageState = OtaImageStateTesting;
+    FILE dummyFile;
+
+    otaFileContext.pSignature = &dummySig;
+    otaFileContext.pFile = &dummyFile;
+
+    /* Test fread pass then fail. */
+    OTA_PAL_FailSingleMock( none_fn , &expectedImageState);
+    fread_StopIgnore();
+    fread_ExpectAnyArgsAndReturn( 1 );
+    fread_ExpectAnyArgsAndReturn( 0 );
+    result = otaPal_CloseFile( &otaFileContext );
+    TEST_ASSERT_EQUAL( OtaPalSuccess, OTA_PAL_MAIN_ERR( result ) );
+}
+
+void test_OTAPAL_CloseFile_BIO_new( void )
+{
+    OtaPalStatus_t result;
+    OtaFileContext_t otaFileContext;
+    Sig256_t dummySig;
+    OtaImageState_t expectedImageState = OtaImageStateTesting;
+    FILE dummyFile;
+    BIO dummyBIO;
+
+    otaFileContext.pSignature = &dummySig;
+    otaFileContext.pFile = &dummyFile;
+
+    /* Test OpenSSL/bio.h functions failing. */
+    OTA_PAL_FailSingleMock_Except_fread( none_fn , &expectedImageState);
+    BIO_new_StopIgnore();
+    BIO_ctrl_StopIgnore();
+    BIO_new_ExpectAnyArgsAndReturn( &dummyBIO );
+    BIO_ctrl_ExpectAnyArgsAndReturn( 0 );
+    BIO_new_ExpectAnyArgsAndReturn( NULL );
+    result = otaPal_CloseFile( &otaFileContext );
+    TEST_ASSERT_EQUAL( OtaPalBadSignerCert, OTA_PAL_MAIN_ERR( result ) );
+
+
+    otaFileContext.pSignature = &dummySig;
+    otaFileContext.pFile = &dummyFile;
+    OTA_PAL_FailSingleMock_Except_fread( BIO_new_fn , &expectedImageState);
+    result = otaPal_CloseFile( &otaFileContext );
     TEST_ASSERT_EQUAL( OtaPalBadSignerCert, OTA_PAL_MAIN_ERR( result ) );
 }
 
-void test_OTAPAL_CloseFile_EVP_DigestVerifyInit( void )
+void test_OTAPAL_CloseFile_BIO_read_filename_fail( void )
+{
+    OtaPalStatus_t result;
+    OtaFileContext_t otaFileContext;
+    Sig256_t dummySig;
+    OtaImageState_t expectedImageState = OtaImageStateTesting;
+    FILE dummyFile;
+
+    otaFileContext.pSignature = &dummySig;
+    otaFileContext.pFile = &dummyFile;
+
+    OTA_PAL_FailSingleMock_Except_fread( BIO_read_filename_fn , &expectedImageState);
+    result = otaPal_CloseFile( &otaFileContext );
+    TEST_ASSERT_EQUAL( OtaPalSuccess, OTA_PAL_MAIN_ERR( result ) );
+}
+
+void test_OTAPAL_CloseFile_EVP_DigestVerifyInit_fail( void )
 {
     OtaPalStatus_t result;
     OtaFileContext_t otaFileContext;
