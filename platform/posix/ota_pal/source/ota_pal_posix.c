@@ -199,6 +199,7 @@ static bool Openssl_DigestVerifyUpdate( EVP_MD_CTX * pSigContext,
          * bytesRead is not equal to OTA_PAL_POSIX_BUF_SIZE, we should be reading last
          * chunk and reach to end of file. */
         assert( bytesRead < OTA_PAL_POSIX_BUF_SIZE );
+
         if( 0 == feof( pFile ) )
         {
             break;
