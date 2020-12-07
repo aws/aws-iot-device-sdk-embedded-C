@@ -137,7 +137,7 @@ static void OTA_PAL_FailSingleMock_openssl_BIO( MockFunctionNames_t funcToFail )
     BIO_METHOD * BIO_s_mem_return;
 
     /* BIO_puts_fn: Returns either the amount of data successfully written
-     * (if the return value is positive) or that no data was succesfully
+     * (if the return value is positive) or that no data was successfully
      * written if the result is 0 or -1. */
     int BIO_puts_success = 1;
     int BIO_puts_failure = 0;
@@ -188,7 +188,7 @@ static void OTA_PAL_FailSingleMock_openssl_X509( MockFunctionNames_t funcToFail 
     EVP_PKEY * X509_get_pubkey_failure = NULL;
     EVP_PKEY * X509_get_pubkey_return;
 
-    /* X509_free_fn: Doesn't return anything. */
+    /* X509_free_fn: Has no return value. */
 
     /*
      * Set the return value for the mock ( if any ) that matches the input. Set
