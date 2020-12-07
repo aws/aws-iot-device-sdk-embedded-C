@@ -83,41 +83,40 @@ extern const BIO_METHOD *BIO_s_mem(void);
 
 extern int BIO_puts(BIO *bp, const char *buf);
 
-extern void BIO_free_all_alias(BIO *a);
+extern void BIO_free_all(BIO *a);
 
 extern long BIO_ctrl(BIO *bp, int cmd, long larg, void *parg);
 
 /* Function declarations for functions in the OpenSSL pem.h header file. */
-extern X509 *PEM_read_bio_X509_alias(BIO *bp, X509 **x, pem_password_cb *cb, void *u);
+extern X509 *PEM_read_bio_X509(BIO *bp, X509 **x, pem_password_cb *cb, void *u);
 
 /* Function declarations for functions in the OpenSSL x509.h header file. */
-EVP_PKEY *X509_get_pubkey_alias(X509 *x);
+EVP_PKEY *X509_get_pubkey(X509 *x);
 
-extern void X509_free_alias(X509 *a);
+extern void X509_free(X509 *a);
+
 /* Function declarations for functions in the OpenSSL evp.h header file. */
-extern EVP_MD_CTX *EVP_MD_CTX_new_alias(void);
+extern EVP_MD_CTX *EVP_MD_CTX_new(void);
 
-extern int EVP_DigestVerifyInit_alias(EVP_MD_CTX *ctx, EVP_PKEY_CTX **pctx,
-                                      const EVP_MD *type, ENGINE *e,
-                                     EVP_PKEY *pkey);
+extern int EVP_DigestVerifyInit(EVP_MD_CTX *ctx, EVP_PKEY_CTX **pctx,
+                                const EVP_MD *type, ENGINE *e,
+                                EVP_PKEY *pkey);
 
 extern int EVP_DigestUpdate(EVP_MD_CTX *ctx, const void *d, size_t cnt);
 
-extern int EVP_DigestVerifyFinal_alias(EVP_MD_CTX *ctx,
-                                       const unsigned char *sig,
-                                       size_t siglen);
+extern int EVP_DigestVerifyFinal(EVP_MD_CTX *ctx,
+                                 const unsigned char *sig,
+                                 size_t siglen);
 
-extern void EVP_MD_CTX_free_alias(EVP_MD_CTX *ctx);
+extern void EVP_MD_CTX_free(EVP_MD_CTX *ctx);
 
-extern void EVP_PKEY_free_alias(EVP_PKEY *pkey);
+extern void EVP_PKEY_free(EVP_PKEY *pkey);
 
 extern const EVP_MD *EVP_sha256(void);
 
-//extern void *OPENSSL_malloc_alias(size_t num);
-extern void *CRYPTO_malloc(size_t num, const char *file, int line);
-
-
 /* Function declarations for functions in the OpenSSL crypto.h header file. */
 extern void CRYPTO_free(void *ptr, const char *file, int line);
+
+extern void *CRYPTO_malloc(size_t num, const char *file, int line);
 
 #endif /* ifndef OPENSSL_API_H_ */

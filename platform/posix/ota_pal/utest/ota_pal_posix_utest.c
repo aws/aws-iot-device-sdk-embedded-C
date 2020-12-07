@@ -431,7 +431,7 @@ static void OTA_PAL_FailSingleMock_openssl_BIO( MockFunctionNames_t funcToFail )
     BIO_puts_return = ( funcToFail == BIO_puts_fn ) ? BIO_puts_failure : BIO_puts_success;
     BIO_puts_IgnoreAndReturn( BIO_puts_return );
 
-    BIO_free_all_alias_Ignore();
+    BIO_free_all_Ignore();
 
     BIO_read_filename_fn_return = ( funcToFail == BIO_read_filename_fn ) ? BIO_read_filename_fn_failure : BIO_read_filename_fn_success;
     BIO_ctrl_IgnoreAndReturn( BIO_read_filename_fn_return );
@@ -459,12 +459,12 @@ static void OTA_PAL_FailSingleMock_openssl_X509( MockFunctionNames_t funcToFail 
      * the rest of the mock functions to return the success value when called.
      */
     PEM_read_bio_X509_return = ( funcToFail == PEM_read_bio_X509_fn ) ? PEM_read_bio_X509_failure : PEM_read_bio_X509_success;
-    PEM_read_bio_X509_alias_IgnoreAndReturn( PEM_read_bio_X509_return );
+    PEM_read_bio_X509_IgnoreAndReturn( PEM_read_bio_X509_return );
 
     X509_get_pubkey_return = ( funcToFail == X509_get_pubkey_fn ) ? X509_get_pubkey_failure : X509_get_pubkey_success;
-    X509_get_pubkey_alias_IgnoreAndReturn( X509_get_pubkey_return );
+    X509_get_pubkey_IgnoreAndReturn( X509_get_pubkey_return );
 
-    X509_free_alias_Ignore();
+    X509_free_Ignore();
 }
 
 static void OTA_PAL_FailSingleMock_openssl_EVP( MockFunctionNames_t funcToFail )
@@ -489,20 +489,20 @@ static void OTA_PAL_FailSingleMock_openssl_EVP( MockFunctionNames_t funcToFail )
     /* EVP_PKEY_free_fn: No return. */
 
     EVP_MD_CTX_new_return = &dummyEVP_MD_CTX;
-    EVP_MD_CTX_new_alias_IgnoreAndReturn( EVP_MD_CTX_new_return );
+    EVP_MD_CTX_new_IgnoreAndReturn( EVP_MD_CTX_new_return );
 
     EVP_DigestVerifyInit_return = ( funcToFail == EVP_DigestVerifyInit_fn ) ? EVP_DigestVerifyInit_failure : EVP_DigestVerifyInit_success;
-    EVP_DigestVerifyInit_alias_IgnoreAndReturn( EVP_DigestVerifyInit_return );
+    EVP_DigestVerifyInit_IgnoreAndReturn( EVP_DigestVerifyInit_return );
 
     EVP_DigestVerifyUpdate_return = ( funcToFail == EVP_DigestVerifyUpdate_fn ) ? EVP_DigestVerifyUpdate_failure : EVP_DigestVerifyUpdate_success;
     EVP_DigestUpdate_IgnoreAndReturn( EVP_DigestVerifyUpdate_return );
 
     EVP_DigestVerifyFinal_return = ( funcToFail == EVP_DigestVerifyFinal_fn ) ? EVP_DigestVerifyFinal_failure : EVP_DigestVerifyFinal_success;
-    EVP_DigestVerifyFinal_alias_IgnoreAndReturn( EVP_DigestVerifyFinal_return );
+    EVP_DigestVerifyFinal_IgnoreAndReturn( EVP_DigestVerifyFinal_return );
 
-    EVP_MD_CTX_free_alias_Ignore();
+    EVP_MD_CTX_free_Ignore();
 
-    EVP_PKEY_free_alias_Ignore();
+    EVP_PKEY_free_Ignore();
 
     EVP_sha256_IgnoreAndReturn( &dummyEVP_MD ); //TODO: Add variables and descriptions and other conditions 
 }
