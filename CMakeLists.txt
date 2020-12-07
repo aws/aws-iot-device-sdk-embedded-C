@@ -90,8 +90,10 @@ add_subdirectory( libraries )
 # Add platform.
 add_subdirectory( platform )
 
-# Build the demos.
-add_subdirectory( demos )
+# Build the demos but only when tests are only being built.
+if( NOT ${BUILD_TESTS} )
+    add_subdirectory( demos )
+endif()
 
 # Add build configuration for all integration tests.
 if(${BUILD_TESTS})
