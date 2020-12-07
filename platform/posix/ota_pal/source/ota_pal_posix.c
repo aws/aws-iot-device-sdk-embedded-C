@@ -427,23 +427,15 @@ static OtaPalStatus_t otaPal_CheckFileSignature( OtaFileContext_t * const C )
         /* Create a new signature context for verification purpose */
         pSigContext = EVP_MD_CTX_new();
 
-        if( ( pPkey != NULL ) && ( pSigContext != NULL ) )
+        if( pPkey != NULL )
         {
             /* Verify an ECDSA-SHA256 signature. */
             mainErr = Openssl_DigestVerify( pSigContext, pPkey, C->pFile, C->pSignature );
         }
         else
         {
-            if( pSigContext == NULL )
-            {
-                LogError( ( "File signature check failed at NEW sig context." ) );
-                mainErr = OtaPalSignatureCheckFailed;
-            }
-            else
-            {
-                LogError( ( "File signature check failed at EXTRACT pkey from signer certificate." ) );
-                mainErr = OtaPalBadSignerCert;
-            }
+            LogError( ( "File signature check failed at EXTRACT pkey from signer certificate." ) );
+            mainErr = OtaPalBadSignerCert;
         }
 
         /* Free up objects */
