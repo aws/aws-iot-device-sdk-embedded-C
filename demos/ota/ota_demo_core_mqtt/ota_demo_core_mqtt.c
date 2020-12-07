@@ -447,7 +447,7 @@ static int startOTADemo( void );
 static void setOtaInterfaces( OtaInterfaces_t * pOtaInterfaces );
 
 /**
- * @brief Disconnect from the MQTT broker.
+ * @brief Disconnect from the MQTT broker and close connection.
  *
  */
 static void disconnect( void );
@@ -603,19 +603,8 @@ static void otaAppCallback( OtaJobEvent_t event,
     {
         LogInfo( ( "Received OtaJobEventActivate callback from OTA Agent." ) );
 
-        if( pthread_mutex_lock( &mqttMutex ) == 0 )
-        {
-            /* OTA job is completed. so delete the network connection. */
-            MQTT_Disconnect( &mqttContext );
-
-            pthread_mutex_unlock( &mqttMutex );
-        }
-        else
-        {
-            LogError( ( "Failed to acquire mutex to execute MQTT_Disconnect"
-                        ",errno=%s",
-                        strerror( errno ) ) );
-        }
+        /* Disconnect from broker and close connection. */
+        disconnect();
 
         /* Clear the mqtt session flag. */
         mqttSessionEstablished = false;
@@ -1654,6 +1643,9 @@ int main( int argc,
         /* Start OTA demo. */
         returnStatus = startOTADemo();
     }
+    
+    /* Disconnect from broker and close connection. */
+    disconnect();
 
     if( bufferSemInitialized == true )
     {
