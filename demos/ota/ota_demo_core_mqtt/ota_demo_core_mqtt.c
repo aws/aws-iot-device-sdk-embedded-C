@@ -1640,7 +1640,7 @@ int main( int argc,
         /* Start OTA demo. */
         returnStatus = startOTADemo();
     }
-    
+
     /* Disconnect from broker and close connection. */
     disconnect();
 
