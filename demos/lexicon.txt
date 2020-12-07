@@ -99,6 +99,7 @@ connectionsarraylength
 const
 contentrangevalstr
 copybrief
+corehttp
 coremqtt
 corepkcs
 correclty
@@ -126,6 +127,7 @@ defenderjsonreportaccepted
 defenderresponse
 defenderresponselength
 defendersuccess
+deinitialize
 der
 des
 deserialize
@@ -166,6 +168,7 @@ en
 enc
 endcond
 endif
+enum
 epalstate
 esavedagentstate
 establishmqttsession
@@ -314,6 +317,7 @@ mqttkeepalivetimeout
 mqttprocessincomingpacket
 mqttsubackfailure
 msg
+msgsize
 msys
 mul
 mutex
@@ -346,6 +350,10 @@ optionalquery
 org
 os
 ota
+otahttpinitfailed
+otahttprequestfailed
+otahttpsuccess
+otamqttsuccess
 otaagentstatestopped
 otafile
 otapalimagestatevalid
@@ -402,11 +410,13 @@ pmessage
 pmethod
 pmetrics
 pmqttcontext
+pmsg
 pnetworkcontext
 poly
 popenportsarray
 portsarraylength
 posix
+potainterfaces
 poutcharswritten
 poutconnectionsarray
 poutnetworkstats
@@ -421,6 +431,7 @@ pouttcpportsarray
 poutudpportsarray
 poweron
 ppacketinfo
+pparam
 pparams
 ppath
 ppathlen
@@ -472,6 +483,8 @@ pxsession
 pxslotid
 py
 qos
+rangeend
+rangestart
 rc
 rdparty
 readme
@@ -564,7 +577,9 @@ tls
 tokenpresent
 toolchain
 topicbuffer
+topicfilter
 topicfilterlength
+topiclen
 topiclength
 transportinterface
 transporttimeout
