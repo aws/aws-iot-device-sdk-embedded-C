@@ -54,12 +54,13 @@
 #include "sockets_posix.h"
 
 /**
- * @brief Definition of the network context.
+ * @brief Parameters for the transport-interface
+ * implementation that uses plaintext POSIX sockets.
  */
-struct NetworkContext
+typedef struct PlaintextParams
 {
     int32_t socketDescriptor;
-};
+} PlaintextParams_t;
 
 /**
  * @brief Establish TCP connection to server.

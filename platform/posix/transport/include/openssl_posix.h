@@ -59,17 +59,17 @@
 #include "sockets_posix.h"
 
 /**
- * @brief Definition of the network context for the transport interface
+ * @brief Parameters for the transport-interface
  * implementation that uses OpenSSL and POSIX sockets.
  *
  * @note For this transport implementation, the socket descriptor and
  * SSL context is used.
  */
-struct NetworkContext
+typedef struct OpensslParams
 {
     int32_t socketDescriptor;
     SSL * pSsl;
-};
+} OpensslParams_t;
 
 /**
  * @brief OpenSSL Connect / Disconnect return status.

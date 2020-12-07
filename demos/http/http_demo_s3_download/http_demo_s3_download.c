@@ -41,8 +41,8 @@
 /* OpenSSL transport header. */
 #include "openssl_posix.h"
 
-/* Retry utilities. */
-#include "retry_utils.h"
+/*Include backoff algorithm header for retry logic.*/
+#include "backoff_algorithm.h"
 
 /* Check that TLS port of the server is defined. */
 #ifndef HTTPS_PORT
@@ -100,6 +100,22 @@
 #define HTTP_STATUS_CODE_PARTIAL_CONTENT          206
 
 /**
+ * @brief The maximum number of times to run the loop in this demo.
+ *
+ * @note The demo loop is attempted to re-run only if it fails in an iteration.
+ * Once the demo loop succeeds in an iteration, the demo exits successfully.
+ */
+#ifndef HTTP_MAX_DEMO_LOOP_COUNT
+    #define HTTP_MAX_DEMO_LOOP_COUNT    ( 3 )
+#endif
+
+/**
+ * @brief Time in seconds to wait between retries of the demo loop if
+ * demo loop fails.
+ */
+#define DELAY_BETWEEN_DEMO_RETRY_ITERATIONS_S    ( 5 )
+
+/**
  * @brief A buffer used in the demo for storing HTTP request headers and HTTP
  * response headers and body.
  *
@@ -142,6 +158,14 @@ static size_t serverHostLength;
  * @brief The location of the path within the pre-signed URL.
  */
 static const char * pPath;
+
+/*-----------------------------------------------------------*/
+
+/* Each compilation unit must define the NetworkContext struct. */
+struct NetworkContext
+{
+    OpensslParams_t * pParams;
+};
 
 /*-----------------------------------------------------------*/
 
@@ -592,6 +616,7 @@ int main( int argc,
     bool ret = false;
     /* HTTPS Client library return status. */
     HTTPStatus_t httpStatus = HTTPSuccess;
+    int demoRunCount = 0;
 
     /* The length of the path within the pre-signed URL. This variable is
      * defined in order to store the length returned from parsing the URL, but
@@ -604,18 +629,23 @@ int main( int argc,
     TransportInterface_t transportInterface;
     /* The network context for the transport layer interface. */
     NetworkContext_t networkContext;
+    OpensslParams_t opensslParams;
 
     ( void ) argc;
     ( void ) argv;
 
+    /* Set the pParams member of the network context with desired transport. */
+    networkContext.pParams = &opensslParams;
+
     LogInfo( ( "HTTP Client Synchronous S3 download demo using pre-signed URL:\n%s",
                S3_PRESIGNED_GET_URL ) );
 
-    /**************************** Connect. ******************************/
-
-    /* Establish TLS connection on top of TCP connection using OpenSSL. */
-    if( returnStatus == EXIT_SUCCESS )
+    do
     {
+        /**************************** Connect. ******************************/
+
+        /* Establish TLS connection on top of TCP connection using OpenSSL. */
+
         /* Attempt to connect to the HTTP server. If connection fails, retry
          * after a timeout. The timeout value will be exponentially
          * increased until either the maximum number of attempts or the
@@ -632,49 +662,71 @@ int main( int argc,
             LogError( ( "Failed to connect to HTTP server %s.",
                         serverHost ) );
         }
-    }
 
-    /* Define the transport interface. */
-    if( returnStatus == EXIT_SUCCESS )
-    {
-        ( void ) memset( &transportInterface, 0, sizeof( transportInterface ) );
-        transportInterface.recv = Openssl_Recv;
-        transportInterface.send = Openssl_Send;
-        transportInterface.pNetworkContext = &networkContext;
-    }
+        /* Define the transport interface. */
+        if( returnStatus == EXIT_SUCCESS )
+        {
+            ( void ) memset( &transportInterface, 0, sizeof( transportInterface ) );
+            transportInterface.recv = Openssl_Recv;
+            transportInterface.send = Openssl_Send;
+            transportInterface.pNetworkContext = &networkContext;
+        }
 
-    /******************** Download S3 Object File. **********************/
+        /******************** Download S3 Object File. **********************/
 
-    if( returnStatus == EXIT_SUCCESS )
-    {
-        /* Retrieve the path location from S3_PRESIGNED_GET_URL. This
-         * function returns the length of the path without the query into
-         * pathLen, which is left unused in this demo. */
-        httpStatus = getUrlPath( S3_PRESIGNED_GET_URL,
-                                 S3_PRESIGNED_GET_URL_LENGTH,
-                                 &pPath,
-                                 &pathLen );
+        if( returnStatus == EXIT_SUCCESS )
+        {
+            /* Retrieve the path location from S3_PRESIGNED_GET_URL. This
+             * function returns the length of the path without the query into
+             * pathLen, which is left unused in this demo. */
+            httpStatus = getUrlPath( S3_PRESIGNED_GET_URL,
+                                     S3_PRESIGNED_GET_URL_LENGTH,
+                                     &pPath,
+                                     &pathLen );
 
-        returnStatus = ( httpStatus == HTTPSuccess ) ? EXIT_SUCCESS : EXIT_FAILURE;
-    }
+            returnStatus = ( httpStatus == HTTPSuccess ) ? EXIT_SUCCESS : EXIT_FAILURE;
+        }
 
-    if( returnStatus == EXIT_SUCCESS )
-    {
-        ret = downloadS3ObjectFile( &transportInterface,
-                                    pPath );
-        returnStatus = ( ret == true ) ? EXIT_SUCCESS : EXIT_FAILURE;
-    }
+        if( returnStatus == EXIT_SUCCESS )
+        {
+            ret = downloadS3ObjectFile( &transportInterface,
+                                        pPath );
+            returnStatus = ( ret == true ) ? EXIT_SUCCESS : EXIT_FAILURE;
+        }
+
+        /************************** Disconnect. *****************************/
+
+        /* End the TLS session, then close the TCP connection. */
+        ( void ) Openssl_Disconnect( &networkContext );
+
+        /******************* Retry in case of failure. **********************/
+
+        /* Increment the demo run count. */
+        demoRunCount++;
+
+        if( returnStatus == EXIT_SUCCESS )
+        {
+            LogInfo( ( "Demo iteration %d is successful.", demoRunCount ) );
+        }
+        /* Attempt to retry a failed iteration of demo for up to #HTTP_MAX_DEMO_LOOP_COUNT times. */
+        else if( demoRunCount < HTTP_MAX_DEMO_LOOP_COUNT )
+        {
+            LogWarn( ( "Demo iteration %d failed. Retrying...", demoRunCount ) );
+            sleep( DELAY_BETWEEN_DEMO_RETRY_ITERATIONS_S );
+        }
+        /* Failed all #HTTP_MAX_DEMO_LOOP_COUNT demo iterations. */
+        else
+        {
+            LogError( ( "All %d demo iterations failed.", HTTP_MAX_DEMO_LOOP_COUNT ) );
+            break;
+        }
+    } while( returnStatus != EXIT_SUCCESS );
 
     if( returnStatus == EXIT_SUCCESS )
     {
         /* Log a message indicating an iteration completed successfully. */
         LogInfo( ( "Demo completed successfully." ) );
     }
-
-    /************************** Disconnect. *****************************/
-
-    /* End the TLS session, then close the TCP connection. */
-    ( void ) Openssl_Disconnect( &networkContext );
 
     return returnStatus;
 }

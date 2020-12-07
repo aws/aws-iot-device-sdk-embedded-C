@@ -91,7 +91,7 @@
     "-----END CERTIFICATE-----"
 
 /* This function can be found in
- * corePKCS11/3rdparty/mbedtls_utils/mbedtls_utils.c.
+ * corePKCS11/source/dependency/3rdparty/mbedtls_utils/mbedtls_utils.c.
  * It will be used to convert the RSA certificate from PEM format
  * to DER format. */
 extern int convert_pem_to_der( const unsigned char * pucInput,

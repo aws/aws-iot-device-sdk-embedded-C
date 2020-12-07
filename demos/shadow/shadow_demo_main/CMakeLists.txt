@@ -5,6 +5,9 @@ set( DEMO_NAME "shadow_demo_main" )
 # Include MQTT library's source and header path variables.
 include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreMQTT/mqttFilePaths.cmake )
 
+# Include backoffAlgorithm library file path configuration.
+include( ${CMAKE_SOURCE_DIR}/libraries/standard/backoffAlgorithm/backoffAlgorithmFilePaths.cmake )
+
 # Include Shadow library's source and header path variables.
 include( ${CMAKE_SOURCE_DIR}/libraries/aws/device-shadow-for-aws-iot-embedded-sdk/shadowFilePaths.cmake )
 
@@ -18,6 +21,7 @@ add_executable(
         "shadow_demo_helpers.c"
         ${MQTT_SOURCES}
         ${MQTT_SERIALIZER_SOURCES}
+        ${BACKOFF_ALGORITHM_SOURCES}
         ${SHADOW_SOURCES}
         ${JSON_SOURCES}
 )
@@ -30,7 +34,6 @@ target_link_libraries(
     PRIVATE
         clock_posix
         openssl_posix
-        retry_utils
 )
 
 target_include_directories(
@@ -38,6 +41,7 @@ target_include_directories(
     PUBLIC
         ${LOGGING_INCLUDE_DIRS}
         ${MQTT_INCLUDE_PUBLIC_DIRS}
+        ${BACKOFF_ALGORITHM_INCLUDE_PUBLIC_DIRS}
         ${SHADOW_INCLUDE_PUBLIC_DIRS}
         ${CMAKE_CURRENT_LIST_DIR}
         ${JSON_INCLUDE_PUBLIC_DIRS}

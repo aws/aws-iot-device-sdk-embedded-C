@@ -40,8 +40,8 @@
 /* OpenSSL transport header. */
 #include "openssl_posix.h"
 
-/* Retry utilities. */
-#include "retry_utils.h"
+/*Include backoff algorithm header for retry logic.*/
+#include "backoff_algorithm.h"
 
 /* Check that hostname of the server is defined. */
 #ifndef SERVER_HOST
@@ -180,6 +180,14 @@ typedef struct httpMethodStrings
  * decide to use separate buffers for storing the HTTP request and response.
  */
 static uint8_t userBuffer[ USER_BUFFER_LENGTH ];
+
+/*-----------------------------------------------------------*/
+
+/* Each compilation unit must define the NetworkContext struct. */
+struct NetworkContext
+{
+    OpensslParams_t * pParams;
+};
 
 /*-----------------------------------------------------------*/
 
@@ -390,6 +398,7 @@ int main( int argc,
     TransportInterface_t transportInterface;
     /* The network context for the transport layer interface. */
     NetworkContext_t networkContext;
+    OpensslParams_t opensslParams;
     /* An array of HTTP paths to request. */
     const httpPathStrings_t httpMethodPaths[] =
     {
@@ -409,6 +418,9 @@ int main( int argc,
 
     ( void ) argc;
     ( void ) argv;
+
+    /* Set the pParams member of the network context with desired transport. */
+    networkContext.pParams = &opensslParams;
 
     for( ; ; )
     {

@@ -73,8 +73,7 @@ if(${BUILD_TESTS})
     # Create a list for each unit test target.
     set(utest_targets
         openssl_utest sockets_utest
-        plaintext_utest clock_utest
-        retry_utils_utest)
+        plaintext_utest clock_utest)
 
     # Add a target for running coverage on tests.
     add_custom_target(coverage
@@ -91,8 +90,10 @@ add_subdirectory( libraries )
 # Add platform.
 add_subdirectory( platform )
 
-# Build the demos.
-add_subdirectory( demos )
+# Build the demos but only when tests are only being built.
+if( NOT ${BUILD_TESTS} )
+    add_subdirectory( demos )
+endif()
 
 # Add build configuration for all integration tests.
 if(${BUILD_TESTS})
@@ -102,4 +103,3 @@ if(${BUILD_TESTS})
         add_subdirectory(${DIR_PATH})
     endforeach()
 endif()
-

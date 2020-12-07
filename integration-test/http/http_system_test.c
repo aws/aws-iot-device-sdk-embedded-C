@@ -48,8 +48,8 @@
 /* Include OpenSSL implementation of transport interface. */
 #include "openssl_posix.h"
 
-/* Retry parameters. */
-#include "retry_utils.h"
+/*Include backoff algorithm header for retry logic.*/
+#include "backoff_algorithm.h"
 
 /* Ensure that config macros, required for TLS connection, have been defined. */
 #ifndef SERVER_HOST
@@ -134,6 +134,11 @@
 static NetworkContext_t networkContext;
 
 /**
+ * @brief Parameters for the Openssl Context.
+ */
+static OpensslParams_t opensslParams;
+
+/**
  * @brief The transport layer interface used by the HTTP Client library.
  */
 static TransportInterface_t transportInterface;
@@ -172,16 +177,21 @@ static size_t networkDataLen = 0U;
 
 /*-----------------------------------------------------------*/
 
+/* Each compilation unit must define the NetworkContext struct. */
+struct NetworkContext
+{
+    OpensslParams_t * pParams;
+};
+
+/*-----------------------------------------------------------*/
+
 /**
  * @brief The random number generator to use for exponential backoff with
  * jitter retry logic.
- * This function is an implementation the #RetryUtils_RNG_t interface type
- * of the retry utils library API.
  *
- * @return The generated random number. This function ALWAYS succeeds
- * in generating a random number.
+ * @return The generated random number.
  */
-static int32_t generateRandomNumber();
+static uint32_t generateRandomNumber();
 
 /**
  * @brief Connect to HTTP server with reconnection retries.
@@ -236,9 +246,9 @@ static int32_t transportSendStub( NetworkContext_t * pNetworkContext,
 
 /*-----------------------------------------------------------*/
 
-static int32_t generateRandomNumber()
+static uint32_t generateRandomNumber()
 {
-    return( rand() % ( INT32_MAX ) );
+    return( rand() );
 }
 
 /*-----------------------------------------------------------*/
@@ -246,9 +256,9 @@ static int32_t generateRandomNumber()
 static void connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext )
 {
     /* Status returned by the retry utilities. */
-    RetryUtilsStatus_t retryUtilsStatus = RetryUtilsSuccess;
+    BackoffAlgorithmStatus_t backoffAlgStatus = BackoffAlgorithmSuccess;
     /* Struct containing the next backoff time. */
-    RetryUtilsContext_t reconnectParams;
+    BackoffAlgorithmContext_t reconnectParams;
     /* Status returned by OpenSSL transport implementation. */
     OpensslStatus_t opensslStatus;
     uint16_t nextRetryBackOff = 0U;
@@ -263,8 +273,11 @@ static void connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContex
     serverInfo.hostNameLength = SERVER_HOST_LENGTH;
     serverInfo.port = HTTPS_PORT;
 
-    /* Seed pseudo random number generator (provided by ISO C standard library) for
-     * use by retry utils library when retrying failed connection attempts to broker. */
+    pNetworkContext->pParams = &opensslParams;
+
+    /* Seed pseudo random number generator used in the demo for
+     * backoff period calculation when retrying failed network operations
+     * with broker. */
 
     /* Get current time to seed pseudo random number generator. */
     ( void ) clock_gettime( CLOCK_REALTIME, &tp );
@@ -272,11 +285,10 @@ static void connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContex
     srand( tp.tv_nsec );
 
     /* Initialize reconnect attempts and interval */
-    RetryUtils_InitializeParams( &reconnectParams,
-                                 CONNECTION_RETRY_BACKOFF_BASE_MS,
-                                 CONNECTION_RETRY_MAX_BACKOFF_DELAY_MS,
-                                 CONNECTION_RETRY_MAX_ATTEMPTS,
-                                 generateRandomNumber );
+    BackoffAlgorithm_InitializeParams( &reconnectParams,
+                                       CONNECTION_RETRY_BACKOFF_BASE_MS,
+                                       CONNECTION_RETRY_MAX_BACKOFF_DELAY_MS,
+                                       CONNECTION_RETRY_MAX_ATTEMPTS );
 
     /* Attempt to connect to HTTP server. If connection fails, retry after
      * a timeout. Timeout value will exponentially increase until maximum
@@ -293,11 +305,10 @@ static void connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContex
 
         if( opensslStatus != OPENSSL_SUCCESS )
         {
-            /* Get back-off value (in milliseconds) for the next connection retry. */
-            retryUtilsStatus = RetryUtils_GetNextBackOff( &reconnectParams, &nextRetryBackOff );
-            assert( retryUtilsStatus != RetryUtilsRngFailure );
+            /* Generate a random number and get back-off value (in milliseconds) for the next connection retry. */
+            backoffAlgStatus = BackoffAlgorithm_GetNextBackoff( &reconnectParams, generateRandomNumber(), &nextRetryBackOff );
 
-            if( retryUtilsStatus == RetryUtilsSuccess )
+            if( backoffAlgStatus == BackoffAlgorithmSuccess )
             {
                 LogWarn( ( "Connection to the HTTP server failed. Retrying connection after backoff." ) );
                 ( void ) sleep( nextRetryBackOff / NUM_MILLISECONDS_IN_SECOND );
@@ -307,11 +318,11 @@ static void connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContex
                 LogError( ( "Connection to the HTTP server failed, all attempts exhausted." ) );
             }
         }
-    } while( ( opensslStatus != OPENSSL_SUCCESS ) && ( retryUtilsStatus == RetryUtilsSuccess ) );
+    } while( ( opensslStatus != OPENSSL_SUCCESS ) && ( backoffAlgStatus == BackoffAlgorithmSuccess ) );
 
     TEST_ASSERT_EQUAL( OPENSSL_SUCCESS, opensslStatus );
-    TEST_ASSERT_NOT_EQUAL( -1, networkContext.socketDescriptor );
-    TEST_ASSERT_NOT_NULL( networkContext.pSsl );
+    TEST_ASSERT_NOT_EQUAL( -1, opensslParams.socketDescriptor );
+    TEST_ASSERT_NOT_NULL( opensslParams.pSsl );
 }
 
 /*-----------------------------------------------------------*/

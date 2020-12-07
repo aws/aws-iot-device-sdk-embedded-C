@@ -171,6 +171,11 @@ static uint16_t globalPublishPacketIdentifier = 0U;
 static NetworkContext_t networkContext;
 
 /**
+ * @brief Parameters for the Openssl Context.
+ */
+static OpensslParams_t opensslParams;
+
+/**
  * @brief Represents the hostname and port of the broker.
  */
 static ServerInfo_t serverInfo;
@@ -266,6 +271,12 @@ static bool receivedGetAcceptedResult = false;
  * @brief Flag to represent result from a /get/rejected  is received from the broker.
  */
 static bool receivedGetRejectedResult = false;
+
+/* Each compilation unit must define the NetworkContext struct. */
+struct NetworkContext
+{
+    OpensslParams_t * pParams;
+};
 
 /**
  * @brief Sends an MQTT CONNECT packet over the already connected TCP socket.
@@ -672,6 +683,7 @@ void setUp( void )
 
     memset( &incomingInfo, 0u, sizeof( MQTTPublishInfo_t ) );
     memset( &opensslCredentials, 0u, sizeof( OpensslCredentials_t ) );
+    memset( &opensslParams, 0u, sizeof( OpensslParams_t ) );
     opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
     opensslCredentials.pClientCertPath = CLIENT_CERT_PATH;
     opensslCredentials.pPrivateKeyPath = CLIENT_PRIVATE_KEY_PATH;
@@ -680,6 +692,8 @@ void setUp( void )
     serverInfo.hostNameLength = AWS_IOT_ENDPOINT_LENGTH;
     serverInfo.port = AWS_MQTT_PORT;
 
+    networkContext.pParams = &opensslParams;
+
     /* Establish a TCP connection with the server endpoint, then
      * establish TLS session on top of TCP connection. */
     TEST_ASSERT_EQUAL( OPENSSL_SUCCESS, Openssl_Connect( &networkContext,
@@ -687,8 +701,8 @@ void setUp( void )
                                                          &opensslCredentials,
                                                          TRANSPORT_SEND_RECV_TIMEOUT_MS,
                                                          TRANSPORT_SEND_RECV_TIMEOUT_MS ) );
-    TEST_ASSERT_NOT_EQUAL( -1, networkContext.socketDescriptor );
-    TEST_ASSERT_NOT_NULL( networkContext.pSsl );
+    TEST_ASSERT_NOT_EQUAL( -1, opensslParams.socketDescriptor );
+    TEST_ASSERT_NOT_NULL( opensslParams.pSsl );
 
     /* Establish MQTT session on top of the TCP+TLS connection. */
     establishMqttSession( &context, &networkContext, true, &persistentSession );
