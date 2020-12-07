@@ -91,6 +91,7 @@ typedef enum
     fopen_fn,
     fclose_fn,
     snprintf_fn,
+    feof_fn,
     fread_fn,
     fseek_alias_fn,
     fwrite_alias_fn
@@ -208,6 +209,8 @@ static void OTA_PAL_FailSingleMock_openssl_EVP( MockFunctionNames_t funcToFail )
     static EVP_MD_CTX dummyEVP_MD_CTX;
     static EVP_MD dummyEVP_MD;
     /* EVP_MD_CTX_new_fn: Has no documented failure returns. Allocates and returns a valid digest context. */
+    EVP_MD_CTX* EVP_MD_CTX_new_success = &dummyEVP_MD_CTX;
+    EVP_MD_CTX* EVP_MD_CTX_new_failure = NULL;
     EVP_MD_CTX* EVP_MD_CTX_new_return;
     /* EVP_DigestVerifyInit_fn: Return 1 for success and 0 for failure. */
     int EVP_DigestVerifyInit_success = 1;
@@ -224,7 +227,7 @@ static void OTA_PAL_FailSingleMock_openssl_EVP( MockFunctionNames_t funcToFail )
     /* EVP_MD_CTX_free_fn: No return. */
     /* EVP_PKEY_free_fn: No return. */
 
-    EVP_MD_CTX_new_return = &dummyEVP_MD_CTX;
+    EVP_MD_CTX_new_return = ( funcToFail == EVP_MD_CTX_new_fn ) ? EVP_MD_CTX_new_failure : EVP_MD_CTX_new_success;
     EVP_MD_CTX_new_IgnoreAndReturn( EVP_MD_CTX_new_return );
 
     EVP_DigestVerifyInit_return = ( funcToFail == EVP_DigestVerifyInit_fn ) ? EVP_DigestVerifyInit_failure : EVP_DigestVerifyInit_success;
@@ -292,6 +295,11 @@ static void OTA_PAL_FailSingleMock_stdio( MockFunctionNames_t funcToFail, OtaIma
     const size_t fread_failure = 0;
     const size_t fread_success = 1;
     size_t fread_return;
+    /* feof returns a non-zero value when End-of-File indicator associated with
+       the stream is set, else zero is returned. */
+    const int feof_success = 1;
+    const int feof_failure = 0;
+    int feof_return;
     /* fseek returns a zero on success and a non-zero number on failure. */
     const int32_t fseek_success = 0; 
     const int32_t fseek_failure = -1;
@@ -308,6 +316,9 @@ static void OTA_PAL_FailSingleMock_stdio( MockFunctionNames_t funcToFail, OtaIma
     fread_return = ( funcToFail == fread_fn ) ? fread_failure: fread_success;
     fread_IgnoreAndReturn( fread_return );
     fread_ReturnThruPtr_ptr( pFreadStateToSet );
+
+    feof_return = ( funcToFail == feof_fn ) ? feof_failure : feof_success;
+    feof_IgnoreAndReturn( feof_return );
 
     fseek_return = ( funcToFail == fseek_alias_fn ) ? fseek_failure : fseek_success;
     fseek_alias_IgnoreAndReturn( fseek_return );
@@ -580,7 +591,49 @@ void test_OTAPAL_CloseFile_OpenSSL_failures( void )
     result = otaPal_CloseFile( &otaFileContext );
     TEST_ASSERT_EQUAL( OtaPalOutOfMemory, OTA_PAL_MAIN_ERR( result ) );
 
+    /* Test EVP_MD_CTX_new failing. */
+    otaFileContext.pFile = &dummyFile;
+    OTA_PAL_FailSingleMock_Except_fread( EVP_MD_CTX_new_fn , &expectedImageState);
+    result = otaPal_CloseFile( &otaFileContext );
+    TEST_ASSERT_EQUAL( OtaPalSignatureCheckFailed, OTA_PAL_MAIN_ERR( result ) );
+}
 
+void test_OTAPAL_CloseFile_BIO_puts( void )
+{
+    OtaPalStatus_t result;
+    OtaFileContext_t otaFileContext;
+    Sig256_t dummySig;
+    OtaImageState_t expectedImageState = OtaImageStateTesting;
+    FILE dummyFile;
+
+    /* Test fseek failing. */
+    otaFileContext.pSignature = &dummySig;
+    otaFileContext.pFile = &dummyFile;
+
+    /* BIO_ctrl has to fail first to call BIO_puts. */
+    BIO_ctrl_IgnoreAndReturn( 0 );
+    OTA_PAL_FailSingleMock_Except_fread( BIO_puts_fn , &expectedImageState);
+
+    result = otaPal_CloseFile( &otaFileContext );
+    TEST_ASSERT_EQUAL( OtaPalBadSignerCert, OTA_PAL_MAIN_ERR( result ) );
+}
+
+void test_OTAPAL_CloseFile_feof_fail( void )
+{
+    OtaPalStatus_t result;
+    OtaFileContext_t otaFileContext;
+    Sig256_t dummySig;
+    OtaImageState_t expectedImageState = OtaImageStateTesting;
+    FILE dummyFile;
+
+    otaFileContext.pSignature = &dummySig;
+    otaFileContext.pFile = &dummyFile;
+
+    /* Test feof failing both times it is called.*/
+    OTA_PAL_FailSingleMock_Except_fread( feof_fn , &expectedImageState);
+    feof_IgnoreAndReturn( 0 );
+    result = otaPal_CloseFile( &otaFileContext );
+    TEST_ASSERT_EQUAL( OtaPalSuccess, OTA_PAL_MAIN_ERR( result ) );
 }
 
 void test_OTAPAL_CloseFile_EVP_DigestVerifyFinal_fail( void )
@@ -600,6 +653,23 @@ void test_OTAPAL_CloseFile_EVP_DigestVerifyFinal_fail( void )
     TEST_ASSERT_EQUAL( OtaPalSignatureCheckFailed, OTA_PAL_MAIN_ERR( result ) );
 }
 
+void test_OTAPAL_CloseFile_EVP_DigestVerifyUpdate_fail( void )
+{
+    OtaPalStatus_t result;
+    OtaFileContext_t otaFileContext;
+    Sig256_t dummySig;
+    OtaImageState_t expectedImageState = OtaImageStateTesting;
+    FILE dummyFile;
+
+    /* Test fseek failing. */
+    otaFileContext.pSignature = &dummySig;
+    otaFileContext.pFile = &dummyFile;
+
+    OTA_PAL_FailSingleMock_Except_fread( EVP_DigestVerifyUpdate_fn , &expectedImageState);
+    result = otaPal_CloseFile( &otaFileContext );
+    TEST_ASSERT_EQUAL( OtaPalSuccess, OTA_PAL_MAIN_ERR( result ) );
+}
+
 void test_OTAPAL_CloseFile_fseek_fail( void )
 {
     OtaPalStatus_t result;
@@ -614,9 +684,9 @@ void test_OTAPAL_CloseFile_fseek_fail( void )
 
     OTA_PAL_FailSingleMock_Except_fread( fseek_alias_fn , &expectedImageState);
     result = otaPal_CloseFile( &otaFileContext );
-    TEST_ASSERT_EQUAL( OtaPalSuccess, OTA_PAL_MAIN_ERR( result ) );
+    TEST_ASSERT_EQUAL( OtaPalSignatureCheckFailed, OTA_PAL_MAIN_ERR( result ) );
 }
-
+#define OTA_PAL_POSIX_BUF_SIZE    ( ( size_t ) 4096U )
 void test_OTAPAL_CloseFile_fread_fail( void )
 {
     OtaPalStatus_t result;
