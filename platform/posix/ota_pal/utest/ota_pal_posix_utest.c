@@ -41,29 +41,18 @@
 #include "mock_stdio_api.h"
 #include "mock_openssl_api.h"
 
-/* Unit test config. */
-#include "ota_utest_config.h"
-
 /* errno error macro. errno.h can't be included in this file due to mocking. */
 #define ENOENT 0x02
-
-/* Global static OTA file context used in every test. This context is reset to all zeros
- * before every test. */
-static OtaFileContext_t otaFile;
 
 /* ============================   UNITY FIXTURES ============================ */
 
 void setUp( void )
 {
     /* Always reset the OTA file context before each test. */
-    memset( &otaFile, 0, sizeof( otaFile ) );
 }
 
 void tearDown( void )
 {
-    OtaPalMainStatus_t result;
-
-    unlink( "PlatformImageState.txt" );
 }
 
 /* ==========================   HELPER FUNCTIONS   ========================== */
@@ -263,11 +252,12 @@ static void OTA_PAL_FailSingleMock_openssl_crypto( MockFunctionNames_t funcToFai
 }
 
 /**
- * @brief Helper function specify a single point of failure for
- * otaPal_SetPlatformImageState. This needs to be updated each time a mocked
- * function is added or removed to otaPal_SetPlatformImageState. 
+ * @brief Helper function specify a single point of failure. This needs to be
+ * updated each time a mocked function is added or removed to the OTA PAL unit
+ * tests. 
  * 
- * Remark: This function assumes specific values for the success and failure of the functions. */
+ * Remark: This function assumes specific values for the success and failure
+ * of the functions. */
 static void OTA_PAL_FailSingleMock_stdio( MockFunctionNames_t funcToFail, OtaImageState_t* pFreadStateToSet )
 {
     static FILE dummyFile;
@@ -393,9 +383,10 @@ void test_OTAPAL_Abort_FileCloseFail( void )
 {
     OtaPalMainStatus_t result;
     OtaFileContext_t testFileContext;
+    FILE dummyFile;
 
-    testFileContext.pFilePath = ( uint8_t * ) OTA_PAL_UTEST_FIRMWARE_FILE;
-    testFileContext.pFile = (FILE *) "placeholder";
+    testFileContext.pFilePath = ( uint8_t * ) "placeholder";
+    testFileContext.pFile = &dummyFile;
 
     fclose_ExpectAnyArgsAndReturn( EOF );
 
@@ -471,10 +462,11 @@ void test_OTAPAL_CreateFileForRx_ValidFileHandle( void )
 {
     OtaPalMainStatus_t result;
     FILE placeholder_file;
-    otaFile.pFilePath = ( uint8_t * ) "placeholder_path";
+    OtaFileContext_t otaFileContext;
+    otaFileContext.pFilePath = ( uint8_t * ) "placeholder_path";
 
     fopen_ExpectAnyArgsAndReturn( &placeholder_file );
-    result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
+    result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFileContext ) );
     TEST_ASSERT_EQUAL( OtaPalSuccess, result );
 }
 
@@ -486,17 +478,18 @@ void test_OTAPAL_CreateFileForRx_PathTypes( void )
 {
     OtaPalMainStatus_t result;
     FILE placeholder_file;
+    OtaFileContext_t otaFileContext;
 
     /* Test for a leading forward slash in the path. */
-    otaFile.pFilePath = ( uint8_t * ) "/placeholder_path";
+    otaFileContext.pFilePath = ( uint8_t * ) "/placeholder_path";
     fopen_ExpectAnyArgsAndReturn( &placeholder_file );
-    result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
+    result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFileContext ) );
     TEST_ASSERT_EQUAL( OtaPalSuccess, result );
 
     /* Test for no leading forward slash in the path. */
-    otaFile.pFilePath = ( uint8_t * ) "placeholder_path";
+    otaFileContext.pFilePath = ( uint8_t * ) "placeholder_path";
     fopen_ExpectAnyArgsAndReturn( &placeholder_file );
-    result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
+    result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFileContext ) );
     TEST_ASSERT_EQUAL( OtaPalSuccess, result );
 }
 
@@ -792,12 +785,13 @@ void test_OTAPAL_WriteBlock_WriteSingleByte( void )
     int16_t numBytesWritten;
     uint8_t data = 0xAA;
     uint32_t blockSize = 1;
+    OtaFileContext_t otaFileContext;
 
     /* TEST: Write a byte of data. */
-    otaFile.pFilePath = ( uint8_t * ) OTA_PAL_UTEST_FIRMWARE_FILE;
+    otaFileContext.pFilePath = ( uint8_t * ) "placeholder";
     fseek_alias_ExpectAnyArgsAndReturn(0);
     fwrite_alias_ExpectAnyArgsAndReturn(blockSize);
-    numBytesWritten = otaPal_WriteBlock( &otaFile, 0, &data, blockSize );
+    numBytesWritten = otaPal_WriteBlock( &otaFileContext, 0, &data, blockSize );
     TEST_ASSERT_EQUAL_INT( blockSize, numBytesWritten );
 }
 
@@ -811,13 +805,14 @@ void test_OTAPAL_WriteBlock_WriteMultipleBytes( void )
     int index = 0;
     uint8_t pData[] = {0xAA, 0xBB, 0xCC, 0xDD, 0xEE};
     uint32_t blockSize = sizeof( pData[0] );
+    OtaFileContext_t otaFileContext;
 
     /* TEST: Write multiple bytes of data. */
     for( index = 0; index < ( sizeof(pData) / sizeof(pData[0]) ); index++ )
     {
         fseek_alias_ExpectAnyArgsAndReturn(0);
         fwrite_alias_ExpectAnyArgsAndReturn( blockSize );
-        numBytesWritten = otaPal_WriteBlock( &otaFile, index * blockSize, pData, blockSize );
+        numBytesWritten = otaPal_WriteBlock( &otaFileContext, index * blockSize, pData, blockSize );
         TEST_ASSERT_EQUAL_INT( blockSize, numBytesWritten );
     }
 }
