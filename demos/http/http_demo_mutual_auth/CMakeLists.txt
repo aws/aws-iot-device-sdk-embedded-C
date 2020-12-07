@@ -24,6 +24,7 @@ check_aws_credentials(${DEMO_NAME})
 target_link_libraries(
     ${DEMO_NAME}
     PRIVATE
+        clock_posix
         openssl_posix
 )
 

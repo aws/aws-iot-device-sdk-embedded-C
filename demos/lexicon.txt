@@ -1,4 +1,3 @@
-
 accel
 ack
 acks
@@ -99,6 +98,7 @@ connectionsarraylength
 const
 contentrangevalstr
 copybrief
+corehttp
 coremqtt
 corepkcs
 correclty
@@ -126,6 +126,7 @@ defenderjsonreportaccepted
 defenderresponse
 defenderresponselength
 defendersuccess
+deinitialize
 der
 des
 deserialize
@@ -348,6 +349,9 @@ optionalquery
 org
 os
 ota
+otahttpinitfailed
+otahttprequestfailed
+otahttpsuccess
 otamqttsuccess
 otaagentstatestopped
 otafile
@@ -407,6 +411,7 @@ pmethod
 pmetrics
 pmsg
 pmqttcontext
+pmsg
 pnetworkcontext
 poly
 popenportsarray
@@ -479,6 +484,8 @@ pxsession
 pxslotid
 py
 qos
+rangeend
+rangestart
 rc
 rdparty
 readme
