@@ -387,7 +387,7 @@ static void OTA_PAL_FailSingleMock_openssl_BIO( MockFunctionNames_t funcToFail )
     int BIO_puts_failure = 0;
     int BIO_puts_return;
     /* BIO_free_all_fn: Does not return anything. */
-    /* BIO_read_filename_fn: Called indirectly via BIO_read_filename. BIO_read_filename
+    /* BIO_read_filename_fn: Calls BIO_ctrl indirectly. BIO_ctrl
      * returns 1 for success or 0 for failure. */
     long BIO_read_filename_fn_success = 1;
     long BIO_read_filename_fn_failure = 0;
@@ -401,7 +401,7 @@ static void OTA_PAL_FailSingleMock_openssl_BIO( MockFunctionNames_t funcToFail )
     BIO_s_file_IgnoreAndReturn(BIO_s_file_return);
 
     BIO_new_return = ( funcToFail == BIO_new_fn ) ? BIO_new_failure : BIO_new_success;
-    BIO_new_alias_IgnoreAndReturn( BIO_new_return );
+    BIO_new_IgnoreAndReturn( BIO_new_return );
 
     BIO_s_mem_return = &dummyBioMethod;
     BIO_s_mem_IgnoreAndReturn( BIO_s_mem_return );
@@ -412,7 +412,7 @@ static void OTA_PAL_FailSingleMock_openssl_BIO( MockFunctionNames_t funcToFail )
     BIO_free_all_alias_Ignore();
 
     BIO_read_filename_fn_return = ( funcToFail == BIO_read_filename_fn_return ) ? BIO_read_filename_fn_failure : BIO_read_filename_fn_success;
-    BIO_read_filename_alias_IgnoreAndReturn( BIO_read_filename_fn_return );
+    BIO_ctrl_IgnoreAndReturn( BIO_read_filename_fn_return );
 }
 
 static void OTA_PAL_FailSingleMock_openssl_X509( MockFunctionNames_t funcToFail )
@@ -470,10 +470,10 @@ static void OTA_PAL_FailSingleMock_openssl_EVP( MockFunctionNames_t funcToFail )
     EVP_MD_CTX_new_alias_IgnoreAndReturn( EVP_MD_CTX_new_return );
 
     EVP_DigestVerifyInit_return = ( funcToFail == EVP_DigestVerifyInit_fn ) ? EVP_DigestVerifyInit_failure : EVP_DigestVerifyInit_success;
-    EVP_DigestVerifyInit_IgnoreAndReturn( EVP_DigestVerifyInit_return );
+    EVP_DigestVerifyInit_alias_IgnoreAndReturn( EVP_DigestVerifyInit_return );
 
     EVP_DigestVerifyUpdate_return = ( funcToFail == EVP_DigestVerifyUpdate_fn ) ? EVP_DigestVerifyUpdate_failure : EVP_DigestVerifyUpdate_success;
-    EVP_DigestVerifyUpdate_alias_IgnoreAndReturn( EVP_DigestVerifyUpdate_return );
+    EVP_DigestUpdate_IgnoreAndReturn( EVP_DigestVerifyUpdate_return );
 
     EVP_DigestVerifyFinal_return = ( funcToFail == EVP_DigestVerifyFinal_fn ) ? EVP_DigestVerifyFinal_failure : EVP_DigestVerifyFinal_success;
     EVP_DigestVerifyFinal_alias_IgnoreAndReturn( EVP_DigestVerifyFinal_return );
@@ -489,12 +489,13 @@ static void OTA_PAL_FailSingleMock_openssl_crypto( MockFunctionNames_t funcToFai
 {
     int mockVariable;
 
+    /* OPENSSL_malloc is a macro define for CRYPTO_malloc. */
     void* OPENSSL_malloc_success = &mockVariable;
     void* OPENSSL_malloc_failure = NULL;
     void* OPENSSL_malloc_return;
 
     OPENSSL_malloc_return = ( funcToFail == OPENSSL_malloc_fn ) ? OPENSSL_malloc_failure : OPENSSL_malloc_success;
-    OPENSSL_malloc_alias_IgnoreAndReturn( OPENSSL_malloc_return );
+    CRYPTO_malloc_IgnoreAndReturn( OPENSSL_malloc_return );
     /* CRYPTO_free_fn: Has no return value. */
     CRYPTO_free_Ignore();
 }
@@ -777,11 +778,6 @@ static void OTA_PAL_FailSingleMock_Except_fread(MockFunctionNames_t funcToFail, 
     OTA_PAL_FailSingleMock_openssl_EVP( funcToFail );
 }
 
-void clearIgnoreStack( void )
-{
-
-}
-
 void test_OTAPAL_CloseFile_NullInput( void )
 {
     OtaPalStatus_t result;
@@ -860,12 +856,6 @@ void test_OTAPAL_CloseFile_OpenSSL_failures( void )
     OTA_PAL_FailSingleMock_Except_fread( X509_get_pubkey_fn , &expectedImageState);
     result = otaPal_CloseFile( &otaFileContext );
     TEST_ASSERT_EQUAL( OtaPalBadSignerCert, OTA_PAL_MAIN_ERR( result ) );
-
-    otaFileContext.pFile = &dummyFile;
-    OTA_PAL_FailSingleMock_Except_fread( EVP_DigestVerifyInit_fn , &expectedImageState);
-
-    result = otaPal_CloseFile( &otaFileContext );
-    TEST_ASSERT_EQUAL( OtaPalSignatureCheckFailed, OTA_PAL_MAIN_ERR( result ) );
 }
 
 void test_OTAPAL_CloseFile_EVP_DigestVerifyInit( void )

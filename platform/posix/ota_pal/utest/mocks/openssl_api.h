@@ -75,11 +75,9 @@ struct evp_md_st
 };
 
 /* Function declarations for functions in the OpenSSL bio.h header file. */
-//called directly by Openssl_GetPkeyFromCertificate
 extern const BIO_METHOD *BIO_s_file(void);
 
-//called directly by Openssl_GetPkeyFromCertificate
-extern BIO *BIO_new_alias(const BIO_METHOD *type);
+extern BIO *BIO_new(const BIO_METHOD *type);
 
 extern const BIO_METHOD *BIO_s_mem(void);
 
@@ -87,7 +85,7 @@ extern int BIO_puts(BIO *bp, const char *buf);
 
 extern void BIO_free_all_alias(BIO *a);
 
-extern int BIO_read_filename_alias(BIO *b, char *name);
+extern long BIO_ctrl(BIO *bp, int cmd, long larg, void *parg);
 
 /* Function declarations for functions in the OpenSSL pem.h header file. */
 extern X509 *PEM_read_bio_X509_alias(BIO *bp, X509 **x, pem_password_cb *cb, void *u);
@@ -103,7 +101,7 @@ extern int EVP_DigestVerifyInit_alias(EVP_MD_CTX *ctx, EVP_PKEY_CTX **pctx,
                                       const EVP_MD *type, ENGINE *e,
                                      EVP_PKEY *pkey);
 
-extern int EVP_DigestVerifyUpdate_alias(EVP_MD_CTX *ctx, const void *d, size_t cnt);
+extern int EVP_DigestUpdate(EVP_MD_CTX *ctx, const void *d, size_t cnt);
 
 extern int EVP_DigestVerifyFinal_alias(EVP_MD_CTX *ctx,
                                        const unsigned char *sig,
@@ -115,7 +113,9 @@ extern void EVP_PKEY_free_alias(EVP_PKEY *pkey);
 
 extern const EVP_MD *EVP_sha256(void);
 
-extern void *OPENSSL_malloc_alias(size_t num);
+//extern void *OPENSSL_malloc_alias(size_t num);
+extern void *CRYPTO_malloc(size_t num, const char *file, int line);
+
 
 /* Function declarations for functions in the OpenSSL crypto.h header file. */
 extern void CRYPTO_free(void *ptr, const char *file, int line);

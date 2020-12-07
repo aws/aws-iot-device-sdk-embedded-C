@@ -164,9 +164,9 @@
    "fwrite". The function declaration for this alias is in "stdio_api.h". */
 #define fwrite fwrite_alias
 
-#define BIO_read_filename BIO_read_filename_alias
+//#define BIO_read_filename BIO_read_filename_alias
 
-#define BIO_new BIO_new_alias
+//#define BIO_new BIO_new_alias
 
 #define BIO_free_all BIO_free_all_alias
 
@@ -178,10 +178,7 @@
 
 #define EVP_PKEY_free EVP_PKEY_free_alias
 
-//#define EVP_DigestVerifyInit EVP_DigestVerifyInit_alias
-#define EVP_DigestVerifyInit EVP_DigestVerifyInit
-
-#define EVP_DigestVerifyUpdate EVP_DigestVerifyUpdate_alias
+#define EVP_DigestVerifyInit EVP_DigestVerifyInit_alias
 
 #define EVP_DigestVerifyFinal EVP_DigestVerifyFinal_alias
 
@@ -189,6 +186,6 @@
 
 #define EVP_MD_CTX_free EVP_MD_CTX_free_alias
 
-#define OPENSSL_malloc OPENSSL_malloc_alias
+//#define OPENSSL_malloc OPENSSL_malloc_alias
 
 #endif /* _OTA_CONFIG_H_ */
