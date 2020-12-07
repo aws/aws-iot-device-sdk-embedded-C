@@ -43,34 +43,9 @@
 
 /* Unit test config. */
 #include "ota_utest_config.h"
+
 /* errno error macro. errno.h can't be included in this file due to mocking. */
 #define ENOENT 0x02
-
-/* For the otaPal_WriteBlock_WriteManyBlocks test this is the number of blocks of
- * dummyData to write to the non-volatile memory. */
-#define testotapalNUM_WRITE_BLOCKS         10
-
-/* For the otaPal_WriteBlock_WriteManyBlocks test this the delay time in ms following
- * the block write loop. */
-#define testotapalWRITE_BLOCKS_DELAY_MS    5000
-
-/*
- * @brief: This dummy data is prepended by a SHA1 hash generated from the rsa-sha1-signer
- * certificate and keys in tests/common/ota/test_files.
- *
- * The RSA SHA256 signature and ECDSA 256 signature are generated from this entire data
- * block as is.
- */
-static uint8_t dummyData[] =
-{
-    0x83, 0x0b, 0xf0, 0x6a, 0x81, 0xd6, 0xca, 0xd7, 0x08, 0x22, 0x0d, 0x6a,
-    0x33, 0xfa, 0x31, 0x9f, 0xa9, 0x5f, 0xb5, 0x26, 0x00, 0x01, 0x02, 0x03,
-    0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0c, 0x0c, 0x0d, 0x0e, 0x0f,
-    0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b,
-    0x1c, 0x1d, 0x1e, 0x1f, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27,
-    0x28, 0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e, 0x2f, 0x30, 0x31, 0x32, 0x33,
-    0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f
-};
 
 /* Global static OTA file context used in every test. This context is reset to all zeros
  * before every test. */
@@ -374,9 +349,10 @@ void test_OTAPAL_Abort_NullFileContext( void )
 void test_OTAPAL_Abort_NullFileHandle( void )
 {
     OtaPalMainStatus_t result;
+    OtaFileContext_t testFileContext;
 
-    otaFile.pFile = NULL;
-    result = OTA_PAL_MAIN_ERR( otaPal_Abort( &otaFile ) );
+    testFileContext.pFile = NULL;
+    result = OTA_PAL_MAIN_ERR( otaPal_Abort( &testFileContext ) );
 
     TEST_ASSERT_EQUAL( OtaPalSuccess, result );
 }
@@ -388,12 +364,14 @@ void test_OTAPAL_Abort_ValidFileHandle( void )
 {
     OtaPalMainStatus_t result;
     FILE placeholder_file;
-    otaFile.pFilePath = ( uint8_t * ) "placeholder_path";
-    otaFile.pFile = &placeholder_file;
+    OtaFileContext_t testFileContext;
+
+    testFileContext.pFilePath = ( uint8_t * ) "placeholder_path";
+    testFileContext.pFile = &placeholder_file;
 
     fclose_ExpectAnyArgsAndReturn( 0 );
 
-    result = OTA_PAL_MAIN_ERR( otaPal_Abort( &otaFile ) );
+    result = OTA_PAL_MAIN_ERR( otaPal_Abort( &testFileContext ) );
     TEST_ASSERT_EQUAL( OtaPalSuccess, result );
 }
 
@@ -403,13 +381,14 @@ void test_OTAPAL_Abort_ValidFileHandle( void )
 void test_OTAPAL_Abort_FileCloseFail( void )
 {
     OtaPalMainStatus_t result;
+    OtaFileContext_t testFileContext;
 
-    otaFile.pFilePath = ( uint8_t * ) OTA_PAL_UTEST_FIRMWARE_FILE;
-    otaFile.pFile = (FILE *) "placeholder";
+    testFileContext.pFilePath = ( uint8_t * ) OTA_PAL_UTEST_FIRMWARE_FILE;
+    testFileContext.pFile = (FILE *) "placeholder";
 
     fclose_ExpectAnyArgsAndReturn( EOF );
 
-    result = otaPal_Abort( &otaFile );
+    result = otaPal_Abort( &testFileContext );
     TEST_ASSERT_EQUAL( OtaPalFileAbort, OTA_PAL_MAIN_ERR( result ) );
     TEST_ASSERT_EQUAL( ENOENT , OTA_PAL_SUB_ERR( result ) );
 }
@@ -420,9 +399,10 @@ void test_OTAPAL_Abort_FileCloseFail( void )
 void test_OTAPAL_Abort_NonExistentFile( void )
 {
     OtaPalMainStatus_t result;
+    OtaFileContext_t testFileContext;
 
-    otaFile.pFilePath = ( uint8_t * ) ( "nonexistingfile.bin" );
-    result = OTA_PAL_MAIN_ERR( otaPal_Abort( &otaFile ) );
+    testFileContext.pFilePath = ( uint8_t * ) ( "nonexistingfile.bin" );
+    result = OTA_PAL_MAIN_ERR( otaPal_Abort( &testFileContext ) );
     TEST_ASSERT_EQUAL( OtaPalSuccess, result );
 }
 
@@ -446,9 +426,10 @@ void test_OTAPAL_CreateFileForRx_NullFileContext( void )
 void test_OTAPAL_CreateFileForRx_NullFilePath( void )
 {
     OtaPalMainStatus_t result;
+    OtaFileContext_t testFile;
 
-    otaFile.pFilePath = NULL;
-    result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
+    testFile.pFilePath = NULL;
+    result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &testFile ) );
 
     TEST_ASSERT_EQUAL( OtaPalRxFileCreateFailed, result );
 }
@@ -460,14 +441,15 @@ void test_OTAPAL_CreateFileForRx_FailedToCreateFile( void )
 {
     OtaPalMainStatus_t result;
     FILE placeholder_file;
+    OtaFileContext_t testFile;
 
-    otaFile.pFilePath = ( uint8_t * ) "placeholder_path";
-    otaFile.pFile = &placeholder_file;
+    testFile.pFilePath = ( uint8_t * ) "placeholder_path";
+    testFile.pFile = &placeholder_file;
 
     fopen_ExpectAnyArgsAndReturn( NULL );
 
     /* Create a file that exists with w+b mode */
-    result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
+    result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &testFile ) );
     TEST_ASSERT_EQUAL( OtaPalRxFileCreateFailed, result );
 }
 
