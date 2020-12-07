@@ -1,12 +1,12 @@
 /**
-@page ota_demo AWS IoT OTA
+@page ota_demos AWS IoT OTA
 @brief This demo demonstrates usage of the AWS IoT Over-The-Air library.
 
 @section ota_demo_core_mqtt OTA over MQTT Demo
 @brief A demo of OTA library to perform a firmware update using coreMQTT for data operations.
 
 <p>
-This example demonstrates the use of OTA library to perform a device firmware update. The Linux application acts as an OTA client and AWS Services are used to 
+This example demonstrates the use of OTA library to perform a device firmware update. The Linux application acts as an OTA client and AWS Services are used to
 send an update to the client. The demo used coreMQTT library to establish a connection to AWS Services by `Subscribing` to MQTT topics to receive a job.
 After a user schedules a job, the client begins the download using coreMQTT to request, ingest and store the data blocks, with the help to tinyCBOR to encode the data stream.
 Once the image is downloaded, the file key signature, version and image is verified to is reset and display a successful update. Workflow for the demo is as follows:
@@ -29,8 +29,8 @@ OTA over coreMQTT Demo Workflow :
 @brief A demo of OTA library to perform a firmware update using coreHTTP for data operations.
 
 <p>
-This example is a modification of the above demo to securely send a firmware image to the device by using coreHTTP for data plane operations. 
-While it still uses MQTT for control operations like pending job notifications and updating job status, this demo uses HTTPS instead of 
+This example is a modification of the above demo to securely send a firmware image to the device by using coreHTTP for data plane operations.
+While it still uses MQTT for control operations like pending job notifications and updating job status, this demo uses HTTPS instead of
 MQTT to download the file. After the file is downloaded, it verifies the signature of the file and updates the firmware.
 </p>
 

@@ -2241,7 +2241,8 @@ TAGFILES               = libraries/standard/coreMQTT/docs/doxygen/output/mqtt.ta
                          libraries/standard/coreHTTP/docs/doxygen/output/http.tag=../../../../libraries/standard/coreHTTP/docs/doxygen/output\html \
                          libraries/aws/device-defender-for-aws-iot-embedded-sdk/docs/doxygen/output/defender.tag=../../../../libraries/aws/device-defender-for-aws-iot-embedded-sdk/docs/doxygen/output/html \
                          libraries/aws/jobs-for-aws-iot-embedded-sdk/docs/doxygen/output/jobs.tag=../../../../libraries/aws/jobs-for-aws-iot-embedded-sdk/docs/doxygen/output/html \
-                         libraries/standard/backoffAlgorithm/docs/doxygen/output/backoffalgorithm.tag=../../../../libraries/standard/backoffAlgorithm/docs/doxygen/output/html
+                         libraries/standard/backoffAlgorithm/docs/doxygen/output/backoffalgorithm.tag=../../../../libraries/standard/backoffAlgorithm/docs/doxygen/output/html \
+                         libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/ota.tag=../../../../libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html
 
 
 # When a file name is specified after GENERATE_TAGFILE, doxygen will create a
