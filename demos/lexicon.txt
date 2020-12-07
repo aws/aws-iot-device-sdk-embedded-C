@@ -1,3 +1,4 @@
+
 accel
 ack
 acks
@@ -266,6 +267,7 @@ lastcontrolpacketsent
 latestversion
 len
 leurent
+lfileclosresult
 libc
 libmosquitto
 libpkcs
@@ -575,6 +577,7 @@ testthingname
 thingname
 thingnamelength
 tls
+todo
 tokenpresent
 toolchain
 topicbuffer
@@ -629,5 +632,6 @@ xxx
 xxxx
 xz
 xzaccel
+ylbc+lyscwcslb2tecubja==\n
 zeroize
 zlib

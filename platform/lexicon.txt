@@ -79,6 +79,7 @@ int
 iot
 ip
 ip
+lfileclosresult
 linux
 logpath
 longjmp
@@ -196,6 +197,7 @@ tls
 tlscontext
 tlsrecv
 tlssend
+todo
 transportcallback
 transportinterface
 transportpage
