@@ -1072,21 +1072,28 @@ static void disconnect( void )
     /* Disconnect from broker. */
     LogInfo( ( "Disconnecting the MQTT connection with %s.", AWS_IOT_ENDPOINT ) );
 
-    if( pthread_mutex_lock( &mqttMutex ) == 0 )
+    if( mqttSessionEstablished == true )
     {
-        /* Disconnect MQTT session. */
-        MQTT_Disconnect( &mqttContext );
+        if( pthread_mutex_lock( &mqttMutex ) == 0 )
+        {
+            /* Disconnect MQTT session. */
+            MQTT_Disconnect( &mqttContext );
 
-        pthread_mutex_unlock( &mqttMutex );
+            pthread_mutex_unlock( &mqttMutex );
 
-        /* Clear the mqtt session flag. */
-        mqttSessionEstablished = false;
+            /* Clear the mqtt session flag. */
+            mqttSessionEstablished = false;
+        }
+        else
+        {
+            LogError( ( "Failed to acquire mutex to execute MQTT_Disconnect"
+                        ",errno=%s",
+                        strerror( errno ) ) );
+        }
     }
     else
     {
-        LogError( ( "Failed to acquire mutex to execute MQTT_Disconnect"
-                    ",errno=%s",
-                    strerror( errno ) ) );
+        LogError( ( "MQTT already disconnected.") );
     }
 
     /* End TLS session, then close TCP connection. */
