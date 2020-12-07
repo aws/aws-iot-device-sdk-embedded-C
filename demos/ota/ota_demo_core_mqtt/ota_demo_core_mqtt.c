@@ -1093,7 +1093,7 @@ static void disconnect( void )
     }
     else
     {
-        LogError( ( "MQTT already disconnected.") );
+        LogError( ( "MQTT already disconnected." ) );
     }
 
     /* End TLS session, then close TCP connection. */
