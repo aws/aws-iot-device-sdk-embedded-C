@@ -91,271 +91,7 @@ void tearDown( void )
     unlink( "PlatformImageState.txt" );
 }
 
-/* ========================================================================== */
-
-/**
- * @brief Test that otaPal_Abort will return correct result code.
- */
-void test_OTAPAL_Abort_NullFileContext( void )
-{
-    OtaPalMainStatus_t result;
-
-    result = OTA_PAL_MAIN_ERR( otaPal_Abort( NULL ) );
-
-    TEST_ASSERT_EQUAL( OtaPalFileAbort, result );
-}
-
-
-/**
- * @brief Test that otaPal_Abort will return correct result code.
- */
-void test_OTAPAL_Abort_NullFileHandle( void )
-{
-    OtaPalMainStatus_t result;
-
-    otaFile.pFile = NULL;
-    result = OTA_PAL_MAIN_ERR( otaPal_Abort( &otaFile ) );
-
-    TEST_ASSERT_EQUAL( OtaPalSuccess, result );
-}
-
-/**
- * @brief Test that otaPal_Abort will return correct result code.
- */
-void test_OTAPAL_Abort_ValidFileHandle( void )
-{
-    OtaPalMainStatus_t result;
-    FILE placeholder_file;
-    otaFile.pFilePath = ( uint8_t * ) "placeholder_path";
-    otaFile.pFile = &placeholder_file;
-
-    fclose_ExpectAnyArgsAndReturn( 0 );
-
-    result = OTA_PAL_MAIN_ERR( otaPal_Abort( &otaFile ) );
-    TEST_ASSERT_EQUAL( OtaPalSuccess, result );
-}
-
-/**
- * @brief Test that otaPal_Abort will return correct result code.
- */
-void test_OTAPAL_Abort_FileCloseFail( void )
-{
-    OtaPalMainStatus_t result;
-
-    otaFile.pFilePath = ( uint8_t * ) OTA_PAL_UTEST_FIRMWARE_FILE;
-    otaFile.pFile = (FILE *) "placeholder";
-
-    fclose_ExpectAnyArgsAndReturn( EOF );
-
-    result = otaPal_Abort( &otaFile );
-    TEST_ASSERT_EQUAL( OtaPalFileAbort, OTA_PAL_MAIN_ERR( result ) );
-    TEST_ASSERT_EQUAL( ENOENT , OTA_PAL_SUB_ERR( result ) );
-}
-
-/**
- * @brief Test that otaPal_Abort will return correct result code.
- */
-void test_OTAPAL_Abort_NonExistentFile( void )
-{
-    OtaPalMainStatus_t result;
-
-    otaFile.pFilePath = ( uint8_t * ) ( "nonexistingfile.bin" );
-    result = OTA_PAL_MAIN_ERR( otaPal_Abort( &otaFile ) );
-    TEST_ASSERT_EQUAL( OtaPalSuccess, result );
-}
-
-/**
- * @brief Test that otaPal_CreateFileForRx will return correct result code.
- */
-void test_OTAPAL_CreateFileForRx_NullFileContext( void )
-{
-    OtaPalMainStatus_t result;
-
-    result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( NULL ) );
-    TEST_ASSERT_EQUAL( OtaPalRxFileCreateFailed, result );
-}
-
-
-/**
- * @brief Test that otaPal_CreateFileForRx will return correct result code.
- */
-void test_OTAPAL_CreateFileForRx_NullFilePath( void )
-{
-    OtaPalMainStatus_t result;
-
-    otaFile.pFilePath = NULL;
-    result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
-
-    TEST_ASSERT_EQUAL( OtaPalRxFileCreateFailed, result );
-}
-
-/**
- * @brief Test that otaPal_CreateFileForRx will return correct result code.
- */
-void test_OTAPAL_CreateFileForRx_FailedToCreateFile( void )
-{
-    OtaPalMainStatus_t result;
-    FILE placeholder_file;
-
-    otaFile.pFilePath = ( uint8_t * ) "placeholder_path";
-    otaFile.pFile = &placeholder_file;
-
-    fopen_ExpectAnyArgsAndReturn( NULL );
-
-    /* Create a file that exists with w+b mode */
-    result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
-    TEST_ASSERT_EQUAL( OtaPalRxFileCreateFailed, result );
-}
-
-/**
- * @brief Test that otaPal_CreateFileForRx will return correct result code.
- */
-void test_OTAPAL_CreateFileForRx_ValidFileHandle( void )
-{
-    OtaPalMainStatus_t result;
-    FILE placeholder_file;
-    otaFile.pFilePath = ( uint8_t * ) "placeholder_path";
-
-    fopen_ExpectAnyArgsAndReturn( &placeholder_file );
-    result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
-    TEST_ASSERT_EQUAL( OtaPalSuccess, result );
-}
-
-/**
- * @brief Test that otaPal_CreateFileForRx will handle the two types of
- * potential paths.
- */
-void test_OTAPAL_CreateFileForRx_PathTypes( void )
-{
-    OtaPalMainStatus_t result;
-    FILE placeholder_file;
-
-    /* Test for a leading forward slash in the path. */
-    otaFile.pFilePath = ( uint8_t * ) "/placeholder_path";
-    fopen_ExpectAnyArgsAndReturn( &placeholder_file );
-    result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
-    TEST_ASSERT_EQUAL( OtaPalSuccess, result );
-
-    /* Test for no leading forward slash in the path. */
-    otaFile.pFilePath = ( uint8_t * ) "placeholder_path";
-    fopen_ExpectAnyArgsAndReturn( &placeholder_file );
-    result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
-    TEST_ASSERT_EQUAL( OtaPalSuccess, result );
-}
-
-
-/**
- * @brief Test that otaPal_WriteBlock will return correct result code.
- */
-void test_OTAPAL_WriteBlock_NullFileContext( void )
-{
-    int16_t result = 0;
-    uint8_t data = 0xAA;
-    uint32_t blockSize = 1;
-
-    result = otaPal_WriteBlock( NULL, 0, &data, blockSize );
-    TEST_ASSERT_EQUAL( -1 , result );
-}
-
-/**
- * @brief Test that otaPal_WriteBlock will return correct result code.
- */
-void test_OTAPAL_WriteBlock_WriteSingleByte( void )
-{
-    int16_t numBytesWritten;
-    uint8_t data = 0xAA;
-    uint32_t blockSize = 1;
-
-    /* TEST: Write a byte of data. */
-    otaFile.pFilePath = ( uint8_t * ) OTA_PAL_UTEST_FIRMWARE_FILE;
-    fseek_alias_ExpectAnyArgsAndReturn(0);
-    fwrite_alias_ExpectAnyArgsAndReturn(blockSize);
-    numBytesWritten = otaPal_WriteBlock( &otaFile, 0, &data, blockSize );
-    TEST_ASSERT_EQUAL_INT( blockSize, numBytesWritten );
-}
-
-/**
- * @brief Test that otaPal_WriteBlock will return correct result code.
- */
-void test_OTAPAL_WriteBlock_WriteMultipleBytes( void )
-{
-    OtaPalMainStatus_t result;
-    int16_t numBytesWritten;
-    int index = 0;
-    uint8_t pData[] = {0xAA, 0xBB, 0xCC, 0xDD, 0xEE};
-    uint32_t blockSize = sizeof( pData[0] );
-
-    /* TEST: Write multiple bytes of data. */
-    for( index = 0; index < ( sizeof(pData) / sizeof(pData[0]) ); index++ )
-    {
-        fseek_alias_ExpectAnyArgsAndReturn(0);
-        fwrite_alias_ExpectAnyArgsAndReturn( blockSize );
-        numBytesWritten = otaPal_WriteBlock( &otaFile, index * blockSize, pData, blockSize );
-        TEST_ASSERT_EQUAL_INT( blockSize, numBytesWritten );
-    }
-}
-
-/**
- * @brief Test that otaPal_WriteBlock will return correct result code.
- */
-void test_OTAPAL_WriteBlock_FseekError( void )
-{
-    int16_t numBytesWritten;
-    uint8_t data = 0xAA;
-    uint32_t blockSize = 1;
-    const int16_t fseek_error_num = 1; /* fseek returns a non-zero number on error. */
-    OtaFileContext_t validFileContext;
-
-    /* TEST: Write a byte of data. */
-    fseek_alias_ExpectAnyArgsAndReturn( fseek_error_num );
-    numBytesWritten = otaPal_WriteBlock( &validFileContext, 0, &data, blockSize );
-    TEST_ASSERT_EQUAL_INT( -1 , numBytesWritten );
-}
-
-/**
- * @brief Test that otaPal_WriteBlock will return correct result code.
- */
-void test_OTAPAL_WriteBlock_FwriteError( void )
-{
-    int16_t numBytesWritten;
-    uint8_t data = 0xAA;
-    uint32_t blockSize = 1;
-    OtaFileContext_t validFileContext;
-    const int32_t fseekSuccessReturn = 0; /* fseek returns a zero on success. */
-    const size_t fwriteErrorReturn = 0; /* fwrite returns a number less than the requested number of bytes to write on error. */
-    const int16_t writeblockErrorReturn = -1;
-
-    fseek_alias_ExpectAnyArgsAndReturn(fseekSuccessReturn);
-    fwrite_alias_ExpectAnyArgsAndReturn(fwriteErrorReturn);
-
-    /* fwrite returns a number less than the amount requested to write on error. */
-    numBytesWritten = otaPal_WriteBlock( &validFileContext, 0, &data, blockSize );
-    TEST_ASSERT_EQUAL_INT( writeblockErrorReturn , numBytesWritten );
-}
-
-/**
- * @brief Test that otaPal_ResetDevice will return correct result code.
- */
-void test_OTAPAL_ResetDevice_NullFileContext( void )
-{
-    OtaPalMainStatus_t result;
-
-    /* Currently there is nothing done inside the function. It's a placeholder. */
-    result = OTA_PAL_MAIN_ERR( otaPal_ResetDevice( NULL ) );
-    TEST_ASSERT_EQUAL( OtaPalSuccess, result );
-}
-
-/**
- * @brief Test that otaPal_WriteBlock will return correct result code.
- */
-void test_OTAPAL_ActivateNewImage_NullFileContext( void )
-{
-    OtaPalMainStatus_t result;
-
-    result = OTA_PAL_MAIN_ERR( otaPal_ActivateNewImage( NULL ) );
-    TEST_ASSERT_EQUAL( OtaPalSuccess, result );
-}
-
+/* ==========================   HELPER FUNCTIONS   ========================== */
 typedef enum
 {
     none_fn = 0,
@@ -384,6 +120,31 @@ typedef enum
     fseek_alias_fn,
     fwrite_alias_fn
 } MockFunctionNames_t;
+
+static void OTA_PAL_FailSingleMock_Except_fread(MockFunctionNames_t funcToFail, OtaImageState_t *pFreadStateToSet);
+static void OTA_PAL_FailSingleMock_openssl_BIO( MockFunctionNames_t funcToFail );
+static void OTA_PAL_FailSingleMock_openssl_X509( MockFunctionNames_t funcToFail );
+static void OTA_PAL_FailSingleMock_openssl_EVP( MockFunctionNames_t funcToFail );
+static void OTA_PAL_FailSingleMock_openssl_crypto( MockFunctionNames_t funcToFail );
+static void OTA_PAL_FailSingleMock_stdio( MockFunctionNames_t funcToFail, OtaImageState_t* pFreadStateToSet );
+static void OTA_PAL_FailSingleMock( MockFunctionNames_t funcToFail, OtaImageState_t* pFreadStateToSet );
+
+static void OTA_PAL_FailSingleMock_Except_fread(MockFunctionNames_t funcToFail, OtaImageState_t *pFreadStateToSet)
+{
+    const size_t fread_failure = 0;
+    /* When fread is being called in this case, it is looping until there is
+    no more data. Setting fread to fail prevents us from getting stuck in
+    the loops. */
+    OTA_PAL_FailSingleMock_stdio(funcToFail, pFreadStateToSet );
+
+    fread_IgnoreAndReturn( fread_failure );
+    fread_ReturnThruPtr_ptr( pFreadStateToSet );
+
+    OTA_PAL_FailSingleMock_openssl_BIO( funcToFail );
+    OTA_PAL_FailSingleMock_openssl_X509( funcToFail );
+    OTA_PAL_FailSingleMock_openssl_crypto( funcToFail );
+    OTA_PAL_FailSingleMock_openssl_EVP( funcToFail );
+}
 
 static void OTA_PAL_FailSingleMock_openssl_BIO( MockFunctionNames_t funcToFail )
 {
@@ -592,219 +353,161 @@ static void OTA_PAL_FailSingleMock( MockFunctionNames_t funcToFail, OtaImageStat
     OTA_PAL_FailSingleMock_openssl_EVP( funcToFail );
 }
 
+/* ======================   OTA PAL ABORT UNIT TESTS   ====================== */
+
 /**
- * @brief Verify that otaPal_SetPlatformImageState correctly handles
- *        attempts to set invalid image states.
+ * @brief Test that otaPal_Abort will return correct result code.
  */
-void test_OTAPAL_SetPlatformImageState_InvalidStates( void )
+void test_OTAPAL_Abort_NullFileContext( void )
 {
-    OtaPalStatus_t result;
-    OtaFileContext_t otaFileContext;
-    OtaImageState_t stateToSet;
+    OtaPalMainStatus_t result;
 
-    stateToSet = OtaImageStateUnknown;
-    result = otaPal_SetPlatformImageState( &otaFileContext, stateToSet );
-    TEST_ASSERT_EQUAL( OtaPalBadImageState, OTA_PAL_MAIN_ERR( result ) );
+    result = OTA_PAL_MAIN_ERR( otaPal_Abort( NULL ) );
 
-    stateToSet = OtaLastImageState + 1;
-    result = otaPal_SetPlatformImageState( &otaFileContext, stateToSet );
-    TEST_ASSERT_EQUAL( OtaPalBadImageState, OTA_PAL_MAIN_ERR( result ) );
+    TEST_ASSERT_EQUAL( OtaPalFileAbort, result );
 }
 
+
 /**
- * @brief Test otaPal_SetPlatformImageState correctly handles setting valid
- * image states.
+ * @brief Test that otaPal_Abort will return correct result code.
  */
-void test_OTAPAL_SetPlatformImageState_HappyPath( void )
+void test_OTAPAL_Abort_NullFileHandle( void )
 {
-    OtaPalStatus_t result;
-    OtaFileContext_t otaFileContext;
-    OtaImageState_t validState = OtaImageStateTesting;
+    OtaPalMainStatus_t result;
 
-    OTA_PAL_FailSingleMock_stdio( none_fn, NULL );
-    result = otaPal_SetPlatformImageState( &otaFileContext, validState );
-    TEST_ASSERT_EQUAL( OtaPalSuccess, OTA_PAL_MAIN_ERR( result ) );
+    otaFile.pFile = NULL;
+    result = OTA_PAL_MAIN_ERR( otaPal_Abort( &otaFile ) );
+
+    TEST_ASSERT_EQUAL( OtaPalSuccess, result );
 }
 
 /**
- * @brief Test otaPal_SetPlatformImageState correctly handles fopen failing.
+ * @brief Test that otaPal_Abort will return correct result code.
  */
-void test_OTAPAL_SetPlatformImageState_fopen_fail( void )
+void test_OTAPAL_Abort_ValidFileHandle( void )
 {
-    OtaPalStatus_t result;
-    OtaFileContext_t otaFileContext;
-    OtaImageState_t validState = OtaImageStateTesting;
+    OtaPalMainStatus_t result;
+    FILE placeholder_file;
+    otaFile.pFilePath = ( uint8_t * ) "placeholder_path";
+    otaFile.pFile = &placeholder_file;
 
-    OTA_PAL_FailSingleMock_stdio( fopen_fn, NULL );
-    result = otaPal_SetPlatformImageState( &otaFileContext, validState );
-    TEST_ASSERT_EQUAL( OtaPalBadImageState, OTA_PAL_MAIN_ERR( result ) );
+    fclose_ExpectAnyArgsAndReturn( 0 );
+
+    result = OTA_PAL_MAIN_ERR( otaPal_Abort( &otaFile ) );
+    TEST_ASSERT_EQUAL( OtaPalSuccess, result );
 }
 
 /**
- * @brief Test otaPal_SetPlatformImageState correctly handles fwrite failing.
+ * @brief Test that otaPal_Abort will return correct result code.
  */
-void test_OTAPAL_SetPlatformImageState_fwrite_fail( void )
+void test_OTAPAL_Abort_FileCloseFail( void )
 {
-    OtaPalStatus_t result;
-    OtaFileContext_t otaFileContext;
-    OtaImageState_t validState = OtaImageStateTesting;
+    OtaPalMainStatus_t result;
 
-    OTA_PAL_FailSingleMock_stdio( fwrite_alias_fn, NULL );
-    result = otaPal_SetPlatformImageState( &otaFileContext, validState );
-    TEST_ASSERT_EQUAL( OtaPalBadImageState, OTA_PAL_MAIN_ERR( result ) );
+    otaFile.pFilePath = ( uint8_t * ) OTA_PAL_UTEST_FIRMWARE_FILE;
+    otaFile.pFile = (FILE *) "placeholder";
+
+    fclose_ExpectAnyArgsAndReturn( EOF );
+
+    result = otaPal_Abort( &otaFile );
+    TEST_ASSERT_EQUAL( OtaPalFileAbort, OTA_PAL_MAIN_ERR( result ) );
+    TEST_ASSERT_EQUAL( ENOENT , OTA_PAL_SUB_ERR( result ) );
 }
 
 /**
- * @brief Test otaPal_SetPlatformImageState correctly handles fclose failing.
+ * @brief Test that otaPal_Abort will return correct result code.
  */
-void test_OTAPAL_SetPlatformImageState_fclose_fail( void )
+void test_OTAPAL_Abort_NonExistentFile( void )
 {
-    OtaPalStatus_t result;
-    OtaFileContext_t otaFileContext;
-    OtaImageState_t validState = OtaImageStateTesting;
+    OtaPalMainStatus_t result;
 
-    OTA_PAL_FailSingleMock_stdio( fclose_fn, NULL );
-    result = otaPal_SetPlatformImageState( &otaFileContext, validState );
-    TEST_ASSERT_EQUAL( OtaPalBadImageState, OTA_PAL_MAIN_ERR( result ) );
+    otaFile.pFilePath = ( uint8_t * ) ( "nonexistingfile.bin" );
+    result = OTA_PAL_MAIN_ERR( otaPal_Abort( &otaFile ) );
+    TEST_ASSERT_EQUAL( OtaPalSuccess, result );
+}
+
+/* ===================   OTA PAL CREATE FILE UNIT TESTS   =================== */
+
+/**
+ * @brief Test that otaPal_CreateFileForRx will return correct result code.
+ */
+void test_OTAPAL_CreateFileForRx_NullFileContext( void )
+{
+    OtaPalMainStatus_t result;
+
+    result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( NULL ) );
+    TEST_ASSERT_EQUAL( OtaPalRxFileCreateFailed, result );
+}
+
+
+/**
+ * @brief Test that otaPal_CreateFileForRx will return correct result code.
+ */
+void test_OTAPAL_CreateFileForRx_NullFilePath( void )
+{
+    OtaPalMainStatus_t result;
+
+    otaFile.pFilePath = NULL;
+    result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
+
+    TEST_ASSERT_EQUAL( OtaPalRxFileCreateFailed, result );
 }
 
 /**
- * @brief Verify that otaPal_GetPlatformImageState correctly handles a fopen
- *        failure. This test assumes that all other function calls return
- *        success.
- * */
-void test_OTAPAL_GetPlatformImageState_fopen_fails( void )
+ * @brief Test that otaPal_CreateFileForRx will return correct result code.
+ */
+void test_OTAPAL_CreateFileForRx_FailedToCreateFile( void )
 {
-    OtaPalImageState_t ePalImageState;
-    OtaFileContext_t otaFileContext;
+    OtaPalMainStatus_t result;
+    FILE placeholder_file;
 
-    OTA_PAL_FailSingleMock_stdio( fopen_fn, NULL );
-    /* The file failed to close, so it is invalid or in an unknown state. */
-    ePalImageState = otaPal_GetPlatformImageState( &otaFileContext );
-    TEST_ASSERT_EQUAL( OtaPalImageStateValid, ePalImageState );
+    otaFile.pFilePath = ( uint8_t * ) "placeholder_path";
+    otaFile.pFile = &placeholder_file;
+
+    fopen_ExpectAnyArgsAndReturn( NULL );
+
+    /* Create a file that exists with w+b mode */
+    result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
+    TEST_ASSERT_EQUAL( OtaPalRxFileCreateFailed, result );
 }
 
 /**
- * @brief Verify that otaPal_GetPlatformImageState correctly handles a fread
- *        failure. This test assumes that all other function calls return
- *        success.
- * */
-void test_OTAPAL_GetPlatformImageState_fread_fails( void )
+ * @brief Test that otaPal_CreateFileForRx will return correct result code.
+ */
+void test_OTAPAL_CreateFileForRx_ValidFileHandle( void )
 {
-    OtaPalImageState_t ePalImageState;
-    OtaFileContext_t otaFileContext;
+    OtaPalMainStatus_t result;
+    FILE placeholder_file;
+    otaFile.pFilePath = ( uint8_t * ) "placeholder_path";
 
-    OTA_PAL_FailSingleMock_stdio( fread_fn , NULL );
-    ePalImageState = otaPal_GetPlatformImageState( &otaFileContext );
-    TEST_ASSERT_EQUAL( OtaPalImageStateInvalid, ePalImageState );
+    fopen_ExpectAnyArgsAndReturn( &placeholder_file );
+    result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
+    TEST_ASSERT_EQUAL( OtaPalSuccess, result );
 }
 
 /**
- * @brief This test validates that the valid states are correctly returned to
- *        the caller.
- * */
-void test_OTAPAL_GetPlatformImageState_fclose_fails( void )
+ * @brief Test that otaPal_CreateFileForRx will handle the two types of
+ * potential paths.
+ */
+void test_OTAPAL_CreateFileForRx_PathTypes( void )
 {
-    OtaPalImageState_t ePalImageState = OtaPalImageStateUnknown;
-    OtaFileContext_t otaFileContext;
-    FILE dummyFile;
+    OtaPalMainStatus_t result;
+    FILE placeholder_file;
 
-    /* On success, snprintf returns a positive number that is less than the amount of data requested. */
-    const int snprintf_success_val = 0;
-    /* On success, fopen returns a FILE address that is not null. */
-    FILE * const fopen_success_val = &dummyFile;
-    /* In otaPal_GetPlatformImageState, fread is always called with a 1 for the
-       size parameter. So, any number other than 1 is an error. */
-    const size_t fread_success_val = 1;
-    /* On failure, fclose returns EOF. */
-    const int fclose_fail_val = EOF;
+    /* Test for a leading forward slash in the path. */
+    otaFile.pFilePath = ( uint8_t * ) "/placeholder_path";
+    fopen_ExpectAnyArgsAndReturn( &placeholder_file );
+    result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
+    TEST_ASSERT_EQUAL( OtaPalSuccess, result );
 
-    /* Predefine what functions are expected to be called. */
-    snprintf_ExpectAnyArgsAndReturn( snprintf_success_val );
-    fopen_ExpectAnyArgsAndReturn( fopen_success_val );
-    fread_ExpectAnyArgsAndReturn( fread_success_val );
-    fclose_ExpectAnyArgsAndReturn( fclose_fail_val );
-
-    /* Call otaPal_GetPlatformImageState and check the result. */
-    ePalImageState = otaPal_GetPlatformImageState( &otaFileContext );
-    TEST_ASSERT_EQUAL( OtaPalImageStateInvalid, ePalImageState );
+    /* Test for no leading forward slash in the path. */
+    otaFile.pFilePath = ( uint8_t * ) "placeholder_path";
+    fopen_ExpectAnyArgsAndReturn( &placeholder_file );
+    result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFile ) );
+    TEST_ASSERT_EQUAL( OtaPalSuccess, result );
 }
 
-/**
- * @brief This test validates that the valid states are correctly returned to
- *        the caller.
- * */
-void test_OTAPAL_GetPlatformImageState_ValidStates( void )
-{
-    OtaPalImageState_t ePalImageState = OtaPalImageStateUnknown;
-    OtaFileContext_t otaFileContext;
-    FILE dummyFile;
-    OtaImageState_t freadResultingState;
-
-    /* On success, snprintf returns a positive number that is less than the amount of data requested. */
-    const int snprintf_success_val = 0;
-    /* On success, fopen returns a FILE address that is not null. */
-    FILE * const fopen_success_val = &dummyFile;
-    /* In otaPal_GetPlatformImageState, fread is always called with a 1 for the
-       size parameter. So, any number other than 1 is an error. */
-    const size_t fread_success_val = 1;
-    /* On success, fclose returns a zero. */
-    const int fclose_success_val = 0;
-
-    /* Test the scenario where the platform state is OtaImageStateTesting. */
-    freadResultingState = OtaImageStateTesting;
-    /* Predefine what functions are expected to be called. */
-    snprintf_ExpectAnyArgsAndReturn( snprintf_success_val );
-    fopen_ExpectAnyArgsAndReturn( fopen_success_val );
-    fread_ExpectAnyArgsAndReturn( fread_success_val );
-    fread_ReturnThruPtr_ptr( &freadResultingState );
-    fclose_ExpectAnyArgsAndReturn( fclose_success_val );
-    /* Call otaPal_GetPlatformImageState and check the result. */
-    ePalImageState = otaPal_GetPlatformImageState( &otaFileContext );
-    TEST_ASSERT_EQUAL( OtaPalImageStatePendingCommit, ePalImageState );
-
-    /* Test the scenario where the platform state is OtaImageStateAccepted. */
-    freadResultingState = OtaImageStateAccepted;
-    /* Predefine what functions are expected to be called. */
-    snprintf_ExpectAnyArgsAndReturn( snprintf_success_val );
-    fopen_ExpectAnyArgsAndReturn( fopen_success_val );
-    fread_ExpectAnyArgsAndReturn( fread_success_val );
-    fread_ReturnThruPtr_ptr( &freadResultingState );
-    fclose_ExpectAnyArgsAndReturn( fclose_success_val );
-    /* Call otaPal_GetPlatformImageState and check the result. */
-    ePalImageState = otaPal_GetPlatformImageState( &otaFileContext );
-    TEST_ASSERT_EQUAL( OtaPalImageStateValid, ePalImageState );
-
-    /* Test the scenario where the platform state is an unexpected value. */
-    freadResultingState = OtaLastImageState + 1;
-    /* Predefine what functions are expected to be called. */
-    snprintf_ExpectAnyArgsAndReturn( snprintf_success_val );
-    fopen_ExpectAnyArgsAndReturn( fopen_success_val );
-    fread_ExpectAnyArgsAndReturn( fread_success_val );
-    fread_ReturnThruPtr_ptr( &freadResultingState );
-    fclose_ExpectAnyArgsAndReturn( fclose_success_val );
-    /* Call otaPal_GetPlatformImageState and check the result. */
-    ePalImageState = otaPal_GetPlatformImageState( &otaFileContext );
-    TEST_ASSERT_EQUAL( OtaPalImageStateInvalid, ePalImageState );
-}
-
-
-static void OTA_PAL_FailSingleMock_Except_fread(MockFunctionNames_t funcToFail, OtaImageState_t *pFreadStateToSet)
-{
-    const size_t fread_failure = 0;
-    /* When fread is being called in this case, it is looping until there is
-    no more data. Setting fread to fail prevents us from getting stuck in
-    the loops. */
-    OTA_PAL_FailSingleMock_stdio(funcToFail, pFreadStateToSet );
-
-    fread_IgnoreAndReturn( fread_failure );
-    fread_ReturnThruPtr_ptr( pFreadStateToSet );
-
-    OTA_PAL_FailSingleMock_openssl_BIO( funcToFail );
-    OTA_PAL_FailSingleMock_openssl_X509( funcToFail );
-    OTA_PAL_FailSingleMock_openssl_crypto( funcToFail );
-    OTA_PAL_FailSingleMock_openssl_EVP( funcToFail );
-}
+/* ===================   OTA PAL CLOSE FILE UNIT TESTS   ==================== */
 
 void test_OTAPAL_CloseFile_NullInput( void )
 {
@@ -1012,4 +715,322 @@ void test_OTAPAL_CloseFile_EVP_DigestVerifyInit_fail( void )
     OTA_PAL_FailSingleMock_Except_fread( EVP_DigestVerifyInit_fn , &expectedImageState);
     result = otaPal_CloseFile( &otaFileContext );
     TEST_ASSERT_EQUAL( OtaPalSignatureCheckFailed, OTA_PAL_MAIN_ERR( result ) );
+}
+
+/* ===================   OTA PAL WRITE BLOCK UNIT TESTS   =================== */
+
+/**
+ * @brief Test that otaPal_WriteBlock will return correct result code.
+ */
+void test_OTAPAL_WriteBlock_NullFileContext( void )
+{
+    int16_t result = 0;
+    uint8_t data = 0xAA;
+    uint32_t blockSize = 1;
+
+    result = otaPal_WriteBlock( NULL, 0, &data, blockSize );
+    TEST_ASSERT_EQUAL( -1 , result );
+}
+
+/**
+ * @brief Test that otaPal_WriteBlock will return correct result code.
+ */
+void test_OTAPAL_WriteBlock_WriteSingleByte( void )
+{
+    int16_t numBytesWritten;
+    uint8_t data = 0xAA;
+    uint32_t blockSize = 1;
+
+    /* TEST: Write a byte of data. */
+    otaFile.pFilePath = ( uint8_t * ) OTA_PAL_UTEST_FIRMWARE_FILE;
+    fseek_alias_ExpectAnyArgsAndReturn(0);
+    fwrite_alias_ExpectAnyArgsAndReturn(blockSize);
+    numBytesWritten = otaPal_WriteBlock( &otaFile, 0, &data, blockSize );
+    TEST_ASSERT_EQUAL_INT( blockSize, numBytesWritten );
+}
+
+/**
+ * @brief Test that otaPal_WriteBlock will return correct result code.
+ */
+void test_OTAPAL_WriteBlock_WriteMultipleBytes( void )
+{
+    OtaPalMainStatus_t result;
+    int16_t numBytesWritten;
+    int index = 0;
+    uint8_t pData[] = {0xAA, 0xBB, 0xCC, 0xDD, 0xEE};
+    uint32_t blockSize = sizeof( pData[0] );
+
+    /* TEST: Write multiple bytes of data. */
+    for( index = 0; index < ( sizeof(pData) / sizeof(pData[0]) ); index++ )
+    {
+        fseek_alias_ExpectAnyArgsAndReturn(0);
+        fwrite_alias_ExpectAnyArgsAndReturn( blockSize );
+        numBytesWritten = otaPal_WriteBlock( &otaFile, index * blockSize, pData, blockSize );
+        TEST_ASSERT_EQUAL_INT( blockSize, numBytesWritten );
+    }
+}
+
+/**
+ * @brief Test that otaPal_WriteBlock will return correct result code.
+ */
+void test_OTAPAL_WriteBlock_FseekError( void )
+{
+    int16_t numBytesWritten;
+    uint8_t data = 0xAA;
+    uint32_t blockSize = 1;
+    const int16_t fseek_error_num = 1; /* fseek returns a non-zero number on error. */
+    OtaFileContext_t validFileContext;
+
+    /* TEST: Write a byte of data. */
+    fseek_alias_ExpectAnyArgsAndReturn( fseek_error_num );
+    numBytesWritten = otaPal_WriteBlock( &validFileContext, 0, &data, blockSize );
+    TEST_ASSERT_EQUAL_INT( -1 , numBytesWritten );
+}
+
+/**
+ * @brief Test that otaPal_WriteBlock will return correct result code.
+ */
+void test_OTAPAL_WriteBlock_FwriteError( void )
+{
+    int16_t numBytesWritten;
+    uint8_t data = 0xAA;
+    uint32_t blockSize = 1;
+    OtaFileContext_t validFileContext;
+    const int32_t fseekSuccessReturn = 0; /* fseek returns a zero on success. */
+    const size_t fwriteErrorReturn = 0; /* fwrite returns a number less than the requested number of bytes to write on error. */
+    const int16_t writeblockErrorReturn = -1;
+
+    fseek_alias_ExpectAnyArgsAndReturn(fseekSuccessReturn);
+    fwrite_alias_ExpectAnyArgsAndReturn(fwriteErrorReturn);
+
+    /* fwrite returns a number less than the amount requested to write on error. */
+    numBytesWritten = otaPal_WriteBlock( &validFileContext, 0, &data, blockSize );
+    TEST_ASSERT_EQUAL_INT( writeblockErrorReturn , numBytesWritten );
+}
+
+/* ===============   OTA PAL ACTIVATE NEW IMAGE UNIT TESTS   ================ */
+
+/**
+ * @brief Test that otaPal_WriteBlock will return correct result code.
+ */
+void test_OTAPAL_ActivateNewImage_NullFileContext( void )
+{
+    OtaPalMainStatus_t result;
+
+    result = OTA_PAL_MAIN_ERR( otaPal_ActivateNewImage( NULL ) );
+    TEST_ASSERT_EQUAL( OtaPalSuccess, result );
+}
+
+/* ==================   OTA PAL RESET DEVICE UNIT TESTS   =================== */
+
+/**
+ * @brief Test that otaPal_ResetDevice will return correct result code.
+ */
+void test_OTAPAL_ResetDevice_NullFileContext( void )
+{
+    OtaPalMainStatus_t result;
+
+    /* Currently there is nothing done inside the function. It's a placeholder. */
+    result = OTA_PAL_MAIN_ERR( otaPal_ResetDevice( NULL ) );
+    TEST_ASSERT_EQUAL( OtaPalSuccess, result );
+}
+
+/* ============   OTA PAL SET PLATFORM IMAGE STATE UNIT TESTS   ============= */
+
+/**
+ * @brief Verify that otaPal_SetPlatformImageState correctly handles
+ *        attempts to set invalid image states.
+ */
+void test_OTAPAL_SetPlatformImageState_InvalidStates( void )
+{
+    OtaPalStatus_t result;
+    OtaFileContext_t otaFileContext;
+    OtaImageState_t stateToSet;
+
+    stateToSet = OtaImageStateUnknown;
+    result = otaPal_SetPlatformImageState( &otaFileContext, stateToSet );
+    TEST_ASSERT_EQUAL( OtaPalBadImageState, OTA_PAL_MAIN_ERR( result ) );
+
+    stateToSet = OtaLastImageState + 1;
+    result = otaPal_SetPlatformImageState( &otaFileContext, stateToSet );
+    TEST_ASSERT_EQUAL( OtaPalBadImageState, OTA_PAL_MAIN_ERR( result ) );
+}
+
+/**
+ * @brief Test otaPal_SetPlatformImageState correctly handles setting valid
+ * image states.
+ */
+void test_OTAPAL_SetPlatformImageState_HappyPath( void )
+{
+    OtaPalStatus_t result;
+    OtaFileContext_t otaFileContext;
+    OtaImageState_t validState = OtaImageStateTesting;
+
+    OTA_PAL_FailSingleMock_stdio( none_fn, NULL );
+    result = otaPal_SetPlatformImageState( &otaFileContext, validState );
+    TEST_ASSERT_EQUAL( OtaPalSuccess, OTA_PAL_MAIN_ERR( result ) );
+}
+
+/**
+ * @brief Test otaPal_SetPlatformImageState correctly handles fopen failing.
+ */
+void test_OTAPAL_SetPlatformImageState_fopen_fail( void )
+{
+    OtaPalStatus_t result;
+    OtaFileContext_t otaFileContext;
+    OtaImageState_t validState = OtaImageStateTesting;
+
+    OTA_PAL_FailSingleMock_stdio( fopen_fn, NULL );
+    result = otaPal_SetPlatformImageState( &otaFileContext, validState );
+    TEST_ASSERT_EQUAL( OtaPalBadImageState, OTA_PAL_MAIN_ERR( result ) );
+}
+
+/**
+ * @brief Test otaPal_SetPlatformImageState correctly handles fwrite failing.
+ */
+void test_OTAPAL_SetPlatformImageState_fwrite_fail( void )
+{
+    OtaPalStatus_t result;
+    OtaFileContext_t otaFileContext;
+    OtaImageState_t validState = OtaImageStateTesting;
+
+    OTA_PAL_FailSingleMock_stdio( fwrite_alias_fn, NULL );
+    result = otaPal_SetPlatformImageState( &otaFileContext, validState );
+    TEST_ASSERT_EQUAL( OtaPalBadImageState, OTA_PAL_MAIN_ERR( result ) );
+}
+
+/**
+ * @brief Test otaPal_SetPlatformImageState correctly handles fclose failing.
+ */
+void test_OTAPAL_SetPlatformImageState_fclose_fail( void )
+{
+    OtaPalStatus_t result;
+    OtaFileContext_t otaFileContext;
+    OtaImageState_t validState = OtaImageStateTesting;
+
+    OTA_PAL_FailSingleMock_stdio( fclose_fn, NULL );
+    result = otaPal_SetPlatformImageState( &otaFileContext, validState );
+    TEST_ASSERT_EQUAL( OtaPalBadImageState, OTA_PAL_MAIN_ERR( result ) );
+}
+
+/* ============   OTA PAL GET PLATFORM IMAGE STATE UNIT TESTS   ============= */
+
+/**
+ * @brief Verify that otaPal_GetPlatformImageState correctly handles a fopen
+ *        failure. This test assumes that all other function calls return
+ *        success.
+ * */
+void test_OTAPAL_GetPlatformImageState_fopen_fails( void )
+{
+    OtaPalImageState_t ePalImageState;
+    OtaFileContext_t otaFileContext;
+
+    OTA_PAL_FailSingleMock_stdio( fopen_fn, NULL );
+    /* The file failed to close, so it is invalid or in an unknown state. */
+    ePalImageState = otaPal_GetPlatformImageState( &otaFileContext );
+    TEST_ASSERT_EQUAL( OtaPalImageStateValid, ePalImageState );
+}
+
+/**
+ * @brief Verify that otaPal_GetPlatformImageState correctly handles a fread
+ *        failure. This test assumes that all other function calls return
+ *        success.
+ * */
+void test_OTAPAL_GetPlatformImageState_fread_fails( void )
+{
+    OtaPalImageState_t ePalImageState;
+    OtaFileContext_t otaFileContext;
+
+    OTA_PAL_FailSingleMock_stdio( fread_fn , NULL );
+    ePalImageState = otaPal_GetPlatformImageState( &otaFileContext );
+    TEST_ASSERT_EQUAL( OtaPalImageStateInvalid, ePalImageState );
+}
+
+/**
+ * @brief This test validates that the valid states are correctly returned to
+ *        the caller.
+ * */
+void test_OTAPAL_GetPlatformImageState_fclose_fails( void )
+{
+    OtaPalImageState_t ePalImageState = OtaPalImageStateUnknown;
+    OtaFileContext_t otaFileContext;
+    FILE dummyFile;
+
+    /* On success, snprintf returns a positive number that is less than the amount of data requested. */
+    const int snprintf_success_val = 0;
+    /* On success, fopen returns a FILE address that is not null. */
+    FILE * const fopen_success_val = &dummyFile;
+    /* In otaPal_GetPlatformImageState, fread is always called with a 1 for the
+       size parameter. So, any number other than 1 is an error. */
+    const size_t fread_success_val = 1;
+    /* On failure, fclose returns EOF. */
+    const int fclose_fail_val = EOF;
+
+    /* Predefine what functions are expected to be called. */
+    snprintf_ExpectAnyArgsAndReturn( snprintf_success_val );
+    fopen_ExpectAnyArgsAndReturn( fopen_success_val );
+    fread_ExpectAnyArgsAndReturn( fread_success_val );
+    fclose_ExpectAnyArgsAndReturn( fclose_fail_val );
+
+    /* Call otaPal_GetPlatformImageState and check the result. */
+    ePalImageState = otaPal_GetPlatformImageState( &otaFileContext );
+    TEST_ASSERT_EQUAL( OtaPalImageStateInvalid, ePalImageState );
+}
+
+/**
+ * @brief This test validates that the valid states are correctly returned to
+ *        the caller.
+ * */
+void test_OTAPAL_GetPlatformImageState_ValidStates( void )
+{
+    OtaPalImageState_t ePalImageState = OtaPalImageStateUnknown;
+    OtaFileContext_t otaFileContext;
+    FILE dummyFile;
+    OtaImageState_t freadResultingState;
+
+    /* On success, snprintf returns a positive number that is less than the amount of data requested. */
+    const int snprintf_success_val = 0;
+    /* On success, fopen returns a FILE address that is not null. */
+    FILE * const fopen_success_val = &dummyFile;
+    /* In otaPal_GetPlatformImageState, fread is always called with a 1 for the
+       size parameter. So, any number other than 1 is an error. */
+    const size_t fread_success_val = 1;
+    /* On success, fclose returns a zero. */
+    const int fclose_success_val = 0;
+
+    /* Test the scenario where the platform state is OtaImageStateTesting. */
+    freadResultingState = OtaImageStateTesting;
+    /* Predefine what functions are expected to be called. */
+    snprintf_ExpectAnyArgsAndReturn( snprintf_success_val );
+    fopen_ExpectAnyArgsAndReturn( fopen_success_val );
+    fread_ExpectAnyArgsAndReturn( fread_success_val );
+    fread_ReturnThruPtr_ptr( &freadResultingState );
+    fclose_ExpectAnyArgsAndReturn( fclose_success_val );
+    /* Call otaPal_GetPlatformImageState and check the result. */
+    ePalImageState = otaPal_GetPlatformImageState( &otaFileContext );
+    TEST_ASSERT_EQUAL( OtaPalImageStatePendingCommit, ePalImageState );
+
+    /* Test the scenario where the platform state is OtaImageStateAccepted. */
+    freadResultingState = OtaImageStateAccepted;
+    /* Predefine what functions are expected to be called. */
+    snprintf_ExpectAnyArgsAndReturn( snprintf_success_val );
+    fopen_ExpectAnyArgsAndReturn( fopen_success_val );
+    fread_ExpectAnyArgsAndReturn( fread_success_val );
+    fread_ReturnThruPtr_ptr( &freadResultingState );
+    fclose_ExpectAnyArgsAndReturn( fclose_success_val );
+    /* Call otaPal_GetPlatformImageState and check the result. */
+    ePalImageState = otaPal_GetPlatformImageState( &otaFileContext );
+    TEST_ASSERT_EQUAL( OtaPalImageStateValid, ePalImageState );
+
+    /* Test the scenario where the platform state is an unexpected value. */
+    freadResultingState = OtaLastImageState + 1;
+    /* Predefine what functions are expected to be called. */
+    snprintf_ExpectAnyArgsAndReturn( snprintf_success_val );
+    fopen_ExpectAnyArgsAndReturn( fopen_success_val );
+    fread_ExpectAnyArgsAndReturn( fread_success_val );
+    fread_ReturnThruPtr_ptr( &freadResultingState );
+    fclose_ExpectAnyArgsAndReturn( fclose_success_val );
+    /* Call otaPal_GetPlatformImageState and check the result. */
+    ePalImageState = otaPal_GetPlatformImageState( &otaFileContext );
+    TEST_ASSERT_EQUAL( OtaPalImageStateInvalid, ePalImageState );
 }
