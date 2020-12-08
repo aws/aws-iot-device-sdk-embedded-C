@@ -230,11 +230,8 @@ static OpensslStatus_t tlsHandshake( OpensslParams_t * pOpensslParams,
     int32_t sslStatus = -1, verifyPeerCertStatus = X509_V_OK;
 
     /* Validate the hostname against the server's certificate. */
-    if( pOpensslCredentials->sniHostName != NULL )
-    {
-        sslStatus = SSL_set1_host( pOpensslParams->pSsl,
-                                   pOpensslCredentials->sniHostName );
-    }
+    sslStatus = SSL_set1_host( pOpensslParams->pSsl,
+                               pOpensslCredentials->sniHostName );
 
     if( sslStatus != 1 )
     {
@@ -753,11 +750,6 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
                  * Thus, setting the return value of this function as zero to represent that no
                  * data was received from the network. */
                 bytesReceived = 0;
-            }
-            else if( bytesReceived = 0 )
-            {
-                /* Peer has sent a close-notify alert. */
-                bytesReceived = -1;
             }
             else
             {
