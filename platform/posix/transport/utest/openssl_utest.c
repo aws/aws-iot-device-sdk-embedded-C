@@ -339,7 +339,7 @@ static OpensslStatus_t failFunctionFrom_Openssl_Connect( FunctionNames_t functio
     if( functionToFail == SSL_set1_host_fn )
     {
         SSL_set1_host_ExpectAnyArgsAndReturn( 0 );
-        returnStatus = OPENSSL_HANDSHAKE_FAILED;
+        returnStatus = OPENSSL_API_ERROR;
     }
     else if( returnStatus == OPENSSL_SUCCESS )
     {

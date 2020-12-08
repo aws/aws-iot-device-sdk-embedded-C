@@ -238,9 +238,8 @@ static OpensslStatus_t tlsHandshake( const ServerInfo_t * pServerInfo,
 
     if( sslStatus != 1 )
     {
-        LogError( ( "SSL_set1_host failed to validate the hostname "
-                    "in the server's certificate." ) );
-        returnStatus = OPENSSL_HANDSHAKE_FAILED;
+        LogError( ( "SSL_set1_host failed to set the hostname to validate." ) );
+        returnStatus = OPENSSL_API_ERROR;
     }
 
     /* Enable SSL peer verification. */
