@@ -223,6 +223,7 @@ static void OTA_PAL_FailSingleMock_openssl_EVP( MockFunctionNames_t funcToFail )
     int EVP_DigestVerifyFinal_success = 1;
     int EVP_DigestVerifyFinal_failure = -1;
     int EVP_DigestVerifyFinal_return;
+
     /* EVP_MD_CTX_free_fn: No return. */
     /* EVP_PKEY_free_fn: No return. */
     /* EVP_sha256_fn: Always returns a valid pointer. */
