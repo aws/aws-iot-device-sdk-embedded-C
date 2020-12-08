@@ -80,30 +80,9 @@ function(check_presigned_urls demo_name)
     endif()
 endfunction()
 
-if(DOWNLOAD_CERTS)
-    # Download the Amazon Root CA certificate.
-    message( "Downloading the Amazon Root CA certificate..." )
-    file(MAKE_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/certificates)
-    execute_process(
-        COMMAND curl --url https://www.amazontrust.com/repository/AmazonRootCA1.pem
-        -o ${CMAKE_CURRENT_LIST_DIR}/certificates/AmazonRootCA1.crt
-    )
-    # Download the Baltimore Cybertrust Root CA certificate.
-    message( "Downloading the Baltimore Cybertrust Root CA certificate..." )
-    file(MAKE_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/certificates)
-    execute_process(
-        COMMAND curl --url https://cacerts.digicert.com/BaltimoreCyberTrustRoot.crt.pem
-        -o ${CMAKE_CURRENT_LIST_DIR}/certificates/BaltimoreCyberTrustRoot.crt
-    )
-endif()
-
 # Copy the certificates and client keys to the build directory.
 file(COPY "${CMAKE_CURRENT_LIST_DIR}/certificates"
      DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
-if(BUILD_TESTS)
-    file(COPY "${CMAKE_CURRENT_LIST_DIR}/certificates"
-         DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/tests")
-endif()
 
 # Include each subdirectory that has a CMakeLists.txt file in it
 file(GLOB demo_dirs "${DEMOS_DIR}/*/*")

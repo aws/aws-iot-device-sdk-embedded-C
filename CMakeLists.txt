@@ -20,6 +20,7 @@ endif()
 get_filename_component(__root_dir "${CMAKE_CURRENT_LIST_DIR}" ABSOLUTE)
 set(ROOT_DIR ${__root_dir} CACHE INTERNAL "C SDK source root.")
 set(DEMOS_DIR "${ROOT_DIR}/demos" CACHE INTERNAL "C SDK demos root.")
+set(SYSTEM_TEST_DIR "${ROOT_DIR}/integration-test" CACHE INTERNAL "C SDK integration tests root.")
 set(PLATFORM_DIR "${ROOT_DIR}/platform" CACHE INTERNAL "C SDK platform root.")
 set(MODULES_DIR "${ROOT_DIR}/libraries" CACHE INTERNAL "C SDK modules root.")
 set(3RDPARTY_DIR "${MODULES_DIR}/3rdparty" CACHE INTERNAL "3rdparty libraries root.")
@@ -90,11 +91,6 @@ add_subdirectory( libraries )
 # Add platform.
 add_subdirectory( platform )
 
-# Build the demos but only when tests are only being built.
-if( NOT ${BUILD_TESTS} )
-    add_subdirectory( demos )
-endif()
-
 # Add build configuration for all integration tests.
 if(${BUILD_TESTS})
     file(GLOB_RECURSE test_modules "integration-test/*CMakeLists.txt")
@@ -102,4 +98,31 @@ if(${BUILD_TESTS})
         get_filename_component(DIR_PATH "${module}" DIRECTORY)
         add_subdirectory(${DIR_PATH})
     endforeach()
+else()
+    add_subdirectory( demos )
+endif()
+
+if(DOWNLOAD_CERTS)
+    if(BUILD_TESTS)
+        set(CERT_DOWNLOAD_DIR ${SYSTEM_TEST_DIR}/certificates)
+        set(CERT_MOVE_DIR ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/tests)
+    else()
+        set(CERT_DOWNLOAD_DIR ${DEMOS_DIR}/certificates)
+        set(CERT_MOVE_DIR ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+    endif()
+    file(MAKE_DIRECTORY ${CERT_DOWNLOAD_DIR})
+    # Download the Amazon Root CA certificate.
+    message( "Downloading the Amazon Root CA certificate..." )
+    execute_process(
+        COMMAND curl --url https://www.amazontrust.com/repository/AmazonRootCA1.pem
+        -o ${CERT_DOWNLOAD_DIR}/AmazonRootCA1.crt
+    )
+    # Download the Baltimore Cybertrust Root CA certificate.
+    message( "Downloading the Baltimore Cybertrust Root CA certificate..." )
+    execute_process(
+        COMMAND curl --url https://cacerts.digicert.com/BaltimoreCyberTrustRoot.crt.pem
+        -o ${CERT_DOWNLOAD_DIR}/BaltimoreCyberTrustRoot.crt
+    )
+    file(COPY "${CERT_DOWNLOAD_DIR}"
+         DESTINATION ${CERT_MOVE_DIR})
 endif()
