@@ -247,6 +247,7 @@ not installed in your system, demos that require that dependency will be exclude
 Dependency | Version | Usage
 :---: | :---: | :---:
 [OpenSSL](https://github.com/openssl/openssl) | 1.1.0 or later | All TLS demos and tests with the exception of PKCS11
+[Mosquitto Client](https://github.com/eclipse/mosquitto) | 1.4.10 or later | AWS IoT Jobs Mosquitto demo
 
 #### AWS IoT Account Setup
 

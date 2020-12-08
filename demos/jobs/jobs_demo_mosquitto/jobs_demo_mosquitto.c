@@ -49,7 +49,7 @@
 #include <err.h>
 #include <getopt.h>
 
-#include "mosquitto.h"
+#include <mosquitto.h>
 #if ( LIBMOSQUITTO_VERSION_NUMBER < 1004010 )
     #error Please use libmosquitto at version 1.4.10 or higher.
 #endif

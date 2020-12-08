@@ -15,13 +15,17 @@ add_executable(
         ${JSON_SOURCES}
 )
 
-# Take the Mosquitto client library from the Mosquitto submodule.
-add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/libmosquitto )
+find_library(LIB_MOSQUITTO mosquitto)
+if(NOT DEFINED LIB_MOSQUITTO)
+    message( "Mosquitto was not installed. It will be built from source for ${DEMO_NAME}." )
+    # Build Mosquitto Client Library from source if it is not found.
+    add_subdirectory( libmosquitto )
+endif()
 
 target_link_libraries(
     ${DEMO_NAME}
     PUBLIC
-        libmosquitto
+        mosquitto
 )
 
 target_include_directories(
@@ -29,6 +33,7 @@ target_include_directories(
     PUBLIC
         ${JOBS_INCLUDE_PUBLIC_DIRS}
         ${JSON_INCLUDE_PUBLIC_DIRS}
+    SYSTEM
         ${CMAKE_CURRENT_LIST_DIR}/libmosquitto/lib
 )
 
