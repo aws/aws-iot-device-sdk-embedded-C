@@ -155,11 +155,10 @@ static OtaPalMainStatus_t Openssl_DigestVerifyStart( EVP_MD_CTX * pSigContext,
     OtaPalMainStatus_t mainErr = OtaPalSignatureCheckFailed;
 
     assert( pBuf != NULL );
+    assert( ( pSigContext != NULL ) && ( pPkey != NULL ) );
 
     /* Verify an ECDSA-SHA256 signature. */
-    if( ( pSigContext != NULL ) &&
-        ( pPkey != NULL ) &&
-        ( pFile != NULL ) &&
+    if( ( pFile != NULL ) &&
         ( 1 == EVP_DigestVerifyInit( pSigContext, NULL, EVP_sha256(), NULL, pPkey ) ) )
     {
         LogDebug( ( "Started signature verification." ) );
@@ -196,10 +195,12 @@ static bool Openssl_DigestVerifyUpdate( EVP_MD_CTX * pSigContext,
         /* coverity[misra_c_2012_rule_21_6_violation] */
         bytesRead = fread( pBuf, 1U, OTA_PAL_POSIX_BUF_SIZE, pFile );
 
+        assert( bytesRead < OTA_PAL_POSIX_BUF_SIZE );
+
         /* feof returns non-zero if end of file is reached, otherwise it returns 0. When
          * bytesRead is not equal to OTA_PAL_POSIX_BUF_SIZE, we should be reading last
          * chunk and reach to end of file. */
-        if( ( bytesRead < OTA_PAL_POSIX_BUF_SIZE ) && ( 0 == feof( pFile ) ) )
+        if( 0 == feof( pFile ) )
         {
             break;
         }
@@ -263,43 +264,35 @@ static OtaPalStatus_t otaPal_CheckFileSignature( OtaFileContext_t * const C )
     EVP_PKEY * pPkey = NULL;
     EVP_MD_CTX * pSigContext = NULL;
 
-    if( C != NULL )
+    assert( C != NULL );
+
+    /* Extract the signer cert from the file. */
+    pPkey = Openssl_GetPkeyFromCertificate( C->pCertFilepath );
+
+    /* Create a new signature context for verification purpose. */
+    pSigContext = EVP_MD_CTX_new();
+
+    if( ( pPkey != NULL ) && ( pSigContext != NULL ) )
     {
-        /* Extract the signer cert from the file */
-        pPkey = Openssl_GetPkeyFromCertificate( C->pCertFilepath );
-
-        /* Create a new signature context for verification purpose */
-        pSigContext = EVP_MD_CTX_new();
-
-        if( ( pPkey != NULL ) && ( pSigContext != NULL ) )
-        {
-            /* Verify an ECDSA-SHA256 signature. */
-            mainErr = Openssl_DigestVerify( pSigContext, pPkey, C->pFile, C->pSignature );
-        }
-        else
-        {
-            if( pSigContext == NULL )
-            {
-                LogError( ( "File signature check failed at NEW sig context." ) );
-            }
-            else
-            {
-                LogError( ( "File signature check failed at EXTRACT pkey from signer certificate." ) );
-                mainErr = OtaPalBadSignerCert;
-            }
-        }
-
-        /* Free up objects */
-        EVP_MD_CTX_free( pSigContext );
-        EVP_PKEY_free( pPkey );
+        /* Verify the signature. */
+        mainErr = Openssl_DigestVerify( pSigContext, pPkey, C->pFile, C->pSignature );
     }
     else
     {
-        LogError( ( "Failed to check file signature: Paramater check failed: "
-                    " Invalid OTA file context." ) );
-        /* Invalid OTA context or file pointer. */
-        mainErr = OtaPalNullFileContext;
+        if( pSigContext == NULL )
+        {
+            LogError( ( "File signature check failed at NEW sig context." ) );
+        }
+        else
+        {
+            LogError( ( "File signature check failed at EXTRACT pkey from signer certificate." ) );
+            mainErr = OtaPalBadSignerCert;
+        }
     }
+
+    /* Free up objects */
+    EVP_MD_CTX_free( pSigContext );
+    EVP_PKEY_free( pPkey );
 
     return OTA_PAL_COMBINE_ERR( mainErr, 0 );
 }
