@@ -80,10 +80,6 @@ function(check_presigned_urls demo_name)
     endif()
 endfunction()
 
-# Copy the certificates and client keys to the build directory.
-file(COPY "${CMAKE_CURRENT_LIST_DIR}/certificates"
-     DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
-
 # Include each subdirectory that has a CMakeLists.txt file in it
 file(GLOB demo_dirs "${DEMOS_DIR}/*/*")
 foreach(demo_dir IN LISTS demo_dirs)
