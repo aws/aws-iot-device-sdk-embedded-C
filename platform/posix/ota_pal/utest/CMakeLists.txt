@@ -34,6 +34,7 @@ list( APPEND real_include_directories
       "${PLATFORM_DIR}/posix/ota_pal/source/include"
       ${OPENSSL_INCLUDE_DIR}
       ${CMAKE_CURRENT_LIST_DIR}
+      ${CMAKE_CURRENT_LIST_DIR}/mocks
       )
 
 #== ===================  Create UnitTest Code here (edit)  =====================

@@ -31,6 +31,9 @@
 #ifndef _OTA_CONFIG_H_
 #define _OTA_CONFIG_H_
 
+/* Required for the declarations of fseek_alias and fwrite_alias. */
+#include "stdio_api.h"
+
 /**
  * @brief The number of words allocated to the stack for the OTA agent.
  */
