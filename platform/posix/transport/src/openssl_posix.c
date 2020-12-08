@@ -726,9 +726,13 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
         {
             sslError = SSL_get_error( pOpensslParams->pSsl, bytesReceived );
 
-            if( sslError == SSL_ERROR_WANT_READ )
+            if( ( sslError == SSL_ERROR_WANT_READ ) || ( sslError == SSL_ERROR_WANT_WRITE ) )
             {
-                /* There is no data to receive at this time. */
+                /* The OpenSSL documentation mentions that SSL_Write can have a return code of
+                 * SSL_ERROR_WANT_READ and SSL_ERROR_WANT_WRITE. Both of those codes mean that the
+                 * SSL_read() operation needs to be retried to complete the read operation.
+                 * Thus, setting the return value of this function as zero to represent that no
+                 * data was received from the network. */
                 bytesReceived = 0;
             }
             else
@@ -778,8 +782,20 @@ int32_t Openssl_Send( NetworkContext_t * pNetworkContext,
         {
             sslError = SSL_get_error( pOpensslParams->pSsl, bytesSent );
 
-            LogError( ( "Failed to send data over network: SSL_write of OpenSSL failed: "
-                        "ErrorStatus=%s.", ERR_reason_error_string( sslError ) ) );
+            if( ( sslError == SSL_ERROR_WANT_WRITE ) || ( sslError == SSL_ERROR_WANT_READ ) )
+            {
+                /* The OpenSSL documentation mentions that SSL_Write can have a return code of
+                 * SSL_ERROR_WANT_READ and SSL_ERROR_WANT_WRITE. Both of those codes mean that the
+                 * call to SSL_write() needs to be retried.
+                 * Thus, setting the return value of this function as zero so to represent that no
+                 * data was sent over the network. */
+                bytesSent = 0;
+            }
+            else
+            {
+                LogError( ( "Failed to send data over network: SSL_write of OpenSSL failed: "
+                            "ErrorStatus=%s.", ERR_reason_error_string( sslError ) ) );
+            }
         }
     }
     else
