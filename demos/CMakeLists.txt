@@ -94,7 +94,7 @@ endforeach()
 
 # Filter demos based on what packages or library exist.
 if(NOT DEFINED LIB_RT)
-    set( librt_demos
+    set(librt_demos
             "http_demo_s3_download_multithreaded"
             "ota_demo_core_http"
             "ota_demo_core_mqtt"
@@ -105,7 +105,7 @@ if(NOT DEFINED LIB_RT)
     endforeach()
 endif()
 if(NOT ${OpenSSL_FOUND})
-    set( openssl_demos
+    set(openssl_demos
             "defender_demo"
             "http_demo_basic_tls"
             "http_demo_mutual_auth"
@@ -125,8 +125,9 @@ if(NOT ${OpenSSL_FOUND})
     endforeach()
 endif()
 if(NOT ${Threads_FOUND})
-    set( thread_demos
-            ${openssl_demos}
+    set(thread_demos
+            "ota_demo_core_http"
+            "ota_demo_core_mqtt"
     )
     message( WARNING "Threads library could not be found. Demos that use it will be excluded from the default target." )
     foreach(demo_name ${thread_demos})

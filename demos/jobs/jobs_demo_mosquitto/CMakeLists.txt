@@ -15,10 +15,13 @@ add_executable(
         ${JSON_SOURCES}
 )
 
+# Take the Mosquitto client library from the Mosquitto submodule.
+add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/libmosquitto )
+
 target_link_libraries(
     ${DEMO_NAME}
-    PRIVATE
-        mosquitto
+    PUBLIC
+        libmosquitto
 )
 
 target_include_directories(
@@ -26,6 +29,7 @@ target_include_directories(
     PUBLIC
         ${JOBS_INCLUDE_PUBLIC_DIRS}
         ${JSON_INCLUDE_PUBLIC_DIRS}
+        ${CMAKE_CURRENT_LIST_DIR}/libmosquitto/lib
 )
 
 if(AWS_IOT_ENDPOINT)
