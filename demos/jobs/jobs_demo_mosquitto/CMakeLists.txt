@@ -28,11 +28,27 @@ target_include_directories(
         ${JSON_INCLUDE_PUBLIC_DIRS}
 )
 
-# Propagate values to compiler flags, even if they are not defined.
-target_compile_definitions(
-    ${DEMO_NAME} PRIVATE
-        ROOT_CA_CERT_PATH="${ROOT_CA_CERT_PATH}"
-        AWS_IOT_ENDPOINT="${AWS_IOT_ENDPOINT}"
-        CLIENT_CERT_PATH="${CLIENT_CERT_PATH}"
-        CLIENT_PRIVATE_KEY_PATH="${CLIENT_PRIVATE_KEY_PATH}"
-)
+if(AWS_IOT_ENDPOINT)
+    target_compile_definitions(
+        ${DEMO_NAME} PRIVATE
+            AWS_IOT_ENDPOINT="${AWS_IOT_ENDPOINT}"
+    )
+endif()
+if(ROOT_CA_CERT_PATH)
+    target_compile_definitions(
+        ${DEMO_NAME} PRIVATE
+            ROOT_CA_CERT_PATH="${ROOT_CA_CERT_PATH}"
+    )
+endif()
+if(CLIENT_CERT_PATH)
+    target_compile_definitions(
+        ${DEMO_NAME} PRIVATE
+            CLIENT_CERT_PATH="${CLIENT_CERT_PATH}"
+    )
+endif()
+if(CLIENT_PRIVATE_KEY_PATH)
+    target_compile_definitions(
+        ${DEMO_NAME} PRIVATE
+            CLIENT_PRIVATE_KEY_PATH="${CLIENT_PRIVATE_KEY_PATH}"
+    )
+endif()

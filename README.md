@@ -205,7 +205,7 @@ The [v4_beta_deprecated](https://github.com/aws/aws-iot-device-sdk-embedded-C/tr
 
 This repository uses [Git Submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules) to bring in the C-SDK libraries (eg, MQTT ) and third-party dependencies (eg, mbedtls for POSIX platform transport layer).
 Note: If you download the ZIP file provided by GitHub UI, you will not get the contents of the submodules (The ZIP file is also not a valid git repository). If you download from the [202011.00 Release Page](https://github.com/aws/aws-iot-device-sdk-embedded-C/releases/tag/202011.00) page, you will get the entire repository (including the submodules) in the ZIP file, aws-iot-device-sdk-embedded-c-202011.00.zip.
-To clone using HTTPS:
+To clone the latest commit to main branch using HTTPS:
 
 ```sh
 git clone --recurse-submodules https://github.com/aws/aws-iot-device-sdk-embedded-C.git
@@ -222,6 +222,10 @@ If you have downloaded the repo without using the `--recurse-submodules` argumen
 ```sh
 git submodule update --init --recursive
 ```
+
+When building with CMake, submodules are also recursively cloned automatically. However, `-DBUILD_CLONE_SUBMODULES=0`
+can be passed as a CMake flag to disable this functionality. This is useful when you'd like to build CMake while using a
+different commit from a submodule.
 
 ### Building and Running Demos
 

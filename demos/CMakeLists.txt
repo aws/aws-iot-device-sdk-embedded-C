@@ -65,18 +65,22 @@ function(check_presigned_urls demo_name)
     check_symbol_exists(S3_PRESIGNED_GET_URL ${FILES_TO_CHECK} HAVE_S3_PRESIGNED_GET_URL)
     check_symbol_exists(S3_PRESIGNED_PUT_URL ${FILES_TO_CHECK} HAVE_S3_PRESIGNED_PUT_URL)
 
-    if(";${UPLOAD_DEMOS};" MATCHES ";${demo_name};" AND NOT(HAVE_S3_PRESIGNED_GET_URL AND HAVE_S3_PRESIGNED_PUT_URL))
-        message("To run ${demo_name}, define S3_PRESIGNED_GET_URL and S3_PRESIGNED_PUT_URL in ${demo_name}/demo_config.h.")
-        set_target_properties(${demo_name} PROPERTIES EXCLUDE_FROM_ALL true)
-    else()
-        message("All required macros for ${demo_name} were found - Adding to default target.")
+    if( ";${UPLOAD_DEMOS};" MATCHES ";${demo_name};" )
+        if( NOT(HAVE_S3_PRESIGNED_GET_URL AND HAVE_S3_PRESIGNED_PUT_URL) )
+            message("To run ${demo_name}, define S3_PRESIGNED_GET_URL and S3_PRESIGNED_PUT_URL in ${demo_name}/demo_config.h.")
+            set_target_properties(${demo_name} PROPERTIES EXCLUDE_FROM_ALL true)
+        else()
+            message("All required macros for ${demo_name} were found - Adding to default target.")
+        endif()
     endif()
 
-    if( ";${DOWNLOAD_DEMOS};" MATCHES ";${demo_name};" AND NOT(HAVE_S3_PRESIGNED_GET_URL))
-        message("To run ${demo_name}, define S3_PRESIGNED_GET_URL in ${demo_name}/demo_config.h.")
-        set_target_properties(${demo_name} PROPERTIES EXCLUDE_FROM_ALL true)
-    else()
-        message("All required macros for ${demo_name} were found - Adding to default target.")
+    if( ";${DOWNLOAD_DEMOS};" MATCHES ";${demo_name};" )
+        if( NOT(HAVE_S3_PRESIGNED_GET_URL) )
+            message("To run ${demo_name}, define S3_PRESIGNED_GET_URL in ${demo_name}/demo_config.h.")
+            set_target_properties(${demo_name} PROPERTIES EXCLUDE_FROM_ALL true)
+        else()
+            message("All required macros for ${demo_name} were found - Adding to default target.")
+        endif()
     endif()
 endfunction()
 
@@ -87,3 +91,45 @@ foreach(demo_dir IN LISTS demo_dirs)
         add_subdirectory(${demo_dir})
     endif()
 endforeach()
+
+# Filter demos based on what packages or library exist.
+if(NOT DEFINED LIB_RT)
+    set( librt_demos
+            "http_demo_s3_download_multithreaded"
+            "ota_demo_core_http"
+            "ota_demo_core_mqtt"
+    )
+    message( WARNING "rt library could not be found. Demos that use it will be excluded from the default target." )
+    foreach(demo_name ${librt_demos})
+        set_target_properties(${demo_name} PROPERTIES EXCLUDE_FROM_ALL true)
+    endforeach()
+endif()
+if(NOT ${OpenSSL_FOUND})
+    set( openssl_demos
+            "defender_demo"
+            "http_demo_basic_tls"
+            "http_demo_mutual_auth"
+            "http_demo_s3_download"
+            "http_demo_s3_download_multithreaded"
+            "http_demo_s3_upload"
+            "mqtt_demo_basic_tls"
+            "mqtt_demo_mutual_auth"
+            "mqtt_demo_subscription_manager"
+            "ota_demo_core_http"
+            "ota_demo_core_mqtt"
+            "shadow_demo_main"
+    )
+    message( WARNING "OpenSSL library could not be found. Demos that use it will be excluded from the default target." )
+    foreach(demo_name ${openssl_demos})
+        set_target_properties(${demo_name} PROPERTIES EXCLUDE_FROM_ALL true)
+    endforeach()
+endif()
+if(NOT ${Threads_FOUND})
+    set( thread_demos
+            ${openssl_demos}
+    )
+    message( WARNING "Threads library could not be found. Demos that use it will be excluded from the default target." )
+    foreach(demo_name ${thread_demos})
+        set_target_properties(${demo_name} PROPERTIES EXCLUDE_FROM_ALL true)
+    endforeach()
+endif()
