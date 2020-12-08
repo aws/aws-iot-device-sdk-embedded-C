@@ -817,9 +817,8 @@ void test_OTAPAL_WriteBlock_WriteSingleByte( void )
  */
 void test_OTAPAL_WriteBlock_WriteMultipleBytes( void )
 {
-    OtaPalMainStatus_t result;
     int16_t numBytesWritten;
-    int index = 0;
+    size_t index = 0;
     uint8_t pData[] = { 0xAA, 0xBB, 0xCC, 0xDD, 0xEE };
     uint32_t blockSize = sizeof( pData[ 0 ] );
     OtaFileContext_t otaFileContext;
