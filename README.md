@@ -238,17 +238,15 @@ The libraries in this SDK are not dependent on any operating system. However, th
 * C90 compiler
 * Although not a part of the ISO C90 standard, `stdint.h` is required for fixed-width integer types that include `uint8_t`, `int8_t`, `uint16_t`, `uint32_t` and `int32_t`, and constant macros like `UINT16_MAX`.
 * A supported operating system. The ports provided with this repo are expected to work with all recent versions of the following operating systems, although we cannot guarantee the behavior on all systems.
-* Linux system with POSIX sockets and timer APIs. (We have tested on Ubuntu 18.04).
+* Linux system with POSIX sockets, threads, RT, and timer APIs. (We have tested on Ubuntu 18.04).
 
 ##### Build Dependencies
-The follow table shows what libraries that need to be installed on your system to run certain demos. If a dependency is
+The follow table shows libraries that need to be installed on your system to run certain demos. If a dependency is
 not installed in your system, demos that require that dependency will be excluded from the default `all` target.
-Dependency | Version | Usage | Package Name
-:---: | :---: | :---:
-OpenSSL | 1.1.0 or later | All TLS demos and tests with the exception of PKCS11 
-[Mosquitto Client] | 1.4.10 or later | AWS IoT Jobs Mosquitto demo
 
-    * On Linux systems, installation of OpenSSL development libraries and header files, *version 1.1.0 or later*, are required. The OpenSSL development libraries are usually called something like `libssl-dev` or `openssl-devel` when installed through a package manager.
+Dependency | Version | Usage
+:---: | :---: | :---:
+[OpenSSL](https://github.com/openssl/openssl) | 1.1.0 or later | All TLS demos and tests with the exception of PKCS11
 
 #### AWS IoT Account Setup
 
