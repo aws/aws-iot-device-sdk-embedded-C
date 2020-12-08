@@ -156,7 +156,6 @@ phostname
 plaintext
 platformimagestate
 platformimagestate
-platfrom
 plisthead
 pnetworkcontext
 png
