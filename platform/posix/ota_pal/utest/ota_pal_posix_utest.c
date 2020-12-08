@@ -1037,6 +1037,10 @@ void test_OTAPAL_GetPlatformImageState_ValidStates( void )
     OtaFileContext_t otaFileContext;
     FILE dummyFile;
     OtaImageState_t freadResultingState;
+    /* OtaLastImageState is always the largest number in the enum. This
+       variable represents an invalid state because it is outside of the
+       expected values. */
+    const OtaImageState_t invalidImageState = OtaLastImageState + 1;
 
     /* On success, snprintf returns a positive number that is less than the amount of data requested. */
     const int snprintf_success_val = 0;
@@ -1074,7 +1078,7 @@ void test_OTAPAL_GetPlatformImageState_ValidStates( void )
     TEST_ASSERT_EQUAL( OtaPalImageStateValid, ePalImageState );
 
     /* Test the scenario where the platform state is an unexpected value. */
-    freadResultingState = OtaLastImageState + 1;
+    freadResultingState = invalidImageState;
     /* Predefine what functions are expected to be called. */
     snprintf_ExpectAnyArgsAndReturn( snprintf_success_val );
     fopen_ExpectAnyArgsAndReturn( fopen_success_val );
