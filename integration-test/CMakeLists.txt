@@ -12,7 +12,7 @@ if(NOT ${OpenSSL_FOUND})
             "mqtt_system_test"
             "shadow_system_test"
     )
-    message( WARNING "OpenSSL library could not be found. Demos that use it will be excluded from the default target." )
+    message( WARNING "OpenSSL library could not be found. Tests that use it will be excluded from the default target." )
     foreach(test_name ${openssl_tests})
         set_target_properties(${test_name} PROPERTIES EXCLUDE_FROM_ALL true)
     endforeach()
