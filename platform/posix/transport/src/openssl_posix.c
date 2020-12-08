@@ -726,11 +726,11 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
         {
             sslError = SSL_get_error( pOpensslParams->pSsl, bytesReceived );
 
-            if( ( sslError == SSL_ERROR_WANT_READ ) || ( sslError == SSL_ERROR_WANT_WRITE ) )
+            if( sslError == SSL_ERROR_WANT_READ )
             {
-                /* The OpenSSL documentation mentions that SSL_Write can have a return code of
-                 * SSL_ERROR_WANT_READ and SSL_ERROR_WANT_WRITE. Both of those codes mean that the
-                 * SSL_read() operation needs to be retried to complete the read operation.
+                /* The OpenSSL documentation mentions that SSL_Read can have a return code of
+                 * SSL_ERROR_WANT_READ in blocking mode. This error code means that the SSL_read()
+                 * operation needs to be retried to complete the read operation.
                  * Thus, setting the return value of this function as zero to represent that no
                  * data was received from the network. */
                 bytesReceived = 0;
@@ -739,6 +739,14 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
             {
                 LogError( ( "Failed to receive data over network: SSL_read failed: "
                             "ErrorStatus=%s.", ERR_reason_error_string( sslError ) ) );
+
+                /* The transport interface requires zero return code only when the receive operation can
+                 * be retried to achieve success. Thus, convert a zero error code to a negative return
+                 * value as this cannot be retried. */
+                if( bytesReceived == 0 )
+                {
+                    bytesReceived = -1;
+                }
             }
         }
     }
@@ -785,8 +793,8 @@ int32_t Openssl_Send( NetworkContext_t * pNetworkContext,
             if( ( sslError == SSL_ERROR_WANT_WRITE ) || ( sslError == SSL_ERROR_WANT_READ ) )
             {
                 /* The OpenSSL documentation mentions that SSL_Write can have a return code of
-                 * SSL_ERROR_WANT_READ and SSL_ERROR_WANT_WRITE. Both of those codes mean that the
-                 * call to SSL_write() needs to be retried.
+                 * SSL_ERROR_WANT_WRITE in blocking mode to signify that the write operation needs
+                 * to be retried by calling SSl_write().
                  * Thus, setting the return value of this function as zero so to represent that no
                  * data was sent over the network. */
                 bytesSent = 0;
@@ -795,6 +803,14 @@ int32_t Openssl_Send( NetworkContext_t * pNetworkContext,
             {
                 LogError( ( "Failed to send data over network: SSL_write of OpenSSL failed: "
                             "ErrorStatus=%s.", ERR_reason_error_string( sslError ) ) );
+
+                /* The transport interface requires zero return code only when the send operation can
+                 * be retried to achieve success. Thus, convert a zero error code to a negative return
+                 * value as this cannot be retried. */
+                if( bytesSent == 0 )
+                {
+                    bytesSent = -1;
+                }
             }
         }
     }

@@ -768,10 +768,16 @@ void test_Openssl_Send_Network_Error( void )
 
     /* Several errors can be returned from #SSL_get_error as mentioned here:
      * https://www.openssl.org/docs/man1.1.1/man3/SSL_get_error.html */
-    SSL_get_error_ExpectAnyArgsAndReturn( SSL_READ_WRITE_ERROR );
+    SSL_get_error_ExpectAnyArgsAndReturn( SSL_ERROR_ZERO_RETURN );
     bytesSent = Openssl_Send( &networkContext, opensslBuffer, BYTES_TO_SEND );
     TEST_ASSERT_EQUAL( SSL_READ_WRITE_ERROR, bytesSent );
-    TEST_ASSERT_TRUE( bytesSent <= 0 );
+    TEST_ASSERT_TRUE( bytesSent < 0 );
+
+    /* Test that a non-retryable zero error code is converted to -1 by the API. */
+    SSL_write_ExpectAnyArgsAndReturn( 0 );
+    SSL_get_error_ExpectAnyArgsAndReturn( SSL_ERROR_ZERO_RETURN );
+    bytesSent = Openssl_Send( &networkContext, opensslBuffer, BYTES_TO_SEND );
+    TEST_ASSERT_EQUAL( -1, bytesSent );
 }
 
 /**
@@ -782,19 +788,11 @@ void test_Openssl_Send_Zero_Return_Value( void )
 {
     int32_t bytesSent;
 
+    opensslParams.pSsl = &ssl;
+    SSL_write_ExpectAnyArgsAndReturn( SSL_READ_WRITE_ERROR );
+
     /* Test when SSL_write returns SSL_ERROR_WANT_WRITE. */
-    opensslParams.pSsl = &ssl;
-    SSL_write_ExpectAnyArgsAndReturn( SSL_READ_WRITE_ERROR );
-
     SSL_get_error_ExpectAnyArgsAndReturn( SSL_ERROR_WANT_WRITE );
-    bytesSent = Openssl_Send( &networkContext, opensslBuffer, BYTES_TO_SEND );
-    TEST_ASSERT_EQUAL( 0, bytesSent );
-
-    /* Test when SSL_write returns SSL_ERROR_WANT_READ. */
-    opensslParams.pSsl = &ssl;
-    SSL_write_ExpectAnyArgsAndReturn( SSL_READ_WRITE_ERROR );
-
-    SSL_get_error_ExpectAnyArgsAndReturn( SSL_ERROR_WANT_READ );
     bytesSent = Openssl_Send( &networkContext, opensslBuffer, BYTES_TO_SEND );
     TEST_ASSERT_EQUAL( 0, bytesSent );
 }
@@ -844,16 +842,6 @@ void test_Openssl_Recv_Network_Error( void )
     int32_t bytesReceived;
 
     opensslParams.pSsl = &ssl;
-    SSL_read_ExpectAnyArgsAndReturn( SSL_READ_WRITE_ERROR );
-
-    /* Several errors can be returned from #SSL_get_error as mentioned here:
-     * https://www.openssl.org/docs/man1.1.1/man3/SSL_get_error.html */
-    SSL_get_error_ExpectAnyArgsAndReturn( SSL_ERROR_WANT_READ );
-    bytesReceived = Openssl_Recv( &networkContext, opensslBuffer, BYTES_TO_RECV );
-
-    /* SSL_ERROR_WANT_READ implies there is no data to receive, so we expect
-     * that no bytes have been received. */
-    TEST_ASSERT_EQUAL( 0, bytesReceived );
 
     SSL_read_ExpectAnyArgsAndReturn( SSL_READ_WRITE_ERROR );
     /* SSL_ERROR_ZERO_RETURN means the peer has closed the connection. */
@@ -863,7 +851,13 @@ void test_Openssl_Recv_Network_Error( void )
     /* SSL_ERROR_WANT_READ implies there is no data to receive, so we expect
      * that no bytes have been received. */
     TEST_ASSERT_EQUAL( SSL_READ_WRITE_ERROR, bytesReceived );
-    TEST_ASSERT_TRUE( bytesReceived <= 0 );
+    TEST_ASSERT_TRUE( bytesReceived < 0 );
+
+    /* Test that a non-retryable zero error code is converted to -1 by the API. */
+    SSL_read_ExpectAnyArgsAndReturn( 0 );
+    SSL_get_error_ExpectAnyArgsAndReturn( SSL_ERROR_ZERO_RETURN );
+    bytesReceived = Openssl_Recv( &networkContext, opensslBuffer, BYTES_TO_RECV );
+    TEST_ASSERT_EQUAL( -1, bytesReceived );
 }
 
 /**
@@ -874,18 +868,10 @@ void test_Openssl_Recv_Zero_Return_Value( void )
 {
     int32_t bytesReceived;
 
-    /* Test when SSL_read returns SSL_ERROR_WANT_WRITE. */
     opensslParams.pSsl = &ssl;
     SSL_read_ExpectAnyArgsAndReturn( SSL_READ_WRITE_ERROR );
 
-    SSL_get_error_ExpectAnyArgsAndReturn( SSL_ERROR_WANT_WRITE );
-    bytesReceived = Openssl_Recv( &networkContext, opensslBuffer, BYTES_TO_RECV );
-    TEST_ASSERT_EQUAL( 0, bytesReceived );
-
-    /* Test when SSL_read returns SSL_ERROR_WANT_READ. */
-    opensslParams.pSsl = &ssl;
-    SSL_read_ExpectAnyArgsAndReturn( SSL_READ_WRITE_ERROR );
-
+    /* Test when SSL_read() returns an SSL_ERROR_WANT_READ error. */
     SSL_get_error_ExpectAnyArgsAndReturn( SSL_ERROR_WANT_READ );
     bytesReceived = Openssl_Recv( &networkContext, opensslBuffer, BYTES_TO_RECV );
     TEST_ASSERT_EQUAL( 0, bytesReceived );
