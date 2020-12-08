@@ -50,7 +50,7 @@ jobs:
           curl https://cmake.org/files/v3.2/cmake-3.2.0-Linux-x86_64.tar.gz -o cmake.tar.gz
           tar -xf cmake.tar.gz
           mkdir build
-          cmake-3.2.0-Linux-x86_64/bin/cmake -S . -B build/ \
+          cmake-3.2.0-Linux-x86_64/bin/cmake . -Bbuild/ \
           -G "Unix Makefiles" \
           -DCMAKE_BUILD_TYPE=Release \
           -DBUILD_TESTS=1 \
@@ -78,7 +78,7 @@ jobs:
           curl https://cmake.org/files/v3.2/cmake-3.2.0-Linux-x86_64.tar.gz -o cmake.tar.gz
           tar -xf cmake.tar.gz
           mkdir build
-          cmake-3.2.0-Linux-x86_64/bin/cmake -S . -B build/ \
+          cmake-3.2.0-Linux-x86_64/bin/cmake . -Bbuild/ \
           -G "Unix Makefiles" \
           -DBUILD_TESTS=1 \
           -DCMAKE_BUILD_TYPE=Debug \
