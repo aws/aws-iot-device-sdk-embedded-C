@@ -1,3 +1,4 @@
+# For static library builds, link against static library of OpenSSL
 if(NOT BUILD_SHARED_LIBS)
     set( OPENSSL_USE_STATIC_LIBS TRUE )
 endif()
@@ -14,6 +15,7 @@ set(OpenSSL_FOUND ${OpenSSL_FOUND} CACHE INTERNAL "Indicates whether OpenSSL lib
 set(Threads_FOUND ${Threads_FOUND} CACHE INTERNAL "Indicates whether Threads library was found.")
 
 find_library(LIB_RT rt)
+
 
 # Add the posix targets
 add_subdirectory( ${PLATFORM_DIR}/posix )

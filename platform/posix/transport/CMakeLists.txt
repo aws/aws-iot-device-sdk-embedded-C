@@ -26,9 +26,6 @@ target_link_libraries( plaintext_posix
 add_library( openssl_posix
                 ${OPENSSL_TRANSPORT_SOURCES} )
 
-# For static library builds, link against static library of OpenSSL
-# for openssl_posix target.
-
 target_link_libraries( openssl_posix
                        PUBLIC
                           sockets_posix
