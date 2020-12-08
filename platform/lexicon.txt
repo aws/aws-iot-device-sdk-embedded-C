@@ -86,7 +86,7 @@ int
 iot
 ip
 ip
-lfileclosresult
+lfilecloseresult
 linux
 logpath
 longjmp

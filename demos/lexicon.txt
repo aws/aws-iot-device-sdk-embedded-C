@@ -267,7 +267,7 @@ lastcontrolpacketsent
 latestversion
 len
 leurent
-lfileclosresult
+lfilecloseresult
 libc
 libmosquitto
 libpkcs
