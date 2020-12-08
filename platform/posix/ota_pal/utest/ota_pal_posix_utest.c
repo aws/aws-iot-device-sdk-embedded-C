@@ -409,19 +409,6 @@ void test_OTAPAL_Abort_FileCloseFail( void )
     TEST_ASSERT_EQUAL( OtaPalFileAbort, OTA_PAL_MAIN_ERR( result ) );
 }
 
-/**
- * @brief Test that otaPal_Abort will return correct result code.
- */
-void test_OTAPAL_Abort_NonExistentFile( void )
-{
-    OtaPalMainStatus_t result;
-    OtaFileContext_t testFileContext;
-
-    testFileContext.pFilePath = ( uint8_t * ) ( "nonexistingfile.bin" );
-    result = OTA_PAL_MAIN_ERR( otaPal_Abort( &testFileContext ) );
-    TEST_ASSERT_EQUAL( OtaPalSuccess, result );
-}
-
 /* ===================   OTA PAL CREATE FILE UNIT TESTS   =================== */
 
 /**
