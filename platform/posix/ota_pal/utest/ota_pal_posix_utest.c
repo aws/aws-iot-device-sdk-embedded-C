@@ -407,7 +407,6 @@ void test_OTAPAL_Abort_FileCloseFail( void )
 
     result = otaPal_Abort( &testFileContext );
     TEST_ASSERT_EQUAL( OtaPalFileAbort, OTA_PAL_MAIN_ERR( result ) );
-    TEST_ASSERT_EQUAL( ENOENT, OTA_PAL_SUB_ERR( result ) );
 }
 
 /**
@@ -643,7 +642,7 @@ void test_OTAPAL_CloseFile_feof_fail( void )
     OTA_PAL_FailSingleMock_Except_fread( feof_fn, &expectedImageState );
     feof_IgnoreAndReturn( 0 );
     result = otaPal_CloseFile( &otaFileContext );
-    TEST_ASSERT_EQUAL( OtaPalSuccess, OTA_PAL_MAIN_ERR( result ) );
+    TEST_ASSERT_EQUAL( OtaPalSignatureCheckFailed, OTA_PAL_MAIN_ERR( result ) );
 }
 
 void test_OTAPAL_CloseFile_EVP_DigestVerifyFinal_fail( void )
