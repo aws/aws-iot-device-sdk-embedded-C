@@ -21,6 +21,7 @@ def run_cmd(cmd):
             check=True,
             timeout=180,
         )
+        print( result.stdout )
         return result.stdout
     except subprocess.CalledProcessError as e:
         result = e.stdout
@@ -63,11 +64,13 @@ def main():
         abs_doxy_path = os.path.join(abs_lib_path, "docs", "doxygen")
         if os.path.exists(abs_doxy_path):
             os.chdir(abs_lib_path)
+            print(abs_lib_path)
             run_cmd("doxygen docs/doxygen/config.doxyfile")
             abs_doxy_paths.append(abs_doxy_path)
 
     # Generate the doxygen for the CSDK last to use the tags from the libraries.
     os.chdir(abs_sdk_root)
+    print(abs_sdk_root)
     run_cmd("doxygen docs/doxygen/config.doxyfile")
     abs_doxy_paths.append(os.path.join(abs_sdk_root, "docs", "doxygen"))
 

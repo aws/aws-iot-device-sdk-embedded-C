@@ -1,6 +1,6 @@
 # Creating Doxygen documentation for a new library
 1. All supporting files were created with Doxygen version 1.8.20. Please download
-from https://sourceforge.net/projects/doxygen/files/.
+from https://sourceforge.net/projects/doxygen/files/rel-1.8.20/.
 
 1. Your library API should have each function, data type, and constant documented
 according to the Doxygen format using **@brief** and **@param**. Doxygen will output
@@ -112,10 +112,31 @@ your library information.
 1. Search for "FIXME"s in <library_root>/docs/doxygen/pages.txt and update with your
 library's information.
 
+1. Add your library to the CSDK's list of libraries, in the first section in <csdk_root>/docs/doxygen/pages.txt.
+
+    ```doxygen
+    - [<library_name>](@ref library_name) - [<library_repo_name>](<library_repo_github_url>)
+    ```
+
+1. Add the name of your library's Doxygen TAG file to the list of library tag files in <csdk_root>/docs/doxygen/config.doxyfile configuration option named `TAGFILES`:
+
+    ```doxygen
+    TAGFILES               = <csdk_path_to_library>/docs/doxygen/output/<library_name>.tag=../../../../<csdk_path_to_library>/docs/doxygen/output/html
+    ```
+
 1. Generate Doxygen with the current working directory as the root of your library's repo:
 
     ```console
     doxygen docs/doxygen/config.doxygen
+    ```
+
+    Fix all warnings.
+
+1. Generate Doxygen in the CSDK repo root:
+
+    ```console
+    git submodule update --init --checkout
+    python tools/doxygen/generate_docs.py --root .
     ```
 
     Fix all warnings.
