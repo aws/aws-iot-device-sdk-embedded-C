@@ -8,23 +8,22 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-check:
+  build-check-demos:
     runs-on: ubuntu-latest
     steps:
       - name: Clone This Repo
         uses: actions/checkout@v2
         with:
           submodules: recursive
-      - name: Download CMake 3.2.0
+      - name: Configure CMake build
         run: |
           curl https://cmake.org/files/v3.2/cmake-3.2.0-Linux-x86_64.tar.gz -o cmake.tar.gz
           tar -xf cmake.tar.gz
-          mkdir build
-          cmake-3.2.0-Linux-x86_64/bin/cmake . -Bbuild/ \
+          mkdir build && cd build
+          ../cmake-3.2.0-Linux-x86_64/bin/cmake .. \
           -G "Unix Makefiles" \
-          -DBUILD_TESTS=1 \
           -DCMAKE_BUILD_TYPE=Release \
-          -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Werror' \
+          -DCMAKE_C_FLAGS='-Wall -Wextra -Werror' \
           -DAWS_IOT_ENDPOINT="aws-iot-endpoint" \
           -DBROKER_ENDPOINT="broker-endpoint" \
           -DCLIENT_CERT_PATH="cert/path" \
@@ -39,6 +38,32 @@ jobs:
           sudo apt-get install -y libmosquitto-dev
           make -C build/ help | grep demo | tr -d '. ' | xargs make -C build/
           make -C demos/jobs/jobs_demo_mosquitto
+  build-check-system-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone This Repo
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Configure CMake build
+        run: |
+          curl https://cmake.org/files/v3.2/cmake-3.2.0-Linux-x86_64.tar.gz -o cmake.tar.gz
+          tar -xf cmake.tar.gz
+          mkdir build && cd build
+          ../cmake-3.2.0-Linux-x86_64/bin/cmake .. \
+          -G "Unix Makefiles" \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DBUILD_TESTS=1 \
+          -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Werror' \
+          -DAWS_IOT_ENDPOINT="aws-iot-endpoint" \
+          -DBROKER_ENDPOINT="broker-endpoint" \
+          -DCLIENT_CERT_PATH="cert/path" \
+          -DROOT_CA_CERT_PATH="cert/path" \
+          -DCLIENT_PRIVATE_KEY_PATH="key/path" \
+          -DCLIENT_IDENTIFIER="ci-identifier" \
+          -DTHING_NAME="thing-name" \
+          -DS3_PRESIGNED_GET_URL="get-url" \
+          -DS3_PRESIGNED_PUT_URL="put-url"
       - name: Build System Tests
         run: make -C build/ help | grep system | tr -d '. ' | xargs make -C build/
   unittest:
