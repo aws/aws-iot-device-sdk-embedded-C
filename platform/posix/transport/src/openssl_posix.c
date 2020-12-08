@@ -147,12 +147,14 @@ static OpensslStatus_t convertToOpensslStatus( SocketStatus_t socketStatus );
 /**
  * @brief Establish TLS session by performing handshake with the server.
  *
+ * @param[in] pServerInfo Server connection info.
  * @param[in] pOpensslParams Parameters to perform the TLS handshake.
  * @param[in] pOpensslCredentials TLS credentials containing configurations.
  *
  * @return #OPENSSL_SUCCESS, #OPENSSL_API_ERROR, and #OPENSSL_HANDSHAKE_FAILED.
  */
-static OpensslStatus_t tlsHandshake( OpensslParams_t * pOpensslParams,
+static OpensslStatus_t tlsHandshake( const ServerInfo_t * pServerInfo,
+                                     OpensslParams_t * pOpensslParams,
                                      const OpensslCredentials_t * pOpensslCredentials );
 
 /*-----------------------------------------------------------*/
@@ -223,7 +225,8 @@ static OpensslStatus_t convertToOpensslStatus( SocketStatus_t socketStatus )
 }
 /*-----------------------------------------------------------*/
 
-static OpensslStatus_t tlsHandshake( OpensslParams_t * pOpensslParams,
+static OpensslStatus_t tlsHandshake( const ServerInfo_t * pServerInfo,
+                                     OpensslParams_t * pOpensslParams,
                                      const OpensslCredentials_t * pOpensslCredentials )
 {
     OpensslStatus_t returnStatus = OPENSSL_SUCCESS;
@@ -231,7 +234,7 @@ static OpensslStatus_t tlsHandshake( OpensslParams_t * pOpensslParams,
 
     /* Validate the hostname against the server's certificate. */
     sslStatus = SSL_set1_host( pOpensslParams->pSsl,
-                               pOpensslCredentials->sniHostName );
+                               pServerInfo->pHostName );
 
     if( sslStatus != 1 )
     {
@@ -645,7 +648,8 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
     /* Setup the socket to use for communication. */
     if( returnStatus == OPENSSL_SUCCESS )
     {
-        returnStatus = tlsHandshake( pOpensslParams,
+        returnStatus = tlsHandshake( pServerInfo,
+                                     pOpensslParams,
                                      pOpensslCredentials );
     }
 
