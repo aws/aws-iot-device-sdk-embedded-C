@@ -223,9 +223,9 @@ static void OTA_PAL_FailSingleMock_openssl_EVP( MockFunctionNames_t funcToFail )
     int EVP_DigestVerifyFinal_success = 1;
     int EVP_DigestVerifyFinal_failure = -1;
     int EVP_DigestVerifyFinal_return;
-
     /* EVP_MD_CTX_free_fn: No return. */
     /* EVP_PKEY_free_fn: No return. */
+    /* EVP_sha256_fn: Always returns a valid pointer. */
 
     EVP_MD_CTX_new_return = ( funcToFail == EVP_MD_CTX_new_fn ) ? EVP_MD_CTX_new_failure : EVP_MD_CTX_new_success;
     EVP_MD_CTX_new_IgnoreAndReturn( EVP_MD_CTX_new_return );
@@ -243,7 +243,7 @@ static void OTA_PAL_FailSingleMock_openssl_EVP( MockFunctionNames_t funcToFail )
 
     EVP_PKEY_free_Ignore();
 
-    EVP_sha256_IgnoreAndReturn( &dummyEVP_MD ); /*TODO: Add variables and descriptions and other conditions */
+    EVP_sha256_IgnoreAndReturn( &dummyEVP_MD );
 }
 
 static void OTA_PAL_FailSingleMock_openssl_crypto( MockFunctionNames_t funcToFail )

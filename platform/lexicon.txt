@@ -207,7 +207,6 @@ tls
 tlscontext
 tlsrecv
 tlssend
-todo
 transportcallback
 transportinterface
 transportpage

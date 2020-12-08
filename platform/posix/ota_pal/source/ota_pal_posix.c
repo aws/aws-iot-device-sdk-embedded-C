@@ -195,11 +195,11 @@ static bool Openssl_DigestVerifyUpdate( EVP_MD_CTX * pSigContext,
         /* coverity[misra_c_2012_rule_21_6_violation] */
         bytesRead = fread( pBuf, 1U, OTA_PAL_POSIX_BUF_SIZE, pFile );
 
+        assert( bytesRead < OTA_PAL_POSIX_BUF_SIZE );
+
         /* feof returns non-zero if end of file is reached, otherwise it returns 0. When
          * bytesRead is not equal to OTA_PAL_POSIX_BUF_SIZE, we should be reading last
          * chunk and reach to end of file. */
-        assert( bytesRead < OTA_PAL_POSIX_BUF_SIZE );
-
         if( 0 == feof( pFile ) )
         {
             break;
@@ -266,15 +266,15 @@ static OtaPalStatus_t otaPal_CheckFileSignature( OtaFileContext_t * const C )
 
     assert( C != NULL );
 
-    /* Extract the signer cert from the file */
+    /* Extract the signer cert from the file. */
     pPkey = Openssl_GetPkeyFromCertificate( C->pCertFilepath );
 
-    /* Create a new signature context for verification purpose */
+    /* Create a new signature context for verification purpose. */
     pSigContext = EVP_MD_CTX_new();
 
     if( ( pPkey != NULL ) && ( pSigContext != NULL ) )
     {
-        /* Verify an ECDSA-SHA256 signature. */
+        /* Verify the signature. */
         mainErr = Openssl_DigestVerify( pSigContext, pPkey, C->pFile, C->pSignature );
     }
     else
