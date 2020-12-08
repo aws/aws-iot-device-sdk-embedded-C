@@ -52,7 +52,7 @@
  * "...base64 data...\n"
  * "-----END CERTIFICATE-----\n";
  */
-static const char signingcredentialSIGNING_CERTIFICATE_PEM[] = "Pasting code signing certificate here\n";
+static const char signingcredentialSIGNING_CERTIFICATE_PEM[] = "Paste code signing certificate here";
 
 /**
  * @brief Size of buffer used in file operations on this platform (POSIX).
