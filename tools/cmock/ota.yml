@@ -25,11 +25,7 @@
   :treat_externs: :include  # Now the extern-ed functions will be mocked.
   :weak: __attribute__((weak))
   :verbosity: 3
-  :attributes:
-    - PRIVILEGED_FUNCTION
   :strippables:
-    - PRIVILEGED_FUNCTION
-    - portDONT_DISCARD
     # These keywords are found in many POSIX APIs but is stripped as it cannot be parsed by CMock.
     - __restrict
     - \s__THROW
