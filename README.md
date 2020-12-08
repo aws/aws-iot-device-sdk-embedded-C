@@ -238,7 +238,7 @@ The libraries in this SDK are not dependent on any operating system. However, th
 * C90 compiler
 * Although not a part of the ISO C90 standard, `stdint.h` is required for fixed-width integer types that include `uint8_t`, `int8_t`, `uint16_t`, `uint32_t` and `int32_t`, and constant macros like `UINT16_MAX`.
 * A supported operating system. The ports provided with this repo are expected to work with all recent versions of the following operating systems, although we cannot guarantee the behavior on all systems.
-* Linux system with POSIX sockets, threads, RT, and timer APIs. (We have tested on Ubuntu 18.04).
+    * Linux system with POSIX sockets, threads, RT, and timer APIs. (We have tested on Ubuntu 18.04).
 
 ##### Build Dependencies
 The follow table shows libraries that need to be installed in your system to run certain demos. If a dependency is
