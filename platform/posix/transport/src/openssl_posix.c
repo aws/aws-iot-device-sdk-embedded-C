@@ -229,16 +229,33 @@ static OpensslStatus_t tlsHandshake( OpensslParams_t * pOpensslParams,
     OpensslStatus_t returnStatus = OPENSSL_SUCCESS;
     int32_t sslStatus = -1, verifyPeerCertStatus = X509_V_OK;
 
-    /* Enable SSL peer verification. */
-    SSL_set_verify( pOpensslParams->pSsl, SSL_VERIFY_PEER, NULL );
-
-    /* Setup the socket to use for communication. */
-    sslStatus = SSL_set_fd( pOpensslParams->pSsl, pOpensslParams->socketDescriptor );
+    /* Validate the hostname against the server's certificate. */
+    if( pOpensslCredentials->sniHostName != NULL )
+    {
+        sslStatus = SSL_set1_host( pOpensslParams->pSsl,
+                                   pOpensslCredentials->sniHostName );
+    }
 
     if( sslStatus != 1 )
     {
-        LogError( ( "SSL_set_fd failed to set the socket fd to SSL context." ) );
-        returnStatus = OPENSSL_API_ERROR;
+        LogError( ( "SSL_set1_host failed to validate the hostname "
+                    "in the server's certificate." ) );
+        returnStatus = OPENSSL_HANDSHAKE_FAILED;
+    }
+
+    /* Enable SSL peer verification. */
+    if( returnStatus == OPENSSL_SUCCESS )
+    {
+        SSL_set_verify( pOpensslParams->pSsl, SSL_VERIFY_PEER, NULL );
+
+        /* Setup the socket to use for communication. */
+        sslStatus = SSL_set_fd( pOpensslParams->pSsl, pOpensslParams->socketDescriptor );
+
+        if( sslStatus != 1 )
+        {
+            LogError( ( "SSL_set_fd failed to set the socket fd to SSL context." ) );
+            returnStatus = OPENSSL_API_ERROR;
+        }
     }
 
     /* Perform the TLS handshake. */
@@ -592,6 +609,16 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
     /* Setup credentials. */
     if( returnStatus == OPENSSL_SUCCESS )
     {
+        /* Set auto retry mode for the blocking calls to SSL_read and SSL_write.
+         * The mask returned by SSL_CTX_set_mode does not need to be checked. */
+
+        /* MISRA Directive 4.6 flags the following line for using basic
+        * numerical type long. This directive is suppressed because openssl
+        * function #SSL_CTX_set_mode takes an argument of type long. */
+        /* coverity[misra_c_2012_directive_4_6_violation] */
+        ( void ) SSL_CTX_set_mode( pSslContext,
+                                   ( long ) ( SSL_MODE_ENABLE_PARTIAL_WRITE ) );
+
         sslStatus = setCredentials( pSslContext,
                                     pOpensslCredentials );
 
@@ -726,6 +753,11 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
                  * Thus, setting the return value of this function as zero to represent that no
                  * data was received from the network. */
                 bytesReceived = 0;
+            }
+            else if( bytesReceived = 0 )
+            {
+                /* Peer has sent a close-notify alert. */
+                bytesReceived = -1;
             }
             else
             {
