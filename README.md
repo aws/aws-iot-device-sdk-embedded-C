@@ -241,8 +241,9 @@ The libraries in this SDK are not dependent on any operating system. However, th
 * Linux system with POSIX sockets, threads, RT, and timer APIs. (We have tested on Ubuntu 18.04).
 
 ##### Build Dependencies
-The follow table shows libraries that need to be installed on your system to run certain demos. If a dependency is
-not installed in your system, demos that require that dependency will be excluded from the default `all` target.
+The follow table shows libraries that need to be installed in your system to run certain demos. If a dependency is
+not installed and cannot be built from source, demos that require that dependency will be excluded
+from the default `all` target.
 
 Dependency | Version | Usage
 :---: | :---: | :---:

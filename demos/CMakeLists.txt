@@ -93,7 +93,7 @@ foreach(demo_dir IN LISTS demo_dirs)
 endforeach()
 
 # Filter demos based on what packages or library exist.
-if(NOT DEFINED LIB_RT)
+if(${LIB_RT} STREQUAL "LIB_RT-NOTFOUND")
     set(librt_demos
             "http_demo_s3_download_multithreaded"
             "ota_demo_core_http"
