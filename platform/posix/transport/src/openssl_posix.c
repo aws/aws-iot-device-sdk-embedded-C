@@ -790,11 +790,11 @@ int32_t Openssl_Send( NetworkContext_t * pNetworkContext,
         {
             sslError = SSL_get_error( pOpensslParams->pSsl, bytesSent );
 
-            if( ( sslError == SSL_ERROR_WANT_WRITE ) || ( sslError == SSL_ERROR_WANT_READ ) )
+            if( sslError == SSL_ERROR_WANT_READ )
             {
                 /* The OpenSSL documentation mentions that SSL_Write can have a return code of
-                 * SSL_ERROR_WANT_WRITE in blocking mode to signify that the write operation needs
-                 * to be retried by calling SSl_write().
+                 * SSL_ERROR_WANT_READ in blocking mode (with auto-retry configuration). This error
+                 * code signifies that write operation needs to be retried by calling SSl_write().
                  * Thus, setting the return value of this function as zero so to represent that no
                  * data was sent over the network. */
                 bytesSent = 0;

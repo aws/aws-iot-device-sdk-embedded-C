@@ -791,8 +791,8 @@ void test_Openssl_Send_Zero_Return_Value( void )
     opensslParams.pSsl = &ssl;
     SSL_write_ExpectAnyArgsAndReturn( SSL_READ_WRITE_ERROR );
 
-    /* Test when SSL_write returns SSL_ERROR_WANT_WRITE. */
-    SSL_get_error_ExpectAnyArgsAndReturn( SSL_ERROR_WANT_WRITE );
+    /* Test when SSL_write returns SSL_ERROR_WANT_READ. */
+    SSL_get_error_ExpectAnyArgsAndReturn( SSL_ERROR_WANT_READ );
     bytesSent = Openssl_Send( &networkContext, opensslBuffer, BYTES_TO_SEND );
     TEST_ASSERT_EQUAL( 0, bytesSent );
 }
