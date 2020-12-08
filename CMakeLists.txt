@@ -106,10 +106,8 @@ endif()
 if(DOWNLOAD_CERTS)
     if(BUILD_TESTS)
         set(CERT_DOWNLOAD_DIR ${SYSTEM_TEST_DIR}/certificates)
-        set(CERT_MOVE_DIR ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/tests)
     else()
         set(CERT_DOWNLOAD_DIR ${DEMOS_DIR}/certificates)
-        set(CERT_MOVE_DIR ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
     endif()
     file(MAKE_DIRECTORY ${CERT_DOWNLOAD_DIR})
     # Download the Amazon Root CA certificate.
@@ -124,6 +122,11 @@ if(DOWNLOAD_CERTS)
         COMMAND curl --url https://cacerts.digicert.com/BaltimoreCyberTrustRoot.crt.pem
         -o ${CERT_DOWNLOAD_DIR}/BaltimoreCyberTrustRoot.crt
     )
+    # Copy certificates to the build directory.
     file(COPY "${CERT_DOWNLOAD_DIR}"
-         DESTINATION ${CERT_MOVE_DIR})
+                DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+    if(BUILD_TESTS)
+        file(COPY "${CERT_DOWNLOAD_DIR}"
+             DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/tests)
+    endif()
 endif()
