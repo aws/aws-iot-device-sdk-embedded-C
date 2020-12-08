@@ -91,14 +91,15 @@ add_subdirectory( libraries )
 # Add platform.
 add_subdirectory( platform )
 
-# Add build configuration for all integration tests.
 if(${BUILD_TESTS})
+    # Add build configuration for all integration tests.
     file(GLOB_RECURSE test_modules "integration-test/*CMakeLists.txt")
     foreach(module IN LISTS test_modules)
         get_filename_component(DIR_PATH "${module}" DIRECTORY)
         add_subdirectory(${DIR_PATH})
     endforeach()
 else()
+    # Add build configuration for demos.
     add_subdirectory( demos )
 endif()
 
