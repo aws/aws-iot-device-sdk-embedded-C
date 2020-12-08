@@ -114,7 +114,7 @@ Note: A pre-signed GET URL is required for all HTTP S3 demos. For upload demos, 
 ### Prerequisites:
 <ol>
 	<li> To perform a successful OTA update you would need to complete the prerequisites mentioned here: https://docs.aws.amazon.com/freertos/latest/userguide/ota-prereqs.html </li>
-	<li> Code-Signing profile can be created using: https://docs.aws.amazon.com/freertos/latest/userguide/ota-code-sign-cert-esp.html </li>
+	<li> A Code-Signing profile can be created using: https://docs.aws.amazon.com/freertos/latest/userguide/ota-code-sign-cert-esp.html </li>
 </ol>
 
 ### Configuration:
@@ -143,7 +143,7 @@ An example expected output:
 After you build and run the initial executable you will have to create another executable and schedule an OTA update job with this image.
 <ol>
 	<li> Increase the version of the application by setting macro `APP_VERSION_BUILD` in demos/ota_demo_core_[mqtt/http]/demo_config.h to a different version than what is running.</li>
-	<li> Rebuild the application using step 1 and 2 from above into a different directory, say build-dir-2</li>
+	<li> Rebuild the application using @ref building_demo_commmandline from below into a different directory, say build-dir-2</li>
 	<li> Rename the demo executable to reflect the change, e.g. `mv ota_demo_core_mqtt ota_demo_core_mqtt2`</li>
 	<li> Create an OTA job:
 		<ol>
