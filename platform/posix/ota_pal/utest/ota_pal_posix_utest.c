@@ -767,8 +767,8 @@ void test_OTAPAL_CloseFile_EVP_DigestVerifyInit_fail( void )
 }
 
 /**
- * @brief Test that CloseFile properly handles receiving fread returning data
- * that is the maximum size. The maximum size is based on the OTA PAL
+ * @brief Test that otaPal_CloseFile properly handles receiving fread returning
+ * data that is the maximum size. The maximum size is based on the OTA PAL
  * implementation. It is defined by the "OTA_PAL_POSIX_BUF_SIZE" macro in the
  * OTA posix PAL implementation .c file.
  */
