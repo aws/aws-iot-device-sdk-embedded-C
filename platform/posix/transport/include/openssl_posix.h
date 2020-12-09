@@ -175,7 +175,8 @@ OpensslStatus_t Openssl_Disconnect( const NetworkContext_t * pNetworkContext );
  * @param[out] pBuffer Buffer to receive network data into.
  * @param[in] bytesToRecv Number of bytes requested from the network.
  *
- * @return Number of bytes received if successful; negative value on error.
+ * @return Number of bytes received if successful; negative value to indicate failure.
+ * A return value of zero represents that the receive operation can be retried.
  */
 int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
                       void * pBuffer,
@@ -192,6 +193,9 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
  * @param[in] bytesToSend Number of bytes to send over the network.
  *
  * @return Number of bytes sent if successful; negative value on error.
+ *
+ * @note This function does not return zero value because it cannot be retried
+ * on send operation failure.
  */
 int32_t Openssl_Send( NetworkContext_t * pNetworkContext,
                       const void * pBuffer,

@@ -231,13 +231,6 @@ static OpensslStatus_t failFunctionFrom_Openssl_Connect( FunctionNames_t functio
         sslCtxCreated = true;
     }
 
-    /* SSL_CTX_set_mode is actually what the API uses, but CMock expects the
-     * actual method rather than the macro wrapper. */
-    if( returnStatus == OPENSSL_SUCCESS )
-    {
-        SSL_CTX_ctrl_ExpectAnyArgsAndReturn( 1 );
-    }
-
     /* Path to Root CA must be set for handshake to succeed. */
     if( opensslCredentials.pRootCaPath == NULL )
     {
@@ -768,10 +761,16 @@ void test_Openssl_Send_Network_Error( void )
 
     /* Several errors can be returned from #SSL_get_error as mentioned here:
      * https://www.openssl.org/docs/man1.1.1/man3/SSL_get_error.html */
-    SSL_get_error_ExpectAnyArgsAndReturn( SSL_ERROR_WANT_WRITE );
+    SSL_get_error_ExpectAnyArgsAndReturn( SSL_ERROR_ZERO_RETURN );
     bytesSent = Openssl_Send( &networkContext, opensslBuffer, BYTES_TO_SEND );
     TEST_ASSERT_EQUAL( SSL_READ_WRITE_ERROR, bytesSent );
-    TEST_ASSERT_TRUE( bytesSent <= 0 );
+    TEST_ASSERT_TRUE( bytesSent < 0 );
+
+    /* Test that a non-retryable zero error code is converted to -1 by the API. */
+    SSL_write_ExpectAnyArgsAndReturn( 0 );
+    SSL_get_error_ExpectAnyArgsAndReturn( SSL_ERROR_ZERO_RETURN );
+    bytesSent = Openssl_Send( &networkContext, opensslBuffer, BYTES_TO_SEND );
+    TEST_ASSERT_EQUAL( -1, bytesSent );
 }
 
 /**
@@ -819,16 +818,6 @@ void test_Openssl_Recv_Network_Error( void )
     int32_t bytesReceived;
 
     opensslParams.pSsl = &ssl;
-    SSL_read_ExpectAnyArgsAndReturn( SSL_READ_WRITE_ERROR );
-
-    /* Several errors can be returned from #SSL_get_error as mentioned here:
-     * https://www.openssl.org/docs/man1.1.1/man3/SSL_get_error.html */
-    SSL_get_error_ExpectAnyArgsAndReturn( SSL_ERROR_WANT_READ );
-    bytesReceived = Openssl_Recv( &networkContext, opensslBuffer, BYTES_TO_RECV );
-
-    /* SSL_ERROR_WANT_READ implies there is no data to receive, so we expect
-     * that no bytes have been received. */
-    TEST_ASSERT_EQUAL( 0, bytesReceived );
 
     SSL_read_ExpectAnyArgsAndReturn( SSL_READ_WRITE_ERROR );
     /* SSL_ERROR_ZERO_RETURN means the peer has closed the connection. */
@@ -838,5 +827,28 @@ void test_Openssl_Recv_Network_Error( void )
     /* SSL_ERROR_WANT_READ implies there is no data to receive, so we expect
      * that no bytes have been received. */
     TEST_ASSERT_EQUAL( SSL_READ_WRITE_ERROR, bytesReceived );
-    TEST_ASSERT_TRUE( bytesReceived <= 0 );
+    TEST_ASSERT_TRUE( bytesReceived < 0 );
+
+    /* Test that a non-retryable zero error code is converted to -1 by the API. */
+    SSL_read_ExpectAnyArgsAndReturn( 0 );
+    SSL_get_error_ExpectAnyArgsAndReturn( SSL_ERROR_ZERO_RETURN );
+    bytesReceived = Openssl_Recv( &networkContext, opensslBuffer, BYTES_TO_RECV );
+    TEST_ASSERT_EQUAL( -1, bytesReceived );
+}
+
+/**
+ * @brief Test that #Openssl_Recv returns zero bytes sent when #SSL_read returns
+ * an error to retry operation.
+ */
+void test_Openssl_Recv_Zero_Return_Value( void )
+{
+    int32_t bytesReceived;
+
+    opensslParams.pSsl = &ssl;
+    SSL_read_ExpectAnyArgsAndReturn( SSL_READ_WRITE_ERROR );
+
+    /* Test when SSL_read() returns an SSL_ERROR_WANT_READ error. */
+    SSL_get_error_ExpectAnyArgsAndReturn( SSL_ERROR_WANT_READ );
+    bytesReceived = Openssl_Recv( &networkContext, opensslBuffer, BYTES_TO_RECV );
+    TEST_ASSERT_EQUAL( 0, bytesReceived );
 }
