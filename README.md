@@ -12,6 +12,7 @@
         * [AWS IoT Device Shadow](#aws-iot-device-shadow)
         * [AWS IoT Jobs](#aws-iot-jobs)
         * [AWS IoT Device Defender](#aws-iot-device-defender)
+        * [backoffAlgorithm](#backoffalgorithm)
     * [AWS Collection of Metrics](#aws-collection-of-metrics)
 * [Versioning](#versioning)
 * [Releases](#releases)
