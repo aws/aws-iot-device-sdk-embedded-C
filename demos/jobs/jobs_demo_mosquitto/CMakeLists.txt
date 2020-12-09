@@ -17,13 +17,13 @@ add_executable(
 
 find_library(LIB_MOSQUITTO mosquitto)
 if(${LIB_MOSQUITTO} STREQUAL "LIB_MOSQUITTO-NOTFOUND")
-    message( "Mosquitto was not installed. It will be built from source for ${DEMO_NAME}." )
+    message( "Mosquitto was not installed. It will be built from source to run ${DEMO_NAME}." )
     # Build Mosquitto Client Library from source if it is not installed.
     add_subdirectory( libmosquitto )
     target_link_libraries(
-    ${DEMO_NAME}
-    PUBLIC
-        libmosquitto
+        ${DEMO_NAME}
+        PUBLIC
+            libmosquitto
     )
     target_include_directories(
         ${DEMO_NAME}
@@ -32,9 +32,9 @@ if(${LIB_MOSQUITTO} STREQUAL "LIB_MOSQUITTO-NOTFOUND")
     )
 else()
     target_link_libraries(
-    ${DEMO_NAME}
-    PUBLIC
-        mosquitto
+        ${DEMO_NAME}
+        PUBLIC
+            mosquitto
     )
 endif()
 

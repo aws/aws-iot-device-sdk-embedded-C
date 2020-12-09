@@ -13,8 +13,6 @@ target_include_directories( ota_pal
 target_link_libraries( ota_pal
     INTERFACE
         ${OPENSSL_CRYPTO_LIBRARY}
-        rt
-        pthreads
 )
 
 if(${BUILD_TESTS})
