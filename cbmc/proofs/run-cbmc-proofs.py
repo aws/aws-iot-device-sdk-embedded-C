@@ -34,7 +34,7 @@ executes these tasks in parallel.
 
 The tool is roughly equivalent to doing this:
 
-        litani init --project "Amazon FreeRTOS";
+        litani init --project "MQTT";
 
         for proof in $(find . -name cbmc-batch.yaml); do
             pushd $(dirname ${proof});
@@ -78,7 +78,7 @@ def get_args():
     }, {
             "flags": ["--project-name"],
             "metavar": "NAME",
-            "default": "Amazon FreeRTOS",
+            "default": "MQTT",
             "help": "Project name for report. Default: %(default)s",
     }, {
             "flags": ["--verbose"],
