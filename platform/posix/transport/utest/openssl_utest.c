@@ -232,11 +232,11 @@ static OpensslStatus_t failFunctionFrom_Openssl_Connect( FunctionNames_t functio
         sslCtxCreated = true;
     }
 
-    /* SSL_CTX_set_mode is actually what the API uses, but CMock expects the	
-     * actual method rather than the macro wrapper. */	
-    if( returnStatus == OPENSSL_SUCCESS )	
-    {	
-        SSL_CTX_ctrl_ExpectAnyArgsAndReturn( 1 );	
+    /* SSL_CTX_set_mode is actually what the API uses, but CMock expects the
+     * actual method rather than the macro wrapper. */
+    if( returnStatus == OPENSSL_SUCCESS )
+    {
+        SSL_CTX_ctrl_ExpectAnyArgsAndReturn( 1 );
     }
 
     /* Path to Root CA must be set for handshake to succeed. */
