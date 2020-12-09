@@ -37,3 +37,6 @@
 	path = libraries/aws/ota-for-aws-iot-embedded-sdk
 	branch = main
 	url = https://github.com/aws/ota-for-aws-iot-embedded-sdk.git
+[submodule "demos/jobs/jobs_demo_mosquitto/libmosquitto"]
+	path = demos/jobs/jobs_demo_mosquitto/libmosquitto
+	url = https://github.com/eclipse/mosquitto.git

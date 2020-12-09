@@ -27,9 +27,6 @@ add_executable(
 # Add to default target if all required macros needed to run this demo are defined
 check_aws_credentials(${DEMO_NAME})
 
-# librt is required to use OTA OS POSIX port.
-find_library(LIB_RT rt REQUIRED)
-
 target_link_libraries(
     ${DEMO_NAME}
     PRIVATE

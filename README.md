@@ -34,6 +34,7 @@
     * [Cloning](#cloning)
     * [Building and Running Demos](#building-and-running-demos)
         * [Prerequisites](#prerequisites)
+            * [Build Dependencies](#build-dependencies)
         * [AWS IoT Account Setup](#aws-iot-account-setup)
         * [Configuring the mutual auth demos](#configuring-the-mutual-auth-demos)
         * [Configuring the S3 demos](#configuring-the-s3-demos)
@@ -215,7 +216,7 @@ The [v4_beta_deprecated](https://github.com/aws/aws-iot-device-sdk-embedded-C/tr
 
 This repository uses [Git Submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules) to bring in the C-SDK libraries (eg, MQTT ) and third-party dependencies (eg, mbedtls for POSIX platform transport layer).
 Note: If you download the ZIP file provided by GitHub UI, you will not get the contents of the submodules (The ZIP file is also not a valid git repository). If you download from the [202011.00 Release Page](https://github.com/aws/aws-iot-device-sdk-embedded-C/releases/tag/202011.00) page, you will get the entire repository (including the submodules) in the ZIP file, aws-iot-device-sdk-embedded-c-202011.00.zip.
-To clone using HTTPS:
+To clone the latest commit to main branch using HTTPS:
 
 ```sh
 git clone --recurse-submodules https://github.com/aws/aws-iot-device-sdk-embedded-C.git
@@ -233,6 +234,10 @@ If you have downloaded the repo without using the `--recurse-submodules` argumen
 git submodule update --init --recursive
 ```
 
+When building with CMake, submodules are also recursively cloned automatically. However, `-DBUILD_CLONE_SUBMODULES=0`
+can be passed as a CMake flag to disable this functionality. This is useful when you'd like to build CMake while using a
+different commit from a submodule.
+
 ### Building and Running Demos
 
 The libraries in this SDK are not dependent on any operating system. However, the demos for the libraries in this SDK are built and tested on a Linux platform. The demos builds with [CMake](https://cmake.org/), a cross-platform build tool.
@@ -241,10 +246,19 @@ The libraries in this SDK are not dependent on any operating system. However, th
 
 * CMake 3.2.0 or later for utilizing the build system of the repository.
 * C90 compiler
-* Although not a part of the ISO C90 standard, `stdint.h` is required for fixed-width integer types that include `uint8_t`, `int8_t`, `uint16_t`, `uint32_t` and `int32_t`, and constant macros like `UINT16_MAX`.
+* Although not a part of the ISO C90 standard, `stdint.h` is required for fixed-width integer types that include `uint8_t`, `int8_t`, `uint16_t`, `uint32_t` and `int32_t`, and constant macros like `UINT16_MAX`, while `stdbool.h` is required for boolean parameters in coreMQTT. For compilers that do not provide these header files, [coreMQTT](https://github.com/FreeRTOS/coreMQTT) provides the files [stdint.readme](https://github.com/FreeRTOS/coreMQTT/blob/main/source/include/stdint.readme) and [stdbool.readme](https://github.com/FreeRTOS/coreMQTT/blob/main/source/include/stdbool.readme), which can be renamed to `stdint.h` and `stdbool.h`, respectively, to provide the required type definitions.
 * A supported operating system. The ports provided with this repo are expected to work with all recent versions of the following operating systems, although we cannot guarantee the behavior on all systems.
-    * Linux system with POSIX sockets and timer APIs. (We have tested on Ubuntu 18.04).
-        * On Linux systems, installation of OpenSSL development libraries and header files, *version 1.1.0 or later*, are required. The OpenSSL development libraries are usually called something like `libssl-dev` or `openssl-devel` when installed through a package manager.
+    * Linux system with POSIX sockets, threads, RT, and timer APIs. (We have tested on Ubuntu 18.04).
+
+##### Build Dependencies
+The follow table shows libraries that need to be installed in your system to run certain demos. If a dependency is
+not installed and cannot be built from source, demos that require that dependency will be excluded
+from the default `all` target.
+
+Dependency | Version | Usage
+:---: | :---: | :---:
+[OpenSSL](https://github.com/openssl/openssl) | 1.1.0 or later | All TLS demos and tests with the exception of PKCS11
+[Mosquitto Client](https://github.com/eclipse/mosquitto) | 1.4.10 or later | AWS IoT Jobs Mosquitto demo
 
 #### AWS IoT Account Setup
 

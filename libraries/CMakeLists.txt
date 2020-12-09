@@ -1,8 +1,8 @@
 # Macro utility to clone a library and source-related submodules.
 macro( clone_path path )
-    find_package( Git REQUIRED )
     # Attempt to clone submodules.
     if( ${BUILD_CLONE_SUBMODULES} )
+        find_package( Git REQUIRED )
         execute_process( COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive ${ARGV1} -- ${path}
                          WORKING_DIRECTORY ${ROOT_DIR}
                          RESULT_VARIABLE LIB_CLONE_RESULT )
