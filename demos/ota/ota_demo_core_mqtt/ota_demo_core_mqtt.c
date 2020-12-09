@@ -1285,7 +1285,7 @@ static OtaMqttStatus_t mqttPublish( const char * const pacTopic,
     OtaMqttStatus_t otaRet = OtaMqttSuccess;
 
     MQTTStatus_t mqttStatus = MQTTBadParameter;
-    MQTTPublishInfo_t publishInfo;
+    MQTTPublishInfo_t publishInfo = { 0 };
     MQTTContext_t * pMqttContext = &mqttContext;
 
     /* Set the required publish parameters. */
