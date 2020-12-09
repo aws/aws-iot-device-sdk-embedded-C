@@ -783,6 +783,7 @@ void test_OTAPAL_CloseFile_MaxBlockSize()
 
     otaFileContext.pSignature = &dummySig;
     otaFileContext.pFile = &dummyFile;
+
     /* Simulate the scenario where fread returns a max size block and then it
      * returns a value less than the max size. */
     fread_IgnoreAndReturn( OTA_PAL_POSIX_BUF_SIZE );
