@@ -147,12 +147,14 @@ static OpensslStatus_t convertToOpensslStatus( SocketStatus_t socketStatus );
 /**
  * @brief Establish TLS session by performing handshake with the server.
  *
+ * @param[in] pServerInfo Server connection info.
  * @param[in] pOpensslParams Parameters to perform the TLS handshake.
  * @param[in] pOpensslCredentials TLS credentials containing configurations.
  *
  * @return #OPENSSL_SUCCESS, #OPENSSL_API_ERROR, and #OPENSSL_HANDSHAKE_FAILED.
  */
-static OpensslStatus_t tlsHandshake( OpensslParams_t * pOpensslParams,
+static OpensslStatus_t tlsHandshake( const ServerInfo_t * pServerInfo,
+                                     OpensslParams_t * pOpensslParams,
                                      const OpensslCredentials_t * pOpensslCredentials );
 
 /*-----------------------------------------------------------*/
@@ -223,22 +225,36 @@ static OpensslStatus_t convertToOpensslStatus( SocketStatus_t socketStatus )
 }
 /*-----------------------------------------------------------*/
 
-static OpensslStatus_t tlsHandshake( OpensslParams_t * pOpensslParams,
+static OpensslStatus_t tlsHandshake( const ServerInfo_t * pServerInfo,
+                                     OpensslParams_t * pOpensslParams,
                                      const OpensslCredentials_t * pOpensslCredentials )
 {
     OpensslStatus_t returnStatus = OPENSSL_SUCCESS;
     int32_t sslStatus = -1, verifyPeerCertStatus = X509_V_OK;
 
-    /* Enable SSL peer verification. */
-    SSL_set_verify( pOpensslParams->pSsl, SSL_VERIFY_PEER, NULL );
-
-    /* Setup the socket to use for communication. */
-    sslStatus = SSL_set_fd( pOpensslParams->pSsl, pOpensslParams->socketDescriptor );
+    /* Validate the hostname against the server's certificate. */
+    sslStatus = SSL_set1_host( pOpensslParams->pSsl,
+                               pServerInfo->pHostName );
 
     if( sslStatus != 1 )
     {
-        LogError( ( "SSL_set_fd failed to set the socket fd to SSL context." ) );
+        LogError( ( "SSL_set1_host failed to set the hostname to validate." ) );
         returnStatus = OPENSSL_API_ERROR;
+    }
+
+    /* Enable SSL peer verification. */
+    if( returnStatus == OPENSSL_SUCCESS )
+    {
+        SSL_set_verify( pOpensslParams->pSsl, SSL_VERIFY_PEER, NULL );
+
+        /* Setup the socket to use for communication. */
+        sslStatus = SSL_set_fd( pOpensslParams->pSsl, pOpensslParams->socketDescriptor );
+
+        if( sslStatus != 1 )
+        {
+            LogError( ( "SSL_set_fd failed to set the socket fd to SSL context." ) );
+            returnStatus = OPENSSL_API_ERROR;
+        }
     }
 
     /* Perform the TLS handshake. */
@@ -592,6 +608,17 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
     /* Setup credentials. */
     if( returnStatus == OPENSSL_SUCCESS )
     {
+        /* Enable partial writes for blocking calls to SSL_write to allow a
+         * payload larger than the maximum fragment length.
+         * The mask returned by SSL_CTX_set_mode does not need to be checked. */
+
+        /* MISRA Directive 4.6 flags the following line for using basic
+        * numerical type long. This directive is suppressed because openssl
+        * function #SSL_CTX_set_mode takes an argument of type long. */
+        /* coverity[misra_c_2012_directive_4_6_violation] */
+        ( void ) SSL_CTX_set_mode( pSslContext,
+                                   ( long ) SSL_MODE_ENABLE_PARTIAL_WRITE );
+
         sslStatus = setCredentials( pSslContext,
                                     pOpensslCredentials );
 
@@ -621,7 +648,8 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
     /* Setup the socket to use for communication. */
     if( returnStatus == OPENSSL_SUCCESS )
     {
-        returnStatus = tlsHandshake( pOpensslParams,
+        returnStatus = tlsHandshake( pServerInfo,
+                                     pOpensslParams,
                                      pOpensslCredentials );
     }
 

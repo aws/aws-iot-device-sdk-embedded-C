@@ -107,6 +107,9 @@ extern void SSL_set_verify( SSL * s,
 extern int SSL_set_fd( SSL * s,
                        int fd );
 
+extern int SSL_set1_host( SSL * s,
+                          const char * hostname );
+
 extern int SSL_connect( SSL * ssl );
 
 extern long SSL_get_verify_result( const SSL * ssl );

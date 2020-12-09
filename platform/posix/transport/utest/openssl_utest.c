@@ -93,6 +93,7 @@ typedef enum FunctionNames
     SSL_CTX_use_certificate_chain_file_fn,
     SSL_CTX_use_PrivateKey_file_fn,
     SSL_new_fn,
+    SSL_set1_host_fn,
     SSL_set_fd_fn,
     SSL_set_alpn_protos_fn,
     SSL_set_max_send_fragment_fn,
@@ -231,6 +232,13 @@ static OpensslStatus_t failFunctionFrom_Openssl_Connect( FunctionNames_t functio
         sslCtxCreated = true;
     }
 
+    /* SSL_CTX_set_mode is actually what the API uses, but CMock expects the
+     * actual method rather than the macro wrapper. */
+    if( returnStatus == OPENSSL_SUCCESS )
+    {
+        SSL_CTX_ctrl_ExpectAnyArgsAndReturn( 1 );
+    }
+
     /* Path to Root CA must be set for handshake to succeed. */
     if( opensslCredentials.pRootCaPath == NULL )
     {
@@ -333,6 +341,16 @@ static OpensslStatus_t failFunctionFrom_Openssl_Connect( FunctionNames_t functio
     {
         SSL_new_ExpectAnyArgsAndReturn( &ssl );
         sslCreated = true;
+    }
+
+    if( functionToFail == SSL_set1_host_fn )
+    {
+        SSL_set1_host_ExpectAnyArgsAndReturn( 0 );
+        returnStatus = OPENSSL_API_ERROR;
+    }
+    else if( returnStatus == OPENSSL_SUCCESS )
+    {
+        SSL_set1_host_ExpectAnyArgsAndReturn( 1 );
     }
 
     if( returnStatus == OPENSSL_SUCCESS )
@@ -585,7 +603,7 @@ void test_Openssl_Connect_Handshake_Fails( void )
     OpensslStatus_t returnStatus, expectedStatus;
     FunctionNames_t connectFunctions[] =
     {
-        SSL_connect_fn, SSL_get_verify_result_fn
+        SSL_set1_host_fn, SSL_connect_fn, SSL_get_verify_result_fn
     };
     uint16_t i;
 
