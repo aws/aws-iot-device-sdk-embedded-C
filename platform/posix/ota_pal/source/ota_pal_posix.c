@@ -218,7 +218,7 @@ static bool Openssl_DigestVerifyUpdate( EVP_MD_CTX * pSigContext,
 
         /* POSIX port using standard library */
         /* coverity[misra_c_2012_rule_21_6_violation] */
-        if( 0 == feof( pFile ) )
+        if( (  bytesRead < OTA_PAL_POSIX_BUF_SIZE ) && ( 0 == feof( pFile )))
         {
             break;
         }
