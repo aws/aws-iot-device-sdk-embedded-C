@@ -683,7 +683,7 @@ void test_OTAPAL_CloseFile_fseek_fail( void )
     result = otaPal_CloseFile( &otaFileContext );
     TEST_ASSERT_EQUAL( OtaPalSignatureCheckFailed, OTA_PAL_MAIN_ERR( result ) );
 }
-#define OTA_PAL_POSIX_BUF_SIZE    ( ( size_t ) 4096U )
+
 void test_OTAPAL_CloseFile_fread_fail( void )
 {
     OtaPalStatus_t result;
@@ -764,6 +764,34 @@ void test_OTAPAL_CloseFile_EVP_DigestVerifyInit_fail( void )
     OTA_PAL_FailSingleMock_Except_fread( EVP_DigestVerifyInit_fn, &expectedImageState );
     result = otaPal_CloseFile( &otaFileContext );
     TEST_ASSERT_EQUAL( OtaPalSignatureCheckFailed, OTA_PAL_MAIN_ERR( result ) );
+}
+
+/**
+ * @brief Test that CloseFile properly handles receiving fread returning data
+ * that is the maximum size. The maximum size is based on the OTA PAL
+ * implementation. It is defined by the "OTA_PAL_POSIX_BUF_SIZE" macro in the
+ * OTA posix PAL implementation .c file.
+ */
+void test_OTAPAL_CloseFile_MaxBlockSize()
+{
+    const size_t OTA_PAL_POSIX_BUF_SIZE = 4096U;
+    const int feofFailReturn = 0;
+
+    OtaPalStatus_t result;
+    OtaFileContext_t otaFileContext;
+    Sig256_t dummySig;
+    OtaImageState_t expectedImageState = OtaImageStateTesting;
+    FILE dummyFile;
+
+    otaFileContext.pSignature = &dummySig;
+    otaFileContext.pFile = &dummyFile;
+    /* Simulate the scenario where fread returns a max size block and then it
+     * returns a value less than the max size. */
+    fread_IgnoreAndReturn( OTA_PAL_POSIX_BUF_SIZE );
+    fread_IgnoreAndReturn( 0 );
+    OTA_PAL_FailSingleMock( none_fn, &expectedImageState );
+    result = otaPal_CloseFile( &otaFileContext );
+    TEST_ASSERT_EQUAL( OtaPalSuccess, OTA_PAL_MAIN_ERR( result ) );
 }
 
 /* ===================   OTA PAL WRITE BLOCK UNIT TESTS   =================== */
