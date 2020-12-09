@@ -58,7 +58,7 @@
  *
  * 10 bits yields a data block size of 1KB.
  */
-#define otaconfigLOG2_FILE_BLOCK_SIZE          10UL
+#define otaconfigLOG2_FILE_BLOCK_SIZE          14UL
 
 /**
  * @brief Size of the file data block message (excluding the header).
@@ -118,7 +118,7 @@
  * This configurations parameter sets the maximum number of static data buffers used by
  * the OTA agent for job and file data blocks received.
  */
-#define otaconfigMAX_NUM_OTA_DATA_BUFFERS      1U
+#define otaconfigMAX_NUM_OTA_DATA_BUFFERS      2U
 
 /**
  * @brief Allow update to same or lower version.
