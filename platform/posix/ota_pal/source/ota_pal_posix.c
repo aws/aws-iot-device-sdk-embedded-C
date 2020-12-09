@@ -124,7 +124,7 @@ static EVP_PKEY * Openssl_GetPkeyFromCertificate( uint8_t * pCertFilePath )
         }
         else
         {
-            LogError( ( "Failed to read certificate from a file." ) );
+            LogDebug( ( "Opened certificate file." ) );
         }
     }
 
