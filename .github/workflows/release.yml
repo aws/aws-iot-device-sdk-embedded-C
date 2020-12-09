@@ -66,7 +66,7 @@ jobs:
         run: |
           cd zip-check/coreMQTT-${{ github.event.inputs.version_number }}/coreMQTT
           sudo apt-get install -y lcov
-          cmake -S test -B build/ \
+          cmake -S . -B build/ \
           -G "Unix Makefiles" \
           -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_C_FLAGS='-Wall -Wextra -Werror' \
@@ -82,10 +82,11 @@ jobs:
           sudo apt-get install -y libmosquitto-dev
           make -C build/ help | grep demo | tr -d '. ' | xargs make -C build/
           make -C demos/jobs/jobs_demo_mosquitto
-      - name : Build Check System Tests
+      - name : Build Check Tests
         run: |
-          rm -rf ./build/*
-          cmake -S test -B build/ \
+          cd zip-check/coreMQTT-${{ github.event.inputs.version_number }}/coreMQTT/
+          rm -rf ./build
+          cmake -S . -B build/ \
           -G "Unix Makefiles" \
           -DCMAKE_BUILD_TYPE=Release \
           -DBUILD_TESTS=1 \
@@ -99,17 +100,8 @@ jobs:
           -DTHING_NAME="thing-name" \
           -DS3_PRESIGNED_GET_URL="get-url" \
           -DS3_PRESIGNED_PUT_URL="put-url"
-          make -C build/ help | grep system | tr -d '. ' | xargs make -C build/
-      - name: Build Unit Tests
-        run: |
-          rm -rf ./build/*
-          cmake -S test -B build/ \
-          -G "Unix Makefiles" \
-          -DBUILD_TESTS=1 \
-          -DCMAKE_BUILD_TYPE=Debug \
-          -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Werror -DNDEBUG'
           make -C build/ all
-      - name: Test
+      - name: Run Unit Tests
         run: |
           cd zip-check/coreMQTT-${{ github.event.inputs.version_number }}/coreMQTT/build/
           ctest -E system --output-on-failure
