@@ -10,16 +10,28 @@ endif()
 # This function will add a demo target to the list of default targets
 # if all AWS Credentials are defined.
 function(check_aws_credentials demo_name)
-    if(AWS_IOT_ENDPOINT AND CLIENT_CERT_PATH AND CLIENT_PRIVATE_KEY_PATH)
-        target_compile_definitions(
-            ${demo_name} PRIVATE
-                AWS_IOT_ENDPOINT="${AWS_IOT_ENDPOINT}"
-                CLIENT_CERT_PATH="${CLIENT_CERT_PATH}"
-                CLIENT_PRIVATE_KEY_PATH="${CLIENT_PRIVATE_KEY_PATH}"
+    set(REQUIRED_AWS_DEFINES
+            "AWS_IOT_ENDPOINT"
+            "CLIENT_CERT_PATH"
+            "CLIENT_PRIVATE_KEY_PATH"
         )
-        set(CMAKE_REQUIRED_DEFINITIONS -DAWS_IOT_ENDPOINT -DCLIENT_CERT_PATH -DCLIENT_PRIVATE_KEY_PATH)
+    set(THING_NAME_DEMOS
+            "THING_NAME"
+        )
+    if(";${THING_NAME_DEMOS};" MATCHES ";${demo_name};")
+        list(APPEND REQUIRED_AWS_DEFINES "THING_NAME")
     endif()
+    foreach(aws_define IN LISTS REQUIRED_AWS_DEFINES)
+        if(DEFINED ${aws_define})
+            target_compile_definitions(
+                ${demo_name} PRIVATE
+                    ${aws_define}="${${aws_define}}"
+            )
+            list(APPEND CMAKE_REQUIRED_DEFINITIONS -D${aws_define})
+        endif()
+    endforeach()
 
+    # Check if demo_config.h has those macros defined.
     set(FILES_TO_CHECK "demo_config.h")
     list(APPEND CMAKE_REQUIRED_INCLUDES "${CMAKE_CURRENT_LIST_DIR};${LOGGING_INCLUDE_DIRS}")
     unset(HAVE_AWS_ENDPOINT CACHE)
@@ -32,9 +44,20 @@ function(check_aws_credentials demo_name)
     if(NOT(HAVE_AWS_ENDPOINT AND HAVE_CLIENT_CERT AND HAVE_PRIVATE_KEY))
         message("To run ${demo_name}, define AWS_IOT_ENDPOINT, CLIENT_CERT_PATH, CLIENT_PRIVATE_KEY_PATH in ${demo_name}/demo_config.h.")
         set_target_properties(${demo_name} PROPERTIES EXCLUDE_FROM_ALL true)
+        return()
     else()
-        message("All required macros for ${demo_name} were found - Adding to default target.")
+        if(";${THING_NAME_DEMOS};" MATCHES ";${demo_name};")
+            unset(HAVE_THING_NAME CACHE)
+            check_symbol_exists(THING_NAME "demo_config.h" HAVE_THING_NAME)
+            if(NOT HAVE_THING_NAME)
+                message("To run ${demo_name}, define THING_NAME in ${demo_name}/demo_config.h.")
+                set_target_properties(${demo_name} PROPERTIES EXCLUDE_FROM_ALL true)
+                return()
+            endif()
+        endif()
     endif()
+
+    message("All required macros for ${demo_name} were found - Adding to default target.")
 endfunction()
 
 # This function will add a demo target to the list of default targets

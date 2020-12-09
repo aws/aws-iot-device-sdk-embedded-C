@@ -25,11 +25,13 @@ if(${LIB_MOSQUITTO} STREQUAL "LIB_MOSQUITTO-NOTFOUND")
         PUBLIC
             libmosquitto
     )
-    target_include_directories(
-        ${DEMO_NAME}
-        SYSTEM PUBLIC
-            ${CMAKE_CURRENT_LIST_DIR}/libmosquitto/lib
-    )
+    # Exclude extraneous mosquitto targets.
+    set_target_properties(mosquittopp PROPERTIES EXCLUDE_FROM_ALL true)
+    set_target_properties(mosquitto_rr PROPERTIES EXCLUDE_FROM_ALL true)
+    set_target_properties(mosquitto_sub PROPERTIES EXCLUDE_FROM_ALL true)
+    set_target_properties(mosquitto_pub PROPERTIES EXCLUDE_FROM_ALL true)
+    set_target_properties(mosquitto_passwd PROPERTIES EXCLUDE_FROM_ALL true)
+    set_target_properties(mosquitto PROPERTIES EXCLUDE_FROM_ALL true)
 else()
     target_link_libraries(
         ${DEMO_NAME}
@@ -43,6 +45,12 @@ target_include_directories(
     PUBLIC
         ${JOBS_INCLUDE_PUBLIC_DIRS}
         ${JSON_INCLUDE_PUBLIC_DIRS}
+)
+
+target_include_directories(
+    ${DEMO_NAME}
+    SYSTEM PUBLIC
+        ${CMAKE_CURRENT_LIST_DIR}/libmosquitto/lib
 )
 
 if(AWS_IOT_ENDPOINT)
