@@ -775,8 +775,6 @@ void test_OTAPAL_CloseFile_EVP_DigestVerifyInit_fail( void )
 void test_OTAPAL_CloseFile_MaxBlockSize()
 {
     const size_t OTA_PAL_POSIX_BUF_SIZE = 4096U;
-    const int feofFailReturn = 0;
-
     OtaPalStatus_t result;
     OtaFileContext_t otaFileContext;
     Sig256_t dummySig;
