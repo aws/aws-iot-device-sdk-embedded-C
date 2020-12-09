@@ -42,7 +42,7 @@ activate AWSIoT
 MQTT <-- AWSIoT
 deactivate AWSIoT
 OTADemo <-- MQTT
-deactivate 
+deactivate
 activate OTAAgent
 OTADemo --> OTAAgent
 deactivate OTADemo
@@ -60,7 +60,7 @@ MQTT -> OTADemo : MQTT Job callback
 activate OTADemo
 deactivate MQTT
 OTADemo -> OTAAgent : Send Job Received event
-activate OTAAgent 
+activate OTAAgent
 deactivate OTADemo
 OTAAgent -> OTAAgent : Parse Job Document (json) (*2)
 deactivate OTAAgent
@@ -71,7 +71,7 @@ MQTT -> OTADemo : MQTT Disconnect Callback
 activate MQTT
 
 activate OTADemo
-OTADemo -> OTAAgent : Suspend OTA 
+OTADemo -> OTAAgent : Suspend OTA
 activate OTAAgent
 deactivate MQTT
 OTAAgent --> OTADemo
@@ -110,7 +110,7 @@ OTADemo -> HTTP : GET Request
 HTTP -> AWSIoT : Send data to server
 deactivate OTADemo
 activate AWSIoT
-HTTP <- AWSIoT :  Packet containing\nfile blocks 
+HTTP <- AWSIoT :  Packet containing\nfile blocks
 deactivate AWSIoT
 activate OTADemo
 HTTP -> OTADemo : HTTP Response
@@ -127,13 +127,13 @@ activate OTAPal
 alt If last file block
 OTAPal -> OTAPal : Verify cypto\nsignature
 end
-OTAAgent <-- OTAPal 
+OTAAgent <-- OTAPal
 deactivate OTAPal
 
 
 alt Every 64(default) file blocks received
 activate OTADemo
-OTAAgent -> OTADemo : Update Job 
+OTAAgent -> OTADemo : Update Job
 deactivate OTAAgent
 OTADemo -> MQTT : Publish
 
@@ -175,7 +175,7 @@ deactivate OTADemo
 OTAAgent -> OTAPal : Activate Image
 deactivate OTAAgent
 activate OTAPal
-OTAPal -> OTAPal :Reset 
+OTAPal -> OTAPal :Reset
 deactivate OTAPal
 deactivate OTAAgent
 
