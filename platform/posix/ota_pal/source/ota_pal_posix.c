@@ -40,6 +40,21 @@
 #include <openssl/pem.h>
 
 /**
+ * @brief Code signing certificate
+ *
+ * The certificate is used for OTA image signing.  If a platform does not support a file
+ * system the signing certificate can be pasted here for testing purpose.
+ *
+ * PEM-encoded code signer certificate
+ *
+ * Must include the PEM header and footer:
+ * "-----BEGIN CERTIFICATE-----\n"
+ * "...base64 data...\n"
+ * "-----END CERTIFICATE-----\n";
+ */
+static const char signingcredentialSIGNING_CERTIFICATE_PEM[] = "Paste code signing certificate here";
+
+/**
  * @brief Size of buffer used in file operations on this platform (POSIX).
  */
 #define OTA_PAL_POSIX_BUF_SIZE    ( ( size_t ) 4096U )
@@ -200,6 +215,9 @@ static bool Openssl_DigestVerifyUpdate( EVP_MD_CTX * pSigContext,
         /* feof returns non-zero if end of file is reached, otherwise it returns 0. When
          * bytesRead is not equal to OTA_PAL_POSIX_BUF_SIZE, we should be reading last
          * chunk and reach to end of file. */
+
+        /* POSIX port using standard library */
+        /* coverity[misra_c_2012_rule_21_6_violation] */
         if( 0 == feof( pFile ) )
         {
             break;
@@ -212,7 +230,9 @@ static bool Openssl_DigestVerifyUpdate( EVP_MD_CTX * pSigContext,
         }
     } while( bytesRead > 0UL );
 
-    return feof( pFile ) != 0;
+    /* POSIX port using standard library */
+    /* coverity[misra_c_2012_rule_21_6_violation] */
+    return( 0 != feof( pFile ) ? true : false );
 }
 
 static OtaPalMainStatus_t Openssl_DigestVerify( EVP_MD_CTX * pSigContext,
@@ -303,7 +323,7 @@ OtaPalStatus_t otaPal_Abort( OtaFileContext_t * const C )
 {
     /* Set default return status to uninitialized. */
     OtaPalMainStatus_t mainErr = OtaPalUninitialized;
-    OtaPalSubStatus_t subErr = 0;
+    int32_t subErr = 0;
     int32_t lFileCloseResult;
 
     if( NULL != C )
@@ -352,15 +372,17 @@ OtaPalStatus_t otaPal_CreateFileForRx( OtaFileContext_t * const C )
     {
         if( C->pFilePath != NULL )
         {
-            if( C->pFilePath[ 0 ] != '/' )
+            if( C->pFilePath[ 0 ] != ( uint8_t ) '/' )
             {
+                /* POSIX port using standard library */
+                /* coverity[misra_c_2012_rule_21_6_violation] */
                 int res = snprintf( realFilePath, OTA_FILE_PATH_LENGTH_MAX, "%s/%s", getenv( "PWD" ), C->pFilePath );
                 assert( res >= 0 );
                 ( void ) res; /* Suppress the unused variable warning when assert is off. */
             }
             else
             {
-                strncpy( realFilePath, ( const char * ) C->pFilePath, strlen( ( const char * ) C->pFilePath ) + 1 );
+                ( void ) strncpy( realFilePath, ( const char * ) C->pFilePath, strlen( ( const char * ) C->pFilePath ) + 1U );
             }
 
             /* POSIX port using standard library */
@@ -426,7 +448,7 @@ OtaPalStatus_t otaPal_CloseFile( OtaFileContext_t * const C )
         {
             LogError( ( "Failed to close OTA update file." ) );
             mainErr = OtaPalFileClose;
-            subErr = errno;
+            subErr = ( uint32_t ) errno;
         }
 
         if( mainErr == OtaPalSuccess )
@@ -517,7 +539,7 @@ OtaPalStatus_t otaPal_SetPlatformImageState( OtaFileContext_t * const C,
                                              OtaImageState_t eState )
 {
     OtaPalMainStatus_t mainErr = OtaPalBadImageState;
-    OtaPalSubStatus_t subErr = 0;
+    int32_t subErr = 0;
     FILE * pPlatformImageState = NULL;
     char imageStateFile[ OTA_FILE_PATH_LENGTH_MAX ];
 
@@ -526,6 +548,8 @@ OtaPalStatus_t otaPal_SetPlatformImageState( OtaFileContext_t * const C,
 
     if( ( eState != OtaImageStateUnknown ) && ( eState <= OtaLastImageState ) )
     {
+        /* POSIX port using standard library */
+        /* coverity[misra_c_2012_rule_21_6_violation] */
         int res = snprintf( imageStateFile, OTA_FILE_PATH_LENGTH_MAX, "%s/%s", getenv( "PWD" ), "PlatformImageState.txt" );
         assert( res >= 0 );
         ( void ) res; /* Suppress the unused variable warning when assert is off. */
@@ -558,6 +582,11 @@ OtaPalStatus_t otaPal_SetPlatformImageState( OtaFileContext_t * const C,
             {
                 LogError( ( "Unable to write to image state file. error-- %d", errno ) );
                 subErr = errno;
+
+                /* The file should be closed, but errno passed out is fwrite error */
+                /* POSIX port using standard library */
+                /* coverity[misra_c_2012_rule_21_6_violation] */
+                ( void ) fclose( pPlatformImageState );
             }
         }
         else
@@ -602,6 +631,8 @@ OtaPalImageState_t otaPal_GetPlatformImageState( OtaFileContext_t * const C )
     OtaPalImageState_t ePalState = OtaPalImageStateUnknown;
     char imageStateFile[ OTA_FILE_PATH_LENGTH_MAX ];
 
+    /* POSIX port using standard library */
+    /* coverity[misra_c_2012_rule_21_6_violation] */
     int res = snprintf( imageStateFile, OTA_FILE_PATH_LENGTH_MAX, "%s/%s", getenv( "PWD" ), "PlatformImageState.txt" );
 
     assert( res >= 0 );
