@@ -17,6 +17,7 @@ jobs:
           submodules: recursive
       - name: Configure CMake build
         run: |
+          sudo apt-get install -y libmosquitto-dev
           curl https://cmake.org/files/v3.2/cmake-3.2.0-Linux-x86_64.tar.gz -o cmake.tar.gz
           tar -xf cmake.tar.gz
           mkdir build && cd build
@@ -35,7 +36,6 @@ jobs:
           -DS3_PRESIGNED_PUT_URL="put-url"
       - name: Build Demos
         run: |
-          sudo apt-get install -y libmosquitto-dev
           make -C build/ help | grep demo | tr -d '. ' | xargs make -C build/
           make -C demos/jobs/jobs_demo_mosquitto
   build-check-system-tests:
