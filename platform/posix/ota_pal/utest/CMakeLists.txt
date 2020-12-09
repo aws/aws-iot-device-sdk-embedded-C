@@ -8,11 +8,13 @@ set( project_name "ota_pal" )
 
 #list the files to mock here
 list( APPEND mock_list
-      ""
+      ${CMAKE_CURRENT_LIST_DIR}/mocks/stdio_api.h
+      ${CMAKE_CURRENT_LIST_DIR}/mocks/openssl_api.h
       )
 #list the directories your mocks need
 list( APPEND mock_include_list
-      ""
+      ${LOGGING_INCLUDE_DIRS}
+      ${PLATFORM_DIR}/include
       )
 #list the definitions of your mocks to control what to be included
 list( APPEND mock_define_list
@@ -32,6 +34,7 @@ list( APPEND real_include_directories
       "${PLATFORM_DIR}/posix/ota_pal/source/include"
       ${OPENSSL_INCLUDE_DIR}
       ${CMAKE_CURRENT_LIST_DIR}
+      ${CMAKE_CURRENT_LIST_DIR}/mocks
       )
 
 #== ===================  Create UnitTest Code here (edit)  =====================
@@ -41,12 +44,20 @@ list ( APPEND test_include_directories
        ${CMAKE_CURRENT_BINARY_DIR}/include
        ${CMAKE_CURRENT_LIST_DIR}
        ${MODULES_DIR}/aws/ota-for-aws-iot-embedded-sdk/source/include
+       /usr/include/x86_64-linux-gnu/sys
+       mocks
        )
 
 #== ===========================  (end edit)  ===================================
-set ( mock_name "" )
+set ( mock_name "ota_pal_mocks" )
 set ( real_name "ota_pal_real" )
 
+create_mock_list(${mock_name}
+                "${mock_list}"
+                "${ROOT_DIR}/tools/cmock/ota.yml"
+                "${mock_include_list}"
+                "${mock_define_list}"
+        )
 
 create_real_library ( ${real_name}
                       "${real_source_files}"
@@ -56,7 +67,6 @@ create_real_library ( ${real_name}
 
 list(APPEND utest_link_list
       lib${real_name}.a
-      ${OPENSSL_LIBRARIES}
       )
 
 list ( APPEND utest_dep_list
@@ -71,8 +81,3 @@ create_test ( ${utest_name}
               "${utest_dep_list}"
               "${test_include_directories}"
               )
-
-# Unit tests configuration
-set(OTA_PAL_UTEST_CERT_FILE "${CMAKE_CURRENT_LIST_DIR}/test_files/ecdsa-sha256-signer.crt.pem")
-set(OTA_PAL_UTEST_FIRMWARE_FILE "${CMAKE_BINARY_DIR}/bin/tests/dummy.bin")
-configure_file(ota_utest_config.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/ota_utest_config.h)

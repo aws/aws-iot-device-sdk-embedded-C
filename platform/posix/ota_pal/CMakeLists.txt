@@ -14,6 +14,6 @@ target_link_libraries( ota_pal
     INTERFACE ${OPENSSL_CRYPTO_LIBRARY}
 )
 
-if(BUILD_TESTS)
+if(${BUILD_TESTS})
   add_subdirectory(utest)
 endif()
