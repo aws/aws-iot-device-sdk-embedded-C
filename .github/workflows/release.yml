@@ -62,14 +62,51 @@ jobs:
           ls coreMQTT-${{ github.event.inputs.version_number }}
           diff -r -x "*.git*" coreMQTT-${{ github.event.inputs.version_number }}/coreMQTT/ ../coreMQTT/
           cd ../
-      - name: Build
+      - name : Build Check Demos
         run: |
           cd zip-check/coreMQTT-${{ github.event.inputs.version_number }}/coreMQTT
           sudo apt-get install -y lcov
           cmake -S test -B build/ \
           -G "Unix Makefiles" \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_C_FLAGS='-Wall -Wextra -Werror' \
+          -DAWS_IOT_ENDPOINT="aws-iot-endpoint" \
+          -DBROKER_ENDPOINT="broker-endpoint" \
+          -DCLIENT_CERT_PATH="cert/path" \
+          -DROOT_CA_CERT_PATH="cert/path" \
+          -DCLIENT_PRIVATE_KEY_PATH="key/path" \
+          -DCLIENT_IDENTIFIER="ci-identifier" \
+          -DTHING_NAME="thing-name" \
+          -DS3_PRESIGNED_GET_URL="get-url" \
+          -DS3_PRESIGNED_PUT_URL="put-url"
+          sudo apt-get install -y libmosquitto-dev
+          make -C build/ help | grep demo | tr -d '. ' | xargs make -C build/
+          make -C demos/jobs/jobs_demo_mosquitto
+      - name : Build Check System Tests
+        run: |
+          rm -rf ./build/*
+          cmake -S test -B build/ \
+          -G "Unix Makefiles" \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DBUILD_TESTS=1 \
+          -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Werror' \
+          -DAWS_IOT_ENDPOINT="aws-iot-endpoint" \
+          -DBROKER_ENDPOINT="broker-endpoint" \
+          -DCLIENT_CERT_PATH="cert/path" \
+          -DROOT_CA_CERT_PATH="cert/path" \
+          -DCLIENT_PRIVATE_KEY_PATH="key/path" \
+          -DCLIENT_IDENTIFIER="ci-identifier" \
+          -DTHING_NAME="thing-name" \
+          -DS3_PRESIGNED_GET_URL="get-url" \
+          -DS3_PRESIGNED_PUT_URL="put-url"
+          make -C build/ help | grep system | tr -d '. ' | xargs make -C build/
+      - name: Build Unit Tests
+        run: |
+          rm -rf ./build/*
+          cmake -S test -B build/ \
+          -G "Unix Makefiles" \
+          -DBUILD_TESTS=1 \
           -DCMAKE_BUILD_TYPE=Debug \
-          -DBUILD_CLONE_SUBMODULES=ON \
           -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Werror -DNDEBUG'
           make -C build/ all
       - name: Test
