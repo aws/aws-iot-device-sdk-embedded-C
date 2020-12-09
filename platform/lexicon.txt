@@ -141,6 +141,7 @@ otapalrxfiletoolarge
 otapalsignaturecheckfailed
 otapalsuccess
 otapaluninitialized
+otapal_closefile
 paddrinfo
 palpnprotos
 param

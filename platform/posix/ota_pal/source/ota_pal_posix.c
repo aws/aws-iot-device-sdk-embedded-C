@@ -124,7 +124,7 @@ static EVP_PKEY * Openssl_GetPkeyFromCertificate( uint8_t * pCertFilePath )
         }
         else
         {
-            LogError( ( "Failed to read certificate from a file." ) );
+            LogDebug( ( "Opened certificate file." ) );
         }
     }
 
@@ -210,7 +210,7 @@ static bool Openssl_DigestVerifyUpdate( EVP_MD_CTX * pSigContext,
         /* coverity[misra_c_2012_rule_21_6_violation] */
         bytesRead = fread( pBuf, 1U, OTA_PAL_POSIX_BUF_SIZE, pFile );
 
-        assert( bytesRead < OTA_PAL_POSIX_BUF_SIZE );
+        assert( bytesRead <= OTA_PAL_POSIX_BUF_SIZE );
 
         /* feof returns non-zero if end of file is reached, otherwise it returns 0. When
          * bytesRead is not equal to OTA_PAL_POSIX_BUF_SIZE, we should be reading last
@@ -218,7 +218,7 @@ static bool Openssl_DigestVerifyUpdate( EVP_MD_CTX * pSigContext,
 
         /* POSIX port using standard library */
         /* coverity[misra_c_2012_rule_21_6_violation] */
-        if( 0 == feof( pFile ) )
+        if( ( bytesRead < OTA_PAL_POSIX_BUF_SIZE ) && ( 0 == feof( pFile ) ) )
         {
             break;
         }
