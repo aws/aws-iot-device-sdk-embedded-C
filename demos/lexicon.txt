@@ -1,3 +1,4 @@
+
 accel
 ack
 acks
@@ -266,6 +267,7 @@ lastcontrolpacketsent
 latestversion
 len
 leurent
+lfilecloseresult
 libc
 libmosquitto
 libpkcs

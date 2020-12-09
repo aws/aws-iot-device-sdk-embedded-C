@@ -31,6 +31,9 @@
 #ifndef _OTA_CONFIG_H_
 #define _OTA_CONFIG_H_
 
+/* Required for the declarations of fseek_alias and fwrite_alias. */
+#include "stdio_api.h"
+
 /**
  * @brief The number of words allocated to the stack for the OTA agent.
  */
@@ -147,5 +150,21 @@
  */
 
 #define configOTA_PRIMARY_DATA_PROTOCOL    ( OTA_DATA_OVER_MQTT )
+
+/* The "fseek" function needs to be mocked to test the OTA PAL. This function
+ * can't be directly mocked because it's required by the coverage tools. As an
+ * alternative, this define replaces the fseek calls in the OTA PAL
+ * implementation with "fseek_alias". This "fseek_alias" function is declared
+ * with an identical function signature to "fseek" and is mocked in place of
+ * "fseek". The function declaration for this alias is in "stdio_api.h". */
+#define fseek                              fseek_alias
+
+/* The "fwrite" function needs to be mocked to test the OTA PAL. This function
+ * can't be directly mocked because it's required by the coverage tools. As an
+ * alternative, this define replaces the fwrite calls in the OTA PAL
+ * implementation with "fwrite_alias". This "fwrite_alias" function is declared
+ * with an identical function signature to "fwrite" and is mocked in place of
+ * "fwrite". The function declaration for this alias is in "stdio_api.h". */
+#define fwrite                             fwrite_alias
 
 #endif /* _OTA_CONFIG_H_ */
