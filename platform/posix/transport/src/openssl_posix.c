@@ -592,15 +592,6 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
     /* Setup credentials. */
     if( returnStatus == OPENSSL_SUCCESS )
     {
-        /* Set auto retry mode for the blocking calls to SSL_read and SSL_write.
-         * The mask returned by SSL_CTX_set_mode does not need to be checked. */
-
-        /* MISRA Directive 4.6 flags the following line for using basic
-        * numerical type long. This directive is suppressed because openssl
-        * function #SSL_CTX_set_mode takes an argument of type long. */
-        /* coverity[misra_c_2012_directive_4_6_violation] */
-        ( void ) SSL_CTX_set_mode( pSslContext, ( long ) SSL_MODE_AUTO_RETRY );
-
         sslStatus = setCredentials( pSslContext,
                                     pOpensslCredentials );
 
@@ -728,8 +719,9 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
 
             if( sslError == SSL_ERROR_WANT_READ )
             {
-                /* The OpenSSL documentation mentions that SSL_Read can have a return code of
-                 * SSL_ERROR_WANT_READ in blocking mode. This error code means that the SSL_read()
+                /* The OpenSSL documentation mentions that SSL_Read can provide a return code of
+                 * SSL_ERROR_WANT_READ in blocking mode, if the SSL context is not configured with
+                 * with the SSL_MODE_AUTO_RETRY. This error code means that the SSL_read()
                  * operation needs to be retried to complete the read operation.
                  * Thus, setting the return value of this function as zero to represent that no
                  * data was received from the network. */
@@ -790,27 +782,24 @@ int32_t Openssl_Send( NetworkContext_t * pNetworkContext,
         {
             sslError = SSL_get_error( pOpensslParams->pSsl, bytesSent );
 
-            if( sslError == SSL_ERROR_WANT_READ )
-            {
-                /* The OpenSSL documentation mentions that SSL_Write can have a return code of
-                 * SSL_ERROR_WANT_READ in blocking mode (with auto-retry configuration). This error
-                 * code signifies that write operation needs to be retried by calling SSl_write().
-                 * Thus, setting the return value of this function as zero so to represent that no
-                 * data was sent over the network. */
-                bytesSent = 0;
-            }
-            else
-            {
-                LogError( ( "Failed to send data over network: SSL_write of OpenSSL failed: "
-                            "ErrorStatus=%s.", ERR_reason_error_string( sslError ) ) );
+            LogError( ( "Failed to send data over network: SSL_write of OpenSSL failed: "
+                        "ErrorStatus=%s.", ERR_reason_error_string( sslError ) ) );
 
-                /* The transport interface requires zero return code only when the send operation can
-                 * be retried to achieve success. Thus, convert a zero error code to a negative return
-                 * value as this cannot be retried. */
-                if( bytesSent == 0 )
-                {
-                    bytesSent = -1;
-                }
+            /* As the SSL context is configured for blocking mode, the SSL_write() function
+             * does not return an SSL_ERROR_WANT_READ or SSL_ERROR_WANT_WRITE error code.
+             * The SSL_ERROR_WANT_READ and SSL_ERROR_WANT_WRITE error codes signify that
+             * the write operation can be retried.
+             * However, in the blocking mode, as the SSL_write() function does not return
+             * either of the error codes, we cannot retry the operation on failure, and thus,
+             * this function will never return a zero error code.
+             */
+
+            /* The transport interface requires zero return code only when the send operation can
+             * be retried to achieve success. Thus, convert a zero error code to a negative return
+             * value as this cannot be retried. */
+            if( bytesSent == 0 )
+            {
+                bytesSent = -1;
             }
         }
     }

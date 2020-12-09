@@ -231,13 +231,6 @@ static OpensslStatus_t failFunctionFrom_Openssl_Connect( FunctionNames_t functio
         sslCtxCreated = true;
     }
 
-    /* SSL_CTX_set_mode is actually what the API uses, but CMock expects the
-     * actual method rather than the macro wrapper. */
-    if( returnStatus == OPENSSL_SUCCESS )
-    {
-        SSL_CTX_ctrl_ExpectAnyArgsAndReturn( 1 );
-    }
-
     /* Path to Root CA must be set for handshake to succeed. */
     if( opensslCredentials.pRootCaPath == NULL )
     {
@@ -778,23 +771,6 @@ void test_Openssl_Send_Network_Error( void )
     SSL_get_error_ExpectAnyArgsAndReturn( SSL_ERROR_ZERO_RETURN );
     bytesSent = Openssl_Send( &networkContext, opensslBuffer, BYTES_TO_SEND );
     TEST_ASSERT_EQUAL( -1, bytesSent );
-}
-
-/**
- * @brief Test that #Openssl_Send returns zero bytes sent when #SSL_write returns
- * an error to retry operation.
- */
-void test_Openssl_Send_Zero_Return_Value( void )
-{
-    int32_t bytesSent;
-
-    opensslParams.pSsl = &ssl;
-    SSL_write_ExpectAnyArgsAndReturn( SSL_READ_WRITE_ERROR );
-
-    /* Test when SSL_write returns SSL_ERROR_WANT_READ. */
-    SSL_get_error_ExpectAnyArgsAndReturn( SSL_ERROR_WANT_READ );
-    bytesSent = Openssl_Send( &networkContext, opensslBuffer, BYTES_TO_SEND );
-    TEST_ASSERT_EQUAL( 0, bytesSent );
 }
 
 /**
