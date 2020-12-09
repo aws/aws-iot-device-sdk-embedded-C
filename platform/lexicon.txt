@@ -9,6 +9,7 @@ aws
 backoff
 backoffdelay
 basedefs
+bio
 bitmasking
 bool
 bootable
@@ -29,6 +30,7 @@ const
 couldn
 coverity
 crt
+crypto
 csdk
 cwd
 didn
@@ -40,10 +42,12 @@ endcode
 endif
 enum
 enums
+eof
 epalstate
 errno
 errornumber
 esavedagentstate
+evp
 ewouldblock
 exe
 expectedstatus
@@ -60,13 +64,16 @@ fopen
 fread
 freertos
 fseek
+fseeksuccessreturn
 functionname
 functionpage
 functionspage
 functiontofail
 fwrite
+fwriteerrorreturn
 getaddrinfo
 getcwd
+h
 hostnamelength
 html
 http
@@ -79,6 +86,7 @@ int
 iot
 ip
 ip
+lfilecloseresult
 linux
 logpath
 longjmp
@@ -113,9 +121,11 @@ otafile
 otaimagestateaborted
 otaimagestateaccepted
 otaimagestaterejected
+otaimagestatetesting
 otaimagestateinvalid
 otaimagestatependingcommit
 otaimagestateunknown
+otalastimagestate
 otapalimagestateinvalid
 otapalimagestatependingcommit
 otapalimagestateunknown
@@ -175,6 +185,7 @@ sizeof
 sleeptimems
 sni
 snihostname
+snprintf
 sockaddr
 sockets_invalid_parameter
 socketstatus
