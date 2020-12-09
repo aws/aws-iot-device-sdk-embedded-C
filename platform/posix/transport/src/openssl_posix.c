@@ -608,7 +608,8 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
     /* Setup credentials. */
     if( returnStatus == OPENSSL_SUCCESS )
     {
-        /* Set auto retry mode for the blocking calls to SSL_read and SSL_write.
+        /* Enable partial writes for blocking calls to SSL_write to allow a
+         * payload larger than the maximum fragment length.
          * The mask returned by SSL_CTX_set_mode does not need to be checked. */
 
         /* MISRA Directive 4.6 flags the following line for using basic
@@ -616,7 +617,7 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
         * function #SSL_CTX_set_mode takes an argument of type long. */
         /* coverity[misra_c_2012_directive_4_6_violation] */
         ( void ) SSL_CTX_set_mode( pSslContext,
-                                   ( long ) ( SSL_MODE_ENABLE_PARTIAL_WRITE ) );
+                                   ( long ) SSL_MODE_ENABLE_PARTIAL_WRITE );
 
         sslStatus = setCredentials( pSslContext,
                                     pOpensslCredentials );
