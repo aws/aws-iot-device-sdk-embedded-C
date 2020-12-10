@@ -152,18 +152,19 @@
  * @brief The name of the MQTT library used and its version, following an "@"
  * symbol.
  */
-#define MQTT_LIB                  "core-mqtt@1.0.0"
+#include "core_mqtt.h"
+#define MQTT_LIB             "core-mqtt@" MQTT_LIBRARY_VERSION
 
 /**
  * @brief Predefined thing name.
  *
  * This is the example predefine thing name and could be compiled in ROM code.
  */
-#define THING_NAME                "testShadow"
+#define THING_NAME           "testShadow"
 
 /**
  * @brief The length of #THING_NAME.
  */
-#define THING_NAME_LENGTH         ( ( uint16_t ) ( sizeof( THING_NAME ) - 1 ) )
+#define THING_NAME_LENGTH    ( ( uint16_t ) ( sizeof( THING_NAME ) - 1 ) )
 
 #endif /* ifndef DEMO_CONFIG_H_ */
