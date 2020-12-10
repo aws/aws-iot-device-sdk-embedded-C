@@ -1075,8 +1075,6 @@ static void disconnect( void )
             /* Disconnect MQTT session. */
             MQTT_Disconnect( &mqttContext );
 
-            pthread_mutex_unlock( &mqttMutex );
-
             /* Clear the mqtt session flag. */
             mqttSessionEstablished = false;
 
