@@ -204,8 +204,13 @@
  */
 #define CONNECTION_RETRY_MAX_ATTEMPTS    ( 5U )
 
+/**
+ * @brief The maximum size of the HTTP header.
+ */
+#define HTTP_HEADER_SIZE_MAX             ( 1024U )
+
 /* HTTP buffers used for http request and response. */
-#define HTTP_USER_BUFFER_LENGTH          ( otaconfigFILE_BLOCK_SIZE + 1024 )
+#define HTTP_USER_BUFFER_LENGTH          ( otaconfigFILE_BLOCK_SIZE + HTTP_HEADER_SIZE_MAX )
 
 /**
  * @brief The MQTT metrics string expected by AWS IoT.
@@ -802,7 +807,7 @@ static void mqttJobCallback( MQTTContext_t * pContext,
     }
     else
     {
-        LogError( ( "Error: No OTA data buffers available.\r\n" ) );
+        LogError( ( "Error: No OTA data buffers available." ) );
     }
 }
 
@@ -1193,10 +1198,10 @@ static void disconnect( void )
             /* Disconnect MQTT session. */
             MQTT_Disconnect( &mqttContext );
 
-            pthread_mutex_unlock( &mqttMutex );
-
             /* Clear the mqtt session flag. */
             mqttSessionEstablished = false;
+
+            pthread_mutex_unlock( &mqttMutex );
         }
         else
         {
@@ -1312,7 +1317,7 @@ static OtaHttpStatus_t handleHttpResponse( const HTTPResponse_t * pResponse )
             }
             else
             {
-                LogError( ( "Error: No OTA data buffers available.\r\n" ) );
+                LogError( ( "Error: No OTA data buffers available." ) );
 
                 ret = OtaHttpRequestFailed;
             }
