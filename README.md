@@ -12,6 +12,7 @@
         * [AWS IoT Device Shadow](#aws-iot-device-shadow)
         * [AWS IoT Jobs](#aws-iot-jobs)
         * [AWS IoT Device Defender](#aws-iot-device-defender)
+        * [AWS IoT Over-The-Air Updates](#aws-iot-over-the-air-updates)
         * [backoffAlgorithm](#backoffalgorithm)
     * [AWS Collection of Metrics](#aws-collection-of-metrics)
 * [Versioning](#versioning)
@@ -104,6 +105,13 @@ The AWS IoT Device Defender library has no dependencies on additional libraries 
 
 See memory requirements for the latest release [here](https://docs.aws.amazon.com/embedded-csdk/202011.00/lib-ref/libraries/aws/device-defender-for-aws-iot-embedded-sdk/docs/doxygen/output/html/index.html#defender_memory_requirements).
 
+#### AWS IoT Over-The-Air Updates
+The [AWS IoT Over-The-Air Updates](https://github.com/aws/OTA-for-AWS-IoT-embedded-SDK) library enables you to manage the notification of a newly available update, download the update, and perform cryptographic verification of the firmware update. Using the over-the-air (OTA) client library, you can logically separate firmware updates from the application running on your devices. Although OTA updates were designed to update device firmware, you can use them to send any files to one or more devices registered with AWS IoT.  More details about OTA library can be found in [AWS IoT Over-The-Air Updates documentation](https://docs.aws.amazon.com/iot/latest/developerguide/iot-ota.html).
+
+The AWS IoT Over-The-Air Updates library has a dependency on [coreJSON](https://github.com/FreeRTOS/coreJSON) for parsing of JSON job document and [tinyCBOR](https://github.com/intel/tinycbor.git) for decoding encoded data streams, other than the standard C library. It can be used with any MQTT library and any HTTP library and underlying operating system (e.g. Linux, FreeRTOS) (see [demos](demos/defender) with coreMQTT and coreHTPP over Linux).
+
+See memory requirements for the latest release [here](https://docs.aws.amazon.com/embedded-csdk/202011.00/lib-ref/libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html/index.html#ota_memory_requirements).
+
 #### backoffAlgorithm 
 
 The [backoffAlgorithm](https://github.com/FreeRTOS/backoffAlgorithm) library is a utility library to calculate backoff period using an exponential backoff with jitter algorithm for retrying network operations (like failed network connection with server). This library uses the "Full Jitter" strategy for the exponential backoff with jitter algorithm. More information about the algorithm can be seen in the Exponential Backoff and Jitter (https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/) AWS blog.
@@ -186,6 +194,10 @@ Guide for porting AWS IoT Device Shadow library is available [here](https://docs
 ### Porting AWS IoT Device Defender
 
 Guide for porting AWS IoT Device Defender library is available [here](https://docs.aws.amazon.com/embedded-csdk/202011.00/lib-ref/libraries/aws/device-defender-for-aws-iot-embedded-sdk/docs/doxygen/output/html/defender_porting.html).
+
+### Porting AWS IoT Over-The-Air Updates
+
+Guide for porting OTA library to your platform is available [here](https://docs.aws.amazon.com/embedded-csdk/202011.00/lib-ref/libraries/standard/ota-for-aws-iot-embedded-sd/docs/doxygen/output/html/ota_porting.html).
 
 ## Migration guide from v3.1.2 to 202009.00 and newer releases
 
