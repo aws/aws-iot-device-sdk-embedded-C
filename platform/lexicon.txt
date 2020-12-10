@@ -235,6 +235,7 @@ unistd
 utest
 utils
 v1
+variadic
 vtaskdelay
 writesize
 www
