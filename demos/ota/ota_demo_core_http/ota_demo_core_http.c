@@ -204,8 +204,13 @@
  */
 #define CONNECTION_RETRY_MAX_ATTEMPTS    ( 5U )
 
+/**
+ * @brief The maximum size of the HTTP header.
+ */
+#define HTTP_HEADER_SIZE_MAX             ( 1024U )
+
 /* HTTP buffers used for http request and response. */
-#define HTTP_USER_BUFFER_LENGTH          ( otaconfigFILE_BLOCK_SIZE + 1024 )
+#define HTTP_USER_BUFFER_LENGTH          ( otaconfigFILE_BLOCK_SIZE + HTTP_HEADER_SIZE_MAX )
 
 /**
  * @brief The MQTT metrics string expected by AWS IoT.
@@ -232,22 +237,30 @@
 /**
  * @brief The common prefix for all OTA topics.
  */
-#define OTA_TOPIC_PREFIX           "$aws/things/"
+#define OTA_TOPIC_PREFIX                 "$aws/things/"
 
 /**
  * @brief The string used for jobs topics.
  */
-#define OTA_TOPIC_JOBS             "jobs"
+#define OTA_TOPIC_JOBS                   "jobs"
 
 /**
  * @brief The string used for streaming service topics.
  */
-#define OTA_TOPIC_STREAM           "streams"
+#define OTA_TOPIC_STREAM                 "streams"
 
 /**
  * @brief The length of #OTA_TOPIC_PREFIX
  */
-#define OTA_TOPIC_PREFIX_LENGTH    ( ( uint16_t ) ( sizeof( OTA_TOPIC_PREFIX ) - 1U ) )
+#define OTA_TOPIC_PREFIX_LENGTH          ( ( uint16_t ) ( sizeof( OTA_TOPIC_PREFIX ) - 1U ) )
+
+/**
+ * @brief HTTP response codes used in this demo.
+ */
+#define HTTP_RESPONSE_PARTIAL_CONTENT    ( 206 )
+#define HTTP_RESPONSE_BAD_REQUEST        ( 400 )
+#define HTTP_RESPONSE_FORBIDDEN          ( 403 )
+#define HTTP_RESPONSE_NOT_FOUND          ( 404 )
 
 /*-----------------------------------------------------------*/
 
@@ -515,6 +528,14 @@ static OtaMqttStatus_t mqttUnsubscribe( const char * pTopicFilter,
                                         uint8_t qos );
 
 /**
+ * @brief Handle HTTP response.
+ *
+ * @param[in] pResponse Pointer to http response buffer.
+ * @return OtaHttpStatus_t OtaHttpSuccess if success or failure code otherwise.
+ */
+static OtaHttpStatus_t handleHttpResponse( const HTTPResponse_t * pResponse );
+
+/**
  * @brief Initialize OTA Http interface.
  *
  * @param[in] pUrl Pointer to the pre-signed url for downloading update file.
@@ -652,6 +673,7 @@ static void mqttEventCallback( MQTTContext_t * pMqttContext,
 
 /* Callbacks to register with the Subscription Manager. */
 static SubscriptionManagerCallback_t otaMessageCallback[ OtaNumOfMessageType ] = { mqttJobCallback, mqttDataCallback };
+
 /*-----------------------------------------------------------*/
 
 void otaEventBufferFree( OtaEventData_t * const pxBuffer )
@@ -668,6 +690,8 @@ void otaEventBufferFree( OtaEventData_t * const pxBuffer )
                     strerror( errno ) ) );
     }
 }
+
+/*-----------------------------------------------------------*/
 
 OtaEventData_t * otaEventBufferGet( void )
 {
@@ -710,32 +734,14 @@ static void otaAppCallback( OtaJobEvent_t event,
     {
         LogInfo( ( "Received OtaJobEventActivate callback from OTA Agent." ) );
 
-        if( pthread_mutex_lock( &mqttMutex ) == 0 )
-        {
-            /* OTA job is completed. so delete the network connection. */
-            MQTT_Disconnect( &mqttContext );
-
-            pthread_mutex_unlock( &mqttMutex );
-        }
-        else
-        {
-            LogError( ( "Failed to acquire mutex to execute MQTT_Disconnect"
-                        ",errno=%s",
-                        strerror( errno ) ) );
-        }
-
-        /* Clear the mqtt session flag. */
-        mqttSessionEstablished = false;
-
         /* Activate the new firmware image. */
         OTA_ActivateNewImage();
 
-        /* We should never get here as new image activation must reset the device.*/
-        LogError( ( "New image activation failed." ) );
+        /* Shutdown OTA Agent. */
+        OTA_Shutdown( 0 );
 
-        for( ; ; )
-        {
-        }
+        /* Requires manual activation of new image.*/
+        LogError( ( "New image activation failed." ) );
     }
     else if( event == OtaJobEventFail )
     {
@@ -1176,23 +1182,34 @@ static int establishConnection( void )
 
     return returnStatus;
 }
+
 static void disconnect( void )
 {
     /* Disconnect from broker. */
     LogInfo( ( "Disconnecting the MQTT connection with %s.", AWS_IOT_ENDPOINT ) );
 
-    if( pthread_mutex_lock( &mqttMutex ) == 0 )
+    if( mqttSessionEstablished == true )
     {
-        /* OTA job is completed. so delete the network connection. */
-        MQTT_Disconnect( &mqttContext );
+        if( pthread_mutex_lock( &mqttMutex ) == 0 )
+        {
+            /* Disconnect MQTT session. */
+            MQTT_Disconnect( &mqttContext );
 
-        pthread_mutex_unlock( &mqttMutex );
+            /* Clear the mqtt session flag. */
+            mqttSessionEstablished = false;
+
+            pthread_mutex_unlock( &mqttMutex );
+        }
+        else
+        {
+            LogError( ( "Failed to acquire mutex to execute MQTT_Disconnect"
+                        ",errno=%s",
+                        strerror( errno ) ) );
+        }
     }
     else
     {
-        LogError( ( "Failed to acquire mutex to execute MQTT_Disconnect"
-                    ",errno=%s",
-                    strerror( errno ) ) );
+        LogError( ( "MQTT already disconnected." ) );
     }
 
     /* End TLS session, then close TCP connection. */
@@ -1267,6 +1284,63 @@ static int32_t connectToS3Server( NetworkContext_t * pNetworkContext,
 }
 
 /*-----------------------------------------------------------*/
+
+static OtaHttpStatus_t handleHttpResponse( const HTTPResponse_t * pResponse )
+{
+    /* Return error code. */
+    OtaHttpStatus_t ret = OtaHttpRequestFailed;
+
+    OtaEventData_t * pData;
+    OtaEventMsg_t eventMsg = { 0 };
+
+    switch( pResponse->statusCode )
+    {
+        case HTTP_RESPONSE_PARTIAL_CONTENT:
+            /* Get buffer to send event & data. */
+            pData = otaEventBufferGet();
+
+            if( pData != NULL )
+            {
+                /* Get the data from response buffer. */
+                memcpy( pData->data, pResponse->pBody, pResponse->bodyLen );
+                pData->dataLength = pResponse->bodyLen;
+
+                /* Send job document received event. */
+                eventMsg.eventId = OtaAgentEventReceivedFileBlock;
+                eventMsg.pEventData = pData;
+                OTA_SignalEvent( &eventMsg );
+
+                ret = OtaHttpSuccess;
+            }
+            else
+            {
+                LogError( ( "Error: No OTA data buffers available." ) );
+
+                ret = OtaHttpRequestFailed;
+            }
+
+            break;
+
+        case HTTP_RESPONSE_BAD_REQUEST:
+        case HTTP_RESPONSE_FORBIDDEN:
+        case HTTP_RESPONSE_NOT_FOUND:
+            /* Request the job document to get new url. */
+            eventMsg.eventId = OtaAgentEventRequestJobDocument;
+            eventMsg.pEventData = NULL;
+            OTA_SignalEvent( &eventMsg );
+
+            ret = OtaHttpSuccess;
+            break;
+
+        default:
+            LogError( ( "Unhandled http response code: =%d.",
+                        pResponse->statusCode ) );
+
+            ret = OtaHttpRequestFailed;
+    }
+
+    return ret;
+}
 
 static OtaHttpStatus_t httpInit( char * pUrl )
 {
@@ -1350,6 +1424,9 @@ static OtaHttpStatus_t httpRequest( uint32_t rangeStart,
     /* Return value of all methods from the HTTP Client library API. */
     HTTPStatus_t httpStatus = HTTPSuccess;
 
+    /* Reconnection required flag. */
+    bool reconnectRequired = false;
+
     /* Initialize all HTTP Client library API structs to 0. */
     ( void ) memset( &requestInfo, 0, sizeof( requestInfo ) );
     ( void ) memset( &response, 0, sizeof( response ) );
@@ -1403,24 +1480,43 @@ static OtaHttpStatus_t httpRequest( uint32_t rangeStart,
     {
         if( httpStatus == HTTPNoResponse )
         {
-            /* reconnect to server. */
-            connectToS3Server( &networkContextHttp, NULL );
+            reconnectRequired = true;
         }
         else
         {
+            LogError( ( "HTTPClient_Send failed: Error=%s.",
+                        HTTPClient_strerror( httpStatus ) ) );
+
             ret = OtaHttpRequestFailed;
         }
     }
     else
     {
-        /* Get the data from response buffer. */
-        memcpy( pData->data, response.pBody, response.bodyLen );
-        pData->dataLength = response.bodyLen;
+        /* Check if reconnection required. */
+        if( response.respFlags | HTTP_RESPONSE_CONNECTION_CLOSE_FLAG )
+        {
+            reconnectRequired = true;
+        }
 
-        /* Send job document received event. */
-        eventMsg.eventId = OtaAgentEventReceivedFileBlock;
-        eventMsg.pEventData = pData;
-        OTA_SignalEvent( &eventMsg );
+        /* Handle the http response received. */
+        ret = handleHttpResponse( &response );
+    }
+
+    if( reconnectRequired == true )
+    {
+        if( connectToS3Server( &networkContextHttp, NULL ) == EXIT_SUCCESS )
+        {
+            ret = HTTPSuccess;
+        }
+        else
+        {
+            /* Log an error to indicate connection failure after all
+             * reconnect attempts are over. */
+            LogError( ( "Failed to connect to HTTP server %s.",
+                        serverHost ) );
+
+            ret = OtaHttpRequestFailed;
+        }
     }
 
     return ret;
