@@ -204,20 +204,18 @@
  */
 #define CONNECTION_RETRY_MAX_ATTEMPTS    ( 5U )
 
-/* Check that size of the user buffer is defined. */
-#ifndef USER_BUFFER_LENGTH
-    #define USER_BUFFER_LENGTH    ( 2048 )
-#endif
+/* HTTP buffers used for http request and response. */
+#define HTTP_USER_BUFFER_LENGTH          ( otaconfigFILE_BLOCK_SIZE + 1024 )
 
 /**
  * @brief The MQTT metrics string expected by AWS IoT.
  */
-#define METRICS_STRING           "?SDK=" OS_NAME "&Version=" OS_VERSION "&Platform=" HARDWARE_PLATFORM_NAME "&OTALib=" OTA_LIB
+#define METRICS_STRING                   "?SDK=" OS_NAME "&Version=" OS_VERSION "&Platform=" HARDWARE_PLATFORM_NAME "&OTALib=" OTA_LIB
 
 /**
  * @brief The length of the MQTT metrics string expected by AWS IoT.
  */
-#define METRICS_STRING_LENGTH    ( ( uint16_t ) ( sizeof( METRICS_STRING ) - 1 ) )
+#define METRICS_STRING_LENGTH            ( ( uint16_t ) ( sizeof( METRICS_STRING ) - 1 ) )
 
 
 #ifdef CLIENT_USERNAME
@@ -299,7 +297,7 @@ static char serverHost[ 256 ];
  * response after the HTTP request is sent out. However, the user can also
  * decide to use separate buffers for storing the HTTP request and response.
  */
-static uint8_t userBuffer[ USER_BUFFER_LENGTH ];
+static uint8_t httpUserBuffer[ HTTP_USER_BUFFER_LENGTH ];
 
 /* The transport layer interface used by the HTTP Client library. */
 TransportInterface_t transportInterfaceHttp;
@@ -1370,8 +1368,8 @@ static OtaHttpStatus_t httpRequest( uint32_t rangeStart,
     requestInfo.reqFlags = HTTP_REQUEST_KEEP_ALIVE_FLAG;
 
     /* Set the buffer used for storing request headers. */
-    requestHeaders.pBuffer = userBuffer;
-    requestHeaders.bufferLen = USER_BUFFER_LENGTH;
+    requestHeaders.pBuffer = httpUserBuffer;
+    requestHeaders.bufferLen = HTTP_USER_BUFFER_LENGTH;
 
     httpStatus = HTTPClient_InitializeRequestHeaders( &requestHeaders,
                                                       &requestInfo );
@@ -1382,8 +1380,8 @@ static OtaHttpStatus_t httpRequest( uint32_t rangeStart,
     {
         /* Initialize the response object. The same buffer used for storing
          * request headers is reused here. */
-        response.pBuffer = userBuffer;
-        response.bufferLen = USER_BUFFER_LENGTH;
+        response.pBuffer = httpUserBuffer;
+        response.bufferLen = HTTP_USER_BUFFER_LENGTH;
 
         /* Send the request and receive the response. */
         httpStatus = HTTPClient_Send( &transportInterfaceHttp,
