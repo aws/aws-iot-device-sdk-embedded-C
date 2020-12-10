@@ -610,11 +610,10 @@ static void otaAppCallback( OtaJobEvent_t event,
         OTA_ActivateNewImage();
 
         /* We should never get here as new image activation must reset the device.*/
-        LogError( ( "New image activation failed." ) );
+        LogError( ( "New image activation failed, exiting." ) );
 
-        for( ; ; )
-        {
-        }
+        /* Exit this application.*/
+        exit( EXIT_SUCCESS );
     }
     else if( event == OtaJobEventFail )
     {
