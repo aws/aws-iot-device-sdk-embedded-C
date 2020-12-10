@@ -1,0 +1,32 @@
+{
+    "files.associations": {
+        "iot_network_metrics.h": "c",
+        "iot_clock.h": "c",
+        "iot_metrics.h": "c",
+        "stdarg.h": "c",
+        "iot_tests_mqtt_mock.h": "c",
+        "aws_iot_provisioning_internal.h": "c",
+        "iot_serializer.h": "c",
+        "iot_mqtt_serializer.h": "c",
+        "string.h": "c",
+        "iot_threads.h": "c",
+        "iot_atomic.h": "c",
+        "iot_atomic_gcc.h": "c",
+        "stdint.h": "c",
+        "iot_config.h": "c",
+        "signal.h": "c",
+        "time.h": "c",
+        "stdlib.h": "c",
+        "cstdlib": "c",
+        "iot_logging_levels.h": "c",
+        "http_client.h": "c",
+        "mqtt_client_internal.h": "c",
+        "mqtt_client.h": "c",
+        "config.h": "c",
+        "iot_logging_setup.h": "c",
+        "logging_config.h": "c",
+        "mqtt_config.h": "c",
+        "iot_logging.h": "c",
+        "logging_levels.h": "c"
+    }
+}

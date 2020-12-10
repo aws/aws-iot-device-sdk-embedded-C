@@ -43,53 +43,32 @@ jobs:
         uses: actions/checkout@v2
         with:
           ref: ${{ github.event.inputs.commit_id }}
-          path: coreMQTT
+          path: aws-iot-device-sdk-embedded-C
           submodules: recursive
       - name: Checkout disabled submodules
         run: |
-          cd coreMQTT
+          cd aws-iot-device-sdk-embedded-C
           git submodule update --init --checkout --recursive
       - name: Create ZIP
         run: |
-          zip -r coreMQTT-${{ github.event.inputs.version_number }}.zip coreMQTT -x "*.git*"
+          zip -r aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}.zip aws-iot-device-sdk-embedded-C -x "*.git*"
           ls ./
       - name: Validate created ZIP
         run: |
           mkdir zip-check
-          mv coreMQTT-${{ github.event.inputs.version_number }}.zip zip-check
+          mv aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}.zip zip-check
           cd zip-check
-          unzip coreMQTT-${{ github.event.inputs.version_number }}.zip -d coreMQTT-${{ github.event.inputs.version_number }}
-          ls coreMQTT-${{ github.event.inputs.version_number }}
-          diff -r -x "*.git*" coreMQTT-${{ github.event.inputs.version_number }}/coreMQTT/ ../coreMQTT/
-          cd ../
+          unzip aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}.zip -d aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}
+          ls aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}
+          diff -r -x "*.git*" aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}/aws-iot-device-sdk-embedded-C/ ../aws-iot-device-sdk-embedded-C/
+          cd ../          
       - name : Build Check Demos
         run: |
-          cd zip-check/coreMQTT-${{ github.event.inputs.version_number }}/coreMQTT
-          sudo apt-get install -y lcov
-          cmake -S . -B build/ \
-          -G "Unix Makefiles" \
-          -DCMAKE_BUILD_TYPE=Release \
-          -DCMAKE_C_FLAGS='-Wall -Wextra -Werror' \
-          -DAWS_IOT_ENDPOINT="aws-iot-endpoint" \
-          -DBROKER_ENDPOINT="broker-endpoint" \
-          -DCLIENT_CERT_PATH="cert/path" \
-          -DROOT_CA_CERT_PATH="cert/path" \
-          -DCLIENT_PRIVATE_KEY_PATH="key/path" \
-          -DCLIENT_IDENTIFIER="ci-identifier" \
-          -DTHING_NAME="thing-name" \
-          -DS3_PRESIGNED_GET_URL="get-url" \
-          -DS3_PRESIGNED_PUT_URL="put-url"
           sudo apt-get install -y libmosquitto-dev
-          make -C build/ help | grep demo | tr -d '. ' | xargs make -C build/
-          make -C demos/jobs/jobs_demo_mosquitto
-      - name : Build Check Tests
-        run: |
-          cd zip-check/coreMQTT-${{ github.event.inputs.version_number }}/coreMQTT/
-          rm -rf ./build
+          cd zip-check/aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}/aws-iot-device-sdk-embedded-C/
           cmake -S . -B build/ \
           -G "Unix Makefiles" \
           -DCMAKE_BUILD_TYPE=Release \
-          -DBUILD_TESTS=1 \
           -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Werror' \
           -DAWS_IOT_ENDPOINT="aws-iot-endpoint" \
           -DBROKER_ENDPOINT="broker-endpoint" \
@@ -100,17 +79,34 @@ jobs:
           -DTHING_NAME="thing-name" \
           -DS3_PRESIGNED_GET_URL="get-url" \
           -DS3_PRESIGNED_PUT_URL="put-url"
-          make -C build/ all
+          make -C build/ help | grep demo | tr -d '. ' | xargs make -C build/
+          make -C demos/jobs/jobs_demo_mosquitto -j8
+      - name : Build Check Tests
+        run: |
+          cd zip-check/aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}/aws-iot-device-sdk-embedded-C/
+          rm -rf ./build
+          cmake -S . -B build/ \
+          -G "Unix Makefiles" \
+          -DCMAKE_BUILD_TYPE=Debug \
+          -DBUILD_TESTS=1 \
+          -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Werror' \
+          -DAWS_IOT_ENDPOINT="aws-iot-endpoint" \
+          -DBROKER_ENDPOINT="broker-endpoint" \
+          -DCLIENT_CERT_PATH="cert/path" \
+          -DROOT_CA_CERT_PATH="cert/path" \
+          -DCLIENT_PRIVATE_KEY_PATH="key/path" \
+          -DCLIENT_IDENTIFIER="ci-identifier"
+          make -C build/ all -j8
       - name: Run Unit Tests
         run: |
-          cd zip-check/coreMQTT-${{ github.event.inputs.version_number }}/coreMQTT/build/
+          cd zip-check/aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}/aws-iot-device-sdk-embedded-C/build/
           ctest -E system --output-on-failure
           cd ..
       - name: Create artifact of ZIP
         uses: actions/upload-artifact@v2
         with:
-          name: coreMQTT-${{ github.event.inputs.version_number }}.zip
-          path: zip-check/coreMQTT-${{ github.event.inputs.version_number }}.zip
+          name: aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}.zip
+          path: zip-check/aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}.zip
   create-release:
     needs: create-zip
     name: Create Release and Upload Release Asset
@@ -130,7 +126,7 @@ jobs:
       - name: Download ZIP artifact
         uses: actions/download-artifact@v2
         with:
-          name: coreMQTT-${{ github.event.inputs.version_number }}.zip
+          name: aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}.zip
       - name: Upload Release Asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
@@ -138,6 +134,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./coreMQTT-${{ github.event.inputs.version_number }}.zip
-          asset_name: coreMQTT-${{ github.event.inputs.version_number }}.zip
+          asset_path: ./aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}.zip
+          asset_name: aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}.zip
           asset_content_type: application/zip
