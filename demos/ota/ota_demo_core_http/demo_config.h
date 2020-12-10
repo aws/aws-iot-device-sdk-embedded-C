@@ -137,12 +137,12 @@
  */
 
 /**
- * @brief MQTT client identifier.
+ * @brief MQTT Client identifier.
  *
  * No two clients may use the same client identifier simultaneously.
  */
-#ifndef MQTT_CLIENT_IDENTIFIER
-    #define MQTT_CLIENT_IDENTIFIER    "testclient"
+#ifndef CLIENT_IDENTIFIER
+    #define CLIENT_IDENTIFIER    "testclient"
 #endif
 
 /**
