@@ -9,6 +9,7 @@
         * [coreMQTT](#coremqtt)
         * [coreHTTP](#corehttp)
         * [coreJSON](#corejson)
+        * [corePKCS11](#corepkcs11)
         * [AWS IoT Device Shadow](#aws-iot-device-shadow)
         * [AWS IoT Jobs](#aws-iot-jobs)
         * [AWS IoT Device Defender](#aws-iot-device-defender)
@@ -76,6 +77,12 @@ See memory requirements for the latest release [here](https://docs.aws.amazon.co
 The [coreJSON](https://github.com/FreeRTOS/coreJSON) library is a JSON parser that strictly enforces the [ECMA-404 JSON standard](https://www.json.org/json-en.html). It provides a function to validate a JSON document, and a function to search for a key and return its value. A search can descend into nested structures using a compound query key. A JSON document validation also checks for illegal UTF8 encodings and illegal Unicode escape sequences.
 
 See memory requirements for the latest release [here](https://docs.aws.amazon.com/embedded-csdk/202011.00/lib-ref/libraries/standard/coreJSON/docs/doxygen/output/html/index.html#json_memory_requirements).
+
+#### corePKCS11
+
+The [corePKCS11](https://github.com/FreeRTOS/corePKCS11) library is an implementation of the PKCS #11 interface (API) that makes it easier to develop applications that rely on cryptographic operations. Only a subset of the [PKCS #11 v2.4](http://docs.oasis-open.org/pkcs11/pkcs11-base/v2.40/os/pkcs11-base-v2.40-os.html) standard has been implemented, with a focus on operations involving asymmetric keys, random number generation, and hashing.
+
+See memory requirements for the latest release [here](https://docs.aws.amazon.com/embedded-csdk/202011.00/lib-ref/libraries/standard/corePKCS11/docs/doxygen/output/html/pkcs11_design.html#pkcs11_memory_requirements).
 
 #### AWS IoT Device Shadow
 

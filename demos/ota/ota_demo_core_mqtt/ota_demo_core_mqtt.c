@@ -603,18 +603,14 @@ static void otaAppCallback( OtaJobEvent_t event,
     {
         LogInfo( ( "Received OtaJobEventActivate callback from OTA Agent." ) );
 
-        /* Disconnect from broker and close connection. */
-        disconnect();
-
         /* Activate the new firmware image. */
         OTA_ActivateNewImage();
 
-        /* We should never get here as new image activation must reset the device.*/
-        LogError( ( "New image activation failed." ) );
+        /* Shutdown OTA Agent. */
+        OTA_Shutdown( 0 );
 
-        for( ; ; )
-        {
-        }
+        /* Requires manual activation of new image.*/
+        LogError( ( "New image activation failed." ) );
     }
     else if( event == OtaJobEventFail )
     {
@@ -678,7 +674,7 @@ static void mqttJobCallback( MQTTContext_t * pContext,
     }
     else
     {
-        LogError( ( "No OTA data buffers available.\r\n" ) );
+        LogError( ( "No OTA data buffers available." ) );
     }
 }
 
@@ -711,7 +707,7 @@ static void mqttDataCallback( MQTTContext_t * pContext,
     }
     else
     {
-        LogError( ( "No OTA data buffers available.\r\n" ) );
+        LogError( ( "No OTA data buffers available." ) );
     }
 }
 
@@ -1079,10 +1075,10 @@ static void disconnect( void )
             /* Disconnect MQTT session. */
             MQTT_Disconnect( &mqttContext );
 
-            pthread_mutex_unlock( &mqttMutex );
-
             /* Clear the mqtt session flag. */
             mqttSessionEstablished = false;
+
+            pthread_mutex_unlock( &mqttMutex );
         }
         else
         {
