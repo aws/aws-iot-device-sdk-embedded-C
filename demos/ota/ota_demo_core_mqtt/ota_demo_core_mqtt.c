@@ -547,7 +547,7 @@ static SubscriptionManagerCallback_t otaMessageCallback[ OtaNumOfMessageType ] =
 
 void otaEventBufferFree( OtaEventData_t * const pxBuffer )
 {
-    if( sem_trywait( &bufferSemaphore ) == 0 )
+    if( sem_wait( &bufferSemaphore ) == 0 )
     {
         pxBuffer->bufferUsed = false;
         ( void ) sem_post( &bufferSemaphore );
@@ -567,7 +567,7 @@ OtaEventData_t * otaEventBufferGet( void )
     uint32_t ulIndex = 0;
     OtaEventData_t * pFreeBuffer = NULL;
 
-    if( sem_trywait( &bufferSemaphore ) == 0 )
+    if( sem_wait( &bufferSemaphore ) == 0 )
     {
         for( ulIndex = 0; ulIndex < otaconfigMAX_NUM_OTA_DATA_BUFFERS; ulIndex++ )
         {
