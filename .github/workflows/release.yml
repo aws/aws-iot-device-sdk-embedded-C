@@ -61,7 +61,7 @@ jobs:
           unzip aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}.zip -d aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}
           ls aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}
           diff -r -x "*.git*" aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}/aws-iot-device-sdk-embedded-C/ ../aws-iot-device-sdk-embedded-C/
-          cd ../          
+          cd ../
       - name : Build Check Demos
         run: |
           sudo apt-get install -y libmosquitto-dev
