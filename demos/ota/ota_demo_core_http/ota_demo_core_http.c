@@ -1488,7 +1488,7 @@ static OtaHttpStatus_t httpRequest( uint32_t rangeStart,
     else
     {
         /* Check if reconnection required. */
-        if( response.respFlags | HTTP_RESPONSE_CONNECTION_CLOSE_FLAG )
+        if( response.respFlags & HTTP_RESPONSE_CONNECTION_CLOSE_FLAG )
         {
             reconnectRequired = true;
         }
