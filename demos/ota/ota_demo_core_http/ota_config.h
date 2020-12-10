@@ -58,7 +58,7 @@
  *
  * 10 bits yields a data block size of 1KB.
  */
-#define otaconfigLOG2_FILE_BLOCK_SIZE          14UL
+#define otaconfigLOG2_FILE_BLOCK_SIZE          12UL
 
 /**
  * @brief Size of the file data block message (excluding the header).
@@ -119,6 +119,15 @@
  * the OTA agent for job and file data blocks received.
  */
 #define otaconfigMAX_NUM_OTA_DATA_BUFFERS      2U
+
+/**
+ * @brief How frequently the device will report its OTA progress to the cloud.
+ *
+ * Device will update the job status with the number of blocks it has received every certain
+ * number of blocks it receives. For example, 25 means device will update job status every 25 blocks
+ * it receives.
+ */
+#define otaconfigOTA_UPDATE_STATUS_FREQUENCY    25U
 
 /**
  * @brief Allow update to same or lower version.
