@@ -30,16 +30,13 @@ jobs:
           body: Release version ${{ github.event.inputs.version_number }} of the AWS IoT Device SDK for Embedded C.	
           draft: false	
           prerelease: false	
-      - name: Download artifact
+      - name: Download ZIP artifact
         uses: dawidd6/action-download-artifact@v2
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           # Required, workflow file name or ID
           workflow: ${{ github.event.inputs.workflow_name }}.yml
-          run_id: ${{ github.event.inputs.workflow_id }}
-      - name: Download ZIP artifact	
-        uses: actions/download-artifact@v2	
-        with:	
+          branch: ci/add-release-job
           name: aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}.zip	
       - name: Upload Release Asset	
         id: upload-release-asset	
