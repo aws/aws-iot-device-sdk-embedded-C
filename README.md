@@ -78,7 +78,7 @@ See memory requirements for the latest release [here](https://docs.aws.amazon.co
 
 #### corePKCS11
 
-The [corePKCS11](https://github.com/FreeRTOS/corePKCS11) library is an implementation of the PKCS #11 interface (API) that makes it easier to develop applications that rely on cryptographic operations. Only a subset of [PKCS #11 v2.4](http://docs.oasis-open.org/pkcs11/pkcs11-base/v2.40/os/pkcs11-base-v2.40-os.html) has been implemented, with a focus on operations involving asymmetric keys, random number generation, and hashing.
+The [corePKCS11](https://github.com/FreeRTOS/corePKCS11) library is an implementation of the PKCS #11 interface (API) that makes it easier to develop applications that rely on cryptographic operations. Only a subset of the [PKCS #11 v2.4](http://docs.oasis-open.org/pkcs11/pkcs11-base/v2.40/os/pkcs11-base-v2.40-os.html) standard has been implemented, with a focus on operations involving asymmetric keys, random number generation, and hashing.
 
 See memory requirements for the latest release [here](https://docs.aws.amazon.com/embedded-csdk/202011.00/lib-ref/libraries/standard/corePKCS11/docs/doxygen/output/html/pkcs11_design.html#pkcs11_memory_requirements).
 
