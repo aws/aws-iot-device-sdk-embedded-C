@@ -316,7 +316,7 @@ static void OTA_PAL_FailSingleMock_stdio( MockFunctionNames_t funcToFail,
     fopen_IgnoreAndReturn( fopen_return );
 
     snprintf_return = ( funcToFail == snprintf_fn ) ? snprintf_failure : snprintf_success;
-    snprintf_IgnoreAndReturn( snprintf_return );
+    snprintf_alias_IgnoreAndReturn( snprintf_return );
 
     fread_return = ( funcToFail == fread_fn ) ? fread_failure : fread_success;
     fread_IgnoreAndReturn( fread_return );
@@ -1045,7 +1045,7 @@ void test_OTAPAL_GetPlatformImageState_fclose_fails( void )
     const int fclose_fail_val = EOF;
 
     /* Predefine what functions are expected to be called. */
-    snprintf_ExpectAnyArgsAndReturn( snprintf_success_val );
+    snprintf_alias_ExpectAnyArgsAndReturn( snprintf_success_val );
     fopen_ExpectAnyArgsAndReturn( fopen_success_val );
     fread_ExpectAnyArgsAndReturn( fread_success_val );
     fclose_ExpectAnyArgsAndReturn( fclose_fail_val );
@@ -1085,7 +1085,7 @@ void test_OTAPAL_GetPlatformImageState_ValidStates( void )
     /* Test the scenario where the platform state is OtaImageStateTesting. */
     freadResultingState = OtaImageStateTesting;
     /* Predefine what functions are expected to be called. */
-    snprintf_ExpectAnyArgsAndReturn( snprintf_success_val );
+    snprintf_alias_ExpectAnyArgsAndReturn( snprintf_success_val );
     fopen_ExpectAnyArgsAndReturn( fopen_success_val );
     fread_ExpectAnyArgsAndReturn( fread_success_val );
     fread_ReturnThruPtr_ptr( &freadResultingState );
@@ -1097,7 +1097,7 @@ void test_OTAPAL_GetPlatformImageState_ValidStates( void )
     /* Test the scenario where the platform state is OtaImageStateAccepted. */
     freadResultingState = OtaImageStateAccepted;
     /* Predefine what functions are expected to be called. */
-    snprintf_ExpectAnyArgsAndReturn( snprintf_success_val );
+    snprintf_alias_ExpectAnyArgsAndReturn( snprintf_success_val );
     fopen_ExpectAnyArgsAndReturn( fopen_success_val );
     fread_ExpectAnyArgsAndReturn( fread_success_val );
     fread_ReturnThruPtr_ptr( &freadResultingState );
@@ -1109,7 +1109,7 @@ void test_OTAPAL_GetPlatformImageState_ValidStates( void )
     /* Test the scenario where the platform state is an unexpected value. */
     freadResultingState = invalidImageState;
     /* Predefine what functions are expected to be called. */
-    snprintf_ExpectAnyArgsAndReturn( snprintf_success_val );
+    snprintf_alias_ExpectAnyArgsAndReturn( snprintf_success_val );
     fopen_ExpectAnyArgsAndReturn( fopen_success_val );
     fread_ExpectAnyArgsAndReturn( fread_success_val );
     fread_ReturnThruPtr_ptr( &freadResultingState );
