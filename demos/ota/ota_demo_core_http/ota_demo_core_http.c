@@ -1410,9 +1410,6 @@ static OtaHttpStatus_t httpRequest( uint32_t rangeStart,
     /* OTA lib return error code. */
     OtaHttpStatus_t ret = OtaHttpSuccess;
 
-    OtaEventData_t * pData;
-    OtaEventMsg_t eventMsg = { 0 };
-
     /* Configurations of the initial request headers that are passed to
      * #HTTPClient_InitializeRequestHeaders. */
     HTTPRequestInfo_t requestInfo;
@@ -1473,8 +1470,6 @@ static OtaHttpStatus_t httpRequest( uint32_t rangeStart,
         LogError( ( "Failed to initialize HTTP request headers: Error=%s.",
                     HTTPClient_strerror( httpStatus ) ) );
     }
-
-    pData = &eventBuffer[ 0 ];
 
     if( httpStatus != HTTPSuccess )
     {
