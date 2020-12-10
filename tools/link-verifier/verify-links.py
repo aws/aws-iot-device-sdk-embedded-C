@@ -27,6 +27,12 @@ ISSUE_SEARCH = r'https://github.com/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)/issues/(
 # seconds to fetch them all, depending on the size of the repo.
 GITHUB_FETCH_THRESHOLD = 5
 
+NUM_PR_KEY = 'num_prs'
+NUM_IS_KEY = 'num_issues'
+PR_KEY = 'prs'
+ISSUE_KEY = 'issues'
+PR_CACHED_KEY = 'pr_cached'
+ISSUE_CACHED_KEY = 'issue_cached'
 """
 Format for repository list:
 {
@@ -42,7 +48,9 @@ Format for repository list:
 """
 main_repo_list = {}
 # Whether to use the above cache of repositories.
-use_cache = True
+use_gh_cache = True
+# Track links so that we don't test multiple times.
+link_cache = {}
 
 class HtmlFile:
     """A class of files with a .html extension"""
@@ -88,11 +96,11 @@ class HtmlFile:
 
         repo_key = f'{owner}/{repo}'.lower()
         if repo_key not in self.linked_repos:
-            self.linked_repos[repo_key] = { 'num_issues' : 0, 'num_prs' : 0 }
+            self.linked_repos[repo_key] = { NUM_IS_KEY : 0, NUM_PR_KEY : 0 }
         if is_pr:
-            self.linked_repos[repo_key]['num_prs'] += 1
+            self.linked_repos[repo_key][NUM_PR_KEY] += 1
         else:
-            self.linked_repos[repo_key]['num_issues'] += 1
+            self.linked_repos[repo_key][NUM_IS_KEY] += 1
 
     def print_filename(self, filename, file_printed):
         """Prints a file name if it hasn't been printed before"""
@@ -124,7 +132,9 @@ class HtmlFile:
                         file_printed = self.print_filename(files[self.name], file_printed)
                         cprint(f'\t{link}', 'green')
                 continue
-            # This is probably a link to a file in the same repo, so we test if the file exists.
+
+            # At this point, this is probably a link to a file in the same repo,
+            # so we test if the file exists.
             filename = os.path.join(dirname, path)
             absfile = os.path.abspath(filename)
             # Note: We don't test whether the link target exists, just the file.
@@ -174,44 +184,59 @@ def create_html(markdown_file):
 def test_url(url):
     """Tests a single url"""
 
-    global use_cache
+    global use_gh_cache
     global main_repo_list
+    global link_cache
     status = ''
     is_broken = False
-    # Test if link was already cached. If not, fail silently and send a request for the link.
-    try:
-        if use_cache:
-            pr_match = re.search(PULL_REQUEST_SEARCH, url)
-            issue_match = re.search(ISSUE_SEARCH, url)
-            if pr_match is not None:
-                repo_key = f'{pr_match.group(1)}/{pr_match.group(2)}'.lower()
-                if int(pr_match.group(3)) in main_repo_list[repo_key]['prs']:
+    # Test if link was already tested before.
+    if url in link_cache:
+        is_broken = link_cache[url][0]
+        status = link_cache[url][1]
+        return is_broken, status
+    # Test if link was cached in pre-fetched GitHub issues. If not, send a request for the link.
+    if use_gh_cache:
+        pr_match = re.search(PULL_REQUEST_SEARCH, url)
+        issue_match = re.search(ISSUE_SEARCH, url)
+        if pr_match is not None:
+            repo_key = f'{pr_match.group(1)}/{pr_match.group(2)}'.lower()
+            if repo_key in main_repo_list and PR_KEY in main_repo_list[repo_key]:
+                if int(pr_match.group(3)) in main_repo_list[repo_key][PR_KEY]:
                     status = 'Good'
-            elif issue_match is not None:
-                repo_key = f'{issue_match.group(1)}/{issue_match.group(2)}'.lower()
-                if int(issue_match.group(3)) in main_repo_list[repo_key]['issues']:
+        elif issue_match is not None:
+            repo_key = f'{issue_match.group(1)}/{issue_match.group(2)}'.lower()
+            if repo_key in main_repo_list and ISSUE_KEY in main_repo_list[repo_key]:
+                if int(issue_match.group(3)) in main_repo_list[repo_key][ISSUE_KEY]:
                     status = 'Good'
-    except ValueError as e:
-        pass
     if status != 'Good':
-        r = requests.head(url, allow_redirects=True)
-        # Some sites may return 404 for head but not get, e.g.
-        # https://tls.mbed.org/kb/development/thread-safety-and-multi-threading
-        if r.status_code >= 400:
-            r = requests.get(url)
-        # It's likely we will run into GitHub's rate-limiting if there are many links.
-        if r.status_code == 429:
-            time.sleep(int(r.headers['Retry-After']))
+        try:
             r = requests.head(url, allow_redirects=True)
-        if r.status_code >= 400:
+            # Some sites may return 404 for head but not get, e.g.
+            # https://tls.mbed.org/kb/development/thread-safety-and-multi-threading
+            if r.status_code >= 400:
+                # Allow redirects is already enabled by default for GET.
+                r = requests.get(url)
+            # It's likely we will run into GitHub's rate-limiting if there are many links.
+            if r.status_code == 429:
+                time.sleep(int(r.headers['Retry-After']))
+                r = requests.head(url, allow_redirects=True)
+            if r.status_code >= 400:
+                is_broken = True
+            status = r.status_code
+        # requests.exceptions.ConnectionError if URL does not exist, but we capture
+        # all possible exceptions from trying the link to be safe.
+        except Exception as e:
+            traceback.print_exc()
             is_broken = True
-        status = r.status_code
+            status = 'Error'
+    # Add result to cache so it won't be tested again.
+    link_cache[url] = (is_broken, status)
     return is_broken, status
 
 def fetch_issues(repo, issue_type, limit):
     """Uses the GitHub CLI to fetch a list of PRs or issues"""
 
-    global use_cache
+    global use_gh_cache
     global main_repo_list
     if shutil.which('gh') is not None:
         # List PRs or issues for repository and extract numbers.
@@ -230,40 +255,40 @@ def fetch_issues(repo, issue_type, limit):
                 main_repo_list[repo][key].add(int(issue))
         return 0
     else:
-        use_cache = False
+        use_gh_cache = False
 
 def consolidate_repo_list(repo_list):
     """Combines each list of repos into a single main list"""
 
-    global use_cache
+    global use_gh_cache
     global main_repo_list
     for repo, stats in repo_list.items():
         if repo not in main_repo_list:
             main_repo_list[repo] = stats
-            main_repo_list[repo]['pr_cached'] = False
-            main_repo_list[repo]['issue_cached'] = False
-            main_repo_list[repo]['prs'] = set()
-            main_repo_list[repo]['issues'] = set()
+            main_repo_list[repo][PR_CACHED_KEY] = False
+            main_repo_list[repo][ISSUE_CACHED_KEY] = False
+            main_repo_list[repo][PR_KEY] = set()
+            main_repo_list[repo][ISSUE_KEY] = set()
         else:
-            main_repo_list[repo]['num_prs'] += stats['num_prs']
-            main_repo_list[repo]['num_issues'] += stats['num_issues']
-        # Fetch the list of GH PRs and cache them. If we run into an error than we
+            main_repo_list[repo][NUM_PR_KEY] += stats[NUM_PR_KEY]
+            main_repo_list[repo][NUM_IS_KEY] += stats[NUM_IS_KEY]
+        # Fetch the list of GH PRs and cache them. If we run into an error then we
         # stop trying to use the cached list.
-        if use_cache:
-            if main_repo_list[repo]['num_prs'] > GITHUB_FETCH_THRESHOLD and main_repo_list[repo]['pr_cached'] == False:
+        if use_gh_cache:
+            if main_repo_list[repo][NUM_PR_KEY] > GITHUB_FETCH_THRESHOLD and main_repo_list[repo][PR_CACHED_KEY] == False:
                 try:
                     fetch_issues(repo, 'pr', 1500)
                 except Exception as e:
                     traceback.print_exc()
-                    use_cache = False
-                main_repo_list[repo]['pr_cached'] = True
-            if main_repo_list[repo]['num_issues'] > GITHUB_FETCH_THRESHOLD and main_repo_list[repo]['issue_cached'] == False:
+                    use_gh_cache = False
+                main_repo_list[repo][PR_CACHED_KEY] = True
+            if main_repo_list[repo][NUM_IS_KEY] > GITHUB_FETCH_THRESHOLD and main_repo_list[repo][ISSUE_CACHED_KEY] == False:
                 try:
                     fetch_issues(repo, 'issue', 1000)
                 except Exception as e:
                     traceback.print_exc()
-                    use_cache = False
-                main_repo_list[repo]['issue_cached'] = True
+                    use_gh_cache = False
+                main_repo_list[repo][ISSUE_CACHED_KEY] = True
 
 
 def main():
@@ -322,25 +347,19 @@ def main():
 
     if args.links is not None:
         for link in args.links:
-            try:
-                is_broken, status_code = test_url(link)
-                if is_broken:
-                    broken_links.append(link)
-                    cprint(f'{status_code}\t{link}', 'red')
-                else:
-                    if args.verbose:
-                        cprint(f'{status_code}\t{link}', 'green')
-            # Many things could go wrong since anything could be passed on the command line.
-            except Exception as e:
-                traceback.print_exc()
+            is_broken, status_code = test_url(link)
+            if is_broken:
                 broken_links.append(link)
-                cprint(f'Error\t{link}', 'red')
+                cprint(f'{status_code}\t{link}', 'red')
+            else:
+                if args.verbose:
+                    cprint(f'{status_code}\t{link}', 'green')
 
-    # Return code > 0 to return error. This may return success if there are 256 broken links ¯\_(ツ)_/¯
+    # Return code > 0 to return error.
     num_broken = len(broken_links)
     if num_broken > 0:
         print(f'{num_broken} broken link' + ('s', '')[num_broken == 1])
-    sys.exit(num_broken)
+    sys.exit(num_broken != 0)
 
 if __name__ == "__main__":
     main()
