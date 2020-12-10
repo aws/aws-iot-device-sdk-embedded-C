@@ -1,4 +1,4 @@
-name: Create Release automation
+name: Create Release for Existing Tag
 
 on:
   workflow_dispatch:
