@@ -205,7 +205,7 @@ Guide for porting AWS IoT Device Defender library is available [here](https://do
 
 ### Porting AWS IoT Over-the-air Update
 
-Guide for porting OTA library to your platform is available [here](https://docs.aws.amazon.com/embedded-csdk/202012.00/lib-ref/libraries/standard/ota-for-aws-iot-embedded-sd/docs/doxygen/output/html/ota_porting.html).
+Guide for porting OTA library to your platform is available [here](https://docs.aws.amazon.com/embedded-csdk/202012.00/lib-ref/libraries/standard/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html/ota_porting.html).
 
 ## Migration guide from v3.1.2 to 202009.00 and newer releases
 
