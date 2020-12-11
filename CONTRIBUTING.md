@@ -31,7 +31,7 @@ To send us a pull request, please:
 
 1. Fork the repository.
 1. Modify the source; please focus on the specific change you are contributing. If you also reformat all the code, it will be hard for us to focus on your change.
-1. Ensure that your contributions conform to the [style guide](https://docs.aws.amazon.com/embedded-csdk/202011.00/lib-ref/docs/doxygen/output/html/guide_developer_styleguide.html).
+1. Ensure that your contributions conform to the [style guide](https://docs.aws.amazon.com/embedded-csdk/202012.00/lib-ref/docs/doxygen/output/html/guide_developer_styleguide.html).
 1. Ensure local tests pass.
 1. Commit to your fork using clear commit messages.
 1. Send us a pull request, answering any default questions in the pull request interface.
