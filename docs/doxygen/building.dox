@@ -108,7 +108,7 @@ Note: A pre-signed GET URL is required for all HTTP S3 demos. For upload demos, 
 	- `--region` : The name of the region in which your S3 bucket was created. If this is not passed in, the region configured in AWS CLI (or us-east-1, if not configured) will be used.
 
 
-@section configuring_ota_demos Configuring the Over-The-Air Update Demos
+@section configuring_ota_demos Configuring the Over-the-air Update Demos
 @brief Configurations and Prerequisites for the OTA Demo
 
 ## Requirements for OTA demo
