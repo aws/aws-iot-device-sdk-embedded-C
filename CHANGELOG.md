@@ -4,11 +4,11 @@
 
 ### Major Changes
 
-- This release introduces the **AWS IoT Over-the-air Update** client library, **backoffAlgorithm** library, and **PKCS11** library.
-These libraries have gone through code quality checks including verification that no function has a [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html) score greater than 8, and checks against deviations from the mandatory rules in the [MISRA coding standard](https://www.misra.org.uk/MISRAHome/MISRAC2012/tabid/196/Default.aspx). These libraries have also undergone both static code analysis from [Coverity statical analysis](https://scan.coverity.com/) and validation of memory safety through the [CBMC automated reasoning tool](http://www.cs.cmu.edu/~modelcheck/cbmc/).
+- This release introduces the **AWS IoT Over-the-air Update** library(Release Candidate), **backoffAlgorithm** library, and **PKCS11** library.
+These libraries have gone through code quality checks including verification that no function has a [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html) score greater than 8, checks against deviations from the mandatory rules in the [MISRA coding standard](https://www.misra.org.uk/MISRAHome/MISRAC2012/tabid/196/Default.aspx), and static code analysis from [Coverity statical analysis](https://scan.coverity.com/). In addition, PKCS11 library has also undergone validation of memory safety through the [CBMC automated reasoning tool](http://www.cs.cmu.edu/~modelcheck/cbmc/).
 
-- This release uses submodule references to the following new individual repositories for the AWS IoT Over-the-air Update client, backoffAlgorithm, and PKCS11 libraries under the `libraries` folder:
-   - [aws/ota-for-aws-iot-embedded-sdk](https://github.com/aws/ota-for-aws-iot-embedded-sdk) for the AWS IoT Over-the-air Update client library.
+- This release uses submodule references to the following new individual repositories for the AWS IoT Over-the-air Update, backoffAlgorithm, and PKCS11 libraries under the `libraries` folder:
+   - [aws/ota-for-aws-iot-embedded-sdk](https://github.com/aws/ota-for-aws-iot-embedded-sdk) for the AWS IoT Over-the-air Update library.
    - [FreeRTOS/backoffAlgorithm](https://github.com/FreeRTOS/backoffAlgorithm) for the backoffAlgorithm library.
    - [FreeRTOS/corePKCS11](https://github.com/FreeRTOS/corePKCS11) for the PKCS11 library.
 
