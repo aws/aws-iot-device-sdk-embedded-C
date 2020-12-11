@@ -13,7 +13,7 @@
         * [AWS IoT Device Shadow](#aws-iot-device-shadow)
         * [AWS IoT Jobs](#aws-iot-jobs)
         * [AWS IoT Device Defender](#aws-iot-device-defender)
-        * [AWS IoT Over-the-air Update](#aws-iot-over-the-air-update-v200-release-candidate)
+        * [AWS IoT Over-the-air Update Library (Release Candidate)](#aws-iot-over-the-air-update-v200-release-candidate)
         * [backoffAlgorithm](#backoffalgorithm)
     * [AWS Collection of Metrics](#aws-collection-of-metrics)
 * [Versioning](#versioning)
