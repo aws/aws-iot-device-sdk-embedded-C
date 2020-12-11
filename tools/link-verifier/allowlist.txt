@@ -1,0 +1,4 @@
+https://aws-s3-endpoint/object-key.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ABABABABABABABABABAB%2F20201027%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20201027T194726Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=SomeHash12345UrlABcdEFgfIjK
+https://aws-s3-endpoint/object-key.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ABABABABABABABABABAB%2F20201027%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20201027T194726Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=SomeHash12345UrlLMnmOPqrStUvW
+https://www.somewebsite.com/path/to/item.txt?optionalquery=stuff
+https://dummy-url.com/ota.bin
