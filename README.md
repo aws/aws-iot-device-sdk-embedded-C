@@ -13,7 +13,7 @@
         * [AWS IoT Device Shadow](#aws-iot-device-shadow)
         * [AWS IoT Jobs](#aws-iot-jobs)
         * [AWS IoT Device Defender](#aws-iot-device-defender)
-        * [AWS IoT Over-the-air Updates (Release Candidate)](#aws-iot-over-the-air-updates-(release-candidate))
+        * [AWS IoT Over-the-air Update Library (Release Candidate)](#aws-iot-over-the-air-update-v200-release-candidate)
         * [backoffAlgorithm](#backoffalgorithm)
     * [AWS Collection of Metrics](#aws-collection-of-metrics)
 * [Versioning](#versioning)
@@ -112,13 +112,13 @@ The AWS IoT Device Defender library has no dependencies on additional libraries 
 
 See memory requirements for the latest release [here](https://docs.aws.amazon.com/embedded-csdk/202011.00/lib-ref/libraries/aws/device-defender-for-aws-iot-embedded-sdk/docs/doxygen/output/html/index.html#defender_memory_requirements).
 
-#### AWS IoT Over-the-air Updates (Release Candidate)
+#### AWS IoT Over-the-air Update v2.0.0 (Release Candidate)
 
-The [AWS IoT Over-the-air Updates (Release Candidate)](https://github.com/aws/OTA-for-AWS-IoT-embedded-SDK) (OTA) library enables you to manage the notification of a newly available update, download the update, and perform cryptographic verification of the firmware update. Using the OTA library, you can logically separate firmware updates from the application running on your devices. You can also use the library to send other files (e.g. images, certificates) to one or more devices registered with AWS IoT. More details about OTA library can be found in [AWS IoT Over-The-Air Updates (Release Candidate) documentation](https://docs.aws.amazon.com/iot/latest/developerguide/iot-ota.html).
+The [AWS IoT Over-the-air Update v2.0.0 (Release Candidate)](https://github.com/aws/ota-for-aws-iot-embedded-sdk) (OTA) library enables you to manage the notification of a newly available update, download the update, and perform cryptographic verification of the firmware update. Using the OTA library, you can logically separate firmware updates from the application running on your devices. You can also use the library to send other files (e.g. images, certificates) to one or more devices registered with AWS IoT. More details about OTA library can be found in [AWS IoT Over-the-air Update v2.0.0 (Release Candidate) documentation](https://docs.aws.amazon.com/iot/latest/developerguide/iot-ota.html).
 
-The AWS IoT Over-the-air Updates library has a dependency on [coreJSON](https://github.com/FreeRTOS/coreJSON) for parsing of JSON job document and [tinyCBOR](https://github.com/intel/tinycbor.git) for decoding encoded data streams, other than the standard C library. It can be used with any MQTT library, HTTP library, and operating system (e.g. Linux, FreeRTOS) (see [demos](demos/ota) with coreMQTT and coreHTTP over Linux).
+The AWS IoT Over-the-air Update library has a dependency on [coreJSON](https://github.com/FreeRTOS/coreJSON) for parsing of JSON job document and [tinyCBOR](https://github.com/intel/tinycbor.git) for decoding encoded data streams, other than the standard C library. It can be used with any MQTT library, HTTP library, and operating system (e.g. Linux, FreeRTOS) (see [demos](demos/ota) with coreMQTT and coreHTTP over Linux).
 
-See memory requirements for the latest release [here](https://docs.aws.amazon.com/embedded-csdk/202011.00/lib-ref/libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html/index.html#ota_memory_requirements).
+See memory requirements for the latest release [here](https://docs.aws.amazon.com/embedded-csdk/202012.00/lib-ref/libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html/index.html#ota_memory_requirements).
 
 #### backoffAlgorithm 
 
@@ -203,9 +203,9 @@ Guide for porting AWS IoT Device Shadow library is available [here](https://docs
 
 Guide for porting AWS IoT Device Defender library is available [here](https://docs.aws.amazon.com/embedded-csdk/202011.00/lib-ref/libraries/aws/device-defender-for-aws-iot-embedded-sdk/docs/doxygen/output/html/defender_porting.html).
 
-### Porting AWS IoT Over-the-air Updates
+### Porting AWS IoT Over-the-air Update
 
-Guide for porting OTA library to your platform is available [here](https://docs.aws.amazon.com/embedded-csdk/202011.00/lib-ref/libraries/standard/ota-for-aws-iot-embedded-sd/docs/doxygen/output/html/ota_porting.html).
+Guide for porting OTA library to your platform is available [here](https://docs.aws.amazon.com/embedded-csdk/202012.00/lib-ref/libraries/standard/ota-for-aws-iot-embedded-sd/docs/doxygen/output/html/ota_porting.html).
 
 ## Migration guide from v3.1.2 to 202009.00 and newer releases
 
