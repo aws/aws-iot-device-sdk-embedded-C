@@ -1548,8 +1548,6 @@ static OtaHttpStatus_t httpRequest( uint32_t rangeStart,
 
 static OtaHttpStatus_t httpDeinit( void )
 {
-    int32_t returnStatus = EXIT_SUCCESS;
-
     OtaHttpStatus_t ret = OtaHttpSuccess;
 
     /* Nothing special to do here .*/
