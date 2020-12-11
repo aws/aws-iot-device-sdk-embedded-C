@@ -1629,7 +1629,7 @@ int main( int argc,
     bool bufferSemInitialized = false;
     bool mqttMutexInitialized = false;
 
-    /* Maximum time in mili seconds to wait before exiting demo . */
+    /* Maximum time in milliseconds to wait before exiting demo . */
     int16_t waitTimeoutMs = OTA_DEMO_EXIT_TIMEOUT_MS;
 
     /* Initialize semaphore for buffer operations. */
