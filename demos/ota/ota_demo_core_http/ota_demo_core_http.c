@@ -1498,7 +1498,7 @@ static OtaHttpStatus_t httpRequest( uint32_t rangeStart,
 
     if( httpStatus != HTTPSuccess )
     {
-        if( ( httpStatus == HTTPNoResponse ) || ( httpStatus == HTTPNoResponse ) )
+        if( ( httpStatus == HTTPNoResponse ) || ( httpStatus == HTTPNetworkError ) )
         {
             reconnectRequired = true;
         }
