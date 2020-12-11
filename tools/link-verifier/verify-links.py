@@ -169,7 +169,7 @@ def create_html(markdown_file):
     """Use pandoc to convert a markdown file to an HTML file"""
     html_file = html_name_from_markdown(markdown_file)
     # Convert from Github-flavored Markdown to HTML
-    cmd = f'pandoc -f markdown_github -o {html_file} {markdown_file}'
+    cmd = f'pandoc -f gfm -o {html_file} {markdown_file}'
     # Use pandoc to generate HTML from Markdown
     process = subprocess.run(
         cmd,
@@ -191,9 +191,7 @@ def test_url(url):
     is_broken = False
     # Test if link was already tested before.
     if url in link_cache:
-        is_broken = link_cache[url][0]
-        status = link_cache[url][1]
-        return is_broken, status
+        return link_cache[url]
     # Test if link was cached in pre-fetched GitHub issues. If not, send a request for the link.
     if use_gh_cache:
         pr_match = re.search(PULL_REQUEST_SEARCH, url)
