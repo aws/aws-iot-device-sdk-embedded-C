@@ -142,9 +142,9 @@ IoT_Error_t aws_iot_mqtt_set_client_state(AWS_IoT_Client *pClient, ClientState e
 	}
 
 #ifdef _ENABLE_THREAD_SUPPORT_
-	rc = aws_iot_mqtt_client_lock_mutex(pClient, &(pClient->clientData.state_change_mutex));
-	if(SUCCESS != rc) {
-		return rc;
+	threadRc = aws_iot_mqtt_client_lock_mutex(pClient, &(pClient->clientData.state_change_mutex));
+	if(SUCCESS != threadRc) {
+		return threadRc;
 	}
 #endif
 	if(expectedCurrentState == aws_iot_mqtt_get_client_state(pClient)) {
