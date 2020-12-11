@@ -1873,7 +1873,7 @@ static void setOtaInterfaces( OtaInterfaces_t * pOtaInterfaces )
 static void * otaThread( void * pParam )
 {
     /* Calling OTA agent task. */
-    otaAgentTask( pParam );
+    OTA_EventProcessingTask( pParam );
     LogInfo( ( "OTA Agent stopped." ) );
     return NULL;
 }
