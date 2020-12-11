@@ -300,6 +300,9 @@ IoT_Error_t iot_tls_write(Network *pNetwork, unsigned char *pMsg, size_t len, Ti
 	 * Timeout is specified by IOT_SSL_READ_RETRY_TIMEOUT_MS. */
 	Timer writeTimer;
 
+	/* This variable is unused */
+	(void) timer;
+
 	/* The timer must be started in case no bytes are written on the first try */
 	init_timer(&writeTimer);
 	countdown_ms(&writeTimer, IOT_SSL_WRITE_RETRY_TIMEOUT_MS);
@@ -308,7 +311,7 @@ IoT_Error_t iot_tls_write(Network *pNetwork, unsigned char *pMsg, size_t len, Ti
 		ret = mbedtls_ssl_write(pSsl, pMsg, len);
 
 		if(ret > 0) {
-			if((size_t)ret > len) {
+			if((size_t) ret > len) {
 				IOT_ERROR("More bytes written than requested\n\n");
 				return NETWORK_SSL_WRITE_ERROR;
 			}
@@ -326,7 +329,7 @@ IoT_Error_t iot_tls_write(Network *pNetwork, unsigned char *pMsg, size_t len, Ti
 				return NETWORK_SSL_WRITE_TIMEOUT_ERROR;
 			}
 		} else {
-			IOT_ERROR(" failed\n  ! mbedtls_ssl_write returned -0x%x\n\n", (unsigned int)-ret);
+			IOT_ERROR(" failed\n  ! mbedtls_ssl_write returned -0x%x\n\n", (unsigned int) -ret);
 			/* All other negative return values indicate connection needs to be reset.
 			 * Will be caught in ping request so ignored here */
 			return NETWORK_SSL_WRITE_ERROR;
@@ -352,6 +355,9 @@ IoT_Error_t iot_tls_read(Network *pNetwork, unsigned char *pMsg, size_t len, Tim
 	 * mbedtls_ssl_read. Timeout is specified by IOT_SSL_READ_RETRY_TIMEOUT_MS. */
 	Timer readTimer;
 
+	/* This variable is unused */
+	(void) timer;
+
 	/* The timer must be started in case no bytes are read on the first try */
 	init_timer(&readTimer);
 	countdown_ms(&readTimer, IOT_SSL_READ_RETRY_TIMEOUT_MS);
@@ -361,7 +367,7 @@ IoT_Error_t iot_tls_read(Network *pNetwork, unsigned char *pMsg, size_t len, Tim
 		ret = mbedtls_ssl_read(pSsl, pMsg, len);
 
 		if (ret > 0) {
-			if((size_t)ret > len) {
+			if((size_t) ret > len) {
 				IOT_ERROR("More bytes read than requested\n\n");
 				return NETWORK_SSL_WRITE_ERROR;
 			}
@@ -384,7 +390,7 @@ IoT_Error_t iot_tls_read(Network *pNetwork, unsigned char *pMsg, size_t len, Tim
 				}
 			}
 		} else {
-			IOT_ERROR("Failed\n  ! mbedtls_ssl_read returned -0x%x\n\n", (unsigned int)-ret);
+			IOT_ERROR("Failed\n  ! mbedtls_ssl_read returned -0x%x\n\n", (unsigned int) -ret);
 			return NETWORK_SSL_READ_ERROR;
 		}
 	}
