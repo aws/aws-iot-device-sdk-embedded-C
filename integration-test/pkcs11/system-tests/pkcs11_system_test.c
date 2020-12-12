@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C V202011.00
+ * AWS IoT Device SDK for Embedded C 202012.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -66,6 +66,8 @@
 #define EC_PARAMS_LENGTH            10
 #define EC_D_LENGTH                 32
 
+/* See core_pkcs11_mbedtls.c for length explanation. */
+#define pkcs11EC_POINT_LENGTH       ( ( 32UL * 2UL ) + 1UL + 1UL + 1UL )
 
 typedef struct RsaParams_t
 {
@@ -228,6 +230,7 @@ static CK_RV destroyTestCredentials( void )
     {
         result = xFindObjectWithLabelAndClass( globalSession,
                                                ( char * ) pkcsLabels[ labelCount ],
+                                               strlen( ( char * ) pkcsLabels[ labelCount ] ),
                                                class[ labelCount ],
                                                &object );
         TEST_ASSERT_EQUAL_MESSAGE( CKR_OK, result, "Found an object after deleting it.\r\n" );
@@ -248,6 +251,7 @@ static void findObjectTest( CK_OBJECT_HANDLE_PTR privateKeyHandlePtr,
     /* Happy Path - Find a previously created object. */
     result = xFindObjectWithLabelAndClass( globalSession,
                                            pkcs11testLABEL_DEVICE_PRIVATE_KEY_FOR_TLS,
+                                           sizeof( pkcs11testLABEL_DEVICE_PRIVATE_KEY_FOR_TLS ),
                                            CKO_PRIVATE_KEY,
                                            privateKeyHandlePtr );
     TEST_ASSERT_EQUAL_MESSAGE( CKR_OK, result, "Failed to find private key after closing and reopening a session." );
@@ -256,6 +260,7 @@ static void findObjectTest( CK_OBJECT_HANDLE_PTR privateKeyHandlePtr,
     /* TODO: Add the code sign key and root ca. */
     result = xFindObjectWithLabelAndClass( globalSession,
                                            pkcs11testLABEL_DEVICE_PUBLIC_KEY_FOR_TLS,
+                                           sizeof( pkcs11testLABEL_DEVICE_PUBLIC_KEY_FOR_TLS ),
                                            CKO_PUBLIC_KEY,
                                            publicKeyHandlePtr );
     TEST_ASSERT_EQUAL_MESSAGE( CKR_OK, result, "Failed to find public key after closing and reopening a session." );
@@ -264,6 +269,7 @@ static void findObjectTest( CK_OBJECT_HANDLE_PTR privateKeyHandlePtr,
 
     result = xFindObjectWithLabelAndClass( globalSession,
                                            pkcs11testLABEL_DEVICE_CERTIFICATE_FOR_TLS,
+                                           sizeof( pkcs11testLABEL_DEVICE_CERTIFICATE_FOR_TLS ),
                                            CKO_CERTIFICATE,
                                            pcertificateHandle );
 
@@ -273,6 +279,7 @@ static void findObjectTest( CK_OBJECT_HANDLE_PTR privateKeyHandlePtr,
     /* Try to find an object that has never been created. */
     result = xFindObjectWithLabelAndClass( globalSession,
                                            ( char * ) "This label doesn't exist",
+                                           sizeof( "This label doesn't exist" ),
                                            CKO_PUBLIC_KEY,
                                            &testObjectHandle );
     TEST_ASSERT_EQUAL_MESSAGE( CKR_OK, result, "Incorrect error code finding object that doesn't exist" );
@@ -711,11 +718,19 @@ void test_GetAttributeValue_RSA( void )
     CK_BYTE certificateValue[ CERTIFICATE_VALUE_LENGTH ];
     CK_BYTE keyComponent[ ( pkcs11RSA_2048_MODULUS_BITS / 8 ) + 1 ] = { 0 };
 
-    result = xFindObjectWithLabelAndClass( globalSession, pkcs11testLABEL_DEVICE_PRIVATE_KEY_FOR_TLS, CKO_PRIVATE_KEY, &privateKeyHandle );
+    result = xFindObjectWithLabelAndClass( globalSession,
+                                           pkcs11testLABEL_DEVICE_PRIVATE_KEY_FOR_TLS,
+                                           sizeof( pkcs11testLABEL_DEVICE_PRIVATE_KEY_FOR_TLS ),
+                                           CKO_PRIVATE_KEY,
+                                           &privateKeyHandle );
     TEST_ASSERT_EQUAL_MESSAGE( CKR_OK, result, "Failed to find RSA private key." );
     TEST_ASSERT_NOT_EQUAL_MESSAGE( CK_INVALID_HANDLE, privateKeyHandle, "Invalid object handle found for RSA private key." );
 
-    result = xFindObjectWithLabelAndClass( globalSession, pkcs11testLABEL_DEVICE_CERTIFICATE_FOR_TLS, CKO_CERTIFICATE, &certificateHandle );
+    result = xFindObjectWithLabelAndClass( globalSession,
+                                           pkcs11testLABEL_DEVICE_CERTIFICATE_FOR_TLS,
+                                           sizeof( pkcs11testLABEL_DEVICE_CERTIFICATE_FOR_TLS ),
+                                           CKO_CERTIFICATE,
+                                           &certificateHandle );
     TEST_ASSERT_EQUAL_MESSAGE( CKR_OK, result, "Failed to find RSA certificate." );
     TEST_ASSERT_NOT_EQUAL_MESSAGE( CK_INVALID_HANDLE, certificateHandle, "Invalid object handle found for RSA certificate." );
 
@@ -1323,7 +1338,7 @@ void test_GenerateKeyPair_EC( void )
     CK_OBJECT_HANDLE publicKeyHandle = CK_INVALID_HANDLE;
     CK_OBJECT_HANDLE certificateHandle = CK_INVALID_HANDLE;
 
-    CK_BYTE ecPoint[ 256 ] = { 0 };
+    CK_BYTE ecPoint[ pkcs11EC_POINT_LENGTH ] = { 0 };
     CK_BYTE privateKeyBuffer[ 32 ] = { 0 };
     CK_KEY_TYPE keyType;
     CK_ATTRIBUTE template;
@@ -1727,7 +1742,7 @@ static CK_RV provisionPublicKey( CK_SESSION_HANDLE session,
     {
         CK_BYTE ecParams[] = pkcs11DER_ENCODED_OID_P256;
         size_t length;
-        CK_BYTE ecPoint[ 256 ] = { 0 };
+        CK_BYTE ecPoint[ pkcs11EC_POINT_LENGTH ] = { 0 };
 
         mbedtls_ecdsa_context * ecdsaContextPtr = ( mbedtls_ecdsa_context * ) mbedPkContext.pk_ctx;
 
@@ -1975,6 +1990,7 @@ static CK_RV destroyProvidedObjects( CK_SESSION_HANDLE session,
 
         result = xFindObjectWithLabelAndClass( session,
                                                ( char * ) labelPtr,
+                                               strlen( ( char * ) labelPtr ),
                                                class[ index ],
                                                &objectHandle );
 
@@ -1990,6 +2006,7 @@ static CK_RV destroyProvidedObjects( CK_SESSION_HANDLE session,
             {
                 result = xFindObjectWithLabelAndClass( session,
                                                        ( char * ) labelPtr,
+                                                       strlen( ( char * ) labelPtr ),
                                                        class[ index ],
                                                        &objectHandle );
             }

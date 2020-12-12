@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C V202011.00
+ * AWS IoT Device SDK for Embedded C 202012.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -54,12 +54,13 @@
 #include "sockets_posix.h"
 
 /**
- * @brief Definition of the network context.
+ * @brief Parameters for the transport-interface
+ * implementation that uses plaintext POSIX sockets.
  */
-struct NetworkContext
+typedef struct PlaintextParams
 {
     int32_t socketDescriptor;
-};
+} PlaintextParams_t;
 
 /**
  * @brief Establish TCP connection to server.

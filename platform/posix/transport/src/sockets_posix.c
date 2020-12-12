@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C V202011.00
+ * AWS IoT Device SDK for Embedded C 202012.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -29,6 +29,7 @@
 #include <netdb.h>
 #include <time.h>
 #include <unistd.h>
+#include <sys/time.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
 

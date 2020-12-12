@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C V202011.00
+ * AWS IoT Device SDK for Embedded C 202012.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -36,6 +36,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 /* POSIX includes. */
 #include <unistd.h>
@@ -49,8 +50,8 @@
 /* OpenSSL sockets transport implementation. */
 #include "openssl_posix.h"
 
-/* Reconnect parameters. */
-#include "retry_utils.h"
+/*Include backoff algorithm header for retry logic.*/
+#include "backoff_algorithm.h"
 
 /* Clock for timer. */
 #include "clock.h"
@@ -89,12 +90,12 @@
 /**
  * @brief Length of the AWS IoT endpoint.
  */
-#define AWS_IOT_ENDPOINT_LENGTH             ( ( uint16_t ) ( sizeof( AWS_IOT_ENDPOINT ) - 1 ) )
+#define AWS_IOT_ENDPOINT_LENGTH                  ( ( uint16_t ) ( sizeof( AWS_IOT_ENDPOINT ) - 1 ) )
 
 /**
  * @brief Length of the client identifier.
  */
-#define CLIENT_IDENTIFIER_LENGTH            ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) )
+#define CLIENT_IDENTIFIER_LENGTH                 ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) )
 
 /**
  * @brief ALPN protocol name for AWS IoT MQTT.
@@ -104,34 +105,49 @@
  * endpoint in the link below.
  * https://aws.amazon.com/blogs/iot/mqtt-with-tls-client-authentication-on-port-443-why-it-is-useful-and-how-it-works/
  */
-#define ALPN_PROTOCOL_NAME                  "\x0ex-amzn-mqtt-ca"
+#define ALPN_PROTOCOL_NAME                       "\x0ex-amzn-mqtt-ca"
 
 /**
  * @brief Length of ALPN protocol name.
  */
-#define ALPN_PROTOCOL_NAME_LENGTH           ( ( uint16_t ) ( sizeof( ALPN_PROTOCOL_NAME ) - 1 ) )
+#define ALPN_PROTOCOL_NAME_LENGTH                ( ( uint16_t ) ( sizeof( ALPN_PROTOCOL_NAME ) - 1 ) )
+
+/**
+ * @brief The maximum number of retries for connecting to server.
+ */
+#define CONNECTION_RETRY_MAX_ATTEMPTS            ( 5U )
+
+/**
+ * @brief The maximum back-off delay (in milliseconds) for retrying connection to server.
+ */
+#define CONNECTION_RETRY_MAX_BACKOFF_DELAY_MS    ( 5000U )
+
+/**
+ * @brief The base back-off delay (in milliseconds) to use for connection retry attempts.
+ */
+#define CONNECTION_RETRY_BACKOFF_BASE_MS         ( 500U )
 
 /**
  * @brief Timeout for receiving CONNACK packet in milliseconds.
  */
-#define CONNACK_RECV_TIMEOUT_MS             ( 1000U )
+#define CONNACK_RECV_TIMEOUT_MS                  ( 1000U )
 
 /**
  * @brief Maximum number of outgoing publishes maintained in the application
  * until an ack is received from the broker.
  */
-#define MAX_OUTGOING_PUBLISHES              ( 5U )
+#define MAX_OUTGOING_PUBLISHES                   ( 5U )
 
 /**
  * @brief Invalid packet identifier for the MQTT packets. Zero is always an
  * invalid packet identifier as per MQTT 3.1.1 spec.
  */
-#define MQTT_PACKET_ID_INVALID              ( ( uint16_t ) 0U )
+#define MQTT_PACKET_ID_INVALID                   ( ( uint16_t ) 0U )
 
 /**
  * @brief Timeout for MQTT_ProcessLoop function in milliseconds.
  */
-#define MQTT_PROCESS_LOOP_TIMEOUT_MS        ( 1000U )
+#define MQTT_PROCESS_LOOP_TIMEOUT_MS             ( 1000U )
 
 /**
  * @brief The maximum time interval in seconds which is allowed to elapse
@@ -142,22 +158,22 @@
  *  absence of sending any other control packets, the client MUST send a
  *  PINGREQ packet.
  */
-#define MQTT_KEEP_ALIVE_INTERVAL_SECONDS    ( 60U )
+#define MQTT_KEEP_ALIVE_INTERVAL_SECONDS         ( 60U )
 
 /**
  * @brief Timeout in milliseconds for transport send and receive.
  */
-#define TRANSPORT_SEND_RECV_TIMEOUT_MS      ( 100 )
+#define TRANSPORT_SEND_RECV_TIMEOUT_MS           ( 100 )
 
 /**
  * @brief The MQTT metrics string expected by AWS IoT MQTT Broker.
  */
-#define METRICS_STRING                      "?SDK=" OS_NAME "&Version=" OS_VERSION "&Platform=" HARDWARE_PLATFORM_NAME "&MQTTLib=" MQTT_LIB
+#define METRICS_STRING                           "?SDK=" OS_NAME "&Version=" OS_VERSION "&Platform=" HARDWARE_PLATFORM_NAME "&MQTTLib=" MQTT_LIB
 
 /**
  * @brief The length of the MQTT metrics string.
  */
-#define METRICS_STRING_LENGTH               ( ( uint16_t ) ( sizeof( METRICS_STRING ) - 1 ) )
+#define METRICS_STRING_LENGTH                    ( ( uint16_t ) ( sizeof( METRICS_STRING ) - 1 ) )
 /*-----------------------------------------------------------*/
 
 /**
@@ -176,6 +192,12 @@ typedef struct PublishPackets
      */
     MQTTPublishInfo_t pubInfo;
 } PublishPackets_t;
+
+/* Each compilation unit must define the NetworkContext struct. */
+struct NetworkContext
+{
+    OpensslParams_t * pParams;
+};
 /*-----------------------------------------------------------*/
 
 /**
@@ -218,6 +240,11 @@ static MQTTContext_t mqttContext = { 0 };
 static NetworkContext_t networkContext = { 0 };
 
 /**
+ * @brief The parameters for Openssl operation.
+ */
+static OpensslParams_t opensslParams = { 0 };
+
+/**
  * @brief The flag to indicate that the mqtt session is established.
  */
 static bool mqttSessionEstablished = false;
@@ -228,6 +255,14 @@ static bool mqttSessionEstablished = false;
  */
 static MQTTPublishCallback_t appPublishCallback = NULL;
 /*-----------------------------------------------------------*/
+
+/**
+ * @brief The random number generator to use for exponential backoff with
+ * jitter retry logic.
+ *
+ * @return The generated random number.
+ */
+static uint32_t generateRandomNumber();
 
 /**
  * @brief Connect to the MQTT broker with reconnection retries.
@@ -299,14 +334,26 @@ static void mqttCallback( MQTTContext_t * pMqttContext,
 static bool handlePublishResend( MQTTContext_t * pMqttContext );
 /*-----------------------------------------------------------*/
 
+static uint32_t generateRandomNumber()
+{
+    return( rand() );
+}
+
+/*-----------------------------------------------------------*/
+
 static bool connectToBrokerWithBackoffRetries( NetworkContext_t * pNetworkContext )
 {
     bool returnStatus = false;
-    RetryUtilsStatus_t retryUtilsStatus = RetryUtilsSuccess;
+    BackoffAlgorithmStatus_t backoffAlgStatus = BackoffAlgorithmSuccess;
     OpensslStatus_t opensslStatus = OPENSSL_SUCCESS;
-    RetryUtilsParams_t reconnectParams;
+    BackoffAlgorithmContext_t reconnectParams;
     ServerInfo_t serverInfo;
     OpensslCredentials_t opensslCredentials;
+    uint16_t nextRetryBackOff = 0U;
+    struct timespec tp;
+
+    /* Set the pParams member of the network context with desired transport. */
+    pNetworkContext->pParams = &opensslParams;
 
     /* Initialize information to connect to the MQTT broker. */
     serverInfo.pHostName = AWS_IOT_ENDPOINT;
@@ -318,6 +365,7 @@ static bool connectToBrokerWithBackoffRetries( NetworkContext_t * pNetworkContex
     opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
     opensslCredentials.pClientCertPath = CLIENT_CERT_PATH;
     opensslCredentials.pPrivateKeyPath = CLIENT_PRIVATE_KEY_PATH;
+    opensslCredentials.sniHostName = AWS_IOT_ENDPOINT;
 
     if( AWS_MQTT_PORT == 443 )
     {
@@ -330,8 +378,20 @@ static bool connectToBrokerWithBackoffRetries( NetworkContext_t * pNetworkContex
         opensslCredentials.alpnProtosLen = ALPN_PROTOCOL_NAME_LENGTH;
     }
 
+    /* Seed pseudo random number generator used in the demo for
+     * backoff period calculation when retrying failed network operations
+     * with broker. */
+
+    /* Get current time to seed pseudo random number generator. */
+    ( void ) clock_gettime( CLOCK_REALTIME, &tp );
+    /* Seed pseudo random number generator with nanoseconds. */
+    srand( tp.tv_nsec );
+
     /* Initialize reconnect attempts and interval */
-    RetryUtils_ParamsReset( &reconnectParams );
+    BackoffAlgorithm_InitializeParams( &reconnectParams,
+                                       CONNECTION_RETRY_BACKOFF_BASE_MS,
+                                       CONNECTION_RETRY_MAX_BACKOFF_DELAY_MS,
+                                       CONNECTION_RETRY_MAX_ATTEMPTS );
 
     /* Attempt to connect to MQTT broker. If connection fails, retry after
      * a timeout. Timeout value will exponentially increase until maximum
@@ -358,15 +418,22 @@ static bool connectToBrokerWithBackoffRetries( NetworkContext_t * pNetworkContex
         }
         else
         {
-            LogWarn( ( "Connection to the broker failed. Retrying connection with backoff and jitter." ) );
-            retryUtilsStatus = RetryUtils_BackoffAndSleep( &reconnectParams );
-        }
+            /* Generate a random number and get back-off value (in milliseconds) for the next connection retry. */
+            backoffAlgStatus = BackoffAlgorithm_GetNextBackoff( &reconnectParams, generateRandomNumber(), &nextRetryBackOff );
 
-        if( retryUtilsStatus == RetryUtilsRetriesExhausted )
-        {
-            LogError( ( "Connection to the broker failed, all attempts exhausted." ) );
+            if( backoffAlgStatus == BackoffAlgorithmRetriesExhausted )
+            {
+                LogError( ( "Connection to the broker failed, all attempts exhausted." ) );
+            }
+            else if( backoffAlgStatus == BackoffAlgorithmSuccess )
+            {
+                LogWarn( ( "Connection to the broker failed. Retrying connection "
+                           "after %hu ms backoff.",
+                           ( unsigned short ) nextRetryBackOff ) );
+                Clock_SleepMs( nextRetryBackOff );
+            }
         }
-    } while( ( opensslStatus != OPENSSL_SUCCESS ) && ( retryUtilsStatus == RetryUtilsSuccess ) );
+    } while( ( opensslStatus != OPENSSL_SUCCESS ) && ( backoffAlgStatus == BackoffAlgorithmSuccess ) );
 
     return returnStatus;
 }
@@ -547,9 +614,9 @@ static bool handlePublishResend( MQTTContext_t * pMqttContext )
             if( mqttStatus != MQTTSuccess )
             {
                 LogError( ( "Sending duplicate PUBLISH for packet id %u "
-                            " failed with status %u.",
+                            " failed with status %s.",
                             outgoingPublishPackets[ index ].packetId,
-                            mqttStatus ) );
+                            MQTT_Status_strerror( mqttStatus ) ) );
                 break;
             }
             else
@@ -625,7 +692,8 @@ bool EstablishMqttSession( MQTTPublishCallback_t publishCallback )
         if( mqttStatus != MQTTSuccess )
         {
             returnStatus = false;
-            LogError( ( "MQTT init failed with status %u.", mqttStatus ) );
+            LogError( ( "MQTT init failed with status %s.",
+                        MQTT_Status_strerror( mqttStatus ) ) );
         }
         else
         {
@@ -667,7 +735,8 @@ bool EstablishMqttSession( MQTTPublishCallback_t publishCallback )
             if( mqttStatus != MQTTSuccess )
             {
                 returnStatus = false;
-                LogError( ( "Connection with MQTT broker failed with status %u.", mqttStatus ) );
+                LogError( ( "Connection with MQTT broker failed with status %s.",
+                            MQTT_Status_strerror( mqttStatus ) ) );
             }
             else
             {
@@ -778,8 +847,8 @@ bool SubscribeToTopic( const char * pTopicFilter,
 
     if( mqttStatus != MQTTSuccess )
     {
-        LogError( ( "Failed to send SUBSCRIBE packet to broker with error = %u.",
-                    mqttStatus ) );
+        LogError( ( "Failed to send SUBSCRIBE packet to broker with error = %s.",
+                    MQTT_Status_strerror( mqttStatus ) ) );
     }
     else
     {
@@ -798,8 +867,8 @@ bool SubscribeToTopic( const char * pTopicFilter,
 
         if( mqttStatus != MQTTSuccess )
         {
-            LogError( ( "MQTT_ProcessLoop returned with status = %u.",
-                        mqttStatus ) );
+            LogError( ( "MQTT_ProcessLoop returned with status = %s.",
+                        MQTT_Status_strerror( mqttStatus ) ) );
         }
         else
         {
@@ -842,8 +911,8 @@ bool UnsubscribeFromTopic( const char * pTopicFilter,
 
     if( mqttStatus != MQTTSuccess )
     {
-        LogError( ( "Failed to send UNSUBSCRIBE packet to broker with error = %u.",
-                    mqttStatus ) );
+        LogError( ( "Failed to send UNSUBSCRIBE packet to broker with error = %s.",
+                    MQTT_Status_strerror( mqttStatus ) ) );
     }
     else
     {
@@ -858,8 +927,8 @@ bool UnsubscribeFromTopic( const char * pTopicFilter,
 
         if( mqttStatus != MQTTSuccess )
         {
-            LogError( ( "MQTT_ProcessLoop returned with status = %u.",
-                        mqttStatus ) );
+            LogError( ( "MQTT_ProcessLoop returned with status = %s.",
+                        MQTT_Status_strerror( mqttStatus ) ) );
         }
         else
         {
@@ -918,8 +987,8 @@ bool PublishToTopic( const char * pTopicFilter,
 
         if( mqttStatus != MQTTSuccess )
         {
-            LogError( ( "Failed to send PUBLISH packet to broker with error = %u.",
-                        mqttStatus ) );
+            LogError( ( "Failed to send PUBLISH packet to broker with error = %s.",
+                        MQTT_Status_strerror( mqttStatus ) ) );
             cleanupOutgoingPublishAt( publishIndex );
             returnStatus = false;
         }
@@ -936,17 +1005,17 @@ bool PublishToTopic( const char * pTopicFilter,
 }
 /*-----------------------------------------------------------*/
 
-bool ProcessLoop( void )
+bool ProcessLoop( uint32_t timeoutMs )
 {
     bool returnStatus = false;
     MQTTStatus_t mqttStatus = MQTTSuccess;
 
-    mqttStatus = MQTT_ProcessLoop( &mqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
+    mqttStatus = MQTT_ProcessLoop( &mqttContext, timeoutMs );
 
     if( mqttStatus != MQTTSuccess )
     {
-        LogWarn( ( "MQTT_ProcessLoop returned with status = %u.",
-                   mqttStatus ) );
+        LogError( ( "MQTT_ProcessLoop returned with status = %s.",
+                    MQTT_Status_strerror( mqttStatus ) ) );
     }
     else
     {

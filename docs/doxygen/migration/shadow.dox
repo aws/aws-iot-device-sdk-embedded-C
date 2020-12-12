@@ -10,6 +10,6 @@ The Device Shadow library has been redesigned in this release.  The new design h
 
 The application can use the new Device Shadow library with their choice of MQTT Client library by following the call sequence diagram in the [Design document](@ref shadow_design).
 
-See the <a href="https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/master/demos/shadow/shadow_demo_main">Device Shadow demo application</a> for sample code.
+See the <a href="https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/main/demos/shadow/shadow_demo_main">Device Shadow demo application</a> for sample code.
 
 */

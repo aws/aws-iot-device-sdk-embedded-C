@@ -1,0 +1,33 @@
+:cmock:
+  :mock_prefix: mock_
+  :when_no_prototypes: :warn
+  :enforce_strict_ordering: true
+  # fclose is called after program terminates, so this will avoid a segfault.
+  :fail_on_unexpected_calls: false
+  :plugins:
+    - :ignore
+    - :ignore_arg
+    - :expect_any_args
+    - :array
+    - :callback
+    - :return_thru_ptr
+  :callback_include_count: true # include a count arg when calling the callback
+  :callback_after_arg_check: false # check arguments before calling the callback
+  :treat_as:
+    uint8:    HEX8
+    uint16:   HEX16
+    uint32:   UINT32
+    int8:     INT8
+    bool:     UINT8
+  :includes:        # This will add these includes to each mock.
+    - <stdbool.h>
+    - <stdint.h>
+  :treat_externs: :include  # Now the extern-ed functions will be mocked.
+  :weak: __attribute__((weak))
+  :verbosity: 3
+  :strippables:
+    # These keywords are found in many POSIX APIs but is stripped as it cannot be parsed by CMock.
+    - __restrict
+    - \s__THROW
+    - __owur
+    - __attribute__((__warn_unused_result__))

@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C V202011.00
+ * AWS IoT Device SDK for Embedded C 202012.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -85,7 +85,7 @@ void end( CK_SESSION_HANDLE session,
  *
  * @param[in] pcDescription         Description message
  * @param[in] pucData               Hex contents to print (Public key)
- * @param[in] ulDataLength          Lenghth of pucData
+ * @param[in] ulDataLength          Length of pucData
  *
  */
 void writeHexBytesToConsole( char * description,

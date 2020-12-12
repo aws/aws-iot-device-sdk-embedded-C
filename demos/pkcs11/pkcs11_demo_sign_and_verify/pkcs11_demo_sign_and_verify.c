@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C V202011.00
+ * AWS IoT Device SDK for Embedded C 202012.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -158,6 +158,7 @@ CK_RV PKCS11SignVerifyDemo( void )
     {
         result = xFindObjectWithLabelAndClass( session,
                                                pkcs11demoPRIVATE_KEY_LABEL,
+                                               sizeof( pkcs11demoPRIVATE_KEY_LABEL ),
                                                CKO_PRIVATE_KEY,
                                                &privateKeyHandle );
     }
@@ -168,6 +169,7 @@ CK_RV PKCS11SignVerifyDemo( void )
     {
         result = xFindObjectWithLabelAndClass( session,
                                                pkcs11demoPUBLIC_KEY_LABEL,
+                                               sizeof( pkcs11demoPUBLIC_KEY_LABEL ),
                                                CKO_PRIVATE_KEY,
                                                &publicKeyHandle );
     }

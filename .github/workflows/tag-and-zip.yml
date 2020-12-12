@@ -1,0 +1,109 @@
+name: Tag and Create ZIP
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit_id:
+        description: 'Commit ID to tag and push to remote'
+        required: true
+      version_number:
+        description: 'Tag Version Number (Eg, v1.0.0)'
+        required: true
+
+jobs:
+  tag-commit:
+    name: Tag commit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.inputs.commit_id }}
+      - name: Configure git identity
+        run: |
+            git config --global user.name "Release Workflow"
+      - name: Tag Commit and Push to remote
+        run: |
+          git tag ${{ github.event.inputs.version_number }} -a -m "AWS IoT Device SDK for Embedded C version ${{ github.event.inputs.version_number }}"
+          git push origin --tags
+      - name: Verify tag on remote
+        run: |
+          git tag -d ${{ github.event.inputs.version_number }}
+          git remote update
+          git checkout tags/${{ github.event.inputs.version_number }}
+          git diff ${{ github.event.inputs.commit_id }} tags/${{ github.event.inputs.version_number }}
+  create-zip:
+    needs: tag-commit
+    name: Create ZIP and verify package for release asset.
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install ZIP tools
+        run: sudo apt-get install zip unzip
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.inputs.commit_id }}
+          path: aws-iot-device-sdk-embedded-C
+          submodules: recursive
+      - name: Checkout disabled submodules
+        run: |
+          cd aws-iot-device-sdk-embedded-C
+          git submodule update --init --checkout --recursive
+      - name: Create ZIP
+        run: |
+          zip -r aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}.zip aws-iot-device-sdk-embedded-C -x "*.git*"
+          ls ./
+      - name: Validate created ZIP
+        run: |
+          mkdir zip-check
+          mv aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}.zip zip-check
+          cd zip-check
+          unzip aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}.zip -d aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}
+          ls aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}
+          diff -r -x "*.git*" aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}/aws-iot-device-sdk-embedded-C/ ../aws-iot-device-sdk-embedded-C/
+          cd ../
+      - name : Build Check Demos
+        run: |
+          sudo apt-get install -y libmosquitto-dev
+          cd zip-check/aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}/aws-iot-device-sdk-embedded-C/
+          cmake -S . -B build/ \
+          -G "Unix Makefiles" \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Werror' \
+          -DAWS_IOT_ENDPOINT="aws-iot-endpoint" \
+          -DBROKER_ENDPOINT="broker-endpoint" \
+          -DCLIENT_CERT_PATH="cert/path" \
+          -DROOT_CA_CERT_PATH="cert/path" \
+          -DCLIENT_PRIVATE_KEY_PATH="key/path" \
+          -DCLIENT_IDENTIFIER="ci-identifier" \
+          -DTHING_NAME="thing-name" \
+          -DS3_PRESIGNED_GET_URL="get-url" \
+          -DS3_PRESIGNED_PUT_URL="put-url"
+          make -C build/ help | grep demo | tr -d '. ' | xargs make -C build/
+          make -C demos/jobs/jobs_demo_mosquitto -j8
+      - name : Build Check Tests
+        run: |
+          cd zip-check/aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}/aws-iot-device-sdk-embedded-C/
+          rm -rf ./build
+          cmake -S . -B build/ \
+          -G "Unix Makefiles" \
+          -DCMAKE_BUILD_TYPE=Debug \
+          -DBUILD_TESTS=1 \
+          -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Werror' \
+          -DAWS_IOT_ENDPOINT="aws-iot-endpoint" \
+          -DBROKER_ENDPOINT="broker-endpoint" \
+          -DCLIENT_CERT_PATH="cert/path" \
+          -DROOT_CA_CERT_PATH="cert/path" \
+          -DCLIENT_PRIVATE_KEY_PATH="key/path" \
+          -DCLIENT_IDENTIFIER="ci-identifier"
+          make -C build/ all -j8
+      - name: Run Unit Tests
+        run: |
+          cd zip-check/aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}/aws-iot-device-sdk-embedded-C/build/
+          ctest -E system --output-on-failure
+          cd ..
+      - name: Create artifact of ZIP
+        uses: actions/upload-artifact@v2
+        with:
+          name: aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}.zip
+          path: zip-check/aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}.zip

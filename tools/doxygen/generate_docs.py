@@ -21,6 +21,7 @@ def run_cmd(cmd):
             check=True,
             timeout=180,
         )
+        print( result.stdout )
         return result.stdout
     except subprocess.CalledProcessError as e:
         result = e.stdout
@@ -47,11 +48,15 @@ def main():
     Generate documentation and optionally zip it up.
     """
     parser = argparse.ArgumentParser(description="Generate all doxygen and optionally zip it.")
-    parser.add_argument("-r", "--root", action="store", required=True, dest="root", help="CSDK repo root path.")
-    parser.add_argument("-z", "--zip", action="store_true", required=False, help="Zip all doxygen output")
+    parser.add_argument("-r", "--root", action="store", required=False, dest="root", help="CSDK repo root path. This defaults to the current working directory.")
+    parser.add_argument("-z", "--zip", action="store_true", required=False, help="Zip all doxygen output.")
     args = parser.parse_args()
     sdk_root = args.root
     doZip = args.zip
+
+    # If the root folder is not give, use the current working directory.
+    if( sdk_root == None ):
+        sdk_root = os.getcwd()
 
     # Get the absolute paths to all of the libraries in the CSDK.
     abs_sdk_root = os.path.abspath(sdk_root)
@@ -63,11 +68,13 @@ def main():
         abs_doxy_path = os.path.join(abs_lib_path, "docs", "doxygen")
         if os.path.exists(abs_doxy_path):
             os.chdir(abs_lib_path)
+            print(abs_lib_path)
             run_cmd("doxygen docs/doxygen/config.doxyfile")
             abs_doxy_paths.append(abs_doxy_path)
 
     # Generate the doxygen for the CSDK last to use the tags from the libraries.
     os.chdir(abs_sdk_root)
+    print(abs_sdk_root)
     run_cmd("doxygen docs/doxygen/config.doxyfile")
     abs_doxy_paths.append(os.path.join(abs_sdk_root, "docs", "doxygen"))
 

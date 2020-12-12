@@ -8,6 +8,7 @@ To install curl and libmosquitto on a Debian or Ubuntu host, run:
 
     apt install curl libmosquitto-dev
 
-To build the latest version of libmosquitto with ALPN support,
-clone the repository at https://github.com/eclipse/mosquitto ,
-and follow the instructions in compiling.txt within the repo.
+libmosquitto 1.4.10 or any later version of the first major release is required to run this demo.
+For ALPN support, build the latest version of the first major release of libmosquitto (1.6.12).
+To do this, go to the libmosquitto directory,
+and follow the instructions in compiling.txt within the submodule.

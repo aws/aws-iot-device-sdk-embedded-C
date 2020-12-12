@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C V202011.00
+ * AWS IoT Device SDK for Embedded C 202012.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -230,6 +230,11 @@ static uint16_t globalPublishPacketIdentifier = 0U;
 static NetworkContext_t networkContext;
 
 /**
+ * @brief Parameters for the Openssl Context.
+ */
+static OpensslParams_t opensslParams;
+
+/**
  * @brief Represents the hostname and port of the broker.
  */
 static ServerInfo_t serverInfo;
@@ -311,6 +316,12 @@ static uint8_t packetTypeForDisconnection = MQTT_PACKET_TYPE_INVALID;
  * to MQTT broker.
  */
 static int clientIdRandNumber;
+
+/* Each compilation unit must define the NetworkContext struct. */
+struct NetworkContext
+{
+    OpensslParams_t * pParams;
+};
 
 /**
  * @brief Sends an MQTT CONNECT packet over the already connected TCP socket.
@@ -726,8 +737,8 @@ static void startPersistentSession()
                                                          &opensslCredentials,
                                                          TRANSPORT_SEND_RECV_TIMEOUT_MS,
                                                          TRANSPORT_SEND_RECV_TIMEOUT_MS ) );
-    TEST_ASSERT_NOT_EQUAL( -1, networkContext.socketDescriptor );
-    TEST_ASSERT_NOT_NULL( networkContext.pSsl );
+    TEST_ASSERT_NOT_EQUAL( -1, opensslParams.socketDescriptor );
+    TEST_ASSERT_NOT_NULL( opensslParams.pSsl );
 
     /* Establish a new MQTT connection for a persistent session with the broker. */
     establishMqttSession( &context, &networkContext, false, &persistentSession );
@@ -742,8 +753,8 @@ static void resumePersistentSession()
                                                          &opensslCredentials,
                                                          TRANSPORT_SEND_RECV_TIMEOUT_MS,
                                                          TRANSPORT_SEND_RECV_TIMEOUT_MS ) );
-    TEST_ASSERT_NOT_EQUAL( -1, networkContext.socketDescriptor );
-    TEST_ASSERT_NOT_NULL( networkContext.pSsl );
+    TEST_ASSERT_NOT_EQUAL( -1, opensslParams.socketDescriptor );
+    TEST_ASSERT_NOT_NULL( opensslParams.pSsl );
 
     /* Re-establish the persistent session with the broker by connecting with "clean session" flag set to 0. */
     TEST_ASSERT_FALSE( persistentSession );
@@ -773,9 +784,13 @@ void setUp()
     packetTypeForDisconnection = MQTT_PACKET_TYPE_INVALID;
     memset( &incomingInfo, 0u, sizeof( MQTTPublishInfo_t ) );
     memset( &opensslCredentials, 0u, sizeof( OpensslCredentials_t ) );
+    memset( &opensslParams, 0u, sizeof( OpensslParams_t ) );
     opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
     opensslCredentials.pClientCertPath = CLIENT_CERT_PATH;
     opensslCredentials.pPrivateKeyPath = CLIENT_PRIVATE_KEY_PATH;
+    opensslCredentials.sniHostName = BROKER_ENDPOINT;
+
+    networkContext.pParams = &opensslParams;
 
     serverInfo.pHostName = BROKER_ENDPOINT;
     serverInfo.hostNameLength = BROKER_ENDPOINT_LENGTH;
@@ -797,8 +812,8 @@ void setUp()
                                                          &opensslCredentials,
                                                          TRANSPORT_SEND_RECV_TIMEOUT_MS,
                                                          TRANSPORT_SEND_RECV_TIMEOUT_MS ) );
-    TEST_ASSERT_NOT_EQUAL( -1, networkContext.socketDescriptor );
-    TEST_ASSERT_NOT_NULL( networkContext.pSsl );
+    TEST_ASSERT_NOT_EQUAL( -1, opensslParams.socketDescriptor );
+    TEST_ASSERT_NOT_NULL( opensslParams.pSsl );
 
     /* Establish MQTT session on top of the TCP+TLS connection. */
     establishMqttSession( &context, &networkContext, true, &persistentSession );
@@ -1029,8 +1044,11 @@ void test_MQTT_Subscribe_Publish_With_Qos_2( void )
 void test_MQTT_Connect_LWT( void )
 {
     NetworkContext_t secondNetworkContext = { 0 };
+    OpensslParams_t secondOpensslParams = { 0 };
     bool sessionPresent;
     MQTTContext_t secondContext;
+
+    secondNetworkContext.pParams = &secondOpensslParams;
 
     /* Establish a second TCP connection with the server endpoint, then
      * a TLS session. The server info and credentials can be reused. */
@@ -1039,8 +1057,8 @@ void test_MQTT_Connect_LWT( void )
                                                          &opensslCredentials,
                                                          TRANSPORT_SEND_RECV_TIMEOUT_MS,
                                                          TRANSPORT_SEND_RECV_TIMEOUT_MS ) );
-    TEST_ASSERT_NOT_EQUAL( -1, secondNetworkContext.socketDescriptor );
-    TEST_ASSERT_NOT_NULL( secondNetworkContext.pSsl );
+    TEST_ASSERT_NOT_EQUAL( -1, secondOpensslParams.socketDescriptor );
+    TEST_ASSERT_NOT_NULL( secondOpensslParams.pSsl );
 
     /* Establish MQTT session on top of the TCP+TLS connection. */
     useLWTClientIdentifier = true;
@@ -1238,7 +1256,6 @@ void test_MQTT_Resend_Unacked_Publish_QoS1( void )
 
     /* Verify that the library has stored the PUBLISH as an incomplete operation. */
     TEST_ASSERT_NOT_EQUAL( MQTT_PACKET_ID_INVALID, context.outgoingPublishRecords[ 0 ].packetId );
-
 
     /* Reset the transport receive function in the context. */
     context.transportInterface.recv = Openssl_Recv;

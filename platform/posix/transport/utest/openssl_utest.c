@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C V202011.00
+ * AWS IoT Device SDK for Embedded C 202012.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -59,9 +59,16 @@
 /* The size of the buffer passed to #Openssl_Send and #Openssl_Recv. */
 #define BUFFER_LEN              4
 
+/* Each compilation unit must define the NetworkContext struct. */
+struct NetworkContext
+{
+    OpensslParams_t * pParams;
+};
+
 /* Objects used by the OpenSSL transport implementation. */
 static ServerInfo_t serverInfo = { 0 };
 static OpensslCredentials_t opensslCredentials = { 0 };
+static OpensslParams_t opensslParams = { 0 };
 static NetworkContext_t networkContext = { 0 };
 static uint8_t opensslBuffer[ BUFFER_LEN ] = { 0 };
 
@@ -86,6 +93,7 @@ typedef enum FunctionNames
     SSL_CTX_use_certificate_chain_file_fn,
     SSL_CTX_use_PrivateKey_file_fn,
     SSL_new_fn,
+    SSL_set1_host_fn,
     SSL_set_fd_fn,
     SSL_set_alpn_protos_fn,
     SSL_set_max_send_fragment_fn,
@@ -102,6 +110,8 @@ void setUp()
     serverInfo.pHostName = HOSTNAME;
     serverInfo.hostNameLength = strlen( HOSTNAME );
     serverInfo.port = PORT;
+
+    networkContext.pParams = &opensslParams;
 
     memset( &opensslCredentials, 0, sizeof( OpensslCredentials_t ) );
     opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
@@ -333,6 +343,16 @@ static OpensslStatus_t failFunctionFrom_Openssl_Connect( FunctionNames_t functio
         sslCreated = true;
     }
 
+    if( functionToFail == SSL_set1_host_fn )
+    {
+        SSL_set1_host_ExpectAnyArgsAndReturn( 0 );
+        returnStatus = OPENSSL_API_ERROR;
+    }
+    else if( returnStatus == OPENSSL_SUCCESS )
+    {
+        SSL_set1_host_ExpectAnyArgsAndReturn( 1 );
+    }
+
     if( returnStatus == OPENSSL_SUCCESS )
     {
         SSL_set_verify_ExpectAnyArgs();
@@ -437,6 +457,15 @@ void test_Openssl_Connect_Invalid_Params( void )
                                     SEND_RECV_TIMEOUT,
                                     SEND_RECV_TIMEOUT );
     TEST_ASSERT_EQUAL( OPENSSL_INVALID_PARAMETER, returnStatus );
+
+    networkContext.pParams = NULL;
+    returnStatus = Openssl_Connect( &networkContext,
+                                    &serverInfo,
+                                    &opensslCredentials,
+                                    SEND_RECV_TIMEOUT,
+                                    SEND_RECV_TIMEOUT );
+    TEST_ASSERT_EQUAL( OPENSSL_INVALID_PARAMETER, returnStatus );
+    networkContext.pParams = &opensslParams;
 
     /* Fail Sockets_Connect(...) */
 
@@ -574,7 +603,7 @@ void test_Openssl_Connect_Handshake_Fails( void )
     OpensslStatus_t returnStatus, expectedStatus;
     FunctionNames_t connectFunctions[] =
     {
-        SSL_connect_fn, SSL_get_verify_result_fn
+        SSL_set1_host_fn, SSL_connect_fn, SSL_get_verify_result_fn
     };
     uint16_t i;
 
@@ -663,6 +692,10 @@ void test_Openssl_Disconnect_NULL_Network_Context( void )
 
     returnStatus = Openssl_Disconnect( NULL );
     TEST_ASSERT_EQUAL( OPENSSL_INVALID_PARAMETER, returnStatus );
+
+    networkContext.pParams = NULL;
+    returnStatus = Openssl_Disconnect( &networkContext );
+    TEST_ASSERT_EQUAL( OPENSSL_INVALID_PARAMETER, returnStatus );
 }
 
 /**
@@ -673,13 +706,14 @@ void test_Openssl_Disconnect_Succeeds( void )
     OpensslStatus_t returnStatus;
 
     /* First, SSL object is NULL. */
-    memset( &networkContext, 0, sizeof( NetworkContext_t ) );
+    opensslParams.pSsl = NULL;
     Sockets_Disconnect_ExpectAnyArgsAndReturn( SOCKETS_SUCCESS );
     returnStatus = Openssl_Disconnect( &networkContext );
     TEST_ASSERT_EQUAL( OPENSSL_SUCCESS, returnStatus );
 
     /* Now, set SSL object for coverage. */
-    networkContext.pSsl = &ssl;
+    networkContext.pParams = &opensslParams;
+    opensslParams.pSsl = &ssl;
     SSL_shutdown_ExpectAnyArgsAndReturn( 0 );
     SSL_shutdown_ExpectAnyArgsAndReturn( 0 );
     SSL_free_ExpectAnyArgs();
@@ -688,7 +722,7 @@ void test_Openssl_Disconnect_Succeeds( void )
     TEST_ASSERT_EQUAL( OPENSSL_SUCCESS, returnStatus );
 
     /* Coverage for the case in which the first SSL_shutdown fails. */
-    networkContext.pSsl = &ssl;
+    opensslParams.pSsl = &ssl;
     SSL_shutdown_ExpectAnyArgsAndReturn( 1 );
     SSL_free_ExpectAnyArgs();
     Sockets_Disconnect_ExpectAnyArgsAndReturn( SOCKETS_SUCCESS );
@@ -707,8 +741,13 @@ void test_Openssl_Send_Invalid_Params( void )
     bytesSent = Openssl_Send( NULL, opensslBuffer, BYTES_TO_SEND );
     TEST_ASSERT_EQUAL( 0, bytesSent );
 
+    networkContext.pParams = NULL;
+    bytesSent = Openssl_Send( &networkContext, opensslBuffer, BYTES_TO_SEND );
+    TEST_ASSERT_EQUAL( 0, bytesSent );
+    networkContext.pParams = &opensslParams;
+
     /* SSL object must not be NULL. Otherwise, no bytes are sent. */
-    networkContext.pSsl = NULL;
+    opensslParams.pSsl = NULL;
     bytesSent = Openssl_Send( &networkContext, opensslBuffer, BYTES_TO_SEND );
     TEST_ASSERT_EQUAL( 0, bytesSent );
 }
@@ -721,7 +760,7 @@ void test_Openssl_Send_All_Bytes_Sent_Successfully( void )
 {
     int32_t bytesSent;
 
-    networkContext.pSsl = &ssl;
+    opensslParams.pSsl = &ssl;
     SSL_write_ExpectAnyArgsAndReturn( BYTES_TO_SEND );
     bytesSent = Openssl_Send( &networkContext, opensslBuffer, BYTES_TO_SEND );
     TEST_ASSERT_EQUAL( BYTES_TO_SEND, bytesSent );
@@ -735,15 +774,21 @@ void test_Openssl_Send_Network_Error( void )
 {
     int32_t bytesSent;
 
-    networkContext.pSsl = &ssl;
+    opensslParams.pSsl = &ssl;
     SSL_write_ExpectAnyArgsAndReturn( SSL_READ_WRITE_ERROR );
 
     /* Several errors can be returned from #SSL_get_error as mentioned here:
      * https://www.openssl.org/docs/man1.1.1/man3/SSL_get_error.html */
-    SSL_get_error_ExpectAnyArgsAndReturn( SSL_ERROR_WANT_WRITE );
+    SSL_get_error_ExpectAnyArgsAndReturn( SSL_ERROR_ZERO_RETURN );
     bytesSent = Openssl_Send( &networkContext, opensslBuffer, BYTES_TO_SEND );
     TEST_ASSERT_EQUAL( SSL_READ_WRITE_ERROR, bytesSent );
-    TEST_ASSERT_TRUE( bytesSent <= 0 );
+    TEST_ASSERT_TRUE( bytesSent < 0 );
+
+    /* Test that a non-retryable zero error code is converted to -1 by the API. */
+    SSL_write_ExpectAnyArgsAndReturn( 0 );
+    SSL_get_error_ExpectAnyArgsAndReturn( SSL_ERROR_ZERO_RETURN );
+    bytesSent = Openssl_Send( &networkContext, opensslBuffer, BYTES_TO_SEND );
+    TEST_ASSERT_EQUAL( -1, bytesSent );
 }
 
 /**
@@ -757,8 +802,13 @@ void test_Openssl_Recv_Invalid_Params( void )
     bytesReceived = Openssl_Recv( NULL, opensslBuffer, BYTES_TO_RECV );
     TEST_ASSERT_EQUAL( 0, bytesReceived );
 
+    networkContext.pParams = NULL;
+    bytesReceived = Openssl_Recv( &networkContext, opensslBuffer, BYTES_TO_RECV );
+    TEST_ASSERT_EQUAL( 0, bytesReceived );
+    networkContext.pParams = &opensslParams;
+
     /* SSL object must not be NULL. Otherwise, no bytes are sent. */
-    networkContext.pSsl = NULL;
+    opensslParams.pSsl = NULL;
     bytesReceived = Openssl_Recv( &networkContext, opensslBuffer, BYTES_TO_RECV );
     TEST_ASSERT_EQUAL( 0, bytesReceived );
 }
@@ -771,7 +821,7 @@ void test_Openssl_Recv_All_Bytes_Received_Successfully( void )
 {
     int32_t bytesReceived;
 
-    networkContext.pSsl = &ssl;
+    opensslParams.pSsl = &ssl;
     SSL_read_ExpectAnyArgsAndReturn( BYTES_TO_RECV );
     bytesReceived = Openssl_Recv( &networkContext, opensslBuffer, BYTES_TO_RECV );
     TEST_ASSERT_EQUAL( BYTES_TO_RECV, bytesReceived );
@@ -785,17 +835,7 @@ void test_Openssl_Recv_Network_Error( void )
 {
     int32_t bytesReceived;
 
-    networkContext.pSsl = &ssl;
-    SSL_read_ExpectAnyArgsAndReturn( SSL_READ_WRITE_ERROR );
-
-    /* Several errors can be returned from #SSL_get_error as mentioned here:
-     * https://www.openssl.org/docs/man1.1.1/man3/SSL_get_error.html */
-    SSL_get_error_ExpectAnyArgsAndReturn( SSL_ERROR_WANT_READ );
-    bytesReceived = Openssl_Recv( &networkContext, opensslBuffer, BYTES_TO_RECV );
-
-    /* SSL_ERROR_WANT_READ implies there is no data to receive, so we expect
-     * that no bytes have been received. */
-    TEST_ASSERT_EQUAL( 0, bytesReceived );
+    opensslParams.pSsl = &ssl;
 
     SSL_read_ExpectAnyArgsAndReturn( SSL_READ_WRITE_ERROR );
     /* SSL_ERROR_ZERO_RETURN means the peer has closed the connection. */
@@ -805,5 +845,28 @@ void test_Openssl_Recv_Network_Error( void )
     /* SSL_ERROR_WANT_READ implies there is no data to receive, so we expect
      * that no bytes have been received. */
     TEST_ASSERT_EQUAL( SSL_READ_WRITE_ERROR, bytesReceived );
-    TEST_ASSERT_TRUE( bytesReceived <= 0 );
+    TEST_ASSERT_TRUE( bytesReceived < 0 );
+
+    /* Test that a non-retryable zero error code is converted to -1 by the API. */
+    SSL_read_ExpectAnyArgsAndReturn( 0 );
+    SSL_get_error_ExpectAnyArgsAndReturn( SSL_ERROR_ZERO_RETURN );
+    bytesReceived = Openssl_Recv( &networkContext, opensslBuffer, BYTES_TO_RECV );
+    TEST_ASSERT_EQUAL( -1, bytesReceived );
+}
+
+/**
+ * @brief Test that #Openssl_Recv returns zero bytes sent when #SSL_read returns
+ * an error to retry operation.
+ */
+void test_Openssl_Recv_Zero_Return_Value( void )
+{
+    int32_t bytesReceived;
+
+    opensslParams.pSsl = &ssl;
+    SSL_read_ExpectAnyArgsAndReturn( SSL_READ_WRITE_ERROR );
+
+    /* Test when SSL_read() returns an SSL_ERROR_WANT_READ error. */
+    SSL_get_error_ExpectAnyArgsAndReturn( SSL_ERROR_WANT_READ );
+    bytesReceived = Openssl_Recv( &networkContext, opensslBuffer, BYTES_TO_RECV );
+    TEST_ASSERT_EQUAL( 0, bytesReceived );
 }

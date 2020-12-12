@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C V202011.00
+ * AWS IoT Device SDK for Embedded C 202012.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -124,6 +124,14 @@ static uint8_t userBuffer[ USER_BUFFER_LENGTH ];
 
 /*-----------------------------------------------------------*/
 
+/* Each compilation unit must define the NetworkContext struct. */
+struct NetworkContext
+{
+    OpensslParams_t * pParams;
+};
+
+/*-----------------------------------------------------------*/
+
 /**
  * @brief Connect to HTTP server with reconnection retries.
  *
@@ -168,6 +176,7 @@ static int32_t connectToServer( NetworkContext_t * pNetworkContext )
     opensslCredentials.pClientCertPath = CLIENT_CERT_PATH;
     opensslCredentials.pPrivateKeyPath = CLIENT_PRIVATE_KEY_PATH;
     opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
+    opensslCredentials.sniHostName = AWS_IOT_ENDPOINT;
 
     /* ALPN is required when communicating to AWS IoT Core over port 443 through HTTP. */
     if( AWS_HTTPS_PORT == 443 )
@@ -339,9 +348,13 @@ int main( int argc,
     TransportInterface_t transportInterface;
     /* The network context for the transport layer interface. */
     NetworkContext_t networkContext;
+    OpensslParams_t opensslParams;
 
     ( void ) argc;
     ( void ) argv;
+
+    /* Set the pParams member of the network context with desired transport. */
+    networkContext.pParams = &opensslParams;
 
     /**************************** Connect. ******************************/
 

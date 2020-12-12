@@ -38,7 +38,7 @@ PROJECT_NAME           = "AWS IoT Device SDK C"
 # could be handy for archiving the generated documentation or if some version
 # control system is used.
 
-PROJECT_NUMBER         = "202011.00"
+PROJECT_NUMBER         = "202012.00"
 
 # Using the PROJECT_BRIEF tag one can provide an optional one line description
 # for a project that appears at the top of each page and should give viewer a
@@ -2236,10 +2236,14 @@ SKIP_FUNCTION_MACROS   = YES
 
 TAGFILES               = libraries/standard/coreMQTT/docs/doxygen/output/mqtt.tag=../../../../libraries/standard/coreMQTT/docs/doxygen/output/html \
                          libraries/standard/coreJSON/docs/doxygen/output/json.tag=../../../../libraries/standard/coreJSON/docs/doxygen/output/html \
+                         libraries/standard/corePKCS11/docs/doxygen/output/core_pkcs11.tag=../../../../libraries/standard/corePKCS11/docs/doxygen/output/html \
                          libraries/aws/device-shadow-for-aws-iot-embedded-sdk/docs/doxygen/output/shadow.tag=../../../../libraries/aws/device-shadow-for-aws-iot-embedded-sdk/docs/doxygen/output/html \
                          libraries/standard/coreHTTP/docs/doxygen/output/http.tag=../../../../libraries/standard/coreHTTP/docs/doxygen/output\html \
                          libraries/aws/device-defender-for-aws-iot-embedded-sdk/docs/doxygen/output/defender.tag=../../../../libraries/aws/device-defender-for-aws-iot-embedded-sdk/docs/doxygen/output/html \
-                         libraries/aws/jobs-for-aws-iot-embedded-sdk/docs/doxygen/output/jobs.tag=../../../../libraries/aws/jobs-for-aws-iot-embedded-sdk/docs/doxygen/output/html
+                         libraries/aws/jobs-for-aws-iot-embedded-sdk/docs/doxygen/output/jobs.tag=../../../../libraries/aws/jobs-for-aws-iot-embedded-sdk/docs/doxygen/output/html \
+                         libraries/standard/backoffAlgorithm/docs/doxygen/output/backoffalgorithm.tag=../../../../libraries/standard/backoffAlgorithm/docs/doxygen/output/html \
+                         libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/ota.tag=../../../../libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html
+
 
 # When a file name is specified after GENERATE_TAGFILE, doxygen will create a
 # tag file that is based on the input files it reads. See section "Linking to

@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C V202011.00
+ * AWS IoT Device SDK for Embedded C 202012.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -91,7 +91,7 @@
     "-----END CERTIFICATE-----"
 
 /* This function can be found in
- * corePKCS11/3rdparty/mbedtls_utils/mbedtls_utils.c.
+ * corePKCS11/source/dependency/3rdparty/mbedtls_utils/mbedtls_utils.c.
  * It will be used to convert the RSA certificate from PEM format
  * to DER format. */
 extern int convert_pem_to_der( const unsigned char * pucInput,

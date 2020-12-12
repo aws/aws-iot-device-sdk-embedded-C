@@ -1,0 +1,182 @@
+@startuml
+skinparam dpi 300
+skinparam classFontSize 8
+skinparam classFontName Helvetica
+autonumber
+
+box "Application" #Mistyrose
+participant OTADemo
+end box
+box "OTA Library" #LightGreen
+participant OTAAgent
+participant OTAPal
+end box
+box "Connectivity Libraries" #LightBlue
+participant MQTT
+participant HTTP
+end box
+box "Cloud AWS IoT \nService" #Darksalmon
+participant AWSIoT
+
+== Initialization ==
+OTADemo -> MQTT : Create MQTT connection
+activate OTADemo
+activate MQTT
+MQTT -> AWSIoT : Send data to server
+activate AWSIoT
+MQTT <-- AWSIoT
+deactivate AWSIoT
+OTADemo <-- MQTT
+deactivate MQTT
+
+OTADemo -> OTAAgent :Initialize OTAAgent
+activate OTAAgent
+OTADemo <-- OTAAgent
+
+OTAAgent -> OTADemo : Subscibe to Job notification topics
+deactivate OTAAgent
+OTADemo -> MQTT : Subscribe
+activate MQTT
+MQTT -> AWSIoT : Send data to server
+activate AWSIoT
+MQTT <-- AWSIoT
+deactivate AWSIoT
+OTADemo <-- MQTT
+deactivate
+activate OTAAgent
+OTADemo --> OTAAgent
+deactivate OTADemo
+
+== Job Parsing ==
+OTAAgent -> OTAAgent : Wait for \nJob
+MQTT <- AWSIoT : Job notification from server
+deactivate OTAAgent
+activate AWSIoT
+activate MQTT
+MQTT --> AWSIoT
+deactivate AWSIoT
+
+MQTT -> OTADemo : MQTT Job callback
+activate OTADemo
+deactivate MQTT
+OTADemo -> OTAAgent : Send Job Received event
+activate OTAAgent
+deactivate OTADemo
+OTAAgent -> OTAAgent : Parse Job Document (json) (*2)
+deactivate OTAAgent
+== Connection Management ==
+
+MQTT -> OTADemo : MQTT Disconnect Callback
+
+activate MQTT
+
+activate OTADemo
+OTADemo -> OTAAgent : Suspend OTA
+activate OTAAgent
+deactivate MQTT
+OTAAgent --> OTADemo
+deactivate OTAAgent
+
+loop till connection succeed or max retries
+
+OTADemo -> MQTT : Re-connect MQTT
+activate MQTT
+MQTT -> AWSIoT : Send data to server
+activate AWSIoT
+MQTT <-- AWSIoT
+deactivate AWSIoT
+OTADemo <-- MQTT : Timeout
+deactivate MQTT
+
+OTADemo -> OTADemo : Exponential Delay( multiplied by 2)
+deactivate MQTT
+end
+OTADemo -> OTAAgent : Resume OTA Agent
+deactivate OTADemo
+activate OTAAgent
+
+== File Download ==
+
+OTAAgent -> OTAPal : Create File for download
+activate OTAPal
+OTAAgent <-- OTAPal
+deactivate OTAPal
+loop Till file download is complete
+OTAAgent -> OTADemo : Request File blocks
+deactivate OTAAgent
+activate OTADemo
+activate HTTP
+OTADemo -> HTTP : GET Request
+HTTP -> AWSIoT : Send data to server
+deactivate OTADemo
+activate AWSIoT
+HTTP <- AWSIoT :  Packet containing\nfile blocks
+deactivate AWSIoT
+activate OTADemo
+HTTP -> OTADemo : HTTP Response
+deactivate HTTP
+OTADemo -> OTAAgent : Process file block
+deactivate MQTT
+deactivate OTADemo
+activate OTAAgent
+
+OTAAgent -> OTAAgent : Decode File Blocks (cbor) (*4)
+OTAAgent -> OTAPal : Write File Blocks
+activate OTAPal
+
+alt If last file block
+OTAPal -> OTAPal : Verify cypto\nsignature
+end
+OTAAgent <-- OTAPal
+deactivate OTAPal
+
+
+alt Every 64(default) file blocks received
+activate OTADemo
+OTAAgent -> OTADemo : Update Job
+deactivate OTAAgent
+OTADemo -> MQTT : Publish
+
+activate MQTT
+MQTT -> AWSIoT : Send data to server
+activate AWSIoT
+MQTT <-- AWSIoT
+deactivate AWSIoT
+MQTT --> OTADemo
+deactivate MQTT
+deactivate OTADemo
+end
+end
+activate OTAAgent
+== Activating Image ==
+
+OTAAgent -> OTAPal : Set boot flags
+activate OTAPal
+OTAAgent <-- OTAPal
+deactivate OTAPal
+deactivate OTAAgent
+activate OTADemo
+activate MQTT
+OTAAgent -> OTADemo : Update Job status
+OTADemo -> MQTT : Publish
+
+MQTT -> AWSIoT : Send data to server
+activate AWSIoT
+MQTT <-- AWSIoT
+deactivate AWSIoT
+MQTT --> OTADemo
+deactivate MQTT
+
+OTAAgent -> OTADemo : Callback for activation
+activate OTADemo
+OTADemo --> OTAAgent
+deactivate OTADemo
+
+OTAAgent -> OTAPal : Activate Image
+deactivate OTAAgent
+activate OTAPal
+OTAPal -> OTAPal :Reset
+deactivate OTAPal
+deactivate OTAAgent
+
+@enduml

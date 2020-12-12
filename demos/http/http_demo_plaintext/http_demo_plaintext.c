@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C V202011.00
+ * AWS IoT Device SDK for Embedded C 202012.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -167,6 +167,14 @@ typedef struct httpMethodStrings
  * decide to use separate buffers for storing the HTTP request and response.
  */
 static uint8_t userBuffer[ USER_BUFFER_LENGTH ];
+
+/*-----------------------------------------------------------*/
+
+/* Each compilation unit must define the NetworkContext struct. */
+struct NetworkContext
+{
+    PlaintextParams_t * pParams;
+};
 
 /*-----------------------------------------------------------*/
 
@@ -368,6 +376,7 @@ int main( int argc,
     TransportInterface_t transportInterface;
     /* The network context for the transport layer interface. */
     NetworkContext_t networkContext;
+    PlaintextParams_t plaintextParams;
     /* An array of HTTP paths to request. */
     const httpPathStrings_t httpMethodPaths[] =
     {
@@ -387,6 +396,9 @@ int main( int argc,
 
     ( void ) argc;
     ( void ) argv;
+
+    /* Set the pParams member of the network context with desired transport. */
+    networkContext.pParams = &plaintextParams;
 
     for( ; ; )
     {

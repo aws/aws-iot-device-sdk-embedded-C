@@ -15,11 +15,36 @@ add_executable(
         ${JSON_SOURCES}
 )
 
-target_link_libraries(
-    ${DEMO_NAME}
-    PRIVATE
-        mosquitto
-)
+find_library(LIB_MOSQUITTO mosquitto)
+if(${LIB_MOSQUITTO} STREQUAL "LIB_MOSQUITTO-NOTFOUND")
+    message( "Mosquitto was not installed. It will be built from source to run ${DEMO_NAME}." )
+    # Build Mosquitto Client Library from source if it is not installed.
+    add_subdirectory( libmosquitto )
+    target_link_libraries(
+        ${DEMO_NAME}
+        PUBLIC
+            libmosquitto
+    )
+    # Exclude extraneous mosquitto targets.
+    set_target_properties(mosquittopp PROPERTIES EXCLUDE_FROM_ALL true)
+    set_target_properties(mosquitto_rr PROPERTIES EXCLUDE_FROM_ALL true)
+    set_target_properties(mosquitto_sub PROPERTIES EXCLUDE_FROM_ALL true)
+    set_target_properties(mosquitto_pub PROPERTIES EXCLUDE_FROM_ALL true)
+    set_target_properties(mosquitto_passwd PROPERTIES EXCLUDE_FROM_ALL true)
+    set_target_properties(mosquitto PROPERTIES EXCLUDE_FROM_ALL true)
+
+    target_include_directories(
+        ${DEMO_NAME}
+        SYSTEM PUBLIC
+            ${CMAKE_CURRENT_LIST_DIR}/libmosquitto/lib
+    )
+else()
+    target_link_libraries(
+        ${DEMO_NAME}
+        PUBLIC
+            mosquitto
+    )
+endif()
 
 target_include_directories(
     ${DEMO_NAME}
@@ -28,11 +53,27 @@ target_include_directories(
         ${JSON_INCLUDE_PUBLIC_DIRS}
 )
 
-# Propagate values to compiler flags, even if they are not defined.
-target_compile_definitions(
-    ${DEMO_NAME} PRIVATE
-        ROOT_CA_CERT_PATH="${ROOT_CA_CERT_PATH}"
-        AWS_IOT_ENDPOINT="${AWS_IOT_ENDPOINT}"
-        CLIENT_CERT_PATH="${CLIENT_CERT_PATH}"
-        CLIENT_PRIVATE_KEY_PATH="${CLIENT_PRIVATE_KEY_PATH}"
-)
+if(AWS_IOT_ENDPOINT)
+    target_compile_definitions(
+        ${DEMO_NAME} PRIVATE
+            AWS_IOT_ENDPOINT="${AWS_IOT_ENDPOINT}"
+    )
+endif()
+if(ROOT_CA_CERT_PATH)
+    target_compile_definitions(
+        ${DEMO_NAME} PRIVATE
+            ROOT_CA_CERT_PATH="${ROOT_CA_CERT_PATH}"
+    )
+endif()
+if(CLIENT_CERT_PATH)
+    target_compile_definitions(
+        ${DEMO_NAME} PRIVATE
+            CLIENT_CERT_PATH="${CLIENT_CERT_PATH}"
+    )
+endif()
+if(CLIENT_PRIVATE_KEY_PATH)
+    target_compile_definitions(
+        ${DEMO_NAME} PRIVATE
+            CLIENT_PRIVATE_KEY_PATH="${CLIENT_PRIVATE_KEY_PATH}"
+    )
+endif()

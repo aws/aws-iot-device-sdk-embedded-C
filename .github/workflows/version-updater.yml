@@ -1,0 +1,40 @@
+name: Source File Version Updater
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Target branch for raising PR'
+        required: true
+      new_version_number:
+        description: 'New version Number (Eg, v1.1.0)'
+        required: true
+      old_version_number:
+        description: 'Old version Number (Eg, v1.0.0)'
+        required: true
+
+jobs:
+  update-version:
+    name: Update Version in source files
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.inputs.branch }}
+      - name: Configure git identity
+        run: |
+          git config --global user.name "Version Updater"
+      - name: Update source files with new version
+        run: |
+          grep -ilr ${{ github.event.inputs.old_version_number }} . | grep -v ".git" | grep -v "CHANGELOG.md" | grep -v "README.md" | xargs sed -i s/${{ github.event.inputs.old_version_number }}/${{ github.event.inputs.new_version_number }}/g
+      - name: Commit changes and Push to remote
+        run: |
+          git checkout -b updater-job/update-to-${{ github.event.inputs.new_version_number }}
+          git commit -am 'Update versioning in file from ${{ github.event.inputs.old_version_number }} to ${{ github.event.inputs.new_version_number }}'
+          git push --set-upstream origin updater-job/update-to-${{ github.event.inputs.new_version_number }}
+      - name: Raise a Pull-Request
+        run: |
+          sudo apt-get install
+          export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
+          gh pr create --base ${{ github.event.inputs.branch }} --title 'Update source file versioning to ${{ github.event.inputs.new_version_number }}' --body 'Updater-Job: PR to update versioning in source files from ${{ github.event.inputs.old_version_numver }} to ${{ github.event.inputs.new_version_number }}'
