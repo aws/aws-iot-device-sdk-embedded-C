@@ -381,7 +381,8 @@ OtaPalStatus_t otaPal_CreateFileForRx( OtaFileContext_t * const C )
             if( C->pFilePath[ 0 ] != ( uint8_t ) '/' )
             {
                 /* Get current directory. */
-                char * pFileName = getcwd( realFilePath, OTA_FILE_PATH_LENGTH_MAX );
+                char * pFileName = NULL;
+                pFileName = getcwd( realFilePath, OTA_FILE_PATH_LENGTH_MAX );
 
                 if( pFileName == NULL )
                 {
@@ -562,7 +563,8 @@ OtaPalStatus_t otaPal_SetPlatformImageState( OtaFileContext_t * const C,
     if( ( eState != OtaImageStateUnknown ) && ( eState <= OtaLastImageState ) )
     {
         /* Get current directory. */
-        char * pFileName = getcwd( imageStateFile, OTA_FILE_PATH_LENGTH_MAX );
+        char * pFileName = NULL;
+        pFileName = getcwd( imageStateFile, OTA_FILE_PATH_LENGTH_MAX );
 
         if( pFileName == NULL )
         {
@@ -654,7 +656,8 @@ OtaPalImageState_t otaPal_GetPlatformImageState( OtaFileContext_t * const C )
     ( void ) C;
 
     /* Get current directory. */
-    char * pFileName = getcwd( imageStateFile, OTA_FILE_PATH_LENGTH_MAX );
+    char * pFileName = NULL;
+    pFileName = getcwd( imageStateFile, OTA_FILE_PATH_LENGTH_MAX );
 
     if( pFileName == NULL )
     {
