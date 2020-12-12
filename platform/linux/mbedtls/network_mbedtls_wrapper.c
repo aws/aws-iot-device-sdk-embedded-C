@@ -270,7 +270,7 @@ IoT_Error_t iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
 	}
 
 #ifdef ENABLE_IOT_DEBUG
-	if (mbedtls_ssl_get_peer_cert(&(tlsDataParams->ssl)) != NULL) {
+	if(mbedtls_ssl_get_peer_cert(&(tlsDataParams->ssl)) != NULL) {
 		IOT_DEBUG("  . Peer certificate information    ...\n");
 		mbedtls_x509_crt_info((char *) buf, sizeof(buf) - 1, "      ", mbedtls_ssl_get_peer_cert(&(tlsDataParams->ssl)));
 		IOT_DEBUG("%s\n", buf);
@@ -307,7 +307,7 @@ IoT_Error_t iot_tls_write(Network *pNetwork, unsigned char *pMsg, size_t len, Ti
 	init_timer(&writeTimer);
 	countdown_ms(&writeTimer, IOT_SSL_WRITE_RETRY_TIMEOUT_MS);
 
-	while (len > 0) {
+	while(len > 0) {
 		ret = mbedtls_ssl_write(pSsl, pMsg, len);
 
 		if(ret > 0) {
@@ -362,11 +362,11 @@ IoT_Error_t iot_tls_read(Network *pNetwork, unsigned char *pMsg, size_t len, Tim
 	init_timer(&readTimer);
 	countdown_ms(&readTimer, IOT_SSL_READ_RETRY_TIMEOUT_MS);
 
-	while (len > 0) {
+	while(len > 0) {
 		/* This read will timeout after IOT_SSL_READ_TIMEOUT if there's no data to be read */
 		ret = mbedtls_ssl_read(pSsl, pMsg, len);
 
-		if (ret > 0) {
+		if(ret > 0) {
 			if((size_t) ret > len) {
 				IOT_ERROR("More bytes read than requested\n\n");
 				return NETWORK_SSL_WRITE_ERROR;
@@ -379,11 +379,11 @@ IoT_Error_t iot_tls_read(Network *pNetwork, unsigned char *pMsg, size_t len, Tim
 			rxLen += ret;
 			pMsg += ret;
 			len -= ret;
-		} else if (ret == MBEDTLS_ERR_SSL_WANT_READ || 
+		} else if(ret == MBEDTLS_ERR_SSL_WANT_READ || 
 				ret == MBEDTLS_ERR_SSL_WANT_WRITE ||
 				ret == MBEDTLS_ERR_SSL_TIMEOUT) {
 			if(has_timer_expired(&readTimer)) {
-				if (rxLen == 0) {
+				if(rxLen == 0) {
 					return NETWORK_SSL_NOTHING_TO_READ;
 				} else {
 					return NETWORK_SSL_READ_TIMEOUT_ERROR;
