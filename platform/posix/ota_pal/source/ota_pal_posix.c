@@ -1,5 +1,5 @@
 /*
- * OTA PAL V2.0.0 (Release Candidate) for POSIX
+ * OTA PAL for POSIX V2.0.0
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -30,6 +30,7 @@
 #include <errno.h>
 #include <assert.h>
 #include <libgen.h>
+#include <unistd.h>
 
 #include "ota.h"
 #include "ota_pal_posix.h"
@@ -57,7 +58,12 @@ static const char signingcredentialSIGNING_CERTIFICATE_PEM[] = "Paste code signi
 /**
  * @brief Size of buffer used in file operations on this platform (POSIX).
  */
-#define OTA_PAL_POSIX_BUF_SIZE    ( ( size_t ) 4096U )
+#define OTA_PAL_POSIX_BUF_SIZE           ( ( size_t ) 4096U )
+
+/**
+ * @brief Name of the file used for storing platform image state.
+ */
+#define OTA_PLATFORM_IMAGE_STATE_FILE    "/PlatformImageState.txt"
 
 /**
  * @brief Specify the OTA signature algorithm we support on this platform.
@@ -374,11 +380,18 @@ OtaPalStatus_t otaPal_CreateFileForRx( OtaFileContext_t * const C )
         {
             if( C->pFilePath[ 0 ] != ( uint8_t ) '/' )
             {
-                /* POSIX port using standard library */
-                /* coverity[misra_c_2012_rule_21_6_violation] */
-                int res = snprintf( realFilePath, OTA_FILE_PATH_LENGTH_MAX, "%s/%s", getenv( "PWD" ), C->pFilePath );
-                assert( res >= 0 );
-                ( void ) res; /* Suppress the unused variable warning when assert is off. */
+                /* Get current directory. */
+                char * pFileName = getcwd( realFilePath, OTA_FILE_PATH_LENGTH_MAX );
+
+                if( pFileName == NULL )
+                {
+                    LogError( ( "Failed to get current working directory: %s", strerror( errno ) ) );
+                }
+                else
+                {
+                    /* Add the filename . */
+                    strncat( realFilePath, C->pFilePath, strlen( ( const char * ) C->pFilePath ) + 1U );
+                }
             }
             else
             {
@@ -541,22 +554,28 @@ OtaPalStatus_t otaPal_SetPlatformImageState( OtaFileContext_t * const C,
     OtaPalMainStatus_t mainErr = OtaPalBadImageState;
     int32_t subErr = 0;
     FILE * pPlatformImageState = NULL;
-    char imageStateFile[ OTA_FILE_PATH_LENGTH_MAX ];
-
+    char imageStateFile[ OTA_FILE_PATH_LENGTH_MAX ] = { 0 };
 
     ( void ) C;
 
     if( ( eState != OtaImageStateUnknown ) && ( eState <= OtaLastImageState ) )
     {
-        /* POSIX port using standard library */
-        /* coverity[misra_c_2012_rule_21_6_violation] */
-        int res = snprintf( imageStateFile, OTA_FILE_PATH_LENGTH_MAX, "%s/%s", getenv( "PWD" ), "PlatformImageState.txt" );
-        assert( res >= 0 );
-        ( void ) res; /* Suppress the unused variable warning when assert is off. */
+        /* Get current directory. */
+        char * pFileName = getcwd( imageStateFile, OTA_FILE_PATH_LENGTH_MAX );
 
-        /* POSIX port using standard library */
-        /* coverity[misra_c_2012_rule_21_6_violation] */
-        pPlatformImageState = fopen( imageStateFile, "w+b" );
+        if( pFileName == NULL )
+        {
+            LogError( ( "Failed to get current working directory: %s", strerror( errno ) ) );
+        }
+        else
+        {
+            /* Add the filename . */
+            strncat( imageStateFile, OTA_PLATFORM_IMAGE_STATE_FILE, sizeof( OTA_PLATFORM_IMAGE_STATE_FILE ) );
+
+            /* POSIX port using standard library */
+            /* coverity[misra_c_2012_rule_21_6_violation] */
+            pPlatformImageState = fopen( imageStateFile, "w+b" );
+        }
 
         if( pPlatformImageState != NULL )
         {
@@ -626,23 +645,29 @@ OtaPalStatus_t otaPal_ResetDevice( OtaFileContext_t * const C )
  */
 OtaPalImageState_t otaPal_GetPlatformImageState( OtaFileContext_t * const C )
 {
-    FILE * pPlatformImageState;
+    FILE * pPlatformImageState = NULL;
     OtaImageState_t eSavedAgentState = OtaImageStateUnknown;
     OtaPalImageState_t ePalState = OtaPalImageStateUnknown;
-    char imageStateFile[ OTA_FILE_PATH_LENGTH_MAX ];
-
-    /* POSIX port using standard library */
-    /* coverity[misra_c_2012_rule_21_6_violation] */
-    int res = snprintf( imageStateFile, OTA_FILE_PATH_LENGTH_MAX, "%s/%s", getenv( "PWD" ), "PlatformImageState.txt" );
-
-    assert( res >= 0 );
-    ( void ) res; /* Suppress the unused variable warning when assert is off. */
+    char imageStateFile[ OTA_FILE_PATH_LENGTH_MAX ] = { 0 };
 
     ( void ) C;
 
-    /* POSIX port using standard library */
-    /* coverity[misra_c_2012_rule_21_6_violation] */
-    pPlatformImageState = fopen( imageStateFile, "r+b" );
+    /* Get current directory. */
+    char * pFileName = getcwd( imageStateFile, OTA_FILE_PATH_LENGTH_MAX );
+
+    if( pFileName == NULL )
+    {
+        LogError( ( "Failed to get current working directory: %s", strerror( errno ) ) );
+    }
+    else
+    {
+        /* Add the filename . */
+        strncat( imageStateFile, OTA_PLATFORM_IMAGE_STATE_FILE, sizeof( OTA_PLATFORM_IMAGE_STATE_FILE ) );
+
+        /* POSIX port using standard library */
+        /* coverity[misra_c_2012_rule_21_6_violation] */
+        pPlatformImageState = fopen( imageStateFile, "r+b" );
+    }
 
     if( pPlatformImageState != NULL )
     {
