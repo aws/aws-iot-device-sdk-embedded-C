@@ -307,7 +307,7 @@ IoT_Error_t iot_tls_write(Network *pNetwork, unsigned char *pMsg, size_t len, Ti
 	init_timer(&writeTimer);
 	countdown_ms(&writeTimer, IOT_SSL_WRITE_RETRY_TIMEOUT_MS);
 
-	while(len > 0) {
+	while(len > 0U) {
 		ret = mbedtls_ssl_write(pSsl, pMsg, len);
 
 		if(ret > 0) {
@@ -362,7 +362,7 @@ IoT_Error_t iot_tls_read(Network *pNetwork, unsigned char *pMsg, size_t len, Tim
 	init_timer(&readTimer);
 	countdown_ms(&readTimer, IOT_SSL_READ_RETRY_TIMEOUT_MS);
 
-	while(len > 0) {
+	while(len > 0U) {
 		/* This read will timeout after IOT_SSL_READ_TIMEOUT if there's no data to be read */
 		ret = mbedtls_ssl_read(pSsl, pMsg, len);
 
@@ -375,7 +375,7 @@ IoT_Error_t iot_tls_read(Network *pNetwork, unsigned char *pMsg, size_t len, Tim
 			/* Successfully received data, so reset the timeout */
 			init_timer(&readTimer);
 			countdown_ms(&readTimer, IOT_SSL_READ_RETRY_TIMEOUT_MS);
-			
+
 			rxLen += ret;
 			pMsg += ret;
 			len -= ret;
@@ -383,7 +383,7 @@ IoT_Error_t iot_tls_read(Network *pNetwork, unsigned char *pMsg, size_t len, Tim
 				ret == MBEDTLS_ERR_SSL_WANT_WRITE ||
 				ret == MBEDTLS_ERR_SSL_TIMEOUT) {
 			if(has_timer_expired(&readTimer)) {
-				if(rxLen == 0) {
+				if(rxLen == 0U) {
 					return NETWORK_SSL_NOTHING_TO_READ;
 				} else {
 					return NETWORK_SSL_READ_TIMEOUT_ERROR;
