@@ -7,9 +7,10 @@
 
 ## Output
 
-This script generate all of the Doxygen for the CSDK and its library spoke repos.
+This script generates all of the Doxygen documentation for the CSDK and its
+library spoke repos.
 Any Doxygen warnings from generation will print out to the console.
-Optionally one can also choose to zip up the generated Doxygen as well.
+Optionally one can also choose to zip up the generated Doxygen documentation.
 
 ## Usage
 
@@ -23,6 +24,8 @@ git submodule update --init --checkout libraries/standard libraries/aws
 ```
 
 ### Generate Doxygen
+
+You can run this script from anywhere with the path to the CSDK repo root.
 
 ```console
 python3 generate_docs.py --root <CSDK_REPO_ROOT>
