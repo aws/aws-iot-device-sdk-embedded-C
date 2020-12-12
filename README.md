@@ -15,7 +15,7 @@
         * [AWS IoT Device Defender](#aws-iot-device-defender)
         * [AWS IoT Over-the-air Update Library (Release Candidate)](#aws-iot-over-the-air-update-v200-release-candidate)
         * [backoffAlgorithm](#backoffalgorithm)
-    * [AWS Collection of Metrics](#aws-collection-of-metrics)
+    * [Sending metrics to AWS IoT](#sending-metrics-to-aws-iot)
 * [Versioning](#versioning)
 * [Releases](#releases)
     * [202011.00](#20201100)
@@ -130,11 +130,11 @@ The backoffAlgorithm library has no dependencies on libraries other than the sta
 
 See memory requirements for the latest release [here](https://docs.aws.amazon.com/embedded-csdk/202012.00/lib-ref/libraries/standard/backoffAlgorithm/docs/doxygen/output/html/index.html#backoff_algorithm_memory_requirements).
 
-### AWS Collection of Metrics
+### Sending metrics to AWS IoT
 
-AWS collects usage metrics indicating the operating system, hardware platform and MQTT client information of use to AWS IoT from the MQTT mutual auth demo by sending a specially formatted string in the username field of the MQTT CONNECT packet. These metrics help AWS IoT improve security and provide better technical support. Providing these metrics is optional for users, and can be disabled by updating the `OS_NAME`, `OS_VERSION`, `HARDWARE_PLATFORM_NAME` and `MQTT_LIB` configuration macros in the `demos/mqtt/mqtt_demo_mutual_auth/demo_config.h` file of the MQTT mutual auth demo.
+When establishing a connection with AWS IoT, users can optionally report the Operating System, Hardware Platform and MQTT client version information of their device to AWS. This information can help AWS IoT provide faster issue resolution and technical support. If users want to report this information, they can send a specially formatted string (see below) in the username field of the MQTT CONNECT packet.
 
-### Format
+Format
 
 The format of the username string with metrics is:
 
@@ -142,14 +142,38 @@ The format of the username string with metrics is:
 <Actual_Username>?SDK=<OS_Name>&Version=<OS_Version>&Platform=<Hardware_Platform>&MQTTLib=<MQTT_Library_name>@<MQTT_Library_version>
 ```
 
-where
+Where
 
-* **Actual_Username** is the actual username used for authentication (if a username/password is used for authentication).
-* **OS_Name** is the Operating System the application is running on.
-* **OS_Version** is the version number of the Operating System.
-* **Hardware_Platform** is the Hardware Platform the application is running on.
-* **MQTT_Library_name** is the MQTT Client library being used.
-* **MQTT_Library_version** is the version of the MQTT Client library being used.
+* <Actual_Username> is the actual username used for authentication, if username and password are used for authentication. When username and password based authentication is not used, this
+is an empty value.
+* <OS_Name> is the Operating System the application is running on (e.g. FreeRTOS)
+* <OS_Version> is the version number of the Operating System (e.g. V10.4.3)
+* <Hardware_Platform> is the Hardware Platform the application is running on (e.g. WinSim)
+* <MQTT_Library_name> is the MQTT Client library being used (e.g. coreMQTT)
+* <MQTT_Library_version> is the version of the MQTT Client library being used (e.g. 1.0.2)
+
+Example
+
+*  Actual_Username = “iotuser”, OS_Name = FreeRTOS, OS_Version = V10.4.3, Hardware_Platform_Name = WinSim, MQTT_Library_Name = coremqtt, MQTT_Library_version = 1.1.0. If username is not used, then “iotuser” can be removed.
+
+```
+/* Username string:
+ * iotuser?SDK=FreeRTOS&Version=v10.4.3&Platform=WinSim&MQTTLib=coremqtt@1.1.0
+ */
+
+#define OS_NAME                   "FreeRTOS"
+#define OS_VERSION                "V10.4.3"
+#define HARDWARE_PLATFORM_NAME    "WinSim"
+#define MQTT_LIB                  "coremqtt@1.1.0"
+
+#define USERNAME_STRING           "iotuser?SDK=" OS_NAME "&Version=" OS_VERSION "&Platform=" HARDWARE_PLATFORM_NAME "&MQTTLib=" MQTT_LIB
+#define USERNAME_STRING_LENGTH    ( ( uint16_t ) ( sizeof( USERNAME_STRING ) - 1 ) )
+
+MQTTConnectInfo_t connectInfo;
+connectInfo.pUserName = USERNAME_STRING;
+connectInfo.userNameLength = USERNAME_STRING_LENGTH;
+mqttStatus = MQTT_Connect( pMqttContext, &connectInfo, NULL, CONNACK_RECV_TIMEOUT_MS, pSessionPresent );
+```
 
 ## Versioning
 
