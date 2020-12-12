@@ -116,7 +116,7 @@ Note: A pre-signed GET URL is required for all HTTP S3 demos. For upload demos, 
 ### Prerequisites
 <ol>
 	<li> To perform a successful OTA update you would need to complete the prerequisites mentioned here: https://docs.aws.amazon.com/freertos/latest/userguide/ota-prereqs.html </li>
-	<li> A Code-Signing profile can be created using: https://docs.aws.amazon.com/freertos/latest/userguide/ota-code-sign-cert-esp.html </li>
+	<li> A code signing certificate is required to authenticate the update. A code signing certificate based on the SHA-256 ECDSA algorithm will work with the current demos. An example of how to generate this kind of certificate can be found here: https://docs.aws.amazon.com/freertos/latest/userguide/ota-code-sign-cert-esp.html </li>
 </ol>
 
 ### Configuration
