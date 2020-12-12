@@ -337,6 +337,7 @@ You can generate the presigned urls using [demos/http/common/src/presigned_urls_
 ```
     apt install curl libmosquitto-dev
 ```
+If the platform does not contain the `libmosquitto` library, the demo will build the library from source.
 
 `libmosquitto` 1.4.10 or any later version of the first major release is required to run this demo.
 
