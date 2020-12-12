@@ -83,13 +83,6 @@ See memory requirements for the latest release [here](https://docs.aws.amazon.co
 
 The [corePKCS11](https://github.com/FreeRTOS/corePKCS11) library is an implementation of the PKCS #11 interface (API) that makes it easier to develop applications that rely on cryptographic operations. Only a subset of the [PKCS #11 v2.4](http://docs.oasis-open.org/pkcs11/pkcs11-base/v2.40/os/pkcs11-base-v2.40-os.html) standard has been implemented, with a focus on operations involving asymmetric keys, random number generation, and hashing.
 
-The corePKCS11 demos do not require any cloud resources and are standalone. The demos build upon each other to introduce concepts in PKCS #11 sequentially.
-1. `pkcs11_demo_managaement_and_rng`
-1. `pkcs11_demo_mechanisms_and_digests`
-1. `pkcs11_demo_objects`
-1. `pkcs11_demo_sign_and_verify`
-    1. Please note that this demo requires the private and public key generated from `pkcs11_demo_objects` to be in the directory the demo is executed from.
-
 See memory requirements for the latest release [here](https://docs.aws.amazon.com/embedded-csdk/202012.00/lib-ref/libraries/standard/corePKCS11/docs/doxygen/output/html/pkcs11_design.html#pkcs11_memory_requirements).
 
 #### AWS IoT Device Shadow
@@ -326,6 +319,16 @@ In order to set these configurations manually, edit `demo_config.h` in `demos/ht
 * Set `S3_PRESIGNED_PUT_URL` to a S3 presigned URL with PUT access.
 
 You can generate the presigned urls using [demos/http/common/src/presigned_urls_gen.py](demos/http/common/src/presigned_urls_gen.py). More info can be found [here](demos/http/common/src/README.md).
+
+#### corePKCS11 demo steps
+
+The corePKCS11 demos do not require any cloud resources and are standalone. The demos build upon each other to introduce concepts in PKCS #11 sequentially. Below is the recommended order.
+1. `pkcs11_demo_managaement_and_rng`
+1. `pkcs11_demo_mechanisms_and_digests`
+1. `pkcs11_demo_objects`
+1. `pkcs11_demo_sign_and_verify`
+    1. Please note that this demo requires the private and public key generated from `pkcs11_demo_objects` to be in the directory the demo is executed from.
+
 
 #### Build Steps
 
