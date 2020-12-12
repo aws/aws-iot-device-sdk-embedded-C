@@ -45,6 +45,7 @@
         * [Prerequisites for the AWS Over-The-Air Update (OTA) demos](#prerequisites-for-the-aws-over-the-air-update-ota-demos)
         * [Scheduling an OTA Update Job](#scheduling-an-ota-update-job)
         * [Build Steps](#build-steps)
+        * [Running corePKCS11 demos](#running-corepkcs11-demos)
         * [Alternative option of Docker containers for running demos locally](#alternative-option-of-docker-containers-for-running-demos-locally)
             * [Installing Mosquitto to run MQTT demos locally](#installing-mosquitto-to-run-mqtt-demos-locally)
             * [Installing httpbin to run HTTP demos locally](#installing-httpbin-to-run-http-demos-locally)
@@ -389,6 +390,15 @@ After you build and run the initial executable you will have to create another e
 * Run *cmake* while inside build directory: `cmake ..`
 * Run this command to build the demos: `make`
 * Go to the `build/bin` directory and run any demo executables from there.
+
+#### Running corePKCS11 demos
+
+The corePKCS11 demos do not require any AWS IoT resources setup, and are standalone. The demos build upon each other to introduce concepts in PKCS #11 sequentially. Below is the recommended order.
+1. `pkcs11_demo_managaement_and_rng`
+1. `pkcs11_demo_mechanisms_and_digests`
+1. `pkcs11_demo_objects`
+1. `pkcs11_demo_sign_and_verify`
+    1. Please note that this demo requires the private and public key generated from `pkcs11_demo_objects` to be in the directory the demo is executed from.
 
 #### Alternative option of Docker containers for running demos locally
 
