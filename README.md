@@ -531,7 +531,7 @@ The Doxygen references were created using Doxygen version 1.8.20. To generate th
 ```sh
 cd <CSDK_ROOT>
 git submodule update --init --recursive --checkout
-python3 tools/doxygen/generate_docs.py --root .
+python3 tools/doxygen/generate_docs.py
 ```
 
 The generated documentation landing page is located at `docs/doxygen/output/html/index.html`.

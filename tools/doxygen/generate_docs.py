@@ -48,11 +48,15 @@ def main():
     Generate documentation and optionally zip it up.
     """
     parser = argparse.ArgumentParser(description="Generate all doxygen and optionally zip it.")
-    parser.add_argument("-r", "--root", action="store", required=True, dest="root", help="CSDK repo root path.")
-    parser.add_argument("-z", "--zip", action="store_true", required=False, help="Zip all doxygen output")
+    parser.add_argument("-r", "--root", action="store", required=False, dest="root", help="CSDK repo root path. This defaults to the current working directory.")
+    parser.add_argument("-z", "--zip", action="store_true", required=False, help="Zip all doxygen output.")
     args = parser.parse_args()
     sdk_root = args.root
     doZip = args.zip
+
+    # If the root folder is not give, use the current working directory.
+    if( sdk_root == None ):
+        sdk_root = os.getcwd()
 
     # Get the absolute paths to all of the libraries in the CSDK.
     abs_sdk_root = os.path.abspath(sdk_root)
