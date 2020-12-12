@@ -261,7 +261,7 @@ different commit from a submodule.
 
 ### Building and Running Demos
 
-The libraries in this SDK are not dependent on any operating system. However, the demos for the libraries in this SDK are built and tested on a Linux platform. The demos builds with [CMake](https://cmake.org/), a cross-platform build tool.
+The libraries in this SDK are not dependent on any operating system. However, the demos for the libraries in this SDK are built and tested on a Linux platform. The demos build with [CMake](https://cmake.org/), a cross-platform build tool.
 
 #### Prerequisites
 
@@ -272,6 +272,7 @@ The libraries in this SDK are not dependent on any operating system. However, th
     * Linux system with POSIX sockets, threads, RT, and timer APIs. (We have tested on Ubuntu 18.04).
 
 ##### Build Dependencies
+
 The follow table shows libraries that need to be installed in your system to run certain demos. If a dependency is
 not installed and cannot be built from source, demos that require that dependency will be excluded
 from the default `all` target.
@@ -283,12 +284,17 @@ Dependency | Version | Usage
 
 #### AWS IoT Account Setup
 
-You need to setup an AWS account and access the AWS IoT console for running the AWS IoT Device Shadow library demo and tests. Also, the AWS account can be used for running the MQTT mutual auth demo can be run against AWS IoT broker.
+You need to setup an AWS account and access the AWS IoT console for running the AWS IoT Device Shadow library, AWS IoT Device Defender library, AWS IoT Jobs library and coreHTTP S3 download demos. 
+Also, the AWS account can be used for running the MQTT mutual auth demo can be run against AWS IoT broker.
+Also, running the AWS IoT Device Defender, AWS IoT Jobs and AWS IoT Device Shadow library demos require the setup of a Thing Name resource for the device running the
+demo.
 Follow the links to:
 [Setup an AWS account](https://portal.aws.amazon.com/billing/signup#/start).
 [Sign-in to the AWS IoT Console](https://aws.amazon.com/console/) after setting up the AWS account.
+[Create a Thing resource](https://docs.aws.amazon.com/iot/latest/developerguide/iot-moisture-create-thing.html)
 
-#### Configuring the mutual auth demos
+
+#### Configuring TLS mutual authentication in demos
 
 You can pass the following configuration settings as command line options in order to run the mutual auth demos:
 
@@ -319,6 +325,57 @@ In order to set these configurations manually, edit `demo_config.h` in `demos/ht
 * Set `S3_PRESIGNED_PUT_URL` to a S3 presigned URL with PUT access.
 
 You can generate the presigned urls using [demos/http/common/src/presigned_urls_gen.py](demos/http/common/src/presigned_urls_gen.py). More info can be found [here](demos/http/common/src/README.md).
+
+#### Setup for AWS IoT Jobs demo
+
+1. The demo requires the Linux platform to contain curl and libmosquitto which can be installed with:
+
+```
+    apt install curl libmosquitto-dev
+```
+
+`libmosquitto` 1.4.10 or any later version of the first major release is required to run this demo.
+
+2. A job that specifies the URL to download for the demo needs to be created on the AWS account for the Thing resource that will be used by the demo.  
+The job can be created directly from the [AWS IoT console](https://console.aws.amazon.com/iot/home) or using the aws cli tool. 
+
+The following creates a job that specifies a Linux Kernel link for downloading.
+
+```
+ aws iot create-job \
+        --job-id 'job_1' \
+        --targets arn:aws:iot:us-west-2:<account-id>:thing/<thing-name> \
+        --document '{\"url\":\"https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.8.5.tar.xz\"}'
+```
+
+
+#### Prerequisites for the AWS Over-The-Air Update (OTA) demos
+
+<ol>
+	<li> To perform a successful OTA update you would need to complete the prerequisites mentioned here: https://docs.aws.amazon.com/freertos/latest/userguide/ota-prereqs.html </li>
+	<li> A code signing certificate is required to authenticate the update. A code signing certificate based on the SHA-256 ECDSA algorithm will work with the current demos. An example of how to generate this kind of certificate can be found here: https://docs.aws.amazon.com/freertos/latest/userguide/ota-code-sign-cert-esp.html </li>
+</ol>
+
+#### Scheduling an OTA Update Job
+
+After you build and run the initial executable you will have to create another executable and schedule an OTA update job with this image.
+<ol>
+	<li> Increase the version of the application by setting macro `APP_VERSION_BUILD` in demos/ota_demo_core_[mqtt/http]/demo_config.h to a different version than what is running.</li>
+	<li> Rebuild the application using @ref building_demo_commmandline from below into a different directory, say build-dir-2</li>
+	<li> Rename the demo executable to reflect the change, e.g. `mv ota_demo_core_mqtt ota_demo_core_mqtt2`</li>
+	<li> Create an OTA job:
+		<ol>
+		<li> Go to the AWS IoT Core console console.aws.amazon.com/iot/ (http://console.aws.amazon.com/iot/)</li>
+		<li> Manage → Jobs → Create → Create a FreeRTOS OTA update job → Select `testclient` from the thing list</li>
+		<li> Sign a new firmware → Create a new profile → Select any SHA-ECDSA signing platform → Upload the code signing certificate(from prerequisites) and provide its path on the device.</li>
+		<li> Select the image → Select the bucket you created in prerequisites → Upload the binary build-dir-2/bin/ota_demo2</li>
+		<li> The path on device should be the complete path to place the executable and the binary name: eg /home/ubuntu/aws-iot-device-sdk-embedded-C-staging/build-dir/bin/ota_demo_core_mqtt2</li>
+		<li> Select the IAM role created in prerequisites</li>
+		<li> Create the Job
+		</ol>
+	</li>
+	<li>Run the initial executable again with the following command: `sudo ./ota_demo_core_mqtt or sudo ./ota_demo_core_http`</li>
+</ol>
 
 #### Build Steps
 
