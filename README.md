@@ -146,24 +146,24 @@ Where
 
 * <Actual_Username> is the actual username used for authentication, if username and password are used for authentication. When username and password based authentication is not used, this
 is an empty value.
-* <OS_Name> is the Operating System the application is running on (e.g. FreeRTOS)
-* <OS_Version> is the version number of the Operating System (e.g. V10.4.3)
-* <Hardware_Platform> is the Hardware Platform the application is running on (e.g. WinSim)
+* <OS_Name> is the Operating System the application is running on (e.g. Ubuntu)
+* <OS_Version> is the version number of the Operating System (e.g. 20.10)
+* <Hardware_Platform> is the Hardware Platform the application is running on (e.g. RaspberryPi)
 * <MQTT_Library_name> is the MQTT Client library being used (e.g. coreMQTT)
-* <MQTT_Library_version> is the version of the MQTT Client library being used (e.g. 1.0.2)
+* <MQTT_Library_version> is the version of the MQTT Client library being used (e.g. 1.1.0)
 
 Example
 
-*  Actual_Username = “iotuser”, OS_Name = FreeRTOS, OS_Version = V10.4.3, Hardware_Platform_Name = WinSim, MQTT_Library_Name = coremqtt, MQTT_Library_version = 1.1.0. If username is not used, then “iotuser” can be removed.
+*  Actual_Username = “iotuser”, OS_Name = Ubuntu, OS_Version = 20.10, Hardware_Platform_Name = RaspberryPi, MQTT_Library_Name = coremqtt, MQTT_Library_version = 1.1.0. If username is not used, then “iotuser” can be removed.
 
 ```
 /* Username string:
- * iotuser?SDK=FreeRTOS&Version=v10.4.3&Platform=WinSim&MQTTLib=coremqtt@1.1.0
+ * iotuser?SDK=Ubuntu&Version=20.10&Platform=RaspberryPi&MQTTLib=coremqtt@1.1.0
  */
 
-#define OS_NAME                   "FreeRTOS"
-#define OS_VERSION                "V10.4.3"
-#define HARDWARE_PLATFORM_NAME    "WinSim"
+#define OS_NAME                   "Ubuntu"
+#define OS_VERSION                "20.10"
+#define HARDWARE_PLATFORM_NAME    "RaspberryPi"
 #define MQTT_LIB                  "coremqtt@1.1.0"
 
 #define USERNAME_STRING           "iotuser?SDK=" OS_NAME "&Version=" OS_VERSION "&Platform=" HARDWARE_PLATFORM_NAME "&MQTTLib=" MQTT_LIB
