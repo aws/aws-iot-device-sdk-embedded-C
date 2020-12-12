@@ -11,12 +11,12 @@ This script accompanies the CSDK release CM. You must use it in conjunction with
 
 ## Output
 This script checks that:
-    - All unit tests and code quality checks pass in each library repo committed on the release-candidate branch.
+    - All unit tests and code quality checks pass in each library repo committed on the main branch.
     - All jobs pass in <JENKINS_CI_URL>/view/CSDK%20Jobs/job/csdk/
     - Only the main branch exists in library repos.
     - Only the main branch and v4_beta_deprecated exist in the CSDK.
     - manifest.yml has all libraries and versions expected in this script's config.yml
-    - There are no pending PRs on the release-candidate branch.
+    - There are no pending PRs on the main branch.
 
 This script outputs:
     - **error.log** in the working directory for any errors found in verification.
@@ -27,13 +27,6 @@ This script outputs:
 1. Clone https://github.com/aws/aws-iot-device-sdk-embedded-C/
 ```console
 git clone git@github.com:aws/aws-iot-device-sdk-embedded-C.git --recurse-submodules
-```
-
-1. Create the **release-candidate** branch, if it doesn't already exist.
-```console
-cd aws-iot-device-sdk-embedded-C
-git checkout -b release-candidate
-git push origin release-candidate
 ```
 
 1. You will need your [Github API Access Token](https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token) and Jenkins CI URL, Username and Password. These should be saved into your system's environment variables as GITHUB_ACCESS_TOKEN, JENKINS_USERNAME, JENKINS_PASSWORD, JENKINS_API_URL.
@@ -63,7 +56,10 @@ python3 tools/release/release-verify.py \
 --device-shadow-for-aws-iot-embedded-sdk-version <SHADOW_VERSION> \
 --jobs-for-aws-iot-embedded-sdk-version <JOBS_VERSION> \
 --corepkcs11-version <PKCS11_VERSION> \
---retry-utils-version <RETRY_UTILS_VERSION> \
+--backoffalgorithm-version <BACKOFF_ALGORITHM_VERSION> \
+--ota-for-aws-iot-embedded-sdk <OTA_LIBRARY_VERSION> \
+--disable-cbmc-checks-for <LIBRARY1> \
+--disable-cbmc-checks-for <LIBRARY2> \
 --disable-jenkins-server-verify
 ```
 
