@@ -333,7 +333,6 @@ IoT_Error_t iot_tls_write(Network *pNetwork, unsigned char *pMsg, size_t len, Ti
 			/* All other negative return values indicate connection needs to be reset.
 			 * Will be caught in ping request so ignored here */
 			return NETWORK_SSL_WRITE_ERROR;
-			break;
 		}
 	}
 
