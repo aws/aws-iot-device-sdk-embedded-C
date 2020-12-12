@@ -613,7 +613,7 @@ OtaPalStatus_t otaPal_SetPlatformImageState( OtaFileContext_t * const C,
         }
         else
         {
-            LogError( ( "Unable to open image state file. error -- %d", errno ) );
+            LogError( ( "Unable to open image state file. Path: %s error: %s", imageStateFile, strerror( errno ) ) );
             subErr = errno;
         }
     }
