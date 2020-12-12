@@ -41,6 +41,9 @@
         * [AWS IoT Account Setup](#aws-iot-account-setup)
         * [Configuring the mutual auth demos](#configuring-the-mutual-auth-demos)
         * [Configuring the S3 demos](#configuring-the-s3-demos)
+        * [Setup for AWS IoT Jobs demo](#setup-for-aws-iot-jobs-demo)
+        * [Prerequisites for the AWS Over-The-Air Update (OTA) demos](#prerequisites-for-the-aws-over-the-air-update-ota-demos)
+        * [Scheduling an OTA Update Job](#scheduling-an-ota-update-job)
         * [Build Steps](#build-steps)
         * [Alternative option of Docker containers for running demos locally](#alternative-option-of-docker-containers-for-running-demos-locally)
             * [Installing Mosquitto to run MQTT demos locally](#installing-mosquitto-to-run-mqtt-demos-locally)
@@ -329,7 +332,7 @@ You can generate the presigned urls using [demos/http/common/src/presigned_urls_
 
 #### Setup for AWS IoT Jobs demo
 
-1. The demo requires the Linux platform to contain curl and libmosquitto which can be installed with:
+1. The demo requires the Linux platform to contain curl and libmosquitto. On a Debian platform, these dependencies can be installed with:
 
 ```
     apt install curl libmosquitto-dev
