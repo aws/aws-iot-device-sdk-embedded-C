@@ -10,13 +10,13 @@
 This script generates all of the Doxygen documentation for the CSDK and its
 library spoke repos.
 Any Doxygen warnings from generation will print out to the console.
-Optionally one can also choose to zip up the generated Doxygen documentation.
+Optionally, one can also choose to zip up the generated Doxygen documentation.
 
 ## Usage
 
 ### Preliminary
 
-Ensure that all of the library spoke repos are cloned before running this script.
+Ensure that all of the library spoke repositories are cloned before running this script.
 
 ```console
 cd aws-iot-device-sdk-embedded-C
