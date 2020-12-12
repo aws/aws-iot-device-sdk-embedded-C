@@ -391,7 +391,7 @@ OtaPalStatus_t otaPal_CreateFileForRx( OtaFileContext_t * const C )
                 {
                     /* Add the filename . */
                     realFilePath[ strlen( realFilePath ) ] = '/';
-                    strncat( realFilePath, C->pFilePath, strlen( ( const char * ) C->pFilePath ) + 1U );
+                    strncat( realFilePath, ( char * ) C->pFilePath, strlen( ( const char * ) C->pFilePath ) + 1U );
                 }
             }
             else
