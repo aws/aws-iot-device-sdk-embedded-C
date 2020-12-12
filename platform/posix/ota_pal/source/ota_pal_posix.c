@@ -373,6 +373,7 @@ OtaPalStatus_t otaPal_CreateFileForRx( OtaFileContext_t * const C )
 {
     OtaPalStatus_t result = OTA_PAL_COMBINE_ERR( OtaPalUninitialized, 0 );
     char realFilePath[ OTA_FILE_PATH_LENGTH_MAX ];
+    char * pFileName = NULL;
 
     if( C != NULL )
     {
@@ -381,7 +382,6 @@ OtaPalStatus_t otaPal_CreateFileForRx( OtaFileContext_t * const C )
             if( C->pFilePath[ 0 ] != ( uint8_t ) '/' )
             {
                 /* Get current directory. */
-                char * pFileName = NULL;
                 pFileName = getcwd( realFilePath, OTA_FILE_PATH_LENGTH_MAX );
 
                 if( pFileName == NULL )
@@ -557,13 +557,13 @@ OtaPalStatus_t otaPal_SetPlatformImageState( OtaFileContext_t * const C,
     int32_t subErr = 0;
     FILE * pPlatformImageState = NULL;
     char imageStateFile[ OTA_FILE_PATH_LENGTH_MAX ] = { 0 };
+    char * pFileName = NULL;
 
     ( void ) C;
 
     if( ( eState != OtaImageStateUnknown ) && ( eState <= OtaLastImageState ) )
     {
         /* Get current directory. */
-        char * pFileName = NULL;
         pFileName = getcwd( imageStateFile, OTA_FILE_PATH_LENGTH_MAX );
 
         if( pFileName == NULL )
@@ -652,11 +652,11 @@ OtaPalImageState_t otaPal_GetPlatformImageState( OtaFileContext_t * const C )
     OtaImageState_t eSavedAgentState = OtaImageStateUnknown;
     OtaPalImageState_t ePalState = OtaPalImageStateUnknown;
     char imageStateFile[ OTA_FILE_PATH_LENGTH_MAX ] = { 0 };
+    char * pFileName = NULL;
 
     ( void ) C;
 
     /* Get current directory. */
-    char * pFileName = NULL;
     pFileName = getcwd( imageStateFile, OTA_FILE_PATH_LENGTH_MAX );
 
     if( pFileName == NULL )
