@@ -18,6 +18,7 @@
     * [Sending metrics to AWS IoT](#sending-metrics-to-aws-iot)
 * [Versioning](#versioning)
 * [Releases](#releases)
+    * [202012.00](#20201200)
     * [202011.00](#20201100)
     * [202009.00](#20200900)
     * [v3.1.2](#v312)
@@ -192,6 +193,12 @@ For example, a second release in June 2021 would be 202106.01. Although the SDK 
 ## Releases
 
 All of the released versions of the C-SDK libraries are available as git tags. For example, the last release of the v3 SDK version is available at [tag 3.1.2](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v3.1.2).
+
+### 202012.00
+
+[API documentation of 202012.00 release](https://docs.aws.amazon.com/embedded-csdk/202012.00/lib-ref/index.html)
+
+This release includes [AWS IoT Over-the-air Update(Release Candidate)](https://github.com/aws/ota-for-aws-iot-embedded-sdk), [backoffAlgorithm](https://github.com/FreeRTOS/backoffAlgorithm), and [PKCS #11](https://github.com/FreeRTOS/corePKCS11) libraries. Additionally, there is a major update to the coreJSON and coreHTTP APIs. All libraries continue to undergo code quality checks (e.g. MISRA-C compliance), and Coverity static analysis. In addition, all libraries except AWS IoT Over-the-air Update and backoffAlgorithm undergo validation of memory safety with the C Bounded Model Checker (CBMC) automated reasoning tool.
 
 ### 202011.00
 
