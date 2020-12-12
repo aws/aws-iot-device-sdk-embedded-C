@@ -297,7 +297,7 @@ IoT_Error_t iot_tls_write(Network *pNetwork, unsigned char *pMsg, size_t len, Ti
 	int ret = 0;
 	/* This timer checks for a timeout whenever MBEDTLS_ERR_SSL_WANT_READ
 	 * or MBEDTLS_ERR_SSL_WANT_WRITE are returned by mbedtls_ssl_write.
-	 * Timeout is specified by IOT_SSL_READ_RETRY_TIMEOUT_MS. */
+	 * Timeout is specified by IOT_SSL_WRITE_RETRY_TIMEOUT_MS. */
 	Timer writeTimer;
 
 	/* This variable is unused */
