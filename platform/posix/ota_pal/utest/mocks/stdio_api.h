@@ -44,13 +44,6 @@ extern _STDIO_FILE_TYPE * fopen( const char * __filename,
 /* Close STREAM. */
 extern int fclose( _STDIO_FILE_TYPE * __stream );
 
-/* CMock does not support variadic functions. This alias replaces the original
- * function name to get around this issue. */
-extern int snprintf_alias( char * s,
-                           size_t n,
-                           const char * format,
-                           ... );
-
 extern size_t fread( void * ptr,
                      size_t size,
                      size_t count,
