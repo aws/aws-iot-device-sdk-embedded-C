@@ -199,7 +199,6 @@ sizeof
 sleeptimems
 sni
 snihostname
-snprintf
 sockaddr
 sockets_invalid_parameter
 socketstatus

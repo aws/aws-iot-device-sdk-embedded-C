@@ -79,7 +79,6 @@ typedef enum
     CRYPTO_free_fn,
     fopen_fn,
     fclose_fn,
-    snprintf_fn,
     feof_fn,
     fread_fn,
     fseek_alias_fn,
@@ -275,10 +274,6 @@ static void OTA_PAL_FailSingleMock_stdio( MockFunctionNames_t funcToFail,
 {
     static FILE dummyFile;
 
-    /* On success, snprintf returns a positive number that is less than the amount of data requested. */
-    const int snprintf_success = 0;
-    const int snprintf_failure = -1;
-    int snprintf_return;
     /* On success, fopen returns a FILE address that is not null. */
     FILE * const fopen_success = &dummyFile;
     FILE * const fopen_failure = NULL;
@@ -314,9 +309,6 @@ static void OTA_PAL_FailSingleMock_stdio( MockFunctionNames_t funcToFail,
     /* Set the return value for each of the callable functions. */
     fopen_return = ( funcToFail == fopen_fn ) ? fopen_failure : fopen_success;
     fopen_IgnoreAndReturn( fopen_return );
-
-    snprintf_return = ( funcToFail == snprintf_fn ) ? snprintf_failure : snprintf_success;
-    snprintf_alias_IgnoreAndReturn( snprintf_return );
 
     fread_return = ( funcToFail == fread_fn ) ? fread_failure : fread_success;
     fread_IgnoreAndReturn( fread_return );
@@ -1033,8 +1025,6 @@ void test_OTAPAL_GetPlatformImageState_fclose_fails( void )
     OtaFileContext_t otaFileContext;
     FILE dummyFile;
 
-    /* On success, snprintf returns a positive number that is less than the amount of data requested. */
-    const int snprintf_success_val = 0;
     /* On success, fopen returns a FILE address that is not null. */
     FILE * const fopen_success_val = &dummyFile;
 
@@ -1070,8 +1060,6 @@ void test_OTAPAL_GetPlatformImageState_ValidStates( void )
      * expected values. */
     const OtaImageState_t invalidImageState = OtaLastImageState + 1;
 
-    /* On success, snprintf returns a positive number that is less than the amount of data requested. */
-    const int snprintf_success_val = 0;
     /* On success, fopen returns a FILE address that is not null. */
     FILE * const fopen_success_val = &dummyFile;
 
