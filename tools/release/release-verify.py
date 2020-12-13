@@ -33,7 +33,6 @@ JENKINS_SERVER_VERIFY = True
 # Errors found in this run.
 errors = 0
 
-
 def log_error(error_log):
     """
     Logs an error to error.log.
@@ -74,11 +73,11 @@ def validate_manifest(csdk_root, csdk_version, lib_versions):
             else:
                 dep_version = found[0]["version"]
                 dep_name = found[0]["name"]
-                if dep_version != lib_versions[library]:
-                    log_error(f"Invalid manifest.yml. Invalid version {dep_version} for {dep_name}")
+                if dep_version.lower() != lib_versions[library]:
+                    log_error(f"Invalid manifest.yml. Invalid version {dep_version} for {dep_name}.")
 
 
-def validate_checks() -> list:
+def validate_checks(configs) -> list:
     """
     Validates that all of the GHA and CBMC status checks passed on all repos.
     Returns a list of existing org/repo paths found.
@@ -88,31 +87,35 @@ def validate_checks() -> list:
     for library_dir in CSDK_LIBRARY_DIRS:
         # Get the submodules in the library directory.
         git_resp = requests.get(
-            f"{GITHUB_API_URL}/repos/{CSDK_ORG}/{CSDK_REPO}/contents/{library_dir}?ref=release-candidate",
+            f"{GITHUB_API_URL}/repos/{CSDK_ORG}/{CSDK_REPO}/contents/{library_dir}?ref=main",
             headers=GITHUB_AUTH_HEADER,
         )
         # A 404 status code means the branch doesn't exist.
         if git_resp.status_code == 404:
             log_error(
-                "The release-candidate branch does not exist in the CSDK. Please create the release-candidate branch."
+                "The main branch does not exist in the CSDK. Please recheck the branches in the repo."
             )
             break
         else:
             # For each library submodule in this directory, get the status checks results and docs to review.
             for library in git_resp.json():
                 library_name = library["name"]
-                # Get the commit SHA of the branch currently in release-candidate.
+                # Get the commit SHA of the branch currently in main.
                 commit_sha = library["sha"]
                 # Get the organization of this repo
                 html_url = library["html_url"]
                 repo_path = re.search("(?<=\.com/)(.*)(?=/tree)", html_url).group(0)
                 repo_paths.append(repo_path)
-                # Get the status of the CBMC checks
-                git_resp = requests.get(
-                    f"{GITHUB_API_URL}/repos/{repo_path}/commits/{commit_sha}/status", headers=GITHUB_AUTH_HEADER
-                )
-                if git_resp.json()["state"] != "success":
-                    log_error(f"The CBMC status checks failed for {html_url}.")
+
+                # Verify CBMC checks for the libraries not excluded.
+                if library_name.lower() not in configs["libraries-to-disable-cbmc-checks"]:
+                    # Get the status of the CBMC checks
+                    git_resp = requests.get(
+                        f"{GITHUB_API_URL}/repos/{repo_path}/commits/{commit_sha}/status", headers=GITHUB_AUTH_HEADER
+                    )
+                    if git_resp.json()["state"] != "success":
+                        log_error(f"The CBMC status checks failed for {html_url}.")
+
                 # Get the status of the GHA checks
                 git_resp = requests.get(
                     f"{GITHUB_API_URL}/repos/{repo_path}/commits/{commit_sha}/check-runs", headers=GITHUB_AUTH_HEADER
@@ -163,25 +166,25 @@ def validate_branches(repo_paths):
         git_resp = requests.get(f"{GITHUB_API_URL}/repos/{repo_path}/branches", headers=GITHUB_AUTH_HEADER)
         valid_branches = ["main"]
         if repo_path == f"{CSDK_ORG}/{CSDK_REPO}":
-            valid_branches += ["v4_beta_deprecated", "release-candidate"]
+            valid_branches += ["v4_beta_deprecated"]
         for branch in git_resp.json():
             branch_name = branch["name"]
             if branch_name not in valid_branches:
                 log_error(f"Invalid branch {branch_name} found in {repo_path}.")
 
 
-def validate_release_candidate_branch():
+def validate_main_branch():
     """
-    Verifies there are no pending PRs to the release candidate branch.
+    Verifies there are no pending PRs to the main branch.
     """
     git_resp = requests.get(
-        f"{GITHUB_API_URL}/repos/{CSDK_ORG}/{CSDK_REPO}/pulls?base=release-candidate", headers=GITHUB_AUTH_HEADER
+        f"{GITHUB_API_URL}/repos/{CSDK_ORG}/{CSDK_REPO}/pulls?base=main", headers=GITHUB_AUTH_HEADER
     )
     if len(git_resp.json()) == 0:
-        logging.warn("release-candidate branch does not exist in CSDK.")
+        logging.warn("main branch does not exist in CSDK.")
     for pr in git_resp.json():
         pr_url = pr["url"]
-        log_error(f"Pull request to release-candidate {pr_url}.")
+        log_error(f"Pull request to main {pr_url}.")
 
 
 def set_globals(configs):
@@ -267,6 +270,15 @@ def get_configs() -> dict:
         dest="disable_jenkins_server_verify",
         help="Disable server verification for the Jenkins API calls if your system doesn't have the certificate in its store.",
     )
+    parser.add_argument(
+        "--disable-cbmc-checks-for",
+        action="append",
+        required=False,
+        default=[],
+        dest="libraries-to-disable-cbmc-checks",
+        type=str.lower,
+        help="Disable CBMC checks for libraries, in case it is not available.",
+    )
 
     args, unknown = parser.parse_known_args()
     csdk_root = os.path.abspath(args.root)
@@ -305,7 +317,7 @@ def main():
     validate_manifest(csdk_root, configs["csdk_version"], configs)
 
     # Verify status checks in all repos.
-    repo_paths = validate_checks()
+    repo_paths = validate_checks(configs)
 
     # Validate that the Jenkins CI passed.
     validate_ci()
@@ -313,8 +325,8 @@ def main():
     # Check that only qualified branches exist in each library repo.
     validate_branches(repo_paths)
 
-    # Verify there are no pending PRs to the release-candidate branch.
-    validate_release_candidate_branch()
+    # Verify there are no pending PRs to the CSDK main branch.
+    validate_main_branch()
 
     if errors > 0:
         print("Release verification failed, please see errors.log")
