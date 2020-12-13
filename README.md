@@ -387,32 +387,25 @@ The following creates a job that specifies a Linux Kernel link for downloading.
 
 
 #### Prerequisites for the AWS Over-The-Air Update (OTA) demos
-
-<ol>
-	<li> To perform a successful OTA update you would need to complete the prerequisites mentioned here: https://docs.aws.amazon.com/freertos/latest/userguide/ota-prereqs.html </li>
-	<li> A code signing certificate is required to authenticate the update. A code signing certificate based on the SHA-256 ECDSA algorithm will work with the current demos. An example of how to generate this kind of certificate can be found here: https://docs.aws.amazon.com/freertos/latest/userguide/ota-code-sign-cert-esp.html </li>
-</ol>
+   
+1. To perform a successful OTA update, you need to complete the prerequisites mentioned [here](https://docs.aws.amazon.com/freertos/latest/userguide/ota-prereqs.html).
+1. A code signing certificate is required to authenticate the update. A code signing certificate based on the SHA-256 ECDSA algorithm will work with the current demos. An example of how to generate this kind of certificate can be found [here](https://docs.aws.amazon.com/freertos/latest/userguide/ota-code-sign-cert-esp.html).
 
 #### Scheduling an OTA Update Job
 
 After you build and run the initial executable you will have to create another executable and schedule an OTA update job with this image.
-<ol>
-	<li> Increase the version of the application by setting macro `APP_VERSION_BUILD` in demos/ota_demo_core_[mqtt/http]/demo_config.h to a different version than what is running.</li>
-	<li> Rebuild the application using @ref building_demo_commmandline from below into a different directory, say build-dir-2</li>
-	<li> Rename the demo executable to reflect the change, e.g. `mv ota_demo_core_mqtt ota_demo_core_mqtt2`</li>
-	<li> Create an OTA job:
-		<ol>
-		<li> Go to the AWS IoT Core console console.aws.amazon.com/iot/ (http://console.aws.amazon.com/iot/)</li>
-		<li> Manage → Jobs → Create → Create a FreeRTOS OTA update job → Select `testclient` from the thing list</li>
-		<li> Sign a new firmware → Create a new profile → Select any SHA-ECDSA signing platform → Upload the code signing certificate(from prerequisites) and provide its path on the device.</li>
-		<li> Select the image → Select the bucket you created in prerequisites → Upload the binary build-dir-2/bin/ota_demo2</li>
-		<li> The path on device should be the complete path to place the executable and the binary name: eg /home/ubuntu/aws-iot-device-sdk-embedded-C-staging/build-dir/bin/ota_demo_core_mqtt2</li>
-		<li> Select the IAM role created in prerequisites</li>
-		<li> Create the Job
-		</ol>
-	</li>
-	<li>Run the initial executable again with the following command: `sudo ./ota_demo_core_mqtt or sudo ./ota_demo_core_http`</li>
-</ol>
+1. Increase the version of the application by setting macro `APP_VERSION_BUILD` in `demos/ota_demo_core_[mqtt/http]/demo_config.h` to a different version than what is running.
+1. Rebuild the application using the [build steps](#build-steps) below into a different directory, say `build-dir-2`.
+1. Rename the demo executable to reflect the change, e.g. `mv ota_demo_core_mqtt ota_demo_core_mqtt2`
+1. Create an OTA job:
+    1. Go to the [AWS IoT Core console](http://console.aws.amazon.com/iot/).
+    1. Manage → Jobs → Create → Create a FreeRTOS OTA update job → Select the corresponding name for your device from the thing list.
+    1. Sign a new firmware → Create a new profile → Select any SHA-ECDSA signing platform → Upload the code signing certificate(from prerequisites) and provide its path on the device.
+    1. Select the image → Select the bucket you created during the [prerequisite steps](#prerequisites-for-the-aws-over-the-air-update-ota-demos) → Upload the binary `build-dir-2/bin/ota_demo2`.
+    1. The path on device should be the absolute path to place the executable and the binary name: e.g. `/home/ubuntu/aws-iot-device-sdk-embedded-C-staging/build-dir/bin/ota_demo_core_mqtt2`.
+    1. Select the IAM role created during the [prerequisite steps](#prerequisites-for-the-aws-over-the-air-update-ota-demos).
+    1. Create the Job.
+1. Run the initial executable again with the following command: `sudo ./ota_demo_core_mqtt` or `sudo ./ota_demo_core_http`.
 
 #### Build Steps
 
