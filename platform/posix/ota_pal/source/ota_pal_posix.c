@@ -581,7 +581,6 @@ OtaPalStatus_t otaPal_SetPlatformImageState( OtaFileContext_t * const C,
     int32_t subErr = 0;
     FILE * pPlatformImageState = NULL;
     char imageStateFile[ OTA_FILE_PATH_LENGTH_MAX ] = { 0 };
-    char * pFileName = NULL;
 
     ( void ) C;
 
@@ -666,7 +665,6 @@ OtaPalImageState_t otaPal_GetPlatformImageState( OtaFileContext_t * const C )
     OtaImageState_t eSavedAgentState = OtaImageStateUnknown;
     OtaPalImageState_t ePalState = OtaPalImageStateUnknown;
     char imageStateFile[ OTA_FILE_PATH_LENGTH_MAX ] = { 0 };
-    char * pFileName = NULL;
 
     ( void ) C;
 
