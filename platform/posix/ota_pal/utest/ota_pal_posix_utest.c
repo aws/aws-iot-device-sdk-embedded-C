@@ -511,7 +511,6 @@ void test_OTAPAL_CreateFileForRx_PathTypes( void )
 void test_OTAPAL_CreateFileForRx_getcwd_fail( void )
 {
     OtaPalMainStatus_t result;
-    FILE placeholder_file;
     OtaFileContext_t otaFileContext;
     OtaImageState_t validState = OtaImageStateTesting;
 
