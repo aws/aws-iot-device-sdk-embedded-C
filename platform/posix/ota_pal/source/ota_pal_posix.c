@@ -63,7 +63,7 @@ static const char signingcredentialSIGNING_CERTIFICATE_PEM[] = "Paste code signi
 /**
  * @brief Name of the file used for storing platform image state.
  */
-#define OTA_PLATFORM_IMAGE_STATE_FILE    "/PlatformImageState.txt"
+#define OTA_PLATFORM_IMAGE_STATE_FILE    "PlatformImageState.txt"
 
 /**
  * @brief Specify the OTA signature algorithm we support on this platform.
@@ -88,6 +88,15 @@ static OtaPalMainStatus_t Openssl_DigestVerify( EVP_MD_CTX * pSigContext,
  * @brief Verify the signature of the specified file using OpenSSL.
  */
 static OtaPalStatus_t otaPal_CheckFileSignature( OtaFileContext_t * const C );
+
+/**
+ * @brief Get the absolute file path from the environment.
+ *
+ * @param realFilePath Buffer to store the file path + file name.
+ * @param pFilePath File name to append to the end of current path.
+ */
+static void getFilePathFromCWD( char * realFilePath,
+                                const char * pFilePath );
 
 /*-----------------------------------------------------------*/
 
@@ -323,6 +332,33 @@ static OtaPalStatus_t otaPal_CheckFileSignature( OtaFileContext_t * const C )
     return OTA_PAL_COMBINE_ERR( mainErr, 0 );
 }
 
+static void getFilePathFromCWD( char * pCompleteFilePath,
+                                const char * pFileName )
+{
+    char * pCurrentDir = NULL;
+
+    /* Get current directory. */
+    pCurrentDir = getcwd( pCompleteFilePath, OTA_FILE_PATH_LENGTH_MAX - 1 );
+
+    if( pCurrentDir == NULL )
+    {
+        LogError( ( "Failed to get current working directory: %s", strerror( errno ) ) );
+    }
+    else
+    {
+        /* Add the filename . */
+        if( strlen( pCompleteFilePath ) + strlen( pFileName ) + 2U > OTA_FILE_PATH_LENGTH_MAX )
+        {
+            LogError( ( "Insufficient space to generate file path" ) );
+        }
+        else
+        {
+            pCompleteFilePath[ strlen( pCompleteFilePath ) ] = '/';
+            strncat( pCompleteFilePath, pFileName, strlen( pFileName ) + 1U );
+        }
+    }
+}
+
 /*-----------------------------------------------------------*/
 
 OtaPalStatus_t otaPal_Abort( OtaFileContext_t * const C )
@@ -373,7 +409,7 @@ OtaPalStatus_t otaPal_CreateFileForRx( OtaFileContext_t * const C )
 {
     OtaPalStatus_t result = OTA_PAL_COMBINE_ERR( OtaPalUninitialized, 0 );
     char realFilePath[ OTA_FILE_PATH_LENGTH_MAX ];
-    char * pFileName = NULL;
+
 
     if( C != NULL )
     {
@@ -381,19 +417,7 @@ OtaPalStatus_t otaPal_CreateFileForRx( OtaFileContext_t * const C )
         {
             if( C->pFilePath[ 0 ] != ( uint8_t ) '/' )
             {
-                /* Get current directory. */
-                pFileName = getcwd( realFilePath, OTA_FILE_PATH_LENGTH_MAX );
-
-                if( pFileName == NULL )
-                {
-                    LogError( ( "Failed to get current working directory: %s", strerror( errno ) ) );
-                }
-                else
-                {
-                    /* Add the filename . */
-                    realFilePath[ strlen( realFilePath ) ] = '/';
-                    strncat( realFilePath, ( char * ) C->pFilePath, strlen( ( const char * ) C->pFilePath ) + 1U );
-                }
+                getFilePathFromCWD( realFilePath, ( const char * ) C->pFilePath );
             }
             else
             {
@@ -563,22 +587,12 @@ OtaPalStatus_t otaPal_SetPlatformImageState( OtaFileContext_t * const C,
 
     if( ( eState != OtaImageStateUnknown ) && ( eState <= OtaLastImageState ) )
     {
-        /* Get current directory. */
-        pFileName = getcwd( imageStateFile, OTA_FILE_PATH_LENGTH_MAX );
+        /* Get file path for the image state file. */
+        getFilePathFromCWD( imageStateFile, OTA_PLATFORM_IMAGE_STATE_FILE );
 
-        if( pFileName == NULL )
-        {
-            LogError( ( "Failed to get current working directory: %s", strerror( errno ) ) );
-        }
-        else
-        {
-            /* Add the filename . */
-            strncat( imageStateFile, OTA_PLATFORM_IMAGE_STATE_FILE, sizeof( OTA_PLATFORM_IMAGE_STATE_FILE ) );
-
-            /* POSIX port using standard library */
-            /* coverity[misra_c_2012_rule_21_6_violation] */
-            pPlatformImageState = fopen( imageStateFile, "w+b" );
-        }
+        /* POSIX port using standard library */
+        /* coverity[misra_c_2012_rule_21_6_violation] */
+        pPlatformImageState = fopen( imageStateFile, "w+b" );
 
         if( pPlatformImageState != NULL )
         {
@@ -656,22 +670,12 @@ OtaPalImageState_t otaPal_GetPlatformImageState( OtaFileContext_t * const C )
 
     ( void ) C;
 
-    /* Get current directory. */
-    pFileName = getcwd( imageStateFile, OTA_FILE_PATH_LENGTH_MAX );
+    /* Get file path for the image state file. */
+    getFilePathFromCWD( imageStateFile, OTA_PLATFORM_IMAGE_STATE_FILE );
 
-    if( pFileName == NULL )
-    {
-        LogError( ( "Failed to get current working directory: %s", strerror( errno ) ) );
-    }
-    else
-    {
-        /* Add the filename . */
-        strncat( imageStateFile, OTA_PLATFORM_IMAGE_STATE_FILE, sizeof( OTA_PLATFORM_IMAGE_STATE_FILE ) );
-
-        /* POSIX port using standard library */
-        /* coverity[misra_c_2012_rule_21_6_violation] */
-        pPlatformImageState = fopen( imageStateFile, "r+b" );
-    }
+    /* POSIX port using standard library */
+    /* coverity[misra_c_2012_rule_21_6_violation] */
+    pPlatformImageState = fopen( imageStateFile, "r+b" );
 
     if( pPlatformImageState != NULL )
     {
