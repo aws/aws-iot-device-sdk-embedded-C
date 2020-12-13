@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <errno.h>
+#include <unistd.h>
 
 /* Include Demo Config as the first non-system header. */
 #include "demo_config.h"
@@ -140,7 +141,12 @@
 /**
  * @brief Timeout for MQTT_ProcessLoop function in milliseconds.
  */
-#define MQTT_PROCESS_LOOP_TIMEOUT_MS             ( 500U )
+#define MQTT_PROCESS_LOOP_TIMEOUT_MS             ( 100U )
+
+/**
+ * @brief Period for demo loop sleep in milliseconds.
+ */
+#define OTA_EXAMPLE_LOOP_SLEEP_PERIOD_MS         ( 5U )
 
 /**
  * @brief The delay used in the main OTA Demo task loop to periodically output the OTA
@@ -1979,7 +1985,7 @@ static int startOTADemo( void )
                 if( pthread_mutex_lock( &mqttMutex ) == 0 )
                 {
                     /* Loop to receive packet from transport interface. */
-                    mqttStatus = MQTT_ProcessLoop( &mqttContext, 0 );
+                    mqttStatus = MQTT_ProcessLoop( &mqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
 
                     pthread_mutex_unlock( &mqttMutex );
                 }
@@ -2000,6 +2006,12 @@ static int startOTADemo( void )
                                otaStatistics.otaPacketsQueued,
                                otaStatistics.otaPacketsProcessed,
                                otaStatistics.otaPacketsDropped ) );
+
+                    /* Delay if mqtt process loop is set to zero.*/
+                    if( !( MQTT_PROCESS_LOOP_TIMEOUT_MS > 0 ) )
+                    {
+                        usleep( OTA_EXAMPLE_LOOP_SLEEP_PERIOD_MS * 1000 );
+                    }
                 }
                 else
                 {
