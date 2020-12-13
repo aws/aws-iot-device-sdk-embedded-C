@@ -126,7 +126,7 @@ You will need to specify the following parameters in the file demo_config.h (loc
 <li> AWS_IOT_ENDPOINT: This is the endpoint for your account. The endpoint should be for the region that your thing was created in. This can be found by going to the AWS IoT Core console, pressing the “Settings” tab on the left hand side of the page. It is under the section labeled “Custom endpoint”. </li>
 <li> CLIENT_CERT_PATH: This is the client certificate that was downloaded when you created your thing. The path specified needs to be either an absolute path, or a path that is relative to the “cloned-repo-root-dir/build/bin" directory where the demo will be ran from.</li>
 <li> CLIENT_PRIVATE_KEY_PATH: This is the client private key that was downloaded when you created your thing. The path specified needs to be either an absolute path, or a path that is relative to the “cloned-repo-root-dir/build/bin" directory where the demo will be ran from.</li>
-<li> CLIENT_IDENTIFER: This is the name of the thing you created during the OTA Prerequisites section.</li>
+<li> CLIENT_IDENTIFIER: This is the name of the thing you created during the OTA Prerequisites section.</li>
 </ol>
 
 An example expected output:
