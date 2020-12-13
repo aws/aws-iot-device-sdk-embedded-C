@@ -40,6 +40,7 @@
 #include "ota_pal_posix.h"
 #include "mock_stdio_api.h"
 #include "mock_openssl_api.h"
+#include "mock_unistd_api.h"
 
 /* errno error macro. errno.h can't be included in this file due to mocking. */
 #define ENOENT    0x02
@@ -82,7 +83,8 @@ typedef enum
     feof_fn,
     fread_fn,
     fseek_alias_fn,
-    fwrite_alias_fn
+    fwrite_alias_fn,
+    getcwd_fn
 } MockFunctionNames_t;
 
 static void OTA_PAL_FailSingleMock_Except_fread( MockFunctionNames_t funcToFail,
@@ -91,6 +93,7 @@ static void OTA_PAL_FailSingleMock_openssl_BIO( MockFunctionNames_t funcToFail )
 static void OTA_PAL_FailSingleMock_openssl_X509( MockFunctionNames_t funcToFail );
 static void OTA_PAL_FailSingleMock_openssl_EVP( MockFunctionNames_t funcToFail );
 static void OTA_PAL_FailSingleMock_openssl_crypto( MockFunctionNames_t funcToFail );
+static void OTA_PAL_FailSingleMock_unistd( MockFunctionNames_t funcToFail );
 static void OTA_PAL_FailSingleMock_stdio( MockFunctionNames_t funcToFail,
                                           OtaImageState_t * pFreadStateToSet );
 static void OTA_PAL_FailSingleMock( MockFunctionNames_t funcToFail,
@@ -262,6 +265,16 @@ static void OTA_PAL_FailSingleMock_openssl_crypto( MockFunctionNames_t funcToFai
     CRYPTO_free_Ignore();
 }
 
+static void OTA_PAL_FailSingleMock_unistd( MockFunctionNames_t funcToFail )
+{
+    char * getcwd_success = "a";
+    char * getcwd_failure = NULL;
+    char * getcwd_return;
+
+    getcwd_return = ( funcToFail == getcwd_fn ) ? getcwd_failure : getcwd_success;
+    getcwd_IgnoreAndReturn( getcwd_return );
+}
+
 /**
  * @brief Helper function specify a single point of failure. This needs to be
  * updated each time a mocked function is added or removed to the OTA PAL unit
@@ -335,6 +348,7 @@ static void OTA_PAL_FailSingleMock( MockFunctionNames_t funcToFail,
     OTA_PAL_FailSingleMock_openssl_X509( funcToFail );
     OTA_PAL_FailSingleMock_openssl_crypto( funcToFail );
     OTA_PAL_FailSingleMock_openssl_EVP( funcToFail );
+    OTA_PAL_FailSingleMock_unistd( funcToFail );
 }
 
 /* ======================   OTA PAL ABORT UNIT TESTS   ====================== */
@@ -443,7 +457,7 @@ void test_OTAPAL_CreateFileForRx_FailedToCreateFile( void )
     testFile.pFile = &placeholder_file;
 
     fopen_ExpectAnyArgsAndReturn( NULL );
-
+    OTA_PAL_FailSingleMock_unistd( none_fn );
     /* Create a file that exists with w+b mode */
     result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &testFile ) );
     TEST_ASSERT_EQUAL( OtaPalRxFileCreateFailed, result );
@@ -460,6 +474,7 @@ void test_OTAPAL_CreateFileForRx_ValidFileHandle( void )
 
     otaFileContext.pFilePath = ( uint8_t * ) "placeholder_path";
 
+    OTA_PAL_FailSingleMock_unistd( none_fn );
     fopen_ExpectAnyArgsAndReturn( &placeholder_file );
     result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFileContext ) );
     TEST_ASSERT_EQUAL( OtaPalSuccess, result );
@@ -477,13 +492,33 @@ void test_OTAPAL_CreateFileForRx_PathTypes( void )
 
     /* Test for a leading forward slash in the path. */
     otaFileContext.pFilePath = ( uint8_t * ) "/placeholder_path";
+    OTA_PAL_FailSingleMock_unistd( none_fn );
     fopen_ExpectAnyArgsAndReturn( &placeholder_file );
     result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFileContext ) );
     TEST_ASSERT_EQUAL( OtaPalSuccess, result );
 
     /* Test for no leading forward slash in the path. */
     otaFileContext.pFilePath = ( uint8_t * ) "placeholder_path";
+    OTA_PAL_FailSingleMock_unistd( none_fn );
     fopen_ExpectAnyArgsAndReturn( &placeholder_file );
+    result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFileContext ) );
+    TEST_ASSERT_EQUAL( OtaPalSuccess, result );
+}
+
+/**
+ * @brief Test that otaPal_CreateFileForRx will return correct result code.
+ */
+void test_OTAPAL_CreateFileForRx_getcwd_fail( void )
+{
+    OtaPalMainStatus_t result;
+    FILE placeholder_file;
+    OtaFileContext_t otaFileContext;
+    OtaImageState_t validState = OtaImageStateTesting;
+
+
+    otaFileContext.pFilePath = ( uint8_t * ) "placeholder_path";
+
+    OTA_PAL_FailSingleMock( getcwd_fn, &validState );
     result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFileContext ) );
     TEST_ASSERT_EQUAL( OtaPalSuccess, result );
 }
@@ -935,6 +970,7 @@ void test_OTAPAL_SetPlatformImageState_HappyPath( void )
     OtaFileContext_t otaFileContext;
     OtaImageState_t validState = OtaImageStateTesting;
 
+    OTA_PAL_FailSingleMock_unistd( none_fn );
     OTA_PAL_FailSingleMock_stdio( none_fn, NULL );
     result = otaPal_SetPlatformImageState( &otaFileContext, validState );
     TEST_ASSERT_EQUAL( OtaPalSuccess, OTA_PAL_MAIN_ERR( result ) );
@@ -949,6 +985,7 @@ void test_OTAPAL_SetPlatformImageState_fopen_fail( void )
     OtaFileContext_t otaFileContext;
     OtaImageState_t validState = OtaImageStateTesting;
 
+    OTA_PAL_FailSingleMock_unistd( none_fn );
     OTA_PAL_FailSingleMock_stdio( fopen_fn, NULL );
     result = otaPal_SetPlatformImageState( &otaFileContext, validState );
     TEST_ASSERT_EQUAL( OtaPalBadImageState, OTA_PAL_MAIN_ERR( result ) );
@@ -963,6 +1000,7 @@ void test_OTAPAL_SetPlatformImageState_fwrite_fail( void )
     OtaFileContext_t otaFileContext;
     OtaImageState_t validState = OtaImageStateTesting;
 
+    OTA_PAL_FailSingleMock_unistd( none_fn );
     OTA_PAL_FailSingleMock_stdio( fwrite_alias_fn, NULL );
     result = otaPal_SetPlatformImageState( &otaFileContext, validState );
     TEST_ASSERT_EQUAL( OtaPalBadImageState, OTA_PAL_MAIN_ERR( result ) );
@@ -977,6 +1015,7 @@ void test_OTAPAL_SetPlatformImageState_fclose_fail( void )
     OtaFileContext_t otaFileContext;
     OtaImageState_t validState = OtaImageStateTesting;
 
+    OTA_PAL_FailSingleMock_unistd( none_fn );
     OTA_PAL_FailSingleMock_stdio( fclose_fn, NULL );
     result = otaPal_SetPlatformImageState( &otaFileContext, validState );
     TEST_ASSERT_EQUAL( OtaPalBadImageState, OTA_PAL_MAIN_ERR( result ) );
@@ -994,6 +1033,7 @@ void test_OTAPAL_GetPlatformImageState_fopen_fails( void )
     OtaPalImageState_t ePalImageState;
     OtaFileContext_t otaFileContext;
 
+    OTA_PAL_FailSingleMock_unistd( none_fn );
     OTA_PAL_FailSingleMock_stdio( fopen_fn, NULL );
     /* The file failed to close, so it is invalid or in an unknown state. */
     ePalImageState = otaPal_GetPlatformImageState( &otaFileContext );
@@ -1010,6 +1050,7 @@ void test_OTAPAL_GetPlatformImageState_fread_fails( void )
     OtaPalImageState_t ePalImageState;
     OtaFileContext_t otaFileContext;
 
+    OTA_PAL_FailSingleMock_unistd( none_fn );
     OTA_PAL_FailSingleMock_stdio( fread_fn, NULL );
     ePalImageState = otaPal_GetPlatformImageState( &otaFileContext );
     TEST_ASSERT_EQUAL( OtaPalImageStateInvalid, ePalImageState );
@@ -1035,6 +1076,7 @@ void test_OTAPAL_GetPlatformImageState_fclose_fails( void )
     const int fclose_fail_val = EOF;
 
     /* Predefine what functions are expected to be called. */
+    OTA_PAL_FailSingleMock_unistd( none_fn );
     fopen_ExpectAnyArgsAndReturn( fopen_success_val );
     fread_ExpectAnyArgsAndReturn( fread_success_val );
     fclose_ExpectAnyArgsAndReturn( fclose_fail_val );
@@ -1069,6 +1111,7 @@ void test_OTAPAL_GetPlatformImageState_ValidStates( void )
     /* On success, fclose returns a zero. */
     const int fclose_success_val = 0;
 
+    OTA_PAL_FailSingleMock_unistd( none_fn );
     /* Test the scenario where the platform state is OtaImageStateTesting. */
     freadResultingState = OtaImageStateTesting;
     /* Predefine what functions are expected to be called. */
@@ -1101,4 +1144,15 @@ void test_OTAPAL_GetPlatformImageState_ValidStates( void )
     /* Call otaPal_GetPlatformImageState and check the result. */
     ePalImageState = otaPal_GetPlatformImageState( &otaFileContext );
     TEST_ASSERT_EQUAL( OtaPalImageStateInvalid, ePalImageState );
+}
+
+void test_OTAPAL_GetPlatformImageState_getcwd_fail( void )
+{
+    OtaPalImageState_t ePalImageState;
+    OtaFileContext_t otaFileContext;
+
+    OTA_PAL_FailSingleMock_unistd( getcwd_fn );
+    OTA_PAL_FailSingleMock_stdio( none_fn, NULL );
+    ePalImageState = otaPal_GetPlatformImageState( &otaFileContext );
+    TEST_ASSERT_EQUAL( OtaPalImageStateValid, ePalImageState );
 }

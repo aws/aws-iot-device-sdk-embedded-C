@@ -20,8 +20,8 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef OPENSSL_API_H_
-#define OPENSSL_API_H_
+#ifndef OPENSSL_API_H
+#define OPENSSL_API_H
 
 #include <openssl/ssl.h>
 
@@ -134,4 +134,4 @@ extern void * CRYPTO_malloc( size_t num,
                              const char * file,
                              int line );
 
-#endif /* ifndef OPENSSL_API_H_ */
+#endif /* ifndef OPENSSL_API_H */

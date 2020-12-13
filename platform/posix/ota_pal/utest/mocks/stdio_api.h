@@ -20,8 +20,8 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef STDIO_API_H_
-#define STDIO_API_H_
+#ifndef STDIO_API_H
+#define STDIO_API_H
 
 #include <stdio.h>
 
@@ -70,4 +70,4 @@ extern size_t fwrite_alias( const void * __restrict __ptr,
                             size_t __n,
                             _STDIO_FILE_TYPE * __restrict __s );
 
-#endif /* ifndef STDIO_API_H_ */
+#endif /* ifndef STDIO_API_H */
