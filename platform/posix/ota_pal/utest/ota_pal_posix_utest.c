@@ -506,6 +506,34 @@ void test_OTAPAL_CreateFileForRx_PathTypes( void )
 }
 
 /**
+ * @brief Test that otaPal_CreateFileForRx will correctly handle a file path
+ * that is too long.
+ */
+void test_OTAPAL_CreateFileForRx_InvalidPathLength( void )
+{
+    OtaPalMainStatus_t result;
+    FILE placeholder_file;
+    OtaFileContext_t otaFileContext;
+    const size_t invalidLength = OTA_FILE_PATH_LENGTH_MAX + 1U;
+    char invalidLengthPath[ invalidLength ];
+    size_t i;
+
+    /* Test calling getcwd and having it return a path that is too long. */
+    for( i = 0U; i < ( invalidLength - 1U ); ++i )
+    {
+        invalidLengthPath[ i ] = 'x';
+    }
+
+    invalidLengthPath[ invalidLength - 1U ] = '\0';
+    otaFileContext.pFilePath = ( uint8_t * ) "placeholder_path";
+    getcwd_ExpectAnyArgsAndReturn( "placeholder_return" );
+    getcwd_ReturnArrayThruPtr_buf( invalidLengthPath, invalidLength );
+    fopen_ExpectAnyArgsAndReturn( &placeholder_file );
+    result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFileContext ) );
+    TEST_ASSERT_EQUAL( OtaPalSuccess, result );
+}
+
+/**
  * @brief Test that otaPal_CreateFileForRx will return correct result code.
  */
 void test_OTAPAL_CreateFileForRx_getcwd_fail( void )
@@ -1153,5 +1181,5 @@ void test_OTAPAL_GetPlatformImageState_getcwd_fail( void )
     OTA_PAL_FailSingleMock_unistd( getcwd_fn );
     OTA_PAL_FailSingleMock_stdio( none_fn, NULL );
     ePalImageState = otaPal_GetPlatformImageState( &otaFileContext );
-    TEST_ASSERT_EQUAL( OtaPalImageStateValid, ePalImageState );
+    TEST_ASSERT_EQUAL( OtaPalImageStateInvalid, ePalImageState );
 }
