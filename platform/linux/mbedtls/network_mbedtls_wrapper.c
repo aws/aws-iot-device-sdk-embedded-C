@@ -31,7 +31,9 @@ extern "C" {
 
 
 /* This is the value used for ssl read timeout */
-#define IOT_SSL_READ_TIMEOUT 10
+#ifndef IOT_SSL_READ_TIMEOUT
+	#define IOT_SSL_READ_TIMEOUT 10
+#endif
 
 /* This defines the value of the debug buffer that gets allocated.
  * The value can be altered based on memory constraints
@@ -289,7 +291,9 @@ IoT_Error_t iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
 /* When this much time has elapsed after receiving MBEDTLS_ERR_SSL_WANT_READ
  * or MBEDTLS_ERR_SSL_WANT_WRITE, then iot_tls_write will return
  * NETWORK_SSL_WRITE_TIMEOUT_ERROR. */
-#define IOT_SSL_WRITE_RETRY_TIMEOUT_MS 10
+#ifndef IOT_SSL_WRITE_RETRY_TIMEOUT_MS
+	#define IOT_SSL_WRITE_RETRY_TIMEOUT_MS 10
+#endif
 
 IoT_Error_t iot_tls_write(Network *pNetwork, unsigned char *pMsg, size_t len, Timer *timer, size_t *written_len) {
 	mbedtls_ssl_context *pSsl = &(pNetwork->tlsDataParams.ssl);
@@ -343,7 +347,9 @@ IoT_Error_t iot_tls_write(Network *pNetwork, unsigned char *pMsg, size_t len, Ti
 /* When this much time has elapsed after receiving MBEDTLS_ERR_SSL_WANT_READ,
  * MBEDTLS_ERR_SSL_WANT_WRITE, or MBEDTLS_ERR_SSL_TIMEOUT, then iot_tls_read
  * will return NETWORK_SSL_READ_TIMEOUT_ERROR. */
-#define IOT_SSL_READ_RETRY_TIMEOUT_MS 10
+#ifndef IOT_SSL_READ_RETRY_TIMEOUT_MS
+	#define IOT_SSL_READ_RETRY_TIMEOUT_MS 10
+#endif
 
 IoT_Error_t iot_tls_read(Network *pNetwork, unsigned char *pMsg, size_t len, Timer *timer, size_t *read_len) {
 	mbedtls_ssl_context *pSsl = &(pNetwork->tlsDataParams.ssl);
