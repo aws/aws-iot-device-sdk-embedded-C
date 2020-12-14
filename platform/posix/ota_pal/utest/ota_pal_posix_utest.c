@@ -512,7 +512,6 @@ void test_OTAPAL_CreateFileForRx_PathTypes( void )
 void test_OTAPAL_CreateFileForRx_InvalidPathLength( void )
 {
     OtaPalMainStatus_t result;
-    FILE placeholder_file;
     OtaFileContext_t otaFileContext;
     const size_t invalidLength = OTA_FILE_PATH_LENGTH_MAX + 1U;
     char invalidLengthPath[ invalidLength ];
