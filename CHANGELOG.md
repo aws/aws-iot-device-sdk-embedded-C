@@ -1,6 +1,6 @@
 # Changelog for AWS IoT Device SDK for Embedded C
 
-## 202012.00 (December 2020)
+## 202012.01 (December 2020)
 
 ### Major Changes
 
