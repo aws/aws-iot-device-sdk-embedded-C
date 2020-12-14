@@ -357,7 +357,7 @@ static OtaPalPathGenStatus_t getFilePathFromCWD( char * pCompleteFilePath,
         else
         {
             strcat( pCompleteFilePath, "/" );
-            strncat( pCompleteFilePath, pFileName, strlen( pFileName ) );
+            strcat( pCompleteFilePath, pFileName );
         }
     }
 
