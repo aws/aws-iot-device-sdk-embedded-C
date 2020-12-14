@@ -528,13 +528,13 @@ void test_OTAPAL_CreateFileForRx_InvalidPathLength( void )
     otaFileContext.pFilePath = ( uint8_t * ) "placeholder_path";
     getcwd_ExpectAnyArgsAndReturn( "placeholder_return" );
     getcwd_ReturnArrayThruPtr_buf( invalidLengthPath, invalidLength );
-    fopen_ExpectAnyArgsAndReturn( &placeholder_file );
     result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFileContext ) );
-    TEST_ASSERT_EQUAL( OtaPalSuccess, result );
+    TEST_ASSERT_EQUAL( OtaPalRxFileCreateFailed, result );
 }
 
 /**
- * @brief Test that otaPal_CreateFileForRx will return correct result code.
+ * @brief Test that otaPal_CreateFileForRx will handle the getcwd command
+ * failing.
  */
 void test_OTAPAL_CreateFileForRx_getcwd_fail( void )
 {
@@ -547,7 +547,7 @@ void test_OTAPAL_CreateFileForRx_getcwd_fail( void )
 
     OTA_PAL_FailSingleMock( getcwd_fn, &validState );
     result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFileContext ) );
-    TEST_ASSERT_EQUAL( OtaPalSuccess, result );
+    TEST_ASSERT_EQUAL( OtaPalRxFileCreateFailed, result );
 }
 
 /* ===================   OTA PAL CLOSE FILE UNIT TESTS   ==================== */
@@ -826,7 +826,7 @@ void test_OTAPAL_CloseFile_EVP_DigestVerifyInit_fail( void )
  * implementation. It is defined by the "OTA_PAL_POSIX_BUF_SIZE" macro in the
  * OTA posix PAL implementation .c file.
  */
-void test_OTAPAL_CloseFile_MaxBlockSize()
+void test_OTAPAL_CloseFile_MaxBlockSize( void )
 {
     const size_t OTA_PAL_POSIX_BUF_SIZE = 4096U;
     OtaPalStatus_t result;
@@ -1083,10 +1083,6 @@ void test_OTAPAL_GetPlatformImageState_fread_fails( void )
     TEST_ASSERT_EQUAL( OtaPalImageStateInvalid, ePalImageState );
 }
 
-/**
- * @brief This test validates that the valid states are correctly returned to
- *        the caller.
- * */
 void test_OTAPAL_GetPlatformImageState_fclose_fails( void )
 {
     OtaPalImageState_t ePalImageState = OtaPalImageStateUnknown;
