@@ -95,8 +95,8 @@ static OtaPalStatus_t otaPal_CheckFileSignature( OtaFileContext_t * const C );
  * @param realFilePath Buffer to store the file path + file name.
  * @param pFilePath File name to append to the end of current path.
  */
-static void getFilePathFromCWD( char * realFilePath,
-                                const char * pFilePath );
+static OtaPalPathGenStatus_t getFilePathFromCWD( char * realFilePath,
+                                                 const char * pFilePath );
 
 /*-----------------------------------------------------------*/
 
@@ -332,10 +332,11 @@ static OtaPalStatus_t otaPal_CheckFileSignature( OtaFileContext_t * const C )
     return OTA_PAL_COMBINE_ERR( mainErr, 0 );
 }
 
-static void getFilePathFromCWD( char * pCompleteFilePath,
-                                const char * pFileName )
+static OtaPalPathGenStatus_t getFilePathFromCWD( char * pCompleteFilePath,
+                                                 const char * pFileName )
 {
     char * pCurrentDir = NULL;
+    OtaPalPathGenStatus_t status = OtaPalFileGenSuccess;
 
     /* Get current directory. */
     pCurrentDir = getcwd( pCompleteFilePath, OTA_FILE_PATH_LENGTH_MAX - 1 );
@@ -343,6 +344,7 @@ static void getFilePathFromCWD( char * pCompleteFilePath,
     if( pCurrentDir == NULL )
     {
         LogError( ( "Failed to get current working directory: %s", strerror( errno ) ) );
+        status = OtaPalCWDFailed;
     }
     else
     {
@@ -350,13 +352,16 @@ static void getFilePathFromCWD( char * pCompleteFilePath,
         if( strlen( pCompleteFilePath ) + strlen( pFileName ) + 2U > OTA_FILE_PATH_LENGTH_MAX )
         {
             LogError( ( "Insufficient space to generate file path" ) );
+            status = OtaPalBufferInsufficient;
         }
         else
         {
-            pCompleteFilePath[ strlen( pCompleteFilePath ) ] = '/';
-            strncat( pCompleteFilePath, pFileName, strlen( pFileName ) + 1U );
+            strcat( pCompleteFilePath, "/" );
+            strncat( pCompleteFilePath, pFileName, strlen( pFileName ) );
         }
     }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/
@@ -409,7 +414,7 @@ OtaPalStatus_t otaPal_CreateFileForRx( OtaFileContext_t * const C )
 {
     OtaPalStatus_t result = OTA_PAL_COMBINE_ERR( OtaPalUninitialized, 0 );
     char realFilePath[ OTA_FILE_PATH_LENGTH_MAX ];
-
+    OtaPalPathGenStatus_t status = OtaPalFileGenSuccess;
 
     if( C != NULL )
     {
@@ -417,11 +422,16 @@ OtaPalStatus_t otaPal_CreateFileForRx( OtaFileContext_t * const C )
         {
             if( C->pFilePath[ 0 ] != ( uint8_t ) '/' )
             {
-                getFilePathFromCWD( realFilePath, ( const char * ) C->pFilePath );
+                status = getFilePathFromCWD( realFilePath, ( const char * ) C->pFilePath );
             }
             else
             {
                 ( void ) strncpy( realFilePath, ( const char * ) C->pFilePath, strlen( ( const char * ) C->pFilePath ) + 1U );
+            }
+
+            if( status != OtaPalFileGenSuccess )
+            {
+                LogError( ( "Could not generate the absolute path for the file" ) );
             }
 
             /* POSIX port using standard library */
@@ -578,6 +588,7 @@ OtaPalStatus_t otaPal_SetPlatformImageState( OtaFileContext_t * const C,
                                              OtaImageState_t eState )
 {
     OtaPalMainStatus_t mainErr = OtaPalBadImageState;
+    OtaPalPathGenStatus_t status = OtaPalFileGenSuccess;
     int32_t subErr = 0;
     FILE * pPlatformImageState = NULL;
     char imageStateFile[ OTA_FILE_PATH_LENGTH_MAX ] = { 0 };
@@ -587,7 +598,12 @@ OtaPalStatus_t otaPal_SetPlatformImageState( OtaFileContext_t * const C,
     if( ( eState != OtaImageStateUnknown ) && ( eState <= OtaLastImageState ) )
     {
         /* Get file path for the image state file. */
-        getFilePathFromCWD( imageStateFile, OTA_PLATFORM_IMAGE_STATE_FILE );
+        status = getFilePathFromCWD( imageStateFile, OTA_PLATFORM_IMAGE_STATE_FILE );
+
+        if( status != OtaPalFileGenSuccess )
+        {
+            LogError( ( "Could not generate the absolute path for the file" ) );
+        }
 
         /* POSIX port using standard library */
         /* coverity[misra_c_2012_rule_21_6_violation] */
@@ -664,12 +680,18 @@ OtaPalImageState_t otaPal_GetPlatformImageState( OtaFileContext_t * const C )
     FILE * pPlatformImageState = NULL;
     OtaImageState_t eSavedAgentState = OtaImageStateUnknown;
     OtaPalImageState_t ePalState = OtaPalImageStateUnknown;
+    OtaPalPathGenStatus_t status = OtaPalFileGenSuccess;
     char imageStateFile[ OTA_FILE_PATH_LENGTH_MAX ] = { 0 };
 
     ( void ) C;
 
     /* Get file path for the image state file. */
-    getFilePathFromCWD( imageStateFile, OTA_PLATFORM_IMAGE_STATE_FILE );
+    status = getFilePathFromCWD( imageStateFile, OTA_PLATFORM_IMAGE_STATE_FILE );
+
+    if( status != OtaPalFileGenSuccess )
+    {
+        LogError( ( "Could not generate the absolute path for the file" ) );
+    }
 
     /* POSIX port using standard library */
     /* coverity[misra_c_2012_rule_21_6_violation] */
