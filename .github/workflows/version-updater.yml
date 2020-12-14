@@ -27,7 +27,7 @@ jobs:
           git config --global user.name "Version Updater"
       - name: Update source files with new version
         run: |
-          grep -ilr ${{ github.event.inputs.old_version_number }} . | grep -v ".git" | grep -v "CHANGELOG.md" | grep -v "README.md" | xargs sed -i s/${{ github.event.inputs.old_version_number }}/${{ github.event.inputs.new_version_number }}/g
+          grep -ilr ${{ github.event.inputs.old_version_number }} . | grep -v ".git" | grep -v "CHANGELOG.md" | grep -v "README.md" | grep -v "CONTRIBUTING.md" |  xargs sed -i s/${{ github.event.inputs.old_version_number }}/${{ github.event.inputs.new_version_number }}/g
       - name: Commit changes and Push to remote
         run: |
           git checkout -b updater-job/update-to-${{ github.event.inputs.new_version_number }}
