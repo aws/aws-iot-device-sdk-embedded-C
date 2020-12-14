@@ -167,8 +167,4 @@
  * "fwrite". The function declaration for this alias is in "stdio_api.h". */
 #define fwrite                             fwrite_alias
 
-/* CMock does not support variadic functions. This alias replaces the original
- * function name to get around this issue. */
-#define snprintf                           snprintf_alias
-
 #endif /* _OTA_CONFIG_H_ */

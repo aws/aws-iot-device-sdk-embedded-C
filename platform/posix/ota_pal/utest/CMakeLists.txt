@@ -10,6 +10,7 @@ set( project_name "ota_pal" )
 list( APPEND mock_list
       ${CMAKE_CURRENT_LIST_DIR}/mocks/stdio_api.h
       ${CMAKE_CURRENT_LIST_DIR}/mocks/openssl_api.h
+      ${CMAKE_CURRENT_LIST_DIR}/mocks/unistd_api.h
       )
 #list the directories your mocks need
 list( APPEND mock_include_list
