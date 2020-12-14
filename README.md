@@ -40,7 +40,8 @@
         * [Prerequisites](#prerequisites)
             * [Build Dependencies](#build-dependencies)
         * [AWS IoT Account Setup](#aws-iot-account-setup)
-        * [Configuring TLS mutual authentication in demos](#configuring-tls-mutual-authentication-in-demos)
+        * [Configuring mutual authentication demos of MQTT and HTTP](#configuring-mutual-authentication-demos-of-mqtt-and-http)
+        * [Configuring AWS IoT Device Defender and AWS IoT Device Shadow demos](#configuring-aws-iot-device-defender-and-aws-iot-device-shadow-demos)
         * [Configuring the S3 demos](#configuring-the-s3-demos)
         * [Setup for AWS IoT Jobs demo](#setup-for-aws-iot-jobs-demo)
         * [Prerequisites for the AWS Over-The-Air Update (OTA) demos](#prerequisites-for-the-aws-over-the-air-update-ota-demos)
@@ -322,20 +323,20 @@ Dependency | Version | Usage
 You need to setup an AWS account and access the AWS IoT console for running the AWS IoT Device Shadow library, AWS IoT Device Defender library, AWS IoT Jobs library, 
 AWS IoT OTA library and coreHTTP S3 download demos. 
 Also, the AWS account can be used for running the MQTT mutual auth demo can be run against AWS IoT broker.
-Also, running the AWS IoT Device Defender, AWS IoT Jobs and AWS IoT Device Shadow library demos require the setup of a Thing Name resource for the device running the
+Also, running the AWS IoT Device Defender, AWS IoT Jobs and AWS IoT Device Shadow library demos require the setup of a Thing resource for the device running the
 demo.
 Follow the links to:
-[Setup an AWS account](https://portal.aws.amazon.com/billing/signup#/start).
-[Sign-in to the AWS IoT Console](https://aws.amazon.com/console/) after setting up the AWS account.
-[Create a Thing resource](https://docs.aws.amazon.com/iot/latest/developerguide/iot-moisture-create-thing.html)
+- [Setup an AWS account](https://portal.aws.amazon.com/billing/signup#/start).
+- [Sign-in to the AWS IoT Console](https://aws.amazon.com/console/) after setting up the AWS account.
+- [Create a Thing resource](https://docs.aws.amazon.com/iot/latest/developerguide/iot-moisture-create-thing.html).
 
 
-#### Configuring TLS mutual authentication in demos
+#### Configuring mutual authentication demos of MQTT and HTTP
 
 You can pass the following configuration settings as command line options in order to run the mutual auth demos:
 
 ```sh
-cmake .. -DAWS_IOT_ENDPOINT="aws-iot-endpoint" -DROOT_CA_CERT_PATH="root-ca-path" -DCLIENT_CERT_PATH="certificate-path" -DCLIENT_PRIVATE_KEY_PATH="private-key-path"
+cmake .. -DAWS_IOT_ENDPOINT="<your-aws-iot-endpoint>" -DROOT_CA_CERT_PATH="<your-path-to-root-ca-cert>" -DCLIENT_CERT_PATH="<your-client-certificate-path>" -DCLIENT_PRIVATE_KEY_PATH="<your-client-private-key-path>" 
 ```
 
 In order to set these configurations manually, edit `demo_config.h` in `demos/mqtt/mqtt_demo_mutual_auth/` and `demos/http/http_demo_mutual_auth/` to `#define` the following:
@@ -344,6 +345,24 @@ In order to set these configurations manually, edit `demo_config.h` in `demos/mq
 * Set `ROOT_CA_CERT_PATH` to the path of the root CA certificate downloaded when setting up the device certificate in [AWS IoT Account Setup](#aws-iot-account-setup).
 * Set `CLIENT_CERT_PATH` to the path of the client certificate downloaded when setting up the device certificate in [AWS IoT Account Setup](#aws-iot-account-setup).
 * Set `CLIENT_PRIVATE_KEY_PATH` to the path of the private key downloaded when setting up the device certificate in [AWS IoT Account Setup](#aws-iot-account-setup).
+
+#### Configuring AWS IoT Device Defender and AWS IoT Device Shadow demos
+
+To build the AWS IoT Device Defender and AWS IoT Device Shadow demos, you can pass the following configuration settings as command line options:
+
+```sh
+cmake .. -DAWS_IOT_ENDPOINT="<your-aws-iot-endpoint>" -DROOT_CA_CERT_PATH="<your-path-to-amazon-root-ca>" -DCLIENT_CERT_PATH="<your-client-certificate-path>" -DCLIENT_PRIVATE_KEY_PATH="<your-client-private-key-path>" -DTHING_NAME="<your-registered-thing-name>"
+```
+
+An Amazon Root CA certificate can be downloaded from [here](https://www.amazontrust.com/repository/). 
+
+In order to set these configurations manually, edit `demo_config.h` in `demos/mqtt/mqtt_demo_mutual_auth/` and `demos/http/http_demo_mutual_auth/` to `#define` the following:
+
+* Set `AWS_IOT_ENDPOINT` to your custom endpoint. This is found on the *Settings* page of the AWS IoT Console and has a format of `ABCDEFG1234567.iot.us-east-2.amazonaws.com`.
+* Set `ROOT_CA_CERT_PATH` to the path of the root CA certificate downloaded when setting up the device certificate in [AWS IoT Account Setup](#aws-iot-account-setup).
+* Set `CLIENT_CERT_PATH` to the path of the client certificate downloaded when setting up the device certificate in [AWS IoT Account Setup](#aws-iot-account-setup).
+* Set `CLIENT_PRIVATE_KEY_PATH` to the path of the private key downloaded when setting up the device certificate in [AWS IoT Account Setup](#aws-iot-account-setup).
+* Set `THING_NAME` to the name of the Thing created in [AWS IoT Account Setup](#aws-iot-account-setup).
 
 #### Configuring the S3 demos
 
@@ -382,7 +401,7 @@ The following creates a job that specifies a Linux Kernel link for downloading.
  aws iot create-job \
         --job-id 'job_1' \
         --targets arn:aws:iot:us-west-2:<account-id>:thing/<thing-name> \
-        --document '{\"url\":\"https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.8.5.tar.xz\"}'
+        --document '{"url":"https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.8.5.tar.xz"}'
 ```
 
 
