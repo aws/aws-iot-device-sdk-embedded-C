@@ -40,7 +40,7 @@
         * [Prerequisites](#prerequisites)
             * [Build Dependencies](#build-dependencies)
         * [AWS IoT Account Setup](#aws-iot-account-setup)
-        * [Configuring the mutual auth demos](#configuring-the-mutual-auth-demos)
+        * [Configuring TLS mutual authentication in demos](#configuring-tls-mutual-authentication-in-demos)
         * [Configuring the S3 demos](#configuring-the-s3-demos)
         * [Setup for AWS IoT Jobs demo](#setup-for-aws-iot-jobs-demo)
         * [Prerequisites for the AWS Over-The-Air Update (OTA) demos](#prerequisites-for-the-aws-over-the-air-update-ota-demos)
@@ -240,7 +240,7 @@ Guide for porting AWS IoT Device Defender library is available [here](https://do
 
 ### Porting AWS IoT Over-the-air Update
 
-Guide for porting OTA library to your platform is available [here](https://docs.aws.amazon.com/embedded-csdk/202012.00/lib-ref/libraries/standard/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html/ota_porting.html).
+Guide for porting OTA library to your platform is available [here](https://docs.aws.amazon.com/embedded-csdk/202012.00/lib-ref/libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html/ota_porting.html).
 
 ## Migration guide from v3.1.2 to 202009.00 and newer releases
 
