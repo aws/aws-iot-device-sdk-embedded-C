@@ -429,24 +429,27 @@ OtaPalStatus_t otaPal_CreateFileForRx( OtaFileContext_t * const C )
                 ( void ) strncpy( realFilePath, ( const char * ) C->pFilePath, strlen( ( const char * ) C->pFilePath ) + 1U );
             }
 
-            if( status != OtaPalFileGenSuccess )
+            if( status == OtaPalFileGenSuccess )
             {
-                LogError( ( "Could not generate the absolute path for the file" ) );
-            }
+                /* POSIX port using standard library */
+                /* coverity[misra_c_2012_rule_21_6_violation] */
+                C->pFile = fopen( ( const char * ) realFilePath, "w+b" );
 
-            /* POSIX port using standard library */
-            /* coverity[misra_c_2012_rule_21_6_violation] */
-            C->pFile = fopen( ( const char * ) realFilePath, "w+b" );
-
-            if( C->pFile != NULL )
-            {
-                result = OTA_PAL_COMBINE_ERR( OtaPalSuccess, 0 );
-                LogInfo( ( "Receive file created." ) );
+                if( C->pFile != NULL )
+                {
+                    result = OTA_PAL_COMBINE_ERR( OtaPalSuccess, 0 );
+                    LogInfo( ( "Receive file created." ) );
+                }
+                else
+                {
+                    result = OTA_PAL_COMBINE_ERR( OtaPalRxFileCreateFailed, errno );
+                    LogError( ( "Failed to start operation: Operation already started. failed to open -- %s Path ", C->pFilePath ) );
+                }
             }
             else
             {
-                result = OTA_PAL_COMBINE_ERR( OtaPalRxFileCreateFailed, errno );
-                LogError( ( "Failed to start operation: Operation already started. failed to open -- %s Path ", C->pFilePath ) );
+                LogError( ( "Could not generate the absolute path for the file" ) );
+                result = OTA_PAL_COMBINE_ERR( OtaPalRxFileCreateFailed, 0 );
             }
         }
         else
@@ -600,14 +603,16 @@ OtaPalStatus_t otaPal_SetPlatformImageState( OtaFileContext_t * const C,
         /* Get file path for the image state file. */
         status = getFilePathFromCWD( imageStateFile, OTA_PLATFORM_IMAGE_STATE_FILE );
 
-        if( status != OtaPalFileGenSuccess )
+        if( status == OtaPalFileGenSuccess )
+        {
+            /* POSIX port using standard library */
+            /* coverity[misra_c_2012_rule_21_6_violation] */
+            pPlatformImageState = fopen( imageStateFile, "w+b" );
+        }
+        else
         {
             LogError( ( "Could not generate the absolute path for the file" ) );
         }
-
-        /* POSIX port using standard library */
-        /* coverity[misra_c_2012_rule_21_6_violation] */
-        pPlatformImageState = fopen( imageStateFile, "w+b" );
 
         if( pPlatformImageState != NULL )
         {
@@ -691,50 +696,53 @@ OtaPalImageState_t otaPal_GetPlatformImageState( OtaFileContext_t * const C )
     if( status != OtaPalFileGenSuccess )
     {
         LogError( ( "Could not generate the absolute path for the file" ) );
-    }
-
-    /* POSIX port using standard library */
-    /* coverity[misra_c_2012_rule_21_6_violation] */
-    pPlatformImageState = fopen( imageStateFile, "r+b" );
-
-    if( pPlatformImageState != NULL )
-    {
-        /* POSIX port using standard library */
-        /* coverity[misra_c_2012_rule_21_6_violation] */
-        if( 1U != fread( &eSavedAgentState, sizeof( OtaImageState_t ), 1, pPlatformImageState ) )
-        {
-            /* If an error occurred reading the file, mark the state as aborted. */
-            LogError( ( "Failed to read image state file." ) );
-            ePalState = OtaPalImageStateInvalid;
-        }
-        else
-        {
-            if( eSavedAgentState == OtaImageStateTesting )
-            {
-                ePalState = OtaPalImageStatePendingCommit;
-            }
-            else if( eSavedAgentState == OtaImageStateAccepted )
-            {
-                ePalState = OtaPalImageStateValid;
-            }
-            else
-            {
-                ePalState = OtaPalImageStateInvalid;
-            }
-        }
-
-        /* POSIX port using standard library */
-        /* coverity[misra_c_2012_rule_21_6_violation] */
-        if( 0 != fclose( pPlatformImageState ) )
-        {
-            LogError( ( "Failed to close image state file." ) );
-            ePalState = OtaPalImageStateInvalid;
-        }
+        ePalState = OtaPalImageStateInvalid;
     }
     else
     {
-        /* If no image state file exists, assume a factory image. */
-        ePalState = OtaPalImageStateValid; /*lint !e64 Allow assignment. */
+        /* POSIX port using standard library */
+        /* coverity[misra_c_2012_rule_21_6_violation] */
+        pPlatformImageState = fopen( imageStateFile, "r+b" );
+
+        if( pPlatformImageState != NULL )
+        {
+            /* POSIX port using standard library */
+            /* coverity[misra_c_2012_rule_21_6_violation] */
+            if( 1U != fread( &eSavedAgentState, sizeof( OtaImageState_t ), 1, pPlatformImageState ) )
+            {
+                /* If an error occurred reading the file, mark the state as aborted. */
+                LogError( ( "Failed to read image state file." ) );
+                ePalState = OtaPalImageStateInvalid;
+            }
+            else
+            {
+                if( eSavedAgentState == OtaImageStateTesting )
+                {
+                    ePalState = OtaPalImageStatePendingCommit;
+                }
+                else if( eSavedAgentState == OtaImageStateAccepted )
+                {
+                    ePalState = OtaPalImageStateValid;
+                }
+                else
+                {
+                    ePalState = OtaPalImageStateInvalid;
+                }
+            }
+
+            /* POSIX port using standard library */
+            /* coverity[misra_c_2012_rule_21_6_violation] */
+            if( 0 != fclose( pPlatformImageState ) )
+            {
+                LogError( ( "Failed to close image state file." ) );
+                ePalState = OtaPalImageStateInvalid;
+            }
+        }
+        else
+        {
+            /* If no image state file exists, assume a factory image. */
+            ePalState = OtaPalImageStateValid; /*lint !e64 Allow assignment. */
+        }
     }
 
     return ePalState;
