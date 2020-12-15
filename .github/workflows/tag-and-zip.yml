@@ -7,7 +7,7 @@ on:
         description: 'Commit ID to tag and push to remote'
         required: true
       version_number:
-        description: 'Tag Version Number (Eg, v1.0.0)'
+        description: 'Tag Version Number (Eg, 202012.00)'
         required: true
 
 jobs:

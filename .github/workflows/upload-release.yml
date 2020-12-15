@@ -5,13 +5,13 @@ on:
     inputs:
       workflow_name:
         description: 'Name of workflow (file name) to obtain ZIP from'
-        default: release
+        default: tag-and-zip
         required: false
       workflow_id:
         description: 'Workflow Run ID to obtain ZIP from'
         required: true
       version_number:
-        description: 'Tag Version Number (Eg, v1.0.0) to release'
+        description: 'Tag Version Number (Eg, 202012.00) to release'
         required: true
 
 jobs:
