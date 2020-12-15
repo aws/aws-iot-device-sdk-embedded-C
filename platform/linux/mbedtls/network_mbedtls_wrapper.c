@@ -32,7 +32,7 @@ extern "C" {
 
 /* This is the value used for ssl read timeout */
 #ifndef IOT_SSL_READ_TIMEOUT
-	#define IOT_SSL_READ_TIMEOUT 10
+	#define IOT_SSL_READ_TIMEOUT 3
 #endif
 
 /* This defines the value of the debug buffer that gets allocated.
@@ -330,6 +330,7 @@ IoT_Error_t iot_tls_write(Network *pNetwork, unsigned char *pMsg, size_t len, Ti
 		} else if(ret == MBEDTLS_ERR_SSL_WANT_READ ||
 				ret == MBEDTLS_ERR_SSL_WANT_WRITE) {
 			if(has_timer_expired(&writeTimer)) {
+				*written_len = txLen;
 				return NETWORK_SSL_WRITE_TIMEOUT_ERROR;
 			}
 		} else {
@@ -388,6 +389,7 @@ IoT_Error_t iot_tls_read(Network *pNetwork, unsigned char *pMsg, size_t len, Tim
 				ret == MBEDTLS_ERR_SSL_WANT_WRITE ||
 				ret == MBEDTLS_ERR_SSL_TIMEOUT) {
 			if(has_timer_expired(&readTimer)) {
+				*read_len = rxLen;
 				if(rxLen == 0U) {
 					return NETWORK_SSL_NOTHING_TO_READ;
 				} else {
