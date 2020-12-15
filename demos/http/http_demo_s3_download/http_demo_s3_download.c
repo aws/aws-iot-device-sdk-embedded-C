@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C V202011.00
+ * AWS IoT Device SDK for Embedded C 202012.01
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -606,6 +606,17 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
  *
  * @note This example is single-threaded and uses statically allocated memory.
  *
+ * @note This demo requires user-generated pre-signed URLs to be pasted into
+ * demo_config.h. Please use the provided script "presigned_urls_gen.py"
+ * (located in located in demos/http/common/src) to generate these URLs. For
+ * detailed instructions, see the accompanied README.md.
+ *
+ * @note If your file requires more than 99 range requests to S3 (depending on
+ * the size of the file and the length specified in RANGE_REQUEST_LENGTH), your
+ * connection may be dropped by S3. In this case, either increase the buffer
+ * size and range request length (if feasible), to reduce the number of requests
+ * required, or re-establish the connection with S3 after receiving a
+ * "Connection: close" response header.
  */
 int main( int argc,
           char ** argv )

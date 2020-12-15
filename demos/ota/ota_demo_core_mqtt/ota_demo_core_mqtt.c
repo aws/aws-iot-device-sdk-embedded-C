@@ -110,7 +110,7 @@
 /**
  * @brief Transport timeout in milliseconds for transport send and receive.
  */
-#define TRANSPORT_SEND_RECV_TIMEOUT_MS      ( 500 )
+#define TRANSPORT_SEND_RECV_TIMEOUT_MS      ( 500U )
 
 /**
  * @brief Timeout for receiving CONNACK packet in milli seconds.
@@ -131,7 +131,12 @@
 /**
  * @brief Timeout for MQTT_ProcessLoop function in milliseconds.
  */
-#define MQTT_PROCESS_LOOP_TIMEOUT_MS        ( 500U )
+#define MQTT_PROCESS_LOOP_TIMEOUT_MS        ( 100U )
+
+/**
+ * @brief Period for demo loop sleep in milliseconds.
+ */
+#define OTA_EXAMPLE_LOOP_SLEEP_PERIOD_MS    ( 5U )
 
 /**
  * @brief Size of the network buffer to receive the MQTT message.
@@ -152,18 +157,23 @@
  * @brief The timeout for waiting for the agent to get suspended after closing the
  * connection.
  */
-#define OTA_SUSPEND_TIMEOUT_MS                   ( 5000 )
+#define OTA_SUSPEND_TIMEOUT_MS                   ( 5000U )
+
+/**
+ * @brief The timeout for waiting before exiting the OTA demo.
+ */
+#define OTA_DEMO_EXIT_TIMEOUT_MS                 ( 3000U )
 
 /**
  * @brief The maximum size of the file paths used in the demo.
  */
-#define OTA_MAX_FILE_PATH_SIZE                   ( 260 )
+#define OTA_MAX_FILE_PATH_SIZE                   ( 260U )
 
 /**
  * @brief The maximum size of the stream name required for downloading update file
  * from streaming service.
  */
-#define OTA_MAX_STREAM_NAME_SIZE                 ( 128 )
+#define OTA_MAX_STREAM_NAME_SIZE                 ( 128U )
 
 /**
  * @brief The maximum back-off delay (in milliseconds) for retrying connection to server.
@@ -547,7 +557,7 @@ static SubscriptionManagerCallback_t otaMessageCallback[ OtaNumOfMessageType ] =
 
 void otaEventBufferFree( OtaEventData_t * const pxBuffer )
 {
-    if( sem_trywait( &bufferSemaphore ) == 0 )
+    if( sem_wait( &bufferSemaphore ) == 0 )
     {
         pxBuffer->bufferUsed = false;
         ( void ) sem_post( &bufferSemaphore );
@@ -567,7 +577,7 @@ OtaEventData_t * otaEventBufferGet( void )
     uint32_t ulIndex = 0;
     OtaEventData_t * pFreeBuffer = NULL;
 
-    if( sem_trywait( &bufferSemaphore ) == 0 )
+    if( sem_wait( &bufferSemaphore ) == 0 )
     {
         for( ulIndex = 0; ulIndex < otaconfigMAX_NUM_OTA_DATA_BUFFERS; ulIndex++ )
         {
@@ -598,50 +608,71 @@ static void otaAppCallback( OtaJobEvent_t event,
 {
     OtaErr_t err = OtaErrUninitialized;
 
-    /* OTA job is completed. so delete the MQTT and network connection. */
-    if( event == OtaJobEventActivate )
+    switch( event )
     {
-        LogInfo( ( "Received OtaJobEventActivate callback from OTA Agent." ) );
+        case OtaJobEventActivate:
+            LogInfo( ( "Received OtaJobEventActivate callback from OTA Agent." ) );
 
-        /* Activate the new firmware image. */
-        OTA_ActivateNewImage();
+            /* Activate the new firmware image. */
+            OTA_ActivateNewImage();
 
-        /* Shutdown OTA Agent. */
-        OTA_Shutdown( 0 );
+            /* Shutdown OTA Agent. */
+            OTA_Shutdown( 0 );
 
-        /* Requires manual activation of new image.*/
-        LogError( ( "New image activation failed." ) );
-    }
-    else if( event == OtaJobEventFail )
-    {
-        LogInfo( ( "Received OtaJobEventFail callback from OTA Agent." ) );
+            /* Requires manual activation of new image.*/
+            LogError( ( "New image activation failed." ) );
 
-        /* Nothing special to do. The OTA agent handles it. */
-    }
-    else if( event == OtaJobEventStartTest )
-    {
-        /* This demo just accepts the image since it was a good OTA update and networking
-         * and services are all working (or we would not have made it this far). If this
-         * were some custom device that wants to test other things before validating new
-         * image, this would be the place to kick off those tests before calling
-         * OTA_SetImageState() with the final result of either accepted or rejected. */
+            break;
 
-        LogInfo( ( "Received OtaJobEventStartTest callback from OTA Agent." ) );
-        err = OTA_SetImageState( OtaImageStateAccepted );
+        case OtaJobEventFail:
+            LogInfo( ( "Received OtaJobEventFail callback from OTA Agent." ) );
 
-        if( err != OtaErrNone )
-        {
-            LogError( ( " Failed to set image state as accepted." ) );
-        }
-    }
-    else if( event == OtaJobEventProcessed )
-    {
-        LogDebug( ( "Received OtaJobEventProcessed callback from OTA Agent." ) );
+            /* Nothing special to do. The OTA agent handles it. */
+            break;
 
-        if( pData != NULL )
-        {
-            otaEventBufferFree( ( OtaEventData_t * ) pData );
-        }
+        case OtaJobEventStartTest:
+
+            /* This demo just accepts the image since it was a good OTA update and networking
+             * and services are all working (or we would not have made it this far). If this
+             * were some custom device that wants to test other things before validating new
+             * image, this would be the place to kick off those tests before calling
+             * OTA_SetImageState() with the final result of either accepted or rejected. */
+
+            LogInfo( ( "Received OtaJobEventStartTest callback from OTA Agent." ) );
+            err = OTA_SetImageState( OtaImageStateAccepted );
+
+            if( err != OtaErrNone )
+            {
+                LogError( ( " Failed to set image state as accepted." ) );
+            }
+
+            break;
+
+        case OtaJobEventProcessed:
+            LogDebug( ( "Received OtaJobEventProcessed callback from OTA Agent." ) );
+
+            if( pData != NULL )
+            {
+                otaEventBufferFree( ( OtaEventData_t * ) pData );
+            }
+
+            break;
+
+        case OtaJobEventSelfTestFailed:
+            LogDebug( ( "Received OtaJobEventSelfTestFailed callback from OTA Agent." ) );
+
+            /* Requires manual activation of previous image as self-test for
+             * new image downloaded failed.*/
+            LogError( ( "Self-test failed, shutting down OTA Agent." ) );
+
+            /* Shutdown OTA Agent. */
+            OTA_Shutdown( 0 );
+
+
+            break;
+
+        default:
+            LogDebug( ( "Received invalid callback event from OTA Agent." ) );
     }
 }
 
@@ -1413,7 +1444,7 @@ static void setOtaInterfaces( OtaInterfaces_t * pOtaInterfaces )
 static void * otaThread( void * pParam )
 {
     /* Calling OTA agent task. */
-    otaAgentTask( pParam );
+    OTA_EventProcessingTask( pParam );
     LogInfo( ( "OTA Agent stopped." ) );
     return NULL;
 }
@@ -1521,7 +1552,7 @@ static int startOTADemo( void )
                 if( pthread_mutex_lock( &mqttMutex ) == 0 )
                 {
                     /* Loop to receive packet from transport interface. */
-                    mqttStatus = MQTT_ProcessLoop( &mqttContext, 0 );
+                    mqttStatus = MQTT_ProcessLoop( &mqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
 
                     pthread_mutex_unlock( &mqttMutex );
                 }
@@ -1542,6 +1573,12 @@ static int startOTADemo( void )
                                otaStatistics.otaPacketsQueued,
                                otaStatistics.otaPacketsProcessed,
                                otaStatistics.otaPacketsDropped ) );
+
+                    /* Delay if mqtt process loop is set to zero.*/
+                    if( !( MQTT_PROCESS_LOOP_TIMEOUT_MS > 0 ) )
+                    {
+                        Clock_SleepMs( OTA_EXAMPLE_LOOP_SLEEP_PERIOD_MS );
+                    }
                 }
                 else
                 {
@@ -1602,6 +1639,9 @@ int main( int argc,
     /* Semaphore initialization flag. */
     bool bufferSemInitialized = false;
     bool mqttMutexInitialized = false;
+
+    /* Maximum time in milliseconds to wait before exiting demo . */
+    int16_t waitTimeoutMs = OTA_DEMO_EXIT_TIMEOUT_MS;
 
     /* Initialize semaphore for buffer operations. */
     if( sem_init( &bufferSemaphore, 0, 1 ) != 0 )
@@ -1671,6 +1711,15 @@ int main( int argc,
 
             returnStatus = EXIT_FAILURE;
         }
+    }
+
+    /* Wait and log message before exiting demo. */
+    while( waitTimeoutMs > 0 )
+    {
+        Clock_SleepMs( OTA_EXAMPLE_TASK_DELAY_MS );
+        waitTimeoutMs -= OTA_EXAMPLE_TASK_DELAY_MS;
+
+        LogError( ( "Exiting demo in %d sec", waitTimeoutMs / 1000 ) );
     }
 
     return returnStatus;

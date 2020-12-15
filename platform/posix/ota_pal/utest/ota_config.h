@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C V202011.00
+ * OTA PAL V2.0.0 (Release Candidate) for POSIX
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -166,9 +166,5 @@
  * with an identical function signature to "fwrite" and is mocked in place of
  * "fwrite". The function declaration for this alias is in "stdio_api.h". */
 #define fwrite                             fwrite_alias
-
-/* CMock does not support variadic functions. This alias replaces the original
- * function name to get around this issue. */
-#define snprintf                           snprintf_alias
 
 #endif /* _OTA_CONFIG_H_ */

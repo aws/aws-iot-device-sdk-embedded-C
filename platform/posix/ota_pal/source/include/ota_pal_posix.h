@@ -1,5 +1,5 @@
 /*
- * FreeRTOS OTA V2.0.0
+ * OTA PAL V2.0.0 (Release Candidate) for POSIX
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -28,12 +28,21 @@
 
 #include "ota.h"
 
-
-
 /**
  * @brief Maximum file path length on Linux
  */
 #define OTA_FILE_PATH_LENGTH_MAX    512
+
+/**
+ * @brief The OTA platform interface status for generating
+ * absolute file path from the incoming relative file path.
+ */
+typedef enum OtaPalPathGenStatus
+{
+    OtaPalFileGenSuccess,    /*!< @brief Absolute path generation success. */
+    OtaPalCWDFailed,         /*!< @brief getcwd failed to output path. */
+    OtaPalBufferInsufficient /*!< @brief Buffer insufficient for storing the file path. */
+} OtaPalPathGenStatus_t;
 
 /**
  * @brief Abort an OTA transfer.

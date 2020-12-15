@@ -1,5 +1,5 @@
 /*
- * OTA PAL for POSIX V2.0.0
+ * OTA PAL V2.0.0 (Release Candidate) for POSIX
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -30,6 +30,7 @@
 #include <errno.h>
 #include <assert.h>
 #include <libgen.h>
+#include <unistd.h>
 
 #include "ota.h"
 #include "ota_pal_posix.h"
@@ -57,7 +58,12 @@ static const char signingcredentialSIGNING_CERTIFICATE_PEM[] = "Paste code signi
 /**
  * @brief Size of buffer used in file operations on this platform (POSIX).
  */
-#define OTA_PAL_POSIX_BUF_SIZE    ( ( size_t ) 4096U )
+#define OTA_PAL_POSIX_BUF_SIZE           ( ( size_t ) 4096U )
+
+/**
+ * @brief Name of the file used for storing platform image state.
+ */
+#define OTA_PLATFORM_IMAGE_STATE_FILE    "PlatformImageState.txt"
 
 /**
  * @brief Specify the OTA signature algorithm we support on this platform.
@@ -82,6 +88,15 @@ static OtaPalMainStatus_t Openssl_DigestVerify( EVP_MD_CTX * pSigContext,
  * @brief Verify the signature of the specified file using OpenSSL.
  */
 static OtaPalStatus_t otaPal_CheckFileSignature( OtaFileContext_t * const C );
+
+/**
+ * @brief Get the absolute file path from the environment.
+ *
+ * @param realFilePath Buffer to store the file path + file name.
+ * @param pFilePath File name to append to the end of current path.
+ */
+static OtaPalPathGenStatus_t getFilePathFromCWD( char * realFilePath,
+                                                 const char * pFilePath );
 
 /*-----------------------------------------------------------*/
 
@@ -317,6 +332,38 @@ static OtaPalStatus_t otaPal_CheckFileSignature( OtaFileContext_t * const C )
     return OTA_PAL_COMBINE_ERR( mainErr, 0 );
 }
 
+static OtaPalPathGenStatus_t getFilePathFromCWD( char * pCompleteFilePath,
+                                                 const char * pFileName )
+{
+    char * pCurrentDir = NULL;
+    OtaPalPathGenStatus_t status = OtaPalFileGenSuccess;
+
+    /* Get current directory. */
+    pCurrentDir = getcwd( pCompleteFilePath, OTA_FILE_PATH_LENGTH_MAX - 1 );
+
+    if( pCurrentDir == NULL )
+    {
+        LogError( ( "Failed to get current working directory: %s", strerror( errno ) ) );
+        status = OtaPalCWDFailed;
+    }
+    else
+    {
+        /* Add the filename . */
+        if( strlen( pCompleteFilePath ) + strlen( pFileName ) + 2U > OTA_FILE_PATH_LENGTH_MAX )
+        {
+            LogError( ( "Insufficient space to generate file path" ) );
+            status = OtaPalBufferInsufficient;
+        }
+        else
+        {
+            strcat( pCompleteFilePath, "/" );
+            strcat( pCompleteFilePath, pFileName );
+        }
+    }
+
+    return status;
+}
+
 /*-----------------------------------------------------------*/
 
 OtaPalStatus_t otaPal_Abort( OtaFileContext_t * const C )
@@ -367,6 +414,7 @@ OtaPalStatus_t otaPal_CreateFileForRx( OtaFileContext_t * const C )
 {
     OtaPalStatus_t result = OTA_PAL_COMBINE_ERR( OtaPalUninitialized, 0 );
     char realFilePath[ OTA_FILE_PATH_LENGTH_MAX ];
+    OtaPalPathGenStatus_t status = OtaPalFileGenSuccess;
 
     if( C != NULL )
     {
@@ -374,30 +422,34 @@ OtaPalStatus_t otaPal_CreateFileForRx( OtaFileContext_t * const C )
         {
             if( C->pFilePath[ 0 ] != ( uint8_t ) '/' )
             {
-                /* POSIX port using standard library */
-                /* coverity[misra_c_2012_rule_21_6_violation] */
-                int res = snprintf( realFilePath, OTA_FILE_PATH_LENGTH_MAX, "%s/%s", getenv( "PWD" ), C->pFilePath );
-                assert( res >= 0 );
-                ( void ) res; /* Suppress the unused variable warning when assert is off. */
+                status = getFilePathFromCWD( realFilePath, ( const char * ) C->pFilePath );
             }
             else
             {
                 ( void ) strncpy( realFilePath, ( const char * ) C->pFilePath, strlen( ( const char * ) C->pFilePath ) + 1U );
             }
 
-            /* POSIX port using standard library */
-            /* coverity[misra_c_2012_rule_21_6_violation] */
-            C->pFile = fopen( ( const char * ) realFilePath, "w+b" );
-
-            if( C->pFile != NULL )
+            if( status == OtaPalFileGenSuccess )
             {
-                result = OTA_PAL_COMBINE_ERR( OtaPalSuccess, 0 );
-                LogInfo( ( "Receive file created." ) );
+                /* POSIX port using standard library */
+                /* coverity[misra_c_2012_rule_21_6_violation] */
+                C->pFile = fopen( ( const char * ) realFilePath, "w+b" );
+
+                if( C->pFile != NULL )
+                {
+                    result = OTA_PAL_COMBINE_ERR( OtaPalSuccess, 0 );
+                    LogInfo( ( "Receive file created." ) );
+                }
+                else
+                {
+                    result = OTA_PAL_COMBINE_ERR( OtaPalRxFileCreateFailed, errno );
+                    LogError( ( "Failed to start operation: Operation already started. failed to open -- %s Path ", C->pFilePath ) );
+                }
             }
             else
             {
-                result = OTA_PAL_COMBINE_ERR( OtaPalRxFileCreateFailed, errno );
-                LogError( ( "Failed to start operation: Operation already started. failed to open -- %s Path ", C->pFilePath ) );
+                LogError( ( "Could not generate the absolute path for the file" ) );
+                result = OTA_PAL_COMBINE_ERR( OtaPalRxFileCreateFailed, 0 );
             }
         }
         else
@@ -539,24 +591,28 @@ OtaPalStatus_t otaPal_SetPlatformImageState( OtaFileContext_t * const C,
                                              OtaImageState_t eState )
 {
     OtaPalMainStatus_t mainErr = OtaPalBadImageState;
+    OtaPalPathGenStatus_t status = OtaPalFileGenSuccess;
     int32_t subErr = 0;
     FILE * pPlatformImageState = NULL;
-    char imageStateFile[ OTA_FILE_PATH_LENGTH_MAX ];
-
+    char imageStateFile[ OTA_FILE_PATH_LENGTH_MAX ] = { 0 };
 
     ( void ) C;
 
     if( ( eState != OtaImageStateUnknown ) && ( eState <= OtaLastImageState ) )
     {
-        /* POSIX port using standard library */
-        /* coverity[misra_c_2012_rule_21_6_violation] */
-        int res = snprintf( imageStateFile, OTA_FILE_PATH_LENGTH_MAX, "%s/%s", getenv( "PWD" ), "PlatformImageState.txt" );
-        assert( res >= 0 );
-        ( void ) res; /* Suppress the unused variable warning when assert is off. */
+        /* Get file path for the image state file. */
+        status = getFilePathFromCWD( imageStateFile, OTA_PLATFORM_IMAGE_STATE_FILE );
 
-        /* POSIX port using standard library */
-        /* coverity[misra_c_2012_rule_21_6_violation] */
-        pPlatformImageState = fopen( imageStateFile, "w+b" );
+        if( status == OtaPalFileGenSuccess )
+        {
+            /* POSIX port using standard library */
+            /* coverity[misra_c_2012_rule_21_6_violation] */
+            pPlatformImageState = fopen( imageStateFile, "w+b" );
+        }
+        else
+        {
+            LogError( ( "Could not generate the absolute path for the file" ) );
+        }
 
         if( pPlatformImageState != NULL )
         {
@@ -591,7 +647,7 @@ OtaPalStatus_t otaPal_SetPlatformImageState( OtaFileContext_t * const C,
         }
         else
         {
-            LogError( ( "Unable to open image state file. error -- %d", errno ) );
+            LogError( ( "Unable to open image state file. Path: %s error: %s", imageStateFile, strerror( errno ) ) );
             subErr = errno;
         }
     }
@@ -626,62 +682,67 @@ OtaPalStatus_t otaPal_ResetDevice( OtaFileContext_t * const C )
  */
 OtaPalImageState_t otaPal_GetPlatformImageState( OtaFileContext_t * const C )
 {
-    FILE * pPlatformImageState;
+    FILE * pPlatformImageState = NULL;
     OtaImageState_t eSavedAgentState = OtaImageStateUnknown;
     OtaPalImageState_t ePalState = OtaPalImageStateUnknown;
-    char imageStateFile[ OTA_FILE_PATH_LENGTH_MAX ];
-
-    /* POSIX port using standard library */
-    /* coverity[misra_c_2012_rule_21_6_violation] */
-    int res = snprintf( imageStateFile, OTA_FILE_PATH_LENGTH_MAX, "%s/%s", getenv( "PWD" ), "PlatformImageState.txt" );
-
-    assert( res >= 0 );
-    ( void ) res; /* Suppress the unused variable warning when assert is off. */
+    OtaPalPathGenStatus_t status = OtaPalFileGenSuccess;
+    char imageStateFile[ OTA_FILE_PATH_LENGTH_MAX ] = { 0 };
 
     ( void ) C;
 
-    /* POSIX port using standard library */
-    /* coverity[misra_c_2012_rule_21_6_violation] */
-    pPlatformImageState = fopen( imageStateFile, "r+b" );
+    /* Get file path for the image state file. */
+    status = getFilePathFromCWD( imageStateFile, OTA_PLATFORM_IMAGE_STATE_FILE );
 
-    if( pPlatformImageState != NULL )
+    if( status != OtaPalFileGenSuccess )
     {
-        /* POSIX port using standard library */
-        /* coverity[misra_c_2012_rule_21_6_violation] */
-        if( 1U != fread( &eSavedAgentState, sizeof( OtaImageState_t ), 1, pPlatformImageState ) )
-        {
-            /* If an error occurred reading the file, mark the state as aborted. */
-            LogError( ( "Failed to read image state file." ) );
-            ePalState = OtaPalImageStateInvalid;
-        }
-        else
-        {
-            if( eSavedAgentState == OtaImageStateTesting )
-            {
-                ePalState = OtaPalImageStatePendingCommit;
-            }
-            else if( eSavedAgentState == OtaImageStateAccepted )
-            {
-                ePalState = OtaPalImageStateValid;
-            }
-            else
-            {
-                ePalState = OtaPalImageStateInvalid;
-            }
-        }
-
-        /* POSIX port using standard library */
-        /* coverity[misra_c_2012_rule_21_6_violation] */
-        if( 0 != fclose( pPlatformImageState ) )
-        {
-            LogError( ( "Failed to close image state file." ) );
-            ePalState = OtaPalImageStateInvalid;
-        }
+        LogError( ( "Could not generate the absolute path for the file" ) );
+        ePalState = OtaPalImageStateInvalid;
     }
     else
     {
-        /* If no image state file exists, assume a factory image. */
-        ePalState = OtaPalImageStateValid; /*lint !e64 Allow assignment. */
+        /* POSIX port using standard library */
+        /* coverity[misra_c_2012_rule_21_6_violation] */
+        pPlatformImageState = fopen( imageStateFile, "r+b" );
+
+        if( pPlatformImageState != NULL )
+        {
+            /* POSIX port using standard library */
+            /* coverity[misra_c_2012_rule_21_6_violation] */
+            if( 1U != fread( &eSavedAgentState, sizeof( OtaImageState_t ), 1, pPlatformImageState ) )
+            {
+                /* If an error occurred reading the file, mark the state as aborted. */
+                LogError( ( "Failed to read image state file." ) );
+                ePalState = OtaPalImageStateInvalid;
+            }
+            else
+            {
+                if( eSavedAgentState == OtaImageStateTesting )
+                {
+                    ePalState = OtaPalImageStatePendingCommit;
+                }
+                else if( eSavedAgentState == OtaImageStateAccepted )
+                {
+                    ePalState = OtaPalImageStateValid;
+                }
+                else
+                {
+                    ePalState = OtaPalImageStateInvalid;
+                }
+            }
+
+            /* POSIX port using standard library */
+            /* coverity[misra_c_2012_rule_21_6_violation] */
+            if( 0 != fclose( pPlatformImageState ) )
+            {
+                LogError( ( "Failed to close image state file." ) );
+                ePalState = OtaPalImageStateInvalid;
+            }
+        }
+        else
+        {
+            /* If no image state file exists, assume a factory image. */
+            ePalState = OtaPalImageStateValid; /*lint !e64 Allow assignment. */
+        }
     }
 
     return ePalState;

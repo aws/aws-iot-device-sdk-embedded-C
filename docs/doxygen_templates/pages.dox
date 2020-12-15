@@ -15,8 +15,8 @@
     <tr>
         <td><b>File</b></td>
         <td><b>No Optimization (asserts enabled)</b></td>
-        <td><b>With -O1 Optimisation</b></td>
-        <td><b>With -Os Optimisation</b></td>
+        <td><b>With -O1 Optimization</b></td>
+        <td><b>With -Os Optimization</b></td>
     </tr>
     <tr>
         <td>[<FIXME: library source, add more rows for more source>]</td>
