@@ -31,8 +31,8 @@ extern "C" {
 
 
 /* This is the value used for ssl read timeout */
-#ifndef IOT_SSL_READ_TIMEOUT
-	#define IOT_SSL_READ_TIMEOUT 3
+#ifndef IOT_SSL_READ_TIMEOUT_MS
+	#define IOT_SSL_READ_TIMEOUT_MS 3
 #endif
 
 /* This defines the value of the debug buffer that gets allocated.
@@ -279,7 +279,7 @@ IoT_Error_t iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
 	}
 #endif
 
-	mbedtls_ssl_conf_read_timeout(&(tlsDataParams->conf), IOT_SSL_READ_TIMEOUT);
+	mbedtls_ssl_conf_read_timeout(&(tlsDataParams->conf), IOT_SSL_READ_TIMEOUT_MS);
 
 #ifdef IOT_SSL_SOCKET_NON_BLOCKING
 	mbedtls_net_set_nonblock(&(tlsDataParams->server_fd));
@@ -369,7 +369,7 @@ IoT_Error_t iot_tls_read(Network *pNetwork, unsigned char *pMsg, size_t len, Tim
 	countdown_ms(&readTimer, IOT_SSL_READ_RETRY_TIMEOUT_MS);
 
 	while(len > 0U) {
-		/* This read will timeout after IOT_SSL_READ_TIMEOUT if there's no data to be read */
+		/* This read will timeout after IOT_SSL_READ_TIMEOUT_MS if there's no data to be read */
 		ret = mbedtls_ssl_read(pSsl, pMsg, len);
 
 		if(ret > 0) {
