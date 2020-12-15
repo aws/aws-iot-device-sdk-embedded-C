@@ -59,7 +59,7 @@ The AWS IoT Device SDK for Embedded C (C-SDK) is a collection of C source files 
 
 For the latest release of C-SDK, please see the section for [Releases](#releases).
 
-**C-SDK includes libraries that are part of the [FreeRTOS 202012.00 LTS](https://github.com/FreeRTOS/FreeRTOS-LTS/tree/202012.00_LTS) release. Learn more about the FreeRTOS 202012.00 LTS libraries at https://freertos.org/lts-libraries.html.**
+**C-SDK includes libraries that are part of the [FreeRTOS 202012.00 LTS](https://github.com/FreeRTOS/FreeRTOS-LTS/tree/202012.00-LTS) release. Learn more about the FreeRTOS 202012.00 LTS libraries at https://freertos.org/lts-libraries.html.**
 
 ### License
 
