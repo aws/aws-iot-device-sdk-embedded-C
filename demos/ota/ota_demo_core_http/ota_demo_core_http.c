@@ -145,7 +145,7 @@
 /**
  * @brief Period for demo loop sleep in milliseconds.
  */
-#define OTA_EXAMPLE_LOOP_SLEEP_PERIOD_MS         ( 5000U )
+#define OTA_EXAMPLE_LOOP_SLEEP_PERIOD_MS         ( 5U )
 
 /**
  * @brief The delay used in the main OTA Demo task loop to periodically output the OTA

@@ -136,7 +136,7 @@
 /**
  * @brief Period for demo loop sleep in milliseconds.
  */
-#define OTA_EXAMPLE_LOOP_SLEEP_PERIOD_MS    ( 5000U )
+#define OTA_EXAMPLE_LOOP_SLEEP_PERIOD_MS    ( 5U )
 
 /**
  * @brief Size of the network buffer to receive the MQTT message.
