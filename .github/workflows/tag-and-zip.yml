@@ -7,7 +7,7 @@ on:
         description: 'Commit ID to tag and push to remote'
         required: true
       version_number:
-        description: 'Tag Version Number (Eg, v1.0.0)'
+        description: 'Tag Version Number (Eg, 202012.00)'
         required: true
 
 jobs:
@@ -79,7 +79,7 @@ jobs:
           -DTHING_NAME="thing-name" \
           -DS3_PRESIGNED_GET_URL="get-url" \
           -DS3_PRESIGNED_PUT_URL="put-url"
-          make -C build/ help | grep demo | tr -d '. ' | xargs make -C build/
+          make -C build/ help | grep demo | tr -d '. ' | xargs make -C build/ -j8
           make -C demos/jobs/jobs_demo_mosquitto -j8
       - name : Build Check Tests
         run: |
