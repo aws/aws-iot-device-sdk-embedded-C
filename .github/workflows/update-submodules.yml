@@ -26,7 +26,7 @@ jobs:
           git config --global user.name "Submodule Updater"
       - name: Update the submodules
         run: |
-          libs=$(find libraries/standard libraries/aws -maxdepth 1 -mindepth 1 | grep "${{ github.event.inputs.ignored }}")
+          libs=$(find libraries/standard libraries/aws -maxdepth 1 -mindepth 1 | grep "${{ github.event.inputs.allowed}}")
           git submodule update --remote $libs
       - name: Commit changes and Push to remote
         run: |
