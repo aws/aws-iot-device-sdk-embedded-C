@@ -8,9 +8,9 @@ on:
         required: true
         default: main
       ignored:
-        description: 'Regex pattern passed to `grep -v` to ignore in the path to the library, e.g. "ota\|jobs" ignores all libraries with "ota" or "jobs" in the name.'
+        description: 'Optional regex pattern passed to `grep` to update only the specified library submodules, e.g. "ota\|jobs" updates only libraries with "ota" or "jobs" in the name.'
         required: false
-        default: 'ignore_none'
+        default: .*
 
 jobs:
   update-submodules:
@@ -26,7 +26,7 @@ jobs:
           git config --global user.name "Submodule Updater"
       - name: Update the submodules
         run: |
-          libs=$(find libraries/standard libraries/aws -maxdepth 1 -mindepth 1 | grep -v ${{ github.event.inputs.ignored }})
+          libs=$(find libraries/standard libraries/aws -maxdepth 1 -mindepth 1 | grep "${{ github.event.inputs.ignored }})"
           git submodule update --remote $libs
       - name: Commit changes and Push to remote
         run: |
@@ -39,4 +39,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh pr create --base ${{ github.event.inputs.branch }} --title 'Update library submodules to the latest' --body 'Update library submodules.'
+          libs=$(find libraries/standard libraries/aws -maxdepth 1 -mindepth 1 | grep "${{ github.event.inputs.ignored }})"
+          pretty=""
+          for lib in $libs; do pretty="$pretty, $lib"; done
+          gh pr create --base ${{ github.event.inputs.branch }} --title 'Update library submodules to the latest' --body 'Update library submodules: $pretty.'
