@@ -42,4 +42,4 @@ jobs:
           libs=$(find libraries/standard libraries/aws -maxdepth 1 -mindepth 1 | grep "${{ github.event.inputs.ignored }}")
           body="Update library submodules: "
           for lib in $libs; do body="$body, $lib"; done
-          gh pr create --base ${{ github.event.inputs.branch }} --title 'Update library submodules to the latest' --body '$(echo body)'
+          gh pr create --base ${{ github.event.inputs.branch }} --title 'Update library submodules to the latest' --body '$(echo $body)'
