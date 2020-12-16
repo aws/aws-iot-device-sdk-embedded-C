@@ -39,7 +39,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          libs=$(find libraries/standard libraries/aws -maxdepth 1 -mindepth 1 | grep "${{ github.event.inputs.ignored }})"
+          libs=$(find libraries/standard libraries/aws -maxdepth 1 -mindepth 1 | grep "${{ github.event.inputs.ignored }}")
           pretty=""
           for lib in $libs; do pretty="$pretty, $lib"; done
           gh pr create --base ${{ github.event.inputs.branch }} --title 'Update library submodules to the latest' --body 'Update library submodules: $pretty.'
