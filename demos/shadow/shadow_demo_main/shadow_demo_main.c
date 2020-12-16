@@ -768,14 +768,14 @@ int main( int argc,
              *
              * #define SHADOW_TOPIC_MAX_LENGTH  (256U)
              *
-             * ShadowStatus_t shadowStatus = SHADOW_STATUS_SUCCESS;
+             * ShadowStatus_t shadowStatus = SHADOW_SUCCESS;
              * char topicBuffer[ SHADOW_TOPIC_MAX_LENGTH ] = { 0 };
              * uint16_t bufferSize = SHADOW_TOPIC_MAX_LENGTH;
              * uint16_t outLength = 0;
              * const char * thingName = "TestThingName";
              * uint16_t thingNameLength  = ( sizeof( thingName ) - 1U );
              *
-             * shadowStatus = Shadow_GetTopicString( SHADOW_TOPIC_STRING_TYPE_UPDATE_DELTA,
+             * shadowStatus = Shadow_GetTopicString( ShadowTopicStringTypeUpdateDelta,
              *                                       thingName,
              *                                       thingNameLength,
              *                                       & ( topicBuffer[ 0 ] ),
@@ -840,7 +840,7 @@ int main( int argc,
                     returnStatus = PublishToTopic( SHADOW_TOPIC_STRING_UPDATE( THING_NAME ),
                                                    SHADOW_TOPIC_LENGTH_UPDATE( THING_NAME_LENGTH ),
                                                    updateDocument,
-                                                   ( SHADOW_DESIRED_JSON_LENGTH + 1 ) );
+                                                   ( SHADOW_REPORTED_JSON_LENGTH + 1 ) );
                 }
                 else
                 {
