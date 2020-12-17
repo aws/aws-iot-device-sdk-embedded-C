@@ -994,10 +994,12 @@ void test_Sign_EC( void )
     mbedtls_pk_context * ecdsaContextPtr = &ecdsaContext;
     CK_ATTRIBUTE pubKeyQuery = { CKA_EC_POINT, NULL, 0 };
     CK_BYTE * publicKeyPtr = NULL;
+
     mbedtls_pk_init( ecdsaContextPtr );
 
     /* Reconstruct public key from EC Params. */
     mbedtls_ecp_keypair * keyPair;
+
     keyPair = PKCS11_MALLOC( sizeof( mbedtls_ecp_keypair ) );
     TEST_ASSERT_NOT_EQUAL_MESSAGE( NULL, keyPair, "Failed to allocate memory for the mbed TLS context." );
 
@@ -1057,6 +1059,7 @@ void test_Sign_EC( void )
         mbedtls_mpi_free( &S );
     }
 
+    PKCS11_FREE( publicKeyPtr );
     mbedtls_pk_free( &ecdsaContext );
 }
 
