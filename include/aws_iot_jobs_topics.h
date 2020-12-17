@@ -19,48 +19,50 @@
  */
 
 #ifdef DISABLE_IOT_JOBS
-#error "Jobs API is disabled"
+    #error "Jobs API is disabled"
 #endif
 
 #ifndef AWS_IOT_JOBS_TOPICS_H_
-#define AWS_IOT_JOBS_TOPICS_H_
+    #define AWS_IOT_JOBS_TOPICS_H_
 
-#include <stdint.h>
-#include <stdbool.h>
-#include <stddef.h>
+    #include <stdint.h>
+    #include <stdbool.h>
+    #include <stddef.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+    #ifdef __cplusplus
+        extern "C" {
+    #endif
 
-#define JOB_ID_NEXT 	"$next"
-#define JOB_ID_WILDCARD "+"
+    #define JOB_ID_NEXT        "$next"
+    #define JOB_ID_WILDCARD    "+"
 
 /**
  * The type of job topic.
  */
-typedef enum {
-	JOB_UNRECOGNIZED_TOPIC = 0,
-	JOB_GET_PENDING_TOPIC,
-	JOB_START_NEXT_TOPIC,
-	JOB_DESCRIBE_TOPIC,
-	JOB_UPDATE_TOPIC,
-	JOB_NOTIFY_TOPIC,
-	JOB_NOTIFY_NEXT_TOPIC,
-	JOB_WILDCARD_TOPIC
-} AwsIotJobExecutionTopicType;
+    typedef enum
+    {
+        JOB_UNRECOGNIZED_TOPIC = 0,
+        JOB_GET_PENDING_TOPIC,
+        JOB_START_NEXT_TOPIC,
+        JOB_DESCRIBE_TOPIC,
+        JOB_UPDATE_TOPIC,
+        JOB_NOTIFY_TOPIC,
+        JOB_NOTIFY_NEXT_TOPIC,
+        JOB_WILDCARD_TOPIC
+    } AwsIotJobExecutionTopicType;
 
 /**
  * The type of reply topic, or #JOB_REQUEST_TYPE for
  * topics that are not replies.
  */
-typedef enum {
-	JOB_UNRECOGNIZED_TOPIC_TYPE = 0,
-	JOB_REQUEST_TYPE,
-	JOB_ACCEPTED_REPLY_TYPE,
-	JOB_REJECTED_REPLY_TYPE,
-	JOB_WILDCARD_REPLY_TYPE
-} AwsIotJobExecutionTopicReplyType;
+    typedef enum
+    {
+        JOB_UNRECOGNIZED_TOPIC_TYPE = 0,
+        JOB_REQUEST_TYPE,
+        JOB_ACCEPTED_REPLY_TYPE,
+        JOB_REJECTED_REPLY_TYPE,
+        JOB_WILDCARD_REPLY_TYPE
+    } AwsIotJobExecutionTopicReplyType;
 
 /**
  * @brief Get the topic matching the provided details and put into the provided buffer.
@@ -77,12 +79,15 @@ typedef enum {
  * \return the number of characters in the topic excluding the null terminator. A return
  *   value of bufferSize or more means that the topic string was truncated.
  */
-int aws_iot_jobs_get_api_topic(char *buffer, size_t bufferSize,
-		AwsIotJobExecutionTopicType topicType, AwsIotJobExecutionTopicReplyType replyType,
-		const char* thingName, const char* jobId);
+    int aws_iot_jobs_get_api_topic( char * buffer,
+                                    size_t bufferSize,
+                                    AwsIotJobExecutionTopicType topicType,
+                                    AwsIotJobExecutionTopicReplyType replyType,
+                                    const char * thingName,
+                                    const char * jobId );
 
-#ifdef __cplusplus
-}
-#endif
+    #ifdef __cplusplus
+        }
+    #endif
 
 #endif /* AWS_IOT_JOBS_TOPICS_H_ */

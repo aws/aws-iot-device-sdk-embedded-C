@@ -16,7 +16,7 @@
 #ifndef SRC_SHADOW_AWS_IOT_SHADOW_KEY_H_
 #define SRC_SHADOW_AWS_IOT_SHADOW_KEY_H_
 
-#define SHADOW_CLIENT_TOKEN_STRING "clientToken"
-#define SHADOW_VERSION_STRING "version"
+#define SHADOW_CLIENT_TOKEN_STRING    "clientToken"
+#define SHADOW_VERSION_STRING         "version"
 
 #endif /* SRC_SHADOW_AWS_IOT_SHADOW_KEY_H_ */

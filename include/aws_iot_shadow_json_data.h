@@ -14,59 +14,63 @@
  */
 
 #ifndef SRC_SHADOW_AWS_IOT_SHADOW_JSON_DATA_H_
-#define SRC_SHADOW_AWS_IOT_SHADOW_JSON_DATA_H_
+    #define SRC_SHADOW_AWS_IOT_SHADOW_JSON_DATA_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+    #ifdef __cplusplus
+        extern "C" {
+    #endif
 
 /**
  * @file aws_iot_shadow_json_data.h
  * @brief This file is the interface for all the Shadow related JSON functions.
  */
 
-#include <stddef.h>
+    #include <stddef.h>
 
 /**
  * @brief This is a static JSON object that could be used in code
  *
  */
-typedef struct jsonStruct jsonStruct_t;
+    typedef struct jsonStruct jsonStruct_t;
 
 /**
  * @brief Every JSON name value can have a callback. The callback should follow this signature
  */
-typedef void (*jsonStructCallback_t)(const char *pJsonValueBuffer, uint32_t valueLength, jsonStruct_t *pJsonStruct_t);
+    typedef void (* jsonStructCallback_t)( const char * pJsonValueBuffer,
+                                           uint32_t valueLength,
+                                           jsonStruct_t * pJsonStruct_t );
 
 /**
  * @brief All the JSON object types enum
  *
  * JSON number types need to be split into proper integer / floating point data types and sizes on embedded platforms.
  */
-typedef enum {
-	SHADOW_JSON_INT32,
-	SHADOW_JSON_INT16,
-	SHADOW_JSON_INT8,
-	SHADOW_JSON_UINT32,
-	SHADOW_JSON_UINT16,
-	SHADOW_JSON_UINT8,
-	SHADOW_JSON_FLOAT,
-	SHADOW_JSON_DOUBLE,
-	SHADOW_JSON_BOOL,
-	SHADOW_JSON_STRING,
-	SHADOW_JSON_OBJECT
-} JsonPrimitiveType;
+    typedef enum
+    {
+        SHADOW_JSON_INT32,
+        SHADOW_JSON_INT16,
+        SHADOW_JSON_INT8,
+        SHADOW_JSON_UINT32,
+        SHADOW_JSON_UINT16,
+        SHADOW_JSON_UINT8,
+        SHADOW_JSON_FLOAT,
+        SHADOW_JSON_DOUBLE,
+        SHADOW_JSON_BOOL,
+        SHADOW_JSON_STRING,
+        SHADOW_JSON_OBJECT
+    } JsonPrimitiveType;
 
 /**
  * @brief This is the struct form of a JSON Key value pair
  */
-struct jsonStruct {
-	const char *pKey; ///< JSON key
-	void *pData; ///< pointer to the data (JSON value)
-	size_t dataLength; ///< Length (in bytes) of pData
-	JsonPrimitiveType type; ///< type of JSON
-	jsonStructCallback_t cb; ///< callback to be executed on receiving the Key value pair
-};
+    struct jsonStruct
+    {
+        const char * pKey;       /*/< JSON key */
+        void * pData;            /*/< pointer to the data (JSON value) */
+        size_t dataLength;       /*/< Length (in bytes) of pData */
+        JsonPrimitiveType type;  /*/< type of JSON */
+        jsonStructCallback_t cb; /*/< callback to be executed on receiving the Key value pair */
+    };
 
 /**
  * @brief Initialize the JSON document with Shadow expected name/value
@@ -82,7 +86,8 @@ struct jsonStruct {
  * @param maxSizeOfJsonDocument maximum size of the pJsonDocument that can be used to fill the JSON document
  * @return An IoT Error Type defining if the buffer was null or the entire string was not filled up
  */
-IoT_Error_t aws_iot_shadow_init_json_document(char *pJsonDocument, size_t maxSizeOfJsonDocument);
+    IoT_Error_t aws_iot_shadow_init_json_document( char * pJsonDocument,
+                                                   size_t maxSizeOfJsonDocument );
 
 /**
  * @brief Add the reported section of the JSON document of jsonStruct_t
@@ -98,7 +103,10 @@ IoT_Error_t aws_iot_shadow_init_json_document(char *pJsonDocument, size_t maxSiz
  * @param count total number of arguments(jsonStruct_t object) passed in the arguments
  * @return An IoT Error Type defining if the buffer was null or the entire string was not filled up
  */
-IoT_Error_t aws_iot_shadow_add_reported(char *pJsonDocument, size_t maxSizeOfJsonDocument, uint8_t count, ...);
+    IoT_Error_t aws_iot_shadow_add_reported( char * pJsonDocument,
+                                             size_t maxSizeOfJsonDocument,
+                                             uint8_t count,
+                                             ... );
 
 /**
  * @brief Add the desired section of the JSON document of jsonStruct_t
@@ -114,7 +122,10 @@ IoT_Error_t aws_iot_shadow_add_reported(char *pJsonDocument, size_t maxSizeOfJso
  * @param count total number of arguments(jsonStruct_t object) passed in the arguments
  * @return An IoT Error Type defining if the buffer was null or the entire string was not filled up
  */
-IoT_Error_t aws_iot_shadow_add_desired(char *pJsonDocument, size_t maxSizeOfJsonDocument, uint8_t count, ...);
+    IoT_Error_t aws_iot_shadow_add_desired( char * pJsonDocument,
+                                            size_t maxSizeOfJsonDocument,
+                                            uint8_t count,
+                                            ... );
 
 /**
  * @brief Finalize the JSON document with Shadow expected client Token.
@@ -128,7 +139,8 @@ IoT_Error_t aws_iot_shadow_add_desired(char *pJsonDocument, size_t maxSizeOfJson
  * @param maxSizeOfJsonDocument maximum size of the pJsonDocument that can be used to fill the JSON document
  * @return An IoT Error Type defining if the buffer was null or the entire string was not filled up
  */
-IoT_Error_t aws_iot_finalize_json_document(char *pJsonDocument, size_t maxSizeOfJsonDocument);
+    IoT_Error_t aws_iot_finalize_json_document( char * pJsonDocument,
+                                                size_t maxSizeOfJsonDocument );
 
 /**
  * @brief Fill the given buffer with client token for tracking the Repsonse.
@@ -141,10 +153,11 @@ IoT_Error_t aws_iot_finalize_json_document(char *pJsonDocument, size_t maxSizeOf
  * @return An IoT Error Type defining if the buffer was null or the entire string was not filled up
  */
 
-IoT_Error_t aws_iot_fill_with_client_token(char *pBufferToBeUpdatedWithClientToken, size_t maxSizeOfJsonDocument);
+    IoT_Error_t aws_iot_fill_with_client_token( char * pBufferToBeUpdatedWithClientToken,
+                                                size_t maxSizeOfJsonDocument );
 
-#ifdef __cplusplus
-}
-#endif
+    #ifdef __cplusplus
+        }
+    #endif
 
 #endif /* SRC_SHADOW_AWS_IOT_SHADOW_JSON_DATA_H_ */

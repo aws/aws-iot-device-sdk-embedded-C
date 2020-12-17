@@ -19,19 +19,19 @@
  */
 
 #ifdef DISABLE_IOT_JOBS
-#error "Jobs API is disabled"
+    #error "Jobs API is disabled"
 #endif
 
 #ifndef AWS_IOT_JOBS_JSON_H_
-#define AWS_IOT_JOBS_JSON_H_
+    #define AWS_IOT_JOBS_JSON_H_
 
-#include <stdbool.h>
-#include "jsmn.h"
-#include "aws_iot_jobs_types.h"
+    #include <stdbool.h>
+    #include "jsmn.h"
+    #include "aws_iot_jobs_types.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+    #ifdef __cplusplus
+        extern "C" {
+    #endif
 
 /**
  * Serialize a job execution update request into a json string.
@@ -46,9 +46,9 @@ extern "C" {
  *   the size of the buffer and if its larger handle the fact that the string has
  *   been truncated.
  */
-int aws_iot_jobs_json_serialize_update_job_execution_request(
-		char *requestBuffer, size_t bufferSize,
-		const AwsIotJobExecutionUpdateRequest *request);
+    int aws_iot_jobs_json_serialize_update_job_execution_request( char * requestBuffer,
+                                                                  size_t bufferSize,
+                                                                  const AwsIotJobExecutionUpdateRequest * request );
 
 /**
  * Serialize a job API request that contains only a client token.
@@ -63,9 +63,9 @@ int aws_iot_jobs_json_serialize_update_job_execution_request(
  *   the size of the buffer and if its larger handle the fact that the string has
  *   been truncated.
  */
-int aws_iot_jobs_json_serialize_client_token_only_request(
-		char *requestBuffer, size_t bufferSize,
-		const char *clientToken);
+    int aws_iot_jobs_json_serialize_client_token_only_request( char * requestBuffer,
+                                                               size_t bufferSize,
+                                                               const char * clientToken );
 
 /**
  * Serialize describe job execution request into json string.
@@ -80,9 +80,9 @@ int aws_iot_jobs_json_serialize_client_token_only_request(
  *   the size of the buffer and if its larger handle the fact that the string has
  *   been truncated.
  */
-int aws_iot_jobs_json_serialize_describe_job_execution_request(
-		char *requestBuffer, size_t bufferSize,
-		const AwsIotDescribeJobExecutionRequest *request);
+    int aws_iot_jobs_json_serialize_describe_job_execution_request( char * requestBuffer,
+                                                                    size_t bufferSize,
+                                                                    const AwsIotDescribeJobExecutionRequest * request );
 
 /**
  * Serialize start next job execution request into json string.
@@ -97,12 +97,12 @@ int aws_iot_jobs_json_serialize_describe_job_execution_request(
  *   the size of the buffer and if its larger handle the fact that the string has
  *   been truncated.
  */
-int aws_iot_jobs_json_serialize_start_next_job_execution_request(
-		char *requestBuffer, size_t bufferSize,
-		const AwsIotStartNextPendingJobExecutionRequest *request);
+    int aws_iot_jobs_json_serialize_start_next_job_execution_request( char * requestBuffer,
+                                                                      size_t bufferSize,
+                                                                      const AwsIotStartNextPendingJobExecutionRequest * request );
 
-#ifdef __cplusplus
-}
-#endif
+    #ifdef __cplusplus
+        }
+    #endif
 
 #endif /* AWS_IOT_JOBS_JSON_H_ */

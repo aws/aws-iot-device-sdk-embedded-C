@@ -26,106 +26,106 @@
  */
 
 #ifndef _IOT_LOG_H
-#define _IOT_LOG_H
+    #define _IOT_LOG_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+    #ifdef __cplusplus
+        extern "C" {
+    #endif
 
-#include <stdio.h>
-#include <stdlib.h>
+    #include <stdio.h>
+    #include <stdlib.h>
 
 /**
  * @brief Debug level logging macro.
  *
  * Macro to expose function, line number as well as desired log message.
  */
-#ifdef ENABLE_IOT_DEBUG
-#define IOT_DEBUG(...)    \
-	{\
-	printf("DEBUG:   %s L#%d ", __func__, __LINE__);  \
-	printf(__VA_ARGS__); \
-	printf("\n"); \
-	}
-#else
-#define IOT_DEBUG(...)
-#endif
+    #ifdef ENABLE_IOT_DEBUG
+        #define IOT_DEBUG( ... )                           \
+    {                                                      \
+        printf( "DEBUG:   %s L#%d ", __func__, __LINE__ ); \
+        printf( __VA_ARGS__ );                             \
+        printf( "\n" );                                    \
+    }
+    #else
+        #define IOT_DEBUG( ... )
+    #endif
 
 /**
  * @brief Debug level trace logging macro.
  *
  * Macro to print message function entry and exit
  */
-#ifdef ENABLE_IOT_TRACE
-#define FUNC_ENTRY    \
-	{\
-	printf("FUNC_ENTRY:   %s L#%d \n", __func__, __LINE__);  \
-	}
-#define FUNC_EXIT    \
-	{\
-	printf("FUNC_EXIT:   %s L#%d \n", __func__, __LINE__);  \
-	}
-#define FUNC_EXIT_RC(x)    \
-	{\
-	printf("FUNC_EXIT:   %s L#%d Return Code : %d \n", __func__, __LINE__, x);  \
-	return x; \
-	}
-#else
-#define FUNC_ENTRY
+    #ifdef ENABLE_IOT_TRACE
+        #define FUNC_ENTRY                                        \
+    {                                                             \
+        printf( "FUNC_ENTRY:   %s L#%d \n", __func__, __LINE__ ); \
+    }
+        #define FUNC_EXIT                                        \
+    {                                                            \
+        printf( "FUNC_EXIT:   %s L#%d \n", __func__, __LINE__ ); \
+    }
+        #define FUNC_EXIT_RC( x )                                                    \
+    {                                                                                \
+        printf( "FUNC_EXIT:   %s L#%d Return Code : %d \n", __func__, __LINE__, x ); \
+        return x;                                                                    \
+    }
+    #else /* ifdef ENABLE_IOT_TRACE */
+        #define FUNC_ENTRY
 
-#define FUNC_EXIT
-#define FUNC_EXIT_RC(x) { return x; }
-#endif
+        #define FUNC_EXIT
+        #define FUNC_EXIT_RC( x )    { return x; }
+    #endif /* ifdef ENABLE_IOT_TRACE */
 
 /**
  * @brief Info level logging macro.
  *
  * Macro to expose desired log message.  Info messages do not include automatic function names and line numbers.
  */
-#ifdef ENABLE_IOT_INFO
-#define IOT_INFO(...)    \
-	{\
-	printf(__VA_ARGS__); \
-	printf("\n"); \
-	}
-#else
-#define IOT_INFO(...)
-#endif
+    #ifdef ENABLE_IOT_INFO
+        #define IOT_INFO( ... ) \
+    {                           \
+        printf( __VA_ARGS__ );  \
+        printf( "\n" );         \
+    }
+    #else
+        #define IOT_INFO( ... )
+    #endif
 
 /**
  * @brief Warn level logging macro.
  *
  * Macro to expose function, line number as well as desired log message.
  */
-#ifdef ENABLE_IOT_WARN
-#define IOT_WARN(...)   \
-	{ \
-	printf("WARN:  %s L#%d ", __func__, __LINE__);  \
-	printf(__VA_ARGS__); \
-	printf("\n"); \
-	}
-#else
-#define IOT_WARN(...)
-#endif
+    #ifdef ENABLE_IOT_WARN
+        #define IOT_WARN( ... )                          \
+    {                                                    \
+        printf( "WARN:  %s L#%d ", __func__, __LINE__ ); \
+        printf( __VA_ARGS__ );                           \
+        printf( "\n" );                                  \
+    }
+    #else
+        #define IOT_WARN( ... )
+    #endif
 
 /**
  * @brief Error level logging macro.
  *
  * Macro to expose function, line number as well as desired log message.
  */
-#ifdef ENABLE_IOT_ERROR
-#define IOT_ERROR(...)  \
-	{ \
-	printf("ERROR: %s L#%d ", __func__, __LINE__); \
-	printf(__VA_ARGS__); \
-	printf("\n"); \
-	}
-#else
-#define IOT_ERROR(...)
-#endif
+    #ifdef ENABLE_IOT_ERROR
+        #define IOT_ERROR( ... )                         \
+    {                                                    \
+        printf( "ERROR: %s L#%d ", __func__, __LINE__ ); \
+        printf( __VA_ARGS__ );                           \
+        printf( "\n" );                                  \
+    }
+    #else
+        #define IOT_ERROR( ... )
+    #endif
 
-#ifdef __cplusplus
-}
-#endif
+    #ifdef __cplusplus
+        }
+    #endif
 
-#endif // _IOT_LOG_H
+#endif /* _IOT_LOG_H */

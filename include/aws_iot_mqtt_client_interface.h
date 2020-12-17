@@ -1,35 +1,36 @@
 /*
-* Copyright 2015-2016 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License").
-* You may not use this file except in compliance with the License.
-* A copy of the License is located at
-*
-* http://aws.amazon.com/apache2.0
-*
-* or in the "license" file accompanying this file. This file is distributed
-* on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
-* express or implied. See the License for the specific language governing
-* permissions and limitations under the License.
-*/
+ * Copyright 2015-2016 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ * http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
 
-// Based on Eclipse Paho.
+/* Based on Eclipse Paho. */
+
 /*******************************************************************************
- * Copyright (c) 2014 IBM Corp.
- *
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * and Eclipse Distribution License v1.0 which accompany this distribution.
- *
- * The Eclipse Public License is available at
- *    http://www.eclipse.org/legal/epl-v10.html
- * and the Eclipse Distribution License is available at
- *   http://www.eclipse.org/org/documents/edl-v10.php.
- *
- * Contributors:
- *    Ian Craggs - initial API and implementation and/or initial documentation
- *    Xiang Rong - 442039 Add makefile to Embedded C client
- *******************************************************************************/
+* Copyright (c) 2014 IBM Corp.
+*
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* and Eclipse Distribution License v1.0 which accompany this distribution.
+*
+* The Eclipse Public License is available at
+*    http://www.eclipse.org/legal/epl-v10.html
+* and the Eclipse Distribution License is available at
+*   http://www.eclipse.org/org/documents/edl-v10.php.
+*
+* Contributors:
+*    Ian Craggs - initial API and implementation and/or initial documentation
+*    Xiang Rong - 442039 Add makefile to Embedded C client
+*******************************************************************************/
 
 /**
  * @file aws_iot_mqtt_client_interface.h
@@ -37,26 +38,26 @@
  */
 
 #ifndef AWS_IOT_SDK_SRC_IOT_MQTT_INTERFACE_H
-#define AWS_IOT_SDK_SRC_IOT_MQTT_INTERFACE_H
+    #define AWS_IOT_SDK_SRC_IOT_MQTT_INTERFACE_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+    #ifdef __cplusplus
+        extern "C" {
+    #endif
 
 /* Library Header files */
-#include "stdio.h"
-#include "stdbool.h"
-#include "stdint.h"
-#include "stddef.h"
+    #include "stdio.h"
+    #include "stdbool.h"
+    #include "stdint.h"
+    #include "stddef.h"
 
 /* AWS Specific header files */
-#include "aws_iot_error.h"
-#include "aws_iot_config.h"
-#include "aws_iot_mqtt_client.h"
+    #include "aws_iot_error.h"
+    #include "aws_iot_config.h"
+    #include "aws_iot_mqtt_client.h"
 
 /* Platform specific implementation header files */
-#include "network_interface.h"
-#include "timer_interface.h"
+    #include "network_interface.h"
+    #include "timer_interface.h"
 
 /**
  * @functionspage{mqtt,MQTT library}
@@ -109,7 +110,8 @@ extern "C" {
  * @return `IoT_Error_t`: See `aws_iot_error.h`
  */
 /* @[declare_mqtt_init] */
-IoT_Error_t aws_iot_mqtt_init(AWS_IoT_Client *pClient, IoT_Client_Init_Params *pInitParams);
+    IoT_Error_t aws_iot_mqtt_init( AWS_IoT_Client * pClient,
+                                   IoT_Client_Init_Params * pInitParams );
 /* @[declare_mqtt_init] */
 
 /**
@@ -124,7 +126,7 @@ IoT_Error_t aws_iot_mqtt_init(AWS_IoT_Client *pClient, IoT_Client_Init_Params *p
  * @return `IoT_Error_t`: See `aws_iot_error.h`
  */
 /* @[declare_mqtt_free] */
-IoT_Error_t aws_iot_mqtt_free( AWS_IoT_Client *pClient );
+    IoT_Error_t aws_iot_mqtt_free( AWS_IoT_Client * pClient );
 /* @[declare_mqtt_free] */
 
 /**
@@ -140,7 +142,8 @@ IoT_Error_t aws_iot_mqtt_free( AWS_IoT_Client *pClient );
  * @return `IoT_Error_t`: See `aws_iot_error.h`
  */
 /* @[declare_mqtt_connect] */
-IoT_Error_t aws_iot_mqtt_connect(AWS_IoT_Client *pClient, IoT_Client_Connect_Params *pConnectParams);
+    IoT_Error_t aws_iot_mqtt_connect( AWS_IoT_Client * pClient,
+                                      IoT_Client_Connect_Params * pConnectParams );
 /* @[declare_mqtt_connect] */
 
 /**
@@ -162,8 +165,10 @@ IoT_Error_t aws_iot_mqtt_connect(AWS_IoT_Client *pClient, IoT_Client_Connect_Par
  * @return `IoT_Error_t`: See `aws_iot_error.h`
  */
 /* @[declare_mqtt_publish] */
-IoT_Error_t aws_iot_mqtt_publish(AWS_IoT_Client *pClient, const char *pTopicName, uint16_t topicNameLen,
-								 IoT_Publish_Message_Params *pParams);
+    IoT_Error_t aws_iot_mqtt_publish( AWS_IoT_Client * pClient,
+                                      const char * pTopicName,
+                                      uint16_t topicNameLen,
+                                      IoT_Publish_Message_Params * pParams );
 /* @[declare_mqtt_publish] */
 
 /**
@@ -191,8 +196,12 @@ IoT_Error_t aws_iot_mqtt_publish(AWS_IoT_Client *pClient, const char *pTopicName
  * of the subscription (until @ref mqtt_function_unsubscribe) is called.
  */
 /* @[declare_mqtt_subscribe] */
-IoT_Error_t aws_iot_mqtt_subscribe(AWS_IoT_Client *pClient, const char *pTopicName, uint16_t topicNameLen,
-								   QoS qos, pApplicationHandler_t pApplicationHandler, void *pApplicationHandlerData);
+    IoT_Error_t aws_iot_mqtt_subscribe( AWS_IoT_Client * pClient,
+                                        const char * pTopicName,
+                                        uint16_t topicNameLen,
+                                        QoS qos,
+                                        pApplicationHandler_t pApplicationHandler,
+                                        void * pApplicationHandlerData );
 /* @[declare_mqtt_subscribe] */
 
 /**
@@ -210,7 +219,7 @@ IoT_Error_t aws_iot_mqtt_subscribe(AWS_IoT_Client *pClient, const char *pTopicNa
  * @return `IoT_Error_t`: See `aws_iot_error.h`
  */
 /* @[declare_mqtt_resubscribe] */
-IoT_Error_t aws_iot_mqtt_resubscribe(AWS_IoT_Client *pClient);
+    IoT_Error_t aws_iot_mqtt_resubscribe( AWS_IoT_Client * pClient );
 /* @[declare_mqtt_resubscribe] */
 
 /**
@@ -227,7 +236,9 @@ IoT_Error_t aws_iot_mqtt_resubscribe(AWS_IoT_Client *pClient);
  * @return `IoT_Error_t`: See `aws_iot_error.h`
  */
 /* @[declare_mqtt_unsubscribe] */
-IoT_Error_t aws_iot_mqtt_unsubscribe(AWS_IoT_Client *pClient, const char *pTopicFilter, uint16_t topicFilterLen);
+    IoT_Error_t aws_iot_mqtt_unsubscribe( AWS_IoT_Client * pClient,
+                                          const char * pTopicFilter,
+                                          uint16_t topicFilterLen );
 /* @[declare_mqtt_unsubscribe] */
 
 /**
@@ -243,7 +254,7 @@ IoT_Error_t aws_iot_mqtt_unsubscribe(AWS_IoT_Client *pClient, const char *pTopic
  * @return `IoT_Error_t`: See `aws_iot_error.h`
  */
 /* @[declare_mqtt_disconnect] */
-IoT_Error_t aws_iot_mqtt_disconnect(AWS_IoT_Client *pClient);
+    IoT_Error_t aws_iot_mqtt_disconnect( AWS_IoT_Client * pClient );
 /* @[declare_mqtt_disconnect] */
 
 /**
@@ -274,7 +285,8 @@ IoT_Error_t aws_iot_mqtt_disconnect(AWS_IoT_Client *pClient);
  * needed, @ref mqtt_function_attempt_reconnect should be called.
  */
 /* @[declare_mqtt_yield] */
-IoT_Error_t aws_iot_mqtt_yield(AWS_IoT_Client *pClient, uint32_t timeout_ms);
+    IoT_Error_t aws_iot_mqtt_yield( AWS_IoT_Client * pClient,
+                                    uint32_t timeout_ms );
 /* @[declare_mqtt_yield] */
 
 /**
@@ -295,11 +307,11 @@ IoT_Error_t aws_iot_mqtt_yield(AWS_IoT_Client *pClient, uint32_t timeout_ms);
  * auto-reconnect has exhausted all attempts.
  */
 /* @[declare_mqtt_attempt_reconnect] */
-IoT_Error_t aws_iot_mqtt_attempt_reconnect(AWS_IoT_Client *pClient);
+    IoT_Error_t aws_iot_mqtt_attempt_reconnect( AWS_IoT_Client * pClient );
 /* @[declare_mqtt_attempt_reconnect] */
 
-#ifdef __cplusplus
-}
-#endif
+    #ifdef __cplusplus
+        }
+    #endif
 
-#endif
+#endif /* ifndef AWS_IOT_SDK_SRC_IOT_MQTT_INTERFACE_H */

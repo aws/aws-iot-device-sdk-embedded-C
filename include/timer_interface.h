@@ -1,18 +1,18 @@
 /*******************************************************************************
- * Copyright (c) 2014 IBM Corp.
- *
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * and Eclipse Distribution License v1.0 which accompany this distribution.
- *
- * The Eclipse Public License is available at
- *    http://www.eclipse.org/legal/epl-v10.html
- * and the Eclipse Distribution License is available at
- *   http://www.eclipse.org/org/documents/edl-v10.php.
- *
- * Contributors:
- *    Allan Stockdill-Mander - initial API and implementation and/or initial documentation
- *******************************************************************************/
+* Copyright (c) 2014 IBM Corp.
+*
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* and Eclipse Distribution License v1.0 which accompany this distribution.
+*
+* The Eclipse Public License is available at
+*    http://www.eclipse.org/legal/epl-v10.html
+* and the Eclipse Distribution License is available at
+*   http://www.eclipse.org/org/documents/edl-v10.php.
+*
+* Contributors:
+*    Allan Stockdill-Mander - initial API and implementation and/or initial documentation
+*******************************************************************************/
 
 /**
  * @file timer_interface.h
@@ -25,19 +25,19 @@
  */
 
 #ifndef __TIMER_INTERFACE_H_
-#define __TIMER_INTERFACE_H_
+    #define __TIMER_INTERFACE_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+    #ifdef __cplusplus
+        extern "C" {
+    #endif
 
 /**
  * The platform specific timer header that defines the Timer struct
  */
-#include "timer_platform.h"
+    #include "timer_platform.h"
 
-#include <stdint.h>
-#include <stdbool.h>
+    #include <stdint.h>
+    #include <stdbool.h>
 
 /**
  * @brief Timer Type
@@ -47,7 +47,7 @@ extern "C" {
  * in "timer_<platform>.h" and include that file above.
  *
  */
-typedef struct Timer Timer;
+    typedef struct Timer Timer;
 
 /**
  * @brief Check if a timer is expired
@@ -57,7 +57,7 @@ typedef struct Timer Timer;
  * @param Timer - pointer to the timer to be checked for expiration
  * @return bool - true = timer expired, false = timer not expired
  */
-bool has_timer_expired(Timer *);
+    bool has_timer_expired( Timer * );
 
 /**
  * @brief Create a timer (milliseconds)
@@ -67,7 +67,7 @@ bool has_timer_expired(Timer *);
  * @param Timer - pointer to the timer to be set to expire in milliseconds
  * @param uint32_t - set the timer to expire in this number of milliseconds
  */
-void countdown_ms(Timer *, uint32_t);
+    void countdown_ms( Timer *, uint32_t );
 
 /**
  * @brief Create a timer (seconds)
@@ -77,7 +77,7 @@ void countdown_ms(Timer *, uint32_t);
  * @param Timer - pointer to the timer to be set to expire in seconds
  * @param uint32_t - set the timer to expire in this number of seconds
  */
-void countdown_sec(Timer *, uint32_t);
+    void countdown_sec( Timer *, uint32_t );
 
 /**
  * @brief Check the time remaining on a given timer
@@ -87,7 +87,7 @@ void countdown_sec(Timer *, uint32_t);
  * @param Timer - pointer to the timer to be set to checked
  * @return int - milliseconds left on the countdown timer
  */
-uint32_t left_ms(Timer *);
+    uint32_t left_ms( Timer * );
 
 /**
  * @brief Initialize a timer
@@ -96,10 +96,10 @@ uint32_t left_ms(Timer *);
  *
  * @param Timer - pointer to the timer to be initialized
  */
-void init_timer(Timer *);
+    void init_timer( Timer * );
 
-#ifdef __cplusplus
-}
-#endif
+    #ifdef __cplusplus
+        }
+    #endif
 
-#endif //__TIMER_INTERFACE_H_
+#endif /*__TIMER_INTERFACE_H_ */

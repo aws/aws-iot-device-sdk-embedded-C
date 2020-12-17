@@ -22,24 +22,24 @@
  */
 
 #ifndef __NETWORK_INTERFACE_H_
-#define __NETWORK_INTERFACE_H_
+    #define __NETWORK_INTERFACE_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+    #ifdef __cplusplus
+        extern "C" {
+    #endif
 
-#include <stdint.h>
-#include <stdbool.h>
-#include <aws_iot_error.h>
-#include "timer_interface.h"
-#include "network_platform.h"
+    #include <stdint.h>
+    #include <stdbool.h>
+    #include <aws_iot_error.h>
+    #include "timer_interface.h"
+    #include "network_platform.h"
 
 /**
  * @brief Network Type
  *
  * Defines a type for the network struct.  See structure definition below.
  */
-typedef struct Network Network;
+    typedef struct Network Network;
 
 /**
  * @brief TLS Connection Parameters
@@ -47,33 +47,44 @@ typedef struct Network Network;
  * Defines a type containing TLS specific parameters to be passed down to the
  * TLS networking layer to create a TLS secured socket.
  */
-typedef struct {
-	char *pRootCALocation;                ///< Pointer to string containing the filename (including path) of the root CA file.
-	char *pDeviceCertLocation;            ///< Pointer to string containing the filename (including path) of the device certificate.
-	char *pDevicePrivateKeyLocation;    ///< Pointer to string containing the filename (including path) of the device private key file.
-	char *pDestinationURL;                ///< Pointer to string containing the endpoint of the MQTT service.
-	uint16_t DestinationPort;            ///< Integer defining the connection port of the MQTT service.
-	uint32_t timeout_ms;                ///< Unsigned integer defining the TLS handshake timeout value in milliseconds.
-	bool ServerVerificationFlag;        ///< Boolean.  True = perform server certificate hostname validation.  False = skip validation \b NOT recommended.
-} TLSConnectParams;
+    typedef struct
+    {
+        char * pRootCALocation;           /*/< Pointer to string containing the filename (including path) of the root CA file. */
+        char * pDeviceCertLocation;       /*/< Pointer to string containing the filename (including path) of the device certificate. */
+        char * pDevicePrivateKeyLocation; /*/< Pointer to string containing the filename (including path) of the device private key file. */
+        char * pDestinationURL;           /*/< Pointer to string containing the endpoint of the MQTT service. */
+        uint16_t DestinationPort;         /*/< Integer defining the connection port of the MQTT service. */
+        uint32_t timeout_ms;              /*/< Unsigned integer defining the TLS handshake timeout value in milliseconds. */
+        bool ServerVerificationFlag;      /*/< Boolean.  True = perform server certificate hostname validation.  False = skip validation \b NOT recommended. */
+    } TLSConnectParams;
 
 /**
  * @brief Network Structure
  *
  * Structure for defining a network connection.
  */
-struct Network {
-	IoT_Error_t (*connect)(Network *, TLSConnectParams *);
+    struct Network
+    {
+        IoT_Error_t (* connect)( Network *,
+                                 TLSConnectParams * );
 
-	IoT_Error_t (*read)(Network *, unsigned char *, size_t, Timer *, size_t *);    ///< Function pointer pointing to the network function to read from the network
-	IoT_Error_t (*write)(Network *, unsigned char *, size_t, Timer *, size_t *);    ///< Function pointer pointing to the network function to write to the network
-	IoT_Error_t (*disconnect)(Network *);    ///< Function pointer pointing to the network function to disconnect from the network
-	IoT_Error_t (*isConnected)(Network *);    ///< Function pointer pointing to the network function to check if TLS is connected
-	IoT_Error_t (*destroy)(Network *);        ///< Function pointer pointing to the network function to destroy the network object
+        IoT_Error_t (* read)( Network *,
+                              unsigned char *,
+                              size_t,
+                              Timer *,
+                              size_t * );                                          /*/< Function pointer pointing to the network function to read from the network */
+        IoT_Error_t (* write)( Network *,
+                               unsigned char *,
+                               size_t,
+                               Timer *,
+                               size_t * );        /*/< Function pointer pointing to the network function to write to the network */
+        IoT_Error_t (* disconnect)( Network * );  /*/< Function pointer pointing to the network function to disconnect from the network */
+        IoT_Error_t (* isConnected)( Network * ); /*/< Function pointer pointing to the network function to check if TLS is connected */
+        IoT_Error_t (* destroy)( Network * );     /*/< Function pointer pointing to the network function to destroy the network object */
 
-	TLSConnectParams tlsConnectParams;        ///< TLSConnect params structure containing the common connection parameters
-	TLSDataParams tlsDataParams;            ///< TLSData params structure containing the connection data parameters that are specific to the library being used
-};
+        TLSConnectParams tlsConnectParams;        /*/< TLSConnect params structure containing the common connection parameters */
+        TLSDataParams tlsDataParams;              /*/< TLSData params structure containing the connection data parameters that are specific to the library being used */
+    };
 
 /**
  * @brief Initialize the TLS implementation
@@ -93,9 +104,14 @@ struct Network {
  *
  * @return IoT_Error_t - successful initialization or TLS error
  */
-IoT_Error_t iot_tls_init(Network *pNetwork, char *pRootCALocation, char *pDeviceCertLocation,
-						 char *pDevicePrivateKeyLocation, char *pDestinationURL,
-						 uint16_t DestinationPort, uint32_t timeout_ms, bool ServerVerificationFlag);
+    IoT_Error_t iot_tls_init( Network * pNetwork,
+                              char * pRootCALocation,
+                              char * pDeviceCertLocation,
+                              char * pDevicePrivateKeyLocation,
+                              char * pDestinationURL,
+                              uint16_t DestinationPort,
+                              uint32_t timeout_ms,
+                              bool ServerVerificationFlag );
 
 /**
  * @brief Create a TLS socket and open the connection
@@ -106,7 +122,8 @@ IoT_Error_t iot_tls_init(Network *pNetwork, char *pRootCALocation, char *pDevice
  * @param TLSParams - TLSConnectParams defines the properties of the TLS connection.
  * @return IoT_Error_t - successful connection or TLS error
  */
-IoT_Error_t iot_tls_connect(Network *pNetwork, TLSConnectParams *TLSParams);
+    IoT_Error_t iot_tls_connect( Network * pNetwork,
+                                 TLSConnectParams * TLSParams );
 
 /**
  * @brief Write bytes to the network socket
@@ -118,7 +135,7 @@ IoT_Error_t iot_tls_connect(Network *pNetwork, TLSConnectParams *TLSParams);
  * @return integer - number of bytes written or TLS error
  * @return IoT_Error_t - successful write or TLS error code
  */
-IoT_Error_t iot_tls_write(Network *, unsigned char *, size_t, Timer *, size_t *);
+    IoT_Error_t iot_tls_write( Network *, unsigned char *, size_t, Timer *, size_t * );
 
 /**
  * @brief Read bytes from the network socket
@@ -130,7 +147,7 @@ IoT_Error_t iot_tls_write(Network *, unsigned char *, size_t, Timer *, size_t *)
  * @param size_t - pointer to store number of bytes read
  * @return IoT_Error_t - successful read or TLS error code
  */
-IoT_Error_t iot_tls_read(Network *, unsigned char *, size_t, Timer *, size_t *);
+    IoT_Error_t iot_tls_read( Network *, unsigned char *, size_t, Timer *, size_t * );
 
 /**
  * @brief Disconnect from network socket
@@ -138,7 +155,7 @@ IoT_Error_t iot_tls_read(Network *, unsigned char *, size_t, Timer *, size_t *);
  * @param Network - Pointer to a Network struct defining the network interface.
  * @return IoT_Error_t - successful read or TLS error code
  */
-IoT_Error_t iot_tls_disconnect(Network *pNetwork);
+    IoT_Error_t iot_tls_disconnect( Network * pNetwork );
 
 /**
  * @brief Perform any tear-down or cleanup of TLS layer
@@ -148,7 +165,7 @@ IoT_Error_t iot_tls_disconnect(Network *pNetwork);
  * @param Network - Pointer to a Network struct defining the network interface
  * @return IoT_Error_t - successful cleanup or TLS error code
  */
-IoT_Error_t iot_tls_destroy(Network *pNetwork);
+    IoT_Error_t iot_tls_destroy( Network * pNetwork );
 
 /**
  * @brief Check if TLS layer is still connected
@@ -158,10 +175,10 @@ IoT_Error_t iot_tls_destroy(Network *pNetwork);
  * @param Network - Pointer to a Network struct defining the network interface
  * @return IoT_Error_t - TLS error code indicating status of network physical layer connection
  */
-IoT_Error_t iot_tls_is_connected(Network *pNetwork);
+    IoT_Error_t iot_tls_is_connected( Network * pNetwork );
 
-#ifdef __cplusplus
-}
-#endif
+    #ifdef __cplusplus
+        }
+    #endif
 
-#endif //__NETWORK_INTERFACE_H_
+#endif /*__NETWORK_INTERFACE_H_ */

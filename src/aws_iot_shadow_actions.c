@@ -19,7 +19,7 @@
  */
 
 #ifdef __cplusplus
-extern "C" {
+    extern "C" {
 #endif
 
 #include "aws_iot_shadow_actions.h"
@@ -29,50 +29,66 @@ extern "C" {
 #include "aws_iot_shadow_records.h"
 #include "aws_iot_config.h"
 
-IoT_Error_t aws_iot_shadow_internal_action(const char *pThingName, ShadowActions_t action,
-										   const char *pJsonDocumentToBeSent, size_t jsonSize, fpActionCallback_t callback,
-										   void *pCallbackContext, uint32_t timeout_seconds, bool isSticky) {
-	IoT_Error_t ret_val = SUCCESS;
-	bool isClientTokenPresent = false;
-	bool isAckWaitListFree = false;
-	uint8_t indexAckWaitList;
-	char extractedClientToken[MAX_SIZE_CLIENT_ID_WITH_SEQUENCE];
+IoT_Error_t aws_iot_shadow_internal_action( const char * pThingName,
+                                            ShadowActions_t action,
+                                            const char * pJsonDocumentToBeSent,
+                                            size_t jsonSize,
+                                            fpActionCallback_t callback,
+                                            void * pCallbackContext,
+                                            uint32_t timeout_seconds,
+                                            bool isSticky )
+{
+    IoT_Error_t ret_val = SUCCESS;
+    bool isClientTokenPresent = false;
+    bool isAckWaitListFree = false;
+    uint8_t indexAckWaitList;
+    char extractedClientToken[ MAX_SIZE_CLIENT_ID_WITH_SEQUENCE ];
 
-	FUNC_ENTRY;
+    FUNC_ENTRY;
 
-	if(NULL == pThingName || NULL == pJsonDocumentToBeSent) {
-		FUNC_EXIT_RC(NULL_VALUE_ERROR);
-	}
+    if( ( NULL == pThingName ) || ( NULL == pJsonDocumentToBeSent ) )
+    {
+        FUNC_EXIT_RC( NULL_VALUE_ERROR );
+    }
 
-	isClientTokenPresent = extractClientToken(pJsonDocumentToBeSent, jsonSize, extractedClientToken, MAX_SIZE_CLIENT_ID_WITH_SEQUENCE );
+    isClientTokenPresent = extractClientToken( pJsonDocumentToBeSent, jsonSize, extractedClientToken, MAX_SIZE_CLIENT_ID_WITH_SEQUENCE );
 
-	if(isClientTokenPresent && (NULL != callback)) {
-		if(getNextFreeIndexOfAckWaitList(&indexAckWaitList)) {
-			isAckWaitListFree = true;
-		}
+    if( isClientTokenPresent && ( NULL != callback ) )
+    {
+        if( getNextFreeIndexOfAckWaitList( &indexAckWaitList ) )
+        {
+            isAckWaitListFree = true;
+        }
 
-		if(isAckWaitListFree) {
-			if(!isSubscriptionPresent(pThingName, action)) {
-				ret_val = subscribeToShadowActionAcks(pThingName, action, isSticky);
-			} else {
-				incrementSubscriptionCnt(pThingName, action, isSticky);
-			}
-		}
-		else {
-			ret_val = FAILURE;
-		}
-	}
+        if( isAckWaitListFree )
+        {
+            if( !isSubscriptionPresent( pThingName, action ) )
+            {
+                ret_val = subscribeToShadowActionAcks( pThingName, action, isSticky );
+            }
+            else
+            {
+                incrementSubscriptionCnt( pThingName, action, isSticky );
+            }
+        }
+        else
+        {
+            ret_val = FAILURE;
+        }
+    }
 
-	if(SUCCESS == ret_val) {
-		ret_val = publishToShadowAction(pThingName, action, pJsonDocumentToBeSent);
-	}
+    if( SUCCESS == ret_val )
+    {
+        ret_val = publishToShadowAction( pThingName, action, pJsonDocumentToBeSent );
+    }
 
-	if(isClientTokenPresent && (NULL != callback) && (SUCCESS == ret_val) && isAckWaitListFree) {
-		addToAckWaitList(indexAckWaitList, pThingName, action, extractedClientToken, callback, pCallbackContext,
-						 timeout_seconds);
-	}
+    if( isClientTokenPresent && ( NULL != callback ) && ( SUCCESS == ret_val ) && isAckWaitListFree )
+    {
+        addToAckWaitList( indexAckWaitList, pThingName, action, extractedClientToken, callback, pCallbackContext,
+                          timeout_seconds );
+    }
 
-	FUNC_EXIT_RC(ret_val);
+    FUNC_EXIT_RC( ret_val );
 }
 
 #ifdef __cplusplus

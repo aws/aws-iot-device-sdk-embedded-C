@@ -13,11 +13,11 @@
  * permissions and limitations under the License.
  */
 #ifndef AWS_IOT_SDK_SRC_IOT_SHADOW_H_
-#define AWS_IOT_SDK_SRC_IOT_SHADOW_H_
+    #define AWS_IOT_SDK_SRC_IOT_SHADOW_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+    #ifdef __cplusplus
+        extern "C" {
+    #endif
 
 
 /**
@@ -37,8 +37,8 @@ extern "C" {
  *
  *
  */
-#include "aws_iot_mqtt_client_interface.h"
-#include "aws_iot_shadow_json_data.h"
+    #include "aws_iot_mqtt_client_interface.h"
+    #include "aws_iot_shadow_json_data.h"
 
 /*!
  * @brief Shadow Initialization parameters
@@ -49,15 +49,16 @@ extern "C" {
  *
  *
  */
-typedef struct {
-	char *pHost; ///< This will be unique to a customer and can be retrieved from the console
-	uint16_t port; ///< Network port for TCP/IP socket
-	char *pRootCA; ///< Location with the Filename of the Root CA
-	char *pClientCRT; ///< Location of Device certs signed by AWS IoT service
-	char *pClientKey; ///< Location of Device private key
-	bool enableAutoReconnect;        ///< Set to true to enable auto reconnect
-	iot_disconnect_handler disconnectHandler;    ///< Callback to be invoked upon connection loss.
-} ShadowInitParameters_t;
+    typedef struct
+    {
+        char * pHost;                             /*/< This will be unique to a customer and can be retrieved from the console */
+        uint16_t port;                            /*/< Network port for TCP/IP socket */
+        char * pRootCA;                           /*/< Location with the Filename of the Root CA */
+        char * pClientCRT;                        /*/< Location of Device certs signed by AWS IoT service */
+        char * pClientKey;                        /*/< Location of Device private key */
+        bool enableAutoReconnect;                 /*/< Set to true to enable auto reconnect */
+        iot_disconnect_handler disconnectHandler; /*/< Callback to be invoked upon connection loss. */
+    } ShadowInitParameters_t;
 
 /*!
  * @brief Shadow Connect parameters
@@ -65,15 +66,16 @@ typedef struct {
  * As the Shadow SDK uses MQTT underneath, it could be connected and disconnected on events to save some battery.
  * @note Always use the \c ShadowConnectParametersDefault to initialize this struct
  *
- *d
+ * d
  *
  */
-typedef struct {
-	char *pMyThingName; ///< Every device has a Thing Shadow and this is the placeholder for name
-	char *pMqttClientId; ///< Currently the Shadow uses MQTT to connect and it is important to ensure we have unique client id
-	uint16_t mqttClientIdLen; ///< Currently the Shadow uses MQTT to connect and it is important to ensure we have unique client id
-	pApplicationHandler_t deleteActionHandler;	///< Callback to be invoked when Thing shadow for this device is deleted
-} ShadowConnectParameters_t;
+    typedef struct
+    {
+        char * pMyThingName;                       /*/< Every device has a Thing Shadow and this is the placeholder for name */
+        char * pMqttClientId;                      /*/< Currently the Shadow uses MQTT to connect and it is important to ensure we have unique client id */
+        uint16_t mqttClientIdLen;                  /*/< Currently the Shadow uses MQTT to connect and it is important to ensure we have unique client id */
+        pApplicationHandler_t deleteActionHandler; /*/< Callback to be invoked when Thing shadow for this device is deleted */
+    } ShadowConnectParameters_t;
 
 /*!
  * @brief This is set to defaults from the configuration file
@@ -81,7 +83,7 @@ typedef struct {
  *
  * \relates ShadowInitParameters_t
  */
-extern const ShadowInitParameters_t ShadowInitParametersDefault;
+    extern const ShadowInitParameters_t ShadowInitParametersDefault;
 
 /*!
  * @brief This is set to defaults from the configuration file
@@ -91,17 +93,17 @@ extern const ShadowInitParameters_t ShadowInitParametersDefault;
  *
  * \relates ShadowConnectParameters_t
  */
-extern const ShadowConnectParameters_t ShadowConnectParametersDefault;
+    extern const ShadowConnectParameters_t ShadowConnectParametersDefault;
 
 /**
-* @brief Clean shadow client from all dynamic memory allocate
-*
-* This function will free up memory that was dynamically allocated for the client. 
-*
-* @param pClient MQTT Client that was previously created by calling aws_iot_shadow_init
-* @return An IoT Error Type defining successful/failed freeing
-*/
-IoT_Error_t aws_iot_shadow_free(AWS_IoT_Client *pClient);
+ * @brief Clean shadow client from all dynamic memory allocate
+ *
+ * This function will free up memory that was dynamically allocated for the client.
+ *
+ * @param pClient MQTT Client that was previously created by calling aws_iot_shadow_init
+ * @return An IoT Error Type defining successful/failed freeing
+ */
+    IoT_Error_t aws_iot_shadow_free( AWS_IoT_Client * pClient );
 
 /**
  * @brief Initialize the Thing Shadow before use
@@ -111,7 +113,8 @@ IoT_Error_t aws_iot_shadow_free(AWS_IoT_Client *pClient);
  * @param pClient A new MQTT Client to be used as the protocol layer. Will be initialized with pParams.
  * @return An IoT Error Type defining successful/failed Initialization
  */
-IoT_Error_t aws_iot_shadow_init(AWS_IoT_Client *pClient, ShadowInitParameters_t *pParams);
+    IoT_Error_t aws_iot_shadow_init( AWS_IoT_Client * pClient,
+                                     ShadowInitParameters_t * pParams );
 
 /**
  * @brief Connect to the AWS IoT Thing Shadow service over MQTT
@@ -122,7 +125,8 @@ IoT_Error_t aws_iot_shadow_init(AWS_IoT_Client *pClient, ShadowInitParameters_t 
  * @param pParams	Shadow Conenction parameters like TLS cert location
  * @return An IoT Error Type defining successful/failed Connection
  */
-IoT_Error_t aws_iot_shadow_connect(AWS_IoT_Client *pClient, ShadowConnectParameters_t *pParams);
+    IoT_Error_t aws_iot_shadow_connect( AWS_IoT_Client * pClient,
+                                        ShadowConnectParameters_t * pParams );
 
 /**
  * @brief Yield function to let the background tasks of MQTT and Shadow
@@ -135,7 +139,8 @@ IoT_Error_t aws_iot_shadow_connect(AWS_IoT_Client *pClient, ShadowConnectParamet
  * @param timeout	in milliseconds, This is the maximum time the yield function will wait for a message and/or read the messages from the TLS buffer
  * @return An IoT Error Type defining successful/failed Yield
  */
-IoT_Error_t aws_iot_shadow_yield(AWS_IoT_Client *pClient, uint32_t timeout);
+    IoT_Error_t aws_iot_shadow_yield( AWS_IoT_Client * pClient,
+                                      uint32_t timeout );
 
 /**
  * @brief Disconnect from the AWS IoT Thing Shadow service over MQTT
@@ -145,7 +150,7 @@ IoT_Error_t aws_iot_shadow_yield(AWS_IoT_Client *pClient, uint32_t timeout);
  * @param pClient	MQTT Client used as the protocol layer
  * @return An IoT Error Type defining successful/failed disconnect status
  */
-IoT_Error_t aws_iot_shadow_disconnect(AWS_IoT_Client *pClient);
+    IoT_Error_t aws_iot_shadow_disconnect( AWS_IoT_Client * pClient );
 
 /**
  * @brief Thing Shadow Acknowledgment enum
@@ -153,9 +158,10 @@ IoT_Error_t aws_iot_shadow_disconnect(AWS_IoT_Client *pClient);
  * This enum type is use in the callback for the action response
  *
  */
-typedef enum {
-	SHADOW_ACK_TIMEOUT, SHADOW_ACK_REJECTED, SHADOW_ACK_ACCEPTED
-} Shadow_Ack_Status_t;
+    typedef enum
+    {
+        SHADOW_ACK_TIMEOUT, SHADOW_ACK_REJECTED, SHADOW_ACK_ACCEPTED
+    } Shadow_Ack_Status_t;
 
 /**
  * @brief Thing Shadow Action type enum
@@ -163,9 +169,10 @@ typedef enum {
  * This enum type is use in the callback for the action response
  *
  */
-typedef enum {
-	SHADOW_GET, SHADOW_UPDATE, SHADOW_DELETE
-} ShadowActions_t;
+    typedef enum
+    {
+        SHADOW_GET, SHADOW_UPDATE, SHADOW_DELETE
+    } ShadowActions_t;
 
 
 /**
@@ -180,8 +187,11 @@ typedef enum {
  * @param pContextData the void* data passed in during the action call(update, get or delete)
  *
  */
-typedef void (*fpActionCallback_t)(const char *pThingName, ShadowActions_t action, Shadow_Ack_Status_t status,
-								   const char *pReceivedJsonDocument, void *pContextData);
+    typedef void (* fpActionCallback_t)( const char * pThingName,
+                                         ShadowActions_t action,
+                                         Shadow_Ack_Status_t status,
+                                         const char * pReceivedJsonDocument,
+                                         void * pContextData );
 
 /**
  * @brief This function is the one used to perform an Update action to a Thing Name's Shadow.
@@ -206,9 +216,13 @@ typedef void (*fpActionCallback_t)(const char *pThingName, ShadowActions_t actio
  * @param isPersistentSubscribe As mentioned above, every  time if a device updates the same shadow then this should be set to true to avoid repeated subscription and unsubscription. If the Thing Name is one off update then this should be set to false
  * @return An IoT Error Type defining successful/failed update action
  */
-IoT_Error_t aws_iot_shadow_update(AWS_IoT_Client *pClient, const char *pThingName, char *pJsonString,
-								  fpActionCallback_t callback, void *pContextData, uint8_t timeout_seconds,
-								  bool isPersistentSubscribe);
+    IoT_Error_t aws_iot_shadow_update( AWS_IoT_Client * pClient,
+                                       const char * pThingName,
+                                       char * pJsonString,
+                                       fpActionCallback_t callback,
+                                       void * pContextData,
+                                       uint8_t timeout_seconds,
+                                       bool isPersistentSubscribe );
 
 /**
  * @brief This function is the one used to perform an Get action to a Thing Name's Shadow.
@@ -224,8 +238,12 @@ IoT_Error_t aws_iot_shadow_update(AWS_IoT_Client *pClient, const char *pThingNam
  * @param isPersistentSubscribe As mentioned above, every  time if a device gets the same Sahdow (JSON document) then this should be set to true to avoid repeated subscription and un-subscription. If the Thing Name is one off get then this should be set to false
  * @return An IoT Error Type defining successful/failed get action
  */
-IoT_Error_t aws_iot_shadow_get(AWS_IoT_Client *pClient, const char *pThingName, fpActionCallback_t callback,
-							   void *pContextData, uint8_t timeout_seconds, bool isPersistentSubscribe);
+    IoT_Error_t aws_iot_shadow_get( AWS_IoT_Client * pClient,
+                                    const char * pThingName,
+                                    fpActionCallback_t callback,
+                                    void * pContextData,
+                                    uint8_t timeout_seconds,
+                                    bool isPersistentSubscribe );
 
 /**
  * @brief This function is the one used to perform an Delete action to a Thing Name's Shadow.
@@ -241,8 +259,12 @@ IoT_Error_t aws_iot_shadow_get(AWS_IoT_Client *pClient, const char *pThingName, 
  * @param isPersistentSubscribe As mentioned above, every  time if a device deletes the same Shadow (JSON document) then this should be set to true to avoid repeated subscription and un-subscription. If the Thing Name is one off delete then this should be set to false
  * @return An IoT Error Type defining successful/failed delete action
  */
-IoT_Error_t aws_iot_shadow_delete(AWS_IoT_Client *pClient, const char *pThingName, fpActionCallback_t callback,
-								  void *pContextData, uint8_t timeout_seconds, bool isPersistentSubscriptions);
+    IoT_Error_t aws_iot_shadow_delete( AWS_IoT_Client * pClient,
+                                       const char * pThingName,
+                                       fpActionCallback_t callback,
+                                       void * pContextData,
+                                       uint8_t timeout_seconds,
+                                       bool isPersistentSubscriptions );
 
 /**
  * @brief This function is used to listen on the delta topic of #AWS_IOT_MY_THING_NAME mentioned in the aws_iot_config.h file.
@@ -253,7 +275,8 @@ IoT_Error_t aws_iot_shadow_delete(AWS_IoT_Client *pClient, const char *pThingNam
  * @param pStruct The struct used to parse JSON value
  * @return An IoT Error Type defining successful/failed delta registering
  */
-IoT_Error_t aws_iot_shadow_register_delta(AWS_IoT_Client *pClient, jsonStruct_t *pStruct);
+    IoT_Error_t aws_iot_shadow_register_delta( AWS_IoT_Client * pClient,
+                                               jsonStruct_t * pStruct );
 
 /**
  * @brief Reset the last received version number to zero.
@@ -261,7 +284,7 @@ IoT_Error_t aws_iot_shadow_register_delta(AWS_IoT_Client *pClient, jsonStruct_t 
  * @return no return values
  *
  */
-void aws_iot_shadow_reset_last_received_version(void);
+    void aws_iot_shadow_reset_last_received_version( void );
 
 /**
  * @brief Version of a document is received with every accepted/rejected and the SDK keeps track of the last received version of the JSON document of #AWS_IOT_MY_THING_NAME shadow
@@ -272,19 +295,19 @@ void aws_iot_shadow_reset_last_received_version(void);
  * @return version number of the last received response
  *
  */
-uint32_t aws_iot_shadow_get_last_received_version(void);
+    uint32_t aws_iot_shadow_get_last_received_version( void );
 
 /**
  * @brief Enable the ignoring of delta messages with old version number
  *
  * As we use MQTT underneath, there could be more than 1 of the same message if we use QoS 0. To avoid getting called for the same message, this functionality should be enabled. All the old message will be ignored
  */
-void aws_iot_shadow_enable_discard_old_delta_msgs(void);
+    void aws_iot_shadow_enable_discard_old_delta_msgs( void );
 
 /**
  * @brief Disable the ignoring of delta messages with old version number
  */
-void aws_iot_shadow_disable_discard_old_delta_msgs(void);
+    void aws_iot_shadow_disable_discard_old_delta_msgs( void );
 
 /**
  * @brief This function is used to enable or disable autoreconnect
@@ -296,10 +319,11 @@ void aws_iot_shadow_disable_discard_old_delta_msgs(void);
  *
  * @return An IoT Error Type defining successful/failed operation
  */
-IoT_Error_t aws_iot_shadow_set_autoreconnect_status(AWS_IoT_Client *pClient, bool newStatus);
+    IoT_Error_t aws_iot_shadow_set_autoreconnect_status( AWS_IoT_Client * pClient,
+                                                         bool newStatus );
 
-#ifdef __cplusplus
-}
-#endif
+    #ifdef __cplusplus
+        }
+    #endif
 
-#endif //AWS_IOT_SDK_SRC_IOT_SHADOW_H_
+#endif /*AWS_IOT_SDK_SRC_IOT_SHADOW_H_ */

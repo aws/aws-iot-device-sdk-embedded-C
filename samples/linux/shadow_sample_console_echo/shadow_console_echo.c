@@ -53,9 +53,9 @@
  * @note Ensure the buffer sizes in aws_iot_config.h are big enough to receive the delta message. The delta message will also contain the metadata with the timestamps
  */
 
-static char certDirectory[PATH_MAX + 1] = "../../../certs";
-#define HOST_ADDRESS_SIZE 255
-static char HostAddress[HOST_ADDRESS_SIZE] = AWS_IOT_MQTT_HOST;
+static char certDirectory[ PATH_MAX + 1 ] = "../../../certs";
+#define HOST_ADDRESS_SIZE    255
+static char HostAddress[ HOST_ADDRESS_SIZE ] = AWS_IOT_MQTT_HOST;
 static uint32_t port = AWS_IOT_MQTT_PORT;
 static bool messageArrivedOnDelta = false;
 
@@ -63,7 +63,7 @@ static bool messageArrivedOnDelta = false;
  * @note The delta message is always sent on the "state" key in the json
  * @note Any time messages are bigger than AWS_IOT_MQTT_RX_BUF_LEN the underlying MQTT library will ignore it. The maximum size of the message that can be received is limited to the AWS_IOT_MQTT_RX_BUF_LEN
  */
-static char stringToEchoDelta[SHADOW_MAX_SIZE_OF_RX_BUFFER];
+static char stringToEchoDelta[ SHADOW_MAX_SIZE_OF_RX_BUFFER ];
 
 
 /**
@@ -74,198 +74,245 @@ static char stringToEchoDelta[SHADOW_MAX_SIZE_OF_RX_BUFFER];
  * @param pReceivedDeltaData This is the data that will be embedded in the reported section of the JSON document
  * @param lengthDelta Length of the data
  */
-static bool buildJSONForReported(char *pJsonDocument, size_t maxSizeOfJsonDocument, const char *pReceivedDeltaData, uint32_t lengthDelta) {
-	int32_t ret;
+static bool buildJSONForReported( char * pJsonDocument,
+                                  size_t maxSizeOfJsonDocument,
+                                  const char * pReceivedDeltaData,
+                                  uint32_t lengthDelta )
+{
+    int32_t ret;
 
-	if (NULL == pJsonDocument) {
-		return false;
-	}
+    if( NULL == pJsonDocument )
+    {
+        return false;
+    }
 
-	char tempClientTokenBuffer[MAX_SIZE_CLIENT_TOKEN_CLIENT_SEQUENCE];
+    char tempClientTokenBuffer[ MAX_SIZE_CLIENT_TOKEN_CLIENT_SEQUENCE ];
 
-	if(aws_iot_fill_with_client_token(tempClientTokenBuffer, MAX_SIZE_CLIENT_TOKEN_CLIENT_SEQUENCE) != SUCCESS){
-		return false;
-	}
+    if( aws_iot_fill_with_client_token( tempClientTokenBuffer, MAX_SIZE_CLIENT_TOKEN_CLIENT_SEQUENCE ) != SUCCESS )
+    {
+        return false;
+    }
 
-	ret = snprintf(pJsonDocument, maxSizeOfJsonDocument, "{\"state\":{\"reported\":%.*s}, \"clientToken\":\"%s\"}", lengthDelta, pReceivedDeltaData, tempClientTokenBuffer);
+    ret = snprintf( pJsonDocument, maxSizeOfJsonDocument, "{\"state\":{\"reported\":%.*s}, \"clientToken\":\"%s\"}", lengthDelta, pReceivedDeltaData, tempClientTokenBuffer );
 
-	if (ret >= maxSizeOfJsonDocument || ret < 0) {
-		return false;
-	}
+    if( ( ret >= maxSizeOfJsonDocument ) || ( ret < 0 ) )
+    {
+        return false;
+    }
 
-	return true;
+    return true;
 }
 
-// Helper functions
-static void parseInputArgsForConnectParams(int argc, char** argv) {
-	int opt;
+/* Helper functions */
+static void parseInputArgsForConnectParams( int argc,
+                                            char ** argv )
+{
+    int opt;
 
-	while (-1 != (opt = getopt(argc, argv, "h:p:c:"))) {
-		switch (opt) {
-		case 'h':
-			strncpy(HostAddress, optarg, HOST_ADDRESS_SIZE);
-			IOT_DEBUG("Host %s", optarg);
-			break;
-		case 'p':
-			port = atoi(optarg);
-			IOT_DEBUG("arg %s", optarg);
-			break;
-		case 'c':
-			strncpy(certDirectory, optarg, PATH_MAX + 1);
-			IOT_DEBUG("cert root directory %s", optarg);
-			break;
-		case '?':
-			if (optopt == 'c') {
-				IOT_ERROR("Option -%c requires an argument.", optopt);
-			} else if (isprint(optopt)) {
-				IOT_WARN("Unknown option `-%c'.", optopt);
-			} else {
-				IOT_WARN("Unknown option character `\\x%x'.", optopt);
-			}
-			break;
-		default:
-			IOT_ERROR("ERROR in command line argument parsing");
-			break;
-		}
-	}
+    while( -1 != ( opt = getopt( argc, argv, "h:p:c:" ) ) )
+    {
+        switch( opt )
+        {
+            case 'h':
+                strncpy( HostAddress, optarg, HOST_ADDRESS_SIZE );
+                IOT_DEBUG( "Host %s", optarg );
+                break;
 
+            case 'p':
+                port = atoi( optarg );
+                IOT_DEBUG( "arg %s", optarg );
+                break;
+
+            case 'c':
+                strncpy( certDirectory, optarg, PATH_MAX + 1 );
+                IOT_DEBUG( "cert root directory %s", optarg );
+                break;
+
+            case '?':
+
+                if( optopt == 'c' )
+                {
+                    IOT_ERROR( "Option -%c requires an argument.", optopt );
+                }
+                else if( isprint( optopt ) )
+                {
+                    IOT_WARN( "Unknown option `-%c'.", optopt );
+                }
+                else
+                {
+                    IOT_WARN( "Unknown option character `\\x%x'.", optopt );
+                }
+
+                break;
+
+            default:
+                IOT_ERROR( "ERROR in command line argument parsing" );
+                break;
+        }
+    }
 }
 
-// Shadow Callback for receiving the delta
-static void DeltaCallback(const char *pJsonValueBuffer, uint32_t valueLength, jsonStruct_t *pJsonStruct_t) {
-	IOT_UNUSED(pJsonStruct_t);
+/* Shadow Callback for receiving the delta */
+static void DeltaCallback( const char * pJsonValueBuffer,
+                           uint32_t valueLength,
+                           jsonStruct_t * pJsonStruct_t )
+{
+    IOT_UNUSED( pJsonStruct_t );
 
-	IOT_DEBUG("Received Delta message %.*s", valueLength, pJsonValueBuffer);
+    IOT_DEBUG( "Received Delta message %.*s", valueLength, pJsonValueBuffer );
 
-	if (buildJSONForReported(stringToEchoDelta, SHADOW_MAX_SIZE_OF_RX_BUFFER, pJsonValueBuffer, valueLength)) {
-		messageArrivedOnDelta = true;
-	}
+    if( buildJSONForReported( stringToEchoDelta, SHADOW_MAX_SIZE_OF_RX_BUFFER, pJsonValueBuffer, valueLength ) )
+    {
+        messageArrivedOnDelta = true;
+    }
 }
 
-static void UpdateStatusCallback(const char *pThingName, ShadowActions_t action, Shadow_Ack_Status_t status,
-		const char *pReceivedJsonDocument, void *pContextData) {
-	IOT_UNUSED(pThingName);
-	IOT_UNUSED(action);
-	IOT_UNUSED(pReceivedJsonDocument);
-	IOT_UNUSED(pContextData);
+static void UpdateStatusCallback( const char * pThingName,
+                                  ShadowActions_t action,
+                                  Shadow_Ack_Status_t status,
+                                  const char * pReceivedJsonDocument,
+                                  void * pContextData )
+{
+    IOT_UNUSED( pThingName );
+    IOT_UNUSED( action );
+    IOT_UNUSED( pReceivedJsonDocument );
+    IOT_UNUSED( pContextData );
 
-	if(SHADOW_ACK_TIMEOUT == status) {
-		IOT_INFO("Update Timeout--");
-	} else if(SHADOW_ACK_REJECTED == status) {
-		IOT_INFO("Update RejectedXX");
-	} else if(SHADOW_ACK_ACCEPTED == status) {
-		IOT_INFO("Update Accepted !!");
-	}
+    if( SHADOW_ACK_TIMEOUT == status )
+    {
+        IOT_INFO( "Update Timeout--" );
+    }
+    else if( SHADOW_ACK_REJECTED == status )
+    {
+        IOT_INFO( "Update RejectedXX" );
+    }
+    else if( SHADOW_ACK_ACCEPTED == status )
+    {
+        IOT_INFO( "Update Accepted !!" );
+    }
 }
 
-int main(int argc, char** argv) {
-	IoT_Error_t rc = SUCCESS;
+int main( int argc,
+          char ** argv )
+{
+    IoT_Error_t rc = SUCCESS;
 
-	char rootCA[PATH_MAX + 1];
-	char clientCRT[PATH_MAX + 1];
-	char clientKey[PATH_MAX + 1];
-	char CurrentWD[PATH_MAX + 1];
+    char rootCA[ PATH_MAX + 1 ];
+    char clientCRT[ PATH_MAX + 1 ];
+    char clientKey[ PATH_MAX + 1 ];
+    char CurrentWD[ PATH_MAX + 1 ];
 
-	IOT_INFO("\nAWS IoT SDK Version %d.%d.%d-%s\n", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, VERSION_TAG);
+    IOT_INFO( "\nAWS IoT SDK Version %d.%d.%d-%s\n", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, VERSION_TAG );
 
-	getcwd(CurrentWD, sizeof(CurrentWD));
-	snprintf(rootCA, PATH_MAX + 1, "%s/%s/%s", CurrentWD, certDirectory, AWS_IOT_ROOT_CA_FILENAME);
-	snprintf(clientCRT, PATH_MAX + 1, "%s/%s/%s", CurrentWD, certDirectory, AWS_IOT_CERTIFICATE_FILENAME);
-	snprintf(clientKey, PATH_MAX + 1, "%s/%s/%s", CurrentWD, certDirectory, AWS_IOT_PRIVATE_KEY_FILENAME);
+    getcwd( CurrentWD, sizeof( CurrentWD ) );
+    snprintf( rootCA, PATH_MAX + 1, "%s/%s/%s", CurrentWD, certDirectory, AWS_IOT_ROOT_CA_FILENAME );
+    snprintf( clientCRT, PATH_MAX + 1, "%s/%s/%s", CurrentWD, certDirectory, AWS_IOT_CERTIFICATE_FILENAME );
+    snprintf( clientKey, PATH_MAX + 1, "%s/%s/%s", CurrentWD, certDirectory, AWS_IOT_PRIVATE_KEY_FILENAME );
 
-	IOT_DEBUG("rootCA %s", rootCA);
-	IOT_DEBUG("clientCRT %s", clientCRT);
-	IOT_DEBUG("clientKey %s", clientKey);
+    IOT_DEBUG( "rootCA %s", rootCA );
+    IOT_DEBUG( "clientCRT %s", clientCRT );
+    IOT_DEBUG( "clientKey %s", clientKey );
 
-	parseInputArgsForConnectParams(argc, argv);
+    parseInputArgsForConnectParams( argc, argv );
 
-	// initialize the mqtt client
-	AWS_IoT_Client mqttClient;
+    /* initialize the mqtt client */
+    AWS_IoT_Client mqttClient;
 
-	ShadowInitParameters_t sp = ShadowInitParametersDefault;
-	sp.pHost = AWS_IOT_MQTT_HOST;
-	sp.port = AWS_IOT_MQTT_PORT;
-	sp.pClientCRT = clientCRT;
-	sp.pClientKey = clientKey;
-	sp.pRootCA = rootCA;
-	sp.enableAutoReconnect = false;
-	sp.disconnectHandler = NULL;
+    ShadowInitParameters_t sp = ShadowInitParametersDefault;
+    sp.pHost = AWS_IOT_MQTT_HOST;
+    sp.port = AWS_IOT_MQTT_PORT;
+    sp.pClientCRT = clientCRT;
+    sp.pClientKey = clientKey;
+    sp.pRootCA = rootCA;
+    sp.enableAutoReconnect = false;
+    sp.disconnectHandler = NULL;
 
-	IOT_INFO("Shadow Init");
-	rc = aws_iot_shadow_init(&mqttClient, &sp);
-	if (SUCCESS != rc) {
-		IOT_ERROR("Shadow Connection Error");
-		return rc;
-	}
+    IOT_INFO( "Shadow Init" );
+    rc = aws_iot_shadow_init( &mqttClient, &sp );
 
-	ShadowConnectParameters_t scp = ShadowConnectParametersDefault;
-	scp.pMyThingName = AWS_IOT_MY_THING_NAME;
-	scp.pMqttClientId = AWS_IOT_MQTT_CLIENT_ID;
-	scp.mqttClientIdLen = (uint16_t) strlen(AWS_IOT_MQTT_CLIENT_ID);
+    if( SUCCESS != rc )
+    {
+        IOT_ERROR( "Shadow Connection Error" );
+        return rc;
+    }
 
-	IOT_INFO("Shadow Connect");
-	rc = aws_iot_shadow_connect(&mqttClient, &scp);
-	if (SUCCESS != rc) {
-		IOT_ERROR("Shadow Connection Error");
-		return rc;
-	}
+    ShadowConnectParameters_t scp = ShadowConnectParametersDefault;
+    scp.pMyThingName = AWS_IOT_MY_THING_NAME;
+    scp.pMqttClientId = AWS_IOT_MQTT_CLIENT_ID;
+    scp.mqttClientIdLen = ( uint16_t ) strlen( AWS_IOT_MQTT_CLIENT_ID );
 
-	/*
-	 * Enable Auto Reconnect functionality. Minimum and Maximum time of Exponential backoff are set in aws_iot_config.h
-	 *  #AWS_IOT_MQTT_MIN_RECONNECT_WAIT_INTERVAL
-	 *  #AWS_IOT_MQTT_MAX_RECONNECT_WAIT_INTERVAL
-	 */
-	rc = aws_iot_shadow_set_autoreconnect_status(&mqttClient, true);
-	if(SUCCESS != rc){
-		IOT_ERROR("Unable to set Auto Reconnect to true - %d", rc);
-		return rc;
-	}
+    IOT_INFO( "Shadow Connect" );
+    rc = aws_iot_shadow_connect( &mqttClient, &scp );
 
-	jsonStruct_t deltaObject;
-	deltaObject.pData = stringToEchoDelta;
-	deltaObject.dataLength = SHADOW_MAX_SIZE_OF_RX_BUFFER;
-	deltaObject.pKey = "state";
-	deltaObject.type = SHADOW_JSON_OBJECT;
-	deltaObject.cb = DeltaCallback;
+    if( SUCCESS != rc )
+    {
+        IOT_ERROR( "Shadow Connection Error" );
+        return rc;
+    }
 
-	/*
-	 * Register the jsonStruct object
-	 */
-	rc = aws_iot_shadow_register_delta(&mqttClient, &deltaObject);
+    /*
+     * Enable Auto Reconnect functionality. Minimum and Maximum time of Exponential backoff are set in aws_iot_config.h
+     *  #AWS_IOT_MQTT_MIN_RECONNECT_WAIT_INTERVAL
+     *  #AWS_IOT_MQTT_MAX_RECONNECT_WAIT_INTERVAL
+     */
+    rc = aws_iot_shadow_set_autoreconnect_status( &mqttClient, true );
 
-	// Now wait in the loop to receive any message sent from the console
-	while (NETWORK_ATTEMPTING_RECONNECT == rc || NETWORK_RECONNECTED == rc || SUCCESS == rc) {
-		/*
-		 * Lets check for the incoming messages for 200 ms.
-		 */
-		rc = aws_iot_shadow_yield(&mqttClient, 200);
+    if( SUCCESS != rc )
+    {
+        IOT_ERROR( "Unable to set Auto Reconnect to true - %d", rc );
+        return rc;
+    }
 
-		if (NETWORK_ATTEMPTING_RECONNECT == rc) {
-			sleep(1);
-			// If the client is attempting to reconnect we will skip the rest of the loop.
-			continue;
-		}
+    jsonStruct_t deltaObject;
+    deltaObject.pData = stringToEchoDelta;
+    deltaObject.dataLength = SHADOW_MAX_SIZE_OF_RX_BUFFER;
+    deltaObject.pKey = "state";
+    deltaObject.type = SHADOW_JSON_OBJECT;
+    deltaObject.cb = DeltaCallback;
 
-		if (messageArrivedOnDelta) {
-			IOT_INFO("\nSending delta message back %s\n", stringToEchoDelta);
-			rc = aws_iot_shadow_update(&mqttClient, AWS_IOT_MY_THING_NAME, stringToEchoDelta, UpdateStatusCallback, NULL, 2, true);
-			messageArrivedOnDelta = false;
-		}
+    /*
+     * Register the jsonStruct object
+     */
+    rc = aws_iot_shadow_register_delta( &mqttClient, &deltaObject );
 
-		// sleep for some time in seconds
-		sleep(1);
-	}
+    /* Now wait in the loop to receive any message sent from the console */
+    while( NETWORK_ATTEMPTING_RECONNECT == rc || NETWORK_RECONNECTED == rc || SUCCESS == rc )
+    {
+        /*
+         * Lets check for the incoming messages for 200 ms.
+         */
+        rc = aws_iot_shadow_yield( &mqttClient, 200 );
 
-	if (SUCCESS != rc) {
-		IOT_ERROR("An error occurred in the loop %d", rc);
-	}
+        if( NETWORK_ATTEMPTING_RECONNECT == rc )
+        {
+            sleep( 1 );
+            /* If the client is attempting to reconnect we will skip the rest of the loop. */
+            continue;
+        }
 
-	IOT_INFO("Disconnecting");
-	rc = aws_iot_shadow_disconnect(&mqttClient);
+        if( messageArrivedOnDelta )
+        {
+            IOT_INFO( "\nSending delta message back %s\n", stringToEchoDelta );
+            rc = aws_iot_shadow_update( &mqttClient, AWS_IOT_MY_THING_NAME, stringToEchoDelta, UpdateStatusCallback, NULL, 2, true );
+            messageArrivedOnDelta = false;
+        }
 
-	if (SUCCESS != rc) {
-		IOT_ERROR("Disconnect error %d", rc);
-	}
+        /* sleep for some time in seconds */
+        sleep( 1 );
+    }
 
-	return rc;
+    if( SUCCESS != rc )
+    {
+        IOT_ERROR( "An error occurred in the loop %d", rc );
+    }
+
+    IOT_INFO( "Disconnecting" );
+    rc = aws_iot_shadow_disconnect( &mqttClient );
+
+    if( SUCCESS != rc )
+    {
+        IOT_ERROR( "Disconnect error %d", rc );
+    }
+
+    return rc;
 }

@@ -24,25 +24,25 @@
  * responses with the queries and update messages.
  */
 #ifndef AWS_IOT_JOBS_INTERFACE_H_
-#define AWS_IOT_JOBS_INTERFACE_H_
+    #define AWS_IOT_JOBS_INTERFACE_H_
 
-#ifdef DISABLE_IOT_JOBS
-#error "Jobs API is disabled"
-#endif
+    #ifdef DISABLE_IOT_JOBS
+        #error "Jobs API is disabled"
+    #endif
 
 /**
  * @file aws_iot_jobs_interface.h
  * @brief Functions for interacting with the AWS IoT Jobs system.
  */
-#include "aws_iot_mqtt_client_interface.h"
-#include "aws_iot_jobs_topics.h"
-#include "aws_iot_jobs_types.h"
-#include "aws_iot_error.h"
-#include "aws_iot_json_utils.h"
+    #include "aws_iot_mqtt_client_interface.h"
+    #include "aws_iot_jobs_topics.h"
+    #include "aws_iot_jobs_types.h"
+    #include "aws_iot_error.h"
+    #include "aws_iot_json_utils.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+    #ifdef __cplusplus
+        extern "C" {
+    #endif
 
 /**
  * @brief Subscribe to jobs messages for the given thing and/or jobs.
@@ -61,8 +61,8 @@ extern "C" {
  * \param pClient the client to use
  * \param qos the qos to use
  * \param thingName the name of the thing to subscribe to
- * \param jobId the job id to subscribe to. To subscribe to messages not related to 
- *   a job the jobId passed should be null. The jobId can also be "+" to subscribe to 
+ * \param jobId the job id to subscribe to. To subscribe to messages not related to
+ *   a job the jobId passed should be null. The jobId can also be "+" to subscribe to
  *   messages related to any job, or "$next" to indicate the next pending job.
  * \param topicType the topic type to subscribe to
  * \param replyType the reply topic type to subscribe to
@@ -75,16 +75,16 @@ extern "C" {
  *   with LIMIT_EXCEEDED_ERROR if this is too small.
  * \return the result of subscribing to the topic (see aws_iot_mqtt_subscribe)
  */
-IoT_Error_t aws_iot_jobs_subscribe_to_job_messages(
-		AWS_IoT_Client *pClient, QoS qos,
-		const char *thingName,
-		const char *jobId,
-		AwsIotJobExecutionTopicType topicType,
-		AwsIotJobExecutionTopicReplyType replyType,
-		pApplicationHandler_t pApplicationHandler,
-		void *pApplicationHandlerData,
-		char *topicBuffer,
-		uint16_t topicBufferSize);
+    IoT_Error_t aws_iot_jobs_subscribe_to_job_messages( AWS_IoT_Client * pClient,
+                                                        QoS qos,
+                                                        const char * thingName,
+                                                        const char * jobId,
+                                                        AwsIotJobExecutionTopicType topicType,
+                                                        AwsIotJobExecutionTopicReplyType replyType,
+                                                        pApplicationHandler_t pApplicationHandler,
+                                                        void * pApplicationHandlerData,
+                                                        char * topicBuffer,
+                                                        uint16_t topicBufferSize );
 
 /**
  * @brief Subscribe to all job messages.
@@ -105,13 +105,13 @@ IoT_Error_t aws_iot_jobs_subscribe_to_job_messages(
  *   with LIMIT_EXCEEDED_ERROR if this is too small.
  * \return the result of subscribing to the topic (see aws_iot_mqtt_subscribe)
  */
-IoT_Error_t aws_iot_jobs_subscribe_to_all_job_messages(
-		AWS_IoT_Client *pClient, QoS qos,
-		const char *thingName,
-		pApplicationHandler_t pApplicationHandler,
-		void *pApplicationHandlerData,
-		char *topicBuffer,
-		uint16_t topicBufferSize);
+    IoT_Error_t aws_iot_jobs_subscribe_to_all_job_messages( AWS_IoT_Client * pClient,
+                                                            QoS qos,
+                                                            const char * thingName,
+                                                            pApplicationHandler_t pApplicationHandler,
+                                                            void * pApplicationHandlerData,
+                                                            char * topicBuffer,
+                                                            uint16_t topicBufferSize );
 
 /**
  * @brief Unsubscribe from a job subscription
@@ -120,13 +120,12 @@ IoT_Error_t aws_iot_jobs_subscribe_to_all_job_messages(
  *   #aws_iot_jobs_subscribe_to_all_job_messages.
  *
  * \param pClient the client to use
- * \param topicBuffer the topic buffer passed to #aws_iot_jobs_subscribe_to_job_messages or 
+ * \param topicBuffer the topic buffer passed to #aws_iot_jobs_subscribe_to_job_messages or
  *   #aws_iot_jobs_subscribe_to_all_job_messages when the subscription was created.
  * \return #SUCCESS or the first error encountered.
  */
-IoT_Error_t aws_iot_jobs_unsubscribe_from_job_messages(
-		AWS_IoT_Client *pClient,
-		char *topicBuffer);
+    IoT_Error_t aws_iot_jobs_unsubscribe_from_job_messages( AWS_IoT_Client * pClient,
+                                                            char * topicBuffer );
 
 /**
  * @brief Send a query to one of the job query APIs.
@@ -156,16 +155,16 @@ IoT_Error_t aws_iot_jobs_unsubscribe_from_job_messages(
  *   the required inputs are NULL, otherwise the result
  *   of the mqtt publish
  */
-IoT_Error_t aws_iot_jobs_send_query(
-		AWS_IoT_Client *pClient, QoS qos,
-		const char *thingName,
-		const char *jobId,
-		const char *clientToken,
-		char *topicBuffer,
-		uint16_t topicBufferSize,
-		char *messageBuffer,
-		size_t messageBufferSize,
-		AwsIotJobExecutionTopicType topicType);
+    IoT_Error_t aws_iot_jobs_send_query( AWS_IoT_Client * pClient,
+                                         QoS qos,
+                                         const char * thingName,
+                                         const char * jobId,
+                                         const char * clientToken,
+                                         char * topicBuffer,
+                                         uint16_t topicBufferSize,
+                                         char * messageBuffer,
+                                         size_t messageBufferSize,
+                                         AwsIotJobExecutionTopicType topicType );
 
 /**
  * @brief Send a start next command to the job start-next API.
@@ -187,14 +186,14 @@ IoT_Error_t aws_iot_jobs_send_query(
  *   the required inputs are NULL, otherwise the result
  *   of the mqtt publish
  */
-IoT_Error_t aws_iot_jobs_start_next(
-		AWS_IoT_Client *pClient, QoS qos,
-		const char *thingName,
-		const AwsIotStartNextPendingJobExecutionRequest *startNextRequest,
-		char *topicBuffer,
-		uint16_t topicBufferSize,
-		char *messageBuffer,
-		size_t messageBufferSize);
+    IoT_Error_t aws_iot_jobs_start_next( AWS_IoT_Client * pClient,
+                                         QoS qos,
+                                         const char * thingName,
+                                         const AwsIotStartNextPendingJobExecutionRequest * startNextRequest,
+                                         char * topicBuffer,
+                                         uint16_t topicBufferSize,
+                                         char * messageBuffer,
+                                         size_t messageBufferSize );
 
 /**
  * @brief Send a describe job query to the job query API.
@@ -220,15 +219,15 @@ IoT_Error_t aws_iot_jobs_start_next(
  *   the required inputs are NULL, otherwise the result
  *   of the mqtt publish
  */
-IoT_Error_t aws_iot_jobs_describe(
-		AWS_IoT_Client *pClient, QoS qos,
-		const char *thingName,
-		const char *jobId,
-		const AwsIotDescribeJobExecutionRequest *describeRequest,
-		char *topicBuffer,
-		uint16_t topicBufferSize,
-		char *messageBuffer,
-		size_t messageBufferSize);
+    IoT_Error_t aws_iot_jobs_describe( AWS_IoT_Client * pClient,
+                                       QoS qos,
+                                       const char * thingName,
+                                       const char * jobId,
+                                       const AwsIotDescribeJobExecutionRequest * describeRequest,
+                                       char * topicBuffer,
+                                       uint16_t topicBufferSize,
+                                       char * messageBuffer,
+                                       size_t messageBufferSize );
 
 /**
  * @brief Send an update about a job execution.
@@ -250,18 +249,18 @@ IoT_Error_t aws_iot_jobs_describe(
  *   the required inputs are NULL, otherwise the result
  *   of the mqtt publish
  */
-IoT_Error_t aws_iot_jobs_send_update(
-		AWS_IoT_Client *pClient, QoS qos,
-		const char *thingName,
-		const char *jobId,
-		const AwsIotJobExecutionUpdateRequest *updateRequest,
-		char *topicBuffer,
-		uint16_t topicBufferSize,
-		char *messageBuffer,
-		size_t messageBufferSize);
+    IoT_Error_t aws_iot_jobs_send_update( AWS_IoT_Client * pClient,
+                                          QoS qos,
+                                          const char * thingName,
+                                          const char * jobId,
+                                          const AwsIotJobExecutionUpdateRequest * updateRequest,
+                                          char * topicBuffer,
+                                          uint16_t topicBufferSize,
+                                          char * messageBuffer,
+                                          size_t messageBufferSize );
 
-#ifdef __cplusplus
-}
-#endif
+    #ifdef __cplusplus
+        }
+    #endif
 
 #endif /* AWS_IOT_JOBS_INTERFACE_H_ */

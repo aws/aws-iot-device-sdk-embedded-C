@@ -14,35 +14,36 @@
  */
 
 #ifndef SRC_PROTOCOL_MQTT_AWS_IOT_EMBEDDED_CLIENT_WRAPPER_PLATFORM_LINUX_COMMON_TIMER_PLATFORM_H_
-#define SRC_PROTOCOL_MQTT_AWS_IOT_EMBEDDED_CLIENT_WRAPPER_PLATFORM_LINUX_COMMON_TIMER_PLATFORM_H_
+    #define SRC_PROTOCOL_MQTT_AWS_IOT_EMBEDDED_CLIENT_WRAPPER_PLATFORM_LINUX_COMMON_TIMER_PLATFORM_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+    #ifdef __cplusplus
+        extern "C" {
+    #endif
 
 /**
  * @file timer_platform.h
  */
-#include <sys/time.h>
-#include <sys/select.h>
-#include "timer_interface.h"
+    #include <sys/time.h>
+    #include <sys/select.h>
+    #include "timer_interface.h"
 
 /**
  * definition of the Timer struct. Platform specific
  */
-struct Timer {
-	struct timeval end_time;
-};
+    struct Timer
+    {
+        struct timeval end_time;
+    };
 
 /**
  * @brief Delay (sleep) for the specified number of milliseconds.
  *
  * @param milliseconds The number of milliseconds to sleep.
  */
-void delay(unsigned milliseconds);
+    void delay( unsigned milliseconds );
 
-#ifdef __cplusplus
-}
-#endif
+    #ifdef __cplusplus
+        }
+    #endif
 
 #endif /* SRC_PROTOCOL_MQTT_AWS_IOT_EMBEDDED_CLIENT_WRAPPER_PLATFORM_LINUX_COMMON_TIMER_PLATFORM_H_ */
