@@ -185,23 +185,25 @@ jobs:
         run: |
           wget -qO- "http://doxygen.nl/files/doxygen-1.8.20.linux.bin.tar.gz" | sudo tar --strip-components=1 -xz -C /usr/local
           sudo apt-get install -y libclang-9-dev graphviz
-      - name: Run Doxygen on all library submodules
+      - name: Install Python3
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      - name: Generate doxygen output
         run: |
-          ROOT=$PWD
-          for lib in $(find libraries/aws libraries/standard -maxdepth 1 -mindepth 1)
-          do
-            cd $lib
-            if [ ! -d docs/doxygen/ ]; then
-              echo "$lib has no Doxygen documentation."
-            else
-              doxygen docs/doxygen/config.doxyfile
-            fi
-            cd $ROOT
-          done
-      - name: Run Doxygen on CSDK and verify stdout is empty
-        run: |
-          doxygen docs/doxygen/config.doxyfile 2>&1 | tee doxyoutput.txt
-          if [[ "$(wc -c < doxyoutput.txt | bc)" = "0" ]]; then exit 0; else exit 1; fi
+          if [[ "$GITHUB_REF" == "refs/heads/main" ]]; then
+            echo 'Generate ZIP artifact of doxygen output'
+            python3 tools/doxygen/generate_docs.py --root . --zip
+          else
+            python3 tools/doxygen/generate_docs.py --root .
+          fi
+      - name: Upload doxygen artifact if main branch
+        if: success() && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v2
+        with:
+          name: doxygen.zip
+          path: ./doxygen.zip
+          retention-days: 2
   git-secrets:
     runs-on: ubuntu-latest
     steps:
