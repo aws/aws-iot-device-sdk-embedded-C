@@ -1575,7 +1575,7 @@ static int startOTADemo( void )
                                otaStatistics.otaPacketsDropped ) );
 
                     /* Delay if mqtt process loop is set to zero.*/
-                    if( !( MQTT_PROCESS_LOOP_TIMEOUT_MS > 0 ) )
+                    if( MQTT_PROCESS_LOOP_TIMEOUT_MS > 0 )
                     {
                         Clock_SleepMs( OTA_EXAMPLE_LOOP_SLEEP_PERIOD_MS );
                     }
@@ -1610,6 +1610,16 @@ static int startOTADemo( void )
                 }
             }
         }
+    }
+
+    /****************************** Wait for OTA Thread. ******************************/
+
+    returnStatus = pthread_join( threadHandle, NULL );
+    if( returnStatus != 0 )
+    {
+        LogError( ( "Failed to join thread"
+                    ",errno=%d",
+                    returnStatus ) );
     }
 
     return returnStatus;
