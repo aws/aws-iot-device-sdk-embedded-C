@@ -69,19 +69,6 @@
 /* shadow demo helpers header. */
 #include "shadow_demo_helpers.h"
 
-
-/**
- * @brief Predefined shadow name.
- *
- * Defaults to un-named "Classic" shadow. Change to a custom string to use a named shadow.
- */
-#define SHADOW_NAME           SHADOW_NAME_CLASSIC
-
-/**
- * @brief The length of #SHADOW_NAME.
- */
-#define SHADOW_NAME_LENGTH    ( ( uint16_t ) ( sizeof( SHADOW_NAME ) - 1 ) )
-
 /**
  * @brief Format string representing a Shadow document with a "desired" state.
  *
@@ -655,15 +642,17 @@ static void eventCallback( MQTTContext_t * pMqttContext,
  *
  * This main function demonstrates how to use the macros provided by the
  * Device Shadow library to assemble strings for the MQTT topics defined
- * by AWS IoT Device Shadow. It uses these macros for topics to subscribe
- * to:
- * - SHADOW_TOPIC_STRING_UPDATE_DELTA for "$aws/things/thingName/shadow[/name/shadowname/]/update/delta"
- * - SHADOW_TOPIC_STRING_UPDATE_ACCEPTED for "$aws/things/thingName/shadow[/name/shadowname/]/update/accepted"
- * - SHADOW_TOPIC_STRING_UPDATE_REJECTED for "$aws/things/thingName/shadow[/name/shadowname/]/update/rejected"
+ * by AWS IoT Device Shadow. Named shadow topic strings differ from unnamed
+ * ("Classic") topic strings as indicated by the tokens within square brackets.
+ *
+ * The main function uses these macros for topics to subscribe to:
+ * - SHADOW_TOPIC_STRING_UPDATE_DELTA for "$aws/things/thingName/shadow[/name/shadowname]/update/delta"
+ * - SHADOW_TOPIC_STRING_UPDATE_ACCEPTED for "$aws/things/thingName/shadow[/name/shadowname]/update/accepted"
+ * - SHADOW_TOPIC_STRING_UPDATE_REJECTED for "$aws/things/thingName/shadow[/name/shadowname]/update/rejected"
  *
  * It also uses these macros for topics to publish to:
- * - SHADOW_TOPIC_STRING_DELETE for "$aws/things/thingName/shadow[/name/shadowname/]/delete"
- * - SHADOW_TOPIC_STRING_UPDATE for "$aws/things/thingName/shadow[/name/shadowname/]/update"
+ * - SHADOW_TOPIC_STRING_DELETE for "$aws/things/thingName/shadow[/name/shadowname]/delete"
+ * - SHADOW_TOPIC_STRING_UPDATE for "$aws/things/thingName/shadow[/name/shadowname]/update"
  *
  * The helper functions this demo uses for MQTT operations have internal
  * loops to process incoming messages. Those are not the focus of this demo
@@ -826,7 +815,7 @@ int main( int argc,
                           ( int ) 1,
                           ( long unsigned ) ( Clock_GetTimeMs() % 1000000 ) );
 
-                returnStatus = PublishToTopic( SHADOW_TOPIC_STRING_UPDATE( THING_NAME, SHADOW_NAME, SHADOW_NAME ),
+                returnStatus = PublishToTopic( SHADOW_TOPIC_STRING_UPDATE( THING_NAME, SHADOW_NAME ),
                                                SHADOW_TOPIC_LENGTH_UPDATE( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ),
                                                updateDocument,
                                                ( SHADOW_DESIRED_JSON_LENGTH + 1 ) );
