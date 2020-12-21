@@ -97,9 +97,9 @@ def main():
 
     # Return failure exit code if doxygen generation resulted in warnings.
     if doxygen_warnings_flag == False:
-        sys.exit(1)
-    else:
         sys.exit(0)
+    else:
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
