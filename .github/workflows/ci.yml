@@ -191,8 +191,7 @@ jobs:
           python-version: '3.x'
       - name: Generate doxygen output
         run: |
-          echo $GITHUB_REF
-          if [[ "$GITHUB_REF" == "refs/head/main" ]]; then
+          if [[ "$GITHUB_REF" == "refs/heads/main" ]]; then
             echo 'Generate ZIP artifact of doxygen output'
             python3 tools/doxygen/generate_docs.py --root . --zip
           else
