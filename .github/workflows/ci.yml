@@ -203,6 +203,7 @@ jobs:
         with:
           name: doxygen.zip
           path: ./doxygen.zip
+          retention-days: 2
   git-secrets:
     runs-on: ubuntu-latest
     steps:
