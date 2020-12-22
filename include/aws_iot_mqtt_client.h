@@ -266,6 +266,7 @@ typedef struct _ClientStatus {
 typedef struct _ClientData {
 	uint16_t nextPacketId; ///< Packet ID to use for the next generated packet
 
+	/* Packet timeout is unused. See https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1475 */
 	uint32_t packetTimeoutMs; ///< Timeout for reading incoming packets from the network
 	uint32_t commandTimeoutMs; ///< Timeout for processing outgoing MQTT packets
 	uint16_t keepAliveInterval; ///< Maximum interval between control packets
