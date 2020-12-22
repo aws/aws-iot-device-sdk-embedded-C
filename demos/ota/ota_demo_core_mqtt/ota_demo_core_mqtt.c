@@ -1615,10 +1615,11 @@ static int startOTADemo( void )
     /****************************** Wait for OTA Thread. ******************************/
 
     returnStatus = pthread_join( threadHandle, NULL );
+
     if( returnStatus != 0 )
     {
         LogError( ( "Failed to join thread"
-                    ",errno=%d",
+                    ",error code = %d",
                     returnStatus ) );
     }
 
