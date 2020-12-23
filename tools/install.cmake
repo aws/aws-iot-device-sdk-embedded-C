@@ -137,11 +137,11 @@ endforeach()
 # Install platform abstractions as shared libraries if enabled.
 if(${INSTALL_PLATFORM})
     set(PLATFORM_TARGETS
-            "openssl_posix"
-            "plaintext_posix"
-            "sockets_posix"
-            "clock_posix"
-            "ota_pal")
+            openssl_posix
+            plaintext_posix
+            sockets_posix
+            clock_posix
+            ota_pal)
     set(PLATFORM_DIRECTORIES
             ${COMMON_TRANSPORT_INCLUDE_PUBLIC_DIRS}
             ${PLATFORM_DIR}/posix/ota_pal/source/include)
@@ -154,7 +154,7 @@ if(${INSTALL_PLATFORM})
                                         ${OTA_INCLUDE_PUBLIC_DIRS}
                                         ${OTA_INCLUDE_OS_POSIX_DIRS})
         target_compile_definitions(ota_posix PRIVATE -DOTA_DO_NOT_USE_CUSTOM_CONFIG)
-        list(APPEND PLATFORM_TARGETS "ota_posix")
+        list(APPEND PLATFORM_TARGETS ota_posix)
         list(APPEND PLATFORM_DIRECTORIES ${OTA_INCLUDE_OS_POSIX_DIRS})
     endif()
     foreach(platform_dir ${PLATFORM_DIRECTORIES})
