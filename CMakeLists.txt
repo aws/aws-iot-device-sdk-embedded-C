@@ -29,10 +29,10 @@ include( "demos/logging-stack/logging.cmake" )
 
 # Configure options to always show in CMake GUI.
 option( BUILD_TESTS
-        "Set this to ON to build demo executables."
+        "Set this to ON to build test executables."
         OFF )
 option( BUILD_DEMOS
-        "Set this to ON to build test executables."
+        "Set this to ON to build demo executables."
         ON )
 option( BUILD_CLONE_SUBMODULES
         "Set this to ON to automatically clone any required Git submodules. When OFF, submodules must be manually cloned."
@@ -40,7 +40,7 @@ option( BUILD_CLONE_SUBMODULES
 option( DOWNLOAD_CERTS
         "Set this to ON to automatically download certificates needed to run the demo. When OFF, certificates must be manually downloaded."
         ON )
-option( INSTALL_PLATFORM 
+option( INSTALL_PLATFORM
         "Set this to ON to install any platform-related dependencies."
         ON )
 
