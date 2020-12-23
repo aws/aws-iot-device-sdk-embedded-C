@@ -29,7 +29,7 @@ include( "demos/logging-stack/logging.cmake" )
 
 # Configure options to always show in CMake GUI.
 option( BUILD_TESTS 
-        "Set this to ON to build demos executables."
+        "Set this to ON to build demo executables."
         OFF )
 option( BUILD_DEMOS
         "Set this to ON to build test executables."
