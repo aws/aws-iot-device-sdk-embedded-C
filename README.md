@@ -36,6 +36,7 @@
     * [v4_beta_deprecated](#v4_beta_deprecated-branch-formerly-named-v4_beta)
 * [Getting Started](#getting-started)
     * [Cloning](#cloning)
+    * [Installation](#installation)
     * [Building and Running Demos](#building-and-running-demos)
         * [Prerequisites](#prerequisites)
             * [Build Dependencies](#build-dependencies)
@@ -297,6 +298,67 @@ When building with CMake, submodules are also recursively cloned automatically. 
 can be passed as a CMake flag to disable this functionality. This is useful when you'd like to build CMake while using a
 different commit from a submodule.
 
+### Installation
+
+The C SDK libraries and platform abstractions can be installed to a file system
+through CMake.
+```sh
+cmake .. -DBUILD_DEMOS=0 -DBUILD_TESTS=0
+make install
+```
+Note that because `make install` will automatically build the `all` target, it may
+be useful to disable building demos and tests with `-DBUILD_DEMOS=0 -DBUILD_TESTS=0`
+unless they have already been configured.
+
+By default, the location of headers will be in the default system include path
+of the OS such as `/usr/local/include`. For libraries, this will likely
+be `/usr/local/lib`.
+
+Upon entering `make install`, the location of each library will be specified first
+followed by the location of all installed headers.
+```
+-- Installing: /usr/local/lib/libaws_iot_defender.so
+-- Installing: /usr/local/lib/libaws_iot_shadow.so
+...
+-- Installing: /usr/local/include/aws/defender.h
+-- Installing: /usr/local/include/aws/defender_config_defaults.h
+-- Installing: /usr/local/include/aws/shadow.h
+-- Installing: /usr/local/include/aws/shadow_config_defaults.h
+```
+The libraries can now be linked to any build system of your choice (e.g. CMake):
+```cmake
+target_link_libraries(execName PUBLIC aws_iot_defender aws_iot_shadow)
+```
+Also, the headers can now be included to any compilation unit as system headers:
+```c
+#include <aws/defender.h>
+#include <aws/shadow.h>
+```
+
+By default, CMake will install to the default system path for headers and libraries of your OS.
+However, an installation path of your choice can be specified by passing the
+following flags through CMake:
+```sh
+cmake .. -DBUILD_DEMOS=0 -DBUILD_TESTS=0 \
+-DCSDK_HEADER_INSTALL_PATH="header-path" -DCSDK_LIB_INSTALL_PATH="lib-path"
+make install
+```
+
+Lastly, a custom config path for any specific library can also be specified
+through the following configs:
+```
+-DDEFENDER_CUSTOM_CONFIG_PATH="defender-config-path"
+-DSHADOW_CUSTOM_CONFIG_PATH="shadow-config-path"
+-DJOBS_CUSTOM_CONFIG_PATH="jobs-config-path"
+-DOTA_CUSTOM_CONFIG_PATH="ota-config-path"
+-DHTTP_CUSTOM_CONFIG_PATH="http-config-path"
+-DJSON_CUSTOM_CONFIG_PATH="json-config-path"
+-DMQTT_CUSTOM_CONFIG_PATH="mqtt-config-path"
+-DPKCS_CUSTOM_CONFIG_PATH="pkcs-config-path"
+```
+This allows the installed libraries to be compiled with any config of your choice.
+Note that the file name of the header should not be included in the path.
+
 ### Building and Running Demos
 
 The libraries in this SDK are not dependent on any operating system. However, the demos for the libraries in this SDK are built and tested on a Linux platform. The demos build with [CMake](https://cmake.org/), a cross-platform build tool.
@@ -371,7 +433,7 @@ In order to set these configurations manually, edit `demo_config.h` in `demos/mq
 You can pass the following configuration settings as command line options in order to run the S3 demos:
 
 ```sh
-cmake .. -DS3_PRESIGNED_GET_URL="s3-get-url"  -DS3_PRESIGNED_PUT_URL="s3-put-url"
+cmake .. -DS3_PRESIGNED_GET_URL="s3-get-url" -DS3_PRESIGNED_PUT_URL="s3-put-url"
 ```
 
 `S3_PRESIGNED_PUT_URL` is only needed for the S3 upload demo.
