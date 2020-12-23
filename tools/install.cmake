@@ -62,16 +62,6 @@ foreach(ota_backend ${OTA_BACKENDS})
         ${OTA_INCLUDE_PRIVATE_DIRS})
 endforeach()
 
-include(GNUInstallDirs)
-# Set the install directory for header files. Prefix by aws by default.
-if(NOT DEFINED CSDK_HEADER_INSTALL_PATH)
-    set(CSDK_HEADER_INSTALL_PATH "${CMAKE_INSTALL_INCLUDEDIR}/aws")
-endif()
-# Set the install directory for shared libraries.
-if(NOT DEFINED CSDK_LIB_INSTALL_PATH)
-    set(CSDK_LIB_INSTALL_PATH "${CMAKE_INSTALL_LIBDIR}")
-endif()
-
 set(ALL_CSDK_PUBLIC_HEADERS "")
 foreach(library_prefix ${LIBRARY_PREFIXES})
     # Create the library target.
@@ -135,13 +125,7 @@ foreach(library_prefix ${LIBRARY_PREFIXES})
 endforeach()
 
 # Install platform abstractions as shared libraries if enabled.
-if(${INSTALL_PLATFORM})
-    set(PLATFORM_TARGETS
-            openssl_posix
-            plaintext_posix
-            sockets_posix
-            clock_posix
-            ota_pal)
+if(INSTALL_PLATFORM)
     set(PLATFORM_DIRECTORIES
             ${COMMON_TRANSPORT_INCLUDE_PUBLIC_DIRS}
             ${PLATFORM_DIR}/posix/ota_pal/source/include)
@@ -149,19 +133,18 @@ if(${INSTALL_PLATFORM})
     if(NOT(${LIB_RT} STREQUAL "LIB_RT-NOTFOUND"))
         add_library(ota_posix
                      ${OTA_OS_POSIX_SOURCES})
-        target_link_libraries(ota_posix PUBLIC ${LIB_RT})
+        target_link_libraries(ota_posix PUBLIC ${LIB_RT} ota_pal)
         target_include_directories(ota_posix PUBLIC
                                         ${OTA_INCLUDE_PUBLIC_DIRS}
                                         ${OTA_INCLUDE_OS_POSIX_DIRS})
         target_compile_definitions(ota_posix PRIVATE -DOTA_DO_NOT_USE_CUSTOM_CONFIG)
-        list(APPEND PLATFORM_TARGETS ota_posix)
+        install(TARGETS ota_posix RUNTIME DESTINATION "${CSDK_LIB_INSTALL_PATH}")
         list(APPEND PLATFORM_DIRECTORIES ${OTA_INCLUDE_OS_POSIX_DIRS})
     endif()
     foreach(platform_dir ${PLATFORM_DIRECTORIES})
         file(GLOB_RECURSE platform_headers LIST_DIRECTORIES false ${platform_dir}/*.h)
         list(APPEND ALL_CSDK_PUBLIC_HEADERS ${platform_headers})
     endforeach()
-    install(TARGETS ${PLATFORM_TARGETS} RUNTIME DESTINATION "${CSDK_LIB_INSTALL_PATH}")
 endif()
 
 # Install all public headers.

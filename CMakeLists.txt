@@ -28,7 +28,7 @@ set(3RDPARTY_DIR "${MODULES_DIR}/3rdparty" CACHE INTERNAL "3rdparty libraries ro
 include( "demos/logging-stack/logging.cmake" )
 
 # Configure options to always show in CMake GUI.
-option( BUILD_TESTS 
+option( BUILD_TESTS
         "Set this to ON to build demo executables."
         OFF )
 option( BUILD_DEMOS
@@ -89,6 +89,16 @@ if(${BUILD_TESTS})
         DEPENDS cmock unity ${utest_targets}
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     )
+endif()
+
+include(GNUInstallDirs)
+# Set the install directory for header files. Prefix by aws by default.
+if(NOT DEFINED CSDK_HEADER_INSTALL_PATH)
+    set(CSDK_HEADER_INSTALL_PATH "${CMAKE_INSTALL_INCLUDEDIR}/aws")
+endif()
+# Set the install directory for shared libraries.
+if(NOT DEFINED CSDK_LIB_INSTALL_PATH)
+    set(CSDK_LIB_INSTALL_PATH "${CMAKE_INSTALL_LIBDIR}")
 endif()
 
 # Add libraries.

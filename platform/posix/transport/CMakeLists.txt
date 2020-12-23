@@ -40,6 +40,15 @@ target_link_libraries( openssl_posix
                           # requires explicit linking.
                           ${CMAKE_DL_LIBS} )
 
+# Install transport implementations as libraries.
+if(INSTALL_PLATFORM)
+    install(TARGETS
+      openssl_posix
+      plaintext_posix
+      sockets_posix
+      RUNTIME DESTINATION "${CSDK_LIB_INSTALL_PATH}")
+endif()
+
 if( BUILD_TESTS )
   add_subdirectory( utest )
 endif()
