@@ -109,7 +109,7 @@ foreach(library_prefix ${LIBRARY_PREFIXES})
         target_include_directories("${library_name}"
                                     PUBLIC ${${library_prefix}_INCLUDE_PUBLIC_DIRS})
         foreach(library_public_dir ${${library_prefix}_INCLUDE_PUBLIC_DIRS})
-            file(GLOB_RECURSE library_headers LIST_DIRECTORIES false ${library_public_dir}/*.h)
+            file(GLOB_RECURSE library_headers LIST_DIRECTORIES false ${library_public_dir}/*.h !${library_public_dir}/*private*)
             list(APPEND ALL_CSDK_PUBLIC_HEADERS ${library_headers})
         endforeach()
     endif()
@@ -147,6 +147,8 @@ if(INSTALL_PLATFORM)
     endforeach()
 endif()
 
+# Exclude all private headers from list.
+list(FILTER ALL_CSDK_PUBLIC_HEADERS EXCLUDE REGEX ".*private.*")
 # Install all public headers.
 install(FILES ${ALL_CSDK_PUBLIC_HEADERS}
         DESTINATION ${CSDK_HEADER_INSTALL_PATH}
