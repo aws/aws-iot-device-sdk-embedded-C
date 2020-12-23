@@ -315,7 +315,7 @@ of the OS such as `/usr/local/include`. For libraries, this will likely
 be `/usr/local/lib`.
 
 Upon entering `make install`, the location of each library will be specified first
-followed by the location of all installed headers.
+followed by the location of all installed headers:
 ```
 -- Installing: /usr/local/lib/libaws_iot_defender.so
 -- Installing: /usr/local/lib/libaws_iot_shadow.so
@@ -329,13 +329,13 @@ The libraries can now be linked to any build system of your choice (e.g. CMake):
 ```cmake
 target_link_libraries(execName PUBLIC aws_iot_defender aws_iot_shadow)
 ```
-Also, the headers can now be included to any compilation unit as system headers:
+Furthermore, the headers can now be included to any compilation unit as system headers:
 ```c
 #include <aws/defender.h>
 #include <aws/shadow.h>
 ```
 
-By default, CMake will install to the default system path for headers and libraries of your OS.
+Note that by default, CMake will install to the default system path for headers and libraries of your OS.
 However, an installation path of your choice can be specified by passing the
 following flags through CMake:
 ```sh
@@ -344,8 +344,8 @@ cmake .. -DBUILD_DEMOS=0 -DBUILD_TESTS=0 \
 make install
 ```
 
-Lastly, a custom config path for any specific library can also be specified
-through the following configs:
+Lastly, a custom config path for any specific library can also be specified through the following CMake flags, allowing
+libraries to be compiled with a config of your choice:
 ```
 -DDEFENDER_CUSTOM_CONFIG_PATH="defender-config-path"
 -DSHADOW_CUSTOM_CONFIG_PATH="shadow-config-path"
@@ -356,7 +356,6 @@ through the following configs:
 -DMQTT_CUSTOM_CONFIG_PATH="mqtt-config-path"
 -DPKCS_CUSTOM_CONFIG_PATH="pkcs-config-path"
 ```
-This allows the installed libraries to be compiled with any config of your choice.
 Note that the file name of the header should not be included in the path.
 
 ### Building and Running Demos
