@@ -1,0 +1,170 @@
+# Creates an install target to allow users to include CSDK as a set of shared libraries
+
+set(FILEPATH_LOCATIONS
+        ${MODULES_DIR}/aws/device-defender-for-aws-iot-embedded-sdk/defenderFilePaths.cmake
+        ${MODULES_DIR}/aws/device-shadow-for-aws-iot-embedded-sdk/shadowFilePaths.cmake
+        ${MODULES_DIR}/aws/jobs-for-aws-iot-embedded-sdk/jobsFilePaths.cmake
+        ${MODULES_DIR}/aws/ota-for-aws-iot-embedded-sdk/otaFilePaths.cmake
+        ${MODULES_DIR}/standard/backoffAlgorithm/backoffAlgorithmFilePaths.cmake
+        ${MODULES_DIR}/standard/coreHTTP/httpFilePaths.cmake
+        ${MODULES_DIR}/standard/coreJSON/jsonFilePaths.cmake
+        ${MODULES_DIR}/standard/coreMQTT/mqttFilePaths.cmake
+        ${MODULES_DIR}/standard/corePKCS11/pkcsFilePaths.cmake
+        ${PLATFORM_DIR}/posix/posixFilePaths.cmake
+    )
+
+# Include filePaths of all libraries
+foreach(filepath ${FILEPATH_LOCATIONS})
+    include(${filepath})
+endforeach()
+
+# Each filePath defines a set of variables that are prefixed with the name of the
+# library and end with the type of source or include directory e.g. MQTT_SERIALIZER_SOURCES.
+set(LIBRARY_PREFIXES
+        "DEFENDER"
+        "SHADOW"
+        "JOBS"
+        "OTA"
+        "OTA_HTTP"
+        "OTA_MQTT"
+        "BACKOFF_ALGORITHM"
+        "HTTP"
+        "JSON"
+        "MQTT"
+        "PKCS")
+
+set(COREPKCS11_LOCATION "${MODULES_DIR}/standard/corePKCS11")
+set(CORE_PKCS11_3RDPARTY_LOCATION "${COREPKCS11_LOCATION}/source/dependency/3rdparty")
+file(GLOB MBEDTLS_FILES CONFIGURE_DEPENDS "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls/library/*.c")
+set_source_files_properties(
+    ${MBEDTLS_FILES}
+    PROPERTIES COMPILE_FLAGS
+    "-Wno-pedantic"
+)
+
+# Define any extra sources or includes outside the standard, making sure to use the same prefix.
+set(MQTT_EXTRA_SOURCES
+        ${MQTT_SERIALIZER_SOURCES})
+set(PKCS_EXTRA_SOURCES
+        "${MBEDTLS_FILES}"
+        "${COREPKCS11_LOCATION}/source/portable/posix/core_pkcs11_pal.c"
+        "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils/mbedtls_utils.c"
+        "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils/mbedtls_error.c")
+set(PKCS_EXTRA_INCLUDE_PRIVATE_DIRS
+    PRIVATE
+        "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls/include"
+        "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils")
+set(OTA_BACKENDS "OTA_HTTP" "OTA_MQTT")
+foreach(ota_backend ${OTA_BACKENDS})
+    set("${ota_backend}_EXTRA_INCLUDE_PUBLIC_DIRS"
+        ${OTA_INCLUDE_PUBLIC_DIRS})
+    set("${ota_backend}_EXTRA_INCLUDE_PRIVATE_DIRS"
+        ${OTA_INCLUDE_PRIVATE_DIRS})
+endforeach()
+
+include(GNUInstallDirs)
+# Set the install directory for header files. Prefix by aws by default.
+if(NOT DEFINED CSDK_HEADER_INSTALL_PATH)
+    set(CSDK_HEADER_INSTALL_PATH "${CMAKE_INSTALL_INCLUDEDIR}/aws")
+endif()
+# Set the install directory for shared libraries.
+if(NOT DEFINED CSDK_LIB_INSTALL_PATH)
+    set(CSDK_LIB_INSTALL_PATH "${CMAKE_INSTALL_LIBDIR}")
+endif()
+
+set(ALL_CSDK_PUBLIC_HEADERS "")
+foreach(library_prefix ${LIBRARY_PREFIXES})
+    # Create the library target.
+    if(DEFINED "${library_prefix}_SOURCES")
+        string(TOLOWER "aws_iot_${library_prefix}" library_name)
+        add_library("${library_name}"
+        ${${library_prefix}_EXTRA_SOURCES}
+        ${${library_prefix}_SOURCES})
+    else()
+        continue()
+    endif()
+
+    # Add any extra includes defined for the library.
+    if(DEFINED "${library_prefix}_EXTRA_INCLUDE_PUBLIC_DIRS")
+        target_include_directories("${library_name}"
+                        PUBLIC ${${library_prefix}_EXTRA_INCLUDE_PUBLIC_DIRS})
+    endif()
+    if(DEFINED "${library_prefix}_EXTRA_INCLUDE_PRIVATE_DIRS")
+        target_include_directories("${library_name}"
+                        PRIVATE ${${library_prefix}_EXTRA_INCLUDE_PRIVATE_DIRS})
+    endif()
+
+    # Allow a path to a custom config header to be passed through a CMake flag.
+    set(config_prefix "${library_prefix}")
+    if(";${OTA_BACKENDS};" MATCHES ";${library_prefix};")
+        set(config_prefix "OTA")
+    endif()
+    if(DEFINED "${config_prefix}_CUSTOM_CONFIG_PATH")
+        target_include_directories("${library_name}"
+                                    PRIVATE ${${config_prefix}_CUSTOM_CONFIG_PATH})
+    else()
+        target_compile_definitions("${library_name}" PRIVATE -D${config_prefix}_DO_NOT_USE_CUSTOM_CONFIG)
+        # PKCS11 requires a config so include the one from the demos by default.
+        if(${config_prefix} STREQUAL "PKCS")
+            target_include_directories("${library_name}" PRIVATE
+                                        ${DEMOS_DIR}/pkcs11/common/include
+                                        ${LOGGING_INCLUDE_DIRS})
+            target_compile_definitions("${library_name}" PUBLIC
+                                       -DMBEDTLS_CONFIG_FILE="mbedtls_config.h")
+        endif()
+    endif()
+
+    # Add public include directories to library target.
+    if(DEFINED "${library_prefix}_INCLUDE_PUBLIC_DIRS")
+        target_include_directories("${library_name}"
+                                    PUBLIC ${${library_prefix}_INCLUDE_PUBLIC_DIRS})
+        foreach(library_public_dir ${${library_prefix}_INCLUDE_PUBLIC_DIRS})
+            file(GLOB_RECURSE library_headers LIST_DIRECTORIES false ${library_public_dir}/*.h)
+            list(APPEND ALL_CSDK_PUBLIC_HEADERS ${library_headers})
+        endforeach()
+    endif()
+
+    # Add private include directories to library target.
+    if(DEFINED "${library_prefix}_INCLUDE_PRIVATE_DIRS")
+        target_include_directories("${library_name}"
+                                    PRIVATE ${${library_prefix}_INCLUDE_PRIVATE_DIRS})
+    endif()
+
+    # Install the library target.
+    install(TARGETS "${library_name}" LIBRARY DESTINATION "${CSDK_LIB_INSTALL_PATH}")
+endforeach()
+
+# Install platform abstractions as shared libraries if enabled.
+if(${INSTALL_PLATFORM})
+    set(PLATFORM_TARGETS
+            "openssl_posix"
+            "plaintext_posix"
+            "sockets_posix"
+            "clock_posix"
+            "ota_pal")
+    set(PLATFORM_DIRECTORIES
+            ${COMMON_TRANSPORT_INCLUDE_PUBLIC_DIRS}
+            ${PLATFORM_DIR}/posix/ota_pal/source/include)
+    # Create target for POSIX port of OTA of LIB_RT is installed.
+    if(NOT(${LIB_RT} STREQUAL "LIB_RT-NOTFOUND"))
+        add_library(ota_posix
+                     ${OTA_OS_POSIX_SOURCES})
+        target_link_libraries(ota_posix PUBLIC ${LIB_RT})
+        target_include_directories(ota_posix PUBLIC
+                                        ${OTA_INCLUDE_PUBLIC_DIRS}
+                                        ${OTA_INCLUDE_OS_POSIX_DIRS})
+        target_compile_definitions(ota_posix PRIVATE -DOTA_DO_NOT_USE_CUSTOM_CONFIG)
+        list(APPEND PLATFORM_TARGETS "ota_posix")
+        list(APPEND PLATFORM_DIRECTORIES ${OTA_INCLUDE_OS_POSIX_DIRS})
+    endif()
+    foreach(platform_dir ${PLATFORM_DIRECTORIES})
+        file(GLOB_RECURSE platform_headers LIST_DIRECTORIES false ${platform_dir}/*.h)
+        list(APPEND ALL_CSDK_PUBLIC_HEADERS ${platform_headers})
+    endforeach()
+    install(TARGETS ${PLATFORM_TARGETS} RUNTIME DESTINATION "${CSDK_LIB_INSTALL_PATH}")
+endif()
+
+# Install all public headers.
+install(FILES ${ALL_CSDK_PUBLIC_HEADERS}
+        DESTINATION ${CSDK_HEADER_INSTALL_PATH}
+)

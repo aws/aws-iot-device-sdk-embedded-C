@@ -28,14 +28,20 @@ set(3RDPARTY_DIR "${MODULES_DIR}/3rdparty" CACHE INTERNAL "3rdparty libraries ro
 include( "demos/logging-stack/logging.cmake" )
 
 # Configure options to always show in CMake GUI.
-option( BUILD_TESTS
-        "Set this to ON to build both demo and test executables. When OFF, only demo executables are built."
+option( BUILD_TESTS 
+        "Set this to ON to build demos executables."
         OFF )
+option( BUILD_DEMOS
+        "Set this to ON to build test executables."
+        ON )
 option( BUILD_CLONE_SUBMODULES
         "Set this to ON to automatically clone any required Git submodules. When OFF, submodules must be manually cloned."
         ON )
 option( DOWNLOAD_CERTS
         "Set this to ON to automatically download certificates needed to run the demo. When OFF, certificates must be manually downloaded."
+        ON )
+option( INSTALL_PLATFORM 
+        "Set this to ON to install any platform-related dependencies."
         ON )
 
 # Unity test framework does not export the correct symbols for DLLs.
@@ -91,10 +97,14 @@ add_subdirectory( libraries )
 # Add platform.
 add_subdirectory( platform )
 
+# Create the `install` target by including this file.
+include( tools/install.cmake )
+
 if(BUILD_TESTS)
     # Add build configuration for integration tests.
     add_subdirectory( integration-test )
-else()
+endif()
+if(BUILD_DEMOS)
     # Add build configuration for demos.
     add_subdirectory( demos )
 endif()
