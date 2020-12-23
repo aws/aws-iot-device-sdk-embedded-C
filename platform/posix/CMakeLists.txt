@@ -13,7 +13,7 @@ target_include_directories( clock_posix
 if(INSTALL_PLATFORM)
     install(TARGETS
       clock_posix
-      RUNTIME DESTINATION "${CSDK_LIB_INSTALL_PATH}")
+      LIBRARY DESTINATION "${CSDK_LIB_INSTALL_PATH}")
 endif()
 
 if(BUILD_TESTS)

@@ -46,7 +46,7 @@ if(INSTALL_PLATFORM)
       openssl_posix
       plaintext_posix
       sockets_posix
-      RUNTIME DESTINATION "${CSDK_LIB_INSTALL_PATH}")
+      LIBRARY DESTINATION "${CSDK_LIB_INSTALL_PATH}")
 endif()
 
 if( BUILD_TESTS )

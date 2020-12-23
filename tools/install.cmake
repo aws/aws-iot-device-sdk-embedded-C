@@ -138,7 +138,7 @@ if(INSTALL_PLATFORM)
                                         ${OTA_INCLUDE_PUBLIC_DIRS}
                                         ${OTA_INCLUDE_OS_POSIX_DIRS})
         target_compile_definitions(ota_posix PRIVATE -DOTA_DO_NOT_USE_CUSTOM_CONFIG)
-        install(TARGETS ota_posix RUNTIME DESTINATION "${CSDK_LIB_INSTALL_PATH}")
+        install(TARGETS ota_posix LIBRARY DESTINATION "${CSDK_LIB_INSTALL_PATH}")
         list(APPEND PLATFORM_DIRECTORIES ${OTA_INCLUDE_OS_POSIX_DIRS})
     endif()
     foreach(platform_dir ${PLATFORM_DIRECTORIES})
