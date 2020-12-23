@@ -129,7 +129,7 @@ if(INSTALL_PLATFORM)
     set(PLATFORM_DIRECTORIES
             ${COMMON_TRANSPORT_INCLUDE_PUBLIC_DIRS}
             ${PLATFORM_DIR}/posix/ota_pal/source/include)
-    # Create target for POSIX port of OTA of LIB_RT is installed.
+    # Create target for POSIX port of OTA if LIB_RT is installed.
     if(NOT(${LIB_RT} STREQUAL "LIB_RT-NOTFOUND"))
         add_library(ota_posix
                      ${OTA_OS_POSIX_SOURCES})
