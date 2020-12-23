@@ -148,7 +148,9 @@ if(INSTALL_PLATFORM)
 endif()
 
 # Exclude all private headers from list.
-list(FILTER ALL_CSDK_PUBLIC_HEADERS EXCLUDE REGEX ".*private.*")
+if(CMAKE_VERSION VERSION_GREATER "3.6.0")
+    list(FILTER ALL_CSDK_PUBLIC_HEADERS EXCLUDE REGEX ".*private.*")
+endif()
 # Install all public headers.
 install(FILES ${ALL_CSDK_PUBLIC_HEADERS}
         DESTINATION ${CSDK_HEADER_INSTALL_PATH}
