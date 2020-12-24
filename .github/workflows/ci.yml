@@ -103,8 +103,8 @@ jobs:
           mkdir build && cd build
           ../cmake-3.2.0-Linux-x86_64/bin/cmake .. \
           -DBUILD_DEMOS=0 -DBUILD_TESTS=0 \
-          -DINSTALL_LIBS="http;defender" -DINSTALL_PLATFORM_ABSTRACTIONS=0
-      - name: Install libraries and verify default install location
+          -DINSTALL_LIBS="shadow;defender" -DINSTALL_PLATFORM_ABSTRACTIONS=0
+      - name: Install selected libraries and verify default system installation path is used
         run: |
           cd build && sudo make install
           while IFS="" read -r p || [ -n "$p" ]
@@ -119,7 +119,7 @@ jobs:
           cd build && sudo make install
           while IFS="" read -r p || [ -n "$p" ]
           do
-            if [[ $p != *"mqtt"* ]] && [[ $p != *"defender"* ]]; then
+            if [[ $p != *"shadow"* ]] && [[ $p != *"defender"* ]]; then
               exit 1
             fi
           # Each line of install_manifest.txt contains the location of an installed library or header
