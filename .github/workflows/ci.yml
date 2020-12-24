@@ -116,7 +116,7 @@ jobs:
           done <install_manifest.txt
       - name: Verify filenames from selective build
         run: |
-          cd build && sudo make install
+          cd build
           while IFS="" read -r p || [ -n "$p" ]
           do
             if [[ $p != *"shadow"* ]] && [[ $p != *"defender"* ]]; then
