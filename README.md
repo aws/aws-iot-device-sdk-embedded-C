@@ -310,9 +310,9 @@ Note that because `make install` will automatically build the `all` target, it m
 be useful to disable building demos and tests with `-DBUILD_DEMOS=0 -DBUILD_TESTS=0`
 unless they have already been configured.
 
-By default, the location of headers will be in the default system include path
-of the OS such as `/usr/local/include`. For libraries, this will likely
-be `/usr/local/lib`.
+By default, the location of headers will be in the default system path for headers
+such as `/usr/local/include` for Linux. For libraries, this will likely
+be `/usr/local/lib` for Linux.
 
 Upon entering `make install`, the location of each library will be specified first
 followed by the location of all installed headers:
@@ -344,17 +344,34 @@ cmake .. -DBUILD_DEMOS=0 -DBUILD_TESTS=0 \
 make install
 ```
 
+If you would like to exclude certain libraries from installation, you may also
+use the following flags:
+```
+-DDEFENDER_EXCLUDE_FROM_INSTALL
+-DSHADOW_EXCLUDE_FROM_INSTALL
+-DJOBS_EXCLUDE_FROM_INSTALL
+-DOTA_EXCLUDE_FROM_INSTALL
+-DHTTP_EXCLUDE_FROM_INSTALL
+-DJSON_EXCLUDE_FROM_INSTALL
+-DMQTT_EXCLUDE_FROM_INSTALL
+-DPKCS_EXCLUDE_FROM_INSTALL
+```
+
+POSIX platform abstractions are used together with the C-SDK libraries in the demos.
+By default, these abstractions are also installed but can be excluded by passing
+the flag: `-DINSTALL_PLATFORM_ABSTRACTIONS=0`.
+
 Lastly, a custom config path for any specific library can also be specified through the following CMake flags, allowing
 libraries to be compiled with a config of your choice:
 ```
--DDEFENDER_CUSTOM_CONFIG_PATH="defender-config-path"
--DSHADOW_CUSTOM_CONFIG_PATH="shadow-config-path"
--DJOBS_CUSTOM_CONFIG_PATH="jobs-config-path"
--DOTA_CUSTOM_CONFIG_PATH="ota-config-path"
--DHTTP_CUSTOM_CONFIG_PATH="http-config-path"
--DJSON_CUSTOM_CONFIG_PATH="json-config-path"
--DMQTT_CUSTOM_CONFIG_PATH="mqtt-config-path"
--DPKCS_CUSTOM_CONFIG_PATH="pkcs-config-path"
+-DDEFENDER_CUSTOM_CONFIG_DIR="defender-config-path"
+-DSHADOW_CUSTOM_CONFIG_DIR="shadow-config-path"
+-DJOBS_CUSTOM_CONFIG_DIR="jobs-config-path"
+-DOTA_CUSTOM_CONFIG_DIR="ota-config-path"
+-DHTTP_CUSTOM_CONFIG_DIR="http-config-path"
+-DJSON_CUSTOM_CONFIG_DIR="json-config-path"
+-DMQTT_CUSTOM_CONFIG_DIR="mqtt-config-path"
+-DPKCS_CUSTOM_CONFIG_DIR="pkcs-config-path"
 ```
 Note that the file name of the header should not be included in the path.
 
