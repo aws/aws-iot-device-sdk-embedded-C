@@ -1,4 +1,5 @@
 # Creates an install target to allow users to include CSDK as a set of shared libraries
+# When making changes to this file, please verify that -DINSTALL_LIBS="prefix-name" still works.
 
 set(FILEPATH_LOCATIONS
         ${MODULES_DIR}/aws/device-defender-for-aws-iot-embedded-sdk/defenderFilePaths.cmake
