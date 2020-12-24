@@ -102,7 +102,8 @@ jobs:
           tar -xf cmake.tar.gz
           mkdir build && cd build
           ../cmake-3.2.0-Linux-x86_64/bin/cmake .. \
-          -DBUILD_DEMOS=0 -DBUILD_TESTS=0 -DINSTALL_LIBS="http;defender"
+          -DBUILD_DEMOS=0 -DBUILD_TESTS=0 \
+          -DINSTALL_LIBS="http;defender" -DINSTALL_PLATFORM_ABSTRACTIONS=0
       - name: Install libraries and verify default install location
         run: |
           cd build && sudo make install
