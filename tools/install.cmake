@@ -65,7 +65,7 @@ endforeach()
 set(ALL_CSDK_PUBLIC_HEADERS "")
 foreach(library_prefix ${LIBRARY_PREFIXES})
     # Create the library target.
-    if(DEFINED "${library_prefix}_SOURCES")
+    if(DEFINED "${library_prefix}_SOURCES" AND NOT ${library_prefix}_EXCLUDE_FROM_INSTALL)
         string(TOLOWER "aws_iot_${library_prefix}" library_name)
         add_library("${library_name}"
         ${${library_prefix}_EXTRA_SOURCES}
@@ -89,9 +89,9 @@ foreach(library_prefix ${LIBRARY_PREFIXES})
     if(";${OTA_BACKENDS};" MATCHES ";${library_prefix};")
         set(config_prefix "OTA")
     endif()
-    if(DEFINED "${config_prefix}_CUSTOM_CONFIG_PATH")
+    if(DEFINED "${config_prefix}_CUSTOM_CONFIG_DIR")
         target_include_directories("${library_name}"
-                                    PRIVATE ${${config_prefix}_CUSTOM_CONFIG_PATH})
+                                    PRIVATE ${${config_prefix}_CUSTOM_CONFIG_DIR})
     else()
         target_compile_definitions("${library_name}" PRIVATE -D${config_prefix}_DO_NOT_USE_CUSTOM_CONFIG)
         # PKCS11 requires a config so include the one from the demos by default.
@@ -150,6 +150,12 @@ endif()
 # Exclude all private headers from list.
 if(CMAKE_VERSION VERSION_GREATER "3.6.0")
     list(FILTER ALL_CSDK_PUBLIC_HEADERS EXCLUDE REGEX ".*private.*")
+else()
+    foreach(public_header ${ALL_CSDK_PUBLIC_HEADERS})
+        if(${public_header} MATCHES ".*private.*")
+            list(REMOVE_ITEM SOURCES ${public_header})
+        endif()
+    endforeach()
 endif()
 # Install all public headers.
 install(FILES ${ALL_CSDK_PUBLIC_HEADERS}

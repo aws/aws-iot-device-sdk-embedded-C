@@ -40,8 +40,8 @@ option( BUILD_CLONE_SUBMODULES
 option( DOWNLOAD_CERTS
         "Set this to ON to automatically download certificates needed to run the demo. When OFF, certificates must be manually downloaded."
         ON )
-option( INSTALL_PLATFORM
-        "Set this to ON to install any platform-related dependencies."
+option( INSTALL_PLATFORM_ABSTRACTIONS
+        "Set this to ON to install POSIX platform abstractions that are used together with the C-SDK libraries in the demos."
         ON )
 
 # Unity test framework does not export the correct symbols for DLLs.
