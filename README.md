@@ -304,11 +304,19 @@ The C SDK libraries and platform abstractions can be installed to a file system
 through CMake.
 ```sh
 cmake .. -DBUILD_DEMOS=0 -DBUILD_TESTS=0
-make install
+sudo make install
 ```
 Note that because `make install` will automatically build the `all` target, it may
 be useful to disable building demos and tests with `-DBUILD_DEMOS=0 -DBUILD_TESTS=0`
-unless they have already been configured.
+unless they have already been configured. Super-user permissions may be needed if
+installing to a system include or system library path.
+
+To install only a subset of all libraries, pass `-DINSTALL_LIBS` to install only
+the libraries you need. By default, all libraries will be installed, but you may
+exclude any library that you don't need from this list:
+```
+-DINSTALL_LIBS="DEFENDER;SHADOW;JOBS;OTA;OTA_HTTP;OTA_MQTT;BACKOFF_ALGORITHM;HTTP;JSON;MQTT;PKCS"
+```
 
 By default, the location of headers will be in the default system path for headers
 such as `/usr/local/include` for Linux. For libraries, this will likely
@@ -341,23 +349,7 @@ following flags through CMake:
 ```sh
 cmake .. -DBUILD_DEMOS=0 -DBUILD_TESTS=0 \
 -DCSDK_HEADER_INSTALL_PATH="header-path" -DCSDK_LIB_INSTALL_PATH="lib-path"
-make install
-```
-
-If you would like to exclude certain libraries from installation, you may also
-use the following flags:
-```
--DDEFENDER_EXCLUDE_FROM_INSTALL
--DSHADOW_EXCLUDE_FROM_INSTALL
--DJOBS_EXCLUDE_FROM_INSTALL
--DOTA_EXCLUDE_FROM_INSTALL
--DOTA_HTTP_EXCLUDE_FROM_INSTALL
--DOTA_MQTT_EXCLUDE_FROM_INSTALL
--DBACKOFF_ALGORITHM_EXCLUDE_FROM_INSTALL
--DHTTP_EXCLUDE_FROM_INSTALL
--DJSON_EXCLUDE_FROM_INSTALL
--DMQTT_EXCLUDE_FROM_INSTALL
--DPKCS_EXCLUDE_FROM_INSTALL
+sudo make install
 ```
 
 POSIX platform abstractions are used together with the C-SDK libraries in the demos.

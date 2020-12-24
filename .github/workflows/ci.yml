@@ -75,14 +75,22 @@ jobs:
           submodules: recursive
       - name: Configure CMake build
         run: |
+          sudo mkdir installed-headers-dir installed-libs-dir
           curl https://cmake.org/files/v3.2/cmake-3.2.0-Linux-x86_64.tar.gz -o cmake.tar.gz
           tar -xf cmake.tar.gz
           mkdir build && cd build
           ../cmake-3.2.0-Linux-x86_64/bin/cmake .. \
-          -DBUILD_DEMOS=0 -DBUILD_TESTS=0
-      - name: Install libraries
+          -DBUILD_DEMOS=0 -DBUILD_TESTS=0 \
+          -DCSDK_HEADER_INSTALL_PATH="$PWD/../installed-headers-dir" -DCSDK_LIB_INSTALL_PATH="$PWD/../installed-headers-dir"
+      - name: Install libraries and verify install location
         run: |
-          make install
+          cd build && sudo make install
+          while IFS="" read -r p || [ -n "$p" ]
+          do
+            if [[ $p != "$PWD/../installed-headers-dir"* ]] && [[ $p != "$PWD/../installed-libs-dir"* ]]; then
+              exit 1
+            fi
+          done <install_manifest.txt
   unittest:
     runs-on: ubuntu-latest
     steps:

@@ -62,10 +62,16 @@ foreach(ota_backend ${OTA_BACKENDS})
         ${OTA_INCLUDE_PRIVATE_DIRS})
 endforeach()
 
+if(NOT DEFINED INSTALL_LIBS)
+    set(INSTALL_LIBS ${LIBRARY_PREFIXES})
+endif()
+
 set(ALL_CSDK_PUBLIC_HEADERS "")
 foreach(library_prefix ${LIBRARY_PREFIXES})
+    # Check if prefix is in list of libraries to be installed.
+    list (FIND INSTALL_LIBS ${library_prefix} _index)
     # Create the library target.
-    if(DEFINED "${library_prefix}_SOURCES" AND NOT ${library_prefix}_EXCLUDE_FROM_INSTALL)
+    if(DEFINED "${library_prefix}_SOURCES" AND ${_index} GREATER -1)
         string(TOLOWER "aws_iot_${library_prefix}" library_name)
         add_library("${library_name}"
         ${${library_prefix}_EXTRA_SOURCES}
