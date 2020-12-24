@@ -41,7 +41,7 @@ target_link_libraries( openssl_posix
                           ${CMAKE_DL_LIBS} )
 
 # Install transport implementations as libraries.
-if(INSTALL_PLATFORM)
+if(INSTALL_PLATFORM_ABSTRACTIONS)
     install(TARGETS
       openssl_posix
       plaintext_posix

@@ -10,7 +10,7 @@ target_include_directories( clock_posix
                                 ${PLATFORM_DIR}/include )
 
 # Install clock abstraction as library.
-if(INSTALL_PLATFORM)
+if(INSTALL_PLATFORM_ABSTRACTIONS)
     install(TARGETS
       clock_posix
       LIBRARY DESTINATION "${CSDK_LIB_INSTALL_PATH}")

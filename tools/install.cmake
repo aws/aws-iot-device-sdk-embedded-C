@@ -1,5 +1,4 @@
 # Creates an install target to allow users to include CSDK as a set of shared libraries
-# When making changes to this file, please verify that -DINSTALL_LIBS="prefix-name" still works.
 
 set(FILEPATH_LOCATIONS
         ${MODULES_DIR}/aws/device-defender-for-aws-iot-embedded-sdk/defenderFilePaths.cmake
@@ -132,7 +131,7 @@ foreach(library_prefix ${LIBRARY_PREFIXES})
 endforeach()
 
 # Install platform abstractions as shared libraries if enabled.
-if(INSTALL_PLATFORM)
+if(INSTALL_PLATFORM_ABSTRACTIONS)
     set(PLATFORM_DIRECTORIES
             ${COMMON_TRANSPORT_INCLUDE_PUBLIC_DIRS}
             ${PLATFORM_DIR}/posix/ota_pal/source/include)
