@@ -94,7 +94,7 @@ jobs:
           # Each line of install_manifest.txt contains the location of an installed library or header
           done <install_manifest.txt
           # Uninstall and reset build.
-          sudo xargs rm < install_manifest.txt
+          sudo xargs rm < install_manifest.txt || echo "transport_interface.h is installed twice because of duplicate copies in spoke repos."
           cd .. && rm -rf build
       - name: Configure CMake build for default install location and selective installation
         run: |
