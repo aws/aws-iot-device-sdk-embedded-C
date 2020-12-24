@@ -66,7 +66,6 @@ if(NOT DEFINED INSTALL_LIBS)
     set(INSTALL_LIBS ${LIBRARY_PREFIXES})
 endif()
 
-set(ALL_CSDK_PUBLIC_HEADERS "")
 foreach(library_prefix ${LIBRARY_PREFIXES})
     # Check if prefix is in list of libraries to be installed.
     list (FIND INSTALL_LIBS ${library_prefix} _index)
@@ -115,8 +114,9 @@ foreach(library_prefix ${LIBRARY_PREFIXES})
         target_include_directories("${library_name}"
                                     PUBLIC ${${library_prefix}_INCLUDE_PUBLIC_DIRS})
         foreach(library_public_dir ${${library_prefix}_INCLUDE_PUBLIC_DIRS})
-            file(GLOB_RECURSE library_headers LIST_DIRECTORIES false ${library_public_dir}/*.h !${library_public_dir}/*private*)
-            list(APPEND ALL_CSDK_PUBLIC_HEADERS ${library_headers})
+            install(DIRECTORY ${library_public_dir}/ DESTINATION ${CSDK_HEADER_INSTALL_PATH}
+                    FILES_MATCHING PATTERN "*.h"
+                    PATTERN "*private*" EXCLUDE)
         endforeach()
     endif()
 
@@ -148,22 +148,8 @@ if(INSTALL_PLATFORM_ABSTRACTIONS)
         list(APPEND PLATFORM_DIRECTORIES ${OTA_INCLUDE_OS_POSIX_DIRS})
     endif()
     foreach(platform_dir ${PLATFORM_DIRECTORIES})
-        file(GLOB_RECURSE platform_headers LIST_DIRECTORIES false ${platform_dir}/*.h)
-        list(APPEND ALL_CSDK_PUBLIC_HEADERS ${platform_headers})
+        install(DIRECTORY ${platform_dir}/ DESTINATION ${CSDK_HEADER_INSTALL_PATH}
+                FILES_MATCHING PATTERN "*.h"
+                PATTERN "*private*" EXCLUDE)
     endforeach()
 endif()
-
-# Exclude all private headers from list.
-if(CMAKE_VERSION VERSION_GREATER "3.6.0")
-    list(FILTER ALL_CSDK_PUBLIC_HEADERS EXCLUDE REGEX ".*private.*")
-else()
-    foreach(public_header ${ALL_CSDK_PUBLIC_HEADERS})
-        if(${public_header} MATCHES ".*private.*")
-            list(REMOVE_ITEM ALL_CSDK_PUBLIC_HEADERS ${public_header})
-        endif()
-    endforeach()
-endif()
-# Install all public headers.
-install(FILES ${ALL_CSDK_PUBLIC_HEADERS}
-        DESTINATION ${CSDK_HEADER_INSTALL_PATH}
-)
