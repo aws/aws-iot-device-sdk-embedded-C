@@ -74,21 +74,52 @@ jobs:
         uses: actions/checkout@v2
         with:
           submodules: recursive
-      - name: Configure CMake build
+      - name: Configure CMake build for custom install location
         run: |
-          sudo mkdir installed-headers-dir installed-libs-dir
+          mkdir installed-headers-dir installed-libs-dir
           curl https://cmake.org/files/v3.2/cmake-3.2.0-Linux-x86_64.tar.gz -o cmake.tar.gz
           tar -xf cmake.tar.gz
           mkdir build && cd build
           ../cmake-3.2.0-Linux-x86_64/bin/cmake .. \
           -DBUILD_DEMOS=0 -DBUILD_TESTS=0 \
           -DCSDK_HEADER_INSTALL_PATH="$PWD/../installed-headers-dir" -DCSDK_LIB_INSTALL_PATH="$PWD/../installed-headers-dir"
-      - name: Install libraries and verify install location
+      - name: Install libraries and verify custom install location
         run: |
           cd build && sudo make install
           while IFS="" read -r p || [ -n "$p" ]
           do
             if [[ $p != "$PWD/../installed-headers-dir"* ]] && [[ $p != "$PWD/../installed-libs-dir"* ]]; then
+              exit 1
+            fi
+          # Each line of install_manifest.txt contains the location of an installed library or header
+          done <install_manifest.txt
+          # Uninstall and reset build.
+          sudo xargs rm < install_manifest.txt
+          cd .. && rm -rf build
+      - name: Configure CMake build for default install location and selective installation
+        run: |
+          mkdir installed-headers-dir installed-libs-dir
+          curl https://cmake.org/files/v3.2/cmake-3.2.0-Linux-x86_64.tar.gz -o cmake.tar.gz
+          tar -xf cmake.tar.gz
+          mkdir build && cd build
+          ../cmake-3.2.0-Linux-x86_64/bin/cmake .. \
+          -DBUILD_DEMOS=0 -DBUILD_TESTS=0 -DINSTALL_LIBS="http;defender"
+      - name: Install libraries and verify default install location
+        run: |
+          cd build && sudo make install
+          while IFS="" read -r p || [ -n "$p" ]
+          do
+            if [[ $p != "/usr/local/include"* ]] && [[ $p != "/usr/local/lib"* ]]; then
+              exit 1
+            fi
+          # Each line of install_manifest.txt contains the location of an installed library or header
+          done <install_manifest.txt
+      - name: Verify filenames from selective build
+        run: |
+          cd build && sudo make install
+          while IFS="" read -r p || [ -n "$p" ]
+          do
+            if [[ $p != *"mqtt"* ]] && [[ $p != *"defender"* ]]; then
               exit 1
             fi
           # Each line of install_manifest.txt contains the location of an installed library or header
