@@ -36,6 +36,7 @@
     * [v4_beta_deprecated](#v4_beta_deprecated-branch-formerly-named-v4_beta)
 * [Getting Started](#getting-started)
     * [Cloning](#cloning)
+    * [Installation](#installation)
     * [Building and Running Demos](#building-and-running-demos)
         * [Prerequisites](#prerequisites)
             * [Build Dependencies](#build-dependencies)
@@ -297,6 +298,68 @@ When building with CMake, submodules are also recursively cloned automatically. 
 can be passed as a CMake flag to disable this functionality. This is useful when you'd like to build CMake while using a
 different commit from a submodule.
 
+### Installation
+
+The C SDK libraries and platform abstractions can be installed to a file system
+through CMake.
+```sh
+cmake .. -DBUILD_DEMOS=0 -DBUILD_TESTS=0
+sudo make install
+```
+Note that because `make install` will automatically build the `all` target, it may
+be useful to disable building demos and tests with `-DBUILD_DEMOS=0 -DBUILD_TESTS=0`
+unless they have already been configured. Super-user permissions may be needed if
+installing to a system include or system library path.
+
+To install only a subset of all libraries, pass `-DINSTALL_LIBS` to install only
+the libraries you need. By default, all libraries will be installed, but you may
+exclude any library that you don't need from this list:
+```
+-DINSTALL_LIBS="DEFENDER;SHADOW;JOBS;OTA;OTA_HTTP;OTA_MQTT;BACKOFF_ALGORITHM;HTTP;JSON;MQTT;PKCS"
+```
+
+By default, the install path will be in the `project` directory of the SDK.
+You can also set `-DINSTALL_TO_SYSTEM=1` to install to the system path for
+headers and libraries in your OS (e.g. `/usr/local/include` & `/usr/local/lib` for Linux).
+
+Upon entering `make install`, the location of each library will be specified first
+followed by the location of all installed headers:
+```
+-- Installing: /usr/local/lib/libaws_iot_defender.so
+-- Installing: /usr/local/lib/libaws_iot_shadow.so
+...
+-- Installing: /usr/local/include/aws/defender.h
+-- Installing: /usr/local/include/aws/defender_config_defaults.h
+-- Installing: /usr/local/include/aws/shadow.h
+-- Installing: /usr/local/include/aws/shadow_config_defaults.h
+```
+
+You may also set an installation path of your choice by passing the
+following flags through CMake:
+```sh
+cmake .. -DBUILD_DEMOS=0 -DBUILD_TESTS=0 \
+-DCSDK_HEADER_INSTALL_PATH="/header/path" -DCSDK_LIB_INSTALL_PATH="/lib/path"
+sudo make install
+```
+
+POSIX platform abstractions are used together with the C-SDK libraries in the demos.
+By default, these abstractions are also installed but can be excluded by passing
+the flag: `-DINSTALL_PLATFORM_ABSTRACTIONS=0`.
+
+Lastly, a custom config path for any specific library can also be specified through the following CMake flags, allowing
+libraries to be compiled with a config of your choice:
+```
+-DDEFENDER_CUSTOM_CONFIG_DIR="defender-config-directory"
+-DSHADOW_CUSTOM_CONFIG_DIR="shadow-config-directory"
+-DJOBS_CUSTOM_CONFIG_DIR="jobs-config-directory"
+-DOTA_CUSTOM_CONFIG_DIR="ota-config-directory"
+-DHTTP_CUSTOM_CONFIG_DIR="http-config-directory"
+-DJSON_CUSTOM_CONFIG_DIR="json-config-directory"
+-DMQTT_CUSTOM_CONFIG_DIR="mqtt-config-directory"
+-DPKCS_CUSTOM_CONFIG_DIR="pkcs-config-directory"
+```
+Note that the file name of the header should not be included in the directory.
+
 ### Building and Running Demos
 
 The libraries in this SDK are not dependent on any operating system. However, the demos for the libraries in this SDK are built and tested on a Linux platform. The demos build with [CMake](https://cmake.org/), a cross-platform build tool.
@@ -371,7 +434,7 @@ In order to set these configurations manually, edit `demo_config.h` in `demos/mq
 You can pass the following configuration settings as command line options in order to run the S3 demos:
 
 ```sh
-cmake .. -DS3_PRESIGNED_GET_URL="s3-get-url"  -DS3_PRESIGNED_PUT_URL="s3-put-url"
+cmake .. -DS3_PRESIGNED_GET_URL="s3-get-url" -DS3_PRESIGNED_PUT_URL="s3-put-url"
 ```
 
 `S3_PRESIGNED_PUT_URL` is only needed for the S3 upload demo.

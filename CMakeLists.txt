@@ -29,14 +29,23 @@ include( "demos/logging-stack/logging.cmake" )
 
 # Configure options to always show in CMake GUI.
 option( BUILD_TESTS
-        "Set this to ON to build both demo and test executables. When OFF, only demo executables are built."
+        "Set this to ON to build test executables."
         OFF )
+option( BUILD_DEMOS
+        "Set this to ON to build demo executables."
+        ON )
 option( BUILD_CLONE_SUBMODULES
         "Set this to ON to automatically clone any required Git submodules. When OFF, submodules must be manually cloned."
         ON )
 option( DOWNLOAD_CERTS
         "Set this to ON to automatically download certificates needed to run the demo. When OFF, certificates must be manually downloaded."
         ON )
+option( INSTALL_PLATFORM_ABSTRACTIONS
+        "Set this to ON to install POSIX platform abstractions that are used together with the C-SDK libraries in the demos."
+        ON )
+option( INSTALL_TO_SYSTEM
+        "Set this to ON to install libraries and headers to the default system path (e.g. /usr/local/lib, /usr/local/include)."
+        OFF )
 
 # Unity test framework does not export the correct symbols for DLLs.
 set( ALLOW_SHARED_LIBRARIES ON )
@@ -67,7 +76,7 @@ if(DEFINED ENV{PWD})
 endif()
 
 # Build the tests if flag enabled.
-if(${BUILD_TESTS})
+if(BUILD_TESTS)
     enable_testing()
     include(${ROOT_DIR}/tools/cmock/cmock_dependencies.cmake)
 
@@ -85,16 +94,45 @@ if(${BUILD_TESTS})
     )
 endif()
 
+include(GNUInstallDirs)
+
+# Try installing to /opt if the directory exists, or use the home directory otherwise.
+# One may turn on the INSTALL_TO_SYSTEM option to have it installed to the
+# default system path for headers and libraries.
+
+# Set the install directory for header files.
+if(INSTALL_TO_SYSTEM)
+    set(CSDK_HEADER_INSTALL_PATH "${CMAKE_INSTALL_INCLUDEDIR}/aws")
+else()
+    if(NOT DEFINED CSDK_HEADER_INSTALL_PATH)
+        set(CSDK_HEADER_INSTALL_PATH "${ROOT_DIR}/project/include")
+    endif()
+endif()
+install(DIRECTORY DESTINATION ${CSDK_HEADER_INSTALL_PATH})
+# Set the install directory for shared libraries.
+if(INSTALL_TO_SYSTEM)
+    set(CSDK_LIB_INSTALL_PATH "${CMAKE_INSTALL_LIBDIR}")
+else()
+    if(NOT DEFINED CSDK_LIB_INSTALL_PATH)
+        set(CSDK_LIB_INSTALL_PATH "${ROOT_DIR}/project/lib")
+    endif()
+endif()
+install(DIRECTORY DESTINATION ${CSDK_LIB_INSTALL_PATH})
+
 # Add libraries.
 add_subdirectory( libraries )
 
 # Add platform.
 add_subdirectory( platform )
 
+# Create the `install` target by including this file.
+include( tools/install.cmake )
+
 if(BUILD_TESTS)
     # Add build configuration for integration tests.
     add_subdirectory( integration-test )
-else()
+endif()
+if(BUILD_DEMOS)
     # Add build configuration for demos.
     add_subdirectory( demos )
 endif()
