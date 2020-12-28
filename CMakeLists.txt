@@ -43,6 +43,9 @@ option( DOWNLOAD_CERTS
 option( INSTALL_PLATFORM_ABSTRACTIONS
         "Set this to ON to install POSIX platform abstractions that are used together with the C-SDK libraries in the demos."
         ON )
+option( INSTALL_TO_SYSTEM
+        "Set this to ON to install libraries and headers to the default system path (e.g. /usr/local/lib, /usr/local/include)."
+        OFF )
 
 # Unity test framework does not export the correct symbols for DLLs.
 set( ALLOW_SHARED_LIBRARIES ON )
@@ -73,7 +76,7 @@ if(DEFINED ENV{PWD})
 endif()
 
 # Build the tests if flag enabled.
-if(${BUILD_TESTS})
+if(BUILD_TESTS)
     enable_testing()
     include(${ROOT_DIR}/tools/cmock/cmock_dependencies.cmake)
 
@@ -92,13 +95,34 @@ if(${BUILD_TESTS})
 endif()
 
 include(GNUInstallDirs)
-# Set the install directory for header files. Prefix by aws by default.
-if(NOT DEFINED CSDK_HEADER_INSTALL_PATH)
+
+# Try installing to /opt if the directory exists, or use the home directory otherwise.
+# One may turn on the INSTALL_TO_SYSTEM option to have it installed to the
+# default system path for headers and libraries.
+
+# Set the install directory for header files.
+if(INSTALL_TO_SYSTEM)
     set(CSDK_HEADER_INSTALL_PATH "${CMAKE_INSTALL_INCLUDEDIR}/aws")
+else()
+    if(NOT DEFINED CSDK_HEADER_INSTALL_PATH)
+        if(IS_DIRECTORY "/opt")
+            set(CSDK_HEADER_INSTALL_PATH "/opt/include")
+        else()
+            set(CSDK_HEADER_INSTALL_PATH "$ENV{HOME}/aws/include")
+        endif()
+    endif()
 endif()
 # Set the install directory for shared libraries.
-if(NOT DEFINED CSDK_LIB_INSTALL_PATH)
+if(INSTALL_TO_SYSTEM)
     set(CSDK_LIB_INSTALL_PATH "${CMAKE_INSTALL_LIBDIR}")
+else()
+    if(NOT DEFINED CSDK_LIB_INSTALL_PATH)
+        if(IS_DIRECTORY "/opt")
+            set(CSDK_LIB_INSTALL_PATH "/opt/lib")
+        else()
+            set(CSDK_LIB_INSTALL_PATH "$ENV{HOME}/aws/lib")
+        endif()
+    endif()
 endif()
 
 # Add libraries.

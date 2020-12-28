@@ -96,11 +96,11 @@ jobs:
           # Uninstall and reset build.
           sudo xargs rm < install_manifest.txt || echo "transport_interface.h is installed twice because of duplicate copies in spoke repos."
           rm -rf *
-      - name: Configure CMake build for default install location and selective installation
+      - name: Configure CMake build for system install location and selective installation
         run: |
           cd build
           ../cmake-3.2.0-Linux-x86_64/bin/cmake .. \
-          -DBUILD_DEMOS=0 -DBUILD_TESTS=0 \
+          -DBUILD_DEMOS=0 -DBUILD_TESTS=0 -DINSTALL_TO_SYSTEM=1 \
           -DINSTALL_LIBS="SHADOW;DEFENDER" -DINSTALL_PLATFORM_ABSTRACTIONS=0
       - name: Install selected libraries and verify default system installation path is used
         run: |

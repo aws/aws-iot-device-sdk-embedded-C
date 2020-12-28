@@ -318,9 +318,11 @@ exclude any library that you don't need from this list:
 -DINSTALL_LIBS="DEFENDER;SHADOW;JOBS;OTA;OTA_HTTP;OTA_MQTT;BACKOFF_ALGORITHM;HTTP;JSON;MQTT;PKCS"
 ```
 
-By default, the location of headers will be in the default system path for headers
-such as `/usr/local/include` for Linux. For libraries, this will likely
-be `/usr/local/lib` for Linux.
+By default, the install path for headers will be `/opt/include` while the install path for
+libraries will be `/opt/lib`. If `/opt` does not exist as a directory in your file system,
+then `$HOME/aws/include` and `$HOME/aws/lib` will be used instead. You can also set 
+`-DINSTALL_TO_SYSTEM=1` to install to the system path for headers and libraries
+in your OS (e.g. `/usr/local/include` & `/usr/local/lib` for Linux).
 
 Upon entering `make install`, the location of each library will be specified first
 followed by the location of all installed headers:
@@ -333,22 +335,12 @@ followed by the location of all installed headers:
 -- Installing: /usr/local/include/aws/shadow.h
 -- Installing: /usr/local/include/aws/shadow_config_defaults.h
 ```
-The libraries can now be linked to any build system of your choice (e.g. CMake):
-```cmake
-target_link_libraries(execName PUBLIC aws_iot_defender aws_iot_shadow)
-```
-Furthermore, the headers can now be included to any compilation unit as system headers:
-```c
-#include <aws/defender.h>
-#include <aws/shadow.h>
-```
 
-Note that by default, CMake will install to the default system path for headers and libraries of your OS.
-However, an installation path of your choice can be specified by passing the
+You may also set an installation path of your choice by passing the
 following flags through CMake:
 ```sh
 cmake .. -DBUILD_DEMOS=0 -DBUILD_TESTS=0 \
--DCSDK_HEADER_INSTALL_PATH="header-path" -DCSDK_LIB_INSTALL_PATH="lib-path"
+-DCSDK_HEADER_INSTALL_PATH="/header/path" -DCSDK_LIB_INSTALL_PATH="/lib/path"
 sudo make install
 ```
 
@@ -359,16 +351,16 @@ the flag: `-DINSTALL_PLATFORM_ABSTRACTIONS=0`.
 Lastly, a custom config path for any specific library can also be specified through the following CMake flags, allowing
 libraries to be compiled with a config of your choice:
 ```
--DDEFENDER_CUSTOM_CONFIG_DIR="defender-config-path"
--DSHADOW_CUSTOM_CONFIG_DIR="shadow-config-path"
--DJOBS_CUSTOM_CONFIG_DIR="jobs-config-path"
--DOTA_CUSTOM_CONFIG_DIR="ota-config-path"
--DHTTP_CUSTOM_CONFIG_DIR="http-config-path"
--DJSON_CUSTOM_CONFIG_DIR="json-config-path"
--DMQTT_CUSTOM_CONFIG_DIR="mqtt-config-path"
--DPKCS_CUSTOM_CONFIG_DIR="pkcs-config-path"
+-DDEFENDER_CUSTOM_CONFIG_DIR="defender-config-directory"
+-DSHADOW_CUSTOM_CONFIG_DIR="shadow-config-directory"
+-DJOBS_CUSTOM_CONFIG_DIR="jobs-config-directory"
+-DOTA_CUSTOM_CONFIG_DIR="ota-config-directory"
+-DHTTP_CUSTOM_CONFIG_DIR="http-config-directory"
+-DJSON_CUSTOM_CONFIG_DIR="json-config-directory"
+-DMQTT_CUSTOM_CONFIG_DIR="mqtt-config-directory"
+-DPKCS_CUSTOM_CONFIG_DIR="pkcs-config-directory"
 ```
-Note that the file name of the header should not be included in the path.
+Note that the file name of the header should not be included in the directory.
 
 ### Building and Running Demos
 
