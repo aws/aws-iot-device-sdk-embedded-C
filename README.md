@@ -318,11 +318,9 @@ exclude any library that you don't need from this list:
 -DINSTALL_LIBS="DEFENDER;SHADOW;JOBS;OTA;OTA_HTTP;OTA_MQTT;BACKOFF_ALGORITHM;HTTP;JSON;MQTT;PKCS"
 ```
 
-By default, the install path for headers will be `/opt/include` while the install path for
-libraries will be `/opt/lib`. If `/opt` does not exist as a directory in your file system,
-then `$HOME/aws/include` and `$HOME/aws/lib` will be used instead. You can also set 
-`-DINSTALL_TO_SYSTEM=1` to install to the system path for headers and libraries
-in your OS (e.g. `/usr/local/include` & `/usr/local/lib` for Linux).
+By default, the install path will be in the `project` directory of the SDK.
+You can also set `-DINSTALL_TO_SYSTEM=1` to install to the system path for
+headers and libraries in your OS (e.g. `/usr/local/include` & `/usr/local/lib` for Linux).
 
 Upon entering `make install`, the location of each library will be specified first
 followed by the location of all installed headers:
