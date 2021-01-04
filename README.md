@@ -496,9 +496,9 @@ After you build and run the initial executable you will have to create another e
     1. Create the Job.
 1. Run the initial executable again with the following command: `sudo ./ota_demo_core_mqtt` or `sudo ./ota_demo_core_http`.
 
-#### Building and Running Demos
+### Building and Running Demos
 
-##### Build a single demo
+#### Build a single demo
 * Go to the root directory of the C SDK.
 * Run *cmake* to generate the Makefiles: `cmake -S. -Bbuild && cd build`
 * Choose a demo from the list below or alternatively, run `make help | grep demo`:
@@ -527,7 +527,7 @@ shadow_demo_main
 * Replace `demo_name` with your desired demo then build it: `make demo_name`
 * Go to the `build/bin` directory and run any demo executables from there.
 
-##### Build all configured demos
+#### Build all configured demos
 * Go to the root directory of the C SDK.
 * Run *cmake* to generate the Makefiles: `cmake -S. -Bbuild && cd build`
 * Run this command to build all configured demos: `make`
