@@ -47,7 +47,7 @@
         * [Setup for AWS IoT Jobs demo](#setup-for-aws-iot-jobs-demo)
         * [Prerequisites for the AWS Over-The-Air Update (OTA) demos](#prerequisites-for-the-aws-over-the-air-update-ota-demos)
         * [Scheduling an OTA Update Job](#scheduling-an-ota-update-job)
-    * [Building and Running Demos](#build-steps)
+    * [Building and Running Demos](#building-and-running-demos)
         * [Build a single demo](#build-a-single-demo)
         * [Build all configured demos](#build-all-configured-demos)
         * [Running corePKCS11 demos](#running-corepkcs11-demos)
@@ -484,7 +484,7 @@ The following creates a job that specifies a Linux Kernel link for downloading.
 
 After you build and run the initial executable you will have to create another executable and schedule an OTA update job with this image.
 1. Increase the version of the application by setting macro `APP_VERSION_BUILD` in `demos/ota_demo_core_[mqtt/http]/demo_config.h` to a different version than what is running.
-1. Rebuild the application using the [build steps](#build-steps) below into a different directory, say `build-dir-2`.
+1. Rebuild the application using the [build steps](#building-and-running-demos) below into a different directory, say `build-dir-2`.
 1. Rename the demo executable to reflect the change, e.g. `mv ota_demo_core_mqtt ota_demo_core_mqtt2`
 1. Create an OTA job:
     1. Go to the [AWS IoT Core console](http://console.aws.amazon.com/iot/).
