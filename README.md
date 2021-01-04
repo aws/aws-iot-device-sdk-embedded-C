@@ -37,7 +37,7 @@
 * [Getting Started](#getting-started)
     * [Cloning](#cloning)
     * [Installation](#installation)
-    * [Building and Running Demos](#building-and-running-demos)
+    * [Configuring Demos](#configuring-demos)
         * [Prerequisites](#prerequisites)
             * [Build Dependencies](#build-dependencies)
         * [AWS IoT Account Setup](#aws-iot-account-setup)
@@ -47,7 +47,9 @@
         * [Setup for AWS IoT Jobs demo](#setup-for-aws-iot-jobs-demo)
         * [Prerequisites for the AWS Over-The-Air Update (OTA) demos](#prerequisites-for-the-aws-over-the-air-update-ota-demos)
         * [Scheduling an OTA Update Job](#scheduling-an-ota-update-job)
-        * [Build Steps](#build-steps)
+    * [Building and Running Demos](#build-steps)
+        * [Build a single demo](#build-a-single-demo)
+        * [Build all configured demos](#build-all-configured-demos)
         * [Running corePKCS11 demos](#running-corepkcs11-demos)
         * [Alternative option of Docker containers for running demos locally](#alternative-option-of-docker-containers-for-running-demos-locally)
             * [Installing Mosquitto to run MQTT demos locally](#installing-mosquitto-to-run-mqtt-demos-locally)
@@ -301,9 +303,10 @@ different commit from a submodule.
 ### Installation
 
 The C SDK libraries and platform abstractions can be installed to a file system
-through CMake.
+through CMake. Make sure to run the following command in the root directory of the C SDK:
 ```sh
-cmake .. -DBUILD_DEMOS=0 -DBUILD_TESTS=0
+cmake -S. -Bbuild -DBUILD_DEMOS=0 -DBUILD_TESTS=0
+cd build
 sudo make install
 ```
 Note that because `make install` will automatically build the `all` target, it may
@@ -335,10 +338,11 @@ followed by the location of all installed headers:
 ```
 
 You may also set an installation path of your choice by passing the
-following flags through CMake:
+following flags through CMake. Make sure to run the following command in the root directory of the C SDK:
 ```sh
-cmake .. -DBUILD_DEMOS=0 -DBUILD_TESTS=0 \
+cmake -S. -Bbuild -DBUILD_DEMOS=0 -DBUILD_TESTS=0 \
 -DCSDK_HEADER_INSTALL_PATH="/header/path" -DCSDK_LIB_INSTALL_PATH="/lib/path"
+cd build
 sudo make install
 ```
 
@@ -360,14 +364,14 @@ libraries to be compiled with a config of your choice:
 ```
 Note that the file name of the header should not be included in the directory.
 
-### Building and Running Demos
+### Configuring Demos
 
 The libraries in this SDK are not dependent on any operating system. However, the demos for the libraries in this SDK are built and tested on a Linux platform. The demos build with [CMake](https://cmake.org/), a cross-platform build tool.
 
 #### Prerequisites
 
-* CMake 3.2.0 or later for utilizing the build system of the repository.
-* C90 compiler
+* CMake 3.2.0 or any newer version for utilizing the build system of the repository.
+* C90 compiler such as gcc
 * Although not a part of the ISO C90 standard, `stdint.h` is required for fixed-width integer types that include `uint8_t`, `int8_t`, `uint16_t`, `uint32_t` and `int32_t`, and constant macros like `UINT16_MAX`, while `stdbool.h` is required for boolean parameters in coreMQTT. For compilers that do not provide these header files, [coreMQTT](https://github.com/FreeRTOS/coreMQTT) provides the files [stdint.readme](https://github.com/FreeRTOS/coreMQTT/blob/main/source/include/stdint.readme) and [stdbool.readme](https://github.com/FreeRTOS/coreMQTT/blob/main/source/include/stdbool.readme), which can be renamed to `stdint.h` and `stdbool.h`, respectively, to provide the required type definitions.
 * A supported operating system. The ports provided with this repo are expected to work with all recent versions of the following operating systems, although we cannot guarantee the behavior on all systems.
     * Linux system with POSIX sockets, threads, RT, and timer APIs. (We have tested on Ubuntu 18.04).
@@ -398,10 +402,11 @@ Follow the links to:
 
 #### Configuring mutual authentication demos of MQTT and HTTP
 
-You can pass the following configuration settings as command line options in order to run the mutual auth demos:
+You can pass the following configuration settings as command line options in order to run the mutual auth demos. Make sure to run the following command in the root directory of the C SDK:
 
 ```sh
-cmake .. -DAWS_IOT_ENDPOINT="<your-aws-iot-endpoint>" -DROOT_CA_CERT_PATH="<your-path-to-root-ca-cert>" -DCLIENT_CERT_PATH="<your-client-certificate-path>" -DCLIENT_PRIVATE_KEY_PATH="<your-client-private-key-path>" 
+cmake -S. -Bbuild
+-DAWS_IOT_ENDPOINT="<your-aws-iot-endpoint>" -DROOT_CA_CERT_PATH="<your-path-to-root-ca-cert>" -DCLIENT_CERT_PATH="<your-client-certificate-path>" -DCLIENT_PRIVATE_KEY_PATH="<your-client-private-key-path>" 
 ```
 
 In order to set these configurations manually, edit `demo_config.h` in `demos/mqtt/mqtt_demo_mutual_auth/` and `demos/http/http_demo_mutual_auth/` to `#define` the following:
@@ -413,10 +418,10 @@ In order to set these configurations manually, edit `demo_config.h` in `demos/mq
 
 #### Configuring AWS IoT Device Defender and AWS IoT Device Shadow demos
 
-To build the AWS IoT Device Defender and AWS IoT Device Shadow demos, you can pass the following configuration settings as command line options:
+To build the AWS IoT Device Defender and AWS IoT Device Shadow demos, you can pass the following configuration settings as command line options. Make sure to run the following command in the root directory of the C SDK:
 
 ```sh
-cmake .. -DAWS_IOT_ENDPOINT="<your-aws-iot-endpoint>" -DROOT_CA_CERT_PATH="<your-path-to-amazon-root-ca>" -DCLIENT_CERT_PATH="<your-client-certificate-path>" -DCLIENT_PRIVATE_KEY_PATH="<your-client-private-key-path>" -DTHING_NAME="<your-registered-thing-name>"
+cmake -S. -Bbuild -DAWS_IOT_ENDPOINT="<your-aws-iot-endpoint>" -DROOT_CA_CERT_PATH="<your-path-to-amazon-root-ca>" -DCLIENT_CERT_PATH="<your-client-certificate-path>" -DCLIENT_PRIVATE_KEY_PATH="<your-client-private-key-path>" -DTHING_NAME="<your-registered-thing-name>"
 ```
 
 An Amazon Root CA certificate can be downloaded from [here](https://www.amazontrust.com/repository/). 
@@ -431,10 +436,10 @@ In order to set these configurations manually, edit `demo_config.h` in `demos/mq
 
 #### Configuring the S3 demos
 
-You can pass the following configuration settings as command line options in order to run the S3 demos:
+You can pass the following configuration settings as command line options in order to run the S3 demos. Make sure to run the following command in the root directory of the C SDK:
 
 ```sh
-cmake .. -DS3_PRESIGNED_GET_URL="s3-get-url" -DS3_PRESIGNED_PUT_URL="s3-put-url"
+cmake -S. -Bbuild -DS3_PRESIGNED_GET_URL="s3-get-url" -DS3_PRESIGNED_PUT_URL="s3-put-url"
 ```
 
 `S3_PRESIGNED_PUT_URL` is only needed for the S3 upload demo.
@@ -491,12 +496,41 @@ After you build and run the initial executable you will have to create another e
     1. Create the Job.
 1. Run the initial executable again with the following command: `sudo ./ota_demo_core_mqtt` or `sudo ./ota_demo_core_http`.
 
-#### Build Steps
+#### Building and Running Demos
 
-* Go to the root directory of this repository.
-* Create build directory: `mkdir build && cd build`
-* Run *cmake* while inside build directory: `cmake ..`
-* Run this command to build the demos: `make`
+##### Build a single demo
+* Go to the root directory of the C SDK.
+* Run *cmake* to generate the Makefiles: `cmake -S. -Bbuild && cd build`
+* Choose a demo from the list below or alternatively, run `make help | grep demo`:
+```
+defender_demo
+http_demo_basic_tls
+http_demo_mutual_auth
+http_demo_plaintext
+http_demo_s3_download
+http_demo_s3_download_multithreaded
+http_demo_s3_upload
+jobs_demo_mosquitto
+mqtt_demo_basic_tls
+mqtt_demo_mutual_auth
+mqtt_demo_plaintext
+mqtt_demo_serializer
+mqtt_demo_subscription_manager
+ota_demo_core_http
+ota_demo_core_mqtt
+pkcs11_demo_management_and_rng
+pkcs11_demo_mechanisms_and_digests
+pkcs11_demo_objects
+pkcs11_demo_sign_and_verify
+shadow_demo_main
+```
+* Replace `demo_name` with your desired demo then build it: `make demo_name`
+* Go to the `build/bin` directory and run any demo executables from there.
+
+##### Build all configured demos
+* Go to the root directory of the C SDK.
+* Run *cmake* to generate the Makefiles: `cmake -S. -Bbuild && cd build`
+* Run this command to build all configured demos: `make`
 * Go to the `build/bin` directory and run any demo executables from there.
 
 #### Running corePKCS11 demos
