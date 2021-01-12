@@ -326,10 +326,10 @@ ReportBuilderStatus_t GenerateJsonReport( char * pBuffer,
     {
         LogError( ( "Invalid parameters. pBuffer: %p, bufferLength: %u"
                     " pMetrics: %p, pOutReprotLength: %p.",
-                    pBuffer,
+                    ( void * ) pBuffer,
                     bufferLength,
-                    pMetrics,
-                    pOutReprotLength ) );
+                    ( void * ) pMetrics,
+                    ( void * ) pOutReprotLength ) );
         status = ReportBuilderBadParameter;
     }
 
