@@ -275,7 +275,7 @@ static bool receivedGetRejectedResult = false;
 /**
  * @brief Buffer to hold constructed topic strings
  */
-static char topicString[ SHADOW_TOPIC_LENGTH_MAX( SHADOW_THINGNAME_LENGTH_MAX, SHADOW_NAME_LENGTH_MAX ) ];
+static char topicString[ SHADOW_TOPIC_LEN_MAX( SHADOW_THINGNAME_LENGTH_MAX, SHADOW_NAME_LENGTH_MAX ) ];
 
 /* Each compilation unit must define the NetworkContext struct. */
 struct NetworkContext
@@ -396,13 +396,13 @@ static void eventCallback( MQTTContext_t * pContext,
 
         /* Handle incoming publish. */
         /* Let the Device Shadow library tell us whether this is a device shadow message. */
-        if( SHADOW_SUCCESS == Shadow_MatchTopic( pDeserializedInfo->pPublishInfo->pTopicName,
-                                                 pDeserializedInfo->pPublishInfo->topicNameLength,
-                                                 &messageType,
-                                                 &pThingName,
-                                                 &thingNameLength,
-                                                 &pShadowName,
-                                                 &shadowNameLength ) )
+        if( SHADOW_SUCCESS == Shadow_MatchTopicString( pDeserializedInfo->pPublishInfo->pTopicName,
+                                                       pDeserializedInfo->pPublishInfo->topicNameLength,
+                                                       &messageType,
+                                                       &pThingName,
+                                                       &thingNameLength,
+                                                       &pShadowName,
+                                                       &shadowNameLength ) )
         {
             /* Upon successful return, the messageType has been filled in. */
             if( messageType == ShadowMessageTypeUpdateDelta )
@@ -676,14 +676,14 @@ static uint16_t createTopicString( ShadowTopicStringType_t topicType,
 
     uint16_t topicLength = 0;
 
-    TEST_ASSERT_EQUAL( SHADOW_SUCCESS, Shadow_GetTopicString( topicType,
-                                                              THING_NAME,
-                                                              THING_NAME_LENGTH,
-                                                              pShadowName,
-                                                              shadowNameLength,
-                                                              topicString,
-                                                              sizeof( topicString ),
-                                                              &topicLength ) );
+    TEST_ASSERT_EQUAL( SHADOW_SUCCESS, Shadow_AssembleTopicString( topicType,
+                                                                   THING_NAME,
+                                                                   THING_NAME_LENGTH,
+                                                                   pShadowName,
+                                                                   shadowNameLength,
+                                                                   topicString,
+                                                                   sizeof( topicString ),
+                                                                   &topicLength ) );
 
     /* Other functions expect the topic string to be null terminated */
     topicString[ topicLength ] = '\0';
