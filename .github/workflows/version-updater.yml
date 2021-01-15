@@ -27,14 +27,18 @@ jobs:
           git config --global user.name "Version Updater"
       - name: Update source files with new version
         run: |
-          grep -ilr ${{ github.event.inputs.old_version_number }} . | grep -v ".git" | grep -v "CHANGELOG.md" | grep -v "README.md" | xargs sed -i s/${{ github.event.inputs.old_version_number }}/${{ github.event.inputs.new_version_number }}/g
+          grep -ilr ${{ github.event.inputs.old_version_number }} . | grep -Ev ".git|CHANGELOG.md|README.md|CONTRIBUTING.md" |  xargs sed -i s/${{ github.event.inputs.old_version_number }}/${{ github.event.inputs.new_version_number }}/g
       - name: Commit changes and Push to remote
         run: |
           git checkout -b updater-job/update-to-${{ github.event.inputs.new_version_number }}
           git commit -am 'Update versioning in file from ${{ github.event.inputs.old_version_number }} to ${{ github.event.inputs.new_version_number }}'
           git push --set-upstream origin updater-job/update-to-${{ github.event.inputs.new_version_number }}
       - name: Raise a Pull-Request
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          sudo apt-get install
-          export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
+          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0
+          sudo apt-add-repository https://cli.github.com/packages
+          sudo apt update
+          sudo apt-get install gh
           gh pr create --base ${{ github.event.inputs.branch }} --title 'Update source file versioning to ${{ github.event.inputs.new_version_number }}' --body 'Updater-Job: PR to update versioning in source files from ${{ github.event.inputs.old_version_numver }} to ${{ github.event.inputs.new_version_number }}'

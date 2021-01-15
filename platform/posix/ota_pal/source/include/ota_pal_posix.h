@@ -28,12 +28,21 @@
 
 #include "ota.h"
 
-
-
 /**
  * @brief Maximum file path length on Linux
  */
 #define OTA_FILE_PATH_LENGTH_MAX    512
+
+/**
+ * @brief The OTA platform interface status for generating
+ * absolute file path from the incoming relative file path.
+ */
+typedef enum OtaPalPathGenStatus
+{
+    OtaPalFileGenSuccess,    /*!< @brief Absolute path generation success. */
+    OtaPalCWDFailed,         /*!< @brief getcwd failed to output path. */
+    OtaPalBufferInsufficient /*!< @brief Buffer insufficient for storing the file path. */
+} OtaPalPathGenStatus_t;
 
 /**
  * @brief Abort an OTA transfer.

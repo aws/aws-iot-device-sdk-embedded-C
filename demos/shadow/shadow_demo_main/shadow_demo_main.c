@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C 202012.00
+ * AWS IoT Device SDK for Embedded C 202012.01
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -774,7 +774,7 @@ int main( int argc,
              *
              * #define SHADOW_TOPIC_MAX_LENGTH  (256U)
              *
-             * ShadowStatus_t shadowStatus = SHADOW_STATUS_SUCCESS;
+             * ShadowStatus_t shadowStatus = SHADOW_SUCCESS;
              * char topicBuffer[ SHADOW_TOPIC_MAX_LENGTH ] = { 0 };
              * uint16_t bufferSize = SHADOW_TOPIC_MAX_LENGTH;
              * uint16_t outLength = 0;
@@ -850,7 +850,7 @@ int main( int argc,
                     returnStatus = PublishToTopic( SHADOW_TOPIC_STR_UPDATE( THING_NAME, SHADOW_NAME ),
                                                    SHADOW_TOPIC_LEN_UPDATE( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ),
                                                    updateDocument,
-                                                   ( SHADOW_DESIRED_JSON_LENGTH + 1 ) );
+                                                   ( SHADOW_REPORTED_JSON_LENGTH + 1 ) );
                 }
                 else
                 {

@@ -18,7 +18,7 @@
     * [Sending metrics to AWS IoT](#sending-metrics-to-aws-iot)
 * [Versioning](#versioning)
 * [Releases](#releases)
-    * [202012.00](#20201200)
+    * [202012.01](#20201201)
     * [202011.00](#20201100)
     * [202009.00](#20200900)
     * [v3.1.2](#v312)
@@ -36,16 +36,20 @@
     * [v4_beta_deprecated](#v4_beta_deprecated-branch-formerly-named-v4_beta)
 * [Getting Started](#getting-started)
     * [Cloning](#cloning)
-    * [Building and Running Demos](#building-and-running-demos)
+    * [Installation](#installation)
+    * [Configuring Demos](#configuring-demos)
         * [Prerequisites](#prerequisites)
             * [Build Dependencies](#build-dependencies)
         * [AWS IoT Account Setup](#aws-iot-account-setup)
-        * [Configuring the mutual auth demos](#configuring-the-mutual-auth-demos)
+        * [Configuring mutual authentication demos of MQTT and HTTP](#configuring-mutual-authentication-demos-of-mqtt-and-http)
+        * [Configuring AWS IoT Device Defender and AWS IoT Device Shadow demos](#configuring-aws-iot-device-defender-and-aws-iot-device-shadow-demos)
         * [Configuring the S3 demos](#configuring-the-s3-demos)
         * [Setup for AWS IoT Jobs demo](#setup-for-aws-iot-jobs-demo)
         * [Prerequisites for the AWS Over-The-Air Update (OTA) demos](#prerequisites-for-the-aws-over-the-air-update-ota-demos)
         * [Scheduling an OTA Update Job](#scheduling-an-ota-update-job)
-        * [Build Steps](#build-steps)
+    * [Building and Running Demos](#building-and-running-demos)
+        * [Build a single demo](#build-a-single-demo)
+        * [Build all configured demos](#build-all-configured-demos)
         * [Running corePKCS11 demos](#running-corepkcs11-demos)
         * [Alternative option of Docker containers for running demos locally](#alternative-option-of-docker-containers-for-running-demos-locally)
             * [Installing Mosquitto to run MQTT demos locally](#installing-mosquitto-to-run-mqtt-demos-locally)
@@ -57,6 +61,8 @@
 The AWS IoT Device SDK for Embedded C (C-SDK) is a collection of C source files under the [MIT open source license](LICENSE) that can be used in embedded applications to securely connect IoT devices to [AWS IoT Core](http://docs.aws.amazon.com/iot/latest/developerguide/what-is-aws-iot.html). It contains MQTT client, HTTP client, JSON Parser, AWS IoT Device Shadow, AWS IoT Jobs, and AWS IoT Device Defender libraries. This SDK is distributed in source form, and can be built into customer firmware along with application code, other libraries and an operating system (OS) of your choice. These libraries are only dependent on standard C libraries, so they can be ported to various OS's - from embedded Real Time Operating Systems (RTOS) to Linux/Mac/Windows. You can find sample usage of C-SDK libraries on POSIX systems using OpenSSL (e.g. [Linux demos](demos) in this repository), and on [FreeRTOS](https://github.com/FreeRTOS/FreeRTOS/) using mbedTLS (e.g. [FreeRTOS demos](https://github.com/FreeRTOS/FreeRTOS/tree/master/FreeRTOS-Plus/Demo) in [FreeRTOS](https://github.com/FreeRTOS/FreeRTOS/) repository).
 
 For the latest release of C-SDK, please see the section for [Releases](#releases).
+
+**C-SDK includes libraries that are part of the [FreeRTOS 202012.00 LTS](https://github.com/FreeRTOS/FreeRTOS-LTS/tree/202012.00-LTS) release. Learn more about the FreeRTOS 202012.00 LTS libraries at https://freertos.org/lts-libraries.html.**
 
 ### License
 
@@ -194,9 +200,9 @@ For example, a second release in June 2021 would be 202106.01. Although the SDK 
 
 All of the released versions of the C-SDK libraries are available as git tags. For example, the last release of the v3 SDK version is available at [tag 3.1.2](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v3.1.2).
 
-### 202012.00
+### 202012.01
 
-[API documentation of 202012.00 release](https://docs.aws.amazon.com/embedded-csdk/202012.00/lib-ref/index.html)
+[API documentation of 202012.01 release](https://docs.aws.amazon.com/embedded-csdk/202012.00/lib-ref/index.html)
 
 This release includes [AWS IoT Over-the-air Update(Release Candidate)](https://github.com/aws/ota-for-aws-iot-embedded-sdk), [backoffAlgorithm](https://github.com/FreeRTOS/backoffAlgorithm), and [PKCS #11](https://github.com/FreeRTOS/corePKCS11) libraries. Additionally, there is a major update to the coreJSON and coreHTTP APIs. All libraries continue to undergo code quality checks (e.g. MISRA-C compliance), and Coverity static analysis. In addition, all libraries except AWS IoT Over-the-air Update and backoffAlgorithm undergo validation of memory safety with the C Bounded Model Checker (CBMC) automated reasoning tool.
 
@@ -240,7 +246,7 @@ Guide for porting AWS IoT Device Defender library is available [here](https://do
 
 ### Porting AWS IoT Over-the-air Update
 
-Guide for porting OTA library to your platform is available [here](https://docs.aws.amazon.com/embedded-csdk/202012.00/lib-ref/libraries/standard/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html/ota_porting.html).
+Guide for porting OTA library to your platform is available [here](https://docs.aws.amazon.com/embedded-csdk/202012.00/lib-ref/libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html/ota_porting.html).
 
 ## Migration guide from v3.1.2 to 202009.00 and newer releases
 
@@ -294,14 +300,78 @@ When building with CMake, submodules are also recursively cloned automatically. 
 can be passed as a CMake flag to disable this functionality. This is useful when you'd like to build CMake while using a
 different commit from a submodule.
 
-### Building and Running Demos
+### Installation
+
+The C SDK libraries and platform abstractions can be installed to a file system
+through CMake. Make sure to run the following command in the root directory of the C SDK:
+```sh
+cmake -S. -Bbuild -DBUILD_DEMOS=0 -DBUILD_TESTS=0
+cd build
+sudo make install
+```
+Note that because `make install` will automatically build the `all` target, it may
+be useful to disable building demos and tests with `-DBUILD_DEMOS=0 -DBUILD_TESTS=0`
+unless they have already been configured. Super-user permissions may be needed if
+installing to a system include or system library path.
+
+To install only a subset of all libraries, pass `-DINSTALL_LIBS` to install only
+the libraries you need. By default, all libraries will be installed, but you may
+exclude any library that you don't need from this list:
+```
+-DINSTALL_LIBS="DEFENDER;SHADOW;JOBS;OTA;OTA_HTTP;OTA_MQTT;BACKOFF_ALGORITHM;HTTP;JSON;MQTT;PKCS"
+```
+
+By default, the install path will be in the `project` directory of the SDK.
+You can also set `-DINSTALL_TO_SYSTEM=1` to install to the system path for
+headers and libraries in your OS (e.g. `/usr/local/include` & `/usr/local/lib` for Linux).
+
+Upon entering `make install`, the location of each library will be specified first
+followed by the location of all installed headers:
+```
+-- Installing: /usr/local/lib/libaws_iot_defender.so
+-- Installing: /usr/local/lib/libaws_iot_shadow.so
+...
+-- Installing: /usr/local/include/aws/defender.h
+-- Installing: /usr/local/include/aws/defender_config_defaults.h
+-- Installing: /usr/local/include/aws/shadow.h
+-- Installing: /usr/local/include/aws/shadow_config_defaults.h
+```
+
+You may also set an installation path of your choice by passing the
+following flags through CMake. Make sure to run the following command in the root directory of the C SDK:
+```sh
+cmake -S. -Bbuild -DBUILD_DEMOS=0 -DBUILD_TESTS=0 \
+-DCSDK_HEADER_INSTALL_PATH="/header/path" -DCSDK_LIB_INSTALL_PATH="/lib/path"
+cd build
+sudo make install
+```
+
+POSIX platform abstractions are used together with the C-SDK libraries in the demos.
+By default, these abstractions are also installed but can be excluded by passing
+the flag: `-DINSTALL_PLATFORM_ABSTRACTIONS=0`.
+
+Lastly, a custom config path for any specific library can also be specified through the following CMake flags, allowing
+libraries to be compiled with a config of your choice:
+```
+-DDEFENDER_CUSTOM_CONFIG_DIR="defender-config-directory"
+-DSHADOW_CUSTOM_CONFIG_DIR="shadow-config-directory"
+-DJOBS_CUSTOM_CONFIG_DIR="jobs-config-directory"
+-DOTA_CUSTOM_CONFIG_DIR="ota-config-directory"
+-DHTTP_CUSTOM_CONFIG_DIR="http-config-directory"
+-DJSON_CUSTOM_CONFIG_DIR="json-config-directory"
+-DMQTT_CUSTOM_CONFIG_DIR="mqtt-config-directory"
+-DPKCS_CUSTOM_CONFIG_DIR="pkcs-config-directory"
+```
+Note that the file name of the header should not be included in the directory.
+
+### Configuring Demos
 
 The libraries in this SDK are not dependent on any operating system. However, the demos for the libraries in this SDK are built and tested on a Linux platform. The demos build with [CMake](https://cmake.org/), a cross-platform build tool.
 
 #### Prerequisites
 
-* CMake 3.2.0 or later for utilizing the build system of the repository.
-* C90 compiler
+* CMake 3.2.0 or any newer version for utilizing the build system of the repository.
+* C90 compiler such as gcc
 * Although not a part of the ISO C90 standard, `stdint.h` is required for fixed-width integer types that include `uint8_t`, `int8_t`, `uint16_t`, `uint32_t` and `int32_t`, and constant macros like `UINT16_MAX`, while `stdbool.h` is required for boolean parameters in coreMQTT. For compilers that do not provide these header files, [coreMQTT](https://github.com/FreeRTOS/coreMQTT) provides the files [stdint.readme](https://github.com/FreeRTOS/coreMQTT/blob/main/source/include/stdint.readme) and [stdbool.readme](https://github.com/FreeRTOS/coreMQTT/blob/main/source/include/stdbool.readme), which can be renamed to `stdint.h` and `stdbool.h`, respectively, to provide the required type definitions.
 * A supported operating system. The ports provided with this repo are expected to work with all recent versions of the following operating systems, although we cannot guarantee the behavior on all systems.
     * Linux system with POSIX sockets, threads, RT, and timer APIs. (We have tested on Ubuntu 18.04).
@@ -322,21 +392,40 @@ Dependency | Version | Usage
 You need to setup an AWS account and access the AWS IoT console for running the AWS IoT Device Shadow library, AWS IoT Device Defender library, AWS IoT Jobs library, 
 AWS IoT OTA library and coreHTTP S3 download demos. 
 Also, the AWS account can be used for running the MQTT mutual auth demo can be run against AWS IoT broker.
-Also, running the AWS IoT Device Defender, AWS IoT Jobs and AWS IoT Device Shadow library demos require the setup of a Thing Name resource for the device running the
+Also, running the AWS IoT Device Defender, AWS IoT Jobs and AWS IoT Device Shadow library demos require the setup of a Thing resource for the device running the
 demo.
 Follow the links to:
-[Setup an AWS account](https://portal.aws.amazon.com/billing/signup#/start).
-[Sign-in to the AWS IoT Console](https://aws.amazon.com/console/) after setting up the AWS account.
-[Create a Thing resource](https://docs.aws.amazon.com/iot/latest/developerguide/iot-moisture-create-thing.html)
+- [Setup an AWS account](https://portal.aws.amazon.com/billing/signup#/start).
+- [Sign-in to the AWS IoT Console](https://aws.amazon.com/console/) after setting up the AWS account.
+- [Create a Thing resource](https://docs.aws.amazon.com/iot/latest/developerguide/iot-moisture-create-thing.html).
 
 
-#### Configuring TLS mutual authentication in demos
+#### Configuring mutual authentication demos of MQTT and HTTP
 
-You can pass the following configuration settings as command line options in order to run the mutual auth demos:
+You can pass the following configuration settings as command line options in order to run the mutual auth demos. Make sure to run the following command in the root directory of the C SDK:
 
 ```sh
-cmake .. -DAWS_IOT_ENDPOINT="aws-iot-endpoint" -DROOT_CA_CERT_PATH="root-ca-path" -DCLIENT_CERT_PATH="certificate-path" -DCLIENT_PRIVATE_KEY_PATH="private-key-path"
+cmake -S. -Bbuild
+-DAWS_IOT_ENDPOINT="<your-aws-iot-endpoint>" -DCLIENT_CERT_PATH="<your-client-certificate-path>" -DCLIENT_PRIVATE_KEY_PATH="<your-client-private-key-path>" 
 ```
+
+In order to set these configurations manually, edit `demo_config.h` in `demos/mqtt/mqtt_demo_mutual_auth/` and `demos/http/http_demo_mutual_auth/` to `#define` the following:
+
+* Set `AWS_IOT_ENDPOINT` to your custom endpoint. This is found on the *Settings* page of the AWS IoT Console and has a format of `ABCDEFG1234567.iot.us-east-2.amazonaws.com`.
+* Set `CLIENT_CERT_PATH` to the path of the client certificate downloaded when setting up the device certificate in [AWS IoT Account Setup](#aws-iot-account-setup).
+* Set `CLIENT_PRIVATE_KEY_PATH` to the path of the private key downloaded when setting up the device certificate in [AWS IoT Account Setup](#aws-iot-account-setup).
+
+It is possible to configure `ROOT_CA_CERT_PATH` to any PEM-encoded Root CA Certificate. However, this is optional because CMake will download and set it to [AmazonRootCA1.pem](https://www.amazontrust.com/repository/AmazonRootCA1.pem) when unspecified.
+
+#### Configuring AWS IoT Device Defender and AWS IoT Device Shadow demos
+
+To build the AWS IoT Device Defender and AWS IoT Device Shadow demos, you can pass the following configuration settings as command line options. Make sure to run the following command in the root directory of the C SDK:
+
+```sh
+cmake -S. -Bbuild -DAWS_IOT_ENDPOINT="<your-aws-iot-endpoint>" -DROOT_CA_CERT_PATH="<your-path-to-amazon-root-ca>" -DCLIENT_CERT_PATH="<your-client-certificate-path>" -DCLIENT_PRIVATE_KEY_PATH="<your-client-private-key-path>" -DTHING_NAME="<your-registered-thing-name>"
+```
+
+An Amazon Root CA certificate can be downloaded from [here](https://www.amazontrust.com/repository/). 
 
 In order to set these configurations manually, edit `demo_config.h` in `demos/mqtt/mqtt_demo_mutual_auth/` and `demos/http/http_demo_mutual_auth/` to `#define` the following:
 
@@ -344,13 +433,14 @@ In order to set these configurations manually, edit `demo_config.h` in `demos/mq
 * Set `ROOT_CA_CERT_PATH` to the path of the root CA certificate downloaded when setting up the device certificate in [AWS IoT Account Setup](#aws-iot-account-setup).
 * Set `CLIENT_CERT_PATH` to the path of the client certificate downloaded when setting up the device certificate in [AWS IoT Account Setup](#aws-iot-account-setup).
 * Set `CLIENT_PRIVATE_KEY_PATH` to the path of the private key downloaded when setting up the device certificate in [AWS IoT Account Setup](#aws-iot-account-setup).
+* Set `THING_NAME` to the name of the Thing created in [AWS IoT Account Setup](#aws-iot-account-setup).
 
 #### Configuring the S3 demos
 
-You can pass the following configuration settings as command line options in order to run the S3 demos:
+You can pass the following configuration settings as command line options in order to run the S3 demos. Make sure to run the following command in the root directory of the C SDK:
 
 ```sh
-cmake .. -DS3_PRESIGNED_GET_URL="s3-get-url"  -DS3_PRESIGNED_PUT_URL="s3-put-url"
+cmake -S. -Bbuild -DS3_PRESIGNED_GET_URL="s3-get-url" -DS3_PRESIGNED_PUT_URL="s3-put-url"
 ```
 
 `S3_PRESIGNED_PUT_URL` is only needed for the S3 upload demo.
@@ -382,44 +472,66 @@ The following creates a job that specifies a Linux Kernel link for downloading.
  aws iot create-job \
         --job-id 'job_1' \
         --targets arn:aws:iot:us-west-2:<account-id>:thing/<thing-name> \
-        --document '{\"url\":\"https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.8.5.tar.xz\"}'
+        --document '{"url":"https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.8.5.tar.xz"}'
 ```
 
 
 #### Prerequisites for the AWS Over-The-Air Update (OTA) demos
-
-<ol>
-	<li> To perform a successful OTA update you would need to complete the prerequisites mentioned here: https://docs.aws.amazon.com/freertos/latest/userguide/ota-prereqs.html </li>
-	<li> A code signing certificate is required to authenticate the update. A code signing certificate based on the SHA-256 ECDSA algorithm will work with the current demos. An example of how to generate this kind of certificate can be found here: https://docs.aws.amazon.com/freertos/latest/userguide/ota-code-sign-cert-esp.html </li>
-</ol>
+   
+1. To perform a successful OTA update, you need to complete the prerequisites mentioned [here](https://docs.aws.amazon.com/freertos/latest/userguide/ota-prereqs.html).
+1. A code signing certificate is required to authenticate the update. A code signing certificate based on the SHA-256 ECDSA algorithm will work with the current demos. An example of how to generate this kind of certificate can be found [here](https://docs.aws.amazon.com/freertos/latest/userguide/ota-code-sign-cert-esp.html).
 
 #### Scheduling an OTA Update Job
 
 After you build and run the initial executable you will have to create another executable and schedule an OTA update job with this image.
-<ol>
-	<li> Increase the version of the application by setting macro `APP_VERSION_BUILD` in demos/ota_demo_core_[mqtt/http]/demo_config.h to a different version than what is running.</li>
-	<li> Rebuild the application using @ref building_demo_commmandline from below into a different directory, say build-dir-2</li>
-	<li> Rename the demo executable to reflect the change, e.g. `mv ota_demo_core_mqtt ota_demo_core_mqtt2`</li>
-	<li> Create an OTA job:
-		<ol>
-		<li> Go to the AWS IoT Core console console.aws.amazon.com/iot/ (http://console.aws.amazon.com/iot/)</li>
-		<li> Manage → Jobs → Create → Create a FreeRTOS OTA update job → Select `testclient` from the thing list</li>
-		<li> Sign a new firmware → Create a new profile → Select any SHA-ECDSA signing platform → Upload the code signing certificate(from prerequisites) and provide its path on the device.</li>
-		<li> Select the image → Select the bucket you created in prerequisites → Upload the binary build-dir-2/bin/ota_demo2</li>
-		<li> The path on device should be the complete path to place the executable and the binary name: eg /home/ubuntu/aws-iot-device-sdk-embedded-C-staging/build-dir/bin/ota_demo_core_mqtt2</li>
-		<li> Select the IAM role created in prerequisites</li>
-		<li> Create the Job
-		</ol>
-	</li>
-	<li>Run the initial executable again with the following command: `sudo ./ota_demo_core_mqtt or sudo ./ota_demo_core_http`</li>
-</ol>
+1. Increase the version of the application by setting macro `APP_VERSION_BUILD` in `demos/ota_demo_core_[mqtt/http]/demo_config.h` to a different version than what is running.
+1. Rebuild the application using the [build steps](#building-and-running-demos) below into a different directory, say `build-dir-2`.
+1. Rename the demo executable to reflect the change, e.g. `mv ota_demo_core_mqtt ota_demo_core_mqtt2`
+1. Create an OTA job:
+    1. Go to the [AWS IoT Core console](http://console.aws.amazon.com/iot/).
+    1. Manage → Jobs → Create → Create a FreeRTOS OTA update job → Select the corresponding name for your device from the thing list.
+    1. Sign a new firmware → Create a new profile → Select any SHA-ECDSA signing platform → Upload the code signing certificate(from prerequisites) and provide its path on the device.
+    1. Select the image → Select the bucket you created during the [prerequisite steps](#prerequisites-for-the-aws-over-the-air-update-ota-demos) → Upload the binary `build-dir-2/bin/ota_demo2`.
+    1. The path on device should be the absolute path to place the executable and the binary name: e.g. `/home/ubuntu/aws-iot-device-sdk-embedded-C-staging/build-dir/bin/ota_demo_core_mqtt2`.
+    1. Select the IAM role created during the [prerequisite steps](#prerequisites-for-the-aws-over-the-air-update-ota-demos).
+    1. Create the Job.
+1. Run the initial executable again with the following command: `sudo ./ota_demo_core_mqtt` or `sudo ./ota_demo_core_http`.
 
-#### Build Steps
+### Building and Running Demos
 
-* Go to the root directory of this repository.
-* Create build directory: `mkdir build && cd build`
-* Run *cmake* while inside build directory: `cmake ..`
-* Run this command to build the demos: `make`
+#### Build a single demo
+* Go to the root directory of the C SDK.
+* Run *cmake* to generate the Makefiles: `cmake -S. -Bbuild && cd build`
+* Choose a demo from the list below or alternatively, run `make help | grep demo`:
+```
+defender_demo
+http_demo_basic_tls
+http_demo_mutual_auth
+http_demo_plaintext
+http_demo_s3_download
+http_demo_s3_download_multithreaded
+http_demo_s3_upload
+jobs_demo_mosquitto
+mqtt_demo_basic_tls
+mqtt_demo_mutual_auth
+mqtt_demo_plaintext
+mqtt_demo_serializer
+mqtt_demo_subscription_manager
+ota_demo_core_http
+ota_demo_core_mqtt
+pkcs11_demo_management_and_rng
+pkcs11_demo_mechanisms_and_digests
+pkcs11_demo_objects
+pkcs11_demo_sign_and_verify
+shadow_demo_main
+```
+* Replace `demo_name` with your desired demo then build it: `make demo_name`
+* Go to the `build/bin` directory and run any demo executables from there.
+
+#### Build all configured demos
+* Go to the root directory of the C SDK.
+* Run *cmake* to generate the Makefiles: `cmake -S. -Bbuild && cd build`
+* Run this command to build all configured demos: `make`
 * Go to the `build/bin` directory and run any demo executables from there.
 
 #### Running corePKCS11 demos
