@@ -772,7 +772,7 @@ int main( int argc,
              * char topicBuffer[ SHADOW_TOPIC_MAX_LENGTH ] = { 0 };
              * uint16_t bufferSize = SHADOW_TOPIC_MAX_LENGTH;
              * uint16_t outLength = 0;
-             * const char * thingName = "TestThingName";
+             * const char thingName[] = "TestThingName";
              * uint16_t thingNameLength  = ( sizeof( thingName ) - 1U );
              *
              * shadowStatus = Shadow_GetTopicString( ShadowTopicStringTypeUpdateDelta,
