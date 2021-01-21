@@ -53,14 +53,10 @@
 #define MQTT_WAIT_TIME          ( 10U * 1000U )
 
 /**
- * @brief How often in seconds to ask for a new job.
+ * @brief Maximum interval in seconds for pollinv and updateinv command line arguments.
+ * (arbitrarily chosen to be a week; must be less than LONG_MAX)
  */
-#define PROMPT_INTERVAL         ( 120U )
-
-/**
- * @brief How often in seconds to send updates for a running job.
- */
-#define UPDATE_INTERVAL         ( 10U )
+#define INTERVAL_MAX            ( 60U * 60U * 24U * 7U )
 
 /**
  * @brief Parent directory to contain download directories and files.

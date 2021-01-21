@@ -125,7 +125,7 @@ static void usage( const char * programName )
              );
     fprintf( stderr,
              "\nusage: %s "
-             "[-o] -n name -h host [-p port] {--cafile file | --capath dir} --certfile file --keyfile file\n"
+             "[-o] -n name -h host [-p port] {--cafile file | --capath dir} --certfile file --keyfile file [--pollinv seconds] [--updateinv seconds]\n"
              "\n"
              "-o : run once, exit after the first job is finished.\n"
              "-n : thing name\n"
@@ -133,13 +133,18 @@ static void usage( const char * programName )
              "-p : network port to connect to. Defaults to %d.\n",
              programName, DEFAULT_MQTT_PORT );
     fprintf( stderr,
-             "--cafile   : path to a file containing trusted CA certificates to enable encrypted\n"
-             "             certificate based communication.\n"
-             "--capath   : path to a directory containing trusted CA certificates to enable encrypted\n"
-             "             communication.  Defaults to %s.\n"
-             "--certfile : client certificate for authentication in PEM format.\n"
-             "--keyfile  : client private key for authentication in PEM format.\n\n",
+             "--cafile    : path to a file containing trusted CA certificates to enable encrypted\n"
+             "              certificate based communication.\n"
+             "--capath    : path to a directory containing trusted CA certificates to enable encrypted\n"
+             "              communication.  Defaults to %s.\n"
+             "--certfile  : client certificate for authentication in PEM format.\n"
+             "--keyfile   : client private key for authentication in PEM format.\n",
              DEFAULT_CA_DIRECTORY );
+    fprintf( stderr,
+             "--pollinv   : after this many idle seconds, request a job.  Default is not to poll.\n"
+             "--updateinv : after this many seconds running a job, resend the current status to the jobs service.\n"
+             "              Default is not to resend.\n\n"
+             );
 }
 
 /*-----------------------------------------------------------*/
@@ -170,6 +175,8 @@ typedef struct
     char * capath;
     char * certfile;
     char * keyfile;
+    uint32_t pollinv;
+    uint32_t updateinv;
     /* flags */
     bool runOnce;
     /* callback-populated values */
@@ -184,8 +191,11 @@ typedef struct
     size_t urlLength;
     /* internal state tracking */
     runStatus_t runStatus;
+    char * report;
     time_t lastPrompt;
     time_t lastUpdate;
+    bool forcePrompt;
+    bool forceUpdate;
     pid_t child;
 } handle_t;
 
@@ -334,13 +344,11 @@ void on_message( struct mosquitto * m,
 static bool sendStartNext( handle_t * h );
 
 /**
- * @brief Reports status of the download process.
+ * @brief Checks status of the download process.
  *
  * @param[in] h runtime state handle
- *
- * @return the result of sendUpdate()
  */
-static bool update( handle_t * h );
+static void checkChild( handle_t * h );
 
 /**
  * @brief Launch a download process.
@@ -521,19 +529,21 @@ static bool parseArgs( handle_t * h,
         long x;
         static struct option long_options[] =
         {
-            { "once",     no_argument,       NULL, 'o' },
-            { "name",     required_argument, NULL, 'n' },
-            { "host",     required_argument, NULL, 'h' },
-            { "port",     required_argument, NULL, 'p' },
-            { "cafile",   required_argument, NULL, 'f' },
-            { "capath",   required_argument, NULL, 'd' },
-            { "certfile", required_argument, NULL, 'c' },
-            { "keyfile",  required_argument, NULL, 'k' },
-            { "help",     no_argument,       NULL, '?' },
-            { NULL,       0,                 NULL, 0   }
+            { "once",      no_argument,       NULL, 'o' },
+            { "name",      required_argument, NULL, 'n' },
+            { "host",      required_argument, NULL, 'h' },
+            { "port",      required_argument, NULL, 'p' },
+            { "cafile",    required_argument, NULL, 'f' },
+            { "capath",    required_argument, NULL, 'd' },
+            { "certfile",  required_argument, NULL, 'c' },
+            { "keyfile",   required_argument, NULL, 'k' },
+            { "pollinv",   required_argument, NULL, 'P' },
+            { "updateinv", required_argument, NULL, 'u' },
+            { "help",      no_argument,       NULL, '?' },
+            { NULL,        0,                 NULL, 0   }
         };
 
-        c = getopt_long( argc, argv, "on:h:p:f:d:c:k:?",
+        c = getopt_long( argc, argv, "on:h:p:P:u:f:d:c:k:?",
                          long_options, &option_index );
 
         if( c == -1 )
@@ -556,19 +566,29 @@ static bool parseArgs( handle_t * h,
                 h->host = optarg;
                 break;
 
+#define optargToInt( element, min, max )                \
+    x = strtol( optarg, NULL, 0 );                      \
+                                                        \
+    if( ( x > min ) && ( x <= max ) )                   \
+    {                                                   \
+        h->element = x;                                 \
+    }                                                   \
+    else                                                \
+    {                                                   \
+        ret = false;                                    \
+        warnx( "bad %s value: %s", # element, optarg ); \
+    }
+
             case 'p':
-                x = strtol( optarg, NULL, 0 );
+                optargToInt( port, 0, 0xFFFF );
+                break;
 
-                if( ( x > 0 ) && ( x <= 0xFFFF ) )
-                {
-                    h->port = x;
-                }
-                else
-                {
-                    ret = false;
-                    warnx( "bad port value: %s", optarg );
-                }
+            case 'P':
+                optargToInt( pollinv, 0, INTERVAL_MAX );
+                break;
 
+            case 'u':
+                optargToInt( updateinv, 0, INTERVAL_MAX );
                 break;
 
             case 'f':
@@ -897,8 +917,8 @@ void on_message( struct mosquitto * m,
     {
         /* a job has been added or the current job was canceled */
         case JobsNextJobChanged:
-            h->lastPrompt = 0;
-            h->lastUpdate = 0;
+            h->forceUpdate = ( h->runStatus == Running ) ? true : false;
+            h->forcePrompt = true;
             break;
 
         /* response to a request to start the next job */
@@ -981,11 +1001,10 @@ static bool sendStartNext( handle_t * h )
 
 /*-----------------------------------------------------------*/
 
-static bool update( handle_t * h )
+static void checkChild( handle_t * h )
 {
     pid_t pid;
     int status;
-    char * report;
 
     assert( h != NULL );
     assert( h->child > 0 );
@@ -998,7 +1017,7 @@ static bool update( handle_t * h )
     {
         /* still running */
         case 0:
-            report = makeReport_( "IN_PROGRESS" );
+            h->report = makeReport_( "IN_PROGRESS" );
             break;
 
         /* exited */
@@ -1010,19 +1029,17 @@ static bool update( handle_t * h )
                 ( WEXITSTATUS( status ) == 0 ) )
             {
                 info( "completed job id: %s", h->jobid );
-                report = makeReport_( "SUCCEEDED" );
+                h->report = makeReport_( "SUCCEEDED" );
             }
             else
             {
                 info( "failed job id: %s", h->jobid );
-                report = makeReport_( "FAILED" );
+                h->report = makeReport_( "FAILED" );
             }
 
             h->child = 0;
             h->runStatus = None;
     }
-
-    return sendUpdate( h, h->jobid, h->jobidLength, report );
 }
 
 /*-----------------------------------------------------------*/
@@ -1181,10 +1198,7 @@ int main( int argc,
           char * argv[] )
 {
     handle_t h_, * h = &h_;
-    size_t i;
     time_t now;
-    /* subscribe to these topics */
-    JobsTopic_t topics[] = { JobsNextJobChanged, JobsStartNextSuccess, JobsUpdateFailed };
 
     initHandle( h );
 
@@ -1200,12 +1214,9 @@ int main( int argc,
         errx( 1, "fatal error" );
     }
 
-    for( i = 0; i < ( sizeof( topics ) / sizeof( topics[ 0 ] ) ); i++ )
+    if( subscribe( h, JobsNextJobChanged ) == false )
     {
-        if( subscribe( h, topics[ i ] ) == false )
-        {
-            errx( 1, "fatal error" );
-        }
+        errx( 1, "fatal error" );
     }
 
     if( sendStartNext( h ) == false )
@@ -1233,11 +1244,13 @@ int main( int argc,
         {
             case None:
 
-                if( now > ( h->lastPrompt + PROMPT_INTERVAL ) )
+                if( ( h->forcePrompt == true ) ||
+                    ( ( h->pollinv != 0 ) && ( now > ( h->lastPrompt + h->pollinv ) ) ) )
                 {
                     h->lastPrompt = now;
                     info( "requesting job" );
                     ret = sendStartNext( h );
+                    h->forcePrompt = false;
                 }
 
                 break;
@@ -1250,7 +1263,8 @@ int main( int argc,
                 {
                     h->runStatus = Running;
                     info( "sending first update" );
-                    ret = update( h );
+                    checkChild( h );
+                    ret = sendUpdate( h, h->jobid, h->jobidLength, h->report );
                     h->lastUpdate = now;
                 }
 
@@ -1258,11 +1272,17 @@ int main( int argc,
 
             case Running:
 
-                if( now > ( h->lastUpdate + UPDATE_INTERVAL ) )
+                checkChild( h );
+
+                /* send an update if the job exited, was "force" canceled, or a periodic update is due */
+                if( ( h->runStatus == None ) ||
+                    ( h->forceUpdate == true ) ||
+                    ( ( h->updateinv != 0 ) && ( now > ( h->lastUpdate + h->updateinv ) ) ) )
                 {
                     info( "updating job id: %s", h->jobid );
-                    ret = update( h );
+                    ret = sendUpdate( h, h->jobid, h->jobidLength, h->report );
                     h->lastUpdate = now;
+                    h->forceUpdate = false;
                 }
 
                 break;
