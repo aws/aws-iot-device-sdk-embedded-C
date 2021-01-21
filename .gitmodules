@@ -15,7 +15,7 @@
 	url = https://github.com/FreeRTOS/coreJSON.git
 [submodule "libraries/aws/device-shadow-for-aws-iot-embedded-sdk"]
 	path = libraries/aws/device-shadow-for-aws-iot-embedded-sdk
-	branch = feature/named-shadows
+	branch = main
 	url = https://github.com/aws/device-shadow-for-aws-iot-embedded-sdk.git
 [submodule "libraries/aws/jobs-for-aws-iot-embedded-sdk"]
 	path = libraries/aws/jobs-for-aws-iot-embedded-sdk

@@ -153,19 +153,19 @@
  * symbol.
  */
 #include "core_mqtt.h"
-#define MQTT_LIB              "core-mqtt@" MQTT_LIBRARY_VERSION
+#define MQTT_LIB             "core-mqtt@" MQTT_LIBRARY_VERSION
 
 /**
  * @brief Predefined thing name.
  *
  * This is the example predefine thing name and could be compiled in ROM code.
  */
-#define THING_NAME            "testShadow"
+#define THING_NAME           "testShadow"
 
 /**
  * @brief The length of #THING_NAME.
  */
-#define THING_NAME_LENGTH     ( ( uint16_t ) ( sizeof( THING_NAME ) - 1 ) )
+#define THING_NAME_LENGTH    ( ( uint16_t ) ( sizeof( THING_NAME ) - 1 ) )
 
 /**
  * @brief Predefined shadow name.
@@ -173,7 +173,7 @@
  * Defaults to unnamed "Classic" shadow. Change to a custom string to use a named shadow.
  */
 #ifndef SHADOW_NAME
-    #define SHADOW_NAME           SHADOW_NAME_CLASSIC
+    #define SHADOW_NAME    SHADOW_NAME_CLASSIC
 #endif
 
 /**
