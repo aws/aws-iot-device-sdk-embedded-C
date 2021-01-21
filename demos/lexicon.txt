@@ -529,6 +529,8 @@ secp
 seedfile
 sendupdate
 serverhost
+shadowname
+shadownamelength
 setkey
 sha
 sha256
@@ -574,6 +576,7 @@ tcp
 tcpportsarraylength
 tcpsocket
 teardown
+testshadowname
 testthingname
 thingname
 thingnamelength
@@ -599,6 +602,7 @@ uldigestlength
 uloffset
 ulong
 ulslotcount
+un
 unix
 unsub
 unsuback

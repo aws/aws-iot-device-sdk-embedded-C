@@ -167,4 +167,18 @@
  */
 #define THING_NAME_LENGTH    ( ( uint16_t ) ( sizeof( THING_NAME ) - 1 ) )
 
+/**
+ * @brief Predefined shadow name.
+ *
+ * Defaults to unnamed "Classic" shadow. Change to a custom string to use a named shadow.
+ */
+#ifndef SHADOW_NAME
+    #define SHADOW_NAME    SHADOW_NAME_CLASSIC
+#endif
+
+/**
+ * @brief The length of #SHADOW_NAME.
+ */
+#define SHADOW_NAME_LENGTH    ( ( uint16_t ) ( sizeof( SHADOW_NAME ) - 1 ) )
+
 #endif /* ifndef DEMO_CONFIG_H_ */
