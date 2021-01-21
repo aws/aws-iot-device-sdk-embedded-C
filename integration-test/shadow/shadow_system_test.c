@@ -277,6 +277,11 @@ static bool receivedGetRejectedResult = false;
  */
 static char topicString[ SHADOW_TOPIC_LEN_MAX( SHADOW_THINGNAME_LENGTH_MAX, SHADOW_NAME_LENGTH_MAX ) ];
 
+/**
+ * @brief Buffer to hold the expected shadow name used to filter incoming messages from the broker
+ */
+static char expectedShadowNameString[ SHADOW_NAME_LENGTH_MAX ];
+
 /* Each compilation unit must define the NetworkContext struct. */
 struct NetworkContext
 {
@@ -392,9 +397,7 @@ static void eventCallback( MQTTContext_t * pContext,
     if( ( pPacketInfo->type & 0xF0U ) == MQTT_PACKET_TYPE_PUBLISH )
     {
         assert( pDeserializedInfo->pPublishInfo != NULL );
-        /* Handle incoming publish. */
 
-        /* Handle incoming publish. */
         /* Let the Device Shadow library tell us whether this is a device shadow message. */
         if( SHADOW_SUCCESS == Shadow_MatchTopicString( pDeserializedInfo->pPublishInfo->pTopicName,
                                                        pDeserializedInfo->pPublishInfo->topicNameLength,
@@ -404,56 +407,73 @@ static void eventCallback( MQTTContext_t * pContext,
                                                        &pShadowName,
                                                        &shadowNameLength ) )
         {
-            /* Upon successful return, the messageType has been filled in. */
-            if( messageType == ShadowMessageTypeUpdateDelta )
+            /* Only accept the message if it has the expected Thing and Shadow names */
+            if( ( strncmp( pThingName, THING_NAME, THING_NAME_LENGTH ) == 0 ) &&
+                ( thingNameLength == THING_NAME_LENGTH ) &&
+                ( strncmp( pShadowName, expectedShadowNameString, strlen( expectedShadowNameString ) ) == 0 ) &&
+                ( shadowNameLength == strlen( expectedShadowNameString ) ) )
             {
-                receivedUpdateDeltaResult = true;
-                LogInfo( ( "/update/delta payload:%s.\n\n", ( const char * ) pDeserializedInfo->pPublishInfo->pPayload ) );
-                /* validate the each field in json payload if meet our expectation. */
-            }
-            else if( ( messageType == ShadowMessageTypeUpdateDocuments ) )
-            {
-                receivedUpdateDocumentsResult = true;
-                LogInfo( ( "/update/documents json payload:%s.\n\n", ( const char * ) pDeserializedInfo->pPublishInfo->pPayload ) );
-            }
-            else if( ( messageType == ShadowMessageTypeUpdateAccepted ) )
-            {
-                receivedUpdateAcceptedResult = true;
-                LogInfo( ( "/update/accepted json payload:%s.\n\n", ( const char * ) pDeserializedInfo->pPublishInfo->pPayload ) );
-            }
-            else if( ( messageType == ShadowMessageTypeUpdateRejected ) )
-            {
-                receivedUpdateRejectedResult = true;
-                LogInfo( ( "/update/rejected json payload:%s.\n\n", ( const char * ) pDeserializedInfo->pPublishInfo->pPayload ) );
-            }
-            else if( ( messageType == ShadowMessageTypeGetAccepted ) )
-            {
-                receivedGetAcceptedResult = true;
-                LogInfo( ( "/get/accepted json payload:%s.\n\n", ( const char * ) pDeserializedInfo->pPublishInfo->pPayload ) );
-            }
-            else if( ( messageType == ShadowMessageTypeGetRejected ) )
-            {
-                receivedGetRejectedResult = true;
-                LogInfo( ( "/get/rejected json payload:%s.\n\n", ( const char * ) pDeserializedInfo->pPublishInfo->pPayload ) );
-            }
-            else if( ( messageType == ShadowMessageTypeDeleteAccepted ) )
-            {
-                receivedDeleteAcceptedResult = true;
-                LogInfo( ( "/delete/accepted json payload:%s.\n\n", ( const char * ) pDeserializedInfo->pPublishInfo->pPayload ) );
-            }
-            else if( ( messageType == ShadowMessageTypeDeleteRejected ) )
-            {
-                receivedDeleteRejectedResult = true;
-                LogInfo( ( "/delete/rejected json payload:%s.\n\n", ( const char * ) pDeserializedInfo->pPublishInfo->pPayload ) );
+                const char * pPayload = ( const char * ) pDeserializedInfo->pPublishInfo->pPayload;
+                uint16_t payloadLength = strlen( pPayload );
+
+                /* Upon successful return, the messageType has been filled in. */
+                if( messageType == ShadowMessageTypeUpdateDelta )
+                {
+                    receivedUpdateDeltaResult = true;
+                    LogInfo( ( "/update/delta payload:%.*s.\n\n", payloadLength, pPayload ) );
+                    /* validate the each field in json payload if meet our expectation. */
+                }
+                else if( ( messageType == ShadowMessageTypeUpdateDocuments ) )
+                {
+                    receivedUpdateDocumentsResult = true;
+                    LogInfo( ( "/update/documents json payload:%.*s.\n\n", payloadLength, pPayload ) );
+                }
+                else if( ( messageType == ShadowMessageTypeUpdateAccepted ) )
+                {
+                    receivedUpdateAcceptedResult = true;
+                    LogInfo( ( "/update/accepted json payload:%.*s.\n\n", payloadLength, pPayload ) );
+                }
+                else if( ( messageType == ShadowMessageTypeUpdateRejected ) )
+                {
+                    receivedUpdateRejectedResult = true;
+                    LogInfo( ( "/update/rejected json payload:%.*s.\n\n", payloadLength, pPayload ) );
+                }
+                else if( ( messageType == ShadowMessageTypeGetAccepted ) )
+                {
+                    receivedGetAcceptedResult = true;
+                    LogInfo( ( "/get/accepted json payload:%.*s.\n\n", payloadLength, pPayload ) );
+                }
+                else if( ( messageType == ShadowMessageTypeGetRejected ) )
+                {
+                    receivedGetRejectedResult = true;
+                    LogInfo( ( "/get/rejected json payload:%.*s.\n\n", payloadLength, pPayload ) );
+                }
+                else if( ( messageType == ShadowMessageTypeDeleteAccepted ) )
+                {
+                    receivedDeleteAcceptedResult = true;
+                    LogInfo( ( "/delete/accepted json payload:%.*s.\n\n", payloadLength, pPayload ) );
+                }
+                else if( ( messageType == ShadowMessageTypeDeleteRejected ) )
+                {
+                    receivedDeleteRejectedResult = true;
+                    LogInfo( ( "/delete/rejected json payload:%.*s.\n\n", payloadLength, pPayload ) );
+                }
+                else
+                {
+                    LogInfo( ( "other message type:%d !!\n\n", messageType ) );
+                }
             }
             else
             {
-                LogInfo( ( "other message type:%d !!\n\n", messageType ) );
+                LogError( ( "Received unexpected Thing (%.*s) or Shadow (%.*s) name\n\n",
+                            thingNameLength, pThingName, shadowNameLength, pShadowName ) );
             }
         }
         else
         {
-            LogError( ( "Shadow_ValidateTopic parse failed:%s !!\n\n", ( const char * ) pDeserializedInfo->pPublishInfo->pTopicName ) );
+            LogError( ( "Shadow_MatchTopicString parse failed:%.*s !!\n\n",
+                        ( int ) strlen( ( const char * ) pDeserializedInfo->pPublishInfo->pTopicName ),
+                        ( const char * ) pDeserializedInfo->pPublishInfo->pTopicName ) );
         }
     }
     else
@@ -695,6 +715,10 @@ static void testSequence( const char * pShadowName,
                           uint16_t shadowNameLength )
 {
     assert( pShadowName != NULL );
+    assert( shadowNameLength < sizeof( expectedShadowNameString ) );
+
+    /* Setup the expected shadow name used to filter incoming messages for only the correct shadow */
+    strncpy( expectedShadowNameString, pShadowName, shadowNameLength );
 
     /* A buffer containing the update document. It has static duration to prevent
      * it from being placed on the call stack. */
@@ -768,7 +792,7 @@ static void testSequence( const char * pShadowName,
                                                     updateDocument,
                                                     MQTTQoS0 ) );
 
-    /* Check the flag for /delete/accepted or /delete/rejected. */
+    /* Check the flag for /delete/accepted or /delete/rejected (if the shadow does not already exist). */
     TEST_ASSERT_TRUE( ( receivedDeleteAcceptedResult || receivedDeleteRejectedResult ) );
 
     /* Publish to the shadow topic /update with reported payload,
@@ -785,8 +809,8 @@ static void testSequence( const char * pShadowName,
     /* Check the flag for /update/delta. */
     TEST_ASSERT_TRUE( receivedUpdateDeltaResult );
 
-    /* Check the flag for /update/accepted and /update/rejected. */
-    TEST_ASSERT_TRUE( ( receivedUpdateAcceptedResult || receivedUpdateRejectedResult ) );
+    /* Check the flag for /update/accepted. */
+    TEST_ASSERT_TRUE( receivedUpdateAcceptedResult );
 
     /* Finally, sending null payload on topic /get to trigger /get/accepted. */
     ( void ) createTopicString( ShadowTopicStringTypeGet, pShadowName, shadowNameLength );
@@ -795,8 +819,8 @@ static void testSequence( const char * pShadowName,
                                                     updateDocument,
                                                     MQTTQoS0 ) );
 
-    /* Check the flag for /get/accepted and /get/rejected. */
-    TEST_ASSERT_TRUE( ( receivedGetAcceptedResult || receivedGetRejectedResult ) );
+    /* Check the flag for /get/accepted */
+    TEST_ASSERT_TRUE( receivedGetAcceptedResult );
 
     /* Un-subscribe from a topic with Qos 0. */
     topicLength = createTopicString( ShadowTopicStringTypeUpdateDelta, pShadowName, shadowNameLength );
@@ -890,7 +914,7 @@ void tearDown( void )
  * @brief Subscribes the classic shadow topics: /update/delta, /update/documents,
  * /update/accepted, /delete/accepted, /get/accepted, then publish the
  * regarding payloads to verify if receiving the notification from the
- * subscribed topics.
+ * subscribed topics, and then finally unsubscribes from update/delta.
  */
 void test_Shadow_System_Classic( void )
 {
@@ -901,7 +925,7 @@ void test_Shadow_System_Classic( void )
  * @brief Subscribes the named shadow topics: /update/delta, /update/documents,
  * /update/accepted, /delete/accepted, /get/accepted, then publish the
  * regarding payloads to verify if receiving the notification from the
- * subscribed topics.
+ * subscribed topics, and then finally unsubscribes from update/delta.
  */
 void test_Shadow_System_Named( void )
 {

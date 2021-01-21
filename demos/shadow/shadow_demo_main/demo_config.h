@@ -172,7 +172,9 @@
  *
  * Defaults to unnamed "Classic" shadow. Change to a custom string to use a named shadow.
  */
-#define SHADOW_NAME           SHADOW_NAME_CLASSIC
+#ifndef SHADOW_NAME
+    #define SHADOW_NAME           SHADOW_NAME_CLASSIC
+#endif
 
 /**
  * @brief The length of #SHADOW_NAME.

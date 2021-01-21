@@ -26,7 +26,7 @@
  * @brief Demo for showing how to use the Device Shadow library's API. This version
  * of Device Shadow API provide macros and helper functions for assembling MQTT topics
  * strings, and for determining whether an incoming MQTT message is related to a
- * device shadow. The shadow can be either the Classic shadow or a named shadow. Change
+ * device shadow. The shadow can be either the classic shadow or a named shadow. Change
  * #SHADOW_NAME to select the shadow. The Device Shadow library does not depend on a MQTT library,
  * therefore the code for MQTT connections are placed in another file (shadow_demo_helpers.c)
  * to make it easy to read the code using Device Shadow library.
@@ -778,9 +778,9 @@ int main( int argc,
              * char topicBuffer[ SHADOW_TOPIC_MAX_LENGTH ] = { 0 };
              * uint16_t bufferSize = SHADOW_TOPIC_MAX_LENGTH;
              * uint16_t outLength = 0;
-             * const char * thingName = "TestThingName";
+             * const char thingName[] = { "TestThingName" };
              * uint16_t thingNameLength  = ( sizeof( thingName ) - 1U );
-             * const char * shadowName = "TestShadowName";
+             * const char shadowName[] = { "TestShadowName" };
              * uint16_t shadowNameLength  = ( sizeof( shadowName ) - 1U );
              *
              * shadowStatus = Shadow_AssembleTopicString( ShadowTopicStringTypeUpdateDelta,
