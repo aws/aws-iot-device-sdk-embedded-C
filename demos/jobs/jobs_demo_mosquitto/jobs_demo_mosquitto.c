@@ -141,9 +141,10 @@ static void usage( const char * programName )
              "--keyfile   : client private key for authentication in PEM format.\n",
              DEFAULT_CA_DIRECTORY );
     fprintf( stderr,
-             "--pollinv   : after this many idle seconds, request a job.  Default is not to poll.\n"
+             "--pollinv   : after this many idle seconds, request a job.\n"
+             "              Without this option and a positive value, no polling is done.\n"
              "--updateinv : after this many seconds running a job, resend the current status to the jobs service.\n"
-             "              Default is not to resend.\n\n"
+             "              Without this option and a positive value, status is not resent.\n\n"
              );
 }
 
@@ -175,8 +176,8 @@ typedef struct
     char * capath;
     char * certfile;
     char * keyfile;
-    uint32_t pollinv;
-    uint32_t updateinv;
+    uint32_t pollinv;   /* 0 (default) disables polling for new jobs */
+    uint32_t updateinv; /* 0 (default) disables periodic resending of status */
     /* flags */
     bool runOnce;
     /* callback-populated values */
