@@ -414,6 +414,7 @@ pmqttcontext
 pmsg
 pmsg
 pnetworkcontext
+pollinv
 poly
 popenportsarray
 portsarraylength
@@ -605,6 +606,7 @@ un
 unix
 unsub
 unsuback
+updateinv
 updatejobexecution
 urandom
 uri
