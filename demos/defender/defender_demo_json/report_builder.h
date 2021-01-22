@@ -60,7 +60,7 @@ typedef struct ReportMetrics
  * @param[in] majorReportVersion Major version of the report.
  * @param[in] minorReportVersion Minor version of the report.
  * @param[in] reportId Value to be used as the reportId in the generated report.
- * @param[out] pOutReprotLength The length of the generated report.
+ * @param[out] pOutReportLength The length of the generated report.
  *
  * @return #ReportBuilderSuccess if the report is successfully generated;
  * #ReportBuilderBadParameter if invalid parameters are passed;
@@ -72,6 +72,6 @@ ReportBuilderStatus_t GenerateJsonReport( char * pBuffer,
                                           uint32_t majorReportVersion,
                                           uint32_t minorReportVersion,
                                           uint32_t reportId,
-                                          uint32_t * pOutReprotLength );
+                                          uint32_t * pOutReportLength );
 
 #endif /* ifndef REPORT_BUILDER_H_ */
