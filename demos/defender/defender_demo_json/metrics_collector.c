@@ -87,10 +87,10 @@ static MetricsCollectorStatus_t getOpenPorts( const char * pProcFile,
     {
         LogError( ( "Invalid parameters. pProcFile: %p, pOutPortsArray: %p,"
                     " portsArrayLength: %u, pOutNumOpenPorts: %p.",
-                    pProcFile,
-                    pOutPortsArray,
+                    ( void * ) pProcFile,
+                    ( void * ) pOutPortsArray,
                     portsArrayLength,
-                    pOutNumOpenPorts ) );
+                    ( void * ) pOutNumOpenPorts ) );
         status = MetricsCollectorBadParameter;
     }
 
@@ -181,7 +181,7 @@ MetricsCollectorStatus_t GetNetworkStats( NetworkStats_t * pOutNetworkStats )
 
     if( pOutNetworkStats == NULL )
     {
-        LogError( ( "Invalid parameter. pOutNetworkStats: %p.", pOutNetworkStats ) );
+        LogError( ( "Invalid parameter. pOutNetworkStats: %p.", ( void * ) pOutNetworkStats ) );
         status = MetricsCollectorBadParameter;
     }
 
@@ -288,9 +288,9 @@ MetricsCollectorStatus_t GetEstablishedConnections( Connection_t * pOutConnectio
     {
         LogError( ( "Invalid parameters. pOutConnectionsArray: %p,"
                     " connectionsArrayLength: %u, pOutNumEstablishedConnections: %p.",
-                    pOutConnectionsArray,
+                    ( void * ) pOutConnectionsArray,
                     connectionsArrayLength,
-                    pOutNumEstablishedConnections ) );
+                    ( void * ) pOutNumEstablishedConnections ) );
         status = MetricsCollectorBadParameter;
     }
 

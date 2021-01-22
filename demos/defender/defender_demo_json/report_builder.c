@@ -312,7 +312,7 @@ ReportBuilderStatus_t GenerateJsonReport( char * pBuffer,
                                           uint32_t majorReportVersion,
                                           uint32_t minorReportVersion,
                                           uint32_t reportId,
-                                          uint32_t * pOutReprotLength )
+                                          uint32_t * pOutReportLength )
 {
     char * pCurrentWritePos = pBuffer;
     uint32_t remainingBufferLength = bufferLength, bufferWritten;
@@ -322,14 +322,14 @@ ReportBuilderStatus_t GenerateJsonReport( char * pBuffer,
     if( ( pBuffer == NULL ) ||
         ( bufferLength == 0 ) ||
         ( pMetrics == NULL ) ||
-        ( pOutReprotLength == NULL ) )
+        ( pOutReportLength == NULL ) )
     {
         LogError( ( "Invalid parameters. pBuffer: %p, bufferLength: %u"
-                    " pMetrics: %p, pOutReprotLength: %p.",
-                    pBuffer,
+                    " pMetrics: %p, pOutReportLength: %p.",
+                    ( void * ) pBuffer,
                     bufferLength,
-                    pMetrics,
-                    pOutReprotLength ) );
+                    ( void * ) pMetrics,
+                    ( void * ) pOutReportLength ) );
         status = ReportBuilderBadParameter;
     }
 
@@ -481,7 +481,7 @@ ReportBuilderStatus_t GenerateJsonReport( char * pBuffer,
 
     if( status == ReportBuilderSuccess )
     {
-        *pOutReprotLength = bufferLength - remainingBufferLength;
+        *pOutReportLength = bufferLength - remainingBufferLength;
     }
 
     return status;
