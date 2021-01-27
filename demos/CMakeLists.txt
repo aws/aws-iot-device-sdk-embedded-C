@@ -60,6 +60,51 @@ function(check_aws_credentials demo_name)
     message("All required macros for ${demo_name} were found - Adding to default target.")
 endfunction()
 
+function(set_macro_definitions)
+    set(multiValueArgs TARGETS REQUIRED OPTIONAL FILES_TO_CHECK)
+    cmake_parse_arguments(MACRO_DEFINITIONS "" "" "${multiValueArgs}" ${ARGN})
+    if(NOT DEFINED MACRO_DEFINITIONS_TARGETS)
+        message("At least one target is required when setting macro definitions through CMake.")
+        return()
+    endif()
+    if(NOT DEFINED MACRO_DEFINITIONS_FILES_TO_CHECK)
+        set(MACRO_DEFINITIONS_FILES_TO_CHECK "demo_config.h")
+    endif()
+    set(CMAKE_REQUIRED_DEFINITIONS "")
+    foreach(application_target ${MACRO_DEFINITIONS_TARGETS})
+        if(DEFINED MACRO_DEFINITIONS_OPTIONAL)
+            foreach(optional_macro_definition ${MACRO_DEFINITIONS_OPTIONAL})
+                if(DEFINED ${optional_macro_definition})
+                    target_compile_definitions(
+                        ${application_target} PRIVATE
+                            ${optional_macro_definition}="${${optional_macro_definition}}"
+                    )
+                endif()
+            endforeach()
+        endif()
+        if(DEFINED MACRO_DEFINITIONS_REQUIRED)
+            foreach(required_macro_definition ${MACRO_DEFINITIONS_REQUIRED})
+                if(DEFINED ${required_macro_definition})
+                    target_compile_definitions(
+                        ${application_target} PRIVATE
+                            ${required_macro_definition}="${${required_macro_definition}}"
+                    )
+                    list(APPEND CMAKE_REQUIRED_DEFINITIONS -D${required_macro_definition})
+                endif()
+                # Check if MACRO_DEFINITIONS_FILES_TO_CHECK has the required macros defined already.
+                # Note: Need to use includes from demo
+                list(APPEND CMAKE_REQUIRED_INCLUDES "${CMAKE_CURRENT_LIST_DIR};${LOGGING_INCLUDE_DIRS}")
+                unset(HAVE_${required_macro_definition} CACHE)
+                check_symbol_exists(${required_macro_definition} ${FILES_TO_CHECK} HAVE_${required_macro_definition})
+            endforeach()
+        endif()
+        # Print the error when certain required macros are not defined
+    endforeach()
+    if(MACRO_DEFINITIONS_REQUIRED)
+
+    endif()
+endfunction()
+
 # This function will add a demo target to the list of default targets
 # if pre-signed GET and PUT URLs are defined.
 function(check_presigned_urls demo_name)
