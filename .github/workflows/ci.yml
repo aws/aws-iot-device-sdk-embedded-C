@@ -9,7 +9,7 @@ on:
 
 jobs:
   build-check-demos:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     steps:
       - name: Clone This Repo
         uses: actions/checkout@v2
@@ -40,7 +40,7 @@ jobs:
           make -C build/ help | grep demo | tr -d '. ' | xargs make -C build/
           make -C demos/jobs/jobs_demo_mosquitto
   build-check-system-tests:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     steps:
       - name: Clone This Repo
         uses: actions/checkout@v2
@@ -68,7 +68,7 @@ jobs:
       - name: Build System Tests
         run: make -C build/ help | grep system | tr -d '. ' | xargs make -C build/
   build-check-install:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     steps:
       - name: Clone This Repo
         uses: actions/checkout@v2
@@ -123,7 +123,7 @@ jobs:
           # Each line of install_manifest.txt contains the location of an installed library or header
           done <install_manifest.txt
   unittest:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     steps:
       - name: Clone This Repo
         uses: actions/checkout@v2

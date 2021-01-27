@@ -31,7 +31,7 @@ target_include_directories(
         ${LOGGING_INCLUDE_DIRS}
 )
 
-set_macro_definitions(TARGETS ${DEMO_NAME} 
+set_macro_definitions(TARGETS ${DEMO_NAME}
                       REQUIRED
                         "ROOT_CA_CERT_PATH"
                         "BROKER_ENDPOINT"
