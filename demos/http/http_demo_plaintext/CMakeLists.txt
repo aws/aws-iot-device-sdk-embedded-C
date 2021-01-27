@@ -33,15 +33,4 @@ target_include_directories(
         ${LOGGING_INCLUDE_DIRS}
 )
 
-if(SERVER_HOST)
-    target_compile_definitions(
-        ${DEMO_NAME} PRIVATE
-            SERVER_HOST="${SERVER_HOST}"
-    )
-endif()
-if(HTTP_PORT)
-    target_compile_definitions(
-        ${DEMO_NAME} PRIVATE
-            HTTP_PORT=${HTTP_PORT}
-    )
-endif()
+set_macro_definitions(TARGETS ${DEMO_NAME} OPTIONAL "SERVER_HOST" "HTTP_PORT")
