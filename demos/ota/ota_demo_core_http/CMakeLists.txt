@@ -24,9 +24,6 @@ add_executable(
         ${BACKOFF_ALGORITHM_SOURCES}
 )
 
-# Add to default target if all required macros needed to run this demo are defined
-check_aws_credentials(${DEMO_NAME})
-
 target_link_libraries(
     ${DEMO_NAME}
     PRIVATE
@@ -51,27 +48,17 @@ target_include_directories(
         ${HTTP_INCLUDE_PUBLIC_DIRS}
 )
 
-if(ROOT_CA_CERT_PATH)
-    target_compile_definitions(
-        ${DEMO_NAME} PRIVATE
-            ROOT_CA_CERT_PATH="${ROOT_CA_CERT_PATH}"
-    )
-endif()
-if(ROOT_CA_CERT_PATH_HTTP)
-    target_compile_definitions(
-        ${DEMO_NAME} PRIVATE
-            ROOT_CA_CERT_PATH_HTTP="${ROOT_CA_CERT_PATH_HTTP}"
-    )
-endif()
-if(AWS_IOT_ENDPOINT)
-    target_compile_definitions(
-        ${DEMO_NAME} PRIVATE
-            AWS_IOT_ENDPOINT="${AWS_IOT_ENDPOINT}"
-    )
-endif()
-if(CLIENT_IDENTIFIER)
-    target_compile_definitions(
-        ${DEMO_NAME} PRIVATE
-            CLIENT_IDENTIFIER="${CLIENT_IDENTIFIER}"
-    )
-endif()
+set_macro_definitions(TARGETS ${DEMO_NAME}
+                      REQUIRED
+                        "AWS_IOT_ENDPOINT"
+                        "ROOT_CA_CERT_PATH"
+                        "ROOT_CA_CERT_PATH_HTTP"
+                        "CLIENT_CERT_PATH"
+                        "CLIENT_PRIVATE_KEY_PATH"
+                        "CLIENT_IDENTIFIER"
+                      OPTIONAL
+                        "CLIENT_USERNAME"
+                        "CLIENT_PASSWORD"
+                        "OS_NAME"
+                        "OS_VERSION"
+                        "HARDWARE_PLATFORM_NAME")

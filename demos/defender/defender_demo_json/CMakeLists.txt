@@ -26,9 +26,6 @@ add_executable( ${DEMO_NAME}
                 ${JSON_SOURCES}
                 ${DEFENDER_SOURCES} )
 
-# Add to default target if all required macros needed to run this demo are defined.
-check_aws_credentials( ${DEMO_NAME} )
-
 target_link_libraries( ${DEMO_NAME} PRIVATE
                        clock_posix
                        openssl_posix )
@@ -41,17 +38,17 @@ target_include_directories( ${DEMO_NAME} PUBLIC
                             ${DEFENDER_INCLUDE_PUBLIC_DIRS}
                             ${CMAKE_CURRENT_LIST_DIR} )
 
-if( ROOT_CA_CERT_PATH )
-    target_compile_definitions( ${DEMO_NAME} PRIVATE
-                                ROOT_CA_CERT_PATH="${ROOT_CA_CERT_PATH}" )
-endif()
-
-if( CLIENT_IDENTIFIER )
-    target_compile_definitions( ${DEMO_NAME} PRIVATE
-                                CLIENT_IDENTIFIER="${CLIENT_IDENTIFIER}" )
-endif()
-
-if( THING_NAME )
-    target_compile_definitions( ${DEMO_NAME} PRIVATE
-                                THING_NAME="${THING_NAME}" )
-endif()
+set_macro_definitions(TARGETS ${DEMO_NAME}
+                      REQUIRED
+                        "AWS_IOT_ENDPOINT"
+                        "ROOT_CA_CERT_PATH"
+                        "CLIENT_CERT_PATH"
+                        "CLIENT_PRIVATE_KEY_PATH"
+                        "CLIENT_IDENTIFIER"
+                        "THING_NAME"
+                      OPTIONAL
+                        "CLIENT_USERNAME"
+                        "CLIENT_PASSWORD"
+                        "OS_NAME"
+                        "OS_VERSION"
+                        "HARDWARE_PLATFORM_NAME")

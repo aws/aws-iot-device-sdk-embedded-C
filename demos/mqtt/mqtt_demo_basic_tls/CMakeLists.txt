@@ -36,5 +36,4 @@ set_macro_definitions(TARGETS ${DEMO_NAME}
                         "ROOT_CA_CERT_PATH"
                         "BROKER_ENDPOINT"
                         "CLIENT_IDENTIFIER"
-                      OPTIONAL
                         "BROKER_PORT")

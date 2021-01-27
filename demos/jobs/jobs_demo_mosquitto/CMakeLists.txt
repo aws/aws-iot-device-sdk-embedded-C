@@ -77,3 +77,10 @@ if(CLIENT_PRIVATE_KEY_PATH)
             CLIENT_PRIVATE_KEY_PATH="${CLIENT_PRIVATE_KEY_PATH}"
     )
 endif()
+set_macro_definitions(TARGETS ${DEMO_NAME}
+                      REQUIRED
+                        "AWS_IOT_ENDPOINT"
+                        "ROOT_CA_CERT_PATH"
+                        "CLIENT_CERT_PATH"
+                        "CLIENT_PRIVATE_KEY_PATH"
+                    )

@@ -33,4 +33,7 @@ target_include_directories(
         ${LOGGING_INCLUDE_DIRS}
 )
 
-set_macro_definitions(TARGETS ${DEMO_NAME} OPTIONAL "SERVER_HOST" "HTTP_PORT")
+set_macro_definitions(TARGETS ${DEMO_NAME}
+                      OPTIONAL
+                        "SERVER_HOST"
+                        "HTTP_PORT")
