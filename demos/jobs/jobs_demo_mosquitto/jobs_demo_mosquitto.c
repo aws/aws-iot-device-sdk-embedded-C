@@ -333,7 +333,7 @@ void on_message( struct mosquitto * m,
                  const struct mosquitto_message * message );
 
 /**
- * @brief Publish a request to the Jobs service to start a job.
+ * @brief Publish a request to the Jobs service to describe the next job.
  *
  * @param[in] h runtime state handle
  *
@@ -342,7 +342,7 @@ void on_message( struct mosquitto * m,
  *
  * @note This does not call mosquitto_loop(); it expects main() to do so.
  */
-static bool sendStartNext( handle_t * h );
+static bool sendDescribeNext( handle_t * h );
 
 /**
  * @brief Checks status of the download process.
@@ -918,14 +918,15 @@ void on_message( struct mosquitto * m,
     {
         /* a job has been added or the current job was canceled */
         case JobsNextJobChanged:
-            h->forceUpdate = ( h->runStatus == Running ) ? true : false;
-            h->forcePrompt = true;
-            break;
+        /* response to a request to describe the next job */
+        case JobsDescribeSuccess:
 
-        /* response to a request to start the next job */
-        case JobsStartNextSuccess:
-
-            if( h->runStatus == None )
+            if( h->runStatus == Running )
+            {
+                h->forceUpdate = true;
+                h->forcePrompt = true;
+            }
+            else if( h->runStatus == None )
             {
                 if( parseJob( h, message ) == true )
                 {
@@ -934,7 +935,7 @@ void on_message( struct mosquitto * m,
             }
             else
             {
-                warnx( "unexpected start next message" );
+                warnx( "unexpected message, topic: %s", message->topic );
             }
 
             break;
@@ -971,7 +972,7 @@ void on_message( struct mosquitto * m,
 
 /*-----------------------------------------------------------*/
 
-static bool sendStartNext( handle_t * h )
+static bool sendDescribeNext( handle_t * h )
 {
     bool ret = true;
     JobsStatus_t jobs_ret;
@@ -980,12 +981,14 @@ static bool sendStartNext( handle_t * h )
 
     assert( h != NULL );
 
-    /* populate the topic buffer for a StartNextPendingJobExecution request */
-    jobs_ret = Jobs_StartNext( topic,
-                               sizeof( topic ),
-                               h->name,
-                               h->nameLength,
-                               NULL );
+    /* populate the topic buffer for a DescribeJobExecution request */
+    jobs_ret = Jobs_Describe( topic,
+                              sizeof( topic ),
+                              h->name,
+                              h->nameLength,
+                              JOBS_API_JOBID_NEXT,
+                              JOBS_API_JOBID_NEXT_LENGTH,
+                              NULL );
     assert( jobs_ret == JobsSuccess );
     ( void ) jobs_ret;
 
@@ -993,7 +996,7 @@ static bool sendStartNext( handle_t * h )
 
     if( m_ret != MOSQ_ERR_SUCCESS )
     {
-        warnx( "sendStartNext: %s", mosquitto_strerror( ret ) );
+        warnx( "sendDescribeNext: %s", mosquitto_strerror( ret ) );
         ret = false;
     }
 
@@ -1220,7 +1223,9 @@ int main( int argc,
         errx( 1, "fatal error" );
     }
 
-    if( sendStartNext( h ) == false )
+    info( "requesting first job" );
+
+    if( sendDescribeNext( h ) == false )
     {
         errx( 1, "fatal error" );
     }
@@ -1250,7 +1255,7 @@ int main( int argc,
                 {
                     h->lastPrompt = now;
                     info( "requesting job" );
-                    ret = sendStartNext( h );
+                    ret = sendDescribeNext( h );
                     h->forcePrompt = false;
                 }
 
