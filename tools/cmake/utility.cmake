@@ -22,7 +22,7 @@ function(set_macro_definitions)
                         ${application_target} PRIVATE
                             ${optional_macro_definition}="${${optional_macro_definition}}"
                     )
-                    list(APPEND DEFINED_MACROS "${required_macro_definition}")
+                    list(APPEND DEFINED_MACROS "${optional_macro_definition}")
                 endif()
             endforeach()
         endif()
