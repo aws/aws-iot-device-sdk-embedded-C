@@ -129,6 +129,7 @@ defendersuccess
 deinitialize
 der
 des
+describejobexecution
 deserialize
 deserialized
 deserializer
