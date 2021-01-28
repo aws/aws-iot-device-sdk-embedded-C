@@ -78,22 +78,8 @@ create_test(${stest_name}
             "${test_include_directories}"
         )
 
-# Set preprocessor defines for test if configured in build.
-if(SERVER_HOST)
-    target_compile_definitions(
-        ${stest_name} PRIVATE
-            SERVER_HOST="${SERVER_HOST}"
-    )
-endif()
-if(ROOT_CA_CERT_PATH)
-    target_compile_definitions(
-        ${stest_name} PRIVATE
-            ROOT_CA_CERT_PATH="${ROOT_CA_CERT_PATH}"
-    )
-endif()
-if(HTTPS_PORT)
-    target_compile_definitions(
-        ${stest_name} PRIVATE
-            HTTPS_PORT=${HTTPS_PORT}
-    )
-endif()
+set_macro_definitions(TARGETS ${stest_name}
+                      REQUIRED
+                        "ROOT_CA_CERT_PATH"
+                        "SERVER_HOST"
+                        "HTTPS_PORT")

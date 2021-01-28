@@ -33,21 +33,8 @@ target_include_directories(
         ${LOGGING_INCLUDE_DIRS}
 )
 
-if(ROOT_CA_CERT_PATH)
-    target_compile_definitions(
-        ${DEMO_NAME} PRIVATE
-            ROOT_CA_CERT_PATH="${ROOT_CA_CERT_PATH}"
-    )
-endif()
-if(SERVER_HOST)
-    target_compile_definitions(
-        ${DEMO_NAME} PRIVATE
-            SERVER_HOST="${SERVER_HOST}"
-    )
-endif()
-if(HTTPS_PORT)
-    target_compile_definitions(
-        ${DEMO_NAME} PRIVATE
-            HTTPS_PORT=${HTTPS_PORT}
-    )
-endif()
+set_macro_definitions(TARGETS ${DEMO_NAME}
+                      REQUIRED
+                        "SERVER_HOST"
+                        "HTTPS_PORT"
+                        "ROOT_CA_CERT_PATH")

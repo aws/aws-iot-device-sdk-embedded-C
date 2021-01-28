@@ -126,7 +126,9 @@ add_subdirectory( libraries )
 add_subdirectory( platform )
 
 # Create the `install` target by including this file.
-include( tools/install.cmake )
+include( tools/cmake/install.cmake )
+# Define any CMake utility functions that are used for building applications.
+include( tools/cmake/utility.cmake )
 
 if(BUILD_TESTS)
     # Add build configuration for integration tests.
