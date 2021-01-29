@@ -1,5 +1,3 @@
-include( CheckSymbolExists )
-
 set( DEMO_NAME "defender_demo" )
 
 # Include MQTT library's source and header path variables.

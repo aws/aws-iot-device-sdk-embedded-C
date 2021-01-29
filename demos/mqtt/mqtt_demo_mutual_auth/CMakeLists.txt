@@ -1,4 +1,3 @@
-include(CheckSymbolExists)
 set( DEMO_NAME "mqtt_demo_mutual_auth" )
 
 # Include MQTT library's source and header path variables.

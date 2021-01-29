@@ -1,5 +1,3 @@
-include(CheckSymbolExists)
-
 set( DEMO_NAME "shadow_demo_main" )
 
 # Include MQTT library's source and header path variables.

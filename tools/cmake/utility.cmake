@@ -1,3 +1,5 @@
+include(CheckSymbolExists)
+
 function(set_macro_definitions)
     set(multiValueArgs TARGETS REQUIRED OPTIONAL FILES_TO_CHECK)
     cmake_parse_arguments(MACRO_DEFINITIONS "" "" "${multiValueArgs}" ${ARGN})
