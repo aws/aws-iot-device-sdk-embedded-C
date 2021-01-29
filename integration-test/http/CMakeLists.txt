@@ -82,4 +82,6 @@ set_macro_definitions(TARGETS ${stest_name}
                       REQUIRED
                         "ROOT_CA_CERT_PATH"
                         "SERVER_HOST"
-                        "HTTPS_PORT")
+                        "HTTPS_PORT"
+                      FILES_TO_CHECK
+                        "test_config.h")
