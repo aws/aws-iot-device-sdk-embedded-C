@@ -1,5 +1,3 @@
-include(CheckSymbolExists)
-
 set( DEMO_NAME "http_demo_mutual_auth" )
 
 # Include HTTP library's source and header path variables.

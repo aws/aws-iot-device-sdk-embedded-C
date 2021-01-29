@@ -1,5 +1,3 @@
-include(CheckSymbolExists)
-
 # Include CMake configuration for subscriptipn manager library.
 add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/subscription-manager )
 
