@@ -616,8 +616,9 @@ static void otaAppCallback( OtaJobEvent_t event,
             /* Activate the new firmware image. */
             OTA_ActivateNewImage();
 
-            /* Shutdown OTA Agent. */
-            OTA_Shutdown( 0 );
+            /* Shutdown OTA Agent, if it is required that the unsubscribe operations are
+             * performed while shutting down please set the second paramter to 0 instead of 1. */
+            OTA_Shutdown( 0, 1 );
 
             /* Requires manual activation of new image.*/
             LogError( ( "New image activation failed." ) );
@@ -665,9 +666,9 @@ static void otaAppCallback( OtaJobEvent_t event,
              * new image downloaded failed.*/
             LogError( ( "Self-test failed, shutting down OTA Agent." ) );
 
-            /* Shutdown OTA Agent. */
-            OTA_Shutdown( 0 );
-
+            /* Shutdown OTA Agent, if it is required that the unsubscribe operations are
+             * performed while shutting down please set the second paramter to 0 instead of 1. */
+            OTA_Shutdown( 0, 1 );
 
             break;
 
