@@ -617,7 +617,7 @@ static void otaAppCallback( OtaJobEvent_t event,
             OTA_ActivateNewImage();
 
             /* Shutdown OTA Agent, if it is required that the unsubscribe operations are not
-             * performed while shutting down please set the second paramter to 0 instead of 1. */
+             * performed while shutting down please set the second parameter to 0 instead of 1. */
             OTA_Shutdown( 0, 1 );
 
             /* Requires manual activation of new image.*/
@@ -667,7 +667,7 @@ static void otaAppCallback( OtaJobEvent_t event,
             LogError( ( "Self-test failed, shutting down OTA Agent." ) );
 
             /* Shutdown OTA Agent, if it is required that the unsubscribe operations are not
-             * performed while shutting down please set the second paramter to 0 instead of 1. */
+             * performed while shutting down please set the second parameter to 0 instead of 1. */
             OTA_Shutdown( 0, 1 );
 
             break;
