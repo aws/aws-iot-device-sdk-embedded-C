@@ -143,6 +143,11 @@
 #define MQTT_PROCESS_LOOP_TIMEOUT_MS             ( 100U )
 
 /**
+ * @brief Maximum number or retries to publish a message in case of failures.
+ */
+#define MQTT_PUBLISH_NUM_RETRIES                 ( 3U )
+
+/**
  * @brief Period for demo loop sleep in milliseconds.
  */
 #define OTA_EXAMPLE_LOOP_SLEEP_PERIOD_MS         ( 5U )
@@ -1746,6 +1751,7 @@ static OtaMqttStatus_t mqttPublish( const char * const pTopic,
     MQTTStatus_t mqttStatus = MQTTBadParameter;
     MQTTPublishInfo_t publishInfo = { 0 };
     MQTTContext_t * pMqttContext = &mqttContext;
+    uint8_t numRetries = MQTT_PUBLISH_NUM_RETRIES;
 
     /* Set the required publish parameters. */
     publishInfo.pTopicName = pTopic;
@@ -1756,9 +1762,20 @@ static OtaMqttStatus_t mqttPublish( const char * const pTopic,
 
     if( pthread_mutex_lock( &mqttMutex ) == 0 )
     {
-        mqttStatus = MQTT_Publish( pMqttContext,
-                                   &publishInfo,
-                                   ( qos ) ? MQTT_GetPacketId( pMqttContext ) : 0U );
+        while( mqttStatus != MQTTSuccess && numRetries > 0 )
+        {
+            mqttStatus = MQTT_Publish( pMqttContext,
+                                       &publishInfo,
+                                       MQTT_GetPacketId( pMqttContext ) );
+
+            if( qos == 1 )
+            {
+                /* Loop to receive packet from transport interface. */
+                mqttStatus = MQTT_ReceiveLoop( &mqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
+            }
+
+            numRetries--;
+        }
 
         pthread_mutex_unlock( &mqttMutex );
     }
@@ -2134,6 +2151,17 @@ int main( int argc,
         /* Start OTA demo. */
         returnStatus = startOTADemo();
     }
+
+    /* Wait and log message before disconnecting from the connections. */
+    while( waitTimeoutMs > 0 )
+    {
+        Clock_SleepMs( OTA_EXAMPLE_TASK_DELAY_MS );
+        waitTimeoutMs -= OTA_EXAMPLE_TASK_DELAY_MS;
+
+        LogError( ( "Disconnecting in %d sec", waitTimeoutMs / 1000 ) );
+    }
+
+    waitTimeoutMs = OTA_DEMO_EXIT_TIMEOUT_MS;
 
     /* Disconnect from broker and close connection. */
     disconnect();
