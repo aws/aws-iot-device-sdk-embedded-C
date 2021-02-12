@@ -220,7 +220,7 @@
 /**
  * @brief The common prefix for all OTA topics.
  */
-#define OTA_TOPIC_PREFIX    "$aws/things/" CLIENT_IDENTIFIER "/"
+#define OTA_TOPIC_PREFIX    "$aws/things/+/"
 
 /**
  * @brief The string used for jobs topics.
