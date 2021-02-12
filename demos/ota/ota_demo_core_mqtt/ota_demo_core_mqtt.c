@@ -681,6 +681,9 @@ jobMessageType_t getJobMessageType( const char * pTopicName,
     bool isMatch = false;
     jobMessageType_t jobMessageIndex = jobMessageTypeMax;
 
+    /* For suppressing compiler-warning: unused variable. */
+    ( void ) mqttStatus;
+
     /* Lookup table for OTA job message string. */
     static const char * const pJobTopicFilters[ jobMessageTypeMax ] =
     {
@@ -1184,6 +1187,9 @@ static void registerSubscriptionManagerCallback( const char * pTopicFilter,
     SubscriptionManagerStatus_t subscriptionStatus = SUBSCRIPTION_MANAGER_SUCCESS;
 
     uint16_t index = 0U;
+
+    /* For suppressing compiler-warning: unused variable. */
+    ( void ) mqttStatus;
 
     /* Lookup table for OTA message string. */
     static const char * const pWildCardTopicFilters[] =
