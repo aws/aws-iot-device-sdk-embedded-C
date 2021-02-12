@@ -145,7 +145,7 @@
 /**
  * @brief Maximum number or retries to publish a message in case of failures.
  */
-#define MQTT_PUBLISH_NUM_RETRIES                 ( 3U )
+#define MQTT_PUBLISH_RETRY_MAX_ATTEMPS           ( 3U )
 
 /**
  * @brief Period for demo loop sleep in milliseconds.
