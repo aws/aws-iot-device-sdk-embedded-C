@@ -247,7 +247,7 @@
 /**
  * @brief The common prefix for all OTA topics.
  */
-#define OTA_TOPIC_PREFIX                 "$aws/things/"
+#define OTA_TOPIC_PREFIX                 "$aws/things/" CLIENT_IDENTIFIER "/"
 
 /**
  * @brief The string used for jobs topics.
@@ -258,11 +258,6 @@
  * @brief The string used for streaming service topics.
  */
 #define OTA_TOPIC_STREAM                 "streams"
-
-/**
- * @brief The length of #OTA_TOPIC_PREFIX
- */
-#define OTA_TOPIC_PREFIX_LENGTH          ( ( uint16_t ) ( sizeof( OTA_TOPIC_PREFIX ) - 1U ) )
 
 /**
  * @brief HTTP response codes used in this demo.
@@ -369,14 +364,14 @@ static size_t serverHostLength;
 static sem_t bufferSemaphore;
 
 /**
- * @brief Enum for type of OTA messages received.
+ * @brief Enum for type of OTA job messages received.
  */
-typedef enum OtaMessageType
+typedef enum jobMessageType
 {
-    OtaMessageTypeJob = 0,
-    OtaMessageTypeStream,
-    OtaNumOfMessageType
-} OtaMessageType_t;
+    jobMessageTypeNextGetAccepted = 0,
+    jobMessageTypeNextNotify,
+    jobMessageTypeMax
+} jobMessageType_t;
 
 /**
  * @brief The network buffer must remain valid when OTA library task is running.
@@ -510,8 +505,6 @@ static OtaMqttStatus_t mqttPublish( const char * const pTopic,
  * @param[in] topicFilterLength Length of the topic filter.
  *
  * @param[in] qos Quality of Service
- *
- * @param[in] callback Callback to be registered.
  *
  * @return OtaMqttSuccess if success , other error code on failure.
  */
@@ -650,6 +643,18 @@ static void otaAppCallback( OtaJobEvent_t event,
                             const void * pData );
 
 /**
+ * @brief callback to use with the MQTT context to notify incoming packet events.
+ *
+ * @param[in] pMqttContext MQTT context which stores the connection.
+ * @param[in] pPacketInfo Parameters of the incoming packet.
+ * @param[in] pDeserializedInfo Deserialized packet information to be dispatched by
+ * the subscription manager to event callbacks.
+ */
+static void mqttEventCallback( MQTTContext_t * pMqttContext,
+                               MQTTPacketInfo_t * pPacketInfo,
+                               MQTTDeserializedInfo_t * pDeserializedInfo );
+
+/**
  * @brief Callback registered with the OTA library that notifies the OTA agent
  * of an incoming PUBLISH containing a job document.
  *
@@ -669,20 +674,7 @@ static void mqttJobCallback( MQTTContext_t * pContext,
 static void mqttDataCallback( MQTTContext_t * pContext,
                               MQTTPublishInfo_t * pPublishInfo );
 
-/**
- * @brief callback to use with the MQTT context to notify incoming packet events.
- *
- * @param[in] pMqttContext MQTT context which stores the connection.
- * @param[in] pPacketInfo Parameters of the incoming packet.
- * @param[in] pDeserializedInfo Deserialized packet information to be dispatched by
- * the subscription manager to event callbacks.
- */
-static void mqttEventCallback( MQTTContext_t * pMqttContext,
-                               MQTTPacketInfo_t * pPacketInfo,
-                               MQTTDeserializedInfo_t * pDeserializedInfo );
-
-/* Callbacks to register with the Subscription Manager. */
-static SubscriptionManagerCallback_t otaMessageCallback[ OtaNumOfMessageType ] = { mqttJobCallback, mqttDataCallback };
+static SubscriptionManagerCallback_t otaMessageCallback[] = { mqttJobCallback, mqttDataCallback };
 
 /*-----------------------------------------------------------*/
 
@@ -808,6 +800,43 @@ static void otaAppCallback( OtaJobEvent_t event,
             LogDebug( ( "Received invalid callback event from OTA Agent." ) );
     }
 }
+
+jobMessageType_t getJobMessageType( const char * pTopicName,
+                                    uint16_t topicNameLength )
+{
+    uint16_t index = 0U;
+    MQTTStatus_t mqttStatus = MQTTSuccess;
+    bool isMatch = false;
+    jobMessageType_t jobMessageIndex = jobMessageTypeMax;
+
+    /* Lookup table for OTA job message string. */
+    static const char * const pJobTopicFilters[ jobMessageTypeMax ] =
+    {
+        OTA_TOPIC_PREFIX OTA_TOPIC_JOBS "/$next/get/accepted",
+        OTA_TOPIC_PREFIX OTA_TOPIC_JOBS "/notify-next",
+    };
+
+    /* Match the input topic filter against the wild-card pattern of topics filters
+    * relevant for the OTA Update service to determine the type of topic filter. */
+    for( ; index < jobMessageTypeMax; index++ )
+    {
+        mqttStatus = MQTT_MatchTopic( pTopicName,
+                                      topicNameLength,
+                                      pJobTopicFilters[ index ],
+                                      strlen( pJobTopicFilters[ index ] ),
+                                      &isMatch );
+        assert( mqttStatus == MQTTSuccess );
+
+        if( isMatch )
+        {
+            jobMessageIndex = index;
+            break;
+        }
+    }
+
+    return jobMessageIndex;
+}
+
 /*-----------------------------------------------------------*/
 
 static void mqttJobCallback( MQTTContext_t * pContext,
@@ -815,28 +844,43 @@ static void mqttJobCallback( MQTTContext_t * pContext,
 {
     OtaEventData_t * pData;
     OtaEventMsg_t eventMsg = { 0 };
+    jobMessageType_t jobMessageType = 0;
 
     assert( pPublishInfo != NULL );
     assert( pContext != NULL );
+
     ( void ) pContext;
 
-    LogInfo( ( "Received job message callback, size %ld.\n\n", pPublishInfo->payloadLength ) );
+    jobMessageType = getJobMessageType( pPublishInfo->pTopicName, pPublishInfo->topicNameLength );
 
-    pData = otaEventBufferGet();
-
-    if( pData != NULL )
+    switch( jobMessageType )
     {
-        memcpy( pData->data, pPublishInfo->pPayload, pPublishInfo->payloadLength );
-        pData->dataLength = pPublishInfo->payloadLength;
-        eventMsg.eventId = OtaAgentEventReceivedJobDocument;
-        eventMsg.pEventData = pData;
+        case jobMessageTypeNextGetAccepted:
+        case jobMessageTypeNextNotify:
 
-        /* Send job document received event. */
-        OTA_SignalEvent( &eventMsg );
-    }
-    else
-    {
-        LogError( ( "Error: No OTA data buffers available.\r\n" ) );
+            pData = otaEventBufferGet();
+
+            if( pData != NULL )
+            {
+                memcpy( pData->data, pPublishInfo->pPayload, pPublishInfo->payloadLength );
+                pData->dataLength = pPublishInfo->payloadLength;
+                eventMsg.eventId = OtaAgentEventReceivedJobDocument;
+                eventMsg.pEventData = pData;
+
+                /* Send job document received event. */
+                OTA_SignalEvent( &eventMsg );
+            }
+            else
+            {
+                LogError( ( "No OTA data buffers available." ) );
+            }
+
+            break;
+
+        default:
+            LogInfo( ( "Received job message %s size %ld.\n\n",
+                       pPublishInfo->pTopicName,
+                       pPublishInfo->payloadLength ) );
     }
 }
 
@@ -850,6 +894,7 @@ static void mqttDataCallback( MQTTContext_t * pContext,
 
     assert( pPublishInfo != NULL );
     assert( pContext != NULL );
+
     ( void ) pContext;
 
     LogInfo( ( "Received data message callback, size %zu.\n\n", pPublishInfo->payloadLength ) );
@@ -868,7 +913,7 @@ static void mqttDataCallback( MQTTContext_t * pContext,
     }
     else
     {
-        LogError( ( "Error: No OTA data buffers available.\r\n" ) );
+        LogError( ( "No OTA data buffers available." ) );
     }
 }
 
@@ -973,6 +1018,7 @@ static int initializeMqtt( MQTTContext_t * pMqttContext,
 }
 
 /*-----------------------------------------------------------*/
+
 static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext )
 {
     int returnStatus = EXIT_SUCCESS;
@@ -1075,6 +1121,8 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     return returnStatus;
 }
 
+/*-----------------------------------------------------------*/
+
 static int establishMqttSession( MQTTContext_t * pMqttContext )
 {
     int returnStatus = EXIT_SUCCESS;
@@ -1164,6 +1212,8 @@ static int establishMqttSession( MQTTContext_t * pMqttContext )
     return returnStatus;
 }
 
+/*-----------------------------------------------------------*/
+
 static int establishConnection( void )
 {
     int returnStatus = EXIT_FAILURE;
@@ -1214,6 +1264,8 @@ static int establishConnection( void )
 
     return returnStatus;
 }
+
+/*-----------------------------------------------------------*/
 
 static void disconnect( void )
 {
@@ -1562,117 +1614,65 @@ static OtaHttpStatus_t httpDeinit( void )
     return ret;
 }
 
+
 /*-----------------------------------------------------------*/
 
-static OtaMessageType_t getOtaMessageType( const char * pTopicFilter,
-                                           uint16_t topicFilterLength )
+static void registerSubscriptionManagerCallback( const char * pTopicFilter,
+                                                 uint16_t topicFilterLength )
 {
-    int retStatus = EXIT_FAILURE;
+    bool isMatch = false;
+    MQTTStatus_t mqttStatus = MQTTSuccess;
+    SubscriptionManagerStatus_t subscriptionStatus = SUBSCRIPTION_MANAGER_SUCCESS;
 
-    uint16_t stringIndex = 0U, fieldLength = 0U, i = 0U;
-    OtaMessageType_t retMesageType = OtaNumOfMessageType;
+    uint16_t index = 0U;
 
     /* Lookup table for OTA message string. */
-    static const char * const pOtaMessageStrings[ OtaNumOfMessageType ] =
+    static const char * const pWildCardTopicFilters[] =
     {
-        OTA_TOPIC_JOBS,
-        OTA_TOPIC_STREAM
+        OTA_TOPIC_PREFIX OTA_TOPIC_JOBS "/#",
+        OTA_TOPIC_PREFIX OTA_TOPIC_STREAM "/#"
     };
 
-    /* Check topic prefix is valid.*/
-    if( strncmp( pTopicFilter, OTA_TOPIC_PREFIX, ( size_t ) OTA_TOPIC_PREFIX_LENGTH ) == 0 )
+    /* Match the input topic filter against the wild-card pattern of topics filters
+    * relevant for the OTA Update service to determine the type of topic filter. */
+    for( ; index < 2; index++ )
     {
-        stringIndex = OTA_TOPIC_PREFIX_LENGTH;
+        mqttStatus = MQTT_MatchTopic( pTopicFilter,
+                                      topicFilterLength,
+                                      pWildCardTopicFilters[ index ],
+                                      strlen( pWildCardTopicFilters[ index ] ),
+                                      &isMatch );
+        assert( mqttStatus == MQTTSuccess );
 
-        retStatus = EXIT_SUCCESS;
-    }
-
-    /* Check if thing name is valid.*/
-    if( retStatus == EXIT_SUCCESS )
-    {
-        retStatus = EXIT_FAILURE;
-
-        /* Extract the thing name.*/
-        for( ; stringIndex < topicFilterLength; stringIndex++ )
+        if( isMatch )
         {
-            if( pTopicFilter[ stringIndex ] == ( char ) '/' )
-            {
-                break;
-            }
-            else
-            {
-                fieldLength++;
-            }
-        }
+            /* Register callback to subscription manager. */
+            subscriptionStatus = SubscriptionManager_RegisterCallback( pWildCardTopicFilters[ index ],
+                                                                       strlen( pWildCardTopicFilters[ index ] ),
+                                                                       otaMessageCallback[ index ] );
 
-        if( fieldLength > 0 )
-        {
-            /* Check thing name.*/
-            if( strncmp( &pTopicFilter[ stringIndex - fieldLength ],
-                         CLIENT_IDENTIFIER,
-                         ( size_t ) ( fieldLength ) ) == 0 )
+            if( subscriptionStatus != SUBSCRIPTION_MANAGER_SUCCESS )
             {
-                stringIndex++;
-
-                retStatus = EXIT_SUCCESS;
+                LogWarn( ( "Failed to register a callback to subscription manager with error = %d.",
+                           subscriptionStatus ) );
             }
+
+            break;
         }
     }
-
-    /* Check the message type from topic.*/
-    if( retStatus == EXIT_SUCCESS )
-    {
-        fieldLength = 0;
-
-        /* Extract the topic type.*/
-        for( ; stringIndex < topicFilterLength; stringIndex++ )
-        {
-            if( pTopicFilter[ stringIndex ] == ( char ) '/' )
-            {
-                break;
-            }
-            else
-            {
-                fieldLength++;
-            }
-        }
-
-        if( fieldLength > 0 )
-        {
-            for( i = 0; i < OtaNumOfMessageType; i++ )
-            {
-                /* check thing name.*/
-                if( strncmp( &pTopicFilter[ stringIndex - fieldLength ],
-                             pOtaMessageStrings[ i ],
-                             ( size_t ) ( fieldLength ) ) == 0 )
-                {
-                    break;
-                }
-            }
-
-            if( i < OtaNumOfMessageType )
-            {
-                retMesageType = i;
-            }
-        }
-    }
-
-    return retMesageType;
 }
 
+
+
 /*-----------------------------------------------------------*/
-
-
 
 static OtaMqttStatus_t mqttSubscribe( const char * pTopicFilter,
                                       uint16_t topicFilterLength,
                                       uint8_t qos )
 {
     OtaMqttStatus_t otaRet = OtaMqttSuccess;
-    SubscriptionManagerStatus_t subscriptionStatus = SUBSCRIPTION_MANAGER_SUCCESS;
-    OtaMessageType_t otaMessageType;
 
-    MQTTStatus_t mqttStatus = MQTTBadParameter;
+    MQTTStatus_t mqttStatus;
     MQTTContext_t * pMqttContext = &mqttContext;
     MQTTSubscribeInfo_t pSubscriptionList[ 1 ];
 
@@ -1680,11 +1680,12 @@ static OtaMqttStatus_t mqttSubscribe( const char * pTopicFilter,
     assert( pTopicFilter != NULL );
     assert( topicFilterLength > 0 );
 
+    ( void ) qos;
+
     /* Start with everything at 0. */
     ( void ) memset( ( void * ) pSubscriptionList, 0x00, sizeof( pSubscriptionList ) );
 
-    /* Set the QoS , topic and topic length. */
-    pSubscriptionList[ 0 ].qos = qos;
+    /* Set the topic and topic length. */
     pSubscriptionList[ 0 ].pTopicFilter = pTopicFilter;
     pSubscriptionList[ 0 ].topicFilterLength = topicFilterLength;
 
@@ -1719,20 +1720,7 @@ static OtaMqttStatus_t mqttSubscribe( const char * pTopicFilter,
                    pTopicFilter ) );
     }
 
-    otaMessageType = getOtaMessageType( pTopicFilter, topicFilterLength );
-
-    assert( ( otaMessageType >= 0 ) && ( otaMessageType < OtaNumOfMessageType ) );
-
-    /* Register callback to subscription manager. */
-    subscriptionStatus = SubscriptionManager_RegisterCallback( pTopicFilter,
-                                                               topicFilterLength,
-                                                               otaMessageCallback[ otaMessageType ] );
-
-    if( subscriptionStatus != SUBSCRIPTION_MANAGER_SUCCESS )
-    {
-        LogWarn( ( "Failed to register a callback to subscription manager with error = %d.",
-                   subscriptionStatus ) );
-    }
+    registerSubscriptionManagerCallback( pTopicFilter, topicFilterLength );
 
     return otaRet;
 }
@@ -1787,6 +1775,8 @@ static OtaMqttStatus_t mqttPublish( const char * const pTopic,
     return otaRet;
 }
 
+/*-----------------------------------------------------------*/
+
 static OtaMqttStatus_t mqttUnsubscribe( const char * pTopicFilter,
                                         uint16_t topicFilterLength,
                                         uint8_t qos )
@@ -1796,6 +1786,8 @@ static OtaMqttStatus_t mqttUnsubscribe( const char * pTopicFilter,
 
     MQTTSubscribeInfo_t pSubscriptionList[ 1 ];
     MQTTContext_t * pMqttContext = &mqttContext;
+
+    ( void ) qos;
 
     /* Start with everything at 0. */
     ( void ) memset( ( void * ) pSubscriptionList, 0x00, sizeof( pSubscriptionList ) );
