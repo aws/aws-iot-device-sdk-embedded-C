@@ -143,6 +143,11 @@
 #define MQTT_PROCESS_LOOP_TIMEOUT_MS             ( 100U )
 
 /**
+ * @brief Maximum number or retries to publish a message in case of failures.
+ */
+#define MQTT_PUBLISH_RETRY_MAX_ATTEMPS           ( 3U )
+
+/**
  * @brief Period for demo loop sleep in milliseconds.
  */
 #define OTA_EXAMPLE_LOOP_SLEEP_PERIOD_MS         ( 5U )
@@ -1748,6 +1753,16 @@ static OtaMqttStatus_t mqttPublish( const char * const pTopic,
     MQTTStatus_t mqttStatus = MQTTBadParameter;
     MQTTPublishInfo_t publishInfo = { 0 };
     MQTTContext_t * pMqttContext = &mqttContext;
+    BackoffAlgorithmStatus_t backoffAlgStatus = BackoffAlgorithmSuccess;
+    BackoffAlgorithmContext_t reconnectParams;
+    uint16_t nextRetryBackOff;
+
+
+    /* Initialize reconnect attempts and interval */
+    BackoffAlgorithm_InitializeParams( &reconnectParams,
+                                       CONNECTION_RETRY_BACKOFF_BASE_MS,
+                                       CONNECTION_RETRY_MAX_BACKOFF_DELAY_MS,
+                                       MQTT_PUBLISH_RETRY_MAX_ATTEMPS );
 
     /* Set the required publish parameters. */
     publishInfo.pTopicName = pTopic;
@@ -1758,9 +1773,36 @@ static OtaMqttStatus_t mqttPublish( const char * const pTopic,
 
     if( pthread_mutex_lock( &mqttMutex ) == 0 )
     {
-        mqttStatus = MQTT_Publish( pMqttContext,
-                                   &publishInfo,
-                                   ( qos ) ? MQTT_GetPacketId( pMqttContext ) : 0U );
+        do
+        {
+            mqttStatus = MQTT_Publish( pMqttContext,
+                                       &publishInfo,
+                                       MQTT_GetPacketId( pMqttContext ) );
+
+            if( qos == 1 )
+            {
+                /* Loop to receive packet from transport interface. */
+                mqttStatus = MQTT_ReceiveLoop( &mqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
+            }
+
+            if( mqttStatus != MQTTSuccess )
+            {
+                /* Generate a random number and get back-off value (in milliseconds) for the next connection retry. */
+                backoffAlgStatus = BackoffAlgorithm_GetNextBackoff( &reconnectParams, generateRandomNumber(), &nextRetryBackOff );
+
+                if( backoffAlgStatus == BackoffAlgorithmRetriesExhausted )
+                {
+                    LogError( ( "Publish failed, all attempts exhausted." ) );
+                }
+                else if( backoffAlgStatus == BackoffAlgorithmSuccess )
+                {
+                    LogWarn( ( "Publish failed. Retrying connection "
+                               "after %hu ms backoff.",
+                               ( unsigned short ) nextRetryBackOff ) );
+                    Clock_SleepMs( nextRetryBackOff );
+                }
+            }
+        } while( ( mqttStatus != MQTTSuccess ) && ( backoffAlgStatus == BackoffAlgorithmSuccess ) );
 
         pthread_mutex_unlock( &mqttMutex );
     }
