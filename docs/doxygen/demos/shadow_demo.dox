@@ -11,11 +11,11 @@ AWS IoT Device Shadow service supports 2 types of shadows for a Thing; a classic
 shadow and multiple named shadows. This demo works with either a classic shadow or
 a named shadow depending on the value of demo config <b>SHADOW_NAME</b>. The demo
 can be configured as listed below.
- 1. Classic shadow - Demo config <b>SHADOW_NAME</b> can be configured as
+ 1. Classic shadow - Demo config <b>SHADOW_NAME</b> can be defined as
     #SHADOW_NAME_CLASSIC to use classic shadow in the demo. This is the default
     configuration for the demo.
- 2. Named shadow - Demo config <b>SHADOW_NAME</b> can be configured with a non empty
-    C string. This configuration value will be used as the named shadow used in
+ 2. Named shadow - Demo config <b>SHADOW_NAME</b> can be defined as a non empty
+    C string. This configuration value will be used as the name of the shadow in
     the demo.
 
 In this demo, the device is assumed to have the powerOn state, which can be 1 or 0
@@ -24,7 +24,7 @@ the device's classic shadow or a named shadow depending on the demo configuratio
 <b>SHADOW_NAME</b>. The demo does the following operations:
 
 - Establish an MQTT connection. ( step 1. )
-- Attempt to delete the shadow if exists already. (step 6 ~ step 23)
+- Attempt to delete the shadow if it exists already. (step 6 ~ step 23)
 - Assemble MQTT topic strings for device shadow operations using macros defined
   by the Device Shadow library. ( step 24. )
 - Subscribe to the MQTT topics for shadow update operations. ( step 26. )

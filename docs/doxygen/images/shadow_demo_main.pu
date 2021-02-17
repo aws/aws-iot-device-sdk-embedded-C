@@ -23,7 +23,7 @@ box "AWS IoT Broker" #Yellow
 end box
 
 activate application
-application -> broker : Establish TLS session with server & client credential
+application -> broker : Establish TLS session with the MQTT Broker
 application -> mqtt : Initialize MQTT
 application -> mqtt : Establish an MQTT connection
 
@@ -32,7 +32,7 @@ mqtt -> broker: Establish MQTT Connection
 mqtt -> application : Return from MQTT library
 deactivate mqtt
 
-application -> shadow : Get the following shadow delete topics by using the MACROs:\n\
+application -> shadow : Get the shadow delete response topic strings using macros from the shadow library:\n\
     If classic shadow:\n\
     SHADOW_TOPIC_STR_DELETE_ACC( "testShadow", SHADOW_NAME_CLASSIC )\n\
     SHADOW_TOPIC_STR_DELETE_REJ( "testShadow", SHADOW_NAME_CLASSIC )\n\
@@ -44,14 +44,14 @@ activate shadow
 shadow -> application : Return assembled shadow topics
 deactivate shadow
 
-application -> mqtt : MQTT_Subscribe subscribes to those shadow delete topics ( SubscribeToTopic )
+application -> mqtt : Subscribe to the shadow delete response topics ( SubscribeToTopic )
 
 activate mqtt
-mqtt -> broker: Subscribe to the shadow topics
+mqtt -> broker: Subscribe to the shadow delete response topics
 mqtt -> application : Return Success
 deactivate mqtt
 
-application -> shadow : Get the the topic to delete the shadow by using the MACRO:\n\
+application -> shadow : Get the shadow delete operation topic string using the macro from the shadow library\n\
     If classic shadow:\n\
     SHADOW_TOPIC_STR_DELETE( "testShadow", SHADOW_NAME_CLASSIC )\n\
     If named shadow:\n\
@@ -61,7 +61,7 @@ activate shadow
 shadow -> application : Return the assembled shadow topic
 deactivate shadow
 
-application -> mqtt : Publish an empty message on the shadow delete topic to delete the shadow if exists
+application -> mqtt : Publish an empty message on the shadow delete topic to delete the shadow if it exists
 
 activate mqtt
 mqtt -> broker : Publish message on the shadow delete topic to the broker
@@ -77,13 +77,13 @@ deactivate callback
 mqtt -> application : Return from MQTT library
 deactivate mqtt
 
-application -> mqtt : Unsubscribe the shadow delete topics ( UnsubscribeFromTopic )
+application -> mqtt : Unsubscribe from the shadow delete response topics ( UnsubscribeFromTopic )
 activate mqtt
-mqtt -> broker : Unsubscribe the shadow delete topics
+mqtt -> broker : Unsubscribe from the shadow delete response topics
 mqtt -> application : Return from MQTT library
 deactivate mqtt
 
-application -> shadow : Get the following shadow topics by using the MACROs:\n\
+application -> shadow : Get the following shadow topic strings using macros from the shadow library:\n\
     If classic shadow:\n\
     SHADOW_TOPIC_STR_UPDATE_DELTA( "testShadow", SHADOW_NAME_CLASSIC )\n\
     SHADOW_TOPIC_STR_UPDATE_ACC( "testShadow", SHADOW_NAME_CLASSIC )\n\
@@ -104,7 +104,7 @@ mqtt -> broker: Subscribe to the shadow topics
 mqtt -> application : Return Success
 deactivate mqtt
 
-application -> shadow : Get the the topic to update the shadow by using the MACRO:\n\
+application -> shadow : Get the shadow update operation topic string using macro from shadow library:\n\
     If classic shadow:\n\
     SHADOW_TOPIC_STR_UPDATE( "testShadow", SHADOW_NAME_CLASSIC )\n\
     If named shadow:\n\
@@ -133,9 +133,9 @@ deactivate callback
 mqtt -> application : Return from MQTT library
 deactivate mqtt
 
-application -> mqtt : Unsubscribe those subscribed topics ( UnsubscribeFromTopic )
+application -> mqtt : Unsubscribe from the subscribed shadow update topics ( UnsubscribeFromTopic )
 activate mqtt
-mqtt -> broker : Unsubscribe to those subscribed topics
+mqtt -> broker : Unsubscribe from the subscribed shadow update topics
 mqtt -> application : Return from MQTT library
 deactivate mqtt
 
