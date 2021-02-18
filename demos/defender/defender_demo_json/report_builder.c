@@ -100,7 +100,7 @@
 #define JSON_REPORT_CUSTOM_METRIC_START \
     ",\"custom_metrics\":{"
 
-#define JSON_REPORT_CUSTOM_METRIC_LIST_NUMBER_FORMAT    "%ld"
+#define JSON_REPORT_CUSTOM_METRIC_LIST_NUMBER_FORMAT    "%ld,"
 #define JSON_REPORT_CUSTOM_METRIC_LIST_STRING_FORMAT    "\"%s\","
 #define JSON_REPORT_CUSTOM_METRIC_LIST_IP_FORMAT        "\"%u.%u.%u.%u\","
 
