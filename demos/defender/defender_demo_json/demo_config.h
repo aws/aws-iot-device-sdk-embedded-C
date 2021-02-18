@@ -42,7 +42,7 @@
 #endif
 
 #ifndef LIBRARY_LOG_LEVEL
-    #define LIBRARY_LOG_LEVEL    LOG_INFO
+    #define LIBRARY_LOG_LEVEL    LOG_DEBUG
 #endif
 
 #include "logging_stack.h"
@@ -194,10 +194,8 @@
 
 /**
  * @brief Size of the buffer which contains the generated device defender report.
- *
- * If the generated report is larger than this, it is rejected.
  */
-#define DEVICE_METRICS_REPORT_BUFFER_SIZE      1000
+#define DEVICE_METRICS_REPORT_BUFFER_SIZE      2000
 
 /**
  * @brief Major version number of the device defender report.

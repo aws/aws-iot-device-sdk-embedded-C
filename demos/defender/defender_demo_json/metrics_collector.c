@@ -36,8 +36,8 @@
 #include "metrics_collector.h"
 
 /**
- * @brief The maximum length of line read from any of /proc/net/dev, /proc/net/tcp
- * and /proc/net/udp.
+ * @brief The maximum length of line read from any of /proc/net/dev, /proc/net/tcp,
+ * /proc/net/udp and /proc/uptime files.
  */
 #define MAX_LINE_LENGTH                  ( 256 )
 
@@ -369,6 +369,69 @@ MetricsCollectorStatus_t GetEstablishedConnections( Connection_t * pOutConnectio
     if( status == MetricsCollectorSuccess )
     {
         *pOutNumEstablishedConnections = numEstablishedConnections;
+    }
+
+    if( fileHandle != NULL )
+    {
+        fclose( fileHandle );
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+MetricsCollectorStatus_t GetCpuUsageData( CpuUsageData_t * pCpuUsage )
+{
+    MetricsCollectorStatus_t status = MetricsCollectorSuccess;
+    FILE * fileHandle = NULL;
+    uint32_t filledVariables;
+    char lineBuffer[ MAX_LINE_LENGTH ];
+
+    if( ( pCpuUsage == NULL ) )
+    {
+        LogError( ( "Invalid pCpuUsage parameter to GetCpuUsageData()." ) );
+        status = MetricsCollectorBadParameter;
+    }
+
+    if( status == MetricsCollectorSuccess )
+    {
+        fileHandle = fopen( "/proc/uptime", "r" );
+
+        if( fileHandle == NULL )
+        {
+            LogError( ( "Failed to open /proc/uptime." ) );
+            status = MetricsCollectorFileOpenFailed;
+        }
+    }
+
+    if( status == MetricsCollectorSuccess )
+    {
+        if( fgets( &( lineBuffer[ 0 ] ), MAX_LINE_LENGTH, fileHandle ) != NULL )
+        {
+            float uptime = 0.0f, idletime = 0.0f;
+            LogDebug( ( "File: /proc/uptime, Content: %s.",
+                        &( lineBuffer[ 0 ] ) ) );
+
+            /* Parse the output. */
+            filledVariables = sscanf( &( lineBuffer[ 0 ] ),
+                                      "%f %f",
+                                      &( uptime ),
+                                      &( idletime ) );
+
+            /* sscanf should fill all the 2 variables successfully. */
+            if( filledVariables != 2 )
+            {
+                LogError( ( "Failed to CPU usage data from /proc/uptime: Data=%s.", &( lineBuffer[ 0 ] ) ) );
+                status = MetricsCollectorParsingFailed;
+            }
+            else
+            {
+                /* Convert data from floating point to interger by multiplying by 100. */
+                pCpuUsage->uptime = ( int64_t ) ( uptime * 100.0f );
+                pCpuUsage->idletime = ( int64_t ) ( idletime * 100.0f );
+            }
+        }
     }
 
     if( fileHandle != NULL )

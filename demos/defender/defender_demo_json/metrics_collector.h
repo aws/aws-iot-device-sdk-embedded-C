@@ -60,6 +60,17 @@ typedef struct Connection
 } Connection_t;
 
 /**
+ * @brief Represents the Cpu Usage statistics obtained from "/proc/uptime".
+ * Refer to Linux manual for "/proc" filesystem for more information.
+ * https://man7.org/linux/man-pages/man5/procfs.5.html
+ */
+typedef struct CpuUsageData
+{
+    int64_t uptime;   /**< Up-time of system in USER_HZ (1/100th of second) time units. */
+    int64_t idletime; /**< Idle time of system in USER_HZ (1/100th of second)  ime units. */
+} CpuUsageData_t;
+
+/**
  * @brief Get network stats.
  *
  * This function finds the network stats by reading "/proc/net/dev".
@@ -144,5 +155,20 @@ MetricsCollectorStatus_t GetOpenUdpPorts( uint16_t * pOutUdpPortsArray,
 MetricsCollectorStatus_t GetEstablishedConnections( Connection_t * pOutConnectionsArray,
                                                     uint32_t connectionsArrayLength,
                                                     uint32_t * pOutNumEstablishedConnections );
+
+/**
+ * @brief Get CPU usage data of uptime and idle time from the system.
+ *
+ * This function finds the system CPU information by reading "/proc/uptime" file.
+ *
+ * @param[in] pCpuUsage The memory to write the CPU usage statistics into.
+ *
+ * @return #MetricsCollectorSuccess if CPU usage data is successfully obtained;
+ * #MetricsCollectorBadParameter if invalid parameter is passed;
+ * #MetricsCollectorFileOpenFailed if the function fails to open "/proc/uptime";
+ * MetricsCollectorParsingFailed if the function fails to parses the data read
+ * from "/proc/uptime".
+ */
+MetricsCollectorStatus_t GetCpuUsageData( CpuUsageData_t * pCpuUsage );
 
 #endif /* ifndef METRICS_COLLECTOR_H_ */

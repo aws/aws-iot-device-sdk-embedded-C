@@ -136,6 +136,22 @@ static uint16_t openUdpPorts[ OPEN_UDP_PORTS_ARRAY_SIZE ];
 static Connection_t establishedConnections[ ESTABLISHED_CONNECTIONS_ARRAY_SIZE ];
 
 /**
+ * @brief The name of the custom metric for CPU usage time.
+ * This demo reports this metrics as a "number list" type of custom metric.
+ */
+static const char * pCustomMetricCpuUsage = "cpu-usage";
+
+/**
+ * @brief Memory to store the CPU usage metrics information.
+ */
+static CpuUsageData_t cpuUsage;
+
+/**
+ * @brief The object for holding custom metric information for CPU usage time data.
+ */
+static CustomMetricNumberList_t cpuUsageMetric;
+
+/**
  * @brief All the metrics sent in the device defender report.
  */
 static ReportMetrics_t deviceMetrics;
@@ -410,6 +426,25 @@ static bool collectDeviceMetrics( void )
         }
     }
 
+    /* Collect CPU usage time metrics from the system.
+     * This is an example of a custom metric of number-list type. */
+    if( metricsCollectorStatus == MetricsCollectorSuccess )
+    {
+        metricsCollectorStatus = GetCpuUsageData( &cpuUsage );
+
+        if( metricsCollectorStatus != MetricsCollectorSuccess )
+        {
+            LogError( ( "Failed to get data of CPU usage from system. Status: %d.",
+                        metricsCollectorStatus ) );
+        }
+        else
+        {
+            cpuUsageMetric.pMetricName = pCustomMetricCpuUsage;
+            cpuUsageMetric.numbers = ( int64_t * ) &cpuUsage;
+            cpuUsageMetric.numberListLength = 2UL;
+        }
+    }
+
     /* Populate device metrics. */
     if( metricsCollectorStatus == MetricsCollectorSuccess )
     {
@@ -421,6 +456,7 @@ static bool collectDeviceMetrics( void )
         deviceMetrics.openUdpPortsArrayLength = numOpenUdpPorts;
         deviceMetrics.pEstablishedConnectionsArray = &( establishedConnections[ 0 ] );
         deviceMetrics.establishedConnectionsArrayLength = numEstablishedConnections;
+        deviceMetrics.pNumberListMetric = &cpuUsageMetric;
     }
 
     return status;

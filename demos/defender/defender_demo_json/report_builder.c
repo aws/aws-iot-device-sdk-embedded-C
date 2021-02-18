@@ -23,20 +23,29 @@
 /* Standard includes. */
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 
 /* Demo config. */
 #include "demo_config.h"
+
+/* Device Defender Library include. */
+#include "defender.h"
 
 /* Interface include. */
 #include "report_builder.h"
 
 /* Various JSON characters. */
-#define JSON_ARRAY_OPEN_MARKER         '['
-#define JSON_ARRAY_CLOSE_MARKER        ']'
-#define JSON_ARRAY_OBJECT_SEPARATOR    ','
+#define JSON_ARRAY_OPEN_MARKER      '['
+#define JSON_ARRAY_CLOSE_MARKER     ']'
+#define JSON_OBJECT_OPEN_MARKER     '{'
+#define JSON_OBJECT_CLOSE_MARKER    '}'
+#define JSON_OBJECT_SEPARATOR       ','
 
 /* Helper macro to check if snprintf was successful. */
 #define SNPRINTF_SUCCESS( retVal, bufLen )    ( ( retVal > 0 ) && ( ( uint32_t ) retVal < bufLen ) )
+
+
+#define CUSTOM_METRIC_CPU_USAGE    "cpu_usage"
 
 /* Formats used to generate the JSON report. */
 #define JSON_PORT_OBJECT_FORMAT \
@@ -86,8 +95,34 @@
     "\"total\": %u"              \
     "}"                          \
     "}"                          \
-    "}"                          \
     "}"
+
+#define JSON_REPORT_CUSTOM_METRIC_START \
+    ",\"custom_metrics\":{"
+
+#define JSON_REPORT_CUSTOM_METRIC_NUMBER_DATA_FORMAT    "%ld,"
+#define JSON_REPORT_CUSTOM_METRIC_STRING_DATA_FORMAT    "%s,"
+#define JSON_REPORT_CUSTOM_METRIC_IP_DATA_FORMAT        "%u.%u.%u.%u,"
+
+#define JSON_REPORT_CUSTOM_METRIC_NUMBER_FORMAT \
+    "\"%s\":["                                  \
+    "{"                                         \
+    "\"number\":%lld"                           \
+    "}"                                         \
+    "],"
+
+#define JSON_REPORT_CUSTOM_METRIC_LIST_START \
+    "\"%s\": ["                              \
+    "{"                                      \
+    "\"%s\": "
+
+#define JSON_REPORT_CUSTOM_METRIC_LIST_END \
+    "}"                                    \
+    "]"
+
+#define JSON_REPORT_CUSTOM_METRIC_END \
+    "}"
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -306,6 +341,83 @@ static ReportBuilderStatus_t writeConnectionsArray( char * pBuffer,
 }
 /*-----------------------------------------------------------*/
 
+static ReportBuilderStatus_t writeCustomMetricNumListArray( char * pBuffer,
+                                                            uint32_t bufferLength,
+                                                            const int64_t * pNumListData,
+                                                            uint32_t numListLength,
+                                                            uint32_t * pOutCharsWritten )
+{
+    char * pCurrentWritePos = pBuffer;
+    uint32_t i, remainingBufferLength = bufferLength;
+    int charactersWritten;
+    ReportBuilderStatus_t status = ReportBuilderSuccess;
+
+    assert( pBuffer != NULL );
+    assert( pNumListData != NULL );
+    assert( numListLength > 0UL );
+    assert( pOutCharsWritten != NULL );
+
+    /* Write the JSON array open marker. */
+    if( remainingBufferLength > 1 )
+    {
+        *pCurrentWritePos = JSON_ARRAY_OPEN_MARKER;
+        remainingBufferLength -= 1;
+        pCurrentWritePos += 1;
+    }
+    else
+    {
+        status = ReportBuilderBufferTooSmall;
+    }
+
+    /* Write the array elements. */
+    for( i = 0; ( ( i < numListLength ) && ( status == ReportBuilderSuccess ) ); i++ )
+    {
+        charactersWritten = snprintf( pCurrentWritePos,
+                                      remainingBufferLength,
+                                      JSON_REPORT_CUSTOM_METRIC_NUMBER_DATA_FORMAT,
+                                      pNumListData[ i ] );
+
+        if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
+        {
+            status = ReportBuilderBufferTooSmall;
+            break;
+        }
+        else
+        {
+            remainingBufferLength -= ( uint32_t ) charactersWritten;
+            pCurrentWritePos += charactersWritten;
+        }
+    }
+
+    if( status == ReportBuilderSuccess )
+    {
+        /* Discard the last comma. */
+        pCurrentWritePos -= 1;
+        remainingBufferLength += 1;
+
+        /* Write the JSON array close marker. */
+        if( remainingBufferLength > 1 )
+        {
+            *pCurrentWritePos = JSON_ARRAY_CLOSE_MARKER;
+            remainingBufferLength -= 1;
+            pCurrentWritePos += 1;
+        }
+        else
+        {
+            status = ReportBuilderBufferTooSmall;
+        }
+    }
+
+    if( status == ReportBuilderSuccess )
+    {
+        *pOutCharsWritten = bufferLength - remainingBufferLength;
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
 ReportBuilderStatus_t GenerateJsonReport( char * pBuffer,
                                           uint32_t bufferLength,
                                           const ReportMetrics_t * pMetrics,
@@ -476,6 +588,112 @@ ReportBuilderStatus_t GenerateJsonReport( char * pBuffer,
         {
             remainingBufferLength -= charactersWritten;
             pCurrentWritePos += charactersWritten;
+        }
+    }
+
+    /* If provides, write custom metrics metrics. */
+    if( status == ReportBuilderSuccess )
+    {
+        if( pMetrics->pNumberListMetric != NULL )
+        {
+            /* Write start of custom metrics object. */
+            charactersWritten = snprintf( pCurrentWritePos,
+                                          remainingBufferLength,
+                                          JSON_REPORT_CUSTOM_METRIC_START );
+
+            if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
+            {
+                LogError( ( "Failed to write starting of custom metrics object." ) );
+                status = ReportBuilderBufferTooSmall;
+            }
+            else
+            {
+                remainingBufferLength -= charactersWritten;
+                pCurrentWritePos += charactersWritten;
+            }
+
+            /* Write start of nested JSON object for list of numbers type of custom metric. */
+            charactersWritten = snprintf( pCurrentWritePos,
+                                          remainingBufferLength,
+                                          JSON_REPORT_CUSTOM_METRIC_LIST_START,
+                                          pMetrics->pNumberListMetric->pMetricName,
+                                          DEFENDER_REPORT_NUMBER_LIST_KEY );
+
+            if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
+            {
+                LogError( ( "Failed to write starting of number list type of custom metric object." ) );
+                status = ReportBuilderBufferTooSmall;
+            }
+            else
+            {
+                remainingBufferLength -= charactersWritten;
+                pCurrentWritePos += charactersWritten;
+            }
+
+            /* Write nested data list of numbers in the report. */
+            status = writeCustomMetricNumListArray( pCurrentWritePos,
+                                                    remainingBufferLength,
+                                                    pMetrics->pNumberListMetric->numbers,
+                                                    pMetrics->pNumberListMetric->numberListLength,
+                                                    &( bufferWritten ) );
+
+            if( status == ReportBuilderSuccess )
+            {
+                pCurrentWritePos += bufferWritten;
+                remainingBufferLength -= bufferWritten;
+            }
+            else
+            {
+                LogError( ( "Failed to write custom metric data of list of numbers." ) );
+            }
+
+            /* Write end of nested JSON object for list of numbers type of custom metric. */
+            charactersWritten = snprintf( pCurrentWritePos,
+                                          remainingBufferLength,
+                                          JSON_REPORT_CUSTOM_METRIC_LIST_END );
+
+            if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
+            {
+                LogError( ( "Failed to write end of number list type of custom metric object." ) );
+                status = ReportBuilderBufferTooSmall;
+            }
+            else
+            {
+                remainingBufferLength -= charactersWritten;
+                pCurrentWritePos += charactersWritten;
+            }
+
+            /* Write end of JSON object for custom metrics. */
+            charactersWritten = snprintf( pCurrentWritePos,
+                                          remainingBufferLength,
+                                          JSON_REPORT_CUSTOM_METRIC_END );
+
+            if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
+            {
+                LogError( ( "Failed to end of custom metrics object." ) );
+                status = ReportBuilderBufferTooSmall;
+            }
+            else
+            {
+                remainingBufferLength -= charactersWritten;
+                pCurrentWritePos += charactersWritten;
+            }
+        }
+    }
+
+    if( status == ReportBuilderSuccess )
+    {
+        /* Write closing JSON bracket. */
+        if( remainingBufferLength > 0 )
+        {
+            *pCurrentWritePos = JSON_OBJECT_CLOSE_MARKER;
+            remainingBufferLength -= charactersWritten;
+            pCurrentWritePos++;
+        }
+        else
+        {
+            LogError( ( "Failed to end of JSON report with \"}\" marker." ) );
+            status = ReportBuilderBufferTooSmall;
         }
     }
 

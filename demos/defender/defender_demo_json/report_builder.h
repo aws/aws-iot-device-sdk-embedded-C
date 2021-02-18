@@ -36,6 +36,24 @@ typedef enum
     ReportBuilderBufferTooSmall
 } ReportBuilderStatus_t;
 
+typedef struct CustomMetricBase
+{
+    const char * pMetricName;
+} CustomMetricBase_t;
+
+typedef struct CustomMetricNumber
+{
+    const char * pMetricName;
+    int64_t number;
+} CustomMetricNumber_t;
+
+typedef struct CustomMetricNumberList
+{
+    const char * pMetricName;
+    int64_t * numbers;
+    size_t numberListLength;
+} CustomMetricNumberList_t;
+
 /**
  * @brief Represents metrics to be included in the report.
  */
@@ -48,6 +66,7 @@ typedef struct ReportMetrics
     uint32_t openUdpPortsArrayLength;
     Connection_t * pEstablishedConnectionsArray;
     uint32_t establishedConnectionsArrayLength;
+    CustomMetricNumberList_t * pNumberListMetric;
 } ReportMetrics_t;
 
 /**
