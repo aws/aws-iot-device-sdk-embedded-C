@@ -118,7 +118,7 @@
 
 #define JSON_REPORT_CUSTOM_METRIC_LIST_END \
     "}"                                    \
-    "]"
+    "],"
 
 #define JSON_REPORT_CUSTOM_METRIC_END \
     "}"
@@ -341,20 +341,21 @@ static ReportBuilderStatus_t writeConnectionsArray( char * pBuffer,
 }
 /*-----------------------------------------------------------*/
 
-static ReportBuilderStatus_t writeCustomMetricNumListArray( char * pBuffer,
-                                                            uint32_t bufferLength,
-                                                            const int64_t * pNumListData,
-                                                            uint32_t numListLength,
-                                                            uint32_t * pOutCharsWritten )
+static ReportBuilderStatus_t writeCustomMetricListData( char * pBuffer,
+                                                        uint32_t bufferLength,
+                                                        CustomMetricBase_t * pCustomMetric,
+                                                        uint32_t * pOutCharsWritten )
 {
     char * pCurrentWritePos = pBuffer;
     uint32_t i, remainingBufferLength = bufferLength;
     int charactersWritten;
     ReportBuilderStatus_t status = ReportBuilderSuccess;
+    uint32_t listLength = 0UL;
 
     assert( pBuffer != NULL );
-    assert( pNumListData != NULL );
-    assert( numListLength > 0UL );
+    assert( pCustomMetric != NULL );
+    assert( ( pCustomMetric->metricType == CustomMetricTypeStringList ) ||
+            ( pCustomMetric->metricType == CustomMetricTypeNumberList ) );
     assert( pOutCharsWritten != NULL );
 
     /* Write the JSON array open marker. */
@@ -369,13 +370,32 @@ static ReportBuilderStatus_t writeCustomMetricNumListArray( char * pBuffer,
         status = ReportBuilderBufferTooSmall;
     }
 
-    /* Write the array elements. */
-    for( i = 0; ( ( i < numListLength ) && ( status == ReportBuilderSuccess ) ); i++ )
+    if( pCustomMetric->metricType == CustomMetricTypeNumberList )
     {
-        charactersWritten = snprintf( pCurrentWritePos,
-                                      remainingBufferLength,
-                                      JSON_REPORT_CUSTOM_METRIC_NUMBER_DATA_FORMAT,
-                                      pNumListData[ i ] );
+        listLength = ( ( CustomMetricNumberList_t * ) pCustomMetric )->numberListLength;
+    }
+    else if( pCustomMetric->metricType == CustomMetricTypeStringList )
+    {
+        listLength = ( ( CustomMetricStringList_t * ) pCustomMetric )->numOfStrings;
+    }
+
+    /* Write the array elements. */
+    for( i = 0; ( ( i < listLength ) && ( status == ReportBuilderSuccess ) ); i++ )
+    {
+        if( pCustomMetric->metricType == CustomMetricTypeNumberList )
+        {
+            charactersWritten = snprintf( pCurrentWritePos,
+                                          remainingBufferLength,
+                                          JSON_REPORT_CUSTOM_METRIC_NUMBER_DATA_FORMAT,
+                                          ( ( CustomMetricNumberList_t * ) pCustomMetric )->numbers[ i ] );
+        }
+        else if( pCustomMetric->metricType == CustomMetricTypeStringList )
+        {
+            charactersWritten = snprintf( pCurrentWritePos,
+                                          remainingBufferLength,
+                                          JSON_REPORT_CUSTOM_METRIC_STRING_DATA_FORMAT,
+                                          ( ( CustomMetricStringList_t * ) pCustomMetric )->strings[ i ] );
+        }
 
         if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
         {
@@ -594,8 +614,12 @@ ReportBuilderStatus_t GenerateJsonReport( char * pBuffer,
     /* If provides, write custom metrics metrics. */
     if( status == ReportBuilderSuccess )
     {
-        if( pMetrics->pNumberListMetric != NULL )
+        if( pMetrics->pCustomMetrics != NULL )
         {
+            assert( pMetrics->numOfCustomMetrics > 0UL );
+
+            uint32_t index = 0;
+
             /* Write start of custom metrics object. */
             charactersWritten = snprintf( pCurrentWritePos,
                                           remainingBufferLength,
@@ -612,56 +636,90 @@ ReportBuilderStatus_t GenerateJsonReport( char * pBuffer,
                 pCurrentWritePos += charactersWritten;
             }
 
-            /* Write start of nested JSON object for list of numbers type of custom metric. */
-            charactersWritten = snprintf( pCurrentWritePos,
-                                          remainingBufferLength,
-                                          JSON_REPORT_CUSTOM_METRIC_LIST_START,
-                                          pMetrics->pNumberListMetric->pMetricName,
-                                          DEFENDER_REPORT_NUMBER_LIST_KEY );
+            for( ; index < pMetrics->numOfCustomMetrics; index++ )
+            {
+                /* Write start of nested JSON object for list of numbers type of custom metric. */
+                charactersWritten = snprintf( pCurrentWritePos,
+                                              remainingBufferLength,
+                                              JSON_REPORT_CUSTOM_METRIC_LIST_START,
+                                              pMetrics->pCustomMetrics[ index ]->pMetricName,
+                                              DEFENDER_REPORT_NUMBER_LIST_KEY );
 
-            if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
-            {
-                LogError( ( "Failed to write starting of number list type of custom metric object." ) );
-                status = ReportBuilderBufferTooSmall;
-            }
-            else
-            {
-                remainingBufferLength -= charactersWritten;
-                pCurrentWritePos += charactersWritten;
+                if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
+                {
+                    LogError( ( "Failed to write starting of number list type of custom metric object." ) );
+                    status = ReportBuilderBufferTooSmall;
+                }
+                else
+                {
+                    remainingBufferLength -= charactersWritten;
+                    pCurrentWritePos += charactersWritten;
+                }
+
+                switch( pMetrics->pCustomMetrics[ index ]->metricType )
+                {
+                    case CustomMetricTypeNumber:
+                        /* Write nested data list of numbers in the report. */
+                        bufferWritten = snprintf( pCurrentWritePos,
+                                                  remainingBufferLength,
+                                                  "%ld",
+                                                  ( ( CustomMetricNumber_t * ) pMetrics->pCustomMetrics[ index ] )->number );
+
+                        if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
+                        {
+                            LogError( ( "Failed to write number for number type custom metric object." ) );
+                            status = ReportBuilderBufferTooSmall;
+                        }
+
+                        break;
+
+                    case CustomMetricTypeNumberList:
+                    case CustomMetricTypeStringList:
+
+                        /* Write nested data list of numbers in the report. */
+                        status = writeCustomMetricListData( pCurrentWritePos,
+                                                            remainingBufferLength,
+                                                            pMetrics->pCustomMetrics[ index ],
+                                                            &( bufferWritten ) );
+
+                        if( status != ReportBuilderSuccess )
+                        {
+                            LogError( ( "Failed to write custom metric data of list of numbers." ) );
+                        }
+
+                        break;
+
+                    case CustomMetricTypeIpList:
+                    case CustomMetricTypeUknown:
+                        break;
+                }
+
+                if( status == ReportBuilderSuccess )
+                {
+                    pCurrentWritePos += bufferWritten;
+                    remainingBufferLength -= bufferWritten;
+                }
+
+                /* Write end of nested JSON object for list of numbers type of custom metric. */
+                charactersWritten = snprintf( pCurrentWritePos,
+                                              remainingBufferLength,
+                                              JSON_REPORT_CUSTOM_METRIC_LIST_END );
+
+                if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
+                {
+                    LogError( ( "Failed to write end of number list type of custom metric object." ) );
+                    status = ReportBuilderBufferTooSmall;
+                }
+                else
+                {
+                    remainingBufferLength -= charactersWritten;
+                    pCurrentWritePos += charactersWritten;
+                }
             }
 
-            /* Write nested data list of numbers in the report. */
-            status = writeCustomMetricNumListArray( pCurrentWritePos,
-                                                    remainingBufferLength,
-                                                    pMetrics->pNumberListMetric->numbers,
-                                                    pMetrics->pNumberListMetric->numberListLength,
-                                                    &( bufferWritten ) );
-
-            if( status == ReportBuilderSuccess )
-            {
-                pCurrentWritePos += bufferWritten;
-                remainingBufferLength -= bufferWritten;
-            }
-            else
-            {
-                LogError( ( "Failed to write custom metric data of list of numbers." ) );
-            }
-
-            /* Write end of nested JSON object for list of numbers type of custom metric. */
-            charactersWritten = snprintf( pCurrentWritePos,
-                                          remainingBufferLength,
-                                          JSON_REPORT_CUSTOM_METRIC_LIST_END );
-
-            if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
-            {
-                LogError( ( "Failed to write end of number list type of custom metric object." ) );
-                status = ReportBuilderBufferTooSmall;
-            }
-            else
-            {
-                remainingBufferLength -= charactersWritten;
-                pCurrentWritePos += charactersWritten;
-            }
+            /* Discard the last comma. */
+            pCurrentWritePos -= 1;
+            remainingBufferLength += 1;
 
             /* Write end of JSON object for custom metrics. */
             charactersWritten = snprintf( pCurrentWritePos,

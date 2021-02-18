@@ -36,23 +36,63 @@ typedef enum
     ReportBuilderBufferTooSmall
 } ReportBuilderStatus_t;
 
+/**
+ * @brief Enumeration for Custom Metric types supported by
+ * AWS IoT Device Defender service.
+ */
+typedef enum CustomMetricType
+{
+    CustomMetricTypeNumber = 0,
+    CustomMetricTypeNumberList,
+    CustomMetricTypeStringList,
+    CustomMetricTypeIpList,
+    CustomMetricTypeUknown
+} CustomMetricType_t;
+
+/**
+ * @brief Base structure of containing information command across
+ * all custom metric types.
+ */
 typedef struct CustomMetricBase
 {
     const char * pMetricName;
+    CustomMetricType_t metricType;
 } CustomMetricBase_t;
 
+/**
+ * @brief Represents a number custom metric.
+ * This is a concrete definition of #CustomMetricBase_t for the number type
+ * of custom metric.
+ */
 typedef struct CustomMetricNumber
 {
-    const char * pMetricName;
+    CustomMetricBase_t base;
     int64_t number;
 } CustomMetricNumber_t;
 
+/**
+ * @brief Represents a number list type of custom metric.
+ * This is a concrete definition of #CustomMetricBase_t for the number list
+ * type of custom metric.
+ */
 typedef struct CustomMetricNumberList
 {
-    const char * pMetricName;
+    CustomMetricBase_t base;
     int64_t * numbers;
-    size_t numberListLength;
+    uint32_t numberListLength;
 } CustomMetricNumberList_t;
+
+/**
+ * @brief Represents a string list type of custom metric.
+ * This is a concrete definition of #CustomMetricBase_t for the string list
+ * type of custom metric.
+ */
+typedef struct CustomMetricStringList
+{
+    CustomMetricBase_t base;
+    char ** strings;
+    uint32_t numOfStrings;
+} CustomMetricStringList_t;
 
 /**
  * @brief Represents metrics to be included in the report.
@@ -66,7 +106,8 @@ typedef struct ReportMetrics
     uint32_t openUdpPortsArrayLength;
     Connection_t * pEstablishedConnectionsArray;
     uint32_t establishedConnectionsArrayLength;
-    CustomMetricNumberList_t * pNumberListMetric;
+    CustomMetricBase_t ** pCustomMetrics;
+    uint32_t numOfCustomMetrics;
 } ReportMetrics_t;
 
 /**

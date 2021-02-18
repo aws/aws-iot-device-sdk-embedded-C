@@ -149,7 +149,10 @@ static CpuUsageData_t cpuUsage;
 /**
  * @brief The object for holding custom metric information for CPU usage time data.
  */
-static CustomMetricNumberList_t cpuUsageMetric;
+static CustomMetricNumberList_t cpuUsageMetric[ 2 ];
+
+
+static CustomMetricBase_t * pCustomMetrics[ 2 ] = { ( CustomMetricBase_t * ) &cpuUsageMetric[ 0 ], ( CustomMetricBase_t * ) &cpuUsageMetric[ 1 ] };
 
 /**
  * @brief All the metrics sent in the device defender report.
@@ -439,9 +442,30 @@ static bool collectDeviceMetrics( void )
         }
         else
         {
-            cpuUsageMetric.pMetricName = pCustomMetricCpuUsage;
-            cpuUsageMetric.numbers = ( int64_t * ) &cpuUsage;
-            cpuUsageMetric.numberListLength = 2UL;
+            cpuUsageMetric[ 0 ].base.pMetricName = pCustomMetricCpuUsage;
+            cpuUsageMetric[ 0 ].base.metricType = CustomMetricTypeNumberList;
+            cpuUsageMetric[ 0 ].numbers = ( int64_t * ) &cpuUsage;
+            cpuUsageMetric[ 0 ].numberListLength = 2UL;
+        }
+    }
+
+    /* Collect CPU usage time metrics from the system.
+     * This is an example of a custom metric of number-list type. */
+    if( metricsCollectorStatus == MetricsCollectorSuccess )
+    {
+        metricsCollectorStatus = GetCpuUsageData( &cpuUsage );
+
+        if( metricsCollectorStatus != MetricsCollectorSuccess )
+        {
+            LogError( ( "Failed to get data of CPU usage from system. Status: %d.",
+                        metricsCollectorStatus ) );
+        }
+        else
+        {
+            cpuUsageMetric[ 1 ].base.pMetricName = pCustomMetricCpuUsage;
+            cpuUsageMetric[ 1 ].base.metricType = CustomMetricTypeNumberList;
+            cpuUsageMetric[ 1 ].numbers = ( int64_t * ) &cpuUsage;
+            cpuUsageMetric[ 1 ].numberListLength = 2UL;
         }
     }
 
@@ -456,7 +480,8 @@ static bool collectDeviceMetrics( void )
         deviceMetrics.openUdpPortsArrayLength = numOpenUdpPorts;
         deviceMetrics.pEstablishedConnectionsArray = &( establishedConnections[ 0 ] );
         deviceMetrics.establishedConnectionsArrayLength = numEstablishedConnections;
-        deviceMetrics.pNumberListMetric = &cpuUsageMetric;
+        deviceMetrics.pCustomMetrics = ( CustomMetricBase_t ** ) &pCustomMetrics;
+        deviceMetrics.numOfCustomMetrics = 2UL;
     }
 
     return status;

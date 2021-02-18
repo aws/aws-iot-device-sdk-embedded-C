@@ -63,6 +63,9 @@ typedef struct Connection
  * @brief Represents the Cpu Usage statistics obtained from "/proc/uptime".
  * Refer to Linux manual for "/proc" filesystem for more information.
  * https://man7.org/linux/man-pages/man5/procfs.5.html
+ * 
+ * @note This information is reported to AWS IoT Device Defender service as a
+ * custom metric.
  */
 typedef struct CpuUsageData
 {
