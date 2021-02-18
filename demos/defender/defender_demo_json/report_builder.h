@@ -95,6 +95,18 @@ typedef struct CustomMetricStringList
 } CustomMetricStringList_t;
 
 /**
+ * @brief Represents a IP address list type of custom metric.
+ * This is a concrete definition of #CustomMetricBase_t for the IP address
+ * list type of custom metric.
+ */
+typedef struct CustomMetricIpList
+{
+    CustomMetricBase_t base;
+    uint32_t * ipAddress;
+    uint32_t numOfAddresses;
+} CustomMetricIpList_t;
+
+/**
  * @brief Represents metrics to be included in the report.
  */
 typedef struct ReportMetrics

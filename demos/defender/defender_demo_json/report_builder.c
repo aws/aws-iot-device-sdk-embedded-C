@@ -354,8 +354,9 @@ static ReportBuilderStatus_t writeCustomMetricListData( char * pBuffer,
 
     assert( pBuffer != NULL );
     assert( pCustomMetric != NULL );
-    assert( ( pCustomMetric->metricType == CustomMetricTypeStringList ) ||
-            ( pCustomMetric->metricType == CustomMetricTypeNumberList ) );
+    assert( ( pCustomMetric->metricType == CustomMetricTypeNumberList ) ||
+            ( pCustomMetric->metricType == CustomMetricTypeStringList ) ||
+            ( pCustomMetric->metricType == CustomMetricTypeIpList ) );
     assert( pOutCharsWritten != NULL );
 
     /* Write the JSON array open marker. */
@@ -378,6 +379,10 @@ static ReportBuilderStatus_t writeCustomMetricListData( char * pBuffer,
     {
         listLength = ( ( CustomMetricStringList_t * ) pCustomMetric )->numOfStrings;
     }
+    else
+    {
+        listLength = ( ( CustomMetricIpList_t * ) pCustomMetric )->numOfAddresses;
+    }
 
     /* Write the array elements. */
     for( i = 0; ( ( i < listLength ) && ( status == ReportBuilderSuccess ) ); i++ )
@@ -395,6 +400,17 @@ static ReportBuilderStatus_t writeCustomMetricListData( char * pBuffer,
                                           remainingBufferLength,
                                           JSON_REPORT_CUSTOM_METRIC_STRING_DATA_FORMAT,
                                           ( ( CustomMetricStringList_t * ) pCustomMetric )->strings[ i ] );
+        }
+        else
+        {
+            uint32_t ipAddr = ( ( CustomMetricIpList_t * ) pCustomMetric )->ipAddress[ i ];
+            charactersWritten = snprintf( pCurrentWritePos,
+                                          remainingBufferLength,
+                                          JSON_REPORT_CUSTOM_METRIC_IP_DATA_FORMAT,
+                                          ( ( ipAddr >> 24 ) & 0xFF ),
+                                          ( ( ipAddr >> 16 ) & 0xFF ),
+                                          ( ( ipAddr >> 8 ) & 0xFF ),
+                                          ( ipAddr & 0xFF ) );
         }
 
         if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
@@ -675,6 +691,7 @@ ReportBuilderStatus_t GenerateJsonReport( char * pBuffer,
 
                     case CustomMetricTypeNumberList:
                     case CustomMetricTypeStringList:
+                    case CustomMetricTypeIpList:
 
                         /* Write nested data list of numbers in the report. */
                         status = writeCustomMetricListData( pCurrentWritePos,
@@ -689,8 +706,9 @@ ReportBuilderStatus_t GenerateJsonReport( char * pBuffer,
 
                         break;
 
-                    case CustomMetricTypeIpList:
                     case CustomMetricTypeUknown:
+                        LogError( ( "Received invalid type of custom metric object: IndexInCustomMetricsArray=%u, Type=%u",
+                                    index, pMetrics->pCustomMetrics[ index ]->metricType ) );
                         break;
                 }
 
