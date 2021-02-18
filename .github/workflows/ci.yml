@@ -244,7 +244,7 @@ jobs:
       - name: Install Python3
         uses: actions/setup-python@v2
         with:
-          python-version: '3.x'
+          python-version: '3.7.10'
       - name: Generate doxygen output
         run: |
           if [[ "$GITHUB_REF" == "refs/heads/main" ]]; then
@@ -286,7 +286,7 @@ jobs:
           submodules: recursive
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.x'
+          python-version: '3.7.10'
       - name: Install pandoc
         run: |
           wget https://github.com/jgm/pandoc/releases/download/2.11/pandoc-2.11-1-amd64.deb -O pandoc.deb
