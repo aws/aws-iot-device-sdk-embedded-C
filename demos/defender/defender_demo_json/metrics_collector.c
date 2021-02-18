@@ -25,6 +25,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 /* POSIX includes. */
 #include <arpa/inet.h>
@@ -37,7 +38,7 @@
 
 /**
  * @brief The maximum length of line read from any of /proc/net/dev, /proc/net/tcp,
- * /proc/net/udp and /proc/uptime files.
+ * /proc/net/udp, /proc/uptime and /proc/meminfo files.
  */
 #define MAX_LINE_LENGTH                  ( 256 )
 
@@ -442,3 +443,71 @@ MetricsCollectorStatus_t GetCpuUsageData( CpuUsageData_t * pCpuUsage )
     return status;
 }
 /*-----------------------------------------------------------*/
+
+MetricsCollectorStatus_t GetMemoryData( MemoryData_t * pMemoryData )
+{
+    MetricsCollectorStatus_t status = MetricsCollectorSuccess;
+    FILE * fileHandle = NULL;
+
+    assert( pMemoryData != NULL );
+
+    if( ( pMemoryData == NULL ) )
+    {
+        LogError( ( "Invalid pMemoryData parameter to GetAvailableMemoryStatistic()." ) );
+        status = MetricsCollectorBadParameter;
+    }
+
+    if( status == MetricsCollectorSuccess )
+    {
+        fileHandle = fopen( "/proc/meminfo", "r" );
+
+        if( fileHandle == NULL )
+        {
+            LogError( ( "Failed to open /proc/meminfo." ) );
+            status = MetricsCollectorFileOpenFailed;
+        }
+    }
+
+    if( status == MetricsCollectorSuccess )
+    {
+        /* Variables for reading and processing data from "/proc/meminfo" file. */
+        uint8_t lineNumber = 0;
+        char lineBuffer[ MAX_LINE_LENGTH ];
+        bool readTotalMem = false, readAvailableMem = false;
+        const char * const pTotalMemoryField = "MemTotal";
+        const char * const pAvailableMemField = "MemAvailable";
+
+        while( ( fgets( &( lineBuffer[ 0 ] ), MAX_LINE_LENGTH, fileHandle ) != NULL ) )
+        {
+            lineNumber++;
+
+            LogDebug( ( "File: /proc/meminfo, LineNo: %u, Content: %s.",
+                        lineNumber, &( lineBuffer[ 0 ] ) ) );
+
+            if( strncmp( lineBuffer, pTotalMemoryField, strlen( pTotalMemoryField ) ) == 0 )
+            {
+                ( void ) strncpy( pMemoryData->totalMemory, lineBuffer, strlen( lineBuffer ) );
+                pMemoryData->totalMemory[ strlen( lineBuffer ) - 1UL ] = '\0';
+                readTotalMem = true;
+            }
+            else if( strncmp( lineBuffer, pAvailableMemField, strlen( pAvailableMemField ) ) == 0 )
+            {
+                ( void ) strncpy( pMemoryData->availableMemory, lineBuffer, strlen( lineBuffer ) );
+                pMemoryData->availableMemory[ strlen( lineBuffer ) - 1UL ] = '\0';
+                readAvailableMem = true;
+            }
+
+            if( readTotalMem && readAvailableMem )
+            {
+                break;
+            }
+        }
+    }
+
+    if( fileHandle != NULL )
+    {
+        fclose( fileHandle );
+    }
+
+    return status;
+}

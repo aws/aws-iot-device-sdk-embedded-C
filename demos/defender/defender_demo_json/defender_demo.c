@@ -149,10 +149,38 @@ static CpuUsageData_t cpuUsage;
 /**
  * @brief The object for holding custom metric information for CPU usage time data.
  */
-static CustomMetricNumberList_t cpuUsageMetric[ 2 ];
+static CustomMetricNumberList_t cpuUsageMetric;
 
+/**
+ * @brief The name of the custom metric for system memory data.
+ * This demo reports this metrics as a "string list" type of custom metric.
+ */
+static const char * pCustomMetricMemoryData = "memory-info";
 
-static CustomMetricBase_t * pCustomMetrics[ 2 ] = { ( CustomMetricBase_t * ) &cpuUsageMetric[ 0 ], ( CustomMetricBase_t * ) &cpuUsageMetric[ 1 ] };
+/**
+ * @brief The object for holding custom metric information for available memory statistic.
+ */
+MemoryData_t memoryData;
+static char * pMemoryInfoStrings[] =
+{
+    memoryData.totalMemory,
+    memoryData.availableMemory
+};
+
+/**
+ * @brief The object for holding custom metric information for system memory data.
+ */
+static CustomMetricStringList_t memoryMetric;
+
+/**
+ * @brief Array of custom metric objects that can hold different types of custom
+ * metric objects.
+ */
+static CustomMetricBase_t * pCustomMetrics[] =
+{
+    ( CustomMetricBase_t * ) &cpuUsageMetric,
+    ( CustomMetricBase_t * ) &memoryMetric
+};
 
 /**
  * @brief All the metrics sent in the device defender report.
@@ -442,30 +470,30 @@ static bool collectDeviceMetrics( void )
         }
         else
         {
-            cpuUsageMetric[ 0 ].base.pMetricName = pCustomMetricCpuUsage;
-            cpuUsageMetric[ 0 ].base.metricType = CustomMetricTypeNumberList;
-            cpuUsageMetric[ 0 ].numbers = ( int64_t * ) &cpuUsage;
-            cpuUsageMetric[ 0 ].numberListLength = 2UL;
+            cpuUsageMetric.base.pMetricName = pCustomMetricCpuUsage;
+            cpuUsageMetric.base.metricType = CustomMetricTypeNumberList;
+            cpuUsageMetric.numbers = ( int64_t * ) &cpuUsage;
+            cpuUsageMetric.numberListLength = 2UL;
         }
     }
 
-    /* Collect CPU usage time metrics from the system.
-     * This is an example of a custom metric of number-list type. */
+    /* Collect data on memory usage and calculate statistic on % of available memory
+     * in the system. This is an example of a custom metric of string-list type. */
     if( metricsCollectorStatus == MetricsCollectorSuccess )
     {
-        metricsCollectorStatus = GetCpuUsageData( &cpuUsage );
+        metricsCollectorStatus = GetMemoryData( &memoryData );
 
         if( metricsCollectorStatus != MetricsCollectorSuccess )
         {
-            LogError( ( "Failed to get data of CPU usage from system. Status: %d.",
+            LogError( ( "Failed to get data of memory availability in system. Status: %d.",
                         metricsCollectorStatus ) );
         }
         else
         {
-            cpuUsageMetric[ 1 ].base.pMetricName = pCustomMetricCpuUsage;
-            cpuUsageMetric[ 1 ].base.metricType = CustomMetricTypeNumberList;
-            cpuUsageMetric[ 1 ].numbers = ( int64_t * ) &cpuUsage;
-            cpuUsageMetric[ 1 ].numberListLength = 2UL;
+            memoryMetric.base.pMetricName = pCustomMetricMemoryData;
+            memoryMetric.base.metricType = CustomMetricTypeStringList;
+            memoryMetric.strings = pMemoryInfoStrings;
+            memoryMetric.numOfStrings = 2UL;
         }
     }
 
@@ -480,7 +508,7 @@ static bool collectDeviceMetrics( void )
         deviceMetrics.openUdpPortsArrayLength = numOpenUdpPorts;
         deviceMetrics.pEstablishedConnectionsArray = &( establishedConnections[ 0 ] );
         deviceMetrics.establishedConnectionsArrayLength = numEstablishedConnections;
-        deviceMetrics.pCustomMetrics = ( CustomMetricBase_t ** ) &pCustomMetrics;
+        deviceMetrics.pCustomMetrics = pCustomMetrics;
         deviceMetrics.numOfCustomMetrics = 2UL;
     }
 

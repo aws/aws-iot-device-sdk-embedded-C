@@ -63,7 +63,7 @@ typedef struct Connection
  * @brief Represents the Cpu Usage statistics obtained from "/proc/uptime".
  * Refer to Linux manual for "/proc" filesystem for more information.
  * https://man7.org/linux/man-pages/man5/procfs.5.html
- * 
+ *
  * @note This information is reported to AWS IoT Device Defender service as a
  * custom metric.
  */
@@ -72,6 +72,22 @@ typedef struct CpuUsageData
     int64_t uptime;   /**< Up-time of system in USER_HZ (1/100th of second) time units. */
     int64_t idletime; /**< Idle time of system in USER_HZ (1/100th of second)  ime units. */
 } CpuUsageData_t;
+
+/**
+ * @brief Represents the memory data of total and available memory from "/proc/uptime".
+ * Refer to Linux manual for "/proc" filesystem for more information.
+ * https://man7.org/linux/man-pages/man5/procfs.5.html
+ *
+ * @note This information is reported to AWS IoT Device Defender service as a
+ * custom metric as a list of strings. Sending this information as a string is for
+ * demonstration purposes only. To reduce memory consumption for this metric, the
+ * information can be sent as integer list instead.
+ */
+typedef struct MemoryData
+{
+    char totalMemory[ 50 ];     /**< Information of total memory in system (in kB). */
+    char availableMemory[ 50 ]; /**< Information of available memory in system (in kB). */
+} MemoryData_t;
 
 /**
  * @brief Get network stats.
@@ -164,7 +180,7 @@ MetricsCollectorStatus_t GetEstablishedConnections( Connection_t * pOutConnectio
  *
  * This function finds the system CPU information by reading "/proc/uptime" file.
  *
- * @param[in] pCpuUsage The memory to write the CPU usage statistics into.
+ * @param[out] pCpuUsage The memory to write the CPU usage statistics into.
  *
  * @return #MetricsCollectorSuccess if CPU usage data is successfully obtained;
  * #MetricsCollectorBadParameter if invalid parameter is passed;
@@ -173,5 +189,21 @@ MetricsCollectorStatus_t GetEstablishedConnections( Connection_t * pOutConnectio
  * from "/proc/uptime".
  */
 MetricsCollectorStatus_t GetCpuUsageData( CpuUsageData_t * pCpuUsage );
+
+/**
+ * @brief Obtains memory usage data and calculates the percentage of available memory
+ * in the system.
+ *
+ * This function finds the system memory information by reading "/proc/meminfo" file.
+ *
+ * @param[out] pMemoryData The memory to write the memory information into.
+ *
+ * @return #MetricsCollectorSuccess if memory data statistic is successfully calculated;
+ * #MetricsCollectorBadParameter if invalid parameter is passed;
+ * #MetricsCollectorFileOpenFailed if the function fails to open "/proc/meminfo";
+ * MetricsCollectorParsingFailed if the function fails to parses the data read
+ * from "/proc/meminfo".
+ */
+MetricsCollectorStatus_t GetMemoryData( MemoryData_t * pMemoryData );
 
 #endif /* ifndef METRICS_COLLECTOR_H_ */
