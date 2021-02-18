@@ -389,7 +389,9 @@ MetricsCollectorStatus_t GetCpuUsageData( CpuUsageData_t * pCpuUsage )
     uint32_t filledVariables;
     char lineBuffer[ MAX_LINE_LENGTH ];
 
-    if( ( pCpuUsage == NULL ) )
+    assert( pCpuUsage != NULL );
+
+    if( pCpuUsage == NULL )
     {
         LogError( ( "Invalid pCpuUsage parameter to GetCpuUsageData()." ) );
         status = MetricsCollectorBadParameter;
@@ -476,6 +478,8 @@ MetricsCollectorStatus_t GetMemoryData( MemoryData_t * pMemoryData )
         bool readTotalMem = false, readAvailableMem = false;
         const char * const pTotalMemoryField = "MemTotal";
         const char * const pAvailableMemField = "MemAvailable";
+        int filledVariables = 0;
+        uint64_t parsedMemData = 0UL;
 
         while( ( fgets( &( lineBuffer[ 0 ] ), MAX_LINE_LENGTH, fileHandle ) != NULL ) )
         {
@@ -484,21 +488,38 @@ MetricsCollectorStatus_t GetMemoryData( MemoryData_t * pMemoryData )
             LogDebug( ( "File: /proc/meminfo, LineNo: %u, Content: %s.",
                         lineNumber, &( lineBuffer[ 0 ] ) ) );
 
-            if( strncmp( lineBuffer, pTotalMemoryField, strlen( pTotalMemoryField ) ) == 0 )
+            /* Extract the total memory value from the line. */
+            filledVariables = sscanf( lineBuffer,
+                                      "%*[^1-9]%lu kB",
+                                      ( &parsedMemData ) );
+
+            if( filledVariables != 1 )
             {
-                ( void ) strncpy( pMemoryData->totalMemory, lineBuffer, strlen( lineBuffer ) );
-                pMemoryData->totalMemory[ strlen( lineBuffer ) - 1UL ] = '\0';
+                LogError( ( "Failed to parse data. Line:%d, Content:%s", lineNumber, lineBuffer ) );
+                status = MetricsCollectorParsingFailed;
+            }
+            /* Check if the line read represents information for "total memory" in the system. */
+            else if( strncmp( lineBuffer, pTotalMemoryField, strlen( pTotalMemoryField ) ) == 0 )
+            {
+                /* Populate buffer with information for total memory as "TotalMem:<data>kB". */
+                ( void ) snprintf( pMemoryData->totalMemory, sizeof( pMemoryData->totalMemory ),
+                                   "%s:%lukB", pTotalMemoryField, parsedMemData );
+
                 readTotalMem = true;
             }
+            /* Check if the line read represents information for "available memory" in the system. */
             else if( strncmp( lineBuffer, pAvailableMemField, strlen( pAvailableMemField ) ) == 0 )
             {
-                ( void ) strncpy( pMemoryData->availableMemory, lineBuffer, strlen( lineBuffer ) );
-                pMemoryData->availableMemory[ strlen( lineBuffer ) - 1UL ] = '\0';
+                /* Populate buffer with information for total memory as "TotalMem:<data>kB". */
+                ( void ) snprintf( pMemoryData->availableMemory, sizeof( pMemoryData->availableMemory ),
+                                   "%s:%lukB", pAvailableMemField, parsedMemData );
+
                 readAvailableMem = true;
             }
 
             if( readTotalMem && readAvailableMem )
             {
+                /* We have obtained data for both total and available memory in the system. */
                 break;
             }
         }

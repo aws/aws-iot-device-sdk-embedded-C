@@ -102,7 +102,15 @@
  * @brief Time in seconds to wait between retries of the demo loop if
  * demo loop fails.
  */
-#define DELAY_BETWEEN_DEMO_RETRY_ITERATIONS_S    ( 5 )
+#define DELAY_BETWEEN_DEMO_RETRY_ITERATIONS_S              ( 5 )
+
+/**
+ * @brief Number of custom metrics that will be sent to AWS IoT Device Defender service by
+ * the demo.
+ * This demo sends custom metrics for Cpu usage data (as number-list type) and memory data
+ * (as string-list type).
+ */
+#define NUMBER_OF_CUSTOM_METRICS_OBJECTS_IN_JSON_REPORT    ( 2 )
 
 /**
  * @brief Status values of the device defender report.
@@ -158,9 +166,15 @@ static CustomMetricNumberList_t cpuUsageMetric;
 static const char * pCustomMetricMemoryData = "memory-info";
 
 /**
- * @brief The object for holding custom metric information for available memory statistic.
+ * @brief Memory for holding custom metric information of system memory data.
  */
-MemoryData_t memoryData;
+static MemoryData_t memoryData;
+
+/**
+ * @brief Array of strings that represent system memory information that is sent
+ * as custom metric of type string-list to AWS IoT Device Defender service by the
+ * demo.
+ */
 static char * pMemoryInfoStrings[] =
 {
     memoryData.totalMemory,
@@ -176,7 +190,7 @@ static CustomMetricStringList_t memoryMetric;
  * @brief Array of custom metric objects that can hold different types of custom
  * metric objects.
  */
-static CustomMetricBase_t * pCustomMetrics[] =
+static CustomMetricBase_t * pCustomMetrics[ NUMBER_OF_CUSTOM_METRICS_OBJECTS_IN_JSON_REPORT ] =
 {
     ( CustomMetricBase_t * ) &cpuUsageMetric,
     ( CustomMetricBase_t * ) &memoryMetric
@@ -509,7 +523,7 @@ static bool collectDeviceMetrics( void )
         deviceMetrics.pEstablishedConnectionsArray = &( establishedConnections[ 0 ] );
         deviceMetrics.establishedConnectionsArrayLength = numEstablishedConnections;
         deviceMetrics.pCustomMetrics = pCustomMetrics;
-        deviceMetrics.numOfCustomMetrics = 2UL;
+        deviceMetrics.numOfCustomMetrics = NUMBER_OF_CUSTOM_METRICS_OBJECTS_IN_JSON_REPORT;
     }
 
     return status;

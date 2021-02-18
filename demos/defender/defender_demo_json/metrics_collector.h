@@ -178,7 +178,7 @@ MetricsCollectorStatus_t GetEstablishedConnections( Connection_t * pOutConnectio
 /**
  * @brief Get CPU usage data of uptime and idle time from the system.
  *
- * This function finds the system CPU information by reading "/proc/uptime" file.
+ * This function finds the system CPU information by reading the "/proc/uptime" file.
  *
  * @param[out] pCpuUsage The memory to write the CPU usage statistics into.
  *
@@ -191,10 +191,10 @@ MetricsCollectorStatus_t GetEstablishedConnections( Connection_t * pOutConnectio
 MetricsCollectorStatus_t GetCpuUsageData( CpuUsageData_t * pCpuUsage );
 
 /**
- * @brief Obtains memory usage data and calculates the percentage of available memory
- * in the system.
+ * @brief Gets data of total and available memory in the system and populates them as
+ * key-value strings in the passed @p pMemoryData parameter.
  *
- * This function finds the system memory information by reading "/proc/meminfo" file.
+ * This function finds the memory information by reading the "/proc/meminfo" file.
  *
  * @param[out] pMemoryData The memory to write the memory information into.
  *

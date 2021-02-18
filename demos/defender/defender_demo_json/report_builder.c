@@ -100,13 +100,14 @@
 #define JSON_REPORT_CUSTOM_METRIC_START \
     ",\"custom_metrics\":{"
 
-#define JSON_REPORT_CUSTOM_METRIC_STRING_DATA_FORMAT    "\"%s\","
-#define JSON_REPORT_CUSTOM_METRIC_IP_DATA_FORMAT        "\"%u.%u.%u.%u\","
+#define JSON_REPORT_CUSTOM_METRIC_LIST_NUMBER_FORMAT    "%ld"
+#define JSON_REPORT_CUSTOM_METRIC_LIST_STRING_FORMAT    "\"%s\","
+#define JSON_REPORT_CUSTOM_METRIC_LIST_IP_FORMAT        "\"%u.%u.%u.%u\","
 
 #define JSON_REPORT_CUSTOM_METRIC_NUMBER_FORMAT \
     "\"%s\":["                                  \
     "{"                                         \
-    "\"number\":%lld"                           \
+    "\"number\":%ld"                            \
     "}"                                         \
     "],"
 
@@ -400,14 +401,14 @@ static ReportBuilderStatus_t writeCustomMetricList( char * pBuffer,
         {
             charactersWritten = snprintf( pCurrentWritePos,
                                           remainingBufferLength,
-                                          JSON_REPORT_CUSTOM_METRIC_NUMBER_DATA_FORMAT,
+                                          JSON_REPORT_CUSTOM_METRIC_LIST_NUMBER_FORMAT,
                                           ( ( CustomMetricNumberList_t * ) pCustomMetric )->numbers[ i ] );
         }
         else if( pCustomMetric->metricType == CustomMetricTypeStringList )
         {
             charactersWritten = snprintf( pCurrentWritePos,
                                           remainingBufferLength,
-                                          JSON_REPORT_CUSTOM_METRIC_STRING_DATA_FORMAT,
+                                          JSON_REPORT_CUSTOM_METRIC_LIST_STRING_FORMAT,
                                           ( ( CustomMetricStringList_t * ) pCustomMetric )->strings[ i ] );
         }
         else
@@ -415,7 +416,7 @@ static ReportBuilderStatus_t writeCustomMetricList( char * pBuffer,
             uint32_t ipAddr = ( ( CustomMetricIpList_t * ) pCustomMetric )->ipAddress[ i ];
             charactersWritten = snprintf( pCurrentWritePos,
                                           remainingBufferLength,
-                                          JSON_REPORT_CUSTOM_METRIC_IP_DATA_FORMAT,
+                                          JSON_REPORT_CUSTOM_METRIC_LIST_IP_FORMAT,
                                           ( ( ipAddr >> 24 ) & 0xFF ),
                                           ( ( ipAddr >> 16 ) & 0xFF ),
                                           ( ( ipAddr >> 8 ) & 0xFF ),
@@ -674,6 +675,7 @@ ReportBuilderStatus_t GenerateJsonReport( char * pBuffer,
                         bufferWritten = snprintf( pCurrentWritePos,
                                                   remainingBufferLength,
                                                   JSON_REPORT_CUSTOM_METRIC_NUMBER_FORMAT,
+                                                  DEFENDER_REPORT_NUMBER_KEY,
                                                   ( ( CustomMetricNumber_t * ) pMetrics->pCustomMetrics[ index ] )->number );
 
                         if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
