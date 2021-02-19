@@ -390,7 +390,7 @@ MetricsCollectorStatus_t GetCpuUsageStats( CpuUsageStats_t * pCpuUsage )
 
     if( pCpuUsage == NULL )
     {
-        LogError( ( "Invalid pCpuUsage parameter to GetCpuUsageStats()." ) );
+        LogError( ( "Invalid parameter. pCpuUsage %p", ( void * ) pCpuUsage ) );
         status = MetricsCollectorBadParameter;
     }
 
@@ -409,15 +409,15 @@ MetricsCollectorStatus_t GetCpuUsageStats( CpuUsageStats_t * pCpuUsage )
     {
         if( fgets( &( lineBuffer[ 0 ] ), MAX_LINE_LENGTH, fileHandle ) != NULL )
         {
-            float uptime = 0.0f, idletime = 0.0f;
+            float upTime = 0.0f, idleTime = 0.0f;
             LogDebug( ( "File: /proc/uptime, Content: %s.",
                         &( lineBuffer[ 0 ] ) ) );
 
             /* Parse the output. */
             filledVariables = sscanf( &( lineBuffer[ 0 ] ),
                                       "%f %f",
-                                      &( uptime ),
-                                      &( idletime ) );
+                                      &( upTime ),
+                                      &( idleTime ) );
 
             /* sscanf should fill all the 2 variables successfully. */
             if( filledVariables != 2 )
@@ -428,8 +428,8 @@ MetricsCollectorStatus_t GetCpuUsageStats( CpuUsageStats_t * pCpuUsage )
             else
             {
                 /* Convert data from floating point to interger by multiplying by 100. */
-                pCpuUsage->uptime = ( int64_t ) ( uptime * 100.0f );
-                pCpuUsage->idletime = ( int64_t ) ( idletime * 100.0f );
+                pCpuUsage->upTime = ( int64_t ) ( upTime * 100.0f );
+                pCpuUsage->idleTime = ( int64_t ) ( idleTime * 100.0f );
             }
         }
     }

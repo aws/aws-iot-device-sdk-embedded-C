@@ -69,8 +69,8 @@ typedef struct Connection
  */
 typedef struct CpuUsageData
 {
-    int64_t uptime;   /**< Up-time of system in USER_HZ (1/100th of second) time units. */
-    int64_t idletime; /**< Idle time of system in USER_HZ (1/100th of second)  ime units. */
+    int64_t upTime;   /**< Up-time of system in USER_HZ (1/100th of second) time units. */
+    int64_t idleTime; /**< Idle time of system in USER_HZ (1/100th of second)  ime units. */
 } CpuUsageStats_t;
 
 /**

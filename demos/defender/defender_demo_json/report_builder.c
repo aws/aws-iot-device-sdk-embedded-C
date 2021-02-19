@@ -44,9 +44,6 @@
 /* Helper macro to check if snprintf was successful. */
 #define SNPRINTF_SUCCESS( retVal, bufLen )    ( ( retVal > 0 ) && ( ( uint32_t ) retVal < bufLen ) )
 
-
-#define CUSTOM_METRIC_CPU_USAGE    "cpu_usage"
-
 /* Formats used to generate the JSON report. */
 #define JSON_PORT_OBJECT_FORMAT \
     "{"                         \
@@ -251,6 +248,11 @@ static ReportBuilderStatus_t writePortsArray( char * pBuffer,
     int charactersWritten;
     ReportBuilderStatus_t status = ReportBuilderSuccess;
 
+    assert( pBuffer != NULL );
+    assert( bufferLength != 0 );
+    assert( pOpenPortsArray != NULL );
+    assert( pOutCharsWritten != NULL );
+
     /* Write the JSON array open marker. */
     if( remainingBufferLength > 1 )
     {
@@ -325,6 +327,11 @@ static ReportBuilderStatus_t writeConnectionsArray( char * pBuffer,
     int charactersWritten;
     ReportBuilderStatus_t status = ReportBuilderSuccess;
     const Connection_t * pConn;
+
+    assert( pBuffer != NULL );
+    assert( bufferLength != 0 );
+    assert( pConnectionsArray != NULL );
+    assert( pOutCharsWritten != NULL );
 
     /* Write the JSON array open marker. */
     if( remainingBufferLength > 1 )
