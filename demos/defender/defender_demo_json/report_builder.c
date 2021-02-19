@@ -159,7 +159,7 @@ static ReportBuilderStatus_t writePortsArray( char * pBuffer,
  * @brief Write established connections array to the given buffer in the format
  * expected by the AWS IoT Device Defender Service.
  *
- * This function write array of the following format:
+ * This function writes array of the following format:
  * [
  *     {
  *         "local_port":44207,
@@ -185,6 +185,59 @@ static ReportBuilderStatus_t writeConnectionsArray( char * pBuffer,
                                                     const Connection_t * pConnectionsArray,
                                                     uint32_t connectionsArrayLength,
                                                     uint32_t * pOutCharsWritten );
+
+/**
+ * @brief A generic utility to write JSON objects for all custom metric
+ * list types (i.e. number-list, ip-address-list and string-list) in the format
+ * expected by the AWS IoT Device Defender service.
+ *
+ * The following is the format for custom metric of number-list type:
+ * "MyMetricOfType_NumberList":[
+ *    {
+ *       "number_list":[
+ *          1.0,
+ *          2.0,
+ *          3.0
+ *       ]
+ *    }
+ * ]
+ *
+ * The following is the format for custom metric of string-list type:
+ * "MyMetricOfType_StringList":[
+ *       {
+ *          "string_list":[
+ *             "value_1",
+ *             "value_2"
+ *          ]
+ *       }
+ *    ]
+ *
+ * The following is the format for custom metric of ip-address-list type:
+ * "MyMetricOfType_IpList":[
+ *        {
+ *           "ip_list":[
+ *              "172.0.0.0",
+ *              "172.0.0.10"
+ *           ]
+ *        }
+ *     ]
+ *
+ * @param[in] pBuffer The buffer to write the connections array.
+ * @param[in] bufferLength The length of the buffer.
+ * @param[in] pCustomMetric The object containing data of the custom metric.
+ * This should be only one of the list types of custom metrics supported
+ * by the AWS IoT Device Defender service.
+ * @param[out] pOutCharsWritten Number of characters written to the buffer.
+ *
+ * @return #ReportBuilderSuccess if the array is successfully written;
+ * #ReportBuilderBufferTooSmall if the buffer cannot hold the full array.
+ */
+static ReportBuilderStatus_t writeCustomMetricList( char * pBuffer,
+                                                    uint32_t bufferLength,
+                                                    CustomMetricBase_t * pCustomMetric,
+                                                    uint32_t * pOutCharsWritten );
+
+
 /*-----------------------------------------------------------*/
 
 static ReportBuilderStatus_t writePortsArray( char * pBuffer,
