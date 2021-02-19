@@ -427,7 +427,8 @@ MetricsCollectorStatus_t GetCpuUsageStats( CpuUsageStats_t * pCpuUsage )
             }
             else
             {
-                /* Convert data from floating point to interger by multiplying by 100. */
+                /* Convert data from floating point to integer by multiplying by 100 to represent data in
+                 * USER_HZ time units. */
                 pCpuUsage->upTime = ( int64_t ) ( upTime * 100.0f );
                 pCpuUsage->idleTime = ( int64_t ) ( idleTime * 100.0f );
             }

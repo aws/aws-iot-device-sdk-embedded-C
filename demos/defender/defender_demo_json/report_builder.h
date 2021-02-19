@@ -95,7 +95,7 @@ typedef struct CustomMetricStringList
 } CustomMetricStringList_t;
 
 /**
- * @brief Represents a IP address list type of custom metric.
+ * @brief Represents an IP address list type of custom metric.
  * This is a concrete definition of #CustomMetricBase_t for the IP address
  * list type of custom metric.
  */

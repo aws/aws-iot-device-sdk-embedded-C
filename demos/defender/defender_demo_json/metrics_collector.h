@@ -63,25 +63,17 @@ typedef struct Connection
  * @brief Represents the Cpu Usage statistics obtained from "/proc/uptime".
  * Refer to Linux manual for "/proc" filesystem for more information.
  * https://man7.org/linux/man-pages/man5/procfs.5.html
- *
- * @note This information is reported to AWS IoT Device Defender service as a
- * custom metric.
  */
 typedef struct CpuUsageData
 {
     int64_t upTime;   /**< Up-time of system in USER_HZ (1/100th of second) time units. */
-    int64_t idleTime; /**< Idle time of system in USER_HZ (1/100th of second)  ime units. */
+    int64_t idleTime; /**< Idle time of system in USER_HZ (1/100th of second) time units. */
 } CpuUsageStats_t;
 
 /**
  * @brief Represents the memory data of total and available memory from "/proc/uptime".
  * Refer to Linux manual for "/proc" filesystem for more information.
  * https://man7.org/linux/man-pages/man5/procfs.5.html
- *
- * @note This information is reported to AWS IoT Device Defender service as a
- * custom metric as a list of strings. Sending this information as a string is for
- * demonstration purposes only. To reduce memory consumption for this metric, the
- * information can be sent as integer list instead.
  */
 typedef struct MemoryStats
 {

@@ -27,6 +27,7 @@ asymetric
 async
 atttribute
 auth
+availablememory
 avoidng
 aws
 ba
@@ -236,6 +237,7 @@ httpsuccess
 httpthread
 hw
 ia
+idletime
 ietf
 ifdef
 ifndef
@@ -247,6 +249,7 @@ intel
 interoperate
 io
 iot
+ip
 ipv
 iso
 jac
@@ -291,6 +294,7 @@ mcu
 md
 mechanims
 mem
+meminfo
 memset
 merkle
 messagelength
@@ -385,6 +389,8 @@ pcks
 pclientsessionpresent
 pconnectionsarray
 pcontext
+pcpuusage
+pcustommetric
 pdeserializedinfo
 pdf
 pdigest
@@ -408,6 +414,7 @@ pkwrite
 plaintext
 platformimagestate
 pleace
+pmemorydata
 pmessage
 pmethod
 pmetrics
@@ -452,6 +459,7 @@ prf
 printf
 proc
 processloop
+procfs
 programname
 proto
 prvobjectgeneration
@@ -530,11 +538,11 @@ secp
 seedfile
 sendupdate
 serverhost
-shadowname
-shadownamelength
 setkey
 sha
 sha256
+shadowname
+shadownamelength
 shadowstatus
 shadowtopicstringtypeupdatedelta
 shasum
@@ -589,6 +597,8 @@ topicfilter
 topicfilterlength
 topiclen
 topiclength
+totalmem
+totalmemory
 transportinterface
 transporttimeout
 txt
