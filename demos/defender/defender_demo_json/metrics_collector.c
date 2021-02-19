@@ -496,18 +496,18 @@ MetricsCollectorStatus_t GetMemoryStats( MemoryStats_t * pMemoryData )
             /* Check if the line read represents information for "total memory" in the system. */
             else if( strncmp( lineBuffer, pTotalMemoryField, strlen( pTotalMemoryField ) ) == 0 )
             {
-                /* Populate buffer with information for total memory as "TotalMem:<data>kB". */
+                /* Populate buffer with information for total memory as "<data>kB". */
                 ( void ) snprintf( pMemoryData->totalMemory, sizeof( pMemoryData->totalMemory ),
-                                   "%s:%lukB", pTotalMemoryField, parsedMemData );
+                                   "%lukB", parsedMemData );
 
                 readTotalMem = true;
             }
             /* Check if the line read represents information for "available memory" in the system. */
             else if( strncmp( lineBuffer, pAvailableMemField, strlen( pAvailableMemField ) ) == 0 )
             {
-                /* Populate buffer with information for total memory as "TotalMem:<data>kB". */
+                /* Populate buffer with information for total memory as "<data>kB". */
                 ( void ) snprintf( pMemoryData->availableMemory, sizeof( pMemoryData->availableMemory ),
-                                   "%s:%lukB", pAvailableMemField, parsedMemData );
+                                   "%lukB", parsedMemData );
 
                 readAvailableMem = true;
             }

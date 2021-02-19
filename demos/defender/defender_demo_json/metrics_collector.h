@@ -77,8 +77,8 @@ typedef struct CpuUsageData
  */
 typedef struct MemoryStats
 {
-    char totalMemory[ 50 ];     /**< Information of total memory in system (in kB). */
-    char availableMemory[ 50 ]; /**< Information of available memory in system (in kB). */
+    char totalMemory[ 50 ];     /**< Amount of total memory in system (in kB). */
+    char availableMemory[ 50 ]; /**< Amount of available memory in system (in kB). */
 } MemoryStats_t;
 
 /**
