@@ -71,7 +71,7 @@ typedef struct CpuUsageData
 {
     int64_t uptime;   /**< Up-time of system in USER_HZ (1/100th of second) time units. */
     int64_t idletime; /**< Idle time of system in USER_HZ (1/100th of second)  ime units. */
-} CpuUsageData_t;
+} CpuUsageStats_t;
 
 /**
  * @brief Represents the memory data of total and available memory from "/proc/uptime".
@@ -83,11 +83,11 @@ typedef struct CpuUsageData
  * demonstration purposes only. To reduce memory consumption for this metric, the
  * information can be sent as integer list instead.
  */
-typedef struct MemoryData
+typedef struct MemoryStats
 {
     char totalMemory[ 50 ];     /**< Information of total memory in system (in kB). */
     char availableMemory[ 50 ]; /**< Information of available memory in system (in kB). */
-} MemoryData_t;
+} MemoryStats_t;
 
 /**
  * @brief Get network stats.
@@ -188,7 +188,7 @@ MetricsCollectorStatus_t GetEstablishedConnections( Connection_t * pOutConnectio
  * MetricsCollectorParsingFailed if the function fails to parses the data read
  * from "/proc/uptime".
  */
-MetricsCollectorStatus_t GetCpuUsageData( CpuUsageData_t * pCpuUsage );
+MetricsCollectorStatus_t GetCpuUsageStats( CpuUsageStats_t * pCpuUsage );
 
 /**
  * @brief Gets data of total and available memory in the system and populates them as
@@ -204,6 +204,6 @@ MetricsCollectorStatus_t GetCpuUsageData( CpuUsageData_t * pCpuUsage );
  * MetricsCollectorParsingFailed if the function fails to parses the data read
  * from "/proc/meminfo".
  */
-MetricsCollectorStatus_t GetMemoryData( MemoryData_t * pMemoryData );
+MetricsCollectorStatus_t GetMemoryStats( MemoryStats_t * pMemoryData );
 
 #endif /* ifndef METRICS_COLLECTOR_H_ */

@@ -152,7 +152,7 @@ static const char * pCustomMetricCpuUsage = "cpu-usage";
 /**
  * @brief Memory to store the CPU usage metrics information.
  */
-static CpuUsageData_t cpuUsage;
+static CpuUsageStats_t cpuUsage;
 
 /**
  * @brief The object for holding custom metric information for CPU usage time data.
@@ -168,7 +168,7 @@ static const char * pCustomMetricMemoryData = "memory-info";
 /**
  * @brief Memory for holding custom metric information of system memory data.
  */
-static MemoryData_t memoryData;
+static MemoryStats_t memoryData;
 
 /**
  * @brief Array of strings that represent system memory information that is sent
@@ -475,7 +475,7 @@ static bool collectDeviceMetrics( void )
      * This is an example of a custom metric of number-list type. */
     if( metricsCollectorStatus == MetricsCollectorSuccess )
     {
-        metricsCollectorStatus = GetCpuUsageData( &cpuUsage );
+        metricsCollectorStatus = GetCpuUsageStats( &cpuUsage );
 
         if( metricsCollectorStatus != MetricsCollectorSuccess )
         {
@@ -495,7 +495,7 @@ static bool collectDeviceMetrics( void )
      * in the system. This is an example of a custom metric of string-list type. */
     if( metricsCollectorStatus == MetricsCollectorSuccess )
     {
-        metricsCollectorStatus = GetMemoryData( &memoryData );
+        metricsCollectorStatus = GetMemoryStats( &memoryData );
 
         if( metricsCollectorStatus != MetricsCollectorSuccess )
         {

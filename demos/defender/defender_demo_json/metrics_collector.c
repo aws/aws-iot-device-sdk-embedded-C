@@ -25,7 +25,6 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 
 /* POSIX includes. */
 #include <arpa/inet.h>
@@ -382,18 +381,16 @@ MetricsCollectorStatus_t GetEstablishedConnections( Connection_t * pOutConnectio
 
 /*-----------------------------------------------------------*/
 
-MetricsCollectorStatus_t GetCpuUsageData( CpuUsageData_t * pCpuUsage )
+MetricsCollectorStatus_t GetCpuUsageStats( CpuUsageStats_t * pCpuUsage )
 {
     MetricsCollectorStatus_t status = MetricsCollectorSuccess;
     FILE * fileHandle = NULL;
     uint32_t filledVariables;
     char lineBuffer[ MAX_LINE_LENGTH ];
 
-    assert( pCpuUsage != NULL );
-
     if( pCpuUsage == NULL )
     {
-        LogError( ( "Invalid pCpuUsage parameter to GetCpuUsageData()." ) );
+        LogError( ( "Invalid pCpuUsage parameter to GetCpuUsageStats()." ) );
         status = MetricsCollectorBadParameter;
     }
 
@@ -425,7 +422,7 @@ MetricsCollectorStatus_t GetCpuUsageData( CpuUsageData_t * pCpuUsage )
             /* sscanf should fill all the 2 variables successfully. */
             if( filledVariables != 2 )
             {
-                LogError( ( "Failed to CPU usage data from /proc/uptime: Data=%s.", &( lineBuffer[ 0 ] ) ) );
+                LogError( ( "Failed to CPU usage data. File: /proc/uptime, Data: %s.", &( lineBuffer[ 0 ] ) ) );
                 status = MetricsCollectorParsingFailed;
             }
             else
@@ -446,16 +443,22 @@ MetricsCollectorStatus_t GetCpuUsageData( CpuUsageData_t * pCpuUsage )
 }
 /*-----------------------------------------------------------*/
 
-MetricsCollectorStatus_t GetMemoryData( MemoryData_t * pMemoryData )
+MetricsCollectorStatus_t GetMemoryStats( MemoryStats_t * pMemoryData )
 {
     MetricsCollectorStatus_t status = MetricsCollectorSuccess;
     FILE * fileHandle = NULL;
-
-    assert( pMemoryData != NULL );
+    /* Variables for reading and processing data from "/proc/meminfo" file. */
+    uint8_t lineNumber = 0;
+    char lineBuffer[ MAX_LINE_LENGTH ];
+    bool readTotalMem = false, readAvailableMem = false;
+    const char * const pTotalMemoryField = "MemTotal";
+    const char * const pAvailableMemField = "MemAvailable";
+    int filledVariables = 0;
+    uint64_t parsedMemData = 0UL;
 
     if( ( pMemoryData == NULL ) )
     {
-        LogError( ( "Invalid pMemoryData parameter to GetAvailableMemoryStatistic()." ) );
+        LogError( ( "Invalid parameter. pMemoryData=%p", ( void * ) pMemoryData ) );
         status = MetricsCollectorBadParameter;
     }
 
@@ -472,15 +475,6 @@ MetricsCollectorStatus_t GetMemoryData( MemoryData_t * pMemoryData )
 
     if( status == MetricsCollectorSuccess )
     {
-        /* Variables for reading and processing data from "/proc/meminfo" file. */
-        uint8_t lineNumber = 0;
-        char lineBuffer[ MAX_LINE_LENGTH ];
-        bool readTotalMem = false, readAvailableMem = false;
-        const char * const pTotalMemoryField = "MemTotal";
-        const char * const pAvailableMemField = "MemAvailable";
-        int filledVariables = 0;
-        uint64_t parsedMemData = 0UL;
-
         while( ( fgets( &( lineBuffer[ 0 ] ), MAX_LINE_LENGTH, fileHandle ) != NULL ) )
         {
             lineNumber++;
@@ -495,7 +489,7 @@ MetricsCollectorStatus_t GetMemoryData( MemoryData_t * pMemoryData )
 
             if( filledVariables != 1 )
             {
-                LogError( ( "Failed to parse data. Line:%d, Content:%s", lineNumber, lineBuffer ) );
+                LogError( ( "Failed to parse data. File: /proc/meminfo, Line:%d, Content:%s", lineNumber, lineBuffer ) );
                 status = MetricsCollectorParsingFailed;
             }
             /* Check if the line read represents information for "total memory" in the system. */
