@@ -443,6 +443,10 @@ OtaPalStatus_t otaPal_CreateFileForRx( OtaFileContext_t * const C )
                         LogError( ( "Failed to close OTA update file." ) );
                         result = OTA_PAL_COMBINE_ERR( OtaPalFileClose, errno );
                     }
+                    else
+                    {
+                        C->pFile = NULL;
+                    }
                 }
 
                 if( C->pFile == NULL )
