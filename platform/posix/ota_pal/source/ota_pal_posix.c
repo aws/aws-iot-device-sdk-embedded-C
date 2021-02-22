@@ -415,6 +415,7 @@ OtaPalStatus_t otaPal_CreateFileForRx( OtaFileContext_t * const C )
     OtaPalStatus_t result = OTA_PAL_COMBINE_ERR( OtaPalUninitialized, 0 );
     char realFilePath[ OTA_FILE_PATH_LENGTH_MAX ];
     OtaPalPathGenStatus_t status = OtaPalFileGenSuccess;
+    int filerc = 0;
 
     if( C != NULL )
     {
@@ -433,17 +434,31 @@ OtaPalStatus_t otaPal_CreateFileForRx( OtaFileContext_t * const C )
             {
                 /* POSIX port using standard library */
                 /* coverity[misra_c_2012_rule_21_6_violation] */
-                C->pFile = fopen( ( const char * ) realFilePath, "w+b" );
-
                 if( C->pFile != NULL )
                 {
-                    result = OTA_PAL_COMBINE_ERR( OtaPalSuccess, 0 );
-                    LogInfo( ( "Receive file created." ) );
+                    filerc = fclose( C->pFile );
+
+                    if( filerc != 0 )
+                    {
+                        LogError( ( "Failed to close OTA update file." ) );
+                        result = OTA_PAL_COMBINE_ERR( OtaPalFileClose, errno );
+                    }
                 }
-                else
+
+                if( C->pFile == NULL )
                 {
-                    result = OTA_PAL_COMBINE_ERR( OtaPalRxFileCreateFailed, errno );
-                    LogError( ( "Failed to start operation: Operation already started. failed to open -- %s Path ", C->pFilePath ) );
+                    C->pFile = fopen( ( const char * ) realFilePath, "w+b" );
+
+                    if( C->pFile != NULL )
+                    {
+                        result = OTA_PAL_COMBINE_ERR( OtaPalSuccess, 0 );
+                        LogInfo( ( "Receive file created." ) );
+                    }
+                    else
+                    {
+                        result = OTA_PAL_COMBINE_ERR( OtaPalRxFileCreateFailed, errno );
+                        LogError( ( "Failed to start operation: Operation already started. failed to open -- %s Path ", C->pFilePath ) );
+                    }
                 }
             }
             else
