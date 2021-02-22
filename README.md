@@ -2,7 +2,7 @@
 
 **[Link to API documentation](https://docs.aws.amazon.com/freertos/latest/lib-ref/embedded-csdk/v4.0_beta_deprecated/lib-ref/index.html)**
 
-[![Build Status](https://travis-com.org/aws/aws-iot-device-sdk-embedded-C.svg?branch=v4_beta_deprecated)](https://travis-ci.org/aws/aws-iot-device-sdk-embedded-C)
+[![Build Status](https://travis-ci.com/aws/aws-iot-device-sdk-embedded-C.svg?branch=v4_beta_deprecated)](https://travis-ci.org/aws/aws-iot-device-sdk-embedded-C)
 [![codecov](https://codecov.io/gh/aws/aws-iot-device-sdk-embedded-C/branch/v4_beta_deprecated/graph/badge.svg)](https://codecov.io/gh/aws/aws-iot-device-sdk-embedded-C)
 
 The CSDK v4_beta_deprecated branch contains a beta version of the AWS IoT Embedded C SDK libraries, which has now been deprecated. No new features will be added, but this branch will continue to be maintained for critical bug fixes and security patches.
