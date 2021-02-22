@@ -557,9 +557,9 @@ static void eventCallback( MQTTContext_t * pMqttContext,
 {
     ShadowMessageType_t messageType = ShadowMessageTypeMaxNum;
     const char * pThingName = NULL;
-    uint16_t thingNameLength = 0U;
+    uint8_t thingNameLength = 0U;
     const char * pShadowName = NULL;
-    uint16_t shadowNameLength = 0U;
+    uint8_t shadowNameLength = 0U;
     uint16_t packetIdentifier;
 
     ( void ) pMqttContext;
