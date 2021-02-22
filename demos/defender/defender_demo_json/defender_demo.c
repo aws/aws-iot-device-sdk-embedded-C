@@ -144,57 +144,10 @@ static uint16_t openUdpPorts[ OPEN_UDP_PORTS_ARRAY_SIZE ];
 static Connection_t establishedConnections[ ESTABLISHED_CONNECTIONS_ARRAY_SIZE ];
 
 /**
- * @brief The name of the custom metric for CPU usage time.
- * This demo reports this metrics as a "number list" type of custom metric.
+ * @brief Memory to represent custom metrics of CPU usage time and memory statistics
+ * that this demo sends to the AWS IoT Defender service.
  */
-static const char * pCustomMetricCpuUsage = "cpu-usage";
-
-/**
- * @brief Memory to store the CPU usage metrics information.
- */
-static CpuUsageStats_t cpuUsage;
-
-/**
- * @brief The object for holding custom metric information for CPU usage time data.
- */
-static CustomMetricNumberList_t cpuUsageMetric;
-
-/**
- * @brief The name of the custom metric for system memory data.
- * This demo reports this metrics as a "string list" type of custom metric.
- */
-static const char * pCustomMetricMemoryData = "memory-info";
-
-/**
- * @brief Memory for holding custom metric information of system memory data.
- */
-static MemoryStats_t memoryData;
-
-/**
- * @brief Array of strings that represent system memory information that is sent
- * as custom metric of type string-list to AWS IoT Device Defender service by the
- * demo.
- */
-static char * pMemoryInfoStrings[] =
-{
-    memoryData.totalMemory,
-    memoryData.availableMemory
-};
-
-/**
- * @brief The object for holding custom metric information for system memory data.
- */
-static CustomMetricStringList_t memoryMetric;
-
-/**
- * @brief Array of custom metric objects that can hold different types of custom
- * metric objects.
- */
-static CustomMetricBase_t * pCustomMetrics[ NUMBER_OF_CUSTOM_METRICS_OBJECTS_IN_JSON_REPORT ] =
-{
-    ( CustomMetricBase_t * ) &cpuUsageMetric,
-    ( CustomMetricBase_t * ) &memoryMetric
-};
+static CustomMetrics_t customMetrics;
 
 /**
  * @brief All the metrics sent in the device defender report.
@@ -475,19 +428,12 @@ static bool collectDeviceMetrics( void )
      * This is an example of a custom metric of number-list type. */
     if( metricsCollectorStatus == MetricsCollectorSuccess )
     {
-        metricsCollectorStatus = GetCpuUsageStats( &cpuUsage );
+        metricsCollectorStatus = GetCpuUsageStats( &customMetrics.cpuUsageStats );
 
         if( metricsCollectorStatus != MetricsCollectorSuccess )
         {
             LogError( ( "Failed to get data of CPU usage from system. Status: %d.",
                         metricsCollectorStatus ) );
-        }
-        else
-        {
-            cpuUsageMetric.base.pMetricName = pCustomMetricCpuUsage;
-            cpuUsageMetric.base.metricType = CustomMetricTypeNumberList;
-            cpuUsageMetric.numbers = ( int64_t * ) &cpuUsage;
-            cpuUsageMetric.numberListLength = 2UL;
         }
     }
 
@@ -495,19 +441,12 @@ static bool collectDeviceMetrics( void )
      * in the system. This is an example of a custom metric of string-list type. */
     if( metricsCollectorStatus == MetricsCollectorSuccess )
     {
-        metricsCollectorStatus = GetMemoryStats( &memoryData );
+        metricsCollectorStatus = GetMemoryStats( &customMetrics.memoryStats );
 
         if( metricsCollectorStatus != MetricsCollectorSuccess )
         {
-            LogError( ( "Failed to get data of memory availability in system. Status: %d.",
+            LogError( ( "Failed to get data of memory statistics from system. Status: %d.",
                         metricsCollectorStatus ) );
-        }
-        else
-        {
-            memoryMetric.base.pMetricName = pCustomMetricMemoryData;
-            memoryMetric.base.metricType = CustomMetricTypeStringList;
-            memoryMetric.strings = pMemoryInfoStrings;
-            memoryMetric.numOfStrings = 2UL;
         }
     }
 
@@ -522,8 +461,7 @@ static bool collectDeviceMetrics( void )
         deviceMetrics.openUdpPortsArrayLength = numOpenUdpPorts;
         deviceMetrics.pEstablishedConnectionsArray = &( establishedConnections[ 0 ] );
         deviceMetrics.establishedConnectionsArrayLength = numEstablishedConnections;
-        deviceMetrics.pCustomMetrics = pCustomMetrics;
-        deviceMetrics.numOfCustomMetrics = NUMBER_OF_CUSTOM_METRICS_OBJECTS_IN_JSON_REPORT;
+        deviceMetrics.pCustomMetrics = &customMetrics;
     }
 
     return status;

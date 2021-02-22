@@ -97,26 +97,35 @@
 #define JSON_REPORT_CUSTOM_METRIC_START \
     ",\"custom_metrics\":{"
 
-#define JSON_REPORT_CUSTOM_METRIC_LIST_NUMBER_FORMAT    "%ld,"
-#define JSON_REPORT_CUSTOM_METRIC_LIST_STRING_FORMAT    "\"%s\","
-#define JSON_REPORT_CUSTOM_METRIC_LIST_IP_FORMAT        "\"%u.%u.%u.%u\","
-
-#define JSON_REPORT_CUSTOM_METRIC_NUMBER_FORMAT \
-    "\"%s\":["                                  \
-    "{"                                         \
-    "\"number\":%ld"                            \
-    "}"                                         \
+/**
+ * @brief The format for the custom metric of CPU usage statistics to send
+ * to AWS IoT Device Defender service.
+ *
+ * @note This demo reports this metrics as a "number list" type of custom metric.
+ */
+#define JSON_REPORT_CUSTOM_METRIC_CPU_USAGE_STATS_FORMAT \
+    "\"cpu-usage\": ["                                   \
+    "{"                                                  \
+    "\"number_list\": ["                                 \
+    "%ld, %ld"                                           \
+    "]"                                                  \
+    "}"                                                  \
     "],"
 
-#define JSON_REPORT_CUSTOM_METRIC_LIST_START \
-    "\"%s\": ["                              \
-    "{"                                      \
-    "\"%s\": ["
-
-#define JSON_REPORT_CUSTOM_METRIC_LIST_END \
-    "]"                                    \
-    "}"                                    \
-    "],"
+/**
+ * @brief The format for the custom metric of system memory statistics to send
+ * to AWS IoT Device Defender service.
+ *
+ * @note This demo reports this metrics as a "string list" type of custom metric.
+ */
+#define JSON_REPORT_CUSTOM_METRIC_MEMORY_STATS_FORMAT \
+    "\"memory-info\": ["                              \
+    "{"                                               \
+    "\"string_list\": ["                              \
+    "\"%s\",\"%s\""                                   \
+    "]"                                               \
+    "}"                                               \
+    "]"
 
 #define JSON_REPORT_CUSTOM_METRIC_END \
     "}"
@@ -183,10 +192,13 @@ static ReportBuilderStatus_t writeConnectionsArray( char * pBuffer,
                                                     uint32_t connectionsArrayLength,
                                                     uint32_t * pOutCharsWritten );
 
+
 /**
- * @brief A generic utility to write JSON objects for all custom metric
- * list types (i.e. number-list, ip-address-list and string-list) in the format
- * expected by the AWS IoT Device Defender service.
+ * @brief Writes custom metrics for CPU usage time and memory statistics in the
+ * JSON report.
+ *
+ * This functions writes the CPU usage time as a "number-list" type and the memory
+ * statistics as a "string-list" type in the JSON report.
  *
  * The following is the format for custom metric of number-list type:
  * "MyMetricOfType_NumberList":[
@@ -209,31 +221,18 @@ static ReportBuilderStatus_t writeConnectionsArray( char * pBuffer,
  *       }
  *    ]
  *
- * The following is the format for custom metric of ip-address-list type:
- * "MyMetricOfType_IpList":[
- *        {
- *           "ip_list":[
- *              "172.0.0.0",
- *              "172.0.0.10"
- *           ]
- *        }
- *     ]
- *
  * @param[in] pBuffer The buffer to write the connections array.
  * @param[in] bufferLength The length of the buffer.
- * @param[in] pCustomMetric The object containing data of the custom metric.
- * This should be only one of the list types of custom metrics supported
- * by the AWS IoT Device Defender service.
+ * @param[in] pCustomMetric The custom metrics to write to the @p pBuffer.
  * @param[out] pOutCharsWritten Number of characters written to the buffer.
  *
  * @return #ReportBuilderSuccess if the array is successfully written;
  * #ReportBuilderBufferTooSmall if the buffer cannot hold the full array.
  */
-static ReportBuilderStatus_t writeCustomMetricList( char * pBuffer,
-                                                    uint32_t bufferLength,
-                                                    CustomMetricBase_t * pCustomMetric,
-                                                    uint32_t * pOutCharsWritten );
-
+static ReportBuilderStatus_t writeCustomMetricsInReport( char * pBuffer,
+                                                         uint32_t bufferLength,
+                                                         CustomMetrics_t * pCustomMetrics,
+                                                         uint32_t * pOutCharsWritten );
 
 /*-----------------------------------------------------------*/
 
@@ -402,50 +401,28 @@ static ReportBuilderStatus_t writeConnectionsArray( char * pBuffer,
 }
 /*-----------------------------------------------------------*/
 
-static ReportBuilderStatus_t writeCustomMetricList( char * pBuffer,
-                                                    uint32_t bufferLength,
-                                                    CustomMetricBase_t * pCustomMetric,
-                                                    uint32_t * pOutCharsWritten )
+static ReportBuilderStatus_t writeCustomMetricsInReport( char * pBuffer,
+                                                         uint32_t bufferLength,
+                                                         CustomMetrics_t * pCustomMetrics,
+                                                         uint32_t * pOutCharsWritten )
 {
     char * pCurrentWritePos = pBuffer;
-    uint32_t i, remainingBufferLength = bufferLength;
+    uint32_t remainingBufferLength = bufferLength;
     int charactersWritten;
     ReportBuilderStatus_t status = ReportBuilderSuccess;
-    uint32_t listLength = 0UL;
-    const char * pListKeyName = NULL;
 
     assert( pBuffer != NULL );
-    assert( pCustomMetric != NULL );
-    assert( ( pCustomMetric->metricType == CustomMetricTypeNumberList ) ||
-            ( pCustomMetric->metricType == CustomMetricTypeStringList ) ||
-            ( pCustomMetric->metricType == CustomMetricTypeIpList ) );
+    assert( pCustomMetrics != NULL );
     assert( pOutCharsWritten != NULL );
 
-    if( pCustomMetric->metricType == CustomMetricTypeNumberList )
-    {
-        listLength = ( ( CustomMetricNumberList_t * ) pCustomMetric )->numberListLength;
-        pListKeyName = DEFENDER_REPORT_NUMBER_LIST_KEY;
-    }
-    else if( pCustomMetric->metricType == CustomMetricTypeStringList )
-    {
-        listLength = ( ( CustomMetricStringList_t * ) pCustomMetric )->numOfStrings;
-        pListKeyName = DEFENDER_REPORT_STRING_LIST_KEY;
-    }
-    else
-    {
-        listLength = ( ( CustomMetricIpList_t * ) pCustomMetric )->numOfAddresses;
-        pListKeyName = DEFENDER_REPORT_IP_LIST_KEY;
-    }
-
-    /* Write start of nested JSON object for list of numbers type of custom metric. */
+    /* Write start of custom metrics object. */
     charactersWritten = snprintf( pCurrentWritePos,
                                   remainingBufferLength,
-                                  JSON_REPORT_CUSTOM_METRIC_LIST_START,
-                                  pCustomMetric->pMetricName,
-                                  pListKeyName );
+                                  JSON_REPORT_CUSTOM_METRIC_START );
 
     if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
     {
+        LogError( ( "Failed to write starting of custom metrics object." ) );
         status = ReportBuilderBufferTooSmall;
     }
     else
@@ -454,68 +431,60 @@ static ReportBuilderStatus_t writeCustomMetricList( char * pBuffer,
         pCurrentWritePos += charactersWritten;
     }
 
-    /* Write the array elements. */
-    for( i = 0; ( ( i < listLength ) && ( status == ReportBuilderSuccess ) ); i++ )
-    {
-        if( pCustomMetric->metricType == CustomMetricTypeNumberList )
-        {
-            charactersWritten = snprintf( pCurrentWritePos,
-                                          remainingBufferLength,
-                                          JSON_REPORT_CUSTOM_METRIC_LIST_NUMBER_FORMAT,
-                                          ( ( CustomMetricNumberList_t * ) pCustomMetric )->numbers[ i ] );
-        }
-        else if( pCustomMetric->metricType == CustomMetricTypeStringList )
-        {
-            charactersWritten = snprintf( pCurrentWritePos,
-                                          remainingBufferLength,
-                                          JSON_REPORT_CUSTOM_METRIC_LIST_STRING_FORMAT,
-                                          ( ( CustomMetricStringList_t * ) pCustomMetric )->strings[ i ] );
-        }
-        else
-        {
-            uint32_t ipAddr = ( ( CustomMetricIpList_t * ) pCustomMetric )->ipAddress[ i ];
-            charactersWritten = snprintf( pCurrentWritePos,
-                                          remainingBufferLength,
-                                          JSON_REPORT_CUSTOM_METRIC_LIST_IP_FORMAT,
-                                          ( ( ipAddr >> 24 ) & 0xFF ),
-                                          ( ( ipAddr >> 16 ) & 0xFF ),
-                                          ( ( ipAddr >> 8 ) & 0xFF ),
-                                          ( ipAddr & 0xFF ) );
-        }
+    /* Write JSON object for custom metric data of CPU usage time in the report.
+     * Note that the CPU usage time is written as a "number-list" type of custom metric
+     * in the report.*/
+    charactersWritten = snprintf( pCurrentWritePos,
+                                  remainingBufferLength,
+                                  JSON_REPORT_CUSTOM_METRIC_CPU_USAGE_STATS_FORMAT,
+                                  pCustomMetrics->cpuUsageStats.upTime,
+                                  pCustomMetrics->cpuUsageStats.idleTime );
 
-        if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
-        {
-            status = ReportBuilderBufferTooSmall;
-            break;
-        }
-        else
-        {
-            remainingBufferLength -= ( uint32_t ) charactersWritten;
-            pCurrentWritePos += charactersWritten;
-        }
+    if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
+    {
+        LogError( ( "Failed to write custom metric data for CPU usage time." ) );
+        status = ReportBuilderBufferTooSmall;
+    }
+    else
+    {
+        pCurrentWritePos += charactersWritten;
+        remainingBufferLength -= charactersWritten;
     }
 
-    if( status == ReportBuilderSuccess )
+    /* Write JSON object for the custom metric of system memory statistics in the report.
+     * Note that the system metric information is written as a "string-list" type of
+     * custom metric in the report.*/
+    charactersWritten = snprintf( pCurrentWritePos,
+                                  remainingBufferLength,
+                                  JSON_REPORT_CUSTOM_METRIC_MEMORY_STATS_FORMAT,
+                                  pCustomMetrics->memoryStats.totalMemory,
+                                  pCustomMetrics->memoryStats.availableMemory );
+
+    if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
     {
-        /* Discard the last comma. */
-        pCurrentWritePos -= 1;
-        remainingBufferLength += 1;
+        LogError( ( "Failed to write custom metric data for system memory statisctics." ) );
+        status = ReportBuilderBufferTooSmall;
+    }
+    else
+    {
+        pCurrentWritePos += charactersWritten;
+        remainingBufferLength -= charactersWritten;
+    }
 
-        /* Write end of nested JSON object for list of numbers type of custom metric. */
-        charactersWritten = snprintf( pCurrentWritePos,
-                                      remainingBufferLength,
-                                      JSON_REPORT_CUSTOM_METRIC_LIST_END );
+    /* Write end of JSON object for custom metrics. */
+    charactersWritten = snprintf( pCurrentWritePos,
+                                  remainingBufferLength,
+                                  JSON_REPORT_CUSTOM_METRIC_END );
 
-        if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
-        {
-            LogError( ( "Failed to write end of number list type of custom metric object." ) );
-            status = ReportBuilderBufferTooSmall;
-        }
-        else
-        {
-            remainingBufferLength -= charactersWritten;
-            pCurrentWritePos += charactersWritten;
-        }
+    if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
+    {
+        LogError( ( "Failed to end of custom metrics object." ) );
+        status = ReportBuilderBufferTooSmall;
+    }
+    else
+    {
+        remainingBufferLength -= charactersWritten;
+        pCurrentWritePos += charactersWritten;
     }
 
     if( status == ReportBuilderSuccess )
@@ -701,100 +670,22 @@ ReportBuilderStatus_t GenerateJsonReport( char * pBuffer,
         }
     }
 
-    /* If provides, write custom metrics metrics. */
+    /* Write custom metrics. */
     if( status == ReportBuilderSuccess )
     {
-        if( pMetrics->pCustomMetrics != NULL )
+        status = writeCustomMetricsInReport( pCurrentWritePos,
+                                             remainingBufferLength,
+                                             pMetrics->pCustomMetrics,
+                                             &( bufferWritten ) );
+
+        if( status == ReportBuilderSuccess )
         {
-            assert( pMetrics->numOfCustomMetrics > 0UL );
-
-            uint32_t index = 0;
-
-            /* Write start of custom metrics object. */
-            charactersWritten = snprintf( pCurrentWritePos,
-                                          remainingBufferLength,
-                                          JSON_REPORT_CUSTOM_METRIC_START );
-
-            if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
-            {
-                LogError( ( "Failed to write starting of custom metrics object." ) );
-                status = ReportBuilderBufferTooSmall;
-            }
-            else
-            {
-                remainingBufferLength -= charactersWritten;
-                pCurrentWritePos += charactersWritten;
-            }
-
-            for( ; index < pMetrics->numOfCustomMetrics; index++ )
-            {
-                switch( pMetrics->pCustomMetrics[ index ]->metricType )
-                {
-                    case CustomMetricTypeNumber:
-                        /* Write nested data list of numbers in the report. */
-                        bufferWritten = snprintf( pCurrentWritePos,
-                                                  remainingBufferLength,
-                                                  JSON_REPORT_CUSTOM_METRIC_NUMBER_FORMAT,
-                                                  DEFENDER_REPORT_NUMBER_KEY,
-                                                  ( ( CustomMetricNumber_t * ) pMetrics->pCustomMetrics[ index ] )->number );
-
-                        if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
-                        {
-                            LogError( ( "Failed to nested object for number type custom metric object." ) );
-                            status = ReportBuilderBufferTooSmall;
-                        }
-
-                        break;
-
-                    case CustomMetricTypeNumberList:
-                    case CustomMetricTypeStringList:
-                    case CustomMetricTypeIpList:
-
-                        /* Write nested data list of numbers in the report. */
-                        status = writeCustomMetricList( pCurrentWritePos,
-                                                        remainingBufferLength,
-                                                        pMetrics->pCustomMetrics[ index ],
-                                                        &( bufferWritten ) );
-
-                        if( status != ReportBuilderSuccess )
-                        {
-                            LogError( ( "Failed to write custom metric data of list of numbers." ) );
-                        }
-
-                        break;
-
-                    case CustomMetricTypeUknown:
-                        LogError( ( "Received invalid type of custom metric object: IndexInCustomMetricsArray=%u, Type=%u",
-                                    index, pMetrics->pCustomMetrics[ index ]->metricType ) );
-                        break;
-                }
-
-                if( status == ReportBuilderSuccess )
-                {
-                    pCurrentWritePos += bufferWritten;
-                    remainingBufferLength -= bufferWritten;
-                }
-            }
-
-            /* Discard the last comma. */
-            pCurrentWritePos -= 1;
-            remainingBufferLength += 1;
-
-            /* Write end of JSON object for custom metrics. */
-            charactersWritten = snprintf( pCurrentWritePos,
-                                          remainingBufferLength,
-                                          JSON_REPORT_CUSTOM_METRIC_END );
-
-            if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
-            {
-                LogError( ( "Failed to end of custom metrics object." ) );
-                status = ReportBuilderBufferTooSmall;
-            }
-            else
-            {
-                remainingBufferLength -= charactersWritten;
-                pCurrentWritePos += charactersWritten;
-            }
+            pCurrentWritePos += bufferWritten;
+            remainingBufferLength -= bufferWritten;
+        }
+        else
+        {
+            LogError( ( "Failed to write established connections array." ) );
         }
     }
 

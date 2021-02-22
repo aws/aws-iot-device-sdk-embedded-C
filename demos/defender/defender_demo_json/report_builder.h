@@ -37,74 +37,19 @@ typedef enum
 } ReportBuilderStatus_t;
 
 /**
- * @brief Enumeration for Custom Metric types supported by
- * AWS IoT Device Defender service.
+ * @brief Represents the set of custom metrics to send to AWS IoT Device Defender service.
+ *
+ * This demo shows how the CPU usage time and  memory data of the system can be sent
+ * as custom metrics to AWS IoT.
+ *
+ * For more information on custom metrics, refer to the following AWS document:
+ * https://docs.aws.amazon.com/iot/latest/developerguide/dd-detect-custom-metrics.html
  */
-typedef enum CustomMetricType
+typedef struct CustomMetrics
 {
-    CustomMetricTypeNumber = 0,
-    CustomMetricTypeNumberList,
-    CustomMetricTypeStringList,
-    CustomMetricTypeIpList,
-    CustomMetricTypeUknown
-} CustomMetricType_t;
-
-/**
- * @brief Base structure of containing information command across
- * all custom metric types.
- */
-typedef struct CustomMetricBase
-{
-    const char * pMetricName;
-    CustomMetricType_t metricType;
-} CustomMetricBase_t;
-
-/**
- * @brief Represents a number custom metric.
- * This is a concrete definition of #CustomMetricBase_t for the number type
- * of custom metric.
- */
-typedef struct CustomMetricNumber
-{
-    CustomMetricBase_t base;
-    int64_t number;
-} CustomMetricNumber_t;
-
-/**
- * @brief Represents a number list type of custom metric.
- * This is a concrete definition of #CustomMetricBase_t for the number list
- * type of custom metric.
- */
-typedef struct CustomMetricNumberList
-{
-    CustomMetricBase_t base;
-    int64_t * numbers;
-    uint32_t numberListLength;
-} CustomMetricNumberList_t;
-
-/**
- * @brief Represents a string list type of custom metric.
- * This is a concrete definition of #CustomMetricBase_t for the string list
- * type of custom metric.
- */
-typedef struct CustomMetricStringList
-{
-    CustomMetricBase_t base;
-    char ** strings;
-    uint32_t numOfStrings;
-} CustomMetricStringList_t;
-
-/**
- * @brief Represents an IP address list type of custom metric.
- * This is a concrete definition of #CustomMetricBase_t for the IP address
- * list type of custom metric.
- */
-typedef struct CustomMetricIpList
-{
-    CustomMetricBase_t base;
-    uint32_t * ipAddress;
-    uint32_t numOfAddresses;
-} CustomMetricIpList_t;
+    CpuUsageStats_t cpuUsageStats;
+    MemoryStats_t memoryStats;
+} CustomMetrics_t;
 
 /**
  * @brief Represents metrics to be included in the report.
@@ -118,8 +63,7 @@ typedef struct ReportMetrics
     uint32_t openUdpPortsArrayLength;
     Connection_t * pEstablishedConnectionsArray;
     uint32_t establishedConnectionsArrayLength;
-    CustomMetricBase_t ** pCustomMetrics;
-    uint32_t numOfCustomMetrics;
+    CustomMetrics_t * pCustomMetrics;
 } ReportMetrics_t;
 
 /**
