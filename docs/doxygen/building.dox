@@ -23,9 +23,13 @@ Linux platform. This SDK builds with [CMake](https://cmake.org/), a cross-platfo
 @section aws_iot_setup AWS IoT Account Setup
 @brief Setting up AWS IoT to run demos.
 
-It is required to setup an AWS account and access the AWS IoT Console for running demos and tests. Follow the links to:
--  [Setup an AWS account](https://docs.aws.amazon.com/iot/latest/developerguide/iot-console-signin.html).
--  [Sign-in to the AWS IoT Console](https://docs.aws.amazon.com/iot/latest/developerguide/iot-console-signin.html) after setting up the AWS account.
+You need to setup an AWS account and access the AWS IoT console for running the AWS IoT Device Shadow library, AWS IoT Device Defender library, AWS IoT Jobs library,
+AWS IoT OTA library and coreHTTP S3 download demos.
+Also, the AWS account can be used for running the MQTT mutual auth demo against AWS IoT broker.
+Also, running the AWS IoT Device Defender, AWS IoT Jobs and AWS IoT Device Shadow library demos require the setup of a Thing resource for the device running the demo.
+-  [Setup an AWS account](https://portal.aws.amazon.com/billing/signup#/start).
+-  [Sign-in to the AWS IoT Console](https://console.aws.amazon.com/iot/home) after setting up the AWS account.
+-  [Create a Thing resource](https://docs.aws.amazon.com/iot/latest/developerguide/iot-moisture-create-thing.html).
 
 @section configuring_mutual_auth_demo Configuring the Mutual Auth Demo
 @brief Passing configuration settings to run the mutual auth demo.
