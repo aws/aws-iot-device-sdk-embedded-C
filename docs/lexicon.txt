@@ -163,6 +163,7 @@ sdk
 sha
 signedheaders
 signin
+signup
 sigterm
 somehash
 src
