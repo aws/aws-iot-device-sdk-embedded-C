@@ -432,11 +432,12 @@ OtaPalStatus_t otaPal_CreateFileForRx( OtaFileContext_t * const C )
 
             if( status == OtaPalFileGenSuccess )
             {
-                /* POSIX port using standard library */
-                /* coverity[misra_c_2012_rule_21_6_violation] */
+                /* Check if file is already open and close it.*/
                 if( C->pFile != NULL )
                 {
-                    if( fclose( C->pFile ) != 0)
+                    /* POSIX port using standard library */
+                    /* coverity[misra_c_2012_rule_21_6_violation] */
+                    if( fclose( C->pFile ) != 0 )
                     {
                         LogError( ( "Failed to close OTA update file." ) );
                         result = OTA_PAL_COMBINE_ERR( OtaPalFileClose, errno );
@@ -449,6 +450,8 @@ OtaPalStatus_t otaPal_CreateFileForRx( OtaFileContext_t * const C )
 
                 if( C->pFile == NULL )
                 {
+                    /* POSIX port using standard library */
+                    /* coverity[misra_c_2012_rule_21_6_violation] */
                     C->pFile = fopen( ( const char * ) realFilePath, "w+b" );
 
                     if( C->pFile != NULL )
