@@ -436,9 +436,7 @@ OtaPalStatus_t otaPal_CreateFileForRx( OtaFileContext_t * const C )
                 /* coverity[misra_c_2012_rule_21_6_violation] */
                 if( C->pFile != NULL )
                 {
-                    filerc = fclose( C->pFile );
-
-                    if( filerc != 0 )
+                    if( fclose( C->pFile ) != 0)
                     {
                         LogError( ( "Failed to close OTA update file." ) );
                         result = OTA_PAL_COMBINE_ERR( OtaPalFileClose, errno );
