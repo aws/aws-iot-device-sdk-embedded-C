@@ -415,7 +415,7 @@ pkwrite
 plaintext
 platformimagestate
 pleace
-pmemorydata
+pmemorystats
 pmessage
 pmethod
 pmetrics

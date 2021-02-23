@@ -452,8 +452,6 @@ MetricsCollectorStatus_t GetMemoryStats( MemoryStats_t * pMemoryStats )
     bool readTotalMem = false, readAvailableMem = false;
     int filledVariables = 0;
 
-    /* uint32_t parsedMemData = 0UL; */
-
     if( ( pMemoryStats == NULL ) )
     {
         LogError( ( "Invalid parameter. pMemoryStats: %p", ( void * ) pMemoryStats ) );
