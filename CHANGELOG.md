@@ -1,5 +1,11 @@
 # Changelog for AWS IoT Device SDK for Embedded C
 
+## 202103.00 (Marchi 2021)
+
+### Major Changes
+
+ - [#1547](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1547) This release updates the Device Defender demo to showcase reporting of custom metrics to the AWS IoT Device Defender service.
+
 ## 202012.01 (December 2020)
 
 ### Major Changes
