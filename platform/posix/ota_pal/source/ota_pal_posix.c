@@ -415,7 +415,6 @@ OtaPalStatus_t otaPal_CreateFileForRx( OtaFileContext_t * const C )
     OtaPalStatus_t result = OTA_PAL_COMBINE_ERR( OtaPalUninitialized, 0 );
     char realFilePath[ OTA_FILE_PATH_LENGTH_MAX ];
     OtaPalPathGenStatus_t status = OtaPalFileGenSuccess;
-    int filerc = 0;
 
     if( C != NULL )
     {
