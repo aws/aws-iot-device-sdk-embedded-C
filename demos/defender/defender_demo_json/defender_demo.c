@@ -102,15 +102,7 @@
  * @brief Time in seconds to wait between retries of the demo loop if
  * demo loop fails.
  */
-#define DELAY_BETWEEN_DEMO_RETRY_ITERATIONS_S              ( 5 )
-
-/**
- * @brief Number of custom metrics that will be sent to AWS IoT Device Defender service by
- * the demo.
- * This demo sends custom metrics for Cpu usage data (as number-list type) and memory data
- * (as string-list type).
- */
-#define NUMBER_OF_CUSTOM_METRICS_OBJECTS_IN_JSON_REPORT    ( 2 )
+#define DELAY_BETWEEN_DEMO_RETRY_ITERATIONS_S    ( 5 )
 
 /**
  * @brief Status values of the device defender report.

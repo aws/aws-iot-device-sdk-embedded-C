@@ -48,6 +48,12 @@
 #define CONNECTION_STATUS_ESTABLISHED    ( 1 )
 
 /**
+ * @brief Fields from /proc/meminfo to use for memory statistics.
+ */
+#define TOTAL_MEM_FIELD                  "MemTotal"
+#define AVAILABLE_MEM_FIELD              "MemAvailable"
+
+/**
  * @brief Get a list of the open ports.
  *
  * This function finds the open ports by reading pProcFile. It can be called
@@ -409,28 +415,20 @@ MetricsCollectorStatus_t GetCpuUsageStats( CpuUsageStats_t * pCpuUsage )
     {
         if( fgets( &( lineBuffer[ 0 ] ), MAX_LINE_LENGTH, fileHandle ) != NULL )
         {
-            float upTime = 0.0f, idleTime = 0.0f;
             LogDebug( ( "File: /proc/uptime, Content: %s.",
                         &( lineBuffer[ 0 ] ) ) );
 
             /* Parse the output. */
             filledVariables = sscanf( &( lineBuffer[ 0 ] ),
-                                      "%f %f",
-                                      &( upTime ),
-                                      &( idleTime ) );
+                                      "%u.%*u %u.%*u",
+                                      &( pCpuUsage->upTime ),
+                                      &( pCpuUsage->idleTime ) );
 
             /* sscanf should fill all the 2 variables successfully. */
             if( filledVariables != 2 )
             {
                 LogError( ( "Failed to CPU usage data. File: /proc/uptime, Data: %s.", &( lineBuffer[ 0 ] ) ) );
                 status = MetricsCollectorParsingFailed;
-            }
-            else
-            {
-                /* Convert data from floating point to integer by multiplying by 100 to represent data in
-                 * USER_HZ time units. */
-                pCpuUsage->upTime = ( int64_t ) ( upTime * 100.0f );
-                pCpuUsage->idleTime = ( int64_t ) ( idleTime * 100.0f );
             }
         }
     }
@@ -444,7 +442,7 @@ MetricsCollectorStatus_t GetCpuUsageStats( CpuUsageStats_t * pCpuUsage )
 }
 /*-----------------------------------------------------------*/
 
-MetricsCollectorStatus_t GetMemoryStats( MemoryStats_t * pMemoryData )
+MetricsCollectorStatus_t GetMemoryStats( MemoryStats_t * pMemoryStats )
 {
     MetricsCollectorStatus_t status = MetricsCollectorSuccess;
     FILE * fileHandle = NULL;
@@ -452,14 +450,13 @@ MetricsCollectorStatus_t GetMemoryStats( MemoryStats_t * pMemoryData )
     uint8_t lineNumber = 0;
     char lineBuffer[ MAX_LINE_LENGTH ];
     bool readTotalMem = false, readAvailableMem = false;
-    const char * const pTotalMemoryField = "MemTotal";
-    const char * const pAvailableMemField = "MemAvailable";
     int filledVariables = 0;
-    uint64_t parsedMemData = 0UL;
 
-    if( ( pMemoryData == NULL ) )
+    /* uint32_t parsedMemData = 0UL; */
+
+    if( ( pMemoryStats == NULL ) )
     {
-        LogError( ( "Invalid parameter. pMemoryData: %p", ( void * ) pMemoryData ) );
+        LogError( ( "Invalid parameter. pMemoryStats: %p", ( void * ) pMemoryStats ) );
         status = MetricsCollectorBadParameter;
     }
 
@@ -480,41 +477,55 @@ MetricsCollectorStatus_t GetMemoryStats( MemoryStats_t * pMemoryData )
         {
             lineNumber++;
 
-            LogDebug( ( "File: /proc/meminfo, LineNo: %u, Content: %s.",
+            LogDebug( ( "File: /proc/meminfo, Line: %u, Content: %s.",
                         lineNumber, &( lineBuffer[ 0 ] ) ) );
 
-            /* Extract the total memory value from the line. */
-            filledVariables = sscanf( lineBuffer,
-                                      "%*[^1-9]%lu kB",
-                                      ( &parsedMemData ) );
-
-            if( filledVariables != 1 )
+            /* Check if the line read represents information for total memory in the system. */
+            if( strncmp( lineBuffer, TOTAL_MEM_FIELD, ( sizeof( TOTAL_MEM_FIELD ) - 1UL ) ) == 0 )
             {
-                LogError( ( "Failed to parse data. File: /proc/meminfo, Line:%d, Content:%s", lineNumber, lineBuffer ) );
-                status = MetricsCollectorParsingFailed;
+                /* Extract the total memory value from the line. */
+                filledVariables = sscanf( lineBuffer,
+                                          "%*[^1-9]%u kB",
+                                          ( &pMemoryStats->totalMemory ) );
+
+                if( filledVariables != 1 )
+                {
+                    LogError( ( "Failed to parse data. File: /proc/meminfo, Line: %u, Content: %s", lineNumber, lineBuffer ) );
+                    status = MetricsCollectorParsingFailed;
+                }
+                else
+                {
+                    readTotalMem = true;
+                }
             }
-            /* Check if the line read represents information for "total memory" in the system. */
-            else if( strncmp( lineBuffer, pTotalMemoryField, strlen( pTotalMemoryField ) ) == 0 )
+            /* Check if the line read represents information for available memory in the system. */
+            else if( strncmp( lineBuffer, AVAILABLE_MEM_FIELD, ( sizeof( AVAILABLE_MEM_FIELD ) - 1UL ) ) == 0 )
             {
-                /* Populate buffer with information for total memory as "<data>kB". */
-                ( void ) snprintf( pMemoryData->totalMemory, sizeof( pMemoryData->totalMemory ),
-                                   "%lukB", parsedMemData );
+                /* Extract the total memory value from the line. */
+                filledVariables = sscanf( lineBuffer,
+                                          "%*[^1-9]%u kB",
+                                          ( &pMemoryStats->availableMemory ) );
 
-                readTotalMem = true;
+                if( filledVariables != 1 )
+                {
+                    LogError( ( "Failed to parse data. File: /proc/meminfo, Line: %u, Content: %s", lineNumber, lineBuffer ) );
+                    status = MetricsCollectorParsingFailed;
+                }
+                else
+                {
+                    readAvailableMem = true;
+                }
             }
-            /* Check if the line read represents information for "available memory" in the system. */
-            else if( strncmp( lineBuffer, pAvailableMemField, strlen( pAvailableMemField ) ) == 0 )
+            else
             {
-                /* Populate buffer with information for total memory as "<data>kB". */
-                ( void ) snprintf( pMemoryData->availableMemory, sizeof( pMemoryData->availableMemory ),
-                                   "%lukB", parsedMemData );
-
-                readAvailableMem = true;
+                status = MetricsCollectorDataNotFound;
             }
 
             if( readTotalMem && readAvailableMem )
             {
                 /* We have obtained data for both total and available memory in the system. */
+                status = MetricsCollectorSuccess;
+
                 break;
             }
         }

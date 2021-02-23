@@ -34,7 +34,8 @@ typedef enum
     MetricsCollectorSuccess = 0,
     MetricsCollectorBadParameter,
     MetricsCollectorFileOpenFailed,
-    MetricsCollectorParsingFailed
+    MetricsCollectorParsingFailed,
+    MetricsCollectorDataNotFound,
 } MetricsCollectorStatus_t;
 
 /**
@@ -66,8 +67,8 @@ typedef struct Connection
  */
 typedef struct CpuUsageData
 {
-    uint32_t upTime;   /**< Up-time of system in USER_HZ (1/100th of second) time units. */
-    uint32_t idleTime; /**< Idle time of system in USER_HZ (1/100th of second) time units. */
+    uint32_t upTime;   /**< Up-time of system in seconds. */
+    uint32_t idleTime; /**< Idle time of system in seconds. */
 } CpuUsageStats_t;
 
 /**
@@ -77,8 +78,8 @@ typedef struct CpuUsageData
  */
 typedef struct MemoryStats
 {
-    char totalMemory[ 50 ];     /**< Amount of total memory in system (in kB). */
-    char availableMemory[ 50 ]; /**< Amount of available memory in system (in kB). */
+    uint32_t totalMemory;     /**< Amount of total memory in system (in kB). */
+    uint32_t availableMemory; /**< Amount of available memory in system (in kB). */
 } MemoryStats_t;
 
 /**
@@ -183,8 +184,7 @@ MetricsCollectorStatus_t GetEstablishedConnections( Connection_t * pOutConnectio
 MetricsCollectorStatus_t GetCpuUsageStats( CpuUsageStats_t * pCpuUsage );
 
 /**
- * @brief Gets data of total and available memory in the system and populates them as
- * key-value strings in the passed @p pMemoryData parameter.
+ * @brief Gets data of total and available memory from the system.
  *
  * This function finds the memory information by reading the "/proc/meminfo" file.
  *

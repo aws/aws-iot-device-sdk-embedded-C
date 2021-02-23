@@ -28,9 +28,6 @@
 /* Demo config. */
 #include "demo_config.h"
 
-/* Device Defender Library include. */
-#include "defender.h"
-
 /* Interface include. */
 #include "report_builder.h"
 
@@ -92,42 +89,33 @@
     "\"total\": %u"              \
     "}"                          \
     "}"                          \
-    "}"
-
-#define JSON_REPORT_CUSTOM_METRIC_START \
-    ",\"custom_metrics\":{"
+    "},"
 
 /**
- * @brief The format for the custom metric of CPU usage statistics to send
- * to AWS IoT Device Defender service.
+ * @brief The format for custom metrics of CPU usage time
+ * and system memory statistics in the JSON report that will be sent
+ * to the AWS IoT Device Defender service.
  *
- * @note This demo reports this metrics as a "number list" type of custom metric.
+ * @note This demo reports the CPU usage time statistics as a "number-list"
+ * type of custom metric, while the system memory statistics as a "string-list"
+ * type of custom metric.
  */
-#define JSON_REPORT_CUSTOM_METRIC_CPU_USAGE_STATS_FORMAT \
-    "\"cpu-usage\": ["                                   \
-    "{"                                                  \
-    "\"number_list\": ["                                 \
-    "%d, %d"                                             \
-    "]"                                                  \
-    "}"                                                  \
-    "],"
-
-/**
- * @brief The format for the custom metric of system memory statistics to send
- * to AWS IoT Device Defender service.
- *
- * @note This demo reports this metrics as a "string list" type of custom metric.
- */
-#define JSON_REPORT_CUSTOM_METRIC_MEMORY_STATS_FORMAT \
-    "\"memory-info\": ["                              \
-    "{"                                               \
-    "\"string_list\": ["                              \
-    "\"%s\",\"%s\""                                   \
-    "]"                                               \
-    "}"                                               \
-    "]"
-
-#define JSON_REPORT_CUSTOM_METRIC_END \
+#define JSON_REPORT_CUSTOM_METRICS_FORMAT_PART5 \
+    "\"custom_metrics\":{"                      \
+    "\"cpu-usage\": ["                          \
+    "{"                                         \
+    "\"number_list\": ["                        \
+    "%u, %u"                                    \
+    "]"                                         \
+    "}"                                         \
+    "],"                                        \
+    "\"memory-info\": ["                        \
+    "{"                                         \
+    "\"string_list\": ["                        \
+    "\"%ukB\",\"%ukB\""                         \
+    "]"                                         \
+    "}"                                         \
+    "]"                                         \
     "}"
 
 /*-----------------------------------------------------------*/
@@ -191,48 +179,6 @@ static ReportBuilderStatus_t writeConnectionsArray( char * pBuffer,
                                                     const Connection_t * pConnectionsArray,
                                                     uint32_t connectionsArrayLength,
                                                     uint32_t * pOutCharsWritten );
-
-
-/**
- * @brief Writes custom metrics for CPU usage time and memory statistics in the
- * JSON report.
- *
- * This functions writes the CPU usage time as a "number-list" type and the memory
- * statistics as a "string-list" type in the JSON report.
- *
- * The following is the format for custom metric of number-list type:
- * "MyMetricOfType_NumberList":[
- *    {
- *       "number_list":[
- *          1.0,
- *          2.0,
- *          3.0
- *       ]
- *    }
- * ]
- *
- * The following is the format for custom metric of string-list type:
- * "MyMetricOfType_StringList":[
- *       {
- *          "string_list":[
- *             "value_1",
- *             "value_2"
- *          ]
- *       }
- *    ]
- *
- * @param[in] pBuffer The buffer to write the connections array.
- * @param[in] bufferLength The length of the buffer.
- * @param[in] pCustomMetric The custom metrics to write to the @p pBuffer.
- * @param[out] pOutCharsWritten Number of characters written to the buffer.
- *
- * @return #ReportBuilderSuccess if the array is successfully written;
- * #ReportBuilderBufferTooSmall if the buffer cannot hold the full array.
- */
-static ReportBuilderStatus_t writeCustomMetricsInReport( char * pBuffer,
-                                                         uint32_t bufferLength,
-                                                         CustomMetrics_t * pCustomMetrics,
-                                                         uint32_t * pOutCharsWritten );
 
 /*-----------------------------------------------------------*/
 
@@ -390,101 +336,6 @@ static ReportBuilderStatus_t writeConnectionsArray( char * pBuffer,
         {
             status = ReportBuilderBufferTooSmall;
         }
-    }
-
-    if( status == ReportBuilderSuccess )
-    {
-        *pOutCharsWritten = bufferLength - remainingBufferLength;
-    }
-
-    return status;
-}
-/*-----------------------------------------------------------*/
-
-static ReportBuilderStatus_t writeCustomMetricsInReport( char * pBuffer,
-                                                         uint32_t bufferLength,
-                                                         CustomMetrics_t * pCustomMetrics,
-                                                         uint32_t * pOutCharsWritten )
-{
-    char * pCurrentWritePos = pBuffer;
-    uint32_t remainingBufferLength = bufferLength;
-    int charactersWritten;
-    ReportBuilderStatus_t status = ReportBuilderSuccess;
-
-    assert( pBuffer != NULL );
-    assert( pCustomMetrics != NULL );
-    assert( pOutCharsWritten != NULL );
-
-    /* Write start of custom metrics object. */
-    charactersWritten = snprintf( pCurrentWritePos,
-                                  remainingBufferLength,
-                                  JSON_REPORT_CUSTOM_METRIC_START );
-
-    if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
-    {
-        LogError( ( "Failed to write starting of custom metrics object." ) );
-        status = ReportBuilderBufferTooSmall;
-    }
-    else
-    {
-        remainingBufferLength -= charactersWritten;
-        pCurrentWritePos += charactersWritten;
-    }
-
-    /* Write JSON object for custom metric data of CPU usage time in the report.
-     * Note that the CPU usage time is written as a "number-list" type of custom metric
-     * in the report.*/
-    charactersWritten = snprintf( pCurrentWritePos,
-                                  remainingBufferLength,
-                                  JSON_REPORT_CUSTOM_METRIC_CPU_USAGE_STATS_FORMAT,
-                                  pCustomMetrics->cpuUsageStats.upTime,
-                                  pCustomMetrics->cpuUsageStats.idleTime );
-
-    if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
-    {
-        LogError( ( "Failed to write custom metric data for CPU usage time." ) );
-        status = ReportBuilderBufferTooSmall;
-    }
-    else
-    {
-        pCurrentWritePos += charactersWritten;
-        remainingBufferLength -= charactersWritten;
-    }
-
-    /* Write JSON object for the custom metric of system memory statistics in the report.
-     * Note that the system metric information is written as a "string-list" type of
-     * custom metric in the report.*/
-    charactersWritten = snprintf( pCurrentWritePos,
-                                  remainingBufferLength,
-                                  JSON_REPORT_CUSTOM_METRIC_MEMORY_STATS_FORMAT,
-                                  pCustomMetrics->memoryStats.totalMemory,
-                                  pCustomMetrics->memoryStats.availableMemory );
-
-    if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
-    {
-        LogError( ( "Failed to write custom metric data for system memory statisctics." ) );
-        status = ReportBuilderBufferTooSmall;
-    }
-    else
-    {
-        pCurrentWritePos += charactersWritten;
-        remainingBufferLength -= charactersWritten;
-    }
-
-    /* Write end of JSON object for custom metrics. */
-    charactersWritten = snprintf( pCurrentWritePos,
-                                  remainingBufferLength,
-                                  JSON_REPORT_CUSTOM_METRIC_END );
-
-    if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
-    {
-        LogError( ( "Failed to end of custom metrics object." ) );
-        status = ReportBuilderBufferTooSmall;
-    }
-    else
-    {
-        remainingBufferLength -= charactersWritten;
-        pCurrentWritePos += charactersWritten;
     }
 
     if( status == ReportBuilderSuccess )
@@ -673,19 +524,23 @@ ReportBuilderStatus_t GenerateJsonReport( char * pBuffer,
     /* Write custom metrics. */
     if( status == ReportBuilderSuccess )
     {
-        status = writeCustomMetricsInReport( pCurrentWritePos,
-                                             remainingBufferLength,
-                                             pMetrics->pCustomMetrics,
-                                             &( bufferWritten ) );
+        charactersWritten = snprintf( pCurrentWritePos,
+                                      remainingBufferLength,
+                                      JSON_REPORT_CUSTOM_METRICS_FORMAT_PART5,
+                                      pMetrics->pCustomMetrics->cpuUsageStats.upTime,
+                                      pMetrics->pCustomMetrics->cpuUsageStats.idleTime,
+                                      pMetrics->pCustomMetrics->memoryStats.totalMemory,
+                                      pMetrics->pCustomMetrics->memoryStats.availableMemory );
 
-        if( status == ReportBuilderSuccess )
+        if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
         {
-            pCurrentWritePos += bufferWritten;
-            remainingBufferLength -= bufferWritten;
+            LogError( ( "Failed to write custom metrics (part 5)." ) );
+            status = ReportBuilderBufferTooSmall;
         }
         else
         {
-            LogError( ( "Failed to write established connections array." ) );
+            remainingBufferLength -= charactersWritten;
+            pCurrentWritePos += charactersWritten;
         }
     }
 
