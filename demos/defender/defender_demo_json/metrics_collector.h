@@ -188,7 +188,7 @@ MetricsCollectorStatus_t GetCpuUsageStats( CpuUsageStats_t * pCpuUsage );
  *
  * This function finds the memory information by reading the "/proc/meminfo" file.
  *
- * @param[out] pMemoryData The memory to write the memory information into.
+ * @param[out] pMemoryStats The memory to write the memory information into.
  *
  * @return #MetricsCollectorSuccess if memory data statistic is successfully calculated;
  * #MetricsCollectorBadParameter if invalid parameter is passed;
@@ -196,6 +196,6 @@ MetricsCollectorStatus_t GetCpuUsageStats( CpuUsageStats_t * pCpuUsage );
  * MetricsCollectorParsingFailed if the function fails to parses the data read
  * from "/proc/meminfo".
  */
-MetricsCollectorStatus_t GetMemoryStats( MemoryStats_t * pMemoryData );
+MetricsCollectorStatus_t GetMemoryStats( MemoryStats_t * pMemoryStats );
 
 #endif /* ifndef METRICS_COLLECTOR_H_ */

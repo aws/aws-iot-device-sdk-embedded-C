@@ -432,7 +432,7 @@ static bool collectDeviceMetrics( void )
 
         if( metricsCollectorStatus != MetricsCollectorSuccess )
         {
-            LogError( ( "Failed to get data of CPU usage from system. Status: %d.",
+            LogError( ( "GetCpuUsageStats failed. Status: %d.",
                         metricsCollectorStatus ) );
         }
     }
@@ -445,7 +445,7 @@ static bool collectDeviceMetrics( void )
 
         if( metricsCollectorStatus != MetricsCollectorSuccess )
         {
-            LogError( ( "Failed to get data of memory statistics from system. Status: %d.",
+            LogError( ( "GetMemoryStats failed. Status: %d.",
                         metricsCollectorStatus ) );
         }
     }
@@ -461,7 +461,7 @@ static bool collectDeviceMetrics( void )
         deviceMetrics.openUdpPortsArrayLength = numOpenUdpPorts;
         deviceMetrics.pEstablishedConnectionsArray = &( establishedConnections[ 0 ] );
         deviceMetrics.establishedConnectionsArrayLength = numEstablishedConnections;
-        deviceMetrics.pCustomMetrics = &customMetrics;
+        deviceMetrics.pCustomMetrics = &( customMetrics );
     }
 
     return status;

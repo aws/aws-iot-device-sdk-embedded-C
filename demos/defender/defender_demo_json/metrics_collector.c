@@ -390,7 +390,7 @@ MetricsCollectorStatus_t GetCpuUsageStats( CpuUsageStats_t * pCpuUsage )
 
     if( pCpuUsage == NULL )
     {
-        LogError( ( "Invalid parameter. pCpuUsage %p", ( void * ) pCpuUsage ) );
+        LogError( ( "Invalid parameter. pCpuUsage: %p", ( void * ) pCpuUsage ) );
         status = MetricsCollectorBadParameter;
     }
 
@@ -459,7 +459,7 @@ MetricsCollectorStatus_t GetMemoryStats( MemoryStats_t * pMemoryData )
 
     if( ( pMemoryData == NULL ) )
     {
-        LogError( ( "Invalid parameter. pMemoryData=%p", ( void * ) pMemoryData ) );
+        LogError( ( "Invalid parameter. pMemoryData: %p", ( void * ) pMemoryData ) );
         status = MetricsCollectorBadParameter;
     }
 

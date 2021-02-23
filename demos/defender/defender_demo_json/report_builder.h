@@ -39,8 +39,8 @@ typedef enum
 /**
  * @brief Represents the set of custom metrics to send to AWS IoT Device Defender service.
  *
- * This demo shows how the CPU usage time and  memory data of the system can be sent
- * as custom metrics to AWS IoT.
+ * This demo shows how the CPU usage time and memory data of the system can be sent
+ * as custom metrics to AWS IoT Device Defender service.
  *
  * For more information on custom metrics, refer to the following AWS document:
  * https://docs.aws.amazon.com/iot/latest/developerguide/dd-detect-custom-metrics.html
