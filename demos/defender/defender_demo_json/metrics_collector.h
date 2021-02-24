@@ -34,7 +34,8 @@ typedef enum
     MetricsCollectorSuccess = 0,
     MetricsCollectorBadParameter,
     MetricsCollectorFileOpenFailed,
-    MetricsCollectorParsingFailed
+    MetricsCollectorParsingFailed,
+    MetricsCollectorDataNotFound,
 } MetricsCollectorStatus_t;
 
 /**
@@ -58,6 +59,28 @@ typedef struct Connection
     uint16_t localPort;
     uint16_t remotePort;
 } Connection_t;
+
+/**
+ * @brief Represents the Cpu Usage statistics obtained from "/proc/uptime".
+ * Refer to Linux manual for "/proc" filesystem for more information.
+ * https://man7.org/linux/man-pages/man5/procfs.5.html
+ */
+typedef struct CpuUsageData
+{
+    uint32_t upTime;   /**< Up-time of system in seconds. */
+    uint32_t idleTime; /**< Idle time of system in seconds. */
+} CpuUsageStats_t;
+
+/**
+ * @brief Represents the memory data of total and available memory from "/proc/uptime".
+ * Refer to Linux manual for "/proc" filesystem for more information.
+ * https://man7.org/linux/man-pages/man5/procfs.5.html
+ */
+typedef struct MemoryStats
+{
+    uint32_t totalMemory;     /**< Amount of total memory in system (in kB). */
+    uint32_t availableMemory; /**< Amount of available memory in system (in kB). */
+} MemoryStats_t;
 
 /**
  * @brief Get network stats.
@@ -144,5 +167,35 @@ MetricsCollectorStatus_t GetOpenUdpPorts( uint16_t * pOutUdpPortsArray,
 MetricsCollectorStatus_t GetEstablishedConnections( Connection_t * pOutConnectionsArray,
                                                     uint32_t connectionsArrayLength,
                                                     uint32_t * pOutNumEstablishedConnections );
+
+/**
+ * @brief Get CPU usage data of uptime and idle time from the system.
+ *
+ * This function finds the system CPU information by reading the "/proc/uptime" file.
+ *
+ * @param[out] pCpuUsage The memory to write the CPU usage statistics into.
+ *
+ * @return #MetricsCollectorSuccess if CPU usage data is successfully obtained;
+ * #MetricsCollectorBadParameter if invalid parameter is passed;
+ * #MetricsCollectorFileOpenFailed if the function fails to open "/proc/uptime";
+ * MetricsCollectorParsingFailed if the function fails to parses the data read
+ * from "/proc/uptime".
+ */
+MetricsCollectorStatus_t GetCpuUsageStats( CpuUsageStats_t * pCpuUsage );
+
+/**
+ * @brief Gets data of total and available memory from the system.
+ *
+ * This function finds the memory information by reading the "/proc/meminfo" file.
+ *
+ * @param[out] pMemoryStats The memory to write the memory information into.
+ *
+ * @return #MetricsCollectorSuccess if memory data statistic is successfully calculated;
+ * #MetricsCollectorBadParameter if invalid parameter is passed;
+ * #MetricsCollectorFileOpenFailed if the function fails to open "/proc/meminfo";
+ * MetricsCollectorParsingFailed if the function fails to parses the data read
+ * from "/proc/meminfo".
+ */
+MetricsCollectorStatus_t GetMemoryStats( MemoryStats_t * pMemoryStats );
 
 #endif /* ifndef METRICS_COLLECTOR_H_ */

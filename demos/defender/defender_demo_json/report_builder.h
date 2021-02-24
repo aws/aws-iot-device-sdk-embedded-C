@@ -37,6 +37,21 @@ typedef enum
 } ReportBuilderStatus_t;
 
 /**
+ * @brief Represents the set of custom metrics to send to AWS IoT Device Defender service.
+ *
+ * This demo shows how the CPU usage time and memory data of the system can be sent
+ * as custom metrics to AWS IoT Device Defender service.
+ *
+ * For more information on custom metrics, refer to the following AWS document:
+ * https://docs.aws.amazon.com/iot/latest/developerguide/dd-detect-custom-metrics.html
+ */
+typedef struct CustomMetrics
+{
+    CpuUsageStats_t cpuUsageStats;
+    MemoryStats_t memoryStats;
+} CustomMetrics_t;
+
+/**
  * @brief Represents metrics to be included in the report.
  */
 typedef struct ReportMetrics
@@ -48,6 +63,7 @@ typedef struct ReportMetrics
     uint32_t openUdpPortsArrayLength;
     Connection_t * pEstablishedConnectionsArray;
     uint32_t establishedConnectionsArrayLength;
+    CustomMetrics_t * pCustomMetrics;
 } ReportMetrics_t;
 
 /**

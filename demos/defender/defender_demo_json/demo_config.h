@@ -194,10 +194,8 @@
 
 /**
  * @brief Size of the buffer which contains the generated device defender report.
- *
- * If the generated report is larger than this, it is rejected.
  */
-#define DEVICE_METRICS_REPORT_BUFFER_SIZE      1000
+#define DEVICE_METRICS_REPORT_BUFFER_SIZE      2000
 
 /**
  * @brief Major version number of the device defender report.

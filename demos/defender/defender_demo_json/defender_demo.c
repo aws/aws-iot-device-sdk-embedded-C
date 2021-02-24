@@ -136,6 +136,12 @@ static uint16_t openUdpPorts[ OPEN_UDP_PORTS_ARRAY_SIZE ];
 static Connection_t establishedConnections[ ESTABLISHED_CONNECTIONS_ARRAY_SIZE ];
 
 /**
+ * @brief Memory to represent custom metrics of CPU usage time and memory statistics
+ * that this demo sends to the AWS IoT Defender service.
+ */
+static CustomMetrics_t customMetrics;
+
+/**
  * @brief All the metrics sent in the device defender report.
  */
 static ReportMetrics_t deviceMetrics;
@@ -410,6 +416,32 @@ static bool collectDeviceMetrics( void )
         }
     }
 
+    /* Collect CPU usage time metrics from the system.
+     * This is an example of a custom metric of number-list type. */
+    if( metricsCollectorStatus == MetricsCollectorSuccess )
+    {
+        metricsCollectorStatus = GetCpuUsageStats( &( customMetrics.cpuUsageStats ) );
+
+        if( metricsCollectorStatus != MetricsCollectorSuccess )
+        {
+            LogError( ( "GetCpuUsageStats failed. Status: %d.",
+                        metricsCollectorStatus ) );
+        }
+    }
+
+    /* Collect metrics of memory statistics from the system.
+     * This is an example of a custom metric of string-list type. */
+    if( metricsCollectorStatus == MetricsCollectorSuccess )
+    {
+        metricsCollectorStatus = GetMemoryStats( &( customMetrics.memoryStats ) );
+
+        if( metricsCollectorStatus != MetricsCollectorSuccess )
+        {
+            LogError( ( "GetMemoryStats failed. Status: %d.",
+                        metricsCollectorStatus ) );
+        }
+    }
+
     /* Populate device metrics. */
     if( metricsCollectorStatus == MetricsCollectorSuccess )
     {
@@ -421,6 +453,7 @@ static bool collectDeviceMetrics( void )
         deviceMetrics.openUdpPortsArrayLength = numOpenUdpPorts;
         deviceMetrics.pEstablishedConnectionsArray = &( establishedConnections[ 0 ] );
         deviceMetrics.establishedConnectionsArrayLength = numEstablishedConnections;
+        deviceMetrics.pCustomMetrics = &( customMetrics );
     }
 
     return status;
