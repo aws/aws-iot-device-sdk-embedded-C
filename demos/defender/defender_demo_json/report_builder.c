@@ -104,7 +104,7 @@
  * type of custom metric.
  */
 #define JSON_REPORT_CUSTOM_METRICS_FORMAT_PART5 \
-    "\"custom_metrics\":{"                      \
+    "\"%s\":{"                                  \
     "\"cpu-usage\": ["                          \
     "{"                                         \
     "\"%s\": ["                                 \
@@ -553,6 +553,7 @@ ReportBuilderStatus_t GenerateJsonReport( char * pBuffer,
         charactersWritten = snprintf( pCurrentWritePos,
                                       remainingBufferLength,
                                       JSON_REPORT_CUSTOM_METRICS_FORMAT_PART5,
+                                      DEFENDER_REPORT_CUSTOM_METRICS_KEY,
                                       DEFENDER_REPORT_NUMBER_LIST_KEY,
                                       pMetrics->pCustomMetrics->cpuUsageStats.upTime,
                                       pMetrics->pCustomMetrics->cpuUsageStats.idleTime,
