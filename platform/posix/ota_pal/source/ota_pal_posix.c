@@ -427,6 +427,7 @@ OtaPalStatus_t otaPal_CreateFileForRx( OtaFileContext_t * const C )
     }
     else
     {
+        /* The plus one is required for copying the NULL character at the end of pFilePath. */
         ( void ) strncpy( realFilePath, ( const char * ) C->pFilePath, strlen( ( const char * ) C->pFilePath ) + 1U );
     }
 
