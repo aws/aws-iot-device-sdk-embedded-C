@@ -1,5 +1,5 @@
 /**
-@page ota_demos AWS IoT Over-the-air Update (Release Candidate)
+@page ota_demos AWS IoT Over-the-air Update
 @brief These demos demonstrate usage of the AWS IoT Over-the-air Update library.
 
 @section ota_demo_core_mqtt OTA over MQTT Demo
