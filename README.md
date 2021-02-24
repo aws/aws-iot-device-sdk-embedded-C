@@ -325,14 +325,13 @@ Dependency | Version | Usage
 
 #### AWS IoT Account Setup
 
-You need to setup an AWS account and access the AWS IoT console for running the AWS IoT Device Shadow library, AWS IoT Device Defender library, AWS IoT Jobs library, 
-AWS IoT OTA library and coreHTTP S3 download demos. 
-Also, the AWS account can be used for running the MQTT mutual auth demo can be run against AWS IoT broker.
-Also, running the AWS IoT Device Defender, AWS IoT Jobs and AWS IoT Device Shadow library demos require the setup of a Thing resource for the device running the
-demo.
+You need to setup an AWS account and access the AWS IoT console for running the AWS IoT Device Shadow library, AWS IoT Device Defender library, AWS IoT Jobs library,
+AWS IoT OTA library and coreHTTP S3 download demos.
+Also, the AWS account can be used for running the MQTT mutual auth demo against AWS IoT broker.
+Note that running the AWS IoT Device Defender, AWS IoT Jobs and AWS IoT Device Shadow library demos require the setup of a Thing resource for the device running the demo.
 Follow the links to:
 - [Setup an AWS account](https://portal.aws.amazon.com/billing/signup#/start).
-- [Sign-in to the AWS IoT Console](https://aws.amazon.com/console/) after setting up the AWS account.
+- [Sign-in to the AWS IoT Console](https://console.aws.amazon.com/iot/home) after setting up the AWS account.
 - [Create a Thing resource](https://docs.aws.amazon.com/iot/latest/developerguide/iot-moisture-create-thing.html).
 
 

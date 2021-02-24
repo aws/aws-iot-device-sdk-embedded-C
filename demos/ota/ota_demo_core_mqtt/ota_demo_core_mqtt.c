@@ -1040,7 +1040,7 @@ static int establishMqttSession( MQTTContext_t * pMqttContext )
     /* Use the username and password for authentication, if they are defined.
      * Refer to the AWS IoT documentation below for details regarding client
      * authentication with a username and password.
-     * https://docs.aws.amazon.com/iot/latest/developerguide/enhanced-custom-authentication.html
+     * https://docs.aws.amazon.com/iot/latest/developerguide/custom-authentication.html
      * An authorizer setup needs to be done, as mentioned in the above link, to use
      * username/password based client authentication.
      *
