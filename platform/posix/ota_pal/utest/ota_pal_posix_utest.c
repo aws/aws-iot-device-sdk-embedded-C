@@ -530,7 +530,6 @@ void test_OTAPAL_CreateFileForRx_getcwd_fail( void )
 void test_OTAPAL_CreateFileForRx_fclose_fail()
 {
     OtaPalMainStatus_t result;
-    FILE placeholder_file;
     OtaFileContext_t otaFileContext;
     OtaImageState_t validState = OtaImageStateTesting;
 
