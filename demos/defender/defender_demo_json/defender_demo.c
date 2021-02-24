@@ -429,8 +429,8 @@ static bool collectDeviceMetrics( void )
         }
     }
 
-    /* Collect data on memory usage and calculate statistic on % of available memory
-     * in the system. This is an example of a custom metric of string-list type. */
+    /* Collect metrics of memory stastics from the system.
+     * This is an example of a custom metric of string-list type. */
     if( metricsCollectorStatus == MetricsCollectorSuccess )
     {
         metricsCollectorStatus = GetMemoryStats( &( customMetrics.memoryStats ) );
