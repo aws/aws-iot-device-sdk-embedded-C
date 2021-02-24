@@ -421,32 +421,6 @@ void test_OTAPAL_Abort_FileCloseFail( void )
 /**
  * @brief Test that otaPal_CreateFileForRx will return correct result code.
  */
-void test_OTAPAL_CreateFileForRx_NullFileContext( void )
-{
-    OtaPalMainStatus_t result;
-
-    result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( NULL ) );
-    TEST_ASSERT_EQUAL( OtaPalRxFileCreateFailed, result );
-}
-
-
-/**
- * @brief Test that otaPal_CreateFileForRx will return correct result code.
- */
-void test_OTAPAL_CreateFileForRx_NullFilePath( void )
-{
-    OtaPalMainStatus_t result;
-    OtaFileContext_t testFile;
-
-    testFile.pFilePath = NULL;
-    result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &testFile ) );
-
-    TEST_ASSERT_EQUAL( OtaPalRxFileCreateFailed, result );
-}
-
-/**
- * @brief Test that otaPal_CreateFileForRx will return correct result code.
- */
 void test_OTAPAL_CreateFileForRx_FailedToCreateFile( void )
 {
     OtaPalMainStatus_t result;
