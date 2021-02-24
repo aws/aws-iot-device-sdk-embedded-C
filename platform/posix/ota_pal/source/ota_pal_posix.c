@@ -462,7 +462,7 @@ OtaPalStatus_t otaPal_CreateFileForRx( OtaFileContext_t * const C )
             else
             {
                 result = OTA_PAL_COMBINE_ERR( OtaPalRxFileCreateFailed, errno );
-                LogError( ( "Failed to start operation: Operation already started. failed to open -- %s Path ", C->pFilePath ) );
+                LogError( ( "Failed to open file for update-- %s Path ", C->pFilePath ) );
             }
         }
     }
