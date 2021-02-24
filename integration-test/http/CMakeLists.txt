@@ -78,6 +78,12 @@ create_test(${stest_name}
             "${test_include_directories}"
         )
 
+target_compile_options(
+    ${stest_name}
+    PRIVATE
+        -Wno-stringop-truncation
+)
+
 set_macro_definitions(TARGETS ${stest_name}
                       REQUIRED
                         "ROOT_CA_CERT_PATH"
