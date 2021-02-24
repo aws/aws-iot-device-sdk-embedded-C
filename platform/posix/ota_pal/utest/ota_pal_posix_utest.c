@@ -536,7 +536,7 @@ void test_OTAPAL_CreateFileForRx_fclose_fail()
 
     otaFileContext.pFilePath = ( uint8_t * ) "placeholder_path";
 
-    OTA_PAL_FailSingleMock( fclose_fn, &validState);
+    OTA_PAL_FailSingleMock( fclose_fn, &validState );
     result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFileContext ) );
     TEST_ASSERT_EQUAL( OtaPalFileClose, result );
 }
