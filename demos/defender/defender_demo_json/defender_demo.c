@@ -429,7 +429,7 @@ static bool collectDeviceMetrics( void )
         }
     }
 
-    /* Collect metrics of memory stastics from the system.
+    /* Collect metrics of memory statistics from the system.
      * This is an example of a custom metric of string-list type. */
     if( metricsCollectorStatus == MetricsCollectorSuccess )
     {
