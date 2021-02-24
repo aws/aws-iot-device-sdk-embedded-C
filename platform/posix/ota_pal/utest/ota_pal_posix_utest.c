@@ -530,9 +530,11 @@ void test_OTAPAL_CreateFileForRx_getcwd_fail( void )
 void test_OTAPAL_CreateFileForRx_fclose_fail()
 {
     OtaPalMainStatus_t result;
+    FILE placeholder_file;
     OtaFileContext_t otaFileContext;
     OtaImageState_t validState = OtaImageStateTesting;
 
+    otaFileContext.pFile = &placeholder_file;
     otaFileContext.pFilePath = ( uint8_t * ) "placeholder_path";
 
     OTA_PAL_FailSingleMock( fclose_fn, &validState );
