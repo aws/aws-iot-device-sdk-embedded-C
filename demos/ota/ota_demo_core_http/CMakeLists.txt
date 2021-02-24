@@ -48,6 +48,12 @@ target_include_directories(
         ${HTTP_INCLUDE_PUBLIC_DIRS}
 )
 
+target_compile_options(
+    ${DEMO_NAME}
+    PRIVATE
+        -Wno-stringop-truncation
+)
+
 set_macro_definitions(TARGETS ${DEMO_NAME}
                       REQUIRED
                         "AWS_IOT_ENDPOINT"
