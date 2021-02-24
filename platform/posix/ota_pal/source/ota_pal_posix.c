@@ -410,77 +410,66 @@ OtaPalStatus_t otaPal_Abort( OtaFileContext_t * const C )
     return OTA_PAL_COMBINE_ERR( mainErr, subErr );
 }
 
+
+
 OtaPalStatus_t otaPal_CreateFileForRx( OtaFileContext_t * const C )
 {
     OtaPalStatus_t result = OTA_PAL_COMBINE_ERR( OtaPalUninitialized, 0 );
     char realFilePath[ OTA_FILE_PATH_LENGTH_MAX ];
     OtaPalPathGenStatus_t status = OtaPalFileGenSuccess;
 
-    if( C != NULL )
+    assert( C != NULL );
+    assert( C->pFilePath != NULL );
+
+    if( C->pFilePath[ 0 ] != ( uint8_t ) '/' )
     {
-        if( C->pFilePath != NULL )
+        status = getFilePathFromCWD( realFilePath, ( const char * ) C->pFilePath );
+    }
+    else
+    {
+        ( void ) strncpy( realFilePath, ( const char * ) C->pFilePath, strlen( ( const char * ) C->pFilePath ) + 1U );
+    }
+
+    if( status == OtaPalFileGenSuccess )
+    {
+        /* Check if file is already open and close it.*/
+        if( C->pFile != NULL )
         {
-            if( C->pFilePath[ 0 ] != ( uint8_t ) '/' )
+            /* POSIX port using standard library */
+            /* coverity[misra_c_2012_rule_21_6_violation] */
+            if( fclose( C->pFile ) != 0 )
             {
-                status = getFilePathFromCWD( realFilePath, ( const char * ) C->pFilePath );
+                LogError( ( "Failed to close OTA update file." ) );
+                result = OTA_PAL_COMBINE_ERR( OtaPalFileClose, errno );
             }
             else
             {
-                ( void ) strncpy( realFilePath, ( const char * ) C->pFilePath, strlen( ( const char * ) C->pFilePath ) + 1U );
-            }
-
-            if( status == OtaPalFileGenSuccess )
-            {
-                /* Check if file is already open and close it.*/
-                if( C->pFile != NULL )
-                {
-                    /* POSIX port using standard library */
-                    /* coverity[misra_c_2012_rule_21_6_violation] */
-                    if( fclose( C->pFile ) != 0 )
-                    {
-                        LogError( ( "Failed to close OTA update file." ) );
-                        result = OTA_PAL_COMBINE_ERR( OtaPalFileClose, errno );
-                    }
-                    else
-                    {
-                        C->pFile = NULL;
-                    }
-                }
-
-                if( C->pFile == NULL )
-                {
-                    /* POSIX port using standard library */
-                    /* coverity[misra_c_2012_rule_21_6_violation] */
-                    C->pFile = fopen( ( const char * ) realFilePath, "w+b" );
-
-                    if( C->pFile != NULL )
-                    {
-                        result = OTA_PAL_COMBINE_ERR( OtaPalSuccess, 0 );
-                        LogInfo( ( "Receive file created." ) );
-                    }
-                    else
-                    {
-                        result = OTA_PAL_COMBINE_ERR( OtaPalRxFileCreateFailed, errno );
-                        LogError( ( "Failed to start operation: Operation already started. failed to open -- %s Path ", C->pFilePath ) );
-                    }
-                }
-            }
-            else
-            {
-                LogError( ( "Could not generate the absolute path for the file" ) );
-                result = OTA_PAL_COMBINE_ERR( OtaPalRxFileCreateFailed, 0 );
+                C->pFile = NULL;
             }
         }
-        else
+
+        if( C->pFile == NULL )
         {
-            result = OTA_PAL_COMBINE_ERR( OtaPalRxFileCreateFailed, 0 );
-            LogError( ( "Invalid file path provided." ) );
+            /* POSIX port using standard library */
+            /* coverity[misra_c_2012_rule_21_6_violation] */
+            C->pFile = fopen( ( const char * ) realFilePath, "w+b" );
+
+            if( C->pFile != NULL )
+            {
+                result = OTA_PAL_COMBINE_ERR( OtaPalSuccess, 0 );
+                LogInfo( ( "Receive file created." ) );
+            }
+            else
+            {
+                result = OTA_PAL_COMBINE_ERR( OtaPalRxFileCreateFailed, errno );
+                LogError( ( "Failed to start operation: Operation already started. failed to open -- %s Path ", C->pFilePath ) );
+            }
         }
     }
     else
     {
+        LogError( ( "Could not generate the absolute path for the file" ) );
         result = OTA_PAL_COMBINE_ERR( OtaPalRxFileCreateFailed, 0 );
-        LogError( ( "Invalid context provided." ) );
     }
 
     /* Exiting function without calling fclose. Context file handle state is managed by this API. */
