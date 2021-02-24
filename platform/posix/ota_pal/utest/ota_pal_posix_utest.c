@@ -523,6 +523,24 @@ void test_OTAPAL_CreateFileForRx_getcwd_fail( void )
     TEST_ASSERT_EQUAL( OtaPalRxFileCreateFailed, result );
 }
 
+/**
+ * @brief Test that otaPal_CreateFileForRx will handle the fclose function
+ * failing.
+ */
+void test_OTAPAL_CreateFileForRx_fclose_fail()
+{
+    OtaPalMainStatus_t result;
+    FILE placeholder_file;
+    OtaFileContext_t otaFileContext;
+    OtaImageState_t validState = OtaImageStateTesting;
+
+    otaFileContext.pFilePath = ( uint8_t * ) "placeholder_path";
+
+    OTA_PAL_FailSingleMock( fclose_fn, &validState);
+    result = OTA_PAL_MAIN_ERR( otaPal_CreateFileForRx( &otaFileContext ) );
+    TEST_ASSERT_EQUAL( OtaPalFileClose, result );
+}
+
 /* ===================   OTA PAL CLOSE FILE UNIT TESTS   ==================== */
 
 void test_OTAPAL_CloseFile_NullInput( void )
