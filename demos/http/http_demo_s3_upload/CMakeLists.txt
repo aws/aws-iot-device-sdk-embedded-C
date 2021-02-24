@@ -35,6 +35,12 @@ target_include_directories(
         ${LOGGING_INCLUDE_DIRS}
 )
 
+target_compile_options(
+    ${DEMO_NAME}
+    PRIVATE
+        -Wno-stringop-truncation
+)
+
 set_macro_definitions(TARGETS ${DEMO_NAME}
                       REQUIRED
                         "S3_PRESIGNED_PUT_URL"
