@@ -420,7 +420,7 @@ static bool collectDeviceMetrics( void )
      * This is an example of a custom metric of number-list type. */
     if( metricsCollectorStatus == MetricsCollectorSuccess )
     {
-        metricsCollectorStatus = GetCpuUsageStats( &customMetrics.cpuUsageStats );
+        metricsCollectorStatus = GetCpuUsageStats( &( customMetrics.cpuUsageStats ) );
 
         if( metricsCollectorStatus != MetricsCollectorSuccess )
         {
@@ -433,7 +433,7 @@ static bool collectDeviceMetrics( void )
      * in the system. This is an example of a custom metric of string-list type. */
     if( metricsCollectorStatus == MetricsCollectorSuccess )
     {
-        metricsCollectorStatus = GetMemoryStats( &customMetrics.memoryStats );
+        metricsCollectorStatus = GetMemoryStats( &( customMetrics.memoryStats ) );
 
         if( metricsCollectorStatus != MetricsCollectorSuccess )
         {
