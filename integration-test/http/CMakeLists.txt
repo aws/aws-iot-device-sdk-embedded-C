@@ -80,7 +80,7 @@ create_test(${stest_name}
 
 target_compile_options(
     ${stest_name}
-    PRIVATE
+    PUBLIC
         -Wno-stringop-truncation
 )
 

@@ -38,7 +38,7 @@ target_include_directories(
 
 target_compile_options(
     ${DEMO_NAME}
-    PRIVATE
+    PUBLIC
         -Wno-stringop-truncation
 )
 
