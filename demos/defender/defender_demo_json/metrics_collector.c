@@ -447,7 +447,6 @@ MetricsCollectorStatus_t GetMemoryStats( MemoryStats_t * pMemoryStats )
     MetricsCollectorStatus_t status = MetricsCollectorSuccess;
     FILE * fileHandle = NULL;
     /* Variables for reading and processing data from "/proc/meminfo" file. */
-    uint8_t lineNumber = 0;
     char lineBuffer[ MAX_LINE_LENGTH ];
     bool readTotalMem = false, readAvailableMem = false;
     int filledVariables = 0;
@@ -473,10 +472,7 @@ MetricsCollectorStatus_t GetMemoryStats( MemoryStats_t * pMemoryStats )
     {
         while( ( fgets( &( lineBuffer[ 0 ] ), MAX_LINE_LENGTH, fileHandle ) != NULL ) )
         {
-            lineNumber++;
-
-            LogDebug( ( "File: /proc/meminfo, Line: %u, Content: %s.",
-                        lineNumber, &( lineBuffer[ 0 ] ) ) );
+            LogDebug( ( "File: /proc/meminfo, Content: %s.", &( lineBuffer[ 0 ] ) ) );
 
             /* Check if the line read represents information for total memory in the system. */
             if( strncmp( lineBuffer, TOTAL_MEM_FIELD, ( sizeof( TOTAL_MEM_FIELD ) - 1UL ) ) == 0 )
@@ -488,8 +484,10 @@ MetricsCollectorStatus_t GetMemoryStats( MemoryStats_t * pMemoryStats )
 
                 if( filledVariables != 1 )
                 {
-                    LogError( ( "Failed to parse data. File: /proc/meminfo, Line: %u, Content: %s", lineNumber, lineBuffer ) );
+                    LogError( ( "Failed to parse data. File: /proc/meminfo, Content: %s", lineBuffer ) );
                     status = MetricsCollectorParsingFailed;
+
+                    break;
                 }
                 else
                 {
@@ -506,17 +504,15 @@ MetricsCollectorStatus_t GetMemoryStats( MemoryStats_t * pMemoryStats )
 
                 if( filledVariables != 1 )
                 {
-                    LogError( ( "Failed to parse data. File: /proc/meminfo, Line: %u, Content: %s", lineNumber, lineBuffer ) );
+                    LogError( ( "Failed to parse data. File: /proc/meminfo, Content: %s", lineBuffer ) );
                     status = MetricsCollectorParsingFailed;
+
+                    break;
                 }
                 else
                 {
                     readAvailableMem = true;
                 }
-            }
-            else
-            {
-                status = MetricsCollectorDataNotFound;
             }
 
             if( readTotalMem && readAvailableMem )
@@ -525,6 +521,10 @@ MetricsCollectorStatus_t GetMemoryStats( MemoryStats_t * pMemoryStats )
                 status = MetricsCollectorSuccess;
 
                 break;
+            }
+            else
+            {
+                status = MetricsCollectorDataNotFound;
             }
         }
     }

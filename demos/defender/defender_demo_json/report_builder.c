@@ -116,6 +116,7 @@
     "]"                                         \
     "}"                                         \
     "]"                                         \
+    "}"                                         \
     "}"
 
 /*-----------------------------------------------------------*/
@@ -541,22 +542,6 @@ ReportBuilderStatus_t GenerateJsonReport( char * pBuffer,
         {
             remainingBufferLength -= charactersWritten;
             pCurrentWritePos += charactersWritten;
-        }
-    }
-
-    if( status == ReportBuilderSuccess )
-    {
-        /* Write closing JSON bracket. */
-        if( remainingBufferLength > 0 )
-        {
-            *pCurrentWritePos = JSON_OBJECT_CLOSE_MARKER;
-            remainingBufferLength -= charactersWritten;
-            pCurrentWritePos++;
-        }
-        else
-        {
-            LogError( ( "Failed to end of JSON report with \"}\" marker." ) );
-            status = ReportBuilderBufferTooSmall;
         }
     }
 
