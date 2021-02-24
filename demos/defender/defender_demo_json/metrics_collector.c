@@ -427,7 +427,7 @@ MetricsCollectorStatus_t GetCpuUsageStats( CpuUsageStats_t * pCpuUsage )
             /* sscanf should fill all the 2 variables successfully. */
             if( filledVariables != 2 )
             {
-                LogError( ( "Failed to CPU usage data. File: /proc/uptime, Data: %s.", &( lineBuffer[ 0 ] ) ) );
+                LogError( ( "Failed to parse CPU usage data. File: /proc/uptime, Data: %s.", &( lineBuffer[ 0 ] ) ) );
                 status = MetricsCollectorParsingFailed;
             }
         }
