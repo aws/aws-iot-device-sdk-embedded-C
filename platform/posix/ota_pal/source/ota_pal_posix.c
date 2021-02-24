@@ -468,7 +468,7 @@ OtaPalStatus_t otaPal_CreateFileForRx( OtaFileContext_t * const C )
     }
     else
     {
-        LogError( ( "Could not generate the absolute path for the file" ) );
+        LogError( ( "Could not generate the absolute path for the receive file" ) );
         result = OTA_PAL_COMBINE_ERR( OtaPalRxFileCreateFailed, 0 );
     }
 
