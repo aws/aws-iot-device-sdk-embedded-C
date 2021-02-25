@@ -5,7 +5,7 @@
 ### Major Changes
 
  - [#1547](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1547) Update the Device Defender demo to showcase reporting of custom metrics to the AWS IoT Device Defender service.
- - The v3.0.0 AWS IoT Over-the-air Update library is now generally available.
+ - AWS IoT Over-the-air Update library v3.0.0 is now generally available.
 
 ### Minor Changes
 
