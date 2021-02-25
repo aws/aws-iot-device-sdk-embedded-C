@@ -29,6 +29,7 @@ JENKINS_CSDK_DEMOS_PATH = "job/csdk/job/demo_pipeline/lastCompletedBuild"
 JENKINS_CSDK_TESTS_PATH = "job/csdk/job/nightly/lastCompletedBuild"
 JENKINS_API_PATH = "api/json"
 JENKINS_SERVER_VERIFY = True
+GITHUB_RELEASES_TAGS_VERIFY = True
 
 # Errors found in this run.
 errors = 0
@@ -178,6 +179,8 @@ def validate_tags_and_releases(repo_paths, lib_versions):
         repo_paths (dict): Paths to all library repos in the CSDK, including their org.
         lib_versions (dict): A dictionary containing the new versions of each library.
     """
+    if not GITHUB_RELEASES_TAGS_VERIFY:
+        return
     # Verify that all repos have a release and tag for the version specified in the config.
     for repo_path in repo_paths:
         library = repo_path.split("/")[-1].casefold()
@@ -224,6 +227,7 @@ def set_globals(configs):
     """
     global GITHUB_ACCESS_TOKEN
     global GITHUB_AUTH_HEADER
+    global GITHUB_RELEASES_TAGS_VERIFY
     global JENKINS_API_URL
     global JENKINS_USERNAME
     global JENKINS_PASSWORD
@@ -263,6 +267,7 @@ def set_globals(configs):
     JENKINS_PASSWORD = jenkins_password
     JENKINS_API_URL = jenkins_api_url
     JENKINS_SERVER_VERIFY = False if configs["disable_jenkins_server_verify"] else True
+    GITHUB_RELEASES_TAGS_VERIFY = False if configs["disable_github_release_tag_verify"] else True
 
 
 def get_configs() -> dict:
@@ -298,6 +303,14 @@ def get_configs() -> dict:
         default=False,
         dest="disable_jenkins_server_verify",
         help="Disable server verification for the Jenkins API calls if your system doesn't have the certificate in its store.",
+    )
+    parser.add_argument(
+        "--disable-github-release-tag-verify",
+        action="store_true",
+        required=False,
+        default=False,
+        dest="disable_github_release_tag_verify",
+        help="Disable verifying that there are Github releases and tags named after the versions of the spoke repos.",
     )
     parser.add_argument(
         "--disable-cbmc-checks-for",
