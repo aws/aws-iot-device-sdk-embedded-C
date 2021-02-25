@@ -1070,7 +1070,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
          * For username and password based authentication in AWS IoT,
          * #AWS_IOT_PASSWORD_ALPN is used. More details can be found in the
          * link below.
-         * https://docs.aws.amazon.com/iot/latest/developerguide/enhanced-custom-auth-using.html
+         * https://docs.aws.amazon.com/iot/latest/developerguide/custom-authentication.html
          */
         #ifdef CLIENT_USERNAME
             opensslCredentials.pAlpnProtos = AWS_IOT_PASSWORD_ALPN;
