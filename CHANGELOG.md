@@ -5,6 +5,17 @@
 ### Major Changes
 
  - [#1547](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1547) This release updates the Device Defender demo to showcase reporting of custom metrics to the AWS IoT Device Defender service.
+ - This release introduces v3.0.0 of the AWS IoT Over-the-air Update library.
+
+### Minor Changes
+
+ - This release provides the following updates to the AWS IoT Over-the-air Update demos:
+   - [#1516](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1516) Wait for the OTA Agent thread to terminate before exiting the demo.
+   - [#1538](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1538) Update the demo to use the latest AWS IoT Over-the-air Update API.
+   - [#1539](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1539) Add retries for MQTT publishing with the backoffAlgorithm library.
+   - [#1540](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1540) Update subscription handling.
+ - [#1487](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1487) This release provides a bugfix for the OTA PAL for POSIX.
+
 
 ## 202012.01 (December 2020)
 
