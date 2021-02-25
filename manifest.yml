@@ -38,7 +38,7 @@ dependencies:
       type: "git"
       url: "https://github.com/aws/Jobs-for-AWS-IoT-embedded-sdk"
   - name: "OTA-for-AWS-IoT-embedded-sdk"
-    version: "v2.0.0 (Release Candidate)"
+    version: "v3.0.0"
     repository:
       type: "git"
       url: "https://github.com/aws/ota-for-aws-iot-embedded-sdk"
