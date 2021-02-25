@@ -15,6 +15,7 @@ This script checks that:
     - All jobs pass in <JENKINS_CI_URL>/view/CSDK%20Jobs/job/csdk/
     - Only the main branch exists in library repos.
     - Only the main branch and v4_beta_deprecated exist in the CSDK.
+    - Each library repo has a tag and release labeled with the version specified in the config.
     - manifest.yml has all libraries and versions expected in this script's config.yml
     - There are no pending PRs on the main branch.
 

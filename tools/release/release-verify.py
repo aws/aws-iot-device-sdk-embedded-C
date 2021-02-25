@@ -135,7 +135,6 @@ def validate_checks(configs) -> list:
     repo_paths.append(f"{CSDK_ORG}/{CSDK_REPO}")
     return repo_paths
 
-
 def validate_ci():
     """
     Validates that all CSDK jobs in the Jenkins CI passed.
@@ -172,6 +171,37 @@ def validate_branches(repo_paths):
             if branch_name not in valid_branches:
                 log_error(f"Invalid branch {branch_name} found in {repo_path}.")
 
+def validate_tags_and_releases(repo_paths, lib_versions):
+    """
+    Validates that each library repo has a release and tag for the specified version number.
+    Args:
+        repo_paths (dict): Paths to all library repos in the CSDK, including their org.
+        lib_versions (dict): A dictionary containing the new versions of each library.
+    """
+    # Verify that all repos have a release and tag for the version specified in the config.
+    for repo_path in repo_paths:
+        library = repo_path.split("/")[-1].casefold()
+        # Only need to verify for spoke repos because CSDK is the library being released.
+        if library == CSDK_REPO:
+            continue
+        # Check that a release exists with the same name as the version.
+        git_releases_resp = requests.get(f"{GITHUB_API_URL}/repos/{repo_path}/releases", headers=GITHUB_AUTH_HEADER)
+        found_release_for_verison = False
+        for release in git_releases_resp.json():
+            if release["name"] == lib_versions[library] and release["tag_name"] == lib_versions[library]:
+                found_release_for_verison = True
+                break
+        if not found_release_for_verison:
+            log_error(f"Could not find release {lib_versions[library]} for {repo_path}.")
+        # Check that a tag exists with the same name as the version.
+        git_tags_resp = requests.get(f"{GITHUB_API_URL}/repos/{repo_path}/tags", headers=GITHUB_AUTH_HEADER)
+        found_tag_for_version = False
+        for tag in git_tags_resp.json():
+            if tag["name"] == lib_versions[library]:
+                found_tag_for_version = True
+                break
+        if not found_tag_for_version:
+            log_error(f"Could not find tag {lib_versions[library]} for {repo_path}.")
 
 def validate_main_branch():
     """
@@ -185,7 +215,6 @@ def validate_main_branch():
     for pr in git_resp.json():
         pr_url = pr["url"]
         log_error(f"Pull request to main {pr_url}.")
-
 
 def set_globals(configs):
     """
@@ -324,6 +353,9 @@ def main():
 
     # Check that only qualified branches exist in each library repo.
     validate_branches(repo_paths)
+
+    # Check that library repos have a tag and release for each specified version.
+    validate_tags_and_releases(repo_paths, configs)
 
     # Verify there are no pending PRs to the CSDK main branch.
     validate_main_branch()
