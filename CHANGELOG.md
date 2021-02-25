@@ -14,7 +14,7 @@
  - [#1511](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1511) Fix memory leak in PKCS #11 test.
  - [#1539](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1539) Add retries for MQTT publishing with the backoffAlgorithm library.
  - [#1516](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1516), [#1538](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1538), [#1540](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1540), [#1487](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1487) Minor bugfixes and refactoring of the OTA demos and OTA PAL for POSIX.
- - [#1552](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1552) Update broken links in demo comments and documentation. 
+ - [#1552](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1552) Update broken links in demo comments and documentation.
 
 ## 202012.01 (December 2020)
 
