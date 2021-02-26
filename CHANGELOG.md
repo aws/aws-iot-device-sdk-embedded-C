@@ -6,11 +6,15 @@
 
  - [#1547](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1547) Update the Device Defender demo to showcase reporting of custom metrics to the AWS IoT Device Defender service.
  - AWS IoT Over-the-air Update library v3.0.0 is now generally available.
+ - [#1529](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1529), [#1532](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1532) Update Jobs demo to use DescribeJobExecution API instead of StartNextPendingJobExecution API, and disable functionality of periodic job updates by default.
+ - [#1519](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1519) Add an `install` target for installing libraries and headers in file system.
 
 ### Minor Changes
 
+ - [#1511](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1511) Fix memory leak in PKCS #11 test.
  - [#1539](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1539) Add retries for MQTT publishing with the backoffAlgorithm library.
  - [#1516](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1516), [#1538](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1538), [#1540](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1540), [#1487](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1487) Minor bugfixes and refactoring of the OTA demos and OTA PAL for POSIX.
+ - [#1552](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1552) Update broken links in demo comments and documentation.
 
 ## 202012.01 (December 2020)
 
