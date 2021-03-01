@@ -149,7 +149,7 @@ After you build and run the initial executable you will have to create another e
 	<li> Rename the demo executable to reflect the change, e.g. `mv ota_demo_core_mqtt ota_demo_core_mqtt2`</li>
 	<li> Create an OTA job:
 		<ol>
-		<li> Go to the AWS IoT Core console console.aws.amazon.com/iot/ (http://console.aws.amazon.com/iot/)</li>
+		<li> Go to the AWS IoT Core console console.aws.amazon.com/iot/ (https://console.aws.amazon.com/iot/)</li>
 		<li> Manage → Jobs → Create → Create a FreeRTOS OTA update job → Select `testclient` from the thing list</li>
 		<li> Sign a new firmware → Create a new profile → Select any SHA-ECDSA signing platform → Upload the code signing certificate(from prerequisites) and provide its path on the device.</li>
 		<li> Select the image → Select the bucket you created in prerequisites → Upload the binary build-dir-2/bin/ota_demo2</li>
