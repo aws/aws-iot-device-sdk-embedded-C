@@ -18,6 +18,7 @@
     * [Sending metrics to AWS IoT](#sending-metrics-to-aws-iot)
 * [Versioning](#versioning)
 * [Releases](#releases)
+    * [202113.00](#20211300)
     * [202012.01](#20201201)
     * [202011.00](#20201100)
     * [202009.00](#20200900)
