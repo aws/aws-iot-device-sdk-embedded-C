@@ -4,7 +4,7 @@
 
 ### Major Changes
 
-[AWS IoT Over-the-air Update library v3.0.0](https://github.com/aws/ota-for-aws-iot-embedded-sdk/tree/v3.0.0) is now generally available. A major update is also introduced to the [AWS IoT Device Shadow library](https://github.com/aws/Device-Shadow-for-AWS-IoT-embedded-sdk/tree/v1.1.0) to support named shadow, a feature of the AWS IoT Device Shadow service that allows you to create multiple shadows for a single IoT device. Additionally, the following changes are also made:
+[AWS IoT Over-the-air Update library v3.0.0](https://github.com/aws/ota-for-aws-iot-embedded-sdk/tree/v3.0.0) is now generally available. A minor update is also introduced to the [AWS IoT Device Shadow library](https://github.com/aws/Device-Shadow-for-AWS-IoT-embedded-sdk/tree/v1.1.0) to support named shadow, a feature of the AWS IoT Device Shadow service that allows you to create multiple shadows for a single IoT device. Additionally, the following changes are also made:
 
  - [#1547](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1547) Update the Device Defender demo to showcase reporting of custom metrics to the AWS IoT Device Defender service.
  - AWS IoT Over-the-air Update library v3.0.0 is now generally available.

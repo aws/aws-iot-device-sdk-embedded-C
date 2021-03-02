@@ -105,7 +105,6 @@ The AWS IoT Device Shadow library has no dependencies on additional libraries ot
 
 See memory requirements for the latest release [here](https://docs.aws.amazon.com/embedded-csdk/202103.00/lib-ref/libraries/aws/device-shadow-for-aws-iot-embedded-sdk/docs/doxygen/output/html/index.html#shadow_memory_requirements).
 
-**Note**: 
 
 #### AWS IoT Jobs
 
