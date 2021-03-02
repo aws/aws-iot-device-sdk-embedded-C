@@ -18,7 +18,7 @@
     * [Sending metrics to AWS IoT](#sending-metrics-to-aws-iot)
 * [Versioning](#versioning)
 * [Releases](#releases)
-    * [202113.00](#20211300)
+    * [202103.00](#20211300)
     * [202012.01](#20201201)
     * [202011.00](#20201100)
     * [202009.00](#20200900)
@@ -201,9 +201,9 @@ For example, a second release in June 2021 would be 202106.01. Although the SDK 
 
 All of the released versions of the C-SDK libraries are available as git tags. For example, the last release of the v3 SDK version is available at [tag 3.1.2](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v3.1.2).
 
-### 202113.00
+### 202103.00
 
-[API documentation of 202113.00 release](https://docs.aws.amazon.com/embedded-csdk/202113.00/lib-ref/index.html)
+[API documentation of 202103.00 release](https://docs.aws.amazon.com/embedded-csdk/202103.00/lib-ref/index.html)
 
 This release includes a [major update](https://github.com/aws/ota-for-aws-iot-embedded-sdk/blob/main/CHANGELOG.md#v300-march-2021) to the APIs of the AWS IoT Over-the-air Update library. Additionally, AWS IoT Device Shadow library introduces a [minor update](https://github.com/aws/Jobs-for-AWS-IoT-embedded-sdk/blob/main/CHANGELOG.md#v110-march-2021) by adding support for named shadow, a feature of the AWS IoT Device Shadow service that allows you to create multiple shadows for a single IoT device. AWS IoT Jobs library introduces a [minor update](https://github.com/aws/Device-Shadow-for-AWS-IoT-embedded-sdk/blob/main/CHANGELOG.md#v110-march-2021) by introducing macros for `$next` job ID and compile-time generation of topic strings. AWS IoT Device Defender library introduces a [minor update](https://github.com/aws/Device-Defender-for-AWS-IoT-embedded-sdk/blob/main/CHANGELOG.md) that adds macros to API for custom metrics feature of AWS IoT Device Defender service. corePKCS11 also introduces a [minor update](https://github.com/FreeRTOS/corePKCS11/blob/main/CHANGELOG.md#v301-february-2021) by removing the `pkcs11configPAL_DESTROY_SUPPORTED` config and mbedTLS platform abstraction layer of `DestroyObject`. Lastly, no code changes are introduced for backoffAlgorithm, coreHTTP, coreMQTT, and coreJSON; however, patch updates are made to improve documentation and CI.
 
@@ -237,37 +237,37 @@ All libraries depend on the ISO C90 standard library and additionally on the `st
 
 ### Porting coreMQTT
 
-Guide for porting coreMQTT library to your platform is available [here](https://docs.aws.amazon.com/embedded-csdk/202113.00/lib-ref/libraries/standard/coreMQTT/docs/doxygen/output/html/mqtt_porting.html).
+Guide for porting coreMQTT library to your platform is available [here](https://docs.aws.amazon.com/embedded-csdk/202103.00/lib-ref/libraries/standard/coreMQTT/docs/doxygen/output/html/mqtt_porting.html).
 
 ### Porting coreHTTP
 
-Guide for porting coreHTTP library is available [here](https://docs.aws.amazon.com/embedded-csdk/202113.00/lib-ref/libraries/standard/coreHTTP/docs/doxygen/output/html/http_porting.html).
+Guide for porting coreHTTP library is available [here](https://docs.aws.amazon.com/embedded-csdk/202103.00/lib-ref/libraries/standard/coreHTTP/docs/doxygen/output/html/http_porting.html).
 
 ### Porting AWS IoT Device Shadow
 
-Guide for porting AWS IoT Device Shadow library is available [here](https://docs.aws.amazon.com/embedded-csdk/202113.00/lib-ref/libraries/aws/device-shadow-for-aws-iot-embedded-sdk/docs/doxygen/output/html/shadow_porting.html).
+Guide for porting AWS IoT Device Shadow library is available [here](https://docs.aws.amazon.com/embedded-csdk/202103.00/lib-ref/libraries/aws/device-shadow-for-aws-iot-embedded-sdk/docs/doxygen/output/html/shadow_porting.html).
 
 ### Porting AWS IoT Device Defender
 
-Guide for porting AWS IoT Device Defender library is available [here](https://docs.aws.amazon.com/embedded-csdk/202113.00/lib-ref/libraries/aws/device-defender-for-aws-iot-embedded-sdk/docs/doxygen/output/html/defender_porting.html).
+Guide for porting AWS IoT Device Defender library is available [here](https://docs.aws.amazon.com/embedded-csdk/202103.00/lib-ref/libraries/aws/device-defender-for-aws-iot-embedded-sdk/docs/doxygen/output/html/defender_porting.html).
 
 ### Porting AWS IoT Over-the-air Update
 
-Guide for porting OTA library to your platform is available [here](https://docs.aws.amazon.com/embedded-csdk/202113.00/lib-ref/libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html/ota_porting.html).
+Guide for porting OTA library to your platform is available [here](https://docs.aws.amazon.com/embedded-csdk/202103.00/lib-ref/libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html/ota_porting.html).
 
 ## Migration guide from v3.1.2 to 202009.00 and newer releases
 
 ### MQTT Migration
 
-Migration guide for MQTT library is available [here](https://docs.aws.amazon.com/embedded-csdk/202113.00/lib-ref/docs/doxygen/output/html/mqtt_migration.html).
+Migration guide for MQTT library is available [here](https://docs.aws.amazon.com/embedded-csdk/202103.00/lib-ref/docs/doxygen/output/html/mqtt_migration.html).
 
 ### Shadow Migration
 
-Migration guide for Shadow library is available [here](https://docs.aws.amazon.com/embedded-csdk/202113.00/lib-ref/docs/doxygen/output/html/shadow_migration.html).
+Migration guide for Shadow library is available [here](https://docs.aws.amazon.com/embedded-csdk/202103.00/lib-ref/docs/doxygen/output/html/shadow_migration.html).
 
 ### Jobs Migration
 
-Migration guide for Jobs library is available [here](https://docs.aws.amazon.com/embedded-csdk/202113.00/lib-ref/docs/doxygen/output/html/jobs_migration.html).
+Migration guide for Jobs library is available [here](https://docs.aws.amazon.com/embedded-csdk/202103.00/lib-ref/docs/doxygen/output/html/jobs_migration.html).
 
 ## Branches
 
