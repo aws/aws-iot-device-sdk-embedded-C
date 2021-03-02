@@ -13,7 +13,7 @@ on:
 jobs:
   tag-commit:
     name: Tag commit
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -35,7 +35,7 @@ jobs:
   create-zip:
     needs: tag-commit
     name: Create ZIP and verify package for release asset.
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     steps:
       - name: Install ZIP tools
         run: sudo apt-get install zip unzip
