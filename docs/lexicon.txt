@@ -51,6 +51,7 @@ corehttp
 corejson
 coremqtt
 corepkcs
+cpu
 crontab
 crt
 csr
@@ -59,6 +60,7 @@ da
 datatypes
 daws
 dclient
+dd
 debian
 defgroup
 dev
@@ -112,6 +114,7 @@ lowercamelcase
 lowercamelcased
 mainpage
 matchtopic
+meminfo
 metadata
 misra
 mkdir
