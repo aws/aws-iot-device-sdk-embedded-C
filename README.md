@@ -18,7 +18,7 @@
     * [Sending metrics to AWS IoT](#sending-metrics-to-aws-iot)
 * [Versioning](#versioning)
 * [Releases](#releases)
-    * [202103.00](#20211300)
+    * [202103.00](#20210300)
     * [202012.01](#20201201)
     * [202011.00](#20201100)
     * [202009.00](#20200900)
@@ -135,7 +135,7 @@ See memory requirements for the latest release [here](https://docs.aws.amazon.co
 
 #### backoffAlgorithm 
 
-The [backoffAlgorithm](https://github.com/FreeRTOS/backoffAlgorithm) library is a utility library to calculate backoff period using an exponential backoff with jitter algorithm for retrying network operations (like failed network connection with server). This library uses the "Full Jitter" strategy for the exponential backoff with jitter algorithm. More information about the algorithm can be seen in the Exponential Backoff and Jitter (https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/) AWS blog.
+The [backoffAlgorithm](https://github.com/FreeRTOS/backoffAlgorithm) library is a utility library to calculate backoff period using an exponential backoff with jitter algorithm for retrying network operations (like failed network connection with server). This library uses the "Full Jitter" strategy for the exponential backoff with jitter algorithm. More information about the algorithm can be seen in the [Exponential Backoff and Jitter AWS blog](https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/).
 
 Exponential backoff with jitter is typically used when retrying a failed connection or network request to the server. An exponential backoff with jitter helps to mitigate the failed network operations with servers, that are caused due to network congestion or high load on the server, by spreading out retry requests across multiple devices attempting network operations. Besides, in an environment with poor connectivity, a client can get disconnected at any time. A backoff strategy helps the client to conserve battery by not repeatedly attempting reconnections when they are unlikely to succeed.
 
@@ -206,11 +206,11 @@ All of the released versions of the C-SDK libraries are available as git tags. F
 
 [API documentation of 202103.00 release](https://docs.aws.amazon.com/embedded-csdk/202103.00/lib-ref/index.html)
 
-This release includes a [major update](https://github.com/aws/ota-for-aws-iot-embedded-sdk/blob/main/CHANGELOG.md#v300-march-2021) to the APIs of the AWS IoT Over-the-air Update library. Additionally, AWS IoT Device Shadow library introduces a [minor update](https://github.com/aws/Jobs-for-AWS-IoT-embedded-sdk/blob/main/CHANGELOG.md#v110-march-2021) by adding support for named shadow, a feature of the AWS IoT Device Shadow service that allows you to create multiple shadows for a single IoT device. AWS IoT Jobs library introduces a [minor update](https://github.com/aws/Device-Shadow-for-AWS-IoT-embedded-sdk/blob/main/CHANGELOG.md#v110-march-2021) by introducing macros for `$next` job ID and compile-time generation of topic strings. AWS IoT Device Defender library introduces a [minor update](https://github.com/aws/Device-Defender-for-AWS-IoT-embedded-sdk/blob/main/CHANGELOG.md) that adds macros to API for custom metrics feature of AWS IoT Device Defender service. corePKCS11 also introduces a [minor update](https://github.com/FreeRTOS/corePKCS11/blob/main/CHANGELOG.md#v301-february-2021) by removing the `pkcs11configPAL_DESTROY_SUPPORTED` config and mbedTLS platform abstraction layer of `DestroyObject`. Lastly, no code changes are introduced for backoffAlgorithm, coreHTTP, coreMQTT, and coreJSON; however, patch updates are made to improve documentation and CI.
+This release includes a [major update](https://github.com/aws/ota-for-aws-iot-embedded-sdk/blob/v3.0.0/CHANGELOG.md#v300-march-2021) to the APIs of the AWS IoT Over-the-air Update library. Additionally, AWS IoT Device Shadow library introduces a [minor update](https://github.com/aws/Device-Shadow-for-AWS-IoT-embedded-sdk/blob/v3.0.0/CHANGELOG.md#v110-march-2021) by adding support for named shadow, a feature of the AWS IoT Device Shadow service that allows you to create multiple shadows for a single IoT device. AWS IoT Jobs library introduces a [minor update](https://github.com/aws/Jobs-for-AWS-IoT-embedded-sdk/blob/v1.1.0/CHANGELOG.md#v110-march-2021) by introducing macros for `$next` job ID and compile-time generation of topic strings. AWS IoT Device Defender library introduces a [minor update](https://github.com/aws/Device-Defender-for-AWS-IoT-embedded-sdk/blob/v1.1.0/CHANGELOG.md#v110-march-2021) that adds macros to API for custom metrics feature of AWS IoT Device Defender service. corePKCS11 also introduces a [patch update](https://github.com/FreeRTOS/corePKCS11/blob/v3.0.1/CHANGELOG.md#v301-february-2021) by removing the `pkcs11configPAL_DESTROY_SUPPORTED` config and mbedTLS platform abstraction layer of `DestroyObject`. Lastly, no code changes are introduced for backoffAlgorithm, coreHTTP, coreMQTT, and coreJSON; however, patch updates are made to improve documentation and CI.
 
 ### 202012.01
 
-[API documentation of 202012.01 release](https://docs.aws.amazon.com/embedded-csdk/202011.01/lib-ref/index.html)
+[API documentation of 202012.01 release](https://docs.aws.amazon.com/embedded-csdk/202012.01/lib-ref/index.html)
 
 This release includes [AWS IoT Over-the-air Update(Release Candidate)](https://github.com/aws/ota-for-aws-iot-embedded-sdk), [backoffAlgorithm](https://github.com/FreeRTOS/backoffAlgorithm), and [PKCS #11](https://github.com/FreeRTOS/corePKCS11) libraries. Additionally, there is a major update to the coreJSON and coreHTTP APIs. All libraries continue to undergo code quality checks (e.g. MISRA-C compliance), and Coverity static analysis. In addition, all libraries except AWS IoT Over-the-air Update and backoffAlgorithm undergo validation of memory safety with the C Bounded Model Checker (CBMC) automated reasoning tool.
 
