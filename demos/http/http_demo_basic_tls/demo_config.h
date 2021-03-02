@@ -83,7 +83,7 @@
 /**
  * @brief Paths for different HTTP methods for specified host.
  *
- * For httpbin.org, see http://httpbin.org/#/HTTP_Methods for details on
+ * For httpbin.org, see https://httpbin.org/#/HTTP_Methods for details on
  * supported REST API.
  */
 #define GET_PATH                          "/get"

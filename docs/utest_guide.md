@@ -33,7 +33,7 @@ func_ReturnMemThruPtr_[parameter name](size, ret_memory)
 func_IgnoreArg_[parameter name]()
 ```
 For a detailed explanation about these mocks check the official documentation:
-[The **CMock** official website](http://www.throwtheswitch.org/cmock)
+[The **CMock** official website](https://www.throwtheswitch.org/cmock)
 [The **CMock** github repository](https://github.com/ThrowTheSwitch/CMock)
 
 ### Setting up a new Unit Testing module in C SDK
