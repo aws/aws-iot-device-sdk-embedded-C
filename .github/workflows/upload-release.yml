@@ -36,7 +36,7 @@ jobs:
           github_token: ${{secrets.GITHUB_TOKEN}}
           # Required, workflow file name or ID
           workflow: ${{ github.event.inputs.workflow_name }}.yml
-          run_id: ${{ github.event.inputs.run_id }}
+          run_id: ${{ github.event.inputs.workflow_id }}
           name: aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}.zip
       - name: Upload Release Asset
         id: upload-release-asset
