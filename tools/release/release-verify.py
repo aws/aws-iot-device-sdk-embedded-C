@@ -214,7 +214,7 @@ def validate_main_branch():
         f"{GITHUB_API_URL}/repos/{CSDK_ORG}/{CSDK_REPO}/pulls?base=main", headers=GITHUB_AUTH_HEADER
     )
     if len(git_resp.json()) == 0:
-        logging.warn("main branch does not exist in CSDK.")
+        logging.warning("main branch does not exist in CSDK.")
     for pr in git_resp.json():
         pr_url = pr["url"]
         log_error(f"Pull request to main {pr_url}.")
