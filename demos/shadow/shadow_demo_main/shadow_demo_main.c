@@ -809,11 +809,15 @@ int main( int argc,
                                  0x00,
                                  sizeof( updateDocument ) );
 
+                /* Keep the client token in global variable used to compare if
+                 * the same token in /update/accepted. */
+                clientToken = ( Clock_GetTimeMs() % 1000000 );
+
                 snprintf( updateDocument,
                           SHADOW_DESIRED_JSON_LENGTH + 1,
                           SHADOW_DESIRED_JSON,
                           ( int ) 1,
-                          ( long unsigned ) ( Clock_GetTimeMs() % 1000000 ) );
+                          ( long unsigned ) clientToken );
 
                 returnStatus = PublishToTopic( SHADOW_TOPIC_STR_UPDATE( THING_NAME, SHADOW_NAME ),
                                                SHADOW_TOPIC_LEN_UPDATE( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ),
