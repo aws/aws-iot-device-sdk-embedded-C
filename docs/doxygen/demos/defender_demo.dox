@@ -23,8 +23,8 @@ reports. The demo then waits for a report accepted response, and ensures that
 the response contains the same report Id as was sent in the request.
 
 For the AWS IoT Device Defender service to make use of the custom metrics reported by the demo, you need to
-define the custom metrics in your account. You can either use the AWS console or the AWS
-CLI tool to create custom metrics in your account. For more information, please refer to [Custom Metrics AWS documentation](https://docs.aws.amazon.com/iot/latest/developerguide/dd-detect-custom-metrics.html).
+define the custom metrics in your account. You can use either the AWS console or CLI to create
+custom metrics in your account. For more information, please refer to [Custom Metrics AWS documentation](https://docs.aws.amazon.com/iot/latest/developerguide/dd-detect-custom-metrics.html).
 
 <div class="caption" style="text-align:center">
 AWS IoT Device Defender Demo Workflow
