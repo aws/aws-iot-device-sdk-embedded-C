@@ -295,63 +295,92 @@ def main():
         epilog='Requires beautifulsoup4, requests, and termcolor from PyPi. ' +
                'Optional dependencies: pandoc (to support testing Markdown files), gh (To speed up checking GitHub links)'
     )
-    parser.add_argument("-F", "--files", action="store", dest="files", nargs='+', help="Markdown files to fix")
-    parser.add_argument("-L", "--links", action="store", dest="links", nargs='+', help="List of links to test")
+    parser.add_argument("-D", "--exclude-dirs", action="store", dest="exclude_dirs", nargs='+', help="List of directories to ignore.")
     parser.add_argument("-n", "--num-processes", action="store", type=int, default=4, help="Number of processes to run in parallel")
     parser.add_argument("-k", "--keep", action="store_true", default=False, help="Keep temporary files instead of deleting")
     parser.add_argument("-v", "--verbose", action="store_true", default=False, help="Print all links tested")
     args = parser.parse_args()
-    file_list = []
+
     html_file_list = []
     broken_links = []
-    if args.files is None and args.links is None:
-        parser.error('Either files or links must be provided.')
+    file_list = []
+    link_list = []
+    if args.exclude_dirs is None:
+        parser.error('List of exclude directories should be provided.')
+    
+    # Obtain list of Markdown files from the repository (along with excluding passed directories).
+    cmd = f'(find . -type f -name \'*.md\' | grep -E -i -v \''
+    cmd += "|".join(args.exclude_dirs)
+    cmd += f'\' | tr \'\\n\' \' \' )'
+    process = subprocess.run(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        shell=True,
+        encoding="utf-8",
+        universal_newlines=True
+    )
+    if process.returncode == 0:
+        for file in process.stdout.split():
+            file_list.append(file)
 
-    if args.files is not None:
-        # Search for markdown files in file list. Note: We could skip this if we can guarantee only markdown files are passed in.
-        file_list = [f for f in args.files if re.search(MARKDOWN_SEARCH_TERM, f, re.IGNORECASE)]
+    if args.verbose:
+        print(file_list)
 
-        if args.verbose:
-            print(file_list)
+    exclude_dirs_with_prefix = [ '--exclude-dir='+dir for dir in args.exclude_dirs ]
+    # Obtain list of links across files in the repository (besides files in exclude list of directories passed).
+    cmd = f'(grep -e \'https\?://\' . -RIa --include=\'*.c\' --include=\'*.h\' --include=\'*.dox\' '
+    cmd += f'--exclude-dir=.git ' + " ".join(exclude_dirs_with_prefix) + ' | ' 
+    cmd += f'grep -IoE \'\\b(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]*[-A-Za-z0-9+&@#/%=~_|]\' | sort | uniq | grep -Fxvf tools/link-verifier/allowlist.txt | tr \'\n\' \' \')'
+    process = subprocess.run(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        shell=True,
+        encoding="utf-8",
+        universal_newlines=True
+    )
+    if process.returncode == 0:
+        for link in process.stdout.split():
+            link_list.append(link)
 
-        try:
-            file_map = {}
-            for f in file_list:
-                process = create_html(f)
-                if process.returncode != 0:
-                    cprint(process.stdout, 'red')
-                    print('Did you install pandoc?')
-                    sys.exit(process.returncode)
-                html_file_list.append(html_name_from_markdown(f))
-                # Create a map so that we know what file this was generated from.
-                file_map[html_name_from_markdown(f)] = f
+    try:
+        file_map = {}
+        for f in file_list:
+            process = create_html(f)
+            if process.returncode != 0:
+                cprint(process.stdout, 'red')
+                print('Did you install pandoc?')
+                sys.exit(process.returncode)
+            html_file_list.append(html_name_from_markdown(f))
+            # Create a map so that we know what file this was generated from.
+            file_map[html_name_from_markdown(f)] = f
 
-            # Parse files in parallel.
-            pool = Pool(args.num_processes)
-            file_objects = pool.map(parse_file, html_file_list)
-            pool.close()
-            pool.join()
-            for file_obj in file_objects:
-                consolidate_repo_list(file_obj.linked_repos)
-            # Test links in series so we don't send too many HTTP requests in a short interval.
-            for file_obj in file_objects:
-                file_obj.identify_broken_links(file_map, args.verbose)
-                broken_links += file_obj.broken_links
-        # Remove the temporary files we created, especially if there was an exception.
-        finally:
-            for f in html_file_list:
-                if not args.keep:
-                    os.remove(f)
+        # Parse files in parallel.
+        pool = Pool(args.num_processes)
+        file_objects = pool.map(parse_file, html_file_list)
+        pool.close()
+        pool.join()
+        for file_obj in file_objects:
+            consolidate_repo_list(file_obj.linked_repos)
+        # Test links in series so we don't send too many HTTP requests in a short interval.
+        for file_obj in file_objects:
+            file_obj.identify_broken_links(file_map, args.verbose)
+            broken_links += file_obj.broken_links
+    # Remove the temporary files we created, especially if there was an exception.
+    finally:
+        for f in html_file_list:
+            if not args.keep:
+                os.remove(f)
 
-    if args.links is not None:
-        for link in args.links:
-            is_broken, status_code = test_url(link)
-            if is_broken:
-                broken_links.append(link)
-                cprint(f'{status_code}\t{link}', 'red')
-            else:
-                if args.verbose:
-                    cprint(f'{status_code}\t{link}', 'green')
+    for link in link_list:
+        is_broken, status_code = test_url(link)
+        if is_broken:
+            broken_links.append(link)
+            cprint(f'{status_code}\t{link}', 'red')
+        else:
+            if args.verbose:
+                cprint(f'{status_code}\t{link}', 'green')
 
     # Return code > 0 to return error.
     num_broken = len(broken_links)
@@ -361,4 +390,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

@@ -284,35 +284,19 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: recursive
-      - uses: actions/setup-python@v2
+      - name: Setup Python for link verifier action
+        uses: actions/setup-python@v2
         with:
           python-version: '3.7.10'
-      - name: Install pandoc
-        run: |
-          wget https://github.com/jgm/pandoc/releases/download/2.11/pandoc-2.11-1-amd64.deb -O pandoc.deb
-          sudo dpkg -i pandoc.deb
-          rm pandoc.deb
-      - name: Install gh
-        run: |
-          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0
-          sudo apt-add-repository https://cli.github.com/packages
-          sudo apt update
-          sudo apt install -y gh
-      - name: Install python dependencies
-        run: |
-          sudo apt-get install -y python3-setuptools python3-pip
-          pip3 install --user bs4 requests termcolor
       - name: Check Links
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          FILES=($(find . -type f -name '*.md' | grep -E -i -v 'cbmc|cmock|third-party|3rdparty|libmosquitto' | tr '\n' ' '))
-          LINKS=($(grep -e 'https\?://' . -RIa --include='*.c' --include='*.h' --include='*.dox' \
-                --exclude-dir=.git --exclude-dir=cbmc --exclude-dir=CMock --exclude-dir=third-party --exclude-dir=3rdparty --exclude-dir=libmosquitto | \
-                grep -IoE '\b(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]*[-A-Za-z0-9+&@#/%=~_|]' | sort | uniq | \
-                grep -Fxvf tools/link-verifier/allowlist.txt | tr '\n' ' '))
-          python3 tools/link-verifier/verify-links.py -F ${FILES[@]} -L ${LINKS[@]}
-          if [ $? -ne "0" ]
-          then
-            exit 1
-          fi
+        uses: aggarw13/CI-CD-GitHub-Actions/link-verifier@main
+        with:
+          path: ./
+          exclude-dirs: cmock,unity,cbmc,third-party,3rdparty,libmosquitto
+          include-file-types: .c,.h,.dox
+          allowlist-file: ./tools/link-verifier/allowlist.txt
+
+          
+        
