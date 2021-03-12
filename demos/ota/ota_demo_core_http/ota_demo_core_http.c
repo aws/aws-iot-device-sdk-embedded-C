@@ -1763,7 +1763,7 @@ static OtaMqttStatus_t mqttPublish( const char * const pTopic,
     int ret;
 
     /* Set the required publish parameters. */
-    publishInfo.pTopicName = pacTopic;
+    publishInfo.pTopicName = pTopic;
     publishInfo.topicNameLength = topicLen;
     publishInfo.qos = qos;
     publishInfo.pPayload = pMsg;
