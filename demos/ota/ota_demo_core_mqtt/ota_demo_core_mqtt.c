@@ -135,9 +135,9 @@
 #define MQTT_PROCESS_LOOP_TIMEOUT_MS        ( 100U )
 
 /**
- * @brief Maximum number or retries to publish a message in case of failures.
+ * @brief Period for waiting on ack.
  */
-#define MQTT_PUBLISH_RETRY_MAX_ATTEMPS      ( 3U )
+#define MQTT_ACK_TIMEOUT_MS                 ( 5000U )
 
 /**
  * @brief Period for demo loop sleep in milliseconds.
@@ -289,6 +289,11 @@ static pthread_mutex_t mqttMutex;
  * @brief Semaphore for synchronizing buffer operations.
  */
 static sem_t bufferSemaphore;
+
+/**
+ * @brief Semaphore for synchronizing wait for ack.
+ */
+static sem_t ackSemaphore;
 
 /**
  * @brief Enum for type of OTA job messages received.
@@ -841,6 +846,7 @@ static void mqttEventCallback( MQTTContext_t * pMqttContext,
             case MQTT_PACKET_TYPE_PUBACK:
                 LogInfo( ( "PUBACK received for packet id %u.\n\n",
                            pDeserializedInfo->packetIdentifier ) );
+                sem_post( &ackSemaphore );
                 break;
 
             /* Any other packet type is invalid. */
@@ -1307,16 +1313,8 @@ static OtaMqttStatus_t mqttPublish( const char * const pacTopic,
     MQTTStatus_t mqttStatus = MQTTBadParameter;
     MQTTPublishInfo_t publishInfo = { 0 };
     MQTTContext_t * pMqttContext = &mqttContext;
-    BackoffAlgorithmStatus_t backoffAlgStatus = BackoffAlgorithmSuccess;
-    BackoffAlgorithmContext_t reconnectParams;
-    uint16_t nextRetryBackOff;
-
-
-    /* Initialize reconnect attempts and interval */
-    BackoffAlgorithm_InitializeParams( &reconnectParams,
-                                       CONNECTION_RETRY_BACKOFF_BASE_MS,
-                                       CONNECTION_RETRY_MAX_BACKOFF_DELAY_MS,
-                                       MQTT_PUBLISH_RETRY_MAX_ATTEMPS );
+    struct timespec ts = { 0 };
+    int ret;
 
     /* Set the required publish parameters. */
     publishInfo.pTopicName = pacTopic;
@@ -1327,36 +1325,16 @@ static OtaMqttStatus_t mqttPublish( const char * const pacTopic,
 
     if( pthread_mutex_lock( &mqttMutex ) == 0 )
     {
-        do
+        mqttStatus = MQTT_Publish( pMqttContext,
+                                   &publishInfo,
+                                   MQTT_GetPacketId( pMqttContext ) );
+
+        if( mqttStatus != MQTTSuccess )
         {
-            mqttStatus = MQTT_Publish( pMqttContext,
-                                       &publishInfo,
-                                       MQTT_GetPacketId( pMqttContext ) );
+            LogError( ( "Failed to send PUBLISH packet to broker with error = %u.", mqttStatus ) );
 
-            if( qos == 1 )
-            {
-                /* Loop to receive packet from transport interface. */
-                mqttStatus = MQTT_ReceiveLoop( &mqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
-            }
-
-            if( mqttStatus != MQTTSuccess )
-            {
-                /* Generate a random number and get back-off value (in milliseconds) for the next connection retry. */
-                backoffAlgStatus = BackoffAlgorithm_GetNextBackoff( &reconnectParams, generateRandomNumber(), &nextRetryBackOff );
-
-                if( backoffAlgStatus == BackoffAlgorithmRetriesExhausted )
-                {
-                    LogError( ( "Publish failed, all attempts exhausted." ) );
-                }
-                else if( backoffAlgStatus == BackoffAlgorithmSuccess )
-                {
-                    LogWarn( ( "Publish failed. Retrying connection "
-                               "after %hu ms backoff.",
-                               ( unsigned short ) nextRetryBackOff ) );
-                    Clock_SleepMs( nextRetryBackOff );
-                }
-            }
-        } while( ( mqttStatus != MQTTSuccess ) && ( backoffAlgStatus == BackoffAlgorithmSuccess ) );
+            otaRet = OtaMqttPublishFailed;
+        }
 
         pthread_mutex_unlock( &mqttMutex );
     }
@@ -1365,19 +1343,29 @@ static OtaMqttStatus_t mqttPublish( const char * const pacTopic,
         LogError( ( "Failed to acquire mqtt mutex for executing MQTT_Publish"
                     ",errno=%s",
                     strerror( errno ) ) );
-    }
-
-    if( mqttStatus != MQTTSuccess )
-    {
-        LogError( ( "Failed to send PUBLISH packet to broker with error = %u.", mqttStatus ) );
 
         otaRet = OtaMqttPublishFailed;
     }
-    else
+
+    if( ( mqttStatus == MQTTSuccess ) && ( qos == 1 ) )
     {
-        LogInfo( ( "Sent PUBLISH packet to broker %.*s to broker.\n\n",
-                   topicLen,
-                   pacTopic ) );
+        /* Calculate relative interval as current time plus number of seconds. */
+        clock_gettime( CLOCK_REALTIME, &ts );
+        ts.tv_sec += MQTT_ACK_TIMEOUT_MS;
+
+        while( ( ret = sem_timedwait( &ackSemaphore, &ts ) ) == -1 && errno == EINTR )
+        {
+            continue;
+        }
+
+        if( ret == -1 )
+        {
+            LogError( ( "Failed to receive ack for publish."
+                        ",errno=%s",
+                        strerror( errno ) ) );
+
+            otaRet = OtaMqttPublishFailed;
+        }
     }
 
     return otaRet;
@@ -1679,6 +1667,7 @@ int main( int argc,
 
     /* Semaphore initialization flag. */
     bool bufferSemInitialized = false;
+    bool ackSemInitialized = false;
     bool mqttMutexInitialized = false;
 
     /* Maximum time in milliseconds to wait before exiting demo . */
@@ -1696,6 +1685,20 @@ int main( int argc,
     else
     {
         bufferSemInitialized = true;
+    }
+
+    /* Initialize semaphore for ack. */
+    if( sem_init( &ackSemaphore, 0, 0 ) != 0 )
+    {
+        LogError( ( "Failed to initialize ack semaphore"
+                    ",errno=%s",
+                    strerror( errno ) ) );
+
+        returnStatus = EXIT_FAILURE;
+    }
+    else
+    {
+        ackSemInitialized = true;
     }
 
     /* Initialize mutex for coreMQTT APIs. */
@@ -1734,6 +1737,19 @@ int main( int argc,
         if( sem_destroy( &bufferSemaphore ) != 0 )
         {
             LogError( ( "Failed to destroy buffer semaphore"
+                        ",errno=%s",
+                        strerror( errno ) ) );
+
+            returnStatus = EXIT_FAILURE;
+        }
+    }
+
+    if( ackSemInitialized == true )
+    {
+        /* Cleanup semaphore created for ack. */
+        if( sem_destroy( &ackSemaphore ) != 0 )
+        {
+            LogError( ( "Failed to destroy ack semaphore"
                         ",errno=%s",
                         strerror( errno ) ) );
 
