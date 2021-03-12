@@ -10,7 +10,7 @@
         * [coreHTTP](#corehttp)
         * [coreJSON](#corejson)
         * [corePKCS11](#corepkcs11)
-        * [AWS IoT Device Shadow](#awsiot-device-shadow)
+        * [AWS IoT Device Shadow](#aws-iot-device-shadow)
         * [AWS IoT Jobs](#aws-iot-jobs)
         * [AWS IoT Device Defender](#aws-iot-device-defender)
         * [AWS IoT Over-the-air Update Library](#aws-iot-over-the-air-update)
@@ -89,7 +89,7 @@ See memory requirements for the latest release [here](https://docs.aws.amazon.co
 
 The [coreJSON](https://github.com/FreeRTOS/coreJSON) library is a JSON parser that strictly enforces the [ECMA-404 JSON standard](https://www.json.org/json-en.html). It provides a function to validate a JSON document, and a function to search for a key and return its value. A search can descend into nested structures using a compound query key. A JSON document validation also checks for illegal UTF8 encodings and illegal Unicode escape sequences.
 
-See memory requirements for the latest release [here](https://docs.aws.amazon.com/embedded-csdk/202103.100/lib-ref/libraries/standard/coreJSON/docs/doxygen/output/html/index.html#json_memory_requirements).
+See memory requirements for the latest release [here](https://docs.aws.amazon.com/embedded-csdk/202103.00/lib-ref/libraries/standard/coreJSON/docs/doxygen/output/html/index.html#json_memory_requirements).
 
 #### corePKCS11
 
