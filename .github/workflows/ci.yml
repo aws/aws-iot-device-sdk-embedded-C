@@ -291,12 +291,12 @@ jobs:
       - name: Check Links
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        uses: aggarw13/CI-CD-GitHub-Actions/link-verifier@main
+        uses: FreeRTOS/CI-CD-GitHub-Actions/link-verifier@main
         with:
           path: ./
           exclude-dirs: cmock,unity,cbmc,third-party,3rdparty,libmosquitto
           include-file-types: .c,.h,.dox
           allowlist-file: ./.github/links_allowlist.txt
 
-          
-        
+
+
