@@ -1748,7 +1748,7 @@ static OtaMqttStatus_t mqttSubscribe( const char * pTopicFilter,
     return otaRet;
 }
 
-static OtaMqttStatus_t mqttPublish( const char * const pacTopic,
+static OtaMqttStatus_t mqttPublish( const char * const pTopic,
                                     uint16_t topicLen,
                                     const char * pMsg,
                                     uint32_t msgSize,
