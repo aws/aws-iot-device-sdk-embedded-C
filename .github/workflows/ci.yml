@@ -296,7 +296,7 @@ jobs:
           path: ./
           exclude-dirs: cmock,unity,cbmc,third-party,3rdparty,libmosquitto
           include-file-types: .c,.h,.dox
-          allowlist-file: ./tools/link-verifier/allowlist.txt
+          allowlist-file: ./.github/links_allowlist.txt
 
           
         
