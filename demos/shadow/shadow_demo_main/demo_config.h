@@ -158,7 +158,7 @@
  * symbol.
  */
 #include "core_mqtt.h"
-#define MQTT_LIB             "core-mqtt@" MQTT_LIBRARY_VERSION
+#define MQTT_LIB    "core-mqtt@" MQTT_LIBRARY_VERSION
 
 /**
  * @brief Predefined thing name.
@@ -166,7 +166,7 @@
  * This is the example predefined thing name and could be compiled in ROM code.
  */
 #ifndef THING_NAME
-    #define THING_NAME           "testShadow"
+    #define THING_NAME    "testShadow"
 #endif
 
 /**
