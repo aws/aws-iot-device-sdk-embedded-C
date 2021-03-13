@@ -4,22 +4,22 @@
     {
       "Effect": "Allow",
       "Action": "iot:Connect",
-      "Resource": "arn:aws:iot:[AWS_REGION]:[AWS_ACCOUNT_ID]:client/${iot:ClientId}"
+      "Resource": "arn:aws:iot:[AWS_REGION]:[AWS_ACCOUNT_ID]:client/${iot:Connection.Thing.ThingName}"
     },
     {
       "Effect": "Allow",
       "Action": "iot:Subscribe",
-      "Resource": "arn:aws:iot:[AWS_REGION]:[AWS_ACCOUNT_ID]:topicfilter/${iot:ClientId}/example/topic"
+      "Resource": "arn:aws:iot:[AWS_REGION]:[AWS_ACCOUNT_ID]:topicfilter/${iot:Connection.Thing.ThingName}/example/topic"
     },
     {
       "Effect": "Allow",
       "Action": "iot:Receive",
-      "Resource": "arn:aws:iot:[AWS_REGION]:[AWS_ACCOUNT_ID]:topic/${iot:ClientId}/example/topic"
+      "Resource": "arn:aws:iot:[AWS_REGION]:[AWS_ACCOUNT_ID]:topic/${iot:Connection.Thing.ThingName}/example/topic"
     },
     {
       "Effect": "Allow",
       "Action": "iot:Publish",
-      "Resource": "arn:aws:iot:[AWS_REGION]:[AWS_ACCOUNT_ID]:topic/${iot:ClientId}/example/topic"
+      "Resource": "arn:aws:iot:[AWS_REGION]:[AWS_ACCOUNT_ID]:topic/${iot:Connection.Thing.ThingName}/example/topic"
     }
   ]
 }

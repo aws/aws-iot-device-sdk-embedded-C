@@ -345,6 +345,7 @@ Follow the links to:
 - [Sign-in to the AWS IoT Console](https://console.aws.amazon.com/iot/home) after setting up the AWS account.
 - [Create a Thing resource](https://docs.aws.amazon.com/iot/latest/developerguide/iot-moisture-create-thing.html).
 
+The MQTT Mutual Authentication and AWS IoT Shadow demos include example AWS IoT policy documents to run each respective demo with AWS IoT. You may use the [MQTT Mutual auth](./demos/mqtt/mqtt_demo_mutual_auth/aws_iot_policy_example_mqtt.json) and [Shadow](./demos/shadow/shadow_demo_main/aws_iot_policy_example_shadow.json) example policies by replacing `[AWS_REGION]` and `[AWS_ACCOUNT_ID]` with the strings of your region and account identifier. While the IoT Thing name and MQTT client identifier do not need to match for the demos to run, the example policies have the Thing name and client identifier identical as per [AWS IoT best practices](https://docs.aws.amazon.com/iot/latest/developerguide/security-best-practices.html)
 
 #### Configuring mutual authentication demos of MQTT and HTTP
 

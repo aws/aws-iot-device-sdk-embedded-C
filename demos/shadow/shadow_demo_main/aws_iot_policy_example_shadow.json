@@ -4,7 +4,7 @@
     {
       "Effect": "Allow",
       "Action": "iot:Connect",
-      "Resource": "arn:aws:iot:[AWS_REGION]:[AWS_ACCOUNT_ID]:client/${iot:ClientId}"
+      "Resource": "arn:aws:iot:[AWS_REGION]:[AWS_ACCOUNT_ID]:client/${iot:Connection.Thing.ThingName}"
     },
     {
       "Effect": "Allow",
