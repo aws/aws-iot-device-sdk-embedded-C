@@ -117,6 +117,11 @@
  * @brief MQTT client identifier.
  *
  * No two clients may use the same client identifier simultaneously.
+ *
+ * @note The client identifier should match the Thing name per
+ * AWS IoT Security best practices:
+ * https://docs.aws.amazon.com/iot/latest/developerguide/security-best-practices.html
+ * However, it is not required for the demo to run.
  */
 #ifndef CLIENT_IDENTIFIER
     #define CLIENT_IDENTIFIER    "testclient"
@@ -153,14 +158,16 @@
  * symbol.
  */
 #include "core_mqtt.h"
-#define MQTT_LIB             "core-mqtt@" MQTT_LIBRARY_VERSION
+#define MQTT_LIB    "core-mqtt@" MQTT_LIBRARY_VERSION
 
 /**
  * @brief Predefined thing name.
  *
- * This is the example predefine thing name and could be compiled in ROM code.
+ * This is the example predefined thing name and could be compiled in ROM code.
  */
-#define THING_NAME           "testShadow"
+#ifndef THING_NAME
+    #define THING_NAME    "testShadow"
+#endif
 
 /**
  * @brief The length of #THING_NAME.
