@@ -95,6 +95,18 @@ See memory requirements for the latest release [here](https://docs.aws.amazon.co
 
 The [corePKCS11](https://github.com/FreeRTOS/corePKCS11) library is an implementation of the PKCS #11 interface (API) that makes it easier to develop applications that rely on cryptographic operations. Only a subset of the [PKCS #11 v2.4](https://docs.oasis-open.org/pkcs11/pkcs11-base/v2.40/os/pkcs11-base-v2.40-os.html) standard has been implemented, with a focus on operations involving asymmetric keys, random number generation, and hashing.
 
+The Cryptoki or PKCS #11 standard defines a platform-independent API to manage and use cryptographic tokens. The name, "PKCS #11", is used interchangeably to refer to the API itself and the standard which defines it.
+
+The PKCS #11 API is useful for writing software without taking a dependency on any particular implementation or hardware. By writing against the PKCS #11 standard interface, code can be used interchangeably with multiple algorithms, implementations and hardware. 
+
+The purpose of corePKCS11 is to allow rapid prototyping and development. Once a secure cryptoprocessor is selected, this library must be replaced with a PKCS #11 implementation that abstracts said cryptoprocessor.
+
+Since the PKCS #11 interface is defined as part of the PKCS #11 [specification](https://docs.oasis-open.org/pkcs11/pkcs11-base/v2.40/os/pkcs11-base-v2.40-os.html) replacing this library with another implementation 
+should require little porting effort, as the interface will not change. The system tests distributed in this repository can be leveraged to verify the behavior of a different implementation is similar to corePKCS11.
+
+Generally vendors for secure cryptoprocessors such as TPM, HSM, Secure Element, or any other type of secure hardware enclave, distribute a PKCS #11 implementation with the hardware. 
+The recommendation is to use a secure cryptoprocessor, and replace corePKCS11 with an implementation compatible with said cryptoprocessor.
+
 See memory requirements for the latest release [here](https://docs.aws.amazon.com/embedded-csdk/202103.00/lib-ref/libraries/standard/corePKCS11/docs/doxygen/output/html/pkcs11_design.html#pkcs11_memory_requirements).
 
 #### AWS IoT Device Shadow
