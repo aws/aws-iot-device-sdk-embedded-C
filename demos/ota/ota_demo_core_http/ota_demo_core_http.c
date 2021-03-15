@@ -1695,7 +1695,7 @@ static OtaMqttStatus_t mqttSubscribe( const char * pTopicFilter,
 {
     OtaMqttStatus_t otaRet = OtaMqttSuccess;
 
-    MQTTStatus_t mqttStatus;
+    MQTTStatus_t mqttStatus = MQTTBadParameter;
     MQTTContext_t * pMqttContext = &mqttContext;
     MQTTSubscribeInfo_t pSubscriptionList[ 1 ];
 
@@ -1741,9 +1741,9 @@ static OtaMqttStatus_t mqttSubscribe( const char * pTopicFilter,
         LogInfo( ( "SUBSCRIBE topic %.*s to broker.\n\n",
                    topicFilterLength,
                    pTopicFilter ) );
-    }
 
-    registerSubscriptionManagerCallback( pTopicFilter, topicFilterLength );
+        registerSubscriptionManagerCallback( pTopicFilter, topicFilterLength );
+    }
 
     return otaRet;
 }
@@ -1858,14 +1858,14 @@ static OtaMqttStatus_t mqttUnsubscribe( const char * pTopicFilter,
 
     if( mqttStatus != MQTTSuccess )
     {
-        LogError( ( "Failed to send SUBSCRIBE packet to broker with error = %u.",
+        LogError( ( "Failed to send UNSUBSCRIBE packet to broker with error = %u.",
                     mqttStatus ) );
 
         otaRet = OtaMqttUnsubscribeFailed;
     }
     else
     {
-        LogInfo( ( "SUBSCRIBE topic %.*s to broker.\n\n",
+        LogInfo( ( "UNSUBSCRIBE topic %.*s to broker.\n\n",
                    topicFilterLength,
                    pTopicFilter ) );
     }
