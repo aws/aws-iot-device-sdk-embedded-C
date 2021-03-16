@@ -131,9 +131,7 @@ include( tools/cmake/install.cmake )
 include( tools/cmake/utility.cmake )
 
 # Make THING_NAME an alias for CLIENT_IDENTIFIER
-if( DEFINED THING_NAME )
-  set( CLIENT_IDENTIFIER ${THING_NAME} )
-endif()
+set_alias( "CLIENT_IDENTIFIER" ALIASES "THING_NAME" )
 
 if(BUILD_TESTS)
     # Add build configuration for integration tests.
@@ -165,9 +163,9 @@ if(DOWNLOAD_CERTS)
     )
     # Copy certificates to the build directory.
     file(COPY "${CERT_DOWNLOAD_DIR}"
-                DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+         DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
     if(BUILD_TESTS)
         file(COPY "${CERT_DOWNLOAD_DIR}"
-                  DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/tests)
+             DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/tests)
     endif()
 endif()
