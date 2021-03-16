@@ -127,8 +127,13 @@ add_subdirectory( platform )
 
 # Create the `install` target by including this file.
 include( tools/cmake/install.cmake )
-# Define any CMake utility functions that are used for building applications.
+# Define any shared CMake utility functions.
 include( tools/cmake/utility.cmake )
+
+# Make THING_NAME an alias for CLIENT_IDENTIFIER
+if( DEFINED THING_NAME )
+  set( CLIENT_IDENTIFIER ${THING_NAME} )
+endif()
 
 if(BUILD_TESTS)
     # Add build configuration for integration tests.

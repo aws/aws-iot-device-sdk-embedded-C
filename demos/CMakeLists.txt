@@ -7,11 +7,6 @@ if( NOT DEFINED PLATFORM_NAME )
     endif()
 endif()
 
-# Make THING_NAME an alias for CLIENT_IDENTIFIER
-if(DEFINED THING_NAME)
-  set(CLIENT_IDENTIFIER ${THING_NAME})
-endif()
-
 # Include each subdirectory that has a CMakeLists.txt file in it
 file(GLOB demo_dirs "${DEMOS_DIR}/*/*")
 foreach(demo_dir IN LISTS demo_dirs)
