@@ -42,9 +42,9 @@ set_macro_definitions(TARGETS ${DEMO_NAME}
                         "ROOT_CA_CERT_PATH"
                         "CLIENT_CERT_PATH"
                         "CLIENT_PRIVATE_KEY_PATH"
-                        "CLIENT_IDENTIFIER"
                         "THING_NAME"
                       OPTIONAL
+                        "CLIENT_IDENTIFIER"
                         "CLIENT_USERNAME"
                         "CLIENT_PASSWORD"
                         "OS_NAME"
