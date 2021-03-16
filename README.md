@@ -99,12 +99,11 @@ The Cryptoki or PKCS #11 standard defines a platform-independent API to manage a
 
 The PKCS #11 API is useful for writing software without taking a dependency on any particular implementation or hardware. By writing against the PKCS #11 standard interface, code can be used interchangeably with multiple algorithms, implementations and hardware. 
 
-The purpose of corePKCS11 is to allow rapid prototyping and development. A [porting guide](https://docs.aws.amazon.com/freertos/latest/portingguide/afr-porting-pkcs.html) is available for implementing corePKCS11 on new platforms. 
-The goal of this library is to allow for exploring and building on the PKCS #11 itnerface, with out having to commit to any specific hardware. 
-Once a secure cryptoprocessor such as a TPM, HSM, Secure Element or other hardware is chosen, the PKCS #11 implementation associated with that hardware should instead be used. If this library is used alongside a cryptoprocessor, the benefits of said cryptoprocessor will be lost.
+Generally vendors for secure cryptoprocessors such as Trusted Platform Module ([TPM](https://en.wikipedia.org/wiki/Trusted_Platform_Module)), Hardware Security Module ([HSM](https://en.wikipedia.org/wiki/Hardware_security_module)), Secure Element, or any other type of secure hardware enclave, distribute a PKCS #11 implementation with the hardware. 
+The purpose of corePKCS11 mock is therefore to provide a PKCS #11 implementation that allows for rapid prototyping and development before switching to a cryptoprocessor specific PKCS #11 implementation in production devices.
 
-Since the PKCS #11 interface is defined as part of the PKCS #11 [specification](https://docs.oasis-open.org/pkcs11/pkcs11-base/v2.40/os/pkcs11-base-v2.40-os.html) replacing this library with another implementation 
-should require little porting effort, as the interface will not change. The system tests distributed in this repository can be leveraged to verify the behavior of a different implementation is similar to corePKCS11.
+Since the PKCS #11 interface is defined as part of the PKCS #11 [specification](https://docs.oasis-open.org/pkcs11/pkcs11-base/v2.40/os/pkcs11-base-v2.40-os.html) replacing corePKCS11 with another implementation 
+should require little porting effort, as the interface will not change. The system tests distributed in corePKCS11 repository can be leveraged to verify the behavior of a different implementation is similar to corePKCS11.
 
 See memory requirements for the latest release [here](https://docs.aws.amazon.com/embedded-csdk/202103.00/lib-ref/libraries/standard/corePKCS11/docs/doxygen/output/html/pkcs11_design.html#pkcs11_memory_requirements).
 
