@@ -42,6 +42,7 @@ function(set_macro_definitions)
                         ${application_target} PRIVATE
                             ${required_macro_definition}="${${required_macro_definition}}"
                     )
+                    # This variable adds definitions to the file being run against `check_symbol_exists`.
                     list(APPEND CMAKE_REQUIRED_DEFINITIONS -D${required_macro_definition})
                     list(APPEND DEFINED_MACROS "${required_macro_definition}")
                     continue()
