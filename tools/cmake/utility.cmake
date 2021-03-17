@@ -1,5 +1,11 @@
 include(CheckSymbolExists)
 
+# This function can be called to define a set of required and optional macros for a build target.
+#
+# If a CMake variable is defined with the same name as a required macro, it will be
+# passed to the target. Otherwise, `FILES_TO_CHECK` (default: demo_config.h)
+# will be checked to see if it already has the macro defined. An optional macro will
+# only perform the first step.
 function(set_macro_definitions)
     set(multiValueArgs TARGETS REQUIRED OPTIONAL FILES_TO_CHECK)
     cmake_parse_arguments(MACRO_DEFINITIONS "" "" "${multiValueArgs}" ${ARGN})
@@ -69,19 +75,20 @@ function(set_macro_definitions)
     endforeach()
 endfunction()
 
-macro(set_alias config_name)
+# This macro makes the value of some CMake variable have the same value as its aliases.
+macro(set_alias var_name)
     set(multiValueArgs ALIASES)
-    cmake_parse_arguments(CMAKE_CONFIG "" "" "${multiValueArgs}" ${ARGN})
+    cmake_parse_arguments(CMAKE_VAR "" "" "${multiValueArgs}" ${ARGN})
     # Check for missing parameters.
-    if(NOT DEFINED CMAKE_CONFIG_ALIASES)
+    if(NOT DEFINED CMAKE_VAR_ALIASES)
         message("At least one alias is required when setting alias for CMake configuration.")
         return()
     endif()
-    foreach(alias_name ${CMAKE_CONFIG_ALIASES})
-        if(DEFINED ${config_name})
-            set(${alias_name} "${${config_name}}")
+    foreach(alias_name ${CMAKE_VAR_ALIASES})
+        if(DEFINED ${var_name})
+            set(${alias_name} "${${var_name}}")
         elseif(DEFINED ${alias_name})
-            set(${config_name} "${${alias_name}}")
+            set(${var_name} "${${alias_name}}")
         endif()
     endforeach()
 endmacro()

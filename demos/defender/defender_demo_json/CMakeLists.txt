@@ -43,7 +43,6 @@ set_macro_definitions(TARGETS ${DEMO_NAME}
                         "CLIENT_CERT_PATH"
                         "CLIENT_PRIVATE_KEY_PATH"
                         "THING_NAME"
-                      OPTIONAL
                         "CLIENT_IDENTIFIER"
                         "CLIENT_USERNAME"
                         "CLIENT_PASSWORD"

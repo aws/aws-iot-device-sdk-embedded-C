@@ -34,6 +34,6 @@ target_include_directories(
 )
 
 set_macro_definitions(TARGETS ${DEMO_NAME}
-                      OPTIONAL
+                      REQUIRED
                         "SERVER_HOST"
                         "HTTP_PORT")
