@@ -158,10 +158,12 @@
 /**
  * @brief Predefined thing name.
  *
- * This is the example predefine thing name and could be compiled in ROM code.
- *
- * #define THING_NAME             "...insert here..."
+ * This is the predefined thing name and could be compiled in ROM code.
+ * When connecting to AWS IoT Core, the thing name is obtained from the client ID.
  */
+#ifndef THING_NAME
+    #define THING_NAME    CLIENT_IDENTIFIER
+#endif
 
 /**
  * @brief The length of #THING_NAME.
