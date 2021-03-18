@@ -31,6 +31,7 @@ function(set_macro_definitions)
                             ${optional_macro_definition}="${${optional_macro_definition}}"
                     )
                     list(APPEND DEFINED_MACROS "${optional_macro_definition}")
+                    message("Defining ${optional_macro_definition} to ${${optional_macro_definition}} in ${application_target}")
                 endif()
             endforeach()
         endif()
@@ -42,6 +43,7 @@ function(set_macro_definitions)
                         ${application_target} PRIVATE
                             ${required_macro_definition}="${${required_macro_definition}}"
                     )
+                    message("Defining ${required_macro_definition} to ${${required_macro_definition}} in ${application_target}")
                     # This variable adds definitions to the file being run against `check_symbol_exists`.
                     list(APPEND CMAKE_REQUIRED_DEFINITIONS -D${required_macro_definition})
                     list(APPEND DEFINED_MACROS "${required_macro_definition}")
@@ -54,6 +56,7 @@ function(set_macro_definitions)
                 check_symbol_exists(${required_macro_definition} ${MACRO_DEFINITIONS_FILES_TO_CHECK} HAVE_${required_macro_definition})
                 # Append to the right list depending on whether definition was found.
                 if(HAVE_${required_macro_definition})
+                message("Using value provided by ${MACRO_DEFINITIONS_FILES_TO_CHECK} for ${required_macro_definition} in ${application_target}")
                     list(APPEND DEFINED_MACROS "${required_macro_definition}")
                 else()
                     list(APPEND MISSING_REQUIRED_MACROS "${required_macro_definition}")
