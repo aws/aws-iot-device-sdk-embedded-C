@@ -73,7 +73,7 @@ function(set_macro_definitions)
         # Log the value of the macros passed through CMake
         list(LENGTH DEFINED_MACROS_FROM_CMAKE DEFINED_MACROS_FROM_CMAKE_LENGTH)
         if(DEFINED_MACROS_FROM_CMAKE_LENGTH GREATER 0)
-            message("Passing the following CMake arguments as macros for ${application_target}:")
+            message("Using the passed CMake arguments to define the following macros for ${application_target}:")
             foreach(defined_macro_from_cmake ${DEFINED_MACROS_FROM_CMAKE})
                 message("${defined_macro_from_cmake} = ${${defined_macro_from_cmake}}")
             endforeach()
