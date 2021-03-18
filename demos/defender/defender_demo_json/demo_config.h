@@ -114,12 +114,26 @@
  */
 
 /**
+ * @brief Predefined thing name.
+ *
+ * This is the example predefine thing name and could be compiled in ROM code.
+ */
+#ifndef THING_NAME
+    #define THING_NAME    "testclient"
+#endif
+
+/**
  * @brief MQTT client identifier.
  *
  * No two clients may use the same client identifier simultaneously.
+ *
+ * @note The client identifier should match the Thing name per
+ * AWS IoT Security best practices:
+ * https://docs.aws.amazon.com/iot/latest/developerguide/security-best-practices.html
+ * However, it is not required for the demo to run.
  */
 #ifndef CLIENT_IDENTIFIER
-    #define CLIENT_IDENTIFIER    "testclient"
+    #define CLIENT_IDENTIFIER    THING_NAME
 #endif
 
 /**
@@ -154,21 +168,6 @@
  */
 #include "core_mqtt.h"
 #define MQTT_LIB    "core-mqtt@" MQTT_LIBRARY_VERSION
-
-/**
- * @brief Predefined thing name.
- *
- * This is the predefined thing name and could be compiled in ROM code.
- * When connecting to AWS IoT Core, the thing name is obtained from the client ID.
- */
-#ifndef THING_NAME
-    #define THING_NAME    CLIENT_IDENTIFIER
-#endif
-
-/**
- * @brief The length of #THING_NAME.
- */
-#define THING_NAME_LENGTH                      ( ( uint16_t ) ( sizeof( THING_NAME ) - 1 ) )
 
 /**
  * @brief Size of the open TCP ports array.
