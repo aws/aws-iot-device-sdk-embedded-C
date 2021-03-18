@@ -1993,9 +1993,7 @@ static int startOTADemo( void )
             if( mqttSessionEstablished != true )
             {
                 /* Connect to MQTT broker and create MQTT connection. */
-                returnStatus = establishConnection();
-
-                if( returnStatus == EXIT_SUCCESS )
+                if( EXIT_SUCCESS == establishConnection() )
                 {
                     mqttSessionEstablished = true;
 
@@ -2085,13 +2083,16 @@ static int startOTADemo( void )
 
     /****************************** Wait for OTA Thread. ******************************/
 
-    returnStatus = pthread_join( threadHandle, NULL );
-
-    if( returnStatus != 0 )
+    if( returnStatus == EXIT_SUCCESS )
     {
-        LogError( ( "Failed to join thread"
-                    ",error code = %d",
-                    returnStatus ) );
+        returnStatus = pthread_join( threadHandle, NULL );
+
+        if( returnStatus != EXIT_SUCCESS )
+        {
+            LogError( ( "Failed to join thread"
+                        ",error code = %d",
+                        returnStatus ) );
+        }
     }
 
     return returnStatus;
