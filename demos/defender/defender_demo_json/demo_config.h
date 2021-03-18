@@ -167,7 +167,7 @@
  * symbol.
  */
 #include "core_mqtt.h"
-#define MQTT_LIB    "core-mqtt@" MQTT_LIBRARY_VERSION
+#define MQTT_LIB                               "core-mqtt@" MQTT_LIBRARY_VERSION
 
 /**
  * @brief Size of the open TCP ports array.
