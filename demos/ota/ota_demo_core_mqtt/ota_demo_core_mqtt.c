@@ -1490,6 +1490,9 @@ static int startOTADemo( void )
     /* OTA Agent thread handle.*/
     pthread_t threadHandle;
 
+    /* Status return from call to pthread_join. */
+    int returnJoin = 0;
+
     /* OTA interface context required for library interface functions.*/
     OtaInterfaces_t otaInterfaces;
 
@@ -1632,13 +1635,15 @@ static int startOTADemo( void )
 
     if( returnStatus == EXIT_SUCCESS )
     {
-        returnStatus = pthread_join( threadHandle, NULL );
+        returnJoin = pthread_join( threadHandle, NULL );
 
-        if( returnStatus != EXIT_SUCCESS )
+        if( returnJoin != 0 )
         {
             LogError( ( "Failed to join thread"
                         ",error code = %d",
                         returnStatus ) );
+
+            returnStatus = EXIT_FAILURE;
         }
     }
 
