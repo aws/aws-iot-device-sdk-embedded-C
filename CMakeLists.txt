@@ -127,8 +127,11 @@ add_subdirectory( platform )
 
 # Create the `install` target by including this file.
 include( tools/cmake/install.cmake )
-# Define any CMake utility functions that are used for building applications.
+# Define any shared CMake utility functions.
 include( tools/cmake/utility.cmake )
+
+# Make THING_NAME an alias for CLIENT_IDENTIFIER
+set_alias( "CLIENT_IDENTIFIER" ALIASES "THING_NAME" )
 
 if(BUILD_TESTS)
     # Add build configuration for integration tests.
@@ -160,9 +163,9 @@ if(DOWNLOAD_CERTS)
     )
     # Copy certificates to the build directory.
     file(COPY "${CERT_DOWNLOAD_DIR}"
-                DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+         DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
     if(BUILD_TESTS)
         file(COPY "${CERT_DOWNLOAD_DIR}"
-                  DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/tests)
+             DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/tests)
     endif()
 endif()
