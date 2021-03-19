@@ -72,6 +72,11 @@
 #endif
 
 /**
+ * @brief The length of #THING_NAME.
+ */
+#define THING_NAME_LENGTH                           ( ( uint16_t ) ( sizeof( THING_NAME ) - 1 ) )
+
+/**
  * @brief Number of seconds to wait for the response from AWS IoT Device
  * Defender service.
  */

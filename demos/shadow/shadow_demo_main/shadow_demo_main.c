@@ -70,6 +70,11 @@
 #include "shadow_demo_helpers.h"
 
 /**
+ * @brief The length of #THING_NAME.
+ */
+#define THING_NAME_LENGTH    ( ( uint16_t ) ( sizeof( THING_NAME ) - 1 ) )
+
+/**
  * @brief Format string representing a Shadow document with a "desired" state.
  *
  * The real json document will look like this:

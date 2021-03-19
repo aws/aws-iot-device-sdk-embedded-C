@@ -53,32 +53,8 @@ target_include_directories(
         ${JSON_INCLUDE_PUBLIC_DIRS}
 )
 
-if(AWS_IOT_ENDPOINT)
-    target_compile_definitions(
-        ${DEMO_NAME} PRIVATE
-            AWS_IOT_ENDPOINT="${AWS_IOT_ENDPOINT}"
-    )
-endif()
-if(ROOT_CA_CERT_PATH)
-    target_compile_definitions(
-        ${DEMO_NAME} PRIVATE
-            ROOT_CA_CERT_PATH="${ROOT_CA_CERT_PATH}"
-    )
-endif()
-if(CLIENT_CERT_PATH)
-    target_compile_definitions(
-        ${DEMO_NAME} PRIVATE
-            CLIENT_CERT_PATH="${CLIENT_CERT_PATH}"
-    )
-endif()
-if(CLIENT_PRIVATE_KEY_PATH)
-    target_compile_definitions(
-        ${DEMO_NAME} PRIVATE
-            CLIENT_PRIVATE_KEY_PATH="${CLIENT_PRIVATE_KEY_PATH}"
-    )
-endif()
 set_macro_definitions(TARGETS ${DEMO_NAME}
-                      REQUIRED
+                      OPTIONAL
                         "AWS_IOT_ENDPOINT"
                         "ROOT_CA_CERT_PATH"
                         "CLIENT_CERT_PATH"

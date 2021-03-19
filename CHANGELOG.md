@@ -1,5 +1,11 @@
 # Changelog for AWS IoT Device SDK for Embedded C
 
+## main
+
+### Minor Changes
+
+- [#1596](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1596) Make `THING_NAME` an alias for `CLIENT_IDENTIFIER` in MQTT-related demos
+
 ## 202103.00 (March 2021)
 
 ### Major Changes
