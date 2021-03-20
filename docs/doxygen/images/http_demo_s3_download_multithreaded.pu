@@ -1,0 +1,81 @@
+@startuml
+skinparam dpi 300
+skinparam classFontSize 8
+skinparam classFontName Helvetica
+autonumber
+
+box "Application" #LightGreen
+    participant "Main Thread" as application
+    participant "HTTP Thread" as httpthread
+end box
+
+box "Queues" #Orange
+    participant "Request queue" as requestqueue
+    participant "Response queue" as responsequeue
+end box
+
+box "HTTP Server" #Yellow
+    participant "S3" as server
+end box
+
+activate application
+loop until session established or all attempts exhausted
+application -> server: Establish TLS session (client verifies server's certificate)
+server -> application: Session established (no client authentication)
+end
+
+application -> httpthread: Start HTTP thread
+activate httpthread
+
+application -> application: Set request info parameters
+
+application -> application: Initialize request headers (HTTPClient_InitializeRequestHeaders)
+application -> application: Add range header (HTTPClient_AddRangeHeader)
+application -> requestqueue: Enqueue request
+
+requestqueue -> httpthread: Dequeue request
+httpthread -> server: Send HTTP GET request (HTTPClient_Send)
+activate server
+
+application -> application: Initialize request headers (HTTPClient_InitializeRequestHeaders)
+application -> application: Add range header (HTTPClient_AddRangeHeader)
+application -> requestqueue: Enqueue request
+
+server -> httpthread: Recieve HTTP response
+deactivate server
+httpthread -> responsequeue: Enqueue response
+requestqueue -> httpthread: Dequeue request
+httpthread -> server: Send HTTP GET request (HTTPClient_Send)
+activate server
+
+responsequeue -> application: Dequeue response
+application -> application: Log response from contents of buffer
+
+application -> application: Initialize request headers (HTTPClient_InitializeRequestHeaders)
+application -> application: Add range header (HTTPClient_AddRangeHeader)
+application -> requestqueue: Enqueue request
+
+server -> httpthread: Recieve HTTP response
+deactivate server
+httpthread -> responsequeue: Enqueue response
+
+requestqueue -> httpthread: Dequeue request
+httpthread -> server: Send HTTP GET request (HTTPClient_Send)
+activate server
+
+responsequeue -> application: Dequeue response
+application -> application: Log response from contents of buffer
+
+server -> httpthread: Recieve HTTP response
+deactivate server
+httpthread -> responsequeue: Enqueue response
+
+responsequeue -> application: Dequeue response
+application -> application: Log response from contents of buffer
+
+application -> server: End TLS session and disconnect from server
+
+deactivate application
+deactivate httpthread
+
+@enduml

@@ -6,17 +6,6 @@ cmake_minimum_required (VERSION 3.2.0)
 # https://github.com/ThrowTheSwitch/CMock/issues/71
 # Therefore, header files need to be preprocessed before mocks are generated.
 
-# The transport interface unit tests use the coreMQTT's transport_interface.h,
-# so make sure the submodule is cloned.
-if( NOT EXISTS ${MODULES_DIR}/standard/coreMQTT/source )
-    # Attempt to clone coreMQTT.
-    if( ${BUILD_CLONE_SUBMODULES} )
-        clone_mqtt()
-    else()
-        message( FATAL_ERROR "The required submodule coreMQTT does not exist. Either clone it manually, or set BUILD_CLONE_SUBMODULES to 1 to automatically clone it during build." )
-    endif()
-endif()
-
 # ====================  Define your project name (edit) ========================
 set(project_name "transport")
 
@@ -37,7 +26,7 @@ list(APPEND mock_list
 list(APPEND mock_include_list
             ${LOGGING_INCLUDE_DIRS}
             ${PLATFORM_DIR}/include
-            ${MODULES_DIR}/standard/coreMQTT/source/portable
+            ${MODULES_DIR}/standard/coreMQTT/source/interface
         )
 #list the definitions of your mocks to control what to be included
 list(APPEND mock_define_list
@@ -55,7 +44,7 @@ list(APPEND real_include_directories
             .
             ${COMMON_TRANSPORT_INCLUDE_PUBLIC_DIRS}
             ${LOGGING_INCLUDE_DIRS}
-            ${MODULES_DIR}/standard/coreMQTT/source/portable
+            ${MODULES_DIR}/standard/coreMQTT/source/interface
         )
 
 # =====================  Create UnitTest Code here (edit)  =====================

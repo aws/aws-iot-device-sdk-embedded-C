@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C V202009.00
+ * AWS IoT Device SDK for Embedded C 202103.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -33,6 +33,14 @@
 
 /*-----------------------------------------------------------*/
 
+/* Each compilation unit must define the NetworkContext struct. */
+struct NetworkContext
+{
+    PlaintextParams_t * pParams;
+};
+
+/*-----------------------------------------------------------*/
+
 /**
  * @brief Log possible error from send/recv.
  *
@@ -56,35 +64,70 @@ SocketStatus_t Plaintext_Connect( NetworkContext_t * pNetworkContext,
                                   uint32_t sendTimeoutMs,
                                   uint32_t recvTimeoutMs )
 {
-    return Sockets_Connect( &pNetworkContext->socketDescriptor,
-                            pServerInfo,
-                            sendTimeoutMs,
-                            recvTimeoutMs );
+    SocketStatus_t returnStatus = SOCKETS_SUCCESS;
+    PlaintextParams_t * pPlaintextParams = NULL;
+
+    /* Validate parameters. */
+    if( ( pNetworkContext == NULL ) || ( pNetworkContext->pParams == NULL ) )
+    {
+        LogError( ( "Parameter check failed: pNetworkContext is NULL." ) );
+        returnStatus = SOCKETS_INVALID_PARAMETER;
+    }
+    else
+    {
+        pPlaintextParams = pNetworkContext->pParams;
+        returnStatus = Sockets_Connect( &pPlaintextParams->socketDescriptor,
+                                        pServerInfo,
+                                        sendTimeoutMs,
+                                        recvTimeoutMs );
+    }
+
+    return returnStatus;
 }
 /*-----------------------------------------------------------*/
 
 SocketStatus_t Plaintext_Disconnect( const NetworkContext_t * pNetworkContext )
 {
-    return Sockets_Disconnect( pNetworkContext->socketDescriptor );
+    SocketStatus_t returnStatus = SOCKETS_SUCCESS;
+    PlaintextParams_t * pPlaintextParams = NULL;
+
+    /* Validate parameters. */
+    if( ( pNetworkContext == NULL ) || ( pNetworkContext->pParams == NULL ) )
+    {
+        LogError( ( "Parameter check failed: pNetworkContext is NULL." ) );
+        returnStatus = SOCKETS_INVALID_PARAMETER;
+    }
+    else
+    {
+        pPlaintextParams = pNetworkContext->pParams;
+        returnStatus = Sockets_Disconnect( pPlaintextParams->socketDescriptor );
+    }
+
+    return returnStatus;
 }
 /*-----------------------------------------------------------*/
 
-int32_t Plaintext_Recv( const NetworkContext_t * pNetworkContext,
+/* MISRA Rule 8.13 flags the following line for not using the const qualifier
+ * on `pNetworkContext`. Indeed, the object pointed by it is not modified
+ * by POSIX sockets, but other implementations of `TransportRecv_t` may do so. */
+int32_t Plaintext_Recv( NetworkContext_t * pNetworkContext,
                         void * pBuffer,
                         size_t bytesToRecv )
 {
+    PlaintextParams_t * pPlaintextParams = NULL;
     int32_t bytesReceived = -1, selectStatus = -1, getTimeoutStatus = -1;
     struct timeval recvTimeout;
     socklen_t recvTimeoutLen;
     fd_set readfds;
 
-    assert( pNetworkContext != NULL );
+    assert( pNetworkContext != NULL && pNetworkContext->pParams != NULL );
     assert( pBuffer != NULL );
     assert( bytesToRecv > 0 );
 
     /* Get receive timeout from the socket to use as the timeout for #select. */
+    pPlaintextParams = pNetworkContext->pParams;
     recvTimeoutLen = ( socklen_t ) sizeof( recvTimeout );
-    getTimeoutStatus = getsockopt( pNetworkContext->socketDescriptor,
+    getTimeoutStatus = getsockopt( pPlaintextParams->socketDescriptor,
                                    SOL_SOCKET,
                                    SO_RCVTIMEO,
                                    &recvTimeout,
@@ -127,10 +170,10 @@ int32_t Plaintext_Recv( const NetworkContext_t * pNetworkContext,
     /* coverity[misra_c_2012_rule_10_1_violation] */
     /* coverity[misra_c_2012_rule_13_4_violation] */
     /* coverity[misra_c_2012_rule_10_8_violation] */
-    FD_SET( pNetworkContext->socketDescriptor, &readfds );
+    FD_SET( pPlaintextParams->socketDescriptor, &readfds );
 
     /* Check if there is data to read from the socket. */
-    selectStatus = select( pNetworkContext->socketDescriptor + 1,
+    selectStatus = select( pPlaintextParams->socketDescriptor + 1,
                            &readfds,
                            NULL,
                            NULL,
@@ -139,7 +182,7 @@ int32_t Plaintext_Recv( const NetworkContext_t * pNetworkContext,
     if( selectStatus > 0 )
     {
         /* The socket is available for receiving data. */
-        bytesReceived = ( int32_t ) recv( pNetworkContext->socketDescriptor,
+        bytesReceived = ( int32_t ) recv( pPlaintextParams->socketDescriptor,
                                           pBuffer,
                                           bytesToRecv,
                                           0 );
@@ -173,22 +216,27 @@ int32_t Plaintext_Recv( const NetworkContext_t * pNetworkContext,
 }
 /*-----------------------------------------------------------*/
 
-int32_t Plaintext_Send( const NetworkContext_t * pNetworkContext,
+/* MISRA Rule 8.13 flags the following line for not using the const qualifier
+ * on `pNetworkContext`. Indeed, the object pointed by it is not modified
+ * by POSIX sockets, but other implementations of `TransportSend_t` may do so. */
+int32_t Plaintext_Send( NetworkContext_t * pNetworkContext,
                         const void * pBuffer,
                         size_t bytesToSend )
 {
+    PlaintextParams_t * pPlaintextParams = NULL;
     int32_t bytesSent = -1, selectStatus = -1, getTimeoutStatus = -1;
     struct timeval sendTimeout;
     socklen_t sendTimeoutLen;
     fd_set writefds;
 
-    assert( pNetworkContext != NULL );
+    assert( pNetworkContext != NULL && pNetworkContext->pParams != NULL );
     assert( pBuffer != NULL );
     assert( bytesToSend > 0 );
 
     /* Get send timeout from the socket to use as the timeout for #select. */
+    pPlaintextParams = pNetworkContext->pParams;
     sendTimeoutLen = ( socklen_t ) sizeof( sendTimeout );
-    getTimeoutStatus = getsockopt( pNetworkContext->socketDescriptor,
+    getTimeoutStatus = getsockopt( pPlaintextParams->socketDescriptor,
                                    SOL_SOCKET,
                                    SO_SNDTIMEO,
                                    &sendTimeout,
@@ -230,9 +278,9 @@ int32_t Plaintext_Send( const NetworkContext_t * pNetworkContext,
     /* coverity[misra_c_2012_rule_10_1_violation] */
     /* coverity[misra_c_2012_rule_13_4_violation] */
     /* coverity[misra_c_2012_rule_10_8_violation] */
-    FD_SET( pNetworkContext->socketDescriptor, &writefds );
+    FD_SET( pPlaintextParams->socketDescriptor, &writefds );
     /* Check if data can be written to the socket. */
-    selectStatus = select( pNetworkContext->socketDescriptor + 1,
+    selectStatus = select( pPlaintextParams->socketDescriptor + 1,
                            NULL,
                            &writefds,
                            NULL,
@@ -241,7 +289,7 @@ int32_t Plaintext_Send( const NetworkContext_t * pNetworkContext,
     if( selectStatus > 0 )
     {
         /* The socket is available for sending data. */
-        bytesSent = ( int32_t ) send( pNetworkContext->socketDescriptor,
+        bytesSent = ( int32_t ) send( pPlaintextParams->socketDescriptor,
                                       pBuffer,
                                       bytesToSend,
                                       0 );

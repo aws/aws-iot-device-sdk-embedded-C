@@ -1,0 +1,96 @@
+@startuml
+skinparam dpi 100
+skinparam classFontSize 8
+skinparam classFontName Helvetica
+autonumber
+
+box "Application" #LightGreen
+	participant "Downloader Process" as download
+	participant "Jobs Demo Main Process" as demo
+    participant "Connect Callback" as connect_cb
+    participant "Subscribe Callback" as subscribe_cb
+    participant "Incoming Publish\n Message Callback" as message_cb
+end box
+
+box "Libraries" #LightBlue
+	participant "Mosquitto MQTT Library" as mqtt
+	participant "Jobs Library" as jobs
+    participant "JSON Library" as json
+end box
+
+box "AWS IoT Broker" #Yellow
+    participant "AWS IoT Broker" as aws
+end box
+
+note over demo, mqtt #FFAAAA: <b>Note</b>: This diagram shows the demo workflow of the success path execution of a single "download" job received from AWS IoT Jobs service.
+
+activate demo
+demo -> demo: Parse CLI arguments for configuring demo.
+note right of demo: Required arguments include \n<b>TLS connection information</b>\nand <b>AWS IoT Thing</b> resource name
+
+demo->mqtt: Register callbacks for <b>Connect</b>, <b>Subscribe</b> and <b>incoming PUBLISH</b> operations
+
+demo->mqtt: Connect to AWS IoT
+mqtt->aws: Establish MQTT over TLS connection
+aws->mqtt: MQTT Session Established
+mqtt->connect_cb: Notify about MQTT connection
+connect_cb->demo: Set flag to indicate connection
+
+== Subscribe to MQTT APIs of AWS IoT Jobs service ==
+note right of demo: Topics to subscribe:\n <b>NextJobChanged</b> API \n "accepted" topic of <b>StartNextPendingJobExecution</b> API \n "rejected" topic of <b>UpdateJobExecution</b> API
+loop For each topic to subscribe
+demo->jobs: Generate topic string with <b>Jobs_GetTopic</b> API
+jobs->demo: Topic generated
+demo->mqtt: Subscribe to MQTT topic
+mqtt-> aws: Send SUBSCRIBE request for topic
+aws->mqtt: Send SUBACK response
+mqtt->subscribe_cb: Notify about subscription completion
+subscribe_cb->demo: Set flag to indicate subscription to topic
+end
+
+== Start Next Pending Job ==
+note right of demo: Next job is queried and started by calling \n <b>StartNextPendingJobExecution</b> API of AWS IoT Jobs service.
+demo->jobs: Generate PUBLISH topic with <b>Jobs_StartNext</b> API
+jobs->demo: Topic generated
+demo->mqtt: Publish to <b>StartNextPendingJobExecution</b> API
+mqtt->aws: PUBLISH to <b>StartNextPendingJobExecution</b> API with QoS 1
+aws->mqtt: PUBACK response
+mqtt->demo: PUBLISH completed
+
+== Receive Next Pending Job from AWS IoT ==
+note left of aws: If there is a pending job in queue,\nAWS IoT Jobs service will respond\nby publishing to "accepted" topic of \n<b>StartNextPendingJobExecution</b> API
+aws->mqtt: Send JSON document of next job on "accepted"\n topic of <b>StartNextPendingJobExecution</b>
+mqtt->message_cb: Notify about incoming PUBLISH message
+message_cb->jobs: Determine incoming topic by calling <b>Jobs_MatchTopic</b> API
+jobs->message_cb: Return topic type as <b>JobsStartNextSuccess</b>
+
+== Parse Job document from JSON payload ==
+message_cb->json: Validate incoming JSON payload with <b>JSON_Validate</b>
+json->message_cb: Return success
+message_cb->json: Parse Job ID from document by calling <b>JSON_Search</b>
+json->message_cb: Return parsed Job ID
+message_cb->json: Parse URL from job document by calling <b>JSON_Search</b>
+json->message_cb: Return parsed URL
+message_cb->demo: Update state of demo to notify about parsed job
+
+== Execute Download Job ==
+demo->download: Start downloader
+activate download
+download->download: Create directory for the download
+download->download: Download URL (in job) to directory\nby using "curl" command
+note right of download: Download operation in progress...
+
+loop Part of Demo loop
+== Send Job Status Update to AWS IoT ==
+demo->demo: Check if download process has completed.
+note right of demo: Send one of the following statuses to AWS IoT Jobs service:\n 1. "IN_PROGRESS" if download is on-going\n2. "SUCCEEDED" if download has completed\n3."FAILED" if download job failed
+demo->jobs: Generate topic for <b>UpdateJobExecution</b> API\nby calling <b>Jobs_Update</b>
+jobs->demo: Return generated topic
+demo->mqtt:Publish appropriate job status update\nto <b>UpdateJobExecution</b> API
+mqtt->aws:PUBLISH to <b>UpdateJobExecution</b> API with QoS 1
+aws->mqtt: Send PUBACK response
+deactivate download
+end
+note right of download: Download operation completed
+note right of demo: <b>Note</b>: The <b>demo loop</b> can continue receiving\nand executing more download jobs.\nIt is a cylical state machine to receive a job,\nexecute the download and send periodic updates of download job,\nand be ready for the next job.
+@enduml

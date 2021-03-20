@@ -3,11 +3,15 @@ set( DEMO_NAME "mqtt_demo_serializer" )
 # Include MQTT library's source and header path variables.
 include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreMQTT/mqttFilePaths.cmake )
 
+# Include backoffAlgorithm library file path configuration.
+include( ${CMAKE_SOURCE_DIR}/libraries/standard/backoffAlgorithm/backoffAlgorithmFilePaths.cmake )
+
 # Demo target.
 add_executable(
     ${DEMO_NAME}
         "${DEMO_NAME}.c"
         ${MQTT_SERIALIZER_SOURCES}
+        ${BACKOFF_ALGORITHM_SOURCES}
 )
 
 target_link_libraries(
@@ -15,26 +19,19 @@ target_link_libraries(
     PRIVATE
         clock_posix
         plaintext_posix
-        retry_utils_posix
 )
 
 target_include_directories(
     ${DEMO_NAME}
     PUBLIC
         ${MQTT_INCLUDE_PUBLIC_DIRS}
+        ${BACKOFF_ALGORITHM_INCLUDE_PUBLIC_DIRS}
         ${CMAKE_CURRENT_LIST_DIR}
         ${LOGGING_INCLUDE_DIRS}
 )
 
-if(BROKER_ENDPOINT)
-    target_compile_definitions(
-        ${DEMO_NAME} PRIVATE
-            BROKER_ENDPOINT="${BROKER_ENDPOINT}"
-    )
-endif()
-if(CLIENT_IDENTIFIER)
-    target_compile_definitions(
-        ${DEMO_NAME} PRIVATE
-            CLIENT_IDENTIFIER="${CLIENT_IDENTIFIER}"
-    )
-endif()
+set_macro_definitions(TARGETS ${DEMO_NAME}
+                      REQUIRED
+                        "BROKER_ENDPOINT"
+                        "BROKER_PORT"
+                        "CLIENT_IDENTIFIER")

@@ -1,0 +1,40 @@
+/**
+@page pkcs11_demo corePKCS11
+@brief Demos used to illustrate various functionalities of the corePKCS11 library.
+
+@section pkcs11_demo_rng PKCS #11 Random Number Generation Demo
+@brief Demo of using the PKCS #11 interface to generate a random number.
+
+
+This demo will introduce the basics of PKCS #11. It will step you through the data types as well as give
+an overview of the functions used to manage the PKCS #11 library's state.
+
+Finally, it will demonstrate how to fill a buffer with random bytes using PKCS #11.
+
+@image html pkcs11_rng.png width=100%
+
+
+@section pkcs11_demo_digest PKCS #11 Mechanisms and Digest Demo
+@brief Demo of using the PKCS #11 interface to select a mechanism and create a digest (hash) with it.
+
+This demo details what PKCS #11 mechanisms are and how to query a slot's support for them.
+It will then use those mechanisms to generate a hash of a buffer.
+
+@image html pkcs11_digest.png width=100%
+
+
+@section pkcs11_demo_object PKCS #11 Objects Demo
+@brief Demo of using the PKCS #11 interface to create an EC key pair and import an RSA certificate.
+This will first import an RSA certificate into the PKCS #11 module, allowing it to be accessed through a label.
+It will then create a unique EC based key pair that can be accessed through a label, and will be used in the
+sign and verify demo.
+@image html pkcs11_object_import.png width=100%
+@image html pkcs11_object_generate.png width=100%
+
+@section pkcs11_demo_sign_verify PKCS #11 Sign and Verify Demo
+@brief Demo of using the PKCS #11 interface to sign and verify a hash using an EC key pair.
+@warning This demo requires the objects created by the PKCS #11 Objects Demo!
+This demo will use the key pair created in the @ref pkcs11_demo_object to sign a hash @ref pkcs11_demo_digest and then
+show how the public key can be used to verify that the signature originated from the private key that created it.
+@image html pkcs11_sign_verify.png width=100%
+*/

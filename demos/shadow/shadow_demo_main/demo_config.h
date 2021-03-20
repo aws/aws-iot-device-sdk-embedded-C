@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C V202009.00
+ * AWS IoT Device SDK for Embedded C 202103.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -114,12 +114,26 @@
  */
 
 /**
+ * @brief Predefined thing name.
+ *
+ * This is the predefined thing name and could be compiled in ROM code.
+ */
+#ifndef THING_NAME
+    #define THING_NAME    "testShadow"
+#endif
+
+/**
  * @brief MQTT client identifier.
  *
  * No two clients may use the same client identifier simultaneously.
+ *
+ * @note The client identifier should match the Thing name per
+ * AWS IoT Security best practices:
+ * https://docs.aws.amazon.com/iot/latest/developerguide/security-best-practices.html
+ * However, it is not required for the demo to run.
  */
 #ifndef CLIENT_IDENTIFIER
-    #define CLIENT_IDENTIFIER    "testclient"
+    #define CLIENT_IDENTIFIER    THING_NAME
 #endif
 
 /**
@@ -152,18 +166,21 @@
  * @brief The name of the MQTT library used and its version, following an "@"
  * symbol.
  */
-#define MQTT_LIB                  "core-mqtt@1.0.0"
+#include "core_mqtt.h"
+#define MQTT_LIB    "core-mqtt@" MQTT_LIBRARY_VERSION
 
 /**
- * @brief Predefined thing name.
+ * @brief Predefined shadow name.
  *
- * This is the example predefine thing name and could be compiled in ROM code.
+ * Defaults to unnamed "Classic" shadow. Change to a custom string to use a named shadow.
  */
-#define THING_NAME                "testShadow"
+#ifndef SHADOW_NAME
+    #define SHADOW_NAME    SHADOW_NAME_CLASSIC
+#endif
 
 /**
- * @brief The length of #THING_NAME.
+ * @brief The length of #SHADOW_NAME.
  */
-#define THING_NAME_LENGTH         ( ( uint16_t ) ( sizeof( THING_NAME ) - 1 ) )
+#define SHADOW_NAME_LENGTH    ( ( uint16_t ) ( sizeof( SHADOW_NAME ) - 1 ) )
 
 #endif /* ifndef DEMO_CONFIG_H_ */

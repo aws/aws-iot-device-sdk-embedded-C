@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C V202009.00
+ * AWS IoT Device SDK for Embedded C 202103.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -106,6 +106,9 @@ extern void SSL_set_verify( SSL * s,
 
 extern int SSL_set_fd( SSL * s,
                        int fd );
+
+extern int SSL_set1_host( SSL * s,
+                          const char * hostname );
 
 extern int SSL_connect( SSL * ssl );
 

@@ -1,0 +1,104 @@
+@startuml
+skinparam dpi 300
+skinparam classFontSize 8
+skinparam classFontName Helvetica
+autonumber
+
+box "Application" #LightGreen
+    participant "Demo" as Demo
+    participant "Metrics Collector" as Metrics
+    participant "Report Builder" as Report
+end box
+
+box "Libraries" #LightBlue
+    participant "Defender Library" as Defender
+    participant "MQTT Client" as MQTT
+    participant "JSON Library" as JSON
+end box
+
+box "AWS IoT Broker" #Yellow
+    participant "AWS IoT Broker" as Broker
+end box
+
+activate Demo
+Demo --> MQTT : Establish MQTT session
+
+activate MQTT
+MQTT --> Broker : Establish MQTT session
+Broker --> MQTT : MQTT session established
+MQTT --> Demo : MQTT session established
+deactivate MQTT
+
+Demo --> Defender : Generate accepted and rejected topic strings for JSON report (DEFENDER_API_JSON_ACCEPTED, DEFENDER_API_JSON_REJECTED)
+activate Defender
+Defender --> Demo : Accepted and rejected topic strings for JSON report
+deactivate Defender
+
+Demo --> MQTT : Subscribe to the accepted and rejected topics for JSON report
+activate MQTT
+MQTT --> Broker : Subscribe to the accepted and rejected topics for JSON report
+Broker --> MQTT : Subscribe successful
+MQTT --> Demo : Subscribe successful
+deactivate MQTT
+
+Demo --> Metrics : Collect device metrics
+activate Metrics
+Metrics --> Demo : Device metrics
+deactivate Metrics
+
+Demo --> Report : Construct JSON report
+activate Report
+Report --> Demo : JSON report
+deactivate Report
+
+Demo --> Defender : Generate publish topic string for JSON report (DEFENDER_API_JSON_PUBLISH)
+activate Defender
+Defender --> Demo :  Publish topic string for JSON report
+deactivate Defender
+
+Demo --> MQTT : Publish report
+activate MQTT
+MQTT --> Broker : Publish report
+Broker --> MQTT : Publish successful
+MQTT --> Demo : Publish successful
+deactivate MQTT
+
+Broker --> MQTT :  Publish message
+activate MQTT
+MQTT --> Demo : Incoming publish message received
+deactivate MQTT
+
+Demo --> Defender : Is this a Defender Message (Defender_MatchTopic)?
+activate Defender
+Defender ---> Demo : Yes
+deactivate Defender
+
+Demo --> JSON : Is the response a valid JSON?
+activate JSON
+JSON --> Demo : Yes
+deactivate JSON
+
+Demo --> JSON : Extract report ID from the response
+activate JSON
+JSON --> Demo : Report ID
+deactivate JSON
+
+Demo --> Demo : Verify that the report Id is same as was sent in the report
+
+Demo --> MQTT : Unsubscribe from the accepted and rejected topics for JSON report
+activate MQTT
+MQTT --> Broker : Unsubscribe from the accepted and rejected topics for JSON report
+Broker --> MQTT : Unsubscribe successful
+MQTT --> Demo : Unsubscribe successful
+deactivate MQTT
+
+Demo --> MQTT : Disconnect MQTT session
+activate MQTT
+MQTT --> Broker : Disconnect MQTT session
+Broker --> MQTT : MQTT session disconnected
+MQTT --> Demo : MQTT session disconnected
+deactivate MQTT
+
+deactivate Demo
+
+@enduml

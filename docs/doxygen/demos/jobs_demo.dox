@@ -1,0 +1,72 @@
+/**
+@page jobs_demo AWS IoT Jobs
+
+This demonstration downloads files from URLs received via AWS IoT Jobs.
+(See https://docs.aws.amazon.com/iot/latest/developerguide/iot-jobs.html for an introduction.)
+
+This demo is intended for Linux platforms with the GCC toolchain, curl,
+and libmosquitto installed.  To build this demo, run make in the `demos/jobs/jobs_demo_mosquitto` folder.
+
+To install curl and libmosquitto on a Debian or Ubuntu host, run:
+
+    apt install curl libmosquitto-dev
+
+To build the latest version of libmosquitto with ALPN support, clone
+the repository at https://github.com/eclipse/mosquitto , and follow the
+instructions in compiling.txt within the repo.
+
+Creating a job may be done with the AWS console, or the aws cli, e.g.,
+
+    $ aws iot create-job --job-id t12 --targets arn:aws:iot:us-east-1:1234567890:thing/device1 \
+      --document '{"url":"https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.8.5.tar.xz"}'
+
+To execute the job, on the target device run the demo program with the device's credentials, e.g.,
+
+    $ jobs_demo_mosquitto -n device1 -h abcdefg123.iot.us-east-1.amazonaws.com \
+      --certfile bbaf123456-certificate.pem.crt --keyfile bbaf123456-private.pem.key
+
+To exit the program, type Control-C, or send a SIGTERM signal.
+
+Output should look like the following:
+
+    Connecting to abcdefg123.iot.us-east-1.amazonaws.com, port 8883.
+    Client device1 sending CONNECT
+    Client device1 received CONNACK
+    Client device1 sending SUBSCRIBE (Mid: 1, Topic: $aws/things/device1/jobs/start-next/accepted, QoS: 1)
+    Client device1 received SUBACK
+    [...]
+    starting job id: t12
+    sending first update
+
+If the output does not show a successful connection, check in the AWS console
+that the client certificate is attached to the Thing resource (associated with the device) and is activated.
+Also check that the Amazon Root CA certificates are in your system's trust store.
+Note, you can provide a CA certificate file directly as a command-line argument.
+
+This demonstration exits on most error conditions.  One way to retry while avoiding
+throttling due to excessive reconnects is to periodically relaunch from cron(8).
+Given a shell script wrapper, named download, that contains the necessary arguments to invoke
+the jobs demo, the following line in /etc/crontab would start the jobs demo unless it is already running.
+The following line tries every 3 minutes, with an additional random delay of up to 2 minutes.
+
+> `*``/3 * * * *  root  exec 9> /tmp/lock && flock -n 9 && sleep $((RANDOM % 120)) && download`
+
+The demo program accepts several arguments:
+
+    usage: jobs_demo_mosquitto [-o] -n name -h host [-p port] {--cafile file | --capath dir} --certfile file --keyfile file
+    -o : run once, exit after the first job is finished.
+    -n : thing name
+    -h : mqtt host to connect to.
+    -p : network port to connect to. Defaults to 8883.
+    --cafile   : path to a file containing trusted CA certificates to enable encrypted
+                 certificate based communication.
+    --capath   : path to a directory containing trusted CA certificates to enable encrypted
+                 communication.  Defaults to /etc/ssl/certs.
+    --certfile : client certificate for authentication in PEM format.
+    --keyfile  : client private key for authentication in PEM format.
+
+<div class="caption" style="text-align:center">
+Success path workflow of a single "Download" job in the AWS IoT Jobs Demo
+</div>
+@image html jobs_demo.png width=100%
+*/

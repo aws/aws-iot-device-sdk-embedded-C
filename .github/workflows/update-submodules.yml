@@ -1,0 +1,42 @@
+name: Update Library Submodules
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Target branch for raising PR'
+        required: true
+        default: main
+      allowed:
+        description: 'Optional regex pattern passed to `grep` to update only the specified library submodules, e.g. "ota\|jobs" updates only libraries with "ota" or "jobs" in the name.'
+        required: false
+        default: .*
+
+jobs:
+  update-submodules:
+    name: Update submodules
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Configure Git identity
+        run: |
+          git config --global user.name "Submodule Updater"
+      - name: Update the submodules
+        run: |
+          libs=$(find libraries/standard libraries/aws -maxdepth 1 -mindepth 1 | grep "${{ github.event.inputs.allowed }}")
+          git submodule update --remote $libs
+      - name: Commit changes and Push to remote
+        run: |
+          now="$(date +'%d-%m-%Y')"
+          branch="updater-job/submodules-$now"
+          git checkout -b $branch
+          git commit -am 'Updating library submodules to the latest.'
+          git push --set-upstream origin $branch
+      - name: Raise a Pull-Request
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr create --base ${{ github.event.inputs.branch }} --title 'Update library submodules to the latest' --body 'Update library submodules to the latest'

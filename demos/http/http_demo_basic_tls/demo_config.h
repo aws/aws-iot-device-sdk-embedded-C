@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C V202009.00
+ * AWS IoT Device SDK for Embedded C 202103.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -83,7 +83,7 @@
 /**
  * @brief Paths for different HTTP methods for specified host.
  *
- * For httpbin.org, see http://httpbin.org/#/HTTP_Methods for details on
+ * For httpbin.org, see https://httpbin.org/#/HTTP_Methods for details on
  * supported REST API.
  */
 #define GET_PATH                          "/get"

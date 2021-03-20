@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C V202009.00
+ * AWS IoT Device SDK for Embedded C 202103.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -36,6 +36,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 /* Shadow includes */
 #include "shadow_demo_helpers.h"
@@ -46,8 +47,8 @@
 /* OpenSSL sockets transport implementation. */
 #include "openssl_posix.h"
 
-/* Reconnect parameters. */
-#include "retry_utils.h"
+/*Include backoff algorithm header for retry logic.*/
+#include "backoff_algorithm.h"
 
 /* Clock for timer. */
 #include "clock.h"
@@ -87,12 +88,12 @@
 /**
  * @brief Length of MQTT server host name.
  */
-#define AWS_IOT_ENDPOINT_LENGTH             ( ( uint16_t ) ( sizeof( AWS_IOT_ENDPOINT ) - 1 ) )
+#define AWS_IOT_ENDPOINT_LENGTH      ( ( uint16_t ) ( sizeof( AWS_IOT_ENDPOINT ) - 1 ) )
 
 /**
  * @brief Length of client identifier.
  */
-#define CLIENT_IDENTIFIER_LENGTH            ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) )
+#define CLIENT_IDENTIFIER_LENGTH     ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) )
 
 /**
  * @brief ALPN protocol name for AWS IoT MQTT.
@@ -102,17 +103,34 @@
  * in the link below.
  * https://aws.amazon.com/blogs/iot/mqtt-with-tls-client-authentication-on-port-443-why-it-is-useful-and-how-it-works/
  */
-#define ALPN_PROTOCOL_NAME                  "\x0ex-amzn-mqtt-ca"
+#define ALPN_PROTOCOL_NAME           "\x0ex-amzn-mqtt-ca"
 
 /**
  * @brief Length of ALPN protocol name.
  */
-#define ALPN_PROTOCOL_NAME_LENGTH           ( ( uint16_t ) ( sizeof( ALPN_PROTOCOL_NAME ) - 1 ) )
+#define ALPN_PROTOCOL_NAME_LENGTH    ( ( uint16_t ) ( sizeof( ALPN_PROTOCOL_NAME ) - 1 ) )
+
+
+/**
+ * @brief The maximum number of retries for connecting to server.
+ */
+#define CONNECTION_RETRY_MAX_ATTEMPTS            ( 5U )
+
+/**
+ * @brief The maximum back-off delay (in milliseconds) for retrying connection to server.
+ */
+#define CONNECTION_RETRY_MAX_BACKOFF_DELAY_MS    ( 5000U )
+
+/**
+ * @brief The base back-off delay (in milliseconds) to use for connection retry attempts.
+ */
+#define CONNECTION_RETRY_BACKOFF_BASE_MS         ( 500U )
 
 /**
  * @brief Timeout for receiving CONNACK packet in milli seconds.
  */
-#define CONNACK_RECV_TIMEOUT_MS             ( 1000U )
+#define CONNACK_RECV_TIMEOUT_MS                  ( 1000U )
+
 
 /**
  * @brief Maximum number of outgoing publishes maintained in the application
@@ -145,7 +163,7 @@
 /**
  * @brief Transport timeout in milliseconds for transport send and receive.
  */
-#define TRANSPORT_SEND_RECV_TIMEOUT_MS      ( 100 )
+#define TRANSPORT_SEND_RECV_TIMEOUT_MS      ( 500 )
 
 /**
  * @brief The MQTT metrics string expected by AWS IoT.
@@ -175,6 +193,14 @@ typedef struct PublishPackets
      */
     MQTTPublishInfo_t pubInfo;
 } PublishPackets_t;
+
+/*-----------------------------------------------------------*/
+
+/* Each compilation unit must define the NetworkContext struct. */
+struct NetworkContext
+{
+    OpensslParams_t * pParams;
+};
 
 /*-----------------------------------------------------------*/
 
@@ -214,11 +240,24 @@ static MQTTContext_t mqttContext = { 0 };
 static NetworkContext_t networkContext = { 0 };
 
 /**
+ * @brief The parameters for Openssl operation.
+ */
+static OpensslParams_t opensslParams = { 0 };
+
+/**
  * @brief The flag to indicate the mqtt session changed.
  */
 static bool mqttSessionEstablished = false;
 
 /*-----------------------------------------------------------*/
+
+/**
+ * @brief The random number generator to use for exponential backoff with
+ * jitter retry logic.
+ *
+ * @return The generated random number.
+ */
+static uint32_t generateRandomNumber();
 
 /**
  * @brief Connect to MQTT broker with reconnection retries.
@@ -278,14 +317,26 @@ static int handlePublishResend( MQTTContext_t * pMqttContext );
 
 /*-----------------------------------------------------------*/
 
+static uint32_t generateRandomNumber()
+{
+    return( rand() );
+}
+
+/*-----------------------------------------------------------*/
+
 static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext )
 {
     int returnStatus = EXIT_SUCCESS;
-    RetryUtilsStatus_t retryUtilsStatus = RetryUtilsSuccess;
+    BackoffAlgorithmStatus_t backoffAlgStatus = BackoffAlgorithmSuccess;
     OpensslStatus_t opensslStatus = OPENSSL_SUCCESS;
-    RetryUtilsParams_t reconnectParams;
+    BackoffAlgorithmContext_t reconnectParams;
     ServerInfo_t serverInfo;
     OpensslCredentials_t opensslCredentials;
+    uint16_t nextRetryBackOff = 0U;
+    struct timespec tp;
+
+    /* Set the pParams member of the network context with desired transport. */
+    pNetworkContext->pParams = &opensslParams;
 
     /* Initialize information to connect to the MQTT broker. */
     serverInfo.pHostName = AWS_IOT_ENDPOINT;
@@ -297,6 +348,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
     opensslCredentials.pClientCertPath = CLIENT_CERT_PATH;
     opensslCredentials.pPrivateKeyPath = CLIENT_PRIVATE_KEY_PATH;
+    opensslCredentials.sniHostName = AWS_IOT_ENDPOINT;
 
     if( AWS_MQTT_PORT == 443 )
     {
@@ -309,8 +361,20 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
         opensslCredentials.alpnProtosLen = ALPN_PROTOCOL_NAME_LENGTH;
     }
 
+    /* Seed pseudo random number generator used in the demo for
+     * backoff period calculation when retrying failed network operations
+     * with broker. */
+
+    /* Get current time to seed pseudo random number generator. */
+    ( void ) clock_gettime( CLOCK_REALTIME, &tp );
+    /* Seed pseudo random number generator with nanoseconds. */
+    srand( tp.tv_nsec );
+
     /* Initialize reconnect attempts and interval */
-    RetryUtils_ParamsReset( &reconnectParams );
+    BackoffAlgorithm_InitializeParams( &reconnectParams,
+                                       CONNECTION_RETRY_BACKOFF_BASE_MS,
+                                       CONNECTION_RETRY_MAX_BACKOFF_DELAY_MS,
+                                       CONNECTION_RETRY_MAX_ATTEMPTS );
 
     /* Attempt to connect to MQTT broker. If connection fails, retry after
      * a timeout. Timeout value will exponentially increase until maximum
@@ -333,16 +397,23 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
 
         if( opensslStatus != OPENSSL_SUCCESS )
         {
-            LogWarn( ( "Connection to the broker failed. Retrying connection with backoff and jitter." ) );
-            retryUtilsStatus = RetryUtils_BackoffAndSleep( &reconnectParams );
-        }
+            /* Generate a random number and get back-off value (in milliseconds) for the next connection retry. */
+            backoffAlgStatus = BackoffAlgorithm_GetNextBackoff( &reconnectParams, generateRandomNumber(), &nextRetryBackOff );
 
-        if( retryUtilsStatus == RetryUtilsRetriesExhausted )
-        {
-            LogError( ( "Connection to the broker failed, all attempts exhausted." ) );
-            returnStatus = EXIT_FAILURE;
+            if( backoffAlgStatus == BackoffAlgorithmRetriesExhausted )
+            {
+                LogError( ( "Connection to the broker failed, all attempts exhausted." ) );
+                returnStatus = EXIT_FAILURE;
+            }
+            else if( backoffAlgStatus == BackoffAlgorithmSuccess )
+            {
+                LogWarn( ( "Connection to the broker failed. Retrying connection "
+                           "after %hu ms backoff.",
+                           ( unsigned short ) nextRetryBackOff ) );
+                Clock_SleepMs( nextRetryBackOff );
+            }
         }
-    } while( ( opensslStatus != OPENSSL_SUCCESS ) && ( retryUtilsStatus == RetryUtilsSuccess ) );
+    } while( ( opensslStatus != OPENSSL_SUCCESS ) && ( backoffAlgStatus == BackoffAlgorithmSuccess ) );
 
     return returnStatus;
 }
@@ -411,7 +482,7 @@ static void cleanupOutgoingPublishWithPacketID( uint16_t packetId )
         if( outgoingPublishPackets[ index ].packetId == packetId )
         {
             cleanupOutgoingPublishAt( index );
-            LogInfo( ( "Cleaned up outgoing publish packet with packet id %u.\n\n",
+            LogInfo( ( "Cleaned up outgoing publish packet with packet id %u.",
                        packetId ) );
             break;
         }
@@ -427,13 +498,13 @@ void HandleOtherIncomingPacket( MQTTPacketInfo_t * pPacketInfo,
     switch( pPacketInfo->type )
     {
         case MQTT_PACKET_TYPE_SUBACK:
-            LogInfo( ( "MQTT_PACKET_TYPE_SUBACK.\n\n" ) );
+            LogInfo( ( "MQTT_PACKET_TYPE_SUBACK." ) );
             /* Make sure ACK packet identifier matches with Request packet identifier. */
             assert( globalSubscribePacketIdentifier == packetIdentifier );
             break;
 
         case MQTT_PACKET_TYPE_UNSUBACK:
-            LogInfo( ( "MQTT_PACKET_TYPE_UNSUBACK.\n\n" ) );
+            LogInfo( ( "MQTT_PACKET_TYPE_UNSUBACK." ) );
             /* Make sure ACK packet identifier matches with Request packet identifier. */
             assert( globalUnsubscribePacketIdentifier == packetIdentifier );
             break;
@@ -443,11 +514,11 @@ void HandleOtherIncomingPacket( MQTTPacketInfo_t * pPacketInfo,
             /* Nothing to be done from application as library handles
              * PINGRESP. */
             LogWarn( ( "PINGRESP should not be handled by the application "
-                       "callback when using MQTT_ProcessLoop.\n\n" ) );
+                       "callback when using MQTT_ProcessLoop." ) );
             break;
 
         case MQTT_PACKET_TYPE_PUBACK:
-            LogInfo( ( "PUBACK received for packet id %u.\n\n",
+            LogInfo( ( "PUBACK received for packet id %u.",
                        packetIdentifier ) );
             /* Cleanup publish packet when a PUBACK is received. */
             cleanupOutgoingPublishWithPacketID( packetIdentifier );
@@ -455,7 +526,7 @@ void HandleOtherIncomingPacket( MQTTPacketInfo_t * pPacketInfo,
 
         /* Any other packet type is invalid. */
         default:
-            LogError( ( "Unknown packet type received:(%02x).\n\n",
+            LogError( ( "Unknown packet type received:(%02x).",
                         pPacketInfo->type ) );
     }
 }
@@ -496,7 +567,7 @@ static int handlePublishResend( MQTTContext_t * pMqttContext )
             }
             else
             {
-                LogInfo( ( "Sent duplicate PUBLISH successfully for packet id %u.\n\n",
+                LogInfo( ( "Sent duplicate PUBLISH successfully for packet id %u.",
                            outgoingPublishPackets[ index ].packetId ) );
             }
         }
@@ -605,7 +676,7 @@ int EstablishMqttSession( MQTTEventCallback_t eventCallback )
             }
             else
             {
-                LogInfo( ( "MQTT connection successfully established with broker.\n\n" ) );
+                LogInfo( ( "MQTT connection successfully established with broker." ) );
             }
         }
 
@@ -633,7 +704,7 @@ int EstablishMqttSession( MQTTEventCallback_t eventCallback )
             else
             {
                 LogInfo( ( "A clean MQTT connection is established."
-                           " Cleaning up all the stored outgoing publishes.\n\n" ) );
+                           " Cleaning up all the stored outgoing publishes." ) );
 
                 /* Clean up the outgoing publishes waiting for ack as this new
                  * connection doesn't re-establish an existing session. */
@@ -715,7 +786,7 @@ int32_t SubscribeToTopic( const char * pTopicFilter,
     }
     else
     {
-        LogInfo( ( "SUBSCRIBE topic %.*s to broker.\n\n",
+        LogInfo( ( "SUBSCRIBE topic %.*s to broker.",
                    topicFilterLength,
                    pTopicFilter ) );
 
@@ -778,7 +849,7 @@ int32_t UnsubscribeFromTopic( const char * pTopicFilter,
     }
     else
     {
-        LogInfo( ( "UNSUBSCRIBE sent topic %.*s to broker.\n\n",
+        LogInfo( ( "UNSUBSCRIBE sent topic %.*s to broker.",
                    topicFilterLength,
                    pTopicFilter ) );
 
@@ -826,11 +897,11 @@ int32_t PublishToTopic( const char * pTopicFilter,
 
     if( returnStatus == EXIT_FAILURE )
     {
-        LogError( ( "Unable to find a free spot for outgoing PUBLISH message.\n\n" ) );
+        LogError( ( "Unable to find a free spot for outgoing PUBLISH message." ) );
     }
     else
     {
-        LogInfo( ( "the published payload:%s \r\n ", pPayload ) );
+        LogInfo( ( "Published payload: %s", pPayload ) );
         /* This example publishes to only one topic and uses QOS1. */
         outgoingPublishPackets[ publishIndex ].pubInfo.qos = MQTTQoS1;
         outgoingPublishPackets[ publishIndex ].pubInfo.pTopicName = pTopicFilter;
@@ -855,7 +926,7 @@ int32_t PublishToTopic( const char * pTopicFilter,
         }
         else
         {
-            LogInfo( ( "PUBLISH sent for topic %.*s to broker with packet ID %u.\n\n",
+            LogInfo( ( "PUBLISH sent for topic %.*s to broker with packet ID %u.",
                        topicFilterLength,
                        pTopicFilter,
                        outgoingPublishPackets[ publishIndex ].packetId ) );

@@ -23,7 +23,7 @@ reported the issue. Please try to include as much information as you can. Detail
 ## Contributing via Pull Requests
 Contributions via pull requests are much appreciated. Before sending us a pull request, please ensure that:
 
-1. You are working against the latest source on the *master* branch.
+1. You are working against the latest source on the *main* branch.
 1. You check existing open, and recently merged, pull requests to make sure someone else hasn't addressed the problem already.
 1. You open an issue to discuss any significant work - we would hate for your time to be wasted.
 
@@ -31,7 +31,7 @@ To send us a pull request, please:
 
 1. Fork the repository.
 1. Modify the source; please focus on the specific change you are contributing. If you also reformat all the code, it will be hard for us to focus on your change.
-1. Ensure that your contributions conform to the [style guide](https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/main/guide_developer_styleguide.html).
+1. Ensure that your contributions conform to the [style guide](https://docs.aws.amazon.com/embedded-csdk/202012.00/lib-ref/docs/doxygen/output/html/guide_developer_styleguide.html).
 1. Ensure local tests pass.
 1. Commit to your fork using clear commit messages.
 1. Send us a pull request, answering any default questions in the pull request interface.
@@ -52,11 +52,11 @@ opensource-codeofconduct@amazon.com with any additional questions or comments.
 
 
 ## Security issue notifications
-If you discover a potential security issue in this project we ask that you notify AWS/Amazon Security via our [vulnerability reporting page](http://aws.amazon.com/security/vulnerability-reporting/). Please do **not** create a public github issue.
+If you discover a potential security issue in this project we ask that you notify AWS/Amazon Security via our [vulnerability reporting page](https://aws.amazon.com/security/vulnerability-reporting/). Please do **not** create a public github issue.
 
 
 ## Licensing
 
 See the [LICENSE](./LICENSE) file for our project's licensing. We will ask you to confirm the licensing of your contribution.
 
-We may ask you to sign a [Contributor License Agreement (CLA)](http://en.wikipedia.org/wiki/Contributor_License_Agreement) for larger changes.
+We may ask you to sign a [Contributor License Agreement (CLA)](https://en.wikipedia.org/wiki/Contributor_License_Agreement) for larger changes.

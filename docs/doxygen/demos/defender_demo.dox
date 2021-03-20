@@ -1,0 +1,33 @@
+/**
+@page defender_demo AWS IoT Device Defender
+@brief This demo demonstrates usage of the AWS IoT Device Defender Client library.
+
+@section defender_demo_main AWS IoT Device Defender Demo
+@brief This demo application uses the AWS IoT Device Defender Client library,
+MQTT Client library, and JSON library to interact with the [AWS IoT Device
+Defender service](https://aws.amazon.com/iot-device-defender/).
+
+The demo reports the following metrics to the AWS IoT Device Defender Service:
+- Network statistics [Packets (Ethernet Frames) and Bytes sent and received over wire]
+- List of open TCP ports
+- List of open UDP ports
+- List of established connections
+- System CPU usage statistics (as a custom metric of number-list type)
+- System memory statistics (as a custom metric of string-list type)
+
+The demo gets the above metrics by reading `/proc/net/dev`, `/proc/net/tcp`,
+`/proc/net/udp`, `/proc/uptime`, and `/proc/meminfo`. It then constructs a JSON report in the format as expected by
+the AWS IoT Device Defender service. The constructed JSON report is then
+published on the device defender MQTT topic reserved for publishing JSON
+reports. The demo then waits for a report accepted response, and ensures that
+the response contains the same report Id as was sent in the request.
+
+For the AWS IoT Device Defender service to make use of the custom metrics reported by the demo, you need to
+define the custom metrics in your account. You can use either the AWS console or CLI to create
+custom metrics in your account. For more information, please refer to [Custom Metrics AWS documentation](https://docs.aws.amazon.com/iot/latest/developerguide/dd-detect-custom-metrics.html).
+
+<div class="caption" style="text-align:center">
+AWS IoT Device Defender Demo Workflow
+</div>
+@image html defender_demo.png width=100%
+*/

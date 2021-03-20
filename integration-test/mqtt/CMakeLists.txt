@@ -59,34 +59,13 @@ create_test(${stest_name}
             "${test_include_directories}"
         )
 
-# Set preprocessor defines for test if configured in build.
-if(BROKER_ENDPOINT)
-    target_compile_definitions(
-        ${stest_name} PRIVATE
-            BROKER_ENDPOINT="${BROKER_ENDPOINT}"
-    )
-endif()
-if(BROKER_ENDPOINT)
-    target_compile_definitions(
-        ${stest_name} PRIVATE
-            CLIENT_IDENTIFIER="${CLIENT_IDENTIFIER}"
-    )
-endif()
-if(ROOT_CA_CERT_PATH)
-    target_compile_definitions(
-        ${stest_name} PRIVATE
-            ROOT_CA_CERT_PATH="${ROOT_CA_CERT_PATH}"
-    )
-endif()
-if(CLIENT_CERT_PATH)
-    target_compile_definitions(
-        ${stest_name} PRIVATE
-        CLIENT_CERT_PATH="${CLIENT_CERT_PATH}"
-    )
-endif()
-if(CLIENT_PRIVATE_KEY_PATH)
-    target_compile_definitions(
-        ${stest_name} PRIVATE
-        CLIENT_PRIVATE_KEY_PATH="${CLIENT_PRIVATE_KEY_PATH}"
-    )
-endif()
+set_macro_definitions(TARGETS ${stest_name}
+                      REQUIRED
+                        "ROOT_CA_CERT_PATH"
+                        "CLIENT_CERT_PATH"
+                        "CLIENT_PRIVATE_KEY_PATH"
+                        "CLIENT_IDENTIFIER"
+                        "BROKER_ENDPOINT"
+                        "BROKER_PORT"
+                      FILES_TO_CHECK
+                        "test_config.h")

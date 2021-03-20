@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C V202009.00
+ * AWS IoT Device SDK for Embedded C 202103.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -33,6 +33,9 @@
 #include <stdlib.h>
 #include <time.h>
 
+/* POSIX include. */
+#include <unistd.h>
+
 /* Include config file before other non-system includes. */
 #include "test_config.h"
 
@@ -45,8 +48,8 @@
 /* Include OpenSSL implementation of transport interface. */
 #include "openssl_posix.h"
 
-/* Retry parameters. */
-#include "retry_utils.h"
+/*Include backoff algorithm header for retry logic.*/
+#include "backoff_algorithm.h"
 
 /* Ensure that config macros, required for TLS connection, have been defined. */
 #ifndef SERVER_HOST
@@ -70,23 +73,70 @@
 /**
  * @brief Length of HTTP server host name.
  */
-#define SERVER_HOST_LENGTH     ( ( uint16_t ) ( sizeof( SERVER_HOST ) - 1 ) )
+#define SERVER_HOST_LENGTH                       ( ( uint16_t ) ( sizeof( SERVER_HOST ) - 1 ) )
 
 /**
  * @brief Length of the request body.
  */
-#define REQUEST_BODY_LENGTH    ( sizeof( REQUEST_BODY ) - 1 )
+#define REQUEST_BODY_LENGTH                      ( sizeof( REQUEST_BODY ) - 1 )
+
+/**
+ * @brief The maximum number of retries for connecting to server.
+ */
+#define CONNECTION_RETRY_MAX_ATTEMPTS            ( 5U )
+
+/**
+ * @brief The maximum back-off delay (in milliseconds) for retrying connection to server.
+ */
+#define CONNECTION_RETRY_MAX_BACKOFF_DELAY_MS    ( 5000U )
+
+/**
+ * @brief The base back-off delay (in milliseconds) to use for connection retry attempts.
+ */
+#define CONNECTION_RETRY_BACKOFF_BASE_MS         ( 500U )
+
+/**
+ * @brief Number of milliseconds in a second.
+ */
+#define NUM_MILLISECONDS_IN_SECOND               ( 1000U )
+
 
 /**
  * @brief The maximum number of retries to attempt on network error.
  */
-#define MAX_RETRY_COUNT        ( 3 )
+#define HTTP_REQUEST_MAX_RETRY_COUNT    ( 3 )
+
+/**
+ * @brief The path used for testing receiving a transfer encoding chunked
+ * response.
+ */
+#define STR_HELPER( x )    # x
+#define TO_STR( x )        STR_HELPER( x )
+#define GET_CHUNKED_PATH    "/stream-bytes/" TO_STR( CHUNKED_BODY_LENGTH )
+
+/**
+ * @brief A test response for http-parser that ends header lines with linefeeds
+ * only.
+ */
+#define HTTP_TEST_RESPONSE_LINE_FEEDS_ONLY \
+    "HTTP/1.1 200 OK\n"                    \
+    "Content-Length: 27\n"                 \
+    "\n"                                   \
+    "HTTP/0.0 0\n"                         \
+    "test-header0: ab"
+#define HTTP_TEST_RESPONSE_LINE_FEEDS_ONLY_BODY_LENGTH       27
+#define HTTP_TEST_RESPONSE_LINE_FEEDS_ONLY_HEADERS_LENGTH    18
 
 /**
  * @brief Represents the OpenSSL context used for TLS session with the broker
  * for tests.
  */
 static NetworkContext_t networkContext;
+
+/**
+ * @brief Parameters for the Openssl Context.
+ */
+static OpensslParams_t opensslParams;
 
 /**
  * @brief The transport layer interface used by the HTTP Client library.
@@ -104,12 +154,44 @@ static ServerInfo_t serverInfo;
 static OpensslCredentials_t opensslCredentials;
 
 /**
- * @brief Shared buffer used in the tests for storing HTTP request headers and
+ * @brief A shared buffer used in the tests for storing HTTP request headers and
  * HTTP response headers and body.
  */
 static uint8_t userBuffer[ USER_BUFFER_LENGTH ];
 
+/**
+ * @brief A HTTPResponse_t to share among the tests. This is used to verify
+ * custom expected output.
+ */
+static HTTPResponse_t response;
+
+/**
+ * @brief Network data that is returned in the transportRecvStub.
+ */
+static uint8_t * pNetworkData = NULL;
+
+/**
+ * @brief The length of the network data to return in the transportRecvStub.
+ */
+static size_t networkDataLen = 0U;
+
 /*-----------------------------------------------------------*/
+
+/* Each compilation unit must define the NetworkContext struct. */
+struct NetworkContext
+{
+    OpensslParams_t * pParams;
+};
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief The random number generator to use for exponential backoff with
+ * jitter retry logic.
+ *
+ * @return The generated random number.
+ */
+static uint32_t generateRandomNumber();
 
 /**
  * @brief Connect to HTTP server with reconnection retries.
@@ -135,27 +217,78 @@ static void sendHttpRequest( const TransportInterface_t * pTransportInterface,
                              const char * pMethod,
                              const char * pPath );
 
+/**
+ * @brief A stub for receiving test network data. This always returns success.
+ *
+ * @param[in] pNetworkContext Implementation-defined network context.
+ * @param[in] pBuffer Buffer to receive the data into.
+ * @param[in] bytesToRecv Number of bytes requested from the network.
+ *
+ * @return The number of bytes received. This will be the minimum of
+ * networkDataLen or bytesToRead.
+ */
+static int32_t transportRecvStub( NetworkContext_t * pNetworkContext,
+                                  void * pBuffer,
+                                  size_t bytesToRead );
+
+/**
+ * @brief A stub for sending data over the network. This always returns success.
+ *
+ * @param[in] pNetworkContext Implementation-defined network context.
+ * @param[in] pBuffer Buffer containing the bytes to send over the network stack.
+ * @param[in] bytesToSend Number of bytes to send over the network.
+ *
+ * @return This function always returns bytesToWrite.
+ */
+static int32_t transportSendStub( NetworkContext_t * pNetworkContext,
+                                  const void * pBuffer,
+                                  size_t bytesToWrite );
+
+/*-----------------------------------------------------------*/
+
+static uint32_t generateRandomNumber()
+{
+    return( rand() );
+}
+
 /*-----------------------------------------------------------*/
 
 static void connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext )
 {
     /* Status returned by the retry utilities. */
-    RetryUtilsStatus_t retryUtilsStatus = RetryUtilsSuccess;
+    BackoffAlgorithmStatus_t backoffAlgStatus = BackoffAlgorithmSuccess;
     /* Struct containing the next backoff time. */
-    RetryUtilsParams_t reconnectParams;
+    BackoffAlgorithmContext_t reconnectParams;
     /* Status returned by OpenSSL transport implementation. */
     OpensslStatus_t opensslStatus;
+    uint16_t nextRetryBackOff = 0U;
+    struct timespec tp;
 
     /* Reset or initialize file-scoped global variables. */
     ( void ) memset( &opensslCredentials, 0, sizeof( opensslCredentials ) );
     opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
+    opensslCredentials.sniHostName = SERVER_HOST;
 
     serverInfo.pHostName = SERVER_HOST;
     serverInfo.hostNameLength = SERVER_HOST_LENGTH;
     serverInfo.port = HTTPS_PORT;
 
+    pNetworkContext->pParams = &opensslParams;
+
+    /* Seed pseudo random number generator used in the demo for
+     * backoff period calculation when retrying failed network operations
+     * with broker. */
+
+    /* Get current time to seed pseudo random number generator. */
+    ( void ) clock_gettime( CLOCK_REALTIME, &tp );
+    /* Seed pseudo random number generator with nanoseconds. */
+    srand( tp.tv_nsec );
+
     /* Initialize reconnect attempts and interval */
-    RetryUtils_ParamsReset( &reconnectParams );
+    BackoffAlgorithm_InitializeParams( &reconnectParams,
+                                       CONNECTION_RETRY_BACKOFF_BASE_MS,
+                                       CONNECTION_RETRY_MAX_BACKOFF_DELAY_MS,
+                                       CONNECTION_RETRY_MAX_ATTEMPTS );
 
     /* Attempt to connect to HTTP server. If connection fails, retry after
      * a timeout. Timeout value will exponentially increase until maximum
@@ -172,18 +305,24 @@ static void connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContex
 
         if( opensslStatus != OPENSSL_SUCCESS )
         {
-            retryUtilsStatus = RetryUtils_BackoffAndSleep( &reconnectParams );
-        }
+            /* Generate a random number and get back-off value (in milliseconds) for the next connection retry. */
+            backoffAlgStatus = BackoffAlgorithm_GetNextBackoff( &reconnectParams, generateRandomNumber(), &nextRetryBackOff );
 
-        if( retryUtilsStatus == RetryUtilsRetriesExhausted )
-        {
-            LogError( ( "Connection to the server failed, all attempts exhausted." ) );
+            if( backoffAlgStatus == BackoffAlgorithmSuccess )
+            {
+                LogWarn( ( "Connection to the HTTP server failed. Retrying connection after backoff." ) );
+                ( void ) sleep( nextRetryBackOff / NUM_MILLISECONDS_IN_SECOND );
+            }
+            else
+            {
+                LogError( ( "Connection to the HTTP server failed, all attempts exhausted." ) );
+            }
         }
-    } while( ( opensslStatus != OPENSSL_SUCCESS ) && ( retryUtilsStatus == RetryUtilsSuccess ) );
+    } while( ( opensslStatus != OPENSSL_SUCCESS ) && ( backoffAlgStatus == BackoffAlgorithmSuccess ) );
 
     TEST_ASSERT_EQUAL( OPENSSL_SUCCESS, opensslStatus );
-    TEST_ASSERT_NOT_EQUAL( -1, networkContext.socketDescriptor );
-    TEST_ASSERT_NOT_NULL( networkContext.pSsl );
+    TEST_ASSERT_NOT_EQUAL( -1, opensslParams.socketDescriptor );
+    TEST_ASSERT_NOT_NULL( opensslParams.pSsl );
 }
 
 /*-----------------------------------------------------------*/
@@ -193,15 +332,13 @@ static void sendHttpRequest( const TransportInterface_t * pTransportInterface,
                              const char * pPath )
 {
     /* Status returned by methods in HTTP Client Library API. */
-    HTTPStatus_t httpStatus = HTTP_NETWORK_ERROR;
+    HTTPStatus_t httpStatus = HTTPNetworkError;
     /* Tracks number of retry requests made to the HTTP server. */
     uint8_t retryCount = 0;
 
     /* Configurations of the initial request headers that are passed to
      * #HTTPClient_InitializeRequestHeaders. */
     HTTPRequestInfo_t requestInfo;
-    /* Represents a response returned from an HTTP server. */
-    HTTPResponse_t response;
     /* Represents header data that will be sent in an HTTP request. */
     HTTPRequestHeaders_t requestHeaders;
 
@@ -216,7 +353,7 @@ static void sendHttpRequest( const TransportInterface_t * pTransportInterface,
     /* Initialize the request object. */
     requestInfo.pHost = SERVER_HOST;
     requestInfo.hostLen = SERVER_HOST_LENGTH;
-    requestInfo.method = pMethod;
+    requestInfo.pMethod = pMethod;
     requestInfo.methodLen = strlen( pMethod );
     requestInfo.pPath = pPath;
     requestInfo.pathLen = strlen( pPath );
@@ -235,19 +372,19 @@ static void sendHttpRequest( const TransportInterface_t * pTransportInterface,
     response.bufferLen = USER_BUFFER_LENGTH;
 
     LogDebug( ( "Sending HTTP %.*s request to %.*s%.*s...",
-                ( int32_t ) requestInfo.methodLen, requestInfo.method,
+                ( int32_t ) requestInfo.methodLen, requestInfo.pMethod,
                 ( int32_t ) SERVER_HOST_LENGTH, SERVER_HOST,
                 ( int32_t ) requestInfo.pathLen, requestInfo.pPath ) );
 
     /* Send request to HTTP server. If a network error is found, retry request for a
-     * count of MAX_RETRY_COUNT. */
+     * count of HTTP_REQUEST_MAX_RETRY_COUNT. */
     do
     {
         /* Since the request and response headers share a buffer, request headers should
          * be re-initialized after a failed request. */
         httpStatus = HTTPClient_InitializeRequestHeaders( &requestHeaders,
                                                           &requestInfo );
-        TEST_ASSERT_EQUAL( HTTP_SUCCESS, httpStatus );
+        TEST_ASSERT_EQUAL( HTTPSuccess, httpStatus );
         TEST_ASSERT_NOT_EQUAL( 0, requestHeaders.headersLen );
 
         LogDebug( ( "Request Headers:\n%.*s\n"
@@ -263,16 +400,16 @@ static void sendHttpRequest( const TransportInterface_t * pTransportInterface,
                                       &response,
                                       0 );
 
-        if( httpStatus == HTTP_NETWORK_ERROR )
+        if( httpStatus == HTTPNetworkError )
         {
             LogDebug( ( "A network error has occured, retrying request." ) );
             resetTest();
         }
 
         retryCount++;
-    } while( ( httpStatus == HTTP_NETWORK_ERROR ) && ( retryCount < MAX_RETRY_COUNT ) );
+    } while( ( httpStatus == HTTPNetworkError ) && ( retryCount < HTTP_REQUEST_MAX_RETRY_COUNT ) );
 
-    TEST_ASSERT_EQUAL( HTTP_SUCCESS, httpStatus );
+    TEST_ASSERT_EQUAL( HTTPSuccess, httpStatus );
 
     LogDebug( ( "Received HTTP response from %.*s%.*s...\n"
                 "Response Headers:\n%.*s\n"
@@ -297,11 +434,46 @@ static void sendHttpRequest( const TransportInterface_t * pTransportInterface,
     }
 }
 
+/*-----------------------------------------------------------*/
+
+static int32_t transportRecvStub( NetworkContext_t * pNetworkContext,
+                                  void * pBuffer,
+                                  size_t bytesToRead )
+{
+    size_t bytesToCopy = ( bytesToRead < networkDataLen ) ? bytesToRead : networkDataLen;
+
+    ( void ) pNetworkContext;
+
+    memcpy( pBuffer, pNetworkData, bytesToCopy );
+    pNetworkData += bytesToCopy;
+    networkDataLen -= bytesToCopy;
+    return bytesToCopy;
+}
+
+/*-----------------------------------------------------------*/
+
+static int32_t transportSendStub( NetworkContext_t * pNetworkContext,
+                                  const void * pBuffer,
+                                  size_t bytesToWrite )
+{
+    ( void ) pNetworkContext;
+    ( void ) pBuffer;
+    return bytesToWrite;
+}
+
+
 /* ============================   UNITY FIXTURES ============================ */
 
 /* Called before each test method. */
 void setUp()
 {
+    /* Clear the global response before each test. */
+    memset( &response, 0, sizeof( HTTPResponse_t ) );
+
+    /* Apply defaults and reset the transport receive data globals. */
+    pNetworkData = NULL;
+    networkDataLen = 0U;
+
     /* Establish TLS session with HTTP server on top of a newly-created TCP connection. */
     connectToServerWithBackoffRetries( &networkContext );
 
@@ -359,4 +531,58 @@ void test_HTTP_PUT_Request( void )
     sendHttpRequest( &transportInterface,
                      HTTP_METHOD_PUT,
                      PUT_PATH );
+}
+
+/**
+ * @brief Receive a Transfer-Encoding chunked response.
+ */
+void test_HTTP_Chunked_Response( void )
+{
+    sendHttpRequest( &transportInterface,
+                     HTTP_METHOD_GET,
+                     GET_CHUNKED_PATH );
+
+    /* Verify the response is of the length configured, which means the
+     * chunk header was overwritten. */
+    TEST_ASSERT_EQUAL( CHUNKED_BODY_LENGTH, response.bodyLen );
+}
+
+/**
+ * @brief Test how http-parser responds with a response of line-feeds only and
+ * no carriage returns.
+ */
+void test_HTTP_LineFeedOnly_Response( void )
+{
+    HTTPRequestHeaders_t requestHeaders = { 0 };
+    HTTPStatus_t status = HTTPSuccess;
+    TransportInterface_t transport = { 0 };
+    const char * dummyRequestHeaders = "GET something.txt HTTP/1.1\r\n"
+                                       "Host: integration-test\r\n\r\r\n";
+
+    requestHeaders.pBuffer = userBuffer;
+    requestHeaders.bufferLen = USER_BUFFER_LENGTH;
+    response.pBuffer = userBuffer;
+    response.bufferLen = USER_BUFFER_LENGTH;
+
+    transport.send = transportSendStub;
+    transport.recv = transportRecvStub;
+
+    /* Setup the data to receive on the network. */
+    pNetworkData = ( uint8_t * ) HTTP_TEST_RESPONSE_LINE_FEEDS_ONLY;
+    networkDataLen = sizeof( HTTP_TEST_RESPONSE_LINE_FEEDS_ONLY ) - 1U;
+
+    /* Setup the request headers to the predefined headers. */
+    requestHeaders.headersLen = strlen( dummyRequestHeaders );
+    memcpy( requestHeaders.pBuffer, dummyRequestHeaders, requestHeaders.headersLen );
+
+    status = HTTPClient_Send( &transport,
+                              &requestHeaders,
+                              NULL,
+                              0,
+                              &response,
+                              HTTP_SEND_DISABLE_CONTENT_LENGTH_FLAG );
+
+    TEST_ASSERT_EQUAL( HTTPSuccess, status );
+    TEST_ASSERT_EQUAL( HTTP_TEST_RESPONSE_LINE_FEEDS_ONLY_BODY_LENGTH, response.bodyLen );
+    TEST_ASSERT_EQUAL( HTTP_TEST_RESPONSE_LINE_FEEDS_ONLY_HEADERS_LENGTH, response.headersLen );
 }

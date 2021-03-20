@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C V202009.00
+ * AWS IoT Device SDK for Embedded C 202103.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -74,6 +74,13 @@
 #ifndef ROOT_CA_CERT_PATH
     #define ROOT_CA_CERT_PATH    "certificates/AmazonRootCA1.crt"
 #endif
+
+/**
+ * @brief The total length, of the chunked HTTP response body, to test receiving.
+ * This length is inserted as a string into the request path, so avoid putting
+ * parenthesis around it.
+ */
+#define CHUNKED_BODY_LENGTH               128
 
 /**
  * @brief Paths for different HTTP methods for specified host.

@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C V202009.00
+ * AWS IoT Device SDK for Embedded C 202103.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -119,7 +119,7 @@
  *
  * Refer to the AWS IoT documentation below for details regarding client
  * authentication with a username and password.
- * https://docs.aws.amazon.com/iot/latest/developerguide/enhanced-custom-authentication.html
+ * https://docs.aws.amazon.com/iot/latest/developerguide/custom-authentication.html
  * As mentioned in the link above, an authorizer setup needs to be done to use
  * username/password based client authentication.
  *
@@ -137,7 +137,7 @@
  *
  * Refer to the AWS IoT documentation below for details regarding client
  * authentication with a username and password.
- * https://docs.aws.amazon.com/iot/latest/developerguide/enhanced-custom-authentication.html
+ * https://docs.aws.amazon.com/iot/latest/developerguide/custom-authentication.html
  * As mentioned in the link above, an authorizer setup needs to be done to use
  * username/password based client authentication.
  *
@@ -186,6 +186,7 @@
  * @brief The name of the MQTT library used and its version, following an "@"
  * symbol.
  */
-#define MQTT_LIB                  "core-mqtt@1.0.0"
+#include "core_mqtt.h"
+#define MQTT_LIB    "core-mqtt@" MQTT_LIBRARY_VERSION
 
 #endif /* ifndef DEMO_CONFIG_H_ */

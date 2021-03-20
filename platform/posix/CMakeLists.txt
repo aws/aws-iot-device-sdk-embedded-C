@@ -9,14 +9,12 @@ target_include_directories( clock_posix
                               PRIVATE
                                 ${PLATFORM_DIR}/include )
 
-# Create target for POSIX implementation of retry logic.
-add_library( retry_utils_posix
-               ${RETRY_SOURCES} )
-
-target_include_directories( retry_utils_posix
-                              PUBLIC
-                                ${RETRY_INCLUDE_PUBLIC_DIRS}
-                                ${LOGGING_INCLUDE_DIRS} )
+# Install clock abstraction as library.
+if(INSTALL_PLATFORM_ABSTRACTIONS)
+    install(TARGETS
+      clock_posix
+      LIBRARY DESTINATION "${CSDK_LIB_INSTALL_PATH}")
+endif()
 
 if(BUILD_TESTS)
   add_subdirectory(utest)

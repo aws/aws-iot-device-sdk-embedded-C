@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C V202009.00
+ * AWS IoT Device SDK for Embedded C 202103.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -59,17 +59,17 @@
 #include "sockets_posix.h"
 
 /**
- * @brief Definition of the network context for the transport interface
+ * @brief Parameters for the transport-interface
  * implementation that uses OpenSSL and POSIX sockets.
  *
  * @note For this transport implementation, the socket descriptor and
  * SSL context is used.
  */
-struct NetworkContext
+typedef struct OpensslParams
 {
     int32_t socketDescriptor;
     SSL * pSsl;
-};
+} OpensslParams_t;
 
 /**
  * @brief OpenSSL Connect / Disconnect return status.
@@ -175,9 +175,10 @@ OpensslStatus_t Openssl_Disconnect( const NetworkContext_t * pNetworkContext );
  * @param[out] pBuffer Buffer to receive network data into.
  * @param[in] bytesToRecv Number of bytes requested from the network.
  *
- * @return Number of bytes received if successful; negative value on error.
+ * @return Number of bytes received if successful; negative value to indicate failure.
+ * A return value of zero represents that the receive operation can be retried.
  */
-int32_t Openssl_Recv( const NetworkContext_t * pNetworkContext,
+int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
                       void * pBuffer,
                       size_t bytesToRecv );
 
@@ -192,8 +193,11 @@ int32_t Openssl_Recv( const NetworkContext_t * pNetworkContext,
  * @param[in] bytesToSend Number of bytes to send over the network.
  *
  * @return Number of bytes sent if successful; negative value on error.
+ *
+ * @note This function does not return zero value because it cannot be retried
+ * on send operation failure.
  */
-int32_t Openssl_Send( const NetworkContext_t * pNetworkContext,
+int32_t Openssl_Send( NetworkContext_t * pNetworkContext,
                       const void * pBuffer,
                       size_t bytesToSend );
 

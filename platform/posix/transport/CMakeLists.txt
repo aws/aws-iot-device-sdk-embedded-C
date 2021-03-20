@@ -1,19 +1,8 @@
 # Include filepaths for source and include.
 include( ${PLATFORM_DIR}/posix/posixFilePaths.cmake )
 
-# The transport_interface.h in coreMQTT is the single source of truth,
-# so make sure the submodule is cloned.
-if( NOT EXISTS ${MODULES_DIR}/standard/coreMQTT/source )
-    # Attempt to clone coreMQTT.
-    if( ${BUILD_CLONE_SUBMODULES} )
-        clone_mqtt()
-    else()
-        message( FATAL_ERROR "The required submodule coreMQTT does not exist. Either clone it manually, or set BUILD_CLONE_SUBMODULES to 1 to automatically clone it during build." )
-    endif()
-endif()
-
 set( TRANSPORT_INTERFACE_INCLUDE_DIR
-     ${MODULES_DIR}/standard/coreMQTT/source/portable )
+     ${MODULES_DIR}/standard/coreMQTT/source/interface )
 
 # Create target for sockets utility.
 add_library( sockets_posix
@@ -37,17 +26,6 @@ target_link_libraries( plaintext_posix
 add_library( openssl_posix
                 ${OPENSSL_TRANSPORT_SOURCES} )
 
-set( OPENSSL_USE_STATIC_LIBS TRUE )
-find_package( OpenSSL REQUIRED )
-
-# Verify the minimum OpenSSL version required
-if( OPENSSL_VERSION MATCHES "0.9$" OR OPENSSL_VERSION MATCHES "1.0$"  )
-    message( FATAL_ERROR "OpenSSL 1.1.0 or later required: OpenSSL ${OPENSSL_VERSION} found." )
-endif()
-
-set( CMAKE_THREAD_PREFER_PTHREAD ON )
-find_package( Threads REQUIRED )
-
 target_link_libraries( openssl_posix
                        PUBLIC
                           sockets_posix
@@ -61,6 +39,15 @@ target_link_libraries( openssl_posix
                           # SSL uses Dynamic Loading and on some platforms
                           # requires explicit linking.
                           ${CMAKE_DL_LIBS} )
+
+# Install transport implementations as libraries.
+if(INSTALL_PLATFORM_ABSTRACTIONS)
+    install(TARGETS
+      openssl_posix
+      plaintext_posix
+      sockets_posix
+      LIBRARY DESTINATION "${CSDK_LIB_INSTALL_PATH}")
+endif()
 
 if( BUILD_TESTS )
   add_subdirectory( utest )

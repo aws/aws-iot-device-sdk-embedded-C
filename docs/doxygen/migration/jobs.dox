@@ -1,0 +1,35 @@
+/**
+@page jobs_migration AWS IoT Jobs
+@brief How to migrate an application using AWS IoT Jobs from v3 to 202009.00 and subsequent releases.
+
+The AWS IoT Jobs client library has been refactored for this release.
+The refactored library has the following differences as compared to the jobs client library in v3 of the AWS IoT Device SDK for Embedded C:
+
+- The refactored library provides simple convenience macros and functions for handling MQTT topic strings as defined by the AWS IoT Jobs Service.
+- The refactored library is completely decoupled from the underlying MQTT implementation, permitting any MQTT client library to be used.
+- The refactored library does not construct JSON message bodies, permitting any JSON library to be used.
+
+The v3 jobs client library, on the other hand, is tightly coupled to the MQTT implementation present in v3 of the AWS IoT Device SDK for Embedded C.
+It consists of a heavyweight set of APIs with multiple dependencies.
+JSON parsing, for example, is built in to the API implementation.
+
+Note: The AWS IoT Device SDK for Embedded C now offers the coreMQTT library and the coreJSON library as supported alternatives.
+
+To migrate an existing application
+- change the setup code to establish a connection with AWS IoT core
+- add a subscription step to the setup code
+    - use Jobs_GetTopic() to populate a buffer with the desired subscription topic
+    - use the MQTT client library to subscribe to the topic
+- in your MQTT receive callback, add a handler that calls Jobs_MatchTopic()
+    - based on the response, react to a succeeded or failed API request
+    - if a jobs document is present, parse it for details and launch the job
+- replace each existing API request call with a set of steps
+    - call the new API to populate a buffer with the desired topic
+    - optionally add a JSON body for the MQTT message
+    - use the MQTT client library to publish the request
+- periodically send a status update when a job is running
+
+A complete example using libmosquitto and coreJSON is available
+<a href="https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/main/demos/jobs/jobs_demo_mosquitto">here</a>.
+
+*/

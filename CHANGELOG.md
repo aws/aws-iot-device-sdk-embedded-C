@@ -1,16 +1,67 @@
-# Change Log for AWS IoT Device SDK for Embedded C
+# Changelog for AWS IoT Device SDK for Embedded C
+
+## main
+
+### Minor Changes
+
+- [#1596](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1596) Make `THING_NAME` an alias for `CLIENT_IDENTIFIER` in MQTT-related demos
+
+## 202103.00 (March 2021)
+
+### Major Changes
+
+- Changes brought through submodule update of libraries:
+  - [AWS IoT Over-the-air Update library v3.0.0](https://github.com/aws/ota-for-aws-iot-embedded-sdk/tree/v3.0.0) is now generally available.
+  - Updated [AWS IoT Device Shadow library](https://github.com/aws/Device-Shadow-for-AWS-IoT-embedded-sdk/tree/v1.1.0) to support named shadow, a feature of the AWS IoT Device Shadow service that allows you to create multiple shadows for a single IoT device.
+  - Updated [AWS IoT Device Defender library](https://github.com/aws/device-defender-for-aws-iot-embedded-sdk/tree/v1.1.0) to support custom metrics, a feature that helps you monitor operational health metrics that are unique to your fleet or use case.
+- Changes brought through pushing commits to AWS IoT Device SDK for Embedded C:
+  - [#1547](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1547) Update the Device Defender demo to showcase reporting of custom metrics to the AWS IoT Device Defender service.
+  - AWS IoT Over-the-air Update library v3.0.0 is now generally available.
+  - [#1529](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1529), [#1532](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1532) Update Jobs demo to use DescribeJobExecution API instead of StartNextPendingJobExecution API, and disable functionality of periodic job updates by default.
+  - [#1519](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1519) Add an `install` target for installing libraries and headers in file system.
+
+### Minor Changes
+
+ - [#1511](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1511) Fix memory leak in PKCS #11 test.
+ - [#1539](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1539) Add retries for MQTT publishing with the backoffAlgorithm library.
+ - [#1516](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1516), [#1538](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1538), [#1540](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1540), [#1487](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1487) Minor bugfixes and refactoring of the OTA demos and OTA PAL for POSIX.
+ - [#1552](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1552) Update broken links in demo comments and documentation.
+
+## 202012.01 (December 2020)
+
+### Major Changes
+
+- This release introduces the **AWS IoT Over-the-air Update** library(Release Candidate), **backoffAlgorithm** library, and **PKCS #11** library.
+These libraries have gone through code quality checks including verification that no function has a [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html) score greater than 8, checks against deviations from the mandatory rules in the [MISRA coding standard](https://www.misra.org.uk/MISRAHome/MISRAC2012/tabid/196/Default.aspx), and static code analysis from [Coverity statical analysis](https://scan.coverity.com/). In addition, PKCS11 library has also undergone validation of memory safety through the [CBMC automated reasoning tool](http://www.cs.cmu.edu/~modelcheck/cbmc/).
+
+- This release uses submodule references to the following new individual repositories for the AWS IoT Over-the-air Update, backoffAlgorithm, and PKCS11 libraries under the `libraries` folder:
+   - [aws/ota-for-aws-iot-embedded-sdk](https://github.com/aws/ota-for-aws-iot-embedded-sdk) for the AWS IoT Over-the-air Update library.
+   - [FreeRTOS/backoffAlgorithm](https://github.com/FreeRTOS/backoffAlgorithm) for the backoffAlgorithm library.
+   - [FreeRTOS/corePKCS11](https://github.com/FreeRTOS/corePKCS11) for the PKCS11 library.
+
+## 202011.00 (November 2020)
+
+### Major Changes
+
+- This release introduces the re-factored **HTTP** client library, **AWS IoT Device Defender** client library, and **AWS IoT Jobs** client library.
+These libraries have gone through code quality checks including verification that no function has a [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html) score greater than 8, and checks against deviations from the mandatory rules in the [MISRA coding standard](https://www.misra.org.uk/MISRAHome/MISRAC2012/tabid/196/Default.aspx). These libraries have also undergone both static code analysis from [Coverity statical analysis](https://scan.coverity.com/) and validation of memory safety through the [CBMC automated reasoning tool](http://www.cs.cmu.edu/~modelcheck/cbmc/).
+
+- This release uses submodule references to the following new individual repositories for the HTTP, AWS IoT Device Defender client, and AWS IoT Jobs client libraries under the `libraries` folder:
+   - [FreeRTOS/coreHTTP](https://github.com/FreeRTOS/coreHTTP) for the HTTP client library
+   - [aws/device-defender-for-aws-iot-embedded-sdk](https://github.com/aws/device-defender-for-aws-iot-embedded-sdk) for the AWS IoT Device Defender client library.
+   - [aws/jobs-for-aws-iot-embedded-sdk](https://github.com/aws/jobs-for-aws-iot-embedded-sdk) for the AWS IoT Jobs client library.
 
 ## 202009.00 (September 2020)
 
 ### Major Changes
 
-- This release introduces the re-factored **MQTT** client library, **JSON** parser library and **AWS IoT Shadow** client library.
-These libraries have gone through code quality checks including verification that no function has a [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html) score greater than 8, and checks against deviations from the mandatory rules in the [MISRA coding standard](https://www.misra.org.uk/MISRAHome/MISRAC2012/tabid/196/Default.aspx). These libraries have also undergone both static code analysis from [Coverity statical analysis](https://scan.coverity.com/) and validation of memory safety and functional correctness proof through the [CBMC automated reasoning tool](https://www.youtube.com/watch?v=YwQHAPRhQkI&feature=youtu.be&t=1721).
+- This release introduces the re-factored **MQTT** client library, **JSON** parser library, and **AWS IoT Device Shadow** client library.
+These libraries have gone through code quality checks including verification that no function has a [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html) score greater than 8, and checks against deviations from the mandatory rules in the [MISRA coding standard](https://www.misra.org.uk/MISRAHome/MISRAC2012/tabid/196/Default.aspx). These libraries have also undergone both static code analysis from [Coverity statical analysis](https://scan.coverity.com/) and validation of memory safety through the [CBMC automated reasoning tool](http://www.cs.cmu.edu/~modelcheck/cbmc/).
 
-- This release uses submodule references to the following new individual repositories for the MQTT, JSON and AWS IoT Shadow service client libraries under `libraries` folder:
-   - [FreeRTOS/coreMQTT](https://github.com/FreeRTOS/coreMQTT) for MQTT client library
-   - [FreeRTOS/coreJSON](https://github.com/FreeRTOS/coreJSON) for JSON parser library
-   - [aws/device-shadow-for-aws-iot-embedded-sdk](https://github.com/aws/device-shadow-for-aws-iot-embedded-sdk) for AWS IoT Shadow service client library.
+- This release uses submodule references to the following new individual repositories for the MQTT, JSON, and AWS IoT Device Shadow client libraries under the `libraries` folder:
+   - [FreeRTOS/coreMQTT](https://github.com/FreeRTOS/coreMQTT) for the MQTT client library
+   - [FreeRTOS/coreJSON](https://github.com/FreeRTOS/coreJSON) for the JSON parser library
+   - [aws/device-shadow-for-aws-iot-embedded-sdk](https://github.com/aws/device-shadow-for-aws-iot-embedded-sdk) for the AWS IoT Device Shadow client library.
 
 - With this release, we are introducing a [date-based versioning scheme](README.md#versioning).
 

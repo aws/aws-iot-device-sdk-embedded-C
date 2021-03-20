@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C V202009.00
+ * AWS IoT Device SDK for Embedded C 202103.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -44,6 +44,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 /* POSIX includes. */
 #include <unistd.h>
@@ -58,8 +59,8 @@
 /* OpenSSL sockets transport implementation. */
 #include "openssl_posix.h"
 
-/* Reconnect parameters. */
-#include "retry_utils.h"
+/*Include backoff algorithm header for retry logic.*/
+#include "backoff_algorithm.h"
 
 /* Clock for timer. */
 #include "clock.h"
@@ -105,7 +106,23 @@
 /**
  * @brief Length of client identifier.
  */
-#define CLIENT_IDENTIFIER_LENGTH                ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) )
+#define CLIENT_IDENTIFIER_LENGTH                 ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) )
+
+/**
+ * @brief The maximum number of retries for connecting to server.
+ */
+#define CONNECTION_RETRY_MAX_ATTEMPTS            ( 5U )
+
+/**
+ * @brief The maximum back-off delay (in milliseconds) for retrying connection to server.
+ */
+#define CONNECTION_RETRY_MAX_BACKOFF_DELAY_MS    ( 5000U )
+
+/**
+ * @brief The base back-off delay (in milliseconds) to use for connection retry attempts.
+ */
+#define CONNECTION_RETRY_BACKOFF_BASE_MS         ( 500U )
+
 
 /**
  * @brief Timeout for receiving CONNACK packet in milli seconds.
@@ -216,7 +233,7 @@
 /**
  * @brief Transport timeout in milliseconds for transport send and receive.
  */
-#define TRANSPORT_SEND_RECV_TIMEOUT_MS          ( 200 )
+#define TRANSPORT_SEND_RECV_TIMEOUT_MS          ( 500 )
 
 /*-----------------------------------------------------------*/
 
@@ -280,6 +297,22 @@ static bool globalReceivedHumidityData = false;
 static bool globalReceivedPrecipitationData = false;
 
 /*-----------------------------------------------------------*/
+
+/* Each compilation unit must define the NetworkContext struct. */
+struct NetworkContext
+{
+    OpensslParams_t * pParams;
+};
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief The random number generator to use for exponential backoff with
+ * jitter retry logic.
+ *
+ * @return The generated random number.
+ */
+static uint32_t generateRandomNumber();
 
 /**
  * @brief Connect to MQTT broker with reconnection retries.
@@ -479,14 +512,22 @@ static int publishToTopicAndProcessIncomingMessage( MQTTContext_t * pMqttContext
 
 /*-----------------------------------------------------------*/
 
+static uint32_t generateRandomNumber()
+{
+    return( rand() );
+}
+
+/*-----------------------------------------------------------*/
 static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext )
 {
     int returnStatus = EXIT_SUCCESS;
-    RetryUtilsStatus_t retryUtilsStatus = RetryUtilsSuccess;
+    BackoffAlgorithmStatus_t backoffAlgStatus = BackoffAlgorithmSuccess;
     OpensslStatus_t opensslStatus = OPENSSL_SUCCESS;
-    RetryUtilsParams_t reconnectParams;
+    BackoffAlgorithmContext_t reconnectParams;
     ServerInfo_t serverInfo;
     OpensslCredentials_t opensslCredentials;
+    uint16_t nextRetryBackOff;
+    struct timespec tp;
 
     /* Initialize information to connect to the MQTT broker. */
     serverInfo.pHostName = BROKER_ENDPOINT;
@@ -496,9 +537,23 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     /* Initialize credentials for establishing TLS session. */
     memset( &opensslCredentials, 0, sizeof( OpensslCredentials_t ) );
     opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
+    opensslCredentials.sniHostName = BROKER_ENDPOINT;
+
+    /* Seed pseudo random number generator used in the demo for
+     * backoff period calculation when retrying failed network operations
+     * with broker. */
+
+    /* Get current time to seed pseudo random number generator. */
+    ( void ) clock_gettime( CLOCK_REALTIME, &tp );
+    /* Seed pseudo random number generator with nanoseconds. */
+    srand( tp.tv_nsec );
+
 
     /* Initialize reconnect attempts and interval. */
-    RetryUtils_ParamsReset( &reconnectParams );
+    BackoffAlgorithm_InitializeParams( &reconnectParams,
+                                       CONNECTION_RETRY_BACKOFF_BASE_MS,
+                                       CONNECTION_RETRY_MAX_BACKOFF_DELAY_MS,
+                                       CONNECTION_RETRY_MAX_ATTEMPTS );
 
     /* Attempt to connect to MQTT broker. If connection fails, retry after
      * a timeout. Timeout value will exponentially increase until maximum
@@ -521,16 +576,23 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
 
         if( opensslStatus != OPENSSL_SUCCESS )
         {
-            LogWarn( ( "Connection to the broker failed. Retrying connection with backoff and jitter." ) );
-            retryUtilsStatus = RetryUtils_BackoffAndSleep( &reconnectParams );
-        }
+            /* Generate a random number and get back-off value (in milliseconds) for the next connection retry. */
+            backoffAlgStatus = BackoffAlgorithm_GetNextBackoff( &reconnectParams, generateRandomNumber(), &nextRetryBackOff );
 
-        if( retryUtilsStatus == RetryUtilsRetriesExhausted )
-        {
-            LogError( ( "Connection to the broker failed, all attempts exhausted." ) );
-            returnStatus = EXIT_FAILURE;
+            if( backoffAlgStatus == BackoffAlgorithmRetriesExhausted )
+            {
+                LogError( ( "Connection to the broker failed, all attempts exhausted." ) );
+                returnStatus = EXIT_FAILURE;
+            }
+            else if( backoffAlgStatus == BackoffAlgorithmSuccess )
+            {
+                LogWarn( ( "Connection to the broker failed. Retrying connection "
+                           "after %hu ms backoff.",
+                           ( unsigned short ) nextRetryBackOff ) );
+                Clock_SleepMs( nextRetryBackOff );
+            }
         }
-    } while( ( opensslStatus != OPENSSL_SUCCESS ) && ( retryUtilsStatus == RetryUtilsSuccess ) );
+    } while( ( opensslStatus != OPENSSL_SUCCESS ) && ( backoffAlgStatus == BackoffAlgorithmSuccess ) );
 
     return returnStatus;
 }
@@ -1271,9 +1333,13 @@ int main( int argc,
 {
     int returnStatus = EXIT_SUCCESS;
     NetworkContext_t networkContext;
+    OpensslParams_t opensslParams;
 
     ( void ) argc;
     ( void ) argv;
+
+    /* Set the pParams member of the network context with desired transport. */
+    networkContext.pParams = &opensslParams;
 
     for( ; ; )
     {

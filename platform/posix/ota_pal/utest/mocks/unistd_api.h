@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C V202009.00
+ * OTA PAL V2.0.1 for POSIX
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -20,16 +20,10 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-/**
- * @file math_api.h
- * @brief This file is used to generate a mock for any functions from
- * math.h since mocking math.h causes several compilation errors from
- * parsing its macros.
- */
+#ifndef UNISTD_API_H
+#define UNISTD_API_H
 
-#ifndef MATH_API_H_
-#define MATH_API_H_
+extern char * getcwd( char * buf,
+                      size_t size );
 
-extern int rand();
-
-#endif /* ifndef MATH_API_H_ */
+#endif /* ifndef UNISTD_API_H */
