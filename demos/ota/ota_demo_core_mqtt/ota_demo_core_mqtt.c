@@ -1490,6 +1490,9 @@ static int startOTADemo( void )
     /* OTA Agent thread handle.*/
     pthread_t threadHandle;
 
+    /* Status return from call to pthread_join. */
+    int returnJoin = 0;
+
     /* OTA interface context required for library interface functions.*/
     OtaInterfaces_t otaInterfaces;
 
@@ -1545,9 +1548,7 @@ static int startOTADemo( void )
             if( mqttSessionEstablished != true )
             {
                 /* Connect to MQTT broker and create MQTT connection. */
-                returnStatus = establishConnection();
-
-                if( returnStatus == EXIT_SUCCESS )
+                if( EXIT_SUCCESS == establishConnection() )
                 {
                     /* Check if OTA process was suspended and resume if required. */
                     if( state == OtaAgentStateSuspended )
@@ -1632,13 +1633,18 @@ static int startOTADemo( void )
 
     /****************************** Wait for OTA Thread. ******************************/
 
-    returnStatus = pthread_join( threadHandle, NULL );
-
-    if( returnStatus != 0 )
+    if( returnStatus == EXIT_SUCCESS )
     {
-        LogError( ( "Failed to join thread"
-                    ",error code = %d",
-                    returnStatus ) );
+        returnJoin = pthread_join( threadHandle, NULL );
+
+        if( returnJoin != 0 )
+        {
+            LogError( ( "Failed to join thread"
+                        ",error code = %d",
+                        returnStatus ) );
+
+            returnStatus = EXIT_FAILURE;
+        }
     }
 
     return returnStatus;
