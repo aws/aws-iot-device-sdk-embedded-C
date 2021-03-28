@@ -373,7 +373,7 @@ cmake -S. -Bbuild
 In order to set these configurations manually, edit `demo_config.h` in `demos/mqtt/mqtt_demo_mutual_auth/` and `demos/http/http_demo_mutual_auth/` to `#define` the following:
 
 * Set `AWS_IOT_ENDPOINT` to your custom endpoint. This is found on the *Settings* page of the AWS IoT Console and has a format of `ABCDEFG1234567.iot.<aws-region>.amazonaws.com` where `<aws-region>` can be an AWS region like `us-east-2`.  
-   * Optionally it can also be found with the AWS CLI command "aws iot describe-endpoint --endpoint-type iot:Data-ATS"
+   * Optionally it can also be found with the AWS CLI command `aws iot describe-endpoint --endpoint-type iot:Data-ATS`
 * Set `CLIENT_CERT_PATH` to the path of the client certificate downloaded when setting up the device certificate in [AWS IoT Account Setup](#aws-iot-account-setup).
 * Set `CLIENT_PRIVATE_KEY_PATH` to the path of the private key downloaded when setting up the device certificate in [AWS IoT Account Setup](#aws-iot-account-setup).
 
