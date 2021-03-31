@@ -357,18 +357,23 @@ Follow the links to:
 
 The MQTT Mutual Authentication and AWS IoT Shadow demos include example AWS IoT policy documents to run each respective demo with AWS IoT. You may use the [MQTT Mutual auth](./demos/mqtt/mqtt_demo_mutual_auth/aws_iot_policy_example_mqtt.json) and [Shadow](./demos/shadow/shadow_demo_main/aws_iot_policy_example_shadow.json) example policies by replacing `[AWS_REGION]` and `[AWS_ACCOUNT_ID]` with the strings of your region and account identifier. While the IoT Thing name and MQTT client identifier do not need to match for the demos to run, the example policies have the Thing name and client identifier identical as per [AWS IoT best practices](https://docs.aws.amazon.com/iot/latest/developerguide/security-best-practices.html).
 
+It can be very helpful to also have the [AWS Command Line Interface tooling](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html) installed.
+
 #### Configuring mutual authentication demos of MQTT and HTTP
 
 You can pass the following configuration settings as command line options in order to run the mutual auth demos. Make sure to run the following command in the root directory of the C SDK:
 
 ```sh
+## optionally find your-aws-iot-endpoint from the command line
+aws iot describe-endpoint --endpoint-type iot:Data-ATS
 cmake -S. -Bbuild
 -DAWS_IOT_ENDPOINT="<your-aws-iot-endpoint>" -DCLIENT_CERT_PATH="<your-client-certificate-path>" -DCLIENT_PRIVATE_KEY_PATH="<your-client-private-key-path>" 
 ```
 
 In order to set these configurations manually, edit `demo_config.h` in `demos/mqtt/mqtt_demo_mutual_auth/` and `demos/http/http_demo_mutual_auth/` to `#define` the following:
 
-* Set `AWS_IOT_ENDPOINT` to your custom endpoint. This is found on the *Settings* page of the AWS IoT Console and has a format of `ABCDEFG1234567.iot.us-east-2.amazonaws.com`.
+* Set `AWS_IOT_ENDPOINT` to your custom endpoint. This is found on the *Settings* page of the AWS IoT Console and has a format of `ABCDEFG1234567.iot.<aws-region>.amazonaws.com` where `<aws-region>` can be an AWS region like `us-east-2`.  
+   * Optionally, it can also be found with the AWS CLI command `aws iot describe-endpoint --endpoint-type iot:Data-ATS`.
 * Set `CLIENT_CERT_PATH` to the path of the client certificate downloaded when setting up the device certificate in [AWS IoT Account Setup](#aws-iot-account-setup).
 * Set `CLIENT_PRIVATE_KEY_PATH` to the path of the private key downloaded when setting up the device certificate in [AWS IoT Account Setup](#aws-iot-account-setup).
 
