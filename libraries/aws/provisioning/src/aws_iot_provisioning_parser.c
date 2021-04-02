@@ -629,17 +629,21 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseRegisterThingResponse( AwsIot
                     IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_INTERNAL_FAILURE );
                 }
 
-                pDeviceConfigurationList = AwsIotProvisioning_MallocDeviceConfigurationList( numOfDeviceConfigurationEntries *
-                                                                                             sizeof( AwsIotProvisioningResponseDeviceConfigurationEntry_t ) );
-
-                if( pDeviceConfigurationList == NULL )
+                if( numOfDeviceConfigurationEntries > 0 )
                 {
-                    IotLogError( "Failure in allocating memory for device configuration data in response payload of %s operation",
-                                 REGISTER_THING_OPERATION_LOG );
-                    IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_NO_MEMORY );
-                }
+                    pDeviceConfigurationList = AwsIotProvisioning_MallocDeviceConfigurationList( numOfDeviceConfigurationEntries *
+                                                                                                 sizeof( AwsIotProvisioningResponseDeviceConfigurationEntry_t ) );
 
-                configurationListAllocated = true;
+                    if( pDeviceConfigurationList == NULL )
+                    {
+                        IotLogError( "Failure in allocating memory for device configuration data in response payload of %s operation",
+                                     REGISTER_THING_OPERATION_LOG );
+                        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_NO_MEMORY );
+                    }
+
+                    configurationListAllocated = true;
+                }
+               
 
                 /* Iterate over the contents of the device configuration to decode the list of configuration entries to
                  * pass to the user-callback.*/
