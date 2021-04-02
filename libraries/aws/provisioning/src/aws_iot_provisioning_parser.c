@@ -636,7 +636,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseRegisterThingResponse( AwsIot
                     if( pDeviceConfigurationList == NULL )
                     {
                         IotLogError( "Failure in allocating memory for device configuration data in response payload of %s operation",
-                                 REGISTER_THING_OPERATION_LOG );
+                                     REGISTER_THING_OPERATION_LOG );
                         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_NO_MEMORY );
                     }
 
