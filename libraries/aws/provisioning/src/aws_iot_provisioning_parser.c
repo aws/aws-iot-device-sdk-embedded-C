@@ -629,9 +629,10 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseRegisterThingResponse( AwsIot
                     IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_INTERNAL_FAILURE );
                 }
 
-                if ( numOfDeviceConfigurationEntries > 0) {
-                     pDeviceConfigurationList = AwsIotProvisioning_MallocDeviceConfigurationList( numOfDeviceConfigurationEntries *
-                                                                                             sizeof( AwsIotProvisioningResponseDeviceConfigurationEntry_t ) );
+                if( numOfDeviceConfigurationEntries > 0 )
+                {
+                    pDeviceConfigurationList = AwsIotProvisioning_MallocDeviceConfigurationList( numOfDeviceConfigurationEntries *
+                                                                                                 sizeof( AwsIotProvisioningResponseDeviceConfigurationEntry_t ) );
 
                     if( pDeviceConfigurationList == NULL )
                     {
