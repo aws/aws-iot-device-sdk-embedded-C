@@ -1882,9 +1882,9 @@ static void setOtaInterfaces( OtaInterfaces_t * pOtaInterfaces )
     pOtaInterfaces->os.event.send = Posix_OtaSendEvent;
     pOtaInterfaces->os.event.recv = Posix_OtaReceiveEvent;
     pOtaInterfaces->os.event.deinit = Posix_OtaDeinitEvent;
-    pOtaInterfaces->os.timer.start = Posix_OtaStartTimer;
-    pOtaInterfaces->os.timer.stop = Posix_OtaStopTimer;
-    pOtaInterfaces->os.timer.delete = Posix_OtaDeleteTimer;
+    pOtaInterfaces->os.timer.startTimer = Posix_OtaStartTimer;
+    pOtaInterfaces->os.timer.stopTimer = Posix_OtaStopTimer;
+    pOtaInterfaces->os.timer.deleteTimer = Posix_OtaDeleteTimer;
     pOtaInterfaces->os.mem.malloc = STDC_Malloc;
     pOtaInterfaces->os.mem.free = STDC_Free;
 
