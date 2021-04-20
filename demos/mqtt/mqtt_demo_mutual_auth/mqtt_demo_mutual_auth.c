@@ -371,6 +371,11 @@ static uint32_t generateRandomNumber();
  * Timeout value will exponentially increase until maximum
  * timeout value is reached or the number of attempts are exhausted.
  *
+ * @param[in,out] pClientSessionPresent Pointer to flag indicating if an
+ * MQTT session is present in the client.
+ * @param[in,out] pBrokerSessionPresent Pointer to flag indicating if an
+ * broker session is present or not to handle outgoing publishes.
+ * @param[out] pMqttContext The output parameter to return the created mqtt context.
  * @param[out] pNetworkContext The output parameter to return the created network context.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on successful connection.
@@ -392,9 +397,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
-static int subscribePublishLoop( MQTTContext_t * pMqttContext,
-                                 bool * pMqttSessionEstablished,
-                                 bool * pBrokerSessionPresent );
+static int subscribePublishLoop( MQTTContext_t * pMqttContext );
 
 /**
  * @brief The function to handle the incoming publishes.
@@ -1333,9 +1336,7 @@ static int initializeMqtt( MQTTContext_t * pMqttContext,
 
 /*-----------------------------------------------------------*/
 
-static int subscribePublishLoop( MQTTContext_t * pMqttContext,
-                                 bool * pMqttSessionEstablished,
-                                 bool * pBrokerSessionPresent )
+static int subscribePublishLoop( MQTTContext_t * pMqttContext )
 {
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus = MQTTSuccess;
@@ -1343,30 +1344,6 @@ static int subscribePublishLoop( MQTTContext_t * pMqttContext,
     const uint32_t maxPublishCount = MQTT_PUBLISH_COUNT_PER_LOOP;
 
     assert( pMqttContext != NULL );
-
-    if( returnStatus == EXIT_SUCCESS )
-    {
-        /* Check if session is present and if there are any outgoing publishes
-         * that need to resend. This is only valid if the broker is
-         * re-establishing a session which was already present. */
-        if( *pBrokerSessionPresent == true )
-        {
-            LogInfo( ( "An MQTT session with broker is re-established. "
-                       "Resending unacked publishes." ) );
-
-            /* Handle all the resend of publish messages. */
-            returnStatus = handlePublishResend( pMqttContext );
-        }
-        else
-        {
-            LogInfo( ( "A clean MQTT connection is established."
-                       " Cleaning up all the stored outgoing publishes.\n\n" ) );
-
-            /* Clean up the outgoing publishes waiting for ack as this new
-             * connection doesn't re-establish an existing session. */
-            cleanupOutgoingPublishes();
-        }
-    }
 
     if( returnStatus == EXIT_SUCCESS )
     {
@@ -1475,22 +1452,19 @@ static int subscribePublishLoop( MQTTContext_t * pMqttContext,
     /* Send an MQTT Disconnect packet over the already connected TCP socket.
      * There is no corresponding response for the disconnect packet. After sending
      * disconnect, client must close the network connection. */
-    if( *pMqttSessionEstablished == true )
-    {
-        LogInfo( ( "Disconnecting the MQTT connection with %.*s.",
-                   AWS_IOT_ENDPOINT_LENGTH,
-                   AWS_IOT_ENDPOINT ) );
+    LogInfo(("Disconnecting the MQTT connection with %.*s.",
+        AWS_IOT_ENDPOINT_LENGTH,
+        AWS_IOT_ENDPOINT));
 
-        if( returnStatus == EXIT_FAILURE )
-        {
-            /* Returned status is not used to update the local status as there
-             * were failures in demo execution. */
-            ( void ) disconnectMqttSession( pMqttContext );
-        }
-        else
-        {
-            returnStatus = disconnectMqttSession( pMqttContext );
-        }
+    if (returnStatus == EXIT_FAILURE)
+    {
+        /* Returned status is not used to update the local status as there
+         * were failures in demo execution. */
+        (void)disconnectMqttSession(pMqttContext);
+    }
+    else
+    {
+        returnStatus = disconnectMqttSession(pMqttContext);
     }
 
     /* Reset global SUBACK status variable after completion of subscription request cycle. */
@@ -1522,7 +1496,7 @@ int main( int argc,
     MQTTContext_t mqttContext = { 0 };
     NetworkContext_t networkContext = { 0 };
     OpensslParams_t opensslParams = { 0 };
-    bool clientSessionPresent = false, brokerSessionPresent, mqttSessionPresent;
+    bool clientSessionPresent = false, brokerSessionPresent, mqttSessionPresent = false;
     struct timespec tp;
 
     ( void ) argc;
@@ -1564,9 +1538,29 @@ int main( int argc,
             }
             else
             {
+               
+                /* Check if session is present and if there are any outgoing publishes
+                * that need to resend. This is only valid if the broker is
+                * re-establishing a session which was already present. */
+                if (brokerSessionPresent == true)
+                {
+                    LogInfo(("An MQTT session with broker is re-established. "
+                        "Resending unacked publishes."));
+
+                    /* Handle all the resend of publish messages. */
+                    returnStatus = handlePublishResend(&mqttContext);
+                }
+                else
+                {
+                    LogInfo(("A clean MQTT connection is established."
+                        " Cleaning up all the stored outgoing publishes.\n\n"));
+
+                    /* Clean up the outgoing publishes waiting for ack as this new
+                     * connection doesn't re-establish an existing session. */
+                    cleanupOutgoingPublishes();
+                }
                 /* If TLS session is established, execute Subscribe/Publish loop. */
-                mqttSessionPresent = true;
-                returnStatus = subscribePublishLoop( &mqttContext, &mqttSessionPresent, &brokerSessionPresent );
+                returnStatus = subscribePublishLoop( &mqttContext );
             }
 
             if( returnStatus == EXIT_SUCCESS )
