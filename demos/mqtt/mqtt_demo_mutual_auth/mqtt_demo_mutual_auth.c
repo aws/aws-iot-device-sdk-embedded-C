@@ -1496,7 +1496,7 @@ int main( int argc,
     MQTTContext_t mqttContext = { 0 };
     NetworkContext_t networkContext = { 0 };
     OpensslParams_t opensslParams = { 0 };
-    bool clientSessionPresent = false, brokerSessionPresent, mqttSessionPresent = false;
+    bool clientSessionPresent = false, brokerSessionPresent;
     struct timespec tp;
 
     ( void ) argc;
