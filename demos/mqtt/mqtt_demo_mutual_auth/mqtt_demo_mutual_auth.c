@@ -1452,19 +1452,19 @@ static int subscribePublishLoop( MQTTContext_t * pMqttContext )
     /* Send an MQTT Disconnect packet over the already connected TCP socket.
      * There is no corresponding response for the disconnect packet. After sending
      * disconnect, client must close the network connection. */
-    LogInfo(("Disconnecting the MQTT connection with %.*s.",
-        AWS_IOT_ENDPOINT_LENGTH,
-        AWS_IOT_ENDPOINT));
+    LogInfo( ( "Disconnecting the MQTT connection with %.*s.",
+               AWS_IOT_ENDPOINT_LENGTH,
+               AWS_IOT_ENDPOINT ) );
 
-    if (returnStatus == EXIT_FAILURE)
+    if( returnStatus == EXIT_FAILURE )
     {
         /* Returned status is not used to update the local status as there
          * were failures in demo execution. */
-        (void)disconnectMqttSession(pMqttContext);
+        ( void ) disconnectMqttSession( pMqttContext );
     }
     else
     {
-        returnStatus = disconnectMqttSession(pMqttContext);
+        returnStatus = disconnectMqttSession( pMqttContext );
     }
 
     /* Reset global SUBACK status variable after completion of subscription request cycle. */
@@ -1496,7 +1496,7 @@ int main( int argc,
     MQTTContext_t mqttContext = { 0 };
     NetworkContext_t networkContext = { 0 };
     OpensslParams_t opensslParams = { 0 };
-    bool clientSessionPresent = false, brokerSessionPresent;
+    bool clientSessionPresent = false, brokerSessionPresent = false;
     struct timespec tp;
 
     ( void ) argc;
@@ -1538,27 +1538,27 @@ int main( int argc,
             }
             else
             {
-               
                 /* Check if session is present and if there are any outgoing publishes
-                * that need to resend. This is only valid if the broker is
-                * re-establishing a session which was already present. */
-                if (brokerSessionPresent == true)
+                 * that need to resend. This is only valid if the broker is
+                 * re-establishing a session which was already present. */
+                if( brokerSessionPresent == true )
                 {
-                    LogInfo(("An MQTT session with broker is re-established. "
-                        "Resending unacked publishes."));
+                    LogInfo( ( "An MQTT session with broker is re-established. "
+                               "Resending unacked publishes." ) );
 
                     /* Handle all the resend of publish messages. */
-                    returnStatus = handlePublishResend(&mqttContext);
+                    returnStatus = handlePublishResend( &mqttContext );
                 }
                 else
                 {
-                    LogInfo(("A clean MQTT connection is established."
-                        " Cleaning up all the stored outgoing publishes.\n\n"));
+                    LogInfo( ( "A clean MQTT connection is established."
+                               " Cleaning up all the stored outgoing publishes.\n\n" ) );
 
                     /* Clean up the outgoing publishes waiting for ack as this new
                      * connection doesn't re-establish an existing session. */
                     cleanupOutgoingPublishes();
                 }
+
                 /* If TLS session is established, execute Subscribe/Publish loop. */
                 returnStatus = subscribePublishLoop( &mqttContext );
             }
