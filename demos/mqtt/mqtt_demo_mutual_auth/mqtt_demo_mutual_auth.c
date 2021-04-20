@@ -373,8 +373,8 @@ static uint32_t generateRandomNumber();
  *
  * @param[in,out] pClientSessionPresent Pointer to flag indicating if an
  * MQTT session is present in the client.
- * @param[in,out] pBrokerSessionPresent Pointer to flag indicating if an
- * broker session is present or not to handle outgoing publishes.
+ * @param[in,out] pBrokerSessionPresent Pointer to flag indicating if a
+ * broker session is present to handle outgoing publishes.
  * @param[out] pMqttContext The output parameter to return the created mqtt context.
  * @param[out] pNetworkContext The output parameter to return the created network context.
  *
