@@ -1056,7 +1056,6 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus;
     MQTTConnectInfo_t connectInfo = { 0 };
-    BackoffAlgorithmContext_t reconnectParams;
 
     assert( pMqttContext != NULL );
     assert( pSessionPresent != NULL );
@@ -1339,41 +1338,14 @@ static int subscribePublishLoop( MQTTContext_t * pMqttContext,
                                  bool * pBrokerSessionPresent )
 {
     int returnStatus = EXIT_SUCCESS;
-    /*bool mqttSessionEstablished = false, brokerSessionPresent; */
     MQTTStatus_t mqttStatus = MQTTSuccess;
     uint32_t publishCount = 0;
     const uint32_t maxPublishCount = MQTT_PUBLISH_COUNT_PER_LOOP;
 
-    /*bool createCleanSession = false; */
-
     assert( pMqttContext != NULL );
-    /*assert( pClientSessionPresent != NULL ); */
-
-    /* A clean MQTT session needs to be created, if there is no session saved
-     * in this MQTT client. */
-    /*createCleanSession = ( *pClientSessionPresent == true ) ? false : true; */
-
-    /* Establish MQTT session on top of TCP+TLS connection. */
-    /* LogInfo( ( "Creating an MQTT connection to %.*s.", */
-    /*            AWS_IOT_ENDPOINT_LENGTH, */
-    /*            AWS_IOT_ENDPOINT ) ); */
-
-    /* Sends an MQTT Connect packet using the established TLS session,
-     * then waits for connection acknowledgment (CONNACK) packet. */
-    /*returnStatus = establishMqttSession( pMqttContext, createCleanSession, &brokerSessionPresent ); */
 
     if( returnStatus == EXIT_SUCCESS )
     {
-        /* Keep a flag for indicating if MQTT session is established. This
-         * flag will mark that an MQTT DISCONNECT has to be sent at the end
-         * of the demo, even if there are intermediate failures. */
-        /*mqttSessionEstablished = true; */
-
-        /* Update the flag to indicate that an MQTT client session is saved.
-         * Once this flag is set, MQTT connect in the following iterations of
-         * this demo will be attempted without requesting for a clean session. */
-        /**pClientSessionPresent = true; */
-
         /* Check if session is present and if there are any outgoing publishes
          * that need to resend. This is only valid if the broker is
          * re-establishing a session which was already present. */
