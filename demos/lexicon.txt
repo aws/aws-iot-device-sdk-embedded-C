@@ -383,6 +383,7 @@ pathlength
 payloadlength
 pbe
 pbkdf
+pbrokersessionpresent
 pbuf
 pbuffer
 pcdescription
