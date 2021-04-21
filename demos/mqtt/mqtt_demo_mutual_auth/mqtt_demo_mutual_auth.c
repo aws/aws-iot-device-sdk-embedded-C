@@ -662,7 +662,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
             }
         }
 
-        if( ( opensslStatus != OPENSSL_SUCCESS ) || ( returnStatus == EXIT_FAILURE ) )
+        if( ( ( returnStatus == EXIT_FAILURE ) )
         {
             /* Generate a random number and get back-off value (in milliseconds) for the next connection retry. */
             backoffAlgStatus = BackoffAlgorithm_GetNextBackoff( &reconnectParams, generateRandomNumber(), &nextRetryBackOff );
