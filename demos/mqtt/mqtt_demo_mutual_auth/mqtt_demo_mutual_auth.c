@@ -563,7 +563,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
                                               bool * pClientSessionPresent,
                                               bool * pBrokerSessionPresent )
 {
-    int returnStatus = EXIT_SUCCESS;
+    int returnStatus = EXIT_FAILURE;
     BackoffAlgorithmStatus_t backoffAlgStatus = BackoffAlgorithmSuccess;
     OpensslStatus_t opensslStatus = OPENSSL_SUCCESS;
     BackoffAlgorithmContext_t reconnectParams;
