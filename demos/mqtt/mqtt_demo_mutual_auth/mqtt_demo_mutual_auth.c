@@ -662,7 +662,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
             }
         }
 
-        if( ( ( returnStatus == EXIT_FAILURE ) )
+        if( ( returnStatus == EXIT_FAILURE ) )
         {
             /* Generate a random number and get back-off value (in milliseconds) for the next connection retry. */
             backoffAlgStatus = BackoffAlgorithm_GetNextBackoff( &reconnectParams, generateRandomNumber(), &nextRetryBackOff );
@@ -680,7 +680,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
                 Clock_SleepMs( nextRetryBackOff );
             }
         }
-    } while( (returnStatus == EXIT_FAILURE) && ( backoffAlgStatus == BackoffAlgorithmSuccess ) );
+    } while( ( returnStatus == EXIT_FAILURE ) && ( backoffAlgStatus == BackoffAlgorithmSuccess ) );
 
     return returnStatus;
 }
