@@ -680,7 +680,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
                 Clock_SleepMs( nextRetryBackOff );
             }
         }
-    } while( ( opensslStatus != OPENSSL_SUCCESS ) && ( backoffAlgStatus == BackoffAlgorithmSuccess ) );
+    } while( (returnStatus == EXIT_FAILURE) && ( backoffAlgStatus == BackoffAlgorithmSuccess ) );
 
     return returnStatus;
 }
