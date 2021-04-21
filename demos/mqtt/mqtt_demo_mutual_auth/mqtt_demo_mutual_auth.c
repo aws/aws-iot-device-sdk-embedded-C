@@ -370,13 +370,13 @@ static uint32_t generateRandomNumber();
  * If connection fails, retry is attempted after a timeout.
  * Timeout value will exponentially increase until maximum
  * timeout value is reached or the number of attempts are exhausted.
- *
+ * 
+ * @param[out] pNetworkContext The output parameter to return the created network context.
+ * @param[in] pMqttContext MQTT context pointer.
  * @param[in,out] pClientSessionPresent Pointer to flag indicating if an
  * MQTT session is present in the client.
- * @param[in,out] pBrokerSessionPresent Pointer to flag indicating if a
- * broker session is present to handle outgoing publishes.
- * @param[out] pMqttContext The output parameter to return the created mqtt context.
- * @param[out] pNetworkContext The output parameter to return the created network context.
+ * @param[out] pBrokerSessionPresent Session was already present in the broker or not.
+ * Session present response is obtained from the CONNACK from broker.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on successful connection.
  */
@@ -392,8 +392,6 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
  * receives the Publish message back.
  *
  * @param[in] pMqttContext MQTT context pointer.
- * @param[in,out] pClientSessionPresent Pointer to flag indicating if an
- * MQTT session is present in the client.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
@@ -664,7 +662,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
             }
         }
 
-        if( opensslStatus != OPENSSL_SUCCESS )
+        if( (opensslStatus != OPENSSL_SUCCESS)  || (returnStatus == EXIT_FAILURE) )
         {
             /* Generate a random number and get back-off value (in milliseconds) for the next connection retry. */
             backoffAlgStatus = BackoffAlgorithm_GetNextBackoff( &reconnectParams, generateRandomNumber(), &nextRetryBackOff );
