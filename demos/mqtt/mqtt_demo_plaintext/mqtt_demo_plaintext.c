@@ -227,7 +227,7 @@ static uint32_t generateRandomNumber();
  * timeout value is reached or the number of attempts are exhausted.
  *
  * @param[out] pNetworkContext The output parameter to return the created network context.
- * @param[in] pMqttContext MQTT context pointer.
+ * @param[out] pMqttContext The output to return the created MQTT context.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on successful connection.
  */
@@ -235,9 +235,9 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
                                               MQTTContext_t * pMqttContext );
 
 /**
- * @brief A function that connects to MQTT broker,
- * subscribes a topic, publishes to the same
- * topic MQTT_PUBLISH_COUNT_PER_LOOP number of times, and verifies if it
+ * @brief A function that uses the passed MQTT connection to
+ * subscribe to a topic, publishe to the same topic
+ * MQTT_PUBLISH_COUNT_PER_LOOP number of times, and verify if it
  * receives the Publish message back.
  *
  * @param[in] pMqttContext MQTT context pointer.

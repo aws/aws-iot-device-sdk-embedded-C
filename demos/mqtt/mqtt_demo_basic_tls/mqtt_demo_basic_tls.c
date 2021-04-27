@@ -270,7 +270,7 @@ static uint32_t generateRandomNumber();
  * timeout value is reached or the number of attempts are exhausted.
  *
  * @param[out] pNetworkContext The output parameter to return the created network context.
- * @param[in] pMqttContext MQTT context pointer.
+ * @param[out] pMqttContext The output to return the created MQTT context.
  * @param[in,out] pClientSessionPresent Pointer to flag indicating if an
  * MQTT session is present in the client.
  * @param[out] pBrokerSessionPresent Session was already present in the broker or not.
@@ -285,9 +285,9 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
 
 
 /**
- * @brief A function that connects to MQTT broker,
- * subscribes to a topic, publishes to the same topic
- * MQTT_PUBLISH_COUNT_PER_LOOP number of times, and verifies if it
+ * @brief A function that uses the passed MQTT connection to
+ * subscribe to a topic, publishe to the same topic
+ * MQTT_PUBLISH_COUNT_PER_LOOP number of times, and verify if it
  * receives the Publish message back.
  *
  * @param[in] pMqttContext MQTT context pointer.
@@ -520,10 +520,6 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
             {
                 /* End TLS session, then close TCP connection. */
                 ( void ) Openssl_Disconnect( pNetworkContext );
-            }
-            else
-            {
-                *pClientSessionPresent = true;
             }
         }
 
@@ -1397,6 +1393,8 @@ int main( int argc,
             }
             else
             {
+                clientSessionPresent = true;
+
                 /* Check if session is present and if there are any outgoing publishes
                  * that need to resend. This is only valid if the broker is
                  * re-establishing a session which was already present. */
