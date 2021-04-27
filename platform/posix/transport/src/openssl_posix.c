@@ -346,6 +346,7 @@ static int32_t setRootCa( const SSL_CTX * pSslContext,
     if( pRootCa != NULL )
     {
         X509_free( pRootCa );
+        pRootCa = NULL;
     }
 
     /* Close the file if it was successfully opened. */
@@ -657,6 +658,7 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
     if( pSslContext != NULL )
     {
         SSL_CTX_free( pSslContext );
+        pSslContext = NULL;
     }
 
     /* Clean up on error. */
@@ -707,6 +709,7 @@ OpensslStatus_t Openssl_Disconnect( const NetworkContext_t * pNetworkContext )
             }
 
             SSL_free( pOpensslParams->pSsl );
+            pOpensslParams->pSsl = NULL;
         }
 
         /* Tear down the socket connection, pNetworkContext != NULL here. */
