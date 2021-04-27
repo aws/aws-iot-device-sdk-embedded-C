@@ -1364,7 +1364,7 @@ int main( int argc,
         else
         {
             /* If TLS session is established, execute Subscribe/Publish loop. */
-            returnStatus = subscribePublishLoop( &networkContext, &mqttContext );
+            returnStatus = subscribePublishLoop( &mqttContext );
         }
 
         if( returnStatus == EXIT_SUCCESS )
