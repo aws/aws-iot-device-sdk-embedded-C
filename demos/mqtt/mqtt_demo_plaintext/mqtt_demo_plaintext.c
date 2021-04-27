@@ -240,13 +240,11 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
  * topic MQTT_PUBLISH_COUNT_PER_LOOP number of times, and verifies if it
  * receives the Publish message back.
  *
- * @param[in] pNetworkContext Pointer to the network context created using Plaintext_Connect.
  * @param[in] pMqttContext MQTT context pointer.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
-static int subscribePublishLoop( NetworkContext_t * pNetworkContext,
-                                 MQTTContext_t * pMqttContext );
+static int subscribePublishLoop( MQTTContext_t * pMqttContext );
 
 /**
  * @brief The function to handle the incoming publishes.
@@ -876,8 +874,7 @@ static int publishToTopic( MQTTContext_t * pMqttContext )
 
 /*-----------------------------------------------------------*/
 
-static int subscribePublishLoop( NetworkContext_t * pNetworkContext,
-                                 MQTTContext_t * pMqttContext )
+static int subscribePublishLoop( MQTTContext_t * pMqttContext )
 {
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus;
@@ -1066,7 +1063,7 @@ int main( int argc,
         else
         {
             /* If TCP connection is successful, execute Subscribe/Publish loop. */
-            returnStatus = subscribePublishLoop( &networkContext, &mqttContext );
+            returnStatus = subscribePublishLoop( &mqttContext );
         }
 
         if( returnStatus == EXIT_SUCCESS )
