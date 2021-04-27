@@ -387,7 +387,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
 
 /**
  * @brief A function that uses the passed MQTT connection to
- * subscribe to a topic, publishe to the same topic
+ * subscribe to a topic, publish to the same topic
  * MQTT_PUBLISH_COUNT_PER_LOOP number of times, and verify if it
  * receives the Publish message back.
  *
