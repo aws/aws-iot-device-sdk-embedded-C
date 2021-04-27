@@ -163,10 +163,13 @@ static uint32_t generateRandomNumber();
  * backoff time is reached or the number of attempts are exhausted.
  *
  * @param[out] pNetworkContext The output parameter to return the created network context.
+ * @param[in] pFixedBuffer Pointer to a structure containing fixed buffer and its length.
+ * The buffer is used for serializing CONNECT packet and deserializing CONN-ACK.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on successful connection.
  */
-static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext );
+static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext,
+                                              MQTTFixedBuffer_t * pFixedBuffer );
 
 /**
  * @brief Establish an MQTT session over a TCP connection by sending MQTT CONNECT.
@@ -350,9 +353,10 @@ static uint32_t generateRandomNumber()
 }
 
 /*-----------------------------------------------------------*/
-static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext )
+static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext,
+                                              MQTTFixedBuffer_t * pFixedBuffer )
 {
-    int returnStatus = EXIT_SUCCESS;
+    int returnStatus = EXIT_FAILURE;
     BackoffAlgorithmStatus_t backoffAlgStatus = BackoffAlgorithmSuccess;
     SocketStatus_t socketStatus = SOCKETS_SUCCESS;
     BackoffAlgorithmContext_t reconnectParams;
@@ -398,7 +402,21 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
                                           TRANSPORT_SEND_RECV_TIMEOUT_MS,
                                           TRANSPORT_SEND_RECV_TIMEOUT_MS );
 
-        if( socketStatus != SOCKETS_SUCCESS )
+        if( socketStatus == SOCKETS_SUCCESS )
+        {
+            /* Sends an MQTT Connect packet over the already connected TCP socket
+             * and waits for connection acknowledgment (CONNACK) packet. */
+            LogInfo( ( "Establishing MQTT connection to the broker  %s.\r\n", BROKER_ENDPOINT ) );
+            returnStatus = createMQTTConnectionWithBroker( pNetworkContext, pFixedBuffer );
+
+            if( returnStatus == EXIT_FAILURE )
+            {
+                /* Close the TCP connection.  */
+                ( void ) Plaintext_Disconnect( pNetworkContext );
+            }
+        }
+
+        if( returnStatus == EXIT_FAILURE )
         {
             /* Generate a random number and get back-off value (in milliseconds) for the next connection retry. */
             backoffAlgStatus = BackoffAlgorithm_GetNextBackoff( &reconnectParams, generateRandomNumber(), &nextRetryBackOff );
@@ -416,7 +434,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
                 Clock_SleepMs( nextRetryBackOff );
             }
         }
-    } while( ( socketStatus != SOCKETS_SUCCESS ) && ( backoffAlgStatus == BackoffAlgorithmSuccess ) );
+    } while( ( returnStatus == EXIT_FAILURE ) && ( backoffAlgStatus == BackoffAlgorithmSuccess ) );
 
     return returnStatus;
 }
@@ -936,16 +954,10 @@ int main( int argc,
          * the MQTT broker as specified in BROKER_ENDPOINT and BROKER_PORT
          * at the demo config header. */
         LogInfo( ( "Establishing TCP connection to the broker  %s.\r\n", BROKER_ENDPOINT ) );
-        returnStatus = connectToServerWithBackoffRetries( &networkContext );
+        returnStatus = connectToServerWithBackoffRetries( &networkContext, &fixedBuffer );
 
         if( returnStatus == EXIT_SUCCESS )
         {
-            /* Sends an MQTT Connect packet over the already connected TCP socket
-             * and waits for connection acknowledgment (CONNACK) packet. */
-            LogInfo( ( "Establishing MQTT connection to the broker  %s.\r\n", BROKER_ENDPOINT ) );
-            returnStatus = createMQTTConnectionWithBroker( &networkContext, &fixedBuffer );
-            assert( returnStatus == EXIT_SUCCESS );
-
             /**************************** Subscribe, Re-subscribe, and Keep-Alive ******************************/
 
             /* Initialize retry attempts and interval. */

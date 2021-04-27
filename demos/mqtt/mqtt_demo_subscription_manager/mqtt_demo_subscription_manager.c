@@ -322,10 +322,12 @@ static uint32_t generateRandomNumber();
  * back-off period is reached or the number of attempts are exhausted.
  *
  * @param[out] pNetworkContext The output parameter to return the created network context.
+ * @param[in] pMqttContext MQTT context pointer.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on successful connection.
  */
-static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext );
+static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext,
+                                              MQTTContext_t * pMqttContext );
 
 /**
  * @brief A function that connects to the MQTT broker,
@@ -337,7 +339,8 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
-static int subscribePublishLoop( NetworkContext_t * pNetworkContext );
+static int subscribePublishLoop( NetworkContext_t * pNetworkContext,
+                                 MQTTContext_t * pMqttContext );
 
 /**
  * @brief The function to handle the incoming publishes.
@@ -518,9 +521,10 @@ static uint32_t generateRandomNumber()
 }
 
 /*-----------------------------------------------------------*/
-static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext )
+static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext,
+                                              MQTTContext_t * pMqttContext )
 {
-    int returnStatus = EXIT_SUCCESS;
+    int returnStatus = EXIT_FAILURE;
     BackoffAlgorithmStatus_t backoffAlgStatus = BackoffAlgorithmSuccess;
     OpensslStatus_t opensslStatus = OPENSSL_SUCCESS;
     BackoffAlgorithmContext_t reconnectParams;
@@ -528,6 +532,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     OpensslCredentials_t opensslCredentials;
     uint16_t nextRetryBackOff;
     struct timespec tp;
+    bool sessionPresent = false;
 
     /* Initialize information to connect to the MQTT broker. */
     serverInfo.pHostName = BROKER_ENDPOINT;
@@ -574,7 +579,36 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
                                          TRANSPORT_SEND_RECV_TIMEOUT_MS,
                                          TRANSPORT_SEND_RECV_TIMEOUT_MS );
 
-        if( opensslStatus != OPENSSL_SUCCESS )
+        if( opensslStatus == OPENSSL_SUCCESS )
+        {
+            /* Establish MQTT session on top of TCP+TLS connection. */
+            LogInfo( ( "Creating an MQTT connection to %.*s.",
+                       BROKER_ENDPOINT_LENGTH,
+                       BROKER_ENDPOINT ) );
+
+            /* Sends an MQTT Connect packet to establish a clean connection over the
+             * established TLS session, then waits for connection acknowledgment
+             * (CONNACK) packet. */
+            returnStatus = establishMqttSession( pMqttContext,
+                                                 pNetworkContext,
+                                                 true, /* clean session */
+                                                 &sessionPresent );
+
+            if( returnStatus == EXIT_FAILURE )
+            {
+                /* End TLS session, then close TCP connection. */
+                ( void ) Openssl_Disconnect( pNetworkContext );
+            }
+            else
+            {
+                /* As we requested a clean session with the MQTT broker, the broker
+                 * should have sent the acknowledgement packet (CONNACK) with the
+                 * session present bit set to 0. */
+                assert( sessionPresent == false );
+            }
+        }
+
+        if( returnStatus == EXIT_FAILURE )
         {
             /* Generate a random number and get back-off value (in milliseconds) for the next connection retry. */
             backoffAlgStatus = BackoffAlgorithm_GetNextBackoff( &reconnectParams, generateRandomNumber(), &nextRetryBackOff );
@@ -592,7 +626,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
                 Clock_SleepMs( nextRetryBackOff );
             }
         }
-    } while( ( opensslStatus != OPENSSL_SUCCESS ) && ( backoffAlgStatus == BackoffAlgorithmSuccess ) );
+    } while( ( returnStatus == EXIT_FAILURE ) && ( backoffAlgStatus == BackoffAlgorithmSuccess ) );
 
     return returnStatus;
 }
@@ -1072,38 +1106,11 @@ static int publishToTopicAndProcessIncomingMessage( MQTTContext_t * pMqttContext
 
 /*-----------------------------------------------------------*/
 
-static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
+static int subscribePublishLoop( NetworkContext_t * pNetworkContext,
+                                 MQTTContext_t * pMqttContext )
 {
     int returnStatus = EXIT_SUCCESS;
-    bool mqttSessionEstablished = false, sessionPresent = false;
-    MQTTContext_t mqttContext;
     MQTTSubscribeInfo_t pSubscriptionList[ 3 ];
-
-    /* Establish MQTT session on top of TCP+TLS connection. */
-    LogInfo( ( "Creating an MQTT connection to %.*s.",
-               BROKER_ENDPOINT_LENGTH,
-               BROKER_ENDPOINT ) );
-
-    /* Sends an MQTT Connect packet to establish a clean connection over the
-     * established TLS session, then waits for connection acknowledgment
-     * (CONNACK) packet. */
-    returnStatus = establishMqttSession( &mqttContext,
-                                         pNetworkContext,
-                                         true, /* clean session */
-                                         &sessionPresent );
-
-    if( returnStatus == EXIT_SUCCESS )
-    {
-        /* Keep a flag for indicating if MQTT session is established. This
-         * flag will mark that an MQTT DISCONNECT has to be sent at the end
-         * of the demo even if there are intermediate failures. */
-        mqttSessionEstablished = true;
-
-        /* As we requested a clean session with the MQTT broker, the broker
-         * should have sent the acknowledgement packet (CONNACK) with the
-         * session present bit set to 0. */
-        assert( sessionPresent == false );
-    }
 
     /* Subscribe to a wildcard temperature topic filter so that we can receive incoming PUBLISH
      * messages from multiple topics from the broker. */
@@ -1113,7 +1120,7 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
          * '+' wildcard character, so that the incoming PUBLISH messages from the broker for
          * both temperature topic types (for "high" and "low" topics) can be handled by the
          * callback. */
-        returnStatus = subscribeToAndRegisterTopicFilter( &mqttContext,
+        returnStatus = subscribeToAndRegisterTopicFilter( pMqttContext,
                                                           DEMO_TEMPERATURE_TOPIC_FILTER,
                                                           DEMO_TEMPERATURE_TOPIC_FILTER_LENGTH,
                                                           temperatureDataCallback );
@@ -1130,7 +1137,7 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
         LogInfo( ( "Publishing to topic %s.",
                    DEMO_TEMPERATURE_HIGH_TOPIC ) );
 
-        returnStatus = publishToTopicAndProcessIncomingMessage( &mqttContext,
+        returnStatus = publishToTopicAndProcessIncomingMessage( pMqttContext,
                                                                 DEMO_TEMPERATURE_HIGH_TOPIC,
                                                                 DEMO_TEMPERATURE_HIGH_TOPIC_LENGTH,
                                                                 DEMO_TEMPERATURE_HIGH_MESSAGE );
@@ -1159,7 +1166,7 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
         LogInfo( ( "Publishing to topic %s.",
                    DEMO_TEMPERATURE_LOW_TOPIC ) );
 
-        returnStatus = publishToTopicAndProcessIncomingMessage( &mqttContext,
+        returnStatus = publishToTopicAndProcessIncomingMessage( pMqttContext,
                                                                 DEMO_TEMPERATURE_LOW_TOPIC,
                                                                 DEMO_TEMPERATURE_LOW_TOPIC_LENGTH,
                                                                 DEMO_TEMPERATURE_LOW_MESSAGE );
@@ -1181,7 +1188,7 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
      * receive incoming PUBLISH message only on the same topic from the broker. */
     if( returnStatus == EXIT_SUCCESS )
     {
-        returnStatus = subscribeToAndRegisterTopicFilter( &mqttContext,
+        returnStatus = subscribeToAndRegisterTopicFilter( pMqttContext,
                                                           DEMO_HUMIDITY_TOPIC,
                                                           DEMO_HUMIDITY_TOPIC_LENGTH,
                                                           humidityDataCallback );
@@ -1197,7 +1204,7 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
         LogInfo( ( "Publish to topic %s.",
                    DEMO_HUMIDITY_TOPIC ) );
 
-        returnStatus = publishToTopicAndProcessIncomingMessage( &mqttContext,
+        returnStatus = publishToTopicAndProcessIncomingMessage( pMqttContext,
                                                                 DEMO_HUMIDITY_TOPIC,
                                                                 DEMO_HUMIDITY_TOPIC_LENGTH,
                                                                 DEMO_HUMIDITY_MESSAGE );
@@ -1219,7 +1226,7 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
      * so that we can receive incoming PUBLISH message only on the same topic from the broker. */
     if( returnStatus == EXIT_SUCCESS )
     {
-        returnStatus = subscribeToAndRegisterTopicFilter( &mqttContext,
+        returnStatus = subscribeToAndRegisterTopicFilter( pMqttContext,
                                                           DEMO_PRECIPITATION_TOPIC,
                                                           DEMO_PRECIPITATION_TOPIC_LENGTH,
                                                           precipitationDataCallback );
@@ -1235,7 +1242,7 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
         LogInfo( ( "Publish to topic %s.",
                    DEMO_PRECIPITATION_TOPIC ) );
 
-        returnStatus = publishToTopicAndProcessIncomingMessage( &mqttContext,
+        returnStatus = publishToTopicAndProcessIncomingMessage( pMqttContext,
                                                                 DEMO_PRECIPITATION_TOPIC,
                                                                 DEMO_PRECIPITATION_TOPIC_LENGTH,
                                                                 DEMO_PRECIPITATION_MESSAGE );
@@ -1287,7 +1294,7 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
 
         /* Unsubscribe from all topic filters of temperature, humidity and
          * precipitation data. */
-        returnStatus = unsubscribeFromTopicFilters( &mqttContext,
+        returnStatus = unsubscribeFromTopicFilters( pMqttContext,
                                                     pSubscriptionList,
                                                     sizeof( pSubscriptionList )
                                                     / sizeof( MQTTSubscribeInfo_t ) );
@@ -1296,22 +1303,19 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
     /* Send an MQTT Disconnect packet over the already connected TCP socket.
      * There is no corresponding response for the disconnect packet. After sending
      * disconnect, client must close the network connection. */
-    if( mqttSessionEstablished == true )
-    {
-        LogInfo( ( "Disconnecting the MQTT connection with %.*s.",
-                   BROKER_ENDPOINT_LENGTH,
-                   BROKER_ENDPOINT ) );
+    LogInfo( ( "Disconnecting the MQTT connection with %.*s.",
+               BROKER_ENDPOINT_LENGTH,
+               BROKER_ENDPOINT ) );
 
-        if( returnStatus == EXIT_FAILURE )
-        {
-            /* Returned status is not used to update the local status as there
-             * were failures in demo execution. */
-            ( void ) disconnectMqttSession( &mqttContext );
-        }
-        else
-        {
-            returnStatus = disconnectMqttSession( &mqttContext );
-        }
+    if( returnStatus == EXIT_FAILURE )
+    {
+        /* Returned status is not used to update the local status as there
+         * were failures in demo execution. */
+        ( void ) disconnectMqttSession( pMqttContext );
+    }
+    else
+    {
+        returnStatus = disconnectMqttSession( pMqttContext );
     }
 
     return returnStatus;
@@ -1332,6 +1336,7 @@ int main( int argc,
           char ** argv )
 {
     int returnStatus = EXIT_SUCCESS;
+    MQTTContext_t mqttContext = { 0 };
     NetworkContext_t networkContext;
     OpensslParams_t opensslParams;
 
@@ -1348,7 +1353,7 @@ int main( int argc,
          * attempts are reached or maximum timeout value is reached. The function
          * returns EXIT_FAILURE if the TCP connection cannot be established to
          * broker after configured number of attempts. */
-        returnStatus = connectToServerWithBackoffRetries( &networkContext );
+        returnStatus = connectToServerWithBackoffRetries( &networkContext, &mqttContext );
 
         if( returnStatus == EXIT_FAILURE )
         {
@@ -1361,7 +1366,7 @@ int main( int argc,
         else
         {
             /* If TLS session is established, execute Subscribe/Publish loop. */
-            returnStatus = subscribePublishLoop( &networkContext );
+            returnStatus = subscribePublishLoop( &networkContext, &mqttContext );
         }
 
         if( returnStatus == EXIT_SUCCESS )

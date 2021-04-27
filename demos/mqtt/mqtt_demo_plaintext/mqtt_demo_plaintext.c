@@ -227,10 +227,12 @@ static uint32_t generateRandomNumber();
  * timeout value is reached or the number of attempts are exhausted.
  *
  * @param[out] pNetworkContext The output parameter to return the created network context.
+ * @param[in] pMqttContext MQTT context pointer.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on successful connection.
  */
-static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext );
+static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext,
+                                              MQTTContext_t * pMqttContext );
 
 /**
  * @brief A function that connects to MQTT broker,
@@ -239,10 +241,12 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
  * receives the Publish message back.
  *
  * @param[in] pNetworkContext Pointer to the network context created using Plaintext_Connect.
+ * @param[in] pMqttContext MQTT context pointer.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
-static int subscribePublishLoop( NetworkContext_t * pNetworkContext );
+static int subscribePublishLoop( NetworkContext_t * pNetworkContext,
+                                 MQTTContext_t * pMqttContext );
 
 /**
  * @brief The function to handle the incoming publishes.
@@ -345,9 +349,10 @@ static uint32_t generateRandomNumber()
 }
 
 /*-----------------------------------------------------------*/
-static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext )
+static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext,
+                                              MQTTContext_t * pMqttContext )
 {
-    int returnStatus = EXIT_SUCCESS;
+    int returnStatus = EXIT_FAILURE;
     BackoffAlgorithmStatus_t backoffAlgStatus = BackoffAlgorithmSuccess;
     SocketStatus_t socketStatus = SOCKETS_SUCCESS;
     BackoffAlgorithmContext_t reconnectParams;
@@ -383,7 +388,25 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
                                           TRANSPORT_SEND_RECV_TIMEOUT_MS,
                                           TRANSPORT_SEND_RECV_TIMEOUT_MS );
 
-        if( socketStatus != SOCKETS_SUCCESS )
+        if( socketStatus == SOCKETS_SUCCESS )
+        {
+            /* Establish MQTT session on top of TCP connection. */
+            LogInfo( ( "Creating an MQTT connection to %.*s.",
+                       BROKER_ENDPOINT_LENGTH,
+                       BROKER_ENDPOINT ) );
+
+            /* Sends an MQTT Connect packet over the already connected TCP socket
+             * tcpSocket, and waits for connection acknowledgment (CONNACK) packet. */
+            returnStatus = establishMqttSession( pMqttContext, pNetworkContext );
+
+            if( returnStatus == EXIT_FAILURE )
+            {
+                /* Close the TCP connection.  */
+                ( void ) Plaintext_Disconnect( pNetworkContext );
+            }
+        }
+
+        if( returnStatus == EXIT_FAILURE )
         {
             /* Generate a random number and get back-off value (in milliseconds) for the next connection retry. */
             backoffAlgStatus = BackoffAlgorithm_GetNextBackoff( &reconnectParams, generateRandomNumber(), &nextRetryBackOff );
@@ -401,7 +424,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
                 Clock_SleepMs( nextRetryBackOff );
             }
         }
-    } while( ( socketStatus != SOCKETS_SUCCESS ) && ( backoffAlgStatus == BackoffAlgorithmSuccess ) );
+    } while( ( returnStatus == EXIT_FAILURE ) && ( backoffAlgStatus == BackoffAlgorithmSuccess ) );
 
     return returnStatus;
 }
@@ -853,31 +876,13 @@ static int publishToTopic( MQTTContext_t * pMqttContext )
 
 /*-----------------------------------------------------------*/
 
-static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
+static int subscribePublishLoop( NetworkContext_t * pNetworkContext,
+                                 MQTTContext_t * pMqttContext )
 {
     int returnStatus = EXIT_SUCCESS;
-    bool mqttSessionEstablished = false;
-    MQTTContext_t mqttContext;
     MQTTStatus_t mqttStatus;
     uint32_t publishCount = 0;
     const uint32_t maxPublishCount = MQTT_PUBLISH_COUNT_PER_LOOP;
-
-    /* Establish MQTT session on top of TCP connection. */
-    LogInfo( ( "Creating an MQTT connection to %.*s.",
-               BROKER_ENDPOINT_LENGTH,
-               BROKER_ENDPOINT ) );
-
-    /* Sends an MQTT Connect packet over the already connected TCP socket
-     * tcpSocket, and waits for connection acknowledgment (CONNACK) packet. */
-    returnStatus = establishMqttSession( &mqttContext, pNetworkContext );
-
-    if( returnStatus == EXIT_SUCCESS )
-    {
-        /* Keep a flag for indicating if MQTT session is established. This
-         * flag will mark that an MQTT DISCONNECT has to be sent at the end
-         * of the demo even if there are intermediate failures. */
-        mqttSessionEstablished = true;
-    }
 
     if( returnStatus == EXIT_SUCCESS )
     {
@@ -890,7 +895,7 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
         LogInfo( ( "Subscribing to the MQTT topic %.*s.",
                    MQTT_EXAMPLE_TOPIC_LENGTH,
                    MQTT_EXAMPLE_TOPIC ) );
-        returnStatus = subscribeToTopic( &mqttContext );
+        returnStatus = subscribeToTopic( pMqttContext );
     }
 
     if( returnStatus == EXIT_SUCCESS )
@@ -902,7 +907,7 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
          * of receiving publish message before subscribe ack is zero; but application
          * must be ready to receive any packet. This demo uses MQTT_ProcessLoop to
          * receive packet from network. */
-        mqttStatus = MQTT_ProcessLoop( &mqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
+        mqttStatus = MQTT_ProcessLoop( pMqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
 
         if( mqttStatus != MQTTSuccess )
         {
@@ -922,7 +927,7 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
         LogInfo( ( "Server rejected initial subscription request. Attempting to re-subscribe to topic %.*s.",
                    MQTT_EXAMPLE_TOPIC_LENGTH,
                    MQTT_EXAMPLE_TOPIC ) );
-        returnStatus = handleResubscribe( &mqttContext );
+        returnStatus = handleResubscribe( pMqttContext );
     }
 
     if( returnStatus == EXIT_SUCCESS )
@@ -934,7 +939,7 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
             LogInfo( ( "Sending Publish to the MQTT topic %.*s.",
                        MQTT_EXAMPLE_TOPIC_LENGTH,
                        MQTT_EXAMPLE_TOPIC ) );
-            returnStatus = publishToTopic( &mqttContext );
+            returnStatus = publishToTopic( pMqttContext );
 
             /* Calling MQTT_ProcessLoop to process incoming publish echo, since
              * application subscribed to the same topic the broker will send
@@ -942,7 +947,7 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
              * sends ping request to broker if MQTT_KEEP_ALIVE_INTERVAL_SECONDS
              * has expired since the last MQTT packet sent and receive
              * ping responses. */
-            mqttStatus = MQTT_ProcessLoop( &mqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
+            mqttStatus = MQTT_ProcessLoop( pMqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
 
             if( mqttStatus != MQTTSuccess )
             {
@@ -963,13 +968,13 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
         LogInfo( ( "Unsubscribing from the MQTT topic %.*s.",
                    MQTT_EXAMPLE_TOPIC_LENGTH,
                    MQTT_EXAMPLE_TOPIC ) );
-        returnStatus = unsubscribeFromTopic( &mqttContext );
+        returnStatus = unsubscribeFromTopic( pMqttContext );
     }
 
     if( returnStatus == EXIT_SUCCESS )
     {
         /* Process Incoming UNSUBACK packet from the broker. */
-        mqttStatus = MQTT_ProcessLoop( &mqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
+        mqttStatus = MQTT_ProcessLoop( pMqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
 
         if( mqttStatus != MQTTSuccess )
         {
@@ -982,22 +987,19 @@ static int subscribePublishLoop( NetworkContext_t * pNetworkContext )
     /* Send an MQTT Disconnect packet over the already connected TCP socket.
      * There is no corresponding response for the disconnect packet. After sending
      * disconnect, client must close the network connection. */
-    if( mqttSessionEstablished == true )
-    {
-        LogInfo( ( "Disconnecting the MQTT connection with %.*s.",
-                   BROKER_ENDPOINT_LENGTH,
-                   BROKER_ENDPOINT ) );
+    LogInfo( ( "Disconnecting the MQTT connection with %.*s.",
+               BROKER_ENDPOINT_LENGTH,
+               BROKER_ENDPOINT ) );
 
-        if( returnStatus == EXIT_FAILURE )
-        {
-            /* Returned status is not used to update the local status as there
-             * were failures in demo execution. */
-            ( void ) disconnectMqttSession( &mqttContext );
-        }
-        else
-        {
-            returnStatus = disconnectMqttSession( &mqttContext );
-        }
+    if( returnStatus == EXIT_FAILURE )
+    {
+        /* Returned status is not used to update the local status as there
+         * were failures in demo execution. */
+        ( void ) disconnectMqttSession( pMqttContext );
+    }
+    else
+    {
+        returnStatus = disconnectMqttSession( pMqttContext );
     }
 
     /* Reset global SUBACK status variable after completion of subscription request cycle. */
@@ -1024,6 +1026,7 @@ int main( int argc,
           char ** argv )
 {
     int returnStatus = EXIT_SUCCESS;
+    MQTTContext_t mqttContext = { 0 };
     NetworkContext_t networkContext = { 0 };
     PlaintextParams_t plaintextParams = { 0 };
     struct timespec tp;
@@ -1050,7 +1053,7 @@ int main( int argc,
          * attempts are reached or maximum timeout value is reached. The function
          * returns EXIT_FAILURE if the TCP connection cannot be established to
          * broker after configured number of attempts. */
-        returnStatus = connectToServerWithBackoffRetries( &networkContext );
+        returnStatus = connectToServerWithBackoffRetries( &networkContext, &mqttContext );
 
         if( returnStatus == EXIT_FAILURE )
         {
@@ -1063,7 +1066,7 @@ int main( int argc,
         else
         {
             /* If TCP connection is successful, execute Subscribe/Publish loop. */
-            returnStatus = subscribePublishLoop( &networkContext );
+            returnStatus = subscribePublishLoop( &networkContext, &mqttContext );
         }
 
         if( returnStatus == EXIT_SUCCESS )

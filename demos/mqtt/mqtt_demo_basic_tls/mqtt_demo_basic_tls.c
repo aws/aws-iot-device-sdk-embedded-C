@@ -266,14 +266,23 @@ static uint32_t generateRandomNumber();
  * @brief Connect to MQTT broker with reconnection retries.
  *
  * If connection fails, retry is attempted after a timeout.
- * Timeout value will exponentially increased till maximum
+ * Timeout value will exponentially increase until maximum
  * timeout value is reached or the number of attempts are exhausted.
  *
  * @param[out] pNetworkContext The output parameter to return the created network context.
+ * @param[in] pMqttContext MQTT context pointer.
+ * @param[in,out] pClientSessionPresent Pointer to flag indicating if an
+ * MQTT session is present in the client.
+ * @param[out] pBrokerSessionPresent Session was already present in the broker or not.
+ * Session present response is obtained from the CONNACK from broker.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on successful connection.
  */
-static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext );
+static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext,
+                                              MQTTContext_t * pMqttContext,
+                                              bool * pClientSessionPresent,
+                                              bool * pBrokerSessionPresent );
+
 
 /**
  * @brief A function that connects to MQTT broker,
@@ -282,13 +291,10 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
  * receives the Publish message back.
  *
  * @param[in] pMqttContext MQTT context pointer.
- * @param[in,out] pClientSessionPresent Pointer to flag indicating if an
- * MQTT session is present in the client.
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on success.
  */
-static int subscribePublishLoop( MQTTContext_t * pMqttContext,
-                                 bool * pClientSessionPresent );
+static int subscribePublishLoop( MQTTContext_t * pMqttContext );
 
 /**
  * @brief The function to handle the incoming publishes.
@@ -451,15 +457,19 @@ static uint32_t generateRandomNumber()
 }
 
 /*-----------------------------------------------------------*/
-static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext )
+static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext,
+                                              MQTTContext_t * pMqttContext,
+                                              bool * pClientSessionPresent,
+                                              bool * pBrokerSessionPresent )
 {
-    int returnStatus = EXIT_SUCCESS;
+    int returnStatus = EXIT_FAILURE;
     BackoffAlgorithmStatus_t backoffAlgStatus = BackoffAlgorithmSuccess;
     OpensslStatus_t opensslStatus = OPENSSL_SUCCESS;
     BackoffAlgorithmContext_t reconnectParams;
     ServerInfo_t serverInfo;
     OpensslCredentials_t opensslCredentials;
     uint16_t nextRetryBackOff;
+    bool createCleanSession;
 
     /* Initialize information to connect to the MQTT broker. */
     serverInfo.pHostName = BROKER_ENDPOINT;
@@ -496,7 +506,28 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
                                          TRANSPORT_SEND_RECV_TIMEOUT_MS,
                                          TRANSPORT_SEND_RECV_TIMEOUT_MS );
 
-        if( opensslStatus != OPENSSL_SUCCESS )
+        if( opensslStatus == OPENSSL_SUCCESS )
+        {
+            /* A clean MQTT session needs to be created, if there is no session saved
+             * in this MQTT client. */
+            createCleanSession = ( *pClientSessionPresent == true ) ? false : true;
+
+            /* Sends an MQTT Connect packet using the established TLS session,
+             * then waits for connection acknowledgment (CONNACK) packet. */
+            returnStatus = establishMqttSession( pMqttContext, createCleanSession, pBrokerSessionPresent );
+
+            if( returnStatus == EXIT_FAILURE )
+            {
+                /* End TLS session, then close TCP connection. */
+                ( void ) Openssl_Disconnect( pNetworkContext );
+            }
+            else
+            {
+                *pClientSessionPresent = true;
+            }
+        }
+
+        if( returnStatus == EXIT_FAILURE )
         {
             /* Generate a random number and get back-off value (in milliseconds) for the next connection retry. */
             backoffAlgStatus = BackoffAlgorithm_GetNextBackoff( &reconnectParams, generateRandomNumber(), &nextRetryBackOff );
@@ -514,7 +545,7 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
                 Clock_SleepMs( nextRetryBackOff );
             }
         }
-    } while( ( opensslStatus != OPENSSL_SUCCESS ) && ( backoffAlgStatus == BackoffAlgorithmSuccess ) );
+    } while( ( returnStatus == EXIT_FAILURE ) && ( backoffAlgStatus == BackoffAlgorithmSuccess ) );
 
     return returnStatus;
 }
@@ -1164,65 +1195,14 @@ static int initializeMqtt( MQTTContext_t * pMqttContext,
 
 /*-----------------------------------------------------------*/
 
-static int subscribePublishLoop( MQTTContext_t * pMqttContext,
-                                 bool * pClientSessionPresent )
+static int subscribePublishLoop( MQTTContext_t * pMqttContext )
 {
     int returnStatus = EXIT_SUCCESS;
-    bool mqttSessionEstablished = false, brokerSessionPresent;
     MQTTStatus_t mqttStatus = MQTTSuccess;
     uint32_t publishCount = 0;
     const uint32_t maxPublishCount = MQTT_PUBLISH_COUNT_PER_LOOP;
-    bool createCleanSession = false;
 
     assert( pMqttContext != NULL );
-    assert( pClientSessionPresent != NULL );
-
-    /* A clean MQTT session needs to be created, if there is no session saved
-     * in this MQTT client. */
-    createCleanSession = ( *pClientSessionPresent == true ) ? false : true;
-
-    /* Establish MQTT session on top of TCP+TLS connection. */
-    LogInfo( ( "Creating an MQTT connection to %.*s.",
-               BROKER_ENDPOINT_LENGTH,
-               BROKER_ENDPOINT ) );
-
-    /* Sends an MQTT Connect packet using the established TLS session,
-     * then waits for connection acknowledgment (CONNACK) packet. */
-    returnStatus = establishMqttSession( pMqttContext, createCleanSession, &brokerSessionPresent );
-
-    if( returnStatus == EXIT_SUCCESS )
-    {
-        /* Keep a flag for indicating if MQTT session is established. This
-         * flag will mark that an MQTT DISCONNECT has to be sent at the end
-         * of the demo, even if there are intermediate failures. */
-        mqttSessionEstablished = true;
-
-        /* Update the flag to indicate that an MQTT client session is saved.
-         * Once this flag is set, MQTT connect in the following iterations of
-         * this demo will be attempted without requesting for a clean session. */
-        *pClientSessionPresent = true;
-
-        /* Check if session is present and if there are any outgoing publishes
-         * that need to resend. This is only valid if the broker is
-         * re-establishing a session which was already present. */
-        if( brokerSessionPresent == true )
-        {
-            LogInfo( ( "An MQTT session with broker is re-established. "
-                       "Resending unacked publishes." ) );
-
-            /* Handle all the resend of publish messages. */
-            returnStatus = handlePublishResend( pMqttContext );
-        }
-        else
-        {
-            LogInfo( ( "A clean MQTT connection is established."
-                       " Cleaning up all the stored outgoing publishes.\n\n" ) );
-
-            /* Clean up the outgoing publishes waiting for ack as this new
-             * connection doesn't re-establish an existing session. */
-            cleanupOutgoingPublishes();
-        }
-    }
 
     if( returnStatus == EXIT_SUCCESS )
     {
@@ -1331,22 +1311,19 @@ static int subscribePublishLoop( MQTTContext_t * pMqttContext,
     /* Send an MQTT Disconnect packet over the already connected TCP socket.
      * There is no corresponding response for the disconnect packet. After sending
      * disconnect, client must close the network connection. */
-    if( mqttSessionEstablished == true )
-    {
-        LogInfo( ( "Disconnecting the MQTT connection with %.*s.",
-                   BROKER_ENDPOINT_LENGTH,
-                   BROKER_ENDPOINT ) );
+    LogInfo( ( "Disconnecting the MQTT connection with %.*s.",
+               BROKER_ENDPOINT_LENGTH,
+               BROKER_ENDPOINT ) );
 
-        if( returnStatus == EXIT_FAILURE )
-        {
-            /* Returned status is not used to update the local status as there
-             * were failures in demo execution. */
-            ( void ) disconnectMqttSession( pMqttContext );
-        }
-        else
-        {
-            returnStatus = disconnectMqttSession( pMqttContext );
-        }
+    if( returnStatus == EXIT_FAILURE )
+    {
+        /* Returned status is not used to update the local status as there
+         * were failures in demo execution. */
+        ( void ) disconnectMqttSession( pMqttContext );
+    }
+    else
+    {
+        returnStatus = disconnectMqttSession( pMqttContext );
     }
 
     /* Reset global SUBACK status variable after completion of subscription request cycle. */
@@ -1378,7 +1355,7 @@ int main( int argc,
     MQTTContext_t mqttContext = { 0 };
     NetworkContext_t networkContext = { 0 };
     OpensslParams_t opensslParams = { 0 };
-    bool clientSessionPresent = false;
+    bool clientSessionPresent = false, brokerSessionPresent = false;
     struct timespec tp;
 
     ( void ) argc;
@@ -1408,7 +1385,7 @@ int main( int argc,
              * attempts are reached or maximum timeout value is reached. The function
              * returns EXIT_FAILURE if the TCP connection cannot be established to
              * broker after configured number of attempts. */
-            returnStatus = connectToServerWithBackoffRetries( &networkContext );
+            returnStatus = connectToServerWithBackoffRetries( &networkContext, &mqttContext, &clientSessionPresent, &brokerSessionPresent );
 
             if( returnStatus == EXIT_FAILURE )
             {
@@ -1420,8 +1397,29 @@ int main( int argc,
             }
             else
             {
+                /* Check if session is present and if there are any outgoing publishes
+                 * that need to resend. This is only valid if the broker is
+                 * re-establishing a session which was already present. */
+                if( brokerSessionPresent == true )
+                {
+                    LogInfo( ( "An MQTT session with broker is re-established. "
+                               "Resending unacked publishes." ) );
+
+                    /* Handle all the resend of publish messages. */
+                    returnStatus = handlePublishResend( &mqttContext );
+                }
+                else
+                {
+                    LogInfo( ( "A clean MQTT connection is established."
+                               " Cleaning up all the stored outgoing publishes.\n\n" ) );
+
+                    /* Clean up the outgoing publishes waiting for ack as this new
+                     * connection doesn't re-establish an existing session. */
+                    cleanupOutgoingPublishes();
+                }
+
                 /* If TLS session is established, execute Subscribe/Publish loop. */
-                returnStatus = subscribePublishLoop( &mqttContext, &clientSessionPresent );
+                returnStatus = subscribePublishLoop( &mqttContext );
             }
 
             if( returnStatus == EXIT_SUCCESS )
