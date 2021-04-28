@@ -1532,6 +1532,9 @@ int main( int argc,
             }
             else
             {
+                /* Update the flag to indicate that an MQTT client session is saved.
+                 * Once this flag is set, MQTT connect in the following iterations of
+                 * this demo will be attempted without requesting for a clean session. */
                 clientSessionPresent = true;
 
                 /* Check if session is present and if there are any outgoing publishes
