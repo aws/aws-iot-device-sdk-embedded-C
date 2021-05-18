@@ -38,6 +38,10 @@ DEF += -DTOPIC_LENGTH_MAX=$(TOPIC_LENGTH_MAX)
 LOOP += valid_IotMqttSubscriptionList.0:$(SUBSCRIPTION_COUNT_MAX)
 LOOP += valid_IotMqttOperationList.0:$(SUBSCRIPTION_COUNT_MAX)
 LOOP += IotListDouble_RemoveAllMatches.0:$(SUBSCRIPTION_COUNT_MAX)
+LOOP += IotListDouble_FindFirstMatch.0:$(SUBSCRIPTION_COUNT_MAX)
+LOOP += IotListDouble_FindFirstMatch.0:$(SUBSCRIPTION_COUNT_MAX)
+LOOP += IotListDouble_RemoveAllMatches\$$link1.0:$(SUBSCRIPTION_COUNT_MAX)
+LOOP += IotListDouble_FindFirstMatch\$$link2.0:$(SUBSCRIPTION_COUNT_MAX)
 
 UNWINDING += --unwind 1
 UNWINDING += --unwindset '$(shell echo $(LOOP) | sed 's/ /,/g')'
