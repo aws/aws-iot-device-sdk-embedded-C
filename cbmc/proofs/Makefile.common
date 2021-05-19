@@ -74,7 +74,14 @@ $(GOTO_DIR)/%.goto: ./%.c
 	mkdir -p $(dir $@)
 	$(GOTO_CC) -o $@ $(CFLAGS) $<
 
-$(MQTT)/build:
+# Do 'make cmake' to build configuration files before 'make report'.
+#
+# When running proofs concurrently, build the configuration files once
+# with 'make cmake' and then run the proofs concurrently with concurrent
+# invocations of 'make report'. Do not add 'cmake' as a 'report'
+# dependency or the concurrent proofs will fail to run correctly.
+#
+cmake:
 	(mkdir -p $(MQTT)/build; cd $(MQTT)/build; cmake ..) \
 	       > $(ENTRY)0.txt 2>&1
 
@@ -115,7 +122,6 @@ CHECKFLAGS += \
 	--malloc-may-fail \
 	--nan-check \
 	--pointer-check \
-	--pointer-overflow-check \
 	--pointer-primitive-check \
 	--signed-overflow-check \
 	--undefined-shift-check \
