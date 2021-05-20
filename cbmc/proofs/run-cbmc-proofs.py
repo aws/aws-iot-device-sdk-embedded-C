@@ -98,6 +98,11 @@ def set_up_logging(verbose):
     logging.basicConfig(
         format="run-cbmc-proofs: %(message)s", level=level)
 
+def task_pool_size():
+    ret = os.cpu_count()
+    if ret is None or ret < 3:
+        return 1
+    return ret - 2
 
 def print_counter(counter):
     print(
@@ -310,7 +315,8 @@ def main():
                 [str(f) for f in counter["fail"]]))
 
     if not args.no_standalone:
-        run_build(litani, args.parallel_jobs)
+        jobs = min(args.parallel_jobs or task_pool_size(), 8)
+        run_build(litani, jobs)
 
 
 if __name__ == "__main__":
