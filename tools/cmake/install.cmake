@@ -127,9 +127,9 @@ foreach(library_prefix ${LIBRARY_PREFIXES})
     endif()
 
     # Install the library target and support both static archive and shared library builds.
-    install(TARGETS "${library_name}" 
-            LIBRARY DESTINATION "${CSDK_LIB_INSTALL_PATH}" 
-            ARCHIVE DESTINATION "${CSDK_LIB_INSTALL_PATH}") 
+    install(TARGETS "${library_name}"
+            LIBRARY DESTINATION "${CSDK_LIB_INSTALL_PATH}"
+            ARCHIVE DESTINATION "${CSDK_LIB_INSTALL_PATH}")
 endforeach()
 
 # Install platform abstractions as shared libraries if enabled.
@@ -146,8 +146,8 @@ if(INSTALL_PLATFORM_ABSTRACTIONS)
                                         ${OTA_INCLUDE_PUBLIC_DIRS}
                                         ${OTA_INCLUDE_OS_POSIX_DIRS})
         target_compile_definitions(ota_posix PRIVATE -DOTA_DO_NOT_USE_CUSTOM_CONFIG)
-        install(TARGETS ota_posix 
-                LIBRARY DESTINATION "${CSDK_LIB_INSTALL_PATH}" 
+        install(TARGETS ota_posix
+                LIBRARY DESTINATION "${CSDK_LIB_INSTALL_PATH}"
                 ARCHIVE DESTINATION "${CSDK_LIB_INSTALL_PATH}")
         list(APPEND PLATFORM_DIRECTORIES ${OTA_INCLUDE_OS_POSIX_DIRS})
     endif()
