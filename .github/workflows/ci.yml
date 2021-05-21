@@ -97,9 +97,7 @@ jobs:
           rm -rf *
       - name: Configure CMake for installation of static libraries at custom location
         run: |
-          curl https://cmake.org/files/v3.2/cmake-3.2.0-Linux-x86_64.tar.gz -o cmake.tar.gz
-          tar -xf cmake.tar.gz
-          mkdir build && cd build
+          cd build
           ../cmake-3.2.0-Linux-x86_64/bin/cmake .. \
           -DBUILD_SHARED_LIBRARIES=OFF \
           -DBUILD_DEMOS=0 -DBUILD_TESTS=0 \
@@ -116,7 +114,7 @@ jobs:
           done <install_manifest.txt
           # Uninstall and reset build.
           sudo xargs rm < install_manifest.txt || echo "transport_interface.h is installed twice because of duplicate copies in spoke repos."
-          rm -rf *          
+          rm -rf *
       - name: Configure CMake build for system install location and selective installation
         run: |
           cd build
