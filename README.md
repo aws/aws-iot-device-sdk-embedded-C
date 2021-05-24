@@ -519,10 +519,10 @@ sh get-docker.sh
 
 The following instructions have been tested on an Ubuntu 18.04 environment with Docker and OpenSSL installed.
 
-1. Download the official Docker image for Mosquitto.
+1. Download the official Docker image for Mosquitto 1.6.14.
 
     ```sh
-    docker pull eclipse-mosquitto:latest
+    docker pull eclipse-mosquitto:1.6.14
     ```
 
 1. If a Mosquitto broker with TLS communication needs to be run, ignore this step and proceed to the next step. A Mosquitto broker with plain text communication can be run by executing the command below.
