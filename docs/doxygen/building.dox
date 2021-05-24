@@ -197,10 +197,10 @@ sh get-docker.sh
 
 The following instructions have been tested on an Ubuntu 18.04 environment with Docker and OpenSSL installed.
 <ol>
-<li>Download the official Docker image for Mosquitto.</li>
+<li>Download the official Docker image for Mosquitto 1.6.14.</li>
 
 @code{sh}
-docker pull eclipse-mosquitto:latest
+docker pull eclipse-mosquitto:1.6.14
 @endcode
 
 <li>`BROKER_ENDPOINT` defined in `demos/mqtt/mqtt_demo_basic_tls/demo_config.h` can now be set to `localhost`.</li>
