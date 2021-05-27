@@ -519,7 +519,8 @@ sh get-docker.sh
 
 The following instructions have been tested on an Ubuntu 18.04 environment with Docker and OpenSSL installed.
 
-1. Download the official Docker image for Mosquitto 1.6.14.
+1. Download the official Docker image for Mosquitto 1.6.14. This version is deliberately chosen so that the Docker container can load certificates from the host system.
+Any version after 1.6.14 will drop privileges as soon as the configuration file has been read (before TLS certificates are loaded).
 
     ```sh
     docker pull eclipse-mosquitto:1.6.14
