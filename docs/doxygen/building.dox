@@ -197,7 +197,8 @@ sh get-docker.sh
 
 The following instructions have been tested on an Ubuntu 18.04 environment with Docker and OpenSSL installed.
 <ol>
-<li>Download the official Docker image for Mosquitto 1.6.14.</li>
+<li>Download the official Docker image for Mosquitto 1.6.14. This version is deliberately chosen so that the Docker container can load certificates from the host system.
+Any version after 1.6.14 will drop privileges as soon as the configuration file has been read (before TLS certificates are loaded).</li>
 
 @code{sh}
 docker pull eclipse-mosquitto:1.6.14
@@ -239,7 +240,7 @@ tls_version tlsv1.2
 <li>Run the docker container from the local directory containing the generated credential and mosquitto.conf files.</li>
 
 @code{sh}
-docker run -it -p 8883:8883 -v $(pwd):/mosquitto/config/ --name mosquitto-basic-tls eclipse-mosquitto:latest
+docker run -it -p 8883:8883 -v $(pwd):/mosquitto/config/ --name mosquitto-basic-tls eclipse-mosquitto:1.6.14
 @endcode
 
 <li>Set `ROOT_CA_CERT_PATH` to the absolute path of the CA certificate created in step 3. for the local Mosquitto server.</li>
