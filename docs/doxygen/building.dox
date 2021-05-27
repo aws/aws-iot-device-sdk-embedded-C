@@ -239,7 +239,7 @@ tls_version tlsv1.2
 <li>Run the docker container from the local directory containing the generated credential and mosquitto.conf files.</li>
 
 @code{sh}
-docker run -it -p 8883:8883 -v $(pwd):/mosquitto/config/ --name mosquitto-basic-tls eclipse-mosquitto:latest
+docker run -it -p 8883:8883 -v $(pwd):/mosquitto/config/ --name mosquitto-basic-tls eclipse-mosquitto:1.6.14
 @endcode
 
 <li>Set `ROOT_CA_CERT_PATH` to the absolute path of the CA certificate created in step 3. for the local Mosquitto server.</li>

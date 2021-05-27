@@ -528,7 +528,7 @@ The following instructions have been tested on an Ubuntu 18.04 environment with 
 1. If a Mosquitto broker with TLS communication needs to be run, ignore this step and proceed to the next step. A Mosquitto broker with plain text communication can be run by executing the command below.
 
     ```
-    docker run -it -p 1883:1883 --name mosquitto-plain-text eclipse-mosquitto:latest
+    docker run -it -p 1883:1883 --name mosquitto-plain-text eclipse-mosquitto:1.6.14
     ```
 
 1. Set `BROKER_ENDPOINT` defined in `demos/mqtt/mqtt_demo_plaintext/demo_config.h` to `localhost`.
@@ -568,7 +568,7 @@ The following instructions have been tested on an Ubuntu 18.04 environment with 
 1. Run the docker container from the local directory containing the generated credential and mosquitto.conf files.
 
     ```sh
-    docker run -it -p 8883:8883 -v $(pwd):/mosquitto/config/ --name mosquitto-basic-tls eclipse-mosquitto:latest
+    docker run -it -p 8883:8883 -v $(pwd):/mosquitto/config/ --name mosquitto-basic-tls eclipse-mosquitto:1.6.14
     ```
 
 1. Update `demos/mqtt/mqtt_demo_basic_tls/demo_config.h` to the following:  
