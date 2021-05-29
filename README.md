@@ -17,7 +17,7 @@
         * [backoffAlgorithm](#backoffalgorithm)
     * [Sending metrics to AWS IoT](#sending-metrics-to-aws-iot)
 * [Versioning](#versioning)
-* [Releases](#releases)
+* [Releases and Documentation](#releases)
     * [202103.00](#20210300)
     * [202012.01](#20201201)
     * [202011.00](#20201100)
@@ -665,6 +665,7 @@ libraries to be compiled with a config of your choice:
 Note that the file name of the header should not be included in the directory.
 
 ## Generating Documentation
+Note: For pre-generated documentation, please visit [Releases and Documentation](#releases) section.
 
 The Doxygen references were created using Doxygen version 1.8.20. To generate the Doxygen pages, use the provided Python script at [tools/doxygen/generate_docs.py](tools/doxygen/generate_docs.py). Please ensure that each of the library submodules under `libraries/standard/` and `libraries/aws/` are cloned before using this script.
 
