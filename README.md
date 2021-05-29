@@ -17,7 +17,7 @@
         * [backoffAlgorithm](#backoffalgorithm)
     * [Sending metrics to AWS IoT](#sending-metrics-to-aws-iot)
 * [Versioning](#versioning)
-* [Releases and Documentation](#releases)
+* [Releases and Documentation](#releases-and-documentation)
     * [202103.00](#20210300)
     * [202012.01](#20201201)
     * [202011.00](#20201100)
@@ -207,7 +207,7 @@ C-SDK releases will now follow a date based versioning scheme with the format YY
 
 For example, a second release in June 2021 would be 202106.01. Although the SDK releases have moved to date-based versioning, each library within the SDK will still retain semantic versioning. In semantic versioning, the version number itself (X.Y.Z) indicates whether the release is a major, minor, or point release. You can use the semantic version of a library to assess the scope and impact of a new release on your application.
 
-## Releases
+## Releases and Documentation
 
 All of the released versions of the C-SDK libraries are available as git tags. For example, the last release of the v3 SDK version is available at [tag 3.1.2](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v3.1.2).
 
@@ -665,7 +665,7 @@ libraries to be compiled with a config of your choice:
 Note that the file name of the header should not be included in the directory.
 
 ## Generating Documentation
-Note: For pre-generated documentation, please visit [Releases and Documentation](#releases) section.
+Note: For pre-generated documentation, please visit [Releases and Documentation](#releases-and-documentation) section.
 
 The Doxygen references were created using Doxygen version 1.8.20. To generate the Doxygen pages, use the provided Python script at [tools/doxygen/generate_docs.py](tools/doxygen/generate_docs.py). Please ensure that each of the library submodules under `libraries/standard/` and `libraries/aws/` are cloned before using this script.
 
