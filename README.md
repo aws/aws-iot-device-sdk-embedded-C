@@ -28,6 +28,7 @@
     * [Porting coreHTTP](#porting-corehttp)
     * [Porting AWS IoT Device Shadow](#porting-aws-iot-device-shadow)
     * [Porting AWS IoT Device Defender](#porting-aws-iot-device-defender)
+    * [Porting AWS IoT Over-the-air Update](#porting-aws-iot-over-the-air-update)
 * [Migration guide from v3.1.2 to 202009.00 and newer releases](#migration-guide-from-v312-to-20200900-and-newer-releases)
     * [MQTT Migration](#mqtt-migration)
     * [Shadow Migration](#shadow-migration)
@@ -499,7 +500,7 @@ shadow_demo_main
 #### Running corePKCS11 demos
 
 The corePKCS11 demos do not require any AWS IoT resources setup, and are standalone. The demos build upon each other to introduce concepts in PKCS #11 sequentially. Below is the recommended order.
-1. `pkcs11_demo_managaement_and_rng`
+1. `pkcs11_demo_managament_and_rng`
 1. `pkcs11_demo_mechanisms_and_digests`
 1. `pkcs11_demo_objects`
 1. `pkcs11_demo_sign_and_verify`
