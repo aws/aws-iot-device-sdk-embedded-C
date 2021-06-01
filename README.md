@@ -17,7 +17,7 @@
         * [backoffAlgorithm](#backoffalgorithm)
     * [Sending metrics to AWS IoT](#sending-metrics-to-aws-iot)
 * [Versioning](#versioning)
-* [Releases and Documentation](#releases)
+* [Releases and Documentation](#releases-and-documentation)
     * [202103.00](#20210300)
     * [202012.01](#20201201)
     * [202011.00](#20201100)
@@ -61,7 +61,7 @@
 
 The AWS IoT Device SDK for Embedded C (C-SDK) is a collection of C source files under the [MIT open source license](LICENSE) that can be used in embedded applications to securely connect IoT devices to [AWS IoT Core](https://docs.aws.amazon.com/iot/latest/developerguide/what-is-aws-iot.html). It contains MQTT client, HTTP client, JSON Parser, AWS IoT Device Shadow, AWS IoT Jobs, and AWS IoT Device Defender libraries. This SDK is distributed in source form, and can be built into customer firmware along with application code, other libraries and an operating system (OS) of your choice. These libraries are only dependent on standard C libraries, so they can be ported to various OS's - from embedded Real Time Operating Systems (RTOS) to Linux/Mac/Windows. You can find sample usage of C-SDK libraries on POSIX systems using OpenSSL (e.g. [Linux demos](demos) in this repository), and on [FreeRTOS](https://github.com/FreeRTOS/FreeRTOS/) using mbedTLS (e.g. [FreeRTOS demos](https://github.com/FreeRTOS/FreeRTOS/tree/master/FreeRTOS-Plus/Demo) in [FreeRTOS](https://github.com/FreeRTOS/FreeRTOS/) repository).
 
-For the latest release of C-SDK, please see the section for [Releases](#releases).
+For the latest release of C-SDK, please see the section for [Releases and Documentation](#releases-and-documentation).
 
 **C-SDK includes libraries that are part of the [FreeRTOS 202012.01 LTS](https://github.com/FreeRTOS/FreeRTOS-LTS/tree/202012.01-LTS) release. Learn more about the FreeRTOS 202012.01 LTS libraries by [clicking here](https://freertos.org/lts-libraries.html).**
 
@@ -207,7 +207,7 @@ C-SDK releases will now follow a date based versioning scheme with the format YY
 
 For example, a second release in June 2021 would be 202106.01. Although the SDK releases have moved to date-based versioning, each library within the SDK will still retain semantic versioning. In semantic versioning, the version number itself (X.Y.Z) indicates whether the release is a major, minor, or point release. You can use the semantic version of a library to assess the scope and impact of a new release on your application.
 
-## Releases
+## Releases and Documentation
 
 All of the released versions of the C-SDK libraries are available as git tags. For example, the last release of the v3 SDK version is available at [tag 3.1.2](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v3.1.2).
 
@@ -665,7 +665,7 @@ libraries to be compiled with a config of your choice:
 Note that the file name of the header should not be included in the directory.
 
 ## Generating Documentation
-Note: For pre-generated documentation, please visit [Releases and Documentation](#releases) section.
+Note: For pre-generated documentation, please visit [Releases and Documentation](#releases-and-documentation) section.
 
 The Doxygen references were created using Doxygen version 1.8.20. To generate the Doxygen pages, use the provided Python script at [tools/doxygen/generate_docs.py](tools/doxygen/generate_docs.py). Please ensure that each of the library submodules under `libraries/standard/` and `libraries/aws/` are cloned before using this script.
 
