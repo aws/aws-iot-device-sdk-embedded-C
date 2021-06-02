@@ -500,7 +500,7 @@ shadow_demo_main
 #### Running corePKCS11 demos
 
 The corePKCS11 demos do not require any AWS IoT resources setup, and are standalone. The demos build upon each other to introduce concepts in PKCS #11 sequentially. Below is the recommended order.
-1. `pkcs11_demo_managament_and_rng`
+1. `pkcs11_demo_management_and_rng`
 1. `pkcs11_demo_mechanisms_and_digests`
 1. `pkcs11_demo_objects`
 1. `pkcs11_demo_sign_and_verify`
