@@ -111,7 +111,7 @@ IoT_Error_t registerJsonTokenOnDelta(jsonStruct_t *pStruct) {
 
 	if(!deltaTopicSubscribedFlag) {
 		snprintf(shadowDeltaTopic, MAX_SHADOW_TOPIC_LENGTH_BYTES, "$aws/things/%s/shadow/update/delta", myThingName);
-		rc = aws_iot_mqtt_subscribe(pMqttClient, shadowDeltaTopic, (uint16_t) strlen(shadowDeltaTopic), QOS0,
+		rc = aws_iot_mqtt_subscribe(pMqttClient, shadowDeltaTopic, (uint16_t) strlen(shadowDeltaTopic), QOS1,
 									shadow_delta_callback, NULL);
 		deltaTopicSubscribedFlag = true;
 	}
@@ -342,7 +342,7 @@ IoT_Error_t subscribeToShadowActionAcks(const char *pThingName, ShadowActions_t 
 	if(indexAcceptedSubList >= 0 && indexRejectedSubList >= 0) {
 		topicNameFromThingAndAction(SubscriptionList[indexAcceptedSubList].Topic, pThingName, action, SHADOW_ACCEPTED);
 		ret_val = aws_iot_mqtt_subscribe(pMqttClient, SubscriptionList[indexAcceptedSubList].Topic,
-										 (uint16_t) strlen(SubscriptionList[indexAcceptedSubList].Topic), QOS0,
+										 (uint16_t) strlen(SubscriptionList[indexAcceptedSubList].Topic), QOS1,
 										 AckStatusCallback, NULL);
 		if(ret_val == SUCCESS) {
 			SubscriptionList[indexAcceptedSubList].count = 1;
@@ -350,7 +350,7 @@ IoT_Error_t subscribeToShadowActionAcks(const char *pThingName, ShadowActions_t 
 			topicNameFromThingAndAction(SubscriptionList[indexRejectedSubList].Topic, pThingName, action,
 										SHADOW_REJECTED);
 			ret_val = aws_iot_mqtt_subscribe(pMqttClient, SubscriptionList[indexRejectedSubList].Topic,
-											 (uint16_t) strlen(SubscriptionList[indexRejectedSubList].Topic), QOS0,
+											 (uint16_t) strlen(SubscriptionList[indexRejectedSubList].Topic), QOS1,
 											 AckStatusCallback, NULL);
 			if(ret_val == SUCCESS) {
 				SubscriptionList[indexRejectedSubList].count = 1;
@@ -413,7 +413,7 @@ IoT_Error_t publishToShadowAction(const char *pThingName, ShadowActions_t action
 
 	topicNameFromThingAndAction(TemporaryTopicName, pThingName, action, SHADOW_ACTION);
 
-	msgParams.qos = QOS0;
+	msgParams.qos = QOS1;
 	msgParams.isRetained = 0;
 	msgParams.payloadLen = strlen(pJsonDocumentToBeSent);
 	msgParams.payload = (char *) pJsonDocumentToBeSent;
