@@ -58,12 +58,18 @@ calloc
 cas
 cb
 cbc
+cbor
 ccm
 ccs
 cdn
 cer
 cert
 certhandle
+certificateid
+certificateidlength
+certificatelength
+certificateownershiptoken
+certificateownershiptokenlength
 certificatetemplate
 certs
 cfb
@@ -104,7 +110,9 @@ coremqtt
 corepkcs
 correclty
 cpu
+createcertificatefromcsr
 createcleansession
+createkeysandcertificate
 crl
 crls
 crt
@@ -200,6 +208,7 @@ generatekeypair
 generaterandom
 genkey
 genprime
+getcertificatefromcsr
 getdeviceserialnumber
 getfunctionlist
 getslotlist
@@ -260,6 +269,8 @@ jitr
 jobid
 jobidlength
 json
+jsonlength
+jsonstring
 karthikeyan
 ke
 keygen
@@ -363,10 +374,15 @@ otahttprequestfailed
 otahttpsuccess
 otamqttsuccess
 otapalimagestatevalid
+outcsrlength
 outform
 outgoingpublishpackets
 outlength
+outlengthwritten
+outwrittenlength
 overriden
+ownershiptoken
+ownershiptokenlength
 pacdata
 packetid
 packetidentifier
@@ -380,6 +396,7 @@ param
 params
 pathlen
 pathlength
+payloadbuffer
 payloadlength
 pbe
 pbkdf
@@ -388,6 +405,7 @@ pbuf
 pbuffer
 pcdescription
 pcks
+pclientcertpath
 pclientsessionpresent
 pconnectionsarray
 pcontext
@@ -449,6 +467,7 @@ ppath
 ppathlen
 ppayload
 ppkey
+pprivatekeypath
 pprocfile
 ppubinfo
 ppublishinfo
@@ -503,6 +522,7 @@ rc
 rdparty
 readme
 reasonnable
+registerthing
 reportbuilderbadparameter
 reportbuilderbuffertoosmall
 reportbuildersuccess
@@ -516,8 +536,10 @@ requesturilen
 reseed
 resending
 resp
+responsebuffer
 responseitem
 responsequeue
+responsestatus
 restartable
 resubscribe
 resubscription
@@ -590,6 +612,8 @@ teardown
 testshadowname
 testthingname
 thingname
+thingnamebuffer
+thingnamebufferlength
 thingnamelength
 tls
 tokenpresent
@@ -616,6 +640,7 @@ uloffset
 ulong
 ulslotcount
 un
+unescaping
 unix
 unsub
 unsuback
@@ -638,6 +663,7 @@ verifyinit
 vtaskdelay
 weierstrass
 wikipedia
+wo
 www
 xcerthandle
 xor
