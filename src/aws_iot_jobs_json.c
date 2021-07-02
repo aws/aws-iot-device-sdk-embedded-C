@@ -116,6 +116,10 @@ int aws_iot_jobs_json_serialize_update_job_execution_request(
 		_printKey(&state, false, "includeJobDocument");
 		_printBooleanValue(&state, request->includeJobDocument);
 	}
+	if (request->stepTimeoutInMinutes) {
+		_printKey(&state, false, "stepTimeoutInMinutes");
+		_printLongValue(&state, request->stepTimeoutInMinutes);
+	}
 	if (request->clientToken != NULL) {
 		_printKey(&state, false, "clientToken");
 		_printStringValue(&state, request->clientToken);

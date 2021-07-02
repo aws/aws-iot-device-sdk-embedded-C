@@ -82,6 +82,7 @@ typedef struct {
 	const char *statusDetails;
 	bool includeJobExecutionState;
 	bool includeJobDocument;
+	int64_t stepTimeoutInMinutes;
 	const char *clientToken;
 } AwsIotJobExecutionUpdateRequest;
 
