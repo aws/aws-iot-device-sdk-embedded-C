@@ -154,7 +154,13 @@ IoT_Error_t iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
 	}
 
 	IOT_DEBUG("  . Loading the CA root certificate ...");
+#ifdef MBEDTLS_PARSE_FROM_MEMORY
+	ret = mbedtls_x509_crt_parse(&(tlsDataParams->cacert),
+			(const unsigned char *)pNetwork->tlsConnectParams.pRootCALocation,
+			strlen(pNetwork->tlsConnectParams.pRootCALocation) + 1);
+#else
 	ret = mbedtls_x509_crt_parse_file(&(tlsDataParams->cacert), pNetwork->tlsConnectParams.pRootCALocation);
+#endif
 	if(ret < 0) {
 		IOT_ERROR(" failed\n  !  mbedtls_x509_crt_parse returned -0x%x while parsing root cert\n\n", -ret);
 		return NETWORK_X509_ROOT_CRT_PARSE_ERROR;
@@ -162,13 +168,26 @@ IoT_Error_t iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
 	IOT_DEBUG(" ok (%d skipped)\n", ret);
 
 	IOT_DEBUG("  . Loading the client cert. and key...");
+#ifdef MBEDTLS_PARSE_FROM_MEMORY
+	mbedtls_x509_crt_parse(&(tlsDataParams->clicert),
+			(const unsigned char *)pNetwork->tlsConnectParams.pDeviceCertLocation,
+			strlen(pNetwork->tlsConnectParams.pDeviceCertLocation) + 1);
+#else
 	ret = mbedtls_x509_crt_parse_file(&(tlsDataParams->clicert), pNetwork->tlsConnectParams.pDeviceCertLocation);
+#endif
 	if(ret != 0) {
 		IOT_ERROR(" failed\n  !  mbedtls_x509_crt_parse returned -0x%x while parsing device cert\n\n", -ret);
 		return NETWORK_X509_DEVICE_CRT_PARSE_ERROR;
 	}
 
+#ifdef MBEDTLS_PARSE_FROM_MEMORY
+	ret = mbedtls_pk_parse_key(&(tlsDataParams->pkey),
+			(const unsigned char *)pNetwork->tlsConnectParams.pDevicePrivateKeyLocation,
+			strlen(pNetwork->tlsConnectParams.pDevicePrivateKeyLocation) + 1,
+			(const unsigned char *)"", strlen(""));
+#else
 	ret = mbedtls_pk_parse_keyfile(&(tlsDataParams->pkey), pNetwork->tlsConnectParams.pDevicePrivateKeyLocation, "");
+#endif
 	if(ret != 0) {
 		IOT_ERROR(" failed\n  !  mbedtls_pk_parse_key returned -0x%x while parsing private key\n\n", -ret);
 		IOT_DEBUG(" path : %s ", pNetwork->tlsConnectParams.pDevicePrivateKeyLocation);
