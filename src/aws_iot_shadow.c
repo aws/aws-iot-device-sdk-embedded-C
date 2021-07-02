@@ -145,6 +145,54 @@ IoT_Error_t aws_iot_shadow_connect(AWS_IoT_Client *pClient, ShadowConnectParamet
 	FUNC_EXIT_RC(rc);
 }
 
+IoT_Error_t aws_iot_shadow_connect_with_will(AWS_IoT_Client *pClient, ShadowConnectParameters_t *pParams, IoT_MQTT_Will_Options *will) {
+	IoT_Error_t rc = SUCCESS;
+	uint16_t deleteAcceptedTopicLen;
+	IoT_Client_Connect_Params ConnectParams = iotClientConnectParamsDefault;
+
+	FUNC_ENTRY;
+
+	if(NULL == pClient || NULL == pParams || NULL == pParams->pMqttClientId) {
+		FUNC_EXIT_RC(NULL_VALUE_ERROR);
+	}
+
+	snprintf(myThingName, MAX_SIZE_OF_THING_NAME, "%s", pParams->pMyThingName);
+	snprintf(mqttClientID, MAX_SIZE_OF_UNIQUE_CLIENT_ID_BYTES, "%s", pParams->pMqttClientId);
+
+	ConnectParams.keepAliveIntervalInSec = 10;
+	ConnectParams.MQTTVersion = MQTT_3_1_1;
+	ConnectParams.isCleanSession = true;
+	ConnectParams.isWillMsgPresent = true;
+	ConnectParams.will.pTopicName = will->pTopicName;
+	ConnectParams.will.topicNameLen = will->topicNameLen;
+	ConnectParams.will.pMessage = will->pMessage;
+	ConnectParams.will.msgLen = will->msgLen;
+	ConnectParams.will.isRetained = will->isRetained;
+	ConnectParams.will.qos = will->qos;
+	ConnectParams.pClientID = pParams->pMqttClientId;
+	ConnectParams.clientIDLen = pParams->mqttClientIdLen;
+	ConnectParams.pPassword = NULL;
+	ConnectParams.pUsername = NULL;
+
+	rc = aws_iot_mqtt_connect(pClient, &ConnectParams);
+
+	if(SUCCESS != rc) {
+		FUNC_EXIT_RC(rc);
+	}
+
+	initializeRecords(pClient);
+
+	if(NULL != pParams->deleteActionHandler) {
+		snprintf(deleteAcceptedTopic, MAX_SHADOW_TOPIC_LENGTH_BYTES,
+				 "$aws/things/%s/shadow/delete/accepted", myThingName);
+		deleteAcceptedTopicLen = (uint16_t) strlen(deleteAcceptedTopic);
+		rc = aws_iot_mqtt_subscribe(pClient, deleteAcceptedTopic, deleteAcceptedTopicLen, QOS1,
+									pParams->deleteActionHandler, (void *) myThingName);
+	}
+
+	FUNC_EXIT_RC(rc);
+}
+
 IoT_Error_t aws_iot_shadow_register_delta(AWS_IoT_Client *pMqttClient, jsonStruct_t *pStruct) {
 	if(NULL == pMqttClient || NULL == pStruct) {
 		return NULL_VALUE_ERROR;

@@ -125,6 +125,18 @@ IoT_Error_t aws_iot_shadow_init(AWS_IoT_Client *pClient, ShadowInitParameters_t 
 IoT_Error_t aws_iot_shadow_connect(AWS_IoT_Client *pClient, ShadowConnectParameters_t *pParams);
 
 /**
+ * @brief Connect to the AWS IoT Thing Shadow service with a last will over MQTT
+ *
+ * This function does the TLSv1.2 handshake and establishes the MQTT connection
+ *
+ * @param pClient	MQTT Client used as the protocol layer
+ * @param pParams	Shadow Conenction parameters like TLS cert location
+ * @param pParams	MQTT last will
+ * @return An IoT Error Type defining successful/failed Connection
+ */
+IoT_Error_t aws_iot_shadow_connect_with_will(AWS_IoT_Client *pClient, ShadowConnectParameters_t *pParams, IoT_MQTT_Will_Options *will);
+
+/**
  * @brief Yield function to let the background tasks of MQTT and Shadow
  *
  * This function could be use in a separate thread waiting for the incoming messages, ensuring the connection is kept alive with the AWS Service.
