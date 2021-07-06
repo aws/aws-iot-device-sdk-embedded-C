@@ -43,3 +43,6 @@
 [submodule "libraries/aws/fleet-provisioning-for-aws-iot-embedded-sdk"]
 	path = libraries/aws/fleet-provisioning-for-aws-iot-embedded-sdk
 	url = https://github.com/aws/Fleet-Provisioning-for-AWS-IoT-embedded-sdk
+[submodule "libraries/3rdparty/tinycbor"]
+	path = libraries/3rdparty/tinycbor
+	url = https://github.com/intel/tinycbor
