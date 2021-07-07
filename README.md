@@ -462,6 +462,11 @@ After you build and run the initial executable you will have to create another e
 
 ### Building and Running Demos
 
+Before building the demos, ensure you have installed the [prerequisite software](#prerequisites). On Ubuntu 18.04 and 20.04, `gcc`, `cmake`, and OpenSSL can be installed with:
+```sh
+sudo apt install build-essential cmake libssl-dev
+```
+
 #### Build a single demo
 * Go to the root directory of the C SDK.
 * Run *cmake* to generate the Makefiles: `cmake -S. -Bbuild && cd build`
