@@ -459,6 +459,9 @@ After you build and run the initial executable you will have to create another e
     1. Select the IAM role created during the [prerequisite steps](#prerequisites-for-the-aws-over-the-air-update-ota-demos).
     1. Create the Job.
 1. Run the initial executable again with the following command: `sudo ./ota_demo_core_mqtt` or `sudo ./ota_demo_core_http`.
+1. After the initial executable finishes executing go to the directory where the downloaded firmware image resides which is the path name used when creating an OTA job.
+1. Change the permissions of the image `chmod 775 *firmware_image_name*`
+1. Run the downloaded firmware image with the following command: `sudo ./firmware image name`
 
 ### Building and Running Demos
 
