@@ -45,6 +45,7 @@
 #define SNPRINTF_SUCCESS( retVal, bufLen )    ( ( retVal > 0 ) && ( ( uint32_t ) retVal < bufLen ) )
 
 /* Formats used to generate the JSON report. */
+/* *INDENT-OFF* */
 #define JSON_PORT_OBJECT_FORMAT          \
     "{"                                  \
     "\""DEFENDER_REPORT_PORT_KEY"\": %u" \
@@ -93,6 +94,8 @@
     "}"                                   \
     "}"                                   \
     "},"
+
+/* *INDENT-ON* */
 
 /**
  * @brief The format for custom metrics of CPU usage time
