@@ -54,7 +54,7 @@
 /* MQTT operations. */
 #include "mqtt_operations.h"
 
-/* tinycbor library for CBOR encoding and decoding operations. */
+/* TinyCBOR library for CBOR encoding and decoding operations. */
 #include "cbor.h"
 
 /* AWS IoT Fleet Provisioning Library. */
@@ -89,7 +89,7 @@
 #define PROVISIONING_TEMPLATE_NAME_LENGTH    ( ( uint16_t ) ( sizeof( PROVISIONING_TEMPLATE_NAME ) - 1 ) )
 
 /**
- * @brief Size of Thing name buffer.
+ * @brief Size of AWS IoT Thing name buffer.
  *
  * See https://docs.aws.amazon.com/iot/latest/apireference/API_CreateThing.html#iot-CreateThing-request-thingName
  */
@@ -120,19 +120,19 @@
 /**
  * @brief Size of buffer in which to hold the certificate.
  */
-#define CERT_BUFFER_LENGTH                       2048
+#define CERT_BUFFER_LENGTH                             2048
 
 /**
  * @brief Size of buffer in which to hold the certificate id.
  *
  * See https://docs.aws.amazon.com/iot/latest/apireference/API_Certificate.html#iot-Type-Certificate-certificateId
  */
-#define CERT_ID_BUFFER_LENGTH                    64
+#define CERT_ID_BUFFER_LENGTH                          64
 
 /**
  * @brief Size of buffer in which to hold the certificate ownership token.
  */
-#define OWNERSHIP_TOKEN_BUFFER_LENGTH            512
+#define OWNERSHIP_TOKEN_BUFFER_LENGTH                  512
 
 /**
  * @brief Status values of the Fleet Provisioning response.
@@ -162,7 +162,7 @@ static char thingName[ MAX_THING_NAME_LENGTH ];
 static size_t thingNameLength;
 
 /**
- * @brief Buffer to hold responses received from the AWS IoT Fleet Provisioning service.
+ * @brief Buffer to hold responses received from the AWS IoT Fleet Provisioning APIs.
  */
 static char payloadBuffer[ NETWORK_BUFFER_SIZE ];
 
@@ -379,7 +379,7 @@ static bool getCsr( char * buffer,
     if( file == NULL )
     {
         LogError( ( "Error opening file at PROVISIONING_CSR_PATH: %s. Error: %s.",
-                    PROVISIONING_CSR_PATH, strerror(errno) ) );
+                    PROVISIONING_CSR_PATH, strerror( errno ) ) );
         status = false;
     }
     else
@@ -391,7 +391,7 @@ static bool getCsr( char * buffer,
         if( result == -1 )
         {
             LogError( ( "Failed while moving to end of the certificate signing request file. Path: %s. Error: %s.",
-                            PROVISIONING_CSR_PATH, strerror(errno) ) );
+                        PROVISIONING_CSR_PATH, strerror( errno ) ) );
             status = false;
         }
         else
@@ -403,7 +403,7 @@ static bool getCsr( char * buffer,
             if( lenResult == -1 )
             {
                 LogError( ( "Failed to get length of certificate signing request file. Path: %s. Error: %s.",
-                            PROVISIONING_CSR_PATH, strerror(errno) ) );
+                            PROVISIONING_CSR_PATH, strerror( errno ) ) );
                 status = false;
             }
             else
@@ -430,7 +430,7 @@ static bool getCsr( char * buffer,
             if( result == -1 )
             {
                 LogError( ( "Failed to move to beginning of certificate signing request file. Path: %s. Error: %s.",
-                            PROVISIONING_CSR_PATH, strerror(errno) ) );
+                            PROVISIONING_CSR_PATH, strerror( errno ) ) );
                 status = false;
             }
         }
@@ -444,7 +444,7 @@ static bool getCsr( char * buffer,
             if( written != length )
             {
                 LogError( ( "Failed reading certificate signing request file. Path: %s. Error: %s.",
-                            PROVISIONING_CSR_PATH, strerror(errno) ) );
+                            PROVISIONING_CSR_PATH, strerror( errno ) ) );
                 status = false;
             }
             else

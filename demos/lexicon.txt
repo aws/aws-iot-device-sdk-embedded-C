@@ -14,17 +14,20 @@ amazonrootca
 amazontrust
 amzn
 api
+apireference
 apis
 appcallback
 arcfour
 argc
 args
 argv
+arn
 ascii
 asm
 asn
 asymetric
 async
+attributepayload
 atttribute
 auth
 availablememory
@@ -113,6 +116,7 @@ cpu
 createcertificatefromcsr
 createcleansession
 createkeysandcertificate
+creatething
 crl
 crls
 crt
@@ -137,6 +141,8 @@ defenderresponse
 defenderresponselength
 defendersuccess
 deinitialize
+demotemplate
+demothingpolicy
 der
 des
 describejobexecution
@@ -146,6 +152,7 @@ deserializer
 deserializing
 dev
 developerguide
+deviceconfiguration
 devicepublickeyasciihex
 devicepublickeyder
 dgst
@@ -191,7 +198,9 @@ filerc
 filesize
 filterindex
 findobjects
+fn
 fopen
+fpdemothings
 fprintf
 fread
 freertos
@@ -208,6 +217,7 @@ generatekeypair
 generaterandom
 genkey
 genprime
+genrsa
 getcertificatefromcsr
 getdeviceserialnumber
 getfunctionlist
@@ -381,6 +391,7 @@ outlength
 outlengthwritten
 outwrittenlength
 overriden
+overridesettings
 ownershiptoken
 ownershiptokenlength
 pacdata
@@ -442,6 +453,7 @@ pmqttcontext
 pmsg
 pmsg
 pnetworkcontext
+policyname
 pollinv
 poly
 popenportsarray
@@ -529,6 +541,7 @@ reportbuildersuccess
 reportid
 reportlength
 reportstatus
+req
 requestcount
 requestinfo
 requestqueue
@@ -561,6 +574,7 @@ sec
 secp
 seedfile
 sendupdate
+serialnumber
 serverhost
 setkey
 sha
@@ -611,10 +625,13 @@ tcpsocket
 teardown
 testshadowname
 testthingname
+thinggroups
 thingname
 thingnamebuffer
 thingnamebufferlength
 thingnamelength
+thingtypename
+tinycbor
 tls
 tokenpresent
 toolchain

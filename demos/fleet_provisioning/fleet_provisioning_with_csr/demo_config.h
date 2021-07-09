@@ -155,7 +155,7 @@
 
 /**
  * @brief Path of the file containing the private key that the device is to be
- * provisioned with using the Fleet Provisoning APIs. This should be the key
+ * provisioned with using the Fleet Provisioning APIs. This should be the key
  * used to generate the Certificate Signing Request (CSR) for certificate
  * provisioning. This key should be used to connect to IoT Core after the
  * client device has been provisioned.
@@ -202,7 +202,7 @@
 
 /**
  * @brief Name of the provisioning template to use for the RegisterThing
- * portion of the fleet provisonign workflow.
+ * portion of the Fleet Provisioning workflow.
  *
  * For information about provisioning templates, see the following AWS documentation:
  * https://docs.aws.amazon.com/iot/latest/developerguide/provision-template.html#fleet-provision-template
