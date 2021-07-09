@@ -1,13 +1,10 @@
-set( DEMO_NAME "fleet_provisioning_csr_demo" )
+set( DEMO_NAME "fleet_provisioning_with_csr_demo" )
 
 # Include MQTT library's source and header path variables.
 include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreMQTT/mqttFilePaths.cmake )
 
 # Include backoffAlgorithm library file path configuration.
 include( ${CMAKE_SOURCE_DIR}/libraries/standard/backoffAlgorithm/backoffAlgorithmFilePaths.cmake )
-
-# Include JSON library's source and header path variables.
-include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreJSON/jsonFilePaths.cmake )
 
 # Include Fleet Provisioning library's source and header path variables.
 include(

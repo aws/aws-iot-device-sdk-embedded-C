@@ -91,18 +91,57 @@
 
 /**
  * @brief Path the file containing the provisioning claim certificate. This
- * certificate is used to authenticate with AWS IoT for provisioning by claim.
+ * certificate is used to connect to AWS IoT Core and use Fleet Provisioning
+ * APIs to provision the client device. This is used for the "Provisioning by
+ * Claim" provisioning workflow.
  *
  * For information about provisioning by claim, see the following AWS documentation:
  * https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html#claim-based
  *
- * @note This certificate should be PEM-encoded.
+ * @note This certificate should be PEM-encoded. The certificate should be
+ * registered on AWS IoT Core beforehand. It should have an AWS IoT policy to
+ * allow it to access only the Fleet Provisioning APIs. An example policy for
+ * the claim certificates for this demo is as follows (Replace us-west-2 with
+ * your AWS region, 012345678901 with your account ID, and DemoTemplate with
+ * the name of your provisioning template):
+ *
+ * {
+ *   "Version": "2012-10-17",
+ *   "Statement": [
+ *     {
+ *       "Effect": "Allow",
+ *       "Action": [
+ *         "iot:Connect"
+ *       ],
+ *       "Resource": "*"
+ *     },
+ *     {
+ *       "Effect": "Allow",
+ *       "Action": [
+ *         "iot:Publish",
+ *         "iot:Receive"
+ *       ],
+ *       "Resource": [
+ *         "arn:aws:iot:us-west-2:012345678901:topic/$aws/certificates/create-from-csr/*",
+ *         "arn:aws:iot:us-west-2:012345678901:topic/$aws/provisioning-templates/DemoTemplate/provision/*"
+ *       ]
+ *     },
+ *     {
+ *       "Effect": "Allow",
+ *       "Action": "iot:Subscribe",
+ *       "Resource": [
+ *         "arn:aws:iot:us-west-2:012345678901:topicfilter/$aws/certificates/create-from-csr/*",
+ *         "arn:aws:iot:us-west-2:012345678901:topicfilter/$aws/provisioning-templates/DemoTemplate/provision/*"
+ *       ]
+ *     }
+ *   ]
+ * }
  *
  * #define CLAIM_CERT_PATH    "...insert here..."
  */
 
 /**
- * @brief Path the file containing the provisioning claim private key. This
+ * @brief Path of the file containing the provisioning claim private key. This
  * key corresponds to the provisioning claim certificate and is used to
  * authenticate with AWS IoT for provisioning by claim.
  *
@@ -111,25 +150,34 @@
  *
  * @note This private key should be PEM-encoded.
  *
- * #define CLAIM_KEY_PATH    "...insert here..."
+ * #define CLAIM_PRIVATE_KEY_PATH    "...insert here..."
  */
 
 /**
- * @brief Path of the file containing the private key used for provisioning. This should be the key
- * used to generate the Certificate Signing Request (CSR) and is used to connect to IoT Core with
- * the provisioned certificate.
+ * @brief Path of the file containing the private key that the device is to be
+ * provisioned with using the Fleet Provisoning APIs. This should be the key
+ * used to generate the Certificate Signing Request (CSR) for certificate
+ * provisioning. This key should be used to connect to IoT Core after the
+ * client device has been provisioned.
+ *
+ * The following openssl command can be used to generate the key:
+ * openssl genrsa -out fpdemo_priv_key.pem 2048
  *
  * For information about provisioning by claim, see the following AWS documentation:
  * https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html#claim-based
  *
  * @note This private key should be PEM-encoded.
  *
- * #define PROVISIONING_KEY_PATH    "...insert here..."
+ * #define PROVISIONING_PRIVATE_KEY_PATH    "...insert here..."
  */
 
 /**
- * @brief Path of the file containing the Certificate Signing Request (CSR) to send to the AWS IoT
- * Fleet Provisioning APIs for provisioning the new certificate.
+ * @brief Path of the file containing the Certificate Signing Request (CSR) to
+ * send to the AWS IoT Fleet Provisioning APIs for provisioning the client
+ * device with a new certificate.
+ *
+ * The following openssl command can be used to generate the key:
+ * openssl req -new -key fpdemo_priv_key.pem -out fpdemo_csr.pem
  *
  * For information about provisioning by claim, see the following AWS documentation:
  * https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html#claim-based
@@ -140,25 +188,83 @@
  */
 
 /**
- * @brief Path to which to write the newly provisioned client certificate obtained from AWS
- * IoT Fleet Provisioning.
- **
+ * @brief Path to which to write the newly provisioned client certificate
+ * obtained from AWS IoT Core through the Fleet Provisioning APIs.
+ *
  * For information about provisioning by claim, see the following AWS documentation:
  * https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html#claim-based
  *
  * For information about client certificates, see the following AWS documentation:
  * https://docs.aws.amazon.com/iot/latest/developerguide/x509-client-certs.html
  *
- * @note This certificate should be PEM-encoded.
- *
  * #define PROVISIONING_CERT_PATH    "...insert here..."
  */
 
 /**
- * @brief Predefined template name to use for the provisioning workflow.
+ * @brief Name of the provisioning template to use for the RegisterThing
+ * portion of the fleet provisonign workflow.
  *
  * For information about provisioning templates, see the following AWS documentation:
  * https://docs.aws.amazon.com/iot/latest/developerguide/provision-template.html#fleet-provision-template
+ *
+ * The example template used for this demo is as follows (Replace
+ * DemoThingPolicy with the policy provisioned devices should have):
+ *
+ * {
+ *   "Parameters": {
+ *     "SerialNumber": {
+ *       "Type": "String"
+ *     },
+ *     "AWS::IoT::Certificate::Id": {
+ *       "Type": "String"
+ *     }
+ *   },
+ *   "Resources": {
+ *     "certificate": {
+ *       "Properties": {
+ *         "CertificateId": {
+ *           "Ref": "AWS::IoT::Certificate::Id"
+ *         },
+ *         "Status": "Active"
+ *       },
+ *       "Type": "AWS::IoT::Certificate"
+ *     },
+ *     "policy": {
+ *       "Properties": {
+ *         "PolicyName": "DemoThingPolicy"
+ *       },
+ *       "Type": "AWS::IoT::Policy"
+ *     },
+ *     "thing": {
+ *       "OverrideSettings": {
+ *         "AttributePayload": "MERGE",
+ *         "ThingGroups": "DO_NOTHING",
+ *         "ThingTypeName": "REPLACE"
+ *       },
+ *       "Properties": {
+ *         "AttributePayload": {},
+ *         "ThingGroups": [],
+ *         "ThingName": {
+ *           "Fn::Join": [
+ *             "",
+ *             [
+ *               "FPDemo_",
+ *               {
+ *                 "Ref": "SerialNumber"
+ *               }
+ *             ]
+ *           ]
+ *         },
+ *         "ThingTypeName": "FPDemoThings"
+ *       },
+ *       "Type": "AWS::IoT::Thing"
+ *     }
+ *   },
+ *   "DeviceConfiguration": {}
+ * }
+ *
+ * @note The provisioning template MUST be created in AWS IoT before running the
+ * demo.
  *
  *  #define PROVISIONING_TEMPLATE_NAME    "...insert here..."
  */

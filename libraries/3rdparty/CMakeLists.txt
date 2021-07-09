@@ -28,7 +28,7 @@ if(${BUILD_TESTS})
     target_link_libraries(cmock unity)
 endif()
 
-add_library(tinycbor STATIC
+add_library(tinycbor
     "${ROOT_DIR}/libraries/3rdparty/tinycbor/src/cborpretty.c"
     "${ROOT_DIR}/libraries/3rdparty/tinycbor/src/cborpretty_stdio.c"
     "${ROOT_DIR}/libraries/3rdparty/tinycbor/src/cborencoder.c"

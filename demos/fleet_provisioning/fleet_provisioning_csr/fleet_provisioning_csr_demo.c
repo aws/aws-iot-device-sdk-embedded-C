@@ -1,6 +1,6 @@
 /*
  * AWS IoT Device SDK for Embedded C 202103.00
- * Copyright
+ * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -46,6 +46,7 @@
 
 /* POSIX includes. */
 #include <unistd.h>
+#include <errno.h>
 
 /* Demo config. */
 #include "demo_config.h"
@@ -53,10 +54,10 @@
 /* MQTT operations. */
 #include "mqtt_operations.h"
 
-/* CBOR Library */
+/* tinycbor library for CBOR encoding and decoding operations. */
 #include "cbor.h"
 
-/* Fleet Provisioning Client Library. */
+/* AWS IoT Fleet Provisioning Library. */
 #include "fleet_provisioning.h"
 
 /**
@@ -69,11 +70,11 @@
 #ifndef CLAIM_CERT_PATH
     #error "Please define path to claim certificate (CLAIM_CERT_PATH) in demo_config.h."
 #endif
-#ifndef CLAIM_KEY_PATH
-    #error "Please define path to claim private key (CLAIM_KEY_PATH) in demo_config.h."
+#ifndef CLAIM_PRIVATE_KEY_PATH
+    #error "Please define path to claim private key (CLAIM_PRIVATE_KEY_PATH) in demo_config.h."
 #endif
-#ifndef PROVISIONING_KEY_PATH
-    #error "Please define path to private key to provision (PROVISIONING_KEY_PATH) in demo_config.h."
+#ifndef PROVISIONING_PRIVATE_KEY_PATH
+    #error "Please define path to private key to provision (PROVISIONING_PRIVATE_KEY_PATH) in demo_config.h."
 #endif
 #ifndef PROVISIONING_CSR_PATH
     #error "Please define path to CSR to use to provision (PROVISIONING_CSR_PATH) in demo_config.h."
@@ -89,12 +90,14 @@
 
 /**
  * @brief Size of Thing name buffer.
+ *
+ * See https://docs.aws.amazon.com/iot/latest/apireference/API_CreateThing.html#iot-CreateThing-request-thingName
  */
-#define MAX_THING_NAME_LENGTH                30
+#define MAX_THING_NAME_LENGTH                128
 
 /**
- * @brief Number of seconds to wait for the response from AWS IoT Fleet
- * Provisioning service.
+ * @brief Number of seconds to wait for response from AWS IoT Fleet
+ * Provisioning APIs.
  */
 #define FLEET_PROV_RESPONSE_WAIT_SECONDS     ( 2 )
 
@@ -112,20 +115,22 @@
  * @brief Time in seconds to wait between retries of the demo loop if
  * demo loop fails.
  */
-#define DELAY_BETWEEN_DEMO_RETRY_ITERATIONS_S    ( 5 )
+#define DELAY_BETWEEN_DEMO_RETRY_ITERATIONS_SECONDS    ( 5 )
 
 /**
- * @brief Size of buffer in which to hold certificate.
+ * @brief Size of buffer in which to hold the certificate.
  */
 #define CERT_BUFFER_LENGTH                       2048
 
 /**
- * @brief Size of buffer in which to hold certificate id.
+ * @brief Size of buffer in which to hold the certificate id.
+ *
+ * See https://docs.aws.amazon.com/iot/latest/apireference/API_Certificate.html#iot-Type-Certificate-certificateId
  */
-#define CERT_ID_BUFFER_LENGTH                    65
+#define CERT_ID_BUFFER_LENGTH                    64
 
 /**
- * @brief Size of buffer in which to hold certificate.
+ * @brief Size of buffer in which to hold the certificate ownership token.
  */
 #define OWNERSHIP_TOKEN_BUFFER_LENGTH            512
 
@@ -142,17 +147,17 @@ typedef enum
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Status reported from the publish callback.
+ * @brief Status reported from the MQTT publish callback.
  */
 static ResponseStatus_t responseStatus;
 
 /**
- * @brief Buffer to hold the provisioned Thing name.
+ * @brief Buffer to hold the provisioned AWS IoT Thing name.
  */
 static char thingName[ MAX_THING_NAME_LENGTH ];
 
 /**
- * @brief Length of the Thing name.
+ * @brief Length of the AWS IoT Thing name.
  */
 static size_t thingNameLength;
 
@@ -368,31 +373,37 @@ static bool getCsr( char * buffer,
     size_t length = 0;
     bool status = true;
 
+    /* Get the file descriptor for the CSR file. */
     file = fopen( PROVISIONING_CSR_PATH, "rb" );
 
     if( file == NULL )
     {
-        LogError( ( "Error opening file at PROVISIONING_CSR_PATH." ) );
+        LogError( ( "Error opening file at PROVISIONING_CSR_PATH: %s. Error: %s.",
+                    PROVISIONING_CSR_PATH, strerror(errno) ) );
         status = false;
     }
     else
     {
         int result;
+        /* Seek to the end of the file, so that we can get the file size. */
         result = fseek( file, 0L, SEEK_END );
 
         if( result == -1 )
         {
-            LogError( ( "Failed to seek CSR file." ) );
+            LogError( ( "Failed while moving to end of the certificate signing request file. Path: %s. Error: %s.",
+                            PROVISIONING_CSR_PATH, strerror(errno) ) );
             status = false;
         }
         else
         {
             long lenResult = -1;
+            /* Get the current position which is the file size. */
             lenResult = ftell( file );
 
             if( lenResult == -1 )
             {
-                LogError( ( "Failed to get length of CSR file." ) );
+                LogError( ( "Failed to get length of certificate signing request file. Path: %s. Error: %s.",
+                            PROVISIONING_CSR_PATH, strerror(errno) ) );
                 status = false;
             }
             else
@@ -405,18 +416,21 @@ static bool getCsr( char * buffer,
         {
             if( length > bufferLength )
             {
-                LogError( ( "Buffer too small for CSR" ) );
+                LogError( ( "Buffer too small for certificate signing request. Buffer size: %ld. Required size: %ld.",
+                            bufferLength, length ) );
                 status = false;
             }
         }
 
         if( status == true )
         {
+            /* Return to the beginning of the file. */
             result = fseek( file, 0L, SEEK_SET );
 
             if( result == -1 )
             {
-                LogError( ( "Failed to seek CSR file." ) );
+                LogError( ( "Failed to move to beginning of certificate signing request file. Path: %s. Error: %s.",
+                            PROVISIONING_CSR_PATH, strerror(errno) ) );
                 status = false;
             }
         }
@@ -424,11 +438,13 @@ static bool getCsr( char * buffer,
         if( status == true )
         {
             size_t written = 0;
+            /* Read the CSR into our buffer. */
             written = fread( buffer, 1, length, file );
 
             if( written != length )
             {
-                LogError( ( "Failed reading CSR file." ) );
+                LogError( ( "Failed reading certificate signing request file. Path: %s. Error: %s.",
+                            PROVISIONING_CSR_PATH, strerror(errno) ) );
                 status = false;
             }
             else
@@ -1026,7 +1042,7 @@ int main( int argc,
             LogInfo( ( "Establishing MQTT session with claim certificate..." ) );
             status = EstablishMqttSession( provisioningPublishCallback,
                                            CLAIM_CERT_PATH,
-                                           CLAIM_KEY_PATH );
+                                           CLAIM_PRIVATE_KEY_PATH );
 
             if( status == false )
             {
@@ -1187,7 +1203,7 @@ int main( int argc,
             LogInfo( ( "Establishing MQTT session with provisioned certificate..." ) );
             status = EstablishMqttSession( provisioningPublishCallback,
                                            PROVISIONING_CERT_PATH,
-                                           PROVISIONING_KEY_PATH );
+                                           PROVISIONING_PRIVATE_KEY_PATH );
 
             if( status != true )
             {
@@ -1226,7 +1242,7 @@ int main( int argc,
         else if( demoRunCount < FLEET_PROV_MAX_DEMO_LOOP_COUNT )
         {
             LogWarn( ( "Demo iteration %d failed. Retrying...", demoRunCount ) );
-            sleep( DELAY_BETWEEN_DEMO_RETRY_ITERATIONS_S );
+            sleep( DELAY_BETWEEN_DEMO_RETRY_ITERATIONS_SECONDS );
         }
         /* Failed all #FLEET_PROV_MAX_DEMO_LOOP_COUNT demo iterations. */
         else
