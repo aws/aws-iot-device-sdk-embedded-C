@@ -101,41 +101,10 @@
  * @note This certificate should be PEM-encoded. The certificate should be
  * registered on AWS IoT Core beforehand. It should have an AWS IoT policy to
  * allow it to access only the Fleet Provisioning APIs. An example policy for
- * the claim certificates for this demo is as follows (Replace us-west-2 with
- * your AWS region, 012345678901 with your account ID, and DemoTemplate with
- * the name of your provisioning template):
- *
- * {
- *   "Version": "2012-10-17",
- *   "Statement": [
- *     {
- *       "Effect": "Allow",
- *       "Action": [
- *         "iot:Connect"
- *       ],
- *       "Resource": "*"
- *     },
- *     {
- *       "Effect": "Allow",
- *       "Action": [
- *         "iot:Publish",
- *         "iot:Receive"
- *       ],
- *       "Resource": [
- *         "arn:aws:iot:us-west-2:012345678901:topic/$aws/certificates/create-from-csr/*",
- *         "arn:aws:iot:us-west-2:012345678901:topic/$aws/provisioning-templates/DemoTemplate/provision/*"
- *       ]
- *     },
- *     {
- *       "Effect": "Allow",
- *       "Action": "iot:Subscribe",
- *       "Resource": [
- *         "arn:aws:iot:us-west-2:012345678901:topicfilter/$aws/certificates/create-from-csr/*",
- *         "arn:aws:iot:us-west-2:012345678901:topicfilter/$aws/provisioning-templates/DemoTemplate/provision/*"
- *       ]
- *     }
- *   ]
- * }
+ * the claim certificates for this demo is available in the claim_policy.json
+ * file in the demo directory. In the example, replace us-west-2 with your AWS
+ * region, 012345678901 with your account ID, and demo_template with the name
+ * of your provisioning template.
  *
  * #define CLAIM_CERT_PATH    "...insert here..."
  */
@@ -207,61 +176,9 @@
  * For information about provisioning templates, see the following AWS documentation:
  * https://docs.aws.amazon.com/iot/latest/developerguide/provision-template.html#fleet-provision-template
  *
- * The example template used for this demo is as follows (Replace
- * DemoThingPolicy with the policy provisioned devices should have):
- *
- * {
- *   "Parameters": {
- *     "SerialNumber": {
- *       "Type": "String"
- *     },
- *     "AWS::IoT::Certificate::Id": {
- *       "Type": "String"
- *     }
- *   },
- *   "Resources": {
- *     "certificate": {
- *       "Properties": {
- *         "CertificateId": {
- *           "Ref": "AWS::IoT::Certificate::Id"
- *         },
- *         "Status": "Active"
- *       },
- *       "Type": "AWS::IoT::Certificate"
- *     },
- *     "policy": {
- *       "Properties": {
- *         "PolicyName": "DemoThingPolicy"
- *       },
- *       "Type": "AWS::IoT::Policy"
- *     },
- *     "thing": {
- *       "OverrideSettings": {
- *         "AttributePayload": "MERGE",
- *         "ThingGroups": "DO_NOTHING",
- *         "ThingTypeName": "REPLACE"
- *       },
- *       "Properties": {
- *         "AttributePayload": {},
- *         "ThingGroups": [],
- *         "ThingName": {
- *           "Fn::Join": [
- *             "",
- *             [
- *               "FPDemo_",
- *               {
- *                 "Ref": "SerialNumber"
- *               }
- *             ]
- *           ]
- *         },
- *         "ThingTypeName": "FPDemoThings"
- *       },
- *       "Type": "AWS::IoT::Thing"
- *     }
- *   },
- *   "DeviceConfiguration": {}
- * }
+ * The example template used for this demo is available in the demo_template.json
+ * file in the demo directory. In the example, replace
+ * demo_thing_policy with the policy provisioned devices should have.
  *
  * @note The provisioning template MUST be created in AWS IoT before running the
  * demo.
