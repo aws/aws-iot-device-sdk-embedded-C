@@ -721,7 +721,6 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
 {
     OpensslParams_t * pOpensslParams = NULL;
     int32_t bytesReceived = 0;
-    int32_t sslError = 0;
 
     if( ( pNetworkContext == NULL ) || ( pNetworkContext->pParams == NULL ) )
     {
@@ -734,7 +733,8 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
     }
     else
     {
-        int32_t pollStatus = -1, readStatus = 1;
+        int32_t pollStatus = 1, readStatus = 1, sslError = 0;
+        uint8_t shouldRead = 0U;
         struct pollfd pollFds;
         pOpensslParams = pNetworkContext->pParams;
 
@@ -744,15 +744,37 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
         /* Set the file descriptor for poll. */
         pollFds.fd = pOpensslParams->socketDescriptor;
 
-        /* Check if there is data to read from the socket. */
-        pollStatus = poll( &pollFds, 1, 0 );
+        if( ( bytesToRecv > 1 ) || ( SSL_pending( pOpensslParams->pSsl ) > 0 ) )
+        {
+            shouldRead = 1U;
+        }
+        else
+        {
+            /* Non-speculative read so check if there is data to read from the socket. */
+            pollStatus = poll( &pollFds, 1, 0 );
+        }
 
-        if( ( SSL_pending( pOpensslParams->pSsl ) > 0 ) || ( pollStatus > 0 ) )
+        if( pollStatus < 0 )
+        {
+            bytesReceived = -1;
+        }
+        else if( pollStatus == 0 )
+        {
+            /* No data available to be read from the socket. */
+            bytesReceived = 0;
+        }
+        else
+        {
+            shouldRead = 1U;
+        }
+
+        if( shouldRead == 1U )
         {
             /* SSL read of data. */
             readStatus = ( int32_t ) SSL_read( pOpensslParams->pSsl, pBuffer,
                                                ( int32_t ) bytesToRecv );
 
+            /* Successfully read of application data. */
             if( readStatus > 0 )
             {
                 bytesReceived = readStatus;
@@ -787,12 +809,6 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
                  * retried. */
                 bytesReceived = -1;
             }
-        }
-
-        if( pollStatus < 0 )
-        {
-            LogError( ( "An error occurred while polling." ) );
-            bytesReceived = -1;
         }
     }
 

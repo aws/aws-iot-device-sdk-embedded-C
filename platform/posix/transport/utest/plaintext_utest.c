@@ -183,7 +183,6 @@ void test_Plaintext_Recv_All_Bytes_Received_Successfully( void )
 {
     int32_t bytesReceived;
 
-    poll_ExpectAnyArgsAndReturn( 1 );
     recv_ExpectAnyArgsAndReturn( BYTES_TO_RECV );
     bytesReceived = Plaintext_Recv( &networkContext,
                                     plaintextBuffer,
@@ -199,7 +198,6 @@ void test_Plaintext_Recv_Zero_Bytes_Received( void )
 {
     int32_t bytesReceived;
 
-    poll_ExpectAnyArgsAndReturn( 1 );
     recv_ExpectAnyArgsAndReturn( 0 );
     bytesReceived = Plaintext_Recv( &networkContext,
                                     plaintextBuffer,
@@ -217,7 +215,7 @@ void test_Plaintext_Recv_Socket_Timeout( void )
     poll_ExpectAnyArgsAndReturn( 0 );
     bytesReceived = Plaintext_Recv( &networkContext,
                                     plaintextBuffer,
-                                    BYTES_TO_RECV );
+                                    1U );
     TEST_ASSERT_EQUAL( 0, bytesReceived );
 }
 
@@ -232,7 +230,7 @@ void test_Plaintext_Recv_Poll_Error( void )
     poll_ExpectAnyArgsAndReturn( -1 );
     bytesReceived = Plaintext_Recv( &networkContext,
                                     plaintextBuffer,
-                                    BYTES_TO_RECV );
+                                    1U );
     TEST_ASSERT_EQUAL( SEND_RECV_ERROR, bytesReceived );
 }
 
@@ -247,7 +245,6 @@ void test_Plaintext_Recv_Network_Error( void )
 
     for( i = 0; i < sizeof( errorNumbers ); i++ )
     {
-        poll_ExpectAnyArgsAndReturn( 1 );
         recv_ExpectAnyArgsAndReturn( SEND_RECV_ERROR );
         errno = errorNumbers[ i ];
         bytesReceived = Plaintext_Recv( &networkContext,

@@ -844,15 +844,11 @@ void test_Openssl_Recv_All_Bytes_Received_Successfully( void )
 
     /* No pending data from last read. */
     opensslParams.pSsl = &ssl;
-    poll_ExpectAnyArgsAndReturn( 1 );
-    SSL_pending_ExpectAnyArgsAndReturn( 0 );
     SSL_read_ExpectAnyArgsAndReturn( BYTES_TO_RECV );
     bytesReceived = Openssl_Recv( &networkContext, opensslBuffer, BYTES_TO_RECV );
     TEST_ASSERT_EQUAL( BYTES_TO_RECV, bytesReceived );
 
     /* Pending data from last read. */
-    poll_ExpectAnyArgsAndReturn( 1 );
-    SSL_pending_ExpectAnyArgsAndReturn( BYTES_TO_RECV );
     SSL_read_ExpectAnyArgsAndReturn( BYTES_TO_RECV );
     bytesReceived = Openssl_Recv( &networkContext, opensslBuffer, BYTES_TO_RECV );
     TEST_ASSERT_EQUAL( BYTES_TO_RECV, bytesReceived );
@@ -868,8 +864,6 @@ void test_Openssl_Recv_Network_Error( void )
 
     opensslParams.pSsl = &ssl;
 
-    poll_ExpectAnyArgsAndReturn( 1 );
-    SSL_pending_ExpectAnyArgsAndReturn( 0 );
     SSL_read_ExpectAnyArgsAndReturn( SSL_READ_WRITE_ERROR );
     /* SSL_ERROR_ZERO_RETURN means the peer has closed the connection. */
     SSL_get_error_ExpectAnyArgsAndReturn( SSL_ERROR_ZERO_RETURN );
@@ -881,17 +875,16 @@ void test_Openssl_Recv_Network_Error( void )
     TEST_ASSERT_TRUE( bytesReceived < 0 );
 
     /* Test that a non-retryable zero error code is converted to -1 by the API. */
-    poll_ExpectAnyArgsAndReturn( 1 );
-    SSL_pending_ExpectAnyArgsAndReturn( 0 );
+    SSL_pending_ExpectAnyArgsAndReturn( 1 );
     SSL_read_ExpectAnyArgsAndReturn( 0 );
     SSL_get_error_ExpectAnyArgsAndReturn( SSL_ERROR_ZERO_RETURN );
-    bytesReceived = Openssl_Recv( &networkContext, opensslBuffer, BYTES_TO_RECV );
+    bytesReceived = Openssl_Recv( &networkContext, opensslBuffer, 1U );
     TEST_ASSERT_EQUAL( -1, bytesReceived );
 
     /* Test that a poll error results in the function under test returning -1. */
-    poll_ExpectAnyArgsAndReturn( -1 );
     SSL_pending_ExpectAnyArgsAndReturn( 0 );
-    bytesReceived = Openssl_Recv( &networkContext, opensslBuffer, BYTES_TO_RECV );
+    poll_ExpectAnyArgsAndReturn( -1 );
+    bytesReceived = Openssl_Recv( &networkContext, opensslBuffer, 1U );
     TEST_ASSERT_EQUAL( -1, bytesReceived );
 }
 
@@ -902,8 +895,9 @@ void test_Openssl_Recv_Poll_No_Events( void )
 {
     int32_t bytesReceived;
 
+    SSL_pending_ExpectAnyArgsAndReturn( 0 );
     poll_ExpectAnyArgsAndReturn( 0 );
-    bytesReceived = Openssl_Recv( &networkContext, opensslBuffer, BYTES_TO_RECV );
+    bytesReceived = Openssl_Recv( &networkContext, opensslBuffer, 1U );
     TEST_ASSERT_EQUAL( 0, bytesReceived );
 }
 
@@ -916,8 +910,6 @@ void test_Openssl_Recv_Zero_Return_Value( void )
     int32_t bytesReceived;
 
     opensslParams.pSsl = &ssl;
-    poll_ExpectAnyArgsAndReturn( 1 );
-    SSL_pending_ExpectAnyArgsAndReturn( 0 );
     SSL_read_ExpectAnyArgsAndReturn( SSL_READ_WRITE_ERROR );
 
     /* Test when SSL_get_error() returns an SSL_ERROR_WANT_READ error. */

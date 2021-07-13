@@ -115,7 +115,7 @@ int32_t Plaintext_Recv( NetworkContext_t * pNetworkContext,
                         size_t bytesToRecv )
 {
     PlaintextParams_t * pPlaintextParams = NULL;
-    int32_t bytesReceived = -1, pollStatus = -1;
+    int32_t bytesReceived = -1, pollStatus = 1;
     struct pollfd pollFds;
 
     assert( pNetworkContext != NULL && pNetworkContext->pParams != NULL );
@@ -131,8 +131,12 @@ int32_t Plaintext_Recv( NetworkContext_t * pNetworkContext,
     /* Set the file descriptor for poll. */
     pollFds.fd = pPlaintextParams->socketDescriptor;
 
-    /* Check if there is data to read from the socket. */
-    pollStatus = poll( &pollFds, 1, 0 );
+    /* Speculative read for the start of a payload. */
+    if( bytesToRecv == 1U )
+    {
+        /* Check if there is data to read from the socket. */
+        pollStatus = poll( &pollFds, 1, 0 );
+    }
 
     if( pollStatus > 0 )
     {
