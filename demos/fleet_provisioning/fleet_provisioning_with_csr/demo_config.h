@@ -129,8 +129,8 @@
  * provisioning. This key should be used to connect to IoT Core after the
  * client device has been provisioned.
  *
- * The following openssl command can be used to generate the key:
- * openssl genrsa -out fpdemo_priv_key.pem 2048
+ * The following openssl command can be used to generate a private key and CSR:
+ * openssl req -newkey rsa:2048 -keyout fpdemo_priv_key.pem -out fpdemo_csr.pem
  *
  * For information about provisioning by claim, see the following AWS documentation:
  * https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html#claim-based
@@ -145,8 +145,8 @@
  * send to the AWS IoT Fleet Provisioning APIs for provisioning the client
  * device with a new certificate.
  *
- * The following openssl command can be used to generate the key:
- * openssl req -new -key fpdemo_priv_key.pem -out fpdemo_csr.pem
+ * The following openssl command can be used to generate a private key and CSR:
+ * openssl req -newkey rsa:2048 -keyout fpdemo_priv_key.pem -out fpdemo_csr.pem
  *
  * For information about provisioning by claim, see the following AWS documentation:
  * https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html#claim-based

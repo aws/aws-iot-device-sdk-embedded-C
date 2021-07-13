@@ -174,7 +174,8 @@ static size_t thingNameLength;
 static char payloadBuffer[ NETWORK_BUFFER_SIZE ];
 
 /**
- * @brief Length of the payload stored in #payloadBuffer.
+ * @brief Length of the payload stored in #payloadBuffer. This is set by the
+ * MQTT publish callback when it copies a received payload into #payloadBuffer.
  */
 static size_t payloadLength;
 
@@ -195,84 +196,84 @@ static void provisioningPublishCallback( MQTTPublishInfo_t * pPublishInfo,
 /**
  * @brief Obtains the CSR from the file path in #PROVISIONING_CSR_PATH.
  *
- * @param[in] buffer Buffer into which to read the CSR.
+ * @param[in] pBuffer Buffer into which to read the CSR.
  * @param[in] bufferLength Length of #buffer.
- * @param[out] outCsrLength The length of the CSR.
+ * @param[out] pOutCsrLength The length of the CSR.
  */
-static bool getCsr( char * buffer,
+static bool getCsr( char * pBuffer,
                     size_t bufferLength,
-                    size_t * outCsrLength );
+                    size_t * pOutCsrLength );
 
 /**
  * @brief Creates the document to be published to the CreateCertificateFromCsr
- * API in order to provision a certificate with the included CSR.
+ * API in order to request a certificate from AWS IoT for the included CSR.
  *
- * @param[in] buffer Buffer into which to write the publish document.
+ * @param[in] pBuffer Buffer into which to write the publish document.
  * @param[in] bufferLength Length of #buffer.
- * @param[out] outLengthWritten The length of the publish document.
+ * @param[out] pOutLengthWritten The length of the publish document.
  */
-static bool generateCsrRequest( char * buffer,
+static bool generateCsrRequest( char * pBuffer,
                                 size_t bufferLength,
-                                size_t * outLengthWritten );
+                                size_t * pOutLengthWritten );
 
 /**
  * @brief Creates the document to be published to the RegisterThing API in order
  * to activate the provisioned certificate and receive a Thing name.
  *
- * @param[in] buffer Buffer into which to write the publish document.
+ * @param[in] pBuffer Buffer into which to write the publish document.
  * @param[in] bufferLength Length of #buffer.
- * @param[in] certificateOwnershipToken The certificate's certificate ownership
+ * @param[in] pCertificateOwnershipToken The certificate's certificate ownership
  * token.
  * @param[in] certificateOwnershipTokenLength Length of #certificateOwnershipToken.
- * @param[out] outLengthWritten The length of the publish document.
+ * @param[out] pOutLengthWritten The length of the publish document.
  */
-static bool generateRegisterThingRequest( char * buffer,
+static bool generateRegisterThingRequest( char * pBuffer,
                                           size_t bufferLength,
-                                          const char * certificateOwnershipToken,
+                                          const char * pCertificateOwnershipToken,
                                           size_t certificateOwnershipTokenLength,
-                                          const char * serial,
+                                          const char * pSerial,
                                           size_t serialLength,
-                                          size_t * outLengthWritten );
+                                          size_t * pOutLengthWritten );
 
 /**
  * @brief Extracts the certificate, certificate ID, and certificate ownership
  * token from a CreateCertificateFromCsr accepted response.
  *
- * @param[in] response The response document.
+ * @param[in] pResponse The response document.
  * @param[in] length Length of #response.
- * @param[in] certificate The buffer to which to write the certificate.
- * @param[in,out] certificateLength The length of #certificate. The written
+ * @param[in] pCertificate The buffer to which to write the certificate.
+ * @param[in,out] pCertificateLength The length of #certificate. The written
  * length is output here.
- * @param[in] certificateId The buffer to which to write the certificate ID.
- * @param[in,out] certificateIdLength The length of #certificateId. The written
+ * @param[in] pCertificateId The buffer to which to write the certificate ID.
+ * @param[in,out] pCertificateIdLength The length of #certificateId. The written
  * length is output here.
- * @param[in] ownershipToken The buffer to which to write the certificate
+ * @param[in] pOwnershipToken The buffer to which to write the certificate
  * ownership token.
- * @param[in,out] ownershipTokenLength The length of #ownershipToken. The written
+ * @param[in,out] pOwnershipTokenLength The length of #ownershipToken. The written
  * length is output here.
  */
-static bool parseCsrResponse( const char * response,
+static bool parseCsrResponse( const char * pResponse,
                               size_t length,
-                              char * certificate,
-                              size_t * certificateLength,
-                              char * certificateId,
-                              size_t * certificateIdLength,
-                              char * ownershipToken,
-                              size_t * ownershipTokenLength );
+                              char * pCertificate,
+                              size_t * pCertificateLength,
+                              char * pCertificateId,
+                              size_t * pCertificateIdLength,
+                              char * pOwnershipToken,
+                              size_t * pOwnershipTokenLength );
 
 /**
  * @brief Extracts the Thing name from a RegisterThing accepted response.
  *
- * @param[in] response The response document.
+ * @param[in] pResponse The response document.
  * @param[in] length Length of #response.
- * @param[in] thingNameBuffer The buffer to which to write the Thing name.
- * @param[in,out] thingNameBufferLength The length of #thingNameBuffer. The written
+ * @param[in] pThingNameBuffer The buffer to which to write the Thing name.
+ * @param[in,out] pThingNameBufferLength The length of #thingNameBuffer. The written
  * length is output here.
  */
-static bool parseRegisterThingResponse( const char * response,
+static bool parseRegisterThingResponse( const char * pResponse,
                                         size_t length,
-                                        char * thingNameBuffer,
-                                        size_t * thingNameBufferLength );
+                                        char * pThingNameBuffer,
+                                        size_t * pThingNameBufferLength );
 
 /**
  * @brief Run the MQTT process loop to get a response.
@@ -301,8 +302,11 @@ static bool unsubscribeFromRegisterThingResponseTopics( void );
 
 /**
  * @brief Save the certificate to the path specified by #PROVISIONING_CERT_PATH.
+ *
+ * @param[in] pCertificate The certificate to save.
+ * @param[in] certificateLength Length of #pCertificate.
  */
-static bool saveCertificate( const char * certificate,
+static bool saveCertificate( const char * pCertificate,
                              size_t certificateLength );
 /*-----------------------------------------------------------*/
 
@@ -372,9 +376,9 @@ static void provisioningPublishCallback( MQTTPublishInfo_t * pPublishInfo,
 }
 /*-----------------------------------------------------------*/
 
-static bool getCsr( char * buffer,
+static bool getCsr( char * pBuffer,
                     size_t bufferLength,
-                    size_t * outCsrLength )
+                    size_t * pOutCsrLength )
 {
     FILE * file;
     size_t length = 0;
@@ -446,7 +450,7 @@ static bool getCsr( char * buffer,
         {
             size_t written = 0;
             /* Read the CSR into our buffer. */
-            written = fread( buffer, 1, length, file );
+            written = fread( pBuffer, 1, length, file );
 
             if( written != length )
             {
@@ -456,7 +460,7 @@ static bool getCsr( char * buffer,
             }
             else
             {
-                *outCsrLength = length;
+                *pOutCsrLength = length;
             }
         }
 
@@ -467,9 +471,9 @@ static bool getCsr( char * buffer,
 }
 /*-----------------------------------------------------------*/
 
-static bool generateCsrRequest( char * buffer,
+static bool generateCsrRequest( char * pBuffer,
                                 size_t bufferLength,
-                                size_t * outLengthWritten )
+                                size_t * pOutLengthWritten )
 {
     bool status = false;
     char csr[ NETWORK_BUFFER_SIZE ] = { 0 };
@@ -484,7 +488,7 @@ static bool generateCsrRequest( char * buffer,
      */
     if( status == true )
     {
-        cbor_encoder_init( &encoder, ( uint8_t * ) buffer, bufferLength, 0 );
+        cbor_encoder_init( &encoder, ( uint8_t * ) pBuffer, bufferLength, 0 );
         cborRet = cbor_encoder_create_map( &encoder, &mapEncoder, 1 );
 
         if( cborRet == CborNoError )
@@ -504,7 +508,7 @@ static bool generateCsrRequest( char * buffer,
 
         if( cborRet == CborNoError )
         {
-            *outLengthWritten = cbor_encoder_get_buffer_size( &encoder, ( uint8_t * ) buffer );
+            *pOutLengthWritten = cbor_encoder_get_buffer_size( &encoder, ( uint8_t * ) pBuffer );
         }
         else
         {
@@ -522,13 +526,13 @@ static bool generateCsrRequest( char * buffer,
 }
 /*-----------------------------------------------------------*/
 
-static bool generateRegisterThingRequest( char * buffer,
+static bool generateRegisterThingRequest( char * pBuffer,
                                           size_t bufferLength,
-                                          const char * certificateOwnershipToken,
+                                          const char * pCertificateOwnershipToken,
                                           size_t certificateOwnershipTokenLength,
-                                          const char * serial,
+                                          const char * pSerial,
                                           size_t serialLength,
-                                          size_t * outLengthWritten )
+                                          size_t * pOutLengthWritten )
 {
     bool status = false;
     CborEncoder encoder, mapEncoder, parametersEncoder;
@@ -537,7 +541,7 @@ static bool generateRegisterThingRequest( char * buffer,
     /* For details on the RegisterThing request payload format, see:
      * https://docs.aws.amazon.com/iot/latest/developerguide/fleet-provision-api.html#register-thing-request-payload
      */
-    cbor_encoder_init( &encoder, ( uint8_t * ) buffer, bufferLength, 0 );
+    cbor_encoder_init( &encoder, ( uint8_t * ) pBuffer, bufferLength, 0 );
     cborRet = cbor_encoder_create_map( &encoder, &mapEncoder, 2 );
 
     if( cborRet == CborNoError )
@@ -547,7 +551,7 @@ static bool generateRegisterThingRequest( char * buffer,
 
     if( cborRet == CborNoError )
     {
-        cborRet = cbor_encode_text_string( &mapEncoder, certificateOwnershipToken, certificateOwnershipTokenLength );
+        cborRet = cbor_encode_text_string( &mapEncoder, pCertificateOwnershipToken, certificateOwnershipTokenLength );
     }
 
     if( cborRet == CborNoError )
@@ -567,7 +571,7 @@ static bool generateRegisterThingRequest( char * buffer,
 
     if( cborRet == CborNoError )
     {
-        cborRet = cbor_encode_text_string( &parametersEncoder, serial, serialLength );
+        cborRet = cbor_encode_text_string( &parametersEncoder, pSerial, serialLength );
     }
 
     if( cborRet == CborNoError )
@@ -583,7 +587,7 @@ static bool generateRegisterThingRequest( char * buffer,
     if( cborRet == CborNoError )
     {
         status = true;
-        *outLengthWritten = cbor_encoder_get_buffer_size( &encoder, ( uint8_t * ) buffer );
+        *pOutLengthWritten = cbor_encoder_get_buffer_size( &encoder, ( uint8_t * ) pBuffer );
     }
     else
     {
@@ -599,14 +603,14 @@ static bool generateRegisterThingRequest( char * buffer,
 }
 /*-----------------------------------------------------------*/
 
-static bool parseCsrResponse( const char * response,
+static bool parseCsrResponse( const char * pResponse,
                               size_t length,
-                              char * certificate,
-                              size_t * certificateLength,
-                              char * certificateId,
-                              size_t * certificateIdLength,
-                              char * ownershipToken,
-                              size_t * ownershipTokenLength )
+                              char * pCertificate,
+                              size_t * pCertificateLength,
+                              char * pCertificateId,
+                              size_t * pCertificateIdLength,
+                              char * pOwnershipToken,
+                              size_t * pOwnershipTokenLength )
 {
     bool status = false;
     CborError cborRet;
@@ -617,7 +621,7 @@ static bool parseCsrResponse( const char * response,
     /* For details on the CreateCertificatefromCsr response payload format, see:
      * https://docs.aws.amazon.com/iot/latest/developerguide/fleet-provision-api.html#register-thing-response-payload
      */
-    cborRet = cbor_parser_init( ( const uint8_t * ) response, length, 0, &parser, &map );
+    cborRet = cbor_parser_init( ( const uint8_t * ) pResponse, length, 0, &parser, &map );
 
     if( cborRet != CborNoError )
     {
@@ -645,7 +649,7 @@ static bool parseCsrResponse( const char * response,
         }
         else
         {
-            cborRet = cbor_value_copy_text_string( &value, certificate, certificateLength, NULL );
+            cborRet = cbor_value_copy_text_string( &value, pCertificate, pCertificateLength, NULL );
 
             if( cborRet == CborErrorOutOfMemory )
             {
@@ -681,7 +685,7 @@ static bool parseCsrResponse( const char * response,
         }
         else
         {
-            cborRet = cbor_value_copy_text_string( &value, certificateId, certificateIdLength, NULL );
+            cborRet = cbor_value_copy_text_string( &value, pCertificateId, pCertificateIdLength, NULL );
 
             if( cborRet == CborErrorOutOfMemory )
             {
@@ -717,7 +721,7 @@ static bool parseCsrResponse( const char * response,
         }
         else
         {
-            cborRet = cbor_value_copy_text_string( &value, ownershipToken, ownershipTokenLength, NULL );
+            cborRet = cbor_value_copy_text_string( &value, pOwnershipToken, pOwnershipTokenLength, NULL );
 
             if( cborRet == CborErrorOutOfMemory )
             {
@@ -738,10 +742,10 @@ static bool parseCsrResponse( const char * response,
 }
 /*-----------------------------------------------------------*/
 
-static bool parseRegisterThingResponse( const char * response,
+static bool parseRegisterThingResponse( const char * pResponse,
                                         size_t length,
-                                        char * thingNameBuffer,
-                                        size_t * thingNameBufferLength )
+                                        char * pThingNameBuffer,
+                                        size_t * pThingNameBufferLength )
 {
     bool status = true;
     CborError cborRet;
@@ -753,7 +757,7 @@ static bool parseRegisterThingResponse( const char * response,
     /* For details on the RegisterThing response payload format, see:
      * https://docs.aws.amazon.com/iot/latest/developerguide/fleet-provision-api.html#register-thing-response-payload
      */
-    cborRet = cbor_parser_init( ( const uint8_t * ) response, length, 0, &parser, &map );
+    cborRet = cbor_parser_init( ( const uint8_t * ) pResponse, length, 0, &parser, &map );
 
     if( cborRet != CborNoError )
     {
@@ -781,7 +785,7 @@ static bool parseRegisterThingResponse( const char * response,
         }
         else
         {
-            cborRet = cbor_value_copy_text_string( &value, thingNameBuffer, thingNameBufferLength, NULL );
+            cborRet = cbor_value_copy_text_string( &value, pThingNameBuffer, pThingNameBufferLength, NULL );
 
             if( cborRet == CborErrorOutOfMemory )
             {
@@ -957,7 +961,7 @@ static bool unsubscribeFromRegisterThingResponseTopics( void )
 }
 /*-----------------------------------------------------------*/
 
-static bool saveCertificate( const char * certificate,
+static bool saveCertificate( const char * pCertificate,
                              size_t certificateLength )
 {
     FILE * file;
@@ -972,7 +976,7 @@ static bool saveCertificate( const char * certificate,
     else
     {
         size_t written;
-        written = fwrite( ( const void * ) certificate, 1U, certificateLength, file );
+        written = fwrite( ( const void * ) pCertificate, 1U, certificateLength, file );
         fclose( file );
 
         if( written != certificateLength )
