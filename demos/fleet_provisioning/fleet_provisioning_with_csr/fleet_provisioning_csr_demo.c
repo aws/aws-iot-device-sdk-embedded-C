@@ -39,12 +39,13 @@
  * Provisioning is an AWS IoT Core feature.
  *
  * This demo provisions a device certificate using the provisioning by claim
- * workflow with a Certificate Signing Request (CSR). The demo connects to
- * AWS IoT Core using provided claim credentials, subscribes to the
- * CreateCertificateFromCsr topics, and obtains a certificate. It then subscribes
- * to the RegisterThing topics and activates the certificate and obtains a Thing
- * using the provisioning template. Finally, it reconnects to AWS IoT Core using
- * the new credentials.
+ * workflow with a Certificate Signing Request (CSR). The demo connects to AWS
+ * IoT Core using provided claim credentials (whose certificate needs to be
+ * registered with IoT Core before running this demo), subscribes to the
+ * CreateCertificateFromCsr topics, and obtains a certificate. It then
+ * subscribes to the RegisterThing topics and activates the certificate and
+ * obtains a Thing using the provisioning template. Finally, it reconnects to
+ * AWS IoT Core using the new credentials.
  */
 
 /* Standard includes. */
