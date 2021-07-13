@@ -179,6 +179,8 @@
  * The example template used for this demo is available in the demo_template.json
  * file in the demo directory. In the example, replace
  * <provisioned-thing-policy> with the policy provisioned devices should have.
+ * The demo template uses Fn::Join to construct the Thing name by concatenating
+ * fp_demo_ and the serial number sent by the demo.
  *
  * @note The provisioning template MUST be created in AWS IoT before running the
  * demo.

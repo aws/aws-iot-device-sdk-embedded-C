@@ -22,15 +22,21 @@
  */
 
 /*
- * Demo for showing how to use the Fleet Provisioning library's APIs. The Fleet
- * Provisioning library provides macros and helper functions for assembling MQTT
- * topics strings, and for determining whether an incoming MQTT message is
- * related to Fleet Provisioning. The Fleet Provisioning library does not depend on
- * any particular MQTT library, therefore the code for MQTT operations is
- * placed in another file (mqtt_operations.c). This demo uses the coreMQTT
- * library. If needed, mqtt_operations.c can be modified to replace coreMQTT
- * with another MQTT library. This demo requires using the AWS IoT broker as
- * Fleet Provisioning is an AWS IoT Core feature.
+ * Demo for showing use of the Fleet Provisioning library to use the Fleet
+ * Provisioning feature of AWS IoT Core for provisioning devices with
+ * credentials. This demo shows how a device can be provisioned with AWS IoT
+ * Core using the Certificate Signing Request workflow of the Fleet
+ * Provisioning feature.
+ *
+ * The Fleet Provisioning library provides macros and helper functions for
+ * assembling MQTT topics strings, and for determining whether an incoming MQTT
+ * message is related to the Fleet Provisioning API of AWS IoT Core. The Fleet
+ * Provisioning library does not depend on any particular MQTT library,
+ * therefore the functionality for MQTT operations is placed in another file
+ * (mqtt_operations.c). This demo uses the coreMQTT library. If needed,
+ * mqtt_operations.c can be modified to replace coreMQTT with another MQTT
+ * library. This demo requires using the AWS IoT Core broker as Fleet
+ * Provisioning is an AWS IoT Core feature.
  *
  * This demo provisions a device certificate using the provisioning by claim
  * workflow with a Certificate Signing Request (CSR). The demo connects to
