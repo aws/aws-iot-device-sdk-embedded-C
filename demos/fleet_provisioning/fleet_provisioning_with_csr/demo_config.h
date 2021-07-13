@@ -101,10 +101,10 @@
  * @note This certificate should be PEM-encoded. The certificate should be
  * registered on AWS IoT Core beforehand. It should have an AWS IoT policy to
  * allow it to access only the Fleet Provisioning APIs. An example policy for
- * the claim certificates for this demo is available in the claim_policy.json
- * file in the demo directory. In the example, replace us-west-2 with your AWS
- * region, 012345678901 with your account ID, and demo_template with the name
- * of your provisioning template.
+ * the claim certificates for this demo is available in the
+ * example_claim_policy.json file in the demo directory. In the example,
+ * replace <aws-region> with your AWS region, <aws-account-id> with your
+ * account ID, and <template-name> with the name of your provisioning template.
  *
  * #define CLAIM_CERT_PATH    "...insert here..."
  */
@@ -178,7 +178,7 @@
  *
  * The example template used for this demo is available in the demo_template.json
  * file in the demo directory. In the example, replace
- * demo_thing_policy with the policy provisioned devices should have.
+ * <provisioned-thing-policy> with the policy provisioned devices should have.
  *
  * @note The provisioning template MUST be created in AWS IoT before running the
  * demo.
