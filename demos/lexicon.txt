@@ -125,6 +125,7 @@ crypto
 cryptoapi
 cryptoki
 csr
+csrlength
 csrs
 ctr
 curbyte
@@ -284,6 +285,7 @@ jsonstring
 karthikeyan
 ke
 keygen
+keyout
 keyusage
 knownmessage
 kw
@@ -352,6 +354,7 @@ mutexes
 mxz
 necesarily
 networkcontext
+newkey
 ni
 nist
 noninfringement
@@ -415,12 +418,17 @@ pbrokersessionpresent
 pbuf
 pbuffer
 pcdescription
+pcertificate
+pcertificateid
+pcertificateidlength
+pcertificateownershiptoken
 pcks
 pclientcertpath
 pclientsessionpresent
 pconnectionsarray
 pcontext
 pcpuusage
+pcsr
 pcustommetric
 pdeserializedinfo
 pdf
@@ -472,6 +480,7 @@ poutreportlength
 pouttcpportsarray
 poutudpportsarray
 poweron
+pownershiptokenlength
 ppacketinfo
 pparam
 pparams
@@ -504,6 +513,8 @@ psk
 pslotlist
 pss
 pthingname
+pthingnamebuffer
+pthingnamebufferlength
 pthread
 ptopic
 ptopicfilter
