@@ -257,7 +257,7 @@ static void provisioningPublishCallback( MQTTPublishInfo_t * pPublishInfo,
 
     if( status != FleetProvisioningSuccess )
     {
-        LogError( ( "Unexpected publish message received. Topic: %.*s.",
+        LogWarn( ( "Unexpected publish message received. Topic: %.*s.",
                     ( int ) pPublishInfo->topicNameLength,
                     ( const char * ) pPublishInfo->pTopicName ) );
     }
@@ -265,7 +265,7 @@ static void provisioningPublishCallback( MQTTPublishInfo_t * pPublishInfo,
     {
         if( api == FleetProvCborCreateCertFromCsrAccepted )
         {
-            LogInfo( ( "Fleet Provisioning CreateCertificateFromCsr accepted." ) );
+            LogInfo( ( "Recieved accepted response from Fleet Provisioning CreateCertificateFromCsr API." ) );
 
             responseStatus = ResponseAccepted;
 
@@ -277,13 +277,13 @@ static void provisioningPublishCallback( MQTTPublishInfo_t * pPublishInfo,
         }
         else if( api == FleetProvCborCreateCertFromCsrRejected )
         {
-            LogError( ( "Fleet Provisioning CreateCertificateFromCsr rejected." ) );
+            LogError( ( "Recieved rejected response from Fleet Provisioning CreateCertificateFromCsr API." ) );
 
             responseStatus = ResponseRejected;
         }
         else if( api == FleetProvCborRegisterThingAccepted )
         {
-            LogInfo( ( "Fleet Provisioning RegisterThing accepted." ) );
+            LogInfo( ( "Recieved accepted response from Fleet Provisioning RegisterThing API." ) );
 
             responseStatus = ResponseAccepted;
 
@@ -295,13 +295,13 @@ static void provisioningPublishCallback( MQTTPublishInfo_t * pPublishInfo,
         }
         else if( api == FleetProvCborCreateCertFromCsrRejected )
         {
-            LogError( ( "Fleet Provisioning RegisterThing rejected." ) );
+            LogError( ( "Recieved rejected response from Fleet Provisioning RegisterThing API." ) );
 
             responseStatus = ResponseRejected;
         }
         else
         {
-            LogError( ( "Unexpected Fleet Provisioning message. Topic: %.*s.",
+            LogError( ( "Recieved message on unexpected Fleet Provisioning topic. Topic: %.*s.",
                         ( int ) pPublishInfo->topicNameLength,
                         ( const char * ) pPublishInfo->pTopicName ) );
         }
@@ -415,6 +415,7 @@ static bool waitForResponse( void )
     {
         ( void ) ProcessLoop( 1000 );
 
+        /* responseStatus is updated from the MQTT publish callback. */
         if( responseStatus != ResponseNotReceived )
         {
             break;
