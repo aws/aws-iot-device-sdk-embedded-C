@@ -849,9 +849,10 @@ void test_Openssl_Recv_All_Bytes_Received_Successfully( void )
     TEST_ASSERT_EQUAL( BYTES_TO_RECV, bytesReceived );
 
     /* Pending data from last read. */
-    SSL_read_ExpectAnyArgsAndReturn( BYTES_TO_RECV );
-    bytesReceived = Openssl_Recv( &networkContext, opensslBuffer, BYTES_TO_RECV );
-    TEST_ASSERT_EQUAL( BYTES_TO_RECV, bytesReceived );
+    SSL_pending_ExpectAnyArgsAndReturn( BYTES_TO_RECV );
+    SSL_read_ExpectAnyArgsAndReturn( 1U );
+    bytesReceived = Openssl_Recv( &networkContext, opensslBuffer, 1U );
+    TEST_ASSERT_EQUAL( 1U, bytesReceived );
 }
 
 /**
@@ -875,10 +876,9 @@ void test_Openssl_Recv_Network_Error( void )
     TEST_ASSERT_TRUE( bytesReceived < 0 );
 
     /* Test that a non-retryable zero error code is converted to -1 by the API. */
-    SSL_pending_ExpectAnyArgsAndReturn( 1 );
     SSL_read_ExpectAnyArgsAndReturn( 0 );
     SSL_get_error_ExpectAnyArgsAndReturn( SSL_ERROR_ZERO_RETURN );
-    bytesReceived = Openssl_Recv( &networkContext, opensslBuffer, 1U );
+    bytesReceived = Openssl_Recv( &networkContext, opensslBuffer, BYTES_TO_RECV );
     TEST_ASSERT_EQUAL( -1, bytesReceived );
 
     /* Test that a poll error results in the function under test returning -1. */

@@ -746,13 +746,21 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
         /* Set the file descriptor for poll. */
         pollFds.fd = pOpensslParams->socketDescriptor;
 
+        /* #SSL_pending returns a value > 0 if application data
+         * from the last processed TLS record remains to be read.
+         * This implementation will ALWAYS block when the number of bytes
+         * requested is greater than 1. Otherwise, poll the socket first
+         * as blocking may negatively impact performance by waiting for the
+         * entire duration of the socket timeout even when no data is available. */
         if( ( bytesToRecv > 1 ) || ( SSL_pending( pOpensslParams->pSsl ) > 0 ) )
         {
             shouldRead = 1U;
         }
         else
         {
-            /* Non-speculative read so check if there is data to read from the socket. */
+            /* Speculative read for the start of a payload.
+             * Note: This is done to avoid blocking when no
+             * data is available to be read from the socket. */
             pollStatus = poll( &pollFds, 1, 0 );
         }
 
@@ -772,7 +780,10 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
 
         if( shouldRead == 1U )
         {
-            /* SSL read of data. */
+            /* Blocking SSL read of data.
+             * Note: The TLS record may only be partially received or unprocessed,
+             * so it is possible that no processed application data is returned
+             * even though the socket has data available to be read. */
             readStatus = ( int32_t ) SSL_read( pOpensslParams->pSsl, pBuffer,
                                                ( int32_t ) bytesToRecv );
 
@@ -845,7 +856,7 @@ int32_t Openssl_Send( NetworkContext_t * pNetworkContext,
         /* Set the file descriptor for poll. */
         pollFds.fd = pOpensslParams->socketDescriptor;
 
-        /* Check if socket descriptor is ready to be written to. */
+        /* `poll` checks if the socket is ready to send data. */
         pollStatus = poll( &pollFds, 1, 0 );
 
         if( pollStatus > 0 )
@@ -883,12 +894,14 @@ int32_t Openssl_Send( NetworkContext_t * pNetworkContext,
         else if( pollStatus < 0 )
         {
             /* An error occurred while polling. */
-            LogError( ( "An error occurred while polling." ) );
+            LogError( ( "Unable to send TLS data on network: "
+                        "An error occurred while checking availability of TCP socket %d.",
+                        pOpensslParams->socketDescriptor ) );
             bytesSent = -1;
         }
         else
         {
-            /* Timed out waiting for data to be sent. */
+            /* Socket is not available for sending data. Set return code for retrying send. */
             bytesSent = 0;
         }
     }

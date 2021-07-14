@@ -133,10 +133,12 @@ int32_t Plaintext_Recv( NetworkContext_t * pNetworkContext,
     /* Set the file descriptor for poll. */
     pollFds.fd = pPlaintextParams->socketDescriptor;
 
-    /* Speculative read for the start of a payload. */
+    /* Speculative read for the start of a payload.
+     * Note: This is done to avoid blocking when
+     * no data is available to be read from the socket. */
     if( bytesToRecv == 1U )
     {
-        /* Check if there is data to read from the socket. */
+        /* Check if there is data to read (without blocking) from the socket. */
         pollStatus = poll( &pollFds, 1, 0 );
     }
 
@@ -155,10 +157,12 @@ int32_t Plaintext_Recv( NetworkContext_t * pNetworkContext,
     }
     else
     {
-        /* Timed out waiting for data to be received. */
+        /* No data available to receive. */
         bytesReceived = 0;
     }
 
+    /* Note: A zero value return from recv() represents
+     * closure of TCP connection by the peer. */
     if( ( pollStatus > 0 ) && ( bytesReceived == 0 ) )
     {
         /* Peer has closed the connection. Treat as an error. */
@@ -201,7 +205,10 @@ int32_t Plaintext_Send( NetworkContext_t * pNetworkContext,
     /* Set the file descriptor for poll. */
     pollFds.fd = pPlaintextParams->socketDescriptor;
 
-    /* Check if there is data to read from the socket. */
+    /* Check if data can be written to the socket.
+     * Note: This is done to avoid blocking on send() when
+     * the socket is ready to accept more data for network transmission
+     * (possibly due to a full TX buffer). */
     pollStatus = poll( &pollFds, 1, 0 );
 
     if( pollStatus > 0 )
@@ -219,7 +226,7 @@ int32_t Plaintext_Send( NetworkContext_t * pNetworkContext,
     }
     else
     {
-        /* Timed out waiting for data to be sent. */
+        /* Socket is not available for sending data. */
         bytesSent = 0;
     }
 
