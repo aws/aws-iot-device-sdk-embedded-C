@@ -107,12 +107,6 @@
 #define MAX_THING_NAME_LENGTH                128
 
 /**
- * @brief Number of seconds to wait for response from AWS IoT Fleet
- * Provisioning APIs.
- */
-#define FLEET_PROV_RESPONSE_WAIT_SECONDS     ( 2 )
-
-/**
  * @brief The maximum number of times to run the loop in this demo.
  *
  * @note The demo loop is attempted to re-run only if it fails in an iteration.
@@ -258,8 +252,8 @@ static void provisioningPublishCallback( MQTTPublishInfo_t * pPublishInfo,
     if( status != FleetProvisioningSuccess )
     {
         LogWarn( ( "Unexpected publish message received. Topic: %.*s.",
-                    ( int ) pPublishInfo->topicNameLength,
-                    ( const char * ) pPublishInfo->pTopicName ) );
+                   ( int ) pPublishInfo->topicNameLength,
+                   ( const char * ) pPublishInfo->pTopicName ) );
     }
     else
     {
@@ -408,21 +402,12 @@ static bool getCsr( char * pBuffer,
 
 static bool waitForResponse( void )
 {
-    int i;
     bool status = false;
 
     responseStatus = ResponseNotReceived;
 
-    for( i = 0; i < FLEET_PROV_RESPONSE_WAIT_SECONDS; i++ )
-    {
-        ( void ) ProcessLoop( 1000 );
-
-        /* responseStatus is updated from the MQTT publish callback. */
-        if( responseStatus != ResponseNotReceived )
-        {
-            break;
-        }
-    }
+    /* responseStatus is updated from the MQTT publish callback. */
+    ( void ) ProcessLoop();
 
     if( responseStatus == ResponseNotReceived )
     {
