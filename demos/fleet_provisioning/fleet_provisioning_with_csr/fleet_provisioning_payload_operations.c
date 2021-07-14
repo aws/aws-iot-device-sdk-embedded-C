@@ -51,6 +51,8 @@ bool generateCsrRequest( char * pBuffer,
     if( status == true )
     {
         cbor_encoder_init( &encoder, ( uint8_t * ) pBuffer, bufferLength, 0 );
+
+        /* The request document is a map with 1 key value pair. */
         cborRet = cbor_encoder_create_map( &encoder, &mapEncoder, 1 );
 
         if( cborRet == CborNoError )
@@ -123,6 +125,7 @@ bool generateRegisterThingRequest( char * pBuffer,
 
     if( cborRet == CborNoError )
     {
+        /* Parameters in this example is length 1. */
         cborRet = cbor_encoder_create_map( &mapEncoder, &parametersEncoder, 1 );
     }
 
