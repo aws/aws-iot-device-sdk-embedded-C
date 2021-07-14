@@ -269,6 +269,7 @@ static void provisioningPublishCallback( MQTTPublishInfo_t * pPublishInfo,
 
             responseStatus = ResponseAccepted;
 
+            /* Copy the payload from the MQTT library's buffer to #payloadBuffer. */
             ( void ) memcpy( ( void * ) payloadBuffer,
                              ( const void * ) pPublishInfo->pPayload,
                              ( size_t ) pPublishInfo->payloadLength );
@@ -287,6 +288,7 @@ static void provisioningPublishCallback( MQTTPublishInfo_t * pPublishInfo,
 
             responseStatus = ResponseAccepted;
 
+            /* Copy the payload from the MQTT library's buffer to #payloadBuffer. */
             ( void ) memcpy( ( void * ) payloadBuffer,
                              ( const void * ) pPublishInfo->pPayload,
                              ( size_t ) pPublishInfo->payloadLength );
