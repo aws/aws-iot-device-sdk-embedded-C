@@ -1,6 +1,6 @@
 # MISRA Compliance
 
-The POSIX platform implementations of transport interfaces, clock utility and retry utils conform to the [MISRA C:2012](https://www.misra.org.uk/MISRAHome/MISRAC2012/tabid/196/Default.aspx)
+The POSIX platform implementations of transport interfaces, clock utility and retry utils conform to the [MISRA C:2012](https://www.misra.org.uk)
 guidelines, with some noted exceptions. Compliance is checked with Coverity static analysis.
 Deviations from the MISRA standard are listed below:
 
