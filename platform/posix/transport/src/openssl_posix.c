@@ -25,15 +25,15 @@
 #include <assert.h>
 #include <string.h>
 
-/* POSIX socket include. */
+/* POSIX socket includes. */
 #include <unistd.h>
+#include <poll.h>
 
 /* Transport interface include. */
 #include "transport_interface.h"
 
 #include "openssl_posix.h"
 #include <openssl/err.h>
-#include <poll.h>
 
 /*-----------------------------------------------------------*/
 
@@ -738,8 +738,10 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
         struct pollfd pollFds;
         pOpensslParams = pNetworkContext->pParams;
 
-        /* Initialize the file descriptor. */
-        pollFds.events = POLLIN | POLLPRI | POLLHUP | POLLERR;
+        /* Initialize the file descriptor.
+         * #POLLPRI corresponds to high-priority data while #POLLIN corresponds
+         * to any other data that may be read. */
+        pollFds.events = POLLIN | POLLPRI;
         pollFds.revents = 0;
         /* Set the file descriptor for poll. */
         pollFds.fd = pOpensslParams->socketDescriptor;
@@ -838,7 +840,7 @@ int32_t Openssl_Send( NetworkContext_t * pNetworkContext,
         pOpensslParams = pNetworkContext->pParams;
 
         /* Initialize the file descriptor. */
-        pollFds.events = POLLOUT | POLLPRI | POLLHUP | POLLERR;
+        pollFds.events = POLLOUT;
         pollFds.revents = 0;
         /* Set the file descriptor for poll. */
         pollFds.fd = pOpensslParams->socketDescriptor;

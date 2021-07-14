@@ -125,8 +125,10 @@ int32_t Plaintext_Recv( NetworkContext_t * pNetworkContext,
     /* Get receive timeout from the socket to use as the timeout for #select. */
     pPlaintextParams = pNetworkContext->pParams;
 
-    /* Initialize the file descriptor. */
-    pollFds.events = POLLIN | POLLPRI | POLLHUP | POLLERR;
+    /* Initialize the file descriptor.
+     * #POLLPRI corresponds to high-priority data while #POLLIN corresponds
+     * to any other data that may be read. */
+    pollFds.events = POLLIN | POLLPRI;
     pollFds.revents = 0;
     /* Set the file descriptor for poll. */
     pollFds.fd = pPlaintextParams->socketDescriptor;
@@ -194,7 +196,7 @@ int32_t Plaintext_Send( NetworkContext_t * pNetworkContext,
     pPlaintextParams = pNetworkContext->pParams;
 
     /* Initialize the file descriptor. */
-    pollFds.events = POLLOUT | POLLPRI | POLLHUP | POLLERR;
+    pollFds.events = POLLOUT;
     pollFds.revents = 0;
     /* Set the file descriptor for poll. */
     pollFds.fd = pPlaintextParams->socketDescriptor;
