@@ -45,54 +45,57 @@
 #define SNPRINTF_SUCCESS( retVal, bufLen )    ( ( retVal > 0 ) && ( ( uint32_t ) retVal < bufLen ) )
 
 /* Formats used to generate the JSON report. */
-#define JSON_PORT_OBJECT_FORMAT \
-    "{"                         \
-    "\"%s\": %u"                \
+/* *INDENT-OFF* */
+#define JSON_PORT_OBJECT_FORMAT          \
+    "{"                                  \
+    "\""DEFENDER_REPORT_PORT_KEY"\": %u" \
     "},"
 
-#define JSON_CONNECTION_OBJECT_FORMAT \
-    "{"                               \
-    "\"%s\": %u,"                     \
-    "\"%s\": \"%u.%u.%u.%u:%u\""      \
+#define JSON_CONNECTION_OBJECT_FORMAT                           \
+    "{"                                                         \
+    "\""DEFENDER_REPORT_LOCAL_PORT_KEY"\": %u,"                 \
+    "\""DEFENDER_REPORT_REMOTE_ADDR_KEY"\": \"%u.%u.%u.%u:%u\"" \
     "},"
 
-#define JSON_REPORT_FORMAT_PART1 \
-    "{"                          \
-    "\"%s\": {"                  \
-    "\"%s\": %u,"                \
-    "\"%s\": \"%u.%u\""          \
-    "},"                         \
-    "\"%s\": {"                  \
-    "\"%s\": {"                  \
-    "\"%s\": "
+#define JSON_REPORT_FORMAT_PART1                       \
+    "{"                                                \
+    "\""DEFENDER_REPORT_HEADER_KEY"\": {"              \
+    "\""DEFENDER_REPORT_ID_KEY"\": %u,"                \
+    "\""DEFENDER_REPORT_VERSION_KEY"\": \"%u.%u\""     \
+    "},"                                               \
+    "\""DEFENDER_REPORT_METRICS_KEY"\": {"             \
+    "\""DEFENDER_REPORT_TCP_LISTENING_PORTS_KEY"\": {" \
+    "\""DEFENDER_REPORT_PORTS_KEY"\": "
 
-#define JSON_REPORT_FORMAT_PART2 \
-    ","                          \
-    "\"%s\": %u"                 \
-    "},"                         \
-    "\"%s\": {"                  \
-    "\"%s\": "
+#define JSON_REPORT_FORMAT_PART2                       \
+    ","                                                \
+    "\""DEFENDER_REPORT_TOTAL_KEY"\": %u"              \
+    "},"                                               \
+    "\""DEFENDER_REPORT_UDP_LISTENING_PORTS_KEY"\": {" \
+    "\""DEFENDER_REPORT_PORTS_KEY"\": "
 
-#define JSON_REPORT_FORMAT_PART3 \
-    ","                          \
-    "\"%s\": %u"                 \
-    "},"                         \
-    "\"%s\": {"                  \
-    "\"%s\": %u,"                \
-    "\"%s\": %u,"                \
-    "\"%s\": %u,"                \
-    "\"%s\": %u"                 \
-    "},"                         \
-    "\"%s\": {"                  \
-    "\"%s\": {"                  \
-    "\"%s\": "
+#define JSON_REPORT_FORMAT_PART3                           \
+    ","                                                    \
+    "\""DEFENDER_REPORT_TOTAL_KEY"\": %u"                  \
+    "},"                                                   \
+    "\""DEFENDER_REPORT_NETWORK_STATS_KEY"\": {"           \
+    "\""DEFENDER_REPORT_BYTES_IN_KEY"\": %u,"              \
+    "\""DEFENDER_REPORT_BYTES_OUT_KEY"\": %u,"             \
+    "\""DEFENDER_REPORT_PKTS_IN_KEY"\": %u,"               \
+    "\""DEFENDER_REPORT_PKTS_OUT_KEY"\": %u"               \
+    "},"                                                   \
+    "\""DEFENDER_REPORT_TCP_CONNECTIONS_KEY"\": {"         \
+    "\""DEFENDER_REPORT_ESTABLISHED_CONNECTIONS_KEY"\": {" \
+    "\""DEFENDER_REPORT_CONNECTIONS_KEY"\": "
 
-#define JSON_REPORT_FORMAT_PART4 \
-    ","                          \
-    "\"%s\": %u"                 \
-    "}"                          \
-    "}"                          \
+#define JSON_REPORT_FORMAT_PART4          \
+    ","                                   \
+    "\""DEFENDER_REPORT_TOTAL_KEY"\": %u" \
+    "}"                                   \
+    "}"                                   \
     "},"
+
+/* *INDENT-ON* */
 
 /**
  * @brief The format for custom metrics of CPU usage time
@@ -220,7 +223,6 @@ static ReportBuilderStatus_t writePortsArray( char * pBuffer,
         charactersWritten = snprintf( pCurrentWritePos,
                                       remainingBufferLength,
                                       JSON_PORT_OBJECT_FORMAT,
-                                      DEFENDER_REPORT_PORT_KEY,
                                       pOpenPortsArray[ i ] );
 
         if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
@@ -302,9 +304,7 @@ static ReportBuilderStatus_t writeConnectionsArray( char * pBuffer,
         charactersWritten = snprintf( pCurrentWritePos,
                                       remainingBufferLength,
                                       JSON_CONNECTION_OBJECT_FORMAT,
-                                      DEFENDER_REPORT_LOCAL_PORT_KEY,
                                       pConn->localPort,
-                                      DEFENDER_REPORT_REMOTE_ADDR_KEY,
                                       ( pConn->remoteIp >> 24 ) & 0xFF,
                                       ( pConn->remoteIp >> 16 ) & 0xFF,
                                       ( pConn->remoteIp >> 8 ) & 0xFF,
@@ -388,15 +388,9 @@ ReportBuilderStatus_t GenerateJsonReport( char * pBuffer,
         charactersWritten = snprintf( pCurrentWritePos,
                                       remainingBufferLength,
                                       JSON_REPORT_FORMAT_PART1,
-                                      DEFENDER_REPORT_HEADER_KEY,
-                                      DEFENDER_REPORT_ID_KEY,
                                       reportId,
-                                      DEFENDER_REPORT_VERSION_KEY,
                                       majorReportVersion,
-                                      minorReportVersion,
-                                      DEFENDER_REPORT_METRICS_KEY,
-                                      DEFENDER_REPORT_TCP_LISTENING_PORTS_KEY,
-                                      DEFENDER_REPORT_PORTS_KEY );
+                                      minorReportVersion );
 
         if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
         {
@@ -436,10 +430,7 @@ ReportBuilderStatus_t GenerateJsonReport( char * pBuffer,
         charactersWritten = snprintf( pCurrentWritePos,
                                       remainingBufferLength,
                                       JSON_REPORT_FORMAT_PART2,
-                                      DEFENDER_REPORT_TOTAL_KEY,
-                                      pMetrics->openTcpPortsArrayLength,
-                                      DEFENDER_REPORT_UDP_LISTENING_PORTS_KEY,
-                                      DEFENDER_REPORT_PORTS_KEY );
+                                      pMetrics->openTcpPortsArrayLength );
 
         if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
         {
@@ -479,20 +470,11 @@ ReportBuilderStatus_t GenerateJsonReport( char * pBuffer,
         charactersWritten = snprintf( pCurrentWritePos,
                                       remainingBufferLength,
                                       JSON_REPORT_FORMAT_PART3,
-                                      DEFENDER_REPORT_TOTAL_KEY,
                                       pMetrics->openUdpPortsArrayLength,
-                                      DEFENDER_REPORT_NETWORK_STATS_KEY,
-                                      DEFENDER_REPORT_BYTES_IN_KEY,
                                       pMetrics->pNetworkStats->bytesReceived,
-                                      DEFENDER_REPORT_BYTES_OUT_KEY,
                                       pMetrics->pNetworkStats->bytesSent,
-                                      DEFENDER_REPORT_PKTS_IN_KEY,
                                       pMetrics->pNetworkStats->packetsReceived,
-                                      DEFENDER_REPORT_PKTS_OUT_KEY,
-                                      pMetrics->pNetworkStats->packetsSent,
-                                      DEFENDER_REPORT_TCP_CONNECTIONS_KEY,
-                                      DEFENDER_REPORT_ESTABLISHED_CONNECTIONS_KEY,
-                                      DEFENDER_REPORT_CONNECTIONS_KEY );
+                                      pMetrics->pNetworkStats->packetsSent );
 
         if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
         {
@@ -532,7 +514,6 @@ ReportBuilderStatus_t GenerateJsonReport( char * pBuffer,
         charactersWritten = snprintf( pCurrentWritePos,
                                       remainingBufferLength,
                                       JSON_REPORT_FORMAT_PART4,
-                                      DEFENDER_REPORT_TOTAL_KEY,
                                       pMetrics->establishedConnectionsArrayLength );
 
         if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
