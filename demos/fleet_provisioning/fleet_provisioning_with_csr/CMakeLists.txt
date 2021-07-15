@@ -12,8 +12,8 @@ include(
 
 # Demo target.
 add_executable( ${DEMO_NAME}
-                "fleet_provisioning_csr_demo.c"
-                "fleet_provisioning_payload_operations.c"
+                "fleet_provisioning_with_csr_demo.c"
+                "fleet_provisioning_serializer.c"
                 "mqtt_operations.c"
                 ${MQTT_SOURCES}
                 ${MQTT_SERIALIZER_SOURCES}

@@ -31,26 +31,26 @@
 #include "fleet_provisioning.h"
 
 /* Header include. */
-#include "fleet_provisioning_payload_operations.h"
+#include "fleet_provisioning_serializer.h"
 /*-----------------------------------------------------------*/
 
-bool generateCsrRequest( char * pBuffer,
+bool generateCsrRequest( uint8_t * pBuffer,
                          size_t bufferLength,
                          const char * pCsr,
                          size_t csrLength,
                          size_t * pOutLengthWritten )
 {
-    bool status = false;
     CborEncoder encoder, mapEncoder;
     CborError cborRet;
 
+    assert( pBuffer != NULL );
+    assert( pCsr != NULL);
+    assert( pOutLengthWritten != NULL );
 
     /* For details on the CreateCertificatefromCsr request payload format, see:
      * https://docs.aws.amazon.com/iot/latest/developerguide/fleet-provision-api.html#create-cert-csr-request-payload
      */
-    if( status == true )
-    {
-        cbor_encoder_init( &encoder, ( uint8_t * ) pBuffer, bufferLength, 0 );
+        cbor_encoder_init( &encoder, pBuffer, bufferLength, 0 );
 
         /* The request document is a map with 1 key value pair. */
         cborRet = cbor_encoder_create_map( &encoder, &mapEncoder, 1 );
@@ -76,7 +76,6 @@ bool generateCsrRequest( char * pBuffer,
         }
         else
         {
-            status = false;
             LogError( ( "Error during CBOR encoding: %s", cbor_error_string( cborRet ) ) );
 
             if( ( cborRet & CborErrorOutOfMemory ) != 0 )
@@ -84,13 +83,12 @@ bool generateCsrRequest( char * pBuffer,
                 LogError( ( "Cannot fit CreateCertificateFromCsr request payload into buffer." ) );
             }
         }
-    }
 
-    return status;
+    return ( cborRet == CborNoError );
 }
 /*-----------------------------------------------------------*/
 
-bool generateRegisterThingRequest( char * pBuffer,
+bool generateRegisterThingRequest( uint8_t * pBuffer,
                                    size_t bufferLength,
                                    const char * pCertificateOwnershipToken,
                                    size_t certificateOwnershipTokenLength,
@@ -98,14 +96,19 @@ bool generateRegisterThingRequest( char * pBuffer,
                                    size_t serialLength,
                                    size_t * pOutLengthWritten )
 {
-    bool status = false;
     CborEncoder encoder, mapEncoder, parametersEncoder;
     CborError cborRet;
+
+    assert( pBuffer != NULL );
+    assert( pCertificateOwnershipToken != NULL );
+    assert( pSerial != NULL );
+    assert( pOutLengthWritten != NULL );
 
     /* For details on the RegisterThing request payload format, see:
      * https://docs.aws.amazon.com/iot/latest/developerguide/fleet-provision-api.html#register-thing-request-payload
      */
-    cbor_encoder_init( &encoder, ( uint8_t * ) pBuffer, bufferLength, 0 );
+    cbor_encoder_init( &encoder, pBuffer, bufferLength, 0 );
+    /* The RegisterThing request payload is a map with two keys. */
     cborRet = cbor_encoder_create_map( &encoder, &mapEncoder, 2 );
 
     if( cborRet == CborNoError )
@@ -151,7 +154,6 @@ bool generateRegisterThingRequest( char * pBuffer,
 
     if( cborRet == CborNoError )
     {
-        status = true;
         *pOutLengthWritten = cbor_encoder_get_buffer_size( &encoder, ( uint8_t * ) pBuffer );
     }
     else
@@ -164,29 +166,37 @@ bool generateRegisterThingRequest( char * pBuffer,
         }
     }
 
-    return status;
+    return ( cborRet == CborNoError );
 }
 /*-----------------------------------------------------------*/
 
-bool parseCsrResponse( const char * pResponse,
+bool parseCsrResponse( const uint8_t * pResponse,
                        size_t length,
-                       char * pCertificate,
-                       size_t * pCertificateLength,
-                       char * pCertificateId,
-                       size_t * pCertificateIdLength,
-                       char * pOwnershipToken,
-                       size_t * pOwnershipTokenLength )
+                       char * pCertificateBuffer,
+                       size_t * pCertificateBufferLength,
+                       char * pCertificateIdBuffer,
+                       size_t * pCertificateIdBufferLength,
+                       char * pOwnershipTokenBuffer,
+                       size_t * pOwnershipTokenBufferLength )
 {
-    bool status = false;
     CborError cborRet;
     CborParser parser;
     CborValue map;
     CborValue value;
 
+    assert( pResponse != NULL );
+    assert( pCertificateBuffer != NULL );
+    assert( pCertificateBufferLength != NULL );
+    assert( pCertificateIdBuffer != NULL );
+    assert( pCertificateIdBufferLength != NULL );
+    assert( *pCertificateIdBufferLength >= 64 );
+    assert( pOwnershipTokenBuffer != NULL );
+    assert( pOwnershipTokenBufferLength != NULL );
+
     /* For details on the CreateCertificatefromCsr response payload format, see:
      * https://docs.aws.amazon.com/iot/latest/developerguide/fleet-provision-api.html#register-thing-response-payload
      */
-    cborRet = cbor_parser_init( ( const uint8_t * ) pResponse, length, 0, &parser, &map );
+    cborRet = cbor_parser_init( pResponse, length, 0, &parser, &map );
 
     if( cborRet != CborNoError )
     {
@@ -194,7 +204,7 @@ bool parseCsrResponse( const char * pResponse,
     }
     else if( !cbor_value_is_map( &map ) )
     {
-        LogError( ( "CreateCertificateFromCsr response not a map type." ) );
+        LogError( ( "CreateCertificateFromCsr response is not a valid map container type." ) );
     }
     else
     {
@@ -210,30 +220,27 @@ bool parseCsrResponse( const char * pResponse,
         }
         else if( value.type != CborTextStringType )
         {
-            LogError( ( "\"certificatePem\" is an unexpected type in CreateCertificateFromCsr response." ) );
+            LogError( ( "Value for \"certificatePem\" key in CreateCertificateFromCsr response is not a text string type." ) );
         }
         else
         {
-            cborRet = cbor_value_copy_text_string( &value, pCertificate, pCertificateLength, NULL );
+            cborRet = cbor_value_copy_text_string( &value, pCertificateBuffer, pCertificateBufferLength, NULL );
 
             if( cborRet == CborErrorOutOfMemory )
             {
-                LogError( ( "Certificate buffer insufficiently large." ) );
+                size_t requiredLen = 0;
+                (void) cbor_value_calculate_string_length( &value, &requiredLen );
+                LogError( ( "Certificate buffer insufficiently large. Certificate length: %lu", (unsigned long) requiredLen ) );
             }
             else if( cborRet != CborNoError )
             {
-                LogError( ( "Error extracting \"certificatePem\" value from CreateCertificateFromCsr response: %s.", cbor_error_string( cborRet ) ) );
-            }
-            else
-            {
-                status = true;
+                LogError( ( "Failed to parse \"certificatePem\" value from CreateCertificateFromCsr response: %s.", cbor_error_string( cborRet ) ) );
             }
         }
     }
 
-    if( status == true )
+    if( cborRet == CborNoError )
     {
-        status = false;
         cborRet = cbor_value_map_find_value( &map, "certificateId", &value );
 
         if( cborRet != CborNoError )
@@ -250,26 +257,23 @@ bool parseCsrResponse( const char * pResponse,
         }
         else
         {
-            cborRet = cbor_value_copy_text_string( &value, pCertificateId, pCertificateIdLength, NULL );
+            cborRet = cbor_value_copy_text_string( &value, pCertificateIdBuffer, pCertificateIdBufferLength, NULL );
 
             if( cborRet == CborErrorOutOfMemory )
             {
-                LogError( ( "Certificate Id buffer insufficiently large." ) );
+                size_t requiredLen = 0;
+                (void) cbor_value_calculate_string_length( &value, &requiredLen );
+                LogError( ( "Certificate ID buffer insufficiently large. Certificate ID length: %lu", (unsigned long) requiredLen ) );
             }
             else if( cborRet != CborNoError )
             {
-                LogError( ( "Error extracting \"certificateId\" value from CreateCertificateFromCsr response: %s.", cbor_error_string( cborRet ) ) );
-            }
-            else
-            {
-                status = true;
+                LogError( ( "Failed to parse \"certificateId\" value from CreateCertificateFromCsr response: %s.", cbor_error_string( cborRet ) ) );
             }
         }
     }
 
-    if( status == true )
+    if( cborRet == CborNoError )
     {
-        status = false;
         cborRet = cbor_value_map_find_value( &map, "certificateOwnershipToken", &value );
 
         if( cborRet != CborNoError )
@@ -286,43 +290,43 @@ bool parseCsrResponse( const char * pResponse,
         }
         else
         {
-            cborRet = cbor_value_copy_text_string( &value, pOwnershipToken, pOwnershipTokenLength, NULL );
+            cborRet = cbor_value_copy_text_string( &value, pOwnershipTokenBuffer, pOwnershipTokenBufferLength, NULL );
 
             if( cborRet == CborErrorOutOfMemory )
             {
-                LogError( ( "Certificate buffer insufficiently large." ) );
+                size_t requiredLen = 0;
+                (void) cbor_value_calculate_string_length( &value, &requiredLen );
+                LogError( ( "Certificate ownership token buffer insufficiently large. Certificate ownership token buffer length: %lu", (unsigned long) requiredLen ) );
             }
             else if( cborRet != CborNoError )
             {
-                LogError( ( "Error extracting \"certificateOwnershipToken\" value from CreateCertificateFromCsr response: %s.", cbor_error_string( cborRet ) ) );
-            }
-            else
-            {
-                status = true;
+                LogError( ( "Failed to parse \"certificateOwnershipToken\" value from CreateCertificateFromCsr response: %s.", cbor_error_string( cborRet ) ) );
             }
         }
     }
 
-    return status;
+    return (cborRet == CborNoError) ;
 }
 /*-----------------------------------------------------------*/
 
-bool parseRegisterThingResponse( const char * pResponse,
+bool parseRegisterThingResponse( const uint8_t * pResponse,
                                  size_t length,
                                  char * pThingNameBuffer,
                                  size_t * pThingNameBufferLength )
 {
-    bool status = true;
     CborError cborRet;
     CborParser parser;
     CborValue map;
     CborValue value;
 
+    assert( pResponse != NULL );
+    assert( pThingNameBuffer != NULL );
+    assert( pThingNameBufferLength != NULL );
 
     /* For details on the RegisterThing response payload format, see:
      * https://docs.aws.amazon.com/iot/latest/developerguide/fleet-provision-api.html#register-thing-response-payload
      */
-    cborRet = cbor_parser_init( ( const uint8_t * ) pResponse, length, 0, &parser, &map );
+    cborRet = cbor_parser_init( pResponse, length, 0, &parser, &map );
 
     if( cborRet != CborNoError )
     {
@@ -354,19 +358,17 @@ bool parseRegisterThingResponse( const char * pResponse,
 
             if( cborRet == CborErrorOutOfMemory )
             {
-                LogError( ( "Thing name buffer insufficiently large." ) );
+                size_t requiredLen = 0;
+                (void) cbor_value_calculate_string_length( &value, &requiredLen );
+                LogError( ( "Thing name buffer insufficiently large. Thing name length: %lu", (unsigned long) requiredLen ) );
             }
             else if( cborRet != CborNoError )
             {
-                LogError( ( "Error extracting \"thingName\" value from RegisterThing response: %s.", cbor_error_string( cborRet ) ) );
-            }
-            else
-            {
-                status = true;
+                LogError( ( "Failed to parse \"thingName\" value from RegisterThing response: %s.", cbor_error_string( cborRet ) ) );
             }
         }
     }
 
-    return status;
+    return (cborRet == CborNoError);
 }
 /*-----------------------------------------------------------*/

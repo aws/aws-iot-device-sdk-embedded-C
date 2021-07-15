@@ -50,6 +50,7 @@
 
 /* Standard includes. */
 #include <stdlib.h>
+#include <stdint.h>
 #include <stdbool.h>
 
 /* POSIX includes. */
@@ -69,7 +70,7 @@
 #include "fleet_provisioning.h"
 
 /* Demo includes. */
-#include "fleet_provisioning_payload_operations.h"
+#include "fleet_provisioning_serializer.h"
 
 /**
  * These configurations are required. Throw compilation error if it is not
@@ -123,6 +124,11 @@
 #define DELAY_BETWEEN_DEMO_RETRY_ITERATIONS_SECONDS    ( 5 )
 
 /**
+ * @brief Size of buffer in which to hold the certificate signing request (CSR).
+ */
+#define CSR_BUFFER_LENGTH                             2048
+
+/**
  * @brief Size of buffer in which to hold the certificate.
  */
 #define CERT_BUFFER_LENGTH                             2048
@@ -167,9 +173,11 @@ static char thingName[ MAX_THING_NAME_LENGTH ];
 static size_t thingNameLength;
 
 /**
- * @brief Buffer to hold responses received from the AWS IoT Fleet Provisioning APIs.
+ * @brief Buffer to hold responses received from the AWS IoT Fleet Provisioning
+ * APIs. When the MQTT publish callback recieves an expected Fleet Provisioning
+ * accepted payload, it copies it into this buffer.
  */
-static char payloadBuffer[ NETWORK_BUFFER_SIZE ];
+static uint8_t payloadBuffer[ NETWORK_BUFFER_SIZE ];
 
 /**
  * @brief Length of the payload stored in #payloadBuffer. This is set by the
@@ -259,7 +267,7 @@ static void provisioningPublishCallback( MQTTPublishInfo_t * pPublishInfo,
     {
         if( api == FleetProvCborCreateCertFromCsrAccepted )
         {
-            LogInfo( ( "Recieved accepted response from Fleet Provisioning CreateCertificateFromCsr API." ) );
+            LogInfo( ( "Received accepted response from Fleet Provisioning CreateCertificateFromCsr API." ) );
 
             responseStatus = ResponseAccepted;
 
@@ -272,13 +280,13 @@ static void provisioningPublishCallback( MQTTPublishInfo_t * pPublishInfo,
         }
         else if( api == FleetProvCborCreateCertFromCsrRejected )
         {
-            LogError( ( "Recieved rejected response from Fleet Provisioning CreateCertificateFromCsr API." ) );
+            LogError( ( "Received rejected response from Fleet Provisioning CreateCertificateFromCsr API." ) );
 
             responseStatus = ResponseRejected;
         }
         else if( api == FleetProvCborRegisterThingAccepted )
         {
-            LogInfo( ( "Recieved accepted response from Fleet Provisioning RegisterThing API." ) );
+            LogInfo( ( "Received accepted response from Fleet Provisioning RegisterThing API." ) );
 
             responseStatus = ResponseAccepted;
 
@@ -291,13 +299,13 @@ static void provisioningPublishCallback( MQTTPublishInfo_t * pPublishInfo,
         }
         else if( api == FleetProvCborCreateCertFromCsrRejected )
         {
-            LogError( ( "Recieved rejected response from Fleet Provisioning RegisterThing API." ) );
+            LogError( ( "Received rejected response from Fleet Provisioning RegisterThing API." ) );
 
             responseStatus = ResponseRejected;
         }
         else
         {
-            LogError( ( "Recieved message on unexpected Fleet Provisioning topic. Topic: %.*s.",
+            LogError( ( "Received message on unexpected Fleet Provisioning topic. Topic: %.*s.",
                         ( int ) pPublishInfo->topicNameLength,
                         ( const char * ) pPublishInfo->pTopicName ) );
         }
@@ -567,7 +575,7 @@ static bool saveCertificate( const char * pCertificate,
 
         if( written != certificateLength )
         {
-            LogError( ( "Failed writing certificate to file." ) );
+            LogError( ( "Failed writing newly provisioned certificate to file." ) );
         }
         else
         {
@@ -587,11 +595,10 @@ int main( int argc,
           char ** argv )
 {
     bool status = false;
-    int exitStatus = EXIT_FAILURE;
-    char serial[ 10 ];
-    size_t serialLength = 10;
+    char deviceSerial[ 10 ];
+    size_t deviceSerialLength = 10;
     /* Buffer for holding the CSR. */
-    char csr[ NETWORK_BUFFER_SIZE ] = { 0 };
+    char csr[ CSR_BUFFER_LENGTH ] = { 0 };
     size_t csrLength = 0;
     /* Buffer for holding received certificate until it is saved. */
     char certificate[ CERT_BUFFER_LENGTH ];
@@ -619,23 +626,9 @@ int main( int argc,
 
         /* The demo template we use has a serial number as a parameter.
          * For this demo we use a random 10 digit number. */
-        for( i = 0; i < serialLength; i++ )
+        for( i = 0; i < deviceSerialLength; i++ )
         {
-            serial[ i ] = '0' + ( rand() % 10 );
-        }
-
-        /* Read the CSR into the CSR buffer. */
-        status = getCsr( csr, NETWORK_BUFFER_SIZE, &csrLength );
-
-        if( status == true )
-        {
-            /* Create the document containing the CSR to publish to the
-             * CreateCertificateFromCsr API. */
-            status = generateCsrRequest( payloadBuffer,
-                                         NETWORK_BUFFER_SIZE,
-                                         csr,
-                                         csrLength,
-                                         &payloadLength );
+            deviceSerial[ i ] = '0' + ( rand() % 10 );
         }
 
         /**** Connect to AWS IoT Core with provisioning claim credentials *****/
@@ -644,9 +637,8 @@ int main( int argc,
          * credentials should allow use of the RegisterThing API and one of the
          * CreateCertificatefromCsr or CreateKeysAndCertificate.
          * In this demo we use CreateCertificatefromCsr. */
-        if( status == true )
-        {
-            /* Attempts to connect to the AWS IoT MQTT broker over TCP. If the
+
+            /* Attempts to connect to the AWS IoT MQTT broker. If the
              * connection fails, retries after a timeout. Timeout value will
              * exponentially increase until maximum attempts are reached. */
             LogInfo( ( "Establishing MQTT session with claim certificate..." ) );
@@ -662,18 +654,35 @@ int main( int argc,
             {
                 connectionEstablished = true;
             }
-        }
 
         /**** Call the CreateCertificateFromCsr API ***************************/
 
         /* We use the CreateCertificatefromCsr API to obtain a client certificate
-         * for a key on the device by means of sending a Certificate Signing
-         * Request (CSR). */
+         * for a key on the device by means of sending a certificate signing
+         * request (CSR). */
         if( status == true )
         {
             /* Subscribe to the CreateCertificateFromCsr accepted and rejected
-             * topics. In this demo we use CBOR, so we use the CBOR topics. */
+             * topics. In this demo we use CBOR encoding for the payloads,
+             * so we use the CBOR variants of the topics. */
             status = subscribeToCsrResponseTopics();
+        }
+
+        if( status == true )
+        {
+        /* Read the CSR into the CSR buffer. */
+        status = getCsr( csr, NETWORK_BUFFER_SIZE, &csrLength );
+        }
+
+        if( status == true )
+        {
+            /* Create the request payload containing the CSR to publish to the
+             * CreateCertificateFromCsr APIs. */
+            status = generateCsrRequest( payloadBuffer,
+                                         NETWORK_BUFFER_SIZE,
+                                         csr,
+                                         csrLength,
+                                         &payloadLength );
         }
 
         if( status == true )
@@ -681,7 +690,7 @@ int main( int argc,
             /* Publish the CSR to the CreateCertificatefromCsr API. */
             PublishToTopic( FP_CBOR_CREATE_CERT_PUBLISH_TOPIC,
                             FP_CBOR_CREATE_CERT_PUBLISH_LENGTH,
-                            payloadBuffer,
+                            (char *) payloadBuffer,
                             payloadLength );
 
             if( status == false )
@@ -737,13 +746,13 @@ int main( int argc,
          * receive device configuration. */
         if( status == true )
         {
-            /* Create the document to publish to the RegisterThing API. */
+            /* Create the request payload to publish to the RegisterThing API. */
             status = generateRegisterThingRequest( payloadBuffer,
                                                    NETWORK_BUFFER_SIZE,
                                                    ownershipToken,
                                                    ownershipTokenLength,
-                                                   serial,
-                                                   serialLength,
+                                                   deviceSerial,
+                                                   deviceSerialLength,
                                                    &payloadLength );
         }
 
@@ -758,7 +767,7 @@ int main( int argc,
             /* Publish the RegisterThing request. */
             PublishToTopic( FP_CBOR_REGISTER_PUBLISH_TOPIC( PROVISIONING_TEMPLATE_NAME ),
                             FP_CBOR_REGISTER_PUBLISH_LENGTH( PROVISIONING_TEMPLATE_NAME_LENGTH ),
-                            payloadBuffer,
+                            (char *)payloadBuffer,
                             payloadLength );
 
             if( status == false )
@@ -786,7 +795,7 @@ int main( int argc,
 
             if( status == true )
             {
-                LogInfo( ( "Received Thing name: %.*s", ( int ) thingNameLength, thingName ) );
+                LogInfo( ( "Received AWS IoT Thing name: %.*s", ( int ) thingNameLength, thingName ) );
             }
         }
 
@@ -799,7 +808,9 @@ int main( int argc,
         /**** Disconnect from AWS IoT Core ************************************/
 
         /* As we have completed the provisioning workflow, we disconnect from
-         * the connection using the provisioning claim credentials. */
+         * the connection using the provisioning claim credentials. We will
+         * establish a new MQTT connection with the newly provisioned
+         * credentials. */
         if( connectionEstablished == true )
         {
             DisconnectMqttSession();
@@ -817,10 +828,14 @@ int main( int argc,
 
             if( status != true )
             {
-                LogError( ( "Failed to establish MQTT session." ) );
+                LogError( ( "Failed to establish MQTT session with provisioned "
+                            "credentials. Verify on your AWS account that the "
+                            "new certificate is active and has an attached IoT "
+                            "Policy that allows the \"iot:Connect\" action." ) );
             }
             else
             {
+                LogInfo( ( "Sucessfully established connection with provisioned credentials." ));
                 connectionEstablished = true;
             }
         }
@@ -834,17 +849,12 @@ int main( int argc,
             connectionEstablished = false;
         }
 
-        if( status == true )
-        {
-            exitStatus = EXIT_SUCCESS;
-        }
-
         /**** Retry in case of failure ****************************************/
 
         /* Increment the demo run count. */
         demoRunCount++;
 
-        if( exitStatus == EXIT_SUCCESS )
+        if( status == true )
         {
             LogInfo( ( "Demo iteration %d is successful.", demoRunCount ) );
         }
@@ -860,15 +870,14 @@ int main( int argc,
             LogError( ( "All %d demo iterations failed.", FLEET_PROV_MAX_DEMO_LOOP_COUNT ) );
             break;
         }
-    } while( exitStatus != EXIT_SUCCESS );
+    } while( status != true );
 
     /* Log demo success. */
-    if( exitStatus == EXIT_SUCCESS )
+    if( status == true )
     {
         LogInfo( ( "Demo completed successfully." ) );
-        exitStatus = EXIT_SUCCESS;
     }
 
-    return exitStatus;
+    return (status == true) ? EXIT_SUCCESS: EXIT_FAILURE;
 }
 /*-----------------------------------------------------------*/
