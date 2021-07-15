@@ -126,7 +126,7 @@
 /**
  * @brief Size of buffer in which to hold the certificate signing request (CSR).
  */
-#define CSR_BUFFER_LENGTH                             2048
+#define CSR_BUFFER_LENGTH                              2048
 
 /**
  * @brief Size of buffer in which to hold the certificate.
@@ -174,7 +174,7 @@ static size_t thingNameLength;
 
 /**
  * @brief Buffer to hold responses received from the AWS IoT Fleet Provisioning
- * APIs. When the MQTT publish callback recieves an expected Fleet Provisioning
+ * APIs. When the MQTT publish callback receives an expected Fleet Provisioning
  * accepted payload, it copies it into this buffer.
  */
 static uint8_t payloadBuffer[ NETWORK_BUFFER_SIZE ];
@@ -638,22 +638,22 @@ int main( int argc,
          * CreateCertificatefromCsr or CreateKeysAndCertificate.
          * In this demo we use CreateCertificatefromCsr. */
 
-            /* Attempts to connect to the AWS IoT MQTT broker. If the
-             * connection fails, retries after a timeout. Timeout value will
-             * exponentially increase until maximum attempts are reached. */
-            LogInfo( ( "Establishing MQTT session with claim certificate..." ) );
-            status = EstablishMqttSession( provisioningPublishCallback,
-                                           CLAIM_CERT_PATH,
-                                           CLAIM_PRIVATE_KEY_PATH );
+        /* Attempts to connect to the AWS IoT MQTT broker. If the
+         * connection fails, retries after a timeout. Timeout value will
+         * exponentially increase until maximum attempts are reached. */
+        LogInfo( ( "Establishing MQTT session with claim certificate..." ) );
+        status = EstablishMqttSession( provisioningPublishCallback,
+                                       CLAIM_CERT_PATH,
+                                       CLAIM_PRIVATE_KEY_PATH );
 
-            if( status == false )
-            {
-                LogError( ( "Failed to establish MQTT session." ) );
-            }
-            else
-            {
-                connectionEstablished = true;
-            }
+        if( status == false )
+        {
+            LogError( ( "Failed to establish MQTT session." ) );
+        }
+        else
+        {
+            connectionEstablished = true;
+        }
 
         /**** Call the CreateCertificateFromCsr API ***************************/
 
@@ -670,8 +670,8 @@ int main( int argc,
 
         if( status == true )
         {
-        /* Read the CSR into the CSR buffer. */
-        status = getCsr( csr, NETWORK_BUFFER_SIZE, &csrLength );
+            /* Read the CSR into the CSR buffer. */
+            status = getCsr( csr, NETWORK_BUFFER_SIZE, &csrLength );
         }
 
         if( status == true )
@@ -690,7 +690,7 @@ int main( int argc,
             /* Publish the CSR to the CreateCertificatefromCsr API. */
             PublishToTopic( FP_CBOR_CREATE_CERT_PUBLISH_TOPIC,
                             FP_CBOR_CREATE_CERT_PUBLISH_LENGTH,
-                            (char *) payloadBuffer,
+                            ( char * ) payloadBuffer,
                             payloadLength );
 
             if( status == false )
@@ -767,7 +767,7 @@ int main( int argc,
             /* Publish the RegisterThing request. */
             PublishToTopic( FP_CBOR_REGISTER_PUBLISH_TOPIC( PROVISIONING_TEMPLATE_NAME ),
                             FP_CBOR_REGISTER_PUBLISH_LENGTH( PROVISIONING_TEMPLATE_NAME_LENGTH ),
-                            (char *)payloadBuffer,
+                            ( char * ) payloadBuffer,
                             payloadLength );
 
             if( status == false )
@@ -835,7 +835,7 @@ int main( int argc,
             }
             else
             {
-                LogInfo( ( "Sucessfully established connection with provisioned credentials." ));
+                LogInfo( ( "Sucessfully established connection with provisioned credentials." ) );
                 connectionEstablished = true;
             }
         }
@@ -878,6 +878,6 @@ int main( int argc,
         LogInfo( ( "Demo completed successfully." ) );
     }
 
-    return (status == true) ? EXIT_SUCCESS: EXIT_FAILURE;
+    return ( status == true ) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 /*-----------------------------------------------------------*/

@@ -79,6 +79,7 @@ cfb
 chacha
 chachapoly
 chinese
+chunked
 ciphersuite
 ciphersuites
 ciphertext
@@ -419,7 +420,11 @@ pbuf
 pbuffer
 pcdescription
 pcertificate
+pcertificatebuffer
+pcertificatebufferlength
 pcertificateid
+pcertificateidbuffer
+pcertificateidbufferlength
 pcertificateidlength
 pcertificatelength
 pcertificateownershiptoken
@@ -484,6 +489,8 @@ pouttcpportsarray
 poutudpportsarray
 poweron
 pownershiptoken
+pownershiptokenbuffer
+pownershiptokenbufferlength
 pownershiptokenlength
 ppacketinfo
 pparam

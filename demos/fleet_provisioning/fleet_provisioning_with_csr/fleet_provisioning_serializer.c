@@ -44,47 +44,47 @@ bool generateCsrRequest( uint8_t * pBuffer,
     CborError cborRet;
 
     assert( pBuffer != NULL );
-    assert( pCsr != NULL);
+    assert( pCsr != NULL );
     assert( pOutLengthWritten != NULL );
 
     /* For details on the CreateCertificatefromCsr request payload format, see:
      * https://docs.aws.amazon.com/iot/latest/developerguide/fleet-provision-api.html#create-cert-csr-request-payload
      */
-        cbor_encoder_init( &encoder, pBuffer, bufferLength, 0 );
+    cbor_encoder_init( &encoder, pBuffer, bufferLength, 0 );
 
-        /* The request document is a map with 1 key value pair. */
-        cborRet = cbor_encoder_create_map( &encoder, &mapEncoder, 1 );
+    /* The request document is a map with 1 key value pair. */
+    cborRet = cbor_encoder_create_map( &encoder, &mapEncoder, 1 );
 
-        if( cborRet == CborNoError )
+    if( cborRet == CborNoError )
+    {
+        cborRet = cbor_encode_text_stringz( &mapEncoder, "certificateSigningRequest" );
+    }
+
+    if( cborRet == CborNoError )
+    {
+        cborRet = cbor_encode_text_string( &mapEncoder, pCsr, csrLength );
+    }
+
+    if( cborRet == CborNoError )
+    {
+        cborRet = cbor_encoder_close_container( &encoder, &mapEncoder );
+    }
+
+    if( cborRet == CborNoError )
+    {
+        *pOutLengthWritten = cbor_encoder_get_buffer_size( &encoder, ( uint8_t * ) pBuffer );
+    }
+    else
+    {
+        LogError( ( "Error during CBOR encoding: %s", cbor_error_string( cborRet ) ) );
+
+        if( ( cborRet & CborErrorOutOfMemory ) != 0 )
         {
-            cborRet = cbor_encode_text_stringz( &mapEncoder, "certificateSigningRequest" );
+            LogError( ( "Cannot fit CreateCertificateFromCsr request payload into buffer." ) );
         }
+    }
 
-        if( cborRet == CborNoError )
-        {
-            cborRet = cbor_encode_text_string( &mapEncoder, pCsr, csrLength );
-        }
-
-        if( cborRet == CborNoError )
-        {
-            cborRet = cbor_encoder_close_container( &encoder, &mapEncoder );
-        }
-
-        if( cborRet == CborNoError )
-        {
-            *pOutLengthWritten = cbor_encoder_get_buffer_size( &encoder, ( uint8_t * ) pBuffer );
-        }
-        else
-        {
-            LogError( ( "Error during CBOR encoding: %s", cbor_error_string( cborRet ) ) );
-
-            if( ( cborRet & CborErrorOutOfMemory ) != 0 )
-            {
-                LogError( ( "Cannot fit CreateCertificateFromCsr request payload into buffer." ) );
-            }
-        }
-
-    return ( cborRet == CborNoError );
+    return( cborRet == CborNoError );
 }
 /*-----------------------------------------------------------*/
 
@@ -166,7 +166,7 @@ bool generateRegisterThingRequest( uint8_t * pBuffer,
         }
     }
 
-    return ( cborRet == CborNoError );
+    return( cborRet == CborNoError );
 }
 /*-----------------------------------------------------------*/
 
@@ -229,8 +229,8 @@ bool parseCsrResponse( const uint8_t * pResponse,
             if( cborRet == CborErrorOutOfMemory )
             {
                 size_t requiredLen = 0;
-                (void) cbor_value_calculate_string_length( &value, &requiredLen );
-                LogError( ( "Certificate buffer insufficiently large. Certificate length: %lu", (unsigned long) requiredLen ) );
+                ( void ) cbor_value_calculate_string_length( &value, &requiredLen );
+                LogError( ( "Certificate buffer insufficiently large. Certificate length: %lu", ( unsigned long ) requiredLen ) );
             }
             else if( cborRet != CborNoError )
             {
@@ -262,8 +262,8 @@ bool parseCsrResponse( const uint8_t * pResponse,
             if( cborRet == CborErrorOutOfMemory )
             {
                 size_t requiredLen = 0;
-                (void) cbor_value_calculate_string_length( &value, &requiredLen );
-                LogError( ( "Certificate ID buffer insufficiently large. Certificate ID length: %lu", (unsigned long) requiredLen ) );
+                ( void ) cbor_value_calculate_string_length( &value, &requiredLen );
+                LogError( ( "Certificate ID buffer insufficiently large. Certificate ID length: %lu", ( unsigned long ) requiredLen ) );
             }
             else if( cborRet != CborNoError )
             {
@@ -295,8 +295,8 @@ bool parseCsrResponse( const uint8_t * pResponse,
             if( cborRet == CborErrorOutOfMemory )
             {
                 size_t requiredLen = 0;
-                (void) cbor_value_calculate_string_length( &value, &requiredLen );
-                LogError( ( "Certificate ownership token buffer insufficiently large. Certificate ownership token buffer length: %lu", (unsigned long) requiredLen ) );
+                ( void ) cbor_value_calculate_string_length( &value, &requiredLen );
+                LogError( ( "Certificate ownership token buffer insufficiently large. Certificate ownership token buffer length: %lu", ( unsigned long ) requiredLen ) );
             }
             else if( cborRet != CborNoError )
             {
@@ -305,7 +305,7 @@ bool parseCsrResponse( const uint8_t * pResponse,
         }
     }
 
-    return (cborRet == CborNoError) ;
+    return( cborRet == CborNoError );
 }
 /*-----------------------------------------------------------*/
 
@@ -359,8 +359,8 @@ bool parseRegisterThingResponse( const uint8_t * pResponse,
             if( cborRet == CborErrorOutOfMemory )
             {
                 size_t requiredLen = 0;
-                (void) cbor_value_calculate_string_length( &value, &requiredLen );
-                LogError( ( "Thing name buffer insufficiently large. Thing name length: %lu", (unsigned long) requiredLen ) );
+                ( void ) cbor_value_calculate_string_length( &value, &requiredLen );
+                LogError( ( "Thing name buffer insufficiently large. Thing name length: %lu", ( unsigned long ) requiredLen ) );
             }
             else if( cborRet != CborNoError )
             {
@@ -369,6 +369,6 @@ bool parseRegisterThingResponse( const uint8_t * pResponse,
         }
     }
 
-    return (cborRet == CborNoError);
+    return( cborRet == CborNoError );
 }
 /*-----------------------------------------------------------*/
