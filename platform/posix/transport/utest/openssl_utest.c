@@ -34,6 +34,7 @@
 #include "mock_openssl_api.h"
 #include "mock_sockets_posix.h"
 #include "mock_stdio_api.h"
+#include "mock_poll.h"
 
 /* The send and receive timeout to set for the socket. */
 #define SEND_RECV_TIMEOUT       0
@@ -761,6 +762,7 @@ void test_Openssl_Send_All_Bytes_Sent_Successfully( void )
     int32_t bytesSent;
 
     opensslParams.pSsl = &ssl;
+    poll_ExpectAnyArgsAndReturn( 1 );
     SSL_write_ExpectAnyArgsAndReturn( BYTES_TO_SEND );
     bytesSent = Openssl_Send( &networkContext, opensslBuffer, BYTES_TO_SEND );
     TEST_ASSERT_EQUAL( BYTES_TO_SEND, bytesSent );
@@ -775,6 +777,7 @@ void test_Openssl_Send_Network_Error( void )
     int32_t bytesSent;
 
     opensslParams.pSsl = &ssl;
+    poll_ExpectAnyArgsAndReturn( 1 );
     SSL_write_ExpectAnyArgsAndReturn( SSL_READ_WRITE_ERROR );
 
     /* Several errors can be returned from #SSL_get_error as mentioned here:
@@ -785,10 +788,28 @@ void test_Openssl_Send_Network_Error( void )
     TEST_ASSERT_TRUE( bytesSent < 0 );
 
     /* Test that a non-retryable zero error code is converted to -1 by the API. */
+    poll_ExpectAnyArgsAndReturn( 1 );
     SSL_write_ExpectAnyArgsAndReturn( 0 );
     SSL_get_error_ExpectAnyArgsAndReturn( SSL_ERROR_ZERO_RETURN );
     bytesSent = Openssl_Send( &networkContext, opensslBuffer, BYTES_TO_SEND );
     TEST_ASSERT_EQUAL( -1, bytesSent );
+
+    /* Test that a poll error results in the function under test returning -1. */
+    poll_ExpectAnyArgsAndReturn( -1 );
+    bytesSent = Openssl_Send( &networkContext, opensslBuffer, BYTES_TO_SEND );
+    TEST_ASSERT_EQUAL( -1, bytesSent );
+}
+
+/**
+ * @brief Test that #Openssl_Send returns 0 when `poll` returns 0.
+ */
+void test_Openssl_Send_Poll_No_Events( void )
+{
+    int32_t bytesSent;
+
+    poll_ExpectAnyArgsAndReturn( 0 );
+    bytesSent = Openssl_Send( &networkContext, opensslBuffer, BYTES_TO_SEND );
+    TEST_ASSERT_EQUAL( 0, bytesSent );
 }
 
 /**
@@ -821,10 +842,17 @@ void test_Openssl_Recv_All_Bytes_Received_Successfully( void )
 {
     int32_t bytesReceived;
 
+    /* No pending data from last read. */
     opensslParams.pSsl = &ssl;
     SSL_read_ExpectAnyArgsAndReturn( BYTES_TO_RECV );
     bytesReceived = Openssl_Recv( &networkContext, opensslBuffer, BYTES_TO_RECV );
     TEST_ASSERT_EQUAL( BYTES_TO_RECV, bytesReceived );
+
+    /* Pending data from last read. */
+    SSL_pending_ExpectAnyArgsAndReturn( BYTES_TO_RECV );
+    SSL_read_ExpectAnyArgsAndReturn( 1U );
+    bytesReceived = Openssl_Recv( &networkContext, opensslBuffer, 1U );
+    TEST_ASSERT_EQUAL( 1U, bytesReceived );
 }
 
 /**
@@ -852,6 +880,25 @@ void test_Openssl_Recv_Network_Error( void )
     SSL_get_error_ExpectAnyArgsAndReturn( SSL_ERROR_ZERO_RETURN );
     bytesReceived = Openssl_Recv( &networkContext, opensslBuffer, BYTES_TO_RECV );
     TEST_ASSERT_EQUAL( -1, bytesReceived );
+
+    /* Test that a poll error results in the function under test returning -1. */
+    SSL_pending_ExpectAnyArgsAndReturn( 0 );
+    poll_ExpectAnyArgsAndReturn( -1 );
+    bytesReceived = Openssl_Recv( &networkContext, opensslBuffer, 1U );
+    TEST_ASSERT_EQUAL( -1, bytesReceived );
+}
+
+/**
+ * @brief Test that #Openssl_Recv returns 0 when `poll` returns 0.
+ */
+void test_Openssl_Recv_Poll_No_Events( void )
+{
+    int32_t bytesReceived;
+
+    SSL_pending_ExpectAnyArgsAndReturn( 0 );
+    poll_ExpectAnyArgsAndReturn( 0 );
+    bytesReceived = Openssl_Recv( &networkContext, opensslBuffer, 1U );
+    TEST_ASSERT_EQUAL( 0, bytesReceived );
 }
 
 /**
@@ -865,7 +912,7 @@ void test_Openssl_Recv_Zero_Return_Value( void )
     opensslParams.pSsl = &ssl;
     SSL_read_ExpectAnyArgsAndReturn( SSL_READ_WRITE_ERROR );
 
-    /* Test when SSL_read() returns an SSL_ERROR_WANT_READ error. */
+    /* Test when SSL_get_error() returns an SSL_ERROR_WANT_READ error. */
     SSL_get_error_ExpectAnyArgsAndReturn( SSL_ERROR_WANT_READ );
     bytesReceived = Openssl_Recv( &networkContext, opensslBuffer, BYTES_TO_RECV );
     TEST_ASSERT_EQUAL( 0, bytesReceived );

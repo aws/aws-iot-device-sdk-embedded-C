@@ -186,6 +186,8 @@ platformimagestate
 plisthead
 pnetworkcontext
 png
+pollin
+pollpri
 popensslcredentials
 popensslparams
 posix
@@ -249,6 +251,7 @@ transportpage
 transportsectionimplementation
 transportsectionoverview
 transportstruct
+tx
 txt
 ulblockindex
 ulblocksize

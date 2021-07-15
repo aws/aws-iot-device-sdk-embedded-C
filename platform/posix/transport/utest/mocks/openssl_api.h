@@ -146,6 +146,8 @@ extern int SSL_write( SSL * ssl,
                       const void * buf,
                       int num );
 
+extern int SSL_pending( const SSL * ssl );
+
 const char * ERR_reason_error_string( unsigned long e );
 
 void X509_free( X509 * a );

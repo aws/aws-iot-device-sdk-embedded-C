@@ -32,7 +32,7 @@
 
 #include "mock_sockets_posix.h"
 #include "mock_stdio_api.h"
-#include "mock_select_api.h"
+#include "mock_poll.h"
 #include "mock_socket.h"
 
 /* The send and receive timeout to set for the socket. */
@@ -183,8 +183,6 @@ void test_Plaintext_Recv_All_Bytes_Received_Successfully( void )
 {
     int32_t bytesReceived;
 
-    getsockopt_ExpectAnyArgsAndReturn( 0 );
-    select_ExpectAnyArgsAndReturn( 1 );
     recv_ExpectAnyArgsAndReturn( BYTES_TO_RECV );
     bytesReceived = Plaintext_Recv( &networkContext,
                                     plaintextBuffer,
@@ -200,8 +198,6 @@ void test_Plaintext_Recv_Zero_Bytes_Received( void )
 {
     int32_t bytesReceived;
 
-    getsockopt_ExpectAnyArgsAndReturn( -1 );
-    select_ExpectAnyArgsAndReturn( 1 );
     recv_ExpectAnyArgsAndReturn( 0 );
     bytesReceived = Plaintext_Recv( &networkContext,
                                     plaintextBuffer,
@@ -216,11 +212,10 @@ void test_Plaintext_Recv_Socket_Timeout( void )
 {
     int32_t bytesReceived;
 
-    getsockopt_ExpectAnyArgsAndReturn( 0 );
-    select_ExpectAnyArgsAndReturn( 0 );
+    poll_ExpectAnyArgsAndReturn( 0 );
     bytesReceived = Plaintext_Recv( &networkContext,
                                     plaintextBuffer,
-                                    BYTES_TO_RECV );
+                                    1U );
     TEST_ASSERT_EQUAL( 0, bytesReceived );
 }
 
@@ -232,11 +227,10 @@ void test_Plaintext_Recv_Poll_Error( void )
 {
     int32_t bytesReceived;
 
-    getsockopt_ExpectAnyArgsAndReturn( 0 );
-    select_ExpectAnyArgsAndReturn( -1 );
+    poll_ExpectAnyArgsAndReturn( -1 );
     bytesReceived = Plaintext_Recv( &networkContext,
                                     plaintextBuffer,
-                                    BYTES_TO_RECV );
+                                    1U );
     TEST_ASSERT_EQUAL( SEND_RECV_ERROR, bytesReceived );
 }
 
@@ -251,8 +245,6 @@ void test_Plaintext_Recv_Network_Error( void )
 
     for( i = 0; i < sizeof( errorNumbers ); i++ )
     {
-        getsockopt_ExpectAnyArgsAndReturn( 0 );
-        select_ExpectAnyArgsAndReturn( 1 );
         recv_ExpectAnyArgsAndReturn( SEND_RECV_ERROR );
         errno = errorNumbers[ i ];
         bytesReceived = Plaintext_Recv( &networkContext,
@@ -271,8 +263,7 @@ void test_Plaintext_Send_All_Bytes_Sent_Successfully( void )
 {
     int32_t bytesSent;
 
-    getsockopt_ExpectAnyArgsAndReturn( 0 );
-    select_ExpectAnyArgsAndReturn( 1 );
+    poll_ExpectAnyArgsAndReturn( 1 );
     send_ExpectAnyArgsAndReturn( BYTES_TO_SEND );
     bytesSent = Plaintext_Send( &networkContext,
                                 plaintextBuffer,
@@ -291,8 +282,7 @@ void test_Plaintext_Send_Network_Error( void )
 
     for( i = 0; i < sizeof( errorNumbers ); i++ )
     {
-        getsockopt_ExpectAnyArgsAndReturn( 0 );
-        select_ExpectAnyArgsAndReturn( 1 );
+        poll_ExpectAnyArgsAndReturn( 1 );
         send_ExpectAnyArgsAndReturn( SEND_RECV_ERROR );
         errno = errorNumbers[ i ];
         bytesSent = Plaintext_Send( &networkContext,
@@ -311,8 +301,7 @@ void test_Plaintext_Send_Zero_Bytes_Received( void )
 {
     int32_t bytesSent;
 
-    getsockopt_ExpectAnyArgsAndReturn( -1 );
-    select_ExpectAnyArgsAndReturn( 1 );
+    poll_ExpectAnyArgsAndReturn( 1 );
     send_ExpectAnyArgsAndReturn( 0 );
     bytesSent = Plaintext_Send( &networkContext,
                                 plaintextBuffer,
@@ -327,8 +316,7 @@ void test_Plaintext_Send_Socket_Timeout( void )
 {
     int32_t bytesSent;
 
-    getsockopt_ExpectAnyArgsAndReturn( 0 );
-    select_ExpectAnyArgsAndReturn( 0 );
+    poll_ExpectAnyArgsAndReturn( 0 );
     bytesSent = Plaintext_Send( &networkContext,
                                 plaintextBuffer,
                                 BYTES_TO_SEND );
@@ -343,8 +331,7 @@ void test_Plaintext_Send_Poll_Error( void )
 {
     int32_t bytesSent;
 
-    getsockopt_ExpectAnyArgsAndReturn( 0 );
-    select_ExpectAnyArgsAndReturn( -1 );
+    poll_ExpectAnyArgsAndReturn( -1 );
     bytesSent = Plaintext_Send( &networkContext,
                                 plaintextBuffer,
                                 BYTES_TO_SEND );
