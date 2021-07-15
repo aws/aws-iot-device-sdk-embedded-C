@@ -207,7 +207,7 @@ int32_t Plaintext_Send( NetworkContext_t * pNetworkContext,
 
     /* Check if data can be written to the socket.
      * Note: This is done to avoid blocking on send() when
-     * the socket is not ready to accept more data for network 
+     * the socket is not ready to accept more data for network
      * transmission (possibly due to a full TX buffer). */
     pollStatus = poll( &pollFds, 1, 0 );
 

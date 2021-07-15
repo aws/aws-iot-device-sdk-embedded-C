@@ -856,7 +856,7 @@ int32_t Openssl_Send( NetworkContext_t * pNetworkContext,
         /* Set the file descriptor for poll. */
         pollFds.fd = pOpensslParams->socketDescriptor;
 
-        /* `poll` checks if the socket is ready to send data. 
+        /* `poll` checks if the socket is ready to send data.
          * Note: This is done to avoid blocking on SSL_write()
          * when TCP socket is not ready to accept more data for
          * network transmission (possibly due to a full TX buffer). */
