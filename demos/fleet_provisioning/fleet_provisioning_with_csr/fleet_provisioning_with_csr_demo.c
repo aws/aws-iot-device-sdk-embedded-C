@@ -652,6 +652,7 @@ int main( int argc,
         }
         else
         {
+            LogInfo( ( "Established connection with claim credentials." ) );
             connectionEstablished = true;
         }
 

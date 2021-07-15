@@ -71,7 +71,7 @@ bool generateRegisterThingRequest( uint8_t * pBuffer,
 /**
  * @brief Extracts the certificate, certificate ID, and certificate ownership
  * token from a CreateCertificateFromCsr accepted response. These are copied
- * the provided buffers so that they can outlive the data in the response
+ * to the provided buffers so that they can outlive the data in the response
  * buffer and as CBOR strings may be chunked.
  *
  * @param[in] pResponse The response payload.
