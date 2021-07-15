@@ -421,6 +421,7 @@ pcdescription
 pcertificate
 pcertificateid
 pcertificateidlength
+pcertificatelength
 pcertificateownershiptoken
 pcks
 pclientcertpath
@@ -470,6 +471,8 @@ posix
 potainterfaces
 poutcharswritten
 poutconnectionsarray
+poutcsrlength
+poutlengthwritten
 poutnetworkstats
 poutnumestablishedconnections
 poutnumopenports
@@ -480,6 +483,7 @@ poutreportlength
 pouttcpportsarray
 poutudpportsarray
 poweron
+pownershiptoken
 pownershiptokenlength
 ppacketinfo
 pparam
