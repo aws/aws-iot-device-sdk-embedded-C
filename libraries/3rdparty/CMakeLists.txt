@@ -27,3 +27,22 @@ if(${BUILD_TESTS})
 
     target_link_libraries(cmock unity)
 endif()
+
+add_library(tinycbor
+    "${ROOT_DIR}/libraries/3rdparty/tinycbor/src/cborpretty.c"
+    "${ROOT_DIR}/libraries/3rdparty/tinycbor/src/cborpretty_stdio.c"
+    "${ROOT_DIR}/libraries/3rdparty/tinycbor/src/cborencoder.c"
+    "${ROOT_DIR}/libraries/3rdparty/tinycbor/src/cborencoder_close_container_checked.c"
+    "${ROOT_DIR}/libraries/3rdparty/tinycbor/src/cborerrorstrings.c"
+    "${ROOT_DIR}/libraries/3rdparty/tinycbor/src/cborparser.c"
+    "${ROOT_DIR}/libraries/3rdparty/tinycbor/src/cborparser_dup_string.c"
+)
+
+set_target_properties(tinycbor PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+    POSITION_INDEPENDENT_CODE ON
+)
+
+target_include_directories(tinycbor PUBLIC
+    "${ROOT_DIR}/libraries/3rdparty/tinycbor/src"
+)

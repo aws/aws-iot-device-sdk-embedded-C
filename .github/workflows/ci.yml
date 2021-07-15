@@ -34,7 +34,13 @@ jobs:
           -DCLIENT_IDENTIFIER="ci-identifier" \
           -DTHING_NAME="thing-name" \
           -DS3_PRESIGNED_GET_URL="get-url" \
-          -DS3_PRESIGNED_PUT_URL="put-url"
+          -DS3_PRESIGNED_PUT_URL="put-url" \
+          -DCLAIM_CERT_PATH="cert/path" \
+          -DCLAIM_PRIVATE_KEY_PATH="key/path" \
+          -DPROVISIONING_TEMPLATE_NAME="template-name" \
+          -DPROVISIONING_CSR_PATH="csr/path" \
+          -DPROVISIONING_PRIVATE_KEY_PATH="key/path" \
+          -DPROVISIONING_CERT_PATH="cert/path"
       - name: Build Demos
         run: |
           make -C build/ help | grep demo | tr -d '. ' | xargs make -C build/
@@ -64,7 +70,13 @@ jobs:
           -DCLIENT_IDENTIFIER="ci-identifier" \
           -DTHING_NAME="thing-name" \
           -DS3_PRESIGNED_GET_URL="get-url" \
-          -DS3_PRESIGNED_PUT_URL="put-url"
+          -DS3_PRESIGNED_PUT_URL="put-url" \
+          -DCLAIM_CERT_PATH="cert/path" \
+          -DCLAIM_PRIVATE_KEY_PATH="key/path" \
+          -DPROVISIONING_TEMPLATE_NAME="template-name" \
+          -DPROVISIONING_CSR_PATH="csr/path" \
+          -DPROVISIONING_PRIVATE_KEY_PATH="key/path" \
+          -DPROVISIONING_CERT_PATH="cert/path"
       - name: Build System Tests
         run: make -C build/ help | grep system | tr -d '. ' | xargs make -C build/
   build-check-install:

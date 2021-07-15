@@ -52,4 +52,9 @@ dependencies:
     repository:
       type: "git"
       url: "https://github.com/FreeRTOS/corePKCS11"
+  - name: "Fleet-Provisioning-for-AWS-IoT-embedded-sdk"
+    version: "5b3e214"
+    repository:
+      type: "git"
+      url: "https://github.com/aws/Fleet-Provisioning-for-AWS-IoT-embedded-sdk"
 license: "MIT"
