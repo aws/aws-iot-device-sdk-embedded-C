@@ -4,6 +4,7 @@
 
 ### Minor Changes
 
+- [#1670](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1670) Update corePKCS11 demo to read the public key as the private key was being used to both sign and verify
 - [#1596](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1596) Make `THING_NAME` an alias for `CLIENT_IDENTIFIER` in MQTT-related demos
 - [#1593](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1593) Initialize MQTT status return code in OTA demos mqtt_publish
 - [#1599](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1599) Checking execution status of demo loop before calling pthread_join in OTA demos
