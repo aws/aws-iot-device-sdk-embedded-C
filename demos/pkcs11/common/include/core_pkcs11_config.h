@@ -146,13 +146,21 @@
 
 /**
  * @brief The PKCS #11 label for the object to be used for HMAC operations.
+ * 
+ * @note The PKCS #11 does create a CMAC object but can be modified to do so
+ * by using the following definition:
+ * #define pkcs11configLABEL_CMAC_KEY                         "HMAC Key"
  */
-#define pkcs11configLABEL_HMAC_KEY                         "HMAC Key"
+#define pkcs11configLABEL_HMAC_KEY                         ""
 
 /**
  * @brief The PKCS #11 label for the object to be used for CMAC operations.
+ * 
+ * @note The PKCS #11 does create a CMAC object but can be modified to do so
+ * by using the following definition:
+ * #define pkcs11configLABEL_CMAC_KEY                         "CMAC Key"
  */
-#define pkcs11configLABEL_CMAC_KEY                         "CMAC Key"
+#define pkcs11configLABEL_CMAC_KEY                         ""
 
 /**
  * @brief The PKCS #11 label for the object to be used for code verification.
