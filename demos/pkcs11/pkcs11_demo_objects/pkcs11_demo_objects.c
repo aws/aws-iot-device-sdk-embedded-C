@@ -336,8 +336,8 @@ static CK_RV objectGeneration( void )
 
     /* Labels are application defined strings that are used to identify an
      * object. It should not be NULL terminated. */
-    CK_BYTE publicKeyLabel[] = { pkcs11demoPRIVATE_KEY_LABEL };
-    CK_BYTE privateKeyLabel[] = { pkcs11demoPUBLIC_KEY_LABEL };
+    CK_BYTE publicKeyLabel[] = { pkcs11demoPUBLIC_KEY_LABEL };
+    CK_BYTE privateKeyLabel[] = { pkcs11demoPRIVATE_KEY_LABEL };
 
     /* CK_ATTTRIBUTE's contain an attribute type, a value, and the length of
      * the value. An array of CK_ATTRIBUTEs is called a template. They are used

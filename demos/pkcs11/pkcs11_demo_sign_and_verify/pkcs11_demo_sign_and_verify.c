@@ -155,7 +155,7 @@ CK_RV PKCS11SignVerifyDemo( void )
     {
         result = xFindObjectWithLabelAndClass( session,
                                                pkcs11demoPRIVATE_KEY_LABEL,
-                                               sizeof( pkcs11demoPRIVATE_KEY_LABEL ),
+                                               sizeof( pkcs11demoPRIVATE_KEY_LABEL ) - 1,
                                                CKO_PRIVATE_KEY,
                                                &privateKeyHandle );
     }
@@ -166,8 +166,8 @@ CK_RV PKCS11SignVerifyDemo( void )
     {
         result = xFindObjectWithLabelAndClass( session,
                                                pkcs11demoPUBLIC_KEY_LABEL,
-                                               sizeof( pkcs11demoPUBLIC_KEY_LABEL ),
-                                               CKO_PRIVATE_KEY,
+                                               sizeof( pkcs11demoPUBLIC_KEY_LABEL ) - 1,
+                                               CKO_PUBLIC_KEY,
                                                &publicKeyHandle );
     }
 
