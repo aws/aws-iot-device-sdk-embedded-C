@@ -46,3 +46,6 @@
 [submodule "libraries/3rdparty/tinycbor"]
 	path = libraries/3rdparty/tinycbor
 	url = https://github.com/intel/tinycbor
+[submodule "libraries/aws/sigv4-for-aws-iot-embedded-sdk"]
+	path = libraries/aws/sigv4-for-aws-iot-embedded-sdk
+	url = https://github.com/aws/SigV4-for-AWS-IoT-embedded-sdk.git
