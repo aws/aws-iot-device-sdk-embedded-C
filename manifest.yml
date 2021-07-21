@@ -57,4 +57,9 @@ dependencies:
     repository:
       type: "git"
       url: "https://github.com/aws/Fleet-Provisioning-for-AWS-IoT-embedded-sdk"
+  - name: "sigv4-for-AWS-IoT-embedded-sdk"
+    version: "2e4bd59"
+    repository:
+      type: "git"
+      url: "https://github.com/aws/SigV4-for-AWS-IoT-embedded-sdk"
 license: "MIT"
