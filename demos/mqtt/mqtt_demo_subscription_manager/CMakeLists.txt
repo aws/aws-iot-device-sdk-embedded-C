@@ -9,10 +9,12 @@ include( ${CMAKE_SOURCE_DIR}/libraries/standard/backoffAlgorithm/backoffAlgorith
 
 set( DEMO_NAME "mqtt_demo_subscription_manager" )
 
+file( GLOB DEMO_FILE "${DEMO_NAME}.c*" )
+
 # Demo target.
 add_executable(
     ${DEMO_NAME}
-        "${DEMO_NAME}.c"
+        "${DEMO_FILE}"
         ${MQTT_SOURCES}
         ${MQTT_SERIALIZER_SOURCES}
         ${BACKOFF_ALGORITHM_SOURCES}

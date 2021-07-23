@@ -479,7 +479,7 @@ static void updateSubAckStatus( MQTTPacketInfo_t * pPacketInfo )
     ( void ) mqttStatus;
 
     /* Demo only subscribes to one topic, so only one status code is returned. */
-    globalSubAckStatus = pPayload[ 0 ];
+    globalSubAckStatus = ( MQTTSubAckStatus_t ) pPayload[ 0 ];
 }
 
 /*-----------------------------------------------------------*/
