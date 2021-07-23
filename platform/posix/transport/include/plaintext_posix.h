@@ -49,6 +49,12 @@
 
 /************ End of logging configuration ****************/
 
+/* *INDENT-OFF* */
+#ifdef __cplusplus
+    extern "C" {
+#endif
+/* *INDENT-ON* */
+
 /* Transport includes. */
 #include "transport_interface.h"
 #include "sockets_posix.h"
@@ -120,5 +126,11 @@ int32_t Plaintext_Recv( NetworkContext_t * pNetworkContext,
 int32_t Plaintext_Send( NetworkContext_t * pNetworkContext,
                         const void * pBuffer,
                         size_t bytesToSend );
+
+/* *INDENT-OFF* */
+#ifdef __cplusplus
+    }
+#endif
+/* *INDENT-ON* */
 
 #endif /* ifndef PLAINTEXT_POSIX_H_ */
