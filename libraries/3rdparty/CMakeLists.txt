@@ -46,3 +46,33 @@ set_target_properties(tinycbor PROPERTIES
 target_include_directories(tinycbor PUBLIC
     "${ROOT_DIR}/libraries/3rdparty/tinycbor/src"
 )
+
+file(GLOB MBEDTLS_FILES CONFIGURE_DEPENDS "${ROOT_DIR}/libraries/3rdparty/mbedtls/library/*.c")
+
+add_library(mbedtls
+    ${MBEDTLS_FILES}
+)
+
+set_target_properties(mbedtls PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+    POSITION_INDEPENDENT_CODE ON
+    C_STANDARD 99
+)
+
+target_include_directories(mbedtls
+    PUBLIC
+        "${ROOT_DIR}/libraries/3rdparty/mbedtls/include"
+        "${ROOT_DIR}/platform/posix/include"
+)
+
+target_compile_definitions(
+    mbedtls
+    PUBLIC
+        -DMBEDTLS_CONFIG_FILE="mbedtls_config.h"
+)
+
+set_source_files_properties(
+    ${MBEDTLS_FILES}
+    PROPERTIES COMPILE_FLAGS
+    "-Wno-pedantic"
+)
