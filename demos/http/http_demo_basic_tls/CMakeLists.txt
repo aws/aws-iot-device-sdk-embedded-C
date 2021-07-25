@@ -6,10 +6,12 @@ include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreHTTP/httpFilePaths.cmake )
 # Include backoffAlgorithm library file path configuration.
 include( ${CMAKE_SOURCE_DIR}/libraries/standard/backoffAlgorithm/backoffAlgorithmFilePaths.cmake )
 
+file( GLOB DEMO_FILE "${DEMO_NAME}.c*" )
+
 # Demo target.
 add_executable(
     ${DEMO_NAME}
-        "${DEMO_NAME}.c"
+        "${DEMO_FILE}"
         "${DEMOS_DIR}/http/common/src/http_demo_utils.c"
         ${HTTP_SOURCES}
         ${HTTP_THIRD_PARTY_SOURCES}
