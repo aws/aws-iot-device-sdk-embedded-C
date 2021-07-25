@@ -55,6 +55,8 @@ jobs:
       - name: Rename source files
         run: |
           for source in demos/mqtt/mqtt*/*.c; do mv -- "$source" "${source%.c}.cpp"; done
+          for source in demos/http/http*/*.c; do mv -- "$source" "${source%.c}.cpp"; done
+          for source in demos/shadow/shadow_demo_main/*.c; do mv -- "$source" "${source%.c}.cpp"; done
       - name: Configure CMake build
         run: |
           sudo apt-get install -y libmosquitto-dev
