@@ -12,12 +12,11 @@ include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreJSON/jsonFilePaths.cmake )
 # Include Defender library's source and header path variables.
 include( ${CMAKE_SOURCE_DIR}/libraries/aws/device-defender-for-aws-iot-embedded-sdk/defenderFilePaths.cmake )
 
+file( GLOB DEMO_SRCS "*.c*" )
+
 # Demo target.
 add_executable( ${DEMO_NAME}
-                "defender_demo.c"
-                "metrics_collector.c"
-                "mqtt_operations.c"
-                "report_builder.c"
+                ${DEMO_SRCS}
                 ${MQTT_SOURCES}
                 ${MQTT_SERIALIZER_SOURCES}
                 ${BACKOFF_ALGORITHM_SOURCES}
