@@ -56,8 +56,12 @@ add_library(mbedtls
 set_target_properties(mbedtls PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
     POSITION_INDEPENDENT_CODE ON
-    C_STANDARD 99
 )
+
+# Use C99 for mbedtls as v2.26.0 is incompatible with C90
+if(CMAKE_C_STANDARD LESS 99)
+    set_target_properties(mbedtls PROPERTIES C_STANDARD 99)
+endif()
 
 target_include_directories(mbedtls
     PUBLIC
