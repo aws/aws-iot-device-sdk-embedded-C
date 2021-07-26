@@ -8,19 +8,10 @@ set(CORE_PKCS11_3RDPARTY_LOCATION "${COREPKCS11_LOCATION}/source/dependency/3rdp
 # Include PKCS #11 library's source and header path variables.
 include( ${COREPKCS11_LOCATION}/pkcsFilePaths.cmake )
 
-file(GLOB MBEDTLS_FILES CONFIGURE_DEPENDS "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls/library/*.c")
-set_source_files_properties(
-    ${MBEDTLS_FILES}
-    PROPERTIES COMPILE_FLAGS
-    "-Wno-pedantic"
-)
-
 list(APPEND PKCS_SOURCES
-            "${MBEDTLS_FILES}"
             "../common/src/demo_helpers.c"
             "${COREPKCS11_LOCATION}/source/portable/posix/core_pkcs11_pal.c"
             "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils/mbedtls_utils.c"
-            "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils/mbedtls_error.c"
             )
 
 # Demo target.
@@ -30,12 +21,11 @@ add_executable(
     ${PKCS_SOURCES}
 )
 
-target_compile_definitions(
+target_link_libraries(
     ${DEMO_NAME}
-    PUBLIC
-        -DMBEDTLS_CONFIG_FILE="mbedtls_config.h"
+    PRIVATE
+        mbedtls
 )
-
 
 target_include_directories(
     ${DEMO_NAME}
@@ -46,7 +36,6 @@ target_include_directories(
         ${LOGGING_INCLUDE_DIRS}
         "${CORE_PKCS11_3RDPARTY_LOCATION}/pkcs11"
     PRIVATE
-        "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls/include"
         "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils"
 )
 

@@ -35,24 +35,15 @@ set(LIBRARY_PREFIXES
 
 set(COREPKCS11_LOCATION "${MODULES_DIR}/standard/corePKCS11")
 set(CORE_PKCS11_3RDPARTY_LOCATION "${COREPKCS11_LOCATION}/source/dependency/3rdparty")
-file(GLOB MBEDTLS_FILES CONFIGURE_DEPENDS "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls/library/*.c")
-set_source_files_properties(
-    ${MBEDTLS_FILES}
-    PROPERTIES COMPILE_FLAGS
-    "-Wno-pedantic"
-)
 
 # Define any extra sources or includes outside the standard, making sure to use the same prefix.
 set(MQTT_EXTRA_SOURCES
         ${MQTT_SERIALIZER_SOURCES})
 set(PKCS_EXTRA_SOURCES
-        "${MBEDTLS_FILES}"
         "${COREPKCS11_LOCATION}/source/portable/posix/core_pkcs11_pal.c"
-        "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils/mbedtls_utils.c"
-        "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils/mbedtls_error.c")
+        "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils/mbedtls_utils.c")
 set(PKCS_EXTRA_INCLUDE_PRIVATE_DIRS
     PRIVATE
-        "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls/include"
         "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils")
 set(OTA_BACKENDS "OTA_HTTP" "OTA_MQTT")
 foreach(ota_backend ${OTA_BACKENDS})
@@ -104,8 +95,7 @@ foreach(library_prefix ${LIBRARY_PREFIXES})
             target_include_directories("${library_name}" PRIVATE
                                         ${DEMOS_DIR}/pkcs11/common/include
                                         ${LOGGING_INCLUDE_DIRS})
-            target_compile_definitions("${library_name}" PUBLIC
-                                       -DMBEDTLS_CONFIG_FILE="mbedtls_config.h")
+            target_link_libraries("${library_name}" PRIVATE mbedtls )
         endif()
     endif()
 
