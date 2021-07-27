@@ -38,9 +38,7 @@ jobs:
           -DCLAIM_CERT_PATH="cert/path" \
           -DCLAIM_PRIVATE_KEY_PATH="key/path" \
           -DPROVISIONING_TEMPLATE_NAME="template-name" \
-          -DPROVISIONING_CSR_PATH="csr/path" \
-          -DPROVISIONING_PRIVATE_KEY_PATH="key/path" \
-          -DPROVISIONING_CERT_PATH="cert/path"
+          -DDEVICE_SERIAL_NUMBER="00000"
       - name: Build Demos
         run: |
           make -C build/ help | grep demo | tr -d '. ' | xargs make -C build/
@@ -84,9 +82,7 @@ jobs:
           -DCLAIM_CERT_PATH="cert/path" \
           -DCLAIM_PRIVATE_KEY_PATH="key/path" \
           -DPROVISIONING_TEMPLATE_NAME="template-name" \
-          -DPROVISIONING_CSR_PATH="csr/path" \
-          -DPROVISIONING_PRIVATE_KEY_PATH="key/path" \
-          -DPROVISIONING_CERT_PATH="cert/path"
+          -DDEVICE_SERIAL_NUMBER="00000"
       - name: Build Demos
         run: |
           make -C build/ help | grep demo | tr -d '. ' | xargs make -C build/
@@ -119,9 +115,7 @@ jobs:
           -DCLAIM_CERT_PATH="cert/path" \
           -DCLAIM_PRIVATE_KEY_PATH="key/path" \
           -DPROVISIONING_TEMPLATE_NAME="template-name" \
-          -DPROVISIONING_CSR_PATH="csr/path" \
-          -DPROVISIONING_PRIVATE_KEY_PATH="key/path" \
-          -DPROVISIONING_CERT_PATH="cert/path"
+          -DDEVICE_SERIAL_NUMBER="00000"
       - name: Build System Tests
         run: make -C build/ help | grep system | tr -d '. ' | xargs make -C build/
   build-check-install:
