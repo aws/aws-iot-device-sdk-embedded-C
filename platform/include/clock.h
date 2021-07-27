@@ -31,6 +31,12 @@
 /* Standard includes. */
 #include <stdint.h>
 
+/* *INDENT-OFF* */
+#ifdef __cplusplus
+    extern "C" {
+#endif
+/* *INDENT-ON* */
+
 /**
  * @brief The timer query function.
  *
@@ -46,5 +52,11 @@ uint32_t Clock_GetTimeMs( void );
  * @param[in] sleepTimeMs milliseconds to sleep.
  */
 void Clock_SleepMs( uint32_t sleepTimeMs );
+
+/* *INDENT-OFF* */
+#ifdef __cplusplus
+    }
+#endif
+/* *INDENT-ON* */
 
 #endif /* ifndef CLOCK_H_ */

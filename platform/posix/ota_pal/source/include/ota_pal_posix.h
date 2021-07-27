@@ -23,6 +23,12 @@
 #ifndef _OTA_PAL_H_
 #define _OTA_PAL_H_
 
+/* *INDENT-OFF* */
+#ifdef __cplusplus
+    extern "C" {
+#endif
+/* *INDENT-ON* */
+
 #include "ota.h"
 
 /**
@@ -213,5 +219,11 @@ OtaPalStatus_t otaPal_SetPlatformImageState( OtaFileContext_t * const C,
  *   NOTE: OtaPalImageStateUnknown should NEVER be returned and indicates an implementation error.
  */
 OtaPalImageState_t otaPal_GetPlatformImageState( OtaFileContext_t * const C );
+
+/* *INDENT-OFF* */
+#ifdef __cplusplus
+    }
+#endif
+/* *INDENT-ON* */
 
 #endif /* ifndef _OTA_PAL_H_ */
